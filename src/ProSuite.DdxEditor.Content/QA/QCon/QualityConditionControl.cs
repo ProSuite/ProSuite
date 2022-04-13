@@ -5,7 +5,6 @@ using System.Data;
 using System.Windows.Forms;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Misc;
 using ProSuite.Commons.UI.Dialogs;
 using ProSuite.Commons.UI.ScreenBinding;
 using ProSuite.Commons.UI.ScreenBinding.Elements;
@@ -14,8 +13,6 @@ using ProSuite.Commons.UI.WinForms.Controls;
 using ProSuite.DdxEditor.Content.QA.TestDescriptors;
 using ProSuite.DdxEditor.Framework.ItemViews;
 using ProSuite.DomainModel.AO.QA;
-using ProSuite.DomainModel.Core.QA;
-using ProSuite.QA.Core;
 using ProSuite.UI.QA;
 
 namespace ProSuite.DdxEditor.Content.QA.QCon

@@ -6,28 +6,20 @@ using System.Reflection;
 using System.Windows.Forms;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.DdxEditor.Content.Properties;
-using ProSuite.Commons.AO.Geodatabase;
-using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Geom.EsriShape;
-using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI.Dialogs;
 using ProSuite.Commons.UI.Finder;
 using ProSuite.Commons.UI.WinForms;
 using ProSuite.Commons.UI.WinForms.Controls;
-using ProSuite.Commons.Validation;
 using ProSuite.DdxEditor.Content.Datasets;
+using ProSuite.DdxEditor.Content.Properties;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Dependencies;
 using ProSuite.DdxEditor.Framework.Items;
 using ProSuite.DdxEditor.Framework.ItemViews;
 using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.Geodatabase;
-using ProSuite.DomainModel.Core.DataModel;
-using ProSuite.DomainModel.Core.DataModel.Repositories;
 using ProSuite.UI.DataModel.ResourceLookup;
 
 namespace ProSuite.DdxEditor.Content.SpatialRef
@@ -92,7 +84,7 @@ namespace ProSuite.DdxEditor.Content.SpatialRef
 							continue;
 						}
 
-						tableRows.Add(new DatasetTableRow(dataset) { Selectable = true });
+						tableRows.Add(new DatasetTableRow(dataset) {Selectable = true});
 					}
 				});
 
@@ -105,7 +97,7 @@ namespace ProSuite.DdxEditor.Content.SpatialRef
 				return null;
 			}
 
-			var vectorDataset = (VectorDataset)selectedTableRow.Entity;
+			var vectorDataset = (VectorDataset) selectedTableRow.Entity;
 
 			const bool allowAlways = true;
 			IFeatureClass featureClass =
@@ -236,7 +228,7 @@ namespace ProSuite.DdxEditor.Content.SpatialRef
 				using (_msg.IncrementIndentation("Reading feature classes..."))
 				{
 					foreach (IFeatureClass featureClass in DatasetUtils
-					                                       .GetObjectClasses((IWorkspace)workspace)
+					                                       .GetObjectClasses((IWorkspace) workspace)
 					                                       .OfType<IFeatureClass>())
 					{
 						var item = new FeatureClassItem(featureClass);
@@ -274,7 +266,7 @@ namespace ProSuite.DdxEditor.Content.SpatialRef
 				FeatureClass = featureClass;
 
 				Image = DatasetTypeImageLookup.GetImage(
-					(ProSuiteGeometryType)featureClass.ShapeType);
+					(ProSuiteGeometryType) featureClass.ShapeType);
 				Image.Tag = DatasetTypeImageLookup.GetDefaultSortIndex(Image);
 
 				Name = DatasetUtils.GetUnqualifiedName(featureClass);

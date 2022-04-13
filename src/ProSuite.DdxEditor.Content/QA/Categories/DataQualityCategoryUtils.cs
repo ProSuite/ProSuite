@@ -5,9 +5,6 @@ using System.Windows.Forms;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.UI.Finder;
-using ProSuite.DomainModel.Core.DataModel;
-using ProSuite.DomainModel.Core.QA;
-using ProSuite.DomainModel.Core.QA.Repositories;
 
 namespace ProSuite.DdxEditor.Content.QA.Categories
 {

@@ -1,16 +1,12 @@
 using System.Collections.Generic;
 using System.Drawing;
-using ProSuite.DdxEditor.Content.Properties;
-using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Validation;
+using ProSuite.DdxEditor.Content.Properties;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Dependencies;
 using ProSuite.DdxEditor.Framework.Items;
 using ProSuite.DdxEditor.Framework.ItemViews;
-using ProSuite.DomainModel.Core.DataModel;
-using ProSuite.DomainModel.Core.DataModel.Repositories;
 
 namespace ProSuite.DdxEditor.Content.DatasetCategories
 {

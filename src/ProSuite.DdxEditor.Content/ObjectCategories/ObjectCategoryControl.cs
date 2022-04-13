@@ -3,7 +3,6 @@ using System.Windows.Forms;
 using ProSuite.Commons.UI.ScreenBinding;
 using ProSuite.Commons.UI.ScreenBinding.Elements;
 using ProSuite.DdxEditor.Framework.ItemViews;
-using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DdxEditor.Content.ObjectCategories
 {

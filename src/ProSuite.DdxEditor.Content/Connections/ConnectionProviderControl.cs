@@ -5,7 +5,6 @@ using System.Windows.Forms;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI.ScreenBinding;
 using ProSuite.DdxEditor.Framework.ItemViews;
 using ProSuite.DomainModel.AO.Geodatabase;

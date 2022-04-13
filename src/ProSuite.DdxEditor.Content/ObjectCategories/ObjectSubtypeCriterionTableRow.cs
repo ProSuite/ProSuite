@@ -1,5 +1,4 @@
 using ProSuite.Commons.Essentials.Assertions;
-using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DdxEditor.Content.ObjectCategories
 {

@@ -2,14 +2,13 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
-using ProSuite.DdxEditor.Content.Properties;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.UI.Dialogs;
 using ProSuite.Commons.UI.Env;
+using ProSuite.DdxEditor.Content.Properties;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Items;
-using ProSuite.DomainModel.Core.QA;
 
 namespace ProSuite.DdxEditor.Content.QA.QSpec
 {
@@ -72,7 +71,7 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 			}
 
 			using (var form = new ExportQualitySpecificationsForm(FileFilter,
-			                                                      DefaultExtension))
+				       DefaultExtension))
 			{
 				new ExportQualitySpecificationsController(form, specifications);
 

@@ -2,20 +2,16 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Windows.Forms;
-using ProSuite.DdxEditor.Content.Properties;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI.WinForms;
+using ProSuite.DdxEditor.Content.Properties;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Commands;
 using ProSuite.DdxEditor.Framework.Items;
 using ProSuite.DomainModel.AO.QA.TestReport;
-using ProSuite.DomainModel.Core.QA;
-using ProSuite.DomainModel.Core.QA.Repositories;
 
 namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 {
@@ -223,7 +219,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 								testDescriptor.Name);
 						}
 						// 2nd check: equality with rest of object
-						else if(! definitions.ContainsValue(definition))
+						else if (! definitions.ContainsValue(definition))
 						{
 							_msg.DebugFormat("Registering new test descriptor {0}", testDescriptor);
 
@@ -248,7 +244,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 			using (new WaitCursor())
 			{
 				using (_msg.IncrementIndentation(
-					"Importing all test descriptors from {0}", fileName))
+					       "Importing all test descriptors from {0}", fileName))
 				{
 					const bool updateTestDescriptorNames = true;
 					const bool updateTestDescriptorProperties = false;

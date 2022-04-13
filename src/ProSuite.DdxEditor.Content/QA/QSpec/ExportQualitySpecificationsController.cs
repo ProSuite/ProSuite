@@ -4,9 +4,6 @@ using System.IO;
 using System.Linq;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Misc;
-using ProSuite.Commons.Text;
-using ProSuite.DomainModel.Core.QA;
 
 namespace ProSuite.DdxEditor.Content.QA.QSpec
 {
@@ -510,11 +507,11 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 			[NotNull] IEnumerable<QualitySpecification> qualitySpecifications)
 		{
 			List<QualitySpecificationListItem> items = qualitySpecifications.Select(
-				                                                                qspec =>
-					                                                                new
-						                                                                QualitySpecificationListItem(
-							                                                                qspec))
-			                                                                .ToList();
+					qspec =>
+						new
+							QualitySpecificationListItem(
+								qspec))
+				.ToList();
 
 			items.Sort();
 

@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 using System.Windows.Forms;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -7,7 +6,6 @@ using ProSuite.DdxEditor.Content.Models;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Items;
 using ProSuite.DomainModel.AO.DataModel;
-using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DdxEditor.Content.Associations
 {

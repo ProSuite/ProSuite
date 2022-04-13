@@ -3,11 +3,7 @@ using System.Diagnostics;
 using System.Reflection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Logging;
 using ProSuite.DdxEditor.Content.QA.QSpec;
-using ProSuite.DomainModel.Core.DataModel;
-using ProSuite.DomainModel.Core.QA;
-using ProSuite.DomainModel.Core.QA.Repositories;
 
 namespace ProSuite.DdxEditor.Content.QA.QCon
 {

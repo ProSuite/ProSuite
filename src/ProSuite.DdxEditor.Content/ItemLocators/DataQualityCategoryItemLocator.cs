@@ -1,6 +1,4 @@
-﻿using ProSuite.Commons.DomainModels;
-using ProSuite.DdxEditor.Framework.NavigationPanel;
-using ProSuite.DomainModel.Core.QA;
+﻿using ProSuite.DdxEditor.Framework.NavigationPanel;
 
 namespace ProSuite.DdxEditor.Content.ItemLocators
 {

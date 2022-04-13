@@ -3,20 +3,15 @@ using System.Collections.Generic;
 using System.Data;
 using System.Reflection;
 using System.Windows.Forms;
-using ProSuite.DdxEditor.Content.Properties;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Logging;
-using ProSuite.Commons.Misc;
-using ProSuite.Commons.Text;
 using ProSuite.Commons.UI.ScreenBinding;
 using ProSuite.Commons.UI.ScreenBinding.Elements;
 using ProSuite.Commons.UI.ScreenBinding.Lists;
 using ProSuite.Commons.UI.WinForms.Controls;
+using ProSuite.DdxEditor.Content.Properties;
 using ProSuite.DdxEditor.Framework.ItemViews;
 using ProSuite.DomainModel.AO.QA;
-using ProSuite.DomainModel.Core.QA;
-using ProSuite.QA.Core;
 
 namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 {
@@ -267,7 +262,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 			const bool includeInternallyUsed = false;
 
 			foreach (int ctorIndex in TestFactoryUtils.GetTestConstructorIndexes(
-				testType, includeObsolete, includeInternallyUsed))
+				         testType, includeObsolete, includeInternallyUsed))
 			{
 				TestFactory testFactory = TestFactoryUtils.GetTestFactory(testType, ctorIndex);
 				string signature = InstanceUtils.GetTestSignature(testFactory);
@@ -337,7 +332,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 			// probably not needed (TOP-2717 no longer reproduces), but does no harm...
 
 			if (_dataGridViewQualityConditions.Columns.Contains(
-				_columnQualityConditionImage))
+				    _columnQualityConditionImage))
 			{
 				_dataGridViewQualityConditions.InvalidateColumn(
 					_columnQualityConditionImage.Index);
@@ -437,8 +432,8 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 		}
 
 		private void _dataGridViewQualityConditions_CellValueChanged(object sender,
-		                                                             DataGridViewCellEventArgs
-			                                                             e)
+			DataGridViewCellEventArgs
+				e)
 		{
 			if (e.RowIndex < 0 || e.ColumnIndex < 0)
 			{
@@ -449,8 +444,8 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 		}
 
 		private void _dataGridViewQualityConditions_CellDoubleClick(object sender,
-		                                                            DataGridViewCellEventArgs
-			                                                            e)
+			DataGridViewCellEventArgs
+				e)
 		{
 			if (Observer == null)
 			{

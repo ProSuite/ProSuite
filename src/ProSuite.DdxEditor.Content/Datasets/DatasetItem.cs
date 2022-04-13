@@ -1,17 +1,13 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
-using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.UI.Finder;
 using ProSuite.Commons.UI.WinForms.Controls;
-using ProSuite.Commons.Validation;
 using ProSuite.DdxEditor.Framework.Dependencies;
 using ProSuite.DdxEditor.Framework.Items;
 using ProSuite.DdxEditor.Framework.ItemViews;
-using ProSuite.DomainModel.Core.DataModel;
-using ProSuite.DomainModel.Core.DataModel.Repositories;
 using ProSuite.UI.DataModel.ResourceLookup;
 
 namespace ProSuite.DdxEditor.Content.Datasets

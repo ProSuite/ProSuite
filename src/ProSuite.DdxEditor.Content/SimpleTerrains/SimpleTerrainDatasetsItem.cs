@@ -3,18 +3,15 @@ using System.Drawing;
 using System.Linq;
 using System.Reflection;
 using System.Windows.Forms;
-using ProSuite.DdxEditor.Content.Properties;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI.WinForms;
 using ProSuite.DdxEditor.Content.Models;
+using ProSuite.DdxEditor.Content.Properties;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Commands;
 using ProSuite.DdxEditor.Framework.Items;
 using ProSuite.DomainModel.AO.DataModel;
-using ProSuite.DomainModel.Core.DataModel;
-using ProSuite.DomainModel.Core.DataModel.Repositories;
 
 namespace ProSuite.DdxEditor.Content.SimpleTerrains
 {

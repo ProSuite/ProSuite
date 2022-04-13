@@ -1,7 +1,5 @@
-using ProSuite.Commons.DomainModels;
 using ProSuite.DdxEditor.Framework.ItemViews;
 using ProSuite.DomainModel.AO.DataModel;
-using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DdxEditor.Content.Datasets
 {

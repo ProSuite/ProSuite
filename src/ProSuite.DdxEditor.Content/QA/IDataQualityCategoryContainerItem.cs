@@ -1,7 +1,6 @@
 using System.Windows.Forms;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DdxEditor.Content.QA.Categories;
-using ProSuite.DomainModel.Core.QA;
 
 namespace ProSuite.DdxEditor.Content.QA
 {

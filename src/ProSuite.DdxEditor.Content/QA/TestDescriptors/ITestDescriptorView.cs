@@ -2,8 +2,6 @@ using System;
 using System.Collections.Generic;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DdxEditor.Framework.ItemViews;
-using ProSuite.DomainModel.Core.QA;
-using ProSuite.QA.Core;
 
 namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 {

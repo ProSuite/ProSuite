@@ -1,7 +1,6 @@
 ﻿using System.IO;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Text;
 
 namespace ProSuite.DdxEditor.Content.QA.QSpec
 {

@@ -4,9 +4,7 @@ using System.Linq;
 using System.Windows.Forms;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Text;
 using ProSuite.Commons.UI.Dialogs;
-using ProSuite.DomainModel.Core.QA;
 
 namespace ProSuite.DdxEditor.Content.QA.QCon
 {

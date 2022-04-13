@@ -1,9 +1,6 @@
-﻿using ProSuite.Commons.DomainModels;
-using ProSuite.Commons.Essentials.Assertions;
+﻿using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DdxEditor.Framework.Dependencies;
-using ProSuite.DomainModel.Core.QA;
-using ProSuite.DomainModel.Core.QA.Repositories;
 
 namespace ProSuite.DdxEditor.Content.Models
 {
@@ -69,7 +66,7 @@ namespace ProSuite.DdxEditor.Content.Models
 			}
 
 			foreach (QualitySpecification qualitySpecification in
-				_qualitySpecificationRepository.Get(_qualityCondition))
+			         _qualitySpecificationRepository.Get(_qualityCondition))
 			{
 				qualitySpecification.RemoveElement(_qualityCondition);
 			}

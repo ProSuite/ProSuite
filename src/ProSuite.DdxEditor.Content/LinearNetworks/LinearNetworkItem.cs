@@ -1,17 +1,14 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
-using ProSuite.DdxEditor.Content.Properties;
-using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
-using ProSuite.Commons.Geom.EsriShape;
 using ProSuite.Commons.UI.Finder;
 using ProSuite.Commons.UI.WinForms.Controls;
 using ProSuite.DdxEditor.Content.Datasets;
+using ProSuite.DdxEditor.Content.Properties;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Items;
 using ProSuite.DdxEditor.Framework.ItemViews;
-using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DdxEditor.Content.LinearNetworks
 {
@@ -54,7 +51,7 @@ namespace ProSuite.DdxEditor.Content.LinearNetworks
 			IList<DatasetTableRow> datasetTableRows = new List<DatasetTableRow>();
 
 			foreach (VectorDataset vectorDataset in _modelBuilder.ReadOnlyTransaction(
-				() => _modelBuilder.Datasets.GetAll<VectorDataset>()))
+				         () => _modelBuilder.Datasets.GetAll<VectorDataset>()))
 			{
 				if (vectorDataset.Deleted)
 				{

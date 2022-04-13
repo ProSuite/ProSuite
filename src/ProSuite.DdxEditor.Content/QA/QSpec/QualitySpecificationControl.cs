@@ -5,12 +5,10 @@ using System.Linq;
 using System.Windows.Forms;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Misc;
 using ProSuite.Commons.UI.ScreenBinding;
 using ProSuite.Commons.UI.ScreenBinding.Elements;
 using ProSuite.Commons.UI.WinForms.Controls;
 using ProSuite.DdxEditor.Framework.ItemViews;
-using ProSuite.DomainModel.Core.QA;
 
 namespace ProSuite.DdxEditor.Content.QA.QSpec
 {
@@ -239,13 +237,13 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 		}
 
 		private void _toolStripButtonAssignQualityConditions_Click(object sender,
-		                                                           EventArgs e)
+			EventArgs e)
 		{
 			Observer?.AddQualityConditionsClicked();
 		}
 
 		private void _toolStripButtonRemoveQualityConditions_Click(object sender,
-		                                                           EventArgs e)
+			EventArgs e)
 		{
 			Observer?.RemoveElementsClicked();
 		}

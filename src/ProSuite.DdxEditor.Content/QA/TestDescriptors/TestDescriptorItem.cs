@@ -5,13 +5,10 @@ using System.Drawing;
 using System.Linq;
 using System.Reflection;
 using System.Windows.Forms;
-using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI.Finder;
 using ProSuite.Commons.UI.WinForms;
-using ProSuite.Commons.Validation;
 using ProSuite.DdxEditor.Content.Datasets;
 using ProSuite.DdxEditor.Content.QA.Categories;
 using ProSuite.DdxEditor.Content.QA.QSpec;
@@ -23,13 +20,6 @@ using ProSuite.DdxEditor.Framework.Items;
 using ProSuite.DdxEditor.Framework.ItemViews;
 using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.QA;
-using ProSuite.DomainModel.Core;
-using ProSuite.DomainModel.Core.DataModel;
-using ProSuite.DomainModel.Core.DataModel.Repositories;
-using ProSuite.DomainModel.Core.QA;
-using ProSuite.DomainModel.Core.QA.Repositories;
-using ProSuite.QA.Container;
-using ProSuite.QA.Core;
 using ProSuite.UI.QA;
 using ProSuite.UI.QA.ResourceLookup;
 
@@ -380,10 +370,10 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 						// Exclude also datasets that are referenced in existing quality conditions based 
 						// on the same test descriptor
 						foreach (QualityCondition qualityCondition in
-							GetQualityConditions())
+						         GetQualityConditions())
 						{
 							foreach (TestParameterValue testParameterValue in
-								qualityCondition.GetParameterValues(parameterName))
+							         qualityCondition.GetParameterValues(parameterName))
 							{
 								var value = testParameterValue as DatasetTestParameterValue;
 
@@ -634,7 +624,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 						TestDescriptor testDescriptor = Assert.NotNull(GetEntity());
 
 						foreach (QualityConditionParameters parameters in
-							qualityConditionParameters)
+						         qualityConditionParameters)
 						{
 							QualityCondition qualityCondition = CreateQualityCondition(
 								testDescriptor, parameters, datasetParameterName);
@@ -696,12 +686,13 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 			var result = new QualityCondition(parameters.Name, testDescriptor);
 
 			AddParameterValue(result, datasetParameterName,
-			                                        parameters.Dataset,
-			                                        parameters.FilterExpression);
-			
+			                  parameters.Dataset,
+			                  parameters.FilterExpression);
+
 			foreach (ScalarParameterValue parameter in parameters.ScalarParameters)
 			{
-				InstanceConfigurationUtils.AddScalarParameterValue(result, parameter.Name, parameter.Value);
+				InstanceConfigurationUtils.AddScalarParameterValue(
+					result, parameter.Name, parameter.Value);
 			}
 
 			foreach (QualitySpecification qualitySpecification in parameters.QualitySpecifications)

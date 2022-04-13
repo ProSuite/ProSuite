@@ -5,23 +5,16 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Windows.Forms;
-using ProSuite.DdxEditor.Content.Properties;
-using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI.Finder;
 using ProSuite.Commons.UI.WinForms.Controls;
-using ProSuite.Commons.Validation;
+using ProSuite.DdxEditor.Content.Properties;
 using ProSuite.DdxEditor.Framework.Dependencies;
 using ProSuite.DdxEditor.Framework.Items;
 using ProSuite.DdxEditor.Framework.ItemViews;
 using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.Geodatabase;
-using ProSuite.DomainModel.Core;
-using ProSuite.DomainModel.Core.DataModel;
-using ProSuite.DomainModel.Core.DataModel.Repositories;
-using Path = System.IO.Path;
 
 namespace ProSuite.DdxEditor.Content.Models
 {
@@ -42,8 +35,8 @@ namespace ProSuite.DdxEditor.Content.Models
 		/// <param name="model">The model.</param>
 		/// <param name="repository">The repository.</param>
 		protected ModelItemBase([NotNull] CoreDomainModelItemModelBuilder modelBuilder,
-		                    [NotNull] E model,
-		                    [NotNull] IRepository<Model> repository)
+		                        [NotNull] E model,
+		                        [NotNull] IRepository<Model> repository)
 			: base(model, repository)
 		{
 			Assert.ArgumentNotNull(modelBuilder, nameof(modelBuilder));
@@ -182,7 +175,6 @@ namespace ProSuite.DdxEditor.Content.Models
 
 			compositeControl.AddPanel(view);
 		}
-		
 
 		protected override void IsValidForPersistenceCore(E entity,
 		                                                  Notification notification)
@@ -296,7 +288,7 @@ namespace ProSuite.DdxEditor.Content.Models
 			var assignCount = 0;
 			var totalCount = 0;
 			using (_msg.IncrementIndentation(
-				"Searching for layer files that match datasets with missing layer files"))
+				       "Searching for layer files that match datasets with missing layer files"))
 			{
 				_modelBuilder.UseTransaction(
 					delegate
@@ -366,6 +358,5 @@ namespace ProSuite.DdxEditor.Content.Models
 		}
 
 		#endregion
-		
 	}
 }

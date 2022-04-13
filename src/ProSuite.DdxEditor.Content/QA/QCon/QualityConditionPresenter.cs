@@ -1,13 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Windows.Forms;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI.Finder;
 using ProSuite.Commons.UI.ScreenBinding.Lists;
 using ProSuite.DdxEditor.Content.QA.QSpec;
@@ -15,8 +13,6 @@ using ProSuite.DdxEditor.Content.QA.TestDescriptors;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.ItemViews;
 using ProSuite.DomainModel.AO.QA;
-using ProSuite.DomainModel.Core.QA;
-using ProSuite.QA.Core;
 using ProSuite.UI.QA;
 
 namespace ProSuite.DdxEditor.Content.QA.QCon
@@ -212,11 +208,11 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 		void IQualityConditionObserver.NewVersionUuidClicked()
 		{
 			if (_view.Confirm(
-				"Are you sure to assign a new version UUID to this quality condition?" +
-				Environment.NewLine +
-				Environment.NewLine +
-				"This invalidates all exceptions defined for the Geoprocessing tool 'Quality Verification (xml-based)'",
-				"Assign new version UUID"))
+				    "Are you sure to assign a new version UUID to this quality condition?" +
+				    Environment.NewLine +
+				    Environment.NewLine +
+				    "This invalidates all exceptions defined for the Geoprocessing tool 'Quality Verification (xml-based)'",
+				    "Assign new version UUID"))
 			{
 				_item.AssignNewVersionUuid();
 				_view.UpdateScreen();

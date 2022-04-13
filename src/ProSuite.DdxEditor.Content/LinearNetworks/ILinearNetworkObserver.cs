@@ -1,5 +1,4 @@
 ﻿using ProSuite.DdxEditor.Framework.ItemViews;
-using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DdxEditor.Content.LinearNetworks
 {

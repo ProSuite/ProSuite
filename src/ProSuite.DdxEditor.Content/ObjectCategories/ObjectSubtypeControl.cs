@@ -2,12 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Windows.Forms;
-using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI.Dialogs;
 using ProSuite.Commons.UI.ScreenBinding;
 using ProSuite.Commons.UI.ScreenBinding.Lists;
 using ProSuite.DdxEditor.Framework.ItemViews;
-using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DdxEditor.Content.ObjectCategories
 {
@@ -77,7 +75,7 @@ namespace ProSuite.DdxEditor.Content.ObjectCategories
 			_criteriaItems.Clear();
 
 			foreach (ObjectSubtypeCriterion criterium in
-				entity.Criteria)
+			         entity.Criteria)
 			{
 				_criteriaItems.Add(new ObjectSubtypeCriterionTableRow(criterium));
 			}

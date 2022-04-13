@@ -1,10 +1,7 @@
 using System.Collections.Generic;
-using System.Linq;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DdxEditor.Framework.Search;
-using ProSuite.DomainModel.Core.QA;
-using ProSuite.DomainModel.Core.QA.Repositories;
 
 namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 {

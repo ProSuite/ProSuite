@@ -1,15 +1,12 @@
 using System.Collections.Generic;
 using System.Windows.Forms;
-using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.UI.Finder;
 using ProSuite.Commons.UI.WinForms.Controls;
-using ProSuite.Commons.Validation;
 using ProSuite.DdxEditor.Content.Attributes;
 using ProSuite.DdxEditor.Framework.Dependencies;
 using ProSuite.DdxEditor.Framework.ItemViews;
-using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DdxEditor.Content.ObjectCategories
 {
@@ -108,7 +105,7 @@ namespace ProSuite.DdxEditor.Content.ObjectCategories
 				}
 
 				foreach (ObjectSubtype existingSubtype in
-					existingObjectType.ObjectSubtypes)
+				         existingObjectType.ObjectSubtypes)
 				{
 					if (! Equals(existingSubtype.Name, entity.Name))
 					{

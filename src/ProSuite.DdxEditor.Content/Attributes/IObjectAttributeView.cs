@@ -1,7 +1,6 @@
 using System;
 using System.Windows.Forms;
 using ProSuite.DdxEditor.Framework.ItemViews;
-using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DdxEditor.Content.Attributes
 {

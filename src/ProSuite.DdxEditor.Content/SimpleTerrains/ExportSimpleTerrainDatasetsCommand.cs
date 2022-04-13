@@ -1,10 +1,10 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
-using ProSuite.DdxEditor.Content.Properties;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.UI.Finder;
 using ProSuite.DdxEditor.Content.Models;
+using ProSuite.DdxEditor.Content.Properties;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DomainModel.AO.DataModel;
 

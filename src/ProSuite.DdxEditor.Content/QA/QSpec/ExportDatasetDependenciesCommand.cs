@@ -7,7 +7,6 @@ using ProSuite.Commons.UI.Dialogs;
 using ProSuite.Commons.UI.Env;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Items;
-using ProSuite.DomainModel.Core.QA;
 
 namespace ProSuite.DdxEditor.Content.QA.QSpec
 {

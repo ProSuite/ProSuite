@@ -4,12 +4,10 @@ using System.Linq;
 using System.Reflection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI.ScreenBinding.Lists;
 using ProSuite.DdxEditor.Content.QA.QCon;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.ItemViews;
-using ProSuite.DomainModel.Core.QA;
 
 namespace ProSuite.DdxEditor.Content.QA.QSpec
 {
@@ -156,7 +154,7 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 			}
 
 			foreach (QualitySpecificationElementTableRow row in
-				_view.GetSelectedElementTableRows())
+			         _view.GetSelectedElementTableRows())
 			{
 				row.UpdateCategory();
 			}

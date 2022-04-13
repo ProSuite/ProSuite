@@ -1,12 +1,10 @@
 using System.Collections.Generic;
 using System.Drawing;
-using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Items;
 using ProSuite.DdxEditor.Framework.ItemViews;
-using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.UI.DataModel.ResourceLookup;
 
 namespace ProSuite.DdxEditor.Content.Associations

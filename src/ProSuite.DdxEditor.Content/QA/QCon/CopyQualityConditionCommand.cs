@@ -1,6 +1,6 @@
 using System.Drawing;
-using ProSuite.DdxEditor.Content.Properties;
 using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.DdxEditor.Content.Properties;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Commands;
 
