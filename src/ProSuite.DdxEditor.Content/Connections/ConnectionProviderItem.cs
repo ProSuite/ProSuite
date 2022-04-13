@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using System.Drawing;
+using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Validation;
 using ProSuite.DdxEditor.Content.Properties;
 using ProSuite.DdxEditor.Framework.Dependencies;
 using ProSuite.DdxEditor.Framework.Items;

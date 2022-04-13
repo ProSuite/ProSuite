@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Windows.Forms;
 using ProSuite.Commons.UI.ScreenBinding.Lists;
 using ProSuite.DdxEditor.Framework.ItemViews;
+using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DdxEditor.Content.SimpleTerrains
 {

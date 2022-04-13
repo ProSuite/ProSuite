@@ -1,14 +1,19 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
+using ProSuite.DdxEditor.Content.Properties;
+using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Geom.EsriShape;
 using ProSuite.Commons.UI.Finder;
 using ProSuite.Commons.UI.WinForms.Controls;
+using ProSuite.Commons.Validation;
 using ProSuite.DdxEditor.Content.Datasets;
-using ProSuite.DdxEditor.Content.Properties;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Items;
 using ProSuite.DdxEditor.Framework.ItemViews;
+using ProSuite.DomainModel.Core.DataModel;
+using ProSuite.DomainModel.Core.DataModel.Repositories;
 
 namespace ProSuite.DdxEditor.Content.SimpleTerrains
 {

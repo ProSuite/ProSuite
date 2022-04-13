@@ -1,3 +1,5 @@
+using ProSuite.DomainModel.Core.DataModel;
+
 namespace ProSuite.DdxEditor.Content.ObjectCategories
 {
 	public class CategoryPresenter<T> : ICategoryObserver where T : ObjectCategory

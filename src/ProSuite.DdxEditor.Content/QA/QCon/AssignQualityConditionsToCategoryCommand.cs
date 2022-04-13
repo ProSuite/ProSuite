@@ -5,6 +5,7 @@ using ProSuite.DdxEditor.Content.QA.QSpec;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Commands;
 using ProSuite.DdxEditor.Framework.Items;
+using ProSuite.DomainModel.Core.QA;
 
 namespace ProSuite.DdxEditor.Content.QA.QCon
 {
@@ -51,7 +52,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			}
 
 			QualityConditionContainerUtils.RefreshAssignmentTarget(category,
-				_applicationController);
+			                                                       _applicationController);
 
 			GoToItem(currentItem);
 		}

@@ -6,7 +6,14 @@ using System.Reflection;
 using System.Text;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
+using ProSuite.Commons.Text;
 using ProSuite.Commons.UI.WinForms;
+using ProSuite.Commons.Xml;
+using ProSuite.DomainModel.Core.QA;
+using ProSuite.DomainModel.Core.QA.DependencyGraph;
+using ProSuite.DomainModel.Core.QA.DependencyGraph.GraphML;
+using ProSuite.DomainModel.Core.QA.XML;
 
 namespace ProSuite.DdxEditor.Content.QA.QSpec
 {
@@ -84,13 +91,13 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 							PrepareFileLocation(fileName, deletableFilesSet);
 
 							modelBuilder.DataQualityExporter.Export(qualitySpecifications,
-								fileName,
-								exportMetadata,
-								exportWorkspaceConnections,
-								exportConnectionFilePaths,
-								exportAllTestDescriptors,
-								exportAllCategories,
-								exportNotes);
+							                                        fileName,
+							                                        exportMetadata,
+							                                        exportWorkspaceConnections,
+							                                        exportConnectionFilePaths,
+							                                        exportAllTestDescriptors,
+							                                        exportAllCategories,
+							                                        exportNotes);
 
 							LogSuccessfulExport(qualitySpecifications, fileName);
 						}
@@ -110,7 +117,7 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 				IList<QualitySpecification> imported;
 
 				using (_msg.IncrementIndentation(
-					       "Importing all quality specifications from {0}", fileName))
+					"Importing all quality specifications from {0}", fileName))
 				{
 					imported = importer.Import(
 						fileName, QualitySpecificationImportType.UpdateOrAdd,
@@ -158,8 +165,8 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 				options.IncludeSelfDependencies);
 
 			graphmltype document = GraphMLUtils.GetGraphMLDocument(graph,
-				options
-					.ExportModelsAsParentNodes);
+			                                                       options
+				                                                       .ExportModelsAsParentNodes);
 
 			XmlUtils.Serialize(document, fileName);
 		}

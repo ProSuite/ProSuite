@@ -1,4 +1,5 @@
 using System.Windows.Forms;
+using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DdxEditor.Content.Datasets
 {

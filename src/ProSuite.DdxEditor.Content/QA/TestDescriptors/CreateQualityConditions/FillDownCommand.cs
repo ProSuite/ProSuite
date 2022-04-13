@@ -1,6 +1,6 @@
 using System.Drawing;
-using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DdxEditor.Content.Properties;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DdxEditor.Framework.Commands;
 
 namespace ProSuite.DdxEditor.Content.QA.TestDescriptors.CreateQualityConditions

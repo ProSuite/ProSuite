@@ -1,8 +1,8 @@
 using System.Drawing;
 using System.Windows.Forms;
+using ProSuite.DdxEditor.Content.Properties;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.UI.Env;
-using ProSuite.DdxEditor.Content.Properties;
 using ProSuite.DdxEditor.Content.QA.QCon;
 using ProSuite.DdxEditor.Content.QA.TestDescriptors;
 using ProSuite.DdxEditor.Framework;

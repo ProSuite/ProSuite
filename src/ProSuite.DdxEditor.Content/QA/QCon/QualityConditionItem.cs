@@ -4,9 +4,13 @@ using System.Drawing;
 using System.IO;
 using System.Reflection;
 using System.Windows.Forms;
+using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
+using ProSuite.Commons.Text;
 using ProSuite.Commons.UI.Finder;
+using ProSuite.Commons.Validation;
 using ProSuite.DdxEditor.Content.QA.Categories;
 using ProSuite.DdxEditor.Content.QA.QSpec;
 using ProSuite.DdxEditor.Content.QA.TestDescriptors;
@@ -16,6 +20,10 @@ using ProSuite.DdxEditor.Framework.Dependencies;
 using ProSuite.DdxEditor.Framework.Items;
 using ProSuite.DdxEditor.Framework.ItemViews;
 using ProSuite.DomainModel.AO.QA;
+using ProSuite.DomainModel.Core.DataModel;
+using ProSuite.DomainModel.Core.QA;
+using ProSuite.DomainModel.Core.QA.Repositories;
+using ProSuite.QA.Core;
 using ProSuite.UI.QA;
 using ProSuite.UI.QA.PropertyEditors;
 using ProSuite.UI.QA.ResourceLookup;
@@ -414,8 +422,8 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 				commands.Add(
 					new CopyQualityConditionCommand(this, applicationController));
 				commands.Add(new AssignQualityConditionsToCategoryCommand(new[] {this},
-					             _containerItem,
-					             applicationController));
+				                                                          _containerItem,
+				                                                          applicationController));
 			}
 		}
 

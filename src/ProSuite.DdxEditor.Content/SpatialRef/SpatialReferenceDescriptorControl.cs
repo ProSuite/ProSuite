@@ -5,8 +5,10 @@ using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Xsl;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO.Geodatabase.SchemaInfo;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Text;
 using ProSuite.Commons.UI.ScreenBinding;
 using ProSuite.Commons.UI.WinForms.Controls;
 using ProSuite.DdxEditor.Framework.ItemViews;
@@ -113,8 +115,8 @@ namespace ProSuite.DdxEditor.Content.SpatialRef
 			xdoc.LoadXml(xmlString);
 
 			using (var stream =
-			       new MemoryStream(new UTF8Encoding().GetBytes(
-				                        XmlPrettyPrint.XmlPrettyPrintStylesheet)))
+				new MemoryStream(new UTF8Encoding().GetBytes(
+					                 XmlPrettyPrint.XmlPrettyPrintStylesheet)))
 			{
 				xslt.Load(new XmlTextReader(stream));
 

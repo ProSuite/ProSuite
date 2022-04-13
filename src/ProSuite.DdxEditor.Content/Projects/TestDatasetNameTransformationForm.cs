@@ -112,8 +112,8 @@ namespace ProSuite.DdxEditor.Content.Projects
 
 			TransformationStatus status;
 			_textBoxTransformedDatasetName.Text = GetTransformedName(_datasetNameTransformer,
-				_textBoxDatasetName.Text,
-				out status);
+			                                                         _textBoxDatasetName.Text,
+			                                                         out status);
 
 			RenderTransformationStatus(status);
 		}

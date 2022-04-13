@@ -7,12 +7,14 @@ using System.Reflection;
 using System.Windows.Forms;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI.Dialogs;
 using ProSuite.Commons.UI.Persistence.WinForms;
 using ProSuite.Commons.UI.WinForms.Controls;
 using ProSuite.DdxEditor.Content.QA.QSpec;
 using ProSuite.DdxEditor.Framework.Commands;
 using ProSuite.DdxEditor.Framework.Menus;
+using ProSuite.DomainModel.Core.QA;
 
 namespace ProSuite.DdxEditor.Content.QA.TestDescriptors.CreateQualityConditions
 {
@@ -391,7 +393,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors.CreateQualityConditions
 		}
 
 		private void _toolStripButtonApplyNamingConventionToSelection_Click(object sender,
-			EventArgs e)
+		                                                                    EventArgs e)
 		{
 			if (_observer != null)
 			{
@@ -400,7 +402,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors.CreateQualityConditions
 		}
 
 		private void _toolStripButtonAssignToQualitySpecifications_Click(object sender,
-			EventArgs e)
+		                                                                 EventArgs e)
 		{
 			if (_observer != null)
 			{
@@ -409,7 +411,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors.CreateQualityConditions
 		}
 
 		private void _toolStripButtonRemoveFromQualitySpecifications_Click(object sender,
-			EventArgs e)
+		                                                                   EventArgs e)
 		{
 			if (_observer != null)
 			{
@@ -418,7 +420,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors.CreateQualityConditions
 		}
 
 		private void _dataGridViewQualitySpecifications_SelectionChanged(object sender,
-			EventArgs e)
+		                                                                 EventArgs e)
 		{
 			if (_observer != null)
 			{

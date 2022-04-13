@@ -8,11 +8,17 @@ using System.Text;
 using System.Windows.Forms;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
+using ProSuite.Commons.Misc;
+using ProSuite.Commons.Text;
 using ProSuite.Commons.UI.ScreenBinding.Lists;
 using ProSuite.DdxEditor.Content.Datasets;
 using ProSuite.DdxEditor.Content.QA.QSpec;
 using ProSuite.DdxEditor.Framework.Commands;
 using ProSuite.DomainModel.AO.QA;
+using ProSuite.DomainModel.Core.DataModel;
+using ProSuite.DomainModel.Core.QA;
+using ProSuite.QA.Core;
 using ProSuite.UI.DataModel.ResourceLookup;
 
 namespace ProSuite.DdxEditor.Content.QA.TestDescriptors.CreateQualityConditions
@@ -1093,7 +1099,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors.CreateQualityConditions
 			var errors = new List<string>();
 
 			foreach (KeyValuePair<string, string> pair in
-			         GetNameValuePairs(dataset, dataQualityCategory))
+				GetNameValuePairs(dataset, dataQualityCategory))
 			{
 				string token = pair.Key;
 				string value = pair.Value;

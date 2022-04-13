@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DdxEditor.Content.Datasets;
 using ProSuite.DdxEditor.Framework.Items;
+using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DdxEditor.Content.ObjectCategories
 {

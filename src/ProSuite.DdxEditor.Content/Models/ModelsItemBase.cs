@@ -3,9 +3,10 @@ using System.Drawing;
 using System.Linq;
 using System.Reflection;
 using System.Windows.Forms;
+using ProSuite.DdxEditor.Content.Properties;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.DdxEditor.Content.Properties;
+using ProSuite.Commons.Logging;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Items;
 using ProSuite.DomainModel.AO.DataModel;
@@ -58,7 +59,8 @@ namespace ProSuite.DdxEditor.Content.Models
 		{
 			return _modelBuilder.Models.GetAll().Select(model => new ModelTableRow(model));
 		}
-
+		
+		
 		protected void AddModelItem(Item modelItem)
 		{
 			Assert.ArgumentNotNull(modelItem, nameof(modelItem));
@@ -67,7 +69,7 @@ namespace ProSuite.DdxEditor.Content.Models
 
 			modelItem.NotifyChanged();
 		}
-
+		
 		public IList<ModelTableRow> GetModelTableRows()
 		{
 			return _modelBuilder.ReadOnlyTransaction(

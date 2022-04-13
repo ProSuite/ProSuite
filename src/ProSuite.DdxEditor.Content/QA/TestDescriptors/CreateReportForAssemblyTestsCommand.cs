@@ -2,8 +2,8 @@ using System.Drawing;
 using System.IO;
 using System.Reflection;
 using System.Windows.Forms;
-using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.DdxEditor.Content.Properties;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Commands;
 

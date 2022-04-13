@@ -4,6 +4,8 @@ using System.Windows.Forms;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.AO.QA;
+using ProSuite.DomainModel.Core.QA;
+using ProSuite.QA.Core;
 
 namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 {
@@ -30,24 +32,24 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 			               };
 
 			DataGridViewColumn paramColumn = AddDataGridViewColumn(dataGridView,
-				paramDataColumn,
-				"Parameter");
+			                                                       paramDataColumn,
+			                                                       "Parameter");
 			paramColumn.DataPropertyName = paramDataColumn.ColumnName;
 			paramColumn.MinimumWidth = 40;
 			paramColumn.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
 			paramColumn.SortMode = DataGridViewColumnSortMode.NotSortable;
 
 			DataGridViewColumn typeColumn = AddDataGridViewColumn(dataGridView,
-				typeDataColumn,
-				"Type");
+			                                                      typeDataColumn,
+			                                                      "Type");
 			typeColumn.DataPropertyName = typeDataColumn.ColumnName;
 			typeColumn.MinimumWidth = 40;
 			typeColumn.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
 			typeColumn.SortMode = DataGridViewColumnSortMode.NotSortable;
 
 			DataGridViewColumn arrayColumn = AddDataGridViewColumn(dataGridView,
-				arrayDataColumn,
-				"List");
+			                                                       arrayDataColumn,
+			                                                       "List");
 			arrayColumn.DataPropertyName = arrayDataColumn.ColumnName;
 			arrayColumn.Width = 80;
 			arrayColumn.MinimumWidth = 40;
@@ -55,8 +57,8 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 			arrayColumn.SortMode = DataGridViewColumnSortMode.NotSortable;
 
 			DataGridViewColumn descColumn = AddDataGridViewColumn(dataGridView,
-				descDataColumn,
-				"Description");
+			                                                      descDataColumn,
+			                                                      "Description");
 			descColumn.DataPropertyName = descDataColumn.ColumnName;
 			descColumn.MinimumWidth = 40;
 			descColumn.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;

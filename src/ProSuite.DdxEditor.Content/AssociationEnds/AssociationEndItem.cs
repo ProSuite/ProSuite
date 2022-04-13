@@ -1,7 +1,9 @@
 using System.Drawing;
+using ProSuite.Commons.DomainModels;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Items;
 using ProSuite.DdxEditor.Framework.ItemViews;
+using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.UI.DataModel.ResourceLookup;
 
 namespace ProSuite.DdxEditor.Content.AssociationEnds

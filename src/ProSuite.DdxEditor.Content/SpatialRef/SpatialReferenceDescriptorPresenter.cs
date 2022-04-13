@@ -3,6 +3,7 @@ using System.Windows.Forms;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 using ProSuite.DdxEditor.Framework.ItemViews;
 
 namespace ProSuite.DdxEditor.Content.SpatialRef

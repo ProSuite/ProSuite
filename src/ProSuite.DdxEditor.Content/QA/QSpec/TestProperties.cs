@@ -2,6 +2,8 @@ using System;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.AO.QA;
+using ProSuite.DomainModel.Core.QA;
+using ProSuite.QA.Core;
 
 namespace ProSuite.DdxEditor.Content.QA.QSpec
 {

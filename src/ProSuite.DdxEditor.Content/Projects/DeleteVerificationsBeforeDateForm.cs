@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Windows.Forms;
+using ProSuite.Commons.Misc;
 
 namespace ProSuite.DdxEditor.Content.Projects
 {
@@ -73,7 +74,7 @@ namespace ProSuite.DdxEditor.Content.Projects
 		}
 
 		private void _radioButtonOlderThanSpecificDate_CheckedChanged(object sender,
-			EventArgs e)
+		                                                              EventArgs e)
 		{
 			if (_latch.IsLatched)
 			{

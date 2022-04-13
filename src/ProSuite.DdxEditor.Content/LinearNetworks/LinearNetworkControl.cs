@@ -2,10 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Windows.Forms;
+using ProSuite.Commons.Logging;
+using ProSuite.Commons.Misc;
 using ProSuite.Commons.UI.Dialogs;
 using ProSuite.Commons.UI.ScreenBinding;
 using ProSuite.Commons.UI.ScreenBinding.Lists;
 using ProSuite.Commons.UI.WinForms.Controls;
+using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DdxEditor.Content.LinearNetworks
 {

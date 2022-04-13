@@ -9,6 +9,9 @@ using ProSuite.DdxEditor.Content.QA.Categories;
 using ProSuite.DdxEditor.Content.QA.QCon;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Items;
+using ProSuite.DomainModel.Core.DataModel;
+using ProSuite.DomainModel.Core.QA;
+using ProSuite.DomainModel.Core.QA.Repositories;
 
 namespace ProSuite.DdxEditor.Content.QA.QSpec
 {
@@ -148,7 +151,7 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 			IDictionary<int, int> qspecCountMap = null;
 
 			foreach (QualityCondition qualityCondition in repository.Get(
-				         category, includeQualityConditionsBasedOnDeletedDatasets))
+				category, includeQualityConditionsBasedOnDeletedDatasets))
 			{
 				if (qspecCountMap == null)
 				{

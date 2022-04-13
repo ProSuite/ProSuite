@@ -1,10 +1,12 @@
 using System;
 using System.ComponentModel;
 using System.Drawing;
+using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.UI.WinForms.Controls;
 using ProSuite.DdxEditor.Framework.TableRows;
+using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.UI.DataModel.ResourceLookup;
 using Attribute = ProSuite.DomainModel.Core.DataModel.Attribute;
 
@@ -62,7 +64,7 @@ namespace ProSuite.DdxEditor.Content.Attributes
 					_fieldType = Attribute.GetTypeName(entity.FieldType);
 
 					if (entity.FieldType ==
-					    DomainModel.Core.DataModel.FieldType.Text)
+					    global::ProSuite.DomainModel.Core.DataModel.FieldType.Text)
 					{
 						_length = entity.FieldLength;
 					}
