@@ -37,7 +37,8 @@ namespace ProSuite.DdxEditor.Content
 {
 	public abstract class CoreDomainModelItemModelBuilder : ItemModelBuilderBase
 	{
-		[NotNull] private IUnitOfWork _unitOfWork;
+		[NotNull]
+		protected IUnitOfWork UnitOfWork { get; }
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="DomainModelItemModelBuilder"/> class.
@@ -48,7 +49,7 @@ namespace ProSuite.DdxEditor.Content
 		{
 			Assert.ArgumentNotNull(unitOfWork, nameof(unitOfWork));
 
-			_unitOfWork = unitOfWork;
+			UnitOfWork = unitOfWork;
 
 			ListQualityConditionsWithDataset = true;
 		}
@@ -390,7 +391,7 @@ namespace ProSuite.DdxEditor.Content
 				subCategories.Select(c => new DataQualityCategoryDependingItem(
 					                     c,
 					                     Assert.NotNull(DataQualityCategories),
-					                     _unitOfWork))
+					                     UnitOfWork))
 				             .Cast<DependingItem>());
 
 			return result;
