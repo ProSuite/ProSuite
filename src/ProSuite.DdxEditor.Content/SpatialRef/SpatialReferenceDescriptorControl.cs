@@ -115,8 +115,8 @@ namespace ProSuite.DdxEditor.Content.SpatialRef
 			xdoc.LoadXml(xmlString);
 
 			using (var stream =
-				new MemoryStream(new UTF8Encoding().GetBytes(
-					                 XmlPrettyPrint.XmlPrettyPrintStylesheet)))
+			       new MemoryStream(new UTF8Encoding().GetBytes(
+				                        XmlPrettyPrint.XmlPrettyPrintStylesheet)))
 			{
 				xslt.Load(new XmlTextReader(stream));
 

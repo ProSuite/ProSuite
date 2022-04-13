@@ -64,7 +64,7 @@ namespace ProSuite.DdxEditor.Content.Attributes
 					_fieldType = Attribute.GetTypeName(entity.FieldType);
 
 					if (entity.FieldType ==
-					    global::ProSuite.DomainModel.Core.DataModel.FieldType.Text)
+					    DomainModel.Core.DataModel.FieldType.Text)
 					{
 						_length = entity.FieldLength;
 					}

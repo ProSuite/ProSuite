@@ -2,11 +2,11 @@ using System;
 using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
-using ProSuite.DdxEditor.Content.Properties;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.UI.WinForms.Controls;
+using ProSuite.DdxEditor.Content.Properties;
 using ProSuite.DdxEditor.Framework.TableRows;
 using ProSuite.DomainModel.AO.DataModel;
 

@@ -490,11 +490,11 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 			[NotNull] IEnumerable<QualitySpecification> qualitySpecifications)
 		{
 			List<QualitySpecificationListItem> items = qualitySpecifications.Select(
-				                                                                qspec =>
-					                                                                new
-						                                                                QualitySpecificationListItem(
-							                                                                qspec))
-			                                                                .ToList();
+					qspec =>
+						new
+							QualitySpecificationListItem(
+								qspec))
+				.ToList();
 
 			items.Sort();
 

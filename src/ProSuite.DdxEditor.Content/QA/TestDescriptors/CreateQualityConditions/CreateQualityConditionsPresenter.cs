@@ -1099,7 +1099,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors.CreateQualityConditions
 			var errors = new List<string>();
 
 			foreach (KeyValuePair<string, string> pair in
-				GetNameValuePairs(dataset, dataQualityCategory))
+			         GetNameValuePairs(dataset, dataQualityCategory))
 			{
 				string token = pair.Key;
 				string value = pair.Value;

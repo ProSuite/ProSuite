@@ -3,6 +3,7 @@ using System.Windows.Forms;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DdxEditor.Framework.Commands;
+using ProSuite.DdxEditor.Framework.Help;
 using ProSuite.DdxEditor.Framework.Items;
 using ProSuite.DdxEditor.Framework.Search;
 
@@ -61,7 +62,7 @@ namespace ProSuite.DdxEditor.Framework
 			[NotNull] ICollection<ItemDeletionCandidate> deletableItems,
 			[NotNull] ICollection<ItemDeletionCandidate> nonDeletableItems);
 
-		void AddHelpMenuItems([NotNull] IEnumerable<Help.IHelpProvider> helpProviders);
+		void AddHelpMenuItems([NotNull] IEnumerable<IHelpProvider> helpProviders);
 
 		void AddSearchMenuItems([NotNull] IEnumerable<ISearchProvider> searchProviders,
 		                        [NotNull] IItemNavigation itemNavigation);

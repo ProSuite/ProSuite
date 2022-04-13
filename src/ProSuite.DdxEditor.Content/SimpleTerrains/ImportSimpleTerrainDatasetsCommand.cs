@@ -1,7 +1,7 @@
 using System.Drawing;
 using System.Windows.Forms;
-using ProSuite.DdxEditor.Content.Properties;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.DdxEditor.Content.Properties;
 using ProSuite.DdxEditor.Framework;
 
 namespace ProSuite.DdxEditor.Content.SimpleTerrains

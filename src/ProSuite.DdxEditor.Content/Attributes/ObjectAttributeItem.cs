@@ -7,7 +7,6 @@ using ProSuite.Commons.UI.Finder;
 using ProSuite.Commons.UI.WinForms.Controls;
 using ProSuite.DdxEditor.Framework.ItemViews;
 using ProSuite.DomainModel.Core.DataModel;
-using Attribute = ProSuite.DomainModel.Core.DataModel.Attribute;
 
 namespace ProSuite.DdxEditor.Content.Attributes
 {

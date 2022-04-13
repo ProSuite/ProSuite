@@ -146,6 +146,9 @@
     <Compile Update="ObjectCategoryAttributeConstraints\RotatedHeadersDataGridView.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Update="Options\OptionsForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Update="Projects\DeleteVerificationsBeforeDateForm.cs">
       <SubType>Form</SubType>
     </Compile>

@@ -239,13 +239,13 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 		}
 
 		private void _toolStripButtonAssignQualityConditions_Click(object sender,
-		                                                           EventArgs e)
+			EventArgs e)
 		{
 			Observer?.AddQualityConditionsClicked();
 		}
 
 		private void _toolStripButtonRemoveQualityConditions_Click(object sender,
-		                                                           EventArgs e)
+			EventArgs e)
 		{
 			Observer?.RemoveElementsClicked();
 		}

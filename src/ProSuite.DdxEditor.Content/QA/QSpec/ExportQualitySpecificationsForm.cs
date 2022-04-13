@@ -175,7 +175,7 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 			var itemsToSelect = new HashSet<QualitySpecificationListItem>(items);
 
 			foreach (QualitySpecificationListItem item in
-				_gridHandler.GetAllRows(excludeInvisible: true))
+			         _gridHandler.GetAllRows(excludeInvisible: true))
 			{
 				item.Selected = itemsToSelect.Contains(item);
 			}
@@ -252,7 +252,7 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 		private void SetAll(bool check)
 		{
 			foreach (QualitySpecificationListItem item in
-				_gridHandler.GetAllRows(excludeInvisible: true))
+			         _gridHandler.GetAllRows(excludeInvisible: true))
 			{
 				item.Selected = check;
 			}
@@ -337,7 +337,7 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 					bool newValue = clickedItem.Selected;
 
 					foreach (QualitySpecificationListItem selectedItem in
-						_gridHandler.GetSelectedRows())
+					         _gridHandler.GetSelectedRows())
 					{
 						selectedItem.Selected = newValue;
 					}
@@ -358,7 +358,7 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 		}
 
 		private void _checkBoxExportWorkspaceConnections_CheckedChanged(object sender,
-		                                                                EventArgs e)
+			EventArgs e)
 		{
 			_observer?.ExportWorkspaceConnectionsChanged();
 		}

@@ -151,7 +151,7 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 			IDictionary<int, int> qspecCountMap = null;
 
 			foreach (QualityCondition qualityCondition in repository.Get(
-				category, includeQualityConditionsBasedOnDeletedDatasets))
+				         category, includeQualityConditionsBasedOnDeletedDatasets))
 			{
 				if (qspecCountMap == null)
 				{

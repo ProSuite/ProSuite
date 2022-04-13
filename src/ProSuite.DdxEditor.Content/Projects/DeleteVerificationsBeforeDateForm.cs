@@ -74,7 +74,7 @@ namespace ProSuite.DdxEditor.Content.Projects
 		}
 
 		private void _radioButtonOlderThanSpecificDate_CheckedChanged(object sender,
-		                                                              EventArgs e)
+			EventArgs e)
 		{
 			if (_latch.IsLatched)
 			{
