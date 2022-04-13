@@ -4,12 +4,9 @@ using System.Windows.Forms;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI.ScreenBinding.Lists;
-using ProSuite.Commons.UI.ScreenBinding.Lists;
-
 using ProSuite.Commons.UI.WinForms.Controls;
 using ProSuite.DdxEditor.Content.Datasets;
 using ProSuite.DdxEditor.Framework.ItemViews;
-
 using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DdxEditor.Content.SimpleTerrains

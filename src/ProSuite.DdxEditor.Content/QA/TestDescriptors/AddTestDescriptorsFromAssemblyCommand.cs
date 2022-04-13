@@ -44,7 +44,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 			}
 
 			using (_msg.IncrementIndentation(
-				"Adding test descriptors from assembly {0}", dllFilePath))
+				       "Adding test descriptors from assembly {0}", dllFilePath))
 			{
 				Assembly assembly = Assembly.LoadFile(dllFilePath);
 
@@ -63,12 +63,12 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 				var testCount = 0;
 
 				foreach (Type testType in TestFactoryUtils.GetTestClasses(
-					assembly, includeObsolete, includeInternallyUsed))
+					         assembly, includeObsolete, includeInternallyUsed))
 				{
 					foreach (int constructorIndex in
-						TestFactoryUtils.GetTestConstructorIndexes(testType,
-						                                              includeObsolete,
-						                                              includeInternallyUsed))
+					         TestFactoryUtils.GetTestConstructorIndexes(testType,
+						         includeObsolete,
+						         includeInternallyUsed))
 					{
 						testCount++;
 						newDescriptors.Add(
@@ -84,7 +84,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 				var testFactoryCount = 0;
 
 				foreach (Type testFactoryType in TestFactoryUtils.GetTestFactoryClasses(
-					assembly, includeObsolete, includeInternallyUsed))
+					         assembly, includeObsolete, includeInternallyUsed))
 				{
 					testFactoryCount++;
 					newDescriptors.Add(

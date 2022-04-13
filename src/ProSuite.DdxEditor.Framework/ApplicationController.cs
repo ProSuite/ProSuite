@@ -13,6 +13,7 @@ using ProSuite.Commons.UI.WinForms;
 using ProSuite.Commons.Validation;
 using ProSuite.DdxEditor.Framework.Commands;
 using ProSuite.DdxEditor.Framework.Dependencies;
+using ProSuite.DdxEditor.Framework.Help;
 using ProSuite.DdxEditor.Framework.History;
 using ProSuite.DdxEditor.Framework.Items;
 using ProSuite.DdxEditor.Framework.Options;
@@ -48,7 +49,7 @@ namespace ProSuite.DdxEditor.Framework
 			[NotNull] IApplicationShell view,
 			[NotNull] IUnitOfWork unitOfWork,
 			[NotNull] IMessageBox messageBox,
-			[CanBeNull] IEnumerable<Help.IHelpProvider> helpProviders = null,
+			[CanBeNull] IEnumerable<IHelpProvider> helpProviders = null,
 			[CanBeNull] IOptionsManager optionsManager = null,
 			[CanBeNull] IEnumerable<ISearchProvider> searchProviders = null)
 		{

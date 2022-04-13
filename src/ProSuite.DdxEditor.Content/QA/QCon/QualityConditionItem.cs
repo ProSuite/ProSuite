@@ -422,8 +422,8 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 				commands.Add(
 					new CopyQualityConditionCommand(this, applicationController));
 				commands.Add(new AssignQualityConditionsToCategoryCommand(new[] {this},
-				                                                          _containerItem,
-				                                                          applicationController));
+					             _containerItem,
+					             applicationController));
 			}
 		}
 

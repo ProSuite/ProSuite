@@ -77,7 +77,7 @@ namespace ProSuite.DdxEditor.Content.ObjectCategories
 			_criteriaItems.Clear();
 
 			foreach (ObjectSubtypeCriterion criterium in
-				entity.Criteria)
+			         entity.Criteria)
 			{
 				_criteriaItems.Add(new ObjectSubtypeCriterionTableRow(criterium));
 			}

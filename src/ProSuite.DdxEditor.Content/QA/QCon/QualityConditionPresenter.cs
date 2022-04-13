@@ -212,11 +212,11 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 		void IQualityConditionObserver.NewVersionUuidClicked()
 		{
 			if (_view.Confirm(
-				"Are you sure to assign a new version UUID to this quality condition?" +
-				Environment.NewLine +
-				Environment.NewLine +
-				"This invalidates all exceptions defined for the Geoprocessing tool 'Quality Verification (xml-based)'",
-				"Assign new version UUID"))
+				    "Are you sure to assign a new version UUID to this quality condition?" +
+				    Environment.NewLine +
+				    Environment.NewLine +
+				    "This invalidates all exceptions defined for the Geoprocessing tool 'Quality Verification (xml-based)'",
+				    "Assign new version UUID"))
 			{
 				_item.AssignNewVersionUuid();
 				_view.UpdateScreen();

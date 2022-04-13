@@ -90,7 +90,7 @@ namespace ProSuite.DdxEditor.Content
 
 		[CanBeNull]
 		public virtual IDataQualityCategoryRepository DataQualityCategories => null;
-		
+
 		public virtual IAssociationRepository Associations
 		{
 			get { throw new NotImplementedException(); }
@@ -220,7 +220,7 @@ namespace ProSuite.DdxEditor.Content
 			Assert.ArgumentNotNull(item, nameof(item));
 
 			return ReadOnlyTransaction(
-				 delegate
+				delegate
 				{
 					DataQualityCategory category = Assert.NotNull(item.GetEntity());
 

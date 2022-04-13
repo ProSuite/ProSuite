@@ -91,14 +91,14 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 					            $"Quality conditions involving datasets in {model.Name}",
 					            $"model{model.Id}",
 					            () => QCon.TableRows.GetQualityConditions(_modelBuilder,
-					                                                      qualitySpecification,
-					                                                      model)));
+						            qualitySpecification,
+						            model)));
 			}
 
 			queries.Add(new FinderQuery<QualityConditionWithTestParametersTableRow>(
 				            "<All>", "[all]",
 				            () => QCon.TableRows.GetQualityConditions(_modelBuilder,
-				                                                      qualitySpecification)));
+					            qualitySpecification)));
 
 			var finder = new Finder<QualityConditionWithTestParametersTableRow>();
 			return finder.ShowDialog(
@@ -234,10 +234,10 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 			base.CollectCommands(commands, applicationController);
 
 			commands.Add(new CreateCopyOfQualitySpecificationCommand(this,
-			                                                         applicationController));
+				             applicationController));
 			commands.Add(new AssignQualitySpecificationsToCategoryCommand(new[] {this},
-			                                                              _containerItem,
-			                                                              applicationController));
+				             _containerItem,
+				             applicationController));
 			commands.Add(new ExportQualitySpecificationCommand(this, _containerItem,
 			                                                   applicationController));
 			commands.Add(
@@ -249,8 +249,8 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 			if (StringUtils.IsNotEmpty(reportTemplate) && File.Exists(reportTemplate))
 			{
 				commands.Add(new CreateQualitySpecificationReportCommand(this,
-				                                                         applicationController,
-				                                                         reportTemplate));
+					             applicationController,
+					             reportTemplate));
 			}
 		}
 
@@ -263,8 +263,8 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 			new QualitySpecificationPresenter(this, control, itemNavigation,
 			                                  qualityConditions =>
 				                                  AssignToCategory(qualityConditions,
-				                                                   itemNavigation,
-				                                                   control));
+					                                  itemNavigation,
+					                                  control));
 
 			return control;
 		}
@@ -333,7 +333,7 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 			foreach (DataQualityCategory categoryToRefresh in categoriesToRefresh)
 			{
 				QualityConditionContainerUtils.RefreshAssignmentTarget(categoryToRefresh,
-				                                                       itemNavigation);
+					itemNavigation);
 			}
 
 			return true;
@@ -402,8 +402,8 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 			}
 
 			string path = SpecificationReportUtils.RenderHtmlQualitySpecification(report,
-			                                                                      reportTemplate,
-			                                                                      htmlFilePath);
+				reportTemplate,
+				htmlFilePath);
 
 			_msg.InfoFormat("Report for quality specification '{0}' created: {1}",
 			                report.Name, path);

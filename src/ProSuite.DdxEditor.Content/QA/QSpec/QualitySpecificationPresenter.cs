@@ -156,7 +156,7 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 			}
 
 			foreach (QualitySpecificationElementTableRow row in
-				_view.GetSelectedElementTableRows())
+			         _view.GetSelectedElementTableRows())
 			{
 				row.UpdateCategory();
 			}

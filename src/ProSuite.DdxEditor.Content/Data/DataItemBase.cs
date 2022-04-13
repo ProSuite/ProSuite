@@ -1,6 +1,6 @@
 using System.Drawing;
-using ProSuite.DdxEditor.Content.Properties;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.DdxEditor.Content.Properties;
 using ProSuite.DdxEditor.Framework.Items;
 
 namespace ProSuite.DdxEditor.Content.Data

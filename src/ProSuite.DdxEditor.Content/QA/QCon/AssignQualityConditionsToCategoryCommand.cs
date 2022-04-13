@@ -52,7 +52,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			}
 
 			QualityConditionContainerUtils.RefreshAssignmentTarget(category,
-			                                                       _applicationController);
+				_applicationController);
 
 			GoToItem(currentItem);
 		}

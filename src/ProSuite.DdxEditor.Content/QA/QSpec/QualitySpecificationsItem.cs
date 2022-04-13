@@ -2,9 +2,9 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
-using ProSuite.DdxEditor.Content.Properties;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.DdxEditor.Content.Properties;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Commands;
 using ProSuite.DdxEditor.Framework.Items;
@@ -108,9 +108,9 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 			out DataQualityCategory category)
 		{
 			if (! QualitySpecificationContainerUtils.AssignToCategory(items,
-			                                                          _modelBuilder,
-			                                                          owner,
-			                                                          out category))
+				    _modelBuilder,
+				    owner,
+				    out category))
 			{
 				return false;
 			}

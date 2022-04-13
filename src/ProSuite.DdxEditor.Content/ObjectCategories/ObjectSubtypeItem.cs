@@ -108,7 +108,7 @@ namespace ProSuite.DdxEditor.Content.ObjectCategories
 				}
 
 				foreach (ObjectSubtype existingSubtype in
-					existingObjectType.ObjectSubtypes)
+				         existingObjectType.ObjectSubtypes)
 				{
 					if (! Equals(existingSubtype.Name, entity.Name))
 					{

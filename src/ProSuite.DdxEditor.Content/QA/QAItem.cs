@@ -2,9 +2,9 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
-using ProSuite.DdxEditor.Content.Properties;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.DdxEditor.Content.Properties;
 using ProSuite.DdxEditor.Content.QA.Categories;
 using ProSuite.DdxEditor.Content.QA.QCon;
 using ProSuite.DdxEditor.Content.QA.QSpec;
@@ -59,9 +59,9 @@ namespace ProSuite.DdxEditor.Content.QA
 				var comparer = new DataQualityCategoryComparer();
 
 				foreach (DataQualityCategory category in
-					_modelBuilder.ReadOnlyTransaction(
-						             () => categoryRepository.GetTopLevelCategories())
-					             .OrderBy(c => c, comparer))
+				         _modelBuilder.ReadOnlyTransaction(
+					                      () => categoryRepository.GetTopLevelCategories())
+				                      .OrderBy(c => c, comparer))
 				{
 					yield return RegisterChild(
 						new DataQualityCategoryItem(_modelBuilder, category, this,
@@ -81,10 +81,10 @@ namespace ProSuite.DdxEditor.Content.QA
 				commands.Add(new AddDataQualityCategoryCommand(this, applicationController, this));
 
 				commands.Add(new ImportQualitySpecificationsCommand(this, applicationController,
-				                                                    this));
+					             this));
 				commands.Add(new ExportQualitySpecificationsCommand(this, applicationController,
-				                                                    this,
-				                                                    includeSubCategories: true));
+					             this,
+					             includeSubCategories: true));
 				commands.Add(new ExportDatasetDependenciesCommand(
 					             this, applicationController, this,
 					             includeSubCategories: true));
@@ -106,7 +106,7 @@ namespace ProSuite.DdxEditor.Content.QA
 				// only category items are selected
 				commands.Add(
 					new DeleteSelectedItemsCommand(selectedCategoryItems.Cast<Item>()
-					                                                    .ToList(),
+						                               .ToList(),
 					                               applicationController));
 			}
 		}
@@ -127,9 +127,9 @@ namespace ProSuite.DdxEditor.Content.QA
 			out DataQualityCategory category)
 		{
 			if (! DataQualityCategoryContainerUtils.AssignToCategory(item,
-			                                                         _modelBuilder,
-			                                                         owner,
-			                                                         out category))
+				    _modelBuilder,
+				    owner,
+				    out category))
 			{
 				return false;
 			}

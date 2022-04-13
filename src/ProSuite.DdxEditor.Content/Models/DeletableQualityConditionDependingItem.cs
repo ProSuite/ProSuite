@@ -69,7 +69,7 @@ namespace ProSuite.DdxEditor.Content.Models
 			}
 
 			foreach (QualitySpecification qualitySpecification in
-				_qualitySpecificationRepository.Get(_qualityCondition))
+			         _qualitySpecificationRepository.Get(_qualityCondition))
 			{
 				qualitySpecification.RemoveElement(_qualityCondition);
 			}
