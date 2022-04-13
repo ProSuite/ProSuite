@@ -16,24 +16,20 @@ namespace ProSuite.QA.Tests.Schema
 		public static IEnumerable<FieldSpecification> ReadFieldSpecifications(
 			[NotNull] ITable table, [NotNull] IQueryFilter queryFilter)
 		{
+			Assert.ArgumentNotNull(table, nameof(table));
+			Assert.ArgumentNotNull(queryFilter, nameof(queryFilter));
+
 			int nameFieldIndex = GetRequiredFieldIndex(table, "ATTRIBUTE");
 
 			int typeFieldIndex = GetRequiredFieldIndex(table,
 			                                           "FIELDTYPE_ARCGIS",
 			                                           "ARCGIS_FIELDTYPE");
 
-			int accessTypeFieldIndex = GetRequiredFieldIndex(table,
-			                                                 "FIELDTYPE_ACCESS",
-			                                                 "ACCESS_FIELDTYPE");
 			int oracleTypeFieldIndex = GetRequiredFieldIndex(table,
 			                                                 "FIELDTYPE_ORACLE",
 			                                                 "ORACLE_FIELDTYPE");
 
 			int aliasFieldIndex = GetRequiredFieldIndex(table, "ALIAS");
-
-			IWorkspace workspace = DatasetUtils.GetWorkspace(table);
-			bool isAccessWorkspace = WorkspaceUtils.IsPersonalGeodatabase(workspace);
-			bool isSdeWorkspace = WorkspaceUtils.IsSDEGeodatabase(workspace);
 
 			foreach (IRow row in GdbQueryUtils.GetRows(table, queryFilter, recycle: true))
 			{
@@ -48,18 +44,14 @@ namespace ProSuite.QA.Tests.Schema
 				               row.Fields.Field[typeFieldIndex].Name, name);
 				esriFieldType expectedType = GetFieldType(typeString);
 
-				var accessTypeString = row.Value[accessTypeFieldIndex] as string;
 				var oracleTypeString = row.Value[oracleTypeFieldIndex] as string;
-
-				Assert.NotNull(accessTypeString, "Undefined value in field {0} (for ATTRIBUTE={1})",
-				               row.Fields.Field[accessTypeFieldIndex].Name, name);
 				Assert.NotNull(oracleTypeString, "Undefined value in field {0} (for ATTRIBUTE={1})",
 				               row.Fields.Field[oracleTypeFieldIndex].Name, name);
 
+				const string oracleTextType = "NVARCHAR2";
 				int length = expectedType != esriFieldType.esriFieldTypeString
 					             ? -1
-					             : GetTextLength(accessTypeString, oracleTypeString,
-					                             isAccessWorkspace, isSdeWorkspace);
+					             : GetTextLength(oracleTypeString, oracleTextType);
 
 				var alias = row.Value[aliasFieldIndex] as string;
 
@@ -91,37 +83,7 @@ namespace ProSuite.QA.Tests.Schema
 					: $"None of the fields {StringUtils.Concatenate(fieldNames, ",")} exists in table {name}");
 		}
 
-		private static int GetTextLength([NotNull] string accessTypeString,
-		                                 [NotNull] string oracleTypeString,
-		                                 bool isAccessWorkspace,
-		                                 bool isSdeWorkspace)
-		{
-			const int accessMemoLength = 2147483647;
-			const string oracleTextType = "NVARCHAR2";
-			const string accessTextType = "Text";
-			const string accessMemoType = "Memo";
-
-			if (isSdeWorkspace)
-			{
-				return GetTextLength(oracleTypeString, oracleTextType);
-			}
-
-			if (! string.Equals(accessTypeString.Trim(), accessMemoType,
-			                    StringComparison.OrdinalIgnoreCase))
-			{
-				// access type is Text(length), get text length from it
-				return GetTextLength(accessTypeString, accessTextType);
-			}
-
-			// access type is Memo. Use memo length if the tested workspace is pgdb, 
-			// otherwise get text length from oracle length
-			return isAccessWorkspace
-				       ? accessMemoLength
-				       : GetTextLength(oracleTypeString, oracleTextType);
-		}
-
-		private static int GetTextLength([NotNull] string typeString,
-		                                 [NotNull] string typePrefix)
+		private static int GetTextLength([NotNull] string typeString, [NotNull] string typePrefix)
 		{
 			string prefix = $"{typePrefix.ToUpper()}(";
 
