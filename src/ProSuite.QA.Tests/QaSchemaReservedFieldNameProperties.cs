@@ -4,6 +4,7 @@ using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
 using ProSuite.QA.Container.TestCategories;
+using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.Schema;
 
 namespace ProSuite.QA.Tests
@@ -14,12 +15,18 @@ namespace ProSuite.QA.Tests
 	{
 		private readonly ITable _fieldSpecificationsTable;
 
+		[Doc(nameof(DocStrings.QaSchemaReservedFieldNames_2))]
 		public QaSchemaReservedFieldNameProperties(
-			[NotNull] ITable table,
-			[NotNull] ITable reservedNamesTable,
-			[NotNull] string reservedNameFieldName,
-			[CanBeNull] string reservedReasonFieldName,
-			[CanBeNull] string validNameFieldName,
+			[Doc(nameof(DocStrings.QaSchemaReservedFieldNames_table))] [NotNull]
+			ITable table,
+			[Doc(nameof(DocStrings.QaSchemaReservedFieldNames_reservedNamesTable))] [NotNull]
+			ITable reservedNamesTable,
+			[Doc(nameof(DocStrings.QaSchemaReservedFieldNames_reservedNameFieldName))] [NotNull]
+			string reservedNameFieldName,
+			[Doc(nameof(DocStrings.QaSchemaReservedFieldNames_reservedReasonFieldName))] [CanBeNull]
+			string reservedReasonFieldName,
+			[Doc(nameof(DocStrings.QaSchemaReservedFieldNames_validNameFieldName))] [CanBeNull]
+			string validNameFieldName,
 			[CanBeNull] ITable fieldSpecificationsTable)
 			: base(table, reservedNamesTable,
 			       reservedNameFieldName, reservedReasonFieldName, validNameFieldName,
