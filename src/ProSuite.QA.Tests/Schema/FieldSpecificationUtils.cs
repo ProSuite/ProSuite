@@ -19,17 +19,10 @@ namespace ProSuite.QA.Tests.Schema
 			Assert.ArgumentNotNull(table, nameof(table));
 			Assert.ArgumentNotNull(queryFilter, nameof(queryFilter));
 
-			int nameFieldIndex = GetRequiredFieldIndex(table, "ATTRIBUTE");
-
-			int typeFieldIndex = GetRequiredFieldIndex(table,
-			                                           "FIELDTYPE_ARCGIS",
-			                                           "ARCGIS_FIELDTYPE");
-
-			int oracleTypeFieldIndex = GetRequiredFieldIndex(table,
-			                                                 "FIELDTYPE_ORACLE",
-			                                                 "ORACLE_FIELDTYPE");
-
-			int aliasFieldIndex = GetRequiredFieldIndex(table, "ALIAS");
+			int nameFieldIndex = GetFieldIndex(table, false, "FIELDNAME", "ATTRIBUTE");
+			int typeFieldIndex = GetFieldIndex(table, false, "FIELDTYPE", "FIELDTYPE_ARCGIS");
+			int lengthFieldIndex = GetFieldIndex(table, false, "FIELDLENGTH", "FIELDTYPE_ORACLE");
+			int aliasFieldIndex = GetFieldIndex(table, true, "ALIASNAME", "ALIAS");
 
 			foreach (IRow row in GdbQueryUtils.GetRows(table, queryFilter, recycle: true))
 			{
@@ -40,27 +33,28 @@ namespace ProSuite.QA.Tests.Schema
 				}
 
 				var typeString = row.Value[typeFieldIndex] as string;
-				Assert.NotNull(typeString, "Undefined value in field {0} (for ATTRIBUTE={1})",
+				Assert.NotNull(typeString, "Undefined value in field {0} (for FIELDNAME={1})",
 				               row.Fields.Field[typeFieldIndex].Name, name);
 				esriFieldType expectedType = GetFieldType(typeString);
 
-				var oracleTypeString = row.Value[oracleTypeFieldIndex] as string;
-				Assert.NotNull(oracleTypeString, "Undefined value in field {0} (for ATTRIBUTE={1})",
-				               row.Fields.Field[oracleTypeFieldIndex].Name, name);
+				var lengthString = row.Value[lengthFieldIndex] as string;
+				Assert.NotNull(lengthString, "Undefined value in field {0} (for FIELDNAME={1})",
+				               row.Fields.Field[lengthFieldIndex].Name, name);
 
-				const string oracleTextType = "NVARCHAR2";
 				int length = expectedType != esriFieldType.esriFieldTypeString
 					             ? -1
-					             : GetTextLength(oracleTypeString, oracleTextType);
+					             : GetTextLength(lengthString);
 
-				var alias = row.Value[aliasFieldIndex] as string;
+				var alias = aliasFieldIndex == -1
+					            ? null
+					            : row.Value[aliasFieldIndex] as string;
 
 				yield return new FieldSpecification(name, expectedType, length, alias, null, true);
 			}
 		}
 
-		private static int GetRequiredFieldIndex([NotNull] ITable table,
-		                                         [NotNull] params string[] fieldNames)
+		private static int GetFieldIndex([NotNull] ITable table, bool fieldIsOptional,
+		                                 [NotNull] params string[] fieldNames)
 		{
 			Assert.ArgumentNotNull(table, nameof(table));
 			Assert.ArgumentCondition(fieldNames.Length > 0,
@@ -76,6 +70,11 @@ namespace ProSuite.QA.Tests.Schema
 				}
 			}
 
+			if (fieldIsOptional)
+			{
+				return -1;
+			}
+
 			string name = DatasetUtils.GetName(table);
 			throw new InvalidConfigurationException(
 				fieldNames.Length == 1
@@ -83,20 +82,28 @@ namespace ProSuite.QA.Tests.Schema
 					: $"None of the fields {StringUtils.Concatenate(fieldNames, ",")} exists in table {name}");
 		}
 
-		private static int GetTextLength([NotNull] string typeString, [NotNull] string typePrefix)
+		private static int GetTextLength([NotNull] string lengthString)
 		{
-			string prefix = $"{typePrefix.ToUpper()}(";
+			if (int.TryParse(lengthString, out int result))
+			{
+				return result;
+			}
 
-			string trimmed = typeString.ToUpper()
-			                           .Replace(" ", string.Empty)
-			                           .Replace(prefix, string.Empty)
-			                           .Replace(")", string.Empty)
-			                           .Trim();
+			//LEGACY
+			const string oracleTextType = "NVARCHAR2";
 
-			if (! int.TryParse(trimmed, out int result))
+			string prefix = $"{oracleTextType.ToUpper()}(";
+
+			string trimmed = lengthString.ToUpper()
+			                             .Replace(" ", string.Empty)
+			                             .Replace(prefix, string.Empty)
+			                             .Replace(")", string.Empty)
+			                             .Trim();
+
+			if (! int.TryParse(trimmed, out result))
 			{
 				throw new InvalidConfigurationException(
-					$"Unable to parse text length from string '{typeString}'");
+					$"Unable to parse text length from string '{lengthString}'");
 			}
 
 			return result;
