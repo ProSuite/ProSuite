@@ -171,7 +171,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 
 					Dictionary<IGeometry, IGeometry> reshapeGeometryCloneByOriginal =
 						ReshapeGeometryCloneByFeature.ToDictionary(pair => pair.Key.Shape,
-						                                           pair => pair.Value);
+							pair => pair.Value);
 
 					var stickyIntersectionReshaper =
 						new StickyIntersectionsMultiplePolygonReshaper(
@@ -1242,7 +1242,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 					GeometryFactory.CreatePolyline(unionReshapeInfo.GeometryToReshape);
 
 				IPolyline unionReshapeLines = CalculateUnionReshapeLines(unionBoundary,
-				                                                         reshapedUnionBoundary);
+					reshapedUnionBoundary);
 
 				var sourceReplacementLines =
 					(IGeometryCollection)
@@ -1378,8 +1378,8 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 				IsFromPointUnreshaped(pathToReshape, unionReshapeInfo);
 
 			double distanceAlong = GeometryUtils.GetDistanceAlongCurve(pathToReshape,
-			                                                           unionReshapePathEnd,
-			                                                           true);
+				unionReshapePathEnd,
+				true);
 
 			// take the other end as start point for the source replacement
 			double start, end;
@@ -1599,8 +1599,8 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			if (startSourceConnection != null && endSourceConnection != null)
 			{
 				adjustCurve = AdjustUtils.CreateAdjustedCutSubcurve(reshapePathForUnion,
-				                                                    startSourceConnection,
-				                                                    endSourceConnection);
+					startSourceConnection,
+					endSourceConnection);
 			}
 
 			if (geometryToReshape.GeometryType == esriGeometryType.esriGeometryPolyline)
@@ -1695,10 +1695,10 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 		private static bool IsOrientedAlong(ICurve curve1, ICurve alongCurve2)
 		{
 			double fromDistance = GeometryUtils.GetDistanceAlongCurve(alongCurve2,
-			                                                          curve1.FromPoint);
+				curve1.FromPoint);
 
 			double toDistance = GeometryUtils.GetDistanceAlongCurve(alongCurve2,
-			                                                        curve1.ToPoint);
+				curve1.ToPoint);
 
 			return toDistance > fromDistance;
 		}
@@ -2160,7 +2160,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 
 			// Get the area that is overlapping in the original
 			IGeometry overlap = IntersectionUtils.GetIntersection(originalSmallGeometry,
-			                                                      originalContainingGeometry);
+				originalContainingGeometry);
 
 			// reshape the original overlap using the sketch and the target intersection points!
 			if (! overlap.IsEmpty && StickyIntersectionPoints != null)

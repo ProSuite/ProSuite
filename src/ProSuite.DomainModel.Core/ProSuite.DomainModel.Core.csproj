@@ -48,6 +48,14 @@
     </Compile>
     <Compile Include="ClassDescriptor.cs" />
     <Compile Include="Commands\ICommandDescriptorRepository.cs" />
+    <Compile Include="DataModel\ITopologyDataset.cs" />
+    <Compile Include="DataModel\LinearNetwork.cs" />
+    <Compile Include="DataModel\LinearNetworkDataset.cs" />
+    <Compile Include="DataModel\ModelSimpleTerrainDataset.cs" />
+    <Compile Include="DataModel\RasterDataset.cs" />
+    <Compile Include="DataModel\Repositories\ILinearNetworkRepository.cs" />
+    <Compile Include="DataModel\Repositories\ISimpleTerrainDatasetRepository.cs" />
+    <Compile Include="DataModel\TopologyDataset.cs" />
     <Compile Include="Processing\CartoProcess.cs" />
     <Compile Include="Commands\CommandDescriptor.cs" />
     <Compile Include="Commands\CommandKey.cs" />
@@ -98,7 +106,7 @@
     <Compile Include="DataModel\IObjectDataset.cs" />
     <Compile Include="DataModel\IRegisteredGdbObject.cs" />
     <Compile Include="DataModel\ISimpleRasterDataset.cs" />
-    <Compile Include="DataModel\ISimpleRasterMosaicDataset.cs" />
+    <Compile Include="DataModel\IRasterMosaicDataset.cs" />
     <Compile Include="DataModel\ISimpleTerrainDataset.cs" />
     <Compile Include="DataModel\ISpatialDataset.cs" />
     <Compile Include="DataModel\ITableDataset.cs" />
@@ -125,9 +133,8 @@
     <Compile Include="DataModel\Repositories\IGeometryTypeRepository.cs" />
     <Compile Include="DataModel\Repositories\IObjectCategoryRepository.cs" />
     <Compile Include="DataModel\SimpleRasterDataset.cs" />
-    <Compile Include="DataModel\SimpleRasterMosaicDataset.cs" />
+    <Compile Include="DataModel\RasterMosaicDataset.cs" />
     <Compile Include="DataModel\SimpleTerrainDataset.cs" />
-    <Compile Include="DataModel\SimpleTerrainDatasetUtils.cs" />
     <Compile Include="DataModel\SqlCaseSensitivity.cs" />
     <Compile Include="DataModel\TableDataset.cs" />
     <Compile Include="DataModel\TinSurfaceType.cs" />
@@ -190,6 +197,11 @@
     <Compile Include="QA\Html\IHtmlDataQualityCategoryOptionsProvider.cs" />
     <Compile Include="QA\IQualitySpecificationReference.cs" />
     <Compile Include="QA\IQualitySpecificationReferencesProvider.cs" />
+    <Compile Include="QA\InstanceDescriptor.cs" />
+    <Compile Include="QA\InstanceConfiguration.cs" />
+    <Compile Include="QA\IssueFilterConfiguration.cs" />
+    <Compile Include="QA\IssueFilterDescriptor.cs" />
+    <Compile Include="QA\InstanceConfigurationUtils.cs" />
     <Compile Include="QA\Repositories\IDataQualityCategoryRepository.cs" />
     <Compile Include="QA\Repositories\IQualitySpecificationRepository.cs" />
     <Compile Include="QA\Repositories\IQualityVerificationRepository.cs" />
@@ -202,19 +214,26 @@
     <Compile Include="QA\QualityVerification.cs" />
     <Compile Include="QA\QualityVerificationDataset.cs" />
     <Compile Include="QA\Repositories\ITestDescriptorRepository.cs" />
+    <Compile Include="QA\RowFilterDescriptor.cs" />
+    <Compile Include="QA\TransformerConfiguration.cs" />
+    <Compile Include="QA\RowFilterConfiguration.cs" />
     <Compile Include="QA\ScalarTestParameterValue.cs" />
     <Compile Include="QA\TestDefinition.cs" />
     <Compile Include="QA\TestDescriptor.cs" />
-    <Compile Include="QA\TestDescriptorUtils.cs" />
+    <Compile Include="QA\InstanceDescriptorUtils.cs" />
     <Compile Include="QA\TestParameterType.cs" />
     <Compile Include="QA\TestParameterStringUtils.cs" />
     <Compile Include="QA\TestParameterValue.cs" />
+    <Compile Include="QA\TransformerDescriptor.cs" />
     <Compile Include="QA\VerificationProgress\IQualityVerificationProgressTracker.cs" />
     <Compile Include="QA\VerificationProgress\IQualityVerificationResult.cs" />
     <Compile Include="QA\VerificationProgress\QualityVerificationProgressTracker.cs" />
     <Compile Include="QA\VerificationProgress\VerificationProgressStep.cs" />
     <Compile Include="QA\VerificationProgress\VerificationProgressType.cs" />
     <Compile Include="DataModel\TerrainSourceDataset.cs" />
+    <Compile Include="QA\XML\IXmlDataQualityExporter.cs" />
+    <Compile Include="QA\XML\IXmlDataQualityImporter.cs" />
+    <Compile Include="QA\XML\QualitySpecificationImportType.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\ProSuite\src\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj">

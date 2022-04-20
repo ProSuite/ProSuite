@@ -235,7 +235,7 @@ namespace ProSuite.QA.TestFactories
 			return test;
 		}
 
-		protected override void SetPropertyValue(ITest test, TestParameter testParameter,
+		protected override void SetPropertyValue(object test, TestParameter testParameter,
 		                                         object value)
 		{
 			if (string.Equals(testParameter.Name,

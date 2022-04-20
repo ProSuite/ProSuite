@@ -191,7 +191,7 @@ namespace ProSuite.QA.TestFactories
 		}
 
 		[NotNull]
-		private static Model GetUniqueModel([NotNull] QualityCondition qualityCondition)
+		private static Model GetUniqueModel([NotNull] InstanceConfiguration qualityCondition)
 		{
 			Model uniqueModel = null;
 			foreach (Dataset dataset in qualityCondition.GetDatasetParameterValues())

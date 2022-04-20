@@ -547,7 +547,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		}
 
 		[NotNull]
-		private string GetOriginPK()
+		public string GetOriginPK()
 		{
 			string origPrimaryKey = _relClass.OriginPrimaryKey;
 
@@ -555,7 +555,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		}
 
 		[NotNull]
-		private string GetBridgeOriginFK()
+		public string GetBridgeOriginFK()
 		{
 			string bridgeOriginFK = _relClass.OriginForeignKey;
 
@@ -563,7 +563,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		}
 
 		[NotNull]
-		private string GetDestinationFK()
+		public string GetDestinationFK()
 		{
 			string destinationFK = _relClass.OriginForeignKey;
 
@@ -571,7 +571,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		}
 
 		[NotNull]
-		private string GetDestinationPK()
+		public string GetDestinationPK()
 		{
 			string destinationPK = _relClass.DestinationPrimaryKey;
 
@@ -579,7 +579,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		}
 
 		[NotNull]
-		private string GetBridgeDestinationFK()
+		public string GetBridgeDestinationFK()
 		{
 			string bridgeDestinationFK = _relClass.DestinationForeignKey;
 

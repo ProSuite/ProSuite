@@ -57,8 +57,8 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 				if (testDescriptor.TestClass != null)
 				{
 					criteria.Add(Restrictions.And(
-						             Restrictions.Eq("TestClass", testDescriptor.TestClass),
-						             Restrictions.Eq("TestConstructorId",
+						             Restrictions.Eq("Class", testDescriptor.TestClass),
+						             Restrictions.Eq("ConstructorId",
 						                             testDescriptor.TestConstructorId)));
 				}
 				else if (testDescriptor.TestFactoryDescriptor != null)

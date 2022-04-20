@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -28,18 +27,70 @@ namespace ProSuite.QA.Container
 		}
 
 		[NotNull]
-		public static IList<InvolvedRow> GetInvolvedRows(params IRow[] rows)
+		public static InvolvedRows GetInvolvedRows(params IRow[] rows)
 		{
 			return GetInvolvedRows((IEnumerable<IRow>) rows);
 		}
 
 		[NotNull]
-		public static IList<InvolvedRow> GetInvolvedRows<T>([NotNull] IEnumerable<T> rows)
+		public static InvolvedRows GetInvolvedRows<T>([NotNull] IEnumerable<T> rows)
 			where T : IRow
 		{
 			Assert.ArgumentNotNull(rows, nameof(rows));
 
-			return rows.Select(row => new InvolvedRow(row)).ToList();
+			InvolvedRows involvedRows = new InvolvedRows();
+			foreach (T row in rows)
+			{
+				involvedRows.AddRange(GetInvolvedCore(row).EnumInvolvedRows());
+				involvedRows.TestedRows.Add(row);
+			}
+
+			return involvedRows;
+		}
+
+		public static IEnumerable<Involved> EnumInvolved<T>([NotNull] IEnumerable<T> rows)
+			where T : IRow
+		{
+			foreach (T row in rows)
+			{
+				yield return GetInvolvedCore(row);
+			}
+		}
+
+		public const string BaseRowField = "__BaseRows__";
+
+		private static Involved GetInvolvedCore(IRow row)
+		{
+			int baseRowsField = row.Fields.FindField(BaseRowField);
+			if (baseRowsField >= 0 && row.get_Value(baseRowsField) is IList<IRow> baseRows)
+			{
+				List<Involved> involveds = new List<Involved>();
+				foreach (var baseRow in baseRows)
+				{
+					involveds.Add(GetInvolvedCore(baseRow));
+				}
+
+				return new InvolvedNested(((IDataset) row.Table).Name, involveds);
+			}
+
+			if (((IDataset) row.Table).FullName is IQueryName qn)
+			{
+				List<Involved> involveds = new List<Involved>();
+				foreach (string table in qn.QueryDef.Tables.Split(','))
+				{
+					string t = table.Trim();
+					string oidField = $"{t}.OBJECTID";
+					int iOid = row.Table.FindField(oidField);
+					if (iOid >= 0)
+					{
+						involveds.Add(new InvolvedRow(t, (int) row.Value[iOid]));
+					}
+				}
+
+				return new InvolvedNested(((IDataset) row.Table).Name, involveds);
+			}
+
+			return new InvolvedRow(row);
 		}
 
 		[NotNull]

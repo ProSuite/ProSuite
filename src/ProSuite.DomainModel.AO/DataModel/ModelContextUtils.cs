@@ -29,7 +29,6 @@ namespace ProSuite.DomainModel.AO.DataModel
 			                  dataset => true);
 		}
 
-
 		public static bool HasMatchingGeometryType([NotNull] IObjectDataset objectDataset,
 		                                           [NotNull] IObjectClass objectClass)
 		{
@@ -46,7 +45,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 		}
 
 		public static bool HasMatchingShapeType(IDdxDataset dataset,
-		                                         esriGeometryType shapeType)
+		                                        esriGeometryType shapeType)
 		{
 			var geometryTypeShape = dataset.GeometryType as GeometryTypeShape;
 
@@ -60,6 +59,56 @@ namespace ProSuite.DomainModel.AO.DataModel
 			return model.IsMasterDatabaseAccessible &&
 			       WorkspaceUtils.IsSameDatabase(model.GetMasterDatabaseWorkspace(),
 			                                     workspace);
+		}
+
+		public static bool HasMatchingDatasetType([NotNull] IDdxDataset dataset,
+		                                          [NotNull] IDatasetName datasetName)
+		{
+			var featureClassName = datasetName as IFeatureClassName;
+			if (featureClassName != null)
+			{
+				return dataset is IVectorDataset &&
+				       HasMatchingShapeType(dataset, DatasetUtils.GetShapeType(featureClassName));
+			}
+
+			var tableName = datasetName as ITableName;
+			if (tableName != null)
+			{
+				return dataset is ITableDataset &&
+				       dataset.GeometryType is GeometryTypeNoGeometry;
+			}
+
+			if (datasetName.Type == esriDatasetType.esriDTTopology)
+			{
+				return dataset is TopologyDataset &&
+				       dataset.GeometryType is GeometryTypeTopology;
+			}
+
+			if (datasetName.Type == esriDatasetType.esriDTGeometricNetwork)
+			{
+				return dataset.GeometryType is GeometryTypeGeometricNetwork;
+			}
+
+			if (datasetName.Type == esriDatasetType.esriDTTerrain)
+			{
+				return dataset.GeometryType is GeometryTypeTerrain;
+			}
+
+			var mosaicDatasetName = datasetName as IMosaicDatasetName;
+			if (mosaicDatasetName != null)
+			{
+				return dataset is RasterMosaicDataset &&
+				       dataset.GeometryType is GeometryTypeRasterMosaic;
+			}
+
+			var rasterDatasetName = datasetName as IRasterDatasetName;
+			if (rasterDatasetName != null)
+			{
+				return dataset is RasterDataset &&
+				       dataset.GeometryType is GeometryTypeRasterDataset;
+			}
+
+			return false;
 		}
 
 		/// <summary>

@@ -92,6 +92,7 @@
     <Compile Include="Geodatabase\EnumerableCursor.cs" />
     <Compile Include="Geodatabase\GdbSchema\BackingDataset.cs" />
     <Compile Include="Geodatabase\GdbSchema\BackingDataStore.cs" />
+    <Compile Include="Geodatabase\GdbSchema\CursorImpl.cs" />
     <Compile Include="Geodatabase\GdbSchema\GdbFeature.cs" />
     <Compile Include="Geodatabase\GdbSchema\GdbFeatureClass.cs" />
     <Compile Include="Geodatabase\GdbSchema\GdbFields.cs" />
@@ -100,7 +101,16 @@
     <Compile Include="Geodatabase\GdbSchema\GdbTableContainer.cs" />
     <Compile Include="Geodatabase\GdbSchema\GdbWorkspace.cs" />
     <Compile Include="Geodatabase\GdbSchema\InMemoryDataset.cs" />
+    <Compile Include="Geodatabase\GdbSchema\IValueList.cs" />
+    <Compile Include="Geodatabase\GdbSchema\JoinedValueList.cs" />
+    <Compile Include="Geodatabase\GdbSchema\ValueList.cs" />
+    <Compile Include="Geodatabase\GdbSchema\PropertySetValueList.cs" />
+    <Compile Include="Geodatabase\GdbSchema\VirtualRow.cs" />
+    <Compile Include="Geodatabase\GdbSchema\VirtualTable.cs" />
+    <Compile Include="Geodatabase\GdbSchema\VirtualWorkspace.cs" />
     <Compile Include="Geodatabase\IWorkspaceDbConnectionProvider.cs" />
+    <Compile Include="Geodatabase\JoinedDataset.cs" />
+    <Compile Include="Geodatabase\MosaicUtils.cs" />
     <Compile Include="Geodatabase\ObjectClassComparer.cs" />
     <Compile Include="Geodatabase\FeatureStorageUtils.cs" />
     <Compile Include="Geodatabase\FieldComparison.cs" />
@@ -152,6 +162,7 @@
     <Compile Include="Geodatabase\SchemaInfo\WorkspaceProperties.cs" />
     <Compile Include="Geodatabase\SchemaInfo\XYDomainProperties.cs" />
     <Compile Include="Geodatabase\SchemaInfo\ZDomainProperties.cs" />
+    <Compile Include="Geodatabase\SchemaLock.cs" />
     <Compile Include="Geodatabase\SegmentAngleComparisonService.cs" />
     <Compile Include="Geodatabase\Subtype.cs" />
     <Compile Include="Geodatabase\SyntheticFeature.cs" />
@@ -159,6 +170,7 @@
     <Compile Include="Geodatabase\TableSortUtils.cs" />
     <Compile Include="Geodatabase\ThreadLocalWorkspace.cs" />
     <Compile Include="Geodatabase\ToolEditOperationObserver.cs" />
+    <Compile Include="Geodatabase\TopologyUtils.cs" />
     <Compile Include="Geodatabase\ValueRowProxy.cs" />
     <Compile Include="Geodatabase\VersionEventsObjectCacheSynchronizer.cs" />
     <Compile Include="Geodatabase\WorkspaceComparison.cs" />

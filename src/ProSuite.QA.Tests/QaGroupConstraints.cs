@@ -6,16 +6,16 @@ using System.Text;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO;
-using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestCategories;
-using ProSuite.QA.Container.TestSupport;
-using ProSuite.QA.Tests.Documentation;
-using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.QA.Container;
+using ProSuite.QA.Container.TestCategories;
+using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Core;
+using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.IssueCodes;
 
 namespace ProSuite.QA.Tests
 {
@@ -157,7 +157,7 @@ namespace ProSuite.QA.Tests
 				                         "(must be 0, 1, or equal to the number of tables");
 
 				_existsRowGroupFiltersSql = new ReadOnlyList<string>(value?.ToList() ??
-				                                                     new List<string>());
+					new List<string>());
 				_existsRowGroupFilter = null;
 			}
 		}
@@ -491,6 +491,31 @@ namespace ProSuite.QA.Tests
 
 			bool caseSensitivity = GetSqlCaseSensitivity(tableIndex);
 
+			if (_relatedTables == null && _tables.Count == 1)
+			{
+				IDataset ds = (IDataset) _tables[0];
+				if (ds.FullName is IQueryName qn)
+				{
+					IFeatureWorkspace ws = (IFeatureWorkspace) ds.Workspace;
+					List<ITable> relTables = new List<ITable>();
+					foreach (string tableName in qn.QueryDef.Tables.Split(','))
+					{
+						ITable relTable = ws.OpenTable(tableName);
+						if (relTable.HasOID &&
+						    relTable.OIDFieldName.Equals(
+							    "RID", StringComparison.InvariantCultureIgnoreCase))
+						{
+							// Ignore relation tables
+							continue;
+						}
+
+						relTables.Add(relTable);
+					}
+
+					SetRelatedTables(relTables);
+				}
+			}
+
 			if (_relatedTables != null)
 			{
 				foreach (var rt in _relatedTables.Related
@@ -579,7 +604,7 @@ namespace ProSuite.QA.Tests
 		                                    [CanBeNull] IGeometry geometry,
 		                                    [NotNull] IssueCode issueCode,
 		                                    [CanBeNull] string affectedComponent,
-		                                    [NotNull] IEnumerable<InvolvedRow> involvedRows,
+		                                    [NotNull] InvolvedRows involvedRows,
 		                                    [CanBeNull] IEnumerable<object> values =
 			                                    null);
 
@@ -720,9 +745,8 @@ namespace ProSuite.QA.Tests
 			{
 				IGeometry errorGeometry;
 				bool incompleteInvolvedRows;
-				IEnumerable<InvolvedRow> involvedList = GetInvolvedRows(out errorGeometry,
-				                                                        out
-				                                                        incompleteInvolvedRows);
+				InvolvedRows involvedList = GetInvolvedRows(out errorGeometry,
+				                                            out incompleteInvolvedRows);
 				IssueCode issueCode;
 				string errorMessage =
 					GetErrorMessage(incompleteInvolvedRows, out issueCode);
@@ -735,12 +759,12 @@ namespace ProSuite.QA.Tests
 			}
 
 			[NotNull]
-			private IEnumerable<InvolvedRow> GetInvolvedRows(
+			private InvolvedRows GetInvolvedRows(
 				[CanBeNull] out IGeometry errorGeometry,
 				out bool incompleteInvolvedRows)
 			{
 				errorGeometry = null;
-				var result = new List<InvolvedRow>();
+				var result = new InvolvedRows();
 
 				const int maxInvolvedRows = 25;
 				incompleteInvolvedRows = false;
@@ -776,8 +800,8 @@ namespace ProSuite.QA.Tests
 									Assert.NotNull(_relatedTables).Related.Count);
 
 							foreach (RelatedTable relatedTable in Assert
-							                                      .NotNull(_relatedTables)
-							                                      .Related)
+								.NotNull(_relatedTables)
+								.Related)
 							{
 								int relatedTableOID =
 									oidTuple[relatedTableIndex].ObjectId;

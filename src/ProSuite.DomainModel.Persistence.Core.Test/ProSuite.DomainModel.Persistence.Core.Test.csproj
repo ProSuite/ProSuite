@@ -42,8 +42,11 @@
     <Compile Include="DataModel\AssociationRepositoryTestBase.cs" />
     <Compile Include="DataModel\AttributeTypeRepositoryTestBase.cs" />
     <Compile Include="DataModel\DatasetRepositoryTestBase.cs" />
+    <Compile Include="DataModel\LinearNetworkRepositoryTestBase.cs" />
     <Compile Include="QA\DataQualityCategoryRepositoryTestBase.cs" />
     <Compile Include="IRepositoryTestController.cs" />
+    <Compile Include="QA\QualityConditionRepositoryTestBase.cs" />
+    <Compile Include="QA\QualitySpecificationRepositoryTestBase.cs" />
     <Compile Include="QA\TestDescriptorRepositoryTestBase.cs" />
     <Compile Include="RepositoryTestBase.cs" />
   </ItemGroup>
@@ -59,6 +62,10 @@
     <ProjectReference Include="..\ProSuite.DomainModel.Core\ProSuite.DomainModel.Core.csproj">
       <Project>{0B48B56F-3A3D-4367-AA76-A356519AF2AB}</Project>
       <Name>ProSuite.DomainModel.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ProSuite.QA.Core\ProSuite.QA.Core.csproj">
+      <Project>{01CBBA9E-0D4D-439F-9147-6A5685884A65}</Project>
+      <Name>ProSuite.QA.Core</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

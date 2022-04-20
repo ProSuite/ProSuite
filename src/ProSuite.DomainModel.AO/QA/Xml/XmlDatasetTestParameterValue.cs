@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using System.Xml.Serialization;
 
 namespace ProSuite.DomainModel.AO.QA.Xml
@@ -16,5 +16,14 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		[XmlAttribute("workspace")]
 		[DefaultValue(null)]
 		public string WorkspaceId { get; set; }
+
+		[XmlElement(ElementName = "RowFilterExpression")]
+		[DefaultValue(null)]
+		public XmlFilterExpression RowFilterExpression { get; set; }
+
+		public bool IsEmpty()
+		{
+			return WorkspaceId == null && string.IsNullOrWhiteSpace(TransformerName);
+		}
 	}
 }

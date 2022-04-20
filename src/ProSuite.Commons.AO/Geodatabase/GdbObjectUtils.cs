@@ -452,7 +452,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			if (value == null || value == DBNull.Value)
 			{
 				_msg.VerboseDebug(
-					()=> $"ConvertRowValue: Field value at <index> {fieldIndex} of row is null.");
+					() => $"ConvertRowValue: Field value at <index> {fieldIndex} of row is null.");
 
 				return null;
 			}
@@ -599,8 +599,9 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 					featureShape = (IGeometry) feature.Value[shapeFieldIdx];
 
-						_msg.VerboseDebug(
-							() => $"The shape extracted from the value of the shape field is {GeometryUtils.ToString(featureShape)}");
+					_msg.VerboseDebug(
+						() =>
+							$"The shape extracted from the value of the shape field is {GeometryUtils.ToString(featureShape)}");
 				}
 				else
 				{
@@ -637,7 +638,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 						// NOTE: If the projection does not happen here (possible for simple features) it will happen in Store() 
 						// -> we can't fix it here, caller has to project back to map SR
 						_msg.VerboseDebug(
-							() => "SetFeatureShape: Spatial reference of feature class and existing feature's shape are not equal. The feature's shape will be left with a different SR.");
+							() =>
+								"SetFeatureShape: Spatial reference of feature class and existing feature's shape are not equal. The feature's shape will be left with a different SR.");
 					}
 
 					Marshal.ReleaseComObject(oldShape);

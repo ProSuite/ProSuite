@@ -90,19 +90,19 @@ namespace ProSuite.Commons.AO.Geometry
 			if (MustIntersect(_matrix[_interior, _interior], out maximumDimension))
 			{
 				geometries.AddRange(GetInteriorInteriorIntersections(g1, g2,
-				                                                     maximumDimension));
+					                    maximumDimension));
 			}
 
 			if (MustIntersect(_matrix[_interior, _boundary], out maximumDimension))
 			{
 				geometries.AddRange(GetInteriorBoundaryIntersections(g1, g2,
-				                                                     maximumDimension));
+					                    maximumDimension));
 			}
 
 			if (MustIntersect(_matrix[_interior, _exterior], out maximumDimension))
 			{
 				geometries.AddRange(GetInteriorExteriorIntersections(g1, g2,
-				                                                     maximumDimension));
+					                    maximumDimension));
 			}
 
 			// g1.boundary
@@ -110,19 +110,19 @@ namespace ProSuite.Commons.AO.Geometry
 			{
 				// swap
 				geometries.AddRange(GetInteriorBoundaryIntersections(g2, g1,
-				                                                     maximumDimension));
+					                    maximumDimension));
 			}
 
 			if (MustIntersect(_matrix[_boundary, _boundary], out maximumDimension))
 			{
 				geometries.AddRange(GetBoundaryBoundaryIntersections(g1, g2,
-				                                                     maximumDimension));
+					                    maximumDimension));
 			}
 
 			if (MustIntersect(_matrix[_boundary, _exterior], out maximumDimension))
 			{
 				geometries.AddRange(GetBoundaryExteriorIntersections(g1, g2,
-				                                                     maximumDimension));
+					                    maximumDimension));
 			}
 
 			// g1.exterior
@@ -130,14 +130,14 @@ namespace ProSuite.Commons.AO.Geometry
 			{
 				// swap
 				geometries.AddRange(GetInteriorExteriorIntersections(g2, g1,
-				                                                     maximumDimension));
+					                    maximumDimension));
 			}
 
 			if (MustIntersect(_matrix[_exterior, _boundary], out maximumDimension))
 			{
 				// swap
 				geometries.AddRange(GetBoundaryExteriorIntersections(g2, g1,
-				                                                     maximumDimension));
+					                    maximumDimension));
 			}
 
 			if (MustIntersect(_matrix[_exterior, _exterior], out maximumDimension))

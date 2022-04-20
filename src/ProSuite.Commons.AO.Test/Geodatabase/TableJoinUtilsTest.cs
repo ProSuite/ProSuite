@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using ESRI.ArcGIS.esriSystem;
@@ -10,8 +11,8 @@ using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Licensing;
-using ProSuite.Commons.AO.Test.TestSupport;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Testing;
 using ProSuite.Commons.Text;
 
 namespace ProSuite.Commons.AO.Test.Geodatabase
@@ -167,10 +168,10 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			queryFilter.SearchOrder = esriSearchOrder.esriSearchOrderSpatial;
 			queryFilter.SpatialRel = esriSpatialRelEnum.esriSpatialRelIntersects;
 			queryFilter.Geometry = GeometryFactory.CreateEnvelope(2655000, 1157000, 2656000,
-			                                                      1158000);
+				1158000);
 			// small extent -> crash
 			queryFilter.Geometry = GeometryFactory.CreateEnvelope(1655000, 1157000, 3656000,
-			                                                      2158000);
+				2158000);
 			queryFilter.WhereClause = string.Empty;
 
 			queryFilter.SubFields = "";
@@ -468,8 +469,8 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			const bool includeOnlyOIDFields = true;
 			const bool excludeShapeField = true;
 			ITable oidOnlyTable = TableJoinUtils.CreateQueryTable(rc, JoinType.LeftJoin,
-			                                                      includeOnlyOIDFields,
-			                                                      excludeShapeField);
+				includeOnlyOIDFields,
+				excludeShapeField);
 			Assert.AreEqual(rowCount, GetRowCount(oidOnlyTable));
 			// row count will be larger than origin row count due to :n row duplication
 
@@ -479,7 +480,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		[Test]
 		public void CanCreateQueryTableNTo1InnerJoin()
 		{
-			const string relClassName = "TOPGIS_TLM.TLM_STRASSE_NAME";
+			const string relClassName = "TOPGIS_TLM.TLM_STRASSE_STRASSE_AVS";
 
 			IFeatureWorkspace ws = OpenTestWorkspace();
 			IRelationshipClass rc = ws.OpenRelationshipClass(relClassName);
@@ -505,6 +506,12 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			                                               includeOnlyOIDFields,
 			                                               excludeShapeField);
 			Assert.AreEqual(featureCount, GetRowCount(table));
+
+			IFeatureClass inMemoryJoinedClass = TableJoinUtils.CreateJoinedGdbFeatureClass(
+				rc, RelationshipClassUtils.GetFeatureClasses(rc).Single(),
+				"inMemoryJoined");
+
+			Assert.AreEqual(featureCount, GetRowCount((ITable) inMemoryJoinedClass));
 		}
 
 		[Test]
@@ -609,6 +616,12 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			                                               includeOnlyOIDFields,
 			                                               excludeShapeField);
 			Assert.AreEqual(featureCount, GetRowCount(table));
+
+			IFeatureClass inMemoryJoinedClass = TableJoinUtils.CreateJoinedGdbFeatureClass(
+				rc, RelationshipClassUtils.GetFeatureClasses(rc).Single(),
+				"inMemoryJoined");
+
+			Assert.AreEqual(featureCount, GetRowCount((ITable) inMemoryJoinedClass));
 		}
 
 		[Test]
@@ -637,8 +650,8 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			const bool includeOnlyOIDFields = true;
 			const bool excludeShapeField = true;
 			ITable oidOnlyTable = TableJoinUtils.CreateQueryTable(rc, JoinType.RightJoin,
-			                                                      includeOnlyOIDFields,
-			                                                      excludeShapeField);
+				includeOnlyOIDFields,
+				excludeShapeField);
 			Assert.AreEqual(rowCount, GetRowCount(oidOnlyTable));
 			Assert.AreEqual(destinationRowCount, rowCount);
 
@@ -675,8 +688,8 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			const bool includeOnlyOIDFields = true;
 			const bool excludeShapeField = true;
 			ITable oidOnlyTable = TableJoinUtils.CreateQueryTable(rc, JoinType.LeftJoin,
-			                                                      includeOnlyOIDFields,
-			                                                      excludeShapeField);
+				includeOnlyOIDFields,
+				excludeShapeField);
 			Assert.AreEqual(rowCount, GetRowCount(oidOnlyTable));
 			// row count will be larger than origin row count due to :n row duplication
 
@@ -759,6 +772,12 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			                                               includeOnlyOIDFields,
 			                                               excludeShapeField);
 			Assert.AreEqual(featureCount, GetRowCount(table));
+
+			IFeatureClass inMemoryJoinedClass = TableJoinUtils.CreateJoinedGdbFeatureClass(
+				rc, RelationshipClassUtils.GetFeatureClasses(rc).Single(),
+				"inMemoryJoined");
+
+			Assert.AreEqual(featureCount, GetRowCount((ITable) inMemoryJoinedClass));
 		}
 
 		[Test]
@@ -850,8 +869,8 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 			// left join
 			IQueryDef leftJoinQueryDef1 = TableJoinUtils.CreateQueryDef(rc, JoinType.LeftJoin,
-			                                                            includeOnlyOIDFields,
-			                                                            excludeShapeField);
+				includeOnlyOIDFields,
+				excludeShapeField);
 			LogQueryDef(leftJoinQueryDef1);
 
 			// BUG: the first Evaluate() call returns an incorrect row count!!
@@ -859,8 +878,8 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			Console.WriteLine(@"left join row count 1: {0}", leftJoinRowCount1);
 
 			IQueryDef leftJoinQueryDef2 = TableJoinUtils.CreateQueryDef(rc, JoinType.LeftJoin,
-			                                                            includeOnlyOIDFields,
-			                                                            excludeShapeField);
+				includeOnlyOIDFields,
+				excludeShapeField);
 			LogQueryDef(leftJoinQueryDef2);
 
 			// NOTE: the first Evaluate() call on the second, equally defined instance returns the correct row count
@@ -872,8 +891,8 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 			// right join
 			IQueryDef rightJoinQuery = TableJoinUtils.CreateQueryDef(rc, JoinType.RightJoin,
-			                                                         includeOnlyOIDFields,
-			                                                         excludeShapeField);
+				includeOnlyOIDFields,
+				excludeShapeField);
 			LogQueryDef(rightJoinQuery);
 
 			int destinationRowCount = ((ITable) rc.DestinationClass).RowCount(null);

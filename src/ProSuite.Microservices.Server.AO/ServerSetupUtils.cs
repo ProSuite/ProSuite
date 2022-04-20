@@ -26,7 +26,8 @@ namespace ProSuite.Microservices.Server.AO
 		private static readonly IMsg _msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);
 
 		private const string _verboseLoggingEnvVar = "PROSUITE_MICROSERVICE_VERBOSE_LOGGING";
-		private const string _configDirectoryVariableName = "PROSUITE_CONFIG_DIR";
+
+		public static string ConfigDirectoryVariableName { get; set; } = "PROSUITE_CONFIG_DIR";
 
 		/// <summary>
 		/// Starts the grpc server, binds the <see cref="QualityVerificationGrpcImpl"/> together
@@ -257,15 +258,23 @@ namespace ProSuite.Microservices.Server.AO
 				     (a.Equals("-v", StringComparison.InvariantCultureIgnoreCase) ||
 				      a.Equals("--verbose", StringComparison.InvariantCultureIgnoreCase)));
 
-			ConfigureLogging(verboseArg, logConfigFileName);
+			var parsedArgs = Parser.Default.ParseArguments<MicroserverArguments>(commandLineArgs);
+
+			int port = -1;
+			parsedArgs.WithParsed(a => port = a.Port);
+
+			ConfigureLogging(verboseArg, logConfigFileName, port);
 		}
 
 		public static void ConfigureLogging(bool verboseRequired,
-		                                    [NotNull] string logConfigFileName)
+		                                    [NotNull] string logConfigFileName,
+		                                    int port = -1)
 		{
 			int processId = Process.GetCurrentProcess().Id;
 
-			LoggingConfigurator.SetGlobalProperty("LogFileSuffix", $"PID_{processId}");
+			string suffix = port < 0 ? $"PID_{processId}" : $"Port_{port}_PID_{processId}";
+
+			LoggingConfigurator.SetGlobalProperty("LogFileSuffix", suffix);
 
 			LoggingConfigurator.Configure(logConfigFileName,
 			                              GetLogConfigPaths(),
@@ -304,7 +313,7 @@ namespace ProSuite.Microservices.Server.AO
 
 		private static IEnumerable<string> GetLogConfigPaths()
 		{
-			string dirPath = Environment.GetEnvironmentVariable(_configDirectoryVariableName);
+			string dirPath = Environment.GetEnvironmentVariable(ConfigDirectoryVariableName);
 
 			if (! string.IsNullOrEmpty(dirPath))
 			{

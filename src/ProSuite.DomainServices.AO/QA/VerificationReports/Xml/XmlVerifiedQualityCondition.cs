@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Xml.Serialization;
 using ProSuite.Commons.Essentials.Assertions;
@@ -7,12 +7,8 @@ using ProSuite.DomainModel.Core.QA;
 
 namespace ProSuite.DomainServices.AO.QA.VerificationReports.Xml
 {
-	public class XmlVerifiedQualityCondition
+	public class XmlVerifiedQualityCondition : XmlInstanceConfiguration
 	{
-		[XmlAttribute("name")]
-		[UsedImplicitly]
-		public string Name { get; set; }
-
 		[XmlAttribute("uuid")]
 		[UsedImplicitly]
 		public string Guid { get; set; }
@@ -41,20 +37,6 @@ namespace ProSuite.DomainServices.AO.QA.VerificationReports.Xml
 		[UsedImplicitly]
 		[DefaultValue(0)]
 		public int ExceptionCount { get; set; }
-
-		[XmlElement("Description")]
-		[UsedImplicitly]
-		public string Description { get; set; }
-
-		[XmlElement("Test")]
-		[UsedImplicitly]
-		public XmlTestDescriptor TestDescriptor { get; set; }
-
-		[XmlArray("Parameters")]
-		[XmlArrayItem("Parameter")]
-		[UsedImplicitly]
-		[CanBeNull]
-		public List<XmlTestParameterValue> ParameterValues { get; set; }
 
 		[XmlArray("Issues")]
 		[XmlArrayItem("Issue")]
@@ -86,19 +68,6 @@ namespace ProSuite.DomainServices.AO.QA.VerificationReports.Xml
 			{
 				IssueCount += issues.Count;
 			}
-		}
-
-		public void AddParameters(
-			[NotNull] IEnumerable<XmlTestParameterValue> parameterValues)
-		{
-			Assert.ArgumentNotNull(parameterValues, nameof(parameterValues));
-
-			if (ParameterValues == null)
-			{
-				ParameterValues = new List<XmlTestParameterValue>();
-			}
-
-			ParameterValues.AddRange(parameterValues);
 		}
 	}
 }

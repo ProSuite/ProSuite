@@ -9,7 +9,7 @@ using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DomainModel.Core.QA
 {
-	public class QualityCondition : VersionedEntityWithMetadata, INamed, IAnnotated,
+	public class QualityCondition : InstanceConfiguration,
 	                                IPersistenceAware
 	{
 		private int _cloneId = -1;
@@ -17,21 +17,10 @@ namespace ProSuite.DomainModel.Core.QA
 		#region Persisted fields
 
 		[UsedImplicitly] [Obfuscation(Exclude = true)]
-		private readonly
-			IList<TestParameterValue> _parameterValues =
-				new List<TestParameterValue>();
-
-		[UsedImplicitly] [Obfuscation(Exclude = true)]
 		private DataQualityCategory _category;
 
 		[UsedImplicitly] [Obfuscation(Exclude = true)]
-		private string _description;
-
-		[UsedImplicitly] [Obfuscation(Exclude = true)]
 		private string _url;
-
-		[UsedImplicitly] [Obfuscation(Exclude = true)]
-		private string _name;
 
 		[UsedImplicitly] [Obfuscation(Exclude = true)]
 		private string _notes;
@@ -43,19 +32,16 @@ namespace ProSuite.DomainModel.Core.QA
 		private bool? _allowErrorsOverride;
 
 		[UsedImplicitly] [Obfuscation(Exclude = true)]
-		private bool?
-			_reportIndividualErrorsOverride;
+		private bool? _reportIndividualErrorsOverride;
 
 		[UsedImplicitly] [Obfuscation(Exclude = true)]
 		private TestDescriptor _testDescriptor;
 
 		[UsedImplicitly] [Obfuscation(Exclude = true)]
-		private bool
-			_neverStoreRelatedGeometryForTableRowIssues;
+		private bool _neverStoreRelatedGeometryForTableRowIssues;
 
 		[UsedImplicitly] [Obfuscation(Exclude = true)]
-		private bool
-			_neverFilterTableRowsUsingRelatedGeometry;
+		private bool _neverFilterTableRowsUsingRelatedGeometry;
 
 		[UsedImplicitly] [Obfuscation(Exclude = true)]
 		private string _uuid;
@@ -71,7 +57,7 @@ namespace ProSuite.DomainModel.Core.QA
 		/// Initializes a new instance of the <see cref="QualityCondition"/> class.
 		/// </summary>
 		/// <remarks>Required for NHibernate</remarks>
-		protected QualityCondition() : this(assignUuids : false) { }
+		protected QualityCondition() : this(assignUuids: false) { }
 
 		public QualityCondition(bool assignUuids)
 		{
@@ -86,16 +72,22 @@ namespace ProSuite.DomainModel.Core.QA
 		                        [NotNull] TestDescriptor testDescriptor,
 		                        [CanBeNull] string description = "",
 		                        bool assignUuids = true)
-			: this(assignUuids)
+			: base(name, description)
 		{
 			Assert.ArgumentNotNull(testDescriptor, nameof(testDescriptor));
 
-			_name = name;
 			_testDescriptor = testDescriptor;
-			_description = description;
+
+			if (assignUuids)
+			{
+				_uuid = GenerateUuid();
+				_versionUuid = GenerateUuid();
+			}
 		}
 
 		#endregion
+
+		public override InstanceDescriptor InstanceDescriptor => TestDescriptor;
 
 		[Required]
 		public TestDescriptor TestDescriptor
@@ -133,21 +125,6 @@ namespace ProSuite.DomainModel.Core.QA
 		public void AssignNewVersionUuid()
 		{
 			_versionUuid = GenerateUuid();
-		}
-
-		[Required]
-		[MaximumStringLength(200)]
-		public string Name
-		{
-			get { return _name; }
-			set { _name = value; }
-		}
-
-		[MaximumStringLength(2000)]
-		public string Description
-		{
-			get { return _description; }
-			set { _description = value; }
 		}
 
 		[MaximumStringLength(2000)]
@@ -262,27 +239,6 @@ namespace ProSuite.DomainModel.Core.QA
 			}
 		}
 
-		[NotNull]
-		public IList<TestParameterValue> ParameterValues =>
-			new ReadOnlyList<TestParameterValue>(_parameterValues);
-
-		public void AddParameterValue([NotNull] TestParameterValue parameterValue)
-		{
-			Assert.ArgumentNotNull(parameterValue, nameof(parameterValue));
-
-			_parameterValues.Add(parameterValue);
-		}
-
-		public void RemoveParameterValue([NotNull] TestParameterValue parameterValue)
-		{
-			_parameterValues.Remove(parameterValue);
-		}
-
-		public void ClearParameterValues()
-		{
-			_parameterValues.Clear();
-		}
-
 		/// <summary>
 		/// Get the parameter values for a test parameter name.
 		/// </summary>
@@ -314,54 +270,28 @@ namespace ProSuite.DomainModel.Core.QA
 			return TestParameterStringUtils.FormatParameterValues(ParameterValues, maxLength);
 		}
 
-		public override bool Equals(object obj)
+		private readonly IList<IssueFilterConfiguration> _issueFilterConfigurations =
+			new List<IssueFilterConfiguration>();
+
+		public void AddIssueFilterConfiguration(
+			[NotNull] IssueFilterConfiguration issueFilterConfiguration)
 		{
-			if (this == obj)
-			{
-				return true;
-			}
-
-			var qualityCondition = obj as QualityCondition;
-			if (qualityCondition == null)
-			{
-				return false;
-			}
-
-			if (! Equals(_name, qualityCondition._name))
-			{
-				return false;
-			}
-
-			if (! Equals(_testDescriptor, qualityCondition._testDescriptor))
-			{
-				return false;
-			}
-
-			// NOTE: comparison on parameter values (count, values) omitted (https://issuetracker02.eggits.net/browse/TOP-3665)
-
-			return true;
+			_issueFilterConfigurations.Add(issueFilterConfiguration);
 		}
 
-		public override int GetHashCode()
-		{
-			unchecked
-			{
-				int result = _testDescriptor.GetHashCode();
-				result = (result * 397) ^ _name.GetHashCode();
-				// result = (result * 397) ^ _parameterValues.GetHashCode();
-				return result;
-			}
-		}
+		[CanBeNull]
+		public string IssueFilterExpression { get; set; }
 
-		public override string ToString()
+		[NotNull]
+		public IList<IssueFilterConfiguration> IssueFilterConfigurations
 		{
-			return Name;
+			get => new ReadOnlyList<IssueFilterConfiguration>(_issueFilterConfigurations);
 		}
 
 		[NotNull]
 		internal QualityCondition Clone()
 		{
-			var clone = new QualityCondition(assignUuids : false)
+			var clone = new QualityCondition(assignUuids: false)
 			            {
 				            Uuid = Uuid,
 				            VersionUuid = VersionUuid,
@@ -377,7 +307,7 @@ namespace ProSuite.DomainModel.Core.QA
 		[NotNull]
 		public QualityCondition CreateCopy()
 		{
-			var copy = new QualityCondition(assignUuids : true);
+			var copy = new QualityCondition(assignUuids: true);
 
 			CopyProperties(copy);
 
@@ -476,22 +406,6 @@ namespace ProSuite.DomainModel.Core.QA
 		}
 
 		[NotNull]
-		public IEnumerable<Dataset> GetDatasetParameterValues()
-		{
-			foreach (TestParameterValue parameterValue in ParameterValues)
-			{
-				var datasetTestParameterValue = parameterValue as DatasetTestParameterValue;
-
-				Dataset dataset = datasetTestParameterValue?.DatasetValue;
-
-				if (dataset != null)
-				{
-					yield return dataset;
-				}
-			}
-		}
-
-		[NotNull]
 		public IList<TestParameterValue> GetDeletedParameterValues()
 		{
 			List<TestParameterValue> result = new List<TestParameterValue>();
@@ -537,9 +451,9 @@ namespace ProSuite.DomainModel.Core.QA
 		{
 			Assert.ArgumentNotNull(target, nameof(target));
 
-			target._name = Name;
+			target.Name = Name;
 			target._testDescriptor = TestDescriptor;
-			target._description = Description;
+			target.Description = Description;
 			target._notes = Notes;
 			target._url = Url;
 
@@ -559,6 +473,24 @@ namespace ProSuite.DomainModel.Core.QA
 			}
 
 			target._category = _category;
+		}
+
+		protected override IEnumerable<Dataset> EnumReferencedDatasetParameterValues()
+		{
+			foreach (IssueFilterConfiguration issueFilterConfiguration in
+			         IssueFilterConfigurations)
+			{
+				foreach (Dataset dataset in issueFilterConfiguration.GetDatasetParameterValues(
+					includeReferencedProcessors: true))
+				{
+					yield return dataset;
+				}
+			}
+
+			foreach (Dataset dataset in base.EnumReferencedDatasetParameterValues())
+			{
+				yield return dataset;
+			}
 		}
 
 		#region Implementation of IPersistenceAware

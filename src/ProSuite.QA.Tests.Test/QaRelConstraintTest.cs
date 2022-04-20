@@ -1,9 +1,5 @@
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container;
-using ProSuite.QA.Container.Test;
-using ProSuite.QA.TestFactories;
-using ProSuite.QA.Tests.Test.TestRunners;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
@@ -15,6 +11,10 @@ using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
+using ProSuite.QA.Container;
+using ProSuite.QA.Container.Test;
+using ProSuite.QA.TestFactories;
+using ProSuite.QA.Tests.Test.TestRunners;
 
 namespace ProSuite.QA.Tests.Test
 {
@@ -26,7 +26,7 @@ namespace ProSuite.QA.Tests.Test
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout();
+			_lic.Checkout(EsriProduct.ArcEditor);
 		}
 
 		[OneTimeTearDown]
@@ -99,12 +99,14 @@ namespace ProSuite.QA.Tests.Test
 			var clsDesc = new ClassDescriptor(typeof(QaRelConstraint));
 			var tstDesc = new TestDescriptor("RelConstraint", clsDesc);
 			QualityCondition condition = new QualityCondition("fc_table_constraints", tstDesc);
-			QualityConditionParameterUtils.AddParameterValue(condition, "relationTables", vectorDataset);
-			QualityConditionParameterUtils.AddParameterValue(condition, "relationTables", tableDataset);
-			QualityConditionParameterUtils.AddParameterValue(condition, "relation", "rc");
-			QualityConditionParameterUtils.AddParameterValue(condition, "join", JoinType.InnerJoin);
-			QualityConditionParameterUtils.AddParameterValue(condition, "constraint",
-			                                        "(fc.OBJECTID = 1 AND table.OBJECTID = 1) AND (table.TEXT = 'table')");
+			InstanceConfigurationUtils.AddParameterValue(
+				condition, "relationTables", vectorDataset);
+			InstanceConfigurationUtils.AddParameterValue(
+				condition, "relationTables", tableDataset);
+			InstanceConfigurationUtils.AddParameterValue(condition, "relation", "rc");
+			InstanceConfigurationUtils.AddParameterValue(condition, "join", JoinType.InnerJoin);
+			InstanceConfigurationUtils.AddParameterValue(condition, "constraint",
+			                                                 "(fc.OBJECTID = 1 AND table.OBJECTID = 1) AND (table.TEXT = 'table')");
 
 			var factory = new QaRelConstraint {Condition = condition};
 			ITest test = factory.CreateTests(new SimpleDatasetOpener(childWorkspaceContext))[0];

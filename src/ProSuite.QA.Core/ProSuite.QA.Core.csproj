@@ -48,10 +48,11 @@
     <Compile Include="..\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
-    <Compile Include="ITestImplementationInfo.cs" />
+    <Compile Include="IInstanceInfo.cs" />
+    <Compile Include="InstanceInfoBase.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="TestImplementationInfo.cs" />
-    <Compile Include="TestImplementationUtils.cs" />
+    <Compile Include="InstanceInfo.cs" />
+    <Compile Include="InstanceUtils.cs" />
     <Compile Include="TestParameter.cs" />
     <Compile Include="TestParameterAttribute.cs" />
   </ItemGroup>

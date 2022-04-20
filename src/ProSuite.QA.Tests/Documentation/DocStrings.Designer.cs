@@ -19,7 +19,7 @@ namespace ProSuite.QA.Tests.Documentation {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class DocStrings {
@@ -135,123 +135,6 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Finds all line segments in &apos;featureClass&apos; that differ more than &apos;limit&apos; from &apos;terrain&apos;
-        ///
-        ///Remark: The feature classes in &apos;featureClass&apos; and &apos;terrain&apos; must have the same spatial reference..
-        /// </summary>
-        public static string Qa3dPipe_1 {
-            get {
-                return ResourceManager.GetString("Qa3dPipe_1", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Finds all line segments in &apos;featureClass&apos; that differ more than &apos;limit&apos; from &apos;raster&apos;
-        ///Remark: The feature classes in &apos;featureClass&apos; and &apos;raster&apos; must have the same spatial reference..
-        /// </summary>
-        public static string Qa3dPipe_2 {
-            get {
-                return ResourceManager.GetString("Qa3dPipe_2", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Finds all line segments in &apos;featureClass&apos; that differ more than &apos;limit&apos; from &apos;mosaicLayer&apos;
-        ///
-        ///Remark: The feature classes in &apos;featureClass&apos; and &apos;mosaicLayer&apos; must have the same spatial reference..
-        /// </summary>
-        public static string Qa3dPipe_4 {
-            get {
-                return ResourceManager.GetString("Qa3dPipe_4", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to True: &apos;startEndIgnoreLength&apos; is given as ratio of the shape length
-        ///False: &apos;startEndIgnoreLength&apos; is the absolute length in units of &apos;featureClass&apos;.
-        /// </summary>
-        public static string Qa3dPipe_asRatio {
-            get {
-                return ResourceManager.GetString("Qa3dPipe_asRatio", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to polyline or polygon feature class with heights.
-        /// </summary>
-        public static string Qa3dPipe_featureClass {
-            get {
-                return ResourceManager.GetString("Qa3dPipe_featureClass", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to maximum allowed difference (in z-units).
-        /// </summary>
-        public static string Qa3dPipe_limit {
-            get {
-                return ResourceManager.GetString("Qa3dPipe_limit", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to mosaicLayer, from which the previewlayer raster is used to process.
-        /// </summary>
-        public static string Qa3dPipe_mosaicLayer {
-            get {
-                return ResourceManager.GetString("Qa3dPipe_mosaicLayer", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to raster to compare.
-        /// </summary>
-        public static string Qa3dPipe_raster {
-            get {
-                return ResourceManager.GetString("Qa3dPipe_raster", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Ignore line parts closer than &apos;startEndIgnoreLength&apos; to the start/end point of the shape.
-        /// </summary>
-        public static string Qa3dPipe_startEndIgnoreLength {
-            get {
-                return ResourceManager.GetString("Qa3dPipe_startEndIgnoreLength", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to terrain to compare.
-        /// </summary>
-        public static string Qa3dPipe_terrain {
-            get {
-                return ResourceManager.GetString("Qa3dPipe_terrain", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to terrain tolerance (in z-Units).
-        /// </summary>
-        public static string Qa3dPipe_terrainTolerance {
-            get {
-                return ResourceManager.GetString("Qa3dPipe_terrainTolerance", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to AboveLimit : All z-values must be above Terrain + &apos;limit&apos;
-        ///BelowLimit : All z-values must be below Terrain + &apos;limit&apos; (For underground, &apos;limit&apos; must be &lt; 0)
-        ///WithinLimit: All z-values must be below Terrain + &apos;limit&apos; and above Terrain - &apos;limit&apos;
-        ///OutsideLimt: All z-values must be either above Terrani + &apos;limit&apos; or below Terrain - &apos;limit&apos;.
-        /// </summary>
-        public static string Qa3dPipe_zOffsetConstraint {
-            get {
-                return ResourceManager.GetString("Qa3dPipe_zOffsetConstraint", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Finds all points or vertices in &apos;featureClass&apos; that differ more than &apos;limit&apos; from &apos;terrain&apos;
         ///
         ///Remark: The feature classes in &apos;featureClass&apos; and &apos;terrain&apos; must have the same spatial reference..
@@ -259,28 +142,6 @@ namespace ProSuite.QA.Tests.Documentation {
         public static string Qa3dSmoothing_0 {
             get {
                 return ResourceManager.GetString("Qa3dSmoothing_0", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Finds all points or vertices in &apos;featureClass&apos; that differ more than &apos;limit&apos; from &apos;raster&apos;
-        ///
-        ///Remark: The feature classes in &apos;featureClass&apos; and &apos;raster&apos; must have the same spatial reference..
-        /// </summary>
-        public static string Qa3dSmoothing_2 {
-            get {
-                return ResourceManager.GetString("Qa3dSmoothing_2", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Finds all points or vertices in &apos;featureClass&apos; that differ more than &apos;limit&apos; from &apos;mosaicLayer&apos;
-        ///
-        ///Remark: The feature classes in &apos;featureClass&apos; and &apos;mosaicLayer&apos; must have the same spatial reference..
-        /// </summary>
-        public static string Qa3dSmoothing_4 {
-            get {
-                return ResourceManager.GetString("Qa3dSmoothing_4", resourceCulture);
             }
         }
         
@@ -295,78 +156,11 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to feature class with heights.
-        /// </summary>
-        public static string Qa3dSmoothing_featureClass {
-            get {
-                return ResourceManager.GetString("Qa3dSmoothing_featureClass", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to limit (in z-units).
-        /// </summary>
-        public static string Qa3dSmoothing_limit {
-            get {
-                return ResourceManager.GetString("Qa3dSmoothing_limit", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to mosaicLayer, from which the previewlayer raster is used to process.
-        /// </summary>
-        public static string Qa3dSmoothing_mosaicLayer {
-            get {
-                return ResourceManager.GetString("Qa3dSmoothing_mosaicLayer", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to true : the difference must be larger than limit
-        ///false : the difference must be smaller than limit.
-        /// </summary>
-        public static string Qa3dSmoothing_mustBeLarger {
-            get {
-                return ResourceManager.GetString("Qa3dSmoothing_mustBeLarger", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to raster to compare.
-        /// </summary>
-        public static string Qa3dSmoothing_raster {
-            get {
-                return ResourceManager.GetString("Qa3dSmoothing_raster", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to terrain to compare.
         /// </summary>
         public static string Qa3dSmoothing_terrain {
             get {
                 return ResourceManager.GetString("Qa3dSmoothing_terrain", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to terrain tolerance (in z-Units).
-        /// </summary>
-        public static string Qa3dSmoothing_terrainTolerance {
-            get {
-                return ResourceManager.GetString("Qa3dSmoothing_terrainTolerance", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to AboveLimit : All z-values must be above Terrain + &apos;limit&apos;
-        ///BelowLimit : All z-values must be below Terrain + &apos;limit&apos; (For underground, &apos;limit&apos; must be &lt; 0)
-        ///WithinLimit: All z-values must be below Terrain + &apos;limit&apos; and above Terrain - &apos;limit&apos;
-        ///OutsideLimt: All z-values must be either above Terrani + &apos;limit&apos; or below Terrain - &apos;limit&apos;.
-        /// </summary>
-        public static string Qa3dSmoothing_zOffsetConstraint {
-            get {
-                return ResourceManager.GetString("Qa3dSmoothing_zOffsetConstraint", resourceCulture);
             }
         }
         
@@ -8991,6 +8785,42 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Verifies that fields have expected properties based on a list of field specifications defined in another table. The field specifications table can be filtered to a subset of rows relevant for the verified table..
+        /// </summary>
+        public static string QaSchemaFieldPropertiesFromTable_0 {
+            get {
+                return ResourceManager.GetString("QaSchemaFieldPropertiesFromTable_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The table that contains the list of field specifications..
+        /// </summary>
+        public static string QaSchemaFieldPropertiesFromTable_fieldSpecificationsTable {
+            get {
+                return ResourceManager.GetString("QaSchemaFieldPropertiesFromTable_fieldSpecificationsTable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates if a field specification is looked up by alias name also..
+        /// </summary>
+        public static string QaSchemaFieldPropertiesFromTable_matchAliasName {
+            get {
+                return ResourceManager.GetString("QaSchemaFieldPropertiesFromTable_matchAliasName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The table to check the field properties in..
+        /// </summary>
+        public static string QaSchemaFieldPropertiesFromTable_table {
+            get {
+                return ResourceManager.GetString("QaSchemaFieldPropertiesFromTable_table", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Finds fields that have a reserved field name, based on a list of reserved names..
         /// </summary>
         public static string QaSchemaReservedFieldNames_0 {
@@ -9293,6 +9123,194 @@ namespace ProSuite.QA.Tests.Documentation {
         public static string QaSmooth_limit {
             get {
                 return ResourceManager.GetString("QaSmooth_limit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all line segments in &apos;featureClass&apos; that differ more than &apos;limit&apos; from &apos;terrain&apos;
+        ///
+        ///Remark: The feature classes in &apos;featureClass&apos; and &apos;terrain&apos; must have the same spatial reference..
+        /// </summary>
+        public static string QaSurfacePipe_1 {
+            get {
+                return ResourceManager.GetString("QaSurfacePipe_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all line segments in &apos;featureClass&apos; that differ more than &apos;limit&apos; from &apos;raster&apos;
+        ///Remark: The feature classes in &apos;featureClass&apos; and &apos;raster&apos; must have the same spatial reference..
+        /// </summary>
+        public static string QaSurfacePipe_2 {
+            get {
+                return ResourceManager.GetString("QaSurfacePipe_2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all line segments in &apos;featureClass&apos; that differ more than &apos;limit&apos; from &apos;rasterMosaic&apos;
+        ///
+        ///Remark: The feature classes in &apos;featureClass&apos; and &apos;rasterMosaic&apos; must have the same spatial reference..
+        /// </summary>
+        public static string QaSurfacePipe_4 {
+            get {
+                return ResourceManager.GetString("QaSurfacePipe_4", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to True: &apos;startEndIgnoreLength&apos; is given as ratio of the shape length
+        ///False: &apos;startEndIgnoreLength&apos; is the absolute length in units of &apos;featureClass&apos;.
+        /// </summary>
+        public static string QaSurfacePipe_asRatio {
+            get {
+                return ResourceManager.GetString("QaSurfacePipe_asRatio", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to polyline or polygon feature class with heights.
+        /// </summary>
+        public static string QaSurfacePipe_featureClass {
+            get {
+                return ResourceManager.GetString("QaSurfacePipe_featureClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to maximum allowed difference (in z-units).
+        /// </summary>
+        public static string QaSurfacePipe_limit {
+            get {
+                return ResourceManager.GetString("QaSurfacePipe_limit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Raster mosaic that provides the surface to compare.
+        /// </summary>
+        public static string QaSurfacePipe_mosaic {
+            get {
+                return ResourceManager.GetString("QaSurfacePipe_mosaic", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to raster to compare.
+        /// </summary>
+        public static string QaSurfacePipe_raster {
+            get {
+                return ResourceManager.GetString("QaSurfacePipe_raster", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ignore line parts closer than &apos;startEndIgnoreLength&apos; to the start/end point of the shape.
+        /// </summary>
+        public static string QaSurfacePipe_startEndIgnoreLength {
+            get {
+                return ResourceManager.GetString("QaSurfacePipe_startEndIgnoreLength", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to terrain to compare.
+        /// </summary>
+        public static string QaSurfacePipe_terrain {
+            get {
+                return ResourceManager.GetString("QaSurfacePipe_terrain", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to AboveLimit : All z-values must be above surface height + &apos;limit&apos;
+        ///BelowLimit : All z-values must be below surface height + &apos;limit&apos; (For underground, &apos;limit&apos; must be &lt; 0)
+        ///WithinLimit: All z-values must be below surface height + &apos;limit&apos; and above surface height - &apos;limit&apos;
+        ///OutsideLimit: All z-values must be either above surface height + &apos;limit&apos; or below surface height - &apos;limit&apos;.
+        /// </summary>
+        public static string QaSurfacePipe_zOffsetConstraint {
+            get {
+                return ResourceManager.GetString("QaSurfacePipe_zOffsetConstraint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all points or vertices in &apos;featureClass&apos; that differ more than &apos;limit&apos; from &apos;raster&apos;
+        ///
+        ///Remark: The feature classes in &apos;featureClass&apos; and &apos;raster&apos; must have the same spatial reference..
+        /// </summary>
+        public static string QaSurfaceVertex_2 {
+            get {
+                return ResourceManager.GetString("QaSurfaceVertex_2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all points or vertices in &apos;featureClass&apos; that differ more than &apos;limit&apos; from &apos;rasterMosaic&apos;
+        ///
+        ///Remark: The feature classes in &apos;featureClass&apos; and &apos;rasterMosaic&apos; must have the same spatial reference..
+        /// </summary>
+        public static string QaSurfaceVertex_4 {
+            get {
+                return ResourceManager.GetString("QaSurfaceVertex_4", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to feature class with heights.
+        /// </summary>
+        public static string QaSurfaceVertex_featureClass {
+            get {
+                return ResourceManager.GetString("QaSurfaceVertex_featureClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to limit (in z-units).
+        /// </summary>
+        public static string QaSurfaceVertex_limit {
+            get {
+                return ResourceManager.GetString("QaSurfaceVertex_limit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Raster mosaic that provides the surface to compare.
+        /// </summary>
+        public static string QaSurfaceVertex_mosaic {
+            get {
+                return ResourceManager.GetString("QaSurfaceVertex_mosaic", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to true : the difference must be larger than limit
+        ///false : the difference must be smaller than limit.
+        /// </summary>
+        public static string QaSurfaceVertex_mustBeLarger {
+            get {
+                return ResourceManager.GetString("QaSurfaceVertex_mustBeLarger", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to raster to compare.
+        /// </summary>
+        public static string QaSurfaceVertex_raster {
+            get {
+                return ResourceManager.GetString("QaSurfaceVertex_raster", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to AboveLimit : All z-values must be above surface height + &apos;limit&apos;
+        ///BelowLimit : All z-values must be below surface height + &apos;limit&apos; (For underground, &apos;limit&apos; must be &lt; 0)
+        ///WithinLimit: All z-values must be below surface height + &apos;limit&apos; and above surface height - &apos;limit&apos;
+        ///OutsideLimit: All z-values must be either above surface height + &apos;limit&apos; or below surface height - &apos;limit&apos;.
+        /// </summary>
+        public static string QaSurfaceVertex_zOffsetConstraint {
+            get {
+                return ResourceManager.GetString("QaSurfaceVertex_zOffsetConstraint", resourceCulture);
             }
         }
         
@@ -10853,6 +10871,358 @@ namespace ProSuite.QA.Tests.Documentation {
         public static string QaZDifferenceSelf_zRelationConstraint {
             get {
                 return ResourceManager.GetString("QaZDifferenceSelf_zRelationConstraint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to transformes line feature class &apos;featureclass&apos; by dissolving connected features.
+        /// </summary>
+        public static string TrDissolve_0 {
+            get {
+                return ResourceManager.GetString("TrDissolve_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Attributes to be transfered to transformed feature class. Must be used with alias and group expression, i.e. &apos;MAX(LAUF_NR) AS MAX_LAUF_NR&apos;.
+        ///In the resulting feature class, only attributes defined in &apos;Attributes&apos; or &apos;GroupBy&apos; can be used..
+        /// </summary>
+        public static string TrDissolve_Attributes {
+            get {
+                return ResourceManager.GetString("TrDissolve_Attributes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Only feature that fulfill constraint between each other are dissolved.
+        /// </summary>
+        public static string TrDissolve_Constraint {
+            get {
+                return ResourceManager.GetString("TrDissolve_Constraint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to (Default = false)
+        ///- false: create separate features when 3 or more features are connected. Only connections with 2 features are dissolved.
+        ///- true: create multpart features for all connected source features..
+        /// </summary>
+        public static string TrDissolve_CreateMultipartFeatures {
+            get {
+                return ResourceManager.GetString("TrDissolve_CreateMultipartFeatures", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Line feature class to dissolve.
+        /// </summary>
+        public static string TrDissolve_featureclass {
+            get {
+                return ResourceManager.GetString("TrDissolve_featureclass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Group features by &apos;GroupBy&apos; before dissolving
+        ///In the resulting feature class, only attributes defined in &apos;Attributes&apos; or &apos;GroupBy&apos; can be used..
+        /// </summary>
+        public static string TrDissolve_GroupBy {
+            get {
+                return ResourceManager.GetString("TrDissolve_GroupBy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to (Default = Tile)
+        ///-Tile: dissolve features only within the current tile
+        ///- All: if features start/end outside tile, load additional connected features (recursively).
+        /// </summary>
+        public static string TrDissolve_NeighborSearchOption {
+            get {
+                return ResourceManager.GetString("TrDissolve_NeighborSearchOption", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Additonal distance to cache &apos;featureclass&apos; features per tile.
+        /// </summary>
+        public static string TrDissolve_SearchDistance {
+            get {
+                return ResourceManager.GetString("TrDissolve_SearchDistance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Transforms multipatches to polygons by taking their footprints.
+        /// </summary>
+        public static string TrFootprint_0 {
+            get {
+                return ResourceManager.GetString("TrFootprint_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to multipatch feature class to transform.
+        /// </summary>
+        public static string TrFootprint_multipatchClass {
+            get {
+                return ResourceManager.GetString("TrFootprint_multipatchClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Transforms geometries to points. The transformed feature class has the attribute PartIndex and VertexIndex. These fields index from which polygon part the transformed polygon part was generated.
+        /// </summary>
+        public static string TrGeometryToPoints_0 {
+            get {
+                return ResourceManager.GetString("TrGeometryToPoints_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to GeometryComponent to extract.
+        /// </summary>
+        public static string TrGeometryToPoints_component {
+            get {
+                return ResourceManager.GetString("TrGeometryToPoints_component", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to multipoint, line, polygon or multpatch class to transform.
+        /// </summary>
+        public static string TrGeometryToPoints_featureClass {
+            get {
+                return ResourceManager.GetString("TrGeometryToPoints_featureClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Attributes that are copied from source featureclass to resulting featureclass.
+        /// </summary>
+        public static string TrGeometryTransform_Attributes {
+            get {
+                return ResourceManager.GetString("TrGeometryTransform_Attributes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Transforms closed lines of &apos;closedLineClass&apos; to polygons.
+        /// </summary>
+        public static string TrLineToPoly_0 {
+            get {
+                return ResourceManager.GetString("TrLineToPoly_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to line feature class to transform.
+        /// </summary>
+        public static string TrLineToPoly_closedLineClass {
+            get {
+                return ResourceManager.GetString("TrLineToPoly_closedLineClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Defines how to handle not closed lines
+        ///- AsPolygonIfClosedElseIgnore (default) : ignore not closed lines.
+        /// </summary>
+        public static string TrLineToPoly_PolylineUsage {
+            get {
+                return ResourceManager.GetString("TrLineToPoly_PolylineUsage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Transforms multi-lines to single lines. The transformed feature class has the attribute PartIndex. This field index from which polygon part the transformed polygon part was generated.
+        /// </summary>
+        public static string TrMultilineToLine_0 {
+            get {
+                return ResourceManager.GetString("TrMultilineToLine_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to line feature class to transform.
+        /// </summary>
+        public static string TrMultilineToLine_featureClass {
+            get {
+                return ResourceManager.GetString("TrMultilineToLine_featureClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Transforms multi-polygons to single polygons. The transformed feature class has the attributes OuterRingIndex and InnerRingIndex. These fields index from which polygon part the transformed polygon part was generated.
+        /// </summary>
+        public static string TrMultipolygonToPolygon_0 {
+            get {
+                return ResourceManager.GetString("TrMultipolygonToPolygon_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to polygon feature class to transform.
+        /// </summary>
+        public static string TrMultipolygonToPolygon_featureClass {
+            get {
+                return ResourceManager.GetString("TrMultipolygonToPolygon_featureClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Default = SinglePolygons
+        ///-SinglePolygon: converts multi polygon to single polygons (Remark: InnerRingIndex = -2)
+        ///-OuterRings: converts all out rings to polygons (Remark: InnerRingIndex = -1)
+        ///-InnerRings: converts all inner rings to polygons
+        ///-AllRings: converts all rings to polygons (Remark: polygons generated from outer rings: InnerRingIndex = -1).
+        /// </summary>
+        public static string TrMultipolygonToPolygon_TransformedParts {
+            get {
+                return ResourceManager.GetString("TrMultipolygonToPolygon_TransformedParts", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Transform polygon to line by taking the boundary of the polygons in &apos;featureClass&apos;.
+        /// </summary>
+        public static string TrPolyToLine_0 {
+            get {
+                return ResourceManager.GetString("TrPolyToLine_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to polygon feature class.
+        /// </summary>
+        public static string TrPolyToLine_featureClass {
+            get {
+                return ResourceManager.GetString("TrPolyToLine_featureClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Transforms features of &apos;t0&apos; and features of &apos;t1&apos; to features, with shape of &apos;t0&apos; if they intersect..
+        /// </summary>
+        public static string TrSpatialJoin_0 {
+            get {
+                return ResourceManager.GetString("TrSpatialJoin_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Constraint on spatially joined features. Only spatially joined feature pairs that fulfill the constraint will be transformed to resulting features.
+        ///The involved features are aliased using &quot;T0&quot; and T1&quot;.
+        ///Example: T0.Level = T1.Level.
+        /// </summary>
+        public static string TrSpatialJoin_Constraint {
+            get {
+                return ResourceManager.GetString("TrSpatialJoin_Constraint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Default = false.
+        ///If false: create one feature for each (t0,t1)-feature pair that intersects
+        ///if true: create one feature for each feature in &apos;t0&apos;, that intersects any feature of &apos;t1&apos;.
+        /// </summary>
+        public static string TrSpatialJoin_Grouped {
+            get {
+                return ResourceManager.GetString("TrSpatialJoin_Grouped", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Default = false.Left outer Join.
+        ///If true: transform features from t0-features that have no spatial relation to any feature of t1
+        ///If false: ignore features from t0 that have no spatial relation to any feature of t1.
+        /// </summary>
+        public static string TrSpatialJoin_OuterJoin {
+            get {
+                return ResourceManager.GetString("TrSpatialJoin_OuterJoin", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Feature class that provides the shape for the new features.
+        /// </summary>
+        public static string TrSpatialJoin_t0 {
+            get {
+                return ResourceManager.GetString("TrSpatialJoin_t0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Attributes of &apos;t0&apos; that are transfered to transformed feature class. Can be used with alias, i.e. &apos;TOPGIS_TLM.TLM_GEWAESSER_LAUF.LAUF_NR AS T1_LAUF_NR&apos;.
+        ///In the resulting feature class, only attributes defined in T0Attributes or T1Attributes can be used. .
+        /// </summary>
+        public static string TrSpatialJoin_T0Attributes {
+            get {
+                return ResourceManager.GetString("TrSpatialJoin_T0Attributes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Feature class to join.
+        /// </summary>
+        public static string TrSpatialJoin_t1 {
+            get {
+                return ResourceManager.GetString("TrSpatialJoin_t1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to See T0Attributes.
+        ///If &apos;Grouped&apos;=true, the attributes must be defined by Group-Expressions like COUNT(),MIN(),MAX()... .
+        /// </summary>
+        public static string TrSpatialJoin_T1Attributes {
+            get {
+                return ResourceManager.GetString("TrSpatialJoin_T1Attributes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Transforms table &apos;t0&apos; and table &apos;t1&apos;, which must be related by &apos;relationName&apos;, to a joined table.
+        /// </summary>
+        public static string TrTableJoin_0 {
+            get {
+                return ResourceManager.GetString("TrTableJoin_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to JoinType.
+        /// </summary>
+        public static string TrTableJoin_joinType {
+            get {
+                return ResourceManager.GetString("TrTableJoin_joinType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to name of existing relation between &apos;t0&apos; and &apos;t1&apos;.
+        /// </summary>
+        public static string TrTableJoin_relationName {
+            get {
+                return ResourceManager.GetString("TrTableJoin_relationName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to table to join with &apos;t1&apos;.
+        /// </summary>
+        public static string TrTableJoin_t0 {
+            get {
+                return ResourceManager.GetString("TrTableJoin_t0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to table to join with &apos;t0&apos;.
+        /// </summary>
+        public static string TrTableJoin_t1 {
+            get {
+                return ResourceManager.GetString("TrTableJoin_t1", resourceCulture);
             }
         }
     }

@@ -19,8 +19,12 @@ namespace ProSuite.Commons.Orm.NHibernate
 	{
 		private static readonly IMsg _msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);
 
-		// Session factory is thread-safe and global (maintains 2nd level cache)
-		private static ISessionFactory _sessionFactory;
+		// Session factory is thread-safe and global (maintains 2nd level cache) per DDX connection
+		private readonly ISessionFactory _sessionFactory;
+		// TODO: static dictionary of session factories and extra constructor parameter with the factory key
+		// -> in a service request, register a new (scoped to thread?) session provider with the specific key
+		// -> if the factory has been added before, use it, otherwise add the factory to the dictionary.
+		// -> All repositories should have lifestyle transient
 
 		private readonly string _sessionFactoryErrorMessage = "Session factory is null";
 

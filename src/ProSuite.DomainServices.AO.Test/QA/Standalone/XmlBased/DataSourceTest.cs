@@ -5,8 +5,8 @@ using ProSuite.Commons;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.AO.Test;
-using ProSuite.Commons.AO.Test.TestSupport;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Testing;
 using ProSuite.DomainServices.AO.QA.Standalone.XmlBased;
 
 namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased

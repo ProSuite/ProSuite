@@ -366,6 +366,26 @@ namespace ProSuite.Commons.AO.Geodatabase
 		}
 
 		[NotNull]
+		public static esriFieldType GetFieldType(Type dataType)
+		{
+			if (dataType == typeof(int))
+				return esriFieldType.esriFieldTypeInteger;
+			if (dataType == typeof(short))
+				return esriFieldType.esriFieldTypeSmallInteger;
+			if (dataType == typeof(bool))
+				return esriFieldType.esriFieldTypeSmallInteger;
+			if (dataType == typeof(float))
+				return esriFieldType.esriFieldTypeSingle;
+			if (dataType == typeof(double))
+				return esriFieldType.esriFieldTypeDouble;
+			if (dataType == typeof(string))
+				return esriFieldType.esriFieldTypeString;
+			if (dataType == typeof(Guid))
+				return esriFieldType.esriFieldTypeGUID;
+			throw new NotImplementedException($"Unhandled type {dataType}");
+		}
+
+		[NotNull]
 		public static object ConvertAttributeValue(
 			[CanBeNull] object sourceValue,
 			esriFieldType sourceType,
@@ -403,7 +423,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 					return Convert.ToDouble(sourceValue, formatProvider);
 
 				case esriFieldType.esriFieldTypeString:
-					return Convert.ToString(sourceValue, formatProvider) ?? string.Empty; // silence R#
+					return Convert.ToString(sourceValue, formatProvider) ??
+					       string.Empty; // silence R#
 
 				case esriFieldType.esriFieldTypeDate:
 					return Convert.ToDateTime(sourceValue, formatProvider);

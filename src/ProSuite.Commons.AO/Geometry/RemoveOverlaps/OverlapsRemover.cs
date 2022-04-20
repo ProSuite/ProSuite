@@ -204,7 +204,7 @@ namespace ProSuite.Commons.AO.Geometry.RemoveOverlaps
 
 			var intersection = (IPolycurve)
 				((ITopologicalOperator) sourceGeometry).Intersect(overlapPolycurve,
-				                                                  resultDimension);
+					resultDimension);
 
 			GeometryUtils.Simplify(intersection);
 
@@ -241,7 +241,7 @@ namespace ProSuite.Commons.AO.Geometry.RemoveOverlaps
 			Plane3D plane = null;
 			if (zSource == ChangeAlongZSource.SourcePlane)
 			{
-				plane = ChangeZUtils.GetSourcePlane(
+				plane = ChangeZUtils.GetPlane(
 					GeometryConversionUtils.GetPntList(fromGeometry),
 					GeometryUtils.GetZTolerance(fromGeometry));
 			}
@@ -295,7 +295,7 @@ namespace ProSuite.Commons.AO.Geometry.RemoveOverlaps
 
 			overlappingResults = _storeOverlapsAsNewFeatures
 				                     ? CalculateOverlappingGeometries(fromGeometry,
-				                                                      overlaps)
+					                     overlaps)
 				                     : null;
 			return result;
 		}

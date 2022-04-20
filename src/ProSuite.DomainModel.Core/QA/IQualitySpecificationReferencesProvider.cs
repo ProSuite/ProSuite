@@ -31,6 +31,5 @@ namespace ProSuite.DomainModel.Core.QA
 		/// </summary>
 		/// <returns></returns>
 		Task<IQualitySpecificationReference> GetQualitySpecification(string name);
-
 	}
 }

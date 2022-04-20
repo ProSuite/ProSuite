@@ -23,6 +23,7 @@ namespace ProSuite.QA.Container.TestContainer
 		private readonly ITestContainer _container;
 		private readonly int _cachedTableCount;
 		private readonly IDictionary<ITable, IList<ContainerTest>> _testsPerTable;
+		private readonly IEnvelope[] _loadedExtents;
 
 		private double _maximumSearchTolerance;
 		private double[][] _searchToleranceFromTo;
@@ -43,7 +44,8 @@ namespace ProSuite.QA.Container.TestContainer
 
 			_cachedTableCount = cachedTables.Count;
 			_rowBoxTrees = new RowBoxTree[_cachedTables.Count];
-			_xyToleranceByTableIndex = GetXYTolerancePerTable(_testsPerTable.Keys);
+			_xyToleranceByTableIndex = GetXYTolerancePerTable(_cachedTables);
+			_loadedExtents = new IEnvelope[_cachedTableCount];
 			IgnoredRowsByTableAndTest = new List<IList<BaseRow>>[_cachedTableCount];
 			OverlappingFeatures = new OverlappingFeatures(_container.MaxCachedPointCount);
 
@@ -51,6 +53,7 @@ namespace ProSuite.QA.Container.TestContainer
 		}
 
 		public OverlappingFeatures OverlappingFeatures { get; }
+		public IReadOnlyList<IEnvelope> LoadedExtents => _loadedExtents;
 
 		public List<IList<BaseRow>>[] IgnoredRowsByTableAndTest { get; }
 
@@ -81,7 +84,7 @@ namespace ProSuite.QA.Container.TestContainer
 				result[tableIndex] = geoDataset == null
 					                     ? defaultTolerance
 					                     : GeometryUtils.GetXyTolerance(geoDataset,
-					                                                    defaultTolerance);
+						                     defaultTolerance);
 
 				tableIndex++;
 			}
@@ -103,9 +106,12 @@ namespace ProSuite.QA.Container.TestContainer
 				_searchToleranceFromTo[queriedTableIndex] = searchToleranceByTable;
 
 				ITable table = GetCachedTable(queriedTableIndex);
-				IList<ContainerTest> pTestList = _testsPerTable[table];
+				if (! _testsPerTable.TryGetValue(table, out IList<ContainerTest> tableTests))
+				{
+					continue;
+				}
 
-				foreach (ContainerTest containerTest in pTestList)
+				foreach (ContainerTest containerTest in tableTests)
 				{
 					if (Math.Abs(containerTest.SearchDistance) < double.Epsilon)
 					{
@@ -159,7 +165,7 @@ namespace ProSuite.QA.Container.TestContainer
 			IList<IRow> result = new List<IRow>();
 
 			// TODO explain network queries
-			bool repeatCachedRows = filterHelper.ForNetwork;
+			bool repeatCachedRows = filterHelper.RepeatCachedRows ?? filterHelper.ForNetwork;
 
 			// filterHelper.PointSearchOnlyWithinTile
 			if (filterHelper.ForNetwork)
@@ -185,7 +191,7 @@ namespace ProSuite.QA.Container.TestContainer
 			}
 
 			List<BoxTree<CachedRow>.TileEntry> searchList = SearchList(filterGeometry,
-			                                                           tableIndex);
+				tableIndex);
 			if (searchList == null || searchList.Count == 0)
 			{
 				return result;
@@ -207,7 +213,7 @@ namespace ProSuite.QA.Container.TestContainer
 
 				_envelopeTemplate.QueryCoords(out double xmin, out double ymin, out _, out _);
 
-				cacheGeometryOverlapsLeftTile = xmin < CurrentTileBox.Min.X &&
+				cacheGeometryOverlapsLeftTile = xmin < CurrentTileBox?.Min.X &&
 				                                xmin > _testRunBox.Min.X;
 
 				// https://issuetracker02.eggits.net/browse/COM-85
@@ -217,7 +223,7 @@ namespace ProSuite.QA.Container.TestContainer
 				// - tile ymin            = 220557.78534
 				// --> filter geometry is completely outside of tile boundaries!!!
 				// --> causes incorrect error in QaContainsOther
-				cacheGeometryOverlapsBottomTile = ymin < CurrentTileBox.Min.Y &&
+				cacheGeometryOverlapsBottomTile = ymin < CurrentTileBox?.Min.Y &&
 				                                  ymin > _testRunBox.Min.Y;
 			}
 
@@ -225,10 +231,15 @@ namespace ProSuite.QA.Container.TestContainer
 
 			engine.SetSourceGeometry(filterGeometry);
 
-			IList<ContainerTest> tests = _testsPerTable[table];
-			int indexTest = tests.IndexOf(filterHelper.ContainerTest);
-
-			IList<BaseRow> ignoredRows = IgnoredRowsByTableAndTest[tableIndex][indexTest];
+			IList<BaseRow> ignoredRows = null;
+			if (_testsPerTable.TryGetValue(table, out IList<ContainerTest> tests))
+			{
+				if (filterHelper.ContainerTest != null)
+				{
+					int indexTest = tests.IndexOf(filterHelper.ContainerTest);
+					ignoredRows = IgnoredRowsByTableAndTest[tableIndex][indexTest];
+				}
+			}
 
 			foreach (BoxTree<CachedRow>.TileEntry entry in searchList)
 			{
@@ -456,9 +467,10 @@ namespace ProSuite.QA.Container.TestContainer
 		}
 
 		public void CreateBoxTree(int tableIndex, [NotNull] IEnumerable<CachedRow> cachedRows,
-		                          [CanBeNull] IBox allBox)
+		                          [CanBeNull] IBox allBox, IEnvelope loadedEnvelope)
 		{
 			_rowBoxTrees[tableIndex] = CreateBoxTree(cachedRows, allBox);
+			_loadedExtents[tableIndex] = loadedEnvelope;
 		}
 
 		[NotNull]

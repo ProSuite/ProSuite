@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.RegularExpressions;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
@@ -252,6 +253,167 @@ namespace ProSuite.QA.Container
 						             : subToken;
 				}
 			}
+		}
+
+		[NotNull]
+		public static Dictionary<string, string> GetFieldDict(
+			[CanBeNull] IList<string> expressions)
+		{
+			Dictionary<string, string> expressionDict =
+				new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+			if (expressions == null)
+			{
+				return expressionDict;
+			}
+
+			foreach (string expression in expressions)
+			{
+				string f = expression.Trim();
+				string key;
+				string expr;
+				IList<string> parts = expression.Split();
+				if (parts.Count >= 3 &&
+				    parts[parts.Count - 2]
+					    .Equals("AS", StringComparison.InvariantCultureIgnoreCase))
+				{
+					key = parts[parts.Count - 1];
+					f = f.Substring(0, f.Length - key.Length).Trim();
+					expr = f.Substring(0, f.Length - 2).Trim();
+				}
+				else
+				{
+					key = expression;
+					expr = expression;
+				}
+
+				expressionDict.Add(key, expr);
+			}
+
+			return expressionDict;
+		}
+
+
+		[NotNull]
+		public static Dictionary<string, string> CreateAliases([CanBeNull] Dictionary<string, string> expressionDict)
+		{
+			Dictionary<string, string> aliasFieldDict =
+				new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+			if (expressionDict == null)
+			{
+				return aliasFieldDict;
+			}
+
+			Dictionary<string, string> fieldAliasDict = new Dictionary<string, string>();
+
+
+			Dictionary<string, string> changedDict = new Dictionary<string, string>();
+
+			foreach (var pair in expressionDict)
+			{
+				string expression = pair.Value;
+				if (!expression.Contains("."))
+				{
+					continue;
+				}
+
+				string aliasedExpression = expression;
+				bool completed = false;
+				while (!completed)
+				{
+					completed = true;
+					foreach (string expressionToken in
+						ExpressionUtils.GetExpressionTokens(aliasedExpression, toUpper: true))
+					{
+						if (!expressionToken.Contains("."))
+						{
+							continue;
+						}
+
+						if (!fieldAliasDict.TryGetValue(expressionToken, out string alias))
+						{
+							alias = GetAlias(expressionToken, expressionDict.Values,
+							                 changedDict.Values);
+							aliasFieldDict.Add(alias, expressionToken);
+							fieldAliasDict.Add(expressionToken, alias);
+						}
+
+						aliasedExpression = Replace(aliasedExpression, expressionToken, alias);
+
+						completed = false;
+						break;
+					}
+				}
+
+				changedDict[pair.Key] = aliasedExpression;
+			}
+
+			foreach (var pair in changedDict)
+			{
+				expressionDict[pair.Key] = pair.Value;
+			}
+
+			return aliasFieldDict;
+		}
+
+		private static string GetAlias([NotNull] string token, [NotNull]ICollection<string> expressions,
+		                               [NotNull] ICollection<string> aliasedExpressions)
+		{
+			string candidate = $"_{token.Substring(token.LastIndexOf('.') + 1)}";
+			bool success = false;
+			while (! success)
+			{
+				const StringComparison ic = StringComparison.InvariantCultureIgnoreCase;
+				success =
+					expressions.FirstOrDefault(x => x.IndexOf(candidate, ic) >= 0) == null &&
+					aliasedExpressions.FirstOrDefault(x => x.IndexOf(candidate, ic) >= 0) == null;
+
+				if (! success)
+				{
+					candidate += "_";
+				}
+			}
+
+			return candidate;
+		}
+		[NotNull]
+		private static string Replace([NotNull] string expression, [NotNull] string search, [NotNull] string replace)
+		{
+			if (string.IsNullOrEmpty(search))
+			{
+				return expression;
+			}
+			int iStart = 0;
+			string replaced = expression;
+			while (true)
+			{
+				int iFound = replaced.Substring(iStart)
+													 .IndexOf(search, StringComparison.InvariantCultureIgnoreCase);
+
+				if (iFound < 0)
+				{
+					break;
+				}
+
+				// verify that it is no subpart of another expression
+				string extended = replaced.Substring(Math.Max(0, iFound - 1));
+				extended = extended.Substring(0, Math.Min(extended.Length, search.Length + 2));
+
+				foreach (string expressionToken in ExpressionUtils.GetExpressionTokens(extended, toUpper: true))
+				{
+					if (expressionToken == search)
+					{
+						replaced = $"{replaced.Substring(0, iFound)}{replace}{replaced.Substring(iFound + search.Length)}";
+						iStart = 0;
+					}
+					else
+					{
+						iStart = iFound + 1;
+					}
+					break;
+				}
+			}
+
+			return replaced;
 		}
 
 		[NotNull]

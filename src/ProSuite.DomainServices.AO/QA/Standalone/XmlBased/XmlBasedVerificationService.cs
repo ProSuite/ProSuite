@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Text;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
@@ -51,12 +52,14 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 		public QualitySpecification SetupQualitySpecification(
 			[NotNull] string dataQualityXml,
 			[NotNull] string specificationName,
-			[NotNull] List<DataSource> dataSourceReplacements,
+			[NotNull] IList<DataSource> dataSourceReplacements,
 			bool ignoreConditionsForUnknownDatasets = true)
 		{
 			IList<XmlQualitySpecification> qualitySpecifications;
 			XmlDataQualityDocument document;
-			using (TextReader xmlReader = new StringReader(dataQualityXml))
+
+			using (Stream baseStream = new MemoryStream(Encoding.UTF8.GetBytes(dataQualityXml)))
+			using (StreamReader xmlReader = new StreamReader(baseStream))
 			{
 				document = XmlDataQualityUtils.ReadXmlDocument(xmlReader,
 				                                               out qualitySpecifications);
@@ -196,7 +199,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 		private static XmlBasedQualitySpecificationFactory CreateSpecificationFactory()
 		{
 			var modelFactory = new VerifiedModelFactory(
-				CreateSimpleWorkspaceContext, new SimpleVerifiedDatasetHarvester());
+				new MasterDatabaseWorkspaceContextFactory(), new SimpleVerifiedDatasetHarvester());
 
 			var datasetOpener = new SimpleDatasetOpener(new MasterDatabaseDatasetContext());
 

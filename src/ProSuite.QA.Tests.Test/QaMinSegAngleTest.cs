@@ -134,9 +134,9 @@ namespace ProSuite.QA.Tests.Test
 				});
 
 			var condition = new QualityCondition("testtest", testDescriptor);
-			QualityConditionParameterUtils.AddParameterValue(condition, "featureClass", ds);
-			QualityConditionParameterUtils.AddParameterValue(condition, "limit", limit);
-			QualityConditionParameterUtils.AddParameterValue(condition, "is3D", true);
+			InstanceConfigurationUtils.AddParameterValue(condition, "featureClass", ds);
+			InstanceConfigurationUtils.AddParameterValue(condition, "limit", limit);
+			InstanceConfigurationUtils.AddParameterValue(condition, "is3D", true);
 
 			TestFactory factory = TestFactoryUtils.CreateTestFactory(condition);
 			Assert.IsNotNull(factory);

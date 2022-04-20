@@ -529,8 +529,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 			[CanBeNull] string configKeyWord,
 			params IField[] fields)
 		{
-			return CreateSimpleFeatureClass(workspace, fclassName,
-			                                CreateFields(fields), configKeyWord);
+			return CreateSimpleFeatureClass(
+				workspace, fclassName, FieldUtils.CreateFields(fields), configKeyWord);
 		}
 
 		[NotNull]
@@ -538,7 +538,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 			[NotNull] IFeatureWorkspace workspace,
 			[NotNull] string fclassName,
 			[NotNull] IFields fields,
-			[CanBeNull] string configKeyWord = null)
+			[CanBeNull] string configKeyWord = null,
+			[CanBeNull] string shapeFieldName = null)
 		{
 			Assert.ArgumentNotNull(workspace, nameof(workspace));
 			Assert.ArgumentNotNullOrEmpty(fclassName, nameof(fclassName));
@@ -549,7 +550,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 				return workspace.CreateFeatureClass(
 					fclassName, fields, GetFeatureUID(), null,
 					esriFeatureType.esriFTSimple,
-					FieldUtils.GetShapeFieldName(), configKeyWord);
+					shapeFieldName ?? FieldUtils.GetShapeFieldName(), configKeyWord);
 			}
 			catch (Exception)
 			{
@@ -568,17 +569,6 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 				throw;
 			}
-		}
-
-		[NotNull]
-		public static IFeatureClass CreateSimpleFeatureClass(
-			[NotNull] IFeatureDataset featureDataset,
-			[NotNull] string fclassName,
-			[CanBeNull] string configKeyWord,
-			params IField[] fields)
-		{
-			return CreateSimpleFeatureClass(featureDataset, fclassName,
-			                                CreateFields(fields), configKeyWord);
 		}
 
 		[NotNull]
@@ -613,7 +603,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		                                 [CanBeNull] string configKeyword,
 		                                 params IField[] fields)
 		{
-			return CreateTable(workspace, name, configKeyword, CreateFields(fields));
+			return CreateTable(workspace, name, configKeyword, FieldUtils.CreateFields(fields));
 		}
 
 		[NotNull]
@@ -1171,6 +1161,43 @@ namespace ProSuite.Commons.AO.Geodatabase
 			return ((ISQLSyntax) workspace).QualifyColumnName(tableName, unqualifiedFieldName);
 		}
 
+		[CanBeNull]
+		public static string GetGdbWorkspaceCatalogPath(
+			[NotNull] string objectClassCatalogPath,
+			[CanBeNull] out string featureDataset,
+			[CanBeNull] out string featureClass)
+		{
+			Assert.ArgumentNotNullOrEmpty(objectClassCatalogPath,
+			                              nameof(objectClassCatalogPath));
+
+			// Shave off the last part until it is a valid connection file / file workspace
+			string candidateWorkspace = objectClassCatalogPath;
+
+			featureClass = null;
+			featureDataset = null;
+			do
+			{
+				if (IsGdbWorkspacePath(candidateWorkspace))
+				{
+					return candidateWorkspace;
+				}
+
+				if (featureClass == null)
+				{
+					featureClass = Path.GetFileName(candidateWorkspace);
+				}
+				else
+				{
+					featureDataset = Path.GetFileName(candidateWorkspace);
+				}
+
+				candidateWorkspace =
+					Path.GetDirectoryName(candidateWorkspace);
+			} while (candidateWorkspace != null);
+
+			return null;
+		}
+
 		public static void ParseTableName([NotNull] IFeatureWorkspace featureWorkspace,
 		                                  [NotNull] string fullTableName,
 		                                  [CanBeNull] out string databaseName,
@@ -1337,9 +1364,9 @@ namespace ProSuite.Commons.AO.Geodatabase
 			foreach (esriDatasetType datasetType in datasetTypes)
 			{
 				foreach (IDatasetName datasetName in GetDatasetNames(featureWorkspace,
-				                                                     datasetType,
-				                                                     featureDatasetNames,
-				                                                     owner))
+					         datasetType,
+					         featureDatasetNames,
+					         owner))
 				{
 					yield return datasetName;
 				}
@@ -1484,9 +1511,9 @@ namespace ProSuite.Commons.AO.Geodatabase
 			Assert.ArgumentNotNull(workspace, nameof(workspace));
 
 			foreach (IDataset dataset in
-				GetDatasets(workspace,
-				            esriDatasetType.esriDTFeatureClass,
-				            esriDatasetType.esriDTTable))
+			         GetDatasets(workspace,
+			                     esriDatasetType.esriDTFeatureClass,
+			                     esriDatasetType.esriDTTable))
 			{
 				if (dataset is IObjectClass objectClass)
 				{
@@ -1495,7 +1522,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 
 			foreach (IDataset dataset in
-				GetDatasets(workspace, esriDatasetType.esriDTFeatureDataset))
+			         GetDatasets(workspace, esriDatasetType.esriDTFeatureDataset))
 			{
 				foreach (
 					IFeatureClass featureClass in GetFeatureClasses((IFeatureDataset) dataset))
@@ -1533,6 +1560,14 @@ namespace ProSuite.Commons.AO.Geodatabase
 			Assert.ArgumentNotNull(featureClassContainer, nameof(featureClassContainer));
 
 			IEnumFeatureClass enumFeatureClass = featureClassContainer.Classes;
+
+			return GetFeatureClasses(enumFeatureClass);
+		}
+
+		[NotNull]
+		public static IEnumerable<IFeatureClass> GetFeatureClasses(
+			[NotNull] IEnumFeatureClass enumFeatureClass)
+		{
 			enumFeatureClass.Reset();
 
 			IFeatureClass featureClass = enumFeatureClass.Next();
@@ -3787,7 +3822,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 				}
 				else
 				{
-					_msg.VerboseDebug(() => $"Dataset name returned more than once: {datasetName.Name}");
+					_msg.VerboseDebug(
+						() => $"Dataset name returned more than once: {datasetName.Name}");
 				}
 
 				datasetName = enumDatasetNames.Next();
@@ -3857,21 +3893,6 @@ namespace ProSuite.Commons.AO.Geodatabase
 			Assert.ArgumentNotNull(subtypeFieldValue, nameof(subtypeFieldValue));
 
 			return subtypeFieldValue as int? ?? Convert.ToInt32(subtypeFieldValue);
-		}
-
-		[NotNull]
-		private static IFields CreateFields([NotNull] IEnumerable<IField> fields)
-		{
-			Assert.ArgumentNotNull(fields, nameof(fields));
-
-			IFieldsEdit result = new FieldsClass();
-
-			foreach (IField field in fields)
-			{
-				result.AddField(field);
-			}
-
-			return result;
 		}
 
 		[NotNull]
@@ -3973,6 +3994,29 @@ namespace ProSuite.Commons.AO.Geodatabase
 			table.DeleteSearchedRows(filter);
 
 			_msg.DebugStopTiming(watch, "Rows deleted");
+		}
+
+		private static bool IsGdbWorkspacePath(string catalogPath)
+		{
+			if (catalogPath.EndsWith(".sde",
+			                         StringComparison.InvariantCultureIgnoreCase))
+			{
+				return true;
+			}
+
+			if (catalogPath.EndsWith(".gdb",
+			                         StringComparison.InvariantCultureIgnoreCase))
+			{
+				return true;
+			}
+
+			if (catalogPath.EndsWith(".mdb",
+			                         StringComparison.InvariantCultureIgnoreCase))
+			{
+				return true;
+			}
+
+			return Directory.Exists(catalogPath);
 		}
 
 		#endregion

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -13,7 +13,7 @@ namespace ProSuite.Commons.Orm.NHibernate
 	[UsedImplicitly]
 	public class MappingConfigurator : IMappingConfigurator
 	{
-		private static readonly IMsg _msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private readonly string _assemblyWithEmbeddedFiles;
 		private readonly List<string> _embeddedFiles;

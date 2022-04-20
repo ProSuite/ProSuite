@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Geom.Wkb;
 
 namespace ProSuite.Commons.Geom
 {
@@ -755,7 +757,7 @@ return : Point2D : lines cut each other at Point (non parallel)
 				Linestring linestring = segmentList.GetPart(partIdx);
 
 				foreach (int localIndex in GetShortSegmentIndexes(
-					linestring, minimumSegmentLength, use3dLength, perimeter))
+					         linestring, minimumSegmentLength, use3dLength, perimeter))
 				{
 					yield return new SegmentIndex(partIdx, localIndex);
 				}
@@ -950,6 +952,73 @@ return : Point2D : lines cut each other at Point (non parallel)
 			}
 
 			return true;
+		}
+
+		public static byte[] ToWkb([NotNull] ISegmentList geometry)
+		{
+			WkbGeomWriter geometryWriter = new WkbGeomWriter();
+
+			return geometryWriter.WriteGeometry(geometry);
+		}
+
+		public static byte[] ToWkb<T>([NotNull] Multipoint<T> multipoint) where T : IPnt
+		{
+			WkbGeomWriter geometryWriter = new WkbGeomWriter();
+
+			Ordinates ordinates = typeof(T) == typeof(Pnt3D) ? Ordinates.Xyz : Ordinates.Xy;
+
+			return geometryWriter.WriteMultipoint(multipoint, ordinates);
+		}
+
+		public static byte[] ToWkb<T>([NotNull] T point) where T : IPnt
+		{
+			WkbGeomWriter geometryWriter = new WkbGeomWriter();
+
+			Ordinates ordinates = typeof(T) == typeof(Pnt3D) ? Ordinates.Xyz : Ordinates.Xy;
+
+			return geometryWriter.WritePoint(point, ordinates);
+		}
+
+		public static IBoundedXY FromWkb([NotNull] byte[] wkb,
+		                                 out WkbGeometryType wkbType)
+		{
+			WkbGeomReader reader = new WkbGeomReader();
+
+			IBoundedXY geometry = reader.ReadGeometry(new MemoryStream(wkb), out wkbType);
+
+			return geometry;
+		}
+
+		public static void ToWkbFile([NotNull] ISegmentList geometry,
+		                             [NotNull] string filePath)
+		{
+			byte[] bytes = ToWkb(geometry);
+
+			File.WriteAllBytes(filePath, bytes);
+		}
+
+		public static void ToWkbFile<T>([NotNull] Multipoint<T> multipoint,
+		                                [NotNull] string filePath) where T : IPnt
+		{
+			byte[] bytes = ToWkb(multipoint);
+
+			File.WriteAllBytes(filePath, bytes);
+		}
+
+		public static void ToWkbFile<T>([NotNull] T point,
+		                                [NotNull] string filePath) where T : IPnt
+		{
+			byte[] bytes = ToWkb(point);
+
+			File.WriteAllBytes(filePath, bytes);
+		}
+
+		public static IBoundedXY FromWkbFile(string filePath,
+		                                     out WkbGeometryType wkbType)
+		{
+			byte[] bytes = File.ReadAllBytes(filePath);
+
+			return FromWkb(bytes, out wkbType);
 		}
 
 		private static bool IsMoreSouthEast(Pnt3D point1, Pnt3D point2)

@@ -97,6 +97,17 @@ namespace ProSuite.DomainModel.AO.DataModel
 				                                           dataset);
 		}
 
+		public override ITopology OpenTopology(ITopologyDataset dataset)
+		{
+			Assert.ArgumentNotNull(dataset, nameof(dataset));
+
+			WorkspaceDataset workspaceDataset = GetWorkspaceDataset(dataset);
+
+			return workspaceDataset == null
+				       ? null
+				       : TopologyUtils.OpenTopology(FeatureWorkspace, workspaceDataset.Name);
+		}
+
 		public override IRasterDataset OpenRasterDataset(IDdxRasterDataset dataset)
 		{
 			Assert.ArgumentNotNull(dataset, nameof(dataset));
@@ -119,7 +130,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 		}
 
 		public override SimpleRasterMosaic OpenSimpleRasterMosaic(
-			ISimpleRasterMosaicDataset dataset)
+			IRasterMosaicDataset dataset)
 		{
 			Assert.ArgumentNotNull(dataset, nameof(dataset));
 

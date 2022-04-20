@@ -21,5 +21,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 		bool IncludeObsolete { get; set; }
 
 		void AddHeaderItem([NotNull] string name, [CanBeNull] string value);
+
+		void IncludeTransformer([NotNull] Type testType, int ctorIndex);
 	}
 }

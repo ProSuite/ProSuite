@@ -6,11 +6,23 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.QA.Container
 {
-	public interface ITest
+	public interface IInvolvesTables
 	{
 		[NotNull]
 		IList<ITable> InvolvedTables { get; }
 
+		/// <summary>
+		/// limits the data to execute corresponding to condition
+		/// </summary>
+		/// <param name="tableIndex"></param>
+		/// <param name="condition"></param>
+		void SetConstraint(int tableIndex, [CanBeNull] string condition);
+
+		void SetSqlCaseSensitivity(int tableIndex, bool useCaseSensitiveQaSql);
+	}
+
+	public interface ITest : IInvolvesTables
+	{
 		/// <summary>
 		/// thrown before a test on a row is performed
 		/// </summary>
@@ -60,14 +72,69 @@ namespace ProSuite.QA.Container
 		/// </summary>
 		/// <param name="area"></param>
 		void SetAreaOfInterest([CanBeNull] IPolygon area);
+	}
 
-		/// <summary>
-		/// limits the data to execute corresponding to condition
-		/// </summary>
-		/// <param name="tableIndex"></param>
-		/// <param name="condition"></param>
-		void SetConstraint(int tableIndex, [CanBeNull] string condition);
+	public interface IFilterTest
+	{
+		[CanBeNull]
+		IReadOnlyList<IIssueFilter> IssueFilters { get; }
 
-		void SetSqlCaseSensitivity(int tableIndex, bool useCaseSensitiveQaSql);
+		[CanBeNull]
+		IReadOnlyList<IRowFilter> GetRowFilters(int tableIndex);
+	}
+
+	public interface IFilterEditTest : IFilterTest
+	{
+		void SetIssueFilters([CanBeNull] string expression, IList<IIssueFilter> issueFilters);
+
+		void SetRowFilters(int tableIndex, [CanBeNull] string expression,
+		                   [CanBeNull] IReadOnlyList<IRowFilter> rowFilters);
+	}
+
+	public interface ITableTransformer : IInvolvesTables
+	{
+		object GetTransformed();
+
+		string TransformerName { get; set; }
+	}
+
+	public interface ITableTransformer<out T> : ITableTransformer
+	{
+		new T GetTransformed();
+	}
+
+	public interface IHasSearchDistance
+	{
+		double SearchDistance { get; }
+	}
+
+	public interface ITransformedValue
+	{
+		[NotNull]
+		IList<ITable> InvolvedTables { get; }
+
+		ISearchable DataContainer { get; set; }
+	}
+
+	public interface ITransformedTable
+	{
+		void SetKnownTransformedRows([CanBeNull] IEnumerable<IRow> knownRows);
+
+		bool NoCaching { get; }
+	}
+
+	public interface INamedFilter : IInvolvesTables
+	{
+		string Name { get; set; }
+	}
+
+	public interface IRowFilter : INamedFilter
+	{
+		bool VerifyExecute(IRow row);
+	}
+
+	public interface IIssueFilter : INamedFilter
+	{
+		bool Check(QaErrorEventArgs args);
 	}
 }

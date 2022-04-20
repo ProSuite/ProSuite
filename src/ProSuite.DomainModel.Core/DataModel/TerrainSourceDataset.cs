@@ -1,10 +1,9 @@
-using System;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.DomainModel.Core.DataModel
 {
-	public class TerrainSourceDataset : IEquatable<TerrainSourceDataset>
+	public class TerrainSourceDataset
 	{
 		[UsedImplicitly] private IVectorDataset _dataset;
 		[UsedImplicitly] private string _whereClause;

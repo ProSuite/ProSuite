@@ -51,9 +51,10 @@ namespace ProSuite.QA.Container.TestSupport
 		public IList<RelatedTable> Related => _relTables.AsReadOnly();
 
 		[NotNull]
-		public IList<InvolvedRow> GetInvolvedRows([NotNull] IRow row)
+		public InvolvedRows GetInvolvedRows([NotNull] IRow row)
 		{
-			var involved = new List<InvolvedRow>();
+			InvolvedRows involved = new InvolvedRows();
+			involved.TestedRows.Add(row);
 
 			foreach (RelatedTable relatedTable in _relTables)
 			{

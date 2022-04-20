@@ -111,6 +111,7 @@
     <Compile Include="QA\DatasetReports\Xml\XmlRange.cs" />
     <Compile Include="QA\DatasetReports\Xml\XmlSpatialReferenceDescriptor.cs" />
     <Compile Include="QA\DatasetReports\Xml\XmlSpatialReferenceDescriptorUtils.cs" />
+    <Compile Include="QA\QualityVerificationUtils.cs" />
     <Compile Include="QA\Standalone\RuleBased\Category.cs" />
     <Compile Include="QA\Standalone\RuleBased\HtmlReportModel.cs" />
     <Compile Include="QA\Standalone\RuleBased\HtmlReportWriter.cs" />
@@ -302,6 +303,7 @@
     <Compile Include="QA\VerificationReports\Xml\XmlExceptionObject.cs" />
     <Compile Include="QA\VerificationReports\Xml\XmlExceptionStatistics.cs" />
     <Compile Include="QA\VerificationReports\Xml\XmlGdbObjectReference.cs" />
+    <Compile Include="QA\VerificationReports\Xml\XmlInstanceConfiguration.cs" />
     <Compile Include="QA\VerificationReports\Xml\XmlInvolvedTable.cs" />
     <Compile Include="QA\VerificationReports\Xml\XmlIssue.cs" />
     <Compile Include="QA\VerificationReports\Xml\XmlQualityConditionExceptions.cs" />
@@ -322,8 +324,10 @@
     <Compile Include="QA\VerifiedDataModel\VerifiedDatasetHarvesterBase.cs" />
     <Compile Include="QA\VerifiedDataModel\VerifiedModel.cs" />
     <Compile Include="QA\VerifiedDataModel\VerifiedModelFactory.cs" />
-    <Compile Include="QA\VerifiedDataModel\VerifiedSimpleRasterMosaicDataset.cs" />
+    <Compile Include="QA\VerifiedDataModel\VerifiedRasterDataset.cs" />
+    <Compile Include="QA\VerifiedDataModel\VerifiedRasterMosaicDataset.cs" />
     <Compile Include="QA\VerifiedDataModel\VerifiedTableDataset.cs" />
+    <Compile Include="QA\VerifiedDataModel\VerifiedTopologyDataset.cs" />
     <Compile Include="QA\VerifiedDataModel\VerifiedVectorDataset.cs" />
     <Compile Include="Schemas\Schema.Designer.cs">
       <AutoGen>True</AutoGen>

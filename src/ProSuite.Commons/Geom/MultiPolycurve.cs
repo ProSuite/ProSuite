@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace ProSuite.Commons.Geom
@@ -25,7 +25,7 @@ namespace ProSuite.Commons.Geom
 
 		public override MultiLinestring Clone()
 		{
-			var result = new MultiPolycurve(Linestrings)
+			var result = new MultiPolycurve(Linestrings.Select(l => l.Clone()))
 			             {
 				             //Id = Id
 			             };

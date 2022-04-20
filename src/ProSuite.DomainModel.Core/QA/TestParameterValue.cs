@@ -14,7 +14,9 @@ namespace ProSuite.DomainModel.Core.QA
 		private static readonly IMsg _msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);
 
 		[UsedImplicitly] private readonly string _testParameterName;
+
 		private Type _dataType;
+		private TransformerConfiguration _valueSource;
 
 		#region Constructors
 
@@ -79,6 +81,13 @@ namespace ProSuite.DomainModel.Core.QA
 		}
 
 		public abstract string StringValue { get; set; }
+
+		[CanBeNull]
+		public TransformerConfiguration ValueSource
+		{
+			get { return _valueSource; }
+			set { _valueSource = value; }
+		}
 
 		[NotNull]
 		public abstract TestParameterValue Clone();

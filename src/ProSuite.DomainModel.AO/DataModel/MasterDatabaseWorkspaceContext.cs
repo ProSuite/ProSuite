@@ -5,21 +5,18 @@ using ESRI.ArcGIS.DataSourcesRaster;
 #endif
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
-using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Surface;
 using ProSuite.Commons.AO.Surface.Raster;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DomainModel.AO.DataModel
 {
 	public class MasterDatabaseWorkspaceContext : WorkspaceContextBase
 	{
-		private static readonly IMsg _msg = Msg.ForCurrentClass();
-
 		[NotNull] private readonly Model _model;
+		[NotNull] private readonly IWorkspaceProxy _workspaceProxy;
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="MasterDatabaseWorkspaceContext"/> class.
@@ -35,12 +32,9 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 			_model = model;
 
-			if (model.KeepDatasetLocks)
-			{
-				_msg.Debug(
-					"Keeping dataset locks is not supported by the simple MasterDatabaseWorkspaceContext." +
-					"No workspace proxy will be used.");
-			}
+			_workspaceProxy = model.KeepDatasetLocks
+				                    ? (IWorkspaceProxy) new CachedWorkspaceProxy(featureWorkspace)
+				                    : new SimpleWorkspaceProxy(featureWorkspace);
 		}
 
 		public override bool CanOpen(IDdxDataset dataset)
@@ -57,25 +51,24 @@ namespace ProSuite.DomainModel.AO.DataModel
 			SpatialReferenceDescriptor spatialReferenceDescriptor =
 				(dataset.Model as Model)?.SpatialReferenceDescriptor;
 
-			return (IObjectClass) ModelElementUtils.OpenTable(
-				FeatureWorkspace,
+			return (IObjectClass) _workspaceProxy.OpenTable(
 				GetGdbElementName(dataset),
 				dataset.GetAttribute(AttributeRole.ObjectID)?.Name,
 				spatialReferenceDescriptor);
+		}
 
-			//return (IObjectClass) _workspaceProxy.OpenTable(
-			//	GetGdbElementName(dataset),
-			//	dataset.GetAttribute(AttributeRole.ObjectID)?.Name,
-			//	spatialReferenceDescriptor);
+		public override ITopology OpenTopology(ITopologyDataset dataset)
+		{
+			Assert.ArgumentNotNull(dataset, nameof(dataset));
+
+			return _workspaceProxy.OpenTopology(GetGdbElementName(dataset));
 		}
 
 		public override IRasterDataset OpenRasterDataset(IDdxRasterDataset dataset)
 		{
 			Assert.ArgumentNotNull(dataset, nameof(dataset));
 
-			return DatasetUtils.OpenRasterDataset(Workspace, GetGdbElementName(dataset));
-
-			//return _workspaceProxy.OpenRasterDataset(GetGdbElementName(dataset));
+			return _workspaceProxy.OpenRasterDataset(GetGdbElementName(dataset));
 		}
 
 		public override TerrainReference OpenTerrainReference(ISimpleTerrainDataset dataset)
@@ -89,9 +82,9 @@ namespace ProSuite.DomainModel.AO.DataModel
 		}
 
 		public override SimpleRasterMosaic OpenSimpleRasterMosaic(
-			ISimpleRasterMosaicDataset dataset)
+			IRasterMosaicDataset dataset)
 		{
-			IMosaicDataset mosaic = DatasetUtils.OpenMosaicDataset(Workspace, dataset.Name);
+			IMosaicDataset mosaic = _workspaceProxy.OpenMosaicDataset(dataset.Name);
 
 			return new SimpleRasterMosaic(mosaic);
 		}
@@ -100,9 +93,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 		{
 			Assert.ArgumentNotNull(association, nameof(association));
 
-			return DatasetUtils.OpenRelationshipClass(FeatureWorkspace,
-			                                          GetGdbElementName(association));
-			//return _workspaceProxy.OpenRelationshipClass(GetGdbElementName(association));
+			return _workspaceProxy.OpenRelationshipClass(GetGdbElementName(association));
 		}
 
 		public override Dataset GetDatasetByGdbName(string gdbDatasetName)

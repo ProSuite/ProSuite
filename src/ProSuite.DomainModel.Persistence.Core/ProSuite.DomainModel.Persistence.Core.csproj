@@ -51,12 +51,15 @@
     <Compile Include="DataModel\AssociationEndRepository.cs" />
     <Compile Include="DataModel\AssociationRepository.cs" />
     <Compile Include="DataModel\AttributeRepository.cs" />
+    <Compile Include="DataModel\AttributeRoleType.cs" />
     <Compile Include="DataModel\AttributeTypeRepository.cs" />
     <Compile Include="DataModel\DatasetCategoryRepository.cs" />
     <Compile Include="DataModel\DatasetRepository.cs" />
     <Compile Include="DataModel\GeometryTypeRepository.cs" />
+    <Compile Include="DataModel\LinearNetworkRepository.cs" />
     <Compile Include="DataModel\ObjectCategoryAttributeConstraintRepository.cs" />
     <Compile Include="DataModel\ObjectCategoryRepository.cs" />
+    <Compile Include="DataModel\SimpleTerrainDatasetRepository.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="QA\DataQualityCategoryRepository.cs" />
     <Compile Include="QA\QualityConditionRepository.cs" />

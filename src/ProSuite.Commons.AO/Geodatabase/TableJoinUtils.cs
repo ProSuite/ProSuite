@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -15,8 +15,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 {
 	public static class TableJoinUtils
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private const int _maxNameLength = 59;
 
@@ -30,6 +29,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		/// <param name="excludeShapeField">if set to <c>true</c> no shape field will be included in the field list. 
 		/// In this case the resulting table can never be used as a feature class.</param>
 		/// <param name="whereClause">An optional where clause</param>
+		/// <param name="queryTableName">An optional name for the query table. If not set, it's generated</param>
 		/// <returns>
 		/// A query table. This will be a feature class if
 		/// <see cref="CanCreateQueryFeatureClass(System.Collections.Generic.IList{ESRI.ArcGIS.Geodatabase.IRelationshipClass},JoinType)"/>
@@ -41,11 +41,13 @@ namespace ProSuite.Commons.AO.Geodatabase
 			JoinType joinType = JoinType.InnerJoin,
 			bool includeOnlyOIDFields = false,
 			bool excludeShapeField = false,
-			string whereClause = null)
+			string whereClause = null,
+			string queryTableName = null)
+
 		{
 			return CreateQueryTable(new[] {relationshipClass}, joinType,
 			                        includeOnlyOIDFields, excludeShapeField,
-			                        whereClause);
+			                        whereClause, queryTableName);
 		}
 
 		/// <summary>
@@ -58,6 +60,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		/// <param name="excludeShapeField">if set to <c>true</c> no shape field will be included in the field list. 
 		/// In this case the resulting table can never be used as a feature class.</param>
 		/// <param name="whereClause">An optional where clause</param>
+		/// <param name="queryTableName">An optional name for the query table. If not set, it's generated</param>
 		/// <returns>
 		/// A query table. This will be a feature class if
 		/// <see cref="CanCreateQueryFeatureClass(System.Collections.Generic.IList{ESRI.ArcGIS.Geodatabase.IRelationshipClass},JoinType)"/>
@@ -69,12 +72,15 @@ namespace ProSuite.Commons.AO.Geodatabase
 			JoinType joinType = JoinType.InnerJoin,
 			bool includeOnlyOIDFields = false,
 			bool excludeShapeField = false,
-			string whereClause = null)
+			string whereClause = null,
+			string queryTableName = null)
 		{
 			Assert.ArgumentNotNull(relationshipClasses, nameof(relationshipClasses));
 
-			return CreateQueryTable(relationshipClasses, joinType,
-			                        GenerateQueryTableName(relationshipClasses),
+			string name = ! string.IsNullOrWhiteSpace(queryTableName)
+				              ? queryTableName
+				              : GenerateQueryTableName(relationshipClasses);
+			return CreateQueryTable(relationshipClasses, joinType, name,
 			                        includeOnlyOIDFields, excludeShapeField,
 			                        whereClause);
 		}
@@ -114,11 +120,11 @@ namespace ProSuite.Commons.AO.Geodatabase
 			queryDef.WhereClause = whereClause;
 
 			IQueryName2 queryName = new FeatureQueryNameClass
-			{
-				PrimaryKey = primaryKey,
-				CopyLocally = false,
-				QueryDef = queryDef
-			};
+			                        {
+				                        PrimaryKey = primaryKey,
+				                        CopyLocally = false,
+				                        QueryDef = queryDef
+			                        };
 
 			var name = (IDatasetName) queryName;
 			name.WorkspaceName = WorkspaceUtils.GetWorkspaceName(workspace);
@@ -131,9 +137,9 @@ namespace ProSuite.Commons.AO.Geodatabase
 				using (_msg.IncrementIndentation())
 				{
 					_msg.DebugFormat("SELECT {0} FROM {1} WHERE {2}",
-									 queryDef.SubFields,
-									 queryDef.Tables,
-									 queryDef.WhereClause);
+					                 queryDef.SubFields,
+					                 queryDef.Tables,
+					                 queryDef.WhereClause);
 					_msg.DebugFormat("Primary key: {0}", queryName.PrimaryKey);
 					_msg.DebugFormat("FClass name: {0}", datasetName);
 				}
@@ -263,6 +269,54 @@ namespace ProSuite.Commons.AO.Geodatabase
 			                              primaryKeyFieldName, workspace, queryDef);
 		}
 
+		public static GdbFeatureClass CreateJoinedGdbFeatureClass(
+			[NotNull] IRelationshipClass relationshipClass,
+			[NotNull] IFeatureClass geometryEndClass,
+			[NotNull] string name)
+		{
+			IObjectClass otherEndClass =
+				RelationshipClassUtils.GetOtherEndObjectClass(relationshipClass, geometryEndClass);
+
+			var result = new GdbFeatureClass(-1, name, geometryEndClass.ShapeType,
+			                                 null,
+			                                 t => new JoinedDataset(
+				                                 relationshipClass, geometryEndClass,
+				                                 (IFeatureClass) t));
+
+			for (int i = 0; i < geometryEndClass.Fields.FieldCount; i++)
+			{
+				IField field = geometryEndClass.Fields.Field[i];
+				result.AddField(CreateQualifiedField(field, geometryEndClass));
+			}
+
+			for (int i = 0; i < otherEndClass.Fields.FieldCount; i++)
+			{
+				IField field = otherEndClass.Fields.Field[i];
+
+				if (field.Type == esriFieldType.esriFieldTypeGeometry)
+				{
+					continue;
+				}
+
+				result.AddField(CreateQualifiedField(field, otherEndClass));
+			}
+
+			// Make sure the OID field name is the one from the feature class
+			result.SetOIDFieldName(
+				DatasetUtils.QualifyFieldName(geometryEndClass, geometryEndClass.OIDFieldName));
+
+			return result;
+		}
+
+		private static IField CreateQualifiedField(IField prototype, IObjectClass table)
+		{
+			var result = (IField) ((IClone) prototype).Clone();
+
+			((IFieldEdit) result).Name_2 = DatasetUtils.QualifyFieldName(table, prototype.Name);
+
+			return result;
+		}
+
 		[NotNull]
 		private static IQueryDef CreateQueryDef([NotNull] IRelationshipClass relClass,
 		                                        JoinType joinType,
@@ -271,7 +325,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			Assert.ArgumentNotNull(relClass, nameof(relClass));
 
 			var joinDefinition = new RelationshipClassJoinDefinition(relClass, joinType,
-			                                                         baseFeatureClass);
+				baseFeatureClass);
 
 			IWorkspace workspace = ((IDataset) relClass).Workspace;
 			IQueryDef result = ((IFeatureWorkspace) workspace).CreateQueryDef();
@@ -343,7 +397,6 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			return result;
 		}
-
 
 		[NotNull]
 		private static string GetTableQuerySubfields(
@@ -570,7 +623,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 				                 datasetName.WorkspaceName == null
 					                 ? "<not defined>"
 					                 : WorkspaceUtils.GetConnectionString(datasetName.WorkspaceName,
-					                                                      replacePassword));
+						                 replacePassword));
 
 				var featureClassName = queryName as IFeatureClassName;
 
@@ -656,7 +709,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			IFeatureClass baseFeatureClass = excludeShapeField
 				                                 ? null
 				                                 : GetBaseFeatureClass(relationshipClasses,
-				                                                       joinType);
+					                                 joinType);
 
 			if (baseFeatureClass != null)
 			{
@@ -751,7 +804,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 					return baseFeatureClass != null &&
 					       RelationshipClassUtils.InvolvesObjectClass(relationshipClass,
-					                                                  baseFeatureClass)
+						       baseFeatureClass)
 						       ? (ITable) baseFeatureClass
 						       : (ITable) relationshipClass.DestinationClass;
 
@@ -974,11 +1027,15 @@ namespace ProSuite.Commons.AO.Geodatabase
 			{
 				if (StringUtils.IsNotEmpty(queryDef.WhereClause))
 				{
-					_msg.VerboseDebug(() => $"Created Query Def: SELECT {queryDef.SubFields} FROM {queryDef.Tables} WHERE {queryDef.WhereClause}");
+					_msg.VerboseDebug(
+						() =>
+							$"Created Query Def: SELECT {queryDef.SubFields} FROM {queryDef.Tables} WHERE {queryDef.WhereClause}");
 				}
 				else
 				{
-					_msg.VerboseDebug(() => $"Created Query Def: SELECT {queryDef.SubFields} FROM {queryDef.Tables}");
+					_msg.VerboseDebug(
+						() =>
+							$"Created Query Def: SELECT {queryDef.SubFields} FROM {queryDef.Tables}");
 				}
 			}
 
@@ -1126,7 +1183,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			// add non-geometry fields
 			foreach (IObjectClass objectClass in
-				RelationshipClassUtils.GetObjectClasses(relationshipClasses))
+			         RelationshipClassUtils.GetObjectClasses(relationshipClasses))
 			{
 				bool excludeOIDField = exclusiveOIDFieldClass != null &&
 				                       objectClass != exclusiveOIDFieldClass;
@@ -1150,8 +1207,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 						// append RID field
 						var relTable = (ITable) relationshipClass;
 						string qualifiedFieldName = DatasetUtils.QualifyFieldName(relTable,
-						                                                          relTable
-							                                                          .OIDFieldName);
+							relTable
+								.OIDFieldName);
 
 						subfields.Add(qualifiedFieldName);
 					}
@@ -1162,7 +1219,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			if (baseFeatureClass != null)
 			{
 				lastFieldBeforeShape = DatasetUtils.QualifyFieldName(baseFeatureClass,
-				                                                     baseFeatureClass.OIDFieldName);
+					baseFeatureClass.OIDFieldName);
 			}
 			else
 			{
@@ -1215,7 +1272,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			// add non-geometry fields
 			foreach (IObjectClass objectClass in
-				RelationshipClassUtils.GetObjectClasses(relationshipClasses))
+			         RelationshipClassUtils.GetObjectClasses(relationshipClasses))
 			{
 				bool excludeOIDField = exclusiveOIDFieldClass != null &&
 				                       objectClass != exclusiveOIDFieldClass;
@@ -1239,8 +1296,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 						// append RID field
 						var relTable = (ITable) relationshipClass;
 						string qualifiedFieldName = DatasetUtils.QualifyFieldName(relTable,
-						                                                          relTable
-							                                                          .OIDFieldName);
+							relTable
+								.OIDFieldName);
 
 						subfieldInfos.Add(new JoinedSubfield(qualifiedFieldName,
 						                                     esriFieldType.esriFieldTypeOID));
@@ -1254,8 +1311,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 			{
 				subfieldInfos.Add(new JoinedSubfield(
 					                  DatasetUtils.QualifyFieldName(baseFeatureClass,
-					                                                baseFeatureClass
-						                                                .ShapeFieldName),
+						                  baseFeatureClass
+							                  .ShapeFieldName),
 					                  esriFieldType.esriFieldTypeGeometry));
 			}
 

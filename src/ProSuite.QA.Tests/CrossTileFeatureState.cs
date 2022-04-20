@@ -4,6 +4,7 @@ using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.QA.Tests.Transformers;
 
 namespace ProSuite.QA.Tests
 {
@@ -15,6 +16,8 @@ namespace ProSuite.QA.Tests
 		private readonly IDictionary<int, IDictionary<int, T>>
 			_suspiciousFeaturesByTableIndex =
 				new Dictionary<int, IDictionary<int, T>>();
+		private readonly IDictionary<int, IRowsCache>
+			_rowsCacheByTableIndex = new Dictionary<int, IRowsCache>();
 
 		private readonly IEnvelope _envelopeTemplate = new EnvelopeClass();
 
@@ -23,7 +26,10 @@ namespace ProSuite.QA.Tests
 			IDictionary<int, T> pendingFeatures;
 			if (_suspiciousFeaturesByTableIndex.TryGetValue(tableIndex, out pendingFeatures))
 			{
-				pendingFeatures.Remove(feature.OID);
+				if (pendingFeatures.Remove(feature.OID))
+				{
+					(feature.Table as IRowsCache)?.Remove(feature.OID);
+				}
 			}
 
 			HashSet<int> oids;
@@ -54,6 +60,7 @@ namespace ProSuite.QA.Tests
 			{
 				pendingFeatures = new Dictionary<int, T>();
 				_suspiciousFeaturesByTableIndex.Add(tableIndex, pendingFeatures);
+				_rowsCacheByTableIndex[tableIndex] = feature.Table as IRowsCache;
 			}
 
 			int oid = feature.OID;
@@ -61,6 +68,7 @@ namespace ProSuite.QA.Tests
 			{
 				pendingFeature = GetPendingFeature(feature);
 				pendingFeatures.Add(oid, pendingFeature);
+				(feature.Table as IRowsCache)?.Add(feature);
 			}
 		}
 
@@ -76,6 +84,7 @@ namespace ProSuite.QA.Tests
 			{
 				int tableIndex = pair.Key;
 				IDictionary<int, T> suspiciousFeatures = pair.Value;
+				_rowsCacheByTableIndex.TryGetValue(tableIndex, out IRowsCache rowsCache);
 
 				var oidsToRemove = new List<int>();
 				var errorFeatures = new List<T>();
@@ -97,6 +106,7 @@ namespace ProSuite.QA.Tests
 				foreach (int oid in oidsToRemove)
 				{
 					suspiciousFeatures.Remove(oid);
+					rowsCache?.Remove(oid);
 				}
 
 				PurgeFeaturesKnownOK(tableIndex, oidsToRemove);

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -10,6 +11,36 @@ namespace ProSuite.Commons.Geom.Wkb
 	/// </summary>
 	public class WkbGeomWriter : WkbWriter
 	{
+		public byte[] WriteGeometry([NotNull] ISegmentList geometry)
+		{
+			if (geometry is RingGroup polygon)
+			{
+				return WritePolygon(polygon);
+			}
+
+			if (geometry is MultiPolycurve multiPolycurve)
+			{
+				Ordinates ordinates = Ordinates.Xy;
+
+				if (multiPolycurve.Count > 0 &&
+				    multiPolycurve.GetPoint(0).Dimension == 3)
+				{
+					ordinates = Ordinates.Xyz;
+				}
+
+				return multiPolycurve.IsClosed
+					       ? WriteMultipolygon(multiPolycurve, ordinates)
+					       : WriteMultiLinestring(multiPolycurve, ordinates);
+			}
+
+			if (geometry is Polyhedron polyhedron)
+			{
+				return WriteMultiSurface(polyhedron);
+			}
+
+			throw new NotImplementedException("Unsupported type of geometry.");
+		}
+
 		public byte[] WritePoint([NotNull] IPnt point, Ordinates ordinates = Ordinates.Xyz)
 		{
 			MemoryStream memoryStream = InitializeWriter();

@@ -46,12 +46,20 @@ namespace ProSuite.DomainModel.AO.QA
 					return _datasetContext.OpenTerrainReference(simpleTerrainDataset);
 				}
 
-				if (dataset is ISimpleRasterMosaicDataset simpleRasterMosaicDataset)
+				if (dataset is IRasterMosaicDataset simpleRasterMosaicDataset)
 				{
 					return _datasetContext.OpenSimpleRasterMosaic(simpleRasterMosaicDataset);
 				}
 
-				// TODO: Raster, Mosaic
+				if (dataset is ITopologyDataset topologyDataset)
+				{
+					return _datasetContext.OpenTopology(topologyDataset);
+				}
+
+				if (dataset is IDdxRasterDataset rasterDataset)
+				{
+					return _datasetContext.OpenRasterDataset(rasterDataset);
+				}
 
 				return null;
 			}
@@ -67,6 +75,37 @@ namespace ProSuite.DomainModel.AO.QA
 			return _datasetContext.OpenRelationshipClass(association);
 		}
 
+		public bool IsSupportedType(Type dataType)
+		{
+			Assert.ArgumentNotNull(dataType, nameof(dataType));
+
+			if (typeof(IFeatureClass) == dataType)
+				return true;
+
+			if (typeof(ITable) == dataType)
+				return true;
+
+			if (typeof(ITopology) == dataType)
+				return true;
+
+			if (typeof(IMosaicDataset) == dataType)
+				return true;
+
+			if (typeof(IRasterDataset) == dataType)
+				return true;
+
+			if (typeof(IRasterDataset2) == dataType)
+				return true;
+
+			if (typeof(SimpleRasterMosaic) == dataType)
+				return true;
+
+			if (typeof(TerrainReference) == dataType)
+				return true;
+
+			return false;
+		}
+
 		private object OpenKnownDatasetType(IDdxDataset dataset, Type knownType)
 		{
 			Assert.ArgumentNotNull(knownType, nameof(knownType));
@@ -76,6 +115,9 @@ namespace ProSuite.DomainModel.AO.QA
 
 			if (typeof(ITable) == knownType)
 				return _datasetContext.OpenTable((IObjectDataset) dataset);
+
+			if (typeof(ITopology) == knownType)
+				return _datasetContext.OpenTopology((ITopologyDataset) dataset);
 
 			if (typeof(IMosaicDataset) == knownType)
 				return (IMosaicDataset) _datasetContext.OpenRasterDataset(
@@ -89,8 +131,7 @@ namespace ProSuite.DomainModel.AO.QA
 					(IDdxRasterDataset) dataset);
 
 			if (typeof(SimpleRasterMosaic) == knownType)
-				return _datasetContext.OpenSimpleRasterMosaic(
-					(ISimpleRasterMosaicDataset) dataset);
+				return _datasetContext.OpenSimpleRasterMosaic((IRasterMosaicDataset) dataset);
 
 			if (typeof(TerrainReference) == knownType)
 				return _datasetContext.OpenTerrainReference((ISimpleTerrainDataset) dataset);

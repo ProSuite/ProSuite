@@ -1,14 +1,14 @@
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container.Test;
-using ProSuite.QA.Tests.Test.Construction;
-using ProSuite.QA.Tests.Test.TestRunners;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.QA.Container.Test;
+using ProSuite.QA.Tests.Test.Construction;
 using ProSuite.QA.Tests.Test.TestData;
+using ProSuite.QA.Tests.Test.TestRunners;
 
 namespace ProSuite.QA.Tests.Test
 {
@@ -44,15 +44,58 @@ namespace ProSuite.QA.Tests.Test
 
 			// expect counter-clockwise: 0 errors
 			var runnerCounterClockwise = new QaContainerTestRunner(1000,
-			                                                       new QaBorderSense(
-				                                                       featureClass, false));
+				new QaBorderSense(
+					featureClass, false));
 			Assert.AreEqual(0, runnerCounterClockwise.Execute());
 
 			// expect clockwise: 1 error
 			var runnerClockwise = new QaContainerTestRunner(1000,
 			                                                new QaBorderSense(featureClass,
-			                                                                  true));
+				                                                true));
 			Assert.AreEqual(1, runnerClockwise.Execute());
+		}
+
+		[Test]
+		public void VerifyBorderHandling()
+		{
+			IFeatureWorkspace workspace =
+				TestWorkspaceUtils.CreateInMemoryWorkspace("BorderHandling");
+
+			IFieldsEdit fields = new FieldsClass();
+			fields.AddField(FieldUtils.CreateOIDField());
+			fields.AddField(FieldUtils.CreateShapeField(
+				                "Shape", esriGeometryType.esriGeometryPolyline,
+				                SpatialReferenceUtils.CreateSpatialReference(
+					                WellKnownHorizontalCS.LV95),
+				                1000));
+
+			IFeatureClass featureClass = DatasetUtils.CreateSimpleFeatureClass(
+				workspace, "Border", fields);
+
+			// invalid line
+			AddFeature(featureClass,
+			           CurveConstruction.StartLine(110, 20).LineTo(90, 30).LineTo(110, 40).Curve);
+
+			// valid lines combination
+			AddFeature(featureClass,
+			           CurveConstruction.StartLine(110, 50).LineTo(90, 60).LineTo(110, 70).Curve);
+			AddFeature(featureClass,
+			           CurveConstruction.StartLine(110, 70).LineTo(110, 50).Curve);
+
+			// expect clockwise: 1 error
+			var runnerClockwise = new QaContainerTestRunner(
+				1000, new QaBorderSense(featureClass, true));
+
+			// errors outside of checked area
+			Assert.AreEqual(
+				0, runnerClockwise.Execute(GeometryFactory.CreateEnvelope(0, 0, 100, 100)));
+
+			// errors within of checked area
+			Assert.AreEqual(
+				4, runnerClockwise.Execute(GeometryFactory.CreateEnvelope(0, 0, 200, 200)));
+
+			runnerClockwise.ClearErrors();
+			Assert.AreEqual(4, runnerClockwise.Execute());
 		}
 
 		[Test]
@@ -64,7 +107,9 @@ namespace ProSuite.QA.Tests.Test
 			IFieldsEdit fields = new FieldsClass();
 			fields.AddField(FieldUtils.CreateOIDField());
 			fields.AddField(FieldUtils.CreateShapeField(
-				                "Shape", esriGeometryType.esriGeometryPolyline, CreateLV95(),
+				                "Shape", esriGeometryType.esriGeometryPolyline,
+				                SpatialReferenceUtils.CreateSpatialReference(
+					                WellKnownHorizontalCS.LV95),
 				                1000));
 
 			IFeatureClass featureClass = DatasetUtils.CreateSimpleFeatureClass(
@@ -101,16 +146,6 @@ namespace ProSuite.QA.Tests.Test
 			feature.Store();
 
 			return feature;
-		}
-
-		[NotNull]
-		private static ISpatialReference CreateLV95()
-		{
-			ISpatialReference result = SpatialReferenceUtils.CreateSpatialReference
-				((int) esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95, true);
-			SpatialReferenceUtils.SetXYDomain(result, -10000, -10000, 10000, 10000,
-			                                  0.0001, _xyTolerance);
-			return result;
 		}
 	}
 }

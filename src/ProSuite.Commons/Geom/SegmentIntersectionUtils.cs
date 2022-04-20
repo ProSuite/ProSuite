@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.Geom
@@ -30,8 +29,8 @@ namespace ProSuite.Commons.Geom
 				                                   predicate);
 
 			foreach (SegmentIntersection intersection in
-				IntersectLineWithLinestringXY(
-					sourceLine, sourceLineGlobalIdx, segmentsByGlobalIdx, tolerance))
+			         IntersectLineWithLinestringXY(
+				         sourceLine, sourceLineGlobalIdx, segmentsByGlobalIdx, tolerance))
 			{
 				int? nextSegmentIndex =
 					containingSegmentList.NextSegmentIndex(intersection.SourceIndex);
@@ -60,8 +59,8 @@ namespace ProSuite.Commons.Geom
 		/// <param name="segmentList1"></param>
 		/// <param name="segmentList2"></param>
 		/// <param name="tolerance"></param>
-		/// <param name="optimizeLinearIntersections">If true, an optimiziation that improves the
-		/// performance when linear intersections are present. If a segmentList1 segment is equal
+		/// <param name="optimizeLinearIntersections">If true, an optimization is employed that improves
+		/// the performance when linear intersections are present. If a segmentList1 segment is equal
 		/// to a linestring2 segment it will directly be used. Other intersections will be missed.
 		/// </param>
 		/// <returns>The segment intersections with the index of the cut part of multiLinestring2</returns>
@@ -83,8 +82,8 @@ namespace ProSuite.Commons.Geom
 				Line3D line = segmentList1.GetSegment(lineIdx);
 
 				foreach (SegmentIntersection result in GetSegmentIntersectionsXY(
-					lineIdx, line, segmentList2, tolerance,
-					previousLinearIntersection))
+					         lineIdx, line, segmentList2, tolerance,
+					         previousLinearIntersection))
 				{
 					if (optimizeLinearIntersections && result.SegmentsAreEqualInXy)
 					{
@@ -96,46 +95,14 @@ namespace ProSuite.Commons.Geom
 			}
 		}
 
-		public static IEnumerable<SegmentIntersection> GetFilteredIntersectionsOrderedAlongSourceSegments(
-				[NotNull] IEnumerable<SegmentIntersection> intersections,
-				[NotNull] ISegmentList source)
+		public static IEnumerable<SegmentIntersection> GetFilteredIntersectionsOrderedAlongSource(
+			[NotNull] IEnumerable<SegmentIntersection> intersections,
+			[NotNull] ISegmentList source)
 		{
-			var intersectionsForCurrentSourceSegment =
-				new List<SegmentIntersection>(3);
+			var intersectionFilter = new SegmentIntersectionFilter(source);
 
-			var allLinearIntersectionFactors = new Dictionary<int, HashSet<double>>();
-
-			int currentIndex = -1;
-			foreach (SegmentIntersection intersection in intersections)
-			{
-				if (intersection.SourceIndex != currentIndex)
-				{
-					currentIndex = intersection.SourceIndex;
-
-					foreach (
-						SegmentIntersection collectedIntersection in
-						FilterIntersections(intersectionsForCurrentSourceSegment,
-						                    source, allLinearIntersectionFactors)
-							.OrderBy(i => i.GetFirstIntersectionAlongSource()))
-					{
-						yield return collectedIntersection;
-					}
-
-					intersectionsForCurrentSourceSegment.Clear();
-				}
-
-				CollectIntersection(intersection, source, allLinearIntersectionFactors,
-				                    intersectionsForCurrentSourceSegment);
-			}
-
-			foreach (
-				SegmentIntersection collectedIntersection in
-				FilterIntersections(intersectionsForCurrentSourceSegment,
-				                    source, allLinearIntersectionFactors)
-					.OrderBy(i => i.GetFirstIntersectionAlongSource()))
-			{
-				yield return collectedIntersection;
-			}
+			return intersectionFilter.GetFilteredIntersectionsOrderedAlongSourceSegments(
+				intersections);
 		}
 
 		/// <summary>
@@ -233,7 +200,7 @@ namespace ProSuite.Commons.Geom
 		/// Returns the distance of the point along the line expressed as ratio (factor).
 		/// If the point is within the tolerance of the line's start or end point, the 
 		/// factor will be snapped to 0 or 1, respectively. If the point is not on the line,
-		/// NaN is  returned.
+		/// NaN is returned.
 		/// </summary>
 		/// <param name="line"></param>
 		/// <param name="point"></param>
@@ -310,199 +277,11 @@ namespace ProSuite.Commons.Geom
 				segmentList.FindSegments(sourceLine, tolerance);
 
 			foreach (SegmentIntersection intersection in
-				IntersectLineWithLinestringXY(
-					sourceLine, sourceLineIdx, segmentsByIndex, tolerance))
+			         IntersectLineWithLinestringXY(
+				         sourceLine, sourceLineIdx, segmentsByIndex, tolerance))
 			{
 				yield return intersection;
 			}
-		}
-
-		private static IEnumerable<SegmentIntersection> FilterIntersections(
-			[NotNull] IEnumerable<SegmentIntersection> intersectionsForSourceSegment,
-			[NotNull] ISegmentList source,
-			[NotNull] IDictionary<int, HashSet<double>> usedIntersectionFactorsByPart)
-		{
-			foreach (SegmentIntersection intersection in intersectionsForSourceSegment)
-			{
-				var filter = false;
-
-				if (! intersection.HasLinearIntersection &&
-				    intersection.SingleInteriorIntersectionFactor == null)
-				{
-					double intersectionFactor;
-					if (intersection.SourceStartIntersects)
-					{
-						intersectionFactor = 0;
-					}
-					else if (intersection.SourceEndIntersects)
-					{
-						intersectionFactor = 1;
-					}
-					else if (intersection.TargetStartIntersects)
-					{
-						intersectionFactor =
-							Assert.NotNull(intersection.TargetStartFactor).Value;
-					}
-					else
-					{
-						intersectionFactor =
-							Assert.NotNull(intersection.TargetEndFactor).Value;
-					}
-
-					int partIndex;
-					int localSegmentIndex =
-						source.GetLocalSegmentIndex(intersection.SourceIndex, out partIndex);
-
-					double intersectionFactorPartGlobal = localSegmentIndex + intersectionFactor;
-
-					// TODO: Extract class IntersectionFactors which encapsulates all the
-					// Contains, Add etc. methods, probably even the filtering
-					if (ContainsIntersection(usedIntersectionFactorsByPart, partIndex,
-					                         intersectionFactorPartGlobal))
-					{
-						filter = true;
-					}
-					else
-					{
-						AddIntersectionFactor(intersectionFactorPartGlobal, partIndex,
-						                      usedIntersectionFactorsByPart, source);
-					}
-				}
-
-				if (! filter)
-				{
-					yield return intersection;
-				}
-			}
-		}
-
-		private static bool ContainsIntersection(
-			IDictionary<int, HashSet<double>> usedIntersectionFactorsByPart,
-			int sourcePartIndex, double intersectionFactor)
-		{
-			HashSet<double> usedIntersectionFactors;
-			return usedIntersectionFactorsByPart.TryGetValue(
-				       sourcePartIndex, out usedIntersectionFactors) &&
-			       usedIntersectionFactors.Contains(intersectionFactor);
-		}
-
-		private static void AddIntersectionFactor(
-			double localIntersectionFactor,
-			int partIndex,
-			[NotNull] IDictionary<int, HashSet<double>> usedIntersectionFactorsByPart)
-		{
-			HashSet<double> localIntersectionFactors;
-
-			if (! usedIntersectionFactorsByPart.TryGetValue(partIndex, out
-			                                                localIntersectionFactors))
-			{
-				localIntersectionFactors = new HashSet<double>();
-				usedIntersectionFactorsByPart.Add(partIndex, localIntersectionFactors);
-			}
-
-			localIntersectionFactors.Add(localIntersectionFactor);
-		}
-
-		private static void AddIntersectionFactor(
-			double localIntersectionFactor,
-			int partIndex,
-			[NotNull] IDictionary<int, HashSet<double>> usedIntersectionFactorsByPart,
-			[NotNull] ISegmentList source)
-		{
-			Linestring part = source.GetPart(partIndex);
-
-			if (IsRingStartOrEnd(part, localIntersectionFactor))
-			{
-				// add both start and end point
-				AddIntersectionFactor(0, partIndex, usedIntersectionFactorsByPart);
-				AddIntersectionFactor(part.SegmentCount, partIndex, usedIntersectionFactorsByPart);
-			}
-			else
-			{
-				AddIntersectionFactor(localIntersectionFactor, partIndex,
-				                      usedIntersectionFactorsByPart);
-			}
-		}
-
-		private static bool IsRingStartOrEnd([NotNull] Linestring linestring,
-		                                     double localVertexIndex)
-		{
-			Assert.False(double.IsNaN(localVertexIndex), "localVertexIndex is NaN");
-
-			var vertexIndexIntegral = (int) localVertexIndex;
-
-			// ReSharper disable once CompareOfFloatsByEqualityOperator
-			bool isVertex = localVertexIndex == vertexIndexIntegral;
-
-			if (! isVertex)
-			{
-				return false;
-			}
-
-			if (linestring.IsFirstPointInPart(vertexIndexIntegral) ||
-			    linestring.IsLastPointInPart(vertexIndexIntegral))
-			{
-				return linestring.IsClosed;
-			}
-
-			return false;
-		}
-
-		private static void CollectIntersection(
-			[NotNull] SegmentIntersection intersection,
-			[NotNull] ISegmentList source,
-			[NotNull] IDictionary<int, HashSet<double>> allLinearIntersectionFactors,
-			[NotNull] ICollection<SegmentIntersection> intersectionsForCurrentSourceSegment)
-		{
-			// Collect segments for current index in list, unless they are clearly not needed 
-			// (and would need to be filtered by a later linear intersection if added)
-
-			bool isLinear = intersection.HasLinearIntersection;
-
-			if (isLinear)
-			{
-				int partIndex;
-				int localSegmentIndex =
-					source.GetLocalSegmentIndex(intersection.SourceIndex, out partIndex);
-
-				double linearIntersectionStartFactor =
-					localSegmentIndex +
-					intersection.GetLinearIntersectionStartFactor(true);
-
-				double linearIntersectionEndFactor =
-					localSegmentIndex +
-					intersection.GetLinearIntersectionEndFactor(true);
-
-				if (intersection.IsSourceZeroLength2D &&
-				    ContainsIntersection(allLinearIntersectionFactors,
-				                         partIndex, linearIntersectionEndFactor))
-				{
-					// avoid double linear segments if the source segment is vertical
-					return;
-				}
-
-				AddIntersectionFactor(linearIntersectionStartFactor, partIndex,
-				                      allLinearIntersectionFactors, source);
-
-				AddIntersectionFactor(linearIntersectionEndFactor, partIndex,
-				                      allLinearIntersectionFactors, source);
-			}
-
-			if (! isLinear && intersection.SourceStartIntersects &&
-			    source.IsFirstSegmentInPart(intersection.SourceIndex) && source.IsClosed)
-			{
-				// will be reported again at the end
-				return;
-			}
-
-			if (! isLinear && intersection.SourceEndIntersects &&
-			    ! source.IsLastSegmentInPart(intersection.SourceIndex))
-			{
-				// will be reported again at next segment
-				return;
-			}
-
-			intersectionsForCurrentSourceSegment.Add(intersection);
 		}
 
 		private static void TryAddLinearIntersectionStretch(
@@ -568,7 +347,7 @@ namespace ProSuite.Commons.Geom
 			// TODO: Test for 0-length lines
 
 			foreach (KeyValuePair<int, Line3D> path2Segment in
-				linestring2Segments.OrderBy(kvp => kvp.Key))
+			         linestring2Segments.OrderBy(kvp => kvp.Key))
 			{
 				int targetIdx = path2Segment.Key;
 				Line3D otherLine = path2Segment.Value;

@@ -108,6 +108,11 @@ namespace ProSuite.DomainModel.AO.QA
 			return InnerModelContext.OpenObjectClass(dataset);
 		}
 
+		public ITopology OpenTopology(ITopologyDataset dataset)
+		{
+			return InnerModelContext.OpenTopology(dataset);
+		}
+
 		//public ITerrain OpenTerrain(ITerrainDataset dataset)
 		//{
 		//	if (! (_modelContext is IDatasetContextEx modelContextEx))
@@ -124,7 +129,7 @@ namespace ProSuite.DomainModel.AO.QA
 			return InnerModelContext.OpenTerrainReference(dataset);
 		}
 
-		public SimpleRasterMosaic OpenSimpleRasterMosaic(ISimpleRasterMosaicDataset dataset)
+		public SimpleRasterMosaic OpenSimpleRasterMosaic(IRasterMosaicDataset dataset)
 		{
 			return InnerModelContext.OpenSimpleRasterMosaic(dataset);
 		}

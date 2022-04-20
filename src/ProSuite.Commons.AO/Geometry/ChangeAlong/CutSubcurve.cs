@@ -126,7 +126,8 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 						}
 
 						_msg.VerboseDebug(
-							() => $"Assigning {_isReshapeMemberCandidate} to IsReshapeMemberCandidate of {this}");
+							() =>
+								$"Assigning {_isReshapeMemberCandidate} to IsReshapeMemberCandidate of {this}");
 					}
 				}
 

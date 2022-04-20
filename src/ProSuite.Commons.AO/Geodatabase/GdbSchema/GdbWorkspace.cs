@@ -532,7 +532,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		}
 
 		#endregion
-		
+
 		private static esriConnectionDBMS ToEsriConnectionDbms(WorkspaceDbType dbType)
 		{
 			switch (dbType)
@@ -559,7 +559,6 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 					                                      "Unknown DB type");
 			}
 		}
-
 	}
 
 	internal class GdbWorkspaceName : IName, IWorkspaceName2

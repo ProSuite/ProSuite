@@ -84,6 +84,7 @@
     </Compile>
     <Compile Include="DataModel\ApplicableAttributes.cs" />
     <Compile Include="DataModel\AttributeUtils.cs" />
+    <Compile Include="DataModel\CachedWorkspaceProxy.cs" />
     <Compile Include="DataModel\FieldIndexCache.cs" />
     <Compile Include="DataModel\GlobalDatasetLookup.cs" />
     <Compile Include="DataModel\Harvesting\DatasetFeatureDatasetMatchCriterion.cs" />
@@ -108,15 +109,17 @@
     <Compile Include="DataModel\IDatasetMatchCriterion.cs" />
     <Compile Include="DataModel\IFeatureDatasetElement.cs" />
     <Compile Include="DataModel\IFieldIndexCache.cs" />
+    <Compile Include="DataModel\IMasterDatabaseWorkspaceContextFactory.cs" />
     <Compile Include="DataModel\IModelContext.cs" />
     <Compile Include="DataModel\IModelRepository.cs" />
     <Compile Include="DataModel\IQueryTableContext.cs" />
-    <Compile Include="DataModel\ISimpleTerrainDatasetRepository.cs" />
     <Compile Include="DataModel\IVirtualModelContext.cs" />
     <Compile Include="DataModel\IWorkspaceContext.cs" />
     <Compile Include="DataModel\IWorkspaceContextLookup.cs" />
+    <Compile Include="DataModel\IWorkspaceProxy.cs" />
     <Compile Include="DataModel\MasterDatabaseDatasetContext.cs" />
     <Compile Include="DataModel\MasterDatabaseWorkspaceContext.cs" />
+    <Compile Include="DataModel\MasterDatabaseWorkspaceContextFactory.cs" />
     <Compile Include="DataModel\MasterDatabaseWorkspaceContextLookup.cs" />
     <Compile Include="DataModel\Model.cs" />
     <Compile Include="DataModel\ModelContextUtils.cs" />
@@ -124,6 +127,7 @@
     <Compile Include="DataModel\ObjectObject.cs" />
     <Compile Include="DataModel\ProductionModel.cs" />
     <Compile Include="DataModel\ProSuiteGeometryTypeExtensions.cs" />
+    <Compile Include="DataModel\SimpleWorkspaceProxy.cs" />
     <Compile Include="DataModel\SpatialReferenceDescriptor.cs" />
     <Compile Include="DataModel\TableObject.cs" />
     <Compile Include="DataModel\VectorObject.cs" />
@@ -131,6 +135,8 @@
     <Compile Include="DataModel\SimpleWorkspaceContext.cs" />
     <Compile Include="DataModel\WorkspaceContextBase.cs" />
     <Compile Include="DataModel\WorkspaceDataset.cs" />
+    <Compile Include="DataModel\WorkspaceModelContext.cs" />
+    <Compile Include="DataModel\WorkspaceProxy.cs" />
     <Compile Include="Geodatabase\ConnectionFileConnectionProvider.cs" />
     <Compile Include="Geodatabase\ConnectionProvider.cs" />
     <Compile Include="Geodatabase\DatabaseType.cs" />
@@ -174,14 +180,16 @@
     <Compile Include="QA\ErrorVectorObject.cs" />
     <Compile Include="QA\IVerificationDataDictionary.cs" />
     <Compile Include="QA\IErrorObject.cs" />
+    <Compile Include="QA\InstanceFactoryUtils.cs" />
     <Compile Include="QA\IOpenDataset.cs" />
     <Compile Include="QA\IQualityConditionContextAware.cs" />
     <Compile Include="QA\IQualityConditionObjectDatasetResolver.cs" />
     <Compile Include="QA\ITestConfigurator.cs" />
     <Compile Include="QA\ITestParameterDatasetProvider.cs" />
     <Compile Include="QA\IVerificationContext.cs" />
+    <Compile Include="QA\InstanceFactory.cs" />
     <Compile Include="QA\QualityConditionObjectDatasetResolver.cs" />
-    <Compile Include="QA\QualityConditionParameterUtils.cs" />
+    <Compile Include="QA\RowFilterFactory.cs" />
     <Compile Include="QA\RowParser.cs" />
     <Compile Include="QA\SimpleDatasetOpener.cs" />
     <Compile Include="QA\SpecificationReport\HtmlDataModel.cs" />
@@ -211,6 +219,7 @@
     <Compile Include="QA\TestReport\HtmlReportBuilder.cs" />
     <Compile Include="QA\TestReport\IncludedTest.cs" />
     <Compile Include="QA\TestReport\IncludedTestBase.cs" />
+    <Compile Include="QA\TestReport\IncludedTransformer.cs" />
     <Compile Include="QA\TestReport\IncludedTestClass.cs" />
     <Compile Include="QA\TestReport\IncludedTestConstructor.cs" />
     <Compile Include="QA\TestReport\IncludedTestFactory.cs" />
@@ -223,6 +232,7 @@
     <Compile Include="QA\TestReport\TestFactoryIndexEntry.cs" />
     <Compile Include="QA\TestReport\TestIndexEntry.cs" />
     <Compile Include="QA\TestReport\TestReportUtils.cs" />
+    <Compile Include="QA\TransformerFactory.cs" />
     <Compile Include="QA\TestReport\XmlTestDescriptorsBuilder.cs" />
     <Compile Include="QA\VerificationContextUtils.cs" />
     <Compile Include="QA\VerificationProgressEventArgs.cs" />
@@ -233,13 +243,23 @@
     <Compile Include="QA\Xml\XmlDataQualityDocument.cs" />
     <Compile Include="QA\Xml\XmlDataQualityUtils.cs" />
     <Compile Include="QA\Xml\XmlDatasetTestParameterValue.cs" />
+    <Compile Include="QA\Xml\XmlDescriptor.cs" />
     <Compile Include="QA\Xml\XmlDeserializationException.cs" />
+    <Compile Include="QA\Xml\XmlFilterExpression.cs" />
+    <Compile Include="QA\Xml\XmlInstanceConfiguration.cs" />
+    <Compile Include="QA\Xml\XmlIssueFilterConfiguration.cs" />
+    <Compile Include="QA\Xml\XmlIssueFilterDescriptor.cs" />
     <Compile Include="QA\Xml\XmlQualityCondition.cs" />
+    <Compile Include="QA\Xml\XmlQualityConditionsCache.cs" />
     <Compile Include="QA\Xml\XmlQualitySpecification.cs" />
     <Compile Include="QA\Xml\XmlQualitySpecificationElement.cs" />
+    <Compile Include="QA\Xml\XmlRowFilterConfiguration.cs" />
+    <Compile Include="QA\Xml\XmlRowFilterDescriptor.cs" />
     <Compile Include="QA\Xml\XmlScalarTestParameterValue.cs" />
     <Compile Include="QA\Xml\XmlTestDescriptor.cs" />
     <Compile Include="QA\Xml\XmlTestParameterValue.cs" />
+    <Compile Include="QA\Xml\XmlTransformerConfiguration.cs" />
+    <Compile Include="QA\Xml\XmlTransformerDescriptor.cs" />
     <Compile Include="QA\Xml\XmlWorkspace.cs" />
     <Compile Include="Schemas\Schema.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -249,11 +269,14 @@
     <Compile Include="Workflow\DatasetNameTransformer.cs" />
     <Compile Include="Workflow\IDatasetNameTransformer.cs" />
     <Compile Include="Workflow\IProjectRepository.cs" />
+    <Compile Include="Workflow\IWorkContext.cs" />
     <Compile Include="Workflow\IWorkspaceFilter.cs" />
+    <Compile Include="Workflow\IWorkUnit.cs" />
     <Compile Include="Workflow\Project.cs" />
     <Compile Include="Workflow\ProjectUtils.cs" />
     <Compile Include="Workflow\ProjectWorkspaceBase.cs" />
     <Compile Include="Workflow\QualityVerificationOutsideEditSessionAllowed.cs" />
+    <Compile Include="Workflow\WorkContextBase.cs" />
     <Compile Include="Workflow\WorkspaceFilters\IWorkspaceMatchCriterion.cs" />
     <Compile Include="Workflow\WorkspaceFilters\WorkspaceDbTypeInfo.cs" />
     <Compile Include="Workflow\WorkspaceFilters\WorkspaceDbTypeMatchCriterion.cs" />
@@ -261,6 +284,7 @@
     <Compile Include="Workflow\WorkspaceFilters\WorkspaceFilterFactory.cs" />
     <Compile Include="Workflow\WorkspaceFilters\WorkspaceMatchCriterionConjunction.cs" />
     <Compile Include="Workflow\WorkspaceFilters\WorkspacePathMatchCriterion.cs" />
+    <Compile Include="Workflow\WorkUnitBase.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ProSuite.Commons.AO\ProSuite.Commons.AO.csproj">
@@ -302,6 +326,10 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="QA\SpecificationReport\QualitySpecificationReport.cd" />
+    <None Include="Schemas\ProSuite.QA.QualitySpecifications-3.0.xsd">
+      <SubType>Designer</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="Schemas\ProSuite.QA.QualitySpecifications-2.0.xsd">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <SubType>Designer</SubType>

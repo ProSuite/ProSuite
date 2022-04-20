@@ -143,17 +143,14 @@
 
 Remark: The feature classes in 'featureClass' and 'terrain' must have the same spatial reference.</value>
   </data>
-  <data name="Qa3dPipe_featureClass" xml:space="preserve">
+  <data name="QaSurfacePipe_featureClass" xml:space="preserve">
     <value>polyline or polygon feature class with heights</value>
   </data>
-  <data name="Qa3dPipe_limit" xml:space="preserve">
+  <data name="QaSurfacePipe_limit" xml:space="preserve">
     <value>maximum allowed difference (in z-units)</value>
   </data>
-  <data name="Qa3dPipe_terrain" xml:space="preserve">
+  <data name="QaSurfacePipe_terrain" xml:space="preserve">
     <value>terrain to compare</value>
-  </data>
-  <data name="Qa3dPipe_terrainTolerance" xml:space="preserve">
-    <value>terrain tolerance (in z-Units)</value>
   </data>
   <data name="Qa3dSmoothing_0" xml:space="preserve">
     <value>Finds all points or vertices in 'featureClass' that differ more than 'limit' from 'terrain'
@@ -164,27 +161,24 @@ Remark: The feature classes in 'featureClass' and 'terrain' must have the same s
     <value>'greater' : the difference must be larger than limit
 'smaller' : the difference must be smaller than limit</value>
   </data>
-  <data name="Qa3dSmoothing_featureClass" xml:space="preserve">
+  <data name="QaSurfaceVertex_featureClass" xml:space="preserve">
     <value>feature class with heights</value>
   </data>
-  <data name="Qa3dSmoothing_limit" xml:space="preserve">
+  <data name="QaSurfaceVertex_limit" xml:space="preserve">
     <value>limit (in z-units)</value>
   </data>
-  <data name="Qa3dSmoothing_mustBeLarger" xml:space="preserve">
+  <data name="QaSurfaceVertex_mustBeLarger" xml:space="preserve">
     <value>true : the difference must be larger than limit
 false : the difference must be smaller than limit</value>
   </data>
   <data name="Qa3dSmoothing_terrain" xml:space="preserve">
     <value>terrain to compare</value>
   </data>
-  <data name="Qa3dSmoothing_terrainTolerance" xml:space="preserve">
-    <value>terrain tolerance (in z-Units)</value>
-  </data>
-  <data name="Qa3dSmoothing_zOffsetConstraint" xml:space="preserve">
-    <value>AboveLimit : All z-values must be above Terrain + 'limit'
-BelowLimit : All z-values must be below Terrain + 'limit' (For underground, 'limit' must be &lt; 0)
-WithinLimit: All z-values must be below Terrain + 'limit' and above Terrain - 'limit'
-OutsideLimt: All z-values must be either above Terrani + 'limit' or below Terrain - 'limit'</value>
+  <data name="QaSurfaceVertex_zOffsetConstraint" xml:space="preserve">
+    <value>AboveLimit : All z-values must be above surface height + 'limit'
+BelowLimit : All z-values must be below surface height + 'limit' (For underground, 'limit' must be &lt; 0)
+WithinLimit: All z-values must be below surface height + 'limit' and above surface height - 'limit'
+OutsideLimit: All z-values must be either above surface height + 'limit' or below surface height - 'limit'</value>
   </data>
   <data name="QaBorderSense_0" xml:space="preserve">
     <value>Finds features that are not involved in valid rings:
@@ -2430,23 +2424,23 @@ Examples:
   <data name="QaDangleCount_tolerance" xml:space="preserve">
     <value>Tolerance for finding coincident end points. End points that lie within the tolerance from other end points are considered coincident. A zero tolerance can be specified to require that end points are exactly coincident (requiring equal resolution grids) to be considered connected.</value>
   </data>
-  <data name="Qa3dPipe_1" xml:space="preserve">
+  <data name="QaSurfacePipe_1" xml:space="preserve">
     <value>Finds all line segments in 'featureClass' that differ more than 'limit' from 'terrain'
 
 Remark: The feature classes in 'featureClass' and 'terrain' must have the same spatial reference.</value>
   </data>
-  <data name="Qa3dPipe_asRatio" xml:space="preserve">
+  <data name="QaSurfacePipe_asRatio" xml:space="preserve">
     <value>True: 'startEndIgnoreLength' is given as ratio of the shape length
 False: 'startEndIgnoreLength' is the absolute length in units of 'featureClass'</value>
   </data>
-  <data name="Qa3dPipe_startEndIgnoreLength" xml:space="preserve">
+  <data name="QaSurfacePipe_startEndIgnoreLength" xml:space="preserve">
     <value>Ignore line parts closer than 'startEndIgnoreLength' to the start/end point of the shape</value>
   </data>
-  <data name="Qa3dPipe_zOffsetConstraint" xml:space="preserve">
-    <value>AboveLimit : All z-values must be above Terrain + 'limit'
-BelowLimit : All z-values must be below Terrain + 'limit' (For underground, 'limit' must be &lt; 0)
-WithinLimit: All z-values must be below Terrain + 'limit' and above Terrain - 'limit'
-OutsideLimt: All z-values must be either above Terrani + 'limit' or below Terrain - 'limit'</value>
+  <data name="QaSurfacePipe_zOffsetConstraint" xml:space="preserve">
+    <value>AboveLimit : All z-values must be above surface height + 'limit'
+BelowLimit : All z-values must be below surface height + 'limit' (For underground, 'limit' must be &lt; 0)
+WithinLimit: All z-values must be below surface height + 'limit' and above surface height - 'limit'
+OutsideLimit: All z-values must be either above surface height + 'limit' or below surface height - 'limit'</value>
   </data>
   <data name="QaDuplicateGeometrySelf_2" xml:space="preserve">
     <value>Finds features with equal geometries in a feature class for which a given constraint is not fulfilled. Geometries for which the difference geometry is empty are considered duplicates. Z and M values are therefore ignored, and the XY tolerance of the spatial reference is applied. Optionally, duplicates can be reported as a single error for the entire set of features that have an equal geometry.</value>
@@ -4233,36 +4227,36 @@ If 'MinGapToSameGroupAtForkCovered' &gt; 0, this value is only used for gaps, th
   <data name="QaMonotonicZ_lineClass" xml:space="preserve">
     <value>Line feature class</value>
   </data>
-  <data name="Qa3dPipe_2" xml:space="preserve">
+  <data name="QaSurfacePipe_2" xml:space="preserve">
     <value>Finds all line segments in 'featureClass' that differ more than 'limit' from 'raster'
 Remark: The feature classes in 'featureClass' and 'raster' must have the same spatial reference.</value>
   </data>
-  <data name="Qa3dPipe_raster" xml:space="preserve">
+  <data name="QaSurfacePipe_raster" xml:space="preserve">
     <value>raster to compare</value>
   </data>
-  <data name="Qa3dSmoothing_2" xml:space="preserve">
+  <data name="QaSurfaceVertex_2" xml:space="preserve">
     <value>Finds all points or vertices in 'featureClass' that differ more than 'limit' from 'raster'
 
 Remark: The feature classes in 'featureClass' and 'raster' must have the same spatial reference.</value>
   </data>
-  <data name="Qa3dSmoothing_raster" xml:space="preserve">
+  <data name="QaSurfaceVertex_raster" xml:space="preserve">
     <value>raster to compare</value>
   </data>
-  <data name="Qa3dPipe_4" xml:space="preserve">
-    <value>Finds all line segments in 'featureClass' that differ more than 'limit' from 'mosaicLayer'
+  <data name="QaSurfacePipe_4" xml:space="preserve">
+    <value>Finds all line segments in 'featureClass' that differ more than 'limit' from 'rasterMosaic'
 
-Remark: The feature classes in 'featureClass' and 'mosaicLayer' must have the same spatial reference.</value>
+Remark: The feature classes in 'featureClass' and 'rasterMosaic' must have the same spatial reference.</value>
   </data>
-  <data name="Qa3dPipe_mosaicLayer" xml:space="preserve">
-    <value>mosaicLayer, from which the previewlayer raster is used to process</value>
+  <data name="QaSurfacePipe_mosaic" xml:space="preserve">
+    <value>Raster mosaic that provides the surface to compare</value>
   </data>
-  <data name="Qa3dSmoothing_4" xml:space="preserve">
-    <value>Finds all points or vertices in 'featureClass' that differ more than 'limit' from 'mosaicLayer'
+  <data name="QaSurfaceVertex_4" xml:space="preserve">
+    <value>Finds all points or vertices in 'featureClass' that differ more than 'limit' from 'rasterMosaic'
 
-Remark: The feature classes in 'featureClass' and 'mosaicLayer' must have the same spatial reference.</value>
+Remark: The feature classes in 'featureClass' and 'rasterMosaic' must have the same spatial reference.</value>
   </data>
-  <data name="Qa3dSmoothing_mosaicLayer" xml:space="preserve">
-    <value>mosaicLayer, from which the previewlayer raster is used to process</value>
+  <data name="QaSurfaceVertex_mosaic" xml:space="preserve">
+    <value>Raster mosaic that provides the surface to compare</value>
   </data>
   <data name="QaLineConnectionFieldValues_allowedPointsExpressions" xml:space="preserve">
     <value>Expression to identify points in 'pointClasses' that are considered valid regardless of their values of the 'pointFields' field name or expression. There must be either a single allowPointExpressions value in the list which is valid for all feature classes in 'pointClasses', or there must be one entry in 'allowedPointsExpressions' per entry in 'pointClasses' and the two lists must be sorted in equal order.</value>
@@ -4793,5 +4787,147 @@ Remark: All feature classes in 'featureClasses' must have the same spatial refer
     <value>fields that are not checked for equality (not editable fields are ignored by default).
 For each feature class in 'polylineClasses', the ignore field list must be defined as a string of fields separated by ','.
 The sort order must correspond with 'polylineClasses'.</value>
+  </data>
+  <data name="TrDissolve_0" xml:space="preserve">
+    <value>transformes line feature class 'featureclass' by dissolving connected features</value>
+  </data>
+  <data name="TrDissolve_Attributes" xml:space="preserve">
+    <value>Attributes to be transfered to transformed feature class. Must be used with alias and group expression, i.e. 'MAX(LAUF_NR) AS MAX_LAUF_NR'.
+In the resulting feature class, only attributes defined in 'Attributes' or 'GroupBy' can be used.</value>
+  </data>
+  <data name="TrDissolve_Constraint" xml:space="preserve">
+    <value>Only feature that fulfill constraint between each other are dissolved</value>
+  </data>
+  <data name="TrDissolve_CreateMultipartFeatures" xml:space="preserve">
+    <value>(Default = false)
+- false: create separate features when 3 or more features are connected. Only connections with 2 features are dissolved.
+- true: create multpart features for all connected source features.</value>
+  </data>
+  <data name="TrDissolve_featureclass" xml:space="preserve">
+    <value>Line feature class to dissolve</value>
+  </data>
+  <data name="TrDissolve_GroupBy" xml:space="preserve">
+    <value>Group features by 'GroupBy' before dissolving
+In the resulting feature class, only attributes defined in 'Attributes' or 'GroupBy' can be used.</value>
+  </data>
+  <data name="TrDissolve_NeighborSearchOption" xml:space="preserve">
+    <value>(Default = Tile)
+-Tile: dissolve features only within the current tile
+- All: if features start/end outside tile, load additional connected features (recursively)</value>
+  </data>
+  <data name="TrDissolve_SearchDistance" xml:space="preserve">
+    <value>Additonal distance to cache 'featureclass' features per tile</value>
+  </data>
+  <data name="TrFootprint_0" xml:space="preserve">
+    <value>Transforms multipatches to polygons by taking their footprints</value>
+  </data>
+  <data name="TrFootprint_multipatchClass" xml:space="preserve">
+    <value>multipatch feature class to transform</value>
+  </data>
+  <data name="TrGeometryToPoints_0" xml:space="preserve">
+    <value>Transforms geometries to points. The transformed feature class has the attribute PartIndex and VertexIndex. These fields index from which polygon part the transformed polygon part was generated</value>
+  </data>
+  <data name="TrGeometryToPoints_component" xml:space="preserve">
+    <value>GeometryComponent to extract</value>
+  </data>
+  <data name="TrGeometryToPoints_featureClass" xml:space="preserve">
+    <value>multipoint, line, polygon or multpatch class to transform</value>
+  </data>
+  <data name="TrLineToPoly_0" xml:space="preserve">
+    <value>Transforms closed lines of 'closedLineClass' to polygons</value>
+  </data>
+  <data name="TrLineToPoly_closedLineClass" xml:space="preserve">
+    <value>line feature class to transform</value>
+  </data>
+  <data name="TrLineToPoly_PolylineUsage" xml:space="preserve">
+    <value>Defines how to handle not closed lines
+- AsPolygonIfClosedElseIgnore (default) : ignore not closed lines</value>
+  </data>
+  <data name="TrMultilineToLine_0" xml:space="preserve">
+    <value>Transforms multi-lines to single lines. The transformed feature class has the attribute PartIndex. This field index from which polygon part the transformed polygon part was generated</value>
+  </data>
+  <data name="TrMultilineToLine_featureClass" xml:space="preserve">
+    <value>line feature class to transform</value>
+  </data>
+  <data name="TrMultipolygonToPolygon_0" xml:space="preserve">
+    <value>Transforms multi-polygons to single polygons. The transformed feature class has the attributes OuterRingIndex and InnerRingIndex. These fields index from which polygon part the transformed polygon part was generated</value>
+  </data>
+  <data name="TrMultipolygonToPolygon_featureClass" xml:space="preserve">
+    <value>polygon feature class to transform</value>
+  </data>
+  <data name="TrMultipolygonToPolygon_TransformedParts" xml:space="preserve">
+    <value>Default = SinglePolygons
+-SinglePolygon: converts multi polygon to single polygons (Remark: InnerRingIndex = -2)
+-OuterRings: converts all out rings to polygons (Remark: InnerRingIndex = -1)
+-InnerRings: converts all inner rings to polygons
+-AllRings: converts all rings to polygons (Remark: polygons generated from outer rings: InnerRingIndex = -1)</value>
+  </data>
+  <data name="TrPolyToLine_0" xml:space="preserve">
+    <value>Transform polygon to line by taking the boundary of the polygons in 'featureClass'</value>
+  </data>
+  <data name="TrPolyToLine_featureClass" xml:space="preserve">
+    <value>polygon feature class</value>
+  </data>
+  <data name="TrSpatialJoin_0" xml:space="preserve">
+    <value>Transforms features of 't0' and features of 't1' to features, with shape of 't0' if they intersect.</value>
+  </data>
+  <data name="TrSpatialJoin_Grouped" xml:space="preserve">
+    <value>Default = false.
+If false: create one feature for each (t0,t1)-feature pair that intersects
+if true: create one feature for each feature in 't0', that intersects any feature of 't1'</value>
+  </data>
+  <data name="TrSpatialJoin_t0" xml:space="preserve">
+    <value>Feature class that provides the shape for the new features</value>
+  </data>
+  <data name="TrSpatialJoin_T0Attributes" xml:space="preserve">
+    <value>Attributes of 't0' that are transfered to transformed feature class. Can be used with alias, i.e. 'TOPGIS_TLM.TLM_GEWAESSER_LAUF.LAUF_NR AS T1_LAUF_NR'.
+In the resulting feature class, only attributes defined in T0Attributes or T1Attributes can be used. </value>
+  </data>
+  <data name="TrSpatialJoin_t1" xml:space="preserve">
+    <value>Feature class to join</value>
+  </data>
+  <data name="TrSpatialJoin_T1Attributes" xml:space="preserve">
+    <value>See T0Attributes.
+If 'Grouped'=true, the attributes must be defined by Group-Expressions like COUNT(),MIN(),MAX()... </value>
+  </data>
+  <data name="TrTableJoin_0" xml:space="preserve">
+    <value>Transforms table 't0' and table 't1', which must be related by 'relationName', to a joined table</value>
+  </data>
+  <data name="TrTableJoin_joinType" xml:space="preserve">
+    <value>JoinType</value>
+  </data>
+  <data name="TrTableJoin_relationName" xml:space="preserve">
+    <value>name of existing relation between 't0' and 't1'</value>
+  </data>
+  <data name="TrTableJoin_t0" xml:space="preserve">
+    <value>table to join with 't1'</value>
+  </data>
+  <data name="TrTableJoin_t1" xml:space="preserve">
+    <value>table to join with 't0'</value>
+  </data>
+  <data name="TrGeometryTransform_Attributes" xml:space="preserve">
+    <value>Attributes that are copied from source featureclass to resulting featureclass</value>
+  </data>
+  <data name="TrSpatialJoin_OuterJoin" xml:space="preserve">
+    <value>Default = false.Left outer Join.
+If true: transform features from t0-features that have no spatial relation to any feature of t1
+If false: ignore features from t0 that have no spatial relation to any feature of t1</value>
+  </data>
+  <data name="TrSpatialJoin_Constraint" xml:space="preserve">
+    <value>Constraint on spatially joined features. Only spatially joined feature pairs that fulfill the constraint will be transformed to resulting features.
+The involved features are aliased using "T0" and T1".
+Example: T0.Level = T1.Level</value>
+  </data>
+  <data name="QaSchemaFieldPropertiesFromTable_0" xml:space="preserve">
+    <value>Verifies that fields have expected properties based on a list of field specifications defined in another table. The field specifications table can be filtered to a subset of rows relevant for the verified table.</value>
+  </data>
+  <data name="QaSchemaFieldPropertiesFromTable_fieldSpecificationsTable" xml:space="preserve">
+    <value>The table that contains the list of field specifications.</value>
+  </data>
+  <data name="QaSchemaFieldPropertiesFromTable_matchAliasName" xml:space="preserve">
+    <value>Indicates if a field specification is looked up by alias name also.</value>
+  </data>
+  <data name="QaSchemaFieldPropertiesFromTable_table" xml:space="preserve">
+    <value>The table to check the field properties in.</value>
   </data>
 </root>

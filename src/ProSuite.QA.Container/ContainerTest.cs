@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Data;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO;
@@ -14,7 +15,7 @@ namespace ProSuite.QA.Container
 	/// <summary>
 	/// Base class for tests running in the container
 	/// </summary>
-	public abstract partial class ContainerTest : TestBase, IRelatedTablesProvider
+	public abstract partial class ContainerTest : TestBase, IRelatedTablesProvider, IFilterEditTest
 	{
 		private readonly List<QueryFilterHelper> _filterHelpers;
 
@@ -59,6 +60,34 @@ namespace ProSuite.QA.Container
 		public IList<RasterReference> InvolvedRasters { get; protected set; }
 
 		public IList<TerrainReference> InvolvedTerrains { get; protected set; }
+
+		private Dictionary<int, string> _rowFiltersExpressionDict;
+
+		private Dictionary<int, string> RowFiltersExpressionDict =>
+			_rowFiltersExpressionDict ??
+			(_rowFiltersExpressionDict = new Dictionary<int, string>());
+
+		private Dictionary<int, IReadOnlyList<IRowFilter>> _rowFiltersDict;
+
+		private Dictionary<int, IReadOnlyList<IRowFilter>> RowFiltersDict =>
+			_rowFiltersDict ?? (_rowFiltersDict = new Dictionary<int, IReadOnlyList<IRowFilter>>());
+
+		private Dictionary<int, DataView> _rowFiltersViewDict;
+
+		private Dictionary<int, DataView> RowFiltersViewDict =>
+			_rowFiltersViewDict ?? (_rowFiltersViewDict = new Dictionary<int, DataView>());
+
+		public string IssueFiltersExpression { get; private set; }
+		private List<IIssueFilter> _issueFilters;
+		public IReadOnlyList<IIssueFilter> IssueFilters => _issueFilters;
+
+		void IFilterEditTest.SetIssueFilters(string expression, IList<IIssueFilter> issueFilters)
+		{
+			_issueFilters = _issueFilters ?? new List<IIssueFilter>();
+			_issueFilters.AddRange(issueFilters);
+
+			IssueFiltersExpression = expression;
+		}
 
 		public IEnumerable<IGeoDataset> GetInvolvedGeoDatasets()
 		{
@@ -117,6 +146,84 @@ namespace ProSuite.QA.Container
 		[PublicAPI]
 		protected bool KeepRows { get; set; }
 
+		private DataView _issueFiltersView;
+
+		protected override void OnQaError(QaErrorEventArgs args)
+		{
+			if (_issueFilters != null)
+			{
+				if (args.Cancel)
+				{
+					return;
+				}
+
+				EnsureIssueFilter();
+
+				if (IsFulfilled(_issueFiltersView, _issueFilters,
+				                filter => filter.Check(args)))
+				{
+					args.Cancel = true;
+				}
+			}
+
+			base.OnQaError(args);
+		}
+
+		private static bool IsFulfilled<T>(DataView filtersView, IEnumerable<T> filters,
+		                                   Func<T, bool> fulfilledFunc)
+			where T : INamedFilter
+		{
+			DataRow filterRow = null;
+			foreach (T filter in filters)
+			{
+				bool fulFilled = fulfilledFunc(filter);
+				if (fulFilled && string.IsNullOrWhiteSpace(filtersView?.RowFilter))
+				{
+					return true;
+				}
+
+				if (filtersView != null)
+				{
+					filterRow = filterRow ?? filtersView.Table.NewRow();
+					filterRow[filter.Name] = fulFilled;
+				}
+			}
+
+			filterRow?.Table.Rows.Add(filterRow);
+			filterRow?.AcceptChanges();
+
+			bool fulfilled = filtersView?.Count == 1;
+			filtersView?.Table.Clear();
+			filtersView?.Table.AcceptChanges();
+
+			return fulfilled;
+		}
+
+		private void EnsureIssueFilter()
+		{
+			_issueFiltersView = _issueFiltersView ??
+			                    GetFiltersView(IssueFiltersExpression, _issueFilters);
+		}
+
+		private static DataView GetFiltersView<T>(string filtersExpression, IEnumerable<T> filters)
+			where T : INamedFilter
+		{
+			if (string.IsNullOrWhiteSpace(filtersExpression))
+			{
+				return null;
+			}
+
+			DataTable tbl = new DataTable();
+			foreach (T issueFilter in filters)
+			{
+				tbl.Columns.Add(issueFilter.Name, typeof(bool));
+			}
+
+			DataView filtersView = new DataView(tbl);
+			filtersView.RowFilter = filtersExpression;
+			return filtersView;
+		}
+
 		#region ITest Members
 
 		// TODO currently this seems to be called on container tests only when they
@@ -144,7 +251,7 @@ namespace ProSuite.QA.Container
 					IQueryFilter queryFilter = new QueryFilterClass();
 					ConfigureQueryFilter(tableIndex, queryFilter);
 
-					errorCount += Execute(table, queryFilter);
+					errorCount += Execute(table, tableIndex, queryFilter);
 				}
 
 				tableIndex++;
@@ -188,7 +295,7 @@ namespace ProSuite.QA.Container
 				IQueryFilter filter = TestUtils.CreateFilter(boundingBox, AreaOfInterest,
 				                                             GetConstraint(tableIndex),
 				                                             table, null);
-				errorCount += Execute(table, filter);
+				errorCount += Execute(table, tableIndex, filter);
 
 				tableIndex++;
 			}
@@ -220,7 +327,7 @@ namespace ProSuite.QA.Container
 				IQueryFilter filter = TestUtils.CreateFilter(area, AreaOfInterest,
 				                                             GetConstraint(tableIndex),
 				                                             table, null);
-				errorCount += Execute(table, filter);
+				errorCount += Execute(table, tableIndex, filter);
 
 				tableIndex++;
 			}
@@ -342,11 +449,13 @@ namespace ProSuite.QA.Container
 		/// </summary>
 		/// <param name="row"></param>
 		/// <returns></returns>
-		protected IList<InvolvedRow> GetInvolvedRows([NotNull] IRow row)
+		protected InvolvedRows GetInvolvedRows([NotNull] IRow row)
 		{
 			RelatedTables related = GetRelatedTables(row);
 
-			return related?.GetInvolvedRows(row) ?? new[] {new InvolvedRow(row)};
+			InvolvedRows involvedRows = related?.GetInvolvedRows(row) ??
+			                            InvolvedRowUtils.GetInvolvedRows(row);
+			return involvedRows;
 		}
 
 		internal int GetTableIndex([CanBeNull] ITable table, int occurrence)
@@ -674,7 +783,7 @@ namespace ProSuite.QA.Container
 				filterHelper.ContainerTest = this;
 			}
 
-			if (DataContainer != null)
+			if (DataContainer != null && (table as ITransformedTable)?.NoCaching != true)
 			{
 				IEnumerable<IRow> rows = DataContainer.Search(table, queryFilter,
 				                                              filterHelper, cacheGeometry);
@@ -800,21 +909,41 @@ namespace ProSuite.QA.Container
 			                                                   GetSqlCaseSensitivity(tableIndex));
 		}
 
-		private int Execute([NotNull] ITable table, [CanBeNull] IQueryFilter queryFilter)
+		protected override void SetRowFiltersCore(
+			int tableIndex, string rowFiltersExpression, IReadOnlyList<IRowFilter> rowFilters)
+		{
+			RowFiltersExpressionDict[tableIndex] = rowFiltersExpression;
+			RowFiltersDict[tableIndex] = rowFilters;
+		}
+
+		[NotNull]
+		public IReadOnlyList<IRowFilter> GetRowFilters(int involvedTableIndex)
+		{
+			if (! RowFiltersDict.TryGetValue(involvedTableIndex,
+			                                 out IReadOnlyList<IRowFilter> rowFilters))
+			{
+				rowFilters = new List<IRowFilter>();
+			}
+
+			return rowFilters ?? new List<IRowFilter>();
+		}
+
+		private int Execute([NotNull] ITable table, int tableIndex,
+		                    [CanBeNull] IQueryFilter queryFilter)
 		{
 			var cursor = new EnumCursor(table, queryFilter, ! KeepRows);
 			var errorCount = 0;
 
 			foreach (IRow row in cursor)
 			{
-				if (row is IFeature)
+				if (row is IFeature feature)
 				{
 					// TODO revise
 
 					// workaround that all spatial searches work properly:
 					// explicitly calculate IsSimple --> 
 					// state of shape seems to be consistent afterward
-					var shapeTopoOp = ((IFeature) row).Shape as ITopologicalOperator2;
+					var shapeTopoOp = feature.Shape as ITopologicalOperator2;
 					// always, when a shape comes from DB, though it needs not to be true:
 					//Debug.Assert(shp.IsKnownSimple && shp.IsSimple);
 
@@ -825,10 +954,33 @@ namespace ProSuite.QA.Container
 					}
 				}
 
-				errorCount += Execute(row);
+				bool cancel = RowFiltersCancel(row, tableIndex);
+
+				if (! cancel)
+				{
+					errorCount += ExecuteCore(row, tableIndex);
+				}
 			}
 
 			return errorCount;
+		}
+
+		public bool RowFiltersCancel(IRow row, int tableIndex)
+		{
+			bool cancel = false;
+			RowFiltersDict.TryGetValue(tableIndex, out IReadOnlyList<IRowFilter> filters);
+			if (filters?.Count > 0)
+			{
+				if (! RowFiltersViewDict.TryGetValue(tableIndex, out DataView view))
+				{
+					RowFiltersExpressionDict.TryGetValue(tableIndex, out string expression);
+					RowFiltersViewDict[tableIndex] = GetFiltersView(expression, filters);
+				}
+
+				cancel = IsFulfilled(view, filters, filter => ! filter.VerifyExecute(row));
+			}
+
+			return cancel;
 		}
 
 		private class TestProgress : ITestProgress

@@ -26,19 +26,29 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 
 		protected override Dataset CreateDataset(IDatasetName datasetName)
 		{
-			if (datasetName is IFeatureClassName)
+			if (datasetName.Type == esriDatasetType.esriDTFeatureClass)
 			{
 				return GetVectorDataset(datasetName);
 			}
 
-			if (datasetName is ITableName)
+			if (datasetName.Type == esriDatasetType.esriDTTable)
 			{
 				return GetTableDataset(datasetName);
 			}
 
-			if (datasetName is IMosaicDatasetName)
+			if (datasetName.Type == esriDatasetType.esriDTTopology)
+			{
+				return GetTopologyDataset(datasetName);
+			}
+
+			if (datasetName.Type == esriDatasetType.esriDTMosaicDataset)
 			{
 				return GetRasterMosaicDataset(datasetName);
+			}
+
+			if (datasetName.Type == esriDatasetType.esriDTRasterDataset)
+			{
+				return GetRasterDataset(datasetName);
 			}
 
 			return null;

@@ -14,17 +14,18 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 	{
 		[NotNull] private readonly IObjectClass _gdbTable;
 
-		// Using property set to support the same COM-release calls (e.g. on GdbFeature.Shape) as
-		// on a real feature. Otherwise InvalidComObjectException can happen when accessing the same
-		// object again (e.g. by calling GdbFeature.Shape again)
-		protected IPropertySet ValueSet { get; } = new PropertySet();
+		protected IValueList ValueSet { get; }
 
 		#region Constructors
 
-		public GdbRow(int oid, [NotNull] IObjectClass gdbTable)
+		public GdbRow(int oid,
+		              [NotNull] IObjectClass gdbTable,
+		              [CanBeNull] IValueList valueList = null)
 		{
 			OID = oid;
 			_gdbTable = gdbTable;
+
+			ValueSet = valueList ?? new PropertySetValueList();
 
 			var oidFieldIndex = _gdbTable.FindField(_gdbTable.OIDFieldName);
 
@@ -39,6 +40,18 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		public bool StoreCalled { get; private set; }
 
 		public bool DeleteCalled { get; private set; }
+
+		/// <summary>
+		/// Sets a new OID but does not change the value list. It is the caller's
+		/// responsibility to ensure the correctness of the values.
+		/// </summary>
+		/// <param name="newOid"></param>
+		public void Recycle(int newOid)
+		{
+			OID = newOid;
+
+			RecycleCore();
+		}
 
 		public bool Equals(IObject other)
 		{
@@ -79,8 +92,6 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			StoreCore();
 		}
 
-		protected virtual void StoreCore() { }
-
 		public void Delete()
 		{
 			DeleteCalled = true;
@@ -90,19 +101,15 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		public bool HasOID => _gdbTable.HasOID;
 
-		public int OID { get; }
+		public int OID { get; private set; }
 
 		public ITable Table => (ITable) _gdbTable;
 
 		public IObjectClass Class => _gdbTable;
 
-		public object get_Value(int index)
+		public virtual object get_Value(int index)
 		{
-			var name = Convert.ToString(index);
-
-			var result = PropertySetUtils.HasProperty(ValueSet, name)
-				             ? ValueSet.GetProperty(name)
-				             : null;
+			var result = ValueSet.GetValue(index);
 
 			var uidResult = result as IUID;
 
@@ -120,7 +127,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 				value = DBNull.Value;
 			}
 
-			ValueSet.SetProperty(Convert.ToString(index), value);
+			ValueSet.SetValue(index, value);
 		}
 
 		#endregion
@@ -132,5 +139,9 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		public int SubtypeCode { get; set; }
 
 		#endregion
+
+		protected virtual void RecycleCore() { }
+
+		protected virtual void StoreCore() { }
 	}
 }

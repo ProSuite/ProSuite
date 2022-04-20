@@ -3,21 +3,21 @@ using System.Collections.Generic;
 using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container;
-using ProSuite.QA.Container.Test;
-using ProSuite.QA.TestFactories;
-using ProSuite.QA.Tests.Test.Construction;
-using ProSuite.QA.Tests.Test.TestRunners;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
+using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
-using ProSuite.DomainModel.AO.QA;
+using ProSuite.QA.Container;
+using ProSuite.QA.Container.Test;
+using ProSuite.QA.TestFactories;
+using ProSuite.QA.Tests.Test.Construction;
+using ProSuite.QA.Tests.Test.TestRunners;
 
 namespace ProSuite.QA.Tests.Test
 {
@@ -44,7 +44,7 @@ namespace ProSuite.QA.Tests.Test
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout();
+			_lic.Checkout(EsriProduct.ArcEditor);
 
 			_spatialReference = CreateLV95();
 			_testWs = TestWorkspaceUtils.CreateInMemoryWorkspace(
@@ -200,20 +200,24 @@ namespace ProSuite.QA.Tests.Test
 				var clsDesc = new ClassDescriptor(typeof(QaRelRegularExpression));
 				var tstDesc = new TestDescriptor("GroupEnds", clsDesc);
 				var condition = new QualityCondition("cndGroupEnds", tstDesc);
-				QualityConditionParameterUtils.AddParameterValue(condition, "relationTables", mds1);
-				QualityConditionParameterUtils.AddParameterValue(condition, "relationTables", mdsRel);
-				QualityConditionParameterUtils.AddParameterValue(condition, "relation", relClassName);
-				QualityConditionParameterUtils.AddParameterValue(condition, "join", JoinType.InnerJoin);
-				QualityConditionParameterUtils.AddParameterValue(condition, "pattern", "A");
-				QualityConditionParameterUtils.AddParameterValue(condition, "fieldNames",
-				                                        $"{tableName}.{_textFieldName}");
-				QualityConditionParameterUtils.AddParameterValue(condition, "MatchIsError", false);
+				InstanceConfigurationUtils.AddParameterValue(condition, "relationTables", mds1);
+				InstanceConfigurationUtils.AddParameterValue(
+					condition, "relationTables", mdsRel);
+				InstanceConfigurationUtils.AddParameterValue(
+					condition, "relation", relClassName);
+				InstanceConfigurationUtils.AddParameterValue(
+					condition, "join", JoinType.InnerJoin);
+				InstanceConfigurationUtils.AddParameterValue(condition, "pattern", "A");
+				InstanceConfigurationUtils.AddParameterValue(condition, "fieldNames",
+				                                                 $"{tableName}.{_textFieldName}");
+				InstanceConfigurationUtils.AddParameterValue(condition, "MatchIsError", false);
 				//condition.AddParameterValue("PatternDescription", "Hallo");
 
 				var factory = new QaRelRegularExpression {Condition = condition};
 
 				IList<ITest> tests =
-					factory.CreateTests(new SimpleDatasetOpener(model.MasterDatabaseWorkspaceContext));
+					factory.CreateTests(
+						new SimpleDatasetOpener(model.MasterDatabaseWorkspaceContext));
 				Assert.AreEqual(1, tests.Count);
 
 				IList<QaError> errors = Run(tests[0], 1000);

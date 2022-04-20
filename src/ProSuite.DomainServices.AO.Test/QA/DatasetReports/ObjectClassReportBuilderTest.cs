@@ -4,8 +4,8 @@ using ESRI.ArcGIS.Geodatabase;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Licensing;
-using ProSuite.Commons.AO.Test.TestSupport;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Testing;
 using ProSuite.DomainServices.AO.QA.DatasetReports;
 using ProSuite.DomainServices.AO.QA.DatasetReports.Xml;
 

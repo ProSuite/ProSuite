@@ -10,7 +10,6 @@ using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
-using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
@@ -162,7 +161,7 @@ namespace ProSuite.QA.TestFactories
 			var testDesc = new TestDescriptor("QaDatasetConstraintFactory", clsDesc);
 			var qc = new QualityCondition("qc_dataset_" + Dataset.Name, testDesc);
 
-			QualityConditionParameterUtils.AddParameterValue(
+			InstanceConfigurationUtils.AddParameterValue(
 				qc, QaDatasetConstraintFactory.TableAttribute, Dataset);
 			AddParameters(qc, Constraints, "");
 
@@ -446,7 +445,7 @@ namespace ProSuite.QA.TestFactories
 			string subPrefix = prefix + "+";
 			foreach (ConstraintNode node in nodes)
 			{
-				QualityConditionParameterUtils.AddParameterValue(
+				InstanceConfigurationUtils.AddParameterValue(
 					qualityCondition, QaDatasetConstraintFactory.ConstraintAttribute,
 					prefix + node.Condition);
 
@@ -1015,7 +1014,8 @@ namespace ProSuite.QA.TestFactories
 
 			foreach (KeyValuePair<object, string> pair in valueCodes)
 			{
-				_msg.VerboseDebug(() => $"Adding key / value pair {pair.Value} / {pair.Key} to result");
+				_msg.VerboseDebug(
+					() => $"Adding key / value pair {pair.Value} / {pair.Key} to result");
 
 				codeValues.Add(pair.Value, pair.Key);
 			}
