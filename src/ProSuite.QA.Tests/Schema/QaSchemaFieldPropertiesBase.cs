@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using ESRI.ArcGIS.Geodatabase;
 using ProSuite.QA.Container;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.Commons.Essentials.Assertions;
@@ -35,7 +34,7 @@ namespace ProSuite.QA.Tests.Schema
 		/// subclass, but needs to be passed to base class to enable constraint filtering etc.).</param>
 		protected QaSchemaFieldPropertiesBase([NotNull] IReadOnlyTable table,
 		                                      bool matchAliasName,
-		                                      [CanBeNull] IReadOnlyTable referenceTable = null)
+		                                      [CanBeNull] IReadOnlyTable referenceTable)
 			: base(table, referenceTable)
 		{
 			Assert.ArgumentNotNull(table, nameof(table));

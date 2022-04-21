@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
 using ProSuite.QA.Container.TestCategories;
@@ -13,21 +14,21 @@ namespace ProSuite.QA.Tests
 	[SchemaTest]
 	public class QaSchemaReservedFieldNameProperties : QaSchemaReservedFieldNamesBase
 	{
-		private readonly ITable _fieldSpecificationsTable;
+		private readonly IReadOnlyTable _fieldSpecificationsTable;
 
 		[Doc(nameof(DocStrings.QaSchemaReservedFieldNames_2))]
 		public QaSchemaReservedFieldNameProperties(
 			[Doc(nameof(DocStrings.QaSchemaReservedFieldNames_table))] [NotNull]
-			ITable table,
+			IReadOnlyTable table,
 			[Doc(nameof(DocStrings.QaSchemaReservedFieldNames_reservedNamesTable))] [NotNull]
-			ITable reservedNamesTable,
+			IReadOnlyTable reservedNamesTable,
 			[Doc(nameof(DocStrings.QaSchemaReservedFieldNames_reservedNameFieldName))] [NotNull]
 			string reservedNameFieldName,
 			[Doc(nameof(DocStrings.QaSchemaReservedFieldNames_reservedReasonFieldName))] [CanBeNull]
 			string reservedReasonFieldName,
 			[Doc(nameof(DocStrings.QaSchemaReservedFieldNames_validNameFieldName))] [CanBeNull]
 			string validNameFieldName,
-			[CanBeNull] ITable fieldSpecificationsTable)
+			[CanBeNull] IReadOnlyTable fieldSpecificationsTable)
 			: base(table, reservedNamesTable,
 			       reservedNameFieldName, reservedReasonFieldName, validNameFieldName,
 			       fieldSpecificationsTable)

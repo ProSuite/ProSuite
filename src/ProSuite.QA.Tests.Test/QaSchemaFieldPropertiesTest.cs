@@ -39,7 +39,8 @@ namespace ProSuite.QA.Tests.Test
 				FieldUtils.CreateTextField("FIELD1", 10, "Field 1"));
 
 			var runner = new QaTestRunner(new QaSchemaFieldProperties(
-				                              table, "FIELD1", esriFieldType.esriFieldTypeString,
+				                              ReadOnlyTableFactory.Create(table),
+				                              "FIELD1", esriFieldType.esriFieldTypeString,
 				                              10, "Field 1", null, false));
 
 			runner.Execute();
@@ -56,7 +57,8 @@ namespace ProSuite.QA.Tests.Test
 				FieldUtils.CreateTextField("FIELD1", 10, "Field 1"));
 
 			var runner = new QaTestRunner(new QaSchemaFieldProperties(
-				                              table, "MISSING", esriFieldType.esriFieldTypeString,
+				                              ReadOnlyTableFactory.Create(table),
+				                              "MISSING", esriFieldType.esriFieldTypeString,
 				                              0, null, null, true));
 
 			runner.Execute();
@@ -73,7 +75,8 @@ namespace ProSuite.QA.Tests.Test
 				FieldUtils.CreateTextField("FIELD1", 10, "Field 1"));
 
 			var runner = new QaTestRunner(new QaSchemaFieldProperties(
-				                              table, "MISSING", esriFieldType.esriFieldTypeString,
+				                              ReadOnlyTableFactory.Create(table),
+				                              "MISSING", esriFieldType.esriFieldTypeString,
 				                              0, null, null, false));
 
 			runner.Execute();
