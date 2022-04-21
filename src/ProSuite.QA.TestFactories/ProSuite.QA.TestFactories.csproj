@@ -72,9 +72,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Update="DocStrings.de.resx">
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
     <EmbeddedResource Update="DocStrings.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>DocStrings.Designer.cs</LastGenOutput>

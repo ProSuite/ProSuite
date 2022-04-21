@@ -4937,4 +4937,16 @@ See T1Attributes</value>
 -Tile: join features only within the current tile
 - All: if features lie partially outside tile, load additional connected features </value>
   </data>
+  <data name="QaSchemaFieldPropertiesFromTable_0" xml:space="preserve">
+    <value>Verifies that fields have expected properties based on a list of field specifications defined in another table. The field specifications table can be filtered to a subset of rows relevant for the verified table.</value>
+  </data>
+  <data name="QaSchemaFieldPropertiesFromTable_fieldSpecificationsTable" xml:space="preserve">
+    <value>The table that contains the list of field specifications.</value>
+  </data>
+  <data name="QaSchemaFieldPropertiesFromTable_matchAliasName" xml:space="preserve">
+    <value>Indicates if a field specification is looked up by alias name also.</value>
+  </data>
+  <data name="QaSchemaFieldPropertiesFromTable_table" xml:space="preserve">
+    <value>The table to check the field properties in.</value>
+  </data>
 </root>
