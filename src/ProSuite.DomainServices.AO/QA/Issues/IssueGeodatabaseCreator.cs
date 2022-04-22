@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
@@ -19,6 +20,10 @@ namespace ProSuite.DomainServices.AO.QA.Issues
 
 		[NotNull] private readonly IList<IssueFeatureWriter> _featureWriters =
 			new List<IssueFeatureWriter>();
+
+		private readonly bool _useBufferedIssueInserts =
+			EnvironmentUtils.GetBooleanEnvironmentVariableValue(
+				"PROSUITE_USE_BUFFERED_ISSUE_WRITING");
 
 		public IssueGeodatabaseCreator([NotNull] IFeatureWorkspace featureWorkspace,
 		                               [NotNull] IIssueTableFieldManagement fields,
@@ -78,7 +83,7 @@ namespace ProSuite.DomainServices.AO.QA.Issues
 		}
 
 		[NotNull]
-		private static IssueRowWriter CreateRowWriter(
+		private IssueRowWriter CreateRowWriter(
 			[NotNull] string className,
 			[NotNull] IFeatureWorkspace featureWorkspace,
 			[NotNull] IIssueTableFieldManagement fields,
@@ -93,11 +98,14 @@ namespace ProSuite.DomainServices.AO.QA.Issues
 
 			var attributeWriter = new IssueAttributeWriter(table, fields);
 
-			return new IssueRowWriter((IObjectClass) table, attributeWriter);
+			return new IssueRowWriter((IObjectClass) table, attributeWriter)
+			       {
+				       AllowLocks = _useBufferedIssueInserts
+			       };
 		}
 
 		[NotNull]
-		private static IssueFeatureWriter CreateFeatureWriter(
+		private IssueFeatureWriter CreateFeatureWriter(
 			[NotNull] string className,
 			[NotNull] IFeatureWorkspace featureWorkspace,
 			[NotNull] IIssueTableFieldManagement fields,
@@ -115,7 +123,10 @@ namespace ProSuite.DomainServices.AO.QA.Issues
 
 			var attributeWriter = new IssueAttributeWriter((ITable) featureClass, fields);
 
-			return new IssueFeatureWriter(featureClass, attributeWriter);
+			return new IssueFeatureWriter(featureClass, attributeWriter)
+			       {
+				       AllowLocks = _useBufferedIssueInserts
+			       };
 		}
 
 		[NotNull]

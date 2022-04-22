@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
@@ -25,9 +26,12 @@ namespace ProSuite.DomainServices.AO.QA.Issues
 		{
 			Assert.ArgumentNotNull(table, nameof(table));
 
+			IWorkspace workspace = DatasetUtils.GetWorkspace(table);
+
 			// TODO insufficient!!
-			bool isDbfTable = DatasetUtils.GetWorkspace(table).Type ==
-			                  esriWorkspaceType.esriFileSystemWorkspace;
+			bool isDbfTable = workspace.Type == esriWorkspaceType.esriFileSystemWorkspace;
+
+			Marshal.ReleaseComObject(workspace);
 
 			const int dbfMaxFieldLength = 10;
 			_maxFieldLength = isDbfTable
@@ -198,6 +202,8 @@ namespace ProSuite.DomainServices.AO.QA.Issues
 				fieldNamesByIndex.Add(fieldIndex, field.Name);
 				fieldNullabilityByIndex.Add(fieldIndex, field.IsNullable);
 			}
+
+			Marshal.ReleaseComObject(fields);
 		}
 
 		[CanBeNull]
