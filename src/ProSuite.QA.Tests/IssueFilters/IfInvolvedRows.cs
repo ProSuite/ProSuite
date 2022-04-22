@@ -13,7 +13,7 @@ namespace ProSuite.QA.Tests.IssueFilters
 	public class IfInvolvedRows : IssueFilter
 	{
 		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+			new Msg(MethodBase.GetCurrentMethod()?.DeclaringType);
 
 		private readonly string _constraint;
 		private Dictionary<IReadOnlyTable, TableView> _tableViews;
@@ -26,7 +26,7 @@ namespace ProSuite.QA.Tests.IssueFilters
 		}
 
 		[TestParameter]
-		public IList<string> TableNames { get; set; }
+		public IList<IReadOnlyTable> Tables { get; set; }
 
 		public override bool Check(QaErrorEventArgs error)
 		{
@@ -40,13 +40,12 @@ namespace ProSuite.QA.Tests.IssueFilters
 				_tableViews = _tableViews ?? new Dictionary<IReadOnlyTable, TableView>();
 				if (! _tableViews.TryGetValue(row.Table, out TableView helper))
 				{
-					string tableName = row.Table.Name;
-					if (! (TableNames?.Count > 0) || TableNames.Contains(tableName))
+					IReadOnlyTable table = row.Table;
+					if (! (Tables?.Count > 0) || Tables.Contains(table))
 					{
-						bool caseSensitivity = false; // TODO;
 						helper = TableViewFactory.Create(
 							row.Table, _constraint, useAsConstraint: true,
-							caseSensitive: caseSensitivity);
+							caseSensitive: false);// TODO;
 					}
 
 					_tableViews.Add(row.Table, helper);

@@ -139,7 +139,43 @@ namespace ProSuite.QA.Container
 			return DataContainer?.GetUniqueIdProvider(InvolvedTables[tableIndex]);
 		}
 
-		internal ISearchable DataContainer { get; set; }
+		internal ISearchable DataContainer { get; private set; }
+
+		internal void SetDataContainer(ISearchable dataContainer)
+		{
+			DataContainer = dataContainer;
+
+			SetSearchable(dataContainer, InvolvedTables);
+
+			if (IssueFilters != null)
+			{
+				foreach (IIssueFilter issueFilter in IssueFilters)
+				{
+					SetSearchable(dataContainer, issueFilter.InvolvedTables);
+				}
+			}
+
+			for (int iTable = 0; iTable < InvolvedTables.Count; iTable++)
+			{
+				foreach (IRowFilter rowFilter in GetRowFilters(iTable))
+				{
+					SetSearchable(dataContainer, rowFilter.InvolvedTables);
+				}
+			}
+		}
+		private void SetSearchable(ISearchable dataContainer, IEnumerable<IReadOnlyTable> tables)
+		{
+			foreach (IReadOnlyTable table in tables)
+			{
+				if (table is ITransformedValue transformed)
+				{
+					transformed.DataContainer = dataContainer;
+
+					SetSearchable(dataContainer, transformed.InvolvedTables);
+				}
+			}
+		}
+
 
 		/// <summary>
 		/// Disables recycling of rows in Execute()
