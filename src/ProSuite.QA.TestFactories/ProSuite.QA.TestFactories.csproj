@@ -160,9 +160,6 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="DocStrings.de.resx">
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
     <EmbeddedResource Include="DocStrings.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>DocStrings.Designer.cs</LastGenOutput>
