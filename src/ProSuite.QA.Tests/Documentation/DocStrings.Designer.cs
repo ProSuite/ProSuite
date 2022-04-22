@@ -63,6 +63,24 @@ namespace ProSuite.QA.Tests.Documentation {
         /// <summary>
         ///   Looks up a localized string similar to Filters errors that intersect any feature in a &apos;featureClass&apos;.
         /// </summary>
+        public static string IfContains_0 {
+            get {
+                return ResourceManager.GetString("IfContains_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to polygon feature class or point, multipoint, polyline feature class.
+        /// </summary>
+        public static string IfContains_featureClass {
+            get {
+                return ResourceManager.GetString("IfContains_featureClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Filters errors that intersect any feature in a &apos;featureClass&apos;.
+        /// </summary>
         public static string IfIntersects_0 {
             get {
                 return ResourceManager.GetString("IfIntersects_0", resourceCulture);
@@ -3032,16 +3050,6 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Area feature class. Errors found that lie within any feature of &apos;IgnoreArea&apos; are not reported.
-        ///A sql-constraint can be provided to this feature class..
-        /// </summary>
-        public static string QaInteriorIntersectsOther_IgnoreArea {
-            get {
-                return ResourceManager.GetString("QaInteriorIntersectsOther_IgnoreArea", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to The feature class to search for interior intersections with &apos;featureClass&apos;..
         /// </summary>
         public static string QaInteriorIntersectsOther_relatedClass {
@@ -3521,16 +3529,6 @@ namespace ProSuite.QA.Tests.Documentation {
         public static string QaIntersectsOther_3 {
             get {
                 return ResourceManager.GetString("QaIntersectsOther_3", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Area feature class. Errors found that lie within any feature of &apos;IgnoreArea&apos; are not reported.
-        ///A sql-constraint can be provided to this feature class..
-        /// </summary>
-        public static string QaIntersectsOther_IgnoreArea {
-            get {
-                return ResourceManager.GetString("QaIntersectsOther_IgnoreArea", resourceCulture);
             }
         }
         
@@ -6559,16 +6557,6 @@ namespace ProSuite.QA.Tests.Documentation {
         public static string QaNeighbourAreas_fieldsString {
             get {
                 return ResourceManager.GetString("QaNeighbourAreas_fieldsString", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Area feature class. Errors found that lie within any feature of &apos;IgnoreArea&apos; are not reported.
-        ///A sql-constraint can be provided to this feature class..
-        /// </summary>
-        public static string QaNeighbourAreas_IgnoreArea {
-            get {
-                return ResourceManager.GetString("QaNeighbourAreas_IgnoreArea", resourceCulture);
             }
         }
         

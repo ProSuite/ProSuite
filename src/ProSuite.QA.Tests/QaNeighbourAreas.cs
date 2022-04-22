@@ -34,8 +34,6 @@ namespace ProSuite.QA.Tests
 		private ISpatialFilter _spatialFilter;
 		private string _comparedFieldsString;
 
-		[CanBeNull] private ContainsPostProcessor _ignoreAreaProcessor;
-
 		#region issue codes
 
 		[CanBeNull] private static TestIssueCodes _codes;
@@ -132,19 +130,6 @@ namespace ProSuite.QA.Tests
 		}
 
 		#endregion
-
-		[TestParameter]
-		[Doc(nameof(DocStrings.QaNeighbourAreas_IgnoreArea))]
-		public IReadOnlyFeatureClass IgnoreArea
-		{
-			get { return _ignoreAreaProcessor?.FeatureClass; }
-			set
-			{
-				_ignoreAreaProcessor?.Dispose();
-				_ignoreAreaProcessor =
-					value != null ? new ContainsPostProcessor(this, value) : null;
-			}
-		}
 
 		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{

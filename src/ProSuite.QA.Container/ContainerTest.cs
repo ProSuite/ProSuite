@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Data;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.Commons.AO;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Surface;
 using ProSuite.Commons.Essentials.Assertions;
@@ -200,6 +199,7 @@ namespace ProSuite.QA.Container
 				                filter => filter.Check(args)))
 				{
 					args.Cancel = true;
+					return;
 				}
 			}
 
@@ -213,8 +213,8 @@ namespace ProSuite.QA.Container
 			DataRow filterRow = null;
 			foreach (T filter in filters)
 			{
-				bool fulFilled = fulfilledFunc(filter);
-				if (fulFilled && string.IsNullOrWhiteSpace(filtersView?.RowFilter))
+				bool fulfilled = fulfilledFunc(filter);
+				if (fulfilled && string.IsNullOrWhiteSpace(filtersView?.RowFilter))
 				{
 					return true;
 				}
@@ -222,18 +222,18 @@ namespace ProSuite.QA.Container
 				if (filtersView != null)
 				{
 					filterRow = filterRow ?? filtersView.Table.NewRow();
-					filterRow[filter.Name] = fulFilled;
+					filterRow[filter.Name] = fulfilled;
 				}
 			}
 
 			filterRow?.Table.Rows.Add(filterRow);
 			filterRow?.AcceptChanges();
 
-			bool fulfilled = filtersView?.Count == 1;
+			bool allFulfilled = filtersView?.Count == 1;
 			filtersView?.Table.Clear();
 			filtersView?.Table.AcceptChanges();
 
-			return fulfilled;
+			return allFulfilled;
 		}
 
 		private void EnsureIssueFilter()
@@ -734,9 +734,9 @@ namespace ProSuite.QA.Container
 		/// <returns></returns>
 		[NotNull]
 		protected IEnumerable<IReadOnlyRow> Search([NotNull] IReadOnlyTable table,
-		                                   [NotNull] IQueryFilter queryFilter,
-		                                   [NotNull] QueryFilterHelper filterHelper,
-		                                   [CanBeNull] IGeometry cacheGeometry = null)
+		                                           [NotNull] IQueryFilter queryFilter,
+		                                           [NotNull] QueryFilterHelper filterHelper,
+		                                           [CanBeNull] IGeometry cacheGeometry = null)
 		{
 			Assert.ArgumentNotNull(table, nameof(table));
 			Assert.ArgumentNotNull(queryFilter, nameof(queryFilter));

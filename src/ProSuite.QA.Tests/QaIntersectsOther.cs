@@ -20,7 +20,6 @@ namespace ProSuite.QA.Tests
 		[CanBeNull] private readonly string _validRelationConstraintSql;
 		[CanBeNull] private IValidRelationConstraint _validRelationConstraint;
 		[CanBeNull] private GeometryConstraint _validIntersectionGeometryConstraint;
-		[CanBeNull] private ContainsPostProcessor _ignoreAreaProcessor;
 		private const bool _defaultReportIntersectionsAsMultipart = true;
 
 		#region issue codes
@@ -119,19 +118,6 @@ namespace ProSuite.QA.Tests
 					StringUtils.IsNullOrEmptyOrBlank(value)
 						? null
 						: new GeometryConstraint(value);
-			}
-		}
-
-		[TestParameter]
-		[Doc(nameof(DocStrings.QaIntersectsOther_IgnoreArea))]
-		public IReadOnlyFeatureClass IgnoreArea
-		{
-			get { return _ignoreAreaProcessor?.FeatureClass; }
-			set
-			{
-				_ignoreAreaProcessor?.Dispose();
-				_ignoreAreaProcessor =
-					value != null ? new ContainsPostProcessor(this, value) : null;
 			}
 		}
 

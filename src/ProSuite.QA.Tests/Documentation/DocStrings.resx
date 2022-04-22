@@ -4720,18 +4720,6 @@ Can either be empty, have one value or have as many values as there are feature 
   <data name="QaGdbRelease_table" xml:space="preserve">
     <value>table to check</value>
   </data>
-  <data name="QaInteriorIntersectsOther_IgnoreArea" xml:space="preserve">
-    <value>Area feature class. Errors found that lie within any feature of 'IgnoreArea' are not reported.
-A sql-constraint can be provided to this feature class.</value>
-  </data>
-  <data name="QaIntersectsOther_IgnoreArea" xml:space="preserve">
-    <value>Area feature class. Errors found that lie within any feature of 'IgnoreArea' are not reported.
-A sql-constraint can be provided to this feature class.</value>
-  </data>
-  <data name="QaNeighbourAreas_IgnoreArea" xml:space="preserve">
-    <value>Area feature class. Errors found that lie within any feature of 'IgnoreArea' are not reported.
-A sql-constraint can be provided to this feature class.</value>
-  </data>
   <data name="QaGroupConstraints_minDistinctCount" xml:space="preserve">
     <value>The minimum number of distinct values returned from 'distinctExpression', per group value defined by 'groupByExpression'</value>
   </data>
@@ -4948,5 +4936,11 @@ See T1Attributes</value>
   </data>
   <data name="QaSchemaFieldPropertiesFromTable_table" xml:space="preserve">
     <value>The table to check the field properties in.</value>
+  </data>
+  <data name="IfContains_0" xml:space="preserve">
+    <value>Filters errors that intersect any feature in a 'featureClass'</value>
+  </data>
+  <data name="IfContains_featureClass" xml:space="preserve">
+    <value>polygon feature class or point, multipoint, polyline feature class</value>
   </data>
 </root>

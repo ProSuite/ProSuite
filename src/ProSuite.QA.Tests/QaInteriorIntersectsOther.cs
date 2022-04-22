@@ -21,7 +21,6 @@ namespace ProSuite.QA.Tests
 		private const string _intersectionMatrix = "T********";
 		private IntersectionMatrixHelper _matrixHelper;
 		[CanBeNull] private GeometryConstraint _validIntersectionGeometryConstraint;
-		[CanBeNull] private ContainsPostProcessor _ignoreAreaProcessor;
 
 		#region issue codes
 
@@ -89,19 +88,6 @@ namespace ProSuite.QA.Tests
 				_validIntersectionGeometryConstraint = StringUtils.IsNullOrEmptyOrBlank(value)
 					                                       ? null
 					                                       : new GeometryConstraint(value);
-			}
-		}
-
-		[TestParameter]
-		[Doc(nameof(DocStrings.QaInteriorIntersectsOther_IgnoreArea))]
-		public IReadOnlyFeatureClass IgnoreArea
-		{
-			get { return _ignoreAreaProcessor?.FeatureClass; }
-			set
-			{
-				_ignoreAreaProcessor?.Dispose();
-				_ignoreAreaProcessor =
-					value != null ? new ContainsPostProcessor(this, value) : null;
 			}
 		}
 
