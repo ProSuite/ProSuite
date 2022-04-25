@@ -12,7 +12,7 @@ namespace ProSuite.Commons.Geom
 
 		private IList<IntersectionPoint3D> _intersectionsAlongTarget;
 
-		private HashSet<IntersectionPoint3D> _multiIntersection;
+		private HashSet<IntersectionPoint3D> _multipleSourceIntersections;
 
 		private IList<IntersectionPoint3D> _intersectionsInboundTarget;
 		private IList<IntersectionPoint3D> _intersectionsOutboundTarget;
@@ -193,6 +193,71 @@ namespace ProSuite.Commons.Geom
 			return false;
 		}
 
+		public bool HasMultipleSourceIntersections([NotNull] IntersectionPoint3D atIntersection)
+		{
+			if (_multipleSourceIntersections == null || _multipleSourceIntersections.Count == 0)
+			{
+				return false;
+			}
+
+			return _multipleSourceIntersections.Contains(atIntersection);
+		}
+
+		public IEnumerable<IntersectionPoint3D> GetOtherSourceIntersections(
+			[NotNull] IntersectionPoint3D atIntersection)
+		{
+			if (_multipleSourceIntersections == null || _multipleSourceIntersections.Count == 0)
+			{
+				yield break;
+			}
+
+			foreach (IntersectionPoint3D other in _multipleSourceIntersections)
+			{
+				if (other == atIntersection)
+				{
+					continue;
+				}
+
+				if (other.ReferencesSameTargetVertex(atIntersection, Target))
+				{
+					yield return other;
+				}
+			}
+		}
+
+		public bool EqualsStartIntersection(IntersectionPoint3D intersection,
+		                                    bool avoidShortSegments = false)
+		{
+			// TODO: .Equals() implementation on IntersectionPoint3D
+			if (intersection == _currentStartIntersection ||
+			    intersection.Point.Equals(_currentStartIntersection.Point))
+			{
+				return true;
+			}
+
+			foreach (IntersectionPoint3D samePlaceIntersection in
+			         GetOtherSourceIntersections(intersection))
+			{
+				if (samePlaceIntersection == _currentStartIntersection ||
+				    samePlaceIntersection.Point.Equals(_currentStartIntersection.Point))
+				{
+					if (intersection.SourcePartIndex != samePlaceIntersection.SourcePartIndex)
+					{
+						return true;
+					}
+
+					// If it's on the same rings we'll get there by curve navigation
+					// We could however, avoid short segments here:
+					if (avoidShortSegments)
+					{
+						return true;
+					}
+				}
+			}
+
+			return false;
+		}
+
 		private bool SkipIntersection(IntersectionPoint3D subcurveStartIntersection,
 		                              IntersectionPoint3D nextIntersection)
 		{
@@ -208,14 +273,14 @@ namespace ProSuite.Commons.Geom
 				return true;
 			}
 
-			if (nextIntersection == _currentStartIntersection)
+			if (EqualsStartIntersection(nextIntersection))
 			{
 				// Always allow navigation back to start
 				return false;
 			}
 
-			if (_multiIntersection != null &&
-			    _multiIntersection.Contains(nextIntersection) &&
+			if (_multipleSourceIntersections != null &&
+			    _multipleSourceIntersections.Contains(nextIntersection) &&
 			    HasDuplicateBeenVisited(nextIntersection))
 			{
 				// Skip it
@@ -323,7 +388,7 @@ namespace ProSuite.Commons.Geom
 				IntersectionPoints,
 				out _intersectionsAlongSource,
 				out _intersectionsAlongTarget,
-				out _multiIntersection);
+				out _multipleSourceIntersections);
 		}
 
 		private Dictionary<IntersectionPoint3D, KeyValuePair<int, int>>

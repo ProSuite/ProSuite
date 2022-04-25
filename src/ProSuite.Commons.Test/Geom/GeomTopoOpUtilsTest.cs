@@ -4308,6 +4308,7 @@ namespace ProSuite.Commons.Test.Geom
 						GeomTopoOpUtils.GetIntersectionAreasXY(poly1, target, tolerance);
 					Assert.IsFalse(result.IsEmpty);
 					Assert.AreEqual(target.GetArea2D(), result.GetArea2D());
+					Assert.AreEqual(target.GetLength2D(), result.GetLength2D());
 
 					// Currently the touching islands remains a touching island also in the result (OGC style)
 					//
@@ -4324,6 +4325,44 @@ namespace ProSuite.Commons.Test.Geom
 
 					result = GeomTopoOpUtils.GetDifferenceAreasXY(target, poly1, tolerance);
 					Assert.IsTrue(result.IsEmpty);
+
+					// TOP-5526
+					// Now the target touches also the source outer ring in a line
+					// -> the result has no inner ring any more:
+					var targetRingPoints3 = new List<Pnt3D>
+					                        {
+						                        new Pnt3D(50, 100, 9),
+						                        new Pnt3D(80, 100, 9),
+						                        new Pnt3D(80, 40, 9),
+						                        new Pnt3D(50, 40, 9)
+					                        };
+
+					var target3 =
+						new RingGroup(new Linestring(GetRotatedRing(targetRingPoints3, t)));
+
+					MultiLinestring result3 =
+						GeomTopoOpUtils.GetIntersectionAreasXY(poly1, target3, tolerance);
+					Assert.IsFalse(result3.IsEmpty);
+					Assert.AreEqual(1, result3.PartCount);
+					Assert.AreEqual(target3.GetArea2D(), result3.GetArea2D());
+					Assert.AreEqual(target3.GetLength2D(), result3.GetLength2D());
+
+					//
+					// Compare with difference:
+					result3 = GeomTopoOpUtils.GetDifferenceAreasXY(poly1, target3, tolerance);
+					Assert.AreEqual(1, result3.PartCount);
+					Assert.AreEqual(560, result3.GetLength2D());
+					Assert.AreEqual(poly1.GetArea2D() - target3.GetArea2D(), result3.GetArea2D());
+
+					// Vice versa to check symmetry:
+					result3 =
+						GeomTopoOpUtils.GetIntersectionAreasXY(target3, poly1, tolerance);
+					Assert.IsFalse(result3.IsEmpty);
+					Assert.AreEqual(target3.GetArea2D(), result3.GetArea2D());
+					Assert.AreEqual(target3.GetLength2D(), result3.GetLength2D());
+
+					result3 = GeomTopoOpUtils.GetDifferenceAreasXY(target3, poly1, tolerance);
+					Assert.IsTrue(result3.IsEmpty);
 
 					//
 					// Now the target touches the source island from inside the island (i.e. outside the polygon)

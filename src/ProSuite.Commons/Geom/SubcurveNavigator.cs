@@ -189,9 +189,10 @@ namespace ProSuite.Commons.Geom
 				if (! onlyFollowingSource)
 				{
 					// Finish ring
-					result.Add(GeomTopoOpUtils.MergeConnectedLinestrings(
-						           subcurveInfos.Select(i => i.Subcurve).ToList(), ringStart,
-						           Tolerance));
+
+					Linestring finishedRing = CreateClosedRing(subcurveInfos, ringStart);
+
+					result.Add(finishedRing);
 
 					foreach (int sourceIdx in subcurveInfos.Select(
 						         i => i.NextIntersection.SourcePartIndex))
@@ -364,6 +365,24 @@ namespace ProSuite.Commons.Geom
 			return false;
 		}
 
+		private Linestring CreateClosedRing(List<IntersectionRun> subcurveInfos, Pnt3D ringStart)
+		{
+			// Make sure the ring closes (in case there are multiple intersections within the tolerance)
+
+			Pnt3D firstPoint = subcurveInfos[0].Subcurve.StartPoint;
+			Linestring lastSubcurve = subcurveInfos[subcurveInfos.Count - 1].Subcurve;
+			Line3D lastSegment = lastSubcurve.Segments[lastSubcurve.SegmentCount - 1];
+
+			lastSegment.SetEndPoint(firstPoint.ClonePnt3D());
+
+			Linestring finishedRing = GeomTopoOpUtils.MergeConnectedLinestrings(
+				subcurveInfos.Select(i => i.Subcurve).ToList(), ringStart, Tolerance);
+
+			Assert.True(finishedRing.IsClosed, "The ring is not closed.");
+
+			return finishedRing;
+		}
+
 		private IEnumerable<IntersectionRun> NavigateSubcurves(
 			IntersectionPoint3D startIntersection)
 		{
@@ -373,7 +392,7 @@ namespace ProSuite.Commons.Geom
 				yield break;
 			}
 
-			IntersectionPoint3D previousIntersection = startIntersection;
+			IntersectionPoint3D currentIntersection = startIntersection;
 			IntersectionPoint3D nextIntersection = null;
 
 			IntersectionPointNavigator.SetStartIntersection(startIntersection);
@@ -384,7 +403,7 @@ namespace ProSuite.Commons.Geom
 			bool forward = true;
 			int partIndex = startIntersection.SourcePartIndex;
 			while (nextIntersection == null ||
-			       ! nextIntersection.Point.Equals(startIntersection.Point))
+			       ! IntersectionPointNavigator.EqualsStartIntersection(nextIntersection))
 			{
 				Assert.True(count++ <= IntersectionPoints.Count,
 				            "Intersections seen twice. Make sure there are no self intersections of the target.");
@@ -394,31 +413,31 @@ namespace ProSuite.Commons.Geom
 					// Determine if at the next intersection we must
 					// - continue along the source (e.g. because the source touches from the inside)
 					// - continue along the target (forward or backward)
-					SetTurnDirection(startIntersection, previousIntersection,
+					SetTurnDirection(startIntersection, currentIntersection,
 					                 ref continueOnSource, ref forward);
 				}
 
 				nextIntersection = FollowUntilNextIntersection(
-					previousIntersection, continueOnSource, partIndex, forward,
+					currentIntersection, continueOnSource, partIndex, forward,
 					out Linestring subcurve);
 
 				Pnt3D containedSourceStart =
-					GetSourceStartBetween(previousIntersection, nextIntersection, continueOnSource,
+					GetSourceStartBetween(currentIntersection, nextIntersection, continueOnSource,
 					                      forward);
 
 				if (continueOnSource)
 				{
 					// Remove, if we follow the source through an intersection from other start.
 					// This happens with vertical rings and multiple targets.
-					if (IntersectionsOutboundTarget.Contains(previousIntersection))
+					if (IntersectionsOutboundTarget.Contains(currentIntersection))
 					{
 						// TODO: if the current startIntersection is inbound make sure the left/right assignment is cleared!
-						VisitedOutboundTarget.Add(previousIntersection);
+						VisitedOutboundTarget.Add(currentIntersection);
 					}
-					else if (IntersectionsInboundTarget.Contains(previousIntersection))
+					else if (IntersectionsInboundTarget.Contains(currentIntersection))
 					{
 						// TODO: if the current startIntersection is outbound make sure the left/right assignment is cleared!
-						VisitedInboundTarget.Add(previousIntersection);
+						VisitedInboundTarget.Add(currentIntersection);
 					}
 				}
 
@@ -430,7 +449,7 @@ namespace ProSuite.Commons.Geom
 
 				yield return next;
 
-				previousIntersection = nextIntersection;
+				currentIntersection = nextIntersection;
 			}
 		}
 
@@ -447,17 +466,8 @@ namespace ProSuite.Commons.Geom
 			Line3D entryLine = GetEntryLine(intersection, sourceRing, target,
 			                                alongSource, forward);
 
-			double distanceAlongSource;
-			int sourceSegmentIdx =
-				intersection.GetLocalSourceIntersectionSegmentIdx(sourceRing,
-					out distanceAlongSource);
-
-			Line3D alongSourceLine = distanceAlongSource < 1
-				                         ? sourceRing[sourceSegmentIdx]
-				                         : sourceRing.NextSegmentInRing(sourceSegmentIdx);
-
-			double? sourceForwardDirection =
-				GetDirectionChange(entryLine, alongSourceLine);
+			double? sourceForwardDirection = GetAlongSourceDirectionChange(preferredDirection,
+				ref intersection, entryLine);
 
 			GetAlongTargetDirectionChanges(startIntersection.SourcePartIndex, intersection,
 			                               entryLine,
@@ -595,6 +605,64 @@ namespace ProSuite.Commons.Geom
 			}
 
 			return angleDifference;
+		}
+
+		private double? GetAlongSourceDirectionChange(TurnDirection preferredDirection,
+		                                              ref IntersectionPoint3D intersection,
+		                                              Line3D entryLine)
+		{
+			double? directionChange =
+				GetAlongSourceDirectionChange(intersection, entryLine);
+
+			if (! IntersectionPointNavigator.HasMultipleSourceIntersections(intersection))
+			{
+				return directionChange;
+			}
+
+			// Allow jumping between intersection points at the same location. This is necessary
+			// for source rings touching another source ring.
+			foreach (IntersectionPoint3D otherSourceIntersection in
+			         IntersectionPointNavigator.GetOtherSourceIntersections(intersection))
+			{
+				if (intersection.SourcePartIndex == otherSourceIntersection.SourcePartIndex)
+				{
+					// We'll get there by normal curve navigation
+					continue;
+				}
+
+				double? otherIntersectionDirectionChange =
+					GetAlongSourceDirectionChange(otherSourceIntersection, entryLine);
+
+				if (true == IsMore(preferredDirection,
+				                   otherIntersectionDirectionChange,
+				                   directionChange))
+				{
+					intersection = otherSourceIntersection;
+					directionChange = otherIntersectionDirectionChange;
+				}
+			}
+
+			return directionChange;
+		}
+
+		private double? GetAlongSourceDirectionChange(IntersectionPoint3D intersection,
+		                                              Line3D entryLine)
+		{
+			Linestring sourceRing = Source.GetPart(intersection.SourcePartIndex);
+
+			double distanceAlongSource;
+			int sourceSegmentIdx =
+				intersection.GetLocalSourceIntersectionSegmentIdx(sourceRing,
+					out distanceAlongSource);
+
+			Line3D alongSourceLine = distanceAlongSource < 1
+				                         ? sourceRing[sourceSegmentIdx]
+				                         : sourceRing.NextSegmentInRing(sourceSegmentIdx);
+
+			double? sourceForwardDirection =
+				GetDirectionChange(entryLine, alongSourceLine);
+
+			return sourceForwardDirection;
 		}
 
 		private void GetAlongTargetDirectionChanges(
