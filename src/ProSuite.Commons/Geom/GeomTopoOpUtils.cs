@@ -4371,7 +4371,7 @@ namespace ProSuite.Commons.Geom
 					Linestring thisCurve = connectedLinestrings[thisCurveIdx];
 
 					int? startIdxThisCurve =
-						thisCurve.FindPointIdx(startPoint, inXY: true);
+						thisCurve.FindPointIdx(startPoint, inXY: true, tolerance);
 
 					if (startIdxThisCurve != null)
 					{

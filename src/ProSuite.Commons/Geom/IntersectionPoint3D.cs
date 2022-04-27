@@ -1091,6 +1091,55 @@ namespace ProSuite.Commons.Geom
 			return localSegmentIdx;
 		}
 
+		protected bool Equals(IntersectionPoint3D other)
+		{
+			if (ReferenceEquals(this, other))
+			{
+				return true;
+			}
+
+			return Type == other.Type &&
+			       SourcePartIndex == other.SourcePartIndex &&
+			       TargetPartIndex == other.TargetPartIndex &&
+			       VirtualSourceVertex.Equals(other.VirtualSourceVertex) &&
+			       VirtualTargetVertex.Equals(other.VirtualTargetVertex) &&
+			       Equals(Point, other.Point);
+		}
+
+		public override bool Equals(object obj)
+		{
+			if (ReferenceEquals(null, obj))
+			{
+				return false;
+			}
+
+			if (ReferenceEquals(this, obj))
+			{
+				return true;
+			}
+
+			if (obj.GetType() != this.GetType())
+			{
+				return false;
+			}
+
+			return Equals((IntersectionPoint3D) obj);
+		}
+
+		public override int GetHashCode()
+		{
+			unchecked
+			{
+				int hashCode = (Point != null ? Point.GetHashCode() : 0);
+				hashCode = (hashCode * 397) ^ SourcePartIndex;
+				hashCode = (hashCode * 397) ^ TargetPartIndex;
+				hashCode = (hashCode * 397) ^ VirtualSourceVertex.GetHashCode();
+				hashCode = (hashCode * 397) ^ VirtualTargetVertex.GetHashCode();
+				hashCode = (hashCode * 397) ^ (int) Type;
+				return hashCode;
+			}
+		}
+
 		public override string ToString()
 		{
 			return $"Point: {Point}, " +

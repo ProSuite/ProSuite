@@ -4257,10 +4257,13 @@ namespace ProSuite.Commons.Test.Geom
 			Assert.AreEqual(poly1.GetArea2D() - target.GetArea2D(), result.GetArea2D());
 		}
 
+		#region Source self-intersections
+
 		[Test]
-		public void CanGetIntersectionAreaXYTargetTouchesBoundaryLoopInLine()
+		public void CanGetIntersectionAreaXYSourceIslandTouchesExteriorRing()
 		{
-			// The source has a boundary loop (or an inner ring touching the exterior in a point)
+			// The source has an inner ring touching the exterior in a point (OGC style)
+			// The target touches the connection point between the two source rings.
 			var ring1 = new List<Pnt3D>
 			            {
 				            new Pnt3D(0, 0, 9),
@@ -4280,7 +4283,7 @@ namespace ProSuite.Commons.Test.Geom
 				                         new Pnt3D(20, 60, 0)
 			                         }.ToList();
 
-			for (var i = 0; i < 1; i++)
+			for (var i = 0; i < 5; i++)
 			{
 				var interiorRing = new Linestring(GetRotatedRing(interiorRingPoints, i));
 
@@ -4326,7 +4329,6 @@ namespace ProSuite.Commons.Test.Geom
 					result = GeomTopoOpUtils.GetDifferenceAreasXY(target, poly1, tolerance);
 					Assert.IsTrue(result.IsEmpty);
 
-					// TOP-5526
 					// Now the target touches also the source outer ring in a line
 					// -> the result has no inner ring any more:
 					var targetRingPoints3 = new List<Pnt3D>
@@ -4398,6 +4400,370 @@ namespace ProSuite.Commons.Test.Geom
 				}
 			}
 		}
+
+		[Test]
+		public void CanGetIntersectionAreaXYSourceHasBoundaryLoop()
+		{
+			// The source has an esri-style boundary loop
+			// The target touches the boundary loop point.
+			var ring1 = new List<Pnt3D>
+			            {
+				            new Pnt3D(0, 0, 9),
+				            new Pnt3D(0, 100, 9),
+				            new Pnt3D(50, 100, 0),
+				            new Pnt3D(20, 60, 0),
+				            new Pnt3D(20, 40, 0),
+				            new Pnt3D(50, 40, 0),
+				            new Pnt3D(50, 100, 0),
+				            new Pnt3D(100, 100, 9),
+				            new Pnt3D(100, 0, 9)
+			            };
+
+			const double tolerance = 0.01;
+
+			for (var i = 0; i < 9; i++)
+			{
+				RingGroup poly1 = CreatePoly(GetRotatedRing(ring1, i));
+
+				for (var t = 0; t < 5; t++)
+				{
+					// The target touches the 'island' including the touching point (from the inside) in a line:
+					var targetRingPoints = new List<Pnt3D>
+					                       {
+						                       new Pnt3D(50, 100, 9),
+						                       new Pnt3D(80, 80, 9),
+						                       new Pnt3D(80, 40, 9),
+						                       new Pnt3D(50, 40, 9),
+					                       };
+
+					var target = new RingGroup(new Linestring(GetRotatedRing(targetRingPoints, t)));
+
+					MultiLinestring result =
+						GeomTopoOpUtils.GetIntersectionAreasXY(poly1, target, tolerance);
+					Assert.IsFalse(result.IsEmpty);
+					Assert.AreEqual(target.GetArea2D(), result.GetArea2D());
+					Assert.AreEqual(target.GetLength2D(), result.GetLength2D());
+
+					// Currently the boundary loop remains a boundary loop also in the result (esri style)
+					//
+					// Compare with difference:
+					result = GeomTopoOpUtils.GetDifferenceAreasXY(poly1, target, tolerance);
+					Assert.AreEqual(1, result.PartCount);
+					Assert.AreEqual(poly1.GetArea2D() - target.GetArea2D(), result.GetArea2D());
+
+					// Vice versa to check symmetry:
+					result =
+						GeomTopoOpUtils.GetIntersectionAreasXY(target, poly1, tolerance);
+					Assert.IsFalse(result.IsEmpty);
+					Assert.AreEqual(target.GetArea2D(), result.GetArea2D());
+
+					result = GeomTopoOpUtils.GetDifferenceAreasXY(target, poly1, tolerance);
+					Assert.IsTrue(result.IsEmpty);
+
+					// 
+					// Now the target touches also the source outer ring in a line
+					// -> the result has no inner ring any more:
+					var targetRingPoints3 = new List<Pnt3D>
+					                        {
+						                        new Pnt3D(50, 100, 9),
+						                        new Pnt3D(80, 100, 9),
+						                        new Pnt3D(80, 40, 9),
+						                        new Pnt3D(50, 40, 9)
+					                        };
+
+					var target3 =
+						new RingGroup(new Linestring(GetRotatedRing(targetRingPoints3, t)));
+
+					MultiLinestring result3 =
+						GeomTopoOpUtils.GetIntersectionAreasXY(poly1, target3, tolerance);
+					Assert.IsFalse(result3.IsEmpty);
+					Assert.AreEqual(1, result3.PartCount);
+					Assert.AreEqual(target3.GetArea2D(), result3.GetArea2D(), 0.0001);
+					Assert.AreEqual(target3.GetLength2D(), result3.GetLength2D());
+
+					//
+					// Compare with difference:
+					result3 = GeomTopoOpUtils.GetDifferenceAreasXY(poly1, target3, tolerance);
+					Assert.AreEqual(1, result3.PartCount);
+					Assert.AreEqual(560, result3.GetLength2D());
+					Assert.AreEqual(poly1.GetArea2D() - target3.GetArea2D(), result3.GetArea2D());
+
+					// Vice versa to check symmetry:
+					result3 =
+						GeomTopoOpUtils.GetIntersectionAreasXY(target3, poly1, tolerance);
+					Assert.IsFalse(result3.IsEmpty);
+					Assert.AreEqual(target3.GetArea2D(), result3.GetArea2D());
+					Assert.AreEqual(target3.GetLength2D(), result3.GetLength2D());
+
+					result3 = GeomTopoOpUtils.GetDifferenceAreasXY(target3, poly1, tolerance);
+					Assert.IsTrue(result3.IsEmpty);
+
+					//
+					// Now the target touches the source island from inside the island (i.e. outside the polygon)
+					//
+					var targetRingPoints2 = new List<Pnt3D>
+					                        {
+						                        new Pnt3D(50, 40, 0),
+						                        new Pnt3D(40, 40, 0),
+						                        new Pnt3D(40, 60, 0),
+						                        new Pnt3D(50, 100, 0),
+					                        };
+
+					var target2 =
+						new RingGroup(new Linestring(GetRotatedRing(targetRingPoints2, t)));
+
+					result =
+						GeomTopoOpUtils.GetIntersectionAreasXY(poly1, target2, tolerance);
+					Assert.IsTrue(result.IsEmpty);
+
+					// Compare with difference:
+					result = GeomTopoOpUtils.GetDifferenceAreasXY(poly1, target2, tolerance);
+					Assert.AreEqual(1, result.PartCount);
+					Assert.AreEqual(poly1.GetArea2D(), result.GetArea2D());
+
+					// Vice versa to check symmetry:
+					result =
+						GeomTopoOpUtils.GetIntersectionAreasXY(target2, poly1, tolerance);
+					Assert.IsTrue(result.IsEmpty);
+
+					result = GeomTopoOpUtils.GetDifferenceAreasXY(target2, poly1, tolerance);
+					Assert.AreEqual(1, result.PartCount);
+					Assert.AreEqual(target2.GetArea2D(), result.GetArea2D());
+				}
+			}
+		}
+
+		[Test]
+		public void CanGetIntersectionAreaXYSourceHasBoundaryLoopToOutside()
+		{
+			// The source has a boundary loop (relative to the tolerance) to the outside (i.e. it
+			// is non-simple). The target touches the boundary loop point.
+			var ring1 = new List<Pnt3D>
+			            {
+				            new Pnt3D(0, 0, 9),
+				            new Pnt3D(0, 100, 9),
+				            new Pnt3D(49.995, 100, 0),
+				            new Pnt3D(20, 140, 0),
+				            new Pnt3D(20, 160, 0),
+				            new Pnt3D(50, 160, 0),
+				            new Pnt3D(50, 100, 0),
+				            new Pnt3D(100, 100, 9),
+				            new Pnt3D(100, 0, 9)
+			            };
+
+			const double tolerance = 0.01;
+
+			for (var i = 0; i < 9; i++)
+			{
+				RingGroup poly1 = CreatePoly(GetRotatedRing(ring1, i));
+
+				for (var t = 0; t < 1; t++)
+				{
+					// The target touches the 'loop point' in a vertex:
+					var targetRingPoints = new List<Pnt3D>
+					                       {
+						                       new Pnt3D(50, 100, 9),
+						                       new Pnt3D(80, 80, 9),
+						                       new Pnt3D(80, 40, 9),
+						                       new Pnt3D(50, 40, 9),
+					                       };
+
+					var target = new RingGroup(new Linestring(GetRotatedRing(targetRingPoints, t)));
+
+					MultiLinestring result =
+						GeomTopoOpUtils.GetIntersectionAreasXY(poly1, target, tolerance);
+					Assert.IsFalse(result.IsEmpty);
+					Assert.AreEqual(target.GetArea2D(), result.GetArea2D());
+					Assert.AreEqual(target.GetLength2D(), result.GetLength2D());
+
+					// Currently the boundary loop remains a boundary loop also in the result (esri style)
+					//
+					// Compare with difference:
+					result = GeomTopoOpUtils.GetDifferenceAreasXY(poly1, target, tolerance);
+					Assert.AreEqual(3, result.PartCount);
+					Assert.AreEqual(poly1.GetArea2D() - target.GetArea2D(), result.GetArea2D(),
+					                0.2);
+
+					// Vice versa to check symmetry:
+					result =
+						GeomTopoOpUtils.GetIntersectionAreasXY(target, poly1, tolerance);
+					Assert.IsFalse(result.IsEmpty);
+					Assert.AreEqual(target.GetArea2D(), result.GetArea2D());
+
+					result = GeomTopoOpUtils.GetDifferenceAreasXY(target, poly1, tolerance);
+					Assert.IsTrue(result.IsEmpty);
+
+					// TOP-5526
+					// Now the target touches also the source outer ring in a line
+					// -> the result has no inner ring any more:
+					var targetRingPoints3 = new List<Pnt3D>
+					                        {
+						                        new Pnt3D(50, 100, 9),
+						                        new Pnt3D(80, 100, 9),
+						                        new Pnt3D(80, 40, 9),
+						                        new Pnt3D(50, 40, 9)
+					                        };
+
+					var target3 =
+						new RingGroup(new Linestring(GetRotatedRing(targetRingPoints3, t)));
+
+					MultiLinestring result3 =
+						GeomTopoOpUtils.GetIntersectionAreasXY(poly1, target3, tolerance);
+					Assert.IsFalse(result3.IsEmpty);
+					Assert.AreEqual(1, result3.PartCount);
+					Assert.AreEqual(target3.GetArea2D(), result3.GetArea2D(), 0.0001);
+					Assert.AreEqual(target3.GetLength2D(), result3.GetLength2D());
+
+					//
+					// Compare with difference:
+					result3 = GeomTopoOpUtils.GetDifferenceAreasXY(poly1, target3, tolerance);
+					Assert.AreEqual(2, result3.PartCount);
+
+					// Currently the result is non-simple: The island touches the main ring's boundary in a line!
+					// TODO: Consider one of the following:
+					// - Simplify outside boundary loops first?
+					// - Try simplification before processing?
+					// - Or just declare non-simple input results in non-simple output...
+					Assert.AreEqual(poly1.GetArea2D() - target3.GetArea2D(), result3.GetArea2D(),
+					                0.4);
+
+					// Vice versa to check symmetry:
+					result3 =
+						GeomTopoOpUtils.GetIntersectionAreasXY(target3, poly1, tolerance);
+					Assert.IsFalse(result3.IsEmpty);
+					Assert.AreEqual(target3.GetArea2D(), result3.GetArea2D());
+					Assert.AreEqual(target3.GetLength2D(), result3.GetLength2D());
+
+					result3 = GeomTopoOpUtils.GetDifferenceAreasXY(target3, poly1, tolerance);
+					Assert.IsTrue(result3.IsEmpty);
+
+					//
+					// Now the target touches the boundary loop in a linear intersection from inside the main part
+					//
+					var targetRingPoints2 = new List<Pnt3D>
+					                        {
+						                        new Pnt3D(30, 100, 9),
+						                        new Pnt3D(80, 100, 9),
+						                        new Pnt3D(80, 40, 9),
+						                        new Pnt3D(50, 40, 9)
+					                        };
+
+					var target2 =
+						new RingGroup(new Linestring(GetRotatedRing(targetRingPoints2, t)));
+
+					var result2 =
+						GeomTopoOpUtils.GetIntersectionAreasXY(poly1, target2, tolerance);
+					Assert.AreEqual(target2.GetArea2D(), result2.GetArea2D(), 0.0001);
+
+					// Compare with difference:
+					result2 = GeomTopoOpUtils.GetDifferenceAreasXY(poly1, target2, tolerance);
+					Assert.AreEqual(2, result2.PartCount);
+					Assert.AreEqual(poly1.GetArea2D() - target2.GetArea2D(), result2.GetArea2D());
+
+					// Vice versa to check symmetry:
+					result2 =
+						GeomTopoOpUtils.GetIntersectionAreasXY(target2, poly1, tolerance);
+					Assert.AreEqual(target2.GetArea2D(), result2.GetArea2D());
+
+					result2 = GeomTopoOpUtils.GetDifferenceAreasXY(target2, poly1, tolerance);
+					Assert.IsTrue(result2.IsEmpty);
+				}
+			}
+		}
+
+		[Test]
+		public void CanGetIntersectionAreaXYSourceHasDegenerateBoundaryLoopToOutside_Top5526()
+		{
+			// The source has a pretty degenerate boundary loop to the outside.
+			// The target covers everything except the boundary loop.
+			var ring1 = new List<Pnt3D>
+			            {
+				            new Pnt3D(0, 0, 9),
+				            new Pnt3D(0, 100, 9),
+				            new Pnt3D(150, 100, 0),
+				            new Pnt3D(125, 99.98, 0),
+				            new Pnt3D(100, 100, 0),
+				            new Pnt3D(100, 0, 9)
+			            };
+
+			const double tolerance = 0.01;
+
+			for (var i = 0; i < 9; i++)
+			{
+				RingGroup poly1 = CreatePoly(GetRotatedRing(ring1, i));
+
+				for (var t = 0; t < 1; t++)
+				{
+					var targetRingPoints = new List<Pnt3D>
+					                       {
+						                       new Pnt3D(0, 0, 9),
+						                       new Pnt3D(0, 100, 9),
+						                       new Pnt3D(100, 100, 0),
+						                       new Pnt3D(100, 0, 9)
+					                       };
+
+					var target = new RingGroup(new Linestring(GetRotatedRing(targetRingPoints, t)));
+
+					MultiLinestring result =
+						GeomTopoOpUtils.GetIntersectionAreasXY(poly1, target, tolerance);
+					Assert.IsFalse(result.IsEmpty);
+					Assert.AreEqual(target.GetArea2D(), result.GetArea2D());
+					Assert.AreEqual(target.GetLength2D(), result.GetLength2D());
+
+					// Compare with difference:
+					result = GeomTopoOpUtils.GetDifferenceAreasXY(poly1, target, tolerance);
+					Assert.AreEqual(1, result.PartCount);
+					Assert.AreEqual(poly1.GetArea2D() - target.GetArea2D(), result.GetArea2D(),
+					                0.0001);
+
+					// Vice versa to check symmetry:
+					result =
+						GeomTopoOpUtils.GetIntersectionAreasXY(target, poly1, tolerance);
+					Assert.IsFalse(result.IsEmpty);
+					Assert.AreEqual(target.GetArea2D(), result.GetArea2D());
+
+					result = GeomTopoOpUtils.GetDifferenceAreasXY(target, poly1, tolerance);
+					Assert.IsTrue(result.IsEmpty);
+
+					// Now the source exceeds the target on the southern side
+					var targetRingPoints3 = new List<Pnt3D>
+					                        {
+						                        new Pnt3D(0, 50, 9),
+						                        new Pnt3D(0, 100, 9),
+						                        new Pnt3D(100, 100, 0),
+						                        new Pnt3D(100, 50, 9)
+					                        };
+
+					var target3 =
+						new RingGroup(new Linestring(GetRotatedRing(targetRingPoints3, t)));
+
+					MultiLinestring result3 =
+						GeomTopoOpUtils.GetIntersectionAreasXY(poly1, target3, tolerance);
+					Assert.IsFalse(result3.IsEmpty);
+					Assert.AreEqual(1, result3.PartCount);
+					Assert.AreEqual(target3.GetArea2D(), result3.GetArea2D(), 0.0001);
+
+					//
+					// Compare with difference:
+					result3 = GeomTopoOpUtils.GetDifferenceAreasXY(poly1, target3, tolerance);
+					Assert.AreEqual(2, result3.PartCount);
+					Assert.AreEqual(poly1.GetArea2D() - target3.GetArea2D(), result3.GetArea2D(),
+					                0.4);
+
+					// Vice versa to check symmetry:
+					result3 =
+						GeomTopoOpUtils.GetIntersectionAreasXY(target3, poly1, tolerance);
+					Assert.IsFalse(result3.IsEmpty);
+					Assert.AreEqual(target3.GetArea2D(), result3.GetArea2D());
+					Assert.AreEqual(target3.GetLength2D(), result3.GetLength2D());
+
+					result3 = GeomTopoOpUtils.GetDifferenceAreasXY(target3, poly1, tolerance);
+					Assert.IsTrue(result3.IsEmpty);
+				}
+			}
+		}
+
+		#endregion
 
 		[Test]
 		public void CanGetIntersectionAreaXYWithLinearBoundaryIntersection()

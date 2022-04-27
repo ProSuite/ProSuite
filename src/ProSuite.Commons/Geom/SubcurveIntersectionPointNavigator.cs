@@ -107,7 +107,7 @@ namespace ProSuite.Commons.Geom
 			}
 		}
 
-		private HashSet<IntersectionPoint3D> VisitedIntersections { get; } =
+		public HashSet<IntersectionPoint3D> VisitedIntersections { get; } =
 			new HashSet<IntersectionPoint3D>();
 
 		public void SetStartIntersection(IntersectionPoint3D startIntersection)
@@ -228,9 +228,7 @@ namespace ProSuite.Commons.Geom
 		public bool EqualsStartIntersection(IntersectionPoint3D intersection,
 		                                    bool avoidShortSegments = false)
 		{
-			// TODO: .Equals() implementation on IntersectionPoint3D
-			if (intersection == _currentStartIntersection ||
-			    intersection.Point.Equals(_currentStartIntersection.Point))
+			if (intersection.Equals(_currentStartIntersection))
 			{
 				return true;
 			}
@@ -238,10 +236,14 @@ namespace ProSuite.Commons.Geom
 			foreach (IntersectionPoint3D samePlaceIntersection in
 			         GetOtherSourceIntersections(intersection))
 			{
-				if (samePlaceIntersection == _currentStartIntersection ||
-				    samePlaceIntersection.Point.Equals(_currentStartIntersection.Point))
+				if (samePlaceIntersection.Equals(_currentStartIntersection))
 				{
 					if (intersection.SourcePartIndex != samePlaceIntersection.SourcePartIndex)
+					{
+						return true;
+					}
+
+					if (IsBoundaryLoopIntersection(intersection, samePlaceIntersection))
 					{
 						return true;
 					}
@@ -256,6 +258,97 @@ namespace ProSuite.Commons.Geom
 			}
 
 			return false;
+		}
+
+		public bool IsBoundaryLoopIntersection(IntersectionPoint3D intersection)
+		{
+			foreach (IntersectionPoint3D samePlaceIntersection in
+			         GetOtherSourceIntersections(intersection))
+			{
+				if (samePlaceIntersection.Equals(_currentStartIntersection))
+				{
+					if (IsBoundaryLoopIntersection(intersection, samePlaceIntersection))
+					{
+						return true;
+					}
+				}
+			}
+
+			return false;
+		}
+
+		private bool IsBoundaryLoopIntersection(
+			[NotNull] IntersectionPoint3D intersectionPoint,
+			[NotNull] IntersectionPoint3D samePlaceAsStartIntersection)
+		{
+			if (intersectionPoint.SourcePartIndex != _currentStartIntersection.SourcePartIndex)
+			{
+				return false;
+			}
+
+			IntersectionPoint3D otherIntersection;
+
+			if (_currentStartIntersection.Equals(intersectionPoint))
+			{
+				otherIntersection = samePlaceAsStartIntersection;
+			}
+			else if (_currentStartIntersection.Equals(samePlaceAsStartIntersection))
+			{
+				otherIntersection = intersectionPoint;
+			}
+			else
+			{
+				return false;
+			}
+
+			if (_currentStartIntersection.Type == IntersectionPointType.TouchingInPoint)
+			{
+				// NOTE: Sometimes the start point is not in the OutboundTarget points.
+				// This should probably should get additional unit-testing
+				return true;
+			}
+
+			// If the start intersection is both outbound and inbound,
+			// it is presumably a boundary loop:
+			// - If at the start intersection the target continues to the right (intersect, right-side rings)
+			//   and the source boundary loop goes to the outside of the target:
+			//   The outbound targets contains the start, the inbound target contains the intersection
+			if (IntersectionsOutboundTarget.Contains(_currentStartIntersection) &&
+			    IntersectionsInboundTarget.Contains(otherIntersection) &&
+			    SourceSegmentsBetween(otherIntersection, _currentStartIntersection) > 1)
+			{
+				return true;
+			}
+
+			// ...
+			// - If at the start intersection the target continues to the left (difference, left-side rings)
+			//   and the source boundary loop goes to the outside of the target:
+			//   The inbound targets contains the start, the outbound target contains the intersection
+			if (IntersectionsInboundTarget.Contains(_currentStartIntersection) &&
+			    IntersectionsOutboundTarget.Contains(otherIntersection) &&
+			    SourceSegmentsBetween(_currentStartIntersection, otherIntersection) > 1)
+			{
+				return true;
+			}
+
+			return false;
+		}
+
+		private double SourceSegmentsBetween([NotNull] IntersectionPoint3D firstIntersection,
+		                                     [NotNull] IntersectionPoint3D secondIntersection)
+		{
+			Assert.AreEqual(firstIntersection.SourcePartIndex, secondIntersection.SourcePartIndex,
+			                "Intersections are not from the same part.");
+
+			double result = secondIntersection.VirtualSourceVertex -
+			                firstIntersection.VirtualSourceVertex;
+
+			if (result < 0)
+			{
+				result += Source.SegmentCount;
+			}
+
+			return Math.Floor(result);
 		}
 
 		private bool SkipIntersection(IntersectionPoint3D subcurveStartIntersection,
@@ -324,29 +417,29 @@ namespace ProSuite.Commons.Geom
 		}
 
 		private IntersectionPoint3D GetNextIntersectionAlongSource(
-			IntersectionPoint3D thisIntersection)
+			IntersectionPoint3D currentIntersection)
 		{
-			IntersectionPoint3D result;
-			int previousSourceIdx = IntersectionOrders[thisIntersection].Key;
+			int nextAlongSourceIdx;
+			int currentSourceIdx = IntersectionOrders[currentIntersection].Key;
+			int count = 0;
 
-			int nextSourceIdx = previousSourceIdx + 1;
-
-			if (nextSourceIdx == IntersectionsAlongSource.Count)
+			do
 			{
-				nextSourceIdx = 0;
-			}
+				nextAlongSourceIdx = currentSourceIdx + 1;
 
-			int thisPartIdx = thisIntersection.SourcePartIndex;
+				if (nextAlongSourceIdx == IntersectionsAlongSource.Count)
+				{
+					nextAlongSourceIdx = 0;
+				}
 
-			if (nextSourceIdx < IntersectionsAlongSource.Count &&
-			    IntersectionsAlongSource[nextSourceIdx].SourcePartIndex == thisPartIdx)
-			{
-				result = IntersectionsAlongSource[nextSourceIdx];
-			}
-			else
-			{
-				result = IntersectionsAlongSource.First(i => i.SourcePartIndex == thisPartIdx);
-			}
+				Assert.True(count++ <= IntersectionsAlongSource.Count,
+				            "Cannot find next intersection in same target part");
+
+				currentSourceIdx = nextAlongSourceIdx;
+			} while (IntersectionsAlongSource[nextAlongSourceIdx].SourcePartIndex !=
+			         currentIntersection.SourcePartIndex);
+
+			IntersectionPoint3D result = IntersectionsAlongSource[nextAlongSourceIdx];
 
 			return result;
 		}

@@ -327,8 +327,7 @@ namespace ProSuite.Commons.Geom
 			int assignmentCount = 0;
 			foreach (RingGroup resultPoly in resultPolys)
 			{
-				if (GeomRelationUtils.PolycurveContainsXY(
-					    resultPoly.ExteriorRing, interiorRing.StartPoint, tolerance))
+				if (RingContains(resultPoly.ExteriorRing, interiorRing, tolerance))
 				{
 					resultPoly.AddInteriorRing(interiorRing);
 					assignmentCount++;
@@ -336,6 +335,33 @@ namespace ProSuite.Commons.Geom
 			}
 
 			return assignmentCount;
+		}
+
+		/// <summary>
+		/// Determines whether the specified interior ring which is known not to cross but only
+		/// touch the exterior ring or be completely inside or disjoint. 
+		/// </summary>
+		/// <param name="exteriorRing"></param>
+		/// <param name="unCutInteriorRing"></param>
+		/// <param name="tolerance"></param>
+		/// <returns></returns>
+		private static bool RingContains([NotNull] Linestring exteriorRing,
+		                                 [NotNull] Linestring unCutInteriorRing,
+		                                 double tolerance)
+		{
+			foreach (Pnt3D interiorRingPoint in unCutInteriorRing.GetPoints())
+			{
+				bool? contained =
+					GeomRelationUtils.AreaContainsXY(exteriorRing, interiorRingPoint, tolerance,
+					                                 true);
+
+				if (contained != null)
+				{
+					return contained.Value;
+				}
+			}
+
+			return false;
 		}
 
 		/// <summary>
@@ -357,7 +383,6 @@ namespace ProSuite.Commons.Geom
 					result.Add(new RingGroup(processedResultRing));
 					fromRings.Remove(processedResultRing);
 				}
-				else { }
 			}
 
 			return result;
