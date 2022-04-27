@@ -97,13 +97,13 @@ namespace ProSuite.Commons.Logging
 		{
 			Assert.ArgumentNotNull(log, nameof(log));
 
-			if (! (log is ILog))
+			if (! (log is ILog iLog))
 			{
 				throw new ArgumentException(
 					"log4net.ILog implementation expected", nameof(log));
 			}
 
-			_log = (ILog) log;
+			_log = iLog;
 		}
 
 		#endregion
@@ -361,14 +361,14 @@ namespace ProSuite.Commons.Logging
 
 		public bool IsVerboseDebugEnabled
 		{
-			get { return _isVerboseDebugEnabled && IsDebugEnabled; }
-			set { _isVerboseDebugEnabled = value; }
+			get => _isVerboseDebugEnabled && IsDebugEnabled;
+			set => _isVerboseDebugEnabled = value;
 		}
 
 		public bool ReportMemoryConsumptionOnError
 		{
-			get { return _reportMemoryConsumptionOnError; }
-			set { _reportMemoryConsumptionOnError = value; }
+			get => _reportMemoryConsumptionOnError;
+			set => _reportMemoryConsumptionOnError = value;
 		}
 
 		public bool IsInfoEnabled => _log.IsInfoEnabled;
@@ -464,17 +464,14 @@ namespace ProSuite.Commons.Logging
 
 		private static string GetMemoryConsumptionText()
 		{
-			long virtualBytes;
-			long privateBytes;
-			long workingSet;
-			ProcessUtils.GetMemorySize(out virtualBytes, out privateBytes, out workingSet);
+			ProcessUtils.GetMemorySize(out long virtualBytes,
+			                           out long privateBytes,
+			                           out long workingSet);
 
 			const int mb = 1024 * 1024;
 			return string.Format(
-				"VB:{0:N0} PB:{1:N0} WS:{2:N0}",
-				virtualBytes / mb,
-				privateBytes / mb,
-				workingSet / mb);
+				"VB:{0:N0} Mb, PB:{1:N0} Mb, WS:{2:N0} Mb",
+				virtualBytes / mb, privateBytes / mb, workingSet / mb);
 		}
 
 		private object PrepareMessage(object message)
@@ -484,9 +481,7 @@ namespace ProSuite.Commons.Logging
 
 		private object PrepareMessage(object message, bool appendMemoryConsumption)
 		{
-			var messageString = message as string;
-
-			if (messageString == null)
+			if (! (message is string messageString))
 			{
 				return GetAppendedMessage(RenderObject(message),
 				                          appendMemoryConsumption);
@@ -509,8 +504,7 @@ namespace ProSuite.Commons.Logging
 		                                         bool appendMemoryConsumption)
 		{
 			return appendMemoryConsumption
-				       ? string.Format("{0} [{1}]", message,
-				                       GetMemoryConsumptionText())
+				       ? string.Format("{0} [{1}]", message, GetMemoryConsumptionText())
 				       : message;
 		}
 
