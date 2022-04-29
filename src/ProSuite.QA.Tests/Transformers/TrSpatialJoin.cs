@@ -75,8 +75,25 @@ namespace ProSuite.QA.Tests.Transformers
 
 			AddFields(transformedFc, T0Attributes, InvolvedTables[0], isGrouped: false);
 			AddFields(transformedFc, T1Attributes, InvolvedTables[1], isGrouped: Grouped, T1CalcAttributes);
+
+			AddFields(transformedFc, InvolvedTables[0], "t0");
+			if (! Grouped)
+			{
+				AddFields(transformedFc, InvolvedTables[1], "t1");
+			}
+
 			return transformedFc;
 		}
+
+		private void AddFields(TransformedFc gdbTable, IReadOnlyTable tbl, string prefix)
+		{
+			for (int iField = 0; iField < tbl.Fields.FieldCount; iField++)
+			{
+				IField f = tbl.Fields.Field[iField];
+				gdbTable.FieldsT.AddFields(FieldUtils.CreateField($"{prefix}.{f.Name}", f.Type));
+			}
+		}
+
 
 		private void AddFields([NotNull] TransformedFc transformedFc,
 		                       [CanBeNull] IList<string> fieldNames,
@@ -221,18 +238,28 @@ namespace ProSuite.QA.Tests.Transformers
 			public override object get_Value(int index)
 			{
 				IField f = Table.Fields.Field[index];
-				if (f.Name.StartsWith("t0.") || f.Name.StartsWith("t1."))
+				if (f.Name.StartsWith("t0."))
 				{
-					int baseRowsIdx = Table.Fields.FindField(InvolvedRowUtils.BaseRowField);
-					IList<IReadOnlyRow> baseRows = (IList<IReadOnlyRow>) get_Value(baseRowsIdx);
-					IReadOnlyRow sourceRow = f.Name.StartsWith("t0.") ? baseRows[0] : baseRows[1];
-
-					int idx = sourceRow.Table.FindField(f.Name.Substring(3));
-					return sourceRow.get_Value(idx);
+					return GetBaseValue(0, f.Name.Substring(3));
+				}
+				if (f.Name.StartsWith("t1."))
+				{
+					return GetBaseValue(1, f.Name.Substring(3));
 				}
 
 				return base.get_Value(index);
 			}
+
+			private object GetBaseValue(int baseRowIndex, string attrName)
+			{
+				int baseRowsIdx = Table.Fields.FindField(InvolvedRowUtils.BaseRowField);
+				IList<IReadOnlyRow> baseRows = (IList<IReadOnlyRow>)get_Value(baseRowsIdx);
+				IReadOnlyRow baseRow = baseRows[baseRowIndex];
+
+				int idx = baseRow.Table.FindField(attrName);
+				return baseRow.get_Value(idx);
+			}
+
 		}
 
 		private class TransformedDataset : TransformedBackingDataset

@@ -193,6 +193,34 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Transforms features of &apos;intersected&apos; by intersecting them with features from &apos;intersecting&apos;.
+        ///If intersected is a line class and intersecting is a polygon class, then the resulting feature class has an attribute &apos;PartIntersected&apos; which contains the (resultingFeature.Shape.Length / intersectedFeature.Shape.Length).
+        /// </summary>
+        internal static string TrIntersect_0 {
+            get {
+                return ResourceManager.GetString("TrIntersect_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Feature class. The attributes of &apos;intersected&apos; can be accessed by &apos;t0.&lt;field&gt;&apos; in the resulting featureClass.
+        /// </summary>
+        internal static string TrIntersect_intersected {
+            get {
+                return ResourceManager.GetString("TrIntersect_intersected", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Feature class. The attributes of &apos;intersecting&apos; can be accessed by &apos;t1.&lt;field&gt;&apos; in the resulting featureClass.
+        /// </summary>
+        internal static string TrIntersect_intersecting {
+            get {
+                return ResourceManager.GetString("TrIntersect_intersecting", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Transforms closed lines of &apos;closedLineClass&apos; to polygons.
         /// </summary>
         internal static string TrLineToPoly_0 {
@@ -240,6 +268,7 @@ namespace ProSuite.QA.Tests.Documentation {
         
         /// <summary>
         ///   Looks up a localized string similar to Transforms multi-polygons to single polygons. The transformed feature class has the attributes OuterRingIndex and InnerRingIndex. These fields index from which polygon part the transformed polygon part was generated.
+        ///The transformed feature class has also the attributes of &apos;featureClass&apos;, which can be accessed by &apos;t0.&lt;fieldName&gt;&apos;..
         /// </summary>
         internal static string TrMultipolygonToPolygon_0 {
             get {
@@ -271,6 +300,7 @@ namespace ProSuite.QA.Tests.Documentation {
         
         /// <summary>
         ///   Looks up a localized string similar to Transform polygon to line by taking the boundary of the polygons in &apos;featureClass&apos;.
+        ///The transformed feature class has also the attributes of &apos;featureClass&apos;, which can be accessed by &apos;t0.&lt;fieldName&gt;&apos;..
         /// </summary>
         internal static string TrPolyToLine_0 {
             get {
