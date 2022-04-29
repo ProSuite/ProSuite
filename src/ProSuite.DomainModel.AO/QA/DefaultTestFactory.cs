@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Reflection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Logging;
 using ProSuite.Commons.Reflection;
 using ProSuite.QA.Container;
 using ProSuite.QA.Core;
@@ -12,8 +11,6 @@ namespace ProSuite.DomainModel.AO.QA
 {
 	public class DefaultTestFactory : TestFactory
 	{
-		private static readonly IMsg _msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);
-
 		[UsedImplicitly] [NotNull] private readonly Type _testType;
 		[UsedImplicitly] private readonly int _constructorId;
 
@@ -22,6 +19,7 @@ namespace ProSuite.DomainModel.AO.QA
 		public DefaultTestFactory([NotNull] Type type, int constructorId = 0)
 		{
 			Assert.ArgumentNotNull(type, nameof(type));
+			InstanceUtils.AssertConstructorExists(type, constructorId);
 
 			_testType = type;
 			_constructorId = constructorId;
@@ -35,7 +33,6 @@ namespace ProSuite.DomainModel.AO.QA
 			Assert.ArgumentNotNull(typeName, nameof(typeName));
 
 			_testType = InstanceUtils.LoadType(assemblyName, typeName, constructorId);
-
 			_constructorId = constructorId;
 		}
 
