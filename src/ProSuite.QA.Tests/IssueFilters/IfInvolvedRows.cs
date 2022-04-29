@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Reflection;
-using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Logging;
 using ProSuite.QA.Container;
@@ -18,14 +17,17 @@ namespace ProSuite.QA.Tests.IssueFilters
 		private readonly string _constraint;
 		private Dictionary<IReadOnlyTable, TableView> _tableViews;
 
-		[Doc("TODO - Filter the issues by a constraint on the involved rows")]
-		public IfInvolvedRows(string constraint)
+		[DocIf(nameof(DocIfStrings.IfInvolvedRows_0))]
+		public IfInvolvedRows(
+			[DocIf(nameof(DocIfStrings.IfInvolvedRows_constraint))]
+			string constraint)
 			: base(new IReadOnlyTable[] { })
 		{
 			_constraint = constraint;
 		}
 
 		[TestParameter]
+		[DocIf(nameof(DocIfStrings.IfInvolvedRows_Tables))]
 		public IList<IReadOnlyTable> Tables { get; set; }
 
 		public override bool Check(QaErrorEventArgs error)

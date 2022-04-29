@@ -31,9 +31,9 @@ namespace ProSuite.QA.Tests.Transformers
 		private int? _iAttrOuterRing;
 		private int? _iAttrInnerRing;
 
-		[Doc(nameof(DocStrings.TrMultipolygonToPolygon_0))]
+		[DocTr(nameof(DocTrStrings.TrMultipolygonToPolygon_0))]
 		public TrMultipolygonToPolygon(
-			[NotNull] [Doc(nameof(DocStrings.TrMultipolygonToPolygon_featureClass))]
+			[NotNull] [DocTr(nameof(DocTrStrings.TrMultipolygonToPolygon_featureClass))]
 			IReadOnlyFeatureClass featureClass)
 			: base(featureClass, esriGeometryType.esriGeometryPolygon) { }
 
@@ -46,7 +46,7 @@ namespace ProSuite.QA.Tests.Transformers
 		}
 
 		[TestParameter(_defaultPolygonPart)]
-		[Doc(nameof(DocStrings.TrMultipolygonToPolygon_TransformedParts))]
+		[DocTr(nameof(DocTrStrings.TrMultipolygonToPolygon_TransformedParts))]
 		public PolygonPart TransformedParts { get; set; }
 
 		protected override IEnumerable<GdbFeature> Transform(IGeometry source)

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
@@ -26,41 +25,41 @@ namespace ProSuite.QA.Tests.Transformers
 
 		private const SearchOption _defaultSearchOption = SearchOption.Tile;
 
-		[Doc(nameof(DocStrings.TrSpatialJoin_0))]
+		[DocTr(nameof(DocTrStrings.TrSpatialJoin_0))]
 		public TrSpatialJoin(
-			[NotNull] [Doc(nameof(DocStrings.TrSpatialJoin_t0))] IReadOnlyFeatureClass t0,
-			[NotNull] [Doc(nameof(DocStrings.TrSpatialJoin_t1))]
+			[NotNull] [DocTr(nameof(DocTrStrings.TrSpatialJoin_t0))] IReadOnlyFeatureClass t0,
+			[NotNull] [DocTr(nameof(DocTrStrings.TrSpatialJoin_t1))]
 			IReadOnlyFeatureClass t1)
 			: base(CastToTables(t0, t1)) { }
 
 		[TestParameter]
-		[Doc(nameof(DocStrings.TrSpatialJoin_Constraint))]
+		[DocTr(nameof(DocTrStrings.TrSpatialJoin_Constraint))]
 		public string Constraint { get; set; }
 
 		[TestParameter]
-		[Doc(nameof(DocStrings.TrSpatialJoin_OuterJoin))]
+		[DocTr(nameof(DocTrStrings.TrSpatialJoin_OuterJoin))]
 		public bool OuterJoin { get; set; }
 
 		[TestParameter(_defaultSearchOption)]
-		[Doc(nameof(DocStrings.TrSpatialJoin_NeighborSearchOption))]
+		[DocTr(nameof(DocTrStrings.TrSpatialJoin_NeighborSearchOption))]
 		public SearchOption NeighborSearchOption { get; set; }
 
 
 		// Remark: Grouped must come in Code before T1Attributes !
 		[TestParameter]
-		[Doc(nameof(DocStrings.TrSpatialJoin_Grouped))]
+		[DocTr(nameof(DocTrStrings.TrSpatialJoin_Grouped))]
 		public bool Grouped { get; set; }
 
 		[TestParameter]
-		[Doc(nameof(DocStrings.TrSpatialJoin_T0Attributes))]
+		[DocTr(nameof(DocTrStrings.TrSpatialJoin_T0Attributes))]
 		public IList<string> T0Attributes { get; set; }
 
 		[TestParameter]
-		[Doc(nameof(DocStrings.TrSpatialJoin_T1Attributes))]
+		[DocTr(nameof(DocTrStrings.TrSpatialJoin_T1Attributes))]
 		public IList<string> T1Attributes { get; set; }
 
 		[TestParameter]
-		[Doc(nameof(DocStrings.TrSpatialJoin_T1CalcAttributes))]
+		[DocTr(nameof(DocTrStrings.TrSpatialJoin_T1CalcAttributes))]
 		public IList<string> T1CalcAttributes { get; set; }
 
 		protected override TransformedFeatureClass GetTransformedCore(string name)
@@ -175,7 +174,7 @@ namespace ProSuite.QA.Tests.Transformers
 				_constraint = _constraint
 				              ?? new JoinConstraint(Constraint,
 				                                    caseSensitive: _parent.GetSqlCaseSensitivity());
-				return _constraint.IsFulfilled(t0, 0, t1, 1, out string conditionMessage);
+				return _constraint.IsFulfilled(t0, 0, t1, 1, out string _);
 			}
 
 			protected override VirtualRow CreateObject(int oid)

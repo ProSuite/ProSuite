@@ -35,9 +35,9 @@ namespace ProSuite.QA.Tests.Transformers
 
 		private readonly IReadOnlyFeatureClass _toDissolve;
 
-		[Doc(nameof(DocStrings.TrDissolve_0))]
+		[DocTr(nameof(DocTrStrings.TrDissolve_0))]
 		public TrDissolve(
-			[NotNull] [Doc(nameof(DocStrings.TrDissolve_featureclass))]
+			[NotNull] [DocTr(nameof(DocTrStrings.TrDissolve_featureclass))]
 			IReadOnlyFeatureClass featureclass)
 			: base(new List<IReadOnlyTable> { featureclass })
 		{
@@ -46,27 +46,27 @@ namespace ProSuite.QA.Tests.Transformers
 		}
 
 		[TestParameter]
-		[Doc(nameof(DocStrings.TrDissolve_SearchDistance))]
+		[DocTr(nameof(DocTrStrings.TrDissolve_SearchDistance))]
 		public new double Search { get; set; }
 
 		[TestParameter(_defaultSearchOption)]
-		[Doc(nameof(DocStrings.TrDissolve_NeighborSearchOption))]
+		[DocTr(nameof(DocTrStrings.TrDissolve_NeighborSearchOption))]
 		public SearchOption NeighborSearchOption { get; set; }
 
 		[TestParameter]
-		[Doc(nameof(DocStrings.TrDissolve_Attributes))]
+		[DocTr(nameof(DocTrStrings.TrDissolve_Attributes))]
 		public IList<string> Attributes { get; set; }
 
 		[TestParameter]
-		[Doc(nameof(DocStrings.TrDissolve_GroupBy))]
+		[DocTr(nameof(DocTrStrings.TrDissolve_GroupBy))]
 		public IList<string> GroupBy { get; set; }
 
 		[TestParameter]
-		[Doc(nameof(DocStrings.TrDissolve_Constraint))]
+		[DocTr(nameof(DocTrStrings.TrDissolve_Constraint))]
 		public string Constraint { get; set; }
 
 		[TestParameter]
-		[Doc(nameof(DocStrings.TrDissolve_CreateMultipartFeatures))]
+		[DocTr(nameof(DocTrStrings.TrDissolve_CreateMultipartFeatures))]
 		public bool CreateMultipartFeatures { get; set; }
 
 		protected override TransformedFeatureClass GetTransformedCore(string name)

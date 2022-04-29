@@ -11,9 +11,10 @@ namespace ProSuite.QA.Tests.Transformers
 	[UsedImplicitly]
 	public class TrPolyToLine : TrGeometryTransform
 	{
-		[Doc(nameof(DocStrings.TrPolyToLine_0))]
-		public TrPolyToLine([NotNull] [Doc(nameof(DocStrings.TrPolyToLine_featureClass))]
-		                    IReadOnlyFeatureClass featureClass)
+		[DocTr(nameof(DocTrStrings.TrPolyToLine_0))]
+		public TrPolyToLine(
+			[NotNull] [DocTr(nameof(DocTrStrings.TrPolyToLine_featureClass))]
+			IReadOnlyFeatureClass featureClass)
 			: base(featureClass, esriGeometryType.esriGeometryPolyline) { }
 
 		protected override IEnumerable<GdbFeature> Transform(IGeometry source)
