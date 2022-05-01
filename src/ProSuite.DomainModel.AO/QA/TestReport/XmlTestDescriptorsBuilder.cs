@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Xml;
 using ProSuite.DomainModel.AO.QA.Xml;
 using ProSuite.DomainModel.Core;
@@ -13,14 +14,12 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 	public class XmlTestDescriptorsBuilder : ReportBuilderBase
 	{
 		private readonly TextWriter _textWriter;
-		private readonly string _title;
 
-		public XmlTestDescriptorsBuilder(TextWriter textWriter, string title)
+		public XmlTestDescriptorsBuilder([NotNull] TextWriter textWriter)
 		{
 			Assert.ArgumentNotNull(textWriter, nameof(textWriter));
 
 			_textWriter = textWriter;
-			_title = title;
 		}
 
 		public override void AddHeaderItem(string name, string value) { }
@@ -45,7 +44,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			{
 				if (includedTest is IncludedTestClass includedTestClass)
 				{
-					Type testType = includedTest.TestType;
+					Type testType = includedTestClass.TestType;
 
 					foreach (IncludedTestConstructor constructor in includedTestClass
 						         .TestConstructors)
