@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Xml;
 using ProSuite.DomainModel.AO.QA.Xml;
@@ -40,9 +39,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 				return;
 			}
 
-			StringBuilder sb = new StringBuilder();
-
-			XmlDataQualityDocument document = new XmlDataQualityDocument();
+			var document = new XmlDataQualityDocument30();
 
 			foreach (IncludedTestBase includedTest in includedTests)
 			{
@@ -51,7 +48,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 					Type testType = includedTest.TestType;
 
 					foreach (IncludedTestConstructor constructor in includedTestClass
-						.TestConstructors)
+						         .TestConstructors)
 					{
 						string testName = $"{testType.Name}({constructor.ConstructorIndex})";
 
