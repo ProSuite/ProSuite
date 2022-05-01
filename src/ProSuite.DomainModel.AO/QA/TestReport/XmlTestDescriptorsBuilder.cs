@@ -28,8 +28,8 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 		{
 			IncludedTestFactories.Sort();
 
-			List<IncludedTestBase> includedTests =
-				GetSortedTestClasses().Cast<IncludedTestBase>().ToList();
+			List<IncludedInstanceBase> includedTests =
+				GetSortedTestClasses().Cast<IncludedInstanceBase>().ToList();
 
 			includedTests.AddRange(IncludedTestFactories);
 
@@ -40,7 +40,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 
 			var document = new XmlDataQualityDocument30();
 
-			foreach (IncludedTestBase includedTest in includedTests)
+			foreach (IncludedInstanceBase includedTest in includedTests)
 			{
 				if (includedTest is IncludedTestClass includedTestClass)
 				{

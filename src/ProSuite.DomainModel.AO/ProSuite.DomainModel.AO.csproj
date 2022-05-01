@@ -217,8 +217,8 @@
     <Compile Include="QA\TestFactory.cs" />
     <Compile Include="QA\TestParameterTypeUtils.cs" />
     <Compile Include="QA\TestReport\HtmlReportBuilder.cs" />
-    <Compile Include="QA\TestReport\IncludedTest.cs" />
-    <Compile Include="QA\TestReport\IncludedTestBase.cs" />
+    <Compile Include="QA\TestReport\IncludedInstance.cs" />
+    <Compile Include="QA\TestReport\IncludedInstanceBase.cs" />
     <Compile Include="QA\TestReport\IncludedTransformer.cs" />
     <Compile Include="QA\TestReport\IncludedTestClass.cs" />
     <Compile Include="QA\TestReport\IncludedTestConstructor.cs" />

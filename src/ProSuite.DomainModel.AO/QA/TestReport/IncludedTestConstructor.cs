@@ -4,7 +4,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.DomainModel.AO.QA.TestReport
 {
-	public class IncludedTestConstructor : IncludedTest,
+	public class IncludedTestConstructor : IncludedInstance,
 	                                       IComparable<IncludedTestConstructor>
 	{
 		private readonly Type _testType;
@@ -12,8 +12,8 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 
 		private IncludedTestConstructor([NotNull] Type testType, int constructorIndex)
 			: base(GetTitle(testType, constructorIndex),
-			       TestFactoryUtils.GetTestFactory(testType, constructorIndex),
 			       testType.Assembly,
+			       TestFactoryUtils.GetTestFactory(testType, constructorIndex),
 			       TestFactoryUtils.IsObsolete(testType, constructorIndex),
 			       TestFactoryUtils.IsInternallyUsed(testType, constructorIndex))
 		{
@@ -43,10 +43,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 		}
 
 		[NotNull]
-		public override Type TestType
-		{
-			get { return _testType; }
-		}
+		public override Type TestType => _testType;
 
 		#region IComparable<IncludedTestConstructor> Members
 
@@ -65,15 +62,9 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 
 		#region Overrides of IncludedTestBase
 
-		public override string Key
-		{
-			get { return string.Format("{0}:{1}", _testType.FullName, ConstructorIndex); }
-		}
+		public override string Key => string.Format("{0}:{1}", _testType.FullName, ConstructorIndex);
 
-		public override string IndexTooltip
-		{
-			get { return TestFactory.GetTestDescription(); }
-		}
+		public override string IndexTooltip => InstanceFactory.GetTestDescription();
 
 		public int ConstructorIndex => _constructorIndex;
 
