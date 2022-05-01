@@ -30,7 +30,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 		[NotNull]
 		public IncludedTestConstructor CreateTestConstructor(int constructorIndex)
 		{
-			return new IncludedTestConstructor(_testType, constructorIndex);
+			return IncludedTestConstructor.CreateInstance(_testType, constructorIndex);
 		}
 
 		public void IncludeConstructor([NotNull] IncludedTestConstructor testConstructor)

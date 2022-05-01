@@ -1,4 +1,5 @@
 using System;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.DomainModel.AO.QA.TestReport
@@ -9,7 +10,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 		private readonly Type _testType;
 		private readonly int _constructorIndex;
 
-		public IncludedTestConstructor([NotNull] Type testType, int constructorIndex)
+		private IncludedTestConstructor([NotNull] Type testType, int constructorIndex)
 			: base(GetTitle(testType, constructorIndex),
 			       TestFactoryUtils.GetTestFactory(testType, constructorIndex),
 			       testType.Assembly,
@@ -18,6 +19,27 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 		{
 			_testType = testType;
 			_constructorIndex = constructorIndex;
+		}
+
+		public static IncludedTestConstructor CreateInstance(
+			[NotNull] Type testType, int constructorIndex)
+		{
+			AssertConstructorExists(testType, constructorIndex);
+
+			return new IncludedTestConstructor(testType, constructorIndex);
+		}
+
+		//TODO: after push/pull subtree use InstanceUtils
+		private static void AssertConstructorExists([NotNull] Type type, int constructorId)
+		{
+			Assert.ArgumentNotNull(type, nameof(type));
+
+			if (type.GetConstructors().Length <= constructorId)
+			{
+				throw new TypeLoadException(
+					$"invalid constructorId {constructorId}, {type} has " +
+					$"{type.GetConstructors().Length} constructors");
+			}
 		}
 
 		[NotNull]
