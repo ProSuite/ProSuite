@@ -1,4 +1,4 @@
-﻿using System.Xml;
+using System.Xml;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -6,9 +6,9 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 {
 	internal class TestIndexEntry : IndexEntry
 	{
-		private readonly IncludedTestBase _includedTest;
+		private readonly IncludedInstanceBase _includedTest;
 
-		public TestIndexEntry([NotNull] IncludedTestBase includedTest)
+		public TestIndexEntry([NotNull] IncludedInstanceBase includedTest)
 		{
 			Assert.ArgumentNotNull(includedTest, nameof(includedTest));
 
