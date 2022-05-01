@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using ProSuite.Commons.Essentials.Assertions;
@@ -13,19 +12,18 @@ namespace ProSuite.Commons.IO
 {
 	public static class FileSystemUtils
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private static readonly Dictionary<string, Environment.SpecialFolder>
 			_specialFolderNames =
 				new Dictionary<string, Environment.SpecialFolder>
 				{
-					{"APPDATA", Environment.SpecialFolder.ApplicationData},
-					{"LOCALAPPDATA", Environment.SpecialFolder.LocalApplicationData},
-					{"PROGRAMDATA", Environment.SpecialFolder.CommonApplicationData}
+					{ "APPDATA", Environment.SpecialFolder.ApplicationData },
+					{ "LOCALAPPDATA", Environment.SpecialFolder.LocalApplicationData },
+					{ "PROGRAMDATA", Environment.SpecialFolder.CommonApplicationData }
 				};
 
-		private static readonly string[] _variableFormats = {@"${{{0}}}", "%{0}%"};
+		private static readonly string[] _variableFormats = { @"${{{0}}}", "%{0}%" };
 		private static char[] _invalidPathChars;
 		private static char[] _invalidFileNameChars;
 
@@ -34,12 +32,9 @@ namespace ProSuite.Commons.IO
 			=> _invalidPathChars ?? (_invalidPathChars = Path.GetInvalidPathChars());
 
 		[NotNull]
-		public static char[] InvalidFileNameChars => _invalidFileNameChars ??
-		                                             (_invalidFileNameChars =
-			                                              Assert.NotNull(
-				                                              Path
-					                                              .GetInvalidFileNameChars())
-		                                             );
+		public static char[] InvalidFileNameChars
+			=> _invalidFileNameChars ??
+			   (_invalidFileNameChars = Assert.NotNull(Path.GetInvalidFileNameChars()));
 
 		/// <summary>
 		/// Creates a relative path from one file or folder to another.
@@ -137,10 +132,8 @@ namespace ProSuite.Commons.IO
 		                                 [NotNull] string targetDirectoryPath,
 		                                 bool overwriteFiles)
 		{
-			Assert.ArgumentNotNullOrEmpty(sourceDirectoryPath,
-			                              nameof(sourceDirectoryPath));
-			Assert.ArgumentNotNullOrEmpty(targetDirectoryPath,
-			                              nameof(targetDirectoryPath));
+			Assert.ArgumentNotNullOrEmpty(sourceDirectoryPath, nameof(sourceDirectoryPath));
+			Assert.ArgumentNotNullOrEmpty(targetDirectoryPath, nameof(targetDirectoryPath));
 
 			CopyDirectory(new DirectoryInfo(sourceDirectoryPath),
 			              new DirectoryInfo(targetDirectoryPath), overwriteFiles);
@@ -203,13 +196,10 @@ namespace ProSuite.Commons.IO
 		public static void MoveDirectory([NotNull] string sourceDirectoryPath,
 		                                 [NotNull] string targetDirectoryPath)
 		{
-			Assert.ArgumentNotNullOrEmpty(sourceDirectoryPath,
-			                              nameof(sourceDirectoryPath));
-			Assert.ArgumentNotNullOrEmpty(targetDirectoryPath,
-			                              nameof(targetDirectoryPath));
+			Assert.ArgumentNotNullOrEmpty(sourceDirectoryPath, nameof(sourceDirectoryPath));
+			Assert.ArgumentNotNullOrEmpty(targetDirectoryPath, nameof(targetDirectoryPath));
 
-			_msg.DebugFormat("Moving {0} to {1}", sourceDirectoryPath,
-			                 targetDirectoryPath);
+			_msg.DebugFormat("Moving {0} to {1}", sourceDirectoryPath, targetDirectoryPath);
 
 			Directory.Move(sourceDirectoryPath, targetDirectoryPath);
 		}
@@ -228,8 +218,7 @@ namespace ProSuite.Commons.IO
 
 			if (force)
 			{
-				_msg.DebugFormat("Making sure there are no read-only files in {0}",
-				                 directory);
+				_msg.DebugFormat("Making sure there are no read-only files in {0}", directory);
 
 				SetAttributes(directory, recursive, FileAttributes.Normal);
 			}
@@ -261,8 +250,7 @@ namespace ProSuite.Commons.IO
 		{
 			Assert.ArgumentNotNullOrEmpty(filePath, nameof(filePath));
 			Assert.ArgumentCondition(File.Exists(filePath),
-			                         $"File does not exist: {filePath}",
-			                         filePath);
+			                         $"File does not exist: {filePath}", filePath);
 
 			using (var reader = new StreamReader(filePath))
 			{
@@ -329,17 +317,15 @@ namespace ProSuite.Commons.IO
 			foreach (string format in _variableFormats)
 			{
 				foreach (KeyValuePair<string, Environment.SpecialFolder> pair
-					in _specialFolderNames)
+				         in _specialFolderNames)
 				{
 					string variableName = string.Format(format, pair.Key);
 
-					if (path.IndexOf(variableName, StringComparison.OrdinalIgnoreCase) >=
-					    0)
+					if (path.IndexOf(variableName, StringComparison.OrdinalIgnoreCase) >= 0)
 					{
 						result = StringUtils.Replace(result,
 						                             variableName,
-						                             Environment
-							                             .GetFolderPath(pair.Value),
+						                             Environment.GetFolderPath(pair.Value),
 						                             StringComparison.OrdinalIgnoreCase);
 					}
 				}
@@ -405,8 +391,7 @@ namespace ProSuite.Commons.IO
 		public static bool TryGetAvailableFreeGigaBytes([NotNull] string folderName,
 		                                                out double availableFreeGigaBytes)
 		{
-			long availableFreeBytes;
-			bool result = TryGetAvailableFreeBytes(folderName, out availableFreeBytes);
+			bool result = TryGetAvailableFreeBytes(folderName, out long availableFreeBytes);
 
 			availableFreeGigaBytes = result ? availableFreeBytes / Math.Pow(1024, 3) : -1;
 
@@ -415,7 +400,7 @@ namespace ProSuite.Commons.IO
 
 		// From http://stackoverflow.com/questions/1393711/get-free-disk-space
 		[DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Auto)]
-		[return : MarshalAs(UnmanagedType.Bool)]
+		[return: MarshalAs(UnmanagedType.Bool)]
 		private static extern bool GetDiskFreeSpaceEx(string lpDirectoryName,
 		                                              out ulong lpFreeBytesAvailable,
 		                                              out ulong lpTotalNumberOfBytes,
