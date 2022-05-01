@@ -298,10 +298,16 @@ namespace ProSuite.Commons.IO
 
 		public static void WriteTextFile([NotNull] string s, [NotNull] string filePath)
 		{
+			WriteTextFile(s, filePath, Encoding.Unicode);
+		}
+
+		public static void WriteTextFile([NotNull] string s, [NotNull] string filePath,
+		                                 Encoding encoding)
+		{
 			Assert.ArgumentNotNullOrEmpty(s, nameof(s));
 			Assert.ArgumentNotNullOrEmpty(filePath, nameof(filePath));
 
-			using (var writer = new StreamWriter(filePath, false, Encoding.Unicode))
+			using (var writer = new StreamWriter(filePath, false, encoding))
 			{
 				writer.Write(s);
 			}
