@@ -118,7 +118,7 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="TrDissolve_0" xml:space="preserve">
-    <value>transformes line feature class 'featureclass' by dissolving connected features</value>
+    <value>Transforms line feature class 'featureClass' by dissolving connected features</value>
   </data>
   <data name="TrDissolve_Attributes" xml:space="preserve">
     <value>Attributes to be transfered to transformed feature class. Must be used with alias and group expression, i.e. 'MAX(LAUF_NR) AS MAX_LAUF_NR'.
@@ -132,7 +132,7 @@ In the resulting feature class, only attributes defined in 'Attributes' or 'Grou
 - false: create separate features when 3 or more features are connected. Only connections with 2 features are dissolved.
 - true: create multpart features for all connected source features.</value>
   </data>
-  <data name="TrDissolve_featureclass" xml:space="preserve">
+  <data name="TrDissolve_featureClass" xml:space="preserve">
     <value>Line feature class to dissolve</value>
   </data>
   <data name="TrDissolve_GroupBy" xml:space="preserve">
@@ -145,7 +145,7 @@ In the resulting feature class, only attributes defined in 'Attributes' or 'Grou
 - All: if features start/end outside tile, load additional connected features (recursively)</value>
   </data>
   <data name="TrDissolve_SearchDistance" xml:space="preserve">
-    <value>Additonal distance to cache 'featureclass' features per tile</value>
+    <value>Additonal distance to cache 'featureClass' features per tile</value>
   </data>
   <data name="TrFootprint_0" xml:space="preserve">
     <value>Transforms multipatches to polygons by taking their footprints</value>

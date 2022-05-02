@@ -4,7 +4,7 @@ using ProSuite.Commons.Globalization;
 namespace ProSuite.QA.Tests.Documentation
 {
 	/// <summary>
-	/// Attribute for documenting transformer classes, constructor parameters and optional parameters. Supports localization by
+	/// Attribute for documenting issue filters. Supports localization by
 	/// looking up string resources in <see cref="DocIfStrings"></see>
 	/// </summary>
 	public class DocIfAttribute : LocalizedDescriptionAttribute

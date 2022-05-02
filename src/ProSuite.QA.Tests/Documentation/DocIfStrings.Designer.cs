@@ -19,10 +19,10 @@ namespace ProSuite.QA.Tests.Documentation {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    internal class DocIfStrings {
+    public class DocIfStrings {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
@@ -36,7 +36,7 @@ namespace ProSuite.QA.Tests.Documentation {
         ///   Returns the cached ResourceManager instance used by this class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Resources.ResourceManager ResourceManager {
+        public static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
                     global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("ProSuite.QA.Tests.Documentation.DocIfStrings", typeof(DocIfStrings).Assembly);
@@ -51,7 +51,7 @@ namespace ProSuite.QA.Tests.Documentation {
         ///   resource lookups using this strongly typed resource class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Globalization.CultureInfo Culture {
+        public static global::System.Globalization.CultureInfo Culture {
             get {
                 return resourceCulture;
             }
@@ -63,7 +63,7 @@ namespace ProSuite.QA.Tests.Documentation {
         /// <summary>
         ///   Looks up a localized string similar to Filters errors that intersect any feature in a &apos;featureClass&apos;.
         /// </summary>
-        internal static string IfContains_0 {
+        public static string IfContains_0 {
             get {
                 return ResourceManager.GetString("IfContains_0", resourceCulture);
             }
@@ -72,7 +72,7 @@ namespace ProSuite.QA.Tests.Documentation {
         /// <summary>
         ///   Looks up a localized string similar to polygon feature class or point, multipoint, polyline feature class.
         /// </summary>
-        internal static string IfContains_featureClass {
+        public static string IfContains_featureClass {
             get {
                 return ResourceManager.GetString("IfContains_featureClass", resourceCulture);
             }
@@ -81,7 +81,7 @@ namespace ProSuite.QA.Tests.Documentation {
         /// <summary>
         ///   Looks up a localized string similar to Filters errors that intersect any feature in a &apos;featureClass&apos;.
         /// </summary>
-        internal static string IfIntersects_0 {
+        public static string IfIntersects_0 {
             get {
                 return ResourceManager.GetString("IfIntersects_0", resourceCulture);
             }
@@ -90,7 +90,7 @@ namespace ProSuite.QA.Tests.Documentation {
         /// <summary>
         ///   Looks up a localized string similar to point, multipoint, polyline or polygon feature class.
         /// </summary>
-        internal static string IfIntersects_featureClass {
+        public static string IfIntersects_featureClass {
             get {
                 return ResourceManager.GetString("IfIntersects_featureClass", resourceCulture);
             }
@@ -99,7 +99,7 @@ namespace ProSuite.QA.Tests.Documentation {
         /// <summary>
         ///   Looks up a localized string similar to Filters errors where any involved row fulfills &apos;constraint&apos;.
         /// </summary>
-        internal static string IfInvolvedRows_0 {
+        public static string IfInvolvedRows_0 {
             get {
                 return ResourceManager.GetString("IfInvolvedRows_0", resourceCulture);
             }
@@ -108,7 +108,7 @@ namespace ProSuite.QA.Tests.Documentation {
         /// <summary>
         ///   Looks up a localized string similar to constraint .
         /// </summary>
-        internal static string IfInvolvedRows_constraint {
+        public static string IfInvolvedRows_constraint {
             get {
                 return ResourceManager.GetString("IfInvolvedRows_constraint", resourceCulture);
             }
@@ -118,7 +118,7 @@ namespace ProSuite.QA.Tests.Documentation {
         ///   Looks up a localized string similar to List of tables, to which a involved row must belong to to be checked.
         ///If not specifed, all involved rows are check for the constraint.
         /// </summary>
-        internal static string IfInvolvedRows_Tables {
+        public static string IfInvolvedRows_Tables {
             get {
                 return ResourceManager.GetString("IfInvolvedRows_Tables", resourceCulture);
             }

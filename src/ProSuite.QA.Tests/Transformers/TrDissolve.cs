@@ -36,11 +36,11 @@ namespace ProSuite.QA.Tests.Transformers
 
 		[DocTr(nameof(DocTrStrings.TrDissolve_0))]
 		public TrDissolve(
-			[NotNull] [DocTr(nameof(DocTrStrings.TrDissolve_featureclass))]
-			IReadOnlyFeatureClass featureclass)
-			: base(new List<IReadOnlyTable> { featureclass })
+			[NotNull] [DocTr(nameof(DocTrStrings.TrDissolve_featureClass))]
+			IReadOnlyFeatureClass featureClass)
+			: base(new List<IReadOnlyTable> { featureClass })
 		{
-			_toDissolve = featureclass;
+			_toDissolve = featureClass;
 			NeighborSearchOption = _defaultSearchOption;
 		}
 

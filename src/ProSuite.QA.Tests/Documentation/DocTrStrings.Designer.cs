@@ -19,10 +19,10 @@ namespace ProSuite.QA.Tests.Documentation {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    internal class DocTrStrings {
+    public class DocTrStrings {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
@@ -36,7 +36,7 @@ namespace ProSuite.QA.Tests.Documentation {
         ///   Returns the cached ResourceManager instance used by this class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Resources.ResourceManager ResourceManager {
+        public static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
                     global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("ProSuite.QA.Tests.Documentation.DocTrStrings", typeof(DocTrStrings).Assembly);
@@ -51,7 +51,7 @@ namespace ProSuite.QA.Tests.Documentation {
         ///   resource lookups using this strongly typed resource class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Globalization.CultureInfo Culture {
+        public static global::System.Globalization.CultureInfo Culture {
             get {
                 return resourceCulture;
             }
@@ -61,9 +61,9 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to transformes line feature class &apos;featureclass&apos; by dissolving connected features.
+        ///   Looks up a localized string similar to Transforms line feature class &apos;featureClass&apos; by dissolving connected features.
         /// </summary>
-        internal static string TrDissolve_0 {
+        public static string TrDissolve_0 {
             get {
                 return ResourceManager.GetString("TrDissolve_0", resourceCulture);
             }
@@ -73,7 +73,7 @@ namespace ProSuite.QA.Tests.Documentation {
         ///   Looks up a localized string similar to Attributes to be transfered to transformed feature class. Must be used with alias and group expression, i.e. &apos;MAX(LAUF_NR) AS MAX_LAUF_NR&apos;.
         ///In the resulting feature class, only attributes defined in &apos;Attributes&apos; or &apos;GroupBy&apos; can be used..
         /// </summary>
-        internal static string TrDissolve_Attributes {
+        public static string TrDissolve_Attributes {
             get {
                 return ResourceManager.GetString("TrDissolve_Attributes", resourceCulture);
             }
@@ -82,7 +82,7 @@ namespace ProSuite.QA.Tests.Documentation {
         /// <summary>
         ///   Looks up a localized string similar to Only feature that fulfill constraint between each other are dissolved.
         /// </summary>
-        internal static string TrDissolve_Constraint {
+        public static string TrDissolve_Constraint {
             get {
                 return ResourceManager.GetString("TrDissolve_Constraint", resourceCulture);
             }
@@ -93,7 +93,7 @@ namespace ProSuite.QA.Tests.Documentation {
         ///- false: create separate features when 3 or more features are connected. Only connections with 2 features are dissolved.
         ///- true: create multpart features for all connected source features..
         /// </summary>
-        internal static string TrDissolve_CreateMultipartFeatures {
+        public static string TrDissolve_CreateMultipartFeatures {
             get {
                 return ResourceManager.GetString("TrDissolve_CreateMultipartFeatures", resourceCulture);
             }
@@ -102,9 +102,9 @@ namespace ProSuite.QA.Tests.Documentation {
         /// <summary>
         ///   Looks up a localized string similar to Line feature class to dissolve.
         /// </summary>
-        internal static string TrDissolve_featureclass {
+        public static string TrDissolve_featureClass {
             get {
-                return ResourceManager.GetString("TrDissolve_featureclass", resourceCulture);
+                return ResourceManager.GetString("TrDissolve_featureClass", resourceCulture);
             }
         }
         
@@ -112,7 +112,7 @@ namespace ProSuite.QA.Tests.Documentation {
         ///   Looks up a localized string similar to Group features by &apos;GroupBy&apos; before dissolving
         ///In the resulting feature class, only attributes defined in &apos;Attributes&apos; or &apos;GroupBy&apos; can be used..
         /// </summary>
-        internal static string TrDissolve_GroupBy {
+        public static string TrDissolve_GroupBy {
             get {
                 return ResourceManager.GetString("TrDissolve_GroupBy", resourceCulture);
             }
@@ -123,16 +123,16 @@ namespace ProSuite.QA.Tests.Documentation {
         ///-Tile: dissolve features only within the current tile
         ///- All: if features start/end outside tile, load additional connected features (recursively).
         /// </summary>
-        internal static string TrDissolve_NeighborSearchOption {
+        public static string TrDissolve_NeighborSearchOption {
             get {
                 return ResourceManager.GetString("TrDissolve_NeighborSearchOption", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Additonal distance to cache &apos;featureclass&apos; features per tile.
+        ///   Looks up a localized string similar to Additonal distance to cache &apos;featureClass&apos; features per tile.
         /// </summary>
-        internal static string TrDissolve_SearchDistance {
+        public static string TrDissolve_SearchDistance {
             get {
                 return ResourceManager.GetString("TrDissolve_SearchDistance", resourceCulture);
             }
@@ -141,7 +141,7 @@ namespace ProSuite.QA.Tests.Documentation {
         /// <summary>
         ///   Looks up a localized string similar to Transforms multipatches to polygons by taking their footprints.
         /// </summary>
-        internal static string TrFootprint_0 {
+        public static string TrFootprint_0 {
             get {
                 return ResourceManager.GetString("TrFootprint_0", resourceCulture);
             }
@@ -150,7 +150,7 @@ namespace ProSuite.QA.Tests.Documentation {
         /// <summary>
         ///   Looks up a localized string similar to multipatch feature class to transform.
         /// </summary>
-        internal static string TrFootprint_multipatchClass {
+        public static string TrFootprint_multipatchClass {
             get {
                 return ResourceManager.GetString("TrFootprint_multipatchClass", resourceCulture);
             }
@@ -159,7 +159,7 @@ namespace ProSuite.QA.Tests.Documentation {
         /// <summary>
         ///   Looks up a localized string similar to Transforms geometries to points. The transformed feature class has the attribute PartIndex and VertexIndex. These fields index from which polygon part the transformed polygon part was generated.
         /// </summary>
-        internal static string TrGeometryToPoints_0 {
+        public static string TrGeometryToPoints_0 {
             get {
                 return ResourceManager.GetString("TrGeometryToPoints_0", resourceCulture);
             }
@@ -168,7 +168,7 @@ namespace ProSuite.QA.Tests.Documentation {
         /// <summary>
         ///   Looks up a localized string similar to GeometryComponent to extract.
         /// </summary>
-        internal static string TrGeometryToPoints_component {
+        public static string TrGeometryToPoints_component {
             get {
                 return ResourceManager.GetString("TrGeometryToPoints_component", resourceCulture);
             }
@@ -177,7 +177,7 @@ namespace ProSuite.QA.Tests.Documentation {
         /// <summary>
         ///   Looks up a localized string similar to multipoint, line, polygon or multpatch class to transform.
         /// </summary>
-        internal static string TrGeometryToPoints_featureClass {
+        public static string TrGeometryToPoints_featureClass {
             get {
                 return ResourceManager.GetString("TrGeometryToPoints_featureClass", resourceCulture);
             }
@@ -186,7 +186,7 @@ namespace ProSuite.QA.Tests.Documentation {
         /// <summary>
         ///   Looks up a localized string similar to Attributes that are copied from source featureclass to resulting featureclass.
         /// </summary>
-        internal static string TrGeometryTransform_Attributes {
+        public static string TrGeometryTransform_Attributes {
             get {
                 return ResourceManager.GetString("TrGeometryTransform_Attributes", resourceCulture);
             }
@@ -196,7 +196,7 @@ namespace ProSuite.QA.Tests.Documentation {
         ///   Looks up a localized string similar to Transforms features of &apos;intersected&apos; by intersecting them with features from &apos;intersecting&apos;.
         ///If intersected is a line class and intersecting is a polygon class, then the resulting feature class has an attribute &apos;PartIntersected&apos; which contains the (resultingFeature.Shape.Length / intersectedFeature.Shape.Length).
         /// </summary>
-        internal static string TrIntersect_0 {
+        public static string TrIntersect_0 {
             get {
                 return ResourceManager.GetString("TrIntersect_0", resourceCulture);
             }
@@ -205,7 +205,7 @@ namespace ProSuite.QA.Tests.Documentation {
         /// <summary>
         ///   Looks up a localized string similar to Feature class. The attributes of &apos;intersected&apos; can be accessed by &apos;t0.&lt;field&gt;&apos; in the resulting featureClass.
         /// </summary>
-        internal static string TrIntersect_intersected {
+        public static string TrIntersect_intersected {
             get {
                 return ResourceManager.GetString("TrIntersect_intersected", resourceCulture);
             }
@@ -214,7 +214,7 @@ namespace ProSuite.QA.Tests.Documentation {
         /// <summary>
         ///   Looks up a localized string similar to Feature class. The attributes of &apos;intersecting&apos; can be accessed by &apos;t1.&lt;field&gt;&apos; in the resulting featureClass.
         /// </summary>
-        internal static string TrIntersect_intersecting {
+        public static string TrIntersect_intersecting {
             get {
                 return ResourceManager.GetString("TrIntersect_intersecting", resourceCulture);
             }
@@ -223,7 +223,7 @@ namespace ProSuite.QA.Tests.Documentation {
         /// <summary>
         ///   Looks up a localized string similar to Transforms closed lines of &apos;closedLineClass&apos; to polygons.
         /// </summary>
-        internal static string TrLineToPoly_0 {
+        public static string TrLineToPoly_0 {
             get {
                 return ResourceManager.GetString("TrLineToPoly_0", resourceCulture);
             }
@@ -232,7 +232,7 @@ namespace ProSuite.QA.Tests.Documentation {
         /// <summary>
         ///   Looks up a localized string similar to line feature class to transform.
         /// </summary>
-        internal static string TrLineToPoly_closedLineClass {
+        public static string TrLineToPoly_closedLineClass {
             get {
                 return ResourceManager.GetString("TrLineToPoly_closedLineClass", resourceCulture);
             }
@@ -242,7 +242,7 @@ namespace ProSuite.QA.Tests.Documentation {
         ///   Looks up a localized string similar to Defines how to handle not closed lines
         ///- AsPolygonIfClosedElseIgnore (default) : ignore not closed lines.
         /// </summary>
-        internal static string TrLineToPoly_PolylineUsage {
+        public static string TrLineToPoly_PolylineUsage {
             get {
                 return ResourceManager.GetString("TrLineToPoly_PolylineUsage", resourceCulture);
             }
@@ -251,7 +251,7 @@ namespace ProSuite.QA.Tests.Documentation {
         /// <summary>
         ///   Looks up a localized string similar to Transforms multi-lines to single lines. The transformed feature class has the attribute PartIndex. This field index from which polygon part the transformed polygon part was generated.
         /// </summary>
-        internal static string TrMultilineToLine_0 {
+        public static string TrMultilineToLine_0 {
             get {
                 return ResourceManager.GetString("TrMultilineToLine_0", resourceCulture);
             }
@@ -260,7 +260,7 @@ namespace ProSuite.QA.Tests.Documentation {
         /// <summary>
         ///   Looks up a localized string similar to line feature class to transform.
         /// </summary>
-        internal static string TrMultilineToLine_featureClass {
+        public static string TrMultilineToLine_featureClass {
             get {
                 return ResourceManager.GetString("TrMultilineToLine_featureClass", resourceCulture);
             }
@@ -270,7 +270,7 @@ namespace ProSuite.QA.Tests.Documentation {
         ///   Looks up a localized string similar to Transforms multi-polygons to single polygons. The transformed feature class has the attributes OuterRingIndex and InnerRingIndex. These fields index from which polygon part the transformed polygon part was generated.
         ///The transformed feature class has also the attributes of &apos;featureClass&apos;, which can be accessed by &apos;t0.&lt;fieldName&gt;&apos;..
         /// </summary>
-        internal static string TrMultipolygonToPolygon_0 {
+        public static string TrMultipolygonToPolygon_0 {
             get {
                 return ResourceManager.GetString("TrMultipolygonToPolygon_0", resourceCulture);
             }
@@ -279,7 +279,7 @@ namespace ProSuite.QA.Tests.Documentation {
         /// <summary>
         ///   Looks up a localized string similar to polygon feature class to transform.
         /// </summary>
-        internal static string TrMultipolygonToPolygon_featureClass {
+        public static string TrMultipolygonToPolygon_featureClass {
             get {
                 return ResourceManager.GetString("TrMultipolygonToPolygon_featureClass", resourceCulture);
             }
@@ -292,7 +292,7 @@ namespace ProSuite.QA.Tests.Documentation {
         ///-InnerRings: converts all inner rings to polygons
         ///-AllRings: converts all rings to polygons (Remark: polygons generated from outer rings: InnerRingIndex = -1).
         /// </summary>
-        internal static string TrMultipolygonToPolygon_TransformedParts {
+        public static string TrMultipolygonToPolygon_TransformedParts {
             get {
                 return ResourceManager.GetString("TrMultipolygonToPolygon_TransformedParts", resourceCulture);
             }
@@ -302,7 +302,7 @@ namespace ProSuite.QA.Tests.Documentation {
         ///   Looks up a localized string similar to Transform polygon to line by taking the boundary of the polygons in &apos;featureClass&apos;.
         ///The transformed feature class has also the attributes of &apos;featureClass&apos;, which can be accessed by &apos;t0.&lt;fieldName&gt;&apos;..
         /// </summary>
-        internal static string TrPolyToLine_0 {
+        public static string TrPolyToLine_0 {
             get {
                 return ResourceManager.GetString("TrPolyToLine_0", resourceCulture);
             }
@@ -311,7 +311,7 @@ namespace ProSuite.QA.Tests.Documentation {
         /// <summary>
         ///   Looks up a localized string similar to polygon feature class.
         /// </summary>
-        internal static string TrPolyToLine_featureClass {
+        public static string TrPolyToLine_featureClass {
             get {
                 return ResourceManager.GetString("TrPolyToLine_featureClass", resourceCulture);
             }
@@ -320,7 +320,7 @@ namespace ProSuite.QA.Tests.Documentation {
         /// <summary>
         ///   Looks up a localized string similar to Transforms features of &apos;t0&apos; and features of &apos;t1&apos; to features, with shape of &apos;t0&apos; if they intersect..
         /// </summary>
-        internal static string TrSpatialJoin_0 {
+        public static string TrSpatialJoin_0 {
             get {
                 return ResourceManager.GetString("TrSpatialJoin_0", resourceCulture);
             }
@@ -331,7 +331,7 @@ namespace ProSuite.QA.Tests.Documentation {
         ///The involved features are aliased using &quot;T0&quot; and T1&quot;.
         ///Example: T0.Level = T1.Level.
         /// </summary>
-        internal static string TrSpatialJoin_Constraint {
+        public static string TrSpatialJoin_Constraint {
             get {
                 return ResourceManager.GetString("TrSpatialJoin_Constraint", resourceCulture);
             }
@@ -342,7 +342,7 @@ namespace ProSuite.QA.Tests.Documentation {
         ///If false: create one feature for each (t0,t1)-feature pair that intersects
         ///if true: create one feature for each feature in &apos;t0&apos;, that intersects any feature of &apos;t1&apos;.
         /// </summary>
-        internal static string TrSpatialJoin_Grouped {
+        public static string TrSpatialJoin_Grouped {
             get {
                 return ResourceManager.GetString("TrSpatialJoin_Grouped", resourceCulture);
             }
@@ -353,7 +353,7 @@ namespace ProSuite.QA.Tests.Documentation {
         ///-Tile: join features only within the current tile
         ///- All: if features lie partially outside tile, load additional connected features .
         /// </summary>
-        internal static string TrSpatialJoin_NeighborSearchOption {
+        public static string TrSpatialJoin_NeighborSearchOption {
             get {
                 return ResourceManager.GetString("TrSpatialJoin_NeighborSearchOption", resourceCulture);
             }
@@ -364,7 +364,7 @@ namespace ProSuite.QA.Tests.Documentation {
         ///If true: transform features from t0-features that have no spatial relation to any feature of t1
         ///If false: ignore features from t0 that have no spatial relation to any feature of t1.
         /// </summary>
-        internal static string TrSpatialJoin_OuterJoin {
+        public static string TrSpatialJoin_OuterJoin {
             get {
                 return ResourceManager.GetString("TrSpatialJoin_OuterJoin", resourceCulture);
             }
@@ -373,7 +373,7 @@ namespace ProSuite.QA.Tests.Documentation {
         /// <summary>
         ///   Looks up a localized string similar to Feature class that provides the shape for the new features.
         /// </summary>
-        internal static string TrSpatialJoin_t0 {
+        public static string TrSpatialJoin_t0 {
             get {
                 return ResourceManager.GetString("TrSpatialJoin_t0", resourceCulture);
             }
@@ -383,7 +383,7 @@ namespace ProSuite.QA.Tests.Documentation {
         ///   Looks up a localized string similar to Attributes of &apos;t0&apos; that are transfered to transformed feature class. Can be used with alias, i.e. &apos;TOPGIS_TLM.TLM_GEWAESSER_LAUF.LAUF_NR AS T1_LAUF_NR&apos;.
         ///In the resulting feature class, only attributes defined in T0Attributes or T1Attributes can be used. .
         /// </summary>
-        internal static string TrSpatialJoin_T0Attributes {
+        public static string TrSpatialJoin_T0Attributes {
             get {
                 return ResourceManager.GetString("TrSpatialJoin_T0Attributes", resourceCulture);
             }
@@ -392,7 +392,7 @@ namespace ProSuite.QA.Tests.Documentation {
         /// <summary>
         ///   Looks up a localized string similar to Feature class to join.
         /// </summary>
-        internal static string TrSpatialJoin_t1 {
+        public static string TrSpatialJoin_t1 {
             get {
                 return ResourceManager.GetString("TrSpatialJoin_t1", resourceCulture);
             }
@@ -406,7 +406,7 @@ namespace ProSuite.QA.Tests.Documentation {
         ///T1CalcAttributes: &quot;IIF(objecttype=&apos;x&apos;,1,0) AS X_VALUE&quot;
         ///T1Attributes: &quot;SUM(X_VALUE) AS X_COUNT&quot;.
         /// </summary>
-        internal static string TrSpatialJoin_T1Attributes {
+        public static string TrSpatialJoin_T1Attributes {
             get {
                 return ResourceManager.GetString("TrSpatialJoin_T1Attributes", resourceCulture);
             }
@@ -416,7 +416,7 @@ namespace ProSuite.QA.Tests.Documentation {
         ///   Looks up a localized string similar to Calculations with attributes of &apos;t1&apos; that are used in Group-Expressions.
         ///See T1Attributes.
         /// </summary>
-        internal static string TrSpatialJoin_T1CalcAttributes {
+        public static string TrSpatialJoin_T1CalcAttributes {
             get {
                 return ResourceManager.GetString("TrSpatialJoin_T1CalcAttributes", resourceCulture);
             }
@@ -425,7 +425,7 @@ namespace ProSuite.QA.Tests.Documentation {
         /// <summary>
         ///   Looks up a localized string similar to Transforms table &apos;t0&apos; and table &apos;t1&apos;, which must be related by &apos;relationName&apos;, to a joined table.
         /// </summary>
-        internal static string TrTableJoin_0 {
+        public static string TrTableJoin_0 {
             get {
                 return ResourceManager.GetString("TrTableJoin_0", resourceCulture);
             }
@@ -434,7 +434,7 @@ namespace ProSuite.QA.Tests.Documentation {
         /// <summary>
         ///   Looks up a localized string similar to JoinType.
         /// </summary>
-        internal static string TrTableJoin_joinType {
+        public static string TrTableJoin_joinType {
             get {
                 return ResourceManager.GetString("TrTableJoin_joinType", resourceCulture);
             }
@@ -443,7 +443,7 @@ namespace ProSuite.QA.Tests.Documentation {
         /// <summary>
         ///   Looks up a localized string similar to name of existing relation between &apos;t0&apos; and &apos;t1&apos;.
         /// </summary>
-        internal static string TrTableJoin_relationName {
+        public static string TrTableJoin_relationName {
             get {
                 return ResourceManager.GetString("TrTableJoin_relationName", resourceCulture);
             }
@@ -452,7 +452,7 @@ namespace ProSuite.QA.Tests.Documentation {
         /// <summary>
         ///   Looks up a localized string similar to table to join with &apos;t1&apos;.
         /// </summary>
-        internal static string TrTableJoin_t0 {
+        public static string TrTableJoin_t0 {
             get {
                 return ResourceManager.GetString("TrTableJoin_t0", resourceCulture);
             }
@@ -461,7 +461,7 @@ namespace ProSuite.QA.Tests.Documentation {
         /// <summary>
         ///   Looks up a localized string similar to table to join with &apos;t0&apos;.
         /// </summary>
-        internal static string TrTableJoin_t1 {
+        public static string TrTableJoin_t1 {
             get {
                 return ResourceManager.GetString("TrTableJoin_t1", resourceCulture);
             }
