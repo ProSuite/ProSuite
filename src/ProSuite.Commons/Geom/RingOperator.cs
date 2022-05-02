@@ -245,7 +245,7 @@ namespace ProSuite.Commons.Geom
 			       clipPolys.Count > 0;
 		}
 
-		#region Single ring operations - remove dependency on correct subcurve navigator!
+		#region Single ring operations
 
 		/// <summary>
 		/// Cuts the source ring using the target and returns separate lists 
@@ -485,14 +485,8 @@ namespace ProSuite.Commons.Geom
 			}
 		}
 
-		private IList<Linestring> GetLeftSideRings()
-		{
-			return _subcurveNavigator.FollowSubcurvesClockwise(
-				_subcurveNavigator.IntersectionsInboundTarget.ToList());
-		}
-
-		private IList<Linestring> GetLeftSideRings(bool includeEqualRings,
-		                                           bool includeNotContained)
+		private IList<Linestring> GetLeftSideRings(bool includeEqualRings = false,
+		                                           bool includeNotContained = false)
 		{
 			IList<Linestring> result = _subcurveNavigator.FollowSubcurvesClockwise(
 				_subcurveNavigator.IntersectionsInboundTarget.ToList());

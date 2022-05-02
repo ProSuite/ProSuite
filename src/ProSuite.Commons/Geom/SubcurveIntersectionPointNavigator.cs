@@ -19,7 +19,9 @@ namespace ProSuite.Commons.Geom
 		private IntersectionPoint3D _currentStartIntersection;
 
 		public SubcurveIntersectionPointNavigator(
-			IList<IntersectionPoint3D> intersectionPoints, ISegmentList source, ISegmentList target)
+			[NotNull] IList<IntersectionPoint3D> intersectionPoints,
+			[NotNull] ISegmentList source,
+			[NotNull] ISegmentList target)
 		{
 			IntersectionPoints = intersectionPoints;
 			Source = source;
@@ -27,7 +29,6 @@ namespace ProSuite.Commons.Geom
 		}
 
 		private ISegmentList Source { get; }
-
 		private ISegmentList Target { get; }
 
 		private IList<IntersectionPoint3D> IntersectionPoints { get; }
@@ -193,6 +194,88 @@ namespace ProSuite.Commons.Geom
 			return false;
 		}
 
+		public bool AllowConnectToSourcePartAlongOtherSourcePart(
+			[NotNull] IntersectionPoint3D fromOtherSourceIntersection,
+			int sourcePartToConnectTo)
+		{
+			IntersectionPoint3D current = fromOtherSourceIntersection;
+
+			IntersectionPoint3D next;
+
+			bool isLoop = false;
+
+			// Any following intersection along the same target part that intersects the required source part?
+			while ((current = GetNextIntersectionAlongSource(
+				        current, fromOtherSourceIntersection)) != null)
+			{
+				// Only use intersections in the same part
+				if (fromOtherSourceIntersection.SourcePartIndex != current.SourcePartIndex)
+				{
+					continue;
+				}
+
+				if (IntersectionsNotUsedForNavigation.Contains(current))
+				{
+					continue;
+				}
+
+				if (current.Equals(fromOtherSourceIntersection))
+				{
+					// we're back where we started
+					isLoop = true;
+				}
+
+				foreach (IntersectionPoint3D duplicateOnNext in
+				         GetOtherSourceIntersections(current))
+				{
+					if (duplicateOnNext.Equals(fromOtherSourceIntersection))
+					{
+						// we're back
+						isLoop = true;
+					}
+				}
+
+				if (! isLoop)
+				{
+					// There was an intermediate source intersection from which we could potentially
+					// travel back via a target (this requires a unit test!)
+					return true;
+				}
+
+				return false;
+			}
+
+			// All intermediate source intersections where from a different part or were equal to the start
+			return false;
+		}
+
+		private IntersectionPoint3D GetNextIntersectionAlongSource(
+			IntersectionPoint3D current, IntersectionPoint3D startedAt)
+		{
+			if (current == null)
+			{
+				current = startedAt;
+			}
+
+			int currentIdx = IntersectionOrders[current].Key;
+
+			int nextAlongSourceIdx = currentIdx + 1;
+
+			if (nextAlongSourceIdx == IntersectionsAlongSource.Count)
+			{
+				nextAlongSourceIdx = 0;
+			}
+
+			IntersectionPoint3D nextAlongSource = IntersectionsAlongSource[nextAlongSourceIdx];
+
+			if (nextAlongSource == startedAt)
+			{
+				return null;
+			}
+
+			return nextAlongSource;
+		}
+
 		public bool HasMultipleSourceIntersections([NotNull] IntersectionPoint3D atIntersection)
 		{
 			if (_multipleSourceIntersections == null || _multipleSourceIntersections.Count == 0)
@@ -281,11 +364,6 @@ namespace ProSuite.Commons.Geom
 			[NotNull] IntersectionPoint3D intersectionPoint,
 			[NotNull] IntersectionPoint3D samePlaceAsStartIntersection)
 		{
-			if (intersectionPoint.SourcePartIndex != _currentStartIntersection.SourcePartIndex)
-			{
-				return false;
-			}
-
 			IntersectionPoint3D otherIntersection;
 
 			if (_currentStartIntersection.Equals(intersectionPoint))
@@ -301,10 +379,16 @@ namespace ProSuite.Commons.Geom
 				return false;
 			}
 
+			if (intersectionPoint.SourcePartIndex != _currentStartIntersection.SourcePartIndex)
+			{
+				// TODO: Can we travel (only along the source) between the intersection points?
+				return true;
+			}
+
 			if (_currentStartIntersection.Type == IntersectionPointType.TouchingInPoint)
 			{
 				// NOTE: Sometimes the start point is not in the OutboundTarget points.
-				// This should probably should get additional unit-testing
+				// This should probably get additional unit-testing
 				return true;
 			}
 
@@ -315,7 +399,7 @@ namespace ProSuite.Commons.Geom
 			//   The outbound targets contains the start, the inbound target contains the intersection
 			if (IntersectionsOutboundTarget.Contains(_currentStartIntersection) &&
 			    IntersectionsInboundTarget.Contains(otherIntersection) &&
-			    SourceSegmentsBetween(otherIntersection, _currentStartIntersection) > 1)
+			    SourceSegmentCountBetween(otherIntersection, _currentStartIntersection) > 1)
 			{
 				return true;
 			}
@@ -326,7 +410,7 @@ namespace ProSuite.Commons.Geom
 			//   The inbound targets contains the start, the outbound target contains the intersection
 			if (IntersectionsInboundTarget.Contains(_currentStartIntersection) &&
 			    IntersectionsOutboundTarget.Contains(otherIntersection) &&
-			    SourceSegmentsBetween(_currentStartIntersection, otherIntersection) > 1)
+			    SourceSegmentCountBetween(_currentStartIntersection, otherIntersection) > 1)
 			{
 				return true;
 			}
@@ -334,8 +418,8 @@ namespace ProSuite.Commons.Geom
 			return false;
 		}
 
-		private double SourceSegmentsBetween([NotNull] IntersectionPoint3D firstIntersection,
-		                                     [NotNull] IntersectionPoint3D secondIntersection)
+		private double SourceSegmentCountBetween([NotNull] IntersectionPoint3D firstIntersection,
+		                                         [NotNull] IntersectionPoint3D secondIntersection)
 		{
 			Assert.AreEqual(firstIntersection.SourcePartIndex, secondIntersection.SourcePartIndex,
 			                "Intersections are not from the same part.");
@@ -345,7 +429,8 @@ namespace ProSuite.Commons.Geom
 
 			if (result < 0)
 			{
-				result += Source.SegmentCount;
+				Linestring sourcePart = Source.GetPart(firstIntersection.SourcePartIndex);
+				result += sourcePart.SegmentCount;
 			}
 
 			return Math.Floor(result);
@@ -615,7 +700,7 @@ namespace ProSuite.Commons.Geom
 
 			// Other linear intersection breaks that are not real (from a 2D perspective)
 			foreach (var pseudoBreak in GeomTopoOpUtils.GetLinearIntersectionPseudoBreaks(
-				         intersectionPoints))
+				         intersectionPoints, source, target))
 			{
 				yield return pseudoBreak;
 			}

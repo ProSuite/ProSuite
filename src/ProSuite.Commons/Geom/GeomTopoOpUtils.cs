@@ -4,11 +4,14 @@ using System.Linq;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 
 namespace ProSuite.Commons.Geom
 {
 	public static class GeomTopoOpUtils
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		/// <summary>
 		/// Returns the lines that are part of <paramref name="linestring1"></paramref> but have
 		/// no linear intersection in the XY plane with <paramref name="multiLinestring2"/>.
@@ -252,6 +255,7 @@ namespace ProSuite.Commons.Geom
 			var result = sourceRings.Clone();
 
 			// TODO: Consider calculating the plane only once.
+			int count = 0;
 			foreach (var targetRingGroup in targetPolyhedron.RingGroups)
 			{
 				result = GetDifferenceAreasXY(result, targetRingGroup, tolerance, zSource);
@@ -260,6 +264,11 @@ namespace ProSuite.Commons.Geom
 				{
 					return result;
 				}
+
+				// ReSharper disable once AccessToModifiedClosure
+				_msg.VerboseDebug(() => $"Processed target ring index at {count}");
+
+				count++;
 			}
 
 			return result;
@@ -2499,7 +2508,9 @@ namespace ProSuite.Commons.Geom
 				yield return ringStartIntersection;
 			}
 
-			foreach (var pseudoBreak in GetLinearIntersectionPseudoBreaks(intersectionPoints))
+			foreach (var pseudoBreak in
+			         GetLinearIntersectionPseudoBreaks(intersectionPoints, sourceSegments,
+			                                           targetSegments))
 			{
 				yield return pseudoBreak;
 			}
@@ -2530,36 +2541,34 @@ namespace ProSuite.Commons.Geom
 				yield break;
 			}
 
-			IntersectionPoint3D previousLinearEnd = null;
-
-			// TODO: Use variables and be more expressive:
-			// bool linearSourceStartIntersection = ...
-			// bool linearTargetStartIntersection = ...
-
-			// To find source breaks also if a break at the target start exists:
-			// The last linear intersection can be connected to the first via ring null point
-			var orderedIntersections =
-				intersectionPoints.OrderBy(i => i.SourcePartIndex)
-				                  .ThenBy(i => i.VirtualSourceVertex).ToList();
-
-			orderedIntersections.Add(orderedIntersections[0]);
-
-			foreach (IntersectionPoint3D intersectionPoint in orderedIntersections)
+			foreach (IGrouping<int, IntersectionPoint3D> intersectionsByPart in
+			         intersectionPoints.GroupBy(p => p.SourcePartIndex))
 			{
-				if (intersectionPoint.Type == IntersectionPointType.LinearIntersectionStart &&
-				    previousLinearEnd != null &&
-				    intersectionPoint.Point.Equals(previousLinearEnd.Point) &&
-				    IsIntersectionAtPartStartOrEnd(sourceSegments, targetSegments,
-				                                   intersectionPoint))
+				var orderedIntersections =
+					intersectionsByPart.OrderBy(i => i.VirtualSourceVertex).ToList();
+
+				if (orderedIntersections.Count < 2)
 				{
-					yield return previousLinearEnd;
-					yield return intersectionPoint;
+					continue;
 				}
 
-				previousLinearEnd =
-					intersectionPoint.Type == IntersectionPointType.LinearIntersectionEnd
-						? intersectionPoint
-						: null;
+				// Target end/start break:
+				foreach (IntersectionPoint3D pseudoBreak in GetLinearIntersectionPseudoBreaks(
+					         sourceSegments, targetSegments, orderedIntersections, true))
+				{
+					yield return pseudoBreak;
+				}
+
+				// Now check the source-end to source-start break
+				IntersectionPoint3D ringEnd = orderedIntersections.Last();
+				IntersectionPoint3D ringStart = orderedIntersections[0];
+
+				if (IsLinearIntersectionPseudoBreak(
+					    ringEnd, ringStart, sourceSegments, targetSegments))
+				{
+					yield return ringEnd;
+					yield return ringStart;
+				}
 			}
 		}
 
@@ -2568,66 +2577,63 @@ namespace ProSuite.Commons.Geom
 		/// stretch and do not start or end the linear intersection from a 2D perspective.
 		/// </summary>
 		/// <param name="intersectionPoints"></param>
+		/// <param name="source"></param>
+		/// <param name="target"></param>
 		/// <returns></returns>
 		public static IEnumerable<IntersectionPoint3D> GetLinearIntersectionPseudoBreaks(
-			[NotNull] IEnumerable<IntersectionPoint3D> intersectionPoints)
+			[NotNull] IEnumerable<IntersectionPoint3D> intersectionPoints,
+			[NotNull] ISegmentList source,
+			[NotNull] ISegmentList target)
 		{
 			var orderedIntersections =
 				intersectionPoints.OrderBy(i => i.SourcePartIndex)
 				                  .ThenBy(i => i.VirtualSourceVertex).ToList();
 
-			IntersectionPoint3D previous = null;
-			foreach (IntersectionPoint3D intersectionPoint in orderedIntersections)
+			foreach (IntersectionPoint3D intersectionPoint3D in
+			         GetLinearIntersectionPseudoBreaks(source, target, orderedIntersections))
 			{
-				// Also, filter other pseudo-breaks (e.g. due to vertical segments):
-				if (previous != null &&
-				    previous.Type == IntersectionPointType.LinearIntersectionEnd &&
-				    intersectionPoint.Type == IntersectionPointType.LinearIntersectionStart &&
-				    previous.SourcePartIndex == intersectionPoint.SourcePartIndex &&
-				    previous.TargetPartIndex == intersectionPoint.TargetPartIndex &&
-				    previous.Point.Equals(intersectionPoint.Point))
-				{
-					yield return previous;
-					yield return intersectionPoint;
-				}
-
-				previous = intersectionPoint;
+				yield return intersectionPoint3D;
 			}
 		}
 
-		/// <summary>
-		/// Determines whether the specified intersection point is touching the target (boundary)
-		/// interior.
-		/// </summary>
-		/// <param name="intersectionPoint"></param>
-		/// <param name="target"></param>
-		/// <returns></returns>
-		public static bool IsTargetInteriorTouchingIntersection(
-			IntersectionPoint3D intersectionPoint,
+		private static IEnumerable<IntersectionPoint3D> GetLinearIntersectionPseudoBreaks(
+			[NotNull] ISegmentList source,
+			[NotNull] ISegmentList target,
+			[NotNull] IEnumerable<IntersectionPoint3D> orderedIntersections,
+			bool onlyOnTargetNullPoint = false)
+		{
+			IntersectionPoint3D previous = null;
+			foreach (IntersectionPoint3D current in orderedIntersections)
+			{
+				if (! onlyOnTargetNullPoint ||
+				    SegmentIntersectionUtils.IsTargetRingNullPoint(
+					    current.SegmentIntersection, previous?.SegmentIntersection,
+					    target))
+				{
+					if (IsLinearIntersectionPseudoBreak(previous, current, source,
+					                                    target))
+					{
+						yield return previous;
+						yield return current;
+					}
+				}
+
+				previous = current;
+			}
+		}
+
+		private static bool IsLinearIntersectionPseudoBreak(
+			IntersectionPoint3D previousIntersection,
+			IntersectionPoint3D currentIntersection,
+			ISegmentList source,
 			ISegmentList target)
 		{
-			if (intersectionPoint.Type != IntersectionPointType.TouchingInPoint)
-			{
-				return false;
-			}
-
-			bool isTargetVertex = intersectionPoint.IsTargetVertex(out int localVertexIdx);
-
-			var targetPart = target.GetPart(intersectionPoint.TargetPartIndex);
-
-			if (! isTargetVertex)
-			{
-				return true;
-			}
-
-			if (targetPart.IsClosed ||
-			    ! targetPart.IsFirstPointInPart(localVertexIdx) &&
-			    ! targetPart.IsLastPointInPart(localVertexIdx))
-			{
-				return true;
-			}
-
-			return false;
+			return previousIntersection != null &&
+			       previousIntersection.Type == IntersectionPointType.LinearIntersectionEnd &&
+			       currentIntersection.Type == IntersectionPointType.LinearIntersectionStart &&
+			       SegmentIntersectionUtils.AreIntersectionsAdjacent(
+				       previousIntersection, currentIntersection,
+				       source, target);
 		}
 
 		private static void FilterLinearIntersectionBreaksAtRingStart(
@@ -2667,18 +2673,10 @@ namespace ProSuite.Commons.Geom
 				return false;
 			}
 
-			// TODO: Add GetGlobalPointIndex and IsVertexIndexAtLinestringStart etc.?
-			//       Or even add GetLinestring(int index) to ISegmentList?
+			Linestring part = segmentList.GetPart(partIndex);
 
-			Linestring linestring = segmentList as Linestring;
-
-			if (linestring == null)
-			{
-				linestring = ((MultiLinestring) segmentList).GetLinestring(partIndex);
-			}
-
-			return linestring.IsFirstPointInPart(vertexIndexIntegral) ||
-			       linestring.IsLastPointInPart(vertexIndexIntegral);
+			return part.IsFirstPointInPart(vertexIndexIntegral) ||
+			       part.IsLastPointInPart(vertexIndexIntegral);
 		}
 
 		#region Cut / Intersect
