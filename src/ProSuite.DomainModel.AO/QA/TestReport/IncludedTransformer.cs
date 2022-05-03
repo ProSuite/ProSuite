@@ -8,7 +8,7 @@ using ProSuite.QA.Container;
 
 namespace ProSuite.DomainModel.AO.QA.TestReport
 {
-	public class IncludedTransformer : IncludedTestBase, IComparable<IncludedTransformer>
+	public class IncludedTransformer : IncludedInstanceBase, IComparable<IncludedTransformer>
 	{
 		private readonly Type _testType;
 
@@ -30,7 +30,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 		[NotNull]
 		public IncludedTestConstructor CreateTestConstructor(int constructorIndex)
 		{
-			return new IncludedTestConstructor(_testType, constructorIndex);
+			return IncludedTestConstructor.CreateInstance(_testType, constructorIndex);
 		}
 
 		public void IncludeConstructor([NotNull] IncludedTestConstructor testConstructor)

@@ -2,13 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Reflection;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Core;
 
 namespace ProSuite.DomainModel.AO.QA
@@ -94,23 +92,6 @@ namespace ProSuite.DomainModel.AO.QA
 			return new DefaultTestFactory(testType, constructorIndex);
 		}
 
-		public static bool IsTestType([NotNull] Type candidateType)
-		{
-			Type testType = typeof(ITest);
-
-			return IsTestType(candidateType, testType);
-		}
-
-		public static bool IsTestType([NotNull] Type candidateType,
-		                              [NotNull] Type testType)
-		{
-			Assert.ArgumentNotNull(candidateType, nameof(candidateType));
-
-			return testType.IsAssignableFrom(candidateType) &&
-			       ! candidateType.IsAbstract &&
-			       candidateType.IsPublic;
-		}
-
 		public static bool IsTestFactoryType([NotNull] Type candidateType,
 		                                     [NotNull] Type testFactoryType)
 		{
@@ -144,7 +125,7 @@ namespace ProSuite.DomainModel.AO.QA
 					continue;
 				}
 
-				if (! includeInternallyUsed && HasInternallyUsedAttribute(candidateType))
+				if (! includeInternallyUsed && InstanceFactoryUtils.HasInternallyUsedAttribute(candidateType))
 				{
 					continue;
 				}
@@ -164,7 +145,7 @@ namespace ProSuite.DomainModel.AO.QA
 
 			foreach (Type candidateType in assembly.GetTypes())
 			{
-				if (! IsTestType(candidateType, testType))
+				if (! InstanceFactoryUtils.IsInstanceType(candidateType, testType))
 				{
 					continue;
 				}
@@ -174,61 +155,12 @@ namespace ProSuite.DomainModel.AO.QA
 					continue;
 				}
 
-				if (! includeInternallyUsed && HasInternallyUsedAttribute(candidateType))
+				if (! includeInternallyUsed && InstanceFactoryUtils.HasInternallyUsedAttribute(candidateType))
 				{
 					continue;
 				}
 
 				yield return candidateType;
-			}
-		}
-
-		[NotNull]
-		public static IEnumerable<Type> GetTransformerClasses([NotNull] Assembly assembly,
-		                                               bool includeObsolete,
-		                                               bool includeInternallyUsed)
-		{
-			Assert.ArgumentNotNull(assembly, nameof(assembly));
-
-			Type transformerType = typeof(ITableTransformer);
-
-			foreach (Type candidateType in assembly.GetTypes())
-			{
-				if (!IsTestType(candidateType, transformerType))
-				{
-					continue;
-				}
-
-				if (!includeObsolete && ReflectionUtils.IsObsolete(candidateType))
-				{
-					continue;
-				}
-
-				if (!includeInternallyUsed && HasInternallyUsedAttribute(candidateType))
-				{
-					continue;
-				}
-
-				yield return candidateType;
-			}
-		}
-
-		[NotNull]
-		public static IEnumerable<int> GetTestConstructorIndexes([NotNull] Type testType,
-		                                                         bool includeObsolete,
-		                                                         bool includeInternallyUsed)
-		{
-			Assert.ArgumentNotNull(testType, nameof(testType));
-
-			var constructorIndex = 0;
-			foreach (ConstructorInfo ctorInfo in testType.GetConstructors())
-			{
-				if (IncludeTestConstructor(ctorInfo, includeObsolete, includeInternallyUsed))
-				{
-					yield return constructorIndex;
-				}
-
-				constructorIndex++;
 			}
 		}
 
@@ -264,12 +196,12 @@ namespace ProSuite.DomainModel.AO.QA
 
 			ConstructorInfo ctorInfo = testType.GetConstructors()[constructorIndex];
 
-			return HasInternallyUsedAttribute(ctorInfo);
+			return InstanceFactoryUtils.HasInternallyUsedAttribute(ctorInfo);
 		}
 
 		public static bool IsInternallyUsed([NotNull] Type testType)
 		{
-			return HasInternallyUsedAttribute(testType);
+			return InstanceFactoryUtils.HasInternallyUsedAttribute(testType);
 		}
 
 		[NotNull]
@@ -289,24 +221,6 @@ namespace ProSuite.DomainModel.AO.QA
 			Assert.ArgumentNotNull(testFactoryType, nameof(testFactoryType));
 
 			return GetTestDescriptorBaseName(testFactoryType);
-		}
-
-		private static bool IncludeTestConstructor([NotNull] ConstructorInfo ctorInfo,
-		                                           bool includeObsolete,
-		                                           bool includeInternallyUsed)
-		{
-			if (! includeObsolete && ReflectionUtils.IsObsolete(ctorInfo))
-			{
-				return false;
-			}
-
-			return includeInternallyUsed || ! HasInternallyUsedAttribute(ctorInfo);
-		}
-
-		private static bool HasInternallyUsedAttribute(
-			[NotNull] ICustomAttributeProvider attributeProvider)
-		{
-			return ReflectionUtils.HasAttribute<InternallyUsedTestAttribute>(attributeProvider);
 		}
 
 		[NotNull]

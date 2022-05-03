@@ -1,0 +1,275 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="TrDissolve_0" xml:space="preserve">
+    <value>Transforms line feature class 'featureClass' by dissolving connected features</value>
+  </data>
+  <data name="TrDissolve_Attributes" xml:space="preserve">
+    <value>Attributes to be transfered to transformed feature class. Must be used with alias and group expression, i.e. 'MAX(LAUF_NR) AS MAX_LAUF_NR'.
+In the resulting feature class, only attributes defined in 'Attributes' or 'GroupBy' can be used.</value>
+  </data>
+  <data name="TrDissolve_Constraint" xml:space="preserve">
+    <value>Only feature that fulfill constraint between each other are dissolved</value>
+  </data>
+  <data name="TrDissolve_CreateMultipartFeatures" xml:space="preserve">
+    <value>(Default = false)
+- false: create separate features when 3 or more features are connected. Only connections with 2 features are dissolved.
+- true: create multpart features for all connected source features.</value>
+  </data>
+  <data name="TrDissolve_featureClass" xml:space="preserve">
+    <value>Line feature class to dissolve</value>
+  </data>
+  <data name="TrDissolve_GroupBy" xml:space="preserve">
+    <value>Group features by 'GroupBy' before dissolving
+In the resulting feature class, only attributes defined in 'Attributes' or 'GroupBy' can be used.</value>
+  </data>
+  <data name="TrDissolve_NeighborSearchOption" xml:space="preserve">
+    <value>(Default = Tile)
+-Tile: dissolve features only within the current tile
+- All: if features start/end outside tile, load additional connected features (recursively)</value>
+  </data>
+  <data name="TrDissolve_SearchDistance" xml:space="preserve">
+    <value>Additonal distance to cache 'featureClass' features per tile</value>
+  </data>
+  <data name="TrFootprint_0" xml:space="preserve">
+    <value>Transforms multipatches to polygons by taking their footprints</value>
+  </data>
+  <data name="TrFootprint_multipatchClass" xml:space="preserve">
+    <value>multipatch feature class to transform</value>
+  </data>
+  <data name="TrGeometryToPoints_0" xml:space="preserve">
+    <value>Transforms geometries to points. The transformed feature class has the attribute PartIndex and VertexIndex. These fields index from which polygon part the transformed polygon part was generated</value>
+  </data>
+  <data name="TrGeometryToPoints_component" xml:space="preserve">
+    <value>GeometryComponent to extract</value>
+  </data>
+  <data name="TrGeometryToPoints_featureClass" xml:space="preserve">
+    <value>multipoint, line, polygon or multpatch class to transform</value>
+  </data>
+  <data name="TrGeometryTransform_Attributes" xml:space="preserve">
+    <value>Attributes that are copied from source featureclass to resulting featureclass</value>
+  </data>
+  <data name="TrIntersect_0" xml:space="preserve">
+    <value>Transforms features of 'intersected' by intersecting them with features from 'intersecting'.
+If intersected is a line class and intersecting is a polygon class, then the resulting feature class has an attribute 'PartIntersected' which contains the (resultingFeature.Shape.Length / intersectedFeature.Shape.Length)</value>
+  </data>
+  <data name="TrIntersect_intersected" xml:space="preserve">
+    <value>Feature class. The attributes of 'intersected' can be accessed by 't0.&lt;field&gt;' in the resulting featureClass</value>
+  </data>
+  <data name="TrIntersect_intersecting" xml:space="preserve">
+    <value>Feature class. The attributes of 'intersecting' can be accessed by 't1.&lt;field&gt;' in the resulting featureClass</value>
+  </data>
+  <data name="TrLineToPoly_0" xml:space="preserve">
+    <value>Transforms closed lines of 'closedLineClass' to polygons</value>
+  </data>
+  <data name="TrLineToPoly_closedLineClass" xml:space="preserve">
+    <value>line feature class to transform</value>
+  </data>
+  <data name="TrLineToPoly_PolylineUsage" xml:space="preserve">
+    <value>Defines how to handle not closed lines
+- AsPolygonIfClosedElseIgnore (default) : ignore not closed lines</value>
+  </data>
+  <data name="TrMultilineToLine_0" xml:space="preserve">
+    <value>Transforms multi-lines to single lines. The transformed feature class has the attribute PartIndex. This field index from which polygon part the transformed polygon part was generated</value>
+  </data>
+  <data name="TrMultilineToLine_featureClass" xml:space="preserve">
+    <value>line feature class to transform</value>
+  </data>
+  <data name="TrMultipolygonToPolygon_0" xml:space="preserve">
+    <value>Transforms multi-polygons to single polygons. The transformed feature class has the attributes OuterRingIndex and InnerRingIndex. These fields index from which polygon part the transformed polygon part was generated.
+The transformed feature class has also the attributes of 'featureClass', which can be accessed by 't0.&lt;fieldName&gt;'.</value>
+  </data>
+  <data name="TrMultipolygonToPolygon_featureClass" xml:space="preserve">
+    <value>polygon feature class to transform</value>
+  </data>
+  <data name="TrMultipolygonToPolygon_TransformedParts" xml:space="preserve">
+    <value>Default = SinglePolygons
+-SinglePolygon: converts multi polygon to single polygons (Remark: InnerRingIndex = -2)
+-OuterRings: converts all out rings to polygons (Remark: InnerRingIndex = -1)
+-InnerRings: converts all inner rings to polygons
+-AllRings: converts all rings to polygons (Remark: polygons generated from outer rings: InnerRingIndex = -1)</value>
+  </data>
+  <data name="TrPolyToLine_0" xml:space="preserve">
+    <value>Transform polygon to line by taking the boundary of the polygons in 'featureClass'.
+The transformed feature class has also the attributes of 'featureClass', which can be accessed by 't0.&lt;fieldName&gt;'.</value>
+  </data>
+  <data name="TrPolyToLine_featureClass" xml:space="preserve">
+    <value>polygon feature class</value>
+  </data>
+  <data name="TrSpatialJoin_0" xml:space="preserve">
+    <value>Transforms features of 't0' and features of 't1' to features, with shape of 't0' if they intersect.</value>
+  </data>
+  <data name="TrSpatialJoin_Constraint" xml:space="preserve">
+    <value>Constraint on spatially joined features. Only spatially joined feature pairs that fulfill the constraint will be transformed to resulting features.
+The involved features are aliased using "T0" and T1".
+Example: T0.Level = T1.Level</value>
+  </data>
+  <data name="TrSpatialJoin_Grouped" xml:space="preserve">
+    <value>Default = false.
+If false: create one feature for each (t0,t1)-feature pair that intersects
+if true: create one feature for each feature in 't0', that intersects any feature of 't1'</value>
+  </data>
+  <data name="TrSpatialJoin_NeighborSearchOption" xml:space="preserve">
+    <value>(Default = Tile)
+-Tile: join features only within the current tile
+- All: if features lie partially outside tile, load additional connected features </value>
+  </data>
+  <data name="TrSpatialJoin_OuterJoin" xml:space="preserve">
+    <value>Default = false.Left outer Join.
+If true: transform features from t0-features that have no spatial relation to any feature of t1
+If false: ignore features from t0 that have no spatial relation to any feature of t1</value>
+  </data>
+  <data name="TrSpatialJoin_t0" xml:space="preserve">
+    <value>Feature class that provides the shape for the new features</value>
+  </data>
+  <data name="TrSpatialJoin_T0Attributes" xml:space="preserve">
+    <value>Attributes of 't0' that are transfered to transformed feature class. Can be used with alias, i.e. 'TOPGIS_TLM.TLM_GEWAESSER_LAUF.LAUF_NR AS T1_LAUF_NR'.
+In the resulting feature class, only attributes defined in T0Attributes or T1Attributes can be used. </value>
+  </data>
+  <data name="TrSpatialJoin_t1" xml:space="preserve">
+    <value>Feature class to join</value>
+  </data>
+  <data name="TrSpatialJoin_T1Attributes" xml:space="preserve">
+    <value>See T0Attributes.
+If 'Grouped'=true, the attributes must be defined by Group-Expressions like COUNT(),MIN(),MAX()... 
+Remark: Group expressions can only containt a single field expression. If a more complex expression is needed, use the parameter T1CalcAttributes.
+Example: Count the number of joined features with a specific objecttype 'x' would be: 
+T1CalcAttributes: "IIF(objecttype='x',1,0) AS X_VALUE"
+T1Attributes: "SUM(X_VALUE) AS X_COUNT"</value>
+  </data>
+  <data name="TrSpatialJoin_T1CalcAttributes" xml:space="preserve">
+    <value>Calculations with attributes of 't1' that are used in Group-Expressions.
+See T1Attributes</value>
+  </data>
+  <data name="TrTableJoin_0" xml:space="preserve">
+    <value>Transforms table 't0' and table 't1', which must be related by 'relationName', to a joined table</value>
+  </data>
+  <data name="TrTableJoin_joinType" xml:space="preserve">
+    <value>JoinType</value>
+  </data>
+  <data name="TrTableJoin_relationName" xml:space="preserve">
+    <value>name of existing relation between 't0' and 't1'</value>
+  </data>
+  <data name="TrTableJoin_t0" xml:space="preserve">
+    <value>table to join with 't1'</value>
+  </data>
+  <data name="TrTableJoin_t1" xml:space="preserve">
+    <value>table to join with 't0'</value>
+  </data>
+</root>

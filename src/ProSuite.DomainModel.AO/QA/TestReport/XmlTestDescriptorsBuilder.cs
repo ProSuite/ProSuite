@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Xml;
 using ProSuite.DomainModel.AO.QA.Xml;
 using ProSuite.DomainModel.Core;
@@ -14,14 +14,12 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 	public class XmlTestDescriptorsBuilder : ReportBuilderBase
 	{
 		private readonly TextWriter _textWriter;
-		private readonly string _title;
 
-		public XmlTestDescriptorsBuilder(TextWriter textWriter, string title)
+		public XmlTestDescriptorsBuilder([NotNull] TextWriter textWriter)
 		{
 			Assert.ArgumentNotNull(textWriter, nameof(textWriter));
 
 			_textWriter = textWriter;
-			_title = title;
 		}
 
 		public override void AddHeaderItem(string name, string value) { }
@@ -30,8 +28,8 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 		{
 			IncludedTestFactories.Sort();
 
-			List<IncludedTestBase> includedTests =
-				GetSortedTestClasses().Cast<IncludedTestBase>().ToList();
+			List<IncludedInstanceBase> includedTests =
+				GetSortedTestClasses().Cast<IncludedInstanceBase>().ToList();
 
 			includedTests.AddRange(IncludedTestFactories);
 
@@ -40,18 +38,16 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 				return;
 			}
 
-			StringBuilder sb = new StringBuilder();
+			var document = new XmlDataQualityDocument30();
 
-			XmlDataQualityDocument document = new XmlDataQualityDocument();
-
-			foreach (IncludedTestBase includedTest in includedTests)
+			foreach (IncludedInstanceBase includedTest in includedTests)
 			{
 				if (includedTest is IncludedTestClass includedTestClass)
 				{
-					Type testType = includedTest.TestType;
+					Type testType = includedTestClass.TestType;
 
 					foreach (IncludedTestConstructor constructor in includedTestClass
-						.TestConstructors)
+						         .TestConstructors)
 					{
 						string testName = $"{testType.Name}({constructor.ConstructorIndex})";
 

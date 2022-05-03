@@ -24,6 +24,7 @@ namespace ProSuite.DomainModel.AO.QA
 		public RowFilterFactory([NotNull] Type type, int constructorId = 0)
 		{
 			Assert.ArgumentNotNull(type, nameof(type));
+			InstanceUtils.AssertConstructorExists(type, constructorId);
 
 			_filterType = type;
 			_constructorId = constructorId;
@@ -47,7 +48,7 @@ namespace ProSuite.DomainModel.AO.QA
 
 		public Type FilterType => _filterType;
 
-		#region ParameterizedInstanceFactory overrides
+		#region InstanceInfoBase overrides
 
 		[NotNull]
 		public override string[] TestCategories => ReflectionUtils.GetCategories(GetType());

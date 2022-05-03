@@ -16,18 +16,19 @@ namespace ProSuite.DomainModel.AO.QA
 		[UsedImplicitly] private int _constructorId;
 
 		/// <summary>
-		/// Initializes a new instance of the <see cref="RowFilterFactory"/> class.
+		/// Initializes a new instance of the <see cref="TransformerFactory"/> class.
 		/// </summary>
 		public TransformerFactory([NotNull] Type type, int constructorId = 0)
 		{
 			Assert.ArgumentNotNull(type, nameof(type));
+			InstanceUtils.AssertConstructorExists(type, constructorId);
 
 			_transformerType = type;
 			_constructorId = constructorId;
 		}
 
 		/// <summary>
-		/// Initializes a new instance of the <see cref="RowFilterFactory"/> class.
+		/// Initializes a new instance of the <see cref="TransformerFactory"/> class.
 		/// </summary>
 		public TransformerFactory([NotNull] string assemblyName,
 		                          [NotNull] string typeName,
@@ -43,7 +44,7 @@ namespace ProSuite.DomainModel.AO.QA
 
 		public Type TransformerType => _transformerType;
 
-		#region ParameterizedInstanceFactory overrides
+		#region InstanceInfoBase overrides
 
 		[NotNull]
 		public override string[] TestCategories => ReflectionUtils.GetCategories(GetType());
@@ -77,8 +78,7 @@ namespace ProSuite.DomainModel.AO.QA
 
 		private T CreateInstance<T>(object[] args)
 		{
-			return InstanceUtils.CreateInstance<T>(
-				TransformerType, _constructorId, args);
+			return InstanceUtils.CreateInstance<T>(TransformerType, _constructorId, args);
 		}
 
 		public override string ToString()

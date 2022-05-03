@@ -1,18 +1,19 @@
 using System;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.DomainModel.AO.QA.TestReport
 {
-	public class IncludedTestConstructor : IncludedTest,
+	public class IncludedTestConstructor : IncludedInstance,
 	                                       IComparable<IncludedTestConstructor>
 	{
 		private readonly Type _testType;
 		private readonly int _constructorIndex;
 
-		public IncludedTestConstructor([NotNull] Type testType, int constructorIndex)
+		private IncludedTestConstructor([NotNull] Type testType, int constructorIndex)
 			: base(GetTitle(testType, constructorIndex),
-			       TestFactoryUtils.GetTestFactory(testType, constructorIndex),
 			       testType.Assembly,
+			       TestFactoryUtils.GetTestFactory(testType, constructorIndex),
 			       TestFactoryUtils.IsObsolete(testType, constructorIndex),
 			       TestFactoryUtils.IsInternallyUsed(testType, constructorIndex))
 		{
@@ -20,11 +21,29 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			_constructorIndex = constructorIndex;
 		}
 
-		[NotNull]
-		public override Type TestType
+		public static IncludedTestConstructor CreateInstance(
+			[NotNull] Type testType, int constructorIndex)
 		{
-			get { return _testType; }
+			AssertConstructorExists(testType, constructorIndex);
+
+			return new IncludedTestConstructor(testType, constructorIndex);
 		}
+
+		//TODO: after push/pull subtree use InstanceUtils
+		private static void AssertConstructorExists([NotNull] Type type, int constructorId)
+		{
+			Assert.ArgumentNotNull(type, nameof(type));
+
+			if (type.GetConstructors().Length <= constructorId)
+			{
+				throw new TypeLoadException(
+					$"invalid constructorId {constructorId}, {type} has " +
+					$"{type.GetConstructors().Length} constructors");
+			}
+		}
+
+		[NotNull]
+		public override Type TestType => _testType;
 
 		#region IComparable<IncludedTestConstructor> Members
 
@@ -43,15 +62,9 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 
 		#region Overrides of IncludedTestBase
 
-		public override string Key
-		{
-			get { return string.Format("{0}:{1}", _testType.FullName, ConstructorIndex); }
-		}
+		public override string Key => string.Format("{0}:{1}", _testType.FullName, ConstructorIndex);
 
-		public override string IndexTooltip
-		{
-			get { return TestFactory.GetTestDescription(); }
-		}
+		public override string IndexTooltip => InstanceFactory.GetTestDescription();
 
 		public int ConstructorIndex => _constructorIndex;
 

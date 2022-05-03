@@ -27,20 +27,29 @@ namespace ProSuite.QA.Core
 					$"{typeName} does not exist in {assemblyName}");
 			}
 
-			if (result.GetConstructors().Length <= constructorId)
-			{
-				throw new TypeLoadException(
-					$"invalid constructorId {constructorId}, {typeName} has " +
-					$"{result.GetConstructors().Length} constructors");
-			}
+			AssertConstructorExists(result, constructorId);
 
 			return result;
+		}
+
+		public static void AssertConstructorExists([NotNull] Type type, int constructorId)
+		{
+			Assert.ArgumentNotNull(type, nameof(type));
+
+			if (type.GetConstructors().Length <= constructorId)
+			{
+				throw new TypeLoadException(
+					$"invalid constructorId {constructorId}, {type} has " +
+					$"{type.GetConstructors().Length} constructors");
+			}
 		}
 
 		public static T CreateInstance<T>([NotNull] Type type,
 		                                  int constructorId,
 		                                  object[] constructorArgs)
 		{
+			AssertConstructorExists(type, constructorId);
+
 			ConstructorInfo constructor = type.GetConstructors()[constructorId];
 
 			return (T) constructor.Invoke(constructorArgs);
@@ -74,9 +83,11 @@ namespace ProSuite.QA.Core
 		public static IList<TestParameter> CreateParameters([NotNull] Type type,
 		                                                    int constructorId)
 		{
-			ConstructorInfo constr = type.GetConstructors()[constructorId];
+			AssertConstructorExists(type, constructorId);
 
-			ParameterInfo[] constructorParameters = constr.GetParameters();
+			ConstructorInfo constructor = type.GetConstructors()[constructorId];
+
+			ParameterInfo[] constructorParameters = constructor.GetParameters();
 			PropertyInfo[] properties = type.GetProperties();
 
 			var testParameterProperties =
@@ -137,7 +148,7 @@ namespace ProSuite.QA.Core
 			}
 
 			foreach (KeyValuePair<PropertyInfo, TestParameterAttribute> pair in
-				testParameterProperties)
+			         testParameterProperties)
 			{
 				PropertyInfo property = pair.Key;
 				TestParameterAttribute attribute = pair.Value;

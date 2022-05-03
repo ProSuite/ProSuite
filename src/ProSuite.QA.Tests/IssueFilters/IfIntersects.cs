@@ -14,9 +14,9 @@ namespace ProSuite.QA.Tests.IssueFilters
 		private IList<QueryFilterHelper> _filterHelpers;
 		private IList<ISpatialFilter> _spatialFilters;
 
-		[Doc(nameof(DocStrings.IfIntersects_0))]
+		[DocIf(nameof(DocIfStrings.IfIntersects_0))]
 		public IfIntersects(
-			[Doc(nameof(DocStrings.IfIntersects_featureClass))]
+			[DocIf(nameof(DocIfStrings.IfIntersects_featureClass))]
 			IReadOnlyFeatureClass featureClass)
 			: base(new[] { featureClass}) { }
 
