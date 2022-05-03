@@ -2917,24 +2917,25 @@ namespace ProSuite.Commons.Geom
 					}
 				}
 
-				IEnumerable<IntersectionPath3D> rotatedResult = GetRingIntersectionLinesXY(
+				IEnumerable<Linestring> rotatedResult = GetRingIntersectionLinesXY(
 					sourceRotated, targetRotated, tolerance, excludeTargetBoundaryIntersections);
 
-				foreach (Linestring linestring in RotateBack(
-					         rotatedResult.Select(rr => rr.Segments), rotationAxis,
-					         orientationReversed))
+				foreach (Linestring linestring in RotateBack(rotatedResult, rotationAxis,
+				                                             orientationReversed))
 				{
 					yield return linestring;
 				}
 			}
 			else
 			{
-				// TODO: Re-use intersection points
-				foreach (IntersectionPath3D intersectionPath in GetRingIntersectionLinesXY(
-					         sourceLines, targetRings, tolerance,
-					         excludeTargetBoundaryIntersections))
+				SubcurveNavigator subcurveNavigator =
+					new SubcurveNavigator(sourceLines, targetRings, tolerance);
+
+				foreach (Linestring linearIntersection in subcurveNavigator
+					         .FollowIntersectionsThroughTargetRings(
+						         excludeTargetBoundaryIntersections))
 				{
-					yield return intersectionPath.Segments;
+					yield return linearIntersection;
 				}
 			}
 		}
@@ -2949,7 +2950,7 @@ namespace ProSuite.Commons.Geom
 		/// <param name="excludeTargetBoundaryIntersections">Whether the intersection of source
 		/// lines with the boundary of the target should be excluded.</param>
 		/// <returns></returns>
-		public static IEnumerable<IntersectionPath3D> GetRingIntersectionLinesXY(
+		public static IEnumerable<Linestring> GetRingIntersectionLinesXY(
 			ISegmentList sourceLines,
 			ISegmentList targetRings,
 			double tolerance,
@@ -2963,193 +2964,15 @@ namespace ProSuite.Commons.Geom
 			Assert.True(targetRings.IsClosed,
 			            "Target is must be closed if ring interior is required.");
 
-			IList<IntersectionPoint3D> intersectionPoints =
-				GetIntersectionPoints(sourceLines, targetRings, tolerance);
+			SubcurveNavigator subcurveNavigator =
+				new SubcurveNavigator(sourceLines, targetRings, tolerance);
 
-			var intersectionsPerSourcePartIdx = intersectionPoints.GroupBy(ip => ip.SourcePartIndex)
-				.ToDictionary(g => g.Key, g => g.ToList());
-
-			for (int i = 0; i < sourceLines.PartCount; i++)
+			foreach (Linestring linearIntersection in subcurveNavigator
+				         .FollowIntersectionsThroughTargetRings(
+					         excludeTargetBoundaryIntersections))
 			{
-				Linestring sourceLinestring = sourceLines.GetPart(i);
-
-				if (! intersectionsPerSourcePartIdx.TryGetValue(
-					    i, out List<IntersectionPoint3D> intersections) ||
-				    intersections.Count == 0)
-				{
-					// The source ring is completely inside or completely outside the target area:
-					if (GeomRelationUtils.PolycurveContainsXY(
-						    targetRings, sourceLinestring.StartPoint, tolerance))
-					{
-						yield return
-							new IntersectionPath3D(sourceLinestring,
-							                       RingPlaneTopology.InPlane)
-							{
-								StartIntersection =
-									IntersectionPoint3D.CreateAreaInteriorIntersection(
-										sourceLinestring.StartPoint, 0),
-								EndIntersection =
-									IntersectionPoint3D.CreateAreaInteriorIntersection(
-										sourceLinestring.EndPoint,
-										sourceLinestring.PointCount - 1)
-							};
-					}
-				}
-				else
-				{
-					foreach (IntersectionPath3D intersectionPath3D in
-					         FollowIntersectionsThroughTargetRings(
-						         intersections, sourceLinestring, targetRings, tolerance,
-						         excludeTargetBoundaryIntersections))
-					{
-						yield return intersectionPath3D;
-					}
-				}
+				yield return linearIntersection;
 			}
-		}
-
-		private static IEnumerable<IntersectionPath3D> FollowIntersectionsThroughTargetRings(
-			[NotNull] List<IntersectionPoint3D> intersections,
-			[NotNull] Linestring sourceLinestring,
-			[NotNull] ISegmentList targetRings,
-			double tolerance,
-			bool excludeTargetBoundaryIntersections)
-		{
-			IntersectionPoint3D linearStart = null;
-
-			if (intersections[0].VirtualSourceVertex > 0)
-			{
-				// Start is no intersection point. Start point within target?
-				if (GeomRelationUtils.PolycurveContainsXY(
-					    targetRings, sourceLinestring.StartPoint, tolerance))
-				{
-					linearStart = IntersectionPoint3D.CreateAreaInteriorIntersection(
-						sourceLinestring.StartPoint, 0);
-				}
-			}
-
-			foreach (IntersectionPoint3D intersectionPoint in intersections)
-			{
-				if (linearStart != null)
-				{
-					yield return EmitSourceSubcurve(sourceLinestring, linearStart,
-					                                intersectionPoint);
-
-					if (RestartLinearIntersection(sourceLinestring, intersectionPoint, targetRings,
-					                              excludeTargetBoundaryIntersections))
-					{
-						linearStart = intersectionPoint;
-					}
-					else
-					{
-						linearStart = null;
-					}
-				}
-				else
-				{
-					if (intersectionPoint.Type == IntersectionPointType.Crossing)
-					{
-						linearStart = intersectionPoint;
-					}
-
-					if (intersectionPoint.Type == IntersectionPointType.LinearIntersectionStart &&
-					    ! excludeTargetBoundaryIntersections)
-					{
-						linearStart = intersectionPoint;
-					}
-
-					if (intersectionPoint.Type == IntersectionPointType.TouchingInPoint ||
-					    intersectionPoint.Type == IntersectionPointType.LinearIntersectionEnd)
-					{
-						if (intersectionPoint.SourceContinuesInbound(
-							    sourceLinestring, targetRings) == true)
-						{
-							linearStart = intersectionPoint;
-						}
-					}
-				}
-			}
-
-			IntersectionPoint3D lastIntersection = intersections[intersections.Count - 1];
-
-			if (linearStart != null &&
-			    lastIntersection.VirtualSourceVertex < sourceLinestring.PointCount - 1 &&
-			    GeomRelationUtils.PolycurveContainsXY(
-				    targetRings, sourceLinestring.EndPoint, tolerance))
-			{
-				// Dangling to the inside:
-				var insideEnd =
-					IntersectionPoint3D.CreateAreaInteriorIntersection(
-						sourceLinestring.EndPoint, sourceLinestring.PointCount - 1);
-
-				yield return EmitSourceSubcurve(sourceLinestring, linearStart, insideEnd);
-			}
-		}
-
-		private static bool RestartLinearIntersection(
-			Linestring sourceLinestring, IntersectionPoint3D intersectionPoint,
-			ISegmentList targetRings,
-			bool excludeTargetBoundaryIntersections)
-		{
-			if (intersectionPoint.Type == IntersectionPointType.TouchingInPoint)
-			{
-				// Touching from the inside, re-start
-				return true;
-			}
-
-			if (intersectionPoint.Type == IntersectionPointType.LinearIntersectionStart)
-			{
-				return ! excludeTargetBoundaryIntersections;
-			}
-
-			if (intersectionPoint.Type == IntersectionPointType.Crossing)
-			{
-				return false;
-			}
-
-			if (intersectionPoint.Type == IntersectionPointType.LinearIntersectionEnd)
-			{
-				// But if it's not the last point, it could continue inbound after the stretch along the boundary
-				if (intersectionPoint.VirtualSourceVertex < sourceLinestring.PointCount - 1)
-				{
-					if (intersectionPoint.SourceContinuesInbound(
-						    sourceLinestring, targetRings) == true)
-					{
-						return true;
-					}
-				}
-			}
-
-			return false;
-		}
-
-		private static IntersectionPath3D EmitSourceSubcurve(Linestring sourceLinestring,
-		                                                     IntersectionPoint3D linearStart,
-		                                                     IntersectionPoint3D linearEnd)
-		{
-			int startSegmentIdx =
-				linearStart.GetLocalSourceIntersectionSegmentIdx(
-					sourceLinestring, out double startRatio);
-
-			int endSegmentIdx =
-				linearEnd.GetLocalSourceIntersectionSegmentIdx(
-					sourceLinestring, out double endRatio);
-
-			Linestring resultSubcurve = sourceLinestring.GetSubcurve(
-				startSegmentIdx, startRatio, endSegmentIdx, endRatio, false);
-
-			// TODO: The side should be determined by the plane!
-			RingPlaneTopology ringPlaneTopology =
-				linearStart.Type == IntersectionPointType.LinearIntersectionStart
-					? RingPlaneTopology.InPlane
-					: RingPlaneTopology.LeftPositive;
-
-			return new IntersectionPath3D(resultSubcurve,
-			                              ringPlaneTopology)
-			       {
-				       StartIntersection = linearStart,
-				       EndIntersection = linearEnd
-			       };
 		}
 
 		#endregion

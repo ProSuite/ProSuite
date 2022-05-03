@@ -58,11 +58,13 @@ namespace ProSuite.Commons.Geom
 		[NotNull]
 		public static IntersectionPoint3D CreateAreaInteriorIntersection(
 			[NotNull] Pnt3D sourcePoint,
-			int sourceIndex)
+			int sourceVertexIndex,
+			int sourcePartIndex)
 		{
-			return new IntersectionPoint3D(sourcePoint, sourceIndex)
+			return new IntersectionPoint3D(sourcePoint, sourceVertexIndex)
 			       {
-				       Type = IntersectionPointType.AreaInterior
+				       Type = IntersectionPointType.AreaInterior,
+				       SourcePartIndex = sourcePartIndex
 			       };
 		}
 
@@ -737,6 +739,32 @@ namespace ProSuite.Commons.Geom
 			             "Not all linear cases were handled.");
 
 			return SegmentIntersection.TargetIndex;
+		}
+
+		/// <summary>
+		/// Classifies the target trajectory with respect to this intersection.
+		/// Note: If this method is called for a linear intersection pseudo-break or for the break of the
+		/// linear intersection at a ring's start or end point, the result could be random because no
+		/// tolerance is used! In these cases, call <see cref="TargetContinuesToRightSide"/> or
+		/// <see cref="TargetArrivesFromRightSide"/> respectively.
+		/// </summary>
+		/// <param name="source"></param>
+		/// <param name="target"></param>
+		/// <param name="sourceContinuesToRightSide"></param>
+		/// <param name="sourceArrivesFromRightSide"></param>
+		/// <param name="tolerance"></param>
+		public void ClassifySourceTrajectory([NotNull] ISegmentList source,
+		                                     [NotNull] ISegmentList target,
+		                                     out bool? sourceContinuesToRightSide,
+		                                     out bool? sourceArrivesFromRightSide,
+		                                     double tolerance)
+		{
+			Assert.False(Type == IntersectionPointType.Unknown,
+			             "Cannot classify unknown intersection type.");
+
+			sourceContinuesToRightSide = SourceContinuesToRightSide(source, target, tolerance);
+
+			sourceArrivesFromRightSide = SourceArrivesFromRightSide(source, target, tolerance);
 		}
 
 		/// <summary>

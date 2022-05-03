@@ -83,7 +83,8 @@ namespace ProSuite.Commons.Geom
 				if (_intersectionPointNavigator == null)
 				{
 					_intersectionPointNavigator =
-						new SubcurveIntersectionPointNavigator(IntersectionPoints, Source, Target);
+						new SubcurveIntersectionPointNavigator(
+							IntersectionPoints, Source, Target, Tolerance);
 				}
 
 				return _intersectionPointNavigator;
@@ -201,6 +202,36 @@ namespace ProSuite.Commons.Geom
 			return result;
 		}
 
+		public IEnumerable<Linestring> FollowIntersectionsThroughTargetRings(
+			bool excludeTargetBoundaryIntersections)
+		{
+			IntersectionPointNavigator.AssumeSourceRings = false;
+
+			foreach (IntersectionPoint3D firstInPart in
+			         IntersectionPointNavigator.GetFirstSourceIntersectionsPerPart())
+			{
+				Linestring sourceLinestring =
+					Source.GetPart(firstInPart.SourcePartIndex);
+
+				IntersectedSourcePartIndexes.Add(firstInPart.SourcePartIndex);
+
+				IntersectionPointNavigator.SetStartIntersection(firstInPart);
+
+				foreach (Linestring result in FollowSourcePartThroughTargetRings(
+					         sourceLinestring, firstInPart, excludeTargetBoundaryIntersections))
+				{
+					yield return result;
+				}
+			}
+
+			foreach (Linestring containedSourcePart in GetUncutSourceParts(
+				         false, false, true, false))
+			{
+				// The source ring is completely inside or completely outside the target area:
+				yield return containedSourcePart;
+			}
+		}
+
 		public SubcurveNavigator Clone()
 		{
 			var result = new SubcurveNavigator(Source, Target, Tolerance,
@@ -220,7 +251,7 @@ namespace ProSuite.Commons.Geom
 			return GetUnused(Source, IntersectedSourcePartIndexes);
 		}
 
-		public IEnumerable<Linestring> GetUncutSourceRings(bool includeCongruent,
+		public IEnumerable<Linestring> GetUncutSourceParts(bool includeCongruent,
 		                                                   bool withSameOrientation,
 		                                                   bool includeContained,
 		                                                   bool includeNotContained)
@@ -866,6 +897,145 @@ namespace ProSuite.Commons.Geom
 
 			return false;
 		}
+
+		#region Source paths intersecting target rings
+
+		private IEnumerable<Linestring> FollowSourcePartThroughTargetRings(
+			[NotNull] Linestring sourceLinestring,
+			[NotNull] IntersectionPoint3D firstIntersectionInSourcePart,
+			bool excludeTargetBoundaryIntersections)
+		{
+			IntersectionPoint3D linearStart = null;
+
+			if (firstIntersectionInSourcePart.VirtualSourceVertex > 0)
+			{
+				// The intersection is not at the start of the linestring
+				bool? sourceComingFromInside =
+					firstIntersectionInSourcePart.SourceArrivesFromRightSide(
+						Source, Target, Tolerance);
+
+				if (sourceComingFromInside == true)
+				{
+					linearStart = IntersectionPoint3D.CreateAreaInteriorIntersection(
+						sourceLinestring.StartPoint, 0,
+						firstIntersectionInSourcePart.SourcePartIndex);
+				}
+			}
+
+			IntersectionPoint3D previous;
+			IntersectionPoint3D current = firstIntersectionInSourcePart;
+			do
+			{
+				if (linearStart != null)
+				{
+					yield return GetSourceSubcurve(linearStart, current);
+
+					if (RestartLinearIntersection(sourceLinestring, current, Target,
+					                              excludeTargetBoundaryIntersections))
+					{
+						linearStart = current;
+					}
+					else
+					{
+						linearStart = null;
+					}
+				}
+				else
+				{
+					if (EndLinearIntersection(current, sourceLinestring,
+					                          excludeTargetBoundaryIntersections))
+					{
+						linearStart = current;
+					}
+				}
+
+				previous = current;
+			} while ((current = IntersectionPointNavigator.GetNextIntersection(
+				          previous, true, true)) != null);
+
+			IntersectionPoint3D lastIntersection = previous;
+
+			if (linearStart != null &&
+			    lastIntersection.VirtualSourceVertex < sourceLinestring.PointCount - 1 &&
+			    GeomRelationUtils.PolycurveContainsXY(
+				    Target, sourceLinestring.EndPoint, Tolerance))
+			{
+				// Dangling to the inside:
+				var insideEnd =
+					IntersectionPoint3D.CreateAreaInteriorIntersection(
+						sourceLinestring.EndPoint, sourceLinestring.PointCount - 1,
+						linearStart.SourcePartIndex);
+
+				yield return GetSourceSubcurve(linearStart, insideEnd);
+			}
+		}
+
+		private bool EndLinearIntersection([NotNull] IntersectionPoint3D current,
+		                                   [NotNull] Linestring sourceLinestring,
+		                                   bool excludeTargetBoundaryIntersections)
+		{
+			if (current.Type == IntersectionPointType.Crossing)
+			{
+				return true;
+			}
+
+			if (current.Type == IntersectionPointType.LinearIntersectionStart &&
+			    ! excludeTargetBoundaryIntersections)
+			{
+				return true;
+			}
+
+			if (current.Type == IntersectionPointType.TouchingInPoint ||
+			    current.Type == IntersectionPointType.LinearIntersectionEnd)
+			{
+				if (current.SourceContinuesInbound(
+					    sourceLinestring, Target) == true)
+				{
+					return true;
+				}
+			}
+
+			return false;
+		}
+
+		private static bool RestartLinearIntersection(
+			Linestring sourceLinestring, IntersectionPoint3D intersectionPoint,
+			ISegmentList targetRings,
+			bool excludeTargetBoundaryIntersections)
+		{
+			if (intersectionPoint.Type == IntersectionPointType.TouchingInPoint)
+			{
+				// Touching from the inside, re-start
+				return true;
+			}
+
+			if (intersectionPoint.Type == IntersectionPointType.LinearIntersectionStart)
+			{
+				return ! excludeTargetBoundaryIntersections;
+			}
+
+			if (intersectionPoint.Type == IntersectionPointType.Crossing)
+			{
+				return false;
+			}
+
+			if (intersectionPoint.Type == IntersectionPointType.LinearIntersectionEnd)
+			{
+				// But if it's not the last point, it could continue inbound after the stretch along the boundary
+				if (intersectionPoint.VirtualSourceVertex < sourceLinestring.PointCount - 1)
+				{
+					if (intersectionPoint.SourceContinuesInbound(
+						    sourceLinestring, targetRings) == true)
+					{
+						return true;
+					}
+				}
+			}
+
+			return false;
+		}
+
+		#endregion
 
 		private Linestring GetSourceSubcurve(
 			[NotNull] IntersectionPoint3D fromIntersection,

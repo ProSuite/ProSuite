@@ -494,7 +494,7 @@ namespace ProSuite.Commons.Geom
 			if (includeEqualRings || includeNotContained)
 			{
 				foreach (Linestring uncutSourceRing in
-				         _subcurveNavigator.GetUncutSourceRings(includeEqualRings, false,
+				         _subcurveNavigator.GetUncutSourceParts(includeEqualRings, false,
 				                                                false, includeNotContained))
 				{
 					result.Add(uncutSourceRing);
@@ -516,7 +516,7 @@ namespace ProSuite.Commons.Geom
 			}
 
 			foreach (Linestring uncutSourceRing in
-			         _subcurveNavigator.GetUncutSourceRings(
+			         _subcurveNavigator.GetUncutSourceParts(
 				         includeEqualRings, true,
 				         includeContainedSourceRings, false))
 			{
@@ -587,33 +587,18 @@ namespace ProSuite.Commons.Geom
 		{
 			var result = new List<Linestring>();
 
-			// W.r.t. AreaContainsXY returning null: if the start point is on the boundary there
-			// are duplicate rings which need to be identified elsewhere.
-			ISegmentList target = _subcurveNavigator.Target;
-			foreach (Linestring ring in _subcurveNavigator.GetNonIntersectedSourceRings()
-			                                              .Where(r => ringPredicate(r)))
+			foreach (Linestring extraSourceRing in
+			         _subcurveNavigator.GetUncutSourceParts(false, false, false, true)
+			                           .Where(r => ringPredicate(r)))
 			{
-				bool? contains = GeomRelationUtils.AreaContainsXY(
-					target, ring.StartPoint, _subcurveNavigator.Tolerance);
-
-				if (contains == false)
-				{
-					// disjoint
-					result.Add(ring);
-				}
+				result.Add(extraSourceRing);
 			}
 
-			ISegmentList source = _subcurveNavigator.Source;
-			foreach (Linestring ring in _subcurveNavigator.GetNonIntersectedTargets()
-			                                              .Where(r => ringPredicate(r)))
+			foreach (Linestring extraTargetRing in _subcurveNavigator
+			                                       .GetTargetRingsCompletelyOutsideSource()
+			                                       .Where(r => ringPredicate(r)))
 			{
-				bool? contains = GeomRelationUtils.AreaContainsXY(
-					source, ring.StartPoint, _subcurveNavigator.Tolerance);
-
-				if (contains == false)
-				{
-					result.Add(ring);
-				}
+				result.Add(extraTargetRing);
 			}
 
 			return result;
