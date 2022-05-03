@@ -4,13 +4,13 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.DomainModel.AO.QA.TestReport
 {
-	public class IncludedTestConstructor : IncludedInstance,
-	                                       IComparable<IncludedTestConstructor>
+	public class IncludedInstanceConstructor : IncludedInstance,
+	                                       IComparable<IncludedInstanceConstructor>
 	{
 		private readonly Type _testType;
 		private readonly int _constructorIndex;
 
-		private IncludedTestConstructor([NotNull] Type testType, int constructorIndex)
+		private IncludedInstanceConstructor([NotNull] Type testType, int constructorIndex)
 			: base(GetTitle(testType, constructorIndex),
 			       testType.Assembly,
 			       TestFactoryUtils.GetTestFactory(testType, constructorIndex),
@@ -21,12 +21,12 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			_constructorIndex = constructorIndex;
 		}
 
-		public static IncludedTestConstructor CreateInstance(
+		public static IncludedInstanceConstructor CreateInstance(
 			[NotNull] Type testType, int constructorIndex)
 		{
 			AssertConstructorExists(testType, constructorIndex);
 
-			return new IncludedTestConstructor(testType, constructorIndex);
+			return new IncludedInstanceConstructor(testType, constructorIndex);
 		}
 
 		//TODO: after push/pull subtree use InstanceUtils
@@ -47,7 +47,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 
 		#region IComparable<IncludedTestConstructor> Members
 
-		public int CompareTo(IncludedTestConstructor other)
+		public int CompareTo(IncludedInstanceConstructor other)
 		{
 			return base.CompareTo(other);
 		}

@@ -6,11 +6,11 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 {
 	public abstract class ReportBuilderBase : IReportBuilder
 	{
-		private readonly IDictionary<Type, IncludedTestClass> _includedTestClasses =
-			new Dictionary<Type, IncludedTestClass>();
+		private readonly IDictionary<Type, IncludedInstanceClass> _includedTestClasses =
+			new Dictionary<Type, IncludedInstanceClass>();
 
-		private readonly IDictionary<Type, IncludedTestClass> _includedTransformerClasses =
-			new Dictionary<Type, IncludedTestClass>();
+		private readonly IDictionary<Type, IncludedInstanceClass> _includedTransformerClasses =
+			new Dictionary<Type, IncludedInstanceClass>();
 
 		private readonly List<IncludedTestFactory> _includedTestFactories =
 			new List<IncludedTestFactory>();
@@ -24,9 +24,9 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 		/// <value><c>true</c> if obsolete tests or factories should be included; otherwise, <c>false</c>.</value>
 		public bool IncludeObsolete { get; set; }
 
-		protected IDictionary<Type, IncludedTestClass> IncludedTestClasses => _includedTestClasses;
+		protected IDictionary<Type, IncludedInstanceClass> IncludedTestClasses => _includedTestClasses;
 
-		protected IDictionary<Type, IncludedTestClass> IncludedTransformerClasses => _includedTransformerClasses;
+		protected IDictionary<Type, IncludedInstanceClass> IncludedTransformerClasses => _includedTransformerClasses;
 
 		protected List<IncludedTestFactory> IncludedTestFactories => _includedTestFactories;
 
@@ -50,10 +50,10 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 		public void IncludeTransformer(Type testType, int constructorIndex)
 		{
 			var newTransformer = false;
-			IncludedTestClass transformerClass;
+			IncludedInstanceClass transformerClass;
 			if (!IncludedTransformerClasses.TryGetValue(testType, out transformerClass))
 			{
-				transformerClass = new IncludedTestClass(testType);
+				transformerClass = new IncludedInstanceClass(testType);
 
 				if (!IncludeObsolete && transformerClass.Obsolete)
 				{
@@ -74,7 +74,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 				return;
 			}
 
-			IncludedTestConstructor testConstructor =
+			IncludedInstanceConstructor testConstructor =
 				transformerClass.CreateTestConstructor(constructorIndex);
 
 			if (!IncludeObsolete && testConstructor.Obsolete)
@@ -99,10 +99,10 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 		public void IncludeTest(Type testType, int constructorIndex)
 		{
 			var newTestClass = false;
-			IncludedTestClass testClass;
+			IncludedInstanceClass testClass;
 			if (! IncludedTestClasses.TryGetValue(testType, out testClass))
 			{
-				testClass = new IncludedTestClass(testType);
+				testClass = new IncludedInstanceClass(testType);
 
 				if (! IncludeObsolete && testClass.Obsolete)
 				{
@@ -123,7 +123,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 				return;
 			}
 
-			IncludedTestConstructor testConstructor =
+			IncludedInstanceConstructor testConstructor =
 				testClass.CreateTestConstructor(constructorIndex);
 
 			if (! IncludeObsolete && testConstructor.Obsolete)
@@ -149,9 +149,9 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 		public abstract void WriteReport();
 
 		[NotNull]
-		protected IEnumerable<IncludedTestClass> GetSortedTestClasses()
+		protected IEnumerable<IncludedInstanceClass> GetSortedTestClasses()
 		{
-			var result = new List<IncludedTestClass>(IncludedTestClasses.Values);
+			var result = new List<IncludedInstanceClass>(IncludedTestClasses.Values);
 
 			result.Sort();
 
@@ -159,9 +159,9 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 		}
 
 		[NotNull]
-		protected IEnumerable<IncludedTestClass> GetSortedTransformerClasses()
+		protected IEnumerable<IncludedInstanceClass> GetSortedTransformerClasses()
 		{
-			var result = new List<IncludedTestClass>(IncludedTransformerClasses.Values);
+			var result = new List<IncludedInstanceClass>(IncludedTransformerClasses.Values);
 
 			result.Sort();
 

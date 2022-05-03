@@ -8,14 +8,14 @@ using ProSuite.QA.Container;
 
 namespace ProSuite.DomainModel.AO.QA.TestReport
 {
-	public class IncludedTestClass : IncludedInstanceBase, IComparable<IncludedTestClass>
+	public class IncludedInstanceClass : IncludedInstanceBase, IComparable<IncludedInstanceClass>
 	{
 		private readonly Type _testType;
 
-		private readonly List<IncludedTestConstructor> _testConstructors =
-			new List<IncludedTestConstructor>();
+		private readonly List<IncludedInstanceConstructor> _testConstructors =
+			new List<IncludedInstanceConstructor>();
 
-		public IncludedTestClass([NotNull] Type testType)
+		public IncludedInstanceClass([NotNull] Type testType)
 			: base(GetTitle(testType),
 			       testType.Assembly,
 			       ReflectionUtils.IsObsolete(testType),
@@ -28,12 +28,12 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 		}
 
 		[NotNull]
-		public IncludedTestConstructor CreateTestConstructor(int constructorIndex)
+		public IncludedInstanceConstructor CreateTestConstructor(int constructorIndex)
 		{
-			return IncludedTestConstructor.CreateInstance(_testType, constructorIndex);
+			return IncludedInstanceConstructor.CreateInstance(_testType, constructorIndex);
 		}
 
-		public void IncludeConstructor([NotNull] IncludedTestConstructor testConstructor)
+		public void IncludeConstructor([NotNull] IncludedInstanceConstructor testConstructor)
 		{
 			Assert.ArgumentNotNull(testConstructor, nameof(testConstructor));
 			Assert.ArgumentCondition(_testType == testConstructor.TestType,
@@ -47,7 +47,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			_testConstructors.Add(testConstructor);
 		}
 
-		public ICollection<IncludedTestConstructor> TestConstructors => _testConstructors;
+		public ICollection<IncludedInstanceConstructor> TestConstructors => _testConstructors;
 
 		private static string GetTitle(Type testType)
 		{
@@ -89,7 +89,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 
 		#region Implementation of IComparable<IncludedTestClass>
 
-		public int CompareTo(IncludedTestClass other)
+		public int CompareTo(IncludedInstanceClass other)
 		{
 			return base.CompareTo(other);
 		}

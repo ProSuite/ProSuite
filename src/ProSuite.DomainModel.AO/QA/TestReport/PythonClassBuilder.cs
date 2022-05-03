@@ -90,14 +90,14 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 
 			foreach (IncludedInstanceBase includedTest in includedTests)
 			{
-				if (includedTest is IncludedTestClass includedTestClass)
+				if (includedTest is IncludedInstanceClass includedTestClass)
 				{
 					if (includedTestClass.TestConstructors.Count <= 0)
 					{
 						continue;
 					}
 
-					foreach (IncludedTestConstructor constructor in includedTestClass
+					foreach (IncludedInstanceConstructor constructor in includedTestClass
 						.TestConstructors)
 					{
 						AppendTestClassMethod(includedTestClass, constructor, sb);
@@ -117,14 +117,14 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 
 			foreach (IncludedInstanceBase includedTest in includedTransformers)
 			{
-				if (includedTest is IncludedTestClass includedTransformer)
+				if (includedTest is IncludedInstanceClass includedTransformer)
 				{
 					if (includedTransformer.TestConstructors.Count <= 0)
 					{
 						continue;
 					}
 
-					foreach (IncludedTestConstructor constructor in includedTransformer
+					foreach (IncludedInstanceConstructor constructor in includedTransformer
 						.TestConstructors)
 					{
 						AppendTransformerClassMethod(includedTransformer, constructor, sb);
@@ -135,7 +135,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 		}
 
 		private static void AppendTransformerClassMethod(IncludedInstanceBase includedTransformerClass,
-		                                          IncludedTestConstructor constructor,
+		                                          IncludedInstanceConstructor constructor,
 		                                          StringBuilder sb)
 		{
 			InstanceFactory testFactory = constructor.InstanceFactory;
@@ -153,7 +153,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 
 
 		private static void AppendTestClassMethod(IncludedInstanceBase includedTestClass,
-		                                          IncludedTestConstructor constructor,
+		                                          IncludedInstanceConstructor constructor,
 		                                          StringBuilder sb)
 		{
 			InstanceFactory factory = constructor.InstanceFactory;

@@ -42,11 +42,11 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 
 			foreach (IncludedInstanceBase includedTest in includedTests)
 			{
-				if (includedTest is IncludedTestClass includedTestClass)
+				if (includedTest is IncludedInstanceClass includedTestClass)
 				{
 					Type testType = includedTestClass.TestType;
 
-					foreach (IncludedTestConstructor constructor in includedTestClass
+					foreach (IncludedInstanceConstructor constructor in includedTestClass
 						         .TestConstructors)
 					{
 						string testName = $"{testType.Name}({constructor.ConstructorIndex})";
