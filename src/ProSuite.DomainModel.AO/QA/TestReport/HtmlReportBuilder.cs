@@ -152,7 +152,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 
 				foreach (IncludedInstanceBase testBase in includedTransformers)
 				{
-					var includedTransformer = (IncludedTransformer) testBase;
+					var includedTransformer = (IncludedTestClass) testBase;
 					if (includedTransformer.TestConstructors.Count <= 0)
 					{
 						continue;
@@ -160,7 +160,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 
 					AppendTransformerClassTitle(includedTransformer);
 
-					AppendTestClassDescription(includedTransformer);
+					AppendTransformerClassDescription(includedTransformer);
 
 					foreach (
 						IncludedTestConstructor includedTestConstructor in
@@ -275,7 +275,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 		{
 			var indexEntries = new List<IndexEntry>();
 
-			foreach (IncludedTransformer transformer in GetSortedTransformerClasses())
+			foreach (IncludedTestClass transformer in GetSortedTransformerClasses())
 			{
 				indexEntries.Add(new TestIndexEntry(transformer));
 			}
@@ -349,7 +349,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			if (IncludedTransformerClasses.Count > 0)
 			{
 				indexEntries.Add(new SectionTitleIndexEntry("Transformers:"));
-				foreach (IncludedTransformer transformer in GetSortedTransformerClasses())
+				foreach (IncludedTestClass transformer in GetSortedTransformerClasses())
 				{
 					indexEntries.Add(new TestIndexEntry(transformer));
 				}
@@ -716,7 +716,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			_htmlTable.AppendChild(row);
 		}
 
-		private void AppendTransformerClassTitle([NotNull] IncludedTransformer transformer)
+		private void AppendTransformerClassTitle([NotNull] IncludedTestClass transformer)
 		{
 			XmlElement row = CreateTableRow();
 			XmlElement cell = CreateTableCell(transformer.Title, 3, transformer.Obsolete
@@ -772,6 +772,35 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			}
 
 			AppendTestIssueCodes(test.IssueCodes);
+		}
+
+		private void AppendTransformerClassDescription(IncludedInstanceBase test)
+		{
+			if (test.Description != null)
+			{
+				AppendTestDescriptionText(test);
+			}
+
+			//XmlElement categoryRow = CreateTableRow();
+			//categoryRow.AppendChild(CreateTableCell("Categories:"));
+			//categoryRow.AppendChild(CreateTableCell(test.GetCommaSeparatedCategories(), 2));
+
+			//_htmlTable.AppendChild(categoryRow);
+
+			if (IncludeAssemblyInfo)
+			{
+				var implementationPattern = "Transformer class";
+
+				string assemblyInfo = string.Format(
+					"{2} {1} in {0}",
+					Path.GetFileName(test.Assembly.Location),
+					test.TestType.FullName,
+					implementationPattern);
+				XmlElement assemblyRow = CreateTableRow();
+				assemblyRow.AppendChild(CreateTableCell("Implementation:"));
+				assemblyRow.AppendChild(CreateTableCell(assemblyInfo, 2));
+				_htmlTable.AppendChild(assemblyRow);
+			}
 		}
 
 		private void AppendTestIssueCodes(IEnumerable<IssueCode> issueCodes)

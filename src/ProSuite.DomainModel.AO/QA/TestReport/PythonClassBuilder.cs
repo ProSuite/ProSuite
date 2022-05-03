@@ -117,7 +117,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 
 			foreach (IncludedInstanceBase includedTest in includedTransformers)
 			{
-				if (includedTest is IncludedTransformer includedTransformer)
+				if (includedTest is IncludedTestClass includedTransformer)
 				{
 					if (includedTransformer.TestConstructors.Count <= 0)
 					{
