@@ -4,7 +4,6 @@ using System.Linq;
 using System.Reflection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Reflection;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Container;
 using ProSuite.QA.Core;
@@ -120,12 +119,12 @@ namespace ProSuite.DomainModel.AO.QA
 					continue;
 				}
 
-				if (! includeObsolete && ReflectionUtils.IsObsolete(candidateType))
+				if (! includeObsolete && InstanceFactoryUtils.IsObsolete(candidateType))
 				{
 					continue;
 				}
 
-				if (! includeInternallyUsed && InstanceFactoryUtils.HasInternallyUsedAttribute(candidateType))
+				if (! includeInternallyUsed && InstanceFactoryUtils.IsInternallyUsed(candidateType))
 				{
 					continue;
 				}
@@ -150,58 +149,18 @@ namespace ProSuite.DomainModel.AO.QA
 					continue;
 				}
 
-				if (! includeObsolete && ReflectionUtils.IsObsolete(candidateType))
+				if (! includeObsolete && InstanceFactoryUtils.IsObsolete(candidateType))
 				{
 					continue;
 				}
 
-				if (! includeInternallyUsed && InstanceFactoryUtils.HasInternallyUsedAttribute(candidateType))
+				if (! includeInternallyUsed && InstanceFactoryUtils.IsInternallyUsed(candidateType))
 				{
 					continue;
 				}
 
 				yield return candidateType;
 			}
-		}
-
-		public static bool IsObsolete([NotNull] Type testType, int constructorIndex)
-		{
-			return IsObsolete(testType, constructorIndex, out _);
-		}
-
-		public static bool IsObsolete([NotNull] Type testType,
-		                              int constructorIndex,
-		                              [CanBeNull] out string message)
-		{
-			Assert.ArgumentNotNull(testType, nameof(testType));
-
-			if (ReflectionUtils.IsObsolete(testType, out message))
-			{
-				return true;
-			}
-
-			ConstructorInfo ctorInfo = testType.GetConstructors()[constructorIndex];
-
-			return ReflectionUtils.IsObsolete(ctorInfo, out message);
-		}
-
-		public static bool IsInternallyUsed([NotNull] Type testType, int constructorIndex)
-		{
-			Assert.ArgumentNotNull(testType, nameof(testType));
-
-			if (IsInternallyUsed(testType))
-			{
-				return true;
-			}
-
-			ConstructorInfo ctorInfo = testType.GetConstructors()[constructorIndex];
-
-			return InstanceFactoryUtils.HasInternallyUsedAttribute(ctorInfo);
-		}
-
-		public static bool IsInternallyUsed([NotNull] Type testType)
-		{
-			return InstanceFactoryUtils.HasInternallyUsedAttribute(testType);
 		}
 
 		[NotNull]

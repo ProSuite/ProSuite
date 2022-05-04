@@ -47,7 +47,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 
 		public abstract string Description { get; }
 
-		public abstract Type TestType { get; }
+		public abstract Type InstanceType { get; }
 
 		public virtual IList<IssueCode> IssueCodes => null;
 

@@ -224,7 +224,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 		{
 			return type.IsPublic &&
 			       ! type.IsAbstract &&
-			       ! TestFactoryUtils.IsInternallyUsed(type);
+			       ! InstanceFactoryUtils.IsInternallyUsed(type);
 		}
 
 		[CanBeNull]

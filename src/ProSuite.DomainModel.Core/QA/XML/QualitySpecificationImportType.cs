@@ -1,4 +1,4 @@
-﻿namespace ProSuite.DomainModel.Core.QA.XML
+namespace ProSuite.DomainModel.Core.QA.Xml
 {
 	public enum QualitySpecificationImportType
 	{
