@@ -147,6 +147,31 @@ namespace ProSuite.Commons.Geom
 		}
 
 		/// <summary>
+		/// Starting at outbound source intersections, follows the subcurves in a clockwise manner
+		/// to get the union of both the source and the target by preferring a left turn at
+		/// intersections.
+		/// </summary>
+		/// <returns></returns>
+		public IList<Linestring> FollowSubcurvesTurningLeft()
+		{
+			TurnDirection originalTurnDirection = PreferredTurnDirection;
+
+			try
+			{
+				PreferredTurnDirection = TurnDirection.Left;
+
+				IEnumerable<IntersectionPoint3D> startPoints =
+					IntersectionPointNavigator.IntersectionsOutboundSource;
+
+				return FollowSubcurvesClockwise(startPoints.ToList());
+			}
+			finally
+			{
+				PreferredTurnDirection = originalTurnDirection;
+			}
+		}
+
+		/// <summary>
 		/// Moves from one intersection to the next by
 		/// - first following the source
 		/// - at each intersection taking the right-most (alternatively, the lef-most, depending
@@ -330,6 +355,28 @@ namespace ProSuite.Commons.Geom
 			}
 		}
 
+		/// <summary>
+		/// Returns the target rings that are outside any source ring (not equal to a source ring
+		/// but not necessarily disjoint.
+		/// </summary>
+		/// <returns></returns>
+		public IEnumerable<Linestring> GetTargetRingsCompletelyOutsideSource()
+		{
+			foreach (int unCutTargetIdx in GetUnusedIndexes(
+				         Target.PartCount, IntersectedTargetPartIndexes))
+			{
+				// No inbound/outbound, but possibly touching or linear intersections
+				Linestring targetRing = Target.GetPart(unCutTargetIdx);
+
+				if (false == GeomRelationUtils.AreaContainsXY(
+					    Source, Target, Tolerance,
+					    IntersectionPointNavigator.IntersectionsAlongTarget, unCutTargetIdx))
+				{
+					yield return targetRing;
+				}
+			}
+		}
+
 		public IEnumerable<Linestring> GetNonIntersectedTargets()
 		{
 			return GetUnused(Target, IntersectedTargetPartIndexes);
@@ -431,8 +478,8 @@ namespace ProSuite.Commons.Geom
 					// Determine if at the next intersection we must
 					// - continue along the source (e.g. because the source touches from the inside)
 					// - continue along the target (forward or backward)
-					SetTurnDirection(startIntersection, ref currentIntersection,
-					                 ref continueOnSource, ref forward);
+					SetTurnDirection(startIntersection, PreferredTurnDirection,
+					                 ref currentIntersection, ref continueOnSource, ref forward);
 				}
 
 				nextIntersection = FollowUntilNextIntersection(
@@ -498,10 +545,10 @@ namespace ProSuite.Commons.Geom
 
 		private void SetTurnDirection(
 			IntersectionPoint3D startIntersection,
+			TurnDirection preferredDirection,
 			ref IntersectionPoint3D intersection,
 			ref bool alongSource, ref bool forward)
 		{
-			TurnDirection preferredDirection = PreferredTurnDirection;
 			// First set the base line, along which we're arriving at the junction:
 			Linestring sourceRing = Source.GetPart(intersection.SourcePartIndex);
 			Linestring target = Target.GetPart(intersection.TargetPartIndex);

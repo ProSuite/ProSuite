@@ -3548,6 +3548,69 @@ namespace ProSuite.Commons.Test.Geom
 		}
 
 		[Test]
+		public void CanUnionTouchingRingsXY()
+		{
+			var ring1 = new List<Pnt3D>
+			            {
+				            new Pnt3D(0, 0, 9),
+				            new Pnt3D(0, 100, 9),
+				            new Pnt3D(100, 50, 9),
+				            new Pnt3D(100, 20, 9)
+			            };
+
+			var ring2 = new List<Pnt3D>
+			            {
+				            new Pnt3D(100, 0, 0),
+				            new Pnt3D(100, 100, 0),
+				            new Pnt3D(200, 100, 0),
+				            new Pnt3D(200, 0, 0)
+			            };
+
+			RingGroup source = CreatePoly(ring1);
+			RingGroup target = CreatePoly(ring2);
+
+			const double tolerance = 0.01;
+
+			MultiLinestring unionResult = GeomTopoOpUtils.GetUnionAreasXY(
+				source, target, tolerance);
+
+			Assert.AreEqual(1, unionResult.PartCount);
+			Assert.AreEqual(true, unionResult.GetLinestring(0).ClockwiseOriented);
+
+			Assert.AreEqual(source.GetArea2D() + target.GetArea2D(), unionResult.GetArea2D(),
+			                0.0001);
+
+			// Now with an interior ring:
+			var sourceInteriorRing = new List<Pnt3D>
+			                         {
+				                         new Pnt3D(20, 20, 9),
+				                         new Pnt3D(40, 20, 9),
+				                         new Pnt3D(40, 50, 9),
+				                         new Pnt3D(20, 50, 9)
+			                         };
+
+			source.AddInteriorRing(CreateRing(sourceInteriorRing));
+
+			var targetSecondRing = new List<Pnt3D>
+			                       {
+				                       new Pnt3D(30, 50, 9),
+				                       new Pnt3D(40, 50, 9),
+				                       new Pnt3D(40, 30, 9),
+				                       new Pnt3D(30, 30, 9),
+			                       };
+
+			target.AddLinestring(CreateRing(targetSecondRing));
+
+			unionResult = GeomTopoOpUtils.GetUnionAreasXY(
+				source, target, tolerance);
+
+			Assert.AreEqual(source.PartCount, unionResult.PartCount);
+			Assert.AreEqual(true, unionResult.GetLinestring(0).ClockwiseOriented);
+			Assert.AreEqual(source.GetArea2D() + target.GetArea2D(), unionResult.GetArea2D(),
+			                0.0001);
+		}
+
+		[Test]
 		public void CanUnionDuplicateRingsXY()
 		{
 			var ring1 = new List<Pnt3D>
@@ -5707,7 +5770,7 @@ namespace ProSuite.Commons.Test.Geom
 			MultiLinestring mergedIntersections =
 				GeomTopoOpUtils.GetUnionAreasXY(intersection[0], intersection[1], xyTolerance);
 
-			Assert.AreEqual(1000, mergedIntersections.GetArea2D());
+			Assert.AreEqual(2000, mergedIntersections.GetArea2D(), 0.0001);
 
 			Assert.IsTrue(ChangeZUtils.AreCoplanar(mergedIntersections.GetPoints().ToList(), 0.0001,
 			                                       out double maxDeviation, out string message));
@@ -5718,8 +5781,7 @@ namespace ProSuite.Commons.Test.Geom
 				GeomTopoOpUtils.GetIntersectionAreasXY(patch1.RingGroups[0], patch2.RingGroups[0],
 				                                       xyTolerance);
 
-			// TODO: Fix union!
-			//Assert.AreEqual(xyIntersection.GetArea2D(), mergedIntersections.GetArea2D(), .001);
+			Assert.AreEqual(xyIntersection.GetArea2D(), mergedIntersections.GetArea2D(), .001);
 
 			MultiLinestring diff1 =
 				GeomTopoOpUtils.GetDifferenceAreasXY(patch1, patch2, xyTolerance);

@@ -143,7 +143,7 @@ namespace ProSuite.Commons.Geom
 		/// <summary>
 		/// Intersections at which the source 'departs' from the target ring boundary
 		/// to the outside. The source linestring does not necessarily have to arrive
-		/// from the outside.
+		/// from the inside.
 		/// </summary>
 		public IEnumerable<IntersectionPoint3D> IntersectionsOutboundSource
 		{
@@ -279,8 +279,6 @@ namespace ProSuite.Commons.Geom
 			int sourcePartToConnectTo)
 		{
 			IntersectionPoint3D current = fromOtherSourceIntersection;
-
-			IntersectionPoint3D next;
 
 			bool isLoop = false;
 
@@ -761,6 +759,8 @@ namespace ProSuite.Commons.Geom
 				}
 				else if (targetArrivesFromRightSide == true)
 				{
+					// targetContinuesToRightSide == false or null, i.e. it continues to the left or
+					// it's probably the end point.
 					intersectionsOutboundTarget.Add(intersectionPoint3D);
 				}
 			}
@@ -788,16 +788,15 @@ namespace ProSuite.Commons.Geom
 				                                           out bool? sourceArrivesFromRightSide,
 				                                           Tolerance);
 
-				// In-bound takes precedence because if the source is both inbound and outbound
-				// (i.e. touching from inside) the resulting part is on the left of the target
-				// which is consistent with other in-bound intersections. TODO: Verify this!
-				if (sourceContinuesToRightSide == true)
+				// TODO: Why not symmetrical with ClassifyIntersectionsTargetTrajectories?
+				if (sourceContinuesToRightSide == false)
+				{
+					// The source continues to the left -> outbound
+					intersectionsOutboundSource.Add(intersectionPoint);
+				}
+				else if (sourceContinuesToRightSide == true)
 				{
 					intersectionsInboundSource.Add(intersectionPoint);
-				}
-				else if (sourceArrivesFromRightSide == true)
-				{
-					intersectionsOutboundSource.Add(intersectionPoint);
 				}
 			}
 

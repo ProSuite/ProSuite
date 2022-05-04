@@ -95,7 +95,8 @@ namespace ProSuite.Commons.Geom
 			Assert.ArgumentCondition(_subcurveNavigator.Source.IsClosed, "Source must be closed.");
 			Assert.ArgumentCondition(_subcurveNavigator.Target.IsClosed, "Target must be closed.");
 
-			IList<Linestring> processedRingsResult = GetBothSideRings();
+			IList<Linestring> processedRingsResult =
+				_subcurveNavigator.FollowSubcurvesTurningLeft();
 
 			List<Linestring> equalRingSelection = GetRingsEqualOtherRing();
 
@@ -460,29 +461,6 @@ namespace ProSuite.Commons.Geom
 			}
 
 			return duplicates;
-		}
-
-		/// <summary>
-		/// Returns the 'union' of the intersecting input rings, i.e. following the subcurves
-		/// by using a left turn at intersections.
-		/// </summary>
-		/// <returns></returns>
-		private IList<Linestring> GetBothSideRings()
-		{
-			SubcurveNavigator.TurnDirection originalTurnDirection =
-				_subcurveNavigator.PreferredTurnDirection;
-
-			try
-			{
-				_subcurveNavigator.PreferredTurnDirection = SubcurveNavigator.TurnDirection.Left;
-
-				return _subcurveNavigator.FollowSubcurvesClockwise(
-					_subcurveNavigator.IntersectionsInboundTarget.ToList());
-			}
-			finally
-			{
-				_subcurveNavigator.PreferredTurnDirection = originalTurnDirection;
-			}
 		}
 
 		private IList<Linestring> GetLeftSideRings(bool includeEqualRings = false,
