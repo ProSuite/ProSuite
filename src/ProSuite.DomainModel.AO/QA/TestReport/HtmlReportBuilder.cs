@@ -100,11 +100,11 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 
 			WriteSubSectionHeader("Tests");
 
-			WriteCategoryIndex();
+			WriteTestsIndex();
 
 			WriteSubSectionHeader("Transformers");
 
-			WriteTransformerIndex();
+			WriteTransformersIndex();
 
 			AppendSeparator();
 
@@ -271,13 +271,13 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			_htmlTable.AppendChild(sectionRow);
 		}
 
-		private void WriteTransformerIndex()
+		private void WriteTransformersIndex()
 		{
 			var indexEntries = new List<IndexEntry>();
 
 			foreach (IncludedInstanceClass transformer in GetSortedTransformerClasses())
 			{
-				indexEntries.Add(new TestIndexEntry(transformer));
+				indexEntries.Add(new InstanceIndexEntry(transformer));
 			}
 
 			if (indexEntries.Count == 0)
@@ -288,7 +288,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			RenderIndexEntries(indexEntries);
 		}
 
-		private void WriteCategoryIndex()
+		private void WriteTestsIndex()
 		{
 			var categories = new Dictionary<string, List<IncludedInstanceBase>>();
 
@@ -312,7 +312,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 
 				foreach (IncludedInstanceBase test in categoryTests)
 				{
-					indexEntries.Add(new TestIndexEntry(test));
+					indexEntries.Add(new InstanceIndexEntry(test));
 				}
 			}
 
@@ -333,16 +333,17 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 
 				foreach (IncludedInstanceClass test in GetSortedTestClasses())
 				{
-					indexEntries.Add(new TestClassIndexEntry(test));
+					indexEntries.Add(new InstanceIndexEntry(test));
 				}
 			}
 
 			if (IncludedTestFactories.Count > 0)
 			{
 				indexEntries.Add(new SectionTitleIndexEntry("Test Factories:"));
+
 				foreach (IncludedTestFactory factory in IncludedTestFactories)
 				{
-					indexEntries.Add(new TestFactoryIndexEntry(factory));
+					indexEntries.Add(new InstanceIndexEntry(factory));
 				}
 			}
 
@@ -351,7 +352,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 				indexEntries.Add(new SectionTitleIndexEntry("Transformers:"));
 				foreach (IncludedInstanceClass transformer in GetSortedTransformerClasses())
 				{
-					indexEntries.Add(new TestIndexEntry(transformer));
+					indexEntries.Add(new InstanceIndexEntry(transformer));
 				}
 			}
 
