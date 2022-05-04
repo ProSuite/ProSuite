@@ -44,10 +44,10 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			{
 				if (includedTest is IncludedInstanceClass includedTestClass)
 				{
-					Type testType = includedTestClass.TestType;
+					Type testType = includedTestClass.InstanceType;
 
 					foreach (IncludedInstanceConstructor constructor in includedTestClass
-						         .TestConstructors)
+						         .InstanceConstructors)
 					{
 						string testName = $"{testType.Name}({constructor.ConstructorIndex})";
 
@@ -60,7 +60,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 				}
 				else if (includedTest is IncludedTestFactory includedFactory)
 				{
-					Type factoryType = includedFactory.TestType;
+					Type factoryType = includedFactory.InstanceType;
 
 					string testName = $"{factoryType.Name}";
 

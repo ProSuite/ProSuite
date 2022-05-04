@@ -22,15 +22,6 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			_testFactoryType = testFactoryType;
 		}
 
-		#region IComparable<IncludedTestFactory> Members
-
-		public int CompareTo(IncludedTestFactory other)
-		{
-			return base.CompareTo(other);
-		}
-
-		#endregion
-
 		private static string GetTitle(Type testFactoryType)
 		{
 			return testFactoryType.Name;
@@ -43,15 +34,25 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			return (TestFactory) ctor.Invoke(new object[] { });
 		}
 
-		#region Overrides of IncludedTestBase
+		#region Overrides of IncludedInstanceBase
 
 		public override string Key => Assert.NotNull(_testFactoryType.FullName, "FullName");
 
 		public override string IndexTooltip => InstanceFactory.GetTestDescription();
 
-		public override Type TestType => _testFactoryType;
+		public override Type InstanceType => _testFactoryType;
 
-		public override IList<IssueCode> IssueCodes => IssueCodeUtils.GetIssueCodes(_testFactoryType);
+		public override IList<IssueCode> IssueCodes =>
+			IssueCodeUtils.GetIssueCodes(_testFactoryType);
+
+		#endregion
+
+		#region IComparable<IncludedTestFactory> Members
+
+		public int CompareTo(IncludedTestFactory other)
+		{
+			return base.CompareTo(other);
+		}
 
 		#endregion
 	}

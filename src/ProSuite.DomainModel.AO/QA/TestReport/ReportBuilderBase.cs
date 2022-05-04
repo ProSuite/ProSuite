@@ -75,7 +75,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			}
 
 			IncludedInstanceConstructor testConstructor =
-				transformerClass.CreateTestConstructor(constructorIndex);
+				transformerClass.CreateInstanceConstructor(constructorIndex);
 
 			if (!IncludeObsolete && testConstructor.Obsolete)
 			{
@@ -124,7 +124,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			}
 
 			IncludedInstanceConstructor testConstructor =
-				testClass.CreateTestConstructor(constructorIndex);
+				testClass.CreateInstanceConstructor(constructorIndex);
 
 			if (! IncludeObsolete && testConstructor.Obsolete)
 			{

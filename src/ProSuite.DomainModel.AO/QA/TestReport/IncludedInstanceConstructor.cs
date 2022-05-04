@@ -5,19 +5,19 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 namespace ProSuite.DomainModel.AO.QA.TestReport
 {
 	public class IncludedInstanceConstructor : IncludedInstance,
-	                                       IComparable<IncludedInstanceConstructor>
+	                                           IComparable<IncludedInstanceConstructor>
 	{
-		private readonly Type _testType;
+		private readonly Type _instanceType;
 		private readonly int _constructorIndex;
 
-		private IncludedInstanceConstructor([NotNull] Type testType, int constructorIndex)
-			: base(GetTitle(testType, constructorIndex),
-			       testType.Assembly,
-			       TestFactoryUtils.GetTestFactory(testType, constructorIndex),
-			       TestFactoryUtils.IsObsolete(testType, constructorIndex),
-			       TestFactoryUtils.IsInternallyUsed(testType, constructorIndex))
+		private IncludedInstanceConstructor([NotNull] Type instanceType, int constructorIndex)
+			: base(GetTitle(instanceType, constructorIndex),
+			       instanceType.Assembly,
+			       TestFactoryUtils.GetTestFactory(instanceType, constructorIndex),
+			       TestFactoryUtils.IsObsolete(instanceType, constructorIndex),
+			       TestFactoryUtils.IsInternallyUsed(instanceType, constructorIndex))
 		{
-			_testType = testType;
+			_instanceType = instanceType;
 			_constructorIndex = constructorIndex;
 		}
 
@@ -43,7 +43,23 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 		}
 
 		[NotNull]
-		public override Type TestType => _testType;
+		public override Type InstanceType => _instanceType;
+
+		public int ConstructorIndex => _constructorIndex;
+
+		private static string GetTitle([NotNull] Type testType, int constructorIndex)
+		{
+			return string.Format("{0} - constructor index: {1}", testType.Name, constructorIndex);
+		}
+
+		#region Overrides of IncludedTestBase
+
+		public override string Key =>
+			string.Format("{0}:{1}", _instanceType.FullName, ConstructorIndex);
+
+		public override string IndexTooltip => InstanceFactory.GetTestDescription();
+
+		#endregion
 
 		#region IComparable<IncludedTestConstructor> Members
 
@@ -51,22 +67,6 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 		{
 			return base.CompareTo(other);
 		}
-
-		#endregion
-
-		private static string GetTitle([NotNull] Type testType, int constructorIndex)
-		{
-			return string.Format("{0} - constructor index: {1}", testType.Name,
-			                     constructorIndex);
-		}
-
-		#region Overrides of IncludedTestBase
-
-		public override string Key => string.Format("{0}:{1}", _testType.FullName, ConstructorIndex);
-
-		public override string IndexTooltip => InstanceFactory.GetTestDescription();
-
-		public int ConstructorIndex => _constructorIndex;
 
 		#endregion
 	}

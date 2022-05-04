@@ -116,7 +116,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 					if (includedTest is IncludedInstanceClass)
 					{
 						var includedTestClass = (IncludedInstanceClass) includedTest;
-						if (includedTestClass.TestConstructors.Count <= 0)
+						if (includedTestClass.InstanceConstructors.Count <= 0)
 						{
 							continue;
 						}
@@ -127,7 +127,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 
 						foreach (
 							IncludedInstanceConstructor includedTestConstructor in
-							includedTestClass.TestConstructors)
+							includedTestClass.InstanceConstructors)
 						{
 							AppendTestConstructorTitle(includedTestConstructor);
 
@@ -153,7 +153,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 				foreach (IncludedInstanceBase testBase in includedTransformers)
 				{
 					var includedTransformer = (IncludedInstanceClass) testBase;
-					if (includedTransformer.TestConstructors.Count <= 0)
+					if (includedTransformer.InstanceConstructors.Count <= 0)
 					{
 						continue;
 					}
@@ -164,7 +164,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 
 					foreach (
 						IncludedInstanceConstructor includedTestConstructor in
-						includedTransformer.TestConstructors)
+						includedTransformer.InstanceConstructors)
 					{
 						AppendTestConstructorTitle(includedTestConstructor);
 
@@ -491,7 +491,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 
 			foreach (IncludedInstanceClass includedTestClass in includedTestClasses)
 			{
-				result += includedTestClass.TestConstructors.Count;
+				result += includedTestClass.InstanceConstructors.Count;
 			}
 
 			return result;
@@ -758,7 +758,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 				string assemblyInfo = string.Format(
 					"{2} {1} in {0}",
 					Path.GetFileName(test.Assembly.Location),
-					test.TestType.FullName,
+					test.InstanceType.FullName,
 					implementationPattern);
 				XmlElement assemblyRow = CreateTableRow();
 				assemblyRow.AppendChild(CreateTableCell("Implementation:"));
@@ -795,7 +795,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 				string assemblyInfo = string.Format(
 					"{2} {1} in {0}",
 					Path.GetFileName(test.Assembly.Location),
-					test.TestType.FullName,
+					test.InstanceType.FullName,
 					implementationPattern);
 				XmlElement assemblyRow = CreateTableRow();
 				assemblyRow.AppendChild(CreateTableCell("Implementation:"));
