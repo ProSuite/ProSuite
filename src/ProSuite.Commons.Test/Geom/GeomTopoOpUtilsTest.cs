@@ -14,6 +14,48 @@ namespace ProSuite.Commons.Test.Geom
 	public class GeomTopoOpUtilsTest
 	{
 		[Test]
+		public void CanProcessEmptyGeometries()
+		{
+			var ring = new List<Pnt3D>
+			           {
+				           new Pnt3D(0, 0, 9),
+				           new Pnt3D(0, 100, 9),
+				           new Pnt3D(100, 50, 9),
+				           new Pnt3D(100, 20, 9)
+			           };
+
+			MultiLinestring poly = CreatePoly(ring);
+			MultiLinestring empty = MultiPolycurve.CreateEmpty();
+
+			double tolerance = 0.001;
+
+			// UnionAreasXY
+			MultiLinestring union = GeomTopoOpUtils.GetUnionAreasXY(poly, empty, tolerance);
+			Assert.AreEqual(poly.GetArea2D(), union.GetArea2D());
+
+			union = GeomTopoOpUtils.GetUnionAreasXY(empty, poly, tolerance);
+			Assert.AreEqual(poly.GetArea2D(), union.GetArea2D());
+
+			// IntersectionAreasXY
+			MultiLinestring intersection =
+				GeomTopoOpUtils.GetIntersectionAreasXY(poly, empty, tolerance);
+			Assert.AreEqual(0, intersection.GetArea2D());
+
+			intersection =
+				GeomTopoOpUtils.GetIntersectionAreasXY(empty, poly, tolerance);
+			Assert.AreEqual(0, intersection.GetArea2D());
+
+			// DifferenceAreasXY
+			MultiLinestring difference =
+				GeomTopoOpUtils.GetDifferenceAreasXY(poly, empty, tolerance);
+			Assert.AreEqual(poly.GetArea2D(), difference.GetArea2D());
+
+			difference =
+				GeomTopoOpUtils.GetDifferenceAreasXY(empty, poly, tolerance);
+			Assert.AreEqual(0, difference.GetArea2D());
+		}
+
+		[Test]
 		public void CanRemoveOverlapsXY()
 		{
 			var ring1 = new List<Pnt3D>
