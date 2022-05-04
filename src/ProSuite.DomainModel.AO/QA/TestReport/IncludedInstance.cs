@@ -1,6 +1,7 @@
 using System.Reflection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.QA.Core;
 
 namespace ProSuite.DomainModel.AO.QA.TestReport
 {
@@ -8,19 +9,19 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 	{
 		protected IncludedInstance([NotNull] string title,
 		                           [NotNull] Assembly assembly,
-		                           [NotNull] InstanceFactory instanceFactory,
+		                           [NotNull] IInstanceInfo instanceInfo,
 		                           bool obsolete,
 		                           bool internallyUsed)
-			: base(title, assembly, obsolete, internallyUsed, instanceFactory.TestCategories)
+			: base(title, assembly, obsolete, internallyUsed, instanceInfo.TestCategories)
 		{
-			Assert.ArgumentNotNull(instanceFactory, nameof(instanceFactory));
+			Assert.ArgumentNotNull(instanceInfo, nameof(instanceInfo));
 
-			InstanceFactory = instanceFactory;
+			InstanceInfo = instanceInfo;
 		}
 
 		[NotNull]
-		public InstanceFactory InstanceFactory { get; }
+		public IInstanceInfo InstanceInfo { get; }
 
-		public override string Description => InstanceFactory.GetTestDescription();
+		public override string Description => InstanceInfo.GetTestDescription();
 	}
 }

@@ -500,7 +500,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 		[NotNull]
 		private IEnumerable<XmlElement> GetTestParameterRows([NotNull] IncludedInstance test)
 		{
-			IInstanceInfo testFactory = test.InstanceFactory;
+			IInstanceInfo testFactory = test.InstanceInfo;
 
 			var rows = new List<XmlElement>();
 
@@ -521,7 +521,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			foreach (TestParameter testParameter in testFactory.Parameters)
 			{
 				string parameterDescription =
-					test.InstanceFactory.GetParameterDescription(testParameter.Name);
+					test.InstanceInfo.GetParameterDescription(testParameter.Name);
 
 				XmlElement parameterRow = CreateTableRow();
 				rows.Add(parameterRow);
@@ -769,7 +769,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			if (test is IncludedTestFactory)
 			{
 				_htmlTable.AppendChild(
-					GetSignatureRow(((IncludedInstance) test).InstanceFactory));
+					GetSignatureRow(((IncludedInstance) test).InstanceInfo));
 			}
 
 			AppendTestIssueCodes(test.IssueCodes);

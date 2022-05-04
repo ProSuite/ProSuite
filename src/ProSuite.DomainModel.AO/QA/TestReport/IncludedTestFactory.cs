@@ -37,7 +37,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 
 		public override string Key => Assert.NotNull(_testFactoryType.FullName, "FullName");
 
-		public override string IndexTooltip => InstanceFactory.GetTestDescription();
+		public override string IndexTooltip => InstanceInfo.GetTestDescription();
 
 		public override Type InstanceType => _testFactoryType;
 
