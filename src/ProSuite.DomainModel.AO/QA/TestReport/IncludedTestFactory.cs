@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Reflection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Reflection;
 using ProSuite.QA.Container;
 
 namespace ProSuite.DomainModel.AO.QA.TestReport
@@ -16,8 +15,8 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			: base(GetTitle(testFactoryType),
 			       testFactoryType.Assembly,
 			       GetTestFactory(testFactoryType),
-			       ReflectionUtils.IsObsolete(testFactoryType),
-			       TestFactoryUtils.IsInternallyUsed(testFactoryType))
+			       InstanceFactoryUtils.IsObsolete(testFactoryType),
+			       InstanceFactoryUtils.IsInternallyUsed(testFactoryType))
 		{
 			_testFactoryType = testFactoryType;
 		}

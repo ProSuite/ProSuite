@@ -18,8 +18,8 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 		public IncludedInstanceClass([NotNull] Type instanceType)
 			: base(GetTitle(instanceType),
 			       instanceType.Assembly,
-			       ReflectionUtils.IsObsolete(instanceType),
-			       TestFactoryUtils.IsInternallyUsed(instanceType),
+			       InstanceFactoryUtils.IsObsolete(instanceType),
+			       InstanceFactoryUtils.IsInternallyUsed(instanceType),
 			       ReflectionUtils.GetCategories(instanceType))
 		{
 			Assert.ArgumentNotNull(instanceType, nameof(instanceType));

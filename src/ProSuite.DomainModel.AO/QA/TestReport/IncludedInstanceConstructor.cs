@@ -1,6 +1,6 @@
 using System;
-using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.QA.Core;
 
 namespace ProSuite.DomainModel.AO.QA.TestReport
 {
@@ -14,8 +14,8 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			: base(GetTitle(instanceType, constructorIndex),
 			       instanceType.Assembly,
 			       TestFactoryUtils.GetTestFactory(instanceType, constructorIndex),
-			       TestFactoryUtils.IsObsolete(instanceType, constructorIndex),
-			       TestFactoryUtils.IsInternallyUsed(instanceType, constructorIndex))
+			       InstanceFactoryUtils.IsObsolete(instanceType, constructorIndex),
+			       InstanceFactoryUtils.IsInternallyUsed(instanceType, constructorIndex))
 		{
 			_instanceType = instanceType;
 			_constructorIndex = constructorIndex;
@@ -24,22 +24,9 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 		public static IncludedInstanceConstructor CreateInstance(
 			[NotNull] Type testType, int constructorIndex)
 		{
-			AssertConstructorExists(testType, constructorIndex);
+			InstanceUtils.AssertConstructorExists(testType, constructorIndex);
 
 			return new IncludedInstanceConstructor(testType, constructorIndex);
-		}
-
-		//TODO: after push/pull subtree use InstanceUtils
-		private static void AssertConstructorExists([NotNull] Type type, int constructorId)
-		{
-			Assert.ArgumentNotNull(type, nameof(type));
-
-			if (type.GetConstructors().Length <= constructorId)
-			{
-				throw new TypeLoadException(
-					$"invalid constructorId {constructorId}, {type} has " +
-					$"{type.GetConstructors().Length} constructors");
-			}
 		}
 
 		[NotNull]

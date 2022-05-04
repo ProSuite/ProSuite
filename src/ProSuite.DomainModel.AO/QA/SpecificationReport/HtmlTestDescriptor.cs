@@ -51,7 +51,7 @@ namespace ProSuite.DomainModel.AO.QA.SpecificationReport
 				testType = testDescriptor.TestClass.GetInstanceType();
 				ConstructorId = testDescriptor.TestConstructorId;
 				UsesConstructor = true;
-				IsObsolete = TestFactoryUtils.IsObsolete(testType, ConstructorId,
+				IsObsolete = InstanceFactoryUtils.IsObsolete(testType, ConstructorId,
 				                                         out _obsoleteMessage);
 			}
 			else if (testDescriptor.TestFactoryDescriptor != null)

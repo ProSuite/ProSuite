@@ -111,12 +111,12 @@ namespace ProSuite.DomainModel.AO.QA
 					continue;
 				}
 
-				if (! includeObsolete && ReflectionUtils.IsObsolete(candidateType))
+				if (! includeObsolete && IsObsolete(candidateType))
 				{
 					continue;
 				}
 
-				if (! includeInternallyUsed && HasInternallyUsedAttribute(candidateType))
+				if (! includeInternallyUsed && IsInternallyUsed(candidateType))
 				{
 					continue;
 				}
@@ -148,7 +148,7 @@ namespace ProSuite.DomainModel.AO.QA
 		                                       bool includeObsolete,
 		                                       bool includeInternallyUsed)
 		{
-			if (! includeObsolete && ReflectionUtils.IsObsolete(ctorInfo))
+			if (! includeObsolete && ReflectionUtils.IsObsolete(ctorInfo, out _))
 			{
 				return false;
 			}
@@ -166,7 +166,56 @@ namespace ProSuite.DomainModel.AO.QA
 			       candidateType.IsPublic;
 		}
 
-		public static bool HasInternallyUsedAttribute(
+		public static bool IsObsolete([NotNull] Type instanceType)
+		{
+			return ReflectionUtils.IsObsolete(instanceType, out _);
+		}
+
+		public static bool IsObsolete([NotNull] Type instanceType, int constructorId)
+		{
+			return IsObsolete(instanceType, constructorId, out _);
+		}
+
+		public static bool IsObsolete([NotNull] Type instanceType,
+		                              int constructorId,
+		                              [CanBeNull] out string message)
+		{
+			Assert.ArgumentNotNull(instanceType, nameof(instanceType));
+
+			if (ReflectionUtils.IsObsolete(instanceType, out message))
+			{
+				return true;
+			}
+
+			InstanceUtils.AssertConstructorExists(instanceType, constructorId);
+
+			ConstructorInfo ctorInfo = instanceType.GetConstructors()[constructorId];
+
+			return ReflectionUtils.IsObsolete(ctorInfo, out message);
+		}
+
+		public static bool IsInternallyUsed([NotNull] Type instanceType)
+		{
+			return HasInternallyUsedAttribute(instanceType);
+		}
+
+		public static bool IsInternallyUsed([NotNull] Type instanceType, int constructorId)
+		{
+			Assert.ArgumentNotNull(instanceType, nameof(instanceType));
+
+			if (HasInternallyUsedAttribute(instanceType))
+			{
+				return true;
+			}
+
+			InstanceUtils.AssertConstructorExists(instanceType, constructorId);
+
+			ConstructorInfo ctorInfo = instanceType.GetConstructors()[constructorId];
+
+			return HasInternallyUsedAttribute(ctorInfo);
+		}
+
+		private static bool HasInternallyUsedAttribute(
 			[NotNull] ICustomAttributeProvider attributeProvider)
 		{
 			return ReflectionUtils.HasAttribute<InternallyUsedTestAttribute>(attributeProvider);

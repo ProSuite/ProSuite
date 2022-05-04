@@ -167,13 +167,13 @@ namespace ProSuite.QA.Core
 		}
 
 		[NotNull]
-		public static string GetTestSignature([NotNull] IInstanceInfo testInfo)
+		public static string GetTestSignature([NotNull] IInstanceInfo instanceInfo)
 		{
-			Assert.ArgumentNotNull(testInfo, nameof(testInfo));
+			Assert.ArgumentNotNull(instanceInfo, nameof(instanceInfo));
 
 			var sb = new StringBuilder();
 
-			foreach (TestParameter testParameter in testInfo.Parameters)
+			foreach (TestParameter testParameter in instanceInfo.Parameters)
 			{
 				if (sb.Length > 1)
 				{
