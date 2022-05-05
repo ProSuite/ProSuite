@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
@@ -8,13 +7,7 @@ using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.DomainModel.AO.QA;
-using ProSuite.DomainModel.Core;
-using ProSuite.DomainModel.Core.DataModel;
-using ProSuite.DomainModel.Core.QA;
-using ProSuite.QA.Container;
 using ProSuite.QA.Container.Test;
-using ProSuite.QA.TestFactories;
 using ProSuite.QA.Tests.Test.Construction;
 using ProSuite.QA.Tests.Test.TestRunners;
 
@@ -83,62 +76,6 @@ namespace ProSuite.QA.Tests.Test
 			Assert.AreEqual(1, runner.Errors.Count);
 
 			test.IgnoreLoopEndpoints = true;
-			runner = new QaTestRunner(test);
-			runner.Execute();
-			Assert.AreEqual(0, runner.Errors.Count);
-		}
-
-		[Test]
-		public void CanTestPseudoNodesFactory()
-		{
-			IFeatureWorkspace ws =
-				TestWorkspaceUtils.CreateInMemoryWorkspace("CanTestPseudoNodes");
-			IFeatureClass fc = CreateLineClass(ws);
-
-			IFeature row1 = fc.CreateFeature();
-			row1.Shape =
-				CurveConstruction.StartLine(0, 0).LineTo(1, 1).LineTo(1, 0).LineTo(0, 0).Curve;
-			row1.set_Value(fc.Fields.FindField(_nrFieldName), 1);
-			row1.Store();
-
-			var ds1 = (IDataset) fc;
-
-			var model = new SimpleModel("model", fc);
-			Dataset mds1 = model.AddDataset(new ModelVectorDataset(ds1.Name));
-
-			var clsDesc = new ClassDescriptor(typeof(QaFactoryPseudoNodes));
-			var tstDesc = new TestDescriptor("GroupEnds", clsDesc);
-			var condition = new QualityCondition("cndPseudoNodes", tstDesc);
-			InstanceConfigurationUtils.AddParameterValue(
-				condition, QaFactoryPseudoNodes.PolylineClassesParam, mds1);
-			InstanceConfigurationUtils.AddParameterValue(
-				condition, QaFactoryPseudoNodes.IgnoreFieldsParam, _nrFieldName);
-			InstanceConfigurationUtils.AddParameterValue(
-				condition, QaFactoryPseudoNodes.IgnoreFieldsParam,
-				QaFactoryPseudoNodes.EndLayerFields);
-			// implicit: ignoreLoopEndPoints = false
-
-			var fact = new QaFactoryPseudoNodes();
-			fact.Condition = condition;
-
-			IList<ITest> tests =
-				fact.CreateTests(new SimpleDatasetOpener(model.MasterDatabaseWorkspaceContext));
-			Assert.AreEqual(1, tests.Count);
-
-			ITest test = tests[0];
-			var runner = new QaTestRunner(test);
-			runner.Execute();
-			Assert.AreEqual(1, runner.Errors.Count);
-
-			// set ignoreLoopEndPoints = true and rerun
-			InstanceConfigurationUtils.AddParameterValue(
-				condition, QaFactoryPseudoNodes.IgnoreLoopEndPointsParam, true);
-			fact.Condition = condition;
-
-			tests = fact.CreateTests(new SimpleDatasetOpener(model.MasterDatabaseWorkspaceContext));
-			Assert.AreEqual(1, tests.Count);
-
-			test = tests[0];
 			runner = new QaTestRunner(test);
 			runner.Execute();
 			Assert.AreEqual(0, runner.Errors.Count);

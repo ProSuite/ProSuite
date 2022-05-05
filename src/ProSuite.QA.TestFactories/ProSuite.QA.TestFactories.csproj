@@ -96,7 +96,6 @@
     <Compile Include="QaDangleFactory.cs" />
     <Compile Include="QaDatasetConstraintFactory.cs" />
     <Compile Include="QaExtentFactory.cs" />
-    <Compile Include="QaFactoryPseudoNodes.cs" />
     <Compile Include="QaGdbConstraintFactory.cs" />
     <Compile Include="QaLinearUnitFactory.cs" />
     <Compile Include="QaLineConnection.cs" />
