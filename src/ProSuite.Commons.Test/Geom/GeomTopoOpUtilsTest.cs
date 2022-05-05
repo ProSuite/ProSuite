@@ -3653,6 +3653,53 @@ namespace ProSuite.Commons.Test.Geom
 		}
 
 		[Test]
+		public void CanUnionTouchingMultipartRingsXY()
+		{
+			var ring1 = new List<Pnt3D>
+			            {
+				            new Pnt3D(0, 0, 9),
+				            new Pnt3D(0, 100, 9),
+				            new Pnt3D(100, 50, 9),
+				            new Pnt3D(100, 20, 9)
+			            };
+
+			var ring2 = new List<Pnt3D>
+			            {
+				            new Pnt3D(100, 0, 0),
+				            new Pnt3D(100, 100, 0),
+				            new Pnt3D(200, 100, 0),
+				            new Pnt3D(200, 0, 0)
+			            };
+
+			var ring1b = new List<Pnt3D>
+			             {
+				             new Pnt3D(200, 0, 9),
+				             new Pnt3D(200, 100, 9),
+				             new Pnt3D(300, 50, 9),
+				             new Pnt3D(300, 20, 9)
+			             };
+
+			MultiPolycurve source = new MultiPolycurve(new[]
+			                                           {
+				                                           CreateRing(ring1),
+				                                           CreateRing(ring1b)
+			                                           });
+
+			RingGroup target = CreatePoly(ring2);
+
+			const double tolerance = 0.01;
+
+			MultiLinestring unionResult = GeomTopoOpUtils.GetUnionAreasXY(
+				source, target, tolerance);
+
+			Assert.AreEqual(1, unionResult.PartCount);
+			Assert.AreEqual(true, unionResult.GetLinestring(0).ClockwiseOriented);
+
+			Assert.AreEqual(source.GetArea2D() + target.GetArea2D(), unionResult.GetArea2D(),
+			                0.0001);
+		}
+
+		[Test]
 		public void CanUnionDuplicateRingsXY()
 		{
 			var ring1 = new List<Pnt3D>

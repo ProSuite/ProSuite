@@ -50,11 +50,7 @@ namespace ProSuite.Commons.Geom
 		private HashSet<int> IntersectedSourcePartIndexes { get; } = new HashSet<int>();
 		private HashSet<int> IntersectedTargetPartIndexes { get; } = new HashSet<int>();
 
-		private HashSet<IntersectionPoint3D> VisitedOutboundTargetIntersections { get; } =
-			new HashSet<IntersectionPoint3D>();
-
-		private HashSet<IntersectionPoint3D> VisitedInboundTargetIntersections { get; } =
-			new HashSet<IntersectionPoint3D>();
+		private HashSet<IntersectionPoint3D> VisitedIntersectionsAlongSource { get; set; }
 
 		/// <summary>
 		/// Intersections at which the target 'arrives' at the source ring boundary
@@ -72,9 +68,7 @@ namespace ProSuite.Commons.Geom
 		public IEnumerable<IntersectionPoint3D> IntersectionsInboundTarget =>
 			Assert.NotNull(IntersectionPointNavigator.IntersectionsInboundTarget);
 
-		// TODO: Once the SingleRingNavigator is removed, this could be a parameter of
-		//       SetTurnDirection()
-		internal TurnDirection PreferredTurnDirection { get; set; } = TurnDirection.Right;
+		private TurnDirection PreferredTurnDirection { get; set; } = TurnDirection.Right;
 
 		public SubcurveIntersectionPointNavigator IntersectionPointNavigator
 		{
@@ -147,6 +141,21 @@ namespace ProSuite.Commons.Geom
 		}
 
 		/// <summary>
+		/// Cut operations use both the left and the right side rings of the target. However, 
+		/// cutting with non-closed targets can result in rings being both on the left and the
+		/// right side of the target. To avoid duplicate rings, the start intersections need to
+		/// be tracked across the two operations (otherwise duplicate rings need to be filtered
+		/// afterwards).
+		/// </summary>
+		public void PrepareForCutOperation()
+		{
+			if (! Target.IsClosed)
+			{
+				VisitedIntersectionsAlongSource = new HashSet<IntersectionPoint3D>();
+			}
+		}
+
+		/// <summary>
 		/// Starting at outbound source intersections, follows the subcurves in a clockwise manner
 		/// to get the union of both the source and the target by preferring a left turn at
 		/// intersections.
@@ -192,11 +201,8 @@ namespace ProSuite.Commons.Geom
 				subcurveInfos.Clear();
 				bool makeRing = false;
 
-				IntersectionPoint3D startIntersection = startIntersections.First();
-				startIntersections.Remove(startIntersection);
-
 				Pnt3D ringStart = null;
-				foreach (IntersectionRun next in NavigateSubcurves(startIntersection))
+				foreach (IntersectionRun next in NavigateSubcurves(startIntersections))
 				{
 					subcurveInfos.Add(next);
 
@@ -450,11 +456,13 @@ namespace ProSuite.Commons.Geom
 		}
 
 		private IEnumerable<IntersectionRun> NavigateSubcurves(
-			IntersectionPoint3D startIntersection)
+			ICollection<IntersectionPoint3D> startIntersections)
 		{
-			if (VisitedOutboundTargetIntersections.Contains(startIntersection) ||
-			    VisitedInboundTargetIntersections.Contains(startIntersection))
+			IntersectionPoint3D startIntersection = startIntersections.First();
+
+			if (VisitedIntersectionsAlongSource?.Contains(startIntersection) == true)
 			{
+				startIntersections.Remove(startIntersection);
 				yield break;
 			}
 
@@ -494,7 +502,12 @@ namespace ProSuite.Commons.Geom
 
 				if (continueOnSource)
 				{
-					RememberVisitedIntersection(currentIntersection);
+					startIntersections.Remove(currentIntersection);
+
+					// Cut operations with un-closed targets: A ring can be both on the right and the
+					// left side! -> Remember the start intersections along the source to avoid using
+					// an intersection twice which would result in duplicate rings.
+					VisitedIntersectionsAlongSource?.Add(currentIntersection);
 				}
 
 				if (isBoundaryLoopIntersection)
@@ -1197,18 +1210,6 @@ namespace ProSuite.Commons.Geom
 				         i => i.NextIntersection.SourcePartIndex))
 			{
 				IntersectedSourcePartIndexes.Add(sourceIdx);
-			}
-		}
-
-		private void RememberVisitedIntersection(IntersectionPoint3D currentIntersection)
-		{
-			if (IntersectionsOutboundTarget.Contains(currentIntersection))
-			{
-				VisitedOutboundTargetIntersections.Add(currentIntersection);
-			}
-			else if (IntersectionsInboundTarget.Contains(currentIntersection))
-			{
-				VisitedInboundTargetIntersections.Add(currentIntersection);
 			}
 		}
 

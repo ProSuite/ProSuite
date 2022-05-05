@@ -158,6 +158,8 @@ namespace ProSuite.Commons.Geom
 			// linear intersections, un-closed target lines and multi-parts.
 			// Potential enhancements: Do not insert phantom points!
 
+			_subcurveNavigator.PrepareForCutOperation();
+
 			IList<Linestring> rightRings = GetRightSideRings();
 			IList<Linestring> leftRings = GetLeftSideRings();
 
@@ -260,7 +262,10 @@ namespace ProSuite.Commons.Geom
 		{
 			Assert.ArgumentCondition(_subcurveNavigator.Source.IsClosed, "source must be closed.");
 
-			// Based on Weiler–Atherton clipping algorithm, added specific logic for linear intersections.
+			// Based on Weiler–Atherton clipping algorithm, with added logic for extra features,
+			// such as Z-value selection, linear intersections, avoiding duplicate rings in cut.
+
+			_subcurveNavigator.PrepareForCutOperation();
 
 			rightRings = GetRightSideRings();
 			leftRings = GetLeftSideRings();
