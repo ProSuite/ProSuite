@@ -255,8 +255,9 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			AddHeaderRow("Test Classes",
 			             IncludedTestClasses.Count.ToString(CultureInfo.InvariantCulture));
 			AddHeaderRow("Test Class Constructors",
-			             GetTestConstructorCount(IncludedTestClasses.Values)
-				             .ToString(CultureInfo.InvariantCulture));
+			             IncludedTestClasses.Values
+			                                .Sum(included => included.InstanceConstructors.Count)
+			                                .ToString(CultureInfo.InvariantCulture));
 			AddHeaderRow("Test Factories",
 			             IncludedTestFactories.Count.ToString(CultureInfo.InvariantCulture));
 			AddHeaderRow("Transformer Classes",
@@ -484,29 +485,16 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			return result;
 		}
 
-		private static int GetTestConstructorCount(
-			[NotNull] IEnumerable<IncludedInstanceClass> includedTestClasses)
-		{
-			var result = 0;
-
-			foreach (IncludedInstanceClass includedTestClass in includedTestClasses)
-			{
-				result += includedTestClass.InstanceConstructors.Count;
-			}
-
-			return result;
-		}
-
 		[NotNull]
 		private IEnumerable<XmlElement> GetTestParameterRows([NotNull] IncludedInstance test)
 		{
-			IInstanceInfo testFactory = test.InstanceFactory;
+			IInstanceInfo instanceInfo = test.InstanceInfo;
 
 			var rows = new List<XmlElement>();
 
 			if (test is IncludedInstanceConstructor)
 			{
-				XmlElement signatureRow = GetSignatureRow(testFactory);
+				XmlElement signatureRow = GetSignatureRow(instanceInfo);
 				rows.Add(signatureRow);
 				rows.Add(GetTestDescriptionTextRow(test));
 			}
@@ -518,15 +506,16 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			parameterHeadingRow.AppendChild(CreateTableCell("Description", "header"));
 			rows.Add(parameterHeadingRow);
 
-			foreach (TestParameter testParameter in testFactory.Parameters)
+			foreach (TestParameter testParameter in instanceInfo.Parameters)
 			{
 				string parameterDescription =
-					test.InstanceFactory.GetParameterDescription(testParameter.Name);
+					test.InstanceInfo.GetParameterDescription(testParameter.Name);
 
 				XmlElement parameterRow = CreateTableRow();
 				rows.Add(parameterRow);
 
-				parameterRow.AppendChild(CreateTableCell(testParameter.Name));
+				parameterRow.AppendChild(
+					CreateTableCell(InstanceUtils.GetParameterNameString(testParameter)));
 				parameterRow.AppendChild(
 					CreateTableCell(InstanceUtils.GetParameterTypeString(testParameter)));
 				parameterRow.AppendChild(
@@ -536,9 +525,9 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			return rows;
 		}
 
-		private XmlElement GetSignatureRow([NotNull] IInstanceInfo testFactory)
+		private XmlElement GetSignatureRow([NotNull] IInstanceInfo instanceInfo)
 		{
-			string signature = InstanceUtils.GetTestSignature(testFactory);
+			string signature = InstanceUtils.GetTestSignature(instanceInfo);
 
 			XmlElement signatureRow = CreateTableRow();
 			signatureRow.AppendChild(CreateTableCell("Signature:"));
@@ -769,7 +758,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			if (test is IncludedTestFactory)
 			{
 				_htmlTable.AppendChild(
-					GetSignatureRow(((IncludedInstance) test).InstanceFactory));
+					GetSignatureRow(((IncludedInstance) test).InstanceInfo));
 			}
 
 			AppendTestIssueCodes(test.IssueCodes);

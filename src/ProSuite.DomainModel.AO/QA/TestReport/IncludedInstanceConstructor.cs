@@ -13,7 +13,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 		private IncludedInstanceConstructor([NotNull] Type instanceType, int constructorIndex)
 			: base(GetTitle(instanceType, constructorIndex),
 			       instanceType.Assembly,
-			       TestFactoryUtils.GetTestFactory(instanceType, constructorIndex),
+			       GetInstanceInfo(instanceType, constructorIndex),
 			       InstanceFactoryUtils.IsObsolete(instanceType, constructorIndex),
 			       InstanceFactoryUtils.IsInternallyUsed(instanceType, constructorIndex))
 		{
@@ -39,12 +39,17 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			return string.Format("{0} - constructor index: {1}", testType.Name, constructorIndex);
 		}
 
+		private static IInstanceInfo GetInstanceInfo(Type instanceType, int constructorIndex)
+		{
+			return new InstanceInfo(instanceType, constructorIndex);
+		}
+
 		#region Overrides of IncludedTestBase
 
 		public override string Key =>
 			string.Format("{0}:{1}", _instanceType.FullName, ConstructorIndex);
 
-		public override string IndexTooltip => InstanceFactory.GetTestDescription();
+		public override string IndexTooltip => InstanceInfo.GetTestDescription();
 
 		#endregion
 

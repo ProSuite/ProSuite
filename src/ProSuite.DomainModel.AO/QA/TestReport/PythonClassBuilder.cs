@@ -138,7 +138,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 		                                          IncludedInstanceConstructor constructor,
 		                                          StringBuilder sb)
 		{
-			InstanceFactory testFactory = constructor.InstanceFactory;
+			IInstanceInfo testFactory = constructor.InstanceInfo;
 
 			string methodName =
 				$"{ToUnderscoreCase(includedTransformerClass.InstanceType.Name)}_{constructor.ConstructorIndex}";
@@ -156,7 +156,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 		                                          IncludedInstanceConstructor constructor,
 		                                          StringBuilder sb)
 		{
-			InstanceFactory factory = constructor.InstanceFactory;
+			IInstanceInfo factory = constructor.InstanceInfo;
 
 			string methodName =
 				$"{ToUnderscoreCase(includedTestClass.InstanceType.Name)}_{constructor.ConstructorIndex}";
@@ -170,7 +170,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 		}
 		
 		private static void AppendTransformerMethod(string methodName, string methodSignature,
-		                                            InstanceFactory factory,
+		                                            IInstanceInfo factory,
 		                                            string conditionConstructorSignature,
 		                                            StringBuilder sb)
 		{
@@ -181,7 +181,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 		}
 
 		private static void AppendMethod(string methodName, string methodSignature,
-		                                 InstanceFactory factory,
+		                                 IInstanceInfo factory,
 		                                 string conditionConstructorSignature, StringBuilder sb)
 		{
 			sb.AppendLine();
@@ -222,7 +222,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 		private static void AppendTestFactoryMethod(IncludedTestFactory includedTestFactory,
 		                                            StringBuilder sb)
 		{
-			InstanceFactory factory = includedTestFactory.InstanceFactory;
+			IInstanceInfo factory = includedTestFactory.InstanceInfo;
 
 			string methodName = ToUnderscoreCase(includedTestFactory.InstanceType.Name);
 

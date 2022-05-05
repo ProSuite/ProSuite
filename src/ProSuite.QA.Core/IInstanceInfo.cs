@@ -15,6 +15,8 @@ namespace ProSuite.QA.Core
 
 		TestParameter GetParameter([NotNull] string parameterName);
 
+		string GetParameterDescription([NotNull] string parameterName);
+
 		string GetTestDescription();
 	}
 }
