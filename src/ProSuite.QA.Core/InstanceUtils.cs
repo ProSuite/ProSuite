@@ -56,6 +56,16 @@ namespace ProSuite.QA.Core
 		}
 
 		[NotNull]
+		public static string GetParameterNameString([NotNull] TestParameter testParameter)
+		{
+			Assert.ArgumentNotNull(testParameter, nameof(testParameter));
+
+			return ! testParameter.IsConstructorParameter
+				       ? string.Format("[{0}]", testParameter.Name)
+				       : testParameter.Name;
+		}
+		
+		[NotNull]
 		public static string GetParameterTypeString([NotNull] TestParameter testParameter)
 		{
 			Assert.ArgumentNotNull(testParameter, nameof(testParameter));
@@ -187,6 +197,7 @@ namespace ProSuite.QA.Core
 
 				sb.Append(GetParameterTypeString(testParameter));
 				sb.AppendFormat(" {0}", testParameter.Name);
+
 				if (! testParameter.IsConstructorParameter)
 				{
 					sb.Append("]");
