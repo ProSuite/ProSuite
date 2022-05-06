@@ -10,7 +10,6 @@ using ProSuite.DomainModel.Core;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Container;
 using ProSuite.QA.Core;
-using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.DomainModel.AO.QA
 {
@@ -116,7 +115,7 @@ namespace ProSuite.DomainModel.AO.QA
 					continue;
 				}
 
-				if (! includeInternallyUsed && IsInternallyUsed(candidateType))
+				if (! includeInternallyUsed && InstanceUtils.IsInternallyUsed(candidateType))
 				{
 					continue;
 				}
@@ -153,7 +152,7 @@ namespace ProSuite.DomainModel.AO.QA
 				return false;
 			}
 
-			return includeInternallyUsed || ! HasInternallyUsedAttribute(ctorInfo);
+			return includeInternallyUsed || ! InstanceUtils.HasInternallyUsedAttribute(ctorInfo);
 		}
 
 		public static bool IsInstanceType([NotNull] Type candidateType, [NotNull] Type instanceType)
@@ -192,33 +191,6 @@ namespace ProSuite.DomainModel.AO.QA
 			ConstructorInfo ctorInfo = instanceType.GetConstructors()[constructorId];
 
 			return ReflectionUtils.IsObsolete(ctorInfo, out message);
-		}
-
-		public static bool IsInternallyUsed([NotNull] Type instanceType)
-		{
-			return HasInternallyUsedAttribute(instanceType);
-		}
-
-		public static bool IsInternallyUsed([NotNull] Type instanceType, int constructorId)
-		{
-			Assert.ArgumentNotNull(instanceType, nameof(instanceType));
-
-			if (HasInternallyUsedAttribute(instanceType))
-			{
-				return true;
-			}
-
-			InstanceUtils.AssertConstructorExists(instanceType, constructorId);
-
-			ConstructorInfo ctorInfo = instanceType.GetConstructors()[constructorId];
-
-			return HasInternallyUsedAttribute(ctorInfo);
-		}
-
-		private static bool HasInternallyUsedAttribute(
-			[NotNull] ICustomAttributeProvider attributeProvider)
-		{
-			return ReflectionUtils.HasAttribute<InternallyUsedTestAttribute>(attributeProvider);
 		}
 
 		private static RowFilterFactory CreateRowFilterFactory(

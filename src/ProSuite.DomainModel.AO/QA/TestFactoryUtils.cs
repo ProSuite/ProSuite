@@ -124,7 +124,7 @@ namespace ProSuite.DomainModel.AO.QA
 					continue;
 				}
 
-				if (! includeInternallyUsed && InstanceFactoryUtils.IsInternallyUsed(candidateType))
+				if (! includeInternallyUsed && InstanceUtils.IsInternallyUsed(candidateType))
 				{
 					continue;
 				}
@@ -154,7 +154,7 @@ namespace ProSuite.DomainModel.AO.QA
 					continue;
 				}
 
-				if (! includeInternallyUsed && InstanceFactoryUtils.IsInternallyUsed(candidateType))
+				if (! includeInternallyUsed && InstanceUtils.IsInternallyUsed(candidateType))
 				{
 					continue;
 				}

@@ -4,6 +4,7 @@ using System.Reflection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
+using ProSuite.QA.Core;
 
 namespace ProSuite.DomainModel.AO.QA.TestReport
 {
@@ -16,7 +17,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			       testFactoryType.Assembly,
 			       GetTestFactory(testFactoryType),
 			       InstanceFactoryUtils.IsObsolete(testFactoryType),
-			       InstanceFactoryUtils.IsInternallyUsed(testFactoryType))
+			       InstanceUtils.IsInternallyUsed(testFactoryType))
 		{
 			_testFactoryType = testFactoryType;
 		}

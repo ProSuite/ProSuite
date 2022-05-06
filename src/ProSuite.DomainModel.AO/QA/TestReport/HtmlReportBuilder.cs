@@ -7,6 +7,7 @@ using System.Text;
 using System.Xml;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Text;
 using ProSuite.Commons.Xml;
 using ProSuite.QA.Container;
 using ProSuite.QA.Core;
@@ -727,7 +728,8 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 
 			XmlElement categoryRow = CreateTableRow();
 			categoryRow.AppendChild(CreateTableCell("Categories:"));
-			categoryRow.AppendChild(CreateTableCell(test.GetCommaSeparatedCategories(), 2));
+			categoryRow.AppendChild(CreateTableCell(
+				                        StringUtils.ConcatenateSorted(test.Categories, ", "), 2));
 
 			_htmlTable.AppendChild(categoryRow);
 

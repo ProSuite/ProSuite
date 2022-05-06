@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Reflection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Reflection;
 using ProSuite.QA.Container;
 using ProSuite.QA.Core;
 
@@ -40,7 +39,7 @@ namespace ProSuite.DomainModel.AO.QA
 		public override string TestDescription =>
 			InstanceUtils.GetDescription(TestType, _constructorId);
 
-		public override string[] TestCategories => ReflectionUtils.GetCategories(TestType);
+		public override string[] TestCategories => InstanceUtils.GetCategories(TestType);
 
 		public override string GetTestTypeDescription()
 		{

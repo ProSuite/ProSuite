@@ -36,7 +36,7 @@ namespace ProSuite.DomainModel.AO.QA
 		public InstanceConfiguration Condition { get; set; }
 
 		[NotNull]
-		public override string[] TestCategories => ReflectionUtils.GetCategories(GetType());
+		public override string[] TestCategories => InstanceUtils.GetCategories(GetType());
 
 		[NotNull]
 		public IList<ITest> CreateTests([NotNull] IOpenDataset datasetContext)

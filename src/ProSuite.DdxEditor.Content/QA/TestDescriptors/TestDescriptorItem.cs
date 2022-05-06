@@ -224,7 +224,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 		{
 			return type.IsPublic &&
 			       ! type.IsAbstract &&
-			       ! InstanceFactoryUtils.IsInternallyUsed(type);
+			       ! InstanceUtils.IsInternallyUsed(type);
 		}
 
 		[CanBeNull]
@@ -233,29 +233,20 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 			return TestFactoryUtils.GetTestFactory(Assert.NotNull(GetEntity()));
 		}
 
-		[CanBeNull]
-		public string GetTestDescription([NotNull] out IList<string> categories)
-		{
-			TestFactory factory = GetTestFactory();
-
-			if (factory == null)
-			{
-				categories = new List<string>();
-				return string.Empty;
-			}
-
-			categories = new List<string>(factory.TestCategories);
-			return factory.TestDescription;
-		}
-
 		[NotNull]
-		public IList<TestParameter> GetTestParameters()
+		public IList<TestParameter> GetTestParameters([CanBeNull] out string description,
+		                                              [NotNull] out string[] categories)
 		{
 			TestFactory factory = GetTestFactory();
 			if (factory == null)
 			{
+				description = string.Empty;
+				categories = Array.Empty<string>();
 				return new List<TestParameter>();
 			}
+
+			description = factory.TestDescription;
+			categories = factory.TestCategories;
 
 			IList<TestParameter> testParameters = factory.Parameters;
 

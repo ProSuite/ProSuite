@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Reflection;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Container;
 using ProSuite.QA.Core;
@@ -52,7 +51,7 @@ namespace ProSuite.DomainModel.AO.QA
 			InstanceUtils.GetDescription(FilterType, _constructorId);
 
 		[NotNull]
-		public override string[] TestCategories => ReflectionUtils.GetCategories(GetType());
+		public override string[] TestCategories => InstanceUtils.GetCategories(FilterType);
 
 		public override string GetTestTypeDescription()
 		{

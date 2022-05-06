@@ -15,7 +15,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			       instanceType.Assembly,
 			       GetInstanceInfo(instanceType, constructorIndex),
 			       InstanceFactoryUtils.IsObsolete(instanceType, constructorIndex),
-			       InstanceFactoryUtils.IsInternallyUsed(instanceType, constructorIndex))
+			       InstanceUtils.IsInternallyUsed(instanceType, constructorIndex))
 		{
 			_instanceType = instanceType;
 			_constructorIndex = constructorIndex;

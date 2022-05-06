@@ -230,9 +230,9 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 			_textBoxTestDescription.Text = value;
 		}
 
-		public void RenderTestCategories(IList<string> testCategories)
+		public void RenderTestCategories(string[] categories)
 		{
-			_textBoxCategories.Text = StringUtils.ConcatenateSorted(testCategories, ", ");
+			_textBoxCategories.Text = StringUtils.ConcatenateSorted(categories, ", ");
 		}
 
 		public void RenderTestParameters(IEnumerable<TestParameter> testParameters)

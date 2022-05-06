@@ -7,6 +7,7 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Reflection;
+using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Core
 {
@@ -227,6 +228,38 @@ namespace ProSuite.QA.Core
 		public static string GetDescription([NotNull] PropertyInfo propertyInfo)
 		{
 			return ReflectionUtils.GetDescription(propertyInfo, inherit: false);
+		}
+
+		public static string[] GetCategories([NotNull] Type type)
+		{
+			return ReflectionUtils.GetCategories(type);
+		}
+
+		public static bool IsInternallyUsed([NotNull] Type type)
+		{
+			return HasInternallyUsedAttribute(type);
+		}
+
+		public static bool IsInternallyUsed([NotNull] Type type, int constructorId)
+		{
+			Assert.ArgumentNotNull(type, nameof(type));
+
+			if (HasInternallyUsedAttribute(type))
+			{
+				return true;
+			}
+
+			AssertConstructorExists(type, constructorId);
+
+			ConstructorInfo constructor = type.GetConstructors()[constructorId];
+
+			return HasInternallyUsedAttribute(constructor);
+		}
+
+		public static bool HasInternallyUsedAttribute(
+			[NotNull] ICustomAttributeProvider attributeProvider)
+		{
+			return ReflectionUtils.HasAttribute<InternallyUsedTestAttribute>(attributeProvider);
 		}
 
 		[NotNull]

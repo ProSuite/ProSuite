@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Reflection;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Container;
 using ProSuite.QA.Core;
@@ -47,7 +46,7 @@ namespace ProSuite.DomainModel.AO.QA
 		public override string TestDescription =>
 			InstanceUtils.GetDescription(TransformerType, _constructorId);
 
-		public override string[] TestCategories => ReflectionUtils.GetCategories(GetType());
+		public override string[] TestCategories => InstanceUtils.GetCategories(TransformerType);
 
 		public override string GetTestTypeDescription()
 		{

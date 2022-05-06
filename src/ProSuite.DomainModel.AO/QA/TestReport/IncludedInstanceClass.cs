@@ -5,6 +5,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Reflection;
 using ProSuite.Commons.Text;
 using ProSuite.QA.Container;
+using ProSuite.QA.Core;
 
 namespace ProSuite.DomainModel.AO.QA.TestReport
 {
@@ -19,8 +20,8 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			: base(GetTitle(instanceType),
 			       instanceType.Assembly,
 			       InstanceFactoryUtils.IsObsolete(instanceType),
-			       InstanceFactoryUtils.IsInternallyUsed(instanceType),
-			       ReflectionUtils.GetCategories(instanceType))
+			       InstanceUtils.IsInternallyUsed(instanceType),
+			       InstanceUtils.GetCategories(instanceType))
 		{
 			Assert.ArgumentNotNull(instanceType, nameof(instanceType));
 
