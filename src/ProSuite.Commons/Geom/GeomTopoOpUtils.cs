@@ -244,6 +244,37 @@ namespace ProSuite.Commons.Geom
 			return resultXY.SelectMany(r => GetConnectedComponents(r, tolerance)).ToList();
 		}
 
+		public static Polyhedron GetDifferenceAreasXY(
+			[NotNull] Polyhedron sourcePolyhedron,
+			[NotNull] Polyhedron targetPolyhedron,
+			double tolerance,
+			ChangeAlongZSource zSource = ChangeAlongZSource.Target)
+		{
+			// Because the source rings of polyhedra can touch (along lines) and even interior-intersect,
+			// we cannot use the standard ring navigation. Each ring must be processed individually.
+
+			var resultRingGroups = new List<RingGroup>();
+			foreach (RingGroup ringGroup in sourcePolyhedron.RingGroups)
+			{
+				// TODO: Spatial index on the full target polyhedron, so we could calculate the intersection
+				//       points only once.
+
+				MultiLinestring perRingResult =
+					GetDifferenceAreasXY(ringGroup, targetPolyhedron, tolerance, zSource);
+
+				if (! perRingResult.IsEmpty)
+				{
+					foreach (RingGroup resultRing in
+					         GetConnectedComponents(perRingResult, tolerance))
+					{
+						resultRingGroups.Add(resultRing);
+					}
+				}
+			}
+
+			return new Polyhedron(resultRingGroups);
+		}
+
 		public static MultiLinestring GetDifferenceAreasXY(
 			[NotNull] MultiLinestring sourceRings,
 			[NotNull] Polyhedron targetPolyhedron,
@@ -258,6 +289,11 @@ namespace ProSuite.Commons.Geom
 			int count = 0;
 			foreach (var targetRingGroup in targetPolyhedron.RingGroups)
 			{
+				if (GeomRelationUtils.AreBoundsDisjoint(sourceRings, targetRingGroup, tolerance))
+				{
+					continue;
+				}
+
 				result = GetDifferenceAreasXY(result, targetRingGroup, tolerance, zSource);
 
 				if (result.IsEmpty)
@@ -295,6 +331,47 @@ namespace ProSuite.Commons.Geom
 				}, tolerance, zSource);
 
 			return result;
+		}
+
+		public static Polyhedron GetIntersectionAreasXY(
+			[NotNull] Polyhedron sourcePolyhedron,
+			[NotNull] Polyhedron targetPolyhedron,
+			double tolerance,
+			ChangeAlongZSource zSource = ChangeAlongZSource.Target)
+		{
+			// Because the source rings of polyhedra can touch (along lines) and even interior-intersect,
+			// we cannot use the standard ring navigation. Each ring must be processed individually.
+
+			var resultRingGroups = new List<RingGroup>();
+			foreach (RingGroup sourceRingGroup in sourcePolyhedron.RingGroups)
+			{
+				if (GeomRelationUtils.AreBoundsDisjoint(sourceRingGroup, targetPolyhedron,
+				                                        tolerance))
+				{
+					continue;
+				}
+
+				// TODO: Spatial index on the full target polyhedron, so we could calculate the intersection
+				//       points only once.
+
+				IList<IntersectionArea3D> perRingResult =
+					GetIntersectionAreasXY(sourceRingGroup, targetPolyhedron, tolerance, zSource);
+
+				foreach (MultiLinestring intersectionArea in perRingResult.Select(
+					         i => i.IntersectionArea))
+				{
+					if (! intersectionArea.IsEmpty)
+					{
+						foreach (RingGroup resultRing in
+						         GetConnectedComponents(intersectionArea, tolerance))
+						{
+							resultRingGroups.Add(resultRing);
+						}
+					}
+				}
+			}
+
+			return new Polyhedron(resultRingGroups);
 		}
 
 		public static IList<IntersectionArea3D> GetIntersectionAreasXY(
