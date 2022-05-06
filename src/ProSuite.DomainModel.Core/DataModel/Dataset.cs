@@ -38,7 +38,7 @@ namespace ProSuite.DomainModel.Core.DataModel
 
 		public virtual string TypeDescription => "Abstract Dataset";
 
-		public override string DisplayName => AliasName;
+		public override string DisplayName => AliasName ?? Name;
 
 		[Required]
 		public string Abbreviation
