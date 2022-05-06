@@ -31,10 +31,7 @@ namespace ProSuite.QA.TestFactories
 			return nameof(QaTopoNotNear);
 		}
 
-		public override string GetTestDescription()
-		{
-			return DocStrings.QaTopoNotNearPolyFactory;
-		}
+		public override string TestDescription => DocStrings.QaTopoNotNearPolyFactory;
 
 		public const string FeatureClassParamName = "featureClass";
 		public const string ReferenceParamName = "reference";

@@ -49,10 +49,7 @@ namespace ProSuite.QA.TestFactories
 			return list.AsReadOnly();
 		}
 
-		public override string GetTestDescription()
-		{
-			return DocStrings.QaRelMustBeNearOther;
-		}
+		public override string TestDescription => DocStrings.QaRelMustBeNearOther;
 
 		protected override object[] Args(IOpenDataset datasetContext,
 		                                 IList<TestParameter> testParameters,

@@ -22,6 +22,8 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 		[NotNull]
 		public IInstanceInfo InstanceInfo { get; }
 
-		public override string Description => InstanceInfo.GetTestDescription();
+		public override string Description => InstanceInfo.TestDescription;
+
+		public override string IndexTooltip => InstanceInfo.TestDescription;
 	}
 }

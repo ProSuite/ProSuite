@@ -14,8 +14,6 @@ namespace ProSuite.DomainModel.AO.QA
 		[UsedImplicitly] [NotNull] private readonly Type _testType;
 		[UsedImplicitly] private readonly int _constructorId;
 
-		#region Constructors
-
 		public DefaultTestFactory([NotNull] Type type, int constructorId = 0)
 		{
 			Assert.ArgumentNotNull(type, nameof(type));
@@ -36,21 +34,24 @@ namespace ProSuite.DomainModel.AO.QA
 			_constructorId = constructorId;
 		}
 
-		#endregion
+		[NotNull]
+		protected Type TestType => _testType;
+
+		public override string TestDescription =>
+			InstanceUtils.GetDescription(TestType, _constructorId);
+
+		public override string[] TestCategories => ReflectionUtils.GetCategories(TestType);
 
 		public override string GetTestTypeDescription()
 		{
 			return TestType.Name;
 		}
 
-		[NotNull]
-		protected Type TestType => _testType;
-
 		public T CreateInstance<T>(IOpenDataset context)
 			where T : IInvolvesTables
 		{
 			IList<T> created = Create(context, Parameters,
-			                          args => new[] {CreateInstance<T>(args)});
+			                          args => new[] { CreateInstance<T>(args) });
 			return created[0];
 		}
 
@@ -67,15 +68,6 @@ namespace ProSuite.DomainModel.AO.QA
 		protected override IList<TestParameter> CreateParameters()
 		{
 			return InstanceUtils.CreateParameters(TestType, _constructorId);
-		}
-
-		public override string[] TestCategories => ReflectionUtils.GetCategories(TestType);
-
-		public override string GetTestDescription()
-		{
-			ConstructorInfo ctor = TestType.GetConstructors()[_constructorId];
-
-			return InstanceUtils.GetDescription(ctor);
 		}
 
 		public override string GetParameterDescription(string parameterName)

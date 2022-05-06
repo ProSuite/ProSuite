@@ -44,14 +44,8 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			return new InstanceInfo(instanceType, constructorIndex);
 		}
 
-		#region Overrides of IncludedTestBase
-
 		public override string Key =>
 			string.Format("{0}:{1}", _instanceType.FullName, ConstructorIndex);
-
-		public override string IndexTooltip => InstanceInfo.GetTestDescription();
-
-		#endregion
 
 		#region IComparable<IncludedTestConstructor> Members
 

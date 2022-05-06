@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using ESRI.ArcGIS.Geodatabase;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Tests;
@@ -18,10 +17,7 @@ namespace ProSuite.QA.TestFactories
 	{
 		[NotNull]
 		[UsedImplicitly]
-		public static ITestIssueCodes Codes
-		{
-			get { return QaConnections.Codes; }
-		}
+		public static ITestIssueCodes Codes => QaConnections.Codes;
 
 		public override string GetTestTypeDescription()
 		{
@@ -39,10 +35,7 @@ namespace ProSuite.QA.TestFactories
 			return list.AsReadOnly();
 		}
 
-		public override string GetTestDescription()
-		{
-			return DocStrings.QaDangleFactory;
-		}
+		public override string TestDescription => DocStrings.QaDangleFactory;
 
 		protected override object[] Args(
 			[NotNull] IOpenDataset datasetContext,

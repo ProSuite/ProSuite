@@ -64,7 +64,7 @@ namespace ProSuite.QA.Core
 				       ? string.Format("[{0}]", testParameter.Name)
 				       : testParameter.Name;
 		}
-		
+
 		[NotNull]
 		public static string GetParameterTypeString([NotNull] TestParameter testParameter)
 		{
@@ -208,9 +208,13 @@ namespace ProSuite.QA.Core
 		}
 
 		[CanBeNull]
-		public static string GetDescription([NotNull] ConstructorInfo constructorInfo)
+		public static string GetDescription([NotNull] Type type, int constructorId)
 		{
-			return ReflectionUtils.GetDescription(constructorInfo);
+			AssertConstructorExists(type, constructorId);
+
+			ConstructorInfo constructor = type.GetConstructors()[constructorId];
+
+			return ReflectionUtils.GetDescription(constructor);
 		}
 
 		[CanBeNull]

@@ -188,7 +188,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			sb.AppendLine($"    @classmethod");
 			sb.AppendLine($"    def {methodName}({methodSignature}) -> Condition:");
 			sb.AppendLine($"        \"\"\"");
-			sb.AppendLine($"        {factory.GetTestDescription()}        \"\"\"");
+			sb.AppendLine($"        {factory.TestDescription ?? string.Empty}        \"\"\"");
 			sb.AppendLine($"        result = Condition({conditionConstructorSignature})");
 
 			foreach (TestParameter testParameter in factory.Parameters)

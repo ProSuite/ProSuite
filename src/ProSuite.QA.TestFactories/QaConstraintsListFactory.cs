@@ -26,15 +26,10 @@ namespace ProSuite.QA.TestFactories
 
 		[NotNull]
 		[UsedImplicitly]
-		public static ITestIssueCodes Codes
-		{
-			get { return QaConstraint.Codes; }
-		}
+		public static ITestIssueCodes Codes => QaConstraint.Codes;
 
-		public override string GetTestDescription()
-		{
-			return DocStrings.QaConstraintsListFactory;
-		}
+		public override string TestDescription => DocStrings.QaConstraintsListFactory;
+	
 
 		protected override IList<TestParameter> CreateParameters()
 		{

@@ -19,10 +19,7 @@ namespace ProSuite.QA.TestFactories
 	{
 		[NotNull]
 		[UsedImplicitly]
-		public static ITestIssueCodes Codes
-		{
-			get { return QaMaxSlope.Codes; }
-		}
+		public static ITestIssueCodes Codes => QaMaxSlope.Codes;
 
 		private IList<TestParameter> _parameters;
 
@@ -31,10 +28,7 @@ namespace ProSuite.QA.TestFactories
 			return typeof(QaMaxSlope).Name;
 		}
 
-		public override string GetTestDescription()
-		{
-			return DocStrings.QaMaxSlopeFactory;
-		}
+		public override string TestDescription => DocStrings.QaMaxSlopeFactory;
 
 		protected override IList<TestParameter> CreateParameters()
 		{

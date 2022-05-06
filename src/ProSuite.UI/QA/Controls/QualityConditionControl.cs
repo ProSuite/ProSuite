@@ -126,7 +126,7 @@ namespace ProSuite.UI.QA.Controls
 
 				description = instanceInfo == null
 					              ? string.Empty
-					              : instanceInfo.GetTestDescription();
+					              : instanceInfo.TestDescription;
 			}
 			else
 			{

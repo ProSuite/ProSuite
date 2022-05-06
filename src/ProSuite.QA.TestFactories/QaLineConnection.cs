@@ -20,20 +20,14 @@ namespace ProSuite.QA.TestFactories
 	{
 		[NotNull]
 		[UsedImplicitly]
-		public static ITestIssueCodes Codes
-		{
-			get { return QaConnections.Codes; }
-		}
+		public static ITestIssueCodes Codes => QaConnections.Codes;
 
 		public override string GetTestTypeDescription()
 		{
 			return typeof(QaConnections).Name;
 		}
 
-		public override string GetTestDescription()
-		{
-			return DocStrings.QaLineConnection;
-		}
+		public override string TestDescription => DocStrings.QaLineConnection;
 
 		protected override IList<TestParameter> CreateParameters()
 		{

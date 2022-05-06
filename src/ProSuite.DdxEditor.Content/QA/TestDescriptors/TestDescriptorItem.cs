@@ -245,7 +245,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 			}
 
 			categories = new List<string>(factory.TestCategories);
-			return factory.GetTestDescription();
+			return factory.TestDescription;
 		}
 
 		[NotNull]

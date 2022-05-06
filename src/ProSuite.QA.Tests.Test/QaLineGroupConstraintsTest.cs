@@ -834,7 +834,7 @@ namespace ProSuite.QA.Tests.Test
 					fact.Parameters.Count,
 					condition.ParameterValues.Count - 1); // 'relationTables' exists twice
 
-				Assert.IsNotNull(fact.GetTestDescription(), "Description");
+				Assert.IsNotNull(fact.TestDescription, "Description");
 				foreach (TestParameter parameter in fact.Parameters)
 				{
 					Assert.IsNotNull(fact.GetParameterDescription(parameter.Name),

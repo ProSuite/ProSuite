@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Reflection;
@@ -35,6 +34,14 @@ namespace ProSuite.QA.Core
 			_constructorId = constructorId;
 		}
 
+		[NotNull]
+		public Type InstanceType => _instanceType;
+
+		public override string TestDescription =>
+			InstanceUtils.GetDescription(InstanceType, _constructorId);
+
+		public override string[] TestCategories => ReflectionUtils.GetCategories(InstanceType);
+
 		public override string GetTestTypeDescription()
 		{
 			return InstanceType.Name;
@@ -43,18 +50,6 @@ namespace ProSuite.QA.Core
 		protected override IList<TestParameter> CreateParameters()
 		{
 			return InstanceUtils.CreateParameters(InstanceType, _constructorId);
-		}
-
-		[NotNull]
-		private Type InstanceType => _instanceType;
-
-		public override string[] TestCategories => ReflectionUtils.GetCategories(InstanceType);
-
-		public override string GetTestDescription()
-		{
-			ConstructorInfo ctor = InstanceType.GetConstructors()[_constructorId];
-
-			return InstanceUtils.GetDescription(ctor);
 		}
 
 		public override string ToString()

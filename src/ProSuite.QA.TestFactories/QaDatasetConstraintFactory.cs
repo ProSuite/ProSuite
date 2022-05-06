@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using ESRI.ArcGIS.Geodatabase;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Tests;
@@ -26,10 +25,7 @@ namespace ProSuite.QA.TestFactories
 		[UsedImplicitly]
 		public static ITestIssueCodes Codes => QaConstraint.Codes;
 
-		public override string GetTestDescription()
-		{
-			return DocStrings.QaDatasetConstraintFactory;
-		}
+		public override string TestDescription => DocStrings.QaDatasetConstraintFactory;
 
 		protected override IList<TestParameter> CreateParameters()
 		{

@@ -38,12 +38,6 @@ namespace ProSuite.DomainModel.AO.QA
 		[NotNull]
 		public override string[] TestCategories => ReflectionUtils.GetCategories(GetType());
 
-		[CanBeNull]
-		public override string GetTestDescription()
-		{
-			return null;
-		}
-
 		[NotNull]
 		public IList<ITest> CreateTests([NotNull] IOpenDataset datasetContext)
 		{

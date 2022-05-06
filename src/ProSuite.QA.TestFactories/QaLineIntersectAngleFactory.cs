@@ -28,10 +28,7 @@ namespace ProSuite.QA.TestFactories
 			return list;
 		}
 
-		public override string GetTestDescription()
-		{
-			return DocStrings.QaLineIntersectAngleFactory;
-		}
+		public override string TestDescription => DocStrings.QaLineIntersectAngleFactory;
 
 		protected override ContainerTest CreateAngleTest(object[] args)
 		{

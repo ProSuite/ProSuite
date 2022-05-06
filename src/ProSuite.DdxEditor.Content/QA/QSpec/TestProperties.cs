@@ -21,7 +21,7 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 				TestFactory testFactory = TestFactoryUtils.GetTestFactory(testDescriptor);
 
 				Signature = InstanceUtils.GetTestSignature(testFactory);
-				Description = testFactory.GetTestDescription() ?? string.Empty;
+				Description = testFactory.TestDescription ?? string.Empty;
 			}
 			catch (TypeLoadException e)
 			{

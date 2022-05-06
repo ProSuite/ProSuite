@@ -16,10 +16,7 @@ namespace ProSuite.QA.TestFactories
 	{
 		[NotNull]
 		[UsedImplicitly]
-		public static ITestIssueCodes Codes
-		{
-			get { return QaUnique.Codes; }
-		}
+		public static ITestIssueCodes Codes => QaUnique.Codes;
 
 		public override string GetTestTypeDescription()
 		{
@@ -50,10 +47,7 @@ namespace ProSuite.QA.TestFactories
 			return list.AsReadOnly();
 		}
 
-		public override string GetTestDescription()
-		{
-			return DocStrings.QaRelUnique;
-		}
+		public override string TestDescription => DocStrings.QaRelUnique;
 
 		protected override object[] Args(IOpenDataset datasetContext,
 		                                 IList<TestParameter> testParameters,

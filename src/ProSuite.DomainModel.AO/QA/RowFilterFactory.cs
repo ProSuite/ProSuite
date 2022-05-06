@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Reflection;
@@ -46,19 +45,14 @@ namespace ProSuite.DomainModel.AO.QA
 			_constructorId = constructorId;
 		}
 
+		[NotNull]
 		public Type FilterType => _filterType;
 
-		#region InstanceInfoBase overrides
+		public override string TestDescription =>
+			InstanceUtils.GetDescription(FilterType, _constructorId);
 
 		[NotNull]
 		public override string[] TestCategories => ReflectionUtils.GetCategories(GetType());
-
-		public override string GetTestDescription()
-		{
-			ConstructorInfo ctor = FilterType.GetConstructors()[_constructorId];
-
-			return InstanceUtils.GetDescription(ctor);
-		}
 
 		public override string GetTestTypeDescription()
 		{
@@ -69,8 +63,6 @@ namespace ProSuite.DomainModel.AO.QA
 		{
 			return InstanceUtils.CreateParameters(FilterType, _constructorId);
 		}
-
-		#endregion
 
 		[NotNull]
 		public IRowFilter Create([NotNull] IOpenDataset datasetContext,
