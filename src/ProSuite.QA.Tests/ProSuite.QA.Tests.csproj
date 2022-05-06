@@ -134,8 +134,6 @@
     <None Include="Documentation\en\EsriCH.QA.Tests.QuickReference_en.pdf" />
     <None Include="Documentation\en\SQLSyntax_en.docx" />
     <None Include="Documentation\en\SQLSyntax_en.pdf" />
-    <None Include="Documentation\Extended\de\QaFactoryPseudoNodes.docx" />
-    <None Include="Documentation\Extended\de\QaFactoryPseudoNodes.pdf" />
     <None Include="Documentation\Extended\de\QaFlowLogic.docx" />
     <None Include="Documentation\Extended\de\QaFlowLogic.pdf" />
     <None Include="Documentation\Extended\de\QaLineConnection.docx" />

@@ -142,24 +142,6 @@ Remark: The feature classes in 'polylineClasses' must have the same spatial refe
   <data name="QaDatasetConstraintFactory_table" xml:space="preserve">
     <value>table to check</value>
   </data>
-  <data name="QaFactoryPseudoNodes" xml:space="preserve">
-    <value>Finds pseudo nodes: Finds all endpoints in 'polylineClasses', that correspond to exactly 2 From-/To-points of 'polylineClasses', where:
-- the two involved features belong to the same feature class, 
-- the attributes values of the involved features do not differ,
-- they are not separated by a point out of 'validPseudoNodes'
-Remark: All feature classes in 'polylineClasses' and 'validPseudoNodes' must have the same spatial reference</value>
-  </data>
-  <data name="QaFactoryPseudoNodes_ignoreFields" xml:space="preserve">
-    <value>fields that are not checked for equality (not editable fields are ignored by default).
-For each feature class in 'polylineClasses', the ignore fields must be defined.
-The sort order must correspond with 'polylineClasses'. The ignoreFields of the layers are separated and must be ended by an ignoreFields value '-'.</value>
-  </data>
-  <data name="QaFactoryPseudoNodes_polylineClasses" xml:space="preserve">
-    <value>polyline feature classes</value>
-  </data>
-  <data name="QaFactoryPseudoNodes_validPseudoNodes" xml:space="preserve">
-    <value>feature classes containing point, line or polygon features to indicate valid pseudo nodes. Pseudo nodes are valid, if they lie on a point, a polyline or a polygon border of 'validPseudoNodes'.</value>
-  </data>
   <data name="QaGdbConstraintFactory" xml:space="preserve">
     <value>Finds all rows in 'table' that do not fulfill the attribute rules that are defined in the geodatabase</value>
   </data>
@@ -328,9 +310,6 @@ InsideBranches (4): A branch toward the inside of a circular area may exist</val
   </data>
   <data name="QaConstraintsListFactory_table" xml:space="preserve">
     <value>The table to verify</value>
-  </data>
-  <data name="QaFactoryPseudoNodes_IgnoreLoopEndpoints" xml:space="preserve">
-    <value>Indicates if end points of closed lines which are not connected to another line should be ignored.</value>
   </data>
   <data name="QaRelLineGroupConstraints" xml:space="preserve">
     <value>Find errors in checking if connected polylines of a joined table with same attributes related to 'groupBy' meet the conditions defined by the parameters</value>
