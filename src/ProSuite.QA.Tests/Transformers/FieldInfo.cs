@@ -1,7 +1,3 @@
-using System.Collections.Generic;
-using ESRI.ArcGIS.Geodatabase;
-using ProSuite.Commons.AO.Geodatabase;
-
 namespace ProSuite.QA.Tests.Transformers
 {
 	public class FieldInfo

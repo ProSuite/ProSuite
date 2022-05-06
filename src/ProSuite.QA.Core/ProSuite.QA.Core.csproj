@@ -32,4 +32,18 @@
     <ProjectReference Include="..\ProSuite.Commons.Logging\ProSuite.Commons.Logging.csproj" />
     <ProjectReference Include="..\ProSuite.Commons\ProSuite.Commons.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <Compile Update="TestCategories\TestCategoryNames.Designer.cs">
+      <DependentUpon>TestCategoryNames.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Update="TestCategories\TestCategoryNames.resx">
+      <SubType>Designer</SubType>
+      <LastGenOutput>TestCategoryNames.Designer.cs</LastGenOutput>
+      <Generator>ResXFileCodeGenerator</Generator>
+    </EmbeddedResource>
+  </ItemGroup>
 </Project>

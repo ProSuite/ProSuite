@@ -9,8 +9,8 @@ using ProSuite.Commons.Reflection;
 using ProSuite.DomainModel.Core;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Core;
+using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.DomainModel.AO.QA
 {

@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Drawing;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Progress;
 using ProSuite.DomainModel.AO.DataModel;

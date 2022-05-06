@@ -1,6 +1,6 @@
 using System.ComponentModel;
 
-namespace ProSuite.QA.Container.TestCategories
+namespace ProSuite.QA.Core.TestCategories
 {
 	public class AttributeTestAttribute : CategoryAttribute
 	{

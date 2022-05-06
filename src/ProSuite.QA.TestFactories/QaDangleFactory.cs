@@ -2,12 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Tests;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.QA.Core;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.TestFactories
 {

@@ -1,7 +1,7 @@
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Globalization;
 
-namespace ProSuite.QA.Container.TestCategories
+namespace ProSuite.QA.Core.TestCategories
 {
 	public class TestCategoryAttribute : LocalizedCategoryAttribute
 	{
