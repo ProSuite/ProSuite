@@ -527,8 +527,16 @@ namespace ProSuite.Commons.Geom
 			IList<IntersectionPoint3D> intersectionPoints = null,
 			int? filterTargetByPartIndex = null)
 		{
-			Assert.False(closedPolycurve.IsEmpty, "Input containing polygon is empty.");
-			Assert.False(targetSegments.IsEmpty, "Input contained curve is empty.");
+			if (closedPolycurve.IsEmpty)
+			{
+				return false;
+			}
+
+			if (targetSegments.IsEmpty)
+			{
+				return true;
+			}
+
 			Assert.True(closedPolycurve.IsClosed, "Input containing polygon is not closed.");
 
 			if (AreBoundsDisjoint(closedPolycurve, targetSegments, tolerance))
@@ -702,8 +710,16 @@ namespace ProSuite.Commons.Geom
 			IList<IntersectionPoint3D> intersectionPoints = null,
 			int? filterSourceByPartIndex = null)
 		{
-			Assert.False(contained.IsEmpty, "Input containing polygon is empty.");
-			Assert.False(withinClosedPolycurve.IsEmpty, "Input contained curve is empty.");
+			if (withinClosedPolycurve.IsEmpty)
+			{
+				return false;
+			}
+
+			if (contained.IsEmpty)
+			{
+				return true;
+			}
+
 			Assert.True(withinClosedPolycurve.IsClosed, "Input within-polygon is not closed.");
 
 			if (AreBoundsDisjoint(contained, withinClosedPolycurve, tolerance))

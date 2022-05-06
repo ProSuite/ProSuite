@@ -187,7 +187,7 @@ namespace ProSuite.DomainServices.AO.QA
 							break;
 
 						case Step.DataLoading:
-							var dataset = args.Tag as IDataset;
+							var dataset = args.Tag as IReadOnlyDataset;
 							_msg.DebugFormat("Loading data: {0}",
 							                 dataset == null
 								                 ? args.Tag

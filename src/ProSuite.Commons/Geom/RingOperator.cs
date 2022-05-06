@@ -95,7 +95,8 @@ namespace ProSuite.Commons.Geom
 			Assert.ArgumentCondition(_subcurveNavigator.Source.IsClosed, "Source must be closed.");
 			Assert.ArgumentCondition(_subcurveNavigator.Target.IsClosed, "Target must be closed.");
 
-			IList<Linestring> processedRingsResult = GetBothSideRings();
+			IList<Linestring> processedRingsResult =
+				_subcurveNavigator.FollowSubcurvesTurningLeft();
 
 			List<Linestring> equalRingSelection = GetRingsEqualOtherRing();
 
@@ -156,6 +157,8 @@ namespace ProSuite.Commons.Geom
 			// Based on Weiler–Atherton clipping algorithm, added specific logic for
 			// linear intersections, un-closed target lines and multi-parts.
 			// Potential enhancements: Do not insert phantom points!
+
+			_subcurveNavigator.PrepareForCutOperation();
 
 			IList<Linestring> rightRings = GetRightSideRings();
 			IList<Linestring> leftRings = GetLeftSideRings();
@@ -259,7 +262,10 @@ namespace ProSuite.Commons.Geom
 		{
 			Assert.ArgumentCondition(_subcurveNavigator.Source.IsClosed, "source must be closed.");
 
-			// Based on Weiler–Atherton clipping algorithm, added specific logic for linear intersections.
+			// Based on Weiler–Atherton clipping algorithm, with added logic for extra features,
+			// such as Z-value selection, linear intersections, avoiding duplicate rings in cut.
+
+			_subcurveNavigator.PrepareForCutOperation();
 
 			rightRings = GetRightSideRings();
 			leftRings = GetLeftSideRings();
@@ -462,29 +468,6 @@ namespace ProSuite.Commons.Geom
 			return duplicates;
 		}
 
-		/// <summary>
-		/// Returns the 'union' of the intersecting input rings, i.e. following the subcurves
-		/// by using a left turn at intersections.
-		/// </summary>
-		/// <returns></returns>
-		private IList<Linestring> GetBothSideRings()
-		{
-			SubcurveNavigator.TurnDirection originalTurnDirection =
-				_subcurveNavigator.PreferredTurnDirection;
-
-			try
-			{
-				_subcurveNavigator.PreferredTurnDirection = SubcurveNavigator.TurnDirection.Left;
-
-				return _subcurveNavigator.FollowSubcurvesClockwise(
-					_subcurveNavigator.IntersectionsInboundTarget.ToList());
-			}
-			finally
-			{
-				_subcurveNavigator.PreferredTurnDirection = originalTurnDirection;
-			}
-		}
-
 		private IList<Linestring> GetLeftSideRings(bool includeEqualRings = false,
 		                                           bool includeNotContained = false)
 		{
@@ -494,7 +477,7 @@ namespace ProSuite.Commons.Geom
 			if (includeEqualRings || includeNotContained)
 			{
 				foreach (Linestring uncutSourceRing in
-				         _subcurveNavigator.GetUncutSourceRings(includeEqualRings, false,
+				         _subcurveNavigator.GetUncutSourceParts(includeEqualRings, false,
 				                                                false, includeNotContained))
 				{
 					result.Add(uncutSourceRing);
@@ -516,7 +499,7 @@ namespace ProSuite.Commons.Geom
 			}
 
 			foreach (Linestring uncutSourceRing in
-			         _subcurveNavigator.GetUncutSourceRings(
+			         _subcurveNavigator.GetUncutSourceParts(
 				         includeEqualRings, true,
 				         includeContainedSourceRings, false))
 			{
@@ -587,33 +570,18 @@ namespace ProSuite.Commons.Geom
 		{
 			var result = new List<Linestring>();
 
-			// W.r.t. AreaContainsXY returning null: if the start point is on the boundary there
-			// are duplicate rings which need to be identified elsewhere.
-			ISegmentList target = _subcurveNavigator.Target;
-			foreach (Linestring ring in _subcurveNavigator.GetNonIntersectedSourceRings()
-			                                              .Where(r => ringPredicate(r)))
+			foreach (Linestring extraSourceRing in
+			         _subcurveNavigator.GetUncutSourceParts(false, false, false, true)
+			                           .Where(r => ringPredicate(r)))
 			{
-				bool? contains = GeomRelationUtils.AreaContainsXY(
-					target, ring.StartPoint, _subcurveNavigator.Tolerance);
-
-				if (contains == false)
-				{
-					// disjoint
-					result.Add(ring);
-				}
+				result.Add(extraSourceRing);
 			}
 
-			ISegmentList source = _subcurveNavigator.Source;
-			foreach (Linestring ring in _subcurveNavigator.GetNonIntersectedTargets()
-			                                              .Where(r => ringPredicate(r)))
+			foreach (Linestring extraTargetRing in _subcurveNavigator
+			                                       .GetTargetRingsCompletelyOutsideSource()
+			                                       .Where(r => ringPredicate(r)))
 			{
-				bool? contains = GeomRelationUtils.AreaContainsXY(
-					source, ring.StartPoint, _subcurveNavigator.Tolerance);
-
-				if (contains == false)
-				{
-					result.Add(ring);
-				}
+				result.Add(extraTargetRing);
 			}
 
 			return result;
