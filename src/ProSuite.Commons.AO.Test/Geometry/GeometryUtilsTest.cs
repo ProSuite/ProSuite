@@ -2800,6 +2800,13 @@ namespace ProSuite.Commons.AO.Test.Geometry
 
 			Assert.IsTrue(((IPointCollection) clone).PointCount ==
 			              ((IPointCollection) clone2).PointCount);
+
+			// Compare with new per-segment method:
+			int linearizedSegmentCount =
+				GeometryUtils.GetLinearizedSegments((ISegmentCollection) clone, 0.01)
+				             .Count();
+
+			Assert.AreEqual(((IPointCollection) clone2).PointCount, linearizedSegmentCount + 1);
 		}
 
 		[Test]
@@ -2832,6 +2839,40 @@ namespace ProSuite.Commons.AO.Test.Geometry
 			double zMiddle = ((IPointCollection) arcPolyline).get_Point(middlePointIdx).Z;
 
 			Assert.IsTrue(599 < zMiddle && zMiddle < 601, "Zs not properly interpolated");
+		}
+
+		[Test]
+		public void CanLinearizeSmallNonLinearSegments()
+		{
+			string testGeometryPath =
+				TestUtils.GetGeometryTestDataPath("PolylineWithLinearArcs.xml");
+			IPolyline polyline = (IPolyline) GeometryUtils.FromXmlFile(testGeometryPath);
+
+			IPolyline clone = GeometryFactory.Clone(polyline);
+			double maxAllowableOffset = 0.005;
+
+			GeometryUtils.Linearize(clone, maxAllowableOffset);
+
+			// Compare with new per-segment method. Linear arcs must be handled specifically!
+			var linearizedSegments =
+				GeometryUtils.GetLinearizedSegments(
+					             (ISegmentCollection) polyline, maxAllowableOffset)
+				             .ToList();
+
+			IPolyline linearizedPolyline = GeometryFactory.CreateEmptyPolyline(polyline);
+
+			object missing = Type.Missing;
+			foreach (ILine line in linearizedSegments)
+			{
+				((ISegmentCollection) linearizedPolyline).AddSegment(
+					(ISegment) line, ref missing, ref missing);
+			}
+
+			// NOTE: GetLinearizedSegments() is presumably way too conservative. Generalize it:
+
+			linearizedPolyline.Generalize(maxAllowableOffset);
+
+			Assert.AreEqual(596, GeometryUtils.GetPointCount(linearizedPolyline));
 		}
 
 		[Test]
