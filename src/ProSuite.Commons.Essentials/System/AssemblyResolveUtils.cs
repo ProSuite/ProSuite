@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Reflection;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -12,7 +12,7 @@ namespace ProSuite.Commons.Essentials.System
 		[ThreadStatic] private static bool _loadingAssembly;
 
 		/// <summary>
-		/// Tries the load an assembly given the name (as reported by a <see cref="ResolveEventArgs"></see> instance
+		/// Tries to load an assembly given the name (as reported by a <see cref="ResolveEventArgs"></see> instance
 		/// when handling an <see cref="AppDomain.AssemblyResolve"></see> event) and a codebase path.
 		/// </summary>
 		/// <param name="name">The assembly name.</param>
@@ -36,7 +36,7 @@ namespace ProSuite.Commons.Essentials.System
 
 				TryLog(logMethod, "Attempting to load assembly '{0}' from codebase '{1}'",
 				       name, codeBase);
-				var assemblyName = new AssemblyName(name) {CodeBase = codeBase};
+				var assemblyName = new AssemblyName(name) { CodeBase = codeBase };
 
 				return Assembly.Load(assemblyName);
 			}
@@ -51,16 +51,11 @@ namespace ProSuite.Commons.Essentials.System
 			}
 		}
 
-		private static void TryLog([CanBeNull] LogMethod logMethod,
-		                           [NotNull] string format,
+		[StringFormatMethod("format")]
+		private static void TryLog([CanBeNull] LogMethod logMethod, [NotNull] string format,
 		                           params object[] args)
 		{
-			if (logMethod == null)
-			{
-				return;
-			}
-
-			logMethod(string.Format(format, args));
+			logMethod?.Invoke(string.Format(format, args));
 		}
 	}
 }
