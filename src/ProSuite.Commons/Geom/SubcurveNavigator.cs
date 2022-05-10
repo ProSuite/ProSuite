@@ -169,6 +169,8 @@ namespace ProSuite.Commons.Geom
 			{
 				PreferredTurnDirection = TurnDirection.Left;
 
+				IntersectionPointNavigator.AllowBoundaryLoops = false;
+
 				IEnumerable<IntersectionPoint3D> startPoints =
 					IntersectionPointNavigator.IntersectionsOutboundSource;
 
@@ -177,6 +179,7 @@ namespace ProSuite.Commons.Geom
 			finally
 			{
 				PreferredTurnDirection = originalTurnDirection;
+				IntersectionPointNavigator.AllowBoundaryLoops = true;
 			}
 		}
 

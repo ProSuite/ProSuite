@@ -42,6 +42,8 @@ namespace ProSuite.Commons.Geom
 		/// </summary>
 		public bool AssumeSourceRings { get; set; } = true;
 
+		public bool AllowBoundaryLoops { get; set; } = true;
+
 		public ISegmentList Source { get; }
 		public ISegmentList Target { get; }
 		public double Tolerance { get; }
@@ -225,6 +227,7 @@ namespace ProSuite.Commons.Geom
 				// Example: GeomTopoOpUtilsTest.CanGetIntersectionAreaXYWithLinearBoundaryIntersection()
 			} while (SkipIntersection(subcurveStart, nextIntersection));
 
+			// Boundary loops that turned into interior rings could be detected here, if desired.
 			VisitedIntersections.Add(nextIntersection);
 
 			return nextIntersection;
@@ -546,7 +549,8 @@ namespace ProSuite.Commons.Geom
 				return false;
 			}
 
-			if (nextIntersection.Type == IntersectionPointType.TouchingInPoint &&
+			if (AllowBoundaryLoops &&
+			    nextIntersection.Type == IntersectionPointType.TouchingInPoint &&
 			    subcurveStartIntersection.SourcePartIndex != nextIntersection.SourcePartIndex &&
 			    ! IsUnclosedTargetEnd(nextIntersection))
 			{

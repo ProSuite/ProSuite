@@ -4027,6 +4027,32 @@ namespace ProSuite.Commons.Test.Geom
 		}
 
 		[Test]
+		public void CanUnionWithMultipleRingsTouchingInPointAndLine()
+		{
+			MultiPolycurve source = (MultiPolycurve) GeomUtils.FromWkbFile(
+				GetGeometryTestDataPath("union_multipart_touching_source.wkb"),
+				out WkbGeometryType wkbType);
+
+			Assert.AreEqual(WkbGeometryType.MultiPolygon, wkbType);
+
+			RingGroup target = (RingGroup) GeomUtils.FromWkbFile(
+				GetGeometryTestDataPath("union_multipart_touching_target.wkb"),
+				out wkbType);
+
+			Assert.AreEqual(WkbGeometryType.Polygon, wkbType);
+
+			MultiLinestring result = GeomTopoOpUtils.GetUnionAreasXY(source, target, 0.01);
+
+			// Currently a touching island is preferred to the boundary loop:
+			Assert.AreEqual(2, result.PartCount);
+
+			// Minus the remaining area of the intersected island
+			double expectedArea = source.GetArea2D() + target.GetArea2D();
+
+			Assert.AreEqual(expectedArea, result.GetArea2D(), 0.0001);
+		}
+
+		[Test]
 		public void CanIntersectXYSimpleRings()
 		{
 			var ring1 = new List<Pnt3D>
