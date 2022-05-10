@@ -1022,7 +1022,9 @@ namespace ProSuite.Commons.Geom
 			IList<IntersectionPoint3D> intersectionPoints = GeomTopoOpUtils.GetIntersectionPoints(
 				ring1, ring2, tolerance, allIntersections, false);
 
-			if (HasSourceCrossingIntersections(ring1, ring2, intersectionPoints, tolerance))
+			// Left/right determination cannot be used for vertical rings
+			if (! ring2CanHaveLinearSelfIntersections &&
+			    HasSourceCrossingIntersections(ring1, ring2, intersectionPoints, tolerance))
 			{
 				return false;
 			}
