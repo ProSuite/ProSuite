@@ -65,7 +65,12 @@ namespace ProSuite.Commons.Geom
 		public bool TargetEndIntersectsSourceVertex =>
 			TargetEndFactor == 0 || TargetEndFactor == 1;
 
-		public bool LinearIntersectionInOppositeDirection { get; private set; }
+		/// <summary>
+		/// In case a linear intersection exists: Whether the source and the target segments
+		/// run in the opposite direction or not.
+		/// NOTE: This property is unreliable for zero-length segments!
+		/// </summary>
+		public bool LinearIntersectionInOppositeDirection { get; set; }
 
 		/// <summary>
 		/// The factor (distance along the source segment as ratio) of the intersection point
@@ -298,7 +303,7 @@ namespace ProSuite.Commons.Geom
 				// -> Search accurate intersection point on the segments' interior
 				double thisFactor, otherFactor;
 				if (sourceLine.TryGetIntersectionPointFactorsXY(
-					targetLine, out thisFactor, out otherFactor))
+					    targetLine, out thisFactor, out otherFactor))
 				{
 					// TOP-5165: Must be really interior-interior intersection (0..1).
 					// Intersections just outside have been handled in CollectVertexIntersectionInfos
@@ -437,7 +442,7 @@ namespace ProSuite.Commons.Geom
 			else
 			{
 				startFactorAlongSource = GetLinearIntersectionStartFactor(
-					closestToSourceStart : true);
+					closestToSourceStart: true);
 
 				start = sourceSegment.GetPointAlong(startFactorAlongSource, true);
 			}
@@ -514,7 +519,7 @@ namespace ProSuite.Commons.Geom
 			else
 			{
 				endFactorAlongSource =
-					GetLinearIntersectionEndFactor(closestToSourceEnd : true);
+					GetLinearIntersectionEndFactor(closestToSourceEnd: true);
 
 				end = sourceSegment.GetPointAlong(endFactorAlongSource, true);
 			}

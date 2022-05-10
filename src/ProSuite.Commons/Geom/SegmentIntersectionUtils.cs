@@ -159,6 +159,10 @@ namespace ProSuite.Commons.Geom
 				{
 					startPoint = fromPoint;
 				}
+				else
+				{
+					EnsureLinearIntersectionDirection(previousLinearEnd, fromPoint);
+				}
 
 				if (previousLinearEnd == null ||
 				    ContinueLinearIntersectionStretch(
@@ -289,6 +293,31 @@ namespace ProSuite.Commons.Geom
 
 			// Connected lines must match exactly
 			return previousLinearIntersectionEnd.Point.Equals(currentLinearIntersectionStart.Point);
+		}
+
+		/// <summary>
+		/// Corrects the LinearIntersectionInOppositeDirection property for zero-length
+		/// segments for either the previous or the current intersection point.
+		/// </summary>
+		/// <param name="previous"></param>
+		/// <param name="current"></param>
+		private static void EnsureLinearIntersectionDirection(
+			[NotNull] IntersectionPoint3D previous,
+			[NotNull] IntersectionPoint3D current)
+		{
+			if (current.SegmentIntersection.IsSegmentZeroLength2D &&
+			    ! previous.SegmentIntersection.IsSegmentZeroLength2D)
+			{
+				// current's LinearIntersectionInOppositeDirection is random, correct it
+				current.SegmentIntersection.LinearIntersectionInOppositeDirection =
+					previous.SegmentIntersection.LinearIntersectionInOppositeDirection;
+			}
+			else if (previous.SegmentIntersection.IsSegmentZeroLength2D &&
+			         ! current.SegmentIntersection.IsSegmentZeroLength2D)
+			{
+				previous.SegmentIntersection.LinearIntersectionInOppositeDirection =
+					current.SegmentIntersection.LinearIntersectionInOppositeDirection;
+			}
 		}
 
 		private static double TargetSegmentCountBetween(
