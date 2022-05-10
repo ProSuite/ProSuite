@@ -3996,15 +3996,14 @@ namespace ProSuite.Commons.Test.Geom
 
 			Assert.AreEqual(expected.GetArea2D(), intersectionResult.GetArea2D(), 0.0001);
 
-			// TODO: Fix union for touching rings
 			// Double-check:
-			//MultiLinestring difference = GeomTopoOpUtils.GetDifferenceAreasXY(
-			//	poly1, target, tolerance);
+			MultiLinestring difference = GeomTopoOpUtils.GetDifferenceAreasXY(
+				poly1, target, tolerance);
 
-			//MultiLinestring reunion = GeomTopoOpUtils.GetUnionAreasXY(
-			//	intersectionResult, difference, tolerance);
+			MultiLinestring reunion = GeomTopoOpUtils.GetUnionAreasXY(
+				intersectionResult, difference, tolerance);
 
-			//Assert.AreEqual(poly1.GetArea2D(), reunion.GetArea2D(), 0.0001);
+			Assert.AreEqual(poly1.GetArea2D(), reunion.GetArea2D(), 0.0001);
 		}
 
 		[Test]
@@ -4547,27 +4546,35 @@ namespace ProSuite.Commons.Test.Geom
 
 					var target = new RingGroup(new Linestring(GetRotatedRing(targetRingPoints, t)));
 
-					MultiLinestring result =
+					MultiLinestring intersection =
 						GeomTopoOpUtils.GetIntersectionAreasXY(poly1, target, tolerance);
-					Assert.IsFalse(result.IsEmpty);
-					Assert.AreEqual(target.GetArea2D(), result.GetArea2D());
-					Assert.AreEqual(target.GetLength2D(), result.GetLength2D());
+					Assert.IsFalse(intersection.IsEmpty);
+					Assert.AreEqual(target.GetArea2D(), intersection.GetArea2D());
+					Assert.AreEqual(target.GetLength2D(), intersection.GetLength2D());
 
 					// Currently the touching islands remains a touching island also in the result (OGC style)
 					//
 					// Compare with difference:
-					result = GeomTopoOpUtils.GetDifferenceAreasXY(poly1, target, tolerance);
-					Assert.AreEqual(2, result.PartCount);
-					Assert.AreEqual(poly1.GetArea2D() - target.GetArea2D(), result.GetArea2D());
+					MultiLinestring difference =
+						GeomTopoOpUtils.GetDifferenceAreasXY(poly1, target, tolerance);
+					Assert.AreEqual(2, difference.PartCount);
+					Assert.AreEqual(poly1.GetArea2D() - target.GetArea2D(), difference.GetArea2D());
+
+					MultiLinestring union =
+						GeomTopoOpUtils.GetUnionAreasXY(intersection, difference, tolerance);
+					Assert.AreEqual(poly1.GetArea2D(), union.GetArea2D());
 
 					// Vice versa to check symmetry:
-					result =
+					intersection =
 						GeomTopoOpUtils.GetIntersectionAreasXY(target, poly1, tolerance);
-					Assert.IsFalse(result.IsEmpty);
-					Assert.AreEqual(target.GetArea2D(), result.GetArea2D());
+					Assert.IsFalse(intersection.IsEmpty);
+					Assert.AreEqual(target.GetArea2D(), intersection.GetArea2D());
 
-					result = GeomTopoOpUtils.GetDifferenceAreasXY(target, poly1, tolerance);
-					Assert.IsTrue(result.IsEmpty);
+					difference = GeomTopoOpUtils.GetDifferenceAreasXY(target, poly1, tolerance);
+					Assert.IsTrue(difference.IsEmpty);
+
+					union = GeomTopoOpUtils.GetUnionAreasXY(intersection, difference, tolerance);
+					Assert.AreEqual(target.GetArea2D(), union.GetArea2D());
 
 					// Now the target touches also the source outer ring in a line
 					// -> the result has no inner ring any more:
@@ -4582,29 +4589,36 @@ namespace ProSuite.Commons.Test.Geom
 					var target3 =
 						new RingGroup(new Linestring(GetRotatedRing(targetRingPoints3, t)));
 
-					MultiLinestring result3 =
+					intersection =
 						GeomTopoOpUtils.GetIntersectionAreasXY(poly1, target3, tolerance);
-					Assert.IsFalse(result3.IsEmpty);
-					Assert.AreEqual(1, result3.PartCount);
-					Assert.AreEqual(target3.GetArea2D(), result3.GetArea2D());
-					Assert.AreEqual(target3.GetLength2D(), result3.GetLength2D());
+					Assert.IsFalse(intersection.IsEmpty);
+					Assert.AreEqual(1, intersection.PartCount);
+					Assert.AreEqual(target3.GetArea2D(), intersection.GetArea2D());
+					Assert.AreEqual(target3.GetLength2D(), intersection.GetLength2D());
 
 					//
 					// Compare with difference:
-					result3 = GeomTopoOpUtils.GetDifferenceAreasXY(poly1, target3, tolerance);
-					Assert.AreEqual(1, result3.PartCount);
-					Assert.AreEqual(560, result3.GetLength2D());
-					Assert.AreEqual(poly1.GetArea2D() - target3.GetArea2D(), result3.GetArea2D());
+					difference = GeomTopoOpUtils.GetDifferenceAreasXY(poly1, target3, tolerance);
+					Assert.AreEqual(1, difference.PartCount);
+					Assert.AreEqual(560, difference.GetLength2D());
+					Assert.AreEqual(poly1.GetArea2D() - target3.GetArea2D(),
+					                difference.GetArea2D());
+
+					union = GeomTopoOpUtils.GetUnionAreasXY(intersection, difference, tolerance);
+					Assert.AreEqual(poly1.GetArea2D(), union.GetArea2D());
 
 					// Vice versa to check symmetry:
-					result3 =
+					intersection =
 						GeomTopoOpUtils.GetIntersectionAreasXY(target3, poly1, tolerance);
-					Assert.IsFalse(result3.IsEmpty);
-					Assert.AreEqual(target3.GetArea2D(), result3.GetArea2D());
-					Assert.AreEqual(target3.GetLength2D(), result3.GetLength2D());
+					Assert.IsFalse(intersection.IsEmpty);
+					Assert.AreEqual(target3.GetArea2D(), intersection.GetArea2D());
+					Assert.AreEqual(target3.GetLength2D(), intersection.GetLength2D());
 
-					result3 = GeomTopoOpUtils.GetDifferenceAreasXY(target3, poly1, tolerance);
-					Assert.IsTrue(result3.IsEmpty);
+					difference = GeomTopoOpUtils.GetDifferenceAreasXY(target3, poly1, tolerance);
+					Assert.IsTrue(difference.IsEmpty);
+
+					union = GeomTopoOpUtils.GetUnionAreasXY(intersection, difference, tolerance);
+					Assert.AreEqual(target3.GetArea2D(), union.GetArea2D());
 
 					//
 					// Now the target touches the source island from inside the island (i.e. outside the polygon)
@@ -4620,23 +4634,30 @@ namespace ProSuite.Commons.Test.Geom
 					var target2 =
 						new RingGroup(new Linestring(GetRotatedRing(targetRingPoints2, t)));
 
-					result =
+					intersection =
 						GeomTopoOpUtils.GetIntersectionAreasXY(poly1, target2, tolerance);
-					Assert.IsTrue(result.IsEmpty);
+					Assert.IsTrue(intersection.IsEmpty);
 
 					// Compare with difference:
-					result = GeomTopoOpUtils.GetDifferenceAreasXY(poly1, target2, tolerance);
-					Assert.AreEqual(2, result.PartCount);
-					Assert.AreEqual(poly1.GetArea2D(), result.GetArea2D());
+					difference = GeomTopoOpUtils.GetDifferenceAreasXY(poly1, target2, tolerance);
+					Assert.AreEqual(2, difference.PartCount);
+					Assert.AreEqual(poly1.GetArea2D(), difference.GetArea2D());
+
+					union =
+						GeomTopoOpUtils.GetUnionAreasXY(intersection, difference, tolerance);
+					Assert.AreEqual(poly1.GetArea2D(), union.GetArea2D());
 
 					// Vice versa to check symmetry:
-					result =
+					intersection =
 						GeomTopoOpUtils.GetIntersectionAreasXY(target2, poly1, tolerance);
-					Assert.IsTrue(result.IsEmpty);
+					Assert.IsTrue(intersection.IsEmpty);
 
-					result = GeomTopoOpUtils.GetDifferenceAreasXY(target2, poly1, tolerance);
-					Assert.AreEqual(1, result.PartCount);
-					Assert.AreEqual(target2.GetArea2D(), result.GetArea2D());
+					difference = GeomTopoOpUtils.GetDifferenceAreasXY(target2, poly1, tolerance);
+					Assert.AreEqual(1, difference.PartCount);
+					Assert.AreEqual(target2.GetArea2D(), difference.GetArea2D());
+
+					union = GeomTopoOpUtils.GetUnionAreasXY(intersection, difference, tolerance);
+					Assert.AreEqual(target2.GetArea2D(), union.GetArea2D());
 				}
 			}
 		}
@@ -4852,26 +4873,32 @@ namespace ProSuite.Commons.Test.Geom
 
 					var target = new RingGroup(new Linestring(GetRotatedRing(targetRingPoints, t)));
 
-					MultiLinestring result =
+					MultiLinestring intersection =
 						GeomTopoOpUtils.GetIntersectionAreasXY(poly1, target, tolerance);
-					Assert.IsFalse(result.IsEmpty);
-					Assert.AreEqual(target.GetArea2D(), result.GetArea2D());
-					Assert.AreEqual(target.GetLength2D(), result.GetLength2D());
+					Assert.IsFalse(intersection.IsEmpty);
+					Assert.AreEqual(target.GetArea2D(), intersection.GetArea2D());
+					Assert.AreEqual(target.GetLength2D(), intersection.GetLength2D());
 
 					//
 					// Compare with difference:
-					result = GeomTopoOpUtils.GetDifferenceAreasXY(poly1, target, tolerance);
-					Assert.AreEqual(2, result.PartCount);
-					Assert.AreEqual(poly1.GetArea2D() - target.GetArea2D(), result.GetArea2D());
+					MultiLinestring difference =
+						GeomTopoOpUtils.GetDifferenceAreasXY(poly1, target, tolerance);
+					Assert.AreEqual(2, difference.PartCount);
+					Assert.AreEqual(poly1.GetArea2D() - target.GetArea2D(), difference.GetArea2D());
+
+					var union =
+						GeomTopoOpUtils.GetUnionAreasXY(intersection, difference, tolerance);
+					Assert.AreEqual(3, union.PartCount);
+					Assert.AreEqual(poly1.GetArea2D(), union.GetArea2D());
 
 					// Vice versa to check symmetry:
-					result =
+					intersection =
 						GeomTopoOpUtils.GetIntersectionAreasXY(target, poly1, tolerance);
-					Assert.IsFalse(result.IsEmpty);
-					Assert.AreEqual(target.GetArea2D(), result.GetArea2D());
+					Assert.IsFalse(intersection.IsEmpty);
+					Assert.AreEqual(target.GetArea2D(), intersection.GetArea2D());
 
-					result = GeomTopoOpUtils.GetDifferenceAreasXY(target, poly1, tolerance);
-					Assert.IsTrue(result.IsEmpty);
+					difference = GeomTopoOpUtils.GetDifferenceAreasXY(target, poly1, tolerance);
+					Assert.IsTrue(difference.IsEmpty);
 
 					// Now the target completely fills the area between the islands
 					// -> only one island in result
@@ -4985,27 +5012,39 @@ namespace ProSuite.Commons.Test.Geom
 
 					var target = new RingGroup(new Linestring(GetRotatedRing(targetRingPoints, t)));
 
-					MultiLinestring result =
+					MultiLinestring intersection =
 						GeomTopoOpUtils.GetIntersectionAreasXY(poly1, target, tolerance);
-					Assert.IsFalse(result.IsEmpty);
-					Assert.AreEqual(target.GetArea2D(), result.GetArea2D());
-					Assert.AreEqual(target.GetLength2D(), result.GetLength2D());
+					Assert.IsFalse(intersection.IsEmpty);
+					Assert.AreEqual(target.GetArea2D(), intersection.GetArea2D());
+					Assert.AreEqual(target.GetLength2D(), intersection.GetLength2D());
 
 					// Currently the boundary loop remains a boundary loop also in the result (esri style)
 					//
 					// Compare with difference:
-					result = GeomTopoOpUtils.GetDifferenceAreasXY(poly1, target, tolerance);
-					Assert.AreEqual(1, result.PartCount);
-					Assert.AreEqual(poly1.GetArea2D() - target.GetArea2D(), result.GetArea2D());
+					MultiLinestring difference =
+						GeomTopoOpUtils.GetDifferenceAreasXY(poly1, target, tolerance);
+					Assert.AreEqual(1, difference.PartCount);
+					Assert.AreEqual(poly1.GetArea2D() - target.GetArea2D(), difference.GetArea2D());
+
+					// Union again:
+					MultiLinestring union =
+						GeomTopoOpUtils.GetUnionAreasXY(intersection, difference, tolerance);
+					Assert.AreEqual(1, union.PartCount);
+					Assert.AreEqual(poly1.GetArea2D(), union.GetArea2D());
 
 					// Vice versa to check symmetry:
-					result =
+					intersection =
 						GeomTopoOpUtils.GetIntersectionAreasXY(target, poly1, tolerance);
-					Assert.IsFalse(result.IsEmpty);
-					Assert.AreEqual(target.GetArea2D(), result.GetArea2D());
+					Assert.IsFalse(intersection.IsEmpty);
+					Assert.AreEqual(target.GetArea2D(), intersection.GetArea2D());
 
-					result = GeomTopoOpUtils.GetDifferenceAreasXY(target, poly1, tolerance);
-					Assert.IsTrue(result.IsEmpty);
+					difference = GeomTopoOpUtils.GetDifferenceAreasXY(target, poly1, tolerance);
+					Assert.IsTrue(difference.IsEmpty);
+
+					union =
+						GeomTopoOpUtils.GetUnionAreasXY(intersection, difference, tolerance);
+					Assert.AreEqual(1, union.PartCount);
+					Assert.AreEqual(target.GetArea2D(), union.GetArea2D());
 
 					// 
 					// Now the target touches also the source outer ring in a line
@@ -5021,29 +5060,37 @@ namespace ProSuite.Commons.Test.Geom
 					var target3 =
 						new RingGroup(new Linestring(GetRotatedRing(targetRingPoints3, t)));
 
-					MultiLinestring result3 =
+					intersection =
 						GeomTopoOpUtils.GetIntersectionAreasXY(poly1, target3, tolerance);
-					Assert.IsFalse(result3.IsEmpty);
-					Assert.AreEqual(1, result3.PartCount);
-					Assert.AreEqual(target3.GetArea2D(), result3.GetArea2D(), 0.0001);
-					Assert.AreEqual(target3.GetLength2D(), result3.GetLength2D());
+					Assert.IsFalse(intersection.IsEmpty);
+					Assert.AreEqual(1, intersection.PartCount);
+					Assert.AreEqual(target3.GetArea2D(), intersection.GetArea2D(), 0.0001);
+					Assert.AreEqual(target3.GetLength2D(), intersection.GetLength2D());
 
 					//
 					// Compare with difference:
-					result3 = GeomTopoOpUtils.GetDifferenceAreasXY(poly1, target3, tolerance);
-					Assert.AreEqual(1, result3.PartCount);
-					Assert.AreEqual(560, result3.GetLength2D());
-					Assert.AreEqual(poly1.GetArea2D() - target3.GetArea2D(), result3.GetArea2D());
+					difference = GeomTopoOpUtils.GetDifferenceAreasXY(poly1, target3, tolerance);
+					Assert.AreEqual(1, difference.PartCount);
+					Assert.AreEqual(560, difference.GetLength2D());
+					Assert.AreEqual(poly1.GetArea2D() - target3.GetArea2D(),
+					                difference.GetArea2D());
+
+					union = GeomTopoOpUtils.GetUnionAreasXY(intersection, difference, tolerance);
+
+					// Currently, the original boundary loop turns into an island. This could theoretically be
+					// detected and adjusted.
+					Assert.AreEqual(2, union.PartCount);
+					Assert.AreEqual(poly1.GetArea2D(), union.GetArea2D());
 
 					// Vice versa to check symmetry:
-					result3 =
+					intersection =
 						GeomTopoOpUtils.GetIntersectionAreasXY(target3, poly1, tolerance);
-					Assert.IsFalse(result3.IsEmpty);
-					Assert.AreEqual(target3.GetArea2D(), result3.GetArea2D());
-					Assert.AreEqual(target3.GetLength2D(), result3.GetLength2D());
+					Assert.IsFalse(intersection.IsEmpty);
+					Assert.AreEqual(target3.GetArea2D(), intersection.GetArea2D());
+					Assert.AreEqual(target3.GetLength2D(), intersection.GetLength2D());
 
-					result3 = GeomTopoOpUtils.GetDifferenceAreasXY(target3, poly1, tolerance);
-					Assert.IsTrue(result3.IsEmpty);
+					difference = GeomTopoOpUtils.GetDifferenceAreasXY(target3, poly1, tolerance);
+					Assert.IsTrue(difference.IsEmpty);
 
 					//
 					// Now the target touches the source island from inside the island (i.e. outside the polygon)
@@ -5059,23 +5106,31 @@ namespace ProSuite.Commons.Test.Geom
 					var target2 =
 						new RingGroup(new Linestring(GetRotatedRing(targetRingPoints2, t)));
 
-					result =
+					intersection =
 						GeomTopoOpUtils.GetIntersectionAreasXY(poly1, target2, tolerance);
-					Assert.IsTrue(result.IsEmpty);
+					Assert.IsTrue(intersection.IsEmpty);
 
 					// Compare with difference:
-					result = GeomTopoOpUtils.GetDifferenceAreasXY(poly1, target2, tolerance);
-					Assert.AreEqual(1, result.PartCount);
-					Assert.AreEqual(poly1.GetArea2D(), result.GetArea2D());
+					difference = GeomTopoOpUtils.GetDifferenceAreasXY(poly1, target2, tolerance);
+					Assert.AreEqual(1, difference.PartCount);
+					Assert.AreEqual(poly1.GetArea2D(), difference.GetArea2D());
+
+					union = GeomTopoOpUtils.GetUnionAreasXY(intersection, difference, tolerance);
+					Assert.AreEqual(1, union.PartCount);
+					Assert.AreEqual(poly1.GetArea2D(), union.GetArea2D());
 
 					// Vice versa to check symmetry:
-					result =
+					intersection =
 						GeomTopoOpUtils.GetIntersectionAreasXY(target2, poly1, tolerance);
-					Assert.IsTrue(result.IsEmpty);
+					Assert.IsTrue(intersection.IsEmpty);
 
-					result = GeomTopoOpUtils.GetDifferenceAreasXY(target2, poly1, tolerance);
-					Assert.AreEqual(1, result.PartCount);
-					Assert.AreEqual(target2.GetArea2D(), result.GetArea2D());
+					difference = GeomTopoOpUtils.GetDifferenceAreasXY(target2, poly1, tolerance);
+					Assert.AreEqual(1, difference.PartCount);
+					Assert.AreEqual(target2.GetArea2D(), difference.GetArea2D());
+
+					union = GeomTopoOpUtils.GetUnionAreasXY(intersection, difference, tolerance);
+					Assert.AreEqual(1, union.PartCount);
+					Assert.AreEqual(target2.GetArea2D(), union.GetArea2D());
 				}
 			}
 		}
@@ -5450,27 +5505,58 @@ namespace ProSuite.Commons.Test.Geom
 
 				RingGroup poly2 = CreatePoly(rotatedRing);
 
-				MultiLinestring result =
+				MultiLinestring intersecion =
 					GeomTopoOpUtils.GetIntersectionAreasXY(poly1, poly2, tolerance);
 
-				Assert.IsFalse(result.IsEmpty);
-				Assert.AreEqual(1, result.PartCount);
-				Assert.AreEqual(6, result.SegmentCount);
-				Console.WriteLine(result.GetArea2D());
+				// NOTE: By declaring the two close by acute angle intersections as pseudo-break
+				// not only the source is used and but additionally, no short segment is created
+				// any more -> 5 result segments
+				Assert.IsFalse(intersecion.IsEmpty);
+				Assert.AreEqual(1, intersecion.PartCount);
+				Assert.AreEqual(5, intersecion.SegmentCount);
+				Console.WriteLine(intersecion.GetArea2D());
 
 				Assert.IsTrue(
-					GeomTopoOpUtils.AreEqualXY(expectedResult, result.GetLinestring(0), 0.0005));
+					GeomTopoOpUtils.AreEqualXY(expectedResult, intersecion.GetLinestring(0),
+					                           0.0005));
+
+				MultiLinestring difference =
+					GeomTopoOpUtils.GetDifferenceAreasXY(poly1, poly2, tolerance);
+
+				Assert.AreEqual(1, difference.PartCount);
+				Assert.AreEqual(poly1.GetArea2D() - poly2.GetArea2D(), difference.GetArea2D(),
+				                1.1);
+
+				MultiLinestring union =
+					GeomTopoOpUtils.GetUnionAreasXY(intersecion, difference, tolerance);
+
+				Assert.AreEqual(1, union.PartCount);
+				Assert.IsTrue(
+					GeomTopoOpUtils.AreEqualXY(poly1.GetLinestring(0), union.GetLinestring(0),
+					                           0.0005));
+
+				// with flipped arguments:
+				union = GeomTopoOpUtils.GetUnionAreasXY(difference, intersecion, tolerance);
+
+				Assert.AreEqual(1, union.PartCount);
+
+				// Equality finds the extra angle (should probably be accounted for), just compare the area for now:
+				Assert.AreEqual(poly1.GetArea2D(), union.GetArea2D(), 0.001);
 
 				// And vice-versa (the no deviation from poly2 which is now the source)
-				result =
+				intersecion =
 					GeomTopoOpUtils.GetIntersectionAreasXY(poly2, poly1, tolerance);
-				Assert.AreEqual(1, result.PartCount);
-				Assert.AreEqual(4, result.SegmentCount);
-				Console.WriteLine(result.GetArea2D());
+				Assert.AreEqual(1, intersecion.PartCount);
+				Assert.AreEqual(4, intersecion.SegmentCount);
+				Console.WriteLine(intersecion.GetArea2D());
 
 				Assert.IsTrue(
-					GeomTopoOpUtils.AreEqualXY(poly2.GetLinestring(0), result.GetLinestring(0),
+					GeomTopoOpUtils.AreEqualXY(poly2.GetLinestring(0), intersecion.GetLinestring(0),
 					                           0.0001));
+
+				difference =
+					GeomTopoOpUtils.GetDifferenceAreasXY(poly2, poly1, tolerance);
+				Assert.IsTrue(difference.IsEmpty);
 			}
 		}
 

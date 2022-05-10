@@ -250,9 +250,27 @@ namespace ProSuite.Commons.Geom
 				IsSameDistanceAlong(sourcePart, previousLinearIntersectionEnd.VirtualSourceVertex,
 				                    currentLinearIntersectionStart.VirtualSourceVertex);
 
-			// Exclude source boundary loops
 			if (! sameDistanceAlongSource)
 			{
+				// Exclude source boundary loops, but include very acute angle linear intersections
+				// as in CanGetIntersectionAreaXYWithLinearIntersectionWithinToleranceAcuteAngle()
+				if (currentLinearIntersectionStart.ReferencesSameTargetVertex(
+					    previousLinearIntersectionEnd, targetSegments))
+				{
+					// TODO: Proper count of source segments between, probably deal with short segments
+					// check if it's a real source boundary loop
+					double segmentRatioDistance =
+						currentLinearIntersectionStart.VirtualSourceVertex -
+						previousLinearIntersectionEnd.VirtualSourceVertex;
+
+					// Typically it is very very small, but theoretically it could be almost the entire segments
+					// if the angle is extremely acute.
+					if (Math.Abs(segmentRatioDistance) < 2)
+					{
+						return true;
+					}
+				}
+
 				return false;
 			}
 
