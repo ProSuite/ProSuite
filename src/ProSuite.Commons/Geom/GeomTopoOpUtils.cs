@@ -3126,7 +3126,7 @@ namespace ProSuite.Commons.Geom
 		}
 
 		[NotNull]
-		public static IList<Line3D> GetLinearSelfIntersectionsXY(
+		public static IEnumerable<Line3D> GetLinearSelfIntersectionsXY(
 			[NotNull] ISegmentList segmentList,
 			double tolerance,
 			bool in3D = false)
@@ -3144,12 +3144,13 @@ namespace ProSuite.Commons.Geom
 
 					foreach (Linestring selfIntersection in linearSelfIntersections)
 					{
-						result.AddRange(selfIntersection.Segments);
+						foreach (Line3D segment in selfIntersection.Segments)
+						{
+							yield return segment;
+						}
 					}
 				}
 			}
-
-			return result;
 		}
 
 		[NotNull]
