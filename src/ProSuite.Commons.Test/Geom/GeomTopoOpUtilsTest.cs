@@ -2277,9 +2277,16 @@ namespace ProSuite.Commons.Test.Geom
 				Assert.AreEqual(2, intersectionPoints.Count);
 
 				Assert.AreEqual(
-					intersectionPoints[0].SegmentIntersection.LinearIntersectionInOppositeDirection,
-					intersectionPoints[1].SegmentIntersection
-					                     .LinearIntersectionInOppositeDirection);
+					intersectionPoints[0].LinearIntersectionInOppositeDirection,
+					true);
+
+				if (i != 3)
+				{
+					// It cannot always be corrected...
+					Assert.AreEqual(
+						intersectionPoints[1].LinearIntersectionInOppositeDirection,
+						true);
+				}
 
 				intersectionPoints =
 					GeomTopoOpUtils.GetIntersectionPoints(
@@ -2290,9 +2297,8 @@ namespace ProSuite.Commons.Test.Geom
 				Assert.AreEqual(2, intersectionPoints.Count);
 
 				Assert.AreEqual(
-					intersectionPoints[0].SegmentIntersection.LinearIntersectionInOppositeDirection,
-					intersectionPoints[1].SegmentIntersection
-					                     .LinearIntersectionInOppositeDirection);
+					intersectionPoints[0].LinearIntersectionInOppositeDirection,
+					intersectionPoints[1].LinearIntersectionInOppositeDirection);
 
 				linestring2.ReverseOrientation();
 
@@ -2305,9 +2311,8 @@ namespace ProSuite.Commons.Test.Geom
 				Assert.AreEqual(2, intersectionPoints.Count);
 
 				Assert.AreEqual(
-					intersectionPoints[0].SegmentIntersection.LinearIntersectionInOppositeDirection,
-					intersectionPoints[1].SegmentIntersection
-					                     .LinearIntersectionInOppositeDirection);
+					intersectionPoints[0].LinearIntersectionInOppositeDirection,
+					intersectionPoints[1].LinearIntersectionInOppositeDirection);
 
 				intersectionPoints =
 					GeomTopoOpUtils.GetIntersectionPoints(
@@ -2318,9 +2323,8 @@ namespace ProSuite.Commons.Test.Geom
 				Assert.AreEqual(2, intersectionPoints.Count);
 
 				Assert.AreEqual(
-					intersectionPoints[0].SegmentIntersection.LinearIntersectionInOppositeDirection,
-					intersectionPoints[1].SegmentIntersection
-					                     .LinearIntersectionInOppositeDirection);
+					intersectionPoints[0].LinearIntersectionInOppositeDirection,
+					intersectionPoints[1].LinearIntersectionInOppositeDirection);
 			}
 		}
 
@@ -5491,6 +5495,144 @@ namespace ProSuite.Commons.Test.Geom
 					result3 = GeomTopoOpUtils.GetDifferenceAreasXY(target3, poly1, tolerance);
 					Assert.IsTrue(result3.IsEmpty);
 				}
+			}
+		}
+
+		[Test]
+		public void CanGetIntersectionAreaXYWithMultipleShortSegmentsAtMultipartTouchPoints()
+		{
+			// Zero-length segments:
+			var ring1 = new List<Pnt3D>
+			            {
+				            new Pnt3D(0, 0, 9),
+				            new Pnt3D(0, 100, 9),
+				            new Pnt3D(100, 100, 9),
+				            new Pnt3D(100, 100, 9),
+				            new Pnt3D(100, 50, 0),
+				            new Pnt3D(100, 50, 0)
+			            };
+
+			var ring2 = new[]
+			            {
+				            new Pnt3D(50, 50, 9),
+				            new Pnt3D(100, 100, 9),
+				            new Pnt3D(100, 0, 0),
+				            //new Pnt3D(200, 0, 0)
+			            }.ToList();
+
+			for (int i = 0; i < 6; i++)
+			{
+				RingGroup poly1 = CreatePoly(GetRotatedRing(ring1, i));
+
+				const double tolerance = 0.01;
+
+				RingGroup poly2 = CreatePoly(ring2);
+
+				MultiLinestring result =
+					GeomTopoOpUtils.GetIntersectionAreasXY(poly1, poly2, tolerance);
+				Assert.AreEqual(1, result.PartCount);
+				Assert.AreEqual(1666.6666, result.GetArea2D(), 0.001);
+
+				result = GeomTopoOpUtils.GetDifferenceAreasXY(poly1, poly2, tolerance);
+
+				Assert.AreEqual(1, result.PartCount);
+				Assert.AreEqual(5833.3333, result.GetArea2D(), 0.001);
+			}
+
+			// Now with short but non-zero segments 
+			ring1[3].X += 0.002;
+			ring1[3].Y -= 0.002;
+
+			ring1[5].X += 0.002;
+			ring1[5].Y -= 0.002;
+
+			for (int i = 0; i < 6; i++)
+			{
+				RingGroup poly1 = CreatePoly(GetRotatedRing(ring1, i));
+
+				const double tolerance = 0.01;
+
+				RingGroup poly2 = CreatePoly(ring2);
+
+				MultiLinestring result =
+					GeomTopoOpUtils.GetIntersectionAreasXY(poly1, poly2, tolerance);
+				Assert.AreEqual(1, result.PartCount);
+				Assert.AreEqual(1666.6666, result.GetArea2D(), 0.3);
+
+				result = GeomTopoOpUtils.GetDifferenceAreasXY(poly1, poly2, tolerance);
+
+				Assert.AreEqual(1, result.PartCount);
+				Assert.AreEqual(5833.3333, result.GetArea2D(), 0.3);
+			}
+		}
+
+		[Test]
+		public void CanGetUnionAreaXYWithMultipleShortSegmentsAtMultipartTouchPoints()
+		{
+			// Zero-length segments:
+			var ring1 = new List<Pnt3D>
+			            {
+				            new Pnt3D(0, 0, 9),
+				            new Pnt3D(0, 100, 9),
+				            new Pnt3D(100, 100, 9),
+				            new Pnt3D(100, 100, 9),
+				            new Pnt3D(100, 50, 0),
+				            new Pnt3D(100, 50, 0)
+			            };
+
+			var ring2 = new[]
+			            {
+				            new Pnt3D(100, 0, 9),
+				            new Pnt3D(100, 100, 9),
+				            new Pnt3D(200, 100, 0),
+				            new Pnt3D(200, 0, 0)
+			            }.ToList();
+
+			for (int i = 0; i < 6; i++)
+			{
+				RingGroup poly1 = CreatePoly(GetRotatedRing(ring1, i));
+
+				const double tolerance = 0.01;
+
+				RingGroup poly2 = CreatePoly(ring2);
+
+				MultiLinestring result = GeomTopoOpUtils.GetUnionAreasXY(poly1, poly2, tolerance);
+
+				Assert.AreEqual(1, result.PartCount);
+				Assert.AreEqual(poly1.GetArea2D() + poly2.GetArea2D(), result.GetArea2D());
+
+				// with swapped arguments
+				result = GeomTopoOpUtils.GetUnionAreasXY(poly2, poly1, tolerance);
+
+				Assert.AreEqual(1, result.PartCount);
+				Assert.AreEqual(poly1.GetArea2D() + poly2.GetArea2D(), result.GetArea2D());
+			}
+
+			// Now with short but non-zero segments 
+			ring1[3].X += 0.002;
+			ring1[3].Y -= 0.002;
+
+			ring1[5].X += 0.002;
+			ring1[5].Y -= 0.002;
+
+			for (int i = 0; i < 6; i++)
+			{
+				RingGroup poly1 = CreatePoly(GetRotatedRing(ring1, i));
+
+				const double tolerance = 0.01;
+
+				RingGroup poly2 = CreatePoly(ring2);
+
+				MultiLinestring result = GeomTopoOpUtils.GetUnionAreasXY(poly1, poly2, tolerance);
+
+				Assert.AreEqual(1, result.PartCount);
+				Assert.AreEqual(poly1.GetArea2D() + poly2.GetArea2D(), result.GetArea2D(), 0.5);
+
+				// with swapped arguments
+				result = GeomTopoOpUtils.GetUnionAreasXY(poly2, poly1, tolerance);
+
+				Assert.AreEqual(1, result.PartCount);
+				Assert.AreEqual(poly1.GetArea2D() + poly2.GetArea2D(), result.GetArea2D(), 0.5);
 			}
 		}
 

@@ -159,10 +159,6 @@ namespace ProSuite.Commons.Geom
 				{
 					startPoint = fromPoint;
 				}
-				else
-				{
-					EnsureLinearIntersectionDirection(previousLinearEnd, fromPoint);
-				}
 
 				if (previousLinearEnd == null ||
 				    ContinueLinearIntersectionStretch(
@@ -305,18 +301,29 @@ namespace ProSuite.Commons.Geom
 			[NotNull] IntersectionPoint3D previous,
 			[NotNull] IntersectionPoint3D current)
 		{
-			if (current.SegmentIntersection.IsSegmentZeroLength2D &&
-			    ! previous.SegmentIntersection.IsSegmentZeroLength2D)
+			// Not sure if correcting this property is really necessary.
+			bool startIsZeroLength = previous.SegmentIntersection.IsSegmentZeroLength2D;
+			bool endIsZeroLength = current.SegmentIntersection.IsSegmentZeroLength2D;
+
+			if (endIsZeroLength && ! startIsZeroLength)
 			{
 				// current's LinearIntersectionInOppositeDirection is random, correct it
-				current.SegmentIntersection.LinearIntersectionInOppositeDirection =
-					previous.SegmentIntersection.LinearIntersectionInOppositeDirection;
+				current.LinearIntersectionInOppositeDirection =
+					previous.LinearIntersectionInOppositeDirection;
 			}
-			else if (previous.SegmentIntersection.IsSegmentZeroLength2D &&
-			         ! current.SegmentIntersection.IsSegmentZeroLength2D)
+			else if (startIsZeroLength && ! endIsZeroLength)
 			{
-				previous.SegmentIntersection.LinearIntersectionInOppositeDirection =
-					current.SegmentIntersection.LinearIntersectionInOppositeDirection;
+				previous.LinearIntersectionInOppositeDirection =
+					current.LinearIntersectionInOppositeDirection;
+			}
+			else if (! MathUtils.AreEqual(previous.VirtualTargetVertex,
+			                              current.VirtualTargetVertex))
+			{
+				// Both intersections have zero length segments. Fall back, if possible:
+				bool oppositeDirection = previous.VirtualTargetVertex > current.VirtualTargetVertex;
+
+				previous.LinearIntersectionInOppositeDirection = oppositeDirection;
+				current.LinearIntersectionInOppositeDirection = oppositeDirection;
 			}
 		}
 
@@ -510,6 +517,11 @@ namespace ProSuite.Commons.Geom
 			if (endPoint != null)
 			{
 				result.Add(endPoint);
+			}
+
+			if (startPoint != null && endPoint != null)
+			{
+				EnsureLinearIntersectionDirection(startPoint, endPoint);
 			}
 		}
 

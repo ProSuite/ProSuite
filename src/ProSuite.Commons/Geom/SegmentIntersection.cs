@@ -70,7 +70,7 @@ namespace ProSuite.Commons.Geom
 		/// run in the opposite direction or not.
 		/// NOTE: This property is unreliable for zero-length segments!
 		/// </summary>
-		public bool LinearIntersectionInOppositeDirection { get; set; }
+		public bool LinearIntersectionInOppositeDirection { get; private set; }
 
 		/// <summary>
 		/// The factor (distance along the source segment as ratio) of the intersection point

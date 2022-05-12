@@ -39,7 +39,28 @@ namespace ProSuite.Commons.Geom
 
 		public IntersectionPointType Type { get; set; }
 
-		public bool? TargetDeviatesToLeftOfSource { get; set; }
+		private bool? TargetDeviatesToLeftOfSource { get; set; }
+
+		private bool? _linearIntersectionInOppositeDirection;
+
+		public bool? LinearIntersectionInOppositeDirection
+		{
+			get
+			{
+				if (_linearIntersectionInOppositeDirection.HasValue)
+				{
+					return _linearIntersectionInOppositeDirection;
+				}
+
+				if (SegmentIntersection.IsSegmentZeroLength2D)
+				{
+					return null;
+				}
+
+				return SegmentIntersection.LinearIntersectionInOppositeDirection;
+			}
+			set => _linearIntersectionInOppositeDirection = value;
+		}
 
 		public IntersectionPoint3D(
 			[NotNull] Pnt3D point,
@@ -585,10 +606,9 @@ namespace ProSuite.Commons.Geom
 			    Type == IntersectionPointType.LinearIntersectionEnd)
 			{
 				// the direction matters:
-				deviationIsBackward =
-					Type == IntersectionPointType.LinearIntersectionStart;
+				deviationIsBackward = Type == IntersectionPointType.LinearIntersectionStart;
 
-				if (SegmentIntersection.LinearIntersectionInOppositeDirection)
+				if (LinearIntersectionInOppositeDirection == true)
 				{
 					deviationIsBackward = ! deviationIsBackward;
 				}
@@ -684,15 +704,21 @@ namespace ProSuite.Commons.Geom
 				bool deviationIsBackward =
 					Type == IntersectionPointType.LinearIntersectionStart;
 
-				if (SegmentIntersection.LinearIntersectionInOppositeDirection)
+				// If it cannot be determined if the segments run in opposite direction there are
+				// potentially several zero-length segments that should probably be handled by
+				// the caller.
+				if (LinearIntersectionInOppositeDirection != null)
 				{
-					deviationIsBackward = ! deviationIsBackward;
-				}
+					if (LinearIntersectionInOppositeDirection == true)
+					{
+						deviationIsBackward = ! deviationIsBackward;
+					}
 
-				if (deviationIsBackward && forwardAlongTarget ||
-				    ! deviationIsBackward && ! forwardAlongTarget)
-				{
-					return null;
+					if (deviationIsBackward && forwardAlongTarget ||
+					    ! deviationIsBackward && ! forwardAlongTarget)
+					{
+						return null;
+					}
 				}
 
 				// get the first non-intersecting point after the linear intersection, check its side:
