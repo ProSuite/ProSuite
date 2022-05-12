@@ -11,13 +11,13 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		private readonly IReadOnlyTable _schema;
 		private IEnvelope _extent;
 
-		public InMemoryDataset(IReadOnlyTable schema,
+		public InMemoryDataset(GdbTable schema,
 		                       IList<IRow> allRows)
 		{
 			_schema = schema;
 			AllRows = allRows.Select(r =>
 			{
-				VirtualRow v = CachedRow.Create(schema, r);
+				VirtualRow v = CreateRow(schema, r);
 				return v;
 			}).ToList();
 		}
@@ -82,7 +82,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			return result;
 		}
 
-		private bool CheckSpatial(IRow row, ISpatialFilter spatialFilter)
+		private static bool CheckSpatial(IRow row, ISpatialFilter spatialFilter)
 		{
 			// TODO: Do it properly, see TileCache
 			IFeature feature = row as IFeature;
@@ -97,33 +97,14 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			return GeometryUtils.Intersects(searchGeometry, feature.Shape);
 		}
 
-		private class CachedFeature : CachedRow, IReadOnlyFeature
+		private static GdbRow CreateRow(GdbTable schema, IRow row)
 		{
-			public CachedFeature(IReadOnlyFeatureClass schema, IFeature sourceFeature)
-				: base(schema, sourceFeature) { }
-
-			public IReadOnlyFeatureClass FeatureClass =>
-				(IReadOnlyFeatureClass)_schema;
-		}
-		private class CachedRow : VirtualRow
-		{
-			public static CachedRow Create(IReadOnlyTable schema, IRow row)
+			if (row is IFeature f)
 			{
-				if (row is IFeature f)
-				{
-					return new CachedFeature((IReadOnlyFeatureClass)schema, f);
-				}
-
-				return new CachedRow(schema, row);
+				return new GdbFeature(row.OID, (GdbFeatureClass) schema, new RowBasedValues(row));
 			}
-			private readonly IRow _sourceRow;
-			protected readonly IReadOnlyTable _schema;
 
-			protected CachedRow(IReadOnlyTable schema, IRow sourceRow)
-			{
-				_sourceRow = sourceRow;
-				_schema = schema;
-			}
+			return new GdbRow(row.OID, schema, new RowBasedValues(row));
 		}
 	}
 }

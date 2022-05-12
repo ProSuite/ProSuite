@@ -67,6 +67,22 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			}
 		}
 
+		public GdbTable(IObjectClass template, bool useTemplateForQuerying = false)
+			: this(template.ObjectClassID, DatasetUtils.GetName(template),
+			       DatasetUtils.GetAliasName(template))
+		{
+			for (int i = 0; i < template.Fields.FieldCount; i++)
+			{
+				IField field = template.Fields.Field[i];
+				AddField(field);
+			}
+
+			if (useTemplateForQuerying)
+			{
+				BackingDataset = new BackingTable((ITable) template, this);
+			}
+		}
+
 		[CanBeNull]
 		public BackingDataset BackingDataset { get; }
 
