@@ -13,7 +13,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 	/// provided  <see cref="BackingDataset"/> allows for actual data-access, such as GetRow()
 	/// or Search().
 	/// </summary>
-	public class GdbTable : VirtualTable, IEquatable<IObjectClass>
+	public class GdbTable : VirtualTable
 	{
 		private const string _defaultOidFieldName = "OBJECTID";
 

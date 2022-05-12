@@ -5,7 +5,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AO.Test.TestSupport
 {
-	public class ObjectMock : IObject, IRowSubtypes, IEquatable<IObject>
+	public class ObjectMock : IObject, IRowSubtypes
 	{
 		[NotNull] private readonly ObjectClassMock _objectClassMock;
 

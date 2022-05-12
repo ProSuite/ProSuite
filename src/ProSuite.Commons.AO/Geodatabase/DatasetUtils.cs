@@ -9,7 +9,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using ESRI.ArcGIS.esriSystem;
@@ -27,8 +26,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 {
 	public static class DatasetUtils
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private const string _queryPrefix = "%";
 
@@ -128,6 +126,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 				return null;
 			}
 		}
+
 		[CanBeNull]
 		public static IField GetLengthField([NotNull] IReadOnlyFeatureClass featureClass)
 		{
@@ -1244,7 +1243,6 @@ namespace ProSuite.Commons.AO.Geodatabase
 				}
 
 				candidateWorkspace = Path.GetDirectoryName(candidateWorkspace);
-
 			} while (! string.IsNullOrEmpty(candidateWorkspace));
 
 			return null;
@@ -1925,16 +1923,11 @@ namespace ProSuite.Commons.AO.Geodatabase
 			Assert.ArgumentNotNull(class1, nameof(class1));
 			Assert.ArgumentNotNull(class2, nameof(class2));
 
-			if (class1 == class2)
+			// Test for reference-equals in real ArcObjects object class instances but also allow
+			// synthetic and mock feature classes to provide their own equality implementation:
+			if (class1.Equals(class2))
 			{
 				return true;
-			}
-
-			// Allow specific IEquatable<IObjectClass> implementation in mock objects or synthetic features
-
-			if (class1 is IEquatable<IObjectClass> equatableObj)
-			{
-				return equatableObj.Equals(class2);
 			}
 
 			bool class1IsRelQuery = class1 is IRelQueryTable;
@@ -2027,6 +2020,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			return GetGeometryDef(featureClass.Fields, featureClass.ShapeFieldName,
 			                      () => GetName(featureClass));
 		}
+
 		public static IGeometryDef GetGeometryDef([NotNull] IReadOnlyFeatureClass featureClass)
 		{
 			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
@@ -2035,12 +2029,12 @@ namespace ProSuite.Commons.AO.Geodatabase
 		}
 
 		[NotNull]
-		private static IGeometryDef GetGeometryDef([NotNull] IFields fields, [NotNull] string shapeFieldName,
+		private static IGeometryDef GetGeometryDef([NotNull] IFields fields,
+		                                           [NotNull] string shapeFieldName,
 		                                           Func<string> getDatasetName)
 		{
 			Assert.ArgumentNotNull(fields, nameof(fields));
 			Assert.ArgumentNotNull(shapeFieldName, nameof(shapeFieldName));
-
 
 			int shapeIndex = fields.FindField(shapeFieldName);
 
@@ -3050,6 +3044,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			return Assert.NotNull(field, "field '{0}' not found in '{1}'",
 			                      fieldName, GetName(table));
 		}
+
 		[NotNull]
 		public static IField GetField([NotNull] IReadOnlyTable table,
 		                              [NotNull] string fieldName)
@@ -3353,30 +3348,30 @@ namespace ProSuite.Commons.AO.Geodatabase
 			return WorkspaceUtils.GetConnectedUser(GetWorkspace(objectClass));
 		}
 
-
 		public static bool TryGetXyTolerance([NotNull] IFeatureClass featureClass,
-																				 out double xyTolerance,
-																				 bool requireBigEnough = false)
+		                                     out double xyTolerance,
+		                                     bool requireBigEnough = false)
 		{
 			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
 
-			ISpatialReference spatialReference = ((IGeoDataset)featureClass).SpatialReference;
+			ISpatialReference spatialReference = ((IGeoDataset) featureClass).SpatialReference;
 			return TryGetXyTolerance(spatialReference, out xyTolerance, requireBigEnough);
 		}
+
 		public static bool TryGetXyTolerance([NotNull] ISpatialReference spatialReference,
-																				 out double xyTolerance,
-																				 bool requireBigEnough = false)
+		                                     out double xyTolerance,
+		                                     bool requireBigEnough = false)
 		{
 			Assert.ArgumentNotNull(spatialReference, nameof(spatialReference));
 
 			var spatialReferenceTolerance = spatialReference as ISpatialReferenceTolerance;
 
 			if (spatialReferenceTolerance != null &&
-					IsToleranceValid(spatialReferenceTolerance.XYToleranceValid,
-													 requireBigEnough))
+			    IsToleranceValid(spatialReferenceTolerance.XYToleranceValid,
+			                     requireBigEnough))
 			{
 				xyTolerance = spatialReferenceTolerance.XYTolerance;
-				return !double.IsNaN(xyTolerance);
+				return ! double.IsNaN(xyTolerance);
 			}
 
 			xyTolerance = double.NaN;
@@ -3438,12 +3433,13 @@ namespace ProSuite.Commons.AO.Geodatabase
 		{
 			Assert.ArgumentNotNull(s, nameof(s));
 
-			ISpatialReference spatialReference = ((IGeoDataset)s).SpatialReference;
+			ISpatialReference spatialReference = ((IGeoDataset) s).SpatialReference;
 			return TryGetMTolerance(spatialReference, out mTolerance, requireBigEnough);
 		}
+
 		public static bool TryGetMTolerance([NotNull] ISpatialReference spatialReference,
-																				out double mTolerance,
-																				bool requireBigEnough = false)
+		                                    out double mTolerance,
+		                                    bool requireBigEnough = false)
 		{
 			Assert.ArgumentNotNull(spatialReference, nameof(spatialReference));
 
