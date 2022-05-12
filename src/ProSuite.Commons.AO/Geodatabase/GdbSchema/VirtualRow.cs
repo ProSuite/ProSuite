@@ -61,12 +61,14 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		int IRow.OID => OID;
 		int IObject.OID => OID;
+
 		public virtual int OID =>
 			throw new NotImplementedException("Implement in derived class");
 
 		ITable IRow.Table => Table;
 		ITable IObject.Table => Table;
 		IReadOnlyTable IReadOnlyRow.Table => Table;
+
 		public virtual VirtualTable Table =>
 			throw new NotImplementedException("Implement in derived class");
 
