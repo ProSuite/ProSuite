@@ -71,7 +71,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		{
 			return _tablesByName.Values.Where(
 				t => t.DatasetType == datasetType ||
-						 datasetType == esriDatasetType.esriDTAny);
+				     datasetType == esriDatasetType.esriDTAny);
 		}
 
 		public override VirtualTable OpenTable(string name)

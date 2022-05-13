@@ -457,6 +457,27 @@ namespace ProSuite.Commons.Geom
 			return result;
 		}
 
+		public static MultiLinestring GetUnionAreasXY([NotNull] IEnumerable<RingGroup> ringGroups,
+		                                              double tolerance)
+		{
+			MultiLinestring result = null;
+
+			// TODO: Optimize and use potential spatial index (change to input polyheron?)
+			foreach (RingGroup ringGroup in ringGroups)
+			{
+				if (result == null)
+				{
+					result = ringGroup.Clone();
+				}
+				else
+				{
+					result = GetUnionAreasXY(result, ringGroup, tolerance);
+				}
+			}
+
+			return result;
+		}
+
 		public static MultiLinestring GetUnionAreasXY([NotNull] MultiLinestring sourceRings,
 		                                              [NotNull] MultiLinestring targetRings,
 		                                              double tolerance)
@@ -3126,7 +3147,7 @@ namespace ProSuite.Commons.Geom
 		}
 
 		[NotNull]
-		public static IList<Line3D> GetLinearSelfIntersectionsXY(
+		public static IEnumerable<Line3D> GetLinearSelfIntersectionsXY(
 			[NotNull] ISegmentList segmentList,
 			double tolerance,
 			bool in3D = false)
@@ -3144,12 +3165,13 @@ namespace ProSuite.Commons.Geom
 
 					foreach (Linestring selfIntersection in linearSelfIntersections)
 					{
-						result.AddRange(selfIntersection.Segments);
+						foreach (Line3D segment in selfIntersection.Segments)
+						{
+							yield return segment;
+						}
 					}
 				}
 			}
-
-			return result;
 		}
 
 		[NotNull]

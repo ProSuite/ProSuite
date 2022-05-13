@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
@@ -20,8 +19,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 {
 	public static class GdbObjectUtils
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		[NotNull]
 		public static string ConcatenateObjectIds<T>([NotNull] IEnumerable<T> list,
@@ -287,6 +285,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			return ReadRowValue<T>(value, fieldIndex, () => GetObjectId(row),
 			                       () => DatasetUtils.GetName(row.Table));
 		}
+
 		[CanBeNull]
 		public static T? ReadRowValue<T>([NotNull] IReadOnlyRow row, int fieldIndex)
 			where T : struct
@@ -298,7 +297,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 		}
 
 		[CanBeNull]
-		private static T? ReadRowValue<T>([NotNull] object value, int fieldIndex, Func<int?> getOid, Func<string> getTableName)
+		private static T? ReadRowValue<T>([NotNull] object value, int fieldIndex, Func<int?> getOid,
+		                                  Func<string> getTableName)
 			where T : struct
 		{
 			if (value == DBNull.Value)
@@ -340,7 +340,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 				_msg.ErrorFormat(
 					"ReadRowValue: Error casting value {0} of type {1} into type {2} for row <oid> {3} at field index {4} in {5}: {6}",
-					value, value.GetType(), typeof(T), fieldIndex, rowOid, getTableName(), ex.Message);
+					value, value.GetType(), typeof(T), fieldIndex, rowOid, getTableName(),
+					ex.Message);
 
 				throw;
 			}
@@ -684,7 +685,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 				useGeometry = newGeometry;
 			}
 			else if (GeometryUtils.EnsureSpatialReference(
-				newGeometry, targetSpatialRefToEnsure, out useGeometry))
+				         newGeometry, targetSpatialRefToEnsure, out useGeometry))
 			{
 				// this is probably only necessary for non-simple features
 				_msg.Debug("SetFeatureShape: Spatial reference of feature class " +
@@ -1616,17 +1617,11 @@ namespace ProSuite.Commons.AO.Geodatabase
 		public static bool IsSameObject([NotNull] IObject obj1, [NotNull] IObject obj2,
 		                                ObjectClassEquality classEquality)
 		{
-			if (obj1 == obj2)
+			// Test for reference-equals in real ArcObjects IObject instances but also allow
+			// synthetic and mock features to provide their own equality implementation:
+			if (obj1.Equals(obj2))
 			{
 				return true;
-			}
-
-			// Allow specific IEquatable<IObject> implementation in mock objects or synthetic features
-			var equatableObj = obj1 as IEquatable<IObject>;
-
-			if (equatableObj != null)
-			{
-				return equatableObj.Equals(obj2);
 			}
 
 			// For real geodatabase objects:

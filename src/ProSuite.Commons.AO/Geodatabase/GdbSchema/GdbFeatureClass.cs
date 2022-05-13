@@ -6,20 +6,30 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 {
 	/// <inheritdoc cref="GdbTable" />
-	public class GdbFeatureClass : GdbTable, IFeatureClass, IGeoDataset, IReadOnlyFeatureClass, IRowCreator<GdbFeature>
+	public class GdbFeatureClass : GdbTable, IFeatureClass, IGeoDataset, IReadOnlyFeatureClass,
+	                               IRowCreator<GdbFeature>
 	{
 		public GdbFeatureClass(int objectClassId,
-													 [NotNull] string name,
-													 esriGeometryType shapeType,
-													 [CanBeNull] string aliasName = null,
-													 [CanBeNull] Func<GdbTable, BackingDataset> createBackingDataset = null,
-													 [CanBeNull] IWorkspace workspace = null)
+		                       [NotNull] string name,
+		                       esriGeometryType shapeType,
+		                       [CanBeNull] string aliasName = null,
+		                       [CanBeNull] Func<GdbTable, BackingDataset> createBackingDataset =
+			                       null,
+		                       [CanBeNull] IWorkspace workspace = null)
 			: base(objectClassId, name, aliasName, createBackingDataset, workspace)
 		{
 			ShapeType = shapeType;
 		}
 
+		public GdbFeatureClass([NotNull] IFeatureClass template,
+		                       bool useTemplateForQuerying = false)
+			: base(template, useTemplateForQuerying)
+		{
+			ShapeType = template.ShapeType;
+		}
+
 		public GdbFields FieldsT => GdbFields;
+
 		protected override void FieldAddedCore(IField field)
 		{
 			base.FieldAddedCore(field);
@@ -30,8 +40,10 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			}
 		}
 
-		GdbFeature IRowCreator<GdbFeature>.CreateRow() => (GdbFeature)CreateRow();
-		public new GdbFeature CreateFeature() => (GdbFeature)CreateRow();
+		GdbFeature IRowCreator<GdbFeature>.CreateRow() => (GdbFeature) CreateRow();
+
+		public new GdbFeature CreateFeature() => (GdbFeature) CreateRow();
+
 		protected override VirtualRow CreateObject(int oid) => CreateFeature(oid);
 
 		public GdbFeature CreateFeature(int oid)
@@ -66,6 +78,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			{
 				throw new NotImplementedException("No backing dataset provided for Search().");
 			}
+
 			var rows = BackingDataset.Search(filter, recycling);
 			return new CursorImpl(this, rows);
 		}
@@ -84,6 +97,5 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		public override int FeatureClassID => ObjectClassID;
 
 		#endregion
-
 	}
 }
