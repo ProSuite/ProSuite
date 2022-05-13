@@ -480,10 +480,12 @@ namespace ProSuite.Commons.AO.Geometry
 		}
 
 		public static Polyhedron CreatePolyhedron(IMultiPatch multipatch,
-		                                          bool assumePartVertexIds = false)
+		                                          bool assumePartVertexIds = false,
+		                                          bool orientRingsClockwise = false)
 		{
 			var ringGroups = new List<RingGroup>();
 
+			int index = 0;
 			foreach (GeometryPart multipatchPart in GeometryPart.FromGeometry(multipatch))
 			{
 				RingGroup ringGroup = CreateRingGroup(multipatchPart);
@@ -492,6 +494,17 @@ namespace ProSuite.Commons.AO.Geometry
 				    GeometryUtils.HasUniqueVertexId(multipatchPart.FirstGeometry, out int vertexId))
 				{
 					ringGroup.Id = vertexId;
+				}
+				else
+				{
+					ringGroup.Id = index;
+				}
+
+				index += ringGroup.PartCount;
+
+				if (orientRingsClockwise)
+				{
+					ringGroup.TryOrientProperly();
 				}
 
 				ringGroups.Add(ringGroup);

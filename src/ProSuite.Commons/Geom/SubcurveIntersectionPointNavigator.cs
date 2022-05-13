@@ -514,6 +514,15 @@ namespace ProSuite.Commons.Geom
 				return true;
 			}
 
+			// If the target intersects both segments of the boundary loop (i.e. partially 'fills'
+			// the boundary loop)
+			if (_currentStartIntersection.Type == IntersectionPointType.LinearIntersectionEnd &&
+			    otherIntersection.Type == IntersectionPointType.LinearIntersectionStart &&
+			    SourceSegmentCountBetween(_currentStartIntersection, otherIntersection) > 1)
+			{
+				return true;
+			}
+
 			return false;
 		}
 
