@@ -18,15 +18,20 @@ namespace ProSuite.DomainModel.AO.DataModel
 			[NotNull] IObject obj,
 			[CanBeNull] IFieldIndexCache fieldIndexCache = null)
 		{
-			ObjectSubtype objectSubtype = objectCategory as ObjectSubtype;
+			Assert.ArgumentNotNull(objectCategory, nameof(objectCategory));
+			Assert.ArgumentNotNull(obj, nameof(obj));
 
-			if (objectSubtype != null)
+			if (objectCategory is ObjectSubtype objectSubtype)
 			{
 				ApplyObjectSubtypeValuesTo(objectSubtype, obj, fieldIndexCache);
 			}
+			else if (objectCategory is ObjectType objectType)
+			{
+				ApplyObjectTypeValueTo(objectType, obj, fieldIndexCache);
+			}
 			else
 			{
-				ApplyObjectTypeValueTo((ObjectType) objectCategory, obj, fieldIndexCache);
+				throw new NotSupportedException($"Unhandled type: {objectCategory.GetType()}");
 			}
 		}
 
@@ -37,15 +42,14 @@ namespace ProSuite.DomainModel.AO.DataModel
 		/// <param name="fromObject">The object whose attribute values shall be analyzed.</param>
 		/// <param name="fieldIndexCache">The optional field index cache.</param>
 		/// <returns></returns>
-		/// <exception cref="ArgumentException">
-		/// The object type does not apply to the object.
-		///   </exception>
+		/// <exception cref="ArgumentException"> The object type does not apply to the object.</exception>
 		[CanBeNull]
 		public static ObjectSubtype TryIdentifyObjectSubtype(
 			[NotNull] ObjectType objectType,
 			[NotNull] IObject fromObject,
 			[CanBeNull] IFieldIndexCache fieldIndexCache = null)
 		{
+			Assert.ArgumentNotNull(objectType, nameof(objectType));
 			Assert.ArgumentNotNull(fromObject, nameof(fromObject));
 
 			int maxMatchingFieldCount = -1;
@@ -86,8 +90,6 @@ namespace ProSuite.DomainModel.AO.DataModel
 		private static bool ObjectTypeAppliesTo([NotNull] ObjectType objectType,
 		                                        [NotNull] IObject obj)
 		{
-			Assert.ArgumentNotNull(obj, nameof(obj));
-
 			int subtypeFieldIndex = GdbObjectUtils.GetSubtypeFieldIndex(obj);
 
 			if (subtypeFieldIndex < 0)
@@ -108,10 +110,8 @@ namespace ProSuite.DomainModel.AO.DataModel
 		private static bool ObjectSubtypeAppliesTo(
 			[NotNull] ObjectSubtype objectSubtype,
 			[NotNull] IObject obj,
-			[CanBeNull] IFieldIndexCache fieldIndexCache = null)
+			[CanBeNull] IFieldIndexCache fieldIndexCache)
 		{
-			Assert.ArgumentNotNull(obj, nameof(obj));
-
 			foreach (ObjectSubtypeCriterion criterion in objectSubtype.Criteria)
 			{
 				ObjectAttribute attribute = criterion.Attribute;
@@ -134,14 +134,10 @@ namespace ProSuite.DomainModel.AO.DataModel
 			return true;
 		}
 
-		public static void ApplyObjectTypeValueTo([NotNull] ObjectType objectType,
-		                                          [NotNull] IObject obj,
-		                                          [CanBeNull] IFieldIndexCache fieldIndexCache =
-			                                          null)
+		private static void ApplyObjectTypeValueTo([NotNull] ObjectType objectType,
+		                                           [NotNull] IObject obj,
+		                                           [CanBeNull] IFieldIndexCache fieldIndexCache)
 		{
-			// TODO: Make private once obsolete methods are gone
-			Assert.ArgumentNotNull(obj, nameof(obj));
-
 			int subtypeFieldIndex = fieldIndexCache?.GetSubtypeFieldIndex(obj.Class) ??
 			                        GdbObjectUtils.GetSubtypeFieldIndex(obj);
 
@@ -157,18 +153,16 @@ namespace ProSuite.DomainModel.AO.DataModel
 				return;
 			}
 
-			_msg.DebugFormat("Changing subtype value to {0} (current value: {1})", objectType.SubtypeCode, value);
+			_msg.DebugFormat("Changing subtype value to {0} (current value: {1})",
+			                 objectType.SubtypeCode, value);
 
-			obj.set_Value(subtypeFieldIndex, objectType.SubtypeCode);
+			obj.Value[subtypeFieldIndex] = objectType.SubtypeCode;
 		}
 
-		public static void ApplyObjectSubtypeValuesTo([NotNull] ObjectSubtype objectSubtype,
-		                                              [NotNull] IObject obj,
-		                                              [CanBeNull] IFieldIndexCache fieldIndexCache)
+		private static void ApplyObjectSubtypeValuesTo([NotNull] ObjectSubtype objectSubtype,
+		                                               [NotNull] IObject obj,
+		                                               [CanBeNull] IFieldIndexCache fieldIndexCache)
 		{
-			// TODO: Make private once obsolete methods are gone
-			Assert.ArgumentNotNull(obj, nameof(obj));
-
 			ApplyObjectTypeValueTo(objectSubtype.ObjectType, obj, fieldIndexCache);
 
 			foreach (ObjectSubtypeCriterion criterion in objectSubtype.Criteria)
@@ -181,7 +175,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 				            "Object subtype criterion attribute not found in object class {0}: {1}",
 				            DatasetUtils.GetName(obj.Class), attribute.Name);
 
-				obj.set_Value(fieldIndex, criterion.AttributeValue);
+				obj.Value[fieldIndex] = criterion.AttributeValue;
 			}
 		}
 	}

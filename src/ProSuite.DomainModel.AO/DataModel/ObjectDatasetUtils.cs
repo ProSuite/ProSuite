@@ -46,6 +46,8 @@ namespace ProSuite.DomainModel.AO.DataModel
 		public static ObjectCategory GetObjectCategory([NotNull] IObjectDataset objectDataset,
 		                                               [NotNull] IObject ofObject)
 		{
+			Assert.ArgumentNotNull(objectDataset, nameof(objectDataset));
+
 			int subtypeFieldIndex = GdbObjectUtils.GetSubtypeFieldIndex(ofObject);
 
 			if (subtypeFieldIndex < 0)
@@ -88,25 +90,28 @@ namespace ProSuite.DomainModel.AO.DataModel
 		}
 
 		[NotNull]
-		public static IEnumerable<int> GetObjectDefininingFieldIndexes(
+		public static IEnumerable<int> GetObjectDefiningFieldIndexes(
 			[NotNull] IObjectDataset objectDataset,
-			[NotNull] IDatasetContext datasetContext)
+			[NotNull] IDatasetContext datasetContext,
+			[CanBeNull] IFieldIndexCache fieldIndexCache = null)
 		{
+			Assert.ArgumentNotNull(datasetContext, nameof(datasetContext));
+
 			IObjectClass objectClass = datasetContext.OpenObjectClass(objectDataset);
 			Assert.NotNull(objectClass, "dataset does not exist in context: {0}",
 			               objectDataset.Name);
 
-			return GetObjectDefininingFieldIndexes(objectDataset, objectClass);
+			return GetObjectDefiningFieldIndexes(objectDataset, objectClass, fieldIndexCache);
 		}
 
 		[NotNull]
-		public static IEnumerable<int> GetObjectDefininingFieldIndexes(
+		public static IEnumerable<int> GetObjectDefiningFieldIndexes(
 			[NotNull] IObjectDataset objectDataset,
 			[NotNull] IObjectClass objectClass,
 			[CanBeNull] IFieldIndexCache fieldIndexCache = null)
 		{
-			foreach (ObjectAttribute attribute in GetObjectDefininingAttributes(
-				objectDataset, objectClass, fieldIndexCache))
+			foreach (ObjectAttribute attribute in GetObjectDefiningAttributes(
+				         objectDataset, objectClass, fieldIndexCache))
 			{
 				int fieldIndex =
 					AttributeUtils.GetFieldIndex(objectClass, attribute, fieldIndexCache);
@@ -119,14 +124,18 @@ namespace ProSuite.DomainModel.AO.DataModel
 		}
 
 		[NotNull]
-		public static IEnumerable<ObjectAttribute> GetObjectDefininingAttributes(
+		public static IEnumerable<ObjectAttribute> GetObjectDefiningAttributes(
 			[NotNull] IObjectDataset objectDataset,
 			[NotNull] IObjectClass objectClass,
 			[CanBeNull] IFieldIndexCache fieldIndexCache)
 		{
+			Assert.ArgumentNotNull(objectDataset, nameof(objectDataset));
+			Assert.ArgumentNotNull(objectClass, nameof(objectClass));
+
 			var subtypeHandled = false;
 
-			int subtypeFieldIndex = GetSubtypeFieldIndex(objectClass, fieldIndexCache);
+			int subtypeFieldIndex = fieldIndexCache?.GetSubtypeFieldIndex(objectClass) ??
+			                        DatasetUtils.GetSubtypeFieldIndex(objectClass);
 
 			foreach (ObjectAttribute attribute in objectDataset.GetAttributes())
 			{
@@ -144,8 +153,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 					else
 					{
 						int fieldIndex =
-							AttributeUtils.GetFieldIndex(objectClass, attribute,
-							                             fieldIndexCache);
+							AttributeUtils.GetFieldIndex(objectClass, attribute, fieldIndexCache);
 
 						if (fieldIndex == subtypeFieldIndex)
 						{
@@ -159,23 +167,6 @@ namespace ProSuite.DomainModel.AO.DataModel
 			}
 		}
 
-		public static int GetSubtypeFieldIndex([NotNull] IObjectDataset objectDataset,
-		                                       [NotNull] IDatasetContext datasetContext,
-		                                       [CanBeNull] IFieldIndexCache fieldIndexCache = null)
-		{
-			IObjectClass objectClass = datasetContext.OpenObjectClass(objectDataset);
-			return objectClass == null
-				       ? -1
-				       : GetSubtypeFieldIndex(objectClass, fieldIndexCache);
-		}
-
-		private static int GetSubtypeFieldIndex([NotNull] IObjectClass objectClass,
-		                                        [CanBeNull] IFieldIndexCache fieldIndexCache)
-		{
-			return fieldIndexCache?.GetSubtypeFieldIndex(objectClass) ??
-			       DatasetUtils.GetSubtypeFieldIndex(objectClass);
-		}
-
 		#region Object attribute values
 
 		public static object GetValue([NotNull] IObject obj,
@@ -184,7 +175,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 		                              [CanBeNull] IFieldIndexCache fieldIndexCache = null)
 		{
 			Assert.ArgumentNotNull(obj, nameof(obj));
-			
+
 			ObjectAttribute attribute = GetExistingAttribute(objectDataset, attributeRole);
 
 			return AttributeUtils.GetValueFor(obj, attribute, fieldIndexCache);
@@ -232,8 +223,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 			else
 			{
 				throw new InvalidConfigurationException(
-					string.Format("Field not found for attribute {0}",
-					              attribute));
+					string.Format("Field not found for attribute {0}", attribute));
 			}
 
 			return true;
@@ -330,7 +320,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 			// needs to be DBNull.Value.
 			object valueToWrite = value ?? DBNull.Value;
 
-			obj.set_Value(fieldIndex, valueToWrite);
+			obj.Value[fieldIndex] = valueToWrite;
 		}
 
 		#endregion
