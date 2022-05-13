@@ -457,6 +457,27 @@ namespace ProSuite.Commons.Geom
 			return result;
 		}
 
+		public static MultiLinestring GetUnionAreasXY([NotNull] IEnumerable<RingGroup> ringGroups,
+		                                              double tolerance)
+		{
+			MultiLinestring result = null;
+
+			// TODO: Optimize and use potential spatial index (change to input polyheron?)
+			foreach (RingGroup ringGroup in ringGroups)
+			{
+				if (result == null)
+				{
+					result = ringGroup.Clone();
+				}
+				else
+				{
+					result = GetUnionAreasXY(result, ringGroup, tolerance);
+				}
+			}
+
+			return result;
+		}
+
 		public static MultiLinestring GetUnionAreasXY([NotNull] MultiLinestring sourceRings,
 		                                              [NotNull] MultiLinestring targetRings,
 		                                              double tolerance)

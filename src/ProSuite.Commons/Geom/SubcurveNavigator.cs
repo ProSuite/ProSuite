@@ -207,6 +207,11 @@ namespace ProSuite.Commons.Geom
 				Pnt3D ringStart = null;
 				foreach (IntersectionRun next in NavigateSubcurves(startIntersections))
 				{
+					if (next.Subcurve.GetLength2D() == 0)
+					{
+						continue;
+					}
+
 					subcurveInfos.Add(next);
 
 					if (next.ContainsSourceStart(out Pnt3D startPoint))
@@ -315,6 +320,11 @@ namespace ProSuite.Commons.Geom
 						                          .Single().Key;
 
 					Linestring targetRing = Target.GetPart(targetIndex);
+
+					// TODO: If there were boundary loops, ensure no outer ring is inside outer ring and no inner ring is in inner ring
+					//       This could probably be detected if the boundary loop is split and the un-cut part/ring is added to the
+					//       un-cut target rings...
+					// See last case in CanGetIntersectionAreaXYSourceHasBoundaryLoop()
 
 					if (withSameOrientation &&
 					    sourceRing.ClockwiseOriented != null &&
@@ -1278,10 +1288,13 @@ namespace ProSuite.Commons.Geom
 
 		private void RememberUsedSourceParts(IEnumerable<IntersectionRun> subcurveInfos)
 		{
-			foreach (int sourceIdx in subcurveInfos.Select(
-				         i => i.NextIntersection.SourcePartIndex))
+			foreach (IntersectionRun intersectionRun in subcurveInfos)
 			{
-				IntersectedSourcePartIndexes.Add(sourceIdx);
+				if (intersectionRun.RunsAlongSource)
+				{
+					int sourceIdx = intersectionRun.NextIntersection.SourcePartIndex;
+					IntersectedSourcePartIndexes.Add(sourceIdx);
+				}
 			}
 		}
 
