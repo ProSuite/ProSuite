@@ -31,6 +31,7 @@ using ProSuite.Microservices.Definitions.QA;
 using ProSuite.Microservices.Definitions.Shared;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.TestContainer;
+using ProSuite.QA.Core.IssueCodes;
 using Quaestor.LoadReporting;
 
 namespace ProSuite.Microservices.Server.AO.QA

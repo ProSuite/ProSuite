@@ -6,6 +6,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.QA.Core;
+using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.TestFactories

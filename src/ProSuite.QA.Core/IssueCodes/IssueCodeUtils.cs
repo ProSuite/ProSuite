@@ -4,7 +4,7 @@ using System.Reflection;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 
-namespace ProSuite.QA.Container
+namespace ProSuite.QA.Core.IssueCodes
 {
 	public static class IssueCodeUtils
 	{

@@ -8,6 +8,7 @@ using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests

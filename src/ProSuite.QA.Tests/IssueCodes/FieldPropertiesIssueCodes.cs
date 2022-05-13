@@ -1,5 +1,5 @@
-using ProSuite.QA.Container;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.QA.Core.IssueCodes;
 
 namespace ProSuite.QA.Tests.IssueCodes
 {

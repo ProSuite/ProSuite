@@ -5,6 +5,7 @@ using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.QA.Container;
 using ProSuite.QA.Tests;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.TestFactories

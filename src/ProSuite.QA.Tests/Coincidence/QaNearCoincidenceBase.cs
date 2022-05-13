@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container;
 using ProSuite.QA.Container.Geometry;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.QA.Tests.Properties;
@@ -13,6 +12,7 @@ using ProSuite.Commons.Geom;
 using IPnt = ProSuite.Commons.Geom.IPnt;
 using Pnt = ProSuite.Commons.Geom.Pnt;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Core.IssueCodes;
 
 namespace ProSuite.QA.Tests.Coincidence
 {
