@@ -57,7 +57,9 @@
     <ProjectReference Include="..\..\..\ProSuite\src\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj" />
     <ProjectReference Include="..\..\..\ProSuite\src\ProSuite.Commons.Logging\ProSuite.Commons.Logging.csproj" />
     <ProjectReference Include="..\..\..\ProSuite\src\ProSuite.Commons\ProSuite.Commons.csproj" />
+    <ProjectReference Include="..\ProSuite.DomainServices.AO\ProSuite.DomainServices.AO.csproj" />
     <ProjectReference Include="..\ProSuite.QA.Container\ProSuite.QA.Container.csproj" />
+    <ProjectReference Include="..\ProSuite.QA.Tests\ProSuite.QA.Tests.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.1.0" />

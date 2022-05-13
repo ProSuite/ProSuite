@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -6,7 +7,9 @@ namespace ProSuite.Commons.AO.Geodatabase
 {
 	public class ReadOnlyTableFactory : ReadOnlyFeatureClass
 	{
-		protected static readonly Dictionary<ITable, ReadOnlyTable> Cache = new Dictionary<ITable, ReadOnlyTable>();
+		[ThreadStatic] private static Dictionary<ITable, ReadOnlyTable> _cache;
+		protected static Dictionary<ITable, ReadOnlyTable> Cache =>
+			_cache ?? (_cache = new Dictionary<ITable, ReadOnlyTable>());
 
 		public static ReadOnlyFeatureClass Create<T>([NotNull] T featureClass)
 			where T : IFeatureClass

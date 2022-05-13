@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
@@ -135,6 +136,37 @@ namespace ProSuite.DomainServices.AO.QA
 				out IList<TestsWithRelatedGeometry> testsWithRelatedGeometry);
 
 			return BuildQcGroups(containerTests, testsWithRelatedGeometry, maxProcesses);
+		}
+
+		public static bool CanBeExecutedWithTileThreads([NotNull]ITest test)
+		{
+			return CanBeExecutedWithTileThreads(test.GetType());
+		}
+
+		public static bool CanBeExecutedWithTileThreads([NotNull] Type testType)
+		{
+			Type ct = typeof(ContainerTest);
+			if (! ct.IsAssignableFrom(testType))
+			{
+				return false;
+			}
+
+			if (Overrides(testType, ct, "CompleteTileCore")
+			    || Overrides(testType, ct, "BeginTileCore"))
+			{
+				return false;
+			}
+
+			return true;
+		}
+
+		private static bool Overrides(Type type, Type baseType, string methodName)
+		{
+			MethodInfo method = type.GetMethod(
+				methodName,
+				BindingFlags.Instance | BindingFlags.NonPublic);
+
+			return method?.DeclaringType != baseType;
 		}
 
 		internal List<IList<QualityCondition>> BuildQcGroups(
