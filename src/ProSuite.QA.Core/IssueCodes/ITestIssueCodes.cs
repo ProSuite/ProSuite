@@ -1,7 +1,7 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
-namespace ProSuite.QA.Container
+namespace ProSuite.QA.Core.IssueCodes
 {
 	public interface ITestIssueCodes
 	{

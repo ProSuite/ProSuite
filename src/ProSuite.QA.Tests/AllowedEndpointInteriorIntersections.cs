@@ -1,5 +1,3 @@
-using System;
-
 namespace ProSuite.QA.Tests
 {
 	public enum AllowedEndpointInteriorIntersections

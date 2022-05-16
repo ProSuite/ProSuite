@@ -9,8 +9,8 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
 using ProSuite.Commons.Xml;
-using ProSuite.QA.Container;
 using ProSuite.QA.Core;
+using ProSuite.QA.Core.IssueCodes;
 
 namespace ProSuite.DomainModel.AO.QA.TestReport
 {

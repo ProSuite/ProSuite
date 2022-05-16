@@ -19,6 +19,7 @@ using ProSuite.QA.Core;
 using IPnt = ProSuite.Commons.Geom.IPnt;
 using Pnt = ProSuite.Commons.Geom.Pnt;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
