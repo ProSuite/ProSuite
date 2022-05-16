@@ -115,7 +115,15 @@ namespace ProSuite.DomainModel.AO.QA
 
 		private object OpenKnownDatasetType(IDdxDataset dataset, Type knownType)
 		{
-			Assert.ArgumentNotNull(knownType, nameof(knownType));
+#if DEBUG
+			if (typeof(IFeatureClass) == knownType ||
+			    typeof(ITable) == knownType)
+			{
+				throw new AssertionException("Legacy type! Use IReadOnly interfaces.");
+			}
+#endif
+
+				Assert.ArgumentNotNull(knownType, nameof(knownType));
 
 			if (typeof(IFeatureClass) == knownType)
 				return _datasetContext.OpenFeatureClass((IVectorDataset) dataset);
@@ -129,7 +137,7 @@ namespace ProSuite.DomainModel.AO.QA
 				return _datasetContext.OpenTable((IObjectDataset) dataset);
 			if (typeof(IReadOnlyTable) == knownType)
 			{
-				ITable tbl = _datasetContext.OpenTable((IObjectDataset)dataset);
+				ITable tbl = _datasetContext.OpenTable((IObjectDataset) dataset);
 				return tbl != null ? ReadOnlyTableFactory.Create(tbl) : null;
 			}
 

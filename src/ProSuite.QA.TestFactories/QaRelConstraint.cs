@@ -206,15 +206,16 @@ namespace ProSuite.QA.TestFactories
 					continue;
 				}
 
-				var table = datasetContext.OpenDataset(
-					            dataset, Assert.NotNull(datasetParameterValue.DataType)) as ITable;
+				IReadOnlyTable table =
+					datasetContext.OpenDataset(
+						dataset, Assert.NotNull(datasetParameterValue.DataType)) as IReadOnlyTable;
 
 				if (table == null)
 				{
 					continue;
 				}
 
-				string tableName = DatasetUtils.GetName(table);
+				string tableName = table.Name;
 
 				if (! string.Equals(dataset.Name, tableName))
 				{
