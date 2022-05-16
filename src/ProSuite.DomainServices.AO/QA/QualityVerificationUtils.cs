@@ -307,25 +307,15 @@ namespace ProSuite.DomainServices.AO.QA
 
 			foreach (Dataset dataset in datasets)
 			{
-				IWorkspaceContext workspaceContext =
-					workspaceContextLookup.GetWorkspaceContext(dataset);
+				// Currently this is only relevant for terrains. Theoretically linear networks
+				// could also be datasets implementing IDatasetCollection.
 
-				if (workspaceContext == null)
+				if (! (dataset is IDatasetCollection terrainDataset))
 				{
 					continue;
 				}
 
-				// TODO: Once the simple terrain is always part of the work unit, this could be simplified
-				//       to ... as SimpleTerrainDataset. By not opening the terrain, this is probably a lot faster!
-				ISimpleTerrainDataset terrainDataset = dataset as ISimpleTerrainDataset;
-
-				if (terrainDataset == null)
-				{
-					continue;
-				}
-
-				IEnumerable<IVectorDataset> baseDatasets =
-					terrainDataset.Sources.Select(s => s.Dataset);
+				IEnumerable<IDdxDataset> baseDatasets = terrainDataset.ContainedDatasets;
 
 				result.AddRange(baseDatasets.Cast<Dataset>());
 			}
