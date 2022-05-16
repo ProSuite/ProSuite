@@ -3,13 +3,13 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.DdxEditor.Content.Blazor;
 
-public partial class Index
+public partial class BlazorHost
 {
 	private QualityConditionRazor _view;
 
 	[CanBeNull]
 	[Parameter]
-	public QualityConditionQualityConditionPresenterFactory Factory { get; set; }
+	public QualityConditionPresenterFactory Factory { get; set; }
 
 	protected override void OnAfterRender(bool firstRender)
 	{

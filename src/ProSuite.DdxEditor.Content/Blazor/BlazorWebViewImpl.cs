@@ -20,19 +20,6 @@ public class BlazorWebViewImpl : BlazorWebView
 		IDictionary<string, object> parameters = new Dictionary<string, object>();
 		parameters.Add("Factory", serviceProvider.GetService<IQualityConditionPresenterFactory>());
 
-		RootComponents.Add<Index>("#app", parameters);
+		RootComponents.Add<BlazorHost>("#app", parameters);
 	}
 }
-
-public class QualityConditionQualityConditionPresenterFactory : IQualityConditionPresenterFactory
-{
-	public IItemNavigation ItemNavigation { get; set; }
-	public QualityConditionItemAdapter Item { get; set; }
-
-	public void CreateObserver(IQualityConditionView view)
-	{
-		new QualityConditionPresenter(Item, view, ItemNavigation);
-	}
-}
-
-public interface IQualityConditionPresenterFactory { }

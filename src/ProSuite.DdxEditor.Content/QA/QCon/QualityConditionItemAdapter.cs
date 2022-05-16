@@ -27,14 +27,14 @@ public class QualityConditionItemAdapter : QualityConditionItem
 
 		IServiceCollection serviceCollection = new ServiceCollection();
 		serviceCollection.AddBlazorWebView();
-		serviceCollection.AddScoped<IQualityConditionPresenterFactory, QualityConditionQualityConditionPresenterFactory>(CreateFactory(itemNavigation));
+		serviceCollection.AddScoped<IQualityConditionPresenterFactory, QualityConditionPresenterFactory>(CreateFactory(itemNavigation));
 
 		return new BlazorWebViewImpl(serviceCollection.BuildServiceProvider());
 	}
 
-	private Func<IServiceProvider, QualityConditionQualityConditionPresenterFactory> CreateFactory(IItemNavigation itemNavigation)
+	private Func<IServiceProvider, QualityConditionPresenterFactory> CreateFactory(IItemNavigation itemNavigation)
 	{
-		return _ => new QualityConditionQualityConditionPresenterFactory
+		return _ => new QualityConditionPresenterFactory
 		            {
 			            ItemNavigation = itemNavigation,
 			            Item = this

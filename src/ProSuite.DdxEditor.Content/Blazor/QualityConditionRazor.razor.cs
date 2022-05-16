@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using Microsoft.AspNetCore.Components.Web;
 using ProSuite.DdxEditor.Content.QA.QCon;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.QA;
@@ -42,6 +43,17 @@ public partial class QualityConditionRazor : IQualityConditionView
 	private void OnLoad()
 	{
 		Load?.Invoke(this, EventArgs.Empty);
+	}
+	
+	private void ValueButtonsClicked()
+	{
+		object result = FindTestDescriptorDelegate();
+
+		if (result == null)
+		{
+			return;
+		}
+
 	}
 
 	public IntPtr Handle { get; }
