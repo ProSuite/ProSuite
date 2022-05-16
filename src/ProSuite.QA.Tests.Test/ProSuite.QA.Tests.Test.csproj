@@ -19,6 +19,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugType>full</DebugType>
     <DefineConstants>DEBUG;TRACE;$(VSArcGISProduct)</DefineConstants>
+    <PlatformTarget Condition=" '$(VSArcGISProduct)' == 'ArcGIS' ">x86</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
