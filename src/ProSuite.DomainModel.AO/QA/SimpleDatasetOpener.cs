@@ -74,11 +74,6 @@ namespace ProSuite.DomainModel.AO.QA
 			}
 		}
 
-		public IRelationshipClass OpenRelationshipClass(Association association)
-		{
-			return _datasetContext.OpenRelationshipClass(association);
-		}
-
 		public bool IsSupportedType(Type dataType)
 		{
 			Assert.ArgumentNotNull(dataType, nameof(dataType));
@@ -183,16 +178,6 @@ namespace ProSuite.DomainModel.AO.QA
 				associationName, model, _datasetContext);
 
 			return DatasetUtils.GetName(relationshipClass);
-		}
-
-		public bool CanOpenQueryTables()
-		{
-			if (_datasetContext is IQueryTableContext queryTableContext)
-			{
-				return queryTableContext.CanOpenQueryTables();
-			}
-
-			return true;
 		}
 
 		public IReadOnlyTable OpenQueryTable(Association association,

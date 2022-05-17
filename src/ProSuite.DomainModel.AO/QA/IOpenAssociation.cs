@@ -14,12 +14,6 @@ namespace ProSuite.DomainModel.AO.QA
 	public interface IOpenAssociation
 	{
 		/// <summary>
-		/// Whether this specific implementation can open query tables or not.
-		/// </summary>
-		/// <returns></returns>
-		bool CanOpenQueryTables();
-
-		/// <summary>
 		/// Opens a query table based on an association. The rules are the same as for
 		/// <see cref="RelationshipClassUtils.GetQueryTable"/>.
 		/// </summary>
@@ -59,6 +53,7 @@ namespace ProSuite.DomainModel.AO.QA
 		/// <param name="associationName"></param>
 		/// <param name="model"></param>
 		/// <returns></returns>
-		string GetRelationshipClassName([NotNull] string associationName, [NotNull] Model model);
+		string GetRelationshipClassName([NotNull] string associationName,
+		                                [NotNull] Model model);
 	}
 }
