@@ -6,11 +6,10 @@ using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Surface;
 using ProSuite.Commons.AO.Surface.Raster;
-using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Text;
 using ProSuite.DomainModel.AO.DataModel;
+using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.Microservices.Definitions.QA;
 using ProSuite.Microservices.Definitions.Shared;
@@ -203,7 +202,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			Assert.NotNull(workspace, "GdbWorkspace for model {0} not available", model);
 
-			return GetRelationshipClassName(workspace, associationName, model);
+			return QueryTableUtils.GetRelationshipClassName(workspace, associationName, model);
 		}
 
 		public bool CanOpenQueryTables()
@@ -212,8 +211,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 		}
 
 		public ITable OpenQueryTable(string relationshipClassName,
-		                             Model model,
-		                             IList<ITable> tables,
+		                             DdxModel model,
+		                             IList<IReadOnlyTable> tables,
 		                             JoinType joinType,
 		                             string whereClause)
 		{
@@ -223,7 +222,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 				                           whereClause);
 			}
 
-			// If schema was cached locally (no link back) - Only used by unit test
+			// If schema was cached locally (no link back) - Only used by unit test (no joinType support etc.)
 			if (_virtualWorkspaces != null)
 			{
 				GdbWorkspace workspace =
@@ -253,8 +252,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 		}
 
 		private ITable GetRemoteQueryTable([NotNull] string relationshipClassName,
-		                                   [NotNull] Model model,
-		                                   [NotNull] IList<ITable> tables,
+		                                   [NotNull] DdxModel model,
+		                                   [NotNull] IList<IReadOnlyTable> tables,
 		                                   JoinType joinType,
 		                                   [CanBeNull] string whereClause)
 		{
@@ -271,7 +270,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 					JoinType = (int) joinType,
 				};
 
-			relClassQueryMsg.Tables.AddRange(tables.Select(DatasetUtils.GetName));
+			relClassQueryMsg.Tables.AddRange(tables.Select(t => t.Name));
 
 			if (! string.IsNullOrEmpty(whereClause))
 			{
@@ -299,50 +298,6 @@ namespace ProSuite.Microservices.Server.AO.QA
 			// TODO: Test!
 			return ProtobufConversionUtils.FromObjectClassMsg(queryTableMsg, gdbWorkspace,
 			                                                  createBackingDataset);
-		}
-
-		[NotNull]
-		private static string GetRelationshipClassName([NotNull] IWorkspace masterWorkspace,
-		                                               [NotNull] string associationName,
-		                                               [NotNull] Model model)
-		{
-			// TODO: Copy from QaRelationTestFactory:
-
-			if (masterWorkspace.Type != esriWorkspaceType.esriRemoteDatabaseWorkspace)
-			{
-				// the workspace uses unqualified names
-
-				return ModelElementNameUtils.IsQualifiedName(associationName)
-					       ? ModelElementNameUtils.GetUnqualifiedName(associationName)
-					       : associationName;
-			}
-
-			// the workspace uses qualified names
-
-			if (! ModelElementNameUtils.IsQualifiedName(associationName))
-			{
-				Assert.NotNullOrEmpty(
-					model.DefaultDatabaseSchemaOwner,
-					"The master database schema owner is not defined, cannot qualify unqualified association name ({0})",
-					associationName);
-
-				return ModelElementNameUtils.GetQualifiedName(
-					model.DefaultDatabaseName,
-					model.DefaultDatabaseSchemaOwner,
-					ModelElementNameUtils.GetUnqualifiedName(associationName));
-			}
-
-			// the association name is already qualified
-
-			if (StringUtils.IsNotEmpty(model.DefaultDatabaseSchemaOwner))
-			{
-				return ModelElementNameUtils.GetQualifiedName(
-					model.DefaultDatabaseName,
-					model.DefaultDatabaseSchemaOwner,
-					ModelElementNameUtils.GetUnqualifiedName(associationName));
-			}
-
-			return associationName;
 		}
 	}
 }

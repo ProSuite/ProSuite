@@ -242,8 +242,8 @@ namespace ProSuite.DomainModel.AO.QA
 		}
 
 		public ITable OpenQueryTable(string relationshipClassName,
-		                             Model model,
-		                             IList<ITable> tables,
+		                             DdxModel model,
+		                             IList<IReadOnlyTable> tables,
 		                             JoinType joinType,
 		                             string whereClause)
 		{
