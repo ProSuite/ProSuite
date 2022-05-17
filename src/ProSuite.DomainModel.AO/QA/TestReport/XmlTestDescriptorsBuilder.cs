@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Xml;
@@ -22,16 +21,19 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			_textWriter = textWriter;
 		}
 
+		public bool StopOnError { get; set; } = false;
+
+		public bool AllowErrors { get; set; } = false;
+
+		public bool UseDefaultTestDescriptorName { get; set; } = false;
+
 		public override void AddHeaderItem(string name, string value) { }
 
 		public override void WriteReport()
 		{
-			IncludedTestFactories.Sort();
-
-			List<IncludedInstanceBase> includedTests =
-				GetSortedTestClasses().Cast<IncludedInstanceBase>().ToList();
-
+			var includedTests = new List<IncludedInstanceBase>(IncludedTestClasses.Values);
 			includedTests.AddRange(IncludedTestFactories);
+			includedTests.Sort();
 
 			if (includedTests.Count <= 0)
 			{
@@ -49,24 +51,30 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 					foreach (IncludedInstanceConstructor constructor in includedTestClass
 						         .InstanceConstructors)
 					{
-						string testName = $"{testType.Name}({constructor.ConstructorIndex})";
+						string testName = UseDefaultTestDescriptorName
+							                  ? TestFactoryUtils.GetDefaultTestDescriptorName(
+								                  testType, constructor.ConstructorIndex)
+							                  : $"{testType.Name}({constructor.ConstructorIndex})";
 
 						TestDescriptor testDescriptor = new TestDescriptor(
-							testName, new ClassDescriptor(testType),
-							constructor.ConstructorIndex, false, false, null);
+							testName, new ClassDescriptor(testType), constructor.ConstructorIndex,
+							StopOnError, AllowErrors);
 
 						Add(testDescriptor, document);
 					}
 				}
 				else if (includedTest is IncludedTestFactory includedFactory)
 				{
-					Type factoryType = includedFactory.InstanceType;
+					Type testFactoryType = includedFactory.InstanceType;
 
-					string testName = $"{factoryType.Name}";
+					string testName = UseDefaultTestDescriptorName
+						                  ? TestFactoryUtils.GetDefaultTestDescriptorName(
+							                  testFactoryType)
+						                  : $"{testFactoryType.Name}";
 
 					TestDescriptor testDescriptor = new TestDescriptor(
-						testName, new ClassDescriptor(factoryType),
-						false, false, null);
+						testName, new ClassDescriptor(testFactoryType),
+						StopOnError, AllowErrors);
 
 					Add(testDescriptor, document);
 				}
@@ -75,8 +83,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			_textWriter.Write(XmlUtils.Serialize(document));
 		}
 
-		private static void Add(TestDescriptor testDescriptor,
-		                        XmlDataQualityDocument toDocument)
+		private static void Add(TestDescriptor testDescriptor, XmlDataQualityDocument toDocument)
 		{
 			XmlTestDescriptor xmlTestDescriptor =
 				XmlDataQualityUtils.CreateXmlTestDescriptor(testDescriptor, false);
