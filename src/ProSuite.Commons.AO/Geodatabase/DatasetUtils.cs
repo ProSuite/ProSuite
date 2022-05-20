@@ -633,7 +633,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 			Assert.ArgumentNotNull(fields, nameof(fields));
 			
 			return featureDataset.CreateFeatureClass(
-				fclassName, fields, GetFeatureUID(), GetAnnotationUID(),
+				fclassName, fields, GetAnnotationFeatureUID(),
+				GetAnnotationFeatureClassExtensionUID(),
 				esriFeatureType.esriFTAnnotation,
 				FieldUtils.GetShapeFieldName(),
 				configKeyWord);
@@ -4024,13 +4025,21 @@ namespace ProSuite.Commons.AO.Geodatabase
 		}
 
 		[NotNull]
-		private static UID GetAnnotationUID()
+		private static UID GetAnnotationFeatureClassExtensionUID()
 		{
 #if Server
 			return new UIDClass { Value = "{F245DFEB-851B-4981-9860-4BACC8C0A688}" };
+			//return new UIDClass { Value = "esriCarto.AnnotationFeatureClassExtension" };
 #else
 			return new UIDClass {Value = "{24429589-D711-11D2-9F41-00C04F6BC6A5}"};
 #endif
+		}
+
+		[NotNull]
+		private static UID GetAnnotationFeatureUID()
+		{
+			return new UIDClass {Value = "{3FF1675E-4FFB-4D9B-9438-767CE04DE34A}"};
+			//return new UIDClass {Value = "esriCarto.AnnotationFeature"};
 		}
 
 		[NotNull]
