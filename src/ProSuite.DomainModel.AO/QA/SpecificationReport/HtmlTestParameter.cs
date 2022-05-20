@@ -8,11 +8,11 @@ namespace ProSuite.DomainModel.AO.QA.SpecificationReport
 	{
 		internal HtmlTestParameter([NotNull] TestParameter testParameter)
 		{
-			Name = testParameter.Name;
+			Name = InstanceUtils.GetParameterNameString(testParameter);
+			Type = InstanceUtils.GetParameterTypeString(testParameter);
 			Description = StringUtils.IsNotEmpty(testParameter.Description)
 				              ? testParameter.Description
 				              : null;
-			Type = InstanceUtils.GetParameterTypeString(testParameter);
 		}
 
 		[UsedImplicitly]
