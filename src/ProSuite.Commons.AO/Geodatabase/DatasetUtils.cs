@@ -622,6 +622,24 @@ namespace ProSuite.Commons.AO.Geodatabase
 		}
 
 		[NotNull]
+		public static IFeatureClass CreateAnnotationFeatureClass(
+			[NotNull] IFeatureDataset featureDataset,
+			[NotNull] string fclassName,
+			[NotNull] IFields fields,
+			[CanBeNull] string configKeyWord = null)
+		{
+			Assert.ArgumentNotNull(featureDataset, nameof(featureDataset));
+			Assert.ArgumentNotNullOrEmpty(fclassName, nameof(fclassName));
+			Assert.ArgumentNotNull(fields, nameof(fields));
+			
+			return featureDataset.CreateFeatureClass(
+				fclassName, fields, GetFeatureUID(), GetAnnotationUID(),
+				esriFeatureType.esriFTAnnotation,
+				FieldUtils.GetShapeFieldName(),
+				configKeyWord);
+		}
+
+		[NotNull]
 		public static ITable CreateTable([NotNull] IFeatureWorkspace workspace,
 		                                 [NotNull] string name,
 		                                 [NotNull] params IField[] fields)
@@ -4003,6 +4021,16 @@ namespace ProSuite.Commons.AO.Geodatabase
 			Assert.ArgumentNotNull(subtypeFieldValue, nameof(subtypeFieldValue));
 
 			return subtypeFieldValue as int? ?? Convert.ToInt32(subtypeFieldValue);
+		}
+
+		[NotNull]
+		private static UID GetAnnotationUID()
+		{
+#if Server
+			return new UIDClass { Value = "{F245DFEB-851B-4981-9860-4BACC8C0A688}" };
+#else
+			return new UIDClass {Value = "{24429589-D711-11D2-9F41-00C04F6BC6A5}"};
+#endif
 		}
 
 		[NotNull]
