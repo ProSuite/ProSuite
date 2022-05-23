@@ -110,7 +110,7 @@ namespace ProSuite.DomainModel.AO.QA
 					continue;
 				}
 
-				if (! includeObsolete && InstanceFactoryUtils.IsObsolete(candidateType))
+				if (! includeObsolete && InstanceUtils.IsObsolete(candidateType))
 				{
 					continue;
 				}
@@ -140,7 +140,7 @@ namespace ProSuite.DomainModel.AO.QA
 					continue;
 				}
 
-				if (! includeObsolete && InstanceFactoryUtils.IsObsolete(candidateType))
+				if (! includeObsolete && InstanceUtils.IsObsolete(candidateType))
 				{
 					continue;
 				}

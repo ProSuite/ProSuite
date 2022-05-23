@@ -16,7 +16,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			: base(GetTitle(testFactoryType),
 			       testFactoryType.Assembly,
 			       GetTestFactory(testFactoryType),
-			       InstanceFactoryUtils.IsObsolete(testFactoryType),
+			       InstanceUtils.IsObsolete(testFactoryType),
 			       InstanceUtils.IsInternallyUsed(testFactoryType))
 		{
 			_testFactoryType = testFactoryType;

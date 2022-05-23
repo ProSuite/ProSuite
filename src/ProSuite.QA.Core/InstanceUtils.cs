@@ -235,6 +235,40 @@ namespace ProSuite.QA.Core
 			return ReflectionUtils.GetCategories(type);
 		}
 
+		public static bool IsObsolete([NotNull] Type type)
+		{
+			return IsObsolete(type, out _);
+		}
+
+		public static bool IsObsolete([NotNull] Type type,
+		                              [CanBeNull] out string message)
+		{
+			return ReflectionUtils.IsObsolete(type, out message);
+		}
+
+		public static bool IsObsolete([NotNull] Type type, int constructorId)
+		{
+			return IsObsolete(type, constructorId, out _);
+		}
+
+		public static bool IsObsolete([NotNull] Type type,
+		                              int constructorId,
+		                              [CanBeNull] out string message)
+		{
+			Assert.ArgumentNotNull(type, nameof(type));
+
+			if (ReflectionUtils.IsObsolete(type, out message))
+			{
+				return true;
+			}
+
+			AssertConstructorExists(type, constructorId);
+
+			ConstructorInfo ctorInfo = type.GetConstructors()[constructorId];
+
+			return ReflectionUtils.IsObsolete(ctorInfo, out message);
+		}
+
 		public static bool IsInternallyUsed([NotNull] Type type)
 		{
 			return HasInternallyUsedAttribute(type);

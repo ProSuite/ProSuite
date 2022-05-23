@@ -19,7 +19,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 		public IncludedInstanceClass([NotNull] Type instanceType)
 			: base(GetTitle(instanceType),
 			       instanceType.Assembly,
-			       InstanceFactoryUtils.IsObsolete(instanceType),
+			       InstanceUtils.IsObsolete(instanceType),
 			       InstanceUtils.IsInternallyUsed(instanceType),
 			       InstanceUtils.GetCategories(instanceType))
 		{
