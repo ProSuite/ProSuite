@@ -60,13 +60,6 @@ namespace ProSuite.DomainModel.Core.QA
 			return parameterValue;
 		}
 
-		public static void AddParameterValue(IssueFilterConfiguration qualityCondition,
-		                                     [NotNull] string parameterName,
-		                                     [CanBeNull] string value)
-		{
-			AddScalarParameterValue(qualityCondition, parameterName, value);
-		}
-
 		public static void AddParameterValue(InstanceConfiguration instanceConfiguration,
 		                                     [NotNull] string parameterName,
 		                                     object value)
