@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
@@ -26,41 +25,41 @@ namespace ProSuite.QA.Tests.Transformers
 
 		private const SearchOption _defaultSearchOption = SearchOption.Tile;
 
-		[Doc(nameof(DocStrings.TrSpatialJoin_0))]
+		[DocTr(nameof(DocTrStrings.TrSpatialJoin_0))]
 		public TrSpatialJoin(
-			[NotNull] [Doc(nameof(DocStrings.TrSpatialJoin_t0))] IReadOnlyFeatureClass t0,
-			[NotNull] [Doc(nameof(DocStrings.TrSpatialJoin_t1))]
+			[NotNull] [DocTr(nameof(DocTrStrings.TrSpatialJoin_t0))] IReadOnlyFeatureClass t0,
+			[NotNull] [DocTr(nameof(DocTrStrings.TrSpatialJoin_t1))]
 			IReadOnlyFeatureClass t1)
 			: base(CastToTables(t0, t1)) { }
 
 		[TestParameter]
-		[Doc(nameof(DocStrings.TrSpatialJoin_Constraint))]
+		[DocTr(nameof(DocTrStrings.TrSpatialJoin_Constraint))]
 		public string Constraint { get; set; }
 
 		[TestParameter]
-		[Doc(nameof(DocStrings.TrSpatialJoin_OuterJoin))]
+		[DocTr(nameof(DocTrStrings.TrSpatialJoin_OuterJoin))]
 		public bool OuterJoin { get; set; }
 
 		[TestParameter(_defaultSearchOption)]
-		[Doc(nameof(DocStrings.TrSpatialJoin_NeighborSearchOption))]
+		[DocTr(nameof(DocTrStrings.TrSpatialJoin_NeighborSearchOption))]
 		public SearchOption NeighborSearchOption { get; set; }
 
 
 		// Remark: Grouped must come in Code before T1Attributes !
 		[TestParameter]
-		[Doc(nameof(DocStrings.TrSpatialJoin_Grouped))]
+		[DocTr(nameof(DocTrStrings.TrSpatialJoin_Grouped))]
 		public bool Grouped { get; set; }
 
 		[TestParameter]
-		[Doc(nameof(DocStrings.TrSpatialJoin_T0Attributes))]
+		[DocTr(nameof(DocTrStrings.TrSpatialJoin_T0Attributes))]
 		public IList<string> T0Attributes { get; set; }
 
 		[TestParameter]
-		[Doc(nameof(DocStrings.TrSpatialJoin_T1Attributes))]
+		[DocTr(nameof(DocTrStrings.TrSpatialJoin_T1Attributes))]
 		public IList<string> T1Attributes { get; set; }
 
 		[TestParameter]
-		[Doc(nameof(DocStrings.TrSpatialJoin_T1CalcAttributes))]
+		[DocTr(nameof(DocTrStrings.TrSpatialJoin_T1CalcAttributes))]
 		public IList<string> T1CalcAttributes { get; set; }
 
 		protected override TransformedFeatureClass GetTransformedCore(string name)
@@ -76,8 +75,25 @@ namespace ProSuite.QA.Tests.Transformers
 
 			AddFields(transformedFc, T0Attributes, InvolvedTables[0], isGrouped: false);
 			AddFields(transformedFc, T1Attributes, InvolvedTables[1], isGrouped: Grouped, T1CalcAttributes);
+
+			AddFields(transformedFc, InvolvedTables[0], "t0");
+			if (! Grouped)
+			{
+				AddFields(transformedFc, InvolvedTables[1], "t1");
+			}
+
 			return transformedFc;
 		}
+
+		private void AddFields(TransformedFc gdbTable, IReadOnlyTable tbl, string prefix)
+		{
+			for (int iField = 0; iField < tbl.Fields.FieldCount; iField++)
+			{
+				IField f = tbl.Fields.Field[iField];
+				gdbTable.FieldsT.AddFields(FieldUtils.CreateField($"{prefix}.{f.Name}", f.Type));
+			}
+		}
+
 
 		private void AddFields([NotNull] TransformedFc transformedFc,
 		                       [CanBeNull] IList<string> fieldNames,
@@ -175,7 +191,7 @@ namespace ProSuite.QA.Tests.Transformers
 				_constraint = _constraint
 				              ?? new JoinConstraint(Constraint,
 				                                    caseSensitive: _parent.GetSqlCaseSensitivity());
-				return _constraint.IsFulfilled(t0, 0, t1, 1, out string conditionMessage);
+				return _constraint.IsFulfilled(t0, 0, t1, 1, out string _);
 			}
 
 			protected override VirtualRow CreateObject(int oid)
@@ -222,18 +238,28 @@ namespace ProSuite.QA.Tests.Transformers
 			public override object get_Value(int index)
 			{
 				IField f = Table.Fields.Field[index];
-				if (f.Name.StartsWith("t0.") || f.Name.StartsWith("t1."))
+				if (f.Name.StartsWith("t0."))
 				{
-					int baseRowsIdx = Table.Fields.FindField(InvolvedRowUtils.BaseRowField);
-					IList<IReadOnlyRow> baseRows = (IList<IReadOnlyRow>) get_Value(baseRowsIdx);
-					IReadOnlyRow sourceRow = f.Name.StartsWith("t0.") ? baseRows[0] : baseRows[1];
-
-					int idx = sourceRow.Table.FindField(f.Name.Substring(3));
-					return sourceRow.get_Value(idx);
+					return GetBaseValue(0, f.Name.Substring(3));
+				}
+				if (f.Name.StartsWith("t1."))
+				{
+					return GetBaseValue(1, f.Name.Substring(3));
 				}
 
 				return base.get_Value(index);
 			}
+
+			private object GetBaseValue(int baseRowIndex, string attrName)
+			{
+				int baseRowsIdx = Table.Fields.FindField(InvolvedRowUtils.BaseRowField);
+				IList<IReadOnlyRow> baseRows = (IList<IReadOnlyRow>)get_Value(baseRowsIdx);
+				IReadOnlyRow baseRow = baseRows[baseRowIndex];
+
+				int idx = baseRow.Table.FindField(attrName);
+				return baseRow.get_Value(idx);
+			}
+
 		}
 
 		private class TransformedDataset : TransformedBackingDataset

@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
-namespace ProSuite.DomainModel.Core.QA.XML
+namespace ProSuite.DomainModel.Core.QA.Xml
 {
 	public interface IXmlDataQualityImporter
 	{

@@ -3,8 +3,6 @@ using System.Data;
 using System.Windows.Forms;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.DomainModel.AO.QA;
-using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Core;
 
 namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
@@ -12,8 +10,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 	internal static class TestParameterGridUtils
 	{
 		[NotNull]
-		public static DataTable BindParametersDataGridView(
-			[NotNull] DataGridView dataGridView)
+		public static DataTable BindParametersDataGridView([NotNull] DataGridView dataGridView)
 		{
 			Assert.ArgumentNotNull(dataGridView, nameof(dataGridView));
 
@@ -21,7 +18,6 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 
 			DataColumn paramDataColumn = dataTable.Columns.Add("Parameter");
 			DataColumn typeDataColumn = dataTable.Columns.Add("Type");
-			DataColumn arrayDataColumn = dataTable.Columns.Add("Array");
 			DataColumn descDataColumn = dataTable.Columns.Add("Description");
 
 			var dataView = new DataView(dataTable)
@@ -31,34 +27,22 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 				               AllowDelete = false
 			               };
 
-			DataGridViewColumn paramColumn = AddDataGridViewColumn(dataGridView,
-				paramDataColumn,
-				"Parameter");
+			DataGridViewColumn paramColumn =
+				AddDataGridViewColumn(dataGridView, paramDataColumn, "Parameter");
 			paramColumn.DataPropertyName = paramDataColumn.ColumnName;
 			paramColumn.MinimumWidth = 40;
 			paramColumn.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
 			paramColumn.SortMode = DataGridViewColumnSortMode.NotSortable;
 
-			DataGridViewColumn typeColumn = AddDataGridViewColumn(dataGridView,
-				typeDataColumn,
-				"Type");
+			DataGridViewColumn typeColumn =
+				AddDataGridViewColumn(dataGridView, typeDataColumn, "Type");
 			typeColumn.DataPropertyName = typeDataColumn.ColumnName;
 			typeColumn.MinimumWidth = 40;
 			typeColumn.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
 			typeColumn.SortMode = DataGridViewColumnSortMode.NotSortable;
 
-			DataGridViewColumn arrayColumn = AddDataGridViewColumn(dataGridView,
-				arrayDataColumn,
-				"List");
-			arrayColumn.DataPropertyName = arrayDataColumn.ColumnName;
-			arrayColumn.Width = 80;
-			arrayColumn.MinimumWidth = 40;
-			arrayColumn.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
-			arrayColumn.SortMode = DataGridViewColumnSortMode.NotSortable;
-
-			DataGridViewColumn descColumn = AddDataGridViewColumn(dataGridView,
-				descDataColumn,
-				"Description");
+			DataGridViewColumn descColumn =
+				AddDataGridViewColumn(dataGridView, descDataColumn, "Description");
 			descColumn.DataPropertyName = descDataColumn.ColumnName;
 			descColumn.MinimumWidth = 40;
 			descColumn.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
@@ -73,8 +57,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 		}
 
 		public static void PopulateDataTable([NotNull] DataTable dataTable,
-		                                     [CanBeNull] IEnumerable<TestParameter>
-			                                     testParameters)
+		                                     [CanBeNull] IEnumerable<TestParameter> testParameters)
 		{
 			Assert.ArgumentNotNull(dataTable, nameof(dataTable));
 
@@ -87,31 +70,10 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 
 			foreach (TestParameter parameter in testParameters)
 			{
-				dataTable.Rows.Add(GetParameterName(parameter),
-				                   GetTypeName(parameter),
-				                   parameter.ArrayDimension > 0
-					                   ? "Yes"
-					                   : "No",
+				dataTable.Rows.Add(InstanceUtils.GetParameterNameString(parameter),
+				                   InstanceUtils.GetParameterTypeString(parameter),
 				                   parameter.Description);
 			}
-		}
-
-		[NotNull]
-		private static string GetParameterName([NotNull] TestParameter parameter)
-		{
-			return ! parameter.IsConstructorParameter
-				       ? string.Format("[{0}]", parameter.Name)
-				       : parameter.Name;
-		}
-
-		[NotNull]
-		private static string GetTypeName([NotNull] TestParameter parameter)
-		{
-			TestParameterType type = TestParameterTypeUtils.GetParameterType(parameter.Type);
-
-			return type == TestParameterType.CustomScalar
-				       ? parameter.Type.Name
-				       : string.Format("{0}", type);
 		}
 
 		[NotNull]

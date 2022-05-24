@@ -36,13 +36,7 @@ namespace ProSuite.DomainModel.AO.QA
 		public InstanceConfiguration Condition { get; set; }
 
 		[NotNull]
-		public override string[] TestCategories => ReflectionUtils.GetCategories(GetType());
-
-		[CanBeNull]
-		public override string GetTestDescription()
-		{
-			return null;
-		}
+		public override string[] TestCategories => InstanceUtils.GetCategories(GetType());
 
 		[NotNull]
 		public IList<ITest> CreateTests([NotNull] IOpenDataset datasetContext)
@@ -301,9 +295,22 @@ namespace ProSuite.DomainModel.AO.QA
 					foreach (T instance in results)
 					{
 						int preInvolvedTablesCount = instance.InvolvedTables.Count;
+						// remark: calling the instance property must add the datasets
+						// to the involved tables when needed. 
 						SetPropertyValue(instance, parameter, value);
-						SetNonConstructorConstraints(instance, preInvolvedTablesCount,
-						                             tableConstraints);
+
+						if (preInvolvedTablesCount < instance.InvolvedTables.Count)
+						{
+							SetNonConstructorConstraints(instance, preInvolvedTablesCount,
+							                             tableConstraints);
+						}
+						else
+						{
+							Assert.True(
+								tableConstraints?.FirstOrDefault(
+									x => ! string.IsNullOrWhiteSpace(x.FilterExpression)) == null,
+								"Cannot apply where constraints to not involved tables");
+						}
 					}
 				}
 

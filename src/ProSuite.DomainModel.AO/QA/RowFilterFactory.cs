@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Reflection;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Container;
 using ProSuite.QA.Core;
@@ -24,6 +22,7 @@ namespace ProSuite.DomainModel.AO.QA
 		public RowFilterFactory([NotNull] Type type, int constructorId = 0)
 		{
 			Assert.ArgumentNotNull(type, nameof(type));
+			InstanceUtils.AssertConstructorExists(type, constructorId);
 
 			_filterType = type;
 			_constructorId = constructorId;
@@ -45,19 +44,14 @@ namespace ProSuite.DomainModel.AO.QA
 			_constructorId = constructorId;
 		}
 
+		[NotNull]
 		public Type FilterType => _filterType;
 
-		#region ParameterizedInstanceFactory overrides
+		public override string TestDescription =>
+			InstanceUtils.GetDescription(FilterType, _constructorId);
 
 		[NotNull]
-		public override string[] TestCategories => ReflectionUtils.GetCategories(GetType());
-
-		public override string GetTestDescription()
-		{
-			ConstructorInfo ctor = FilterType.GetConstructors()[_constructorId];
-
-			return InstanceUtils.GetDescription(ctor);
-		}
+		public override string[] TestCategories => InstanceUtils.GetCategories(FilterType);
 
 		public override string GetTestTypeDescription()
 		{
@@ -68,8 +62,6 @@ namespace ProSuite.DomainModel.AO.QA
 		{
 			return InstanceUtils.CreateParameters(FilterType, _constructorId);
 		}
-
-		#endregion
 
 		[NotNull]
 		public IRowFilter Create([NotNull] IOpenDataset datasetContext,

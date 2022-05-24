@@ -128,11 +128,17 @@
     <Compile Update="LinearNetworks\LinearNetworkControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
+    <Compile Update="Models\AssignLayerFilesForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Update="Models\ModelControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Update="Models\ProductionModelControl.cs">
       <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Update="Models\SpatialReferenceComparisonForm.cs">
+      <SubType>Form</SubType>
     </Compile>
     <Compile Update="ObjectCategories\ObjectCategoryControl.cs">
       <SubType>UserControl</SubType>

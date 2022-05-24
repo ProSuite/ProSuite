@@ -66,7 +66,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 					         assembly, includeObsolete, includeInternallyUsed))
 				{
 					foreach (int constructorIndex in
-					         TestFactoryUtils.GetTestConstructorIndexes(testType,
+					         InstanceFactoryUtils.GetConstructorIndexes(testType,
 						         includeObsolete,
 						         includeInternallyUsed))
 					{

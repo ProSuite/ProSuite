@@ -25,10 +25,14 @@ namespace ProSuite.Commons.AO.Geodatabase
 		{ return new ReadOnlyTable(table); }
 
 		private readonly ITable _table;
+		private readonly string _name; // cache name for debugging purposes (avoid all ArcObjects threading issues)
 		protected ReadOnlyTable(ITable table)
 		{
 			_table = table;
+			_name = DatasetUtils.GetName(_table);
 		}
+
+		public override string ToString() => $"{_name} ({GetType().Name})";
 
 		public ITable BaseTable => _table;
 		protected ITable Table => _table;

@@ -1,4 +1,6 @@
-﻿using System.Xml;
+using System.Xml;
+using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.DomainModel.AO.QA.TestReport
 {
@@ -6,8 +8,10 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 	{
 		private readonly string _title;
 
-		public SectionTitleIndexEntry(string title)
+		public SectionTitleIndexEntry([NotNull] string title)
 		{
+			Assert.ArgumentNotNullOrEmpty(title, nameof(title));
+
 			_title = title;
 		}
 

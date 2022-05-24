@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-using System.Text;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Reflection;
@@ -51,7 +50,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 		}
 
 		public static void WritePythonTransformerClass([NotNull] IList<Assembly> assemblies,
-		                                          [NotNull] TextWriter writer)
+		                                               [NotNull] TextWriter writer)
 		{
 			Assert.ArgumentNotNull(assemblies, nameof(assemblies));
 
@@ -65,7 +64,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			builder.IncludeAssemblyInfo = true;
 
 			IncludeTransformerClasses(builder, assemblies);
-			
+
 			builder.WriteTransformerClassFile();
 		}
 
@@ -94,7 +93,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 		{
 			Assert.ArgumentNotNull(assemblies, nameof(assemblies));
 
-			var builder = new XmlTestDescriptorsBuilder(writer, null);
+			var builder = new XmlTestDescriptorsBuilder(writer);
 
 			builder.AddHeaderItem("ProSuite Version",
 			                      ReflectionUtils.GetAssemblyVersionString(
@@ -109,26 +108,6 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			builder.WriteReport();
 		}
 
-		[NotNull]
-		private static string GetTitle([NotNull] IEnumerable<Assembly> assemblies)
-		{
-			IList<string> fileNames = new List<string>();
-
-			foreach (Assembly assembly in assemblies)
-			{
-				fileNames.Add(Path.GetFileName(assembly.Location));
-			}
-
-			var stringBuilder = new StringBuilder();
-
-			foreach (string fileName in fileNames)
-			{
-				stringBuilder.AppendFormat("{0} ", fileName);
-			}
-
-			return string.Format("Assembly: {0}", stringBuilder);
-		}
-
 		private static void IncludeTestClasses([NotNull] IReportBuilder reportBuilder,
 		                                       [NotNull] IEnumerable<Assembly> assemblies)
 		{
@@ -138,12 +117,10 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			foreach (Assembly assembly in assemblies)
 			{
 				foreach (Type testType in TestFactoryUtils.GetTestClasses(
-					assembly, includeObsolete, includeInternallyUsed))
+					         assembly, includeObsolete, includeInternallyUsed))
 				{
-					foreach (int ctorIndex in TestFactoryUtils.GetTestConstructorIndexes(
-						testType,
-						includeObsolete,
-						includeInternallyUsed))
+					foreach (int ctorIndex in InstanceFactoryUtils.GetConstructorIndexes(
+						         testType, includeObsolete, includeInternallyUsed))
 					{
 						reportBuilder.IncludeTest(testType, ctorIndex);
 					}
@@ -159,15 +136,13 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 
 			foreach (Assembly assembly in assemblies)
 			{
-				foreach (Type testType in TestFactoryUtils.GetTransformerClasses(
-					assembly, includeObsolete, includeInternallyUsed))
+				foreach (Type transformerType in InstanceFactoryUtils.GetTransformerClasses(
+					         assembly, includeObsolete, includeInternallyUsed))
 				{
-					foreach (int ctorIndex in TestFactoryUtils.GetTestConstructorIndexes(
-						testType,
-						includeObsolete,
-						includeInternallyUsed))
+					foreach (int ctorIndex in InstanceFactoryUtils.GetConstructorIndexes(
+						         transformerType, includeObsolete, includeInternallyUsed))
 					{
-						reportBuilder.IncludeTransformer(testType, ctorIndex);
+						reportBuilder.IncludeTransformer(transformerType, ctorIndex);
 					}
 				}
 			}
@@ -180,9 +155,8 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			const bool includeInternallyUsed = true;
 			foreach (Assembly assembly in assemblies)
 			{
-				foreach (Type testFactoryType in
-					TestFactoryUtils.GetTestFactoryClasses(
-						assembly, includeObsolete, includeInternallyUsed))
+				foreach (Type testFactoryType in TestFactoryUtils.GetTestFactoryClasses(
+					         assembly, includeObsolete, includeInternallyUsed))
 				{
 					reportBuilder.IncludeTestFactory(testFactoryType);
 				}

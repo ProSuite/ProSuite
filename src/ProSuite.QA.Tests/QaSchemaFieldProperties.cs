@@ -1,10 +1,10 @@
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
-using ProSuite.QA.Container.TestCategories;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.Schema;
-using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
 {
@@ -25,14 +25,12 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaSchemaFieldProperties_expectedFieldLength))]
 			int expectedFieldLength,
 			[Doc(nameof(DocStrings.QaSchemaFieldProperties_expectedAliasName))] [CanBeNull]
-			string
-				expectedAliasName,
+			string expectedAliasName,
 			[Doc(nameof(DocStrings.QaSchemaFieldProperties_expectedDomainName))] [CanBeNull]
-			string
-				expectedDomainName,
+			string expectedDomainName,
 			[Doc(nameof(DocStrings.QaSchemaFieldProperties_fieldIsOptional))]
 			bool fieldIsOptional)
-			: base(table, false)
+			: base(table, matchAliasName: false, referenceTable: null)
 		{
 			_fieldSpecification = new FieldSpecification(fieldName, expectedFieldType,
 			                                             expectedFieldLength, expectedAliasName,
@@ -41,7 +39,7 @@ namespace ProSuite.QA.Tests
 
 		protected override IEnumerable<FieldSpecification> GetFieldSpecifications()
 		{
-			return new[] {_fieldSpecification};
+			return new[] { _fieldSpecification };
 		}
 	}
 }

@@ -13,6 +13,7 @@ using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Core;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Core.IssueCodes;
 
 namespace ProSuite.QA.TestFactories
 {
@@ -31,10 +32,7 @@ namespace ProSuite.QA.TestFactories
 			return nameof(QaTopoNotNear);
 		}
 
-		public override string GetTestDescription()
-		{
-			return DocStrings.QaTopoNotNearPolyFactory;
-		}
+		public override string TestDescription => DocStrings.QaTopoNotNearPolyFactory;
 
 		public const string FeatureClassParamName = "featureClass";
 		public const string ReferenceParamName = "reference";

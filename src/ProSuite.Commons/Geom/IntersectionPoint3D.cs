@@ -39,7 +39,28 @@ namespace ProSuite.Commons.Geom
 
 		public IntersectionPointType Type { get; set; }
 
-		public bool? TargetDeviatesToLeftOfSource { get; set; }
+		private bool? TargetDeviatesToLeftOfSource { get; set; }
+
+		private bool? _linearIntersectionInOppositeDirection;
+
+		public bool? LinearIntersectionInOppositeDirection
+		{
+			get
+			{
+				if (_linearIntersectionInOppositeDirection.HasValue)
+				{
+					return _linearIntersectionInOppositeDirection;
+				}
+
+				if (SegmentIntersection.IsSegmentZeroLength2D)
+				{
+					return null;
+				}
+
+				return SegmentIntersection.LinearIntersectionInOppositeDirection;
+			}
+			set => _linearIntersectionInOppositeDirection = value;
+		}
 
 		public IntersectionPoint3D(
 			[NotNull] Pnt3D point,
@@ -58,11 +79,13 @@ namespace ProSuite.Commons.Geom
 		[NotNull]
 		public static IntersectionPoint3D CreateAreaInteriorIntersection(
 			[NotNull] Pnt3D sourcePoint,
-			int sourceIndex)
+			int sourceVertexIndex,
+			int sourcePartIndex)
 		{
-			return new IntersectionPoint3D(sourcePoint, sourceIndex)
+			return new IntersectionPoint3D(sourcePoint, sourceVertexIndex)
 			       {
-				       Type = IntersectionPointType.AreaInterior
+				       Type = IntersectionPointType.AreaInterior,
+				       SourcePartIndex = sourcePartIndex
 			       };
 		}
 
@@ -583,10 +606,9 @@ namespace ProSuite.Commons.Geom
 			    Type == IntersectionPointType.LinearIntersectionEnd)
 			{
 				// the direction matters:
-				deviationIsBackward =
-					Type == IntersectionPointType.LinearIntersectionStart;
+				deviationIsBackward = Type == IntersectionPointType.LinearIntersectionStart;
 
-				if (SegmentIntersection.LinearIntersectionInOppositeDirection)
+				if (LinearIntersectionInOppositeDirection == true)
 				{
 					deviationIsBackward = ! deviationIsBackward;
 				}
@@ -682,15 +704,21 @@ namespace ProSuite.Commons.Geom
 				bool deviationIsBackward =
 					Type == IntersectionPointType.LinearIntersectionStart;
 
-				if (SegmentIntersection.LinearIntersectionInOppositeDirection)
+				// If it cannot be determined if the segments run in opposite direction there are
+				// potentially several zero-length segments that should probably be handled by
+				// the caller.
+				if (LinearIntersectionInOppositeDirection != null)
 				{
-					deviationIsBackward = ! deviationIsBackward;
-				}
+					if (LinearIntersectionInOppositeDirection == true)
+					{
+						deviationIsBackward = ! deviationIsBackward;
+					}
 
-				if (deviationIsBackward && forwardAlongTarget ||
-				    ! deviationIsBackward && ! forwardAlongTarget)
-				{
-					return null;
+					if (deviationIsBackward && forwardAlongTarget ||
+					    ! deviationIsBackward && ! forwardAlongTarget)
+					{
+						return null;
+					}
 				}
 
 				// get the first non-intersecting point after the linear intersection, check its side:
@@ -737,6 +765,32 @@ namespace ProSuite.Commons.Geom
 			             "Not all linear cases were handled.");
 
 			return SegmentIntersection.TargetIndex;
+		}
+
+		/// <summary>
+		/// Classifies the target trajectory with respect to this intersection.
+		/// Note: If this method is called for a linear intersection pseudo-break or for the break of the
+		/// linear intersection at a ring's start or end point, the result could be random because no
+		/// tolerance is used! In these cases, call <see cref="TargetContinuesToRightSide"/> or
+		/// <see cref="TargetArrivesFromRightSide"/> respectively.
+		/// </summary>
+		/// <param name="source"></param>
+		/// <param name="target"></param>
+		/// <param name="sourceContinuesToRightSide"></param>
+		/// <param name="sourceArrivesFromRightSide"></param>
+		/// <param name="tolerance"></param>
+		public void ClassifySourceTrajectory([NotNull] ISegmentList source,
+		                                     [NotNull] ISegmentList target,
+		                                     out bool? sourceContinuesToRightSide,
+		                                     out bool? sourceArrivesFromRightSide,
+		                                     double tolerance)
+		{
+			Assert.False(Type == IntersectionPointType.Unknown,
+			             "Cannot classify unknown intersection type.");
+
+			sourceContinuesToRightSide = SourceContinuesToRightSide(source, target, tolerance);
+
+			sourceArrivesFromRightSide = SourceArrivesFromRightSide(source, target, tolerance);
 		}
 
 		/// <summary>
@@ -1089,6 +1143,55 @@ namespace ProSuite.Commons.Geom
 			}
 
 			return localSegmentIdx;
+		}
+
+		protected bool Equals(IntersectionPoint3D other)
+		{
+			if (ReferenceEquals(this, other))
+			{
+				return true;
+			}
+
+			return Type == other.Type &&
+			       SourcePartIndex == other.SourcePartIndex &&
+			       TargetPartIndex == other.TargetPartIndex &&
+			       VirtualSourceVertex.Equals(other.VirtualSourceVertex) &&
+			       VirtualTargetVertex.Equals(other.VirtualTargetVertex) &&
+			       Equals(Point, other.Point);
+		}
+
+		public override bool Equals(object obj)
+		{
+			if (ReferenceEquals(null, obj))
+			{
+				return false;
+			}
+
+			if (ReferenceEquals(this, obj))
+			{
+				return true;
+			}
+
+			if (obj.GetType() != this.GetType())
+			{
+				return false;
+			}
+
+			return Equals((IntersectionPoint3D) obj);
+		}
+
+		public override int GetHashCode()
+		{
+			unchecked
+			{
+				int hashCode = (Point != null ? Point.GetHashCode() : 0);
+				hashCode = (hashCode * 397) ^ SourcePartIndex;
+				hashCode = (hashCode * 397) ^ TargetPartIndex;
+				hashCode = (hashCode * 397) ^ VirtualSourceVertex.GetHashCode();
+				hashCode = (hashCode * 397) ^ VirtualTargetVertex.GetHashCode();
+				hashCode = (hashCode * 397) ^ (int) Type;
+				return hashCode;
+			}
 		}
 
 		public override string ToString()

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Data;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.Commons.AO;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Surface;
 using ProSuite.Commons.Essentials.Assertions;
@@ -139,7 +138,43 @@ namespace ProSuite.QA.Container
 			return DataContainer?.GetUniqueIdProvider(InvolvedTables[tableIndex]);
 		}
 
-		internal ISearchable DataContainer { get; set; }
+		internal ISearchable DataContainer { get; private set; }
+
+		internal void SetDataContainer(ISearchable dataContainer)
+		{
+			DataContainer = dataContainer;
+
+			SetSearchable(dataContainer, InvolvedTables);
+
+			if (IssueFilters != null)
+			{
+				foreach (IIssueFilter issueFilter in IssueFilters)
+				{
+					SetSearchable(dataContainer, issueFilter.InvolvedTables);
+				}
+			}
+
+			for (int iTable = 0; iTable < InvolvedTables.Count; iTable++)
+			{
+				foreach (IRowFilter rowFilter in GetRowFilters(iTable))
+				{
+					SetSearchable(dataContainer, rowFilter.InvolvedTables);
+				}
+			}
+		}
+		private void SetSearchable(ISearchable dataContainer, IEnumerable<IReadOnlyTable> tables)
+		{
+			foreach (IReadOnlyTable table in tables)
+			{
+				if (table is ITransformedValue transformed)
+				{
+					transformed.DataContainer = dataContainer;
+
+					SetSearchable(dataContainer, transformed.InvolvedTables);
+				}
+			}
+		}
+
 
 		/// <summary>
 		/// Disables recycling of rows in Execute()
@@ -164,6 +199,7 @@ namespace ProSuite.QA.Container
 				                filter => filter.Check(args)))
 				{
 					args.Cancel = true;
+					return;
 				}
 			}
 
@@ -177,8 +213,8 @@ namespace ProSuite.QA.Container
 			DataRow filterRow = null;
 			foreach (T filter in filters)
 			{
-				bool fulFilled = fulfilledFunc(filter);
-				if (fulFilled && string.IsNullOrWhiteSpace(filtersView?.RowFilter))
+				bool fulfilled = fulfilledFunc(filter);
+				if (fulfilled && string.IsNullOrWhiteSpace(filtersView?.RowFilter))
 				{
 					return true;
 				}
@@ -186,18 +222,18 @@ namespace ProSuite.QA.Container
 				if (filtersView != null)
 				{
 					filterRow = filterRow ?? filtersView.Table.NewRow();
-					filterRow[filter.Name] = fulFilled;
+					filterRow[filter.Name] = fulfilled;
 				}
 			}
 
 			filterRow?.Table.Rows.Add(filterRow);
 			filterRow?.AcceptChanges();
 
-			bool fulfilled = filtersView?.Count == 1;
+			bool allFulfilled = filtersView?.Count == 1;
 			filtersView?.Table.Clear();
 			filtersView?.Table.AcceptChanges();
 
-			return fulfilled;
+			return allFulfilled;
 		}
 
 		private void EnsureIssueFilter()
@@ -698,9 +734,9 @@ namespace ProSuite.QA.Container
 		/// <returns></returns>
 		[NotNull]
 		protected IEnumerable<IReadOnlyRow> Search([NotNull] IReadOnlyTable table,
-		                                   [NotNull] IQueryFilter queryFilter,
-		                                   [NotNull] QueryFilterHelper filterHelper,
-		                                   [CanBeNull] IGeometry cacheGeometry = null)
+		                                           [NotNull] IQueryFilter queryFilter,
+		                                           [NotNull] QueryFilterHelper filterHelper,
+		                                           [CanBeNull] IGeometry cacheGeometry = null)
 		{
 			Assert.ArgumentNotNull(table, nameof(table));
 			Assert.ArgumentNotNull(queryFilter, nameof(queryFilter));

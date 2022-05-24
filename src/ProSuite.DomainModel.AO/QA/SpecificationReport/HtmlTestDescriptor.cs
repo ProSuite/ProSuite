@@ -4,11 +4,10 @@ using System.IO;
 using System.Linq;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Reflection;
 using ProSuite.Commons.Text;
 using ProSuite.DomainModel.Core.QA;
-using ProSuite.QA.Container;
 using ProSuite.QA.Core;
+using ProSuite.QA.Core.IssueCodes;
 
 namespace ProSuite.DomainModel.AO.QA.SpecificationReport
 {
@@ -34,16 +33,16 @@ namespace ProSuite.DomainModel.AO.QA.SpecificationReport
 		{
 			Assert.ArgumentNotNull(testDescriptor, nameof(testDescriptor));
 
-			TestFactory testFactory =
-				Assert.NotNull(TestFactoryUtils.GetTestFactory(testDescriptor));
+			IInstanceInfo instanceInfo =
+				Assert.NotNull(InstanceDescriptorUtils.GetInstanceInfo(testDescriptor));
 
 			Name = testDescriptor.Name;
 			Description = StringUtils.IsNotEmpty(testDescriptor.Description)
 				              ? testDescriptor.Description
 				              : null;
 
-			TestDescription = testFactory.GetTestDescription();
-			Signature = InstanceUtils.GetTestSignature(testFactory);
+			TestDescription = instanceInfo.TestDescription;
+			Signature = InstanceUtils.GetTestSignature(instanceInfo);
 
 			Type testType;
 			if (testDescriptor.TestClass != null)
@@ -51,15 +50,15 @@ namespace ProSuite.DomainModel.AO.QA.SpecificationReport
 				testType = testDescriptor.TestClass.GetInstanceType();
 				ConstructorId = testDescriptor.TestConstructorId;
 				UsesConstructor = true;
-				IsObsolete = TestFactoryUtils.IsObsolete(testType, ConstructorId,
-				                                         out _obsoleteMessage);
+				IsObsolete = InstanceUtils.IsObsolete(testType, ConstructorId,
+				                                      out _obsoleteMessage);
 			}
 			else if (testDescriptor.TestFactoryDescriptor != null)
 			{
 				testType = testDescriptor.TestFactoryDescriptor.GetInstanceType();
 				ConstructorId = -1;
 				UsesConstructor = false;
-				IsObsolete = ReflectionUtils.IsObsolete(testType, out _obsoleteMessage);
+				IsObsolete = InstanceUtils.IsObsolete(testType, out _obsoleteMessage);
 			}
 			else
 			{
@@ -70,9 +69,9 @@ namespace ProSuite.DomainModel.AO.QA.SpecificationReport
 			ClassName = testType.FullName;
 
 			_issueCodes = IssueCodeUtils.GetIssueCodes(testType).ToList();
-			_testCategories = testFactory.TestCategories.OrderBy(c => c).ToList();
+			_testCategories = instanceInfo.TestCategories.OrderBy(c => c).ToList();
 
-			foreach (TestParameter testParameter in testFactory.Parameters)
+			foreach (TestParameter testParameter in instanceInfo.Parameters)
 			{
 				var htmlTestParameter = new HtmlTestParameter(testParameter);
 
@@ -113,40 +112,25 @@ namespace ProSuite.DomainModel.AO.QA.SpecificationReport
 
 		[NotNull]
 		[UsedImplicitly]
-		public List<IssueCode> IssueCodes
-		{
-			get { return _issueCodes; }
-		}
+		public List<IssueCode> IssueCodes => _issueCodes;
 
 		[UsedImplicitly]
 		public bool IsObsolete { get; private set; }
 
 		[CanBeNull]
 		[UsedImplicitly]
-		public string ObsoleteMessage
-		{
-			get { return _obsoleteMessage; }
-		}
+		public string ObsoleteMessage => _obsoleteMessage;
 
 		[NotNull]
 		[UsedImplicitly]
-		public List<string> TestCategories
-		{
-			get { return _testCategories; }
-		}
+		public List<string> TestCategories => _testCategories;
 
 		[NotNull]
 		[UsedImplicitly]
-		public List<HtmlTestParameter> Parameters
-		{
-			get { return _parameters; }
-		}
+		public List<HtmlTestParameter> Parameters => _parameters;
 
 		[UsedImplicitly]
-		public bool HasReferencingElements
-		{
-			get { return _referencingElements.Count > 0; }
-		}
+		public bool HasReferencingElements => _referencingElements.Count > 0;
 
 		[NotNull]
 		[UsedImplicitly]

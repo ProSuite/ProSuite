@@ -176,14 +176,16 @@ namespace ProSuite.Commons.Xml
 			Assert.ArgumentNotNull(obj, nameof(obj));
 
 			var serializer = new XmlSerializer(typeof(T));
-			var sb = new StringBuilder();
 
-			using (XmlWriter xmlWriter = XmlWriter.Create(sb, GetWriterSettings()))
+			using (var stringWriter = new UTF8StringWriter())
 			{
-				serializer.Serialize(xmlWriter, obj);
-			}
+				using (XmlWriter xmlWriter = XmlWriter.Create(stringWriter, GetWriterSettings()))
+				{
+					serializer.Serialize(xmlWriter, obj);
+				}
 
-			return sb.ToString();
+				return stringWriter.ToString();
+			}
 		}
 
 		[NotNull]
@@ -262,6 +264,11 @@ namespace ProSuite.Commons.Xml
 				       NewLineHandling = NewLineHandling.Entitize,
 				       Indent = true
 			       };
+		}
+
+		private class UTF8StringWriter : StringWriter
+		{
+			public override Encoding Encoding => Encoding.UTF8;
 		}
 
 		[NotNull]

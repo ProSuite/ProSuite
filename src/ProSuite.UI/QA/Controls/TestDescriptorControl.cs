@@ -50,24 +50,23 @@ namespace ProSuite.UI.QA.Controls
 			_textBoxName.Text = testDescriptor.Name;
 			_textBoxImplementation.Text = GetImplementation(testDescriptor);
 
-			var testImplementationInfo =
-				InstanceDescriptorUtils.GetInstanceInfo(testDescriptor);
+			var instanceInfo = InstanceDescriptorUtils.GetInstanceInfo(testDescriptor);
 
-			_textBoxTestDescription.Text = testImplementationInfo == null
+			_textBoxTestDescription.Text = instanceInfo == null
 				                               ? string.Empty
-				                               : testImplementationInfo.GetTestDescription();
+				                               : instanceInfo.TestDescription;
 
-			_textBoxCategories.Text = testImplementationInfo == null
+			_textBoxCategories.Text = instanceInfo == null
 				                          ? string.Empty
 				                          : StringUtils.ConcatenateSorted(
-					                          testImplementationInfo.TestCategories,
+					                          instanceInfo.TestCategories,
 					                          ", ");
 			try
 			{
-				_textBoxSignature.Text = testImplementationInfo == null
+				_textBoxSignature.Text = instanceInfo == null
 					                         ? "Unable to create test signature"
 					                         : InstanceUtils.GetTestSignature(
-						                         testImplementationInfo);
+						                         instanceInfo);
 			}
 			catch (Exception e)
 			{

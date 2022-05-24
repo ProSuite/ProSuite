@@ -18,11 +18,12 @@ namespace ProSuite.QA.Tests.Transformers
 		private int? _iAttrPart;
 		private int? _iAttrVertex;
 
-		[Doc(nameof(DocStrings.TrGeometryToPoints_0))]
-		public TrGeometryToPoints([NotNull] [Doc(nameof(DocStrings.TrGeometryToPoints_featureClass))]
-															IReadOnlyFeatureClass featureClass,
-															[Doc(nameof(DocStrings.TrGeometryToPoints_component))]
-															GeometryComponent component)
+		[DocTr(nameof(DocTrStrings.TrGeometryToPoints_0))]
+		public TrGeometryToPoints(
+			[NotNull] [DocTr(nameof(DocTrStrings.TrGeometryToPoints_featureClass))]
+			IReadOnlyFeatureClass featureClass,
+			[DocTr(nameof(DocTrStrings.TrGeometryToPoints_component))]
+			GeometryComponent component)
 			: base(featureClass, esriGeometryType.esriGeometryPoint)
 		{
 			_component = component;

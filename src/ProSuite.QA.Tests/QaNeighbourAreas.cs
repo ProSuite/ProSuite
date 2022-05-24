@@ -4,7 +4,6 @@ using System.Text;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
@@ -13,7 +12,8 @@ using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
-using ProSuite.QA.Core;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
 {
@@ -33,8 +33,6 @@ namespace ProSuite.QA.Tests
 		private QueryFilterHelper _selectHelper;
 		private ISpatialFilter _spatialFilter;
 		private string _comparedFieldsString;
-
-		[CanBeNull] private ContainsPostProcessor _ignoreAreaProcessor;
 
 		#region issue codes
 
@@ -132,19 +130,6 @@ namespace ProSuite.QA.Tests
 		}
 
 		#endregion
-
-		[TestParameter]
-		[Doc(nameof(DocStrings.QaNeighbourAreas_IgnoreArea))]
-		public IReadOnlyFeatureClass IgnoreArea
-		{
-			get { return _ignoreAreaProcessor?.FeatureClass; }
-			set
-			{
-				_ignoreAreaProcessor?.Dispose();
-				_ignoreAreaProcessor =
-					value != null ? new ContainsPostProcessor(this, value) : null;
-			}
-		}
 
 		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{

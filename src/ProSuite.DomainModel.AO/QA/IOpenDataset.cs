@@ -1,5 +1,4 @@
 using System;
-using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.Core.DataModel;
 
@@ -14,9 +13,6 @@ namespace ProSuite.DomainModel.AO.QA
 		[CanBeNull]
 		object OpenDataset([NotNull] IDdxDataset dataset,
 		                   [CanBeNull] Type knownType = null);
-
-		[CanBeNull]
-		IRelationshipClass OpenRelationshipClass([NotNull] Association association);
 
 		bool IsSupportedType([NotNull] Type dataType);
 	}

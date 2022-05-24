@@ -7,6 +7,7 @@ using ProSuite.QA.Tests.Test.TestRunners;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Core.IssueCodes;
 
 namespace ProSuite.QA.Tests.Test.SpatialRelations
 {

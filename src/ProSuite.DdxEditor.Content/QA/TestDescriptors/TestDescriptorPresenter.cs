@@ -124,25 +124,24 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 			// TODO handle validation/valid state in item
 
 			string testDescription;
+			string[] testCategories;
 			IList<TestParameter> testParameters;
-			IList<string> testCategories;
 
 			try
 			{
-				testDescription = _item.GetTestDescription(out testCategories);
-				testParameters = _item.GetTestParameters();
+				testParameters = _item.GetTestParameters(out testDescription, out testCategories);
 			}
 			catch (Exception e)
 			{
 				_msg.WarnFormat(e.Message);
 
-				testCategories = new List<string>();
 				testDescription = string.Empty;
+				testCategories = Array.Empty<string>();
 				testParameters = new List<TestParameter>();
 			}
 
-			_view.RenderTestCategories(testCategories);
 			_view.RenderTestDescription(testDescription);
+			_view.RenderTestCategories(testCategories);
 			_view.RenderTestParameters(testParameters);
 		}
 	}

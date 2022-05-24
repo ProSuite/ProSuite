@@ -12,9 +12,10 @@ using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Geometry.Serialization;
 using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.AO.Test;
+using ProSuite.DomainServices.AO.QA.Standalone.XmlBased;
 using ProSuite.Microservices.AO;
+using ProSuite.Microservices.Definitions.QA;
 using ProSuite.Microservices.Definitions.Shared;
-using ProSuite.Microservices.Server.AO.Geodatabase;
 
 namespace ProSuite.Microservices.Server.AO.Test
 {
@@ -226,6 +227,39 @@ namespace ProSuite.Microservices.Server.AO.Test
 				                             multipointFeature,
 				                             featureWithShape
 			                             });
+		}
+
+		[Test]
+		public void CanCreateXmlConditionElement()
+		{
+			const string categoryName = "Cat";
+			const string conditionName = "someCondition";
+			const string conditionDescription = "someDescription";
+			const string testDescriptorName = "descriptor";
+			const string url = "http://www.someUrl.com";
+
+			QualitySpecificationElementMsg elementMsg =
+				new QualitySpecificationElementMsg()
+				{
+					CategoryName = categoryName,
+					Condition = new QualityConditionMsg()
+					            {
+						            Name = conditionName,
+						            Description = conditionDescription,
+						            TestDescriptorName = testDescriptorName,
+						            Url = url
+					            }
+				};
+
+			SpecificationElement xmlConditionElement =
+				ProtobufConversionUtils.CreateXmlConditionElement(elementMsg);
+
+			Assert.AreEqual(xmlConditionElement.CategoryName, categoryName);
+			Assert.AreEqual(xmlConditionElement.XmlCondition.Name, conditionName);
+			Assert.AreEqual(xmlConditionElement.XmlCondition.Description, conditionDescription);
+			Assert.AreEqual(xmlConditionElement.XmlCondition.TestDescriptorName,
+			                testDescriptorName);
+			Assert.AreEqual(xmlConditionElement.XmlCondition.Url, url);
 		}
 
 		private static void AssertCanConvertToDtoAndBack(IList<IFeature> features)

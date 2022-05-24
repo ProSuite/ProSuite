@@ -1,14 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Core;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests;
 using ProSuite.QA.Tests.Constraints;
 
@@ -75,10 +75,7 @@ namespace ProSuite.QA.TestFactories
 			       }.AsReadOnly();
 		}
 
-		public override string GetTestDescription()
-		{
-			return DocStrings.QaGdbConstraintFactory;
-		}
+		public override string TestDescription => DocStrings.QaGdbConstraintFactory;
 
 		protected override ITest CreateTestInstance(object[] args)
 		{

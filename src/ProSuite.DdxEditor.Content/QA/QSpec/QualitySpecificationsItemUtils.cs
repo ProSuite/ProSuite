@@ -13,7 +13,7 @@ using ProSuite.Commons.Xml;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.DependencyGraph;
 using ProSuite.DomainModel.Core.QA.DependencyGraph.GraphML;
-using ProSuite.DomainModel.Core.QA.XML;
+using ProSuite.DomainModel.Core.QA.Xml;
 
 namespace ProSuite.DdxEditor.Content.QA.QSpec
 {

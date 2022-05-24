@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
@@ -10,6 +9,8 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
 using ProSuite.QA.Core;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
 {
@@ -21,7 +22,6 @@ namespace ProSuite.QA.Tests
 		private const string _intersectionMatrix = "T********";
 		private IntersectionMatrixHelper _matrixHelper;
 		[CanBeNull] private GeometryConstraint _validIntersectionGeometryConstraint;
-		[CanBeNull] private ContainsPostProcessor _ignoreAreaProcessor;
 
 		#region issue codes
 
@@ -89,19 +89,6 @@ namespace ProSuite.QA.Tests
 				_validIntersectionGeometryConstraint = StringUtils.IsNullOrEmptyOrBlank(value)
 					                                       ? null
 					                                       : new GeometryConstraint(value);
-			}
-		}
-
-		[TestParameter]
-		[Doc(nameof(DocStrings.QaInteriorIntersectsOther_IgnoreArea))]
-		public IReadOnlyFeatureClass IgnoreArea
-		{
-			get { return _ignoreAreaProcessor?.FeatureClass; }
-			set
-			{
-				_ignoreAreaProcessor?.Dispose();
-				_ignoreAreaProcessor =
-					value != null ? new ContainsPostProcessor(this, value) : null;
 			}
 		}
 

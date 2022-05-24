@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace ProSuite.Commons
 {
@@ -142,12 +142,25 @@ namespace ProSuite.Commons
 			return value < tolerance || Math.Abs(value - tolerance) <= epsilon;
 		}
 
-		public static double Modulo(double dividend, double divisor)
+		/// <summary>
+		/// Determines the 'correct' (i.e. without double-floating point issues) modulo with the
+		/// option to enforce the result to be positive despite negative inputs.
+		/// </summary>
+		/// <param name="dividend"></param>
+		/// <param name="divisor"></param>
+		/// <param name="enforcePositive"></param>
+		/// <returns></returns>
+		public static double Modulo(double dividend, double divisor, bool enforcePositive = false)
 		{
 			// modulo on doubles can be 'wrong':
 			// https://stackoverflow.com/questions/906564/why-is-modulus-operator-not-working-for-double-in-c
 
 			decimal remainder = (decimal) dividend % (decimal) divisor;
+
+			if (enforcePositive && remainder < 0)
+			{
+				remainder += (decimal) divisor;
+			}
 
 			return (double) remainder;
 		}

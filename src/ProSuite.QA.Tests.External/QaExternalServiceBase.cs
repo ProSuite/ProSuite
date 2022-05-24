@@ -20,6 +20,7 @@ using ProSuite.Microservices.Client.QualityTestService;
 using ProSuite.Microservices.Definitions.QA.Test;
 using ProSuite.Microservices.Definitions.Shared;
 using ProSuite.QA.Container;
+using ProSuite.QA.Core.IssueCodes;
 
 namespace ProSuite.QA.Tests.External
 {

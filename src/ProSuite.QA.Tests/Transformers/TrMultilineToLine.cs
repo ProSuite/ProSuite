@@ -15,9 +15,10 @@ namespace ProSuite.QA.Tests.Transformers
 		public const string AttrPartIndex = "PartIndex";
 		private int? _iAttrPart;
 
-		[Doc(nameof(DocStrings.TrMultilineToLine_0))]
-		public TrMultilineToLine([NotNull] [Doc(nameof(DocStrings.TrMultilineToLine_featureClass))]
-		                         IReadOnlyFeatureClass featureClass)
+		[DocTr(nameof(DocTrStrings.TrMultilineToLine_0))]
+		public TrMultilineToLine(
+			[NotNull] [DocTr(nameof(DocTrStrings.TrMultilineToLine_featureClass))]
+			IReadOnlyFeatureClass featureClass)
 			: base(featureClass, esriGeometryType.esriGeometryPolyline) { }
 
 		protected override void AddCustomAttributes(TransformedFeatureClass transformedFc)

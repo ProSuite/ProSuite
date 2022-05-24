@@ -1,9 +1,9 @@
-using System.Collections.Generic;
 #if Server
 using ESRI.ArcGIS.DatasourcesRaster;
 #else
 using ESRI.ArcGIS.DataSourcesRaster;
 #endif
+using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
@@ -20,7 +20,6 @@ using ProSuite.QA.Container.Test;
 using ProSuite.QA.Tests.Test.Construction;
 using ProSuite.QA.Tests.Test.TestData;
 using ProSuite.QA.Tests.Test.TestRunners;
-using TestUtils = ProSuite.Commons.AO.Test.TestUtils;
 
 namespace ProSuite.QA.Tests.Test
 {
@@ -29,6 +28,9 @@ namespace ProSuite.QA.Tests.Test
 	{
 		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
 		private IFeatureWorkspace _testFgdbWs;
+
+		private const string _vectorDsName = "TOPGIS_TLM.TLM_DTM_BRUCHKANTE";
+		private const string _mosaicDatasetName = "TOPGIS_TLM.TLM_DTM_MOSAIC";
 
 		[OneTimeSetUp]
 		public void SetupFixture()
@@ -114,10 +116,10 @@ namespace ProSuite.QA.Tests.Test
 			                            .Curve;
 			f3.Store();
 
-			IWorkspace workspace = TestUtils.OpenUserWorkspaceOracle();
+			IWorkspace workspace = TestDataUtils.OpenTopgisAlti();
 
 			IMosaicDataset mosaicDataset = DatasetUtils.OpenMosaicDataset(workspace,
-				"TOPGIS_TLM.TLM_DTM_MOSAIC");
+				_mosaicDatasetName);
 
 			var test = new QaSurfacePipe(
 				ReadOnlyTableFactory.Create(fc), new SimpleRasterMosaic(mosaicDataset), 4);
@@ -130,53 +132,26 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanRunMosaicDefinitionFromCondition()
 		{
-			//XmlSimpleTerrainDataset tds =
-			//	new XmlSimpleTerrainDataset
-			//	{
-			//		Name = "TestSimpleTerrainDs",
-			//		PointDensity = 7.8125,
-			//		Sources =
-			//			new List<XmlTerrainSource>
-			//			{
-			//				new XmlTerrainSource
-			//				{
-			//					Dataset = "TOPGIS_TLM.TLM_DTM_MASSENPUNKTE",
-			//					Type = TinSurfaceType.MassPoint
-			//				},
-			//				new XmlTerrainSource
-			//				{
-			//					Dataset = "TOPGIS_TLM.TLM_DTM_BRUCHKANTE",
-			//					Type = TinSurfaceType.HardLine
-			//				}
-			//			}
-			//	};
+			IWorkspace dtmWs = TestDataUtils.OpenTopgisAlti();
 
-			//XmlSerializer serializer = new XmlSerializer(typeof(XmlSimpleTerrainDataset));
-			//StringBuilder sb = new StringBuilder();
-			//using (StringWriter xmlWriter = new StringWriter(sb))
-			//{
-			//	serializer.Serialize(xmlWriter, tds);
-			//}
-
-			IWorkspace dtmWs = TestDataUtils.OpenTopgisTlm();
-
-			var model = new SimpleModel("model", dtmWs);
-			Dataset mds0 = model.AddDataset(new ModelVectorDataset("TOPGIS_TLM.TLM_STRASSE"));
-			Dataset mds1 =
-				model.AddDataset(new ModelMosaicRasterDataset("TOPGIS_TLM.TLM_DTM_MOSAIC"));
+			var modelAlti = new SimpleModel("alti", dtmWs);
+			Dataset vectorDs = modelAlti.AddDataset(new ModelVectorDataset(_vectorDsName));
+			Dataset mosaicDs =
+				modelAlti.AddDataset(new ModelMosaicRasterDataset(_mosaicDatasetName));
 
 			var clsDesc = new ClassDescriptor(typeof(QaSurfacePipe));
-			var tstDesc = new TestDescriptor("QaSurfacePipe", clsDesc, testConstructorId: 4);
+			const int testConstructorId = 4;
+			var tstDesc = new TestDescriptor("QaSurfacePipe", clsDesc, testConstructorId);
 			var condition = new QualityCondition("QaSurfacePipe", tstDesc);
-			InstanceConfigurationUtils.AddParameterValue(condition, "featureClass", mds0);
-			InstanceConfigurationUtils.AddParameterValue(condition, "simpleRasterMosaic", mds1);
+			InstanceConfigurationUtils.AddParameterValue(condition, "featureClass", vectorDs);
+			InstanceConfigurationUtils.AddParameterValue(condition, "rasterMosaic", mosaicDs);
 			InstanceConfigurationUtils.AddParameterValue(condition, "limit", 2);
 
-			var fact = new DefaultTestFactory(typeof(QaSurfacePipe), constructorId: 4);
+			var fact = new DefaultTestFactory(typeof(QaSurfacePipe), testConstructorId);
 			fact.Condition = condition;
 
 			IList<ITest> tests =
-				fact.CreateTests(new SimpleDatasetOpener(model.MasterDatabaseWorkspaceContext));
+				fact.CreateTests(new SimpleDatasetOpener(modelAlti.MasterDatabaseWorkspaceContext));
 			Assert.AreEqual(1, tests.Count);
 
 			var runner = new QaContainerTestRunner(10000, tests[0]) {KeepGeometry = true};
@@ -190,25 +165,27 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanRunMosaicDatasetFromCondition()
 		{
-			IWorkspace dtmWs = TestDataUtils.OpenTopgisTlm();
+			IWorkspace dtmWs = TestDataUtils.OpenTopgisAlti();
+			var modelAlti = new SimpleModel("alti", dtmWs);
 
-			var model = new SimpleModel("model", dtmWs);
-			Dataset mds0 = model.AddDataset(new ModelVectorDataset("TOPGIS_TLM.TLM_STRASSE"));
+			Dataset mds0 = modelAlti.AddDataset(new ModelVectorDataset(_vectorDsName));
+
 			Dataset mds1 =
-				model.AddDataset(new ModelMosaicRasterDataset("TOPGIS_TLM.TLM_DTM_MOSAIC"));
+				modelAlti.AddDataset(new ModelMosaicRasterDataset(_mosaicDatasetName));
 
 			var clsDesc = new ClassDescriptor(typeof(QaSurfacePipe));
-			var tstDesc = new TestDescriptor("QaSurfacePipe", clsDesc, testConstructorId: 6);
+			const int testConstructorId = 4;
+			var tstDesc = new TestDescriptor("QaSurfacePipe", clsDesc, testConstructorId);
 			var condition = new QualityCondition("QaSurfacePipe", tstDesc);
 			InstanceConfigurationUtils.AddParameterValue(condition, "featureClass", mds0);
-			InstanceConfigurationUtils.AddParameterValue(condition, "mosaicLayer", mds1);
-			InstanceConfigurationUtils.AddParameterValue(condition, "limit", 2);
+			InstanceConfigurationUtils.AddParameterValue(condition, "rasterMosaic", mds1);
+			InstanceConfigurationUtils.AddParameterValue(condition, "limit", 4);
 
-			var fact = new DefaultTestFactory(typeof(QaSurfacePipe), 6);
+			var fact = new DefaultTestFactory(typeof(QaSurfacePipe), testConstructorId);
 			fact.Condition = condition;
 
 			IList<ITest> tests =
-				fact.CreateTests(new SimpleDatasetOpener(model.MasterDatabaseWorkspaceContext));
+				fact.CreateTests(new SimpleDatasetOpener(modelAlti.MasterDatabaseWorkspaceContext));
 			Assert.AreEqual(1, tests.Count);
 
 			var runner = new QaContainerTestRunner(10000, tests[0]) {KeepGeometry = true};

@@ -1,9 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ESRI.ArcGIS.Geodatabase;
-using ProSuite.QA.Tests;
-using ProSuite.QA.Tests.Constraints;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -11,8 +8,11 @@ using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Core;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Tests;
+using ProSuite.QA.Tests.Constraints;
 
 namespace ProSuite.QA.TestFactories
 {
@@ -57,10 +57,7 @@ namespace ProSuite.QA.TestFactories
 			return list.AsReadOnly();
 		}
 
-		public override string GetTestDescription()
-		{
-			return DocStrings.QaRelConstraint;
-		}
+		public override string TestDescription => DocStrings.QaRelConstraint;
 
 		protected override object[] Args(IOpenDataset datasetContext,
 		                                 IList<TestParameter> testParameters,
@@ -116,8 +113,10 @@ namespace ProSuite.QA.TestFactories
 
 			string whereClause = applyFilterInDatabase ? tableConstraint : null;
 
-			IReadOnlyTable queryTable = CreateQueryTable(datasetContext, associationName, tables, join,
-			                                     whereClause, out string relationshipClassName);
+			IReadOnlyTable queryTable = CreateQueryTable(datasetContext, associationName, tables,
+			                                             join,
+			                                             whereClause,
+			                                             out string relationshipClassName);
 
 			IList<string> translatedConstraints = TranslateConstraints(
 				constraints,
@@ -182,7 +181,7 @@ namespace ProSuite.QA.TestFactories
 			}
 
 			return constraints.Select(sql => ExpressionUtils.ReplaceTableNames(sql,
-			                                                                   replacements))
+				                          replacements))
 			                  .ToList();
 		}
 
@@ -209,15 +208,16 @@ namespace ProSuite.QA.TestFactories
 					continue;
 				}
 
-				var table = datasetContext.OpenDataset(
-					            dataset, Assert.NotNull(datasetParameterValue.DataType)) as ITable;
+				IReadOnlyTable table =
+					datasetContext.OpenDataset(
+						dataset, Assert.NotNull(datasetParameterValue.DataType)) as IReadOnlyTable;
 
 				if (table == null)
 				{
 					continue;
 				}
 
-				string tableName = DatasetUtils.GetName(table);
+				string tableName = table.Name;
 
 				if (! string.Equals(dataset.Name, tableName))
 				{

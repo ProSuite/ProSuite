@@ -2,12 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
-using ProSuite.QA.Container;
-using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Tests.IssueCodes;
 
 namespace ProSuite.QA.Tests.Schema
 {
@@ -60,11 +60,10 @@ namespace ProSuite.QA.Tests.Schema
 						continue;
 					}
 
-					FieldSpecification assignedFieldSpecification;
-					if (_fieldSpecificationsByAliasName.TryGetValue(aliasName,
-					                                                out assignedFieldSpecification))
+					if (_fieldSpecificationsByAliasName.TryGetValue(
+						    aliasName, out FieldSpecification assignedFieldSpecification))
 					{
-						Assert.Fail("Duplicate alias names in field specificatiions: " +
+						Assert.Fail("Duplicate alias names in field specifications: " +
 						            "{0} (used in specifications for {1}, {2}), " +
 						            "unable to uniquely match field to specification by alias name",
 						            aliasName,
@@ -94,18 +93,17 @@ namespace ProSuite.QA.Tests.Schema
 						IssueCode issueCode = _issueCodes.MissingField;
 						errorCount += reportSchemaError(
 							fieldName,
-							string.Format("Required field '{0}' does not exist",
-							              fieldName),
+							string.Format("Required field '{0}' does not exist", fieldName),
 							issueCode);
 					}
 
 					continue;
 				}
 
-				IField field = _table.Fields.get_Field(fieldIndex);
+				IField field = _table.Fields.Field[fieldIndex];
 
 				foreach (KeyValuePair<string, IssueCode> pair in
-					fieldSpecification.GetIssues(field, _issueCodes))
+				         fieldSpecification.GetIssues(field, _issueCodes))
 				{
 					errorCount += reportSchemaError(fieldName, pair.Key, pair.Value);
 				}
@@ -123,9 +121,8 @@ namespace ProSuite.QA.Tests.Schema
 						continue;
 					}
 
-					FieldSpecification fieldSpecification;
-					if (! _fieldSpecificationsByAliasName.TryGetValue(aliasName.Trim(),
-					                                                  out fieldSpecification))
+					if (! _fieldSpecificationsByAliasName.TryGetValue(
+						    aliasName.Trim(), out FieldSpecification fieldSpecification))
 					{
 						continue;
 					}
