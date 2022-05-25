@@ -11,7 +11,7 @@ using ProSuite.DomainModel.Core.QA;
 
 namespace ProSuite.UI.QA.Controls
 {
-	public partial class QualityConditionTableViewControl : UserControl
+	public partial class QualityConditionTableViewControl : UserControl, IQualityConditionTableViewControl
 	{
 		[CanBeNull] private TestDescriptor _testDescriptor;
 
@@ -71,6 +71,8 @@ namespace ProSuite.UI.QA.Controls
 			_bindingSourceParametrValueList.DataSource = parameterValueItems;
 			ShowDescription = false;
 		}
+
+		public void NotifySavedChanges(QualityCondition qualityCondition) { }
 
 		[CanBeNull]
 		private string GetParameterDescription([CanBeNull] string parameterName)

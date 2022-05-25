@@ -1,0 +1,38 @@
+@using Radzen
+@using Radzen.Blazor
+
+<RadzenDataGrid @ref="_testParametersGrid"
+                TItem="TestParameterViewModel"
+                EditMode="DataGridEditMode.Single"
+                SelectionMode="DataGridSelectionMode.Single"
+                RowClick="@OnRowClick"
+                Data="@Items">
+    <Columns>
+        <RadzenDataGridColumn TItem="TestParameterViewModel" Property="ParameterName" Title="Parameter" Width="140px"/>
+        <RadzenDataGridColumn TItem="TestParameterViewModel" Property="DatasetType">
+            <Template Context="item">
+                @*<img src="@item.Source"/>*@
+                <RadzenImage Path="@item.ImageSource"></RadzenImage>
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="TestParameterViewModel" Property="DisplayName" Title="Value">
+            <Template Context="item">
+                <RadzenButton ButtonStyle="ButtonStyle.Light" Class="m-1" Click="@(args => ValueButtonClicked(item))"/>
+                @item.DisplayName
+                @*<RadzenTextBox @bind-value="item.DisplayName" Style="width: 100%; display: block"/>*@
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="TestParameterViewModel" Property="ModelName" Title="Data Model">
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="TestParameterViewModel" Property="FilterExpression" Title="Filter Expression">
+            <EditTemplate Context="item">
+                <RadzenTextBox @bind-Value="item.FilterExpression" Change="OnChange"/>
+            </EditTemplate>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="TestParameterViewModel" Property="UsedAsReferenceData" Title="Reference">
+            <EditTemplate Context="item">
+                <RadzenDropDown @bind-Value="item.UsedAsReferenceData" Data="new List<bool>{true, false}" Change="OnChange"/>
+            </EditTemplate>
+        </RadzenDataGridColumn>
+    </Columns>
+</RadzenDataGrid>

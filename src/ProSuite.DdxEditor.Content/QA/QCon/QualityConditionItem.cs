@@ -25,6 +25,7 @@ using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.Repositories;
 using ProSuite.QA.Core;
 using ProSuite.UI.QA;
+using ProSuite.UI.QA.Controls;
 using ProSuite.UI.QA.PropertyEditors;
 using ProSuite.UI.QA.ResourceLookup;
 
@@ -438,7 +439,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 
 		protected override Control CreateControlCore(IItemNavigation itemNavigation)
 		{
-			var control = new QualityConditionControl(_tableState);
+			var control = new QualityConditionControl(_tableState, new QualityConditionTableViewControl());
 			new QualityConditionPresenter(this, control, itemNavigation);
 
 			return control;
