@@ -248,8 +248,20 @@ namespace ProSuite.Commons.AO.Test.TestSupport
 			throw new InvalidOperationException("No row count result specified for mock");
 		}
 
-		IEnumerable<IReadOnlyRow> IReadOnlyTable.EnumRows(IQueryFilter filter, bool recycle) =>
-			throw new NotImplementedException();
+		IEnumerable<IReadOnlyRow> IReadOnlyTable.EnumRows(IQueryFilter filter, bool recycle)
+		{
+			foreach (var row in new EnumCursor(this, filter, recycle))
+			{
+				if (row is IReadOnlyRow roRow)
+				{
+					yield return roRow;
+				}
+				else
+				{
+					throw new NotImplementedException();
+				}
+			}
+		}
 
 		ICursor ITable.Search(IQueryFilter QueryFilter, bool Recycling) =>
 			Search(QueryFilter, Recycling);
