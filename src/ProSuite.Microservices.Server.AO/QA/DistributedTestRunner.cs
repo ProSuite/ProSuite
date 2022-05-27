@@ -83,13 +83,14 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			CancellationTokenSource = cancellationTokenSource;
 
-			IList<IList<QualityCondition>> qcGroups =
+			IList<QualityConditionGroup> qcGroups =
 				TestAssembler.BuildQualityConditionGroups(tests.ToList(), areaOfInterest,
 				                                          FilterTableRowsUsingRelatedGeometry,
 				                                          _originalRequest.MaxParallelProcessing);
 
-			foreach (IList<QualityCondition> qcGroup in qcGroups)
+			foreach (QualityConditionGroup qualityConditionGroup in qcGroups)
 			{
+				IList<QualityCondition> qcGroup = qualityConditionGroup.QualityConditions;
 				if (qcGroup.Count == 0)
 				{
 					continue;

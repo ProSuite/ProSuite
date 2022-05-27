@@ -125,7 +125,7 @@ namespace ProSuite.DomainServices.AO.QA
 			return testGroups;
 		}
 
-		public List<IList<QualityCondition>> BuildQualityConditionGroups(
+		public List<QualityConditionGroup> BuildQualityConditionGroups(
 			[NotNull] IList<ITest> tests,
 			[CanBeNull] AreaOfInterest areaOfInterest,
 			bool filterTableRowsUsingRelatedGeometry,
@@ -169,7 +169,7 @@ namespace ProSuite.DomainServices.AO.QA
 			return method?.DeclaringType != baseType;
 		}
 
-		internal List<IList<QualityCondition>> BuildQcGroups(
+		internal List<QualityConditionGroup> BuildQcGroups(
 			[NotNull] IList<ITest> tests,
 			[NotNull] IList<TestsWithRelatedGeometry> testsWithRelatedGeom,
 			int maxProcesses)
@@ -220,20 +220,43 @@ namespace ProSuite.DomainServices.AO.QA
 				}
 			}
 
-			List<IList<QualityCondition>> testGroups = new List<IList<QualityCondition>>();
-			testGroups.Add(new List<QualityCondition>(nonContainerQcs));
+			List<QualityConditionGroup> testGroups = new List<QualityConditionGroup>();
+			testGroups.Add(new QualityConditionGroup(QualityConditionExecType.NonContainer, nonContainerQcs));
 
 			int nGroups = maxProcesses - 1;
 			for (int iGroup = 0; iGroup < nGroups; iGroup++)
 			{
-				testGroups.Add(new List<QualityCondition>());
+				testGroups.Add(new QualityConditionGroup(QualityConditionExecType.Container));
 			}
 
 			int group = 0;
 			int offset = maxProcesses > 1 ? 1 : 0;
+			// TODO: do something with nonTileParallelTest and tileParallelTest
+			QualityConditionGroup nonTileParallelTest =
+				new QualityConditionGroup(QualityConditionExecType.Container);
+			QualityConditionGroup tileParallelTest =
+				new QualityConditionGroup(QualityConditionExecType.TileParallel);
 			foreach (var qc in containerQcs)
 			{
-				testGroups[group + offset].Add(qc);
+				QualityConditionExecType execType = QualityConditionExecType.TileParallel;
+				foreach (ITest test in qcTests[qc])
+				{
+					if (! CanBeExecutedWithTileThreads(test))
+					{
+						execType = QualityConditionExecType.Container;
+					}
+				}
+
+				if (execType == QualityConditionExecType.Container)
+				{
+					nonTileParallelTest.QualityConditions.Add(qc);
+				}
+				else
+				{
+					tileParallelTest.QualityConditions.Add(qc);
+				}
+
+				testGroups[group + offset].QualityConditions.Add(qc);
 				group++;
 				if (group >= maxProcesses - 1)
 				{
