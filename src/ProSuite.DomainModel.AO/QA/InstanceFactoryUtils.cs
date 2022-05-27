@@ -110,7 +110,7 @@ namespace ProSuite.DomainModel.AO.QA
 					continue;
 				}
 
-				if (! includeObsolete && IsObsolete(candidateType))
+				if (! includeObsolete && InstanceUtils.IsObsolete(candidateType))
 				{
 					continue;
 				}
@@ -163,34 +163,6 @@ namespace ProSuite.DomainModel.AO.QA
 			return instanceType.IsAssignableFrom(candidateType) &&
 			       ! candidateType.IsAbstract &&
 			       candidateType.IsPublic;
-		}
-
-		public static bool IsObsolete([NotNull] Type instanceType)
-		{
-			return ReflectionUtils.IsObsolete(instanceType, out _);
-		}
-
-		public static bool IsObsolete([NotNull] Type instanceType, int constructorId)
-		{
-			return IsObsolete(instanceType, constructorId, out _);
-		}
-
-		public static bool IsObsolete([NotNull] Type instanceType,
-		                              int constructorId,
-		                              [CanBeNull] out string message)
-		{
-			Assert.ArgumentNotNull(instanceType, nameof(instanceType));
-
-			if (ReflectionUtils.IsObsolete(instanceType, out message))
-			{
-				return true;
-			}
-
-			InstanceUtils.AssertConstructorExists(instanceType, constructorId);
-
-			ConstructorInfo ctorInfo = instanceType.GetConstructors()[constructorId];
-
-			return ReflectionUtils.IsObsolete(ctorInfo, out message);
 		}
 
 		private static RowFilterFactory CreateRowFilterFactory(

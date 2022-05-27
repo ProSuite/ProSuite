@@ -12,6 +12,7 @@ using ProSuite.Commons.Text;
 using ProSuite.QA.Core;
 using ProSuite.Commons.AO.Geometry;
 using System.Linq;
+using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests

@@ -2,7 +2,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using ESRI.ArcGIS.esriSystem;
@@ -24,7 +23,6 @@ using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.VerificationProgress;
 using ProSuite.DomainServices.AO.QA;
 using ProSuite.DomainServices.AO.QA.IssuePersistence;
-using ProSuite.DomainServices.AO.QA.Issues;
 using ProSuite.DomainServices.AO.QA.Standalone.XmlBased;
 using ProSuite.Microservices.AO;
 using ProSuite.Microservices.Definitions.QA;
@@ -37,7 +35,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 {
 	public class QualityVerificationGrpcImpl : QualityVerificationGrpc.QualityVerificationGrpcBase
 	{
-		private static readonly IMsg _msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private readonly StaTaskScheduler _staThreadScheduler;
 
@@ -575,7 +573,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			var specificationElements = new List<SpecificationElement>();
 
 			foreach (QualitySpecificationElementMsg specificationElementMsg in
-				conditionsSpecificationMsg.Elements)
+			         conditionsSpecificationMsg.Elements)
 			{
 				// Temporary - TODO: Remove de-tour via xml condition
 
@@ -646,7 +644,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			qaService.IssueFound +=
 				(sender, args) =>
-					issueCollection.Add(CreateIssueProto(args, backgroundVerificationInputs));
+					issueCollection.Add(
+						IssueProtobufUtils.CreateIssueProto(args, backgroundVerificationInputs));
 
 			qaService.Progress += (sender, args) =>
 				SendProgress(
@@ -771,114 +770,6 @@ namespace ProSuite.Microservices.Server.AO.QA
 				};
 
 			return result;
-		}
-
-		private static IssueMsg CreateIssueProto(
-			[NotNull] IssueFoundEventArgs args,
-			[NotNull] IBackgroundVerificationInputs backgroundVerificationInputs)
-		{
-			QualityCondition qualityCondition =
-				args.QualitySpecificationElement.QualityCondition;
-
-			IssueMsg issueProto = new IssueMsg();
-
-			issueProto.ConditionId = qualityCondition.Id;
-			issueProto.Allowable = args.IsAllowable;
-			issueProto.StopCondition = args.Issue.StopCondition;
-
-			CallbackUtils.DoWithNonNull(
-				args.Issue.Description, s => issueProto.Description = s);
-
-			IssueCode issueCode = args.Issue.IssueCode;
-
-			if (issueCode != null)
-			{
-				CallbackUtils.DoWithNonNull(
-					issueCode.ID, s => issueProto.IssueCodeId = s);
-
-				CallbackUtils.DoWithNonNull(
-					issueCode.Description, s => issueProto.IssueCodeDescription = s);
-			}
-
-			CallbackUtils.DoWithNonNull(
-				args.Issue.AffectedComponent,
-				(value) => issueProto.AffectedComponent = value);
-
-			issueProto.InvolvedTables.AddRange(GetInvolvedTableMessages(args.Issue.InvolvedTables));
-
-			CallbackUtils.DoWithNonNull(
-				args.LegacyInvolvedObjectsString,
-				(value) => issueProto.LegacyInvolvedRows = value);
-
-			IVerificationContext verificationContext =
-				Assert.NotNull(backgroundVerificationInputs.VerificationContext);
-
-			var supportedGeometryTypes =
-				GetSupportedErrorRepoGeometryTypes(verificationContext).ToList();
-
-			// create valid Error geometry (geometry type, min dimensions) if possible
-			IGeometry geometry = ErrorRepositoryUtils.GetGeometryToStore(
-				args.ErrorGeometry,
-				verificationContext.SpatialReferenceDescriptor.SpatialReference,
-				supportedGeometryTypes);
-
-			issueProto.IssueGeometry =
-				ProtobufGeometryUtils.ToShapeMsg(geometry);
-
-			// NOTE: Multipatches are not restored from byte arrays in EsriShape (10.6.1)
-			ShapeMsg.FormatOneofCase format =
-				geometry?.GeometryType == esriGeometryType.esriGeometryMultiPatch
-					? ShapeMsg.FormatOneofCase.Wkb
-					: ShapeMsg.FormatOneofCase.EsriShape;
-
-			issueProto.IssueGeometry =
-				ProtobufGeometryUtils.ToShapeMsg(geometry, format);
-
-			issueProto.CreationDateTimeTicks = DateTime.Now.Ticks;
-
-			//issueProto.IsInvalidException = args.us;
-
-			//if (args.IsAllowed)
-			//{
-			//	issueProto.ExceptedObjRef = new GdbObjRefMsg()
-			//	                            {
-			//		                            ClassHandle = args.AllowedErrorRef.ClassId,
-			//		                            ObjectId = args.AllowedErrorRef.ObjectId
-			//	                            };
-			//}
-
-			return issueProto;
-		}
-
-		private static IEnumerable<esriGeometryType> GetSupportedErrorRepoGeometryTypes(
-			IVerificationContext verificationContext)
-		{
-			if (verificationContext.NoGeometryIssueDataset != null)
-				yield return esriGeometryType.esriGeometryNull;
-
-			if (verificationContext.MultipointIssueDataset != null)
-				yield return esriGeometryType.esriGeometryMultipoint;
-
-			if (verificationContext.LineIssueDataset != null)
-				yield return esriGeometryType.esriGeometryPolyline;
-
-			if (verificationContext.PolygonIssueDataset != null)
-				yield return esriGeometryType.esriGeometryPolygon;
-
-			if (verificationContext.MultiPatchIssueDataset != null)
-				yield return esriGeometryType.esriGeometryMultiPatch;
-		}
-
-		private static IEnumerable<InvolvedTableMsg> GetInvolvedTableMessages(
-			IEnumerable<InvolvedTable> involvedTables)
-		{
-			foreach (InvolvedTable involvedTable in involvedTables)
-			{
-				var involvedTableMsg = new InvolvedTableMsg();
-				involvedTableMsg.TableName = involvedTable.TableName;
-
-				yield return involvedTableMsg;
-			}
 		}
 
 		private static void WriteProgressAndIssues(

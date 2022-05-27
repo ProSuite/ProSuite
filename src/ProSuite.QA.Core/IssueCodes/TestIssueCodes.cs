@@ -1,11 +1,11 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Resources;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
-namespace ProSuite.QA.Container
+namespace ProSuite.QA.Core.IssueCodes
 {
 	public abstract class TestIssueCodes : ITestIssueCodes
 	{

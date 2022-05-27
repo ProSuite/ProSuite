@@ -194,6 +194,12 @@ namespace ProSuite.Microservices.Server.AO.QA
 			IssueMsg issueMsg;
 			if (fromSubVerification.Issues.TryTake(out issueMsg))
 			{
+				// TODO: Consider adding the issue to some IssueProcessor that
+				//       keeps track of what has been found and performs
+				//       - de-duplication
+				//       - potentially re-assembling of partial issues on tile boundaries
+				//       - adds the final issues to a 'outbox' colleciton that will be
+				//         sent on the next progress
 				// This is the global issue collection that will be sent on progress:
 				_issueCollection.Add(issueMsg);
 

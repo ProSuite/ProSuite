@@ -4,8 +4,8 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Reflection;
 using ProSuite.Commons.Text;
-using ProSuite.QA.Container;
 using ProSuite.QA.Core;
+using ProSuite.QA.Core.IssueCodes;
 
 namespace ProSuite.DomainModel.AO.QA.TestReport
 {
@@ -19,7 +19,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 		public IncludedInstanceClass([NotNull] Type instanceType)
 			: base(GetTitle(instanceType),
 			       instanceType.Assembly,
-			       InstanceFactoryUtils.IsObsolete(instanceType),
+			       InstanceUtils.IsObsolete(instanceType),
 			       InstanceUtils.IsInternallyUsed(instanceType),
 			       InstanceUtils.GetCategories(instanceType))
 		{

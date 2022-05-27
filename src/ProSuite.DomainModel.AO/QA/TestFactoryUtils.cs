@@ -82,15 +82,6 @@ namespace ProSuite.DomainModel.AO.QA
 			return null;
 		}
 
-		[NotNull]
-		public static DefaultTestFactory GetTestFactory([NotNull] Type testType,
-		                                                int constructorIndex)
-		{
-			Assert.ArgumentNotNull(testType, nameof(testType));
-
-			return new DefaultTestFactory(testType, constructorIndex);
-		}
-
 		public static bool IsTestFactoryType([NotNull] Type candidateType,
 		                                     [NotNull] Type testFactoryType)
 		{
@@ -119,7 +110,7 @@ namespace ProSuite.DomainModel.AO.QA
 					continue;
 				}
 
-				if (! includeObsolete && InstanceFactoryUtils.IsObsolete(candidateType))
+				if (! includeObsolete && InstanceUtils.IsObsolete(candidateType))
 				{
 					continue;
 				}
@@ -149,7 +140,7 @@ namespace ProSuite.DomainModel.AO.QA
 					continue;
 				}
 
-				if (! includeObsolete && InstanceFactoryUtils.IsObsolete(candidateType))
+				if (! includeObsolete && InstanceUtils.IsObsolete(candidateType))
 				{
 					continue;
 				}

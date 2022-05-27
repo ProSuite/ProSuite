@@ -2,7 +2,7 @@
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
-namespace ProSuite.QA.Container
+namespace ProSuite.QA.Core.IssueCodes
 {
 	public class IssueCode : IEquatable<IssueCode>
 	{

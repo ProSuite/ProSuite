@@ -10,6 +10,7 @@ using ProSuite.QA.Core;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.TestFactories
