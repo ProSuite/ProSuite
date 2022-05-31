@@ -24,7 +24,7 @@ namespace ProSuite.Commons.Test.Geom
 				           new Pnt3D(100, 20, 9)
 			           };
 
-			MultiLinestring poly = CreatePoly(ring);
+			MultiLinestring poly = GeomTestUtils.CreatePoly(ring);
 			MultiLinestring empty = MultiPolycurve.CreateEmpty();
 
 			double tolerance = 0.001;
@@ -72,8 +72,8 @@ namespace ProSuite.Commons.Test.Geom
 			overlapping.Add(new Pnt3D(200, 30, 0));
 			overlapping.Add(new Pnt3D(200, -10, 0));
 
-			RingGroup poly1 = CreatePoly(ring1);
-			Linestring overlap = CreateRing(overlapping);
+			RingGroup poly1 = GeomTestUtils.CreatePoly(ring1);
+			Linestring overlap = GeomTestUtils.CreateRing(overlapping);
 
 			const double tolerance = 0.01;
 
@@ -82,15 +82,15 @@ namespace ProSuite.Commons.Test.Geom
 			Assert.AreEqual(1, differenceResult.PartCount);
 			Assert.AreEqual(true, differenceResult.GetLinestring(0).ClockwiseOriented);
 
-			var expected = CreateRing(new List<Pnt3D>
-			                          {
-				                          new Pnt3D(0, 0, 9),
-				                          new Pnt3D(0, 100, 9),
-				                          new Pnt3D(100, 50, 9),
-				                          new Pnt3D(100, 30, 9),
-				                          new Pnt3D(40, 30, 9),
-				                          new Pnt3D(40, 8, 9),
-			                          });
+			var expected = GeomTestUtils.CreateRing(new List<Pnt3D>
+			                             {
+				                             new Pnt3D(0, 0, 9),
+				                             new Pnt3D(0, 100, 9),
+				                             new Pnt3D(100, 50, 9),
+				                             new Pnt3D(100, 30, 9),
+				                             new Pnt3D(40, 30, 9),
+				                             new Pnt3D(40, 8, 9),
+			                             });
 
 			Assert.AreEqual(expected.GetArea2D(), differenceResult.GetArea2D(), 0.0001);
 		}
@@ -106,14 +106,14 @@ namespace ProSuite.Commons.Test.Geom
 				            new Pnt3D(100, 20, 9)
 			            };
 
-			RingGroup poly1 = CreatePoly(ring1);
-			Linestring containedRing = CreateRing(new[]
-			                                      {
-				                                      new Pnt3D(25, 75, 0),
-				                                      new Pnt3D(50, 75, 0),
-				                                      new Pnt3D(50, 50, 0),
-				                                      new Pnt3D(25, 50, 0)
-			                                      }.ToList());
+			RingGroup poly1 = GeomTestUtils.CreatePoly(ring1);
+			Linestring containedRing = GeomTestUtils.CreateRing(new[]
+			                                         {
+				                                         new Pnt3D(25, 75, 0),
+				                                         new Pnt3D(50, 75, 0),
+				                                         new Pnt3D(50, 50, 0),
+				                                         new Pnt3D(25, 50, 0)
+			                                         }.ToList());
 
 			const double tolerance = 0.01;
 
@@ -161,8 +161,8 @@ namespace ProSuite.Commons.Test.Geom
 			disjoint.Add(new Pnt3D(300, 30, 0));
 			disjoint.Add(new Pnt3D(300, -10, 0));
 
-			RingGroup poly1 = CreatePoly(ring1);
-			Linestring overlap = CreateRing(disjoint);
+			RingGroup poly1 = GeomTestUtils.CreatePoly(ring1);
+			Linestring overlap = GeomTestUtils.CreateRing(disjoint);
 
 			const double tolerance = 0.01;
 
@@ -214,7 +214,7 @@ namespace ProSuite.Commons.Test.Geom
 				            new Pnt3D(100, 20, 9)
 			            };
 
-			RingGroup poly1 = CreatePoly(ring1);
+			RingGroup poly1 = GeomTestUtils.CreatePoly(ring1);
 			Linestring equalRing = poly1.ExteriorRing.Clone();
 
 			const double tolerance = 0.01;
@@ -247,7 +247,7 @@ namespace ProSuite.Commons.Test.Geom
 			notQuiteCutting.Add(new Pnt3D(40, -10, 0));
 			notQuiteCutting.Add(new Pnt3D(40, 30, 0));
 
-			RingGroup poly1 = new RingGroup(CreateRing(ring1));
+			RingGroup poly1 = new RingGroup(GeomTestUtils.CreateRing(ring1));
 			Linestring target = new Linestring(notQuiteCutting);
 
 			IList<RingGroup> result = CutPlanar(poly1, target, 0, 0);
@@ -263,7 +263,7 @@ namespace ProSuite.Commons.Test.Geom
 				            new Pnt3D(25, 75, 0)
 			            };
 
-			var polyWithIsland = new RingGroup(CreateRing(ring1), new[] {CreateRing(inner)});
+			var polyWithIsland = new RingGroup(GeomTestUtils.CreateRing(ring1), new[] {GeomTestUtils.CreateRing(inner)});
 
 			var innerRingCutting = new List<Pnt3D>();
 
@@ -303,15 +303,15 @@ namespace ProSuite.Commons.Test.Geom
 						{
 							IList<RingGroup> result = CutPlanarBothWays(poly1, o, 2, 0);
 
-							var expected = CreateRing(new List<Pnt3D>
-							                          {
-								                          new Pnt3D(0, 0, 9),
-								                          new Pnt3D(0, 100, 9),
-								                          new Pnt3D(100, 100, 9),
-								                          new Pnt3D(100, 30, 9),
-								                          new Pnt3D(40, 30, 9),
-								                          new Pnt3D(40, 0, 9)
-							                          });
+							var expected = GeomTestUtils.CreateRing(new List<Pnt3D>
+							                             {
+								                             new Pnt3D(0, 0, 9),
+								                             new Pnt3D(0, 100, 9),
+								                             new Pnt3D(100, 100, 9),
+								                             new Pnt3D(100, 30, 9),
+								                             new Pnt3D(40, 30, 9),
+								                             new Pnt3D(40, 0, 9)
+							                             });
 
 							Assert.True(
 								GeomTopoOpUtils.AreEqualXY(expected, result[0].ExteriorRing,
@@ -347,20 +347,20 @@ namespace ProSuite.Commons.Test.Geom
 			overlapping.Add(new Pnt3D(200, 30, 40));
 			overlapping.Add(new Pnt3D(200, -10, 40));
 
-			RingGroup source = new RingGroup(CreateRing(ring1));
-			var targetLine = CreateRing(overlapping);
+			RingGroup source = new RingGroup(GeomTestUtils.CreateRing(ring1));
+			var targetLine = GeomTestUtils.CreateRing(overlapping);
 
 			// The general consensus is that if possible, the target Zs should be used
 			// at the intersection points.
-			var expected = CreateRing(new List<Pnt3D>
-			                          {
-				                          new Pnt3D(0, 0, 100),
-				                          new Pnt3D(0, 100, 100),
-				                          new Pnt3D(100, 100, 100),
-				                          new Pnt3D(100, 30, 40),
-				                          new Pnt3D(40, 30, 40),
-				                          new Pnt3D(40, 0, 40)
-			                          });
+			var expected = GeomTestUtils.CreateRing(new List<Pnt3D>
+			                             {
+				                             new Pnt3D(0, 0, 100),
+				                             new Pnt3D(0, 100, 100),
+				                             new Pnt3D(100, 100, 100),
+				                             new Pnt3D(100, 30, 40),
+				                             new Pnt3D(40, 30, 40),
+				                             new Pnt3D(40, 0, 40)
+			                             });
 
 			var expectedRingGroup = new RingGroup(expected);
 
@@ -379,7 +379,7 @@ namespace ProSuite.Commons.Test.Geom
 				        new Pnt3D(40, 0, 100)
 			        };
 
-			source = new RingGroup(CreateRing(ring1));
+			source = new RingGroup(GeomTestUtils.CreateRing(ring1));
 
 			result = CutPlanarBothWays(source, targetLine, 2, 0);
 
@@ -419,7 +419,7 @@ namespace ProSuite.Commons.Test.Geom
 				                 new Pnt3D(25, 75, 0)
 			                 };
 
-			var poly = new RingGroup(CreateRing(ring1), new[] {CreateRing(innerRing2)});
+			var poly = new RingGroup(GeomTestUtils.CreateRing(ring1), new[] {GeomTestUtils.CreateRing(innerRing2)});
 
 			var innerRing2Overlapping = new List<Pnt3D>
 			                            {
@@ -429,7 +429,7 @@ namespace ProSuite.Commons.Test.Geom
 				                            new Pnt3D(200, -10, 0)
 			                            };
 
-			Linestring target = CreateRing(innerRing2Overlapping);
+			Linestring target = GeomTestUtils.CreateRing(innerRing2Overlapping);
 
 			IList<RingGroup> result = CutPlanarBothWays(poly, target, 2, 1);
 			Assert.AreEqual(3, result.Sum(p => p.Count));
@@ -448,7 +448,7 @@ namespace ProSuite.Commons.Test.Geom
 				             new Pnt3D(50, 45, 0)
 			             };
 
-			poly.AddInteriorRing(CreateRing(inner2));
+			poly.AddInteriorRing(GeomTestUtils.CreateRing(inner2));
 			result = CutPlanarBothWays(poly, target, 2, 1);
 			Assert.AreEqual(3, result.Sum(p => p.Count));
 
@@ -514,8 +514,8 @@ namespace ProSuite.Commons.Test.Geom
 				             new Pnt3D(60, 75, 0)
 			             };
 
-			var poly = new RingGroup(CreateRing(ring1),
-			                         new[] {CreateRing(inner1), CreateRing(inner2)});
+			var poly = new RingGroup(GeomTestUtils.CreateRing(ring1),
+			                         new[] {GeomTestUtils.CreateRing(inner1), GeomTestUtils.CreateRing(inner2)});
 
 			var overlapping = new List<Pnt3D>();
 			overlapping.Add(new Pnt3D(40, -10, 0));
@@ -523,7 +523,7 @@ namespace ProSuite.Commons.Test.Geom
 			overlapping.Add(new Pnt3D(200, 30, 0));
 			overlapping.Add(new Pnt3D(200, -10, 0));
 
-			Linestring target = CreateRing(overlapping);
+			Linestring target = GeomTestUtils.CreateRing(overlapping);
 
 			IList<RingGroup> result = CutPlanarBothWays(poly, target, 2, 2);
 			Assert.AreEqual(4, result.Sum(p => p.Count));
@@ -537,7 +537,7 @@ namespace ProSuite.Commons.Test.Geom
 				             new Pnt3D(50, 45, 0)
 			             };
 
-			poly.AddInteriorRing(CreateRing(inner3));
+			poly.AddInteriorRing(GeomTestUtils.CreateRing(inner3));
 			result = CutPlanarBothWays(poly, target, 2, 2);
 			Assert.AreEqual(4, result.Sum(p => p.Count));
 		}
@@ -569,10 +569,10 @@ namespace ProSuite.Commons.Test.Geom
 				             new Pnt3D(60, 75, 0)
 			             };
 
-			var poly = new RingGroup(CreateRing(ring1),
-			                         new[] {CreateRing(inner1)});
+			var poly = new RingGroup(GeomTestUtils.CreateRing(ring1),
+			                         new[] {GeomTestUtils.CreateRing(inner1)});
 
-			Linestring target = CreateRing(inner2);
+			Linestring target = GeomTestUtils.CreateRing(inner2);
 
 			IList<RingGroup> result1 = CutPlanarBothWays(poly, target, 2, 2);
 			Assert.AreEqual(4, result1.Sum(p => p.Count));
@@ -586,7 +586,7 @@ namespace ProSuite.Commons.Test.Geom
 				                           new Pnt3D(40, 70, 0)
 			                           };
 
-			target = CreateRing(bridgeBetweenIslands);
+			target = GeomTestUtils.CreateRing(bridgeBetweenIslands);
 
 			IList<RingGroup> result2 = CutPlanarBothWays(poly, target, 2, 1);
 			Assert.AreEqual(3, result2.Sum(p => p.Count));
@@ -597,7 +597,7 @@ namespace ProSuite.Commons.Test.Geom
 			Assert.AreEqual(3, xyResult.Sum(p => p.Count));
 
 			// Now cut a new inner ring intersecting both existing inner rings
-			target = CreateRing(bridgeBetweenIslands);
+			target = GeomTestUtils.CreateRing(bridgeBetweenIslands);
 			RingGroup polyWith2Islands = result1[0];
 			IList<RingGroup> result3 = CutPlanarBothWays(polyWith2Islands, target, 2, 1);
 			Assert.AreEqual(3, result3.Sum(p => p.Count));
@@ -618,14 +618,14 @@ namespace ProSuite.Commons.Test.Geom
 				                           new Pnt3D(20, 80, 0)
 			                           };
 
-			target = CreateRing(containingInnerRing1);
+			target = GeomTestUtils.CreateRing(containingInnerRing1);
 			xyResult = CutXY(polyWith2Islands, target, 2, 3);
 			Assert.AreEqual(5, xyResult.Sum(p => p.Count));
 			Assert.AreEqual(polyWith2Islands.GetArea2D(),
 			                xyResult.Sum(p => ((RingGroup) p).GetArea2D()));
 
 			// Try cutting with an existing inner ring
-			target = CreateRing(inner2);
+			target = GeomTestUtils.CreateRing(inner2);
 			var unCutResult = CutXY(polyWith2Islands, target, 0, 0);
 			Assert.AreEqual(0, unCutResult.Count);
 		}
@@ -650,7 +650,7 @@ namespace ProSuite.Commons.Test.Geom
 
 			Linestring target = new Linestring(startingAlong);
 
-			var poly = new RingGroup(CreateRing(ring1));
+			var poly = new RingGroup(GeomTestUtils.CreateRing(ring1));
 
 			CutPlanarBothWays(poly, target, 2, 0);
 		}
@@ -675,7 +675,7 @@ namespace ProSuite.Commons.Test.Geom
 
 			Linestring target = new Linestring(startingAlong);
 
-			var poly = new RingGroup(CreateRing(ring1));
+			var poly = new RingGroup(GeomTestUtils.CreateRing(ring1));
 
 			CutPlanarBothWays(poly, target, 0, 0);
 		}
@@ -707,8 +707,8 @@ namespace ProSuite.Commons.Test.Geom
 				                     new Pnt3D(50, 50, 0),
 			                     };
 
-			var poly = new RingGroup(CreateRing(ring1),
-			                         new[] {CreateRing(inner1)});
+			var poly = new RingGroup(GeomTestUtils.CreateRing(ring1),
+			                         new[] {GeomTestUtils.CreateRing(inner1)});
 
 			Linestring target = new Linestring(touchingIsland);
 
@@ -781,8 +781,8 @@ namespace ProSuite.Commons.Test.Geom
 				              new Pnt3D(100, 0, 0),
 			              };
 
-			var poly = new RingGroup(CreateRing(ring1),
-			                         new[] {CreateRing(inner1)});
+			var poly = new RingGroup(GeomTestUtils.CreateRing(ring1),
+			                         new[] {GeomTestUtils.CreateRing(inner1)});
 
 			Linestring target = new Linestring(cutLine);
 
@@ -848,7 +848,7 @@ namespace ProSuite.Commons.Test.Geom
 
 			Linestring target = new Linestring(startingAlong);
 
-			var poly = new RingGroup(CreateRing(ring1));
+			var poly = new RingGroup(GeomTestUtils.CreateRing(ring1));
 
 			CutPlanarBothWays(poly, target, 2, 0);
 		}
@@ -885,7 +885,7 @@ namespace ProSuite.Commons.Test.Geom
 					new Linestring(target2)
 				});
 
-			var poly = new RingGroup(CreateRing(ring1));
+			var poly = new RingGroup(GeomTestUtils.CreateRing(ring1));
 
 			CutXY(poly, target, 3, 0);
 
@@ -932,7 +932,7 @@ namespace ProSuite.Commons.Test.Geom
 					new Linestring(target2)
 				});
 
-			var poly = new RingGroup(CreateRing(ring1));
+			var poly = new RingGroup(GeomTestUtils.CreateRing(ring1));
 
 			CutXY(poly, target, 3, 0);
 
@@ -974,8 +974,8 @@ namespace ProSuite.Commons.Test.Geom
 				                         new Pnt3D(60, 100, 0)
 			                         };
 
-			var poly = new RingGroup(CreateRing(ring1),
-			                         new[] {CreateRing(inner1)});
+			var poly = new RingGroup(GeomTestUtils.CreateRing(ring1),
+			                         new[] {GeomTestUtils.CreateRing(inner1)});
 
 			WithRotatedRing(touchingFromInside,
 			                target =>
@@ -1020,8 +1020,8 @@ namespace ProSuite.Commons.Test.Geom
 				                          new Pnt3D(200, 60, 0)
 			                          };
 
-			var poly = new RingGroup(CreateRing(ring1),
-			                         new[] {CreateRing(inner1)});
+			var poly = new RingGroup(GeomTestUtils.CreateRing(ring1),
+			                         new[] {GeomTestUtils.CreateRing(inner1)});
 
 			WithRotatedRing(touchingFromOutside,
 			                target =>
@@ -1060,8 +1060,8 @@ namespace ProSuite.Commons.Test.Geom
 				                         new Pnt3D(80, 100, 0)
 			                         };
 
-			var poly = new RingGroup(CreateRing(ring1),
-			                         new[] {CreateRing(inner1)});
+			var poly = new RingGroup(GeomTestUtils.CreateRing(ring1),
+			                         new[] {GeomTestUtils.CreateRing(inner1)});
 
 			WithRotatedRing(touchingFromInside,
 			                target =>
@@ -1123,7 +1123,7 @@ namespace ProSuite.Commons.Test.Geom
 			WithRotatedRing(ring1,
 			                source =>
 			                {
-				                var poly = new RingGroup(CreateRing(ring1));
+				                var poly = new RingGroup(GeomTestUtils.CreateRing(ring1));
 
 				                IList<MultiLinestring> result = CutXY(poly, cutLine, 3, 0);
 
@@ -1159,10 +1159,10 @@ namespace ProSuite.Commons.Test.Geom
 				                     new Pnt3D(40, 30, 0)
 			                     };
 
-			var poly = new RingGroup(CreateRing(ring1),
-			                         new[] {CreateRing(inner1)});
+			var poly = new RingGroup(GeomTestUtils.CreateRing(ring1),
+			                         new[] {GeomTestUtils.CreateRing(inner1)});
 
-			Linestring target = CreateRing(touchingIsland);
+			Linestring target = GeomTestUtils.CreateRing(touchingIsland);
 			target.TryOrientClockwise();
 
 			IList<MultiLinestring> result = CutXY(poly, target, 2, 2);
@@ -1179,7 +1179,7 @@ namespace ProSuite.Commons.Test.Geom
 				                                 new Pnt3D(60, 0, 0)
 			                                 };
 
-			target = CreateRing(touchingIslandAndOuterRing);
+			target = GeomTestUtils.CreateRing(touchingIslandAndOuterRing);
 			target.TryOrientClockwise();
 
 			result = CutXY(poly, target, 2, 1);
@@ -1215,8 +1215,8 @@ namespace ProSuite.Commons.Test.Geom
 				                     new Pnt3D(30, 60, 0)
 			                     };
 
-			var poly = new RingGroup(CreateRing(ring1),
-			                         new[] {CreateRing(inner1)});
+			var poly = new RingGroup(GeomTestUtils.CreateRing(ring1),
+			                         new[] {GeomTestUtils.CreateRing(inner1)});
 
 			WithRotatedRing(touchingIsland,
 			                l =>
@@ -1240,7 +1240,7 @@ namespace ProSuite.Commons.Test.Geom
 				            new Pnt3D(100, 0, 0)
 			            };
 
-			var poly = new RingGroup(CreateRing(ring1));
+			var poly = new RingGroup(GeomTestUtils.CreateRing(ring1));
 
 			var targetWithDangle = new List<Pnt3D>
 			                       {
@@ -1331,7 +1331,7 @@ namespace ProSuite.Commons.Test.Geom
 				            new Pnt3D(100, 0, 0)
 			            };
 
-			var poly = new RingGroup(CreateRing(ring1));
+			var poly = new RingGroup(GeomTestUtils.CreateRing(ring1));
 
 			var targetWithCutBack = new List<Pnt3D>
 			                        {
@@ -1395,7 +1395,7 @@ namespace ProSuite.Commons.Test.Geom
 				             new Pnt3D(40, 60, 0)
 			             };
 
-			var poly = new RingGroup(CreateRing(ring1), new[] {CreateRing(island)});
+			var poly = new RingGroup(GeomTestUtils.CreateRing(ring1), new[] {GeomTestUtils.CreateRing(island)});
 
 			var targetEnlargeIsland = new List<Pnt3D>
 			                          {
@@ -1910,7 +1910,7 @@ namespace ProSuite.Commons.Test.Geom
 
 			for (var i = 0; i < 4; i++)
 			{
-				List<Pnt3D> rotatedRing = GetRotatedRing(ring1, i);
+				List<Pnt3D> rotatedRing = GeomTestUtils.GetRotatedRing(ring1, i);
 
 				const bool includedRingStarts = false;
 				IList<Pnt3D> intersectionPointsXY = GetIntersectionPointsXY(
@@ -1985,7 +1985,7 @@ namespace ProSuite.Commons.Test.Geom
 
 			for (var i = 0; i < 4; i++)
 			{
-				List<Pnt3D> rotatedRing = GetRotatedRing(ring1, i);
+				List<Pnt3D> rotatedRing = GeomTestUtils.GetRotatedRing(ring1, i);
 
 				IList<Pnt3D> intersectionPointsXY = GetIntersectionPointsXY(
 					rotatedRing, ring2, 0.0001, false);
@@ -2039,7 +2039,7 @@ namespace ProSuite.Commons.Test.Geom
 
 			for (var i = 0; i < 4; i++)
 			{
-				List<Pnt3D> rotatedRing = GetRotatedRing(ring1, i);
+				List<Pnt3D> rotatedRing = GeomTestUtils.GetRotatedRing(ring1, i);
 
 				var sourceLinestring = new Linestring(rotatedRing);
 				double totalLength = sourceLinestring.GetLength2D();
@@ -2089,15 +2089,6 @@ namespace ProSuite.Commons.Test.Geom
 			}
 		}
 
-		private static List<Pnt3D> GetRotatedRing(List<Pnt3D> ringPoints, int steps)
-		{
-			Pnt3D[] array1 = ringPoints.ToArray();
-			CollectionUtils.Rotate(array1, steps);
-			var rotatedRing = new List<Pnt3D>(array1);
-
-			rotatedRing.Add((Pnt3D) rotatedRing[0].Clone());
-			return rotatedRing;
-		}
 
 		[Test]
 		public void CanGetIntersectionPointsXYTouchingLine()
@@ -2265,8 +2256,8 @@ namespace ProSuite.Commons.Test.Geom
 
 			for (var i = 0; i < 4; i++)
 			{
-				Linestring linestring1 = new Linestring(GetRotatedRing(path1, i));
-				Linestring linestring2 = CreateRing(path2);
+				Linestring linestring1 = new Linestring(GeomTestUtils.GetRotatedRing(path1, i));
+				Linestring linestring2 = GeomTestUtils.CreateRing(path2);
 
 				IList<IntersectionPoint3D> intersectionPoints =
 					GeomTopoOpUtils.GetIntersectionPoints(
@@ -3577,8 +3568,8 @@ namespace ProSuite.Commons.Test.Geom
 			overlapping.Add(new Pnt3D(200, 30, 0));
 			overlapping.Add(new Pnt3D(200, -10, 0));
 
-			RingGroup poly1 = CreatePoly(ring1);
-			Linestring overlap = CreateRing(overlapping);
+			RingGroup poly1 = GeomTestUtils.CreatePoly(ring1);
+			Linestring overlap = GeomTestUtils.CreateRing(overlapping);
 
 			const double tolerance = 0.01;
 
@@ -3588,18 +3579,18 @@ namespace ProSuite.Commons.Test.Geom
 			Assert.AreEqual(1, unionResult.PartCount);
 			Assert.AreEqual(true, unionResult.GetLinestring(0).ClockwiseOriented);
 
-			var expected = CreateRing(new List<Pnt3D>
-			                          {
-				                          new Pnt3D(0, 0, 9),
-				                          new Pnt3D(0, 100, 9),
-				                          new Pnt3D(100, 50, 9),
-				                          new Pnt3D(100, 30, 9),
-				                          new Pnt3D(200, 30, 0),
-				                          new Pnt3D(200, -10, 0),
-				                          new Pnt3D(40, -10, 0),
-				                          new Pnt3D(40, 8, 0),
-				                          new Pnt3D(0, 0, 9)
-			                          });
+			var expected = GeomTestUtils.CreateRing(new List<Pnt3D>
+			                             {
+				                             new Pnt3D(0, 0, 9),
+				                             new Pnt3D(0, 100, 9),
+				                             new Pnt3D(100, 50, 9),
+				                             new Pnt3D(100, 30, 9),
+				                             new Pnt3D(200, 30, 0),
+				                             new Pnt3D(200, -10, 0),
+				                             new Pnt3D(40, -10, 0),
+				                             new Pnt3D(40, 8, 0),
+				                             new Pnt3D(0, 0, 9)
+			                             });
 
 			Assert.AreEqual(expected.GetArea2D(), unionResult.GetArea2D(), 0.0001);
 		}
@@ -3623,8 +3614,8 @@ namespace ProSuite.Commons.Test.Geom
 				            new Pnt3D(40, 20, 9)
 			            };
 
-			RingGroup source = CreatePoly(ring1);
-			RingGroup target = CreatePoly(ring2);
+			RingGroup source = GeomTestUtils.CreatePoly(ring1);
+			RingGroup target = GeomTestUtils.CreatePoly(ring2);
 
 			const double tolerance = 0.01;
 
@@ -3634,7 +3625,7 @@ namespace ProSuite.Commons.Test.Geom
 			Assert.AreEqual(1, unionResult.PartCount);
 			Assert.AreEqual(true, unionResult.GetLinestring(0).ClockwiseOriented);
 
-			var expected = CreateRing(ring1);
+			var expected = GeomTestUtils.CreateRing(ring1);
 			double expectedArea = expected.GetArea2D();
 
 			Assert.AreEqual(expectedArea, unionResult.GetArea2D(), 0.0001);
@@ -3649,7 +3640,7 @@ namespace ProSuite.Commons.Test.Geom
 			Assert.AreEqual(expectedArea, unionResult.GetArea2D(), 0.0001);
 
 			// In case the target is equal to a source ring -> The source ring should be deleted
-			Linestring interiorRing = CreateRing(ring2);
+			Linestring interiorRing = GeomTestUtils.CreateRing(ring2);
 			interiorRing.ReverseOrientation();
 			source.AddInteriorRing(interiorRing);
 
@@ -3690,8 +3681,8 @@ namespace ProSuite.Commons.Test.Geom
 				            new Pnt3D(200, 0, 0)
 			            };
 
-			RingGroup source = CreatePoly(ring1);
-			RingGroup target = CreatePoly(ring2);
+			RingGroup source = GeomTestUtils.CreatePoly(ring1);
+			RingGroup target = GeomTestUtils.CreatePoly(ring2);
 
 			const double tolerance = 0.01;
 
@@ -3713,7 +3704,7 @@ namespace ProSuite.Commons.Test.Geom
 				                         new Pnt3D(20, 50, 9)
 			                         };
 
-			source.AddInteriorRing(CreateRing(sourceInteriorRing));
+			source.AddInteriorRing(GeomTestUtils.CreateRing(sourceInteriorRing));
 
 			var targetSecondRing = new List<Pnt3D>
 			                       {
@@ -3723,7 +3714,7 @@ namespace ProSuite.Commons.Test.Geom
 				                       new Pnt3D(30, 30, 9),
 			                       };
 
-			target.AddLinestring(CreateRing(targetSecondRing));
+			target.AddLinestring(GeomTestUtils.CreateRing(targetSecondRing));
 
 			unionResult = GeomTopoOpUtils.GetUnionAreasXY(
 				source, target, tolerance);
@@ -3763,11 +3754,10 @@ namespace ProSuite.Commons.Test.Geom
 
 			MultiPolycurve source = new MultiPolycurve(new[]
 			                                           {
-				                                           CreateRing(ring1),
-				                                           CreateRing(ring1b)
+				                                           GeomTestUtils.CreateRing(ring1), GeomTestUtils.CreateRing(ring1b)
 			                                           });
 
-			RingGroup target = CreatePoly(ring2);
+			RingGroup target = GeomTestUtils.CreatePoly(ring2);
 
 			const double tolerance = 0.01;
 
@@ -3792,8 +3782,8 @@ namespace ProSuite.Commons.Test.Geom
 				            new Pnt3D(100, 20, 9)
 			            };
 
-			RingGroup source = CreatePoly(ring1);
-			MultiLinestring target = CreatePoly(ring1);
+			RingGroup source = GeomTestUtils.CreatePoly(ring1);
+			MultiLinestring target = GeomTestUtils.CreatePoly(ring1);
 
 			const double tolerance = 0.01;
 
@@ -3814,7 +3804,7 @@ namespace ProSuite.Commons.Test.Geom
 				            new Pnt3D(20, 50, 9)
 			            };
 
-			source.AddInteriorRing(CreateRing(ring2));
+			source.AddInteriorRing(GeomTestUtils.CreateRing(ring2));
 
 			target = source.Clone();
 
@@ -3845,8 +3835,8 @@ namespace ProSuite.Commons.Test.Geom
 				                   new Pnt3D(25, 75, 0)
 			                   };
 
-			Linestring sourceInner = CreateRing(sourceInner1);
-			var poly = new RingGroup(CreateRing(ring1), new[] {sourceInner});
+			Linestring sourceInner = GeomTestUtils.CreateRing(sourceInner1);
+			var poly = new RingGroup(GeomTestUtils.CreateRing(ring1), new[] {sourceInner});
 
 			var innerRing2Overlapping = new List<Pnt3D>
 			                            {
@@ -3856,24 +3846,24 @@ namespace ProSuite.Commons.Test.Geom
 				                            new Pnt3D(200, -10, 0)
 			                            };
 
-			var target = new RingGroup(CreateRing(innerRing2Overlapping));
+			var target = new RingGroup(GeomTestUtils.CreateRing(innerRing2Overlapping));
 
 			MultiLinestring result = GeomTopoOpUtils.GetUnionAreasXY(poly, target, 0.001);
 
 			Assert.AreEqual(2, result.PartCount);
 
-			var expectedOuterRing = CreateRing(new List<Pnt3D>
-			                                   {
-				                                   new Pnt3D(0, 0, 9),
-				                                   new Pnt3D(0, 100, 9),
-				                                   new Pnt3D(100, 100, 9),
-				                                   new Pnt3D(100, 30, 9),
-				                                   new Pnt3D(200, 30, 0),
-				                                   new Pnt3D(200, -10, 0),
-				                                   new Pnt3D(40, -10, 0),
-				                                   new Pnt3D(40, 0, 0),
-				                                   new Pnt3D(0, 0, 9)
-			                                   });
+			var expectedOuterRing = GeomTestUtils.CreateRing(new List<Pnt3D>
+			                                      {
+				                                      new Pnt3D(0, 0, 9),
+				                                      new Pnt3D(0, 100, 9),
+				                                      new Pnt3D(100, 100, 9),
+				                                      new Pnt3D(100, 30, 9),
+				                                      new Pnt3D(200, 30, 0),
+				                                      new Pnt3D(200, -10, 0),
+				                                      new Pnt3D(40, -10, 0),
+				                                      new Pnt3D(40, 0, 0),
+				                                      new Pnt3D(0, 0, 9)
+			                                      });
 
 			double expectedOuterRingArea = expectedOuterRing.GetArea2D();
 			double expectedOuterWithFirstInnerRingArea =
@@ -3891,7 +3881,7 @@ namespace ProSuite.Commons.Test.Geom
 				             new Pnt3D(50, 45, 0)
 			             };
 
-			poly.AddInteriorRing(CreateRing(inner2));
+			poly.AddInteriorRing(GeomTestUtils.CreateRing(inner2));
 
 			result = GeomTopoOpUtils.GetUnionAreasXY(poly, target, 0.001);
 			Assert.AreEqual(3, result.PartCount);
@@ -3910,7 +3900,7 @@ namespace ProSuite.Commons.Test.Geom
 				             new Pnt3D(80, 20, 123),
 			             };
 
-			poly.AddInteriorRing(CreateRing(inner3));
+			poly.AddInteriorRing(GeomTestUtils.CreateRing(inner3));
 
 			// The third ring should have been erased by the target;
 			result = GeomTopoOpUtils.GetUnionAreasXY(poly, target, 0.001);
@@ -3926,7 +3916,7 @@ namespace ProSuite.Commons.Test.Geom
 				                  new Pnt3D(91, 20, 123),
 			                  };
 
-			target.AddInteriorRing(CreateRing(targetInner));
+			target.AddInteriorRing(GeomTestUtils.CreateRing(targetInner));
 
 			result = GeomTopoOpUtils.GetUnionAreasXY(poly, target, 0.001);
 			Assert.AreEqual(3, result.PartCount);
@@ -3941,7 +3931,7 @@ namespace ProSuite.Commons.Test.Geom
 				                   new Pnt3D(150, 20, 321),
 			                   };
 
-			target.AddInteriorRing(CreateRing(targetInner2));
+			target.AddInteriorRing(GeomTestUtils.CreateRing(targetInner2));
 
 			expectedResultArea -= 25 * 10;
 			result = GeomTopoOpUtils.GetUnionAreasXY(poly, target, 0.001);
@@ -3971,8 +3961,8 @@ namespace ProSuite.Commons.Test.Geom
 				                   new Pnt3D(25, 75, 0)
 			                   };
 
-			Linestring sourceInner = CreateRing(sourceInner1);
-			var poly = new RingGroup(CreateRing(ring1), new[] {sourceInner});
+			Linestring sourceInner = GeomTestUtils.CreateRing(sourceInner1);
+			var poly = new RingGroup(GeomTestUtils.CreateRing(ring1), new[] {sourceInner});
 
 			var disjointTarget = new List<Pnt3D>
 			                     {
@@ -3982,7 +3972,7 @@ namespace ProSuite.Commons.Test.Geom
 				                     new Pnt3D(200, -10, 0)
 			                     };
 
-			var target = new RingGroup(CreateRing(disjointTarget));
+			var target = new RingGroup(GeomTestUtils.CreateRing(disjointTarget));
 
 			MultiLinestring result = GeomTopoOpUtils.GetUnionAreasXY(poly, target, 0.001);
 
@@ -4000,7 +3990,7 @@ namespace ProSuite.Commons.Test.Geom
 				              new Pnt3D(175, 20, 0)
 			              };
 
-			poly.AddLinestring(CreateRing(source2));
+			poly.AddLinestring(GeomTestUtils.CreateRing(source2));
 
 			result = GeomTopoOpUtils.GetUnionAreasXY(poly, target, 0.001);
 
@@ -4020,7 +4010,7 @@ namespace ProSuite.Commons.Test.Geom
 				              new Pnt3D(40, 60, 0),
 			              };
 
-			target.AddLinestring(CreateRing(target2));
+			target.AddLinestring(GeomTestUtils.CreateRing(target2));
 
 			// The second target ring should be part of the result;
 			result = GeomTopoOpUtils.GetUnionAreasXY(poly, target, 0.001);
@@ -4033,15 +4023,13 @@ namespace ProSuite.Commons.Test.Geom
 		[Test]
 		public void CanUnionWithMultipleRingsTouchingInPointAndLine()
 		{
-			MultiPolycurve source = (MultiPolycurve) GeomUtils.FromWkbFile(
-				GetGeometryTestDataPath("union_multipart_touching_source.wkb"),
-				out WkbGeometryType wkbType);
+			MultiPolycurve source = (MultiPolycurve) GeomUtils.FromWkbFile(GeomTestUtils.GetGeometryTestDataPath("union_multipart_touching_source.wkb"),
+			                                                               out WkbGeometryType wkbType);
 
 			Assert.AreEqual(WkbGeometryType.MultiPolygon, wkbType);
 
-			RingGroup target = (RingGroup) GeomUtils.FromWkbFile(
-				GetGeometryTestDataPath("union_multipart_touching_target.wkb"),
-				out wkbType);
+			RingGroup target = (RingGroup) GeomUtils.FromWkbFile(GeomTestUtils.GetGeometryTestDataPath("union_multipart_touching_target.wkb"),
+			                                                     out wkbType);
 
 			Assert.AreEqual(WkbGeometryType.Polygon, wkbType);
 
@@ -4073,8 +4061,8 @@ namespace ProSuite.Commons.Test.Geom
 			overlapping.Add(new Pnt3D(200, 30, 0));
 			overlapping.Add(new Pnt3D(200, -10, 0));
 
-			RingGroup poly1 = CreatePoly(ring1);
-			Linestring overlap = CreateRing(overlapping);
+			RingGroup poly1 = GeomTestUtils.CreatePoly(ring1);
+			Linestring overlap = GeomTestUtils.CreateRing(overlapping);
 			var target = new MultiPolycurve(new[] {overlap});
 
 			const double tolerance = 0.01;
@@ -4085,13 +4073,13 @@ namespace ProSuite.Commons.Test.Geom
 			Assert.AreEqual(1, intersectionResult.PartCount);
 			Assert.AreEqual(true, intersectionResult.GetLinestring(0).ClockwiseOriented);
 
-			var expected = CreateRing(new List<Pnt3D>
-			                          {
-				                          new Pnt3D(100, 30, 9),
-				                          new Pnt3D(100, 20, 9),
-				                          new Pnt3D(40, 8, 9),
-				                          new Pnt3D(40, 30, 0)
-			                          });
+			var expected = GeomTestUtils.CreateRing(new List<Pnt3D>
+			                             {
+				                             new Pnt3D(100, 30, 9),
+				                             new Pnt3D(100, 20, 9),
+				                             new Pnt3D(40, 8, 9),
+				                             new Pnt3D(40, 30, 0)
+			                             });
 
 			Assert.AreEqual(expected.GetArea2D(), intersectionResult.GetArea2D(), 0.0001);
 
@@ -4133,8 +4121,8 @@ namespace ProSuite.Commons.Test.Geom
 				            new Pnt3D(40, 20, 9)
 			            };
 
-			RingGroup source = CreatePoly(ring1);
-			RingGroup target = CreatePoly(ring2);
+			RingGroup source = GeomTestUtils.CreatePoly(ring1);
+			RingGroup target = GeomTestUtils.CreatePoly(ring2);
 
 			const double tolerance = 0.01;
 
@@ -4144,7 +4132,7 @@ namespace ProSuite.Commons.Test.Geom
 			Assert.AreEqual(1, intersection.PartCount);
 			Assert.AreEqual(true, intersection.GetLinestring(0).ClockwiseOriented);
 
-			var expected = CreateRing(ring2);
+			var expected = GeomTestUtils.CreateRing(ring2);
 			double expectedArea = expected.GetArea2D();
 
 			Assert.AreEqual(expectedArea, intersection.GetArea2D(), 0.0001);
@@ -4159,7 +4147,7 @@ namespace ProSuite.Commons.Test.Geom
 			Assert.AreEqual(expectedArea, intersection.GetArea2D(), 0.0001);
 
 			// In case the target is equal to a source hole -> The intersection should be empty
-			Linestring interiorRing = CreateRing(ring2);
+			Linestring interiorRing = GeomTestUtils.CreateRing(ring2);
 			interiorRing.ReverseOrientation();
 			source.AddInteriorRing(interiorRing);
 
@@ -4192,8 +4180,8 @@ namespace ProSuite.Commons.Test.Geom
 			disjoint.Add(new Pnt3D(300, 30, 0));
 			disjoint.Add(new Pnt3D(300, -10, 0));
 
-			RingGroup poly1 = CreatePoly(ring1);
-			Linestring overlap = CreateRing(disjoint);
+			RingGroup poly1 = GeomTestUtils.CreatePoly(ring1);
+			Linestring overlap = GeomTestUtils.CreateRing(disjoint);
 
 			const double tolerance = 0.01;
 
@@ -4242,7 +4230,7 @@ namespace ProSuite.Commons.Test.Geom
 				            new Pnt3D(100, 20, 9)
 			            };
 
-			RingGroup poly1 = CreatePoly(ring1);
+			RingGroup poly1 = GeomTestUtils.CreatePoly(ring1);
 			Linestring equalRing = poly1.ExteriorRing.Clone();
 
 			const double tolerance = 0.01;
@@ -4305,7 +4293,7 @@ namespace ProSuite.Commons.Test.Geom
 				            new Pnt3D(100, 20, 9)
 			            };
 
-			RingGroup poly1 = CreatePoly(ring1);
+			RingGroup poly1 = GeomTestUtils.CreatePoly(ring1);
 
 			const double tolerance = 0.01;
 
@@ -4318,7 +4306,7 @@ namespace ProSuite.Commons.Test.Geom
 				                         new Pnt3D(20, 60, 0)
 			                         }.ToList();
 
-			var interiorRing = new Linestring(GetRotatedRing(interiorRingPoints, 0));
+			var interiorRing = new Linestring(GeomTestUtils.GetRotatedRing(interiorRingPoints, 0));
 
 			poly1.AddInteriorRing(interiorRing);
 
@@ -4332,7 +4320,7 @@ namespace ProSuite.Commons.Test.Geom
 
 			Assert.IsTrue(result.IsEmpty);
 
-			filledHole = new Linestring(GetRotatedRing(interiorRingPoints, 1));
+			filledHole = new Linestring(GeomTestUtils.GetRotatedRing(interiorRingPoints, 1));
 
 			filledHole.ReverseOrientation();
 			target = new MultiPolycurve(new[] {filledHole});
@@ -4359,7 +4347,7 @@ namespace ProSuite.Commons.Test.Geom
 
 			// Now the filling is not complete but only partial:
 			interiorRingPoints.RemoveAt(1);
-			filledHole = new Linestring(GetRotatedRing(interiorRingPoints, 1));
+			filledHole = new Linestring(GeomTestUtils.GetRotatedRing(interiorRingPoints, 1));
 
 			filledHole.ReverseOrientation();
 			target = new MultiPolycurve(new[] {filledHole});
@@ -4380,7 +4368,7 @@ namespace ProSuite.Commons.Test.Geom
 				            new Pnt3D(0, 0, 9)
 			            };
 
-			RingGroup poly1 = CreatePoly(ring1);
+			RingGroup poly1 = GeomTestUtils.CreatePoly(ring1);
 
 			const double tolerance = 0.01;
 
@@ -4398,7 +4386,7 @@ namespace ProSuite.Commons.Test.Geom
 				CollectionUtils.Rotate(array2, i);
 				var rotatedRing = new List<Pnt3D>(array2);
 
-				RingGroup poly2 = CreatePoly(rotatedRing);
+				RingGroup poly2 = GeomTestUtils.CreatePoly(rotatedRing);
 
 				MultiLinestring result =
 					GeomTopoOpUtils.GetIntersectionAreasXY(poly1, poly2, tolerance);
@@ -4423,7 +4411,7 @@ namespace ProSuite.Commons.Test.Geom
 				CollectionUtils.Rotate(array2, i);
 				var rotatedRing = new List<Pnt3D>(array2);
 
-				RingGroup poly2 = CreatePoly(rotatedRing);
+				RingGroup poly2 = GeomTestUtils.CreatePoly(rotatedRing);
 
 				MultiLinestring result =
 					GeomTopoOpUtils.GetIntersectionAreasXY(poly1, poly2, tolerance);
@@ -4451,7 +4439,7 @@ namespace ProSuite.Commons.Test.Geom
 				            new Pnt3D(100, 0, 9)
 			            };
 
-			RingGroup poly1 = CreatePoly(ring1);
+			RingGroup poly1 = GeomTestUtils.CreatePoly(ring1);
 
 			const double tolerance = 0.01;
 
@@ -4464,7 +4452,7 @@ namespace ProSuite.Commons.Test.Geom
 				                         new Pnt3D(20, 60, 0)
 			                         }.ToList();
 
-			var interiorRing = new Linestring(GetRotatedRing(interiorRingPoints, 0));
+			var interiorRing = new Linestring(GeomTestUtils.GetRotatedRing(interiorRingPoints, 0));
 
 			poly1.AddInteriorRing(interiorRing);
 
@@ -4643,9 +4631,9 @@ namespace ProSuite.Commons.Test.Geom
 
 			for (var i = 0; i < 5; i++)
 			{
-				var interiorRing = new Linestring(GetRotatedRing(interiorRingPoints, i));
+				var interiorRing = new Linestring(GeomTestUtils.GetRotatedRing(interiorRingPoints, i));
 
-				RingGroup poly1 = CreatePoly(ring1);
+				RingGroup poly1 = GeomTestUtils.CreatePoly(ring1);
 
 				poly1.AddInteriorRing(interiorRing);
 
@@ -4663,7 +4651,7 @@ namespace ProSuite.Commons.Test.Geom
 						                       //new Pnt3D(50, 100, 9)
 					                       };
 
-					var target = new RingGroup(new Linestring(GetRotatedRing(targetRingPoints, t)));
+					var target = new RingGroup(new Linestring(GeomTestUtils.GetRotatedRing(targetRingPoints, t)));
 
 					MultiLinestring intersection =
 						GeomTopoOpUtils.GetIntersectionAreasXY(poly1, target, tolerance);
@@ -4706,7 +4694,7 @@ namespace ProSuite.Commons.Test.Geom
 					                        };
 
 					var target3 =
-						new RingGroup(new Linestring(GetRotatedRing(targetRingPoints3, t)));
+						new RingGroup(new Linestring(GeomTestUtils.GetRotatedRing(targetRingPoints3, t)));
 
 					intersection =
 						GeomTopoOpUtils.GetIntersectionAreasXY(poly1, target3, tolerance);
@@ -4751,7 +4739,7 @@ namespace ProSuite.Commons.Test.Geom
 					                        };
 
 					var target2 =
-						new RingGroup(new Linestring(GetRotatedRing(targetRingPoints2, t)));
+						new RingGroup(new Linestring(GeomTestUtils.GetRotatedRing(targetRingPoints2, t)));
 
 					intersection =
 						GeomTopoOpUtils.GetIntersectionAreasXY(poly1, target2, tolerance);
@@ -4815,10 +4803,10 @@ namespace ProSuite.Commons.Test.Geom
 
 			for (var i = 0; i < 5; i++)
 			{
-				RingGroup poly1 = CreatePoly(ring1);
+				RingGroup poly1 = GeomTestUtils.CreatePoly(ring1);
 
-				var interiorRing1 = new Linestring(GetRotatedRing(interiorRing1Points, i));
-				var interiorRing2 = new Linestring(GetRotatedRing(interiorRing2Points, -i));
+				var interiorRing1 = new Linestring(GeomTestUtils.GetRotatedRing(interiorRing1Points, i));
+				var interiorRing2 = new Linestring(GeomTestUtils.GetRotatedRing(interiorRing2Points, -i));
 
 				poly1.AddInteriorRing(interiorRing1);
 				poly1.AddInteriorRing(interiorRing2);
@@ -4834,7 +4822,7 @@ namespace ProSuite.Commons.Test.Geom
 						                       new Pnt3D(20, 20, 9),
 					                       };
 
-					var target = new RingGroup(new Linestring(GetRotatedRing(targetRingPoints, t)));
+					var target = new RingGroup(new Linestring(GeomTestUtils.GetRotatedRing(targetRingPoints, t)));
 
 					MultiLinestring result =
 						GeomTopoOpUtils.GetIntersectionAreasXY(poly1, target, tolerance);
@@ -4868,7 +4856,7 @@ namespace ProSuite.Commons.Test.Geom
 					                        };
 
 					var target2 =
-						new RingGroup(new Linestring(GetRotatedRing(targetRingPoints2, t)));
+						new RingGroup(new Linestring(GeomTestUtils.GetRotatedRing(targetRingPoints2, t)));
 
 					MultiLinestring result2 =
 						GeomTopoOpUtils.GetIntersectionAreasXY(poly1, target2, tolerance);
@@ -4904,7 +4892,7 @@ namespace ProSuite.Commons.Test.Geom
 					                        };
 
 					var target3 =
-						new RingGroup(new Linestring(GetRotatedRing(targetRingPoints3, t)));
+						new RingGroup(new Linestring(GeomTestUtils.GetRotatedRing(targetRingPoints3, t)));
 
 					MultiLinestring result3 =
 						GeomTopoOpUtils.GetIntersectionAreasXY(poly1, target3, tolerance);
@@ -4970,10 +4958,10 @@ namespace ProSuite.Commons.Test.Geom
 
 			for (var i = 0; i < 5; i++)
 			{
-				RingGroup poly1 = CreatePoly(ring1);
+				RingGroup poly1 = GeomTestUtils.CreatePoly(ring1);
 
-				var interiorRing1 = new Linestring(GetRotatedRing(interiorRing1Points, i));
-				var interiorRing2 = new Linestring(GetRotatedRing(interiorRing2Points, -i));
+				var interiorRing1 = new Linestring(GeomTestUtils.GetRotatedRing(interiorRing1Points, i));
+				var interiorRing2 = new Linestring(GeomTestUtils.GetRotatedRing(interiorRing2Points, -i));
 
 				poly1.AddInteriorRing(interiorRing1);
 				poly1.AddInteriorRing(interiorRing2);
@@ -4990,7 +4978,7 @@ namespace ProSuite.Commons.Test.Geom
 						                       new Pnt3D(40, 50, 9)
 					                       };
 
-					var target = new RingGroup(new Linestring(GetRotatedRing(targetRingPoints, t)));
+					var target = new RingGroup(new Linestring(GeomTestUtils.GetRotatedRing(targetRingPoints, t)));
 
 					MultiLinestring intersection =
 						GeomTopoOpUtils.GetIntersectionAreasXY(poly1, target, tolerance);
@@ -5030,7 +5018,7 @@ namespace ProSuite.Commons.Test.Geom
 					                        };
 
 					var target2 =
-						new RingGroup(new Linestring(GetRotatedRing(targetRingPoints2, t)));
+						new RingGroup(new Linestring(GeomTestUtils.GetRotatedRing(targetRingPoints2, t)));
 
 					MultiLinestring result2 =
 						GeomTopoOpUtils.GetIntersectionAreasXY(poly1, target2, tolerance);
@@ -5066,7 +5054,7 @@ namespace ProSuite.Commons.Test.Geom
 					                        };
 
 					var target3 =
-						new RingGroup(new Linestring(GetRotatedRing(targetRingPoints3, t)));
+						new RingGroup(new Linestring(GeomTestUtils.GetRotatedRing(targetRingPoints3, t)));
 
 					MultiLinestring result3 =
 						GeomTopoOpUtils.GetIntersectionAreasXY(poly1, target3, tolerance);
@@ -5116,7 +5104,7 @@ namespace ProSuite.Commons.Test.Geom
 
 			for (var i = 0; i < 9; i++)
 			{
-				RingGroup poly1 = CreatePoly(GetRotatedRing(ring1, i));
+				RingGroup poly1 = GeomTestUtils.CreatePoly(GeomTestUtils.GetRotatedRing(ring1, i));
 
 				for (var t = 0; t < 5; t++)
 				{
@@ -5129,7 +5117,7 @@ namespace ProSuite.Commons.Test.Geom
 						                       new Pnt3D(50, 40, 9),
 					                       };
 
-					var target = new RingGroup(new Linestring(GetRotatedRing(targetRingPoints, t)));
+					var target = new RingGroup(new Linestring(GeomTestUtils.GetRotatedRing(targetRingPoints, t)));
 
 					MultiLinestring intersection =
 						GeomTopoOpUtils.GetIntersectionAreasXY(poly1, target, tolerance);
@@ -5177,7 +5165,7 @@ namespace ProSuite.Commons.Test.Geom
 					                        };
 
 					var target3 =
-						new RingGroup(new Linestring(GetRotatedRing(targetRingPoints3, t)));
+						new RingGroup(new Linestring(GeomTestUtils.GetRotatedRing(targetRingPoints3, t)));
 
 					intersection =
 						GeomTopoOpUtils.GetIntersectionAreasXY(poly1, target3, tolerance);
@@ -5223,7 +5211,7 @@ namespace ProSuite.Commons.Test.Geom
 					                        };
 
 					var target2 =
-						new RingGroup(new Linestring(GetRotatedRing(targetRingPoints2, t)));
+						new RingGroup(new Linestring(GeomTestUtils.GetRotatedRing(targetRingPoints2, t)));
 
 					intersection =
 						GeomTopoOpUtils.GetIntersectionAreasXY(poly1, target2, tolerance);
@@ -5262,7 +5250,7 @@ namespace ProSuite.Commons.Test.Geom
 					                        };
 
 					var target4 =
-						new RingGroup(new Linestring(GetRotatedRing(targetRingPoints4, t)));
+						new RingGroup(new Linestring(GeomTestUtils.GetRotatedRing(targetRingPoints4, t)));
 
 					intersection =
 						GeomTopoOpUtils.GetIntersectionAreasXY(poly1, target4, tolerance);
@@ -5350,7 +5338,7 @@ namespace ProSuite.Commons.Test.Geom
 
 			for (var i = 0; i < 9; i++)
 			{
-				RingGroup poly1 = CreatePoly(GetRotatedRing(ring1, i));
+				RingGroup poly1 = GeomTestUtils.CreatePoly(GeomTestUtils.GetRotatedRing(ring1, i));
 
 				for (var t = 0; t < 5; t++)
 				{
@@ -5363,7 +5351,7 @@ namespace ProSuite.Commons.Test.Geom
 						                       new Pnt3D(50, 40, 9),
 					                       };
 
-					var target = new RingGroup(new Linestring(GetRotatedRing(targetRingPoints, t)));
+					var target = new RingGroup(new Linestring(GeomTestUtils.GetRotatedRing(targetRingPoints, t)));
 
 					MultiLinestring result =
 						GeomTopoOpUtils.GetIntersectionAreasXY(poly1, target, tolerance);
@@ -5399,7 +5387,7 @@ namespace ProSuite.Commons.Test.Geom
 					                        };
 
 					var target3 =
-						new RingGroup(new Linestring(GetRotatedRing(targetRingPoints3, t)));
+						new RingGroup(new Linestring(GeomTestUtils.GetRotatedRing(targetRingPoints3, t)));
 
 					MultiLinestring result3 =
 						GeomTopoOpUtils.GetIntersectionAreasXY(poly1, target3, tolerance);
@@ -5438,7 +5426,7 @@ namespace ProSuite.Commons.Test.Geom
 					                        };
 
 					var target2 =
-						new RingGroup(new Linestring(GetRotatedRing(targetRingPoints2, t)));
+						new RingGroup(new Linestring(GeomTestUtils.GetRotatedRing(targetRingPoints2, t)));
 
 					var result2 =
 						GeomTopoOpUtils.GetIntersectionAreasXY(poly1, target2, tolerance);
@@ -5468,7 +5456,7 @@ namespace ProSuite.Commons.Test.Geom
 					                        };
 
 					var target4 =
-						new RingGroup(new Linestring(GetRotatedRing(targetRingPoints4, t)));
+						new RingGroup(new Linestring(GeomTestUtils.GetRotatedRing(targetRingPoints4, t)));
 
 					var result4 =
 						GeomTopoOpUtils.GetIntersectionAreasXY(poly1, target4, tolerance);
@@ -5510,7 +5498,7 @@ namespace ProSuite.Commons.Test.Geom
 
 			for (var i = 0; i < 9; i++)
 			{
-				RingGroup poly1 = CreatePoly(GetRotatedRing(ring1, i));
+				RingGroup poly1 = GeomTestUtils.CreatePoly(GeomTestUtils.GetRotatedRing(ring1, i));
 
 				for (var t = 0; t < 5; t++)
 				{
@@ -5522,13 +5510,13 @@ namespace ProSuite.Commons.Test.Geom
 						                       new Pnt3D(100, 0, 9)
 					                       };
 
-					var target = new RingGroup(new Linestring(GetRotatedRing(targetRingPoints, t)));
+					var target = new RingGroup(new Linestring(GeomTestUtils.GetRotatedRing(targetRingPoints, t)));
 
 					MultiLinestring result =
 						GeomTopoOpUtils.GetIntersectionAreasXY(poly1, target, tolerance);
 					Assert.IsFalse(result.IsEmpty);
-					Assert.AreEqual(target.GetArea2D(), result.GetArea2D());
-					Assert.AreEqual(target.GetLength2D(), result.GetLength2D());
+					Assert.AreEqual(target.GetArea2D(), result.GetArea2D(), 0.0001);
+					Assert.AreEqual(target.GetLength2D(), result.GetLength2D(), 0.0001);
 
 					// Compare with difference:
 					result = GeomTopoOpUtils.GetDifferenceAreasXY(poly1, target, tolerance);
@@ -5555,7 +5543,7 @@ namespace ProSuite.Commons.Test.Geom
 					                        };
 
 					var target3 =
-						new RingGroup(new Linestring(GetRotatedRing(targetRingPoints3, t)));
+						new RingGroup(new Linestring(GeomTestUtils.GetRotatedRing(targetRingPoints3, t)));
 
 					MultiLinestring result3 =
 						GeomTopoOpUtils.GetIntersectionAreasXY(poly1, target3, tolerance);
@@ -5607,11 +5595,11 @@ namespace ProSuite.Commons.Test.Geom
 
 			for (int i = 0; i < 6; i++)
 			{
-				RingGroup poly1 = CreatePoly(GetRotatedRing(ring1, i));
+				RingGroup poly1 = GeomTestUtils.CreatePoly(GeomTestUtils.GetRotatedRing(ring1, i));
 
 				const double tolerance = 0.01;
 
-				RingGroup poly2 = CreatePoly(ring2);
+				RingGroup poly2 = GeomTestUtils.CreatePoly(ring2);
 
 				MultiLinestring result =
 					GeomTopoOpUtils.GetIntersectionAreasXY(poly1, poly2, tolerance);
@@ -5633,11 +5621,11 @@ namespace ProSuite.Commons.Test.Geom
 
 			for (int i = 0; i < 6; i++)
 			{
-				RingGroup poly1 = CreatePoly(GetRotatedRing(ring1, i));
+				RingGroup poly1 = GeomTestUtils.CreatePoly(GeomTestUtils.GetRotatedRing(ring1, i));
 
 				const double tolerance = 0.01;
 
-				RingGroup poly2 = CreatePoly(ring2);
+				RingGroup poly2 = GeomTestUtils.CreatePoly(ring2);
 
 				MultiLinestring result =
 					GeomTopoOpUtils.GetIntersectionAreasXY(poly1, poly2, tolerance);
@@ -5675,11 +5663,11 @@ namespace ProSuite.Commons.Test.Geom
 
 			for (int i = 0; i < 6; i++)
 			{
-				RingGroup poly1 = CreatePoly(GetRotatedRing(ring1, i));
+				RingGroup poly1 = GeomTestUtils.CreatePoly(GeomTestUtils.GetRotatedRing(ring1, i));
 
 				const double tolerance = 0.01;
 
-				RingGroup poly2 = CreatePoly(ring2);
+				RingGroup poly2 = GeomTestUtils.CreatePoly(ring2);
 
 				MultiLinestring result = GeomTopoOpUtils.GetUnionAreasXY(poly1, poly2, tolerance);
 
@@ -5705,11 +5693,11 @@ namespace ProSuite.Commons.Test.Geom
 
 			for (int i = 0; i < 6; i++)
 			{
-				RingGroup poly1 = CreatePoly(GetRotatedRing(ring1, i));
+				RingGroup poly1 = GeomTestUtils.CreatePoly(GeomTestUtils.GetRotatedRing(ring1, i));
 
 				const double tolerance = 0.01;
 
-				RingGroup poly2 = CreatePoly(ring2);
+				RingGroup poly2 = GeomTestUtils.CreatePoly(ring2);
 
 				MultiLinestring result = GeomTopoOpUtils.GetUnionAreasXY(poly1, poly2, tolerance);
 
@@ -5739,7 +5727,7 @@ namespace ProSuite.Commons.Test.Geom
 				            new Pnt3D(0, 100, 9)
 			            };
 
-			RingGroup poly1 = CreatePoly(ring1);
+			RingGroup poly1 = GeomTestUtils.CreatePoly(ring1);
 
 			const double tolerance = 0.01;
 
@@ -5758,7 +5746,7 @@ namespace ProSuite.Commons.Test.Geom
 				CollectionUtils.Rotate(array2, i);
 				var rotatedRing = new List<Pnt3D>(array2);
 
-				RingGroup poly2 = CreatePoly(rotatedRing);
+				RingGroup poly2 = GeomTestUtils.CreatePoly(rotatedRing);
 
 				MultiLinestring result =
 					GeomTopoOpUtils.GetIntersectionAreasXY(poly1, poly2, tolerance);
@@ -5777,7 +5765,7 @@ namespace ProSuite.Commons.Test.Geom
 				CollectionUtils.Rotate(array2, i);
 				var rotatedRing = new List<Pnt3D>(array2);
 
-				RingGroup poly2 = CreatePoly(rotatedRing);
+				RingGroup poly2 = GeomTestUtils.CreatePoly(rotatedRing);
 
 				MultiLinestring result =
 					GeomTopoOpUtils.GetIntersectionAreasXY(poly1, poly2, tolerance);
@@ -5812,7 +5800,7 @@ namespace ProSuite.Commons.Test.Geom
 				            new Pnt3D(0, 100, 9)
 			            };
 
-			RingGroup poly1 = CreatePoly(ring1);
+			RingGroup poly1 = GeomTestUtils.CreatePoly(ring1);
 
 			var ring2 = new[]
 			            {
@@ -5837,7 +5825,7 @@ namespace ProSuite.Commons.Test.Geom
 				CollectionUtils.Rotate(array2, i);
 				var rotatedRing = new List<Pnt3D>(array2);
 
-				RingGroup poly2 = CreatePoly(rotatedRing);
+				RingGroup poly2 = GeomTestUtils.CreatePoly(rotatedRing);
 
 				MultiLinestring intersecion =
 					GeomTopoOpUtils.GetIntersectionAreasXY(poly1, poly2, tolerance);
@@ -5902,15 +5890,13 @@ namespace ProSuite.Commons.Test.Geom
 			// The 'inner' vertex is within the tolerance of the line.
 			// The situation is modeled in an even more pronounced way in unit test
 			// CanGetIntersectionAreaXYWithLinearIntersectionWithinToleranceAcuteAngle()
-			RingGroup ring1 = (RingGroup) GeomUtils.FromWkbFile(
-				GetGeometryTestDataPath("almost_linear_acute_intersection_source.wkb"),
-				out WkbGeometryType wkbType);
+			RingGroup ring1 = (RingGroup) GeomUtils.FromWkbFile(GeomTestUtils.GetGeometryTestDataPath("almost_linear_acute_intersection_source.wkb"),
+			                                                    out WkbGeometryType wkbType);
 
 			Assert.AreEqual(WkbGeometryType.Polygon, wkbType);
 
-			RingGroup ring2 = (RingGroup) GeomUtils.FromWkbFile(
-				GetGeometryTestDataPath("almost_linear_acute_intersection_target.wkb"),
-				out wkbType);
+			RingGroup ring2 = (RingGroup) GeomUtils.FromWkbFile(GeomTestUtils.GetGeometryTestDataPath("almost_linear_acute_intersection_target.wkb"),
+			                                                    out wkbType);
 
 			Assert.AreEqual(WkbGeometryType.Polygon, wkbType);
 
@@ -5934,15 +5920,13 @@ namespace ProSuite.Commons.Test.Geom
 		public void CanGetIntersectionAreaWithLinearIntersectionWithinTolerance()
 		{
 			// Linear intersection is within the tolerance (1 cm)
-			RingGroup ring1 = (RingGroup) GeomUtils.FromWkbFile(
-				GetGeometryTestDataPath("almost_linear_intersection_source.wkb"),
-				out WkbGeometryType wkbType);
+			RingGroup ring1 = (RingGroup) GeomUtils.FromWkbFile(GeomTestUtils.GetGeometryTestDataPath("almost_linear_intersection_source.wkb"),
+			                                                    out WkbGeometryType wkbType);
 
 			Assert.AreEqual(WkbGeometryType.Polygon, wkbType);
 
-			RingGroup ring2 = (RingGroup) GeomUtils.FromWkbFile(
-				GetGeometryTestDataPath("almost_linear_intersection_target.wkb"),
-				out wkbType);
+			RingGroup ring2 = (RingGroup) GeomUtils.FromWkbFile(GeomTestUtils.GetGeometryTestDataPath("almost_linear_intersection_target.wkb"),
+			                                                    out wkbType);
 
 			Assert.AreEqual(WkbGeometryType.Polygon, wkbType);
 
@@ -5979,7 +5963,7 @@ namespace ProSuite.Commons.Test.Geom
 
 			Linestring sourceLinestring = new Linestring(path1);
 
-			RingGroup targetPoly = CreatePoly(ring2);
+			RingGroup targetPoly = GeomTestUtils.CreatePoly(ring2);
 
 			var intersectionLinesXY =
 				GeomTopoOpUtils.GetRingIntersectionLinesXY(
@@ -6071,7 +6055,7 @@ namespace ProSuite.Commons.Test.Geom
 					new Linestring(sourcePath2)
 				});
 
-			RingGroup targetPoly = CreatePoly(ring2);
+			RingGroup targetPoly = GeomTestUtils.CreatePoly(ring2);
 
 			var intersectionLinesXY =
 				GeomTopoOpUtils.GetRingIntersectionLinesXY(
@@ -6125,7 +6109,7 @@ namespace ProSuite.Commons.Test.Geom
 
 			for (var i = 0; i < 5; i++)
 			{
-				RingGroup poly = CreatePoly(GetRotatedRing(ring, i));
+				RingGroup poly = GeomTestUtils.CreatePoly(GeomTestUtils.GetRotatedRing(ring, i));
 
 				Linestring sourceLinestring = new Linestring(startingAlong);
 
@@ -6170,7 +6154,7 @@ namespace ProSuite.Commons.Test.Geom
 
 			Linestring containedSource = new Linestring(path1);
 
-			RingGroup targetPoly = CreatePoly(ring2);
+			RingGroup targetPoly = GeomTestUtils.CreatePoly(ring2);
 
 			var intersectionLinesXY =
 				GeomTopoOpUtils.GetRingIntersectionLinesXY(
@@ -7285,7 +7269,7 @@ namespace ProSuite.Commons.Test.Geom
 				Pnt3D[] array1 = ring.ToArray();
 				CollectionUtils.Rotate(array1, i);
 
-				Linestring linestring = CreateRing(array1.ToList());
+				Linestring linestring = GeomTestUtils.CreateRing(array1.ToList());
 
 				proc(linestring);
 			}
@@ -7384,34 +7368,6 @@ namespace ProSuite.Commons.Test.Geom
 			}
 
 			return result;
-		}
-
-		private static RingGroup CreatePoly(List<Pnt3D> points)
-		{
-			Linestring ring = CreateRing(points);
-
-			RingGroup poly = new RingGroup(ring);
-
-			return poly;
-		}
-
-		private static Linestring CreateRing(List<Pnt3D> points)
-		{
-			if (! points[0].Equals(points[points.Count - 1]))
-			{
-				points = new List<Pnt3D>(points);
-				points.Add(points[0].ClonePnt3D());
-			}
-
-			var ring = new Linestring(points);
-			return ring;
-		}
-
-		public static string GetGeometryTestDataPath(string fileName)
-		{
-			var locator = TestDataLocator.Create("ProSuite", @"TestData\Geom");
-
-			return locator.GetPath(fileName);
 		}
 	}
 }
