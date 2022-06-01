@@ -26,7 +26,7 @@ namespace ProSuite.UI.QA.PropertyEditors
 {
 	public static class DefaultTestConfiguratorFactory
 	{
-		private static readonly IMsg _msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		[NotNull]
 		public static ITestConfigurator Create(
@@ -205,6 +205,12 @@ namespace ProSuite.UI.QA.PropertyEditors
 
 			// System:
 			AddReferencedAssembly<string>(cp, assemblies);
+
+			// netstandard (necessary probably due to upstream assemblies have changed to .netstandard)
+			Assembly netstandard =
+				Assembly.Load(
+					"netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51");
+			AddReferencedAssembly(cp, netstandard, assemblies);
 
 			// ComponentModel
 			AddReferencedAssembly<DisplayNameAttribute>(cp, assemblies);
