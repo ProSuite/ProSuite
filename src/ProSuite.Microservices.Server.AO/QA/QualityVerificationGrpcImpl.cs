@@ -10,6 +10,7 @@ using Grpc.Core;
 using log4net.Core;
 using ProSuite.Commons;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Callbacks;
 using ProSuite.Commons.Com;
 using ProSuite.Commons.Essentials.Assertions;
@@ -475,6 +476,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 				var aoi = perimeter == null ? null : new AreaOfInterest(perimeter);
 
+				_msg.DebugFormat("Provided perimeter: {0}", GeometryUtils.ToString(perimeter));
+
 				XmlBasedVerificationService qaService = new XmlBasedVerificationService(
 					HtmlReportTemplatePath, QualitySpecificationTemplatePath);
 
@@ -569,6 +572,10 @@ namespace ProSuite.Microservices.Server.AO.QA
 			var dataSources = conditionsSpecificationMsg.DataSources.Select(
 				dsMsg => new DataSource(dsMsg.ModelName, dsMsg.Id, dsMsg.CatalogPath,
 				                        dsMsg.Database, dsMsg.SchemaOwner)).ToList();
+
+			_msg.DebugFormat("{0} data sources provided:{1} {2}",
+			                 dataSources.Count, Environment.NewLine,
+			                 StringUtils.Concatenate(dataSources, Environment.NewLine));
 
 			var specificationElements = new List<SpecificationElement>();
 
