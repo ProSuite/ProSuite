@@ -1,10 +1,12 @@
 using System;
 using System.IO;
+using System.Runtime.InteropServices;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 using ProSuite.DomainServices.AO.QA.Issues;
 using Path = System.IO.Path;
 
@@ -12,6 +14,8 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 {
 	public static class ExternalIssueRepositoryUtils
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		public static bool IssueRepositoryExists(
 			[NotNull] string directoryFullPath,
 			[NotNull] string gdbName,
@@ -98,9 +102,19 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 				Directory.CreateDirectory(directoryFullPath);
 			}
 
-			IWorkspaceName workspaceName = GetWorkspaceName(issueRepositoryType,
-			                                                directoryFullPath,
-			                                                gdbName);
+			IWorkspaceName workspaceName;
+			try
+			{
+				workspaceName = GetWorkspaceName(issueRepositoryType, directoryFullPath, gdbName);
+			}
+			catch (COMException e)
+			{
+				_msg.Warn($"Error creating issue workspace {gdbName} in {directoryFullPath}. " +
+				          "Make sure the executing process has the appropriate privileges and the disk has free space.",
+				          e);
+
+				throw;
+			}
 
 			return workspaceName == null
 				       ? null

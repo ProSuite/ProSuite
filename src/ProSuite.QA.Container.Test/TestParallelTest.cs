@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading;
@@ -50,7 +51,7 @@ namespace ProSuite.QA.Container.Test
 						continue;
 					}
 
-					if (! typeof(ITest).IsAssignableFrom(type))
+					if (!typeof(ITest).IsAssignableFrom(type))
 					{
 						continue;
 					}
@@ -85,43 +86,39 @@ namespace ProSuite.QA.Container.Test
 
 			int iWait = linesFc.FindField(_waitFieldName);
 			//ReadOnlyFeatureClass roFc = ReadOnlyTableFactory.Create(linesFc);
-			int maxX = 5;
-			int maxY = 5;
-
-			List<TileParam> tileParsList = new List<TileParam>();
 
 			double dx = 10000;
-			for (int ix = 0; ix < maxX; ix++)
+			TileRaster tileRaster = TileRaster.Create(2600000, 1200000, 5, 5, dx);
+			for (int ix = 0; ix < tileRaster.Nx; ix++)
 			{
-				for (int iy = 0; iy < maxY; iy++)
+				for (int iy = 0; iy < tileRaster.Ny; iy++)
 				{
 					IFeature f = linesFc.CreateFeature();
-					f.Value[iWait] = (maxX - ix) * 1000 + (maxY - iy) * 100;
+					f.Value[iWait] = (tileRaster.Nx - ix) * 400 + (tileRaster.Ny - iy) * 40;
 					double x = 2600000 + ix * dx;
 					double y = 1200000 + iy * dx;
 					f.Shape = GeometryFactory.CreatePoint(x, y);
 					f.Store();
 
 					TileParam t = new TileParam
-					              {
-						              Box = new WKSEnvelope
-						                    {
-							                    XMin = x - dx / 2,
-							                    XMax = x + dx / 2,
-							                    YMin = y - dx / 2,
-							                    YMax = y + dx / 2
-						                    }
-					              };
-					tileParsList.Add(t);
+					{
+						Box = new WKSEnvelope
+						{
+							XMin = x - dx / 2,
+							XMax = x + dx / 2,
+							YMin = y - dx / 2,
+							YMax = y + dx / 2
+						}
+					};
 				}
 			}
 
-			_tileParams = tileParsList;
-			string wsPath = WorkspaceUtils.TryGetCatalogPath((IWorkspace) workspace);
+			_tileRaster = tileRaster;
+			string wsPath = WorkspaceUtils.TryGetCatalogPath((IWorkspace)workspace);
 			Assert.NotNull(wsPath);
 
 			RunParallel(
-				tileParsList, dx,
+				tileRaster, dx,
 				() =>
 				{
 					IFeatureWorkspace ws = WorkspaceUtils.OpenFeatureWorkspace(wsPath);
@@ -143,46 +140,30 @@ namespace ProSuite.QA.Container.Test
 				workspace, fcName, esriGeometryType.esriGeometryPolyline);
 
 			//ReadOnlyFeatureClass roFc = ReadOnlyTableFactory.Create(linesFc);
-			int maxX = 5;
-			int maxY = 5;
-
-			List<TileParam> tilePars = new List<TileParam>();
 
 			double dx = 10000;
+			TileRaster tileRaster = TileRaster.Create(2600000, 1200000, 5, 5, dx);
+
 			IPolyline p = new PolylineClass();
-			for (int ix = 0; ix < maxX; ix++)
+			foreach (var tile in tileRaster.Tiles)
 			{
-				for (int iy = 0; iy < maxY; iy++)
-				{
-					double x = 2600000 + ix * dx;
-					double y = 1200000 + iy * dx;
-					((IPointCollection) p).AddPoint(new PointClass { X = x, Y = y });
-					TileParam t = new TileParam
-					              {
-						              Box = new WKSEnvelope
-						                    {
-							                    XMin = x - dx / 2,
-							                    XMax = x + dx / 2,
-							                    YMin = y - dx / 2,
-							                    YMax = y + dx / 2
-						                    }
-					              };
-					tilePars.Add(t);
-				}
+				((IPointCollection)p).AddPoint(
+					new PointClass { X = tile.Box.XMin + dx / 2, Y = tile.Box.YMin + dx / 2 });
 			}
 
 			IFeature f = linesFc.CreateFeature();
 			f.Shape = p;
 			f.Store();
 
-			_tileParams = tilePars;
-			string wsPath = WorkspaceUtils.TryGetCatalogPath((IWorkspace) workspace);
+			_tileRaster = tileRaster;
+			string wsPath = WorkspaceUtils.TryGetCatalogPath((IWorkspace)workspace);
 			Assert.NotNull(wsPath);
 
+			_cachedErrors.Clear();
 			_errors.Clear();
 			_unfilteredErrors.Clear();
 			RunParallel(
-				tilePars, dx,
+				tileRaster, dx,
 				() =>
 				{
 					IFeatureWorkspace ws = WorkspaceUtils.OpenFeatureWorkspace(wsPath);
@@ -195,20 +176,98 @@ namespace ProSuite.QA.Container.Test
 
 					return new List<ContainerTest> { wt, ml, ma };
 				});
-			int expected = 1 + 1 + (2 * (maxY - 1));
+			int expected = 1 + 1 + (2 * (tileRaster.Ny - 1));
 			Assert.AreEqual(expected, _errors.Count);
-			Assert.AreEqual(2 * tilePars.Count * expected, _unfilteredErrors.Count);
+			Assert.AreEqual(2 * tileRaster.Nx * tileRaster.Ny * expected, _unfilteredErrors.Count);
 		}
 
-		private void RunParallel(List<TileParam> tilePars, double dx,
-		                         Func<List<ContainerTest>> getTests,
-		                         bool runWithMaxTasks = true, bool runTilesParallel = true)
+		[Test]
+		public void CanHandleTileEndsParallel()
 		{
-			_tileParams = tilePars;
+			IFeatureWorkspace workspace =
+				TestWorkspaceUtils.CreateTestFgdbWorkspace("CanHandleTileEndsParallel");
+			string fcLineName = "Lines";
+			IFeatureClass linesFc = CreateFeatureClass(
+				workspace, fcLineName, esriGeometryType.esriGeometryPolyline);
+			string fcPointName = "Points";
+			IFeatureClass pointFc = CreateFeatureClass(
+				workspace, fcPointName, esriGeometryType.esriGeometryPoint,
+				customFields:
+				new[]
+				{
+					FieldUtils.CreateField(_waitFieldName, esriFieldType.esriFieldTypeInteger)
+				});
+
+
+			double dx = 10000;
+			TileRaster tileRaster = TileRaster.Create(2600000, 1200000, 5, 5, dx);
+
+			IPolyline line = new PolylineClass();
+			Random r = new Random((int)DateTime.Now.Ticks);
+			foreach (var tile in tileRaster.Tiles)
+			{
+				IPoint p = new PointClass
+				{ X = tile.Box.XMin + dx / 2, Y = tile.Box.YMin + dx / 2 };
+				((IPointCollection)line).AddPoint(p);
+
+				IFeature pf = pointFc.CreateFeature();
+				pf.Value[pf.Fields.FindField(_waitFieldName)] = r.Next(300);
+				pf.Shape = p;
+				pf.Store();
+			}
+
+			IFeature lf = linesFc.CreateFeature();
+			lf.Shape = line;
+			lf.Store();
+
+			_tileRaster = tileRaster;
+			string wsPath = WorkspaceUtils.TryGetCatalogPath((IWorkspace)workspace);
+			Assert.NotNull(wsPath);
+
+			_cachedErrors.Clear();
+			_errors.Clear();
+			_unfilteredErrors.Clear();
+			RunParallel(
+				tileRaster, dx,
+				() =>
+				{
+					IFeatureWorkspace ws = WorkspaceUtils.OpenFeatureWorkspace(wsPath);
+					ReadOnlyFeatureClass roLineFc =
+						ReadOnlyTableFactory.Create(ws.OpenFeatureClass(fcLineName));
+					AllErrorsTest allLine = new AllErrorsTest(roLineFc);
+
+					QaMaxLength ml = new QaMaxLength(roLineFc, 10000);
+					QaMinSegAngle ma = new QaMinSegAngle(roLineFc, 0.6);
+
+					ReadOnlyFeatureClass roPointFc =
+						ReadOnlyTableFactory.Create(ws.OpenFeatureClass(fcPointName));
+					AllErrorsTest allPoint = new AllErrorsTest(roPointFc);
+					WaitTest wt = new WaitTest(roPointFc);
+
+					return new List<ContainerTest> { allLine, ml, ma, allPoint };
+				},
+				runWithMaxTasks: false, runTilesParallel: true, completedTileHandling: true
+			);
+			int nTiles = tileRaster.Nx * tileRaster.Ny;
+			int lineErrors = 1 + 1 + (2 * (tileRaster.Ny - 1));
+			int ptErrors = nTiles;
+			int expected = lineErrors + ptErrors;
+			Assert.AreEqual(expected, _errors.Count);
+			Assert.AreEqual(nTiles * lineErrors + ptErrors, _unfilteredErrors.Count);
+			Assert.AreEqual(0, _cachedErrors.Count);
+		}
+
+		private void RunParallel(TileRaster tileRaster, double dx,
+								 Func<List<ContainerTest>> getTests,
+								 bool runWithMaxTasks = true, bool runTilesParallel = true,
+								 bool completedTileHandling = false)
+		{
+			_tileRaster = tileRaster;
 
 			if (runWithMaxTasks)
 			{
-				tilePars.ForEach(p => p.State = 0);
+				foreach (TileParam tile in tileRaster.Tiles) tile.State = 0;
+
 				int nTasks = 8;
 				List<Task> tasks = new List<Task>();
 				for (int iTask = 0; iTask < nTasks; iTask++)
@@ -239,7 +298,7 @@ namespace ProSuite.QA.Container.Test
 				Task completed = Task.WhenAll(tasks);
 				completed.Wait();
 
-				foreach (TileParam tileParam in tilePars)
+				foreach (TileParam tileParam in tileRaster.Tiles)
 				{
 					Assert.AreEqual(3, tileParam.State);
 				}
@@ -247,33 +306,123 @@ namespace ProSuite.QA.Container.Test
 
 			if (runTilesParallel)
 			{
-				tilePars.ForEach(p => p.State = 0);
-				int iTask = 0;
-				List<Task> tasks = new List<Task>();
-				foreach (TileParam tileParam in tilePars)
+				foreach (var tile in tileRaster.Tiles) tile.State = 0;
+				Dictionary<Task, TileParam> tasks = new Dictionary<Task, TileParam>();
+				foreach (TileParam tileParam in tileRaster.Tiles)
 				{
-					int i = iTask++;
 					TileParam tp = tileParam;
 					Task t = Task.Run(() =>
 					{
-						Trace.WriteLine($"Started Task {i}");
+						Trace.WriteLine($"Started Task {Task.CurrentId}");
 
 						List<ContainerTest> tests = getTests();
 						RunTile(tests, tp, dx);
 
-						Trace.WriteLine($"Ended Task {i}");
+						Trace.WriteLine($"Ended Task {Task.CurrentId}");
 					});
-					tasks.Add(t);
+					tasks.Add(t, tileParam);
 				}
 
-				Task completed = Task.WhenAll(tasks);
-				completed.Wait();
+				if (completedTileHandling == false)
+				{
+					Task allCompleted = Task.WhenAll(tasks.Keys);
+					allCompleted.Wait();
+				}
+				else
+				{
+					HandleCompletedTiles(tileRaster, tasks);
+				}
 
-				foreach (TileParam tileParam in tilePars)
+				foreach (TileParam tileParam in tileRaster.Tiles)
 				{
 					Assert.AreEqual(3, tileParam.State);
 				}
 			}
+		}
+
+		private void HandleCompletedTiles(TileRaster tileRaster, Dictionary<Task, TileParam> tasks)
+		{
+			HashSet<TileParam> completedTiles = new HashSet<TileParam>();
+			Dictionary<Task, TileParam> uncompletedTasks = new Dictionary<Task, TileParam>(tasks);
+			while (uncompletedTasks.Count > 0)
+			{
+				Task[] taskArray = uncompletedTasks.Keys.ToArray();
+				int iCompleted = Task.WaitAny(taskArray);
+
+				Task t = taskArray[iCompleted];
+				TileParam tp = tasks[t];
+				if (t.IsCompleted)
+				{
+					Trace.WriteLine($"Completed Task {t.Id}");
+					Assert.AreEqual(3, tp.State);
+					DropHandledCashedErrors(tileRaster, completedTiles, tp);
+				}
+				else
+				{
+					Assert.AreNotEqual(3, tp.State);
+					throw new NotImplementedException("handle failed tasks");
+				}
+
+				uncompletedTasks.Remove(t);
+			}
+		}
+
+		private void DropHandledCashedErrors(TileRaster tileRaster,
+			HashSet<TileParam> completedTiles, TileParam completedTile)
+		{
+			List<QaSer> cashedErrors = null;
+			AccessErrors(() => cashedErrors = new List<QaSer>(_cachedErrors));
+
+			completedTiles.Add(completedTile);
+			bool[,] compl = new bool[tileRaster.Nx, tileRaster.Ny];
+			for (int ix = 0; ix < tileRaster.Nx; ix++)
+			{
+				for (int iy = 0; iy < tileRaster.Ny; iy++)
+				{
+					compl[ix, iy] = completedTiles.Contains(tileRaster.Tile(ix, iy));
+				}
+			}
+
+			List<QaSer> completed = new List<QaSer>();
+			foreach (QaSer cashedError in cashedErrors)
+			{
+				if (IsHandled(cashedError, tileRaster, compl))
+				{
+					completed.Add(cashedError);
+				}
+			}
+
+			if (completed.Count > 0)
+			{
+				AccessErrors(() => { completed.ForEach(x => _cachedErrors.Remove(x)); });
+			}
+		}
+
+
+		private bool IsHandled(QaSer error, TileRaster tileRaster, bool[,] completed)
+		{
+			WKSEnvelope minBox = tileRaster.Tile(0, 0).Box;
+			double dx = minBox.XMax - minBox.XMin;
+			int xMin = Math.Max((int)((error.InvolvedExtent.XMin - minBox.XMin) / dx), 0);
+			int yMin = Math.Max((int)((error.InvolvedExtent.YMin - minBox.YMin) / dx), 0);
+
+			int xMax = Math.Min((int)((error.InvolvedExtent.XMax - minBox.XMin) / dx),
+								tileRaster.Nx - 1);
+			int yMax = Math.Max((int)((error.InvolvedExtent.YMax - minBox.YMin) / dx),
+								tileRaster.Ny - 1);
+
+			for (int ix = xMin; ix <= xMax; ix++)
+			{
+				for (int iy = yMin; iy <= yMax; iy++)
+				{
+					if (!completed[ix, iy])
+					{
+						return false;
+					}
+				}
+			}
+
+			return true;
 		}
 
 		private void RunTile(IEnumerable<ContainerTest> tests, TileParam tp, double dx)
@@ -300,7 +449,7 @@ namespace ProSuite.QA.Container.Test
 					return;
 				}
 
-				ContainerTest test = (ContainerTest) e.QaError.Test;
+				ContainerTest test = (ContainerTest)e.QaError.Test;
 				string serGeom = SerializeGeometry(e.QaError.Geometry);
 				e.QaError.Geometry.Envelope.QueryWKSCoords(out WKSEnvelope errorExtent);
 				IEnvelope involvedEnv = null;
@@ -319,7 +468,7 @@ namespace ProSuite.QA.Container.Test
 					}
 				}
 
-				WKSEnvelope involvedExtent = new WKSEnvelope();
+				WKSEnvelope involvedExtent;
 				if (involvedEnv != null)
 				{
 					involvedEnv.QueryWKSCoords(out involvedExtent);
@@ -330,12 +479,12 @@ namespace ProSuite.QA.Container.Test
 				}
 
 				QaSer qaSer = new QaSer
-				              {
-					              TestIndex = testDict[test],
-					              Error = serGeom,
-					              ErrorExtent = errorExtent,
-					              InvolvedExtent = involvedExtent
-				              };
+				{
+					TestIndex = testDict[test],
+					Error = serGeom,
+					ErrorExtent = errorExtent,
+					InvolvedExtent = involvedExtent
+				};
 				AddError(qaSer, tp);
 			};
 			container.Execute(GeometryFactory.CreateEnvelope(tp.Box));
@@ -368,7 +517,7 @@ namespace ProSuite.QA.Container.Test
 
 			IJSONSerializer jsonSerializer = new JSONSerializerGdbClass();
 			jsonSerializer.InitSerializer(jsonWriter, propertySet);
-			((IExternalSerializerGdb) jsonSerializer).WriteGeometry(null, geometry);
+			((IExternalSerializerGdb)jsonSerializer).WriteGeometry(null, geometry);
 
 			string json = Encoding.UTF8.GetString(jsonWriter.GetStringBuffer());
 			return json;
@@ -390,16 +539,17 @@ namespace ProSuite.QA.Container.Test
 				fields.Add(iField);
 			}
 
-			((IExternalSerializerGdb) jsonSerializer).WriteRow(
+			((IExternalSerializerGdb)jsonSerializer).WriteRow(
 				null, feature, feature.Fields, fields.ToArray(), opts);
 			string json = Encoding.UTF8.GetString(jsonWriter.GetStringBuffer());
 			return json;
 		}
 
-		private List<TileParam> _tileParams;
+		private TileRaster _tileRaster;
 		private readonly object _tileParamsLock = new object();
 
-		private readonly HashSet<QaSer> _errors = new HashSet<QaSer>(new QaSerEqual());
+		private readonly HashSet<QaSer> _cachedErrors = new HashSet<QaSer>(new QaSerEqual());
+		private readonly List<QaSer> _errors = new List<QaSer>();
 		private readonly List<QaSer> _unfilteredErrors = new List<QaSer>();
 		private readonly object _errorsLock = new object();
 
@@ -407,7 +557,11 @@ namespace ProSuite.QA.Container.Test
 		{
 			AccessErrors(() =>
 			{
-				_errors.Add(serGeom);
+				if (_cachedErrors.Add(serGeom))
+				{
+					_errors.Add(serGeom);
+				}
+
 				_unfilteredErrors.Add(serGeom);
 			});
 		}
@@ -423,7 +577,7 @@ namespace ProSuite.QA.Container.Test
 		private void RemoveHandledErrors()
 		{
 			WKSPoint handled = new WKSPoint { X = double.MaxValue, Y = double.MaxValue };
-			foreach (TileParam tileParam in _tileParams)
+			foreach (TileParam tileParam in _tileRaster.Tiles)
 			{
 				if (tileParam.State != 3)
 				{
@@ -431,7 +585,7 @@ namespace ProSuite.QA.Container.Test
 				}
 			}
 
-			foreach (TileParam tileParam in _tileParams)
+			foreach (TileParam tileParam in _tileRaster.Tiles)
 			{
 				if (tileParam.Box.YMax <= handled.Y && tileParam.State != 3)
 				{
@@ -454,7 +608,7 @@ namespace ProSuite.QA.Container.Test
 			Task.Run(() => RemoveHandledErrors());
 			lock (_tileParamsLock)
 			{
-				foreach (TileParam tileParam in _tileParams)
+				foreach (TileParam tileParam in _tileRaster.Tiles)
 				{
 					if (tileParam.State == 0)
 					{
@@ -474,7 +628,7 @@ namespace ProSuite.QA.Container.Test
 				if (x == y) return true;
 				if (x == null || y == null) return false;
 				return x.TestIndex == y.TestIndex &&
-				       x.Error == y.Error;
+					   x.Error == y.Error;
 			}
 
 			public int GetHashCode(QaSer obj)
@@ -491,15 +645,73 @@ namespace ProSuite.QA.Container.Test
 			public WKSEnvelope InvolvedExtent { get; set; }
 		}
 
+		private class TileRaster
+		{
+			public static TileRaster Create(double x0, double y0, int nx, int ny, double dx)
+			{
+				TileRaster r = new TileRaster();
+				r._tiles = new TileParam[nx, ny];
+				r.Nx = nx;
+				r.Ny = ny;
+
+				for (int ix = 0; ix < nx; ix++)
+				{
+					for (int iy = 0; iy < ny; iy++)
+					{
+						double x = x0 + ix * dx;
+						double y = y0 + iy * dx;
+						TileParam t = new TileParam
+						{
+							Box = new WKSEnvelope
+							{
+								XMin = x,
+								XMax = x + dx,
+								YMin = y,
+								YMax = y + dx
+							}
+						};
+						r._tiles[ix, iy] = t;
+					}
+				}
+
+				return r;
+			}
+
+			private TileRaster()
+			{
+
+			}
+			private TileParam[,] _tiles;
+			public int Nx { get; private set; }
+			public int Ny { get; private set; }
+
+			public TileParam Tile(int ix, int iy) => _tiles[ix, iy];
+			public IEnumerable<TileParam> Tiles
+			{
+				get
+				{
+					int nx = Nx;
+					int ny = Ny;
+					for (int ix = 0; ix < nx; ix++)
+					{
+						for (int iy = 0; iy < ny; iy++)
+						{
+							yield return _tiles[ix, iy];
+						}
+					}
+				}
+			}
+		}
 		private class TileParam
 		{
+
 			public WKSEnvelope Box { get; set; }
 			public int State { get; set; }
 		}
 
 		private static IFeatureClass CreateFeatureClass(
 			IFeatureWorkspace workspace, string name, esriGeometryType type,
-			int spatialReferenceId = (int) esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95,
+			int spatialReferenceId = (int)esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95,
 			IEnumerable<IField> customFields = null)
 		{
 			ISpatialReference sr = SpatialReferenceUtils.CreateSpatialReference(
@@ -551,7 +763,7 @@ namespace ProSuite.QA.Container.Test
 
 			protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 			{
-				if (! (row is IReadOnlyFeature f))
+				if (!(row is IReadOnlyFeature f))
 				{
 					return 0;
 				}

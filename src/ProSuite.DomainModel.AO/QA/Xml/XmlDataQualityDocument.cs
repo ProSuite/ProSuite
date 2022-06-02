@@ -124,14 +124,31 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		public void AddTestDescriptor([NotNull] XmlTestDescriptor xmlTestDescriptor)
 		{
 			Assert.ArgumentNotNull(xmlTestDescriptor, nameof(xmlTestDescriptor));
-
-			if (TestDescriptors == null)
-			{
-				TestDescriptors = new List<XmlTestDescriptor>();
-			}
-
+			TestDescriptors = TestDescriptors ?? new List<XmlTestDescriptor>();
 			TestDescriptors.Add(xmlTestDescriptor);
 		}
+
+		public void AddIssueFilterDescriptor([NotNull] XmlIssueFilterDescriptor xmlIssueFilterDescriptor)
+		{
+			Assert.ArgumentNotNull(xmlIssueFilterDescriptor, nameof(xmlIssueFilterDescriptor));
+			IssueFilterDescriptors = IssueFilterDescriptors ?? new List<XmlIssueFilterDescriptor>();
+			IssueFilterDescriptors.Add(xmlIssueFilterDescriptor);
+		}
+
+		public void AddRowFilterDescriptor([NotNull] XmlRowFilterDescriptor xmlRowFilterDescriptor)
+		{
+			Assert.ArgumentNotNull(xmlRowFilterDescriptor, nameof(xmlRowFilterDescriptor));
+			RowFilterDescriptors = RowFilterDescriptors ?? new List<XmlRowFilterDescriptor>();
+			RowFilterDescriptors.Add(xmlRowFilterDescriptor);
+		}
+
+		public void AddTransformerDescriptor([NotNull] XmlTransformerDescriptor xmlTransformerDescriptor)
+		{
+			Assert.ArgumentNotNull(xmlTransformerDescriptor, nameof(xmlTransformerDescriptor));
+			TransformerDescriptors = TransformerDescriptors ?? new List<XmlTransformerDescriptor>();
+			TransformerDescriptors.Add(xmlTransformerDescriptor);
+		}
+
 
 		[NotNull]
 		public IEnumerable<XmlDataQualityCategory> GetAllCategories()
