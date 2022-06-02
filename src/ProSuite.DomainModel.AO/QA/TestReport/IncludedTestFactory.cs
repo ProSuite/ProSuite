@@ -8,14 +8,14 @@ using ProSuite.QA.Container;
 
 namespace ProSuite.DomainModel.AO.QA.TestReport
 {
-	public class IncludedTestFactory : IncludedTest, IComparable<IncludedTestFactory>
+	public class IncludedTestFactory : IncludedInstance, IComparable<IncludedTestFactory>
 	{
 		private readonly Type _testFactoryType;
 
 		public IncludedTestFactory([NotNull] Type testFactoryType)
 			: base(GetTitle(testFactoryType),
-			       GetTestFactory(testFactoryType),
 			       testFactoryType.Assembly,
+			       GetTestFactory(testFactoryType),
 			       ReflectionUtils.IsObsolete(testFactoryType),
 			       TestFactoryUtils.IsInternallyUsed(testFactoryType))
 		{
@@ -45,25 +45,13 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 
 		#region Overrides of IncludedTestBase
 
-		public override string Key
-		{
-			get { return Assert.NotNull(_testFactoryType.FullName, "FullName"); }
-		}
+		public override string Key => Assert.NotNull(_testFactoryType.FullName, "FullName");
 
-		public override string IndexTooltip
-		{
-			get { return TestFactory.GetTestDescription(); }
-		}
+		public override string IndexTooltip => InstanceFactory.GetTestDescription();
 
-		public override Type TestType
-		{
-			get { return _testFactoryType; }
-		}
+		public override Type TestType => _testFactoryType;
 
-		public override IList<IssueCode> IssueCodes
-		{
-			get { return IssueCodeUtils.GetIssueCodes(_testFactoryType); }
-		}
+		public override IList<IssueCode> IssueCodes => IssueCodeUtils.GetIssueCodes(_testFactoryType);
 
 		#endregion
 	}

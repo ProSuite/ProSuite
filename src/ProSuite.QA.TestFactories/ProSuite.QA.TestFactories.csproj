@@ -96,7 +96,6 @@
     <Compile Include="QaDangleFactory.cs" />
     <Compile Include="QaDatasetConstraintFactory.cs" />
     <Compile Include="QaExtentFactory.cs" />
-    <Compile Include="QaFactoryPseudoNodes.cs" />
     <Compile Include="QaGdbConstraintFactory.cs" />
     <Compile Include="QaLinearUnitFactory.cs" />
     <Compile Include="QaLineConnection.cs" />
@@ -160,9 +159,6 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="DocStrings.de.resx">
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
     <EmbeddedResource Include="DocStrings.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>DocStrings.Designer.cs</LastGenOutput>

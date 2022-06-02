@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
@@ -70,6 +71,8 @@ namespace ProSuite.DomainServices.AO.QA
 			Write(feature, AttributeRole.GeneralizationTolerance, aoi.GeneralizationTolerance);
 
 			feature.Store();
+
+			Marshal.ReleaseComObject(feature);
 
 			return featureClass;
 		}

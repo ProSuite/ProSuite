@@ -88,13 +88,13 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 		{
 			IncludedTestFactories.Sort();
 
-			List<IncludedTestBase> includedTests =
-				GetSortedTestClasses().Cast<IncludedTestBase>().ToList();
+			List<IncludedInstanceBase> includedTests =
+				GetSortedTestClasses().Cast<IncludedInstanceBase>().ToList();
 
-			List<IncludedTestBase> includedTransformers =
-				GetSortedTransformerClasses().Cast<IncludedTestBase>().ToList();
+			List<IncludedInstanceBase> includedTransformers =
+				GetSortedTransformerClasses().Cast<IncludedInstanceBase>().ToList();
 
-			includedTests.AddRange(IncludedTestFactories.Cast<IncludedTestBase>());
+			includedTests.AddRange(IncludedTestFactories.Cast<IncludedInstanceBase>());
 
 			WriteHeader();
 
@@ -111,7 +111,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			if (includedTests.Count > 0)
 
 			{
-				foreach (IncludedTestBase includedTest in includedTests)
+				foreach (IncludedInstanceBase includedTest in includedTests)
 				{
 					if (includedTest is IncludedTestClass)
 					{
@@ -150,7 +150,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 					}
 				}
 
-				foreach (IncludedTestBase testBase in includedTransformers)
+				foreach (IncludedInstanceBase testBase in includedTransformers)
 				{
 					var includedTransformer = (IncludedTransformer) testBase;
 					if (includedTransformer.TestConstructors.Count <= 0)
@@ -290,7 +290,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 
 		private void WriteCategoryIndex()
 		{
-			var categories = new Dictionary<string, List<IncludedTestBase>>();
+			var categories = new Dictionary<string, List<IncludedInstanceBase>>();
 
 			ExtractCategories(categories, IncludedTestClasses.Values);
 			ExtractCategories(categories, IncludedTestFactories.ToArray());
@@ -299,7 +299,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 
 			foreach (string category in GetSortedCategories(categories.Keys))
 			{
-				List<IncludedTestBase> categoryTests = categories[category];
+				List<IncludedInstanceBase> categoryTests = categories[category];
 
 				categoryTests.Sort();
 
@@ -310,7 +310,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 
 				indexEntries.Add(new SectionTitleIndexEntry(string.Format("{0}:", category)));
 
-				foreach (IncludedTestBase test in categoryTests)
+				foreach (IncludedInstanceBase test in categoryTests)
 				{
 					indexEntries.Add(new TestIndexEntry(test));
 				}
@@ -416,8 +416,8 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 		}
 
 		private static void ExtractCategories<T>(
-			[NotNull] IDictionary<string, List<IncludedTestBase>> categories,
-			[NotNull] IEnumerable<T> includedTests) where T : IncludedTestBase
+			[NotNull] IDictionary<string, List<IncludedInstanceBase>> categories,
+			[NotNull] IEnumerable<T> includedTests) where T : IncludedInstanceBase
 		{
 			foreach (T test in includedTests)
 			{
@@ -439,14 +439,14 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 		}
 
 		private static void AddTestToCategory(
-			[NotNull] IncludedTestBase test,
+			[NotNull] IncludedInstanceBase test,
 			[NotNull] string category,
-			[NotNull] IDictionary<string, List<IncludedTestBase>> categories)
+			[NotNull] IDictionary<string, List<IncludedInstanceBase>> categories)
 		{
-			List<IncludedTestBase> tests;
+			List<IncludedInstanceBase> tests;
 			if (! categories.TryGetValue(category, out tests))
 			{
-				tests = new List<IncludedTestBase>();
+				tests = new List<IncludedInstanceBase>();
 				categories.Add(category, tests);
 			}
 
@@ -497,9 +497,9 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 		}
 
 		[NotNull]
-		private IEnumerable<XmlElement> GetTestParameterRows([NotNull] IncludedTest test)
+		private IEnumerable<XmlElement> GetTestParameterRows([NotNull] IncludedInstance test)
 		{
-			TestFactory testFactory = test.TestFactory;
+			IInstanceInfo testFactory = test.InstanceFactory;
 
 			var rows = new List<XmlElement>();
 
@@ -520,7 +520,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			foreach (TestParameter testParameter in testFactory.Parameters)
 			{
 				string parameterDescription =
-					test.TestFactory.GetParameterDescription(testParameter.Name);
+					test.InstanceFactory.GetParameterDescription(testParameter.Name);
 
 				XmlElement parameterRow = CreateTableRow();
 				rows.Add(parameterRow);
@@ -535,7 +535,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			return rows;
 		}
 
-		private XmlElement GetSignatureRow([NotNull] TestFactory testFactory)
+		private XmlElement GetSignatureRow([NotNull] IInstanceInfo testFactory)
 		{
 			string signature = InstanceUtils.GetTestSignature(testFactory);
 
@@ -545,12 +545,12 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			return signatureRow;
 		}
 
-		private void AppendTestDescriptionText(IncludedTestBase test)
+		private void AppendTestDescriptionText(IncludedInstanceBase test)
 		{
 			_htmlTable.AppendChild(GetTestDescriptionTextRow(test));
 		}
 
-		private XmlElement GetTestDescriptionTextRow(IncludedTestBase test)
+		private XmlElement GetTestDescriptionTextRow(IncludedInstanceBase test)
 		{
 			string testDescription = test.Description;
 			XmlElement descriptionRow = CreateTableRow();
@@ -684,7 +684,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			_htmlTable.AppendChild(row);
 		}
 
-		private void AppendTestParameters([NotNull] IncludedTest test)
+		private void AppendTestParameters([NotNull] IncludedInstance test)
 		{
 			foreach (XmlElement row in GetTestParameterRows(test))
 			{
@@ -728,7 +728,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			_htmlTable.AppendChild(row);
 		}
 
-		private void AppendTestClassDescription(IncludedTestBase test)
+		private void AppendTestClassDescription(IncludedInstanceBase test)
 		{
 			if (test.Description != null)
 			{
@@ -768,7 +768,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			if (test is IncludedTestFactory)
 			{
 				_htmlTable.AppendChild(
-					GetSignatureRow(((IncludedTest) test).TestFactory));
+					GetSignatureRow(((IncludedInstance) test).InstanceFactory));
 			}
 
 			AppendTestIssueCodes(test.IssueCodes);

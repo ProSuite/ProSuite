@@ -204,6 +204,8 @@
     <Compile Include="Qa3dConstantZ.cs" />
     <Compile Include="QaExportTables.cs" />
     <Compile Include="QaGdbConstraint.cs" />
+    <Compile Include="QaSchemaFieldPropertiesFromTable.cs" />
+    <Compile Include="QaSchemaReservedFieldNameProperties.cs" />
     <Compile Include="QaSurfaceOffset.cs" />
     <Compile Include="QaSurfacePipe.cs" />
     <Compile Include="QaAreaBase.cs" />
@@ -341,6 +343,7 @@
     <Compile Include="Schema\DomainUsage.cs" />
     <Compile Include="Schema\FieldSpecification.cs" />
     <Compile Include="Schema\FieldSpecifications.cs" />
+    <Compile Include="Schema\FieldSpecificationUtils.cs" />
     <Compile Include="Schema\QaSchemaFieldPropertiesBase.cs" />
     <Compile Include="Schema\QaSchemaReservedFieldNamesBase.cs" />
     <Compile Include="Schema\QaSchemaTestBase.cs" />
@@ -447,8 +450,6 @@
     <None Include="Documentation\en\EsriCH.QA.Tests.QuickReference_en.pdf" />
     <None Include="Documentation\en\SQLSyntax_en.docx" />
     <None Include="Documentation\en\SQLSyntax_en.pdf" />
-    <None Include="Documentation\Extended\de\QaFactoryPseudoNodes.docx" />
-    <None Include="Documentation\Extended\de\QaFactoryPseudoNodes.pdf" />
     <None Include="Documentation\Extended\de\QaFlowLogic.docx" />
     <None Include="Documentation\Extended\de\QaFlowLogic.pdf" />
     <None Include="Documentation\Extended\de\QaLineConnection.docx" />

@@ -578,52 +578,10 @@ namespace ProSuite.Microservices.Server.AO.QA
 			foreach (QualitySpecificationElementMsg specificationElementMsg in
 				conditionsSpecificationMsg.Elements)
 			{
-				QualityConditionMsg conditionMsg = specificationElementMsg.Condition;
-
 				// Temporary - TODO: Remove de-tour via xml condition
 
-				var parameterList = new List<XmlTestParameterValue>();
-				foreach (ParameterMsg parameterMsg in conditionMsg.Parameters)
-				{
-					XmlTestParameterValue xmlParameter;
-					if (StringUtils.IsNotEmpty(parameterMsg.WorkspaceId))
-					{
-						xmlParameter = new XmlDatasetTestParameterValue()
-						               {
-							               TestParameterName = parameterMsg.Name,
-							               Value = parameterMsg.Value,
-							               WorkspaceId = parameterMsg.WorkspaceId,
-							               WhereClause = parameterMsg.WhereClause
-						               };
-					}
-					else
-					{
-						xmlParameter = new XmlScalarTestParameterValue()
-						               {
-							               TestParameterName = parameterMsg.Name,
-							               Value = parameterMsg.Value
-						               };
-					}
-
-					parameterList.Add(xmlParameter);
-				}
-
-				XmlQualityCondition xmlCondition =
-					new XmlQualityCondition()
-					{
-						Name = specificationElementMsg.Condition.Name,
-						TestDescriptorName = specificationElementMsg.Condition.TestDescriptorName
-					};
-
-				xmlCondition.ParameterValues.AddRange(parameterList);
-
-				var specificationElement =
-					new SpecificationElement(xmlCondition,
-					                         specificationElementMsg.CategoryName)
-					{
-						AllowErrors = specificationElementMsg.AllowErrors,
-						StopOnError = specificationElementMsg.StopOnError
-					};
+				SpecificationElement specificationElement =
+					ProtobufConversionUtils.CreateXmlConditionElement(specificationElementMsg);
 
 				specificationElements.Add(specificationElement);
 

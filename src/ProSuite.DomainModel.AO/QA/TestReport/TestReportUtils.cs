@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-using System.Text;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Reflection;
@@ -94,7 +93,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 		{
 			Assert.ArgumentNotNull(assemblies, nameof(assemblies));
 
-			var builder = new XmlTestDescriptorsBuilder(writer, null);
+			var builder = new XmlTestDescriptorsBuilder(writer);
 
 			builder.AddHeaderItem("ProSuite Version",
 			                      ReflectionUtils.GetAssemblyVersionString(
@@ -107,26 +106,6 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			IncludeTestFactories(builder, assemblies);
 
 			builder.WriteReport();
-		}
-
-		[NotNull]
-		private static string GetTitle([NotNull] IEnumerable<Assembly> assemblies)
-		{
-			IList<string> fileNames = new List<string>();
-
-			foreach (Assembly assembly in assemblies)
-			{
-				fileNames.Add(Path.GetFileName(assembly.Location));
-			}
-
-			var stringBuilder = new StringBuilder();
-
-			foreach (string fileName in fileNames)
-			{
-				stringBuilder.AppendFormat("{0} ", fileName);
-			}
-
-			return string.Format("Assembly: {0}", stringBuilder);
 		}
 
 		private static void IncludeTestClasses([NotNull] IReportBuilder reportBuilder,
