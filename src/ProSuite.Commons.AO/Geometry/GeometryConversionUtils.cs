@@ -146,6 +146,24 @@ namespace ProSuite.Commons.AO.Geometry
 			                pointId);
 		}
 
+		public static IMultiPatch CreateMultipatch([NotNull] IEnumerable<RingGroup> fromRingGroups,
+		                                           [NotNull] IGeometry prototypeGeometry)
+		{
+			IMultiPatch resultMultipatch =
+				GeometryFactory.CreateEmptyMultiPatch(prototypeGeometry);
+
+			foreach (RingGroup poly in fromRingGroups)
+			{
+				// TODO: Support vertical ring group with inner rings
+				bool simplify = poly.InteriorRings.Any();
+
+				AddRingGroup(
+					resultMultipatch, poly, simplify, poly.Id != null);
+			}
+
+			return resultMultipatch;
+		}
+
 		public static IPolygon CreatePolygon(IGeometry template,
 		                                     IRing ringTemplate,
 		                                     RingGroup ringGroup)
