@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using ESRI.ArcGIS.esriSystem;
+using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -14,7 +16,9 @@ using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.VerificationProgress;
 using ProSuite.DomainServices.AO.QA;
 using ProSuite.Microservices.Definitions.QA;
+using ProSuite.Microservices.Definitions.Shared;
 using ProSuite.QA.Container;
+using ProSuite.QA.Container.TestContainer;
 
 namespace ProSuite.Microservices.Server.AO.QA
 {
@@ -90,7 +94,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			foreach (QualityConditionGroup qualityConditionGroup in qcGroups)
 			{
-				IList<QualityCondition> qcGroup = qualityConditionGroup.QualityConditions;
+				IList<QualityCondition> qcGroup =
+					qualityConditionGroup.QualityConditions.Keys.ToList();
 				if (qcGroup.Count == 0)
 				{
 					continue;
@@ -98,6 +103,10 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 				VerificationRequest subRequest =
 					CreateSubRequest(_originalRequest, QualitySpecification, qcGroup);
+
+				IList<VerificationRequest> subRequests =
+					CreateSubRequests(_originalRequest, QualitySpecification,
+					                  qualityConditionGroup);
 
 				SubResponse subResponse = new SubResponse();
 
@@ -374,6 +383,75 @@ namespace ProSuite.Microservices.Server.AO.QA
 			}
 
 			return result;
+		}
+
+		private IList<VerificationRequest> CreateSubRequests(
+			[NotNull] VerificationRequest originalRequest,
+			[NotNull] QualitySpecification specification,
+			[NotNull] QualityConditionGroup qualityConditionGroup)
+		{
+			List<QualityCondition> qualityConditions =
+				qualityConditionGroup.QualityConditions.Keys.ToList();
+			if (qualityConditionGroup.ExecType != QualityConditionExecType.TileParallel)
+			{
+				return new[]
+				       {
+					       CreateSubRequest(
+						       originalRequest, specification, qualityConditions)
+				       };
+			}
+
+			List<ContainerTest> tests = new List<ContainerTest>();
+			foreach (KeyValuePair<QualityCondition, IList<ITest>> pair in
+			         qualityConditionGroup.QualityConditions)
+			{
+				foreach (var test in pair.Value)
+				{
+					tests.Add((ContainerTest) test);
+				}
+			}
+
+			// TODO: get values
+			EnvelopeMsg boxMsg = originalRequest.Parameters.Perimeter.Envelope;
+			IEnvelope executeEnvelope = new EnvelopeClass();
+			executeEnvelope.PutCoords(boxMsg.XMin, boxMsg.YMin, boxMsg.XMax, boxMsg.YMax);
+			// TODO
+			ISpatialReference spatialReference = null;
+			//	originalRequest.Parameters.Perimeter.SpatialReference;
+			double tileSize = originalRequest.Parameters.TileSize;
+			TileEnum tileEnum = new TileEnum(tests, executeEnvelope, tileSize, spatialReference);
+
+			var requestedConditionIds = new HashSet<int>(qualityConditions.Select(c => c.Id));
+
+			foreach (Tile tile in tileEnum.EnumTiles())
+			{
+				var result = new VerificationRequest(originalRequest);
+				result.MaxParallelProcessing = 1;
+
+				foreach (QualitySpecificationElement element in specification.Elements)
+				{
+					QualityCondition condition = element.QualityCondition;
+
+					if (! requestedConditionIds.Contains(condition.Id))
+					{
+						result.Specification.ExcludedConditionIds.Add(condition.Id);
+					}
+
+					tile.FilterEnvelope.QueryWKSCoords(out WKSEnvelope wks);
+					result.Parameters.Perimeter =
+						new ShapeMsg
+						{
+							Envelope =
+								new EnvelopeMsg
+								{
+									XMin = wks.XMin, YMin = wks.YMin, XMax = wks.XMax,
+									YMax = wks.YMax
+								}
+						};
+				}
+			}
+
+			return null;
 		}
 
 		private async Task<bool> VerifyAsync(

@@ -221,7 +221,9 @@ namespace ProSuite.DomainServices.AO.QA
 			}
 
 			List<QualityConditionGroup> testGroups = new List<QualityConditionGroup>();
-			testGroups.Add(new QualityConditionGroup(QualityConditionExecType.NonContainer, nonContainerQcs));
+			testGroups.Add(new QualityConditionGroup(QualityConditionExecType.NonContainer,
+			                                         nonContainerQcs.ToDictionary(
+				                                         x => x, y => qcTests[y])));
 
 			int nGroups = maxProcesses - 1;
 			for (int iGroup = 0; iGroup < nGroups; iGroup++)
@@ -249,14 +251,14 @@ namespace ProSuite.DomainServices.AO.QA
 
 				if (execType == QualityConditionExecType.Container)
 				{
-					nonTileParallelTest.QualityConditions.Add(qc);
+					nonTileParallelTest.QualityConditions.Add(qc, qcTests[qc]);
 				}
 				else
 				{
-					tileParallelTest.QualityConditions.Add(qc);
+					tileParallelTest.QualityConditions.Add(qc, qcTests[qc]);
 				}
 
-				testGroups[group + offset].QualityConditions.Add(qc);
+				testGroups[group + offset].QualityConditions.Add(qc, qcTests[qc]);
 				group++;
 				if (group >= maxProcesses - 1)
 				{

@@ -1,22 +1,24 @@
-
-using ProSuite.DomainModel.Core.QA;
 using System.Collections.Generic;
+using ProSuite.DomainModel.Core.QA;
+using ProSuite.QA.Container;
 
 namespace ProSuite.DomainServices.AO.QA
 {
 	public class QualityConditionGroup
 	{
-		private readonly QualityConditionExecType _execType;
+		public QualityConditionExecType ExecType { get; }
 
-		public QualityConditionGroup(QualityConditionExecType execType, IEnumerable<QualityCondition> tests = null)
+		public QualityConditionGroup(
+			QualityConditionExecType execType,
+			IDictionary<QualityCondition, IList<ITest>> qualityConditions = null)
 		{
-			_execType = execType;
-			QualityConditions = new List<QualityCondition>();
-			if (tests != null)
-			{
-				QualityConditions.AddRange(tests);
-			}
+			ExecType = execType;
+			QualityConditions = qualityConditions == null
+				                    ? new Dictionary<QualityCondition, IList<ITest>>()
+				                    : new Dictionary<QualityCondition, IList<ITest>>(
+					                    qualityConditions);
 		}
-		public List<QualityCondition> QualityConditions { get; }
+
+		public IDictionary<QualityCondition, IList<ITest>> QualityConditions { get; }
 	}
 }
