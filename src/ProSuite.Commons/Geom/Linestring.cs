@@ -246,6 +246,41 @@ namespace ProSuite.Commons.Geom
 			return result;
 		}
 
+		public void Close(double tolerance = 0)
+		{
+			// double.Epsilon is not enough!
+			double epsilon = MathUtils.GetDoubleSignificanceEpsilon(StartPoint.X, StartPoint.Y);
+
+			if (StartPoint.Equals(EndPoint, epsilon))
+			{
+				// Absolutely equal
+				return;
+			}
+
+			if (StartPoint.EqualsXY(EndPoint, epsilon))
+			{
+				// Absolutely equal in XY, difference is only in Z
+				UpdatePoint(PointCount - 1, EndPoint.X, EndPoint.Y, StartPoint.Z);
+				return;
+			}
+
+			if (tolerance > double.Epsilon &&
+			    StartPoint.EqualsXY(EndPoint, tolerance))
+			{
+				// Equal within the geometry's tolerance. Do not add an extra segment,
+				// just update the current end point:
+				UpdatePoint(PointCount - 1, StartPoint.X, StartPoint.Y, StartPoint.Z);
+				return;
+			}
+
+			// Add a new segment
+			Pnt3D previousEnd = EndPoint.ClonePnt3D();
+			Pnt3D startPointClone = StartPoint.ClonePnt3D();
+			_segments.Add(new Line3D(previousEnd, startPointClone));
+
+			SpatialIndex = null;
+		}
+
 		public void SetEmpty()
 		{
 			_segments.Clear();
