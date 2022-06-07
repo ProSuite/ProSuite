@@ -1053,11 +1053,14 @@ namespace ProSuite.Commons.Geom
 		/// <param name="clonePoints"></param>
 		/// <param name="againstRingOrientation">If true, the resulting path will travel against
 		/// the segment orientation of this linestring. If the </param>
+		/// <param name="preferFullRingToZeroLength">In case the from-point equals the to-point:
+		/// Whether a the full ring should be returned or a zero-length segment.</param>
 		/// <returns></returns>
 		public Linestring GetSubcurve(int fromSegment, double fromSegmentRatio,
 		                              int toSegment, double toSegmentRatio,
 		                              bool clonePoints,
-		                              bool againstRingOrientation)
+		                              bool againstRingOrientation,
+		                              bool preferFullRingToZeroLength)
 		{
 			Assert.ArgumentCondition(fromSegmentRatio >= 0 && fromSegmentRatio <= 1.0,
 			                         "fromSegmentDistance must be >= 0 and <= 1");
@@ -1077,7 +1080,7 @@ namespace ProSuite.Commons.Geom
 
 			var result = GetSubcurve(fromSegment, fromSegmentRatio,
 			                         toSegment, toSegmentRatio,
-			                         clonePoints);
+			                         clonePoints, preferFullRingToZeroLength);
 
 			if (againstRingOrientation)
 			{
@@ -1100,7 +1103,8 @@ namespace ProSuite.Commons.Geom
 		/// <returns></returns>
 		public Linestring GetSubcurve(int fromSegment, double fromSegmentRatio,
 		                              int toSegment, double toSegmentRatio,
-		                              bool clonePoints)
+		                              bool clonePoints,
+		                              bool preferFullRingToZeroLength)
 		{
 			Line3D startSegment = _segments[fromSegment];
 
@@ -1125,6 +1129,11 @@ namespace ProSuite.Commons.Geom
 
 			double epsilon =
 				MathUtils.GetDoubleSignificanceEpsilon(startPoint.X, startPoint.Y);
+
+			if (preferFullRingToZeroLength)
+			{
+				epsilon = -epsilon;
+			}
 
 			bool fromBeforeTo = fromSegmentRatio - toSegmentRatio < epsilon;
 
@@ -1180,14 +1189,16 @@ namespace ProSuite.Commons.Geom
 			if (startSegmentIdx < SegmentCount - 1 || startRatioAlong < 1)
 			{
 				Linestring toEndSubcurve =
-					GetSubcurve(startSegmentIdx, startRatioAlong, SegmentCount - 1, 1, clonePoints);
+					GetSubcurve(startSegmentIdx, startRatioAlong, SegmentCount - 1, 1,
+					            clonePoints, false);
 
 				if (IsClosed && fullRing)
 				{
 					double epsilon = MathUtils.GetDoubleSignificanceEpsilon(XMax, YMax);
 
 					Linestring fromStartSubcurve =
-						GetSubcurve(0, 0, startSegmentIdx, startRatioAlong, clonePoints);
+						GetSubcurve(0, 0, startSegmentIdx, startRatioAlong,
+						            clonePoints, false);
 
 					return GeomTopoOpUtils.MergeConnectedLinestrings(
 						new List<Linestring> {toEndSubcurve, fromStartSubcurve}, null, epsilon);

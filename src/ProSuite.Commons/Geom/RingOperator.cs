@@ -1,6 +1,6 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
+using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -14,6 +14,11 @@ namespace ProSuite.Commons.Geom
 		{
 			_subcurveNavigator = subcurveNavigator;
 		}
+
+		public RingOperator([NotNull] ISegmentList source,
+		                    [NotNull] ISegmentList target,
+		                    double tolerance)
+			: this(new SubcurveNavigator(source, target, tolerance)) { }
 
 		/// <summary>
 		/// Returns the difference between source and target.
@@ -80,10 +85,12 @@ namespace ProSuite.Commons.Geom
 			// and from the containedTargetRings (i.e. target islands inside the source).
 			var unassignedInnerRings = new MultiPolycurve(new List<Linestring>(0));
 			AssignInteriorRings(leftRings, resultPolys, unassignedInnerRings,
-			                    _subcurveNavigator.Tolerance);
+			                    _subcurveNavigator.Tolerance,
+			                    _subcurveNavigator.InteriorRingsCouldContainEachOther);
 
 			AssignInteriorRings(containedTargetRings, resultPolys, unassignedInnerRings,
-			                    _subcurveNavigator.Tolerance);
+			                    _subcurveNavigator.Tolerance,
+			                    _subcurveNavigator.InteriorRingsCouldContainEachOther);
 
 			List<MultiLinestring> results = new List<MultiLinestring>(resultPolys);
 
@@ -98,14 +105,19 @@ namespace ProSuite.Commons.Geom
 			IList<Linestring> processedRingsResult =
 				_subcurveNavigator.FollowSubcurvesTurningLeft();
 
-			List<Linestring> equalRingSelection = GetRingsEqualOtherRing();
+			_subcurveNavigator.DetermineExtraSourceRingRelations(
+				out IList<Linestring> equalRings,
+				out IList<Linestring> sourceRingsOnTargetOutside);
+
+			var ringsOutsideOtherPoly = sourceRingsOnTargetOutside.Union(
+				_subcurveNavigator.GetUnprocessedTargetRingsOutsideSource()).ToList();
 
 			// The non-intersecting outer rings...
 			var unprocessedOuterRings =
-				GetRingsDisjointFromOtherPoly(r => r.ClockwiseOriented == true).ToList();
+				ringsOutsideOtherPoly.Where(r => r.ClockwiseOriented == true).ToList();
 
 			unprocessedOuterRings.AddRange(
-				equalRingSelection.Where(r => r.ClockwiseOriented == true));
+				equalRings.Where(r => r.ClockwiseOriented == true));
 
 			// ... can be used where necessary to aggregate the processed inner rings into ring groups
 			IList<RingGroup> resultRingGroups =
@@ -122,16 +134,19 @@ namespace ProSuite.Commons.Geom
 
 			// Assign the un-intersected inner rings not inside the other input poly:
 			List<Linestring> remainingIslands =
-				GetRingsDisjointFromOtherPoly(r => r.ClockwiseOriented == false).ToList();
+				ringsOutsideOtherPoly.Where(r => r.ClockwiseOriented == false).ToList();
 
-			remainingIslands.AddRange(equalRingSelection.Where(r => r.ClockwiseOriented == false));
+			remainingIslands.AddRange(equalRings.Where(r => r.ClockwiseOriented == false));
 
 			AssignInteriorRings(remainingIslands, resultRingGroups, unprocessedParts,
 			                    _subcurveNavigator.Tolerance);
 
 			List<MultiLinestring> results = new List<MultiLinestring>(resultRingGroups);
 
-			results.Add(unprocessedParts);
+			if (unprocessedParts.Count > 0)
+			{
+				results.Add(unprocessedParts);
+			}
 
 			return new MultiPolycurve(results);
 		}
@@ -308,14 +323,16 @@ namespace ProSuite.Commons.Geom
 		private static void AssignInteriorRings([NotNull] IEnumerable<Linestring> interiorRings,
 		                                        [NotNull] ICollection<RingGroup> polygons,
 		                                        [NotNull] MultiLinestring unassignedParts,
-		                                        double tolerance)
+		                                        double tolerance,
+		                                        bool checkRelationToExistingInteriorRings = false)
 		{
 			foreach (Linestring interiorRing in interiorRings)
 			{
 				// Assuming no conflicts (island within island) between un-cut islands because
 				// they all come from the same source.
 				int assignmentCount =
-					AssignInteriorRing(interiorRing, polygons, tolerance);
+					AssignInteriorRing(interiorRing, polygons, tolerance,
+					                   checkRelationToExistingInteriorRings);
 
 				if (assignmentCount == 0)
 				{
@@ -327,20 +344,72 @@ namespace ProSuite.Commons.Geom
 		}
 
 		private static int AssignInteriorRing([NotNull] Linestring interiorRing,
-		                                      IEnumerable<RingGroup> resultPolys,
-		                                      double tolerance)
+		                                      ICollection<RingGroup> resultPolys,
+		                                      double tolerance,
+		                                      bool checkRelationToExistingInteriorRings = false)
 		{
-			int assignmentCount = 0;
-			foreach (RingGroup resultPoly in resultPolys)
+			RingGroup assignedPoly = GetContainingRingGroup(interiorRing, resultPolys, tolerance);
+
+			// This is the fast option that works if the inputs are simple and no touching rings
+			// from the same geometry turn into a new ring that contains some other ring.
+
+			if (assignedPoly == null)
 			{
-				if (RingContains(resultPoly.ExteriorRing, interiorRing, tolerance))
+				return 0;
+			}
+
+			// TODO: If several result polys contain the interior ring, choose the smallest
+
+			// This is the no-shortcuts option:
+			if (checkRelationToExistingInteriorRings)
+			{
+				// Full assessment including inner rings:
+				bool? newRingIsContained =
+					GeomRelationUtils.IsContainedXY(interiorRing, assignedPoly, tolerance);
+
+				// The new, to-be-assigned interior ring is inside an existing interior ring
+				// (i.e. outside) -> do not assign it
+				if (newRingIsContained == false)
 				{
-					resultPoly.AddInteriorRing(interiorRing);
-					assignmentCount++;
+					return 0;
+				}
+
+				// It could also be that the result already has a ring that is contained by
+				// the new ring (add unit test!) -> remove the existing ring.
+				foreach (Linestring existingInteriorRing in assignedPoly.InteriorRings)
+				{
+					if (RingContains(interiorRing, existingInteriorRing, tolerance))
+					{
+						// replace the existing interior ring
+						assignedPoly.RemoveLinestring(existingInteriorRing);
+					}
 				}
 			}
 
-			return assignmentCount;
+			assignedPoly.AddInteriorRing(interiorRing);
+
+			return 1;
+		}
+
+		private static RingGroup GetContainingRingGroup(
+			[NotNull] Linestring interiorRing,
+			[NotNull] ICollection<RingGroup> candidateRingGroups,
+			double tolerance)
+		{
+			List<RingGroup> allContaining = new List<RingGroup>(1);
+
+			foreach (RingGroup candidatePoly in candidateRingGroups)
+			{
+				// TODO: If the candidates contain exactly 1, do we really have to check contains?
+				// For huge polygons with thousands of islands this might make a big difference.
+
+				if (RingContains(candidatePoly.ExteriorRing, interiorRing, tolerance))
+				{
+					allContaining.Add(candidatePoly);
+				}
+			}
+
+			return allContaining.MinElementOrDefault(r => r.ExteriorRing.GetArea2D());
 		}
 
 		/// <summary>
@@ -477,8 +546,8 @@ namespace ProSuite.Commons.Geom
 			if (includeEqualRings || includeNotContained)
 			{
 				foreach (Linestring uncutSourceRing in
-				         _subcurveNavigator.GetUncutSourceParts(includeEqualRings, false,
-				                                                false, includeNotContained))
+				         _subcurveNavigator.GetUnprocessedSourceParts(includeEqualRings, false,
+					         false, includeNotContained))
 				{
 					result.Add(uncutSourceRing);
 				}
@@ -499,7 +568,7 @@ namespace ProSuite.Commons.Geom
 			}
 
 			foreach (Linestring uncutSourceRing in
-			         _subcurveNavigator.GetUncutSourceParts(
+			         _subcurveNavigator.GetUnprocessedSourceParts(
 				         includeEqualRings, true,
 				         includeContainedSourceRings, false))
 			{
@@ -507,112 +576,6 @@ namespace ProSuite.Commons.Geom
 			}
 
 			return result;
-		}
-
-		private IList<Tuple<Linestring, Linestring>> GetEqualBoundaryRingPairs()
-		{
-			var boundaryIntersectingRings = new List<Tuple<Linestring, Linestring>>(0);
-
-			// W.r.t. AreaContainsXY returning null: if the start point is on the boundary there
-			// are duplicate rings (otherwise they would be 'intesected' and we would not get here.
-
-			for (int j = 0; j < _subcurveNavigator.Source.PartCount; j++)
-			{
-				var sourceIntersections = _subcurveNavigator
-				                          .IntersectionPoints.Where(ip => ip.SourcePartIndex == j)
-				                          .ToList();
-
-				if (sourceIntersections.Count != 2)
-				{
-					continue;
-				}
-
-				if (sourceIntersections[0].TargetPartIndex !=
-				    sourceIntersections[1].TargetPartIndex)
-				{
-					continue;
-				}
-
-				if (sourceIntersections[0].Type != IntersectionPointType.LinearIntersectionStart ||
-				    sourceIntersections[1].Type != IntersectionPointType.LinearIntersectionEnd)
-				{
-					continue;
-				}
-
-				if (! sourceIntersections[0].Point.EqualsXY(
-					    sourceIntersections[1].Point,
-					    _subcurveNavigator.Tolerance))
-				{
-					continue;
-				}
-
-				// If there are exactly 2 intersection points both linear start/end in the same point:
-				// The ring is covered by the respective target index
-				Linestring sourceRing =
-					_subcurveNavigator.Source.GetPart(sourceIntersections[0].SourcePartIndex);
-				Linestring targetRing =
-					_subcurveNavigator.Target.GetPart(sourceIntersections[0].TargetPartIndex);
-
-				boundaryIntersectingRings.Add(
-					new Tuple<Linestring, Linestring>(sourceRing, targetRing));
-			}
-
-			return boundaryIntersectingRings;
-		}
-
-		/// <summary>
-		/// Returns source rings disjoint from target and target rings disjoint from source.
-		/// </summary>
-		/// <param name="ringPredicate"></param>
-		/// <returns></returns>
-		private IEnumerable<Linestring> GetRingsDisjointFromOtherPoly(
-			Predicate<Linestring> ringPredicate)
-		{
-			var result = new List<Linestring>();
-
-			foreach (Linestring extraSourceRing in
-			         _subcurveNavigator.GetUncutSourceParts(false, false, false, true)
-			                           .Where(r => ringPredicate(r)))
-			{
-				result.Add(extraSourceRing);
-			}
-
-			foreach (Linestring extraTargetRing in _subcurveNavigator
-			                                       .GetTargetRingsCompletelyOutsideSource()
-			                                       .Where(r => ringPredicate(r)))
-			{
-				result.Add(extraTargetRing);
-			}
-
-			return result;
-		}
-
-		/// <summary>
-		/// Returns the source ring where an XY-equal ring in the target exists with the same
-		/// orientation. Non-equal oriented source-target ring pairs cancel each other out.
-		/// </summary>
-		/// <returns></returns>
-		private List<Linestring> GetRingsEqualOtherRing()
-		{
-			var equalRingSelection = new List<Linestring>();
-
-			IList<Tuple<Linestring, Linestring>> equalBoundaryRingPairs =
-				GetEqualBoundaryRingPairs();
-
-			foreach (Tuple<Linestring, Linestring> equalBoundaryRingPair in equalBoundaryRingPairs)
-			{
-				Linestring sourceRing = equalBoundaryRingPair.Item1;
-				Linestring targetRing = equalBoundaryRingPair.Item2;
-
-				if (sourceRing.ClockwiseOriented != targetRing.ClockwiseOriented)
-				{
-					continue;
-				}
-
-				equalRingSelection.Add(sourceRing);
-			}
-
-			return equalRingSelection;
 		}
 
 		#region Cookie cutting
@@ -772,7 +735,7 @@ namespace ProSuite.Commons.Geom
 			List<Linestring> subcurves = new List<Linestring>();
 			subcurves.Add(containingSourceRing.GetSubcurve(
 				              0, 0, sourceTouchSegmentIdx, sourceTouchPointRatio,
-				              false));
+				              false, false));
 
 			double targetTouchPointRatio;
 			int targetTouchSegmentIdx =
@@ -785,7 +748,8 @@ namespace ProSuite.Commons.Geom
 
 			subcurves.Add(containingSourceRing.GetSubcurve(
 				              sourceTouchSegmentIdx, sourceTouchPointRatio,
-				              containingSourceRing.SegmentCount - 1, 1, false));
+				              containingSourceRing.SegmentCount - 1, 1,
+				              false, false));
 
 			Linestring withBoundaryLoop =
 				GeomTopoOpUtils.MergeConnectedLinestrings(subcurves, null, tolerance);

@@ -457,12 +457,39 @@ namespace ProSuite.Commons.Geom
 			return result;
 		}
 
+
+		public static MultiLinestring GetUnionAreasXY(
+			[NotNull] MultiLinestring sourceRings,
+			[NotNull] Polyhedron targetPolyhedron,
+			double tolerance)
+		{
+			// Use the source rings and iteratively go through all target rings and remove the intersections:
+
+			IEnumerable<RingGroup> allInputRings;
+			if (sourceRings is RingGroup sourceRingGroup)
+			{
+				allInputRings = targetPolyhedron.RingGroups.Prepend(sourceRingGroup);
+			}
+			else if (sourceRings is Polyhedron sourcePolyhedron)
+			{
+				allInputRings = sourcePolyhedron.RingGroups.Union(targetPolyhedron.RingGroups);
+			}
+			else
+			{
+				IEnumerable<RingGroup> sourceRingGroups = GetConnectedComponents(sourceRings, tolerance);
+
+				allInputRings = sourceRingGroups.Union(targetPolyhedron.RingGroups);
+			}
+
+			return GetUnionAreasXY(allInputRings, tolerance);
+		}
+
 		public static MultiLinestring GetUnionAreasXY([NotNull] IEnumerable<RingGroup> ringGroups,
 		                                              double tolerance)
 		{
 			MultiLinestring result = null;
 
-			// TODO: Optimize and use potential spatial index (change to input polyheron?)
+			// TODO: Optimize and use potential spatial index (change to input polyhedron?)
 			foreach (RingGroup ringGroup in ringGroups)
 			{
 				if (result == null)
@@ -2600,17 +2627,19 @@ namespace ProSuite.Commons.Geom
 			[NotNull] ISegmentList targetSegments,
 			[NotNull] ICollection<IntersectionPoint3D> intersectionPoints)
 		{
-			foreach (var ringStartIntersection in GetLinearIntersectionBreaksAtRingStart(
+			foreach (var linearBreaks in GetLinearIntersectionBreaksAtRingStart(
 				         sourceSegments, targetSegments, intersectionPoints))
 			{
-				yield return ringStartIntersection;
+				yield return linearBreaks.PreviousEnd;
+				yield return linearBreaks.Restart;
 			}
 
-			foreach (var pseudoBreak in
+			foreach (var linearBreaks in
 			         GetLinearIntersectionPseudoBreaks(intersectionPoints, sourceSegments,
 			                                           targetSegments))
 			{
-				yield return pseudoBreak;
+				yield return linearBreaks.PreviousEnd;
+				yield return linearBreaks.Restart;
 			}
 		}
 
@@ -2623,11 +2652,14 @@ namespace ProSuite.Commons.Geom
 		/// <param name="sourceSegments"></param>
 		/// <param name="targetSegments"></param>
 		/// <param name="intersectionPoints"></param>
+		/// <param name="includeBoundaryLoops"></param>
 		/// <returns></returns>
-		public static IEnumerable<IntersectionPoint3D> GetLinearIntersectionBreaksAtRingStart(
-			ISegmentList sourceSegments,
-			ISegmentList targetSegments,
-			ICollection<IntersectionPoint3D> intersectionPoints)
+		internal static IEnumerable<LinearIntersectionPseudoBreak>
+			GetLinearIntersectionBreaksAtRingStart(
+				ISegmentList sourceSegments,
+				ISegmentList targetSegments,
+				ICollection<IntersectionPoint3D> intersectionPoints,
+				bool includeBoundaryLoops = false)
 		{
 			if (intersectionPoints.Count == 0)
 			{
@@ -2651,8 +2683,10 @@ namespace ProSuite.Commons.Geom
 				}
 
 				// Target end/start break:
-				foreach (IntersectionPoint3D pseudoBreak in GetLinearIntersectionPseudoBreaks(
-					         sourceSegments, targetSegments, orderedIntersections, true))
+				foreach (LinearIntersectionPseudoBreak pseudoBreak in
+				         GetLinearIntersectionPseudoBreaks(
+					         sourceSegments, targetSegments, orderedIntersections, true,
+					         includeBoundaryLoops))
 				{
 					yield return pseudoBreak;
 				}
@@ -2662,10 +2696,14 @@ namespace ProSuite.Commons.Geom
 				IntersectionPoint3D ringStart = orderedIntersections[0];
 
 				if (IsLinearIntersectionPseudoBreak(
-					    ringEnd, ringStart, sourceSegments, targetSegments))
+					    ringEnd, ringStart, sourceSegments, targetSegments,
+					    out LinearIntersectionPseudoBreak ringNullPointBreak))
 				{
-					yield return ringEnd;
-					yield return ringStart;
+					yield return ringNullPointBreak;
+				}
+				else if (includeBoundaryLoops && ringNullPointBreak?.IsBoundaryLoop == true)
+				{
+					yield return ringNullPointBreak;
 				}
 			}
 		}
@@ -2677,28 +2715,33 @@ namespace ProSuite.Commons.Geom
 		/// <param name="intersectionPoints"></param>
 		/// <param name="source"></param>
 		/// <param name="target"></param>
+		/// <param name="includeBoundaryLoops"></param>
 		/// <returns></returns>
-		public static IEnumerable<IntersectionPoint3D> GetLinearIntersectionPseudoBreaks(
-			[NotNull] IEnumerable<IntersectionPoint3D> intersectionPoints,
-			[NotNull] ISegmentList source,
-			[NotNull] ISegmentList target)
+		internal static IEnumerable<LinearIntersectionPseudoBreak>
+			GetLinearIntersectionPseudoBreaks(
+				[NotNull] IEnumerable<IntersectionPoint3D> intersectionPoints,
+				[NotNull] ISegmentList source,
+				[NotNull] ISegmentList target,
+				bool includeBoundaryLoops = false)
 		{
 			var orderedIntersections =
 				intersectionPoints.OrderBy(i => i.SourcePartIndex)
 				                  .ThenBy(i => i.VirtualSourceVertex).ToList();
 
-			foreach (IntersectionPoint3D intersectionPoint3D in
-			         GetLinearIntersectionPseudoBreaks(source, target, orderedIntersections))
+			foreach (LinearIntersectionPseudoBreak pseudoBreak in
+			         GetLinearIntersectionPseudoBreaks(source, target, orderedIntersections,
+			                                           false, includeBoundaryLoops))
 			{
-				yield return intersectionPoint3D;
+				yield return pseudoBreak;
 			}
 		}
 
-		private static IEnumerable<IntersectionPoint3D> GetLinearIntersectionPseudoBreaks(
+		private static IEnumerable<LinearIntersectionPseudoBreak> GetLinearIntersectionPseudoBreaks(
 			[NotNull] ISegmentList source,
 			[NotNull] ISegmentList target,
 			[NotNull] IEnumerable<IntersectionPoint3D> orderedIntersections,
-			bool onlyOnTargetNullPoint = false)
+			bool onlyOnTargetNullPoint = false,
+			bool includeBoundaryLoops = false)
 		{
 			IntersectionPoint3D previous = null;
 			foreach (IntersectionPoint3D current in orderedIntersections)
@@ -2709,10 +2752,15 @@ namespace ProSuite.Commons.Geom
 					    target))
 				{
 					if (IsLinearIntersectionPseudoBreak(previous, current, source,
-					                                    target))
+					                                    target,
+					                                    out LinearIntersectionPseudoBreak
+						                                        pseudoBreak))
 					{
-						yield return previous;
-						yield return current;
+						yield return pseudoBreak;
+					}
+					else if (includeBoundaryLoops && pseudoBreak?.IsBoundaryLoop == true)
+					{
+						yield return pseudoBreak;
 					}
 				}
 
@@ -2724,14 +2772,33 @@ namespace ProSuite.Commons.Geom
 			IntersectionPoint3D previousIntersection,
 			IntersectionPoint3D currentIntersection,
 			ISegmentList source,
-			ISegmentList target)
+			ISegmentList target,
+			out LinearIntersectionPseudoBreak pseudoBreak)
 		{
-			return previousIntersection != null &&
-			       previousIntersection.Type == IntersectionPointType.LinearIntersectionEnd &&
-			       currentIntersection.Type == IntersectionPointType.LinearIntersectionStart &&
-			       SegmentIntersectionUtils.AreIntersectionsAdjacent(
-				       previousIntersection, currentIntersection,
-				       source, target);
+			pseudoBreak = null;
+
+			if (previousIntersection == null ||
+			    previousIntersection.Type != IntersectionPointType.LinearIntersectionEnd ||
+			    currentIntersection.Type != IntersectionPointType.LinearIntersectionStart)
+			{
+				return false;
+			}
+
+			bool adjacent = SegmentIntersectionUtils.AreIntersectionsAdjacent(
+				previousIntersection, currentIntersection,
+				source, target, out bool isSourceBoundaryLoop, out bool isTargetBoundaryLoop);
+
+			if (adjacent || isSourceBoundaryLoop || isTargetBoundaryLoop)
+			{
+				pseudoBreak =
+					new LinearIntersectionPseudoBreak(previousIntersection, currentIntersection)
+					{
+						IsSourceBoundaryLoop = isSourceBoundaryLoop,
+						IsTargetBoundaryLoop = isTargetBoundaryLoop
+					};
+			}
+
+			return adjacent;
 		}
 
 		private static void FilterLinearIntersectionBreaksAtRingStart(
@@ -2739,44 +2806,14 @@ namespace ProSuite.Commons.Geom
 			ISegmentList targetSegments,
 			IList<IntersectionPoint3D> intersectionPoints)
 		{
-			foreach (var linearStartOrEnd in GetLinearIntersectionBreaksAtRingStart(
+			foreach (var pseudoBreak in GetLinearIntersectionBreaksAtRingStart(
 				         sourceSegments, targetSegments, intersectionPoints))
 			{
-				intersectionPoints.Remove(linearStartOrEnd);
+				intersectionPoints.Remove(pseudoBreak.PreviousEnd);
+				intersectionPoints.Remove(pseudoBreak.Restart);
 			}
 		}
-
-		private static bool IsIntersectionAtPartStartOrEnd(
-			[NotNull] ISegmentList source,
-			[NotNull] ISegmentList target,
-			[NotNull] IntersectionPoint3D intersectionPoint)
-		{
-			return IsPointAtPartStartOrEnd(source, intersectionPoint.SourcePartIndex,
-			                               intersectionPoint.VirtualSourceVertex) ||
-			       IsPointAtPartStartOrEnd(target, intersectionPoint.TargetPartIndex,
-			                               intersectionPoint.VirtualTargetVertex);
-		}
-
-		private static bool IsPointAtPartStartOrEnd(ISegmentList segmentList,
-		                                            int partIndex,
-		                                            double localPointAlongIndex)
-		{
-			var vertexIndexIntegral = (int) localPointAlongIndex;
-
-			// ReSharper disable once CompareOfFloatsByEqualityOperator
-			bool isVertex = localPointAlongIndex == vertexIndexIntegral;
-
-			if (! isVertex)
-			{
-				return false;
-			}
-
-			Linestring part = segmentList.GetPart(partIndex);
-
-			return part.IsFirstPointInPart(vertexIndexIntegral) ||
-			       part.IsLastPointInPart(vertexIndexIntegral);
-		}
-
+		
 		#region Cut / Intersect
 
 		public static RotationAxis GetPreferredRotationAxis(IBoundedXY geometry)

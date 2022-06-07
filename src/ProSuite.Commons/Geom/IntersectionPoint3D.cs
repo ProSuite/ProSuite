@@ -442,8 +442,49 @@ namespace ProSuite.Commons.Geom
 			return sourcePart.PointCount - 1 == VirtualSourceVertex && source.IsClosed;
 		}
 
+		public bool ReferencesSameSourceVertex([CanBeNull] IntersectionPoint3D other,
+		                                       ISegmentList source,
+		                                       double tolerance = double.Epsilon)
+		{
+			if (other == null)
+			{
+				return false;
+			}
+
+			if (other.SourcePartIndex != SourcePartIndex)
+			{
+				return false;
+			}
+
+			if (VirtualSourceVertex == 0 &&
+			    other.IsAtSourceRingEndPoint(source))
+			{
+				return true;
+			}
+
+			if (other.VirtualSourceVertex == 0 &&
+			    IsAtSourceRingEndPoint(source))
+			{
+				return true;
+			}
+
+			//return VirtualSourceVertex == other.VirtualSourceVertex;
+
+			double delta = Math.Abs(VirtualSourceVertex - other.VirtualSourceVertex);
+
+			// Quick test: if they are more than 2 vertices away from each other -> false
+			if (delta > 2)
+			{
+				return false;
+			}
+
+			// Proper test:
+			return other.Point.GetDistance(Point, true) < tolerance;
+		}
+
 		public bool ReferencesSameTargetVertex([CanBeNull] IntersectionPoint3D other,
-		                                       ISegmentList target)
+		                                       ISegmentList target,
+		                                       double tolerance = double.Epsilon)
 		{
 			if (other == null)
 			{
@@ -467,8 +508,21 @@ namespace ProSuite.Commons.Geom
 				return true;
 			}
 
-			// ReSharper disable once CompareOfFloatsByEqualityOperator
-			return VirtualTargetVertex == other.VirtualTargetVertex;
+			//return VirtualTargetVertex == other.VirtualTargetVertex;
+
+			double delta = Math.Abs(VirtualTargetVertex - other.VirtualTargetVertex);
+
+			// Quick test: if they are more than 2 vertices away from each other -> false
+			if (delta > 2)
+			{
+				return false;
+			}
+
+			// Proper test:
+			Pnt3D otherPoint = other.GetTargetPoint(target);
+			Pnt3D thisPoint = GetTargetPoint(target);
+
+			return otherPoint.GetDistance(thisPoint, true) < tolerance;
 		}
 
 		public int GetLocalSourceIntersectionSegmentIdx(Linestring source,

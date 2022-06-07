@@ -477,6 +477,8 @@ namespace ProSuite.Commons.Geom
 		{
 			bool result = Linestrings.Remove(linestring);
 
+			InitializeBounds();
+
 			foreach (Linestring l in Linestrings)
 			{
 				UpdateBounds(l);
