@@ -2805,6 +2805,15 @@ namespace ProSuite.Commons.Geom
 				                      : GeomUtils.RotateY90(linestring.GetPoints(), true));
 		}
 
+		public static Linestring Move([NotNull] Linestring linestring,
+		                              double dX, double dY, double dZ)
+		{
+			// TODO: Some rings have startPoint reference-equals endPoint which messes up when updating:
+			// -> for the moment, copy everything
+
+			return new Linestring(GeomUtils.Move(linestring.GetPoints(), dX, dY, dZ, true));
+		}
+
 		public static IEnumerable<Linestring> RotateBack(
 			[NotNull] IEnumerable<Linestring> linestrings,
 			RotationAxis rotationAxis,

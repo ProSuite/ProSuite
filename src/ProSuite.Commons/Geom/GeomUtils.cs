@@ -467,6 +467,27 @@ return : Point2D : lines cut each other at Point (non parallel)
 			}
 		}
 
+		public static IEnumerable<Pnt3D> Move(IEnumerable<Pnt3D> points,
+		                                      double dX, double dY, double dZ,
+		                                      bool copy = false)
+		{
+			foreach (Pnt3D point in points)
+			{
+				if (copy)
+				{
+					yield return new Pnt3D(point.X + dX, point.Y + dY, point.Z + dZ);
+				}
+				else
+				{
+					point.X += dX;
+					point.Y += dY;
+					point.Z += dZ;
+
+					yield return point;
+				}
+			}
+		}
+
 		/// <summary>
 		/// Returns - larger 0 for testPoint left of the line from lineStart to lineEnd
 		///         - 0 for testPoint on the line
