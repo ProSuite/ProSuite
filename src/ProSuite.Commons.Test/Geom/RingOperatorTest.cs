@@ -520,6 +520,113 @@ namespace ProSuite.Commons.Test.Geom
 			});
 		}
 
+		[Test]
+		public void CutWithCutLineEndingWithShortSegment()
+		{
+			var ring1 = new List<Pnt3D>
+			            {
+				            new Pnt3D(2600000, 1200000, 9),
+				            new Pnt3D(2600000, 1200100, 9),
+				            new Pnt3D(2600100, 1200100, 9),
+				            new Pnt3D(2600100, 1200000, 9)
+			            };
+
+			const double tolerance = 0.01;
+
+			WithRotatedRingGroup(ring1, poly1 =>
+			{
+				var targetPoints = new List<Pnt3D>
+				                   {
+					                   new Pnt3D(2600050.0, 1200100, 0),
+					                   new Pnt3D(2600050.0, 1200100.001, 0),
+					                   //new Pnt3D(2600020, 1200000.001, 0),
+					                   new Pnt3D(2600020, 1200000, 0)
+				                   };
+
+				Linestring target = new Linestring(targetPoints);
+
+				RingOperator ringOperator = new RingOperator(poly1, target, tolerance);
+				bool success = ringOperator.CutXY(out IList<Linestring> leftRings,
+				                                  out IList<Linestring> rightRings);
+
+				Assert.IsTrue(success);
+				Assert.AreEqual(1, leftRings.Count);
+				Assert.AreEqual(1, rightRings.Count);
+
+				// Re-assemble
+				ringOperator = new RingOperator(leftRings[0], rightRings[0], tolerance);
+				MultiLinestring union = ringOperator.UnionXY();
+				Assert.AreEqual(1, union.PartCount);
+				Assert.AreEqual(poly1.GetArea2D(), union.GetArea2D());
+
+				// flip the cut line
+				target.ReverseOrientation();
+
+				ringOperator = new RingOperator(poly1, target, tolerance);
+				success = ringOperator.CutXY(out leftRings, out rightRings);
+
+				Assert.IsTrue(success);
+				Assert.AreEqual(1, leftRings.Count);
+				Assert.AreEqual(1, rightRings.Count);
+
+				ringOperator = new RingOperator(leftRings[0], rightRings[0], tolerance);
+				union = ringOperator.UnionXY();
+				Assert.AreEqual(1, union.PartCount);
+				Assert.AreEqual(poly1.GetArea2D(), union.GetArea2D());
+			});
+
+			// Now with an extra vertex at the start point of the target:
+			ring1 = new List<Pnt3D>
+			        {
+				        new Pnt3D(2600000, 1200000, 9),
+				        new Pnt3D(2600000, 1200100, 9),
+				        new Pnt3D(2600050, 1200100, 0), // target start
+				        new Pnt3D(2600100, 1200100, 9),
+				        new Pnt3D(2600100, 1200000, 9)
+			        };
+
+			WithRotatedRingGroup(ring1, poly1 =>
+			{
+				var targetPoints = new List<Pnt3D>
+				                   {
+					                   new Pnt3D(2600050.0, 1200100, 0),
+					                   new Pnt3D(2600050.0, 1200100.001, 0),
+					                   new Pnt3D(2600020, 1200000, 0)
+				                   };
+
+				Linestring target = new Linestring(targetPoints);
+
+				RingOperator ringOperator = new RingOperator(poly1, target, tolerance);
+				bool success = ringOperator.CutXY(out IList<Linestring> leftRings,
+				                                  out IList<Linestring> rightRings);
+
+				Assert.IsTrue(success);
+				Assert.AreEqual(1, leftRings.Count);
+				Assert.AreEqual(1, rightRings.Count);
+
+				// Re-assemble
+				ringOperator = new RingOperator(leftRings[0], rightRings[0], tolerance);
+				MultiLinestring union = ringOperator.UnionXY();
+				Assert.AreEqual(1, union.PartCount);
+				Assert.AreEqual(poly1.GetArea2D(), union.GetArea2D());
+
+				// flip the cut line
+				target.ReverseOrientation();
+
+				ringOperator = new RingOperator(poly1, target, tolerance);
+				success = ringOperator.CutXY(out leftRings, out rightRings);
+
+				Assert.IsTrue(success);
+				Assert.AreEqual(1, leftRings.Count);
+				Assert.AreEqual(1, rightRings.Count);
+
+				ringOperator = new RingOperator(leftRings[0], rightRings[0], tolerance);
+				union = ringOperator.UnionXY();
+				Assert.AreEqual(1, union.PartCount);
+				Assert.AreEqual(poly1.GetArea2D(), union.GetArea2D());
+			});
+		}
+
 		private static void WithRotatedRingGroup([NotNull] List<Pnt3D> ringPoints,
 		                                         [NotNull] Action<RingGroup> procedure,
 		                                         int intialRotation = 0,

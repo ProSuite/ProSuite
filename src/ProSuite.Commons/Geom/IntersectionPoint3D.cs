@@ -858,17 +858,19 @@ namespace ProSuite.Commons.Geom
 		/// <param name="target"></param>
 		/// <param name="targetContinuesToRightSide"></param>
 		/// <param name="targetArrivesFromRightSide"></param>
+		/// <param name="tolerance"></param>
 		public void ClassifyTargetTrajectory([NotNull] ISegmentList source,
 		                                     [NotNull] ISegmentList target,
 		                                     out bool? targetContinuesToRightSide,
-		                                     out bool? targetArrivesFromRightSide)
+		                                     out bool? targetArrivesFromRightSide,
+		                                     double tolerance = 0)
 		{
 			Assert.False(Type == IntersectionPointType.Unknown,
 			             "Cannot classify unknown intersection type.");
 
-			targetContinuesToRightSide = TargetContinuesToRightSide(source, target);
+			targetContinuesToRightSide = TargetContinuesToRightSide(source, target, tolerance);
 
-			targetArrivesFromRightSide = TargetArrivesFromRightSide(source, target);
+			targetArrivesFromRightSide = TargetArrivesFromRightSide(source, target, tolerance);
 		}
 
 		public bool? TargetContinuesToRightSide([NotNull] ISegmentList source,

@@ -807,7 +807,7 @@ namespace ProSuite.Commons.Geom
 			{
 				// ReSharper disable once CompareOfFloatsByEqualityOperator
 				if (visitedIntersection != intersection &&
-				    visitedIntersection.ReferencesSameTargetVertex(intersection, Target))
+				    visitedIntersection.ReferencesSameTargetVertex(intersection, Target, Tolerance))
 				{
 					return true;
 				}
@@ -1171,7 +1171,7 @@ namespace ProSuite.Commons.Geom
 					(p1, p2) =>
 					{
 						// ReSharper disable once CompareOfFloatsByEqualityOperator
-						if (p1.ReferencesSameTargetVertex(p2, Target))
+						if (p1.ReferencesSameTargetVertex(p2, Target, Tolerance))
 						{
 							result.Add(p1);
 							result.Add(p2);
@@ -1197,16 +1197,16 @@ namespace ProSuite.Commons.Geom
 			foreach (var pointsPerRing in
 			         intersectionsAlongSource.GroupBy(ip => ip.SourcePartIndex))
 			{
-				WithRingIntersectionPairs(pointsPerRing,
-				                          (p1, p2) =>
-				                          {
-					                          // ReSharper disable once CompareOfFloatsByEqualityOperator
-					                          if (p1.ReferencesSameSourceVertex(p2, Source))
-					                          {
-						                          result.Add(p1);
-						                          result.Add(p2);
-					                          }
-				                          });
+				WithRingIntersectionPairs(
+					pointsPerRing,
+					(p1, p2) =>
+					{
+						if (p1.ReferencesSameSourceVertex(p2, Source, Tolerance))
+						{
+							result.Add(p1);
+							result.Add(p2);
+						}
+					});
 			}
 
 			return result.Count == 0 ? null : result;
