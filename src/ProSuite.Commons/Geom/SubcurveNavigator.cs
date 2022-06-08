@@ -1189,7 +1189,7 @@ namespace ProSuite.Commons.Geom
 			       ! IntersectionPointNavigator.EqualsStartIntersection(nextIntersection))
 			{
 				Assert.True(count++ <= IntersectionPoints.Count,
-				            "Intersections seen twice. Make sure there are no self intersections of the target.");
+				            "Intersections seen twice. Make sure the input has no self intersections.");
 
 				if (nextIntersection != null)
 				{
@@ -1427,33 +1427,6 @@ namespace ProSuite.Commons.Geom
 			return entryLine;
 		}
 
-		private static double? GetDirectionChange(Line3D baseLine, Line3D compareLine)
-		{
-			double angleDifference = baseLine.GetDirectionAngleXY() -
-			                         compareLine.GetDirectionAngleXY();
-
-			// Normalize to -PI .. +PI
-			if (angleDifference <= -Math.PI)
-			{
-				angleDifference += 2 * Math.PI;
-			}
-			else if (angleDifference > Math.PI)
-			{
-				angleDifference -= 2 * Math.PI;
-			}
-
-			// exclude 180-degree turns
-			double epsilon = MathUtils.GetDoubleSignificanceEpsilon(baseLine.XMax);
-
-			if (MathUtils.AreEqual(angleDifference, -Math.PI, epsilon) ||
-			    MathUtils.AreEqual(angleDifference, Math.PI, epsilon))
-			{
-				return null;
-			}
-
-			return angleDifference;
-		}
-
 		private double? GetAlongSourceDirectionChange(TurnDirection preferredDirection,
 		                                              ref IntersectionPoint3D intersection,
 		                                              Line3D entryLine)
@@ -1503,7 +1476,7 @@ namespace ProSuite.Commons.Geom
 				                           Tolerance);
 
 			double? sourceForwardDirection =
-				GetDirectionChange(entryLine, alongSourceLine);
+				GeomUtils.GetDirectionChange(entryLine, alongSourceLine);
 
 			return sourceForwardDirection;
 		}
@@ -1578,7 +1551,7 @@ namespace ProSuite.Commons.Geom
 					Line3D targetForward =
 						GetNonShortContinuingLine(Target, forwardSegmentIdx.Value, Tolerance);
 
-					targetForwardDirection = GetDirectionChange(entryLine, targetForward);
+					targetForwardDirection = GeomUtils.GetDirectionChange(entryLine, targetForward);
 				}
 			}
 
@@ -1596,7 +1569,7 @@ namespace ProSuite.Commons.Geom
 					targetBackward.ReverseOrientation();
 
 					targetBackwardDirection =
-						GetDirectionChange(entryLine, targetBackward);
+						GeomUtils.GetDirectionChange(entryLine, targetBackward);
 				}
 			}
 		}

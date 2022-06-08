@@ -2593,16 +2593,27 @@ namespace ProSuite.Commons.Geom
 
 		public static IList<IntersectionPoint3D> GetSelfIntersectionPoints(
 			[NotNull] ISegmentList linestring,
-			double tolerance)
+			double tolerance,
+			bool linearIntersectionsOnly = false)
 		{
 			var filteredSelfIntersections = new List<SegmentIntersection>();
+
+			Func<SegmentIntersection, bool> predicate;
+			if (linearIntersectionsOnly)
+			{
+				predicate = li => li.HasLinearIntersection;
+			}
+			else
+			{
+				predicate = li => true;
+			}
 
 			for (int i = 0; i < linestring.SegmentCount; i++)
 			{
 				var linearSelfIntersections = new List<SegmentIntersection>(
 					SegmentIntersectionUtils.GetRelevantSelfIntersectionsXY(i, linestring[i],
 						                        linestring, tolerance)
-					                        .Where(li => li.HasLinearIntersection));
+					                        .Where(predicate));
 
 				filteredSelfIntersections.AddRange(linearSelfIntersections);
 			}
@@ -3690,6 +3701,180 @@ namespace ProSuite.Commons.Geom
 			return result;
 		}
 
+		/// <summary>
+		/// Extremely rudimentary polygonization of a (potentially self-intersecting)
+		/// linestring. This would be better done by a martinez-union.
+		/// </summary>
+		/// <param name="linestring"></param>
+		/// <param name="tolerance"></param>
+		/// <param name="results"></param>
+		/// <returns></returns>
+		public static bool TryCrackSelfCrossingRing([NotNull] Linestring linestring,
+		                                            double tolerance,
+		                                            [NotNull] List<Linestring> results)
+		{
+			var linestrings = new List<Linestring>();
+
+			if (! TryCrackSelfCrossingLinestring(linestring, tolerance, linestrings))
+			{
+				return false;
+			}
+
+			BuildRings(linestrings, tolerance, results);
+
+			// Now the same using the other direction (try left-turns as well?)
+			foreach (Linestring potentialRing in results.ToList())
+			{
+				potentialRing.ReverseOrientation();
+
+				var reEvaluation = new List<Linestring>();
+				if (TryCrackSelfCrossingLinestring(potentialRing, tolerance, reEvaluation))
+				{
+					results.Remove(potentialRing);
+					BuildRings(reEvaluation, tolerance, results);
+				}
+			}
+
+			// Ensure proper orientation
+			foreach (Linestring ring in results.Where(ring => ring.ClockwiseOriented != true))
+			{
+				ring.ReverseOrientation();
+			}
+
+			return results.Count > 0;
+		}
+
+		/// <summary>
+		/// Splits the specified line at the points of self-intersection.
+		/// </summary>
+		/// <param name="linestring"></param>
+		/// <param name="tolerance"></param>
+		/// <param name="results">The collection to add the resulting subcurves to.</param>
+		/// <returns>Whether any self-intersection-point was found and subcurves were
+		/// added to the result collection.</returns>
+		public static bool TryCrackSelfCrossingLinestring(
+			[NotNull] Linestring linestring,
+			double tolerance,
+			[NotNull] List<Linestring> results)
+		{
+			IList<IntersectionPoint3D> intersectionPoints =
+				GetSelfIntersectionPoints(linestring, tolerance)
+					.Where(ip => ip.Type == IntersectionPointType.Crossing)
+					.ToList();
+
+			Linestring result = null;
+
+			int fromIndex = 0;
+			double fromDistanceAlongAsRatio = 0;
+			foreach (IntersectionPoint3D crackPoint in intersectionPoints.OrderBy(
+				         ip => ip.VirtualSourceVertex))
+			{
+				int toIndex = crackPoint.GetLocalSourceIntersectionSegmentIdx(
+					linestring, out double toDistanceAlongAsRatio);
+
+				result = linestring.GetSubcurve(fromIndex, fromDistanceAlongAsRatio, toIndex,
+				                                toDistanceAlongAsRatio, true, false, false);
+				results.Add(result);
+
+				fromIndex = toIndex;
+				fromDistanceAlongAsRatio = toDistanceAlongAsRatio;
+			}
+
+			if (fromIndex > 0 || fromDistanceAlongAsRatio > 0)
+			{
+				result = linestring.GetSubcurve(fromIndex, fromDistanceAlongAsRatio,
+				                                linestring.SegmentCount - 1, 1,
+				                                true, false, false);
+				results.Add(result);
+			}
+
+			return result != null;
+		}
+
+		private static void BuildRings(IList<Linestring> crackedLinestrings,
+		                               double tolerance,
+		                               ICollection<Linestring> results)
+		{
+			while (crackedLinestrings.Count > 0)
+			{
+				Linestring startString = crackedLinestrings[0];
+				crackedLinestrings.Remove(crackedLinestrings[0]);
+
+				if (startString.StartPoint.EqualsXY(startString.EndPoint, tolerance))
+				{
+					startString.Close();
+					results.Add(startString);
+				}
+				else
+				{
+					foreach (Linestring ring in FollowAndRemoveLinestringsClockwise(
+						         crackedLinestrings, startString, tolerance))
+					{
+						results.Add(ring);
+					}
+				}
+			}
+		}
+
+		private static Linestring BuildRing([NotNull] IList<Linestring> fromLinestrings,
+		                                    double tolerance)
+		{
+			Linestring merged = fromLinestrings.Count > 1
+				                    ? MergeConnectedLinestrings(fromLinestrings, null, tolerance)
+				                    : fromLinestrings[0];
+
+			if (merged.StartPoint.EqualsXY(merged.EndPoint, tolerance))
+			{
+				merged.Close();
+			}
+
+			return merged;
+		}
+
+		private static IEnumerable<Linestring> FollowAndRemoveLinestringsClockwise(
+			[NotNull] ICollection<Linestring> linestrings,
+			[NotNull] Linestring startLinestring,
+			double tolerance)
+		{
+			var result = new List<Linestring>();
+
+			Pnt3D startPoint = startLinestring.StartPoint;
+			Linestring previous = startLinestring;
+			result.Add(startLinestring);
+			while (! previous.EndPoint.EqualsXY(startPoint, tolerance) &&
+			       linestrings.Count > 0)
+			{
+				Line3D previousLine = previous.GetSegment(previous.SegmentCount - 1);
+
+				// Get the next fitting linestring that turns more right
+				var matchingStrings = linestrings.Where(
+					l => l.StartPoint.EqualsXY(previous.EndPoint, tolerance));
+
+				Linestring nextString = matchingStrings.MaxElement(
+					s => Assert.NotNull(GeomUtils.GetDirectionChange(previousLine, s.GetSegment(0)))
+					           .Value);
+
+				linestrings.Remove(nextString);
+
+				// Cut off and yield single-linestring rings
+				if (nextString.EndPoint.EqualsXY(nextString.StartPoint, tolerance))
+				{
+					nextString.Close();
+					yield return nextString;
+				}
+				else
+				{
+					result.Add(nextString);
+					previous = nextString;
+				}
+			}
+
+			if (result.Count > 0)
+			{
+				yield return BuildRing(result, tolerance);
+			}
+		}
+
 		[NotNull]
 		private static IList<KeyValuePair<IPnt, List<T>>> Group<T>(
 			[NotNull] List<T> items,
@@ -3822,7 +4007,7 @@ namespace ProSuite.Commons.Geom
 			result = null;
 
 			IList<IntersectionPoint3D> intersectionPoints =
-				GetSelfIntersectionPoints(ring, tolerance);
+				GetSelfIntersectionPoints(ring, tolerance, true);
 
 			var allCrackPoints = new List<CrackPoint>();
 			foreach (var intersectionPoint in intersectionPoints.OrderBy(
