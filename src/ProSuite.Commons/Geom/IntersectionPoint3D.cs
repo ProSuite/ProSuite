@@ -508,8 +508,6 @@ namespace ProSuite.Commons.Geom
 				return true;
 			}
 
-			//return VirtualTargetVertex == other.VirtualTargetVertex;
-
 			double delta = Math.Abs(VirtualTargetVertex - other.VirtualTargetVertex);
 
 			// Quick test: if they are more than 2 vertices away from each other -> false
@@ -518,11 +516,25 @@ namespace ProSuite.Commons.Geom
 				return false;
 			}
 
-			// Proper test:
-			Pnt3D otherPoint = other.GetTargetPoint(target);
-			Pnt3D thisPoint = GetTargetPoint(target);
+			if (delta <= double.Epsilon)
+			{
+				// It does not make a difference whether ratio or absolute distance:
+				return true;
+			}
 
-			return otherPoint.GetDistance(thisPoint, true) < tolerance;
+			// Proper test:
+			Linestring targetPart = target.GetPart(TargetPartIndex);
+
+			// This might not be optimal in a ring where one is 0 and the other just below segment count
+			int lowerSegmentIdx = (int) Math.Min(other.VirtualTargetVertex, VirtualTargetVertex);
+
+			double distanceAlongBetween =
+				GetDistanceAlong(targetPart, VirtualTargetVertex, lowerSegmentIdx) -
+				GetDistanceAlong(targetPart, other.VirtualTargetVertex, lowerSegmentIdx);
+
+			double alongDistance = Math.Abs(distanceAlongBetween);
+
+			return alongDistance < tolerance;
 		}
 
 		public int GetLocalSourceIntersectionSegmentIdx(Linestring source,
@@ -1199,6 +1211,25 @@ namespace ProSuite.Commons.Geom
 			}
 
 			return localSegmentIdx;
+		}
+
+		private static double GetDistanceAlong([NotNull] Linestring linestring,
+		                                       double virtualVertexIdx,
+		                                       int startVertex = 0)
+		{
+			if (startVertex == linestring.SegmentCount)
+			{
+				startVertex = 0;
+			}
+
+			int segmentIdx = GetLocalIntersectionSegmentIdx(linestring, virtualVertexIdx,
+			                                                out double distanceAlongSegmentRatio);
+
+			double result = linestring.GetDistanceAlong2D(segmentIdx, startVertex);
+
+			result += distanceAlongSegmentRatio * linestring.GetSegment(segmentIdx).Length2D;
+
+			return result;
 		}
 
 		protected bool Equals(IntersectionPoint3D other)

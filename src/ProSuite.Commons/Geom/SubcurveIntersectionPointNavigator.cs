@@ -1170,9 +1170,13 @@ namespace ProSuite.Commons.Geom
 					intersectionsPerRing,
 					(p1, p2) =>
 					{
-						// ReSharper disable once CompareOfFloatsByEqualityOperator
 						if (p1.ReferencesSameTargetVertex(p2, Target, Tolerance))
 						{
+							// Possibly also check if we really can jump from one source part to the other
+							// It can be jumped where the source vertices are exactly on top of each other
+							// or there is a boundary loop? But
+							// NOT: with a very thin spike where both sides intersect
+
 							result.Add(p1);
 							result.Add(p2);
 						}

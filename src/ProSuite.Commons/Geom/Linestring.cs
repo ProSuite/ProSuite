@@ -534,6 +534,26 @@ namespace ProSuite.Commons.Geom
 			                                      "The provided distance is outside the linestring");
 		}
 
+		public double GetDistanceAlong2D(int vertexIndex,
+		                                 int startVertexIndex = 0)
+		{
+			double result = 0;
+
+			int? segmentIndex = startVertexIndex;
+			Line3D segment = GetSegment(startVertexIndex);
+
+			while (segmentIndex != null && segmentIndex != vertexIndex)
+			{
+				segment = GetSegment(segmentIndex.Value);
+
+				result += segment.Length2D;
+
+				segmentIndex = NextSegmentIndex(segmentIndex.Value);
+			}
+
+			return result;
+		}
+
 		public IEnumerable<IPnt> AsEnumerablePoints(bool clone = false)
 		{
 			return GetPoints(0, null, clone);
