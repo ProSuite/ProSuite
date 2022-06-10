@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using NHibernate.Cfg;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -37,6 +38,12 @@ namespace ProSuite.Commons.Orm.NHibernate
 
 		protected string CacheProviderClass { get; set; } =
 			"NHibernate.Caches.SysCache.SysCacheProvider, NHibernate.Caches.SysCache";
+
+		public bool DatabaseSupportsSequence =>
+			// NOTE: Currently SQLite is just used for unit testing.
+			// TODO: Also check if the sequence exists. 
+			! Dialect.Equals("NHibernate.Dialect.SQLiteDialect",
+			                 StringComparison.InvariantCultureIgnoreCase);
 
 		/// <summary>
 		/// Builds the Configuration object from the specified configuration
