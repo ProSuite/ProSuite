@@ -1759,7 +1759,12 @@ namespace ProSuite.Commons.Geom
 
 			var entryLine = linestring[segmentIdx];
 
-			while (usableToSegmentIdx != null && entryLine.Length2D < minSegmentLength)
+			int count = 0;
+			int maxSegmentCount = linestring.SegmentCount;
+
+			while (usableToSegmentIdx != null &&
+			       entryLine.Length2D < minSegmentLength &&
+			       count < maxSegmentCount)
 			{
 				// The entry line is 0 which might result in a wrong direction
 				// -> Add the previous segment to the line
@@ -1771,6 +1776,8 @@ namespace ProSuite.Commons.Geom
 					entryLine = new Line3D(linestring[usableToSegmentIdx.Value].StartPoint,
 					                       entryLine.EndPoint);
 				}
+
+				count++;
 			}
 
 			return entryLine;
@@ -1784,7 +1791,12 @@ namespace ProSuite.Commons.Geom
 
 			var entryLine = linestring[segmentIdx];
 
-			while (usableToSegmentIdx != null && entryLine.Length2D < minSegmentLength)
+			int count = 0;
+			int maxSegmentCount = linestring.SegmentCount;
+
+			while (usableToSegmentIdx != null &&
+			       entryLine.Length2D < minSegmentLength &&
+			       count < maxSegmentCount)
 			{
 				// The entry line is 0 which might result in a wrong direction
 				// -> Add the next segment to the line
@@ -1796,6 +1808,8 @@ namespace ProSuite.Commons.Geom
 					entryLine = new Line3D(entryLine.StartPoint,
 					                       linestring[usableToSegmentIdx.Value].EndPoint);
 				}
+
+				count++;
 			}
 
 			return entryLine;
