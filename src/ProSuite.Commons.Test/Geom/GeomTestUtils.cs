@@ -1,8 +1,5 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Geom;
 using ProSuite.Commons.Testing;
@@ -11,7 +8,6 @@ namespace ProSuite.Commons.Test.Geom
 {
 	internal static class GeomTestUtils
 	{
-
 		internal static List<Pnt3D> GetRotatedRing(List<Pnt3D> ringPoints, int steps)
 		{
 			Pnt3D[] array = ringPoints.Select(p => p.ClonePnt3D()).ToArray();
@@ -19,7 +15,7 @@ namespace ProSuite.Commons.Test.Geom
 			CollectionUtils.Rotate(array, steps);
 			var rotatedRing = new List<Pnt3D>(array);
 
-			rotatedRing.Add((Pnt3D)rotatedRing[0].Clone());
+			rotatedRing.Add((Pnt3D) rotatedRing[0].Clone());
 
 			return rotatedRing;
 		}
@@ -35,7 +31,7 @@ namespace ProSuite.Commons.Test.Geom
 
 		public static Linestring CreateRing(List<Pnt3D> points)
 		{
-			if (!points[0].Equals(points[points.Count - 1]))
+			if (! points[0].Equals(points[points.Count - 1]))
 			{
 				points = new List<Pnt3D>(points);
 				points.Add(points[0].ClonePnt3D());
