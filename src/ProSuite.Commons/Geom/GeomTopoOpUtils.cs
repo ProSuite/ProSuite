@@ -41,16 +41,19 @@ namespace ProSuite.Commons.Geom
 			IEnumerable<Line3D> resultSegments = GetDifferenceLinesXY(
 				linestring1, multiLinestring2, tolerance, zOnlyDiffLines, zTolerance);
 
+			double epsilon =
+				MathUtils.GetDoubleSignificanceEpsilon(multiLinestring2.XMax,
+				                                       multiLinestring2.YMax);
 			if (zOnlyDiffLines != null)
 			{
 				foreach (Linestring zOnlyLinestring in CollectIntersectionPaths(
-					         zOnlyDiffLines))
+					         zOnlyDiffLines, epsilon))
 				{
 					zOnlyDifferences.Add(zOnlyLinestring);
 				}
 			}
 
-			return CollectIntersectionPaths(resultSegments);
+			return CollectIntersectionPaths(resultSegments, epsilon);
 		}
 
 		public static bool IsLinearIntersectionDifferentInZ(
@@ -89,8 +92,10 @@ namespace ProSuite.Commons.Geom
 			IEnumerable<Line3D> zOnlyDifferenceLines =
 				GetZOnlyDifferenceLines(linestring1, multiLinestring2, tolerance);
 
-			IList<Linestring> result =
-				CollectIntersectionPaths(zOnlyDifferenceLines);
+			double epsilon =
+				MathUtils.GetDoubleSignificanceEpsilon(linestring1.XMax, linestring1.YMax);
+
+			IList<Linestring> result = CollectIntersectionPaths(zOnlyDifferenceLines, epsilon);
 
 			return result;
 		}
@@ -294,7 +299,6 @@ namespace ProSuite.Commons.Geom
 					continue;
 				}
 
-				
 				result = GetDifferenceAreasXY(result, targetRingGroup, tolerance, zSource);
 
 				ISegmentList previous = result;
@@ -2713,7 +2717,7 @@ namespace ProSuite.Commons.Geom
 
 				if (IsLinearIntersectionPseudoBreak(
 					    ringEnd, ringStart, sourceSegments, targetSegments,
-						tolerance,
+					    tolerance,
 					    out LinearIntersectionPseudoBreak ringNullPointBreak))
 				{
 					yield return ringNullPointBreak;
@@ -3310,10 +3314,15 @@ namespace ProSuite.Commons.Geom
 			[NotNull] ISegmentList segmentList2,
 			double tolerance)
 		{
-			return CollectIntersectionPaths(
+			double epsilon =
+				MathUtils.GetDoubleSignificanceEpsilon(segmentList1.XMax, segmentList1.YMax);
+
+			IEnumerable<Line3D> intersectionLines =
 				intersections.Select(i => IntersectLines3D(segmentList1[i.SourceIndex],
 				                                           segmentList2[i.TargetIndex], tolerance))
-				             .Where(l => l != null));
+				             .Where(l => l != null);
+
+			return CollectIntersectionPaths(intersectionLines, epsilon);
 		}
 
 		/// <summary>
@@ -3404,14 +3413,21 @@ namespace ProSuite.Commons.Geom
 			[NotNull] IEnumerable<SegmentIntersection> intersections,
 			[NotNull] ISegmentList segmentList1)
 		{
-			return CollectIntersectionPaths(
-				intersections.Select(i => i.TryGetIntersectionLine(segmentList1))
-				             .Where(l => l != null));
+			double epsilon =
+				MathUtils.GetDoubleSignificanceEpsilon(segmentList1.XMax, segmentList1.YMax);
+
+			IEnumerable<Line3D> intersectionLines = intersections
+			                                        .Select(i => i.TryGetIntersectionLine(
+				                                                segmentList1))
+			                                        .Where(l => l != null);
+
+			return CollectIntersectionPaths(intersectionLines, epsilon);
 		}
 
 		[NotNull]
 		public static IList<Linestring> CollectIntersectionPaths(
-			[NotNull] IEnumerable<Line3D> intersectionLines)
+			[NotNull] IEnumerable<Line3D> intersectionLines,
+			double epsilon)
 		{
 			var result = new List<Linestring>();
 
@@ -3427,7 +3443,7 @@ namespace ProSuite.Commons.Geom
 					nextResultPath.Add(segment);
 				}
 				else if (nextResultPath[nextResultPath.Count - 1]
-				         .StartPoint.Equals(segment.EndPoint))
+				         .StartPoint.Equals(segment.EndPoint, epsilon))
 				{
 					reversed = true;
 					nextResultPath.Add(segment);
@@ -3588,22 +3604,26 @@ namespace ProSuite.Commons.Geom
 				}
 			}
 
+			// NOTE: If short segments exist in a geometry, using the tolerance is probably not a good idea.
+			double epsilon =
+				MathUtils.GetDoubleSignificanceEpsilon(segmentList.XMax, segmentList.YMax);
+
 			SegmentIntersection previousIntersection = null;
 			foreach (SegmentIntersection intersection in orderedIntersections)
 			{
 				// Add non-intersecting source lines between the previous and this intersection:
 				AddSegmentsBetween(segmentList, intersection, previousIntersection,
-				                   result);
+				                   result, epsilon);
 
 				previousIntersection = intersection;
 			}
 
 			AddSegmentsBetween(segmentList, null, previousIntersection,
-			                   result);
+			                   result, epsilon);
 
 			// TODO: Crack at intersectionPoints1D where still necessary
 
-			return new MultiPolycurve(CollectIntersectionPaths(result));
+			return new MultiPolycurve(CollectIntersectionPaths(result, epsilon));
 		}
 
 		/// <summary>
@@ -3771,6 +3791,14 @@ namespace ProSuite.Commons.Geom
 					.Where(ip => ip.Type == IntersectionPointType.Crossing)
 					.ToList();
 
+			return TryCrackAtSelfIntersections(linestring, intersectionPoints, results);
+		}
+
+		private static bool TryCrackAtSelfIntersections(Linestring linestring,
+		                                                IEnumerable<IntersectionPoint3D>
+			                                                intersectionPoints,
+		                                                List<Linestring> results)
+		{
 			Linestring result = null;
 
 			int fromIndex = 0;
@@ -4440,7 +4468,7 @@ namespace ProSuite.Commons.Geom
 				Assert.True(ring.IsClosed, "Unclosed ring.");
 				Assert.NotNull(ring.ClockwiseOriented, "Undefined orientation");
 
-				if (ring.ClockwiseOriented == true)
+				if (ring.ClockwiseOriented != false)
 				{
 					result.Add(new RingGroup(ring));
 				}
@@ -4654,7 +4682,8 @@ namespace ProSuite.Commons.Geom
 			[NotNull] ISegmentList source,
 			[CanBeNull] SegmentIntersection current,
 			[CanBeNull] SegmentIntersection previous,
-			[NotNull] List<Line3D> result)
+			[NotNull] List<Line3D> result,
+			double tolerance)
 		{
 			int startIndex = previous?.SourceIndex ?? 0;
 			int endIndex = current?.SourceIndex ?? source.SegmentCount;
@@ -4664,12 +4693,15 @@ namespace ProSuite.Commons.Geom
 				    previous.GetLinearIntersectionEndFactor(true) < 1)
 				{
 					// add remaining uncovered part of previous source segment
-					result.Add(
-						new Line3D(
-							source[previous.SourceIndex].GetPointAlong(
-								previous.GetLinearIntersectionEndFactor(true),
-								true),
-							source[previous.SourceIndex].EndPoint));
+					Line3D newLine = new Line3D(
+						source[previous.SourceIndex]
+							.GetPointAlong(previous.GetLinearIntersectionEndFactor(true), true),
+						source[previous.SourceIndex].EndPoint);
+
+					if (newLine.Length2D >= tolerance)
+					{
+						result.Add(newLine);
+					}
 				}
 
 				startIndex++;
@@ -4691,23 +4723,31 @@ namespace ProSuite.Commons.Geom
 					    previous.GetLinearIntersectionEndFactor(true))
 					{
 						Line3D sourceLine = source[previous.SourceIndex];
-						result.Add(
-							new Line3D(
-								sourceLine.GetPointAlong(
-									previous.GetLinearIntersectionEndFactor(true), true),
-								sourceLine.GetPointAlong(
-									current.GetLinearIntersectionStartFactor(true), true)));
+						var newLine = new Line3D(
+							sourceLine.GetPointAlong(previous.GetLinearIntersectionEndFactor(true),
+							                         true),
+							sourceLine.GetPointAlong(current.GetLinearIntersectionStartFactor(true),
+							                         true));
+
+						if (newLine.Length2D >= tolerance)
+						{
+							result.Add(newLine);
+						}
 					}
 				}
 				else if (current.GetLinearIntersectionStartFactor(true) > 0)
 				{
 					// The un-covered part is between from-point and the start factor
 					Line3D sourceLine = source[current.SourceIndex];
-					result.Add(
-						new Line3D(
-							sourceLine.StartPoint,
-							sourceLine.GetPointAlong(
-								current.GetLinearIntersectionStartFactor(true), true)));
+					Line3D newLine = new Line3D(
+						sourceLine.StartPoint,
+						sourceLine.GetPointAlong(
+							current.GetLinearIntersectionStartFactor(true), true));
+
+					if (newLine.Length2D >= tolerance)
+					{
+						result.Add(newLine);
+					}
 				}
 			}
 		}
@@ -4739,11 +4779,15 @@ namespace ProSuite.Commons.Geom
 			double zTolerance2 = zTolerance * zTolerance;
 
 			SegmentIntersection previousIntersection = null;
+
+			// Or use the actual tolerance?
+			double epsilon =
+				MathUtils.GetDoubleSignificanceEpsilon(linestring1.XMax, linestring1.YMax);
 			foreach (SegmentIntersection intersection in orderedIntersections)
 			{
 				// Add non-intersecting source lines between the previous and this intersection:
 				AddSegmentsBetween(linestring1, intersection, previousIntersection,
-				                   result);
+				                   result, epsilon);
 
 				previousIntersection = intersection;
 
@@ -4769,7 +4813,7 @@ namespace ProSuite.Commons.Geom
 			}
 
 			AddSegmentsBetween(linestring1, null, previousIntersection,
-			                   result);
+			                   result, epsilon);
 
 			return result;
 		}

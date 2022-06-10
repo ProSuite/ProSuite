@@ -3553,6 +3553,59 @@ namespace ProSuite.Commons.Test.Geom
 		}
 
 		[Test]
+		public void CanPlanarizeLinearSelfIntersections()
+		{
+			var linestring1 =
+				new Linestring(new[] {new Line3D(new Pnt3D(40, 0, 0), new Pnt3D(100, 0, 0))});
+			var linestring2 =
+				new Linestring(new[] {new Line3D(new Pnt3D(0, 0, 0), new Pnt3D(40, 0, 0))});
+			var linestring3 =
+				new Linestring(new[] {new Line3D(new Pnt3D(0, 0, 0), new Pnt3D(100, 0, 0))});
+
+			var polycurve = new MultiPolycurve(new[]
+			                                              {
+				                                              linestring1, linestring2, linestring3
+			                                              });
+
+			MultiLinestring result = GeomTopoOpUtils.PlanarizeLines(polycurve, 0.001);
+			Assert.AreEqual(1, result.PartCount);
+			Assert.AreEqual(2, result.SegmentCount);
+
+			// Now with slightly perturbed vertices (TOP-5543):
+			linestring1 =
+				new Linestring(new[] { new Line3D(new Pnt3D(2600040.00000001, 1200000, 0), new Pnt3D(2600100, 1200000, 0)) });
+			linestring2 =
+				new Linestring(new[] { new Line3D(new Pnt3D(2600000, 1200000, 0), new Pnt3D(2600040, 1200000, 0)) });
+			linestring3 =
+				new Linestring(new[] { new Line3D(new Pnt3D(2600000, 1200000, 0), new Pnt3D(2600100, 1200000, 0)) });
+
+			polycurve = new MultiPolycurve(new[]
+			                                              {
+				                                              linestring1, linestring2, linestring3
+			                                              });
+
+			result = GeomTopoOpUtils.PlanarizeLines(polycurve, 0.001);
+			Assert.AreEqual(1, result.PartCount);
+			Assert.AreEqual(2, result.SegmentCount);
+
+			linestring1 =
+				new Linestring(new[] { new Line3D(new Pnt3D(2600040, 1200000, 0), new Pnt3D(2600100, 1200000, 0)) });
+			linestring2 =
+				new Linestring(new[] { new Line3D(new Pnt3D(2600000, 1200000, 0), new Pnt3D(2600040.00000001, 1200000, 0)) });
+			linestring3 =
+				new Linestring(new[] { new Line3D(new Pnt3D(2600000, 1200000, 0), new Pnt3D(2600100, 1200000, 0)) });
+
+			polycurve = new MultiPolycurve(new[]
+			                               {
+				                               linestring1, linestring2, linestring3
+			                               });
+
+			result = GeomTopoOpUtils.PlanarizeLines(polycurve, 0.001);
+			Assert.AreEqual(1, result.PartCount);
+			Assert.AreEqual(2, result.SegmentCount);
+		}
+
+		[Test]
 		public void CanUnionSimpleRingsXY()
 		{
 			var ring1 = new List<Pnt3D>
