@@ -198,7 +198,7 @@ namespace ProSuite.Commons.Geom
 			[NotNull] ISegmentList targetSegments)
 		{
 			if (! AreIntersectionsAdjacent(previousLinearEnd, currentLinearStart, sourceSegments,
-			                               targetSegments))
+			                               targetSegments, out _, out _))
 			{
 				return false;
 			}
@@ -229,8 +229,14 @@ namespace ProSuite.Commons.Geom
 			[NotNull] IntersectionPoint3D previousLinearIntersectionEnd,
 			[NotNull] IntersectionPoint3D currentLinearIntersectionStart,
 			[NotNull] ISegmentList sourceSegments,
-			[NotNull] ISegmentList targetSegments)
+			[NotNull] ISegmentList targetSegments,
+			out bool isSourceBoundaryLoop,
+			out bool isTargetBoundaryLoop,
+			double tolerance = double.NaN)
 		{
+			isSourceBoundaryLoop = false;
+			isTargetBoundaryLoop = false;
+
 			if (previousLinearIntersectionEnd.SourcePartIndex !=
 			    currentLinearIntersectionStart.SourcePartIndex)
 			{
@@ -247,8 +253,8 @@ namespace ProSuite.Commons.Geom
 				sourceSegments.GetPart(previousLinearIntersectionEnd.SourcePartIndex);
 
 			bool sameDistanceAlongSource =
-				IsSameDistanceAlong(sourcePart, previousLinearIntersectionEnd.VirtualSourceVertex,
-				                    currentLinearIntersectionStart.VirtualSourceVertex);
+				currentLinearIntersectionStart.ReferencesSameSourceVertex(
+					previousLinearIntersectionEnd, sourceSegments, tolerance);
 
 			if (! sameDistanceAlongSource)
 			{
@@ -263,12 +269,25 @@ namespace ProSuite.Commons.Geom
 						currentLinearIntersectionStart.VirtualSourceVertex -
 						previousLinearIntersectionEnd.VirtualSourceVertex;
 
+					// Sometimes (see CanGetIntersectionAreaWithLinearIntersectionWithinToleranceAcuteAngleTop5502)
+					// The linear intersections starts just after the start point and ends just
+					// after the last point. This happens with acute angles and the actual start
+					// point is just outside the tolerance. For the time being, they shall be
+					// considered adjacent anyway (but not boundary loops!)
+					if (segmentRatioDistance < 0)
+					{
+						segmentRatioDistance =
+							MathUtils.Modulo(segmentRatioDistance, sourcePart.SegmentCount, true);
+					}
+
 					// Typically it is very very small, but theoretically it could be almost the entire segments
 					// if the angle is extremely acute.
 					if (Math.Abs(segmentRatioDistance) < 2)
 					{
 						return true;
 					}
+
+					isSourceBoundaryLoop = true;
 				}
 
 				return false;
@@ -280,14 +299,15 @@ namespace ProSuite.Commons.Geom
 			double targetSegmentsBetween = TargetSegmentCountBetween(
 				previousLinearIntersectionEnd, currentLinearIntersectionStart, targetPart);
 
-			// Exclude target boundary loops
-			// TODO: One short segment means 1. If more, do the actual distance check!
+			// Exclude target boundary loops: More than one segment (and probably we should also
+			// make sure to call ! ReferencesSameTargetVertex which now checks for the distance > tolerance.
 			if (targetSegmentsBetween > 1)
 			{
+				isTargetBoundaryLoop = true;
 				return false;
 			}
 
-			// Connected lines must match exactly
+			// Connected lines must match exactly (they are typically reference-equal)
 			return previousLinearIntersectionEnd.Point.Equals(currentLinearIntersectionStart.Point);
 		}
 
@@ -392,28 +412,6 @@ namespace ProSuite.Commons.Geom
 			return forwardSegmentCount < backwardSegmentCount
 				       ? forwardSegmentCount
 				       : backwardSegmentCount;
-		}
-
-		private static bool IsSameDistanceAlong([NotNull] Linestring linestring,
-		                                        double virtualVertex1,
-		                                        double virtualVertex2)
-		{
-			double epsilon =
-				MathUtils.GetDoubleSignificanceEpsilon(linestring.XMax, linestring.YMax);
-
-			bool sameDistanceAlongSource =
-				MathUtils.AreEqual(virtualVertex1, virtualVertex2, epsilon);
-
-			if (sameDistanceAlongSource)
-			{
-				return true;
-			}
-
-			int previousPoint = (int) Math.Truncate(virtualVertex1);
-			int currentPoint = (int) Math.Truncate(virtualVertex2);
-
-			return linestring.IsLastPointInPart(previousPoint) && virtualVertex2 == 0 ||
-			       linestring.IsLastPointInPart(currentPoint) && previousPoint == 0;
 		}
 
 		/// <summary>

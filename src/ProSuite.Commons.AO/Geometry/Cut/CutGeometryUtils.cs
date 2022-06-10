@@ -857,17 +857,7 @@ namespace ProSuite.Commons.AO.Geometry.Cut
 				RingGroup footprintPart = outerRingsByFootprintPart.Key;
 				List<RingGroup> resultPolys = outerRingsByFootprintPart.Value;
 
-				IMultiPatch resultMultipatch =
-					GeometryFactory.CreateEmptyMultiPatch(prototype);
-
-				foreach (RingGroup poly in resultPolys)
-				{
-					// TODO: Support vertical ring group with inner rings
-					bool simplify = poly.InteriorRings.Any();
-
-					GeometryConversionUtils.AddRingGroup(
-						resultMultipatch, poly, simplify, poly.Id != null);
-				}
+				IMultiPatch resultMultipatch = GeometryConversionUtils.CreateMultipatch(resultPolys, prototype);
 
 				if (resultPolys.Any(p => p.Id != null))
 				{
@@ -904,6 +894,7 @@ namespace ProSuite.Commons.AO.Geometry.Cut
 
 			return result;
 		}
+
 
 		private static void AssignResultsToFootprintParts(
 			IEnumerable<RingGroup> resultRingGroups,
