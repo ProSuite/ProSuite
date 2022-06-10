@@ -13,6 +13,9 @@ namespace ProSuite.Commons.Geom
 		private Box _boundingBox;
 		private readonly List<Line3D> _segments;
 
+		private bool? _isKnownClosed;
+		private double? _knownArea;
+
 		public static Linestring CreateEmpty()
 		{
 			var result = new Linestring(new List<Line3D>(0));
@@ -121,8 +124,19 @@ namespace ProSuite.Commons.Geom
 			}
 		}
 
-		public bool IsClosed => SegmentCount > 1 &&
-		                        StartPoint.Equals(EndPoint);
+		public bool IsClosed
+		{
+			get
+			{
+				if (_isKnownClosed == null)
+				{
+					_isKnownClosed = SegmentCount > 1 &&
+					                 StartPoint.Equals(EndPoint);
+				}
+
+				return _isKnownClosed.Value;
+			}
+		}
 
 		public bool? ClockwiseOriented
 		{
@@ -279,6 +293,8 @@ namespace ProSuite.Commons.Geom
 			_segments.Add(new Line3D(previousEnd, startPointClone));
 
 			SpatialIndex = null;
+			_isKnownClosed = null;
+			_knownArea = null;
 		}
 
 		public void SetEmpty()
@@ -292,6 +308,9 @@ namespace ProSuite.Commons.Geom
 
 			_boundingBox = null;
 			RightMostBottomIndex = -1;
+
+			_isKnownClosed = null;
+			_knownArea = null;
 
 			SpatialIndex = null;
 		}
@@ -998,6 +1017,9 @@ namespace ProSuite.Commons.Geom
 			// TODO: To avoid grow-only bounds changes, make sure the replaced point was not an extreme point
 			//       ... if replacedPoint.X == XMax -> re-create envelope
 			UpdateBounds(newPoint, pointIndex, Segments, null);
+
+			_isKnownClosed = null;
+			_knownArea = null;
 		}
 
 		public void UpdatePoint(int pointIndex, double x, double y, double z)
@@ -1060,6 +1082,8 @@ namespace ProSuite.Commons.Geom
 
 			if (RightMostBottomIndex != 0)
 				RightMostBottomIndex = SegmentCount - RightMostBottomIndex;
+
+			_knownArea = null;
 		}
 
 		/// <summary>
@@ -1241,8 +1265,13 @@ namespace ProSuite.Commons.Geom
 		{
 			if (! IsClosed)
 			{
-				throw new NotImplementedException(
+				throw new InvalidOperationException(
 					"Area can only be calculated for closed linestrings.");
+			}
+
+			if (_knownArea == null)
+			{
+				_knownArea = GeomUtils.GetArea2D(GetPoints().ToList());
 			}
 
 			return GeomUtils.GetArea2D(GetPoints().ToList());
@@ -1365,6 +1394,8 @@ namespace ProSuite.Commons.Geom
 			RightMostBottomIndex = -1;
 
 			_boundingBox = null;
+			_isKnownClosed = null;
+			_knownArea = null;
 		}
 
 		public void TryOrientClockwise()

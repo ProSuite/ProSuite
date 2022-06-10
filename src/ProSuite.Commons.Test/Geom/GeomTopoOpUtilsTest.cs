@@ -4660,6 +4660,91 @@ namespace ProSuite.Commons.Test.Geom
 			Assert.AreEqual(poly1.GetArea2D() - target.GetArea2D(), result.GetArea2D());
 		}
 
+		[Test]
+		public void CanGetIntersectionAreaXYLargePolyPerformanceEqualPoly()
+		{
+			RingGroup source = (RingGroup) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath("huge_lockergestein.wkb"),
+				out WkbGeometryType wkbType);
+
+			Assert.AreEqual(WkbGeometryType.Polygon, wkbType);
+
+			RingGroup target = (RingGroup) source.Clone();
+
+			Assert.AreEqual(WkbGeometryType.Polygon, wkbType);
+
+			const double tolerance = 0.01;
+
+			Stopwatch watch = Stopwatch.StartNew();
+			MultiLinestring intersection =
+				GeomTopoOpUtils.GetIntersectionAreasXY(source, target, tolerance);
+
+			watch.Stop();
+			Console.WriteLine("Lockergestein with clone - intersect: {0} ms",
+			                  watch.ElapsedMilliseconds);
+
+			Assert.AreEqual(intersection.GetArea2D(), source.GetArea2D(), 0.01);
+
+			watch.Restart();
+			MultiLinestring difference =
+				GeomTopoOpUtils.GetDifferenceAreasXY(source, target, tolerance);
+
+			watch.Stop();
+			Console.WriteLine("Lockergestein with clone - difference (with index): {0}ms",
+			                  watch.ElapsedMilliseconds);
+
+			Assert.IsTrue(difference.IsEmpty);
+
+			target.SpatialIndex = null;
+			watch.Restart();
+			difference = GeomTopoOpUtils.GetDifferenceAreasXY(source, target, tolerance);
+
+			watch.Stop();
+			Console.WriteLine("Lockergestein with clone - difference (without index): {0}ms",
+			                  watch.ElapsedMilliseconds);
+
+			Assert.IsTrue(difference.IsEmpty);
+
+			// Moved by a few km
+			MultiPolycurve multiTarget =
+				new MultiPolycurve(
+					target.GetLinestrings().Select(
+						l => GeomTopoOpUtils.Move(l, 4567, 1234, 0)));
+
+			watch.Restart();
+
+			intersection =
+				GeomTopoOpUtils.GetIntersectionAreasXY(source, multiTarget, tolerance);
+
+			watch.Stop();
+			Console.WriteLine("Lockergestein with moved clone - intersect ({0} sqm): {1}ms",
+			                  intersection.GetArea2D(), watch.ElapsedMilliseconds);
+
+			Assert.AreEqual(14197784, intersection.GetArea2D(), 1);
+
+			watch.Restart();
+			difference =
+				GeomTopoOpUtils.GetDifferenceAreasXY(source, multiTarget, tolerance);
+
+			watch.Stop();
+			Console.WriteLine(
+				"Lockergestein with moved clone - difference (with index) ({0} sqm): {1}ms",
+				difference.GetArea2D(), watch.ElapsedMilliseconds);
+
+			// TODO: There is a weird vertical cut-off! Needs investigation
+			//Assert.AreEqual(49640701.2531033, difference.GetArea2D(), 1);
+
+			multiTarget.SpatialIndex = null;
+			watch.Restart();
+			difference = GeomTopoOpUtils.GetDifferenceAreasXY(source, multiTarget, tolerance);
+
+			watch.Stop();
+			Console.WriteLine("Lockergestein with moved clone - difference (without index): {0}ms",
+			                  watch.ElapsedMilliseconds);
+
+			Assert.AreEqual(49640701.2531033, difference.GetArea2D(), 1);
+		}
+
 		#region Source self-intersections
 
 		[Test]

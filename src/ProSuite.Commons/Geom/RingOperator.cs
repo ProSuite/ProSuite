@@ -400,13 +400,16 @@ namespace ProSuite.Commons.Geom
 
 			foreach (RingGroup candidatePoly in candidateRingGroups)
 			{
-				// TODO: If the candidates contain exactly 1, do we really have to check contains?
-				// For huge polygons with thousands of islands this might make a big difference.
-
 				if (RingContains(candidatePoly.ExteriorRing, interiorRing, tolerance))
 				{
 					allContaining.Add(candidatePoly);
 				}
+			}
+
+			// For better performance:
+			if (allContaining.Count == 1)
+			{
+				return allContaining[0];
 			}
 
 			return allContaining.MinElementOrDefault(r => r.ExteriorRing.GetArea2D());
