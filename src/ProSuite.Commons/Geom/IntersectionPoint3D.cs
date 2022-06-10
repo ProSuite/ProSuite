@@ -444,7 +444,7 @@ namespace ProSuite.Commons.Geom
 
 		public bool ReferencesSameSourceVertex([CanBeNull] IntersectionPoint3D other,
 		                                       ISegmentList source,
-		                                       double tolerance = double.Epsilon)
+		                                       double tolerance = double.NaN)
 		{
 			if (other == null)
 			{
@@ -468,8 +468,6 @@ namespace ProSuite.Commons.Geom
 				return true;
 			}
 
-			//return VirtualSourceVertex == other.VirtualSourceVertex;
-
 			double delta = Math.Abs(VirtualSourceVertex - other.VirtualSourceVertex);
 
 			// Quick test: if they are more than 2 vertices away from each other -> false
@@ -478,8 +476,30 @@ namespace ProSuite.Commons.Geom
 				return false;
 			}
 
+			if (delta <= double.Epsilon)
+			{
+				// It does not make a difference whether measuring the ratio or absolute distance:
+				return true;
+			}
+
 			// Proper test:
-			return other.Point.GetDistance(Point, true) < tolerance;
+			Linestring sourcePart = source.GetPart(SourcePartIndex);
+
+			// This might not be optimal in a ring where one is 0 and the other just below segment count
+			int lowerSegmentIdx = (int) Math.Min(other.VirtualSourceVertex, VirtualSourceVertex);
+
+			double distanceAlongBetween =
+				GetDistanceAlong(sourcePart, VirtualSourceVertex, lowerSegmentIdx) -
+				GetDistanceAlong(sourcePart, other.VirtualSourceVertex, lowerSegmentIdx);
+
+			double alongDistance = Math.Abs(distanceAlongBetween);
+
+			if (double.IsNaN(tolerance))
+			{
+				tolerance = MathUtils.GetDoubleSignificanceEpsilon(Point.X, Point.Y);
+			}
+
+			return alongDistance < tolerance;
 		}
 
 		public bool ReferencesSameTargetVertex([CanBeNull] IntersectionPoint3D other,
@@ -518,7 +538,7 @@ namespace ProSuite.Commons.Geom
 
 			if (delta <= double.Epsilon)
 			{
-				// It does not make a difference whether ratio or absolute distance:
+				// It does not make a difference whether measuring the ratio or absolute distance:
 				return true;
 			}
 

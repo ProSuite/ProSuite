@@ -1005,7 +1005,8 @@ namespace ProSuite.Commons.Geom
 
 				intersectionPoint3D.ClassifyTargetTrajectory(source, target,
 				                                             out bool? targetContinuesToRightSide,
-				                                             out bool? targetArrivesFromRightSide);
+				                                             out bool? targetArrivesFromRightSide,
+				                                             Tolerance);
 
 				// In-bound takes precedence because if the target is both inbound and outbound (i.e. touching from inside)
 				// the resulting part is on the left of the cut line which is consistent with other in-bound intersections.
@@ -1105,7 +1106,7 @@ namespace ProSuite.Commons.Geom
 				// The 'standard' linear intersection breaks at ring start/end:
 				foreach (LinearIntersectionPseudoBreak linearBreak in
 				         GeomTopoOpUtils.GetLinearIntersectionBreaksAtRingStart(
-					         source, target, intersectionsAlongSource, true))
+					         source, target, intersectionsAlongSource, true, Tolerance))
 				{
 					foreach (IntersectionPoint3D intersectionPoint3D in EvaluateLinearBreak(
 						         linearBreak))
@@ -1117,7 +1118,7 @@ namespace ProSuite.Commons.Geom
 
 			// Other linear intersection breaks that are not real (from a 2D perspective)
 			foreach (var linearBreak in GeomTopoOpUtils.GetLinearIntersectionPseudoBreaks(
-				         intersectionsAlongSource, source, target, true))
+				         intersectionsAlongSource, source, target, true, Tolerance))
 			{
 				foreach (IntersectionPoint3D intersectionPoint3D in
 				         EvaluateLinearBreak(linearBreak))

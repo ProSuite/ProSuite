@@ -231,7 +231,8 @@ namespace ProSuite.Commons.Geom
 			[NotNull] ISegmentList sourceSegments,
 			[NotNull] ISegmentList targetSegments,
 			out bool isSourceBoundaryLoop,
-			out bool isTargetBoundaryLoop)
+			out bool isTargetBoundaryLoop,
+			double tolerance = double.NaN)
 		{
 			isSourceBoundaryLoop = false;
 			isTargetBoundaryLoop = false;
@@ -252,8 +253,8 @@ namespace ProSuite.Commons.Geom
 				sourceSegments.GetPart(previousLinearIntersectionEnd.SourcePartIndex);
 
 			bool sameDistanceAlongSource =
-				IsSameDistanceAlong(sourcePart, previousLinearIntersectionEnd.VirtualSourceVertex,
-				                    currentLinearIntersectionStart.VirtualSourceVertex);
+				currentLinearIntersectionStart.ReferencesSameSourceVertex(
+					previousLinearIntersectionEnd, sourceSegments, tolerance);
 
 			if (! sameDistanceAlongSource)
 			{
@@ -298,15 +299,15 @@ namespace ProSuite.Commons.Geom
 			double targetSegmentsBetween = TargetSegmentCountBetween(
 				previousLinearIntersectionEnd, currentLinearIntersectionStart, targetPart);
 
-			// Exclude target boundary loops
-			// TODO: One short segment means 1. If more, do the actual distance check!
+			// Exclude target boundary loops: More than one segment (and probably we should also
+			// make sure to call ! ReferencesSameTargetVertex which now checks for the distance > tolerance.
 			if (targetSegmentsBetween > 1)
 			{
 				isTargetBoundaryLoop = true;
 				return false;
 			}
 
-			// Connected lines must match exactly
+			// Connected lines must match exactly (they are typically reference-equal)
 			return previousLinearIntersectionEnd.Point.Equals(currentLinearIntersectionStart.Point);
 		}
 
@@ -411,28 +412,6 @@ namespace ProSuite.Commons.Geom
 			return forwardSegmentCount < backwardSegmentCount
 				       ? forwardSegmentCount
 				       : backwardSegmentCount;
-		}
-
-		private static bool IsSameDistanceAlong([NotNull] Linestring linestring,
-		                                        double virtualVertex1,
-		                                        double virtualVertex2)
-		{
-			double epsilon =
-				MathUtils.GetDoubleSignificanceEpsilon(linestring.XMax, linestring.YMax);
-
-			bool sameDistanceAlongSource =
-				MathUtils.AreEqual(virtualVertex1, virtualVertex2, epsilon);
-
-			if (sameDistanceAlongSource)
-			{
-				return true;
-			}
-
-			int previousPoint = (int) Math.Truncate(virtualVertex1);
-			int currentPoint = (int) Math.Truncate(virtualVertex2);
-
-			return linestring.IsLastPointInPart(previousPoint) && virtualVertex2 == 0 ||
-			       linestring.IsLastPointInPart(currentPoint) && previousPoint == 0;
 		}
 
 		/// <summary>

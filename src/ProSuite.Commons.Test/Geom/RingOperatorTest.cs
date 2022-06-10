@@ -627,6 +627,56 @@ namespace ProSuite.Commons.Test.Geom
 			});
 		}
 
+
+		[Test]
+		public void SourceCappedSpikeTouchingTargetCorner()
+		{
+			// This is what happens in TOP-5547: An empty 2-segment part is created during difference!
+			var sourceSpike = new[]
+			                  {
+				                  new Pnt3D(105, 100, 0),
+				                  new Pnt3D(110, 100, 0),
+				                  new Pnt3D(100.006, 0, 9),
+				                  new Pnt3D(100.003, 0.001, 9)
+			                  }.ToList();
+
+			// The target cuts the point of the spike:
+			var targetRing = new List<Pnt3D>
+			                 {
+				                 new Pnt3D(0, 0, 9),
+				                 new Pnt3D(0, 100, 9),
+				                 new Pnt3D(100, 100, 9),
+				                 new Pnt3D(100, 0, 9)
+			                 };
+
+			const double tolerance = 0.01;
+
+			Linestring sourceSpikeRing = GeomTestUtils.CreateRing(sourceSpike);
+
+			MultiPolycurve source = new MultiPolycurve(new[] {sourceSpikeRing});
+
+			Linestring targetOuterRing = GeomTestUtils.CreateRing(targetRing);
+			RingGroup target = new RingGroup(targetOuterRing);
+
+			RingOperator ringOperator = new RingOperator(source, target, tolerance);
+			MultiLinestring difference = ringOperator.DifferenceXY();
+			Assert.AreEqual(1, difference.PartCount);
+			Assert.AreEqual(sourceSpikeRing.GetArea2D(), difference.GetArea2D());
+
+			// Compare with difference:
+			MultiLinestring intersection = ringOperator.IntersectXY();
+			Assert.IsTrue(intersection.IsEmpty);
+
+			// Vice versa to check symmetry:
+			intersection =
+				GeomTopoOpUtils.GetIntersectionAreasXY(target, source, tolerance);
+			Assert.IsTrue(intersection.IsEmpty);
+
+			difference = GeomTopoOpUtils.GetDifferenceAreasXY(target, source, tolerance);
+			Assert.AreEqual(1, difference.PartCount);
+			Assert.AreEqual(target.GetArea2D(), difference.GetArea2D());
+		}
+
 		private static void WithRotatedRingGroup([NotNull] List<Pnt3D> ringPoints,
 		                                         [NotNull] Action<RingGroup> procedure,
 		                                         int intialRotation = 0,
