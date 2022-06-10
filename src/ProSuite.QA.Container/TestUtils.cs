@@ -69,28 +69,53 @@ namespace ProSuite.QA.Container
 				var list0 = new List<InvolvedRow>(error0.InvolvedRows);
 				var list1 = new List<InvolvedRow>(error1.InvolvedRows);
 
-				// TODO reuse instance?
-				var rowCompare = new InvolvedRowComparer();
-
-				list0.Sort(rowCompare);
-				list1.Sort(rowCompare);
-
-				for (var involvedRowIndex = 0;
-				     involvedRowIndex < involvedRowsCount;
-				     involvedRowIndex++)
+				SortInvolvedRows(list0);
+				SortInvolvedRows(list1);
+				int involvedRowDifference = CompareSortedInvolvedRows(list0, list1);
+				if (involvedRowDifference != 0)
 				{
-					int involvedRowDifference = rowCompare.Compare(
-						list0[involvedRowIndex],
-						list1[involvedRowIndex]);
-
-					if (involvedRowDifference != 0)
-					{
-						return involvedRowDifference;
-					}
+					return involvedRowDifference;
 				}
 			}
 
 			// no difference detected
+			return 0;
+		}
+
+		public static void SortInvolvedRows([NotNull]List<InvolvedRow> involvedRows)
+		{
+			involvedRows.Sort(new InvolvedRowComparer());
+		}
+
+		public static int CompareSortedInvolvedRows([NotNull] IList<InvolvedRow> sorted0,
+		                                            [NotNull] IList<InvolvedRow> sorted1,
+		                                            bool validateRowCount = false)
+		{
+			int involvedRowsCount = sorted0.Count;
+			if (validateRowCount)
+			{
+				int diffCount = involvedRowsCount - sorted1.Count;
+				if (diffCount != 0)
+				{
+					return diffCount;
+				}
+			}
+
+			var rowCompare = new InvolvedRowComparer();
+			for (var involvedRowIndex = 0;
+			     involvedRowIndex < involvedRowsCount;
+			     involvedRowIndex++)
+			{
+				int involvedRowDifference = rowCompare.Compare(
+					sorted0[involvedRowIndex],
+					sorted1[involvedRowIndex]);
+
+				if (involvedRowDifference != 0)
+				{
+					return involvedRowDifference;
+				}
+			}
+
 			return 0;
 		}
 
