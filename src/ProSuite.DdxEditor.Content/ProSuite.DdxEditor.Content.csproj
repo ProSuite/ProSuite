@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Razor">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <ProjectGuid>{4B1FE874-5C47-4850-AF42-F1100780C029}</ProjectGuid>
@@ -318,12 +318,6 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
       <Generator>PublicResXFileCodeGenerator</Generator>
     </EmbeddedResource>
-  </ItemGroup>
-
-  <ItemGroup>
-    <!--<PackageReference Include="Microsoft.AspNetCore.Components.WebView" Version="6.0.4" />-->
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebView.WindowsForms" Version="6.0.200-preview.14.5099" />
-    <PackageReference Include="Radzen.Blazor" Version="3.18.4" />
   </ItemGroup>
 
 </Project>

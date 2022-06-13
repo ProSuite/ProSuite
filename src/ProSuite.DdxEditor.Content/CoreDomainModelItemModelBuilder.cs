@@ -8,7 +8,6 @@ using ProSuite.DdxEditor.Content.AssociationEnds;
 using ProSuite.DdxEditor.Content.Associations;
 using ProSuite.DdxEditor.Content.Attributes;
 using ProSuite.DdxEditor.Content.AttributeTypes;
-using ProSuite.DdxEditor.Content.Blazor;
 using ProSuite.DdxEditor.Content.Connections;
 using ProSuite.DdxEditor.Content.DatasetCategories;
 using ProSuite.DdxEditor.Content.Datasets;
@@ -112,11 +111,6 @@ namespace ProSuite.DdxEditor.Content
 		public abstract IXmlDataQualityExporter DataQualityExporter { get; }
 
 		public abstract IEnumerable<Item> GetChildren([NotNull] ModelsItemBase modelItem);
-
-		public IEnumerable<Item> GetChildren(BlazorItems item)
-		{
-			return Enumerable.Empty<Item>();
-		}
 
 		public abstract IEnumerable<Item> GetChildren<E>([NotNull] ModelItemBase<E> modelItem)
 			where E : Model;
