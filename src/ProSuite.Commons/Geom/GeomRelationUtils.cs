@@ -527,8 +527,16 @@ namespace ProSuite.Commons.Geom
 			IList<IntersectionPoint3D> intersectionPoints = null,
 			int? filterTargetByPartIndex = null)
 		{
-			Assert.False(closedPolycurve.IsEmpty, "Input containing polygon is empty.");
-			Assert.False(targetSegments.IsEmpty, "Input contained curve is empty.");
+			if (closedPolycurve.IsEmpty)
+			{
+				return false;
+			}
+
+			if (targetSegments.IsEmpty)
+			{
+				return true;
+			}
+
 			Assert.True(closedPolycurve.IsClosed, "Input containing polygon is not closed.");
 
 			if (AreBoundsDisjoint(closedPolycurve, targetSegments, tolerance))
@@ -702,8 +710,16 @@ namespace ProSuite.Commons.Geom
 			IList<IntersectionPoint3D> intersectionPoints = null,
 			int? filterSourceByPartIndex = null)
 		{
-			Assert.False(contained.IsEmpty, "Input containing polygon is empty.");
-			Assert.False(withinClosedPolycurve.IsEmpty, "Input contained curve is empty.");
+			if (withinClosedPolycurve.IsEmpty)
+			{
+				return false;
+			}
+
+			if (contained.IsEmpty)
+			{
+				return true;
+			}
+
 			Assert.True(withinClosedPolycurve.IsClosed, "Input within-polygon is not closed.");
 
 			if (AreBoundsDisjoint(contained, withinClosedPolycurve, tolerance))
@@ -949,6 +965,11 @@ namespace ProSuite.Commons.Geom
 			Assert.ArgumentCondition(ring1.IsClosed && ring2.IsClosed,
 			                         "Both rings must be closed.");
 
+			// Determine if the second ring really is partially or fully vertical:
+			bool ring2HasLinarSelfIntersections =
+				ring2CanHaveLinearSelfIntersections &&
+				GeomTopoOpUtils.GetLinearSelfIntersectionsXY(ring2, tolerance).Any();
+
 			IEnumerable<SegmentIntersection> segmentIntersections =
 				SegmentIntersectionUtils.GetSegmentIntersectionsXY(
 					ring1, ring2, tolerance);
@@ -970,20 +991,20 @@ namespace ProSuite.Commons.Geom
 
 				if (intersection.HasLinearIntersection)
 				{
-					//// TODO/Experimental: Test with more exception cases
-					//if (intersection.IsPotentialPseudoLinearIntersection(
-					//	    ring1[intersection.SourceIndex], ring2[intersection.TargetIndex],
-					//	    tolerance))
-					//{
-					//	continue;
-					//}
+					// Zero-length segment intersections have random opposite direction property values!
 					if (! intersection.IsSegmentZeroLength2D)
 					{
-						if (! disregardRingOrientation &&
+						if (! ring2HasLinarSelfIntersections &&
 						    ! intersection.LinearIntersectionInOppositeDirection)
 						{
-							// Optimization if the ring orientation is known to be correct
-							return false;
+							// Optimization if the ring orientation is known to be correct or both
+							// rings have the same orientation.
+							if (! disregardRingOrientation ||
+							    ring1.ClockwiseOriented != null &&
+							    ring1.ClockwiseOriented == ring2.ClockwiseOriented)
+							{
+								return false;
+							}
 						}
 
 						if (linearIntersectionsInverted == null)
@@ -993,7 +1014,7 @@ namespace ProSuite.Commons.Geom
 						}
 						else if (linearIntersectionsInverted.Value !=
 						         intersection.LinearIntersectionInOppositeDirection &&
-						         ! ring2CanHaveLinearSelfIntersections)
+						         ! ring2HasLinarSelfIntersections)
 						{
 							return false;
 						}
@@ -1006,7 +1027,8 @@ namespace ProSuite.Commons.Geom
 			IList<IntersectionPoint3D> intersectionPoints = GeomTopoOpUtils.GetIntersectionPoints(
 				ring1, ring2, tolerance, allIntersections, false);
 
-			if (HasSourceCrossingIntersections(ring1, ring2, intersectionPoints, tolerance))
+			if (HasSourceCrossingIntersections(ring1, ring2, intersectionPoints,
+			                                   ring2HasLinarSelfIntersections, tolerance))
 			{
 				return false;
 			}
@@ -1014,7 +1036,7 @@ namespace ProSuite.Commons.Geom
 			// No intersection or no deviation of target from source or all deviations to the same side
 			bool contained = RingsContainEachOther(ring1, ring2, intersectionPoints, tolerance,
 			                                       disregardRingOrientation,
-			                                       ring2CanHaveLinearSelfIntersections);
+			                                       ring2HasLinarSelfIntersections);
 
 			ringsAreDisjoint = ringsAreDisjoint && ! contained;
 
@@ -1025,6 +1047,7 @@ namespace ProSuite.Commons.Geom
 			[NotNull] Linestring ring1,
 			[NotNull] Linestring ring2,
 			[NotNull] IList<IntersectionPoint3D> intersectionPoints,
+			bool ring2HasSelfIntersections,
 			double tolerance)
 		{
 			var leftDeviationCount = 0;
@@ -1037,6 +1060,12 @@ namespace ProSuite.Commons.Geom
 				if (intersectionPoint.Type == IntersectionPointType.Crossing)
 				{
 					return true;
+				}
+
+				if (ring2HasSelfIntersections)
+				{
+					// Left/right determination cannot be used for vertical rings
+					continue;
 				}
 
 				bool? continuesToRightSide =
@@ -1094,6 +1123,7 @@ namespace ProSuite.Commons.Geom
 
 			bool? ring2ContainsRing1 = false;
 
+			// TODO: Simplify ring2 and check contains?
 			if (! ring2IsVertical)
 			{
 				ring2ContainsRing1 = IsWithinAreaXY(ring1, ring2, intersectionPoints, tolerance,
@@ -1165,7 +1195,10 @@ namespace ProSuite.Commons.Geom
 				Pnt3D nonIntersectingTargetPnt =
 					intersectionPoint.GetNonIntersectingTargetPoint(targetRing, 0.5);
 
-				return nonIntersectingTargetPnt;
+				if (nonIntersectingTargetPnt != null)
+				{
+					return nonIntersectingTargetPnt;
+				}
 			}
 
 			return null;

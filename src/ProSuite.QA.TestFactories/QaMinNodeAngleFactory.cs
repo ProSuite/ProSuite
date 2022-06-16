@@ -1,9 +1,9 @@
 using System.Collections.Generic;
-using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestCategories;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests;
 
 namespace ProSuite.QA.TestFactories
@@ -14,10 +14,7 @@ namespace ProSuite.QA.TestFactories
 	{
 		[NotNull]
 		[UsedImplicitly]
-		public static ITestIssueCodes Codes
-		{
-			get { return QaMinAngle.Codes; }
-		}
+		public static ITestIssueCodes Codes => QaMinAngle.Codes;
 
 		public override string GetTestTypeDescription()
 		{
@@ -31,9 +28,6 @@ namespace ProSuite.QA.TestFactories
 			return test;
 		}
 
-		public override string GetTestDescription()
-		{
-			return DocStrings.QaMinNodeAngleFactory;
-		}
+		public override string TestDescription => DocStrings.QaMinNodeAngleFactory;
 	}
 }

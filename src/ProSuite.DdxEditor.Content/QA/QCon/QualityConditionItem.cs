@@ -90,7 +90,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			QualityCondition qualityCondition = Assert.NotNull(GetEntity());
 			TestFactory factory = GetTestFactory(qualityCondition.TestDescriptor);
 
-			return factory?.GetTestDescription();
+			return factory?.TestDescription;
 		}
 
 		[CanBeNull]

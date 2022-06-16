@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -19,5 +20,10 @@ namespace ProSuite.DomainServices.AO.QA.Issues
 		public ITable Table { get; }
 
 		public IIssueStatisticsTableFieldNames FieldNames { get; }
+
+		public void Dispose()
+		{
+			Marshal.ReleaseComObject(Table);
+		}
 	}
 }

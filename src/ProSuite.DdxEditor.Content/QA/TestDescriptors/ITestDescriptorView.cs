@@ -20,7 +20,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 
 		void RenderTestDescription(string description);
 
-		void RenderTestCategories([NotNull] IList<string> testCategories);
+		void RenderTestCategories([NotNull] string[] categories);
 
 		void RenderTestParameters([NotNull] IEnumerable<TestParameter> testParameters);
 

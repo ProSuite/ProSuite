@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Reflection;
-using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Logging;
 using ProSuite.QA.Container;
@@ -13,20 +12,23 @@ namespace ProSuite.QA.Tests.IssueFilters
 	public class IfInvolvedRows : IssueFilter
 	{
 		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+			new Msg(MethodBase.GetCurrentMethod()?.DeclaringType);
 
 		private readonly string _constraint;
 		private Dictionary<IReadOnlyTable, TableView> _tableViews;
 
-		[Doc("TODO - Filter the issues by a constraint on the involved rows")]
-		public IfInvolvedRows(string constraint)
+		[DocIf(nameof(DocIfStrings.IfInvolvedRows_0))]
+		public IfInvolvedRows(
+			[DocIf(nameof(DocIfStrings.IfInvolvedRows_constraint))]
+			string constraint)
 			: base(new IReadOnlyTable[] { })
 		{
 			_constraint = constraint;
 		}
 
 		[TestParameter]
-		public IList<string> TableNames { get; set; }
+		[DocIf(nameof(DocIfStrings.IfInvolvedRows_Tables))]
+		public IList<IReadOnlyTable> Tables { get; set; }
 
 		public override bool Check(QaErrorEventArgs error)
 		{
@@ -40,13 +42,12 @@ namespace ProSuite.QA.Tests.IssueFilters
 				_tableViews = _tableViews ?? new Dictionary<IReadOnlyTable, TableView>();
 				if (! _tableViews.TryGetValue(row.Table, out TableView helper))
 				{
-					string tableName = row.Table.Name;
-					if (! (TableNames?.Count > 0) || TableNames.Contains(tableName))
+					IReadOnlyTable table = row.Table;
+					if (! (Tables?.Count > 0) || Tables.Contains(table))
 					{
-						bool caseSensitivity = false; // TODO;
 						helper = TableViewFactory.Create(
 							row.Table, _constraint, useAsConstraint: true,
-							caseSensitive: caseSensitivity);
+							caseSensitive: false);// TODO;
 					}
 
 					_tableViews.Add(row.Table, helper);

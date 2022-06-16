@@ -21,15 +21,15 @@ namespace ProSuite.QA.Tests.Transformers
 		private IReadOnlyTable _joined;
 		private string _transformerName;
 
-		[Doc(nameof(DocStrings.TrTableJoin_0))]
+		[DocTr(nameof(DocTrStrings.TrTableJoin_0))]
 		public TrTableJoin(
-			[NotNull] [Doc(nameof(DocStrings.TrTableJoin_t0))]
+			[NotNull] [DocTr(nameof(DocTrStrings.TrTableJoin_t0))]
 			IReadOnlyTable t0,
-			[NotNull] [Doc(nameof(DocStrings.TrTableJoin_t1))]
+			[NotNull] [DocTr(nameof(DocTrStrings.TrTableJoin_t1))]
 			IReadOnlyTable t1,
-			[NotNull] [Doc(nameof(DocStrings.TrTableJoin_relationName))]
+			[NotNull] [DocTr(nameof(DocTrStrings.TrTableJoin_relationName))]
 			string relationName,
-			[Doc(nameof(DocStrings.TrTableJoin_joinType))]
+			[DocTr(nameof(DocTrStrings.TrTableJoin_joinType))]
 			JoinType joinType)
 		{
 			_t0 = t0;

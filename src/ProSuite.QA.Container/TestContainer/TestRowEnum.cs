@@ -106,9 +106,7 @@ namespace ProSuite.QA.Container.TestContainer
 
 			foreach (ContainerTest containerTest in _container.ContainerTests)
 			{
-				containerTest.DataContainer = this;
-
-				SetSearchable(containerTest.InvolvedTables);
+				containerTest.SetDataContainer(this);
 			}
 
 			_rastersRowEnumerable =
@@ -375,7 +373,7 @@ namespace ProSuite.QA.Container.TestContainer
 			{
 				_container.SubscribeTestEvents(containerTest);
 
-				containerTest.DataContainer = this;
+				containerTest.SetDataContainer(this);
 				containerTest.IgnoreUndirected = true; //  ! _container.UseIstQuality;
 			}
 		}
@@ -384,7 +382,7 @@ namespace ProSuite.QA.Container.TestContainer
 		{
 			foreach (ContainerTest containerTest in _container.ContainerTests)
 			{
-				containerTest.DataContainer = null;
+				containerTest.SetDataContainer(null);
 
 				_container.UnsubscribeTestEvents(containerTest);
 			}
@@ -846,19 +844,6 @@ namespace ProSuite.QA.Container.TestContainer
 			}
 
 			return commonExpression;
-		}
-
-		private void SetSearchable(IEnumerable<IReadOnlyTable> tables)
-		{
-			foreach (IReadOnlyTable table in tables)
-			{
-				if (table is ITransformedValue transformed)
-				{
-					transformed.DataContainer = this;
-
-					SetSearchable(transformed.InvolvedTables);
-				}
-			}
 		}
 
 		// optimize filter to exclude existing large objects

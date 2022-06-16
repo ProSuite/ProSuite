@@ -13,7 +13,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 	/// provided  <see cref="BackingDataset"/> allows for actual data-access, such as GetRow()
 	/// or Search().
 	/// </summary>
-	public class GdbTable : VirtualTable, IEquatable<IObjectClass>
+	public class GdbTable : VirtualTable
 	{
 		private const string _defaultOidFieldName = "OBJECTID";
 
@@ -64,6 +64,22 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			else
 			{
 				BackingDataset = createBackingDataset(this);
+			}
+		}
+
+		public GdbTable(IObjectClass template, bool useTemplateForQuerying = false)
+			: this(template.ObjectClassID, DatasetUtils.GetName(template),
+			       DatasetUtils.GetAliasName(template))
+		{
+			for (int i = 0; i < template.Fields.FieldCount; i++)
+			{
+				IField field = template.Fields.Field[i];
+				AddField(field);
+			}
+
+			if (useTemplateForQuerying)
+			{
+				BackingDataset = new BackingTable((ITable) template, this);
 			}
 		}
 

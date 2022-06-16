@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Tests;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -11,6 +10,8 @@ using ProSuite.QA.Core;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.TestFactories
 {
@@ -20,20 +21,14 @@ namespace ProSuite.QA.TestFactories
 	{
 		[NotNull]
 		[UsedImplicitly]
-		public static ITestIssueCodes Codes
-		{
-			get { return QaConnections.Codes; }
-		}
+		public static ITestIssueCodes Codes => QaConnections.Codes;
 
 		public override string GetTestTypeDescription()
 		{
 			return typeof(QaConnections).Name;
 		}
 
-		public override string GetTestDescription()
-		{
-			return DocStrings.QaLineConnection;
-		}
+		public override string TestDescription => DocStrings.QaLineConnection;
 
 		protected override IList<TestParameter> CreateParameters()
 		{

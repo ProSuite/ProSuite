@@ -26,7 +26,7 @@ namespace ProSuite.QA.Tests.Transformers
 		}
 
 		[TestParameter]
-		[Doc(nameof(DocStrings.TrGeometryTransform_Attributes))]
+		[DocTr(nameof(DocTrStrings.TrGeometryTransform_Attributes))]
 		public IList<string> Attributes { get; set; }
 
 		protected override TransformedFeatureClass GetTransformedCore(string name)

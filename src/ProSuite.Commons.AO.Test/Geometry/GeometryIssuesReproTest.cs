@@ -1916,6 +1916,33 @@ namespace ProSuite.Commons.AO.Test.Geometry
 			Assert.AreEqual(diffPointCountWithIndexing, diffPointCountWithOutIndexing);
 		}
 
+		[Test]
+		public void LearningTestControlPoints()
+		{
+			// Learning test for geometry comparison and control points (relates to issue: GEN-3467)
+			// The Xml-Geometries have been created from a real scenario in 10.6.1:
+			// - Checkout from an enterprise gdb into a file gdb
+			// - Manually edited first vertex to be a control point
+			// - Checkin to a version --> control point is lost/not transferred
+
+			// Geometry with a ControlPoint, from file gdb prior to checkin
+			string beforeCheckinXml =
+				TestUtils.GetGeometryTestDataPath("ControlPoint_id1306_WU_FGDB.xml");
+
+			// Geometry without ControlPoint, in version after checkin
+			string afterCheckinXml =
+				TestUtils.GetGeometryTestDataPath("ControlPoint_id1306_WU_Version.xml");
+
+			IGeometry beforeCheckin = GeometryUtils.FromXmlFile(beforeCheckinXml);
+			IGeometry afterCheckin = GeometryUtils.FromXmlFile(afterCheckinXml);
+
+			Assert.IsTrue(((IPointIDAware) beforeCheckin).PointIDAware);
+			Assert.IsFalse(((IPointIDAware) afterCheckin).PointIDAware);
+
+			// IDAware is not relevant for IClone.IsEqual
+			Assert.IsTrue(((IClone) beforeCheckin).IsEqual((IClone) afterCheckin));
+		}
+
 		#region Geometry creation utils
 
 		private static IGeometryBag CreateGeometryBag(IGeometry polyline)

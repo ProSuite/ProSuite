@@ -1,9 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Xml;
 using ProSuite.DomainModel.AO.QA.Xml;
 using ProSuite.DomainModel.Core;
@@ -14,63 +13,68 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 	public class XmlTestDescriptorsBuilder : ReportBuilderBase
 	{
 		private readonly TextWriter _textWriter;
-		private readonly string _title;
 
-		public XmlTestDescriptorsBuilder(TextWriter textWriter, string title)
+		public XmlTestDescriptorsBuilder([NotNull] TextWriter textWriter)
 		{
 			Assert.ArgumentNotNull(textWriter, nameof(textWriter));
 
 			_textWriter = textWriter;
-			_title = title;
 		}
+
+		public bool StopOnError { get; set; } = false;
+
+		public bool AllowErrors { get; set; } = false;
+
+		public bool UseDefaultTestDescriptorName { get; set; } = false;
 
 		public override void AddHeaderItem(string name, string value) { }
 
 		public override void WriteReport()
 		{
-			IncludedTestFactories.Sort();
-
-			List<IncludedTestBase> includedTests =
-				GetSortedTestClasses().Cast<IncludedTestBase>().ToList();
-
+			var includedTests = new List<IncludedInstanceBase>(IncludedTestClasses.Values);
 			includedTests.AddRange(IncludedTestFactories);
+			includedTests.Sort();
 
 			if (includedTests.Count <= 0)
 			{
 				return;
 			}
 
-			StringBuilder sb = new StringBuilder();
+			var document = new XmlDataQualityDocument30();
 
-			XmlDataQualityDocument document = new XmlDataQualityDocument();
-
-			foreach (IncludedTestBase includedTest in includedTests)
+			foreach (IncludedInstanceBase includedTest in includedTests)
 			{
-				if (includedTest is IncludedTestClass includedTestClass)
+				if (includedTest is IncludedInstanceClass includedTestClass)
 				{
-					Type testType = includedTest.TestType;
+					Type testType = includedTestClass.InstanceType;
 
-					foreach (IncludedTestConstructor constructor in includedTestClass
-						.TestConstructors)
+					foreach (IncludedInstanceConstructor constructor in includedTestClass
+						         .InstanceConstructors)
 					{
-						string testName = $"{testType.Name}({constructor.ConstructorIndex})";
+						string testName = UseDefaultTestDescriptorName
+							                  ? TestFactoryUtils.GetDefaultTestDescriptorName(
+								                  testType, constructor.ConstructorIndex)
+							                  : $"{testType.Name}({constructor.ConstructorIndex})";
 
 						TestDescriptor testDescriptor = new TestDescriptor(
-							testName, new ClassDescriptor(testType),
-							constructor.ConstructorIndex, false, false, null);
+							testName, new ClassDescriptor(testType), constructor.ConstructorIndex,
+							StopOnError, AllowErrors);
 
 						Add(testDescriptor, document);
 					}
 				}
 				else if (includedTest is IncludedTestFactory includedFactory)
 				{
-					Type factoryType = includedFactory.TestType;
+					Type testFactoryType = includedFactory.InstanceType;
 
-					string testName = $"{factoryType.Name}";
+					string testName = UseDefaultTestDescriptorName
+						                  ? TestFactoryUtils.GetDefaultTestDescriptorName(
+							                  testFactoryType)
+						                  : $"{testFactoryType.Name}";
 
 					TestDescriptor testDescriptor = new TestDescriptor(
-						testName, new ClassDescriptor(factoryType),
-						false, false, null);
+						testName, new ClassDescriptor(testFactoryType),
+						StopOnError, AllowErrors);
 
 					Add(testDescriptor, document);
 				}
@@ -79,8 +83,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			_textWriter.Write(XmlUtils.Serialize(document));
 		}
 
-		private static void Add(TestDescriptor testDescriptor,
-		                        XmlDataQualityDocument toDocument)
+		private static void Add(TestDescriptor testDescriptor, XmlDataQualityDocument toDocument)
 		{
 			XmlTestDescriptor xmlTestDescriptor =
 				XmlDataQualityUtils.CreateXmlTestDescriptor(testDescriptor, false);

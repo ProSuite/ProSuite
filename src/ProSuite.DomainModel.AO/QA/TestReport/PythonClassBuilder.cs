@@ -14,7 +14,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 	{
 		private readonly TextWriter _textWriter;
 
-		public PythonClassBuilder(TextWriter textWriter)
+		public PythonClassBuilder([NotNull] TextWriter textWriter)
 		{
 			Assert.ArgumentNotNull(textWriter, nameof(textWriter));
 
@@ -27,8 +27,8 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 		{
 			IncludedTestFactories.Sort();
 
-			List<IncludedTestBase> includedTests =
-				GetSortedTestClasses().Cast<IncludedTestBase>().ToList();
+			List<IncludedInstanceBase> includedTests =
+				GetSortedTestClasses().Cast<IncludedInstanceBase>().ToList();
 
 			
 			includedTests.AddRange(IncludedTestFactories);
@@ -49,8 +49,8 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 
 		public void WriteTransformerClassFile()
 		{
-			List<IncludedTestBase> includedTransformers =
-				GetSortedTransformerClasses().Cast<IncludedTestBase>().ToList();
+			List<IncludedInstanceBase> includedTransformers =
+				GetSortedTransformerClasses().Cast<IncludedInstanceBase>().ToList();
 
 			if (includedTransformers.Count <= 0)
 			{
@@ -83,22 +83,22 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			sb.AppendLine();
 		}
 
-		private static void CreatePythonClass(IEnumerable<IncludedTestBase> includedTests,
+		private static void CreatePythonClass(IEnumerable<IncludedInstanceBase> includedTests,
 		                                      StringBuilder sb)
 		{
 			sb.AppendLine("class ConditionFactory:");
 
-			foreach (IncludedTestBase includedTest in includedTests)
+			foreach (IncludedInstanceBase includedTest in includedTests)
 			{
-				if (includedTest is IncludedTestClass includedTestClass)
+				if (includedTest is IncludedInstanceClass includedTestClass)
 				{
-					if (includedTestClass.TestConstructors.Count <= 0)
+					if (includedTestClass.InstanceConstructors.Count <= 0)
 					{
 						continue;
 					}
 
-					foreach (IncludedTestConstructor constructor in includedTestClass
-						.TestConstructors)
+					foreach (IncludedInstanceConstructor constructor in includedTestClass
+						.InstanceConstructors)
 					{
 						AppendTestClassMethod(includedTestClass, constructor, sb);
 					}
@@ -110,22 +110,22 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			}
 		}
 
-		private static void CreatePythonTransformerClass(IEnumerable<IncludedTestBase> includedTransformers,
+		private static void CreatePythonTransformerClass(IEnumerable<IncludedInstanceBase> includedTransformers,
 		                                      StringBuilder sb)
 		{
 			sb.AppendLine("class Transformer:");
 
-			foreach (IncludedTestBase includedTest in includedTransformers)
+			foreach (IncludedInstanceBase includedTest in includedTransformers)
 			{
-				if (includedTest is IncludedTransformer includedTransformer)
+				if (includedTest is IncludedInstanceClass includedTransformer)
 				{
-					if (includedTransformer.TestConstructors.Count <= 0)
+					if (includedTransformer.InstanceConstructors.Count <= 0)
 					{
 						continue;
 					}
 
-					foreach (IncludedTestConstructor constructor in includedTransformer
-						.TestConstructors)
+					foreach (IncludedInstanceConstructor constructor in includedTransformer
+						.InstanceConstructors)
 					{
 						AppendTransformerClassMethod(includedTransformer, constructor, sb);
 					}
@@ -134,43 +134,43 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			}
 		}
 
-		private static void AppendTransformerClassMethod(IncludedTestBase includedTransformerClass,
-		                                          IncludedTestConstructor constructor,
+		private static void AppendTransformerClassMethod(IncludedInstanceBase includedTransformerClass,
+		                                          IncludedInstanceConstructor constructor,
 		                                          StringBuilder sb)
 		{
-			TestFactory testFactory = constructor.TestFactory;
+			IInstanceInfo testFactory = constructor.InstanceInfo;
 
 			string methodName =
-				$"{ToUnderscoreCase(includedTransformerClass.TestType.Name)}_{constructor.ConstructorIndex}";
+				$"{ToUnderscoreCase(includedTransformerClass.InstanceType.Name)}_{constructor.ConstructorIndex}";
 
 			string methodSignature = GetConstructorSignature(testFactory);
 			string conditionConstructorSignature =
-				$"\"{includedTransformerClass.TestType.Name}({constructor.ConstructorIndex})\"";
+				$"\"{includedTransformerClass.InstanceType.Name}({constructor.ConstructorIndex})\"";
 
 			AppendTransformerMethod(methodName, methodSignature, testFactory, conditionConstructorSignature,
 			             sb);
 		}
 
 
-		private static void AppendTestClassMethod(IncludedTestBase includedTestClass,
-		                                          IncludedTestConstructor constructor,
+		private static void AppendTestClassMethod(IncludedInstanceBase includedTestClass,
+		                                          IncludedInstanceConstructor constructor,
 		                                          StringBuilder sb)
 		{
-			TestFactory testFactory = constructor.TestFactory;
+			IInstanceInfo factory = constructor.InstanceInfo;
 
 			string methodName =
-				$"{ToUnderscoreCase(includedTestClass.TestType.Name)}_{constructor.ConstructorIndex}";
+				$"{ToUnderscoreCase(includedTestClass.InstanceType.Name)}_{constructor.ConstructorIndex}";
 
-			string methodSignature = GetConstructorSignature(testFactory);
+			string methodSignature = GetConstructorSignature(factory);
 			string conditionConstructorSignature =
-				$"\"{includedTestClass.TestType.Name}({constructor.ConstructorIndex})\"";
+				$"\"{includedTestClass.InstanceType.Name}({constructor.ConstructorIndex})\"";
 
-			AppendMethod(methodName, methodSignature, testFactory, conditionConstructorSignature,
+			AppendMethod(methodName, methodSignature, factory, conditionConstructorSignature,
 			             sb);
 		}
 		
 		private static void AppendTransformerMethod(string methodName, string methodSignature,
-		                                            TestFactory testFactory,
+		                                            IInstanceInfo factory,
 		                                            string conditionConstructorSignature,
 		                                            StringBuilder sb)
 		{
@@ -181,19 +181,17 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 		}
 
 		private static void AppendMethod(string methodName, string methodSignature,
-		                                 TestFactory testFactory,
+		                                 IInstanceInfo factory,
 		                                 string conditionConstructorSignature, StringBuilder sb)
 		{
-			string testDescription = testFactory.GetTestDescription();
-
 			sb.AppendLine();
 			sb.AppendLine($"    @classmethod");
 			sb.AppendLine($"    def {methodName}({methodSignature}) -> Condition:");
 			sb.AppendLine($"        \"\"\"");
-			sb.AppendLine($"        {testFactory.GetTestDescription()}        \"\"\"");
+			sb.AppendLine($"        {factory.TestDescription ?? string.Empty}        \"\"\"");
 			sb.AppendLine($"        result = Condition({conditionConstructorSignature})");
 
-			foreach (TestParameter testParameter in testFactory.Parameters)
+			foreach (TestParameter testParameter in factory.Parameters)
 			{
 				string snakeCasePythonName = ToUnderscoreCase(testParameter.Name);
 
@@ -224,14 +222,14 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 		private static void AppendTestFactoryMethod(IncludedTestFactory includedTestFactory,
 		                                            StringBuilder sb)
 		{
-			TestFactory testFactory = includedTestFactory.TestFactory;
+			IInstanceInfo factory = includedTestFactory.InstanceInfo;
 
-			string methodName = ToUnderscoreCase(includedTestFactory.TestType.Name);
+			string methodName = ToUnderscoreCase(includedTestFactory.InstanceType.Name);
 
-			string methodSignature = GetConstructorSignature(testFactory);
-			string conditionConstructorSignature = $"\"{includedTestFactory.TestType.Name}\"";
+			string methodSignature = GetConstructorSignature(factory);
+			string conditionConstructorSignature = $"\"{includedTestFactory.InstanceType.Name}\"";
 
-			AppendMethod(methodName, methodSignature, testFactory, conditionConstructorSignature,
+			AppendMethod(methodName, methodSignature, factory, conditionConstructorSignature,
 			             sb);
 		}
 
@@ -245,23 +243,23 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 		}
 
 		[NotNull]
-		private static string GetConstructorSignature([NotNull] IInstanceInfo testInfo)
+		private static string GetConstructorSignature([NotNull] IInstanceInfo instanceInfo)
 		{
-			Assert.ArgumentNotNull(testInfo, nameof(testInfo));
+			Assert.ArgumentNotNull(instanceInfo, nameof(instanceInfo));
 
 			var sb = new StringBuilder();
 
 			// Because it is a @classmethod
 			sb.Append("cls");
 
-			foreach (TestParameter testParameter in testInfo.Parameters.Where(
+			foreach (TestParameter testParameter in instanceInfo.Parameters.Where(
 				p => p.IsConstructorParameter))
 			{
 				AppendTestParameter(sb, testParameter);
 			}
 
 			// Optional parameters:
-			foreach (TestParameter testParameter in testInfo.Parameters.Where(
+			foreach (TestParameter testParameter in instanceInfo.Parameters.Where(
 				p => ! p.IsConstructorParameter))
 			{
 				AppendTestParameter(sb, testParameter);

@@ -13,6 +13,7 @@ using ProSuite.Commons.Logging;
 using ProSuite.Commons.Misc;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.Geometry;
+using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.QA.Tests.PointEnumerators;
 

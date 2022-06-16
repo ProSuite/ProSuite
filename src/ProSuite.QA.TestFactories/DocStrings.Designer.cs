@@ -19,7 +19,7 @@ namespace ProSuite.QA.TestFactories {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class DocStrings {
@@ -184,57 +184,6 @@ namespace ProSuite.QA.TestFactories {
         internal static string QaDatasetConstraintFactory_table {
             get {
                 return ResourceManager.GetString("QaDatasetConstraintFactory_table", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Finds pseudo nodes: Finds all endpoints in &apos;polylineClasses&apos;, that correspond to exactly 2 From-/To-points of &apos;polylineClasses&apos;, where:
-        ///- the two involved features belong to the same feature class, 
-        ///- the attributes values of the involved features do not differ,
-        ///- they are not separated by a point out of &apos;validPseudoNodes&apos;
-        ///Remark: All feature classes in &apos;polylineClasses&apos; and &apos;validPseudoNodes&apos; must have the same spatial reference.
-        /// </summary>
-        internal static string QaFactoryPseudoNodes {
-            get {
-                return ResourceManager.GetString("QaFactoryPseudoNodes", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to fields that are not checked for equality (not editable fields are ignored by default).
-        ///For each feature class in &apos;polylineClasses&apos;, the ignore fields must be defined.
-        ///The sort order must correspond with &apos;polylineClasses&apos;. The ignoreFields of the layers are separated and must be ended by an ignoreFields value &apos;-&apos;..
-        /// </summary>
-        internal static string QaFactoryPseudoNodes_ignoreFields {
-            get {
-                return ResourceManager.GetString("QaFactoryPseudoNodes_ignoreFields", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Indicates if end points of closed lines which are not connected to another line should be ignored..
-        /// </summary>
-        internal static string QaFactoryPseudoNodes_IgnoreLoopEndpoints {
-            get {
-                return ResourceManager.GetString("QaFactoryPseudoNodes_IgnoreLoopEndpoints", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to polyline feature classes.
-        /// </summary>
-        internal static string QaFactoryPseudoNodes_polylineClasses {
-            get {
-                return ResourceManager.GetString("QaFactoryPseudoNodes_polylineClasses", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to feature classes containing point, line or polygon features to indicate valid pseudo nodes. Pseudo nodes are valid, if they lie on a point, a polyline or a polygon border of &apos;validPseudoNodes&apos;..
-        /// </summary>
-        internal static string QaFactoryPseudoNodes_validPseudoNodes {
-            get {
-                return ResourceManager.GetString("QaFactoryPseudoNodes_validPseudoNodes", resourceCulture);
             }
         }
         

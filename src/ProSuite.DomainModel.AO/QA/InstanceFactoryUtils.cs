@@ -1,10 +1,14 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.Reflection;
 using ProSuite.DomainModel.Core;
 using ProSuite.DomainModel.Core.QA;
+using ProSuite.QA.Container;
 using ProSuite.QA.Core;
 
 namespace ProSuite.DomainModel.AO.QA
@@ -44,7 +48,7 @@ namespace ProSuite.DomainModel.AO.QA
 		/// Gets the transformer factory, sets the transformer configuration and initializes its 
 		/// parameter values.
 		/// </summary>
-		/// <returns>RowFilterFactory or null.</returns>
+		/// <returns>TransformerFactory or null.</returns>
 		[CanBeNull]
 		public static TransformerFactory CreateTransformerFactory(
 			[NotNull] TransformerConfiguration transformerConfiguration)
@@ -76,9 +80,8 @@ namespace ProSuite.DomainModel.AO.QA
 
 			foreach (TestParameterValue parameterValue in parameterValues)
 			{
-				TestParameter testParameter;
 				if (parametersByName.TryGetValue(parameterValue.TestParameterName,
-				                                 out testParameter))
+				                                 out TestParameter testParameter))
 				{
 					parameterValue.DataType = testParameter.Type;
 				}
@@ -89,6 +92,77 @@ namespace ProSuite.DomainModel.AO.QA
 						parameterValue.TestParameterName, factory);
 				}
 			}
+		}
+
+		[NotNull]
+		public static IEnumerable<Type> GetTransformerClasses([NotNull] Assembly assembly,
+		                                                      bool includeObsolete,
+		                                                      bool includeInternallyUsed)
+		{
+			Assert.ArgumentNotNull(assembly, nameof(assembly));
+
+			Type transformerType = typeof(ITableTransformer);
+
+			foreach (Type candidateType in assembly.GetTypes())
+			{
+				if (! IsInstanceType(candidateType, transformerType))
+				{
+					continue;
+				}
+
+				if (! includeObsolete && InstanceUtils.IsObsolete(candidateType))
+				{
+					continue;
+				}
+
+				if (! includeInternallyUsed && InstanceUtils.IsInternallyUsed(candidateType))
+				{
+					continue;
+				}
+
+				yield return candidateType;
+			}
+		}
+
+		[NotNull]
+		public static IEnumerable<int> GetConstructorIndexes([NotNull] Type instanceType,
+		                                                     bool includeObsolete,
+		                                                     bool includeInternallyUsed)
+		{
+			Assert.ArgumentNotNull(instanceType, nameof(instanceType));
+
+			var constructorIndex = 0;
+			foreach (ConstructorInfo ctorInfo in instanceType.GetConstructors())
+			{
+				if (IncludeConstructor(ctorInfo, includeObsolete, includeInternallyUsed))
+				{
+					yield return constructorIndex;
+				}
+
+				constructorIndex++;
+			}
+		}
+
+		private static bool IncludeConstructor([NotNull] ConstructorInfo ctorInfo,
+		                                       bool includeObsolete,
+		                                       bool includeInternallyUsed)
+		{
+			if (! includeObsolete && ReflectionUtils.IsObsolete(ctorInfo, out _))
+			{
+				return false;
+			}
+
+			return includeInternallyUsed || ! InstanceUtils.HasInternallyUsedAttribute(ctorInfo);
+		}
+
+		public static bool IsInstanceType([NotNull] Type candidateType, [NotNull] Type instanceType)
+		{
+			Assert.ArgumentNotNull(candidateType, nameof(candidateType));
+			Assert.ArgumentNotNull(instanceType, nameof(instanceType));
+
+			return instanceType.IsAssignableFrom(candidateType) &&
+			       ! candidateType.IsAbstract &&
+			       candidateType.IsPublic;
 		}
 
 		private static RowFilterFactory CreateRowFilterFactory(

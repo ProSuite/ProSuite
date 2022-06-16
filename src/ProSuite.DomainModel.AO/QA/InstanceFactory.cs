@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -25,49 +24,6 @@ namespace ProSuite.DomainModel.AO.QA
 	public abstract class InstanceFactory : InstanceInfoBase
 	{
 		protected static readonly IMsg _msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);
-
-		[NotNull]
-		public TestParameterValue CreateDatasetParameterValue(
-			[NotNull] string parameterName,
-			[CanBeNull] Dataset value,
-			string filterExpression = null,
-			bool usedAsReferenceData = false)
-		{
-			Assert.ArgumentNotNullOrEmpty(parameterName, nameof(parameterName));
-
-			TestParameter parameter = GetParameter(parameterName);
-
-			TestParameterTypeUtils.AssertValidDataset(parameter, value);
-
-			var parameterValue = new DatasetTestParameterValue(parameter, value,
-			                                                   filterExpression,
-			                                                   usedAsReferenceData);
-
-			parameterValue.DataType = parameter.Type;
-
-			return parameterValue;
-		}
-
-		[CanBeNull]
-		public ScalarTestParameterValue CreateScalarTestParameterValue(
-			[NotNull] string parameterName,
-			[CanBeNull] object value)
-		{
-			Assert.ArgumentNotNullOrEmpty(parameterName, nameof(parameterName));
-
-			TestParameter parameter = GetParameter(parameterName);
-
-			if (! parameter.IsConstructorParameter && parameter.Type.IsValueType &&
-			    (value == null || value as string == string.Empty))
-			{
-				return null;
-			}
-
-			var parameterValue = new ScalarTestParameterValue(parameter, value);
-			parameterValue.DataType = parameter.Type;
-
-			return parameterValue;
-		}
 
 		[NotNull]
 		protected T Create<T>([NotNull] InstanceConfiguration instanceConfiguration,

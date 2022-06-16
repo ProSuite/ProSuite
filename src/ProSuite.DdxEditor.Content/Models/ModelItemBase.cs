@@ -3,16 +3,22 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Windows.Forms;
+using ESRI.ArcGIS.Geodatabase;
+using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.UI.Env;
 using ProSuite.Commons.UI.Finder;
 using ProSuite.Commons.UI.WinForms.Controls;
 using ProSuite.Commons.Validation;
 using ProSuite.DdxEditor.Content.Properties;
+using ProSuite.DdxEditor.Framework;
+using ProSuite.DdxEditor.Framework.Commands;
 using ProSuite.DdxEditor.Framework.Dependencies;
 using ProSuite.DdxEditor.Framework.Items;
 using ProSuite.DdxEditor.Framework.ItemViews;
@@ -21,21 +27,21 @@ using ProSuite.DomainModel.AO.Geodatabase;
 using ProSuite.DomainModel.Core;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.DataModel.Repositories;
+using Path = System.IO.Path;
 
 namespace ProSuite.DdxEditor.Content.Models
 {
 	public abstract class ModelItemBase<E> : SubclassedEntityItem<E, Model>
 		where E : Model
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		[NotNull] private readonly CoreDomainModelItemModelBuilder _modelBuilder;
 
 		#region Constructors
 
 		/// <summary>
-		/// Initializes a new instance of the <see cref="ModelItemBaseBase{E}"/> class.
+		/// Initializes a new instance of the <see cref="ModelItemBase{E}"/> class.
 		/// </summary>
 		/// <param name="modelBuilder">The model builder.</param>
 		/// <param name="model">The model.</param>
@@ -57,6 +63,28 @@ namespace ProSuite.DdxEditor.Content.Models
 		public override IList<DependingItem> GetDependingItems()
 		{
 			return _modelBuilder.GetDependingItems(GetEntity());
+		}
+
+		protected override void CollectCommands(
+			List<ICommand> commands,
+			IApplicationController applicationController)
+		{
+			base.CollectCommands(commands, applicationController);
+
+			if (_modelBuilder.DatasetCategories != null)
+			{
+				commands.Add(new AssignDatasetCategoriesBasedOnFeatureDatasetsCommand<E>(
+					             this, applicationController));
+			}
+
+			commands.Add(new AssignLayerFilesCommand<E>(
+				             this, applicationController));
+
+			commands.Add(new RefreshModelContentCommand<E>(
+				             this, applicationController));
+
+			commands.Add(new CheckSpatialReferencesCommand<E>(
+				             this, applicationController, _modelBuilder));
 		}
 
 		public ConnectionProvider FindUserConnectionProvider(IWin32Window owner)
@@ -154,6 +182,104 @@ namespace ProSuite.DdxEditor.Content.Models
 
 					return FindClassDescriptor<IDatasetListBuilderFactory>(owner, currentValue);
 				});
+		}
+
+		public void AssignDatasetCategoriesBasedOnFeatureDatasets()
+		{
+			var categoriesByName =
+				new Dictionary<string, DatasetCategory>(
+					StringComparer.InvariantCultureIgnoreCase);
+			var abbreviations = new HashSet<string>(StringComparer.CurrentCulture);
+
+			IDatasetCategoryRepository datasetCategories =
+				Assert.NotNull(_modelBuilder.DatasetCategories);
+
+			var assignCount = 0;
+			var totalCount = 0;
+			using (_msg.IncrementIndentation(
+				       "Processing datasets with missing dataset category assignment"))
+			{
+				_modelBuilder.UseTransaction(
+					delegate
+					{
+						foreach (DatasetCategory category in datasetCategories.GetAll())
+						{
+							categoriesByName.Add(category.Name, category);
+							abbreviations.Add(category.Abbreviation);
+						}
+
+						E model = Assert.NotNull(GetEntity());
+
+						IWorkspaceContext workspaceContext = model.MasterDatabaseWorkspaceContext;
+						Assert.NotNull("The model master database is not accessible");
+
+						foreach (Dataset dataset in model.GetDatasets())
+						{
+							totalCount++;
+
+							if (dataset.DatasetCategory != null)
+							{
+								continue;
+							}
+
+							IFeatureDataset featureDataset = GetFeatureDataset(
+								dataset, Assert.NotNull(workspaceContext));
+							if (featureDataset == null)
+							{
+								continue;
+							}
+
+							string categoryName = DatasetUtils.GetTableName(featureDataset);
+
+							DatasetCategory category;
+							if (! categoriesByName.TryGetValue(categoryName, out category))
+							{
+								string abbreviation =
+									GenerateUniqueAbbreviation(abbreviations);
+
+								_msg.InfoFormat(
+									"Adding new dataset category based on feature dataset {0}.{1}" +
+									"Generated abbreviation: {2}",
+									featureDataset.Name, Environment.NewLine, abbreviation);
+
+								category = new DatasetCategory(categoryName, abbreviation);
+								datasetCategories.Save(category);
+
+								categoriesByName.Add(categoryName, category);
+							}
+
+							_msg.InfoFormat(
+								"Assigning dataset category to dataset {0}: {1}",
+								dataset.Name, category.Name);
+
+							dataset.DatasetCategory = category;
+
+							assignCount++;
+						}
+					});
+			}
+
+			_msg.InfoFormat("Dataset categories assigned to {0} of {1} dataset{2}",
+			                assignCount, totalCount, totalCount == 1
+				                                         ? string.Empty
+				                                         : "s");
+		}
+
+		public void CheckSpatialReferences()
+		{
+			SpatialReferenceProperties modelSpatialReferenceProperties = null;
+			IEnumerable<ModelDatasetSpatialReferenceComparison> comparisons =
+				_modelBuilder
+					.ReadOnlyTransaction<IEnumerable<ModelDatasetSpatialReferenceComparison>>(
+						() => GetSpatialReferenceComparisons(out modelSpatialReferenceProperties));
+			Assert.NotNull(modelSpatialReferenceProperties, "modelSpatialReferenceProperties");
+
+			using (
+				var form = new SpatialReferenceComparisonForm(comparisons,
+				                                              modelSpatialReferenceProperties))
+			{
+				UIEnvironment.ShowDialog(form);
+			}
 		}
 
 		#region Non-public
@@ -364,5 +490,181 @@ namespace ProSuite.DdxEditor.Content.Models
 		}
 
 		#endregion
+
+		[NotNull]
+		private static string GenerateUniqueAbbreviation(
+			[NotNull] ICollection<string> abbreviations)
+		{
+			var i = 0;
+			const string format = "cat{0}";
+
+			while (true)
+			{
+				string candidate = string.Format(format, i);
+
+				if (! abbreviations.Contains(candidate))
+				{
+					abbreviations.Add(candidate);
+
+					return candidate;
+				}
+
+				i++;
+			}
+		}
+
+		[CanBeNull]
+		private static IFeatureDataset GetFeatureDataset(
+			[NotNull] IDdxDataset dataset,
+			[NotNull] IDatasetContext datasetContext)
+		{
+			var vectorDataset = dataset as VectorDataset;
+			if (vectorDataset != null)
+			{
+				return Assert.NotNull(datasetContext.OpenFeatureClass(vectorDataset))
+				             .FeatureDataset;
+			}
+
+			var topologyDataset = dataset as TopologyDataset;
+			if (topologyDataset != null)
+			{
+				return Assert.NotNull(datasetContext.OpenTopology(topologyDataset))
+				             .FeatureDataset;
+			}
+
+			return null;
+		}
+
+		[NotNull]
+		private IEnumerable<ModelDatasetSpatialReferenceComparison>
+			GetSpatialReferenceComparisons(
+				[NotNull] out SpatialReferenceProperties modelSpatialReferenceProperties)
+		{
+			Model model = Assert.NotNull(GetEntity());
+
+			SpatialReferenceDescriptor spatialReferenceDescriptor =
+				model.SpatialReferenceDescriptor;
+			Assert.NotNull(spatialReferenceDescriptor,
+			               "spatial reference descriptor is not defined");
+
+			ISpatialReference modelSpatialReference =
+				spatialReferenceDescriptor.SpatialReference;
+
+			modelSpatialReferenceProperties =
+				new SpatialReferenceProperties(modelSpatialReference);
+
+			var comparisons = new List<ModelDatasetSpatialReferenceComparison>();
+
+			using (
+				_msg.IncrementIndentation("Comparing spatial references for model '{0}'",
+				                          model.Name))
+			{
+				foreach (Dataset dataset in model.GetDatasets())
+				{
+					var vectorDataset = dataset as VectorDataset;
+					if (vectorDataset == null)
+					{
+						continue;
+					}
+
+					_msg.InfoFormat("Comparing spatial reference for dataset {0}",
+					                vectorDataset.AliasName);
+
+					string message;
+					ISpatialReference datasetSpatialReference = TryGetSpatialReference(
+						vectorDataset,
+						out message);
+
+					ModelDatasetSpatialReferenceComparison comparison;
+					if (datasetSpatialReference == null)
+					{
+						comparison = new ModelDatasetSpatialReferenceComparison(dataset, null);
+						if (! string.IsNullOrEmpty(message))
+						{
+							comparison.AddIssue(message);
+						}
+					}
+					else
+					{
+						comparison = GetSpatialReferenceComparison(modelSpatialReference, dataset,
+							datasetSpatialReference);
+					}
+
+					comparisons.Add(comparison);
+				}
+
+				return comparisons;
+			}
+		}
+
+		[NotNull]
+		private static ModelDatasetSpatialReferenceComparison GetSpatialReferenceComparison(
+			[NotNull] ISpatialReference modelSpatialReference,
+			[NotNull] Dataset dataset,
+			[NotNull] ISpatialReference datasetSpatialReference)
+		{
+			bool coordinateSystemDifferent;
+			bool vcsDifferent;
+			bool xyPrecisionDifferent;
+			bool zPrecisionDifferent;
+			bool mPrecisionDifferent;
+			bool xyToleranceDifferent;
+			bool zToleranceDifferent;
+			bool mToleranceDifferent;
+			SpatialReferenceUtils.AreEqual(modelSpatialReference,
+			                               datasetSpatialReference,
+			                               out coordinateSystemDifferent, out vcsDifferent,
+			                               out xyPrecisionDifferent, out zPrecisionDifferent,
+			                               out mPrecisionDifferent, out xyToleranceDifferent,
+			                               out zToleranceDifferent, out mToleranceDifferent);
+
+			return new ModelDatasetSpatialReferenceComparison(
+				       dataset,
+				       new SpatialReferenceProperties(datasetSpatialReference))
+			       {
+				       XyPrecisionDifferent = xyPrecisionDifferent,
+				       ZPrecisionDifferent = zPrecisionDifferent,
+				       IsMPrecisionEqual = mPrecisionDifferent,
+				       CoordinateSystemDifferent = coordinateSystemDifferent,
+				       VerticalCoordinateSystemDifferent = ! vcsDifferent,
+				       XyToleranceDifferent = xyToleranceDifferent,
+				       ZToleranceDifferent = zToleranceDifferent,
+				       MToleranceDifferent = mToleranceDifferent
+			       };
+		}
+
+		[CanBeNull]
+		private static ISpatialReference TryGetSpatialReference(
+			[NotNull] IVectorDataset vectorDataset,
+			[CanBeNull] out string message)
+		{
+			IFeatureClass featureClass;
+			try
+			{
+				IWorkspaceContext masterDatabaseWorkspaceContext =
+					ModelElementUtils.GetMasterDatabaseWorkspaceContext(vectorDataset);
+
+				if (masterDatabaseWorkspaceContext == null)
+				{
+					message = "Master database is not accessible";
+					return null;
+				}
+
+				featureClass = masterDatabaseWorkspaceContext.OpenFeatureClass(vectorDataset);
+				if (featureClass == null)
+				{
+					message = "Feature class does not exist in model master database";
+					return null;
+				}
+			}
+			catch (Exception e)
+			{
+				message = $"Unable to open feature class: {e.Message}";
+				return null;
+			}
+
+			message = null;
+			return ((IGeoDataset) featureClass).SpatialReference;
+		}
 	}
 }

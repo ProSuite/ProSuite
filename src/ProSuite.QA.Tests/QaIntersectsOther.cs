@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
@@ -10,6 +9,8 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
 using ProSuite.QA.Core;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
 {
@@ -20,7 +21,6 @@ namespace ProSuite.QA.Tests
 		[CanBeNull] private readonly string _validRelationConstraintSql;
 		[CanBeNull] private IValidRelationConstraint _validRelationConstraint;
 		[CanBeNull] private GeometryConstraint _validIntersectionGeometryConstraint;
-		[CanBeNull] private ContainsPostProcessor _ignoreAreaProcessor;
 		private const bool _defaultReportIntersectionsAsMultipart = true;
 
 		#region issue codes
@@ -119,19 +119,6 @@ namespace ProSuite.QA.Tests
 					StringUtils.IsNullOrEmptyOrBlank(value)
 						? null
 						: new GeometryConstraint(value);
-			}
-		}
-
-		[TestParameter]
-		[Doc(nameof(DocStrings.QaIntersectsOther_IgnoreArea))]
-		public IReadOnlyFeatureClass IgnoreArea
-		{
-			get { return _ignoreAreaProcessor?.FeatureClass; }
-			set
-			{
-				_ignoreAreaProcessor?.Dispose();
-				_ignoreAreaProcessor =
-					value != null ? new ContainsPostProcessor(this, value) : null;
 			}
 		}
 

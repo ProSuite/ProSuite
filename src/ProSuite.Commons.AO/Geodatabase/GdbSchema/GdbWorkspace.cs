@@ -392,7 +392,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 				{
 					return false;
 				}
-				
+
 				//Determines whether two Uri instances have the same value.
 				// e.g. these paths are equal
 				// C:\Users\daro\AppData\Local\Temp\GdbWorkspaceTest.gdb

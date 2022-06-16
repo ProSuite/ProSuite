@@ -9,10 +9,11 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 	{
 		private IGeoDataset Dataset { get; }
 
-		public ReadOnlyGeoDataset([NotNull]IGeoDataset dataset)
+		public ReadOnlyGeoDataset([NotNull] IGeoDataset dataset)
 		{
 			Dataset = dataset;
 		}
+
 		ISpatialReference IReadOnlyGeoDataset.SpatialReference => Dataset.SpatialReference;
 		IEnvelope IReadOnlyGeoDataset.Extent => Dataset.Extent;
 

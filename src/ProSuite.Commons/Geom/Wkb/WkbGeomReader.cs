@@ -56,8 +56,12 @@ namespace ProSuite.Commons.Geom.Wkb
 					return ReadMultipointCore(reader, ordinates);
 				}
 
-				if (geometryType == WkbGeometryType.MultiLineString ||
-				    geometryType == WkbGeometryType.MultiPolygon)
+				if (geometryType == WkbGeometryType.MultiPolygon)
+				{
+					return new MultiPolycurve(ReadMultiPolygonCore(reader));
+				}
+
+				if (geometryType == WkbGeometryType.MultiLineString)
 				{
 					return ReadMultiPolycurveCore(reader, geometryType, ordinates);
 				}
@@ -118,17 +122,7 @@ namespace ProSuite.Commons.Geom.Wkb
 
 				if (geometryType == WkbGeometryType.MultiPolygon)
 				{
-					uint polygonCount = reader.ReadUInt32();
-
-					var result = new List<RingGroup>((int) polygonCount);
-
-					for (int i = 0; i < polygonCount; i++)
-					{
-						ReadWkbType(reader, false,
-						            out geometryType, out ordinates);
-
-						result.Add(ReadPolygonCore(reader, ordinates));
-					}
+					List<RingGroup> result = ReadMultiPolygonCore(reader);
 
 					return result;
 				}
@@ -281,6 +275,26 @@ namespace ProSuite.Commons.Geom.Wkb
 
 			// Allow empty?
 			return null;
+		}
+
+		private List<RingGroup> ReadMultiPolygonCore(BinaryReader reader)
+		{
+			uint polygonCount = reader.ReadUInt32();
+
+			var result = new List<RingGroup>((int) polygonCount);
+
+			for (int i = 0; i < polygonCount; i++)
+			{
+				ReadWkbType(reader, false,
+				            out WkbGeometryType geometryType, out Ordinates expected);
+
+				Assert.AreEqual(WkbGeometryType.Polygon, geometryType,
+				                "Unexpected geometry type");
+
+				result.Add(ReadPolygonCore(reader, expected));
+			}
+
+			return result;
 		}
 	}
 }

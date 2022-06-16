@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
@@ -88,7 +89,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			{
 				IFeature f = lineFc.CreateFeature();
 				f.Shape = CurveConstruction.StartLine(0, 0).LineTo(70, 70)
-				                           .MoveTo(10, 0).LineTo(20, 5).Curve;
+										   .MoveTo(10, 0).LineTo(20, 5).Curve;
 				f.Store();
 			}
 
@@ -155,17 +156,102 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			}
 		}
 
-		private IFeatureClass CreateFeatureClass(IFeatureWorkspace ws, string name,
-		                                         esriGeometryType geometryType)
+		[Test]
+		public void CanAccessAttributes()
 		{
-			IFieldsEdit fields = new FieldsClass();
-			fields.AddField(FieldUtils.CreateOIDField());
-			fields.AddField(FieldUtils.CreateShapeField(
-				                "Shape", geometryType,
-				                SpatialReferenceUtils.CreateSpatialReference
-				                ((int) esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95,
-				                 true), 1000));
-			IFeatureClass fc = DatasetUtils.CreateSimpleFeatureClass(ws, name, fields);
+			IFeatureWorkspace ws = TestWorkspaceUtils.CreateInMemoryWorkspace("TrAttributes");
+
+			IFeatureClass polyFc =
+				CreateFeatureClass(ws, "lineFc", esriGeometryType.esriGeometryPolygon,
+					new[] { FieldUtils.CreateIntegerField("IntField") });
+
+			{
+				IFeature f = polyFc.CreateFeature();
+				f.Value[polyFc.FindField("IntField")] = 12;
+				f.Shape =
+					CurveConstruction
+						.StartPoly(0, 0).LineTo(30, 0).LineTo(30, 30).LineTo(0, 30).LineTo(0, 0)
+						.MoveTo(10, 10).LineTo(10, 20).LineTo(20, 20).LineTo(20, 10).LineTo(10, 10)
+						.MoveTo(22, 22).LineTo(22, 24).LineTo(24, 24).LineTo(24, 22).LineTo(22, 22)
+						.MoveTo(13, 13).LineTo(17, 13).LineTo(17, 17).LineTo(13, 17).LineTo(13, 13)
+						.MoveTo(40, 40).LineTo(50, 40).LineTo(50, 50).LineTo(40, 50).LineTo(40, 40)
+						.ClosePolygon();
+				f.Store();
+			}
+
+			TrMultipolygonToPolygon trMp2p = new TrMultipolygonToPolygon(ReadOnlyTableFactory.Create(polyFc));
+			{
+				QaConstraint test = new QaConstraint(
+					trMp2p.GetTransformed(),
+					$"T0.IntField < 12 AND {TrMultipolygonToPolygon.AttrInnerRingIndex} = 1 OR {TrMultipolygonToPolygon.AttrOuterRingIndex} = 1");
+
+				var runner = new QaContainerTestRunner(1000, test);
+				runner.Execute();
+				Assert.AreEqual(2, runner.Errors.Count);
+			}
+
+			TrPolyToLine trP2l = new TrPolyToLine(trMp2p.GetTransformed());
+			{
+				QaConstraint test = new QaConstraint(
+					trP2l.GetTransformed(),
+					$"t0.T0.IntField < 12 AND t0.{TrMultipolygonToPolygon.AttrInnerRingIndex} = 1 OR t0.{TrMultipolygonToPolygon.AttrOuterRingIndex} = 1");
+
+				var runner = new QaContainerTestRunner(1000, test);
+				runner.Execute();
+				Assert.AreEqual(2, runner.Errors.Count);
+			}
+
+			TrMultilineToLine trMl2l = new TrMultilineToLine(trP2l.GetTransformed());
+			{
+				string constr =
+					$"t0.t0.T0.IntField < 12 " +
+					$" AND t0.t0.{TrMultipolygonToPolygon.AttrInnerRingIndex} = 1" +
+					$" OR t0.t0.{TrMultipolygonToPolygon.AttrOuterRingIndex} = 1" +
+					$" OR {TrMultilineToLine.AttrPartIndex} <> 0";
+				QaConstraint test = new QaConstraint(
+					trMl2l.GetTransformed(), constr);
+
+				var runner = new QaContainerTestRunner(1000, test);
+				runner.Execute();
+				Assert.AreEqual(2, runner.Errors.Count);
+			}
+
+			TrGeometryToPoints trG2p = new TrGeometryToPoints(trP2l.GetTransformed(), GeometryComponent.Vertices);
+			{
+				string constr =
+					$"t0.t0.T0.IntField < 12 " +
+					$" AND t0.t0.{TrMultipolygonToPolygon.AttrInnerRingIndex} = 1" +
+					$" OR t0.t0.{TrMultipolygonToPolygon.AttrOuterRingIndex} = 1" +
+					$" OR {TrGeometryToPoints.AttrPartIndex} <> 0" +
+					$" OR {TrGeometryToPoints.AttrVertexIndex} <> 0";
+				QaConstraint test = new QaConstraint(
+					trG2p.GetTransformed(), constr);
+
+				var runner = new QaContainerTestRunner(1000, test);
+				runner.Execute();
+				Assert.AreEqual(2, runner.Errors.Count);
+			}
+
+		}
+
+		private IFeatureClass CreateFeatureClass(IFeatureWorkspace ws, string name,
+												 esriGeometryType geometryType,
+												 IList<IField> customFields = null)
+		{
+			List<IField> fields = new List<IField>();
+			fields.Add(FieldUtils.CreateOIDField());
+			if (customFields != null)
+			{
+				fields.AddRange(customFields);
+			}
+			fields.Add(FieldUtils.CreateShapeField(
+						   "Shape", geometryType,
+						   SpatialReferenceUtils.CreateSpatialReference
+						   ((int)esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95,
+							true), 1000));
+
+			IFeatureClass fc = DatasetUtils.CreateSimpleFeatureClass(ws, name,
+				FieldUtils.CreateFields(fields));
 			return fc;
 		}
 	}

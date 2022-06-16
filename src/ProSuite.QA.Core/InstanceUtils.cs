@@ -7,6 +7,7 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Reflection;
+using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Core
 {
@@ -27,23 +28,42 @@ namespace ProSuite.QA.Core
 					$"{typeName} does not exist in {assemblyName}");
 			}
 
-			if (result.GetConstructors().Length <= constructorId)
-			{
-				throw new TypeLoadException(
-					$"invalid constructorId {constructorId}, {typeName} has " +
-					$"{result.GetConstructors().Length} constructors");
-			}
+			AssertConstructorExists(result, constructorId);
 
 			return result;
+		}
+
+		public static void AssertConstructorExists([NotNull] Type type, int constructorId)
+		{
+			Assert.ArgumentNotNull(type, nameof(type));
+
+			if (type.GetConstructors().Length <= constructorId)
+			{
+				throw new TypeLoadException(
+					$"invalid constructorId {constructorId}, {type} has " +
+					$"{type.GetConstructors().Length} constructors");
+			}
 		}
 
 		public static T CreateInstance<T>([NotNull] Type type,
 		                                  int constructorId,
 		                                  object[] constructorArgs)
 		{
+			AssertConstructorExists(type, constructorId);
+
 			ConstructorInfo constructor = type.GetConstructors()[constructorId];
 
 			return (T) constructor.Invoke(constructorArgs);
+		}
+
+		[NotNull]
+		public static string GetParameterNameString([NotNull] TestParameter testParameter)
+		{
+			Assert.ArgumentNotNull(testParameter, nameof(testParameter));
+
+			return ! testParameter.IsConstructorParameter
+				       ? string.Format("[{0}]", testParameter.Name)
+				       : testParameter.Name;
 		}
 
 		[NotNull]
@@ -74,9 +94,11 @@ namespace ProSuite.QA.Core
 		public static IList<TestParameter> CreateParameters([NotNull] Type type,
 		                                                    int constructorId)
 		{
-			ConstructorInfo constr = type.GetConstructors()[constructorId];
+			AssertConstructorExists(type, constructorId);
 
-			ParameterInfo[] constructorParameters = constr.GetParameters();
+			ConstructorInfo constructor = type.GetConstructors()[constructorId];
+
+			ParameterInfo[] constructorParameters = constructor.GetParameters();
 			PropertyInfo[] properties = type.GetProperties();
 
 			var testParameterProperties =
@@ -137,7 +159,7 @@ namespace ProSuite.QA.Core
 			}
 
 			foreach (KeyValuePair<PropertyInfo, TestParameterAttribute> pair in
-				testParameterProperties)
+			         testParameterProperties)
 			{
 				PropertyInfo property = pair.Key;
 				TestParameterAttribute attribute = pair.Value;
@@ -156,13 +178,13 @@ namespace ProSuite.QA.Core
 		}
 
 		[NotNull]
-		public static string GetTestSignature([NotNull] IInstanceInfo testInfo)
+		public static string GetTestSignature([NotNull] IInstanceInfo instanceInfo)
 		{
-			Assert.ArgumentNotNull(testInfo, nameof(testInfo));
+			Assert.ArgumentNotNull(instanceInfo, nameof(instanceInfo));
 
 			var sb = new StringBuilder();
 
-			foreach (TestParameter testParameter in testInfo.Parameters)
+			foreach (TestParameter testParameter in instanceInfo.Parameters)
 			{
 				if (sb.Length > 1)
 				{
@@ -176,6 +198,7 @@ namespace ProSuite.QA.Core
 
 				sb.Append(GetParameterTypeString(testParameter));
 				sb.AppendFormat(" {0}", testParameter.Name);
+
 				if (! testParameter.IsConstructorParameter)
 				{
 					sb.Append("]");
@@ -186,9 +209,13 @@ namespace ProSuite.QA.Core
 		}
 
 		[CanBeNull]
-		public static string GetDescription([NotNull] ConstructorInfo constructorInfo)
+		public static string GetDescription([NotNull] Type type, int constructorId)
 		{
-			return ReflectionUtils.GetDescription(constructorInfo);
+			AssertConstructorExists(type, constructorId);
+
+			ConstructorInfo constructor = type.GetConstructors()[constructorId];
+
+			return ReflectionUtils.GetDescription(constructor);
 		}
 
 		[CanBeNull]
@@ -201,6 +228,72 @@ namespace ProSuite.QA.Core
 		public static string GetDescription([NotNull] PropertyInfo propertyInfo)
 		{
 			return ReflectionUtils.GetDescription(propertyInfo, inherit: false);
+		}
+
+		public static string[] GetCategories([NotNull] Type type)
+		{
+			return ReflectionUtils.GetCategories(type);
+		}
+
+		public static bool IsObsolete([NotNull] Type type)
+		{
+			return IsObsolete(type, out _);
+		}
+
+		public static bool IsObsolete([NotNull] Type type,
+		                              [CanBeNull] out string message)
+		{
+			return ReflectionUtils.IsObsolete(type, out message);
+		}
+
+		public static bool IsObsolete([NotNull] Type type, int constructorId)
+		{
+			return IsObsolete(type, constructorId, out _);
+		}
+
+		public static bool IsObsolete([NotNull] Type type,
+		                              int constructorId,
+		                              [CanBeNull] out string message)
+		{
+			Assert.ArgumentNotNull(type, nameof(type));
+
+			if (ReflectionUtils.IsObsolete(type, out message))
+			{
+				return true;
+			}
+
+			AssertConstructorExists(type, constructorId);
+
+			ConstructorInfo ctorInfo = type.GetConstructors()[constructorId];
+
+			return ReflectionUtils.IsObsolete(ctorInfo, out message);
+		}
+
+		public static bool IsInternallyUsed([NotNull] Type type)
+		{
+			return HasInternallyUsedAttribute(type);
+		}
+
+		public static bool IsInternallyUsed([NotNull] Type type, int constructorId)
+		{
+			Assert.ArgumentNotNull(type, nameof(type));
+
+			if (HasInternallyUsedAttribute(type))
+			{
+				return true;
+			}
+
+			AssertConstructorExists(type, constructorId);
+
+			ConstructorInfo constructor = type.GetConstructors()[constructorId];
+
+			return HasInternallyUsedAttribute(constructor);
+		}
+
+		public static bool HasInternallyUsedAttribute(
+			[NotNull] ICustomAttributeProvider attributeProvider)
+		{
+			return ReflectionUtils.HasAttribute<InternallyUsedTestAttribute>(attributeProvider);
 		}
 
 		[NotNull]

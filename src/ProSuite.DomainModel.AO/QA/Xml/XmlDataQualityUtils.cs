@@ -46,16 +46,16 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			XmlDataQualityDocument document = Deserialize(xml);
 
 			Assert.ArgumentCondition(document.GetAllQualitySpecifications().Any(),
-			                         "The document does not contain any quality specifications");
+									 "The document does not contain any quality specifications");
 
 			AssertUniqueQualitySpecificationNames(document);
 			AssertUniqueQualityConditionNames(document);
 			AssertUniqueTestDescriptorNames(document);
 
 			qualitySpecifications = document.GetAllQualitySpecifications()
-			                                .Select(p => p.Key)
-			                                .Where(qs => qs.Elements.Count > 0)
-			                                .ToList();
+											.Select(p => p.Key)
+											.Where(qs => qs.Elements.Count > 0)
+											.ToList();
 
 			return document;
 		}
@@ -121,7 +121,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 							{
 								reader.MoveToAttribute(iAttr);
 								if (reader.Name == "xmlns" && reader.Value ==
-								    "urn:EsriDE.ProSuite.QA.QualitySpecifications-2.0")
+									"urn:EsriDE.ProSuite.QA.QualitySpecifications-2.0")
 								{
 									schema = Schema.ProSuite_QA_QualitySpecifications_2_0;
 									version = QaSpecVersion.v2_0;
@@ -199,7 +199,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 				if (uuids.Contains(trimmedUuid))
 				{
 					Assert.Fail("Duplicate UUID in document: {0} (quality specification {1})",
-					            trimmedUuid, xmlQualitySpecification.Name);
+								trimmedUuid, xmlQualitySpecification.Name);
 				}
 
 				uuids.Add(trimmedUuid);
@@ -229,10 +229,10 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 				instanceConfigurations)
 			{
 				foreach (string uuid in new[]
-				                        {
-					                        xmlInstanceConfiguration.Uuid,
-					                        xmlInstanceConfiguration.VersionUuid
-				                        })
+										{
+											xmlInstanceConfiguration.Uuid,
+											xmlInstanceConfiguration.VersionUuid
+										})
 				{
 					if (StringUtils.IsNullOrEmptyOrBlank(uuid))
 					{
@@ -273,7 +273,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 				if (uuids.Contains(trimmedUuid))
 				{
 					Assert.Fail("Duplicate UUID in document: {0} (category {1})",
-					            trimmedUuid, xmlCategory.Name);
+								trimmedUuid, xmlCategory.Name);
 				}
 
 				uuids.Add(trimmedUuid);
@@ -336,7 +336,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 				string name = xmlInstanceConfiguration.Name;
 
 				Assert.True(StringUtils.IsNotEmpty(name),
-				            $"Missing {type} name in document");
+							$"Missing {type} name in document");
 
 				string trimmedName = name.Trim();
 
@@ -382,13 +382,13 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			{
 				string name = testDescriptor.Name;
 				Assert.True(StringUtils.IsNotEmpty(name),
-				            "Test descriptor with undefined name encountered");
+							"Test descriptor with undefined name encountered");
 
 				string trimmedName = name.Trim();
 
 				Assert.False(names.Contains(trimmedName),
-				             "Duplicate test descriptor name: {0}",
-				             trimmedName);
+							 "Duplicate test descriptor name: {0}",
+							 trimmedName);
 
 				names.Add(trimmedName);
 			}
@@ -407,14 +407,14 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 				string name = xmlQualitySpecification.Name;
 
 				Assert.True(StringUtils.IsNotEmpty(name),
-				            "Missing quality specification name in document");
+							"Missing quality specification name in document");
 
 				string trimmedName = name.Trim();
 
 				if (names.Contains(trimmedName))
 				{
 					Assert.Fail("Duplicate quality specification name in document: {0}",
-					            trimmedName);
+								trimmedName);
 				}
 
 				names.Add(trimmedName);
@@ -435,14 +435,14 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 				string name = xmlQualitySpecificationElement.QualityConditionName;
 
 				Assert.True(StringUtils.IsNotEmpty(name),
-				            "Missing quality condition reference name in document");
+							"Missing quality condition reference name in document");
 
 				string trimmedName = name.Trim();
 
 				if (names.Contains(trimmedName))
 				{
 					Assert.Fail("Duplicate quality condition reference in document: {0}",
-					            trimmedName);
+								trimmedName);
 				}
 
 				names.Add(trimmedName);
@@ -458,8 +458,8 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			Assert.ArgumentNotNull(document, nameof(document));
 
 			return FindXmlQualitySpecification(document.GetAllQualitySpecifications(),
-			                                   qualitySpecificationName,
-			                                   out category);
+											   qualitySpecificationName,
+											   out category);
 		}
 
 		[CanBeNull]
@@ -469,11 +469,11 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		{
 			Assert.ArgumentNotNull(qualitySpecifications, nameof(qualitySpecifications));
 			Assert.ArgumentNotNullOrEmpty(qualitySpecificationName,
-			                              nameof(qualitySpecificationName));
+										  nameof(qualitySpecificationName));
 
 			return qualitySpecifications.FirstOrDefault(
 				qs => string.Equals(qs.Name, qualitySpecificationName,
-				                    StringComparison.OrdinalIgnoreCase));
+									StringComparison.OrdinalIgnoreCase));
 		}
 
 		[CanBeNull]
@@ -485,7 +485,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		{
 			Assert.ArgumentNotNull(qualitySpecifications, nameof(qualitySpecifications));
 			Assert.ArgumentNotNullOrEmpty(qualitySpecificationName,
-			                              nameof(qualitySpecificationName));
+										  nameof(qualitySpecificationName));
 
 			string trimmedName = qualitySpecificationName.Trim();
 
@@ -497,7 +497,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			{
 				availableNames.Add(pair.Key.Name);
 				if (string.Equals(pair.Key.Name, trimmedName,
-				                  StringComparison.OrdinalIgnoreCase))
+								  StringComparison.OrdinalIgnoreCase))
 				{
 					category = pair.Value;
 					return pair.Key;
@@ -536,11 +536,11 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			hasUndefinedWorkspaceReference = false;
 
 			AddWorkspaceIds(referencedWorkspaceIds, instanceConfigurations, conditionsCache,
-			                ref hasUndefinedWorkspaceReference);
+							ref hasUndefinedWorkspaceReference);
 
 			return conditionsCache.Workspaces?.Where(
-				       workspace => referencedWorkspaceIds.Contains(workspace.ID)).ToList()
-			       ?? new List<XmlWorkspace>();
+					   workspace => referencedWorkspaceIds.Contains(workspace.ID)).ToList()
+				   ?? new List<XmlWorkspace>();
 		}
 
 		private static void AddWorkspaceIds<T>(
@@ -555,20 +555,20 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 				foreach (XmlTestParameterValue xmlTestParameterValue in
 					xmlInstanceConfig.EnumParameterValues(ignoreEmptyValues: true))
 				{
-					if (! string.IsNullOrWhiteSpace(xmlTestParameterValue.TransformerName))
+					if (!string.IsNullOrWhiteSpace(xmlTestParameterValue.TransformerName))
 					{
-						if (! conditionsCache.TryGetTransformer(
-							    xmlTestParameterValue.TransformerName,
-							    out XmlTransformerConfiguration transformerConfiguration))
+						if (!conditionsCache.TryGetTransformer(
+								xmlTestParameterValue.TransformerName,
+								out XmlTransformerConfiguration transformerConfiguration))
 						{
 							hasUndefinedWorkspaceReference = true;
 							// TODO: handle missing
 							continue;
 						}
 
-						AddWorkspaceIds(workspaceIds, new[] {transformerConfiguration},
-						                conditionsCache,
-						                ref hasUndefinedWorkspaceReference);
+						AddWorkspaceIds(workspaceIds, new[] { transformerConfiguration },
+										conditionsCache,
+										ref hasUndefinedWorkspaceReference);
 					}
 
 					var datasetTestParameterValue =
@@ -586,8 +586,8 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 						var rowFilterConfigurations = new List<XmlInstanceConfiguration>();
 						foreach (string name in rowFilterNames)
 						{
-							if (! conditionsCache.TryGetRowFilter(
-								    name, out XmlRowFilterConfiguration rowFilterConfiguration))
+							if (!conditionsCache.TryGetRowFilter(
+									name, out XmlRowFilterConfiguration rowFilterConfiguration))
 							{
 								hasUndefinedWorkspaceReference = true;
 								// TODO: handle missing
@@ -598,8 +598,8 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 						}
 
 						AddWorkspaceIds(workspaceIds, rowFilterConfigurations,
-						                conditionsCache,
-						                ref hasUndefinedWorkspaceReference);
+										conditionsCache,
+										ref hasUndefinedWorkspaceReference);
 					}
 
 					if (string.IsNullOrEmpty(datasetTestParameterValue.WorkspaceId))
@@ -626,8 +626,8 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 						var issueFilterConfigurations = new List<XmlInstanceConfiguration>();
 						foreach (string name in issueFilterNames)
 						{
-							if (! conditionsCache.TryGetIssueFilter(
-								    name, out XmlIssueFilterConfiguration issueFilterConfiguration))
+							if (!conditionsCache.TryGetIssueFilter(
+									name, out XmlIssueFilterConfiguration issueFilterConfiguration))
 							{
 								hasUndefinedWorkspaceReference = true;
 								// TODO: handle missing
@@ -638,8 +638,8 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 						}
 
 						AddWorkspaceIds(workspaceIds, issueFilterConfigurations,
-						                conditionsCache,
-						                ref hasUndefinedWorkspaceReference);
+										conditionsCache,
+										ref hasUndefinedWorkspaceReference);
 					}
 				}
 			}
@@ -684,8 +684,8 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 
 			IEnumerable<KeyValuePair<XmlQualityCondition, XmlDataQualityCategory>>
 				qualityConditions = document.GetAllQualityConditions()
-				                            .Where(pair => referencedConditionNames.Contains(
-					                                   pair.Key.Name?.Trim()));
+											.Where(pair => referencedConditionNames.Contains(
+													   pair.Key.Name?.Trim()));
 
 			return new XmlQualityConditionsCache(document, qualityConditions);
 		}
@@ -701,9 +701,9 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			Assert.ArgumentNotNull(xmlSpecification, nameof(xmlSpecification));
 
 			var result = new QualitySpecification(xmlSpecification.Name)
-			             {
-				             Category = category
-			             };
+			{
+				Category = category
+			};
 
 			string uuid = xmlSpecification.Uuid;
 			if (StringUtils.IsNotEmpty(uuid))
@@ -712,10 +712,10 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			}
 
 			UpdateSpecification(result,
-			                    xmlSpecification,
-			                    instanceConfigsByName,
-			                    category,
-			                    ignoreMissingConditions);
+								xmlSpecification,
+								instanceConfigsByName,
+								category,
+								ignoreMissingConditions);
 
 			return result;
 		}
@@ -733,7 +733,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			foreach (QualitySpecificationElement element in specificationElements)
 			{
 				result.AddElement(element.QualityCondition, element.StopOnError,
-				                  element.AllowErrors);
+								  element.AllowErrors);
 			}
 
 			return result;
@@ -754,8 +754,8 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			qualitySpecification.Description = xmlSpecification.Description;
 			qualitySpecification.Notes = xmlSpecification.Notes;
 			qualitySpecification.TileSize = xmlSpecification.TileSize <= 0
-				                                ? (double?) null
-				                                : xmlSpecification.TileSize;
+												? (double?)null
+												: xmlSpecification.TileSize;
 			qualitySpecification.Url = xmlSpecification.Url;
 			qualitySpecification.Hidden = xmlSpecification.Hidden;
 			qualitySpecification.Category = category;
@@ -771,7 +771,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 				xmlSpecification.Elements)
 			{
 				AddQualitySpecificationElement(qualitySpecification, configs,
-				                               xmlElement, ignoreMissingConditions);
+											   xmlElement, ignoreMissingConditions);
 			}
 		}
 
@@ -784,8 +784,8 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			Assert.True(StringUtils.IsNotEmpty(testDescriptorName), "test descriptor name");
 
 			TestDescriptor testDescriptor;
-			if (! testDescriptorsByName.TryGetValue(testDescriptorName.Trim(),
-			                                        out testDescriptor))
+			if (!testDescriptorsByName.TryGetValue(testDescriptorName.Trim(),
+													out testDescriptor))
 			{
 				Assert.Fail(
 					"Test descriptor '{0}' referenced in quality condition '{1}' does not exist", // TODO '... quality condition ...' correct?
@@ -808,8 +808,8 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		{
 			QualityCondition result =
 				cache.CreateQualityCondition(xmlQualityCondition, getDatasetsByName,
-				                             ignoreForUnknownDatasets,
-				                             out unknownDatasetParameters);
+											 ignoreForUnknownDatasets,
+											 out unknownDatasetParameters);
 
 			if (result == null)
 			{
@@ -854,8 +854,8 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 				xmlQualityCondition.EnumParameterValues(ignoreEmptyValues: true))
 			{
 				TestParameter testParameter;
-				if (! testParametersByName.TryGetValue(xmlTestParameterValue.TestParameterName,
-				                                       out testParameter))
+				if (!testParametersByName.TryGetValue(xmlTestParameterValue.TestParameterName,
+													   out testParameter))
 				{
 					throw new InvalidConfigurationException(
 						string.Format(
@@ -891,7 +891,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 					else
 					{
 						throw new InvalidProgramException("Unhandled TestParameterValue " +
-						                                  xmlTestParameterValue.TestParameterName);
+														  xmlTestParameterValue.TestParameterName);
 					}
 				}
 
@@ -912,8 +912,8 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		}
 
 		private static void InitializeProperties(QualityCondition qualityCondition,
-		                                         XmlQualityCondition fromXmlQualityCondition,
-		                                         DataQualityCategory category)
+												 XmlQualityCondition fromXmlQualityCondition,
+												 DataQualityCategory category)
 		{
 			qualityCondition.Description = fromXmlQualityCondition.Description;
 			qualityCondition.Notes = fromXmlQualityCondition.Notes;
@@ -955,20 +955,20 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			[NotNull] Func<IEnumerable<string>, IList<RowFilterConfiguration>> rowFilterProvider)
 		{
 			Dataset dataset = GetDataset(xmlDatasetTestParameterValue,
-			                             testParameter,
-			                             qualityConditionName,
-			                             modelsByWorkspaceId,
-			                             getDatasetsByName,
-			                             ignoreForUnknownDatasets);
+										 testParameter,
+										 qualityConditionName,
+										 modelsByWorkspaceId,
+										 getDatasetsByName,
+										 ignoreForUnknownDatasets);
 
 			if (dataset == null)
 			{
-				if (! testParameter.IsConstructorParameter)
+				if (!testParameter.IsConstructorParameter)
 				{
 					return new DatasetTestParameterValue(testParameter, dataset,
-					                                     xmlDatasetTestParameterValue.WhereClause,
-					                                     xmlDatasetTestParameterValue
-						                                     .UsedAsReferenceData);
+														 xmlDatasetTestParameterValue.WhereClause,
+														 xmlDatasetTestParameterValue
+															 .UsedAsReferenceData);
 				}
 
 				// Exception must already be thrown in GetDataset()
@@ -980,7 +980,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			TestParameterTypeUtils.AssertValidDataset(testParameter, dataset);
 
 			return CreateDatasetTestParameterValue(testParameter, xmlDatasetTestParameterValue,
-			                                       dataset, rowFilterProvider);
+												   dataset, rowFilterProvider);
 		}
 
 		[NotNull]
@@ -1040,7 +1040,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			{
 				Model model;
 				Assert.True(modelsByWorkspaceId.TryGetValue(workspaceId, out model),
-				            "No matching model found for workspace id '{0}'", workspaceId);
+							"No matching model found for workspace id '{0}'", workspaceId);
 
 				return ModelElementUtils.GetDatasetFromStoredName(datasetName,
 					model,
@@ -1066,8 +1066,8 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			IList<Dataset> datasets = getDatasetsByName(datasetName);
 
 			Assert.False(datasets.Count > 1,
-			             "More than one dataset found with name '{0}', for parameter '{1}' in quality condition '{2}'",
-			             datasetName, testParameter.Name, qualityConditionName);
+						 "More than one dataset found with name '{0}', for parameter '{1}' in quality condition '{2}'",
+						 datasetName, testParameter.Name, qualityConditionName);
 
 			if (datasets.Count == 0)
 			{
@@ -1077,8 +1077,8 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 				}
 
 				Assert.False(datasets.Count == 0,
-				             "Dataset '{0}' for parameter '{1}' in quality condition '{2}' not found",
-				             datasetName, testParameter.Name, qualityConditionName);
+							 "Dataset '{0}' for parameter '{1}' in quality condition '{2}' not found",
+							 datasetName, testParameter.Name, qualityConditionName);
 			}
 
 			return datasets[0];
@@ -1091,17 +1091,17 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			[CanBeNull] Func<string, Model> getModelByName = null)
 		{
 			var category = new DataQualityCategory(assignUuid: true)
-			               {
-				               Name = xmlCategory.Name,
-				               Abbreviation = xmlCategory.Abbreviation,
-				               Description = xmlCategory.Description,
-				               ListOrder = xmlCategory.ListOrder,
-				               CanContainQualityConditions =
-					               xmlCategory.CanContainQualityConditions,
-				               CanContainQualitySpecifications =
-					               xmlCategory.CanContainQualitySpecifications,
-				               CanContainSubCategories = xmlCategory.CanContainSubCategories
-			               };
+			{
+				Name = xmlCategory.Name,
+				Abbreviation = xmlCategory.Abbreviation,
+				Description = xmlCategory.Description,
+				ListOrder = xmlCategory.ListOrder,
+				CanContainQualityConditions =
+								   xmlCategory.CanContainQualityConditions,
+				CanContainQualitySpecifications =
+								   xmlCategory.CanContainQualitySpecifications,
+				CanContainSubCategories = xmlCategory.CanContainSubCategories
+			};
 
 			ImportMetadata(category, xmlCategory);
 
@@ -1126,7 +1126,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 				else
 				{
 					_msg.WarnFormat("Default model not found for category {0}: {1}",
-					                category.Name, xmlCategory.DefaultModelName);
+									category.Name, xmlCategory.DefaultModelName);
 				}
 			}
 
@@ -1134,7 +1134,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		}
 
 		public static void TransferProperties([NotNull] DataQualityCategory from,
-		                                      [NotNull] DataQualityCategory to)
+											  [NotNull] DataQualityCategory to)
 		{
 			Assert.ArgumentNotNull(from, nameof(from));
 			Assert.ArgumentNotNull(to, nameof(to));
@@ -1180,7 +1180,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		}
 
 		public static void TransferProperties([NotNull] QualityCondition from,
-		                                      [NotNull] QualityCondition to)
+											  [NotNull] QualityCondition to)
 		{
 			Assert.ArgumentNotNull(from, nameof(from));
 			Assert.ArgumentNotNull(to, nameof(to));
@@ -1198,7 +1198,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 
 			to.Category = from.Category;
 
-			if (! AreParameterValuesEqual(to.ParameterValues, from.ParameterValues))
+			if (!AreParameterValuesEqual(to.ParameterValues, from.ParameterValues))
 			{
 				to.ClearParameterValues();
 				foreach (TestParameterValue value in from.ParameterValues)
@@ -1239,8 +1239,8 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			{
 				throw new InvalidOperationException(
 					string.Format("Invalid xml test descriptor '{0}': " +
-					              "neither test class nor test factory is defined",
-					              xmlTestDescriptor.Name));
+								  "neither test class nor test factory is defined",
+								  xmlTestDescriptor.Name));
 			}
 
 			result.Description = xmlTestDescriptor.Description;
@@ -1261,8 +1261,8 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 				Type factoryType = configurator.GetFactoryType();
 
 				Assert.True(testClassType == null != (factoryType == null),
-				            "Invalid TestConfigurator {0}: Combination testClass = {1} and factory = {2} not allowed",
-				            testConfigDescriptor, testClassType, factoryType);
+							"Invalid TestConfigurator {0}: Combination testClass = {1} and factory = {2} not allowed",
+							testConfigDescriptor, testClassType, factoryType);
 
 				if (testClassType != null)
 				{
@@ -1284,7 +1284,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			}
 
 			Assert.NotNull(TestFactoryUtils.GetTestFactory(result),
-			               "Error in xml test descriptor '{0}'", result.Name);
+						   "Error in xml test descriptor '{0}'", result.Name);
 
 			return result;
 		}
@@ -1310,7 +1310,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		}
 
 		public static void ExportMetadata([NotNull] IEntityMetadata entity,
-		                                  [NotNull] IXmlEntityMetadata xml)
+										  [NotNull] IXmlEntityMetadata xml)
 		{
 			Assert.ArgumentNotNull(entity, nameof(entity));
 			Assert.ArgumentNotNull(xml, nameof(xml));
@@ -1322,19 +1322,19 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		}
 
 		public static void TransferProperties([NotNull] TestDescriptor from,
-		                                      [NotNull] TestDescriptor to,
-		                                      bool updateName,
-		                                      bool updateProperties)
+											  [NotNull] TestDescriptor to,
+											  bool updateName,
+											  bool updateProperties)
 		{
 			Assert.ArgumentNotNull(from, nameof(from));
 			Assert.ArgumentNotNull(to, nameof(to));
 
 			if (updateName)
 			{
-				if (! string.Equals(to.Name, from.Name))
+				if (!string.Equals(to.Name, from.Name))
 				{
 					_msg.InfoFormat("Updating name of test descriptor {0} -> {1}", to.Name,
-					                from.Name);
+									from.Name);
 
 					to.Name = from.Name;
 				}
@@ -1385,13 +1385,13 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			}
 
 			Assert.NotNullOrEmpty(xmlWorkspace.FactoryProgId,
-			                      "no factory progId is specified for xml workspace id '{0}'",
-			                      xmlWorkspace.ID);
+								  "no factory progId is specified for xml workspace id '{0}'",
+								  xmlWorkspace.ID);
 
 			try
 			{
 				return WorkspaceUtils.OpenWorkspace(xmlWorkspace.ConnectionString,
-				                                    xmlWorkspace.FactoryProgId);
+													xmlWorkspace.FactoryProgId);
 			}
 			catch (Exception e)
 			{
@@ -1412,10 +1412,10 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		public static DateTime? ParseDateTime([CanBeNull] string dateTimeString)
 		{
 			return string.IsNullOrEmpty(dateTimeString)
-				       ? (DateTime?) null
-				       : DateTime.Parse(dateTimeString,
-				                        CultureInfo.InvariantCulture,
-				                        DateTimeStyles.AssumeLocal);
+					   ? (DateTime?)null
+					   : DateTime.Parse(dateTimeString,
+										CultureInfo.InvariantCulture,
+										DateTimeStyles.AssumeLocal);
 		}
 
 		public static bool AreEqual(DateTime? dateTime1, DateTime? dateTime2)
@@ -1434,7 +1434,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			bool exportAllCategories,
 			bool exportNotes,
 			out T result)
-		where T: XmlDataQualityDocument, new()
+		where T : XmlDataQualityDocument, new()
 		{
 			Assert.ArgumentNotNull(qualitySpecifications, nameof(qualitySpecifications));
 			Assert.ArgumentNotNull(testDescriptors, nameof(testDescriptors));
@@ -1442,24 +1442,82 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			result = new T();
 
 			Populate(result,
-			         qualitySpecifications.ToList(),
-			         testDescriptors,
-			         categories,
-			         exportMetadata,
-			         exportConnections,
-			         exportConnectionFilePaths,
-			         exportAllCategories,
-			         exportNotes);
+					 qualitySpecifications.ToList(),
+					 testDescriptors,
+					 categories,
+					 exportMetadata,
+					 exportConnections,
+					 exportConnectionFilePaths,
+					 exportAllCategories,
+					 exportNotes);
 		}
 
 		public static void ExportDocument<T>([NotNull] T document,
-		                                     [NotNull] string xmlFilePath)
+											 [NotNull] string xmlFilePath)
 			where T : XmlDataQualityDocument
 		{
 			Assert.ArgumentNotNull(document, nameof(document));
 			Assert.ArgumentNotNullOrEmpty(xmlFilePath, nameof(xmlFilePath));
 
+			// Sort entries
+			SortSpecifications(document.QualitySpecifications);
+			SortQualityConditions(document.QualityConditions);
+
+			StringComparison o = StringComparison.Ordinal;
+
+			document.Transformers?.Sort((x, y) => string.Compare(x.Name, y.Name, o));
+			document.IssueFilters?.Sort((x, y) => string.Compare(x.Name, y.Name, o));
+			document.RowFilters?.Sort((x, y) => string.Compare(x.Name, y.Name, o));
+
+			document.TestDescriptors?.Sort((x, y) => string.Compare(x.Name, y.Name, o));
+			document.TransformerDescriptors?.Sort((x, y) => string.Compare(x.Name, y.Name, o));
+			document.IssueFilterDescriptors?.Sort((x, y) => string.Compare(x.Name, y.Name, o));
+			document.RowFilterDescriptors?.Sort((x, y) => string.Compare(x.Name, y.Name, o));
+
+			SortCategories(document.Categories);
+
 			XmlUtils.Serialize(document, xmlFilePath);
+		}
+
+		private static void SortCategories([CanBeNull] List<XmlDataQualityCategory> categories)
+		{
+			if (categories == null)
+			{
+				return;
+			}
+
+			StringComparison o = StringComparison.Ordinal;
+			foreach (XmlDataQualityCategory category in categories)
+			{
+				SortSpecifications(category.QualitySpecifications);
+				SortQualityConditions(category.QualityConditions);
+
+				SortCategories(category.SubCategories);
+			}
+		}
+
+		private static void SortSpecifications(
+			[CanBeNull] List<XmlQualitySpecification> specifications)
+		{
+			if (specifications == null)
+			{
+				return;
+			}
+
+			StringComparison o = StringComparison.Ordinal;
+			specifications.Sort((x, y) => string.Compare(x.Name, y.Name, o));
+			foreach (XmlQualitySpecification spec in specifications)
+			{
+				spec.Elements.Sort(
+					(x, y) => string.Compare(
+						x.QualityConditionName, y.QualityConditionName, o));
+			}
+		}
+
+		private static void SortQualityConditions([CanBeNull] List<XmlQualityCondition> qualityConditions)
+		{
+			qualityConditions?.Sort(
+				(x, y) => string.Compare(x.Name, y.Name, StringComparison.Ordinal));
 		}
 
 		[NotNull]
@@ -1503,8 +1561,8 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		{
 			const bool ignoreUnknownDataset = true;
 			return ModelElementUtils.GetDatasetFromStoredName(datasetParameterValue,
-			                                                  model,
-			                                                  ignoreUnknownDataset);
+															  model,
+															  ignoreUnknownDataset);
 		}
 
 		[NotNull]
@@ -1532,8 +1590,8 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 
 					string datasetWorkspaceId = datasetParameterValue.WorkspaceId ?? string.Empty;
 
-					if (! string.Equals(datasetWorkspaceId, workspaceId,
-					                    StringComparison.OrdinalIgnoreCase))
+					if (!string.Equals(datasetWorkspaceId, workspaceId,
+										StringComparison.OrdinalIgnoreCase))
 					{
 						continue;
 					}
@@ -1589,29 +1647,29 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			bool exportConnectionFilePath)
 		{
 			var result = new XmlWorkspace
-			             {
-				             ID = Escape(model.Name),
-				             ModelName = Escape(model.Name),
-				             Database = model.DefaultDatabaseName,
-				             SchemaOwner = model.DefaultDatabaseSchemaOwner
-			             };
+			{
+				ID = Escape(model.Name),
+				ModelName = Escape(model.Name),
+				Database = model.DefaultDatabaseName,
+				SchemaOwner = model.DefaultDatabaseSchemaOwner
+			};
 
 			if (exportWorkspaceConnections)
 			{
 				IWorkspace workspace = model.GetMasterDatabaseWorkspace();
 
 				Assert.NotNull(workspace,
-				               "Unable to determine workspace connection string for model {0} " +
-				               "(cannot open model master database workspace)",
-				               model.Name);
+							   "Unable to determine workspace connection string for model {0} " +
+							   "(cannot open model master database workspace)",
+							   model.Name);
 
 				string catalogPath = workspace.Type ==
-				                     esriWorkspaceType.esriRemoteDatabaseWorkspace &&
-				                     ! exportConnectionFilePath
-					                     ? null // don't use catalog path even if defined
-					                     : WorkspaceUtils.TryGetCatalogPath(workspace);
+									 esriWorkspaceType.esriRemoteDatabaseWorkspace &&
+									 !exportConnectionFilePath
+										 ? null // don't use catalog path even if defined
+										 : WorkspaceUtils.TryGetCatalogPath(workspace);
 
-				if (! string.IsNullOrEmpty(catalogPath))
+				if (!string.IsNullOrEmpty(catalogPath))
 				{
 					result.CatalogPath = catalogPath;
 				}
@@ -1642,7 +1700,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 
 					foreach (Dataset dataset in qualityCondition.GetDatasetParameterValues())
 					{
-						Model model = (Model) dataset.Model;
+						Model model = (Model)dataset.Model;
 						if (result.ContainsKey(model))
 						{
 							continue;
@@ -1672,15 +1730,15 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			Assert.ArgumentNotNull(qualitySpecification, nameof(qualitySpecification));
 
 			var result = new XmlQualitySpecification
-			             {
-				             Name = Escape(qualitySpecification.Name),
-				             Description = Escape(qualitySpecification.Description),
-				             Uuid = qualitySpecification.Uuid,
-				             ListOrder = qualitySpecification.ListOrder,
-				             TileSize = qualitySpecification.TileSize ?? 0,
-				             Url = Escape(qualitySpecification.Url),
-				             Hidden = qualitySpecification.Hidden
-			             };
+			{
+				Name = Escape(qualitySpecification.Name),
+				Description = Escape(qualitySpecification.Description),
+				Uuid = qualitySpecification.Uuid,
+				ListOrder = qualitySpecification.ListOrder,
+				TileSize = qualitySpecification.TileSize ?? 0,
+				Url = Escape(qualitySpecification.Url),
+				Hidden = qualitySpecification.Hidden
+			};
 
 			if (exportMetadata)
 			{
@@ -1724,28 +1782,28 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 
 			IDictionary<Model, string> workspaceIdsByModel =
 				AddWorkspaces(qualitySpecifications,
-				              document,
-				              exportWorkspaceConnections,
-				              exportConnectionFilePaths);
+							  document,
+							  exportWorkspaceConnections,
+							  exportConnectionFilePaths);
 
 			foreach (TestDescriptor testDescriptor in GetSorted(testDescriptors))
 			{
 				document.AddTestDescriptor(CreateXmlTestDescriptor(testDescriptor,
-					                           exportMetadata));
+											   exportMetadata));
 			}
 
 			IEnumerable<QualityCondition> qualityConditions =
 				GetQualityConditions(qualitySpecifications);
 
 			AddCategories(document, categories,
-			              c => qualityConditions.Where(qc => Equals(qc.Category, c))
-			                                    .ToList(),
-			              c => qualitySpecifications.Where(qs => Equals(qs.Category, c))
-			                                        .ToList(),
-			              workspaceIdsByModel,
-			              exportMetadata,
-			              exportAllCategories,
-			              exportNotes);
+						  c => qualityConditions.Where(qc => Equals(qc.Category, c))
+												.ToList(),
+						  c => qualitySpecifications.Where(qs => Equals(qs.Category, c))
+													.ToList(),
+						  workspaceIdsByModel,
+						  exportMetadata,
+						  exportAllCategories,
+						  exportNotes);
 
 			// TODO: add any test descriptors that are referenced in the quality specifications but were not passed in
 			// TODO: allow the test descriptors collection to be empty (or even null?)
@@ -1757,9 +1815,9 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 				{
 					document.AddQualityCondition(
 						CreateXmlQualityCondition(qualityCondition,
-						                          workspaceIdsByModel,
-						                          exportMetadata,
-						                          exportNotes));
+												  workspaceIdsByModel,
+												  exportMetadata,
+												  exportNotes));
 				}
 			}
 
@@ -1770,8 +1828,8 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 				{
 					document.AddQualitySpecification(
 						CreateXmlQualitySpecification(qualitySpecification,
-						                              exportMetadata,
-						                              exportNotes));
+													  exportMetadata,
+													  exportNotes));
 				}
 			}
 		}
@@ -1819,16 +1877,16 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			Assert.ArgumentNotNull(categories, nameof(categories));
 
 			foreach (DataQualityCategory category in GetSorted(categories.Where(
-				                                                   c => c.ParentCategory == null))
+																   c => c.ParentCategory == null))
 			)
 			{
 				document.AddCategory(CreateXmlDataQualityCategory(category,
-					                     getQualityConditions,
-					                     getQualitySpecifications,
-					                     workspaceIdsByModel,
-					                     exportMetadata,
-					                     exportAllCategories,
-					                     exportNotes));
+										 getQualityConditions,
+										 getQualitySpecifications,
+										 workspaceIdsByModel,
+										 exportMetadata,
+										 exportAllCategories,
+										 exportNotes));
 			}
 		}
 
@@ -1855,8 +1913,8 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 					CanContainQualitySpecifications = category.CanContainQualitySpecifications,
 					CanContainSubCategories = category.CanContainSubCategories,
 					DefaultModelName = category.DefaultModel == null
-						                   ? null
-						                   : Escape(category.DefaultModel.Name)
+										   ? null
+										   : Escape(category.DefaultModel.Name)
 				};
 
 			if (exportMetadata)
@@ -1874,9 +1932,9 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 					exportAllCategories,
 					exportNotes);
 
-				if (! exportAllCategories &&
-				    ! xmlSubCategory.ContainsQualityConditions &&
-				    ! xmlSubCategory.ContainsQualitySpecifications)
+				if (!exportAllCategories &&
+					!xmlSubCategory.ContainsQualityConditions &&
+					!xmlSubCategory.ContainsQualitySpecifications)
 				{
 					continue;
 				}
@@ -1887,9 +1945,9 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			foreach (QualityCondition condition in GetSorted(getQualityConditions(category)))
 			{
 				result.AddQualityCondition(CreateXmlQualityCondition(condition,
-					                           workspaceIdsByModel,
-					                           exportMetadata,
-					                           exportNotes));
+											   workspaceIdsByModel,
+											   exportMetadata,
+											   exportNotes));
 			}
 
 			foreach (
@@ -1897,8 +1955,8 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 				GetSorted(getQualitySpecifications(category)))
 			{
 				result.AddQualitySpecification(CreateXmlQualitySpecification(specification,
-					                               exportMetadata,
-					                               exportNotes));
+												   exportMetadata,
+												   exportNotes));
 			}
 
 			return result;
@@ -1940,21 +1998,21 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			[NotNull] ScalarTestParameterValue scValue)
 		{
 			return new XmlScalarTestParameterValue
-			       {
-				       TestParameterName = scValue.TestParameterName,
-				       Value = scValue.StringValue
-			       };
+			{
+				TestParameterName = scValue.TestParameterName,
+				Value = scValue.StringValue
+			};
 		}
 
 		private static void ImportMetadata([NotNull] IEntityMetadata entity,
-		                                   [NotNull] IXmlEntityMetadata xml)
+										   [NotNull] IXmlEntityMetadata xml)
 		{
 			Assert.ArgumentNotNull(entity, nameof(entity));
 			Assert.ArgumentNotNull(xml, nameof(xml));
 
 			// created
 
-			if (! string.IsNullOrEmpty(xml.CreatedByUser))
+			if (!string.IsNullOrEmpty(xml.CreatedByUser))
 			{
 				entity.CreatedByUser = xml.CreatedByUser;
 			}
@@ -1962,21 +2020,21 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			DateTime? xmlCreatedDate = ParseDateTime(xml.CreatedDate);
 
 			if (xmlCreatedDate != null &&
-			    ! AreEqual(entity.CreatedDate, xmlCreatedDate))
+				!AreEqual(entity.CreatedDate, xmlCreatedDate))
 			{
 				entity.CreatedDate = xmlCreatedDate;
 			}
 
 			// last changed 
 
-			if (! string.IsNullOrEmpty(xml.LastChangedByUser))
+			if (!string.IsNullOrEmpty(xml.LastChangedByUser))
 			{
 				entity.LastChangedByUser = xml.LastChangedByUser;
 			}
 
 			DateTime? xmlLastChangedDate = ParseDateTime(xml.LastChangedDate);
 			if (xmlLastChangedDate != null &&
-			    ! AreEqual(entity.LastChangedDate, xmlLastChangedDate))
+				!AreEqual(entity.LastChangedDate, xmlLastChangedDate))
 			{
 				entity.LastChangedDate = xmlLastChangedDate;
 			}
@@ -2001,33 +2059,33 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		}
 
 		private static void TransferMetadata([NotNull] IEntityMetadata from,
-		                                     [NotNull] IEntityMetadata to)
+											 [NotNull] IEntityMetadata to)
 		{
 			Assert.ArgumentNotNull(from, nameof(from));
 			Assert.ArgumentNotNull(to, nameof(to));
 
 			// created
 
-			if (! string.IsNullOrEmpty(from.CreatedByUser))
+			if (!string.IsNullOrEmpty(from.CreatedByUser))
 			{
 				to.CreatedByUser = from.CreatedByUser;
 			}
 
 			if (from.CreatedDate != null &&
-			    ! AreEqual(to.CreatedDate, from.CreatedDate))
+				!AreEqual(to.CreatedDate, from.CreatedDate))
 			{
 				to.CreatedDate = from.CreatedDate;
 			}
 
 			// last changed
 
-			if (! string.IsNullOrEmpty(from.LastChangedByUser))
+			if (!string.IsNullOrEmpty(from.LastChangedByUser))
 			{
 				to.LastChangedByUser = from.LastChangedByUser;
 			}
 
 			if (from.LastChangedDate != null &&
-			    ! AreEqual(to.LastChangedDate, from.LastChangedDate))
+				!AreEqual(to.LastChangedDate, from.LastChangedDate))
 			{
 				to.LastChangedDate = from.LastChangedDate;
 			}
@@ -2061,8 +2119,8 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			Assert.ArgumentNotNull(xmlClassDescriptor, nameof(xmlClassDescriptor));
 
 			return new ClassDescriptor(xmlClassDescriptor.TypeName,
-			                           xmlClassDescriptor.AssemblyName,
-			                           xmlClassDescriptor.Description);
+									   xmlClassDescriptor.AssemblyName,
+									   xmlClassDescriptor.Description);
 		}
 
 		private static void AddQualitySpecificationElement(
@@ -2074,7 +2132,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			string conditionName = xmlElement.QualityConditionName;
 
 			QualityCondition qualityCondition;
-			if (! instanceConfigs.TryGetValue(conditionName, out qualityCondition))
+			if (!instanceConfigs.TryGetValue(conditionName, out qualityCondition))
 			{
 				if (ignoreMissingConditions)
 				{
@@ -2082,7 +2140,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 				}
 
 				Assert.Fail("The quality condition reference '{0}' defined in import document " +
-				            "is based on an unknown quality condition.", conditionName);
+							"is based on an unknown quality condition.", conditionName);
 			}
 
 			bool? stopOnError = TranslateOverride(xmlElement.StopOnError);
@@ -2183,7 +2241,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 					StopOnError = testDescriptor.StopOnError,
 					AllowErrors = testDescriptor.AllowErrors,
 					TestClass = CreateXmlClassDescriptor(testDescriptor.TestClass,
-					                                     testDescriptor.TestConstructorId),
+														 testDescriptor.TestConstructorId),
 					TestFactoryDescriptor = CreateXmlClassDescriptor(
 						testDescriptor.TestFactoryDescriptor),
 					TestConfigurator = CreateXmlClassDescriptor(
@@ -2241,7 +2299,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			{
 				xmlCondition.ParameterValues.Add(
 					CreateXmlTestParameterValue(parameterValue, qualityCondition,
-					                            workspaceIdsByModel));
+												workspaceIdsByModel));
 			}
 
 			return xmlCondition;
@@ -2249,14 +2307,14 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 
 		private static Override EOverride(bool? value)
 		{
-			if (! value.HasValue)
+			if (!value.HasValue)
 			{
 				return Override.Null;
 			}
 
 			return value.Value
-				       ? Override.True
-				       : Override.False;
+					   ? Override.True
+					   : Override.False;
 		}
 
 		[NotNull]
@@ -2303,7 +2361,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 				datasetName = dataset.Name;
 				Assert.NotNull(dataset.Model, "dataset model is null");
 
-				if (! workspaceIdsByModel.TryGetValue((Model) dataset.Model, out workspaceId))
+				if (!workspaceIdsByModel.TryGetValue((Model)dataset.Model, out workspaceId))
 				{
 					throw new ArgumentException(
 						string.Format("model not found in dictionary: {0}", dataset.Model),
@@ -2317,13 +2375,13 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			}
 
 			return new XmlDatasetTestParameterValue
-			       {
-				       TestParameterName = datasetTestParameterValue.TestParameterName,
-				       Value = datasetName,
-				       WhereClause = Escape(datasetTestParameterValue.FilterExpression),
-				       UsedAsReferenceData = datasetTestParameterValue.UsedAsReferenceData,
-				       WorkspaceId = Escape(workspaceId)
-			       };
+			{
+				TestParameterName = datasetTestParameterValue.TestParameterName,
+				Value = datasetName,
+				WhereClause = Escape(datasetTestParameterValue.FilterExpression),
+				UsedAsReferenceData = datasetTestParameterValue.UsedAsReferenceData,
+				WorkspaceId = Escape(workspaceId)
+			};
 		}
 
 		[NotNull]

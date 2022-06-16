@@ -45,13 +45,9 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 			{
 				TestFactory testFactory = TestFactoryUtils.GetTestFactory(_entity);
 
-				_testDescription = testFactory != null
-					                   ? testFactory.GetTestDescription()
-					                   : string.Empty;
+				_testDescription = testFactory.TestDescription ?? string.Empty;
 
-				_categories = testFactory == null
-					              ? string.Empty
-					              : StringUtils.ConcatenateSorted(testFactory.TestCategories, ", ");
+				_categories = StringUtils.ConcatenateSorted(testFactory.TestCategories, ", ");
 
 				_parameters = InstanceUtils.GetTestSignature(testFactory);
 			}

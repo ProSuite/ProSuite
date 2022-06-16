@@ -34,7 +34,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		public override IGeometry ShapeCopy => Shape != null ? GeometryFactory.Clone(Shape) : null;
 		ITable IFeature.Table => Table;
-		IReadOnlyFeatureClass IReadOnlyFeature.FeatureClass => (IReadOnlyFeatureClass)Table;
+		IReadOnlyFeatureClass IReadOnlyFeature.FeatureClass => (IReadOnlyFeatureClass) Table;
 
 		public override IGeometry Shape
 		{
@@ -72,7 +72,6 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 				set_Value(_shapeFieldIndex, value);
 			}
 		}
-
 
 		public override esriFeatureType FeatureType => _featureClass.FeatureType;
 

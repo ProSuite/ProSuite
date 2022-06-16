@@ -12,25 +12,43 @@ namespace ProSuite.Commons.Geom
 
 		private IList<IntersectionPoint3D> _intersectionsAlongTarget;
 
-		private HashSet<IntersectionPoint3D> _multiIntersection;
+		private HashSet<IntersectionPoint3D> _multipleSourceIntersections;
 
 		private IList<IntersectionPoint3D> _intersectionsInboundTarget;
 		private IList<IntersectionPoint3D> _intersectionsOutboundTarget;
+		private IList<IntersectionPoint3D> _intersectionsInboundSource;
+		private IList<IntersectionPoint3D> _intersectionsOutboundSource;
+
 		private IntersectionPoint3D _currentStartIntersection;
+		private IList<IntersectionPoint3D> _navigableIntersections;
 
 		public SubcurveIntersectionPointNavigator(
-			IList<IntersectionPoint3D> intersectionPoints, ISegmentList source, ISegmentList target)
+			[NotNull] IList<IntersectionPoint3D> intersectionPoints,
+			[NotNull] ISegmentList source,
+			[NotNull] ISegmentList target,
+			double tolerance)
 		{
 			IntersectionPoints = intersectionPoints;
 			Source = source;
 			Target = target;
+			Tolerance = tolerance;
 		}
 
-		private ISegmentList Source { get; }
+		/// <summary>
+		/// Whether the source is a ring that is guaranteed to be closed in which case the start
+		/// and end points will be skipped if they are on the target.
+		/// If set to false, the properties <see cref="IntersectionsInboundTarget"/> and
+		/// <see cref="IntersectionsOutboundTarget"/> will throw an exception.
+		/// </summary>
+		public bool AssumeSourceRings { get; set; } = true;
 
-		private ISegmentList Target { get; }
+		public bool AllowBoundaryLoops { get; set; } = true;
 
-		private IList<IntersectionPoint3D> IntersectionPoints { get; }
+		public ISegmentList Source { get; }
+		public ISegmentList Target { get; }
+		public double Tolerance { get; }
+
+		public IList<IntersectionPoint3D> IntersectionPoints { get; }
 
 		private IList<IntersectionPoint3D> IntersectionsNotUsedForNavigation { get; } =
 			new List<IntersectionPoint3D>();
@@ -61,10 +79,27 @@ namespace ProSuite.Commons.Geom
 			}
 		}
 
-		public Dictionary<IntersectionPoint3D, KeyValuePair<int, int>> IntersectionOrders
+		/// <summary>
+		/// The intersections that allow navigating between source and target in a meaningful way.
+		/// The intersections are ordered along the source.
+		/// </summary>
+		public IList<IntersectionPoint3D> NavigableIntersections
+		{
+			get
+			{
+				if (_navigableIntersections == null)
+				{
+					_navigableIntersections = GetNavigableIntersections(AssumeSourceRings);
+				}
+
+				return _navigableIntersections;
+			}
+		}
+
+		private Dictionary<IntersectionPoint3D, KeyValuePair<int, int>> IntersectionOrders
 		{
 			get;
-			private set;
+			set;
 		}
 
 		/// <summary>
@@ -78,9 +113,9 @@ namespace ProSuite.Commons.Geom
 			{
 				if (_intersectionsOutboundTarget == null)
 				{
-					ClassifyIntersections(Source, Target,
-					                      out _intersectionsInboundTarget,
-					                      out _intersectionsOutboundTarget);
+					ClassifyIntersectionsTargetTrajectories(Source, Target,
+					                                        out _intersectionsInboundTarget,
+					                                        out _intersectionsOutboundTarget);
 				}
 
 				return Assert.NotNull(_intersectionsOutboundTarget);
@@ -98,16 +133,58 @@ namespace ProSuite.Commons.Geom
 			{
 				if (_intersectionsInboundTarget == null)
 				{
-					ClassifyIntersections(Source, Target,
-					                      out _intersectionsInboundTarget,
-					                      out _intersectionsOutboundTarget);
+					ClassifyIntersectionsTargetTrajectories(Source, Target,
+					                                        out _intersectionsInboundTarget,
+					                                        out _intersectionsOutboundTarget);
 				}
 
 				return _intersectionsInboundTarget;
 			}
 		}
 
-		private HashSet<IntersectionPoint3D> VisitedIntersections { get; } =
+		/// <summary>
+		/// Intersections at which the source 'departs' from the target ring boundary
+		/// to the outside. The source linestring does not necessarily have to arrive
+		/// from the inside.
+		/// </summary>
+		public IEnumerable<IntersectionPoint3D> IntersectionsOutboundSource
+		{
+			get
+			{
+				if (_intersectionsOutboundSource == null)
+				{
+					ClassifyIntersectionsSourceTrajectories(
+						Source, Target,
+						out _intersectionsInboundSource,
+						out _intersectionsOutboundSource);
+				}
+
+				return _intersectionsOutboundSource;
+			}
+		}
+
+		/// <summary>
+		/// Intersections at which the source 'departs' from the target ring boundary
+		/// to the inside. The source linestring does not necessarily have to arrive
+		/// from the outside.
+		/// </summary>
+		public IEnumerable<IntersectionPoint3D> IntersectionsInboundSource
+		{
+			get
+			{
+				if (_intersectionsInboundSource == null)
+				{
+					ClassifyIntersectionsSourceTrajectories(
+						Source, Target,
+						out _intersectionsInboundSource,
+						out _intersectionsOutboundSource);
+				}
+
+				return _intersectionsInboundSource;
+			}
+		}
+
+		public HashSet<IntersectionPoint3D> VisitedIntersections { get; } =
 			new HashSet<IntersectionPoint3D>();
 
 		public void SetStartIntersection(IntersectionPoint3D startIntersection)
@@ -116,8 +193,9 @@ namespace ProSuite.Commons.Geom
 			VisitedIntersections.Add(startIntersection);
 		}
 
-		public IntersectionPoint3D GetNextIntersection(IntersectionPoint3D previousIntersection,
-		                                               bool continueOnSource, bool continueForward)
+		public IntersectionPoint3D GetNextIntersection(
+			[NotNull] IntersectionPoint3D previousIntersection,
+			bool continueOnSource, bool continueForward)
 		{
 			IntersectionPoint3D nextIntersection;
 			IntersectionPoint3D subcurveStart = previousIntersection;
@@ -140,10 +218,16 @@ namespace ProSuite.Commons.Geom
 
 				previousIntersection = nextIntersection;
 
+				if (nextIntersection == null)
+				{
+					return null;
+				}
+
 				// Skip pseudo-breaks to avoid going astray due to minimal angle-differences:
 				// Example: GeomTopoOpUtilsTest.CanGetIntersectionAreaXYWithLinearBoundaryIntersection()
 			} while (SkipIntersection(subcurveStart, nextIntersection));
 
+			// Boundary loops that turned into interior rings could be detected here, if desired.
 			VisitedIntersections.Add(nextIntersection);
 
 			return nextIntersection;
@@ -193,29 +277,303 @@ namespace ProSuite.Commons.Geom
 			return false;
 		}
 
-		private bool SkipIntersection(IntersectionPoint3D subcurveStartIntersection,
-		                              IntersectionPoint3D nextIntersection)
+		public bool AllowConnectToSourcePartAlongOtherSourcePart(
+			[NotNull] IntersectionPoint3D fromOtherSourceIntersection,
+			int sourcePartToConnectTo)
+		{
+			IntersectionPoint3D current = fromOtherSourceIntersection;
+
+			bool isLoop = false;
+
+			// Any following intersection along the same target part that intersects the required source part?
+			while ((current = GetNextIntersectionAlongSource(
+				        current, fromOtherSourceIntersection)) != null)
+			{
+				// Only use intersections in the same part
+				if (fromOtherSourceIntersection.SourcePartIndex != current.SourcePartIndex)
+				{
+					continue;
+				}
+
+				if (IntersectionsNotUsedForNavigation.Contains(current))
+				{
+					continue;
+				}
+
+				if (current.Equals(fromOtherSourceIntersection))
+				{
+					// we're back where we started
+					isLoop = true;
+				}
+
+				foreach (IntersectionPoint3D duplicateOnNext in
+				         GetOtherSourceIntersections(current))
+				{
+					if (duplicateOnNext.Equals(fromOtherSourceIntersection))
+					{
+						// we're back
+						isLoop = true;
+					}
+				}
+
+				if (! isLoop)
+				{
+					// There was an intermediate source intersection from which we could potentially
+					// travel back via a target (this requires a unit test!)
+					return true;
+				}
+
+				return false;
+			}
+
+			// All intermediate source intersections where from a different part or were equal to the start
+			return false;
+		}
+
+		private IntersectionPoint3D GetNextIntersectionAlongSource(
+			IntersectionPoint3D current, IntersectionPoint3D startedAt)
+		{
+			if (current == null)
+			{
+				current = startedAt;
+			}
+
+			int currentIdx = IntersectionOrders[current].Key;
+
+			int nextAlongSourceIdx = currentIdx + 1;
+
+			if (nextAlongSourceIdx == IntersectionsAlongSource.Count)
+			{
+				nextAlongSourceIdx = 0;
+			}
+
+			IntersectionPoint3D nextAlongSource = IntersectionsAlongSource[nextAlongSourceIdx];
+
+			if (nextAlongSource == startedAt)
+			{
+				return null;
+			}
+
+			return nextAlongSource;
+		}
+
+		public bool HasMultipleSourceIntersections([NotNull] IntersectionPoint3D atIntersection)
+		{
+			if (_multipleSourceIntersections == null || _multipleSourceIntersections.Count == 0)
+			{
+				return false;
+			}
+
+			return _multipleSourceIntersections.Contains(atIntersection);
+		}
+
+		public IEnumerable<IntersectionPoint3D> GetOtherSourceIntersections(
+			[NotNull] IntersectionPoint3D atIntersection)
+		{
+			if (_multipleSourceIntersections == null || _multipleSourceIntersections.Count == 0)
+			{
+				yield break;
+			}
+
+			foreach (IntersectionPoint3D other in _multipleSourceIntersections)
+			{
+				if (other == atIntersection)
+				{
+					continue;
+				}
+
+				if (other.ReferencesSameTargetVertex(atIntersection, Target))
+				{
+					yield return other;
+				}
+			}
+		}
+
+		public bool EqualsStartIntersection([NotNull] IntersectionPoint3D intersection,
+		                                    bool avoidShortSegments = false)
+		{
+			if (intersection.Equals(_currentStartIntersection))
+			{
+				return true;
+			}
+
+			foreach (IntersectionPoint3D samePlaceIntersection in
+			         GetOtherSourceIntersections(intersection))
+			{
+				if (samePlaceIntersection.Equals(_currentStartIntersection))
+				{
+					if (intersection.SourcePartIndex != samePlaceIntersection.SourcePartIndex)
+					{
+						return true;
+					}
+
+					if (IsBoundaryLoopIntersection(intersection, samePlaceIntersection))
+					{
+						return true;
+					}
+
+					// If it's on the same rings we'll get there by curve navigation
+					// We could however, avoid short segments here:
+					if (avoidShortSegments)
+					{
+						return true;
+					}
+				}
+			}
+
+			return false;
+		}
+
+		/// <summary>
+		/// Gets all the first intersection along the source for each source part.
+		/// </summary>
+		/// <returns></returns>
+		/// <exception cref="NotImplementedException"></exception>
+		public IEnumerable<IntersectionPoint3D> GetFirstSourceIntersectionsPerPart()
+		{
+			int? currentSourcePart = null;
+			foreach (IntersectionPoint3D intersection in NavigableIntersections)
+			{
+				if (currentSourcePart != intersection.SourcePartIndex)
+				{
+					yield return intersection;
+					currentSourcePart = intersection.SourcePartIndex;
+				}
+			}
+		}
+
+		public bool IsBoundaryLoopIntersection([NotNull] IntersectionPoint3D intersection)
+		{
+			foreach (IntersectionPoint3D samePlaceIntersection in
+			         GetOtherSourceIntersections(intersection))
+			{
+				if (samePlaceIntersection.Equals(_currentStartIntersection))
+				{
+					if (IsBoundaryLoopIntersection(intersection, samePlaceIntersection))
+					{
+						return true;
+					}
+				}
+			}
+
+			return false;
+		}
+
+		private bool IsBoundaryLoopIntersection(
+			[NotNull] IntersectionPoint3D intersectionPoint,
+			[NotNull] IntersectionPoint3D samePlaceAsStartIntersection)
+		{
+			IntersectionPoint3D otherIntersection;
+
+			if (_currentStartIntersection.Equals(intersectionPoint))
+			{
+				otherIntersection = samePlaceAsStartIntersection;
+			}
+			else if (_currentStartIntersection.Equals(samePlaceAsStartIntersection))
+			{
+				otherIntersection = intersectionPoint;
+			}
+			else
+			{
+				return false;
+			}
+
+			if (intersectionPoint.SourcePartIndex != _currentStartIntersection.SourcePartIndex)
+			{
+				// TODO: Can we travel (only along the source) between the intersection points?
+				return true;
+			}
+
+			if (_currentStartIntersection.Type == IntersectionPointType.TouchingInPoint)
+			{
+				// NOTE: Sometimes the start point is not in the OutboundTarget points.
+				// This should probably get additional unit-testing
+				return true;
+			}
+
+			// If the start intersection is both outbound and inbound,
+			// it is presumably a boundary loop:
+			// - If at the start intersection the target continues to the right (intersect, right-side rings)
+			//   and the source boundary loop goes to the outside of the target:
+			//   The outbound targets contains the start, the inbound target contains the intersection
+			if (IntersectionsOutboundTarget.Contains(_currentStartIntersection) &&
+			    IntersectionsInboundTarget.Contains(otherIntersection) &&
+			    SourceSegmentCountBetween(otherIntersection, _currentStartIntersection) > 1)
+			{
+				return true;
+			}
+
+			// ...
+			// - If at the start intersection the target continues to the left (difference, left-side rings)
+			//   and the source boundary loop goes to the outside of the target:
+			//   The inbound targets contains the start, the outbound target contains the intersection
+			if (IntersectionsInboundTarget.Contains(_currentStartIntersection) &&
+			    IntersectionsOutboundTarget.Contains(otherIntersection) &&
+			    SourceSegmentCountBetween(_currentStartIntersection, otherIntersection) > 1)
+			{
+				return true;
+			}
+
+			// If the target intersects both segments of the boundary loop (i.e. partially 'fills'
+			// the boundary loop)
+			if (_currentStartIntersection.Type == IntersectionPointType.LinearIntersectionEnd &&
+			    otherIntersection.Type == IntersectionPointType.LinearIntersectionStart &&
+			    SourceSegmentCountBetween(_currentStartIntersection, otherIntersection) > 1)
+			{
+				return true;
+			}
+
+			return false;
+		}
+
+		private double SourceSegmentCountBetween([NotNull] IntersectionPoint3D firstIntersection,
+		                                         [NotNull] IntersectionPoint3D secondIntersection)
+		{
+			Assert.AreEqual(firstIntersection.SourcePartIndex, secondIntersection.SourcePartIndex,
+			                "Intersections are not from the same part.");
+
+			double result = secondIntersection.VirtualSourceVertex -
+			                firstIntersection.VirtualSourceVertex;
+
+			if (result < 0)
+			{
+				Linestring sourcePart = Source.GetPart(firstIntersection.SourcePartIndex);
+				result += sourcePart.SegmentCount;
+			}
+
+			return Math.Floor(result);
+		}
+
+		private bool SkipIntersection([NotNull] IntersectionPoint3D subcurveStartIntersection,
+		                              [NotNull] IntersectionPoint3D nextIntersection)
 		{
 			if (IntersectionsNotUsedForNavigation.Contains(nextIntersection))
 			{
 				return true;
 			}
 
-			if (nextIntersection.Type == IntersectionPointType.TouchingInPoint &&
+			if (! AssumeSourceRings)
+			{
+				// Line / Ring intersections: Just follow the line without special logic
+				return false;
+			}
+
+			if (AllowBoundaryLoops &&
+			    nextIntersection.Type == IntersectionPointType.TouchingInPoint &&
 			    subcurveStartIntersection.SourcePartIndex != nextIntersection.SourcePartIndex &&
 			    ! IsUnclosedTargetEnd(nextIntersection))
 			{
 				return true;
 			}
 
-			if (nextIntersection == _currentStartIntersection)
+			if (EqualsStartIntersection(nextIntersection))
 			{
 				// Always allow navigation back to start
 				return false;
 			}
 
-			if (_multiIntersection != null &&
-			    _multiIntersection.Contains(nextIntersection) &&
+			if (_multipleSourceIntersections != null &&
+			    _multipleSourceIntersections.Contains(nextIntersection) &&
 			    HasDuplicateBeenVisited(nextIntersection))
 			{
 				// Skip it
@@ -258,36 +616,43 @@ namespace ProSuite.Commons.Geom
 			return true;
 		}
 
+		[CanBeNull]
 		private IntersectionPoint3D GetNextIntersectionAlongSource(
-			IntersectionPoint3D thisIntersection)
+			[NotNull] IntersectionPoint3D currentIntersection)
 		{
-			IntersectionPoint3D result;
-			int previousSourceIdx = IntersectionOrders[thisIntersection].Key;
+			int nextAlongSourceIdx;
+			int currentSourceIdx = IntersectionOrders[currentIntersection].Key;
+			int count = 0;
 
-			int nextSourceIdx = previousSourceIdx + 1;
-
-			if (nextSourceIdx == IntersectionsAlongSource.Count)
+			do
 			{
-				nextSourceIdx = 0;
-			}
+				nextAlongSourceIdx = currentSourceIdx + 1;
 
-			int thisPartIdx = thisIntersection.SourcePartIndex;
+				if (nextAlongSourceIdx == IntersectionsAlongSource.Count)
+				{
+					// Continue at the beginning
+					nextAlongSourceIdx = 0;
+				}
 
-			if (nextSourceIdx < IntersectionsAlongSource.Count &&
-			    IntersectionsAlongSource[nextSourceIdx].SourcePartIndex == thisPartIdx)
-			{
-				result = IntersectionsAlongSource[nextSourceIdx];
-			}
-			else
-			{
-				result = IntersectionsAlongSource.First(i => i.SourcePartIndex == thisPartIdx);
-			}
+				if (! AssumeSourceRings && nextAlongSourceIdx <= currentSourceIdx)
+				{
+					return null;
+				}
+
+				Assert.True(count++ <= IntersectionsAlongSource.Count,
+				            "Cannot find next intersection in same source part");
+
+				currentSourceIdx = nextAlongSourceIdx;
+			} while (IntersectionsAlongSource[nextAlongSourceIdx].SourcePartIndex !=
+			         currentIntersection.SourcePartIndex);
+
+			IntersectionPoint3D result = IntersectionsAlongSource[nextAlongSourceIdx];
 
 			return result;
 		}
 
 		private IntersectionPoint3D GetNextIntersectionAlongTarget(
-			IntersectionPoint3D current, bool continueForward)
+			[NotNull] IntersectionPoint3D current, bool continueForward)
 		{
 			int nextAlongTargetIdx;
 			int count = 0;
@@ -323,7 +688,7 @@ namespace ProSuite.Commons.Geom
 				IntersectionPoints,
 				out _intersectionsAlongSource,
 				out _intersectionsAlongTarget,
-				out _multiIntersection);
+				out _multipleSourceIntersections);
 		}
 
 		private Dictionary<IntersectionPoint3D, KeyValuePair<int, int>>
@@ -364,14 +729,8 @@ namespace ProSuite.Commons.Geom
 			return intersectionOrders;
 		}
 
-		private void ClassifyIntersections(
-			[NotNull] ISegmentList source,
-			[NotNull] ISegmentList target,
-			[NotNull] out IList<IntersectionPoint3D> intersectionsInboundTarget,
-			[NotNull] out IList<IntersectionPoint3D> intersectionsOutboundTarget)
+		private IList<IntersectionPoint3D> GetNavigableIntersections(bool sourceIsClosedRing)
 		{
-			intersectionsInboundTarget = new List<IntersectionPoint3D>();
-			intersectionsOutboundTarget = new List<IntersectionPoint3D>();
 			IntersectionsNotUsedForNavigation.Clear();
 
 			// Filter all non-real linear intersections (i. e. those where no deviation between
@@ -381,13 +740,25 @@ namespace ProSuite.Commons.Geom
 			var usableIntersections = IntersectionsAlongSource.ToList();
 
 			foreach (IntersectionPoint3D unusable in GetIntersectionsNotUsedForNavigation(
-				         IntersectionsAlongSource, Source, Target))
+				         IntersectionsAlongSource, Source, Target, sourceIsClosedRing))
 			{
 				usableIntersections.Remove(unusable);
 				IntersectionsNotUsedForNavigation.Add(unusable);
 			}
 
-			foreach (IntersectionPoint3D intersectionPoint3D in usableIntersections)
+			return usableIntersections;
+		}
+
+		private void ClassifyIntersectionsTargetTrajectories(
+			[NotNull] ISegmentList source,
+			[NotNull] ISegmentList target,
+			[NotNull] out IList<IntersectionPoint3D> intersectionsInboundTarget,
+			[NotNull] out IList<IntersectionPoint3D> intersectionsOutboundTarget)
+		{
+			intersectionsInboundTarget = new List<IntersectionPoint3D>();
+			intersectionsOutboundTarget = new List<IntersectionPoint3D>();
+
+			foreach (IntersectionPoint3D intersectionPoint3D in NavigableIntersections)
 			{
 				intersectionPoint3D.ClassifyTargetTrajectory(source, target,
 				                                             out bool? targetContinuesToRightSide,
@@ -401,6 +772,8 @@ namespace ProSuite.Commons.Geom
 				}
 				else if (targetArrivesFromRightSide == true)
 				{
+					// targetContinuesToRightSide == false or null, i.e. it continues to the left or
+					// it's probably the end point.
 					intersectionsOutboundTarget.Add(intersectionPoint3D);
 				}
 			}
@@ -410,6 +783,42 @@ namespace ProSuite.Commons.Geom
 				// Remove dangles that cannot cut and would lead to duplicate result rings
 				RemoveDeadEndIntersections(intersectionsInboundTarget, intersectionsOutboundTarget);
 			}
+		}
+
+		private void ClassifyIntersectionsSourceTrajectories(
+			[NotNull] ISegmentList source,
+			[NotNull] ISegmentList target,
+			[NotNull] out IList<IntersectionPoint3D> intersectionsInboundSource,
+			[NotNull] out IList<IntersectionPoint3D> intersectionsOutboundSource)
+		{
+			intersectionsInboundSource = new List<IntersectionPoint3D>();
+			intersectionsOutboundSource = new List<IntersectionPoint3D>();
+
+			foreach (IntersectionPoint3D intersectionPoint in NavigableIntersections)
+			{
+				intersectionPoint.ClassifySourceTrajectory(source, target,
+				                                           out bool? sourceContinuesToRightSide,
+				                                           out bool? sourceArrivesFromRightSide,
+				                                           Tolerance);
+
+				// TODO: Why not symmetrical with ClassifyIntersectionsTargetTrajectories?
+				if (sourceContinuesToRightSide == false)
+				{
+					// The source continues to the left -> outbound
+					intersectionsOutboundSource.Add(intersectionPoint);
+				}
+				else if (sourceContinuesToRightSide == true)
+				{
+					intersectionsInboundSource.Add(intersectionPoint);
+				}
+			}
+
+			// TODO: To support total spaghetti, remove source dangles here
+			//if (!target.IsClosed)
+			//{
+			//	// Remove dangles that cannot cut and would lead to duplicate result rings
+			//	RemoveDeadEndIntersections(intersectionsInboundTarget, intersectionsOutboundTarget);
+			//}
 		}
 
 		/// <summary>
@@ -443,21 +852,25 @@ namespace ProSuite.Commons.Geom
 		}
 
 		private static IEnumerable<IntersectionPoint3D> GetIntersectionsNotUsedForNavigation(
-			[NotNull] IList<IntersectionPoint3D> intersectionPoints,
+			[NotNull] IList<IntersectionPoint3D> intersectionsAlongSource,
 			[NotNull] ISegmentList source,
-			[NotNull] ISegmentList target)
+			[NotNull] ISegmentList target,
+			bool includeSourceRingStartEnd)
 		{
-			// The 'standard' linear intersection breaks at ring start/end:
-			foreach (IntersectionPoint3D linearStartBreak in
-			         GeomTopoOpUtils.GetLinearIntersectionBreaksAtRingStart(
-				         source, target, intersectionPoints))
+			if (includeSourceRingStartEnd)
 			{
-				yield return linearStartBreak;
+				// The 'standard' linear intersection breaks at ring start/end:
+				foreach (IntersectionPoint3D linearStartBreak in
+				         GeomTopoOpUtils.GetLinearIntersectionBreaksAtRingStart(
+					         source, target, intersectionsAlongSource))
+				{
+					yield return linearStartBreak;
+				}
 			}
 
 			// Other linear intersection breaks that are not real (from a 2D perspective)
 			foreach (var pseudoBreak in GeomTopoOpUtils.GetLinearIntersectionPseudoBreaks(
-				         intersectionPoints))
+				         intersectionsAlongSource, source, target))
 			{
 				yield return pseudoBreak;
 			}

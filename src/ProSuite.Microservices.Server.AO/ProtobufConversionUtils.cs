@@ -11,6 +11,9 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Gdb;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.Text;
+using ProSuite.DomainModel.AO.QA.Xml;
+using ProSuite.DomainServices.AO.QA.Standalone.XmlBased;
 using ProSuite.Microservices.AO;
 using ProSuite.Microservices.Definitions.QA;
 using ProSuite.Microservices.Definitions.Shared;
@@ -178,7 +181,7 @@ namespace ProSuite.Microservices.Server.AO
 		{
 			var result = new List<GdbWorkspace>();
 			foreach (IGrouping<long, ObjectClassMsg> classGroup in objectClassMessages.GroupBy(
-				c => c.WorkspaceHandle))
+				         c => c.WorkspaceHandle))
 			{
 				GdbTableContainer gdbTableContainer =
 					CreateGdbTableContainer(classGroup, moreDataRequest,
@@ -192,8 +195,8 @@ namespace ProSuite.Microservices.Server.AO
 				}
 
 				foreach (ObjectClassMsg relTableMsg
-					in relClassMessages.Where(
-						r => r.WorkspaceHandle == gdbWorkspace.WorkspaceHandle))
+				         in relClassMessages.Where(
+					         r => r.WorkspaceHandle == gdbWorkspace.WorkspaceHandle))
 				{
 					GdbTable relClassTable = FromObjectClassMsg(relTableMsg, gdbWorkspace);
 
@@ -211,7 +214,7 @@ namespace ProSuite.Microservices.Server.AO
 			var result = new List<GdbWorkspace>();
 
 			foreach (IGrouping<long, ObjectClassMsg> classGroup in objectClassMessages.GroupBy(
-				c => c.WorkspaceHandle))
+				         c => c.WorkspaceHandle))
 			{
 				long workspaceHandle = classGroup.Key;
 
@@ -296,7 +299,7 @@ namespace ProSuite.Microservices.Server.AO
 			[NotNull] Func<GdbFeatureClass> getClass)
 		{
 			GdbFeatureClass featureClass = getClass();
-				//(IFeatureClass) tableContainer.GetByClassId((int) gdbObjectMsg.ClassHandle);
+			//(IFeatureClass) tableContainer.GetByClassId((int) gdbObjectMsg.ClassHandle);
 
 			GdbFeature result = CreateGdbFeature(gdbObjectMsg, featureClass);
 
@@ -320,6 +323,59 @@ namespace ProSuite.Microservices.Server.AO
 			ReadMsgValues(gdbObjectMsg, result, table);
 
 			return result;
+		}
+
+		public static SpecificationElement CreateXmlConditionElement(
+			[NotNull] QualitySpecificationElementMsg specificationElementMsg)
+		{
+			QualityConditionMsg conditionMsg = specificationElementMsg.Condition;
+
+			var parameterList = new List<XmlTestParameterValue>();
+
+			foreach (ParameterMsg parameterMsg in conditionMsg.Parameters)
+			{
+				XmlTestParameterValue xmlParameter;
+				if (StringUtils.IsNotEmpty(parameterMsg.WorkspaceId))
+				{
+					xmlParameter = new XmlDatasetTestParameterValue()
+					               {
+						               TestParameterName = parameterMsg.Name,
+						               Value = parameterMsg.Value,
+						               WorkspaceId = parameterMsg.WorkspaceId,
+						               WhereClause = parameterMsg.WhereClause
+					               };
+				}
+				else
+				{
+					xmlParameter = new XmlScalarTestParameterValue()
+					               {
+						               TestParameterName = parameterMsg.Name,
+						               Value = parameterMsg.Value
+					               };
+				}
+
+				parameterList.Add(xmlParameter);
+			}
+
+			XmlQualityCondition xmlCondition =
+				new XmlQualityCondition
+				{
+					Name = conditionMsg.Name,
+					TestDescriptorName = conditionMsg.TestDescriptorName,
+					Description = conditionMsg.Description,
+					Url = conditionMsg.Url
+				};
+
+			xmlCondition.ParameterValues.AddRange(parameterList);
+
+			var specificationElement =
+				new SpecificationElement(xmlCondition,
+				                         specificationElementMsg.CategoryName)
+				{
+					AllowErrors = specificationElementMsg.AllowErrors,
+					StopOnError = specificationElementMsg.StopOnError
+				};
+			return specificationElement;
 		}
 
 		private static GdbFeature CreateGdbFeature(GdbObjectMsg gdbObjectMsg,

@@ -10,7 +10,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 	/// an existing feature on the client. Its parent can be a real object class or a fake
 	/// <see cref="GdbTable"/> also provided through the wire.
 	/// </summary>
-	public class GdbRow : VirtualRow, IRowSubtypes // IObject, IEquatable<IObject>, IReadOnlyRow
+	public class GdbRow : VirtualRow, IRowSubtypes
 	{
 		[NotNull] private readonly GdbTable _gdbTable;
 
@@ -102,7 +102,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		public override int OID => _oid;
 
 		public override VirtualTable Table => _gdbTable;
-//		public GdbTable Table => _gdbTable;
+		//		public GdbTable Table => _gdbTable;
 
 		public override object get_Value(int index)
 		{
@@ -117,7 +117,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			return result;
 		}
 
-		public override void set_Value(int index, object value)
+		public sealed override void set_Value(int index, object value)
 		{
 			if (value == null)
 			{

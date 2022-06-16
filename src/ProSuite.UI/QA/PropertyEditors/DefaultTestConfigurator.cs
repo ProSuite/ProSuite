@@ -35,7 +35,7 @@ namespace ProSuite.UI.QA.PropertyEditors
 				TestFactoryUtils.CreateTestFactory(_qualityCondition),
 				$"Cannot create test factory for condition {_qualityCondition.Name}");
 
-			_testDescription = factory.GetTestDescription();
+			_testDescription = factory.TestDescription;
 
 			IList<TestParameter> parameters = factory.Parameters;
 

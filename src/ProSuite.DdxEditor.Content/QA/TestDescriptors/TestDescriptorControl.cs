@@ -31,7 +31,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 		private bool _suspend;
 
 		[NotNull] private readonly BoundDataGridHandler<ReferencingQualityConditionTableRow>
-			_qconGridHandler;
+			_qConGridHandler;
 
 		[NotNull] private readonly DataGridViewFindController _findController;
 		[NotNull] private readonly ToolStripButton _toolStripButtonSelectFindResultRows;
@@ -41,8 +41,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 
 		[CanBeNull] private static string _lastSelectedTab;
 
-		private TableStateManager<ReferencingQualityConditionTableRow>
-			_qconStateManager;
+		private TableStateManager<ReferencingQualityConditionTableRow> _qConStateManager;
 
 		[NotNull] private readonly TableState _tableState;
 		[CanBeNull] private IList<ReferencingQualityConditionTableRow> _initialTableRows;
@@ -54,8 +53,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 
 		private bool _loaded;
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);
 
 		#region Constructors
 
@@ -125,7 +123,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 				TestParameterGridUtils.BindParametersDataGridView(_dataGridViewParameter);
 
 			_dataGridViewQualityConditions.AutoGenerateColumns = false;
-			_qconGridHandler =
+			_qConGridHandler =
 				new BoundDataGridHandler<ReferencingQualityConditionTableRow>(
 					_dataGridViewQualityConditions);
 
@@ -162,24 +160,24 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 
 		void ITestDescriptorView.SaveState()
 		{
-			_qconStateManager.SaveState(_tableState);
+			_qConStateManager.SaveState(_tableState);
 		}
 
 		void ITestDescriptorView.BindToQualityConditions(
 			IList<ReferencingQualityConditionTableRow> tableRows)
 		{
-			if (_qconStateManager == null)
+			if (_qConStateManager == null)
 			{
 				// first time; initialize state manager, delay bind to tableRows to first paint event
-				_qconStateManager =
+				_qConStateManager =
 					new TableStateManager<ReferencingQualityConditionTableRow>(
-						_qconGridHandler, _dataGridViewFindToolStrip);
+						_qConGridHandler, _dataGridViewFindToolStrip);
 				_initialTableRows = tableRows;
 				return;
 			}
 
 			// already initialized. Save the current state, to reapply it after the bind
-			_qconStateManager.SaveState(_tableState);
+			_qConStateManager.SaveState(_tableState);
 
 			BindTo(tableRows);
 		}
@@ -187,7 +185,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 		IList<ReferencingQualityConditionTableRow> ITestDescriptorView.
 			GetSelectedQualityConditionTableRows()
 		{
-			return _qconGridHandler.GetSelectedRows();
+			return _qConGridHandler.GetSelectedRows();
 		}
 
 		public Func<object> FindTestFactoryDelegate
@@ -230,15 +228,14 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 			_textBoxTestDescription.Text = value;
 		}
 
-		public void RenderTestCategories(IList<string> testCategories)
+		public void RenderTestCategories(string[] categories)
 		{
-			_textBoxCategories.Text = StringUtils.ConcatenateSorted(testCategories, ", ");
+			_textBoxCategories.Text = StringUtils.ConcatenateSorted(categories, ", ");
 		}
 
 		public void RenderTestParameters(IEnumerable<TestParameter> testParameters)
 		{
-			TestParameterGridUtils.PopulateDataTable(_parametersDataTable,
-			                                         testParameters);
+			TestParameterGridUtils.PopulateDataTable(_parametersDataTable, testParameters);
 
 			_dataGridViewParameter.AutoResizeRows();
 			_dataGridViewParameter.ClearSelection();
@@ -249,12 +246,12 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 			_latch.RunInsideLatch(
 				() =>
 				{
-					bool sorted = _qconGridHandler.BindTo(
+					bool sorted = _qConGridHandler.BindTo(
 						tableRows,
 						defaultSortState: new DataGridViewSortState(_columnName.Name),
 						sortStateOverride: _tableState.TableSortState);
 
-					_qconStateManager.ApplyState(_tableState, sorted);
+					_qConStateManager.ApplyState(_tableState, sorted);
 				}
 			);
 		}
@@ -266,11 +263,12 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 			const bool includeObsolete = false;
 			const bool includeInternallyUsed = false;
 
-			foreach (int ctorIndex in TestFactoryUtils.GetTestConstructorIndexes(
+			foreach (int ctorIndex in InstanceFactoryUtils.GetConstructorIndexes(
 				         testType, includeObsolete, includeInternallyUsed))
 			{
-				TestFactory testFactory = TestFactoryUtils.GetTestFactory(testType, ctorIndex);
-				string signature = InstanceUtils.GetTestSignature(testFactory);
+				var testInfo = new InstanceInfo(testType, ctorIndex);
+
+				string signature = InstanceUtils.GetTestSignature(testInfo);
 
 				string formattedSignature = $"{ctorIndex}: {signature}";
 
@@ -463,7 +461,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 			}
 
 			ReferencingQualityConditionTableRow qcon =
-				_qconGridHandler.GetRow(e.RowIndex);
+				_qConGridHandler.GetRow(e.RowIndex);
 
 			if (qcon != null)
 			{

@@ -52,10 +52,20 @@
 
   <ItemGroup>
     <Compile Include="..\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
+    <Compile Update="Documentation\DocIfStrings.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>DocIfStrings.resx</DependentUpon>
+    </Compile>
     <Compile Update="Documentation\DocStrings.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>DocStrings.resx</DependentUpon>
+    </Compile>
+    <Compile Update="Documentation\DocTrStrings.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>DocTrStrings.resx</DependentUpon>
     </Compile>
     <Compile Update="IssueCodes\IssueCodeDescriptions.de-CH.Designer.cs">
       <DependentUpon>IssueCodeDescriptions.de-CH.resx</DependentUpon>
@@ -80,10 +90,18 @@
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Update="Documentation\DocIfStrings.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>DocIfStrings.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
     <EmbeddedResource Update="Documentation\DocStrings.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>DocStrings.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Documentation\DocTrStrings.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>DocTrStrings.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Update="IssueCodes\IssueCodeDescriptions.de.resx">
       <Generator>ResXFileCodeGenerator</Generator>
@@ -116,8 +134,6 @@
     <None Include="Documentation\en\EsriCH.QA.Tests.QuickReference_en.pdf" />
     <None Include="Documentation\en\SQLSyntax_en.docx" />
     <None Include="Documentation\en\SQLSyntax_en.pdf" />
-    <None Include="Documentation\Extended\de\QaFactoryPseudoNodes.docx" />
-    <None Include="Documentation\Extended\de\QaFactoryPseudoNodes.pdf" />
     <None Include="Documentation\Extended\de\QaFlowLogic.docx" />
     <None Include="Documentation\Extended\de\QaFlowLogic.pdf" />
     <None Include="Documentation\Extended\de\QaLineConnection.docx" />

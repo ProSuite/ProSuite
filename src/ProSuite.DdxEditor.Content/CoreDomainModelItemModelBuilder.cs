@@ -29,10 +29,10 @@ using ProSuite.DomainModel.AO.Geodatabase;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.DataModel.Repositories;
-using ProSuite.DomainModel.Core.DataModel.XML;
+using ProSuite.DomainModel.Core.DataModel.Xml;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.Repositories;
-using ProSuite.DomainModel.Core.QA.XML;
+using ProSuite.DomainModel.Core.QA.Xml;
 
 namespace ProSuite.DdxEditor.Content
 {

@@ -5,12 +5,12 @@
   <Name>ProSuite.AGP.WorkList.PluginDatasource</Name>
   <AddInID>{90f49e0f-e7e9-47ff-82e5-f964441ca2e3}</AddInID>
   <Description>ProSuite Plugins for ArcGIS Pro</Description>
-  <Version>0.5</Version>
+  <Version>0.6</Version>
   <Author>The ProSuite Authors</Author>
   <Company></Company>
-  <Date>2021-11-23</Date>
+  <Date>2022-03-24</Date>
   <Targets>
-    <Target name="ArcGISPro" version="2.5" />
+    <Target name="ArcGISPro" version="2.6" />
   </Targets>
   <!-- CLR should be set to the 4.8 set in the .csproj -->
   <AddIn language="CLR4.8" library="ProSuiteSolutionPlugins.dll" namespace="ProSuite.AGP.Solution.Plugins">

@@ -127,7 +127,7 @@ namespace ProSuite.QA.Tests.Test
 				serializer.Serialize(xmlWriter, tds);
 			}
 
-			IWorkspace dtmWs = TestDataUtils.OpenTopgisTlm();
+			IWorkspace dtmWs = TestDataUtils.OpenTopgisAlti();
 
 			var model = new SimpleModel("model", dtmWs);
 
@@ -146,6 +146,7 @@ namespace ProSuite.QA.Tests.Test
 				                           Abbreviation = "DTM",
 				                           PointDensity = 7.8125
 			                           };
+			simpleTerrainDataset.Model = model;
 
 			SimpleTerrainDataset terrainDatasetFromXml =
 				ModelSimpleTerrainDataset.Create(
@@ -172,8 +173,8 @@ namespace ProSuite.QA.Tests.Test
 
 			var runner = new QaContainerTestRunner(10000, tests[0]) {KeepGeometry = true};
 
-			const double xMin = 2751000;
-			const double yMin = 1238000;
+			const double xMin = 2700000;
+			const double yMin = 1255000;
 			IEnvelope box = GeometryFactory.CreateEnvelope(xMin, yMin, xMin + 100, yMin + 100);
 			int errorCount = runner.Execute(box);
 

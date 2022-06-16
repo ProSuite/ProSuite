@@ -8768,6 +8768,12 @@ namespace ProSuite.Commons.AO.Geometry
 				}
 				else
 				{
+					if (IsDegeneratedToLine(segment))
+					{
+						yield return ToLinearLine(segment);
+						continue;
+					}
+
 					ILine[] result;
 					if (segment is ICircularArc circularArc)
 					{
@@ -8809,6 +8815,49 @@ namespace ProSuite.Commons.AO.Geometry
 					}
 				}
 			}
+		}
+
+		private static bool IsDegeneratedToLine(ISegment nonLinearSegment)
+		{
+			if (nonLinearSegment is ICircularArc circularArc)
+			{
+				if (circularArc.IsLine)
+				{
+					// Degenerated
+					return true;
+				}
+			}
+
+			if (nonLinearSegment is IEllipticArc ellipticArc)
+			{
+				if (ellipticArc.IsLine)
+				{
+					// Degenerated
+					return true;
+				}
+			}
+
+			if (nonLinearSegment is IBezierCurve3 bezierCurve)
+			{
+				if (bezierCurve.IsLine)
+				{
+					return true;
+				}
+			}
+
+			return false;
+		}
+
+		private static ILine ToLinearLine(ISegment segment)
+		{
+			ILine linearLine = new LineClass();
+
+			((IGeometry) linearLine).SpatialReference = segment.SpatialReference;
+
+			linearLine.FromPoint = segment.FromPoint;
+			linearLine.ToPoint = segment.ToPoint;
+
+			return linearLine;
 		}
 
 		/// <summary>

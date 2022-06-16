@@ -2,8 +2,9 @@ using System.Collections.Generic;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Core;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests;
 
 namespace ProSuite.QA.TestFactories
@@ -28,10 +29,7 @@ namespace ProSuite.QA.TestFactories
 			return list;
 		}
 
-		public override string GetTestDescription()
-		{
-			return DocStrings.QaLineIntersectAngleFactory;
-		}
+		public override string TestDescription => DocStrings.QaLineIntersectAngleFactory;
 
 		protected override ContainerTest CreateAngleTest(object[] args)
 		{

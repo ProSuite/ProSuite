@@ -188,5 +188,59 @@ namespace ProSuite.Commons.AO.Test.Geodatabase.GdbSchema
 			Assert.AreEqual(101,
 			                GdbQueryUtils.Count(featureClassWithBackingData, queryFilter));
 		}
+
+		[Test]
+		public void CanCreateGdbFeatureClassWrappingRealFeatureClass()
+		{
+			IWorkspace ws = TestUtils.OpenUserWorkspaceOracle();
+
+			const string tlmStrasse = "TOPGIS_TLM.TLM_STRASSE";
+
+			IFeatureClass realFeatureClass = DatasetUtils.OpenFeatureClass(ws, tlmStrasse);
+
+			GdbTable gdbTable = new GdbFeatureClass(realFeatureClass);
+
+			IFeatureClass gdbFeatureClass = (IFeatureClass) gdbTable;
+
+			Assert.AreEqual(realFeatureClass.ObjectClassID, gdbFeatureClass.ObjectClassID);
+			Assert.AreEqual(DatasetUtils.GetName(realFeatureClass),
+			                DatasetUtils.GetName(gdbFeatureClass));
+			Assert.AreEqual(DatasetUtils.GetAliasName(realFeatureClass),
+			                DatasetUtils.GetAliasName(gdbFeatureClass));
+			Assert.AreEqual(realFeatureClass.ShapeType,
+			                gdbFeatureClass.ShapeType);
+
+			Assert.IsTrue(gdbFeatureClass.HasOID);
+			Assert.NotNull(gdbFeatureClass.OIDFieldName);
+
+			Assert.AreEqual("OBJECTID", gdbFeatureClass.OIDFieldName);
+			Assert.AreEqual("SHAPE", gdbFeatureClass.ShapeFieldName);
+
+			// We're only using the schema, not the actual data!
+			Assert.AreEqual(0,
+			                GdbQueryUtils.Count(gdbFeatureClass));
+
+			IQueryFilter queryFilter = GdbQueryUtils.CreateQueryFilter("OBJECTID");
+			queryFilter.WhereClause = "OBJECTID < 0";
+
+			Assert.AreEqual(0,
+			                GdbQueryUtils.Count(gdbFeatureClass, queryFilter));
+
+			// Now with querying the template class
+
+			gdbFeatureClass = new GdbFeatureClass(realFeatureClass, true);
+
+			Assert.AreEqual(realFeatureClass.FeatureCount(null),
+			                GdbQueryUtils.Count(gdbFeatureClass));
+
+			queryFilter.WhereClause = "OBJECTID > 12345";
+
+			Assert.AreEqual(GdbQueryUtils.Count(realFeatureClass, queryFilter),
+			                GdbQueryUtils.Count(gdbFeatureClass, queryFilter));
+
+			IEnvelope gdbClassEnvelope = ((IGeoDataset) gdbFeatureClass).Extent;
+			IEnvelope realClassEnvelope = ((IGeoDataset) realFeatureClass).Extent;
+			Assert.IsTrue(GeometryUtils.AreEqual(realClassEnvelope, gdbClassEnvelope));
+		}
 	}
 }

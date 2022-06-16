@@ -150,7 +150,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 					    out XmlRowFilterDescriptor xmlDesc))
 				{
 					Assert.Fail(
-						$"Test descriptor not found for {xmlRowFilter.RowFilterDescriptorName}");
+						$"RowFilter descriptor not found for {xmlRowFilter.RowFilterDescriptorName}");
 				}
 
 				rowFilter =
@@ -180,7 +180,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 					    out XmlIssueFilterDescriptor xmlDesc))
 				{
 					Assert.Fail(
-						$"Test descriptor not found for {xmlIssueFilter.IssueFilterDescriptorName}");
+						$"IssueFilter descriptor not found for {xmlIssueFilter.IssueFilterDescriptorName}");
 				}
 
 				issueFilter =

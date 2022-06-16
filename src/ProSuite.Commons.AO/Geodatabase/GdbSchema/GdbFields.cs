@@ -36,7 +36,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			}
 
 			if (_fields.Any(
-				f => f.Name.Equals(field.Name, StringComparison.InvariantCultureIgnoreCase)))
+				    f => f.Name.Equals(field.Name, StringComparison.InvariantCultureIgnoreCase)))
 			{
 				throw new ArgumentException(
 					$"The field list already contains a field with name {field.Name}");
