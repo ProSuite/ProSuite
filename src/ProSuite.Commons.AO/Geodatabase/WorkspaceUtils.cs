@@ -276,7 +276,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 			var workspaceFactory = (IWorkspaceFactory2) GetFileGdbWorkspaceFactory();
 
 			_msg.VerboseDebug(
-				() => $"Opening file geodatabase workspace using connection string {connectionString}");
+				() =>
+					$"Opening file geodatabase workspace using connection string {connectionString}");
 
 			return OpenWorkspace(workspaceFactory, connectionString);
 		}
@@ -342,7 +343,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 			var factory = (IWorkspaceFactory2) GetAccessWorkspaceFactory();
 
 			_msg.VerboseDebug(
-				() => $"Opening personal geodatabase workspace using connection string {connectionString}");
+				() =>
+					$"Opening personal geodatabase workspace using connection string {connectionString}");
 
 			return OpenWorkspace(factory, connectionString);
 		}
@@ -2879,7 +2881,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		[NotNull]
 		private static string GetSdeInstancePostgreSQL(DirectConnectDriver driver,
-		                                                [NotNull] string serverName)
+		                                               [NotNull] string serverName)
 		{
 			return string.Format(@"{0}:{1}", GetSdeInstance(driver), serverName);
 		}
@@ -2905,15 +2907,13 @@ namespace ProSuite.Commons.AO.Geodatabase
 		{
 			switch (driver)
 			{
-				case DirectConnectDriver.Oracle:
-					return "sde:oracle9i";
-
 				case DirectConnectDriver.Oracle9i:
 					return "sde:oracle9i";
 
 				case DirectConnectDriver.Oracle10g:
 					return "sde:oracle10g";
 
+				case DirectConnectDriver.Oracle:
 				case DirectConnectDriver.Oracle11g:
 					return "sde:oracle11g";
 
