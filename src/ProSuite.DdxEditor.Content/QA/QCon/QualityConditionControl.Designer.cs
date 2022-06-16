@@ -65,7 +65,6 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			this._splitContainer = new global::ProSuite.Commons.UI.WinForms.Controls.SplitContainerEx();
 			this._splitContainerHeader = new global::ProSuite.Commons.UI.WinForms.Controls.SplitContainerEx();
 			this._dataGridViewParamGrid = new global::ProSuite.Commons.UI.WinForms.Controls.DoubleBufferedDataGridView();
-			this._qualityConditionTableViewControl = new QualityConditionTableViewControl();
 			this._labelStopOnError = new System.Windows.Forms.Label();
 			this._labelAllowErrors = new System.Windows.Forms.Label();
 			this._textBoxStopOnErrorDefault = new System.Windows.Forms.TextBox();
@@ -1034,6 +1033,5 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 		private System.Windows.Forms.DataGridViewTextBoxColumn _columnCategory;
 		private System.Windows.Forms.DataGridViewComboBoxColumn _columnIssueType;
 		private System.Windows.Forms.DataGridViewComboBoxColumn _columnStopOnError;
-		private QualityConditionTableViewControl _qualityConditionTableViewControl;
 	}
 }

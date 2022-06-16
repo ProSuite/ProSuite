@@ -1,0 +1,132 @@
+@using ProSuite.DdxEditor.Content.Blazor.ViewModel
+@using Radzen
+@using Radzen.Blazor
+
+<div class="flex-md-row">
+    <div class="col-xl-11">
+        <RadzenDataGrid @ref="_mainGrid"
+                        TItem="ViewModelBase"
+                        Data="@Rows"
+                        SelectionMode="DataGridSelectionMode.Single"
+                        ExpandMode="DataGridExpandMode.Multiple"
+                        EditMode="DataGridEditMode.Single"
+                        AllowColumnResize="true"
+                        AllowRowSelectOnRowClick="true"
+                        RowClick="@OnRowClick"
+                        CellRender="@OnCellRender"
+                        RowRender="args => OnRowRender(args)">
+            <Template Context="viewModel">
+                <RadzenDataGrid @ref="_collectionGrid"
+                                TItem="ViewModelBase"
+                                Data="@viewModel.Values"
+                                SelectionMode="DataGridSelectionMode.Single"
+                                RowClick="@OnRowClick"
+                                RowCreate="OnRowCreate"
+                                AllowColumnResize="true"
+                                Render="args => OnRender(args, viewModel)">
+                    <Columns>
+                        <RadzenDataGridColumn TItem="ViewModelBase" Property="ParameterName" Title="Parameter"/>
+                        <RadzenDataGridColumn TItem="ViewModelBase">
+                            <Template Context="subViewModel">
+                                <RadzenImage Path="@subViewModel.ImageSource"></RadzenImage>
+                            </Template>
+                        </RadzenDataGridColumn>
+                        <RadzenDataGridColumn TItem="ViewModelBase" Property="Value" Title="Value">
+                            <Template Context="subViewModel">
+                                <DynamicComponent Type="subViewModel.ComponentType" Parameters="subViewModel.ComponentParameters"></DynamicComponent>
+                            </Template>
+                        </RadzenDataGridColumn>
+                        <RadzenDataGridColumn TItem="ViewModelBase" Property="ModelName" Title="Data Model">
+                            <Template></Template>
+                        </RadzenDataGridColumn>
+                        <RadzenDataGridColumn TItem="ViewModelBase" Property="FilterExpression" Title="Filter Expression">
+                            <EditTemplate Context="subViewModel">
+                                @if (subViewModel is DatasetTestParameterValueViewModel vm)
+                                {
+	                                <RadzenTextBox @bind-Value="vm.FilterExpression"/>
+                                }
+                            </EditTemplate>
+                        </RadzenDataGridColumn>
+                        <RadzenDataGridColumn TItem="ViewModelBase" Property="UsedAsReferenceData" Title="Reference">
+                            <EditTemplate Context="subViewModel">
+                                @if (subViewModel is DatasetTestParameterValueViewModel vm)
+                                {
+	                                <RadzenSwitch @bind-Value="vm.UsedAsReferenceData"/>
+                                }
+                            </EditTemplate>
+                        </RadzenDataGridColumn>
+                    </Columns>
+                </RadzenDataGrid>
+            </Template>
+            <Columns>
+                <RadzenDataGridColumn TItem="ViewModelBase" Property="ParameterName" Title="Parameter"/>
+                <RadzenDataGridColumn TItem="ViewModelBase">
+                    <Template Context="viewModel">
+                        <RadzenImage Path="@viewModel.ImageSource"></RadzenImage>
+                    </Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="ViewModelBase" Property="Value" Title="Value">
+                    <Template Context="viewModel">
+                        <DynamicComponent Type="viewModel.ComponentType" Parameters="viewModel.ComponentParameters" />
+                    </Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="ViewModelBase" Property="ModelName" Title="Data Model">
+                    <Template></Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="ViewModelBase" Property="FilterExpression" Title="Filter Expression">
+                    <Template Context="viewModel">
+                        @if (viewModel is DatasetTestParameterValueViewModel vm)
+                        {
+	                        @vm.FilterExpression
+                        }
+                    </Template>
+                    <EditTemplate Context="viewModel">
+                        @if (viewModel is DatasetTestParameterValueViewModel vm)
+                        {
+	                        <RadzenTextBox @bind-Value="vm.FilterExpression"/>
+                        }
+                    </EditTemplate>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="ViewModelBase" Property="UsedAsReferenceData" Title="Reference">
+                    <Template Context="viewModel">
+                        @if (viewModel is DatasetTestParameterValueViewModel vm)
+                        {
+	                        <RadzenSwitch @bind-Value="vm.UsedAsReferenceData"/>
+                        }
+                    </Template>
+                    <EditTemplate Context="viewModel">
+                        @if (viewModel is DatasetTestParameterValueViewModel vm)
+                        {
+	                        <RadzenSwitch @bind-Value="vm.UsedAsReferenceData"/>
+                        }
+                    </EditTemplate>
+                </RadzenDataGridColumn>
+            </Columns>
+        </RadzenDataGrid>
+    </div>
+
+    <div class="col-xl-1">
+        <div>
+            <RadzenButton ButtonStyle="ButtonStyle.Light" Click="() => UpClicked()" Disabled="UpButtonDisabled()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-up" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M8 15a.5.5 0 0 0 .5-.5V2.707l3.146 3.147a.5.5 0 0 0 .708-.708l-4-4a.5.5 0 0 0-.708 0l-4 4a.5.5 0 1 0 .708.708L7.5 2.707V14.5a.5.5 0 0 0 .5.5z"/>
+                </svg>
+            </RadzenButton>
+        </div>
+        <div>
+            <RadzenButton ButtonStyle="ButtonStyle.Light" Click="() => DownClicked()" Disabled="DownButtonDisabled()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-down" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M8 1a.5.5 0 0 1 .5.5v11.793l3.146-3.147a.5.5 0 0 1 .708.708l-4 4a.5.5 0 0 1-.708 0l-4-4a.5.5 0 0 1 .708-.708L7.5 13.293V1.5A.5.5 0 0 1 8 1z"/>
+                </svg>
+            </RadzenButton>
+        </div>
+        <div>
+            <RadzenButton ButtonStyle="ButtonStyle.Light" Click="() => InsertRowClicked()" Disabled="InsertRowButtonDisabled()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle" viewBox="0 0 16 16">
+                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                    <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+                </svg>
+            </RadzenButton>
+        </div>
+    </div>
+</div>

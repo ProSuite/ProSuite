@@ -17,6 +17,7 @@ using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Core;
 using ProSuite.UI.QA;
+using ProSuite.UI.QA.Controls;
 
 namespace ProSuite.DdxEditor.Content.QA.QCon
 {
@@ -39,16 +40,26 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 		[NotNull] private readonly TableState _tableState;
 		private IList<QualitySpecificationReferenceTableRow> _initialTableRows;
 
+		[NotNull]
+		private readonly Control _qualityConditionTableViewControl;
+
+		[NotNull]
+		private readonly IQualityConditionTableViewControl _tableViewControl;
+
 		#region Constructors
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="QualityConditionControl"/> class.
 		/// </summary>
-		public QualityConditionControl([NotNull] TableState tableState)
+		public QualityConditionControl([NotNull] TableState tableState,
+		                               [NotNull] IQualityConditionTableViewControl tableViewControl)
 		{
 			Assert.ArgumentNotNull(tableState, nameof(tableState));
+			Assert.ArgumentNotNull(tableViewControl, nameof(tableViewControl));
 
 			_tableState = tableState;
+			_tableViewControl = tableViewControl;
+			_qualityConditionTableViewControl = (Control) tableViewControl;
 
 			InitializeComponent();
 
@@ -289,7 +300,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 		public void BindToParameterValues(
 			BindingList<ParameterValueListItem> parameterValueItems)
 		{
-			_qualityConditionTableViewControl.BindToParameterValues(parameterValueItems);
+			_tableViewControl.BindToParameterValues(parameterValueItems);
 		}
 
 		[CanBeNull]
@@ -297,6 +308,8 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 
 		public void BindTo(QualityCondition target)
 		{
+			_tableViewControl.BindTo(target);
+
 			_binder.BindToModel(target);
 		}
 
