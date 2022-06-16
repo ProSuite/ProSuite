@@ -308,7 +308,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 
 		public void BindTo(QualityCondition target)
 		{
-			_tableViewControl.NotifySavedChanges(target);
+			_tableViewControl.BindTo(target);
 
 			_binder.BindToModel(target);
 		}

@@ -72,7 +72,7 @@ namespace ProSuite.UI.QA.Controls
 			ShowDescription = false;
 		}
 
-		public void NotifySavedChanges(QualityCondition qualityCondition) { }
+		public void BindTo(QualityCondition qualityCondition) { }
 
 		[CanBeNull]
 		private string GetParameterDescription([CanBeNull] string parameterName)

@@ -69,7 +69,8 @@ internal static class BlazorImageUtils
 
 	private static string GetImageSource(string key)
 	{
-		throw new NotImplementedException();
+		// todo daro!
+		return string.Empty;
 	}
 
 	private static string GetImageSource(ProSuiteGeometryType geometryType)

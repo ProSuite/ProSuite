@@ -9,5 +9,5 @@ public interface IQualityConditionTableViewControl
 	void BindToParameterValues(
 		[NotNull] BindingList<ParameterValueListItem> parameterValueItems);
 
-	void NotifySavedChanges(QualityCondition qualityCondition);
+	void BindTo([NotNull] QualityCondition qualityCondition);
 }

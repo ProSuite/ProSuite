@@ -1,0 +1,11 @@
+@using Radzen
+@using Radzen.Blazor
+
+@if (ViewModel.Editing)
+{
+	<RadzenTextBox @bind-Value="StringValue"/>
+}
+else
+{
+    @StringValue
+}

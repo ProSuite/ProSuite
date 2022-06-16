@@ -5,9 +5,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DdxEditor.Content.Blazor;
 using ProSuite.DdxEditor.Content.QA.QSpec;
 using ProSuite.DdxEditor.Framework;
-using ProSuite.DdxEditor.Framework.Items;
 using ProSuite.DdxEditor.Framework.ItemViews;
-using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.QA;
 
 namespace ProSuite.DdxEditor.Content.QA.QCon;
@@ -38,23 +36,27 @@ public class QualityConditionItemAdapter : QualityConditionItem
 
 		IServiceCollection serviceCollection = new ServiceCollection();
 		serviceCollection.AddBlazorWebView();
-		serviceCollection.AddSingleton(_ => CreateViewModel());
+		//serviceCollection.AddSingleton(_ => CreateViewModel());
 
-		DI.Configure(serviceCollection);
-		DI.Build();
+		//DI.Configure(serviceCollection);
+		//DI.Build();
 
-		var blazorControl = new QualityConditionBlazorControl();
-		
+		ServiceProvider provider = serviceCollection.BuildServiceProvider();
+
+		var blazorControl = new QualityConditionBlazor(CreateViewModel(), provider);
+
+		// todo daro invoke base method?
 		var control = new QualityConditionControl(_tableState, blazorControl);
+		new QualityConditionPresenter(this, control, itemNavigation);
 
-		serviceCollection.AddSingleton(_ => new QualityConditionPresenter(this, control, itemNavigation));
+		//serviceCollection.AddSingleton(_ => new QualityConditionPresenter(this, control, itemNavigation));
 
-		DI.Configure(serviceCollection);
-		DI.Build();
+		//DI.Configure(serviceCollection);
+		//DI.Build();
 
 		// We have to instantiate the presenter now so he exists. Otherwise he would be
 		// instantiated later when we change a property in TestParameterViewModel.
-		DI.Get<QualityConditionPresenter>();
+		//DI.Get<QualityConditionPresenter>();
 
 		// todo daro: remove!
 		// code generation!
@@ -69,6 +71,6 @@ public class QualityConditionItemAdapter : QualityConditionItem
 
 	private QualityConditionViewModel CreateViewModel()
 	{
-		return new QualityConditionViewModel(GetEntity(), _modelBuilder.GetTestParameterDatasetProvider());
+		return new QualityConditionViewModel(this, _modelBuilder.GetTestParameterDatasetProvider());
 	}
 }
