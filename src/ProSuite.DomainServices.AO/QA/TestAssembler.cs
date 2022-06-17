@@ -125,17 +125,17 @@ namespace ProSuite.DomainServices.AO.QA
 			return testGroups;
 		}
 
-		public List<QualityConditionGroup> BuildQualityConditionGroups(
+		public IList<QualityConditionGroup> BuildQualityConditionGroups(
 			[NotNull] IList<ITest> tests,
 			[CanBeNull] AreaOfInterest areaOfInterest,
 			bool filterTableRowsUsingRelatedGeometry,
-			int maxProcesses)
+			bool singleProcess)
 		{
 			IList<ITest> containerTests = AssembleTests(
 				tests, areaOfInterest, filterTableRowsUsingRelatedGeometry,
 				out IList<TestsWithRelatedGeometry> testsWithRelatedGeometry);
 
-			return BuildQcGroups(containerTests, testsWithRelatedGeometry, maxProcesses);
+			return BuildQcGroups(containerTests, testsWithRelatedGeometry, singleProcess);
 		}
 
 		public static bool CanBeExecutedWithTileThreads([NotNull] ITest test)
@@ -169,10 +169,10 @@ namespace ProSuite.DomainServices.AO.QA
 			return method?.DeclaringType != baseType;
 		}
 
-		internal List<QualityConditionGroup> BuildQcGroups(
+		internal IList<QualityConditionGroup> BuildQcGroups(
 			[NotNull] IList<ITest> tests,
 			[NotNull] IList<TestsWithRelatedGeometry> testsWithRelatedGeom,
-			int maxProcesses)
+			bool singleProcess)
 		{
 			Dictionary<QualityCondition, IList<ITest>> qcTests =
 				new Dictionary<QualityCondition, IList<ITest>>();
@@ -198,19 +198,45 @@ namespace ProSuite.DomainServices.AO.QA
 				}
 			}
 
-			if (maxProcesses <= 1)
+			if (singleProcess)
 			{
 				QualityConditionGroup single =
 					new QualityConditionGroup(QualityConditionExecType.Mixed, qcTests);
 				return new List<QualityConditionGroup> { single };
 			}
 
+			GroupTests(
+				tests, testsWithRelatedGeom, testQc, qcTests,
+				out HashSet<QualityCondition> nonContainerQcs,
+				out QualityConditionGroup nonTileParallelTest,
+				out QualityConditionGroup tileParallelTest);
 
+			// Create test groups
+			// ------------------
+
+			List<QualityConditionGroup> testGroups = new List<QualityConditionGroup>();
+			testGroups.Add(new QualityConditionGroup(
+				               QualityConditionExecType.NonContainer,
+				               nonContainerQcs.ToDictionary(x => x, y => qcTests[y])));
+			testGroups.Add(nonTileParallelTest);
+			testGroups.Add(tileParallelTest);
+			return testGroups;
+		}
+
+		private void GroupTests(
+			[NotNull] IList<ITest> tests,
+			[NotNull] IList<TestsWithRelatedGeometry> testsWithRelatedGeom,
+			[NotNull] Dictionary<ITest, QualityCondition> testQc,
+			[NotNull] Dictionary<QualityCondition, IList<ITest>> qcTests,
+			out HashSet<QualityCondition> nonContainerQcs,
+			out QualityConditionGroup nonTileParallelTest,
+			out QualityConditionGroup tileParallelTest)
+		{
 			TestUtils.ClassifyTests(tests, allowEditing: false, // remark :  is set again later
 			                        out IList<ContainerTest> containerTests,
 			                        out IList<ITest> nonContainerTests);
 
-			HashSet<QualityCondition> nonContainerQcs = new HashSet<QualityCondition>();
+			nonContainerQcs = new HashSet<QualityCondition>();
 			AddQcs(nonContainerQcs, nonContainerTests, testQc);
 			// Add geom-related tests to nonContainer tests
 			foreach (var relTests in testsWithRelatedGeom)
@@ -222,22 +248,22 @@ namespace ProSuite.DomainServices.AO.QA
 			foreach (ContainerTest test in containerTests)
 			{
 				QualityCondition qc = testQc[test];
-				if (! nonContainerQcs.Contains(qc))
+				if (!nonContainerQcs.Contains(qc))
 				{
 					containerQcs.Add(qc);
 				}
 			}
 
-			QualityConditionGroup nonTileParallelTest =
+			nonTileParallelTest =
 				new QualityConditionGroup(QualityConditionExecType.Container);
-			QualityConditionGroup tileParallelTest =
+			tileParallelTest =
 				new QualityConditionGroup(QualityConditionExecType.TileParallel);
 			foreach (var qc in containerQcs)
 			{
 				QualityConditionExecType execType = QualityConditionExecType.TileParallel;
 				foreach (ITest test in qcTests[qc])
 				{
-					if (! CanBeExecutedWithTileThreads(test))
+					if (!CanBeExecutedWithTileThreads(test))
 					{
 						execType = QualityConditionExecType.Container;
 					}
@@ -253,43 +279,6 @@ namespace ProSuite.DomainServices.AO.QA
 				}
 			}
 
-
-			// Create test groups
-			// ------------------
-
-			// Add non container tests to 1 group TODO: revise, may be add 1 group per quality condition?
-			List<QualityConditionGroup> testGroups = new List<QualityConditionGroup>();
-			testGroups.Add(new QualityConditionGroup(
-				               QualityConditionExecType.NonContainer,
-				               nonContainerQcs.ToDictionary(x => x, y => qcTests[y])));
-
-			// add non tile parallel tests to other groups
-			int nGroups = maxProcesses - 1;
-			for (int iGroup = 0; iGroup < nGroups; iGroup++)
-			{
-				testGroups.Add(new QualityConditionGroup(QualityConditionExecType.Container));
-			}
-
-			int group = 0;
-			int offset = 1;
-			foreach (var qc in nonTileParallelTest.QualityConditions)
-			{
-				testGroups[group + offset].QualityConditions.Add(qc.Key, qc.Value);
-				group++;
-				if (group >= maxProcesses - 1)
-				{
-					group = 0;
-				}
-			}
-
-			// add tile parallel tests to additional group
-			// (several tiles processes will be created)
-			if (tileParallelTest.QualityConditions.Count > 0)
-			{
-				testGroups.Add(tileParallelTest);
-			}
-
-			return testGroups;
 		}
 
 		private void AddQcs(HashSet<QualityCondition> qualityConditions, IEnumerable<ITest> tests,
