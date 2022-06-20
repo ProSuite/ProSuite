@@ -1,4 +1,3 @@
-using System;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Geom.EsriShape;
 using ProSuite.DomainModel.Core.DataModel;

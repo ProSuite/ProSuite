@@ -1,4 +1,3 @@
-using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DdxEditor.Content.Blazor.View;
 using ProSuite.DomainModel.AO.QA;

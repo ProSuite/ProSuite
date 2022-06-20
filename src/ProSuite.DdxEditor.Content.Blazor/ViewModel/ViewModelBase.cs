@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.DdxEditor.Content.Blazor.View;
 using ProSuite.QA.Core;
 
 namespace ProSuite.DdxEditor.Content.Blazor.ViewModel;

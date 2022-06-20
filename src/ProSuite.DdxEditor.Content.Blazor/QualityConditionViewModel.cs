@@ -4,8 +4,9 @@ using System.ComponentModel;
 using System.Linq;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.DdxEditor.Content.Blazor.View;
 using ProSuite.DdxEditor.Content.Blazor.ViewModel;
-using ProSuite.DdxEditor.Content.QA.QCon;
+using ProSuite.DdxEditor.Framework.Items;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Core;
@@ -15,13 +16,13 @@ namespace ProSuite.DdxEditor.Content.Blazor;
 // todo daro implement IDisposable
 public class QualityConditionViewModel : Observable, IQualityConditionAwareViewModel
 {
-	[NotNull] private readonly QualityConditionItem _item;
+	[NotNull] private readonly EntityItem<QualityCondition, QualityCondition> _item;
 	private Dictionary<TestParameter, IList<ViewModelBase>> _rowsByParameter;
 	private Dictionary<TestParameter, ViewModelBase> _topLevelRowsByParameter;
 	private IList<ViewModelBase> _rows;
 
 	// todo daro InstanceConfiguration?
-	public QualityConditionViewModel([NotNull] QualityConditionItem item,
+	public QualityConditionViewModel([NotNull] EntityItem<QualityCondition, QualityCondition> item,
 	                                 [NotNull] ITestParameterDatasetProvider datasetProvider) : base(null)
 	{
 		Assert.ArgumentNotNull(item, nameof(item));
@@ -31,7 +32,7 @@ public class QualityConditionViewModel : Observable, IQualityConditionAwareViewM
 
 		DatasetProvider = datasetProvider;
 
-		QualityCondition = Assert.NotNull(_item.GetEntity());
+		QualityCondition = Assert.NotNull<QualityCondition>(_item.GetEntity());
 	}
 
 	public IList<ViewModelBase> Rows

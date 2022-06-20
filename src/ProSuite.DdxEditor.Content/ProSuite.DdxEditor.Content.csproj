@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Razor">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <ProjectGuid>{4B1FE874-5C47-4850-AF42-F1100780C029}</ProjectGuid>
@@ -26,7 +26,6 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <UseWpf>true</UseWpf>
     <UseWindowsForms>true</UseWindowsForms>
   </PropertyGroup>
 
@@ -42,6 +41,7 @@
   <ItemGroup>
     <ProjectReference Include="..\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj" />
     <ProjectReference Include="..\ProSuite.Commons.UI\ProSuite.Commons.UI.csproj" />
+    <ProjectReference Include="..\ProSuite.DdxEditor.Content.Blazor\ProSuite.DdxEditor.Content.Blazor.csproj" />
     <ProjectReference Include="..\ProSuite.DdxEditor.Framework\ProSuite.DdxEditor.Framework.csproj" />
     <ProjectReference Include="..\ProSuite.DomainModel.AO\ProSuite.DomainModel.AO.csproj" />
     <ProjectReference Include="..\ProSuite.UI\ProSuite.UI.csproj" />

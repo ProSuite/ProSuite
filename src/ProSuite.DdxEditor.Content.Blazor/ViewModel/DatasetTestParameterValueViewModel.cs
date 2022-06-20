@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Windows.Forms;
-using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.UI.Finder;
 using ProSuite.DdxEditor.Content.Blazor.View;

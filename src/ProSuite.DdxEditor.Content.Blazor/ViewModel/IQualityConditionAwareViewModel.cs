@@ -1,4 +1,3 @@
-using System;
 using ProSuite.DdxEditor.Framework.ItemViews;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.QA;

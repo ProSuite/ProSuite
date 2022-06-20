@@ -8,7 +8,7 @@ using ProSuite.DomainModel.Core.QA;
 using ProSuite.UI.QA;
 using ProSuite.UI.QA.PropertyEditors;
 
-namespace ProSuite.DdxEditor.Content.Blazor.ViewModel;
+namespace ProSuite.DdxEditor.Content.Blazor;
 
 public static class FinderUtils
 {

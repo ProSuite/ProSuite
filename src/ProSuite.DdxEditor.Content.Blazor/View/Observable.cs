@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DdxEditor.Content.Blazor.ViewModel;
 
-namespace ProSuite.DdxEditor.Content.Blazor;
+namespace ProSuite.DdxEditor.Content.Blazor.View;
 
 // substitute with Prism
 public abstract class Observable : IDisposable, INotifyPropertyChanged
