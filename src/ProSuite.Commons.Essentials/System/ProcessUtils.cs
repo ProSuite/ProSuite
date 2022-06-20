@@ -1,3 +1,5 @@
+using System;
+using System.ComponentModel;
 using System.Diagnostics;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -94,6 +96,21 @@ namespace ProSuite.Commons.Essentials.System
 			process.PriorityClass = priorityClass;
 
 			return process;
+		}
+
+		[PublicAPI]
+		public static TimeSpan TryGetUserProcessorTime([CanBeNull] Process process = null)
+		{
+			try
+			{
+				if (process == null) process = Process.GetCurrentProcess();
+
+				return process.UserProcessorTime;
+			}
+			catch (Win32Exception)
+			{
+				return TimeSpan.Zero;
+			}
 		}
 
 		[PublicAPI]
