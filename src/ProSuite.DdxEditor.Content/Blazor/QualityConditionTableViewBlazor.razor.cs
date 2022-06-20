@@ -2,10 +2,10 @@ using System;
 using System.Linq;
 using System.ComponentModel;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Misc;
 using ProSuite.DdxEditor.Content.Blazor.ViewModel;
 using Radzen;
 using Radzen.Blazor;
@@ -21,6 +21,8 @@ public partial class QualityConditionTableViewBlazor : IDisposable
 	// ReSharper disable once NotNullMemberIsNotInitialized
 	[NotNull] private QualityConditionViewModel _viewModel;
 
+	private Latch _latch = new Latch();
+
 	[NotNull]
 	[Parameter]
 	// ReSharper disable once NotNullMemberIsNotInitialized
@@ -35,93 +37,138 @@ public partial class QualityConditionTableViewBlazor : IDisposable
 		}
 	}
 
+	private IList<ViewModelBase> Rows => ViewModel.Rows;
+
+	public ViewModelBase SelectedRow { get; set; }
+
+	public void Dispose()
+	{
+		_viewModel.PropertyChanged -= OnPropertyChanged;
+	}
+
 	private async void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
 	{
-		if (_collectionGrid != null)
-		{
-			foreach (ViewModelBase row in Rows.SelectMany(row => row.Values))
-			{
-				await _collectionGrid.UpdateRow(row);
-			}
-		}
-
 		foreach (ViewModelBase row in Rows)
 		{
 			await _mainGrid.UpdateRow(row);
 		}
 
-		StateHasChanged();
-	}
-
-	private IList<ViewModelBase> Rows => ViewModel.Rows;
-
-	public ViewModelBase SelectedRow { get; set; }
-
-	//public IList<ViewModelBase> SelectedRows { get; set; }
-
-	public void Dispose()
-	{
-		_viewModel.PropertyChanged -= OnPropertyChanged;
-		//ViewModel.SavedChanges -= OnSavedChanges;
-	}
-
-	private async Task EditRow([NotNull] ViewModelBase row)
-	{
-		if (_collectionGrid != null)
+		if (_collectionGrid == null)
 		{
-			await _collectionGrid.EditRow(row);
+			return;
 		}
 
-		await _mainGrid.EditRow(row);
+		foreach (ViewModelBase row in Rows.OfType<TestParameterValueCollectionViewModel>()
+										  .SelectMany(row => row.Values))
+		{
+			await _collectionGrid.UpdateRow(row);
+		}
 	}
 
 	#region layout
 
-	private static void OnRowCreate(ViewModelBase row) { }
+	#region row
 
-	// todo daro implement ViewUtils
+	private void OnRowCreate(ViewModelBase row)
+	{
+		row.New = false;
+	}
+	
+	private void OnRowUpdate(ViewModelBase row)
+	{
+		row.Dirty = false;
+	}
+
 	private async void OnRowClick(DataGridRowMouseEventArgs<ViewModelBase> arg)
 	{
 		ViewModelBase recent = SelectedRow;
 
-		ViewModelBase current = arg.Data;
+		SelectedRow = arg.Data;
 
-		if (! Equals(recent, current))
+		if (SelectedRow is TestParameterValueCollectionViewModel)
 		{
 			recent?.StopEditing();
-			current.StartEditing();
+			return;
 		}
 
-		SelectedRow = current;
+		if (_collectionGrid != null)
+		{
+			Assert.True(SelectedRow is not TestParameterValueCollectionViewModel,
+			            $"{nameof(TestParameterValueCollectionViewModel)} cannot be edited");
 
-		await EditRow(SelectedRow);
+			// start editing selected row
+			if (_collectionGrid.Data.Contains(SelectedRow))
+			{
+				if (! Equals(recent, SelectedRow))
+				{
+					if (recent != null)
+					{
+						recent.StopEditing();
+						await _collectionGrid.UpdateRow(recent);
+					}
+
+					SelectedRow.StartEditing();
+					await _collectionGrid.UpdateRow(SelectedRow);
+					await _collectionGrid.EditRow(SelectedRow);
+
+					return;
+				}
+			}
+		}
+
+		if (_mainGrid.Data.Contains(SelectedRow))
+		{
+			if (! Equals(recent, SelectedRow))
+			{
+				recent?.StopEditing();
+				await _mainGrid.UpdateRow(recent);
+
+				SelectedRow.StartEditing();
+				await _mainGrid.EditRow(SelectedRow);
+			}
+
+			await _mainGrid.UpdateRow(SelectedRow);
+		}
 	}
 
-	private static void OnRowRender(RowRenderEventArgs<ViewModelBase> args)
+	private void OnRowRender(RowRenderEventArgs<ViewModelBase> args)
 	{
 		// todo daro inline
 		bool isExpandable = args.Data.Values != null;
-
+		
 		args.Expandable = isExpandable;
 	}
 
-	private static void OnRender(DataGridRenderEventArgs<ViewModelBase> args, ViewModelBase parent)
+	private void OnRowExpand(ViewModelBase row)
+	{
+		if (_latch.IsLatched)
+		{
+			return;
+		}
+
+		row.Expanded = true;
+	}
+
+	private void OnRowCollapse(ViewModelBase row)
+	{
+		if (_latch.IsLatched)
+		{
+			return;
+		}
+
+		row.Expanded = false;
+	}
+
+	#endregion
+
+	private async void OnRender(DataGridRenderEventArgs<ViewModelBase> args)
 	{
 		RadzenDataGrid<ViewModelBase> grid = args.Grid;
 
-		//if (parent is TestParameterValueCollectionViewModel && ! _collectionGrids.ContainsKey("dataset"))
-		//{
-		//	grid.UniqueID = "dataset";
-		//	_collectionGrids.Add("dataset", grid);
-
-		//	return;
-		//}
-
-		//if (parent is ScalarTestParameterValueViewModel && ! _collectionGrids.ContainsKey("scalar"))
-		//{
-		//	grid.UniqueID = "scalar";
-		//	_collectionGrids.Add("scalar", grid);
-		//}
+		foreach (ViewModelBase row in grid.Data.Where(row => row.Expanded))
+		{
+			await grid.ExpandRow(row);
+		}
 	}
 
 	private void OnCellRender(DataGridCellRenderEventArgs<ViewModelBase> args)
@@ -140,27 +187,29 @@ public partial class QualityConditionTableViewBlazor : IDisposable
 
 	#region buttons
 
+	private async void DeleteRowClicked()
+	{
+		Assert.NotNull(_collectionGrid);
+
+		Assert.NotNull(SelectedRow);
+
+		ViewModel.DeleteRow(SelectedRow);
+
+		SelectedRow = null;
+
+		await _collectionGrid.Reload();
+	}
+
 	private void InsertRowClicked()
 	{
 		Assert.NotNull(_collectionGrid);
 
-		//var renderFragment = _testParametersGrid.RenderFragment;
+		ViewModelBase first = _collectionGrid.Data.FirstOrDefault();
+		Assert.NotNull(first);
+		
+		ViewModelBase row = ViewModel.InsertRow(first.Parameter);
 
-		//var collectionViewModel = parent as TestParameterValueCollectionViewModel;
-		//if (collectionViewModel == null)
-		//{
-		//	return;
-		//}
-
-		//Assert.NotNull(collectionViewModel, "no collection view model");
-		//Assert.True(collectionViewModel.Values.Count > 0, "empty collection view model");
-
-		//collectionViewModel.Values.Add(new EmptyTestParameterValueViewModel());
-
-		//if (_collectionGrids.TryGetValue(dataGrid.UniqueID, out RadzenDataGrid<ViewModelBase> grid))
-		//{
-		//	grid.InsertRow(new EmptyTestParameterValueViewModel());
-		//}
+		_collectionGrid.InsertRow(row);
 	}
 
 	private void UpClicked()
@@ -247,7 +296,22 @@ public partial class QualityConditionTableViewBlazor : IDisposable
 			return true;
 		}
 
-		if (SelectedRow is not TestParameterValueCollectionViewModel collectionViewModel)
+		if (SelectedRow is not TestParameterValueCollectionViewModel)
+		{
+			return true;
+		}
+
+		return false;
+	}
+
+	private bool DeleteRowButtonDisabled()
+	{
+		if (ButtonDisabledCore())
+		{
+			return true;
+		}
+
+		if (SelectedRow is TestParameterValueCollectionViewModel)
 		{
 			return true;
 		}

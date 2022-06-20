@@ -1,9 +1,9 @@
-using System;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DdxEditor.Content.Blazor.View;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.QA;
+using ProSuite.QA.Core;
 
 namespace ProSuite.DdxEditor.Content.Blazor.ViewModel;
 
@@ -11,20 +11,19 @@ public class ScalarTestParameterValueViewModel : ViewModelBase
 {
 	private object _value;
 
-	public ScalarTestParameterValueViewModel([NotNull] string name,
-	                                         [NotNull] object value,
-	                                         [NotNull] Type dataType,
+	public ScalarTestParameterValueViewModel([NotNull] TestParameter parameter,
+	                                         [CanBeNull] object value,
 	                                         [NotNull] IViewModel observer) :
-		base(name, observer)
+		base(parameter, observer)
 	{
-		Assert.ArgumentNotNull(value, nameof(value));
-		Assert.ArgumentNotNull(dataType, nameof(dataType));
+		//Assert.ArgumentNotNull(value, nameof(value));
+		//Assert.ArgumentNotNull(dataType, nameof(dataType));
 
 		_value = value;
 
 		ComponentParameters.Add("ViewModel", this);
 
-		TestParameterType testParameterType = TestParameterTypeUtils.GetParameterType(dataType);
+		TestParameterType testParameterType = TestParameterTypeUtils.GetParameterType(DataType);
 
 		switch (testParameterType)
 		{

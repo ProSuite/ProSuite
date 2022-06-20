@@ -36,28 +36,14 @@ public class QualityConditionItemAdapter : QualityConditionItem
 
 		IServiceCollection serviceCollection = new ServiceCollection();
 		serviceCollection.AddBlazorWebView();
-		//serviceCollection.AddSingleton(_ => CreateViewModel());
-
-		//DI.Configure(serviceCollection);
-		//DI.Build();
 
 		ServiceProvider provider = serviceCollection.BuildServiceProvider();
 
 		var blazorControl = new QualityConditionBlazor(CreateViewModel(), provider);
-
-		// todo daro invoke base method?
+		
 		var control = new QualityConditionControl(_tableState, blazorControl);
 		new QualityConditionPresenter(this, control, itemNavigation);
-
-		//serviceCollection.AddSingleton(_ => new QualityConditionPresenter(this, control, itemNavigation));
-
-		//DI.Configure(serviceCollection);
-		//DI.Build();
-
-		// We have to instantiate the presenter now so he exists. Otherwise he would be
-		// instantiated later when we change a property in TestParameterViewModel.
-		//DI.Get<QualityConditionPresenter>();
-
+		
 		// todo daro: remove!
 		// code generation!
 		//ITestConfigurator testConfigurator = presenter.GetTestConfigurator();

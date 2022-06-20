@@ -6,49 +6,51 @@ using ProSuite.Commons.UI.Finder;
 using ProSuite.DdxEditor.Content.Blazor.View;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
+using ProSuite.QA.Core;
 using ProSuite.UI.QA.PropertyEditors;
 
 namespace ProSuite.DdxEditor.Content.Blazor.ViewModel;
 
 public class DatasetTestParameterValueViewModel : ViewModelBase
 {
-	private readonly IQualityConditionAwareViewModel _viewModel;
-	private Dataset _dataset;
-	private string _filterExpression;
+	[NotNull] private readonly IQualityConditionAwareViewModel _viewModel;
+	[CanBeNull] private Dataset _dataset;
+	[CanBeNull] private string _filterExpression;
 	private bool _usedAsReferenceData;
 
-	public DatasetTestParameterValueViewModel([NotNull] string name,
-	                                          [NotNull] Dataset dataset,
-	                                          string filterExpression,
+	public DatasetTestParameterValueViewModel([NotNull] TestParameter parameter,
+	                                          [CanBeNull] Dataset dataset,
+	                                          [CanBeNull] string filterExpression,
 	                                          bool usedAsReferenceData,
 	                                          [NotNull] IQualityConditionAwareViewModel observer) :
-		base(name, observer)
+		base(parameter, observer)
 	{
-		Assert.ArgumentNotNull(dataset, nameof(dataset));
-
 		_viewModel = observer;
 
 		_dataset = dataset;
 		_filterExpression = filterExpression;
 		_usedAsReferenceData = usedAsReferenceData;
 
-		ImageSource = BlazorImageUtils.GetImageSource(Dataset);
+		//ImageSource = BlazorImageUtils.GetImageSource(Dataset);
 
-		ModelName = Dataset.Model?.Name;
+		ModelName = _dataset?.Model?.Name;
 
 		ComponentType = typeof(DatasetTestParameterValueBlazor);
 		ComponentParameters.Add("ViewModel", this);
 	}
 
+	[CanBeNull]
 	public Dataset Dataset
 	{
 		get => _dataset;
 		private set => SetProperty(ref _dataset, value);
 	}
-
+	
+	[CanBeNull]
 	[UsedImplicitly]
 	public string ModelName { get; }
 
+	[CanBeNull]
 	[UsedImplicitly]
 	public string FilterExpression
 	{

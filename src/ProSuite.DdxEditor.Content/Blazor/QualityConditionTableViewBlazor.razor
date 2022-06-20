@@ -6,24 +6,27 @@
     <div class="col-xl-11">
         <RadzenDataGrid @ref="_mainGrid"
                         TItem="ViewModelBase"
-                        Data="@Rows"
+                        Data="Rows"
                         SelectionMode="DataGridSelectionMode.Single"
                         ExpandMode="DataGridExpandMode.Multiple"
                         EditMode="DataGridEditMode.Single"
                         AllowColumnResize="true"
                         AllowRowSelectOnRowClick="true"
-                        RowClick="@OnRowClick"
-                        CellRender="@OnCellRender"
-                        RowRender="args => OnRowRender(args)">
+                        RowClick="OnRowClick"
+                        RowExpand="OnRowExpand"
+                        RowCollapse="OnRowCollapse"
+                        CellRender="OnCellRender"
+                        RowRender="OnRowRender">
             <Template Context="viewModel">
                 <RadzenDataGrid @ref="_collectionGrid"
                                 TItem="ViewModelBase"
-                                Data="@viewModel.Values"
+                                Data="viewModel.Values"
                                 SelectionMode="DataGridSelectionMode.Single"
-                                RowClick="@OnRowClick"
-                                RowCreate="OnRowCreate"
                                 AllowColumnResize="true"
-                                Render="args => OnRender(args, viewModel)">
+                                AllowRowSelectOnRowClick="true"
+                                RowClick="OnRowClick"
+                                RowCreate="OnRowCreate"
+                                RowUpdate="OnRowUpdate">
                     <Columns>
                         <RadzenDataGridColumn TItem="ViewModelBase" Property="ParameterName" Title="Parameter"/>
                         <RadzenDataGridColumn TItem="ViewModelBase">
@@ -37,13 +40,25 @@
                             </Template>
                         </RadzenDataGridColumn>
                         <RadzenDataGridColumn TItem="ViewModelBase" Property="ModelName" Title="Data Model">
-                            <Template></Template>
+                            <Template Context="subViewModel">
+                                @if (subViewModel is DatasetTestParameterValueViewModel vm)
+                                {
+	                                @vm.ModelName
+                                }
+                            </Template>
                         </RadzenDataGridColumn>
                         <RadzenDataGridColumn TItem="ViewModelBase" Property="FilterExpression" Title="Filter Expression">
                             <EditTemplate Context="subViewModel">
                                 @if (subViewModel is DatasetTestParameterValueViewModel vm)
                                 {
-	                                <RadzenTextBox @bind-Value="vm.FilterExpression"/>
+	                                if (vm.Editing)
+	                                {
+		                                <RadzenTextBox @bind-Value="vm.FilterExpression"/>
+	                                }
+	                                else
+	                                {
+		                                @vm.FilterExpression
+	                                }
                                 }
                             </EditTemplate>
                         </RadzenDataGridColumn>
@@ -71,7 +86,12 @@
                     </Template>
                 </RadzenDataGridColumn>
                 <RadzenDataGridColumn TItem="ViewModelBase" Property="ModelName" Title="Data Model">
-                    <Template></Template>
+                    <Template Context="viewModel">
+                        @if (viewModel is DatasetTestParameterValueViewModel vm)
+                        {
+	                        @vm.ModelName
+                        }
+                    </Template>
                 </RadzenDataGridColumn>
                 <RadzenDataGridColumn TItem="ViewModelBase" Property="FilterExpression" Title="Filter Expression">
                     <Template Context="viewModel">
@@ -126,6 +146,10 @@
                     <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
                     <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
                 </svg>
+            </RadzenButton>
+        </div>
+        <div>
+            <RadzenButton ButtonStyle="ButtonStyle.Light" Click="() => DeleteRowClicked()" Disabled="DeleteRowButtonDisabled()">
             </RadzenButton>
         </div>
     </div>

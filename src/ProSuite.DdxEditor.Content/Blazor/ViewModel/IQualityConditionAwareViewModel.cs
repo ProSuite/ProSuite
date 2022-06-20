@@ -8,7 +8,6 @@ namespace ProSuite.DdxEditor.Content.Blazor.ViewModel;
 // todo daro better name
 public interface IViewModel : IViewObserver
 {
-	//event EventHandler SavedChanges;
 }
 
 // todo daro use IQualityConditionContextAware!!!

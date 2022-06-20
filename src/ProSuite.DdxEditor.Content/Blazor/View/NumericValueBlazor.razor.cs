@@ -5,9 +5,9 @@ namespace ProSuite.DdxEditor.Content.Blazor.View;
 
 public partial class NumericValueBlazor
 {
-	public string Value
+	public object Value
 	{
-		get => ViewModel.Value.ToString();
+		get => ViewModel.Value;
 		set => ViewModel.Value = value;
 	}
 

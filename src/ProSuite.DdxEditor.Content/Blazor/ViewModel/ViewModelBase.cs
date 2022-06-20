@@ -2,37 +2,35 @@ using System;
 using System.Collections.Generic;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.DdxEditor.Content.Blazor.View;
+using ProSuite.QA.Core;
 
 namespace ProSuite.DdxEditor.Content.Blazor.ViewModel;
 
 // todo daro rename
 public abstract class ViewModelBase : Observable
 {
-	protected ViewModelBase([NotNull] string name, [NotNull] IViewModel observer) : base(observer)
+	protected ViewModelBase([NotNull] TestParameter parameter, [NotNull] IViewModel observer) : base(observer)
 	{
-		Assert.ArgumentNotNullOrEmpty(name, nameof(name));
+		Assert.ArgumentNotNull(parameter, nameof(parameter));
 
-		ParameterName = name;
+		ParameterName = parameter.Name;
+		Parameter = parameter;
+		DataType = parameter.Type;
 
-		ComponentType = typeof(StringValueBlazor);
 		ComponentParameters = new Dictionary<string, object>();
 	}
 
-	protected ViewModelBase() : base(null)
-	{
-		ComponentParameters = new Dictionary<string, object>();
-
-		Values = new List<ViewModelBase>();
-	}
-
-	[UsedImplicitly]
+	[CanBeNull]
 	public abstract object Value { get; set; }
 
-	[UsedImplicitly]
+	[CanBeNull]
+	public virtual List<ViewModelBase> Values { get; set; }
+
+	[NotNull]
 	public string ParameterName { get; }
 
 	public bool Editing { get; private set; }
+	public bool Expanded { get; set; }
 
 	public string ImageSource { get; set; }
 
@@ -40,7 +38,11 @@ public abstract class ViewModelBase : Observable
 
 	public IDictionary<string, object> ComponentParameters { get; }
 
-	public List<ViewModelBase> Values { get; set; }
+	[NotNull]
+	public TestParameter Parameter { get; }
+
+	[CanBeNull]
+	public Type DataType { get; }
 
 	public void StartEditing()
 	{
@@ -50,5 +52,10 @@ public abstract class ViewModelBase : Observable
 	public void StopEditing()
 	{
 		Editing = false;
+	}
+
+	public override string ToString()
+	{
+		return $"{ParameterName}, Type: {DataType}";
 	}
 }

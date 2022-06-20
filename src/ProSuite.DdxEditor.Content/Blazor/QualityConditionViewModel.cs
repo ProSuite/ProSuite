@@ -17,6 +17,7 @@ public class QualityConditionViewModel : Observable, IQualityConditionAwareViewM
 {
 	[NotNull] private readonly QualityConditionItem _item;
 	private Dictionary<TestParameter, IList<ViewModelBase>> _rowsByParameter;
+	private Dictionary<TestParameter, ViewModelBase> _topLevelRowsByParameter;
 	private IList<ViewModelBase> _rows;
 
 	// todo daro InstanceConfiguration?
@@ -54,40 +55,51 @@ public class QualityConditionViewModel : Observable, IQualityConditionAwareViewM
 	{
 		Assert.ArgumentNotNull(qualityCondition, nameof(qualityCondition));
 
-		if (_rowsByParameter != null && _rowsByParameter?.Count != 0)
+		if (_rowsByParameter != null && _rowsByParameter?.Count > 0)
 		{
 			UnwireEvents(_rowsByParameter.Values.SelectMany(row => row));
 		}
 
-		_rowsByParameter = CreateRows(qualityCondition);
+		if (_topLevelRowsByParameter != null && _topLevelRowsByParameter?.Count > 0)
+		{
+			UnwireEvents(_topLevelRowsByParameter.Values.OfType<TestParameterValueCollectionViewModel>());
+		}
 
-		// todo daro inline
-		Rows = new List<ViewModelBase>(GetTopLevelRows(_rowsByParameter).ToList());
+		_rowsByParameter = CreateRows(qualityCondition);
 
 		WireEvents(_rowsByParameter.Values.SelectMany(row => row));
 
-		// implement event args?
-		//SavedChanges?.Invoke(this, null);
+		_topLevelRowsByParameter =
+			new Dictionary<TestParameter, ViewModelBase>(GetTopLevelRows(_rowsByParameter));
+		
+		WireEvents(_topLevelRowsByParameter.Values.OfType<TestParameterValueCollectionViewModel>());
+
+		// important to notify view before setting the source data
+		//OnPropertyChanged(nameof(Rows));
+
+		Rows = new List<ViewModelBase>(_topLevelRowsByParameter.Values);
 	}
 
-	private IEnumerable<ViewModelBase> GetTopLevelRows(
+	private IEnumerable<KeyValuePair<TestParameter, ViewModelBase>> GetTopLevelRows(
 		[NotNull] Dictionary<TestParameter, IList<ViewModelBase>> rowsByParameter)
 	{
 		Assert.ArgumentNotNull(rowsByParameter, nameof(rowsByParameter));
 
 		foreach (KeyValuePair<TestParameter, IList<ViewModelBase>> pair in rowsByParameter)
 		{
-			TestParameter testParam = pair.Key;
+			TestParameter parameter = pair.Key;
 			IList<ViewModelBase> rows = pair.Value;
 
 			if (rows.Count > 1)
 			{
-				yield return new TestParameterValueCollectionViewModel(testParam.Name, rows, this);
+				yield return new KeyValuePair<TestParameter, ViewModelBase>(
+					parameter, new TestParameterValueCollectionViewModel(parameter, parameter.Type, rows, this));
 			}
-			else
+			else if (rows.Count == 1)
 			{
-				yield return rows[0];
+				yield return new KeyValuePair<TestParameter, ViewModelBase>(parameter, rows[0]);
 			}
+			// todo daro log
 		}
 	}
 
@@ -133,7 +145,7 @@ public class QualityConditionViewModel : Observable, IQualityConditionAwareViewM
 			{
 				rowsByParameter[param]
 					.Add(new DatasetTestParameterValueViewModel(
-						     name,
+						     param,
 						     datasetValue.DatasetValue,
 						     datasetValue.FilterExpression,
 						     datasetValue.UsedAsReferenceData,
@@ -143,7 +155,7 @@ public class QualityConditionViewModel : Observable, IQualityConditionAwareViewM
 			{
 				rowsByParameter[param]
 					.Add(new ScalarTestParameterValueViewModel(
-						     name, scalarValue.GetValue(), scalarValue.DataType, this));
+						     param, scalarValue.GetValue(), this));
 			}
 			else
 			{
@@ -153,6 +165,48 @@ public class QualityConditionViewModel : Observable, IQualityConditionAwareViewM
 		}
 
 		return rowsByParameter;
+	}
+
+	public ViewModelBase InsertRow(TestParameter parameter)
+	{
+		Assert.ArgumentNotNull(parameter, nameof(parameter));
+		Assert.ArgumentCondition(_rowsByParameter.ContainsKey(parameter), nameof(parameter));
+
+		var collectionRow =
+			Assert.NotNull((TestParameterValueCollectionViewModel) _topLevelRowsByParameter[parameter]);
+
+		ViewModelBase insertRow;
+
+		if (TestParameterTypeUtils.IsDatasetType(parameter.Type))
+		{
+			insertRow = new DatasetTestParameterValueViewModel(parameter, null, null, false, this);
+		}
+		else
+		{
+			insertRow = new ScalarTestParameterValueViewModel(parameter, null, this);
+		}
+
+		insertRow.New = true;
+
+		WireEvents(insertRow);
+
+		_rowsByParameter[parameter].Add(insertRow);
+
+		collectionRow.Insert(insertRow);
+
+		return insertRow;
+	}
+
+	public void DeleteRow(ViewModelBase row)
+	{
+		TestParameter parameter = row.Parameter;
+
+		var collectionRow =
+			Assert.NotNull((TestParameterValueCollectionViewModel) _topLevelRowsByParameter[parameter]);
+
+		Assert.True(_rowsByParameter[parameter].Remove(row), $"cannot remove {row}");
+
+		collectionRow.Remove(row);
 	}
 
 	private void UpdateEntity([NotNull] QualityCondition qualityCondition)
@@ -188,8 +242,6 @@ public class QualityConditionViewModel : Observable, IQualityConditionAwareViewM
 		}
 	}
 
-	//public event EventHandler SavedChanges;
-
 	#region events
 
 	private void WireEvents([NotNull] IEnumerable<ViewModelBase> rows)
@@ -198,8 +250,13 @@ public class QualityConditionViewModel : Observable, IQualityConditionAwareViewM
 
 		foreach (ViewModelBase row in rows)
 		{
-			row.PropertyChanged += OnRowPropertyChanged;
+			WireEvents(row);
 		}
+	}
+
+	private void WireEvents(ViewModelBase row)
+	{
+		row.PropertyChanged += OnRowPropertyChanged;
 	}
 
 	private void UnwireEvents([NotNull] IEnumerable<ViewModelBase> rows)
@@ -208,8 +265,13 @@ public class QualityConditionViewModel : Observable, IQualityConditionAwareViewM
 
 		foreach (ViewModelBase row in rows)
 		{
-			row.PropertyChanged -= OnRowPropertyChanged;
+			UnwireEvents(row);
 		}
+	}
+
+	private void UnwireEvents(ViewModelBase row)
+	{
+		row.PropertyChanged -= OnRowPropertyChanged;
 	}
 
 	private void OnRowPropertyChanged(object sender, PropertyChangedEventArgs e)

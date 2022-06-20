@@ -113,11 +113,6 @@ namespace ProSuite.DdxEditor.Content
 
 		public abstract IEnumerable<Item> GetChildren([NotNull] ModelsItemBase modelItem);
 
-		public IEnumerable<Item> GetChildren(BlazorItems item)
-		{
-			return Enumerable.Empty<Item>();
-		}
-
 		public abstract IEnumerable<Item> GetChildren<E>([NotNull] ModelItemBase<E> modelItem)
 			where E : Model;
 

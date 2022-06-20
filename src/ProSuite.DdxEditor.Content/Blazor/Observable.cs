@@ -1,7 +1,6 @@
 using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DdxEditor.Content.Blazor.ViewModel;
 
@@ -15,25 +14,15 @@ public abstract class Observable : IDisposable, INotifyPropertyChanged
 	protected Observable([CanBeNull] IViewModel observer)
 	{
 		_observer = observer;
-
-		//_observer.SavedChanges += OnSavedChanges;
 	}
 
 	public bool Dirty { get; set; }
 
-	public void Dispose()
-	{
-		//_observer.SavedChanges -= OnSavedChanges;
-	}
+	public bool New { get; set; }
+
+	public void Dispose() { }
 
 	public event PropertyChangedEventHandler PropertyChanged;
-
-	private void OnSavedChanges(object sender, EventArgs e)
-	{
-		Dirty = false;
-
-		OnSavedChangesCore();
-	}
 
 	protected virtual void OnSavedChangesCore() { }
 
@@ -47,6 +36,8 @@ public abstract class Observable : IDisposable, INotifyPropertyChanged
 	[NotifyPropertyChangedInvocator]
 	protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
 	{
+		NotifyDirty();
+
 		PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 	}
 
