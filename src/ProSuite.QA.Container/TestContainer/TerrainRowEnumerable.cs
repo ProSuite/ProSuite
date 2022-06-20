@@ -12,11 +12,11 @@ namespace ProSuite.QA.Container.TestContainer
 	{
 		[NotNull] private readonly TerrainReference _terrainReference;
 		private readonly double _resolution;
-		[NotNull] private readonly ITestProgress _progress;
+		[CanBeNull] private readonly ITestProgress _progress;
 
 		public TerrainRowEnumerable([NotNull] TerrainReference terrainRef,
 		                            double resolution,
-		                            [NotNull] ITestProgress progress)
+		                            [CanBeNull] ITestProgress progress)
 		{
 			_terrainReference = terrainRef;
 			_resolution = resolution;

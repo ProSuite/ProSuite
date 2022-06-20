@@ -2,6 +2,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Core.IssueCodes;
@@ -14,6 +16,7 @@ namespace ProSuite.QA.Container
 	public class QaError
 	{
 		private readonly QaErrorGeometry _errorGeometry;
+		private IEnvelope _involvedExtent;
 
 		#region Constructors
 
@@ -30,6 +33,7 @@ namespace ProSuite.QA.Container
 			Assert.ArgumentNotNullOrEmpty(description, nameof(description));
 			Assert.ArgumentNotNull(involvedRows, nameof(involvedRows));
 
+
 			Test = test;
 			InvolvedRows = new List<InvolvedRow>(involvedRows);
 
@@ -41,6 +45,7 @@ namespace ProSuite.QA.Container
 			AssertionFailed = assertionFailed;
 			Values = values?.ToList();
 
+			_involvedExtent = GetInvolvedExtent(involvedRows as InvolvedRows);
 			Duplicate = false;
 		}
 
@@ -67,6 +72,9 @@ namespace ProSuite.QA.Container
 		public bool Duplicate { get; set; }
 
 		public bool AssertionFailed { get; }
+
+		[CanBeNull]
+		public IEnvelope InvolvedExtent => _involvedExtent;
 
 		[CanBeNull]
 		public IList<object> Values { get; }
@@ -108,6 +116,31 @@ namespace ProSuite.QA.Container
 		public void ReduceGeometry()
 		{
 			_errorGeometry.ReduceGeometry();
+		}
+
+		private IEnvelope GetInvolvedExtent([CanBeNull] InvolvedRows involvedRows)
+		{
+			if (involvedRows == null)
+			{
+				return null;
+			}
+			IEnvelope involvedExtent = null;
+			foreach (IReadOnlyRow testedRow in involvedRows.TestedRows)
+			{
+				if (testedRow is IReadOnlyFeature testedFeature)
+				{
+					if (involvedExtent == null)
+					{
+						involvedExtent = GeometryFactory.Clone(testedFeature.Shape.Envelope);
+					}
+					else
+					{
+						involvedExtent.Union(GeometryFactory.Clone(testedFeature.Shape.Envelope));
+					}
+				}
+			}
+
+			return involvedExtent;
 		}
 
 		public bool IsProcessed(double xMax, double yMax)

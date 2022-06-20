@@ -4,17 +4,23 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons;
+using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Geom;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Progress;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.VerificationProgress;
 using ProSuite.DomainServices.AO.QA;
+using ProSuite.Microservices.AO;
 using ProSuite.Microservices.Definitions.QA;
+using ProSuite.Microservices.Definitions.Shared;
 using ProSuite.QA.Container;
+using ProSuite.QA.Container.TestContainer;
 
 namespace ProSuite.Microservices.Server.AO.QA
 {
@@ -24,14 +30,132 @@ namespace ProSuite.Microservices.Server.AO.QA
 	/// </summary>
 	public class DistributedTestRunner : ITestRunner
 	{
+		private class IssueKey
+		{
+			private readonly ITest _test;
+
+			public IssueKey([NotNull] IssueMsg issueMsg, [NotNull] ITest test)
+			{
+				IssueMsg = issueMsg;
+				_test = test;
+			}
+
+			public IssueMsg IssueMsg { get; }
+
+			public List<InvolvedRow> InvolvedRows =>
+				_involvedRows ?? (_involvedRows = GetSortedInvolvedRows(IssueMsg.LegacyInvolvedRows));
+			private List<InvolvedRow> _involvedRows;
+
+			public QaError QaError =>
+				_qaError ?? (_qaError = GetQaError());
+			private QaError _qaError;
+
+			private List<InvolvedRow> GetSortedInvolvedRows(string legayInvolvedRows)
+			{
+				InvolvedRows involvedRows = RowParser.Parse(legayInvolvedRows);
+				TestUtils.SortInvolvedRows(involvedRows);
+				return involvedRows;
+			}
+
+			private QaError GetQaError()
+			{
+				QaError error = new QaError(
+					_test, IssueMsg.Description, InvolvedRows,
+					ProtobufGeometryUtils.FromShapeMsg(IssueMsg.IssueGeometry), null, null);
+				error.ReduceGeometry();
+				return error;
+			}
+		}
+		private class IssueKeyComparer : IEqualityComparer<IssueKey>
+		{
+			public bool Equals(IssueKey x, IssueKey y)
+			{
+				if (x == y)
+					return true;
+
+				if (x == null || y == null)
+					return false;
+
+				if (x.IssueMsg.Test != y.IssueMsg.Test)
+					return false;
+
+				if (TestUtils.CompareSortedInvolvedRows(x.InvolvedRows, y.InvolvedRows,
+				                                        validateRowCount: true) != 0)
+				{
+					return false;
+				}
+				if (TestUtils.CompareQaErrors(x.QaError, y.QaError,
+				                              compareIndividualInvolvedRows: true) != 0)
+				{
+					return false;
+				}
+
+
+				return true;
+			}
+
+			public int GetHashCode(IssueKey obj)
+			{
+				return obj.IssueMsg.ConditionId ^ 29 * obj.IssueMsg.Description.GetHashCode();
+			}
+		}
+		private class SubVerification
+		{
+			private IDictionary<IssueKey, IssueMsg> _knownIssues;
+			public SubVerification(VerificationRequest subRequest)
+			{
+				SubRequest = subRequest;
+				SubResponse = new SubResponse();
+			}
+
+			public VerificationRequest SubRequest { get; }
+			public SubResponse SubResponse { get; }
+			public Tile Tile { get; set; }
+			public int TileX { get; set; }
+			public int TileY { get; set; }
+			public QualityConditionGroup QualityConditionGroup { get; set; }
+
+			public IDictionary<IssueKey, IssueMsg> KnownIssues =>
+				_knownIssues ??
+				(_knownIssues =
+					 new ConcurrentDictionary<IssueKey, IssueMsg>(new IssueKeyComparer()));
+
+			private Dictionary<int, QualityCondition> _idConditions;
+			private Dictionary<int, QualityCondition> GetIdConditions()
+			{
+				Dictionary<int, QualityCondition> idConditions =
+					new Dictionary<int, QualityCondition>();
+				foreach (QualityCondition qualityCondition in QualityConditionGroup.QualityConditions.Keys)
+				{
+					idConditions[qualityCondition.Id] = qualityCondition;
+				}
+
+				return idConditions;
+			}
+
+			public ITest GetFirstTest(int conditionId)
+			{
+				_idConditions = _idConditions ?? GetIdConditions();
+				QualityCondition qc = _idConditions[conditionId];
+				ITest test = QualityConditionGroup.QualityConditions[qc].First();
+				return test;
+			}
+
+			public bool IsFullyProcessed(IssueKey issue)
+			{
+				// TODO: Check extent of issue with processed area
+				return false;
+			}
+		}
+
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private readonly QualityVerificationGrpc.QualityVerificationGrpcClient _qaClient;
 		private readonly VerificationRequest _originalRequest;
 		private readonly ConcurrentBag<IssueMsg> _issueCollection;
 
-		private readonly IDictionary<Task<bool>, SubResponse> _tasks =
-			new ConcurrentDictionary<Task<bool>, SubResponse>();
+		private readonly IDictionary<Task<bool>, SubVerification> _tasks =
+			new ConcurrentDictionary<Task<bool>, SubVerification>();
 
 		public DistributedTestRunner(
 			[NotNull] QualityVerificationGrpc.QualityVerificationGrpcClient qaClient,
@@ -90,36 +214,42 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			foreach (QualityConditionGroup qualityConditionGroup in qcGroups)
 			{
-				IList<QualityCondition> qcGroup = qualityConditionGroup.QualityConditions;
+				IList<QualityCondition> qcGroup =
+					qualityConditionGroup.QualityConditions.Keys.ToList();
 				if (qcGroup.Count == 0)
 				{
 					continue;
 				}
 
-				VerificationRequest subRequest =
-					CreateSubRequest(_originalRequest, QualitySpecification, qcGroup);
+				IList<SubVerification> subVerifications =
+					CreateSubVerifications(_originalRequest, QualitySpecification,
+					                  qualityConditionGroup);
 
-				SubResponse subResponse = new SubResponse();
+				foreach (var subVerification in subVerifications)
+				{
+					VerificationRequest subRequest = subVerification.SubRequest;
+					SubResponse subResponse = subVerification.SubResponse;
 
-				Task<bool> task = Task.Run(
-					async () =>
-						await VerifyAsync(_qaClient, subRequest, subResponse,
-						                  CancellationTokenSource),
-					CancellationTokenSource.Token);
+					Task<bool> task = Task.Run(
+						async () =>
+							await VerifyAsync(_qaClient, subRequest, subResponse,
+							                  CancellationTokenSource),
+						CancellationTokenSource.Token);
 
-				// Process the messages even though the foreground thread is blocking/busy processing results
-				task.ConfigureAwait(false);
-				_tasks.Add(Assert.NotNull(task), subResponse);
+					// Process the messages even though the foreground thread is blocking/busy processing results
+					task.ConfigureAwait(false);
+					_tasks.Add(task, subVerification);
 
-				Thread.Sleep(50);
+					Thread.Sleep(50);
+				}
 			}
 
 			while (_tasks.Count > 0)
 			{
 				if (TryTakeCompletedRun(_tasks, out Task<bool> task,
-				                        out SubResponse subResponse))
+				                        out SubVerification completed))
 				{
-					ProcessFinalResult(task, subResponse);
+					ProcessFinalResult(task, completed);
 
 					_msg.InfoFormat("Remaining work unit verifications: {0}", _tasks.Count);
 				}
@@ -128,14 +258,14 @@ namespace ProSuite.Microservices.Server.AO.QA
 					// Process intermediate errors (might need de-duplication or other manipulation in the future)
 
 					bool reportProgress = false;
-					foreach (SubResponse response in _tasks.Values)
+					foreach (SubVerification subVerification in _tasks.Values)
 					{
-						if (DrainIssues(response))
+						if (DrainIssues(subVerification))
 						{
 							reportProgress = true;
 						}
 
-						if (UpdateOverallProgress(response))
+						if (UpdateOverallProgress(subVerification))
 						{
 							reportProgress = true;
 						}
@@ -158,22 +288,23 @@ namespace ProSuite.Microservices.Server.AO.QA
 			EndVerification(QualityVerification);
 		}
 
-		private void ProcessFinalResult(Task<bool> task, SubResponse subVerification)
+		private void ProcessFinalResult(Task<bool> task, SubVerification subVerification)
 		{
+			SubResponse subResponse = subVerification.SubResponse;
 			if (task.IsFaulted)
 			{
-				_msg.WarnFormat("Sub-verification has faulted: {0}", subVerification);
+				_msg.WarnFormat("Sub-verification has faulted: {0}", subResponse);
 
 				CancellationTokenSource.Cancel();
 				CancellationMessage = task.Exception?.InnerException?.Message;
 			}
 
-			if (! string.IsNullOrEmpty(subVerification.CancellationMessage))
+			if (! string.IsNullOrEmpty(subResponse.CancellationMessage))
 			{
-				CancellationMessage = subVerification.CancellationMessage;
+				CancellationMessage = subResponse.CancellationMessage;
 			}
 
-			QualityVerificationMsg verificationMsg = subVerification.VerificationMsg;
+			QualityVerificationMsg verificationMsg = subResponse.VerificationMsg;
 
 			if (verificationMsg != null)
 			{
@@ -181,32 +312,81 @@ namespace ProSuite.Microservices.Server.AO.QA
 			}
 
 			DrainIssues(subVerification);
+
+			ProcessTileCompletion(subVerification);
 		}
 
-		private bool DrainIssues(SubResponse fromSubVerification)
+		private bool DrainIssues([CanBeNull] SubVerification fromSubVerification, int max = int.MaxValue)
 		{
 			if (fromSubVerification == null)
 			{
 				return false;
 			}
+			SubVerification verification = fromSubVerification;
 
 			bool drained = false;
-			IssueMsg issueMsg;
-			if (fromSubVerification.Issues.TryTake(out issueMsg))
+			int drainedCount = 0;
+			while (drainedCount < max && verification.SubResponse.Issues.TryTake(out IssueMsg issueMsg))
 			{
+				drainedCount++;
+
 				// TODO: Consider adding the issue to some IssueProcessor that
 				//       keeps track of what has been found and performs
 				//       - de-duplication
 				//       - potentially re-assembling of partial issues on tile boundaries
 				//       - adds the final issues to a 'outbox' colleciton that will be
 				//         sent on the next progress
-				// This is the global issue collection that will be sent on progress:
-				_issueCollection.Add(issueMsg);
+
+				bool add = true;
+
+				if (verification.Tile != null)
+				{
+					ITest test = verification.GetFirstTest(issueMsg.ConditionId);
+					IssueKey key = new IssueKey(issueMsg, test);
+					if (!verification.KnownIssues.ContainsKey(key))
+					{
+						verification.KnownIssues.Add(key, issueMsg);
+					}
+					else
+					{
+						add = false;
+					}
+				}
+
+				if (add)
+				{
+					// This is the global issue collection that will be sent on progress:
+					_issueCollection.Add(issueMsg);
+				}
 
 				drained = true;
 			}
 
 			return drained;
+		}
+
+		private void ProcessTileCompletion(SubVerification forSubVerification)
+		{
+			Tile tile = forSubVerification.Tile;
+			if (tile == null)
+			{
+				return;
+			}
+
+			IDictionary<IssueKey, IssueMsg> knownIssues = forSubVerification.KnownIssues;
+			List<IssueKey> fullyProcessed = new List<IssueKey>();
+			foreach (var issue in knownIssues.Keys)
+			{
+				if (forSubVerification.IsFullyProcessed(issue))
+				{
+					fullyProcessed.Add(issue);
+				}
+			}
+
+			foreach (IssueKey issue in fullyProcessed)
+			{
+				knownIssues.Remove(issue);
+			}
 		}
 
 		private static void StartVerification([CanBeNull] QualityVerification qualityVerification)
@@ -298,24 +478,24 @@ namespace ProSuite.Microservices.Server.AO.QA
 			return conditionVerification;
 		}
 
-		private bool UpdateOverallProgress(SubResponse response)
+		private bool UpdateOverallProgress(SubVerification subVerification)
 		{
 			// The 'slowest' wins:
 
-			if (response.ProgressTotal == 0)
+			if (subVerification.SubResponse.ProgressTotal == 0)
 			{
 				return false;
 			}
 
-			SubResponse slowest = GetSlowestResponse(_tasks.Values);
+			SubResponse slowest = GetSlowestResponse(_tasks.Select(x => x.Value.SubResponse));
 
 			OverallProgressCurrent = slowest.ProgressCurrent;
 			OverallProgressTotal = slowest.ProgressTotal;
 
-			return response == slowest;
+			return subVerification.SubResponse == slowest;
 		}
 
-		private static SubResponse GetSlowestResponse(ICollection<SubResponse> subResponses)
+		private static SubResponse GetSlowestResponse(IEnumerable<SubResponse> subResponses)
 		{
 			double slowest = double.MaxValue;
 
@@ -333,11 +513,11 @@ namespace ProSuite.Microservices.Server.AO.QA
 		}
 
 		private static bool TryTakeCompletedRun(
-			IDictionary<Task<bool>, SubResponse> tasks,
+			IDictionary<Task<bool>, SubVerification> tasks,
 			out Task<bool> task,
-			out SubResponse subVerification)
+			out SubVerification subVerification)
 		{
-			KeyValuePair<Task<bool>, SubResponse> keyValuePair =
+			KeyValuePair<Task<bool>, SubVerification> keyValuePair =
 				tasks.FirstOrDefault(kvp => kvp.Key.IsCompleted);
 
 			// NOTE: 'Default' is an empty keyValuePair struct
@@ -352,14 +532,14 @@ namespace ProSuite.Microservices.Server.AO.QA
 			return tasks.Remove(task);
 		}
 
-		private static VerificationRequest CreateSubRequest(
+		private static SubVerification CreateVerification(
 			[NotNull] VerificationRequest originalRequest,
 			[NotNull] QualitySpecification specification,
 			[NotNull] IList<QualityCondition> qualityConditions)
 		{
-			var result = new VerificationRequest(originalRequest);
+			var subRequest = new VerificationRequest(originalRequest);
 
-			result.MaxParallelProcessing = 1;
+			subRequest.MaxParallelProcessing = 1;
 
 			var requestedConditionIds = new HashSet<int>(qualityConditions.Select(c => c.Id));
 
@@ -369,11 +549,95 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 				if (! requestedConditionIds.Contains(condition.Id))
 				{
-					result.Specification.ExcludedConditionIds.Add(condition.Id);
+					subRequest.Specification.ExcludedConditionIds.Add(condition.Id);
 				}
 			}
 
-			return result;
+			return new SubVerification(subRequest);
+		}
+
+		private IList<SubVerification> CreateSubVerifications(
+			[NotNull] VerificationRequest originalRequest,
+			[NotNull] QualitySpecification specification,
+			[NotNull] QualityConditionGroup qualityConditionGroup)
+		{
+			List<QualityCondition> qualityConditions =
+				qualityConditionGroup.QualityConditions.Keys.ToList();
+
+			if (qualityConditionGroup.ExecType != QualityConditionExecType.TileParallel)
+			{
+				return new[]
+				       {
+					       CreateVerification(
+						       originalRequest, specification, qualityConditions)
+				       };
+			}
+
+			List<ContainerTest> tests = new List<ContainerTest>();
+			foreach (KeyValuePair<QualityCondition, IList<ITest>> pair in
+			         qualityConditionGroup.QualityConditions)
+			{
+				foreach (var test in pair.Value)
+				{
+					tests.Add((ContainerTest) test);
+				}
+			}
+
+			IGeometry perimeter = ProtobufGeometryUtils.FromShapeMsg(originalRequest.Parameters.Perimeter);
+			IEnvelope executeEnvelope = perimeter?.Envelope;
+			double tileSize = originalRequest.Parameters.TileSize;
+			TileEnum tileEnum = new TileEnum(tests, executeEnvelope, tileSize, executeEnvelope?.SpatialReference);
+
+			var requestedConditionIds = new HashSet<int>(qualityConditions.Select(c => c.Id));
+
+			List<SubVerification> subVerifications = new List<SubVerification>();
+			HashSet<int> excludedConditionIds = new HashSet<int>();
+			foreach (QualitySpecificationElement element in specification.Elements)
+			{
+				QualityCondition condition = element.QualityCondition;
+
+				if (!requestedConditionIds.Contains(condition.Id))
+				{
+					excludedConditionIds.Add(condition.Id);
+				}
+			}
+
+			IBox testBox = tileEnum.TestRunBox;
+
+			List<List<bool>> completed = new List<List<bool>>();
+			foreach (Tile tile in tileEnum.EnumTiles())
+			{
+				int ix = (int) Math.Round((tile.Box.Min.X - testBox.Min.X) / tileSize);
+				int iy = (int)Math.Round((tile.Box.Min.Y - testBox.Min.Y) / tileSize);
+
+				IGeometry filter = tile.FilterEnvelope;
+				if (perimeter?.GeometryType == esriGeometryType.esriGeometryPolygon)
+				{
+					IGeometry clone = GeometryFactory.Clone(perimeter);
+					var op = (ITopologicalOperator) clone;
+					op.Clip(tile.FilterEnvelope);
+					if (clone.IsEmpty)
+					{
+//						completed[ix][iy] = true;
+						continue;
+					}
+					filter = clone;
+				}
+
+				var subRequest = new VerificationRequest(originalRequest);
+				subRequest.Parameters.Perimeter = ProtobufGeometryUtils.ToShapeMsg(filter);
+				subRequest.MaxParallelProcessing = 1;
+				subRequest.Specification.ExcludedConditionIds.AddRange(excludedConditionIds);
+
+				SubVerification subVerification = new SubVerification(subRequest);
+				subVerification.Tile = tile;
+				subVerification.TileX = ix;
+				subVerification.TileY = iy;
+				subVerification.QualityConditionGroup = qualityConditionGroup;
+				subVerifications.Add(subVerification);
+			}
+
+			return subVerifications;
 		}
 
 		private async Task<bool> VerifyAsync(

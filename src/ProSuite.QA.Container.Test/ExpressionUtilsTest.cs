@@ -1,10 +1,5 @@
 using System.Collections.Generic;
-using ESRI.ArcGIS.Geodatabase;
 using NUnit.Framework;
-using ProSuite.Commons.AO.Geodatabase;
-using ProSuite.Commons.AO.Geodatabase.GdbSchema;
-using ProSuite.Commons.AO.Licensing;
-using ProSuite.QA.Container.TestSupport;
 
 namespace ProSuite.QA.Container.Test
 {
@@ -19,8 +14,8 @@ namespace ProSuite.QA.Container.Test
 
 			var replacements = new Dictionary<string, string>
 			                   {
-				                   {"a_mdl", "a_ds"},
-				                   {"b_mdl", "b_ds"}
+				                   { "a_mdl", "a_ds" },
+				                   { "b_mdl", "b_ds" }
 			                   };
 
 			Assert.AreEqual(exeSql,
@@ -34,8 +29,8 @@ namespace ProSuite.QA.Container.Test
 
 			var replacements = new Dictionary<string, string>
 			                   {
-				                   {"a_mdl", "a_ds"},
-				                   {"b_mdl", "b_ds"}
+				                   { "a_mdl", "a_ds" },
+				                   { "b_mdl", "b_ds" }
 			                   };
 
 			Assert.AreEqual(sql,
@@ -51,8 +46,8 @@ namespace ProSuite.QA.Container.Test
 
 			var replacements = new Dictionary<string, string>
 			                   {
-				                   {"a_mdl", "xx.a_ds"},
-				                   {"b_mdl", "yy.b_ds"}
+				                   { "a_mdl", "xx.a_ds" },
+				                   { "b_mdl", "yy.b_ds" }
 			                   };
 
 			Assert.AreEqual(exeSql,
@@ -68,8 +63,8 @@ namespace ProSuite.QA.Container.Test
 
 			var replacements = new Dictionary<string, string>
 			                   {
-				                   {"a", "a.a"},
-				                   {"b", "a.b"}
+				                   { "a", "a.a" },
+				                   { "b", "a.b" }
 			                   };
 
 			Assert.AreEqual(exeSql,
@@ -84,8 +79,8 @@ namespace ProSuite.QA.Container.Test
 				@"x.a_mdl.f1 > x.b_mdl.f1 and (x.a_mdl.f2 * x.b_mdl.f2 < 100)";
 			var replacements = new Dictionary<string, string>
 			                   {
-				                   {"x.a_mdl", "a_ds"},
-				                   {"x.b_mdl", "b_ds"}
+				                   { "x.a_mdl", "a_ds" },
+				                   { "x.b_mdl", "b_ds" }
 			                   };
 
 			Assert.AreEqual(exeSql,
@@ -100,7 +95,7 @@ namespace ProSuite.QA.Container.Test
 			bool? caseSensitive;
 			Assert.AreEqual(expression,
 			                ExpressionUtils.ParseCaseSensitivityHint(expression,
-			                                                         out caseSensitive));
+				                out caseSensitive));
 			Assert.IsNull(caseSensitive);
 		}
 
@@ -112,7 +107,7 @@ namespace ProSuite.QA.Container.Test
 			bool? caseSensitive;
 			Assert.AreEqual(expression,
 			                ExpressionUtils.ParseCaseSensitivityHint(expression,
-			                                                         out caseSensitive));
+				                out caseSensitive));
 			Assert.IsNull(caseSensitive);
 		}
 
@@ -192,26 +187,6 @@ namespace ProSuite.QA.Container.Test
 				                expression + ExpressionUtils.IgnoreCaseHint,
 				                out caseSensitive));
 			Assert.False(caseSensitive != null && caseSensitive.Value);
-		}
-	}
-
-	[TestFixture]
-	public class TableViewFactoryTest
-	{
-		[Test]
-		public void Gaga()
-		{
-			new ArcGISLicenses().Checkout();
-			GdbTable t = new GdbTable(1, "t");
-			t.AddField(FieldUtils.CreateField("a", esriFieldType.esriFieldTypeInteger));
-			t.AddField(FieldUtils.CreateField("b", esriFieldType.esriFieldTypeInteger));
-			TableView v = TableViewFactory.Create(t, "a+b=5");
-			v = TableViewFactory.Create(t, "a-b=5");
-			v = TableViewFactory.Create(t, "a*b=5");
-			v = TableViewFactory.Create(t, "a/b=5");
-			v = TableViewFactory.Create(t, "a%b=5");
-
-			v.AddExpressionColumn("tt", "SUM(IIF(a=0,1,2))", isGroupExpression: true);
 		}
 	}
 }

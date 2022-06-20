@@ -380,6 +380,41 @@ return : Point2D : lines cut each other at Point (non parallel)
 		}
 
 		/// <summary>
+		/// Gets the change in direction between the baseLine and the compareLine between
+		/// -PI (180 degrees left) and +PI (180 degrees right). However, an exact 180 direction
+		/// change results in null.
+		/// </summary>
+		/// <param name="baseLine"></param>
+		/// <param name="compareLine"></param>
+		/// <returns></returns>
+		public static double? GetDirectionChange(Line3D baseLine, Line3D compareLine)
+		{
+			double angleDifference = baseLine.GetDirectionAngleXY() -
+			                         compareLine.GetDirectionAngleXY();
+
+			// Normalize to -PI .. +PI
+			if (angleDifference <= -Math.PI)
+			{
+				angleDifference += 2 * Math.PI;
+			}
+			else if (angleDifference > Math.PI)
+			{
+				angleDifference -= 2 * Math.PI;
+			}
+
+			// exclude 180-degree turns
+			double epsilon = MathUtils.GetDoubleSignificanceEpsilon(baseLine.XMax);
+
+			if (MathUtils.AreEqual(angleDifference, -Math.PI, epsilon) ||
+			    MathUtils.AreEqual(angleDifference, Math.PI, epsilon))
+			{
+				return null;
+			}
+
+			return angleDifference;
+		}
+
+		/// <summary>
 		/// Rotate the provided points about the X axis by 90 degrees.
 		/// </summary>
 		/// <param name="points">The points to rotate.</param>
@@ -464,6 +499,27 @@ return : Point2D : lines cut each other at Point (non parallel)
 				resultPoint.Z = origX;
 
 				yield return resultPoint;
+			}
+		}
+
+		public static IEnumerable<Pnt3D> Move(IEnumerable<Pnt3D> points,
+		                                      double dX, double dY, double dZ,
+		                                      bool copy = false)
+		{
+			foreach (Pnt3D point in points)
+			{
+				if (copy)
+				{
+					yield return new Pnt3D(point.X + dX, point.Y + dY, point.Z + dZ);
+				}
+				else
+				{
+					point.X += dX;
+					point.Y += dY;
+					point.Z += dZ;
+
+					yield return point;
+				}
 			}
 		}
 

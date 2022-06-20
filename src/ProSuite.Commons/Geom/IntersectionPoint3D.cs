@@ -442,8 +442,69 @@ namespace ProSuite.Commons.Geom
 			return sourcePart.PointCount - 1 == VirtualSourceVertex && source.IsClosed;
 		}
 
+		public bool ReferencesSameSourceVertex([CanBeNull] IntersectionPoint3D other,
+		                                       ISegmentList source,
+		                                       double tolerance = double.NaN)
+		{
+			if (other == null)
+			{
+				return false;
+			}
+
+			if (other.SourcePartIndex != SourcePartIndex)
+			{
+				return false;
+			}
+
+			if (VirtualSourceVertex == 0 &&
+			    other.IsAtSourceRingEndPoint(source))
+			{
+				return true;
+			}
+
+			if (other.VirtualSourceVertex == 0 &&
+			    IsAtSourceRingEndPoint(source))
+			{
+				return true;
+			}
+
+			double delta = Math.Abs(VirtualSourceVertex - other.VirtualSourceVertex);
+
+			// Quick test: if they are more than 2 vertices away from each other -> false
+			if (delta > 2)
+			{
+				return false;
+			}
+
+			if (delta <= double.Epsilon)
+			{
+				// It does not make a difference whether measuring the ratio or absolute distance:
+				return true;
+			}
+
+			// Proper test:
+			Linestring sourcePart = source.GetPart(SourcePartIndex);
+
+			// This might not be optimal in a ring where one is 0 and the other just below segment count
+			int lowerSegmentIdx = (int) Math.Min(other.VirtualSourceVertex, VirtualSourceVertex);
+
+			double distanceAlongBetween =
+				GetDistanceAlong(sourcePart, VirtualSourceVertex, lowerSegmentIdx) -
+				GetDistanceAlong(sourcePart, other.VirtualSourceVertex, lowerSegmentIdx);
+
+			double alongDistance = Math.Abs(distanceAlongBetween);
+
+			if (double.IsNaN(tolerance))
+			{
+				tolerance = MathUtils.GetDoubleSignificanceEpsilon(Point.X, Point.Y);
+			}
+
+			return alongDistance < tolerance;
+		}
+
 		public bool ReferencesSameTargetVertex([CanBeNull] IntersectionPoint3D other,
-		                                       ISegmentList target)
+		                                       ISegmentList target,
+		                                       double tolerance = double.Epsilon)
 		{
 			if (other == null)
 			{
@@ -467,8 +528,33 @@ namespace ProSuite.Commons.Geom
 				return true;
 			}
 
-			// ReSharper disable once CompareOfFloatsByEqualityOperator
-			return VirtualTargetVertex == other.VirtualTargetVertex;
+			double delta = Math.Abs(VirtualTargetVertex - other.VirtualTargetVertex);
+
+			// Quick test: if they are more than 2 vertices away from each other -> false
+			if (delta > 2)
+			{
+				return false;
+			}
+
+			if (delta <= double.Epsilon)
+			{
+				// It does not make a difference whether measuring the ratio or absolute distance:
+				return true;
+			}
+
+			// Proper test:
+			Linestring targetPart = target.GetPart(TargetPartIndex);
+
+			// This might not be optimal in a ring where one is 0 and the other just below segment count
+			int lowerSegmentIdx = (int) Math.Min(other.VirtualTargetVertex, VirtualTargetVertex);
+
+			double distanceAlongBetween =
+				GetDistanceAlong(targetPart, VirtualTargetVertex, lowerSegmentIdx) -
+				GetDistanceAlong(targetPart, other.VirtualTargetVertex, lowerSegmentIdx);
+
+			double alongDistance = Math.Abs(distanceAlongBetween);
+
+			return alongDistance < tolerance;
 		}
 
 		public int GetLocalSourceIntersectionSegmentIdx(Linestring source,
@@ -804,17 +890,19 @@ namespace ProSuite.Commons.Geom
 		/// <param name="target"></param>
 		/// <param name="targetContinuesToRightSide"></param>
 		/// <param name="targetArrivesFromRightSide"></param>
+		/// <param name="tolerance"></param>
 		public void ClassifyTargetTrajectory([NotNull] ISegmentList source,
 		                                     [NotNull] ISegmentList target,
 		                                     out bool? targetContinuesToRightSide,
-		                                     out bool? targetArrivesFromRightSide)
+		                                     out bool? targetArrivesFromRightSide,
+		                                     double tolerance = 0)
 		{
 			Assert.False(Type == IntersectionPointType.Unknown,
 			             "Cannot classify unknown intersection type.");
 
-			targetContinuesToRightSide = TargetContinuesToRightSide(source, target);
+			targetContinuesToRightSide = TargetContinuesToRightSide(source, target, tolerance);
 
-			targetArrivesFromRightSide = TargetArrivesFromRightSide(source, target);
+			targetArrivesFromRightSide = TargetArrivesFromRightSide(source, target, tolerance);
 		}
 
 		public bool? TargetContinuesToRightSide([NotNull] ISegmentList source,
@@ -1145,53 +1233,23 @@ namespace ProSuite.Commons.Geom
 			return localSegmentIdx;
 		}
 
-		protected bool Equals(IntersectionPoint3D other)
+		private static double GetDistanceAlong([NotNull] Linestring linestring,
+		                                       double virtualVertexIdx,
+		                                       int startVertex = 0)
 		{
-			if (ReferenceEquals(this, other))
+			if (startVertex == linestring.SegmentCount)
 			{
-				return true;
+				startVertex = 0;
 			}
 
-			return Type == other.Type &&
-			       SourcePartIndex == other.SourcePartIndex &&
-			       TargetPartIndex == other.TargetPartIndex &&
-			       VirtualSourceVertex.Equals(other.VirtualSourceVertex) &&
-			       VirtualTargetVertex.Equals(other.VirtualTargetVertex) &&
-			       Equals(Point, other.Point);
-		}
+			int segmentIdx = GetLocalIntersectionSegmentIdx(linestring, virtualVertexIdx,
+			                                                out double distanceAlongSegmentRatio);
 
-		public override bool Equals(object obj)
-		{
-			if (ReferenceEquals(null, obj))
-			{
-				return false;
-			}
+			double result = linestring.GetDistanceAlong2D(segmentIdx, startVertex);
 
-			if (ReferenceEquals(this, obj))
-			{
-				return true;
-			}
+			result += distanceAlongSegmentRatio * linestring.GetSegment(segmentIdx).Length2D;
 
-			if (obj.GetType() != this.GetType())
-			{
-				return false;
-			}
-
-			return Equals((IntersectionPoint3D) obj);
-		}
-
-		public override int GetHashCode()
-		{
-			unchecked
-			{
-				int hashCode = (Point != null ? Point.GetHashCode() : 0);
-				hashCode = (hashCode * 397) ^ SourcePartIndex;
-				hashCode = (hashCode * 397) ^ TargetPartIndex;
-				hashCode = (hashCode * 397) ^ VirtualSourceVertex.GetHashCode();
-				hashCode = (hashCode * 397) ^ VirtualTargetVertex.GetHashCode();
-				hashCode = (hashCode * 397) ^ (int) Type;
-				return hashCode;
-			}
+			return result;
 		}
 
 		public override string ToString()

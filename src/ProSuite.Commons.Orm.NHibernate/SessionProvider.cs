@@ -12,12 +12,13 @@ namespace ProSuite.Commons.Orm.NHibernate
 {
 	/// <summary>
 	/// Session provider implementation that directly uses the NHibernate session factory
-	/// and directly begins a transaction when opened.
+	/// and directly begins a transaction when opened. Sessions are managed on a per-thread
+	/// basis. Therefore the SessionProvider can be used in a multi-threaded environment.
 	/// </summary>
 	[UsedImplicitly]
 	public class SessionProvider : ISessionProvider
 	{
-		private static readonly IMsg _msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		// Session factory is thread-safe and global (maintains 2nd level cache) per DDX connection
 		private readonly ISessionFactory _sessionFactory;

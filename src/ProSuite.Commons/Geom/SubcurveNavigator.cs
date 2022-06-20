@@ -12,6 +12,7 @@ namespace ProSuite.Commons.Geom
 		private readonly bool _allowTargetTargetIntersections;
 		private IList<IntersectionPoint3D> _intersectionPoints;
 		private IList<IntersectionPoint3D> _targetTargetIntersectionPoints;
+		private readonly IList<IntersectionRun> _congruentRings = new List<IntersectionRun>(0);
 
 		public SubcurveNavigator([NotNull] ISegmentList sourceRings,
 		                         [NotNull] ISegmentList targets,
@@ -27,8 +28,8 @@ namespace ProSuite.Commons.Geom
 			_allowTargetTargetIntersections = allowTargetTargetIntersections;
 		}
 
-		public SubcurveNavigator(ISegmentList source,
-		                         ISegmentList target,
+		public SubcurveNavigator([NotNull] ISegmentList source,
+		                         [NotNull] ISegmentList target,
 		                         double tolerance)
 		{
 			Source = source;
@@ -140,6 +141,8 @@ namespace ProSuite.Commons.Geom
 			}
 		}
 
+		public bool InteriorRingsCouldContainEachOther { get; private set; }
+
 		/// <summary>
 		/// Cut operations use both the left and the right side rings of the target. However, 
 		/// cutting with non-closed targets can result in rings being both on the left and the
@@ -199,10 +202,13 @@ namespace ProSuite.Commons.Geom
 			IList<Linestring> result = new List<Linestring>();
 			var subcurveInfos = new List<IntersectionRun>();
 
+			// Reset state:
+			_congruentRings.Clear();
+			InteriorRingsCouldContainEachOther = false;
+
 			while (startIntersections.Count > 0)
 			{
 				subcurveInfos.Clear();
-				bool makeRing = false;
 
 				Pnt3D ringStart = null;
 				foreach (IntersectionRun next in NavigateSubcurves(startIntersections))
@@ -212,20 +218,25 @@ namespace ProSuite.Commons.Geom
 						continue;
 					}
 
+					if (next.RunsAlongSource && next.RunsAlongTarget &&
+					    next.Subcurve.IsClosed)
+					{
+						// It's a congruent ring. Remember for subsequent operation? directly add to result?
+						// Probably a lot of special cases treatment w.r.t intersection points can be eliminated
+						// if we do the right thing here!?
+						_congruentRings.Add(next);
+						continue;
+					}
+
 					subcurveInfos.Add(next);
 
 					if (next.ContainsSourceStart(out Pnt3D startPoint))
 					{
 						ringStart = startPoint;
 					}
-
-					if (! next.RunsAlongSource || next.IsBoundaryLoop)
-					{
-						makeRing = true;
-					}
 				}
 
-				if (makeRing)
+				if (CanMakeRing(subcurveInfos))
 				{
 					// Finish ring
 					Linestring finishedRing = CreateClosedRing(subcurveInfos, ringStart);
@@ -233,7 +244,6 @@ namespace ProSuite.Commons.Geom
 					result.Add(finishedRing);
 
 					RememberUsedSourceParts(subcurveInfos);
-
 					RememberUsedTargetParts(subcurveInfos);
 				}
 			}
@@ -263,7 +273,7 @@ namespace ProSuite.Commons.Geom
 				}
 			}
 
-			foreach (Linestring containedSourcePart in GetUncutSourceParts(
+			foreach (Linestring containedSourcePart in GetUnprocessedSourceParts(
 				         false, false, true, false))
 			{
 				// The source ring is completely inside or completely outside the target area:
@@ -290,66 +300,737 @@ namespace ProSuite.Commons.Geom
 			return GetUnused(Source, IntersectedSourcePartIndexes);
 		}
 
-		public IEnumerable<Linestring> GetUncutSourceParts(bool includeCongruent,
-		                                                   bool withSameOrientation,
-		                                                   bool includeContained,
-		                                                   bool includeNotContained)
+		public IEnumerable<Linestring> GetUnprocessedSourceParts(bool includeCongruent,
+		                                                         bool withSameOrientation,
+		                                                         bool includeContained,
+		                                                         bool includeNotContained)
 		{
+			var unCutSourceIndexes = GetUnusedIndexes(
+				Source.PartCount, IntersectedSourcePartIndexes).ToList();
+
+			// Process the boundary loops of partially 'used' source parts, where only the other
+			// loop has been used. Additionally process all boundary loops if they loop to the
+			// outside - they must be split up because subcurve navigation does not really support
+			// loops to the outside.
+			foreach (BoundaryLoop boundaryLoop in GetSourceBoundaryLoops())
+			{
+				//BoundaryLoop boundaryLoop =
+				//	new BoundaryLoop(start, end, Source.GetPart(start.SourcePartIndex), true);
+
+				if (! boundaryLoop.IsLoopingToOutside &&
+				    unCutSourceIndexes.Contains(boundaryLoop.Start.SourcePartIndex))
+				{
+					// Completely uncut boundary loops to the inside can be handled like
+					// normal rings (below)
+					continue;
+				}
+
+				foreach (Linestring resultRing in
+				         ProcessSourceBoundaryLoops(boundaryLoop, includeCongruent,
+				                                    withSameOrientation,
+				                                    includeContained, includeNotContained))
+				{
+					yield return resultRing;
+
+					IntersectedSourcePartIndexes.Add(boundaryLoop.Start.SourcePartIndex);
+				}
+			}
+
 			foreach (int unCutSourceIdx in GetUnusedIndexes(
 				         Source.PartCount, IntersectedSourcePartIndexes))
 			{
-				// No inbound/outbound, but possibly touching or linear intersections
+				foreach (BoundaryLoop boundaryLoop in
+				         GetTargetBoundaryLoops()
+					         .Where(bl => bl.Start.SourcePartIndex == unCutSourceIdx))
+				{
+					foreach (Linestring sourceRing in
+					         CompareToTargetBoundaryLoops(unCutSourceIdx, boundaryLoop,
+					                                      includeCongruent,
+					                                      withSameOrientation, includeContained,
+					                                      includeNotContained))
+					{
+						yield return sourceRing;
+						yield break;
+					}
+				}
+			}
+
+			foreach (int unCutSourceIdx in GetUnusedIndexes(
+				         Source.PartCount, IntersectedSourcePartIndexes))
+			{
+				{
+					bool? isContainedXY = GeomRelationUtils.IsContainedXY(
+						Source, Target, Tolerance,
+						IntersectionPointNavigator.IntersectionsAlongSource,
+						unCutSourceIdx);
+
+					Linestring sourceRing = Source.GetPart(unCutSourceIdx);
+					Linestring targetRing = null;
+
+					if (isContainedXY == null)
+					{
+						int targetIndex =
+							IntersectionPointNavigator.IntersectionsAlongSource
+							                          .Where(
+								                          i =>
+									                          i.SourcePartIndex == unCutSourceIdx &&
+									                          i.Type == IntersectionPointType
+										                          .LinearIntersectionStart &&
+									                          i.VirtualSourceVertex == 0)
+							                          .GroupBy(i => i.TargetPartIndex)
+							                          .Single().Key;
+
+						targetRing = Target.GetPart(targetIndex);
+					}
+
+					if (CheckRingRelation(sourceRing, targetRing, isContainedXY, includeCongruent,
+					                      withSameOrientation, includeContained,
+					                      includeNotContained))
+					{
+						yield return sourceRing;
+					}
+				}
+			}
+
+			// Add the congruent source rings found during subcurve navigation (typically with extra boundary loop)
+			if (includeCongruent)
+			{
+				foreach (IntersectionRun congruentRun in _congruentRings)
+				{
+					int sourcePartIdx = congruentRun.NextIntersection.SourcePartIndex;
+
+					if (unCutSourceIndexes.Contains(sourcePartIdx))
+					{
+						// already dealt with above
+						continue;
+					}
+
+					int targetPart = congruentRun.NextIntersection.TargetPartIndex;
+
+					Linestring sourceRing = GetKnownCongruentSourceRing(
+						sourcePartIdx, targetPart, withSameOrientation);
+
+					if (sourceRing != null)
+					{
+						yield return congruentRun.Subcurve;
+					}
+				}
+			}
+		}
+
+		#region Boundary loop handnling
+
+		private IEnumerable<Linestring> ProcessSourceBoundaryLoops(
+			[NotNull] BoundaryLoop boundaryLoop, bool includeCongruent,
+			bool withSameOrientation, bool includeContained,
+			bool includeNotContained)
+		{
+			// If the end is the next intersection from the start it means the ring is un-used:
+			if (IntersectionPointNavigator.IsNextSourceIntersection(
+				    boundaryLoop.Start, boundaryLoop.End))
+			{
+				Linestring loop1 = boundaryLoop.Loop1;
+
+				int targetIndex = boundaryLoop.Start.TargetPartIndex;
+
+				if (ProcessSourceRing(loop1, targetIndex, includeCongruent,
+				                      withSameOrientation, includeContained,
+				                      includeNotContained))
+				{
+					yield return loop1;
+				}
+			}
+
+			// And check the other loop too:
+			if (IntersectionPointNavigator.IsNextSourceIntersection(
+				    boundaryLoop.End, boundaryLoop.Start))
+			{
+				Linestring loop2 = boundaryLoop.Loop2;
+
+				int targetIndex = boundaryLoop.End.TargetPartIndex;
+
+				if (ProcessSourceRing(loop2, targetIndex, includeCongruent,
+				                      withSameOrientation, includeContained,
+				                      includeNotContained))
+				{
+					yield return loop2;
+				}
+			}
+		}
+
+		private IEnumerable<Linestring> CompareToTargetBoundaryLoops(
+			int sourceRingIndex,
+			[NotNull] BoundaryLoop boundaryLoop, bool includeCongruent,
+			bool withSameOrientation, bool includeContained,
+			bool includeNotContained)
+		{
+			Linestring sourceRing = Source.GetPart(sourceRingIndex);
+
+			Linestring loop1 = boundaryLoop.Loop1;
+			RingRingRelation loop1Relation = GetTargetRelation(sourceRingIndex, loop1);
+
+			Linestring loop2 = boundaryLoop.Loop2;
+			RingRingRelation loop2Relation = GetTargetRelation(sourceRingIndex, loop2);
+
+			// If No exact boundary match has been found, the contains/not contains logic must be prioritized first:
+			RingRingRelation priorityRelation = QualifyContainmentRelations(
+				boundaryLoop, includeContained, includeNotContained, loop1Relation, loop2Relation);
+
+			if (priorityRelation == RingRingRelation.Undefined)
+			{
+				// Both have relevant relations:
+				priorityRelation = GetPriorityRelation(loop1Relation, loop2Relation,
+				                                       includeCongruent, includeContained,
+				                                       includeNotContained);
+			}
+
+			if (CheckRingRelation(priorityRelation,
+			                      includeCongruent, withSameOrientation, includeContained,
+			                      includeNotContained))
+			{
+				yield return sourceRing;
+			}
+
+			// Even if the ring was not yielded, the source ring should be marked as processed:
+			if (priorityRelation == RingRingRelation.CongruentSameOrientation ||
+			    priorityRelation == RingRingRelation.CongruentDifferentOrientation)
+			{
+				// It should not be detected any more as contained target:
+				IntersectedSourcePartIndexes.Add(sourceRingIndex);
+			}
+		}
+
+		/// <summary>
+		/// Ensures that a relation is only used if it is relevant. E.g. the outer boundary loop is
+		/// irrelevant if the inner loop contains the source ring.
+		/// </summary>
+		/// <param name="boundaryLoop"></param>
+		/// <param name="includeContained"></param>
+		/// <param name="includeNotContained"></param>
+		/// <param name="loop1Relation"></param>
+		/// <param name="loop2Relation"></param>
+		/// <returns></returns>
+		private static RingRingRelation QualifyContainmentRelations(
+			[NotNull] BoundaryLoop boundaryLoop,
+			bool includeContained,
+			bool includeNotContained,
+			RingRingRelation loop1Relation,
+			RingRingRelation loop2Relation)
+		{
+			// Use a relation only if it is relevant! I.e. the outer boundary loop is irrelevant
+			// if the inner loop contains the source ring
+
+			// NOTE: Both loops being negative is not supported (should not happen)
+
+			// First exclude the cases that are not handled here:
+			if (loop1Relation == RingRingRelation.CongruentDifferentOrientation ||
+			    loop1Relation == RingRingRelation.CongruentSameOrientation ||
+			    loop2Relation == RingRingRelation.CongruentDifferentOrientation ||
+			    loop2Relation == RingRingRelation.CongruentSameOrientation)
+			{
+				return RingRingRelation.Undefined;
+			}
+
+			RingRingRelation priorityRelation = RingRingRelation.Undefined;
+
+			Linestring loop1 = boundaryLoop.Loop1;
+			Linestring loop2 = boundaryLoop.Loop2;
+
+			if (! boundaryLoop.IsLoopingToOutside &&
+			    loop1.ClockwiseOriented != loop2.ClockwiseOriented)
+			{
+				if (boundaryLoop.Loop1ContainsLoop2 &&
+				    loop2Relation == RingRingRelation.IsNotContained &&
+				    loop2.ClockwiseOriented == false)
+				{
+					// It is 'inside' the 'inner' loop2 (i.e. outside): loop1Relation is irrelevant
+					priorityRelation = loop2Relation;
+				}
+
+				if (boundaryLoop.Loop2ContainsLoop1 &&
+				    loop1Relation == RingRingRelation.IsNotContained &&
+				    loop1.ClockwiseOriented == false)
+				{
+					// It is 'inside' the 'inner' loop1 (i.e. outside): loop2Relation is irrelevant
+					priorityRelation = loop1Relation;
+				}
+			}
+			else
+			{
+				// Both have the same orientation: Use the correct logic for Contains/NotContains:
+				// For 'Contained':
+				// Any positive loop that contains the target should result in 'Contained'
+				if (includeContained &&
+				    loop1.ClockwiseOriented == true &&
+				    loop2.ClockwiseOriented == true)
+				{
+					if (loop1Relation == RingRingRelation.IsContained ||
+					    loop2Relation == RingRingRelation.IsContained)
+					{
+						priorityRelation = RingRingRelation.IsContained;
+					}
+				}
+
+				// For 'NotContained':
+				// No positive loop must contain the target
+				if (includeNotContained &&
+				    loop1.ClockwiseOriented == true &&
+				    loop2.ClockwiseOriented == true)
+				{
+					if (loop1Relation == RingRingRelation.IsContained ||
+					    loop2Relation == RingRingRelation.IsContained)
+					{
+						// ignore  it
+						priorityRelation = RingRingRelation.IsContained;
+					}
+				}
+			}
+
+			return priorityRelation;
+		}
+
+		private static RingRingRelation GetPriorityRelation(RingRingRelation loop1Relation,
+		                                                    RingRingRelation loop2Relation,
+		                                                    bool isCongruent,
+		                                                    bool isContained,
+		                                                    bool isNotContained)
+		{
+			if (loop1Relation == RingRingRelation.Undefined)
+			{
+				return loop2Relation;
+			}
+
+			if (loop2Relation == RingRingRelation.Undefined)
+			{
+				return loop1Relation;
+			}
+
+			if (isCongruent)
+			{
+				if (loop1Relation == RingRingRelation.CongruentSameOrientation ||
+				    loop1Relation == RingRingRelation.CongruentDifferentOrientation)
+				{
+					return loop1Relation;
+				}
+
+				if (loop2Relation == RingRingRelation.CongruentSameOrientation ||
+				    loop2Relation == RingRingRelation.CongruentDifferentOrientation)
+				{
+					return loop2Relation;
+				}
+			}
+
+			if (isContained)
+			{
+				if (loop1Relation == RingRingRelation.IsContained)
+				{
+					return loop1Relation;
+				}
+
+				if (loop2Relation == RingRingRelation.IsContained)
+				{
+					return loop2Relation;
+				}
+			}
+
+			if (isNotContained)
+			{
+				if (loop1Relation == RingRingRelation.IsNotContained)
+				{
+					return loop1Relation;
+				}
+
+				if (loop2Relation == RingRingRelation.IsNotContained)
+				{
+					return loop2Relation;
+				}
+			}
+
+			return loop1Relation;
+		}
+
+		private IEnumerable<BoundaryLoop> GetSourceBoundaryLoops()
+		{
+			List<BoundaryLoop> result = new List<BoundaryLoop>();
+
+			foreach ((IntersectionPoint3D start, IntersectionPoint3D end) in
+			         IntersectionPointNavigator.SourceBoundaryLoopIntersections)
+			{
+				BoundaryLoop boundaryLoop = new BoundaryLoop(
+					start, end, Source.GetPart(start.SourcePartIndex), true);
+
+				result.Add(boundaryLoop);
+			}
+
+			return result.Distinct(new BoundaryLoopComparer());
+		}
+
+		private IEnumerable<BoundaryLoop> GetTargetBoundaryLoops()
+		{
+			List<BoundaryLoop> result = new List<BoundaryLoop>();
+
+			foreach ((IntersectionPoint3D start, IntersectionPoint3D end) in
+			         IntersectionPointNavigator.TargetBoundaryLoopIntersections)
+			{
+				BoundaryLoop boundaryLoop = new BoundaryLoop(
+					start, end, Target.GetPart(start.TargetPartIndex), false);
+
+				result.Add(boundaryLoop);
+			}
+
+			return result.Distinct(new BoundaryLoopComparer());
+		}
+
+		private IEnumerable<Tuple<IntersectionPoint3D, IntersectionPoint3D>>
+			GetUnCutSourceBoundaryLoops()
+		{
+			foreach ((IntersectionPoint3D start, IntersectionPoint3D end) in
+			         IntersectionPointNavigator.SourceBoundaryLoopIntersections)
+			{
+				if (IntersectionPointNavigator.IsNextSourceIntersection(start, end))
+				{
+					yield return new Tuple<IntersectionPoint3D, IntersectionPoint3D>(start, end);
+				}
+
+				// And check the other loop too:
+				if (IntersectionPointNavigator.IsNextSourceIntersection(end, start))
+				{
+					yield return new Tuple<IntersectionPoint3D, IntersectionPoint3D>(end, start);
+				}
+			}
+		}
+
+		private IEnumerable<Tuple<IntersectionPoint3D, IntersectionPoint3D>>
+			GetUnprocessedTargetBoundaryLoops()
+		{
+			const bool forward = true;
+
+			foreach ((IntersectionPoint3D start, IntersectionPoint3D end) in
+			         IntersectionPointNavigator.TargetBoundaryLoopIntersections)
+			{
+				if (IntersectionPointNavigator.IsNextTargetIntersection(start, end, forward))
+				{
+					yield return new Tuple<IntersectionPoint3D, IntersectionPoint3D>(start, end);
+				}
+
+				// And check the other loop too:
+				if (IntersectionPointNavigator.IsNextTargetIntersection(end, start, forward))
+				{
+					yield return new Tuple<IntersectionPoint3D, IntersectionPoint3D>(end, start);
+				}
+			}
+		}
+
+		#endregion
+
+		private bool ProcessSourceRing([NotNull] Linestring sourceRing,
+		                               int targetIndex,
+		                               bool includeCongruent, bool withSameOrientation,
+		                               bool includeContained, bool includeNotContained)
+		{
+			Linestring targetRing = Target.GetPart(targetIndex);
+
+			bool? isContainedXY = GeomRelationUtils.IsContainedXY(
+				sourceRing, targetRing, Tolerance);
+
+			RingRingRelation relation = GetRingRelation(sourceRing, targetRing, isContainedXY);
+
+			if (CheckRingRelation(relation,
+			                      includeCongruent, withSameOrientation, includeContained,
+			                      includeNotContained))
+			{
+				if (relation == RingRingRelation.CongruentSameOrientation ||
+				    relation == RingRingRelation.CongruentDifferentOrientation)
+				{
+					// It should not be detected any more as contained target:
+					IntersectedTargetPartIndexes.Add(targetIndex);
+				}
+
+				return true;
+			}
+
+			return false;
+		}
+
+		private RingRingRelation GetTargetRelation(int sourceRingIndex,
+		                                           [NotNull] Linestring targetRing)
+		{
+			Linestring sourceRing = Source.GetPart(sourceRingIndex);
+
+			bool? isContainedXY = GeomRelationUtils.IsContainedXY(
+				sourceRing, targetRing, Tolerance);
+
+			return GetRingRelation(sourceRing, targetRing, isContainedXY);
+		}
+
+		private static bool CheckRingRelation([NotNull] Linestring sourceRing,
+		                                      [CanBeNull] Linestring targetRing,
+		                                      bool? isContainedXY, bool isCongruent,
+		                                      bool withSameOrientation, bool isContained,
+		                                      bool isNotContained)
+		{
+			if (isContainedXY == null && isCongruent)
+			{
+				// congruent
+				Assert.NotNull(targetRing);
+				if (IsKnownCongruentSourceRingOriented(sourceRing, targetRing, withSameOrientation))
+				{
+					return true;
+				}
+			}
+			else if (isContainedXY == true && isContained)
+			{
+				return true;
+			}
+			else if (isContainedXY == false && isNotContained)
+			{
+				return true;
+			}
+
+			return false;
+		}
+
+		private static bool CheckRingRelation(RingRingRelation relation,
+		                                      bool isCongruent,
+		                                      bool withSameOrientation,
+		                                      bool isContained,
+		                                      bool isNotContained)
+		{
+			if (relation == RingRingRelation.CongruentSameOrientation)
+			{
+				if (isCongruent && withSameOrientation)
+				{
+					return true;
+				}
+			}
+
+			if (relation == RingRingRelation.CongruentDifferentOrientation)
+			{
+				if (isCongruent && ! withSameOrientation)
+				{
+					return true;
+				}
+			}
+
+			if (relation == RingRingRelation.IsContained)
+			{
+				if (isContained)
+				{
+					return true;
+				}
+			}
+
+			if (relation == RingRingRelation.IsNotContained)
+			{
+				if (isNotContained)
+				{
+					return true;
+				}
+			}
+
+			return false;
+		}
+
+		/// <summary>
+		/// Gets the ring relation of the source relative to the target
+		/// </summary>
+		/// <param name="sourceRing"></param>
+		/// <param name="targetRing"></param>
+		/// <param name="isContainedXY"></param>
+		/// <returns></returns>
+		private static RingRingRelation GetRingRelation([NotNull] Linestring sourceRing,
+		                                                [CanBeNull] Linestring targetRing,
+		                                                bool? isContainedXY)
+		{
+			if (isContainedXY == null)
+			{
+				// congruent
+				Assert.NotNull(targetRing);
+				return IsKnownCongruentSourceRingOriented(sourceRing, targetRing, true)
+					       ? RingRingRelation.CongruentSameOrientation
+					       : RingRingRelation.CongruentDifferentOrientation;
+			}
+
+			if (isContainedXY == true)
+			{
+				// The source is contained within the target
+				return sourceRing.ClockwiseOriented == true
+					       ? RingRingRelation.IsContained
+					       : RingRingRelation.IsNotContained;
+			}
+
+			// The source is not contained within the target (target orientation already taken into account)
+			return RingRingRelation.IsNotContained;
+		}
+
+		public void DetermineExtraSourceRingRelations(
+			out IList<Linestring> equalOrientationCongruentRings,
+			out IList<Linestring> outsideOtherPolygonRings)
+		{
+			equalOrientationCongruentRings = new List<Linestring>();
+			outsideOtherPolygonRings = new List<Linestring>();
+
+			// Add the boundary loops of 'used' source parts, but only the other loop has been used.
+			// This could probably go to the subcurve navigation and be added to congruent or un-used subcurves?
+			// Source boundary loops:
+			foreach ((IntersectionPoint3D start, IntersectionPoint3D end) in
+			         GetUnCutSourceBoundaryLoops())
+			{
+				// Get the smallest possible rings to compare with target, do not exclude already
+				// (partially) processed rings.
+
+				Linestring sourceRing = GetSourceSubcurve(start, end);
+				Linestring targetRing = Target.GetPart(start.TargetPartIndex);
 
 				bool? isContainedXY = GeomRelationUtils.IsContainedXY(
+					sourceRing, targetRing, Tolerance);
+
+				DetermineRingRelation(sourceRing, targetRing, isContainedXY,
+				                      start.SourcePartIndex, start.TargetPartIndex,
+				                      equalOrientationCongruentRings, outsideOtherPolygonRings);
+			}
+
+			foreach ((IntersectionPoint3D start, IntersectionPoint3D end) in
+			         GetUnprocessedTargetBoundaryLoops())
+			{
+				const bool forward = true;
+
+				Linestring sourceRing = Source.GetPart(start.SourcePartIndex);
+				Linestring targetPart = Target.GetPart(start.TargetPartIndex);
+				Linestring targetRing = GetTargetSubcurve(targetPart, start, end, forward);
+
+				bool? isContainedXY = GeomRelationUtils.IsContainedXY(
+					sourceRing, targetRing, Tolerance);
+
+				DetermineRingRelation(sourceRing, targetRing, isContainedXY,
+				                      start.SourcePartIndex, start.TargetPartIndex,
+				                      equalOrientationCongruentRings, outsideOtherPolygonRings);
+			}
+
+			var unCutSourceIndexes = GetUnusedIndexes(
+				Source.PartCount, IntersectedSourcePartIndexes).ToList();
+
+			// Non-boundary loops, not yet used:
+			foreach (int unCutSourcePartIdx in unCutSourceIndexes)
+			{
+				// No inbound/outbound, but possibly touching or linear intersections
+
+				bool? isSourceContainedXY = GeomRelationUtils.IsContainedXY(
 					Source, Target, Tolerance, IntersectionPointNavigator.IntersectionsAlongSource,
-					unCutSourceIdx);
+					unCutSourcePartIdx);
 
-				if (isContainedXY == null && includeCongruent)
+				Linestring sourceRing = Source.GetPart(unCutSourcePartIdx);
+				int targetIndex = -1;
+				Linestring targetRing = null;
+
+				if (isSourceContainedXY == null)
 				{
-					// congruent
-					Linestring sourceRing = Source.GetPart(unCutSourceIdx);
-
-					int targetIndex =
+					targetIndex =
 						IntersectionPointNavigator.IntersectionsAlongSource
 						                          .Where(
-							                          i => i.SourcePartIndex == unCutSourceIdx &&
+							                          i => i.SourcePartIndex ==
+							                               unCutSourcePartIdx &&
 							                               i.Type == IntersectionPointType
 								                               .LinearIntersectionStart &&
 							                               i.VirtualSourceVertex == 0)
 						                          .GroupBy(i => i.TargetPartIndex)
 						                          .Single().Key;
 
-					Linestring targetRing = Target.GetPart(targetIndex);
-
-					// TODO: If there were boundary loops, ensure no outer ring is inside outer ring and no inner ring is in inner ring
-					//       This could probably be detected if the boundary loop is split and the un-cut part/ring is added to the
-					//       un-cut target rings...
-					// See last case in CanGetIntersectionAreaXYSourceHasBoundaryLoop()
-
-					if (withSameOrientation &&
-					    sourceRing.ClockwiseOriented != null &&
-					    sourceRing.ClockwiseOriented == targetRing.ClockwiseOriented)
-					{
-						yield return sourceRing;
-					}
-
-					if (! withSameOrientation &&
-					    sourceRing.ClockwiseOriented != null &&
-					    sourceRing.ClockwiseOriented != targetRing.ClockwiseOriented)
-					{
-						// The interior of a positive ring is on the left side of a negative ring
-						yield return sourceRing;
-					}
+					targetRing = Target.GetPart(targetIndex);
 				}
-				else if (isContainedXY == true && includeContained)
+
+				DetermineRingRelation(sourceRing, targetRing, isSourceContainedXY,
+				                      unCutSourcePartIdx, targetIndex,
+				                      equalOrientationCongruentRings, outsideOtherPolygonRings);
+			}
+
+			foreach (int unCutTargetIdx in GetUnusedIndexes(
+				         Target.PartCount, IntersectedTargetPartIndexes))
+			{
+				// Congruent rings would have been found already 
+				Linestring targetRing = Target.GetPart(unCutTargetIdx);
+
+				if (false == GeomRelationUtils.AreaContainsXY(
+					    Source, Target, Tolerance,
+					    IntersectionPointNavigator.IntersectionsAlongTarget, unCutTargetIdx))
 				{
-					yield return GetSourcePart(unCutSourceIdx);
-				}
-				else if (isContainedXY == false && includeNotContained)
-				{
-					yield return GetSourcePart(unCutSourceIdx);
+					outsideOtherPolygonRings.Add(targetRing);
 				}
 			}
+		}
+
+		private void DetermineRingRelation(Linestring sourceRing, Linestring targetRing,
+		                                   bool? isSourceContainedXY,
+		                                   int sourcePartIndex, int targetPartIndex,
+		                                   IList<Linestring> equalOrientationCongruentRings,
+		                                   IList<Linestring> outsideOtherPolygonRings)
+		{
+			if (isSourceContainedXY == null)
+			{
+				// Even if they have opposite orientation: They cancel each other out and should
+				// be disregarded in subsequent operations.
+				IntersectedSourcePartIndexes.Add(sourcePartIndex);
+				IntersectedTargetPartIndexes.Add(targetPartIndex);
+			}
+
+			if (CheckRingRelation(sourceRing, targetRing, isContainedXY: isSourceContainedXY,
+			                      isCongruent: true, withSameOrientation: true,
+			                      isContained: false, isNotContained: false))
+			{
+				equalOrientationCongruentRings.Add(sourceRing);
+			}
+			else if (CheckRingRelation(sourceRing, targetRing, isSourceContainedXY,
+			                           false, false, false, true))
+			{
+				outsideOtherPolygonRings.Add(sourceRing);
+
+				IntersectedSourcePartIndexes.Add(sourcePartIndex);
+			}
+		}
+
+		[CanBeNull]
+		private Linestring GetKnownCongruentSourceRing(int sourceIdx,
+		                                               int targetIndex,
+		                                               bool withSameOrientation)
+		{
+			Linestring sourceRing = Source.GetPart(sourceIdx);
+			if (IsKnownCongruentSourceRingOriented(sourceRing, targetIndex, withSameOrientation))
+			{
+				return sourceRing;
+			}
+
+			return null;
+		}
+
+		private bool IsKnownCongruentSourceRingOriented(Linestring sourceRing, int targetIndex,
+		                                                bool withSameOrientationAsTarget)
+		{
+			Linestring targetRing = Target.GetPart(targetIndex);
+
+			return IsKnownCongruentSourceRingOriented(sourceRing, targetRing,
+			                                          withSameOrientationAsTarget);
+		}
+
+		private static bool IsKnownCongruentSourceRingOriented([NotNull] Linestring sourceRing,
+		                                                       [NotNull] Linestring targetRing,
+		                                                       bool withSameOrientationAsTarget)
+		{
+			if (withSameOrientationAsTarget &&
+			    sourceRing.ClockwiseOriented != null &&
+			    sourceRing.ClockwiseOriented == targetRing.ClockwiseOriented)
+			{
+				return true;
+			}
+
+			if (! withSameOrientationAsTarget &&
+			    sourceRing.ClockwiseOriented != null &&
+			    sourceRing.ClockwiseOriented != targetRing.ClockwiseOriented)
+			{
+				// The interior of a positive ring is on the left side of a negative ring
+				return true;
+			}
+
+			return false;
 		}
 
 		/// <summary>
@@ -375,11 +1056,11 @@ namespace ProSuite.Commons.Geom
 		}
 
 		/// <summary>
-		/// Returns the target rings that are outside any source ring (not equal to a source ring
-		/// but not necessarily disjoint.
+		/// Returns the target rings that are on the outside of any source ring, i.e. not equal to
+		/// a source ring but not necessarily disjoint.
 		/// </summary>
 		/// <returns></returns>
-		public IEnumerable<Linestring> GetTargetRingsCompletelyOutsideSource()
+		public IEnumerable<Linestring> GetUnprocessedTargetRingsOutsideSource()
 		{
 			foreach (int unCutTargetIdx in GetUnusedIndexes(
 				         Target.PartCount, IntersectedTargetPartIndexes))
@@ -390,6 +1071,22 @@ namespace ProSuite.Commons.Geom
 				if (false == GeomRelationUtils.AreaContainsXY(
 					    Source, Target, Tolerance,
 					    IntersectionPointNavigator.IntersectionsAlongTarget, unCutTargetIdx))
+				{
+					yield return targetRing;
+				}
+			}
+
+			foreach ((IntersectionPoint3D start, IntersectionPoint3D end) in
+			         GetUnprocessedTargetBoundaryLoops())
+			{
+				const bool forward = true;
+
+				Linestring sourceRing = Source.GetPart(start.SourcePartIndex);
+				Linestring targetPart = Target.GetPart(start.TargetPartIndex);
+				Linestring targetRing = GetTargetSubcurve(targetPart, start, end, forward);
+
+				if (false == GeomRelationUtils.AreaContainsXY(
+					    sourceRing, targetRing, Tolerance))
 				{
 					yield return targetRing;
 				}
@@ -492,7 +1189,7 @@ namespace ProSuite.Commons.Geom
 			       ! IntersectionPointNavigator.EqualsStartIntersection(nextIntersection))
 			{
 				Assert.True(count++ <= IntersectionPoints.Count,
-				            "Intersections seen twice. Make sure there are no self intersections of the target.");
+				            "Intersections seen twice. Make sure the input has no self intersections.");
 
 				if (nextIntersection != null)
 				{
@@ -534,7 +1231,8 @@ namespace ProSuite.Commons.Geom
 					{
 						RunsAlongSource = continueOnSource,
 						RunsAlongTarget = SubcurveRunsAlongTarget(
-							continueOnSource, currentIntersection, nextIntersection),
+							continueOnSource, currentIntersection, nextIntersection,
+							isBoundaryLoopIntersection, subcurve),
 						IsBoundaryLoop = isBoundaryLoopIntersection
 					};
 
@@ -544,26 +1242,66 @@ namespace ProSuite.Commons.Geom
 			}
 		}
 
-		private static bool SubcurveRunsAlongTarget(
+		private bool SubcurveRunsAlongTarget(
 			bool continueOnSource,
 			[NotNull] IntersectionPoint3D currentIntersection,
-			[NotNull] IntersectionPoint3D nextIntersection)
+			[NotNull] IntersectionPoint3D nextIntersection,
+			bool isBoundaryLoopIntersection,
+			Linestring intersectionCurve)
 		{
 			if (! continueOnSource)
 			{
 				return true;
 			}
 
+			// Linear intersection start/end is always with respect to source
 			if (currentIntersection.Type == IntersectionPointType.LinearIntersectionStart &&
 			    nextIntersection.Type == IntersectionPointType.LinearIntersectionEnd)
 			{
-				return true;
+				if (currentIntersection.LinearIntersectionInOppositeDirection == false)
+				{
+					// same directon, target forward
+					return true;
+				}
 			}
 
 			if (currentIntersection.Type == IntersectionPointType.LinearIntersectionEnd &&
 			    nextIntersection.Type == IntersectionPointType.LinearIntersectionStart)
 			{
-				return true;
+				// At boundary loops, there could be a direction change (inside loop: opposite, outside loop: not)
+				if (isBoundaryLoopIntersection)
+				{
+					if (IntersectionPointNavigator.TargetBoundaryLoopIntersections.Contains(
+						    new Tuple<IntersectionPoint3D, IntersectionPoint3D>(
+							    currentIntersection, nextIntersection)))
+					{
+						// We're going along the 
+					}
+
+					Linestring targetPart =
+						IntersectionPointNavigator.Target.GetPart(
+							currentIntersection.TargetPartIndex);
+
+					int? forwardTargetSegmentIdx =
+						currentIntersection.GetNonIntersectingTargetSegmentIndex(targetPart, true);
+
+					double halfWay = 0.5;
+
+					IPnt pointAlong = intersectionCurve.GetPointAlong(halfWay, true);
+
+					if (GeomRelationUtils.LinesContainXY(targetPart, pointAlong, Tolerance))
+					{
+						return true;
+					}
+				}
+
+				// It's the end of the linear intersection going forward along the source:
+				// true, if the target goes in the opposite direction
+
+				else if (currentIntersection.LinearIntersectionInOppositeDirection == true)
+				{
+					return true;
+				}
 			}
 
 			return false;
@@ -586,9 +1324,9 @@ namespace ProSuite.Commons.Geom
 			double? sourceForwardDirection = GetAlongSourceDirectionChange(preferredDirection,
 				ref actualSourceIntersection, entryLine);
 
-			// TODO: Allow intersection jumping also for target!?
-			GetAlongTargetDirectionChanges(startIntersection.SourcePartIndex, intersection,
-			                               entryLine,
+			IntersectionPoint3D actualTargetIntersection = intersection;
+			GetAlongTargetDirectionChanges(preferredDirection, startIntersection.SourcePartIndex,
+			                               ref actualTargetIntersection, entryLine,
 			                               out double? targetForwardDirection,
 			                               out double? targetBackwardDirection);
 
@@ -635,7 +1373,7 @@ namespace ProSuite.Commons.Geom
 				}
 			}
 
-			intersection = alongSource ? actualSourceIntersection : intersection;
+			intersection = alongSource ? actualSourceIntersection : actualTargetIntersection;
 		}
 
 		/// <summary>
@@ -689,33 +1427,6 @@ namespace ProSuite.Commons.Geom
 			return entryLine;
 		}
 
-		private static double? GetDirectionChange(Line3D baseLine, Line3D compareLine)
-		{
-			double angleDifference = baseLine.GetDirectionAngleXY() -
-			                         compareLine.GetDirectionAngleXY();
-
-			// Normalize to -PI .. +PI
-			if (angleDifference <= -Math.PI)
-			{
-				angleDifference += 2 * Math.PI;
-			}
-			else if (angleDifference > Math.PI)
-			{
-				angleDifference -= 2 * Math.PI;
-			}
-
-			// exclude 180-degree turns
-			double epsilon = MathUtils.GetDoubleSignificanceEpsilon(baseLine.XMax);
-
-			if (MathUtils.AreEqual(angleDifference, -Math.PI, epsilon) ||
-			    MathUtils.AreEqual(angleDifference, Math.PI, epsilon))
-			{
-				return null;
-			}
-
-			return angleDifference;
-		}
-
 		private double? GetAlongSourceDirectionChange(TurnDirection preferredDirection,
 		                                              ref IntersectionPoint3D intersection,
 		                                              Line3D entryLine)
@@ -765,9 +1476,59 @@ namespace ProSuite.Commons.Geom
 				                           Tolerance);
 
 			double? sourceForwardDirection =
-				GetDirectionChange(entryLine, alongSourceLine);
+				GeomUtils.GetDirectionChange(entryLine, alongSourceLine);
 
 			return sourceForwardDirection;
+		}
+
+		private void GetAlongTargetDirectionChanges(
+			TurnDirection preferredDirection,
+			int? initialSourcePartForRingResult,
+			[NotNull] ref IntersectionPoint3D intersection,
+			[NotNull] Line3D entryLine,
+			out double? targetForwardDirection,
+			out double? targetBackwardDirection)
+		{
+			GetAlongTargetDirectionChanges(initialSourcePartForRingResult, intersection, entryLine,
+			                               out targetForwardDirection, out targetBackwardDirection);
+
+			if (! IntersectionPointNavigator.HasMultipleTargetIntersections(intersection))
+			{
+				return;
+			}
+
+			// Allow jumping between intersection points at the same location. This is necessary
+			// for target rings touching another target ring or target boundary loops.
+			foreach (IntersectionPoint3D otherTargetIntersection in
+			         IntersectionPointNavigator.GetOtherTargetIntersections(intersection))
+			{
+				double? otherTargetForwardDirection;
+				double? otherTargetBackwardDirection;
+
+				GetAlongTargetDirectionChanges(
+					initialSourcePartForRingResult, otherTargetIntersection, entryLine,
+					out otherTargetForwardDirection, out otherTargetBackwardDirection);
+
+				// Which intersection one has the most preferred direction?
+				// 1. Get the maximum from the current intersection:
+				double? intersectionMax =
+					true == IsMore(preferredDirection, targetForwardDirection,
+					               targetBackwardDirection)
+						? targetForwardDirection
+						: targetBackwardDirection;
+
+				// 2. Compare the other directions to the maximum of the current
+				if (true == IsMore(preferredDirection, otherTargetForwardDirection,
+				                   intersectionMax) ||
+				    true == IsMore(preferredDirection, otherTargetBackwardDirection,
+				                   intersectionMax))
+				{
+					// In boundary loops both conditions should be true
+					intersection = otherTargetIntersection;
+					targetForwardDirection = otherTargetForwardDirection;
+					targetBackwardDirection = otherTargetBackwardDirection;
+				}
+			}
 		}
 
 		private void GetAlongTargetDirectionChanges(
@@ -790,7 +1551,7 @@ namespace ProSuite.Commons.Geom
 					Line3D targetForward =
 						GetNonShortContinuingLine(Target, forwardSegmentIdx.Value, Tolerance);
 
-					targetForwardDirection = GetDirectionChange(entryLine, targetForward);
+					targetForwardDirection = GeomUtils.GetDirectionChange(entryLine, targetForward);
 				}
 			}
 
@@ -808,7 +1569,7 @@ namespace ProSuite.Commons.Geom
 					targetBackward.ReverseOrientation();
 
 					targetBackwardDirection =
-						GetDirectionChange(entryLine, targetBackward);
+						GeomUtils.GetDirectionChange(entryLine, targetBackward);
 				}
 			}
 		}
@@ -998,7 +1759,12 @@ namespace ProSuite.Commons.Geom
 
 			var entryLine = linestring[segmentIdx];
 
-			while (usableToSegmentIdx != null && entryLine.Length2D < minSegmentLength)
+			int count = 0;
+			int maxSegmentCount = linestring.SegmentCount;
+
+			while (usableToSegmentIdx != null &&
+			       entryLine.Length2D < minSegmentLength &&
+			       count < maxSegmentCount)
 			{
 				// The entry line is 0 which might result in a wrong direction
 				// -> Add the previous segment to the line
@@ -1010,6 +1776,8 @@ namespace ProSuite.Commons.Geom
 					entryLine = new Line3D(linestring[usableToSegmentIdx.Value].StartPoint,
 					                       entryLine.EndPoint);
 				}
+
+				count++;
 			}
 
 			return entryLine;
@@ -1023,7 +1791,12 @@ namespace ProSuite.Commons.Geom
 
 			var entryLine = linestring[segmentIdx];
 
-			while (usableToSegmentIdx != null && entryLine.Length2D < minSegmentLength)
+			int count = 0;
+			int maxSegmentCount = linestring.SegmentCount;
+
+			while (usableToSegmentIdx != null &&
+			       entryLine.Length2D < minSegmentLength &&
+			       count < maxSegmentCount)
 			{
 				// The entry line is 0 which might result in a wrong direction
 				// -> Add the next segment to the line
@@ -1035,9 +1808,36 @@ namespace ProSuite.Commons.Geom
 					entryLine = new Line3D(entryLine.StartPoint,
 					                       linestring[usableToSegmentIdx.Value].EndPoint);
 				}
+
+				count++;
 			}
 
 			return entryLine;
+		}
+
+		private bool CanMakeRing(List<IntersectionRun> fromSubcurves)
+		{
+			foreach (IntersectionRun intersectionRun in fromSubcurves)
+			{
+				if (! intersectionRun.RunsAlongSource)
+				{
+					return true;
+				}
+			}
+
+			// All run along source: Make a ring if several source parts
+			// are involved (e.g. double-touching islands that have been combined,
+			// into a bigger island:
+			int distinctSourcePartCount =
+				fromSubcurves.GroupBy(s => s.NextIntersection.SourcePartIndex).Count();
+
+			if (distinctSourcePartCount > 1)
+			{
+				InteriorRingsCouldContainEachOther = true;
+				return true;
+			}
+
+			return false;
 		}
 
 		#region Source paths intersecting target rings
@@ -1197,10 +1997,16 @@ namespace ProSuite.Commons.Geom
 			int toIndex = toIntersection.GetLocalSourceIntersectionSegmentIdx(
 				source, out toDistanceAlongAsRatio);
 
+			bool touching = (fromIntersection.Type == IntersectionPointType.TouchingInPoint &&
+			                 toIntersection.Type == IntersectionPointType.TouchingInPoint) ||
+			                fromIntersection.TargetPartIndex != toIntersection.TargetPartIndex;
+
+			bool preferFullRingToZeroLength = ! touching && source.IsClosed;
+
 			Linestring subcurve = source.GetSubcurve(
 				fromIndex, fromDistanceAlongAsRatio,
 				toIndex, toDistanceAlongAsRatio,
-				false);
+				false, preferFullRingToZeroLength);
 
 			if (PreferTargetZsAtIntersections)
 			{
@@ -1231,13 +2037,17 @@ namespace ProSuite.Commons.Geom
 			int toIndex = toIntersection.GetLocalTargetIntersectionSegmentIdx(
 				target, out toDistanceAlongAsRatio);
 
-			if (! forward &&
-			    fromIntersection.VirtualTargetVertex > toIntersection.VirtualTargetVertex) { }
+			// If different source parts are involved, they should be touching (otherwise the source is non-simple)
+			bool touching = (fromIntersection.Type == IntersectionPointType.TouchingInPoint &&
+			                 toIntersection.Type == IntersectionPointType.TouchingInPoint) ||
+			                fromIntersection.SourcePartIndex != toIntersection.SourcePartIndex;
+
+			bool preferFullRingToZeroLength = ! touching && target.IsClosed;
 
 			Linestring subcurve = target.GetSubcurve(
 				fromIndex, fromDistanceAlongAsRatio,
 				toIndex, toDistanceAlongAsRatio,
-				false, ! forward);
+				false, ! forward, preferFullRingToZeroLength);
 
 			// Replace the start / end with the actual intersection (correct source Z, exactly matching previous subcurve end)
 			Pnt3D startPoint = fromIntersection.Point.ClonePnt3D();
@@ -1333,6 +2143,15 @@ namespace ProSuite.Commons.Geom
 			}
 		}
 
+		private enum RingRingRelation
+		{
+			Undefined,
+			CongruentSameOrientation,
+			CongruentDifferentOrientation,
+			IsContained,
+			IsNotContained
+		}
+
 		private class IntersectionRun
 		{
 			private readonly Pnt3D _includedRingStartPoint;
@@ -1368,7 +2187,7 @@ namespace ProSuite.Commons.Geom
 			}
 		}
 
-		internal enum TurnDirection
+		private enum TurnDirection
 		{
 			Left,
 			Right
