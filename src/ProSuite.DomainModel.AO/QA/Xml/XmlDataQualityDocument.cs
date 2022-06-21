@@ -5,7 +5,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.DomainModel.AO.QA.Xml
 {
-	[XmlRoot("DataQuality", Namespace = "urn:EsriDE.ProSuite.QA.QualitySpecifications-3.0")]
+	[XmlRoot("DataQuality", Namespace = "urn:ProSuite.QA.QualitySpecifications-3.0")]
 	public class XmlDataQualityDocument30 : XmlDataQualityDocument { }
 
 	[XmlRoot("DataQuality", Namespace = "urn:EsriDE.ProSuite.QA.QualitySpecifications-2.0")]
