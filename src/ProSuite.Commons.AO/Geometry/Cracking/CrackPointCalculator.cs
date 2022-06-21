@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
@@ -17,8 +16,7 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 {
 	public class CrackPointCalculator
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private IEnvelope _envelopeTemplate1;
 		private IEnvelope _envelopeTemplate2;
@@ -414,9 +412,7 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 					}
 				}
 
-				IPnt pntToInsert = SnapTolerance != null
-					                   ? Snap3d(point, snapTarget, snapTolerance)
-					                   : point.Clone();
+				IPnt pntToInsert = Snap3d(point, snapTarget, snapTolerance);
 
 				IPoint pointToInsert =
 					GeometryConversionUtils.CreatePoint(pntToInsert,
@@ -1061,8 +1057,8 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			// if the local crack point is exactly on an existing crack point (AllCrackPoints)
 			//    -> Use this matching previously created crack point to avoid swapping Z values
 			bool sourcePointDifferentToCrackPoint;
-			IPnt crackPointAtSourcePoint = FindCrackPoint3d(
-				allCrackPoints, point, snapTolerance, out sourcePointDifferentToCrackPoint);
+			IPnt crackPointAtSourcePoint = FindCrackPoint(
+				allCrackPoints, point, snapTolerance, false, out sourcePointDifferentToCrackPoint);
 
 			if (crackPointAtSourcePoint != null && ! sourcePointDifferentToCrackPoint)
 			{
@@ -1084,8 +1080,8 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 
 				// if the target point is exactly on an existing crack point -> use it!
 				bool targetPointDifferentToCrackPoint;
-				IPnt crackPointAtTargetPoint = FindCrackPoint3d(
-					allCrackPoints, snappedPoint, snapTolerance,
+				IPnt crackPointAtTargetPoint = FindCrackPoint(
+					allCrackPoints, snappedPoint, snapTolerance, false,
 					out targetPointDifferentToCrackPoint);
 
 				if (crackPointAtTargetPoint != null && ! targetPointDifferentToCrackPoint)
@@ -1157,10 +1153,11 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 		}
 
 		[CanBeNull]
-		private IPnt FindCrackPoint3d([CanBeNull] IEnumerable<IPnt> allCrackPoints,
-		                              [NotNull] IPnt atPoint,
-		                              double snapTolerance,
-		                              out bool differentWithinTolerance)
+		private IPnt FindCrackPoint([CanBeNull] IEnumerable<IPnt> allCrackPoints,
+		                            [NotNull] IPnt atPoint,
+		                            double snapTolerance,
+		                            bool mustMatchInZ,
+		                            out bool differentWithinTolerance)
 		{
 			differentWithinTolerance = false;
 
@@ -1182,7 +1179,8 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 				}
 
 				if (IsPerfectlyMatching(crackPoint, atPoint, xyResolution, zResolution,
-				                        snapTolerance, out differentWithinTolerance, out bool _))
+				                        snapTolerance, out differentWithinTolerance,
+				                        out bool differentInZ))
 				{
 					// there is a perfectly matching crack point -> add it anyway, just in case there is no existing vertex in the source
 					return crackPoint;
@@ -1194,7 +1192,7 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 					// TODO: ensure the total distance between the original source point and the snapped result is not > snap distance
 				}
 
-				if (differentWithinTolerance)
+				if (! mustMatchInZ || ! differentInZ)
 				{
 					result = crackPoint;
 				}
