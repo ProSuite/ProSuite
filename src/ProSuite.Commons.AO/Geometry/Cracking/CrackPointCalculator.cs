@@ -146,7 +146,7 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 		/// <param name="transformedIntersectionTarget"></param>
 		/// <returns></returns>
 		[NotNull]
-		public IPointCollection GetIntersectionPoints(
+		public IList<KeyValuePair<IPnt, List<IntersectionPoint3D>>> GetIntersectionPoints(
 			[NotNull] IPolyline sourceGeometry,
 			[NotNull] IGeometry intersectionTarget,
 			[CanBeNull] out IGeometry transformedIntersectionTarget)
@@ -163,7 +163,7 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 
 					emptyResult.SpatialReference = sourceGeometry.SpatialReference;
 
-					return (IPointCollection) emptyResult;
+					return new List<KeyValuePair<IPnt, List<IntersectionPoint3D>>>(0);
 				}
 			}
 			else
@@ -171,7 +171,7 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 				transformedIntersectionTarget = intersectionTarget;
 			}
 
-			IPointCollection result;
+			IList<KeyValuePair<IPnt, List<IntersectionPoint3D>>> result;
 
 			bool origIntersect = IntersectionUtils.UseCustomIntersect;
 
@@ -189,12 +189,19 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 				if (useCustomIntersect)
 				{
 					IntersectionUtils.UseCustomIntersect = true;
-					result = GetIntersectionPointsCustom(sourceGeometry,
-					                                     transformedIntersectionTarget);
+					result = GetClusteredIntersectionPoints(
+						sourceGeometry, transformedIntersectionTarget);
 				}
 				else
 				{
-					result = GetIntersectionPoints(sourceGeometry, transformedIntersectionTarget);
+					var legacyIntersections =
+						GetIntersectionPoints(sourceGeometry, transformedIntersectionTarget);
+
+					result = GeometryUtils
+					         .GetPoints(legacyIntersections)
+					         .Select(p => new KeyValuePair<IPnt, List<IntersectionPoint3D>>(
+						                 new Pnt3D(p.X, p.Y, p.Z), null))
+					         .ToList();
 				}
 			}
 			finally
@@ -375,10 +382,9 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 					}
 				}
 
-				// TODO: When doing self-intersections in 3D space, snapping might have no benefit.
-				//       The clustering initially finds the 'average' xy locations (with stacked 
-				//       A planarity-preserving intersection strategy would be better -> see CrackMultipatch()
-				IPnt pntToInsert = Snap3d(point, snapTarget, snapTolerance);
+				IPnt pntToInsert = SnapTolerance != null
+					                   ? Snap3d(point, snapTarget, snapTolerance)
+					                   : point.Clone();
 
 				IPoint pointToInsert =
 					GeometryConversionUtils.CreatePoint(pntToInsert,
@@ -526,7 +532,8 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			{
 				bool thisPointWithinTolerance, thisPointDifferentInZ;
 				if (IsPerfectlyMatching(
-					atPoint, existingPoint, xyResolution, zResolution, out thisPointWithinTolerance,
+					    atPoint, existingPoint, xyResolution, zResolution,
+					    out thisPointWithinTolerance,
 					    out thisPointDifferentInZ))
 				{
 					pointFound = true;
@@ -736,19 +743,6 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 
 			// Add all points, they should already coincide in XY if snapped, in Z they should be allowed to differ (3D cracking)
 			AddPoint(crackPoint.Point, toPlanarCrackPoints);
-		}
-
-		[NotNull]
-		private IPointCollection GetIntersectionPointsCustom(
-			[NotNull] IPolyline sourceGeometry,
-			[NotNull] IGeometry intersectionTarget)
-		{
-			var resultPoints = GetClusteredIntersectionPoints(sourceGeometry, intersectionTarget);
-
-			IPointCollection result = GeometryConversionUtils.CreatePointCollection(
-				sourceGeometry, resultPoints.Select(kvp => kvp.Key).ToList());
-
-			return result;
 		}
 
 		[NotNull]
