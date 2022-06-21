@@ -239,33 +239,6 @@ namespace ProSuite.QA.TestFactories {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Finds all segments in &apos;featureClass&apos; where the slope is larger than &apos;limit&apos;.
-        /// </summary>
-        internal static string QaMaxSlopeFactory {
-            get {
-                return ResourceManager.GetString("QaMaxSlopeFactory", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to polyline or polygon feature class.
-        /// </summary>
-        internal static string QaMaxSlopeFactory_featureClass {
-            get {
-                return ResourceManager.GetString("QaMaxSlopeFactory_featureClass", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to maximum angle in °.
-        /// </summary>
-        internal static string QaMaxSlopeFactory_limit {
-            get {
-                return ResourceManager.GetString("QaMaxSlopeFactory_limit", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Finds all rows in the joined table that do not fulfill &apos;constraint&apos;.
         /// </summary>
         internal static string QaRelConstraint {

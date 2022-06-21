@@ -181,15 +181,6 @@ rules:
   <data name="QaLineConnection_rules" xml:space="preserve">
     <value>list of rules. Must be a multiple of the number of 'featureClasses'</value>
   </data>
-  <data name="QaMaxSlopeFactory" xml:space="preserve">
-    <value>Finds all segments in 'featureClass' where the slope is larger than 'limit'</value>
-  </data>
-  <data name="QaMaxSlopeFactory_featureClass" xml:space="preserve">
-    <value>polyline or polygon feature class</value>
-  </data>
-  <data name="QaMaxSlopeFactory_limit" xml:space="preserve">
-    <value>maximum angle in °</value>
-  </data>
   <data name="QaRelConstraint" xml:space="preserve">
     <value>Finds all rows in the joined table that do not fulfill 'constraint'</value>
   </data>
