@@ -347,6 +347,8 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 				envelopeXY = GeometryConversionUtils.CreateEnvelopeXY(Perimeter);
 			}
 
+			double tolerance = GeometryUtils.GetXyTolerance(originalGeometry);
+
 			double snapTolerance = SnapTolerance ?? GeometryUtils.GetXyTolerance(originalGeometry);
 
 			foreach (var kvp in clusteredIntersections)
@@ -394,8 +396,8 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 					// With the new intersection logic we have a crack point at each Z-level
 					// But un-cracked segments can still be there (even if a source point exists
 					// an uncracked segment might co-exist) in multipatches...
-					bool hasUncrackedSegment = HasUncrackedExtraMultipatchSegments(
-						optimizedPolyline, aoPoint);
+					bool hasUncrackedSegment = HasUncrackedExtraMultipatchSegments3d(
+						originalSegments, point, tolerance);
 
 					// Uncracked segments always win over (almost-matching) points
 					if (hasUncrackedSegment)
@@ -419,8 +421,6 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 				IPoint pointToInsert =
 					GeometryConversionUtils.CreatePoint(pntToInsert,
 					                                    originalGeometry.SpatialReference);
-
-				double tolerance = GeometryUtils.GetXyTolerance(originalGeometry);
 
 				bool violatesMinSegLength =
 					ViolatesMinimumSegmentLength3d(point, pntToInsert, originalSegments,
@@ -528,6 +528,42 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 						atPoint, xyTolerance, true);
 
 				return unsplitSegments.Count > 0;
+			}
+
+			return false;
+		}
+
+		/// <summary>
+		/// Whether there are additional segments (apart from an expected vertex) that are not cracked
+		/// at the specified point. This makes sense for multipatch cracking, where geometries self-intersect
+		/// at various Z-levels.
+		/// </summary>
+		/// <param name="sourceSegments"></param>
+		/// <param name="atPoint"></param>
+		/// <param name="tolerance"></param>
+		/// <returns></returns>
+		private bool HasUncrackedExtraMultipatchSegments3d([NotNull] ISegmentList sourceSegments,
+		                                                   [NotNull] IPnt atPoint,
+		                                                   double tolerance)
+		{
+			if (In3D)
+			{
+				return false;
+			}
+
+			if (UseSourceZs)
+			{
+				double xyTolerance = SnapTolerance ?? tolerance;
+
+				// check for segments that are not cracked, even though there are other good vertices at different Z in the same part
+				var unsplitSegments =
+					FindSegmentsPerpendicular(atPoint, sourceSegments, xyTolerance);
+
+				int unsplitSegmentCount = unsplitSegments
+					.Count(s => ! HasEndPointWithinDistance(
+						            s.Value, atPoint, xyTolerance));
+
+				return unsplitSegmentCount > 0;
 			}
 
 			return false;
