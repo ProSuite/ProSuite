@@ -404,6 +404,54 @@ namespace ProSuite.Commons.Test.Geom
 		}
 
 		[Test]
+		public void CanDetermineTouchesWithAlmostLinearIntersection()
+		{
+			// Repro test for TOP-5552
+
+			// The touch point is adjacent to a point that is just above the tolerance from
+			// the target, i.e. the segment intersection is almost linear.
+
+			var ring1 = new Linestring(new List<Pnt3D>
+			                           {
+				                           new Pnt3D(0, 0, 9),
+				                           new Pnt3D(0, 100, 9),
+				                           new Pnt3D(100, 100, 9),
+				                           new Pnt3D(100, 0, 9),
+				                           new Pnt3D(0, 0, 9),
+			                           });
+
+			List<Pnt3D> ring2Points = new List<Pnt3D>
+			                          {
+				                          new Pnt3D(50, 50, 0),
+				                          new Pnt3D(100, 50, 0),
+				                          new Pnt3D(99.985, 10, 55),
+				                          new Pnt3D(50, 10, 55)
+			                          };
+
+			Linestring ring1AsIsland = ring1.Clone();
+			ring1AsIsland.ReverseOrientation();
+
+			double tolerance = 0.01;
+
+			for (var i = 0; i < 4; i++)
+			{
+				var ring2 = new Linestring(GeomTestUtils.GetRotatedRing(ring2Points, i));
+
+				bool touchesXY =
+					GeomRelationUtils.TouchesXY(ring1, ring2, tolerance, out bool disjoint);
+
+				Assert.False(touchesXY);
+				Assert.False(disjoint);
+
+				touchesXY =
+					GeomRelationUtils.TouchesXY(ring1AsIsland, ring2, tolerance, out disjoint);
+
+				Assert.True(touchesXY);
+				Assert.False(disjoint);
+			}
+		}
+
+		[Test]
 		public void CanDetermineInteriorLineIntersectsXY()
 		{
 			var line1 = new Line3D(new Pnt3D(0, 0, 0), new Pnt3D(10, 10, 0));

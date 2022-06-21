@@ -894,8 +894,7 @@ namespace ProSuite.Commons.Geom
 			double distanceFromNext = nextSegment.GetDistanceXYPerpendicularSigned(
 				testPoint, out double distanceAlongNextRatio);
 
-			if (Math.Abs(distanceFromNext) < tolerance &&
-			    distanceAlongNextRatio >= 0 && distanceAlongNextRatio <= 1)
+			if (Math.Abs(distanceFromNext) < tolerance && distanceAlongNextRatio >= 0)
 			{
 				return null;
 			}
@@ -906,8 +905,7 @@ namespace ProSuite.Commons.Geom
 			double distanceFromPrevious = previousSegment.GetDistanceXYPerpendicularSigned(
 				testPoint, out distanceAlongPreviousRatio);
 
-			if (Math.Abs(distanceFromPrevious) < tolerance &&
-			    distanceAlongPreviousRatio >= 0 && distanceAlongPreviousRatio <= 1)
+			if (Math.Abs(distanceFromPrevious) < tolerance && distanceAlongPreviousRatio <= 1)
 			{
 				return null;
 			}
