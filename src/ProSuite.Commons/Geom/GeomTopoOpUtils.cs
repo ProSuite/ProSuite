@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
@@ -301,8 +302,6 @@ namespace ProSuite.Commons.Geom
 
 				result = GetDifferenceAreasXY(result, targetRingGroup, tolerance, zSource);
 
-				ISegmentList previous = result;
-
 				if (result.IsEmpty)
 				{
 					return result;
@@ -334,7 +333,23 @@ namespace ProSuite.Commons.Geom
 						new SubcurveNavigator(source, target, tolerance);
 					var ringOperator = new RingOperator(subcurveNavigator);
 
-					return ringOperator.DifferenceXY();
+					if (_msg.IsVerboseDebugEnabled)
+					{
+						LogGeometries(nameof(GetDifferenceAreasXY), sourceRings, targetRings);
+					}
+
+					try
+					{
+						return ringOperator.DifferenceXY();
+					}
+					catch (Exception e)
+					{
+						LogGeometries(nameof(GetDifferenceAreasXY), sourceRings, targetRings);
+
+						_msg.Debug("Error calculating XY-difference areas with " +
+						           $"tolerance {tolerance}.", e);
+						throw;
+					}
 				}, tolerance, zSource);
 
 			return result;
@@ -425,7 +440,23 @@ namespace ProSuite.Commons.Geom
 
 					var ringOperator = new RingOperator(subcurveNavigator);
 
-					return ringOperator.IntersectXY();
+					if (_msg.IsVerboseDebugEnabled)
+					{
+						LogGeometries(nameof(GetIntersectionAreasXY), sourceRings, targetRings);
+					}
+
+					try
+					{
+						return ringOperator.IntersectXY();
+					}
+					catch (Exception e)
+					{
+						LogGeometries(nameof(GetIntersectionAreasXY), sourceRings, targetRings);
+
+						_msg.Debug("Error calculating XY-intersection areas with " +
+						           $"tolerance {tolerance}.", e);
+						throw;
+					}
 				}, tolerance, zSource);
 
 			return result;
@@ -523,7 +554,23 @@ namespace ProSuite.Commons.Geom
 
 			var ringOperator = new RingOperator(subcurveNavigator);
 
-			return ringOperator.UnionXY();
+			if (_msg.IsVerboseDebugEnabled)
+			{
+				LogGeometries(nameof(GetUnionAreasXY), sourceRings, targetRings);
+			}
+
+			try
+			{
+				return ringOperator.UnionXY();
+			}
+			catch (Exception e)
+			{
+				LogGeometries(nameof(GetUnionAreasXY), sourceRings, targetRings);
+
+				_msg.Debug("Error calculating XY-union areas with " +
+				           $"tolerance {tolerance}.", e);
+				throw;
+			}
 		}
 
 		[NotNull]
@@ -4843,6 +4890,29 @@ namespace ProSuite.Commons.Geom
 				cutLine.GetLength2D() < tolerance &&
 				! MathUtils.AreEqual(cutLine.StartPoint.Z, cutLine.EndPoint.Z, tolerance);
 			return cutLineIsVertical;
+		}
+
+		private static void LogGeometries(string functionName,
+		                                  ISegmentList source,
+		                                  ISegmentList target)
+		{
+			string timeString = $"{DateTime.Now:yyyyMMdd_HHmmss}";
+
+			string directoryName = $"{functionName}_{timeString}";
+
+			string resultDirectory = Path.Combine(Path.GetTempPath(), directoryName);
+
+			if (Directory.Exists(resultDirectory))
+			{
+				resultDirectory += $"_{DateTime.Now.Millisecond}";
+			}
+
+			Directory.CreateDirectory(resultDirectory);
+
+			GeomUtils.ToWkbFile(source, Path.Combine(resultDirectory, $"source_{timeString}.wkb"));
+			GeomUtils.ToWkbFile(target, Path.Combine(resultDirectory, $"target_{timeString}.wkb"));
+
+			_msg.DebugFormat("Geometries have been logged to {0}", resultDirectory);
 		}
 	}
 }
