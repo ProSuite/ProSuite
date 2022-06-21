@@ -30,7 +30,6 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			List<IncludedInstanceBase> includedTests =
 				GetSortedTestClasses().Cast<IncludedInstanceBase>().ToList();
 
-			
 			includedTests.AddRange(IncludedTestFactories);
 
 			if (includedTests.Count <= 0)
@@ -98,7 +97,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 					}
 
 					foreach (IncludedInstanceConstructor constructor in includedTestClass
-						.InstanceConstructors)
+						         .InstanceConstructors)
 					{
 						AppendTestClassMethod(includedTestClass, constructor, sb);
 					}
@@ -110,8 +109,9 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			}
 		}
 
-		private static void CreatePythonTransformerClass(IEnumerable<IncludedInstanceBase> includedTransformers,
-		                                      StringBuilder sb)
+		private static void CreatePythonTransformerClass(
+			IEnumerable<IncludedInstanceBase> includedTransformers,
+			StringBuilder sb)
 		{
 			sb.AppendLine("class Transformer:");
 
@@ -125,18 +125,18 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 					}
 
 					foreach (IncludedInstanceConstructor constructor in includedTransformer
-						.InstanceConstructors)
+						         .InstanceConstructors)
 					{
 						AppendTransformerClassMethod(includedTransformer, constructor, sb);
 					}
 				}
-				
 			}
 		}
 
-		private static void AppendTransformerClassMethod(IncludedInstanceBase includedTransformerClass,
-		                                          IncludedInstanceConstructor constructor,
-		                                          StringBuilder sb)
+		private static void AppendTransformerClassMethod(
+			IncludedInstanceBase includedTransformerClass,
+			IncludedInstanceConstructor constructor,
+			StringBuilder sb)
 		{
 			IInstanceInfo testFactory = constructor.InstanceInfo;
 
@@ -147,10 +147,10 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			string conditionConstructorSignature =
 				$"\"{includedTransformerClass.InstanceType.Name}({constructor.ConstructorIndex})\"";
 
-			AppendTransformerMethod(methodName, methodSignature, testFactory, conditionConstructorSignature,
-			             sb);
+			AppendTransformerMethod(methodName, methodSignature, testFactory,
+			                        conditionConstructorSignature,
+			                        sb);
 		}
-
 
 		private static void AppendTestClassMethod(IncludedInstanceBase includedTestClass,
 		                                          IncludedInstanceConstructor constructor,
@@ -168,7 +168,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			AppendMethod(methodName, methodSignature, factory, conditionConstructorSignature,
 			             sb);
 		}
-		
+
 		private static void AppendTransformerMethod(string methodName, string methodSignature,
 		                                            IInstanceInfo factory,
 		                                            string conditionConstructorSignature,
@@ -253,14 +253,14 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			sb.Append("cls");
 
 			foreach (TestParameter testParameter in instanceInfo.Parameters.Where(
-				p => p.IsConstructorParameter))
+				         p => p.IsConstructorParameter))
 			{
 				AppendTestParameter(sb, testParameter);
 			}
 
 			// Optional parameters:
 			foreach (TestParameter testParameter in instanceInfo.Parameters.Where(
-				p => ! p.IsConstructorParameter))
+				         p => ! p.IsConstructorParameter))
 			{
 				AppendTestParameter(sb, testParameter);
 
@@ -282,8 +282,8 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			return sb.ToString();
 		}
 
-		private static void AppendTestParameter(StringBuilder stringBuilder,
-		                                        TestParameter testParameter)
+		private static void AppendTestParameter([NotNull] StringBuilder stringBuilder,
+		                                        [NotNull] TestParameter testParameter)
 		{
 			if (stringBuilder.Length > 1)
 			{
@@ -294,12 +294,9 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 
 			stringBuilder.AppendFormat("{0}", snakeCasePythonName);
 
-			string pythonType = TranslateType(testParameter);
+			string pythonType = TranslateToPythonType(testParameter);
 
-			if (! string.IsNullOrEmpty(pythonType))
-			{
-				stringBuilder.AppendFormat(": {0}", pythonType);
-			}
+			stringBuilder.AppendFormat(": {0}", pythonType);
 		}
 
 		private static object GetDefault(Type type)
@@ -318,7 +315,8 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			return null;
 		}
 
-		private static string TranslateType(TestParameter testParameter)
+		[NotNull]
+		private static string TranslateToPythonType([NotNull] TestParameter testParameter)
 		{
 			TestParameterType parameterType =
 				TestParameterTypeUtils.GetParameterType(testParameter.Type);
@@ -330,9 +328,6 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 				case TestParameterType.ObjectDataset:
 				case TestParameterType.TableDataset:
 					result = "Dataset";
-					break;
-				case TestParameterType.CustomScalar:
-					result = null;
 					break;
 				case TestParameterType.String:
 					result = "str";
@@ -350,7 +345,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 					result = "bool";
 					break;
 				default:
-					result = "None";
+					result = "any";
 					break;
 			}
 
