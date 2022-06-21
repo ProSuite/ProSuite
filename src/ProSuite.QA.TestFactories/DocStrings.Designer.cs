@@ -233,24 +233,6 @@ namespace ProSuite.QA.TestFactories {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to reference scale.
-        /// </summary>
-        internal static string QaLinearUnitFactory_referenceScale {
-            get {
-                return ResourceManager.GetString("QaLinearUnitFactory_referenceScale", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to linear units.
-        /// </summary>
-        internal static string QaLinearUnitFactory_units {
-            get {
-                return ResourceManager.GetString("QaLinearUnitFactory_units", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Finds all connected features in &apos;featureClasses&apos; that do not correspond with the &apos;rules&apos;.
         ///&apos;featureClasses&apos; can consist of line and point featureclasses. &apos;rules&apos; are checked at all distinct points that exist as start/endpoint (line featureclasses) or points (point featureclasses).
         ///Remark: the feature classes in &apos;featureClasses&apos; must have the same spatial reference. 

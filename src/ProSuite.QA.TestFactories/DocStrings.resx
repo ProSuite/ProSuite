@@ -148,12 +148,6 @@ Remark: The feature classes in 'polylineClasses' must have the same spatial refe
   <data name="QaGdbConstraintFactory_table" xml:space="preserve">
     <value>table with subtypes and domains</value>
   </data>
-  <data name="QaLinearUnitFactory_referenceScale" xml:space="preserve">
-    <value>reference scale</value>
-  </data>
-  <data name="QaLinearUnitFactory_units" xml:space="preserve">
-    <value>linear units</value>
-  </data>
   <data name="QaLineConnection" xml:space="preserve">
     <value>Finds all connected features in 'featureClasses' that do not correspond with the 'rules'.
 'featureClasses' can consist of line and point featureclasses. 'rules' are checked at all distinct points that exist as start/endpoint (line featureclasses) or points (point featureclasses).
