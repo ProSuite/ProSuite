@@ -1504,7 +1504,7 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 				{
 					Pnt3D targetPnt = intersectionPoint.GetTargetPoint(targetGeometry);
 
-					double distanceSquared = GeomUtils.GetDistanceSquaredXYZ(point, targetPnt);
+					double distanceSquared = GeomUtils.GetDistanceSquaredXY(point, targetPnt);
 
 					if (distanceSquared < closestDistanceSquared)
 					{
