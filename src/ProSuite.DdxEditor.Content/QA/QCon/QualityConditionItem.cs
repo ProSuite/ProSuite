@@ -439,10 +439,8 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 
 		protected override Control CreateControlCore(IItemNavigation itemNavigation)
 		{
-			var control = new QualityConditionControl(_tableState, new QualityConditionTableViewControl());
-			new QualityConditionPresenter(this, control, itemNavigation);
-
-			return control;
+			return QualityConditionControlFactory.CreateControl(
+				this, itemNavigation, _modelBuilder, _tableState);
 		}
 
 		protected override void IsValidForPersistenceCore(QualityCondition entity,

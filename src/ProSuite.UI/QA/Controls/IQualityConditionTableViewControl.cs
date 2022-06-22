@@ -2,12 +2,13 @@ using System.ComponentModel;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.Core.QA;
 
-namespace ProSuite.UI.QA.Controls;
-
-public interface IQualityConditionTableViewControl
+namespace ProSuite.UI.QA.Controls
 {
-	void BindToParameterValues(
-		[NotNull] BindingList<ParameterValueListItem> parameterValueItems);
+	public interface IQualityConditionTableViewControl
+	{
+		void BindToParameterValues(
+			[NotNull] BindingList<ParameterValueListItem> parameterValueItems);
 
-	void BindTo([NotNull] QualityCondition qualityCondition);
+		void BindTo([NotNull] QualityCondition qualityCondition);
+	}
 }
