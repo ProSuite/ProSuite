@@ -1,4 +1,4 @@
-﻿namespace ProSuite.DomainModel.AO.DataModel
+namespace ProSuite.DomainModel.Core.DataModel.LegacyTypes
 {
 	public interface IFeatureDatasetElement
 	{
