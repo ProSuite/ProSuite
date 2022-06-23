@@ -466,5 +466,32 @@ namespace ProSuite.QA.Tests.Documentation {
                 return ResourceManager.GetString("TrTableJoin_t1", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Transforms table &apos;t0&apos; and table &apos;t1&apos; to a joined table (experimental).
+        /// </summary>
+        public static string TrTableJoinInMemory_0 {
+            get {
+                return ResourceManager.GetString("TrTableJoinInMemory_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Table containing the shape field to be used in the joined table.
+        /// </summary>
+        public static string TrTableJoinInMemory_t0 {
+            get {
+                return ResourceManager.GetString("TrTableJoinInMemory_t0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to table to join with &apos;t1&apos;.
+        /// </summary>
+        public static string TrTableJoinInMemory_t1 {
+            get {
+                return ResourceManager.GetString("TrTableJoinInMemory_t1", resourceCulture);
+            }
+        }
     }
 }

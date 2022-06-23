@@ -257,6 +257,15 @@ T1Attributes: "SUM(X_VALUE) AS X_COUNT"</value>
     <value>Calculations with attributes of 't1' that are used in Group-Expressions.
 See T1Attributes</value>
   </data>
+  <data name="TrTableJoinInMemory_0" xml:space="preserve">
+    <value>Transforms table 't0' and table 't1' to a joined table (experimental)</value>
+  </data>
+  <data name="TrTableJoinInMemory_t0" xml:space="preserve">
+    <value>Table containing the shape field to be used in the joined table</value>
+  </data>
+  <data name="TrTableJoinInMemory_t1" xml:space="preserve">
+    <value>table to join with 't1'</value>
+  </data>
   <data name="TrTableJoin_0" xml:space="preserve">
     <value>Transforms table 't0' and table 't1', which must be related by 'relationName', to a joined table</value>
   </data>
