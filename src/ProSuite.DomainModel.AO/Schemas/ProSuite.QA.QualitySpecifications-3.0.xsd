@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<xs:schema xmlns:tns="urn:EsriDE.ProSuite.QA.QualitySpecifications-3.0" elementFormDefault="qualified"
-           targetNamespace="urn:EsriDE.ProSuite.QA.QualitySpecifications-3.0"
+<xs:schema xmlns:tns="urn:ProSuite.QA.QualitySpecifications-3.0" elementFormDefault="qualified"
+           targetNamespace="urn:ProSuite.QA.QualitySpecifications-3.0"
            xmlns:xs="http://www.w3.org/2001/XMLSchema">
   <xs:element name="DataQuality" nillable="true" type="tns:XmlDataQualityDocument" />
   <xs:complexType name="XmlDataQualityDocument">

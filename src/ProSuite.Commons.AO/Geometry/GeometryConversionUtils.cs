@@ -222,7 +222,7 @@ namespace ProSuite.Commons.AO.Geometry
 		}
 
 		public static IPointCollection CreatePointCollection(
-			[NotNull] IPolycurve templateGeometry,
+			[NotNull] IGeometry templateGeometry,
 			[NotNull] IEnumerable<IPnt> points,
 			[CanBeNull] EnvelopeXY insideAoi = null,
 			double xyTolerance = 0)

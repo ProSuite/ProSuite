@@ -117,15 +117,6 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="QaAngleFactory_featureClasses" xml:space="preserve">
-    <value>polyline feature classes</value>
-  </data>
-  <data name="QaAngleFactory_is3D" xml:space="preserve">
-    <value>include z-coordinate for checking</value>
-  </data>
-  <data name="QaAngleFactory_limit" xml:space="preserve">
-    <value>minimum angle in °</value>
-  </data>
   <data name="QaDangleFactory" xml:space="preserve">
     <value>Finds all start/end points in 'polylineClasses' that connect to no other start/end point
 Remark: The feature classes in 'polylineClasses' must have the same spatial reference</value>
@@ -147,12 +138,6 @@ Remark: The feature classes in 'polylineClasses' must have the same spatial refe
   </data>
   <data name="QaGdbConstraintFactory_table" xml:space="preserve">
     <value>table with subtypes and domains</value>
-  </data>
-  <data name="QaLinearUnitFactory_referenceScale" xml:space="preserve">
-    <value>reference scale</value>
-  </data>
-  <data name="QaLinearUnitFactory_units" xml:space="preserve">
-    <value>linear units</value>
   </data>
   <data name="QaLineConnection" xml:space="preserve">
     <value>Finds all connected features in 'featureClasses' that do not correspond with the 'rules'.
@@ -195,38 +180,6 @@ rules:
   </data>
   <data name="QaLineConnection_rules" xml:space="preserve">
     <value>list of rules. Must be a multiple of the number of 'featureClasses'</value>
-  </data>
-  <data name="QaLineIntersectAngleFactory" xml:space="preserve">
-    <value>Finds all intersections between lines of 'featureClasses' where the intersection angle is smaller than 'limit'
-Remark: The feature classes in 'featureClasses' must have the same spatial reference</value>
-  </data>
-  <data name="QaLineIntersectAngleFactory_featureClasses" xml:space="preserve">
-    <value>polyline or polygon feature classes</value>
-  </data>
-  <data name="QaMaxSlopeFactory" xml:space="preserve">
-    <value>Finds all segments in 'featureClass' where the slope is larger than 'limit'</value>
-  </data>
-  <data name="QaMaxSlopeFactory_featureClass" xml:space="preserve">
-    <value>polyline or polygon feature class</value>
-  </data>
-  <data name="QaMaxSlopeFactory_limit" xml:space="preserve">
-    <value>maximum angle in °</value>
-  </data>
-  <data name="QaMinNodeAngleFactory" xml:space="preserve">
-    <value>Finds all pair of lines in 'featureClasses' with common start or end point where the angle built by the lines is smaller than 'limit'
-Remark: The feature classes in 'featureClasses' must have the same spatial reference</value>
-  </data>
-  <data name="QaMinSegAngleFactory" xml:space="preserve">
-    <value>Finds all consecutive segments in 'featureClass' where the angle between two segments is smaller than 'limit'</value>
-  </data>
-  <data name="QaMinSegAngleFactory_featureClass" xml:space="preserve">
-    <value>polyline or polygon feature class</value>
-  </data>
-  <data name="QaMinSegAngleFactory_is3D" xml:space="preserve">
-    <value>include z-coordinate for checking</value>
-  </data>
-  <data name="QaMinSegAngleFactory_limit" xml:space="preserve">
-    <value>minimum allowed angle between segments (in °)</value>
   </data>
   <data name="QaRelConstraint" xml:space="preserve">
     <value>Finds all rows in the joined table that do not fulfill 'constraint'</value>

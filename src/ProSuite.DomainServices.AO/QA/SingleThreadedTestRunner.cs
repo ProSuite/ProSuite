@@ -8,6 +8,7 @@ using ProSuite.Commons;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Essentials.System;
 using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.QA;
@@ -69,7 +70,7 @@ namespace ProSuite.DomainServices.AO.QA
 
 			StartVerification(QualityVerification);
 
-			TimeSpan processorStartTime = Process.GetCurrentProcess().UserProcessorTime;
+			TimeSpan processorStartTime = ProcessUtils.TryGetUserProcessorTime();
 
 			CancellationTokenSource = cancellationTokenSource;
 
@@ -621,19 +622,19 @@ namespace ProSuite.DomainServices.AO.QA
 
 		#endregion
 
-		private void EndVerification(QualityVerification qualityVerification,
-		                             TimeSpan startTime)
+		private void EndVerification([CanBeNull] QualityVerification qualityVerification,
+		                             TimeSpan processorStartTime)
 		{
 			if (qualityVerification == null)
 			{
 				return;
 			}
 
-			TimeSpan endTime = Process.GetCurrentProcess().UserProcessorTime;
+			TimeSpan processorEndTime = ProcessUtils.TryGetUserProcessorTime();
 
-			TimeSpan t = endTime - startTime;
+			TimeSpan processorTime = processorEndTime - processorStartTime;
 
-			qualityVerification.ProcessorTimeSeconds = t.TotalSeconds;
+			qualityVerification.ProcessorTimeSeconds = processorTime.TotalSeconds;
 
 			qualityVerification.EndDate = DateTime.Now;
 
