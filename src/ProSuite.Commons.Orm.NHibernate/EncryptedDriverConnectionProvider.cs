@@ -25,7 +25,7 @@ namespace ProSuite.Commons.Orm.NHibernate
 						string decryptedConnectionString;
 
 						if (ConnectionStringEncryptionUtils.DecryptConnectionString(
-							stringEncryptor, connectionString, out decryptedConnectionString))
+							    stringEncryptor, connectionString, out decryptedConnectionString))
 						{
 							settings[_connectionStringKey] = decryptedConnectionString;
 						}

@@ -1,4 +1,4 @@
-﻿using NHibernate.Cfg;
+using NHibernate.Cfg;
 
 namespace ProSuite.Commons.Orm.NHibernate
 {
