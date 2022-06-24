@@ -91,7 +91,7 @@ public class QualityConditionViewModel : Observable, IQualityConditionAwareViewM
 			TestParameter parameter = pair.Key;
 			IList<ViewModelBase> rows = pair.Value;
 
-			if (rows.Count > 1)
+			if (parameter.ArrayDimension > 0)
 			{
 				yield return new KeyValuePair<TestParameter, ViewModelBase>(
 					parameter, new TestParameterValueCollectionViewModel(parameter, parameter.Type, rows, this));
