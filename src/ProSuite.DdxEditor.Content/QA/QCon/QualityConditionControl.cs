@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Drawing;
 using System.Windows.Forms;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -61,7 +62,32 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			_tableViewControl = tableViewControl;
 			_qualityConditionTableViewControl = (Control) tableViewControl;
 
+#if NET6_0
+			_qualityConditionTableViewControl.SuspendLayout();
+			_qualityConditionTableViewControl.Dock = DockStyle.Fill;
+			_qualityConditionTableViewControl.Location = new Point(0, 0);
+			_qualityConditionTableViewControl.Name = "_qualityConditionTableViewControl";
+			_qualityConditionTableViewControl.Size = new Size(569, 123);
+			_qualityConditionTableViewControl.TabIndex = 0;
+#endif
+
 			InitializeComponent();
+
+#if NET6_0
+			// hack!
+			_splitContainer.SuspendLayout();
+			_qualityConditionTableViewControlPanel.SuspendLayout();
+
+			_splitContainer.Panel2.Controls.Add(_qualityConditionTableViewControl);
+			_splitContainer.Size = new Size(569, 282);
+			_splitContainer.SplitterDistance = 155;
+			_qualityConditionTableViewControlPanel.Controls.RemoveByKey("_tabControlParameterValues");
+			_qualityConditionTableViewControlPanel.Controls.Add(_splitContainer);
+
+			_splitContainer.ResumeLayout(false);
+			_qualityConditionTableViewControl.ResumeLayout(false);
+			_qualityConditionTableViewControlPanel.ResumeLayout(false);
+#endif
 
 			NullableBooleanItems.UseFor(_columnIssueType,
 			                            trueText: "Warning",

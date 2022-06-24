@@ -30,7 +30,7 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 		_filterExpression = filterExpression;
 		_usedAsReferenceData = usedAsReferenceData;
 
-		//ImageSource = BlazorImageUtils.GetImageSource(Dataset);
+		ImageSource = BlazorImageUtils.GetImageSource(Dataset);
 
 		ModelName = _dataset?.Model?.Name;
 
@@ -69,6 +69,8 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 		get => Dataset?.ToString();
 		set { }
 	}
+
+	public string ImageSource { get; set; }
 
 	public void FindDatasetClicked()
 	{

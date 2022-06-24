@@ -23,7 +23,6 @@ public class QualityConditionBlazor : BlazorWebView, IQualityConditionTableViewC
 
 		_viewModel = viewModel;
 
-		Dock = DockStyle.Fill;
 		HostPage = "wwwroot/index.html";
 		Services = provider;
 	}
@@ -46,6 +45,8 @@ public class QualityConditionBlazor : BlazorWebView, IQualityConditionTableViewC
 		parameters.Add("ViewModel", _viewModel);
 
 		RootComponents.Add<QualityConditionTableViewBlazor>("#app", parameters);
+		
+		Dock = DockStyle.Fill;
 
 		// Note: necessary!
 		base.OnCreateControl();

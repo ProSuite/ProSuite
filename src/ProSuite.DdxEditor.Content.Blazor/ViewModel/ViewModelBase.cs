@@ -33,8 +33,6 @@ public abstract class ViewModelBase : Observable
 	public bool Editing { get; private set; }
 	public bool Expanded { get; set; }
 
-	public string ImageSource { get; set; }
-
 	public Type ComponentType { get; set; }
 
 	public IDictionary<string, object> ComponentParameters { get; }

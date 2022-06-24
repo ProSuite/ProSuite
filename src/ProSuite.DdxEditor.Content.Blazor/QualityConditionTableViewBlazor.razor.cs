@@ -3,6 +3,7 @@ using System.Linq;
 using System.ComponentModel;
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Misc;
@@ -40,6 +41,7 @@ public partial class QualityConditionTableViewBlazor : IDisposable
 	private IList<ViewModelBase> Rows => ViewModel.Rows;
 
 	public ViewModelBase SelectedRow { get; set; }
+	public ViewModelBase SelectedCollectionRow { get; set; }
 
 	public void Dispose()
 	{
@@ -65,6 +67,56 @@ public partial class QualityConditionTableViewBlazor : IDisposable
 		}
 	}
 
+	private async void OnRowClick(DataGridRowMouseEventArgs<ViewModelBase> args)
+	{
+		Assert.True(_mainGrid.Data.Contains(args.Data), "row is not from grid");
+
+		await DataGridUtils.UpdateRowIfNotNull(_collectionGrid, SelectedCollectionRow);
+
+		ViewModelBase recent = SelectedRow;
+
+		SelectedRow = args.Data;
+		SelectedCollectionRow = null;
+
+		if (SelectedRow is TestParameterValueCollectionViewModel)
+		{
+			await DataGridUtils.UpdateRowIfNotNull(_mainGrid, recent);
+			return;
+		}
+		
+		if (! Equals(recent, SelectedRow))
+		{
+			await DataGridUtils.UpdateRowIfNotNull(_mainGrid, recent);
+
+			await DataGridUtils.EditRow(_mainGrid, SelectedRow);
+		}
+	}
+
+	private async void OnCollectionRowClick(DataGridRowMouseEventArgs<ViewModelBase> args)
+	{
+		Assert.NotNull(_collectionGrid);
+		Assert.True(_collectionGrid.Data.Contains(args.Data), "row is not from collection grid");
+		
+		await DataGridUtils.UpdateRowIfNotNull(_mainGrid, SelectedRow);
+
+		ViewModelBase recent = SelectedCollectionRow;
+
+		SelectedCollectionRow = args.Data;
+		SelectedRow = null;
+
+		if (! Equals(recent, SelectedCollectionRow))
+		{
+			await DataGridUtils.UpdateRowIfNotNull(_collectionGrid, recent);
+
+			if (SelectedCollectionRow.New)
+			{
+				await DataGridUtils.UpdateRow(_collectionGrid, SelectedCollectionRow);
+			}
+
+			await DataGridUtils.EditRow(_collectionGrid, SelectedCollectionRow);
+		}
+	}
+
 	#region layout
 
 	#region row
@@ -77,58 +129,6 @@ public partial class QualityConditionTableViewBlazor : IDisposable
 	private void OnRowUpdate(ViewModelBase row)
 	{
 		row.Dirty = false;
-	}
-
-	private async void OnRowClick(DataGridRowMouseEventArgs<ViewModelBase> arg)
-	{
-		ViewModelBase recent = SelectedRow;
-
-		SelectedRow = arg.Data;
-
-		if (SelectedRow is TestParameterValueCollectionViewModel)
-		{
-			recent?.StopEditing();
-			return;
-		}
-
-		if (_collectionGrid != null)
-		{
-			Assert.True(SelectedRow is not TestParameterValueCollectionViewModel,
-			            $"{nameof(TestParameterValueCollectionViewModel)} cannot be edited");
-
-			// start editing selected row
-			if (_collectionGrid.Data.Contains(SelectedRow))
-			{
-				if (! Equals(recent, SelectedRow))
-				{
-					if (recent != null)
-					{
-						recent.StopEditing();
-						await _collectionGrid.UpdateRow(recent);
-					}
-
-					SelectedRow.StartEditing();
-					await _collectionGrid.UpdateRow(SelectedRow);
-					await _collectionGrid.EditRow(SelectedRow);
-
-					return;
-				}
-			}
-		}
-
-		if (_mainGrid.Data.Contains(SelectedRow))
-		{
-			if (! Equals(recent, SelectedRow))
-			{
-				recent?.StopEditing();
-				await _mainGrid.UpdateRow(recent);
-
-				SelectedRow.StartEditing();
-				await _mainGrid.EditRow(SelectedRow);
-			}
-
-			await _mainGrid.UpdateRow(SelectedRow);
-		}
 	}
 
 	private void OnRowRender(RowRenderEventArgs<ViewModelBase> args)
@@ -173,6 +173,9 @@ public partial class QualityConditionTableViewBlazor : IDisposable
 
 	private void OnCellRender(DataGridCellRenderEventArgs<ViewModelBase> args)
 	{
+		//args.Attributes.Add("style", "min-height: 0px; height: 40px");
+		args.Attributes.Add("height", "auto");
+
 		if (args.Data is ScalarTestParameterValueViewModel)
 		{
 			if (args.Column.Property == "ModelName")
@@ -191,11 +194,11 @@ public partial class QualityConditionTableViewBlazor : IDisposable
 	{
 		Assert.NotNull(_collectionGrid);
 
-		Assert.NotNull(SelectedRow);
+		Assert.NotNull(SelectedCollectionRow);
 
-		ViewModel.DeleteRow(SelectedRow);
+		ViewModel.DeleteRow(SelectedCollectionRow);
 
-		SelectedRow = null;
+		SelectedCollectionRow = null;
 
 		await _collectionGrid.Reload();
 	}
@@ -215,7 +218,7 @@ public partial class QualityConditionTableViewBlazor : IDisposable
 	private void UpClicked()
 	{
 		Assert.NotNull(_collectionGrid);
-		Assert.NotNull(SelectedRow);
+		Assert.NotNull(SelectedCollectionRow);
 		
 		IEnumerable<ViewModelBase> collectionViewModels =
 			Rows.Where(vm => vm is TestParameterValueCollectionViewModel);
@@ -224,7 +227,7 @@ public partial class QualityConditionTableViewBlazor : IDisposable
 		{
 			List<ViewModelBase> values = vm.Values;
 
-			int index = values.IndexOf(SelectedRow);
+			int index = values.IndexOf(SelectedCollectionRow);
 
 			if (index == -1)
 			{
@@ -234,7 +237,7 @@ public partial class QualityConditionTableViewBlazor : IDisposable
 
 			values.RemoveAt(index);
 
-			values.Insert(index - 1, SelectedRow);
+			values.Insert(index - 1, SelectedCollectionRow);
 
 			_collectionGrid.Data = values;
 			_collectionGrid.Reload();
@@ -244,16 +247,15 @@ public partial class QualityConditionTableViewBlazor : IDisposable
 	private void DownClicked()
 	{
 		Assert.NotNull(_collectionGrid);
-		Assert.NotNull(SelectedRow);
+		Assert.NotNull(SelectedCollectionRow);
 
-		
 		IEnumerable<ViewModelBase> collectionViewModels =
 			Rows.Where(vm => vm is TestParameterValueCollectionViewModel);
 
 		foreach (ViewModelBase vm in collectionViewModels)
 		{
 			List<ViewModelBase> values = vm.Values;
-			int index = values.IndexOf(SelectedRow);
+			int index = values.IndexOf(SelectedCollectionRow);
 
 			if (index == -1)
 			{
@@ -263,7 +265,7 @@ public partial class QualityConditionTableViewBlazor : IDisposable
 
 			values.RemoveAt(index);
 
-			values.Insert(index + 1, SelectedRow);
+			values.Insert(index + 1, SelectedCollectionRow);
 
 			_collectionGrid.Data = values;
 			_collectionGrid.Reload();
@@ -311,7 +313,17 @@ public partial class QualityConditionTableViewBlazor : IDisposable
 			return true;
 		}
 
-		if (SelectedRow is TestParameterValueCollectionViewModel)
+		if (_collectionGrid == null)
+		{
+			return true;
+		}
+
+		if (Enumerable.Count(_collectionGrid.Data) == 1)
+		{
+			return true;
+		}
+
+		if (SelectedCollectionRow == null)
 		{
 			return true;
 		}
@@ -326,7 +338,7 @@ public partial class QualityConditionTableViewBlazor : IDisposable
 			return true;
 		}
 
-		if (SelectedRow == null)
+		if (SelectedCollectionRow == null)
 		{
 			return true;
 		}
@@ -346,9 +358,9 @@ public partial class QualityConditionTableViewBlazor : IDisposable
 
 		return collectionViewModels.Any(vm =>
 		{
-			int index = vm.Values.IndexOf(SelectedRow);
+			int index = vm.Values.IndexOf(SelectedCollectionRow);
 
-			return index == 0 || index == -1;
+			return index == 0;
 		});
 	}
 
@@ -364,9 +376,9 @@ public partial class QualityConditionTableViewBlazor : IDisposable
 
 		return collectionViewModels.Any(vm =>
 		{
-			int index = vm.Values.IndexOf(SelectedRow);
+			int index = vm.Values.IndexOf(SelectedCollectionRow);
 
-			return index == vm.Values.Count - 1 || index == -1;
+			return index >= vm.Values.Count - 1;
 		});
 	}
 
@@ -391,4 +403,8 @@ public partial class QualityConditionTableViewBlazor : IDisposable
 	}
 
 	#endregion
+
+	private void OnFocusOut(FocusEventArgs args)
+	{
+	}
 }
