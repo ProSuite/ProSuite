@@ -16,8 +16,7 @@ namespace ProSuite.DdxEditor.Framework.ItemViews
 	{
 		[NotNull] private readonly IBoundView<E, O> _view;
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		#region Constructors
 

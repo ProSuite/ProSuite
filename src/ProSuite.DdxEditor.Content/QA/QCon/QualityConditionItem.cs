@@ -25,7 +25,6 @@ using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.Repositories;
 using ProSuite.QA.Core;
 using ProSuite.UI.QA;
-using ProSuite.UI.QA.Controls;
 using ProSuite.UI.QA.PropertyEditors;
 using ProSuite.UI.QA.ResourceLookup;
 

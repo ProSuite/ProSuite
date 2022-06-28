@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
-using System.Reflection;
 using System.Windows.Forms;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
@@ -37,8 +36,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 {
 	public class TestDescriptorItem : EntityItem<TestDescriptor, TestDescriptor>
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		[NotNull] private readonly CoreDomainModelItemModelBuilder _modelBuilder;
 		[CanBeNull] private Image _image;

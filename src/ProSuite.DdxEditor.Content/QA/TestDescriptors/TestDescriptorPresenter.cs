@@ -20,8 +20,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 		[NotNull] private readonly IItemNavigation _itemNavigation;
 		[NotNull] private readonly TestDescriptorItem _item;
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		[NotNull] private readonly SortableBindingList<ReferencingQualityConditionTableRow>
 			_qconTableRows =

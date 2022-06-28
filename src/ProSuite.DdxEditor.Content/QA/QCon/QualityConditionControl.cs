@@ -41,11 +41,9 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 		[NotNull] private readonly TableState _tableState;
 		private IList<QualitySpecificationReferenceTableRow> _initialTableRows;
 
-		[NotNull]
-		private readonly Control _qualityConditionTableViewControl;
+		[NotNull] private readonly Control _qualityConditionTableViewControl;
 
-		[NotNull]
-		private readonly IQualityConditionTableViewControl _tableViewControl;
+		[NotNull] private readonly IQualityConditionTableViewControl _tableViewControl;
 
 		#region Constructors
 

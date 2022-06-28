@@ -41,7 +41,7 @@ namespace ProSuite.DdxEditor.Content
 		protected IUnitOfWork UnitOfWork { get; }
 
 		/// <summary>
-		/// Initializes a new instance of the <see cref="DomainModelItemModelBuilder"/> class.
+		/// Initializes a new instance of the <see cref="CoreDomainModelItemModelBuilder"/> class.
 		/// </summary>
 		/// <param name="unitOfWork">The unit of work.</param>
 		protected CoreDomainModelItemModelBuilder([NotNull] IUnitOfWork unitOfWork)

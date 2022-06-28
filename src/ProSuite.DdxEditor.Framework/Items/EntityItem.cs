@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -14,8 +13,7 @@ namespace ProSuite.DdxEditor.Framework.Items
 		where E : BASE
 	{
 		// ReSharper disable once StaticFieldInGenericType
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private readonly IRepository<BASE> _repository;
 		private int _entityId;

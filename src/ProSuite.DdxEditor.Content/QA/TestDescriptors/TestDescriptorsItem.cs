@@ -21,8 +21,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 {
 	public class TestDescriptorsItem : EntityTypeItem<TestDescriptor>
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		[NotNull] private readonly CoreDomainModelItemModelBuilder _modelBuilder;
 		[NotNull] private static readonly Image _image;

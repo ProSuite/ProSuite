@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
-using System.Reflection;
 using System.Windows.Forms;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -34,8 +33,7 @@ namespace ProSuite.DdxEditor.Framework.Items
 
 		private bool _discardingChanges;
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		/// <summary>
 		/// Initializes the <see cref="Item"/> class.
@@ -559,7 +557,7 @@ namespace ProSuite.DdxEditor.Framework.Items
 				_children.Sort(CompareChildren);
 			}
 
-			_children.ForEach(child => child.Parent = this);
+			Assert.NotNull(_children).ForEach(child => child.Parent = this);
 		}
 
 		protected virtual int CompareChildren([CanBeNull] Item child1,
