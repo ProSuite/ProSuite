@@ -6,12 +6,11 @@ namespace ProSuite.DomainModel.Core.QA
 {
 	public class TransformerConfiguration : InstanceConfiguration
 	{
-		[UsedImplicitly] private TransformerDescriptor _transformerDescriptor;
-
 		/// <summary>
 		/// Initializes a new instance of the <see cref="TransformerConfiguration" /> class.
 		/// </summary>
 		/// <remarks>Required for NHibernate</remarks>
+		[UsedImplicitly]
 		protected TransformerConfiguration() { }
 
 		public TransformerConfiguration(string name,
@@ -21,20 +20,19 @@ namespace ProSuite.DomainModel.Core.QA
 		{
 			Assert.ArgumentNotNull(transformerDescriptor, nameof(transformerDescriptor));
 
-			_transformerDescriptor = transformerDescriptor;
+			TransformerDescriptor = transformerDescriptor;
 		}
-
-		public override InstanceDescriptor InstanceDescriptor => TransformerDescriptor;
 
 		[Required]
 		public TransformerDescriptor TransformerDescriptor
 		{
-			get => _transformerDescriptor;
-			set => _transformerDescriptor = value;
+			get => (TransformerDescriptor) InstanceDescriptor;
+			private set => InstanceDescriptor = value;
 		}
 
 		private object _value;
 		private object _datasetContext;
+
 		public bool HasCashedValue(object datasetContext)
 		{
 			return ReferenceEquals(datasetContext, _datasetContext) && _value != null;
@@ -46,6 +44,6 @@ namespace ProSuite.DomainModel.Core.QA
 		{
 			_value = value;
 			_datasetContext = datasetContext;
-		} 
+		}
 	}
 }

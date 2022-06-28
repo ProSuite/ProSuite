@@ -23,6 +23,8 @@ namespace ProSuite.DomainModel.Core.QA
 		[UsedImplicitly] [Obfuscation(Exclude = true)]
 		private string _description;
 
+		[UsedImplicitly] private InstanceDescriptor _instanceDescriptor;
+
 		#endregion
 
 		protected InstanceConfiguration() { }
@@ -38,7 +40,12 @@ namespace ProSuite.DomainModel.Core.QA
 		public IList<TestParameterValue> ParameterValues =>
 			new ReadOnlyList<TestParameterValue>(_parameterValues);
 
-		public abstract InstanceDescriptor InstanceDescriptor { get; }
+		[Required]
+		public virtual InstanceDescriptor InstanceDescriptor
+		{
+			get => _instanceDescriptor;
+			set => _instanceDescriptor = value;
+		}
 
 		#region INamed, IAnnotated members
 
@@ -106,8 +113,8 @@ namespace ProSuite.DomainModel.Core.QA
 				else if (includeSourceDatasets && datasetTestParameterValue.ValueSource != null)
 				{
 					foreach (Dataset referencedDataset in
-						datasetTestParameterValue.ValueSource.GetDatasetParameterValues(
-							includeSourceDatasets: true))
+					         datasetTestParameterValue.ValueSource.GetDatasetParameterValues(
+						         includeSourceDatasets: true))
 					{
 						yield return referencedDataset;
 					}
@@ -133,11 +140,11 @@ namespace ProSuite.DomainModel.Core.QA
 				if (datasetTestParameterValue?.RowFilterConfigurations != null)
 				{
 					foreach (var rowFilterConfiguration in
-						datasetTestParameterValue.RowFilterConfigurations)
+					         datasetTestParameterValue.RowFilterConfigurations)
 					{
 						foreach (Dataset referencedDataset in
-							rowFilterConfiguration.GetDatasetParameterValues(
-								includeReferencedProcessors: true))
+						         rowFilterConfiguration.GetDatasetParameterValues(
+							         includeReferencedProcessors: true))
 						{
 							yield return referencedDataset;
 						}
@@ -148,8 +155,8 @@ namespace ProSuite.DomainModel.Core.QA
 				if (parameterValue.ValueSource != null)
 				{
 					foreach (Dataset referencedDataset in
-						parameterValue.ValueSource.GetDatasetParameterValues(
-							includeReferencedProcessors: true))
+					         parameterValue.ValueSource.GetDatasetParameterValues(
+						         includeReferencedProcessors: true))
 					{
 						yield return referencedDataset;
 					}

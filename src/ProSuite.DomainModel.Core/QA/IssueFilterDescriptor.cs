@@ -12,8 +12,8 @@ namespace ProSuite.DomainModel.Core.QA
 
 		public IssueFilterDescriptor([NotNull] string name,
 		                             [NotNull] ClassDescriptor testClass,
-		                             int testConstructorId,
+		                             int constructorId,
 		                             string description = null)
-			: base(name, testClass, testConstructorId, description) { }
+			: base(name, testClass, constructorId, description) { }
 	}
 }

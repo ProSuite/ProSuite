@@ -6,12 +6,11 @@ namespace ProSuite.DomainModel.Core.QA
 {
 	public class IssueFilterConfiguration : InstanceConfiguration
 	{
-		[UsedImplicitly] private IssueFilterDescriptor _issueFilterDescriptor;
-
 		/// <summary>
 		/// Initializes a new instance of the <see cref="RowFilterConfiguration" /> class.
 		/// </summary>
 		/// <remarks>Required for NHibernate</remarks>
+		[UsedImplicitly]
 		protected IssueFilterConfiguration() { }
 
 		public IssueFilterConfiguration(string name,
@@ -21,16 +20,14 @@ namespace ProSuite.DomainModel.Core.QA
 		{
 			Assert.ArgumentNotNull(issueFilterDescriptor, nameof(issueFilterDescriptor));
 
-			_issueFilterDescriptor = issueFilterDescriptor;
+			IssueFilterDescriptor = issueFilterDescriptor;
 		}
-
-		public override InstanceDescriptor InstanceDescriptor => IssueFilterDescriptor;
 
 		[Required]
 		public IssueFilterDescriptor IssueFilterDescriptor
 		{
-			get => _issueFilterDescriptor;
-			set => _issueFilterDescriptor = value;
+			get => (IssueFilterDescriptor) InstanceDescriptor;
+			private set => InstanceDescriptor = value;
 		}
 	}
 }
