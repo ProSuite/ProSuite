@@ -174,7 +174,7 @@ namespace ProSuite.DomainModel.Core.QA
 				return true;
 			}
 
-			if (obj.GetType() != typeof(InstanceDescriptor))
+			if (obj.GetType() != this.GetType())
 			{
 				return false;
 			}
