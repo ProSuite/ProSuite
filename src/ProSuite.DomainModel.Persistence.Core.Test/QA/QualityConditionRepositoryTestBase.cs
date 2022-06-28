@@ -339,9 +339,7 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.QA
 							readFilterConfig.InstanceDescriptor);
 
 					Assert.NotNull(filterInfo);
-
-					// TODO: Add Description
-					Assert.AreEqual(null, filterInfo.TestDescription);
+					Assert.NotNull(filterInfo.TestDescription);
 				}
 			);
 		}
