@@ -5,6 +5,7 @@ using System.Linq;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Logging;
 
 namespace ProSuite.Commons.Geom
@@ -344,11 +345,17 @@ namespace ProSuite.Commons.Geom
 					}
 					catch (Exception e)
 					{
-						LogGeometries(nameof(GetDifferenceAreasXY), sourceRings, targetRings);
+						IList<string> loggedGeometries =
+							LogGeometries(nameof(GetDifferenceAreasXY), sourceRings, targetRings);
 
 						_msg.Debug("Error calculating XY-difference areas with " +
 						           $"tolerance {tolerance}.", e);
-						throw;
+
+						throw new GeomException("Error calculating XY-difference areas with " +
+						                        $"tolerance {tolerance}.", e)
+						      {
+							      ErrorGeometries = loggedGeometries
+						      };
 					}
 				}, tolerance, zSource);
 
@@ -451,11 +458,17 @@ namespace ProSuite.Commons.Geom
 					}
 					catch (Exception e)
 					{
-						LogGeometries(nameof(GetIntersectionAreasXY), sourceRings, targetRings);
+						IList<string> loggedGeometries =
+							LogGeometries(nameof(GetIntersectionAreasXY), sourceRings, targetRings);
 
 						_msg.Debug("Error calculating XY-intersection areas with " +
 						           $"tolerance {tolerance}.", e);
-						throw;
+
+						throw new GeomException("Error calculating XY-intersection areas with " +
+						                        $"tolerance {tolerance}.", e)
+						      {
+							      ErrorGeometries = loggedGeometries
+						      };
 					}
 				}, tolerance, zSource);
 
@@ -565,11 +578,16 @@ namespace ProSuite.Commons.Geom
 			}
 			catch (Exception e)
 			{
-				LogGeometries(nameof(GetUnionAreasXY), sourceRings, targetRings);
+				IList<string> loggedGeometries =
+					LogGeometries(nameof(GetUnionAreasXY), sourceRings, targetRings);
 
 				_msg.Debug("Error calculating XY-union areas with " +
 				           $"tolerance {tolerance}.", e);
-				throw;
+				throw new GeomException("Error calculating XY-union areas with " +
+				                        $"tolerance {tolerance}.", e)
+				      {
+					      ErrorGeometries = loggedGeometries
+				      };
 			}
 		}
 
@@ -4892,9 +4910,9 @@ namespace ProSuite.Commons.Geom
 			return cutLineIsVertical;
 		}
 
-		private static void LogGeometries(string functionName,
-		                                  ISegmentList source,
-		                                  ISegmentList target)
+		private static IList<string> LogGeometries(string functionName,
+		                                           ISegmentList source,
+		                                           ISegmentList target)
 		{
 			string timeString = $"{DateTime.Now:yyyyMMdd_HHmmss}";
 
@@ -4909,10 +4927,17 @@ namespace ProSuite.Commons.Geom
 
 			Directory.CreateDirectory(resultDirectory);
 
-			GeomUtils.ToWkbFile(source, Path.Combine(resultDirectory, $"source_{timeString}.wkb"));
-			GeomUtils.ToWkbFile(target, Path.Combine(resultDirectory, $"target_{timeString}.wkb"));
+			string sourcePath = Path.Combine(resultDirectory, $"source_{timeString}.wkb");
+			string targetPath = Path.Combine(resultDirectory, $"target_{timeString}.wkb");
+
+			GeomUtils.ToWkbFile(source, sourcePath);
+			GeomUtils.ToWkbFile(target, targetPath);
+
+			var resultPaths = new List<string> {sourcePath, targetPath};
 
 			_msg.DebugFormat("Geometries have been logged to {0}", resultDirectory);
+
+			return resultPaths;
 		}
 	}
 }
