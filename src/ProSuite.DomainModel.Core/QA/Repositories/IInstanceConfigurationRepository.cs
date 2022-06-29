@@ -10,5 +10,7 @@ namespace ProSuite.DomainModel.Core.QA.Repositories
 		IList<RowFilterConfiguration> GetRowFilterConfigurations();
 
 		IList<IssueFilterConfiguration> GetIssueFilterConfigurations();
+
+		IList<T> Get<T>(InstanceDescriptor descriptor) where T : InstanceConfiguration;
 	}
 }

@@ -74,6 +74,7 @@ namespace ProSuite.DdxEditor.Content
 		public abstract IAttributeTypeRepository AttributeTypes { get; }
 		public abstract IDatasetRepository Datasets { get; }
 		public abstract ITestDescriptorRepository TestDescriptors { get; }
+		public abstract IInstanceDescriptorRepository InstanceDescriptors { get; }
 
 		public virtual ILinearNetworkRepository LinearNetworks
 		{
@@ -85,6 +86,7 @@ namespace ProSuite.DdxEditor.Content
 			get { throw new NotImplementedException(); }
 		}
 
+		public abstract IInstanceConfigurationRepository InstanceConfigurations { get; }
 		public abstract IQualityConditionRepository QualityConditions { get; }
 		public abstract IQualitySpecificationRepository QualitySpecifications { get; }
 
@@ -281,6 +283,8 @@ namespace ProSuite.DdxEditor.Content
 
 		public abstract IEnumerable<Item> GetChildren([NotNull] TestDescriptorsItem parent);
 
+		public abstract IEnumerable<Item> GetChildren<T>([NotNull] InstanceDescriptorsItem<T> parent) where T : InstanceDescriptor;
+
 		[NotNull]
 		[Obsolete("No longer called")]
 		public virtual IEnumerable<Item> GetChildren([NotNull] QualityConditionsItem parent)
@@ -405,6 +409,13 @@ namespace ProSuite.DdxEditor.Content
 		}
 
 		[NotNull]
+		public virtual IList<DependingItem> GetDependingItems(
+			[CanBeNull] InstanceDescriptor transformerDescriptor)
+		{
+			return new List<DependingItem>();
+		}
+
+		[NotNull]
 		protected virtual ObjectSubtypeItem CreateObjectSubtypeItem(
 			[NotNull] ObjectSubtype objectSubtype,
 			[NotNull] IObjectCategoryRepository repository)
@@ -414,7 +425,13 @@ namespace ProSuite.DdxEditor.Content
 
 		protected IList<E> GetAll<E>(IRepository<E> repository) where E : Entity
 		{
-			return ReadOnlyTransaction(() => repository.GetAll());
+			return ReadOnlyTransaction(repository.GetAll);
+		}
+
+		protected IList<E> GetEntities<E>(Func<IList<E>> getRepositoryAction) where E : Entity
+		{
+
+			return ReadOnlyTransaction(getRepositoryAction);
 		}
 
 		[NotNull]

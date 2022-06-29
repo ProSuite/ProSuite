@@ -69,6 +69,8 @@ namespace ProSuite.DomainModel.Core.QA
 			set => _name = value;
 		}
 
+		public abstract string TypeDisplayName { get; }
+
 		#endregion
 
 		#region IAnnotated Members

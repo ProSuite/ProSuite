@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -51,6 +52,11 @@ namespace ProSuite.DdxEditor.Content.QA
 			yield return RegisterChild(new QualityConditionsItem(_modelBuilder, this));
 
 			yield return RegisterChild(new TestDescriptorsItem(_modelBuilder));
+
+			if (Environment.Version >= new Version(6, 0))
+			{
+				yield return RegisterChild(new InstanceDescriptorsItem<TransformerDescriptor>(_modelBuilder));
+			}
 
 			IDataQualityCategoryRepository categoryRepository =
 				_modelBuilder.DataQualityCategories;

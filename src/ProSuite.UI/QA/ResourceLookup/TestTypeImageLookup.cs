@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
@@ -17,11 +18,12 @@ namespace ProSuite.UI.QA.ResourceLookup
 
 		private static readonly SortedList<string, int> _defaultSort =
 			new SortedList<string, int>();
-
+		
 		private const string _keyWarning = "warning";
 		private const string _keyProhibition = "prohibition";
 		private const string _keyStop = "stop";
 		private const string _keyUnknown = "unknown";
+		private const string _keyTransform = "transform";
 
 		#region Constructor
 
@@ -34,6 +36,7 @@ namespace ProSuite.UI.QA.ResourceLookup
 			_mapKeyToImage.Add(_keyProhibition, TestTypeImages.TestTypeProhibition);
 			_mapKeyToImage.Add(_keyStop, TestTypeImages.TestTypeStop);
 			_mapKeyToImage.Add(_keyUnknown, TestTypeImages.TestTypeUnknown);
+			_mapKeyToImage.Add(_keyTransform, TestTypeImages.Transform);
 
 			foreach (KeyValuePair<string, Image> pair in _mapKeyToImage)
 			{
@@ -45,6 +48,7 @@ namespace ProSuite.UI.QA.ResourceLookup
 			_defaultSort.Add(_keyProhibition, ++i);
 			_defaultSort.Add(_keyStop, ++i);
 			_defaultSort.Add(_keyUnknown, ++i);
+			_defaultSort.Add(_keyTransform, ++i);
 		}
 
 		#endregion
@@ -87,6 +91,23 @@ namespace ProSuite.UI.QA.ResourceLookup
 		}
 
 		[CanBeNull]
+		public static Image GetImage([CanBeNull] InstanceDescriptor instanceDescriptor)
+		{
+			if (instanceDescriptor is TransformerDescriptor transformerDescriptor)
+			{
+				return GetImage(transformerDescriptor);
+			}
+
+			throw new NotImplementedException();
+		}
+
+		[CanBeNull]
+		public static Image GetImage([CanBeNull] TransformerDescriptor transformerDescriptor)
+		{
+			return GetImage(_keyTransform);
+		}
+
+		[CanBeNull]
 		[ContractAnnotation("notnull => notnull")]
 		public static Image GetImage([CanBeNull] QualityCondition qualityCondition)
 		{
@@ -112,6 +133,15 @@ namespace ProSuite.UI.QA.ResourceLookup
 			return testDescriptor == null
 				       ? null
 				       : GetImageKey(GetImage(testDescriptor));
+		}
+
+		[CanBeNull]
+		[ContractAnnotation("notnull => notnull")]
+		public static string GetImageKey([CanBeNull] TransformerDescriptor transformerDescriptor)
+		{
+			return transformerDescriptor == null
+				       ? null
+				       : GetImageKey(GetImage(transformerDescriptor));
 		}
 
 		[CanBeNull]
@@ -144,6 +174,21 @@ namespace ProSuite.UI.QA.ResourceLookup
 		public static int GetDefaultSortIndex([NotNull] TestDescriptor testDescriptor)
 		{
 			return GetDefaultSortIndex(GetImageKey(testDescriptor));
+		}
+
+		public static int GetDefaultSortIndex([NotNull] InstanceDescriptor instanceDescriptor)
+		{
+			if (instanceDescriptor is TransformerDescriptor transformerDescriptor)
+			{
+				return GetDefaultSortIndex(transformerDescriptor);
+			}
+
+			throw new NotImplementedException();
+		}
+
+		public static int GetDefaultSortIndex([NotNull] TransformerDescriptor transformerDescriptor)
+		{
+			return GetDefaultSortIndex(GetImageKey(transformerDescriptor));
 		}
 
 		public static int GetDefaultSortIndex([NotNull] QualityCondition qualityCondition)

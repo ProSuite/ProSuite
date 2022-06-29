@@ -15,5 +15,11 @@ namespace ProSuite.DomainModel.Core.QA
 		                             int constructorId,
 		                             string description = null)
 			: base(name, testClass, constructorId, description) { }
+
+		#region Overrides of InstanceDescriptor
+
+		public override string TypeDisplayName => "Issue Filter Descriptor";
+
+		#endregion
 	}
 }

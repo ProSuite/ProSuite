@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
@@ -13,13 +14,16 @@ using ProSuite.DdxEditor.Content.Properties;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Commands;
 using ProSuite.DdxEditor.Framework.Items;
+using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.AO.QA.TestReport;
+using ProSuite.DomainModel.Core;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.Repositories;
+using ProSuite.QA.Container;
 
 namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 {
-	public class TestDescriptorsItem : EntityTypeItem<TestDescriptor>
+	public class InstanceDescriptorsItem<T> : EntityTypeItem<T> where T : InstanceDescriptor
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -27,15 +31,14 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 		[NotNull] private static readonly Image _image;
 		[NotNull] private static readonly Image _selectedImage;
 
-		static TestDescriptorsItem()
+		static InstanceDescriptorsItem()
 		{
-			_image = ItemUtils.GetGroupItemImage(Resources.TestDescriptorsOverlay);
-			_selectedImage = ItemUtils.GetGroupItemSelectedImage(
-				Resources.TestDescriptorsOverlay);
+			_image = ItemUtils.GetGroupItemImage(Resources.TransformOverlay);
+			_selectedImage = ItemUtils.GetGroupItemSelectedImage(Resources.TransformOverlay);
 		}
 
-		public TestDescriptorsItem([NotNull] CoreDomainModelItemModelBuilder modelBuider)
-			: base("Test Descriptors", "Test implementations")
+		public InstanceDescriptorsItem([NotNull] CoreDomainModelItemModelBuilder modelBuider)
+			: base("Transformer Descriptors", "Transformer implementations")
 		{
 			Assert.ArgumentNotNull(modelBuider, nameof(modelBuider));
 
@@ -55,22 +58,43 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 			return _modelBuilder.GetChildren(this);
 		}
 
-		protected override void CollectCommands(List<ICommand> commands,
-		                                        IApplicationController
-			                                        applicationController)
+		protected override void CollectCommands(
+			List<ICommand> commands,
+			IApplicationController applicationController)
 		{
 			base.CollectCommands(commands, applicationController);
 
-			commands.Add(new ImportTestDescriptorsCommand(
-				             this, applicationController,
-				             _modelBuilder.DefaultTestDescriptorsXmlFile));
-			commands.Add(new AddTestDescriptorCommand(this, applicationController));
-			commands.Add(
-				new AddTestDescriptorsFromAssemblyCommand(this, applicationController));
-			commands.Add(new CreateReportForAssemblyTestsCommand(this, applicationController));
-			commands.Add(
-				new CreateReportForRegisteredTestsCommand(this, applicationController));
+			// TODO: Consider automatically detect the relevant assemblies and load ALL transformers etc.
+			//commands.Add(new ImportTestDescriptorsCommand(
+			//				 this, applicationController,
+			//				 _modelBuilder.DefaultTestDescriptorsXmlFile));
+			//commands.Add(new AddTestDescriptorCommand(this, applicationController));
+			commands.Add(CreateAddFromAssemblyCommand(applicationController));
+			//commands.Add(new CreateReportForAssemblyTestsCommand(this, applicationController));
+			//commands.Add(
+			//	new CreateReportForRegisteredTestsCommand(this, applicationController));
 			commands.Add(new DeleteAllChildItemsCommand(this, applicationController));
+		}
+
+		private AddInstanceDescriptorsFromAssemblyCommand<T> CreateAddFromAssemblyCommand(
+			IApplicationController applicationController)
+		{
+			if (typeof(T) == typeof(TransformerDescriptor))
+			{
+				return new AddInstanceDescriptorsFromAssemblyCommand<T>(
+					this, typeof(ITableTransformer),
+					(t, c) => (T) CreateTransformerDescriptor(t, c), "transformer descriptor",
+					applicationController);
+			}
+
+			throw new NotImplementedException();
+		}
+
+		private static InstanceDescriptor CreateTransformerDescriptor(Type type, int constructor)
+		{
+			return new TransformerDescriptor(
+				InstanceFactoryUtils.GetDefaultDescriptorName(type, constructor),
+				new ClassDescriptor(type), constructor);
 		}
 
 		[NotNull]
@@ -94,18 +118,24 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 		}
 
 		[NotNull]
-		protected virtual IEnumerable<TestDescriptorTableRow> GetTableRows()
+		protected virtual IEnumerable<InstanceDescriptorTableRow> GetTableRows()
 		{
-			ITestDescriptorRepository repository = _modelBuilder.TestDescriptors;
+			IInstanceDescriptorRepository repository = _modelBuilder.InstanceDescriptors;
 
-			IList<TestDescriptor> testDescriptors = repository.GetAll()
-			                                                  .OrderBy(t => t.Name)
-			                                                  .ToList();
+			if (! typeof(TransformerDescriptor).IsAssignableFrom(typeof(T)))
+			{
+				throw new NotImplementedException();
+			}
+
+			IList<TransformerDescriptor> transformerDescriptors = repository
+				.GetTransformerDescriptors()
+				.OrderBy(t => t.Name)
+				.ToList();
 
 			IDictionary<int, int> refCountMap =
-				repository.GetReferencingQualityConditionCount();
+				repository.GetReferencingConfigurationCount<TransformerConfiguration>();
 
-			foreach (TestDescriptor testDescriptor in testDescriptors)
+			foreach (TransformerDescriptor testDescriptor in transformerDescriptors)
 			{
 				int refCount;
 				if (! refCountMap.TryGetValue(testDescriptor.Id, out refCount))
@@ -113,7 +143,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 					refCount = 0;
 				}
 
-				yield return new TestDescriptorTableRow(testDescriptor, refCount);
+				yield return new InstanceDescriptorTableRow(testDescriptor, refCount);
 			}
 		}
 
@@ -189,12 +219,12 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 			Process.Start(htmlFileName);
 		}
 
-		public void TryAddTestDescriptors(
-			[NotNull] IEnumerable<TestDescriptor> testDescriptors)
+		public void TryAddInstanceDescriptors(
+			[NotNull] IEnumerable<InstanceDescriptor> descriptors)
 		{
-			Assert.ArgumentNotNull(testDescriptors, nameof(testDescriptors));
+			Assert.ArgumentNotNull(descriptors, nameof(descriptors));
 
-			ITestDescriptorRepository repository = _modelBuilder.TestDescriptors;
+			IInstanceDescriptorRepository repository = _modelBuilder.InstanceDescriptors;
 
 			var addedCount = 0;
 			_modelBuilder.NewTransaction(
@@ -205,9 +235,9 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 						          .Select(descriptor => new InstanceDefinition(descriptor))
 						          .ToDictionary(definition => definition.Name);
 
-					foreach (TestDescriptor testDescriptor in testDescriptors)
+					foreach (InstanceDescriptor descriptor in descriptors)
 					{
-						var definition = new InstanceDefinition(testDescriptor);
+						var definition = new InstanceDefinition(descriptor);
 
 						// Note daro: hack for TOP-5464
 						// In DDX schema there is an unique constraint on NAME
@@ -218,24 +248,25 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 						if (definitions.ContainsKey(definition.Name))
 						{
 							_msg.InfoFormat(
-								"A test descriptor with the same definition as '{0}' is already registered",
-								testDescriptor.Name);
+								"An {0} with the same definition as '{1}' is already registered",
+								descriptor.TypeDisplayName, descriptor.Name);
 						}
 						// 2nd check: equality with rest of object
 						else if (! definitions.ContainsValue(definition))
 						{
-							_msg.DebugFormat("Registering new test descriptor {0}", testDescriptor);
+							_msg.DebugFormat("Registering new {0} {1}", descriptor.TypeDisplayName,
+							                 descriptor);
 
 							definitions.Add(definition.Name, definition);
 
-							repository.Save(testDescriptor);
+							repository.Save(descriptor);
 
 							addedCount++;
 						}
 					}
 				});
 
-			_msg.InfoFormat("{0} test descriptor(s) added", addedCount);
+			_msg.InfoFormat("{0} instance descriptor(s) added", addedCount);
 
 			RefreshChildren();
 		}

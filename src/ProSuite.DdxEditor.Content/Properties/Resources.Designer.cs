@@ -653,6 +653,16 @@ namespace ProSuite.DdxEditor.Content.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        public static System.Drawing.Bitmap TransformOverlay {
+            get {
+                object obj = ResourceManager.GetObject("TransformOverlay", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         public static System.Drawing.Bitmap WellKnownLayerFileItem {
             get {
                 object obj = ResourceManager.GetObject("WellKnownLayerFileItem", resourceCulture);

@@ -103,9 +103,20 @@ namespace ProSuite.DomainModel.AO.QA
 
 			Type transformerType = typeof(ITableTransformer);
 
+			return GetClasses(assembly, transformerType, includeObsolete, includeInternallyUsed);
+		}
+
+		[NotNull]
+		public static IEnumerable<Type> GetClasses([NotNull] Assembly assembly,
+		                                           [NotNull] Type baseType,
+		                                           bool includeObsolete,
+		                                           bool includeInternallyUsed)
+		{
+			Assert.ArgumentNotNull(assembly, nameof(assembly));
+
 			foreach (Type candidateType in assembly.GetTypes())
 			{
-				if (! IsInstanceType(candidateType, transformerType))
+				if (! IsInstanceType(candidateType, baseType))
 				{
 					continue;
 				}
@@ -187,6 +198,42 @@ namespace ProSuite.DomainModel.AO.QA
 				                                classDescriptor.TypeName,
 				                                transformerDescriptor.ConstructorId)
 				       : null;
+		}
+
+		public static string GetDefaultDescriptorName(Type instanceType,
+		                                              int constructorIndex)
+		{
+			Assert.ArgumentNotNull(instanceType, nameof(instanceType));
+
+			return string.Format("{0}({1})",
+			                     GetDescriptorBaseName(instanceType),
+			                     constructorIndex);
+		}
+
+		[NotNull]
+		private static string GetDescriptorBaseName([NotNull] Type type)
+		{
+			Assert.ArgumentNotNull(type, nameof(type));
+
+			string result = type.Name.Trim();
+
+			if (result.Length > 2 &&
+			    result.StartsWith("tr", StringComparison.InvariantCultureIgnoreCase))
+			{
+				result = result.Substring(2);
+			}
+			else if (result.Length > 2 &&
+			         result.StartsWith("if", StringComparison.CurrentCultureIgnoreCase))
+			{
+				result = result.Substring(2);
+			}
+			else if (result.Length > 2 &&
+			         result.StartsWith("rf", StringComparison.InvariantCultureIgnoreCase))
+			{
+				result = result.Substring(2);
+			}
+
+			return result;
 		}
 	}
 }
