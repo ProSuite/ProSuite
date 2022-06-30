@@ -19,15 +19,15 @@
                             CellRender="OnCellRender"
                             RowRender="OnRowRender">
                 <Template Context="viewModel">
-                    <RadzenDataGrid @ref="_collectionGrid"
-                                    TItem="ViewModelBase"
+                    <RadzenDataGrid TItem="ViewModelBase"
                                     Data="viewModel.Values"
                                     SelectionMode="DataGridSelectionMode.Single"
                                     AllowColumnResize="true"
                                     AllowRowSelectOnRowClick="true"
-                                    RowClick="OnCollectionRowClick"
+                                    RowClick="OnChildRowClick"
                                     RowCreate="OnRowCreate"
-                                    RowUpdate="OnRowUpdate">
+                                    RowUpdate="OnRowUpdate"
+                                    Render="OnChildGridRender">
                         <Columns>
                             <RadzenDataGridColumn TItem="ViewModelBase" Property="ParameterName" Title="Parameter"/>
                             <RadzenDataGridColumn TItem="ViewModelBase" Width="38px" Resizable="false">
