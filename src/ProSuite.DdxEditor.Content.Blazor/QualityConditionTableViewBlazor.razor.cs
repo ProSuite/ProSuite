@@ -18,7 +18,8 @@ public partial class QualityConditionTableViewBlazor : IDisposable
 {
 	// ReSharper disable once NotNullMemberIsNotInitialized
 	[NotNull] private RadzenDataGrid<ViewModelBase> _mainGrid;
-	[CanBeNull] private RadzenDataGrid<ViewModelBase> _collectionGrid;
+
+	[NotNull] private List<RadzenDataGrid<ViewModelBase>> _childGrids = new();
 
 	// ReSharper disable once NotNullMemberIsNotInitialized
 	[NotNull] private IInstanceConfigurationAwareViewModel _viewModel;
@@ -56,7 +57,7 @@ public partial class QualityConditionTableViewBlazor : IDisposable
 			await _mainGrid.UpdateRow(row);
 		}
 
-		if (_collectionGrid == null)
+		if (_childGrids.Count == 0)
 		{
 			return;
 		}
@@ -64,15 +65,15 @@ public partial class QualityConditionTableViewBlazor : IDisposable
 		foreach (ViewModelBase row in Rows.OfType<TestParameterValueCollectionViewModel>()
 										  .SelectMany(row => row.Values))
 		{
-			await _collectionGrid.UpdateRow(row);
+			await DataGridUtils.UpdateRowIfNotNull(_childGrids, row);
 		}
 	}
 
 	private async void OnRowClick(DataGridRowMouseEventArgs<ViewModelBase> args)
 	{
 		Assert.True(_mainGrid.Data.Contains(args.Data), "row is not from grid");
-
-		await DataGridUtils.UpdateRowIfNotNull(_collectionGrid, SelectedCollectionRow);
+		
+		await DataGridUtils.UpdateRowIfNotNull(_childGrids, SelectedCollectionRow);
 
 		ViewModelBase recent = SelectedRow;
 
@@ -93,10 +94,9 @@ public partial class QualityConditionTableViewBlazor : IDisposable
 		}
 	}
 
-	private async void OnCollectionRowClick(DataGridRowMouseEventArgs<ViewModelBase> args)
+	private async void OnChildRowClick(DataGridRowMouseEventArgs<ViewModelBase> args)
 	{
-		Assert.NotNull(_collectionGrid);
-		Assert.True(_collectionGrid.Data.Contains(args.Data), "row is not from collection grid");
+		//Assert.True(_collectionGrid.Data.Contains(args.Data), "row is not from collection grid");
 		
 		await DataGridUtils.UpdateRowIfNotNull(_mainGrid, SelectedRow);
 
@@ -107,14 +107,14 @@ public partial class QualityConditionTableViewBlazor : IDisposable
 
 		if (! Equals(recent, SelectedCollectionRow))
 		{
-			await DataGridUtils.UpdateRowIfNotNull(_collectionGrid, recent);
+			await DataGridUtils.UpdateRowIfNotNull(_childGrids, recent);
 
 			if (SelectedCollectionRow.New)
 			{
-				await DataGridUtils.UpdateRow(_collectionGrid, SelectedCollectionRow);
+				await DataGridUtils.UpdateRow(_childGrids, SelectedCollectionRow);
 			}
 
-			await DataGridUtils.EditRow(_collectionGrid, SelectedCollectionRow);
+			await DataGridUtils.EditRow(_childGrids, SelectedCollectionRow);
 		}
 	}
 
@@ -152,6 +152,9 @@ public partial class QualityConditionTableViewBlazor : IDisposable
 
 	private void OnRowCollapse(ViewModelBase row)
 	{
+		// OnChildGridRender fires every time
+		_childGrids.Clear();
+
 		if (_latch.IsLatched)
 		{
 			return;
@@ -174,15 +177,24 @@ public partial class QualityConditionTableViewBlazor : IDisposable
 
 	private void OnCellRender(DataGridCellRenderEventArgs<ViewModelBase> args)
 	{
-		//args.Attributes.Add("style", "min-height: 0px; height: 40px");
-		args.Attributes.Add("height", "auto");
+		IDictionary<string, object> attributes = args.Attributes;
+
+		attributes.Add("style", string.Empty);
 
 		if (args.Data is ScalarTestParameterValueViewModel)
 		{
 			if (args.Column.Property == "ModelName")
 			{
-				args.Attributes.Add("colspan", 3);
-				args.Attributes.Add("style", "background-color: grey;");
+				attributes.Add("colspan", 3);
+
+				if (attributes.TryGetValue("style", out object styleObj))
+				{
+					var style = (string) styleObj;
+
+					style += "background-color: grey";
+
+					attributes["style"] = style;
+				}
 			}
 		}
 	}
@@ -193,7 +205,7 @@ public partial class QualityConditionTableViewBlazor : IDisposable
 
 	private async void DeleteRowClicked()
 	{
-		Assert.NotNull(_collectionGrid);
+		Assert.False(_childGrids.Count == 0, "no child grids");
 
 		Assert.NotNull(SelectedCollectionRow);
 
@@ -201,32 +213,38 @@ public partial class QualityConditionTableViewBlazor : IDisposable
 
 		SelectedCollectionRow = null;
 
-		await _collectionGrid.Reload();
+		foreach (RadzenDataGrid<ViewModelBase> grid in _childGrids)
+		{
+			await grid.Reload();
+		}
 	}
 
 	private void InsertRowClicked()
 	{
-		Assert.NotNull(_collectionGrid);
-
-		ViewModelBase first = _collectionGrid.Data.FirstOrDefault();
-		Assert.NotNull(first);
+		Assert.False(_childGrids.Count == 0, "no child grids");
+		Assert.NotNull(SelectedRow);
 		
-		ViewModelBase row = ViewModel.InsertRow(first.Parameter);
+		ViewModelBase row = ViewModel.InsertRow(SelectedRow.Parameter);
 
-		_collectionGrid.InsertRow(row);
+		DataGridUtils.Insert(_childGrids, row);
 	}
 
 	private void UpClicked()
 	{
-		Assert.NotNull(_collectionGrid);
+		Assert.False(_childGrids.Count == 0, "no child grids");
 		Assert.NotNull(SelectedCollectionRow);
-		
+
+		RadzenDataGrid<ViewModelBase> childGrid =
+			_childGrids.FirstOrDefault(grid => grid.Data.Contains(SelectedCollectionRow));
+
+		Assert.NotNull(childGrid);
+
 		IEnumerable<ViewModelBase> collectionViewModels =
 			Rows.Where(vm => vm is TestParameterValueCollectionViewModel);
 
 		foreach (ViewModelBase vm in collectionViewModels)
 		{
-			List<ViewModelBase> values = vm.Values;
+			List<ViewModelBase> values = Assert.NotNull(vm.Values);
 
 			int index = values.IndexOf(SelectedCollectionRow);
 
@@ -240,24 +258,30 @@ public partial class QualityConditionTableViewBlazor : IDisposable
 
 			values.Insert(index - 1, SelectedCollectionRow);
 
-			_collectionGrid.Data = values;
-			_collectionGrid.Reload();
+			childGrid.Data = values;
+			childGrid.Reload();
 		}
 	}
 
 	private void DownClicked()
 	{
-		Assert.NotNull(_collectionGrid);
+		Assert.False(_childGrids.Count == 0, "no child grids");
 		Assert.NotNull(SelectedCollectionRow);
+
+		RadzenDataGrid<ViewModelBase> childGrid =
+			_childGrids.FirstOrDefault(grid => grid.Data.Contains(SelectedCollectionRow));
+
+		Assert.NotNull(childGrid);
 
 		IEnumerable<ViewModelBase> collectionViewModels =
 			Rows.Where(vm => vm is TestParameterValueCollectionViewModel);
 
 		foreach (ViewModelBase vm in collectionViewModels)
 		{
-			List<ViewModelBase> values = vm.Values;
-			int index = values.IndexOf(SelectedCollectionRow);
+			List<ViewModelBase> values = Assert.NotNull(vm.Values);
 
+			int index = values.IndexOf(SelectedCollectionRow);
+			
 			if (index == -1)
 			{
 				// selected row is not in this collection view model
@@ -268,8 +292,8 @@ public partial class QualityConditionTableViewBlazor : IDisposable
 
 			values.Insert(index + 1, SelectedCollectionRow);
 
-			_collectionGrid.Data = values;
-			_collectionGrid.Reload();
+			childGrid.Data = values;
+			childGrid.Reload();
 		}
 	}
 
@@ -284,7 +308,7 @@ public partial class QualityConditionTableViewBlazor : IDisposable
 			return true;
 		}
 
-		if (_collectionGrid == null)
+		if (_childGrids.Count == 0)
 		{
 			return true;
 		}
@@ -314,16 +338,16 @@ public partial class QualityConditionTableViewBlazor : IDisposable
 			return true;
 		}
 
-		if (_collectionGrid == null)
+		if (_childGrids.Count == 0)
 		{
 			return true;
 		}
 
-		if (Enumerable.Count(_collectionGrid.Data) == 1)
+		if (_childGrids.Any(grid => grid.Data.Count() == 1))
 		{
 			return true;
 		}
-
+		
 		if (SelectedCollectionRow == null)
 		{
 			return true;
@@ -407,5 +431,15 @@ public partial class QualityConditionTableViewBlazor : IDisposable
 
 	private void OnFocusOut(FocusEventArgs args)
 	{
+	}
+
+	private void OnChildGridRender(DataGridRenderEventArgs<ViewModelBase> args)
+	{
+		List<RadzenDataGrid<ViewModelBase>> grids = _childGrids;
+
+		if (! grids.Contains(args.Grid))
+		{
+			_childGrids.Add(args.Grid);
+		}
 	}
 }
