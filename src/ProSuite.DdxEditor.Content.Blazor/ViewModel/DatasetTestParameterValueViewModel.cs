@@ -12,7 +12,7 @@ namespace ProSuite.DdxEditor.Content.Blazor.ViewModel;
 
 public class DatasetTestParameterValueViewModel : ViewModelBase
 {
-	[NotNull] private readonly IQualityConditionAwareViewModel _viewModel;
+	[NotNull] private readonly IInstanceConfigurationAwareViewModel _viewModel;
 	[CanBeNull] private Dataset _dataset;
 	[CanBeNull] private string _filterExpression;
 	private bool _usedAsReferenceData;
@@ -21,7 +21,7 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 	                                          [CanBeNull] Dataset dataset,
 	                                          [CanBeNull] string filterExpression,
 	                                          bool usedAsReferenceData,
-	                                          [NotNull] IQualityConditionAwareViewModel observer) :
+	                                          [NotNull] IInstanceConfigurationAwareViewModel observer) :
 		base(parameter, observer)
 	{
 		_viewModel = observer;
@@ -107,7 +107,7 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 	{
 		var finder = new Finder<DatasetFinderItem>();
 
-		DataQualityCategory category = _viewModel.QualityCondition.Category;
+		DataQualityCategory category = _viewModel.InstanceConfiguration.Category;
 
 		return FinderUtils.GetFinder(category, _viewModel.DatasetProvider, finder);
 	}

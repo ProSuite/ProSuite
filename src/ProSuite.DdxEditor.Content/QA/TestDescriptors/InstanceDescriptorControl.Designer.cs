@@ -46,10 +46,6 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 			this._objectReferenceControlTestClass = new ProSuite.Commons.UI.WinForms.Controls.ObjectReferenceControl();
 			this._labelParameter = new System.Windows.Forms.Label();
 			this._dataGridViewParameter = new ProSuite.Commons.UI.WinForms.Controls.DoubleBufferedDataGridView();
-			this._booleanComboboxStopOnError = new ProSuite.Commons.UI.WinForms.Controls.BooleanCombobox();
-			this._labelStopOnError = new System.Windows.Forms.Label();
-			this._booleanComboboxAllowErrors = new ProSuite.Commons.UI.WinForms.Controls.BooleanCombobox();
-			this._labelAllowErrors = new System.Windows.Forms.Label();
 			this._groupBoxClassOrFactory = new System.Windows.Forms.GroupBox();
 			this._tabControl = new System.Windows.Forms.TabControl();
 			this._tabPageImplementation = new System.Windows.Forms.TabPage();
@@ -66,8 +62,6 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 			this._dataGridViewFindToolStrip = new ProSuite.Commons.UI.WinForms.Controls.DataGridViewFindToolStrip();
 			this._toolStripElements = new ProSuite.Commons.UI.WinForms.Controls.ToolStripEx();
 			this.toolStripLabel1 = new System.Windows.Forms.ToolStripLabel();
-			this._numericUpDownExecutionPriority = new ProSuite.Commons.UI.WinForms.Controls.NumericUpDownNullable();
-			this._labelExecutionPriority = new System.Windows.Forms.Label();
 			((System.ComponentModel.ISupportInitialize)(this._errorProvider)).BeginInit();
 			this._groupBoxClass.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this._dataGridViewParameter)).BeginInit();
@@ -157,12 +151,12 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 			// _labelTestDescription
 			// 
 			this._labelTestDescription.AutoSize = true;
-			this._labelTestDescription.Location = new System.Drawing.Point(2, 62);
+			this._labelTestDescription.Location = new System.Drawing.Point(5, 60);
 			this._labelTestDescription.Margin = new System.Windows.Forms.Padding(5, 0, 5, 0);
 			this._labelTestDescription.Name = "_labelTestDescription";
-			this._labelTestDescription.Size = new System.Drawing.Size(139, 25);
+			this._labelTestDescription.Size = new System.Drawing.Size(106, 25);
 			this._labelTestDescription.TabIndex = 10;
-			this._labelTestDescription.Text = "Test description:";
+			this._labelTestDescription.Text = "Description:";
 			this._labelTestDescription.TextAlign = System.Drawing.ContentAlignment.TopRight;
 			// 
 			// _textBoxTestDescription
@@ -195,7 +189,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 			this._groupBoxClass.Size = new System.Drawing.Size(998, 152);
 			this._groupBoxClass.TabIndex = 1;
 			this._groupBoxClass.TabStop = false;
-			this._groupBoxClass.Text = "Instance Implementation Class";
+			this._groupBoxClass.Text = "Algorithm Implementation";
 			// 
 			// _comboBoxConstructorIndex
 			// 
@@ -228,12 +222,12 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 			// _labelParameter
 			// 
 			this._labelParameter.AutoSize = true;
-			this._labelParameter.Location = new System.Drawing.Point(0, 10);
+			this._labelParameter.Location = new System.Drawing.Point(5, 8);
 			this._labelParameter.Margin = new System.Windows.Forms.Padding(5, 0, 5, 0);
 			this._labelParameter.Name = "_labelParameter";
-			this._labelParameter.Size = new System.Drawing.Size(140, 25);
+			this._labelParameter.Size = new System.Drawing.Size(103, 25);
 			this._labelParameter.TabIndex = 12;
-			this._labelParameter.Text = "Test parameters:";
+			this._labelParameter.Text = "Parameters:";
 			this._labelParameter.TextAlign = System.Drawing.ContentAlignment.TopRight;
 			// 
 			// _dataGridViewParameter
@@ -263,54 +257,8 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 			this._dataGridViewParameter.RowHeadersVisible = false;
 			this._dataGridViewParameter.RowHeadersWidth = 62;
 			this._dataGridViewParameter.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-			this._dataGridViewParameter.Size = new System.Drawing.Size(887, 434);
+			this._dataGridViewParameter.Size = new System.Drawing.Size(887, 471);
 			this._dataGridViewParameter.TabIndex = 13;
-			// 
-			// _booleanComboboxStopOnError
-			// 
-			this._booleanComboboxStopOnError.FalseText = "No";
-			this._booleanComboboxStopOnError.FlatStyle = System.Windows.Forms.FlatStyle.Standard;
-			this._booleanComboboxStopOnError.Location = new System.Drawing.Point(465, 250);
-			this._booleanComboboxStopOnError.Margin = new System.Windows.Forms.Padding(8, 12, 8, 12);
-			this._booleanComboboxStopOnError.Name = "_booleanComboboxStopOnError";
-			this._booleanComboboxStopOnError.Size = new System.Drawing.Size(148, 40);
-			this._booleanComboboxStopOnError.TabIndex = 3;
-			this._booleanComboboxStopOnError.TrueText = "Yes";
-			this._booleanComboboxStopOnError.Value = false;
-			// 
-			// _labelStopOnError
-			// 
-			this._labelStopOnError.AutoSize = true;
-			this._labelStopOnError.Location = new System.Drawing.Point(337, 258);
-			this._labelStopOnError.Margin = new System.Windows.Forms.Padding(5, 0, 5, 0);
-			this._labelStopOnError.Name = "_labelStopOnError";
-			this._labelStopOnError.Size = new System.Drawing.Size(122, 25);
-			this._labelStopOnError.TabIndex = 4;
-			this._labelStopOnError.Text = "Stop on error:";
-			this._labelStopOnError.TextAlign = System.Drawing.ContentAlignment.TopRight;
-			// 
-			// _booleanComboboxAllowErrors
-			// 
-			this._booleanComboboxAllowErrors.FalseText = "Error";
-			this._booleanComboboxAllowErrors.FlatStyle = System.Windows.Forms.FlatStyle.Standard;
-			this._booleanComboboxAllowErrors.Location = new System.Drawing.Point(177, 250);
-			this._booleanComboboxAllowErrors.Margin = new System.Windows.Forms.Padding(8, 12, 8, 12);
-			this._booleanComboboxAllowErrors.Name = "_booleanComboboxAllowErrors";
-			this._booleanComboboxAllowErrors.Size = new System.Drawing.Size(148, 40);
-			this._booleanComboboxAllowErrors.TabIndex = 2;
-			this._booleanComboboxAllowErrors.TrueText = "Warning";
-			this._booleanComboboxAllowErrors.Value = false;
-			// 
-			// _labelAllowErrors
-			// 
-			this._labelAllowErrors.AutoSize = true;
-			this._labelAllowErrors.Location = new System.Drawing.Point(70, 258);
-			this._labelAllowErrors.Margin = new System.Windows.Forms.Padding(5, 0, 5, 0);
-			this._labelAllowErrors.Name = "_labelAllowErrors";
-			this._labelAllowErrors.Size = new System.Drawing.Size(96, 25);
-			this._labelAllowErrors.TabIndex = 6;
-			this._labelAllowErrors.Text = "Issue type:";
-			this._labelAllowErrors.TextAlign = System.Drawing.ContentAlignment.TopRight;
 			// 
 			// _groupBoxClassOrFactory
 			// 
@@ -333,11 +281,11 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
             | System.Windows.Forms.AnchorStyles.Right)));
 			this._tabControl.Controls.Add(this._tabPageImplementation);
 			this._tabControl.Controls.Add(this._tabPageQualityConditions);
-			this._tabControl.Location = new System.Drawing.Point(7, 313);
+			this._tabControl.Location = new System.Drawing.Point(7, 260);
 			this._tabControl.Margin = new System.Windows.Forms.Padding(5, 6, 5, 6);
 			this._tabControl.Name = "_tabControl";
 			this._tabControl.SelectedIndex = 0;
-			this._tabControl.Size = new System.Drawing.Size(1073, 869);
+			this._tabControl.Size = new System.Drawing.Size(1073, 922);
 			this._tabControl.TabIndex = 5;
 			this._tabControl.SelectedIndexChanged += new System.EventHandler(this._tabControl_SelectedIndexChanged);
 			// 
@@ -349,7 +297,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 			this._tabPageImplementation.Margin = new System.Windows.Forms.Padding(5, 6, 5, 6);
 			this._tabPageImplementation.Name = "_tabPageImplementation";
 			this._tabPageImplementation.Padding = new System.Windows.Forms.Padding(5, 6, 5, 6);
-			this._tabPageImplementation.Size = new System.Drawing.Size(1065, 831);
+			this._tabPageImplementation.Size = new System.Drawing.Size(1065, 884);
 			this._tabPageImplementation.TabIndex = 0;
 			this._tabPageImplementation.Text = "Implementation";
 			this._tabPageImplementation.UseVisualStyleBackColor = true;
@@ -378,7 +326,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 			this._splitContainerDescription.Panel2.Controls.Add(this._dataGridViewParameter);
 			this._splitContainerDescription.Panel2.Controls.Add(this._labelParameter);
 			this._splitContainerDescription.Panel2MinSize = 50;
-			this._splitContainerDescription.Size = new System.Drawing.Size(1040, 568);
+			this._splitContainerDescription.Size = new System.Drawing.Size(1040, 621);
 			this._splitContainerDescription.SplitterDistance = 120;
 			this._splitContainerDescription.SplitterWidth = 8;
 			this._splitContainerDescription.TabIndex = 14;
@@ -399,12 +347,12 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 			// _labelTestCategories
 			// 
 			this._labelTestCategories.AutoSize = true;
-			this._labelTestCategories.Location = new System.Drawing.Point(7, 12);
+			this._labelTestCategories.Location = new System.Drawing.Point(5, 10);
 			this._labelTestCategories.Margin = new System.Windows.Forms.Padding(5, 0, 5, 0);
 			this._labelTestCategories.Name = "_labelTestCategories";
-			this._labelTestCategories.Size = new System.Drawing.Size(132, 25);
+			this._labelTestCategories.Size = new System.Drawing.Size(100, 25);
 			this._labelTestCategories.TabIndex = 10;
-			this._labelTestCategories.Text = "Test categories:";
+			this._labelTestCategories.Text = "Categories:";
 			this._labelTestCategories.TextAlign = System.Drawing.ContentAlignment.TopRight;
 			// 
 			// _tabPageQualityConditions
@@ -416,9 +364,9 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 			this._tabPageQualityConditions.Margin = new System.Windows.Forms.Padding(5, 6, 5, 6);
 			this._tabPageQualityConditions.Name = "_tabPageQualityConditions";
 			this._tabPageQualityConditions.Padding = new System.Windows.Forms.Padding(5, 6, 5, 6);
-			this._tabPageQualityConditions.Size = new System.Drawing.Size(1065, 831);
+			this._tabPageQualityConditions.Size = new System.Drawing.Size(1065, 884);
 			this._tabPageQualityConditions.TabIndex = 1;
-			this._tabPageQualityConditions.Text = "Quality Conditions";
+			this._tabPageQualityConditions.Text = "Configurations";
 			this._tabPageQualityConditions.UseVisualStyleBackColor = true;
 			// 
 			// _dataGridViewQualityConditions
@@ -435,13 +383,13 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
             this._columnQualityConditionDescription});
 			this._dataGridViewQualityConditions.Dock = System.Windows.Forms.DockStyle.Fill;
 			this._dataGridViewQualityConditions.EditMode = System.Windows.Forms.DataGridViewEditMode.EditOnEnter;
-			this._dataGridViewQualityConditions.Location = new System.Drawing.Point(5, 90);
+			this._dataGridViewQualityConditions.Location = new System.Drawing.Point(5, 82);
 			this._dataGridViewQualityConditions.Margin = new System.Windows.Forms.Padding(5, 6, 5, 6);
 			this._dataGridViewQualityConditions.Name = "_dataGridViewQualityConditions";
 			this._dataGridViewQualityConditions.RowHeadersVisible = false;
 			this._dataGridViewQualityConditions.RowHeadersWidth = 62;
 			this._dataGridViewQualityConditions.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-			this._dataGridViewQualityConditions.Size = new System.Drawing.Size(1055, 735);
+			this._dataGridViewQualityConditions.Size = new System.Drawing.Size(1055, 796);
 			this._dataGridViewQualityConditions.TabIndex = 26;
 			this._dataGridViewQualityConditions.CellDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this._dataGridViewQualityConditions_CellDoubleClick);
 			this._dataGridViewQualityConditions.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this._dataGridViewQualityConditions_CellEndEdit);
@@ -474,7 +422,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 			this._columnIssueType.MinimumWidth = 80;
 			this._columnIssueType.Name = "_columnIssueType";
 			this._columnIssueType.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
-			this._columnIssueType.Width = 130;
+			this._columnIssueType.Width = 120;
 			// 
 			// _columnStopOnError
 			// 
@@ -509,7 +457,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 			this._dataGridViewFindToolStrip.Observer = null;
 			this._dataGridViewFindToolStrip.Padding = new System.Windows.Forms.Padding(0, 0, 3, 0);
 			this._dataGridViewFindToolStrip.RenderMode = System.Windows.Forms.ToolStripRenderMode.System;
-			this._dataGridViewFindToolStrip.Size = new System.Drawing.Size(1055, 36);
+			this._dataGridViewFindToolStrip.Size = new System.Drawing.Size(1055, 28);
 			this._dataGridViewFindToolStrip.TabIndex = 28;
 			this._dataGridViewFindToolStrip.Text = "_dataGridViewFindToolStrip";
 			// 
@@ -532,61 +480,14 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 			// toolStripLabel1
 			// 
 			this.toolStripLabel1.Name = "toolStripLabel1";
-			this.toolStripLabel1.Size = new System.Drawing.Size(159, 43);
-			this.toolStripLabel1.Text = "Quality Conditions";
-			// 
-			// _numericUpDownExecutionPriority
-			// 
-			this._numericUpDownExecutionPriority.DecimalPlaces = 0;
-			this._numericUpDownExecutionPriority.Increment = new decimal(new int[] {
-            1,
-            0,
-            0,
-            0});
-			this._numericUpDownExecutionPriority.Location = new System.Drawing.Point(780, 254);
-			this._numericUpDownExecutionPriority.Margin = new System.Windows.Forms.Padding(5, 6, 5, 6);
-			this._numericUpDownExecutionPriority.Maximum = new decimal(new int[] {
-            100,
-            0,
-            0,
-            0});
-			this._numericUpDownExecutionPriority.Minimum = new decimal(new int[] {
-            0,
-            0,
-            0,
-            0});
-			this._numericUpDownExecutionPriority.Name = "_numericUpDownExecutionPriority";
-			this._numericUpDownExecutionPriority.Size = new System.Drawing.Size(215, 38);
-			this._numericUpDownExecutionPriority.TabIndex = 4;
-			this._numericUpDownExecutionPriority.ThousandsSeparator = false;
-			this._numericUpDownExecutionPriority.Value = new decimal(new int[] {
-            0,
-            0,
-            0,
-            0});
-			// 
-			// _labelExecutionPriority
-			// 
-			this._labelExecutionPriority.AutoSize = true;
-			this._labelExecutionPriority.Location = new System.Drawing.Point(623, 258);
-			this._labelExecutionPriority.Margin = new System.Windows.Forms.Padding(5, 0, 5, 0);
-			this._labelExecutionPriority.Name = "_labelExecutionPriority";
-			this._labelExecutionPriority.Size = new System.Drawing.Size(153, 25);
-			this._labelExecutionPriority.TabIndex = 16;
-			this._labelExecutionPriority.Text = "Execution priority:";
-			this._labelExecutionPriority.TextAlign = System.Drawing.ContentAlignment.TopRight;
+			this.toolStripLabel1.Size = new System.Drawing.Size(86, 43);
+			this.toolStripLabel1.Text = "Configurations";
 			// 
 			// InstanceDescriptorControl
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(10F, 25F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.Controls.Add(this._labelExecutionPriority);
-			this.Controls.Add(this._numericUpDownExecutionPriority);
 			this.Controls.Add(this._tabControl);
-			this.Controls.Add(this._labelAllowErrors);
-			this.Controls.Add(this._labelStopOnError);
-			this.Controls.Add(this._booleanComboboxAllowErrors);
-			this.Controls.Add(this._booleanComboboxStopOnError);
 			this.Controls.Add(this._labelDescription);
 			this.Controls.Add(this._textBoxDescription);
 			this.Controls.Add(this._labelName);
@@ -633,17 +534,11 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
         private System.Windows.Forms.GroupBox _groupBoxClass;
         private ObjectReferenceControl _objectReferenceControlTestClass;
 		private System.Windows.Forms.Label _labelParameter;
-        private System.Windows.Forms.Label _labelStopOnError;
-        private global::ProSuite.Commons.UI.WinForms.Controls.BooleanCombobox _booleanComboboxStopOnError;
-        private System.Windows.Forms.Label _labelAllowErrors;
-        private global::ProSuite.Commons.UI.WinForms.Controls.BooleanCombobox _booleanComboboxAllowErrors;
         private System.Windows.Forms.GroupBox _groupBoxClassOrFactory;
         private System.Windows.Forms.TabControl _tabControl;
         private System.Windows.Forms.TabPage _tabPageImplementation;
 		private System.Windows.Forms.TabPage _tabPageQualityConditions;
 		private System.Windows.Forms.ToolStripLabel toolStripLabel1;
-        private NumericUpDownNullable _numericUpDownExecutionPriority;
-        private System.Windows.Forms.Label _labelExecutionPriority;
 		private System.Windows.Forms.ComboBox _comboBoxConstructorIndex;
 		private DoubleBufferedDataGridView _dataGridViewParameter;
 		private DoubleBufferedDataGridView _dataGridViewQualityConditions;

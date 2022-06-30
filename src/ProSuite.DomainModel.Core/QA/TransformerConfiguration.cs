@@ -11,7 +11,7 @@ namespace ProSuite.DomainModel.Core.QA
 		/// </summary>
 		/// <remarks>Required for NHibernate</remarks>
 		[UsedImplicitly]
-		protected TransformerConfiguration() { }
+		public TransformerConfiguration() { }
 
 		public TransformerConfiguration(string name,
 		                                [NotNull] TransformerDescriptor transformerDescriptor,
@@ -45,5 +45,11 @@ namespace ProSuite.DomainModel.Core.QA
 			_value = value;
 			_datasetContext = datasetContext;
 		}
+
+		#region Overrides of InstanceConfiguration
+
+		public override DataQualityCategory Category { get; set; }
+
+		#endregion
 	}
 }

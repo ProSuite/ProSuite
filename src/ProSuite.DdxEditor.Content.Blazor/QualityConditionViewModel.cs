@@ -14,15 +14,15 @@ using ProSuite.QA.Core;
 namespace ProSuite.DdxEditor.Content.Blazor;
 
 // todo daro implement IDisposable
-public class QualityConditionViewModel : Observable, IQualityConditionAwareViewModel
+public class InstanceConfigurationViewModel<T> : Observable, IInstanceConfigurationAwareViewModel where T: InstanceConfiguration
 {
-	[NotNull] private readonly EntityItem<QualityCondition, QualityCondition> _item;
+	[NotNull] private readonly EntityItem<T, T> _item;
 	private Dictionary<TestParameter, IList<ViewModelBase>> _rowsByParameter;
 	private Dictionary<TestParameter, ViewModelBase> _topLevelRowsByParameter;
 	private IList<ViewModelBase> _rows;
 
 	// todo daro InstanceConfiguration?
-	public QualityConditionViewModel([NotNull] EntityItem<QualityCondition, QualityCondition> item,
+	public InstanceConfigurationViewModel([NotNull] EntityItem<T, T> item,
 	                                 [NotNull] ITestParameterDatasetProvider datasetProvider) : base(null)
 	{
 		Assert.ArgumentNotNull(item, nameof(item));
@@ -32,17 +32,17 @@ public class QualityConditionViewModel : Observable, IQualityConditionAwareViewM
 
 		DatasetProvider = datasetProvider;
 
-		QualityCondition = Assert.NotNull<QualityCondition>(_item.GetEntity());
+		InstanceConfiguration = Assert.NotNull(_item.GetEntity());
 	}
 
 	public IList<ViewModelBase> Rows
 	{
 		get => _rows;
-		private set => SetProperty(ref _rows, value);
+		set => SetProperty(ref _rows, value);
 	}
 
 	[NotNull]
-	public QualityCondition QualityCondition { get; }
+	public InstanceConfiguration InstanceConfiguration { get; }
 
 	[NotNull]
 	public ITestParameterDatasetProvider DatasetProvider { get; }
@@ -52,7 +52,7 @@ public class QualityConditionViewModel : Observable, IQualityConditionAwareViewM
 		_item.NotifyChanged();
 	}
 
-	public void BindTo([NotNull] QualityCondition qualityCondition)
+	public void BindTo([NotNull] InstanceConfiguration qualityCondition)
 	{
 		Assert.ArgumentNotNull(qualityCondition, nameof(qualityCondition));
 
@@ -114,7 +114,7 @@ public class QualityConditionViewModel : Observable, IQualityConditionAwareViewM
 			return rowsByParameter;
 		}
 
-		TestFactory factory = TestFactoryUtils.CreateTestFactory(instanceConfiguration);
+		var factory = InstanceFactoryUtils.CreateFactory(instanceConfiguration);
 
 		// todo daro log
 		if (factory == null)
@@ -210,11 +210,11 @@ public class QualityConditionViewModel : Observable, IQualityConditionAwareViewM
 		collectionRow.Remove(row);
 	}
 
-	private void UpdateEntity([NotNull] QualityCondition qualityCondition)
+	private void UpdateEntity([NotNull] InstanceConfiguration instanceConfiguration)
 	{
-		Assert.ArgumentNotNull(qualityCondition, nameof(qualityCondition));
+		Assert.ArgumentNotNull(instanceConfiguration, nameof(instanceConfiguration));
 
-		qualityCondition.ClearParameterValues();
+		instanceConfiguration.ClearParameterValues();
 
 		foreach (KeyValuePair<TestParameter, IList<ViewModelBase>> pair in _rowsByParameter)
 		{
@@ -225,14 +225,14 @@ public class QualityConditionViewModel : Observable, IQualityConditionAwareViewM
 			{
 				if (row is DatasetTestParameterValueViewModel dataset)
 				{
-					qualityCondition.AddParameterValue(new DatasetTestParameterValue(testParameter,
+					instanceConfiguration.AddParameterValue(new DatasetTestParameterValue(testParameter,
 						                                   dataset.Dataset,
 						                                   dataset.FilterExpression,
 						                                   dataset.UsedAsReferenceData));
 				}
 				else if (row is ScalarTestParameterValueViewModel scalar)
 				{
-					qualityCondition.AddParameterValue(
+					instanceConfiguration.AddParameterValue(
 						new ScalarTestParameterValue(testParameter, row.Value));
 				}
 				else

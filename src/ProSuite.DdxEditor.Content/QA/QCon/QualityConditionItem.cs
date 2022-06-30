@@ -438,7 +438,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 
 		protected override Control CreateControlCore(IItemNavigation itemNavigation)
 		{
-			return QualityConditionControlFactory.CreateControl(
+			return InstanceConfigurationControlFactory.CreateControl(
 				this, itemNavigation, _modelBuilder, _tableState);
 		}
 

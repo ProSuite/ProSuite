@@ -9,6 +9,7 @@ using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI.Finder;
 using ProSuite.Commons.Validation;
 using ProSuite.DdxEditor.Content.QA.Categories;
+using ProSuite.DdxEditor.Content.QA.InstanceConfig;
 using ProSuite.DdxEditor.Content.QA.QSpec;
 using ProSuite.DdxEditor.Content.QA.TestDescriptors.CreateQualityConditions;
 using ProSuite.DdxEditor.Framework;
@@ -57,6 +58,8 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 		public override Image Image => _image;
 
 		public override string ImageKey => _imageKey;
+
+		public string TypeName => GetEntity()?.TypeDisplayName;
 
 		private void UpdateImage([CanBeNull] InstanceDescriptor instanceDescriptor)
 		{
@@ -263,22 +266,27 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 		{
 			base.CollectCommands(commands, applicationController);
 
-			//commands.Add(new CreateQualityConditionCommand(this, applicationController));
+			commands.Add(
+				new CreateInstanceConfigurationCommand<TransformerConfigurationsItem>(
+					this, applicationController));
+
 			//commands.Add(
 			//	new BatchCreateQualityConditionsCommand(this, applicationController));
 		}
 
 		protected override bool AllowDelete => true;
 
-		//public QualityCondition CreateQualityCondition()
-		//{
-		//	var condition = new QualityCondition(assignUuids: true);
+		public InstanceConfiguration CreateConfiguration()
+		{
+			InstanceDescriptor descriptor = Assert.NotNull(GetEntity());
 
-		//	_modelBuilder.ReadOnlyTransaction(
-		//		delegate { condition.TestDescriptor = GetEntity(); });
+			InstanceConfiguration configuration = descriptor.CreateConfiguration();
 
-		//	return condition;
-		//}
+			_modelBuilder.ReadOnlyTransaction(
+				delegate { configuration.InstanceDescriptor = GetEntity(); });
+
+			return configuration;
+		}
 
 		public IEnumerable<InstanceConfiguration> GetInstanceConfigurations()
 		{

@@ -47,6 +47,9 @@ namespace ProSuite.DomainModel.Core.QA
 			set => _instanceDescriptor = value;
 		}
 
+		// TODO: Persistence
+		public abstract DataQualityCategory Category { get; set; }
+
 		#region INamed, IAnnotated members
 
 		[MaximumStringLength(2000)]
@@ -63,6 +66,9 @@ namespace ProSuite.DomainModel.Core.QA
 			get => _name;
 			set => _name = value;
 		}
+
+		// TODO: Persistence
+		public string Url { get; set; }
 
 		#endregion
 

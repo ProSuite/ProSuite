@@ -21,9 +21,8 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		[NotNull] private readonly SortableBindingList<ReferencingQualityConditionTableRow>
-			_qconTableRows =
-				new SortableBindingList<ReferencingQualityConditionTableRow>();
+		[NotNull] private readonly SortableBindingList<ReferencingInstanceConfigurationTableRow>
+			_configurationTableRows = new SortableBindingList<ReferencingInstanceConfigurationTableRow>();
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="InstanceDescriptorPresenter"/> class.
@@ -62,7 +61,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 
 			SetViewData();
 
-			PopulateInstanceConfigurationTableRows(_qconTableRows);
+			PopulateInstanceConfigurationTableRows(_configurationTableRows);
 
 			RenderInstanceConfigurations();
 		}
@@ -81,14 +80,13 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 		}
 
 		public void InstanceConfigurationDoubleClicked(
-			ReferencingQualityConditionTableRow referencingQualityConditionTableRow)
+			ReferencingInstanceConfigurationTableRow referencingConfigurationTableRow)
 		{
-			_itemNavigation.GoToItem(referencingQualityConditionTableRow
-				                         .QualityCondition);
+			_itemNavigation.GoToItem(referencingConfigurationTableRow.InstanceConfiguration);
 		}
 
 		private void PopulateInstanceConfigurationTableRows(
-			ICollection<ReferencingQualityConditionTableRow> tableRows)
+			ICollection<ReferencingInstanceConfigurationTableRow> tableRows)
 		{
 			Assert.ArgumentNotNull(tableRows, nameof(tableRows));
 
@@ -97,13 +95,13 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 			foreach (InstanceConfiguration config in _item.GetInstanceConfigurations())
 			{
 				// TODO:
-				//tableRows.Add(new ReferencingQualityConditionTableRow(config));
+				tableRows.Add(new ReferencingInstanceConfigurationTableRow(config));
 			}
 		}
 
 		private void RenderInstanceConfigurations()
 		{
-			_view.BindToInstanceConfigurations(_qconTableRows);
+			_view.BindToInstanceConfigurations(_configurationTableRows);
 		}
 
 		private void SetViewData()

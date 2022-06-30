@@ -169,6 +169,11 @@ namespace ProSuite.DomainModel.Core.QA
 			return result;
 		}
 
+		public override InstanceConfiguration CreateConfiguration()
+		{
+			throw new NotImplementedException();
+		}
+
 		public override string ToString()
 		{
 			return string.IsNullOrEmpty(Name)

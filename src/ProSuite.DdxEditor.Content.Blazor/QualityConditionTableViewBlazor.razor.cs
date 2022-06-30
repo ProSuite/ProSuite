@@ -8,6 +8,7 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Misc;
 using ProSuite.DdxEditor.Content.Blazor.ViewModel;
+using ProSuite.DomainModel.Core.QA;
 using Radzen;
 using Radzen.Blazor;
 
@@ -20,14 +21,14 @@ public partial class QualityConditionTableViewBlazor : IDisposable
 	[CanBeNull] private RadzenDataGrid<ViewModelBase> _collectionGrid;
 
 	// ReSharper disable once NotNullMemberIsNotInitialized
-	[NotNull] private QualityConditionViewModel _viewModel;
+	[NotNull] private IInstanceConfigurationAwareViewModel _viewModel;
 
 	private Latch _latch = new Latch();
 
 	[NotNull]
 	[Parameter]
 	// ReSharper disable once NotNullMemberIsNotInitialized
-	public QualityConditionViewModel ViewModel
+	public IInstanceConfigurationAwareViewModel ViewModel
 	{
 		get => _viewModel;
 		set
@@ -386,13 +387,13 @@ public partial class QualityConditionTableViewBlazor : IDisposable
 
 	#region unused
 
-	protected override void OnInitialized()
-	{
-		// 1
-		//ViewModel.SavedChanges += OnSavedChanges;
+	//protected override void OnInitialized()
+	//{
+	//	// 1
+	//	//ViewModel.SavedChanges += OnSavedChanges;
 
-		base.OnInitialized();
-	}
+	//	base.OnInitialized();
+	//}
 
 	private void OnSavedChanges(object sender, EventArgs e)
 	{

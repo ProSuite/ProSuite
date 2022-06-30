@@ -29,5 +29,11 @@ namespace ProSuite.DomainModel.Core.QA
 			get => (RowFilterDescriptor) InstanceDescriptor;
 			private set => InstanceDescriptor = value;
 		}
+
+		#region Overrides of InstanceConfiguration
+
+		public override DataQualityCategory Category { get; set; }
+
+		#endregion
 	}
 }

@@ -7,6 +7,7 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DdxEditor.Content.Properties;
 using ProSuite.DdxEditor.Content.QA.Categories;
+using ProSuite.DdxEditor.Content.QA.InstanceConfig;
 using ProSuite.DdxEditor.Content.QA.QCon;
 using ProSuite.DdxEditor.Content.QA.QSpec;
 using ProSuite.DdxEditor.Content.QA.TestDescriptors;
@@ -51,11 +52,17 @@ namespace ProSuite.DdxEditor.Content.QA
 
 			yield return RegisterChild(new QualityConditionsItem(_modelBuilder, this));
 
+			if (Environment.Version >= new Version(6, 0))
+			{
+				yield return RegisterChild(new TransformerConfigurationsItem(_modelBuilder, this));
+			}
+
 			yield return RegisterChild(new TestDescriptorsItem(_modelBuilder));
 
 			if (Environment.Version >= new Version(6, 0))
 			{
-				yield return RegisterChild(new InstanceDescriptorsItem<TransformerDescriptor>(_modelBuilder));
+				yield return RegisterChild(
+					new InstanceDescriptorsItem<TransformerDescriptor>(_modelBuilder));
 			}
 
 			IDataQualityCategoryRepository categoryRepository =

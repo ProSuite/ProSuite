@@ -20,11 +20,10 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 
 		void RenderTestParameters([NotNull] IEnumerable<TestParameter> testParameters);
 
-		// TODO: Replace Table Row with instance-config-tableRow
 		void BindToInstanceConfigurations(
-			[NotNull] IList<ReferencingQualityConditionTableRow> tableRows);
+			[NotNull] IList<ReferencingInstanceConfigurationTableRow> tableRows);
 
-		IList<ReferencingQualityConditionTableRow> GetSelectedQualityConditionTableRows();
+		IList<ReferencingInstanceConfigurationTableRow> GetSelectedQualityConditionTableRows();
 
 		void SaveState();
 	}

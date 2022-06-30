@@ -11,7 +11,7 @@ using ProSuite.DomainModel.Core.QA;
 
 namespace ProSuite.UI.QA.Controls
 {
-	public partial class QualityConditionTableViewControl : UserControl, IQualityConditionTableViewControl
+	public partial class QualityConditionTableViewControl : UserControl, IInstanceConfigurationTableViewControl
 	{
 		[CanBeNull] private TestDescriptor _testDescriptor;
 
@@ -72,7 +72,7 @@ namespace ProSuite.UI.QA.Controls
 			ShowDescription = false;
 		}
 
-		public void BindTo(QualityCondition qualityCondition) { }
+		public void BindTo(InstanceConfiguration qualityCondition) { }
 
 		[CanBeNull]
 		private string GetParameterDescription([CanBeNull] string parameterName)

@@ -220,7 +220,7 @@ namespace ProSuite.DomainModel.Core.QA
 		}
 
 		[CanBeNull]
-		public DataQualityCategory Category
+		public override DataQualityCategory Category
 		{
 			get { return _category; }
 			set { _category = value; }

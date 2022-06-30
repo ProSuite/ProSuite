@@ -169,6 +169,9 @@
     <Compile Update="QA\Categories\DataQualityCategoryControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
+    <Compile Update="QA\InstanceConfig\InstanceConfigurationControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
     <Compile Update="QA\QCon\FindQualityConditionByNameForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -288,6 +291,9 @@
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Update="ObjectCategoryAttributeConstraints\ObjectCategoryAttributeConstraintsControl.resx">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Update="QA\InstanceConfig\InstanceConfigurationControl.resx">
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Update="QA\QCon\QualityConditionControl.resx">

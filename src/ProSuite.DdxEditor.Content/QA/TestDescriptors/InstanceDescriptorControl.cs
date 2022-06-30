@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Reflection;
 using System.Windows.Forms;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -30,7 +29,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 
 		private bool _suspend;
 
-		[NotNull] private readonly BoundDataGridHandler<ReferencingQualityConditionTableRow>
+		[NotNull] private readonly BoundDataGridHandler<ReferencingInstanceConfigurationTableRow>
 			_qConGridHandler;
 
 		[NotNull] private readonly DataGridViewFindController _findController;
@@ -41,10 +40,10 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 
 		[CanBeNull] private static string _lastSelectedTab;
 
-		private TableStateManager<ReferencingQualityConditionTableRow> _qConStateManager;
+		private TableStateManager<ReferencingInstanceConfigurationTableRow> _qConStateManager;
 
 		[NotNull] private readonly TableState _tableState;
-		[CanBeNull] private IList<ReferencingQualityConditionTableRow> _initialTableRows;
+		[CanBeNull] private IList<ReferencingInstanceConfigurationTableRow> _initialTableRows;
 
 		// the same splitter distance is used for all test descriptors
 		// NOTE large splitter distances do not restore correctly, since the control first renders with a reduced size 
@@ -53,7 +52,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 
 		private bool _loaded;
 
-		private static readonly IMsg _msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		#region Constructors
 
@@ -105,7 +104,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 			_objectReferenceControlTestClass.Changed += TestClass_Changed;
 			_comboBoxConstructorIndex.SelectedIndexChanged +=
 				TestConstructorIndex_Changed;
-			
+
 			_binder.OnChange = BinderChanged;
 
 			// set up the parameters data table, and bind the grid to it
@@ -114,7 +113,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 
 			_dataGridViewQualityConditions.AutoGenerateColumns = false;
 			_qConGridHandler =
-				new BoundDataGridHandler<ReferencingQualityConditionTableRow>(
+				new BoundDataGridHandler<ReferencingInstanceConfigurationTableRow>(
 					_dataGridViewQualityConditions);
 
 			// set up controller for find toolbar for quality conditions
@@ -154,13 +153,13 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 		}
 
 		void IInstanceDescriptorView.BindToInstanceConfigurations(
-			IList<ReferencingQualityConditionTableRow> tableRows)
+			IList<ReferencingInstanceConfigurationTableRow> tableRows)
 		{
 			if (_qConStateManager == null)
 			{
 				// first time; initialize state manager, delay bind to tableRows to first paint event
 				_qConStateManager =
-					new TableStateManager<ReferencingQualityConditionTableRow>(
+					new TableStateManager<ReferencingInstanceConfigurationTableRow>(
 						_qConGridHandler, _dataGridViewFindToolStrip);
 				_initialTableRows = tableRows;
 				return;
@@ -172,7 +171,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 			BindTo(tableRows);
 		}
 
-		IList<ReferencingQualityConditionTableRow> IInstanceDescriptorView.
+		IList<ReferencingInstanceConfigurationTableRow> IInstanceDescriptorView.
 			GetSelectedQualityConditionTableRows()
 		{
 			return _qConGridHandler.GetSelectedRows();
@@ -219,7 +218,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 			_dataGridViewParameter.ClearSelection();
 		}
 
-		private void BindTo([NotNull] IList<ReferencingQualityConditionTableRow> tableRows)
+		private void BindTo([NotNull] IList<ReferencingInstanceConfigurationTableRow> tableRows)
 		{
 			_latch.RunInsideLatch(
 				() =>
@@ -341,7 +340,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 
 			_loaded = true;
 		}
-		
+
 		private void TestClass_Changed(object sender, EventArgs e)
 		{
 			if (_bindingLatch.IsLatched)
@@ -358,7 +357,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 		{
 			NotifyTestImplementationChanged();
 		}
-		
+
 		private void NotifyTestImplementationChanged()
 		{
 			if (Observer == null || _suspend)
@@ -420,12 +419,12 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 				return; // ignore
 			}
 
-			ReferencingQualityConditionTableRow qcon =
+			ReferencingInstanceConfigurationTableRow configRow =
 				_qConGridHandler.GetRow(e.RowIndex);
 
-			if (qcon != null)
+			if (configRow != null)
 			{
-				Observer.InstanceConfigurationDoubleClicked(qcon);
+				Observer.InstanceConfigurationDoubleClicked(configRow);
 			}
 		}
 

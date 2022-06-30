@@ -119,6 +119,18 @@ namespace ProSuite.UI.QA.ResourceLookup
 
 		[CanBeNull]
 		[ContractAnnotation("notnull => notnull")]
+		public static Image GetImage([CanBeNull] InstanceConfiguration instanceConfiguration)
+		{
+			if (instanceConfiguration is TransformerConfiguration)
+			{
+				return GetImage(_keyTransform);
+			}
+
+			throw new NotImplementedException();
+		}
+
+		[CanBeNull]
+		[ContractAnnotation("notnull => notnull")]
 		public static Image GetImage([CanBeNull] QualitySpecificationElement element)
 		{
 			return element == null
@@ -151,6 +163,37 @@ namespace ProSuite.UI.QA.ResourceLookup
 			return qualityCondition == null
 				       ? null
 				       : GetImageKey(GetImage(qualityCondition));
+		}
+
+		[CanBeNull]
+		[ContractAnnotation("notnull => notnull")]
+		public static string GetImageKey([CanBeNull] TransformerConfiguration transformer)
+		{
+			return transformer == null
+				       ? null
+				       : GetImageKey(GetImage(transformer));
+		}
+
+		[CanBeNull]
+		[ContractAnnotation("notnull => notnull")]
+		public static string GetImageKey([CanBeNull] InstanceConfiguration configuration)
+		{
+			if (configuration == null)
+			{
+				return null;
+			}
+
+			if (configuration is QualityCondition qualityCondition)
+			{
+				return GetImageKey(qualityCondition);
+			}
+
+			if (configuration is TransformerConfiguration transformerConfiguration)
+			{
+				return GetImageKey(transformerConfiguration);
+			}
+
+			throw new NotImplementedException();
 		}
 
 		[CanBeNull]
@@ -194,6 +237,11 @@ namespace ProSuite.UI.QA.ResourceLookup
 		public static int GetDefaultSortIndex([NotNull] QualityCondition qualityCondition)
 		{
 			return GetDefaultSortIndex(GetImageKey(qualityCondition));
+		}
+
+		public static int GetDefaultSortIndex([NotNull] InstanceConfiguration configuration)
+		{
+			return GetDefaultSortIndex(GetImageKey(configuration));
 		}
 
 		public static int GetDefaultSortIndex(

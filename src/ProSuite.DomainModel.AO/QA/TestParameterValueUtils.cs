@@ -23,9 +23,21 @@ namespace ProSuite.DomainModel.AO.QA
 				return false;
 			}
 
-			TestFactory factory =
+			IInstanceInfo factory =
 				TestFactoryUtils.GetTestFactory(qualityCondition.TestDescriptor);
+
 			if (factory == null)
+			{
+				return false;
+			}
+
+			return SyncParameterValues(qualityCondition, factory);
+		}
+
+		public static bool SyncParameterValues([NotNull] InstanceConfiguration qualityCondition,
+		                                       [CanBeNull] IInstanceInfo instanceInfo)
+		{
+			if (instanceInfo == null)
 			{
 				return false;
 			}
@@ -34,7 +46,7 @@ namespace ProSuite.DomainModel.AO.QA
 				new Dictionary<TestParameter, IList<TestParameterValue>>();
 			var parametersByName = new Dictionary<string, TestParameter>();
 
-			foreach (TestParameter param in factory.Parameters)
+			foreach (TestParameter param in instanceInfo.Parameters)
 			{
 				validValuesByParameter.Add(param, new List<TestParameterValue>());
 				parametersByName.Add(param.Name, param);
@@ -219,7 +231,7 @@ namespace ProSuite.DomainModel.AO.QA
 		[CanBeNull]
 		private static object GetDefault([NotNull] Type type)
 		{
-			if (!type.IsValueType)
+			if (! type.IsValueType)
 			{
 				return null;
 			}
@@ -229,7 +241,7 @@ namespace ProSuite.DomainModel.AO.QA
 			if (type.IsEnum)
 			{
 				// Ensure valid value for enums: if default value (0) is not in list, return the first enum item value
-				if (!Enum.IsDefined(type, defaultValue))
+				if (! Enum.IsDefined(type, defaultValue))
 				{
 					string[] values = Enum.GetNames(type);
 					if (values.Length > 0)

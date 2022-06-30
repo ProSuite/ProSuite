@@ -138,6 +138,8 @@ namespace ProSuite.DomainModel.Core.QA
 		/// <value>The name of the assembly.</value>
 		public virtual string TestAssemblyName => Class?.AssemblyName;
 
+		public abstract InstanceConfiguration CreateConfiguration();
+
 		public override string ToString()
 		{
 			return string.IsNullOrEmpty(Name)

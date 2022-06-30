@@ -1,0 +1,225 @@
+using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Linq;
+using System.Windows.Forms;
+using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.DdxEditor.Content.Properties;
+using ProSuite.DdxEditor.Content.QA.QCon;
+using ProSuite.DdxEditor.Content.QA.QSpec;
+using ProSuite.DdxEditor.Framework;
+using ProSuite.DdxEditor.Framework.Commands;
+using ProSuite.DdxEditor.Framework.Items;
+using ProSuite.DomainModel.Core.QA;
+using ProSuite.DomainModel.Core.QA.Repositories;
+
+namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
+{
+	public abstract class InstanceConfigurationsItem : EntityTypeItem<InstanceConfiguration>,
+	                                                   IQualityConditionContainerItem
+	{
+		[NotNull] private readonly IQualityConditionContainer _container;
+
+		protected InstanceConfigurationsItem([NotNull] CoreDomainModelItemModelBuilder modelBuilder,
+		                                     [NotNull] string text,
+		                                     [CanBeNull] string description,
+		                                     [NotNull] IQualityConditionContainer container)
+			: base(text, description)
+		{
+			Assert.ArgumentNotNull(modelBuilder, nameof(modelBuilder));
+			Assert.ArgumentNotNull(container, nameof(container));
+
+			ModelBuilder = modelBuilder;
+			_container = container;
+		}
+
+		[NotNull]
+		protected CoreDomainModelItemModelBuilder ModelBuilder { get; }
+
+		protected override bool AllowDeleteSelectedChildren => true;
+
+		protected override IEnumerable<Item> GetChildren()
+		{
+			return _container.GetQualityConditionItems(this);
+		}
+
+		protected override Control CreateControlCore(IItemNavigation itemNavigation)
+		{
+			return ModelBuilder.ListQualityConditionsWithDataset
+				       ? CreateTableControl(_container.GetQualityConditionDatasetTableRows,
+				                            itemNavigation)
+				       : CreateTableControl(_container.GetQualityConditionTableRows,
+				                            itemNavigation);
+		}
+
+		protected override void CollectCommands(List<ICommand> commands,
+		                                        IApplicationController applicationController,
+		                                        ICollection<Item> selectedChildren)
+		{
+			base.CollectCommands(commands, applicationController, selectedChildren);
+
+			List<QualityConditionItem> selectedConditionItems =
+				selectedChildren.OfType<QualityConditionItem>().ToList();
+
+			if (selectedConditionItems.Count > 0)
+			{
+				commands.Add(new AssignQualityConditionsToCategoryCommand(
+					             selectedConditionItems, this, applicationController));
+			}
+		}
+
+		[NotNull]
+		public InstanceConfigurationItem AddConfigurationItem(
+			[NotNull] InstanceConfiguration configuration)
+		{
+			Assert.ArgumentNotNull(configuration, nameof(configuration));
+
+			InstanceConfigurationItem item = CreateConfigurationItemCore(
+				ModelBuilder, configuration, this, ModelBuilder.InstanceConfigurations);
+
+			AddConfigurationItem(item);
+
+			return item;
+		}
+
+		protected abstract InstanceConfigurationItem CreateConfigurationItemCore(
+			CoreDomainModelItemModelBuilder modelBuilder, InstanceConfiguration configuration,
+			IQualityConditionContainerItem containerItem,
+			IInstanceConfigurationRepository repository);
+
+		void IQualityConditionContainerItem.AddNewQualityConditionItem()
+		{
+			InstanceConfigurationItem item = CreateNewItemCore(ModelBuilder);
+
+			AddChild(item);
+
+			item.NotifyChanged();
+
+			//AddConfigurationItem(_container.CreateQualityConditionItem(this));
+		}
+
+		protected abstract InstanceConfigurationItem CreateNewItemCore(
+			[NotNull] CoreDomainModelItemModelBuilder modelBuilder);
+
+		void IQualityConditionContainerItem.CreateCopy(QualityConditionItem item)
+		{
+			throw new NotImplementedException();
+
+			//QualityCondition copy = _modelBuilder.ReadOnlyTransaction(
+			//	() => Assert.NotNull(item.GetEntity()).CreateCopy());
+
+			//copy.Name = string.Format("Copy of {0}", copy.Name);
+
+			//AddConfigurationItem(new QualityConditionItem(_modelBuilder, copy, this,
+			//                                                 _modelBuilder.QualityConditions));
+		}
+
+		bool IQualityConditionContainerItem.AssignToCategory(
+			ICollection<QualityConditionItem> items,
+			IWin32Window owner,
+			out DataQualityCategory category)
+		{
+			if (! QualityConditionContainerUtils.AssignToCategory(items, ModelBuilder, owner,
+				    out category))
+			{
+				return false;
+			}
+
+			RefreshChildren();
+			return true;
+		}
+
+		public QualityCondition GetQualityCondition(QualityConditionItem item)
+		{
+			return ModelBuilder.ReadOnlyTransaction(() => item.GetEntity());
+		}
+
+		private void AddConfigurationItem(InstanceConfigurationItem item)
+		{
+			AddChild(item);
+
+			item.NotifyChanged();
+		}
+	}
+
+	public class TransformerConfigurationsItem : InstanceConfigurationsItem
+	{
+		[NotNull] private static readonly Image _image;
+		[NotNull] private static readonly Image _selectedImage;
+
+		static TransformerConfigurationsItem()
+		{
+			_image = ItemUtils.GetGroupItemImage(Resources.TransformOverlay);
+			_selectedImage =
+				ItemUtils.GetGroupItemSelectedImage(Resources.TransformOverlay);
+		}
+
+		public TransformerConfigurationsItem([NotNull] CoreDomainModelItemModelBuilder modelBuilder,
+		                                     [NotNull] IQualityConditionContainer container)
+			: base(modelBuilder, "Transformer Configurations",
+			       "Configured dataset transformers using one or more input datasets",
+			       container) { }
+
+		public override Image Image => _image;
+
+		public override Image SelectedImage => _selectedImage;
+
+		protected override void CollectCommands(
+			List<ICommand> commands,
+			IApplicationController applicationController)
+		{
+			base.CollectCommands(commands, applicationController);
+
+			commands.Add(new AddTransformerConfigurationCommand(this, applicationController, this));
+			commands.Add(new DeleteAllChildItemsCommand(this, applicationController));
+		}
+
+		#region Overrides of InstanceConfigurationsItem
+
+		protected override InstanceConfigurationItem CreateConfigurationItemCore(
+			CoreDomainModelItemModelBuilder modelBuilder,
+			InstanceConfiguration configuration,
+			IQualityConditionContainerItem containerItem,
+			IInstanceConfigurationRepository repository)
+		{
+			Assert.ArgumentNotNull(configuration, nameof(configuration));
+
+			var item =
+				new InstanceConfigurationItem(modelBuilder, configuration, containerItem,
+				                              repository);
+
+			return item;
+
+			//InstanceConfigurationItem item = CreateConfigurationItemCore(
+			//	_modelBuilder, configuration, this,
+			//	_modelBuilder.QualityConditions);
+
+			//AddConfigurationItem(item);
+
+			//return item;
+		}
+
+		protected override InstanceConfigurationItem CreateNewItemCore(
+			CoreDomainModelItemModelBuilder modelBuilder)
+		{
+			//return new TransformerConfigurationItem()
+
+			//var qualityCondition = new QualityCondition(assignUuids: true)
+			//                       {
+			//	                       Category = category
+			//                       };
+
+			//return new QualityConditionItem(
+			//	_modelBuilder, qualityCondition,
+			//	containerItem, _modelBuilder.QualityConditions);
+
+			var transformerConfig = new TransformerConfiguration();
+
+			return new InstanceConfigurationItem(modelBuilder, transformerConfig, this,
+			                                     modelBuilder.InstanceConfigurations);
+		}
+
+		#endregion
+	}
+}

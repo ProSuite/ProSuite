@@ -5,17 +5,18 @@ using System.Windows.Forms;
 using Microsoft.AspNetCore.Components.WebView.WindowsForms;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.DdxEditor.Content.Blazor.ViewModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.UI.QA;
 using ProSuite.UI.QA.Controls;
 
 namespace ProSuite.DdxEditor.Content.Blazor;
 
-public class QualityConditionBlazor : BlazorWebView, IQualityConditionTableViewControl
+public class QualityConditionBlazor : BlazorWebView, IInstanceConfigurationTableViewControl
 {
-	[NotNull] private readonly QualityConditionViewModel _viewModel;
+	[NotNull] private readonly IInstanceConfigurationAwareViewModel _viewModel;
 
-	public QualityConditionBlazor([NotNull] QualityConditionViewModel viewModel,
+	public QualityConditionBlazor([NotNull] IInstanceConfigurationAwareViewModel viewModel,
 	                              [NotNull] IServiceProvider provider)
 	{
 		Assert.ArgumentNotNull(viewModel, nameof(viewModel));
@@ -30,7 +31,7 @@ public class QualityConditionBlazor : BlazorWebView, IQualityConditionTableViewC
 	[Obsolete("not used anymore with .NET 6")]
 	public void BindToParameterValues(BindingList<ParameterValueListItem> parameterValueItems) { }
 
-	public void BindTo(QualityCondition qualityCondition)
+	public void BindTo(InstanceConfiguration qualityCondition)
 	{
 		Assert.ArgumentNotNull(qualityCondition, nameof(qualityCondition));
 

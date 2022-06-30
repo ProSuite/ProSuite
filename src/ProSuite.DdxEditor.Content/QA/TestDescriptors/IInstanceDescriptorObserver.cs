@@ -7,6 +7,6 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 		void NotifyFactoryChanged();
 
 		void InstanceConfigurationDoubleClicked(
-			ReferencingQualityConditionTableRow referencingQualityConditionTableRow);
+			ReferencingInstanceConfigurationTableRow referencingQualityConditionTableRow);
 	}
 }

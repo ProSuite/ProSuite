@@ -20,6 +20,14 @@ namespace ProSuite.DomainModel.Core.QA
 
 		public override string TypeDisplayName => "Transformer Descriptor";
 
+		public override InstanceConfiguration CreateConfiguration()
+		{
+			return new TransformerConfiguration()
+			       {
+					   InstanceDescriptor = this
+			       };
+		}
+
 		#endregion
 	}
 }

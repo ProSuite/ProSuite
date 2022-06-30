@@ -359,6 +359,14 @@ namespace ProSuite.DdxEditor.Content
 
 		[NotNull]
 		public virtual IList<DependingItem> GetDependingItems(
+			[CanBeNull] InstanceConfiguration instanceConfiguration)
+		{
+			return new List<DependingItem>();
+		}
+
+
+		[NotNull]
+		public virtual IList<DependingItem> GetDependingItems(
 			[CanBeNull] QualitySpecification qualitySpecification)
 		{
 			return new List<DependingItem>();

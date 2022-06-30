@@ -18,6 +18,40 @@ namespace ProSuite.DomainModel.AO.QA
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		/// <summary>
+		/// Gets the transformer factory, sets the transformer configuration and initializes its 
+		/// parameter values.
+		/// </summary>
+		/// <returns>TransformerFactory or null.</returns>
+		[CanBeNull]
+		public static InstanceFactory CreateFactory(
+			[NotNull] InstanceConfiguration instanceConfiguration)
+		{
+			Assert.ArgumentNotNull(instanceConfiguration, nameof(instanceConfiguration));
+
+			if (instanceConfiguration.InstanceDescriptor == null)
+			{
+				return null;
+			}
+
+			if (instanceConfiguration is TransformerConfiguration transConfig)
+			{
+				return CreateTransformerFactory(transConfig);
+			}
+
+			if (instanceConfiguration is RowFilterConfiguration rowFilterconfig)
+			{
+				return CreateRowFilterFactory(rowFilterconfig);
+			}
+
+			if (instanceConfiguration is QualityCondition qualityCondition)
+			{
+				return TestFactoryUtils.CreateTestFactory(qualityCondition);
+			}
+
+			throw new NotImplementedException();
+		}
+
+		/// <summary>
 		/// Gets the row filter factory, sets the row filter configuration for it and initializes
 		/// its  parameter values.
 		/// </summary>

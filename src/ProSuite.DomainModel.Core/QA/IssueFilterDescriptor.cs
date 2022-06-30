@@ -20,6 +20,11 @@ namespace ProSuite.DomainModel.Core.QA
 
 		public override string TypeDisplayName => "Issue Filter Descriptor";
 
+		public override InstanceConfiguration CreateConfiguration()
+		{
+			throw new System.NotImplementedException();
+		}
+
 		#endregion
 	}
 }
