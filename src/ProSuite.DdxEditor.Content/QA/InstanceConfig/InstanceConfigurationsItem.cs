@@ -47,8 +47,9 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 		protected override Control CreateControlCore(IItemNavigation itemNavigation)
 		{
 			return ModelBuilder.ListQualityConditionsWithDataset
-				       ? CreateTableControl(_container.GetQualityConditionDatasetTableRows,
-				                            itemNavigation)
+				       ? (Control) CreateTableControl(
+					       _container.GetQualityConditionDatasetTableRows,
+					       itemNavigation)
 				       : CreateTableControl(_container.GetQualityConditionTableRows,
 				                            itemNavigation);
 		}

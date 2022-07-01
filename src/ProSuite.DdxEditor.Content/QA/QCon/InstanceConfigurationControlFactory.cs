@@ -69,7 +69,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			control = new InstanceConfigurationControl(tableState, blazorControl);
 #else
 			control =
-				new QualityConditionControl(tableState, new QualityConditionTableViewControl());
+				new InstanceConfigurationControl(tableState, new QualityConditionTableViewControl());
 #endif
 			new InstanceConfigurationPresenter(item, control, itemNavigation);
 
