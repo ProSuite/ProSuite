@@ -25,8 +25,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 		EntityItemPresenter<QualityCondition, IQualityConditionObserver, QualityCondition>,
 		IQualityConditionObserver
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		[NotNull] private readonly QualityConditionItem _item;
 		[NotNull] private readonly IQualityConditionView _view;
@@ -325,10 +324,12 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 		{
 			GetTestParameterItems(qualityCondition);
 
+#if NET48
 			_view.BindToParameterValues(_paramValues);
 			_view.SetConfigurator(_testFactoryHasError
 				                      ? null
 				                      : _item.GetConfigurator());
+#endif
 		}
 
 		private void GetTestParameterItems([NotNull] QualityCondition qualityCondition)
