@@ -27,7 +27,9 @@ namespace ProSuite.Commons.UI.WinForms
 
 			string contextId = _wpfControl.GetType().Name;
 			_formStateManager = new FormStateManager<FormState>(this, contextId);
-			_formStateManager.RestoreState();
+
+			// Avoid problems with high-resolution displays making the (fixed) height too small:
+			_formStateManager.RestoreState(FormStateRestoreOption.OnlyLocation);
 		}
 
 		public bool FixedWidth { get; set; }
