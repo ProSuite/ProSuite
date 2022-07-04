@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
@@ -182,6 +183,9 @@ namespace ProSuite.QA.Tests.Test
 				{
 					runner.Execute();
 					Assert.AreEqual(4, runner.Errors.Count);
+
+					// TODO: Fix lost involved rows
+					Assert.True(runner.Errors.All(e => e.InvolvedRows.Count > 0));
 				}
 
 				using (var runner = new QaTestRunner(test))
