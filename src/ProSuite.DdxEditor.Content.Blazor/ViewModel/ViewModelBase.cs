@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.DdxEditor.Content.Blazor.View;
 using ProSuite.QA.Core;
 
 namespace ProSuite.DdxEditor.Content.Blazor.ViewModel;
@@ -40,7 +39,7 @@ public abstract class ViewModelBase : Observable
 	[NotNull]
 	public TestParameter Parameter { get; }
 
-	[CanBeNull]
+	[NotNull]
 	public Type DataType { get; }
 
 	public void StartEditing()
@@ -55,6 +54,6 @@ public abstract class ViewModelBase : Observable
 
 	public override string ToString()
 	{
-		return $"{ParameterName}, Type: {DataType}";
+		return $"name: {ParameterName}, type: {DataType} ({GetType()})";
 	}
 }

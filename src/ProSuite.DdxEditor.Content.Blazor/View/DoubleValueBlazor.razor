@@ -1,0 +1,10 @@
+@using Radzen.Blazor
+
+@if (ViewModel.Editing)
+{
+	<RadzenNumeric TValue="double" @bind-Value="DoubleValue"/>
+}
+else
+{
+	@DoubleValue
+}

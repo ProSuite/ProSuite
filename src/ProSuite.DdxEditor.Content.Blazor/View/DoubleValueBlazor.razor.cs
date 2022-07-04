@@ -5,7 +5,8 @@ using ProSuite.DdxEditor.Content.Blazor.ViewModel;
 
 namespace ProSuite.DdxEditor.Content.Blazor.View;
 
-public partial class SwitchValueBlazor : IDisposable
+// todo daro rename DoubletTestParameterValueBlazor etc.
+public partial class DoubleValueBlazor : IDisposable
 {
 	[Parameter]
 	public ScalarTestParameterValueViewModel ViewModel { get; set; }
@@ -17,9 +18,17 @@ public partial class SwitchValueBlazor : IDisposable
 		set => ViewModel.Value = value;
 	}
 
-	public bool BoolValue
+	public double DoubleValue
 	{
-		get => Value != null && (bool) Value;
+		get
+		{
+			if (Value != null)
+			{
+				return (double) Value;
+			}
+
+			return 0;
+		}
 		set => Value = value;
 	}
 

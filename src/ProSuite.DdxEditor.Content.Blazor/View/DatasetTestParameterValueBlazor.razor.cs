@@ -5,14 +5,10 @@ namespace ProSuite.DdxEditor.Content.Blazor.View;
 
 public partial class DatasetTestParameterValueBlazor
 {
-	public object Value
-	{
-		get => ViewModel.Value;
-		set => ViewModel.Value = value;
-	}
-
 	[Parameter]
 	public DatasetTestParameterValueViewModel ViewModel { get; set; }
+
+	public object Value => ViewModel.Value;
 
 	private void OnClick()
 	{

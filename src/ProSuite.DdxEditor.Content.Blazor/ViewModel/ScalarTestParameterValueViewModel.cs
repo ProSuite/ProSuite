@@ -1,3 +1,4 @@
+using System;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DdxEditor.Content.Blazor.View;
 using ProSuite.DomainModel.AO.QA;
@@ -8,16 +9,13 @@ namespace ProSuite.DdxEditor.Content.Blazor.ViewModel;
 
 public class ScalarTestParameterValueViewModel : ViewModelBase
 {
-	private object _value;
+	[CanBeNull] private object _value;
 
 	public ScalarTestParameterValueViewModel([NotNull] TestParameter parameter,
 	                                         [CanBeNull] object value,
 	                                         [NotNull] IViewModel observer) :
 		base(parameter, observer)
 	{
-		//Assert.ArgumentNotNull(value, nameof(value));
-		//Assert.ArgumentNotNull(dataType, nameof(dataType));
-
 		_value = value;
 
 		ComponentParameters.Add("ViewModel", this);
@@ -30,14 +28,26 @@ public class ScalarTestParameterValueViewModel : ViewModelBase
 				ComponentType = typeof(StringValueBlazor);
 				break;
 			case TestParameterType.Integer:
-			case TestParameterType.Double:
-				ComponentType = typeof(NumericValueBlazor);
+				if (DataType.IsEnum)
+				{
+					ComponentParameters.Add("DataType", DataType);
+					ComponentType = typeof(EnumTestParameterValueBlazor);
+					break;
+				}
+				ComponentType = typeof(IntegerValueBlazor);
 				break;
-			//case TestParameterType.DateTime:
-			//	break;
+			case TestParameterType.Double:
+				ComponentType = typeof(DoubleValueBlazor);
+				break;
+			// todo daro Blazor DateTime picker 
+			case TestParameterType.DateTime:
+			case TestParameterType.CustomScalar:
+				throw new NotImplementedException($"{testParameterType} is not yet supported");
 			case TestParameterType.Boolean:
 				ComponentType = typeof(SwitchValueBlazor);
 				break;
+			default:
+				throw new ArgumentOutOfRangeException($"Unkown {nameof(TestParameterType)}");
 		}
 	}
 

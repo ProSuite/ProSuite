@@ -1,0 +1,14 @@
+@using Radzen.Blazor
+
+@if (ViewModel.Editing)
+{
+	<RadzenDropDown TValue="int" @bind-Value="IntValue" Data="@IntValues">
+        <Template Context="v">
+            @Enum.ToObject(DataType, v)
+        </Template>
+    </RadzenDropDown>
+}
+else
+{
+	@Enum.ToObject(DataType, IntValue)
+}

@@ -2,9 +2,8 @@ using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.DdxEditor.Content.Blazor.ViewModel;
 
-namespace ProSuite.DdxEditor.Content.Blazor.View;
+namespace ProSuite.DdxEditor.Content.Blazor.ViewModel;
 
 // substitute with Prism
 public abstract class Observable : IDisposable, INotifyPropertyChanged
@@ -26,7 +25,7 @@ public abstract class Observable : IDisposable, INotifyPropertyChanged
 
 	protected virtual void OnSavedChangesCore() { }
 
-	private void NotifyDirty()
+	public void NotifyDirty()
 	{
 		Dirty = true;
 

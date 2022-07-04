@@ -1,4 +1,5 @@
 using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom.EsriShape;
 using ProSuite.DomainModel.Core.DataModel;
 
@@ -59,7 +60,7 @@ internal static class BlazorImageUtils
 		return GetImageSource(_keyUnknown);
 	}
 
-	public static string GetImageSource(IDdxDataset dataset)
+	public static string GetImageSource([NotNull] IDdxDataset dataset)
 	{
 		return dataset.Deleted
 			       ? GetImageSource(_keyDeleted)
@@ -88,7 +89,7 @@ internal static class BlazorImageUtils
 				break;
 
 			case ProSuiteGeometryType.Polyline:
-				file = "DatasetTypePolyline.png";
+				file = "DatasetTypeLine.png";
 				break;
 
 			case ProSuiteGeometryType.MultiPatch:

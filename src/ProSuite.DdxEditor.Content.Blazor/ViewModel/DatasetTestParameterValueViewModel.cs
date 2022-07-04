@@ -30,7 +30,10 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 		_filterExpression = filterExpression;
 		_usedAsReferenceData = usedAsReferenceData;
 
-		ImageSource = BlazorImageUtils.GetImageSource(Dataset);
+		if (Dataset != null)
+		{
+			ImageSource = BlazorImageUtils.GetImageSource(Dataset);
+		}
 
 		ModelName = _dataset?.Model?.Name;
 
@@ -66,7 +69,7 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 
 	public override object Value
 	{
-		get => Dataset?.ToString();
+		get => Dataset?.Name;
 		set { }
 	}
 

@@ -75,9 +75,6 @@ public class InstanceConfigurationViewModel<T> : Observable, IInstanceConfigurat
 		
 		WireEvents(_topLevelRowsByParameter.Values.OfType<TestParameterValueCollectionViewModel>());
 
-		// important to notify view before setting the source data
-		//OnPropertyChanged(nameof(Rows));
-
 		Rows = new List<ViewModelBase>(_topLevelRowsByParameter.Values);
 	}
 
@@ -94,7 +91,7 @@ public class InstanceConfigurationViewModel<T> : Observable, IInstanceConfigurat
 			if (parameter.ArrayDimension > 0)
 			{
 				yield return new KeyValuePair<TestParameter, ViewModelBase>(
-					parameter, new TestParameterValueCollectionViewModel(parameter, parameter.Type, rows, this));
+					parameter, new TestParameterValueCollectionViewModel(parameter, rows, this));
 			}
 			else if (rows.Count == 1)
 			{

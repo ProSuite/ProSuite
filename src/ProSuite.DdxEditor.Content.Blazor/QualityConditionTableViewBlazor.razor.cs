@@ -8,6 +8,7 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Misc;
 using ProSuite.DdxEditor.Content.Blazor.ViewModel;
+using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.QA;
 using Radzen;
 using Radzen.Blazor;
@@ -43,7 +44,11 @@ public partial class QualityConditionTableViewBlazor : IDisposable
 	private IList<ViewModelBase> Rows => ViewModel.Rows;
 
 	public ViewModelBase SelectedRow { get; set; }
+	// todo rename to SelectedChildRow
 	public ViewModelBase SelectedCollectionRow { get; set; }
+
+	// this is necessary that data grid shows selection
+	public IList<ViewModelBase> SelectedRows { get; set; } = new List<ViewModelBase>();
 
 	public void Dispose()
 	{
@@ -96,8 +101,6 @@ public partial class QualityConditionTableViewBlazor : IDisposable
 
 	private async void OnChildRowClick(DataGridRowMouseEventArgs<ViewModelBase> args)
 	{
-		//Assert.True(_collectionGrid.Data.Contains(args.Data), "row is not from collection grid");
-		
 		await DataGridUtils.UpdateRowIfNotNull(_mainGrid, SelectedRow);
 
 		ViewModelBase recent = SelectedCollectionRow;
@@ -179,22 +182,34 @@ public partial class QualityConditionTableViewBlazor : IDisposable
 	{
 		IDictionary<string, object> attributes = args.Attributes;
 
-		attributes.Add("style", string.Empty);
+		if (args.Data is TestParameterValueCollectionViewModel vm &&
+		    ! TestParameterTypeUtils.IsDatasetType(vm.Parameter.Type))
+		{
+			SetBackgroundColorGrey(args, attributes);
+			return;
+		}
 
 		if (args.Data is ScalarTestParameterValueViewModel)
 		{
-			if (args.Column.Property == "ModelName")
+			SetBackgroundColorGrey(args, attributes);
+		}
+	}
+
+	private static void SetBackgroundColorGrey(
+		[NotNull] DataGridCellRenderEventArgs<ViewModelBase> args,
+		[NotNull] IDictionary<string, object> attributes)
+	{
+		if (args.Column.Property == "ModelName")
+		{
+			attributes.Add("colspan", 3);
+
+			if (attributes.ContainsKey("style"))
 			{
-				attributes.Add("colspan", 3);
-
-				if (attributes.TryGetValue("style", out object styleObj))
-				{
-					var style = (string) styleObj;
-
-					style += "background-color: grey";
-
-					attributes["style"] = style;
-				}
+				attributes["style"] += "; background-color: grey";
+			}
+			else
+			{
+				attributes.Add("style", "background-color: grey");
 			}
 		}
 	}
@@ -221,7 +236,6 @@ public partial class QualityConditionTableViewBlazor : IDisposable
 
 	private void InsertRowClicked()
 	{
-		Assert.False(_childGrids.Count == 0, "no child grids");
 		Assert.NotNull(SelectedRow);
 		
 		ViewModelBase row = ViewModel.InsertRow(SelectedRow.Parameter);
@@ -260,6 +274,8 @@ public partial class QualityConditionTableViewBlazor : IDisposable
 
 			childGrid.Data = values;
 			childGrid.Reload();
+
+			SelectedCollectionRow.NotifyDirty();
 		}
 	}
 
@@ -294,6 +310,8 @@ public partial class QualityConditionTableViewBlazor : IDisposable
 
 			childGrid.Data = values;
 			childGrid.Reload();
+
+			SelectedCollectionRow.NotifyDirty();
 		}
 	}
 
@@ -304,11 +322,6 @@ public partial class QualityConditionTableViewBlazor : IDisposable
 	private bool ButtonDisabledCore()
 	{
 		if (Rows.Count == 0)
-		{
-			return true;
-		}
-
-		if (_childGrids.Count == 0)
 		{
 			return true;
 		}
@@ -343,7 +356,7 @@ public partial class QualityConditionTableViewBlazor : IDisposable
 			return true;
 		}
 
-		if (_childGrids.Any(grid => grid.Data.Count() == 1))
+		if (_childGrids.Any(grid => grid.Data.Count() == 0))
 		{
 			return true;
 		}
@@ -359,6 +372,11 @@ public partial class QualityConditionTableViewBlazor : IDisposable
 	private bool NavigationButtonDisabledCore()
 	{
 		if (ButtonDisabledCore())
+		{
+			return true;
+		}
+
+		if (_childGrids.Count == 0)
 		{
 			return true;
 		}
