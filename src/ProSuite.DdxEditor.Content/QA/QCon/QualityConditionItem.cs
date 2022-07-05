@@ -461,7 +461,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 					continue;
 				}
 
-				if (dsValue.DatasetValue == null)
+				if (dsValue.DatasetValue == null && dsValue.ValueSource == null)
 				{
 					if (IsParameterOptional(entity, dsValue))
 					{

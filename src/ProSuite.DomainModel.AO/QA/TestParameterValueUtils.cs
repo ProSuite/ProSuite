@@ -14,28 +14,30 @@ namespace ProSuite.DomainModel.AO.QA
 		/// Synchronize parameters with TestFactory.
 		/// </summary>
 		/// <returns>true, if not all parameters fit to the TestFactory.</returns>
-		public static bool SyncParameterValues([NotNull] QualityCondition qualityCondition)
+		public static bool SyncParameterValues(
+			[NotNull] InstanceConfiguration instanceConfiguration)
 		{
-			Assert.ArgumentNotNull(qualityCondition, nameof(qualityCondition));
+			Assert.ArgumentNotNull(instanceConfiguration, nameof(instanceConfiguration));
 
-			if (qualityCondition.TestDescriptor == null)
+			if (instanceConfiguration.InstanceDescriptor == null)
 			{
 				return false;
 			}
 
 			IInstanceInfo factory =
-				TestFactoryUtils.GetTestFactory(qualityCondition.TestDescriptor);
+				TestFactoryUtils.GetTestFactory(instanceConfiguration.InstanceDescriptor);
 
 			if (factory == null)
 			{
 				return false;
 			}
 
-			return SyncParameterValues(qualityCondition, factory);
+			return SyncParameterValues(instanceConfiguration, factory);
 		}
 
-		public static bool SyncParameterValues([NotNull] InstanceConfiguration qualityCondition,
-		                                       [CanBeNull] IInstanceInfo instanceInfo)
+		public static bool SyncParameterValues(
+			[NotNull] InstanceConfiguration instanceConfiguration,
+			[CanBeNull] IInstanceInfo instanceInfo)
 		{
 			if (instanceInfo == null)
 			{
@@ -54,7 +56,7 @@ namespace ProSuite.DomainModel.AO.QA
 
 			var invalidValues = new List<TestParameterValue>();
 
-			foreach (TestParameterValue paramValue in qualityCondition.ParameterValues)
+			foreach (TestParameterValue paramValue in instanceConfiguration.ParameterValues)
 			{
 				string name = paramValue.TestParameterName;
 
@@ -140,17 +142,17 @@ namespace ProSuite.DomainModel.AO.QA
 
 			if (newParameters)
 			{
-				qualityCondition.ClearParameterValues();
+				instanceConfiguration.ClearParameterValues();
 				foreach (TestParameterValue value in validValues)
 				{
-					qualityCondition.AddParameterValue(value);
+					instanceConfiguration.AddParameterValue(value);
 				}
 			}
 			else
 			{
 				foreach (TestParameterValue value in invalidValues)
 				{
-					qualityCondition.RemoveParameterValue(value);
+					instanceConfiguration.RemoveParameterValue(value);
 				}
 			}
 

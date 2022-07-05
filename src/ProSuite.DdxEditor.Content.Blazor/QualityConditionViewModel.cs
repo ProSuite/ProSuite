@@ -4,7 +4,6 @@ using System.ComponentModel;
 using System.Linq;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.DdxEditor.Content.Blazor.View;
 using ProSuite.DdxEditor.Content.Blazor.ViewModel;
 using ProSuite.DdxEditor.Framework.Items;
 using ProSuite.DomainModel.AO.QA;
@@ -14,7 +13,8 @@ using ProSuite.QA.Core;
 namespace ProSuite.DdxEditor.Content.Blazor;
 
 // todo daro implement IDisposable
-public class InstanceConfigurationViewModel<T> : Observable, IInstanceConfigurationAwareViewModel where T: InstanceConfiguration
+public class InstanceConfigurationViewModel<T> : Observable, IInstanceConfigurationAwareViewModel
+	where T : InstanceConfiguration
 {
 	[NotNull] private readonly EntityItem<T, T> _item;
 	private Dictionary<TestParameter, IList<ViewModelBase>> _rowsByParameter;
@@ -23,7 +23,8 @@ public class InstanceConfigurationViewModel<T> : Observable, IInstanceConfigurat
 
 	// todo daro InstanceConfiguration?
 	public InstanceConfigurationViewModel([NotNull] EntityItem<T, T> item,
-	                                 [NotNull] ITestParameterDatasetProvider datasetProvider) : base(null)
+	                                      [NotNull] ITestParameterDatasetProvider datasetProvider) :
+		base(null)
 	{
 		Assert.ArgumentNotNull(item, nameof(item));
 		Assert.ArgumentNotNull(datasetProvider, nameof(datasetProvider));
@@ -63,8 +64,15 @@ public class InstanceConfigurationViewModel<T> : Observable, IInstanceConfigurat
 
 		if (_topLevelRowsByParameter != null && _topLevelRowsByParameter?.Count > 0)
 		{
-			UnwireEvents(_topLevelRowsByParameter.Values.OfType<TestParameterValueCollectionViewModel>());
+			UnwireEvents(_topLevelRowsByParameter.Values
+			                                     .OfType<TestParameterValueCollectionViewModel>());
 		}
+
+		// TODO: Sort out the binding / re-creation of the rows (on load like in .net48?)
+		// The problem is when a new condition/confniguration is created from scratch and/or
+		// the descriptor is changed.
+		// This is called twice at the moment, but it must be called somewhere before the row creation:
+		TestParameterValueUtils.SyncParameterValues(qualityCondition);
 
 		_rowsByParameter = CreateRows(qualityCondition);
 
@@ -72,7 +80,7 @@ public class InstanceConfigurationViewModel<T> : Observable, IInstanceConfigurat
 
 		_topLevelRowsByParameter =
 			new Dictionary<TestParameter, ViewModelBase>(GetTopLevelRows(_rowsByParameter));
-		
+
 		WireEvents(_topLevelRowsByParameter.Values.OfType<TestParameterValueCollectionViewModel>());
 
 		Rows = new List<ViewModelBase>(_topLevelRowsByParameter.Values);
@@ -143,11 +151,7 @@ public class InstanceConfigurationViewModel<T> : Observable, IInstanceConfigurat
 			{
 				rowsByParameter[param]
 					.Add(new DatasetTestParameterValueViewModel(
-						     param,
-						     datasetValue.DatasetValue,
-						     datasetValue.FilterExpression,
-						     datasetValue.UsedAsReferenceData,
-						     this));
+						     param, datasetValue, this));
 			}
 			else if (paramValue is ScalarTestParameterValue scalarValue)
 			{
@@ -171,13 +175,14 @@ public class InstanceConfigurationViewModel<T> : Observable, IInstanceConfigurat
 		Assert.ArgumentCondition(_rowsByParameter.ContainsKey(parameter), nameof(parameter));
 
 		var collectionRow =
-			Assert.NotNull((TestParameterValueCollectionViewModel) _topLevelRowsByParameter[parameter]);
+			Assert.NotNull(
+				(TestParameterValueCollectionViewModel) _topLevelRowsByParameter[parameter]);
 
 		ViewModelBase insertRow;
 
 		if (TestParameterTypeUtils.IsDatasetType(parameter.Type))
 		{
-			insertRow = new DatasetTestParameterValueViewModel(parameter, null, null, false, this);
+			insertRow = new DatasetTestParameterValueViewModel(parameter, null, this);
 		}
 		else
 		{
@@ -200,7 +205,8 @@ public class InstanceConfigurationViewModel<T> : Observable, IInstanceConfigurat
 		TestParameter parameter = row.Parameter;
 
 		var collectionRow =
-			Assert.NotNull((TestParameterValueCollectionViewModel) _topLevelRowsByParameter[parameter]);
+			Assert.NotNull(
+				(TestParameterValueCollectionViewModel) _topLevelRowsByParameter[parameter]);
 
 		Assert.True(_rowsByParameter[parameter].Remove(row), $"cannot remove {row}");
 
@@ -222,10 +228,15 @@ public class InstanceConfigurationViewModel<T> : Observable, IInstanceConfigurat
 			{
 				if (row is DatasetTestParameterValueViewModel dataset)
 				{
-					instanceConfiguration.AddParameterValue(new DatasetTestParameterValue(testParameter,
-						                                   dataset.Dataset,
-						                                   dataset.FilterExpression,
-						                                   dataset.UsedAsReferenceData));
+					instanceConfiguration.AddParameterValue(
+						new DatasetTestParameterValue(
+							testParameter,
+							dataset.DatasetSource.Match(d => d, t => null),
+							dataset.FilterExpression,
+							dataset.UsedAsReferenceData)
+						{
+							ValueSource = dataset.DatasetSource.Match(d => null, t => t)
+						});
 				}
 				else if (row is ScalarTestParameterValueViewModel scalar)
 				{

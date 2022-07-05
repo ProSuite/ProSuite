@@ -60,8 +60,14 @@ internal static class BlazorImageUtils
 		return GetImageSource(_keyUnknown);
 	}
 
-	public static string GetImageSource([NotNull] IDdxDataset dataset)
+	[CanBeNull]
+	public static string GetImageSource([CanBeNull] IDdxDataset dataset)
 	{
+		if (dataset == null)
+		{
+			return null;
+		}
+
 		return dataset.Deleted
 			       ? GetImageSource(_keyDeleted)
 			       : GetImageSource(dataset.GeometryType);
