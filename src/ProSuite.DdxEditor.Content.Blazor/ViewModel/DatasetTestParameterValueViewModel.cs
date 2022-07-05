@@ -3,6 +3,7 @@ using System.Windows.Forms;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.UI.Finder;
 using ProSuite.DdxEditor.Content.Blazor.View;
+using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Core;
@@ -77,7 +78,9 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 
 	public void FindDatasetClicked()
 	{
-		using (FinderForm<DatasetFinderItem> form = GetFinderForm())
+		TestParameterType parameterType = TestParameterTypeUtils.GetParameterType(DataType);
+
+		using (FinderForm<DatasetFinderItem> form = GetFinderForm(parameterType))
 		{
 			DialogResult result = form.ShowDialog();
 
@@ -106,12 +109,13 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 		}
 	}
 
-	private FinderForm<DatasetFinderItem> GetFinderForm()
+	private FinderForm<DatasetFinderItem> GetFinderForm(TestParameterType datasetParameterType)
 	{
 		var finder = new Finder<DatasetFinderItem>();
 
 		DataQualityCategory category = _viewModel.InstanceConfiguration.Category;
 
-		return FinderUtils.GetFinder(category, _viewModel.DatasetProvider, finder);
+		return FinderUtils.GetFinder(category, _viewModel.DatasetProvider, datasetParameterType,
+		                             finder);
 	}
 }

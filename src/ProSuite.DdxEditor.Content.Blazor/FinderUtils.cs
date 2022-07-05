@@ -14,11 +14,12 @@ public static class FinderUtils
 {
 	public static FinderForm<DatasetFinderItem> GetFinder(DataQualityCategory category,
 	                                                      ITestParameterDatasetProvider datasetProvider,
-	                                                      Finder<DatasetFinderItem> finder)
+	                                                      TestParameterType datasetParameterType,
+														  Finder<DatasetFinderItem> finder)
 	{
 		DdxModel model = category?.GetDefaultModel();
 
-		return finder.CreateForm(GetFinderQueries(model, datasetProvider),
+		return finder.CreateForm(GetFinderQueries(model, datasetProvider, datasetParameterType),
 		                         allowMultiSelection: false,
 		                         columnDescriptors: null,
 		                         filterSettingsContext: FinderContextIds.GetId(category));
@@ -26,23 +27,26 @@ public static class FinderUtils
 
 	[NotNull]
 	private static IEnumerable<FinderQuery<DatasetFinderItem>> GetFinderQueries(
-		[CanBeNull] DdxModel model, ITestParameterDatasetProvider datasetProvider)
+		[CanBeNull] DdxModel model,
+		ITestParameterDatasetProvider datasetProvider,
+		TestParameterType datasetParameterType)
 	{
 		if (model != null)
 		{
 			yield return new FinderQuery<DatasetFinderItem>(
 				string.Format("Datasets in {0}", model.Name),
 				string.Format("model{0}", model.Id),
-				() => GetListItems(datasetProvider, model));
+				() => GetListItems(datasetProvider, datasetParameterType, model));
 		}
 
 		yield return new FinderQuery<DatasetFinderItem>(
-			"<All>", "[all]", () => GetListItems(datasetProvider));
+			"<All>", "[all]", () => GetListItems(datasetProvider, datasetParameterType));
 	}
 
 	[NotNull]
 	private static IList<DatasetFinderItem> GetListItems(
 		ITestParameterDatasetProvider datasetProvider,
+		TestParameterType datasetParameterType,
 		[CanBeNull] DdxModel model = null)
 	{
 		if (datasetProvider == null)
@@ -50,8 +54,7 @@ public static class FinderUtils
 			return new List<DatasetFinderItem>();
 		}
 
-		// todo daro add more TestParameterTypes?
-		return datasetProvider.GetDatasets(TestParameterType.PolygonDataset, model)
+		return datasetProvider.GetDatasets(datasetParameterType, model)
 		                      .Select(dataset => new DatasetFinderItem(dataset))
 		                      .ToList();
 	}
