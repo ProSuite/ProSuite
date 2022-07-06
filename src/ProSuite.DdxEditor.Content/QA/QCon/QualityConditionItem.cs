@@ -36,7 +36,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
 
 		[NotNull] private readonly CoreDomainModelItemModelBuilder _modelBuilder;
-		[CanBeNull] private readonly IQualityConditionContainerItem _containerItem;
+		[CanBeNull] private readonly IInstanceConfigurationContainerItem _containerItem;
 		[NotNull] private readonly TableState _tableState = new TableState();
 
 		[CanBeNull] private Image _image;
@@ -54,7 +54,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 		public QualityConditionItem(
 			[NotNull] CoreDomainModelItemModelBuilder modelBuilder,
 			[NotNull] QualityCondition qualityCondition,
-			[CanBeNull] IQualityConditionContainerItem containerItem,
+			[CanBeNull] IInstanceConfigurationContainerItem containerItem,
 			[NotNull] IRepository<QualityCondition> repository)
 			: base(qualityCondition, repository)
 		{

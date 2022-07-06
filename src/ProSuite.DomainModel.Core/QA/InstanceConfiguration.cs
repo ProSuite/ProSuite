@@ -213,5 +213,10 @@ namespace ProSuite.DomainModel.Core.QA
 		{
 			return Name;
 		}
+
+		public InstanceConfiguration CreateCopy()
+		{
+			throw new System.NotImplementedException();
+		}
 	}
 }

@@ -17,7 +17,7 @@ using ProSuite.DomainModel.Core.QA.Repositories;
 namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 {
 	public abstract class InstanceConfigurationsItem : EntityTypeItem<InstanceConfiguration>,
-	                                                   IQualityConditionContainerItem
+	                                                   IInstanceConfigurationContainerItem
 	{
 		[NotNull] private readonly IQualityConditionContainer _container;
 
@@ -41,14 +41,16 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 
 		protected override IEnumerable<Item> GetChildren()
 		{
+			return ((IInstanceConfigurationContainer) _container)
+				.GetInstanceConfigurationItems(this);
 			return _container.GetQualityConditionItems(this);
 		}
 
 		protected override Control CreateControlCore(IItemNavigation itemNavigation)
 		{
 			return ModelBuilder.ListQualityConditionsWithDataset
-				       ? (Control) CreateTableControl(
-					       _container.GetQualityConditionDatasetTableRows,
+				       ? (Control) CreateTableControl<InstanceConfigurationDatasetTableRow>(
+					       ((IInstanceConfigurationContainer)_container).GetInstanceConfigurationDatasetTableRows<TransformerConfiguration>,
 					       itemNavigation)
 				       : CreateTableControl(_container.GetQualityConditionTableRows,
 				                            itemNavigation);
@@ -86,10 +88,10 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 
 		protected abstract InstanceConfigurationItem CreateConfigurationItemCore(
 			CoreDomainModelItemModelBuilder modelBuilder, InstanceConfiguration configuration,
-			IQualityConditionContainerItem containerItem,
+			IInstanceConfigurationContainerItem containerItem,
 			IInstanceConfigurationRepository repository);
 
-		void IQualityConditionContainerItem.AddNewQualityConditionItem()
+		void IInstanceConfigurationContainerItem.AddNewInstanceConfigurationItem()
 		{
 			InstanceConfigurationItem item = CreateNewItemCore(ModelBuilder);
 
@@ -103,7 +105,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 		protected abstract InstanceConfigurationItem CreateNewItemCore(
 			[NotNull] CoreDomainModelItemModelBuilder modelBuilder);
 
-		void IQualityConditionContainerItem.CreateCopy(QualityConditionItem item)
+		void IInstanceConfigurationContainerItem.CreateCopy(QualityConditionItem item)
 		{
 			throw new NotImplementedException();
 
@@ -116,8 +118,27 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			//                                                 _modelBuilder.QualityConditions));
 		}
 
-		bool IQualityConditionContainerItem.AssignToCategory(
-			ICollection<QualityConditionItem> items,
+		void IInstanceConfigurationContainerItem.CreateCopy(InstanceConfigurationItem item)
+		{
+			InstanceConfiguration copy = ModelBuilder.ReadOnlyTransaction(
+				() => Assert.NotNull(item.GetEntity()).CreateCopy());
+
+			copy.Name = $"Copy of {copy.Name}";
+
+			AddConfigurationItem(new InstanceConfigurationItem(
+				                     ModelBuilder, copy, this,
+				                     ModelBuilder.InstanceConfigurations));
+		}
+
+		public bool AssignToCategory(ICollection<QualityConditionItem> items,
+		                             IWin32Window owner,
+		                             out DataQualityCategory category)
+		{
+			throw new NotImplementedException();
+		}
+
+		bool IInstanceConfigurationContainerItem.AssignToCategory(
+			ICollection<InstanceConfigurationItem> items,
 			IWin32Window owner,
 			out DataQualityCategory category)
 		{
@@ -131,9 +152,10 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			return true;
 		}
 
-		public QualityCondition GetQualityCondition(QualityConditionItem item)
+		InstanceConfiguration IInstanceConfigurationContainerItem.GetInstanceConfiguration<T>(
+			EntityItem<T, T> instanceConfigurationItem)
 		{
-			return ModelBuilder.ReadOnlyTransaction(() => item.GetEntity());
+			return ModelBuilder.ReadOnlyTransaction(instanceConfigurationItem.GetEntity);
 		}
 
 		private void AddConfigurationItem(InstanceConfigurationItem item)
@@ -181,7 +203,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 		protected override InstanceConfigurationItem CreateConfigurationItemCore(
 			CoreDomainModelItemModelBuilder modelBuilder,
 			InstanceConfiguration configuration,
-			IQualityConditionContainerItem containerItem,
+			IInstanceConfigurationContainerItem containerItem,
 			IInstanceConfigurationRepository repository)
 		{
 			Assert.ArgumentNotNull(configuration, nameof(configuration));

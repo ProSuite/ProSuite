@@ -156,6 +156,21 @@ namespace ProSuite.DomainModel.Core.QA
 			set { _usedAsReferenceData = value; }
 		}
 
+		public string GetName()
+		{
+			if (DatasetValue != null)
+			{
+				return DatasetValue.Name;
+			}
+
+			if (ValueSource != null)
+			{
+				return ValueSource.Name;
+			}
+
+			return null;
+		}
+
 		public override TestParameterValue Clone()
 		{
 			var result = new DatasetTestParameterValue(TestParameterName, DataType)

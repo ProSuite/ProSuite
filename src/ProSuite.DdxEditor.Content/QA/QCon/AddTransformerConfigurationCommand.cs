@@ -10,7 +10,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 	public class AddTransformerConfigurationCommand : AddItemCommandBase<Item>
 	{
 		// TODO: Separate interface!
-		private readonly IQualityConditionContainerItem _containerItem;
+		private readonly IInstanceConfigurationContainerItem _containerItem;
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="AddTransformerConfigurationCommand"/> class.
@@ -21,7 +21,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 		public AddTransformerConfigurationCommand(
 			[NotNull] Item item,
 			[NotNull] IApplicationController applicationController,
-			[NotNull] IQualityConditionContainerItem containerItem)
+			[NotNull] IInstanceConfigurationContainerItem containerItem)
 			: base(item, applicationController)
 		{
 			Assert.ArgumentNotNull(containerItem, nameof(containerItem));
@@ -33,7 +33,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 
 		protected override void ExecuteCore()
 		{
-			_containerItem.AddNewQualityConditionItem();
+			_containerItem.AddNewInstanceConfigurationItem();
 		}
 	}
 }

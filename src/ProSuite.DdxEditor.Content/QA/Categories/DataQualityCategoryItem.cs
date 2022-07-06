@@ -10,6 +10,7 @@ using ProSuite.Commons.UI.Finder;
 using ProSuite.Commons.UI.WinForms.Controls;
 using ProSuite.Commons.Validation;
 using ProSuite.DdxEditor.Content.Properties;
+using ProSuite.DdxEditor.Content.QA.InstanceConfig;
 using ProSuite.DdxEditor.Content.QA.QCon;
 using ProSuite.DdxEditor.Content.QA.QSpec;
 using ProSuite.DdxEditor.Framework;
@@ -28,7 +29,7 @@ namespace ProSuite.DdxEditor.Content.QA.Categories
 		IQualitySpecificationContainer,
 		IQualitySpecificationContainerItem,
 		IQualityConditionContainer,
-		IQualityConditionContainerItem,
+		IInstanceConfigurationContainerItem,
 		IDataQualityCategoryContainerItem
 	{
 		[NotNull] private readonly CoreDomainModelItemModelBuilder _modelBuilder;
@@ -320,7 +321,7 @@ namespace ProSuite.DdxEditor.Content.QA.Categories
 		}
 
 		IEnumerable<Item> IQualityConditionContainer.GetQualityConditionItems(
-			IQualityConditionContainerItem containerItem)
+			IInstanceConfigurationContainerItem containerItem)
 		{
 			return GetQualityConditions()
 			       .OrderBy(q => q.Name)
@@ -350,7 +351,7 @@ namespace ProSuite.DdxEditor.Content.QA.Categories
 		}
 
 		public QualityConditionItem CreateQualityConditionItem(
-			IQualityConditionContainerItem containerItem)
+			IInstanceConfigurationContainerItem containerItem)
 		{
 			DataQualityCategory category = _modelBuilder.ReadOnlyTransaction(() => GetEntity());
 
@@ -364,12 +365,12 @@ namespace ProSuite.DdxEditor.Content.QA.Categories
 				containerItem, _modelBuilder.QualityConditions);
 		}
 
-		void IQualityConditionContainerItem.AddNewQualityConditionItem()
+		void IInstanceConfigurationContainerItem.AddNewInstanceConfigurationItem()
 		{
 			AddQualityConditionItem(CreateQualityConditionItem(this));
 		}
 
-		void IQualityConditionContainerItem.CreateCopy(QualityConditionItem item)
+		void IInstanceConfigurationContainerItem.CreateCopy(QualityConditionItem item)
 		{
 			QualityCondition copy = _modelBuilder.ReadOnlyTransaction(
 				() => Assert.NotNull(item.GetEntity()).CreateCopy());
@@ -378,6 +379,18 @@ namespace ProSuite.DdxEditor.Content.QA.Categories
 
 			AddQualityConditionItem(new QualityConditionItem(_modelBuilder, copy, this,
 			                                                 _modelBuilder.QualityConditions));
+		}
+
+		void IInstanceConfigurationContainerItem.CreateCopy(InstanceConfigurationItem item)
+		{
+			InstanceConfiguration copy = _modelBuilder.ReadOnlyTransaction(
+				() => Assert.NotNull(item.GetEntity()).CreateCopy());
+
+			copy.Name = $"Copy of {copy.Name}";
+
+			AddInstanceConfigurationItem(new InstanceConfigurationItem(
+				                             _modelBuilder, copy, this,
+				                             _modelBuilder.InstanceConfigurations));
 		}
 
 		void IQualitySpecificationContainerItem.CreateCopy(QualitySpecificationItem item)
@@ -473,8 +486,23 @@ namespace ProSuite.DdxEditor.Content.QA.Categories
 			return _modelBuilder.ReadOnlyTransaction(item.GetEntity);
 		}
 
-		bool IQualityConditionContainerItem.AssignToCategory(
+		bool IInstanceConfigurationContainerItem.AssignToCategory(
 			ICollection<QualityConditionItem> items,
+			IWin32Window owner,
+			out DataQualityCategory category)
+		{
+			if (!QualityConditionContainerUtils.AssignToCategory(items, _modelBuilder, owner,
+			                                                     out category))
+			{
+				return false;
+			}
+
+			RefreshChildren();
+			return true;
+		}
+
+		bool IInstanceConfigurationContainerItem.AssignToCategory(
+			ICollection<InstanceConfigurationItem> items,
 			IWin32Window owner,
 			out DataQualityCategory category)
 		{
@@ -488,10 +516,10 @@ namespace ProSuite.DdxEditor.Content.QA.Categories
 			return true;
 		}
 
-		QualityCondition IQualityConditionContainerItem.GetQualityCondition(
-			QualityConditionItem item)
+		InstanceConfiguration IInstanceConfigurationContainerItem.GetInstanceConfiguration<T>(
+			EntityItem<T, T> instanceConfigurationItem)
 		{
-			return _modelBuilder.ReadOnlyTransaction(() => item.GetEntity());
+			return _modelBuilder.ReadOnlyTransaction(instanceConfigurationItem.GetEntity);
 		}
 
 		public bool AssignToCategory(ICollection<QualitySpecificationItem> items,
@@ -560,6 +588,13 @@ namespace ProSuite.DdxEditor.Content.QA.Categories
 		}
 
 		private void AddQualityConditionItem([NotNull] QualityConditionItem item)
+		{
+			AddChild(item);
+
+			item.NotifyChanged();
+		}
+
+		private void AddInstanceConfigurationItem([NotNull] InstanceConfigurationItem item)
 		{
 			AddChild(item);
 

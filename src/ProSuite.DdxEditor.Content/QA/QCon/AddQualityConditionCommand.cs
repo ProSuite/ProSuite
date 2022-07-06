@@ -9,7 +9,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 {
 	public class AddQualityConditionCommand : AddItemCommandBase<Item>
 	{
-		private readonly IQualityConditionContainerItem _containerItem;
+		private readonly IInstanceConfigurationContainerItem _containerItem;
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="AddQualityConditionCommand"/> class.
@@ -20,7 +20,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 		public AddQualityConditionCommand(
 			[NotNull] Item item,
 			[NotNull] IApplicationController applicationController,
-			[NotNull] IQualityConditionContainerItem containerItem)
+			[NotNull] IInstanceConfigurationContainerItem containerItem)
 			: base(item, applicationController)
 		{
 			Assert.ArgumentNotNull(containerItem, nameof(containerItem));
@@ -32,7 +32,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 
 		protected override void ExecuteCore()
 		{
-			_containerItem.AddNewQualityConditionItem();
+			_containerItem.AddNewInstanceConfigurationItem();
 		}
 	}
 }

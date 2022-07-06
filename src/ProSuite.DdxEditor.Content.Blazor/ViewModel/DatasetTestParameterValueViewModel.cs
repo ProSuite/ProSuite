@@ -39,8 +39,8 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 
 		ImageSource = DatasetSource.Match(d => BlazorImageUtils.GetImageSource(d),
 		                                  _ => null);
-
-		ModelName = DatasetParameterViewModelUtils.GetModelName(_source);
+		ModelName = _source.Match(d => d?.Model?.Name,
+		                          TestParameterValueUtils.GetDatasetModelName);
 
 		ComponentType = typeof(DatasetTestParameterValueBlazor);
 		ComponentParameters.Add("ViewModel", this);

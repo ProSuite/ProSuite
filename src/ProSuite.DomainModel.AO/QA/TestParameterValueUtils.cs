@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Text;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Core;
@@ -228,6 +230,83 @@ namespace ProSuite.DomainModel.AO.QA
 				return InstanceConfigurationUtils.AddScalarParameterValue(
 					qualityCondition, parameterName, value);
 			}
+		}
+
+		public static string GetDatasetCategoryName(DatasetTestParameterValue datasetParameterValue)
+		{
+			if (datasetParameterValue.DatasetValue != null)
+			{
+				return datasetParameterValue.DatasetValue.DatasetCategory?.Name;
+			}
+
+			return GetDatasetCategoryName(datasetParameterValue.ValueSource);
+		}
+
+		public static string GetDatasetModelName(DatasetTestParameterValue datasetParameterValue)
+		{
+			if (datasetParameterValue.DatasetValue != null)
+			{
+				return datasetParameterValue.DatasetValue.Model?.Name;
+			}
+
+			if (datasetParameterValue.ValueSource != null)
+			{
+				return GetDatasetModelName(datasetParameterValue.ValueSource);
+			}
+
+			return null;
+		}
+
+		[CanBeNull]
+		public static string GetDatasetModelName(TransformerConfiguration transformer)
+		{
+			if (transformer == null)
+			{
+				return null;
+			}
+
+			var distinctModels = transformer.GetDatasetParameterValues(false, true)
+			                                .Select(d => d.Model)
+			                                .Distinct().ToList();
+
+			if (distinctModels.Count == 0)
+			{
+				return null;
+			}
+			else if (distinctModels.Count == 1)
+			{
+				return distinctModels[0].Name;
+			}
+			else
+			{
+				return "<multiple>";
+			}
+		}
+
+		[CanBeNull]
+		public static string GetDatasetCategoryName(TransformerConfiguration transformer)
+		{
+			if (transformer == null)
+			{
+				return null;
+			}
+
+			var distinctCategories = transformer.GetDatasetParameterValues(false, true)
+			                                    .Select(d => d.DatasetCategory)
+			                                    .Distinct().ToList();
+
+			if (distinctCategories.Count == 0)
+			{
+				return null;
+			}
+
+			if (distinctCategories.Count == 1)
+			{
+				return distinctCategories[0].Name;
+			}
+
+			return StringUtils.Concatenate(distinctCategories.OrderBy(c => c.Name), c => c.Name,
+			                               ", ");
 		}
 
 		[CanBeNull]

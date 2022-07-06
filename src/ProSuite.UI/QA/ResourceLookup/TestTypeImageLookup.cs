@@ -121,6 +121,11 @@ namespace ProSuite.UI.QA.ResourceLookup
 		[ContractAnnotation("notnull => notnull")]
 		public static Image GetImage([CanBeNull] InstanceConfiguration instanceConfiguration)
 		{
+			if (instanceConfiguration is QualityCondition qualityCondition)
+			{
+				return GetImage(qualityCondition);
+			}
+
 			if (instanceConfiguration is TransformerConfiguration)
 			{
 				return GetImage(_keyTransform);

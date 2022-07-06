@@ -6,6 +6,7 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.UI.Dialogs;
 using ProSuite.DdxEditor.Content.QA.Categories;
+using ProSuite.DdxEditor.Content.QA.InstanceConfig;
 using ProSuite.DdxEditor.Content.QA.QCon;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Items;
@@ -28,6 +29,22 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 			return GetQualityConditionDatasetTableRows(
 					category,
 					modelBuilder.QualityConditions,
+					modelBuilder.IncludeQualityConditionsBasedOnDeletedDatasets)
+				.OrderBy(row => string.Format("{0}||{1}",
+				                              row.Name, row.DatasetName));
+		}
+
+		[NotNull]
+		public static IEnumerable<InstanceConfigurationDatasetTableRow>
+			GetInstanceConfigurationDatasetTableRows<T>(
+				[NotNull] CoreDomainModelItemModelBuilder modelBuilder,
+				[CanBeNull] DataQualityCategory category) where T : InstanceConfiguration
+		{
+			Assert.ArgumentNotNull(modelBuilder, nameof(modelBuilder));
+
+			return GetInstanceConfigurationDatasetTableRows<T>(
+					category,
+					modelBuilder.InstanceConfigurations,
 					modelBuilder.IncludeQualityConditionsBasedOnDeletedDatasets)
 				.OrderBy(row => string.Format("{0}||{1}",
 				                              row.Name, row.DatasetName));
@@ -112,6 +129,77 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 					foreach (QualityCondition qualityCondition in qualityConditions)
 					{
 						qualityCondition.Category = selectedCategory.DataQualityCategory;
+					}
+				});
+
+			category = selectedCategory.DataQualityCategory;
+			return true;
+		}
+
+		public static bool AssignToCategory(
+			[NotNull] ICollection<InstanceConfigurationItem> items,
+			[NotNull] CoreDomainModelItemModelBuilder modelBuilder,
+			[NotNull] IWin32Window owner,
+			[CanBeNull] out DataQualityCategory category)
+		{
+			IList<InstanceConfiguration> instanceConfigurations = null;
+			modelBuilder.UseTransaction(
+				() =>
+				{
+					instanceConfigurations = items.Select(i => Assert.NotNull(i.GetEntity()))
+					                              .ToList();
+				});
+
+			return AssignToCategory(instanceConfigurations, modelBuilder, owner, out category);
+		}
+
+		public static bool AssignToCategory(
+			[NotNull] ICollection<InstanceConfiguration> instanceConfigurations,
+			[NotNull] CoreDomainModelItemModelBuilder modelBuilder,
+			[NotNull] IWin32Window owner,
+			[CanBeNull] out DataQualityCategory category)
+		{
+			Assert.ArgumentNotNull(instanceConfigurations, nameof(instanceConfigurations));
+			Assert.ArgumentNotNull(owner, nameof(owner));
+			Assert.ArgumentNotNull(modelBuilder, nameof(modelBuilder));
+
+			IList<DataQualityCategory> categories =
+				DataQualityCategoryUtils.GetCategories(modelBuilder,
+				                                       c => c.CanContainQualityConditions);
+
+			const string title = "Assign to Category";
+			if (categories.Count == 0)
+			{
+				Dialog.InfoFormat(owner, title,
+				                  "There are no categories which can contain quality conditions");
+				category = null;
+				return false;
+			}
+
+			DataQualityCategoryTableRow selectedCategory =
+				DataQualityCategoryUtils.SelectCategory(categories, owner);
+
+			if (selectedCategory == null)
+			{
+				category = null;
+				return false;
+			}
+
+			if (! Dialog.YesNo(owner, title,
+			                   string.Format(
+				                   "Do you want to assign {0} quality condition(s) to {1}?",
+				                   instanceConfigurations.Count, selectedCategory.QualifiedName)))
+			{
+				category = null;
+				return false;
+			}
+
+			modelBuilder.UseTransaction(
+				delegate
+				{
+					foreach (InstanceConfiguration instanceConfiguration in instanceConfigurations)
+					{
+						instanceConfiguration.Category = selectedCategory.DataQualityCategory;
 					}
 				});
 
@@ -211,22 +299,22 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 					foreach (DatasetTestParameterValue datasetValue in datasetParameterValues)
 					{
 						Dataset dataset = datasetValue.DatasetValue;
-						if (dataset == null)
+						if (dataset == null && datasetValue.ValueSource == null)
 						{
 							continue;
 						}
 
+						// TODO: Recursively find the deleted datasets in transformers -> Query!
 						if (! includeQualityConditionsBasedOnDeletedDatasets &&
-						    dataset.Deleted)
+						    dataset != null && dataset.Deleted)
 						{
 							anyDeletedDatasets = true;
 							break;
 						}
 
 						tableRows.Add(
-							new QualityConditionDatasetTableRow(qualityCondition,
-							                                    datasetValue,
-							                                    qualitySpecificationRefCount));
+							new QualityConditionDatasetTableRow(
+								qualityCondition, datasetValue, qualitySpecificationRefCount));
 					}
 				}
 				catch (TypeLoadException e)
@@ -240,6 +328,82 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 				if (! anyDeletedDatasets)
 				{
 					foreach (QualityConditionDatasetTableRow tableRow in tableRows)
+					{
+						yield return tableRow;
+					}
+				}
+			}
+		}
+
+		[NotNull]
+		private static IEnumerable<InstanceConfigurationDatasetTableRow>
+			GetInstanceConfigurationDatasetTableRows<T>(
+				[CanBeNull] DataQualityCategory category,
+				[NotNull] IInstanceConfigurationRepository instanceConfigurations,
+				bool includeQualityConditionsBasedOnDeletedDatasets) where T : InstanceConfiguration
+		{
+			IDictionary<int, int> usageCountMap = null; // created lazily
+
+			IDictionary<T, IList<DatasetTestParameterValue>> datasetsByQConId =
+				instanceConfigurations.GetWithDatasetParameterValues<T>(category);
+
+			foreach (KeyValuePair<T, IList<DatasetTestParameterValue>> pair in datasetsByQConId)
+			{
+				T instanceConfig = pair.Key;
+				IList<DatasetTestParameterValue> datasetParameterValues = pair.Value;
+
+				if (usageCountMap == null)
+				{
+					usageCountMap = instanceConfigurations.GetReferenceCounts<T>()
+					                                      .ToDictionary(
+						                                      rc => rc.EntityId,
+						                                      rc => rc.UsageCount);
+				}
+
+				int qualitySpecificationRefCount;
+				if (! usageCountMap.TryGetValue(instanceConfig.Id,
+				                                out qualitySpecificationRefCount))
+				{
+					qualitySpecificationRefCount = 0;
+				}
+
+				var tableRows = new List<InstanceConfigurationDatasetTableRow>();
+
+				var anyDeletedDatasets = false;
+				try
+				{
+					foreach (DatasetTestParameterValue datasetValue in datasetParameterValues)
+					{
+						Dataset dataset = datasetValue.DatasetValue;
+						if (dataset == null && datasetValue.ValueSource == null)
+						{
+							continue;
+						}
+
+						// TODO: Recursively find the deleted datasets in transformers -> Query!
+						if (! includeQualityConditionsBasedOnDeletedDatasets &&
+						    dataset != null && dataset.Deleted)
+						{
+							anyDeletedDatasets = true;
+							break;
+						}
+
+						tableRows.Add(
+							new InstanceConfigurationDatasetTableRow(
+								instanceConfig, datasetValue, qualitySpecificationRefCount));
+					}
+				}
+				catch (TypeLoadException e)
+				{
+					tableRows.Add(
+						new InstanceConfigurationDatasetTableRow(instanceConfig,
+						                                         e.Message,
+						                                         qualitySpecificationRefCount));
+				}
+
+				if (! anyDeletedDatasets)
+				{
+					foreach (InstanceConfigurationDatasetTableRow tableRow in tableRows)
 					{
 						yield return tableRow;
 					}

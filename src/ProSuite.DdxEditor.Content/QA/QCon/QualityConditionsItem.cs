@@ -5,6 +5,7 @@ using System.Windows.Forms;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DdxEditor.Content.Properties;
+using ProSuite.DdxEditor.Content.QA.InstanceConfig;
 using ProSuite.DdxEditor.Content.QA.QSpec;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Commands;
@@ -14,7 +15,7 @@ using ProSuite.DomainModel.Core.QA;
 namespace ProSuite.DdxEditor.Content.QA.QCon
 {
 	public class QualityConditionsItem : EntityTypeItem<QualityCondition>,
-	                                     IQualityConditionContainerItem
+	                                     IInstanceConfigurationContainerItem
 	{
 		[NotNull] private readonly CoreDomainModelItemModelBuilder _modelBuilder;
 		[NotNull] private readonly IQualityConditionContainer _container;
@@ -101,12 +102,12 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			return item;
 		}
 
-		void IQualityConditionContainerItem.AddNewQualityConditionItem()
+		void IInstanceConfigurationContainerItem.AddNewInstanceConfigurationItem()
 		{
 			AddQualityConditionItem(_container.CreateQualityConditionItem(this));
 		}
 
-		void IQualityConditionContainerItem.CreateCopy(QualityConditionItem item)
+		void IInstanceConfigurationContainerItem.CreateCopy(QualityConditionItem item)
 		{
 			QualityCondition copy = _modelBuilder.ReadOnlyTransaction(
 				() => Assert.NotNull(item.GetEntity()).CreateCopy());
@@ -117,7 +118,18 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			                                                 _modelBuilder.QualityConditions));
 		}
 
-		bool IQualityConditionContainerItem.AssignToCategory(
+		public void CreateCopy(InstanceConfigurationItem item)
+		{
+			QualityCondition copy = (QualityCondition) _modelBuilder.ReadOnlyTransaction(
+				() => Assert.NotNull(item.GetEntity()).CreateCopy());
+
+			copy.Name = $"Copy of {copy.Name}";
+
+			AddQualityConditionItem(new QualityConditionItem(_modelBuilder, copy, this,
+			                                                 _modelBuilder.QualityConditions));
+		}
+
+		bool IInstanceConfigurationContainerItem.AssignToCategory(
 			ICollection<QualityConditionItem> items,
 			IWin32Window owner,
 			out DataQualityCategory category)
@@ -132,10 +144,31 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			return true;
 		}
 
-		public QualityCondition GetQualityCondition(QualityConditionItem item)
+		bool IInstanceConfigurationContainerItem.AssignToCategory(
+			ICollection<InstanceConfigurationItem> items,
+			IWin32Window owner,
+			out DataQualityCategory category)
 		{
-			return _modelBuilder.ReadOnlyTransaction(() => item.GetEntity());
+			if (! QualityConditionContainerUtils.AssignToCategory(items, _modelBuilder, owner,
+				    out category))
+			{
+				return false;
+			}
+
+			RefreshChildren();
+			return true;
 		}
+
+		InstanceConfiguration IInstanceConfigurationContainerItem.GetInstanceConfiguration<T>(
+			EntityItem<T, T> instanceConfigurationItem)
+		{
+			return _modelBuilder.ReadOnlyTransaction(instanceConfigurationItem.GetEntity);
+		}
+
+		//public QualityCondition GetQualityCondition(QualityConditionItem item)
+		//{
+		//	return _modelBuilder.ReadOnlyTransaction(() => item.GetEntity());
+		//}
 
 		private void AddQualityConditionItem(QualityConditionItem item)
 		{

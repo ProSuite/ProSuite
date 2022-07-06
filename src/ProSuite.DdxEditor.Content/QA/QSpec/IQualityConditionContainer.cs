@@ -9,7 +9,7 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 	{
 		[NotNull]
 		IEnumerable<Item> GetQualityConditionItems(
-			[NotNull] IQualityConditionContainerItem containerItem);
+			[NotNull] IInstanceConfigurationContainerItem containerItem);
 
 		[NotNull]
 		IEnumerable<QualityConditionDatasetTableRow> GetQualityConditionDatasetTableRows();
@@ -19,6 +19,6 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 
 		[NotNull]
 		QualityConditionItem CreateQualityConditionItem(
-			[NotNull] IQualityConditionContainerItem containerItem);
+			[NotNull] IInstanceConfigurationContainerItem containerItem);
 	}
 }

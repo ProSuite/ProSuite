@@ -131,7 +131,7 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 			// exclude qcon's based on deleted datasets
 			using (ISession session = OpenSession(true))
 			{
-				IList<int> deletedDatasetParameterIds = GetDeletedDatasetParameterIds(session);
+				IList<int> deletedDatasetParameterIds = DatasetParameterFetchingUtils.GetDeletedDatasetParameterIds(session);
 
 				if (deletedDatasetParameterIds.Count == 0)
 				{
@@ -177,7 +177,7 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 		{
 			using (ISession session = OpenSession(true))
 			{
-				IList<int> deletedDatasetParameterIds = GetDeletedDatasetParameterIds(session);
+				IList<int> deletedDatasetParameterIds = DatasetParameterFetchingUtils.GetDeletedDatasetParameterIds(session);
 
 				if (deletedDatasetParameterIds.Count == 0)
 				{
@@ -240,6 +240,15 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 
 			using (ISession session = OpenSession(true))
 			{
+				//// TEST:
+
+				//var paramsByConfig = DatasetParameterFetchingUtils
+				//	.GetDatasetParameterValuesByConfiguration<QualityCondition>(category, session);
+
+				//int countNew = paramsByConfig.Count();
+
+				//// END TEST:
+				
 				Dictionary<int, QualityCondition> conditionsById =
 					Get(category, session)
 						.ToDictionary(qcon => qcon.Id);
@@ -252,6 +261,8 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 
 					result.Add(conditionsById[conditionId], values);
 				}
+
+				//Assert.AreEqual(result.Count, countNew, "Query error in config count!");
 
 				return result;
 			}
@@ -311,7 +322,7 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 		private static HashSet<int> GetQualityConditionIdsInvolvingDeletedDatasets(
 			[NotNull] ISession session)
 		{
-			IList<int> deletedDatasetParameterIds = GetDeletedDatasetParameterIds(session);
+			IList<int> deletedDatasetParameterIds = DatasetParameterFetchingUtils.GetDeletedDatasetParameterIds(session);
 
 			var result = new HashSet<int>();
 
@@ -358,11 +369,21 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 		[NotNull]
 		private static HashSet<int> GetIdsInvolvingDeletedDatasets([NotNull] ISession session)
 		{
-			IList<int> datasetParameterIds = GetDeletedDatasetParameterIds(session);
+			IList<int> datasetParameterIds = DatasetParameterFetchingUtils.GetDeletedDatasetParameterIds(session);
 
-			return GetQualityConditionIdsForParameterIds(session,
-			                                             datasetParameterIds,
-			                                             _maxInParameterCount);
+			// New implementation to be tested
+			HashSet<int> queryOverResult =
+				DatasetParameterFetchingUtils.GetInstanceConfigurationIdsForParameterIds<QualityCondition>(
+					session, datasetParameterIds, _maxInParameterCount);
+
+			HashSet<int> originalResult =
+				GetQualityConditionIdsForParameterIds(session, datasetParameterIds,
+				                                      _maxInParameterCount);
+
+			Assert.AreEqual(originalResult.Count, queryOverResult.Count,
+			                "Implementation change results in result difference");
+
+			return originalResult;
 		}
 
 		[NotNull]
@@ -501,20 +522,7 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 			return all.Where(qc => ! excludedIds.Contains(qc.Id))
 			          .ToList();
 		}
-
-		[NotNull]
-		private static IList<int> GetDeletedDatasetParameterIds([NotNull] ISession session)
-		{
-			// get the list of test parameter ids based on deleted datasets
-			string hql = string.Format("select dsParam.Id " +
-			                           "  from DatasetTestParameterValue dsParam" +
-			                           " where dsParam.DatasetValue is not null" +
-			                           "   and dsParam.DatasetValue.Deleted = {0}",
-			                           GetHqlLiteral(true, session));
-
-			return session.CreateQuery(hql).List<int>();
-		}
-
+		
 		[NotNull]
 		private static HashSet<int> GetQualityConditionIdsForParameterIds(
 			[NotNull] ISession session,
@@ -530,7 +538,7 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 			{
 				return result;
 			}
-
+			
 			var first = true;
 			foreach (IList<int> subList in
 				CollectionUtils.Split(parameterIds, maxInParameterCount))

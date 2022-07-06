@@ -32,7 +32,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		// TODO: Separate interface
-		[CanBeNull] private readonly IQualityConditionContainerItem _containerItem;
+		[CanBeNull] private readonly IInstanceConfigurationContainerItem _containerItem;
 		[NotNull] private readonly TableState _tableState = new TableState();
 
 		[CanBeNull] private Image _image;
@@ -50,7 +50,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 		public InstanceConfigurationItem(
 			[NotNull] CoreDomainModelItemModelBuilder modelBuilder,
 			[NotNull] InstanceConfiguration instanceConfiguration,
-			[CanBeNull] IQualityConditionContainerItem containerItem,
+			[CanBeNull] IInstanceConfigurationContainerItem containerItem,
 			[NotNull] IRepository<InstanceConfiguration> repository)
 			: base(instanceConfiguration, repository)
 		{
@@ -160,8 +160,8 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 
 		public void CreateCopy()
 		{
-			//Assert.NotNull(_containerItem, "no container, cannot create copy")
-			//      .CreateCopy(this);
+			Assert.NotNull(_containerItem, "no container, cannot create copy")
+				  .CreateCopy(this);
 		}
 
 		[NotNull]
@@ -381,8 +381,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 
 			if (_containerItem != null)
 			{
-				//commands.Add(
-				//	new CopyQualityConditionCommand(this, applicationController));
+				commands.Add(new CopyInstanceConfigurationCommand(this, applicationController));
 				//commands.Add(new AssignQualityConditionsToCategoryCommand(new[] {this},
 				//	             _containerItem,
 				//	             applicationController));

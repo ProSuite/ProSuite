@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DdxEditor.Content.QA.QSpec;
@@ -12,7 +13,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 	public class AssignQualityConditionsToCategoryCommand :
 		ItemsCommandBase<QualityConditionItem>
 	{
-		[NotNull] private readonly IQualityConditionContainerItem _containerItem;
+		[NotNull] private readonly IInstanceConfigurationContainerItem _containerItem;
 		[NotNull] private readonly IApplicationController _applicationController;
 
 		/// <summary>
@@ -23,7 +24,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 		/// <param name="applicationController">The application controller.</param>
 		public AssignQualityConditionsToCategoryCommand(
 			[NotNull] ICollection<QualityConditionItem> qualityConditionItems,
-			[NotNull] IQualityConditionContainerItem containerItem,
+			[NotNull] IInstanceConfigurationContainerItem containerItem,
 			[NotNull] IApplicationController applicationController)
 			: base(qualityConditionItems)
 		{
@@ -44,8 +45,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			Item currentItem = _applicationController.CurrentItem;
 
 			DataQualityCategory category;
-			if (! _containerItem.AssignToCategory(Items,
-			                                      _applicationController.Window,
+			if (! _containerItem.AssignToCategory(Items, _applicationController.Window,
 			                                      out category))
 			{
 				return;
@@ -54,10 +54,10 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			QualityConditionContainerUtils.RefreshAssignmentTarget(category,
 				_applicationController);
 
-			GoToItem(currentItem);
+			GoToItem<QualityCondition>(currentItem);
 		}
 
-		private void GoToItem([CanBeNull] Item currentItem)
+		private void GoToItem<T>([CanBeNull] Item currentItem) where T : InstanceConfiguration
 		{
 			if (currentItem == null)
 			{
@@ -69,10 +69,11 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 				return;
 			}
 
-			var entityItem = currentItem as QualityConditionItem;
+			var entityItem = currentItem as EntityItem<T, T>;
+
 			if (entityItem != null)
 			{
-				QualityCondition entity = _containerItem.GetQualityCondition(entityItem);
+				Entity entity = _containerItem.GetInstanceConfiguration(entityItem);
 				if (entity != null)
 				{
 					_applicationController.GoToItem(entity);

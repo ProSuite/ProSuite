@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Drawing;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Misc;
+using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.UI.DataModel.ResourceLookup;
@@ -34,7 +35,9 @@ namespace ProSuite.DdxEditor.Content.Blazor.ViewModel
 		public Image Image => _image;
 
 		[UsedImplicitly]
-		public string Model => _modelName ??= DatasetParameterViewModelUtils.GetModelName(Source);
+		public string Model => _modelName ??=
+			                       Source.Match(d => d?.Model?.Name,
+			                                    TestParameterValueUtils.GetDatasetModelName);
 
 		[UsedImplicitly]
 		public string Name => Source.Match(d => d.Name, t => t.Name);
