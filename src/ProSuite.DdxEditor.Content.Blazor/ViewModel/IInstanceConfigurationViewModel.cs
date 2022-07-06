@@ -7,19 +7,13 @@ using ProSuite.QA.Core;
 
 namespace ProSuite.DdxEditor.Content.Blazor.ViewModel;
 
-// todo daro better name
-public interface IViewModel : IViewObserver
-{
-}
-
-// todo daro use IQualityConditionContextAware!!!
-public interface IInstanceConfigurationAwareViewModel : IViewModel, INotifyPropertyChanged
+public interface IInstanceConfigurationViewModel : IViewObserver, INotifyPropertyChanged
 {
 	InstanceConfiguration InstanceConfiguration { get; }
 
 	ITestParameterDatasetProvider DatasetProvider { get; }
 
-	IList<ViewModelBase> Rows { get; set; }
+	IList<ViewModelBase> Rows { get; }
 
 	void BindTo(InstanceConfiguration instanceConfiguration);
 

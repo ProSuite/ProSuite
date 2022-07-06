@@ -245,6 +245,10 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			set => _textBoxQualitySpecifications.Text = value;
 		}
 
+		[NotNull]
+		IInstanceConfigurationTableViewControl IInstanceConfigurationView.TableViewControl =>
+			_tableViewControl;
+
 		IList<QualitySpecificationReferenceTableRow> IInstanceConfigurationView.
 			GetSelectedQualitySpecificationReferenceTableRows()
 		{
@@ -294,8 +298,6 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 
 		public void BindTo(InstanceConfiguration target)
 		{
-			_tableViewControl.BindTo(target);
-
 			_binder.BindToModel(target);
 		}
 

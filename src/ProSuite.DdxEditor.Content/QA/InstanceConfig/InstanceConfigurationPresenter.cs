@@ -323,6 +323,11 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			GetTestParameterItems(instanceConfig);
 
 			_view.BindToParameterValues(_paramValues);
+
+#if NET6_0
+
+			_view.TableViewControl.BindTo(instanceConfig);
+#endif
 		}
 
 		private void GetTestParameterItems([NotNull] InstanceConfiguration qualityCondition)

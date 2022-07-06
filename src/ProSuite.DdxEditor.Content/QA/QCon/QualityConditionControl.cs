@@ -41,8 +41,6 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 		[NotNull] private readonly TableState _tableState;
 		private IList<QualitySpecificationReferenceTableRow> _initialTableRows;
 
-		[NotNull] private readonly Control _qualityConditionTableViewControl;
-
 		[NotNull] private readonly IInstanceConfigurationTableViewControl _tableViewControl;
 
 		#region Constructors
@@ -59,15 +57,15 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 
 			_tableState = tableState;
 			_tableViewControl = tableViewControl;
-			_qualityConditionTableViewControl = (Control) tableViewControl;
+			var qualityConditionTableViewControl = (Control) tableViewControl;
 
 #if NET6_0
-			_qualityConditionTableViewControl.SuspendLayout();
-			_qualityConditionTableViewControl.Dock = DockStyle.Fill;
-			_qualityConditionTableViewControl.Location = new Point(0, 0);
-			_qualityConditionTableViewControl.Name = "_qualityConditionTableViewControl";
-			_qualityConditionTableViewControl.Size = new Size(569, 123);
-			_qualityConditionTableViewControl.TabIndex = 0;
+			qualityConditionTableViewControl.SuspendLayout();
+			qualityConditionTableViewControl.Dock = DockStyle.Fill;
+			qualityConditionTableViewControl.Location = new Point(0, 0);
+			qualityConditionTableViewControl.Name = "_qualityConditionTableViewControl";
+			qualityConditionTableViewControl.Size = new Size(569, 123);
+			qualityConditionTableViewControl.TabIndex = 0;
 #endif
 
 			InitializeComponent();
@@ -77,7 +75,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			_splitContainer.SuspendLayout();
 			_qualityConditionTableViewControlPanel.SuspendLayout();
 
-			_splitContainer.Panel2.Controls.Add(_qualityConditionTableViewControl);
+			_splitContainer.Panel2.Controls.Add(qualityConditionTableViewControl);
 			_splitContainer.Size = new Size(569, 282);
 			_splitContainer.SplitterDistance = 155;
 			_qualityConditionTableViewControlPanel.Controls.RemoveByKey(
@@ -85,7 +83,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			_qualityConditionTableViewControlPanel.Controls.Add(_splitContainer);
 
 			_splitContainer.ResumeLayout(false);
-			_qualityConditionTableViewControl.ResumeLayout(false);
+			qualityConditionTableViewControl.ResumeLayout(false);
 			_qualityConditionTableViewControlPanel.ResumeLayout(false);
 #endif
 
@@ -285,6 +283,10 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			set => _textBoxQualitySpecifications.Text = value;
 		}
 
+		[NotNull]
+		IInstanceConfigurationTableViewControl IQualityConditionView.TableViewControl =>
+			_tableViewControl;
+
 		IList<QualitySpecificationReferenceTableRow> IQualityConditionView.
 			GetSelectedQualitySpecificationReferenceTableRows()
 		{
@@ -334,8 +336,6 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 
 		public void BindTo(QualityCondition target)
 		{
-			_tableViewControl.BindTo(target);
-
 			_binder.BindToModel(target);
 		}
 

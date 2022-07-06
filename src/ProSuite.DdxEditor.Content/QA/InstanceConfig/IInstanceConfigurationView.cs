@@ -7,6 +7,7 @@ using ProSuite.DdxEditor.Framework.ItemViews;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Core;
 using ProSuite.UI.QA;
+using ProSuite.UI.QA.Controls;
 
 namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 {
@@ -32,6 +33,8 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 		bool InstanceDescriptorLinkEnabled { get; set; }
 
 		string QualitySpecificationSummary { get; set; }
+
+		IInstanceConfigurationTableViewControl TableViewControl { get; }
 
 		void BindToQualitySpecificationReferences(
 			[NotNull] IList<QualitySpecificationReferenceTableRow> tableRows);

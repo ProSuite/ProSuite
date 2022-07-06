@@ -23,14 +23,14 @@ public partial class QualityConditionTableViewBlazor : IDisposable
 	[NotNull] private List<RadzenDataGrid<ViewModelBase>> _childGrids = new();
 
 	// ReSharper disable once NotNullMemberIsNotInitialized
-	[NotNull] private IInstanceConfigurationAwareViewModel _viewModel;
+	[NotNull] private IInstanceConfigurationViewModel _viewModel;
 
 	private Latch _latch = new Latch();
 
 	[NotNull]
 	[Parameter]
 	// ReSharper disable once NotNullMemberIsNotInitialized
-	public IInstanceConfigurationAwareViewModel ViewModel
+	public IInstanceConfigurationViewModel ViewModel
 	{
 		get => _viewModel;
 		set
@@ -57,6 +57,8 @@ public partial class QualityConditionTableViewBlazor : IDisposable
 
 	private async void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
 	{
+		StateHasChanged();
+
 		foreach (ViewModelBase row in Rows)
 		{
 			await _mainGrid.UpdateRow(row);
