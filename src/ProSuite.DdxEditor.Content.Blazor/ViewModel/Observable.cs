@@ -2,17 +2,18 @@ using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.DdxEditor.Framework.ItemViews;
 
 namespace ProSuite.DdxEditor.Content.Blazor.ViewModel;
 
 // substitute with Prism
 public abstract class Observable : IDisposable, INotifyPropertyChanged
 {
-	[CanBeNull] private readonly IViewModel _observer;
+	[CanBeNull] private readonly IViewObserver _observer;
 
 	protected Observable() { }
 
-	protected Observable([CanBeNull] IViewModel observer)
+	protected Observable([CanBeNull] IViewObserver observer)
 	{
 		_observer = observer;
 	}
@@ -24,8 +25,6 @@ public abstract class Observable : IDisposable, INotifyPropertyChanged
 	public void Dispose() { }
 
 	public event PropertyChangedEventHandler PropertyChanged;
-
-	protected virtual void OnSavedChangesCore() { }
 
 	public void NotifyDirty()
 	{
@@ -51,8 +50,6 @@ public abstract class Observable : IDisposable, INotifyPropertyChanged
 		}
 
 		backingField = value;
-
-		NotifyDirty();
 
 		OnPropertyChanged(propertyName);
 

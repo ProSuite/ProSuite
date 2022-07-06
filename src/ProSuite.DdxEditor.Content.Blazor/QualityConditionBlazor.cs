@@ -14,9 +14,9 @@ namespace ProSuite.DdxEditor.Content.Blazor;
 
 public class QualityConditionBlazor : BlazorWebView, IInstanceConfigurationTableViewControl
 {
-	[NotNull] private readonly IInstanceConfigurationAwareViewModel _viewModel;
+	[NotNull] private readonly IInstanceConfigurationViewModel _viewModel;
 
-	public QualityConditionBlazor([NotNull] IInstanceConfigurationAwareViewModel viewModel,
+	public QualityConditionBlazor([NotNull] IInstanceConfigurationViewModel viewModel,
 	                              [NotNull] IServiceProvider provider)
 	{
 		Assert.ArgumentNotNull(viewModel, nameof(viewModel));

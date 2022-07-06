@@ -13,8 +13,7 @@ using ProSuite.QA.Core;
 namespace ProSuite.DdxEditor.Content.Blazor;
 
 // todo daro implement IDisposable
-// todo daro rename file
-public class InstanceConfigurationViewModel<T> : Observable, IInstanceConfigurationAwareViewModel
+public class InstanceConfigurationViewModel<T> : Observable, IInstanceConfigurationViewModel
 	where T : InstanceConfiguration
 {
 	[NotNull] private readonly EntityItem<T, T> _item;

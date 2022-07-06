@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.DdxEditor.Framework.ItemViews;
 using ProSuite.QA.Core;
 
 namespace ProSuite.DdxEditor.Content.Blazor.ViewModel;
@@ -9,7 +10,7 @@ namespace ProSuite.DdxEditor.Content.Blazor.ViewModel;
 // todo daro rename
 public abstract class ViewModelBase : Observable
 {
-	protected ViewModelBase([NotNull] TestParameter parameter, [NotNull] IViewModel observer) : base(observer)
+	protected ViewModelBase([NotNull] TestParameter parameter, [NotNull] IViewObserver observer) : base(observer)
 	{
 		Assert.ArgumentNotNull(parameter, nameof(parameter));
 

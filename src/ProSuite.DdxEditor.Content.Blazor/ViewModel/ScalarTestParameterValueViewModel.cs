@@ -1,6 +1,7 @@
 using System;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DdxEditor.Content.Blazor.View;
+using ProSuite.DdxEditor.Framework.ItemViews;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Core;
@@ -13,7 +14,7 @@ public class ScalarTestParameterValueViewModel : ViewModelBase
 
 	public ScalarTestParameterValueViewModel([NotNull] TestParameter parameter,
 	                                         [CanBeNull] object value,
-	                                         [NotNull] IViewModel observer) :
+	                                         [NotNull] IViewObserver observer) :
 		base(parameter, observer)
 	{
 		_value = value;

@@ -13,7 +13,7 @@ namespace ProSuite.DdxEditor.Content.Blazor.ViewModel;
 
 public class DatasetTestParameterValueViewModel : ViewModelBase
 {
-	[NotNull] private readonly IInstanceConfigurationAwareViewModel _viewModel;
+	[NotNull] private readonly IInstanceConfigurationViewModel _viewModel;
 
 	[NotNull] private Either<Dataset, TransformerConfiguration> _source;
 
@@ -23,7 +23,7 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 	public DatasetTestParameterValueViewModel(
 		[NotNull] TestParameter parameter,
 		[CanBeNull] DatasetTestParameterValue datasetParameterValue,
-		[NotNull] IInstanceConfigurationAwareViewModel observer) :
+		[NotNull] IInstanceConfigurationViewModel observer) :
 		base(parameter, observer)
 	{
 		_viewModel = observer;

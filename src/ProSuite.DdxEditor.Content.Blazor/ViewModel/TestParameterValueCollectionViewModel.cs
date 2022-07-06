@@ -5,6 +5,7 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
 using ProSuite.DdxEditor.Content.Blazor.View;
+using ProSuite.DdxEditor.Framework.ItemViews;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.QA.Core;
 
@@ -16,7 +17,7 @@ public class TestParameterValueCollectionViewModel : ViewModelBase
 
 	public TestParameterValueCollectionViewModel([NotNull] TestParameter parameter,
 	                                             [NotNull] IList<ViewModelBase> values,
-	                                             IViewModel observer) : base(parameter, observer)
+	                                             IViewObserver observer) : base(parameter, observer)
 	{
 		Assert.ArgumentNotNull(values, nameof(values));
 
