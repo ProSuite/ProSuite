@@ -57,6 +57,8 @@ public partial class QualityConditionTableViewBlazor : IDisposable
 
 	private async void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
 	{
+		StateHasChanged();
+
 		foreach (ViewModelBase row in Rows)
 		{
 			await _mainGrid.UpdateRow(row);

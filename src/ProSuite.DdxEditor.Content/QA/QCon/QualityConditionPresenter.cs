@@ -329,6 +329,9 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			_view.SetConfigurator(_testFactoryHasError
 				                      ? null
 				                      : _item.GetConfigurator());
+#elif NET6_0
+
+			_view.TableViewControl.BindTo(qualityCondition);
 #endif
 		}
 

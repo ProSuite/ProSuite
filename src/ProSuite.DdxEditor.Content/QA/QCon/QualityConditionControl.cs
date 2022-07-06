@@ -285,6 +285,10 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			set => _textBoxQualitySpecifications.Text = value;
 		}
 
+		[NotNull]
+		IInstanceConfigurationTableViewControl IQualityConditionView.TableViewControl =>
+			_tableViewControl;
+
 		IList<QualitySpecificationReferenceTableRow> IQualityConditionView.
 			GetSelectedQualitySpecificationReferenceTableRows()
 		{
@@ -334,8 +338,6 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 
 		public void BindTo(QualityCondition target)
 		{
-			_tableViewControl.BindTo(target);
-
 			_binder.BindToModel(target);
 		}
 

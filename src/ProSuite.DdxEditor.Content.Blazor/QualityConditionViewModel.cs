@@ -13,6 +13,7 @@ using ProSuite.QA.Core;
 namespace ProSuite.DdxEditor.Content.Blazor;
 
 // todo daro implement IDisposable
+// todo daro rename file
 public class InstanceConfigurationViewModel<T> : Observable, IInstanceConfigurationAwareViewModel
 	where T : InstanceConfiguration
 {
@@ -23,8 +24,7 @@ public class InstanceConfigurationViewModel<T> : Observable, IInstanceConfigurat
 
 	// todo daro InstanceConfiguration?
 	public InstanceConfigurationViewModel([NotNull] EntityItem<T, T> item,
-	                                      [NotNull] ITestParameterDatasetProvider datasetProvider) :
-		base(null)
+	                                      [NotNull] ITestParameterDatasetProvider datasetProvider)
 	{
 		Assert.ArgumentNotNull(item, nameof(item));
 		Assert.ArgumentNotNull(datasetProvider, nameof(datasetProvider));
@@ -67,12 +67,6 @@ public class InstanceConfigurationViewModel<T> : Observable, IInstanceConfigurat
 			UnwireEvents(_topLevelRowsByParameter.Values
 			                                     .OfType<TestParameterValueCollectionViewModel>());
 		}
-
-		// TODO: Sort out the binding / re-creation of the rows (on load like in .net48?)
-		// The problem is when a new condition/confniguration is created from scratch and/or
-		// the descriptor is changed.
-		// This is called twice at the moment, but it must be called somewhere before the row creation:
-		TestParameterValueUtils.SyncParameterValues(qualityCondition);
 
 		_rowsByParameter = CreateRows(qualityCondition);
 
@@ -126,9 +120,6 @@ public class InstanceConfigurationViewModel<T> : Observable, IInstanceConfigurat
 		{
 			return rowsByParameter;
 		}
-
-		InstanceFactoryUtils.InitializeParameterValues(
-			factory, instanceConfiguration.ParameterValues);
 
 		var parametersByName = new Dictionary<string, TestParameter>();
 

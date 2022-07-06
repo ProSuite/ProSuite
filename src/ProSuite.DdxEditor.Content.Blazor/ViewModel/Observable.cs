@@ -10,6 +10,8 @@ public abstract class Observable : IDisposable, INotifyPropertyChanged
 {
 	[CanBeNull] private readonly IViewModel _observer;
 
+	protected Observable() { }
+
 	protected Observable([CanBeNull] IViewModel observer)
 	{
 		_observer = observer;
