@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using ProSuite.Commons.DomainModels;
@@ -92,7 +93,8 @@ namespace ProSuite.DomainModel.Core.QA
 		}
 
 		/// <summary>
-		/// 
+		/// Gets the dataset referenced directly by the condition and optionally also the datasets
+		/// referenced indirectly (and recursively) by any filters or transformers.
 		/// </summary>
 		/// <param name="includeReferencedProcessors">include RowFilters, IssueFilters and Transformers</param>
 		/// <param name="includeSourceDatasets">include Transformers of dataset sources</param>
@@ -116,11 +118,10 @@ namespace ProSuite.DomainModel.Core.QA
 				{
 					yield return dataset;
 				}
-				else if (includeSourceDatasets && datasetTestParameterValue.ValueSource != null)
+				else if (includeSourceDatasets)
 				{
 					foreach (Dataset referencedDataset in
-					         datasetTestParameterValue.ValueSource.GetDatasetParameterValues(
-						         includeSourceDatasets: true))
+					         datasetTestParameterValue.GetAllSourceDatasets())
 					{
 						yield return referencedDataset;
 					}
@@ -216,7 +217,7 @@ namespace ProSuite.DomainModel.Core.QA
 
 		public InstanceConfiguration CreateCopy()
 		{
-			throw new System.NotImplementedException();
+			throw new NotImplementedException();
 		}
 	}
 }

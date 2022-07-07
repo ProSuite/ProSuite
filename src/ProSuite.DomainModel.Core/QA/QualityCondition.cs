@@ -396,9 +396,12 @@ namespace ProSuite.DomainModel.Core.QA
 					continue;
 				}
 
-				if (verifiedDatasets.Contains(datasetTestParameterValue.DatasetValue))
+				foreach (Dataset dataset in datasetTestParameterValue.GetAllSourceDatasets())
 				{
-					return true;
+					if (verifiedDatasets.Contains(dataset))
+					{
+						return true;
+					}
 				}
 			}
 
@@ -481,7 +484,7 @@ namespace ProSuite.DomainModel.Core.QA
 			         IssueFilterConfigurations)
 			{
 				foreach (Dataset dataset in issueFilterConfiguration.GetDatasetParameterValues(
-					includeReferencedProcessors: true))
+					         includeReferencedProcessors: true))
 				{
 					yield return dataset;
 				}

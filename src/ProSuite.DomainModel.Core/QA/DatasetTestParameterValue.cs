@@ -156,6 +156,10 @@ namespace ProSuite.DomainModel.Core.QA
 			set { _usedAsReferenceData = value; }
 		}
 
+		/// <summary>
+		/// Gets the name of the referenced dataset or the name of the referenced transformer.
+		/// </summary>
+		/// <returns></returns>
 		public string GetName()
 		{
 			if (DatasetValue != null)
@@ -169,6 +173,28 @@ namespace ProSuite.DomainModel.Core.QA
 			}
 
 			return null;
+		}
+
+		/// <summary>
+		/// Gets the source dataset(s) referenced either directly by this parameter or recursively
+		/// through the referenced transformer. Datasets only referenced by (row/issue-) filters
+		/// are not returned.
+		/// </summary>
+		/// <returns></returns>
+		public IEnumerable<Dataset> GetAllSourceDatasets()
+		{
+			if (DatasetValue != null)
+			{
+				yield return DatasetValue;
+			}
+			else if (ValueSource != null)
+			{
+				foreach (Dataset referencedDataset in ValueSource.GetDatasetParameterValues(
+					         includeSourceDatasets: true))
+				{
+					yield return referencedDataset;
+				}
+			}
 		}
 
 		public override TestParameterValue Clone()

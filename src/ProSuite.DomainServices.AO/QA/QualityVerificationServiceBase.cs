@@ -193,7 +193,7 @@ namespace ProSuite.DomainServices.AO.QA
 			                                         .Where(qcon => qcon != null))
 			{
 				foreach (Dataset dataset in qcon
-				                            .GetDatasetParameterValues()
+				                            .GetDatasetParameterValues(true, true)
 				                            .Where(ds => ds.Model != null))
 				{
 					ObjectDataset objectDataset = dataset as ObjectDataset;
@@ -232,8 +232,8 @@ namespace ProSuite.DomainServices.AO.QA
 			}
 
 			foreach (QualitySpecificationElement element in
-				specification.Elements
-				             .Where(e => e.Enabled))
+			         specification.Elements
+			                      .Where(e => e.Enabled))
 			{
 				QualityCondition condition = element.QualityCondition;
 
@@ -353,8 +353,8 @@ namespace ProSuite.DomainServices.AO.QA
 
 			var datasetsInvolvedInSelection = new HashSet<IObjectDataset>();
 			foreach (IObjectDataset objectDataset in
-				VerificationUtils.GetDatasetsByObjectClass(_selection, _datasetLookup)
-				                 .Values)
+			         VerificationUtils.GetDatasetsByObjectClass(_selection, _datasetLookup)
+			                          .Values)
 			{
 				if (objectDataset != null)
 				{
@@ -423,7 +423,7 @@ namespace ProSuite.DomainServices.AO.QA
 				new HashSet<QualityCondition>(
 					QualitySpecificationUtils.GetOrderedQualityConditions(
 						qualitySpecification, datasetOpener));
-			
+
 			qualityVerification = GetQualityVerification(
 				qualitySpecification, orderedQualityConditions,
 				out _elementsByConditionVerification);
@@ -803,13 +803,13 @@ namespace ProSuite.DomainServices.AO.QA
 			_verificationReportBuilder.BeginVerification(areaOfInterest);
 
 			foreach (QualityVerificationDataset verifiedDataset in
-				qualityVerification.VerificationDatasets)
+			         qualityVerification.VerificationDatasets)
 			{
 				_verificationReportBuilder.AddVerifiedDataset(verifiedDataset.Dataset);
 			}
 
 			foreach (QualityConditionVerification conditionVerification in
-				qualityVerification.ConditionVerifications)
+			         qualityVerification.ConditionVerifications)
 			{
 				_verificationReportBuilder.AddVerifiedQualityCondition(
 					_elementsByConditionVerification[conditionVerification]);
@@ -1485,7 +1485,7 @@ namespace ProSuite.DomainServices.AO.QA
 				{
 					// the error is outside the perimeter -> search in *all* allowed errors
 					if (_verificationContextIssueRepository.IsAllowedError(
-						qaError, qualityCondition))
+						    qaError, qualityCondition))
 					{
 						// filtered out by allowed error
 						return false;

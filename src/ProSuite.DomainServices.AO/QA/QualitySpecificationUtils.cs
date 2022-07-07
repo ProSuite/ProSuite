@@ -47,6 +47,13 @@ namespace ProSuite.DomainServices.AO.QA
 			return datasets;
 		}
 
+		/// <summary>
+		/// Gets all datasets that are involved in any of the conditions of the provided specification,
+		/// including datasets that are part of a transformer or filter used in a condition.
+		/// </summary>
+		/// <param name="qualitySpecification"></param>
+		/// <param name="conditions"></param>
+		/// <returns></returns>
 		public static ICollection<Dataset> GetQualityConditionDatasets(
 			QualitySpecification qualitySpecification,
 			out ICollection<QualityCondition> conditions)
@@ -62,7 +69,9 @@ namespace ProSuite.DomainServices.AO.QA
 
 				QualityCondition condition = element.QualityCondition;
 
-				foreach (Dataset dataset in condition.GetDatasetParameterValues())
+				const bool includeRecursively = true;
+				foreach (Dataset dataset in condition.GetDatasetParameterValues(
+					         includeRecursively, includeRecursively))
 				{
 					datasets.Add(dataset);
 				}
