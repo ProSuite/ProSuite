@@ -83,6 +83,63 @@ namespace ProSuite.QA.Tests.Test.Transformer
 		}
 
 		[Test]
+		public void CanDissolvePolygon()
+		{
+			IFeatureWorkspace ws = TestWorkspaceUtils.CreateInMemoryWorkspace("TrDissolve");
+
+			IFieldsEdit fields = new FieldsClass();
+			fields.AddField(FieldUtils.CreateOIDField());
+			ISpatialReference sr =
+				SpatialReferenceUtils.CreateSpatialReference(
+					(int) esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95, true);
+
+			fields.AddField(
+				FieldUtils.CreateShapeField("Shape", esriGeometryType.esriGeometryPolygon, sr,
+				                            1000));
+
+			const string fclassName = "polyFc";
+			IFeatureClass fc = DatasetUtils.CreateSimpleFeatureClass(ws, fclassName, fields);
+
+			{
+				IFeature f = fc.CreateFeature();
+				f.Shape = GeometryFactory.CreatePolygon(0, 0, 70, 70, sr);
+				f.Store();
+			}
+			{
+				IFeature f = fc.CreateFeature();
+				f.Shape = GeometryFactory.CreatePolygon(70, 70, 80, 80, sr);
+				f.Store();
+			}
+			{
+				IFeature f = fc.CreateFeature();
+				f.Shape = GeometryFactory.CreatePolygon(20, 70, 30, 80, sr);
+				f.Store();
+			}
+			{
+				IFeature f = fc.CreateFeature();
+				f.Shape = GeometryFactory.CreatePolygon(20, 20, 30, 30, sr);
+				f.Store();
+			}
+
+			TrDissolve dissolve =
+				new TrDissolve(ReadOnlyTableFactory.Create(fc))
+				{Search = 1, NeighborSearchOption = TrDissolve.SearchOption.All};
+
+			QaMinArea test = new QaMinArea(dissolve.GetTransformed(), 110);
+			{
+				var runner = new QaContainerTestRunner(1000, test);
+				runner.Execute();
+				Assert.AreEqual(1, runner.Errors.Count);
+			}
+			{
+				// TODO: Implement proper handling of the SearchOption All in the polygon case
+				var runner = new QaContainerTestRunner(25, test);
+				runner.Execute();
+				Assert.AreEqual(1, runner.Errors.Count);
+			}
+		}
+
+		[Test]
 		public void CanDissolveMultipart()
 		{
 			IFeatureWorkspace ws = TestWorkspaceUtils.CreateInMemoryWorkspace("TrDissolve");
@@ -297,9 +354,10 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			}
 
 			TrTableJoin joined =
-				new TrTableJoin(ReadOnlyTableFactory.Create(lineFc), ReadOnlyTableFactory.Create(table), relRoute, JoinType.InnerJoin);
+				new TrTableJoin(ReadOnlyTableFactory.Create(lineFc),
+				                ReadOnlyTableFactory.Create(table), relRoute, JoinType.InnerJoin);
 			TrDissolve dissolve =
-				new TrDissolve((IReadOnlyFeatureClass)joined.GetTransformed())
+				new TrDissolve((IReadOnlyFeatureClass) joined.GetTransformed())
 				{
 					Search = 1,
 					Attributes = new List<string> {"Min(RouteTbl.RouteFk) AS MinRouteFk"},

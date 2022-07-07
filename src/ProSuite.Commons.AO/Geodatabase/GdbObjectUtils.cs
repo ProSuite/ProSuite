@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
@@ -1538,6 +1539,60 @@ namespace ProSuite.Commons.AO.Geodatabase
 			return result;
 		}
 
+		public static IEnumerable<List<T>> GroupRowsByAttributes<T>(
+			IEnumerable<T> valuesToGroup,
+			Func<T, IReadOnlyRow> getRow,
+			IList<string> groupByFields)
+		{
+			if (! (groupByFields?.Count > 0))
+			{
+				yield return valuesToGroup.ToList();
+				yield break;
+			}
+
+			Dictionary<string, int> fieldDict = null;
+
+			Dictionary<List<object>, List<T>> groupDict =
+				new Dictionary<List<object>, List<T>>(new ListComparer());
+			foreach (T valueToGroup in valuesToGroup)
+			{
+				IReadOnlyRow row = getRow(valueToGroup);
+
+				if (fieldDict == null)
+				{
+					fieldDict = new Dictionary<string, int>(groupByFields.Count);
+					IFields f = row.Table.Fields;
+
+					foreach (string groupBy in groupByFields)
+					{
+						int idx = f.FindField(groupBy);
+						Assert.True(idx >= 0, $"Unknonw field '{groupBy}'");
+						fieldDict.Add(groupBy, idx);
+					}
+				}
+
+				List<object> key = new List<object>(groupByFields.Count);
+
+				foreach (int idx in fieldDict.Values)
+				{
+					key.Add(row.get_Value(idx));
+				}
+
+				if (! groupDict.TryGetValue(key, out List<T> group))
+				{
+					group = new List<T>();
+					groupDict.Add(key, group);
+				}
+
+				group.Add(valueToGroup);
+			}
+
+			foreach (KeyValuePair<List<object>, List<T>> pair in groupDict)
+			{
+				yield return pair.Value;
+			}
+		}
+
 		/// <summary>
 		/// Returns the list of distinct features from the provided features.
 		/// </summary>
@@ -1888,5 +1943,50 @@ namespace ProSuite.Commons.AO.Geodatabase
 		}
 
 		#endregion
+
+		private class ListComparer : IComparer<List<object>>, IEqualityComparer<List<object>>
+		{
+			public int Compare(List<object> x, List<object> y)
+			{
+				if (x == y) return 0;
+				if (x == null) return -1;
+				if (y == null) return +1;
+
+				int nx = x.Count;
+				int ny = y.Count;
+				int d = nx.CompareTo(ny);
+				if (d != 0)
+				{
+					return d;
+				}
+
+				for (int i = 0; i < nx; i++)
+				{
+					d = Comparer.Default.Compare(x[i], y[i]);
+					if (d != 0)
+					{
+						return d;
+					}
+				}
+
+				return 0;
+			}
+
+			public bool Equals(List<object> x, List<object> y)
+			{
+				return Compare(x, y) == 0;
+			}
+
+			public int GetHashCode(List<object> x)
+			{
+				int hashCode = 1;
+				foreach (object o in x)
+				{
+					hashCode = 29 * hashCode + (o?.GetHashCode() ?? 0);
+				}
+
+				return hashCode;
+			}
+		}
 	}
 }
