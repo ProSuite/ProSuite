@@ -33,10 +33,5 @@ namespace ProSuite.QA.Tests.Transformers
 			return Assert.NotNull((TransformedBackingDataset) BackingDataset,
 			                      $"{nameof(BackingDataset)} not set").RemoveFromCache(oid);
 		}
-
-		public override IEnumerable<IReadOnlyRow> EnumReadOnlyRows(IQueryFilter queryFilter, bool recycling)
-		{
-			return BackingDataset.Search(queryFilter, recycling);
-		}
 	}
 }

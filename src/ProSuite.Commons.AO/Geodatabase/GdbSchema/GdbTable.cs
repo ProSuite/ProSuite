@@ -148,6 +148,21 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			}
 		}
 
+		#region VirtualTable overrides
+
+		public override IEnumerable<IReadOnlyRow> EnumReadOnlyRows(
+			IQueryFilter queryFilter, bool recycling)
+		{
+			if (BackingDataset == null)
+			{
+				throw new NotImplementedException("No backing dataset provided for Search().");
+			}
+
+			return BackingDataset.Search(queryFilter, recycling);
+		}
+
+		#endregion
+
 		#region IDatasetEdit Member
 
 		public override bool IsBeingEdited()
