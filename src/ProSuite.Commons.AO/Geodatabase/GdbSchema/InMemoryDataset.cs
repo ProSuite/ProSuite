@@ -51,7 +51,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		public override IEnumerable<VirtualRow> Search(IQueryFilter filter, bool recycling)
 		{
-			var filterHelper = FilterHelper.Create(_schema, filter.WhereClause);
+			var filterHelper = FilterHelper.Create(_schema, filter?.WhereClause);
 
 			ISpatialFilter spatialFilter = filter as ISpatialFilter;
 

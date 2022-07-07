@@ -30,7 +30,7 @@ namespace ProSuite.Microservices.Server.AO.Geodatabase
 			Assert.True(classDefinition != null | queryDefinition != null,
 			            "Either the class definition or the query definition must be provided.");
 
-			_schema = (GdbTable)schema;
+			_schema = (GdbTable) schema;
 			_classDefinition = classDefinition;
 			_queryDefinition = queryDefinition;
 
@@ -134,7 +134,7 @@ namespace ProSuite.Microservices.Server.AO.Geodatabase
 			}
 		}
 
-		private DataRequest CreateDataRequest(IQueryFilter filter)
+		private DataRequest CreateDataRequest([CanBeNull] IQueryFilter filter)
 		{
 			ShapeMsg searchGeoMsg =
 				filter is ISpatialFilter spatialFilter && spatialFilter.Geometry != null
@@ -143,9 +143,9 @@ namespace ProSuite.Microservices.Server.AO.Geodatabase
 
 			var dataRequest = new DataRequest
 			                  {
-				                  WhereClause = filter.WhereClause,
+				                  WhereClause = filter?.WhereClause,
 				                  SearchGeometry = searchGeoMsg,
-				                  SubFields = filter.SubFields
+				                  SubFields = filter?.SubFields
 			                  };
 
 			if (_queryDefinition != null)

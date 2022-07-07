@@ -22,7 +22,7 @@ namespace ProSuite.QA.Tests.Transformers
 			IReadOnlyFeatureClass intersected,
 			[NotNull, DocTr(nameof(DocTrStrings.TrIntersect_intersecting))]
 			IReadOnlyFeatureClass intersecting)
-			: base(new List<IReadOnlyTable> { intersected, intersecting })
+			: base(new List<IReadOnlyTable> {intersected, intersecting})
 		{
 			_intersected = intersected;
 			_intersecting = intersecting;
@@ -45,7 +45,7 @@ namespace ProSuite.QA.Tests.Transformers
 					       new TransformedDataset((TransformedFc) t, intersected, intersecting),
 				       workspace: new GdbWorkspace(new TransformerWorkspace()))
 			{
-				InvolvedTables = new List<IReadOnlyTable> { intersected, intersecting };
+				InvolvedTables = new List<IReadOnlyTable> {intersected, intersecting};
 
 				IGeometryDef geomDef =
 					intersected.Fields.Field[
@@ -153,6 +153,8 @@ namespace ProSuite.QA.Tests.Transformers
 
 			public override IEnumerable<VirtualRow> Search(IQueryFilter filter, bool recycling)
 			{
+				filter = filter ?? new QueryFilterClass();
+
 				ISpatialFilter intersectingFilter = new SpatialFilterClass();
 				intersectingFilter.SpatialRel = esriSpatialRelEnum.esriSpatialRelEnvelopeIntersects;
 
@@ -191,7 +193,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 						f.set_Value(
 							Resulting.FindField(InvolvedRowUtils.BaseRowField),
-							new List<IReadOnlyRow> { toIntersect, intersecting }); // TODO
+							new List<IReadOnlyRow> {toIntersect, intersecting}); // TODO
 
 						yield return f;
 					}

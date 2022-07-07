@@ -246,6 +246,8 @@ namespace ProSuite.QA.Tests.Transformers
 			{
 				var involvedDict = new Dictionary<VirtualRow, Involved>();
 
+				filter = filter ?? new QueryFilterClass();
+
 				foreach (var row in DataContainer.Search(_t0, filter, QueryHelpers[0]))
 				{
 					IReadOnlyFeature baseFeature = (IReadOnlyFeature)row;

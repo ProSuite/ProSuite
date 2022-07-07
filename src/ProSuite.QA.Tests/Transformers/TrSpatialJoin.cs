@@ -308,7 +308,7 @@ namespace ProSuite.QA.Tests.Transformers
 				TransformedFc res = (TransformedFc) Resulting;
 				bool grouped = res.Grouped;
 				foreach (var toJoin in DataContainer.Search(
-					         _t0, filter, QueryHelpers[0]))
+					         _t0, filter ?? new QueryFilterClass(), QueryHelpers[0]))
 				{
 					joinFilter.Geometry = ((IReadOnlyFeature) toJoin).Extent;
 					var op = (IRelationalOperator) ((IReadOnlyFeature) toJoin).Shape;
