@@ -37,30 +37,11 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		{
 			if (TryGetSource(index, out IRow sourceRow, out int fieldIndex))
 			{
-				return sourceRow.Value[fieldIndex];
+				return sourceRow?.Value[fieldIndex] ?? DBNull.Value;
 			}
 
 			throw new ArgumentOutOfRangeException(
 				$"Field index {index} not found in a copy matrix.");
-		}
-
-		private bool TryGetSource(int targetIndex, out IRow sourceRow, out int fieldIndex)
-		{
-			for (int i = 0; i < _rows.Count; i++)
-			{
-				if (_copyMatrices[i].TryGetValue(targetIndex, out int sourceIndex))
-				{
-					sourceRow = _rows[i];
-					fieldIndex = sourceIndex;
-
-					return true;
-				}
-			}
-
-			sourceRow = null;
-			fieldIndex = -1;
-
-			return false;
 		}
 
 		public void SetValue(int index, object value)
@@ -71,7 +52,9 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 				if (Readonly)
 				{
 					// TODO: Check DBNull, reference types
-					if (! sourceRow.Value[fieldIndex].Equals(value))
+					object sourceValue = sourceRow?.Value[fieldIndex] ?? DBNull.Value;
+
+					if (! sourceValue.Equals(value))
 					{
 						throw new InvalidOperationException("Cannot update read-only row");
 					}
@@ -97,6 +80,25 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 					return true;
 				}
 			}
+
+			return false;
+		}
+
+		private bool TryGetSource(int targetIndex, out IRow sourceRow, out int fieldIndex)
+		{
+			for (int i = 0; i < _rows.Count; i++)
+			{
+				if (_copyMatrices[i].TryGetValue(targetIndex, out int sourceIndex))
+				{
+					sourceRow = _rows[i];
+					fieldIndex = sourceIndex;
+
+					return true;
+				}
+			}
+
+			sourceRow = null;
+			fieldIndex = -1;
 
 			return false;
 		}

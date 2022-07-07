@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
@@ -52,6 +53,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 			_joinedSchema = joinedSchema;
 		}
 
+		public JoinType JoinType { get; set; } = JoinType.InnerJoin;
+
 		public override IEnvelope Extent => ((IGeoDataset) _geometryEndClass).Extent;
 
 		public override VirtualRow GetRow(int id)
@@ -63,8 +66,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		{
 			if (filter != null && ! string.IsNullOrEmpty(filter.WhereClause))
 			{
-				throw new NotImplementedException(
-					"This join implementation does not support the where clause");
+				return Search(filter, true).Count();
 			}
 
 			GetKeyFieldNames(out string featureClassKeyField, out string otherClassKeyField);
@@ -87,24 +89,60 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		public override IEnumerable<VirtualRow> Search(IQueryFilter filter, bool recycling)
 		{
-			if (filter != null && ! string.IsNullOrEmpty(filter.WhereClause))
+			var filterHelper = FilterHelper.Create(_joinedSchema, filter?.WhereClause);
+
+			// The filter's where clause must use the fully qualified rows. But the spatial
+			// constraint is applied during the creation of the join.
+			foreach (VirtualRow virtualRow in GetJoinedRows(filter))
 			{
-				throw new NotImplementedException(
-					"This join implementation does not support the where clause");
+				if (filterHelper.Check(virtualRow))
+				{
+					yield return virtualRow;
+				}
+			}
+		}
+
+		/// <summary>
+		/// Performs the join using the filter only by applying the spatial constraint.
+		/// </summary>
+		/// <param name="filter"></param>
+		/// <returns></returns>
+		private IEnumerable<VirtualRow> GetJoinedRows([CanBeNull] IQueryFilter filter)
+		{
+			if (filter != null && (! string.IsNullOrEmpty(filter.WhereClause)))
+			{
+				filter = (IQueryFilter) ((IClone) filter).Clone();
+				filter.WhereClause = null;
 			}
 
 			GetKeyFieldNames(out string featureClassKeyField, out string otherClassKeyField);
 
-			IDictionary<string, IList<IRow>> otherRows =
+			IDictionary<string, IList<IRow>> otherRowsByFeatureKey =
 				GetOtherRowsByFeatureKey(filter, featureClassKeyField, otherClassKeyField,
 				                         out int featureClassKeyIdx);
 
 			foreach (IFeature feature in PerformFinalGeoClassRead(
-				         otherRows, featureClassKeyField, filter))
+				         otherRowsByFeatureKey, featureClassKeyField, filter))
 			{
-				string keyValue = Assert.NotNull(GetKeyValue(feature, featureClassKeyIdx));
+				string featureKeyValue = GetKeyValue(feature, featureClassKeyIdx);
+				IList<IRow> otherRowList;
+				if (JoinType == JoinType.InnerJoin)
+				{
+					Assert.NotNull(featureKeyValue);
+					otherRowList = otherRowsByFeatureKey[featureKeyValue];
+				}
+				else
+				{
+					if (featureKeyValue == null ||
+					    ! otherRowsByFeatureKey.TryGetValue(featureKeyValue, out otherRowList))
+					{
+						// No relationship or no relational integrity
+						yield return CreateJoinedFeature(feature, null);
+						continue;
+					}
+				}
 
-				foreach (IRow otherRow in otherRows[keyValue])
+				foreach (IRow otherRow in otherRowList)
 				{
 					yield return CreateJoinedFeature(feature, otherRow);
 				}
@@ -178,6 +216,32 @@ namespace ProSuite.Commons.AO.Geodatabase
 		{
 			Stopwatch watch = _msg.DebugStartTiming();
 
+			if (JoinType == JoinType.InnerJoin)
+			{
+				foreach (IFeature feature in PerformFinalGeoClassReadFilteredByKeys(
+					         otherRowsByGeoKey, featureClassKeyField, filter))
+				{
+					yield return feature;
+				}
+			}
+			else if (JoinType == JoinType.LeftJoin)
+			{
+				// All records from the left table:
+				foreach (IFeature feature in GdbQueryUtils.GetFeatures(
+					         _geometryEndClass, filter, true))
+				{
+					yield return feature;
+				}
+			}
+
+			_msg.DebugStopTiming(watch, "Final read of geo-features with result processing");
+		}
+
+		private IEnumerable<IFeature> PerformFinalGeoClassReadFilteredByKeys(
+			[NotNull] IDictionary<string, IList<IRow>> otherRowsByGeoKey,
+			[NotNull] string featureClassKeyField,
+			[CanBeNull] IQueryFilter filter)
+		{
 			int featureClassKeyIdx = _geometryEndClass.FindField(featureClassKeyField);
 			Assert.True(featureClassKeyIdx >= 0, $"Key field not found: {featureClassKeyIdx}");
 
@@ -207,8 +271,6 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 				yield return feature;
 			}
-
-			_msg.DebugStopTiming(watch, "Final read of geo-features with result processing");
 		}
 
 		private void GetKeyFieldNames(out string featureClassKeyField,
@@ -247,7 +309,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 		}
 
-		private GdbFeature CreateJoinedFeature(IFeature feature, IRow otherRow)
+		private GdbFeature CreateJoinedFeature(IFeature feature, [CanBeNull] IRow otherRow)
 		{
 			var joinedValueList = new JoinedValueList {Readonly = true};
 
@@ -468,6 +530,12 @@ namespace ProSuite.Commons.AO.Geodatabase
 			// 3.5K rows in key list: ~1.2s
 			// -> Use 2% of key-count / all rows count
 
+			string originalSubfields = filter?.SubFields;
+			if (filter != null)
+			{
+				filter.SubFields = null;
+			}
+
 			if (clientSideKeyFiltering)
 			{
 				_msg.DebugFormat(
@@ -519,6 +587,11 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 				_msg.DebugFormat("Yielded {0} rows", count);
 			}
+
+			if (filter != null)
+			{
+				filter.SubFields = originalSubfields;
+			}
 		}
 
 		private IDictionary<int, int> GeometryEndCopyMatrix
@@ -530,7 +603,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 					_geometryEndCopyMatrix =
 						GdbObjectUtils.CreateMatchingIndexMatrix(
 							              _joinedSchema, _geometryEndClass, true, true, null,
-							              FieldComparison.FieldName)
+							              FieldComparison.FieldName).Where(pair => pair.Value >= 0)
 						              .ToDictionary(pair => pair.Value, pair => pair.Key);
 				}
 
@@ -547,7 +620,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 					_otherEndCopyMatrix =
 						GdbObjectUtils.CreateMatchingIndexMatrix(
 							              _joinedSchema, _otherEndClass, true, true, null,
-							              FieldComparison.FieldName)
+							              FieldComparison.FieldName).Where(pair => pair.Value >= 0)
 						              .ToDictionary(pair => pair.Value, pair => pair.Key);
 				}
 

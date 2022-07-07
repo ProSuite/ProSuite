@@ -272,16 +272,24 @@ namespace ProSuite.Commons.AO.Geodatabase
 		public static GdbFeatureClass CreateJoinedGdbFeatureClass(
 			[NotNull] IRelationshipClass relationshipClass,
 			[NotNull] IFeatureClass geometryEndClass,
-			[NotNull] string name)
+			[NotNull] string name,
+			JoinType joinType = JoinType.InnerJoin)
 		{
+			// TODO: support both tables having no geometry -> get all records from the smaller?
+			//       support left table having the geometry but using right join -> swap, leftJoin
+			if (joinType == JoinType.RightJoin)
+			{
+				throw new NotImplementedException("RightJoin is not yet implemented.");
+			}
+
 			IObjectClass otherEndClass =
 				RelationshipClassUtils.GetOtherEndObjectClass(relationshipClass, geometryEndClass);
 
-			var result = new GdbFeatureClass(-1, name, geometryEndClass.ShapeType,
-			                                 null,
-			                                 t => new JoinedDataset(
-				                                 relationshipClass, geometryEndClass,
-				                                 (GdbFeatureClass) t));
+			var result = new GdbFeatureClass(
+				-1, name, geometryEndClass.ShapeType, null,
+				t => new JoinedDataset(relationshipClass, geometryEndClass, (GdbFeatureClass) t)
+				     {JoinType = joinType},
+				DatasetUtils.GetWorkspace(geometryEndClass));
 
 			for (int i = 0; i < geometryEndClass.Fields.FieldCount; i++)
 			{

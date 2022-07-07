@@ -76,10 +76,6 @@ namespace ProSuite.QA.Tests.Transformers
 					((IFeatureWorkspace) _t0.Workspace).OpenRelationshipClass(
 						_relationName);
 
-				var joined = RelationshipClassUtils.GetQueryTable(
-					relClass, involved, _joinType, whereClause: null,
-					queryTableName: _transformerName);
-
 				IFeatureClass geometryEndClass =
 					((IFeatureWorkspace) ws).OpenTable(_t0.Name) as IFeatureClass;
 
@@ -87,7 +83,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 				_joinedTable =
 					TableJoinUtils.CreateJoinedGdbFeatureClass(
-						relClass, geometryEndClass, _relationName);
+						relClass, geometryEndClass, _relationName, _joinType);
 			}
 
 			return _joinedTable;
