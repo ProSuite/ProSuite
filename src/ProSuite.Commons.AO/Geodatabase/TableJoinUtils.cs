@@ -297,12 +297,26 @@ namespace ProSuite.Commons.AO.Geodatabase
 				result.AddField(CreateQualifiedField(field, geometryEndClass));
 			}
 
+			IField lengthField = null;
+			IField areaField = null;
+			if (otherEndClass is IFeatureClass otherFeatureClass)
+			{
+				lengthField = DatasetUtils.GetLengthField(otherFeatureClass);
+				areaField = DatasetUtils.GetAreaField(otherFeatureClass);
+			}
+
 			for (int i = 0; i < otherEndClass.Fields.FieldCount; i++)
 			{
 				IField field = otherEndClass.Fields.Field[i];
 
 				if (field.Type == esriFieldType.esriFieldTypeGeometry)
 				{
+					continue;
+				}
+
+				if (field == lengthField || field == areaField)
+				{
+					// ignore, it would fail in search
 					continue;
 				}
 
