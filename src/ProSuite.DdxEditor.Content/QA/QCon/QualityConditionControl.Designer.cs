@@ -72,6 +72,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			this._tabControlDetails = new System.Windows.Forms.TabControl();
 			this._tabPageParameters = new System.Windows.Forms.TabPage();
 			this._qualityConditionTableViewControlPanel = new System.Windows.Forms.Panel();
+			this._exportButtonPanel = new System.Windows.Forms.Panel();
 			this._tabPageQualitySpecifications = new System.Windows.Forms.TabPage();
 			this._dataGridViewQualitySpecifications = new ProSuite.Commons.UI.WinForms.Controls.DoubleBufferedDataGridView();
 			this._columnName = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -126,6 +127,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			this._tabControlDetails.SuspendLayout();
 			this._tabPageParameters.SuspendLayout();
 			this._qualityConditionTableViewControlPanel.SuspendLayout();
+			this._exportButtonPanel.SuspendLayout();
 			this._tabPageQualitySpecifications.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this._dataGridViewQualitySpecifications)).BeginInit();
 			this._toolStripElements.SuspendLayout();
@@ -193,7 +195,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			this._textBoxDescGrid.Name = "_textBoxDescGrid";
 			this._textBoxDescGrid.ReadOnly = true;
 			this._textBoxDescGrid.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-			this._textBoxDescGrid.Size = new System.Drawing.Size(682, 48);
+			this._textBoxDescGrid.Size = new System.Drawing.Size(674, 48);
 			this._textBoxDescGrid.TabIndex = 21;
 			// 
 			// _labelTestDescriptor
@@ -212,7 +214,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			// _buttonExport
 			// 
 			this._buttonExport.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this._buttonExport.Location = new System.Drawing.Point(507, 7);
+			this._buttonExport.Location = new System.Drawing.Point(506, 3);
 			this._buttonExport.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
 			this._buttonExport.Name = "_buttonExport";
 			this._buttonExport.Size = new System.Drawing.Size(88, 27);
@@ -224,7 +226,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			// _buttonImport
 			// 
 			this._buttonImport.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this._buttonImport.Location = new System.Drawing.Point(602, 7);
+			this._buttonImport.Location = new System.Drawing.Point(602, 3);
 			this._buttonImport.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
 			this._buttonImport.Name = "_buttonImport";
 			this._buttonImport.Size = new System.Drawing.Size(88, 27);
@@ -242,7 +244,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			this._tabControlParameterValues.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
 			this._tabControlParameterValues.Name = "_tabControlParameterValues";
 			this._tabControlParameterValues.SelectedIndex = 0;
-			this._tabControlParameterValues.Size = new System.Drawing.Size(698, 343);
+			this._tabControlParameterValues.Size = new System.Drawing.Size(690, 345);
 			this._tabControlParameterValues.TabIndex = 28;
 			this._tabControlParameterValues.SelectedIndexChanged += new System.EventHandler(this._tabControlParameterValues_SelectedIndexChanged);
 			// 
@@ -253,7 +255,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			this.tabPageProperties.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
 			this.tabPageProperties.Name = "tabPageProperties";
 			this.tabPageProperties.Padding = new System.Windows.Forms.Padding(4, 3, 4, 3);
-			this.tabPageProperties.Size = new System.Drawing.Size(690, 315);
+			this.tabPageProperties.Size = new System.Drawing.Size(682, 317);
 			this.tabPageProperties.TabIndex = 0;
 			this.tabPageProperties.Text = "Parameter Values";
 			this.tabPageProperties.UseVisualStyleBackColor = true;
@@ -275,7 +277,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			// _splitContainerProperties.Panel2
 			// 
 			this._splitContainerProperties.Panel2.Controls.Add(this._propertyGrid);
-			this._splitContainerProperties.Size = new System.Drawing.Size(682, 309);
+			this._splitContainerProperties.Size = new System.Drawing.Size(674, 311);
 			this._splitContainerProperties.SplitterDistance = 74;
 			this._splitContainerProperties.SplitterWidth = 5;
 			this._splitContainerProperties.TabIndex = 31;
@@ -289,7 +291,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			this._textBoxDescProps.Name = "_textBoxDescProps";
 			this._textBoxDescProps.ReadOnly = true;
 			this._textBoxDescProps.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-			this._textBoxDescProps.Size = new System.Drawing.Size(596, 74);
+			this._textBoxDescProps.Size = new System.Drawing.Size(588, 74);
 			this._textBoxDescProps.TabIndex = 0;
 			// 
 			// _panelDescriptionLabel
@@ -322,7 +324,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			this._propertyGrid.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
 			this._propertyGrid.Name = "_propertyGrid";
 			this._propertyGrid.PropertySort = System.Windows.Forms.PropertySort.NoSort;
-			this._propertyGrid.Size = new System.Drawing.Size(682, 230);
+			this._propertyGrid.Size = new System.Drawing.Size(674, 232);
 			this._propertyGrid.TabIndex = 0;
 			this._propertyGrid.PropertyValueChanged += new System.Windows.Forms.PropertyValueChangedEventHandler(this._propertyGrid_PropertyValueChanged);
 			// 
@@ -333,7 +335,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			this._tabPageTableView.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
 			this._tabPageTableView.Name = "_tabPageTableView";
 			this._tabPageTableView.Padding = new System.Windows.Forms.Padding(4, 3, 4, 3);
-			this._tabPageTableView.Size = new System.Drawing.Size(690, 315);
+			this._tabPageTableView.Size = new System.Drawing.Size(682, 317);
 			this._tabPageTableView.TabIndex = 1;
 			this._tabPageTableView.Text = "Table View";
 			this._tabPageTableView.UseVisualStyleBackColor = true;
@@ -349,8 +351,8 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			// _splitContainer.Panel1
 			// 
 			this._splitContainer.Panel1.Controls.Add(this._splitContainerHeader);
-			this._splitContainer.Size = new System.Drawing.Size(682, 309);
-			this._splitContainer.SplitterDistance = 169;
+			this._splitContainer.Size = new System.Drawing.Size(674, 311);
+			this._splitContainer.SplitterDistance = 170;
 			this._splitContainer.TabIndex = 30;
 			// 
 			// _splitContainerHeader
@@ -370,7 +372,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			// 
 			this._splitContainerHeader.Panel2.Controls.Add(this._dataGridViewParamGrid);
 			this._splitContainerHeader.Panel2MinSize = 50;
-			this._splitContainerHeader.Size = new System.Drawing.Size(682, 169);
+			this._splitContainerHeader.Size = new System.Drawing.Size(674, 170);
 			this._splitContainerHeader.SplitterDistance = 48;
 			this._splitContainerHeader.SplitterWidth = 5;
 			this._splitContainerHeader.TabIndex = 26;
@@ -399,7 +401,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			this._dataGridViewParamGrid.ReadOnly = true;
 			this._dataGridViewParamGrid.RowHeadersVisible = false;
 			this._dataGridViewParamGrid.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-			this._dataGridViewParamGrid.Size = new System.Drawing.Size(682, 116);
+			this._dataGridViewParamGrid.Size = new System.Drawing.Size(674, 117);
 			this._dataGridViewParamGrid.TabIndex = 24;
 			this._dataGridViewParamGrid.DataBindingComplete += new System.Windows.Forms.DataGridViewBindingCompleteEventHandler(this._dataGridViewParamGrid_DataBindingComplete);
 			// 
@@ -487,8 +489,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			// _tabPageParameters
 			// 
 			this._tabPageParameters.Controls.Add(this._qualityConditionTableViewControlPanel);
-			this._tabPageParameters.Controls.Add(this._buttonImport);
-			this._tabPageParameters.Controls.Add(this._buttonExport);
+			this._tabPageParameters.Controls.Add(this._exportButtonPanel);
 			this._tabPageParameters.Location = new System.Drawing.Point(4, 24);
 			this._tabPageParameters.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
 			this._tabPageParameters.Name = "_tabPageParameters";
@@ -499,14 +500,22 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			// 
 			// _qualityConditionTableViewControlPanel
 			// 
-			this._qualityConditionTableViewControlPanel.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
 			this._qualityConditionTableViewControlPanel.Controls.Add(this._tabControlParameterValues);
-			this._qualityConditionTableViewControlPanel.Location = new System.Drawing.Point(0, 40);
+			this._qualityConditionTableViewControlPanel.Dock = System.Windows.Forms.DockStyle.Fill;
+			this._qualityConditionTableViewControlPanel.Location = new System.Drawing.Point(4, 38);
 			this._qualityConditionTableViewControlPanel.Name = "_qualityConditionTableViewControlPanel";
-			this._qualityConditionTableViewControlPanel.Size = new System.Drawing.Size(698, 343);
+			this._qualityConditionTableViewControlPanel.Size = new System.Drawing.Size(690, 345);
 			this._qualityConditionTableViewControlPanel.TabIndex = 29;
+			// 
+			// _exportButtonPanel
+			// 
+			this._exportButtonPanel.Controls.Add(this._buttonExport);
+			this._exportButtonPanel.Controls.Add(this._buttonImport);
+			this._exportButtonPanel.Dock = System.Windows.Forms.DockStyle.Top;
+			this._exportButtonPanel.Location = new System.Drawing.Point(4, 3);
+			this._exportButtonPanel.Name = "_exportButtonPanel";
+			this._exportButtonPanel.Size = new System.Drawing.Size(690, 35);
+			this._exportButtonPanel.TabIndex = 30;
 			// 
 			// _tabPageQualitySpecifications
 			// 
@@ -978,6 +987,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			this._tabControlDetails.ResumeLayout(false);
 			this._tabPageParameters.ResumeLayout(false);
 			this._qualityConditionTableViewControlPanel.ResumeLayout(false);
+			this._exportButtonPanel.ResumeLayout(false);
 			this._tabPageQualitySpecifications.ResumeLayout(false);
 			((System.ComponentModel.ISupportInitialize)(this._dataGridViewQualitySpecifications)).EndInit();
 			this._toolStripElements.ResumeLayout(false);
@@ -1060,5 +1070,6 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 		private System.Windows.Forms.DataGridViewComboBoxColumn _columnIssueType;
 		private System.Windows.Forms.DataGridViewComboBoxColumn _columnStopOnError;
 		private System.Windows.Forms.Panel _qualityConditionTableViewControlPanel;
+		private System.Windows.Forms.Panel _exportButtonPanel;
 	}
 }
