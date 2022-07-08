@@ -46,8 +46,6 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			this._textBoxDescription = new System.Windows.Forms.TextBox();
 			this._labelDescription = new System.Windows.Forms.Label();
 			this._errorProvider = new System.Windows.Forms.ErrorProvider(this.components);
-			this.labelParamGrid = new System.Windows.Forms.Label();
-			this.labelDescGrid = new System.Windows.Forms.Label();
 			this._textBoxDescGrid = new System.Windows.Forms.TextBox();
 			this._labelTestDescriptor = new System.Windows.Forms.LinkLabel();
 			this._buttonExport = new System.Windows.Forms.Button();
@@ -186,38 +184,16 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			this._errorProvider.BlinkStyle = System.Windows.Forms.ErrorBlinkStyle.NeverBlink;
 			this._errorProvider.ContainerControl = this;
 			// 
-			// labelParamGrid
-			// 
-			this.labelParamGrid.Dock = System.Windows.Forms.DockStyle.Left;
-			this.labelParamGrid.Location = new System.Drawing.Point(0, 0);
-			this.labelParamGrid.Margin = new System.Windows.Forms.Padding(0, 3, 4, 0);
-			this.labelParamGrid.Name = "labelParamGrid";
-			this.labelParamGrid.Size = new System.Drawing.Size(93, 116);
-			this.labelParamGrid.TabIndex = 23;
-			this.labelParamGrid.Text = "Parameters:";
-			this.labelParamGrid.TextAlign = System.Drawing.ContentAlignment.TopRight;
-			// 
-			// labelDescGrid
-			// 
-			this.labelDescGrid.Dock = System.Windows.Forms.DockStyle.Left;
-			this.labelDescGrid.Location = new System.Drawing.Point(0, 0);
-			this.labelDescGrid.Margin = new System.Windows.Forms.Padding(4, 3, 4, 0);
-			this.labelDescGrid.Name = "labelDescGrid";
-			this.labelDescGrid.Size = new System.Drawing.Size(93, 48);
-			this.labelDescGrid.TabIndex = 22;
-			this.labelDescGrid.Text = "Description:";
-			this.labelDescGrid.TextAlign = System.Drawing.ContentAlignment.TopRight;
-			// 
 			// _textBoxDescGrid
 			// 
 			this._textBoxDescGrid.Dock = System.Windows.Forms.DockStyle.Fill;
-			this._textBoxDescGrid.Location = new System.Drawing.Point(93, 0);
+			this._textBoxDescGrid.Location = new System.Drawing.Point(0, 0);
 			this._textBoxDescGrid.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
 			this._textBoxDescGrid.Multiline = true;
 			this._textBoxDescGrid.Name = "_textBoxDescGrid";
 			this._textBoxDescGrid.ReadOnly = true;
 			this._textBoxDescGrid.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-			this._textBoxDescGrid.Size = new System.Drawing.Size(589, 48);
+			this._textBoxDescGrid.Size = new System.Drawing.Size(682, 48);
 			this._textBoxDescGrid.TabIndex = 21;
 			// 
 			// _labelTestDescriptor
@@ -389,12 +365,10 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			// _splitContainerHeader.Panel1
 			// 
 			this._splitContainerHeader.Panel1.Controls.Add(this._textBoxDescGrid);
-			this._splitContainerHeader.Panel1.Controls.Add(this.labelDescGrid);
 			// 
 			// _splitContainerHeader.Panel2
 			// 
 			this._splitContainerHeader.Panel2.Controls.Add(this._dataGridViewParamGrid);
-			this._splitContainerHeader.Panel2.Controls.Add(this.labelParamGrid);
 			this._splitContainerHeader.Panel2MinSize = 50;
 			this._splitContainerHeader.Size = new System.Drawing.Size(682, 169);
 			this._splitContainerHeader.SplitterDistance = 48;
@@ -419,13 +393,13 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
 			this._dataGridViewParamGrid.DefaultCellStyle = dataGridViewCellStyle1;
 			this._dataGridViewParamGrid.Dock = System.Windows.Forms.DockStyle.Fill;
-			this._dataGridViewParamGrid.Location = new System.Drawing.Point(93, 0);
+			this._dataGridViewParamGrid.Location = new System.Drawing.Point(0, 0);
 			this._dataGridViewParamGrid.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
 			this._dataGridViewParamGrid.Name = "_dataGridViewParamGrid";
 			this._dataGridViewParamGrid.ReadOnly = true;
 			this._dataGridViewParamGrid.RowHeadersVisible = false;
 			this._dataGridViewParamGrid.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-			this._dataGridViewParamGrid.Size = new System.Drawing.Size(589, 116);
+			this._dataGridViewParamGrid.Size = new System.Drawing.Size(682, 116);
 			this._dataGridViewParamGrid.TabIndex = 24;
 			this._dataGridViewParamGrid.DataBindingComplete += new System.Windows.Forms.DataGridViewBindingCompleteEventHandler(this._dataGridViewParamGrid_DataBindingComplete);
 			// 
@@ -1027,8 +1001,6 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
         private System.Windows.Forms.Label _labelDescription;
 		private System.Windows.Forms.ErrorProvider _errorProvider;
 		private ObjectReferenceControl _objectReferenceControlTestDescriptor;
-        private System.Windows.Forms.Label labelParamGrid;
-        private System.Windows.Forms.Label labelDescGrid;
         private System.Windows.Forms.TextBox _textBoxDescGrid;
         private System.Windows.Forms.LinkLabel _labelTestDescriptor;
         private System.Windows.Forms.Button _buttonImport;
