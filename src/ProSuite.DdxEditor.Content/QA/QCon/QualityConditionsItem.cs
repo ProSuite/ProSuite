@@ -57,7 +57,8 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			var category = _container.Category;
 
 			return _modelBuilder.ListQualityConditionsWithDataset
-				       ? CreateTableControl(
+				       // ReSharper disable once RedundantCast because it is needed in C# 7.3
+				       ? (Control) CreateTableControl(
 					       () => QualityConditionContainerUtils.GetQualityConditionDatasetTableRows(
 						       _modelBuilder, category), itemNavigation)
 				       : CreateTableControl(
