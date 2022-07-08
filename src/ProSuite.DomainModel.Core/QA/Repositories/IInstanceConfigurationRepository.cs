@@ -6,7 +6,8 @@ namespace ProSuite.DomainModel.Core.QA.Repositories
 {
 	public interface IInstanceConfigurationRepository : IRepository<InstanceConfiguration>
 	{
-		IList<TransformerConfiguration> GetTransformerConfigurations();
+		IList<TransformerConfiguration> GetTransformerConfigurations(
+			[CanBeNull] IList<int> excludedIds = null);
 
 		IList<RowFilterConfiguration> GetRowFilterConfigurations();
 
@@ -17,16 +18,16 @@ namespace ProSuite.DomainModel.Core.QA.Repositories
 		HashSet<int> GetIdsInvolvingDeletedDatasets<T>() where T : InstanceConfiguration;
 
 		IList<T> Get<T>(
-			DataQualityCategory category,
+			[CanBeNull] DataQualityCategory category,
 			bool includeQualityConditionsBasedOnDeletedDatasets = true)
 			where T : InstanceConfiguration;
 
 		IDictionary<T, IList<DatasetTestParameterValue>> GetWithDatasetParameterValues<T>(
-			DataQualityCategory category) where T : InstanceConfiguration;
+			[CanBeNull] DataQualityCategory category) where T : InstanceConfiguration;
 
 		IList<ReferenceCount> GetReferenceCounts<T>() where T : InstanceConfiguration;
 
 		IList<InstanceConfiguration> GetReferencingConfigurations(
-			TransformerConfiguration transformer);
+			[NotNull] TransformerConfiguration transformer);
 	}
 }

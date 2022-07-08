@@ -121,6 +121,12 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 
 		DataQualityCategory category = _viewModel.InstanceConfiguration.Category;
 
+		if (_viewModel.InstanceConfiguration is TransformerConfiguration transformer)
+		{
+			// Do not allow circular references!
+			_viewModel.DatasetProvider.Exclude(transformer);
+		}
+
 		return FinderUtils.GetFinder(category, _viewModel.DatasetProvider, datasetParameterType,
 		                             finder);
 	}
