@@ -3,58 +3,120 @@
 @using Radzen.Blazor
 
 <style>
-    /*html, body {
-        background-color: red
-    }*/
-
-    .rz-datatable-data td .rz-cell-data, .rz-grid-table td .rz-cell-data {
-        color: black;
+    /*Control color*/
+	html, body {
+        background-color: #f0f0f0
     }
-
-    RadzenTextBox {
-	    width: 100%;
-    }
-
-    /* selection color */
-    /*.rz-state-highlight td {
-	    background: #0078d7 ! important;
-    }*/
-    
-    .rz-datatable-thead th .rz-column-title, .rz-grid-table thead th .rz-column-title {
-        font-size: 14px;
-    }
-
-	.rz-datatable td {
-		padding: 0 0.625rem 0 0.625rem;
-        height: 38px;
+	
+	.rz-datatable {
+		background-color: black; /*eliminates the slight shadow around data grid*/
+		border: solid 1px black; /*black border*/
+		border-radius: unset;
 	}
 
-    .rz-datatable-thead th .rz-column-title, .rz-grid-table thead th .rz-column-title {
-	    text-transform: unset;
-	    color: black;
+	.rz-datatable td {
+		padding: 0 0.5rem 0 0.5rem; /*padding of grid cells*/
+		height: 1.8rem; /*height of data rows*/
+	}
+
+	/*unnecessary*/
+	/*.rz-datatable-even > td {
+		background-color: #ffffff;
+	}*/
+
+	/*the same color for odd rows*/
+	.rz-datatable-odd > td {
+		background-color: #ffffff;
+	}
+
+	.rz-datatable-data td .rz-cell-data, .rz-grid-table td .rz-cell-data {
+		color: black;
+		font-size: 0.75rem; /*75% of 16px*/
+	}
+
+	/* For highlight when you click on a row. */
+	.rz-state-highlight td {
+		background-color: #0078d7 !important;
+	}
+
+	/* For hover  */
+	.rz-selectable .rz-datatable-even:hover:not(.rz-state-highlight) > td,
+	.rz-selectable .rz-datatable-odd:hover:not(.rz-state-highlight) > td {
+		background-color: white !important;
+	}
+
+	/* Color of text when hover */
+	.rz-selectable .rz-datatable-even:hover:not(.rz-state-highlight) .rz-cell-data,
+	.rz-selectable .rz-datatable-odd:hover:not(.rz-state-highlight) .rz-cell-data {
+		color: black !important;
+		/*background-color: black !important*/
+	}
+    
+	.rz-datatable-thead th, .rz-grid-table thead th {
+		background-color: #e6ecef;
+		padding: 0 0 0 0; /*padding of column header (1)*/
+	}
+    
+	.rz-datatable-thead th .rz-column-title, .rz-grid-table thead th .rz-column-title {
+		text-transform: unset; /*lower case*/
+		color: black;
+		padding: 0 0 0.25rem 0.5rem; /*padding of column header (2)*/
+	}
+
+	.rz-expanded-row-template {
+		background-color: #ffffff;
+		padding: 0.625rem;
+		border: none; /*small frame around expanded row*/
+		border-radius: unset;
+	}
+
+	.rz-switch {
+		display: block;
+		height: 1.29rem;
+	}
+
+	.rz-switch.rz-switch-checked .rz-switch-circle {
+		background: #367736;
+	}
+    
+	.rz-textbox {
+		width: 100%;
+		height: auto;
+		max-height: 1.8rem;
+		margin: 0;
+		border-radius: unset;
+	}
+
+    .rz-dropdown {
+	    height: 1.8rem;
+	    max-height: 1.8rem;
+	    padding-top: 0;
+	    padding-bottom: 0.25rem;
+	    margin: 0.25rem 0 0 0;
+	    border-radius: unset;
     }
 
-    .rz-switch {
-	    display: block;
+	.rz-button {
+		border-radius: 0;
+		border: 1px solid #adadad;
+		background-color: #e1e1e1;
+		height: 20px ! important;
+		padding: 0 8px ! important;
+		margin: 0 0 0 0;
+	}
+
+    /*button border when button is disbled*/
+	.rz-button.rz-state-disabled, .rz-state-disabled.rz-paginator-element {
+		border: 1px solid black ! important;
+	}
+
+    .ui-image {
+	    padding: 0 0 10px 0;
     }
 
-    /*.rz-switch .rz-switch-circle:before {
-	    background: #ffffff;
-	    width: 1rem;
-	    height: 1rem;
-	    left: 0.27rem;
-	    margin-top: -0.5rem;
-	    border-radius: 50%;
-	    transition-duration: 0.2s;
-	    box-shadow: none;
-    }*/
-
-    .rz-switch {
-	    /*height: 1.29rem;*/
-    }
 </style>
 
-<div class="container-fluid">
+<div class="container-fluid" style="margin: 0.625rem 0 0 0;">
     <div class="row">
         <div class="col">
             <RadzenDataGrid @ref="_mainGrid"
@@ -72,70 +134,96 @@
                             CellRender="OnCellRender"
                             RowRender="OnRowRender">
                 <Template Context="viewModel">
-                    <RadzenDataGrid TItem="ViewModelBase"
-                                    Data="viewModel.Values"
-                                    SelectionMode="DataGridSelectionMode.Single"
-                                    AllowColumnResize="true"
-                                    AllowRowSelectOnRowClick="true"
-                                    @bind-Value="@SelectedRows"
-                                    RowClick="OnChildRowClick"
-                                    RowCreate="OnRowCreate"
-                                    RowUpdate="OnRowUpdate"
-                                    CellRender="OnCellRender"
-                                    Render="OnChildGridRender">
-                        <Columns>
-                            <RadzenDataGridColumn TItem="ViewModelBase" Property="ParameterName" Title="Parameter" Width="150px"/>
-                            <RadzenDataGridColumn TItem="ViewModelBase" Resizable="false" Width="38px">
-                                <Template Context="subViewModel">
-                                    @if (subViewModel is DatasetTestParameterValueViewModel vm)
-                                    {
-	                                    <RadzenImage Path="@vm.ImageSource"></RadzenImage>
-                                    }
-                                </Template>
-                            </RadzenDataGridColumn>
-                            <RadzenDataGridColumn TItem="ViewModelBase" Property="Value" Title="Value">
-                                <Template Context="subViewModel">
-                                    <DynamicComponent Type="subViewModel.ComponentType" Parameters="subViewModel.ComponentParameters"/>
-                                </Template>
-                            </RadzenDataGridColumn>
-                            <RadzenDataGridColumn TItem="ViewModelBase" Property="ModelName" Title="Data Model" Width="140px">
-                                <Template Context="subViewModel">
-                                    @if (subViewModel is DatasetTestParameterValueViewModel vm)
-                                    {
-	                                    @vm.ModelName
-                                    }
-                                </Template>
-                            </RadzenDataGridColumn>
-                            <RadzenDataGridColumn TItem="ViewModelBase" Property="FilterExpression" Title="Filter Expression">
-                                <Template Context="subViewModel">
-                                    @if (subViewModel is DatasetTestParameterValueViewModel vm)
-                                    {
-	                                    @vm.FilterExpression
-                                    }
-                                </Template>
-                                <EditTemplate Context="subViewModel">
-                                    @if (subViewModel is DatasetTestParameterValueViewModel vm)
-                                    {
-	                                    <RadzenTextBox @bind-Value="vm.FilterExpression" Style="width: 100%;"/>
-                                    }
-                                </EditTemplate>
-                            </RadzenDataGridColumn>
-                            <RadzenDataGridColumn TItem="ViewModelBase" Property="UsedAsReferenceData" Title="Reference" Width="80px">
-                                <Template Context="subViewModel">
-                                    @if (subViewModel is DatasetTestParameterValueViewModel vm)
-                                    {
-	                                    <RadzenSwitch @bind-Value="vm.UsedAsReferenceData"/>
-                                    }
-                                </Template>
-                                <EditTemplate Context="subViewModel">
-                                    @if (subViewModel is DatasetTestParameterValueViewModel vm)
-                                    {
-	                                    <RadzenSwitch @bind-Value="vm.UsedAsReferenceData"/>
-                                    }
-                                </EditTemplate>
-                            </RadzenDataGridColumn>
-                        </Columns>
-                    </RadzenDataGrid>
+                    @if (viewModel is TestParameterValueCollectionViewModel vm && vm.IsDatasetType)
+                    {
+	                    <RadzenDataGrid TItem="ViewModelBase"
+                                        Data="viewModel.Values"
+                                        SelectionMode="DataGridSelectionMode.Single"
+                                        AllowColumnResize="true"
+                                        AllowRowSelectOnRowClick="true"
+                                        @bind-Value="@SelectedRows"
+                                        RowClick="OnChildRowClick"
+                                        RowCreate="OnRowCreate"
+                                        RowUpdate="OnRowUpdate"
+                                        CellRender="OnCellRender"
+                                        Render="OnChildGridRender">
+                            <Columns>
+                                <RadzenDataGridColumn TItem="ViewModelBase" Property="ParameterName" Title="Parameter" Width="150px"/>
+                                <RadzenDataGridColumn TItem="ViewModelBase" Resizable="false" Width="38px">
+                                    <Template Context="subViewModel">
+                                        @if (subViewModel is DatasetTestParameterValueViewModel vm)
+                                        {
+	                                        <RadzenImage Path="@vm.ImageSource"></RadzenImage>
+                                        }
+                                    </Template>
+                                </RadzenDataGridColumn>
+                                <RadzenDataGridColumn TItem="ViewModelBase" Property="Value" Title="Value">
+                                    <Template Context="subViewModel">
+                                        <DynamicComponent Type="subViewModel.ComponentType" Parameters="subViewModel.ComponentParameters"/>
+                                    </Template>
+                                </RadzenDataGridColumn>
+                                <RadzenDataGridColumn TItem="ViewModelBase" Property="ModelName" Title="Data Model" Width="140px">
+                                    <Template Context="subViewModel">
+                                        @if (subViewModel is DatasetTestParameterValueViewModel vm)
+                                        {
+	                                        @vm.ModelName
+                                        }
+                                    </Template>
+                                </RadzenDataGridColumn>
+                                <RadzenDataGridColumn TItem="ViewModelBase" Property="FilterExpression" Title="Filter Expression">
+                                    <Template Context="subViewModel">
+                                        @if (subViewModel is DatasetTestParameterValueViewModel vm)
+                                        {
+	                                        @vm.FilterExpression
+                                        }
+                                    </Template>
+                                    <EditTemplate Context="subViewModel">
+                                        @if (subViewModel is DatasetTestParameterValueViewModel vm)
+                                        {
+	                                        <RadzenTextBox @bind-Value="vm.FilterExpression" Style="width: 100%;"/>
+                                        }
+                                    </EditTemplate>
+                                </RadzenDataGridColumn>
+                                <RadzenDataGridColumn TItem="ViewModelBase" Property="UsedAsReferenceData" Title="Reference" Width="80px">
+                                    <Template Context="subViewModel">
+                                        @if (subViewModel is DatasetTestParameterValueViewModel vm)
+                                        {
+	                                        <RadzenSwitch @bind-Value="vm.UsedAsReferenceData"/>
+                                        }
+                                    </Template>
+                                    <EditTemplate Context="subViewModel">
+                                        @if (subViewModel is DatasetTestParameterValueViewModel vm)
+                                        {
+	                                        <RadzenSwitch @bind-Value="vm.UsedAsReferenceData"/>
+                                        }
+                                    </EditTemplate>
+                                </RadzenDataGridColumn>
+                            </Columns>
+                        </RadzenDataGrid>
+                    }
+                    else
+                    {
+                        <RadzenDataGrid TItem="ViewModelBase"
+                                        Data="viewModel.Values"
+                                        SelectionMode="DataGridSelectionMode.Single"
+                                        AllowColumnResize="true"
+                                        AllowRowSelectOnRowClick="true"
+                                        @bind-Value="@SelectedRows"
+                                        RowClick="OnChildRowClick"
+                                        RowCreate="OnRowCreate"
+                                        RowUpdate="OnRowUpdate"
+                                        CellRender="OnCellRender"
+                                        Render="OnChildGridRender">
+                            <Columns>
+                                <RadzenDataGridColumn TItem="ViewModelBase" Property="ParameterName" Title="Parameter" Width="150px"/>
+                                <RadzenDataGridColumn TItem="ViewModelBase" Property="Value" Title="Value">
+                                    <Template Context="subViewModel">
+                                        <DynamicComponent Type="subViewModel.ComponentType" Parameters="subViewModel.ComponentParameters"/>
+                                    </Template>
+                                </RadzenDataGridColumn>
+                            </Columns>
+                        </RadzenDataGrid>
+                    }
                 </Template>
                 <Columns>
                     <RadzenDataGridColumn TItem="ViewModelBase" Property="ParameterName" Title="Parameter" Width="150px">
@@ -202,34 +290,23 @@
 
         <div class="col-auto">
             <div class="col">
-                <RadzenButton ButtonStyle="ButtonStyle.Light" Click="() => UpClicked()" Disabled="UpButtonDisabled()"
-                              Style="border-radius: 0; width: 88px; height: 27px; margin: 4px 0px 4px 0px;">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-up" viewBox="0 0 16 16">
-                        <path fill-rule="evenodd" d="M8 15a.5.5 0 0 0 .5-.5V2.707l3.146 3.147a.5.5 0 0 0 .708-.708l-4-4a.5.5 0 0 0-.708 0l-4 4a.5.5 0 1 0 .708.708L7.5 2.707V14.5a.5.5 0 0 0 .5.5z"/>
-                    </svg>
+                <RadzenButton ButtonStyle="ButtonStyle.Light" Click="() => UpClicked()" Disabled="UpButtonDisabled()">
+                    <img src="images/UpArrow.png" class="ui-image"/>
                 </RadzenButton>
             </div>
             <div class="col">
                 <RadzenButton ButtonStyle="ButtonStyle.Light" Click="() => DownClicked()" Disabled="DownButtonDisabled()">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-down" viewBox="0 0 16 16">
-                        <path fill-rule="evenodd" d="M8 1a.5.5 0 0 1 .5.5v11.793l3.146-3.147a.5.5 0 0 1 .708.708l-4 4a.5.5 0 0 1-.708 0l-4-4a.5.5 0 0 1 .708-.708L7.5 13.293V1.5A.5.5 0 0 1 8 1z"/>
-                    </svg>
+                    <img src="images/DownArrow.png" class="ui-image"/>
                 </RadzenButton>
             </div>
             <div class="col">
                 <RadzenButton ButtonStyle="ButtonStyle.Light" Click="() => InsertRowClicked()" Disabled="InsertRowButtonDisabled()">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle" viewBox="0 0 16 16">
-                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
-                        <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
-                    </svg>
+                    <img src="images/Add.png" class="ui-image"/>
                 </RadzenButton>
             </div>
             <div class="col">
                 <RadzenButton ButtonStyle="ButtonStyle.Light" Click="() => DeleteRowClicked()" Disabled="DeleteRowButtonDisabled()">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-dash-circle" viewBox="0 0 16 16">
-                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
-                        <path d="M4 8a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7A.5.5 0 0 1 4 8z"/>
-                    </svg>
+                    <img src="images/Remove.png" class="ui-image"/>
                 </RadzenButton>
             </div>
         </div>

@@ -207,11 +207,11 @@ public partial class QualityConditionTableViewBlazor : IDisposable
 
 			if (attributes.ContainsKey("style"))
 			{
-				attributes["style"] += "; background-color: grey";
+				attributes["style"] += "; background-color: #adadad";
 			}
 			else
 			{
-				attributes.Add("style", "background-color: grey");
+				attributes.Add("style", "background-color: #adadad");
 			}
 		}
 	}
