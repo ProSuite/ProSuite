@@ -146,12 +146,7 @@ public static class DataGridUtils
 				continue;
 			}
 
-			ViewModelBase first = grid.Data.FirstOrDefault();
-
-			if (first != null && first.Parameter.Equals(row.Parameter))
-			{
-				await grid.InsertRow(row);
-			}
+			await grid.Reload();
 		}
 	}
 }

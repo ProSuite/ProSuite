@@ -66,7 +66,16 @@ public class TestParameterValueCollectionViewModel : ViewModelBase
 
 	public void Insert(ViewModelBase row)
 	{
-		_values.Add(row);
+		int index = _values.Count;
+
+		if (index > -1)
+		{
+			_values.Insert(index, row);
+		}
+		else
+		{
+			_values.Add(row);
+		}
 		OnPropertyChanged(nameof(Values));
 	}
 
