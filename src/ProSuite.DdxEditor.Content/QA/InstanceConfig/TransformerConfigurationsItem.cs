@@ -11,81 +11,82 @@ using ProSuite.DdxEditor.Framework.Items;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.Repositories;
 
-namespace ProSuite.DdxEditor.Content.QA.InstanceConfig;
-
-public class TransformerConfigurationsItem : InstanceConfigurationsItem
+namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 {
-	[NotNull] private static readonly Image _image;
-	[NotNull] private static readonly Image _selectedImage;
-
-	static TransformerConfigurationsItem()
+	public class TransformerConfigurationsItem : InstanceConfigurationsItem
 	{
-		_image = ItemUtils.GetGroupItemImage(Resources.TransformOverlay);
-		_selectedImage =
-			ItemUtils.GetGroupItemSelectedImage(Resources.TransformOverlay);
-	}
+		[NotNull] private static readonly Image _image;
+		[NotNull] private static readonly Image _selectedImage;
 
-	public TransformerConfigurationsItem([NotNull] CoreDomainModelItemModelBuilder modelBuilder,
-	                                     [NotNull] IQualityConditionContainer container)
-		: base(modelBuilder, "Transformer Configurations",
-		       "Configured dataset transformers using one or more input datasets",
-		       container) { }
+		static TransformerConfigurationsItem()
+		{
+			_image = ItemUtils.GetGroupItemImage(Resources.TransformOverlay);
+			_selectedImage =
+				ItemUtils.GetGroupItemSelectedImage(Resources.TransformOverlay);
+		}
 
-	public override Image Image => _image;
+		public TransformerConfigurationsItem([NotNull] CoreDomainModelItemModelBuilder modelBuilder,
+		                                     [NotNull] IQualityConditionContainer container)
+			: base(modelBuilder, "Transformer Configurations",
+			       "Configured dataset transformers using one or more input datasets",
+			       container) { }
 
-	public override Image SelectedImage => _selectedImage;
+		public override Image Image => _image;
 
-	protected override void CollectCommands(
-		List<ICommand> commands,
-		IApplicationController applicationController)
-	{
-		base.CollectCommands(commands, applicationController);
+		public override Image SelectedImage => _selectedImage;
 
-		commands.Add(new AddTransformerConfigurationCommand(this, applicationController, this));
-		commands.Add(new DeleteAllChildItemsCommand(this, applicationController));
-	}
+		protected override void CollectCommands(
+			List<ICommand> commands,
+			IApplicationController applicationController)
+		{
+			base.CollectCommands(commands, applicationController);
 
-	#region Overrides of InstanceConfigurationsItem
+			commands.Add(new AddTransformerConfigurationCommand(this, applicationController, this));
+			commands.Add(new DeleteAllChildItemsCommand(this, applicationController));
+		}
 
-	protected override IEnumerable<InstanceConfigurationDatasetTableRow>
-		GetConfigDatasetTableRows(
+		#region Overrides of InstanceConfigurationsItem
+
+		protected override IEnumerable<InstanceConfigurationDatasetTableRow>
+			GetConfigDatasetTableRows(
+				DataQualityCategory category)
+		{
+			return QualityConditionContainerUtils
+				.GetInstanceConfigurationDatasetTableRows<TransformerConfiguration>(
+					ModelBuilder, category);
+		}
+
+		protected override IEnumerable<InstanceConfigurationInCategoryTableRow> GetConfigTableRows(
 			DataQualityCategory category)
-	{
-		return QualityConditionContainerUtils
-			.GetInstanceConfigurationDatasetTableRows<TransformerConfiguration>(
-				ModelBuilder, category);
+		{
+			return QualityConditionContainerUtils.GetInstanceConfigurationTableRows<
+				TransformerConfiguration>(ModelBuilder, category);
+		}
+
+		protected override InstanceConfigurationItem CreateConfigurationItemCore(
+			CoreDomainModelItemModelBuilder modelBuilder,
+			InstanceConfiguration configuration,
+			IInstanceConfigurationContainerItem containerItem,
+			IInstanceConfigurationRepository repository)
+		{
+			Assert.ArgumentNotNull(configuration, nameof(configuration));
+
+			var item =
+				new InstanceConfigurationItem(modelBuilder, configuration, containerItem,
+				                              repository);
+
+			return item;
+		}
+
+		protected override InstanceConfigurationItem CreateNewItemCore(
+			CoreDomainModelItemModelBuilder modelBuilder)
+		{
+			var transformerConfig = new TransformerConfiguration();
+
+			return new InstanceConfigurationItem(modelBuilder, transformerConfig, this,
+			                                     modelBuilder.InstanceConfigurations);
+		}
+
+		#endregion
 	}
-
-	protected override IEnumerable<InstanceConfigurationInCategoryTableRow> GetConfigTableRows(
-		DataQualityCategory category)
-	{
-		return QualityConditionContainerUtils.GetInstanceConfigurationTableRows<
-			TransformerConfiguration>(ModelBuilder, category);
-	}
-
-	protected override InstanceConfigurationItem CreateConfigurationItemCore(
-		CoreDomainModelItemModelBuilder modelBuilder,
-		InstanceConfiguration configuration,
-		IInstanceConfigurationContainerItem containerItem,
-		IInstanceConfigurationRepository repository)
-	{
-		Assert.ArgumentNotNull(configuration, nameof(configuration));
-
-		var item =
-			new InstanceConfigurationItem(modelBuilder, configuration, containerItem,
-			                              repository);
-
-		return item;
-	}
-
-	protected override InstanceConfigurationItem CreateNewItemCore(
-		CoreDomainModelItemModelBuilder modelBuilder)
-	{
-		var transformerConfig = new TransformerConfiguration();
-
-		return new InstanceConfigurationItem(modelBuilder, transformerConfig, this,
-		                                     modelBuilder.InstanceConfigurations);
-	}
-
-	#endregion
 }
