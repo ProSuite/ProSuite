@@ -62,8 +62,6 @@ public class TestParameterValueCollectionViewModel : ViewModelBase
 	[UsedImplicitly]
 	public string ModelName { get; }
 
-	public override object Value { get; set; }
-
 	public void Insert(ViewModelBase row)
 	{
 		int index = _values.Count;

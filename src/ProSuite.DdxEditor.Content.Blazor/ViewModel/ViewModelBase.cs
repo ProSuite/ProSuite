@@ -10,6 +10,8 @@ namespace ProSuite.DdxEditor.Content.Blazor.ViewModel;
 // todo daro rename
 public abstract class ViewModelBase : Observable
 {
+	[CanBeNull] private object _value;
+
 	protected ViewModelBase([NotNull] TestParameter parameter, [NotNull] IViewObserver observer) : base(observer)
 	{
 		Assert.ArgumentNotNull(parameter, nameof(parameter));
@@ -22,7 +24,11 @@ public abstract class ViewModelBase : Observable
 	}
 
 	[CanBeNull]
-	public abstract object Value { get; set; }
+	public object Value
+	{
+		get => _value;
+		set => SetProperty(ref _value, value);
+	}
 
 	[CanBeNull]
 	public virtual List<ViewModelBase> Values { get; set; }
