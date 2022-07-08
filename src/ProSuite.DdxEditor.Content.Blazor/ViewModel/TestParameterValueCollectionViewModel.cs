@@ -26,7 +26,9 @@ public class TestParameterValueCollectionViewModel : ViewModelBase
 		DisplayName =
 			StringUtils.Concatenate(values, v => v.Value == null ? "<null>" : v.Value.ToString(), "; ");
 
-		if (TestParameterTypeUtils.IsDatasetType(Parameter.Type))
+		IsDatasetType = TestParameterTypeUtils.IsDatasetType(Parameter.Type);
+
+		if (IsDatasetType)
 		{
 			ModelName = GetModelName(values);
 		}
@@ -34,6 +36,8 @@ public class TestParameterValueCollectionViewModel : ViewModelBase
 		ComponentType = typeof(TestParameterValueCollectionBlazor);
 		ComponentParameters.Add("ViewModel", this);
 	}
+
+	public bool IsDatasetType { get; }
 
 	public override List<ViewModelBase> Values
 	{
