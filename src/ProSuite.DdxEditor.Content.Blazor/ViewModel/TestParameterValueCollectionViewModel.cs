@@ -23,10 +23,21 @@ public class TestParameterValueCollectionViewModel : ViewModelBase
 
 		_values = new List<ViewModelBase>(values);
 
-		DisplayName =
-			StringUtils.Concatenate(values, v => v.Value == null ? "<null>" : v.Value.ToString(), "; ");
+		string displayName = StringUtils.Concatenate(values, v =>
+		{
+			if (v.Value == null)
+			{
+				return TestParameterTypeUtils.GetDefault(DataType)?.ToString();
+			}
+			else
+			{
+				return v.Value.ToString();
+			}
+		}, "; ");
 
-		IsDatasetType = TestParameterTypeUtils.IsDatasetType(Parameter.Type);
+		DisplayName = $"[{displayName}]";
+
+		IsDatasetType = TestParameterTypeUtils.IsDatasetType(DataType);
 
 		if (IsDatasetType)
 		{

@@ -207,7 +207,7 @@ namespace ProSuite.DomainModel.AO.QA
 		}
 
 		[CanBeNull]
-		private static object GetDefault([NotNull] Type type)
+		public static object GetDefault([NotNull] Type type)
 		{
 			if (! type.IsValueType)
 			{
