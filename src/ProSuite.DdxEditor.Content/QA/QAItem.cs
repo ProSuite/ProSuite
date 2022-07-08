@@ -22,7 +22,6 @@ namespace ProSuite.DdxEditor.Content.QA
 	public class QAItem : EntityTypeItem<DataQualityCategory>,
 	                      IQualitySpecificationContainer,
 	                      IQualityConditionContainer,
-	                      IInstanceConfigurationContainer,
 	                      IDataQualityCategoryContainerItem
 	{
 		[NotNull] private readonly CoreDomainModelItemModelBuilder _modelBuilder;
@@ -194,6 +193,7 @@ namespace ProSuite.DdxEditor.Content.QA
 		IEnumerable<Item> IInstanceConfigurationContainer.GetInstanceConfigurationItems(
 			IInstanceConfigurationContainerItem containerItem)
 		{
+			// TODO: Factory method on containerItem? Is the category the only thing taken from here? 
 			if (containerItem is QualityConditionsItem)
 			{
 				return GetQualityConditions().OrderBy(q => q.Name)
@@ -216,37 +216,7 @@ namespace ProSuite.DdxEditor.Content.QA
 			throw new NotImplementedException();
 		}
 
-		IEnumerable<Item> IQualityConditionContainer.GetQualityConditionItems(
-			IInstanceConfigurationContainerItem containerItem)
-		{
-			return GetQualityConditions().OrderBy(q => q.Name)
-			                             .Select(spec =>
-				                                     new QualityConditionItem(
-					                                     _modelBuilder, spec, containerItem,
-					                                     _modelBuilder.QualityConditions))
-			                             .Cast<Item>();
-		}
-
-		IEnumerable<QualityConditionDatasetTableRow> IQualityConditionContainer.
-			GetQualityConditionDatasetTableRows()
-		{
-			return QualityConditionContainerUtils.GetQualityConditionDatasetTableRows(
-				_modelBuilder, null);
-		}
-
-		IEnumerable<InstanceConfigurationDatasetTableRow> IInstanceConfigurationContainer.
-			GetInstanceConfigurationDatasetTableRows<T>()
-		{
-			return QualityConditionContainerUtils.GetInstanceConfigurationDatasetTableRows<T>(
-				_modelBuilder, null);
-		}
-
-		IEnumerable<QualityConditionInCategoryTableRow> IQualityConditionContainer.
-			GetQualityConditionTableRows()
-		{
-			return QualityConditionContainerUtils.GetQualityConditionTableRows(
-				_modelBuilder, null);
-		}
+		public DataQualityCategory Category => null;
 
 		QualityConditionItem IQualityConditionContainer.CreateQualityConditionItem(
 			IInstanceConfigurationContainerItem containerItem)

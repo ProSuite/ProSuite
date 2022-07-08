@@ -51,7 +51,7 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 		}
 
 		[NotNull]
-		public static IEnumerable<QualityConditionInCategoryTableRow>
+		public static IEnumerable<InstanceConfigurationInCategoryTableRow>
 			GetQualityConditionTableRows(
 				[NotNull] CoreDomainModelItemModelBuilder modelBuilder,
 				[CanBeNull] DataQualityCategory category)
@@ -61,6 +61,21 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 			return GetQualityConditionTableRows(
 					category,
 					modelBuilder.QualityConditions,
+					modelBuilder.IncludeQualityConditionsBasedOnDeletedDatasets)
+				.OrderBy(row => row.Name);
+		}
+
+		[NotNull]
+		public static IEnumerable<InstanceConfigurationInCategoryTableRow>
+			GetInstanceConfigurationTableRows<T>(
+				[NotNull] CoreDomainModelItemModelBuilder modelBuilder,
+				[CanBeNull] DataQualityCategory category) where T : InstanceConfiguration
+		{
+			Assert.ArgumentNotNull(modelBuilder, nameof(modelBuilder));
+
+			return GetInstanceConfigurationTableRows<T>(
+					category,
+					modelBuilder.InstanceConfigurations,
 					modelBuilder.IncludeQualityConditionsBasedOnDeletedDatasets)
 				.OrderBy(row => row.Name);
 		}
@@ -230,7 +245,7 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 		}
 
 		[NotNull]
-		private static IEnumerable<QualityConditionInCategoryTableRow>
+		private static IEnumerable<InstanceConfigurationInCategoryTableRow>
 			GetQualityConditionTableRows(
 				[CanBeNull] DataQualityCategory category,
 				[NotNull] IQualityConditionRepository repository,
@@ -254,7 +269,7 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 				}
 
 				yield return
-					new QualityConditionInCategoryTableRow(qualityCondition,
+					new InstanceConfigurationInCategoryTableRow(qualityCondition,
 					                                       qualitySpecificationRefCount);
 			}
 		}
@@ -335,6 +350,8 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 			}
 		}
 
+
+
 		[NotNull]
 		private static IEnumerable<InstanceConfigurationDatasetTableRow>
 			GetInstanceConfigurationDatasetTableRows<T>(
@@ -410,6 +427,38 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 				}
 			}
 		}
+
+
+		[NotNull]
+		private static IEnumerable<InstanceConfigurationInCategoryTableRow>
+			GetInstanceConfigurationTableRows<T>(
+				[CanBeNull] DataQualityCategory category,
+				[NotNull] IInstanceConfigurationRepository repository,
+				bool includeQualityConditionsBasedOnDeletedDatasets) where T : InstanceConfiguration
+		{
+			IDictionary<int, int> usageCountMap = null;
+
+			foreach (T instanceConfig in repository.Get<T>(
+				         category, includeQualityConditionsBasedOnDeletedDatasets))
+			{
+
+				if (usageCountMap == null)
+				{
+					usageCountMap = repository.GetReferenceCounts<T>()
+					                          .ToDictionary(rc => rc.EntityId,
+					                                        rc => rc.UsageCount);
+				}
+
+				if (!usageCountMap.TryGetValue(instanceConfig.Id,
+				                               out int refCount))
+				{
+					refCount = 0;
+				}
+
+				yield return new InstanceConfigurationInCategoryTableRow(instanceConfig, refCount);
+			}
+		}
+
 
 		private static void RefreshQualityConditionsItem(
 			[CanBeNull] Item parentItem,

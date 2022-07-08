@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.DdxEditor.Content.QA.QCon;
 using ProSuite.DdxEditor.Framework.ItemViews;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Core;
@@ -23,35 +22,17 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 
 		void SetParameterDescriptions([CanBeNull] IList<TestParameter> paramList);
 
-		// TODO: Remove specification stuff
-		bool HasSelectedQualitySpecificationReferences { get; }
-
-		bool RemoveFromQualitySpecificationsEnabled { get; set; }
-
-		int FirstQualitySpecificationReferenceIndex { get; }
-
 		bool InstanceDescriptorLinkEnabled { get; set; }
 
-		string QualitySpecificationSummary { get; set; }
+		string ReferenceingInstancesSummary { get; set; }
 
 		IInstanceConfigurationTableViewControl TableViewControl { get; }
 
-		void BindToQualitySpecificationReferences(
-			[NotNull] IList<QualitySpecificationReferenceTableRow> tableRows);
-
-		[NotNull]
-		IList<QualitySpecificationReferenceTableRow>
-			GetSelectedQualitySpecificationReferenceTableRows();
-
-		bool Confirm([NotNull] string message, [NotNull] string title);
-
-		void UpdateScreen();
+		void BindToQualityConditionReferences(
+			[NotNull] IList<InstanceConfigurationReferenceTableRow> tableRows);
 
 		void RenderCategory([CanBeNull] string categoryText);
 
 		void SaveState();
-
-		void SelectQualitySpecifications(
-			[NotNull] IEnumerable<QualitySpecification> specsToSelect);
 	}
 }

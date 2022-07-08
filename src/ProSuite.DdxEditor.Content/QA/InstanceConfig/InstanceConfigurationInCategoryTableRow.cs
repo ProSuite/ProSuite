@@ -6,27 +6,28 @@ using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.UI.WinForms.Controls;
+using ProSuite.DdxEditor.Content.QA.QCon;
 using ProSuite.DdxEditor.Framework.TableRows;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.UI.QA.ResourceLookup;
 
-namespace ProSuite.DdxEditor.Content.QA.QCon
+namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 {
-	public class QualityConditionInCategoryTableRow : SelectableTableRow, IEntityRow
+	public class InstanceConfigurationInCategoryTableRow : SelectableTableRow, IEntityRow
 	{
 		/// <summary>
 		/// Initializes a new instance of the <see cref="QualityConditionWithTestParametersTableRow"/> class.
 		/// </summary>
 		/// <param name="entity">The quality condition.</param>
-		/// <param name="qualitySpecificationRefCount"></param>
-		public QualityConditionInCategoryTableRow([NotNull] QualityCondition entity,
-		                                          int qualitySpecificationRefCount)
+		/// <param name="usageCount"></param>
+		public InstanceConfigurationInCategoryTableRow([NotNull] InstanceConfiguration entity,
+		                                               int usageCount)
 		{
 			Assert.ArgumentNotNull(entity, nameof(entity));
 
-			QualityCondition = entity;
-			TestName = entity.TestDescriptor.Name;
-			QualitySpecificationRefCount = qualitySpecificationRefCount;
+			InstanceConfiguration = entity;
+			AlgorithmImplementation = entity.InstanceDescriptor.Name;
+			UsageCount = usageCount;
 
 			Image = TestTypeImageLookup.GetImage(entity);
 			Image.Tag = TestTypeImageLookup.GetDefaultSortIndex(entity);
@@ -39,54 +40,54 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 
 		[ColumnConfiguration(Width = 400)]
 		[UsedImplicitly]
-		public string Name => QualityCondition.Name;
+		public string Name => InstanceConfiguration.Name;
 
 		[ColumnConfiguration(MinimumWidth = 100,
 		                     AutoSizeColumnMode = DataGridViewAutoSizeColumnMode.Fill)]
 		[UsedImplicitly]
-		public string Description => QualityCondition.Description;
+		public string Description => InstanceConfiguration.Description;
 
 		[DisplayName("Usage Count")]
 		[ColumnConfiguration(Width = 70)]
 		[UsedImplicitly]
-		public int QualitySpecificationRefCount { get; }
+		public int UsageCount { get; }
 
-		[DisplayName("Test")]
+		[DisplayName("Algorithm")]
 		[UsedImplicitly]
-		public string TestName { get; }
+		public string AlgorithmImplementation { get; }
 
 		[DisplayName("Url")]
 		[ColumnConfiguration(Width = 100)]
 		[UsedImplicitly]
-		public string Url => QualityCondition.Url;
+		public string Url => InstanceConfiguration.Url;
 
 		[DisplayName("Created")]
 		[ColumnConfiguration(Width = 100)]
 		[UsedImplicitly]
-		public DateTime? CreatedDate => QualityCondition.CreatedDate;
+		public DateTime? CreatedDate => InstanceConfiguration.CreatedDate;
 
 		[DisplayName("Created By")]
 		[ColumnConfiguration(Width = 80)]
 		[UsedImplicitly]
-		public string CreatedByUser => QualityCondition.CreatedByUser;
+		public string CreatedByUser => InstanceConfiguration.CreatedByUser;
 
 		[DisplayName("Last Changed")]
 		[ColumnConfiguration(Width = 100)]
 		[UsedImplicitly]
-		public DateTime? LastChangedDate => QualityCondition.LastChangedDate;
+		public DateTime? LastChangedDate => InstanceConfiguration.LastChangedDate;
 
 		[DisplayName("Last Changed By")]
 		[ColumnConfiguration(MinimumWidth = 90)]
 		[UsedImplicitly]
-		public string LastChangedByUser => QualityCondition.LastChangedByUser;
+		public string LastChangedByUser => InstanceConfiguration.LastChangedByUser;
 
 		[Browsable(false)]
 		[NotNull]
-		public QualityCondition QualityCondition { get; }
+		public InstanceConfiguration InstanceConfiguration { get; }
 
 		#region IEntityRow Members
 
-		Entity IEntityRow.Entity => QualityCondition;
+		Entity IEntityRow.Entity => InstanceConfiguration;
 
 		#endregion
 	}

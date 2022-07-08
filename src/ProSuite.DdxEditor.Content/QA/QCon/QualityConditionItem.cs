@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
-using System.Reflection;
 using System.Windows.Forms;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
@@ -12,6 +11,7 @@ using ProSuite.Commons.Text;
 using ProSuite.Commons.UI.Finder;
 using ProSuite.Commons.Validation;
 using ProSuite.DdxEditor.Content.QA.Categories;
+using ProSuite.DdxEditor.Content.QA.InstanceConfig;
 using ProSuite.DdxEditor.Content.QA.QSpec;
 using ProSuite.DdxEditor.Content.QA.TestDescriptors;
 using ProSuite.DdxEditor.Framework;
@@ -32,8 +32,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 {
 	public class QualityConditionItem : EntityItem<QualityCondition, QualityCondition>
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		[NotNull] private readonly CoreDomainModelItemModelBuilder _modelBuilder;
 		[CanBeNull] private readonly IInstanceConfigurationContainerItem _containerItem;

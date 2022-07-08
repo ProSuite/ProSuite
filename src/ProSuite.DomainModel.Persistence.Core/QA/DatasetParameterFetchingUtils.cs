@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using NHibernate;
 using NHibernate.Criterion;
 using ProSuite.Commons.Collections;
@@ -261,6 +263,100 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 			//}
 
 			//return result;
+		}
+
+
+		[NotNull]
+		public static IList<T> GetParentConfiguration<T>(
+				[CanBeNull] DataQualityCategory category,
+				[NotNull] ISession session,
+				Expression<Func<bool>> parameterExpression) where T : InstanceConfiguration
+		{
+			// TODO: Check SQL!
+
+			// TODO: Category
+			//const string categoryProperty = "Category";
+			//ICriterion categoryFilter =
+			//	category == null
+			//		? (ICriterion)new NullExpression(categoryProperty)
+			//		: Restrictions.Eq(categoryProperty, category);
+
+			T instanceConfigAlias = null;
+			DatasetTestParameterValue parameterValueAlias = null;
+
+			//Expression<Func<bool>> extraParameterExpression =
+			//	() => p => parameterExpression(parameterValueAlias);
+
+			var result =
+				session.QueryOver<T>(() => instanceConfigAlias)
+					   //.Where(categoryFilter)
+					   .JoinAlias(i => instanceConfigAlias.ParameterValues,
+								  () => parameterValueAlias)
+					   //.Where(Restrictions.Eq("parameterValueAlias.class", nameof(DatasetTestParameterValue)))
+					   .Where(() => parameterValueAlias.GetType() == typeof(DatasetTestParameterValue))
+					   .And(parameterExpression).List();
+
+			return result;
+		}
+
+
+		[NotNull]
+		public static IEnumerable<KeyValuePair<T, List<DatasetTestParameterValue>>>
+			GetParameterValuesByConfiguration<T>(
+				[CanBeNull] DataQualityCategory category,
+				[NotNull] ISession session,
+				Expression<Func<bool>> parameterExpression) where T : InstanceConfiguration
+		{
+			// TODO: Check SQL!
+
+			// TODO: Category
+			//const string categoryProperty = "Category";
+			//ICriterion categoryFilter =
+			//	category == null
+			//		? (ICriterion)new NullExpression(categoryProperty)
+			//		: Restrictions.Eq(categoryProperty, category);
+
+			T instanceConfigAlias = null;
+			DatasetTestParameterValue parameterValueAlias = null;
+
+			//Expression<Func<bool>> extraParameterExpression =
+			//	() => p => parameterExpression(parameterValueAlias);
+
+			var parametersQuery =
+				session.QueryOver<T>(() => instanceConfigAlias)
+					   //.Where(categoryFilter)
+					   .JoinAlias(i => instanceConfigAlias.ParameterValues,
+								  () => parameterValueAlias)
+					   //.Where(Restrictions.Eq("parameterValueAlias.class", nameof(DatasetTestParameterValue)))
+					   .Where(() => parameterValueAlias.GetType() == typeof(DatasetTestParameterValue))
+					   .And(parameterExpression)
+					   .Select(i => i.AsEntity<T>(), i => parameterValueAlias.AsEntity());
+			
+			var parametersByConfigId = new Dictionary<int, List<DatasetTestParameterValue>>();
+			var configsById = new Dictionary<int, T>();
+			foreach (object[] pair in parametersQuery.List<object[]>())
+			{
+				T instanceConfig = (T)pair[0];
+				DatasetTestParameterValue parameterValue = (DatasetTestParameterValue)pair[1];
+
+				configsById[instanceConfig.Id] = instanceConfig;
+
+				if (!parametersByConfigId.TryGetValue(instanceConfig.Id, out List<DatasetTestParameterValue> parameters))
+				{
+					parameters = new List<DatasetTestParameterValue>();
+					parametersByConfigId.Add(instanceConfig.Id, parameters);
+				}
+
+				parameters.Add(parameterValue);
+			}
+
+			foreach (KeyValuePair<int, List<DatasetTestParameterValue>> paramsById in parametersByConfigId)
+			{
+				int id = paramsById.Key;
+
+				yield return new KeyValuePair<T, List<DatasetTestParameterValue>>(
+					configsById[id], paramsById.Value);
+			}
 		}
 	}
 }

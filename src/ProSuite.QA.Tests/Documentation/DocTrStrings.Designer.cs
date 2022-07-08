@@ -459,7 +459,7 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to table to join with &apos;t0&apos;.
+        ///   Looks up a localized string similar to table to join with &apos;leftTable&apos;.
         /// </summary>
         public static string TrTableJoin_t1 {
             get {

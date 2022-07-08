@@ -2,16 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
-using System.Drawing;
 using System.Windows.Forms;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Misc;
-using ProSuite.Commons.UI.Dialogs;
 using ProSuite.Commons.UI.ScreenBinding;
 using ProSuite.Commons.UI.ScreenBinding.Elements;
 using ProSuite.Commons.UI.WinForms.Controls;
-using ProSuite.DdxEditor.Content.QA.QCon;
 using ProSuite.DdxEditor.Content.QA.TestDescriptors;
 using ProSuite.DdxEditor.Framework.ItemViews;
 using ProSuite.DomainModel.AO.QA;
@@ -20,6 +17,9 @@ using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Core;
 using ProSuite.UI.QA;
 using ProSuite.UI.QA.Controls;
+#if NET6_0_OR_GREATER
+using System.Drawing;
+#endif
 
 namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 {
@@ -31,18 +31,16 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 		[NotNull] private readonly DataTable _parameterTbl;
 
 		[NotNull] private readonly
-			BoundDataGridHandler<QualitySpecificationReferenceTableRow> _qSpecGridHandler;
+			BoundDataGridHandler<InstanceConfigurationReferenceTableRow> _qSpecGridHandler;
 
 		[CanBeNull] private static string _lastSelectedDetailsTab;
 		[CanBeNull] private static string _lastSelectedParameterValuesTab;
 		private readonly bool _tableViewShown;
 
-		private TableStateManager<QualitySpecificationReferenceTableRow> _qSpecStateManager;
+		private TableStateManager<InstanceConfigurationReferenceTableRow> _qSpecStateManager;
 
 		[NotNull] private readonly TableState _tableState;
-		private IList<QualitySpecificationReferenceTableRow> _initialTableRows;
-
-		[NotNull] private readonly Control _instanceConfigTableViewControl;
+		private IList<InstanceConfigurationReferenceTableRow> _initialTableRows;
 
 		[NotNull] private readonly IInstanceConfigurationTableViewControl _tableViewControl;
 
@@ -60,15 +58,15 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 
 			_tableState = tableState;
 			_tableViewControl = tableViewControl;
-			_instanceConfigTableViewControl = (Control) tableViewControl;
+			var instanceConfigTableViewControl = (Control) tableViewControl;
 
 #if NET6_0
-			_instanceConfigTableViewControl.SuspendLayout();
-			_instanceConfigTableViewControl.Dock = DockStyle.Fill;
-			_instanceConfigTableViewControl.Location = new Point(0, 0);
-			_instanceConfigTableViewControl.Name = "_instanceConfigTableViewControl";
-			_instanceConfigTableViewControl.Size = new Size(569, 123);
-			_instanceConfigTableViewControl.TabIndex = 0;
+			instanceConfigTableViewControl.SuspendLayout();
+			instanceConfigTableViewControl.Dock = DockStyle.Fill;
+			instanceConfigTableViewControl.Location = new Point(0, 0);
+			instanceConfigTableViewControl.Name = "_instanceConfigTableViewControl";
+			instanceConfigTableViewControl.Size = new Size(569, 123);
+			instanceConfigTableViewControl.TabIndex = 0;
 #endif
 
 			InitializeComponent();
@@ -78,7 +76,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			_splitContainer.SuspendLayout();
 			_instanceConfigTableViewControlPanel.SuspendLayout();
 
-			_splitContainer.Panel2.Controls.Add(_instanceConfigTableViewControl);
+			_splitContainer.Panel2.Controls.Add(instanceConfigTableViewControl);
 			_splitContainer.Size = new Size(569, 282);
 			_splitContainer.SplitterDistance = 155;
 			_instanceConfigTableViewControlPanel.Controls.RemoveByKey(
@@ -86,14 +84,9 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			_instanceConfigTableViewControlPanel.Controls.Add(_splitContainer);
 
 			_splitContainer.ResumeLayout(false);
-			_instanceConfigTableViewControl.ResumeLayout(false);
+			instanceConfigTableViewControl.ResumeLayout(false);
 			_instanceConfigTableViewControlPanel.ResumeLayout(false);
 #endif
-
-			NullableBooleanItems.UseFor(_columnIssueType,
-			                            trueText: "Warning",
-			                            falseText: "Error");
-			NullableBooleanItems.UseFor(_columnStopOnError);
 
 			_binder = new ScreenBinder<InstanceConfiguration>(
 				new ErrorProviderValidationMonitor(_errorProvider));
@@ -110,16 +103,6 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			       .To(_textBoxUrl)
 			       .WithLabel(_labelUrl);
 
-			//_binder.Bind(m => m.Uuid)
-			//       .To(_textBoxUuid)
-			//       .WithLabel(_labelUuid)
-			//       .AsReadOnly();
-
-			//_binder.Bind(m => m.VersionUuid)
-			//       .To(_textBoxVersionUuid)
-			//       .WithLabel(_labelVersionUuid)
-			//       .AsReadOnly();
-
 			//_binder.Bind(m => m.Notes)
 			//       .To(_textBoxNotes);
 
@@ -129,12 +112,6 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 
 			_objectReferenceControlInstanceDescriptor.FormatTextDelegate = FormatInstanceDescriptor;
 
-			//_binder.Bind(m => m.NeverFilterTableRowsUsingRelatedGeometry)
-			//       .To(_checkBoxNeverFilterTableRowsUsingRelatedGeometry);
-
-			//_binder.Bind(m => m.NeverStoreRelatedGeometryForTableRowIssues)
-			//       .To(_checkBoxNeverStoreRelatedGeometryForTableRowIssues);
-
 			_binder.OnChange = BinderChanged;
 
 			_parameterTbl = TestParameterGridUtils.BindParametersDataGridView(
@@ -143,9 +120,8 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			_propertyGrid.ToolbarVisible = false;
 
 			_qSpecGridHandler =
-				new BoundDataGridHandler<QualitySpecificationReferenceTableRow>(
-					_dataGridViewQualitySpecifications, restoreSelectionAfterUserSort: true);
-			_qSpecGridHandler.SelectionChanged += _qSpecGridHandler_SelectionChanged;
+				new BoundDataGridHandler<InstanceConfigurationReferenceTableRow>(
+					_dataGridViewReferences, restoreSelectionAfterUserSort: true);
 
 			TabControlUtils.SelectTabPage(_tabControlDetails, _lastSelectedDetailsTab);
 			TabControlUtils.SelectTabPage(_tabControlParameterValues,
@@ -192,26 +168,14 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 						: new LinkArea(0, 0);
 		}
 
-		bool IInstanceConfigurationView.HasSelectedQualitySpecificationReferences
-			=> _qSpecGridHandler.HasSelectedRows;
-
-		public bool RemoveFromQualitySpecificationsEnabled
-		{
-			get => _toolStripButtonRemoveFromQualitySpecifications.Enabled;
-			set => _toolStripButtonRemoveFromQualitySpecifications.Enabled = value;
-		}
-
-		int IInstanceConfigurationView.FirstQualitySpecificationReferenceIndex
-			=> _qSpecGridHandler.FirstSelectedRowIndex;
-
-		void IInstanceConfigurationView.BindToQualitySpecificationReferences(
-			IList<QualitySpecificationReferenceTableRow> tableRows)
+		void IInstanceConfigurationView.BindToQualityConditionReferences(
+			IList<InstanceConfigurationReferenceTableRow> tableRows)
 		{
 			if (_qSpecStateManager == null)
 			{
 				// first time; initialize state manager, delay bind to tableRows to first paint event
 				_qSpecStateManager =
-					new TableStateManager<QualitySpecificationReferenceTableRow>(
+					new TableStateManager<InstanceConfigurationReferenceTableRow>(
 						_qSpecGridHandler);
 				_initialTableRows = tableRows;
 				return;
@@ -223,23 +187,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			BindTo(tableRows);
 		}
 
-		void IInstanceConfigurationView.SelectQualitySpecifications(
-			IEnumerable<QualitySpecification> specsToSelect)
-		{
-			Assert.ArgumentNotNull(specsToSelect, nameof(specsToSelect));
-
-			var selectable = new HashSet<QualitySpecification>(specsToSelect);
-
-			_latch.RunInsideLatch(
-				() => _qSpecGridHandler.SelectRows(
-					row => selectable.Contains(row.QualitySpecification)));
-
-			_qSpecStateManager?.SaveState(_tableState);
-
-			OnSelectionChanged();
-		}
-
-		string IInstanceConfigurationView.QualitySpecificationSummary
+		string IInstanceConfigurationView.ReferenceingInstancesSummary
 		{
 			get => _textBoxQualitySpecifications.Text;
 			set => _textBoxQualitySpecifications.Text = value;
@@ -248,44 +196,6 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 		[NotNull]
 		IInstanceConfigurationTableViewControl IInstanceConfigurationView.TableViewControl =>
 			_tableViewControl;
-
-		IList<QualitySpecificationReferenceTableRow> IInstanceConfigurationView.
-			GetSelectedQualitySpecificationReferenceTableRows()
-		{
-			return _qSpecGridHandler.GetSelectedRows();
-		}
-
-		//public void SetConfigurator(ITestConfigurator configurator)
-		//{
-		//	// configurator may be null
-
-		//	if (_propertyGrid.SelectedObject is ITestConfigurator old)
-		//	{
-		//		old.DataChanged -= configurator_DataChanged;
-		//	}
-
-		//	try
-		//	{
-		//		_propertyGrid.SelectedObject = configurator;
-		//	}
-		//	catch (NullReferenceException)
-		//	{
-		//		// Bug in property Grid !?, do it again
-		//		_propertyGrid.SelectedObject = configurator;
-		//	}
-
-		//	if (configurator != null)
-		//	{
-		//		configurator.DataChanged += configurator_DataChanged;
-		//		_textBoxDescProps.Text = FormatNewLine(configurator.GetTestDescription());
-		//	}
-		//	else
-		//	{
-		//		_textBoxDescProps.Text = null;
-		//	}
-
-		//	_propertyGrid.ExpandAllGridItems();
-		//}
 
 		public void BindToParameterValues(
 			BindingList<ParameterValueListItem> parameterValueItems)
@@ -313,20 +223,10 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			_toolTip.SetToolTip(_textBoxCategory, categoryText);
 		}
 
-		bool IInstanceConfigurationView.Confirm(string message, string title)
-		{
-			return Dialog.YesNo(this, title, message);
-		}
-
-		void IInstanceConfigurationView.UpdateScreen()
-		{
-			_binder.UpdateScreen();
-		}
-
 		#endregion
 
 		private void BindTo(
-			[NotNull] IList<QualitySpecificationReferenceTableRow> tableRows)
+			[NotNull] IList<InstanceConfigurationReferenceTableRow> tableRows)
 		{
 			_latch.RunInsideLatch(
 				() =>
@@ -371,11 +271,6 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			}
 		}
 
-		private void NotifyDirty()
-		{
-			Observer?.NotifyChanged(true);
-		}
-
 		private void BinderChanged()
 		{
 			Observer?.NotifyChanged(_binder.IsDirty());
@@ -391,19 +286,6 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 				              .Replace("\r\r", "\r");
 		}
 
-		private void OnSelectionChanged()
-		{
-			Observer?.QualitySpecificationSelectionChanged();
-		}
-
-		private void configurator_DataChanged(object sender, EventArgs e)
-		{
-			//ITestConfigurator configurator = (ITestConfigurator)sender;
-			//_observer.SetTestParameterValues(configurator.GetTestParameterValues());
-
-			Observer?.NotifyChanged(true);
-		}
-
 		private void _tabControlDetails_SelectedIndexChanged(object sender, EventArgs e)
 		{
 			_lastSelectedDetailsTab = TabControlUtils.GetSelectedTabPageName(_tabControlDetails);
@@ -411,11 +293,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 
 		private void _tabControlParameterValues_SelectedIndexChanged(object sender, EventArgs e)
 		{
-			if (_tabControlParameterValues.SelectedTab == tabPageProperties)
-			{
-				//SetConfigurator(Observer?.GetTestConfigurator());
-			}
-			else if (_tabControlParameterValues.SelectedTab == _tabPageTableView)
+			if (_tabControlParameterValues.SelectedTab == _tabPageTableView)
 			{
 				BindToParameterValues(Observer?.GetTestParameterItems() ??
 				                      new BindingList<ParameterValueListItem>());
@@ -444,26 +322,6 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			Observer?.NotifyChanged(true);
 		}
 
-		private void _toolStripButtonAssignToQualitySpecifications_Click(object sender, EventArgs e)
-		{
-			Observer?.AssignToQualitySpecificationsClicked();
-		}
-
-		private void _toolStripButtonRemoveQualityConditions_Click(object sender, EventArgs e)
-		{
-			Observer?.RemoveFromQualitySpecificationsClicked();
-		}
-
-		private void _qSpecGridHandler_SelectionChanged(object sender, EventArgs e)
-		{
-			if (_latch.IsLatched)
-			{
-				return;
-			}
-
-			OnSelectionChanged();
-		}
-
 		private void _dataGridViewQualitySpecifications_CellValueChanged(
 			object sender, DataGridViewCellEventArgs e)
 		{
@@ -478,22 +336,22 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 		private void _dataGridViewQualitySpecifications_CellEndEdit(
 			object sender, DataGridViewCellEventArgs e)
 		{
-			_dataGridViewQualitySpecifications.InvalidateRow(e.RowIndex);
+			_dataGridViewReferences.InvalidateRow(e.RowIndex);
 		}
 
 		private void _dataGridViewQualitySpecifications_CellDoubleClick(
 			object sender, DataGridViewCellEventArgs e)
 		{
-			if (_dataGridViewQualitySpecifications.IsCurrentCellInEditMode)
+			if (_dataGridViewReferences.IsCurrentCellInEditMode)
 			{
 				return; // ignore
 			}
 
-			QualitySpecificationReferenceTableRow tableRow = _qSpecGridHandler.GetRow(e.RowIndex);
+			InstanceConfigurationReferenceTableRow tableRow = _qSpecGridHandler.GetRow(e.RowIndex);
 
 			if (tableRow != null)
 			{
-				Observer?.QualitySpecificationReferenceDoubleClicked(tableRow);
+				Observer?.InstanceReferenceDoubleClicked(tableRow);
 			}
 		}
 
@@ -509,11 +367,6 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 		private void _buttonOpenUrl_Click(object sender, EventArgs e)
 		{
 			Observer?.OpenUrlClicked();
-		}
-
-		private void _buttonNewVersionUuid_Click(object sender, EventArgs e)
-		{
-			Observer?.NewVersionUuidClicked();
 		}
 
 		private void QualityConditionControl_Load(object sender, EventArgs e)

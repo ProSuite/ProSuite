@@ -8,7 +8,6 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI.Finder;
 using ProSuite.Commons.UI.ScreenBinding.Lists;
-using ProSuite.DdxEditor.Content.QA.QCon;
 using ProSuite.DdxEditor.Content.QA.TestDescriptors;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.ItemViews;
@@ -34,9 +33,9 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 		[NotNull] private readonly BindingList<ParameterValueListItem> _paramValues
 			= new BindingList<ParameterValueListItem>();
 
-		[NotNull] private readonly SortableBindingList<QualitySpecificationReferenceTableRow>
+		[NotNull] private readonly SortableBindingList<InstanceConfigurationReferenceTableRow>
 			_qspecTableRows =
-				new SortableBindingList<QualitySpecificationReferenceTableRow>();
+				new SortableBindingList<InstanceConfigurationReferenceTableRow>();
 
 		#region Constructors
 
@@ -62,6 +61,8 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 		}
 
 		#endregion
+
+		#region IInstanceConfigurationObserver implementation
 
 		void IInstanceConfigurationObserver.OnInstanceDescriptorChanged()
 		{
@@ -96,95 +97,11 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			return _paramValues;
 		}
 
-		//void IInstanceConfigurationObserver.ExportQualityCondition(string exportFileName)
-		//{
-		//	_item.ExportQualityCondition(exportFileName);
-		//}
-
-		//void IInstanceConfigurationObserver.ImportQualityCondition(string importFileName)
-		//{
-		//	_item.ImportQualityCondition(importFileName);
-
-		//	InitParameterData(Assert.NotNull(_item.GetEntity()));
-		//}
-
-		void IInstanceConfigurationObserver.AssignToQualitySpecificationsClicked()
-		{
-			return;
-
-			//InstanceConfiguration instanceConfiguration = Assert.NotNull(Item.GetEntity());
-
-			//IList<QualitySpecificationTableRow> specTableRows =
-			//	_item.GetQualitySpecificationsToReference(instanceConfiguration, _view);
-
-			//if (specTableRows == null || specTableRows.Count == 0)
-			//{
-			//	// nothing selected
-			//	return;
-			//}
-
-			//bool anyChange = false;
-
-			//foreach (QualitySpecificationTableRow specTableRow in specTableRows)
-			//{
-			//	QualitySpecification spec = specTableRow.QualitySpecification;
-
-			//	if (spec.Contains(instanceConfiguration))
-			//	{
-			//		_msg.WarnFormat(
-			//			"The quality condition {0} is already contained in quality specification {1}",
-			//			instanceConfiguration.Name, spec.Name);
-			//	}
-			//	else
-			//	{
-			//		var element = spec.AddElement(instanceConfiguration);
-			//		anyChange = true;
-			//		_qspecTableRows.Add(new QualitySpecificationReferenceTableRow(
-			//			                    spec, element));
-			//	}
-			//}
-
-			//_view.BindToQualitySpecificationReferences(_qspecTableRows);
-			//_view.SelectQualitySpecifications(specTableRows.Select(r => r.QualitySpecification));
-
-			//RenderQualitySpecificationSummary();
-
-			//if (anyChange)
-			//{
-			//	Item.NotifyChanged();
-			//}
-		}
-
-		void IInstanceConfigurationObserver.RemoveFromQualitySpecificationsClicked()
-		{
-			// get selected targets
-			IList<QualitySpecificationReferenceTableRow> selected =
-				_view.GetSelectedQualitySpecificationReferenceTableRows();
-
-			// remove them from the entity
-			foreach (QualitySpecificationReferenceTableRow tableRow in selected)
-			{
-				tableRow.QualitySpecification.RemoveElement(
-					tableRow.QualitySpecificationElement);
-
-				_qspecTableRows.Remove(tableRow);
-			}
-
-			RenderQualitySpecificationSummary();
-
-			Item.NotifyChanged();
-		}
-
-		void IInstanceConfigurationObserver.QualitySpecificationSelectionChanged()
-		{
-			UpdateQualitySpecificationsAppearance();
-		}
-
-		void IInstanceConfigurationObserver.QualitySpecificationReferenceDoubleClicked(
-			QualitySpecificationReferenceTableRow qualitySpecificationReferenceTableRow)
+		void IInstanceConfigurationObserver.InstanceReferenceDoubleClicked(
+			InstanceConfigurationReferenceTableRow qualitySpecificationReferenceTableRow)
 		{
 			_itemNavigation.GoToItem(
-				qualitySpecificationReferenceTableRow.QualitySpecification);
+				qualitySpecificationReferenceTableRow.InstanceConfig);
 		}
 
 		void IInstanceConfigurationObserver.InstanceDescriptorLinkClicked(
@@ -203,24 +120,12 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			_item.OpenUrl();
 		}
 
-		void IInstanceConfigurationObserver.NewVersionUuidClicked()
-		{
-			if (_view.Confirm(
-				    "Are you sure to assign a new version UUID to this quality condition?" +
-				    Environment.NewLine +
-				    Environment.NewLine +
-				    "This invalidates all exceptions defined for the Geoprocessing tool 'Quality Verification (xml-based)'",
-				    "Assign new version UUID"))
-			{
-				_item.AssignNewVersionUuid();
-				_view.UpdateScreen();
-			}
-		}
+		#endregion
 
 		protected override void OnBoundTo(InstanceConfiguration instanceConfiguration)
 		{
 			Assert.ArgumentNotNull(instanceConfiguration, nameof(instanceConfiguration));
-			// called on initial load, on Save and on Discard (NOT: on add/remove qspecs)
+			// called on initial load, on Save and on Discard
 
 			try
 			{
@@ -242,7 +147,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 
 			SetViewData();
 
-			PopulateQualitySpecificationReferenceTableRows(_qspecTableRows);
+			PopulateQualityConditionReferenceTableRows(_qspecTableRows);
 
 			RenderQualitySpecificationReferences();
 
@@ -258,15 +163,9 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			base.OnUnloaded();
 		}
 
-		private void UpdateQualitySpecificationsAppearance()
-		{
-			_view.RemoveFromQualitySpecificationsEnabled =
-				_view.HasSelectedQualitySpecificationReferences;
-		}
-
 		private void RenderQualitySpecificationReferences()
 		{
-			_view.BindToQualitySpecificationReferences(_qspecTableRows);
+			_view.BindToQualityConditionReferences(_qspecTableRows);
 
 			RenderQualitySpecificationSummary();
 		}
@@ -275,34 +174,31 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 		{
 			var sb = new StringBuilder();
 
-			foreach (QualitySpecificationReferenceTableRow row in _qspecTableRows)
+			foreach (InstanceConfigurationReferenceTableRow row in _qspecTableRows)
 			{
 				if (sb.Length > 0)
 				{
 					sb.Append("; ");
 				}
 
-				sb.Append(row.QualitySpecificationName);
+				sb.Append(row.InstanceConfig.Name);
 			}
 
-			_view.QualitySpecificationSummary = sb.Length == 0
-				                                    ? "<no quality specification uses this condition>"
-				                                    : sb.ToString();
+			_view.ReferenceingInstancesSummary = sb.Length == 0
+				                                     ? "<no quality condition, transformer or filter uses this instance>"
+				                                     : sb.ToString();
 		}
 
-		private void PopulateQualitySpecificationReferenceTableRows(
-			[NotNull] ICollection<QualitySpecificationReferenceTableRow> tableRows)
+		private void PopulateQualityConditionReferenceTableRows(
+			[NotNull] ICollection<InstanceConfigurationReferenceTableRow> tableRows)
 		{
 			Assert.ArgumentNotNull(tableRows, nameof(tableRows));
 
 			tableRows.Clear();
 
-			foreach (
-				KeyValuePair<QualitySpecification, QualitySpecificationElement> pair in
-				_item.GetQualitySpecificationReferences())
+			foreach (InstanceConfiguration instanceConfig in _item.GetReferencingInstances())
 			{
-				tableRows.Add(
-					new QualitySpecificationReferenceTableRow(pair.Key, pair.Value));
+				tableRows.Add(new InstanceConfigurationReferenceTableRow(instanceConfig));
 			}
 		}
 
@@ -325,7 +221,6 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			_view.BindToParameterValues(_paramValues);
 
 #if NET6_0
-
 			_view.TableViewControl.BindTo(instanceConfig);
 #endif
 		}

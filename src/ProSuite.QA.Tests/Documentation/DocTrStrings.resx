@@ -279,6 +279,6 @@ See T1Attributes</value>
     <value>table to join with 't1'</value>
   </data>
   <data name="TrTableJoin_t1" xml:space="preserve">
-    <value>table to join with 't0'</value>
+    <value>table to join with 'leftTable'</value>
   </data>
 </root>

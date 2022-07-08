@@ -1,11 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.DdxEditor.Content.Properties;
 using ProSuite.DdxEditor.Content.QA.QCon;
 using ProSuite.DdxEditor.Content.QA.QSpec;
 using ProSuite.DdxEditor.Framework;
@@ -41,20 +39,26 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 
 		protected override IEnumerable<Item> GetChildren()
 		{
-			return ((IInstanceConfigurationContainer) _container)
-				.GetInstanceConfigurationItems(this);
-			return _container.GetQualityConditionItems(this);
+			return _container.GetInstanceConfigurationItems(this);
 		}
 
 		protected override Control CreateControlCore(IItemNavigation itemNavigation)
 		{
+			var category = _container.Category;
+
 			return ModelBuilder.ListQualityConditionsWithDataset
-				       ? (Control) CreateTableControl<InstanceConfigurationDatasetTableRow>(
-					       ((IInstanceConfigurationContainer)_container).GetInstanceConfigurationDatasetTableRows<TransformerConfiguration>,
-					       itemNavigation)
-				       : CreateTableControl(_container.GetQualityConditionTableRows,
-				                            itemNavigation);
+				       ? CreateTableControl(
+					       () => GetConfigDatasetTableRows(category), itemNavigation)
+				       : CreateTableControl(
+					       () => GetConfigTableRows(category), itemNavigation);
 		}
+
+		protected abstract IEnumerable<InstanceConfigurationDatasetTableRow>
+			GetConfigDatasetTableRows(
+				[CanBeNull] DataQualityCategory category);
+
+		protected abstract IEnumerable<InstanceConfigurationInCategoryTableRow> GetConfigTableRows(
+			[CanBeNull] DataQualityCategory category);
 
 		protected override void CollectCommands(List<ICommand> commands,
 		                                        IApplicationController applicationController,
@@ -164,85 +168,5 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 
 			item.NotifyChanged();
 		}
-	}
-
-	public class TransformerConfigurationsItem : InstanceConfigurationsItem
-	{
-		[NotNull] private static readonly Image _image;
-		[NotNull] private static readonly Image _selectedImage;
-
-		static TransformerConfigurationsItem()
-		{
-			_image = ItemUtils.GetGroupItemImage(Resources.TransformOverlay);
-			_selectedImage =
-				ItemUtils.GetGroupItemSelectedImage(Resources.TransformOverlay);
-		}
-
-		public TransformerConfigurationsItem([NotNull] CoreDomainModelItemModelBuilder modelBuilder,
-		                                     [NotNull] IQualityConditionContainer container)
-			: base(modelBuilder, "Transformer Configurations",
-			       "Configured dataset transformers using one or more input datasets",
-			       container) { }
-
-		public override Image Image => _image;
-
-		public override Image SelectedImage => _selectedImage;
-
-		protected override void CollectCommands(
-			List<ICommand> commands,
-			IApplicationController applicationController)
-		{
-			base.CollectCommands(commands, applicationController);
-
-			commands.Add(new AddTransformerConfigurationCommand(this, applicationController, this));
-			commands.Add(new DeleteAllChildItemsCommand(this, applicationController));
-		}
-
-		#region Overrides of InstanceConfigurationsItem
-
-		protected override InstanceConfigurationItem CreateConfigurationItemCore(
-			CoreDomainModelItemModelBuilder modelBuilder,
-			InstanceConfiguration configuration,
-			IInstanceConfigurationContainerItem containerItem,
-			IInstanceConfigurationRepository repository)
-		{
-			Assert.ArgumentNotNull(configuration, nameof(configuration));
-
-			var item =
-				new InstanceConfigurationItem(modelBuilder, configuration, containerItem,
-				                              repository);
-
-			return item;
-
-			//InstanceConfigurationItem item = CreateConfigurationItemCore(
-			//	_modelBuilder, configuration, this,
-			//	_modelBuilder.QualityConditions);
-
-			//AddConfigurationItem(item);
-
-			//return item;
-		}
-
-		protected override InstanceConfigurationItem CreateNewItemCore(
-			CoreDomainModelItemModelBuilder modelBuilder)
-		{
-			//return new TransformerConfigurationItem()
-
-			//var qualityCondition = new QualityCondition(assignUuids: true)
-			//                       {
-			//	                       Category = category
-			//                       };
-
-			//return new QualityConditionItem(
-			//	_modelBuilder, qualityCondition,
-			//	containerItem, _modelBuilder.QualityConditions);
-
-			var transformerConfig = new TransformerConfiguration();
-
-			return new InstanceConfigurationItem(modelBuilder, transformerConfig, this,
-			                                     modelBuilder.InstanceConfigurations);
-		}
-
-		#endregion
 	}
 }

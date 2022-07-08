@@ -1,22 +1,11 @@
-using System.Collections.Generic;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.DdxEditor.Content.QA.InstanceConfig;
 using ProSuite.DdxEditor.Content.QA.QCon;
-using ProSuite.DdxEditor.Framework.Items;
 
 namespace ProSuite.DdxEditor.Content.QA.QSpec
 {
-	public interface IQualityConditionContainer
+	public interface IQualityConditionContainer : IInstanceConfigurationContainer
 	{
-		[NotNull]
-		IEnumerable<Item> GetQualityConditionItems(
-			[NotNull] IInstanceConfigurationContainerItem containerItem);
-
-		[NotNull]
-		IEnumerable<QualityConditionDatasetTableRow> GetQualityConditionDatasetTableRows();
-
-		[NotNull]
-		IEnumerable<QualityConditionInCategoryTableRow> GetQualityConditionTableRows();
-
 		[NotNull]
 		QualityConditionItem CreateQualityConditionItem(
 			[NotNull] IInstanceConfigurationContainerItem containerItem);

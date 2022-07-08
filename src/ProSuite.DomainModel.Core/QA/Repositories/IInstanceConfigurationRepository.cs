@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using ProSuite.Commons.DomainModels;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.DomainModel.Core.QA.Repositories
 {
@@ -24,5 +25,8 @@ namespace ProSuite.DomainModel.Core.QA.Repositories
 			DataQualityCategory category) where T : InstanceConfiguration;
 
 		IList<ReferenceCount> GetReferenceCounts<T>() where T : InstanceConfiguration;
+
+		IList<InstanceConfiguration> GetReferencingConfigurations(
+			TransformerConfiguration transformer);
 	}
 }

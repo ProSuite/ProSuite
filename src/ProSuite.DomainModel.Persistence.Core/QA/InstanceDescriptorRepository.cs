@@ -89,7 +89,7 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 
 				T instanceConfigAlias = null;
 				var intermediateResult =
-					session.QueryOver<T>(() => instanceConfigAlias)
+					session.QueryOver(() => instanceConfigAlias)
 					       .JoinAlias(() => instanceConfigAlias.InstanceDescriptor,
 					                  () => instanceDescAlias)
 					       .SelectList(list => list.SelectCount(config => config.Id)
@@ -107,10 +107,10 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 				var result = new Dictionary<int, int>(intermediateResult.Count);
 				foreach (object[] values in intermediateResult)
 				{
-					var testDescriptorId = (int) values[0];
-					int qualityConditionCount = Convert.ToInt32(values[1]);
+					int configCount = Convert.ToInt32(values[0]);
+					var descriptorId = (int) values[1];
 
-					result.Add(testDescriptorId, qualityConditionCount);
+					result.Add(descriptorId, configCount);
 				}
 
 				return result;

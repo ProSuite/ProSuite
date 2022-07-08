@@ -320,7 +320,7 @@ namespace ProSuite.DdxEditor.Content.QA.Categories
 			AddQualitySpecificationItem(CreateQualitySpecificationItem(this));
 		}
 
-		IEnumerable<Item> IQualityConditionContainer.GetQualityConditionItems(
+		IEnumerable<Item> IInstanceConfigurationContainer.GetInstanceConfigurationItems(
 			IInstanceConfigurationContainerItem containerItem)
 		{
 			return GetQualityConditions()
@@ -342,7 +342,7 @@ namespace ProSuite.DdxEditor.Content.QA.Categories
 				_modelBuilder, category);
 		}
 
-		public IEnumerable<QualityConditionInCategoryTableRow> GetQualityConditionTableRows()
+		public IEnumerable<InstanceConfigurationInCategoryTableRow> GetQualityConditionTableRows()
 		{
 			DataQualityCategory category = Assert.NotNull(GetEntity());
 
@@ -607,5 +607,11 @@ namespace ProSuite.DdxEditor.Content.QA.Categories
 
 			item.NotifyChanged();
 		}
+
+		#region Implementation of IInstanceConfigurationContainer
+
+		public DataQualityCategory Category => Assert.NotNull(GetEntity());
+
+		#endregion
 	}
 }

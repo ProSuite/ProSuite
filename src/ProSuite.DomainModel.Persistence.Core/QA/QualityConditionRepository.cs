@@ -318,6 +318,19 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 			}
 		}
 
+		//public IList<QualityCondition> Get(TransformerConfiguration transformer)
+		//{
+		//	IQueryOver<DatasetTestParameterValue, Dataset> parametersQuery =
+		//		session.QueryOver<DatasetTestParameterValue>()
+		//		       .Select(p => p.Id)
+		//		       .Where(p => p.DatasetValue != null)
+		//		       .JoinQueryOver<Dataset>(p => p.DatasetValue)
+		//		       //.Where(d => d != null)
+		//		       .And(d => d.Deleted);
+
+		//	return parametersQuery.List<int>();
+		//}
+
 		[NotNull]
 		private static HashSet<int> GetQualityConditionIdsInvolvingDeletedDatasets(
 			[NotNull] ISession session)

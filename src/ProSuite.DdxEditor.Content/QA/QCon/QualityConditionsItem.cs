@@ -49,17 +49,20 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 
 		protected override IEnumerable<Item> GetChildren()
 		{
-			return _container.GetQualityConditionItems(this);
+			return _container.GetInstanceConfigurationItems(this);
 		}
 
 		protected override Control CreateControlCore(IItemNavigation itemNavigation)
 		{
+			var category = _container.Category;
+
 			return _modelBuilder.ListQualityConditionsWithDataset
-				       ? (Control)
-				       CreateTableControl(_container.GetQualityConditionDatasetTableRows,
-				                          itemNavigation)
-				       : CreateTableControl(_container.GetQualityConditionTableRows,
-				                            itemNavigation);
+				       ? CreateTableControl(
+					       () => QualityConditionContainerUtils.GetQualityConditionDatasetTableRows(
+						       _modelBuilder, category), itemNavigation)
+				       : CreateTableControl(
+					       () => QualityConditionContainerUtils.GetQualityConditionTableRows(
+						       _modelBuilder, category), itemNavigation);
 		}
 
 		protected override void CollectCommands(
@@ -164,11 +167,6 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 		{
 			return _modelBuilder.ReadOnlyTransaction(instanceConfigurationItem.GetEntity);
 		}
-
-		//public QualityCondition GetQualityCondition(QualityConditionItem item)
-		//{
-		//	return _modelBuilder.ReadOnlyTransaction(() => item.GetEntity());
-		//}
 
 		private void AddQualityConditionItem(QualityConditionItem item)
 		{

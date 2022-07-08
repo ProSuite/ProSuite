@@ -7,11 +7,8 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
-using ProSuite.Commons.UI.Finder;
 using ProSuite.Commons.Validation;
-using ProSuite.DdxEditor.Content.QA.Categories;
 using ProSuite.DdxEditor.Content.QA.QCon;
-using ProSuite.DdxEditor.Content.QA.QSpec;
 using ProSuite.DdxEditor.Content.QA.TestDescriptors;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Commands;
@@ -19,15 +16,14 @@ using ProSuite.DdxEditor.Framework.Dependencies;
 using ProSuite.DdxEditor.Framework.Items;
 using ProSuite.DdxEditor.Framework.ItemViews;
 using ProSuite.DomainModel.AO.QA;
-using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Core;
-using ProSuite.UI.QA;
 using ProSuite.UI.QA.ResourceLookup;
 
 namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 {
-	public class InstanceConfigurationItem : EntityItem<InstanceConfiguration, InstanceConfiguration>
+	public class
+		InstanceConfigurationItem : EntityItem<InstanceConfiguration, InstanceConfiguration>
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -112,19 +108,6 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			return paramList;
 		}
 
-		public void ExportQualityCondition([NotNull] string exportFileName)
-		{
-			ModelBuilder.ReadOnlyTransaction(
-				() => ExportQualityConditionCore(exportFileName));
-		}
-
-		public void ImportQualityCondition([NotNull] string importFileName)
-		{
-			// TODO only if there are no pending changes!!
-			ModelBuilder.UseTransaction(
-				() => ImportQualityConditionCore(importFileName));
-		}
-
 		[NotNull]
 		public IList<InstanceDescriptorTableRow> GetInstanceDescriptorTableRows()
 		{
@@ -141,13 +124,14 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 
 			IDictionary<int, int> refCountMap =
 				ModelBuilder.InstanceDescriptors
-							.GetReferencingConfigurationCount<TransformerConfiguration>();
+				            .GetReferencingConfigurationCount<TransformerConfiguration>();
 
 			foreach (InstanceDescriptor descriptor in ModelBuilder
-													  .InstanceDescriptors.GetTransformerDescriptors())
+			                                          .InstanceDescriptors
+			                                          .GetTransformerDescriptors())
 			{
 				int refCount;
-				if (!refCountMap.TryGetValue(descriptor.Id, out refCount))
+				if (! refCountMap.TryGetValue(descriptor.Id, out refCount))
 				{
 					refCount = 0;
 				}
@@ -161,74 +145,19 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 		public void CreateCopy()
 		{
 			Assert.NotNull(_containerItem, "no container, cannot create copy")
-				  .CreateCopy(this);
+			      .CreateCopy(this);
 		}
 
 		[NotNull]
-		public IEnumerable<KeyValuePair<QualitySpecification, QualitySpecificationElement>>
-			GetQualitySpecificationReferences()
+		public IEnumerable<InstanceConfiguration> GetReferencingInstances()
 		{
-			yield break;
+			InstanceConfiguration instanceConfig = Assert.NotNull(GetEntity());
 
-			//var qualityCondition = Assert.NotNull(GetEntity());
+			var referencingEntities =
+				ModelBuilder.InstanceConfigurations.GetReferencingConfigurations(
+					(TransformerConfiguration) instanceConfig);
 
-			//IList<QualitySpecification> qualitySpecifications =
-			//	_modelBuilder.Resolve<IQualitySpecificationRepository>().Get(
-			//		qualityCondition);
-
-			//foreach (QualitySpecification specification in qualitySpecifications)
-			//{
-			//	QualitySpecificationElement element = specification.GetElement(qualityCondition);
-
-			//	Assert.NotNull(element,
-			//	               "Element for {0} not found in referencing quality specification {1}",
-			//	               qualityCondition.Name, specification.Name);
-
-			//	yield return
-			//		new KeyValuePair<QualitySpecification, QualitySpecificationElement>(
-			//			specification, element);
-			//}
-		}
-
-		[CanBeNull]
-		public IList<QualitySpecificationTableRow> GetQualitySpecificationsToReference(
-			[NotNull] InstanceConfiguration instanceConfig,
-			[NotNull] IWin32Window owner)
-		{
-			Assert.ArgumentNotNull(instanceConfig, nameof(instanceConfig));
-
-			return new List<QualitySpecificationTableRow>();
-
-			//DdxModel model = DataQualityCategoryUtils.GetDefaultModel(
-			//	instanceConfig.Category);
-
-			//var queries = new List<FinderQuery<QualitySpecificationTableRow>>
-			//              {
-			//	              new FinderQuery<QualitySpecificationTableRow>(
-			//		              "<All>", "[all]",
-			//		              () =>
-			//			              QSpec.TableRows.GetQualitySpecifications(
-			//				              ModelBuilder,
-			//				              instanceConfig))
-			//              };
-
-			//if (model != null)
-			//{
-			//	queries.Add(new FinderQuery<QualitySpecificationTableRow>(
-			//		            $"Quality specifications involving datasets in {model.Name}",
-			//		            $"model{model.Id}",
-			//		            () => QSpec.TableRows.GetQualitySpecifications(
-			//			            ModelBuilder,
-			//			            instanceConfig,
-			//			            model)));
-			//}
-
-			//var finder = new Finder<QualitySpecificationTableRow>();
-
-			//return finder.ShowDialog(
-			//	owner, queries,
-			//	filterSettingsContext: FinderContextIds.GetId(instanceConfig.Category),
-			//	allowMultiSelection: true);
+			return referencingEntities;
 		}
 
 		public void OpenUrl()
@@ -255,18 +184,6 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			Process.Start(url);
 		}
 
-		public void AssignNewVersionUuid()
-		{
-			//QualityCondition qualityCondition =
-			//	_modelBuilder.ReadOnlyTransaction(GetEntity);
-
-			//Assert.NotNull(qualityCondition, "Quality condition no longer exists");
-
-			//qualityCondition.AssignNewVersionUuid();
-
-			//NotifyChanged();
-		}
-
 		private void UpdateImage([CanBeNull] InstanceConfiguration instanceConfiguration)
 		{
 			if (instanceConfiguration == null)
@@ -279,103 +196,23 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 				_image.Tag = TestTypeImageLookup.GetDefaultSortIndex(instanceConfiguration);
 
 				_imageKey = string.Format("{0}#{1}", base.ImageKey,
-										  TestTypeImageLookup.GetImageKey(
-											  instanceConfiguration));
+				                          TestTypeImageLookup.GetImageKey(
+					                          instanceConfiguration));
 			}
-		}
-
-		/// <summary>
-		/// Exports the quality condition to a specified file name
-		/// </summary>
-		/// <param name="exportFileName">Name of the export file.</param>
-		/// <remarks>Expects to be called within a transaction</remarks>
-		private void ExportQualityConditionCore([NotNull] string exportFileName)
-		{
-			//Assert.ArgumentNotNullOrEmpty(exportFileName, nameof(exportFileName));
-
-			//InstanceConfiguration qualityCondition = Assert.NotNull(GetEntity());
-
-			//using (TextWriter file = new StreamWriter(exportFileName))
-			//{
-			//	try
-			//	{
-			//		TestFactory factory = Assert.NotNull(
-			//			TestFactoryUtils.CreateTestFactory(qualityCondition),
-			//			"Cannot create test factory");
-
-			//		string data = factory.Export(qualityCondition);
-
-			//		file.Write(data);
-			//	}
-			//	finally
-			//	{
-			//		file.Close();
-			//	}
-			//}
-
-			//_msg.Info(string.Format(
-			//	          "Exported parameters of quality condition '{0}' to {1}",
-			//	          qualityCondition.Name, exportFileName));
-		}
-
-		/// <summary>
-		/// Imports the quality condition from a given file.
-		/// </summary>
-		/// <param name="importFileName">Name of the import file.</param>
-		/// <remarks>Expects to be called within a transaction</remarks>
-		private void ImportQualityConditionCore([NotNull] string importFileName)
-		{
-			//Assert.ArgumentNotNullOrEmpty(importFileName, nameof(importFileName));
-
-			//InstanceConfiguration qualityCondition = Assert.NotNull(GetEntity());
-
-			//QualityCondition paramValuesQa;
-			//using (var file = new StreamReader(importFileName))
-			//{
-			//	try
-			//	{
-			//		IList<Dataset> datasets = _modelBuilder.Datasets.GetAll();
-
-			//		TestFactory factory = Assert.NotNull(
-			//			TestFactoryUtils.CreateTestFactory(qualityCondition),
-			//			"Cannot create test factory");
-
-			//		paramValuesQa = factory.CreateQualityCondition(
-			//			file, datasets, qualityCondition.ParameterValues);
-			//	}
-			//	finally
-			//	{
-			//		file.Close();
-			//	}
-			//}
-
-			//Assert.NotNull(paramValuesQa,
-			//               "Unable to import quality condition parameters");
-
-			//qualityCondition.ClearParameterValues();
-
-			//foreach (TestParameterValue value in paramValuesQa.ParameterValues)
-			//{
-			//	qualityCondition.AddParameterValue(value);
-			//}
-
-			//_msg.Info(string.Format(
-			//	          "Imported parameters of quality condition {0} from {1}",
-			//	          qualityCondition.Name, importFileName));
 		}
 
 		protected override string GetText(InstanceConfiguration entity)
 		{
 			string suffix = entity.InstanceDescriptor == null
-								? string.Empty
-								: string.Format(" ({0})", entity.InstanceDescriptor.Name);
+				                ? string.Empty
+				                : string.Format(" ({0})", entity.InstanceDescriptor.Name);
 
 			return $"{entity.Name}{suffix}";
 		}
 
 		protected override void CollectCommands(List<ICommand> commands,
-												IApplicationController
-													applicationController)
+		                                        IApplicationController
+			                                        applicationController)
 		{
 			base.CollectCommands(commands, applicationController);
 
@@ -404,7 +241,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 		}
 
 		protected override void IsValidForPersistenceCore(InstanceConfiguration entity,
-														  Notification notification)
+		                                                  Notification notification)
 		{
 			Assert.ArgumentNotNull(entity, nameof(entity));
 			Assert.ArgumentNotNull(notification, nameof(notification));
@@ -430,8 +267,8 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 					}
 
 					notification.RegisterMessage(dsValue.TestParameterName,
-												 "Dataset not set",
-												 Severity.Error);
+					                             "Dataset not set",
+					                             Severity.Error);
 				}
 			}
 
@@ -441,8 +278,8 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			if (existing != null && existing.Id != entity.Id)
 			{
 				notification.RegisterMessage("Name",
-											 "A quality condition with the same name already exists",
-											 Severity.Error);
+				                             "A quality condition with the same name already exists",
+				                             Severity.Error);
 			}
 		}
 
@@ -462,7 +299,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 				if (testParameter.Name == parameterValue.TestParameterName)
 				{
 					// parameter found; it is optional if not a constructor parameter
-					return !testParameter.IsConstructorParameter;
+					return ! testParameter.IsConstructorParameter;
 				}
 			}
 
@@ -472,7 +309,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 		protected virtual InstanceFactory CreateInstanceFactory(InstanceConfiguration entity)
 		{
 			// TODO: Subclass
-			var transformerConfig = (TransformerConfiguration)entity;
+			var transformerConfig = (TransformerConfiguration) entity;
 			InstanceFactory factory =
 				InstanceFactoryUtils.CreateTransformerFactory(transformerConfig);
 			return factory;

@@ -98,18 +98,6 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 			{
 				if (typeof(T) == typeof(TransformerConfiguration))
 				{
-					//DatasetTestParameterValue parameterAlias = null;
-					//TransformerConfiguration transformerAlias = null;
-					//IQueryOver<DatasetTestParameterValue, TransformerConfiguration>
-					//	parametersQuery =
-					//		session.QueryOver(() => parameterAlias)
-					//		       .Where(p => p.ValueSource != null)
-					//		       .JoinQueryOver(p => p.ValueSource, () => transformerAlias)
-					//		       .SelectList(lst => lst
-					//		                          .SelectGroup(p => p.ValueSource.Id)
-					//		                          .SelectCount(p => p.Id)
-					//		       );
-
 					ReferenceCount referenceCount = null;
 					IQueryOver<DatasetTestParameterValue>
 						parametersQuery =
@@ -128,6 +116,29 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 
 				throw new NotImplementedException();
 			}
+		}
+
+		public IList<InstanceConfiguration> GetReferencingConfigurations(
+			TransformerConfiguration transformer)
+		{
+			if (! transformer.IsPersistent)
+			{
+				return new List<InstanceConfiguration>(0);
+			}
+
+			using (ISession session = OpenSession(true))
+			{
+				DatasetTestParameterValue parameterValueAlias = null;
+				var result =
+					DatasetParameterFetchingUtils.GetParentConfiguration<InstanceConfiguration>(
+						null, session, () =>
+							parameterValueAlias.ValueSource != null &&
+							parameterValueAlias.ValueSource == transformer);
+
+				return result;
+			}
+
+			throw new NotImplementedException();
 		}
 
 		[NotNull]
