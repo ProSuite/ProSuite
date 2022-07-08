@@ -398,12 +398,11 @@ public partial class QualityConditionTableViewBlazor : IDisposable
 			return true;
 		}
 
-		IEnumerable<ViewModelBase> collectionViewModels =
-			Rows.Where(vm => vm is TestParameterValueCollectionViewModel);
-
-		return collectionViewModels.Any(vm =>
+		return _childGrids.Any(grid =>
 		{
-			int index = vm.Values.IndexOf(SelectedCollectionRow);
+			List<ViewModelBase> data = grid.Data.ToList();
+
+			int index = data.IndexOf(SelectedCollectionRow);
 
 			return index == 0;
 		});
@@ -415,15 +414,14 @@ public partial class QualityConditionTableViewBlazor : IDisposable
 		{
 			return true;
 		}
-
-		IEnumerable<ViewModelBase> collectionViewModels =
-			Rows.Where(vm => vm is TestParameterValueCollectionViewModel);
-
-		return collectionViewModels.Any(vm =>
+		
+		return _childGrids.Any(grid =>
 		{
-			int index = vm.Values.IndexOf(SelectedCollectionRow);
+			List<ViewModelBase> data = grid.Data.ToList();
 
-			return index >= vm.Values.Count - 1;
+			int index = data.IndexOf(SelectedCollectionRow);
+
+			return index == data.Count - 1;
 		});
 	}
 
