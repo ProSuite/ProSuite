@@ -9,10 +9,16 @@ namespace ProSuite.DdxEditor.Content.Blazor.View;
 public partial class EnumTestParameterValueBlazor : IDisposable
 {
 	private Type _dataType;
-	private Dictionary<object, EnumValueItem> _enumValuesByObject;
 
 	[Parameter]
 	public ScalarTestParameterValueViewModel ViewModel { get; set; }
+
+	[CanBeNull]
+	public object Value
+	{
+		get => ViewModel.Value;
+		set => ViewModel.Value = value;
+	}
 
 	[Parameter]
 	public Type DataType
@@ -25,8 +31,6 @@ public partial class EnumTestParameterValueBlazor : IDisposable
 			Array values = Enum.GetValues(_dataType);
 
 			IntValues = new List<int>(values.Length);
-
-			_enumValuesByObject = new Dictionary<object, EnumValueItem>(values.Length);
 			
 			for (var i = 0; i < values.Length; i++)
 			{
@@ -35,30 +39,25 @@ public partial class EnumTestParameterValueBlazor : IDisposable
 				if (enumValue != null)
 				{
 					IntValues.Add((int) enumValue);
-					_enumValuesByObject.Add(enumValue, new EnumValueItem(enumValue));
 				}
 			}
-			
-			EnumValues = _enumValuesByObject.Values;
 		}
 	}
 
 	public IList<int> IntValues { get; set; }
-	public IEnumerable<EnumValueItem> EnumValues { get; set; }
 
-	public int IntValue { get; set; }
-
-	[CanBeNull]
-	public object Value
+	public int IntValue
 	{
 		get
 		{
-			return ViewModel.Value;
+			if (Value != null)
+			{
+				return (int) Value;
+			}
+
+			return 0;
 		}
-		set
-		{
-			ViewModel.Value = Enum.ToObject(DataType, IntValue);
-		}
+		set => Value = value;
 	}
 
 	public void Dispose()
@@ -66,21 +65,21 @@ public partial class EnumTestParameterValueBlazor : IDisposable
 		ViewModel?.Dispose();
 	}
 
-	public class EnumValueItem
-	{
-		private readonly int _enumValue;
-		private readonly string _enumName;
+	//public class EnumValueItem
+	//{
+	//	private readonly int _enumValue;
+	//	private readonly string _enumName;
 
-		public EnumValueItem([NotNull] object enumValue)
-		{
-			_enumValue = (int) enumValue;
-			_enumName = $"{enumValue}";
-		}
+	//	public EnumValueItem([NotNull] object enumValue)
+	//	{
+	//		_enumValue = (int) enumValue;
+	//		_enumName = $"{enumValue}";
+	//	}
 
-		[UsedImplicitly]
-		public int EnumValue => _enumValue;
+	//	[UsedImplicitly]
+	//	public int EnumValue => _enumValue;
 
-		[UsedImplicitly]
-		public string EnumName => _enumName;
-	}
+	//	[UsedImplicitly]
+	//	public string EnumName => _enumName;
+	//}
 }
