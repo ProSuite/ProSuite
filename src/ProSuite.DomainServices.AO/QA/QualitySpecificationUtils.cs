@@ -29,12 +29,24 @@ namespace ProSuite.DomainServices.AO.QA
 			[NotNull] QualitySpecification specification,
 			[NotNull] IDomainTransactionManager domainTransactions)
 		{
+			// Avoid no session while getting referenced datasets, attach conditions first:
+			var persistentConditions = new List<QualityCondition>();
+			foreach (QualitySpecificationElement element in specification.Elements.Where(e => e.Enabled))
+			{
+				QualityCondition condition = element.QualityCondition;
+				
+				if (condition.IsPersistent)
+				{
+					// Do not re-attach un-persisted (e.g. customized) conditions.
+					domainTransactions.Reattach(condition);
+				}
+
+				persistentConditions.Add(condition);
+			}
+
 			ICollection<Dataset> datasets =
-				GetQualityConditionDatasets(
-					specification, out ICollection<QualityCondition> persistentConditions);
-
-			domainTransactions.Reattach(persistentConditions);
-
+				GetQualityConditionDatasets(specification);
+			
 			// Re-attach conditions because otherwise a LazyLoadException occurs when getting
 			// the issue filters
 			foreach (QualityCondition condition in persistentConditions)
@@ -52,13 +64,10 @@ namespace ProSuite.DomainServices.AO.QA
 		/// including datasets that are part of a transformer or filter used in a condition.
 		/// </summary>
 		/// <param name="qualitySpecification"></param>
-		/// <param name="conditions"></param>
 		/// <returns></returns>
 		public static ICollection<Dataset> GetQualityConditionDatasets(
-			QualitySpecification qualitySpecification,
-			out ICollection<QualityCondition> conditions)
+			QualitySpecification qualitySpecification)
 		{
-			conditions = new List<QualityCondition>();
 			var datasets = new HashSet<Dataset>();
 			foreach (QualitySpecificationElement element in qualitySpecification.Elements)
 			{
@@ -74,12 +83,6 @@ namespace ProSuite.DomainServices.AO.QA
 					         includeRecursively, includeRecursively))
 				{
 					datasets.Add(dataset);
-				}
-
-				if (condition.IsPersistent)
-				{
-					// Do not re-attach un-persisted (e.g. customized) conditions.
-					conditions.Add(condition);
 				}
 			}
 
