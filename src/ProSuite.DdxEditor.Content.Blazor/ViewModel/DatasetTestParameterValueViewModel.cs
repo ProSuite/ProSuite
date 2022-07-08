@@ -42,8 +42,6 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 		ModelName = _source.Match(d => d?.Model?.Name,
 		                          TestParameterValueUtils.GetDatasetModelName);
 
-		Value = DatasetSource.Match(d => d?.Name, t => t?.Name);
-
 		ComponentType = typeof(DatasetTestParameterValueBlazor);
 		ComponentParameters.Add("ViewModel", this);
 	}
@@ -72,6 +70,12 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 	{
 		get => _usedAsReferenceData;
 		set => SetProperty(ref _usedAsReferenceData, value);
+	}
+
+	public override object Value
+	{
+		get => DatasetSource.Match(d => d?.Name, t => t?.Name);
+		set { }
 	}
 
 	public string ImageSource { get; set; }

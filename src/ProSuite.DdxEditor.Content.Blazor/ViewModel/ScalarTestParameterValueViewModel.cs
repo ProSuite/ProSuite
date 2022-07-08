@@ -10,12 +10,14 @@ namespace ProSuite.DdxEditor.Content.Blazor.ViewModel;
 
 public class ScalarTestParameterValueViewModel : ViewModelBase
 {
+	[CanBeNull] private object _value;
+
 	public ScalarTestParameterValueViewModel([NotNull] TestParameter parameter,
 	                                         [CanBeNull] object value,
 	                                         [NotNull] IViewObserver observer) :
 		base(parameter, observer)
 	{
-		Value = value ?? TestParameterTypeUtils.GetDefault(DataType);
+		_value = value;
 
 		ComponentParameters.Add("ViewModel", this);
 
@@ -48,5 +50,11 @@ public class ScalarTestParameterValueViewModel : ViewModelBase
 			default:
 				throw new ArgumentOutOfRangeException($"Unkown {nameof(TestParameterType)}");
 		}
+	}
+
+	public override object Value
+	{
+		get => _value;
+		set => SetProperty(ref _value, value);
 	}
 }
