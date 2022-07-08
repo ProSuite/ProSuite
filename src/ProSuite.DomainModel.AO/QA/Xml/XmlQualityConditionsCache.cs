@@ -215,7 +215,8 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			[NotNull] out ICollection<XmlDatasetTestParameterValue> unknownDatasetParameters)
 		{
 			string testDescriptorName = xmlCondition.TestDescriptorName;
-			Assert.True(StringUtils.IsNotEmpty(testDescriptorName), "test descriptor name");
+			Assert.True(StringUtils.IsNotEmpty(testDescriptorName),
+			            $"Test descriptor name is missing in condition: {xmlCondition}");
 
 			if (! TestDescriptors.TryGetValue(testDescriptorName.Trim(),
 			                                  out XmlTestDescriptor xmlTestDescriptor))
