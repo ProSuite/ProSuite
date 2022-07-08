@@ -14,19 +14,19 @@ namespace ProSuite.Commons.AO.Geodatabase
 			    esriRelCardinality.esriRelCardinalityManyToMany)
 			{
 				return new ManyToManyAssociationDescription(
-					(ITable) relationshipClass.DestinationClass,
+					ReadOnlyTableFactory.Create((ITable) relationshipClass.DestinationClass),
 					relationshipClass.DestinationPrimaryKey,
-					(ITable) relationshipClass.OriginClass,
+					ReadOnlyTableFactory.Create((ITable) relationshipClass.OriginClass),
 					relationshipClass.OriginPrimaryKey,
-					(ITable) relationshipClass,
+					ReadOnlyTableFactory.Create((ITable) relationshipClass),
 					relationshipClass.DestinationForeignKey,
 					relationshipClass.OriginForeignKey);
 			}
 
 			return new ForeignKeyAssociationDescription(
-				(ITable) relationshipClass.DestinationClass,
+				ReadOnlyTableFactory.Create((ITable) relationshipClass.DestinationClass),
 				relationshipClass.OriginForeignKey,
-				(ITable) relationshipClass.OriginClass,
+				ReadOnlyTableFactory.Create((ITable) relationshipClass.OriginClass),
 				relationshipClass.OriginPrimaryKey);
 		}
 	}

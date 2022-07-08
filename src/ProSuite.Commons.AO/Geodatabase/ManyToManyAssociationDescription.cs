@@ -1,4 +1,3 @@
-using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AO.Geodatabase
@@ -7,16 +6,16 @@ namespace ProSuite.Commons.AO.Geodatabase
 	{
 		private readonly string _table1KeyName;
 		private readonly string _table2KeyName;
-		private readonly ITable _associationTable;
+		private readonly IReadOnlyTable _associationTable;
 		private readonly string _associationTableKey1;
 		private readonly string _associationTableKey2;
 
 		public ManyToManyAssociationDescription(
-			[NotNull] ITable table1,
+			[NotNull] IReadOnlyTable table1,
 			[NotNull] string table1KeyName,
-			[NotNull] ITable table2,
+			[NotNull] IReadOnlyTable table2,
 			[NotNull] string table2KeyName,
-			[NotNull] ITable associationTable,
+			[NotNull] IReadOnlyTable associationTable,
 			[NotNull] string associationTableKey1,
 			[NotNull] string associationTableKey2)
 			: base(table1, table2)
@@ -34,8 +33,11 @@ namespace ProSuite.Commons.AO.Geodatabase
 		[NotNull]
 		public string Table2KeyName => _table2KeyName;
 
+		/// <summary>
+		/// The 'bridge' table connecting Table1 and Table2 in an m:n join.
+		/// </summary>
 		[NotNull]
-		public ITable AssociationTable => _associationTable;
+		public IReadOnlyTable AssociationTable => _associationTable;
 
 		[NotNull]
 		public string AssociationTableKey1 => _associationTableKey1;

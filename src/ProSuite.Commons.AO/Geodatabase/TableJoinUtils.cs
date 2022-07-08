@@ -282,14 +282,73 @@ namespace ProSuite.Commons.AO.Geodatabase
 				throw new NotImplementedException("RightJoin is not yet implemented.");
 			}
 
+			AssociationDescription associationDescription =
+				AssociationDescriptionUtils.CreateAssociationDescription(relationshipClass);
+
 			IObjectClass otherEndClass =
 				RelationshipClassUtils.GetOtherEndObjectClass(relationshipClass, geometryEndClass);
 
-			var result = new GdbFeatureClass(
-				-1, name, geometryEndClass.ShapeType, null,
-				t => new JoinedDataset(relationshipClass, geometryEndClass, (GdbFeatureClass) t)
-				     {JoinType = joinType},
-				DatasetUtils.GetWorkspace(geometryEndClass));
+			IReadOnlyTable roGeometryTable = ReadOnlyTableFactory.Create(geometryEndClass);
+			IReadOnlyTable roOtherTable = ReadOnlyTableFactory.Create((ITable) otherEndClass);
+
+			Func<GdbTable, BackingDataset> datasetFactoryFunc = t =>
+				new JoinedDataset(associationDescription,
+				                  roGeometryTable, roOtherTable, t)
+				{JoinType = joinType};
+
+			var result = CreateJoinedGdbTable(name, datasetFactoryFunc,
+			                                  roGeometryTable, roOtherTable);
+
+			return (GdbFeatureClass) result;
+		}
+
+		public static GdbTable CreateJoinedGdbFeatureClass(
+			[NotNull] AssociationDescription associationDescription,
+			[CanBeNull] IReadOnlyTable geometryTable,
+			[NotNull] string name,
+			JoinType joinType = JoinType.InnerJoin)
+		{
+			// TODO: Support both tables having no geometry -> get all records from the smaller?
+			//       Or possibly always query the left table first (in inner joins) to allow for optimization by user.
+			//       support left table having the geometry but using right join -> swap, leftJoin
+			if (joinType == JoinType.RightJoin)
+			{
+				throw new NotImplementedException("RightJoin is not yet implemented.");
+			}
+
+			// If the geometry table is null, the 'left' table will be used (if it has a geometry).
+			geometryTable = geometryTable ?? associationDescription.Table1;
+
+			IReadOnlyTable otherTable = associationDescription.Table1.Equals(geometryTable)
+				                            ? associationDescription.Table2
+				                            : associationDescription.Table1;
+
+			Func<GdbTable, BackingDataset> datasetFactoryFunc = t =>
+				new JoinedDataset(associationDescription, geometryTable, otherTable, t)
+				{JoinType = joinType};
+
+			return CreateJoinedGdbTable(name, datasetFactoryFunc, geometryTable, otherTable);
+		}
+
+		private static GdbTable CreateJoinedGdbTable(
+			[NotNull] string name,
+			[NotNull] Func<GdbTable, BackingDataset> datasetFactoryFunc,
+			IReadOnlyTable geometryEndClass,
+			IReadOnlyTable otherEndClass)
+		{
+			GdbTable result;
+
+			IWorkspace workspace = geometryEndClass.Workspace;
+
+			if (geometryEndClass is IReadOnlyFeatureClass featureClass)
+			{
+				result = new GdbFeatureClass(-1, name, featureClass.ShapeType, null,
+				                             datasetFactoryFunc, workspace);
+			}
+			else
+			{
+				result = new GdbTable(-1, name, null, datasetFactoryFunc, workspace);
+			}
 
 			for (int i = 0; i < geometryEndClass.Fields.FieldCount; i++)
 			{
@@ -299,7 +358,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			IField lengthField = null;
 			IField areaField = null;
-			if (otherEndClass is IFeatureClass otherFeatureClass)
+			if (otherEndClass is IReadOnlyFeatureClass otherFeatureClass)
 			{
 				lengthField = DatasetUtils.GetLengthField(otherFeatureClass);
 				areaField = DatasetUtils.GetAreaField(otherFeatureClass);
@@ -331,6 +390,15 @@ namespace ProSuite.Commons.AO.Geodatabase
 		}
 
 		private static IField CreateQualifiedField(IField prototype, IObjectClass table)
+		{
+			var result = (IField) ((IClone) prototype).Clone();
+
+			((IFieldEdit) result).Name_2 = DatasetUtils.QualifyFieldName(table, prototype.Name);
+
+			return result;
+		}
+
+		private static IField CreateQualifiedField(IField prototype, IReadOnlyTable table)
 		{
 			var result = (IField) ((IClone) prototype).Clone();
 

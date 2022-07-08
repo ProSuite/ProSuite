@@ -16,9 +16,9 @@ namespace ProSuite.Commons.AO.Geodatabase
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		[NotNull] private readonly IFeatureClass _geometryEndClass;
-		[NotNull] private readonly IObjectClass _otherEndClass;
-		[NotNull] private readonly GdbFeatureClass _joinedSchema;
+		[NotNull] private readonly IReadOnlyTable _geometryEndClass;
+		[NotNull] private readonly IReadOnlyTable _otherEndClass;
+		[NotNull] private readonly GdbTable _joinedSchema;
 
 		private IDictionary<int, int> _geometryEndCopyMatrix;
 		private IDictionary<int, int> _otherEndCopyMatrix;
@@ -28,25 +28,16 @@ namespace ProSuite.Commons.AO.Geodatabase
 		private readonly string
 			_joinStrategy = Environment.GetEnvironmentVariable("PROSUITE_MEMORY_JOIN_STRATEGY");
 
-		private readonly Dictionary<ITable, int> _tableRowStatistics =
-			new Dictionary<ITable, int>(3);
-
-		public JoinedDataset([NotNull] IRelationshipClass relationshipClass,
-		                     [NotNull] IFeatureClass geometryEndClass,
-		                     [NotNull] GdbFeatureClass joinedSchema)
-			: this(AssociationDescriptionUtils.CreateAssociationDescription(relationshipClass),
-			       geometryEndClass,
-			       RelationshipClassUtils.GetOtherEndObjectClass(
-				       relationshipClass, geometryEndClass),
-			       joinedSchema) { }
+		private readonly Dictionary<IReadOnlyTable, int> _tableRowStatistics =
+			new Dictionary<IReadOnlyTable, int>(3);
 
 		public JoinedDataset([NotNull] AssociationDescription associationDescription,
-		                     [NotNull] IFeatureClass geometryEndClass,
-		                     [NotNull] IObjectClass otherEndClass,
-		                     [NotNull] GdbFeatureClass joinedSchema)
+		                     IReadOnlyTable geometryTable,
+		                     IReadOnlyTable otherTable,
+		                     [NotNull] GdbTable joinedSchema)
 		{
-			_geometryEndClass = geometryEndClass;
-			_otherEndClass = otherEndClass;
+			_geometryEndClass = geometryTable;
+			_otherEndClass = otherTable;
 
 			_associationDescription = associationDescription;
 
@@ -55,7 +46,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		public JoinType JoinType { get; set; } = JoinType.InnerJoin;
 
-		public override IEnvelope Extent => ((IGeoDataset) _geometryEndClass).Extent;
+		public override IEnvelope Extent => (_geometryEndClass as IReadOnlyFeatureClass)?.Extent;
 
 		public override VirtualRow GetRow(int id)
 		{
@@ -71,7 +62,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			GetKeyFieldNames(out string featureClassKeyField, out string otherClassKeyField);
 
-			IDictionary<string, IList<IRow>> otherRows =
+			IDictionary<string, IList<IReadOnlyRow>> otherRows =
 				GetOtherRowsByFeatureKey(filter, featureClassKeyField, otherClassKeyField,
 				                         out int _);
 
@@ -83,7 +74,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			{
 				// TODO: This could be optimized if the side of the primary key was known
 				return PerformFinalGeoClassRead(
-					otherRows, featureClassKeyField, filter).Count();
+					otherRows, featureClassKeyField, filter, true).Count();
 			}
 		}
 
@@ -93,7 +84,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			// The filter's where clause must use the fully qualified rows. But the spatial
 			// constraint is applied during the creation of the join.
-			foreach (VirtualRow virtualRow in GetJoinedRows(filter))
+			foreach (VirtualRow virtualRow in GetJoinedRows(filter, recycling))
 			{
 				if (filterHelper.Check(virtualRow))
 				{
@@ -106,8 +97,10 @@ namespace ProSuite.Commons.AO.Geodatabase
 		/// Performs the join using the filter only by applying the spatial constraint.
 		/// </summary>
 		/// <param name="filter"></param>
+		/// <param name="recycle"></param>
 		/// <returns></returns>
-		private IEnumerable<VirtualRow> GetJoinedRows([CanBeNull] IQueryFilter filter)
+		private IEnumerable<VirtualRow> GetJoinedRows([CanBeNull] IQueryFilter filter,
+		                                              bool recycle)
 		{
 			if (filter != null && (! string.IsNullOrEmpty(filter.WhereClause)))
 			{
@@ -117,15 +110,15 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			GetKeyFieldNames(out string featureClassKeyField, out string otherClassKeyField);
 
-			IDictionary<string, IList<IRow>> otherRowsByFeatureKey =
+			IDictionary<string, IList<IReadOnlyRow>> otherRowsByFeatureKey =
 				GetOtherRowsByFeatureKey(filter, featureClassKeyField, otherClassKeyField,
 				                         out int featureClassKeyIdx);
 
-			foreach (IFeature feature in PerformFinalGeoClassRead(
-				         otherRowsByFeatureKey, featureClassKeyField, filter))
+			foreach (IReadOnlyRow feature in PerformFinalGeoClassRead(
+				         otherRowsByFeatureKey, featureClassKeyField, filter, recycle))
 			{
 				string featureKeyValue = GetKeyValue(feature, featureClassKeyIdx);
-				IList<IRow> otherRowList;
+				IList<IReadOnlyRow> otherRowList;
 				if (JoinType == JoinType.InnerJoin)
 				{
 					Assert.NotNull(featureKeyValue);
@@ -142,14 +135,14 @@ namespace ProSuite.Commons.AO.Geodatabase
 					}
 				}
 
-				foreach (IRow otherRow in otherRowList)
+				foreach (IReadOnlyRow otherRow in otherRowList)
 				{
 					yield return CreateJoinedFeature(feature, otherRow);
 				}
 			}
 		}
 
-		private IDictionary<string, IList<IRow>> GetOtherRowsByFeatureKey(
+		private IDictionary<string, IList<IReadOnlyRow>> GetOtherRowsByFeatureKey(
 			[CanBeNull] IQueryFilter filter,
 			[NotNull] string featureClassKeyField,
 			[NotNull] string otherClassKeyField,
@@ -184,7 +177,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			//       which table should be queried first.
 
 			int featureCount = 0;
-			foreach (IFeature feature in GdbQueryUtils.GetFeatures(_geometryEndClass, filter, true))
+			foreach (IReadOnlyRow feature in _geometryEndClass.EnumRows(filter, true))
 			{
 				featureCount++;
 
@@ -199,7 +192,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			_msg.DebugStopTiming(watch, "Initial search found {0} geo-keys in {1} features",
 			                     fClassKeys.Count, featureCount);
 
-			IDictionary<string, IList<IRow>> otherRows =
+			IDictionary<string, IList<IReadOnlyRow>> otherRows =
 				GetOtherRowListsByFeatureKey(otherClassKeyField, fClassKeys);
 
 			// Revert the filter change:
@@ -209,17 +202,18 @@ namespace ProSuite.Commons.AO.Geodatabase
 			return otherRows;
 		}
 
-		private IEnumerable<IFeature> PerformFinalGeoClassRead(
-			IDictionary<string, IList<IRow>> otherRowsByGeoKey,
+		private IEnumerable<IReadOnlyRow> PerformFinalGeoClassRead(
+			IDictionary<string, IList<IReadOnlyRow>> otherRowsByGeoKey,
 			string featureClassKeyField,
-			[CanBeNull] IQueryFilter filter)
+			[CanBeNull] IQueryFilter filter,
+			bool recycling)
 		{
 			Stopwatch watch = _msg.DebugStartTiming();
 
 			if (JoinType == JoinType.InnerJoin)
 			{
-				foreach (IFeature feature in PerformFinalGeoClassReadFilteredByKeys(
-					         otherRowsByGeoKey, featureClassKeyField, filter))
+				foreach (IReadOnlyRow feature in PerformFinalGeoClassReadFilteredByKeys(
+					         otherRowsByGeoKey, featureClassKeyField, filter, recycling))
 				{
 					yield return feature;
 				}
@@ -227,8 +221,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			else if (JoinType == JoinType.LeftJoin)
 			{
 				// All records from the left table:
-				foreach (IFeature feature in GdbQueryUtils.GetFeatures(
-					         _geometryEndClass, filter, true))
+				foreach (IReadOnlyRow feature in _geometryEndClass.EnumRows(filter, recycling))
 				{
 					yield return feature;
 				}
@@ -237,10 +230,11 @@ namespace ProSuite.Commons.AO.Geodatabase
 			_msg.DebugStopTiming(watch, "Final read of geo-features with result processing");
 		}
 
-		private IEnumerable<IFeature> PerformFinalGeoClassReadFilteredByKeys(
-			[NotNull] IDictionary<string, IList<IRow>> otherRowsByGeoKey,
+		private IEnumerable<IReadOnlyRow> PerformFinalGeoClassReadFilteredByKeys(
+			[NotNull] IDictionary<string, IList<IReadOnlyRow>> otherRowsByGeoKey,
 			[NotNull] string featureClassKeyField,
-			[CanBeNull] IQueryFilter filter)
+			[CanBeNull] IQueryFilter filter,
+			bool recycling)
 		{
 			int featureClassKeyIdx = _geometryEndClass.FindField(featureClassKeyField);
 			Assert.True(featureClassKeyIdx >= 0, $"Key field not found: {featureClassKeyIdx}");
@@ -261,15 +255,13 @@ namespace ProSuite.Commons.AO.Geodatabase
 				clientSideKeyFiltering = false;
 			}
 
-			IEnumerable<IRow> resultGeoFeatures = FetchRowsByKey(
-				(ITable) _geometryEndClass, otherRowsByGeoKey.Keys, featureClassKeyField, true,
+			IEnumerable<IReadOnlyRow> resultGeoFeatures = FetchRowsByKey(
+				_geometryEndClass, otherRowsByGeoKey.Keys, featureClassKeyField, recycling,
 				clientSideKeyFiltering, filter);
 
-			foreach (IRow row in resultGeoFeatures)
+			foreach (IReadOnlyRow row in resultGeoFeatures)
 			{
-				IFeature feature = (IFeature) row;
-
-				yield return feature;
+				yield return row;
 			}
 		}
 
@@ -278,8 +270,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		{
 			if (_associationDescription is ForeignKeyAssociationDescription foreignKeyAssociation)
 			{
-				if (DatasetUtils.IsSameObjectClass(
-					    _geometryEndClass, (IObjectClass) foreignKeyAssociation.ReferencedTable))
+				if (AreEqual(_geometryEndClass, foreignKeyAssociation.ReferencedTable))
 				{
 					featureClassKeyField = foreignKeyAssociation.ReferencedKeyName;
 					otherClassKeyField = foreignKeyAssociation.ReferencingKeyName;
@@ -295,8 +286,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 				ManyToManyAssociationDescription manyToManyAssociation =
 					(ManyToManyAssociationDescription) _associationDescription;
 
-				if (DatasetUtils.IsSameObjectClass(
-					    _geometryEndClass, (IObjectClass) manyToManyAssociation.Table1))
+				if (AreEqual(_geometryEndClass, manyToManyAssociation.Table1))
 				{
 					featureClassKeyField = manyToManyAssociation.Table1KeyName;
 					otherClassKeyField = manyToManyAssociation.Table2KeyName;
@@ -309,32 +299,34 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 		}
 
-		private GdbFeature CreateJoinedFeature(IFeature feature, [CanBeNull] IRow otherRow)
+		private GdbRow CreateJoinedFeature(IReadOnlyRow leftRow, [CanBeNull] IReadOnlyRow otherRow)
 		{
-			var joinedValueList = new JoinedValueList {Readonly = true};
+			var joinedValueList = new JoinedValueList();
 
-			joinedValueList.AddRow(feature, GeometryEndCopyMatrix);
+			joinedValueList.AddRow(leftRow, GeometryEndCopyMatrix);
 			joinedValueList.AddRow(otherRow, OtherEndCopyMatrix);
 
-			GdbFeature resultFeature = new GdbFeature(feature.OID, _joinedSchema,
-			                                          joinedValueList);
+			if (leftRow is IReadOnlyFeature && _joinedSchema is GdbFeatureClass gdbFeatureClass)
+			{
+				return new GdbFeature(leftRow.OID, gdbFeatureClass, joinedValueList);
+			}
 
-			return resultFeature;
+			return new GdbRow(leftRow.OID, _joinedSchema, joinedValueList);
 		}
 
-		private IDictionary<string, IRow> GetOtherRowsByKey(
+		private IDictionary<string, IReadOnlyRow> GetOtherRowsByKey(
 			[NotNull] string otherClassField,
 			[NotNull] IEnumerable<string> keyValues)
 		{
 			// Get the non-feature-rows:
 			int otherClassKeyIdx = _otherEndClass.FindField(otherClassField);
-			string otherTableName = DatasetUtils.GetName(_otherEndClass);
+			string otherTableName = _otherEndClass.Name;
 			Assert.True(otherClassKeyIdx >= 0,
 			            $"Key field {otherClassField} not found in {otherTableName}");
 
-			IDictionary<string, IRow> otherRows = new Dictionary<string, IRow>();
-			foreach (IRow row in GdbQueryUtils.GetRowsInList(
-				         (ITable) _otherEndClass, otherClassField, keyValues, false))
+			IDictionary<string, IReadOnlyRow> otherRows = new Dictionary<string, IReadOnlyRow>();
+			foreach (IReadOnlyRow row in GdbQueryUtils.GetRowsInList(
+				         _otherEndClass, otherClassField, keyValues, false))
 			{
 				object otherRowKey = row.get_Value(otherClassKeyIdx);
 				Assert.True(otherRowKey != null && DBNull.Value != otherRowKey,
@@ -346,11 +338,12 @@ namespace ProSuite.Commons.AO.Geodatabase
 			return otherRows;
 		}
 
-		private IDictionary<string, IList<IRow>> GetOtherRowListsByFeatureKey(
+		private IDictionary<string, IList<IReadOnlyRow>> GetOtherRowListsByFeatureKey(
 			string otherClassKeyField,
 			HashSet<string> fClassKeys)
 		{
-			IDictionary<string, IList<IRow>> result = new Dictionary<string, IList<IRow>>();
+			IDictionary<string, IList<IReadOnlyRow>> result =
+				new Dictionary<string, IList<IReadOnlyRow>>();
 
 			// M:N - Get the bridge table rows:
 			if (_associationDescription is ManyToManyAssociationDescription m2n)
@@ -367,7 +360,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 				watch = _msg.DebugStartTiming();
 
-				IDictionary<string, IRow> otherRowsByKey =
+				IDictionary<string, IReadOnlyRow> otherRowsByKey =
 					GetOtherRowsByKey(otherClassKeyField, geoKeysByOtherKey.Keys);
 
 				_msg.DebugStopTiming(watch, "Retrieved all {0} other rows.", otherRowsByKey.Count);
@@ -378,9 +371,9 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 					foreach (string geoKey in keyValuePair.Value)
 					{
-						if (! result.TryGetValue(geoKey, out IList<IRow> otherRowList))
+						if (! result.TryGetValue(geoKey, out IList<IReadOnlyRow> otherRowList))
 						{
-							otherRowList = new List<IRow>(5);
+							otherRowList = new List<IReadOnlyRow>(5);
 
 							result.Add(geoKey, otherRowList);
 						}
@@ -396,14 +389,14 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 
 			// Get the non-feature-rows:
-			foreach (KeyValuePair<string, IRow> keyValuePair in GetOtherRowsByKey(
+			foreach (KeyValuePair<string, IReadOnlyRow> keyValuePair in GetOtherRowsByKey(
 				         otherClassKeyField, fClassKeys))
 			{
 				string otherRowKey = keyValuePair.Key;
 
-				if (! result.TryGetValue(otherRowKey, out IList<IRow> otherRowList))
+				if (! result.TryGetValue(otherRowKey, out IList<IReadOnlyRow> otherRowList))
 				{
-					otherRowList = new List<IRow>(3);
+					otherRowList = new List<IReadOnlyRow>(3);
 
 					result.Add(otherRowKey, otherRowList);
 				}
@@ -421,11 +414,10 @@ namespace ProSuite.Commons.AO.Geodatabase
 			Dictionary<string, List<string>> geoKeysByOtherKey =
 				new Dictionary<string, List<string>>();
 
-			ITable bridgeTable = m2nAssociation.AssociationTable;
+			IReadOnlyTable bridgeTable = m2nAssociation.AssociationTable;
 			string bridgeTableGeoKeyField;
 			string bridgeTableOtherKeyField;
-			if (DatasetUtils.IsSameObjectClass(_geometryEndClass,
-			                                   (IObjectClass) m2nAssociation.Table1))
+			if (AreEqual(_geometryEndClass, m2nAssociation.Table1))
 			{
 				bridgeTableGeoKeyField = m2nAssociation.AssociationTableKey1;
 				bridgeTableOtherKeyField = m2nAssociation.AssociationTableKey2;
@@ -436,7 +428,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 				bridgeTableOtherKeyField = m2nAssociation.AssociationTableKey1;
 			}
 
-			string bridgeTableName = DatasetUtils.GetName(bridgeTable);
+			string bridgeTableName = bridgeTable.Name;
 
 			int bridgeTableOtherKeyIdx = bridgeTable.FindField(bridgeTableOtherKeyField);
 			Assert.True(bridgeTableOtherKeyIdx >= 0,
@@ -446,8 +438,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 			Assert.True(bridgeTableGeoKeyIdx >= 0,
 			            $"Key field {bridgeTableGeoKeyField} not found in {bridgeTable}");
 
-			foreach (IRow row in FetchBridgeTableRowsByKey(geoKeys, bridgeTable,
-			                                               bridgeTableGeoKeyField))
+			foreach (IReadOnlyRow row in FetchBridgeTableRowsByKey(geoKeys, bridgeTable,
+				         bridgeTableGeoKeyField))
 			{
 				// The primary key of the other table:
 				object bridgeOtherKey = row.get_Value(bridgeTableOtherKeyIdx);
@@ -481,9 +473,26 @@ namespace ProSuite.Commons.AO.Geodatabase
 			return geoKeysByOtherKey;
 		}
 
-		private IEnumerable<IRow> FetchBridgeTableRowsByKey(
+		private static bool AreEqual(IReadOnlyTable table1, IReadOnlyTable table2)
+		{
+			if (table1.Equals(table2))
+			{
+				return true;
+			}
+
+			if (table1 is ReadOnlyTable roTable1 && table2 is ReadOnlyTable roTable2)
+			{
+				// TODO: Move to Equals implementation of ReadOnlyTable? Add Equals to IReadOnlyTable?
+				return DatasetUtils.IsSameObjectClass((IObjectClass) roTable1.BaseTable,
+				                                      (IObjectClass) roTable2.BaseTable);
+			}
+
+			return false;
+		}
+
+		private IEnumerable<IReadOnlyRow> FetchBridgeTableRowsByKey(
 			[NotNull] HashSet<string> keys,
-			[NotNull] ITable bridgeTable,
+			[NotNull] IReadOnlyTable bridgeTable,
 			[NotNull] string keyFieldName)
 		{
 			bool clientSideKeyFiltering;
@@ -510,8 +519,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 			return FetchRowsByKey(bridgeTable, keys, keyFieldName, true, clientSideKeyFiltering);
 		}
 
-		private static IEnumerable<IRow> FetchRowsByKey(
-			[NotNull] ITable table,
+		private static IEnumerable<IReadOnlyRow> FetchRowsByKey(
+			[NotNull] IReadOnlyTable table,
 			[NotNull] ICollection<string> keys,
 			[NotNull] string keyFieldName,
 			bool recycle,
@@ -540,17 +549,18 @@ namespace ProSuite.Commons.AO.Geodatabase
 			{
 				_msg.DebugFormat(
 					"Fetching rows from {0} and filtering for key list on the client...",
-					DatasetUtils.GetName(table));
+					table.Name);
 
 				int keyFieldIdx = table.FindField(keyFieldName);
 				Assert.True(keyFieldIdx >= 0,
-				            $"Key field {keyFieldName} not found in {DatasetUtils.GetName(table)}");
+				            $"Key field {keyFieldName} not found in {table.Name}");
 
 				int totalCount = 0, yieldCount = 0;
-				foreach (IRow row in GdbQueryUtils.GetRows(table, filter, recycle))
+
+				foreach (IReadOnlyRow row in table.EnumRows(filter, recycle))
 				{
 					totalCount++;
-					object rowKeyValue = row.Value[keyFieldIdx];
+					object rowKeyValue = row.get_Value(keyFieldIdx);
 
 					if (rowKeyValue == null || rowKeyValue == DBNull.Value)
 					{
@@ -575,10 +585,10 @@ namespace ProSuite.Commons.AO.Geodatabase
 			{
 				_msg.DebugFormat(
 					"Fetching rows from {0} using select-in-list strategy (filtering on the server)",
-					DatasetUtils.GetName(table));
+					table.Name);
 
 				int count = 0;
-				foreach (IRow row in GdbQueryUtils.GetRowsInList(
+				foreach (IReadOnlyRow row in GdbQueryUtils.GetRowsInList(
 					         table, keyFieldName, keys, recycle, filter))
 				{
 					yield return row;
@@ -628,25 +638,30 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 		}
 
-		private int GetTableRowCount(ITable table)
+		private int GetTableRowCount(IReadOnlyTable table)
 		{
 			if (! _tableRowStatistics.TryGetValue(table, out int rowCount))
 			{
 				Stopwatch watch = _msg.DebugStartTiming();
 
-				rowCount = GdbQueryUtils.Count((IObjectClass) table);
+				IQueryFilter filter = new QueryFilterClass
+				                      {
+					                      SubFields = table.OIDFieldName
+				                      };
+
+				rowCount = table.RowCount(filter);
+
 				_tableRowStatistics.Add(table, rowCount);
 
-				_msg.DebugStopTiming(watch, "Determined row count of {0}",
-				                     DatasetUtils.GetName(table));
+				_msg.DebugStopTiming(watch, "Determined row count of {0}", table.Name);
 			}
 
 			return rowCount;
 		}
 
-		private static string GetKeyValue(IRow row, int fieldIndex)
+		private static string GetKeyValue(IReadOnlyRow row, int fieldIndex)
 		{
-			object value = row.Value[fieldIndex];
+			object value = row.get_Value(fieldIndex);
 
 			if (value != null && DBNull.Value != value)
 			{

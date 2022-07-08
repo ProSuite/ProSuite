@@ -258,13 +258,31 @@ T1Attributes: "SUM(X_VALUE) AS X_COUNT"</value>
 See T1Attributes</value>
   </data>
   <data name="TrTableJoinInMemory_0" xml:space="preserve">
-    <value>Transforms table 't0' and table 't1' to a joined table (experimental)</value>
+    <value>Creates a joined table with the fields from 'leftTable' and 'rightTable'.</value>
   </data>
-  <data name="TrTableJoinInMemory_t0" xml:space="preserve">
-    <value>Table containing the shape field to be used in the joined table</value>
+  <data name="TrTableJoinInMemory_joinType" xml:space="preserve">
+    <value>The type of join. Currently inner joins and left joins are supported.</value>
   </data>
-  <data name="TrTableJoinInMemory_t1" xml:space="preserve">
-    <value>table to join with 't1'</value>
+  <data name="TrTableJoinInMemory_leftTable" xml:space="preserve">
+    <value>The left table in the join. Its OBJECTID field will be used in the result table. If it is a FeatureClass its shape field it will be used in the result FeatureClass.</value>
+  </data>
+  <data name="TrTableJoinInMemory_leftTableKey" xml:space="preserve">
+    <value>The key field in the left table.</value>
+  </data>
+  <data name="TrTableJoinInMemory_manyToManyTable" xml:space="preserve">
+    <value>The association / bridge table for a many-to-many join.</value>
+  </data>
+  <data name="TrTableJoinInMemory_manyToManyTableLeftKey" xml:space="preserve">
+    <value>The key field in the many-to-many association table referencing the leftTableKey.</value>
+  </data>
+  <data name="TrTableJoinInMemory_manyToManyTableRightKey" xml:space="preserve">
+    <value>The key field in the many-to-many association table referencing the rightTableKey.</value>
+  </data>
+  <data name="TrTableJoinInMemory_rightTable" xml:space="preserve">
+    <value>The right table in the join.</value>
+  </data>
+  <data name="TrTableJoinInMemory_rightTableKey" xml:space="preserve">
+    <value>The key field in the right table.</value>
   </data>
   <data name="TrTableJoin_0" xml:space="preserve">
     <value>Transforms table 't0' and table 't1', which must be related by 'relationName', to a joined table</value>

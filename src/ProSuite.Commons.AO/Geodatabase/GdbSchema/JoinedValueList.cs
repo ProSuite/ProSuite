@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using ESRI.ArcGIS.Geodatabase;
 
 namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 {
@@ -10,16 +9,14 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 	/// </summary>
 	public class JoinedValueList : IValueList
 	{
-		private readonly List<IRow> _rows;
+		private readonly List<IReadOnlyRow> _rows;
 		private readonly List<IDictionary<int, int>> _copyMatrices;
 
 		public JoinedValueList(int rowCapacity = 2)
 		{
-			_rows = new List<IRow>(rowCapacity);
+			_rows = new List<IReadOnlyRow>(rowCapacity);
 			_copyMatrices = new List<IDictionary<int, int>>(rowCapacity);
 		}
-
-		public bool Readonly { get; set; }
 
 		/// <summary>
 		/// Add a row to the list with its associated copyMatrix.
@@ -27,7 +24,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		/// <param name="row">The source row from which the values shall be taken</param>
 		/// <param name="copyMatrix">The copy matrix containing the {target-schema, source schema}
 		/// key-value pairs of the associated field indexes. </param>
-		public void AddRow(IRow row, IDictionary<int, int> copyMatrix)
+		public void AddRow(IReadOnlyRow row, IDictionary<int, int> copyMatrix)
 		{
 			_rows.Add(row);
 			_copyMatrices.Add(copyMatrix);
@@ -35,9 +32,9 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		public object GetValue(int index, bool ensureRcwRefCountIncrease = false)
 		{
-			if (TryGetSource(index, out IRow sourceRow, out int fieldIndex))
+			if (TryGetSource(index, out IReadOnlyRow sourceRow, out int fieldIndex))
 			{
-				return sourceRow?.Value[fieldIndex] ?? DBNull.Value;
+				return sourceRow?.get_Value(fieldIndex) ?? DBNull.Value;
 			}
 
 			throw new ArgumentOutOfRangeException(
@@ -46,22 +43,16 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		public void SetValue(int index, object value)
 		{
-			if (TryGetSource(index, out IRow sourceRow, out int fieldIndex))
+			if (TryGetSource(index, out IReadOnlyRow sourceRow, out int fieldIndex))
 			{
-				// Be careful not to update actual features, just ensure the value is equal
-				if (Readonly)
-				{
-					// TODO: Check DBNull, reference types
-					object sourceValue = sourceRow?.Value[fieldIndex] ?? DBNull.Value;
+				// No updating of actual features, just ensure the value is equal!
 
-					if (! sourceValue.Equals(value))
-					{
-						throw new InvalidOperationException("Cannot update read-only row");
-					}
-				}
-				else
+				// TODO: Check DBNull, reference types
+				object sourceValue = sourceRow?.get_Value(fieldIndex) ?? DBNull.Value;
+
+				if (! sourceValue.Equals(value))
 				{
-					sourceRow.Value[fieldIndex] = value;
+					throw new InvalidOperationException("Cannot update read-only row");
 				}
 			}
 			else
@@ -84,7 +75,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			return false;
 		}
 
-		private bool TryGetSource(int targetIndex, out IRow sourceRow, out int fieldIndex)
+		private bool TryGetSource(int targetIndex, out IReadOnlyRow sourceRow, out int fieldIndex)
 		{
 			for (int i = 0; i < _rows.Count; i++)
 			{
