@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 
 namespace ProSuite.Commons.AO.Geodatabase
@@ -17,15 +18,21 @@ namespace ProSuite.Commons.AO.Geodatabase
 					table = CreateReadOnlyTable(row.Table);
 					current = t;
 				}
+
 				yield return table.CreateRow(row);
 			}
 		}
 
 		protected static ReadOnlyTable CreateReadOnlyTable(ITable table)
-		{ return new ReadOnlyTable(table); }
+		{
+			return new ReadOnlyTable(table);
+		}
 
 		private readonly ITable _table;
-		private readonly string _name; // cache name for debugging purposes (avoid all ArcObjects threading issues)
+
+		private readonly string
+			_name; // cache name for debugging purposes (avoid all ArcObjects threading issues)
+
 		protected ReadOnlyTable(ITable table)
 		{
 			_table = table;
@@ -36,15 +43,41 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		public ITable BaseTable => _table;
 		protected ITable Table => _table;
-		ESRI.ArcGIS.esriSystem.IName IReadOnlyDataset.FullName => ((IDataset)_table).FullName;
-		IWorkspace IReadOnlyDataset.Workspace => ((IDataset)_table).Workspace;
+		IName IReadOnlyDataset.FullName => ((IDataset) _table).FullName;
+		IWorkspace IReadOnlyDataset.Workspace => ((IDataset) _table).Workspace;
 		public string Name => DatasetUtils.GetName(_table);
 		public IFields Fields => _table.Fields;
+
 		public int FindField(string name) => _table.FindField(name);
+
 		public bool HasOID => _table.HasOID;
 		public string OIDFieldName => _table.OIDFieldName;
+
 		public IReadOnlyRow GetRow(int oid) => CreateRow(_table.GetRow(oid));
+
 		public int RowCount(IQueryFilter filter) => _table.RowCount(filter);
+
+		public bool Equals(IReadOnlyTable otherTable)
+		{
+			if (otherTable is IObjectClass otherObjectClass)
+			{
+				return DatasetUtils.IsSameObjectClass((IObjectClass) _table, otherObjectClass);
+			}
+
+			if (otherTable is ReadOnlyTable roTable)
+			{
+				return DatasetUtils.IsSameObjectClass((IObjectClass) _table,
+				                                      (IObjectClass) roTable.BaseTable);
+			}
+
+			if (otherTable == null)
+			{
+				return false;
+			}
+
+			// Some other implementation!?
+			return Name.Equals(otherTable.Name);
+		}
 
 		public virtual ReadOnlyRow CreateRow(IRow row)
 		{
@@ -73,19 +106,29 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		bool ISubtypes.HasSubtype => _subtypes?.HasSubtype ?? false;
 
-		int ISubtypes.DefaultSubtypeCode { get => _subtypes.DefaultSubtypeCode; set => _subtypes.DefaultSubtypeCode = value; }
+		int ISubtypes.DefaultSubtypeCode
+		{
+			get => _subtypes.DefaultSubtypeCode;
+			set => _subtypes.DefaultSubtypeCode = value;
+		}
 
 		object ISubtypes.get_DefaultValue(int subtypeCode, string fieldName)
 			=> _subtypes.DefaultValue[subtypeCode, fieldName];
+
 		void ISubtypes.set_DefaultValue(int subtypeCode, string fieldName, object value)
 			=> _subtypes.DefaultValue[subtypeCode, fieldName] = value;
 
 		IDomain ISubtypes.get_Domain(int subtypeCode, string fieldName)
 			=> _subtypes.Domain[subtypeCode, fieldName];
+
 		void ISubtypes.set_Domain(int subtypeCode, string fieldName, IDomain value)
 			=> _subtypes.DefaultValue[subtypeCode, fieldName] = value;
 
-		string ISubtypes.SubtypeFieldName { get => _subtypes.SubtypeFieldName; set => _subtypes.SubtypeFieldName = value; }
+		string ISubtypes.SubtypeFieldName
+		{
+			get => _subtypes.SubtypeFieldName;
+			set => _subtypes.SubtypeFieldName = value;
+		}
 
 		int ISubtypes.SubtypeFieldIndex => _subtypes.SubtypeFieldIndex;
 

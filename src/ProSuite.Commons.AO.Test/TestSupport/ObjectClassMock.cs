@@ -382,6 +382,11 @@ namespace ProSuite.Commons.AO.Test.TestSupport
 
 		#endregion
 
+		public bool Equals(IReadOnlyTable otherTable)
+		{
+			return Equals(otherTable as IObjectClass);
+		}
+
 		protected bool Equals(ObjectClassMock other)
 		{
 			return Equals(_workspaceMock, other._workspaceMock) &&

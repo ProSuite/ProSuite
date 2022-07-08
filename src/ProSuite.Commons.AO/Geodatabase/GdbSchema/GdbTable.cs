@@ -109,8 +109,19 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		public bool Equals(GdbTable other)
 		{
-			return Equals(_workspace, other._workspace) &&
-			       ObjectClassID == other.ObjectClassID;
+			if (! Equals(_workspace, other._workspace))
+			{
+				return false;
+			}
+
+			if (ObjectClassID >= 0 && other.ObjectClassID >= 0 &&
+			    ObjectClassID == other.ObjectClassID)
+			{
+				return true;
+			}
+
+			// Same workspace, potentially 'virtual' classes;
+			return Name.Equals(other.Name);
 		}
 
 		public bool Equals(IObjectClass other)

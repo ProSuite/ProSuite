@@ -167,13 +167,21 @@ namespace ProSuite.QA.Tests.Transformers
 
 			public void AddCustomField(string field)
 			{
-				IField f =
-					FieldUtils.CreateField(
-						field, FieldUtils.GetFieldType(TableView.GetColumnType(field)));
-				FieldsT.AddFields(f);
+				try
+				{
+					IField f =
+						FieldUtils.CreateField(
+							field, FieldUtils.GetFieldType(TableView.GetColumnType(field)));
+					FieldsT.AddFields(f);
 
-				CustomFields = CustomFields ?? new List<FieldInfo>();
-				CustomFields.Add(new FieldInfo(field, Fields.FindField(field), -1));
+					CustomFields = CustomFields ?? new List<FieldInfo>();
+					CustomFields.Add(new FieldInfo(field, Fields.FindField(field), -1));
+				}
+				catch (Exception e)
+				{
+					throw new InvalidOperationException(
+						$"{this.Name}: Unable to add field {field}.", e);
+				}
 			}
 
 			public string Constraint

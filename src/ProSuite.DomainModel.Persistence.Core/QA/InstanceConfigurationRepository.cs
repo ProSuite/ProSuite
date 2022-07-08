@@ -19,12 +19,20 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 
 		#region Implementation of IInstanceConfigurationRepository
 
-		public IList<TransformerConfiguration> GetTransformerConfigurations()
+		public IList<TransformerConfiguration> GetTransformerConfigurations(
+			IList<int> excludedIds = null)
 		{
 			using (ISession session = OpenSession(true))
 			{
-				return session.CreateCriteria(typeof(TransformerConfiguration))
-				              .List<TransformerConfiguration>();
+				var query = session.QueryOver<TransformerConfiguration>();
+
+				if (excludedIds != null)
+				{
+					query.WhereRestrictionOn(tr => tr.Id)
+					     .Not.IsIn(excludedIds.ToArray());
+				}
+
+				return query.List();
 			}
 		}
 
