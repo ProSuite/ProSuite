@@ -209,13 +209,29 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 		bool IQualityConditionView.ExportEnabled
 		{
 			get => _buttonExport.Enabled;
-			set => _buttonExport.Enabled = value;
+			set
+			{
+				_buttonExport.Enabled = value;
+
+				if (value == false)
+				{
+					_exportButtonPanel.Height = 0;
+				}
+			}
 		}
 
 		bool IQualityConditionView.ImportEnabled
 		{
 			get => _buttonImport.Enabled;
-			set => _buttonImport.Enabled = value;
+			set
+			{
+				_buttonImport.Enabled = value;
+
+				if (value == false)
+				{
+					_exportButtonPanel.Height = 0;
+				}
+			}
 		}
 
 		string IQualityConditionView.IssueTypeDefault
