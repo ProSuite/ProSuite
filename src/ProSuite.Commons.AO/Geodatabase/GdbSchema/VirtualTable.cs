@@ -258,6 +258,30 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		int ITable.RowCount(IQueryFilter QueryFilter) => RowCount(QueryFilter);
 
+		public bool Equals(IReadOnlyTable otherTable)
+		{
+			VirtualTable other = otherTable as VirtualTable;
+
+			if (other == null)
+			{
+				return false;
+			}
+
+			if (! Equals(Workspace, other.Workspace))
+			{
+				return false;
+			}
+
+			if (ObjectClassID >= 0 && other.ObjectClassID >= 0 &&
+			    ObjectClassID == other.ObjectClassID)
+			{
+				return true;
+			}
+
+			// Same workspace but negative class ids:
+			return Name.Equals(other.Name);
+		}
+
 		public int FeatureCount(IQueryFilter QueryFilter) => RowCount(QueryFilter);
 
 		public virtual int RowCount(IQueryFilter QueryFilter) =>
