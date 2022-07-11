@@ -1206,6 +1206,22 @@ namespace ProSuite.Commons.AO.Geodatabase
 			return QualifyFieldName((ITable) objectClass, unqualifiedFieldName);
 		}
 
+		public static string QualifyFieldName([NotNull] IReadOnlyTable table,
+		                                      [NotNull] string unqualifiedFieldName)
+		{
+			Assert.ArgumentNotNull(table, nameof(table));
+			Assert.ArgumentNotNullOrEmpty(unqualifiedFieldName, nameof(unqualifiedFieldName));
+
+			IWorkspace workspace = table.Workspace;
+
+			if (workspace is ISQLSyntax sqlWorkspace)
+			{
+				return sqlWorkspace.QualifyColumnName(table.Name, unqualifiedFieldName);
+			}
+
+			return $"{table.Name}.{unqualifiedFieldName}";
+		}
+
 		[NotNull]
 		public static string QualifyFieldName([NotNull] ITable table,
 		                                      [NotNull] string unqualifiedFieldName)

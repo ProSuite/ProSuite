@@ -1,41 +1,76 @@
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
-using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Text;
 using ProSuite.QA.Container;
+using ProSuite.QA.Core;
 using ProSuite.QA.Tests.Documentation;
 
 namespace ProSuite.QA.Tests.Transformers
 {
 	public class TrTableJoinInMemory : ITableTransformer<IReadOnlyTable>
 	{
-		private readonly IReadOnlyTable _t0;
-		private readonly IReadOnlyTable _t1;
-		private readonly string _relationName;
+		private readonly IReadOnlyTable _leftTable;
+		private readonly IReadOnlyTable _rightTable;
+		private readonly string _leftTableKey;
+		private readonly string _rightTableKey;
+
+		private IReadOnlyTable _manyToManyTable;
+		private string _manyToManyTableLeftKey;
+		private string _manyToManyTableRightKey;
+
 		private readonly JoinType _joinType;
 		private readonly List<IReadOnlyTable> _involvedTables;
 
 		private IReadOnlyTable _joinedTable;
-		private string _transformerName;
 
 		[DocTr(nameof(DocTrStrings.TrTableJoinInMemory_0))]
 		public TrTableJoinInMemory(
-			[NotNull] [DocTr(nameof(DocTrStrings.TrTableJoinInMemory_t0))]
-			IReadOnlyTable t0,
-			[NotNull] [DocTr(nameof(DocTrStrings.TrTableJoin_t1))]
-			IReadOnlyTable t1,
-			[NotNull] [DocTr(nameof(DocTrStrings.TrTableJoin_relationName))]
-			string relationName,
-			[DocTr(nameof(DocTrStrings.TrTableJoin_joinType))]
+			[NotNull] [DocTr(nameof(DocTrStrings.TrTableJoinInMemory_leftTable))]
+			IReadOnlyTable leftTable,
+			[NotNull] [DocTr(nameof(DocTrStrings.TrTableJoinInMemory_rightTable))]
+			IReadOnlyTable rightTable,
+			[NotNull] [DocTr(nameof(DocTrStrings.TrTableJoinInMemory_leftTableKey))]
+			string leftTableKey,
+			[NotNull] [DocTr(nameof(DocTrStrings.TrTableJoinInMemory_rightTableKey))]
+			string rightTableKey,
+			[DocTr(nameof(DocTrStrings.TrTableJoinInMemory_joinType))]
 			JoinType joinType)
 		{
-			_t0 = t0;
-			_t1 = t1;
-			_relationName = relationName;
+			_leftTable = leftTable;
+			_rightTable = rightTable;
+
+			_leftTableKey = leftTableKey ?? throw new ArgumentNullException(nameof(leftTableKey));
+			_rightTableKey = rightTableKey;
+
 			_joinType = joinType;
-			_involvedTables = new List<IReadOnlyTable> {t0, t1};
+			_involvedTables = new List<IReadOnlyTable> {leftTable, rightTable};
+		}
+
+		[TestParameter]
+		[Doc(nameof(DocTrStrings.TrTableJoinInMemory_manyToManyTable))]
+		public IReadOnlyTable ManyToManyTable
+		{
+			get => _manyToManyTable;
+			set => _manyToManyTable = value;
+		}
+
+		[TestParameter]
+		[Doc(nameof(DocTrStrings.TrTableJoinInMemory_manyToManyTableLeftKey))]
+		public string ManyToManyTableLeftKey
+		{
+			get => _manyToManyTableLeftKey;
+			set => _manyToManyTableLeftKey = StringUtils.IsNullOrEmptyOrBlank(value) ? null : value;
+		}
+
+		[TestParameter]
+		[Doc(nameof(DocTrStrings.TrTableJoinInMemory_manyToManyTableRightKey))]
+		public string ManyToManyTableRightKey
+		{
+			get => _manyToManyTableRightKey;
+			set => _manyToManyTableRightKey =
+				       StringUtils.IsNullOrEmptyOrBlank(value) ? null : value;
 		}
 
 		#region Implementation of IInvolvesTables
@@ -56,6 +91,8 @@ namespace ProSuite.QA.Tests.Transformers
 
 		#region Implementation of ITableTransformer
 
+		string ITableTransformer.TransformerName { get; set; }
+
 		object ITableTransformer.GetTransformed()
 		{
 			return GetTransformed();
@@ -65,34 +102,46 @@ namespace ProSuite.QA.Tests.Transformers
 		{
 			if (_joinedTable == null)
 			{
-				IWorkspace ws = _involvedTables.Select(x => x.Workspace).FirstOrDefault();
+				AssociationDescription association = CreateAssociationDescription();
 
-				Assert.NotNull(ws);
-				List<ITable> involved = new List<ITable>();
-				_involvedTables.ForEach(
-					x => involved.Add(((IFeatureWorkspace) ws).OpenTable(x.Name)));
+				string joinTableName = ((ITableTransformer) this).TransformerName;
 
-				IRelationshipClass relClass =
-					((IFeatureWorkspace) _t0.Workspace).OpenRelationshipClass(
-						_relationName);
-
-				IFeatureClass geometryEndClass =
-					((IFeatureWorkspace) ws).OpenTable(_t0.Name) as IFeatureClass;
-
-				Assert.NotNull(geometryEndClass, "First table must be a feature class");
-
-				_joinedTable =
-					TableJoinUtils.CreateJoinedGdbFeatureClass(
-						relClass, geometryEndClass, _relationName, _joinType);
+				_joinedTable = TableJoinUtils.CreateJoinedGdbFeatureClass(
+					association, _leftTable, joinTableName, _joinType);
 			}
 
 			return _joinedTable;
 		}
 
-		string ITableTransformer.TransformerName
+		private AssociationDescription CreateAssociationDescription()
 		{
-			get => _transformerName;
-			set => _transformerName = value;
+			AssociationDescription association;
+
+			if (ManyToManyTable == null &&
+			    string.IsNullOrEmpty(_manyToManyTableLeftKey) &&
+			    string.IsNullOrEmpty(_manyToManyTableRightKey))
+			{
+				association = new ForeignKeyAssociationDescription(
+					_leftTable, _leftTableKey, _rightTable, _rightTableKey);
+			}
+			else
+			{
+				if (ManyToManyTable == null ||
+				    string.IsNullOrEmpty(_manyToManyTableLeftKey) ||
+				    string.IsNullOrEmpty(_manyToManyTableRightKey))
+				{
+					throw new ArgumentNullException(
+						$"Many-to-many attributes ({nameof(ManyToManyTable)}, " +
+						$"{nameof(ManyToManyTableLeftKey)}, {nameof(ManyToManyTableRightKey)}) " +
+						"must all be null or all specified.");
+				}
+
+				association = new ManyToManyAssociationDescription(
+					_leftTable, _leftTableKey, _rightTable, _rightTableKey,
+					_manyToManyTable, _manyToManyTableLeftKey, _manyToManyTableRightKey);
+			}
+
+			return association;
 		}
 
 		#endregion

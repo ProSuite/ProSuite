@@ -468,7 +468,7 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Transforms table &apos;t0&apos; and table &apos;t1&apos; to a joined table (experimental).
+        ///   Looks up a localized string similar to Creates a joined table with the fields from &apos;leftTable&apos; and &apos;rightTable&apos;..
         /// </summary>
         public static string TrTableJoinInMemory_0 {
             get {
@@ -477,20 +477,74 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Table containing the shape field to be used in the joined table.
+        ///   Looks up a localized string similar to The type of join. Currently inner joins and left joins are supported..
         /// </summary>
-        public static string TrTableJoinInMemory_t0 {
+        public static string TrTableJoinInMemory_joinType {
             get {
-                return ResourceManager.GetString("TrTableJoinInMemory_t0", resourceCulture);
+                return ResourceManager.GetString("TrTableJoinInMemory_joinType", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to table to join with &apos;t1&apos;.
+        ///   Looks up a localized string similar to The left table in the join. Its OBJECTID field will be used in the result table. If it is a FeatureClass its shape field it will be used in the result FeatureClass..
         /// </summary>
-        public static string TrTableJoinInMemory_t1 {
+        public static string TrTableJoinInMemory_leftTable {
             get {
-                return ResourceManager.GetString("TrTableJoinInMemory_t1", resourceCulture);
+                return ResourceManager.GetString("TrTableJoinInMemory_leftTable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The key field in the left table..
+        /// </summary>
+        public static string TrTableJoinInMemory_leftTableKey {
+            get {
+                return ResourceManager.GetString("TrTableJoinInMemory_leftTableKey", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The association / bridge table for a many-to-many join..
+        /// </summary>
+        public static string TrTableJoinInMemory_manyToManyTable {
+            get {
+                return ResourceManager.GetString("TrTableJoinInMemory_manyToManyTable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The key field in the many-to-many association table referencing the leftTableKey..
+        /// </summary>
+        public static string TrTableJoinInMemory_manyToManyTableLeftKey {
+            get {
+                return ResourceManager.GetString("TrTableJoinInMemory_manyToManyTableLeftKey", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The key field in the many-to-many association table referencing the rightTableKey..
+        /// </summary>
+        public static string TrTableJoinInMemory_manyToManyTableRightKey {
+            get {
+                return ResourceManager.GetString("TrTableJoinInMemory_manyToManyTableRightKey", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The right table in the join..
+        /// </summary>
+        public static string TrTableJoinInMemory_rightTable {
+            get {
+                return ResourceManager.GetString("TrTableJoinInMemory_rightTable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The key field in the right table..
+        /// </summary>
+        public static string TrTableJoinInMemory_rightTableKey {
+            get {
+                return ResourceManager.GetString("TrTableJoinInMemory_rightTableKey", resourceCulture);
             }
         }
     }

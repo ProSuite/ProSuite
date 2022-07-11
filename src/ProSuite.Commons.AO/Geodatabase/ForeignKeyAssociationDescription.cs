@@ -1,4 +1,3 @@
-using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AO.Geodatabase
@@ -8,9 +7,9 @@ namespace ProSuite.Commons.AO.Geodatabase
 		private readonly string _referencingKeyName;
 		private readonly string _referencedKeyName;
 
-		public ForeignKeyAssociationDescription([NotNull] ITable referencingTable,
+		public ForeignKeyAssociationDescription([NotNull] IReadOnlyTable referencingTable,
 		                                        [NotNull] string referencingKeyName,
-		                                        [NotNull] ITable referencedTable,
+		                                        [NotNull] IReadOnlyTable referencedTable,
 		                                        [NotNull] string referencedKeyName)
 			: base(referencingTable, referencedTable)
 		{
@@ -18,14 +17,26 @@ namespace ProSuite.Commons.AO.Geodatabase
 			_referencedKeyName = referencedKeyName;
 		}
 
+		/// <summary>
+		/// The key field in the <see cref="ReferencingTable"/>.
+		/// </summary>
 		[NotNull]
 		public string ReferencingKeyName => _referencingKeyName;
 
+		/// <summary>
+		/// The key field in the <see cref="ReferencedTable"/>.
+		/// </summary>
 		[NotNull]
 		public string ReferencedKeyName => _referencedKeyName;
 
-		public ITable ReferencingTable => Table1;
+		/// <summary>
+		/// The 'left' table in the join, containing the <see cref="ReferencingKeyName"/>.
+		/// </summary>
+		public IReadOnlyTable ReferencingTable => Table1;
 
-		public ITable ReferencedTable => Table2;
+		/// <summary>
+		/// The 'right' table in the join, containing the <see cref="ReferencedKeyName"/>.
+		/// </summary>
+		public IReadOnlyTable ReferencedTable => Table2;
 	}
 }

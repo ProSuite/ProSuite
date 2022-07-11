@@ -1023,8 +1023,6 @@ namespace ProSuite.Commons.AO.Geodatabase
 			Assert.ArgumentNotNull(sourceClass, nameof(sourceClass));
 			Assert.ArgumentNotNull(targetClass, nameof(targetClass));
 
-			var result = new Dictionary<int, int>();
-
 			IFields sourceFields = sourceClass.Fields;
 			IFields targetFields = targetClass.Fields;
 
@@ -1034,6 +1032,77 @@ namespace ProSuite.Commons.AO.Geodatabase
 			{
 				targetTableName = ((IDataset) targetClass).Name;
 			}
+
+			return MatchingIndexMatrix(sourceFields, targetFields, includeReadOnlyFields,
+			                           targetTableName, includeTargetField, fieldComparison);
+		}
+
+		/// <summary>
+		/// Creates a matrix holding the target row field index as key and
+		/// the matching source row field index in the value. If none matching
+		/// source field is found for the target feature, the index will be -1.
+		/// </summary>
+		/// <param name="sourceTable">Source table</param>
+		/// <param name="targetTable">Target table</param>
+		/// <param name="includeReadOnlyFields">include readonly fields in matrix</param> 
+		/// <param name="searchJoinedFields">match fields in source table, that start with 
+		/// the table name of the target class</param>
+		/// <param name="includeTargetField">Predicate to determine the inclusion of a given 
+		/// target field (optional; field is included if null)</param>
+		/// <returns>Dictionary with the indices of the targetClass as key
+		/// and the matching index of the sourceClass as value (could be -1)</returns>
+		/// <param name="fieldComparison">The comparison options to identify matches.</param>
+		[NotNull]
+		public static IDictionary<int, int> CreateMatchingIndexMatrix(
+			[NotNull] IReadOnlyTable sourceTable,
+			[NotNull] IReadOnlyTable targetTable,
+			bool includeReadOnlyFields = false,
+			bool searchJoinedFields = false,
+			[CanBeNull] Predicate<IField> includeTargetField = null,
+			FieldComparison fieldComparison = FieldComparison.FieldNameDomainName)
+		{
+			Assert.ArgumentNotNull(sourceTable, nameof(sourceTable));
+			Assert.ArgumentNotNull(targetTable, nameof(targetTable));
+
+			IFields sourceFields = sourceTable.Fields;
+			IFields targetFields = targetTable.Fields;
+
+			string targetTableName = null;
+
+			if (searchJoinedFields)
+			{
+				targetTableName = targetTable.Name;
+			}
+
+			return MatchingIndexMatrix(sourceFields, targetFields, includeReadOnlyFields,
+			                           targetTableName, includeTargetField, fieldComparison);
+		}
+
+		/// <summary>
+		/// Creates a matrix holding the target row field index as key and
+		/// the matching source row field index in the value. If none matching
+		/// source field is found for the target feature, the index will be -1.
+		/// </summary>
+		/// <param name="sourceFields">Source feature class</param>
+		/// <param name="targetFields">Target feature class</param>
+		/// <param name="includeReadOnlyFields">include readonly fields in matrix</param> 
+		/// <param name="targetTableName">match fields in source fields, that start with 
+		/// the specified table name of the target table.</param>
+		/// <param name="includeTargetField">Predicate to determine the inclusion of a given 
+		/// target field (optional; field is included if null)</param>
+		/// <returns>Dictionary with the indices of the targetClass as key
+		/// and the matching index of the sourceClass as value (could be -1)</returns>
+		/// <param name="fieldComparison">The comparison options to identify matches.</param>
+		[NotNull]
+		public static IDictionary<int, int> MatchingIndexMatrix(
+			[NotNull] IFields sourceFields,
+			[NotNull] IFields targetFields,
+			bool includeReadOnlyFields = false,
+			[CanBeNull] string targetTableName = null,
+			[CanBeNull] Predicate<IField> includeTargetField = null,
+			FieldComparison fieldComparison = FieldComparison.FieldNameDomainName)
+		{
+			var result = new Dictionary<int, int>();
 
 			int targetFieldCount = targetFields.FieldCount;
 
