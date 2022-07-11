@@ -9,7 +9,6 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Misc;
 using ProSuite.DdxEditor.Content.Blazor.ViewModel;
 using ProSuite.DomainModel.AO.QA;
-using ProSuite.DomainModel.Core.QA;
 using Radzen;
 using Radzen.Blazor;
 

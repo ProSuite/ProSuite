@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DdxEditor.Framework.ItemViews;
+using ProSuite.DomainModel.AO.QA;
 using ProSuite.QA.Core;
 
 namespace ProSuite.DdxEditor.Content.Blazor.ViewModel;
@@ -10,19 +11,28 @@ namespace ProSuite.DdxEditor.Content.Blazor.ViewModel;
 // todo daro rename
 public abstract class ViewModelBase : Observable
 {
-	protected ViewModelBase([NotNull] TestParameter parameter, [NotNull] IViewObserver observer) : base(observer)
+	[CanBeNull] private object _value;
+
+	protected ViewModelBase([NotNull] TestParameter parameter,
+	                        [CanBeNull] object value,
+	                        [NotNull] IViewObserver observer) : base(observer)
 	{
 		Assert.ArgumentNotNull(parameter, nameof(parameter));
-
+		
 		ParameterName = parameter.Name;
 		Parameter = parameter;
 		DataType = parameter.Type;
+		_value = value ?? TestParameterTypeUtils.GetDefault(DataType);
 
 		ComponentParameters = new Dictionary<string, object>();
 	}
 
 	[CanBeNull]
-	public abstract object Value { get; set; }
+	public object Value
+	{
+		get => _value;
+		set => SetProperty(ref _value, value);
+	}
 
 	[CanBeNull]
 	public virtual List<ViewModelBase> Values { get; set; }

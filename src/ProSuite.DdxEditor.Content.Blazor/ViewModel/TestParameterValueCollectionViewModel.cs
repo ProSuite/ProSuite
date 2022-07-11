@@ -17,7 +17,7 @@ public class TestParameterValueCollectionViewModel : ViewModelBase
 
 	public TestParameterValueCollectionViewModel([NotNull] TestParameter parameter,
 	                                             [NotNull] IList<ViewModelBase> values,
-	                                             IViewObserver observer) : base(parameter, observer)
+	                                             IViewObserver observer) : base(parameter, null, observer)
 	{
 		Assert.ArgumentNotNull(values, nameof(values));
 
@@ -61,8 +61,6 @@ public class TestParameterValueCollectionViewModel : ViewModelBase
 	[CanBeNull]
 	[UsedImplicitly]
 	public string ModelName { get; }
-
-	public override object Value { get; set; }
 
 	public void Insert(ViewModelBase row)
 	{

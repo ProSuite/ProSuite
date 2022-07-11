@@ -140,8 +140,7 @@ public class InstanceConfigurationViewModel<T> : Observable, IInstanceConfigurat
 			if (paramValue is DatasetTestParameterValue datasetValue)
 			{
 				rowsByParameter[param]
-					.Add(new DatasetTestParameterValueViewModel(
-						     param, datasetValue, this));
+					.Add(DatasetTestParameterValueViewModel.CreateInstance(param, datasetValue, this));
 			}
 			else if (paramValue is ScalarTestParameterValue scalarValue)
 			{
@@ -172,7 +171,7 @@ public class InstanceConfigurationViewModel<T> : Observable, IInstanceConfigurat
 
 		if (TestParameterTypeUtils.IsDatasetType(parameter.Type))
 		{
-			insertRow = new DatasetTestParameterValueViewModel(parameter, null, this);
+			insertRow = DatasetTestParameterValueViewModel.CreateInstance(parameter, null, this);
 		}
 		else
 		{

@@ -15,7 +15,7 @@ public class ScalarTestParameterValueViewModel : ViewModelBase
 	public ScalarTestParameterValueViewModel([NotNull] TestParameter parameter,
 	                                         [CanBeNull] object value,
 	                                         [NotNull] IViewObserver observer) :
-		base(parameter, observer)
+		base(parameter, value, observer)
 	{
 		_value = value;
 
@@ -50,11 +50,5 @@ public class ScalarTestParameterValueViewModel : ViewModelBase
 			default:
 				throw new ArgumentOutOfRangeException($"Unkown {nameof(TestParameterType)}");
 		}
-	}
-
-	public override object Value
-	{
-		get => _value;
-		set => SetProperty(ref _value, value);
 	}
 }
