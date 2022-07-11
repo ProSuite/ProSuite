@@ -255,29 +255,9 @@ public partial class QualityConditionTableViewBlazor : IDisposable
 
 		Assert.NotNull(childGrid);
 
-		IEnumerable<ViewModelBase> collectionViewModels =
-			Rows.Where(vm => vm is TestParameterValueCollectionViewModel);
-
-		foreach (ViewModelBase vm in collectionViewModels)
+		if (ViewModel.TryMoveUp(SelectedCollectionRow))
 		{
-			List<ViewModelBase> values = Assert.NotNull(vm.Values);
-
-			int index = values.IndexOf(SelectedCollectionRow);
-
-			if (index == -1)
-			{
-				// selected row is not in this collection view model
-				continue;
-			}
-
-			values.RemoveAt(index);
-
-			values.Insert(index - 1, SelectedCollectionRow);
-
-			childGrid.Data = values;
 			childGrid.Reload();
-
-			SelectedCollectionRow.NotifyDirty();
 		}
 	}
 
@@ -291,29 +271,9 @@ public partial class QualityConditionTableViewBlazor : IDisposable
 
 		Assert.NotNull(childGrid);
 
-		IEnumerable<ViewModelBase> collectionViewModels =
-			Rows.Where(vm => vm is TestParameterValueCollectionViewModel);
-
-		foreach (ViewModelBase vm in collectionViewModels)
+		if (ViewModel.TryMoveDown(SelectedCollectionRow))
 		{
-			List<ViewModelBase> values = Assert.NotNull(vm.Values);
-
-			int index = values.IndexOf(SelectedCollectionRow);
-			
-			if (index == -1)
-			{
-				// selected row is not in this collection view model
-				continue;
-			}
-
-			values.RemoveAt(index);
-
-			values.Insert(index + 1, SelectedCollectionRow);
-
-			childGrid.Data = values;
 			childGrid.Reload();
-
-			SelectedCollectionRow.NotifyDirty();
 		}
 	}
 

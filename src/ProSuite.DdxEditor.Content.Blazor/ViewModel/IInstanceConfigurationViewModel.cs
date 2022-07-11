@@ -20,4 +20,8 @@ public interface IInstanceConfigurationViewModel : IViewObserver, INotifyPropert
 	void DeleteRow(ViewModelBase selectedCollectionRow);
 
 	ViewModelBase InsertRow(TestParameter firstParameter);
+
+	bool TryMoveDown(ViewModelBase row);
+
+	bool TryMoveUp(ViewModelBase row);
 }

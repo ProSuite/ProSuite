@@ -203,6 +203,57 @@ public class InstanceConfigurationViewModel<T> : Observable, IInstanceConfigurat
 		collectionRow.Remove(row);
 	}
 
+	public bool TryMoveDown([NotNull] ViewModelBase row)
+	{
+		Assert.ArgumentNotNull(row, nameof(row));
+
+		TestParameter parameter = row.Parameter;
+
+		var collectionRow =
+			Assert.NotNull(
+				(TestParameterValueCollectionViewModel) _topLevelRowsByParameter[parameter]);
+
+		List<ViewModelBase> values = Assert.NotNull(collectionRow.Values);
+
+		int index = values.IndexOf(row);
+			
+		if (index == -1 || index == values.Count - 1)
+		{
+			// selected row is not in this collection view model
+			return false;
+		}
+
+		Assert.True(_rowsByParameter[parameter].Remove(row), $"cannot remove {row}");
+		_rowsByParameter[parameter].Insert(index + 1, row);
+
+		return collectionRow.TryMoveDown(row);
+	}
+
+	public bool TryMoveUp([NotNull] ViewModelBase row)
+	{
+		Assert.ArgumentNotNull(row, nameof(row));
+
+		TestParameter parameter = row.Parameter;
+
+		var collectionRow =
+			Assert.NotNull(
+				(TestParameterValueCollectionViewModel) _topLevelRowsByParameter[parameter]);
+
+		List<ViewModelBase> values = Assert.NotNull(collectionRow.Values);
+
+		int index = values.IndexOf(row);
+		
+		if (index is -1 or 0)
+		{
+			return false;
+		}
+
+		Assert.True(_rowsByParameter[parameter].Remove(row), $"cannot remove {row}");
+		_rowsByParameter[parameter].Insert(index - 1, row);
+
+		return collectionRow.TryMoveUp(row);
+	}
+
 	private void UpdateEntity([NotNull] InstanceConfiguration instanceConfiguration)
 	{
 		Assert.ArgumentNotNull(instanceConfiguration, nameof(instanceConfiguration));

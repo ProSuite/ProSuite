@@ -86,6 +86,48 @@ public class TestParameterValueCollectionViewModel : ViewModelBase
 		OnPropertyChanged(nameof(Values));
 	}
 
+	public bool TryMoveUp([NotNull] ViewModelBase row)
+	{
+		Assert.ArgumentNotNull(row, nameof(row));
+
+		Assert.NotNull(Values);
+		int index = Values.IndexOf(row);
+
+		if (index is -1 or 0)
+		{
+			return false;
+		}
+		
+		Assert.True(Values.Remove(row), $"cannot remove {row}");
+		Values.Insert(index - 1, row);
+
+		OnPropertyChanged(nameof(Values));
+
+		return true;
+	}
+
+	public bool TryMoveDown([NotNull] ViewModelBase row)
+	{
+		Assert.ArgumentNotNull(row, nameof(row));
+
+		Assert.NotNull(Values);
+
+		int index = Values.IndexOf(row);
+			
+		if (index == -1 || index == Values.Count - 1)
+		{
+			// selected row is not in this collection view model
+			return false;
+		}
+		
+		Assert.True(Values.Remove(row), $"cannot remove {row}");
+		Values.Insert(index + 1, row);
+
+		OnPropertyChanged(nameof(Values));
+
+		return true;
+	}
+
 	private static string GetModelName([NotNull] IEnumerable<ViewModelBase> viewModels)
 	{
 		var vms = viewModels.Cast<DatasetTestParameterValueViewModel>();
