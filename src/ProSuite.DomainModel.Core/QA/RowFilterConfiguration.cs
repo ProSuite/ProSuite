@@ -11,7 +11,7 @@ namespace ProSuite.DomainModel.Core.QA
 		/// </summary>
 		/// <remarks>Required for NHibernate</remarks>
 		[UsedImplicitly]
-		protected RowFilterConfiguration() { }
+		public RowFilterConfiguration() { }
 
 		public RowFilterConfiguration(string name,
 		                              [NotNull] RowFilterDescriptor rowFilterDescriptor,

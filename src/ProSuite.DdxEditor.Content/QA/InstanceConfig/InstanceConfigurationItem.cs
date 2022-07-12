@@ -9,8 +9,8 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
 using ProSuite.Commons.Validation;
+using ProSuite.DdxEditor.Content.QA.InstanceDescriptors;
 using ProSuite.DdxEditor.Content.QA.QCon;
-using ProSuite.DdxEditor.Content.QA.TestDescriptors;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Commands;
 using ProSuite.DdxEditor.Framework.Dependencies;
@@ -28,7 +28,6 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		// TODO: Separate interface
 		[CanBeNull] private readonly IInstanceConfigurationContainerItem _containerItem;
 		[NotNull] private readonly TableState _tableState = new TableState();
 
@@ -62,7 +61,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 		#endregion
 
 		[NotNull]
-		protected CoreDomainModelItemModelBuilder ModelBuilder { get; }
+		private CoreDomainModelItemModelBuilder ModelBuilder { get; }
 
 		public override Image Image => _image;
 
@@ -119,15 +118,6 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			return list;
 		}
 
-		private void PopulateInstanceDescriptorList(List<InstanceDescriptorTableRow> list)
-		{
-			InstanceConfigurationsItem configurationsItem = (InstanceConfigurationsItem) Parent;
-
-			Assert.NotNull(configurationsItem);
-
-			list.AddRange(configurationsItem.GetInstanceDescriptorTableRows());
-		}
-
 		public bool CanCreateCopy => _containerItem != null;
 
 		public void CreateCopy()
@@ -143,9 +133,16 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 
 			if (instanceConfig is TransformerConfiguration transformerConfiguration)
 			{
-				// Transformer configs are referenced by anything:
+				// Transformer configs can be referenced by any dataset parameter  (through ValueSource):
 				return ModelBuilder.InstanceConfigurations.GetReferencingConfigurations(
 					transformerConfiguration);
+			}
+
+			if (instanceConfig is RowFilterConfiguration rowFilterConfiguration)
+			{
+				// Transformer configs can be referenced by any dataset parameter (through RowFilters):
+				return ModelBuilder.InstanceConfigurations.GetReferencingConfigurations(
+					rowFilterConfiguration);
 			}
 
 			if (instanceConfig is IssueFilterConfiguration issueFilterConfiguration)
@@ -180,6 +177,15 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			_msg.InfoFormat("Opening url {0}...", url);
 
 			Process.Start(url);
+		}
+
+		private void PopulateInstanceDescriptorList(List<InstanceDescriptorTableRow> list)
+		{
+			InstanceConfigurationsItem configurationsItem = (InstanceConfigurationsItem) Parent;
+
+			Assert.NotNull(configurationsItem);
+
+			list.AddRange(configurationsItem.GetInstanceDescriptorTableRows());
 		}
 
 		private void UpdateImage([CanBeNull] InstanceConfiguration instanceConfiguration)

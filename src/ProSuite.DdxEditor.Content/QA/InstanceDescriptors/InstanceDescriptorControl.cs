@@ -12,12 +12,13 @@ using ProSuite.Commons.UI.ScreenBinding.Elements;
 using ProSuite.Commons.UI.ScreenBinding.Lists;
 using ProSuite.Commons.UI.WinForms.Controls;
 using ProSuite.DdxEditor.Content.Properties;
+using ProSuite.DdxEditor.Content.QA.TestDescriptors;
 using ProSuite.DdxEditor.Framework.ItemViews;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Core;
 
-namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
+namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 {
 	// TODO handle reflection errors
 	// TODO handle obsolete constructors and classes (validation, defaults etc)

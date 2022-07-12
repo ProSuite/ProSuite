@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.DdxEditor.Content.QA.TestDescriptors;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.Repositories;
 

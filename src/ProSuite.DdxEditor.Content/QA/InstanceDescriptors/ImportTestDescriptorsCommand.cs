@@ -4,9 +4,10 @@ using System.Windows.Forms;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DdxEditor.Content.Properties;
 using ProSuite.DdxEditor.Content.QA.QSpec;
+using ProSuite.DdxEditor.Content.QA.TestDescriptors;
 using ProSuite.DdxEditor.Framework;
 
-namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
+namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 {
 	public class ImportTestDescriptorsCommand :
 		ExchangeQualitySpecificationCommand<TestDescriptorsItem>

@@ -15,6 +15,7 @@ using ProSuite.DdxEditor.Content.LinearNetworks;
 using ProSuite.DdxEditor.Content.Models;
 using ProSuite.DdxEditor.Content.ObjectCategories;
 using ProSuite.DdxEditor.Content.QA.Categories;
+using ProSuite.DdxEditor.Content.QA.InstanceDescriptors;
 using ProSuite.DdxEditor.Content.QA.QCon;
 using ProSuite.DdxEditor.Content.QA.QSpec;
 using ProSuite.DdxEditor.Content.QA.TestDescriptors;
@@ -283,7 +284,8 @@ namespace ProSuite.DdxEditor.Content
 
 		public abstract IEnumerable<Item> GetChildren([NotNull] TestDescriptorsItem parent);
 
-		public abstract IEnumerable<Item> GetChildren<T>([NotNull] InstanceDescriptorsItem<T> parent) where T : InstanceDescriptor;
+		public abstract IEnumerable<Item> GetChildren<T>(
+			[NotNull] InstanceDescriptorsItem<T> parent) where T : InstanceDescriptor;
 
 		[NotNull]
 		[Obsolete("No longer called")]
@@ -364,7 +366,6 @@ namespace ProSuite.DdxEditor.Content
 			return new List<DependingItem>();
 		}
 
-
 		[NotNull]
 		public virtual IList<DependingItem> GetDependingItems(
 			[CanBeNull] QualitySpecification qualitySpecification)
@@ -438,7 +439,6 @@ namespace ProSuite.DdxEditor.Content
 
 		protected IList<E> GetEntities<E>(Func<IList<E>> getRepositoryAction) where E : Entity
 		{
-
 			return ReadOnlyTransaction(getRepositoryAction);
 		}
 

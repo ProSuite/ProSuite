@@ -5,7 +5,7 @@ using ProSuite.DdxEditor.Framework.ItemViews;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Core;
 
-namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
+namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 {
 	internal interface IInstanceDescriptorView :
 		IBoundView<InstanceDescriptor, IInstanceDescriptorObserver>

@@ -11,7 +11,7 @@ using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Core;
 using ProSuite.UI.QA.ResourceLookup;
 
-namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
+namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 {
 	public class InstanceDescriptorTableRow : IEntityRow, IEntityRow<InstanceDescriptor>
 	{

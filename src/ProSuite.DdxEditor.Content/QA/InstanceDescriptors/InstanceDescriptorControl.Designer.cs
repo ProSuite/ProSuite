@@ -1,6 +1,6 @@
 using ProSuite.Commons.UI.WinForms.Controls;
 
-namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
+namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 {
     partial class InstanceDescriptorControl
     {

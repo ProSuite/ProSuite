@@ -109,14 +109,13 @@ namespace ProSuite.UI.QA.ResourceLookup
 				return GetImage(_keyIssueFilter);
 			}
 
+			if (instanceDescriptor is RowFilterDescriptor)
+			{
+				return GetImage(_keyRowFilter);
+			}
+
 			throw new NotImplementedException();
 		}
-
-		//[CanBeNull]
-		//public static Image GetImage([CanBeNull] TransformerDescriptor transformerDescriptor)
-		//{
-		//	return GetImage(_keyTransform);
-		//}
 
 		[CanBeNull]
 		[ContractAnnotation("notnull => notnull")]
@@ -194,15 +193,6 @@ namespace ProSuite.UI.QA.ResourceLookup
 
 		[CanBeNull]
 		[ContractAnnotation("notnull => notnull")]
-		public static string GetImageKey([CanBeNull] TransformerConfiguration transformer)
-		{
-			return transformer == null
-				       ? null
-				       : GetImageKey(GetImage(transformer));
-		}
-
-		[CanBeNull]
-		[ContractAnnotation("notnull => notnull")]
 		public static string GetImageKey([CanBeNull] InstanceConfiguration configuration)
 		{
 			if (configuration == null)
@@ -211,18 +201,6 @@ namespace ProSuite.UI.QA.ResourceLookup
 			}
 
 			return GetImageKey(GetImage(configuration));
-
-			//if (configuration is QualityCondition qualityCondition)
-			//{
-			//	return GetImageKey(qualityCondition);
-			//}
-
-			//if (configuration is TransformerConfiguration transformerConfiguration)
-			//{
-			//	return GetImageKey(transformerConfiguration);
-			//}
-
-			//throw new NotImplementedException();
 		}
 
 		[CanBeNull]
@@ -251,13 +229,6 @@ namespace ProSuite.UI.QA.ResourceLookup
 		public static int GetDefaultSortIndex([NotNull] InstanceDescriptor instanceDescriptor)
 		{
 			return GetDefaultSortIndex(GetImageKey(instanceDescriptor));
-
-			if (instanceDescriptor is TransformerDescriptor transformerDescriptor)
-			{
-				return GetDefaultSortIndex(transformerDescriptor);
-			}
-
-			throw new NotImplementedException();
 		}
 
 		public static int GetDefaultSortIndex([NotNull] TransformerDescriptor transformerDescriptor)

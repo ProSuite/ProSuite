@@ -5,11 +5,12 @@ using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.UI.WinForms.Controls;
+using ProSuite.DdxEditor.Content.QA.TestDescriptors;
 using ProSuite.DdxEditor.Framework.TableRows;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.UI.QA.ResourceLookup;
 
-namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
+namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 {
 	public class ReferencingInstanceConfigurationTableRow : SelectableTableRow, IEntityRow
 	{
@@ -33,7 +34,10 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 			get
 			{
 				Image image = TestTypeImageLookup.GetImage(_entity);
-				image.Tag = TestTypeImageLookup.GetDefaultSortIndex(_entity);
+				if (_entity != null)
+				{
+					image.Tag = TestTypeImageLookup.GetDefaultSortIndex(_entity);
+				}
 
 				return image;
 			}
@@ -45,7 +49,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 		[UsedImplicitly]
 		[ColumnConfiguration(Width = 300)]
 		public string Description => _entity.Description;
-		
+
 		[DisplayName("Created")]
 		[ColumnConfiguration(Width = 100)]
 		[UsedImplicitly]

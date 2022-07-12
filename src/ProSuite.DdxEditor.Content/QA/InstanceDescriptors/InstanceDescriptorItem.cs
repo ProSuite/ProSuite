@@ -8,6 +8,7 @@ using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI.Finder;
 using ProSuite.Commons.Validation;
 using ProSuite.DdxEditor.Content.QA.Categories;
+using ProSuite.DdxEditor.Content.QA.TestDescriptors;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Commands;
 using ProSuite.DdxEditor.Framework.Dependencies;
@@ -21,7 +22,7 @@ using ProSuite.QA.Container;
 using ProSuite.QA.Core;
 using ProSuite.UI.QA.ResourceLookup;
 
-namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
+namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 {
 	public class InstanceDescriptorItem : EntityItem<InstanceDescriptor, InstanceDescriptor>
 	{
@@ -57,21 +58,14 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 
 		private void UpdateImage([CanBeNull] InstanceDescriptor instanceDescriptor)
 		{
-			var transormerDescriptor = instanceDescriptor as TransformerDescriptor;
-			if (transormerDescriptor != null)
-			{
-				_image = TestTypeImageLookup.GetImage(transormerDescriptor);
-				_image.Tag = TestTypeImageLookup.GetDefaultSortIndex(transormerDescriptor);
+			_image = TestTypeImageLookup.GetImage(instanceDescriptor);
 
-				_imageKey = string.Format("{0}#{1}", base.ImageKey,
-				                          TestTypeImageLookup
-					                          .GetImageKey(transormerDescriptor));
-			}
-			else if (instanceDescriptor is IssueFilterDescriptor issueFilterDescriptor)
+			if (instanceDescriptor != null)
 			{
-				_image = TestTypeImageLookup.GetImage(issueFilterDescriptor);
-				_image.Tag = TestTypeImageLookup.GetDefaultSortIndex(issueFilterDescriptor);
+				_image.Tag = TestTypeImageLookup.GetDefaultSortIndex(instanceDescriptor);
 			}
+
+			_imageKey = $"{base.ImageKey}#{TestTypeImageLookup.GetImageKey(instanceDescriptor)}";
 		}
 
 		protected override void UpdateItemStateCore(InstanceDescriptor entity)
@@ -121,18 +115,9 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 		{
 			var control = new InstanceDescriptorControl(_tableState);
 
-			new InstanceDescriptorPresenter(this, control, FindTestFactoryProvider,
-			                                FindTestClassProvider,
-			                                FindTestConfiguratorProvider, itemNavigation);
+			new InstanceDescriptorPresenter(this, control,
+			                                FindTestClassProvider, itemNavigation);
 			return control;
-		}
-
-		[CanBeNull]
-		private static ClassDescriptor FindTestFactoryProvider(
-			[NotNull] IWin32Window owner,
-			[CanBeNull] ClassDescriptor orig)
-		{
-			return FindClassDescriptor<TestFactory>(owner, orig);
 		}
 
 		[CanBeNull]
@@ -141,14 +126,6 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 			[CanBeNull] ClassDescriptor orig)
 		{
 			return FindClassDescriptor<ITest>(owner, orig);
-		}
-
-		[CanBeNull]
-		private static ClassDescriptor FindTestConfiguratorProvider(
-			[NotNull] IWin32Window owner,
-			[CanBeNull] ClassDescriptor orig)
-		{
-			return FindClassDescriptor<ITestConfigurator>(owner, orig);
 		}
 
 		[CanBeNull]
@@ -293,7 +270,8 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 				case RowFilterDescriptor _:
 					return repository.Get<RowFilterConfiguration>(instanceDescriptor);
 				default:
-					throw new NotImplementedException($"Unsupported instance descriptor type: {instanceDescriptor}");
+					throw new NotImplementedException(
+						$"Unsupported instance descriptor type: {instanceDescriptor}");
 			}
 		}
 	}

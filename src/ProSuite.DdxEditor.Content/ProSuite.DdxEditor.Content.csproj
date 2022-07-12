@@ -199,7 +199,7 @@
     <Compile Update="QA\TestDescriptors\CreateQualityConditions\QualityConditionParameters.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Update="QA\TestDescriptors\InstanceDescriptorControl.cs">
+    <Compile Update="QA\InstanceDescriptors\InstanceDescriptorControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Update="QA\TestDescriptors\TestDescriptorControl.cs">
@@ -308,7 +308,7 @@
     <EmbeddedResource Update="QA\TestDescriptors\CreateQualityConditions\CreateQualityConditionsForm.resx">
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Update="QA\TestDescriptors\InstanceDescriptorControl.resx">
+    <EmbeddedResource Update="QA\InstanceDescriptors\InstanceDescriptorControl.resx">
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Update="QA\TestDescriptors\TestDescriptorControl.resx">

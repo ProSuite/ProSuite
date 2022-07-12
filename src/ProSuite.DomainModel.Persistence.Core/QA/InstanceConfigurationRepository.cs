@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using NHibernate;
 using NHibernate.Criterion;
 using NHibernate.Transform;
@@ -144,11 +145,42 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 			using (ISession session = OpenSession(true))
 			{
 				DatasetTestParameterValue parameterValueAlias = null;
+				Expression<Func<bool>> parameterExpression = () =>
+					parameterValueAlias.ValueSource != null &&
+					parameterValueAlias.ValueSource == transformer;
+
 				var result =
 					DatasetParameterFetchingUtils.GetParentConfiguration<InstanceConfiguration>(
-						null, session, () =>
-							parameterValueAlias.ValueSource != null &&
-							parameterValueAlias.ValueSource == transformer);
+						null, session, parameterExpression);
+
+				return result;
+			}
+		}
+
+		public IList<InstanceConfiguration> GetReferencingConfigurations(
+			RowFilterConfiguration rowFilter)
+		{
+			if (! rowFilter.IsPersistent)
+			{
+				return new List<InstanceConfiguration>(0);
+			}
+
+			using (ISession session = OpenSession(true))
+			{
+				TestParameterValue paramAlias = null;
+				RowFilterConfiguration rfAlias = null;
+				var result =
+					session.QueryOver<InstanceConfiguration>()
+					       //.Where(categoryFilter)
+					       .JoinAlias(i => i.ParameterValues,
+					                  () => paramAlias)
+					       .Where(i => paramAlias.GetType() == typeof(DatasetTestParameterValue))
+					       .JoinAlias(
+						       i => ((DatasetTestParameterValue) paramAlias)
+							       .RowFilterConfigurations,
+						       () => rfAlias)
+					       .Where(i => rfAlias.Id == rowFilter.Id)
+					       .List();
 
 				return result;
 			}

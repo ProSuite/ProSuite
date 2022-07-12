@@ -13,22 +13,22 @@ using ProSuite.DomainModel.Core.QA.Repositories;
 
 namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 {
-	public class TransformerConfigurationsItem : InstanceConfigurationsItem
+	public class RowFilterConfigurationsItem : InstanceConfigurationsItem
 	{
 		[NotNull] private static readonly Image _image;
 		[NotNull] private static readonly Image _selectedImage;
 
-		static TransformerConfigurationsItem()
+		static RowFilterConfigurationsItem()
 		{
-			_image = ItemUtils.GetGroupItemImage(Resources.TransformOverlay);
+			_image = ItemUtils.GetGroupItemImage(Resources.RowFilterOverlay);
 			_selectedImage =
-				ItemUtils.GetGroupItemSelectedImage(Resources.TransformOverlay);
+				ItemUtils.GetGroupItemSelectedImage(Resources.RowFilterOverlay);
 		}
 
-		public TransformerConfigurationsItem([NotNull] CoreDomainModelItemModelBuilder modelBuilder,
-		                                     [NotNull] IQualityConditionContainer container)
-			: base(modelBuilder, "Transformer Configurations",
-			       "Configured dataset transformers using one or more input datasets",
+		public RowFilterConfigurationsItem([NotNull] CoreDomainModelItemModelBuilder modelBuilder,
+		                                   [NotNull] IQualityConditionContainer container)
+			: base(modelBuilder, "Row filter configurations",
+			       "Configured filter algorithms to filter the rows being verified in a quality condition",
 			       container) { }
 
 		public override Image Image => _image;
@@ -41,7 +41,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 		{
 			base.CollectCommands(commands, applicationController);
 
-			commands.Add(new AddTransformerConfigurationCommand(this, applicationController, this));
+			commands.Add(new AddRowFilterConfigurationCommand(this, applicationController, this));
 			commands.Add(new DeleteAllChildItemsCommand(this, applicationController));
 		}
 
@@ -49,24 +49,24 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 
 		public override IEnumerable<InstanceDescriptorTableRow> GetInstanceDescriptorTableRows()
 		{
-			return InstanceDescriptorItemUtils.GetTransformerDescriptorTableRows(
+			return InstanceDescriptorItemUtils.GetRowFilterDescriptorTableRows(
 				ModelBuilder.InstanceDescriptors);
 		}
 
 		protected override IEnumerable<InstanceConfigurationDatasetTableRow>
-			GetConfigDatasetTableRows(
-				DataQualityCategory category)
+			GetConfigDatasetTableRows(DataQualityCategory category)
 		{
 			return QualityConditionContainerUtils
-				.GetInstanceConfigurationDatasetTableRows<TransformerConfiguration>(
+				.GetInstanceConfigurationDatasetTableRows<RowFilterConfiguration>(
 					ModelBuilder, category);
 		}
 
 		protected override IEnumerable<InstanceConfigurationInCategoryTableRow> GetConfigTableRows(
 			DataQualityCategory category)
 		{
-			return QualityConditionContainerUtils.GetInstanceConfigurationTableRows<
-				TransformerConfiguration>(ModelBuilder, category);
+			return QualityConditionContainerUtils
+				.GetInstanceConfigurationTableRows<RowFilterConfiguration>(
+					ModelBuilder, category);
 		}
 
 		protected override InstanceConfigurationItem CreateConfigurationItemCore(
@@ -77,9 +77,8 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 		{
 			Assert.ArgumentNotNull(configuration, nameof(configuration));
 
-			var item =
-				new InstanceConfigurationItem(modelBuilder, configuration, containerItem,
-				                              repository);
+			var item = new InstanceConfigurationItem(modelBuilder, configuration, containerItem,
+			                                         repository);
 
 			return item;
 		}
@@ -87,9 +86,9 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 		protected override InstanceConfigurationItem CreateNewItemCore(
 			CoreDomainModelItemModelBuilder modelBuilder)
 		{
-			var transformerConfig = new TransformerConfiguration();
+			var rowFilterConfig = new RowFilterConfiguration();
 
-			return new InstanceConfigurationItem(modelBuilder, transformerConfig, this,
+			return new InstanceConfigurationItem(modelBuilder, rowFilterConfig, this,
 			                                     modelBuilder.InstanceConfigurations);
 		}
 

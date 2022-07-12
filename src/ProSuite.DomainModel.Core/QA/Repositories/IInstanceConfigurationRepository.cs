@@ -32,5 +32,8 @@ namespace ProSuite.DomainModel.Core.QA.Repositories
 
 		IList<InstanceConfiguration> GetReferencingConfigurations(
 			[NotNull] TransformerConfiguration transformer);
+
+		IList<InstanceConfiguration> GetReferencingConfigurations(
+			RowFilterConfiguration rowFilter);
 	}
 }

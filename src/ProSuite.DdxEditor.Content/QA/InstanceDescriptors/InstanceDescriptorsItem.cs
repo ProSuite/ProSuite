@@ -9,10 +9,11 @@ using ProSuite.Commons.Logging;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Commands;
 using ProSuite.DdxEditor.Framework.Items;
+using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.Repositories;
 
-namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
+namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 {
 	public abstract class InstanceDescriptorsItem<T> : EntityTypeItem<T>
 		where T : InstanceDescriptor
@@ -36,6 +37,58 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 
 		protected override bool SortChildren => true;
 
+		public void AddInstanceDescriptors(string dllFilePath,
+		                                   IApplicationController applicationController)
+		{
+			using (_msg.IncrementIndentation(
+				       "Adding {0} from assembly {1}", DescriptorTypeDisplayName, dllFilePath))
+			{
+				Assembly assembly = Assembly.LoadFile(dllFilePath);
+
+				AddInstanceDescriptors(applicationController, assembly);
+			}
+		}
+
+		protected void AddInstanceDescriptors(
+			IApplicationController applicationController,
+			Assembly assembly)
+		{
+			const bool includeObsolete = false;
+			const bool includeInternallyUsed = false;
+
+			Type instanceBaseType = GetInstanceType();
+
+			IEnumerable<Type> instanceTypes = InstanceFactoryUtils.GetClasses(
+				assembly, instanceBaseType, includeObsolete, includeInternallyUsed);
+
+			var newDescriptors = new List<InstanceDescriptor>();
+
+			// TODO allow specifying naming convention
+			// TODO optionally use alternate display name 
+			// TODO allow selection of types/constructors
+			// TODO optionally change properties of existing descriptors with same definition
+			var count = 0;
+
+			foreach (Type instanceType in instanceTypes)
+			{
+				foreach (int constructorIndex in
+				         InstanceFactoryUtils.GetConstructorIndexes(instanceType,
+					         includeObsolete, includeInternallyUsed))
+				{
+					count++;
+					newDescriptors.Add(CreateDescriptor(instanceType, constructorIndex));
+				}
+			}
+
+			_msg.InfoFormat("The assembly contains {0} {1}s", count, DescriptorTypeDisplayName);
+
+			applicationController.GoToItem(this);
+
+			TryAddInstanceDescriptors(newDescriptors);
+		}
+
+		protected abstract Type GetInstanceType();
+
 		protected override IEnumerable<Item> GetChildren()
 		{
 			return ModelBuilder.GetChildren(this);
@@ -47,7 +100,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 		{
 			base.CollectCommands(commands, applicationController);
 
-			// TODO: Consider automatically detect the relevant assemblies and load ALL transformers etc.
+			// TODO: Consider automatically detecting the relevant assemblies and load ALL transformers etc.
 			//commands.Add(new ImportTestDescriptorsCommand(
 			//				 this, applicationController,
 			//				 _modelBuilder.DefaultTestDescriptorsXmlFile));
@@ -59,8 +112,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 			commands.Add(new DeleteAllChildItemsCommand(this, applicationController));
 		}
 
-		protected abstract T CreateDescriptor<T>(Type type, int constructor)
-			where T : InstanceDescriptor;
+		protected abstract InstanceDescriptor CreateDescriptor(Type type, int constructor);
 
 		protected override Control CreateControlCore(IItemNavigation itemNavigation)
 		{
@@ -130,21 +182,5 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 
 			RefreshChildren();
 		}
-
-		public void AddInstanceDescriptors(string dllFilePath,
-		                                   IApplicationController applicationController)
-		{
-			using (_msg.IncrementIndentation(
-				       "Adding {0} from assembly {1}", DescriptorTypeDisplayName, dllFilePath))
-			{
-				Assembly assembly = Assembly.LoadFile(dllFilePath);
-
-				AddInstanceDescriptorsCore(applicationController, assembly);
-			}
-		}
-
-		protected abstract void AddInstanceDescriptorsCore(
-			IApplicationController applicationController,
-			Assembly assembly);
 	}
 }

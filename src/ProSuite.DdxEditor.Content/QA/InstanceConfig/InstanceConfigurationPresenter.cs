@@ -8,7 +8,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI.Finder;
 using ProSuite.Commons.UI.ScreenBinding.Lists;
-using ProSuite.DdxEditor.Content.QA.TestDescriptors;
+using ProSuite.DdxEditor.Content.QA.InstanceDescriptors;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.ItemViews;
 using ProSuite.DomainModel.AO.QA;

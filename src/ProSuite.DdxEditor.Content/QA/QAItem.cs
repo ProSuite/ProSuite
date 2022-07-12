@@ -8,6 +8,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DdxEditor.Content.Properties;
 using ProSuite.DdxEditor.Content.QA.Categories;
 using ProSuite.DdxEditor.Content.QA.InstanceConfig;
+using ProSuite.DdxEditor.Content.QA.InstanceDescriptors;
 using ProSuite.DdxEditor.Content.QA.QCon;
 using ProSuite.DdxEditor.Content.QA.QSpec;
 using ProSuite.DdxEditor.Content.QA.TestDescriptors;
@@ -48,27 +49,51 @@ namespace ProSuite.DdxEditor.Content.QA
 
 		protected override IEnumerable<Item> GetChildren()
 		{
+			if (Environment.Version >= new Version(6, 0))
+			{
+				foreach (Item item in GetChildrenDdxCore())
+				{
+					yield return item;
+				}
+
+				yield break;
+			}
+
 			yield return RegisterChild(new QualitySpecificationsItem(_modelBuilder, this));
 
 			yield return RegisterChild(new QualityConditionsItem(_modelBuilder, this));
 
-			if (Environment.Version >= new Version(6, 0))
-			{
-				yield return RegisterChild(new TransformerConfigurationsItem(_modelBuilder, this));
-				yield return RegisterChild(new IssueFilterConfigurationsItem(_modelBuilder, this));
-			}
-
 			yield return RegisterChild(new TestDescriptorsItem(_modelBuilder));
 
-			if (Environment.Version >= new Version(6, 0))
+			foreach (Item categoryItem in GetCategoryItems())
 			{
-				yield return RegisterChild(new TransformerDescriptorsItem(_modelBuilder));
-				yield return RegisterChild(
-					new IssueFilterDescriptorsItem(_modelBuilder));
+				yield return categoryItem;
 			}
+		}
 
+		private IEnumerable<Item> GetChildrenDdxCore()
+		{
+			yield return RegisterChild(new AlgorithmImplementationItem(_modelBuilder));
+
+			yield return RegisterChild(new QualitySpecificationsItem(_modelBuilder, this));
+
+			yield return RegisterChild(new QualityConditionsItem(_modelBuilder, this));
+
+			yield return RegisterChild(new TransformerConfigurationsItem(_modelBuilder, this));
+			yield return RegisterChild(new IssueFilterConfigurationsItem(_modelBuilder, this));
+			yield return RegisterChild(new RowFilterConfigurationsItem(_modelBuilder, this));
+
+			foreach (Item categoryItem in GetCategoryItems())
+			{
+				yield return categoryItem;
+			}
+		}
+
+		private IEnumerable<Item> GetCategoryItems()
+		{
 			IDataQualityCategoryRepository categoryRepository =
 				_modelBuilder.DataQualityCategories;
+
 			if (categoryRepository != null)
 			{
 				var comparer = new DataQualityCategoryComparer();
@@ -218,6 +243,15 @@ namespace ProSuite.DdxEditor.Content.QA
 			if (containerItem is IssueFilterConfigurationsItem)
 			{
 				return GetInstanceConfigurations<IssueFilterConfiguration>()
+				       .OrderBy(c => c.Name)
+				       .Select(c => new InstanceConfigurationItem(
+					               _modelBuilder, c, containerItem,
+					               _modelBuilder.InstanceConfigurations));
+			}
+
+			if (containerItem is RowFilterConfigurationsItem)
+			{
+				return GetInstanceConfigurations<RowFilterConfiguration>()
 				       .OrderBy(c => c.Name)
 				       .Select(c => new InstanceConfigurationItem(
 					               _modelBuilder, c, containerItem,
