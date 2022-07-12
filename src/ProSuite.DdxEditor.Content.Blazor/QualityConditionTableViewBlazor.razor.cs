@@ -282,7 +282,7 @@ public partial class QualityConditionTableViewBlazor : IDisposable
 
 	private bool ButtonDisabledCore()
 	{
-		if (Rows.Count == 0)
+		if (Rows == null || Rows.Count == 0)
 		{
 			return true;
 		}
