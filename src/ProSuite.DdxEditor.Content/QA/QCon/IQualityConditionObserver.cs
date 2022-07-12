@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.DdxEditor.Content.QA.InstanceConfig;
 using ProSuite.DdxEditor.Framework.ItemViews;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.QA;
@@ -30,14 +31,22 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 
 		void QualitySpecificationSelectionChanged();
 
+		void IssueFilterSelectionChanged();
+		void AddIssueFilterClicked();
+		void RemoveIssueFilterClicked();
+
 		void QualitySpecificationReferenceDoubleClicked(
 			[NotNull] QualitySpecificationReferenceTableRow
 				qualitySpecificationReferenceTableRow);
+
+		void IssueFilterDoubleClicked([NotNull] InstanceConfigurationReferenceTableRow filterConfigTableRow);
 
 		void TestDescriptorLinkClicked([CanBeNull] TestDescriptor testDescriptor);
 
 		void OpenUrlClicked();
 
 		void NewVersionUuidClicked();
+
+		
 	}
 }

@@ -10,8 +10,10 @@ using ProSuite.Commons.Misc;
 using ProSuite.Commons.UI.Dialogs;
 using ProSuite.Commons.UI.ScreenBinding;
 using ProSuite.Commons.UI.ScreenBinding.Elements;
+using ProSuite.Commons.UI.ScreenBinding.Lists;
 using ProSuite.Commons.UI.WinForms;
 using ProSuite.Commons.UI.WinForms.Controls;
+using ProSuite.DdxEditor.Content.QA.InstanceConfig;
 using ProSuite.DdxEditor.Content.QA.TestDescriptors;
 using ProSuite.DdxEditor.Framework.ItemViews;
 using ProSuite.DomainModel.AO.QA;
@@ -31,15 +33,21 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 
 		[NotNull] private readonly
 			BoundDataGridHandler<QualitySpecificationReferenceTableRow> _qSpecGridHandler;
+		[NotNull] private readonly
+			BoundDataGridHandler<InstanceConfigurationReferenceTableRow> _issueFilterGridHandler;
 
 		[CanBeNull] private static string _lastSelectedDetailsTab;
 		[CanBeNull] private static string _lastSelectedParameterValuesTab;
 		private readonly bool _tableViewShown;
 
 		private TableStateManager<QualitySpecificationReferenceTableRow> _qSpecStateManager;
+		private TableStateManager<InstanceConfigurationReferenceTableRow> _issueFilterStateManager;
 
-		[NotNull] private readonly TableState _tableState;
-		private IList<QualitySpecificationReferenceTableRow> _initialTableRows;
+		[NotNull] private readonly TableState _tableStateQSpec;
+		[NotNull] private readonly TableState _tableStateIssueFilter;
+
+		private IList<QualitySpecificationReferenceTableRow> _initialQSpecTableRows;
+		private IList<InstanceConfigurationReferenceTableRow> _initialIssueFilterTableRows;
 
 		[NotNull] private readonly IInstanceConfigurationTableViewControl _tableViewControl;
 
@@ -48,14 +56,16 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 		/// <summary>
 		/// Initializes a new instance of the <see cref="QualityConditionControl"/> class.
 		/// </summary>
-		public QualityConditionControl([NotNull] TableState tableState,
-		                               [NotNull]
-		                               IInstanceConfigurationTableViewControl tableViewControl)
+		public QualityConditionControl(
+			[NotNull] TableState tableStateQSpec,
+			[NotNull] TableState tableStateIssueFilter,
+			[NotNull] IInstanceConfigurationTableViewControl tableViewControl)
 		{
-			Assert.ArgumentNotNull(tableState, nameof(tableState));
+			Assert.ArgumentNotNull(tableStateQSpec, nameof(tableStateQSpec));
 			Assert.ArgumentNotNull(tableViewControl, nameof(tableViewControl));
 
-			_tableState = tableState;
+			_tableStateQSpec = tableStateQSpec;
+			_tableStateIssueFilter = tableStateIssueFilter;
 			_tableViewControl = tableViewControl;
 			var qualityConditionTableViewControl = (Control) tableViewControl;
 
@@ -161,6 +171,11 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 					_dataGridViewQualitySpecifications, restoreSelectionAfterUserSort: true);
 			_qSpecGridHandler.SelectionChanged += _qSpecGridHandler_SelectionChanged;
 
+			_issueFilterGridHandler =
+				new BoundDataGridHandler<InstanceConfigurationReferenceTableRow>(
+					_dataGridViewIssueFilters, restoreSelectionAfterUserSort: true);
+			_issueFilterGridHandler.SelectionChanged+=_issueFilterGridHandler_SelectionChanged;
+
 			TabControlUtils.SelectTabPage(_tabControlDetails, _lastSelectedDetailsTab);
 			TabControlUtils.SelectTabPage(_tabControlParameterValues,
 			                              _lastSelectedParameterValuesTab);
@@ -168,13 +183,15 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			_tableViewShown = _tabControlParameterValues.SelectedTab == _tabPageTableView;
 		}
 
+
 		#endregion
 
 		#region IQualityConditionView Members
 
 		public void SaveState()
 		{
-			_qSpecStateManager?.SaveState(_tableState);
+			_qSpecStateManager?.SaveState(_tableStateQSpec);
+			_issueFilterStateManager?.SaveState(_tableStateIssueFilter);
 		}
 
 		Func<object> IQualityConditionView.FindTestDescriptorDelegate
@@ -249,14 +266,26 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 		bool IQualityConditionView.HasSelectedQualitySpecificationReferences
 			=> _qSpecGridHandler.HasSelectedRows;
 
+		bool IQualityConditionView.HasSelectedIssueFilter =>
+			_issueFilterGridHandler.HasSelectedRows;
+
 		public bool RemoveFromQualitySpecificationsEnabled
 		{
 			get => _toolStripButtonRemoveFromQualitySpecifications.Enabled;
 			set => _toolStripButtonRemoveFromQualitySpecifications.Enabled = value;
 		}
 
+		public bool RemoveIssueFilterEnabled
+		{
+			get => _toolStripButtonRemoveIssueFilter.Enabled;
+			set => _toolStripButtonRemoveIssueFilter.Enabled = value;
+		}
+
 		int IQualityConditionView.FirstQualitySpecificationReferenceIndex
 			=> _qSpecGridHandler.FirstSelectedRowIndex;
+
+		int IQualityConditionView.FirstIssueFilterIndex =>
+			_issueFilterGridHandler.FirstSelectedRowIndex;
 
 		void IQualityConditionView.BindToQualitySpecificationReferences(
 			IList<QualitySpecificationReferenceTableRow> tableRows)
@@ -267,14 +296,33 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 				_qSpecStateManager =
 					new TableStateManager<QualitySpecificationReferenceTableRow>(
 						_qSpecGridHandler);
-				_initialTableRows = tableRows;
+				_initialQSpecTableRows = tableRows;
 				return;
 			}
 
 			// already initialized. Save the current state, to reapply it after the bind
-			_qSpecStateManager.SaveState(_tableState);
+			_qSpecStateManager.SaveState(_tableStateQSpec);
 
 			BindTo(tableRows);
+		}
+
+		void IQualityConditionView.BindToIssueFilters(
+			SortableBindingList<InstanceConfigurationReferenceTableRow> issueFilterTableRows)
+		{
+			if (_issueFilterStateManager == null)
+			{
+				// first time; initialize state manager, delay bind to tableRows to first paint event
+				_issueFilterStateManager =
+					new TableStateManager<InstanceConfigurationReferenceTableRow>(
+						_issueFilterGridHandler);
+				_initialIssueFilterTableRows = issueFilterTableRows;
+				return;
+			}
+
+			// already initialized. Save the current state, to reapply it after the bind
+			_issueFilterStateManager.SaveState(_tableStateIssueFilter);
+
+			BindTo(issueFilterTableRows);
 		}
 
 		void IQualityConditionView.SelectQualitySpecifications(
@@ -288,9 +336,25 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 				() => _qSpecGridHandler.SelectRows(
 					row => selectable.Contains(row.QualitySpecification)));
 
-			_qSpecStateManager?.SaveState(_tableState);
+			_qSpecStateManager?.SaveState(_tableStateQSpec);
 
-			OnSelectionChanged();
+			OnSpecificationSelectionChanged();
+		}
+
+		void IQualityConditionView.SelectIssueFilters(
+			IEnumerable<IssueFilterConfiguration> filtersToSelect)
+		{
+			Assert.ArgumentNotNull(filtersToSelect, nameof(filtersToSelect));
+
+			var selectable = new HashSet<IssueFilterConfiguration>(filtersToSelect);
+
+			_latch.RunInsideLatch(
+				() => _issueFilterGridHandler.SelectRows(
+					row => selectable.Contains((IssueFilterConfiguration) row.InstanceConfig)));
+
+			_issueFilterStateManager?.SaveState(_tableStateIssueFilter);
+
+			OnIssueFilterSelectionChanged();
 		}
 
 		string IQualityConditionView.QualitySpecificationSummary
@@ -307,6 +371,12 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			GetSelectedQualitySpecificationReferenceTableRows()
 		{
 			return _qSpecGridHandler.GetSelectedRows();
+		}
+
+		IList<InstanceConfigurationReferenceTableRow> IQualityConditionView.
+			GetSelectedIssueFilterTableRows()
+		{
+			return _issueFilterGridHandler.GetSelectedRows();
 		}
 
 		public void SetConfigurator(ITestConfigurator configurator)
@@ -388,9 +458,25 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 					bool sorted = _qSpecGridHandler.BindTo(
 						tableRows,
 						defaultSortState: new DataGridViewSortState(_columnName.Name),
-						sortStateOverride: _tableState.TableSortState);
+						sortStateOverride: _tableStateQSpec.TableSortState);
 
-					_qSpecStateManager.ApplyState(_tableState, sorted);
+					_qSpecStateManager.ApplyState(_tableStateQSpec, sorted);
+				}
+			);
+		}
+
+		private void BindTo(
+			[NotNull] IList<InstanceConfigurationReferenceTableRow> tableRows)
+		{
+			_latch.RunInsideLatch(
+				() =>
+				{
+					bool sorted = _issueFilterGridHandler.BindTo(
+						tableRows,
+						defaultSortState: new DataGridViewSortState(_columnName.Name),
+						sortStateOverride: _tableStateIssueFilter.TableSortState);
+
+					_issueFilterStateManager.ApplyState(_tableStateIssueFilter, sorted);
 				}
 			);
 		}
@@ -437,9 +523,14 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 				              .Replace("\r\r", "\r");
 		}
 
-		private void OnSelectionChanged()
+		private void OnSpecificationSelectionChanged()
 		{
 			Observer?.QualitySpecificationSelectionChanged();
+		}
+
+		private void OnIssueFilterSelectionChanged()
+		{
+			Observer?.IssueFilterSelectionChanged();
 		}
 
 		private void configurator_DataChanged(object sender, EventArgs e)
@@ -526,6 +617,16 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			Observer?.RemoveFromQualitySpecificationsClicked();
 		}
 
+		private void _toolStripButtonAddIssueFilter_Click(object sender, EventArgs e)
+		{
+			Observer?.AddIssueFilterClicked();
+		}
+
+		private void _toolStripButtonRemoveIssueFilter_Click(object sender, EventArgs e)
+		{
+			Observer?.RemoveIssueFilterClicked();
+		}
+
 		private void _qSpecGridHandler_SelectionChanged(object sender, EventArgs e)
 		{
 			if (_latch.IsLatched)
@@ -533,11 +634,32 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 				return;
 			}
 
-			OnSelectionChanged();
+			OnSpecificationSelectionChanged();
+		}
+
+
+		private void _issueFilterGridHandler_SelectionChanged(object sender, EventArgs e)
+		{
+			if (_latch.IsLatched)
+			{
+				return;
+			}
+
+			OnIssueFilterSelectionChanged();
 		}
 
 		private void _dataGridViewQualitySpecifications_CellValueChanged(
 			object sender, DataGridViewCellEventArgs e)
+		{
+			if (e.RowIndex < 0 || e.ColumnIndex < 0)
+			{
+				return;
+			}
+
+			Observer?.NotifyChanged(true);
+		}
+
+		private void _dataGridViewIssueFilters_CellValueChanged(object sender, DataGridViewCellEventArgs e)
 		{
 			if (e.RowIndex < 0 || e.ColumnIndex < 0)
 			{
@@ -553,6 +675,11 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			_dataGridViewQualitySpecifications.InvalidateRow(e.RowIndex);
 		}
 
+		private void _dataGridViewIssueFilters_CellEndEdit(object sender, DataGridViewCellEventArgs e)
+		{
+			_dataGridViewIssueFilters.InvalidateRow(e.RowIndex);
+		}
+
 		private void _dataGridViewQualitySpecifications_CellDoubleClick(
 			object sender, DataGridViewCellEventArgs e)
 		{
@@ -566,6 +693,21 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			if (tableRow != null)
 			{
 				Observer?.QualitySpecificationReferenceDoubleClicked(tableRow);
+			}
+		}
+
+		private void _dataGridViewIssueFilters_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
+		{
+			if (_dataGridViewIssueFilters.IsCurrentCellInEditMode)
+			{
+				return; // ignore
+			}
+
+			InstanceConfigurationReferenceTableRow tableRow = _issueFilterGridHandler.GetRow(e.RowIndex);
+
+			if (tableRow != null)
+			{
+				Observer?.IssueFilterDoubleClicked(tableRow);
 			}
 		}
 
@@ -603,12 +745,20 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 		{
 			// on the initial load, the bind to the table rows (applying stored state) must be delayed to 
 			// the first paint event.
-			if (_initialTableRows != null)
+			if (_initialQSpecTableRows != null)
 			{
-				var tableRows = _initialTableRows;
-				_initialTableRows = null;
+				var tableRows = _initialQSpecTableRows;
+				_initialQSpecTableRows = null;
 
 				BindTo(tableRows);
+			}
+
+			if (_initialIssueFilterTableRows != null)
+			{
+				var filterTableRows = _initialIssueFilterTableRows;
+
+				_initialIssueFilterTableRows = null;
+				BindTo(filterTableRows);
 			}
 		}
 	}

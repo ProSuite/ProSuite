@@ -17,7 +17,8 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 		public static Control CreateControl([NotNull] QualityConditionItem item,
 		                                    [NotNull] IItemNavigation itemNavigation,
 		                                    [NotNull] CoreDomainModelItemModelBuilder modelBuilder,
-		                                    [NotNull] TableState tableState)
+		                                    [NotNull] TableState tableStateQSpec,
+		                                    TableState tableStateIssueFilter)
 		{
 			// ReSharper disable once JoinDeclarationAndInitializer
 			QualityConditionControl control;
@@ -35,10 +36,11 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			IInstanceConfigurationTableViewControl blazorControl =
 				new QualityConditionBlazor(viewModel, provider);
 
-			control = new QualityConditionControl(tableState, blazorControl);
+			control = new QualityConditionControl(tableStateQSpec, tableStateIssueFilter, blazorControl);
 #else
 			control =
-				new QualityConditionControl(tableState, new QualityConditionTableViewControl());
+				new QualityConditionControl(tableStateQSpec, tableStateIssueFilter,
+				                            new QualityConditionTableViewControl());
 #endif
 			new QualityConditionPresenter(item, control, itemNavigation);
 

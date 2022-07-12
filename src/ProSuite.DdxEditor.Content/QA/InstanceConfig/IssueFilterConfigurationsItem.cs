@@ -64,9 +64,8 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 		protected override IEnumerable<InstanceConfigurationInCategoryTableRow> GetConfigTableRows(
 			DataQualityCategory category)
 		{
-			return QualityConditionContainerUtils
-				.GetInstanceConfigurationTableRows<IssueFilterConfiguration>(
-					ModelBuilder, category);
+			return InstanceConfigTableRows.GetInstanceConfigs<IssueFilterConfiguration>(
+				ModelBuilder, category);
 		}
 
 		protected override InstanceConfigurationItem CreateConfigurationItemCore(

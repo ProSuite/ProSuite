@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Windows.Forms;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
@@ -36,7 +37,8 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 
 		[NotNull] private readonly CoreDomainModelItemModelBuilder _modelBuilder;
 		[CanBeNull] private readonly IInstanceConfigurationContainerItem _containerItem;
-		[NotNull] private readonly TableState _tableState = new TableState();
+		[NotNull] private readonly TableState _tableStateQSpec = new TableState();
+		[NotNull] private readonly TableState _tableStateIssueFilter = new TableState();
 
 		[CanBeNull] private Image _image;
 		[CanBeNull] private string _imageKey;
@@ -261,6 +263,43 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 				allowMultiSelection: true);
 		}
 
+		[CanBeNull]
+		public IList<InstanceConfigurationInCategoryTableRow> GetIssueFiltersToAdd(
+			[NotNull] QualityCondition qualityCondition, IWin32Window owner)
+		{
+			Assert.ArgumentNotNull(qualityCondition, nameof(qualityCondition));
+
+			DdxModel model = DataQualityCategoryUtils.GetDefaultModel(
+				qualityCondition.Category);
+
+			var queries =
+				new List<FinderQuery<InstanceConfigurationInCategoryTableRow>>();
+
+			if (model != null)
+			{
+				queries.Add(
+					new FinderQuery<InstanceConfigurationInCategoryTableRow>(
+						$"Issue filters involving datasets in {model.Name}",
+						$"model{model.Id}",
+						() => InstanceConfigTableRows.GetInstanceConfigs<IssueFilterConfiguration>(
+							_modelBuilder,
+							qualityCondition.Category).ToList()));
+			}
+
+			queries.Add(
+				new FinderQuery<InstanceConfigurationInCategoryTableRow>(
+					"<All>", "[all]",
+					() => InstanceConfigTableRows
+					      .GetInstanceConfigs<IssueFilterConfiguration>(_modelBuilder, null)
+					      .ToList()));
+
+			var finder = new Finder<InstanceConfigurationInCategoryTableRow>();
+			return finder.ShowDialog(
+				owner, queries,
+				filterSettingsContext: FinderContextIds.GetId(qualityCondition.Category),
+				allowMultiSelection: true);
+		}
+
 		public void OpenUrl()
 		{
 			QualityCondition qualityCondition = _modelBuilder.ReadOnlyTransaction(GetEntity);
@@ -438,7 +477,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 		protected override Control CreateControlCore(IItemNavigation itemNavigation)
 		{
 			return InstanceConfigurationControlFactory.CreateControl(
-				this, itemNavigation, _modelBuilder, _tableState);
+				this, itemNavigation, _modelBuilder, _tableStateQSpec, _tableStateIssueFilter);
 		}
 
 		protected override void IsValidForPersistenceCore(QualityCondition entity,

@@ -10,6 +10,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI.Finder;
 using ProSuite.Commons.UI.ScreenBinding.Lists;
+using ProSuite.DdxEditor.Content.QA.InstanceConfig;
 using ProSuite.DdxEditor.Content.QA.QSpec;
 using ProSuite.DdxEditor.Content.QA.TestDescriptors;
 using ProSuite.DdxEditor.Framework;
@@ -38,6 +39,10 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 		[NotNull] private readonly SortableBindingList<QualitySpecificationReferenceTableRow>
 			_qspecTableRows =
 				new SortableBindingList<QualitySpecificationReferenceTableRow>();
+
+		[NotNull] private readonly SortableBindingList<InstanceConfigurationReferenceTableRow>
+			_issueFilterTableRows =
+				new SortableBindingList<InstanceConfigurationReferenceTableRow>();
 
 		#region Constructors
 
@@ -185,11 +190,93 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			UpdateQualitySpecificationsAppearance();
 		}
 
+		public void IssueFilterSelectionChanged()
+		{
+			UpdateIssueFiltersAppearance();
+		}
+
+		public void AddIssueFilterClicked()
+		{
+			QualityCondition qualityCondition = Assert.NotNull(Item.GetEntity());
+
+			IList<InstanceConfigurationInCategoryTableRow> filterTableRows =
+				_item.GetIssueFiltersToAdd(qualityCondition, _view);
+
+			if (filterTableRows == null || filterTableRows.Count == 0)
+			{
+				// nothing selected
+				return;
+			}
+
+			bool anyChange = false;
+
+			foreach (InstanceConfigurationInCategoryTableRow filterRow in filterTableRows)
+			{
+				IssueFilterConfiguration filterConfig =
+					(IssueFilterConfiguration) filterRow.InstanceConfiguration;
+
+				if (qualityCondition.IssueFilterConfigurations.Contains(filterConfig))
+				{
+					_msg.WarnFormat(
+						"The quality condition {0} already uses the issue filter {1}",
+						qualityCondition.Name, filterConfig.Name);
+				}
+				else
+				{
+					qualityCondition.AddIssueFilterConfiguration(filterConfig);
+					anyChange = true;
+					_issueFilterTableRows.Add(
+						new InstanceConfigurationReferenceTableRow(filterConfig));
+				}
+			}
+
+			_view.BindToIssueFilters(_issueFilterTableRows);
+			_view.SelectIssueFilters(
+				filterTableRows.Select(r => (IssueFilterConfiguration) r.InstanceConfiguration));
+			
+			if (anyChange)
+			{
+				Item.NotifyChanged();
+			}
+		}
+
+		public void RemoveIssueFilterClicked()
+		{
+			// get selected targets
+			IList<InstanceConfigurationReferenceTableRow> selected = _view.GetSelectedIssueFilterTableRows();
+
+			QualityCondition qualityCondition = Assert.NotNull(Item.GetEntity());
+
+			// remove them from the entity
+			bool anyChange = false;
+			foreach (InstanceConfigurationReferenceTableRow tableRow in selected)
+			{
+				var filterToRemove = (IssueFilterConfiguration) tableRow.InstanceConfig;
+
+				qualityCondition.RemoveIssueFilterConfiguration(filterToRemove);
+
+				_issueFilterTableRows.Remove(tableRow);
+
+				anyChange = true;
+			}
+
+			if (anyChange)
+			{
+				Item.NotifyChanged();
+			}
+		}
+
 		void IQualityConditionObserver.QualitySpecificationReferenceDoubleClicked(
 			QualitySpecificationReferenceTableRow qualitySpecificationReferenceTableRow)
 		{
 			_itemNavigation.GoToItem(
 				qualitySpecificationReferenceTableRow.QualitySpecification);
+		}
+
+		public void IssueFilterDoubleClicked(
+			InstanceConfigurationReferenceTableRow filterConfigTableRow)
+		{
+			_itemNavigation.GoToItem(filterConfigTableRow.InstanceConfig);
 		}
 
 		void IQualityConditionObserver.TestDescriptorLinkClicked(
@@ -245,8 +332,11 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			SetViewData();
 
 			PopulateQualitySpecificationReferenceTableRows(_qspecTableRows);
+			PopulateIssueFilterTableRows(_issueFilterTableRows);
 
 			RenderQualitySpecificationReferences();
+
+			RenderIssueFilters();
 
 			_view.RenderCategory(qualityCondition.Category == null
 				                     ? string.Empty
@@ -266,11 +356,23 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 				_view.HasSelectedQualitySpecificationReferences;
 		}
 
+		private void UpdateIssueFiltersAppearance()
+		{
+			_view.RemoveIssueFilterEnabled = _view.HasSelectedIssueFilter;
+		}
+
 		private void RenderQualitySpecificationReferences()
 		{
 			_view.BindToQualitySpecificationReferences(_qspecTableRows);
 
 			RenderQualitySpecificationSummary();
+		}
+
+		private void RenderIssueFilters()
+		{
+			_view.BindToIssueFilters(_issueFilterTableRows);
+
+			//RenderQualitySpecificationSummary();
 		}
 
 		private void RenderQualitySpecificationSummary()
@@ -305,6 +407,21 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			{
 				tableRows.Add(
 					new QualitySpecificationReferenceTableRow(pair.Key, pair.Value));
+			}
+		}
+
+		private void PopulateIssueFilterTableRows(
+			ICollection<InstanceConfigurationReferenceTableRow> issueFilterTableRows)
+		{
+			QualityCondition qualityCondition = Assert.NotNull(_item.GetEntity());
+
+			issueFilterTableRows.Clear();
+
+			foreach (IssueFilterConfiguration issueFilterConfig in qualityCondition
+				         .IssueFilterConfigurations)
+			{
+				issueFilterTableRows.Add(
+					new InstanceConfigurationReferenceTableRow(issueFilterConfig));
 			}
 		}
 

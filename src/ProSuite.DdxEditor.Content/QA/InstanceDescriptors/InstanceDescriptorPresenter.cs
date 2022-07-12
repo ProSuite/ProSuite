@@ -92,7 +92,6 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 
 			foreach (InstanceConfiguration config in _item.GetInstanceConfigurations())
 			{
-				// TODO:
 				tableRows.Add(new ReferencingInstanceConfigurationTableRow(config));
 			}
 		}

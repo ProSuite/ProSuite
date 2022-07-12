@@ -279,6 +279,12 @@ namespace ProSuite.DomainModel.Core.QA
 			_issueFilterConfigurations.Add(issueFilterConfiguration);
 		}
 
+		public bool RemoveIssueFilterConfiguration(
+			[NotNull] IssueFilterConfiguration issueFilterConfiguration)
+		{
+			return _issueFilterConfigurations.Remove(issueFilterConfiguration);
+		}
+
 		[CanBeNull]
 		public string IssueFilterExpression { get; set; }
 
