@@ -41,6 +41,14 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 			}
 		}
 
+		public IList<T> GetInstanceDescriptors<T>() where T : InstanceDescriptor
+		{
+			using (ISession session = OpenSession(true))
+			{
+				return session.QueryOver<T>().List();
+			}
+		}
+
 		public InstanceDescriptor Get(string name)
 		{
 			return GetUniqueResult("Name", name, true);
@@ -71,20 +79,6 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 		{
 			using (ISession session = OpenSession(true))
 			{
-				//IList<T> uniquelyNamedCats = session.CreateCriteria(typeof(T))
-				//                                      .CreateEntityAlias(
-				//	                                      "joinedCat",
-				//	                                      Restrictions.And(
-				//		                                      Restrictions.EqProperty("c.Name", "joinedCat.Name"),
-				//		                                      Restrictions.NotEqProperty("c.Id", "joinedCat.Id")),
-				//	                                      JoinType.InnerJoin,
-				//	                                      typeof(Cat).FullName)
-				//                                      .Add(Restrictions.IsNull("joinedCat.Id"))
-				//                                      .List();
-
-				//ICriteria criteria = session.CreateCriteria(typeof(T));
-
-				//criteria.Add(.And())
 				InstanceDescriptor instanceDescAlias = null;
 
 				T instanceConfigAlias = null;
@@ -96,13 +90,6 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 					                               .SelectGroup(
 						                               config => config.InstanceDescriptor.Id))
 					       .List<object>();
-
-				//var list = session.CreateQuery(
-				//	                    "select test.id, count(qc.id) " +
-				//	                    "  from InstanceConfiguration qc " +
-				//	                    "   inner join qc.InstanceDescriptor as test " +
-				//	                    " group by test.id")
-				//                    .List();
 
 				var result = new Dictionary<int, int>(intermediateResult.Count);
 				foreach (object[] values in intermediateResult)

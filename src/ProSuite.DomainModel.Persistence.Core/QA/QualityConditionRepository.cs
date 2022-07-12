@@ -131,7 +131,8 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 			// exclude qcon's based on deleted datasets
 			using (ISession session = OpenSession(true))
 			{
-				IList<int> deletedDatasetParameterIds = DatasetParameterFetchingUtils.GetDeletedDatasetParameterIds(session);
+				IList<int> deletedDatasetParameterIds =
+					DatasetParameterFetchingUtils.GetDeletedDatasetParameterIds(session);
 
 				if (deletedDatasetParameterIds.Count == 0)
 				{
@@ -177,7 +178,8 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 		{
 			using (ISession session = OpenSession(true))
 			{
-				IList<int> deletedDatasetParameterIds = DatasetParameterFetchingUtils.GetDeletedDatasetParameterIds(session);
+				IList<int> deletedDatasetParameterIds =
+					DatasetParameterFetchingUtils.GetDeletedDatasetParameterIds(session);
 
 				if (deletedDatasetParameterIds.Count == 0)
 				{
@@ -240,29 +242,18 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 
 			using (ISession session = OpenSession(true))
 			{
-				//// TEST:
-
-				//var paramsByConfig = DatasetParameterFetchingUtils
-				//	.GetDatasetParameterValuesByConfiguration<QualityCondition>(category, session);
-
-				//int countNew = paramsByConfig.Count();
-
-				//// END TEST:
-				
 				Dictionary<int, QualityCondition> conditionsById =
 					Get(category, session)
 						.ToDictionary(qcon => qcon.Id);
 
 				foreach (KeyValuePair<int, List<DatasetTestParameterValue>> pair in
-					GetDatasetValuesByConditionId(category, session))
+				         GetDatasetValuesByConditionId(category, session))
 				{
 					int conditionId = pair.Key;
 					List<DatasetTestParameterValue> values = pair.Value;
 
 					result.Add(conditionsById[conditionId], values);
 				}
-
-				//Assert.AreEqual(result.Count, countNew, "Query error in config count!");
 
 				return result;
 			}
@@ -318,24 +309,36 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 			}
 		}
 
-		//public IList<QualityCondition> Get(TransformerConfiguration transformer)
-		//{
-		//	IQueryOver<DatasetTestParameterValue, Dataset> parametersQuery =
-		//		session.QueryOver<DatasetTestParameterValue>()
-		//		       .Select(p => p.Id)
-		//		       .Where(p => p.DatasetValue != null)
-		//		       .JoinQueryOver<Dataset>(p => p.DatasetValue)
-		//		       //.Where(d => d != null)
-		//		       .And(d => d.Deleted);
+		public IList<QualityCondition> GetReferencingConditions(
+			IssueFilterConfiguration issueFilter)
+		{
+			// Issue filters are only referenced directly by conditions
+			if (! issueFilter.IsPersistent)
+			{
+				return new List<QualityCondition>(0);
+			}
 
-		//	return parametersQuery.List<int>();
-		//}
+			using (ISession session = OpenSession(true))
+			{
+				IssueFilterConfiguration issueFilterAlias = null;
+				var result =
+					session.QueryOver<QualityCondition>()
+					       //.Where(categoryFilter)
+					       .JoinAlias(qc => qc.IssueFilterConfigurations,
+					                  () => issueFilterAlias)
+					       .Where(() => issueFilterAlias.Id == issueFilter.Id)
+					       .List();
+
+				return result;
+			}
+		}
 
 		[NotNull]
 		private static HashSet<int> GetQualityConditionIdsInvolvingDeletedDatasets(
 			[NotNull] ISession session)
 		{
-			IList<int> deletedDatasetParameterIds = DatasetParameterFetchingUtils.GetDeletedDatasetParameterIds(session);
+			IList<int> deletedDatasetParameterIds =
+				DatasetParameterFetchingUtils.GetDeletedDatasetParameterIds(session);
 
 			var result = new HashSet<int>();
 
@@ -382,12 +385,14 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 		[NotNull]
 		private static HashSet<int> GetIdsInvolvingDeletedDatasets([NotNull] ISession session)
 		{
-			IList<int> datasetParameterIds = DatasetParameterFetchingUtils.GetDeletedDatasetParameterIds(session);
+			IList<int> datasetParameterIds =
+				DatasetParameterFetchingUtils.GetDeletedDatasetParameterIds(session);
 
 			// New implementation to be tested
 			HashSet<int> queryOverResult =
-				DatasetParameterFetchingUtils.GetInstanceConfigurationIdsForParameterIds<QualityCondition>(
-					session, datasetParameterIds, _maxInParameterCount);
+				DatasetParameterFetchingUtils
+					.GetInstanceConfigurationIdsForParameterIds<QualityCondition>(
+						session, datasetParameterIds, _maxInParameterCount);
 
 			HashSet<int> originalResult =
 				GetQualityConditionIdsForParameterIds(session, datasetParameterIds,
@@ -535,7 +540,7 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 			return all.Where(qc => ! excludedIds.Contains(qc.Id))
 			          .ToList();
 		}
-		
+
 		[NotNull]
 		private static HashSet<int> GetQualityConditionIdsForParameterIds(
 			[NotNull] ISession session,
@@ -551,10 +556,10 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 			{
 				return result;
 			}
-			
+
 			var first = true;
 			foreach (IList<int> subList in
-				CollectionUtils.Split(parameterIds, maxInParameterCount))
+			         CollectionUtils.Split(parameterIds, maxInParameterCount))
 			{
 				IList<int> qualityConditionIds =
 					session.CreateQuery(

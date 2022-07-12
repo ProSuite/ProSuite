@@ -363,6 +363,16 @@ namespace ProSuite.DdxEditor.Content.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        public static System.Drawing.Bitmap IssueFilterOverlay {
+            get {
+                object obj = ResourceManager.GetObject("IssueFilterOverlay", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         public static System.Drawing.Bitmap ModelItem {
             get {
                 object obj = ResourceManager.GetObject("ModelItem", resourceCulture);
@@ -566,6 +576,16 @@ namespace ProSuite.DdxEditor.Content.Properties {
         public static System.Drawing.Bitmap Remove {
             get {
                 object obj = ResourceManager.GetObject("Remove", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap RowFilterOverlay {
+            get {
+                object obj = ResourceManager.GetObject("RowFilterOverlay", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

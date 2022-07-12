@@ -55,14 +55,16 @@ namespace ProSuite.DdxEditor.Content.QA
 			if (Environment.Version >= new Version(6, 0))
 			{
 				yield return RegisterChild(new TransformerConfigurationsItem(_modelBuilder, this));
+				yield return RegisterChild(new IssueFilterConfigurationsItem(_modelBuilder, this));
 			}
 
 			yield return RegisterChild(new TestDescriptorsItem(_modelBuilder));
 
 			if (Environment.Version >= new Version(6, 0))
 			{
+				yield return RegisterChild(new TransformerDescriptorsItem(_modelBuilder));
 				yield return RegisterChild(
-					new InstanceDescriptorsItem<TransformerDescriptor>(_modelBuilder));
+					new IssueFilterDescriptorsItem(_modelBuilder));
 			}
 
 			IDataQualityCategoryRepository categoryRepository =
@@ -207,6 +209,15 @@ namespace ProSuite.DdxEditor.Content.QA
 			if (containerItem is TransformerConfigurationsItem)
 			{
 				return GetInstanceConfigurations<TransformerConfiguration>()
+				       .OrderBy(c => c.Name)
+				       .Select(c => new InstanceConfigurationItem(
+					               _modelBuilder, c, containerItem,
+					               _modelBuilder.InstanceConfigurations));
+			}
+
+			if (containerItem is IssueFilterConfigurationsItem)
+			{
+				return GetInstanceConfigurations<IssueFilterConfiguration>()
 				       .OrderBy(c => c.Name)
 				       .Select(c => new InstanceConfigurationItem(
 					               _modelBuilder, c, containerItem,

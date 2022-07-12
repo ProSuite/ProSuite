@@ -6,6 +6,7 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DdxEditor.Content.QA.QCon;
 using ProSuite.DdxEditor.Content.QA.QSpec;
+using ProSuite.DdxEditor.Content.QA.TestDescriptors;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Commands;
 using ProSuite.DdxEditor.Framework.Items;
@@ -54,9 +55,11 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 					       () => GetConfigTableRows(category), itemNavigation);
 		}
 
+		[NotNull]
+		public abstract IEnumerable<InstanceDescriptorTableRow> GetInstanceDescriptorTableRows();
+
 		protected abstract IEnumerable<InstanceConfigurationDatasetTableRow>
-			GetConfigDatasetTableRows(
-				[CanBeNull] DataQualityCategory category);
+			GetConfigDatasetTableRows([CanBeNull] DataQualityCategory category);
 
 		protected abstract IEnumerable<InstanceConfigurationInCategoryTableRow> GetConfigTableRows(
 			[CanBeNull] DataQualityCategory category);
@@ -103,8 +106,6 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			AddChild(item);
 
 			item.NotifyChanged();
-
-			//AddConfigurationItem(_container.CreateQualityConditionItem(this));
 		}
 
 		protected abstract InstanceConfigurationItem CreateNewItemCore(

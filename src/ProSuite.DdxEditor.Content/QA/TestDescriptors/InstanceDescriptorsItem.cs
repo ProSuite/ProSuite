@@ -1,53 +1,36 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Drawing;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Windows.Forms;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
-using ProSuite.Commons.UI.WinForms;
-using ProSuite.DdxEditor.Content.Properties;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Commands;
 using ProSuite.DdxEditor.Framework.Items;
-using ProSuite.DomainModel.AO.QA;
-using ProSuite.DomainModel.AO.QA.TestReport;
-using ProSuite.DomainModel.Core;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.Repositories;
-using ProSuite.QA.Container;
 
 namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 {
-	public class InstanceDescriptorsItem<T> : EntityTypeItem<T> where T : InstanceDescriptor
+	public abstract class InstanceDescriptorsItem<T> : EntityTypeItem<T>
+		where T : InstanceDescriptor
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		[NotNull] private readonly CoreDomainModelItemModelBuilder _modelBuilder;
-		[NotNull] private static readonly Image _image;
-		[NotNull] private static readonly Image _selectedImage;
+		[NotNull]
+		protected CoreDomainModelItemModelBuilder ModelBuilder { get; }
 
-		static InstanceDescriptorsItem()
-		{
-			_image = ItemUtils.GetGroupItemImage(Resources.TransformOverlay);
-			_selectedImage = ItemUtils.GetGroupItemSelectedImage(Resources.TransformOverlay);
-		}
-
-		public InstanceDescriptorsItem([NotNull] CoreDomainModelItemModelBuilder modelBuider)
-			: base("Transformer Descriptors", "Transformer implementations")
+		protected InstanceDescriptorsItem([NotNull] string text,
+		                                  [CanBeNull] string description,
+		                                  [NotNull] CoreDomainModelItemModelBuilder modelBuider)
+			: base(text, description)
 		{
 			Assert.ArgumentNotNull(modelBuider, nameof(modelBuider));
 
-			_modelBuilder = modelBuider;
+			ModelBuilder = modelBuider;
 		}
-
-		public override Image Image => _image;
-
-		public override Image SelectedImage => _selectedImage;
 
 		protected override bool AllowDeleteSelectedChildren => true;
 
@@ -55,7 +38,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 
 		protected override IEnumerable<Item> GetChildren()
 		{
-			return _modelBuilder.GetChildren(this);
+			return ModelBuilder.GetChildren(this);
 		}
 
 		protected override void CollectCommands(
@@ -76,158 +59,35 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 			commands.Add(new DeleteAllChildItemsCommand(this, applicationController));
 		}
 
-		private AddInstanceDescriptorsFromAssemblyCommand<T> CreateAddFromAssemblyCommand(
-			IApplicationController applicationController)
-		{
-			if (typeof(T) == typeof(TransformerDescriptor))
-			{
-				return new AddInstanceDescriptorsFromAssemblyCommand<T>(
-					this, typeof(ITableTransformer),
-					(t, c) => (T) CreateTransformerDescriptor(t, c), "transformer descriptor",
-					applicationController);
-			}
-
-			throw new NotImplementedException();
-		}
-
-		private static InstanceDescriptor CreateTransformerDescriptor(Type type, int constructor)
-		{
-			return new TransformerDescriptor(
-				InstanceFactoryUtils.GetDefaultDescriptorName(type, constructor),
-				new ClassDescriptor(type), constructor);
-		}
-
-		[NotNull]
-		public TestDescriptorItem AddTestDescriptorItem()
-		{
-			var testDescriptor = new TestDescriptor();
-
-			var item = new TestDescriptorItem(_modelBuilder, testDescriptor,
-			                                  _modelBuilder.TestDescriptors);
-
-			AddChild(item);
-
-			item.NotifyChanged();
-
-			return item;
-		}
+		protected abstract T CreateDescriptor<T>(Type type, int constructor)
+			where T : InstanceDescriptor;
 
 		protected override Control CreateControlCore(IItemNavigation itemNavigation)
 		{
 			return CreateTableControl(GetTableRows, itemNavigation);
 		}
 
+		private AddInstanceDescriptorsFromAssemblyCommand<T> CreateAddFromAssemblyCommand(
+			IApplicationController applicationController)
+		{
+			return new AddInstanceDescriptorsFromAssemblyCommand<T>(
+				this, applicationController, DescriptorTypeDisplayName);
+		}
+
+		protected abstract string DescriptorTypeDisplayName { get; }
+
 		[NotNull]
-		protected virtual IEnumerable<InstanceDescriptorTableRow> GetTableRows()
-		{
-			IInstanceDescriptorRepository repository = _modelBuilder.InstanceDescriptors;
+		protected abstract IEnumerable<InstanceDescriptorTableRow> GetTableRows();
 
-			if (! typeof(TransformerDescriptor).IsAssignableFrom(typeof(T)))
-			{
-				throw new NotImplementedException();
-			}
-
-			IList<TransformerDescriptor> transformerDescriptors = repository
-				.GetTransformerDescriptors()
-				.OrderBy(t => t.Name)
-				.ToList();
-
-			IDictionary<int, int> refCountMap =
-				repository.GetReferencingConfigurationCount<TransformerConfiguration>();
-
-			foreach (TransformerDescriptor testDescriptor in transformerDescriptors)
-			{
-				int refCount;
-				if (! refCountMap.TryGetValue(testDescriptor.Id, out refCount))
-				{
-					refCount = 0;
-				}
-
-				yield return new InstanceDescriptorTableRow(testDescriptor, refCount);
-			}
-		}
-
-		public void CreateTestReport([NotNull] string htmlFileName, bool overwrite)
-		{
-			Assert.ArgumentNotNullOrEmpty(htmlFileName, nameof(htmlFileName));
-
-			if (overwrite && File.Exists(htmlFileName))
-			{
-				File.Delete(htmlFileName);
-			}
-
-			using (TextWriter writer = new StreamWriter(htmlFileName))
-			{
-				var reportBuilder = new HtmlReportBuilder(writer, "Registered Tests")
-				                    {
-					                    IncludeObsolete = false,
-					                    IncludeAssemblyInfo = true
-				                    };
-
-				_modelBuilder.ReadOnlyTransaction(
-					delegate
-					{
-						IList<TestDescriptor> testDescriptors =
-							_modelBuilder.TestDescriptors.GetAll();
-
-						foreach (TestDescriptor descriptor in testDescriptors)
-						{
-							if (descriptor.TestClass != null)
-							{
-								reportBuilder.IncludeTest(descriptor.TestClass.GetInstanceType(),
-								                          descriptor.TestConstructorId);
-							}
-							else if (descriptor.TestFactoryDescriptor != null)
-							{
-								reportBuilder.IncludeTestFactory(
-									descriptor.TestFactoryDescriptor.GetInstanceType());
-							}
-							else
-							{
-								_msg.WarnFormat(
-									"Neither test class nor factory defined for descriptor {0}",
-									descriptor.Name);
-							}
-						}
-
-						reportBuilder.WriteReport();
-					});
-			}
-
-			_msg.InfoFormat("Report of registered tests created: {0}", htmlFileName);
-
-			_msg.Info("Opening report...");
-			Process.Start(htmlFileName);
-		}
-
-		public void CreateTestReport([NotNull] Assembly assembly,
-		                             [NotNull] string htmlFileName,
-		                             bool overwrite)
-		{
-			Assert.ArgumentNotNull(assembly, nameof(assembly));
-			Assert.ArgumentNotNullOrEmpty(htmlFileName, nameof(htmlFileName));
-
-			string location = assembly.Location;
-			Assert.NotNull(location, "assembly location is null");
-
-			TestReportUtils.WriteTestReport(new[] {assembly}, htmlFileName, overwrite);
-
-			_msg.InfoFormat("Report of tests in assembly {0} created: {1}",
-			                assembly.Location, htmlFileName);
-
-			_msg.Info("Opening report...");
-			Process.Start(htmlFileName);
-		}
-
-		public void TryAddInstanceDescriptors(
+		protected void TryAddInstanceDescriptors(
 			[NotNull] IEnumerable<InstanceDescriptor> descriptors)
 		{
 			Assert.ArgumentNotNull(descriptors, nameof(descriptors));
 
-			IInstanceDescriptorRepository repository = _modelBuilder.InstanceDescriptors;
+			IInstanceDescriptorRepository repository = ModelBuilder.InstanceDescriptors;
 
 			var addedCount = 0;
-			_modelBuilder.NewTransaction(
+			ModelBuilder.NewTransaction(
 				delegate
 				{
 					Dictionary<string, InstanceDefinition> definitions =
@@ -271,27 +131,20 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 			RefreshChildren();
 		}
 
-		public void ImportTestDescriptors([NotNull] string fileName)
+		public void AddInstanceDescriptors(string dllFilePath,
+		                                   IApplicationController applicationController)
 		{
-			Assert.ArgumentNotNullOrEmpty(fileName, nameof(fileName));
-
-			using (new WaitCursor())
+			using (_msg.IncrementIndentation(
+				       "Adding {0} from assembly {1}", DescriptorTypeDisplayName, dllFilePath))
 			{
-				using (_msg.IncrementIndentation(
-					       "Importing all test descriptors from {0}", fileName))
-				{
-					const bool updateTestDescriptorNames = true;
-					const bool updateTestDescriptorProperties = false;
+				Assembly assembly = Assembly.LoadFile(dllFilePath);
 
-					_modelBuilder.DataQualityImporter.ImportTestDescriptors(
-						fileName, updateTestDescriptorNames,
-						updateTestDescriptorProperties);
-				}
-
-				// TODO report stats (inserted, updated qcons and testdescs)
-
-				_msg.InfoFormat("Test descriptors imported from {0}", fileName);
+				AddInstanceDescriptorsCore(applicationController, assembly);
 			}
 		}
+
+		protected abstract void AddInstanceDescriptorsCore(
+			IApplicationController applicationController,
+			Assembly assembly);
 	}
 }

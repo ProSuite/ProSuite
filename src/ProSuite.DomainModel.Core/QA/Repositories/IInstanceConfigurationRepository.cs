@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -21,6 +22,8 @@ namespace ProSuite.DomainModel.Core.QA.Repositories
 			[CanBeNull] DataQualityCategory category,
 			bool includeQualityConditionsBasedOnDeletedDatasets = true)
 			where T : InstanceConfiguration;
+
+		InstanceConfiguration Get(string name, Type type);
 
 		IDictionary<T, IList<DatasetTestParameterValue>> GetWithDatasetParameterValues<T>(
 			[CanBeNull] DataQualityCategory category) where T : InstanceConfiguration;

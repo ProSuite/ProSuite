@@ -2,16 +2,13 @@ using System;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DdxEditor.Content.QA.InstanceConfig;
-using ProSuite.DdxEditor.Content.QA.QCon;
-using ProSuite.DdxEditor.Content.QA.QSpec;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Commands;
-using ProSuite.DdxEditor.Framework.Items;
 using ProSuite.DomainModel.Core.QA;
 
 namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 {
-	public class CreateInstanceConfigurationCommand<T> : AddItemCommandBase<InstanceDescriptorItem> where T : Item
+	public class CreateInstanceConfigurationCommand : AddItemCommandBase<InstanceDescriptorItem>
 	{
 		/// <summary>
 		/// Initializes a new instance of the <see cref="CreateQualityConditionCommand"/> class.
@@ -31,13 +28,40 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 
 			InstanceConfiguration configuration = Item.CreateConfiguration();
 
-			T configurationsItem = ApplicationController.FindFirstItem<T>();
-
-			Assert.NotNull(configurationsItem, "Configuration item not found");
-
-			InstanceConfigurationsItem instanceConfigurationsItem = (InstanceConfigurationsItem) (object)configurationsItem;
+			InstanceConfigurationsItem instanceConfigurationsItem =
+				FindConfigurationsItem(configuration);
 
 			instanceConfigurationsItem.AddConfigurationItem(configuration);
+		}
+
+		private InstanceConfigurationsItem FindConfigurationsItem(
+			InstanceConfiguration configuration)
+		{
+			object foundItem = null;
+			switch (configuration)
+			{
+				case TransformerConfiguration _:
+					foundItem = ApplicationController
+						.FindFirstItem<TransformerConfigurationsItem>();
+					break;
+				case IssueFilterConfiguration _:
+					foundItem = ApplicationController
+						.FindFirstItem<IssueFilterConfigurationsItem>();
+					break;
+				case RowFilterConfiguration _:
+					foundItem = ApplicationController
+						.FindFirstItem<RowFilterConfigurationsItem>();
+					break;
+				default:
+					throw new NotImplementedException(
+						$"Unsupported configuration type: {configuration}");
+			}
+
+			Assert.NotNull(foundItem, $"Configurations item not found for {configuration.Name}");
+
+			InstanceConfigurationsItem result = (InstanceConfigurationsItem) foundItem;
+
+			return result;
 		}
 	}
 }

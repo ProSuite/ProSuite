@@ -78,6 +78,17 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 			}
 		}
 
+		public InstanceConfiguration Get(string name,
+		                                 Type targetType)
+		{
+			using (ISession session = OpenSession(true))
+			{
+				return session.CreateCriteria(targetType)
+				              .Add(GetEqualityExpression("Name", name, true))
+				              .UniqueResult<InstanceConfiguration>();
+			}
+		}
+
 		public IDictionary<T, IList<DatasetTestParameterValue>> GetWithDatasetParameterValues<T>(
 			DataQualityCategory category) where T : InstanceConfiguration
 		{
@@ -104,25 +115,21 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 		{
 			using (ISession session = OpenSession(true))
 			{
-				if (typeof(T) == typeof(TransformerConfiguration))
-				{
-					ReferenceCount referenceCount = null;
-					IQueryOver<DatasetTestParameterValue>
-						parametersQuery =
-							session.QueryOver<DatasetTestParameterValue>()
-							       .Where(p => p.ValueSource != null)
-							       //.JoinQueryOver(p => p.ValueSource, () => transformerAlias)
-							       .SelectList(lst => lst
-							                          .SelectGroup(p => p.ValueSource.Id)
-							                          .WithAlias(() => referenceCount.EntityId)
-							                          .SelectCount(p => p.Id)
-							                          .WithAlias(() => referenceCount.UsageCount))
-							       .TransformUsing(Transformers.AliasToBean<ReferenceCount>());
+				ReferenceCount referenceCount = null;
 
-					return parametersQuery.List<ReferenceCount>();
-				}
+				IQueryOver<DatasetTestParameterValue>
+					parametersQuery =
+						session.QueryOver<DatasetTestParameterValue>()
+						       .Where(p => p.ValueSource != null)
+						       //.JoinQueryOver(p => p.ValueSource, () => transformerAlias)
+						       .SelectList(lst => lst
+						                          .SelectGroup(p => p.ValueSource.Id)
+						                          .WithAlias(() => referenceCount.EntityId)
+						                          .SelectCount(p => p.Id)
+						                          .WithAlias(() => referenceCount.UsageCount))
+						       .TransformUsing(Transformers.AliasToBean<ReferenceCount>());
 
-				throw new NotImplementedException();
+				return parametersQuery.List<ReferenceCount>();
 			}
 		}
 
@@ -145,8 +152,6 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 
 				return result;
 			}
-
-			throw new NotImplementedException();
 		}
 
 		[NotNull]

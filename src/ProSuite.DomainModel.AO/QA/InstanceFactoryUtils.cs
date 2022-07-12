@@ -43,6 +43,11 @@ namespace ProSuite.DomainModel.AO.QA
 				return CreateRowFilterFactory(rowFilterconfig);
 			}
 
+			if (instanceConfiguration is IssueFilterConfiguration issueFilterConfig)
+			{
+				return CreateIssueFilterFactory(issueFilterConfig);
+			}
+
 			if (instanceConfiguration is QualityCondition qualityCondition)
 			{
 				return TestFactoryUtils.CreateTestFactory(qualityCondition);
@@ -73,6 +78,25 @@ namespace ProSuite.DomainModel.AO.QA
 			if (factory != null)
 			{
 				InitializeParameterValues(factory, rowFilterConfiguration.ParameterValues);
+			}
+
+			return factory;
+		}
+
+		private static IssueFilterFactory CreateIssueFilterFactory(
+			[NotNull] IssueFilterConfiguration issueFilterConfig)
+		{
+			if (issueFilterConfig.InstanceDescriptor == null)
+			{
+				return null;
+			}
+
+			IssueFilterFactory factory =
+				CreateIssueFilterFactory(issueFilterConfig.IssueFilterDescriptor);
+
+			if (factory != null)
+			{
+				InitializeParameterValues(factory, issueFilterConfig.ParameterValues);
 			}
 
 			return factory;
@@ -222,6 +246,18 @@ namespace ProSuite.DomainModel.AO.QA
 				       : null;
 		}
 
+		private static IssueFilterFactory CreateIssueFilterFactory(
+			[NotNull] IssueFilterDescriptor filterDescriptor)
+		{
+			ClassDescriptor classDescriptor = filterDescriptor.Class;
+
+			return classDescriptor != null
+				       ? new IssueFilterFactory(classDescriptor.AssemblyName,
+				                                classDescriptor.TypeName,
+				                                filterDescriptor.ConstructorId)
+				       : null;
+		}
+
 		private static TransformerFactory CreateTransformerFactory(
 			[NotNull] TransformerDescriptor transformerDescriptor)
 		{
@@ -239,9 +275,7 @@ namespace ProSuite.DomainModel.AO.QA
 		{
 			Assert.ArgumentNotNull(instanceType, nameof(instanceType));
 
-			return string.Format("{0}({1})",
-			                     GetDescriptorBaseName(instanceType),
-			                     constructorIndex);
+			return $"{GetDescriptorBaseName(instanceType)}({constructorIndex})";
 		}
 
 		[NotNull]

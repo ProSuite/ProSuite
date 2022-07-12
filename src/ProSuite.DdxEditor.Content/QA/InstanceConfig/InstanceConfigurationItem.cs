@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
@@ -22,8 +23,8 @@ using ProSuite.UI.QA.ResourceLookup;
 
 namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 {
-	public class
-		InstanceConfigurationItem : EntityItem<InstanceConfiguration, InstanceConfiguration>
+	public class InstanceConfigurationItem
+		: EntityItem<InstanceConfiguration, InstanceConfiguration>
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -118,26 +119,13 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			return list;
 		}
 
-		protected void PopulateInstanceDescriptorList(List<InstanceDescriptorTableRow> list)
+		private void PopulateInstanceDescriptorList(List<InstanceDescriptorTableRow> list)
 		{
-			// TODO: Subclasses!
+			InstanceConfigurationsItem configurationsItem = (InstanceConfigurationsItem) Parent;
 
-			IDictionary<int, int> refCountMap =
-				ModelBuilder.InstanceDescriptors
-				            .GetReferencingConfigurationCount<TransformerConfiguration>();
+			Assert.NotNull(configurationsItem);
 
-			foreach (InstanceDescriptor descriptor in ModelBuilder
-			                                          .InstanceDescriptors
-			                                          .GetTransformerDescriptors())
-			{
-				int refCount;
-				if (! refCountMap.TryGetValue(descriptor.Id, out refCount))
-				{
-					refCount = 0;
-				}
-
-				list.Add(new InstanceDescriptorTableRow(descriptor, refCount));
-			}
+			list.AddRange(configurationsItem.GetInstanceDescriptorTableRows());
 		}
 
 		public bool CanCreateCopy => _containerItem != null;
@@ -153,11 +141,21 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 		{
 			InstanceConfiguration instanceConfig = Assert.NotNull(GetEntity());
 
-			var referencingEntities =
-				ModelBuilder.InstanceConfigurations.GetReferencingConfigurations(
-					(TransformerConfiguration) instanceConfig);
+			if (instanceConfig is TransformerConfiguration transformerConfiguration)
+			{
+				// Transformer configs are referenced by anything:
+				return ModelBuilder.InstanceConfigurations.GetReferencingConfigurations(
+					transformerConfiguration);
+			}
 
-			return referencingEntities;
+			if (instanceConfig is IssueFilterConfiguration issueFilterConfiguration)
+			{
+				// Issue filters are only referenced by conditions:
+				return ModelBuilder.QualityConditions.GetReferencingConditions(
+					issueFilterConfiguration);
+			}
+
+			throw new NotImplementedException();
 		}
 
 		public void OpenUrl()
@@ -272,18 +270,21 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 				}
 			}
 
-			// check if another quality condition with the same name exists
-			QualityCondition existing = ModelBuilder.QualityConditions.Get(entity.Name);
+			// check if another entity with the same name exists
+			// TODO: Also allow duplicate names across types in mapping!
+			Type targetType = entity.GetType();
+			InstanceConfiguration existing =
+				ModelBuilder.InstanceConfigurations.Get(entity.Name, targetType);
 
 			if (existing != null && existing.Id != entity.Id)
 			{
 				notification.RegisterMessage("Name",
-				                             "A quality condition with the same name already exists",
+				                             $"A {targetType.Name} with the same name already exists",
 				                             Severity.Error);
 			}
 		}
 
-		private bool IsParameterOptional(
+		private static bool IsParameterOptional(
 			[NotNull] InstanceConfiguration entity,
 			[NotNull] TestParameterValue parameterValue)
 		{
@@ -306,12 +307,10 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			return false;
 		}
 
-		protected virtual InstanceFactory CreateInstanceFactory(InstanceConfiguration entity)
+		private static InstanceFactory CreateInstanceFactory(InstanceConfiguration entity)
 		{
-			// TODO: Subclass
-			var transformerConfig = (TransformerConfiguration) entity;
-			InstanceFactory factory =
-				InstanceFactoryUtils.CreateTransformerFactory(transformerConfig);
+			InstanceFactory factory = InstanceFactoryUtils.CreateFactory(entity);
+
 			return factory;
 		}
 	}

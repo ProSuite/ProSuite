@@ -29,8 +29,7 @@ namespace ProSuite.DdxEditor.Framework.ItemViews
 		[NotNull] private SortableBindingList<T> _rows;
 		[CanBeNull] private IMenuManager _menuManager;
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		#region Constructors
 

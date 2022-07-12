@@ -58,5 +58,8 @@ namespace ProSuite.DomainModel.Core.QA.Repositories
 
 		[NotNull]
 		IList<QualityCondition> Get([NotNull] IEnumerable<DataQualityCategory> categories);
+
+		IList<QualityCondition> GetReferencingConditions(
+			IssueFilterConfiguration issueFilter);
 	}
 }

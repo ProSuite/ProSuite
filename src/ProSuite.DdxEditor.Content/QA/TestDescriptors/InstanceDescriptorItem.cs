@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
 using System.Windows.Forms;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -9,18 +8,13 @@ using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI.Finder;
 using ProSuite.Commons.Validation;
 using ProSuite.DdxEditor.Content.QA.Categories;
-using ProSuite.DdxEditor.Content.QA.InstanceConfig;
-using ProSuite.DdxEditor.Content.QA.QSpec;
-using ProSuite.DdxEditor.Content.QA.TestDescriptors.CreateQualityConditions;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Commands;
 using ProSuite.DdxEditor.Framework.Dependencies;
 using ProSuite.DdxEditor.Framework.Items;
 using ProSuite.DdxEditor.Framework.ItemViews;
-using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core;
-using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.Repositories;
 using ProSuite.QA.Container;
@@ -73,9 +67,10 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 				                          TestTypeImageLookup
 					                          .GetImageKey(transormerDescriptor));
 			}
-			else
+			else if (instanceDescriptor is IssueFilterDescriptor issueFilterDescriptor)
 			{
-				// TODO
+				_image = TestTypeImageLookup.GetImage(issueFilterDescriptor);
+				_image.Tag = TestTypeImageLookup.GetDefaultSortIndex(issueFilterDescriptor);
 			}
 		}
 
@@ -266,12 +261,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 		{
 			base.CollectCommands(commands, applicationController);
 
-			commands.Add(
-				new CreateInstanceConfigurationCommand<TransformerConfigurationsItem>(
-					this, applicationController));
-
-			//commands.Add(
-			//	new BatchCreateQualityConditionsCommand(this, applicationController));
+			commands.Add(new CreateInstanceConfigurationCommand(this, applicationController));
 		}
 
 		protected override bool AllowDelete => true;
@@ -290,472 +280,21 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 
 		public IEnumerable<InstanceConfiguration> GetInstanceConfigurations()
 		{
-			var instanceDescriptor = Assert.NotNull(GetEntity());
+			InstanceDescriptor instanceDescriptor = Assert.NotNull(GetEntity());
 
-			if (instanceDescriptor is TransformerDescriptor)
+			IInstanceConfigurationRepository repository = _modelBuilder.InstanceConfigurations;
+
+			switch (instanceDescriptor)
 			{
-				return _modelBuilder.InstanceConfigurations.Get<TransformerConfiguration>(
-					instanceDescriptor);
+				case TransformerDescriptor _:
+					return repository.Get<TransformerConfiguration>(instanceDescriptor);
+				case IssueFilterDescriptor _:
+					return repository.Get<IssueFilterConfiguration>(instanceDescriptor);
+				case RowFilterDescriptor _:
+					return repository.Get<RowFilterConfiguration>(instanceDescriptor);
+				default:
+					throw new NotImplementedException($"Unsupported instance descriptor type: {instanceDescriptor}");
 			}
-
-			throw new NotImplementedException();
 		}
-
-		//[NotNull]
-		//public ICollection<string> GetQualityConditionNames()
-		//{
-		//	var result = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-		//	_modelBuilder.ReadOnlyTransaction(
-		//		delegate
-		//		{
-		//			foreach (QualityCondition qualityCondition in GetQualityConditions())
-		//			{
-		//				result.Add(qualityCondition.Name);
-		//			}
-		//		});
-
-		//	return result;
-		//}
-
-		//[CanBeNull]
-		//public IList<DatasetTableRow> GetApplicableDatasets(
-		//	[NotNull] IWin32Window owner,
-		//	[NotNull] string parameterName,
-		//	[NotNull] IEnumerable<Dataset> alreadySelectedDatasets,
-		//	bool excludeAlreadyUsedDatasets,
-		//	[CanBeNull] DataQualityCategory category)
-		//{
-		//	HashSet<Dataset> nonSelectableDatasets =
-		//		excludeAlreadyUsedDatasets
-		//			? GetSet(alreadySelectedDatasets)
-		//			: null;
-
-		//	DdxModel model = DataQualityCategoryUtils.GetDefaultModel(category);
-
-		//	var queries = new List<FinderQuery<DatasetTableRow>>();
-
-		//	if (model != null)
-		//	{
-		//		queries.Add(new FinderQuery<DatasetTableRow>(
-		//			            string.Format("Datasets in {0}", model.Name),
-		//			            string.Format("model{0}", model.Id),
-		//			            () => GetDatasetTableRows(parameterName,
-		//			                                      _modelBuilder,
-		//			                                      nonSelectableDatasets,
-		//			                                      model)));
-		//	}
-
-		//	queries.Add(new FinderQuery<DatasetTableRow>(
-		//		            "<All>", "[all]",
-		//		            () => GetDatasetTableRows(parameterName,
-		//		                                      _modelBuilder,
-		//		                                      nonSelectableDatasets)));
-
-		//	var finder = new Finder<DatasetTableRow>();
-
-		//	return finder.ShowDialog(
-		//		owner, queries,
-		//		filterSettingsContext: FinderContextIds.GetId(category),
-		//		allowMultiSelection: true);
-		//}
-
-		//[NotNull]
-		//private List<DatasetTableRow> GetDatasetTableRows(
-		//	[NotNull] string parameterName,
-		//	[NotNull] CoreDomainModelItemModelBuilder modelBuilder,
-		//	[CanBeNull] HashSet<Dataset> nonSelectableDatasets,
-		//	[CanBeNull] DdxModel model = null)
-		//{
-		//	Stopwatch stopWatch = _msg.DebugStartTiming();
-
-		//	IDatasetRepository repository = modelBuilder.Datasets;
-
-		//	return modelBuilder.ReadOnlyTransaction(
-		//		delegate
-		//		{
-		//			if (nonSelectableDatasets != null)
-		//			{
-		//				// Exclude also datasets that are referenced in existing quality conditions based 
-		//				// on the same test descriptor
-		//				foreach (QualityCondition qualityCondition in
-		//				         GetQualityConditions())
-		//				{
-		//					foreach (TestParameterValue testParameterValue in
-		//					         qualityCondition.GetParameterValues(parameterName))
-		//					{
-		//						var value = testParameterValue as DatasetTestParameterValue;
-
-		//						if (value?.DatasetValue != null &&
-		//						    ! nonSelectableDatasets.Contains(value.DatasetValue))
-		//						{
-		//							nonSelectableDatasets.Add(value.DatasetValue);
-		//						}
-		//					}
-		//				}
-		//			}
-
-		//			TestFactory factory = GetTestFactory();
-		//			TestParameter testParameter = factory?.GetParameter(parameterName);
-
-		//			IList<Dataset> datasets = model?.GetDatasets() ?? repository.GetAll();
-
-		//			var result = new List<DatasetTableRow>();
-
-		//			foreach (Dataset dataset in datasets)
-		//			{
-		//				if (dataset.Deleted)
-		//				{
-		//					continue;
-		//				}
-
-		//				if (! IsApplicableFor(testParameter, dataset))
-		//				{
-		//					continue;
-		//				}
-
-		//				var tableRow = new DatasetTableRow(dataset);
-
-		//				if (nonSelectableDatasets != null)
-		//				{
-		//					tableRow.Selectable =
-		//						! nonSelectableDatasets.Contains(dataset);
-		//				}
-
-		//				result.Add(tableRow);
-		//			}
-
-		//			_msg.DebugStopTiming(stopWatch, "Read {0} datasets", result.Count);
-
-		//			return result;
-		//		});
-		//}
-
-		//[NotNull]
-		//private static HashSet<Dataset> GetSet([NotNull] IEnumerable<Dataset> datasets)
-		//{
-		//	var result = new HashSet<Dataset>();
-
-		//	foreach (Dataset dataset in datasets)
-		//	{
-		//		result.Add(dataset);
-		//	}
-
-		//	return result;
-		//}
-
-		// TODO consolidate with TestParameterDatasetProviderBase
-		private static bool IsApplicableFor(TestParameter testParameter,
-		                                    [NotNull] Dataset dataset)
-		{
-			if (testParameter == null || dataset.Deleted)
-			{
-				return false;
-			}
-
-			// error datasets shouldn't be themselves testable
-			if (dataset is IErrorDataset)
-			{
-				return false;
-			}
-
-			DdxModel model = dataset.Model;
-
-			if (model == null)
-			{
-				return false;
-			}
-
-			if (! (model is ProductionModel))
-			{
-				return false;
-			}
-
-			TestParameterType parameterType =
-				TestParameterTypeUtils.GetParameterType(testParameter.Type);
-
-			if ((parameterType & TestParameterType.Dataset) != 0)
-			{
-				return false;
-			}
-
-			if ((parameterType & TestParameterType.VectorDataset) ==
-			    TestParameterType.VectorDataset &&
-			    dataset is VectorDataset)
-			{
-				return true;
-			}
-
-			if ((parameterType & TestParameterType.ObjectDataset) ==
-			    TestParameterType.ObjectDataset &&
-			    dataset is IObjectDataset)
-			{
-				return true;
-			}
-
-			if ((parameterType & TestParameterType.GeometricNetworkDataset) ==
-			    TestParameterType.GeometricNetworkDataset &&
-			    dataset.TypeDescription == "Geometric Network")
-			{
-				return true;
-			}
-
-			if ((parameterType & TestParameterType.TopologyDataset) ==
-			    TestParameterType.TopologyDataset &&
-			    dataset is TopologyDataset)
-			{
-				return true;
-			}
-
-			if ((parameterType & TestParameterType.TerrainDataset) ==
-			    TestParameterType.TerrainDataset &&
-			    dataset is ISimpleTerrainDataset)
-			{
-				return true;
-			}
-
-			if ((parameterType & TestParameterType.RasterMosaicDataset) ==
-			    TestParameterType.RasterMosaicDataset &&
-			    dataset is RasterMosaicDataset)
-			{
-				return true;
-			}
-
-			if ((parameterType & TestParameterType.RasterDataset) ==
-			    TestParameterType.RasterDataset &&
-			    dataset is RasterDataset)
-			{
-				return true;
-			}
-
-			return false;
-		}
-
-		public bool CanBatchCreateQualityConditions()
-		{
-			return CanBatchCreateQualityConditions(out string _, out string _);
-		}
-
-		private bool CanBatchCreateQualityConditions(
-			[NotNull] out string datasetParameterName,
-			[NotNull] out string reason)
-		{
-			datasetParameterName = string.Empty;
-
-			if (IsDirty || IsNew)
-			{
-				reason = "There are pending changes";
-				return false;
-			}
-
-			string dsParameterName = null;
-			var enabled = false;
-
-			try
-			{
-				_modelBuilder.ReadOnlyTransaction(
-					delegate
-					{
-						TestFactory factory = GetTestFactory();
-						var parameters = factory?.Parameters ?? Enumerable.Empty<TestParameter>();
-
-						foreach (TestParameter parameter in parameters)
-						{
-							if (TestParameterTypeUtils.IsDatasetType(parameter.Type))
-							{
-								if (dsParameterName != null)
-								{
-									return;
-								}
-
-								dsParameterName = parameter.Name;
-
-								if (parameter.ArrayDimension > 0 &&
-								    parameter.IsConstructorParameter)
-								{
-									return;
-								}
-							}
-							else
-							{
-								// scalar parameter - no arrays allowed if a required constructor parameter
-								if (parameter.ArrayDimension > 0 &&
-								    parameter.IsConstructorParameter)
-								{
-									return;
-								}
-							}
-						}
-
-						enabled = true;
-					});
-			}
-			catch (Exception e)
-			{
-				reason = string.Format("Error accessing test descriptor: {0}", e.Message);
-				return false;
-			}
-
-			reason = "Only one non-array dataset parameter and only " +
-			         "non-array scalar parameters are currently supported";
-			datasetParameterName = dsParameterName;
-
-			return enabled;
-		}
-
-		//public bool BatchCreateQualityConditions(
-		//	[CanBeNull] IWin32Window window,
-		//	[CanBeNull] out DataQualityCategory targetCategory)
-		//{
-		//	string datasetParameterName;
-		//	string reason;
-		//	Assert.True(
-		//		CanBatchCreateQualityConditions(out datasetParameterName, out reason),
-		//		"Operation not supported for test descriptor {0}: {1}",
-		//		Text, reason);
-
-		//	DataQualityCategory category;
-		//	IEnumerable<QualityConditionParameters> qualityConditionParameters =
-		//		GetQualityConditionParameters(window, datasetParameterName,
-		//		                              out category);
-
-		//	if (qualityConditionParameters == null)
-		//	{
-		//		targetCategory = null;
-		//		return false;
-		//	}
-
-		//	using (new WaitCursor())
-		//	{
-		//		_modelBuilder.UseTransaction(
-		//			delegate
-		//			{
-		//				TransformerDescriptor testDescriptor = Assert.NotNull(GetEntity());
-
-		//				foreach (QualityConditionParameters parameters in
-		//				         qualityConditionParameters)
-		//				{
-		//					QualityCondition qualityCondition = CreateQualityCondition(
-		//						testDescriptor, parameters, datasetParameterName);
-
-		//					qualityCondition.Category = category;
-
-		//					_msg.InfoFormat("Creating quality condition {0}",
-		//					                qualityCondition.Name);
-
-		//					_modelBuilder.QualityConditions.Save(qualityCondition);
-		//				}
-		//			});
-		//	}
-
-		//	targetCategory = category;
-		//	return true;
-		//}
-
-		[CanBeNull]
-		public IList<QualitySpecificationTableRow> GetQualitySpecificationsToReference(
-			[NotNull] IWin32Window owner,
-			[NotNull] ICollection<QualitySpecification> selectedQualitySpecifications,
-			[CanBeNull] DataQualityCategory category)
-		{
-			DdxModel model = DataQualityCategoryUtils.GetDefaultModel(category);
-
-			var queries = new List<FinderQuery<QualitySpecificationTableRow>>();
-
-			queries.Add(new FinderQuery<QualitySpecificationTableRow>(
-				            "<All>", "[all]",
-				            () => TableRows.GetQualitySpecificationTableRows(
-					            _modelBuilder, selectedQualitySpecifications)));
-
-			if (model != null)
-			{
-				queries.Add(new FinderQuery<QualitySpecificationTableRow>(
-					            $"Quality specifications involving datasets in {model.Name}",
-					            $"model{model.Id}",
-					            () => TableRows.GetQualitySpecificationTableRows(
-						            _modelBuilder, selectedQualitySpecifications,
-						            model)));
-			}
-
-			var finder = new Finder<QualitySpecificationTableRow>();
-			return finder.ShowDialog(owner, queries, allowMultiSelection: true);
-		}
-
-		[NotNull]
-		private static QualityCondition CreateQualityCondition(
-			[NotNull] TestDescriptor testDescriptor,
-			[NotNull] QualityConditionParameters parameters,
-			[NotNull] string datasetParameterName)
-		{
-			Assert.ArgumentNotNull(testDescriptor, nameof(testDescriptor));
-			Assert.ArgumentNotNull(parameters, nameof(parameters));
-			Assert.ArgumentNotNullOrEmpty(datasetParameterName,
-			                              nameof(datasetParameterName));
-
-			var result = new QualityCondition(parameters.Name, testDescriptor);
-
-			AddParameterValue(result, datasetParameterName,
-			                  parameters.Dataset,
-			                  parameters.FilterExpression);
-
-			foreach (ScalarParameterValue parameter in parameters.ScalarParameters)
-			{
-				InstanceConfigurationUtils.AddScalarParameterValue(
-					result, parameter.Name, parameter.Value);
-			}
-
-			foreach (QualitySpecification qualitySpecification in parameters.QualitySpecifications)
-			{
-				qualitySpecification.AddElement(result);
-			}
-
-			return result;
-		}
-
-		[NotNull]
-		private static TestParameterValue AddParameterValue(
-			[NotNull] InstanceConfiguration qualityCondition,
-			[NotNull] string parameterName,
-			[CanBeNull] Dataset value,
-			string filterExpression = null,
-			bool usedAsReferenceData = false)
-		{
-			TestParameterValue result = InstanceConfigurationUtils.AddParameterValue(
-				qualityCondition, parameterName, value, filterExpression, usedAsReferenceData);
-
-			TestParameterTypeUtils.AssertValidDataset(Assert.NotNull(result.DataType), value);
-
-			return result;
-		}
-
-		//[CanBeNull]
-		//private IEnumerable<QualityConditionParameters> GetQualityConditionParameters(
-		//	[CanBeNull] IWin32Window window,
-		//	[NotNull] string datasetParameterName,
-		//	[CanBeNull] out DataQualityCategory targetCategory)
-		//{
-		//	IList<TestParameter> testParameters = _modelBuilder.ReadOnlyTransaction(
-		//		() => GetTestFactory().Parameters);
-
-		//	IList<QualityConditionParameters> result;
-		//	using (var form = new CreateQualityConditionsForm())
-		//	{
-		//		new CreateQualityConditionsPresenter(form, this, datasetParameterName,
-		//		                                     testParameters);
-
-		//		DialogResult dialogResult = form.ShowDialog(window);
-
-		//		if (dialogResult != DialogResult.OK)
-		//		{
-		//			targetCategory = null;
-		//			return null;
-		//		}
-
-		//		targetCategory = form.TargetCategory;
-		//		result = form.QualityConditionParameters;
-		//	}
-
-		//	return result;
-		//}
 	}
 }

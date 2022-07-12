@@ -22,7 +22,10 @@ namespace ProSuite.DomainModel.Core.QA
 
 		public override InstanceConfiguration CreateConfiguration()
 		{
-			throw new System.NotImplementedException();
+			return new IssueFilterConfiguration()
+			       {
+				       InstanceDescriptor = this
+			       };
 		}
 
 		#endregion

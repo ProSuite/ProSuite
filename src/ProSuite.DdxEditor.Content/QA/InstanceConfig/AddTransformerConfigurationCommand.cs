@@ -1,15 +1,13 @@
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.DdxEditor.Content.QA.InstanceConfig;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Commands;
 using ProSuite.DdxEditor.Framework.Items;
 
-namespace ProSuite.DdxEditor.Content.QA.QCon
+namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 {
 	public class AddTransformerConfigurationCommand : AddItemCommandBase<Item>
 	{
-		// TODO: Separate interface!
 		private readonly IInstanceConfigurationContainerItem _containerItem;
 
 		/// <summary>

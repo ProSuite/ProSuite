@@ -11,7 +11,7 @@ namespace ProSuite.DomainModel.Core.QA
 		/// </summary>
 		/// <remarks>Required for NHibernate</remarks>
 		[UsedImplicitly]
-		protected IssueFilterConfiguration() { }
+		public IssueFilterConfiguration() { }
 
 		public IssueFilterConfiguration(string name,
 		                                [NotNull] IssueFilterDescriptor issueFilterDescriptor,
