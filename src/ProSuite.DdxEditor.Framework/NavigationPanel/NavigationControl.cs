@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using System.Reflection;
 using System.Windows.Forms;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
@@ -18,8 +17,7 @@ namespace ProSuite.DdxEditor.Framework.NavigationPanel
 	{
 		[CanBeNull] private readonly IEnumerable<IItemLocator> _itemLocators;
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		[NotNull] private readonly ImageListBuilder _imageListBuilder;
 

@@ -7,11 +7,11 @@ using ProSuite.DomainModel.Core.QA;
 
 namespace ProSuite.DdxEditor.Content.ItemLocators
 {
-	public class TestDescriptorItemLocator : ItemLocatorBase
+	public class InstanceDescriptorItemLocator : ItemLocatorBase
 	{
 		public override bool CanLocate(Entity entity)
 		{
-			return entity is TestDescriptor;
+			return entity is InstanceDescriptor;
 		}
 
 		public override Item Locate(Entity entity, IEnumerable<IItemTreeNode> rootNodes)
@@ -23,8 +23,10 @@ namespace ProSuite.DdxEditor.Content.ItemLocators
 				return null;
 			}
 
-			IItemTreeNode entityTypeNode = FindNode(rootNode.ChildNodes,
-			                                        n => n.IsBasedOnEntityType<TestDescriptor>());
+			IItemTreeNode entityTypeNode = FindNode(
+				rootNode.ChildNodes,
+				n => n.IsBasedOnEntityType<InstanceDescriptor>(),
+				true);
 
 			return entityTypeNode == null
 				       ? null

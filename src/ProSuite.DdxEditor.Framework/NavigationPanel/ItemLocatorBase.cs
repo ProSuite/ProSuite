@@ -39,12 +39,31 @@ namespace ProSuite.DdxEditor.Framework.NavigationPanel
 
 		[CanBeNull]
 		protected static IItemTreeNode FindNode([NotNull] IEnumerable<IItemTreeNode> nodes,
-		                                        [NotNull] Predicate<IItemTreeNode> match)
+		                                        [NotNull] Predicate<IItemTreeNode> match,
+		                                        bool recursive = false)
 		{
 			Assert.ArgumentNotNull(nodes, nameof(nodes));
 			Assert.ArgumentNotNull(match, nameof(match));
 
-			return nodes.FirstOrDefault(childNode => match(childNode));
+			foreach (IItemTreeNode itemTreeNode in nodes)
+			{
+				if (match(itemTreeNode))
+				{
+					return itemTreeNode;
+				}
+
+				if (recursive && itemTreeNode.Item is GroupItem)
+				{
+					IItemTreeNode foundChild = FindNode(itemTreeNode.ChildNodes, match, true);
+
+					if (foundChild != null)
+					{
+						return foundChild;
+					}
+				}
+			}
+
+			return null;
 		}
 	}
 }
