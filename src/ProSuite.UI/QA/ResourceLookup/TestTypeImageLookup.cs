@@ -47,7 +47,7 @@ namespace ProSuite.UI.QA.ResourceLookup
 				_mapImageToKey.Add(pair.Value, pair.Key);
 			}
 
-			int i = 0;
+			int i = 10;
 			_defaultSort.Add(_keyWarning, ++i);
 			_defaultSort.Add(_keyProhibition, ++i);
 			_defaultSort.Add(_keyStop, ++i);
