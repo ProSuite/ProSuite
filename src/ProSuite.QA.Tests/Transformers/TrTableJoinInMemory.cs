@@ -49,7 +49,7 @@ namespace ProSuite.QA.Tests.Transformers
 		}
 
 		[TestParameter]
-		[Doc(nameof(DocTrStrings.TrTableJoinInMemory_manyToManyTable))]
+		[DocTr(nameof(DocTrStrings.TrTableJoinInMemory_manyToManyTable))]
 		public IReadOnlyTable ManyToManyTable
 		{
 			get => _manyToManyTable;
@@ -57,7 +57,7 @@ namespace ProSuite.QA.Tests.Transformers
 		}
 
 		[TestParameter]
-		[Doc(nameof(DocTrStrings.TrTableJoinInMemory_manyToManyTableLeftKey))]
+		[DocTr(nameof(DocTrStrings.TrTableJoinInMemory_manyToManyTableLeftKey))]
 		public string ManyToManyTableLeftKey
 		{
 			get => _manyToManyTableLeftKey;
@@ -65,7 +65,7 @@ namespace ProSuite.QA.Tests.Transformers
 		}
 
 		[TestParameter]
-		[Doc(nameof(DocTrStrings.TrTableJoinInMemory_manyToManyTableRightKey))]
+		[DocTr(nameof(DocTrStrings.TrTableJoinInMemory_manyToManyTableRightKey))]
 		public string ManyToManyTableRightKey
 		{
 			get => _manyToManyTableRightKey;
