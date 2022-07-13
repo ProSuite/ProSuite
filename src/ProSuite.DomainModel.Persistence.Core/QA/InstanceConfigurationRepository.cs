@@ -218,6 +218,25 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 			}
 		}
 
+		public IList<InstanceConfiguration> Get(InstanceDescriptor descriptor)
+		{
+			switch (descriptor)
+			{
+				case TransformerDescriptor _:
+					return Get<TransformerConfiguration>(descriptor).Cast<InstanceConfiguration>()
+						.ToList();
+				case IssueFilterDescriptor _:
+					return Get<IssueFilterConfiguration>(descriptor).Cast<InstanceConfiguration>()
+						.ToList();
+				case RowFilterDescriptor _:
+					return Get<RowFilterConfiguration>(descriptor).Cast<InstanceConfiguration>()
+						.ToList();
+				default:
+					throw new NotImplementedException(
+						$"Unsupported instance descriptor type: {descriptor}");
+			}
+		}
+
 		[NotNull]
 		private static IList<T> Get<T>(
 			[CanBeNull] DataQualityCategory category,

@@ -361,13 +361,6 @@ namespace ProSuite.DdxEditor.Content
 
 		[NotNull]
 		public virtual IList<DependingItem> GetDependingItems(
-			[CanBeNull] InstanceConfiguration instanceConfiguration)
-		{
-			return new List<DependingItem>();
-		}
-
-		[NotNull]
-		public virtual IList<DependingItem> GetDependingItems(
 			[CanBeNull] QualitySpecification qualitySpecification)
 		{
 			return new List<DependingItem>();
@@ -419,7 +412,13 @@ namespace ProSuite.DdxEditor.Content
 
 		[NotNull]
 		public virtual IList<DependingItem> GetDependingItems(
-			[CanBeNull] InstanceDescriptor transformerDescriptor)
+			[CanBeNull] InstanceDescriptor instanceDescriptor)
+		{
+			return new List<DependingItem>();
+		}
+
+		public virtual IEnumerable<DependingItem> CreateDependingItems(
+			IEnumerable<InstanceConfiguration> dependentConfigurations)
 		{
 			return new List<DependingItem>();
 		}

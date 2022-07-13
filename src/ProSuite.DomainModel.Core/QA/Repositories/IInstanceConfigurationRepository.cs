@@ -14,8 +14,6 @@ namespace ProSuite.DomainModel.Core.QA.Repositories
 
 		IList<IssueFilterConfiguration> GetIssueFilterConfigurations();
 
-		IList<T> Get<T>(InstanceDescriptor descriptor) where T : InstanceConfiguration;
-
 		HashSet<int> GetIdsInvolvingDeletedDatasets<T>() where T : InstanceConfiguration;
 
 		IList<T> Get<T>(
@@ -35,5 +33,7 @@ namespace ProSuite.DomainModel.Core.QA.Repositories
 
 		IList<InstanceConfiguration> GetReferencingConfigurations(
 			RowFilterConfiguration rowFilter);
+
+		IList<InstanceConfiguration> Get(InstanceDescriptor descriptor);
 	}
 }

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
@@ -69,7 +70,11 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 
 		public override IList<DependingItem> GetDependingItems()
 		{
-			return ModelBuilder.GetDependingItems(GetEntity());
+			InstanceConfiguration rootEntity = GetEntity();
+
+			IEnumerable<InstanceConfiguration> dependent = GetReferencingConfigurations(rootEntity);
+
+			return ModelBuilder.CreateDependingItems(dependent).ToList();
 		}
 
 		[CanBeNull]
@@ -131,6 +136,11 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 		{
 			InstanceConfiguration instanceConfig = Assert.NotNull(GetEntity());
 
+			return GetReferencingConfigurations(instanceConfig);
+		}
+
+		private IEnumerable<InstanceConfiguration> GetReferencingConfigurations(InstanceConfiguration instanceConfig)
+		{
 			if (instanceConfig is TransformerConfiguration transformerConfiguration)
 			{
 				// Transformer configs can be referenced by any dataset parameter  (through ValueSource):

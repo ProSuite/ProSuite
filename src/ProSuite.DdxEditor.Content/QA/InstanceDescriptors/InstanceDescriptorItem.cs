@@ -261,18 +261,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 
 			IInstanceConfigurationRepository repository = _modelBuilder.InstanceConfigurations;
 
-			switch (instanceDescriptor)
-			{
-				case TransformerDescriptor _:
-					return repository.Get<TransformerConfiguration>(instanceDescriptor);
-				case IssueFilterDescriptor _:
-					return repository.Get<IssueFilterConfiguration>(instanceDescriptor);
-				case RowFilterDescriptor _:
-					return repository.Get<RowFilterConfiguration>(instanceDescriptor);
-				default:
-					throw new NotImplementedException(
-						$"Unsupported instance descriptor type: {instanceDescriptor}");
-			}
+			return repository.Get(instanceDescriptor);
 		}
 	}
 }
