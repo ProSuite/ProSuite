@@ -25,7 +25,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 
 #if NET6_0
 			IServiceCollection serviceCollection = new ServiceCollection();
-			serviceCollection.AddBlazorWebView();
+			serviceCollection.AddWindowsFormsBlazorWebView();
 
 			ServiceProvider provider = serviceCollection.BuildServiceProvider();
 
@@ -57,7 +57,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 
 #if NET6_0
 			IServiceCollection serviceCollection = new ServiceCollection();
-			serviceCollection.AddBlazorWebView();
+			serviceCollection.AddWindowsFormsBlazorWebView();
 
 			ServiceProvider provider = serviceCollection.BuildServiceProvider();
 
