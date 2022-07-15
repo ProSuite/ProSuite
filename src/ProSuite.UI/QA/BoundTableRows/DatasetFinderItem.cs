@@ -53,9 +53,20 @@ namespace ProSuite.UI.QA.BoundTableRows
 		}
 
 		[UsedImplicitly]
-		public string Model => _modelName ??=
-								   Source.Match(d => d?.Model?.Name,
-												TestParameterValueUtils.GetDatasetModelName);
+		public string Model
+		{
+			get
+			{
+				if (_modelName == null)
+				{
+					_modelName =
+						Source.Match(d => d?.Model?.Name,
+						             TestParameterValueUtils.GetDatasetModelName);
+				}
+
+				return _modelName;
+			}
+		}
 
 		[UsedImplicitly]
 		public string Name => Source.Match(d => d.Name, t => t.Name);
