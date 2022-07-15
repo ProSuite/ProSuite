@@ -1,3 +1,4 @@
+@using ProSuite.DdxEditor.Content.Blazor.View
 @using ProSuite.DdxEditor.Content.Blazor.ViewModel
 @using Radzen
 @using Radzen.Blazor
@@ -162,14 +163,17 @@
                                         <DynamicComponent Type="subViewModel.ComponentType" Parameters="subViewModel.ComponentParameters"/>
                                     </Template>
                                 </RadzenDataGridColumn>
-                                <RadzenDataGridColumn TItem="ViewModelBase" Property="ModelName" Title="Data Model" Width="140px">
+
+                                <!-- TEST: In the future, we should support an expression (builder). -->
+                                <RadzenDataGridColumn TItem="ViewModelBase" Property="RowFilters" Title="Row Filter" Width="120px">
                                     <Template Context="subViewModel">
                                         @if (subViewModel is DatasetTestParameterValueViewModel vm)
                                         {
-	                                        @vm.ModelName
+	                                        <DynamicComponent Type="@typeof(RowFilterViewBlazor)" Parameters="vm.ComponentParameters"/>
                                         }
                                     </Template>
                                 </RadzenDataGridColumn>
+
                                 <RadzenDataGridColumn TItem="ViewModelBase" Property="FilterExpression" Title="Filter Expression">
                                     <Template Context="subViewModel">
                                         @if (subViewModel is DatasetTestParameterValueViewModel vm)
@@ -188,13 +192,13 @@
                                     <Template Context="subViewModel">
                                         @if (subViewModel is DatasetTestParameterValueViewModel vm)
                                         {
-	                                        <RadzenSwitch @bind-Value="vm.UsedAsReferenceData"/>
+	                                        <RadzenCheckBox @bind-Value="vm.UsedAsReferenceData"/>
                                         }
                                     </Template>
                                     <EditTemplate Context="subViewModel">
                                         @if (subViewModel is DatasetTestParameterValueViewModel vm)
                                         {
-	                                        <RadzenSwitch @bind-Value="vm.UsedAsReferenceData"/>
+	                                        <RadzenCheckBox @bind-Value="vm.UsedAsReferenceData"/>
                                         }
                                     </EditTemplate>
                                 </RadzenDataGridColumn>
@@ -244,18 +248,17 @@
                             <DynamicComponent Type="viewModel.ComponentType" Parameters="viewModel.ComponentParameters"/>
                         </Template>
                     </RadzenDataGridColumn>
-                    <RadzenDataGridColumn TItem="ViewModelBase" Property="ModelName" Title="Data Model" Width="140px">
+
+                    <!-- Experimental: In the future, we should support an expression (builder). -->
+                    <RadzenDataGridColumn TItem="ViewModelBase" Property="RowFilters" Title="Row Filter" Width="120px">
                         <Template Context="viewModel">
                             @if (viewModel is DatasetTestParameterValueViewModel vm)
                             {
-	                            @vm.ModelName
-                            }
-                            @if (viewModel is TestParameterValueCollectionViewModel collectionViewModel)
-                            {
-	                            @collectionViewModel.ModelName
+	                            <DynamicComponent Type="@typeof(RowFilterViewBlazor)" Parameters="vm.ComponentParameters"/>
                             }
                         </Template>
                     </RadzenDataGridColumn>
+
                     <RadzenDataGridColumn TItem="ViewModelBase" Property="FilterExpression" Title="Filter Expression">
                         <Template Context="viewModel">
                             @if (viewModel is DatasetTestParameterValueViewModel vm)

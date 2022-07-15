@@ -6,17 +6,16 @@ using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.UI.WinForms.Controls;
-using ProSuite.DdxEditor.Content.QA.QCon;
 using ProSuite.DdxEditor.Framework.TableRows;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.UI.QA.ResourceLookup;
 
-namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
+namespace ProSuite.UI.QA.BoundTableRows
 {
 	public class InstanceConfigurationInCategoryTableRow : SelectableTableRow, IEntityRow
 	{
 		/// <summary>
-		/// Initializes a new instance of the <see cref="QualityConditionWithTestParametersTableRow"/> class.
+		/// Initializes a new instance of the <see cref="InstanceConfigurationInCategoryTableRow"/> class.
 		/// </summary>
 		/// <param name="entity">The quality condition.</param>
 		/// <param name="usageCount"></param>

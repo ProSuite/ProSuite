@@ -6,7 +6,6 @@ using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.UI.WinForms.Controls;
-using ProSuite.DdxEditor.Content.QA.QCon;
 using ProSuite.DdxEditor.Framework.TableRows;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.DataModel;
@@ -14,7 +13,7 @@ using ProSuite.DomainModel.Core.QA;
 using ProSuite.UI.DataModel.ResourceLookup;
 using ProSuite.UI.QA.ResourceLookup;
 
-namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
+namespace ProSuite.UI.QA.BoundTableRows
 {
 	public class InstanceConfigurationDatasetTableRow : IEntityRow
 	{
@@ -39,7 +38,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 		}
 
 		/// <summary>
-		/// Initializes a new instance of the <see cref="QualityConditionDatasetTableRow"/> class.
+		/// Initializes a new instance of the <see cref="InstanceConfigurationDatasetTableRow"/> class.
 		/// </summary>
 		/// <param name="instanceConfiguration">The instance configuration.</param>
 		/// <param name="datasetParameterValue">The parameter value.</param>
@@ -81,7 +80,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 		}
 
 		/// <summary>
-		/// Initializes a new instance of the <see cref="QualityConditionDatasetTableRow"/> class.
+		/// Initializes a new instance of the <see cref="InstanceConfigurationDatasetTableRow"/> class.
 		/// </summary>
 		/// <param name="instanceConfiguration">The instance configuration.</param>
 		/// <param name="errorText">The error text.</param>

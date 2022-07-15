@@ -1003,7 +1003,11 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 					rowFilterProvider(rowFilterNames);
 
 				paramValue.RowFiltersExpression = rowFilterExpression;
-				paramValue.RowFilterConfigurations = rowFilterConfigurations;
+				paramValue.ClearRowFilters();
+				foreach (RowFilterConfiguration rowFilterConfiguration in rowFilterConfigurations)
+				{
+					paramValue.AddRowFilter(rowFilterConfiguration);
+				}
 			}
 
 			return paramValue;

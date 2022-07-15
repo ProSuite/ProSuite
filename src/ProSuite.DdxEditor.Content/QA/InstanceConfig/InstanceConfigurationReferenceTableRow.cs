@@ -38,6 +38,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 		[UsedImplicitly]
 		public string Name { get; private set; }
 
+		[UsedImplicitly]
 		public string Type
 		{
 			get

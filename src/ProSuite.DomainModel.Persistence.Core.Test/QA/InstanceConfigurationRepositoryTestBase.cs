@@ -1,9 +1,11 @@
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using NUnit.Framework;
 using ProSuite.DomainModel.Core;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.Repositories;
+using ProSuite.QA.Core;
 
 namespace ProSuite.DomainModel.Persistence.Core.Test.QA
 {
@@ -68,6 +70,62 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.QA
 						foundConfigs.Single(d => d.Name == "issueFilterConfig1");
 					Assert.AreEqual(testConstructorId, foundI1.InstanceDescriptor.ConstructorId);
 					Assert.AreEqual(i1.Class, foundI1.InstanceDescriptor.Class);
+				});
+		}
+
+		[Test]
+		public void CanAddRowFilterToParameter()
+		{
+			var t1 = new TransformerDescriptor(
+				"trans1", new ClassDescriptor("factTypeName", "factAssemblyName"), 0);
+
+			var tc1 = new TransformerConfiguration("transConfig1", t1, "bla bla1");
+
+			tc1.AddParameterValue(new DatasetTestParameterValue(
+				                      new TestParameter("paramName", typeof(DataTable),
+				                                        "desc for trans")));
+
+			var f1 = new RowFilterDescriptor(
+				"filt1", new ClassDescriptor("rowFiltTypeName", "factAssemblyName"), 0);
+
+			var fc1 = new RowFilterConfiguration("filterConfig2", f1, "bla bla1");
+
+			CreateSchema(t1, f1, tc1, fc1);
+
+			UnitOfWork.NewTransaction(
+				delegate
+				{
+					AssertUnitOfWorkHasNoChanges();
+
+					IList<TransformerConfiguration> foundTransformers =
+						Repository.GetTransformerConfigurations();
+					Assert.AreEqual(1, foundTransformers.Count);
+					Assert.False(foundTransformers.Any(t => t.TransformerDescriptor == null));
+
+					TransformerConfiguration foundTransformer = foundTransformers[0];
+
+					var parameterValue =
+						foundTransformer.ParameterValues.First() as DatasetTestParameterValue;
+					Assert.NotNull(parameterValue);
+
+					parameterValue.AddRowFilter(fc1);
+				});
+
+			UnitOfWork.NewTransaction(
+				() =>
+				{
+					IList<TransformerConfiguration> foundAgain =
+						Repository.GetTransformerConfigurations();
+
+					Assert.AreEqual(1, foundAgain.Count);
+
+					TransformerConfiguration foundTransformer = foundAgain[0];
+
+					var parameterValue =
+						foundTransformer.ParameterValues.First() as DatasetTestParameterValue;
+					Assert.NotNull(parameterValue);
+
+					Assert.AreEqual(1, parameterValue.RowFilterConfigurations.Count);
 				});
 		}
 

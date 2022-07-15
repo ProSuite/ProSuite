@@ -7,6 +7,7 @@ using System.Windows.Forms.Design;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.UI.Finder;
 using ProSuite.DomainModel.Core.DataModel;
+using ProSuite.UI.QA.BoundTableRows;
 
 namespace ProSuite.UI.QA.PropertyEditors
 {

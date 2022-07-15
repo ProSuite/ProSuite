@@ -1,19 +1,15 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.Repositories;
+using ProSuite.UI.QA.BoundTableRows;
 
 namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 {
-	internal  static class InstanceConfigTableRows
+	internal static class InstanceConfigTableRows
 	{
-
-
 		[NotNull]
 		public static IEnumerable<InstanceConfigurationInCategoryTableRow>
 			GetInstanceConfigs<T>(
@@ -29,9 +25,6 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 				.OrderBy(row => row.Name);
 		}
 
-
-
-
 		[NotNull]
 		private static IEnumerable<InstanceConfigurationInCategoryTableRow>
 			GetInstanceConfigurationTableRows<T>(
@@ -44,7 +37,6 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			foreach (T instanceConfig in repository.Get<T>(
 				         category, includeQualityConditionsBasedOnDeletedDatasets))
 			{
-
 				if (usageCountMap == null)
 				{
 					usageCountMap = repository.GetReferenceCounts<T>()
@@ -52,8 +44,8 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 					                                        rc => rc.UsageCount);
 				}
 
-				if (!usageCountMap.TryGetValue(instanceConfig.Id,
-				                               out int refCount))
+				if (! usageCountMap.TryGetValue(instanceConfig.Id,
+				                                out int refCount))
 				{
 					refCount = 0;
 				}
@@ -61,7 +53,5 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 				yield return new InstanceConfigurationInCategoryTableRow(instanceConfig, refCount);
 			}
 		}
-
-
 	}
 }

@@ -12,6 +12,7 @@ public interface IInstanceConfigurationViewModel : IViewObserver, INotifyPropert
 	InstanceConfiguration InstanceConfiguration { get; }
 
 	ITestParameterDatasetProvider DatasetProvider { get; }
+	IRowFilterConfigurationProvider RowFilterProvider { get; }
 
 	IList<ViewModelBase> Rows { get; }
 

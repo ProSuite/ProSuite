@@ -23,7 +23,9 @@ public class InstanceConfigurationViewModel<T> : Observable, IInstanceConfigurat
 
 	// todo daro InstanceConfiguration?
 	public InstanceConfigurationViewModel([NotNull] EntityItem<T, T> item,
-	                                      [NotNull] ITestParameterDatasetProvider datasetProvider)
+	                                      [NotNull] ITestParameterDatasetProvider datasetProvider,
+	                                      [NotNull]
+	                                      IRowFilterConfigurationProvider rowFilterProvider)
 	{
 		Assert.ArgumentNotNull(item, nameof(item));
 		Assert.ArgumentNotNull(datasetProvider, nameof(datasetProvider));
@@ -31,6 +33,7 @@ public class InstanceConfigurationViewModel<T> : Observable, IInstanceConfigurat
 		_item = item;
 
 		DatasetProvider = datasetProvider;
+		RowFilterProvider = rowFilterProvider;
 
 		InstanceConfiguration = Assert.NotNull(_item.GetEntity());
 	}
@@ -46,6 +49,9 @@ public class InstanceConfigurationViewModel<T> : Observable, IInstanceConfigurat
 
 	[NotNull]
 	public ITestParameterDatasetProvider DatasetProvider { get; }
+
+	[NotNull]
+	public IRowFilterConfigurationProvider RowFilterProvider { get; }
 
 	public void NotifyChanged(bool dirty)
 	{
@@ -140,7 +146,8 @@ public class InstanceConfigurationViewModel<T> : Observable, IInstanceConfigurat
 			if (paramValue is DatasetTestParameterValue datasetValue)
 			{
 				rowsByParameter[param]
-					.Add(DatasetTestParameterValueViewModel.CreateInstance(param, datasetValue, this));
+					.Add(DatasetTestParameterValueViewModel.CreateInstance(
+						     param, datasetValue, this));
 			}
 			else if (paramValue is ScalarTestParameterValue scalarValue)
 			{
@@ -215,7 +222,7 @@ public class InstanceConfigurationViewModel<T> : Observable, IInstanceConfigurat
 		List<ViewModelBase> values = Assert.NotNull(collectionRow.Values);
 
 		int index = values.IndexOf(row);
-			
+
 		if (index == -1 || index == values.Count - 1)
 		{
 			// selected row is not in this collection view model
@@ -241,7 +248,7 @@ public class InstanceConfigurationViewModel<T> : Observable, IInstanceConfigurat
 		List<ViewModelBase> values = Assert.NotNull(collectionRow.Values);
 
 		int index = values.IndexOf(row);
-		
+
 		if (index is -1 or 0)
 		{
 			return false;
@@ -266,17 +273,22 @@ public class InstanceConfigurationViewModel<T> : Observable, IInstanceConfigurat
 
 			foreach (ViewModelBase row in rows)
 			{
-				if (row is DatasetTestParameterValueViewModel dataset)
+				if (row is DatasetTestParameterValueViewModel datasetParamVM)
 				{
+					var newValue = new DatasetTestParameterValue(
+						               testParameter,
+						               datasetParamVM.DatasetSource.Match(d => d, t => null),
+						               datasetParamVM.FilterExpression,
+						               datasetParamVM.UsedAsReferenceData)
+					               {
+						               ValueSource = datasetParamVM.DatasetSource.Match(
+							               d => null, t => t)
+					               };
+
+					UpdateRowFilterConfigurations(newValue, datasetParamVM);
+
 					instanceConfiguration.AddParameterValue(
-						new DatasetTestParameterValue(
-							testParameter,
-							dataset.DatasetSource.Match(d => d, t => null),
-							dataset.FilterExpression,
-							dataset.UsedAsReferenceData)
-						{
-							ValueSource = dataset.DatasetSource.Match(d => null, t => t)
-						});
+						newValue);
 				}
 				else if (row is ScalarTestParameterValueViewModel scalar)
 				{
@@ -288,6 +300,20 @@ public class InstanceConfigurationViewModel<T> : Observable, IInstanceConfigurat
 					throw new ArgumentOutOfRangeException(nameof(row), @"Unkown view model type");
 				}
 			}
+		}
+	}
+
+	private void UpdateRowFilterConfigurations(DatasetTestParameterValue datasetParameter,
+	                                           DatasetTestParameterValueViewModel viewModel)
+	{
+		datasetParameter.RowFiltersExpression = viewModel.RowFilterExpression;
+		
+		datasetParameter.ClearRowFilters();
+
+		datasetParameter.ClearRowFilters();
+		foreach (RowFilterConfiguration rowFilterConfiguration in viewModel.RowFilterConfigurations)
+		{
+			datasetParameter.AddRowFilter(rowFilterConfiguration);
 		}
 	}
 

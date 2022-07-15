@@ -10,6 +10,7 @@ using ProSuite.DdxEditor.Framework.Commands;
 using ProSuite.DdxEditor.Framework.Items;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.Repositories;
+using ProSuite.UI.QA.BoundTableRows;
 
 namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 {

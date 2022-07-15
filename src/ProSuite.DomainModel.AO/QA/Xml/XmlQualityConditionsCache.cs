@@ -436,7 +436,12 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 					GetRowFilterConfigurations(rowFilterNames, datasetSettings);
 
 				paramValue.RowFiltersExpression = rowFiltersExpression;
-				paramValue.RowFilterConfigurations = rowFilterConfigurations;
+
+				paramValue.ClearRowFilters();
+				foreach (RowFilterConfiguration rowFilterConfiguration in rowFilterConfigurations)
+				{
+					paramValue.AddRowFilter(rowFilterConfiguration);
+				}
 			}
 
 			return paramValue;

@@ -21,6 +21,7 @@ using ProSuite.DdxEditor.Framework.ItemViews;
 using ProSuite.DdxEditor.Framework.TableRows;
 using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.Core.QA;
+using ProSuite.UI.QA.BoundTableRows;
 
 namespace ProSuite.DdxEditor.Content.QA.Categories
 {
@@ -491,8 +492,8 @@ namespace ProSuite.DdxEditor.Content.QA.Categories
 			IWin32Window owner,
 			out DataQualityCategory category)
 		{
-			if (!QualityConditionContainerUtils.AssignToCategory(items, _modelBuilder, owner,
-			                                                     out category))
+			if (! QualityConditionContainerUtils.AssignToCategory(items, _modelBuilder, owner,
+				    out category))
 			{
 				return false;
 			}

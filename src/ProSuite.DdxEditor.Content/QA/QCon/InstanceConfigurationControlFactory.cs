@@ -31,7 +31,8 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 
 			var viewModel =
 				new InstanceConfigurationViewModel<QualityCondition>(
-					item, modelBuilder.GetTestParameterDatasetProvider());
+					item, modelBuilder.GetTestParameterDatasetProvider(),
+					modelBuilder.GetRowFilterConfigurationProvider());
 
 			IInstanceConfigurationTableViewControl blazorControl =
 				new QualityConditionBlazor(viewModel, provider);
@@ -63,7 +64,8 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 
 			var viewModel =
 				new InstanceConfigurationViewModel<InstanceConfiguration>(
-					item, modelBuilder.GetTestParameterDatasetProvider());
+					item, modelBuilder.GetTestParameterDatasetProvider(),
+					modelBuilder.GetRowFilterConfigurationProvider());
 
 			IInstanceConfigurationTableViewControl blazorControl =
 				new QualityConditionBlazor(viewModel, provider);

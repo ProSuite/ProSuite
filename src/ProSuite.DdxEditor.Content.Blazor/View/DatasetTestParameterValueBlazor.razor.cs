@@ -8,7 +8,7 @@ public partial class DatasetTestParameterValueBlazor
 	[Parameter]
 	public DatasetTestParameterValueViewModel ViewModel { get; set; }
 
-	public object Value => ViewModel.Value;
+	public object Value => ViewModel.DisplayValue;
 
 	private void OnClick()
 	{

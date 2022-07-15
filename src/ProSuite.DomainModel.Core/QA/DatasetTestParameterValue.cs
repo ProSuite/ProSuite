@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using ProSuite.Commons.DomainModels;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.QA.Core;
@@ -13,7 +15,7 @@ namespace ProSuite.DomainModel.Core.QA
 		[UsedImplicitly] private string _filterExpression;
 		[UsedImplicitly] private bool _usedAsReferenceData;
 
-		[UsedImplicitly] private IList<RowFilterConfiguration> _rowFilterConfigurations =
+		[UsedImplicitly] private readonly IList<RowFilterConfiguration> _rowFilterConfigurations =
 			new List<RowFilterConfiguration>();
 
 		[UsedImplicitly] private string _rowFiltersExpression;
@@ -136,13 +138,29 @@ namespace ProSuite.DomainModel.Core.QA
 			set { _filterExpression = value; }
 		}
 
-		[CanBeNull]
-		public IList<RowFilterConfiguration> RowFilterConfigurations
+		[NotNull]
+		public IList<RowFilterConfiguration> RowFilterConfigurations =>
+			new ReadOnlyList<RowFilterConfiguration>(_rowFilterConfigurations);
+
+		public RowFilterConfiguration AddRowFilter([NotNull] RowFilterConfiguration rowFilterConfiguration)
 		{
-			get => _rowFilterConfigurations;
-			set => _rowFilterConfigurations = value;
+			Assert.ArgumentNotNull(rowFilterConfiguration, nameof(rowFilterConfiguration));
+
+			_rowFilterConfigurations.Add(rowFilterConfiguration);
+
+			return rowFilterConfiguration;
 		}
 
+		public void RemoveRowFilter([NotNull] RowFilterConfiguration rowFilterConfiguration)
+		{
+			_rowFilterConfigurations.Remove(rowFilterConfiguration);
+		}
+
+		public void ClearRowFilters()
+		{
+			_rowFilterConfigurations.Clear();
+		}
+		
 		[CanBeNull]
 		public string RowFiltersExpression
 		{
@@ -246,7 +264,9 @@ namespace ProSuite.DomainModel.Core.QA
 
 			bool equal = TestParameterName == o.TestParameterName &&
 			             DatasetValue == o.DatasetValue &&
-			             FilterExpression == o.FilterExpression &&
+						 ValueSource == o.ValueSource &&
+						 RowFiltersExpression == o.RowFiltersExpression &&
+						 FilterExpression == o.FilterExpression &&
 			             UsedAsReferenceData == o.UsedAsReferenceData;
 
 			return equal;

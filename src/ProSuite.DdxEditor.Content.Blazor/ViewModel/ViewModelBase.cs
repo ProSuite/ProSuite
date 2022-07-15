@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Microsoft.AspNetCore.Components;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DdxEditor.Framework.ItemViews;
@@ -53,6 +54,9 @@ public abstract class ViewModelBase : Observable
 	[NotNull]
 	public Type DataType { get; }
 
+	[CanBeNull]
+	public DynamicComponent DynamicRowFilterComponent { get; set; }
+	
 	public void StartEditing()
 	{
 		Editing = true;
