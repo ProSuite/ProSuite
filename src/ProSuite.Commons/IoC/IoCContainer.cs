@@ -9,8 +9,9 @@ namespace ProSuite.Commons.IoC
 	/// A basic 'Pure DI' container that allows registering objects with
 	/// - single-instance-per-container lifecycle (<see cref="Register{T}(object)"/>)
 	/// - transient lifecycle (creating a new instance when resolved, <see cref="Register{T}(System.Func{object})"/>
+	/// Once only .net is supported, an implementation using IServiceCollection could be used.
 	/// </summary>
-	public class IoCContainer : IDisposable
+	public class IoCContainer : IDisposable, IDependencyResolver
 	{
 		private readonly IDictionary<Type, Func<object>> _transientComponents =
 			new Dictionary<Type, Func<object>>();
@@ -24,7 +25,7 @@ namespace ProSuite.Commons.IoC
 		/// <typeparam name="T"></typeparam>
 		/// <returns></returns>
 		/// <exception cref="InvalidConfigurationException"></exception>
-		public T Resolve<T>()
+		public T Resolve<T>(string key = null)
 		{
 			if (_transientComponents.TryGetValue(typeof(T),
 			                                     out Func<object> factoryMethod))
@@ -54,7 +55,8 @@ namespace ProSuite.Commons.IoC
 		}
 
 		/// <summary>
-		/// Register a component with singleton lifecycle (i.e. singleton per container).
+		/// Register a component with singleton lifecycle (i.e. singleton per container). Hence
+		/// make sure the provided component can be used from different threads!
 		/// Calling <see cref="Release{T}"/> has no effect for singletons. They will be disposed
 		/// when the container itself is disposed by calling <see cref="Dispose"/>.
 		/// </summary>
