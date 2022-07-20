@@ -510,7 +510,7 @@ namespace ProSuite.DomainModel.AO.QA
 		protected class TableConstraint
 		{
 			/// <summary>
-			/// Initializes a new instance of the <see cref="ProSuite.DomainModel.AO.QA.ParameterizedInstanceFactory.TableConstraint"/> class.
+			/// Initializes a new instance of the <see cref="ProSuite.DomainModel.AO.QA.InstanceFactory.TableConstraint"/> class.
 			/// </summary>
 			/// <param name="table">The table.</param>
 			/// <param name="filterExpression">The filter expression.</param>

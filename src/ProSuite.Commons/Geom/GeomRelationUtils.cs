@@ -131,7 +131,7 @@ namespace ProSuite.Commons.Geom
 		}
 
 		/// <summary>
-		/// Determines whether <see cref="geometry1"/> is contained in <see cref="geometry2"/>.
+		/// Determines whether <paramref name="geometry1"/> is contained in <paramref cref="geometry2"/>.
 		/// </summary>
 		/// <param name="geometry1">The test geometry.</param>
 		/// <param name="geometry2">The containing geometry.</param>

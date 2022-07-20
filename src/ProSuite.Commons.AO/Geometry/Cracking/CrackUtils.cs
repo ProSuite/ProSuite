@@ -723,7 +723,7 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 
 		/// <summary>
 		/// Gets the points that are removed by the Douglas-Peucker algorithm using the specified
-		/// tolerance. Non-linear segments are handled according to the <see cref="omitNonLinearSegments"/>
+		/// tolerance. Non-linear segments are handled according to the <paramref name="omitNonLinearSegments"/>
 		/// parameter.
 		/// </summary>
 		/// <param name="polycurve"></param>

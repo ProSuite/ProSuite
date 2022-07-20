@@ -15,7 +15,7 @@ namespace ProSuite.Commons.Geom
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		/// <summary>
-		/// Returns the lines that are part of <paramref name="linestring1"></paramref> but have
+		/// Returns the lines that are part of <paramref name="linestring1"/> but have
 		/// no linear intersection in the XY plane with <paramref name="multiLinestring2"/>.
 		/// Optionally the sequence of lines that exist in both geometries but differ in Z
 		/// are calculated (having vertices from both inputs but Z values of <paramref name="linestring1"/>).
