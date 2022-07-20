@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Reflection;
 using System.Threading;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
@@ -24,8 +23,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 		private readonly IVerifiedModelFactory _modelFactory;
 		[NotNull] private readonly IOpenDataset _datasetOpener;
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="XmlBasedQualitySpecificationFactory"/> class.
@@ -165,6 +163,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			
 			Dictionary<string, QualityCondition> qualityConditions =
 				CreateQualityConditions(xmlDocumentCache,
+				                        categoryMap,
 				                        modelsByWorkspaceId,
 				                        ignoreConditionsForUnknownDatasets);
 
@@ -266,6 +265,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 
 		private static Dictionary<string, QualityCondition> CreateQualityConditions(
 			XmlQualityConditionsCache xmlDocumentCache,
+			IDictionary<XmlDataQualityCategory, DataQualityCategory> categoryMap,
 			IDictionary<string, Model> modelsByWorkspaceId,
 			bool ignoreConditionsForUnknownDatasets)
 		{
@@ -278,9 +278,15 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 				xmlDocumentCache.QualityConditionsWithCategories)
 			{
 				XmlQualityCondition xmlCondition = pair.Key;
+				XmlDataQualityCategory xmlCategory = pair.Value;
 
-				QualityCondition createdCondition = xmlDocumentCache.CreateQualityCondition(
-					xmlCondition, getDatasetsByName, ignoreConditionsForUnknownDatasets,
+				DataQualityCategory category =
+					xmlCategory != null
+						? categoryMap[xmlCategory]
+						: null;
+
+				QualityCondition createdCondition = XmlDataQualityUtils.CreateQualityCondition(
+					xmlCondition, xmlDocumentCache, getDatasetsByName, category, ignoreConditionsForUnknownDatasets,
 					out ICollection<XmlDatasetTestParameterValue> unknownDatasetParameters);
 
 				if (createdCondition == null)
