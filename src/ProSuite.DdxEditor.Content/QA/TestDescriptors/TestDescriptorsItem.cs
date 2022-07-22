@@ -10,7 +10,6 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI.WinForms;
 using ProSuite.DdxEditor.Content.Properties;
-using ProSuite.DdxEditor.Content.QA.InstanceDescriptors;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Commands;
 using ProSuite.DdxEditor.Framework.Items;

@@ -2,7 +2,6 @@ using System;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DdxEditor.Content.QA.InstanceConfig;
-using ProSuite.DdxEditor.Content.QA.TestDescriptors;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Commands;
 using ProSuite.DomainModel.Core.QA;
@@ -12,7 +11,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 	public class CreateInstanceConfigurationCommand : AddItemCommandBase<InstanceDescriptorItem>
 	{
 		/// <summary>
-		/// Initializes a new instance of the <see cref="CreateQualityConditionCommand"/> class.
+		/// Initializes a new instance of the <see cref="CreateInstanceConfigurationCommand"/> class.
 		/// </summary>
 		/// <param name="item">The test descriptor item.</param>
 		/// <param name="applicationController">The application controller.</param>

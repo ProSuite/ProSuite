@@ -25,12 +25,12 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 
 		protected InstanceDescriptorsItem([NotNull] string text,
 		                                  [CanBeNull] string description,
-		                                  [NotNull] CoreDomainModelItemModelBuilder modelBuider)
+		                                  [NotNull] CoreDomainModelItemModelBuilder modelBuilder)
 			: base(text, description)
 		{
-			Assert.ArgumentNotNull(modelBuider, nameof(modelBuider));
+			Assert.ArgumentNotNull(modelBuilder, nameof(modelBuilder));
 
-			ModelBuilder = modelBuider;
+			ModelBuilder = modelBuilder;
 		}
 
 		protected override bool AllowDeleteSelectedChildren => true;
@@ -41,7 +41,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 		                                   IApplicationController applicationController)
 		{
 			using (_msg.IncrementIndentation(
-				       "Adding {0} from assembly {1}", DescriptorTypeDisplayName, dllFilePath))
+				       "Adding {0}s from assembly {1}", DescriptorTypeDisplayName, dllFilePath))
 			{
 				Assembly assembly = Assembly.LoadFile(dllFilePath);
 
@@ -49,9 +49,8 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 			}
 		}
 
-		protected void AddInstanceDescriptors(
-			IApplicationController applicationController,
-			Assembly assembly)
+		protected void AddInstanceDescriptors(IApplicationController applicationController,
+		                                      Assembly assembly)
 		{
 			const bool includeObsolete = false;
 			const bool includeInternallyUsed = false;
@@ -86,6 +85,8 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 
 			TryAddInstanceDescriptors(newDescriptors);
 		}
+
+		protected abstract string DescriptorTypeDisplayName { get; }
 
 		protected abstract Type GetInstanceType();
 
@@ -126,8 +127,6 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 				this, applicationController, DescriptorTypeDisplayName);
 		}
 
-		protected abstract string DescriptorTypeDisplayName { get; }
-
 		[NotNull]
 		protected abstract IEnumerable<InstanceDescriptorTableRow> GetTableRows();
 
@@ -160,7 +159,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 						if (definitions.ContainsKey(definition.Name))
 						{
 							_msg.InfoFormat(
-								"An {0} with the same definition as '{1}' is already registered",
+								"{0} with the same definition as '{1}' is already registered",
 								descriptor.TypeDisplayName, descriptor.Name);
 						}
 						// 2nd check: equality with rest of object
@@ -178,7 +177,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 					}
 				});
 
-			_msg.InfoFormat("{0} instance descriptor(s) added", addedCount);
+			_msg.InfoFormat("{0} {1}s added", addedCount, DescriptorTypeDisplayName);
 
 			RefreshChildren();
 		}

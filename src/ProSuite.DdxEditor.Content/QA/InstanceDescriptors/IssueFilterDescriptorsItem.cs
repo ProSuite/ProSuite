@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Logging;
 using ProSuite.DdxEditor.Content.Properties;
 using ProSuite.DdxEditor.Framework.Items;
 using ProSuite.DomainModel.AO.QA;
@@ -15,8 +14,6 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 {
 	public class IssueFilterDescriptorsItem : InstanceDescriptorsItem<IssueFilterDescriptor>
 	{
-		private static readonly IMsg _msg = Msg.ForCurrentClass();
-
 		[NotNull] private static readonly Image _image;
 		[NotNull] private static readonly Image _selectedImage;
 
@@ -27,9 +24,9 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 			_selectedImage = ItemUtils.GetGroupItemSelectedImage(Resources.IssueFilterOverlay);
 		}
 
-		public IssueFilterDescriptorsItem([NotNull] CoreDomainModelItemModelBuilder modelBuider) :
+		public IssueFilterDescriptorsItem([NotNull] CoreDomainModelItemModelBuilder modelBuilder) :
 			base("Issue Filter Descriptors", "Issue Filter algorithm implementations",
-			     modelBuider) { }
+			     modelBuilder) { }
 
 		public override Image Image => _image;
 
@@ -37,7 +34,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 
 		#region Overrides of InstanceDescriptorsItem<IssueFilterDescriptor>
 
-		protected override string DescriptorTypeDisplayName => "issue filter descriptor";
+		protected override string DescriptorTypeDisplayName => "Issue Filter Descriptor";
 
 		protected override Type GetInstanceType()
 		{

@@ -4,10 +4,9 @@ using System.Windows.Forms;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DdxEditor.Content.Properties;
 using ProSuite.DdxEditor.Content.QA.QSpec;
-using ProSuite.DdxEditor.Content.QA.TestDescriptors;
 using ProSuite.DdxEditor.Framework;
 
-namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
+namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 {
 	public class ImportTestDescriptorsCommand :
 		ExchangeQualitySpecificationCommand<TestDescriptorsItem>
@@ -30,9 +29,9 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 		/// <param name="applicationController">The application controller.</param>
 		/// <param name="defaultTestDescriptorsXmlFile"></param>
 		public ImportTestDescriptorsCommand([NotNull] TestDescriptorsItem item,
-		                                    [NotNull] IApplicationController
-			                                    applicationController,
-		                                    [CanBeNull] string defaultTestDescriptorsXmlFile)
+											[NotNull] IApplicationController
+												applicationController,
+											[CanBeNull] string defaultTestDescriptorsXmlFile)
 			: base(item, applicationController)
 		{
 			_defaultTestDescriptorsXmlFile = defaultTestDescriptorsXmlFile;
@@ -51,13 +50,13 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 					dialog.Multiselect = false;
 
 					string initialFileName = _defaultTestDescriptorsXmlFile != null &&
-					                         File.Exists(_defaultTestDescriptorsXmlFile)
-						                         ? _defaultTestDescriptorsXmlFile
-						                         : null;
+											 File.Exists(_defaultTestDescriptorsXmlFile)
+												 ? _defaultTestDescriptorsXmlFile
+												 : null;
 
 					string xmlFilePath = GetSelectedFileName(dialog, initialFileName);
 
-					if (! string.IsNullOrEmpty(xmlFilePath))
+					if (!string.IsNullOrEmpty(xmlFilePath))
 					{
 						Item.ImportTestDescriptors(xmlFilePath);
 					}

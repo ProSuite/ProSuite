@@ -22,13 +22,12 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 		static RowFilterConfigurationsItem()
 		{
 			_image = ItemUtils.GetGroupItemImage(Resources.RowFilterOverlay);
-			_selectedImage =
-				ItemUtils.GetGroupItemSelectedImage(Resources.RowFilterOverlay);
+			_selectedImage = ItemUtils.GetGroupItemSelectedImage(Resources.RowFilterOverlay);
 		}
 
 		public RowFilterConfigurationsItem([NotNull] CoreDomainModelItemModelBuilder modelBuilder,
 		                                   [NotNull] IQualityConditionContainer container)
-			: base(modelBuilder, "Row filter configurations",
+			: base(modelBuilder, "Row Filter Configurations",
 			       "Configured filter algorithms to filter the rows being verified in a quality condition",
 			       container) { }
 

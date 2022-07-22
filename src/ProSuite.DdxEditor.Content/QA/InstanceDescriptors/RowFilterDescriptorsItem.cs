@@ -24,9 +24,9 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 			_selectedImage = ItemUtils.GetGroupItemSelectedImage(Resources.RowFilterOverlay);
 		}
 
-		public RowFilterDescriptorsItem([NotNull] CoreDomainModelItemModelBuilder modelBuider) :
+		public RowFilterDescriptorsItem([NotNull] CoreDomainModelItemModelBuilder modelBuilder) :
 			base("Row Filter Descriptors", "Row Filter algorithm implementations",
-			     modelBuider) { }
+			     modelBuilder) { }
 
 		public override Image Image => _image;
 
@@ -34,7 +34,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 
 		#region Overrides of InstanceDescriptorsItem<RowFilterDescriptor>
 
-		protected override string DescriptorTypeDisplayName => "row filter descriptor";
+		protected override string DescriptorTypeDisplayName => "Row Filter Descriptor";
 
 		protected override Type GetInstanceType()
 		{

@@ -22,8 +22,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 		static TransformerConfigurationsItem()
 		{
 			_image = ItemUtils.GetGroupItemImage(Resources.TransformOverlay);
-			_selectedImage =
-				ItemUtils.GetGroupItemSelectedImage(Resources.TransformOverlay);
+			_selectedImage = ItemUtils.GetGroupItemSelectedImage(Resources.TransformOverlay);
 		}
 
 		public TransformerConfigurationsItem([NotNull] CoreDomainModelItemModelBuilder modelBuilder,

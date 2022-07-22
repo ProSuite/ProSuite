@@ -23,7 +23,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 			_instanceTypeDisplayName = instanceTypeDisplayName;
 		}
 
-		public override string Text => $"Add {_instanceTypeDisplayName} from Assembly";
+		public override string Text => $"Add {_instanceTypeDisplayName}s from Assembly";
 
 		protected override void ExecuteCore()
 		{

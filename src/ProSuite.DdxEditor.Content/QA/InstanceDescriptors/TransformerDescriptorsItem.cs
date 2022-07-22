@@ -24,9 +24,9 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 			_selectedImage = ItemUtils.GetGroupItemSelectedImage(Resources.TransformOverlay);
 		}
 
-		public TransformerDescriptorsItem([NotNull] CoreDomainModelItemModelBuilder modelBuider) :
-			base("Transformer Descriptors", "Transformer algorithm implementations",
-			     modelBuider) { }
+		public TransformerDescriptorsItem([NotNull] CoreDomainModelItemModelBuilder modelBuilder) :
+			base("Transformer Descriptors", "Dataset transformer algorithm implementations",
+			     modelBuilder) { }
 
 		public override Image Image => _image;
 
@@ -34,7 +34,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 
 		#region Overrides of InstanceDescriptorsItem<TransformerDescriptor>
 
-		protected override string DescriptorTypeDisplayName => "transformer descriptor";
+		protected override string DescriptorTypeDisplayName => "Transformer Descriptor";
 
 		protected override Type GetInstanceType()
 		{

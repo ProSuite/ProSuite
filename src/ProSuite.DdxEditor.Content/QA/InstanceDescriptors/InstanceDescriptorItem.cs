@@ -8,7 +8,6 @@ using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI.Finder;
 using ProSuite.Commons.Validation;
 using ProSuite.DdxEditor.Content.QA.Categories;
-using ProSuite.DdxEditor.Content.QA.TestDescriptors;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Commands;
 using ProSuite.DdxEditor.Framework.Dependencies;
@@ -34,7 +33,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 		[NotNull] private readonly TableState _tableState = new TableState();
 
 		/// <summary>
-		/// Initializes a new instance of the <see cref="TestDescriptorItem"/> class.
+		/// Initializes a new instance of the <see cref="InstanceDescriptorItem"/> class.
 		/// </summary>
 		/// <param name="modelBuilder">The model builder.</param>
 		/// <param name="descriptor">The test descriptor.</param>
@@ -91,7 +90,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 				    descriptorWithSameName.Id != entity.Id)
 				{
 					notification.RegisterMessage("Name",
-					                             "A test descriptor with the same name already exists",
+					                             "Instance descriptor with the same name already exists",
 					                             Severity.Error);
 				}
 			}
