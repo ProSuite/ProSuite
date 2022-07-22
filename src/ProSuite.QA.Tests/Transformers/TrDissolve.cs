@@ -147,11 +147,14 @@ namespace ProSuite.QA.Tests.Transformers
 				IGeometryDef geomDef =
 					dissolve.Fields.Field[
 						dissolve.Fields.FindField(dissolve.ShapeFieldName)].GeometryDef;
+
 				FieldsT.AddFields(
 					FieldUtils.CreateOIDField(),
 					FieldUtils.CreateShapeField(
 						dissolve.ShapeType,
-						geomDef.SpatialReference, geomDef.GridSize[0], geomDef.HasZ, geomDef.HasM));
+						geomDef.SpatialReference,
+						geomDef.GridCount > 0 ? geomDef.GridSize[0] : 0,
+						geomDef.HasZ, geomDef.HasM));
 			}
 
 			public double SearchDistance { get; set; }

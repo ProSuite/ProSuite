@@ -20,6 +20,10 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		[XmlArrayItem(ElementName = "QualityCondition")]
 		public List<XmlQualityCondition> QualityConditions { get; set; }
 
+		[XmlArrayItem(ElementName = "Transformer")]
+		[CanBeNull]
+		public List<XmlTransformerConfiguration> Transformers { get; set; }
+
 		[XmlArrayItem(ElementName = "IssueFilter")]
 		[CanBeNull]
 		public List<XmlIssueFilterConfiguration> IssueFilters { get; set; }
@@ -27,10 +31,6 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		[XmlArrayItem(ElementName = "RowFilter")]
 		[CanBeNull]
 		public List<XmlRowFilterConfiguration> RowFilters { get; set; }
-
-		[XmlArrayItem(ElementName = "Transformer")]
-		[CanBeNull]
-		public List<XmlTransformerConfiguration> Transformers { get; set; }
 
 		[XmlArrayItem("Category")]
 		[CanBeNull]
