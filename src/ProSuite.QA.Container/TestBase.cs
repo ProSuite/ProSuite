@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
@@ -211,10 +212,26 @@ namespace ProSuite.QA.Container
 		                          [CanBeNull] IEnumerable<object> values,
 		                          params IReadOnlyRow[] rows)
 		{
+			// TODO trial/hack to fix missing involved rows if this method signature is used
+			// remove after push/pull subtree
+			InvolvedRows involvedRows = InvolvedRowUtils.GetInvolvedRows(rows);
+			if (rows.Length == 0)
+			{
+				if (values is IEnumerable<IReadOnlyRow> rowsAsValues)
+				{
+					involvedRows = InvolvedRowUtils.GetInvolvedRows(rowsAsValues);
+					values = null;
+				}
+				else if (values is IEnumerable<InvolvedRow> involvedsAsValues)
+				{
+					involvedRows.AddRange(involvedsAsValues.ToList());
+					values = null;
+				}
+			}
+
 			return ReportError(description, errorGeometry,
 			                   issueCode, affectedComponent,
-			                   InvolvedRowUtils.GetInvolvedRows(rows),
-			                   values);
+			                   involvedRows, values);
 		}
 
 		[Obsolete("call overload with issueCode and affectedComponent")]
