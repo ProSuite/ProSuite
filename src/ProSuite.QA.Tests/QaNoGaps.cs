@@ -721,7 +721,7 @@ namespace ProSuite.QA.Tests
 			sb.Append(")");
 
 			// the error polygon is guaranteed to be a clone already, no further cloning needed.
-			return ReportError(sb.ToString(), gapPolygon, GetIssueCode(), null);
+			return ReportError(sb.ToString(), new InvolvedRows(), gapPolygon, GetIssueCode(), null);
 		}
 
 		private IssueCode GetIssueCode()

@@ -502,12 +502,10 @@ namespace ProSuite.QA.Tests
 				description = first.ConstraintDescription;
 			}
 
-			return ReportError(description,
-			                   GeometryFactory.Clone(errorGeometry),
-			                   first.IssueCode,
-			                   first.AffectedComponents,
-			                   new[] {first.TextValue},
-			                   lineFeature, neighborFeature);
+			return ReportError(
+				description, InvolvedRowUtils.GetInvolvedRows(lineFeature, neighborFeature),
+				GeometryFactory.Clone(errorGeometry),
+				first.IssueCode, first.AffectedComponents, values: new[] { first.TextValue });
 		}
 
 		private int CompareBorderConnectionList(
@@ -714,9 +712,9 @@ namespace ProSuite.QA.Tests
 								.QaEdgeMatchBorderingLines_NoMatch_NoCandidate;
 						}
 
-						errorCount += ReportError(description, uncoveredPart,
-						                          Codes[codeId], null,
-						                          borderConnection.Feature);
+						errorCount += ReportError(
+							description, InvolvedRowUtils.GetInvolvedRows(borderConnection.Feature),
+							uncoveredPart, Codes[codeId], null);
 					}
 				}
 			}
@@ -1013,9 +1011,9 @@ namespace ProSuite.QA.Tests
 		{
 			return ReportError(
 				LocalizableStrings.QaEdgeMatchBorderingLines_Match_EndPointNotCoincident,
+				InvolvedRowUtils.GetInvolvedRows(lineFeature, neighborFeature),
 				GeometryFactory.Clone(endPoint),
-				Codes[Code.Match_EndPointNotCoincident], null,
-				lineFeature, neighborFeature);
+				Codes[Code.Match_EndPointNotCoincident], null);
 		}
 
 		[CanBeNull]

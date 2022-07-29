@@ -224,11 +224,11 @@ namespace ProSuite.QA.Tests
 
 			if (centerPoint == null || centerPoint.IsEmpty)
 			{
-				return ReportError("Circular arc has no center point",
-				                   GetErrorGeometry((ISegment) circularArc),
-				                   Codes[Code.CicularArc_NoCenterPoint],
-				                   TestUtils.GetShapeFieldName(row),
-				                   row);
+				return ReportError(
+					"Circular arc has no center point",
+					InvolvedRowUtils.GetInvolvedRows(row),
+					GetErrorGeometry((ISegment) circularArc), Codes[Code.CicularArc_NoCenterPoint],
+					TestUtils.GetShapeFieldName(row));
 			}
 
 			if (circularArc.ChordHeight < _minimumChordHeight)
@@ -238,10 +238,10 @@ namespace ProSuite.QA.Tests
 					              FormatLengthComparison(circularArc.ChordHeight, "<",
 					                                     _minimumChordHeight,
 					                                     _spatialReference)),
+					InvolvedRowUtils.GetInvolvedRows(row),
 					GetErrorGeometry((ISegment) circularArc),
 					Codes[Code.CircularArc_ChordHeightTooSmall],
-					TestUtils.GetShapeFieldName(row),
-					row);
+					TestUtils.GetShapeFieldName(row));
 			}
 
 			// add checks as needed

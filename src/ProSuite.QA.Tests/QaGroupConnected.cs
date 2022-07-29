@@ -1029,7 +1029,7 @@ namespace ProSuite.QA.Tests
 				return NoError;
 			}
 
-			var involvedRows = new List<InvolvedRow>(lineCount);
+			InvolvedRows involvedRows = new InvolvedRows();
 			foreach (DirectedRow row in groupRows)
 			{
 				InvolvedRowUtils.AddUniqueInvolvedRows(
@@ -1038,10 +1038,9 @@ namespace ProSuite.QA.Tests
 			}
 
 			const string description = "Group branches";
-			return ReportError(description,
+			return ReportError(description, involvedRows,
 			                   groupRows[0].FromPoint,
-			                   LocalCodes[Code.InvalidLineGroup_Branch], null,
-			                   involvedRows);
+			                   LocalCodes[Code.InvalidLineGroup_Branch], null);
 		}
 
 		[NotNull]
@@ -1079,7 +1078,7 @@ namespace ProSuite.QA.Tests
 			}
 
 			int endRowCount = groupEndRows.Count;
-			var involvedRows = new List<InvolvedRow>(endRowCount + otherPartEnds.Count);
+			InvolvedRows involvedRows = new InvolvedRows();
 
 			for (var i = 0; i < endRowCount; i++)
 			{
@@ -1122,10 +1121,9 @@ namespace ProSuite.QA.Tests
 				              " (Errorgeometry = endpoints of one group and any point(s) of another group)",
 				              group.GetInfo(GroupBys));
 
-			return ReportError(description,
+			return ReportError(description, involvedRows,
 			                   (IGeometry) endPoints,
-			                   LocalCodes[Code.InvalidLineGroup_MultipleParts], null,
-			                   involvedRows);
+			                   LocalCodes[Code.InvalidLineGroup_MultipleParts], null);
 		}
 
 		private int ReportCombinedErrors([NotNull] Group group,
@@ -1220,9 +1218,9 @@ namespace ProSuite.QA.Tests
 					description = baseDescription;
 				}
 
-				errorCount += ReportError(description, errorLines,
-				                          LocalCodes[Code.InvalidLineGroup_MultipleParts], null,
-				                          GetInvolvedRows(longGaps));
+				errorCount += ReportError(
+					description, GetInvolvedRows(longGaps), errorLines,
+					LocalCodes[Code.InvalidLineGroup_MultipleParts], null);
 			}
 
 			if (errorPoints != null)
@@ -1250,9 +1248,8 @@ namespace ProSuite.QA.Tests
 					description = baseDescription;
 				}
 
-				errorCount += ReportError(description, errorPoints,
-				                          LocalCodes[Code.InvalidLineGroup_MultipleParts], null,
-				                          GetInvolvedRows(shortGaps));
+				errorCount += ReportError(description, GetInvolvedRows(shortGaps), errorPoints,
+				                          LocalCodes[Code.InvalidLineGroup_MultipleParts], null);
 			}
 
 			return errorCount;
@@ -1286,9 +1283,8 @@ namespace ProSuite.QA.Tests
 						groupInfo,
 						FormatLength(gap.Distance, errorGeometry.SpatialReference).Trim());
 
-				errorCount += ReportError(description, errorGeometry,
-				                          LocalCodes[Code.InvalidLineGroup_MultipleParts], null,
-				                          GetInvolvedRows(gap));
+				errorCount += ReportError(description, GetInvolvedRows(gap), errorGeometry,
+				                          LocalCodes[Code.InvalidLineGroup_MultipleParts], null);
 			}
 
 			return errorCount;
@@ -1498,9 +1494,9 @@ namespace ProSuite.QA.Tests
 		}
 
 		[NotNull]
-		private static IEnumerable<InvolvedRow> GetInvolvedRows([NotNull] EndsGap gap)
+		private static InvolvedRows GetInvolvedRows([NotNull] EndsGap gap)
 		{
-			var result = new List<InvolvedRow>(2);
+			var result = new InvolvedRows();
 
 			InvolvedRowUtils.AddUniqueInvolvedRows(result, gap.ThisEnd.InvolvedRows);
 			InvolvedRowUtils.AddUniqueInvolvedRows(result, gap.OtherEnd.InvolvedRows);
@@ -1527,10 +1523,10 @@ namespace ProSuite.QA.Tests
 		//}
 
 		[NotNull]
-		private static IEnumerable<InvolvedRow> GetInvolvedRows(
+		private static InvolvedRows GetInvolvedRows(
 			[NotNull] ICollection<EndsGap> gaps)
 		{
-			var result = new List<InvolvedRow>(gaps.Count * 2);
+			InvolvedRows result = new InvolvedRows();
 
 			foreach (EndsGap gap in gaps)
 			{
@@ -1666,9 +1662,9 @@ namespace ProSuite.QA.Tests
 
 				const string description = "Cycle found";
 				_groupCompletedErrorsCount +=
-					ReportError(description, errList.GetPolygon(),
-					            LocalCodes[Code.InvalidLineGroup_Cycle], null,
-					            GetUniqueInvolvedRows(errList.GetUniqueRows(InvolvedTables)));
+					ReportError(
+						description, GetUniqueInvolvedRows(errList.GetUniqueRows(InvolvedTables)),
+						errList.GetPolygon(), LocalCodes[Code.InvalidLineGroup_Cycle], null);
 			}
 
 			if (orientation > 0 && (_allowedShape & ShapeAllowed.InsideBranches) == 0)
@@ -1746,9 +1742,9 @@ namespace ProSuite.QA.Tests
 
 			string description = string.Format("Found {0} ends, expected <= {1}",
 			                                   endRows.Count, maxEnd);
-			return ReportError(description, (IGeometry) points,
-			                   issueCode, null,
-			                   GetUniqueInvolvedRows(lineList.GetUniqueRows(InvolvedTables)));
+			return ReportError(
+				description, GetUniqueInvolvedRows(lineList.GetUniqueRows(InvolvedTables)),
+				(IGeometry) points, issueCode, null);
 		}
 
 		[NotNull]

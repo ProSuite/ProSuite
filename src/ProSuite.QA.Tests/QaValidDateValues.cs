@@ -205,9 +205,9 @@ namespace ProSuite.QA.Tests
 						TestUtils.GetFieldDisplayName(row, dateFieldIndex, out fieldName),
 						dateValue, e.Message);
 
-					errorCount += ReportError(description, TestUtils.GetShapeCopy(row),
-					                          Codes[Code.UnrecognizedDateValue], fieldName,
-					                          row);
+					errorCount += ReportError(
+						description, InvolvedRowUtils.GetInvolvedRows(row),
+						TestUtils.GetShapeCopy(row), Codes[Code.UnrecognizedDateValue], fieldName);
 					continue;
 				}
 
@@ -219,9 +219,10 @@ namespace ProSuite.QA.Tests
 						TestUtils.GetFieldDisplayName(row, dateFieldIndex, out fieldName),
 						_minimumDateValue);
 
-					errorCount += ReportError(description, TestUtils.GetShapeCopy(row),
-					                          Codes[Code.ValueBeforeEarliestValidDate], fieldName,
-					                          row);
+					errorCount += ReportError(
+						description, InvolvedRowUtils.GetInvolvedRows(row),
+						TestUtils.GetShapeCopy(row), Codes[Code.ValueBeforeEarliestValidDate],
+						fieldName);
 				}
 				else if (dateTime > _maximumDateValue)
 				{
@@ -231,9 +232,10 @@ namespace ProSuite.QA.Tests
 						TestUtils.GetFieldDisplayName(row, dateFieldIndex, out fieldName),
 						_maximumDateValue);
 
-					errorCount += ReportError(description, TestUtils.GetShapeCopy(row),
-					                          Codes[Code.ValueAfterLatestValidDate], fieldName,
-					                          row);
+					errorCount += ReportError(
+						description, InvolvedRowUtils.GetInvolvedRows(row),
+						TestUtils.GetShapeCopy(row), Codes[Code.ValueAfterLatestValidDate],
+						fieldName);
 				}
 			}
 

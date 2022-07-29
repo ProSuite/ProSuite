@@ -382,10 +382,10 @@ namespace ProSuite.QA.Tests
 				string shapeFieldName = ((IReadOnlyFeatureClass) feature.Table).ShapeFieldName;
 
 				errorCount +=
-					ReportError(LocalizableStrings.QaFullCoincidence_PartNotNearReference,
-					            errorGeometry,
-					            Codes[Code.PartNotNearReference],
-					            shapeFieldName, feature);
+					ReportError(
+						LocalizableStrings.QaFullCoincidence_PartNotNearReference,
+						InvolvedRowUtils.GetInvolvedRows(feature),
+						errorGeometry, Codes[Code.PartNotNearReference], shapeFieldName);
 			}
 
 			return errorCount;

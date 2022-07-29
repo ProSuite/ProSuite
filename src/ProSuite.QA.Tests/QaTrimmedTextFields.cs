@@ -249,8 +249,9 @@ namespace ProSuite.QA.Tests
 					string.Format(LocalizableStrings.QaTrimmedTextFields_InvalidStringValue,
 					              fieldName, value, e.Message);
 
-				return ReportError(description, TestUtils.GetShapeCopy(row),
-				                   Codes[Code.ErrorReadingString], fieldName, row);
+				return ReportError(
+					description, InvolvedRowUtils.GetInvolvedRows(row), TestUtils.GetShapeCopy(row),
+					Codes[Code.ErrorReadingString], fieldName);
 			}
 
 			// check for leading or trailing blanks
@@ -307,8 +308,9 @@ namespace ProSuite.QA.Tests
 					fieldDisplayName, blankCount);
 			}
 
-			return ReportError(description, TestUtils.GetShapeCopy(row),
-			                   issueCode, fieldName, row);
+			return ReportError(
+				description, InvolvedRowUtils.GetInvolvedRows(row), TestUtils.GetShapeCopy(row),
+				issueCode, fieldName);
 		}
 
 		[NotNull]

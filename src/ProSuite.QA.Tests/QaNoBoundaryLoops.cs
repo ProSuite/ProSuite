@@ -278,10 +278,10 @@ namespace ProSuite.QA.Tests
 
 			if (_errorGeometry == BoundaryLoopErrorGeometry.LoopStartPoint)
 			{
-				return ReportError(baseMessage,
-				                   GetPoint(geometry, startVertexIndex),
-				                   Codes[Code.BoundaryLoop], _shapeFieldName,
-				                   row);
+				return ReportError(
+					baseMessage, InvolvedRowUtils.GetInvolvedRows(row),
+					GetPoint(geometry, startVertexIndex),
+					Codes[Code.BoundaryLoop], _shapeFieldName);
 			}
 
 			// polygon is requested as error geometry
@@ -290,16 +290,16 @@ namespace ProSuite.QA.Tests
 				// ... but the polygon could not be created
 				string description = string.Format("{0} - unable to determine loop polygon: {1}",
 				                                   baseMessageStartPoint, noPolygonReason);
-				return ReportError(description,
-				                   GetPoint(geometry, startVertexIndex),
-				                   Codes[Code.BoundaryLoop_UnableToConstructLoopPolygon],
-				                   _shapeFieldName,
-				                   row);
+				return ReportError(
+					description, InvolvedRowUtils.GetInvolvedRows(row),
+					GetPoint(geometry, startVertexIndex),
+					Codes[Code.BoundaryLoop_UnableToConstructLoopPolygon],
+					_shapeFieldName);
 			}
 
-			return ReportError(baseMessage, loopPolygon,
-			                   Codes[Code.BoundaryLoop], _shapeFieldName,
-			                   row);
+			return ReportError(
+				baseMessage, InvolvedRowUtils.GetInvolvedRows(row), loopPolygon,
+				Codes[Code.BoundaryLoop], _shapeFieldName);
 		}
 
 		private int CheckLoopArea([NotNull] IGeometry geometry,
@@ -316,11 +316,11 @@ namespace ProSuite.QA.Tests
 				description =
 					string.Format("{0} - unable to determine loop polygon for area comparison: {1}",
 					              baseMessageStartPoint, noPolygonReason);
-				return ReportError(description,
-				                   GetPoint(geometry, startVertexIndex),
-				                   Codes[Code.BoundaryLoop_UnableToConstructLoopPolygon],
-				                   _shapeFieldName,
-				                   row);
+				return ReportError(
+					description, InvolvedRowUtils.GetInvolvedRows(row),
+					GetPoint(geometry, startVertexIndex),
+					Codes[Code.BoundaryLoop_UnableToConstructLoopPolygon],
+					_shapeFieldName);
 			}
 
 			double loopArea = ((IArea) loopPolygon).Area;
@@ -341,9 +341,9 @@ namespace ProSuite.QA.Tests
 			if (_errorGeometry == BoundaryLoopErrorGeometry.LoopPolygon)
 			{
 				description = string.Format("{0}: {1}", baseMessage, comparison);
-				return ReportError(description, loopPolygon,
-				                   issueCode, _shapeFieldName,
-				                   row);
+				return ReportError(
+					description, InvolvedRowUtils.GetInvolvedRows(row), loopPolygon,
+					issueCode, _shapeFieldName);
 			}
 
 			// report start point only
@@ -352,10 +352,10 @@ namespace ProSuite.QA.Tests
 			Marshal.ReleaseComObject(loopPolygon);
 
 			description = string.Format("{0}: {1}", baseMessageStartPoint, comparison);
-			return ReportError(description,
-			                   GetPoint(geometry, startVertexIndex),
-			                   issueCode, _shapeFieldName,
-			                   row);
+			return ReportError(
+				description, InvolvedRowUtils.GetInvolvedRows(row),
+				GetPoint(geometry, startVertexIndex),
+				issueCode, _shapeFieldName);
 		}
 
 		private static IssueCode GetAreaRelationIssueCode(

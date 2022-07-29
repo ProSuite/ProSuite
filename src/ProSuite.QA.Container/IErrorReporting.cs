@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Core.IssueCodes;
 
@@ -12,41 +11,11 @@ namespace ProSuite.QA.Container
 	public interface IErrorReporting
 	{
 		int Report([NotNull] string description,
-		           params IReadOnlyRow[] rows);
-
-		int Report([NotNull] string description,
-		           [CanBeNull] IssueCode issueCode,
-		           [CanBeNull] string affectedComponent,
-		           params IReadOnlyRow[] rows);
-
-		int Report([NotNull] string description,
-		           [CanBeNull] IGeometry errorGeometry,
-		           params IReadOnlyRow[] rows);
-
-		int Report([NotNull] string description,
+				   [NotNull] InvolvedRows rows,
 		           [CanBeNull] IGeometry errorGeometry,
 		           [CanBeNull] IssueCode issueCode,
 		           [CanBeNull] string affectedComponent,
-		           params IReadOnlyRow[] rows);
-
-		int Report([NotNull] string description,
-		           [CanBeNull] IGeometry errorGeometry,
-		           [CanBeNull] IssueCode issueCode,
-		           bool reportIndividualParts,
-		           params IReadOnlyRow[] rows);
-
-		int Report([NotNull] string description,
-		           [CanBeNull] IGeometry errorGeometry,
-		           [CanBeNull] IssueCode issueCode,
-		           [CanBeNull] string affectedComponent,
-		           [CanBeNull] IEnumerable<object> values,
-		           params IReadOnlyRow[] rows);
-
-		int Report([NotNull] string description,
-		           [CanBeNull] IGeometry errorGeometry,
-		           [CanBeNull] IssueCode issueCode,
-		           [CanBeNull] string affectedComponent,
-		           bool reportIndividualParts,
-		           params IReadOnlyRow[] rows);
+				   bool reportIndividualParts = false,
+		           [CanBeNull] IEnumerable<object> values = null);
 	}
 }

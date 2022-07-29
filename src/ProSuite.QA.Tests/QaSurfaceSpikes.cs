@@ -136,8 +136,9 @@ namespace ProSuite.QA.Tests
 			IPoint point = new PointClass();
 			tinNode.QueryAsPoint(point);
 
-			return ReportError(description, point,
-			                   Codes[Code.MaximumSlopeAndDeltaZExceeded], null);
+			return ReportError(
+				description, new InvolvedRows(), point, Codes[Code.MaximumSlopeAndDeltaZExceeded],
+				null);
 		}
 
 		private static void GetAbsoluteDeltaZRange(double minDeltaZ, double maxDeltaZ,

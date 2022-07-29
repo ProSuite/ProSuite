@@ -146,10 +146,9 @@ namespace ProSuite.QA.Tests
 
 			IGeometry errorGeometry = GetErrorGeometry(threeSegments[1]);
 
-			return ReportError(description, errorGeometry,
-			                   Codes[Code.AbruptChangeInSlopeAngle],
-			                   TestUtils.GetShapeFieldName(row),
-			                   row);
+			return ReportError(
+				description, InvolvedRowUtils.GetInvolvedRows(row), errorGeometry,
+				Codes[Code.AbruptChangeInSlopeAngle], TestUtils.GetShapeFieldName(row));
 		}
 
 		[NotNull]

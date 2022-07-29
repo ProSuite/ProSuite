@@ -1116,13 +1116,9 @@ namespace ProSuite.QA.Tests.Test
 					}
 
 					string desc = string.Format("{0},{1}", feature.OID, otherFeature.OID);
-					errorCount +=
-						ReportError(desc, otherFeature.Shape, null, null,
-						            new[]
-						            {
-							            new InvolvedRow(feature),
-							            new InvolvedRow(otherFeature)
-						            });
+					errorCount += ReportError(
+						desc, InvolvedRowUtils.GetInvolvedRows(feature, otherFeature),
+						otherFeature.Shape, null, null);
 				}
 
 				return errorCount;

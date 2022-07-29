@@ -356,9 +356,9 @@ namespace ProSuite.QA.Tests
 			// --> create a clone, so that not the same errorGeometry instance exists in different errors
 
 			IGeometry errorGeometry = GeometryFactory.Clone(intersectionPoint);
-			return ReportError(description, errorGeometry, issueCode, affectedComponent,
-			                   new List<object> {zDifference},
-			                   rows);
+			return ReportError(
+				description, InvolvedRowUtils.GetInvolvedRows(rows), errorGeometry,
+				issueCode, affectedComponent, values: new List<object> { zDifference });
 		}
 
 		private class ZOrderConstraint : RowPairCondition

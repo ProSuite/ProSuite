@@ -601,12 +601,12 @@ namespace ProSuite.QA.Tests
 		}
 
 		private delegate int ErrorReporting([NotNull] string description,
+		                                    [NotNull] InvolvedRows involvedRows,
 		                                    [CanBeNull] IGeometry geometry,
 		                                    [NotNull] IssueCode issueCode,
 		                                    [CanBeNull] string affectedComponent,
-		                                    [NotNull] InvolvedRows involvedRows,
-		                                    [CanBeNull] IEnumerable<object> values =
-			                                    null);
+											bool reportIndividualParts = false,
+		                                    [CanBeNull] IEnumerable<object> values = null);
 
 		private abstract class GroupStatistics
 		{
@@ -751,11 +751,8 @@ namespace ProSuite.QA.Tests
 				string errorMessage =
 					GetErrorMessage(incompleteInvolvedRows, out issueCode);
 
-				return errorReporting(errorMessage,
-				                      errorGeometry,
-				                      issueCode,
-				                      null,
-				                      involvedList);
+				return errorReporting(
+					errorMessage, involvedList, errorGeometry, issueCode, null);
 			}
 
 			[NotNull]

@@ -116,11 +116,10 @@ namespace ProSuite.QA.Tests
 					string description = string.Format("Invalid geometry type '{0}' in multipatch",
 					                                   type);
 
-					errorCount += ReportError(description,
-					                          GetErrorGeometry(part),
-					                          Codes[Code.InvalidGeometryType],
-					                          TestUtils.GetShapeFieldName(row),
-					                          row);
+					errorCount += ReportError(
+						description, InvolvedRowUtils.GetInvolvedRows(row),
+						GetErrorGeometry(part), Codes[Code.InvalidGeometryType],
+						TestUtils.GetShapeFieldName(row));
 				}
 			}
 

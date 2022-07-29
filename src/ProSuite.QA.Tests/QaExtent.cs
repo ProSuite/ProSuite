@@ -142,10 +142,10 @@ namespace ProSuite.QA.Tests
 			                                   FormatLengthComparison(
 				                                   max, ">", _limit,
 				                                   geometry.SpatialReference));
-			return ReportError(description, geometry,
-			                   Codes[Code.ExtentLargerThanLimit],
-			                   TestUtils.GetShapeFieldName(row),
-			                   row);
+			return ReportError(
+				description, InvolvedRowUtils.GetInvolvedRows(row),
+				geometry, Codes[Code.ExtentLargerThanLimit],
+				TestUtils.GetShapeFieldName(row));
 		}
 
 		[NotNull]

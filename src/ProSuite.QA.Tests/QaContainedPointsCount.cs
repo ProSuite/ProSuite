@@ -295,8 +295,9 @@ namespace ProSuite.QA.Tests
 				{
 					if (PolylineUsage == PolylineUsage.AsPolygonIfClosedElseReportIssue)
 					{
-						return ReportError("Unclosed line", line, Codes[Code.NotClosed_Line], null,
-						                   InvolvedRowUtils.GetInvolvedRows(feature));
+						return ReportError(
+							"Unclosed line", InvolvedRowUtils.GetInvolvedRows(feature),
+							line, Codes[Code.NotClosed_Line], null);
 					}
 
 					if (PolylineUsage == PolylineUsage.AsPolygonIfClosedElseIgnore)
@@ -484,9 +485,9 @@ namespace ProSuite.QA.Tests
 
 					PolygonPointsError error = errorsByOid[polygonFeature.OID];
 
-					errorCount += ReportError(error.ErrorDescription, errorGeometry,
-					                          error.IssueCode, null,
-					                          GetInvolvedRows(polygonFeature, error));
+					errorCount += ReportError(
+						error.ErrorDescription, GetInvolvedRows(polygonFeature, error),
+						errorGeometry, error.IssueCode, null);
 				}
 			}
 
@@ -494,18 +495,20 @@ namespace ProSuite.QA.Tests
 		}
 
 		[NotNull]
-		private IEnumerable<InvolvedRow> GetInvolvedRows(
+		private InvolvedRows GetInvolvedRows(
 			[NotNull] IReadOnlyFeature polygonFeature,
 			[NotNull] PolygonPointsError error)
 		{
-			yield return new InvolvedRow(polygonFeature);
+			InvolvedRows result = InvolvedRowUtils.GetInvolvedRows(polygonFeature);
 
 			foreach (PointFeature pointFeature in error.PointFeatures)
 			{
 				IReadOnlyTable pointFeatureClass = InvolvedTables[pointFeature.TableIndex];
 
-				yield return new InvolvedRow(pointFeatureClass.Name, pointFeature.OID);
+				result.Add(new InvolvedRow(pointFeatureClass.Name, pointFeature.OID));
 			}
+
+			return result;
 		}
 
 		[NotNull]

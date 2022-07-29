@@ -147,11 +147,11 @@ namespace ProSuite.QA.Tests
 			double length = meanSegmentLength.FullLength;
 			if (segmentCount <= 0)
 			{
-				return ReportError("Invalid segment count",
-				                   meanSegmentLength.GetErrorGeometry(),
-				                   Codes[Code.InvalidSegmentCount],
-				                   TestUtils.GetShapeFieldName(row),
-				                   row);
+				return ReportError(
+					"Invalid segment count",
+					InvolvedRowUtils.GetInvolvedRows(row),
+					meanSegmentLength.GetErrorGeometry(),
+					Codes[Code.InvalidSegmentCount], TestUtils.GetShapeFieldName(row));
 			}
 
 			double averageSegmentLength = length / segmentCount;
@@ -168,10 +168,11 @@ namespace ProSuite.QA.Tests
 					segmentCount,
 					FormatLength(length, _spatialReference));
 
-			return ReportError(description, meanSegmentLength.GetErrorGeometry(),
-			                   Codes[Code.AverageSegmentLengthBelowLimit],
-			                   TestUtils.GetShapeFieldName(row),
-			                   row);
+			return ReportError(
+				description, InvolvedRowUtils.GetInvolvedRows(row),
+				meanSegmentLength.GetErrorGeometry(),
+				Codes[Code.AverageSegmentLengthBelowLimit],
+				TestUtils.GetShapeFieldName(row));
 		}
 
 		[NotNull]

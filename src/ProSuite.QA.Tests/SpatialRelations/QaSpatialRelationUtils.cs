@@ -99,11 +99,9 @@ namespace ProSuite.QA.Tests.SpatialRelations
 
 			IGeometry errorGeometry = ((IReadOnlyFeature) row1).ShapeCopy;
 
-			const bool reportIndividualParts = false;
-			return errorReporting.Report(errorDescription,
-			                             errorGeometry, issueCode,
-			                             reportIndividualParts,
-			                             row1, row2);
+			return errorReporting.Report(
+				errorDescription, InvolvedRowUtils.GetInvolvedRows(row1, row2),
+				errorGeometry, issueCode, null, reportIndividualParts: false);
 		}
 
 		public static int ReportTouches(
@@ -155,10 +153,10 @@ namespace ProSuite.QA.Tests.SpatialRelations
 							continue;
 						}
 
-						errorCount += errorReporting.Report(errorDescription,
-						                                    part, issueCode,
-						                                    false, // already exploded
-						                                    row1, row2);
+						errorCount += errorReporting.Report(
+							errorDescription, InvolvedRowUtils.GetInvolvedRows(row1, row2),
+							part, issueCode, null, reportIndividualParts: false // already exploded
+						);
 					}
 				}
 				else
@@ -169,10 +167,9 @@ namespace ProSuite.QA.Tests.SpatialRelations
 						continue;
 					}
 
-					errorCount += errorReporting.Report(errorDescription,
-					                                    geometry, issueCode,
-					                                    false,
-					                                    row1, row2);
+					errorCount += errorReporting.Report(
+						errorDescription, InvolvedRowUtils.GetInvolvedRows(row1, row2),
+						geometry, issueCode, null, reportIndividualParts: false);
 				}
 			}
 
@@ -215,10 +212,9 @@ namespace ProSuite.QA.Tests.SpatialRelations
 				return _noError;
 			}
 
-			return errorReporting.Report(errorDescription,
-			                             intersection, issueCode,
-			                             reportIndividualParts,
-			                             row1, row2);
+			return errorReporting.Report(
+				errorDescription, InvolvedRowUtils.GetInvolvedRows(row1, row2),
+				intersection, issueCode, null, reportIndividualParts);
 		}
 
 		public static int ReportIntersections(
@@ -265,10 +261,9 @@ namespace ProSuite.QA.Tests.SpatialRelations
 					if (validIntersectionGeometryConstraint == null ||
 					    ! validIntersectionGeometryConstraint.IsFulfilled(errorGeometry))
 					{
-						errorCount += errorReporting.Report(errorDescription,
-						                                    errorGeometry,
-						                                    issueCode, reportIndividualParts,
-						                                    row1, row2);
+						errorCount += errorReporting.Report(
+							errorDescription, InvolvedRowUtils.GetInvolvedRows(row1, row2),
+							errorGeometry, issueCode, null, reportIndividualParts);
 					}
 				}
 			}
@@ -313,10 +308,9 @@ namespace ProSuite.QA.Tests.SpatialRelations
 					continue;
 				}
 
-				errorCount += errorReporting.Report(errorDescription,
-				                                    errorGeometry, issueCode,
-				                                    reportIndividualParts,
-				                                    row1, row2);
+				errorCount += errorReporting.Report(
+					errorDescription, InvolvedRowUtils.GetInvolvedRows(row1, row2),
+					errorGeometry, issueCode, null, reportIndividualParts);
 			}
 
 			return errorCount;

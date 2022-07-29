@@ -222,10 +222,11 @@ namespace ProSuite.QA.Tests
 					Assert.Null(poly, "poly is not null");
 
 					const string description = "Centroid lies on border";
-					errorCount += ReportError(description, ((IReadOnlyFeature) pointRow).Shape,
-					                          Codes[Code.CentroidLiesOnBorder],
-					                          TestUtils.GetShapeFieldName(pointRow),
-					                          pointRow);
+					errorCount += ReportError(
+						description, InvolvedRowUtils.GetInvolvedRows(pointRow),
+						((IReadOnlyFeature) pointRow).Shape,
+						Codes[Code.CentroidLiesOnBorder],
+						TestUtils.GetShapeFieldName(pointRow));
 					continue;
 				}
 
@@ -255,16 +256,15 @@ namespace ProSuite.QA.Tests
 				}
 
 				IPolygon errorGeometry = poly.GetPolygon();
-				IList<InvolvedRow> involved =
-					InvolvedRow.CreateList(poly.OuterRing.GetUniqueRows(InvolvedTables));
+				InvolvedRows involved =
+					InvolvedRowUtils.GetInvolvedRows(poly.OuterRing.GetUniqueRows(InvolvedTables));
 
 				string description =
 					$"Constructed polygon contains {pointsWithin} centroids.";
-				errorCount += ReportError(description, errorGeometry,
-				                          pointsWithin > 1
-					                          ? Codes[Code.MultipleCentroids]
-					                          : Codes[Code.NoCentroid],
-				                          null, involved);
+				errorCount += ReportError(
+					description, involved, errorGeometry,
+					pointsWithin > 1 ? Codes[Code.MultipleCentroids] : Codes[Code.NoCentroid],
+					null);
 
 				if (pointsWithin <= 1)
 				{
@@ -272,9 +272,9 @@ namespace ProSuite.QA.Tests
 				}
 
 				description = "Multiple centroids of constructed polygon";
-				errorCount += ReportError(description, GetErrorGeometry(poly),
-				                          Codes[Code.MultipleCentroids], null,
-				                          involved);
+				errorCount += ReportError(
+					description, involved, GetErrorGeometry(poly),
+					Codes[Code.MultipleCentroids], null);
 			}
 
 			return errorCount;
@@ -379,9 +379,10 @@ namespace ProSuite.QA.Tests
 							_constraintHelper.ToString(lineFeature,
 							                           centroid,
 							                           line.RightCentroid),
+							InvolvedRowUtils.GetInvolvedRows(
+								lineFeature, centroid, line.RightCentroid),
 							lineFeature.Shape,
-							Codes[Code.DoesNotMatchConstraint], null,
-							lineFeature, centroid, line.RightCentroid);
+							Codes[Code.DoesNotMatchConstraint], null);
 				}
 
 				line.RightCentroid = null;
@@ -505,11 +506,11 @@ namespace ProSuite.QA.Tests
 			if (lineCount == 1)
 			{
 				const string description = "Dangling line";
-				errorCount += ReportError(description, connectedRows[0].FromPoint,
-				                          Codes[Code.DanglingLine],
-				                          TestUtils.GetShapeFieldName(
-					                          connectedRows[0].Row.Row),
-				                          connectedRows[0].Row.Row);
+				errorCount += ReportError(
+					description, InvolvedRowUtils.GetInvolvedRows(connectedRows[0].Row.Row),
+					connectedRows[0].FromPoint,
+					Codes[Code.DanglingLine],
+					TestUtils.GetShapeFieldName(connectedRows[0].Row.Row));
 			}
 
 			connectedRows.Sort(new DirectedRow.RowByLineAngleComparer());

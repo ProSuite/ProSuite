@@ -309,8 +309,9 @@ namespace ProSuite.QA.Tests
 				string errorDescription = FieldValueUtils.GetTypeConversionErrorDescription(
 					_referencedTable, foreignKey, fkField, pkField, e.Message);
 
-				return ReportError(errorDescription, Codes[Code.UnableToConvertFieldValue],
-				                   fkField, row);
+				return ReportError(
+					errorDescription, InvolvedRowUtils.GetInvolvedRows(row),
+					null, Codes[Code.UnableToConvertFieldValue], fkField);
 			}
 
 			if (_referenceIsError)
@@ -340,9 +341,9 @@ namespace ProSuite.QA.Tests
 			if (fkTuple == null)
 			{
 				// unable to read the tuple
-				return ReportError(errorMessage,
-				                   Codes[Code.UnableToConvertFieldValue],
-				                   null, row);
+				return ReportError(
+					errorMessage, InvolvedRowUtils.GetInvolvedRows(row),
+					null, Codes[Code.UnableToConvertFieldValue], null);
 			}
 
 			if (fkTuple.IsNull)
@@ -378,9 +379,9 @@ namespace ProSuite.QA.Tests
 						? string.Format(" (in rows matching '{0}')", _whereClause)
 						: string.Empty);
 
-			return ReportError(description,
-			                   Codes[Code.NoReferencedRow],
-			                   fkField, row);
+			return ReportError(
+				description, InvolvedRowUtils.GetInvolvedRows(row),
+				null, Codes[Code.NoReferencedRow], fkField);
 		}
 
 		private int ReportUnallowedReference(
@@ -398,9 +399,9 @@ namespace ProSuite.QA.Tests
 						? string.Format(" (in rows matching '{0}')", _whereClause)
 						: string.Empty);
 
-			return ReportError(description,
-			                   Codes[Code.UnexpectedReferencedRow],
-			                   fkField, row);
+			return ReportError(
+				description, InvolvedRowUtils.GetInvolvedRows(row),
+				null, Codes[Code.UnexpectedReferencedRow], fkField);
 		}
 
 		private int ReportMissingReference([NotNull] IReadOnlyRow row,
@@ -416,9 +417,9 @@ namespace ProSuite.QA.Tests
 						? string.Format(" (in rows matching '{0}')", _whereClause)
 						: string.Empty);
 
-			return ReportError(description,
-			                   Codes[Code.NoReferencedRow],
-			                   _foreignKeyFieldNamesString, row);
+			return ReportError(
+				description, InvolvedRowUtils.GetInvolvedRows(row),
+				null, Codes[Code.NoReferencedRow], _foreignKeyFieldNamesString);
 		}
 
 		private int ReportUnallowedReference([NotNull] IReadOnlyRow row,
@@ -434,9 +435,9 @@ namespace ProSuite.QA.Tests
 						? string.Format(" (in rows matching '{0}')", _whereClause)
 						: string.Empty);
 
-			return ReportError(description,
-			                   Codes[Code.UnexpectedReferencedRow],
-			                   _foreignKeyFieldNamesString, row);
+			return ReportError(
+				description, InvolvedRowUtils.GetInvolvedRows(row),
+				null, Codes[Code.UnexpectedReferencedRow], _foreignKeyFieldNamesString);
 		}
 
 		[NotNull]

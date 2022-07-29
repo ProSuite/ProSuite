@@ -178,9 +178,10 @@ namespace ProSuite.QA.Tests
 
 			const string description = "No intersection";
 
-			return ReportError(description, errorGeometry,
-			                   Codes[IntersectionMatrixIssueCodes.NoIntersection],
-			                   TestUtils.GetShapeFieldName(row), row);
+			return ReportError(
+				description, InvolvedRowUtils.GetInvolvedRows(row), errorGeometry,
+				Codes[IntersectionMatrixIssueCodes.NoIntersection],
+				TestUtils.GetShapeFieldName(row));
 		}
 	}
 }

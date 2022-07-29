@@ -108,18 +108,18 @@ namespace ProSuite.QA.Container.TestSupport
 							_intersectionGeometryConstraint.Constraint.Replace("$", string.Empty),
 							displayValues);
 
-						errorCount += reportError.Report(description, reportableGeometry,
-						                                 issueCode, null,
-						                                 new object[] {rawValues},
-						                                 feature1, feature2);
+						errorCount += reportError.Report(
+							description, InvolvedRowUtils.GetInvolvedRows(feature1, feature2),
+							reportableGeometry, issueCode, null,
+							values: new object[] { rawValues });
 					}
 					else
 					{
 						string description = GetErrorDescription(conditionMessage);
 
-						errorCount += reportError.Report(description, reportableGeometry,
-						                                 issueCode, null,
-						                                 feature1, feature2);
+						errorCount += reportError.Report(
+							description, InvolvedRowUtils.GetInvolvedRows(feature1, feature2),
+							reportableGeometry, issueCode, null);
 					}
 				}
 			}

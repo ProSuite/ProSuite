@@ -167,9 +167,9 @@ namespace ProSuite.QA.Tests
 				                      ? Codes[Code.NoContainingFeature_WithFulfilledConstraint]
 				                      : Codes[Code.NoContainingFeature];
 
-			return ReportError(description, errorGeometry,
-			                   issueCode, null,
-			                   _reportIndividualParts, row);
+			return ReportError(
+				description, InvolvedRowUtils.GetInvolvedRows(row),
+				errorGeometry, issueCode, null, _reportIndividualParts);
 		}
 
 		[NotNull]

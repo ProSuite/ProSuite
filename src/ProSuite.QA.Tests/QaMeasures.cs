@@ -106,8 +106,9 @@ namespace ProSuite.QA.Tests
 			if (! mAware.MAware)
 			{
 				// This can actually happen, despite the feature class having M values!
-				return ReportError("Geometry is not M-aware", GeometryFactory.Clone(shape),
-				                   Codes[Code.UndefinedMValues], _shapeFieldName, row);
+				return ReportError(
+					"Geometry is not M-aware", InvolvedRowUtils.GetInvolvedRows(row),
+					GeometryFactory.Clone(shape), Codes[Code.UndefinedMValues], _shapeFieldName);
 			}
 
 			Assert.True(mAware.MAware, "The geometry is not M-aware");
@@ -171,9 +172,9 @@ namespace ProSuite.QA.Tests
 				errorDescription = string.Format("Invalid M value: {0}", _invalidValue);
 			}
 
-			return ReportError(errorDescription, GeometryFactory.Clone(point),
-			                   issueCode, _shapeFieldName,
-			                   row);
+			return ReportError(
+				errorDescription, InvolvedRowUtils.GetInvolvedRows(row),
+				GeometryFactory.Clone(point), issueCode, _shapeFieldName);
 		}
 
 		private int ReportInvalidPoints([NotNull] IPointCollection points,
@@ -249,9 +250,9 @@ namespace ProSuite.QA.Tests
 				string errorDescription = GetErrorDescription(issueCode, errorPoints.Points.Count,
 				                                              errorPoints.Errors);
 
-				errorCount += ReportError(errorDescription, (IGeometry) errorGeometry,
-				                          issueCode, _shapeFieldName,
-				                          row);
+				errorCount += ReportError(
+					errorDescription, InvolvedRowUtils.GetInvolvedRows(row),
+					(IGeometry) errorGeometry, issueCode, _shapeFieldName);
 			}
 
 			return errorCount;
@@ -446,9 +447,9 @@ namespace ProSuite.QA.Tests
 			string errorDescription = GetErrorDescription(invalidValue, invalidMSegments,
 			                                              out issueCode);
 
-			return ReportError(errorDescription, errorGeometry,
-			                   issueCode, _shapeFieldName,
-			                   row);
+			return ReportError(
+				errorDescription, InvolvedRowUtils.GetInvolvedRows(row),
+				errorGeometry, issueCode, _shapeFieldName);
 		}
 	}
 }

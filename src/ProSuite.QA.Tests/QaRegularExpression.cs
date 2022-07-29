@@ -291,8 +291,9 @@ namespace ProSuite.QA.Tests
 		                             [NotNull] string fieldName,
 		                             [NotNull] IReadOnlyRow row)
 		{
-			return ReportError(description, TestUtils.GetShapeCopy(row),
-			                   issueCode, fieldName, GetInvolvedRows(row));
+			return ReportError(
+				description, GetInvolvedRows(row), TestUtils.GetShapeCopy(row),
+				issueCode, fieldName);
 		}
 
 		[NotNull]

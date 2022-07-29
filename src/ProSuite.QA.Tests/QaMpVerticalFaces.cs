@@ -123,10 +123,10 @@ namespace ProSuite.QA.Tests
 				string description = GetIssueDescription(nonVerticalAngle);
 				IGeometry errorGeometry = verticalFaceProvider.GetErrorGeometry();
 
-				errorCount += ReportError(description, errorGeometry,
-				                          Codes[Code.NotSufficientlyVertical],
-				                          TestUtils.GetShapeFieldName(row),
-				                          row);
+				errorCount += ReportError(
+					description, InvolvedRowUtils.GetInvolvedRows(row), errorGeometry,
+					Codes[Code.NotSufficientlyVertical],
+					TestUtils.GetShapeFieldName(row));
 			}
 
 			return errorCount;

@@ -519,12 +519,11 @@ namespace ProSuite.QA.Tests
 					              point.X, point.Y, nearbyVertex.X, nearbyVertex.Y);
 			}
 
-			return _errorReporting.Report(description,
-			                              CreateErrorGeometry(point, spatialReference),
-			                              Codes[code],
-			                              GetAffectedComponent(features),
-			                              new object[] {vertexDistance},
-			                              features.Cast<IReadOnlyRow>().ToArray());
+			return _errorReporting.Report(
+				description, InvolvedRowUtils.GetInvolvedRows((IEnumerable<IReadOnlyFeature>)features),
+				CreateErrorGeometry(point, spatialReference),
+				Codes[code], GetAffectedComponent(features),
+				values: new object[] { vertexDistance });
 		}
 
 		private int ReportZDiffersCoincidentVertex(
@@ -549,12 +548,11 @@ namespace ProSuite.QA.Tests
 				format,
 				_formatComparisonFunction(Math.Abs(deltaZ), ">", zCoincidenceTolerance, "N2"));
 
-			return _errorReporting.Report(description,
-			                              CreateErrorGeometry(point, spatialReference),
-			                              Codes[code],
-			                              GetAffectedComponent(features),
-			                              new object[] {Math.Abs(deltaZ)},
-			                              features.Cast<IReadOnlyRow>().ToArray());
+			return _errorReporting.Report(
+				description, InvolvedRowUtils.GetInvolvedRows((IEnumerable<IReadOnlyFeature>)features),
+				CreateErrorGeometry(point, spatialReference),
+				Codes[code], GetAffectedComponent(features),
+				values: new object[] { Math.Abs(deltaZ) });
 		}
 
 		private int ReportNearbyEdgeNotPassingThroughVertex(
@@ -588,12 +586,10 @@ namespace ProSuite.QA.Tests
 					              point.X, point.Y);
 			}
 
-			return _errorReporting.Report(description,
-			                              CreateErrorGeometry(point, spatialReference),
-			                              Codes[code],
-			                              GetAffectedComponent(features),
-			                              new object[] {edgeDistance},
-			                              features.Cast<IReadOnlyRow>().ToArray());
+			return _errorReporting.Report(
+				description, InvolvedRowUtils.GetInvolvedRows((IEnumerable<IReadOnlyFeature>)features),
+				CreateErrorGeometry(point, spatialReference),
+				Codes[code], GetAffectedComponent(features), values: new object[] { edgeDistance });
 		}
 
 		private int ReportZDiffersCoincidentEdge(
@@ -618,12 +614,11 @@ namespace ProSuite.QA.Tests
 			                                   _formatComparisonFunction(Math.Abs(deltaZ), ">",
 			                                                             zTolerance, "N2"));
 
-			return _errorReporting.Report(description,
-			                              CreateErrorGeometry(point, spatialReference),
-			                              Codes[code],
-			                              GetAffectedComponent(features),
-			                              new object[] {Math.Abs(deltaZ)},
-			                              features.Cast<IReadOnlyRow>().ToArray());
+			return _errorReporting.Report(
+				description, InvolvedRowUtils.GetInvolvedRows((IEnumerable<IReadOnlyFeature>)features),
+				CreateErrorGeometry(point, spatialReference),
+				Codes[code], GetAffectedComponent(features),
+				values: new object[] { Math.Abs(deltaZ) });
 		}
 
 		private int ReportNoVertexOnNearbyEdge(
@@ -656,12 +651,10 @@ namespace ProSuite.QA.Tests
 					              point.X, point.Y);
 			}
 
-			return _errorReporting.Report(description,
-			                              CreateErrorGeometry(point, spatialReference),
-			                              Codes[code],
-			                              GetAffectedComponent(features),
-			                              new object[] {edgeDistance},
-			                              features.Cast<IReadOnlyRow>().ToArray());
+			return _errorReporting.Report(
+				description, InvolvedRowUtils.GetInvolvedRows((IEnumerable<IReadOnlyFeature>)features),
+				CreateErrorGeometry(point, spatialReference),
+				Codes[code], GetAffectedComponent(features), values: new object[] { edgeDistance });
 		}
 
 		[CanBeNull]

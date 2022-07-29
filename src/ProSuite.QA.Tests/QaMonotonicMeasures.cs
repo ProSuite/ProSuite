@@ -131,10 +131,10 @@ namespace ProSuite.QA.Tests
 
 			return errorSequences.Sum(errorSequence => ReportError(
 				                          GetErrorMessage(errorSequence),
+				                          InvolvedRowUtils.GetInvolvedRows(row),
 				                          errorSequence.CreatePolyline(),
 				                          Codes[Code.MeasuresNotMonotonic],
-				                          TestUtils.GetShapeFieldName(feature),
-				                          row));
+				                          TestUtils.GetShapeFieldName(feature)));
 		}
 
 		[NotNull]

@@ -337,15 +337,11 @@ namespace ProSuite.QA.Tests
 									                       : "<",
 								                       searchDistance, _spatialReference));
 
-						errorCount += ReportError(description, errorGeometry,
-						                          Codes[Code.NodeTooCloseToLine_WithinFeature],
-						                          _shapeFieldName,
-						                          new object[]
-						                          {
-							                          tooClosePath.Distance,
-							                          tooClosePath.PathIndex
-						                          },
-						                          feature);
+						errorCount += ReportError(
+							description, InvolvedRowUtils.GetInvolvedRows(feature), errorGeometry,
+							Codes[Code.NodeTooCloseToLine_WithinFeature],
+							_shapeFieldName,
+							values: new object[] { tooClosePath.Distance, tooClosePath.PathIndex });
 					}
 				}
 			}
@@ -568,10 +564,10 @@ namespace ProSuite.QA.Tests
 			IssueCode issueCode = feature == neighborTooClose.Feature
 				                      ? Codes[Code.NodeTooCloseToLine_WithinFeature]
 				                      : Codes[Code.NodeTooCloseToLine_BetweenFeatures];
-			return ReportError(description, errorGeometry,
-			                   issueCode, _shapeFieldName,
-			                   new object[] {neighborTooClose.Distance},
-			                   feature, neighborTooClose.Feature);
+			return ReportError(
+				description, InvolvedRowUtils.GetInvolvedRows(feature, neighborTooClose.Feature),
+				errorGeometry, issueCode, _shapeFieldName,
+				values: new object[] { neighborTooClose.Distance });
 		}
 
 		/// <summary>

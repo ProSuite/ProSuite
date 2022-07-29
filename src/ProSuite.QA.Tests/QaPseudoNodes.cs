@@ -260,10 +260,9 @@ namespace ProSuite.QA.Tests
 				}
 			}
 
-			return ReportError("Pseudo Node", netPoint,
-			                   Codes[Code.PseudoNode],
-			                   TestUtils.GetShapeFieldName(lineFeature1),
-			                   lineFeature1, lineFeature2);
+			return ReportError(
+				"Pseudo Node", InvolvedRowUtils.GetInvolvedRows(lineFeature1, lineFeature2),
+				netPoint, Codes[Code.PseudoNode], TestUtils.GetShapeFieldName(lineFeature1));
 		}
 
 		private static bool IsPseudoNode([NotNull] IEnumerable<NetElement> connectedRows,

@@ -129,9 +129,9 @@ namespace ProSuite.QA.Tests
 			                                   FormatAreaComparison(area, relation, Limit,
 			                                                        shape.SpatialReference));
 
-			return ReportError(description, GetErrorGeometry(shape),
-			                   issueCode, _shapeFieldName,
-			                   row);
+			return ReportError(description, InvolvedRowUtils.GetInvolvedRows(row),
+			                   GetErrorGeometry(shape),
+			                   issueCode, _shapeFieldName);
 		}
 
 		protected abstract int CheckArea(double area,

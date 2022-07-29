@@ -113,12 +113,12 @@ namespace ProSuite.QA.Tests
 
 			string description = string.Format("Intersect area {0}",
 			                                   FormatAreaComparison(area, "<", _limit,
-			                                                        shape2.SpatialReference));
+				                                   shape2.SpatialReference));
 
-			return ReportError(description, intersection,
-			                   Codes[Code.SmallIntersectionArea],
-			                   TestUtils.GetShapeFieldName(row1),
-			                   row1, row2);
+			return ReportError(
+				description, InvolvedRowUtils.GetInvolvedRows(row1, row2),
+				intersection, Codes[Code.SmallIntersectionArea],
+				TestUtils.GetShapeFieldName(row1));
 		}
 	}
 }

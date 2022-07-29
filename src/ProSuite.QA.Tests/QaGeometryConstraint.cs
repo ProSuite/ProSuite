@@ -179,10 +179,9 @@ namespace ProSuite.QA.Tests
 				issueCode = Codes[Code.ConstraintNotFulfilled_ForShape];
 			}
 
-			return ReportError(description, errorGeometry,
-			                   issueCode, _shapeFieldName,
-			                   new[] {rawValues},
-			                   feature);
+			return ReportError(
+				description, InvolvedRowUtils.GetInvolvedRows(feature), errorGeometry,
+				issueCode, _shapeFieldName, values: new[] { rawValues });
 		}
 
 		[NotNull]

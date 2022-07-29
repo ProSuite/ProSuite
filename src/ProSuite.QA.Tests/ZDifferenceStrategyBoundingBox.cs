@@ -118,11 +118,11 @@ namespace ProSuite.QA.Tests
 					description = $"The feature Z ranges overlap by {overlapDistance:N2}";
 				}
 
-				errorCount += ErrorReporting.Report(description,
-				                                    geometryProvider.Geometry,
-				                                    issueCode, null,
-				                                    minFeature.Feature,
-				                                    maxFeature.Feature);
+				errorCount += ErrorReporting.Report(
+					description,
+					InvolvedRowUtils.GetInvolvedRows(minFeature.Feature, maxFeature.Feature),
+					geometryProvider.Geometry,
+					issueCode, null);
 			}
 
 			if (maximumZDifference > 0 && dz > maximumZDifference)
@@ -133,11 +133,9 @@ namespace ProSuite.QA.Tests
 					FormatComparison(dz, maximumZDifference, ">"));
 
 				errorCount += ErrorReporting.Report(
-					description,
+					description, InvolvedRowUtils.GetInvolvedRows(feature1, feature2),
 					geometryProvider.Geometry, Codes[Code.TooLarge],
-					TestUtils.GetShapeFieldName(feature1),
-					new object[] {dz},
-					feature1, feature2);
+					TestUtils.GetShapeFieldName(feature1), values: new object[] { dz });
 			}
 
 			errorCount += CheckConstraint(minFeature, maxFeature, geometryProvider, dz);
@@ -163,20 +161,19 @@ namespace ProSuite.QA.Tests
 			}
 
 			IGeometry errorGeometry = geometryProvider.Geometry;
-			return ErrorReporting.Report(conditionMessage, errorGeometry,
-			                             Codes[Code.ConstraintNotFulfilled], null,
-			                             maxFeature.Feature,
-			                             minFeature.Feature);
+			return ErrorReporting.Report(
+				conditionMessage,
+				InvolvedRowUtils.GetInvolvedRows(maxFeature.Feature, minFeature.Feature),
+				errorGeometry, Codes[Code.ConstraintNotFulfilled], null);
 		}
 
 		private int ValidateZNotNull([NotNull] ZRangeFeature feature)
 		{
 			return double.IsNaN(feature.ZMin) || double.IsNaN(feature.ZMax)
-				       ? ErrorReporting.Report("Z is NaN", feature.Shape,
-				                               Codes[Code.UndefinedZ],
-				                               TestUtils.GetShapeFieldName(
-					                               feature.Feature),
-				                               feature.Feature)
+				       ? ErrorReporting.Report(
+					       "Z is NaN", InvolvedRowUtils.GetInvolvedRows(feature.Feature),
+					       feature.Shape, Codes[Code.UndefinedZ],
+					       TestUtils.GetShapeFieldName(feature.Feature))
 				       : 0;
 		}
 

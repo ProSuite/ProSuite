@@ -107,8 +107,8 @@ namespace ProSuite.QA.Tests
 			// report consecutive points that are further away than half the tolerance from the most frequent Z value
 			// - if more than half the points are off: report the entire geometry once as error
 			IEnumerable<List<WKSPointZ>> errorPointSequences = GetErrorPointSequences(shape,
-			                                                                          minAllowedZ,
-			                                                                          maxAllowedZ);
+				minAllowedZ,
+				maxAllowedZ);
 
 			int totalPointCount = points.PointCount;
 			IList<List<WKSPointZ>> errorPointSequencesList =
@@ -126,13 +126,15 @@ namespace ProSuite.QA.Tests
 				// more than half the points are errors --> don't report individually	
 				IGeometry errorGeometry = GeometryFactory.Clone(shape);
 
-				return ReportError(errorMessage, errorGeometry, issueCode,
-				                   TestUtils.GetShapeFieldName(row), row);
+				return ReportError(errorMessage, InvolvedRowUtils.GetInvolvedRows(row),
+				                   errorGeometry, issueCode,
+				                   TestUtils.GetShapeFieldName(row));
 			}
 
 			return errorPointSequencesList.Sum(
-				errorPoints => ReportError(errorMessage, GetErrorGeometry(errorPoints),
-				                           issueCode, TestUtils.GetShapeFieldName(row), row));
+				errorPoints => ReportError(errorMessage, InvolvedRowUtils.GetInvolvedRows(row),
+				                           GetErrorGeometry(errorPoints),
+				                           issueCode, TestUtils.GetShapeFieldName(row)));
 		}
 
 		private static IssueCode GetIssueCode(int modalZPointCount)

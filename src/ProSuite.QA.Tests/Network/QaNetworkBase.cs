@@ -258,20 +258,6 @@ namespace ProSuite.QA.Tests.Network
 		}
 
 		[NotNull]
-		protected static IEnumerable<InvolvedRow> GetInvolvedRows(
-			[NotNull] ICollection<IReadOnlyRow> connectedRows)
-		{
-			var result = new List<InvolvedRow>(connectedRows.Count);
-
-			foreach (IReadOnlyRow row in connectedRows)
-			{
-				result.Add(new InvolvedRow(row));
-			}
-
-			return result;
-		}
-
-		[NotNull]
 		protected IList<InvolvedRow> GetInvolvedRows([NotNull] ITableIndexRow tableIndexRow)
 		{
 			IReadOnlyRow row = tableIndexRow.GetRow(InvolvedTables);

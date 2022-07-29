@@ -130,12 +130,12 @@ namespace ProSuite.QA.Tests
 				                                   FormatAngle(angleRadians, "N2"),
 				                                   FormatAngle(_limit, "N2"));
 
-				errorCount += ReportError(description,
-				                          GeometryFactory.Clone(intersection.At),
-				                          Codes[Code.IntersectionAngleSmallerThanLimit],
-				                          TestUtils.GetShapeFieldName(row1),
-				                          new object[] {MathUtils.ToDegrees(angleRadians)},
-				                          row1, row2);
+				errorCount += ReportError(
+					description, InvolvedRowUtils.GetInvolvedRows(row1, row2),
+					GeometryFactory.Clone(intersection.At),
+					Codes[Code.IntersectionAngleSmallerThanLimit],
+					TestUtils.GetShapeFieldName(row1),
+					values: new object[] { MathUtils.ToDegrees(angleRadians) });
 			}
 
 			return errorCount;

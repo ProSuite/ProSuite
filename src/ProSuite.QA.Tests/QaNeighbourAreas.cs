@@ -190,10 +190,10 @@ namespace ProSuite.QA.Tests
 			}
 
 			IssueCode issueCode;
-			return ReportError(GetErrorDescription(row, touchingFeature, out issueCode),
-			                   errorGeometry,
-			                   issueCode, null,
-			                   row, touchingFeature);
+			return ReportError(
+				GetErrorDescription(row, touchingFeature, out issueCode),
+				InvolvedRowUtils.GetInvolvedRows(row, touchingFeature), errorGeometry,
+				issueCode, null);
 		}
 
 		[NotNull]

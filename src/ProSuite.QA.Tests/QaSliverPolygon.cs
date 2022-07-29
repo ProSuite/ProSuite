@@ -145,9 +145,9 @@ namespace ProSuite.QA.Tests
 					string description =
 						GetErrorDescription(absoluteArea, perimeter, ratio, geometry);
 
-					errorCount += ReportError(description, geometry,
-					                          GetIssueCode(), _shapeFieldName,
-					                          row);
+					errorCount += ReportError(
+						description, InvolvedRowUtils.GetInvolvedRows(row), geometry,
+						GetIssueCode(), _shapeFieldName);
 				}
 
 				return errorCount;

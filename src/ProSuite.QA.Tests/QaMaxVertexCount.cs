@@ -116,9 +116,9 @@ namespace ProSuite.QA.Tests
 			string description = string.Format("Too many vertices: {0:N0} > {1:N0}",
 			                                   pointCount, _limit);
 
-			return ReportError(description, GetErrorGeometry(points),
-			                   Codes[Code.TooManyVertices], _shapeFieldName,
-			                   row);
+			return ReportError(
+				description, InvolvedRowUtils.GetInvolvedRows(row),
+				GetErrorGeometry(points), Codes[Code.TooManyVertices], _shapeFieldName);
 		}
 
 		[NotNull]

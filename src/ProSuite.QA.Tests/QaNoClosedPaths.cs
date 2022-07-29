@@ -96,9 +96,9 @@ namespace ProSuite.QA.Tests
 		private int CheckCurve([NotNull] ICurve curve, [NotNull] IReadOnlyRow row)
 		{
 			return ! curve.IsEmpty && curve.IsClosed
-				       ? ReportError("Closed path", curve.FromPoint,
-				                     Codes[Code.ClosedPath], _shapeFieldName,
-				                     row)
+				       ? ReportError(
+					       "Closed path", InvolvedRowUtils.GetInvolvedRows(row), curve.FromPoint,
+				                     Codes[Code.ClosedPath], _shapeFieldName)
 				       : NoError;
 		}
 	}

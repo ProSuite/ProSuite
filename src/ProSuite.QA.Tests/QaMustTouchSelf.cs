@@ -173,10 +173,10 @@ namespace ProSuite.QA.Tests
 			return GdbQueryUtils.GetRows(featureClass, oids, recycling).Cast<IReadOnlyFeature>()
 			                    .Sum(feature => ReportError(
 				                         "Feature is not touched by another feature",
+				                         GetInvolvedRows(feature),
 				                         feature.ShapeCopy,
 				                         Codes[MustTouchIssueCodes.NoTouchingFeature],
-				                         TestUtils.GetShapeFieldName(feature),
-				                         GetInvolvedRows(feature)));
+				                         TestUtils.GetShapeFieldName(feature)));
 		}
 
 		/// <summary>

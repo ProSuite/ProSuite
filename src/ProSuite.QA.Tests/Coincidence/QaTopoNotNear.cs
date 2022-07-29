@@ -1725,19 +1725,14 @@ namespace ProSuite.QA.Tests.Coincidence
 		}
 
 		[NotNull]
-		private static List<InvolvedRow> GetInvolvedRows(
+		private static InvolvedRows GetInvolvedRows(
 			[NotNull] ConnectedLinesEx parts)
 		{
 			IEnumerable<IReadOnlyRow> rows = GetInvolvedFeatures(parts,
 			                                             includeIrrelevantNeighbors:
 			                                             false);
 
-			var result = new List<InvolvedRow>();
-
-			foreach (IReadOnlyRow involved in rows)
-			{
-				result.Add(new InvolvedRow(involved));
-			}
+			InvolvedRows result = InvolvedRowUtils.GetInvolvedRows(rows);
 
 			return result;
 		}
@@ -2413,7 +2408,7 @@ namespace ProSuite.QA.Tests.Coincidence
 			ConnectedLines error = errorEx.Line;
 
 			IPolyline errorGeometry = GetErrorGeometry(error);
-			List<InvolvedRow> involved = GetInvolvedRows(errorEx);
+			InvolvedRows involved = GetInvolvedRows(errorEx);
 			ISpatialReference spatialReference = errorGeometry.SpatialReference;
 
 			IssueCode code;
@@ -2485,18 +2480,17 @@ namespace ProSuite.QA.Tests.Coincidence
 			}
 
 			processInLaterTile = false;
-			return ReportError(description, errorGeometry, code, null, involved);
+			return ReportError(description, involved, errorGeometry, code, null);
 		}
 
 		private int ReportCoincidentError([NotNull] CoincidenceError coincidenceError)
 		{
 			IssueCode code = Codes[Code.CoincidentSection];
 
-			var involved = new InvolvedRows
-			               {
-				               new InvolvedRow(coincidenceError.DroppedPart.NeighborFeature),
-				               new InvolvedRow(coincidenceError.UsedPart.BaseFeature)
-			               };
+
+			InvolvedRows involved = InvolvedRowUtils.GetInvolvedRows(
+				coincidenceError.DroppedPart.NeighborFeature,
+				coincidenceError.UsedPart.BaseFeature);
 
 			NeighboredSegmentsSubpart errorPart = coincidenceError.UsedPart;
 			double fullMin = errorPart.FullMinFraction;
@@ -2513,7 +2507,7 @@ namespace ProSuite.QA.Tests.Coincidence
 				                                                  iMin, fullMin - iMin,
 				                                                  iMax, fullMax - iMax);
 			return ReportError(LocalizableStrings.QaTopoNotNear_CoincidentSectionFound,
-			                   errorGeometry, code, null, involved);
+			                   involved, errorGeometry, code, null);
 		}
 
 		private int ReportShortSubpartError([NotNull] ShortSubpartError subpartError)
@@ -2526,15 +2520,12 @@ namespace ProSuite.QA.Tests.Coincidence
 			IssueCode code = Codes[Code.ShortSubpart];
 
 			SegmentsSubpart subpart = subpartError.SegmentsSubpart;
-			var involved = new InvolvedRows
-			               {
-				               new InvolvedRow(subpart.BaseFeature),
-			               };
+			InvolvedRows involved = InvolvedRowUtils.GetInvolvedRows(subpart.BaseFeature);
 
 			IGeometry errorGeometry = subpart.BaseSegments.GetSubpart(
 				subpart.PartIndex, subpart.FullMinFraction, 0,
 				subpart.FullMaxFraction, 0);
-			return ReportError(description, errorGeometry, code, null, involved);
+			return ReportError(description, involved, errorGeometry, code, null);
 		}
 
 		private int ReportAngledEndError([NotNull] AngleEndError sharpAngleError)
@@ -2544,10 +2535,7 @@ namespace ProSuite.QA.Tests.Coincidence
 			IssueCode code = Codes[Code.InconsistentLineSymbolEnd];
 
 			SegmentsSubpart subpart = sharpAngleError.SegmentsSubpart;
-			var involved = new InvolvedRows
-			               {
-				               new InvolvedRow(subpart.BaseFeature),
-			               };
+			InvolvedRows involved = InvolvedRowUtils.GetInvolvedRows(subpart.BaseFeature);
 
 			//IGeometry errorGeometry = GeometryFactory.CreatePoint(
 			//	sharpAngleError.At.X, sharpAngleError.At.Y,
@@ -2561,7 +2549,7 @@ namespace ProSuite.QA.Tests.Coincidence
 
 			errorGeometry.SpatialReference = subpart.BaseFeature.Shape.SpatialReference;
 
-			return ReportError(description, errorGeometry, code, null, involved);
+			return ReportError(description, involved, errorGeometry, code, null);
 		}
 
 		[Obsolete("Verify code")] private static readonly bool _neededForCircularErrors =

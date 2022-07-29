@@ -133,10 +133,9 @@ namespace ProSuite.QA.Tests
 				if (! valid)
 				{
 					string description = string.Format("First invalid rule: {0}", message);
-					errorCount += ReportError(description,
-					                          TestUtils.GetShapeCopy(row),
-					                          issueCode,
-					                          rule.FieldName, row);
+					errorCount += ReportError(
+						description, InvolvedRowUtils.GetInvolvedRows(row),
+						TestUtils.GetShapeCopy(row), issueCode, rule.FieldName);
 
 					break;
 				}

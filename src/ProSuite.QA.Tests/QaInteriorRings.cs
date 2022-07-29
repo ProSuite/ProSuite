@@ -141,19 +141,19 @@ namespace ProSuite.QA.Tests
 					errorCount += ReportError(
 						GetIndividualErrorDescription(ring, relevantInteriorRings,
 						                              totalInteriorRingCount),
+						InvolvedRowUtils.GetInvolvedRows(row),
 						GetIndividualErrorGeometry(polygon, ring),
-						Codes[Code.UnallowedInteriorRings],
-						_shapeFieldName, row);
+						Codes[Code.UnallowedInteriorRings], _shapeFieldName);
 				}
 
 				return errorCount;
 			}
 
-			return ReportError(GetCombinedErrorDescription(relevantInteriorRings,
-			                                               totalInteriorRingCount),
-			                   GetCombinedErrorGeometry(polygon, relevantInteriorRings),
-			                   Codes[Code.UnallowedInteriorRings],
-			                   _shapeFieldName, row);
+			return ReportError(
+				GetCombinedErrorDescription(relevantInteriorRings, totalInteriorRingCount),
+				InvolvedRowUtils.GetInvolvedRows(row),
+				GetCombinedErrorGeometry(polygon, relevantInteriorRings),
+				Codes[Code.UnallowedInteriorRings], _shapeFieldName);
 		}
 
 		private string GetCombinedErrorDescription(

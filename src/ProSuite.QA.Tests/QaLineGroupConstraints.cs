@@ -1522,13 +1522,12 @@ namespace ProSuite.QA.Tests
 		private int ReportError([NotNull] NearError error)
 		{
 			return ReportError(
-				error.Description, error.Geometry,
-				error.IssueCode, null,
-				GetInvolvedRows(error));
+				error.Description, GetInvolvedRows(error), error.Geometry,
+				error.IssueCode, null);
 		}
 
 		[NotNull]
-		private IEnumerable<InvolvedRow> GetInvolvedRows([NotNull] NearError error)
+		private InvolvedRows GetInvolvedRows([NotNull] NearError error)
 		{
 			return GetUniqueInvolvedRows(new[] {error.DirectedRow.Row, error.Near});
 		}
@@ -1595,9 +1594,8 @@ namespace ProSuite.QA.Tests
 				sumLength, "<", _minGroupLength, joinedLine.SpatialReference).Trim();
 			string description = string.Format("Group length too small: {0}", comparison);
 
-			return ReportError(description, joinedLine,
-			                   LocalCodes[Code.GroupTooSmall], null,
-			                   GetUniqueInvolvedRows(involved));
+			return ReportError(description, GetUniqueInvolvedRows(involved), joinedLine,
+			                   LocalCodes[Code.GroupTooSmall], null);
 		}
 
 		private int CheckDangle([NotNull] NodesDirectedRow endRow,
@@ -1719,8 +1717,8 @@ namespace ProSuite.QA.Tests
 				joinedLine.SpatialReference).Trim();
 			string description = string.Format("{0}: {1}", baseDescription, comparison);
 
-			return ReportError(description, joinedLine, issueCode, null,
-			                   GetUniqueInvolvedRows(involved));
+			return ReportError(description, GetUniqueInvolvedRows(involved), joinedLine,
+			                   issueCode, null);
 		}
 
 		private static double GetLength([NotNull] IEnumerable<NodesDirectedRow> leaf,

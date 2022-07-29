@@ -201,9 +201,9 @@ namespace ProSuite.QA.Tests
 
 			// no rule fulfills all the rows
 			const string description = "Rows do not fulfill rules";
-			return ReportError(description, connectedElements[0].NetPoint,
-			                   Codes[Code.RulesNotFulfilled], null,
-			                   GetInvolvedRows(connectedRows));
+			return ReportError(
+				description, InvolvedRowUtils.GetInvolvedRows(connectedRows),
+				connectedElements[0].NetPoint, Codes[Code.RulesNotFulfilled], null);
 		}
 
 		private int GetMatchingRowsCount(int tableIndex,

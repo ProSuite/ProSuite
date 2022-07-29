@@ -143,10 +143,9 @@ namespace ProSuite.QA.Tests
 					TestUtils.GetFieldDisplayName(row, fieldIndex, out fieldName),
 					value, e.Message);
 
-				return ReportError(description,
+				return ReportError(description, InvolvedRowUtils.GetInvolvedRows(row),
 				                   TestUtils.GetShapeCopy(row),
-				                   Codes[Code.InvalidDateValue], fieldName,
-				                   row);
+				                   Codes[Code.InvalidDateValue], fieldName);
 			}
 
 			// check for time part
@@ -161,10 +160,9 @@ namespace ProSuite.QA.Tests
 				TestUtils.GetFieldDisplayName(row, fieldIndex, out fieldName),
 				dateTimeValue);
 
-			return ReportError(description,
+			return ReportError(description, InvolvedRowUtils.GetInvolvedRows(row),
 			                   TestUtils.GetShapeCopy(row),
-			                   Codes[Code.HasTimePart], fieldName,
-			                   row);
+			                   Codes[Code.HasTimePart], fieldName);
 		}
 
 		[NotNull]

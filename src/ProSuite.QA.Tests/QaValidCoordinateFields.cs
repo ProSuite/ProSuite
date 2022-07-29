@@ -440,9 +440,9 @@ namespace ProSuite.QA.Tests
 					FormatLengthComparison(distance, ">", _xyTolerance,
 					                       _spatialReference).Trim());
 
-			return ReportError(description, GetErrorGeometry(point),
-			                   Codes[Code.XYFieldCoordinateValueTooFarFromShape],
-			                   coordinateField.FieldName, feature);
+			return ReportError(
+				description, InvolvedRowUtils.GetInvolvedRows(feature), GetErrorGeometry(point),
+				Codes[Code.XYFieldCoordinateValueTooFarFromShape], coordinateField.FieldName);
 		}
 
 		private string GetNonEqualValueMessage([NotNull] CoordinateField coordinateField,
@@ -501,9 +501,9 @@ namespace ProSuite.QA.Tests
 					                       _spatialReference).Trim(),
 					comparisonMessage);
 
-			return ReportError(description, GetErrorGeometry(point),
-			                   Codes[Code.XYFieldCoordinatesTooFarFromShape],
-			                   affectedComponent, feature);
+			return ReportError(
+				description, InvolvedRowUtils.GetInvolvedRows(feature), GetErrorGeometry(point),
+				Codes[Code.XYFieldCoordinatesTooFarFromShape], affectedComponent);
 		}
 
 		private int ReportZFieldCoordinateTooFarFromShape(
@@ -521,9 +521,9 @@ namespace ProSuite.QA.Tests
 					FormatLengthComparison(zDistance, ">", _zTolerance,
 					                       _spatialReference).Trim());
 
-			return ReportError(description, GetErrorGeometry(point),
-			                   Codes[Code.ZFieldCoordinateTooFarFromShape],
-			                   zCoordinateField.FieldName, feature);
+			return ReportError(
+				description, InvolvedRowUtils.GetInvolvedRows(feature), GetErrorGeometry(point),
+				Codes[Code.ZFieldCoordinateTooFarFromShape], zCoordinateField.FieldName);
 		}
 
 		private int ReportFieldValueForUndefinedShape(
@@ -536,9 +536,9 @@ namespace ProSuite.QA.Tests
 					"The shape is not defined, but the field '{0}' has a value ({1})",
 					coordinateField.FieldName, value);
 
-			return ReportError(description, null,
-			                   Codes[Code.ShapeIsUndefinedButCoordinateFieldHasValue],
-			                   coordinateField.FieldName, feature);
+			return ReportError(
+				description, InvolvedRowUtils.GetInvolvedRows(feature), null,
+				Codes[Code.ShapeIsUndefinedButCoordinateFieldHasValue], coordinateField.FieldName);
 		}
 
 		private int ReportMissingFieldValueForDefinedShape(
@@ -551,10 +551,9 @@ namespace ProSuite.QA.Tests
 					"The shape is defined, but the field '{0}' does not contain a value",
 					coordinateField.FieldName);
 
-			return ReportError(description,
-			                   GetErrorGeometry(point),
-			                   Codes[Code.ShapeIsDefinedButCoordinateFieldHasNoValue],
-			                   coordinateField.FieldName, feature);
+			return ReportError(
+				description, InvolvedRowUtils.GetInvolvedRows(feature), GetErrorGeometry(point),
+				Codes[Code.ShapeIsDefinedButCoordinateFieldHasNoValue], coordinateField.FieldName);
 		}
 
 		private static double GetDistanceSquared(double x0, double y0,
@@ -586,8 +585,9 @@ namespace ProSuite.QA.Tests
 			                   out value, out message, out issueCode))
 			{
 				errorReadingValue = true;
-				return ReportError(message, GetErrorGeometry(point),
-				                   issueCode, coordinateField.FieldName, feature);
+				return ReportError(
+					message, InvolvedRowUtils.GetInvolvedRows(feature), GetErrorGeometry(point),
+					issueCode, coordinateField.FieldName);
 			}
 
 			errorReadingValue = false;

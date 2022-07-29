@@ -206,18 +206,18 @@ namespace ProSuite.QA.Tests
 								break;
 
 							case ErrorType.NoTerrain:
-								errorCount += ReportError("Missing Terrain", p,
-								                          Codes[Code.NoTerrainData],
-								                          TestUtils.GetShapeFieldName(feature),
-								                          feature);
+								errorCount += ReportError(
+									"Missing Terrain", InvolvedRowUtils.GetInvolvedRows(feature), p,
+									Codes[Code.NoTerrainData],
+									TestUtils.GetShapeFieldName(feature));
 								break;
 
 							default:
 								IssueCode issueCode;
-								errorCount += ReportError(GetOffsetMessage(max, out issueCode), p,
-								                          issueCode,
-								                          TestUtils.GetShapeFieldName(feature),
-								                          feature);
+								errorCount += ReportError(
+									GetOffsetMessage(max, out issueCode),
+									InvolvedRowUtils.GetInvolvedRows(feature), p,
+									issueCode, TestUtils.GetShapeFieldName(feature));
 								break;
 						}
 
@@ -409,8 +409,9 @@ namespace ProSuite.QA.Tests
 
 				foreach (IPolyline part in parts)
 				{
-					errorCount += ReportError(description, part, issueCode,
-					                          TestUtils.GetShapeFieldName(errorRow), errorRow);
+					errorCount += ReportError(
+						description, InvolvedRowUtils.GetInvolvedRows(errorRow), part, issueCode,
+						TestUtils.GetShapeFieldName(errorRow));
 				}
 
 				error.Clear();
@@ -419,8 +420,9 @@ namespace ProSuite.QA.Tests
 			else if (final)
 			{
 				IMultipoint errorGeom = CreateMultipoint(baseGeometry, errorPoints);
-				errorCount += ReportError(description, errorGeom, issueCode,
-				                          TestUtils.GetShapeFieldName(errorRow), errorRow);
+				errorCount += ReportError(
+					description, InvolvedRowUtils.GetInvolvedRows(errorRow), errorGeom, issueCode,
+					TestUtils.GetShapeFieldName(errorRow));
 			}
 
 			return errorCount;

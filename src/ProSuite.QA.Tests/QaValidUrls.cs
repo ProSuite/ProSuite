@@ -393,11 +393,9 @@ namespace ProSuite.QA.Tests
 
 		private int ReportError([NotNull] ErrorInfo errorInfo, [NotNull] IReadOnlyRow row)
 		{
-			return ReportError(errorInfo.Description,
-			                   TestUtils.GetShapeCopy(row),
-			                   errorInfo.IssueCode,
-			                   _affectedComponent,
-			                   row);
+			return ReportError(
+				errorInfo.Description, InvolvedRowUtils.GetInvolvedRows(row),
+				TestUtils.GetShapeCopy(row), errorInfo.IssueCode, _affectedComponent);
 		}
 
 		[CanBeNull]

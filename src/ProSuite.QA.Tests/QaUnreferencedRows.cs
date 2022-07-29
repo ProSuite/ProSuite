@@ -211,9 +211,9 @@ namespace ProSuite.QA.Tests
 				TestUtils.GetFieldDisplayName(row, referencedTableInfo.KeyFieldIndex,
 				                              out fieldName);
 
-				errorCount += ReportError(description, TestUtils.GetShapeCopy(row),
-				                          Codes[Code.ValueNotReferenced], fieldName,
-				                          row);
+				errorCount += ReportError(
+					description, InvolvedRowUtils.GetInvolvedRows(row), TestUtils.GetShapeCopy(row),
+					Codes[Code.ValueNotReferenced], fieldName);
 			}
 
 			referencedTableInfo.KeySet.Clear();
@@ -238,9 +238,9 @@ namespace ProSuite.QA.Tests
 					                           referencedTableInfo,
 					                           out errorDescription, out convertedValue))
 					{
-						return ReportError(errorDescription, TestUtils.GetShapeCopy(row),
-						                   Codes[Code.ConversionError], null,
-						                   row);
+						return ReportError(
+							errorDescription, InvolvedRowUtils.GetInvolvedRows(row),
+							TestUtils.GetShapeCopy(row), Codes[Code.ConversionError], null);
 					}
 
 					referencedTableInfo.RemoveObject(convertedValue);

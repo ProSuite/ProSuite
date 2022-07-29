@@ -205,10 +205,10 @@ namespace ProSuite.QA.Tests
 
 			IssueCode issueCode = Codes[Code.FootprintHasMultipleParts];
 
-			return ReportError("Footprint of MultiPatch feature contains more than one part",
-			                   errorGeometry,
-			                   issueCode, _shapeFieldName,
-			                   feature);
+			return ReportError(
+				"Footprint of MultiPatch feature contains more than one part",
+				InvolvedRowUtils.GetInvolvedRows(feature), errorGeometry,
+				issueCode, _shapeFieldName);
 		}
 
 		[NotNull]

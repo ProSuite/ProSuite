@@ -131,10 +131,9 @@ namespace ProSuite.QA.Tests
 
 			IReadOnlyRow errorRow = p.Row.Row;
 
-			return ReportError(description, p.NetPoint,
-			                   Codes[Code.OrphanNode],
-			                   TestUtils.GetShapeFieldName(errorRow),
-			                   errorRow);
+			return ReportError(
+				description, InvolvedRowUtils.GetInvolvedRows(errorRow), p.NetPoint,
+				Codes[Code.OrphanNode], TestUtils.GetShapeFieldName(errorRow));
 		}
 
 		/// <summary>
@@ -155,16 +154,12 @@ namespace ProSuite.QA.Tests
 				}
 			}
 
-			var involved = new List<InvolvedRow>(connectedElements.Count);
-			foreach (NetElement elem in connectedElements)
-			{
-				involved.Add(new InvolvedRow(elem.Row.Row));
-			}
 
 			const string description = "Missing Node";
-			return ReportError(description, connectedElements[0].NetPoint,
-			                   Codes[Code.MissingNode], null,
-			                   involved);
+			return ReportError(
+				description,
+				InvolvedRowUtils.GetInvolvedRows(connectedElements.Select(e => e.Row.Row)),
+				connectedElements[0].NetPoint, Codes[Code.MissingNode], null);
 		}
 	}
 }

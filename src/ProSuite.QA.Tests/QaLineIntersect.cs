@@ -13,6 +13,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
 using ProSuite.QA.Core;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Container;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
 
@@ -221,12 +222,13 @@ namespace ProSuite.QA.Tests
 			if (parts != null && parts.GeometryCount > 1)
 			{
 				return GeometryUtils.GetParts(parts)
-				                    .Sum(part => ReportError(message, part,
-				                                             issueCode, null,
-				                                             row1, row2));
+				                    .Sum(part => ReportError(
+					                         message, InvolvedRowUtils.GetInvolvedRows(row1, row2),
+					                         part, issueCode, null));
 			}
 
-			return ReportError(message, errorGeometry, issueCode, null, row1, row2);
+			return ReportError(message, InvolvedRowUtils.GetInvolvedRows(row1, row2),
+			                   errorGeometry, issueCode, null);
 		}
 
 		private bool HasFulfilledConstraint([NotNull] IReadOnlyRow row1, int tableIndex1,

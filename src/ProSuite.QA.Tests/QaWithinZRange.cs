@@ -253,20 +253,21 @@ namespace ProSuite.QA.Tests
 
 			if (errorPointsBelow.Count > 0)
 			{
-				errorCount += ReportError(GetErrorMessageBelow(errorPointsBelow, zMin),
-				                          GetErrorGeometry(errorPointsBelow),
-				                          null, _shapeFieldName,
-				                          feature);
+				errorCount += ReportError(
+					GetErrorMessageBelow(errorPointsBelow, zMin),
+					InvolvedRowUtils.GetInvolvedRows(feature),
+					GetErrorGeometry(errorPointsBelow),
+					null, _shapeFieldName);
 			}
 
 			if (errorPointsAbove.Count > 0)
 			{
 				string message = GetErrorMessageAbove(errorPointsAbove, zMax);
 
-				errorCount += ReportError(message,
-				                          GetErrorGeometry(errorPointsAbove),
-				                          null, _shapeFieldName,
-				                          feature);
+				errorCount += ReportError(
+					message, InvolvedRowUtils.GetInvolvedRows(feature),
+					GetErrorGeometry(errorPointsAbove),
+					null, _shapeFieldName);
 			}
 
 			return errorCount;
@@ -348,9 +349,9 @@ namespace ProSuite.QA.Tests
 
 			string message = string.Format(format, z);
 
-			return ReportError(message, point,
-			                   Codes[code], _shapeFieldName,
-			                   feature);
+			return ReportError(
+				message, InvolvedRowUtils.GetInvolvedRows(feature), point,
+				Codes[code], _shapeFieldName);
 		}
 
 		private int ReportError([NotNull] IReadOnlyFeature feature,
@@ -361,9 +362,9 @@ namespace ProSuite.QA.Tests
 			IssueCode issueCode;
 			string message = GetErrorMessage(errorSegments, out issueCode);
 
-			return ReportError(message, errorGeometry,
-			                   issueCode, _shapeFieldName,
-			                   feature);
+			return ReportError(
+				message, InvolvedRowUtils.GetInvolvedRows(feature), errorGeometry,
+				issueCode, _shapeFieldName);
 		}
 
 		[NotNull]

@@ -396,9 +396,9 @@ namespace ProSuite.QA.Tests
 			string description = GetErrorDescription(pointConstraintValid, lineConstraintValid,
 			                                         pointMessage, lineMessage);
 
-			return ReportError(description, elementsToCheck[0].NetPoint,
-			                   issueCode, null,
-			                   GetInvolvedRows(connectedRows));
+			return ReportError(
+				description, InvolvedRowUtils.GetInvolvedRows(connectedRows),
+				elementsToCheck[0].NetPoint, issueCode, null);
 		}
 
 		private bool HasPointsAndAllAreAllowed(

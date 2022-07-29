@@ -466,11 +466,12 @@ namespace ProSuite.QA.Tests
 						{
 							errorCount += ReportError(
 								constraintViolation.Description,
+								InvolvedRowUtils.GetInvolvedRows(
+									borderConnection.Feature, neighborFeature),
 								GeometryFactory.Clone(borderConnection.Point),
 								Codes[Code.Match_ConstraintsNotFulfilled],
 								constraintViolation.AffectedComponents,
-								new[] {constraintViolation.TextValue},
-								borderConnection.Feature, neighborFeature);
+								values: new[] { constraintViolation.TextValue });
 						}
 
 						return errorCount;
@@ -512,9 +513,9 @@ namespace ProSuite.QA.Tests
 				{
 					errorCount += ReportError(
 						LocalizableStrings.QaEdgeMatchBorderingPoints_NoMatch_NoCandidate,
+						InvolvedRowUtils.GetInvolvedRows(borderConnection.Feature),
 						GeometryFactory.Clone(borderConnection.Point),
-						Codes[Code.NoMatch_NoCandidate], null,
-						borderConnection.Feature);
+						Codes[Code.NoMatch_NoCandidate], null);
 				}
 			}
 
@@ -554,10 +555,11 @@ namespace ProSuite.QA.Tests
 						$"{baseDescription} {LocalizableStrings.QaEdgeMatchBorderingPoints_BordersNotCoincident}";
 				}
 
-				return ReportError(description, errorGeometry,
-				                   issueCode, null,
-				                   borderConnection.Feature,
-				                   neighborBorderConnection.Feature);
+				return ReportError(
+					description,
+					InvolvedRowUtils.GetInvolvedRows(borderConnection.Feature,
+					                                 neighborBorderConnection.Feature),
+					errorGeometry, issueCode, null);
 			}
 
 			var errorCount = 0;
@@ -580,11 +582,12 @@ namespace ProSuite.QA.Tests
 						$"{baseDescription} {LocalizableStrings.QaEdgeMatchBorderingPoints_BordersNotCoincident} {constraintViolation.Description}.";
 				}
 
-				errorCount += ReportError(description, errorGeometry,
-				                          issueCode, constraintViolation.AffectedComponents,
-				                          new[] {constraintViolation.TextValue},
-				                          borderConnection.Feature,
-				                          neighborBorderConnection.Feature);
+				errorCount += ReportError(
+					description, InvolvedRowUtils.GetInvolvedRows(
+						borderConnection.Feature, neighborBorderConnection.Feature),
+					errorGeometry, issueCode, constraintViolation.AffectedComponents,
+					values: new[] { constraintViolation.TextValue }
+				);
 			}
 
 			return errorCount;

@@ -261,11 +261,9 @@ namespace ProSuite.QA.Tests
 			                                         out issueCode,
 			                                         out affectedComponent);
 
-			return ReportError(description,
-			                   feature.ShapeCopy,
-			                   issueCode,
-			                   affectedComponent,
-			                   GetInvolvedRows(feature));
+			return ReportError(
+				description, GetInvolvedRows(feature),
+				feature.ShapeCopy, issueCode, affectedComponent);
 		}
 
 		/// <summary>

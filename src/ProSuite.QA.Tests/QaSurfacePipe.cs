@@ -461,10 +461,10 @@ namespace ProSuite.QA.Tests
 					desc.AppendLine();
 					IssueCode issueCode;
 					desc.Append(GetOffsetMessage(partInfo.MaxOffset, out issueCode));
-					errorCount += ReportError(desc.ToString(), partInfo.Shape,
-					                          issueCode, null,
-					                          new object[] {partInfo.MaxOffset},
-					                          row);
+					errorCount += ReportError(
+						desc.ToString(), InvolvedRowUtils.GetInvolvedRows(row), partInfo.Shape,
+						issueCode, null, values: new object[] { partInfo.MaxOffset });
+
 				}
 
 				remove.Add(row);
@@ -577,9 +577,10 @@ namespace ProSuite.QA.Tests
 			foreach (IPolyline polyline in partsOutsideTerrain)
 			{
 				const string description = "Terrain is missing";
-				errorCount += ReportError(description, polyline,
-				                          Codes[Code.NoTerrainData], null,
-				                          searchedRow);
+				errorCount += ReportError(
+					description, InvolvedRowUtils.GetInvolvedRows(searchedRow), polyline,
+					Codes[Code.NoTerrainData], null);
+
 			}
 
 			IList<IPolyline> partsInsideTerrain = validTerrain.GetParts();
@@ -640,9 +641,9 @@ namespace ProSuite.QA.Tests
 					foreach (IPolyline invalidPart in invalidSegments.GetParts())
 					{
 						const string description = "Terrain is missing";
-						ReportError(description, invalidPart,
-						            Codes[Code.NoTerrainData], null,
-						            searchedRow);
+						ReportError(
+							description, InvolvedRowUtils.GetInvolvedRows(searchedRow), invalidPart,
+							Codes[Code.NoTerrainData], null);
 						errorCount++;
 					}
 
@@ -838,9 +839,9 @@ namespace ProSuite.QA.Tests
 				values = new object[] {max};
 			}
 
-			return ReportError(description, GeometryFactory.Clone(shape),
-			                   issueCode, TestUtils.GetShapeFieldName(row),
-			                   values, row);
+			return ReportError(
+				description, InvolvedRowUtils.GetInvolvedRows(row), GeometryFactory.Clone(shape),
+				issueCode, TestUtils.GetShapeFieldName(row), values: values);
 		}
 
 		[NotNull]
@@ -1049,11 +1050,10 @@ namespace ProSuite.QA.Tests
 				IssueCode issueCode;
 				string description = GetOffsetMessage(maxOffset, out issueCode);
 
-				errorCount += ReportError(description, part,
-				                          issueCode,
-				                          TestUtils.GetShapeFieldName(errorRow),
-				                          new object[] {maxOffset},
-				                          errorRow);
+				errorCount += ReportError(
+					description, InvolvedRowUtils.GetInvolvedRows(errorRow), part,
+					issueCode, TestUtils.GetShapeFieldName(errorRow),
+					values: new object[] { maxOffset });
 			}
 
 			error.Clear();

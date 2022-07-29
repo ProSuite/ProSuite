@@ -97,11 +97,10 @@ namespace ProSuite.QA.Tests
 
 					IPolyline errorGeometry = GeometryFactory.CreatePolyline(segment);
 
-					errorCount += ReportError(description, errorGeometry,
-					                          Codes[Code.SlopeTooSteep],
-					                          TestUtils.GetShapeFieldName(row),
-					                          new object[] {MathUtils.ToDegrees(slopeRadians)},
-					                          row);
+					errorCount += ReportError(
+						description, InvolvedRowUtils.GetInvolvedRows(row), errorGeometry,
+						Codes[Code.SlopeTooSteep], TestUtils.GetShapeFieldName(row),
+						values: new object[] { MathUtils.ToDegrees(slopeRadians) });
 				}
 
 				if (recycling)

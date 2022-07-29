@@ -294,9 +294,9 @@ namespace ProSuite.QA.Tests
 			// polyline to become empty (short segments)
 			IGeometry errorGeometry = GetErrorGeometry(consecutiveErrorSegments);
 
-			return ReportError(description, errorGeometry,
-			                   Codes[issueCode], _shapeFieldName,
-			                   row);
+			return ReportError(
+				description, InvolvedRowUtils.GetInvolvedRows(row), errorGeometry,
+				Codes[issueCode], _shapeFieldName);
 		}
 
 		[NotNull]

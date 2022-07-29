@@ -1108,7 +1108,7 @@ namespace ProSuite.QA.Tests
 		private int ReportError([NotNull] DataRow dataRow)
 		{
 			IGeometry geometry = null;
-			var involvedList = new List<InvolvedRow>();
+			InvolvedRows involvedList = new InvolvedRows();
 
 			var tableIndex = (int) dataRow[_tableIndexColumn];
 			IReadOnlyTable table = _tables[tableIndex];
@@ -1162,10 +1162,9 @@ namespace ProSuite.QA.Tests
 
 			string affectedComponent = commaSeparatedFieldNames;
 
-			return ReportError(description, geometry,
-			                   Codes[Code.NotUnique],
-			                   affectedComponent,
-			                   involvedList);
+			return ReportError(
+				description, involvedList, geometry,
+				Codes[Code.NotUnique], affectedComponent);
 		}
 
 		[NotNull]

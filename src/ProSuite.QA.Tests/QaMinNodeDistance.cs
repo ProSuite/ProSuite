@@ -449,10 +449,10 @@ namespace ProSuite.QA.Tests
 					                      : Codes[Code.NodeDistanceTooSmall_ConstraintNotFulfilled];
 
 				// TODO differentiate issue code if exactly coincident?
-				return ReportError(description, errorGeometry,
-				                   issueCode, TestUtils.GetShapeFieldName(row0),
-				                   InvolvedRowUtils.GetInvolvedRows(row0, row1),
-				                   new object[] {dist});
+				return ReportError(
+					description, InvolvedRowUtils.GetInvolvedRows(row0, row1),
+					errorGeometry, issueCode, TestUtils.GetShapeFieldName(row0),
+					values: new object[] { dist });
 			}
 
 			if (_maxZDifference >= 0 && pointDistanceSquared < _searchDistanceSquared)
@@ -487,10 +487,10 @@ namespace ProSuite.QA.Tests
 						                      : Codes[
 							                      Code.ZDifferenceTooLarge_ConstraintNotFulfilled];
 
-					return ReportError(description, errorGeometry,
-					                   issueCode, TestUtils.GetShapeFieldName(row0),
-					                   InvolvedRowUtils.GetInvolvedRows(row0, row1),
-					                   new object[] {absZDifference});
+					return ReportError(
+						description, InvolvedRowUtils.GetInvolvedRows(row0, row1), errorGeometry,
+						issueCode, TestUtils.GetShapeFieldName(row0),
+						values: new object[] { absZDifference });
 				}
 			}
 

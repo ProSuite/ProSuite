@@ -148,9 +148,9 @@ namespace ProSuite.QA.Tests
 		                          [CanBeNull] IssueCode issueCode,
 		                          [NotNull] IReadOnlyRow row)
 		{
-			return ReportError(description, GetErrorGeometry(curve),
-			                   issueCode, _shapeFieldName,
-			                   row);
+			return ReportError(
+				description, InvolvedRowUtils.GetInvolvedRows(row),
+				GetErrorGeometry(curve), issueCode, _shapeFieldName);
 		}
 
 		private int CheckLength([NotNull] IReadOnlyRow row, [NotNull] ICurve curve)

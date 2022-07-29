@@ -149,11 +149,10 @@ namespace ProSuite.QA.Tests
 					                      ? Codes[Code.OutgoingLines_None]
 					                      : Codes[Code.OutgoingLines_Multiple];
 
-				errorCount += ReportError(description, fromPoint,
-				                          issueCode,
-				                          TestUtils.GetShapeFieldName(
-					                          connectedRows[0].Row.Row),
-				                          GetInvolvedRows(connectedRows));
+				errorCount += ReportError(
+					description, GetInvolvedRows(connectedRows),
+					fromPoint, issueCode,
+					TestUtils.GetShapeFieldName(connectedRows[0].Row.Row));
 			}
 
 			return errorCount;
@@ -165,12 +164,13 @@ namespace ProSuite.QA.Tests
 		}
 
 		[NotNull]
-		private static IEnumerable<InvolvedRow> GetInvolvedRows(
+		private static InvolvedRows GetInvolvedRows(
 			[NotNull] IEnumerable<DirectedRow> connectedRows)
 		{
 			Assert.ArgumentNotNull(connectedRows, nameof(connectedRows));
 
-			return connectedRows.Select(dirRow => new InvolvedRow(dirRow.Row.Row));
+			return InvolvedRowUtils.GetInvolvedRows(
+				connectedRows.Select(dirRow => dirRow.Row.Row));
 		}
 
 		private bool IsBackward([NotNull] DirectedRow dirRow)

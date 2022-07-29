@@ -108,10 +108,9 @@ namespace ProSuite.QA.Tests
 					"Point does not lie closer than {0} to any (border)-line",
 					FormatLength(SearchDistance, _spatialReference));
 
-			return ReportError(description, error,
-			                   Codes[Code.PointNotNearLine],
-			                   TestUtils.GetShapeFieldName(feature),
-			                   feature);
+			return ReportError(
+				description, InvolvedRowUtils.GetInvolvedRows(feature), error,
+				Codes[Code.PointNotNearLine], TestUtils.GetShapeFieldName(feature));
 		}
 
 		private bool CheckTable([NotNull] IPoint point,

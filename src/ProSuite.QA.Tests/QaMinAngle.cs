@@ -284,11 +284,11 @@ namespace ProSuite.QA.Tests
 			if (! compareConnectionFound)
 			{
 				// this is possible because of tolerance and resolution
-				errorCount += ReportError("End points do not fit", connectPoint,
-				                          Codes[Code.EndPointsDoNotFit],
-				                          TestUtils.GetShapeFieldName(feature),
-				                          feature,
-				                          compareFeature);
+				errorCount += ReportError(
+					"End points do not fit",
+					InvolvedRowUtils.GetInvolvedRows(feature, compareFeature),
+					connectPoint, Codes[Code.EndPointsDoNotFit],
+					TestUtils.GetShapeFieldName(feature));
 			}
 
 			return errorCount;
@@ -326,11 +326,11 @@ namespace ProSuite.QA.Tests
 					                                   FormatAngle(angleRadians, "N2"),
 					                                   FormatAngle(_limit, "N2"));
 
-					return ReportError(description, GeometryFactory.Clone(connectPoint),
-					                   Codes[Code.AngleTooSmall],
-					                   TestUtils.GetShapeFieldName(feature),
-					                   new object[] {MathUtils.ToDegrees(angleRadians)},
-					                   feature, compareFeature);
+					return ReportError(
+						description, InvolvedRowUtils.GetInvolvedRows(feature, compareFeature),
+						GeometryFactory.Clone(connectPoint),
+						Codes[Code.AngleTooSmall], TestUtils.GetShapeFieldName(feature),
+						values: new object[] { MathUtils.ToDegrees(angleRadians) });
 				}
 			}
 

@@ -768,7 +768,8 @@ namespace ProSuite.QA.Container.Test
 					return 0;
 				}
 
-				ReportError("error", GeometryFactory.Clone(f.Shape), null, null, values: null, row);
+				ReportError("error", InvolvedRowUtils.GetInvolvedRows(row),
+				            GeometryFactory.Clone(f.Shape), null, null);
 				return 1;
 			}
 		}

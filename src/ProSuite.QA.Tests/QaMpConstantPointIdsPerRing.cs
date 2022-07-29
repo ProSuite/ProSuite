@@ -130,9 +130,10 @@ namespace ProSuite.QA.Tests
 
 				IGeometry errorGeometry = rings.CreateMultiPatch();
 
-				return ReportError(description, errorGeometry,
-				                   Codes[Code.InnerRingIdDifferentFromOuterRingId],
-				                   TestUtils.GetShapeFieldName(row), row);
+				return ReportError(
+					description, InvolvedRowUtils.GetInvolvedRows(row), errorGeometry,
+					Codes[Code.InnerRingIdDifferentFromOuterRingId],
+					TestUtils.GetShapeFieldName(row));
 			}
 
 			int? maxPointsId = GetMaxPointsId(pointIndexesById);
@@ -146,10 +147,9 @@ namespace ProSuite.QA.Tests
 						: "Different point ids exist in these rings (out ring = {0}. patch in multipatch)",
 					rings.FirstPatchIndex + 1);
 
-				return ReportError(description, errorGeometry,
-				                   Codes[Code.DifferentIdInRing],
-				                   TestUtils.GetShapeFieldName(row),
-				                   row);
+				return ReportError(
+					description, InvolvedRowUtils.GetInvolvedRows(row), errorGeometry,
+					Codes[Code.DifferentIdInRing], TestUtils.GetShapeFieldName(row));
 			}
 
 			return ReportError(rings, pointIndexesById, maxPointsId.Value, row);
@@ -202,9 +202,9 @@ namespace ProSuite.QA.Tests
 					rings.FirstPatchIndex);
 			}
 
-			return ReportError(description, rings.CreateMultiPatch(),
-			                   Codes[Code.DifferentIdInRing], TestUtils.GetShapeFieldName(row),
-			                   row);
+			return ReportError(
+				description, InvolvedRowUtils.GetInvolvedRows(row), rings.CreateMultiPatch(),
+				Codes[Code.DifferentIdInRing], TestUtils.GetShapeFieldName(row));
 		}
 
 		private int ReportPointErrors(
@@ -254,8 +254,9 @@ namespace ProSuite.QA.Tests
 					rings.FirstPatchIndex + 1);
 			}
 
-			return ReportError(description, (IGeometry) points, Codes[Code.DifferentIdInRing],
-			                   TestUtils.GetShapeFieldName(row), row);
+			return ReportError(
+				description, InvolvedRowUtils.GetInvolvedRows(row), (IGeometry) points,
+				Codes[Code.DifferentIdInRing], TestUtils.GetShapeFieldName(row));
 		}
 
 		private static int? GetMaxPointsId(

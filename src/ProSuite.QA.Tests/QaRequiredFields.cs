@@ -151,9 +151,10 @@ namespace ProSuite.QA.Tests
 						              TestUtils.GetFieldDisplayName(
 							              row, fieldIndex, out fieldName));
 
-					errorCount += ReportError(description, TestUtils.GetShapeCopy(row),
-					                          Codes[Code.NullValue], fieldName,
-					                          row);
+					errorCount += ReportError(
+						description, InvolvedRowUtils.GetInvolvedRows(row),
+						TestUtils.GetShapeCopy(row),
+						Codes[Code.NullValue], fieldName);
 				}
 				else
 				{
@@ -166,9 +167,9 @@ namespace ProSuite.QA.Tests
 								"Required field has empty string value: {0}",
 								TestUtils.GetFieldDisplayName(row, fieldIndex, out fieldName));
 
-							errorCount += ReportError(description, TestUtils.GetShapeCopy(row),
-							                          Codes[Code.EmptyString], fieldName,
-							                          row);
+							errorCount += ReportError(
+								description, InvolvedRowUtils.GetInvolvedRows(row),
+								TestUtils.GetShapeCopy(row), Codes[Code.EmptyString], fieldName);
 						}
 					}
 				}

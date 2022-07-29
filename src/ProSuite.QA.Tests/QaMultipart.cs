@@ -87,9 +87,9 @@ namespace ProSuite.QA.Tests
 				if (partCount > 1)
 				{
 					string description = $"Geometry has {partCount} parts, allowed is 1";
-					return ReportError(description, shape,
-					                   Codes[Code.MultipleParts],
-					                   _shapeFieldName, row);
+					return ReportError(
+						description, GetInvolvedRows(row), shape,
+						Codes[Code.MultipleParts], _shapeFieldName);
 				}
 			}
 			else if (shape.GeometryType == esriGeometryType.esriGeometryPolygon)
@@ -102,9 +102,9 @@ namespace ProSuite.QA.Tests
 				{
 					string description =
 						$"Polygon has {exteriorRingCount} exterior rings, allowed is 1";
-					return ReportError(description, shape,
-					                   Codes[Code.MultipleExteriorRings],
-					                   _shapeFieldName, row);
+					return ReportError(
+						description, InvolvedRowUtils.GetInvolvedRows(row), shape,
+						Codes[Code.MultipleExteriorRings], _shapeFieldName);
 				}
 			}
 

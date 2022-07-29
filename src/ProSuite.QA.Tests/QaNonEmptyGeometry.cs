@@ -191,10 +191,10 @@ namespace ProSuite.QA.Tests
 				}
 				catch (Exception e)
 				{
-					errorCount += ReportError($"Feature geometry cannot be loaded ({e.Message})",
-					                          null,
-					                          Codes[Code.GeometryEmpty], _shapeFieldName,
-					                          feature);
+					errorCount += ReportError(
+						$"Feature geometry cannot be loaded ({e.Message})",
+						InvolvedRowUtils.GetInvolvedRows(feature),
+						null, Codes[Code.GeometryEmpty], _shapeFieldName);
 				}
 			}
 
@@ -209,15 +209,15 @@ namespace ProSuite.QA.Tests
 
 			if (geometry == null)
 			{
-				return ReportError("Feature has no geometry", null,
-				                   Codes[Code.GeometryNull], _shapeFieldName,
-				                   feature);
+				return ReportError(
+					"Feature has no geometry", InvolvedRowUtils.GetInvolvedRows(feature),
+					null, Codes[Code.GeometryNull], _shapeFieldName);
 			}
 
 			return geometry.IsEmpty
-				       ? ReportError("Feature has empty geometry", null,
-				                     Codes[Code.GeometryEmpty], _shapeFieldName,
-				                     feature)
+				       ? ReportError(
+					       "Feature has empty geometry", InvolvedRowUtils.GetInvolvedRows(feature),
+					       null, Codes[Code.GeometryEmpty], _shapeFieldName)
 				       : NoError;
 		}
 

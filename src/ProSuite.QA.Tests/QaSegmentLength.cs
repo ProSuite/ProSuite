@@ -189,9 +189,9 @@ namespace ProSuite.QA.Tests
 				issueCode = Codes[Code.SmallerThanLimit_ConsecutiveSegments];
 			}
 
-			return ReportError(description, errorGeometry,
-			                   issueCode, TestUtils.GetShapeFieldName(row),
-			                   row);
+			return ReportError(
+				description, InvolvedRowUtils.GetInvolvedRows(row), errorGeometry,
+				issueCode, TestUtils.GetShapeFieldName(row));
 		}
 
 		private class SegmentLength

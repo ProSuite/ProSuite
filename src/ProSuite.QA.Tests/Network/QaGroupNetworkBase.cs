@@ -872,11 +872,10 @@ namespace ProSuite.QA.Tests.Network
 								Format(nonUniqueValue), nonUniqueValue.Count);
 
 							errorCount += ReportError(
-								description,
+								description, InvolvedRowUtils.GetInvolvedRows(row),
 								((IReadOnlyFeature) row).ShapeCopy,
 								Codes[FieldValueCode.InvalidFieldValue_DuplicateGroupValueInField],
-								fieldName,
-								row);
+								fieldName);
 						}
 					}
 
@@ -949,13 +948,11 @@ namespace ProSuite.QA.Tests.Network
 				row.get_Value(tableFieldIndex),
 				GroupBys[valueFieldIndex].GetFieldSeparator(tableIndex));
 
-			int errorCount = ReportError(description,
-			                             ((IReadOnlyFeature) row).ShapeCopy,
-			                             Codes[
-				                             FieldValueCode
-					                             .InvalidFieldValue_InvalidValueForSeparator],
-			                             fieldName,
-			                             row);
+			int errorCount = ReportError(
+				description, InvolvedRowUtils.GetInvolvedRows(row),
+				((IReadOnlyFeature) row).ShapeCopy,
+				Codes[FieldValueCode.InvalidFieldValue_InvalidValueForSeparator],
+				fieldName);
 
 			return errorCount;
 		}
@@ -1126,10 +1123,10 @@ namespace ProSuite.QA.Tests.Network
 		}
 
 		[NotNull]
-		protected IEnumerable<InvolvedRow> GetUniqueInvolvedRows(
+		protected InvolvedRows GetUniqueInvolvedRows(
 			[NotNull] ICollection<IReadOnlyRow> rows)
 		{
-			var result = new List<InvolvedRow>(rows.Count);
+			var result = new InvolvedRows();
 			var set = new HashSet<InvolvedRow>();
 
 			foreach (IReadOnlyRow row in rows)
@@ -1147,10 +1144,10 @@ namespace ProSuite.QA.Tests.Network
 		}
 
 		[NotNull]
-		protected IEnumerable<InvolvedRow> GetUniqueInvolvedRows(
+		protected InvolvedRows GetUniqueInvolvedRows(
 			[NotNull] ICollection<ITableIndexRow> rows)
 		{
-			var result = new List<InvolvedRow>(rows.Count);
+			var result = new InvolvedRows();
 			var set = new HashSet<InvolvedRow>();
 
 			foreach (ITableIndexRow row in rows)

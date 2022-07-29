@@ -263,10 +263,10 @@ namespace ProSuite.QA.Tests
 				errorCount += MeasureUtils.GetMonotonicitySequences(polyline, invalidTypes)
 				                          .Sum(sequence => ReportError(
 					                               description,
+					                               InvolvedRowUtils.GetInvolvedRows(feature),
 					                               sequence.CreatePolyline(),
 					                               Codes[Code.MeasuresNotUnique_WithinFeature],
-					                               TestUtils.GetShapeFieldName(feature),
-					                               feature));
+					                               TestUtils.GetShapeFieldName(feature)));
 			}
 
 			return errorCount;
@@ -291,17 +291,16 @@ namespace ProSuite.QA.Tests
 
 			if (lineErrorGeometry != null)
 			{
-				errorCount += ReportError(description, lineErrorGeometry,
-				                          Codes[Code.MeasuresNotUnique_WithinRoute], null,
-				                          involvedRows);
+				errorCount += ReportError(
+					description, involvedRows, lineErrorGeometry,
+					Codes[Code.MeasuresNotUnique_WithinRoute], null);
 			}
 
 			if (pointErrorGeometry != null)
 			{
-				errorCount += ReportError(description,
-				                          pointErrorGeometry,
-				                          Codes[Code.MeasuresNotUnique_WithinRoute], null,
-				                          involvedRows);
+				errorCount += ReportError(
+					description, involvedRows, pointErrorGeometry,
+					Codes[Code.MeasuresNotUnique_WithinRoute], null);
 			}
 
 			if (lineErrorGeometry == null && pointErrorGeometry == null)

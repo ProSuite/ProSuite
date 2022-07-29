@@ -148,10 +148,10 @@ namespace ProSuite.QA.Tests
 					: string.Format("Invalid value in field {0}: {1} ({2})",
 					                fieldInfo.Name, value, fieldInfo.LastMessage);
 
-			return ReportError(description,
-			                   TestUtils.GetShapeCopy(row),
-			                   Codes[Code.ValueNotValidForFieldType],
-			                   fieldInfo.Name, row);
+			return ReportError(
+				description, InvolvedRowUtils.GetInvolvedRows(row),
+				TestUtils.GetShapeCopy(row),
+				Codes[Code.ValueNotValidForFieldType], fieldInfo.Name);
 		}
 
 		#region Nested type: FieldInfo

@@ -159,20 +159,18 @@ namespace ProSuite.QA.Tests
 			IGeometry shape = feature.Shape;
 			if (shape == null)
 			{
-				return ReportError(LocalizableStrings.QaSimpleGeometry_Null,
-				                   null,
-				                   Codes[Code.Null],
-				                   _shapeFieldName,
-				                   feature);
+				return ReportError(
+					LocalizableStrings.QaSimpleGeometry_Null,
+					InvolvedRowUtils.GetInvolvedRows(feature),
+					null, Codes[Code.Null], _shapeFieldName);
 			}
 
 			if (shape.IsEmpty)
 			{
-				return ReportError(LocalizableStrings.QaSimpleGeometry_Empty,
-				                   GeometryFactory.Clone(shape),
-				                   Codes[Code.Empty],
-				                   _shapeFieldName,
-				                   feature);
+				return ReportError(
+					LocalizableStrings.QaSimpleGeometry_Empty,
+					InvolvedRowUtils.GetInvolvedRows(feature),
+					GeometryFactory.Clone(shape), Codes[Code.Empty], _shapeFieldName);
 			}
 
 			// allow non-planar lines for network edges?
@@ -205,9 +203,9 @@ namespace ProSuite.QA.Tests
 				return NoError;
 			}
 
-			return ReportError(nonSimpleReason, errorGeometry,
-			                   issueCode, _shapeFieldName,
-			                   feature);
+			return ReportError(
+				nonSimpleReason, InvolvedRowUtils.GetInvolvedRows(feature), errorGeometry,
+				issueCode, _shapeFieldName);
 		}
 
 		[NotNull]

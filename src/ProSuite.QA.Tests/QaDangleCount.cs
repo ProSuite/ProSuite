@@ -224,12 +224,12 @@ namespace ProSuite.QA.Tests
 					                     featureDangleCount.DanglingPointCount,
 					                     constraintValues);
 
-			return ReportError(description,
-			                   GeometryFactory.CreateMultipoint(
-				                   featureDangleCount.DanglingPoints),
-			                   Codes[Code.InvalidNumberOfDangles],
-			                   TestUtils.GetShapeFieldName(featureDangleCount.Feature),
-			                   featureDangleCount.Feature);
+			return ReportError(
+				description, InvolvedRowUtils.GetInvolvedRows(featureDangleCount.Feature),
+				GeometryFactory.CreateMultipoint(
+					featureDangleCount.DanglingPoints),
+				Codes[Code.InvalidNumberOfDangles],
+				TestUtils.GetShapeFieldName(featureDangleCount.Feature));
 		}
 
 		private bool IsAllowedDangleCount(int tableIndex,

@@ -162,11 +162,11 @@ namespace ProSuite.QA.Tests
 				}
 			}
 
-			return ReportError(description,
-			                   GetErrorGeometry(row),
-			                   Codes[Code.ConstraintNotFulfilled],
-			                   GetSimpleConstraintAffectedComponent(),
-			                   GetInvolvedRows(row));
+			return ReportError(
+				description, GetInvolvedRows(row),
+				GetErrorGeometry(row),
+				Codes[Code.ConstraintNotFulfilled],
+				GetSimpleConstraintAffectedComponent());
 		}
 
 		[CanBeNull]
@@ -251,11 +251,10 @@ namespace ProSuite.QA.Tests
 						// of an un-convertable input type)
 						string description = string.Format(
 							"Error evaluating expression: {0}", e.Message);
-						errorCount += ReportError(description,
+						errorCount += ReportError(description, GetInvolvedRows(row),
 						                          GetErrorGeometry(row),
 						                          Codes[Code.ErrorEvaluatingExpression],
-						                          constraintNode.AffectedComponent,
-						                          GetInvolvedRows(row));
+						                          constraintNode.AffectedComponent);
 
 						return errorCount;
 					}
@@ -281,14 +280,12 @@ namespace ProSuite.QA.Tests
 					IssueCode issueCode = constraintNode.IssueCode ??
 					                      Codes[Code.ConstraintNotFulfilled];
 
-					object[] values = {GetFieldValues(row, constraintNode.Helper, parentHelpers)};
+					object[] values = { GetFieldValues(row, constraintNode.Helper, parentHelpers) };
 
-					errorCount += ReportError(description,
-					                          GetErrorGeometry(row),
-					                          issueCode,
-					                          constraintNode.AffectedComponent,
-					                          GetInvolvedRows(row),
-					                          values);
+					errorCount += ReportError(
+						description, GetInvolvedRows(row),
+						GetErrorGeometry(row),
+						issueCode, constraintNode.AffectedComponent, values: values);
 				}
 			}
 

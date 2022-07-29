@@ -258,9 +258,8 @@ namespace ProSuite.QA.Tests
 					                          : "Geometries are equal and constraint is not fulfilled";
 
 				IGeometry errorGeometry = feature.ShapeCopy;
-				errorCount += ReportError(errorDescription, errorGeometry,
-				                          GetIssueCode(), _shapeFieldName,
-				                          GetInvolvedRows(tableName, duplicates));
+				errorCount += ReportError(errorDescription, GetInvolvedRows(tableName, duplicates),
+				                          errorGeometry, GetIssueCode(), _shapeFieldName);
 			}
 
 			return errorCount;
@@ -286,11 +285,14 @@ namespace ProSuite.QA.Tests
 		}
 
 		[NotNull]
-		private static IEnumerable<InvolvedRow> GetInvolvedRows(
+		private static InvolvedRows GetInvolvedRows(
 			[NotNull] string tableName,
 			[NotNull] IEnumerable<int> oids)
 		{
-			return oids.Select(oid => new InvolvedRow(tableName, oid));
+			InvolvedRows result = new InvolvedRows();
+			result.AddRange(oids.Select(oid => new InvolvedRow(tableName, oid)));
+
+			return result;
 		}
 	}
 }

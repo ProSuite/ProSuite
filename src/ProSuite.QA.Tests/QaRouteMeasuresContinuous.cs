@@ -230,11 +230,9 @@ namespace ProSuite.QA.Tests
 						"M values are not continuous at line connection within route {0} (NaN / not NaN)",
 						routeId);
 					errorCount += ReportError(
-						description,
+						description, InvolvedRowUtils.GetInvolvedRows(row, searchRow),
 						GeometryFactory.Clone(endPoint),
-						Codes[Code.DifferentMeasuresAtLineConnection_OneValueIsNaN],
-						null,
-						row, searchRow);
+						Codes[Code.DifferentMeasuresAtLineConnection_OneValueIsNaN], null);
 				}
 				else
 				{
@@ -248,12 +246,11 @@ namespace ProSuite.QA.Tests
 							"M values are not continuous at line connection within route {0}. The M difference is {1}",
 							routeId, mDifference);
 						errorCount += ReportError(
-							description,
+							description, InvolvedRowUtils.GetInvolvedRows(row, searchRow),
 							GeometryFactory.Clone(endPoint),
 							Codes[
 								Code.DifferentMeasuresAtLineConnection_MDifferenceExceedsTolerance],
-							null,
-							row, searchRow);
+							null);
 					}
 				}
 			}

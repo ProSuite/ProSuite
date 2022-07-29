@@ -11,6 +11,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using IPnt = ProSuite.Commons.Geom.IPnt;
 using Pnt = ProSuite.Commons.Geom.Pnt;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Container;
 using ProSuite.QA.Core.IssueCodes;
 
 namespace ProSuite.QA.Tests.Coincidence
@@ -629,14 +630,16 @@ namespace ProSuite.QA.Tests.Coincidence
 					                                              out values);
 
 				errorCount += isWithinFeature
-					              ? ReportError(description, errorGeometry,
+					              ? ReportError(description,
+					                            InvolvedRowUtils.GetInvolvedRows(row0),
+					                            errorGeometry,
 					                            Codes[Code.NearlyCoincidentSection_WithinFeature],
-					                            shapeFieldName, values,
-					                            row0)
-					              : ReportError(description, errorGeometry,
+					                            shapeFieldName, values: values)
+					              : ReportError(description,
+					                            InvolvedRowUtils.GetInvolvedRows(row0, row1),
+					                            errorGeometry,
 					                            Codes[Code.NearlyCoincidentSection_BetweenFeatures],
-					                            shapeFieldName, values,
-					                            row0, row1);
+					                            shapeFieldName, values: values);
 			}
 
 			return errorCount;

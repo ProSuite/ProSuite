@@ -91,9 +91,9 @@ namespace ProSuite.QA.Tests
 						"field value is null: {0}",
 						TestUtils.GetFieldDisplayName(row, fieldIndex, out fieldName));
 
-					errorCount += ReportError(description, TestUtils.GetShapeCopy(row),
-					                          Codes[Code.ValueIsNull], fieldName,
-					                          row);
+					errorCount += ReportError(
+						description, InvolvedRowUtils.GetInvolvedRows(row),
+						TestUtils.GetShapeCopy(row), Codes[Code.ValueIsNull], fieldName);
 				}
 				else
 				{
@@ -105,9 +105,9 @@ namespace ProSuite.QA.Tests
 							TestUtils.GetFieldDisplayName(row, fieldIndex, out fieldName),
 							value);
 
-						errorCount += ReportError(description, TestUtils.GetShapeCopy(row),
-						                          Codes[Code.UnexpectedValue], fieldName,
-						                          row);
+						errorCount += ReportError(
+							description, InvolvedRowUtils.GetInvolvedRows(row),
+							TestUtils.GetShapeCopy(row), Codes[Code.UnexpectedValue], fieldName);
 					}
 					else if (stringValue.Length == 0)
 					{
@@ -115,9 +115,9 @@ namespace ProSuite.QA.Tests
 							"Empty text in field {0}",
 							TestUtils.GetFieldDisplayName(row, fieldIndex, out fieldName));
 
-						errorCount += ReportError(description, TestUtils.GetShapeCopy(row),
-						                          Codes[Code.EmptyText], fieldName,
-						                          row);
+						errorCount += ReportError(
+							description, InvolvedRowUtils.GetInvolvedRows(row),
+							TestUtils.GetShapeCopy(row), Codes[Code.EmptyText], fieldName);
 					}
 				}
 			}

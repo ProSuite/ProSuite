@@ -149,9 +149,9 @@ namespace ProSuite.QA.Tests
 		{
 			IPoint point = ((IPointCollection) part).get_Point(pointIndex);
 
-			return ReportError("Parts touch", point,
-			                   Codes[Code.PartsTouch],
-			                   _shapeFieldName, row);
+			return ReportError(
+				"Parts touch", InvolvedRowUtils.GetInvolvedRows(row), point,
+				Codes[Code.PartsTouch], _shapeFieldName);
 		}
 
 		[NotNull]

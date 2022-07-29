@@ -38,12 +38,6 @@ namespace ProSuite.QA.Container
 			QaError?.Invoke(this, args);
 		}
 
-		int IErrorReporting.Report(string description,
-		                           params IReadOnlyRow[] rows)
-		{
-			return ReportError(description, null, null, null, rows);
-		}
-
 		protected bool CancelTestingRow([NotNull] IReadOnlyRow row, Guid? recycleUnique = null,
 		                                bool ignoreTestArea = false)
 		{
@@ -65,90 +59,24 @@ namespace ProSuite.QA.Container
 		}
 
 		int IErrorReporting.Report(string description,
-		                           IssueCode issueCode,
-		                           string affectedComponent,
-		                           params IReadOnlyRow[] rows)
-		{
-			const IGeometry errorGeometry = null;
-			const bool reportIndividualParts = false;
-
-			return ReportError(description, errorGeometry,
-			                   issueCode, affectedComponent,
-			                   reportIndividualParts,
-			                   rows);
-		}
-
-		int IErrorReporting.Report(string description,
-		                           IGeometry errorGeometry,
-		                           params IReadOnlyRow[] rows)
-		{
-			return ReportError(description, errorGeometry, null, null, rows);
-		}
-
-		int IErrorReporting.Report(string description,
-		                           IGeometry errorGeometry,
-		                           IssueCode issueCode,
-		                           string affectedComponent,
-		                           params IReadOnlyRow[] rows)
-		{
-			const bool reportIndividualParts = false;
-
-			return ReportError(description, errorGeometry,
-			                   issueCode, affectedComponent,
-			                   reportIndividualParts, rows);
-		}
-
-		int IErrorReporting.Report(string description,
-		                           IGeometry errorGeometry,
-		                           IssueCode issueCode,
-		                           bool reportIndividualParts,
-		                           params IReadOnlyRow[] rows)
-		{
-			return ReportError(description, errorGeometry,
-			                   issueCode, null,
-			                   reportIndividualParts, rows);
-		}
-
-		public int Report(string description, IGeometry errorGeometry, IssueCode issueCode,
-		                  string affectedComponent, IEnumerable<object> values,
-		                  params IReadOnlyRow[] rows)
-		{
-			return ReportError(description, errorGeometry,
-			                   issueCode, affectedComponent, values,
-			                   rows);
-		}
-
-		int IErrorReporting.Report(string description,
+		                           InvolvedRows rows,
 		                           IGeometry errorGeometry,
 		                           IssueCode issueCode,
 		                           string affectedComponent,
 		                           bool reportIndividualParts,
-		                           params IReadOnlyRow[] rows)
+		                           IEnumerable<object> values)
 		{
-			return ReportError(description, errorGeometry,
-			                   issueCode, affectedComponent,
-			                   reportIndividualParts, rows);
+			return ReportError(description, rows, errorGeometry, issueCode, affectedComponent,
+			                   reportIndividualParts, values);
 		}
 
 		protected int ReportError([NotNull] string description,
+		                          [NotNull] InvolvedRows rows,
 		                          [CanBeNull] IGeometry errorGeometry,
 		                          [CanBeNull] IssueCode issueCode,
 		                          [CanBeNull] string affectedComponent,
-		                          bool reportIndividualParts,
-		                          params IReadOnlyRow[] rows)
-		{
-			return ReportError(description, errorGeometry,
-			                   issueCode, affectedComponent, null,
-			                   reportIndividualParts, rows);
-		}
-
-		protected int ReportError([NotNull] string description,
-		                          [CanBeNull] IGeometry errorGeometry,
-		                          [CanBeNull] IssueCode issueCode,
-		                          [CanBeNull] string affectedComponent,
-		                          [CanBeNull] IEnumerable<object> values,
-		                          bool reportIndividualParts,
-		                          params IReadOnlyRow[] rows)
+		                          bool reportIndividualParts = false,
+		                          [CanBeNull] IEnumerable<object> values = null)
 		{
 			ICollection<object> valueCollection =
 				values == null
@@ -157,9 +85,9 @@ namespace ProSuite.QA.Container
 
 			if (! reportIndividualParts || errorGeometry == null || errorGeometry.IsEmpty)
 			{
-				return ReportError(description, errorGeometry,
-				                   issueCode, affectedComponent, valueCollection,
-				                   rows);
+				return ReportError(description, rows, errorGeometry,
+				                   issueCode, affectedComponent,
+				                   valueCollection);
 			}
 
 			var errorCount = 0;
@@ -168,85 +96,19 @@ namespace ProSuite.QA.Container
 			{
 				if (! part.IsEmpty)
 				{
-					errorCount += ReportError(description, part,
-					                          issueCode, affectedComponent, valueCollection,
-					                          rows);
+					errorCount += ReportError(description, rows, part,
+					                          issueCode, affectedComponent, valueCollection);
 				}
 			}
 
 			return errorCount;
 		}
 
-		protected int ReportError([NotNull] string description,
-		                          [CanBeNull] IssueCode issueCode,
-		                          [CanBeNull] string affectedComponent,
-		                          [NotNull] IReadOnlyRow row)
-		{
-			return ReportError(description, TestUtils.GetShapeCopy(row),
-			                   issueCode, affectedComponent, row);
-		}
-
-		[Obsolete("call overload with issueCode and affectedComponent")]
-		protected int ReportError([NotNull] string description,
-		                          [CanBeNull] IGeometry errorGeometry,
-		                          params IReadOnlyRow[] rows)
-		{
-			return ReportError(description, errorGeometry, null, null, rows);
-		}
-
-		protected int ReportError([NotNull] string description,
-		                          [CanBeNull] IGeometry errorGeometry,
-		                          [CanBeNull] IssueCode issueCode,
-		                          [CanBeNull] string affectedComponent,
-		                          params IReadOnlyRow[] rows)
-		{
-			return ReportError(description, errorGeometry,
-			                   issueCode, affectedComponent,
-			                   InvolvedRowUtils.GetInvolvedRows(rows));
-		}
-
-		protected int ReportError([NotNull] string description,
-		                          [CanBeNull] IGeometry errorGeometry,
-		                          [CanBeNull] IssueCode issueCode,
-		                          [CanBeNull] string affectedComponent,
-		                          [CanBeNull] IEnumerable<object> values,
-		                          params IReadOnlyRow[] rows)
-		{
-			// TODO trial/hack to fix missing involved rows if this method signature is used
-			// remove after push/pull subtree
-			InvolvedRows involvedRows = InvolvedRowUtils.GetInvolvedRows(rows);
-			if (rows.Length == 0)
-			{
-				if (values is IEnumerable<IReadOnlyRow> rowsAsValues)
-				{
-					involvedRows = InvolvedRowUtils.GetInvolvedRows(rowsAsValues);
-					values = null;
-				}
-				else if (values is IEnumerable<InvolvedRow> involvedsAsValues)
-				{
-					involvedRows.AddRange(involvedsAsValues.ToList());
-					values = null;
-				}
-			}
-
-			return ReportError(description, errorGeometry,
-			                   issueCode, affectedComponent,
-			                   involvedRows, values);
-		}
-
-		[Obsolete("call overload with issueCode and affectedComponent")]
-		protected int ReportError([NotNull] string description,
-		                          [CanBeNull] IGeometry errorGeometry,
-		                          [NotNull] IEnumerable<InvolvedRow> involvedRows)
-		{
-			return ReportError(description, errorGeometry, null, null, involvedRows);
-		}
-
-		protected int ReportError([NotNull] string description,
-		                          [CanBeNull] IGeometry errorGeometry,
-		                          [CanBeNull] IssueCode issueCode,
-		                          [CanBeNull] string affectedComponent,
+		private int ReportError([NotNull] string description,
 		                          [NotNull] InvolvedRows involvedRows,
+		                          [CanBeNull] IGeometry errorGeometry,
+		                          [CanBeNull] IssueCode issueCode,
+		                          [CanBeNull] string affectedComponent,
 		                          [CanBeNull] IEnumerable<object> values = null)
 		{
 			var args = new QaErrorEventArgs(new QaError(this, description, involvedRows,

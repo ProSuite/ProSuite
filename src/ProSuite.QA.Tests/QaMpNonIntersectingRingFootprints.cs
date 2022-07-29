@@ -189,9 +189,9 @@ namespace ProSuite.QA.Tests
 					              FormatArea(area, _spatialReference));
 			}
 
-			return ReportError(description, intersection,
-			                   Codes[Code.RingFootprintsIntersect], _shapeFieldName,
-			                   feature);
+			return ReportError(
+				description, InvolvedRowUtils.GetInvolvedRows(feature), intersection,
+				Codes[Code.RingFootprintsIntersect], _shapeFieldName);
 		}
 
 		[NotNull]
@@ -285,10 +285,9 @@ namespace ProSuite.QA.Tests
 								"Point ids are not unique within face. Point ids: {0}",
 								StringUtils.ConcatenateSorted(pointIds, ","));
 
-							errorCount += ReportError(description, polygon,
-							                          Codes[Code.PointIdNotUniqueWithinFace],
-							                          _shapeFieldName,
-							                          feature);
+							errorCount += ReportError(
+								description, InvolvedRowUtils.GetInvolvedRows(feature), polygon,
+								Codes[Code.PointIdNotUniqueWithinFace], _shapeFieldName);
 							continue;
 						}
 					}

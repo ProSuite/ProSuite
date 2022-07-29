@@ -237,10 +237,10 @@ namespace ProSuite.QA.Tests.External
 				IssueCode issueCode =
 					new IssueCode(issueMsg.IssueCodeId, issueMsg.IssueCodeDescription);
 
-				IList<InvolvedRow> involvedRows = GetInvolvedRows(issueMsg.InvolvedObjects);
+				InvolvedRows involvedRows = GetInvolvedRows(issueMsg.InvolvedObjects);
 
-				errorCount += ReportError(issueMsg.Description, issueGeometry, issueCode,
-				                          issueMsg.AffectedComponent, involvedRows);
+				errorCount += ReportError(issueMsg.Description, involvedRows, issueGeometry, issueCode,
+				                          issueMsg.AffectedComponent);
 			}
 
 			// TODO: Make sure the obsolete exceptions are still handled in the domain verification service
@@ -255,10 +255,10 @@ namespace ProSuite.QA.Tests.External
 			return errorCount;
 		}
 
-		private static IList<InvolvedRow> GetInvolvedRows(
+		private static InvolvedRows GetInvolvedRows(
 			RepeatedField<InvolvedObjectsMsg> involvedObjectsMsg)
 		{
-			var result = new List<InvolvedRow>();
+			var result = new InvolvedRows();
 
 			foreach (InvolvedObjectsMsg involvedTableMsg in involvedObjectsMsg)
 			{

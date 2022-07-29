@@ -271,9 +271,9 @@ namespace ProSuite.QA.Tests
 						"Invalid value from expected M expression '{0}'. Numeric value expected ({1})",
 						_expectedMValueExpression, e.Message);
 
-					return ReportError(description, pointFeature.ShapeCopy,
-					                   Codes[Code.ExpressionResultNotNumeric], null,
-					                   pointFeature);
+					return ReportError(
+						description, InvolvedRowUtils.GetInvolvedRows(pointFeature),
+						pointFeature.ShapeCopy, Codes[Code.ExpressionResultNotNumeric], null);
 				}
 			}
 			else
@@ -293,19 +293,19 @@ namespace ProSuite.QA.Tests
 				if (string.IsNullOrEmpty(_expectedMValueExpression))
 				{
 					description = "Undefined M value on point feature";
-					return ReportError(description, pointFeature.ShapeCopy,
-					                   Codes[Code.UndefinedMValue_FromPointFeature],
-					                   TestUtils.GetShapeFieldName(pointFeature),
-					                   pointFeature);
+					return ReportError(
+						description, InvolvedRowUtils.GetInvolvedRows(pointFeature),
+						pointFeature.ShapeCopy, Codes[Code.UndefinedMValue_FromPointFeature],
+						TestUtils.GetShapeFieldName(pointFeature));
 				}
 
 				description = string.Format(
 					"Undefined expected M value from expression '{0}'",
 					_expectedMValueExpression);
 
-				return ReportError(description, pointFeature.ShapeCopy,
-				                   Codes[Code.UndefinedMValue_FromExpression], null,
-				                   pointFeature);
+				return ReportError(
+					description, InvolvedRowUtils.GetInvolvedRows(pointFeature),
+					pointFeature.ShapeCopy, Codes[Code.UndefinedMValue_FromExpression], null);
 			}
 
 			int errorCount = 0;
@@ -340,10 +340,9 @@ namespace ProSuite.QA.Tests
 						"Point does not lie closer than {0} to any line",
 						FormatLength(SearchDistance, _spatialReference));
 
-				errorCount += ReportError(description, error,
-				                          Codes[Code.PointNotNearLine],
-				                          TestUtils.GetShapeFieldName(pointFeature),
-				                          pointFeature);
+				errorCount += ReportError(
+					description, InvolvedRowUtils.GetInvolvedRows(pointFeature), error,
+					Codes[Code.PointNotNearLine], TestUtils.GetShapeFieldName(pointFeature));
 			}
 
 			return errorCount;
@@ -417,12 +416,11 @@ namespace ProSuite.QA.Tests
 				{
 					if (_lineMSource == LineMSource.VertexRequired)
 					{
-						errorCount += ReportError("No vertex near calibration point",
-						                          pointFeature.ShapeCopy,
-						                          Codes[Code.NoVertexNearPoint],
-						                          TestUtils.GetShapeFieldName(pointFeature),
-						                          pointFeature,
-						                          neighborFeature);
+						errorCount += ReportError(
+							"No vertex near calibration point",
+							InvolvedRowUtils.GetInvolvedRows(pointFeature, neighborFeature),
+							pointFeature.ShapeCopy, Codes[Code.NoVertexNearPoint],
+							TestUtils.GetShapeFieldName(pointFeature));
 					}
 
 					continue;
@@ -434,10 +432,10 @@ namespace ProSuite.QA.Tests
 				{
 					errorCount += ReportError(
 						string.Format("Expected M: {0}, actual M: undefined", expectedMValue),
+						InvolvedRowUtils.GetInvolvedRows(pointFeature, neighborFeature),
 						GeometryFactory.Clone(nearestPoint),
 						Codes[Code.UndefinedMValue_FromPointFeature],
-						TestUtils.GetShapeFieldName(pointFeature),
-						pointFeature, neighborFeature);
+						TestUtils.GetShapeFieldName(pointFeature));
 				}
 				else
 				{
@@ -450,10 +448,12 @@ namespace ProSuite.QA.Tests
 							string.Format("Expected M: {0}, actual M: {1}; difference: {2} ",
 							              expectedMValue, actualMValue, mDifference);
 
-						errorCount += ReportError(description, GeometryFactory.Clone(nearestPoint),
-						                          Codes[Code.MValueNotAsExpected],
-						                          TestUtils.GetShapeFieldName(pointFeature),
-						                          pointFeature, neighborFeature);
+						errorCount += ReportError(
+							description,
+							InvolvedRowUtils.GetInvolvedRows(pointFeature, neighborFeature),
+							GeometryFactory.Clone(nearestPoint),
+							Codes[Code.MValueNotAsExpected],
+							TestUtils.GetShapeFieldName(pointFeature));
 					}
 				}
 			}

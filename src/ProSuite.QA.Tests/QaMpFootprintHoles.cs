@@ -234,10 +234,10 @@ namespace ProSuite.QA.Tests
 						errorCount +=
 							ReportError(
 								"Multipatch has only vertical patches forming a ring",
+								InvolvedRowUtils.GetInvolvedRows(feature),
 								(IPolyline) errorParts,
 								Codes[Code.MultiPatchHasOnlyVerticalPatchesFormingARing],
-								_shapeFieldName,
-								feature);
+								_shapeFieldName);
 					}
 				}
 				else
@@ -247,10 +247,10 @@ namespace ProSuite.QA.Tests
 						errorCount +=
 							ReportError(
 								"Segments of vertical patch is not (completely) within footprint",
+								InvolvedRowUtils.GetInvolvedRows(feature),
 								(IPolyline) errorParts,
 								Codes[Code.VerticalPatchNotCompletelyWithinFootprint],
-								_shapeFieldName,
-								feature);
+								_shapeFieldName);
 					}
 				}
 			}
@@ -297,12 +297,11 @@ namespace ProSuite.QA.Tests
 
 				string description = string.Format("Footprint has inner ring (area: {0})",
 				                                   FormatArea(area, _spatialReference));
-				errorCount += ReportError(description,
-				                          GeometryFactory.CreatePolygon(ring),
-				                          Codes[Code.FootprintHasInnerRing],
-				                          _shapeFieldName,
-				                          new object[] {area},
-				                          row);
+				errorCount += ReportError(
+					description, InvolvedRowUtils.GetInvolvedRows(row),
+					GeometryFactory.CreatePolygon(ring),
+					Codes[Code.FootprintHasInnerRing],
+					_shapeFieldName, values: new object[] { area });
 			}
 
 			return errorCount;

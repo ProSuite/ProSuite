@@ -654,9 +654,9 @@ namespace ProSuite.QA.Tests
 					            : Codes[Code.PointTooClose_ConstraintNotFulfilled];
 			}
 
-			return ReportError(description, errorGeometry,
-			                   issueCode, _shapeFieldName,
-			                   pointFeature, referenceFeature);
+			return ReportError(
+				description, InvolvedRowUtils.GetInvolvedRows(pointFeature, referenceFeature),
+				errorGeometry, issueCode, _shapeFieldName);
 		}
 
 		[NotNull]

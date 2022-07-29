@@ -150,10 +150,9 @@ namespace ProSuite.QA.Tests
 						"The segments of this face are collinear and do not define a valid plane";
 					IGeometry errorGeometry = GetErrorGeometry(feature.Shape.GeometryType,
 					                                           segmentsPlane.Segments);
-					errorCount += ReportError(description, errorGeometry,
-					                          Codes[Code.FaceDoesNotDefineValidPlane],
-					                          null,
-					                          row);
+					errorCount += ReportError(
+						description, InvolvedRowUtils.GetInvolvedRows(row),
+						errorGeometry, Codes[Code.FaceDoesNotDefineValidPlane], null);
 					continue;
 				}
 
@@ -166,11 +165,10 @@ namespace ProSuite.QA.Tests
 						$"Face with {segmentsCount} segments is not planar, max. offset = {comparison}";
 					IGeometry errorGeometry = GetErrorGeometry(feature.Shape.GeometryType,
 					                                           segmentsPlane.Segments);
-					errorCount += ReportError(description, errorGeometry,
-					                          Codes[Code.FaceNotCoplanar],
-					                          TestUtils.GetShapeFieldName(feature),
-					                          InvolvedRowUtils.GetInvolvedRows(row),
-					                          new object[] {maxOffset});
+					errorCount += ReportError(
+						description, InvolvedRowUtils.GetInvolvedRows(row), errorGeometry,
+						Codes[Code.FaceNotCoplanar], TestUtils.GetShapeFieldName(feature),
+						values: new object[] { maxOffset });
 				}
 			}
 
@@ -183,10 +181,9 @@ namespace ProSuite.QA.Tests
 		{
 			IGeometry errorGeometry = GetErrorGeometry(feature.Shape.GeometryType,
 			                                           segmentsPlane.Segments);
-			return ReportError(description, errorGeometry,
-			                   Codes[Code.FaceDoesNotDefineValidPlane],
-			                   null,
-			                   feature);
+			return ReportError(
+				description, InvolvedRowUtils.GetInvolvedRows(feature), errorGeometry,
+				Codes[Code.FaceDoesNotDefineValidPlane], null);
 		}
 
 		[NotNull]

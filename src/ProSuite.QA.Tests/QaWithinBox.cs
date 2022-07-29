@@ -132,9 +132,9 @@ namespace ProSuite.QA.Tests
 			}
 
 			const string description = "Geometry is not within expected extent";
-			return ReportError(description, errorGeometry,
-			                   Codes[Code.GeometryNotWithinBox],
-			                   _shapeFieldName, feature);
+			return ReportError(
+				description, InvolvedRowUtils.GetInvolvedRows(feature), errorGeometry,
+				Codes[Code.GeometryNotWithinBox], _shapeFieldName);
 		}
 
 		[NotNull]

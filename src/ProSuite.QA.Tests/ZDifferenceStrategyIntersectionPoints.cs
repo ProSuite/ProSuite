@@ -213,11 +213,11 @@ namespace ProSuite.QA.Tests
 				       ? NoError
 				       : ErrorReporting.Report(
 					       nonPlanarError.Message,
+					       InvolvedRowUtils.GetInvolvedRows(planarFeature),
 					       nonPlanarError.SegmentsPlane.Geometry,
 					       Codes[Code.FaceNotCoplanar],
 					       ((IReadOnlyFeatureClass) planarFeature.Table).ShapeFieldName,
-					       new object[] {nonPlanarError.MaximumOffset},
-					       planarFeature);
+					       values: new object[] { nonPlanarError.MaximumOffset });
 		}
 
 		[NotNull]
@@ -469,10 +469,10 @@ namespace ProSuite.QA.Tests
 			{
 				return IgnoreUndefinedZValues
 					       ? NoError
-					       : ErrorReporting.Report("Z is NaN", intersectionPoint,
-					                               Codes[Code.UndefinedZ],
-					                               TestUtils.GetShapeFieldName(feature1),
-					                               feature1, feature2);
+					       : ErrorReporting.Report(
+						       "Z is NaN", InvolvedRowUtils.GetInvolvedRows(feature1, feature2),
+						       intersectionPoint, Codes[Code.UndefinedZ],
+						       TestUtils.GetShapeFieldName(feature1));
 			}
 
 			//double feature2Z = GeometryUtils.GetZValueFromGeometry(
@@ -501,11 +501,9 @@ namespace ProSuite.QA.Tests
 				errorCount += ErrorReporting.Report(
 					string.Format("The Z distance is too small ({0})",
 					              FormatComparison(dz, minimumZDifference, "<")),
-					intersectionPoint,
-					Codes[Code.TooSmall],
-					TestUtils.GetShapeFieldName(feature1),
-					new object[] {dz},
-					feature1, feature2);
+					InvolvedRowUtils.GetInvolvedRows(feature1, feature2),
+					intersectionPoint, Codes[Code.TooSmall],
+					TestUtils.GetShapeFieldName(feature1), values: new object[] { dz });
 			}
 
 			if (maximumZDifference > 0 && dz > maximumZDifference)
@@ -514,11 +512,9 @@ namespace ProSuite.QA.Tests
 				errorCount += ErrorReporting.Report(
 					string.Format("The Z distance is too large ({0})",
 					              FormatComparison(dz, maximumZDifference, ">")),
-					intersectionPoint,
-					Codes[Code.TooLarge],
-					TestUtils.GetShapeFieldName(feature1),
-					new object[] {dz},
-					feature1, feature2);
+					InvolvedRowUtils.GetInvolvedRows(feature1, feature2),
+					intersectionPoint, Codes[Code.TooLarge],
+					TestUtils.GetShapeFieldName(feature1), values: new object[] { dz });
 			}
 
 			return errorCount +
@@ -569,10 +565,9 @@ namespace ProSuite.QA.Tests
 			string message = $"Z distance = {zDifference:N2}; {conditionMessage}";
 
 			return ErrorReporting.Report(
-				message, intersectionPoint,
-				Codes[Code.ConstraintNotFulfilled],
-				TestUtils.GetShapeFieldNames(upperFeature, lowerFeature),
-				upperFeature, lowerFeature);
+				message, InvolvedRowUtils.GetInvolvedRows(upperFeature, lowerFeature),
+				intersectionPoint, Codes[Code.ConstraintNotFulfilled],
+				TestUtils.GetShapeFieldNames(upperFeature, lowerFeature));
 		}
 
 		public interface IIntersectionPoint

@@ -338,9 +338,9 @@ namespace ProSuite.QA.Tests
 				errorCount +=
 					ReportError(
 						$"Point is {cmp} below face",
+						InvolvedRowUtils.GetInvolvedRows(feature, related),
 						GeometryFactory.CreatePoint(point.X, point.Y, point[2]),
-						Codes[Code.PointTooCloseBelowFace], null,
-						feature, related);
+						Codes[Code.PointTooCloseBelowFace], null);
 			}
 
 			if (dzMax >= 0 && dzMax < _minimumDistanceAbove)
@@ -353,9 +353,9 @@ namespace ProSuite.QA.Tests
 				errorCount +=
 					ReportError(
 						$"Point is {cmp} above face",
+						InvolvedRowUtils.GetInvolvedRows(feature, related),
 						GeometryFactory.CreatePoint(point.X, point.Y, point[2]),
-						Codes[Code.PointTooCloseAboveFace], null,
-						feature, related);
+						Codes[Code.PointTooCloseAboveFace], null);
 			}
 
 			if (dzMin <= 0 && dzMax <= 0)
@@ -363,9 +363,9 @@ namespace ProSuite.QA.Tests
 				errorCount +=
 					ReportError(
 						"Point is within non-coplanarity of face",
+						InvolvedRowUtils.GetInvolvedRows(feature, related),
 						GeometryFactory.CreatePoint(point.X, point.Y, point[2]),
-						Codes[Code.PointInNonCoplanarityOfFace], null,
-						feature, related);
+						Codes[Code.PointInNonCoplanarityOfFace], null);
 			}
 
 			return errorCount;
@@ -418,9 +418,9 @@ namespace ProSuite.QA.Tests
 			const string description =
 				"The segments of this face are collinear and do not define a valid plane";
 
-			return ReportError(description, errorGeometry,
-			                   Codes[Code.FaceDoesNotDefineValidPlane], null,
-			                   feature);
+			return ReportError(
+				description, InvolvedRowUtils.GetInvolvedRows(feature), errorGeometry,
+				Codes[Code.FaceDoesNotDefineValidPlane], null);
 		}
 
 		private int ReportNonCoplanarFace(int segmentsCount,
@@ -434,9 +434,8 @@ namespace ProSuite.QA.Tests
 
 			return ReportError(
 				$"Face with {segmentsCount} segments is not planar, max. offset = {comparison}",
-				errorGeometry,
-				Codes[Code.FaceNotCoplanar], null,
-				involvedFeature);
+				InvolvedRowUtils.GetInvolvedRows(involvedFeature), errorGeometry,
+				Codes[Code.FaceNotCoplanar], null);
 		}
 
 		private class PlaneVerticalHelper : PlaneHelper

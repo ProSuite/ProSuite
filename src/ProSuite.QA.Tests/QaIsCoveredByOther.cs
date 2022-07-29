@@ -1254,11 +1254,10 @@ namespace ProSuite.QA.Tests
 					return NoError;
 				}
 
-				return ReportError(uncoveredDescription,
-				                   errorGeometry,
-				                   Codes[codeId],
-				                   GetAffectedComponent(unCoveredFeature.TableIndex),
-				                   feature);
+				return ReportError(
+					uncoveredDescription, InvolvedRowUtils.GetInvolvedRows(feature),
+					errorGeometry, Codes[codeId],
+					GetAffectedComponent(unCoveredFeature.TableIndex));
 			}
 
 			// there are some intersecting features, but the feature is not covered completely
@@ -1328,10 +1327,9 @@ namespace ProSuite.QA.Tests
 					continue;
 				}
 
-				errorCount += ReportError(partlyCoveredDescription, part,
-				                          issueCode,
-				                          GetAffectedComponent(unCoveredFeature.TableIndex),
-				                          feature);
+				errorCount += ReportError(
+					partlyCoveredDescription, InvolvedRowUtils.GetInvolvedRows(feature), part,
+					issueCode, GetAffectedComponent(unCoveredFeature.TableIndex));
 			}
 
 			return errorCount;

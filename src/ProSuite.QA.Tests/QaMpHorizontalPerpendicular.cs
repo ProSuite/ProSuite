@@ -212,10 +212,9 @@ namespace ProSuite.QA.Tests
 
 			IGeometry errorGeometry = SegmentPairUtils.CreateGeometry(relatedPairs);
 
-			return ReportError(description, errorGeometry,
-			                   issueCode,
-			                   TestUtils.GetShapeFieldName(row),
-			                   row);
+			return ReportError(
+				description, InvolvedRowUtils.GetInvolvedRows(row), errorGeometry,
+				issueCode, TestUtils.GetShapeFieldName(row));
 		}
 
 		[NotNull]

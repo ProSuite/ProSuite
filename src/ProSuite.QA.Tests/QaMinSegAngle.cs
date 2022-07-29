@@ -206,10 +206,11 @@ namespace ProSuite.QA.Tests
 					string description = string.Format("Segment angle {0} < {1}",
 					                                   FormatAngle(angleRadians, format),
 					                                   FormatAngle(_settings.LimitRad, format));
-					errorCount += ReportError(description, CreateErrorPoint(angleInfo),
-					                          Codes[Code.SegmentAngleTooSmall], _shapeFieldName,
-					                          new object[] {MathUtils.ToDegrees(angleRadians)},
-					                          row);
+					errorCount += ReportError(
+						description, InvolvedRowUtils.GetInvolvedRows(row),
+						CreateErrorPoint(angleInfo), Codes[Code.SegmentAngleTooSmall],
+						_shapeFieldName,
+						values: new object[] { MathUtils.ToDegrees(angleRadians) });
 				}
 			}
 
