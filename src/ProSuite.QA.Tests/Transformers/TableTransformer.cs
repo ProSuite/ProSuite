@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
@@ -25,21 +26,28 @@ namespace ProSuite.QA.Tests.Transformers
 		{
 			if (_transformed == null)
 			{
-				TransformedFeatureClass transformed = GetTransformedCore(_transformerName);
-				if (transformed.BackingDataset is TransformedBackingDataset tbds)
+				try
 				{
-					foreach (var pair in _tableConstraints)
+					TransformedFeatureClass transformed = GetTransformedCore(_transformerName);
+					if (transformed.BackingDataset is TransformedBackingDataset tbds)
 					{
-						tbds.SetConstraint(pair.Key, pair.Value);
-					}
+						foreach (var pair in _tableConstraints)
+						{
+							tbds.SetConstraint(pair.Key, pair.Value);
+						}
 
-					foreach (var pair in _tableCaseSensitivity)
-					{
-						tbds.SetSqlCaseSensitivity(pair.Key, pair.Value);
+						foreach (var pair in _tableCaseSensitivity)
+						{
+							tbds.SetSqlCaseSensitivity(pair.Key, pair.Value);
+						}
 					}
+					_transformed = transformed;
 				}
-
-				_transformed = transformed;
+				catch (Exception exception)
+				{
+					throw new InvalidOperationException(
+						$"Cannot create TableTransformer {_transformerName}", exception);
+				}
 			}
 
 			return _transformed;

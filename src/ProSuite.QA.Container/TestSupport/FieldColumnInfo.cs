@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
@@ -13,6 +14,11 @@ namespace ProSuite.QA.Container.TestSupport
 		public static FieldColumnInfo Create(IReadOnlyTable table, string fieldName)
 		{
 			int fieldIndex = table.FindField(fieldName);
+			if (fieldIndex < 0)
+			{
+				throw new InvalidOperationException(
+					$"Unknown field {fieldName} in table {table.Name}");
+			}
 			IField field = table.Fields.Field[fieldIndex];
 			return new FieldColumnInfo(table, field, fieldIndex);
 		}
