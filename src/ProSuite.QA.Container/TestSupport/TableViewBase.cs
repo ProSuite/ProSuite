@@ -138,14 +138,18 @@ namespace ProSuite.QA.Container.TestSupport
 			return ConstraintView.Table.Columns.IndexOf(columnName);
 		}
 
+		[NotNull]
 		public Type GetColumnType([NotNull] string columnName)
 		{
 			ColumnInfo ci = ColumnInfos.FirstOrDefault(
 				x => x?.ColumnName.Equals(columnName,
 				                          StringComparison.InvariantCultureIgnoreCase) == true);
-			return ci?.ColumnType ?? GetColumn(columnName)?.DataType;
+			return ci?.ColumnType ?? GetColumn(columnName)?.DataType ??
+			       throw new InvalidOperationException($"Column {columnName} not found)");
 		}
-		public DataColumn GetColumn([NotNull] string columnName)
+
+		[CanBeNull]
+		private DataColumn GetColumn([NotNull] string columnName)
 		{
 			if (ConstraintView == null)
 			{

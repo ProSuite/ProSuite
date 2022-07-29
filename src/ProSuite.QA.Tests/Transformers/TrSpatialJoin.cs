@@ -205,7 +205,7 @@ namespace ProSuite.QA.Tests.Transformers
 			{
 				IField f =
 					FieldUtils.CreateField(
-						field, FieldUtils.GetFieldType(tableView.GetColumn(field).DataType));
+						field, FieldUtils.GetFieldType(tableView.GetColumnType(field)));
 				FieldsT.AddFields(f);
 
 				CalcFields = CalcFields ?? new Dictionary<TableView, List<FieldInfo>>();
