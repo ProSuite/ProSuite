@@ -55,6 +55,8 @@ namespace ProSuite.QA.Container
 
 		#endregion
 
+		public static string BeginTileCoreMethod => nameof(BeginTileCore);
+		public static string CompleteTileCoreMethod => nameof(CompleteTileCore);
 		protected internal double TerrainTolerance { get; set; }
 
 		public IList<RasterReference> InvolvedRasters { get; protected set; }

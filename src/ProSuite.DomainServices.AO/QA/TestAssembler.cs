@@ -151,8 +151,8 @@ namespace ProSuite.DomainServices.AO.QA
 				return false;
 			}
 
-			if (Overrides(testType, ct, "CompleteTileCore")
-				|| Overrides(testType, ct, "BeginTileCore"))
+			if (Overrides(testType, ct, ContainerTest.CompleteTileCoreMethod)
+				|| Overrides(testType, ct, ContainerTest.BeginTileCoreMethod))
 			{
 				return false;
 			}
