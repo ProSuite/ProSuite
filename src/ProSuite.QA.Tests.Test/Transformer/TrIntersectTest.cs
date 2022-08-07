@@ -32,7 +32,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 		}
 
 		[Test]
-		public void CanIntersect()
+		public void CanIntersectLines()
 		{
 			IFeatureWorkspace ws = TestWorkspaceUtils.CreateInMemoryWorkspace("TrIntersect");
 
@@ -74,6 +74,137 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			}
 
 		}
+
+		[Test]
+		public void CanIntersectPoints()
+		{
+			IFeatureWorkspace ws = TestWorkspaceUtils.CreateInMemoryWorkspace("TrIntersect");
+
+			IFeatureClass pointFc =
+				CreateFeatureClass(ws, "pointFc", esriGeometryType.esriGeometryPoint,
+				                   new[] { FieldUtils.CreateIntegerField("IntVal") });
+			IFeatureClass polyFc =
+				CreateFeatureClass(ws, "polyFc", esriGeometryType.esriGeometryPolygon);
+
+			{
+				IFeature f = pointFc.CreateFeature();
+				f.Shape = GeometryFactory.CreatePoint(55, 65);
+				f.Value[1] = 5;
+				f.Store();
+			}
+			{
+				IFeature f = pointFc.CreateFeature();
+				f.Shape = GeometryFactory.CreatePoint(20, 20);
+				f.Value[1] = 5;
+				f.Store();
+			}
+			{
+				IFeature f = polyFc.CreateFeature();
+				f.Shape = CurveConstruction.StartPoly(50, 50).LineTo(50, 70).LineTo(70, 70)
+				                           .LineTo(70, 50).ClosePolygon();
+				f.Store();
+			}
+
+			TrIntersect tr = new TrIntersect(ReadOnlyTableFactory.Create(pointFc),
+			                                 ReadOnlyTableFactory.Create(polyFc));
+			{
+				QaConstraint test = new QaConstraint(tr.GetTransformed(), "t0.IntVal < 2");
+				var runner = new QaContainerTestRunner(1000, test);
+				runner.Execute();
+				Assert.AreEqual(1, runner.Errors.Count);
+			}
+			{
+				QaConstraint test = new QaConstraint(tr.GetTransformed(), "t0.IntVal < 8");
+				var runner = new QaContainerTestRunner(1000, test);
+				runner.Execute();
+				Assert.AreEqual(0, runner.Errors.Count);
+			}
+
+		}
+
+		[Test]
+		public void CanIntersectMultiPoints()
+		{
+			IFeatureWorkspace ws = TestWorkspaceUtils.CreateInMemoryWorkspace("TrIntersect");
+
+			IFeatureClass pointFc =
+				CreateFeatureClass(ws, "pointFc", esriGeometryType.esriGeometryMultipoint,
+				                   new[] { FieldUtils.CreateIntegerField("IntVal") });
+			IFeatureClass polyFc =
+				CreateFeatureClass(ws, "polyFc", esriGeometryType.esriGeometryPolygon);
+
+			{
+				IFeature f = pointFc.CreateFeature();
+				f.Shape = GeometryFactory.CreateMultipoint(GeometryFactory.CreatePoint(55, 65), GeometryFactory.CreatePoint(20, 20));
+				f.Value[1] = 5;
+				f.Store();
+			}
+			{
+				IFeature f = polyFc.CreateFeature();
+				f.Shape = CurveConstruction.StartPoly(50, 50).LineTo(50, 70).LineTo(70, 70)
+				                           .LineTo(70, 50).ClosePolygon();
+				f.Store();
+			}
+
+			TrIntersect tr = new TrIntersect(ReadOnlyTableFactory.Create(pointFc),
+			                                 ReadOnlyTableFactory.Create(polyFc));
+			{
+				QaConstraint test = new QaConstraint(tr.GetTransformed(), "PartIntersected < 0.3");
+				var runner = new QaContainerTestRunner(1000, test);
+				runner.Execute();
+				Assert.AreEqual(1, runner.Errors.Count);
+			}
+			{
+				QaConstraint test = new QaConstraint(tr.GetTransformed(), "PartIntersected < 0.8");
+				var runner = new QaContainerTestRunner(1000, test);
+				runner.Execute();
+				Assert.AreEqual(0, runner.Errors.Count);
+			}
+
+		}
+
+		[Test]
+		public void CanIntersectPolygons()
+		{
+			IFeatureWorkspace ws = TestWorkspaceUtils.CreateInMemoryWorkspace("TrIntersect");
+
+			IFeatureClass pFc =
+				CreateFeatureClass(ws, "pointFc", esriGeometryType.esriGeometryPolygon,
+				                   new[] { FieldUtils.CreateIntegerField("IntVal") });
+			IFeatureClass polyFc =
+				CreateFeatureClass(ws, "polyFc", esriGeometryType.esriGeometryPolygon);
+
+			{
+				IFeature f = pFc.CreateFeature();
+				f.Shape = CurveConstruction.StartPoly(40, 40).LineTo(40, 60).LineTo(60, 60)
+				                           .LineTo(60, 40).ClosePolygon();
+				f.Value[1] = 5;
+				f.Store();
+			}
+			{
+				IFeature f = polyFc.CreateFeature();
+				f.Shape = CurveConstruction.StartPoly(50, 50).LineTo(50, 70).LineTo(70, 70)
+				                           .LineTo(70, 50).ClosePolygon();
+				f.Store();
+			}
+
+			TrIntersect tr = new TrIntersect(ReadOnlyTableFactory.Create(pFc),
+			                                 ReadOnlyTableFactory.Create(polyFc));
+			{
+				QaConstraint test = new QaConstraint(tr.GetTransformed(), "PartIntersected < 0.2");
+				var runner = new QaContainerTestRunner(1000, test);
+				runner.Execute();
+				Assert.AreEqual(1, runner.Errors.Count);
+			}
+			{
+				QaConstraint test = new QaConstraint(tr.GetTransformed(), "PartIntersected < 0.26");
+				var runner = new QaContainerTestRunner(1000, test);
+				runner.Execute();
+				Assert.AreEqual(0, runner.Errors.Count);
+			}
+
+		}
+
 		[Test]
 		public void CanAccessAttributes()
 		{

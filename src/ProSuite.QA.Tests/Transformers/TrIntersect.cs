@@ -168,7 +168,8 @@ namespace ProSuite.QA.Tests.Transformers
 						         _intersecting, intersectingFilter, QueryHelpers[1]))
 					{
 						IGeometry intersectingGeom = ((IReadOnlyFeature) intersecting).Shape;
-						var op = (ITopologicalOperator) ((IReadOnlyFeature) toIntersect).Shape;
+						IGeometry toIntersectGeom = ((IReadOnlyFeature) toIntersect).Shape;
+						var op = (ITopologicalOperator)toIntersectGeom;
 						if (((IRelationalOperator) op).Disjoint(intersectingGeom))
 						{
 							continue;
@@ -176,19 +177,36 @@ namespace ProSuite.QA.Tests.Transformers
 
 						IGeometry intersected = op.Intersect(
 							intersectingGeom,
-							esriGeometryDimension.esriGeometry1Dimension); // TODO
+							toIntersectGeom.Dimension);
 
 						if (intersected.IsEmpty)
 						{
 							continue;
 						}
 
-						double fullLength = ((IPolyline) op).Length;
-						double partLength = ((IPolyline) intersected).Length;
+						double partIntersected = 1;
+						if (toIntersectGeom is IPolyline l)
+						{
+							double fullLength = l.Length;
+							double partLength = ((IPolyline) intersected).Length;
+							partIntersected = partLength / fullLength;
+						}
+						else if (toIntersectGeom is IArea pg)
+						{
+							double fullArea = pg.Area;
+							double partArea = ((IArea)intersected).Area;
+							partIntersected = partArea / fullArea;
+						}
+						else if (toIntersectGeom is IPointCollection mp)
+						{
+							double fullCount = mp.PointCount;
+							double partCount = ((IPointCollection) intersected).PointCount;
+							partIntersected = partCount / fullCount;
+						}
 
 						GdbFeature f = Resulting.CreateFeature();
 						f.Shape = intersected;
-						f.set_Value(iPartIntersected, partLength / fullLength);
+						f.set_Value(iPartIntersected, partIntersected);
 						f.Store();
 
 						f.set_Value(
