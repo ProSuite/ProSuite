@@ -1,11 +1,12 @@
 using System;
-using System.Linq;
-using System.ComponentModel;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Linq;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 using ProSuite.Commons.Misc;
 using ProSuite.DdxEditor.Content.Blazor.ViewModel;
 using ProSuite.DomainModel.AO.QA;
@@ -16,15 +17,31 @@ namespace ProSuite.DdxEditor.Content.Blazor;
 
 public partial class QualityConditionTableViewBlazor : IDisposable
 {
+	private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 	// ReSharper disable once NotNullMemberIsNotInitialized
 	[NotNull] private RadzenDataGrid<ViewModelBase> _mainGrid;
 
-	[NotNull] private List<RadzenDataGrid<ViewModelBase>> _childGrids = new();
+	[NotNull] private readonly List<RadzenDataGrid<ViewModelBase>> _childGrids;
 
 	// ReSharper disable once NotNullMemberIsNotInitialized
 	[NotNull] private IInstanceConfigurationViewModel _viewModel;
 
-	private Latch _latch = new Latch();
+	private readonly Latch _latch = new Latch();
+
+	// ReSharper disable once NotNullMemberIsNotInitialized
+	public QualityConditionTableViewBlazor()
+	{
+		try
+		{
+			_childGrids = new List<RadzenDataGrid<ViewModelBase>>();
+		}
+		catch (Exception e)
+		{
+			_msg.Debug("Error initializing blazor QualityConditionTableViewBlazor", e);
+			throw;
+		}
+	}
 
 	[NotNull]
 	[Parameter]
@@ -43,6 +60,7 @@ public partial class QualityConditionTableViewBlazor : IDisposable
 	private IList<ViewModelBase> Rows => ViewModel.Rows;
 
 	public ViewModelBase SelectedRow { get; set; }
+
 	// todo rename to SelectedChildRow
 	public ViewModelBase SelectedCollectionRow { get; set; }
 
@@ -69,7 +87,7 @@ public partial class QualityConditionTableViewBlazor : IDisposable
 		}
 
 		foreach (ViewModelBase row in Rows.OfType<TestParameterValueCollectionViewModel>()
-										  .SelectMany(row => row.Values))
+		                                  .SelectMany(row => row.Values))
 		{
 			await DataGridUtils.UpdateRowIfNotNull(_childGrids, row);
 		}
@@ -78,7 +96,7 @@ public partial class QualityConditionTableViewBlazor : IDisposable
 	private async void OnRowClick(DataGridRowMouseEventArgs<ViewModelBase> args)
 	{
 		Assert.True(_mainGrid.Data.Contains(args.Data), "row is not from grid");
-		
+
 		await DataGridUtils.UpdateRowIfNotNull(_childGrids, SelectedCollectionRow);
 
 		ViewModelBase recent = SelectedRow;
@@ -91,7 +109,7 @@ public partial class QualityConditionTableViewBlazor : IDisposable
 			await DataGridUtils.UpdateRowIfNotNull(_mainGrid, recent);
 			return;
 		}
-		
+
 		if (! Equals(recent, SelectedRow))
 		{
 			await DataGridUtils.UpdateRowIfNotNull(_mainGrid, recent);
@@ -130,7 +148,7 @@ public partial class QualityConditionTableViewBlazor : IDisposable
 	{
 		row.New = false;
 	}
-	
+
 	private void OnRowUpdate(ViewModelBase row)
 	{
 		row.Dirty = false;
@@ -140,7 +158,7 @@ public partial class QualityConditionTableViewBlazor : IDisposable
 	{
 		// todo daro inline
 		bool isExpandable = args.Data.Values != null;
-		
+
 		args.Expandable = isExpandable;
 	}
 
@@ -238,7 +256,7 @@ public partial class QualityConditionTableViewBlazor : IDisposable
 	private void InsertRowClicked()
 	{
 		Assert.NotNull(SelectedRow);
-		
+
 		ViewModelBase row = ViewModel.InsertRow(SelectedRow.Parameter);
 
 		DataGridUtils.Insert(_childGrids, row);
@@ -321,7 +339,7 @@ public partial class QualityConditionTableViewBlazor : IDisposable
 		{
 			return true;
 		}
-		
+
 		if (SelectedCollectionRow == null)
 		{
 			return true;
@@ -373,7 +391,7 @@ public partial class QualityConditionTableViewBlazor : IDisposable
 		{
 			return true;
 		}
-		
+
 		return _childGrids.Any(grid =>
 		{
 			List<ViewModelBase> data = grid.Data.ToList();
@@ -406,9 +424,7 @@ public partial class QualityConditionTableViewBlazor : IDisposable
 
 	#endregion
 
-	private void OnFocusOut(FocusEventArgs args)
-	{
-	}
+	private void OnFocusOut(FocusEventArgs args) { }
 
 	private void OnChildGridRender(DataGridRenderEventArgs<ViewModelBase> args)
 	{

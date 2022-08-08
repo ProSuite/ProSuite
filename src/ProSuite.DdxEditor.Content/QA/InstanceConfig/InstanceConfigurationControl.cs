@@ -5,6 +5,7 @@ using System.Data;
 using System.Windows.Forms;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 using ProSuite.Commons.Misc;
 using ProSuite.Commons.UI.ScreenBinding;
 using ProSuite.Commons.UI.ScreenBinding.Elements;
@@ -25,6 +26,8 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 {
 	public partial class InstanceConfigurationControl : UserControl, IInstanceConfigurationView
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		[NotNull] private readonly ScreenBinder<InstanceConfiguration> _binder;
 		[NotNull] private readonly Latch _latch = new Latch();
 
@@ -387,10 +390,17 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			// the first paint event.
 			if (_initialTableRows != null)
 			{
-				var tableRows = _initialTableRows;
-				_initialTableRows = null;
+				try
+				{
+					var tableRows = _initialTableRows;
+					_initialTableRows = null;
 
-				BindTo(tableRows);
+					BindTo(tableRows);
+				}
+				catch (Exception ex)
+				{
+					_msg.Warn("Error binding table rows", ex);
+				}
 			}
 		}
 	}
