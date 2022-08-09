@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Data;
-using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AO.Geodatabase
@@ -66,7 +65,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 				}
 			}
 
-			var dataTable = new DataTable(((IDataset) table).Name);
+			var dataTable = new DataTable(table.Name);
 			// dataTable.CaseSensitive = true; TODO allow controlling case-sensitivity
 
 			int nFields = fields.Count;
