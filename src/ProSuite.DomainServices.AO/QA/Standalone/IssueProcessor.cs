@@ -9,6 +9,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainServices.AO.QA.Exceptions;
+using ProSuite.DomainServices.AO.QA.Issues;
 using ProSuite.QA.Container;
 
 namespace ProSuite.DomainServices.AO.QA.Standalone
@@ -45,6 +46,8 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 			_testPerimeter = testPerimeter;
 			_exceptionObjectEvaluator = exceptionObjectEvaluator;
 		}
+
+		public event EventHandler<IssueFoundEventArgs> IssueFound;
 
 		public void Process([NotNull] QaErrorEventArgs args)
 		{
@@ -91,6 +94,8 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 				ErrorCount++;
 				Fulfilled = false;
 			}
+
+			OnIssueFound(element, qaError, element.AllowErrors);
 
 			_issueWriter.WriteIssue(qaError, element);
 		}
@@ -161,6 +166,23 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 
 				return false;
 			}
+		}
+
+		private void OnIssueFound(
+			[NotNull] QualitySpecificationElement qSpecElement,
+			[NotNull] QaError qaError,
+			bool isAllowable)
+		{
+			if (IssueFound == null)
+			{
+				return;
+			}
+
+			string involvedObjectsString = null;
+
+			IssueFound.Invoke(
+				this, new IssueFoundEventArgs(qSpecElement, qaError, isAllowable,
+				                              involvedObjectsString));
 		}
 
 		public int GetIssueCount([NotNull] QualityCondition qualityCondition,
