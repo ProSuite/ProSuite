@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Threading;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geometry;
@@ -12,8 +11,7 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 {
 	public static class ErrorRepositoryUtils
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		[NotNull] private static readonly ThreadLocal<IEnvelope> _envelopeTemplate =
 			new ThreadLocal<IEnvelope>(() => new EnvelopeClass());
@@ -80,7 +78,7 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 						// the geometry has become empty due to simplification
 						// -> use center of original envelope (which was not empty)
 						return CreateMultipointFromEnvelopeCentroid(envelope,
-						                                            ((IZAware) result).ZAware);
+							((IZAware) result).ZAware);
 					}
 				}
 
@@ -163,8 +161,8 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 			return _envelopeTemplate.Value;
 		}
 
-		public static bool IsPolygonTooSmall([NotNull] IPolygon polygon,
-		                                     [NotNull] ISpatialReference spatialReference)
+		private static bool IsPolygonTooSmall([NotNull] IPolygon polygon,
+		                                      [NotNull] ISpatialReference spatialReference)
 		{
 			double absArea = Math.Abs(((IArea) polygon).Area);
 
@@ -180,8 +178,8 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 			return IsPolygonTooSmall(perimeter, absArea, xyTolerance);
 		}
 
-		public static bool IsPolygonTooSmall(double perimeter, double area,
-		                                     double xyTolerance)
+		private static bool IsPolygonTooSmall(double perimeter, double area,
+		                                      double xyTolerance)
 		{
 			if (perimeter < xyTolerance)
 			{
