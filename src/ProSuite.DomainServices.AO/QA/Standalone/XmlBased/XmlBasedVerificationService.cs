@@ -33,6 +33,9 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 	/// <summary>
 	/// Standalone (i.e. non-DDX dependent) verification service based on a xml specification or
 	/// based on a list of conditions (defined via xml).
+	/// TODO: Rename to Standalone/UnRegisteredModelVerification or something like this
+	/// TODO: Report Errors, probably progress messages back via events to allow for error-streaming
+	/// TODO: Report final (probably simplified statistics) to be delivered to client.
 	/// </summary>
 	public class XmlBasedVerificationService
 	{
