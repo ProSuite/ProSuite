@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Windows.Forms;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Essentials.System;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI.WinForms;
 using ProSuite.DdxEditor.Content.Properties;
@@ -167,7 +168,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 			_msg.InfoFormat("Report of registered tests created: {0}", htmlFileName);
 
 			_msg.Info("Opening report...");
-			Process.Start(htmlFileName);
+			ProcessUtils.StartProcess(htmlFileName);
 		}
 
 		public void CreateTestReport([NotNull] Assembly assembly,
@@ -186,7 +187,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 			                assembly.Location, htmlFileName);
 
 			_msg.Info("Opening report...");
-			Process.Start(htmlFileName);
+			ProcessUtils.StartProcess(htmlFileName);
 		}
 
 		public void TryAddTestDescriptors(

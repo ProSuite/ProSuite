@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Essentials.System;
 using ProSuite.Commons.Geom;
 using ProSuite.Commons.Progress;
 using ProSuite.DomainModel.Core.QA;
@@ -65,7 +66,7 @@ namespace ProSuite.Microservices.Client.QA
 				return;
 			}
 
-			Process.Start(verificationResult.HtmlReportPath);
+			ProcessUtils.StartProcess(verificationResult.HtmlReportPath);
 		}
 
 		public bool CanShowReport(ServiceCallStatus? currentProgressStep,

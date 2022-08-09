@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Windows.Forms;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Essentials.System;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI.Dialogs;
 using ProSuite.DomainModel.Core.QA;
@@ -152,7 +153,7 @@ namespace ProSuite.UI.QA.Controls
 				// the link should not be clickable if there's no url
 				Assert.NotNullOrEmpty(_qualityCondition.Url, "url is not defined");
 
-				Process.Start(_qualityCondition.Url);
+				ProcessUtils.StartProcess(_qualityCondition.Url);
 			}
 			catch (Exception ex)
 			{

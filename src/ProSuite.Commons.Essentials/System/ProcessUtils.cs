@@ -33,6 +33,27 @@ namespace ProSuite.Commons.Essentials.System
 		}
 
 		/// <summary>
+		/// Starts a new process by specifying the name of a document or application file, such as an html document
+		/// being shown by the browser. The associated process will be started with UseShellExecute.
+		/// </summary>
+		/// <param name="fileName">The full path of the document/file to be opened with the associated process.</param>
+		/// <returns>The started process.</returns>
+		[PublicAPI]
+		public static Process StartProcess([NotNull] string fileName)
+		{
+			var process = new Process();
+
+			// NOTE: In .net 6 UseShellExecute defaults to false and therefore must be set explicitly.
+			process.StartInfo = new ProcessStartInfo(fileName)
+			                    {
+				                    UseShellExecute = true
+			                    };
+			process.Start();
+
+			return process;
+		}
+
+		/// <summary>
 		/// Starts a new process.
 		/// </summary>
 		/// <param name="fileName">The full path of the executable</param>
