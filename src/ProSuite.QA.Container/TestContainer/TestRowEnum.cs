@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using ESRI.ArcGIS.esriSystem;
@@ -47,6 +46,15 @@ namespace ProSuite.QA.Container.TestContainer
 		public Box Box => _box;
 		public IEnvelope FilterEnvelope => _filterEnvelope;
 		public ISpatialFilter SpatialFilter => _filter;
+
+		#region Overrides of Object
+
+		public override string ToString()
+		{
+			return $"Tile {_box.Min.X} {_box.Min.Y} {_box.Max.X} {_box.Max.Y}";
+		}
+
+		#endregion
 	}
 
 	// TODO revise MoveNextCachedRow (IsFirstOccurrence assignment)
@@ -86,8 +94,7 @@ namespace ProSuite.QA.Container.TestContainer
 
 		// of the current row (per table)
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		#endregion
 
@@ -1126,12 +1133,15 @@ namespace ProSuite.QA.Container.TestContainer
 
 			_tileCache.CreateBoxTree(tableIndex, cachedRows.Values, allBox, loadExtent);
 
+			int newlyLoadedRows = cachedRows.Count - previousCachedRowCount;
+
 			if (_loadedRowCountPerTable != null)
 			{
-				int newlyLoadedRows = cachedRows.Count - previousCachedRowCount;
-
 				_loadedRowCountPerTable[table] += newlyLoadedRows;
 			}
+
+			_msg.VerboseDebug(() => $"{table.Name}: Added additional {newlyLoadedRows} rows " +
+			                        $"to the previous {previousCachedRowCount} rows in {tile}");
 
 			_tileCache.IgnoredRowsByTableAndTest[tableIndex] =
 				GetIgnoredRows(table, cachedRows.Values, tile.SpatialFilter.Geometry);
