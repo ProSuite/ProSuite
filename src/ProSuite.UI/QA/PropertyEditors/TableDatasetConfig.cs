@@ -66,6 +66,11 @@ namespace ProSuite.UI.QA.PropertyEditors
 
 			var value = GetTestParameterValue() as DatasetTestParameterValue;
 
+			if (value?.ValueSource != null)
+			{
+				return value.ValueSource.Name;
+			}
+
 			if (value?.DatasetValue == null)
 			{
 				return "(invalid)";
