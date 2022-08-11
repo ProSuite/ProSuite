@@ -221,7 +221,8 @@ namespace ProSuite.DomainModel.Core.QA
 			             {
 				             _datasetValue = _datasetValue,
 				             _filterExpression = _filterExpression,
-				             _usedAsReferenceData = _usedAsReferenceData
+				             _usedAsReferenceData = _usedAsReferenceData,
+							 ValueSource = ValueSource
 			             };
 
 			return result;
@@ -235,6 +236,12 @@ namespace ProSuite.DomainModel.Core.QA
 			if (DatasetValue != datasetUpdateValue.DatasetValue)
 			{
 				DatasetValue = datasetUpdateValue.DatasetValue;
+				hasUpdates = true;
+			}
+
+			if (ValueSource != datasetUpdateValue.ValueSource)
+			{
+				ValueSource = datasetUpdateValue.ValueSource;
 				hasUpdates = true;
 			}
 
