@@ -21,7 +21,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		private readonly IWorkspace _workspace;
 
 		private IName _fullName;
-		private bool _hasOID;
+
 		private string _oidFieldName;
 
 		private static int _nextObjectClassId;
@@ -193,7 +193,6 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			{
 				// Probably the same logic as AO (query) classes:
 				// The last one to be added determines the OID field
-				_hasOID = true;
 				_oidFieldName = field.Name;
 			}
 
@@ -201,7 +200,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			return i;
 		}
 
-		public override bool HasOID => _hasOID;
+		public override bool HasOID => _oidFieldName != null;
 
 		public override string OIDFieldName => _oidFieldName;
 
