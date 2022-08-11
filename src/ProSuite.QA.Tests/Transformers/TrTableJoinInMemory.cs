@@ -12,7 +12,7 @@ using ProSuite.QA.Tests.Documentation;
 
 namespace ProSuite.QA.Tests.Transformers
 {
-	public class TrTableJoinInMemory : ITableTransformer<IReadOnlyTable>
+	public class TrTableJoinInMemory : InvolvesTablesBase, ITableTransformer<IReadOnlyTable>
 	{
 		private readonly IReadOnlyTable _leftTable;
 		private readonly IReadOnlyTable _rightTable;
@@ -24,7 +24,6 @@ namespace ProSuite.QA.Tests.Transformers
 		private string _manyToManyTableRightKey;
 
 		private readonly JoinType _joinType;
-		private readonly List<IReadOnlyTable> _involvedTables;
 
 		private GdbTable _joinedTable;
 
@@ -40,6 +39,7 @@ namespace ProSuite.QA.Tests.Transformers
 			string rightTableKey,
 			[DocTr(nameof(DocTrStrings.TrTableJoinInMemory_joinType))]
 			JoinType joinType)
+			: base(new[] {leftTable, rightTable})
 		{
 			_leftTable = leftTable;
 			_rightTable = rightTable;
@@ -48,7 +48,6 @@ namespace ProSuite.QA.Tests.Transformers
 			_rightTableKey = rightTableKey;
 
 			_joinType = joinType;
-			_involvedTables = new List<IReadOnlyTable> {leftTable, rightTable};
 		}
 
 		[TestParameter]
@@ -59,7 +58,9 @@ namespace ProSuite.QA.Tests.Transformers
 			set
 			{
 				_manyToManyTable = value;
-				_involvedTables.Add(_manyToManyTable);
+
+				// Does queriedOnly mean anything in case of transformers?
+				AddInvolvedTable(_manyToManyTable, null, false, true);
 			}
 		}
 
@@ -80,22 +81,6 @@ namespace ProSuite.QA.Tests.Transformers
 				       StringUtils.IsNullOrEmptyOrBlank(value) ? null : value;
 		}
 
-		#region Implementation of IInvolvesTables
-
-		IList<IReadOnlyTable> IInvolvesTables.InvolvedTables => _involvedTables;
-
-		public void SetConstraint(int tableIndex, string condition)
-		{
-			// TODO
-		}
-
-		public void SetSqlCaseSensitivity(int tableIndex, bool useCaseSensitiveQaSql)
-		{
-			// TODO
-		}
-
-		#endregion
-
 		#region Implementation of ITableTransformer
 
 		string ITableTransformer.TransformerName { get; set; }
@@ -114,6 +99,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 				string joinTableName = ((ITableTransformer) this).TransformerName;
 
+				// TODO: Constraints on the tables!
 				_joinedTable = TableJoinUtils.CreateJoinedGdbFeatureClass(
 					association, _leftTable, joinTableName, _joinType);
 

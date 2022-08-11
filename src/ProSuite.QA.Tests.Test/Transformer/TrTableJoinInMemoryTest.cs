@@ -188,6 +188,8 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			{
 				var intersectsSelf =
 					new QaIntersectsSelf((IReadOnlyFeatureClass) tr.GetTransformed());
+				//intersectsSelf.SetConstraint(0, "polyFc.Nr_Poly < 10");
+
 				var runner = new QaContainerTestRunner(1000, intersectsSelf) {KeepGeometry = true};
 				runner.Execute();
 				Assert.AreEqual(1, runner.Errors.Count);
@@ -212,6 +214,16 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				// Check involved rows. They must be from a 'real' feature class, not form a transformed feature class.
 				List<string> realTableNames = new List<string> {"lineFc", "polyFc"};
 				CheckInvolvedRows(error.InvolvedRows, 2, realTableNames);
+			}
+			{
+				// TODO: This has currently no effect and should be implemented
+				tr.SetConstraint(0, "Nr_Poly < 10");
+
+				QaConstraint test = new QaConstraint(tr.GetTransformed(), "polyFc.Nr_Poly > 11");
+				IFilterEditTest ft = test;
+				var runner = new QaContainerTestRunner(1000, test);
+				runner.Execute();
+				Assert.AreEqual(1, runner.Errors.Count);
 			}
 		}
 
