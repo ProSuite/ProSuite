@@ -56,7 +56,11 @@ namespace ProSuite.QA.Tests.Transformers
 		public IReadOnlyTable ManyToManyTable
 		{
 			get => _manyToManyTable;
-			set => _manyToManyTable = value;
+			set
+			{
+				_manyToManyTable = value;
+				_involvedTables.Add(_manyToManyTable);
+			}
 		}
 
 		[TestParameter]
