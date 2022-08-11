@@ -382,9 +382,19 @@ namespace ProSuite.Commons.AO.Geodatabase
 				result.AddField(CreateQualifiedField(field, otherEndClass));
 			}
 
-			// Make sure the OID field name is the one from the feature class
-			result.SetOIDFieldName(
-				DatasetUtils.QualifyFieldName(geometryEndClass, geometryEndClass.OIDFieldName));
+			// Make sure the OID field name is the one from the feature class. Make sure it is explicitly set
+			// (or unset) rather than relying on the implicit logic in AddField which.
+			string oidFieldName =
+				geometryEndClass.HasOID
+					? DatasetUtils.QualifyFieldName(geometryEndClass, geometryEndClass.OIDFieldName)
+					: null;
+
+			result.SetOIDFieldName(oidFieldName);
+
+			if (! geometryEndClass.HasOID)
+			{
+				_msg.Debug($"{geometryEndClass.Name} has no OID. Neither will the result class.");
+			}
 
 			return result;
 		}
