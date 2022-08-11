@@ -92,6 +92,24 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				var runner = new QaContainerTestRunner(1000, test);
 				runner.Execute();
 				Assert.AreEqual(1, runner.Errors.Count);
+
+				// Check involved rows:
+				QaError error = runner.Errors[0];
+
+				// Check involved rows. They must be from a 'real' feature class, not form a transformed feature class.
+				List<string> realTableNames = new List<string> {"lineFc", "polyFc"};
+				CheckInvolvedRows(error.InvolvedRows, 2, realTableNames);
+			}
+		}
+
+		private static void CheckInvolvedRows(IList<InvolvedRow> involvedRows, int expectedCount,
+		                                      IList<string> realTableNames)
+		{
+			Assert.AreEqual(expectedCount, involvedRows.Count);
+
+			foreach (InvolvedRow involvedRow in involvedRows)
+			{
+				Assert.IsTrue(realTableNames.Contains(involvedRow.TableName));
 			}
 		}
 

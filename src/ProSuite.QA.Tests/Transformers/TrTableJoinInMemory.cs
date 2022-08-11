@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
+using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase.GdbSchema;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
 using ProSuite.QA.Container;
@@ -23,7 +26,7 @@ namespace ProSuite.QA.Tests.Transformers
 		private readonly JoinType _joinType;
 		private readonly List<IReadOnlyTable> _involvedTables;
 
-		private IReadOnlyTable _joinedTable;
+		private GdbTable _joinedTable;
 
 		[DocTr(nameof(DocTrStrings.TrTableJoinInMemory_0))]
 		public TrTableJoinInMemory(
@@ -100,6 +103,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 		public IReadOnlyTable GetTransformed()
 		{
+			// TODO: In order to use the DataContainer at least for the left rows, wrap or subclass JoinedDataset
 			if (_joinedTable == null)
 			{
 				AssociationDescription association = CreateAssociationDescription();
@@ -108,6 +112,15 @@ namespace ProSuite.QA.Tests.Transformers
 
 				_joinedTable = TableJoinUtils.CreateJoinedGdbFeatureClass(
 					association, _leftTable, joinTableName, _joinType);
+
+				// To store the involved base rows in issue:
+				IField baseRowField = FieldUtils.CreateBlobField(InvolvedRowUtils.BaseRowField);
+				_joinedTable.AddField(baseRowField);
+
+				JoinedDataset joinedDataset =
+					(JoinedDataset) Assert.NotNull(_joinedTable.BackingDataset);
+
+				joinedDataset.OnRowCreatingAction = AddBaseRowsAction;
 			}
 
 			return _joinedTable;
@@ -142,6 +155,43 @@ namespace ProSuite.QA.Tests.Transformers
 			}
 
 			return association;
+		}
+
+		private Action<JoinedValueList, IReadOnlyRow, IReadOnlyRow> AddBaseRowsAction
+		{
+			get
+			{
+				int baseRowsFieldIdxResult = _joinedTable.FindField(InvolvedRowUtils.BaseRowField);
+
+				var baseRowField = _joinedTable.Fields.Field[baseRowsFieldIdxResult];
+
+				GdbTable extraRowTable = new GdbTable(-1, "BASE_ROW_TBL");
+				int baseRowsIndex = extraRowTable.AddFieldT(baseRowField);
+
+				return (joinedRows, leftRow, otherRow) =>
+				{
+					var involvedRows = new List<IReadOnlyRow>(2);
+
+					if (leftRow != null)
+					{
+						involvedRows.Add(leftRow);
+					}
+
+					if (otherRow != null)
+					{
+						involvedRows.Add(otherRow);
+					}
+
+					VirtualRow rowContainingBaseRows = extraRowTable.CreateRow();
+
+					IDictionary<int, int> indexMatrix = new Dictionary<int, int>(1);
+					indexMatrix.Add(baseRowsFieldIdxResult, baseRowsIndex);
+
+					joinedRows.AddRow(rowContainingBaseRows, indexMatrix);
+
+					rowContainingBaseRows.set_Value(baseRowsIndex, involvedRows);
+				};
+			}
 		}
 
 		#endregion

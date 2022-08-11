@@ -46,6 +46,16 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		public JoinType JoinType { get; set; } = JoinType.InnerJoin;
 
+		/// <summary>
+		/// The action to be performed on newly joined rows to allow client code to react to or
+		/// adapt new instantiated joined rows. The arguments are:
+		/// 1. JoinedValueList: The new virtual joined row list. It can be used to add extra rows.
+		/// 2. IReadOnlyRow: The left table row
+		/// 3. IReadOnlyRow: The right table row
+		/// </summary>
+		[CanBeNull]
+		public Action<JoinedValueList, IReadOnlyRow, IReadOnlyRow> OnRowCreatingAction { get; set; }
+
 		public override IEnvelope Extent => (_geometryEndClass as IReadOnlyFeatureClass)?.Extent;
 
 		public override VirtualRow GetRow(int id)
@@ -306,12 +316,14 @@ namespace ProSuite.Commons.AO.Geodatabase
 			joinedValueList.AddRow(leftRow, GeometryEndCopyMatrix);
 			joinedValueList.AddRow(otherRow, OtherEndCopyMatrix);
 
-			if (leftRow is IReadOnlyFeature && _joinedSchema is GdbFeatureClass gdbFeatureClass)
-			{
-				return new GdbFeature(leftRow.OID, gdbFeatureClass, joinedValueList);
-			}
+			OnRowCreatingAction?.Invoke(joinedValueList, leftRow, otherRow);
 
-			return new GdbRow(leftRow.OID, _joinedSchema, joinedValueList);
+			GdbRow result = leftRow is IReadOnlyFeature &&
+			                _joinedSchema is GdbFeatureClass gdbFeatureClass
+				                ? new GdbFeature(leftRow.OID, gdbFeatureClass, joinedValueList)
+				                : new GdbRow(leftRow.OID, _joinedSchema, joinedValueList);
+
+			return result;
 		}
 
 		private IDictionary<string, IReadOnlyRow> GetOtherRowsByKey(
