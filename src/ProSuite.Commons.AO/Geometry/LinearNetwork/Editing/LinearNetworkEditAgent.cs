@@ -587,7 +587,7 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork.Editing
 			{
 				IPolyline polyline = edgeFeature.Shape as IPolyline;
 
-				if (polyline != null)
+				if (polyline != null && ! polyline.IsEmpty)
 				{
 					DeleteOrphanedJunctions(polyline.FromPoint);
 					DeleteOrphanedJunctions(polyline.ToPoint);
