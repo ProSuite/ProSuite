@@ -43,9 +43,12 @@ namespace ProSuite.Microservices.AO
 
 			result.ObjectId = featureOrObject.OID;
 
-			result.Shape =
-				ProtobufGeometryUtils.ToShapeMsg(geometry, ShapeMsg.FormatOneofCase.EsriShape,
-				                                 spatialRefFormat);
+			ShapeMsg.FormatOneofCase format =
+				geometry?.GeometryType == esriGeometryType.esriGeometryMultiPatch
+					? ShapeMsg.FormatOneofCase.Wkb
+					: ShapeMsg.FormatOneofCase.EsriShape;
+
+			result.Shape = ProtobufGeometryUtils.ToShapeMsg(geometry, format, spatialRefFormat);
 
 			return result;
 		}
@@ -64,11 +67,17 @@ namespace ProSuite.Microservices.AO
 			{
 				IGeometry featureShape = GdbObjectUtils.GetFeatureShape(feature);
 
-				result.Shape = ProtobufGeometryUtils.ToShapeMsg(
-					featureShape, ShapeMsg.FormatOneofCase.EsriShape,
-					includeSpatialRef
-						? SpatialReferenceMsg.FormatOneofCase.SpatialReferenceEsriXml
-						: SpatialReferenceMsg.FormatOneofCase.SpatialReferenceWkid);
+				ShapeMsg.FormatOneofCase shapeFormat =
+					featureShape?.GeometryType == esriGeometryType.esriGeometryMultiPatch
+						? ShapeMsg.FormatOneofCase.Wkb
+						: ShapeMsg.FormatOneofCase.EsriShape;
+
+				SpatialReferenceMsg.FormatOneofCase spatialRefFormat = includeSpatialRef
+					? SpatialReferenceMsg.FormatOneofCase.SpatialReferenceEsriXml
+					: SpatialReferenceMsg.FormatOneofCase.SpatialReferenceWkid;
+
+				result.Shape =
+					ProtobufGeometryUtils.ToShapeMsg(featureShape, shapeFormat, spatialRefFormat);
 			}
 
 			if (includeFieldValues)
