@@ -249,6 +249,33 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to A table from the same data model. This table will be used to determine the workspace..
+        /// </summary>
+        public static string TrMakeTabl_baseTable {
+            get {
+                return ResourceManager.GetString("TrMakeTabl_baseTable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The name of the database object to be created and made usable as table..
+        /// </summary>
+        public static string TrMakeTabl_viewOrTableName {
+            get {
+                return ResourceManager.GetString("TrMakeTabl_viewOrTableName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Creates a table from a many-to-many relationship class or from an unregistered database table or view that would otherwise not be usable as dataset..
+        /// </summary>
+        public static string TrMakeTable_0 {
+            get {
+                return ResourceManager.GetString("TrMakeTable_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Transforms multi-lines to single lines. The transformed feature class has the attribute PartIndex. This field index from which polygon part the transformed polygon part was generated.
         /// </summary>
         public static string TrMultilineToLine_0 {

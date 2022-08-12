@@ -185,6 +185,15 @@ If intersected is a line class and intersecting is a polygon class, then the res
     <value>Defines how to handle not closed lines
 - AsPolygonIfClosedElseIgnore (default) : ignore not closed lines</value>
   </data>
+  <data name="TrMakeTable_0" xml:space="preserve">
+    <value>Creates a table from a many-to-many relationship class or from an unregistered database table or view that would otherwise not be usable as dataset.</value>
+  </data>
+  <data name="TrMakeTabl_baseTable" xml:space="preserve">
+    <value>A table from the same data model. This table will be used to determine the workspace.</value>
+  </data>
+  <data name="TrMakeTabl_viewOrTableName" xml:space="preserve">
+    <value>The name of the database object to be created and made usable as table.</value>
+  </data>
   <data name="TrMultilineToLine_0" xml:space="preserve">
     <value>Transforms multi-lines to single lines. The transformed feature class has the attribute PartIndex. This field index from which polygon part the transformed polygon part was generated</value>
   </data>
