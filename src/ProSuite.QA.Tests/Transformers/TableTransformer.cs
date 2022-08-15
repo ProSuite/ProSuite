@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
-using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Logging;
 using ProSuite.QA.Container;
 
@@ -28,14 +27,7 @@ namespace ProSuite.QA.Tests.Transformers
 				{
 					T transformed = GetTransformedCore(_transformerName);
 
-					if (transformed is GdbTable gdbTable &&
-					    gdbTable.BackingDataset is TransformedBackingData backingData)
-
-						for (int i = 0; i < InvolvedTables.Count; i++)
-						{
-							backingData.SetConstraint(i, GetConstraint(i));
-							backingData.SetSqlCaseSensitivity(i, GetSqlCaseSensitivity(i));
-						}
+					UpdateConstraints(transformed);
 
 					_transformed = transformed;
 				}
@@ -51,6 +43,18 @@ namespace ProSuite.QA.Tests.Transformers
 			return _transformed;
 		}
 
+		private void UpdateConstraints(T transformed)
+		{
+			if (transformed is GdbTable gdbTable &&
+			    gdbTable.BackingDataset is TransformedBackingData backingData)
+
+				for (int i = 0; i < InvolvedTables.Count; i++)
+				{
+					backingData.SetConstraint(i, GetConstraint(i));
+					backingData.SetSqlCaseSensitivity(i, GetSqlCaseSensitivity(i));
+				}
+		}
+
 		protected abstract T GetTransformedCore(string tableName);
 
 		object ITableTransformer.GetTransformed() => GetTransformed();
@@ -61,18 +65,19 @@ namespace ProSuite.QA.Tests.Transformers
 			set => _transformerName = value;
 		}
 
-		void IInvolvesTables.SetConstraint(int tableIndex, string condition)
-		{
-			// TODO: Use ProcessBase implementation, Assort in SetConstraintCore?
-			base.SetConstraint(tableIndex, condition);
+		#region Overrides of ProcessBase
 
-			Assert.Null(_transformed, "transformed value already initialized");
+		protected override void SetConstraintCore(IReadOnlyTable table, int tableIndex,
+		                                          string constraint)
+		{
+			if (_transformed == null)
+			{
+				return;
+			}
+
+			UpdateConstraints(_transformed);
 		}
 
-		void IInvolvesTables.SetSqlCaseSensitivity(int tableIndex, bool useCaseSensitiveQaSql)
-		{
-			base.SetSqlCaseSensitivity(tableIndex, useCaseSensitiveQaSql);
-			Assert.Null(_transformed, "transformed value  already initialized");
-		}
+		#endregion
 	}
 }

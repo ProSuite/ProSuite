@@ -190,6 +190,24 @@ namespace ProSuite.QA.Tests.Test.Transformer
 
 				Assert.AreEqual(1, errors.Count);
 			}
+
+			// Test constraint on filtering table:
+			{
+				// Leaves only the non-containing poly in containing
+				tr.SetConstraint(1, "Nr_Poly <> 11");
+
+				IList<QaError> errors = ExecuteQaConstraint(tr, "Nr_Line < 0");
+
+				// Nothing is contained -> no feature -> error is gone:
+				Assert.AreEqual(0, errors.Count);
+
+				// Remove constraint:
+				tr.SetConstraint(1, null);
+				errors = ExecuteQaConstraint(tr, "Nr_Line < 0");
+
+				// Filtered again, no error
+				Assert.AreEqual(1, errors.Count);
+			}
 		}
 
 		private static IList<QaError> ExecuteQaConstraint(TrOnlyContainedFeatures tr,
