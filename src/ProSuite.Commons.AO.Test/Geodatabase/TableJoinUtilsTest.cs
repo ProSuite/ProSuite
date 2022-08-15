@@ -537,21 +537,31 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			HashSet<int> oids = new HashSet<int>();
 
 			int duplicates = 0;
+			int lastOid = -1;
 			foreach (IRow row in GdbQueryUtils.GetRows(table, true))
 			{
-				if (oids.Contains(row.OID))
+				lastOid = row.OID;
+				if (oids.Contains(lastOid))
 				{
 					duplicates++;
 				}
 
 				if (! allowDuplicates)
-					Assert.IsFalse(oids.Contains(row.OID), $"Duplicate OID: {row.OID}");
+					Assert.IsFalse(oids.Contains(lastOid), $"Duplicate OID: {lastOid}");
 
-				oids.Add(row.OID);
+				oids.Add(lastOid);
 			}
 
 			Console.WriteLine(@"Duplicates allowed: {0} ({1} duplicates)", allowDuplicates,
 			                  duplicates);
+
+			if (! allowDuplicates && lastOid > 0)
+			{
+				// Extra check
+				int checkId = table.GetRow(lastOid).OID;
+
+				Assert.AreEqual(lastOid, checkId);
+			}
 		}
 
 		[Test]

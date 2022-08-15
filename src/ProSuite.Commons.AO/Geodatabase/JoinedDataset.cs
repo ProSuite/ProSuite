@@ -91,7 +91,42 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		public override VirtualRow GetRow(int id)
 		{
-			throw new NotImplementedException();
+			EnsureKeyFieldNames();
+			// This is ok if there is 1 left row with the provided id. For 1:many several results exist.
+			// Consider using UniqueIdProvider. For many:many we should probably use the ObjectID on the
+			// bridge table in the first place!
+			// TODO: In case of m:n take the RID (if exists) and fill it into the OBJECTID field.
+			//       In  case of 1:m take the right table's OBJECT id and fill it into the OBJECTID field.
+			//       -> here, do a reverse look-up if necessary
+			if (ObjectIdSource == SourceTable.Left)
+			{
+				IReadOnlyRow leftRow = _geometryEndClass.GetRow(id);
+
+				return GetJoinedRows(new List<IReadOnlyRow> {leftRow}).FirstOrDefault();
+			}
+
+			if (ObjectIdSource == SourceTable.Right)
+			{
+				IReadOnlyRow rightRow = _otherEndClass.GetRow(id);
+
+				string otherKeyValue = GetNonNullKeyValue(rightRow, OtherClassKeyFieldIndex);
+
+				var otherKeyList = new List<string> {otherKeyValue};
+				IList<IReadOnlyRow> resultGeoFeatures = FetchRowsByKey(
+						_geometryEndClass, otherKeyList, GeometryClassKeyField, false)
+					.ToList();
+
+				Assert.True(resultGeoFeatures.Count <= 1,
+				            $"Unexpected number of joined features: {resultGeoFeatures.Count}");
+
+				IReadOnlyRow geoFeature = resultGeoFeatures[0];
+
+				return CreateJoinedFeature(geoFeature, rightRow);
+			}
+
+			var m2nAssociation = ((ManyToManyAssociationDescription) _associationDescription);
+
+			return GetRowManyToMany(id, m2nAssociation);
 		}
 
 		public override int GetRowCount(IQueryFilter filter)
@@ -549,6 +584,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 			return result;
 		}
 
+		#region Many-to-many row access
+
 		private Dictionary<string, List<string>> GeoKeysByOtherKeyManyToMany(
 			[NotNull] HashSet<string> geoKeys,
 			[NotNull] ManyToManyAssociationDescription m2nAssociation)
@@ -557,28 +594,18 @@ namespace ProSuite.Commons.AO.Geodatabase
 				new Dictionary<string, List<string>>();
 
 			IReadOnlyTable bridgeTable = m2nAssociation.AssociationTable;
-			string bridgeTableGeoKeyField;
-			string bridgeTableOtherKeyField;
-			if (AreEqual(_geometryEndClass, m2nAssociation.Table1))
-			{
-				bridgeTableGeoKeyField = m2nAssociation.AssociationTableKey1;
-				bridgeTableOtherKeyField = m2nAssociation.AssociationTableKey2;
-			}
-			else
-			{
-				bridgeTableGeoKeyField = m2nAssociation.AssociationTableKey2;
-				bridgeTableOtherKeyField = m2nAssociation.AssociationTableKey1;
-			}
+			GetAssociationTableKeyFields(m2nAssociation, out string bridgeTableGeoKeyField,
+			                             out string bridgeTableOtherKeyField);
 
 			string bridgeTableName = bridgeTable.Name;
 
 			int bridgeTableOtherKeyIdx = bridgeTable.FindField(bridgeTableOtherKeyField);
 			Assert.True(bridgeTableOtherKeyIdx >= 0,
-			            $"Key field {bridgeTableOtherKeyField} not found in {bridgeTable}");
+			            $"Key field {bridgeTableOtherKeyField} not found in {bridgeTableName}");
 
 			int bridgeTableGeoKeyIdx = bridgeTable.FindField(bridgeTableGeoKeyField);
 			Assert.True(bridgeTableGeoKeyIdx >= 0,
-			            $"Key field {bridgeTableGeoKeyField} not found in {bridgeTable}");
+			            $"Key field {bridgeTableGeoKeyField} not found in {bridgeTableName}");
 
 			// This is the short-term cache. In a strictly read-only environment it could also be
 			// used to retrieve the result in specific cases (requires caching geoKeys without match)
@@ -617,6 +644,50 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			return geoKeysByOtherKey;
 		}
+
+		private VirtualRow GetRowManyToMany(int id, ManyToManyAssociationDescription m2nAssociation)
+		{
+			GetAssociationTableKeyFields(m2nAssociation, out string bridgeTableGeoKeyField,
+			                             out string _);
+
+			IReadOnlyTable bridgeTable = m2nAssociation.AssociationTable;
+
+			int bridgeTableGeoKeyIdx = bridgeTable.FindField(bridgeTableGeoKeyField);
+			Assert.True(bridgeTableGeoKeyIdx >= 0,
+			            $"Key field {bridgeTableGeoKeyField} not found in {bridgeTable.Name}");
+
+			IReadOnlyRow associationRow = bridgeTable.GetRow(id);
+
+			string geoKeyValue = GetNonNullKeyValue(associationRow, bridgeTableGeoKeyIdx);
+
+			var geoKeyList = new List<string> {geoKeyValue};
+
+			IList<IReadOnlyRow> geoFeatures = FetchRowsByKey(
+					_geometryEndClass, geoKeyList, GeometryClassKeyField, false)
+				.ToList();
+
+			Assert.AreEqual(1, geoFeatures.Count, $"Unexpected number of left table features");
+
+			return GetJoinedRows(new List<IReadOnlyRow> {geoFeatures[0]}).FirstOrDefault();
+		}
+
+		private void GetAssociationTableKeyFields(ManyToManyAssociationDescription m2nAssociation,
+		                                          out string bridgeTableGeoKeyField,
+		                                          out string bridgeTableOtherKeyField)
+		{
+			if (AreEqual(_geometryEndClass, m2nAssociation.Table1))
+			{
+				bridgeTableGeoKeyField = m2nAssociation.AssociationTableKey1;
+				bridgeTableOtherKeyField = m2nAssociation.AssociationTableKey2;
+			}
+			else
+			{
+				bridgeTableGeoKeyField = m2nAssociation.AssociationTableKey2;
+				bridgeTableOtherKeyField = m2nAssociation.AssociationTableKey1;
+			}
+		}
+
+		#endregion
 
 		private static bool AreEqual(IReadOnlyTable table1, IReadOnlyTable table2)
 		{
