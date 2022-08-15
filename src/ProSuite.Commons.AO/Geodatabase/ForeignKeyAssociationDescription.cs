@@ -38,5 +38,12 @@ namespace ProSuite.Commons.AO.Geodatabase
 		/// The 'right' table in the join, containing the <see cref="ReferencedKeyName"/>.
 		/// </summary>
 		public IReadOnlyTable ReferencedTable => Table2;
+
+		/// <summary>
+		/// Whether the association is a declared 1:1 association. It will be assumed that both
+		/// keys are unique and both tables can be used as primary key table. This increases the
+		/// flexibility in the choice of ID for outer joins.
+		/// </summary>
+		public bool HasOneToOneCardinality { get; set; }
 	}
 }

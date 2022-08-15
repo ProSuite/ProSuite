@@ -98,10 +98,11 @@ namespace ProSuite.QA.Tests.Transformers
 				AssociationDescription association = CreateAssociationDescription();
 
 				string joinTableName = ((ITableTransformer) this).TransformerName;
+				const bool ensureUniqueIds = true;
 
 				// TODO: Constraints on the tables!
 				_joinedTable = TableJoinUtils.CreateJoinedGdbFeatureClass(
-					association, _leftTable, joinTableName, _joinType);
+					association, _leftTable, joinTableName, ensureUniqueIds, _joinType);
 
 				// To store the involved base rows in issue:
 				IField baseRowField = FieldUtils.CreateBlobField(InvolvedRowUtils.BaseRowField);
