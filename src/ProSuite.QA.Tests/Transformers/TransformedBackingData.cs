@@ -7,6 +7,12 @@ using ProSuite.QA.Container;
 
 namespace ProSuite.QA.Tests.Transformers
 {
+	/// <summary>
+	/// A bare-bones base class for implementations of row transformation logic with the most
+	/// fundamental functionality for accessing the data container and involved tables with
+	/// constraints.It has no direct support for row caching but allows accessing other cached
+	/// data in the container.
+	/// </summary>
 	public abstract class TransformedBackingData : BackingDataset
 	{
 		private readonly List<QueryFilterHelper> _queryHelpers;
