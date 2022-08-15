@@ -3,22 +3,19 @@ using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
-using ProSuite.QA.Tests.Documentation;
 
 namespace ProSuite.QA.Tests.Transformers.Filters
 {
-	public class TrOnlyIntersectingFeatures : TableTransformer<FilteredFeatureClass>
+	public abstract class TrSpatiallyFiltered : TableTransformer<FilteredFeatureClass>
 	{
-		[NotNull] private readonly IReadOnlyFeatureClass _featureClassToFilter;
-		[NotNull] private readonly IReadOnlyFeatureClass _intersecting;
-		private FilteredFeatureClass _resultingTable;
+		[NotNull] protected readonly IReadOnlyFeatureClass _featureClassToFilter;
+		[NotNull] protected readonly IReadOnlyFeatureClass _intersecting;
 
-		[DocTr(nameof(DocTrStrings.TrOnlyIntersectingFeatures_0))]
-		public TrOnlyIntersectingFeatures(
-			[NotNull] [DocTr(nameof(DocTrStrings.TrOnlyIntersectingFeatures_featureClassToFilter))]
-			IReadOnlyFeatureClass featureClassToFilter,
-			[NotNull] [DocTr(nameof(DocTrStrings.TrOnlyIntersectingFeatures_intersecting))]
-			IReadOnlyFeatureClass intersecting)
+		private FilteredFeatureClass _resultingClass;
+
+		protected TrSpatiallyFiltered(
+			[NotNull] IReadOnlyFeatureClass featureClassToFilter,
+			[NotNull] IReadOnlyFeatureClass intersecting)
 			: base(new[] {featureClassToFilter, intersecting})
 		{
 			_featureClassToFilter = featureClassToFilter;
@@ -27,7 +24,7 @@ namespace ProSuite.QA.Tests.Transformers.Filters
 
 		protected override FilteredFeatureClass GetTransformedCore(string name)
 		{
-			if (_resultingTable == null)
+			if (_resultingClass == null)
 			{
 				string filteredTableName = ((ITableTransformer) this).TransformerName;
 
@@ -35,11 +32,11 @@ namespace ProSuite.QA.Tests.Transformers.Filters
 				// If the evaluation of the filter criterion is slow, re-consider caching.
 				// But an efficient cache could also be implemented locally, e.g. by
 				// remembering the OIDs that were filtered out previously.
-				_resultingTable = new FilteredFeatureClass(
+				_resultingClass = new FilteredFeatureClass(
 					_featureClassToFilter, filteredTableName,
 					createBackingDataset: CreateFilteredDataset);
 
-				FilteredBackingDataset filterBackingData = _resultingTable.BackingData;
+				FilteredBackingDataset filterBackingData = _resultingClass.BackingData;
 
 				ISpatialFilter filterIntersecting = new SpatialFilterClass();
 
@@ -52,17 +49,9 @@ namespace ProSuite.QA.Tests.Transformers.Filters
 				filterBackingData.IntersectingFeatureFilter = filterIntersecting;
 			}
 
-			return _resultingTable;
+			return _resultingClass;
 		}
 
-		private FilteredBackingDataset CreateFilteredDataset(GdbTable gdbTable)
-		{
-			return new FilteredBackingDataset(gdbTable, _featureClassToFilter, _intersecting);
-		}
+		protected abstract FilteredBackingDataset CreateFilteredDataset(GdbTable gdbTable);
 	}
-
-	//public interface IFilterTransformer
-	//{
-	//	bool IsFiltered(IReadOnlyRow row);
-	//}
 }

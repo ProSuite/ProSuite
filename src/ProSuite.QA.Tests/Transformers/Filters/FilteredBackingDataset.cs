@@ -81,24 +81,9 @@ namespace ProSuite.QA.Tests.Transformers.Filters
 
 		#endregion
 
-		public Func<IReadOnlyFeature, bool> PassCriterion { get; set; }
+		public Func<IReadOnlyFeature, IReadOnlyFeature, bool> PassCriterion { get; set; }
 
 		private bool PassesFilter(IReadOnlyFeature resultFeature)
-		{
-			if (! Intersects(resultFeature))
-			{
-				return false;
-			}
-
-			if (PassCriterion == null)
-			{
-				return true;
-			}
-
-			return PassCriterion.Invoke(resultFeature);
-		}
-
-		private bool Intersects(IReadOnlyFeature resultFeature)
 		{
 			IGeometry testGeometry = resultFeature.Shape;
 
@@ -107,28 +92,25 @@ namespace ProSuite.QA.Tests.Transformers.Filters
 			spatialFilter.Geometry = testGeometry;
 			QueryFilterHelper queryFilterHelper = QueryHelpers[1];
 
-			foreach (var searched in DataSearchContainer.Search(
+			foreach (var testRow in DataSearchContainer.Search(
 				         _intersecting, spatialFilter, queryFilterHelper))
 			{
-				if (((IRelationalOperator) testGeometry).Disjoint(
-					    ((IReadOnlyFeature) searched).Shape))
+				IReadOnlyFeature intersectingFeature = ((IReadOnlyFeature) testRow);
+
+				if (((IRelationalOperator) testGeometry).Disjoint(intersectingFeature.Shape))
 				{
 					continue;
 				}
 
-				return true;
+				if (PassCriterion == null)
+				{
+					return true;
+				}
+
+				return PassCriterion.Invoke(resultFeature, intersectingFeature);
 			}
 
 			return false;
 		}
-
-		//#region Implementation of IFilterTransformer
-
-		//public bool IsFiltered(IReadOnlyRow row)
-		//{
-		//	return ! PassesFilter((IReadOnlyFeature) row);
-		//}
-
-		//#endregion
 	}
 }

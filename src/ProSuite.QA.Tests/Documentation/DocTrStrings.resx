@@ -214,6 +214,15 @@ The transformed feature class has also the attributes of 'featureClass', which c
 -InnerRings: converts all inner rings to polygons
 -AllRings: converts all rings to polygons (Remark: polygons generated from outer rings: InnerRingIndex = -1)</value>
   </data>
+  <data name="TrOnlyContainedFeatures_0" xml:space="preserve">
+    <value>Creates a filtered feature class containing only the features that are contained within features from 'containing'. The resulting feature class has the same properties and attributes as 'featureClassToFilter'.</value>
+  </data>
+  <data name="TrOnlyContainedFeatures_containing" xml:space="preserve">
+    <value>The features used to check if they contain the features to be filtered.</value>
+  </data>
+  <data name="TrOnlyContainedFeatures_featureClassToFilter" xml:space="preserve">
+    <value>The feature class to be filtered.</value>
+  </data>
   <data name="TrOnlyIntersectingFeatures_0" xml:space="preserve">
     <value>Creates a filtered feature class containing only the features that intersect features from 'intersecting'.  The resulting feature class has the same properties and attributes as 'featureClassToFilter'.</value>
   </data>

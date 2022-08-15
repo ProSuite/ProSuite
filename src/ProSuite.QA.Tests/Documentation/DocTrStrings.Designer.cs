@@ -326,6 +326,33 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Creates a filtered feature class containing only the features that are contained within features from &apos;containing&apos;. The resulting feature class has the same properties and attributes as &apos;featureClassToFilter&apos;..
+        /// </summary>
+        public static string TrOnlyContainedFeatures_0 {
+            get {
+                return ResourceManager.GetString("TrOnlyContainedFeatures_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The features used to check if they contain the features to be filtered..
+        /// </summary>
+        public static string TrOnlyContainedFeatures_containing {
+            get {
+                return ResourceManager.GetString("TrOnlyContainedFeatures_containing", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The feature class to be filtered..
+        /// </summary>
+        public static string TrOnlyContainedFeatures_featureClassToFilter {
+            get {
+                return ResourceManager.GetString("TrOnlyContainedFeatures_featureClassToFilter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Creates a filtered feature class containing only the features that intersect features from &apos;intersecting&apos;.  The resulting feature class has the same properties and attributes as &apos;featureClassToFilter&apos;..
         /// </summary>
         public static string TrOnlyIntersectingFeatures_0 {

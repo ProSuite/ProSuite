@@ -14,7 +14,7 @@ using ProSuite.QA.Tests.Transformers.Filters;
 namespace ProSuite.QA.Tests.Test.Transformer
 {
 	[TestFixture]
-	public class TrOnlyIntersectingTest
+	public class TrSpatiallyFilteredTest
 	{
 		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
 
@@ -31,7 +31,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 		}
 
 		[Test]
-		public void CanFilterLinesWithPoly()
+		public void CanGetFilteredLinesWithPolyIntersecting()
 		{
 			IFeatureWorkspace ws =
 				TestWorkspaceUtils.CreateInMemoryWorkspace("TrOnlyIntersectingRows");
@@ -73,7 +73,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			}
 
 			var tr = new TrOnlyIntersectingFeatures(ReadOnlyTableFactory.Create(lineFc),
-			                                    ReadOnlyTableFactory.Create(polyFc));
+			                                        ReadOnlyTableFactory.Create(polyFc));
 
 			// The name is used as the table name and thus necessary
 			((ITableTransformer) tr).TransformerName = "filtered_lines";
@@ -101,6 +101,106 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				List<string> realTableNames = new List<string> {"lineFc"};
 				CheckInvolvedRows(error.InvolvedRows, 1, realTableNames);
 			}
+		}
+
+		[Test]
+		public void CanGetFilteredLinesWithPolyContained()
+		{
+			IFeatureWorkspace ws =
+				TestWorkspaceUtils.CreateInMemoryWorkspace("TrOnlyIntersectingRows");
+
+			IFeatureClass lineFc =
+				CreateFeatureClass(
+					ws, "lineFc", esriGeometryType.esriGeometryPolyline,
+					new[] {FieldUtils.CreateIntegerField("Nr_Line")});
+			IFeatureClass polyFc =
+				CreateFeatureClass(
+					ws, "polyFc", esriGeometryType.esriGeometryPolygon,
+					new[] {FieldUtils.CreateIntegerField("Nr_Poly")});
+
+			{
+				// Contained:
+				IFeature f = lineFc.CreateFeature();
+				f.Value[1] = 1;
+				f.Shape = CurveConstruction.StartLine(0, 0).LineTo(10, 10).Curve;
+				f.Store();
+			}
+			{
+				// Not contained:
+				IFeature f = lineFc.CreateFeature();
+				f.Value[1] = 2;
+				f.Shape = CurveConstruction.StartLine(60, 40).LineTo(60, 80).Curve;
+				f.Store();
+			}
+			{
+				IFeature f = polyFc.CreateFeature();
+				f.Value[1] = 11;
+				f.Shape = CurveConstruction.StartPoly(0, 0).LineTo(0, 20).LineTo(20, 20)
+				                           .LineTo(20, 0).ClosePolygon();
+				f.Store();
+			}
+			{
+				IFeature f = polyFc.CreateFeature();
+				f.Value[1] = 12;
+				f.Shape = CurveConstruction.StartPoly(0, 0).LineTo(0, -70).LineTo(-70, -70)
+				                           .LineTo(-70, 0).ClosePolygon();
+				f.Store();
+			}
+
+			var tr = new TrOnlyContainedFeatures(ReadOnlyTableFactory.Create(lineFc),
+			                                     ReadOnlyTableFactory.Create(polyFc));
+
+			// The name is used as the table name and thus necessary
+			((ITableTransformer) tr).TransformerName = "filtered_lines";
+			{
+				var intersectsSelf = new QaIntersectsSelf(tr.GetTransformed());
+				//intersectsSelf.SetConstraint(0, "polyFc.Nr_Poly < 10");
+
+				var runner = new QaContainerTestRunner(1000, intersectsSelf) {KeepGeometry = true};
+				runner.Execute();
+
+				// Theoretically they intersect, but one was filtered out:
+				Assert.AreEqual(0, runner.Errors.Count);
+			}
+			{
+				IList<QaError> errors = ExecuteQaConstraint(tr, "Nr_Line < 0");
+
+				Assert.AreEqual(1, errors.Count);
+
+				// Check involved rows:
+				QaError error = errors[0];
+
+				// Check involved rows. They must be from a 'real' feature class, not form a transformed feature class.
+				List<string> realTableNames = new List<string> {"lineFc"};
+				CheckInvolvedRows(error.InvolvedRows, 1, realTableNames);
+			}
+
+			// Test constraint on input of transformed table:
+			{
+				// Already filters input:
+				tr.SetConstraint(0, "Nr_Line < 0");
+
+				IList<QaError> errors = ExecuteQaConstraint(tr, "Nr_Line < 0");
+
+				Assert.AreEqual(0, errors.Count);
+
+				// Remove constraint:
+				tr.SetConstraint(0, null);
+				errors = ExecuteQaConstraint(tr, "Nr_Line < 0");
+
+				Assert.AreEqual(1, errors.Count);
+			}
+		}
+
+		private static IList<QaError> ExecuteQaConstraint(TrOnlyContainedFeatures tr,
+		                                                  string constraint)
+		{
+			QaConstraint test = new QaConstraint(tr.GetTransformed(), constraint);
+
+			var runner = new QaContainerTestRunner(1000, test);
+			runner.Execute();
+
+			return runner.Errors;
 		}
 
 		private static void CheckInvolvedRows(IList<InvolvedRow> involvedRows, int expectedCount,
