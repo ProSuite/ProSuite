@@ -68,6 +68,10 @@ namespace ProSuite.QA.Tests
 			{
 				pendingFeature = GetPendingFeature(feature);
 				pendingFeatures.Add(oid, pendingFeature);
+
+				// EMA: Why does the feature need to be cached (only) if it is a transformer?
+				//      Is this an optimization or needed for correctness? Where is it used?
+				//      If GetRow(oid) was implemented, would this be needed?
 				(feature.Table as IRowsCache)?.Add(feature);
 			}
 		}
