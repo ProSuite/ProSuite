@@ -16,7 +16,7 @@ using ProSuite.QA.Tests.Documentation;
 namespace ProSuite.QA.Tests.Transformers
 {
 	[UsedImplicitly]
-	public abstract class TrGeometryTransform : TableTransformer<IReadOnlyFeatureClass>,
+	public abstract class TrGeometryTransform : TableTransformer<TransformedFeatureClass>,
 	                                            IGeometryTransformer, IContainerTransformer
 	{
 		private readonly esriGeometryType _derivedShapeType;

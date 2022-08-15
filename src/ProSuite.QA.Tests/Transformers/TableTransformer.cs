@@ -1,50 +1,48 @@
 using System;
 using System.Collections.Generic;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.Essentials.Assertions;
-using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 using ProSuite.QA.Container;
 
 namespace ProSuite.QA.Tests.Transformers
 {
-	public abstract class TableTransformer<T> : InvolvesTablesBase, ITableTransformer<TransformedFeatureClass>
+	public abstract class TableTransformer<T> : InvolvesTablesBase, ITableTransformer<T>
+		where T : IReadOnlyTable
 	{
-		private TransformedFeatureClass _transformed;
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		protected TableTransformer(IList<IReadOnlyTable> involvedTables)
-			: base(involvedTables)
-		{
-			_tableConstraints = new Dictionary<int, string>();
-			_tableCaseSensitivity = new Dictionary<int, bool>();
-		}
+		private T _transformed;
 
-		[NotNull] private readonly Dictionary<int, string> _tableConstraints;
-		[NotNull] private readonly Dictionary<int, bool> _tableCaseSensitivity;
+		protected TableTransformer(IEnumerable<IReadOnlyTable> involvedTables)
+			: base(involvedTables) { }
+
 		private string _transformerName;
 
-		public TransformedFeatureClass GetTransformed()
+		public T GetTransformed()
 		{
 			if (_transformed == null)
 			{
 				try
 				{
-					TransformedFeatureClass transformed = GetTransformedCore(_transformerName);
-					if (transformed.BackingDataset is TransformedBackingDataset tbds)
-					{
-						foreach (var pair in _tableConstraints)
+					T transformed = GetTransformedCore(_transformerName);
+
+					if (transformed is GdbTable gdbTable &&
+					    gdbTable.BackingDataset is TransformedBackingDataset backingData)
+
+						for (int i = 0; i < InvolvedTables.Count; i++)
 						{
-							tbds.SetConstraint(pair.Key, pair.Value);
+							backingData.SetConstraint(i, GetConstraint(i));
+							backingData.SetSqlCaseSensitivity(i, GetSqlCaseSensitivity(i));
 						}
 
-						foreach (var pair in _tableCaseSensitivity)
-						{
-							tbds.SetSqlCaseSensitivity(pair.Key, pair.Value);
-						}
-					}
 					_transformed = transformed;
 				}
 				catch (Exception exception)
 				{
+					_msg.Debug($"Error creating {_transformerName}", exception);
+
 					throw new InvalidOperationException(
 						$"Cannot create TableTransformer {_transformerName}", exception);
 				}
@@ -53,7 +51,7 @@ namespace ProSuite.QA.Tests.Transformers
 			return _transformed;
 		}
 
-		protected abstract TransformedFeatureClass GetTransformedCore(string name);
+		protected abstract T GetTransformedCore(string tableName);
 
 		object ITableTransformer.GetTransformed() => GetTransformed();
 
@@ -65,14 +63,16 @@ namespace ProSuite.QA.Tests.Transformers
 
 		void IInvolvesTables.SetConstraint(int tableIndex, string condition)
 		{
+			// TODO: Use ProcessBase implementation, Assort in SetConstraintCore?
+			base.SetConstraint(tableIndex, condition);
+
 			Assert.Null(_transformed, "transformed value already initialized");
-			_tableConstraints[tableIndex] = condition;
 		}
 
 		void IInvolvesTables.SetSqlCaseSensitivity(int tableIndex, bool useCaseSensitiveQaSql)
 		{
+			base.SetSqlCaseSensitivity(tableIndex, useCaseSensitiveQaSql);
 			Assert.Null(_transformed, "transformed value  already initialized");
-			_tableCaseSensitivity[tableIndex] = useCaseSensitiveQaSql;
 		}
 	}
 }

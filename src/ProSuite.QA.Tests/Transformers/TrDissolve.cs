@@ -20,7 +20,7 @@ using ProSuite.QA.Tests.Network;
 
 namespace ProSuite.QA.Tests.Transformers
 {
-	public class TrDissolve : TableTransformer<IReadOnlyFeatureClass>
+	public class TrDissolve : TableTransformer<TransformedFeatureClass>
 	{
 		public enum SearchOption
 		{

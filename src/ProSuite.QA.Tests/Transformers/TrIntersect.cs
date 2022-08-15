@@ -11,7 +11,7 @@ using ProSuite.QA.Tests.Documentation;
 namespace ProSuite.QA.Tests.Transformers
 {
 	[UsedImplicitly]
-	public class TrIntersect : TableTransformer<IReadOnlyFeatureClass>
+	public class TrIntersect : TableTransformer<TransformedFeatureClass>
 	{
 		private readonly IReadOnlyFeatureClass _intersected;
 		private readonly IReadOnlyFeatureClass _intersecting;
