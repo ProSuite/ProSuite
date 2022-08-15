@@ -214,6 +214,15 @@ The transformed feature class has also the attributes of 'featureClass', which c
 -InnerRings: converts all inner rings to polygons
 -AllRings: converts all rings to polygons (Remark: polygons generated from outer rings: InnerRingIndex = -1)</value>
   </data>
+  <data name="TrOnlyIntersectingFeatures_0" xml:space="preserve">
+    <value>Creates a filtered feature class containing only the features that intersect features from 'intersecting'.  The resulting feature class has the same properties and attributes as 'featureClassToFilter'.</value>
+  </data>
+  <data name="TrOnlyIntersectingFeatures_featureClassToFilter" xml:space="preserve">
+    <value>The feature class to be filtered.</value>
+  </data>
+  <data name="TrOnlyIntersectingFeatures_intersecting" xml:space="preserve">
+    <value>The features used to check if they intersect the features to be filtered.</value>
+  </data>
   <data name="TrPolyToLine_0" xml:space="preserve">
     <value>Transform polygon to line by taking the boundary of the polygons in 'featureClass'.
 The transformed feature class has also the attributes of 'featureClass', which can be accessed by 't0.&lt;fieldName&gt;'.</value>

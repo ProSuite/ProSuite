@@ -326,6 +326,33 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Creates a filtered feature class containing only the features that intersect features from &apos;intersecting&apos;.  The resulting feature class has the same properties and attributes as &apos;featureClassToFilter&apos;..
+        /// </summary>
+        public static string TrOnlyIntersectingFeatures_0 {
+            get {
+                return ResourceManager.GetString("TrOnlyIntersectingFeatures_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The feature class to be filtered..
+        /// </summary>
+        public static string TrOnlyIntersectingFeatures_featureClassToFilter {
+            get {
+                return ResourceManager.GetString("TrOnlyIntersectingFeatures_featureClassToFilter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The features used to check if they intersect the features to be filtered..
+        /// </summary>
+        public static string TrOnlyIntersectingFeatures_intersecting {
+            get {
+                return ResourceManager.GetString("TrOnlyIntersectingFeatures_intersecting", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Transform polygon to line by taking the boundary of the polygons in &apos;featureClass&apos;.
         ///The transformed feature class has also the attributes of &apos;featureClass&apos;, which can be accessed by &apos;t0.&lt;fieldName&gt;&apos;..
         /// </summary>
