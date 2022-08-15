@@ -23,7 +23,7 @@ namespace ProSuite.DomainModel.AO.QA
 	/// </summary>
 	public abstract class InstanceFactory : InstanceInfoBase
 	{
-		protected static readonly IMsg _msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		protected static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		[NotNull]
 		protected T Create<T>([NotNull] InstanceConfiguration instanceConfiguration,
@@ -36,6 +36,8 @@ namespace ProSuite.DomainModel.AO.QA
 
 			try
 			{
+				_msg.VerboseDebug(() => $"Creating instance config {instanceConfiguration.Name}");
+
 				IList<TestParameterValue> parameterValues = instanceConfiguration.ParameterValues;
 
 				List<TableConstraint> sortedTableParameters;
@@ -197,7 +199,7 @@ namespace ProSuite.DomainModel.AO.QA
 			               "Set method not found for property {0} on test type {1}",
 			               propertyName, testType.Name);
 
-			setMethod.Invoke(test, new[] { value });
+			setMethod.Invoke(test, new[] {value});
 		}
 
 		protected static void SetNonConstructorConstraints(
@@ -294,6 +296,9 @@ namespace ProSuite.DomainModel.AO.QA
 				{
 					continue;
 				}
+
+				_msg.VerboseDebug(
+					() => $"Creating parameter value for {parameterValue.TestParameterName}");
 
 				object valueForParameter =
 					GetValue(parameterValue, parameter, datasetContext);

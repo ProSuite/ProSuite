@@ -263,6 +263,8 @@ namespace ProSuite.DomainModel.AO.QA
 			Assert.ArgumentNotNull(datasetContext, nameof(datasetContext));
 			Assert.ArgumentNotNull(testParameters, nameof(testParameters));
 
+			_msg.VerboseDebug(() => $"Creating test(s) (Condition: {Condition?.Name})...");
+
 			IList<TestParameterValue> parameterValues = Condition?.ParameterValues;
 
 			try
