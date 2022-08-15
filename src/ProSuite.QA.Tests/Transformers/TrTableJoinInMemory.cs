@@ -12,7 +12,7 @@ using ProSuite.QA.Tests.Documentation;
 
 namespace ProSuite.QA.Tests.Transformers
 {
-	public class TrTableJoinInMemory : InvolvesTablesBase, ITableTransformer<IReadOnlyTable>
+	public class TrTableJoinInMemory : TableTransformer<GdbTable>
 	{
 		private readonly IReadOnlyTable _leftTable;
 		private readonly IReadOnlyTable _rightTable;
@@ -83,26 +83,18 @@ namespace ProSuite.QA.Tests.Transformers
 
 		#region Implementation of ITableTransformer
 
-		string ITableTransformer.TransformerName { get; set; }
-
-		object ITableTransformer.GetTransformed()
-		{
-			return GetTransformed();
-		}
-
-		public IReadOnlyTable GetTransformed()
+		protected override GdbTable GetTransformedCore(string name)
 		{
 			// TODO: In order to use the DataContainer at least for the left rows, wrap or subclass JoinedDataset
 			if (_joinedTable == null)
 			{
 				AssociationDescription association = CreateAssociationDescription();
 
-				string joinTableName = ((ITableTransformer) this).TransformerName;
 				const bool ensureUniqueIds = true;
 
 				// TODO: Constraints on the tables!
 				_joinedTable = TableJoinUtils.CreateJoinedGdbFeatureClass(
-					association, _leftTable, joinTableName, ensureUniqueIds, _joinType);
+					association, _leftTable, name, ensureUniqueIds, _joinType);
 
 				// To store the involved base rows in issue:
 				IField baseRowField = FieldUtils.CreateBlobField(InvolvedRowUtils.BaseRowField);
@@ -110,6 +102,16 @@ namespace ProSuite.QA.Tests.Transformers
 
 				JoinedDataset joinedDataset =
 					(JoinedDataset) Assert.NotNull(_joinedTable.BackingDataset);
+
+				//// Case sensitivity?!
+				//joinedDataset.LeftRowsFilter = GetConstraint(0);
+				//joinedDataset.RightRowsFilter = GetConstraint(1);
+				//if (ManyToManyTable != null)
+				//{
+				//	joinedDataset.ManyToManyRowsFilter = GetConstraint(2);
+				//}
+
+				// or: joinedDataset.SearchMethod = () => DataContainer.Search();
 
 				joinedDataset.OnRowCreatingAction = AddBaseRowsAction;
 			}
