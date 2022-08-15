@@ -7,12 +7,12 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 	/// Value list that delegates to underlying actual features using the provided copy matrix.
 	/// The values are only accessed when needed which improves performance.
 	/// </summary>
-	public class JoinedValueList : IValueList
+	public class MultipleRowBasedValues : IValueList
 	{
 		private readonly List<IReadOnlyRow> _rows;
 		private readonly List<IDictionary<int, int>> _copyMatrices;
 
-		public JoinedValueList(int rowCapacity = 2)
+		public MultipleRowBasedValues(int rowCapacity = 2)
 		{
 			_rows = new List<IReadOnlyRow>(rowCapacity);
 			_copyMatrices = new List<IDictionary<int, int>>(rowCapacity);

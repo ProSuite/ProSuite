@@ -85,7 +85,11 @@ namespace ProSuite.Commons.AO.Geodatabase
 		/// 3. IReadOnlyRow: The right table row
 		/// </summary>
 		[CanBeNull]
-		public Action<JoinedValueList, IReadOnlyRow, IReadOnlyRow> OnRowCreatingAction { get; set; }
+		public Action<MultipleRowBasedValues, IReadOnlyRow, IReadOnlyRow> OnRowCreatingAction
+		{
+			get;
+			set;
+		}
 
 		public override IEnvelope Extent => (_geometryEndClass as IReadOnlyFeatureClass)?.Extent;
 
@@ -454,7 +458,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		                                   [CanBeNull] IReadOnlyRow otherRow,
 		                                   [CanBeNull] IReadOnlyRow associationRow = null)
 		{
-			var joinedValueList = new JoinedValueList();
+			var joinedValueList = new MultipleRowBasedValues();
 
 			joinedValueList.AddRow(leftRow, GeometryEndCopyMatrix);
 			joinedValueList.AddRow(otherRow, OtherEndCopyMatrix);
