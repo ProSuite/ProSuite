@@ -250,6 +250,16 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			return CreateObject(GetNextOid());
 		}
 
+		public override IRow GetRow(int OID)
+		{
+			if (BackingDataset == null)
+			{
+				throw new NotImplementedException("No backing dataset provided for GetRow().");
+			}
+
+			return BackingDataset.GetRow(OID);
+		}
+
 		public override IReadOnlyRow GetReadOnlyRow(int id)
 		{
 			if (BackingDataset == null)
@@ -257,7 +267,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 				throw new NotImplementedException("No backing dataset provided for GetRow().");
 			}
 
-			return BackingDataset?.GetRow(id);
+			return BackingDataset.GetRow(id);
 		}
 
 		public override IRowBuffer CreateRowBuffer()
