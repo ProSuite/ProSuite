@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using ProSuite.Commons.AO.Geodatabase;
@@ -20,17 +19,14 @@ namespace ProSuite.QA.Tests.Transformers
 		public new T Resulting => (T) base.Resulting;
 	}
 
-	public abstract class TransformedBackingDataset : BackingDataset
+	public abstract class TransformedBackingDataset : TransformedBackingData
 	{
-		private readonly IList<IReadOnlyTable> _involvedTables;
-		private readonly List<QueryFilterHelper> _queryHelpers;
 		private readonly Dictionary<int, VirtualRow> _rowsCache;
 
 		private readonly TransformedFeatureClass _resulting;
 
 		public ISearchable DataContainer { get; set; }
 		public TransformedFeatureClass Resulting => _resulting;
-		protected IReadOnlyList<QueryFilterHelper> QueryHelpers => _queryHelpers;
 
 		public void AddToCache(VirtualRow row)
 		{
@@ -56,48 +52,11 @@ namespace ProSuite.QA.Tests.Transformers
 
 		protected TransformedBackingDataset([NotNull] TransformedFeatureClass gdbTable,
 		                                    IList<IReadOnlyTable> involvedTables)
+			: base(involvedTables)
 		{
-			_involvedTables = involvedTables;
-			_queryHelpers = _involvedTables
-			                .Select(t => new QueryFilterHelper(t, null, false)
-			                             { RepeatCachedRows = true })
-			                .ToList();
-
 			gdbTable.AddField(FieldUtils.CreateBlobField(InvolvedRowUtils.BaseRowField));
 			_resulting = gdbTable;
 			_rowsCache = new Dictionary<int, VirtualRow>();
-		}
-
-		public void SetConstraint(int tableIndex, string condition)
-		{
-			if (tableIndex >= 0 && tableIndex < _involvedTables.Count)
-			{
-				_queryHelpers[tableIndex] =
-					new QueryFilterHelper(
-						_involvedTables[tableIndex], condition,
-						_queryHelpers[tableIndex]?.TableView?.CaseSensitive ?? true)
-					{ RepeatCachedRows = true };
-			}
-			else
-			{
-				throw new InvalidOperationException(
-					$"Invalid table index {tableIndex}");
-			}
-		}
-
-		public void SetSqlCaseSensitivity(int tableIndex, bool useCaseSensitiveQaSql)
-		{
-			if (tableIndex >= 0 && tableIndex < _involvedTables.Count)
-			{
-				_queryHelpers[tableIndex] = new QueryFilterHelper(
-					_involvedTables[tableIndex], _queryHelpers[tableIndex]?.TableView?.Constraint,
-					useCaseSensitiveQaSql);
-			}
-			else
-			{
-				throw new InvalidOperationException(
-					$"Invalid table index {tableIndex}");
-			}
 		}
 
 		protected IEnumerable<Involved> EnumKnownInvolveds(
@@ -116,7 +75,7 @@ namespace ProSuite.QA.Tests.Transformers
 				if (! involvedDict.TryGetValue(entry.Value, out Involved knownInvolved))
 				{
 					knownInvolved =
-						InvolvedRowUtils.EnumInvolved(new[] { entry.Value }).First();
+						InvolvedRowUtils.EnumInvolved(new[] {entry.Value}).First();
 					involvedDict.Add(entry.Value, knownInvolved);
 				}
 

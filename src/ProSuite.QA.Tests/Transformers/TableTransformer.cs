@@ -29,7 +29,7 @@ namespace ProSuite.QA.Tests.Transformers
 					T transformed = GetTransformedCore(_transformerName);
 
 					if (transformed is GdbTable gdbTable &&
-					    gdbTable.BackingDataset is TransformedBackingDataset backingData)
+					    gdbTable.BackingDataset is TransformedBackingData backingData)
 
 						for (int i = 0; i < InvolvedTables.Count; i++)
 						{
