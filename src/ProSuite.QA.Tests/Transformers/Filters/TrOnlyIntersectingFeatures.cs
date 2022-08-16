@@ -1,5 +1,4 @@
 using ProSuite.Commons.AO.Geodatabase;
-using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Tests.Documentation;
 
@@ -16,9 +15,11 @@ namespace ProSuite.QA.Tests.Transformers.Filters
 			IReadOnlyFeatureClass intersecting)
 			: base(featureClassToFilter, intersecting) { }
 
-		protected override FilteredBackingDataset CreateFilteredDataset(GdbTable gdbTable)
+		protected override SpatiallyFilteredBackingDataset CreateFilteredDataset(
+			FilteredFeatureClass resultClass)
 		{
-			return new FilteredBackingDataset(gdbTable, _featureClassToFilter, _intersecting);
+			return new SpatiallyFilteredBackingDataset(resultClass, _featureClassToFilter,
+			                                           _intersecting);
 		}
 	}
 }

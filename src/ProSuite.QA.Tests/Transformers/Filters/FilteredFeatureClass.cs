@@ -10,14 +10,16 @@ namespace ProSuite.QA.Tests.Transformers.Filters
 	public class FilteredFeatureClass : TransformedFeatureClassBase<FilteredBackingDataset>
 	{
 		public FilteredFeatureClass(
-			IReadOnlyFeatureClass inputFeatureClass,
+			IReadOnlyFeatureClass featureClassToFilter,
 			[NotNull] string name,
 			[NotNull] Func<GdbTable, FilteredBackingDataset> createBackingDataset)
-			: base(-1, name, inputFeatureClass.ShapeType, createBackingDataset,
-			       inputFeatureClass.Workspace)
+			: base(-1, name, featureClassToFilter.ShapeType, createBackingDataset,
+			       featureClassToFilter.Workspace)
 		{
+			FeatureClassToFilter = featureClassToFilter;
+
 			// All fields
-			IFields sourceFields = inputFeatureClass.Fields;
+			IFields sourceFields = featureClassToFilter.Fields;
 			for (int i = 0; i < sourceFields.FieldCount; i++)
 			{
 				AddField(sourceFields.Field[i]);
@@ -27,6 +29,13 @@ namespace ProSuite.QA.Tests.Transformers.Filters
 			// In that case we could directly pass through the rows from the featureClassToFilter
 			// TODO: Check if it already exists, extract to Utils class
 			AddField(FieldUtils.CreateBlobField(InvolvedRowUtils.BaseRowField));
+		}
+
+		public IReadOnlyFeatureClass FeatureClassToFilter { get; }
+
+		public bool PassesFilter(IReadOnlyFeature feature)
+		{
+			return BackingData.PassesFilter(feature);
 		}
 	}
 }

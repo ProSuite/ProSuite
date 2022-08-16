@@ -1,6 +1,5 @@
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
-using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
 
@@ -34,9 +33,11 @@ namespace ProSuite.QA.Tests.Transformers.Filters
 				// remembering the OIDs that were filtered out previously.
 				_resultingClass = new FilteredFeatureClass(
 					_featureClassToFilter, filteredTableName,
-					createBackingDataset: CreateFilteredDataset);
+					createBackingDataset: gdbTable =>
+						CreateFilteredDataset((FilteredFeatureClass) gdbTable));
 
-				FilteredBackingDataset filterBackingData = _resultingClass.BackingData;
+				SpatiallyFilteredBackingDataset filterBackingData =
+					(SpatiallyFilteredBackingDataset) _resultingClass.BackingData;
 
 				ISpatialFilter filterIntersecting = new SpatialFilterClass();
 
@@ -52,6 +53,7 @@ namespace ProSuite.QA.Tests.Transformers.Filters
 			return _resultingClass;
 		}
 
-		protected abstract FilteredBackingDataset CreateFilteredDataset(GdbTable gdbTable);
+		protected abstract SpatiallyFilteredBackingDataset CreateFilteredDataset(
+			[NotNull] FilteredFeatureClass resultClass);
 	}
 }
