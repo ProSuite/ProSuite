@@ -9,10 +9,10 @@ using Radzen.Blazor;
 
 namespace ProSuite.DdxEditor.Content.Blazor;
 
-public static class DataGridUtils
+public static class BlazorDataGridUtils
 {
-	public static async Task EditRow([NotNull] RadzenDataGrid<ViewModelBase> grid,
-	                                 [NotNull] ViewModelBase row)
+	public static async Task Edit([NotNull] this RadzenDataGrid<ViewModelBase> grid,
+	                              [NotNull] ViewModelBase row)
 	{
 		Assert.ArgumentNotNull(grid, nameof(grid));
 		Assert.ArgumentNotNull(row, nameof(row));
@@ -26,36 +26,36 @@ public static class DataGridUtils
 		await grid.EditRow(row);
 	}
 
-	public static bool Contains([NotNull] PagedDataBoundComponent<ViewModelBase> grid,
-	                            [NotNull] ViewModelBase row)
+	public static bool Contains([NotNull] this PagedDataBoundComponent<ViewModelBase> grid,
+	                            [CanBeNull] ViewModelBase row)
 	{
-		return grid.Data.Contains(row);
+		return row != null && grid.Data.Contains(row);
 	}
 
-	public static async Task EditRow([NotNull] List<RadzenDataGrid<ViewModelBase>> grids,
-	                                 [NotNull] ViewModelBase row)
+	public static async Task Edit([NotNull] List<RadzenDataGrid<ViewModelBase>> grids,
+	                              [NotNull] ViewModelBase row)
 	{
 		Assert.ArgumentNotNull(grids, nameof(grids));
 		Assert.ArgumentNotNull(row, nameof(row));
-		
+
 		foreach (RadzenDataGrid<ViewModelBase> grid in grids)
 		{
 			if (! Contains(grid, row))
 			{
 				continue;
 			}
-			
+
 			row.StartEditing();
 			await grid.EditRow(row);
 		}
 	}
 
-	public static async Task UpdateRow([NotNull] RadzenDataGrid<ViewModelBase> grid,
-	                                   [NotNull] ViewModelBase row)
+	public static async Task Update([NotNull] RadzenDataGrid<ViewModelBase> grid,
+	                                [NotNull] ViewModelBase row)
 	{
 		Assert.ArgumentNotNull(grid, nameof(grid));
 		Assert.ArgumentNotNull(row, nameof(row));
-		
+
 		if (! Contains(grid, row))
 		{
 			return;
@@ -65,8 +65,8 @@ public static class DataGridUtils
 		await grid.UpdateRow(row);
 	}
 
-	public static async Task UpdateRow([NotNull] List<RadzenDataGrid<ViewModelBase>> grids,
-	                                   [NotNull] ViewModelBase row)
+	public static async Task Update([NotNull] List<RadzenDataGrid<ViewModelBase>> grids,
+	                                [NotNull] ViewModelBase row)
 	{
 		Assert.ArgumentNotNull(grids, nameof(grids));
 		Assert.ArgumentNotNull(row, nameof(row));
@@ -84,14 +84,9 @@ public static class DataGridUtils
 		}
 	}
 
-	public static async Task UpdateRowIfNotNull([CanBeNull] RadzenDataGrid<ViewModelBase> grid,
-	                                            [CanBeNull] ViewModelBase row)
+	public static async Task UpdateIfNotNull([NotNull] this RadzenDataGrid<ViewModelBase> grid,
+	                                         [CanBeNull] ViewModelBase row)
 	{
-		if (grid == null)
-		{
-			return;
-		}
-
 		if (row == null)
 		{
 			return;
@@ -106,8 +101,8 @@ public static class DataGridUtils
 		await grid.UpdateRow(row);
 	}
 
-	public static async Task UpdateRowIfNotNull([NotNull] List<RadzenDataGrid<ViewModelBase>> grids,
-	                                            [CanBeNull] ViewModelBase row)
+	public static async Task UpdateIfNotNull([NotNull] List<RadzenDataGrid<ViewModelBase>> grids,
+	                                         [CanBeNull] ViewModelBase row)
 	{
 		Assert.ArgumentNotNull(grids, nameof(grids));
 
@@ -122,7 +117,7 @@ public static class DataGridUtils
 			{
 				continue;
 			}
-			
+
 			if (! Contains(grid, row))
 			{
 				continue;

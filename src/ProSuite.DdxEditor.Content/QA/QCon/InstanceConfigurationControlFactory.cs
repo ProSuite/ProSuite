@@ -6,6 +6,7 @@ using ProSuite.DdxEditor.Framework.ItemViews;
 using ProSuite.UI.QA.Controls;
 #if NET6_0
 using Microsoft.Extensions.DependencyInjection;
+using Prism.Events;
 using ProSuite.DdxEditor.Content.Blazor;
 using ProSuite.DomainModel.Core.QA;
 #endif
@@ -26,6 +27,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 #if NET6_0
 			IServiceCollection serviceCollection = new ServiceCollection();
 			serviceCollection.AddWindowsFormsBlazorWebView();
+			serviceCollection.AddSingleton<IEventAggregator>(_ => new EventAggregator());
 
 			ServiceProvider provider = serviceCollection.BuildServiceProvider();
 

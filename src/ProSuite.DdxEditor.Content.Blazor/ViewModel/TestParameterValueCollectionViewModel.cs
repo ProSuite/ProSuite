@@ -5,23 +5,24 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
 using ProSuite.DdxEditor.Content.Blazor.View;
-using ProSuite.DdxEditor.Framework.ItemViews;
 using ProSuite.DomainModel.AO.QA;
+using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Core;
 
 namespace ProSuite.DdxEditor.Content.Blazor.ViewModel;
 
-public class TestParameterValueCollectionViewModel : ViewModelBase
+public class TestParameterValueCollectionViewModel : ViewModelBase, IDataGridViewModel
 {
-	private List<ViewModelBase> _values;
+	private IList<ViewModelBase> _values;
 
 	public TestParameterValueCollectionViewModel([NotNull] TestParameter parameter,
 	                                             [NotNull] IList<ViewModelBase> values,
-	                                             IViewObserver observer) : base(parameter, null, observer)
+	                                             IInstanceConfigurationViewModel observer) : base(
+		parameter, null, observer)
 	{
 		Assert.ArgumentNotNull(values, nameof(values));
 
-		_values = new List<ViewModelBase>(values);
+		_values = values;
 
 		string displayName = StringUtils.Concatenate(values, v =>
 		{
@@ -29,10 +30,8 @@ public class TestParameterValueCollectionViewModel : ViewModelBase
 			{
 				return TestParameterTypeUtils.GetDefault(DataType)?.ToString();
 			}
-			else
-			{
-				return v.Value.ToString();
-			}
+
+			return v.Value.ToString();
 		}, "; ");
 
 		DisplayName = $"[{displayName}]";
@@ -46,45 +45,78 @@ public class TestParameterValueCollectionViewModel : ViewModelBase
 
 		ComponentType = typeof(TestParameterValueCollectionBlazor);
 		ComponentParameters.Add("ViewModel", this);
+
+		InsertDummyRow();
 	}
 
 	public bool IsDatasetType { get; }
 
-	public override List<ViewModelBase> Values
+	public string DisplayName { get; }
+
+	[CanBeNull]
+	[UsedImplicitly]
+	public string ModelName { get; }
+
+	public IList<ViewModelBase> Values
 	{
 		get => _values;
 		set => SetProperty(ref _values, value);
 	}
 
-	public string DisplayName { get; }
-	
-	[CanBeNull]
-	[UsedImplicitly]
-	public string ModelName { get; }
-
-	public void Insert(ViewModelBase row)
+	public void WireEvents(ViewModelBase row)
 	{
-		int index = _values.Count;
+		Observer.WireEvents(row);
+	}
 
-		if (index > -1)
+	public void UnwireEvents(ViewModelBase row)
+	{
+		Observer.UnwireEvents(row);
+	}
+
+	[NotNull]
+	public ViewModelBase InsertDefaultRow()
+	{
+		int? position = _values.Count - 1;
+
+		TestParameterValue emptyTestParameterValue =
+			TestParameterTypeUtils.GetEmptyParameterValue(Parameter);
+
+		ViewModelBase row;
+
+		if (TestParameterTypeUtils.IsDatasetType(DataType))
 		{
-			_values.Insert(index, row);
+			var testParameterValue = emptyTestParameterValue as DatasetTestParameterValue;
+			Assert.NotNull(testParameterValue);
+
+			row = DatasetTestParameterValueViewModel.CreateInstance(
+				Parameter, testParameterValue, Observer);
+			Insert(row, position);
 		}
 		else
 		{
-			_values.Add(row);
+			var testParameterValue = emptyTestParameterValue as ScalarTestParameterValue;
+			Assert.NotNull(testParameterValue);
+
+			row = new ScalarTestParameterValueViewModel(Parameter, testParameterValue.GetValue(),
+			                                            Observer);
+			Insert(row, position);
 		}
-		OnPropertyChanged(nameof(Values));
+
+		return row;
 	}
 
-	public void Remove(ViewModelBase row)
+	public void Remove([NotNull] ViewModelBase row)
 	{
+		Assert.ArgumentNotNull(row, nameof(row));
+
 		Assert.True(_values.Remove(row), $"cannot remove {row}");
 
+		UnwireEvents(row);
+
 		OnPropertyChanged(nameof(Values));
 	}
 
-	public bool TryMoveUp([NotNull] ViewModelBase row)
+	public void MoveUp([NotNull] ViewModelBase row)
 	{
 		Assert.ArgumentNotNull(row, nameof(row));
 
@@ -93,42 +125,72 @@ public class TestParameterValueCollectionViewModel : ViewModelBase
 
 		if (index is -1 or 0)
 		{
-			return false;
+			return;
 		}
-		
+
 		Assert.True(Values.Remove(row), $"cannot remove {row}");
 		Values.Insert(index - 1, row);
 
 		OnPropertyChanged(nameof(Values));
-
-		return true;
 	}
 
-	public bool TryMoveDown([NotNull] ViewModelBase row)
+	public void MoveDown([NotNull] ViewModelBase row)
 	{
 		Assert.ArgumentNotNull(row, nameof(row));
 
 		Assert.NotNull(Values);
 
 		int index = Values.IndexOf(row);
-			
+
 		if (index == -1 || index == Values.Count - 1)
 		{
 			// selected row is not in this collection view model
-			return false;
+			return;
 		}
-		
+
 		Assert.True(Values.Remove(row), $"cannot remove {row}");
 		Values.Insert(index + 1, row);
 
 		OnPropertyChanged(nameof(Values));
+	}
 
-		return true;
+	private void Insert([NotNull] ViewModelBase row, int? index = null)
+	{
+		Assert.ArgumentNotNull(row, nameof(row));
+
+		int i = index is > -1 ? index.Value : _values.Count;
+
+		InsertCore(row, i);
+
+		WireEvents(row);
+
+		OnPropertyChanged(nameof(Values));
+	}
+
+	private void InsertDummyRow()
+	{
+		ViewModelBase row = new DummyTestParameterValueViewModel(Parameter, Observer);
+		int index = _values.Count;
+
+		InsertCore(row, index);
+	}
+
+	private void InsertCore(ViewModelBase row, int index)
+	{
+		if (index > -1)
+		{
+			_values.Insert(index, row);
+		}
+		else
+		{
+			_values.Add(row);
+		}
 	}
 
 	private static string GetModelName([NotNull] IEnumerable<ViewModelBase> viewModels)
 	{
-		var vms = viewModels.Cast<DatasetTestParameterValueViewModel>();
+		IEnumerable<DatasetTestParameterValueViewModel> vms =
+			viewModels.Cast<DatasetTestParameterValueViewModel>();
 
 		return StringUtils.Concatenate(GetDistinctModelNames(vms), ", ");
 	}

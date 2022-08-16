@@ -1,26 +1,24 @@
 using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.DdxEditor.Framework.ItemViews;
 
 namespace ProSuite.DdxEditor.Content.Blazor.ViewModel;
 
 // substitute with Prism
 public abstract class Observable : IDisposable, INotifyPropertyChanged
 {
-	[CanBeNull] private readonly IViewObserver _observer;
-
-	protected Observable() { }
-
-	protected Observable([CanBeNull] IViewObserver observer)
+	protected Observable([NotNull] IInstanceConfigurationViewModel observer)
 	{
-		_observer = observer;
+		Assert.ArgumentNotNull(observer, nameof(observer));
+
+		Observer = observer;
 	}
 
-	public bool Dirty { get; set; }
-
-	public bool New { get; set; }
+	// todo daro rename?
+	[NotNull]
+	protected IInstanceConfigurationViewModel Observer { get; }
 
 	public void Dispose() { }
 
@@ -28,9 +26,7 @@ public abstract class Observable : IDisposable, INotifyPropertyChanged
 
 	public void NotifyDirty()
 	{
-		Dirty = true;
-
-		_observer?.NotifyChanged(true);
+		Observer.NotifyChanged(true);
 	}
 
 	[NotifyPropertyChangedInvocator]
