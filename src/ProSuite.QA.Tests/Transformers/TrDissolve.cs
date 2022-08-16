@@ -10,6 +10,8 @@ using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom.SpatialIndex;
+using ProSuite.Commons.Logging;
+using ProSuite.Commons.Text;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.Geometry;
 using ProSuite.QA.Container.PolygonGrower;
@@ -22,6 +24,8 @@ namespace ProSuite.QA.Tests.Transformers
 {
 	public class TrDissolve : TableTransformer<TransformedFeatureClass>
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		public enum SearchOption
 		{
 			Tile,
@@ -104,28 +108,85 @@ namespace ProSuite.QA.Tests.Transformers
 
 			IReadOnlyTable fc = InvolvedTables[0];
 
-			Dictionary<string, string> expressionDict = ExpressionUtils.GetFieldDict(fieldNames);
-			Dictionary<string, string> aliasFieldDict =
-				ExpressionUtils.CreateAliases(expressionDict);
-
-			TableView tv = dissolveFc.TableView;
-			if (tv == null)
+			try
 			{
-				tv = TableViewFactory.Create(fc, expressionDict, aliasFieldDict, isGrouped);
-				dissolveFc.TableView = tv;
-			}
-			else
-			{
-				foreach (string fieldName in fieldNames)
+				if (isGrouped)
 				{
-					FieldColumnInfo ci = FieldColumnInfo.Create(fc, fieldName);
-					tv.AddColumn(ci);
+					AssertValidFieldNames(fieldNames, fc);
+				}
+
+				Dictionary<string, string>
+					expressionDict = ExpressionUtils.GetFieldDict(fieldNames);
+				Dictionary<string, string> aliasFieldDict =
+					ExpressionUtils.CreateAliases(expressionDict);
+
+				TableView tv = dissolveFc.TableView;
+				if (tv == null)
+				{
+					tv = TableViewFactory.Create(fc, expressionDict, aliasFieldDict, isGrouped);
+					dissolveFc.TableView = tv;
+				}
+				else
+				{
+					foreach (string fieldName in fieldNames)
+					{
+						FieldColumnInfo ci = FieldColumnInfo.Create(fc, fieldName);
+						tv.AddColumn(ci);
+					}
+				}
+
+				foreach (string field in expressionDict.Keys)
+				{
+					dissolveFc.AddCustomField(field);
 				}
 			}
-
-			foreach (string field in expressionDict.Keys)
+			catch (Exception e)
 			{
-				dissolveFc.AddCustomField(field);
+				_msg.Warn(
+					$"Error adding fields to {dissolveFc.Name}: {StringUtils.Concatenate(fieldNames, ", ")}.",
+					e);
+				_msg.Info(PrintFieldList(fc));
+				throw;
+			}
+		}
+
+		private static string PrintFieldList(IReadOnlyTable table)
+		{
+			var fieldList = DatasetUtils.GetFields(table.Fields)
+			                            .Where(f => f.Name != InvolvedRowUtils.BaseRowField)
+			                            .Select(f => f.Name).ToList();
+
+			string fieldDisplayList = $"List of fields of {table.Name}: " +
+			                          $"{Environment.NewLine}{StringUtils.Concatenate(fieldList, Environment.NewLine)}";
+
+			return fieldDisplayList;
+		}
+
+		private static void AssertValidFieldNames([NotNull] IList<string> fieldNames,
+		                                          [NotNull] IReadOnlyTable table)
+		{
+			var fieldList = DatasetUtils.GetFields(table.Fields)
+			                            .Where(f => f.Name != InvolvedRowUtils.BaseRowField)
+			                            .Select(f => f.Name).ToList();
+
+			foreach (string fieldName in fieldNames)
+			{
+				if (string.IsNullOrEmpty(fieldName))
+				{
+					throw new InvalidOperationException(
+						$"Null or empty field name defined for {table.Name}");
+				}
+
+				// Quick and dirty. TODO: AttributeValidator
+				bool isExpression =
+					fieldName.IndexOf("AS", StringComparison.OrdinalIgnoreCase) >= 0;
+
+				if (! isExpression &&
+				    ! fieldList.Any(
+					    f => f.Equals(fieldName, StringComparison.InvariantCultureIgnoreCase)))
+				{
+					_msg.Warn($"Field name {fieldName} does not exist in {table.Name}.");
+				}
 			}
 		}
 

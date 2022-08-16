@@ -6,7 +6,6 @@ using System.Reflection;
 using System.Text;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Reflection;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
@@ -327,39 +326,7 @@ namespace ProSuite.DomainModel.AO.QA
 						"Unable to create test for undefined condition", e);
 				}
 
-				var sb = new StringBuilder();
-
-				sb.AppendFormat("Unable to create test(s) for quality condition {0}",
-				                condition.Name);
-				sb.AppendLine();
-				sb.AppendLine("with parameters:");
-
-				foreach (TestParameterValue value in condition.ParameterValues)
-				{
-					string stringValue;
-					try
-					{
-						stringValue = value.StringValue;
-					}
-					catch (Exception e1)
-					{
-						_msg.Debug(
-							string.Format(
-								"Error getting string value for parameter {0} of condition {1}",
-								value.TestParameterName,
-								condition.Name),
-							e1);
-
-						stringValue = $"<error: {e1.Message} (see log for details)>";
-					}
-
-					sb.AppendFormat("  {0} : {1}", value.TestParameterName, stringValue);
-					sb.AppendLine();
-				}
-
-				sb.AppendFormat("error message: {0}",
-				                ExceptionUtils.GetInnermostMessage(e));
-				sb.AppendLine();
+				StringBuilder sb = InstanceFactoryUtils.GetErrorMessageWithDetails(condition, e);
 
 				throw new InvalidOperationException(sb.ToString(), e);
 			}

@@ -2,8 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Reflection;
 using ProSuite.DomainModel.Core;
@@ -210,6 +212,46 @@ namespace ProSuite.DomainModel.AO.QA
 
 				constructorIndex++;
 			}
+		}
+
+		public static StringBuilder GetErrorMessageWithDetails(
+			[NotNull] InstanceConfiguration forInstanceConfiguration,
+			[NotNull] Exception exception)
+		{
+			var sb = new StringBuilder();
+
+			string typeName = forInstanceConfiguration.GetType().Name;
+
+			sb.AppendFormat("Unable to create {0} {1}",
+			                typeName, forInstanceConfiguration.Name);
+			sb.AppendLine();
+			sb.AppendLine("with parameters:");
+
+			foreach (TestParameterValue value in forInstanceConfiguration.ParameterValues)
+			{
+				string stringValue;
+				try
+				{
+					stringValue = value.StringValue;
+				}
+				catch (Exception e1)
+				{
+					_msg.Debug(
+						$"Error getting string value for parameter {value.TestParameterName} " +
+						$"of {typeName} {forInstanceConfiguration.Name}", e1);
+
+					stringValue = $"<error: {e1.Message} (see log for details)>";
+				}
+
+				sb.AppendFormat("  {0} : {1}", value.TestParameterName, stringValue);
+				sb.AppendLine();
+			}
+
+			sb.AppendFormat("error message: {0}",
+			                ExceptionUtils.GetInnermostMessage(exception));
+			sb.AppendLine();
+
+			return sb;
 		}
 
 		private static bool IncludeConstructor([NotNull] ConstructorInfo ctorInfo,
