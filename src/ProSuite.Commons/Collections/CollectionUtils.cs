@@ -700,6 +700,36 @@ namespace ProSuite.Commons.Collections
 			}
 		}
 
+		public static void AddToValueList<TKey, TValue>(
+			[NotNull] IDictionary<TKey, List<TValue>> dictionary,
+			[NotNull] TKey key,
+			[NotNull] TValue value)
+		{
+			List<TValue> list;
+			if (! dictionary.TryGetValue(key, out list))
+			{
+				list = new List<TValue>();
+				dictionary.Add(key, list);
+			}
+
+			list.Add(value);
+		}
+
+		public static void AddToValueList<TKey, TValue>(
+			[NotNull] IDictionary<TKey, IList<TValue>> dictionary,
+			[NotNull] TKey key,
+			[NotNull] TValue value)
+		{
+			IList<TValue> list;
+			if (! dictionary.TryGetValue(key, out list))
+			{
+				list = new List<TValue>();
+				dictionary.Add(key, list);
+			}
+
+			list.Add(value);
+		}
+
 		#region Non-public
 
 		private static int GetFirstIndex<T>(ICollection<ListItem<T>> listItems)

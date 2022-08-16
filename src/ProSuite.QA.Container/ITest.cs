@@ -89,7 +89,7 @@ namespace ProSuite.QA.Container
 		void SetIssueFilters([CanBeNull] string expression, IList<IIssueFilter> issueFilters);
 
 		void SetRowFilters(int tableIndex, [CanBeNull] string expression,
-											 [CanBeNull] IReadOnlyList<IRowFilter> rowFilters);
+		                   [CanBeNull] IReadOnlyList<IRowFilter> rowFilters);
 	}
 
 	public interface ITableTransformer : IInvolvesTables
@@ -109,14 +109,31 @@ namespace ProSuite.QA.Container
 		double SearchDistance { get; }
 	}
 
+	// This is used to set the search container to be used for searching in the implementation of
+	// input (transformed) tables.
+	// Rename to ContainerSearchingTransformedClass r DataContainerAware or CacheAware or something on those lines?
+	// The data container is assigned recursively to the input tables of implementors which could
+	// again be transformed tables with their own input tables etc.
+	// Therefore this interface must be implemented by transformed tables that can have potentially
+	// transformed input tables. Even if a transformed table does not use the data container,
+	// it's involved tables might be transformed tables that need the container.
+	// Additionally the input (involved) tables are also added to the cache, if they implement the
+	// additional interface ITransformedTable. Therefore all transformed tables must implement
+	// this interface if they can have input tables that potentially could be cached.
 	public interface ITransformedValue
 	{
+		// These are the tables that are recursively checked if they need the DataContainer for searching
+		// or even require caching in the data container.
+		// Implementors should return all input tables that are searched for in the Data Container AND
+		// all tables that could be transformed tables.
 		[NotNull]
 		IList<IReadOnlyTable> InvolvedTables { get; }
 
 		ISearchable DataContainer { get; set; }
 	}
 
+	// This is used to manage the caching of the transformed output features produced by implementors.
+	// Rename to CacheableTransformedTable?
 	public interface ITransformedTable
 	{
 		void SetKnownTransformedRows([CanBeNull] IEnumerable<VirtualRow> knownRows);

@@ -7,6 +7,7 @@ using System.Windows.Forms;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Essentials.System;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
 using ProSuite.Commons.Validation;
@@ -186,7 +187,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 
 			_msg.InfoFormat("Opening url {0}...", url);
 
-			Process.Start(url);
+			ProcessUtils.StartProcess(url);
 		}
 
 		private void PopulateInstanceDescriptorList(List<InstanceDescriptorTableRow> list)

@@ -91,7 +91,8 @@ namespace ProSuite.QA.Container
 		/// </summary>
 		public IList<IReadOnlyTable> InvolvedTables { get; }
 
-		protected int AddInvolvedTable(IReadOnlyTable table, string constraint, bool sqlCaseSensitivity,
+		protected int AddInvolvedTable(IReadOnlyTable table, string constraint,
+		                               bool sqlCaseSensitivity,
 		                               bool queriedOnly = false)
 		{
 			InvolvedTables.Add(table);
@@ -141,8 +142,7 @@ namespace ProSuite.QA.Container
 
 				filterHelpers[tableIndex] = new QueryFilterHelper(table,
 					GetConstraint(tableIndex),
-					GetSqlCaseSensitivity(
-						tableIndex));
+					GetSqlCaseSensitivity(tableIndex));
 				spatialFilters[tableIndex] = new SpatialFilterClass();
 
 				ConfigureQueryFilter(tableIndex, spatialFilters[tableIndex]);
@@ -234,7 +234,7 @@ namespace ProSuite.QA.Container
 
 		[NotNull]
 		protected static IList<IReadOnlyTable> Union([NotNull] IList<IReadOnlyTable> tables0,
-			[NotNull] IList<IReadOnlyTable> tables1)
+		                                             [NotNull] IList<IReadOnlyTable> tables1)
 		{
 			var union = new List<IReadOnlyTable>(tables0.Count + tables1.Count);
 
@@ -252,7 +252,8 @@ namespace ProSuite.QA.Container
 			Assert.ArgumentNotNull(featureClasses0, nameof(featureClasses0));
 			Assert.ArgumentNotNull(featureClasses1, nameof(featureClasses1));
 
-			var union = new List<IReadOnlyFeatureClass>(featureClasses0.Count + featureClasses1.Count);
+			var union =
+				new List<IReadOnlyFeatureClass>(featureClasses0.Count + featureClasses1.Count);
 
 			union.AddRange(featureClasses0);
 			union.AddRange(featureClasses1);
@@ -261,7 +262,8 @@ namespace ProSuite.QA.Container
 		}
 
 		[NotNull]
-		public static IList<IReadOnlyTable> CastToTables(params IReadOnlyFeatureClass[] featureClasses)
+		public static IList<IReadOnlyTable> CastToTables(
+			params IReadOnlyFeatureClass[] featureClasses)
 		{
 			return CastToTables((IEnumerable<IReadOnlyFeatureClass>) featureClasses);
 		}

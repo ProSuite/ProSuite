@@ -31,6 +31,14 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 		public IList<QualitySpecification> Get(IList<int> datasetIds,
 		                                       bool excludeHidden)
 		{
+			// TODO: Include indirectly referenced datasets via transformers
+			// Get all IDs of all Dataset Test parameter values for the specified ids to find
+			// out if
+			// - They are all referenced directly by a condition -> done, use conditions' specs
+			// - Some are referenced by a transformer -> Build the tree, e.g. by fully loading all
+			//   transformer configs and all dataset parameters with ValueSource not null.
+			//   Hierarchical queries are not supported in hql.
+
 			if (datasetIds.Count <= 0)
 			{
 				return new List<QualitySpecification>();

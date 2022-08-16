@@ -7,7 +7,6 @@ using System.Text;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
 using ProSuite.DomainModel.AO.DataModel;
@@ -23,7 +22,7 @@ namespace ProSuite.DomainModel.AO.QA
 	/// </summary>
 	public abstract class InstanceFactory : InstanceInfoBase
 	{
-		protected static readonly IMsg _msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		protected static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		[NotNull]
 		protected T Create<T>([NotNull] InstanceConfiguration instanceConfiguration,
@@ -36,6 +35,8 @@ namespace ProSuite.DomainModel.AO.QA
 
 			try
 			{
+				_msg.VerboseDebug(() => $"Creating instance config {instanceConfiguration.Name}");
+
 				IList<TestParameterValue> parameterValues = instanceConfiguration.ParameterValues;
 
 				List<TableConstraint> sortedTableParameters;
@@ -83,40 +84,8 @@ namespace ProSuite.DomainModel.AO.QA
 						$"Unable to create test for undefined {typeof(T)}", e);
 				}
 
-				var sb = new StringBuilder();
-
-				sb.AppendFormat("Unable to create instance for {0} {1}",
-				                typeof(T), instanceConfiguration.Name);
-				sb.AppendLine();
-				sb.AppendLine("with parameters:");
-
-				foreach (TestParameterValue value in instanceConfiguration.ParameterValues)
-				{
-					string stringValue;
-					try
-					{
-						stringValue = value.StringValue;
-					}
-					catch (Exception e1)
-					{
-						_msg.Debug(
-							string.Format(
-								"Error getting string value for parameter {0} of {1} {2}",
-								value.TestParameterName, typeof(T),
-								instanceConfiguration.Name),
-							e1);
-
-						stringValue = $"<error: {e1.Message} (see log for details)>";
-					}
-
-					sb.AppendFormat("  {0} : {1}", value.TestParameterName, stringValue);
-					sb.AppendLine();
-				}
-
-				sb.AppendFormat("error message: {0}",
-				                ExceptionUtils.GetInnermostMessage(e));
-				sb.AppendLine();
-
+				StringBuilder sb =
+					InstanceFactoryUtils.GetErrorMessageWithDetails(instanceConfiguration, e);
 				throw new InvalidOperationException(sb.ToString(), e);
 			}
 		}
@@ -197,7 +166,7 @@ namespace ProSuite.DomainModel.AO.QA
 			               "Set method not found for property {0} on test type {1}",
 			               propertyName, testType.Name);
 
-			setMethod.Invoke(test, new[] { value });
+			setMethod.Invoke(test, new[] {value});
 		}
 
 		protected static void SetNonConstructorConstraints(
@@ -295,8 +264,10 @@ namespace ProSuite.DomainModel.AO.QA
 					continue;
 				}
 
-				object valueForParameter =
-					GetValue(parameterValue, parameter, datasetContext);
+				_msg.VerboseDebug(
+					() => $"Creating parameter value for {parameterValue.TestParameterName}");
+
+				object valueForParameter = GetValue(parameterValue, parameter, datasetContext);
 
 				valuesForParameter.Add(valueForParameter);
 
@@ -356,26 +327,19 @@ namespace ProSuite.DomainModel.AO.QA
 			Assert.ArgumentNotNull(parameter, nameof(parameter));
 			Assert.ArgumentNotNull(datasetContext, nameof(datasetContext));
 
-			if (paramVal.ValueSource != null)
-			{
-				if (! paramVal.ValueSource.HasCashedValue(datasetContext))
-				{
-					if (! (InstanceFactoryUtils.CreateTransformerFactory(paramVal.ValueSource)
-						       is TransformerFactory fct))
-					{
-						throw new ArgumentException(
-							$"Unable to create TransformerFactory for {paramVal.ValueSource}");
-					}
+			TransformerConfiguration transformerConfiguration = paramVal.ValueSource;
 
-					// TODO: implement for other types
-					ITableTransformer sourceInstance =
-						fct.Create(datasetContext, paramVal.ValueSource);
+			if (transformerConfiguration != null)
+			{
+				if (! transformerConfiguration.HasCashedValue(datasetContext))
+				{
+					IReadOnlyTable transformedTable =
+						CreateTransformedTable(transformerConfiguration, datasetContext);
 					// TODO: validate caching
-					paramVal.ValueSource.CacheValue(sourceInstance.GetTransformed(),
-					                                datasetContext);
+					transformerConfiguration.CacheValue(transformedTable, datasetContext);
 				}
 
-				return paramVal.ValueSource.GetCachedValue();
+				return transformerConfiguration.GetCachedValue();
 			}
 
 			if (paramVal is ScalarTestParameterValue scalarParameterValue)
@@ -412,6 +376,33 @@ namespace ProSuite.DomainModel.AO.QA
 			}
 
 			throw new ArgumentException($"Unhandled type {paramVal.GetType()}");
+		}
+
+		private static IReadOnlyTable CreateTransformedTable(
+			[NotNull] TransformerConfiguration transformerConfiguration,
+			[NotNull] IOpenDataset datasetContext)
+		{
+			try
+			{
+				if (! (InstanceFactoryUtils.CreateTransformerFactory(transformerConfiguration)
+					       is TransformerFactory transformerFactory))
+				{
+					throw new ArgumentException(
+						$"Unable to create TransformerFactory for {transformerConfiguration}");
+				}
+
+				ITableTransformer tableTransformer =
+					transformerFactory.Create(datasetContext, transformerConfiguration);
+
+				return (IReadOnlyTable) tableTransformer.GetTransformed();
+			}
+			catch (Exception e)
+			{
+				StringBuilder sb =
+					InstanceFactoryUtils.GetErrorMessageWithDetails(transformerConfiguration, e);
+
+				throw new InvalidOperationException(sb.ToString(), e);
+			}
 		}
 
 		[NotNull]

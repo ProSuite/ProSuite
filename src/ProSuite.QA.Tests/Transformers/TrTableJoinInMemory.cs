@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
+using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase.GdbSchema;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
 using ProSuite.QA.Container;
@@ -9,7 +12,7 @@ using ProSuite.QA.Tests.Documentation;
 
 namespace ProSuite.QA.Tests.Transformers
 {
-	public class TrTableJoinInMemory : ITableTransformer<IReadOnlyTable>
+	public class TrTableJoinInMemory : TableTransformer<GdbTable>
 	{
 		private readonly IReadOnlyTable _leftTable;
 		private readonly IReadOnlyTable _rightTable;
@@ -21,9 +24,8 @@ namespace ProSuite.QA.Tests.Transformers
 		private string _manyToManyTableRightKey;
 
 		private readonly JoinType _joinType;
-		private readonly List<IReadOnlyTable> _involvedTables;
 
-		private IReadOnlyTable _joinedTable;
+		private GdbTable _joinedTable;
 
 		[DocTr(nameof(DocTrStrings.TrTableJoinInMemory_0))]
 		public TrTableJoinInMemory(
@@ -37,6 +39,7 @@ namespace ProSuite.QA.Tests.Transformers
 			string rightTableKey,
 			[DocTr(nameof(DocTrStrings.TrTableJoinInMemory_joinType))]
 			JoinType joinType)
+			: base(new[] {leftTable, rightTable})
 		{
 			_leftTable = leftTable;
 			_rightTable = rightTable;
@@ -45,7 +48,6 @@ namespace ProSuite.QA.Tests.Transformers
 			_rightTableKey = rightTableKey;
 
 			_joinType = joinType;
-			_involvedTables = new List<IReadOnlyTable> {leftTable, rightTable};
 		}
 
 		[TestParameter]
@@ -53,7 +55,13 @@ namespace ProSuite.QA.Tests.Transformers
 		public IReadOnlyTable ManyToManyTable
 		{
 			get => _manyToManyTable;
-			set => _manyToManyTable = value;
+			set
+			{
+				_manyToManyTable = value;
+
+				// Does queriedOnly mean anything in case of transformers?
+				AddInvolvedTable(_manyToManyTable, null, false, true);
+			}
 		}
 
 		[TestParameter]
@@ -73,41 +81,39 @@ namespace ProSuite.QA.Tests.Transformers
 				       StringUtils.IsNullOrEmptyOrBlank(value) ? null : value;
 		}
 
-		#region Implementation of IInvolvesTables
-
-		IList<IReadOnlyTable> IInvolvesTables.InvolvedTables => _involvedTables;
-
-		public void SetConstraint(int tableIndex, string condition)
-		{
-			// TODO
-		}
-
-		public void SetSqlCaseSensitivity(int tableIndex, bool useCaseSensitiveQaSql)
-		{
-			// TODO
-		}
-
-		#endregion
-
 		#region Implementation of ITableTransformer
 
-		string ITableTransformer.TransformerName { get; set; }
-
-		object ITableTransformer.GetTransformed()
+		protected override GdbTable GetTransformedCore(string name)
 		{
-			return GetTransformed();
-		}
-
-		public IReadOnlyTable GetTransformed()
-		{
+			// TODO: In order to use the DataContainer at least for the left rows, wrap or subclass JoinedDataset
 			if (_joinedTable == null)
 			{
 				AssociationDescription association = CreateAssociationDescription();
 
-				string joinTableName = ((ITableTransformer) this).TransformerName;
+				const bool ensureUniqueIds = true;
 
+				// TODO: Constraints on the tables!
 				_joinedTable = TableJoinUtils.CreateJoinedGdbFeatureClass(
-					association, _leftTable, joinTableName, _joinType);
+					association, _leftTable, name, ensureUniqueIds, _joinType);
+
+				// To store the involved base rows in issue:
+				IField baseRowField = FieldUtils.CreateBlobField(InvolvedRowUtils.BaseRowField);
+				_joinedTable.AddField(baseRowField);
+
+				JoinedDataset joinedDataset =
+					(JoinedDataset) Assert.NotNull(_joinedTable.BackingDataset);
+
+				//// Case sensitivity?!
+				//joinedDataset.LeftRowsFilter = GetConstraint(0);
+				//joinedDataset.RightRowsFilter = GetConstraint(1);
+				//if (ManyToManyTable != null)
+				//{
+				//	joinedDataset.ManyToManyRowsFilter = GetConstraint(2);
+				//}
+
+				// or: joinedDataset.SearchMethod = () => DataContainer.Search();
+
+				joinedDataset.OnRowCreatingAction = AddBaseRowsAction;
 			}
 
 			return _joinedTable;
@@ -142,6 +148,43 @@ namespace ProSuite.QA.Tests.Transformers
 			}
 
 			return association;
+		}
+
+		private Action<MultipleRowBasedValues, IReadOnlyRow, IReadOnlyRow> AddBaseRowsAction
+		{
+			get
+			{
+				int baseRowsFieldIdxResult = _joinedTable.FindField(InvolvedRowUtils.BaseRowField);
+
+				var baseRowField = _joinedTable.Fields.Field[baseRowsFieldIdxResult];
+
+				GdbTable extraRowTable = new GdbTable(-1, "BASE_ROW_TBL");
+				int baseRowsIndex = extraRowTable.AddFieldT(baseRowField);
+
+				return (joinedRows, leftRow, otherRow) =>
+				{
+					var involvedRows = new List<IReadOnlyRow>(2);
+
+					if (leftRow != null)
+					{
+						involvedRows.Add(leftRow);
+					}
+
+					if (otherRow != null)
+					{
+						involvedRows.Add(otherRow);
+					}
+
+					VirtualRow rowContainingBaseRows = extraRowTable.CreateRow();
+
+					IDictionary<int, int> indexMatrix = new Dictionary<int, int>(1);
+					indexMatrix.Add(baseRowsFieldIdxResult, baseRowsIndex);
+
+					joinedRows.AddRow(rowContainingBaseRows, indexMatrix);
+
+					rowContainingBaseRows.set_Value(baseRowsIndex, involvedRows);
+				};
+			}
 		}
 
 		#endregion

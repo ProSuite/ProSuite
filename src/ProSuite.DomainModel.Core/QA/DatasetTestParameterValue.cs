@@ -64,19 +64,26 @@ namespace ProSuite.DomainModel.Core.QA
 		{
 			get
 			{
-				if (_datasetValue == null)
+				string result;
+				if (_datasetValue != null)
+				{
+					result = _datasetValue.AliasName;
+				}
+				else if (ValueSource != null)
+				{
+					result = ValueSource.Name;
+				}
+				else
 				{
 					return null;
 				}
 
-				string val = _datasetValue.Name;
-
-				if (! string.IsNullOrEmpty(_filterExpression))
+				if (!string.IsNullOrEmpty(_filterExpression))
 				{
-					val = val + " ; " + _filterExpression;
+					result = result + " ; " + _filterExpression;
 				}
 
-				return val;
+				return result;
 			}
 			set
 			{
@@ -92,6 +99,12 @@ namespace ProSuite.DomainModel.Core.QA
 				{
 					throw new InvalidOperationException(
 						"Cannot set Value of DatasetValue, except filter expression");
+				}
+
+				if (ValueSource != null && datasetName != ValueSource.Name)
+				{
+					throw new InvalidOperationException(
+						"Cannot set Value of Transformer, except filter expression");
 				}
 
 				_filterExpression = tokens.Length > 1
@@ -111,16 +124,26 @@ namespace ProSuite.DomainModel.Core.QA
 		{
 			get
 			{
-				string val = _datasetValue != null
-					             ? _datasetValue.AliasName
-					             : "<not defined>";
+				string result;
+				if (_datasetValue != null)
+				{
+					result = _datasetValue.AliasName;
+				}
+				else if (ValueSource != null)
+				{
+					result = ValueSource.Name;
+				}
+				else
+				{
+					result = "<not defined>";
+				}
 
 				if (! string.IsNullOrEmpty(_filterExpression))
 				{
-					val = val + " ; " + _filterExpression;
+					result = result + " ; " + _filterExpression;
 				}
 
-				return val;
+				return result;
 			}
 		}
 
@@ -221,7 +244,8 @@ namespace ProSuite.DomainModel.Core.QA
 			             {
 				             _datasetValue = _datasetValue,
 				             _filterExpression = _filterExpression,
-				             _usedAsReferenceData = _usedAsReferenceData
+				             _usedAsReferenceData = _usedAsReferenceData,
+							 ValueSource = ValueSource
 			             };
 
 			return result;
@@ -235,6 +259,12 @@ namespace ProSuite.DomainModel.Core.QA
 			if (DatasetValue != datasetUpdateValue.DatasetValue)
 			{
 				DatasetValue = datasetUpdateValue.DatasetValue;
+				hasUpdates = true;
+			}
+
+			if (ValueSource != datasetUpdateValue.ValueSource)
+			{
+				ValueSource = datasetUpdateValue.ValueSource;
 				hasUpdates = true;
 			}
 

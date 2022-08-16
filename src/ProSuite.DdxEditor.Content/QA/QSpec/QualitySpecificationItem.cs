@@ -8,6 +8,7 @@ using System.Windows.Forms;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Essentials.System;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
 using ProSuite.Commons.UI.Finder;
@@ -376,7 +377,7 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 
 			_msg.InfoFormat("Opening url {0}...", url);
 
-			Process.Start(url);
+			ProcessUtils.StartProcess(url);
 		}
 
 		public void CreateReport([NotNull] string htmlFilePath,
@@ -409,7 +410,7 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 			                report.Name, path);
 
 			_msg.Info("Opening report...");
-			Process.Start(path);
+			ProcessUtils.StartProcess(path);
 		}
 	}
 }

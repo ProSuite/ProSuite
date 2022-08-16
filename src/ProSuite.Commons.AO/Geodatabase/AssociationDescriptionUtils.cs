@@ -9,7 +9,6 @@ namespace ProSuite.Commons.AO.Geodatabase
 		public static AssociationDescription CreateAssociationDescription(
 			[NotNull] IRelationshipClass relationshipClass)
 		{
-			// TODO test
 			if (relationshipClass.Cardinality ==
 			    esriRelCardinality.esriRelCardinalityManyToMany)
 			{
@@ -24,10 +23,15 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 
 			return new ForeignKeyAssociationDescription(
-				ReadOnlyTableFactory.Create((ITable) relationshipClass.DestinationClass),
-				relationshipClass.OriginForeignKey,
-				ReadOnlyTableFactory.Create((ITable) relationshipClass.OriginClass),
-				relationshipClass.OriginPrimaryKey);
+				       ReadOnlyTableFactory.Create((ITable) relationshipClass.DestinationClass),
+				       relationshipClass.OriginForeignKey,
+				       ReadOnlyTableFactory.Create((ITable) relationshipClass.OriginClass),
+				       relationshipClass.OriginPrimaryKey)
+			       {
+				       HasOneToOneCardinality =
+					       relationshipClass.Cardinality ==
+					       esriRelCardinality.esriRelCardinalityOneToOne
+			       };
 		}
 	}
 }

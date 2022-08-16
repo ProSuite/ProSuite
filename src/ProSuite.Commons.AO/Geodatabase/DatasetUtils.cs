@@ -1112,25 +1112,28 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			var srTolerance = (ISpatialReferenceTolerance) queryDescription.SpatialReference;
 
-			if (! double.IsNaN(xyTolerance))
+			if (srTolerance != null)
 			{
-				// TOP-5355: In some environments (versions) the SR created by GetQueryDescription()
-				// has 0 tolerances which subsequently results in HRESULT E_FAIL in topo-operators
-				// because it is not simple. Typically the tolerance is just the default of the SR
-				// which, in some situations can be equal or even smaller than the resolution!
+				if (! double.IsNaN(xyTolerance))
+				{
+					// TOP-5355: In some environments (versions) the SR created by GetQueryDescription()
+					// has 0 tolerances which subsequently results in HRESULT E_FAIL in topo-operators
+					// because it is not simple. Typically the tolerance is just the default of the SR
+					// which, in some situations can be equal or even smaller than the resolution!
 
-				// NOTE: The spatial reference must not be set to anything even slightly different 
-				// from the one derived by the Srid (internally) or no rows are found.
+					// NOTE: The spatial reference must not be set to anything even slightly different 
+					// from the one derived by the Srid (internally) or no rows are found.
 
-				// However, just chaning the tolerance seems to work:
+					// However, just chaning the tolerance seems to work:
 
-				srTolerance.XYTolerance = xyTolerance;
-			}
+					srTolerance.XYTolerance = xyTolerance;
+				}
 
-			if (srTolerance.XYToleranceValid != esriSRToleranceEnum.esriSRToleranceOK)
-			{
-				// Safety net: Do not allow a tolerance equal or smaller than the resolution:
-				srTolerance.SetMinimumXYTolerance();
+				if (srTolerance.XYToleranceValid != esriSRToleranceEnum.esriSRToleranceOK)
+				{
+					// Safety net: Do not allow a tolerance equal or smaller than the resolution:
+					srTolerance.SetMinimumXYTolerance();
+				}
 			}
 
 			return queryDescription;

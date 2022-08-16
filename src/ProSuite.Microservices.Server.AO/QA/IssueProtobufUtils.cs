@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.Callbacks;
-using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.QA;
@@ -20,7 +19,20 @@ namespace ProSuite.Microservices.Server.AO.QA
 	{
 		public static IssueMsg CreateIssueProto(
 			[NotNull] IssueFoundEventArgs args,
-			[NotNull] IBackgroundVerificationInputs backgroundVerificationInputs)
+			[NotNull] IVerificationContext verificationContext)
+		{
+			var supportedGeometryTypes =
+				GetSupportedErrorRepoGeometryTypes(verificationContext).ToList();
+
+			ISpatialReference spatialReference =
+				verificationContext.SpatialReferenceDescriptor.SpatialReference;
+
+			return CreateIssueProto(args, spatialReference, supportedGeometryTypes);
+		}
+
+		public static IssueMsg CreateIssueProto(IssueFoundEventArgs args,
+		                                        ISpatialReference spatialReference,
+		                                        List<esriGeometryType> supportedGeometryTypes)
 		{
 			QualityCondition qualityCondition =
 				args.QualitySpecificationElement.QualityCondition;
@@ -55,17 +67,9 @@ namespace ProSuite.Microservices.Server.AO.QA
 				args.LegacyInvolvedObjectsString,
 				(value) => issueProto.LegacyInvolvedRows = value);
 
-			IVerificationContext verificationContext =
-				Assert.NotNull(backgroundVerificationInputs.VerificationContext);
-
-			var supportedGeometryTypes =
-				GetSupportedErrorRepoGeometryTypes(verificationContext).ToList();
-
 			// create valid Error geometry (geometry type, min dimensions) if possible
 			IGeometry geometry = ErrorRepositoryUtils.GetGeometryToStore(
-				args.ErrorGeometry,
-				verificationContext.SpatialReferenceDescriptor.SpatialReference,
-				supportedGeometryTypes);
+				args.ErrorGeometry, spatialReference, supportedGeometryTypes);
 
 			issueProto.IssueGeometry =
 				ProtobufGeometryUtils.ToShapeMsg(geometry);

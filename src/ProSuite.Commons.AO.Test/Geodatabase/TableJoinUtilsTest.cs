@@ -512,6 +512,56 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 				"inMemoryJoined");
 
 			Assert.AreEqual(featureCount, GetRowCount((ITable) inMemoryJoinedClass));
+
+			Stopwatch watch = Stopwatch.StartNew();
+
+			CheckOIDs((ITable) inMemoryJoinedClass, true);
+
+			watch.Stop();
+			Console.WriteLine(@"Without unique IDs: {0}ms", watch.ElapsedMilliseconds);
+
+			inMemoryJoinedClass = TableJoinUtils.CreateJoinedGdbFeatureClass(
+				rc, RelationshipClassUtils.GetFeatureClasses(rc).Single(),
+				"inMemoryJoined", JoinType.InnerJoin, true);
+
+			Assert.AreEqual(featureCount, GetRowCount((ITable) inMemoryJoinedClass));
+
+			watch.Restart();
+			CheckOIDs((ITable) inMemoryJoinedClass, false);
+			watch.Stop();
+			Console.WriteLine(@"With unique IDs: {0}ms", watch.ElapsedMilliseconds);
+		}
+
+		private static void CheckOIDs(ITable table, bool allowDuplicates = false)
+		{
+			HashSet<int> oids = new HashSet<int>();
+
+			int duplicates = 0;
+			int lastOid = -1;
+			foreach (IRow row in GdbQueryUtils.GetRows(table, true))
+			{
+				lastOid = row.OID;
+				if (oids.Contains(lastOid))
+				{
+					duplicates++;
+				}
+
+				if (! allowDuplicates)
+					Assert.IsFalse(oids.Contains(lastOid), $"Duplicate OID: {lastOid}");
+
+				oids.Add(lastOid);
+			}
+
+			Console.WriteLine(@"Duplicates allowed: {0} ({1} duplicates)", allowDuplicates,
+			                  duplicates);
+
+			if (! allowDuplicates && lastOid > 0)
+			{
+				// Extra check
+				int checkId = table.GetRow(lastOid).OID;
+
+				Assert.AreEqual(lastOid, checkId);
+			}
 		}
 
 		[Test]
@@ -595,6 +645,8 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			// Check if we can iterate also:
 			Assert.AreEqual(featureCount,
 			                GdbQueryUtils.GetFeatures(inMemoryJoinedClass, true).Count());
+
+			CheckOIDs((ITable) inMemoryJoinedClass);
 		}
 
 		[Test]
@@ -636,6 +688,8 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			// Check if we can iterate also:
 			Assert.AreEqual(featureCount,
 			                GdbQueryUtils.GetFeatures(inMemoryJoinedClass, true).Count());
+
+			CheckOIDs((ITable) inMemoryJoinedClass);
 		}
 
 		[Test]
@@ -677,6 +731,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			// Check if we can iterate also:
 			Assert.AreEqual(featureCount,
 			                GdbQueryUtils.GetFeatures(inMemoryJoinedClass, true).Count());
+			CheckOIDs((ITable) inMemoryJoinedClass);
 
 			inMemoryJoinedClass = TableJoinUtils.CreateJoinedGdbFeatureClass(
 				rc, (IFeatureClass) rc.OriginClass, "inMemoryJoined");
@@ -685,6 +740,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			// Check if we can iterate also:
 			Assert.AreEqual(featureCount,
 			                GdbQueryUtils.GetFeatures(inMemoryJoinedClass, true).Count());
+			CheckOIDs((ITable) inMemoryJoinedClass);
 
 			// Test filter:
 			var filter = new QueryFilterClass()
@@ -853,6 +909,25 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 				"inMemoryJoined");
 
 			Assert.AreEqual(featureCount, GetRowCount((ITable) inMemoryJoinedClass));
+
+			Stopwatch watch = Stopwatch.StartNew();
+
+			CheckOIDs((ITable) inMemoryJoinedClass, true);
+
+			watch.Stop();
+			Console.WriteLine(@"Without unique IDs: {0}ms", watch.ElapsedMilliseconds);
+
+			inMemoryJoinedClass = TableJoinUtils.CreateJoinedGdbFeatureClass(
+				rc, RelationshipClassUtils.GetFeatureClasses(rc).Single(),
+				"inMemoryJoined", JoinType.InnerJoin, true);
+
+			Assert.AreEqual(featureCount, GetRowCount((ITable) inMemoryJoinedClass));
+
+			watch.Restart();
+			CheckOIDs((ITable) inMemoryJoinedClass, false);
+			watch.Stop();
+			Console.WriteLine(@"Wit unique IDs (and extra row in result): {0}ms",
+			                  watch.ElapsedMilliseconds);
 		}
 
 		[Test]
@@ -1548,7 +1623,13 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		[NotNull]
 		private static IFeatureWorkspace OpenTestWorkspace()
 		{
-			return (IFeatureWorkspace) TestUtils.OpenUserWorkspaceOracle();
+			string versionName = "TG_SERVICE.RC_TLM_2022-6-30";
+
+			IFeatureWorkspace defaultVersion =
+				(IFeatureWorkspace) TestUtils.OpenUserWorkspaceOracle();
+
+			return WorkspaceUtils.OpenFeatureWorkspaceVersion(defaultVersion, versionName);
+			return defaultVersion;
 		}
 
 		private static int GetRowCount([NotNull] IQueryDef queryDef)

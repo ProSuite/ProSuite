@@ -31,7 +31,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 		}
 
 		[Test]
-		public void CanInnerJoin()
+		public void CanInnerJoinOneToOne()
 		{
 			IFeatureWorkspace ws =
 				TestWorkspaceUtils.CreateInMemoryWorkspace("TrTableJoinInMemory");
@@ -66,7 +66,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			{
 				IFeature f = polyFc.CreateFeature();
 				f.Value[1] = 14;
-				f.Shape = CurveConstruction.StartPoly(50, 50).LineTo(50, 70).LineTo(70, 70)
+				f.Shape = CurveConstruction.StartPoly(0, 0).LineTo(50, 70).LineTo(70, 70)
 				                           .LineTo(70, 50).ClosePolygon();
 				f.Store();
 			}
@@ -79,12 +79,18 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			// The name is used as the table name and thus necessary
 			((ITableTransformer) tr).TransformerName = "test_join";
 			{
-				// The two polygons only touch:
-				QaIntersectsSelf test =
+				var intersectsSelf =
 					new QaIntersectsSelf((IReadOnlyFeatureClass) tr.GetTransformed());
-				var runner = new QaContainerTestRunner(1000, test) {KeepGeometry = true};
+				var runner = new QaContainerTestRunner(1000, intersectsSelf) {KeepGeometry = true};
 				runner.Execute();
-				Assert.AreEqual(0, runner.Errors.Count);
+				Assert.AreEqual(1, runner.Errors.Count);
+
+				// Check involved rows:
+				QaError error = runner.Errors[0];
+
+				// Check involved rows. They must be from a 'real' feature class, not form a transformed feature class.
+				List<string> realTableNames = new List<string> {"lineFc", "polyFc"};
+				CheckInvolvedRows(error.InvolvedRows, 4, realTableNames);
 			}
 			{
 				QaConstraint test = new QaConstraint(tr.GetTransformed(), "polyFc.Nr_Poly > 12");
@@ -92,6 +98,143 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				var runner = new QaContainerTestRunner(1000, test);
 				runner.Execute();
 				Assert.AreEqual(1, runner.Errors.Count);
+
+				// Check involved rows:
+				QaError error = runner.Errors[0];
+
+				// Check involved rows. They must be from a 'real' feature class, not form a transformed feature class.
+				List<string> realTableNames = new List<string> {"lineFc", "polyFc"};
+				CheckInvolvedRows(error.InvolvedRows, 2, realTableNames);
+			}
+		}
+
+		[Test]
+		public void CanInnerJoinManyToMany()
+		{
+			IFeatureWorkspace ws =
+				TestWorkspaceUtils.CreateInMemoryWorkspace("TrTableJoinInMemory");
+
+			IFeatureClass lineFc =
+				CreateFeatureClass(
+					ws, "lineFc", esriGeometryType.esriGeometryPolyline,
+					new[] {FieldUtils.CreateIntegerField("Nr_Line")});
+			IFeatureClass polyFc =
+				CreateFeatureClass(
+					ws, "polyFc", esriGeometryType.esriGeometryPolygon,
+					new[] {FieldUtils.CreateIntegerField("Nr_Poly")});
+
+			IFeatureClass bridgeTable =
+				CreateFeatureClass(
+					ws, "bridgeTable", esriGeometryType.esriGeometryPoint,
+					new[]
+					{
+						FieldUtils.CreateIntegerField("Nr_Poly"),
+						FieldUtils.CreateIntegerField("Nr_Line")
+					});
+			{
+				IFeature f = lineFc.CreateFeature();
+				f.Value[1] = 1;
+				f.Shape = CurveConstruction.StartLine(0, 0).LineTo(69.5, 69.5).Curve;
+				f.Store();
+			}
+			{
+				IFeature f = lineFc.CreateFeature();
+				f.Value[1] = 2;
+				f.Shape = CurveConstruction.StartLine(60, 40).LineTo(60, 80).Curve;
+				f.Store();
+			}
+			{
+				IFeature f = polyFc.CreateFeature();
+				f.Value[1] = 11;
+				f.Shape = CurveConstruction.StartPoly(0, 0).LineTo(20, 50).LineTo(40, 50)
+				                           .LineTo(40, 0).ClosePolygon();
+				f.Store();
+			}
+			{
+				IFeature f = polyFc.CreateFeature();
+				f.Value[1] = 12;
+				f.Shape = CurveConstruction.StartPoly(0, 0).LineTo(50, 70).LineTo(70, 70)
+				                           .LineTo(70, 50).ClosePolygon();
+				f.Store();
+			}
+
+			{
+				IFeature f = bridgeTable.CreateFeature();
+				f.Value[1] = 11;
+				f.Value[2] = 1;
+				f.Shape = GeometryFactory.CreatePoint(0, 0);
+				f.Store();
+			}
+			{
+				IFeature f = bridgeTable.CreateFeature();
+				f.Value[1] = 12;
+				f.Value[2] = 2;
+				f.Shape = GeometryFactory.CreatePoint(0, 0);
+				f.Store();
+			}
+
+			TrTableJoinInMemory tr = new TrTableJoinInMemory(
+				                         ReadOnlyTableFactory.Create(polyFc),
+				                         ReadOnlyTableFactory.Create(lineFc),
+				                         "Nr_Poly", "Nr_Line", JoinType.InnerJoin)
+			                         {
+				                         ManyToManyTable = ReadOnlyTableFactory.Create(bridgeTable),
+				                         ManyToManyTableLeftKey = "Nr_Poly",
+				                         ManyToManyTableRightKey = "Nr_Line"
+			                         };
+
+			// The name is used as the table name and thus necessary
+			((ITableTransformer) tr).TransformerName = "test_join";
+			{
+				var intersectsSelf =
+					new QaIntersectsSelf((IReadOnlyFeatureClass) tr.GetTransformed());
+				//intersectsSelf.SetConstraint(0, "polyFc.Nr_Poly < 10");
+
+				var runner = new QaContainerTestRunner(1000, intersectsSelf) {KeepGeometry = true};
+				runner.Execute();
+				Assert.AreEqual(1, runner.Errors.Count);
+
+				// Check involved rows:
+				QaError error = runner.Errors[0];
+
+				// Check involved rows. They must be from a 'real' feature class, not form a transformed feature class.
+				List<string> realTableNames = new List<string> {"lineFc", "polyFc"};
+				CheckInvolvedRows(error.InvolvedRows, 4, realTableNames);
+			}
+			{
+				QaConstraint test = new QaConstraint(tr.GetTransformed(), "polyFc.Nr_Poly > 11");
+				IFilterEditTest ft = test;
+				var runner = new QaContainerTestRunner(1000, test);
+				runner.Execute();
+				Assert.AreEqual(1, runner.Errors.Count);
+
+				// Check involved rows:
+				QaError error = runner.Errors[0];
+
+				// Check involved rows. They must be from a 'real' feature class, not form a transformed feature class.
+				List<string> realTableNames = new List<string> {"lineFc", "polyFc"};
+				CheckInvolvedRows(error.InvolvedRows, 2, realTableNames);
+			}
+			{
+				// TODO: This has currently no effect and should be implemented
+				tr.SetConstraint(0, "Nr_Poly < 10");
+
+				QaConstraint test = new QaConstraint(tr.GetTransformed(), "polyFc.Nr_Poly > 11");
+				IFilterEditTest ft = test;
+				var runner = new QaContainerTestRunner(1000, test);
+				runner.Execute();
+				Assert.AreEqual(1, runner.Errors.Count);
+			}
+		}
+
+		private static void CheckInvolvedRows(IList<InvolvedRow> involvedRows, int expectedCount,
+		                                      IList<string> realTableNames)
+		{
+			Assert.AreEqual(expectedCount, involvedRows.Count);
+
+			foreach (InvolvedRow involvedRow in involvedRows)
+			{
+				Assert.IsTrue(realTableNames.Contains(involvedRow.TableName));
 			}
 		}
 
@@ -114,6 +257,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 
 			IFeatureClass fc = DatasetUtils.CreateSimpleFeatureClass(ws, name,
 				FieldUtils.CreateFields(fields));
+
 			return fc;
 		}
 	}

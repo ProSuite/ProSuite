@@ -21,7 +21,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		private readonly IWorkspace _workspace;
 
 		private IName _fullName;
-		private bool _hasOID;
+
 		private string _oidFieldName;
 
 		private static int _nextObjectClassId;
@@ -67,9 +67,9 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			}
 		}
 
-		public GdbTable(IObjectClass template, bool useTemplateForQuerying = false)
-			: this(template.ObjectClassID, DatasetUtils.GetName(template),
-			       DatasetUtils.GetAliasName(template))
+		public GdbTable(ITable template, bool useTemplateForQuerying = false)
+			: this(GetObjectClassId(template), DatasetUtils.GetName(template),
+			       GetAliasName(template))
 		{
 			for (int i = 0; i < template.Fields.FieldCount; i++)
 			{
@@ -79,7 +79,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 			if (useTemplateForQuerying)
 			{
-				BackingDataset = new BackingTable((ITable) template, this);
+				BackingDataset = new BackingTable(template, this);
 			}
 		}
 
@@ -105,6 +105,26 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		public void SetOIDFieldName(string fieldName)
 		{
 			_oidFieldName = fieldName;
+		}
+
+		private static string GetAliasName(ITable template)
+		{
+			if (template is IObjectClass objectClass)
+			{
+				return DatasetUtils.GetAliasName(objectClass);
+			}
+
+			return null;
+		}
+
+		private static int GetObjectClassId(ITable template)
+		{
+			if (template is IObjectClass objectClass)
+			{
+				return objectClass.ObjectClassID;
+			}
+
+			return -1;
 		}
 
 		public bool Equals(GdbTable other)
@@ -193,7 +213,6 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			{
 				// Probably the same logic as AO (query) classes:
 				// The last one to be added determines the OID field
-				_hasOID = true;
 				_oidFieldName = field.Name;
 			}
 
@@ -201,7 +220,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			return i;
 		}
 
-		public override bool HasOID => _hasOID;
+		public override bool HasOID => _oidFieldName != null;
 
 		public override string OIDFieldName => _oidFieldName;
 
@@ -251,6 +270,16 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			return CreateObject(GetNextOid());
 		}
 
+		public override IRow GetRow(int OID)
+		{
+			if (BackingDataset == null)
+			{
+				throw new NotImplementedException("No backing dataset provided for GetRow().");
+			}
+
+			return BackingDataset.GetRow(OID);
+		}
+
 		public override IReadOnlyRow GetReadOnlyRow(int id)
 		{
 			if (BackingDataset == null)
@@ -258,7 +287,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 				throw new NotImplementedException("No backing dataset provided for GetRow().");
 			}
 
-			return BackingDataset?.GetRow(id);
+			return BackingDataset.GetRow(id);
 		}
 
 		public override IRowBuffer CreateRowBuffer()

@@ -23,7 +23,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		public GdbFeatureClass([NotNull] IFeatureClass template,
 		                       bool useTemplateForQuerying = false)
-			: base(template, useTemplateForQuerying)
+			: base((ITable) template, useTemplateForQuerying)
 		{
 			ShapeType = template.ShapeType;
 		}

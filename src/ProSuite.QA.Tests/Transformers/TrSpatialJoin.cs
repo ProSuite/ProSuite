@@ -15,7 +15,7 @@ using ProSuite.QA.Tests.Documentation;
 namespace ProSuite.QA.Tests.Transformers
 {
 	[UsedImplicitly]
-	public class TrSpatialJoin : TableTransformer<IReadOnlyFeatureClass>
+	public class TrSpatialJoin : TableTransformer<TransformedFeatureClass>
 	{
 		public enum SearchOption
 		{
