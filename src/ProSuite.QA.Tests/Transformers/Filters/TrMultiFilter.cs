@@ -4,6 +4,7 @@ using System.Linq;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
+using ProSuite.QA.Tests.Documentation;
 
 namespace ProSuite.QA.Tests.Transformers.Filters
 {
@@ -16,9 +17,12 @@ namespace ProSuite.QA.Tests.Transformers.Filters
 
 		private FilteredFeatureClass _resultingClass;
 
+		[DocTr(nameof(DocTrStrings.TrMultiFilter_0))]
 		public TrMultiFilter([NotNull] IReadOnlyFeatureClass featureClassToFilter,
-		                     [NotNull] IList<IReadOnlyFeatureClass> inputFilters,
-		                     [CanBeNull] string expression)
+		                     [DocTr(nameof(DocTrStrings.TrMultiFilter_inputFilters))] [NotNull]
+		                     IList<IReadOnlyFeatureClass> inputFilters,
+		                     [DocTr(nameof(DocTrStrings.TrMultiFilter_expression))] [CanBeNull]
+		                     string expression)
 			: base(inputFilters.Prepend(featureClassToFilter))
 		{
 			_featureClassToFilter = featureClassToFilter;

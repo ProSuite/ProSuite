@@ -206,6 +206,20 @@ If the table is part of the geodatabase and registered as versioned it will be o
   <data name="TrMakeTable_viewOrTableName" xml:space="preserve">
     <value>The name of the database object to be created and made usable as table.</value>
   </data>
+  <data name="TrMultiFilter_0" xml:space="preserve">
+    <value>Creates a filtered feature class based on several other filters that use the same 'featureClassToFilter'.</value>
+  </data>
+  <data name="TrMultiFilter_expression" xml:space="preserve">
+    <value>An expression that allows combining filters with AND or OR. Example: 
+(islands_in_lakes OR islands_in_rivers) AND islands_in_bavaria
+The input filters are referenced by the transformer configuration name. If not specified, all input filters are combined with AND, i.e. the feature passes all filters.</value>
+  </data>
+  <data name="TrMultiFilter_featureClassToFilter" xml:space="preserve">
+    <value>The feature class to be filtered.</value>
+  </data>
+  <data name="TrMultiFilter_inputFilters" xml:space="preserve">
+    <value>The filters which should be checked to determine if a feature passes the filter. By default, a feature passes the filter if it passes all input filters.</value>
+  </data>
   <data name="TrMultilineToLine_0" xml:space="preserve">
     <value>Transforms multi-lines to single lines. The transformed feature class has the attribute PartIndex. This field index from which polygon part the transformed polygon part was generated</value>
   </data>
