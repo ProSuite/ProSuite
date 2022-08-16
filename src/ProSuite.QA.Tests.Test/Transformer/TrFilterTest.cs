@@ -14,7 +14,7 @@ using ProSuite.QA.Tests.Transformers.Filters;
 namespace ProSuite.QA.Tests.Test.Transformer
 {
 	[TestFixture]
-	public class TrSpatiallyFilteredTest
+	public class TrFilterTest
 	{
 		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
 
@@ -207,6 +207,109 @@ namespace ProSuite.QA.Tests.Test.Transformer
 
 				// Filtered again, no error
 				Assert.AreEqual(1, errors.Count);
+			}
+		}
+
+		[Test]
+		public void CanGetMultiFilteredAndCombination()
+		{
+			IFeatureWorkspace ws =
+				TestWorkspaceUtils.CreateInMemoryWorkspace("TrMultiFilter");
+
+			IFeatureClass lineFc =
+				CreateFeatureClass(
+					ws, "lineFc", esriGeometryType.esriGeometryPolyline,
+					new[] {FieldUtils.CreateIntegerField("Nr_Line")});
+			IFeatureClass polyFc =
+				CreateFeatureClass(
+					ws, "polyFc", esriGeometryType.esriGeometryPolygon,
+					new[] {FieldUtils.CreateIntegerField("Nr_Poly")});
+			IFeatureClass pointFc =
+				CreateFeatureClass(
+					ws, "pointFc", esriGeometryType.esriGeometryPoint,
+					new[] {FieldUtils.CreateIntegerField("Nr_Point")});
+
+			{
+				IFeature f = lineFc.CreateFeature();
+				f.Value[1] = 1;
+				f.Shape = CurveConstruction.StartLine(0, 0).LineTo(69.5, 69.5).Curve;
+				f.Store();
+			}
+			{
+				IFeature f = lineFc.CreateFeature();
+				f.Value[1] = 2;
+				f.Shape = CurveConstruction.StartLine(60, 40).LineTo(60, 80).Curve;
+				f.Store();
+			}
+			{
+				IFeature f = polyFc.CreateFeature();
+				f.Value[1] = 11;
+				f.Shape = CurveConstruction.StartPoly(0, 0).LineTo(0, 20).LineTo(20, 20)
+				                           .LineTo(20, 0).ClosePolygon();
+				f.Store();
+			}
+			{
+				IFeature f = polyFc.CreateFeature();
+				f.Value[1] = 12;
+				f.Shape = CurveConstruction.StartPoly(0, 0).LineTo(0, -70).LineTo(-70, -70)
+				                           .LineTo(-70, 0).ClosePolygon();
+				f.Store();
+			}
+
+			{
+				// In polygon AND on line
+				IFeature f = pointFc.CreateFeature();
+				f.Value[1] = 1;
+				f.Shape = GeometryFactory.CreatePoint(10, 10);
+				f.Store();
+			}
+			{
+				// In polygon but NOT on line
+				IFeature f = pointFc.CreateFeature();
+				f.Value[1] = 1;
+				f.Shape = GeometryFactory.CreatePoint(10, 12);
+				f.Store();
+			}
+			{
+				// On line but NOT in polygon
+				IFeature f = pointFc.CreateFeature();
+				f.Value[1] = 1;
+				f.Shape = GeometryFactory.CreatePoint(69.5, 69.5);
+				f.Store();
+			}
+
+			// The names are used as the table name and thus necessary
+			var trInPoly = new TrOnlyIntersectingFeatures(ReadOnlyTableFactory.Create(pointFc),
+			                                              ReadOnlyTableFactory.Create(polyFc))
+			               {TransformerName = "filtered_by_poly"};
+
+			var trOnLine = new TrOnlyIntersectingFeatures(ReadOnlyTableFactory.Create(pointFc),
+			                                              ReadOnlyTableFactory.Create(lineFc))
+			               {TransformerName = "filtered_by_line"};
+
+			var inputFilters = new List<IReadOnlyFeatureClass>
+			                   {
+				                   trInPoly.GetTransformed(),
+				                   trOnLine.GetTransformed()
+			                   };
+
+			var trCombined =
+				new TrMultiFilter(ReadOnlyTableFactory.Create(pointFc), inputFilters, null)
+				{TransformerName = "filtered_by_both"};
+
+			{
+				QaConstraint test = new QaConstraint(trCombined.GetTransformed(), "Nr_Point = 0");
+
+				var runner = new QaContainerTestRunner(1000, test);
+				runner.Execute();
+				Assert.AreEqual(1, runner.Errors.Count);
+
+				// Check involved rows:
+				QaError error = runner.Errors[0];
+
+				// Check involved rows. They must be from a 'real' feature class, not form a transformed feature class.
+				List<string> realTableNames = new List<string> {"pointFc"};
+				CheckInvolvedRows(error.InvolvedRows, 1, realTableNames);
 			}
 		}
 

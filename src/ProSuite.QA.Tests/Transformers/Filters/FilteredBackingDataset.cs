@@ -47,6 +47,8 @@ namespace ProSuite.QA.Tests.Transformers.Filters
 
 		public override int GetRowCount(IQueryFilter queryFilter)
 		{
+			// TODO: Callers should refrain from getting row count unnecessarily
+			// Currently the container calls row count for each tile for progress reasons
 			return Search(queryFilter, true).Count();
 		}
 

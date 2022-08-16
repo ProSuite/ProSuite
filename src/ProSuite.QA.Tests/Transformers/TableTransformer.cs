@@ -23,8 +23,6 @@ namespace ProSuite.QA.Tests.Transformers
 		protected TableTransformer(IEnumerable<IReadOnlyTable> involvedTables)
 			: base(involvedTables) { }
 
-		private string _transformerName;
-
 		public T GetTransformed()
 		{
 			if (_transformed != null)
@@ -32,11 +30,11 @@ namespace ProSuite.QA.Tests.Transformers
 				return _transformed;
 			}
 
-			using (_msg.IncrementIndentation("Creating transformer {0}...", _transformerName))
+			using (_msg.IncrementIndentation("Creating transformer {0}...", TransformerName))
 			{
 				try
 				{
-					T transformed = GetTransformedCore(_transformerName);
+					T transformed = GetTransformedCore(TransformerName);
 
 					UpdateConstraints(transformed);
 
@@ -50,7 +48,7 @@ namespace ProSuite.QA.Tests.Transformers
 				}
 				catch (Exception exception)
 				{
-					_msg.Debug($"Error creating {_transformerName}", exception);
+					_msg.Debug($"Error creating {TransformerName}", exception);
 					throw;
 				}
 			}
@@ -130,11 +128,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 		object ITableTransformer.GetTransformed() => GetTransformed();
 
-		string ITableTransformer.TransformerName
-		{
-			get => _transformerName;
-			set => _transformerName = value;
-		}
+		public string TransformerName { get; set; }
 
 		#region Overrides of ProcessBase
 
