@@ -67,9 +67,9 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			}
 		}
 
-		public GdbTable(IObjectClass template, bool useTemplateForQuerying = false)
-			: this(template.ObjectClassID, DatasetUtils.GetName(template),
-			       DatasetUtils.GetAliasName(template))
+		public GdbTable(ITable template, bool useTemplateForQuerying = false)
+			: this(GetObjectClassId(template), DatasetUtils.GetName(template),
+			       GetAliasName(template))
 		{
 			for (int i = 0; i < template.Fields.FieldCount; i++)
 			{
@@ -79,7 +79,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 			if (useTemplateForQuerying)
 			{
-				BackingDataset = new BackingTable((ITable) template, this);
+				BackingDataset = new BackingTable(template, this);
 			}
 		}
 
@@ -105,6 +105,26 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		public void SetOIDFieldName(string fieldName)
 		{
 			_oidFieldName = fieldName;
+		}
+
+		private static string GetAliasName(ITable template)
+		{
+			if (template is IObjectClass objectClass)
+			{
+				return DatasetUtils.GetAliasName(objectClass);
+			}
+
+			return null;
+		}
+
+		private static int GetObjectClassId(ITable template)
+		{
+			if (template is IObjectClass objectClass)
+			{
+				return objectClass.ObjectClassID;
+			}
+
+			return -1;
 		}
 
 		public bool Equals(GdbTable other)
