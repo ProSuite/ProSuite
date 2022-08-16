@@ -1,7 +1,6 @@
 using System;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DdxEditor.Content.Blazor.View;
-using ProSuite.DdxEditor.Framework.ItemViews;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Core;
@@ -10,15 +9,11 @@ namespace ProSuite.DdxEditor.Content.Blazor.ViewModel;
 
 public class ScalarTestParameterValueViewModel : ViewModelBase
 {
-	[CanBeNull] private object _value;
-
 	public ScalarTestParameterValueViewModel([NotNull] TestParameter parameter,
 	                                         [CanBeNull] object value,
-	                                         [NotNull] IViewObserver observer) :
+	                                         [NotNull] IInstanceConfigurationViewModel observer) :
 		base(parameter, value, observer)
 	{
-		_value = value;
-
 		ComponentParameters.Add("ViewModel", this);
 
 		TestParameterType testParameterType = TestParameterTypeUtils.GetParameterType(DataType);
@@ -35,6 +30,7 @@ public class ScalarTestParameterValueViewModel : ViewModelBase
 					ComponentType = typeof(EnumTestParameterValueBlazor);
 					break;
 				}
+
 				ComponentType = typeof(IntegerValueBlazor);
 				break;
 			case TestParameterType.Double:

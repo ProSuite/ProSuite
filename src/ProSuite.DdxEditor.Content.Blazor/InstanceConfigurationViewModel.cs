@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DdxEditor.Content.Blazor.ViewModel;
@@ -13,19 +14,21 @@ using ProSuite.QA.Core;
 namespace ProSuite.DdxEditor.Content.Blazor;
 
 // todo daro implement IDisposable
-public class InstanceConfigurationViewModel<T> : Observable, IInstanceConfigurationViewModel
+public class InstanceConfigurationViewModel<T> : IInstanceConfigurationViewModel
 	where T : InstanceConfiguration
 {
 	[NotNull] private readonly EntityItem<T, T> _item;
-	private Dictionary<TestParameter, IList<ViewModelBase>> _rowsByParameter;
+
+	// todo daro refactor to list
+	[NotNull] private Dictionary<TestParameter, IList<ViewModelBase>> _rowsByParameter = new();
+
+	// todo daro refactor to list
 	private Dictionary<TestParameter, ViewModelBase> _topLevelRowsByParameter;
-	private IList<ViewModelBase> _rows;
 
 	// todo daro InstanceConfiguration?
 	public InstanceConfigurationViewModel([NotNull] EntityItem<T, T> item,
 	                                      [NotNull] ITestParameterDatasetProvider datasetProvider,
-	                                      [NotNull]
-	                                      IRowFilterConfigurationProvider rowFilterProvider)
+	                                      [NotNull] IRowFilterConfigurationProvider rowFilterProvider)
 	{
 		Assert.ArgumentNotNull(item, nameof(item));
 		Assert.ArgumentNotNull(datasetProvider, nameof(datasetProvider));
@@ -38,11 +41,7 @@ public class InstanceConfigurationViewModel<T> : Observable, IInstanceConfigurat
 		InstanceConfiguration = Assert.NotNull(_item.GetEntity());
 	}
 
-	public IList<ViewModelBase> Rows
-	{
-		get => _rows;
-		set => SetProperty(ref _rows, value);
-	}
+	public IList<ViewModelBase> Values { get; set; }
 
 	[NotNull]
 	public InstanceConfiguration InstanceConfiguration { get; }
@@ -58,16 +57,17 @@ public class InstanceConfigurationViewModel<T> : Observable, IInstanceConfigurat
 		_item.NotifyChanged();
 	}
 
+	// todo daro refactor
 	public void BindTo([NotNull] InstanceConfiguration qualityCondition)
 	{
 		Assert.ArgumentNotNull(qualityCondition, nameof(qualityCondition));
 
-		if (_rowsByParameter != null && _rowsByParameter?.Count > 0)
+		if (_rowsByParameter.Count > 0)
 		{
 			UnwireEvents(_rowsByParameter.Values.SelectMany(row => row));
 		}
 
-		if (_topLevelRowsByParameter != null && _topLevelRowsByParameter?.Count > 0)
+		if (_topLevelRowsByParameter is { Count: > 0 })
 		{
 			UnwireEvents(_topLevelRowsByParameter.Values
 			                                     .OfType<TestParameterValueCollectionViewModel>());
@@ -82,7 +82,21 @@ public class InstanceConfigurationViewModel<T> : Observable, IInstanceConfigurat
 
 		WireEvents(_topLevelRowsByParameter.Values.OfType<TestParameterValueCollectionViewModel>());
 
-		Rows = new List<ViewModelBase>(_topLevelRowsByParameter.Values);
+		Values = new List<ViewModelBase>(_topLevelRowsByParameter.Values);
+	}
+
+	public void WireEvents([NotNull] ViewModelBase row)
+	{
+		Assert.ArgumentNotNull(row, nameof(row));
+
+		row.PropertyChanged += OnRowPropertyChanged;
+	}
+
+	public void UnwireEvents([NotNull] ViewModelBase row)
+	{
+		Assert.ArgumentNotNull(row, nameof(row));
+
+		row.PropertyChanged -= OnRowPropertyChanged;
 	}
 
 	private IEnumerable<KeyValuePair<TestParameter, ViewModelBase>> GetTopLevelRows(
@@ -111,6 +125,7 @@ public class InstanceConfigurationViewModel<T> : Observable, IInstanceConfigurat
 	private Dictionary<TestParameter, IList<ViewModelBase>> CreateRows(
 		[CanBeNull] InstanceConfiguration instanceConfiguration)
 	{
+		// todo daro use _rowsByParameter?
 		var rowsByParameter = new Dictionary<TestParameter, IList<ViewModelBase>>();
 
 		if (instanceConfiguration == null)
@@ -118,7 +133,7 @@ public class InstanceConfigurationViewModel<T> : Observable, IInstanceConfigurat
 			return rowsByParameter;
 		}
 
-		var factory = InstanceFactoryUtils.CreateFactory(instanceConfiguration);
+		InstanceFactory factory = InstanceFactoryUtils.CreateFactory(instanceConfiguration);
 
 		// todo daro log
 		if (factory == null)
@@ -165,100 +180,100 @@ public class InstanceConfigurationViewModel<T> : Observable, IInstanceConfigurat
 		return rowsByParameter;
 	}
 
-	public ViewModelBase InsertRow(TestParameter parameter)
-	{
-		Assert.ArgumentNotNull(parameter, nameof(parameter));
-		Assert.ArgumentCondition(_rowsByParameter.ContainsKey(parameter), nameof(parameter));
+	//public ViewModelBase InsertRow(TestParameter parameter)
+	//{
+	//	Assert.ArgumentNotNull(parameter, nameof(parameter));
+	//	Assert.ArgumentCondition(_rowsByParameter.ContainsKey(parameter), nameof(parameter));
 
-		var collectionRow =
-			Assert.NotNull(
-				(TestParameterValueCollectionViewModel) _topLevelRowsByParameter[parameter]);
+	//	var collectionRow =
+	//		Assert.NotNull(
+	//			(TestParameterValueCollectionViewModel) _topLevelRowsByParameter[parameter]);
 
-		ViewModelBase insertRow;
+	//	ViewModelBase insertRow;
 
-		if (TestParameterTypeUtils.IsDatasetType(parameter.Type))
-		{
-			insertRow = DatasetTestParameterValueViewModel.CreateInstance(parameter, null, this);
-		}
-		else
-		{
-			insertRow = new ScalarTestParameterValueViewModel(parameter, null, this);
-		}
+	//	if (TestParameterTypeUtils.IsDatasetType(parameter.Type))
+	//	{
+	//		insertRow = DatasetTestParameterValueViewModel.CreateInstance(parameter, null, this);
+	//	}
+	//	else
+	//	{
+	//		insertRow = new ScalarTestParameterValueViewModel(parameter, null, this);
+	//	}
 
-		insertRow.New = true;
+	//	insertRow.New = true;
 
-		WireEvents(insertRow);
+	//	WireEvents(insertRow);
 
-		_rowsByParameter[parameter].Add(insertRow);
+	//	_rowsByParameter[parameter].Add(insertRow);
 
-		collectionRow.Insert(insertRow);
+	//	collectionRow.Insert(insertRow);
 
-		return insertRow;
-	}
+	//	return insertRow;
+	//}
 
-	public void DeleteRow(ViewModelBase row)
-	{
-		TestParameter parameter = row.Parameter;
+	//public void DeleteRow(ViewModelBase row)
+	//{
+	//	TestParameter parameter = row.Parameter;
 
-		var collectionRow =
-			Assert.NotNull(
-				(TestParameterValueCollectionViewModel) _topLevelRowsByParameter[parameter]);
+	//	var collectionRow =
+	//		Assert.NotNull(
+	//			(TestParameterValueCollectionViewModel) _topLevelRowsByParameter[parameter]);
 
-		Assert.True(_rowsByParameter[parameter].Remove(row), $"cannot remove {row}");
+	//	Assert.True(_rowsByParameter[parameter].Remove(row), $"cannot remove {row}");
 
-		collectionRow.Remove(row);
-	}
+	//	collectionRow.Remove(row);
+	//}
 
-	public bool TryMoveDown([NotNull] ViewModelBase row)
-	{
-		Assert.ArgumentNotNull(row, nameof(row));
+	//public bool TryMoveDown([NotNull] ViewModelBase row)
+	//{
+	//	Assert.ArgumentNotNull(row, nameof(row));
 
-		TestParameter parameter = row.Parameter;
+	//	TestParameter parameter = row.Parameter;
 
-		var collectionRow =
-			Assert.NotNull(
-				(TestParameterValueCollectionViewModel) _topLevelRowsByParameter[parameter]);
+	//	var collectionRow =
+	//		Assert.NotNull(
+	//			(TestParameterValueCollectionViewModel) _topLevelRowsByParameter[parameter]);
 
-		List<ViewModelBase> values = Assert.NotNull(collectionRow.Values);
+	//	IList<ViewModelBase> values = Assert.NotNull(collectionRow.Values);
 
-		int index = values.IndexOf(row);
+	//	int index = values.IndexOf(row);
 
-		if (index == -1 || index == values.Count - 1)
-		{
-			// selected row is not in this collection view model
-			return false;
-		}
+	//	if (index == -1 || index == values.Count - 1)
+	//	{
+	//		// selected row is not in this collection view model
+	//		return false;
+	//	}
 
-		Assert.True(_rowsByParameter[parameter].Remove(row), $"cannot remove {row}");
-		_rowsByParameter[parameter].Insert(index + 1, row);
+	//	Assert.True(_rowsByParameter[parameter].Remove(row), $"cannot remove {row}");
+	//	_rowsByParameter[parameter].Insert(index + 1, row);
 
-		return collectionRow.TryMoveDown(row);
-	}
+	//	return collectionRow.TryMoveDown(row);
+	//}
 
-	public bool TryMoveUp([NotNull] ViewModelBase row)
-	{
-		Assert.ArgumentNotNull(row, nameof(row));
+	//public bool TryMoveUp([NotNull] ViewModelBase row)
+	//{
+	//	Assert.ArgumentNotNull(row, nameof(row));
 
-		TestParameter parameter = row.Parameter;
+	//	TestParameter parameter = row.Parameter;
 
-		var collectionRow =
-			Assert.NotNull(
-				(TestParameterValueCollectionViewModel) _topLevelRowsByParameter[parameter]);
+	//	var collectionRow =
+	//		Assert.NotNull(
+	//			(TestParameterValueCollectionViewModel) _topLevelRowsByParameter[parameter]);
 
-		List<ViewModelBase> values = Assert.NotNull(collectionRow.Values);
+	//	IList<ViewModelBase> values = Assert.NotNull(collectionRow.Values);
 
-		int index = values.IndexOf(row);
+	//	int index = values.IndexOf(row);
 
-		if (index is -1 or 0)
-		{
-			return false;
-		}
+	//	if (index is -1 or 0)
+	//	{
+	//		return false;
+	//	}
 
-		Assert.True(_rowsByParameter[parameter].Remove(row), $"cannot remove {row}");
-		_rowsByParameter[parameter].Insert(index - 1, row);
+	//	Assert.True(_rowsByParameter[parameter].Remove(row), $"cannot remove {row}");
+	//	_rowsByParameter[parameter].Insert(index - 1, row);
 
-		return collectionRow.TryMoveUp(row);
-	}
+	//	return collectionRow.TryMoveUp(row);
+	//}
 
 	private void UpdateEntity([NotNull] InstanceConfiguration instanceConfiguration)
 	{
@@ -295,6 +310,10 @@ public class InstanceConfigurationViewModel<T> : Observable, IInstanceConfigurat
 					instanceConfiguration.AddParameterValue(
 						new ScalarTestParameterValue(testParameter, row.Value));
 				}
+				else if (row is DummyTestParameterValueViewModel)
+				{
+					// do nothing
+				}
 				else
 				{
 					throw new ArgumentOutOfRangeException(nameof(row), @"Unkown view model type");
@@ -307,7 +326,7 @@ public class InstanceConfigurationViewModel<T> : Observable, IInstanceConfigurat
 	                                           DatasetTestParameterValueViewModel viewModel)
 	{
 		datasetParameter.RowFiltersExpression = viewModel.RowFilterExpression;
-		
+
 		datasetParameter.ClearRowFilters();
 
 		datasetParameter.ClearRowFilters();
@@ -329,11 +348,6 @@ public class InstanceConfigurationViewModel<T> : Observable, IInstanceConfigurat
 		}
 	}
 
-	private void WireEvents(ViewModelBase row)
-	{
-		row.PropertyChanged += OnRowPropertyChanged;
-	}
-
 	private void UnwireEvents([NotNull] IEnumerable<ViewModelBase> rows)
 	{
 		Assert.ArgumentNotNull(rows, nameof(rows));
@@ -342,11 +356,6 @@ public class InstanceConfigurationViewModel<T> : Observable, IInstanceConfigurat
 		{
 			UnwireEvents(row);
 		}
-	}
-
-	private void UnwireEvents(ViewModelBase row)
-	{
-		row.PropertyChanged -= OnRowPropertyChanged;
 	}
 
 	private void OnRowPropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -430,4 +439,12 @@ public class InstanceConfigurationViewModel<T> : Observable, IInstanceConfigurat
 	}
 
 	#endregion
+
+	public event PropertyChangedEventHandler PropertyChanged;
+
+	[NotifyPropertyChangedInvocator]
+	protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+	{
+		PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+	}
 }

@@ -1,0 +1,27 @@
+@using ProSuite.DdxEditor.Content.Blazor.View
+@using ProSuite.DdxEditor.Content.Blazor.ViewModel
+@using Radzen
+@using Radzen.Blazor
+
+<div class="col-auto">
+	<div class="col">
+		<RadzenButton ButtonStyle="ButtonStyle.Light" Click="UpClicked" Disabled="UpButtonDisabled()">
+			<img src="images/UpArrow.png" class="ui-image"/>
+		</RadzenButton>
+	</div>
+	<div class="col">
+		<RadzenButton ButtonStyle="ButtonStyle.Light" Click="DownClicked" Disabled="DownButtonDisabled()">
+			<img src="images/DownArrow.png" class="ui-image"/>
+		</RadzenButton>
+	</div>
+	@*<div class="col">
+		<RadzenButton ButtonStyle="ButtonStyle.Light" Click="() => InsertRowClicked()" Disabled="InsertRowButtonDisabled()">
+			<img src="images/Add.png" class="ui-image"/>
+		</RadzenButton>
+	</div>*@
+	<div class="col">
+		<RadzenButton ButtonStyle="ButtonStyle.Light" Click="DeleteRowClicked" Disabled="DeleteRowButtonDisabled()">
+			<img src="images/Remove.png" class="ui-image"/>
+		</RadzenButton>
+	</div>
+</div>

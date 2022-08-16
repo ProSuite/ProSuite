@@ -22,9 +22,6 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 	[CanBeNull] private string _filterExpression;
 	[CanBeNull] private string _rowFilterExpression;
 
-	public List<RowFilterConfiguration> RowFilterConfigurations { get; } =
-		new List<RowFilterConfiguration>();
-
 	private bool _usedAsReferenceData;
 
 	private DatasetTestParameterValueViewModel(
@@ -35,7 +32,7 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 		[CanBeNull] string filterExpression,
 		bool usedAsReferenceData,
 		[NotNull] Either<Dataset, TransformerConfiguration> datasetSource,
-		[CanBeNull] ICollection<RowFilterConfiguration> rowFilters,
+		[CanBeNull] IEnumerable<RowFilterConfiguration> rowFilters,
 		[NotNull] IInstanceConfigurationViewModel observer) :
 		base(parameter, value, observer)
 	{
@@ -56,18 +53,7 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 		InitializeRowFilters(rowFilters);
 	}
 
-	private void InitializeRowFilters([CanBeNull] IEnumerable<RowFilterConfiguration> rowFilters)
-	{
-		if (rowFilters == null)
-		{
-			return;
-		}
-
-		RowFilterConfigurations.AddRange(rowFilters);
-
-		_rowFilterExpression =
-			StringUtils.Concatenate(RowFilterConfigurations.Select(rf => rf.Name), ", ");
-	}
+	public List<RowFilterConfiguration> RowFilterConfigurations { get; } = new();
 
 	[NotNull]
 	public Either<Dataset, TransformerConfiguration> DatasetSource { get; private set; }
@@ -101,9 +87,23 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 
 	public string ImageSource { get; set; }
 
+	// todo daro: rename to Value
 	public string DisplayValue => DatasetSource.Match(
 		GetDisplayName,
 		t => t?.Name);
+
+	private void InitializeRowFilters([CanBeNull] IEnumerable<RowFilterConfiguration> rowFilters)
+	{
+		if (rowFilters == null)
+		{
+			return;
+		}
+
+		RowFilterConfigurations.AddRange(rowFilters);
+
+		_rowFilterExpression =
+			StringUtils.Concatenate(RowFilterConfigurations.Select(rf => rf.Name), ", ");
+	}
 
 	public void FindDatasetClicked()
 	{
@@ -165,7 +165,7 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 
 		InstanceConfigurationInCategoryTableRow selectedItem = selection[0];
 
-		RowFilterConfiguration rowFilter =
+		var rowFilter =
 			(RowFilterConfiguration) selectedItem.InstanceConfiguration;
 
 		RowFilterConfigurations.Clear();

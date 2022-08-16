@@ -3,6 +3,8 @@
 @using Radzen
 @using Radzen.Blazor
 
+@inherits DataGridBlazorBase
+
 <style>
     /*Control color*/
 	html, body {
@@ -118,11 +120,10 @@
 </style>
 
 <div class="container-fluid" style="margin: 0.625rem 0 0 -0.75rem;">
-    <div class="row">
-        <div class="col">
-            <RadzenDataGrid @ref="_mainGrid"
+    <div class="col">
+	    <RadzenDataGrid @ref="DataGrid"
                             TItem="ViewModelBase"
-                            Data="Rows"
+                            Data="ViewModel.Values"
                             SelectionMode="DataGridSelectionMode.Single"
                             ExpandMode="DataGridExpandMode.Multiple"
                             EditMode="DataGridEditMode.Single"
@@ -130,105 +131,22 @@
                             AllowRowSelectOnRowClick="true"
                             @bind-Value="@SelectedRows"
                             RowClick="OnRowClick"
-                            RowExpand="OnRowExpand"
-                            RowCollapse="OnRowCollapse"
                             CellRender="OnCellRender"
                             RowRender="OnRowRender">
-                <Template Context="viewModel">
-                    @if (viewModel is TestParameterValueCollectionViewModel vm && vm.IsDatasetType)
-                    {
-	                    <RadzenDataGrid TItem="ViewModelBase"
-                                        Data="viewModel.Values"
-                                        SelectionMode="DataGridSelectionMode.Single"
-                                        AllowColumnResize="true"
-                                        AllowRowSelectOnRowClick="true"
-                                        @bind-Value="@SelectedRows"
-                                        RowClick="OnChildRowClick"
-                                        RowCreate="OnRowCreate"
-                                        RowUpdate="OnRowUpdate"
-                                        CellRender="OnCellRender"
-                                        Render="OnChildGridRender">
-                            <Columns>
-                                <RadzenDataGridColumn TItem="ViewModelBase" Property="ParameterName" Title="Parameter" Width="150px"/>
-                                <RadzenDataGridColumn TItem="ViewModelBase" Resizable="false" Width="38px">
-                                    <Template Context="subViewModel">
-                                        @if (subViewModel is DatasetTestParameterValueViewModel vm)
-                                        {
-	                                        <RadzenImage Path="@vm.ImageSource"></RadzenImage>
-                                        }
-                                    </Template>
-                                </RadzenDataGridColumn>
-                                <RadzenDataGridColumn TItem="ViewModelBase" Property="Value" Title="Value">
-                                    <Template Context="subViewModel">
-                                        <DynamicComponent Type="subViewModel.ComponentType" Parameters="subViewModel.ComponentParameters"/>
-                                    </Template>
-                                </RadzenDataGridColumn>
-
-                                <!-- TEST: In the future, we should support an expression (builder). -->
-                                <RadzenDataGridColumn TItem="ViewModelBase" Property="RowFilters" Title="Row Filter" Width="120px">
-                                    <Template Context="subViewModel">
-                                        @if (subViewModel is DatasetTestParameterValueViewModel vm)
-                                        {
-	                                        <DynamicComponent Type="@typeof(RowFilterViewBlazor)" Parameters="vm.ComponentParameters"/>
-                                        }
-                                    </Template>
-                                </RadzenDataGridColumn>
-
-                                <RadzenDataGridColumn TItem="ViewModelBase" Property="FilterExpression" Title="Filter Expression">
-                                    <Template Context="subViewModel">
-                                        @if (subViewModel is DatasetTestParameterValueViewModel vm)
-                                        {
-	                                        @vm.FilterExpression
-                                        }
-                                    </Template>
-                                    <EditTemplate Context="subViewModel">
-                                        @if (subViewModel is DatasetTestParameterValueViewModel vm)
-                                        {
-	                                        <RadzenTextBox @bind-Value="vm.FilterExpression" Style="width: 100%;"/>
-                                        }
-                                    </EditTemplate>
-                                </RadzenDataGridColumn>
-                                <RadzenDataGridColumn TItem="ViewModelBase" Property="UsedAsReferenceData" Title="Reference" Width="80px">
-                                    <Template Context="subViewModel">
-                                        @if (subViewModel is DatasetTestParameterValueViewModel vm)
-                                        {
-	                                        <RadzenCheckBox @bind-Value="vm.UsedAsReferenceData"/>
-                                        }
-                                    </Template>
-                                    <EditTemplate Context="subViewModel">
-                                        @if (subViewModel is DatasetTestParameterValueViewModel vm)
-                                        {
-	                                        <RadzenCheckBox @bind-Value="vm.UsedAsReferenceData"/>
-                                        }
-                                    </EditTemplate>
-                                </RadzenDataGridColumn>
-                            </Columns>
-                        </RadzenDataGrid>
+	            <Template Context="viewModel">
+                    @{
+	                    var vm = viewModel as TestParameterValueCollectionViewModel;
+						
+	                    if (vm is {IsDatasetType: true })
+	                    {
+		                    <DatasetTestParameterValueDataGridBlazor ViewModel="vm"/>
+	                    }
+	                    else if (vm != null)
+	                    {
+                            <ScalarTestParameterValueDataGridBlazor ViewModel="vm"/>
+	                    }
                     }
-                    else
-                    {
-                        <RadzenDataGrid TItem="ViewModelBase"
-                                        Data="viewModel.Values"
-                                        SelectionMode="DataGridSelectionMode.Single"
-                                        AllowColumnResize="true"
-                                        AllowRowSelectOnRowClick="true"
-                                        @bind-Value="@SelectedRows"
-                                        RowClick="OnChildRowClick"
-                                        RowCreate="OnRowCreate"
-                                        RowUpdate="OnRowUpdate"
-                                        CellRender="OnCellRender"
-                                        Render="OnChildGridRender">
-                            <Columns>
-                                <RadzenDataGridColumn TItem="ViewModelBase" Property="ParameterName" Title="Parameter" Width="150px"/>
-                                <RadzenDataGridColumn TItem="ViewModelBase" Property="Value" Title="Value">
-                                    <Template Context="subViewModel">
-                                        <DynamicComponent Type="subViewModel.ComponentType" Parameters="subViewModel.ComponentParameters"/>
-                                    </Template>
-                                </RadzenDataGridColumn>
-                            </Columns>
-                        </RadzenDataGrid>
-                    }
-                </Template>
+	            </Template>
                 <Columns>
                     <RadzenDataGridColumn TItem="ViewModelBase" Property="ParameterName" Title="Parameter" Width="150px">
                         <Template Context="viewModel">
@@ -289,29 +207,6 @@
                     </RadzenDataGridColumn>
                 </Columns>
             </RadzenDataGrid>
-        </div>
-
-        <div class="col-auto">
-            <div class="col">
-                <RadzenButton ButtonStyle="ButtonStyle.Light" Click="() => UpClicked()" Disabled="UpButtonDisabled()">
-                    <img src="images/UpArrow.png" class="ui-image"/>
-                </RadzenButton>
-            </div>
-            <div class="col">
-                <RadzenButton ButtonStyle="ButtonStyle.Light" Click="() => DownClicked()" Disabled="DownButtonDisabled()">
-                    <img src="images/DownArrow.png" class="ui-image"/>
-                </RadzenButton>
-            </div>
-            <div class="col">
-                <RadzenButton ButtonStyle="ButtonStyle.Light" Click="() => InsertRowClicked()" Disabled="InsertRowButtonDisabled()">
-                    <img src="images/Add.png" class="ui-image"/>
-                </RadzenButton>
-            </div>
-            <div class="col">
-                <RadzenButton ButtonStyle="ButtonStyle.Light" Click="() => DeleteRowClicked()" Disabled="DeleteRowButtonDisabled()">
-                    <img src="images/Remove.png" class="ui-image"/>
-                </RadzenButton>
-            </div>
-        </div>
+        
     </div>
 </div>
