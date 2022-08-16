@@ -249,29 +249,59 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to A table from the same data model. This table will be used to determine the workspace..
+        ///   Looks up a localized string similar to Creates a table from an existing table or view in the database. This allows using tables that would otherwise not be usable because they have not been harvested as datasets in the data dictionary. Typical examples are:
+        ///- Association tables in many-to-many relationship classes
+        ///- Tables or views that are not part of the geodatabase.
+        ///If the table is part of the geodatabase and registered as versioned it will be opened from the same version as the base table..
         /// </summary>
-        public static string TrMakeTabl_baseTable {
+        public static string TrMakeTable_0 {
             get {
-                return ResourceManager.GetString("TrMakeTabl_baseTable", resourceCulture);
+                return ResourceManager.GetString("TrMakeTable_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Creates a table from an SQL statement directly evaluated in the RDBMS. The same restrictions apply as for ArcGIS &apos;query layers&apos;. For example, versioned data cannot be accessed, only the raw tables in the database including tables that are not registered as part of the geodatabase..
+        /// </summary>
+        public static string TrMakeTable_1 {
+            get {
+                return ResourceManager.GetString("TrMakeTable_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A table from the same data model. This table will be used to determine the workspace of the table..
+        /// </summary>
+        public static string TrMakeTable_baseTable {
+            get {
+                return ResourceManager.GetString("TrMakeTable_baseTable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The field name containing the non-null and unique values to be used as identifier..
+        /// </summary>
+        public static string TrMakeTable_objectIdField {
+            get {
+                return ResourceManager.GetString("TrMakeTable_objectIdField", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The SQL statement to be evaluated in the database. Example: SELECT ID, REGION, LAUF_NR, STATUS FROM TLM.GEWISS_LAUF_REGION WHERE REGION &lt;&gt; &apos;LI&apos; AND LAUF_NR IN (SELECT LAUF_NR FROM TLM.GEWISS_LAUF_EXTERNAL WHERE OWNER = &apos;KANTON&apos;).
+        /// </summary>
+        public static string TrMakeTable_sql {
+            get {
+                return ResourceManager.GetString("TrMakeTable_sql", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to The name of the database object to be created and made usable as table..
         /// </summary>
-        public static string TrMakeTabl_viewOrTableName {
+        public static string TrMakeTable_viewOrTableName {
             get {
-                return ResourceManager.GetString("TrMakeTabl_viewOrTableName", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Creates a table from a many-to-many relationship class or from an unregistered database table or view that would otherwise not be usable as dataset..
-        /// </summary>
-        public static string TrMakeTable_0 {
-            get {
-                return ResourceManager.GetString("TrMakeTable_0", resourceCulture);
+                return ResourceManager.GetString("TrMakeTable_viewOrTableName", resourceCulture);
             }
         }
         
