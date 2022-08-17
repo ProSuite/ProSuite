@@ -25,11 +25,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			QualityConditionControl control;
 
 #if NET6_0
-			IServiceCollection serviceCollection = new ServiceCollection();
-			serviceCollection.AddWindowsFormsBlazorWebView();
-			serviceCollection.AddSingleton<IEventAggregator>(_ => new EventAggregator());
-
-			ServiceProvider provider = serviceCollection.BuildServiceProvider();
+			ServiceProvider provider = CreateIoCContainer();
 
 			var viewModel =
 				new InstanceConfigurationViewModel<QualityCondition>(
@@ -59,10 +55,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			InstanceConfigurationControl control;
 
 #if NET6_0
-			IServiceCollection serviceCollection = new ServiceCollection();
-			serviceCollection.AddWindowsFormsBlazorWebView();
-
-			ServiceProvider provider = serviceCollection.BuildServiceProvider();
+			ServiceProvider provider = CreateIoCContainer();
 
 			var viewModel =
 				new InstanceConfigurationViewModel<InstanceConfiguration>(
@@ -80,6 +73,16 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			new InstanceConfigurationPresenter(item, control, itemNavigation);
 
 			return control;
+		}
+
+		private static ServiceProvider CreateIoCContainer()
+		{
+			IServiceCollection serviceCollection = new ServiceCollection();
+			serviceCollection.AddWindowsFormsBlazorWebView();
+			serviceCollection.AddSingleton<IEventAggregator>(_ => new EventAggregator());
+
+			ServiceProvider provider = serviceCollection.BuildServiceProvider();
+			return provider;
 		}
 	}
 }
