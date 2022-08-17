@@ -32,9 +32,13 @@ namespace ProSuite.QA.Tests.Transformers
 		/// <summary>
 		/// The target-source index mapping.
 		/// </summary>
+		[NotNull]
 		public IDictionary<int, int> CopyIndexMatrix { get; set; } = new Dictionary<int, int>();
 
+		[CanBeNull]
 		public List<FieldInfo> CalculatedFields { get; private set; }
+
+		[CanBeNull]
 		public TableView TableView { get; private set; }
 
 		/// <summary>

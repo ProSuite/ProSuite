@@ -150,7 +150,7 @@ namespace ProSuite.QA.Tests.Transformers
 			return association;
 		}
 
-		private Action<MultipleRowBasedValues, IReadOnlyRow, IReadOnlyRow> AddBaseRowsAction
+		private Action<MultiListValues, IReadOnlyRow, IReadOnlyRow> AddBaseRowsAction
 		{
 			get
 			{
