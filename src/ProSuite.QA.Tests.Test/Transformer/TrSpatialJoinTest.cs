@@ -135,6 +135,26 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				                   ReadOnlyTableFactory.Create(lineFc))
 			                   {Grouped = false};
 
+			tr.T0Attributes = new List<string>
+			                  {
+				                  "MIN(OBJECTID) AS t0Oid"
+			                  };
+			tr.T1Attributes = new List<string>
+			                  {
+				                  "MIN(OBJECTID) AS minObi",
+				                  "Count(Nr) as AnzUnqualifiziert",
+				                  "SUM(Nr) as SummeUnqualifiziert",
+				                  //"SUM(t1.Nr) as SummeQuali" // TODO: This fails
+			                  };
+
+			// NOTE: Cross-Field Calculations are only supported on t1 and only for
+			//       pre-existing fields!
+			// -> Consider separate transformer for more flexibility: trCalculateFields
+			tr.T1CalcAttributes = new List<string>
+			                      {
+				                      "OBJECTID + NR as crossFieldSum"
+			                      };
+
 			TransformedFeatureClass transformedClass = tr.GetTransformed();
 			WriteFieldNames(transformedClass);
 

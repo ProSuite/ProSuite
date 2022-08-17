@@ -263,8 +263,8 @@ namespace ProSuite.QA.Tests.Transformers
 			CopyIndexMatrix.Add(targetIdx, sourceIdx);
 		}
 
-		private static bool ValidateField(IReadOnlyTable sourceTable, string fieldName,
-		                                  out string message)
+		private bool ValidateField(IReadOnlyTable sourceTable, string fieldName,
+		                           out string message)
 		{
 			if (string.IsNullOrEmpty(fieldName))
 			{
@@ -272,7 +272,8 @@ namespace ProSuite.QA.Tests.Transformers
 				return false;
 			}
 
-			string unqualifiedField = GetUnqualifiedFieldName(sourceTable, fieldName);
+			string unqualifiedField = GetUnqualifiedFieldName(sourceTable, fieldName,
+			                                                  OutputFieldPrefix);
 
 			if (sourceTable.FindField(unqualifiedField) < 0)
 			{
@@ -287,7 +288,9 @@ namespace ProSuite.QA.Tests.Transformers
 			return true;
 		}
 
-		private static string GetUnqualifiedFieldName(IReadOnlyTable sourceTable, string fieldName)
+		private static string GetUnqualifiedFieldName([NotNull] IReadOnlyTable sourceTable,
+		                                              [NotNull] string fieldName,
+		                                              string fieldPrefix = null)
 		{
 			// Repeating the name of the current table is not necessary for single tables but might be done for clarity
 
@@ -296,6 +299,15 @@ namespace ProSuite.QA.Tests.Transformers
 				string remainder = fieldName.Substring(sourceTable.Name.Length);
 
 				return remainder.Length > 1 ? remainder.Substring(1) : null;
+			}
+
+			// Also check the prefix that could be used as table-alias.
+			if (! string.IsNullOrEmpty(fieldPrefix) &&
+			    fieldName.StartsWith(fieldPrefix, StringComparison.InvariantCultureIgnoreCase))
+			{
+				string remainder = fieldName.Substring(fieldPrefix.Length);
+
+				return remainder.Length > 0 ? remainder : null;
 			}
 
 			return fieldName;
