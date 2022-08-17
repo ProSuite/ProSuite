@@ -38,6 +38,13 @@ namespace ProSuite.QA.Tests.Transformers
 		//	set => _userDefinedAttributes = value;
 		//}
 
+		/// <summary>
+		/// Adds all fields from the source table to the specified output table in the exact same
+		/// order. If no fields have been previously added, the field indexes are identical and the
+		/// the <see cref="CopyIndexMatrix"/> is not needed for target->source index look-ups.
+		/// </summary>
+		/// <param name="toOutputClass"></param>
+		/// <param name="skipIfAlreadyExist"></param>
 		public void AddAllFields(GdbTable toOutputClass,
 		                         bool skipIfAlreadyExist = false)
 		{
