@@ -138,6 +138,10 @@ namespace ProSuite.QA.Tests.Transformers
 				_parent = parent;
 				InvolvedTables = new List<IReadOnlyTable> { t0, t1 };
 
+				// The 'basic' fields can still be added previously but it might make sense to use
+				// the same pre-fixing defined in TransformedTableFields if the values clearly come
+				// from one of the tables.
+				// ObjectID field should be set explicitly on the feature class.
 				IGeometryDef geomDef =
 					t0.Fields.Field[
 						t0.Fields.FindField(t0.ShapeFieldName)].GeometryDef;
