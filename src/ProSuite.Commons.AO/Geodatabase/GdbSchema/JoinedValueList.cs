@@ -30,7 +30,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			_copyMatrices.Add(copyMatrix);
 		}
 
-		public object GetValue(int index, bool ensureRcwRefCountIncrease = false)
+		public object GetValue(int index, bool increaseRcwRefCount = false)
 		{
 			if (TryGetSource(index, out IReadOnlyRow sourceRow, out int fieldIndex))
 			{

@@ -19,7 +19,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		/// </summary>
 		public object ExtraValue { get; set; }
 
-		public object GetValue(int index, bool ensureRcwRefCountIncrease = false)
+		public object GetValue(int index, bool increaseRcwRefCount = false)
 		{
 			if (ExtraValue != null && index == BaseRow.Table.Fields.FieldCount)
 			{
