@@ -73,66 +73,43 @@ namespace ProSuite.QA.Tests.Transformers
 			transformedFc.Grouped = Grouped;
 			transformedFc.NeighborSearchOption = NeighborSearchOption;
 
-			AddFields(transformedFc, T0Attributes, InvolvedTables[0], isGrouped: false);
-			AddFields(transformedFc, T1Attributes, InvolvedTables[1], isGrouped: Grouped, T1CalcAttributes);
+			// Suggestion for multi-table transformers: fields are only qualified to avoid duplicates
+			// using <input table name>_ 
+			TransformedTableFields t0Fields = new TransformedTableFields(InvolvedTables[0])
+			                                  {OutputFieldPrefix = "t0."};
+			TransformedTableFields t1Fields = new TransformedTableFields(InvolvedTables[1])
+			                                  {
+				                                  OutputFieldPrefix = "t1.",
+				                                  AreResultRowsGrouped = Grouped
+			                                  };
 
-			AddFields(transformedFc, InvolvedTables[0], "t0");
-			if (! Grouped)
+			transformedFc.TableFieldsBySource.Add(InvolvedTables[0], t0Fields);
+			transformedFc.TableFieldsBySource.Add(InvolvedTables[1], t1Fields);
+
+			// Add fields defined by Attribute parameter:
+			if (T0Attributes != null)
+				t0Fields.AddUserDefinedFields(T0Attributes, transformedFc);
+
+			if (T1Attributes != null)
+				t1Fields.AddUserDefinedFields(T1Attributes, transformedFc, T1CalcAttributes);
+
+			//AddFields(transformedFc, T0Attributes, InvolvedTables[0], isGrouped: false);
+			//AddFields(transformedFc, T1Attributes, InvolvedTables[1], isGrouped: Grouped, T1CalcAttributes);
+
+			// Add all fields (not already defined by the user?)
+			t0Fields.AddAllFields(transformedFc, false);
+			if (!Grouped)
 			{
-				AddFields(transformedFc, InvolvedTables[1], "t1");
+				t1Fields.AddAllFields(transformedFc, false);
 			}
+
+			//AddFields(transformedFc, InvolvedTables[0], "t0");
+			//if (!Grouped)
+			//{
+			//	AddFields(transformedFc, InvolvedTables[1], "t1");
+			//}
 
 			return transformedFc;
-		}
-
-		private void AddFields(TransformedFc gdbTable, IReadOnlyTable tbl, string prefix)
-		{
-			for (int iField = 0; iField < tbl.Fields.FieldCount; iField++)
-			{
-				IField f = tbl.Fields.Field[iField];
-				gdbTable.FieldsT.AddFields(FieldUtils.CreateField($"{prefix}.{f.Name}", f.Type));
-			}
-		}
-
-
-		private void AddFields([NotNull] TransformedFc transformedFc,
-		                       [CanBeNull] IList<string> fieldNames,
-							   IReadOnlyTable sourceTable, bool isGrouped,
-							   [CanBeNull] IList<string> calcAttributes = null)
-		{
-			if (fieldNames == null)
-			{
-				return;
-			}
-
-			Dictionary<string, string> expressionDict = ExpressionUtils.GetFieldDict(fieldNames);
-			Dictionary<string, string> aliasFieldDict =
-				ExpressionUtils.CreateAliases(expressionDict);
-			Dictionary<string, string> calcExpressionDict = null;
-
-			if (calcAttributes?.Count > 0)
-			{
-				calcExpressionDict = ExpressionUtils.GetFieldDict(calcAttributes);
-				Dictionary<string, string> calcAliasFieldDict = ExpressionUtils.CreateAliases(calcExpressionDict);
-
-				foreach (KeyValuePair<string, string> pair in aliasFieldDict)
-				{
-					calcAliasFieldDict.Add(pair.Key, pair.Value);
-				}
-				aliasFieldDict = calcAliasFieldDict;
-			}
-
-			TableView tv =
-				TableViewFactory.Create(sourceTable, expressionDict, aliasFieldDict, isGrouped, calcExpressionDict);
-
-			transformedFc.TableViews =
-				transformedFc.TableViews ?? new Dictionary<IReadOnlyTable, TableView>();
-			transformedFc.TableViews[sourceTable] = tv;
-
-			foreach (string field in expressionDict.Keys)
-			{
-				transformedFc.AddField(field, tv);
-			}
 		}
 
 		private class JoinConstraint : RowPairCondition
@@ -171,7 +148,10 @@ namespace ProSuite.QA.Tests.Transformers
 						geomDef.SpatialReference, geomDef.GridSize[0], geomDef.HasZ, geomDef.HasM));
 			}
 
-			public Dictionary<IReadOnlyTable, TableView> TableViews { get; set; }
+			public Dictionary<IReadOnlyTable, TransformedTableFields> TableFieldsBySource { get; }
+				= new Dictionary<IReadOnlyTable, TransformedTableFields>();
+
+
 			public bool Grouped { get; set; }
 			public bool OuterJoin { get; set; }
 			public SearchOption NeighborSearchOption { get; set; }
@@ -198,27 +178,7 @@ namespace ProSuite.QA.Tests.Transformers
 			{
 				return new TfcFeature(oid, this);
 			}
-
-			public Dictionary<TableView, List<FieldInfo>> CalcFields { get; private set; }
-
-			public void AddField(string field, TableView tableView)
-			{
-				IField f =
-					FieldUtils.CreateField(
-						field, FieldUtils.GetFieldType(tableView.GetColumnType(field)));
-				FieldsT.AddFields(f);
-
-				CalcFields = CalcFields ?? new Dictionary<TableView, List<FieldInfo>>();
-
-				if (! CalcFields.TryGetValue(tableView, out List<FieldInfo> fieldInfos))
-				{
-					fieldInfos = new List<FieldInfo>();
-					CalcFields.Add(tableView, fieldInfos);
-				}
-
-				fieldInfos.Add(new FieldInfo(field, Fields.FindField(field), -1));
-			}
-
+			
 			public IList<IReadOnlyTable> InvolvedTables { get; }
 
 			public ISearchable DataContainer
@@ -402,18 +362,22 @@ namespace ProSuite.QA.Tests.Transformers
 
 				return f;
 			}
-
+			
 			private void SetValues(IFeature feature, IList<IReadOnlyRow> sources)
 			{
-				TransformedFc r = (TransformedFc) Resulting;
+				TransformedFc r = (TransformedFc)Resulting;
 
+				// TODO: Can the tableView contain columns for several source tables?
+				// -> Consider adding TransformedMultiTableFields?
+				TransformedTableFields tableFields = null;
 				TableView tv = null;
 				DataRow tableRow = null;
 				foreach (IReadOnlyRow row in sources)
 				{
 					if (tv == null)
 					{
-						r.TableViews?.TryGetValue(row.Table, out tv);
+						r.TableFieldsBySource?.TryGetValue(row.Table, out tableFields);
+						tv = tableFields?.TableView;
 					}
 
 					tableRow = tv?.Add(row);
@@ -421,7 +385,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 				if (tableRow != null)
 				{
-					foreach (FieldInfo fieldInfo in r.CalcFields[tv])
+					foreach (FieldInfo fieldInfo in tableFields.CalculatedFields)
 					{
 						feature.set_Value(fieldInfo.Index, tableRow[fieldInfo.Name]);
 					}

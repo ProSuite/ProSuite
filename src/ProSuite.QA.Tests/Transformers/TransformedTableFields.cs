@@ -10,13 +10,13 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
 using ProSuite.QA.Container;
+using ProSuite.QA.Container.TestSupport;
 
 namespace ProSuite.QA.Tests.Transformers
 {
 	public class TransformedTableFields
 	{
 		private readonly IReadOnlyTable _sourceTable;
-		//private IList<string> _userDefinedAttributes;
 
 		public TransformedTableFields([NotNull] IReadOnlyTable sourceTable)
 		{
@@ -27,16 +27,15 @@ namespace ProSuite.QA.Tests.Transformers
 
 		public bool ExcludeBaseRowsField { get; set; }
 
+		public bool AreResultRowsGrouped { get; set; }
+
 		/// <summary>
 		/// The target-source index mapping.
 		/// </summary>
 		public IDictionary<int, int> CopyIndexMatrix { get; set; } = new Dictionary<int, int>();
 
-		//public IList<string> UserDefinedAttributes
-		//{
-		//	get => _userDefinedAttributes;
-		//	set => _userDefinedAttributes = value;
-		//}
+		public List<FieldInfo> CalculatedFields { get; private set; }
+		public TableView TableView { get; private set; }
 
 		/// <summary>
 		/// Adds all fields from the source table to the specified output table in the exact same
@@ -64,22 +63,24 @@ namespace ProSuite.QA.Tests.Transformers
 				CopyField(sourceIdx, toOutputClass, sourceFields);
 			}
 
-			if (!ExcludeBaseRowsField)
+			if (! ExcludeBaseRowsField)
 				EnsureBaseRowField(toOutputClass);
 		}
 
 		private static void EnsureBaseRowField(GdbTable inTable)
 		{
-
 			if (inTable.FindField(InvolvedRowUtils.BaseRowField) < 0)
 			{
 				inTable.AddFieldT(FieldUtils.CreateBlobField(InvolvedRowUtils.BaseRowField));
 			}
 		}
 
-		public void AddUserDefinedFields(IList<string> userAttributes,
-		                                 GdbTable toOutputClass)
+		public void AddUserDefinedFields([NotNull] IList<string> userAttributes,
+		                                 [NotNull] GdbTable toOutputClass,
+		                                 [CanBeNull] IList<string> calculatedFields = null)
 		{
+			Assert.NotNull(userAttributes, nameof(userAttributes));
+
 			const bool allowExpressions = true;
 			if (! ValidateFieldNames(userAttributes, allowExpressions, out string message))
 			{
@@ -87,13 +88,20 @@ namespace ProSuite.QA.Tests.Transformers
 					$"Error adding fields to {toOutputClass.Name}: {message}");
 			}
 
+			List<string> expressionAttributes = new List<string>();
+
 			foreach (string userAttribute in userAttributes)
 			{
 				string inputField =
 					ExpressionUtils.GetExpression(userAttribute, out string resultField);
 
-				string unqualifiedInputField =
-					GetUnqualifiedFieldName(_sourceTable, inputField);
+				if (IsExpression(inputField, out List<string> _))
+				{
+					expressionAttributes.Add(userAttribute);
+					continue;
+				}
+
+				string unqualifiedInputField = GetUnqualifiedFieldName(_sourceTable, inputField);
 
 				int sourceIndex = _sourceTable.FindField(unqualifiedInputField);
 
@@ -111,7 +119,9 @@ namespace ProSuite.QA.Tests.Transformers
 				CopyField(sourceIndex, toOutputClass, _sourceTable.Fields, resultField);
 			}
 
-			if (!ExcludeBaseRowsField)
+			AddExpressionFields(expressionAttributes, toOutputClass, calculatedFields);
+
+			if (! ExcludeBaseRowsField)
 				EnsureBaseRowField(toOutputClass);
 		}
 
@@ -164,9 +174,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 				resultFieldNames.Add(resultField);
 
-				var expressionTokens = ExpressionUtils.GetExpressionTokens(sourceField).ToList();
-
-				if (expressionTokens.Count > 1)
+				if (IsExpression(sourceField, out List<string> expressionTokens))
 				{
 					if (! ValidateExpression(allowExpressions, expressionTokens, sourceField,
 					                         out message))
@@ -184,6 +192,14 @@ namespace ProSuite.QA.Tests.Transformers
 			}
 
 			return true;
+		}
+
+		private bool IsExpression([NotNull] string sourceField,
+		                          out List<string> expressionTokens)
+		{
+			expressionTokens = ExpressionUtils.GetExpressionTokens(sourceField).ToList();
+
+			return expressionTokens.Count > 1;
 		}
 
 		private bool ValidateExpression(bool allowExpressions,
@@ -223,7 +239,9 @@ namespace ProSuite.QA.Tests.Transformers
 		                       [NotNull] IFields sourceFields,
 		                       [CanBeNull] string resultFieldName = null)
 		{
-			Assert.True(sourceIdx >= 0 && sourceIdx < sourceFields.FieldCount, $"Invalid source index: {sourceIdx}");
+			Assert.True(sourceIdx >= 0 && sourceIdx < sourceFields.FieldCount,
+			            $"Invalid source index: {sourceIdx}");
+
 			IField field = sourceFields.Field[sourceIdx];
 
 			string targetName = resultFieldName ?? field.Name;
@@ -294,5 +312,60 @@ namespace ProSuite.QA.Tests.Transformers
 
 			return fieldDisplayList;
 		}
+
+		#region Calculated field set up originally from TrSpatialJoin
+
+		private void AddExpressionFields(IList<string> expressionAttributes,
+		                                 GdbTable toOutputClass,
+		                                 [CanBeNull] IList<string> calculatedFields = null)
+		{
+			Dictionary<string, string> expressionDict =
+				ExpressionUtils.GetFieldDict(expressionAttributes);
+			Dictionary<string, string> aliasFieldDict =
+				ExpressionUtils.CreateAliases(expressionDict);
+			Dictionary<string, string> calcExpressionDict = null;
+
+			if (calculatedFields?.Count > 0)
+			{
+				calcExpressionDict = ExpressionUtils.GetFieldDict(calculatedFields);
+				Dictionary<string, string> calcAliasFieldDict =
+					ExpressionUtils.CreateAliases(calcExpressionDict);
+
+				foreach (KeyValuePair<string, string> pair in aliasFieldDict)
+				{
+					calcAliasFieldDict.Add(pair.Key, pair.Value);
+				}
+
+				aliasFieldDict = calcAliasFieldDict;
+			}
+
+			TableView =
+				TableViewFactory.Create(_sourceTable, expressionDict, aliasFieldDict,
+				                        AreResultRowsGrouped, calcExpressionDict);
+
+			foreach (string field in expressionDict.Keys)
+			{
+				AddCalculatedField(toOutputClass, field, TableView);
+			}
+		}
+
+		private void AddCalculatedField([NotNull] GdbTable toOutputClass,
+		                                [NotNull] string field,
+		                                [NotNull] TableView tableView)
+		{
+			IField f =
+				FieldUtils.CreateField(
+					field, FieldUtils.GetFieldType(tableView.GetColumnType(field)));
+			toOutputClass.AddFieldT(f);
+
+			if (CalculatedFields == null)
+			{
+				CalculatedFields = new List<FieldInfo>();
+			}
+
+			CalculatedFields.Add(new FieldInfo(field, toOutputClass.FindField(field), -1));
+		}
+
+		#endregion
 	}
 }

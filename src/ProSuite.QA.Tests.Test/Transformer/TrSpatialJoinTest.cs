@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
@@ -10,7 +12,6 @@ using ProSuite.QA.Tests.IssueFilters;
 using ProSuite.QA.Tests.Test.Construction;
 using ProSuite.QA.Tests.Test.TestRunners;
 using ProSuite.QA.Tests.Transformers;
-using System.Collections.Generic;
 
 namespace ProSuite.QA.Tests.Test.Transformer
 {
@@ -54,7 +55,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			{
 				IFeature f = polyFc.CreateFeature();
 				f.Shape = CurveConstruction.StartPoly(50, 50).LineTo(50, 70).LineTo(70, 70)
-										   .LineTo(70, 50).ClosePolygon();
+				                           .LineTo(70, 50).ClosePolygon();
 				f.Store();
 			}
 			{
@@ -67,21 +68,28 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			TrSpatialJoin tr = new TrSpatialJoin(
 				                   ReadOnlyTableFactory.Create(polyFc),
 				                   ReadOnlyTableFactory.Create(lineFc))
-			                   { Grouped = true, T1Attributes = new[] { "COUNT(OBJECTID) AS LineCount" } };
+			                   {
+				                   Grouped = true,
+				                   T1Attributes = new[] {"COUNT(OBJECTID) AS LineCount"}
+			                   };
+
+			TransformedFeatureClass transformedClass = tr.GetTransformed();
+			WriteFieldNames(transformedClass);
+
 			{
-				QaConstraint test = new QaConstraint(tr.GetTransformed(), "LineCount = 2");
+				QaConstraint test = new QaConstraint(transformedClass, "LineCount = 2");
 				var runner = new QaContainerTestRunner(1000, test);
 				runner.Execute();
 				Assert.AreEqual(1, runner.Errors.Count);
 			}
 			{
-				QaConstraint test = new QaConstraint(tr.GetTransformed(), "LineCount > 2");
+				QaConstraint test = new QaConstraint(transformedClass, "LineCount > 2");
 				var runner = new QaContainerTestRunner(1000, test);
 				runner.Execute();
 				Assert.AreEqual(2, runner.Errors.Count);
 			}
-
 		}
+
 		[Test]
 		public void CanAccessAttributes()
 		{
@@ -90,11 +98,11 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			IFeatureClass lineFc =
 				CreateFeatureClass(
 					ws, "lineFc", esriGeometryType.esriGeometryPolyline,
-					new[] { FieldUtils.CreateIntegerField("Nr") });
+					new[] {FieldUtils.CreateIntegerField("Nr")});
 			IFeatureClass polyFc =
 				CreateFeatureClass(
 					ws, "polyFc", esriGeometryType.esriGeometryPolygon,
-					new[] { FieldUtils.CreateIntegerField("Nr") });
+					new[] {FieldUtils.CreateIntegerField("Nr")});
 			{
 				IFeature f = lineFc.CreateFeature();
 				f.Value[1] = 12;
@@ -111,42 +119,57 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				IFeature f = polyFc.CreateFeature();
 				f.Value[1] = 8;
 				f.Shape = CurveConstruction.StartPoly(50, 50).LineTo(50, 70).LineTo(70, 70)
-										   .LineTo(70, 50).ClosePolygon();
+				                           .LineTo(70, 50).ClosePolygon();
 				f.Store();
 			}
 			{
 				IFeature f = polyFc.CreateFeature();
 				f.Value[1] = 6;
 				f.Shape = CurveConstruction.StartPoly(50, 50).LineTo(50, 70).LineTo(70, 70)
-										   .LineTo(70, 50).ClosePolygon();
+				                           .LineTo(70, 50).ClosePolygon();
 				f.Store();
 			}
 
 			TrSpatialJoin tr = new TrSpatialJoin(
 				                   ReadOnlyTableFactory.Create(polyFc),
 				                   ReadOnlyTableFactory.Create(lineFc))
-			                   { Grouped = false };
+			                   {Grouped = false};
+
+			TransformedFeatureClass transformedClass = tr.GetTransformed();
+			WriteFieldNames(transformedClass);
+
 			{
-				QaConstraint test = new QaConstraint(tr.GetTransformed(), "t0.Nr > 10");
+				QaConstraint test = new QaConstraint(transformedClass, "t0.Nr > 10");
 				var runner = new QaContainerTestRunner(1000, test);
 				runner.Execute();
 				Assert.AreEqual(4, runner.Errors.Count);
 			}
 			{
-				QaConstraint test = new QaConstraint(tr.GetTransformed(), "t0.Nr > 10");
+				QaConstraint test = new QaConstraint(transformedClass, "t0.Nr > 10");
 				IFilterEditTest ft = test;
 				ft.SetIssueFilters(
-					"filter", new List<IIssueFilter> { new IfInvolvedRows("t0.Nr + t1.Nr = 20") { Name = "filter" } });
+					"filter",
+					new List<IIssueFilter>
+					{new IfInvolvedRows("t0.Nr + t1.Nr = 20") {Name = "filter"}});
 				var runner = new QaContainerTestRunner(1000, test);
 				runner.Execute();
 				Assert.AreEqual(2, runner.Errors.Count);
 			}
+		}
 
+		private static void WriteFieldNames(IReadOnlyTable targetTable)
+		{
+			for (int i = 0; i < targetTable.Fields.FieldCount; i++)
+			{
+				IField field = targetTable.Fields.Field[i];
+
+				Console.WriteLine(field.Name);
+			}
 		}
 
 		private IFeatureClass CreateFeatureClass(IFeatureWorkspace ws, string name,
-												 esriGeometryType geometryType,
-												 IList<IField> customFields = null)
+		                                         esriGeometryType geometryType,
+		                                         IList<IField> customFields = null)
 		{
 			List<IField> fields = new List<IField>();
 			fields.Add(FieldUtils.CreateOIDField());
@@ -154,16 +177,16 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			{
 				fields.AddRange(customFields);
 			}
+
 			fields.Add(FieldUtils.CreateShapeField(
-						   "Shape", geometryType,
-						   SpatialReferenceUtils.CreateSpatialReference
-						   ((int)esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95,
-							true), 1000));
+				           "Shape", geometryType,
+				           SpatialReferenceUtils.CreateSpatialReference
+				           ((int) esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95,
+				            true), 1000));
 
 			IFeatureClass fc = DatasetUtils.CreateSimpleFeatureClass(ws, name,
 				FieldUtils.CreateFields(fields));
 			return fc;
 		}
-
 	}
 }
