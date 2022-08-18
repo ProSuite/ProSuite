@@ -19,6 +19,12 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		}
 
 		/// <summary>
+		/// Whether or not a missing field mapping is allowed and does not result in an exception
+		/// but a null-value being returned instead.
+		/// </summary>
+		public bool AllowMissingFieldMapping { get; set; }
+
+		/// <summary>
 		/// Add a row with its associated copyMatrix.
 		/// </summary>
 		/// <param name="row">The source row from which the values shall be taken</param>
@@ -47,6 +53,11 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			if (TryGetSource(index, out IValueList sourceRow, out int fieldIndex))
 			{
 				return sourceRow?.GetValue(fieldIndex) ?? DBNull.Value;
+			}
+
+			if (AllowMissingFieldMapping)
+			{
+				return DBNull.Value;
 			}
 
 			throw new ArgumentOutOfRangeException(

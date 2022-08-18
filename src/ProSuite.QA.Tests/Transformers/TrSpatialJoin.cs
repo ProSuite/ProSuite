@@ -359,7 +359,10 @@ namespace ProSuite.QA.Tests.Transformers
 
 				// Build an aggregate value list consisting of the toJoin row, the baseRows and
 				// the extra calculated values;
-				var rowValues = new MultiListValues(joineds.Count + 2);
+				var rowValues = new MultiListValues(joineds.Count + 2)
+				                {
+									AllowMissingFieldMapping = true
+				                };
 
 				List<IReadOnlyRow> baseRows = new List<IReadOnlyRow>(joineds.Count + 1);
 				baseRows.Add(toJoin);
