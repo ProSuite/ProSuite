@@ -88,6 +88,10 @@ namespace ProSuite.QA.Tests.Transformers
 			transformedFc.TableFieldsBySource.Add(InvolvedTables[0], t0Fields);
 			transformedFc.TableFieldsBySource.Add(InvolvedTables[1], t1Fields);
 
+			// Add the minimal fields that mus always be present:
+			t0Fields.AddOIDField(transformedFc, "OBJECTID");
+			t0Fields.AddShapeField(transformedFc);
+
 			// Add fields defined by Attribute parameter:
 			if (T0Attributes != null)
 				t0Fields.AddUserDefinedFields(T0Attributes, transformedFc);
@@ -139,19 +143,6 @@ namespace ProSuite.QA.Tests.Transformers
 			{
 				_parent = parent;
 				InvolvedTables = new List<IReadOnlyTable> {t0, t1};
-
-				// The 'basic' fields can still be added previously but it might make sense to use
-				// the same pre-fixing defined in TransformedTableFields if the values clearly come
-				// from one of the tables.
-				// ObjectID field should be set explicitly on the feature class.
-				IGeometryDef geomDef =
-					t0.Fields.Field[
-						t0.Fields.FindField(t0.ShapeFieldName)].GeometryDef;
-				FieldsT.AddFields(
-					FieldUtils.CreateOIDField(),
-					FieldUtils.CreateShapeField(
-						t0.ShapeType,
-						geomDef.SpatialReference, geomDef.GridSize[0], geomDef.HasZ, geomDef.HasM));
 			}
 
 			public Dictionary<IReadOnlyTable, TransformedTableFields> TableFieldsBySource { get; }
@@ -361,7 +352,7 @@ namespace ProSuite.QA.Tests.Transformers
 				// the extra calculated values;
 				var rowValues = new MultiListValues(joineds.Count + 2)
 				                {
-									AllowMissingFieldMapping = true
+					                AllowMissingFieldMapping = true
 				                };
 
 				List<IReadOnlyRow> baseRows = new List<IReadOnlyRow>(joineds.Count + 1);
