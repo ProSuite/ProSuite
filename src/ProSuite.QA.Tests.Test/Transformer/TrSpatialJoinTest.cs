@@ -91,6 +91,102 @@ namespace ProSuite.QA.Tests.Test.Transformer
 		}
 
 		[Test]
+		public void CanOuterJoin()
+		{
+			IFeatureWorkspace ws = TestWorkspaceUtils.CreateInMemoryWorkspace("TrIntersect");
+
+			IFeatureClass lineFc =
+				CreateFeatureClass(ws, "lineFc", esriGeometryType.esriGeometryPolyline);
+			IFeatureClass polyFc =
+				CreateFeatureClass(ws, "polyFc", esriGeometryType.esriGeometryPolygon);
+
+			{
+				IFeature f = lineFc.CreateFeature();
+				f.Shape = CurveConstruction.StartLine(0, 0).LineTo(69.5, 69.5).Curve;
+				f.Store();
+			}
+			{
+				IFeature f = lineFc.CreateFeature();
+				f.Shape = CurveConstruction.StartLine(0, 0).LineTo(5, 5).Curve;
+				f.Store();
+			}
+			{
+				IFeature f = polyFc.CreateFeature();
+				f.Shape = CurveConstruction.StartPoly(50, 50).LineTo(50, 70).LineTo(70, 70)
+				                           .LineTo(70, 50).ClosePolygon();
+				f.Store();
+			}
+			{
+				IFeature f = polyFc.CreateFeature();
+				f.Shape = CurveConstruction.StartPoly(10, 10).LineTo(10, 30).LineTo(30, 30)
+				                           .LineTo(30, 10).ClosePolygon();
+				f.Store();
+			}
+
+			TrSpatialJoin tr = new TrSpatialJoin(
+				                   ReadOnlyTableFactory.Create(lineFc),
+				                   ReadOnlyTableFactory.Create(polyFc))
+			                   {
+				                   Grouped = false,
+				                   T1Attributes = new[] {"COUNT(OBJECTID) AS PolyCount"},
+				                   OuterJoin = true
+			                   };
+
+			TransformedFeatureClass transformedClass = tr.GetTransformed();
+			WriteFieldNames(transformedClass);
+
+			{
+				QaConstraint test = new QaConstraint(transformedClass, "PolyCount = 2");
+				var runner = new QaContainerTestRunner(1000, test);
+				runner.Execute();
+
+				// 2 times the first feature  (with PolyCount = 1), one time the second (with no poly-row)
+				Assert.AreEqual(3, runner.Errors.Count);
+			}
+			{
+				QaConstraint test = new QaConstraint(transformedClass,
+				                                     "t1.OBJECTID IS NULL AND PolyCount IS NULL");
+				var runner = new QaContainerTestRunner(1000, test);
+				runner.Execute();
+				Assert.AreEqual(2, runner.Errors.Count);
+			}
+
+			// Outer joined grouped:
+			tr = new TrSpatialJoin(
+				     ReadOnlyTableFactory.Create(lineFc),
+				     ReadOnlyTableFactory.Create(polyFc))
+			     {
+				     Grouped = true,
+				     T1Attributes = new[] {"COUNT(OBJECTID) AS PolyCount"},
+				     OuterJoin = true
+			     };
+
+			transformedClass = tr.GetTransformed();
+			WriteFieldNames(transformedClass);
+
+			{
+				QaConstraint test = new QaConstraint(transformedClass, "PolyCount = 2");
+				var runner = new QaContainerTestRunner(1000, test);
+				runner.Execute();
+
+				// The first feature has PolyCount = 2 -> no error
+				// The second feture has PolyCount null -> 1 error
+				// 1 time the first feature  (with PolyCount = 2), one time the second (with no poly-row)
+				Assert.AreEqual(1, runner.Errors.Count);
+			}
+			{
+				QaConstraint test = new QaConstraint(transformedClass,
+				                                     "PolyCount IS NULL");
+				var runner = new QaContainerTestRunner(1000, test);
+				runner.Execute();
+
+				// First feature -> error
+				// Second feature: no error
+				Assert.AreEqual(1, runner.Errors.Count);
+			}
+		}
+
+		[Test]
 		public void CanAccessAttributes()
 		{
 			IFeatureWorkspace ws = TestWorkspaceUtils.CreateInMemoryWorkspace("TrIntersect");
