@@ -137,14 +137,16 @@ namespace ProSuite.QA.Tests.Test.Transformer
 
 			tr.T0Attributes = new List<string>
 			                  {
-				                  "MIN(OBJECTID) AS t0Oid"
+				                  "MIN(OBJECTID) AS t0Oid",
 			                  };
 			tr.T1Attributes = new List<string>
 			                  {
+				                  "Nr",
+				                  "Nr as alias_Nr",
 				                  "MIN(OBJECTID) AS minObi",
 				                  "Count(Nr) as AnzUnqualifiziert",
 				                  "SUM(Nr) as SummeUnqualifiziert",
-				                  //"SUM(t1.Nr) as SummeQuali" // TODO: This fails
+				                  //"SUM(alias_Nr) as SummeQuali" // TODO: This fails
 			                  };
 
 			// NOTE: Cross-Field Calculations are only supported on t1 and only for

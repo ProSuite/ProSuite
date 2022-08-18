@@ -78,10 +78,10 @@ namespace ProSuite.QA.Tests.Transformers
 			// Suggestion for multi-table transformers: fields are only qualified to avoid duplicates
 			// using <input table name>_ 
 			TransformedTableFields t0Fields = new TransformedTableFields(InvolvedTables[0])
-			                                  {OutputFieldPrefix = "t0."};
+			                                  {NonUserDefinedFieldPrefix = "t0."};
 			TransformedTableFields t1Fields = new TransformedTableFields(InvolvedTables[1])
 			                                  {
-				                                  OutputFieldPrefix = "t1.",
+				                                  NonUserDefinedFieldPrefix = "t1.",
 				                                  AreResultRowsGrouped = Grouped
 			                                  };
 
@@ -372,7 +372,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 				// 1. The toJoin row, wrapped in a value list:
 				var toJoinValues = new ReadOnlyRowBasedValues(toJoin);
-				rowValues.AddList(toJoinValues, toJoinTableFields.CopyIndexMatrix);
+				rowValues.AddList(toJoinValues, toJoinTableFields.FieldIndexMapping);
 
 				extraValues.AddRange(GetCalculatedValues(toJoin, toJoinTableFields, baseRows));
 
@@ -380,7 +380,7 @@ namespace ProSuite.QA.Tests.Transformers
 				if (joineds.Count == 1)
 				{
 					var joinedValues = new ReadOnlyRowBasedValues(joineds[0]);
-					rowValues.AddList(joinedValues, joinedTableFields.CopyIndexMatrix);
+					rowValues.AddList(joinedValues, joinedTableFields.FieldIndexMapping);
 
 					extraValues.AddRange(GetCalculatedValues(joineds[0], joinedTableFields));
 				}

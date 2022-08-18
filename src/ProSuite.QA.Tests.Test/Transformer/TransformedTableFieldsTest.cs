@@ -106,8 +106,11 @@ namespace ProSuite.QA.Tests.Test.Transformer
 
 			TransformedTableFields tableFields = new TransformedTableFields(sourceTable);
 
-			tableFields.AddOIDField(targetTable);
-			tableFields.AddShapeField(targetTable, esriGeometryType.esriGeometryPolygon, shapeField.GeometryDef);
+			int oidFieldIdx = tableFields.AddCustomOIDField(targetTable);
+			Assert.False(oidFieldIdx < 0);
+			tableFields.AddCustomShapeField(targetTable,
+			                          esriGeometryType.esriGeometryPolygon,
+			                          shapeField.GeometryDef);
 
 			tableFields.AddUserDefinedFields(new List<string>
 			                                 {
