@@ -10,8 +10,10 @@ using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Core;
 
 namespace ProSuite.QA.Tests
 {
@@ -25,7 +27,11 @@ namespace ProSuite.QA.Tests
 	[ZValuesTest]
 	public class QaSmooth : ContainerTest
 	{
-		private readonly double _limit;
+		private const AngleUnit _defaultAngularUnit = DefaultAngleUnit;
+
+		private readonly double _limitCstr;
+
+		private double _limitRad;
 
 		#region issue codes
 
@@ -50,11 +56,27 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaSmooth_limit))] double limit)
 			: base(featureClass)
 		{
-			_limit = limit;
+			_limitCstr = limit;
+		}
+
+		[TestParameter(_defaultAngularUnit)]
+		[Doc(nameof(DocStrings.QaSmooth_AngularUnit))]
+		public AngleUnit AngularUnit
+		{
+			get { return AngleUnit; }
+			set
+			{
+				AngleUnit = value;
+				_limitRad = -1; // gets initialized in next ExecuteCore() 
+			}
 		}
 
 		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
+			if (_limitRad <= 0)
+			{
+				_limitRad = FormatUtils.AngleInUnits2Radians(_limitCstr, AngularUnit);
+			}
 			IGeometry shape = ((IReadOnlyFeature) row).Shape;
 
 			switch (shape.GeometryType)
@@ -136,13 +158,13 @@ namespace ProSuite.QA.Tests
 			                                                           threeSegments[1],
 			                                                           threeSegments[2]);
 
-			if (Math.Abs(anglechange) <= _limit)
+			if (Math.Abs(anglechange) <= _limitRad)
 			{
 				return NoError;
 			}
 
 			string description = string.Format("Smoothness parameter {0:N4} > {1:N4}",
-			                                   Math.Abs(anglechange), _limit);
+			                                   Math.Abs(anglechange), _limitRad); // TODO: use AngularUnit
 
 			IGeometry errorGeometry = GetErrorGeometry(threeSegments[1]);
 

@@ -8,6 +8,9 @@ using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
+using ProSuite.QA.Container.Geometry;
+using ProSuite.QA.Container.TestSupport;
+using ProSuite.QA.Core;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
@@ -19,11 +22,15 @@ namespace ProSuite.QA.Tests
 	[IntersectionParameterTest]
 	public class QaMinAngle : ContainerTest
 	{
+		private const AngleUnit _defaultAngularUnit = DefaultAngleUnit;
+
 		private IList<ISpatialFilter> _filter;
 		private IList<QueryFilterHelper> _helper;
 		private bool _is3D;
-		private double _limit;
-		private double _limitCos2;
+		private double _limitCstr;
+
+		private double _limitRad;
+		private double _limitCos2_;
 
 		// point templates to avoid creating Point Instances
 		private IPoint _firstSegmentStartPoint;
@@ -78,19 +85,33 @@ namespace ProSuite.QA.Tests
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(polylineClasses, limit, false) { }
 
+		[TestParameter(_defaultAngularUnit)]
+		[Doc(nameof(DocStrings.QaMinAngle_AngularUnit))]
+		public AngleUnit AngularUnit
+		{
+			get { return AngleUnit; }
+			set { AngleUnit = value; }
+		}
+
 		private void Init(double limit, bool is3D)
 		{
 			_filter = null;
-			_limit = limit;
+			_limitCstr = limit;
 			_is3D = is3D;
 
-			_limitCos2 = Math.Cos(limit);
-			if (_limitCos2 < 0)
+			_limitCos2_ = -1;
+		}
+
+		private void InitLimit()
+		{
+			_limitRad = FormatUtils.AngleInUnits2Radians(_limitCstr, AngularUnit);
+			double cos = Math.Cos(_limitRad);
+			if (cos < 0)
 			{
 				throw new ArgumentException("Angle must be smaller than PI / 2");
 			}
 
-			_limitCos2 = _limitCos2 * _limitCos2;
+			_limitCos2_ = cos * cos;
 
 			_firstSegmentStartPoint = new PointClass();
 			_firstSegmentEndPoint = new PointClass();
@@ -107,6 +128,11 @@ namespace ProSuite.QA.Tests
 			if (_filter == null)
 			{
 				InitFilter();
+			}
+
+			if (_limitCos2_ < 0)
+			{
+				InitLimit();
 			}
 
 			// iterating over all needed tables
@@ -318,13 +344,13 @@ namespace ProSuite.QA.Tests
 			{
 				double cos2 = prod * prod / (squaredSegmentLength * distanceSquaredToComparePoint);
 
-				if (cos2 > _limitCos2)
+				if (cos2 > _limitCos2_)
 				{
 					double angleRadians = Math.Acos(Math.Sqrt(cos2));
 
 					string description = string.Format("Angle {0} < {1}",
 					                                   FormatAngle(angleRadians, "N2"),
-					                                   FormatAngle(_limit, "N2"));
+					                                   FormatAngle(_limitRad, "N2"));
 
 					return ReportError(
 						description, InvolvedRowUtils.GetInvolvedRows(feature, compareFeature),

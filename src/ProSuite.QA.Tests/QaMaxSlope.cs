@@ -9,6 +9,9 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Core;
+using ProSuite.QA.Container.Geometry;
+using ProSuite.QA.Container.TestSupport;
 
 namespace ProSuite.QA.Tests
 {
@@ -20,7 +23,10 @@ namespace ProSuite.QA.Tests
 	[ZValuesTest]
 	public class QaMaxSlope : ContainerTest
 	{
-		private readonly double _limit;
+		private const AngleUnit _defaultAngularUnit = DefaultAngleUnit;
+		private readonly double _limitCstr;
+
+		private double _limitRad;
 
 		#region issue codes
 
@@ -45,7 +51,19 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaMaxSlope_limit))] double limit)
 			: base(featureClass)
 		{
-			_limit = limit;
+			_limitCstr = limit;
+		}
+
+		[TestParameter(_defaultAngularUnit)]
+		[Doc(nameof(DocStrings.QaSmooth_AngularUnit))]
+		public AngleUnit AngularUnit
+		{
+			get { return AngleUnit; }
+			set
+			{
+				AngleUnit = value;
+				_limitRad = -1; // gets initialized in next ExecuteCore()
+			}
 		}
 
 		public override bool IsQueriedTable(int tableIndex)
@@ -60,6 +78,11 @@ namespace ProSuite.QA.Tests
 
 		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
+			if (_limitRad <= 0)
+			{
+				_limitRad = FormatUtils.AngleInUnits2Radians(_limitCstr, AngularUnit);
+			}
+
 			IGeometry shape = ((IReadOnlyFeature) row).Shape;
 
 			if (! (shape is IPolycurve))
@@ -89,11 +112,11 @@ namespace ProSuite.QA.Tests
 			{
 				double slopeRadians = GeometryMathUtils.CalculateSlope(segment);
 
-				if (slopeRadians > _limit)
+				if (slopeRadians > _limitRad)
 				{
 					string description = string.Format(
 						"Slope angle {0} > {1}", FormatAngle(slopeRadians, "N2"),
-						FormatAngle(_limit, "N2"));
+						FormatAngle(_limitRad, "N2"));
 
 					IPolyline errorGeometry = GeometryFactory.CreatePolyline(segment);
 
