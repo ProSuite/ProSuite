@@ -98,7 +98,7 @@ public class TestParameterValueCollectionViewModel : ViewModelBase, IDataGridVie
 			Assert.NotNull(testParameterValue);
 
 			row = new ScalarTestParameterValueViewModel(Parameter, testParameterValue.GetValue(),
-			                                            Observer);
+			                                            Observer, Parameter.IsConstructorParameter);
 			Insert(row, position);
 		}
 

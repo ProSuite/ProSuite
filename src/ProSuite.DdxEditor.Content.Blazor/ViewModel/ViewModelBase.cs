@@ -17,7 +17,8 @@ public abstract class ViewModelBase : Observable
 
 	protected ViewModelBase([NotNull] TestParameter parameter,
 	                        [CanBeNull] object value,
-	                        [NotNull] IInstanceConfigurationViewModel observer) : base(observer)
+	                        [NotNull] IInstanceConfigurationViewModel observer,
+	                        bool required = false) : base(observer, required)
 	{
 		Assert.ArgumentNotNull(parameter, nameof(parameter));
 
@@ -40,8 +41,9 @@ public abstract class ViewModelBase : Observable
 
 	public bool Editing { get; private set; }
 
-	public Type ComponentType { get; set; }
+	public Type ComponentType { get; protected init; }
 
+	[NotNull]
 	public IDictionary<string, object> ComponentParameters { get; } =
 		new Dictionary<string, object>();
 
@@ -59,6 +61,11 @@ public abstract class ViewModelBase : Observable
 	public void StopEditing()
 	{
 		Editing = false;
+	}
+
+	protected override void RegisterMessageCore(Notification notification, string message)
+	{
+		notification.RegisterMessage(ParameterName, message, Severity.Error);
 	}
 
 	public override string ToString()

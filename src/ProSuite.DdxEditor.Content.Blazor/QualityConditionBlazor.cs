@@ -3,12 +3,15 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Windows.Forms;
 using Microsoft.AspNetCore.Components.WebView.WindowsForms;
+using Microsoft.Extensions.DependencyInjection;
+using Prism.Events;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DdxEditor.Content.Blazor.ViewModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.UI.QA;
 using ProSuite.UI.QA.Controls;
+using Radzen;
 
 namespace ProSuite.DdxEditor.Content.Blazor;
 
@@ -16,16 +19,14 @@ public class QualityConditionBlazor : BlazorWebView, IInstanceConfigurationTable
 {
 	[NotNull] private readonly IInstanceConfigurationViewModel _viewModel;
 
-	public QualityConditionBlazor([NotNull] IInstanceConfigurationViewModel viewModel,
-	                              [NotNull] IServiceProvider provider)
+	public QualityConditionBlazor([NotNull] IInstanceConfigurationViewModel viewModel)
 	{
 		Assert.ArgumentNotNull(viewModel, nameof(viewModel));
-		Assert.ArgumentNotNull(provider, nameof(provider));
 
 		_viewModel = viewModel;
 
 		HostPage = "wwwroot/index.html";
-		Services = provider;
+		Services = CreateIoCContainer();
 	}
 
 	[Obsolete("not used anymore with .NET 6")]
@@ -38,6 +39,22 @@ public class QualityConditionBlazor : BlazorWebView, IInstanceConfigurationTable
 		_viewModel.BindTo(qualityCondition);
 	}
 
+	private static IServiceProvider CreateIoCContainer()
+	{
+#if NET6_0
+		IServiceCollection serviceCollection = new ServiceCollection();
+		serviceCollection.AddWindowsFormsBlazorWebView();
+		serviceCollection.AddSingleton<IEventAggregator>(_ => new EventAggregator());
+		serviceCollection.AddScoped<TooltipService>();
+#if DEBUG
+		serviceCollection.AddBlazorWebViewDeveloperTools();
+#endif
+		return serviceCollection.BuildServiceProvider();
+#else
+			throw new NotImplementedException();
+#endif
+	}
+
 	protected override void OnCreateControl()
 	{
 		// use this OnCreateControl because constructor is to early
@@ -46,7 +63,7 @@ public class QualityConditionBlazor : BlazorWebView, IInstanceConfigurationTable
 		parameters.Add("ViewModel", _viewModel);
 
 		RootComponents.Add<QualityConditionTableViewBlazor>("#app", parameters);
-		
+
 		Dock = DockStyle.Fill;
 
 		// Note: necessary!

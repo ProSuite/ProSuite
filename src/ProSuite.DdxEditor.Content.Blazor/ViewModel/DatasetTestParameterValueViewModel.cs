@@ -20,6 +20,8 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 	[NotNull] private readonly IInstanceConfigurationViewModel _viewModel;
 
 	[CanBeNull] private string _filterExpression;
+	[CanBeNull] private string _rowFilterExpression;
+	[CanBeNull] private readonly string _errorMessage;
 
 	private bool _usedAsReferenceData;
 
@@ -31,8 +33,9 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 		[CanBeNull] string filterExpression,
 		bool usedAsReferenceData,
 		[NotNull] Either<Dataset, TransformerConfiguration> datasetSource,
-		[NotNull] IInstanceConfigurationViewModel observer) :
-		base(parameter, value, observer)
+		[NotNull] IInstanceConfigurationViewModel observer,
+		bool required) :
+		base(parameter, value, observer, required)
 	{
 		Assert.ArgumentNotNull(datasetSource, nameof(datasetSource));
 
@@ -47,8 +50,15 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 
 		ComponentType = typeof(DatasetTestParameterValueBlazor);
 		ComponentParameters.Add("ViewModel", this);
+		
+		_errorMessage = "Dataset not set";
+		Validation = () => DisplayValue != null;
+
+		Validate();
 	}
-	
+
+	public List<RowFilterConfiguration> RowFilterConfigurations { get; } = new();
+
 	[NotNull]
 	public Either<Dataset, TransformerConfiguration> DatasetSource { get; private set; }
 
@@ -62,6 +72,14 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 	{
 		get => _filterExpression;
 		set => SetProperty(ref _filterExpression, value);
+	}
+
+	[CanBeNull]
+	[UsedImplicitly]
+	public string RowFilterExpression
+	{
+		get => _rowFilterExpression;
+		set => SetProperty(ref _rowFilterExpression, value);
 	}
 
 	[UsedImplicitly]
@@ -116,6 +134,11 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 		Value = source.Match(d => d?.Name, t => t.Name);
 	}
 	
+	protected override string GetErrorMessageCore()
+	{
+		return _errorMessage;
+	}
+
 	[NotNull]
 	public static DatasetTestParameterValueViewModel CreateInstance(
 		[NotNull] TestParameter parameter,
@@ -148,7 +171,7 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 
 		return new DatasetTestParameterValueViewModel(parameter, value, imageSource, modelName,
 		                                              filterExpression, usedAsReferenceData, source,
-		                                              observer);
+		                                              observer, parameter.IsConstructorParameter);
 	}
 
 	private FinderForm<DatasetFinderItem> GetDatasetFinderForm(

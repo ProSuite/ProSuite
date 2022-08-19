@@ -55,8 +55,8 @@ namespace ProSuite.QA.Tests.Transformers
 		/// source. Especially if the resulting rows are grouped calculated fields are used
 		/// to provide aggregate functions such as SUM, COUNT etc.
 		/// </summary>
-		[CanBeNull]
-		public List<FieldInfo> CalculatedFields { get; private set; }
+		[CanBeNull] public IReadOnlyList<FieldInfo> CalculatedFields => _calculatedFields;
+		private List<FieldInfo> _calculatedFields;
 
 		[CanBeNull]
 		internal TableView TableView { get; private set; }
@@ -482,12 +482,9 @@ namespace ProSuite.QA.Tests.Transformers
 					field, FieldUtils.GetFieldType(tableView.GetColumnType(field)));
 			toOutputClass.AddFieldT(f);
 
-			if (CalculatedFields == null)
-			{
-				CalculatedFields = new List<FieldInfo>();
-			}
+			_calculatedFields = _calculatedFields ?? new List<FieldInfo>();
 
-			CalculatedFields.Add(new FieldInfo(field, toOutputClass.FindField(field), -1));
+			_calculatedFields.Add(new FieldInfo(field, toOutputClass.FindField(field), -1));
 		}
 
 		#endregion
