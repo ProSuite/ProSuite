@@ -1,0 +1,18 @@
+<style>
+	.error-message {
+		font-style: italic
+	}
+</style>
+
+<span @ref="_element" onmouseover="@(() => OnMouseOver(_element))">
+	
+	@ChildContent
+	
+	@if (! string.IsNullOrEmpty(@ImagePath))
+	{
+		<img src="@ImagePath" alt="error" style="padding: 0 2px 1px" />
+		<span class="error-message">
+			@ErrorMessage
+		</span>
+	}
+</span>

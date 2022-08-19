@@ -21,6 +21,7 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 
 	[CanBeNull] private string _filterExpression;
 	[CanBeNull] private string _rowFilterExpression;
+	[CanBeNull] private readonly string _errorMessage;
 
 	private bool _usedAsReferenceData;
 
@@ -33,8 +34,9 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 		bool usedAsReferenceData,
 		[NotNull] Either<Dataset, TransformerConfiguration> datasetSource,
 		[CanBeNull] IEnumerable<RowFilterConfiguration> rowFilters,
-		[NotNull] IInstanceConfigurationViewModel observer) :
-		base(parameter, value, observer)
+		[NotNull] IInstanceConfigurationViewModel observer,
+		bool required) :
+		base(parameter, value, observer, required)
 	{
 		Assert.ArgumentNotNull(datasetSource, nameof(datasetSource));
 
@@ -51,6 +53,11 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 		ComponentParameters.Add("ViewModel", this);
 
 		InitializeRowFilters(rowFilters);
+		
+		_errorMessage = "Dataset not set";
+		Validation = () => DisplayValue != null;
+
+		Validate();
 	}
 
 	public List<RowFilterConfiguration> RowFilterConfigurations { get; } = new();
@@ -172,6 +179,11 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 		RowFilterConfigurations.Add(rowFilter);
 		RowFilterExpression = rowFilter?.Name;
 	}
+	
+	protected override string GetErrorMessageCore()
+	{
+		return _errorMessage;
+	}
 
 	[NotNull]
 	public static DatasetTestParameterValueViewModel CreateInstance(
@@ -206,7 +218,7 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 		return new DatasetTestParameterValueViewModel(parameter, value, imageSource, modelName,
 		                                              filterExpression, usedAsReferenceData, source,
 		                                              datasetValue?.RowFilterConfigurations,
-		                                              observer);
+		                                              observer, parameter.IsConstructorParameter);
 	}
 
 	private FinderForm<DatasetFinderItem> GetDatasetFinderForm(
