@@ -209,10 +209,10 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		{
 			int i = base.AddFieldT(field);
 
-			if (field.Type == esriFieldType.esriFieldTypeOID)
+			// Do not overwrite previous a value that could have been set explicitly!
+			if (_oidFieldName == null && field.Type == esriFieldType.esriFieldTypeOID)
 			{
-				// Probably the same logic as AO (query) classes:
-				// The last one to be added determines the OID field
+				// If nothing was set, the first one to be added determines the OID field.
 				_oidFieldName = field.Name;
 			}
 
