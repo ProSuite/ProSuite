@@ -40,11 +40,6 @@ namespace ProSuite.DomainModel.AO.QA
 				return CreateTransformerFactory(transConfig);
 			}
 
-			if (instanceConfiguration is RowFilterConfiguration rowFilterconfig)
-			{
-				return CreateRowFilterFactory(rowFilterconfig);
-			}
-
 			if (instanceConfiguration is IssueFilterConfiguration issueFilterConfig)
 			{
 				return CreateIssueFilterFactory(issueFilterConfig);
@@ -57,34 +52,7 @@ namespace ProSuite.DomainModel.AO.QA
 
 			throw new NotImplementedException();
 		}
-
-		/// <summary>
-		/// Gets the row filter factory, sets the row filter configuration for it and initializes
-		/// its  parameter values.
-		/// </summary>
-		/// <returns>RowFilterFactory or null.</returns>
-		[CanBeNull]
-		public static RowFilterFactory CreateRowFilterFactory(
-			[NotNull] RowFilterConfiguration rowFilterConfiguration)
-		{
-			Assert.ArgumentNotNull(rowFilterConfiguration, nameof(rowFilterConfiguration));
-
-			if (rowFilterConfiguration.RowFilterDescriptor == null)
-			{
-				return null;
-			}
-
-			RowFilterFactory factory =
-				CreateRowFilterFactory(rowFilterConfiguration.RowFilterDescriptor);
-
-			if (factory != null)
-			{
-				InitializeParameterValues(factory, rowFilterConfiguration.ParameterValues);
-			}
-
-			return factory;
-		}
-
+		
 		private static IssueFilterFactory CreateIssueFilterFactory(
 			[NotNull] IssueFilterConfiguration issueFilterConfig)
 		{

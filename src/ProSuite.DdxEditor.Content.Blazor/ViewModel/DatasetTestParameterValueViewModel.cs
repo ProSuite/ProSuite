@@ -20,7 +20,6 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 	[NotNull] private readonly IInstanceConfigurationViewModel _viewModel;
 
 	[CanBeNull] private string _filterExpression;
-	[CanBeNull] private string _rowFilterExpression;
 
 	private bool _usedAsReferenceData;
 
@@ -49,9 +48,7 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 		ComponentType = typeof(DatasetTestParameterValueBlazor);
 		ComponentParameters.Add("ViewModel", this);
 	}
-
-	public List<RowFilterConfiguration> RowFilterConfigurations { get; } = new();
-
+	
 	[NotNull]
 	public Either<Dataset, TransformerConfiguration> DatasetSource { get; private set; }
 
@@ -65,14 +62,6 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 	{
 		get => _filterExpression;
 		set => SetProperty(ref _filterExpression, value);
-	}
-
-	[CanBeNull]
-	[UsedImplicitly]
-	public string RowFilterExpression
-	{
-		get => _rowFilterExpression;
-		set => SetProperty(ref _rowFilterExpression, value);
 	}
 
 	[UsedImplicitly]

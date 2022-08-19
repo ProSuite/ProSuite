@@ -190,9 +190,6 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 				case IssueFilterDescriptor _:
 					return Get<IssueFilterConfiguration>(descriptor).Cast<InstanceConfiguration>()
 						.ToList();
-				case RowFilterDescriptor _:
-					return Get<RowFilterConfiguration>(descriptor).Cast<InstanceConfiguration>()
-						.ToList();
 				default:
 					throw new NotImplementedException(
 						$"Unsupported instance descriptor type: {descriptor}");

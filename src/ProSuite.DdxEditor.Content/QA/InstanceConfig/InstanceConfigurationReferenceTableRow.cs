@@ -51,8 +51,6 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 						return "Transformer";
 					case IssueFilterConfiguration _:
 						return "Issue Filter";
-					case RowFilterConfiguration _:
-						return "Row Filter";
 					default:
 						throw new InvalidOperationException(
 							$"Unknown configuration type: {InstanceConfig}");

@@ -32,15 +32,6 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 			}
 		}
 
-		public IList<RowFilterDescriptor> GetRowFilterDescriptors()
-		{
-			using (ISession session = OpenSession(true))
-			{
-				return session.CreateCriteria(typeof(RowFilterDescriptor))
-				              .List<RowFilterDescriptor>();
-			}
-		}
-
 		public IList<T> GetInstanceDescriptors<T>() where T : InstanceDescriptor
 		{
 			using (ISession session = OpenSession(true))

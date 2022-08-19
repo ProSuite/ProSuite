@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.Linq;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.UI.Finder;
-using ProSuite.Commons.UI.WinForms.Controls;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
@@ -25,30 +24,7 @@ internal static class FinderUtils
 		                         columnDescriptors: null,
 		                         filterSettingsContext: FinderContextIds.GetId(category));
 	}
-
-	internal static FinderForm<InstanceConfigurationInCategoryTableRow> GetRowFilterFinder(
-		IRowFilterConfigurationProvider rowFilterProvider,
-		[CanBeNull] Dataset forDataset,
-		[CanBeNull] DataQualityCategory category,
-		Finder<InstanceConfigurationInCategoryTableRow> finder)
-	{
-		DdxModel model = category?.GetDefaultModel();
-
-		IList<ColumnDescriptor> columnDescriptors =
-			new List<ColumnDescriptor>
-			{
-				new("Image"),
-				new("Name"),
-				new("Description"),
-				new("AlgorithmImplementation")
-			};
-
-		return finder.CreateForm(GetFinderQueries(rowFilterProvider, forDataset, category),
-		                         allowMultiSelection: true,
-		                         columnDescriptors: columnDescriptors,
-		                         filterSettingsContext: FinderContextIds.GetId(category));
-	}
-
+	
 	[NotNull]
 	private static IEnumerable<FinderQuery<DatasetFinderItem>> GetFinderQueries(
 		[CanBeNull] DdxModel model,
@@ -65,25 +41,6 @@ internal static class FinderUtils
 
 		yield return new FinderQuery<DatasetFinderItem>(
 			"<All>", "[all]", () => GetListItems(datasetProvider, datasetParameterType));
-	}
-
-	[NotNull]
-	private static IEnumerable<FinderQuery<InstanceConfigurationInCategoryTableRow>>
-		GetFinderQueries(
-			IRowFilterConfigurationProvider rowFilterProvider,
-			Dataset forDataset,
-			DataQualityCategory category)
-	{
-		if (category != null)
-		{
-			yield return new FinderQuery<InstanceConfigurationInCategoryTableRow>(
-				string.Format("Datasets in {0}", category.Name),
-				string.Format("model{0}", category.Id),
-				() => GetListItems(rowFilterProvider, forDataset, category));
-		}
-
-		yield return new FinderQuery<InstanceConfigurationInCategoryTableRow>(
-			"<All>", "[all]", () => GetListItems(rowFilterProvider, forDataset, category));
 	}
 
 	[NotNull]
@@ -105,26 +62,6 @@ internal static class FinderUtils
 
 		result.AddRange(datasetProvider.GetTransformers(datasetParameterType, model)
 		                               .Select(t => new DatasetFinderItem(t)));
-
-		return result;
-	}
-
-	[NotNull]
-	private static IList<InstanceConfigurationInCategoryTableRow> GetListItems(
-		[CanBeNull] IRowFilterConfigurationProvider rowFilterProvider,
-		[NotNull] Dataset forDataset,
-		[CanBeNull] DataQualityCategory category = null)
-	{
-		if (rowFilterProvider == null)
-		{
-			return new List<InstanceConfigurationInCategoryTableRow>();
-		}
-
-		List<InstanceConfigurationInCategoryTableRow> result =
-			rowFilterProvider.GetFilterConfigurations(forDataset, category)
-			                 .Select(dataset =>
-				                         new InstanceConfigurationInCategoryTableRow(dataset, -1))
-			                 .ToList();
 
 		return result;
 	}

@@ -27,12 +27,7 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.QA
 
 			var tc2 = new TransformerConfiguration("transConfig2", t2, "bla bla2");
 			var tc2b = new TransformerConfiguration("transConfig2b", t2, "bla bla2");
-
-			var f1 = new RowFilterDescriptor(
-				"filt1", new ClassDescriptor("rowFiltTypeName", "factAssemblyName"), 0);
-
-			var fc1 = new RowFilterConfiguration("filterConfig2", f1, "bla bla1");
-
+			
 			const int testConstructorId = 1;
 			var i1 = new IssueFilterDescriptor(
 				"ifilt1", new ClassDescriptor("issueFilTypeName", "factAssemblyName"),
@@ -40,7 +35,7 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.QA
 
 			var ic1 = new IssueFilterConfiguration("issueFilterConfig1", i1);
 
-			CreateSchema(t1, t2, f1, i1, tc1, tc2, tc2b, fc1, ic1);
+			CreateSchema(t1, t2, i1, tc1, tc2, tc2b, ic1);
 
 			UnitOfWork.NewTransaction(
 				delegate
@@ -59,7 +54,7 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.QA
 
 					IList<InstanceConfiguration> foundConfigs = Repository.GetAll();
 
-					Assert.AreEqual(5, foundConfigs.Count);
+					Assert.AreEqual(4, foundConfigs.Count);
 					Assert.False(foundConfigs.Any(t => t.InstanceDescriptor == null));
 
 					InstanceConfiguration foundI1 =

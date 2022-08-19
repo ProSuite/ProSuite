@@ -51,9 +51,6 @@ public abstract class ViewModelBase : Observable
 	[NotNull]
 	protected Type DataType { get; }
 
-	[CanBeNull]
-	public DynamicComponent DynamicRowFilterComponent { get; set; }
-
 	public void StartEditing()
 	{
 		Editing = true;

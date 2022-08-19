@@ -1864,17 +1864,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 
 			return descriptors.ToList();
 		}
-		private static IReadOnlyList<RowFilterDescriptor> GetRowFilterDescriptors(
-			[NotNull] IEnumerable<RowFilterConfiguration> rowFilters)
-		{
-			HashSet<RowFilterDescriptor> descriptors = new HashSet<RowFilterDescriptor>();
-			foreach (RowFilterConfiguration configuration in rowFilters)
-			{
-				descriptors.Add(configuration.RowFilterDescriptor);
-			}
-
-			return descriptors.ToList();
-		}
+		
 		private static IReadOnlyList<IssueFilterDescriptor> GetIssueFilterDescriptors(
 			[NotNull] IEnumerable<IssueFilterConfiguration> issueFilters)
 		{

@@ -8,9 +8,7 @@ namespace ProSuite.DomainModel.Core.QA.Repositories
 		IList<TransformerDescriptor> GetTransformerDescriptors();
 
 		IList<IssueFilterDescriptor> GetIssueFilterDescriptors();
-
-		IList<RowFilterDescriptor> GetRowFilterDescriptors();
-
+		
 		InstanceDescriptor Get(string name);
 
 		InstanceDescriptor GetWithSameImplementation(InstanceDescriptor entity);
