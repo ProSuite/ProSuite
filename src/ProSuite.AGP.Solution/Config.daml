@@ -109,6 +109,12 @@
         </group>
       </groups>
       <controls>
+        <button id="ProSuiteTools_Diagnostics_SaveXmlGeometryButton" caption="Save As XML Geometry"
+                className="Diagnostics.SaveXmlGeometryButton" loadOnClick="false"
+                condition="esri_mapping_mapPane">
+          <tooltip heading="Save As XML Geometry">Save selected feature to an XML- File.<disabledText />
+          </tooltip>
+        </button>
         <comboBox id="ProSuiteTools_QA_SpecsComboBox" caption=" Specification"
                   className="QA.QualitySpecificationsComboBox" itemWidth="90" extendedCaption="Extended Caption"
                   isEditable="false" isReadOnly="true" resizable="true" rows="32">
