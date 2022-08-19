@@ -28,10 +28,6 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		[CanBeNull]
 		public List<XmlIssueFilterConfiguration> IssueFilters { get; set; }
 
-		[XmlArrayItem(ElementName = "RowFilter")]
-		[CanBeNull]
-		public List<XmlRowFilterConfiguration> RowFilters { get; set; }
-
 		[XmlArrayItem("Category")]
 		[CanBeNull]
 		public List<XmlDataQualityCategory> Categories { get; set; }
@@ -47,10 +43,6 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		[XmlArrayItem("IssueFilterDescriptor")]
 		[CanBeNull]
 		public List<XmlIssueFilterDescriptor> IssueFilterDescriptors { get; set; }
-
-		[XmlArrayItem("RowFilterDescriptor")]
-		[CanBeNull]
-		public List<XmlRowFilterDescriptor> RowFilterDescriptors { get; set; }
 
 		[XmlArrayItem("Workspace")]
 		[CanBeNull]
@@ -106,14 +98,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			IssueFilters = IssueFilters ?? new List<XmlIssueFilterConfiguration>();
 			IssueFilters.Add(xmlIssueFilter);
 		}
-
-		public void AddRowFilter([NotNull] XmlRowFilterConfiguration xmlRowFilter)
-		{
-			Assert.ArgumentNotNull(xmlRowFilter, nameof(xmlRowFilter));
-			RowFilters = RowFilters ?? new List<XmlRowFilterConfiguration>();
-			RowFilters.Add(xmlRowFilter);
-		}
-
+		
 		public void AddTransformer([NotNull] XmlTransformerConfiguration xmlTransformer)
 		{
 			Assert.ArgumentNotNull(xmlTransformer, nameof(xmlTransformer));
@@ -134,14 +119,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			IssueFilterDescriptors = IssueFilterDescriptors ?? new List<XmlIssueFilterDescriptor>();
 			IssueFilterDescriptors.Add(xmlIssueFilterDescriptor);
 		}
-
-		public void AddRowFilterDescriptor([NotNull] XmlRowFilterDescriptor xmlRowFilterDescriptor)
-		{
-			Assert.ArgumentNotNull(xmlRowFilterDescriptor, nameof(xmlRowFilterDescriptor));
-			RowFilterDescriptors = RowFilterDescriptors ?? new List<XmlRowFilterDescriptor>();
-			RowFilterDescriptors.Add(xmlRowFilterDescriptor);
-		}
-
+		
 		public void AddTransformerDescriptor([NotNull] XmlTransformerDescriptor xmlTransformerDescriptor)
 		{
 			Assert.ArgumentNotNull(xmlTransformerDescriptor, nameof(xmlTransformerDescriptor));

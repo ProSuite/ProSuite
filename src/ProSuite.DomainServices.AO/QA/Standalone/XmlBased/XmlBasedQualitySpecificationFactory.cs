@@ -128,7 +128,6 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			XmlDataQualityUtils.AssertUniqueTestDescriptorNames(document);
 			XmlDataQualityUtils.AssertUniqueQualityConditionNames(document);
 			XmlDataQualityUtils.AssertUniqueIssueFilterNames(document);
-			XmlDataQualityUtils.AssertUniqueRowFilterNames(document);
 			XmlDataQualityUtils.AssertUniqueTransformerNames(document);
 			XmlDataQualityUtils.AssertUniqueQualitySpecificationNames(document);
 			XmlDataQualityUtils.AssertUniqueQualifiedCategoryNames(document);

@@ -10,8 +10,6 @@ namespace ProSuite.DomainModel.Core.QA.Repositories
 		IList<TransformerConfiguration> GetTransformerConfigurations(
 			[CanBeNull] IList<int> excludedIds = null);
 
-		IList<RowFilterConfiguration> GetRowFilterConfigurations();
-
 		IList<IssueFilterConfiguration> GetIssueFilterConfigurations();
 
 		HashSet<int> GetIdsInvolvingDeletedDatasets<T>() where T : InstanceConfiguration;
@@ -30,9 +28,6 @@ namespace ProSuite.DomainModel.Core.QA.Repositories
 
 		IList<InstanceConfiguration> GetReferencingConfigurations(
 			[NotNull] TransformerConfiguration transformer);
-
-		IList<InstanceConfiguration> GetReferencingConfigurations(
-			RowFilterConfiguration rowFilter);
 
 		IList<InstanceConfiguration> Get(InstanceDescriptor descriptor);
 	}

@@ -157,7 +157,7 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.QA
 		}
 
 		[Test]
-		public void CanSaveConditionWithRowFilter()
+		public void CanSaveConditionWithTransformer()
 		{
 			const string ds1Name = "SCHEMA.TLM_DATASET1";
 			const string ds2Name = "SCHEMA.TLM_DATASET2";
@@ -186,20 +186,22 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.QA
 			InstanceConfigurationUtils.AddParameterValue(condition, "limit", limit);
 			InstanceConfigurationUtils.AddParameterValue(condition, "is3D", is3D);
 
-			DatasetTestParameterValue datasetParameterValue =
-				InstanceConfigurationUtils.AddParameterValue(condition, "featureClass", ds1);
-
-			RowFilterDescriptor filterDescriptor = new RowFilterDescriptor(
-				filterDefName, new ClassDescriptor("ProSuite.QA.Tests.RowFilters.RfExecuteArea",
+			
+			TransformerDescriptor filterDescriptor = new TransformerDescriptor(
+				filterDefName, new ClassDescriptor("ProSuite.QA.Tests.Transformers.Filters.TrOnlyIntersectingFeatures",
 				                                   "ProSuite.QA.Tests"), 0);
 
-			var filterConfig = new RowFilterConfiguration(filterConfigName, filterDescriptor);
-			InstanceConfigurationUtils.AddParameterValue(filterConfig, "areaFc", ds2);
+			var filterTransformerConfig = new TransformerConfiguration(filterConfigName, filterDescriptor);
+			InstanceConfigurationUtils.AddParameterValue(filterTransformerConfig, "featureClassToFilter", ds1);
+			InstanceConfigurationUtils.AddParameterValue(filterTransformerConfig, "intersecting", ds2);
 
-			Assert.NotNull(datasetParameterValue.RowFilterConfigurations);
-			datasetParameterValue.RowFilterConfigurations.Add(filterConfig);
+			// Instead of the feature class directly, specify the filter-transformer configuration:
+			DatasetTestParameterValue conditionParameter =
+				InstanceConfigurationUtils.AddParameterValue(condition, "featureClass", filterTransformerConfig);
 
-			CreateSchema(testDescriptor, filterDescriptor, filterConfig, condition, m);
+			Assert.NotNull(conditionParameter.ValueSource);
+			
+			CreateSchema(testDescriptor, filterDescriptor, filterTransformerConfig, condition, m);
 
 			UnitOfWork.NewTransaction(
 				delegate
@@ -226,12 +228,11 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.QA
 
 					Assert.AreEqual("featureClass", value2.TestParameterName);
 
-					Assert.NotNull(value2.RowFilterConfigurations);
-					Assert.AreEqual(1, value2.RowFilterConfigurations.Count);
+					Assert.NotNull(value2.ValueSource);
+					var readFilterConfig = value2.ValueSource;
 
-					var readFilterConfig = value2.RowFilterConfigurations[0];
 					var filteredByDatasetParameter =
-						readFilterConfig.ParameterValues[0] as DatasetTestParameterValue;
+						readFilterConfig.ParameterValues[1] as DatasetTestParameterValue;
 					Assert.NotNull(filteredByDatasetParameter);
 					var dataset = filteredByDatasetParameter.DatasetValue;
 
@@ -245,7 +246,7 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.QA
 							readFilterConfig.InstanceDescriptor);
 					Assert.IsNotNull(filterInfo);
 
-					Assert.AreEqual(1, filterInfo.Parameters.Count);
+					Assert.AreEqual(2, filterInfo.Parameters.Count);
 				}
 			);
 		}

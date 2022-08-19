@@ -46,10 +46,6 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.QA
 				delegate
 				{
 					AssertUnitOfWorkHasNoChanges();
-					IList<RowFilterConfiguration> foundRowFilters =
-						Repository.GetRowFilterConfigurations();
-					Assert.AreEqual(1, foundRowFilters.Count);
-					Assert.AreEqual(foundRowFilters[0].RowFilterDescriptor, f1);
 
 					IList<IssueFilterConfiguration> foundIssueFilters =
 						Repository.GetIssueFilterConfigurations();
@@ -74,7 +70,7 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.QA
 		}
 
 		[Test]
-		public void CanAddRowFilterToParameter()
+		public void CanAddTransformerToParameter()
 		{
 			var t1 = new TransformerDescriptor(
 				"trans1", new ClassDescriptor("factTypeName", "factAssemblyName"), 0);
@@ -85,10 +81,12 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.QA
 				                      new TestParameter("paramName", typeof(DataTable),
 				                                        "desc for trans")));
 
-			var f1 = new RowFilterDescriptor(
-				"filt1", new ClassDescriptor("rowFiltTypeName", "factAssemblyName"), 0);
+			// Currently filters are implemented via transformers. They could also be modelled as a separate concept
+			// on the parameter.
+			var f1 = new TransformerDescriptor(
+				"filt1", new ClassDescriptor("filterTypeName", "factAssemblyName"), 0);
 
-			var fc1 = new RowFilterConfiguration("filterConfig2", f1, "bla bla1");
+			var fc1 = new TransformerConfiguration("filterConfig2", f1, "bla bla1");
 
 			CreateSchema(t1, f1, tc1, fc1);
 
@@ -99,7 +97,7 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.QA
 
 					IList<TransformerConfiguration> foundTransformers =
 						Repository.GetTransformerConfigurations();
-					Assert.AreEqual(1, foundTransformers.Count);
+					Assert.AreEqual(2, foundTransformers.Count);
 					Assert.False(foundTransformers.Any(t => t.TransformerDescriptor == null));
 
 					TransformerConfiguration foundTransformer = foundTransformers[0];
@@ -108,7 +106,7 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.QA
 						foundTransformer.ParameterValues.First() as DatasetTestParameterValue;
 					Assert.NotNull(parameterValue);
 
-					parameterValue.AddRowFilter(fc1);
+					parameterValue.ValueSource = fc1;
 				});
 
 			UnitOfWork.NewTransaction(
@@ -117,7 +115,7 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.QA
 					IList<TransformerConfiguration> foundAgain =
 						Repository.GetTransformerConfigurations();
 
-					Assert.AreEqual(1, foundAgain.Count);
+					Assert.AreEqual(2, foundAgain.Count);
 
 					TransformerConfiguration foundTransformer = foundAgain[0];
 
@@ -125,7 +123,10 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.QA
 						foundTransformer.ParameterValues.First() as DatasetTestParameterValue;
 					Assert.NotNull(parameterValue);
 
-					Assert.AreEqual(1, parameterValue.RowFilterConfigurations.Count);
+					TransformerConfiguration filterTransformer = parameterValue.ValueSource;
+
+					Assert.IsNotNull(filterTransformer);
+					Assert.AreEqual("filterConfig2", filterTransformer.Name);
 				});
 		}
 
