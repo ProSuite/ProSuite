@@ -16,6 +16,7 @@ using ProSuite.QA.Tests.Test.TestRunners;
 using System.Collections.Generic;
 using ProSuite.Commons.AO.Licensing;
 using System;
+using ProSuite.QA.Tests.Transformers.Filters;
 
 namespace ProSuite.QA.Tests.Test.Transformer
 {
@@ -173,7 +174,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 		}
 
 		[Test]
-		public void CanRunFromXmlWithRowFilters()
+		public void CanRunFromXmlWithFilterTransformer()
 		{
 			// Init
 			IFeatureWorkspace ws =
@@ -228,31 +229,33 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			XmlClassDescriptor xmlCdContainsOther =
 				new XmlClassDescriptor(typeof(QaContainsOther), constructorId: 1);
 			XmlClassDescriptor xmlCdIgnore =
-				new XmlClassDescriptor(typeof(IgnoreProcessArea), constructorId: 0);
+				new XmlClassDescriptor(typeof(TrOnlyIntersectingFeatures), constructorId: 0);
 
 			XmlTestDescriptor xmlTdContainsOther =
 				new XmlTestDescriptor { Name = "co", TestClass = xmlCdContainsOther };
-			XmlRowFilterDescriptor xmlRdIgnore =
-				new XmlRowFilterDescriptor { Name = "ig", RowFilterClass = xmlCdIgnore };
+			XmlTransformerDescriptor xmlRdIgnore =
+				new XmlTransformerDescriptor { Name = "ig", TransformerClass = xmlCdIgnore };
 
-			XmlRowFilterConfiguration xmlRowFilter =
-				new XmlRowFilterConfiguration { Name = "pp", RowFilterDescriptorName = xmlRdIgnore.Name };
+			XmlTransformerConfiguration xmlRowFilter =
+				new XmlTransformerConfiguration { Name = "filterTransformed", TransformerDescriptorName = xmlRdIgnore.Name };
 			xmlRowFilter.ParameterValues.Add(
 				new XmlDatasetTestParameterValue
-				{ TestParameterName = "areaFc", Value = "ignoreFc", WorkspaceId = xmlWs.ID });
+				{ TestParameterName = "featureClassToFilter", Value = "areaFc", WorkspaceId = xmlWs.ID });
+			xmlRowFilter.ParameterValues.Add(
+				new XmlDatasetTestParameterValue
+				{ TestParameterName = "intersecting", Value = "ignoreFc", WorkspaceId = xmlWs.ID });
 
 			XmlQualityCondition xmlQc =
 				new XmlQualityCondition { Name = "qc", TestDescriptorName = xmlTdContainsOther.Name };
 			xmlQc.ParameterValues.Add(
 				new XmlDatasetTestParameterValue
-				{ TestParameterName = "contains", Value = "areaFc", WorkspaceId = xmlWs.ID });
+				{ TestParameterName = "contains", TransformerName = "filterTransformed", WorkspaceId = xmlWs.ID });
 			xmlQc.ParameterValues.Add(
 				new XmlDatasetTestParameterValue
 				{
 					TestParameterName = "isWithin",
 					Value = "bbFc",
-					WorkspaceId = xmlWs.ID,
-					RowFilterExpression = new XmlFilterExpression { Expression = $"{xmlRowFilter.Name}" }
+					WorkspaceId = xmlWs.ID
 				});
 
 			var xmlSpec = new XmlQualitySpecification { TileSize = 10000, Name = "spec" };
@@ -265,10 +268,10 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			xmlDocument.AddQualitySpecification(xmlSpec);
 
 			xmlDocument.AddQualityCondition(xmlQc);
-			xmlDocument.AddRowFilter(xmlRowFilter);
+			xmlDocument.AddTransformer(xmlRowFilter);
 
 			xmlDocument.AddTestDescriptor(xmlTdContainsOther);
-			xmlDocument.AddRowFilterDescriptor(xmlRdIgnore);
+			xmlDocument.AddTransformerDescriptor(xmlRdIgnore);
 
 			var modelFactory =
 				new VerifiedModelFactory(new MasterDatabaseWorkspaceContextFactory(),
@@ -288,9 +291,9 @@ namespace ProSuite.QA.Tests.Test.Transformer
 
 			Assert.AreEqual(1, qs.Elements.Count);
 			QualityCondition qc = qs.Elements[0].QualityCondition;
-			var dsValue = (DatasetTestParameterValue)qc.ParameterValues[1];
-			Assert.AreEqual(1, dsValue.RowFilterConfigurations?.Count);
-			Assert.AreEqual(1, dsValue.RowFilterConfigurations?[0].ParameterValues.Count);
+			var filterTransformer = (DatasetTestParameterValue)qc.ParameterValues[0];
+			Assert.IsNotNull(filterTransformer.ValueSource);
+			Assert.AreEqual(2, filterTransformer.ValueSource.ParameterValues.Count);
 
 			TestFactory testFct = TestFactoryUtils.CreateTestFactory(qc);
 			Assert.IsNotNull(testFct);
@@ -299,8 +302,6 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				new SimpleDatasetOpener(model.MasterDatabaseWorkspaceContext));
 
 			Assert.AreEqual(1, tests.Count);
-			IFilterTest test = (QaContainsOther)tests[0];
-			Assert.AreEqual(1, test.GetRowFilters(1)?.Count);
 		}
 
 		[Test]

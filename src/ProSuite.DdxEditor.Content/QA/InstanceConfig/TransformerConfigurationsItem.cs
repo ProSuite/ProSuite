@@ -57,7 +57,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			GetConfigDatasetTableRows(
 				DataQualityCategory category)
 		{
-			return QualityConditionContainerUtils
+			return InstanceConfigTableRows
 				.GetInstanceConfigurationDatasetTableRows<TransformerConfiguration>(
 					ModelBuilder, category);
 		}

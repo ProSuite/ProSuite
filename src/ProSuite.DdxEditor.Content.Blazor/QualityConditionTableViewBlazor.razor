@@ -167,16 +167,6 @@
                         </Template>
                     </RadzenDataGridColumn>
 
-                    <!-- Experimental: In the future, we should support an expression (builder). -->
-                    <RadzenDataGridColumn TItem="ViewModelBase" Property="RowFilters" Title="Row Filter" Width="120px">
-                        <Template Context="viewModel">
-                            @if (viewModel is DatasetTestParameterValueViewModel vm)
-                            {
-	                            <DynamicComponent Type="@typeof(RowFilterViewBlazor)" Parameters="vm.ComponentParameters"/>
-                            }
-                        </Template>
-                    </RadzenDataGridColumn>
-
                     <RadzenDataGridColumn TItem="ViewModelBase" Property="FilterExpression" Title="Filter Expression">
                         <Template Context="viewModel">
                             @if (viewModel is DatasetTestParameterValueViewModel vm)

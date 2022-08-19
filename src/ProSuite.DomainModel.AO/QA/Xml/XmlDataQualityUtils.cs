@@ -303,14 +303,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			Assert.ArgumentNotNull(document, nameof(document));
 			AssertUniqueInstanceConfigurationNames(document.IssueFilters, "issue filter");
 		}
-
-		public static void AssertUniqueRowFilterNames(
-			[NotNull] XmlDataQualityDocument document)
-		{
-			Assert.ArgumentNotNull(document, nameof(document));
-			AssertUniqueInstanceConfigurationNames(document.RowFilters, "row filter");
-		}
-
+		
 		public static void AssertUniqueTransformerNames(
 			[NotNull] XmlDataQualityDocument document)
 		{
@@ -553,22 +546,22 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			foreach (T xmlInstanceConfig in instanceConfigurations)
 			{
 				foreach (XmlTestParameterValue xmlTestParameterValue in
-					xmlInstanceConfig.EnumParameterValues(ignoreEmptyValues: true))
+				         xmlInstanceConfig.EnumParameterValues(ignoreEmptyValues: true))
 				{
-					if (!string.IsNullOrWhiteSpace(xmlTestParameterValue.TransformerName))
+					if (! string.IsNullOrWhiteSpace(xmlTestParameterValue.TransformerName))
 					{
-						if (!conditionsCache.TryGetTransformer(
-								xmlTestParameterValue.TransformerName,
-								out XmlTransformerConfiguration transformerConfiguration))
+						if (! conditionsCache.TryGetTransformer(
+							    xmlTestParameterValue.TransformerName,
+							    out XmlTransformerConfiguration transformerConfiguration))
 						{
 							hasUndefinedWorkspaceReference = true;
 							// TODO: handle missing
 							continue;
 						}
 
-						AddWorkspaceIds(workspaceIds, new[] { transformerConfiguration },
-										conditionsCache,
-										ref hasUndefinedWorkspaceReference);
+						AddWorkspaceIds(workspaceIds, new[] {transformerConfiguration},
+						                conditionsCache,
+						                ref hasUndefinedWorkspaceReference);
 					}
 
 					var datasetTestParameterValue =
@@ -576,30 +569,6 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 					if (datasetTestParameterValue == null)
 					{
 						continue;
-					}
-
-					IList<string> rowFilterNames =
-						GetFilterNames(datasetTestParameterValue.RowFilterExpression?.Expression);
-					// Handle row filters
-					if (rowFilterNames != null)
-					{
-						var rowFilterConfigurations = new List<XmlInstanceConfiguration>();
-						foreach (string name in rowFilterNames)
-						{
-							if (!conditionsCache.TryGetRowFilter(
-									name, out XmlRowFilterConfiguration rowFilterConfiguration))
-							{
-								hasUndefinedWorkspaceReference = true;
-								// TODO: handle missing
-								continue;
-							}
-
-							rowFilterConfigurations.Add(rowFilterConfiguration);
-						}
-
-						AddWorkspaceIds(workspaceIds, rowFilterConfigurations,
-										conditionsCache,
-										ref hasUndefinedWorkspaceReference);
 					}
 
 					if (string.IsNullOrEmpty(datasetTestParameterValue.WorkspaceId))
@@ -655,7 +624,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 
 			IList<string> filterNames = null;
 			foreach (string token in ExpressionUtils.GetExpressionTokens(
-				filterExpression))
+				         filterExpression))
 			{
 				const StringComparison ii = StringComparison.InvariantCultureIgnoreCase;
 				if (token.Equals("AND", ii) || token.Equals("OR") || token.Equals("NOT"))
@@ -873,8 +842,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 					parameterValue = CreateDatasetTestParameterValue(
 						testParameter, datasetValue,
 						Assert.NotNullOrEmpty(xmlQualityCondition.Name),
-						modelsByWorkspaceId, getDatasetsByName, ignoreForUnknownDatasets,
-						f => null);
+						modelsByWorkspaceId, getDatasetsByName, ignoreForUnknownDatasets);
 
 					if (parameterValue == null)
 					{
@@ -951,8 +919,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			[NotNull] string qualityConditionName,
 			[NotNull] IDictionary<string, Model> modelsByWorkspaceId,
 			[NotNull] Func<string, IList<Dataset>> getDatasetsByName,
-			bool ignoreForUnknownDatasets,
-			[NotNull] Func<IEnumerable<string>, IList<RowFilterConfiguration>> rowFilterProvider)
+			bool ignoreForUnknownDatasets)
 		{
 			Dataset dataset = GetDataset(xmlDatasetTestParameterValue,
 										 testParameter,
@@ -980,35 +947,19 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			TestParameterTypeUtils.AssertValidDataset(testParameter, dataset);
 
 			return CreateDatasetTestParameterValue(testParameter, xmlDatasetTestParameterValue,
-												   dataset, rowFilterProvider);
+												   dataset);
 		}
 
 		[NotNull]
 		private static TestParameterValue CreateDatasetTestParameterValue(
 			[NotNull] TestParameter testParameter,
 			[NotNull] XmlDatasetTestParameterValue xmlValue,
-			[CanBeNull] Dataset dataset,
-			[NotNull] Func<IEnumerable<string>, IList<RowFilterConfiguration>> rowFilterProvider)
+			[CanBeNull] Dataset dataset)
 		{
 			var paramValue = new DatasetTestParameterValue(
 				testParameter, dataset,
 				xmlValue.WhereClause,
 				xmlValue.UsedAsReferenceData);
-
-			string rowFilterExpression = xmlValue.RowFilterExpression?.Expression;
-			IList<string> rowFilterNames = GetFilterNames(rowFilterExpression);
-			if (rowFilterNames != null)
-			{
-				IList<RowFilterConfiguration> rowFilterConfigurations =
-					rowFilterProvider(rowFilterNames);
-
-				paramValue.RowFiltersExpression = rowFilterExpression;
-				paramValue.ClearRowFilters();
-				foreach (RowFilterConfiguration rowFilterConfiguration in rowFilterConfigurations)
-				{
-					paramValue.AddRowFilter(rowFilterConfiguration);
-				}
-			}
 
 			return paramValue;
 		}
@@ -1471,12 +1422,10 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 
 			document.Transformers?.Sort((x, y) => string.Compare(x.Name, y.Name, o));
 			document.IssueFilters?.Sort((x, y) => string.Compare(x.Name, y.Name, o));
-			document.RowFilters?.Sort((x, y) => string.Compare(x.Name, y.Name, o));
 
 			document.TestDescriptors?.Sort((x, y) => string.Compare(x.Name, y.Name, o));
 			document.TransformerDescriptors?.Sort((x, y) => string.Compare(x.Name, y.Name, o));
 			document.IssueFilterDescriptors?.Sort((x, y) => string.Compare(x.Name, y.Name, o));
-			document.RowFilterDescriptors?.Sort((x, y) => string.Compare(x.Name, y.Name, o));
 
 			SortCategories(document.Categories);
 
@@ -1798,13 +1747,11 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 
 			GetConfigurations(qualityConditions,
 				out IReadOnlyList<TransformerConfiguration> transformerConfigurations,
-				out IReadOnlyList<RowFilterConfiguration> rowFilterConfigurations,
 				out IReadOnlyList<IssueFilterConfiguration> issueFilterConfigurations);
 
 			IReadOnlyList<TransformerDescriptor> transformerDescriptors =
 				GetTransformerDescriptors(transformerConfigurations);
-			IReadOnlyList<RowFilterDescriptor> rowFilterDescriptors =
-				GetRowFilterDescriptors(rowFilterConfigurations);
+
 			IReadOnlyList<IssueFilterDescriptor> issueFilterDescriptors =
 				GetIssueFilterDescriptors(issueFilterConfigurations);
 
@@ -1820,12 +1767,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 					CreateXmlTransformerDescriptor(transformerDescriptor, exportMetadata));
 
 			}
-			foreach (var rowFilterDescriptor in GetSortedDescriptors(rowFilterDescriptors))
-			{
-				document.AddRowFilterDescriptor(
-					CreateXmlRowFilterDescriptor(rowFilterDescriptor, exportMetadata));
 
-			}
 			foreach (var issueFilterDescriptor in GetSortedDescriptors(issueFilterDescriptors))
 			{
 				document.AddIssueFilterDescriptor(
@@ -1862,12 +1804,6 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			{
 				document.AddTransformer(
 					CreateXmlTransformer(transformer, workspaceIdsByModel, exportMetadata));
-			}
-			foreach (RowFilterConfiguration rowFilter in
-			         GetSortedConfigurations(rowFilterConfigurations))
-			{
-				document.AddRowFilter(
-					CreateXmlRowFilter(rowFilter, workspaceIdsByModel, exportMetadata));
 			}
 			foreach (IssueFilterConfiguration issueFilter in
 			         GetSortedConfigurations(issueFilterConfigurations))
@@ -1954,18 +1890,16 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		private static void GetConfigurations(
 			[NotNull] IEnumerable<QualityCondition> qualityConditions,
 			out IReadOnlyList<TransformerConfiguration> transformerConfigurations,
-			out IReadOnlyList<RowFilterConfiguration> rowFilterConfigurations,
 			out IReadOnlyList<IssueFilterConfiguration> issueFilterConfigurations)
 		{
 			HashSet<TransformerConfiguration>
 				allTransformers = new HashSet<TransformerConfiguration>();
-			HashSet<RowFilterConfiguration>
-				allRowFilters = new HashSet<RowFilterConfiguration>();
+			
 			HashSet<IssueFilterConfiguration>
 				allIssueFilters = new HashSet<IssueFilterConfiguration>();
 			foreach (QualityCondition qualityCondition in qualityConditions)
 			{
-				AddTransformers(qualityCondition, allTransformers, allRowFilters);
+				AddTransformers(qualityCondition, allTransformers);
 				foreach (var issueFilter in qualityCondition.IssueFilterConfigurations)
 				{
 					if (allIssueFilters.Add(issueFilter))
@@ -1975,19 +1909,17 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 							$"Cannot create factory for issue filter {issueFilter.Name}");
 					}
 
-					AddTransformers(issueFilter, allTransformers, allRowFilters);
+					AddTransformers(issueFilter, allTransformers);
 				}
 			}
 
 			transformerConfigurations = allTransformers.ToList();
-			rowFilterConfigurations = allRowFilters.ToList();
 			issueFilterConfigurations = allIssueFilters.ToList();
 		}
 
 		private static void AddTransformers(
 			[NotNull]InstanceConfiguration configuration,
-									 [NotNull] HashSet<TransformerConfiguration> allTransformers,
-			[NotNull]HashSet<RowFilterConfiguration> allRowFilters)
+									 [NotNull] HashSet<TransformerConfiguration> allTransformers)
 		{
 			foreach (TestParameterValue parameterValue in configuration.ParameterValues)
 			{
@@ -2001,26 +1933,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 							$"Cannot create factory for transformer {transformer.Name}");
 					}
 
-					AddTransformers(transformer, allTransformers, allRowFilters);
-				}
-
-				IList<RowFilterConfiguration> rowFilters =
-					(parameterValue as DatasetTestParameterValue)?
-					.RowFilterConfigurations;
-
-				if (rowFilters != null)
-				{
-					foreach (RowFilterConfiguration rowFilter in rowFilters)
-					{
-						if (allRowFilters.Add(rowFilter))
-						{
-							Assert.NotNull(
-								TestFactoryUtils.CreateTestFactory(rowFilter),
-								$"Cannot create factory for row filter {rowFilter.Name}");
-						}
-
-						AddTransformers(rowFilter, allTransformers, allRowFilters);
-					}
+					AddTransformers(transformer, allTransformers);
 				}
 			}
 		}
@@ -2454,29 +2367,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 
 			return xmlDescriptor;
 		}
-
-		[NotNull]
-		public static XmlRowFilterDescriptor CreateXmlRowFilterDescriptor(
-			[NotNull] RowFilterDescriptor rowFilterDescriptor, bool exportMetadata)
-		{
-			Assert.ArgumentNotNull(rowFilterDescriptor, nameof(rowFilterDescriptor));
-
-			var xmlDescriptor =
-				new XmlRowFilterDescriptor
-				{
-					Name = Escape(rowFilterDescriptor.Name),
-					Description = Escape(rowFilterDescriptor.Description),
-					RowFilterClass = CreateXmlClassDescriptor(
-						rowFilterDescriptor.Class, rowFilterDescriptor.ConstructorId),
-				};
-
-			if (exportMetadata)
-			{
-				ExportMetadata(rowFilterDescriptor, xmlDescriptor);
-			}
-
-			return xmlDescriptor;
-		}
+		
 		[NotNull]
 		public static XmlIssueFilterDescriptor CreateXmlIssueFilterDescriptor(
 			[NotNull] IssueFilterDescriptor issueFilterDescriptor, bool exportMetadata)
@@ -2585,42 +2476,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 
 			return xmlTransformer;
 		}
-
-		[NotNull]
-		private static XmlRowFilterConfiguration CreateXmlRowFilter(
-			[NotNull] RowFilterConfiguration rowFilter,
-			[NotNull] IDictionary<Model, string> workspaceIdsByModel,
-			bool exportMetadata)
-		{
-			Assert.ArgumentNotNull(rowFilter, nameof(rowFilter));
-			Assert.ArgumentNotNull(workspaceIdsByModel, nameof(workspaceIdsByModel));
-
-			var xmlRowFilter =
-				new XmlRowFilterConfiguration
-				{
-					Name = Escape(rowFilter.Name),
-					// TODO:
-					//Uuid = transformer.Uuid,
-					//VersionUuid = transformer.VersionUuid,
-					RowFilterDescriptorName = Escape(rowFilter.RowFilterDescriptor.Name),
-					Description = Escape(rowFilter.Description),
-				};
-
-			if (exportMetadata)
-			{
-				// TODO:				ExportMetadata(transformer, xmlTransformer);
-			}
-
-			foreach (TestParameterValue parameterValue in rowFilter.ParameterValues)
-			{
-				xmlRowFilter.ParameterValues.Add(
-					CreateXmlTestParameterValue(parameterValue, rowFilter,
-					                            workspaceIdsByModel));
-			}
-
-			return xmlRowFilter;
-		}
-
+		
 		[NotNull]
 		private static XmlIssueFilterConfiguration CreateXmlIssueFilter(
 			[NotNull] IssueFilterConfiguration issueFilter,
@@ -2742,14 +2598,10 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 				       Value = datasetName,
 				       WhereClause = Escape(datasetTestParameterValue.FilterExpression),
 				       UsedAsReferenceData = datasetTestParameterValue.UsedAsReferenceData,
-				       WorkspaceId = Escape(workspaceId),
-				       RowFilterExpression =
-					       CreateFilterExpression(
-						       datasetTestParameterValue.RowFiltersExpression,
-							   datasetTestParameterValue.RowFilterConfigurations)
+				       WorkspaceId = Escape(workspaceId)
 			       };
 		}
-
+		
 		[CanBeNull]
 		private static XmlFilterExpression CreateFilterExpression<T>(
 			[CanBeNull] string expression,

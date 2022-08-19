@@ -328,11 +328,6 @@ namespace ProSuite.DdxEditor.Content
 
 		public abstract ITestParameterDatasetProvider GetTestParameterDatasetProvider();
 
-		public virtual IRowFilterConfigurationProvider GetRowFilterConfigurationProvider()
-		{
-			return null;
-		}
-
 		public virtual C Resolve<C>()
 		{
 			// implement in project-specific subclass based on project registry
