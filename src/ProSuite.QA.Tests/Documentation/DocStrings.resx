@@ -4788,4 +4788,13 @@ The sort order must correspond with 'polylineClasses'.</value>
   <data name="QaSchemaFieldPropertiesFromTable_table" xml:space="preserve">
     <value>The table to check the field properties in.</value>
   </data>
+  <data name="QaLineIntersectAngle_AngularUnit" xml:space="preserve">
+    <value>Unit of 'limit', default = 'radian'.</value>
+  </data>
+  <data name="QaMinAngle_AngularUnit" xml:space="preserve">
+    <value>Unit of 'limit', default = 'radian'.</value>
+  </data>
+  <data name="QaSmooth_AngularUnit" xml:space="preserve">
+    <value>Unit of 'limit', default = 'radian'.</value>
+  </data>
 </root>

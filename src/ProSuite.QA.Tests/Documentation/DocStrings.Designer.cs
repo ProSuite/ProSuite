@@ -19,7 +19,7 @@ namespace ProSuite.QA.Tests.Documentation {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class DocStrings {
@@ -4344,6 +4344,15 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unit of &apos;limit&apos;, default = &apos;radian&apos;..
+        /// </summary>
+        public static string QaLineIntersectAngle_AngularUnit {
+            get {
+                return ResourceManager.GetString("QaLineIntersectAngle_AngularUnit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to include z-coordinate for checking.
         /// </summary>
         public static string QaLineIntersectAngle_is3D {
@@ -4837,6 +4846,15 @@ namespace ProSuite.QA.Tests.Documentation {
         public static string QaMinAngle_1 {
             get {
                 return ResourceManager.GetString("QaMinAngle_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unit of &apos;limit&apos;, default = &apos;radian&apos;..
+        /// </summary>
+        public static string QaMinAngle_AngularUnit {
+            get {
+                return ResourceManager.GetString("QaMinAngle_AngularUnit", resourceCulture);
             }
         }
         
@@ -9075,6 +9093,15 @@ namespace ProSuite.QA.Tests.Documentation {
         public static string QaSmooth_0 {
             get {
                 return ResourceManager.GetString("QaSmooth_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unit of &apos;limit&apos;, default = &apos;radian&apos;..
+        /// </summary>
+        public static string QaSmooth_AngularUnit {
+            get {
+                return ResourceManager.GetString("QaSmooth_AngularUnit", resourceCulture);
             }
         }
         
