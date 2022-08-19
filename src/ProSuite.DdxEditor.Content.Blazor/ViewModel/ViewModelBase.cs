@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Microsoft.AspNetCore.Components;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.UI.ScreenBinding;
 using ProSuite.Commons.Validation;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.QA.Core;
@@ -27,10 +26,6 @@ public abstract class ViewModelBase : Observable
 		DataType = parameter.Type;
 
 		_value = value ?? TestParameterTypeUtils.GetDefault(DataType);
-
-		var singlePropertyAccessor = SinglePropertyAccessor.Build<string>(nameof(ParameterName));
-
-		NotificationMessage[] messages = singlePropertyAccessor.Validate(ParameterName);
 	}
 
 	[CanBeNull]
