@@ -34,7 +34,7 @@ namespace ProSuite.QA.Tests.Transformers
 			return transformedFc;
 		}
 
-		private class TransformedFc : TransformedFeatureClass, ITransformedValue
+		private class TransformedFc : TransformedFeatureClass, IDataContainerAware
 		{
 			public TransformedFc(IReadOnlyFeatureClass intersected,
 			                     IReadOnlyFeatureClass intersecting,
@@ -64,7 +64,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 			public IList<IReadOnlyTable> InvolvedTables { get; }
 
-			public ISearchable DataContainer
+			public IDataContainer DataContainer
 			{
 				get => BackingDs.DataContainer;
 				set => BackingDs.DataContainer = value;
@@ -169,7 +169,7 @@ namespace ProSuite.QA.Tests.Transformers
 					{
 						IGeometry intersectingGeom = ((IReadOnlyFeature) intersecting).Shape;
 						IGeometry toIntersectGeom = ((IReadOnlyFeature) toIntersect).Shape;
-						var op = (ITopologicalOperator)toIntersectGeom;
+						var op = (ITopologicalOperator) toIntersectGeom;
 						if (((IRelationalOperator) op).Disjoint(intersectingGeom))
 						{
 							continue;
@@ -194,7 +194,7 @@ namespace ProSuite.QA.Tests.Transformers
 						else if (toIntersectGeom is IArea pg)
 						{
 							double fullArea = pg.Area;
-							double partArea = ((IArea)intersected).Area;
+							double partArea = ((IArea) intersected).Area;
 							partIntersected = partArea / fullArea;
 						}
 						else if (toIntersectGeom is IPointCollection mp)

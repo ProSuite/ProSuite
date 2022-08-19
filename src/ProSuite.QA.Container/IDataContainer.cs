@@ -8,7 +8,7 @@ using ProSuite.QA.Container.TestContainer;
 
 namespace ProSuite.QA.Container
 {
-	public interface ISearchable
+	public interface IDataContainer
 	{
 		///// <summary>
 		///// returns the extent of the area for which data are currently loaded in the cache of the ISearchable instance
@@ -21,9 +21,9 @@ namespace ProSuite.QA.Container
 		double GetSearchTolerance(IReadOnlyTable table);
 
 		IEnumerable<IReadOnlyRow> Search([NotNull] IReadOnlyTable table,
-		                         [NotNull] IQueryFilter queryFilter,
-		                         [NotNull] QueryFilterHelper filterHelper,
-		                         [CanBeNull] IGeometry cacheGeometry = null);
+		                                 [NotNull] IQueryFilter queryFilter,
+		                                 [NotNull] QueryFilterHelper filterHelper,
+		                                 [CanBeNull] IGeometry cacheGeometry = null);
 
 		[CanBeNull]
 		UniqueIdProvider GetUniqueIdProvider([NotNull] IReadOnlyTable table);

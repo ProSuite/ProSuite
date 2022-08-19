@@ -72,7 +72,8 @@ namespace ProSuite.QA.Tests.Transformers
 		bool IContainerTransformer.HandlesContainer => HandlesContainer;
 		protected virtual bool HandlesContainer => true;
 
-		private class TransformedFc : TransformedFeatureClass, ITransformedValue, ITransformedTable
+		private class TransformedFc : TransformedFeatureClass, IDataContainerAware,
+		                              ITransformedTable
 		{
 			public TransformedFc(IReadOnlyFeatureClass fc, esriGeometryType derivedShapeType,
 			                     IGeometryTransformer transformer, string name)
@@ -114,7 +115,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 			public IList<IReadOnlyTable> InvolvedTables { get; }
 
-			public ISearchable DataContainer
+			public IDataContainer DataContainer
 			{
 				get => BackingDs.DataContainer;
 				set => BackingDs.DataContainer = value;

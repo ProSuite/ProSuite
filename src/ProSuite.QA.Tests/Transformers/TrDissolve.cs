@@ -190,7 +190,8 @@ namespace ProSuite.QA.Tests.Transformers
 			}
 		}
 
-		private class TransformedFc : TransformedFeatureClass, ITransformedTable, ITransformedValue,
+		private class TransformedFc : TransformedFeatureClass, ITransformedTable,
+		                              IDataContainerAware,
 		                              IHasSearchDistance
 		{
 			public TableView TableView { get; set; }
@@ -262,7 +263,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 			public IList<IReadOnlyTable> InvolvedTables { get; }
 
-			public ISearchable DataContainer
+			public IDataContainer DataContainer
 			{
 				get => BackingDs.DataContainer;
 				set => BackingDs.DataContainer = value;

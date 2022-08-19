@@ -126,7 +126,7 @@ namespace ProSuite.QA.Tests.Transformers
 				       conciseMessage: true) { }
 		}
 
-		private class TransformedFc : TransformedFeatureClass, ITransformedValue
+		private class TransformedFc : TransformedFeatureClass, IDataContainerAware
 		{
 			private string _constraintSql;
 			private JoinConstraint _constraint;
@@ -177,7 +177,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 			public IList<IReadOnlyTable> InvolvedTables { get; }
 
-			public ISearchable DataContainer
+			public IDataContainer DataContainer
 			{
 				get => BackingDs.DataContainer;
 				set => BackingDs.DataContainer = value;
