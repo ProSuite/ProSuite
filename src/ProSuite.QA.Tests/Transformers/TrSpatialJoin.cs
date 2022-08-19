@@ -425,7 +425,7 @@ namespace ProSuite.QA.Tests.Transformers
 				// For several source rows, they all must be grouped into one by calculation functions:
 				// TODO: Are there exceptions? Group-by value? -> Test
 
-				List<FieldInfo> calculatedFields = sourceTableFields.CalculatedFields;
+				IReadOnlyList<FieldInfo> calculatedFields = sourceTableFields.CalculatedFields;
 
 				Assert.NotNull(calculatedFields,
 				               "No calculated fields definitions for rows to group");
@@ -440,7 +440,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 			private static IEnumerable<CalculatedValue> GetCalculatedValues(
 				[NotNull] IList<IReadOnlyRow> sources,
-				[NotNull] IList<FieldInfo> calculatedFields,
+				[NotNull] IReadOnlyList<FieldInfo> calculatedFields,
 				[NotNull] TableView tableView)
 			{
 				// NOTE: The tableView never contains columns from several source tables

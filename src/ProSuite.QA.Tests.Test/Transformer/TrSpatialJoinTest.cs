@@ -241,8 +241,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				                  "Nr as alias_Nr",
 				                  "MIN(OBJECTID) AS minObi",
 				                  "Count(Nr) as AnzUnqualifiziert",
-				                  "SUM(Nr) as SummeUnqualifiziert",
-				                  //"SUM(alias_Nr) as SummeQuali" // TODO: This fails
+				                  "SUM(Nr) as SummeUnqualifiziert"
 			                  };
 
 			// NOTE: Cross-Field Calculations are only supported on t1 and only for
