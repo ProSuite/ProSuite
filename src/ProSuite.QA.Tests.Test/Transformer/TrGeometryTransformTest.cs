@@ -416,7 +416,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 		}
 	}
 
-	public class UncachedDataContainer : ISearchable
+	public class UncachedDataContainer : IDataContainer
 	{
 		private readonly WKSEnvelope _extent;
 
