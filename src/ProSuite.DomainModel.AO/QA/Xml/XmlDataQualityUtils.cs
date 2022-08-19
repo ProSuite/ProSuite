@@ -1702,7 +1702,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 				{
 					QualityCondition qualityCondition = element.QualityCondition;
 
-					foreach (Dataset dataset in qualityCondition.GetDatasetParameterValues())
+					foreach (Dataset dataset in qualityCondition.GetDatasetParameterValues(true, true))
 					{
 						Model model = (Model)dataset.Model;
 						if (result.ContainsKey(model))

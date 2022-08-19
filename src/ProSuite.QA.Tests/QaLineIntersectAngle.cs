@@ -7,6 +7,9 @@ using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
+using ProSuite.QA.Container.Geometry;
+using ProSuite.QA.Container.TestSupport;
+using ProSuite.QA.Core;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
@@ -23,8 +26,12 @@ namespace ProSuite.QA.Tests
 	[UsedImplicitly]
 	public class QaLineIntersectAngle : QaSpatialRelationSelfBase
 	{
+		private const AngleUnit _defaultAngularUnit = DefaultAngleUnit;
+
 		private readonly bool _is3D;
-		private readonly double _limit;
+		private readonly double _limitCstr;
+
+		private double _limitRad;
 
 		#region issue codes
 
@@ -55,7 +62,8 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaLineIntersectAngle_is3D))] bool is3d)
 			: base(polylineClasses, esriSpatialRelEnum.esriSpatialRelCrosses)
 		{
-			_limit = limit;
+			_limitCstr = limit;
+
 			_is3D = is3d;
 		}
 
@@ -83,9 +91,26 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
+		[TestParameter(_defaultAngularUnit)]
+		[Doc(nameof(DocStrings.QaLineIntersectAngle_AngularUnit))]
+		public AngleUnit AngularUnit
+		{
+			get { return AngleUnit; }
+			set
+			{
+				AngleUnit = value;
+				_limitRad = -1; // gets initialized in next FindErrors()
+			}
+		}
+
 		protected override int FindErrors(IReadOnlyRow row1, int tableIndex1,
 										  IReadOnlyRow row2, int tableIndex2)
 		{
+			if (_limitRad <= 0)
+			{
+				_limitRad = FormatUtils.AngleInUnits2Radians(_limitCstr, AngleUnit);
+			}
+
 			if (row1 == row2)
 			{
 				return NoError;
@@ -119,7 +144,7 @@ namespace ProSuite.QA.Tests
 
 				double angleRadians = intersection.Angle;
 
-				if (angleRadians >= _limit)
+				if (angleRadians >= _limitRad)
 				{
 					// angle is allowed
 					continue;
@@ -128,7 +153,7 @@ namespace ProSuite.QA.Tests
 				// The angle is smaller than limit. Report error
 				string description = string.Format("Intersect angle {0} < {1}",
 				                                   FormatAngle(angleRadians, "N2"),
-				                                   FormatAngle(_limit, "N2"));
+				                                   FormatAngle(_limitRad, "N2"));
 
 				errorCount += ReportError(
 					description, InvolvedRowUtils.GetInvolvedRows(row1, row2),

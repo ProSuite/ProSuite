@@ -11,7 +11,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			_row = row;
 		}
 
-		public object GetValue(int index, bool ensureRcwRefCountIncrease = false)
+		public object GetValue(int index, bool increaseRcwRefCount = false)
 		{
 			return _row.Value[index];
 		}

@@ -5,7 +5,9 @@ using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
+using ProSuite.Commons.AO.Geodatabase.GdbSchema.RowValues;
 using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.TestSupport;
@@ -27,7 +29,8 @@ namespace ProSuite.QA.Tests.Transformers
 
 		[DocTr(nameof(DocTrStrings.TrSpatialJoin_0))]
 		public TrSpatialJoin(
-			[NotNull] [DocTr(nameof(DocTrStrings.TrSpatialJoin_t0))] IReadOnlyFeatureClass t0,
+			[NotNull] [DocTr(nameof(DocTrStrings.TrSpatialJoin_t0))]
+			IReadOnlyFeatureClass t0,
 			[NotNull] [DocTr(nameof(DocTrStrings.TrSpatialJoin_t1))]
 			IReadOnlyFeatureClass t1)
 			: base(CastToTables(t0, t1)) { }
@@ -43,7 +46,6 @@ namespace ProSuite.QA.Tests.Transformers
 		[TestParameter(_defaultSearchOption)]
 		[DocTr(nameof(DocTrStrings.TrSpatialJoin_NeighborSearchOption))]
 		public SearchOption NeighborSearchOption { get; set; }
-
 
 		// Remark: Grouped must come in Code before T1Attributes !
 		[TestParameter]
@@ -73,66 +75,47 @@ namespace ProSuite.QA.Tests.Transformers
 			transformedFc.Grouped = Grouped;
 			transformedFc.NeighborSearchOption = NeighborSearchOption;
 
-			AddFields(transformedFc, T0Attributes, InvolvedTables[0], isGrouped: false);
-			AddFields(transformedFc, T1Attributes, InvolvedTables[1], isGrouped: Grouped, T1CalcAttributes);
+			// Suggestion for multi-table transformers: fields are only qualified to avoid duplicates
+			// using <input table name>_ 
+			TransformedTableFields t0Fields = new TransformedTableFields(InvolvedTables[0])
+			                                  {NonUserDefinedFieldPrefix = "t0."};
+			TransformedTableFields t1Fields = new TransformedTableFields(InvolvedTables[1])
+			                                  {
+				                                  NonUserDefinedFieldPrefix = "t1.",
+				                                  AreResultRowsGrouped = Grouped
+			                                  };
 
-			AddFields(transformedFc, InvolvedTables[0], "t0");
+			transformedFc.TableFieldsBySource.Add(InvolvedTables[0], t0Fields);
+			transformedFc.TableFieldsBySource.Add(InvolvedTables[1], t1Fields);
+
+			// Add the minimal fields that mus always be present:
+			t0Fields.AddOIDField(transformedFc, "OBJECTID");
+			t0Fields.AddShapeField(transformedFc);
+
+			// Add fields defined by Attribute parameter:
+			if (T0Attributes != null)
+				t0Fields.AddUserDefinedFields(T0Attributes, transformedFc);
+
+			if (T1Attributes != null)
+				t1Fields.AddUserDefinedFields(T1Attributes, transformedFc, T1CalcAttributes);
+
+			//AddFields(transformedFc, T0Attributes, InvolvedTables[0], isGrouped: false);
+			//AddFields(transformedFc, T1Attributes, InvolvedTables[1], isGrouped: Grouped, T1CalcAttributes);
+
+			// Add all fields (not already defined by the user?)
+			t0Fields.AddAllFields(transformedFc, false);
 			if (! Grouped)
 			{
-				AddFields(transformedFc, InvolvedTables[1], "t1");
+				t1Fields.AddAllFields(transformedFc, false);
 			}
+
+			//AddFields(transformedFc, InvolvedTables[0], "t0");
+			//if (!Grouped)
+			//{
+			//	AddFields(transformedFc, InvolvedTables[1], "t1");
+			//}
 
 			return transformedFc;
-		}
-
-		private void AddFields(TransformedFc gdbTable, IReadOnlyTable tbl, string prefix)
-		{
-			for (int iField = 0; iField < tbl.Fields.FieldCount; iField++)
-			{
-				IField f = tbl.Fields.Field[iField];
-				gdbTable.FieldsT.AddFields(FieldUtils.CreateField($"{prefix}.{f.Name}", f.Type));
-			}
-		}
-
-
-		private void AddFields([NotNull] TransformedFc transformedFc,
-		                       [CanBeNull] IList<string> fieldNames,
-							   IReadOnlyTable sourceTable, bool isGrouped,
-							   [CanBeNull] IList<string> calcAttributes = null)
-		{
-			if (fieldNames == null)
-			{
-				return;
-			}
-
-			Dictionary<string, string> expressionDict = ExpressionUtils.GetFieldDict(fieldNames);
-			Dictionary<string, string> aliasFieldDict =
-				ExpressionUtils.CreateAliases(expressionDict);
-			Dictionary<string, string> calcExpressionDict = null;
-
-			if (calcAttributes?.Count > 0)
-			{
-				calcExpressionDict = ExpressionUtils.GetFieldDict(calcAttributes);
-				Dictionary<string, string> calcAliasFieldDict = ExpressionUtils.CreateAliases(calcExpressionDict);
-
-				foreach (KeyValuePair<string, string> pair in aliasFieldDict)
-				{
-					calcAliasFieldDict.Add(pair.Key, pair.Value);
-				}
-				aliasFieldDict = calcAliasFieldDict;
-			}
-
-			TableView tv =
-				TableViewFactory.Create(sourceTable, expressionDict, aliasFieldDict, isGrouped, calcExpressionDict);
-
-			transformedFc.TableViews =
-				transformedFc.TableViews ?? new Dictionary<IReadOnlyTable, TableView>();
-			transformedFc.TableViews[sourceTable] = tv;
-
-			foreach (string field in expressionDict.Keys)
-			{
-				transformedFc.AddField(field, tv);
-			}
 		}
 
 		private class JoinConstraint : RowPairCondition
@@ -159,19 +142,12 @@ namespace ProSuite.QA.Tests.Transformers
 				       workspace: new GdbWorkspace(new TransformerWorkspace()))
 			{
 				_parent = parent;
-				InvolvedTables = new List<IReadOnlyTable> { t0, t1 };
-
-				IGeometryDef geomDef =
-					t0.Fields.Field[
-						t0.Fields.FindField(t0.ShapeFieldName)].GeometryDef;
-				FieldsT.AddFields(
-					FieldUtils.CreateOIDField(),
-					FieldUtils.CreateShapeField(
-						t0.ShapeType,
-						geomDef.SpatialReference, geomDef.GridSize[0], geomDef.HasZ, geomDef.HasM));
+				InvolvedTables = new List<IReadOnlyTable> {t0, t1};
 			}
 
-			public Dictionary<IReadOnlyTable, TableView> TableViews { get; set; }
+			public Dictionary<IReadOnlyTable, TransformedTableFields> TableFieldsBySource { get; }
+				= new Dictionary<IReadOnlyTable, TransformedTableFields>();
+
 			public bool Grouped { get; set; }
 			public bool OuterJoin { get; set; }
 			public SearchOption NeighborSearchOption { get; set; }
@@ -199,26 +175,6 @@ namespace ProSuite.QA.Tests.Transformers
 				return new TfcFeature(oid, this);
 			}
 
-			public Dictionary<TableView, List<FieldInfo>> CalcFields { get; private set; }
-
-			public void AddField(string field, TableView tableView)
-			{
-				IField f =
-					FieldUtils.CreateField(
-						field, FieldUtils.GetFieldType(tableView.GetColumnType(field)));
-				FieldsT.AddFields(f);
-
-				CalcFields = CalcFields ?? new Dictionary<TableView, List<FieldInfo>>();
-
-				if (! CalcFields.TryGetValue(tableView, out List<FieldInfo> fieldInfos))
-				{
-					fieldInfos = new List<FieldInfo>();
-					CalcFields.Add(tableView, fieldInfos);
-				}
-
-				fieldInfos.Add(new FieldInfo(field, Fields.FindField(field), -1));
-			}
-
 			public IList<IReadOnlyTable> InvolvedTables { get; }
 
 			public ISearchable DataContainer
@@ -242,6 +198,7 @@ namespace ProSuite.QA.Tests.Transformers
 				{
 					return GetBaseValue(0, f.Name.Substring(3));
 				}
+
 				if (f.Name.StartsWith("t1."))
 				{
 					return GetBaseValue(1, f.Name.Substring(3));
@@ -253,13 +210,12 @@ namespace ProSuite.QA.Tests.Transformers
 			private object GetBaseValue(int baseRowIndex, string attrName)
 			{
 				int baseRowsIdx = Table.Fields.FindField(InvolvedRowUtils.BaseRowField);
-				IList<IReadOnlyRow> baseRows = (IList<IReadOnlyRow>)get_Value(baseRowsIdx);
+				IList<IReadOnlyRow> baseRows = (IList<IReadOnlyRow>) get_Value(baseRowsIdx);
 				IReadOnlyRow baseRow = baseRows[baseRowIndex];
 
 				int idx = baseRow.Table.FindField(attrName);
 				return baseRow.get_Value(idx);
 			}
-
 		}
 
 		private class TransformedDataset : TransformedBackingDataset
@@ -295,12 +251,11 @@ namespace ProSuite.QA.Tests.Transformers
 			public override IEnumerable<VirtualRow> Search(IQueryFilter filter, bool recycling)
 			{
 				IRelationalOperator t1LoadedExtent = null;
-				TransformedFc r = (TransformedFc)Resulting;
+				TransformedFc r = (TransformedFc) Resulting;
 				if (r.NeighborSearchOption == SearchOption.All)
 				{
-					t1LoadedExtent = (IRelationalOperator)DataContainer.GetLoadedExtent(_t1);
+					t1LoadedExtent = (IRelationalOperator) DataContainer.GetLoadedExtent(_t1);
 				}
-
 
 				ISpatialFilter joinFilter = new SpatialFilterClass();
 				joinFilter.SpatialRel = esriSpatialRelEnum.esriSpatialRelEnvelopeIntersects;
@@ -333,7 +288,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 						if (! grouped)
 						{
-							var f = CreateFeature(toJoin, new[] { joined });
+							var f = CreateFeature(toJoin, new[] {joined});
 							//res.CreateFeature();
 							yield return f;
 						}
@@ -352,7 +307,7 @@ namespace ProSuite.QA.Tests.Transformers
 			}
 
 			private IEnumerable<IReadOnlyRow> EnumNeighbors(
-				[NotNull]ISpatialFilter joinFilter,
+				[NotNull] ISpatialFilter joinFilter,
 				[CanBeNull] IRelationalOperator loaded)
 			{
 				foreach (var joined in DataContainer.Search(
@@ -365,6 +320,7 @@ namespace ProSuite.QA.Tests.Transformers
 				{
 					yield break;
 				}
+
 				if (loaded.Contains(joinFilter.Geometry))
 				{
 					yield break;
@@ -384,50 +340,159 @@ namespace ProSuite.QA.Tests.Transformers
 				}
 			}
 
-			private GdbFeature CreateFeature(IReadOnlyRow toJoin, IList<IReadOnlyRow> joineds)
+			private GdbFeature CreateFeature([NotNull] IReadOnlyRow toJoin,
+			                                 [NotNull] IList<IReadOnlyRow> joineds)
 			{
-				GdbFeature f = Resulting.CreateFeature();
-				f.Shape = ((IReadOnlyFeature) toJoin).Shape;
-				f.Store();
+				var transformedFc = ((TransformedFc) Resulting);
 
-				List<IReadOnlyRow> involved = new List<IReadOnlyRow>(joineds.Count + 1);
-				involved.Add(toJoin);
-				involved.AddRange(joineds);
-				f.set_Value(
-					Resulting.FindField(InvolvedRowUtils.BaseRowField),
-					involved);
+				TransformedTableFields toJoinTableFields = transformedFc.TableFieldsBySource[_t0];
+				TransformedTableFields joinedTableFields = transformedFc.TableFieldsBySource[_t1];
 
-				SetValues(f, new[] { toJoin });
-				SetValues(f, joineds);
+				// Build an aggregate value list consisting of the toJoin row, the baseRows and
+				// the extra calculated values;
+				var rowValues = new MultiListValues(joineds.Count + 2)
+				                {
+					                AllowMissingFieldMapping = true
+				                };
 
-				return f;
+				List<IReadOnlyRow> baseRows = new List<IReadOnlyRow>(joineds.Count + 1);
+				baseRows.Add(toJoin);
+				baseRows.AddRange(joineds);
+
+				List<CalculatedValue> extraValues = new List<CalculatedValue>();
+
+				// 1. The toJoin row, wrapped in a value list:
+				var toJoinValues = new ReadOnlyRowBasedValues(toJoin);
+				rowValues.AddList(toJoinValues, toJoinTableFields.FieldIndexMapping);
+
+				extraValues.AddRange(GetCalculatedValues(toJoin, toJoinTableFields, baseRows));
+
+				// 2. The joined row(s):
+				if (joineds.Count == 1)
+				{
+					var joinedValues = new ReadOnlyRowBasedValues(joineds[0]);
+					rowValues.AddList(joinedValues, joinedTableFields.FieldIndexMapping);
+
+					extraValues.AddRange(GetCalculatedValues(joineds[0], joinedTableFields));
+				}
+				else
+				{
+					extraValues.AddRange(GetCalculatedValues(joineds, joinedTableFields));
+				}
+
+				// Add all the collected extra values with their own copy-matrix:
+				IValueList simpleList =
+					ToSimpleValueList(extraValues, out IDictionary<int, int> extraCopyMatrix);
+
+				rowValues.AddList(simpleList, extraCopyMatrix);
+
+				return new GdbFeature(toJoin.OID, transformedFc, rowValues);
 			}
 
-			private void SetValues(IFeature feature, IList<IReadOnlyRow> sources)
+			private IEnumerable<CalculatedValue> GetCalculatedValues(
+				[NotNull] IReadOnlyRow sourceRow,
+				[NotNull] TransformedTableFields sourceTableFields,
+				[CanBeNull] IList<IReadOnlyRow> involvedBaseRowsToAdd = null)
 			{
-				TransformedFc r = (TransformedFc) Resulting;
+				// Base rows, if requested:
+				if (involvedBaseRowsToAdd != null)
+				{
+					int baseRowsIdx = Resulting.FindField(InvolvedRowUtils.BaseRowField);
+					yield return new CalculatedValue(baseRowsIdx, involvedBaseRowsToAdd);
+				}
 
-				TableView tv = null;
+				if (sourceTableFields.CalculatedFields != null)
+				{
+					var sources = new List<IReadOnlyRow> {sourceRow};
+					foreach (CalculatedValue calculatedValue in GetCalculatedValues(
+						         sources, sourceTableFields.CalculatedFields,
+						         Assert.NotNull(sourceTableFields.TableView)))
+					{
+						yield return calculatedValue;
+					}
+				}
+			}
+
+			private static IEnumerable<CalculatedValue> GetCalculatedValues(
+				[NotNull] IList<IReadOnlyRow> rowsToGroup,
+				[NotNull] TransformedTableFields sourceTableFields)
+			{
+				if (rowsToGroup.Count == 0)
+				{
+					yield break;
+				}
+
+				// For several source rows, they all must be grouped into one by calculation functions:
+				// TODO: Are there exceptions? Group-by value? -> Test
+
+				List<FieldInfo> calculatedFields = sourceTableFields.CalculatedFields;
+
+				Assert.NotNull(calculatedFields,
+				               "No calculated fields definitions for rows to group");
+
+				foreach (CalculatedValue calculatedValue in GetCalculatedValues(
+					         rowsToGroup, calculatedFields,
+					         Assert.NotNull(sourceTableFields.TableView)))
+				{
+					yield return calculatedValue;
+				}
+			}
+
+			private static IEnumerable<CalculatedValue> GetCalculatedValues(
+				[NotNull] IList<IReadOnlyRow> sources,
+				[NotNull] IList<FieldInfo> calculatedFields,
+				[NotNull] TableView tableView)
+			{
+				// NOTE: The tableView never contains columns from several source tables
+
 				DataRow tableRow = null;
 				foreach (IReadOnlyRow row in sources)
 				{
-					if (tv == null)
-					{
-						r.TableViews?.TryGetValue(row.Table, out tv);
-					}
-
-					tableRow = tv?.Add(row);
+					tableRow = tableView.Add(row);
 				}
 
 				if (tableRow != null)
 				{
-					foreach (FieldInfo fieldInfo in r.CalcFields[tv])
+					Assert.NotNull(calculatedFields);
+
+					foreach (FieldInfo fieldInfo in calculatedFields)
 					{
-						feature.set_Value(fieldInfo.Index, tableRow[fieldInfo.Name]);
+						yield return new CalculatedValue(targetIndex: fieldInfo.Index,
+						                                 value: tableRow[fieldInfo.Name]);
 					}
 				}
 
-				tv?.ClearRows();
+				tableView.ClearRows();
+			}
+
+			private static IValueList ToSimpleValueList(List<CalculatedValue> extraValues,
+			                                            out IDictionary<int, int> extraCopyMatrix)
+			{
+				extraCopyMatrix = new Dictionary<int, int>();
+				IValueList simpleList = new SimpleValueList(extraValues.Count);
+				int index = 0;
+				foreach (CalculatedValue calculated in extraValues)
+				{
+					simpleList.SetValue(index, calculated.Value);
+
+					// Update the target-source copy matrix to redirect from the calculated index
+					// in the target to the local row-value count + index:
+					extraCopyMatrix[calculated.TargetIndex] = index++;
+				}
+
+				return simpleList;
+			}
+
+			private class CalculatedValue
+			{
+				public CalculatedValue(int targetIndex, object value)
+				{
+					TargetIndex = targetIndex;
+					Value = value;
+				}
+
+				public object Value { get; set; }
+				public int TargetIndex { get; set; }
 			}
 		}
 	}

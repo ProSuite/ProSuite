@@ -6,11 +6,11 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		/// Gets the value at the specified index
 		/// </summary>
 		/// <param name="index"></param>
-		/// <param name="ensureRcwRefCountIncrease">In case of COM objects the RCW reference
+		/// <param name="increaseRcwRefCount">In case of COM objects the RCW reference
 		/// count must be increased exactly by 1 when getting the object in case it is released
 		/// after use. Otherwise the RCW reference count will become incorrect.</param>
 		/// <returns></returns>
-		object GetValue(int index, bool ensureRcwRefCountIncrease = false);
+		object GetValue(int index, bool increaseRcwRefCount = false);
 
 		/// <summary>
 		/// Sets the specified object at the specified index.

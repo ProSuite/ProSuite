@@ -1,3 +1,4 @@
+using System;
 using System.Windows.Forms;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DdxEditor.Content.QA.InstanceConfig;
@@ -25,7 +26,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			QualityConditionControl control;
 
 #if NET6_0
-			ServiceProvider provider = CreateIoCContainer();
+			IServiceProvider provider = CreateIoCContainer();
 
 			var viewModel =
 				new InstanceConfigurationViewModel<QualityCondition>(
@@ -55,7 +56,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			InstanceConfigurationControl control;
 
 #if NET6_0
-			ServiceProvider provider = CreateIoCContainer();
+			IServiceProvider provider = CreateIoCContainer();
 
 			var viewModel =
 				new InstanceConfigurationViewModel<InstanceConfiguration>(
@@ -75,14 +76,17 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			return control;
 		}
 
-		private static ServiceProvider CreateIoCContainer()
+		private static IServiceProvider CreateIoCContainer()
 		{
+#if NET6_0
 			IServiceCollection serviceCollection = new ServiceCollection();
 			serviceCollection.AddWindowsFormsBlazorWebView();
 			serviceCollection.AddSingleton<IEventAggregator>(_ => new EventAggregator());
 
-			ServiceProvider provider = serviceCollection.BuildServiceProvider();
+			IServiceProvider provider = serviceCollection.BuildServiceProvider();
 			return provider;
+#endif
+			throw new NotImplementedException();
 		}
 	}
 }

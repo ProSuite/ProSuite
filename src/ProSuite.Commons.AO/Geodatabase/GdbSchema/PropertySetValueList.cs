@@ -15,11 +15,11 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		// object again (e.g. by calling GdbFeature.Shape again)
 		private IPropertySet ValueSet { get; } = new PropertySet();
 
-		public object GetValue(int index, bool ensureRcwRefCountIncrease = false)
+		public object GetValue(int index, bool increaseRcwRefCount = false)
 		{
 			var name = Convert.ToString(index);
 
-			if (ensureRcwRefCountIncrease)
+			if (increaseRcwRefCount)
 			{
 				// Make sure that the marshal-reference-count is increased by exactly 1,
 				// i.e. do not call PropertySetUtils.HasProperty
