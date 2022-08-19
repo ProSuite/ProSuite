@@ -1,10 +1,8 @@
 using System.Collections.Generic;
-using System.Linq;
 using System.Windows.Forms;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Misc;
-using ProSuite.Commons.Text;
 using ProSuite.Commons.UI.Finder;
 using ProSuite.DdxEditor.Content.Blazor.View;
 using ProSuite.DomainModel.AO.QA;
@@ -20,7 +18,6 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 	[NotNull] private readonly IInstanceConfigurationViewModel _viewModel;
 
 	[CanBeNull] private string _filterExpression;
-	[CanBeNull] private string _rowFilterExpression;
 	[CanBeNull] private readonly string _errorMessage;
 
 	private bool _usedAsReferenceData;
@@ -50,7 +47,7 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 
 		ComponentType = typeof(DatasetTestParameterValueBlazor);
 		ComponentParameters.Add("ViewModel", this);
-		
+
 		_errorMessage = "Dataset not set";
 		Validation = () => DisplayValue != null;
 
@@ -72,14 +69,6 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 	{
 		get => _filterExpression;
 		set => SetProperty(ref _filterExpression, value);
-	}
-
-	[CanBeNull]
-	[UsedImplicitly]
-	public string RowFilterExpression
-	{
-		get => _rowFilterExpression;
-		set => SetProperty(ref _rowFilterExpression, value);
 	}
 
 	[UsedImplicitly]
@@ -133,7 +122,7 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 		// which updates the entity
 		Value = source.Match(d => d?.Name, t => t.Name);
 	}
-	
+
 	protected override string GetErrorMessageCore()
 	{
 		return _errorMessage;
