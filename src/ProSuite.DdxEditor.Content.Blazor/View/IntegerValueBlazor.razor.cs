@@ -1,44 +1,10 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Components;
-using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.DdxEditor.Content.Blazor.ViewModel;
+namespace ProSuite.DdxEditor.Content.Blazor.View;
 
-namespace ProSuite.DdxEditor.Content.Blazor.View
+public partial class IntegerValueBlazor : TestParameterValueBlazorBase<int?>
 {
-	// todo daro make generic for double and integer?
-	public partial class IntegerValueBlazor : IDisposable
+	public int IntegerValue
 	{
-		[Parameter]
-		public ScalarTestParameterValueViewModel ViewModel { get; set; }
-
-		[CanBeNull]
-		public object Value
-		{
-			get => ViewModel.Value;
-			set => ViewModel.Value = value;
-		}
-
-		public int IntegerValue
-		{
-			get
-			{
-				if (Value != null)
-				{
-					return (int) Value;
-				}
-
-				return 0;
-			}
-			set => Value = value;
-		}
-
-		public void Dispose()
-		{
-			ViewModel?.Dispose();
-		}
+		get => GetValue() ?? -1;
+		set => SetValue(value);
 	}
 }

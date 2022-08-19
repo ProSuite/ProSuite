@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using ProSuite.Commons.DomainModels;
-using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.QA.Core;
@@ -14,12 +12,7 @@ namespace ProSuite.DomainModel.Core.QA
 		[UsedImplicitly] private Dataset _datasetValue;
 		[UsedImplicitly] private string _filterExpression;
 		[UsedImplicitly] private bool _usedAsReferenceData;
-
-		[UsedImplicitly] private readonly IList<RowFilterConfiguration> _rowFilterConfigurations =
-			new List<RowFilterConfiguration>();
-
-		[UsedImplicitly] private string _rowFiltersExpression;
-
+		
 		#region Constructors
 
 		/// <summary>
@@ -78,7 +71,7 @@ namespace ProSuite.DomainModel.Core.QA
 					return null;
 				}
 
-				if (!string.IsNullOrEmpty(_filterExpression))
+				if (! string.IsNullOrEmpty(_filterExpression))
 				{
 					result = result + " ; " + _filterExpression;
 				}
@@ -160,37 +153,7 @@ namespace ProSuite.DomainModel.Core.QA
 			get { return _filterExpression; }
 			set { _filterExpression = value; }
 		}
-
-		[NotNull]
-		public IList<RowFilterConfiguration> RowFilterConfigurations =>
-			new ReadOnlyList<RowFilterConfiguration>(_rowFilterConfigurations);
-
-		public RowFilterConfiguration AddRowFilter([NotNull] RowFilterConfiguration rowFilterConfiguration)
-		{
-			Assert.ArgumentNotNull(rowFilterConfiguration, nameof(rowFilterConfiguration));
-
-			_rowFilterConfigurations.Add(rowFilterConfiguration);
-
-			return rowFilterConfiguration;
-		}
-
-		public void RemoveRowFilter([NotNull] RowFilterConfiguration rowFilterConfiguration)
-		{
-			_rowFilterConfigurations.Remove(rowFilterConfiguration);
-		}
-
-		public void ClearRowFilters()
-		{
-			_rowFilterConfigurations.Clear();
-		}
 		
-		[CanBeNull]
-		public string RowFiltersExpression
-		{
-			get => _rowFiltersExpression;
-			set => _rowFiltersExpression = value;
-		}
-
 		public bool UsedAsReferenceData
 		{
 			get { return _usedAsReferenceData; }
@@ -245,7 +208,7 @@ namespace ProSuite.DomainModel.Core.QA
 				             _datasetValue = _datasetValue,
 				             _filterExpression = _filterExpression,
 				             _usedAsReferenceData = _usedAsReferenceData,
-							 ValueSource = ValueSource
+				             ValueSource = ValueSource
 			             };
 
 			return result;
@@ -294,9 +257,8 @@ namespace ProSuite.DomainModel.Core.QA
 
 			bool equal = TestParameterName == o.TestParameterName &&
 			             DatasetValue == o.DatasetValue &&
-						 ValueSource == o.ValueSource &&
-						 RowFiltersExpression == o.RowFiltersExpression &&
-						 FilterExpression == o.FilterExpression &&
+			             ValueSource == o.ValueSource &&
+			             FilterExpression == o.FilterExpression &&
 			             UsedAsReferenceData == o.UsedAsReferenceData;
 
 			return equal;

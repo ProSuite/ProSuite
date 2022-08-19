@@ -305,7 +305,8 @@ namespace ProSuite.DomainModel.AO.QA
 				return distinctCategories[0].Name;
 			}
 
-			return StringUtils.Concatenate(distinctCategories.OrderBy(c => c.Name), c => c.Name,
+			return StringUtils.Concatenate(distinctCategories.OrderBy(c => c?.Name),
+			                               c => c?.Name ?? "<no category>",
 			                               ", ");
 		}
 

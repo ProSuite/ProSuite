@@ -21,6 +21,7 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 
 	[CanBeNull] private string _filterExpression;
 	[CanBeNull] private string _rowFilterExpression;
+	[CanBeNull] private readonly string _errorMessage;
 
 	private bool _usedAsReferenceData;
 
@@ -32,9 +33,9 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 		[CanBeNull] string filterExpression,
 		bool usedAsReferenceData,
 		[NotNull] Either<Dataset, TransformerConfiguration> datasetSource,
-		[CanBeNull] IEnumerable<RowFilterConfiguration> rowFilters,
-		[NotNull] IInstanceConfigurationViewModel observer) :
-		base(parameter, value, observer)
+		[NotNull] IInstanceConfigurationViewModel observer,
+		bool required) :
+		base(parameter, value, observer, required)
 	{
 		Assert.ArgumentNotNull(datasetSource, nameof(datasetSource));
 
@@ -49,8 +50,11 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 
 		ComponentType = typeof(DatasetTestParameterValueBlazor);
 		ComponentParameters.Add("ViewModel", this);
+		
+		_errorMessage = "Dataset not set";
+		Validation = () => DisplayValue != null;
 
-		InitializeRowFilters(rowFilters);
+		Validate();
 	}
 
 	public List<RowFilterConfiguration> RowFilterConfigurations { get; } = new();
@@ -92,19 +96,6 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 		GetDisplayName,
 		t => t?.Name);
 
-	private void InitializeRowFilters([CanBeNull] IEnumerable<RowFilterConfiguration> rowFilters)
-	{
-		if (rowFilters == null)
-		{
-			return;
-		}
-
-		RowFilterConfigurations.AddRange(rowFilters);
-
-		_rowFilterExpression =
-			StringUtils.Concatenate(RowFilterConfigurations.Select(rf => rf.Name), ", ");
-	}
-
 	public void FindDatasetClicked()
 	{
 		TestParameterType parameterType = TestParameterTypeUtils.GetParameterType(DataType);
@@ -142,35 +133,10 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 		// which updates the entity
 		Value = source.Match(d => d?.Name, t => t.Name);
 	}
-
-	public void FindRowFilterClicked(Either<Dataset, TransformerConfiguration> soureDataset)
+	
+	protected override string GetErrorMessageCore()
 	{
-		Dataset parameterDataset = soureDataset.Match(d => d, t => null);
-		using FinderForm<InstanceConfigurationInCategoryTableRow> form =
-			GetRowFilterFinderForm(parameterDataset);
-
-		DialogResult result = form.ShowDialog();
-
-		if (result != DialogResult.OK)
-		{
-			return;
-		}
-
-		IList<InstanceConfigurationInCategoryTableRow> selection = form.Selection;
-
-		if (selection?.Count != 1)
-		{
-			return;
-		}
-
-		InstanceConfigurationInCategoryTableRow selectedItem = selection[0];
-
-		var rowFilter =
-			(RowFilterConfiguration) selectedItem.InstanceConfiguration;
-
-		RowFilterConfigurations.Clear();
-		RowFilterConfigurations.Add(rowFilter);
-		RowFilterExpression = rowFilter?.Name;
+		return _errorMessage;
 	}
 
 	[NotNull]
@@ -205,8 +171,7 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 
 		return new DatasetTestParameterValueViewModel(parameter, value, imageSource, modelName,
 		                                              filterExpression, usedAsReferenceData, source,
-		                                              datasetValue?.RowFilterConfigurations,
-		                                              observer);
+		                                              observer, parameter.IsConstructorParameter);
 	}
 
 	private FinderForm<DatasetFinderItem> GetDatasetFinderForm(
@@ -225,17 +190,6 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 		return FinderUtils.GetDatasetFinder(category, _viewModel.DatasetProvider,
 		                                    datasetParameterType,
 		                                    finder);
-	}
-
-	private FinderForm<InstanceConfigurationInCategoryTableRow> GetRowFilterFinderForm(
-		[CanBeNull] Dataset parameterDataset)
-	{
-		var finder = new Finder<InstanceConfigurationInCategoryTableRow>();
-
-		DataQualityCategory category = _viewModel.InstanceConfiguration.Category;
-
-		return FinderUtils.GetRowFilterFinder(_viewModel.RowFilterProvider, parameterDataset,
-		                                      category, finder);
 	}
 
 	private string GetDisplayName([CanBeNull] Dataset dataset)

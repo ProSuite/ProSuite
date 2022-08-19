@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Microsoft.AspNetCore.Components;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.UI.ScreenBinding;
 using ProSuite.Commons.Validation;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.QA.Core;
@@ -18,7 +17,8 @@ public abstract class ViewModelBase : Observable
 
 	protected ViewModelBase([NotNull] TestParameter parameter,
 	                        [CanBeNull] object value,
-	                        [NotNull] IInstanceConfigurationViewModel observer) : base(observer)
+	                        [NotNull] IInstanceConfigurationViewModel observer,
+	                        bool required = false) : base(observer, required)
 	{
 		Assert.ArgumentNotNull(parameter, nameof(parameter));
 
@@ -27,10 +27,6 @@ public abstract class ViewModelBase : Observable
 		DataType = parameter.Type;
 
 		_value = value ?? TestParameterTypeUtils.GetDefault(DataType);
-
-		var singlePropertyAccessor = SinglePropertyAccessor.Build<string>(nameof(ParameterName));
-
-		NotificationMessage[] messages = singlePropertyAccessor.Validate(ParameterName);
 	}
 
 	[CanBeNull]
@@ -45,8 +41,9 @@ public abstract class ViewModelBase : Observable
 
 	public bool Editing { get; private set; }
 
-	public Type ComponentType { get; set; }
+	public Type ComponentType { get; protected init; }
 
+	[NotNull]
 	public IDictionary<string, object> ComponentParameters { get; } =
 		new Dictionary<string, object>();
 
@@ -67,6 +64,11 @@ public abstract class ViewModelBase : Observable
 	public void StopEditing()
 	{
 		Editing = false;
+	}
+
+	protected override void RegisterMessageCore(Notification notification, string message)
+	{
+		notification.RegisterMessage(ParameterName, message, Severity.Error);
 	}
 
 	public override string ToString()

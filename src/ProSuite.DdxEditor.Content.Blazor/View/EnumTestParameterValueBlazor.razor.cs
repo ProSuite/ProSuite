@@ -1,24 +1,12 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Components;
-using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.DdxEditor.Content.Blazor.ViewModel;
 
 namespace ProSuite.DdxEditor.Content.Blazor.View;
 
-public partial class EnumTestParameterValueBlazor : IDisposable
+public partial class EnumTestParameterValueBlazor : TestParameterValueBlazorBase<int>
 {
 	private Type _dataType;
-
-	[Parameter]
-	public ScalarTestParameterValueViewModel ViewModel { get; set; }
-
-	[CanBeNull]
-	public object Value
-	{
-		get => ViewModel.Value;
-		set => ViewModel.Value = value;
-	}
 
 	[Parameter]
 	public Type DataType
@@ -48,38 +36,7 @@ public partial class EnumTestParameterValueBlazor : IDisposable
 
 	public int IntValue
 	{
-		get
-		{
-			if (Value != null)
-			{
-				return (int) Value;
-			}
-
-			return 0;
-		}
-		set => Value = value;
+		get => GetValue();
+		set => SetValue(value);
 	}
-
-	public void Dispose()
-	{
-		ViewModel?.Dispose();
-	}
-
-	//public class EnumValueItem
-	//{
-	//	private readonly int _enumValue;
-	//	private readonly string _enumName;
-
-	//	public EnumValueItem([NotNull] object enumValue)
-	//	{
-	//		_enumValue = (int) enumValue;
-	//		_enumName = $"{enumValue}";
-	//	}
-
-	//	[UsedImplicitly]
-	//	public int EnumValue => _enumValue;
-
-	//	[UsedImplicitly]
-	//	public string EnumName => _enumName;
-	//}
 }

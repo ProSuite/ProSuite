@@ -141,23 +141,6 @@ namespace ProSuite.DomainModel.Core.QA
 		{
 			foreach (TestParameterValue parameterValue in ParameterValues)
 			{
-				var datasetTestParameterValue = parameterValue as DatasetTestParameterValue;
-
-				// Row filters
-				if (datasetTestParameterValue?.RowFilterConfigurations != null)
-				{
-					foreach (var rowFilterConfiguration in
-					         datasetTestParameterValue.RowFilterConfigurations)
-					{
-						foreach (Dataset referencedDataset in
-						         rowFilterConfiguration.GetDatasetParameterValues(
-							         includeReferencedProcessors: true))
-						{
-							yield return referencedDataset;
-						}
-					}
-				}
-
 				// Transformers
 				if (parameterValue.ValueSource != null)
 				{

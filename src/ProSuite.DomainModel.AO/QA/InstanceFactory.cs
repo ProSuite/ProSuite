@@ -301,14 +301,9 @@ namespace ProSuite.DomainModel.AO.QA
 					                           ModelElementUtils.UseCaseSensitiveSql(
 						                           table, dataModel.SqlCaseSensitivity);
 
-					List<IRowFilter> rowFilters = GetRowFilters(
-						datasetParameterValue.RowFilterConfigurations, datasetContext);
-
 					tableConstraints.Add(new TableConstraint(
 						                     table, datasetParameterValue.FilterExpression,
-						                     useCaseSensitiveSql,
-						                     datasetParameterValue.RowFiltersExpression,
-						                     rowFilters));
+						                     useCaseSensitiveSql));
 				}
 			}
 

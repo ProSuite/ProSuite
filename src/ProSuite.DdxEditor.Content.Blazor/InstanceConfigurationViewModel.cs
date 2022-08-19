@@ -27,8 +27,7 @@ public class InstanceConfigurationViewModel<T> : IInstanceConfigurationViewModel
 
 	// todo daro InstanceConfiguration?
 	public InstanceConfigurationViewModel([NotNull] EntityItem<T, T> item,
-	                                      [NotNull] ITestParameterDatasetProvider datasetProvider,
-	                                      [NotNull] IRowFilterConfigurationProvider rowFilterProvider)
+	                                      [NotNull] ITestParameterDatasetProvider datasetProvider)
 	{
 		Assert.ArgumentNotNull(item, nameof(item));
 		Assert.ArgumentNotNull(datasetProvider, nameof(datasetProvider));
@@ -36,7 +35,6 @@ public class InstanceConfigurationViewModel<T> : IInstanceConfigurationViewModel
 		_item = item;
 
 		DatasetProvider = datasetProvider;
-		RowFilterProvider = rowFilterProvider;
 
 		InstanceConfiguration = Assert.NotNull(_item.GetEntity());
 	}
@@ -48,10 +46,7 @@ public class InstanceConfigurationViewModel<T> : IInstanceConfigurationViewModel
 
 	[NotNull]
 	public ITestParameterDatasetProvider DatasetProvider { get; }
-
-	[NotNull]
-	public IRowFilterConfigurationProvider RowFilterProvider { get; }
-
+	
 	public void NotifyChanged(bool dirty)
 	{
 		_item.NotifyChanged();
@@ -300,8 +295,6 @@ public class InstanceConfigurationViewModel<T> : IInstanceConfigurationViewModel
 							               d => null, t => t)
 					               };
 
-					UpdateRowFilterConfigurations(newValue, datasetParamVM);
-
 					instanceConfiguration.AddParameterValue(
 						newValue);
 				}
@@ -319,20 +312,6 @@ public class InstanceConfigurationViewModel<T> : IInstanceConfigurationViewModel
 					throw new ArgumentOutOfRangeException(nameof(row), @"Unkown view model type");
 				}
 			}
-		}
-	}
-
-	private void UpdateRowFilterConfigurations(DatasetTestParameterValue datasetParameter,
-	                                           DatasetTestParameterValueViewModel viewModel)
-	{
-		datasetParameter.RowFiltersExpression = viewModel.RowFilterExpression;
-
-		datasetParameter.ClearRowFilters();
-
-		datasetParameter.ClearRowFilters();
-		foreach (RowFilterConfiguration rowFilterConfiguration in viewModel.RowFilterConfigurations)
-		{
-			datasetParameter.AddRowFilter(rowFilterConfiguration);
 		}
 	}
 

@@ -36,22 +36,6 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 		}
 
 		[NotNull]
-		public static IEnumerable<InstanceConfigurationDatasetTableRow>
-			GetInstanceConfigurationDatasetTableRows<T>(
-				[NotNull] CoreDomainModelItemModelBuilder modelBuilder,
-				[CanBeNull] DataQualityCategory category) where T : InstanceConfiguration
-		{
-			Assert.ArgumentNotNull(modelBuilder, nameof(modelBuilder));
-
-			return GetInstanceConfigurationDatasetTableRows<T>(
-					category,
-					modelBuilder.InstanceConfigurations,
-					modelBuilder.IncludeQualityConditionsBasedOnDeletedDatasets)
-				.OrderBy(row => string.Format("{0}||{1}",
-				                              row.Name, row.DatasetName));
-		}
-
-		[NotNull]
 		public static IEnumerable<InstanceConfigurationInCategoryTableRow>
 			GetQualityConditionTableRows(
 				[NotNull] CoreDomainModelItemModelBuilder modelBuilder,
@@ -65,7 +49,6 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 					modelBuilder.IncludeQualityConditionsBasedOnDeletedDatasets)
 				.OrderBy(row => row.Name);
 		}
-
 
 		public static bool AssignToCategory(
 			[NotNull] ICollection<QualityConditionItem> items,
@@ -257,7 +240,7 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 
 				yield return
 					new InstanceConfigurationInCategoryTableRow(qualityCondition,
-					                                       qualitySpecificationRefCount);
+					                                            qualitySpecificationRefCount);
 			}
 		}
 
@@ -336,86 +319,6 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 				}
 			}
 		}
-
-
-
-		[NotNull]
-		private static IEnumerable<InstanceConfigurationDatasetTableRow>
-			GetInstanceConfigurationDatasetTableRows<T>(
-				[CanBeNull] DataQualityCategory category,
-				[NotNull] IInstanceConfigurationRepository instanceConfigurations,
-				bool includeQualityConditionsBasedOnDeletedDatasets) where T : InstanceConfiguration
-		{
-			IDictionary<int, int> usageCountMap = null; // created lazily
-
-			IDictionary<T, IList<DatasetTestParameterValue>> datasetsByQConId =
-				instanceConfigurations.GetWithDatasetParameterValues<T>(category);
-
-			foreach (KeyValuePair<T, IList<DatasetTestParameterValue>> pair in datasetsByQConId)
-			{
-				T instanceConfig = pair.Key;
-				IList<DatasetTestParameterValue> datasetParameterValues = pair.Value;
-
-				if (usageCountMap == null)
-				{
-					usageCountMap = instanceConfigurations.GetReferenceCounts<T>()
-					                                      .ToDictionary(
-						                                      rc => rc.EntityId,
-						                                      rc => rc.UsageCount);
-				}
-
-				int qualitySpecificationRefCount;
-				if (! usageCountMap.TryGetValue(instanceConfig.Id,
-				                                out qualitySpecificationRefCount))
-				{
-					qualitySpecificationRefCount = 0;
-				}
-
-				var tableRows = new List<InstanceConfigurationDatasetTableRow>();
-
-				var anyDeletedDatasets = false;
-				try
-				{
-					foreach (DatasetTestParameterValue datasetValue in datasetParameterValues)
-					{
-						Dataset dataset = datasetValue.DatasetValue;
-						if (dataset == null && datasetValue.ValueSource == null)
-						{
-							continue;
-						}
-
-						// TODO: Recursively find the deleted datasets in transformers -> Query!
-						if (! includeQualityConditionsBasedOnDeletedDatasets &&
-						    dataset != null && dataset.Deleted)
-						{
-							anyDeletedDatasets = true;
-							break;
-						}
-
-						tableRows.Add(
-							new InstanceConfigurationDatasetTableRow(
-								instanceConfig, datasetValue, qualitySpecificationRefCount));
-					}
-				}
-				catch (TypeLoadException e)
-				{
-					tableRows.Add(
-						new InstanceConfigurationDatasetTableRow(instanceConfig,
-						                                         e.Message,
-						                                         qualitySpecificationRefCount));
-				}
-
-				if (! anyDeletedDatasets)
-				{
-					foreach (InstanceConfigurationDatasetTableRow tableRow in tableRows)
-					{
-						yield return tableRow;
-					}
-				}
-			}
-		}
-
-
 
 		private static void RefreshQualityConditionsItem(
 			[CanBeNull] Item parentItem,

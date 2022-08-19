@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -147,13 +146,6 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 				// Transformer configs can be referenced by any dataset parameter  (through ValueSource):
 				return ModelBuilder.InstanceConfigurations.GetReferencingConfigurations(
 					transformerConfiguration);
-			}
-
-			if (instanceConfig is RowFilterConfiguration rowFilterConfiguration)
-			{
-				// Transformer configs can be referenced by any dataset parameter (through RowFilters):
-				return ModelBuilder.InstanceConfigurations.GetReferencingConfigurations(
-					rowFilterConfiguration);
 			}
 
 			if (instanceConfig is IssueFilterConfiguration issueFilterConfiguration)

@@ -37,15 +37,6 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 			}
 		}
 
-		public IList<RowFilterConfiguration> GetRowFilterConfigurations()
-		{
-			using (ISession session = OpenSession(true))
-			{
-				return session.CreateCriteria(typeof(RowFilterConfiguration))
-				              .List<RowFilterConfiguration>();
-			}
-		}
-
 		public IList<IssueFilterConfiguration> GetIssueFilterConfigurations()
 		{
 			using (ISession session = OpenSession(true))
@@ -156,36 +147,7 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 				return result;
 			}
 		}
-
-		public IList<InstanceConfiguration> GetReferencingConfigurations(
-			RowFilterConfiguration rowFilter)
-		{
-			if (! rowFilter.IsPersistent)
-			{
-				return new List<InstanceConfiguration>(0);
-			}
-
-			using (ISession session = OpenSession(true))
-			{
-				TestParameterValue paramAlias = null;
-				RowFilterConfiguration rfAlias = null;
-				var result =
-					session.QueryOver<InstanceConfiguration>()
-					       //.Where(categoryFilter)
-					       .JoinAlias(i => i.ParameterValues,
-					                  () => paramAlias)
-					       .Where(i => paramAlias.GetType() == typeof(DatasetTestParameterValue))
-					       .JoinAlias(
-						       i => ((DatasetTestParameterValue) paramAlias)
-							       .RowFilterConfigurations,
-						       () => rfAlias)
-					       .Where(i => rfAlias.Id == rowFilter.Id)
-					       .List();
-
-				return result;
-			}
-		}
-
+		
 		[NotNull]
 		private static HashSet<int> GetIdsInvolvingDeletedDatasets<T>([NotNull] ISession session)
 			where T : InstanceConfiguration

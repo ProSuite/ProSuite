@@ -13,14 +13,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 			return GetInstanceDescriptorTableRows<IssueFilterDescriptor, IssueFilterConfiguration>(
 				repository);
 		}
-
-		public static IEnumerable<InstanceDescriptorTableRow> GetRowFilterDescriptorTableRows(
-			[NotNull] IInstanceDescriptorRepository instanceDescriptors)
-		{
-			return GetInstanceDescriptorTableRows<RowFilterDescriptor, RowFilterConfiguration>(
-				instanceDescriptors);
-		}
-
+		
 		public static IEnumerable<InstanceDescriptorTableRow> GetTransformerDescriptorTableRows(
 			IInstanceDescriptorRepository instanceDescriptors)
 		{
@@ -28,7 +21,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 				instanceDescriptors);
 		}
 
-		public static IEnumerable<InstanceDescriptorTableRow> GetInstanceDescriptorTableRows<D, C>(
+		private static IEnumerable<InstanceDescriptorTableRow> GetInstanceDescriptorTableRows<D, C>(
 			IInstanceDescriptorRepository repository)
 			where D : InstanceDescriptor
 			where C : InstanceConfiguration

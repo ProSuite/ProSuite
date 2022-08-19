@@ -37,17 +37,12 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			_qualityConditions;
 
 		private Dictionary<string, XmlIssueFilterConfiguration> _issueFilters;
-		private Dictionary<string, XmlRowFilterConfiguration> _rowFilters;
 		private Dictionary<string, XmlTransformerConfiguration> _transformers;
 
 		private Dictionary<string, XmlTestDescriptor> _testDescriptors;
-		private Dictionary<string, XmlRowFilterDescriptor> _rowFilterDescriptors;
 		private Dictionary<string, XmlIssueFilterDescriptor> _issueFilterDescriptors;
 		private Dictionary<string, XmlTransformerDescriptor> _transformerDescriptors;
-
-		[CanBeNull]
-		private Dictionary<XmlRowFilterConfiguration, RowFilterConfiguration> _rowFilterInstances;
-
+		
 		[CanBeNull] private Dictionary<XmlIssueFilterConfiguration, IssueFilterConfiguration>
 			_issueFilterInstances;
 
@@ -60,12 +55,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		private Dictionary<string, XmlIssueFilterConfiguration> IssueFilters => _issueFilters ??
 			(_issueFilters = _document.IssueFilters?.ToDictionary(x => x.Name) ??
 			                 new Dictionary<string, XmlIssueFilterConfiguration>());
-
-		[NotNull]
-		private Dictionary<string, XmlRowFilterConfiguration> RowFilters => _rowFilters ??
-			(_rowFilters = _document.RowFilters?.ToDictionary(x => x.Name) ??
-			               new Dictionary<string, XmlRowFilterConfiguration>());
-
+		
 		[NotNull]
 		private Dictionary<string, XmlTransformerConfiguration> Transformers => _transformers ??
 			(_transformers = _document.Transformers?.ToDictionary(x => x.Name) ??
@@ -75,13 +65,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		private Dictionary<string, XmlTestDescriptor> TestDescriptors => _testDescriptors ??
 			(_testDescriptors = _document.TestDescriptors?.ToDictionary(x => x.Name) ??
 			                    new Dictionary<string, XmlTestDescriptor>());
-
-		[NotNull]
-		private Dictionary<string, XmlRowFilterDescriptor> RowFilterDescriptors =>
-			_rowFilterDescriptors ??
-			(_rowFilterDescriptors = _document.RowFilterDescriptors?.ToDictionary(x => x.Name) ??
-			                         new Dictionary<string, XmlRowFilterDescriptor>());
-
+		
 		[NotNull]
 		private Dictionary<string, XmlIssueFilterDescriptor> IssueFilterDescriptors =>
 			_issueFilterDescriptors ??
@@ -122,49 +106,13 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		{
 			return IssueFilters.TryGetValue(name, out issueFilterConfiguration);
 		}
-
-		public bool TryGetRowFilter(string name,
-		                            out XmlRowFilterConfiguration rowFilterConfiguration)
-		{
-			return RowFilters.TryGetValue(name, out rowFilterConfiguration);
-		}
-
+		
 		public bool TryGetTransformer(string name,
 		                              out XmlTransformerConfiguration transformerConfiguration)
 		{
 			return Transformers.TryGetValue(name, out transformerConfiguration);
 		}
-
-		private RowFilterConfiguration GetRowFilterConfiguration(
-			[NotNull] XmlRowFilterConfiguration xmlRowFilter,
-			[NotNull] DatasetSettings datasetSettings)
-		{
-			_rowFilterInstances =
-				_rowFilterInstances ??
-				new Dictionary<XmlRowFilterConfiguration, RowFilterConfiguration>();
-			if (! _rowFilterInstances.TryGetValue(xmlRowFilter,
-			                                      out RowFilterConfiguration rowFilter))
-			{
-				if (! RowFilterDescriptors.TryGetValue(
-					    Assert.NotNull(xmlRowFilter.RowFilterDescriptorName),
-					    out XmlRowFilterDescriptor xmlDesc))
-				{
-					Assert.Fail(
-						$"RowFilter descriptor not found for {xmlRowFilter.RowFilterDescriptorName}");
-				}
-
-				rowFilter =
-					new RowFilterConfiguration(
-						xmlRowFilter.Name,
-						XmlDataQualityUtils.CreateInstanceDescriptor<RowFilterDescriptor>(xmlDesc));
-				CompleteConfiguration(rowFilter, xmlRowFilter, datasetSettings);
-
-				Assert.NotNull(_rowFilterInstances).Add(xmlRowFilter, rowFilter);
-			}
-
-			return rowFilter;
-		}
-
+		
 		private IssueFilterConfiguration GetIssueFilterConfiguration(
 			[NotNull] XmlIssueFilterConfiguration xmlIssueFilter, DatasetSettings datasetSettings)
 		{
@@ -408,8 +356,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 
 			return XmlDataQualityUtils.CreateDatasetTestParameterValue(
 				testParameter, xmlDatasetTestParameterValue, qualityConditionName, referenceModels,
-				datasetSettings.GetDatasetsByName, datasetSettings.IgnoreUnknownDatasets,
-				filternames => GetRowFilterConfigurations(filternames, datasetSettings));
+				datasetSettings.GetDatasetsByName, datasetSettings.IgnoreUnknownDatasets);
 		}
 
 		[NotNull]
@@ -423,51 +370,10 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 				testParameter, dataset,
 				xmlDatasetTestParameterValue.WhereClause,
 				xmlDatasetTestParameterValue.UsedAsReferenceData);
-
-			string rowFiltersExpression =
-				xmlDatasetTestParameterValue.RowFilterExpression?.Expression;
-
-			if (rowFiltersExpression != null)
-			{
-				IList<string> rowFilterNames =
-					XmlDataQualityUtils.GetFilterNames(rowFiltersExpression);
-
-				IList<RowFilterConfiguration> rowFilterConfigurations =
-					GetRowFilterConfigurations(rowFilterNames, datasetSettings);
-
-				paramValue.RowFiltersExpression = rowFiltersExpression;
-
-				paramValue.ClearRowFilters();
-				foreach (RowFilterConfiguration rowFilterConfiguration in rowFilterConfigurations)
-				{
-					paramValue.AddRowFilter(rowFilterConfiguration);
-				}
-			}
-
+			
 			return paramValue;
 		}
-
-		private IList<RowFilterConfiguration> GetRowFilterConfigurations(
-			IEnumerable<string> rowFilterNames,
-			DatasetSettings datasetSettings)
-		{
-			List<RowFilterConfiguration> rowFilterConfigurations =
-				new List<RowFilterConfiguration>();
-			foreach (string filterName in rowFilterNames)
-			{
-				if (! TryGetRowFilter(
-					    filterName, out XmlRowFilterConfiguration xmlRowFilter))
-				{
-					Assert.Fail($"Row filter {filterName} not found");
-				}
-
-				RowFilterConfiguration
-					rowFilter = GetRowFilterConfiguration(xmlRowFilter, datasetSettings);
-				rowFilterConfigurations.Add(rowFilter);
-			}
-
-			return rowFilterConfigurations;
-		}
+		
 
 		public IEnumerable<XmlInstanceConfiguration> EnumReferencedConfigurationInstances(
 			XmlInstanceConfiguration config)
@@ -510,27 +416,6 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 					foreach (var referenced in EnumReferencedConfigurationInstances(transformer))
 					{
 						yield return referenced;
-					}
-				}
-
-				if (parameterValue is XmlDatasetTestParameterValue dsValue)
-				{
-					IList<string> rowFilterNames =
-						XmlDataQualityUtils.GetFilterNames(dsValue.RowFilterExpression?.Expression)
-						?? new List<string>();
-
-					foreach (string filterName in rowFilterNames)
-					{
-						if (! RowFilters.TryGetValue(filterName,
-						                             out XmlRowFilterConfiguration filter))
-						{
-							Assert.Fail($"missing row filter {filterName}");
-						}
-
-						foreach (var referenced in EnumReferencedConfigurationInstances(filter))
-						{
-							yield return referenced;
-						}
 					}
 				}
 			}

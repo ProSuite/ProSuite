@@ -81,7 +81,6 @@ namespace ProSuite.DdxEditor.Content.QA
 
 			yield return RegisterChild(new TransformerConfigurationsItem(_modelBuilder, this));
 			yield return RegisterChild(new IssueFilterConfigurationsItem(_modelBuilder, this));
-			yield return RegisterChild(new RowFilterConfigurationsItem(_modelBuilder, this));
 
 			foreach (Item categoryItem in GetCategoryItems())
 			{
@@ -243,15 +242,6 @@ namespace ProSuite.DdxEditor.Content.QA
 			if (containerItem is IssueFilterConfigurationsItem)
 			{
 				return GetInstanceConfigurations<IssueFilterConfiguration>()
-				       .OrderBy(c => c.Name)
-				       .Select(c => new InstanceConfigurationItem(
-					               _modelBuilder, c, containerItem,
-					               _modelBuilder.InstanceConfigurations));
-			}
-
-			if (containerItem is RowFilterConfigurationsItem)
-			{
-				return GetInstanceConfigurations<RowFilterConfiguration>()
 				       .OrderBy(c => c.Name)
 				       .Select(c => new InstanceConfigurationItem(
 					               _modelBuilder, c, containerItem,

@@ -69,6 +69,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\ProSuite.Shared\src\ProSuite.Shared.IoCRoot\ProSuite.Shared.IoCRoot.csproj" />
     <ProjectReference Include="..\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj" />
     <ProjectReference Include="..\ProSuite.Commons.Logging\ProSuite.Commons.Logging.csproj" />
     <ProjectReference Include="..\ProSuite.Commons.UI\ProSuite.Commons.UI.csproj" />
@@ -97,6 +98,7 @@
     <Content Include="Properties\Images\Save.png" />
     <Content Include="Properties\Images\ShowAboutBoxCmd.png" />
     <Content Include="Properties\Images\ShowOnlineHelpCmd.png" />
+    <PackageReference Include="Prism.Core" Version="8.1.97" />
     <Compile Update="AboutForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -181,6 +183,14 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
       <Generator>PublicResXFileCodeGenerator</Generator>
     </EmbeddedResource>
+  </ItemGroup>
+
+  <!-- License files: -->
+  <ItemGroup>
+    <Content Include="..\..\lib\licenses\Prism.Core.license.txt">
+      <Link>Licenses\Prism.Core.license.txt</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
 </Project>

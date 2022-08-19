@@ -1,10 +1,13 @@
 @using Radzen.Blazor
+@inherits TestParameterValueBlazorBase<string>
 
-@if (ViewModel.Editing)
-{
-	<RadzenTextBox @bind-Value="StringValue" Style="width: 100%;"/>
-}
-else
-{
-    @StringValue
-}
+<Validation ErrorMessage="@ErrorMessage">
+	@if (ViewModel.Editing)
+	{
+		<RadzenTextBox @bind-Value="StringValue" Style="width: 100%;"/>
+	}
+	else
+	{
+		@StringValue
+	}
+</Validation>

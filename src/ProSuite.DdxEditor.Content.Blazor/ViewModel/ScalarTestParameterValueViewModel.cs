@@ -9,10 +9,13 @@ namespace ProSuite.DdxEditor.Content.Blazor.ViewModel;
 
 public class ScalarTestParameterValueViewModel : ViewModelBase
 {
+	[CanBeNull] private readonly string _errorMessage;
+
 	public ScalarTestParameterValueViewModel([NotNull] TestParameter parameter,
 	                                         [CanBeNull] object value,
-	                                         [NotNull] IInstanceConfigurationViewModel observer) :
-		base(parameter, value, observer)
+	                                         [NotNull] IInstanceConfigurationViewModel observer,
+	                                         bool required) :
+		base(parameter, value, observer, required)
 	{
 		ComponentParameters.Add("ViewModel", this);
 
@@ -22,6 +25,8 @@ public class ScalarTestParameterValueViewModel : ViewModelBase
 		{
 			case TestParameterType.String:
 				ComponentType = typeof(StringValueBlazor);
+				_errorMessage = "Value not set";
+				Validation = () => ! string.IsNullOrEmpty((string) Value);
 				break;
 			case TestParameterType.Integer:
 				if (DataType.IsEnum)
@@ -46,5 +51,12 @@ public class ScalarTestParameterValueViewModel : ViewModelBase
 			default:
 				throw new ArgumentOutOfRangeException($"Unkown {nameof(TestParameterType)}");
 		}
+
+		Validate();
+	}
+
+	protected override string GetErrorMessageCore()
+	{
+		return _errorMessage;
 	}
 }
