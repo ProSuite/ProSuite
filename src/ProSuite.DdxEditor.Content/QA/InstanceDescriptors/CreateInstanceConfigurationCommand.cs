@@ -48,10 +48,6 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 					foundItem = ApplicationController
 						.FindFirstItem<IssueFilterConfigurationsItem>();
 					break;
-				case RowFilterConfiguration _:
-					foundItem = ApplicationController
-						.FindFirstItem<RowFilterConfigurationsItem>();
-					break;
 				default:
 					throw new NotImplementedException(
 						$"Unsupported configuration type: {configuration}");

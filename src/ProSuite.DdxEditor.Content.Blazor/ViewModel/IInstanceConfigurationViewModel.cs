@@ -12,7 +12,5 @@ public interface IInstanceConfigurationViewModel : IViewObserver, INotifyPropert
 
 	ITestParameterDatasetProvider DatasetProvider { get; }
 
-	IRowFilterConfigurationProvider RowFilterProvider { get; }
-
 	void BindTo(InstanceConfiguration instanceConfiguration);
 }

@@ -40,7 +40,6 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 
 			yield return RegisterChild(new TransformerDescriptorsItem(_modelBuilder));
 			yield return RegisterChild(new IssueFilterDescriptorsItem(_modelBuilder));
-			yield return RegisterChild(new RowFilterDescriptorsItem(_modelBuilder));
 		}
 	}
 }
