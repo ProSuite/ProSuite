@@ -163,7 +163,7 @@ public class InstanceConfigurationViewModel<T> : IInstanceConfigurationViewModel
 			{
 				rowsByParameter[param]
 					.Add(new ScalarTestParameterValueViewModel(
-						     param, scalarValue.GetValue(), this));
+						     param, scalarValue.GetValue(), this, param.IsConstructorParameter));
 			}
 			else
 			{
