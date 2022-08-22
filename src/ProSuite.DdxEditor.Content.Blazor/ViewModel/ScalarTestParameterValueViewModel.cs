@@ -47,7 +47,7 @@ public class ScalarTestParameterValueViewModel : ViewModelBase
 			case TestParameterType.CustomScalar:
 				throw new NotImplementedException($"{testParameterType} is not yet supported");
 			case TestParameterType.Boolean:
-				ComponentType = typeof(SwitchValueBlazor);
+				ComponentType = typeof(BooleanValueBlazor);
 				break;
 			default:
 				throw new ArgumentOutOfRangeException($"Unkown {nameof(TestParameterType)}");

@@ -185,13 +185,13 @@
                         <Template Context="viewModel">
                             @if (viewModel is DatasetTestParameterValueViewModel vm)
                             {
-                                <RadzenSwitch  @bind-Value="vm.UsedAsReferenceData"/>
+                                <RadzenCheckBox  @bind-Value="vm.UsedAsReferenceData"/>
                             }
                         </Template>
                         <EditTemplate Context="viewModel">
                             @if (viewModel is DatasetTestParameterValueViewModel vm)
                             {
-	                            <RadzenSwitch  @bind-Value="vm.UsedAsReferenceData"/>
+	                            <RadzenCheckBox  @bind-Value="vm.UsedAsReferenceData"/>
                             }
                         </EditTemplate>
                     </RadzenDataGridColumn>
