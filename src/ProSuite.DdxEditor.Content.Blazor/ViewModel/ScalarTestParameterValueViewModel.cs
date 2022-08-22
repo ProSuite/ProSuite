@@ -29,6 +29,7 @@ public class ScalarTestParameterValueViewModel : ViewModelBase
 				Validation = () => ! string.IsNullOrEmpty((string) Value);
 				break;
 			case TestParameterType.Integer:
+
 				if (DataType.IsEnum)
 				{
 					ComponentParameters.Add("DataType", DataType);

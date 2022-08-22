@@ -22,6 +22,8 @@ public abstract class Observable : IDisposable, INotifyPropertyChanged
 		_required = required;
 
 		Observer = observer;
+
+		PropertyChanged += Observer.OnRowPropertyChanged;
 	}
 
 	// todo daro rename?
@@ -31,11 +33,15 @@ public abstract class Observable : IDisposable, INotifyPropertyChanged
 	public string ErrorMessage { get; set; }
 
 	[NotNull]
-	public Func<bool> Validation { get; set; } = () => true;
+	public Func<bool> Validation { get; set; }
 
 	public void Dispose()
 	{
+		PropertyChanged -= Observer.OnRowPropertyChanged;
+
 		UnwireEvent();
+
+		DisposeCore();
 	}
 
 	public event PropertyChangedEventHandler PropertyChanged;
@@ -91,6 +97,8 @@ public abstract class Observable : IDisposable, INotifyPropertyChanged
 
 		RegisterMessageCore(notification, message);
 	}
+
+	protected virtual void DisposeCore() { }
 
 	protected virtual void RegisterMessageCore(Notification notification, string message) { }
 
