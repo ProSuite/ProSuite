@@ -11,7 +11,7 @@ namespace ProSuite.DomainModel.Core.QA
 		/// </summary>
 		/// <remarks>Required for NHibernate</remarks>
 		[UsedImplicitly]
-		public TransformerConfiguration() { }
+		public TransformerConfiguration(bool assignUuid = false) : base(assignUuid) { }
 
 		public TransformerConfiguration(string name,
 		                                [NotNull] TransformerDescriptor transformerDescriptor,
@@ -48,8 +48,25 @@ namespace ProSuite.DomainModel.Core.QA
 
 		#region Overrides of InstanceConfiguration
 
-		public override DataQualityCategory Category { get; set; }
+		[NotNull]
+		public override InstanceConfiguration CreateCopy()
+		{
+			var copy = new TransformerConfiguration(assignUuid: true);
+
+			CopyProperties(copy);
+
+			return copy;
+		}
 
 		#endregion
+
+		private void CopyProperties(TransformerConfiguration target)
+		{
+			Assert.ArgumentNotNull(target, nameof(target));
+
+			CopyBaseProperties(target);
+
+			target.TransformerDescriptor = TransformerDescriptor;
+		}
 	}
 }

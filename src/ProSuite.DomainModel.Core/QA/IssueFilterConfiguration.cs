@@ -11,7 +11,7 @@ namespace ProSuite.DomainModel.Core.QA
 		/// </summary>
 		/// <remarks>Required for NHibernate</remarks>
 		[UsedImplicitly]
-		public IssueFilterConfiguration() { }
+		public IssueFilterConfiguration(bool assignUuid = false) : base(assignUuid) { }
 
 		public IssueFilterConfiguration(string name,
 		                                [NotNull] IssueFilterDescriptor issueFilterDescriptor,
@@ -32,8 +32,25 @@ namespace ProSuite.DomainModel.Core.QA
 
 		#region Overrides of InstanceConfiguration
 
-		public override DataQualityCategory Category { get; set; }
+		[NotNull]
+		public override InstanceConfiguration CreateCopy()
+		{
+			var copy = new IssueFilterConfiguration(assignUuid: true);
+
+			CopyProperties(copy);
+
+			return copy;
+		}
 
 		#endregion
+
+		private void CopyProperties(IssueFilterConfiguration target)
+		{
+			Assert.ArgumentNotNull(target, nameof(target));
+
+			CopyBaseProperties(target);
+
+			target.IssueFilterDescriptor = IssueFilterDescriptor;
+		}
 	}
 }

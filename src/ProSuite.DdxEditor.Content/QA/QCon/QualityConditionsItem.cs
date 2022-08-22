@@ -113,7 +113,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 
 		void IInstanceConfigurationContainerItem.CreateCopy(QualityConditionItem item)
 		{
-			QualityCondition copy = _modelBuilder.ReadOnlyTransaction(
+			QualityCondition copy = (QualityCondition) _modelBuilder.ReadOnlyTransaction(
 				() => Assert.NotNull(item.GetEntity()).CreateCopy());
 
 			copy.Name = string.Format("Copy of {0}", copy.Name);
