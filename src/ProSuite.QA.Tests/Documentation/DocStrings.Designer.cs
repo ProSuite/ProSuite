@@ -4362,7 +4362,7 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to minimum permitted angle (in radians).
+        ///   Looks up a localized string similar to minimum permitted angle (in &apos;AngularUnit&apos;, default value of &apos;AngularUnit&apos; is radian).
         /// </summary>
         public static string QaLineIntersectAngle_limit {
             get {
@@ -4631,6 +4631,15 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unit of &apos;limit&apos;, default = &apos;radian&apos;..
+        /// </summary>
+        public static string QaMaxSlope_AngularUnit {
+            get {
+                return ResourceManager.GetString("QaMaxSlope_AngularUnit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to polyline or polygon feature class.
         /// </summary>
         public static string QaMaxSlope_featureClass {
@@ -4640,7 +4649,7 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to maximum slope (in radians).
+        ///   Looks up a localized string similar to maximum slope (in &apos;AngularUnit&apos;, default value of &apos;AngularUnit&apos; is radian).
         /// </summary>
         public static string QaMaxSlope_limit {
             get {
@@ -4868,7 +4877,7 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to minimum angle (in radians).
+        ///   Looks up a localized string similar to minimum angle (in &apos;AngularUnit&apos;, default value of &apos;AngularUnit&apos; is radian).
         /// </summary>
         public static string QaMinAngle_limit {
             get {
@@ -9106,7 +9115,7 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to polyline or polygon feature class with z-coorindates.
+        ///   Looks up a localized string similar to polyline or polygon feature class with z-coordinates.
         /// </summary>
         public static string QaSmooth_featureClass {
             get {
@@ -9115,7 +9124,7 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to the maximum permitted second derivative of the angle in radians.
+        ///   Looks up a localized string similar to the maximum permitted second derivative of the angle (in &apos;AngularUnit&apos;, default value of &apos;AngularUnit&apos; is radian).
         /// </summary>
         public static string QaSmooth_limit {
             get {
