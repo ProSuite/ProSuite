@@ -101,8 +101,9 @@ public partial class UpDownButtonsBlazor
 			return true;
 		}
 
-		// is Selected the last row?
-		return rows?.Count - 1 == rows?.IndexOf(Selected);
+		// Is Selected the 2nd last row? The last row is always
+		// a dummy row.
+		return rows?.Count - 2 == rows?.IndexOf(Selected);
 	}
 
 	private bool DeleteRowButtonDisabled()
