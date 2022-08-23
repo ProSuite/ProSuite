@@ -168,8 +168,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 				return;
 			}
 
-			//string url = configuration.Url;
-			string url = null;
+			string url = configuration.Url;
 
 			if (StringUtils.IsNullOrEmptyOrBlank(url))
 			{
