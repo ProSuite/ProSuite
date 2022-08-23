@@ -8,10 +8,12 @@ using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
+using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests.Transformers
 {
 	[UsedImplicitly]
+	[TableTransformer]
 	public class TrTableAppend : InvolvesTablesBase, ITableTransformer<IReadOnlyTable>
 	{
 		private AppendedTable _transformedTable;

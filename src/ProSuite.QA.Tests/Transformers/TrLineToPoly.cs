@@ -5,11 +5,13 @@ using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Core;
+using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 
 namespace ProSuite.QA.Tests.Transformers
 {
 	[UsedImplicitly]
+	[GeometryTransformer]
 	public class TrLineToPoly : TrGeometryTransform
 	{
 		private const PolylineUsage _defaultPolylineUsage =
@@ -17,7 +19,8 @@ namespace ProSuite.QA.Tests.Transformers
 
 		[DocTr(nameof(DocTrStrings.TrLineToPoly_0))]
 		public TrLineToPoly(
-			[NotNull][DocTr(nameof(DocTrStrings.TrLineToPoly_closedLineClass))] IReadOnlyFeatureClass closedLineClass)
+			[NotNull] [DocTr(nameof(DocTrStrings.TrLineToPoly_closedLineClass))]
+			IReadOnlyFeatureClass closedLineClass)
 			: base(closedLineClass, esriGeometryType.esriGeometryPolygon)
 		{
 			PolylineUsage = _defaultPolylineUsage;

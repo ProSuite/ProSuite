@@ -1,10 +1,12 @@
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 
 namespace ProSuite.QA.Tests.Transformers.Filters
 {
 	[UsedImplicitly]
+	[FilterTransformer]
 	public class TrOnlyIntersectingFeatures : TrSpatiallyFiltered
 	{
 		[DocTr(nameof(DocTrStrings.TrOnlyIntersectingFeatures_0))]

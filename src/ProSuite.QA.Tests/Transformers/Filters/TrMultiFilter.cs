@@ -4,11 +4,13 @@ using System.Linq;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
+using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 
 namespace ProSuite.QA.Tests.Transformers.Filters
 {
 	[UsedImplicitly]
+	[FilterTransformer]
 	public class TrMultiFilter : TableTransformer<FilteredFeatureClass>
 	{
 		[NotNull] private readonly IReadOnlyFeatureClass _featureClassToFilter;
@@ -18,11 +20,13 @@ namespace ProSuite.QA.Tests.Transformers.Filters
 		private FilteredFeatureClass _resultingClass;
 
 		[DocTr(nameof(DocTrStrings.TrMultiFilter_0))]
-		public TrMultiFilter([NotNull] IReadOnlyFeatureClass featureClassToFilter,
-		                     [DocTr(nameof(DocTrStrings.TrMultiFilter_inputFilters))] [NotNull]
-		                     IList<IReadOnlyFeatureClass> inputFilters,
-		                     [DocTr(nameof(DocTrStrings.TrMultiFilter_expression))] [CanBeNull]
-		                     string expression)
+		public TrMultiFilter(
+			[NotNull] [DocTr(nameof(DocTrStrings.TrMultiFilter_featureClassToFilter))]
+			IReadOnlyFeatureClass featureClassToFilter,
+			[NotNull] [DocTr(nameof(DocTrStrings.TrMultiFilter_inputFilters))]
+			IList<IReadOnlyFeatureClass> inputFilters,
+			[CanBeNull] [DocTr(nameof(DocTrStrings.TrMultiFilter_expression))]
+			string expression)
 			: base(inputFilters.Prepend(featureClassToFilter))
 		{
 			_featureClassToFilter = featureClassToFilter;
