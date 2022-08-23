@@ -1,9 +1,7 @@
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Windows.Forms;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -56,9 +54,9 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 			return _modelBuilder.GetChildren(this);
 		}
 
-		protected override void CollectCommands(List<ICommand> commands,
-		                                        IApplicationController
-			                                        applicationController)
+		protected override void CollectCommands(
+			List<ICommand> commands,
+			IApplicationController applicationController)
 		{
 			base.CollectCommands(commands, applicationController);
 
@@ -68,7 +66,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 			commands.Add(new AddTestDescriptorCommand(this, applicationController));
 			commands.Add(
 				new AddTestDescriptorsFromAssemblyCommand(this, applicationController));
-			commands.Add(new CreateReportForAssemblyTestsCommand(this, applicationController));
+
 			commands.Add(
 				new CreateReportForRegisteredTestsCommand(this, applicationController));
 			commands.Add(new DeleteAllChildItemsCommand(this, applicationController));
@@ -166,25 +164,6 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 			}
 
 			_msg.InfoFormat("Report of registered tests created: {0}", htmlFileName);
-
-			_msg.Info("Opening report...");
-			ProcessUtils.StartProcess(htmlFileName);
-		}
-
-		public void CreateTestReport([NotNull] Assembly assembly,
-		                             [NotNull] string htmlFileName,
-		                             bool overwrite)
-		{
-			Assert.ArgumentNotNull(assembly, nameof(assembly));
-			Assert.ArgumentNotNullOrEmpty(htmlFileName, nameof(htmlFileName));
-
-			string location = assembly.Location;
-			Assert.NotNull(location, "assembly location is null");
-
-			TestReportUtils.WriteTestReport(new[] {assembly}, htmlFileName, overwrite);
-
-			_msg.InfoFormat("Report of tests in assembly {0} created: {1}",
-			                assembly.Location, htmlFileName);
 
 			_msg.Info("Opening report...");
 			ProcessUtils.StartProcess(htmlFileName);
