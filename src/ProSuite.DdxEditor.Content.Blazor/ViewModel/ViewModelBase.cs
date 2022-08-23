@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Microsoft.AspNetCore.Components;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Validation;
@@ -25,6 +24,8 @@ public abstract class ViewModelBase : Observable
 		ParameterName = parameter.Name;
 		Parameter = parameter;
 		DataType = parameter.Type;
+
+		Validation = () => Value != null;
 
 		_value = value ?? TestParameterTypeUtils.GetDefault(DataType);
 	}

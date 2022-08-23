@@ -12,6 +12,6 @@ public class DummyTestParameterValueViewModel : ViewModelBase
 	{
 		ComponentParameters.Add("ViewModel", this);
 
-		ComponentType = typeof(StringValueBlazor);
+		ComponentType = typeof(DummyValueBlazor);
 	}
 }

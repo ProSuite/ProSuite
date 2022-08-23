@@ -63,16 +63,6 @@ public class TestParameterValueCollectionViewModel : ViewModelBase, IDataGridVie
 		set => SetProperty(ref _values, value);
 	}
 
-	public void WireEvents(ViewModelBase row)
-	{
-		Observer.WireEvents(row);
-	}
-
-	public void UnwireEvents(ViewModelBase row)
-	{
-		Observer.UnwireEvents(row);
-	}
-
 	[NotNull]
 	public ViewModelBase InsertDefaultRow()
 	{
@@ -110,8 +100,6 @@ public class TestParameterValueCollectionViewModel : ViewModelBase, IDataGridVie
 		Assert.ArgumentNotNull(row, nameof(row));
 
 		Assert.True(_values.Remove(row), $"cannot remove {row}");
-
-		UnwireEvents(row);
 
 		OnPropertyChanged(nameof(Values));
 	}
@@ -161,8 +149,6 @@ public class TestParameterValueCollectionViewModel : ViewModelBase, IDataGridVie
 		int i = index is > -1 ? index.Value : _values.Count;
 
 		InsertCore(row, i);
-
-		WireEvents(row);
 
 		OnPropertyChanged(nameof(Values));
 	}
