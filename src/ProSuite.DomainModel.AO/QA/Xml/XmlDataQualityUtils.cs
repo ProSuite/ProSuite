@@ -1246,20 +1246,20 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 
 		[NotNull]
 		public static T CreateInstanceDescriptor<T>(
-			[NotNull] XmlDescriptor xmlTestDescriptor)
+			[NotNull] XmlDescriptor xmlDescriptor)
 			where T : InstanceDescriptor, new()
 		{
-			Assert.ArgumentNotNull(xmlTestDescriptor, nameof(xmlTestDescriptor));
+			Assert.ArgumentNotNull(xmlDescriptor, nameof(xmlDescriptor));
 
-			Assert.NotNull(xmlTestDescriptor.ClassDescriptor);
+			Assert.NotNull(xmlDescriptor.ClassDescriptor);
 			T result = new T();
-			result.Name = xmlTestDescriptor.Name;
-			result.Class = CreateClassDescriptor(xmlTestDescriptor.ClassDescriptor);
-			result.ConstructorId = xmlTestDescriptor.ClassDescriptor.ConstructorId;
+			result.Name = xmlDescriptor.Name;
+			result.Class = CreateClassDescriptor(xmlDescriptor.ClassDescriptor);
+			result.ConstructorId = xmlDescriptor.ClassDescriptor.ConstructorId;
 
-			result.Description = xmlTestDescriptor.Description;
+			result.Description = xmlDescriptor.Description;
 
-			ImportMetadata(result, xmlTestDescriptor);
+			ImportMetadata(result, xmlDescriptor);
 
 			return result;
 		}
@@ -2454,7 +2454,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 
 			if (exportMetadata)
 			{
-// TODO:				ExportMetadata(transformer, xmlTransformer);
+				// TODO:				ExportMetadata(transformer, xmlTransformer);
 			}
 
 			foreach (TestParameterValue parameterValue in transformer.ParameterValues)
