@@ -11,6 +11,12 @@ namespace ProSuite.DomainModel.Core.QA
 		/// </summary>
 		/// <remarks>Required for NHibernate</remarks>
 		[UsedImplicitly]
+		public IssueFilterConfiguration() : this(false) { }
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="RowFilterConfiguration" /> class.
+		/// </summary>
+		[UsedImplicitly]
 		public IssueFilterConfiguration(bool assignUuid = false) : base(assignUuid) { }
 
 		public IssueFilterConfiguration(string name,

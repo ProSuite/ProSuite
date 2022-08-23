@@ -11,7 +11,13 @@ namespace ProSuite.DomainModel.Core.QA
 		/// </summary>
 		/// <remarks>Required for NHibernate</remarks>
 		[UsedImplicitly]
-		public TransformerConfiguration(bool assignUuid = false) : base(assignUuid) { }
+		public TransformerConfiguration() : this(false) { }
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="TransformerConfiguration" /> class.
+		/// </summary>
+		[UsedImplicitly]
+		public TransformerConfiguration(bool assignUuid) : base(assignUuid) { }
 
 		public TransformerConfiguration(string name,
 		                                [NotNull] TransformerDescriptor transformerDescriptor,

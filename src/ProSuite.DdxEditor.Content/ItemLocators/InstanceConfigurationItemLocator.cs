@@ -1,21 +1,22 @@
-﻿using ProSuite.Commons.DomainModels;
+using ProSuite.Commons.DomainModels;
 using ProSuite.DdxEditor.Framework.NavigationPanel;
 using ProSuite.DomainModel.Core.QA;
 
 namespace ProSuite.DdxEditor.Content.ItemLocators
 {
-	public class QualityConditionItemLocator : CategorizedQualityEntityBase
+	public class InstanceConfigurationItemLocator<T> : CategorizedQualityEntityBase
+		where T : InstanceConfiguration
 	{
 		public override bool CanLocate(Entity entity)
 		{
-			return entity is QualityCondition;
+			return entity is T;
 		}
 
 		protected override DataQualityCategory GetCategory(Entity entity)
 		{
-			var qualityCondition = (QualityCondition) entity;
+			var instanceConfig = (T) entity;
 
-			return qualityCondition.Category;
+			return instanceConfig.Category;
 		}
 
 		protected override IItemTreeNode GetContainerNode(DataQualityCategory category,
@@ -26,10 +27,10 @@ namespace ProSuite.DdxEditor.Content.ItemLocators
 				return categoryNode;
 			}
 
-			// search beneath QualityConditionsItem child node
+			// search beneath QualityConditionsItem (or respective item) child node
 			return FindNode(categoryNode,
 			                node =>
-				                node.IsBasedOnEntityType<QualityCondition>());
+				                node.IsBasedOnEntityType<T>());
 		}
 	}
 }

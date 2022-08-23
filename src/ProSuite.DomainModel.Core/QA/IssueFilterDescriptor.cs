@@ -22,7 +22,7 @@ namespace ProSuite.DomainModel.Core.QA
 
 		public override InstanceConfiguration CreateConfiguration()
 		{
-			return new IssueFilterConfiguration()
+			return new IssueFilterConfiguration(true)
 			       {
 				       InstanceDescriptor = this
 			       };

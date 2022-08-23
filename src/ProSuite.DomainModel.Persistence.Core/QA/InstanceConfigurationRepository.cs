@@ -147,7 +147,7 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 				return result;
 			}
 		}
-		
+
 		[NotNull]
 		private static HashSet<int> GetIdsInvolvingDeletedDatasets<T>([NotNull] ISession session)
 			where T : InstanceConfiguration
@@ -205,18 +205,15 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 		{
 			ICriteria criteria = session.CreateCriteria(typeof(T));
 
-			// TODO: Add Category to InstanceConfigs
-			//const string categoryProperty = "Category";
+			const string categoryProperty = "Category";
 
-			//ICriterion filterCriterion =
-			//	category == null
-			//		? (ICriterion)new NullExpression(categoryProperty)
-			//		: Restrictions.Eq(categoryProperty, category);
+			ICriterion filterCriterion =
+				category == null
+					? (ICriterion)new NullExpression(categoryProperty)
+					: Restrictions.Eq(categoryProperty, category);
 
-			//IList<T> all = criteria.Add(filterCriterion)
-			//					   .List<T>();
-			IList<T> all = criteria.List<T>();
-
+			IList<T> all = criteria.Add(filterCriterion).List<T>();
+			
 			if (all.Count == 0 || includeQualityConditionsBasedOnDeletedDatasets)
 			{
 				return all;

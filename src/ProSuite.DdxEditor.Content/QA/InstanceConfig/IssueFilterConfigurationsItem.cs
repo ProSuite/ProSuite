@@ -85,10 +85,26 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 		protected override InstanceConfigurationItem CreateNewItemCore(
 			CoreDomainModelItemModelBuilder modelBuilder)
 		{
-			var issueFilterConfig = new IssueFilterConfiguration();
+			var issueFilterConfig = new IssueFilterConfiguration(true);
 
 			return new InstanceConfigurationItem(modelBuilder, issueFilterConfig, this,
 			                                     modelBuilder.InstanceConfigurations);
+		}
+
+		protected override IEnumerable<InstanceConfiguration> GetInstanceConfigurations(
+			DataQualityCategory category)
+		{
+			IList<IssueFilterConfiguration> result = null;
+			bool includeForDelted = ModelBuilder.IncludeQualityConditionsBasedOnDeletedDatasets;
+
+			ModelBuilder.ReadOnlyTransaction(
+				delegate
+				{
+					result = ModelBuilder.InstanceConfigurations.Get<IssueFilterConfiguration>(
+						category, includeForDelted);
+				});
+
+			return result;
 		}
 
 		#endregion

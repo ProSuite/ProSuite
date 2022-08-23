@@ -49,7 +49,18 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 
 		protected override IEnumerable<Item> GetChildren()
 		{
-			return _container.GetInstanceConfigurationItems(this);
+			bool includeForDeleted = _modelBuilder.IncludeQualityConditionsBasedOnDeletedDatasets;
+
+			IList<QualityCondition> qualityConditions =
+				_modelBuilder.ReadOnlyTransaction(
+					() => _modelBuilder.QualityConditions.Get(
+						_container.Category, includeForDeleted));
+
+			return qualityConditions
+			       .OrderBy(q => q.Name)
+			       .Select(qcon => new QualityConditionItem(
+				               _modelBuilder, qcon, this, _modelBuilder.QualityConditions))
+			       .Cast<Item>();
 		}
 
 		protected override Control CreateControlCore(IItemNavigation itemNavigation)

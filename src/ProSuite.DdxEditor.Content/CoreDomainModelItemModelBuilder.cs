@@ -15,6 +15,7 @@ using ProSuite.DdxEditor.Content.LinearNetworks;
 using ProSuite.DdxEditor.Content.Models;
 using ProSuite.DdxEditor.Content.ObjectCategories;
 using ProSuite.DdxEditor.Content.QA.Categories;
+using ProSuite.DdxEditor.Content.QA.InstanceConfig;
 using ProSuite.DdxEditor.Content.QA.InstanceDescriptors;
 using ProSuite.DdxEditor.Content.QA.QCon;
 using ProSuite.DdxEditor.Content.QA.QSpec;
@@ -264,6 +265,8 @@ namespace ProSuite.DdxEditor.Content
 					if (category.CanContainQualityConditions)
 					{
 						result.Add(new QualityConditionsItem(this, item));
+						result.Add(new TransformerConfigurationsItem(this, item));
+						result.Add(new IssueFilterConfigurationsItem(this, item));
 					}
 
 					if (category.CanContainSubCategories && DataQualityCategories != null)

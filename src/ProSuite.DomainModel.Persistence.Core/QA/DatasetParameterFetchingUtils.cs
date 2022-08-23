@@ -87,24 +87,12 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 		}
 
 		[NotNull]
-		public static IDictionary<int, HashSet<int>> GetDatasetParameterIdsByInstanceConfigurationId<T>(
+		public static IDictionary<int, HashSet<int>>
+			GetDatasetParameterIdsByInstanceConfigurationId<T>(
 				[NotNull] ISession session,
 				[CanBeNull] DataQualityCategory category) where T : InstanceConfiguration
 		{
-			//IQuery query = category == null
-			//	               ? session.CreateQuery("select qcon.Id, paramVal.Id " +
-			//	                                     "  from QualityCondition qcon " +
-			//	                                     " inner join qcon.ParameterValues paramVal " +
-			//	                                     " where qcon.Category is null " +
-			//	                                     "   and paramVal.class = DatasetTestParameterValue")
-			//	               : session.CreateQuery("select qcon.Id, paramVal.Id " +
-			//	                                     "  from QualityCondition qcon " +
-			//	                                     " inner join qcon.ParameterValues paramVal " +
-			//	                                     " where qcon.Category = :category " +
-			//	                                     "   and paramVal.class = DatasetTestParameterValue")
-			//	                        .SetEntity("category", category);
-
-			const string categoryProperty = "Category";
+			string categoryProperty = nameof(InstanceConfiguration.Category);
 			ICriterion categoryFilter =
 				category == null
 					? (ICriterion) new NullExpression(categoryProperty)
@@ -150,60 +138,37 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 		{
 			// TODO: Check SQL!
 
-			// TODO: Category
-			//const string categoryProperty = "Category";
-			//ICriterion categoryFilter =
-			//	category == null
-			//		? (ICriterion)new NullExpression(categoryProperty)
-			//		: Restrictions.Eq(categoryProperty, category);
+			string categoryProperty = nameof(InstanceConfiguration.Category);
+			ICriterion categoryFilter =
+				category == null
+					? (ICriterion) new NullExpression(categoryProperty)
+					: Restrictions.Eq(categoryProperty, category);
 
 			T instanceConfigAlias = null;
 			DatasetTestParameterValue parameterValueAlias = null;
 
 			var parametersQuery =
 				session.QueryOver<T>(() => instanceConfigAlias)
-				       //.Where(categoryFilter)
+				       .Where(categoryFilter)
 				       .JoinAlias(i => instanceConfigAlias.ParameterValues,
 				                  () => parameterValueAlias)
 				       //.Where(Restrictions.Eq("parameterValueAlias.class", nameof(DatasetTestParameterValue)))
-				       .Where(() => parameterValueAlias.GetType() == typeof(DatasetTestParameterValue))
+				       .Where(() => parameterValueAlias.GetType() ==
+				                    typeof(DatasetTestParameterValue))
 				       .Select(i => i.AsEntity<T>(), i => parameterValueAlias.AsEntity());
-
-			//IEnumerable<KeyValuePair<T, DatasetTestParameterValue>> flatList = parametersQuery
-			//	.List<object[]>()
-			//	.Select(o => new KeyValuePair<T, DatasetTestParameterValue>(
-			//		        (T) o[0], (DatasetTestParameterValue) o[1]));
-
-			//foreach (var grouping in flatList.GroupBy(kvp => kvp.Key.Id))
-			//{
-			//	grouping.
-			//}
-
-			//foreach (var pair in flatList)
-			//{
-			//	T instanceConfig = (T)pair[0];
-			//	DatasetTestParameterValue parameterValue = (DatasetTestParameterValue)pair[1];
-
-			//	if (!result.TryGetValue(instanceConfig.Id, out List<DatasetTestParameterValue> parameters))
-			//	{
-			//		parameters = new List<DatasetTestParameterValue>();
-			//		result.Add(instanceConfig.Id, parameters);
-			//	}
-
-			//	parameters.Add(parameterValue);
-			//}
-
 
 			var parametersByConfigId = new Dictionary<int, List<DatasetTestParameterValue>>();
 			var configsById = new Dictionary<int, T>();
 			foreach (object[] pair in parametersQuery.List<object[]>())
 			{
-				T instanceConfig = (T)pair[0];
-				DatasetTestParameterValue parameterValue = (DatasetTestParameterValue)pair[1];
+				T instanceConfig = (T) pair[0];
+				DatasetTestParameterValue parameterValue = (DatasetTestParameterValue) pair[1];
 
 				configsById[instanceConfig.Id] = instanceConfig;
 
-				if (!parametersByConfigId.TryGetValue(instanceConfig.Id, out List<DatasetTestParameterValue> parameters))
+				if (! parametersByConfigId.TryGetValue(instanceConfig.Id,
+				                                       out List<DatasetTestParameterValue>
+					                                           parameters))
 				{
 					parameters = new List<DatasetTestParameterValue>();
 					parametersByConfigId.Add(instanceConfig.Id, parameters);
@@ -212,65 +177,21 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 				parameters.Add(parameterValue);
 			}
 
-			foreach (KeyValuePair<int, List<DatasetTestParameterValue>> paramsById in parametersByConfigId)
+			foreach (KeyValuePair<int, List<DatasetTestParameterValue>> paramsById in
+			         parametersByConfigId)
 			{
 				int id = paramsById.Key;
 
 				yield return new KeyValuePair<T, List<DatasetTestParameterValue>>(
 					configsById[id], paramsById.Value);
 			}
-
-
-			//IDictionary<int, List<DatasetTestParameterValue>> dsParamsByConfigId =
-			//	DatasetParameterFetchingUtils.GetDatasetParametersByInstanceConfigId<T>(
-			//		session, category);
-
-
-
-
-
-
-			//IDictionary<int, HashSet<int>> dsParamsByQualityCondition =
-			//	DatasetParameterFetchingUtils.GetDatasetParameterIdsByInstanceConfigurationId<T>(
-			//		session, category);
-
-			//if (dsParamsByQualityCondition.Count == 0)
-			//{
-			//	return result;
-			//}
-
-			//// flatmap to get the complete parameter id list
-			//var allDsParamIds = new HashSet<int>(
-			//	dsParamsByQualityCondition.SelectMany(pair => pair.Value));
-
-			//Dictionary<int, DatasetTestParameterValue> datasetValuesById =
-			//	DatasetParameterFetchingUtils.GetDatasetTestParameterValuesById(session, allDsParamIds);
-
-			//foreach (KeyValuePair<int, HashSet<int>> pair in dsParamsByQualityCondition)
-			//{
-			//	var values = new List<DatasetTestParameterValue>();
-
-			//	foreach (int paramValId in pair.Value)
-			//	{
-			//		DatasetTestParameterValue value;
-			//		if (datasetValuesById.TryGetValue(paramValId, out value))
-			//		{
-			//			values.Add(value);
-			//		}
-			//	}
-
-			//	result.Add(pair.Key, values);
-			//}
-
-			//return result;
 		}
-
 
 		[NotNull]
 		public static IList<T> GetParentConfiguration<T>(
-				[CanBeNull] DataQualityCategory category,
-				[NotNull] ISession session,
-				Expression<Func<bool>> parameterExpression) where T : InstanceConfiguration
+			[CanBeNull] DataQualityCategory category,
+			[NotNull] ISession session,
+			Expression<Func<bool>> parameterExpression) where T : InstanceConfiguration
 		{
 			// TODO: Check SQL!
 
@@ -289,16 +210,16 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 
 			var result =
 				session.QueryOver<T>(() => instanceConfigAlias)
-					   //.Where(categoryFilter)
-					   .JoinAlias(i => instanceConfigAlias.ParameterValues,
-								  () => parameterValueAlias)
-					   //.Where(Restrictions.Eq("parameterValueAlias.class", nameof(DatasetTestParameterValue)))
-					   .Where(() => parameterValueAlias.GetType() == typeof(DatasetTestParameterValue))
-					   .And(parameterExpression).List();
+				       //.Where(categoryFilter)
+				       .JoinAlias(i => instanceConfigAlias.ParameterValues,
+				                  () => parameterValueAlias)
+				       //.Where(Restrictions.Eq("parameterValueAlias.class", nameof(DatasetTestParameterValue)))
+				       .Where(() => parameterValueAlias.GetType() ==
+				                    typeof(DatasetTestParameterValue))
+				       .And(parameterExpression).List();
 
 			return result;
 		}
-
 
 		[NotNull]
 		public static IEnumerable<KeyValuePair<T, List<DatasetTestParameterValue>>>
@@ -324,24 +245,27 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 
 			var parametersQuery =
 				session.QueryOver<T>(() => instanceConfigAlias)
-					   //.Where(categoryFilter)
-					   .JoinAlias(i => instanceConfigAlias.ParameterValues,
-								  () => parameterValueAlias)
-					   //.Where(Restrictions.Eq("parameterValueAlias.class", nameof(DatasetTestParameterValue)))
-					   .Where(() => parameterValueAlias.GetType() == typeof(DatasetTestParameterValue))
-					   .And(parameterExpression)
-					   .Select(i => i.AsEntity<T>(), i => parameterValueAlias.AsEntity());
-			
+				       //.Where(categoryFilter)
+				       .JoinAlias(i => instanceConfigAlias.ParameterValues,
+				                  () => parameterValueAlias)
+				       //.Where(Restrictions.Eq("parameterValueAlias.class", nameof(DatasetTestParameterValue)))
+				       .Where(() => parameterValueAlias.GetType() ==
+				                    typeof(DatasetTestParameterValue))
+				       .And(parameterExpression)
+				       .Select(i => i.AsEntity<T>(), i => parameterValueAlias.AsEntity());
+
 			var parametersByConfigId = new Dictionary<int, List<DatasetTestParameterValue>>();
 			var configsById = new Dictionary<int, T>();
 			foreach (object[] pair in parametersQuery.List<object[]>())
 			{
-				T instanceConfig = (T)pair[0];
-				DatasetTestParameterValue parameterValue = (DatasetTestParameterValue)pair[1];
+				T instanceConfig = (T) pair[0];
+				DatasetTestParameterValue parameterValue = (DatasetTestParameterValue) pair[1];
 
 				configsById[instanceConfig.Id] = instanceConfig;
 
-				if (!parametersByConfigId.TryGetValue(instanceConfig.Id, out List<DatasetTestParameterValue> parameters))
+				if (! parametersByConfigId.TryGetValue(instanceConfig.Id,
+				                                       out List<DatasetTestParameterValue>
+					                                           parameters))
 				{
 					parameters = new List<DatasetTestParameterValue>();
 					parametersByConfigId.Add(instanceConfig.Id, parameters);
@@ -350,7 +274,8 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 				parameters.Add(parameterValue);
 			}
 
-			foreach (KeyValuePair<int, List<DatasetTestParameterValue>> paramsById in parametersByConfigId)
+			foreach (KeyValuePair<int, List<DatasetTestParameterValue>> paramsById in
+			         parametersByConfigId)
 			{
 				int id = paramsById.Key;
 
