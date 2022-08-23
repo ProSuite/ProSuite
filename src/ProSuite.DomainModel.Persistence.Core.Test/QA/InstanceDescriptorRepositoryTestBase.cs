@@ -18,18 +18,12 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.QA
 				"trans1", new ClassDescriptor("factTypeName", "factAssemblyName"), 0);
 
 			var t2 = new TransformerDescriptor(
-				"trans2", new ClassDescriptor("factTypeName", "factAssemblyName__"),
-				0, "desc");
+				"trans2", new ClassDescriptor("factTypeName", "factAssemblyName__"), 0, "desc");
 
-			var f1 = new RowFilterDescriptor(
-				"filt1", new ClassDescriptor("rowFiltTypeName", "factAssemblyName"), 0);
-
-			const int testConstructorId = 1;
 			var i1 = new IssueFilterDescriptor(
-				"ifilt1", new ClassDescriptor("issueFilTypeName", "factAssemblyName"),
-				testConstructorId);
+				"ifilt1", new ClassDescriptor("issueFilTypeName", "factAssemblyName"), 1);
 
-			CreateSchema(t1, t2, f1, i1);
+			CreateSchema(t1, t2, i1);
 
 			UnitOfWork.NewTransaction(
 				delegate
@@ -37,10 +31,10 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.QA
 					AssertUnitOfWorkHasNoChanges();
 					IList<InstanceDescriptor> foundDescriptors = Repository.GetAll();
 
-					Assert.AreEqual(4, foundDescriptors.Count);
+					Assert.AreEqual(3, foundDescriptors.Count);
 
 					InstanceDescriptor foundI1 = foundDescriptors.Single(d => d.Name == "ifilt1");
-					Assert.AreEqual(testConstructorId, foundI1.ConstructorId);
+					Assert.AreEqual(1, foundI1.ConstructorId);
 					Assert.AreEqual(i1.Class, foundI1.Class);
 				});
 		}
@@ -51,12 +45,15 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.QA
 			var t1 = new TransformerDescriptor(
 				"trans1", new ClassDescriptor("factTypeName", "factAssemblyName"), 0);
 
-			const int testConstructorId = 2;
+			const int constructorId = 2;
 			var t2 = new TransformerDescriptor(
 				"trans2", new ClassDescriptor("factTypeName", "factAssemblyName__"),
-				testConstructorId, "desc");
+				constructorId, "desc");
 
-			CreateSchema(t1, t2);
+			var i1 = new IssueFilterDescriptor(
+				"ifilt1", new ClassDescriptor("issueFilTypeName", "factAssemblyName"), 0);
+
+			CreateSchema(t1, t2, i1);
 
 			UnitOfWork.NewTransaction(
 				delegate
@@ -70,8 +67,33 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.QA
 					TransformerDescriptor foundTest2 =
 						foundDescriptors.Single(d => d.Name == "trans2");
 					Assert.AreEqual("desc", foundTest2.Description);
-					Assert.AreEqual(testConstructorId, foundTest2.ConstructorId);
+					Assert.AreEqual(constructorId, foundTest2.ConstructorId);
 					Assert.AreEqual(t2.Class, foundTest2.Class);
+
+					Assert.AreEqual(1, Repository.GetIssueFilterDescriptors());
+				});
+		}
+
+		[Test]
+		public void CanGetWithSameImplementation()
+		{
+			var classDesc = new ClassDescriptor("factTypeName", "factAssemblyName");
+
+			var t1 = new TransformerDescriptor("trans1", classDesc, 0);
+
+			var t2 = new TransformerDescriptor("trans2", classDesc, 0, "desc");
+
+			CreateSchema(t1);
+
+			UnitOfWork.NewTransaction(
+				delegate
+				{
+					AssertUnitOfWorkHasNoChanges();
+					InstanceDescriptor foundDescriptor = Repository.GetWithSameImplementation(t2);
+
+					Assert.NotNull(foundDescriptor);
+
+					Assert.AreEqual(t2.Class, foundDescriptor.Class);
 				});
 		}
 	}

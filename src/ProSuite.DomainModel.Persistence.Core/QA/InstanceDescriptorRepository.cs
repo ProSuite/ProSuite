@@ -51,7 +51,7 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 
 			using (ISession session = OpenSession(true))
 			{
-				ICriteria criteria = session.CreateCriteria(typeof(TestDescriptor));
+				ICriteria criteria = session.CreateCriteria(typeof(InstanceDescriptor));
 
 				Assert.ArgumentNotNull(instanceDescriptor.Class,
 				                       $"Class of instance descriptor {instanceDescriptor} is null");
@@ -61,7 +61,7 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 					             Restrictions.Eq("ConstructorId",
 					                             instanceDescriptor.ConstructorId)));
 
-				return criteria.UniqueResult<TestDescriptor>();
+				return criteria.UniqueResult<InstanceDescriptor>();
 			}
 		}
 
