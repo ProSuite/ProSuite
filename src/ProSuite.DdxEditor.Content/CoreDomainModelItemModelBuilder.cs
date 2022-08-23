@@ -114,6 +114,9 @@ namespace ProSuite.DdxEditor.Content
 
 		public abstract IXmlDataQualityExporter DataQualityExporter { get; }
 
+		public virtual bool SupportsTransformersAndFilters =>
+			Environment.Version >= new Version(6, 0);
+
 		public abstract IEnumerable<Item> GetChildren([NotNull] ModelsItemBase modelItem);
 
 		public abstract IEnumerable<Item> GetChildren<E>([NotNull] ModelItemBase<E> modelItem)
@@ -265,8 +268,12 @@ namespace ProSuite.DdxEditor.Content
 					if (category.CanContainQualityConditions)
 					{
 						result.Add(new QualityConditionsItem(this, item));
-						result.Add(new TransformerConfigurationsItem(this, item));
-						result.Add(new IssueFilterConfigurationsItem(this, item));
+
+						if (SupportsTransformersAndFilters)
+						{
+							result.Add(new TransformerConfigurationsItem(this, item));
+							result.Add(new IssueFilterConfigurationsItem(this, item));
+						}
 					}
 
 					if (category.CanContainSubCategories && DataQualityCategories != null)

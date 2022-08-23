@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -49,7 +48,7 @@ namespace ProSuite.DdxEditor.Content.QA
 
 		protected override IEnumerable<Item> GetChildren()
 		{
-			if (Environment.Version >= new Version(6, 0))
+			if (_modelBuilder.SupportsTransformersAndFilters)
 			{
 				foreach (Item item in GetChildrenDdxCore())
 				{
@@ -59,6 +58,7 @@ namespace ProSuite.DdxEditor.Content.QA
 				yield break;
 			}
 
+			// Legacy setup:
 			yield return RegisterChild(new QualitySpecificationsItem(_modelBuilder, this));
 
 			yield return RegisterChild(new QualityConditionsItem(_modelBuilder, this));
