@@ -14,14 +14,17 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 		bool IncludeAssemblyInfo { get; set; }
 
 		/// <summary>
-		/// Gets or sets a value indicating whether obsolete tests or factories are
+		/// Gets or sets a value indicating whether obsolete instance descriptors are
 		/// included.
 		/// </summary>
-		/// <value><c>true</c> if obsolete tests or factories should be included; otherwise, <c>false</c>.</value>
+		/// <value><c>true</c> if obsolete tests, factories, transformers or filters should be
+		/// included; otherwise, <c>false</c>.</value>
 		bool IncludeObsolete { get; set; }
 
 		void AddHeaderItem([NotNull] string name, [CanBeNull] string value);
 
-		void IncludeTransformer([NotNull] Type testType, int ctorIndex);
+		void IncludeTransformer([NotNull] Type transformerType, int ctorIndex);
+
+		void IncludeIssueFilter(Type issueFilterType, int ctorIndex);
 	}
 }

@@ -52,7 +52,7 @@ namespace ProSuite.DomainModel.AO.QA
 
 			throw new NotImplementedException();
 		}
-		
+
 		private static IssueFilterFactory CreateIssueFilterFactory(
 			[NotNull] IssueFilterConfiguration issueFilterConfig)
 		{
@@ -132,6 +132,18 @@ namespace ProSuite.DomainModel.AO.QA
 			Type transformerType = typeof(ITableTransformer);
 
 			return GetClasses(assembly, transformerType, includeObsolete, includeInternallyUsed);
+		}
+
+		[NotNull]
+		public static IEnumerable<Type> GetIssueFilterClasses([NotNull] Assembly assembly,
+		                                                      bool includeObsolete,
+		                                                      bool includeInternallyUsed)
+		{
+			Assert.ArgumentNotNull(assembly, nameof(assembly));
+
+			Type filterType = typeof(IIssueFilter);
+
+			return GetClasses(assembly, filterType, includeObsolete, includeInternallyUsed);
 		}
 
 		[NotNull]
