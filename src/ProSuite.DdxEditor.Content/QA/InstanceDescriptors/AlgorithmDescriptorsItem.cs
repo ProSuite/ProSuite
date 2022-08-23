@@ -7,21 +7,21 @@ using ProSuite.DdxEditor.Framework.Items;
 
 namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 {
-	public class AlgorithmImplementationItem : GroupItem
+	public class AlgorithmDescriptorsItem : GroupItem
 	{
 		[NotNull] private readonly CoreDomainModelItemModelBuilder _modelBuilder;
 		[NotNull] private static readonly Image _image;
 		[NotNull] private static readonly Image _selectedImage;
 
-		static AlgorithmImplementationItem()
+		static AlgorithmDescriptorsItem()
 		{
 			_image = ItemUtils.GetGroupItemImage(Resources.TestDescriptorsOverlay);
 			_selectedImage = ItemUtils.GetGroupItemSelectedImage(
 				Resources.TestDescriptorsOverlay);
 		}
 
-		public AlgorithmImplementationItem([NotNull] CoreDomainModelItemModelBuilder modelBuilder)
-			: base("Algorithm Implementations", "Test, transformer and filter implementations")
+		public AlgorithmDescriptorsItem([NotNull] CoreDomainModelItemModelBuilder modelBuilder)
+			: base("Algorithm Descriptors", "Test, transformer and filter implementations")
 		{
 			_modelBuilder = modelBuilder;
 		}

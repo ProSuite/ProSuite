@@ -31,7 +31,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
         private void InitializeComponent()
         {
 			this.components = new System.ComponentModel.Container();
-			System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
+			System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
 			this._labelDescription = new System.Windows.Forms.Label();
 			this._textBoxDescription = new System.Windows.Forms.TextBox();
 			this._labelName = new System.Windows.Forms.Label();
@@ -189,7 +189,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 			this._groupBoxClass.Size = new System.Drawing.Size(998, 152);
 			this._groupBoxClass.TabIndex = 1;
 			this._groupBoxClass.TabStop = false;
-			this._groupBoxClass.Text = "Algorithm Implementation";
+			this._groupBoxClass.Text = "Implementation";
 			// 
 			// _comboBoxConstructorIndex
 			// 
@@ -198,7 +198,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 			this._comboBoxConstructorIndex.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
 			this._comboBoxConstructorIndex.Font = new System.Drawing.Font("Courier New", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
 			this._comboBoxConstructorIndex.FormattingEnabled = true;
-			this._comboBoxConstructorIndex.Location = new System.Drawing.Point(133, 87);
+			this._comboBoxConstructorIndex.Location = new System.Drawing.Point(133, 90);
 			this._comboBoxConstructorIndex.Margin = new System.Windows.Forms.Padding(5, 6, 5, 6);
 			this._comboBoxConstructorIndex.Name = "_comboBoxConstructorIndex";
 			this._comboBoxConstructorIndex.Size = new System.Drawing.Size(826, 28);
@@ -241,15 +241,15 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 			this._dataGridViewParameter.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.AllCells;
 			this._dataGridViewParameter.AutoSizeRowsMode = System.Windows.Forms.DataGridViewAutoSizeRowsMode.AllCells;
 			this._dataGridViewParameter.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-			dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-			dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.ControlLight;
-			dataGridViewCellStyle1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-			dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.ControlText;
-			dataGridViewCellStyle1.Padding = new System.Windows.Forms.Padding(0, 2, 0, 2);
-			dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-			dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-			dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-			this._dataGridViewParameter.DefaultCellStyle = dataGridViewCellStyle1;
+			dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+			dataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.ControlLight;
+			dataGridViewCellStyle2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+			dataGridViewCellStyle2.ForeColor = System.Drawing.SystemColors.ControlText;
+			dataGridViewCellStyle2.Padding = new System.Windows.Forms.Padding(0, 2, 0, 2);
+			dataGridViewCellStyle2.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+			dataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+			dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+			this._dataGridViewParameter.DefaultCellStyle = dataGridViewCellStyle2;
 			this._dataGridViewParameter.Location = new System.Drawing.Point(153, 6);
 			this._dataGridViewParameter.Margin = new System.Windows.Forms.Padding(5, 6, 5, 6);
 			this._dataGridViewParameter.Name = "_dataGridViewParameter";
@@ -257,7 +257,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 			this._dataGridViewParameter.RowHeadersVisible = false;
 			this._dataGridViewParameter.RowHeadersWidth = 62;
 			this._dataGridViewParameter.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-			this._dataGridViewParameter.Size = new System.Drawing.Size(887, 471);
+			this._dataGridViewParameter.Size = new System.Drawing.Size(887, 467);
 			this._dataGridViewParameter.TabIndex = 13;
 			// 
 			// _groupBoxClassOrFactory
@@ -383,13 +383,13 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
             this._columnQualityConditionDescription});
 			this._dataGridViewQualityConditions.Dock = System.Windows.Forms.DockStyle.Fill;
 			this._dataGridViewQualityConditions.EditMode = System.Windows.Forms.DataGridViewEditMode.EditOnEnter;
-			this._dataGridViewQualityConditions.Location = new System.Drawing.Point(5, 82);
+			this._dataGridViewQualityConditions.Location = new System.Drawing.Point(5, 90);
 			this._dataGridViewQualityConditions.Margin = new System.Windows.Forms.Padding(5, 6, 5, 6);
 			this._dataGridViewQualityConditions.Name = "_dataGridViewQualityConditions";
 			this._dataGridViewQualityConditions.RowHeadersVisible = false;
 			this._dataGridViewQualityConditions.RowHeadersWidth = 62;
 			this._dataGridViewQualityConditions.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-			this._dataGridViewQualityConditions.Size = new System.Drawing.Size(1055, 796);
+			this._dataGridViewQualityConditions.Size = new System.Drawing.Size(1055, 788);
 			this._dataGridViewQualityConditions.TabIndex = 26;
 			this._dataGridViewQualityConditions.CellDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this._dataGridViewQualityConditions_CellDoubleClick);
 			this._dataGridViewQualityConditions.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this._dataGridViewQualityConditions_CellEndEdit);
@@ -457,7 +457,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 			this._dataGridViewFindToolStrip.Observer = null;
 			this._dataGridViewFindToolStrip.Padding = new System.Windows.Forms.Padding(0, 0, 3, 0);
 			this._dataGridViewFindToolStrip.RenderMode = System.Windows.Forms.ToolStripRenderMode.System;
-			this._dataGridViewFindToolStrip.Size = new System.Drawing.Size(1055, 28);
+			this._dataGridViewFindToolStrip.Size = new System.Drawing.Size(1055, 36);
 			this._dataGridViewFindToolStrip.TabIndex = 28;
 			this._dataGridViewFindToolStrip.Text = "_dataGridViewFindToolStrip";
 			// 
@@ -480,7 +480,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 			// toolStripLabel1
 			// 
 			this.toolStripLabel1.Name = "toolStripLabel1";
-			this.toolStripLabel1.Size = new System.Drawing.Size(86, 43);
+			this.toolStripLabel1.Size = new System.Drawing.Size(129, 43);
 			this.toolStripLabel1.Text = "Configurations";
 			// 
 			// InstanceDescriptorControl

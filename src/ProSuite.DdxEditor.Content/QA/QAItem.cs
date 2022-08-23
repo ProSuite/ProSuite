@@ -73,7 +73,7 @@ namespace ProSuite.DdxEditor.Content.QA
 
 		private IEnumerable<Item> GetChildrenDdxCore()
 		{
-			yield return RegisterChild(new AlgorithmImplementationItem(_modelBuilder));
+			yield return RegisterChild(new AlgorithmDescriptorsItem(_modelBuilder));
 
 			yield return RegisterChild(new QualitySpecificationsItem(_modelBuilder, this));
 
