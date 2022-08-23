@@ -120,11 +120,15 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 		}
 
 		[CanBeNull]
-		private static ClassDescriptor FindTestClassProvider(
+		private ClassDescriptor FindTestClassProvider(
 			[NotNull] IWin32Window owner,
 			[CanBeNull] ClassDescriptor orig)
 		{
-			return FindClassDescriptor<ITest>(owner, orig);
+			InstanceDescriptor descriptor = Assert.NotNull(GetEntity());
+
+			return descriptor is TransformerDescriptor
+				       ? FindClassDescriptor<ITableTransformer>(owner, orig)
+				       : FindClassDescriptor<IIssueFilter>(owner, orig);
 		}
 
 		[CanBeNull]
