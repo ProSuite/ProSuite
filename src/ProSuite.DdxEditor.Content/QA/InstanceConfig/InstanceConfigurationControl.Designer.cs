@@ -417,7 +417,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			// 
 			this.toolStripLabel1.Name = "toolStripLabel1";
 			this.toolStripLabel1.Size = new System.Drawing.Size(235, 43);
-			this.toolStripLabel1.Text = "This instance is reference by:";
+			this.toolStripLabel1.Text = "This instance is referenced by:";
 			// 
 			// miniToolStrip
 			// 
