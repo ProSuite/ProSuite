@@ -129,7 +129,7 @@ namespace ProSuite.QA.Tests.Documentation {
         /// <summary>
         ///   Looks up a localized string similar to (Default = false)
         ///- false: create separate features when 3 or more features are connected. Only connections with 2 features are dissolved.
-        ///- true: create multpart features for all connected source features..
+        ///- true: create multipart features for all connected source features..
         /// </summary>
         public static string TrDissolve_CreateMultipartFeatures {
             get {
@@ -261,18 +261,18 @@ namespace ProSuite.QA.Tests.Documentation {
         /// <summary>
         ///   Looks up a localized string similar to Transforms closed lines of &apos;closedLineClass&apos; to polygons.
         /// </summary>
-        public static string TrLineToPoly_0 {
+        public static string TrLineToPolygon_0 {
             get {
-                return ResourceManager.GetString("TrLineToPoly_0", resourceCulture);
+                return ResourceManager.GetString("TrLineToPolygon_0", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to line feature class to transform.
         /// </summary>
-        public static string TrLineToPoly_closedLineClass {
+        public static string TrLineToPolygon_closedLineClass {
             get {
-                return ResourceManager.GetString("TrLineToPoly_closedLineClass", resourceCulture);
+                return ResourceManager.GetString("TrLineToPolygon_closedLineClass", resourceCulture);
             }
         }
         
@@ -280,9 +280,9 @@ namespace ProSuite.QA.Tests.Documentation {
         ///   Looks up a localized string similar to Defines how to handle not closed lines
         ///- AsPolygonIfClosedElseIgnore (default) : ignore not closed lines.
         /// </summary>
-        public static string TrLineToPoly_PolylineUsage {
+        public static string TrLineToPolygon_PolylineUsage {
             get {
-                return ResourceManager.GetString("TrLineToPoly_PolylineUsage", resourceCulture);
+                return ResourceManager.GetString("TrLineToPolygon_PolylineUsage", resourceCulture);
             }
         }
         
@@ -344,7 +344,7 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Transforms multi-lines to single lines. The transformed feature class has the attribute PartIndex. This field index from which polygon part the transformed polygon part was generated.
+        ///   Looks up a localized string similar to Transforms multipart lines to single lines. The transformed feature class has the attribute PartIndex. This field index from which line part the transformed line was generated.
         /// </summary>
         public static string TrMultilineToLine_0 {
             get {
@@ -362,7 +362,7 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Transforms multi-polygons to single polygons. The transformed feature class has the attributes OuterRingIndex and InnerRingIndex. These fields index from which polygon part the transformed polygon part was generated.
+        ///   Looks up a localized string similar to Transforms multipart polygons to single polygons. The transformed feature class has the attributes OuterRingIndex and InnerRingIndex. These fields index from which polygon part the transformed polygon was generated.
         ///The transformed feature class has also the attributes of &apos;featureClass&apos;, which can be accessed by &apos;t0.&lt;fieldName&gt;&apos;..
         /// </summary>
         public static string TrMultipolygonToPolygon_0 {
@@ -451,18 +451,18 @@ namespace ProSuite.QA.Tests.Documentation {
         ///   Looks up a localized string similar to Transform polygon to line by taking the boundary of the polygons in &apos;featureClass&apos;.
         ///The transformed feature class has also the attributes of &apos;featureClass&apos;, which can be accessed by &apos;t0.&lt;fieldName&gt;&apos;..
         /// </summary>
-        public static string TrPolyToLine_0 {
+        public static string TrPolygonToLine_0 {
             get {
-                return ResourceManager.GetString("TrPolyToLine_0", resourceCulture);
+                return ResourceManager.GetString("TrPolygonToLine_0", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to polygon feature class.
         /// </summary>
-        public static string TrPolyToLine_featureClass {
+        public static string TrPolygonToLine_featureClass {
             get {
-                return ResourceManager.GetString("TrPolyToLine_featureClass", resourceCulture);
+                return ResourceManager.GetString("TrPolygonToLine_featureClass", resourceCulture);
             }
         }
         

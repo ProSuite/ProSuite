@@ -130,7 +130,7 @@ In the resulting feature class, only attributes defined in 'Attributes' or 'Grou
   <data name="TrDissolve_CreateMultipartFeatures" xml:space="preserve">
     <value>(Default = false)
 - false: create separate features when 3 or more features are connected. Only connections with 2 features are dissolved.
-- true: create multpart features for all connected source features.</value>
+- true: create multipart features for all connected source features.</value>
   </data>
   <data name="TrDissolve_featureClass" xml:space="preserve">
     <value>Line feature class to dissolve</value>
@@ -175,13 +175,13 @@ If intersected is a line class and intersecting is a polygon class, then the res
   <data name="TrIntersect_intersecting" xml:space="preserve">
     <value>Feature class. The attributes of 'intersecting' can be accessed by 't1.&lt;field&gt;' in the resulting featureClass</value>
   </data>
-  <data name="TrLineToPoly_0" xml:space="preserve">
+  <data name="TrLineToPolygon_0" xml:space="preserve">
     <value>Transforms closed lines of 'closedLineClass' to polygons</value>
   </data>
-  <data name="TrLineToPoly_closedLineClass" xml:space="preserve">
+  <data name="TrLineToPolygon_closedLineClass" xml:space="preserve">
     <value>line feature class to transform</value>
   </data>
-  <data name="TrLineToPoly_PolylineUsage" xml:space="preserve">
+  <data name="TrLineToPolygon_PolylineUsage" xml:space="preserve">
     <value>Defines how to handle not closed lines
 - AsPolygonIfClosedElseIgnore (default) : ignore not closed lines</value>
   </data>
@@ -221,13 +221,13 @@ The input filters are referenced by the transformer configuration name. If not s
     <value>The filters which should be checked to determine if a feature passes the filter. By default, a feature passes the filter if it passes all input filters.</value>
   </data>
   <data name="TrMultilineToLine_0" xml:space="preserve">
-    <value>Transforms multi-lines to single lines. The transformed feature class has the attribute PartIndex. This field index from which polygon part the transformed polygon part was generated</value>
+    <value>Transforms multipart lines to single lines. The transformed feature class has the attribute PartIndex. This field index from which line part the transformed line was generated</value>
   </data>
   <data name="TrMultilineToLine_featureClass" xml:space="preserve">
     <value>line feature class to transform</value>
   </data>
   <data name="TrMultipolygonToPolygon_0" xml:space="preserve">
-    <value>Transforms multi-polygons to single polygons. The transformed feature class has the attributes OuterRingIndex and InnerRingIndex. These fields index from which polygon part the transformed polygon part was generated.
+    <value>Transforms multipart polygons to single polygons. The transformed feature class has the attributes OuterRingIndex and InnerRingIndex. These fields index from which polygon part the transformed polygon was generated.
 The transformed feature class has also the attributes of 'featureClass', which can be accessed by 't0.&lt;fieldName&gt;'.</value>
   </data>
   <data name="TrMultipolygonToPolygon_featureClass" xml:space="preserve">
@@ -258,11 +258,11 @@ The transformed feature class has also the attributes of 'featureClass', which c
   <data name="TrOnlyIntersectingFeatures_intersecting" xml:space="preserve">
     <value>The features used to check if they intersect the features to be filtered.</value>
   </data>
-  <data name="TrPolyToLine_0" xml:space="preserve">
+  <data name="TrPolygonToLine_0" xml:space="preserve">
     <value>Transform polygon to line by taking the boundary of the polygons in 'featureClass'.
 The transformed feature class has also the attributes of 'featureClass', which can be accessed by 't0.&lt;fieldName&gt;'.</value>
   </data>
-  <data name="TrPolyToLine_featureClass" xml:space="preserve">
+  <data name="TrPolygonToLine_featureClass" xml:space="preserve">
     <value>polygon feature class</value>
   </data>
   <data name="TrSpatialJoin_0" xml:space="preserve">
