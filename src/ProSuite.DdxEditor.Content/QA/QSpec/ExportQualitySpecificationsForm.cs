@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
@@ -75,7 +75,7 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 
 		public bool ExportConnectionFilePaths => _checkBoxExportConnectionFilePaths.Checked;
 
-		public bool ExportAllTestDescriptors => _radioButtonExportAllTestDescriptors.Checked;
+		public bool ExportAllDescriptors => _radioButtonExportAllTestDescriptors.Checked;
 
 		public bool ExportAllCategories => _radioButtonExportAllCategories.Checked;
 

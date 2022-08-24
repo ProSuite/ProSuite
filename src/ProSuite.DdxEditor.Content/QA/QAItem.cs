@@ -244,7 +244,7 @@ namespace ProSuite.DdxEditor.Content.QA
 			ICollection<string> deletableFiles, bool exportMetadata,
 			bool? exportWorkspaceConnections,
 			bool exportConnectionFilePaths,
-			bool exportAllTestDescriptors,
+			bool exportAllDescriptors,
 			bool exportAllCategories,
 			bool exportNotes)
 		{
@@ -254,7 +254,7 @@ namespace ProSuite.DdxEditor.Content.QA
 				exportMetadata,
 				exportWorkspaceConnections,
 				exportConnectionFilePaths,
-				exportAllTestDescriptors,
+				exportAllDescriptors,
 				exportAllCategories,
 				exportNotes,
 				_modelBuilder);

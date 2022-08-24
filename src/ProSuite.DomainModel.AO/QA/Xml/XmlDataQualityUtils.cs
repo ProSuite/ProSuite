@@ -1375,28 +1375,30 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 
 		public static void CreateXmlDataQualityDocument<T>(
 			[NotNull] IEnumerable<QualitySpecification> qualitySpecifications,
-			[NotNull] IEnumerable<TestDescriptor> testDescriptors,
+			[NotNull] IList<InstanceDescriptor> descriptors,
 			[NotNull] IEnumerable<DataQualityCategory> categories,
 			bool exportMetadata,
 			bool exportConnections,
 			bool exportConnectionFilePaths,
+			bool exportAllDescriptors,
 			bool exportAllCategories,
 			bool exportNotes,
 			out T result)
 		where T : XmlDataQualityDocument, new()
 		{
 			Assert.ArgumentNotNull(qualitySpecifications, nameof(qualitySpecifications));
-			Assert.ArgumentNotNull(testDescriptors, nameof(testDescriptors));
+			Assert.ArgumentNotNull(descriptors, nameof(descriptors));
 
 			result = new T();
 
 			Populate(result,
 					 qualitySpecifications.ToList(),
-					 testDescriptors,
+					 descriptors,
 					 categories,
 					 exportMetadata,
 					 exportConnections,
 					 exportConnectionFilePaths,
+					 exportAllDescriptors,
 					 exportAllCategories,
 					 exportNotes);
 		}
@@ -1714,17 +1716,18 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		private static void Populate(
 			[NotNull] XmlDataQualityDocument document,
 			[NotNull] IList<QualitySpecification> qualitySpecifications,
-			[NotNull] IEnumerable<TestDescriptor> testDescriptors,
+			[NotNull] IList<InstanceDescriptor> descriptors,
 			[NotNull] IEnumerable<DataQualityCategory> categories,
 			bool exportMetadata,
 			bool exportWorkspaceConnections,
 			bool exportConnectionFilePaths,
+			bool exportAllDescriptors,
 			bool exportAllCategories,
 			bool exportNotes)
 		{
 			Assert.ArgumentNotNull(document, nameof(document));
 			Assert.ArgumentNotNull(qualitySpecifications, nameof(qualitySpecifications));
-			Assert.ArgumentNotNull(testDescriptors, nameof(testDescriptors));
+			Assert.ArgumentNotNull(descriptors, nameof(descriptors));
 			Assert.ArgumentNotNull(categories, nameof(categories));
 
 			IDictionary<Model, string> workspaceIdsByModel =
@@ -1743,16 +1746,25 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 				out IReadOnlyList<TransformerConfiguration> transformerConfigurations,
 				out IReadOnlyList<IssueFilterConfiguration> issueFilterConfigurations);
 
+			IReadOnlyList<TestDescriptor> testDescriptors =
+				exportAllDescriptors
+					? descriptors.OfType<TestDescriptor>().ToList()
+					: GetTestDescriptors(qualityConditions);
+
 			IReadOnlyList<TransformerDescriptor> transformerDescriptors =
-				GetTransformerDescriptors(transformerConfigurations);
+				exportAllDescriptors
+					? descriptors.OfType<TransformerDescriptor>().ToList()
+					: GetTransformerDescriptors(transformerConfigurations);
 
 			IReadOnlyList<IssueFilterDescriptor> issueFilterDescriptors =
-				GetIssueFilterDescriptors(issueFilterConfigurations);
+				exportAllDescriptors
+					? descriptors.OfType<IssueFilterDescriptor>().ToList()
+					: GetIssueFilterDescriptors(issueFilterConfigurations);
 
-			foreach (TestDescriptor testDescriptor in GetSortedDescriptors(testDescriptors))
+			foreach (var testDescriptor in GetSortedDescriptors(testDescriptors))
 			{
-				document.AddTestDescriptor(CreateXmlTestDescriptor(testDescriptor,
-					                           exportMetadata));
+				document.AddTestDescriptor(
+					CreateXmlTestDescriptor(testDescriptor, exportMetadata));
 			}
 
 			foreach (var transformerDescriptor in GetSortedDescriptors(transformerDescriptors))
@@ -1847,6 +1859,25 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			}
 
 			return uniqueConditions.ToList();
+		}
+
+		[NotNull]
+		private static IReadOnlyList<TestDescriptor> GetTestDescriptors(
+			[NotNull] IEnumerable<QualityCondition> qualityConditions)
+		{
+			var descriptors = new HashSet<TestDescriptor>();
+
+			foreach (QualityCondition qualityCondition in qualityConditions)
+			{
+				TestDescriptor testDescriptor = qualityCondition.TestDescriptor;
+
+				if (testDescriptor != null)
+				{
+					descriptors.Add(testDescriptor);
+				}
+			}
+
+			return descriptors.ToList();
 		}
 
 		private static IReadOnlyList<TransformerDescriptor> GetTransformerDescriptors(
