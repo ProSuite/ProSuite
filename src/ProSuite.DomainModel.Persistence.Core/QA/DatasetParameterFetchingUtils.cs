@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using NHibernate;
 using NHibernate.Criterion;
+using NHibernate.Transform;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -189,24 +190,13 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 
 		[NotNull]
 		public static IList<T> GetParentConfiguration<T>(
-			[CanBeNull] DataQualityCategory category,
 			[NotNull] ISession session,
 			Expression<Func<bool>> parameterExpression) where T : InstanceConfiguration
 		{
 			// TODO: Check SQL!
 
-			// TODO: Category
-			//const string categoryProperty = "Category";
-			//ICriterion categoryFilter =
-			//	category == null
-			//		? (ICriterion)new NullExpression(categoryProperty)
-			//		: Restrictions.Eq(categoryProperty, category);
-
 			T instanceConfigAlias = null;
 			DatasetTestParameterValue parameterValueAlias = null;
-
-			//Expression<Func<bool>> extraParameterExpression =
-			//	() => p => parameterExpression(parameterValueAlias);
 
 			var result =
 				session.QueryOver<T>(() => instanceConfigAlias)
@@ -283,5 +273,266 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 					configsById[id], paramsById.Value);
 			}
 		}
+
+		#region Get Datasets from instance configuration (recursive)
+
+		/// <summary>
+		/// Returns all the IDs of transformers that directly or indirectly reference one of the
+		/// datasets identified by the provided <see cref="datasetIds"/>.
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="session"></param>
+		/// <param name="datasetIds"></param>
+		/// <param name="excludeReferenceData"></param>
+		/// <returns></returns>
+		public static IEnumerable<int> GetAllTransformerIdsForDatasets(
+			[NotNull] ISession session,
+			IEnumerable<int> datasetIds,
+			bool excludeReferenceData = true)
+		{
+			int[] datasetIdArray = datasetIds.ToArray();
+
+			DatasetTestParameterValue parameterValueAlias = null;
+
+			TransformerConfiguration transformerAlias = null;
+			var query =
+				session.QueryOver(() => transformerAlias)
+				       .JoinAlias(i => transformerAlias.ParameterValues,
+				                  () => parameterValueAlias)
+				       .Where(() => parameterValueAlias.GetType() ==
+				                    typeof(DatasetTestParameterValue))
+				       .And(() => parameterValueAlias.DatasetValue.Id.IsIn(datasetIdArray))
+				       .And(() => ! parameterValueAlias.UsedAsReferenceData)
+				       .Select(t => t.Id);
+
+			if (excludeReferenceData)
+			{
+				query = query.Where(() => ! parameterValueAlias.UsedAsReferenceData);
+			}
+
+			IList<int> transformerIds = query.List<int>();
+
+			List<int> allTransformerIds = new List<int>(transformerIds);
+
+			// Walk up the dependency tree, max round trip count == depth of the tree
+			while (transformerIds.Count > 0)
+			{
+				transformerIds = GetReferencedTransformerIdentifiers(session, transformerIds);
+
+				allTransformerIds.AddRange(transformerIds);
+			}
+
+			return allTransformerIds;
+		}
+
+		private static IList<int> GetReferencedTransformerIdentifiers(
+			[NotNull] ISession session,
+			[NotNull] IEnumerable<int> transformerIds)
+		{
+			TransformerConfiguration transformerAlias = null;
+			DatasetTestParameterValue parameterValueAlias = null;
+
+			var transformerIdArray = transformerIds.ToArray();
+
+			IList<int> result =
+				session.QueryOver<TransformerConfiguration>(
+					       () => transformerAlias)
+				       .JoinAlias(i => transformerAlias.ParameterValues,
+				                  () => parameterValueAlias)
+				       .Where(() => parameterValueAlias.GetType() ==
+				                    typeof(DatasetTestParameterValue))
+				       .And(() => parameterValueAlias.ValueSource.Id.IsIn(transformerIdArray))
+				       .Select(t => t.Id).List<int>();
+
+			return result;
+		}
+
+		public static IEnumerable<Dataset> GetAllReferencedDatasets(
+			[NotNull] ISession session,
+			[NotNull] IEnumerable<QualityCondition> qualityConditions,
+			bool includeReferenceViaIssueFilters,
+			Predicate<DatasetTestParameterValue> testParameterPredicate = null)
+		{
+			List<InstanceConfiguration> referencedTransformers =
+				new List<InstanceConfiguration>();
+
+			foreach (Dataset directlyReferenced in GetReferencedDatasets(
+				         session, qualityConditions, referencedTransformers,
+				         includeReferenceViaIssueFilters, testParameterPredicate))
+			{
+				yield return directlyReferenced;
+			}
+
+			List<int> transformerIds = referencedTransformers.Select(t => t.Id).ToList();
+			while (transformerIds.Count > 0)
+			{
+				var referencedTransformerIds = new List<InstanceConfiguration>();
+				foreach (Dataset referencedDataset in GetReferencedDatasets(
+					         session, transformerIds, referencedTransformerIds,
+					         testParameterPredicate))
+				{
+					yield return referencedDataset;
+				}
+
+				transformerIds = referencedTransformerIds.Select(t => t.Id).ToList();
+			}
+		}
+
+		private static IEnumerable<Dataset> GetReferencedDatasets(
+			[NotNull] ISession session,
+			[NotNull] IEnumerable<QualityCondition> referencedByConditions,
+			[NotNull] List<InstanceConfiguration> referencedTransformers,
+			bool includeReferencesViaIssueFilters,
+			[CanBeNull] Predicate<DatasetTestParameterValue> testParameterPredicate = null)
+		{
+			var conditionIds = referencedByConditions.Select(t => t.Id).ToArray();
+
+			QualityCondition qualityConditionAlias = null;
+			TestParameterValue testParamAlias = null;
+
+			// Initial query, eagerly fetching transformers including their parameters
+			IQueryOver<QualityCondition>
+				parametersQuery =
+					session.QueryOver<QualityCondition>(() => qualityConditionAlias)
+					       .Fetch(SelectMode.FetchLazyProperties,
+					              () => qualityConditionAlias.ParameterValues)
+					       .JoinQueryOver(qc => qc.ParameterValues, () => testParamAlias)
+					       .Where(() => testParamAlias.GetType() ==
+					                    typeof(DatasetTestParameterValue))
+					       .Fetch(SelectMode.FetchLazyProperties,
+					              () => testParamAlias.ValueSource.ParameterValues)
+					       .Where(() => qualityConditionAlias.Id.IsIn(conditionIds))
+					       .TransformUsing(Transformers.DistinctRootEntity);
+
+			if (includeReferencesViaIssueFilters)
+			{
+				// Also fetch issue filters (without parameters, because that extra round trip is probably rare
+				// and the extra join probably not worth it) -> profile real-world data
+				parametersQuery.Fetch(SelectMode.FetchLazyProperties,
+				                      () => qualityConditionAlias.IssueFilterConfigurations);
+			}
+
+			var initialResult = parametersQuery.List<QualityCondition>();
+
+			foreach (Dataset dataset in
+			         GetReferencedDatasets(initialResult, referencedTransformers,
+			                               testParameterPredicate))
+			{
+				yield return dataset;
+			}
+
+			if (includeReferencesViaIssueFilters)
+			{
+				var issueFilters = initialResult.SelectMany(c => c.IssueFilterConfigurations);
+
+				foreach (Dataset dataset in
+				         GetReferencedDatasets(issueFilters, referencedTransformers,
+				                               testParameterPredicate))
+				{
+					yield return dataset;
+				}
+			}
+		}
+
+		private static IEnumerable<Dataset> GetReferencedDatasets(
+			[NotNull] ISession session,
+			[NotNull] ICollection<int> forTransformerIds,
+			[NotNull] List<InstanceConfiguration> referencedTransformers,
+			[CanBeNull] Predicate<DatasetTestParameterValue> testParameterPredicate = null)
+		{
+			TransformerConfiguration transformerConfigAlias = null;
+			TestParameterValue testParamAlias = null;
+			IQueryOver<TransformerConfiguration>
+				transformersQuery =
+					session.QueryOver<TransformerConfiguration>(() => transformerConfigAlias)
+					       .Fetch(SelectMode.FetchLazyProperties,
+					              () => transformerConfigAlias.ParameterValues)
+					       .JoinQueryOver(tc => tc.ParameterValues, () => testParamAlias)
+					       .Where(() => testParamAlias.GetType() ==
+					                    typeof(DatasetTestParameterValue))
+					       .Fetch(SelectMode.FetchLazyProperties,
+					              () => testParamAlias.ValueSource.ParameterValues)
+					       .Where(() => transformerConfigAlias.Id.IsIn(
+						              forTransformerIds.ToArray()));
+
+			IEnumerable<InstanceConfiguration> resultList =
+				transformersQuery.List<TransformerConfiguration>();
+
+			foreach (Dataset dataset in GetReferencedDatasets(
+				         resultList, referencedTransformers, testParameterPredicate))
+			{
+				yield return dataset;
+			}
+		}
+
+		private static IEnumerable<Dataset> GetReferencedDatasets(
+			[NotNull] IEnumerable<InstanceConfiguration> instanceConfigurations,
+			[NotNull] List<InstanceConfiguration> referencedTransformers,
+			[CanBeNull] Predicate<DatasetTestParameterValue> testParameterPredicate = null)
+		{
+			foreach (InstanceConfiguration transformer in instanceConfigurations)
+			{
+				foreach (TestParameterValue parameterValue in transformer.ParameterValues)
+				{
+					if (TryGetDataset(parameterValue, testParameterPredicate, out Dataset dataset,
+					                  out TransformerConfiguration referencedTransformer))
+					{
+						yield return dataset;
+					}
+					else if (referencedTransformer != null)
+					{
+						// These have already been fetched:
+						foreach (TestParameterValue sourceParameterValue in referencedTransformer
+							         .ParameterValues)
+						{
+							if (TryGetDataset(sourceParameterValue, testParameterPredicate,
+							                  out Dataset sourceRefDataset,
+							                  out TransformerConfiguration sourceRefTransformer))
+							{
+								yield return sourceRefDataset;
+							}
+							else if (sourceParameterValue != null)
+							{
+								// not yet fetched, add for next round trip:
+								referencedTransformers.Add(sourceRefTransformer);
+							}
+						}
+					}
+				}
+			}
+		}
+
+		private static bool TryGetDataset(
+			TestParameterValue testParameterValue,
+			[CanBeNull] Predicate<DatasetTestParameterValue> testParameterPredicate,
+			out Dataset result, out TransformerConfiguration transformerConfig)
+		{
+			result = null;
+			transformerConfig = null;
+			if (! (testParameterValue is DatasetTestParameterValue datasetParameterValue))
+			{
+				return false;
+			}
+
+			if (testParameterPredicate?.Invoke(datasetParameterValue) == false)
+			{
+				return false;
+			}
+
+			if (datasetParameterValue.DatasetValue != null)
+			{
+				result = datasetParameterValue.DatasetValue;
+				return true;
+			}
+
+			if (testParameterValue.ValueSource != null)
+			{
+				transformerConfig = datasetParameterValue.ValueSource;
+			}
+
+			return false;
+		}
+
+		#endregion
 	}
 }
