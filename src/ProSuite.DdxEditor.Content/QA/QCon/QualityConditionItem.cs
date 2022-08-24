@@ -533,6 +533,16 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			eventAggregator.GetEvent<ValidateForPersistenceEvent>().Publish(notification);
 		}
 
+		protected override void DiscardChangesCore()
+		{
+			base.DiscardChangesCore();
+
+			var eventAggregator =
+				ContainerRegistry.Current.Resolve<IEventAggregator>();
+
+			eventAggregator.GetEvent<DiscardChangesEvent>().Publish();
+		}
+
 		private static bool IsParameterOptional(
 			[NotNull] QualityCondition entity,
 			[NotNull] TestParameterValue parameterValue)

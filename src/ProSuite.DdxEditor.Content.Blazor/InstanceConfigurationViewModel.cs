@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using ProSuite.Commons;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -13,7 +14,8 @@ using ProSuite.QA.Core;
 
 namespace ProSuite.DdxEditor.Content.Blazor;
 
-public class InstanceConfigurationViewModel<T> : IInstanceConfigurationViewModel
+public class InstanceConfigurationViewModel<T> : NotifyPropertyChangedBase,
+                                                 IInstanceConfigurationViewModel
 	where T : InstanceConfiguration
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
@@ -59,6 +61,8 @@ public class InstanceConfigurationViewModel<T> : IInstanceConfigurationViewModel
 		_rowsByParameter = CreateRows(qualityCondition);
 
 		Values = new List<ViewModelBase>(GetTopLevelRows(_rowsByParameter));
+		OnPropertyChanged(nameof(Values));
+	}
 
 	void IInstanceConfigurationViewModel.OnRowPropertyChanged(
 		object sender, PropertyChangedEventArgs e)
