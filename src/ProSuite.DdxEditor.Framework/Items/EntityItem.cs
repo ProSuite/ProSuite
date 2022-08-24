@@ -1,15 +1,11 @@
 using System;
 using System.Collections.Generic;
-using Prism.Events;
-using Prism.Ioc;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Validation;
 using ProSuite.DdxEditor.Framework.Commands;
-using ProSuite.DdxEditor.Framework.Events;
-using ProSuite.Shared.IoCRoot;
 
 namespace ProSuite.DdxEditor.Framework.Items
 {
@@ -123,11 +119,6 @@ namespace ProSuite.DdxEditor.Framework.Items
 
 			notification = entity.ValidateForPersistence();
 			IsValidForPersistenceCore(entity, notification);
-			
-			var eventAggregator =
-				ContainerRegistry.Current.Resolve<IEventAggregator>();
-
-			eventAggregator.GetEvent<ValidateForPersistenceEvent>().Publish(notification);
 
 			return notification.IsValid();
 		}

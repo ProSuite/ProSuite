@@ -14,18 +14,20 @@ public abstract class ViewModelBase : Observable
 {
 	[CanBeNull] private object _value;
 
+	// todo daro refactor parameter order
 	protected ViewModelBase([NotNull] TestParameter parameter,
 	                        [CanBeNull] object value,
 	                        [NotNull] IInstanceConfigurationViewModel observer,
-	                        bool required = false) : base(observer, required)
+	                        bool required = false,
+	                        bool validateOnPersistence = false,
+	                        [CanBeNull] string customErrorMessage = null) : base(
+		observer, customErrorMessage, required, validateOnPersistence)
 	{
 		Assert.ArgumentNotNull(parameter, nameof(parameter));
 
 		ParameterName = parameter.Name;
 		Parameter = parameter;
 		DataType = parameter.Type;
-
-		Validation = () => Value != null;
 
 		_value = value ?? TestParameterTypeUtils.GetDefault(DataType);
 	}
@@ -67,6 +69,11 @@ public abstract class ViewModelBase : Observable
 	protected override void RegisterMessageCore(Notification notification, string message)
 	{
 		notification.RegisterMessage(ParameterName, message, Severity.Error);
+	}
+
+	protected override bool ValidateCore()
+	{
+		return Value != null;
 	}
 
 	public override string ToString()

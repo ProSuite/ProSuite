@@ -11,11 +11,11 @@ namespace ProSuite.QA.Tests.Transformers
 {
 	[UsedImplicitly]
 	[GeometryTransformer]
-	public class TrPolyToLine : TrGeometryTransform
+	public class TrPolygonToLine : TrGeometryTransform
 	{
-		[DocTr(nameof(DocTrStrings.TrPolyToLine_0))]
-		public TrPolyToLine(
-			[NotNull] [DocTr(nameof(DocTrStrings.TrPolyToLine_featureClass))]
+		[DocTr(nameof(DocTrStrings.TrPolygonToLine_0))]
+		public TrPolygonToLine(
+			[NotNull] [DocTr(nameof(DocTrStrings.TrPolygonToLine_featureClass))]
 			IReadOnlyFeatureClass featureClass)
 			: base(featureClass, esriGeometryType.esriGeometryPolyline) { }
 

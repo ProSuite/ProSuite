@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using ProSuite.Commons;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -13,7 +14,8 @@ using ProSuite.QA.Core;
 
 namespace ProSuite.DdxEditor.Content.Blazor;
 
-public class InstanceConfigurationViewModel<T> : IInstanceConfigurationViewModel
+public class InstanceConfigurationViewModel<T> : NotifyPropertyChangedBase,
+                                                 IInstanceConfigurationViewModel
 	where T : InstanceConfiguration
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
@@ -21,7 +23,7 @@ public class InstanceConfigurationViewModel<T> : IInstanceConfigurationViewModel
 	[NotNull] private readonly EntityItem<T, T> _item;
 
 	[NotNull] private Dictionary<TestParameter, IList<ViewModelBase>> _rowsByParameter = new();
-	
+
 	public InstanceConfigurationViewModel([NotNull] EntityItem<T, T> item,
 	                                      [NotNull] ITestParameterDatasetProvider datasetProvider)
 	{
@@ -35,6 +37,7 @@ public class InstanceConfigurationViewModel<T> : IInstanceConfigurationViewModel
 		InstanceConfiguration = Assert.NotNull(_item.GetEntity());
 	}
 
+	[CanBeNull]
 	public IList<ViewModelBase> Values { get; private set; }
 
 	[NotNull]
@@ -42,19 +45,42 @@ public class InstanceConfigurationViewModel<T> : IInstanceConfigurationViewModel
 
 	[NotNull]
 	public ITestParameterDatasetProvider DatasetProvider { get; }
-	
+
 	public void NotifyChanged(bool dirty)
 	{
 		_item.NotifyChanged();
 	}
-	
+
 	public void BindTo([NotNull] InstanceConfiguration qualityCondition)
 	{
 		Assert.ArgumentNotNull(qualityCondition, nameof(qualityCondition));
 
+		// force dispose in case of discarding changes
+		Dispose();
+
 		_rowsByParameter = CreateRows(qualityCondition);
 
-		Values = new List<ViewModelBase>(GetTopLevelRows(_rowsByParameter).ToList());
+		Values = new List<ViewModelBase>(GetTopLevelRows(_rowsByParameter));
+		OnPropertyChanged(nameof(Values));
+	}
+
+	void IInstanceConfigurationViewModel.OnRowPropertyChanged(
+		object sender, PropertyChangedEventArgs e)
+	{
+		UpdateEntity(Assert.NotNull(_item.GetEntity()));
+	}
+
+	public void Dispose()
+	{
+		Values?.Clear();
+		Values = null;
+
+		foreach (ViewModelBase vm in _rowsByParameter.Values.SelectMany(row => row))
+		{
+			vm.Dispose();
+		}
+
+		_rowsByParameter.Clear();
 	}
 
 	private IEnumerable<ViewModelBase> GetTopLevelRows(
@@ -96,7 +122,7 @@ public class InstanceConfigurationViewModel<T> : IInstanceConfigurationViewModel
 		}
 
 		InstanceFactory factory = InstanceFactoryUtils.CreateFactory(instanceConfiguration);
-		
+
 		if (factory == null)
 		{
 			_msg.Debug($"{nameof(InstanceFactory)} of {instanceConfiguration} is null");
@@ -130,7 +156,9 @@ public class InstanceConfigurationViewModel<T> : IInstanceConfigurationViewModel
 			{
 				rowsByParameter[param]
 					.Add(new ScalarTestParameterValueViewModel(
-						     param, scalarValue.GetValue(), this, param.IsConstructorParameter));
+						     param, scalarValue.GetValue(), this,
+						     param.IsConstructorParameter,
+						     param.IsConstructorParameter));
 			}
 			else
 			{
@@ -172,6 +200,11 @@ public class InstanceConfigurationViewModel<T> : IInstanceConfigurationViewModel
 				}
 				else if (row is ScalarTestParameterValueViewModel)
 				{
+					if (testParameter.IsConstructorParameter)
+					{
+						Assert.NotNull(row.Value);
+					}
+
 					instanceConfiguration.AddParameterValue(
 						new ScalarTestParameterValue(testParameter, row.Value));
 				}
@@ -185,20 +218,5 @@ public class InstanceConfigurationViewModel<T> : IInstanceConfigurationViewModel
 				}
 			}
 		}
-	}
-	
-	void IInstanceConfigurationViewModel.OnRowPropertyChanged(
-		object sender, PropertyChangedEventArgs e)
-	{
-		UpdateEntity(Assert.NotNull(_item.GetEntity()));
-	}
-
-	public void Dispose()
-	{
-		Values.Clear();
-		Values = null;
-
-		_rowsByParameter.Clear();
-		_rowsByParameter = null!;
 	}
 }

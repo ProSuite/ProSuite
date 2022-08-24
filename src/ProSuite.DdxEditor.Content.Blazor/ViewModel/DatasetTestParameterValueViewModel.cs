@@ -18,7 +18,6 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 	[NotNull] private readonly IInstanceConfigurationViewModel _viewModel;
 
 	[CanBeNull] private string _filterExpression;
-	[CanBeNull] private readonly string _errorMessage;
 
 	private bool _usedAsReferenceData;
 
@@ -31,8 +30,9 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 		bool usedAsReferenceData,
 		[NotNull] Either<Dataset, TransformerConfiguration> datasetSource,
 		[NotNull] IInstanceConfigurationViewModel observer,
-		bool required) :
-		base(parameter, value, observer, required)
+		bool required,
+		bool validateOnPersistence) :
+		base(parameter, value, observer, required, validateOnPersistence, "Dataset not set")
 	{
 		Assert.ArgumentNotNull(datasetSource, nameof(datasetSource));
 
@@ -48,13 +48,8 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 		ComponentType = typeof(DatasetTestParameterValueBlazor);
 		ComponentParameters.Add("ViewModel", this);
 
-		_errorMessage = "Dataset not set";
-		Validation = () => DisplayValue != null;
-
 		Validate();
 	}
-
-	public List<RowFilterConfiguration> RowFilterConfigurations { get; } = new();
 
 	[NotNull]
 	public Either<Dataset, TransformerConfiguration> DatasetSource { get; private set; }
@@ -78,12 +73,9 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 		set => SetProperty(ref _usedAsReferenceData, value);
 	}
 
-	public string ImageSource { get; set; }
+	public string ImageSource { get; private set; }
 
-	// todo daro: rename to Value
-	public string DisplayValue => DatasetSource.Match(
-		GetDisplayName,
-		t => t?.Name);
+	public string DisplayValue => GetDisplayName();
 
 	public void FindDatasetClicked()
 	{
@@ -123,9 +115,9 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 		Value = source.Match(d => d?.Name, t => t.Name);
 	}
 
-	protected override string GetErrorMessageCore()
+	protected override bool ValidateCore()
 	{
-		return _errorMessage;
+		return DisplayValue != null;
 	}
 
 	[NotNull]
@@ -160,7 +152,9 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 
 		return new DatasetTestParameterValueViewModel(parameter, value, imageSource, modelName,
 		                                              filterExpression, usedAsReferenceData, source,
-		                                              observer, parameter.IsConstructorParameter);
+		                                              observer,
+		                                              parameter.IsConstructorParameter,
+		                                              parameter.IsConstructorParameter);
 	}
 
 	private FinderForm<DatasetFinderItem> GetDatasetFinderForm(
@@ -181,8 +175,20 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 		                                    finder);
 	}
 
-	private string GetDisplayName([CanBeNull] Dataset dataset)
+	public string GetDisplayName(bool qualified = true)
 	{
-		return dataset == null ? null : $"{dataset.DisplayName ?? dataset.Name} [{ModelName}]";
+		return DatasetSource.Match(dataset => GetDisplayName(dataset, qualified), t => t?.Name);
+	}
+
+	private string GetDisplayName([CanBeNull] IModelElement dataset, bool qualified = true)
+	{
+		string name = dataset == null ? null : $"{dataset.DisplayName ?? dataset.Name}";
+
+		if (string.IsNullOrEmpty(name))
+		{
+			return null;
+		}
+
+		return qualified ? $"{name} [{ModelName}]" : name;
 	}
 }

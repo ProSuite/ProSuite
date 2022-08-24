@@ -51,7 +51,7 @@ public class QualityConditionBlazor : BlazorWebView, IInstanceConfigurationTable
 #endif
 		return serviceCollection.BuildServiceProvider();
 #else
-			throw new NotImplementedException();
+		throw new NotImplementedException();
 #endif
 	}
 
@@ -68,5 +68,12 @@ public class QualityConditionBlazor : BlazorWebView, IInstanceConfigurationTable
 
 		// Note: necessary!
 		base.OnCreateControl();
+	}
+
+	protected override void Dispose(bool disposing)
+	{
+		_viewModel.Dispose();
+
+		base.Dispose(disposing);
 	}
 }

@@ -363,24 +363,24 @@ namespace ProSuite.QA.Tests.Test.Transformer
 					Attributes = new List<string> {"Min(RouteTbl.RouteFk) AS MinRouteFk"},
 					GroupBy = new List<string> {"RouteTbl.RouteNr"}
 				};
-			TrLineToPoly lineToPoly =
-				new TrLineToPoly(dissolve.GetTransformed())
+			TrLineToPolygon lineToPolygon =
+				new TrLineToPolygon(dissolve.GetTransformed())
 				{Attributes = new[] {"RouteTbl.RouteNr"}};
 
 			{
-				QaMinArea test = new QaMinArea(lineToPoly.GetTransformed(), 1000);
+				QaMinArea test = new QaMinArea(lineToPolygon.GetTransformed(), 1000);
 				var runner = new QaContainerTestRunner(1000, test);
 				runner.Execute();
 				Assert.AreEqual(3, runner.Errors.Count);
 			}
 			{
-				QaMinArea test = new QaMinArea(lineToPoly.GetTransformed(), 150);
+				QaMinArea test = new QaMinArea(lineToPolygon.GetTransformed(), 150);
 				var runner = new QaContainerTestRunner(1000, test);
 				runner.Execute();
 				Assert.AreEqual(1, runner.Errors.Count);
 			}
 			{
-				QaMinArea test = new QaMinArea(lineToPoly.GetTransformed(), 1000);
+				QaMinArea test = new QaMinArea(lineToPolygon.GetTransformed(), 1000);
 				test.SetConstraint(0, "RouteTbl.RouteNr > 100");
 				var runner = new QaContainerTestRunner(1000, test);
 				runner.Execute();
@@ -470,9 +470,9 @@ namespace ProSuite.QA.Tests.Test.Transformer
 					Search = 1,
 					NeighborSearchOption = TrDissolve.SearchOption.All
 				};
-			TrLineToPoly lineToPoly = new TrLineToPoly(dissolve.GetTransformed());
+			TrLineToPolygon lineToPolygon = new TrLineToPolygon(dissolve.GetTransformed());
 			QaIntersectsOther test = new QaIntersectsOther(
-				lineToPoly.GetTransformed(),
+				lineToPolygon.GetTransformed(),
 				ReadOnlyTableFactory.Create(ptFc));
 
 			{

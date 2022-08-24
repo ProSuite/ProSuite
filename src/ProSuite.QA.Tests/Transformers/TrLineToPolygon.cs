@@ -12,14 +12,14 @@ namespace ProSuite.QA.Tests.Transformers
 {
 	[UsedImplicitly]
 	[GeometryTransformer]
-	public class TrLineToPoly : TrGeometryTransform
+	public class TrLineToPolygon : TrGeometryTransform
 	{
 		private const PolylineUsage _defaultPolylineUsage =
 			PolylineUsage.AsPolygonIfClosedElseIgnore;
 
-		[DocTr(nameof(DocTrStrings.TrLineToPoly_0))]
-		public TrLineToPoly(
-			[NotNull] [DocTr(nameof(DocTrStrings.TrLineToPoly_closedLineClass))]
+		[DocTr(nameof(DocTrStrings.TrLineToPolygon_0))]
+		public TrLineToPolygon(
+			[NotNull] [DocTr(nameof(DocTrStrings.TrLineToPolygon_closedLineClass))]
 			IReadOnlyFeatureClass closedLineClass)
 			: base(closedLineClass, esriGeometryType.esriGeometryPolygon)
 		{
@@ -27,7 +27,7 @@ namespace ProSuite.QA.Tests.Transformers
 		}
 
 		[TestParameter(_defaultPolylineUsage)]
-		[DocTr(nameof(DocTrStrings.TrLineToPoly_PolylineUsage))]
+		[DocTr(nameof(DocTrStrings.TrLineToPolygon_PolylineUsage))]
 		public PolylineUsage PolylineUsage { get; set; }
 
 		protected override IEnumerable<GdbFeature> Transform(IGeometry source)

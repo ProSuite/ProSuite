@@ -1,9 +1,9 @@
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using Prism.Events;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -12,6 +12,7 @@ using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
 using ProSuite.Commons.UI.Finder;
 using ProSuite.Commons.Validation;
+using ProSuite.DdxEditor.Content.Blazor.Events;
 using ProSuite.DdxEditor.Content.QA.Categories;
 using ProSuite.DdxEditor.Content.QA.InstanceConfig;
 using ProSuite.DdxEditor.Content.QA.QSpec;
@@ -26,10 +27,12 @@ using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.Repositories;
 using ProSuite.QA.Core;
+using ProSuite.Shared.IoCRoot;
 using ProSuite.UI.QA;
 using ProSuite.UI.QA.BoundTableRows;
 using ProSuite.UI.QA.PropertyEditors;
 using ProSuite.UI.QA.ResourceLookup;
+using Notification = ProSuite.Commons.Validation.Notification;
 
 namespace ProSuite.DdxEditor.Content.QA.QCon
 {
@@ -523,6 +526,21 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 				                             "A quality condition with the same name already exists",
 				                             Severity.Error);
 			}
+
+			var eventAggregator =
+				ContainerRegistry.Current.Resolve<IEventAggregator>();
+
+			eventAggregator.GetEvent<ValidateForPersistenceEvent>().Publish(notification);
+		}
+
+		protected override void DiscardChangesCore()
+		{
+			base.DiscardChangesCore();
+
+			var eventAggregator =
+				ContainerRegistry.Current.Resolve<IEventAggregator>();
+
+			eventAggregator.GetEvent<DiscardChangesEvent>().Publish();
 		}
 
 		private static bool IsParameterOptional(
