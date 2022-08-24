@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using System.Xml;
 using ESRI.ArcGIS.Geodatabase;
@@ -33,8 +32,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			v3_0
 		}
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		[NotNull]
 		public static XmlDataQualityDocument ReadXmlDocument(
@@ -71,9 +69,9 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			{
 				switch (version)
 				{
-					case (QaSpecVersion.v2_0):
+					case QaSpecVersion.v2_0:
 						return XmlUtils.Deserialize<XmlDataQualityDocument20>(xml, schema);
-					case (QaSpecVersion.v3_0):
+					case QaSpecVersion.v3_0:
 						return XmlUtils.Deserialize<XmlDataQualityDocument30>(xml, schema);
 					default:
 						throw new InvalidOperationException("Unknown schema");
@@ -81,8 +79,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			}
 			catch (Exception e)
 			{
-				throw new XmlDeserializationException(
-					string.Format("Error deserializing xml: {0}", e.Message), e);
+				throw new XmlDeserializationException($"Error deserializing file: {e.Message}", e);
 			}
 		}
 
@@ -99,8 +96,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			}
 			catch (Exception e)
 			{
-				throw new XmlDeserializationException(
-					string.Format("Error deserializing xml: {0}", e.Message), e);
+				throw new XmlDeserializationException($"Error deserializing xml: {e.Message}", e);
 			}
 		}
 
@@ -507,31 +503,31 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 
 		[NotNull]
 		public static IList<XmlWorkspace> GetReferencedWorkspaces(
-			[NotNull] XmlQualityConditionsCache xmlConditionsCache)
+			[NotNull] XmlDataQualityDocumentCache documentCache)
 		{
 			return GetReferencedWorkspaces(
-				xmlConditionsCache.QualityConditions,
-				xmlConditionsCache,
+				documentCache.QualityConditions,
+				documentCache,
 				out bool hasUndefinedWorkspaceReference);
 		}
 
 		[NotNull]
 		public static IList<XmlWorkspace> GetReferencedWorkspaces<T>(
 			[NotNull] IEnumerable<T> instanceConfigurations,
-			[NotNull] XmlQualityConditionsCache conditionsCache,
+			[NotNull] XmlDataQualityDocumentCache documentCache,
 			out bool hasUndefinedWorkspaceReference)
 			where T : XmlInstanceConfiguration
 		{
-			Assert.ArgumentNotNull(conditionsCache, nameof(conditionsCache));
+			Assert.ArgumentNotNull(documentCache, nameof(documentCache));
 
 			var referencedWorkspaceIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
 			hasUndefinedWorkspaceReference = false;
 
-			AddWorkspaceIds(referencedWorkspaceIds, instanceConfigurations, conditionsCache,
+			AddWorkspaceIds(referencedWorkspaceIds, instanceConfigurations, documentCache,
 							ref hasUndefinedWorkspaceReference);
 
-			return conditionsCache.Workspaces?.Where(
+			return documentCache.Workspaces?.Where(
 					   workspace => referencedWorkspaceIds.Contains(workspace.ID)).ToList()
 				   ?? new List<XmlWorkspace>();
 		}
@@ -539,7 +535,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		private static void AddWorkspaceIds<T>(
 			[NotNull] HashSet<string> workspaceIds,
 			[NotNull] IEnumerable<T> instanceConfigurations,
-			[NotNull] XmlQualityConditionsCache conditionsCache,
+			[NotNull] XmlDataQualityDocumentCache documentCache,
 			ref bool hasUndefinedWorkspaceReference)
 			where T : XmlInstanceConfiguration
 		{
@@ -550,7 +546,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 				{
 					if (! string.IsNullOrWhiteSpace(xmlTestParameterValue.TransformerName))
 					{
-						if (! conditionsCache.TryGetTransformer(
+						if (! documentCache.TryGetTransformer(
 							    xmlTestParameterValue.TransformerName,
 							    out XmlTransformerConfiguration transformerConfiguration))
 						{
@@ -560,7 +556,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 						}
 
 						AddWorkspaceIds(workspaceIds, new[] {transformerConfiguration},
-						                conditionsCache,
+						                documentCache,
 						                ref hasUndefinedWorkspaceReference);
 					}
 
@@ -595,7 +591,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 						var issueFilterConfigurations = new List<XmlInstanceConfiguration>();
 						foreach (string name in issueFilterNames)
 						{
-							if (!conditionsCache.TryGetIssueFilter(
+							if (!documentCache.TryGetIssueFilter(
 									name, out XmlIssueFilterConfiguration issueFilterConfiguration))
 							{
 								hasUndefinedWorkspaceReference = true;
@@ -607,7 +603,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 						}
 
 						AddWorkspaceIds(workspaceIds, issueFilterConfigurations,
-										conditionsCache,
+										documentCache,
 										ref hasUndefinedWorkspaceReference);
 					}
 				}
@@ -640,8 +636,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		}
 
 		[NotNull]
-		public static XmlQualityConditionsCache
-			GetReferencedXmlQualityConditions(
+		public static XmlDataQualityDocumentCache GetDocumentCache(
 				[NotNull] XmlDataQualityDocument document,
 				[NotNull] IEnumerable<XmlQualitySpecification> xmlQualitySpecifications)
 		{
@@ -656,7 +651,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 											.Where(pair => referencedConditionNames.Contains(
 													   pair.Key.Name?.Trim()));
 
-			return new XmlQualityConditionsCache(document, qualityConditions);
+			return new XmlDataQualityDocumentCache(document, qualityConditions);
 		}
 
 		[NotNull]
@@ -769,14 +764,14 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		[CanBeNull]
 		public static QualityCondition CreateQualityCondition(
 			[NotNull] XmlQualityCondition xmlQualityCondition,
-			[NotNull] XmlQualityConditionsCache cache,
+			[NotNull] XmlDataQualityDocumentCache documentCache,
 			[NotNull] Func<string, IList<Dataset>> getDatasetsByName,
 			[CanBeNull] DataQualityCategory category,
 			bool ignoreForUnknownDatasets,
 			out ICollection<XmlDatasetTestParameterValue> unknownDatasetParameters)
 		{
 			QualityCondition result =
-				cache.CreateQualityCondition(xmlQualityCondition, getDatasetsByName,
+				documentCache.CreateQualityCondition(xmlQualityCondition, getDatasetsByName,
 											 ignoreForUnknownDatasets,
 											 out unknownDatasetParameters);
 
@@ -1246,20 +1241,20 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 
 		[NotNull]
 		public static T CreateInstanceDescriptor<T>(
-			[NotNull] XmlDescriptor xmlTestDescriptor)
+			[NotNull] XmlDescriptor xmlDescriptor)
 			where T : InstanceDescriptor, new()
 		{
-			Assert.ArgumentNotNull(xmlTestDescriptor, nameof(xmlTestDescriptor));
+			Assert.ArgumentNotNull(xmlDescriptor, nameof(xmlDescriptor));
 
-			Assert.NotNull(xmlTestDescriptor.ClassDescriptor);
+			Assert.NotNull(xmlDescriptor.ClassDescriptor);
 			T result = new T();
-			result.Name = xmlTestDescriptor.Name;
-			result.Class = CreateClassDescriptor(xmlTestDescriptor.ClassDescriptor);
-			result.ConstructorId = xmlTestDescriptor.ClassDescriptor.ConstructorId;
+			result.Name = xmlDescriptor.Name;
+			result.Class = CreateClassDescriptor(xmlDescriptor.ClassDescriptor);
+			result.ConstructorId = xmlDescriptor.ClassDescriptor.ConstructorId;
 
-			result.Description = xmlTestDescriptor.Description;
+			result.Description = xmlDescriptor.Description;
 
-			ImportMetadata(result, xmlTestDescriptor);
+			ImportMetadata(result, xmlDescriptor);
 
 			return result;
 		}
@@ -1378,7 +1373,6 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			return Equals(Format(dateTime1), Format(dateTime2));
 		}
 
-		[NotNull]
 		public static void CreateXmlDataQualityDocument<T>(
 			[NotNull] IEnumerable<QualitySpecification> qualitySpecifications,
 			[NotNull] IEnumerable<TestDescriptor> testDescriptors,
@@ -1803,13 +1797,15 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			         GetSortedConfigurations(transformerConfigurations))
 			{
 				document.AddTransformer(
-					CreateXmlTransformer(transformer, workspaceIdsByModel, exportMetadata));
+					CreateXmlTransformer(transformer, workspaceIdsByModel, exportMetadata,
+					                     exportNotes));
 			}
 			foreach (IssueFilterConfiguration issueFilter in
 			         GetSortedConfigurations(issueFilterConfigurations))
 			{
 				document.AddIssueFilter(
-					CreateXmlIssueFilter(issueFilter, workspaceIdsByModel, exportMetadata));
+					CreateXmlIssueFilter(issueFilter, workspaceIdsByModel, exportMetadata,
+					                     exportNotes));
 			}
 
 			// export root level quality specifications
@@ -2385,8 +2381,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		private static XmlQualityCondition CreateXmlQualityCondition(
 			[NotNull] QualityCondition qualityCondition,
 			[NotNull] IDictionary<Model, string> workspaceIdsByModel,
-			bool exportMetadata,
-			bool exportNotes)
+			bool exportMetadata, bool exportNotes)
 		{
 			Assert.ArgumentNotNull(qualityCondition, nameof(qualityCondition));
 			Assert.ArgumentNotNull(workspaceIdsByModel, nameof(workspaceIdsByModel));
@@ -2436,7 +2431,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		private static XmlTransformerConfiguration CreateXmlTransformer(
 			[NotNull] TransformerConfiguration transformer,
 			[NotNull] IDictionary<Model, string> workspaceIdsByModel,
-			bool exportMetadata)
+			bool exportMetadata, bool exportNotes)
 		{
 			Assert.ArgumentNotNull(transformer, nameof(transformer));
 			Assert.ArgumentNotNull(workspaceIdsByModel, nameof(workspaceIdsByModel));
@@ -2445,16 +2440,21 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 				new XmlTransformerConfiguration
 				{
 					Name = Escape(transformer.Name),
-					// TODO:
-					//Uuid = transformer.Uuid,
-					//VersionUuid = transformer.VersionUuid,
+					Uuid = transformer.Uuid,
+					// TODO: VersionUuid = transformer.VersionUuid,
+					Url = Escape(transformer.Url),
 					TransformerDescriptorName = Escape(transformer.TransformerDescriptor.Name),
 					Description = Escape(transformer.Description),
 				};
 
 			if (exportMetadata)
 			{
-// TODO:				ExportMetadata(transformer, xmlTransformer);
+				ExportMetadata(transformer, xmlTransformer);
+			}
+
+			if (exportNotes)
+			{
+				xmlTransformer.Notes = Escape(transformer.Notes);
 			}
 
 			foreach (TestParameterValue parameterValue in transformer.ParameterValues)
@@ -2471,7 +2471,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		private static XmlIssueFilterConfiguration CreateXmlIssueFilter(
 			[NotNull] IssueFilterConfiguration issueFilter,
 			[NotNull] IDictionary<Model, string> workspaceIdsByModel,
-			bool exportMetadata)
+			bool exportMetadata, bool exportNotes)
 		{
 			Assert.ArgumentNotNull(issueFilter, nameof(issueFilter));
 			Assert.ArgumentNotNull(workspaceIdsByModel, nameof(workspaceIdsByModel));
@@ -2480,16 +2480,21 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 				new XmlIssueFilterConfiguration
 				{
 					Name = Escape(issueFilter.Name),
-					// TODO:
-					//Uuid = transformer.Uuid,
-					//VersionUuid = transformer.VersionUuid,
+					Uuid = issueFilter.Uuid,
+					// TODO: VersionUuid = issueFilter.VersionUuid,
+					Url = Escape(issueFilter.Url),
 					IssueFilterDescriptorName = Escape(issueFilter.IssueFilterDescriptor.Name),
 					Description = Escape(issueFilter.Description),
 				};
 
 			if (exportMetadata)
 			{
-				// TODO:				ExportMetadata(transformer, xmlTransformer);
+				ExportMetadata(issueFilter, xmlIssueFilter);
+			}
+
+			if (exportNotes)
+			{
+				xmlIssueFilter.Notes = Escape(issueFilter.Notes);
 			}
 
 			foreach (TestParameterValue parameterValue in issueFilter.ParameterValues)

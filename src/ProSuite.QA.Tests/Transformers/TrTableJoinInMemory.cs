@@ -8,10 +8,13 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
 using ProSuite.QA.Container;
 using ProSuite.QA.Core;
+using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 
 namespace ProSuite.QA.Tests.Transformers
 {
+	[UsedImplicitly]
+	[TableTransformer]
 	public class TrTableJoinInMemory : TableTransformer<GdbTable>
 	{
 		private readonly IReadOnlyTable _leftTable;

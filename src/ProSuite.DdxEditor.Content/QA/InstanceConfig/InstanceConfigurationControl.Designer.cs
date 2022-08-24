@@ -32,7 +32,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
         private void InitializeComponent()
         {
 			this.components = new System.ComponentModel.Container();
-			System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
+			System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
 			this._textBoxName = new System.Windows.Forms.TextBox();
 			this._labelName = new System.Windows.Forms.Label();
 			this._textBoxDescription = new System.Windows.Forms.TextBox();
@@ -120,7 +120,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			// _labelName
 			// 
 			this._labelName.AutoSize = true;
-			this._labelName.Location = new System.Drawing.Point(84, 30);
+			this._labelName.Location = new System.Drawing.Point(92, 29);
 			this._labelName.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
 			this._labelName.Name = "_labelName";
 			this._labelName.Size = new System.Drawing.Size(63, 25);
@@ -143,7 +143,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			// _labelDescription
 			// 
 			this._labelDescription.AutoSize = true;
-			this._labelDescription.Location = new System.Drawing.Point(43, 83);
+			this._labelDescription.Location = new System.Drawing.Point(50, 83);
 			this._labelDescription.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
 			this._labelDescription.Name = "_labelDescription";
 			this._labelDescription.Size = new System.Drawing.Size(106, 25);
@@ -159,13 +159,13 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			// _labelInstanceDescriptor
 			// 
 			this._labelInstanceDescriptor.AutoSize = true;
-			this._labelInstanceDescriptor.Location = new System.Drawing.Point(44, 233);
+			this._labelInstanceDescriptor.Location = new System.Drawing.Point(12, 233);
 			this._labelInstanceDescriptor.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
 			this._labelInstanceDescriptor.Name = "_labelInstanceDescriptor";
-			this._labelInstanceDescriptor.Size = new System.Drawing.Size(96, 25);
+			this._labelInstanceDescriptor.Size = new System.Drawing.Size(142, 25);
 			this._labelInstanceDescriptor.TabIndex = 9;
 			this._labelInstanceDescriptor.TabStop = true;
-			this._labelInstanceDescriptor.Text = "Algorithm:";
+			this._labelInstanceDescriptor.Text = "Implementation:";
 			this._labelInstanceDescriptor.TextAlign = System.Drawing.ContentAlignment.TopRight;
 			this._labelInstanceDescriptor.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this._labelInstanceDescriptor_LinkClicked);
 			// 
@@ -184,7 +184,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			// _labelQualitySpecifications
 			// 
 			this._labelQualitySpecifications.AutoSize = true;
-			this._labelQualitySpecifications.Location = new System.Drawing.Point(69, 279);
+			this._labelQualitySpecifications.Location = new System.Drawing.Point(77, 279);
 			this._labelQualitySpecifications.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
 			this._labelQualitySpecifications.Name = "_labelQualitySpecifications";
 			this._labelQualitySpecifications.Size = new System.Drawing.Size(75, 25);
@@ -205,7 +205,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			// _labelUrl
 			// 
 			this._labelUrl.AutoSize = true;
-			this._labelUrl.Location = new System.Drawing.Point(93, 190);
+			this._labelUrl.Location = new System.Drawing.Point(106, 188);
 			this._labelUrl.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
 			this._labelUrl.Name = "_labelUrl";
 			this._labelUrl.Size = new System.Drawing.Size(47, 25);
@@ -417,7 +417,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			// 
 			this.toolStripLabel1.Name = "toolStripLabel1";
 			this.toolStripLabel1.Size = new System.Drawing.Size(235, 43);
-			this.toolStripLabel1.Text = "This instance is reference by:";
+			this.toolStripLabel1.Text = "This instance is referenced by:";
 			// 
 			// miniToolStrip
 			// 
@@ -632,15 +632,15 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			this._dataGridViewParamGrid.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.AllCells;
 			this._dataGridViewParamGrid.AutoSizeRowsMode = System.Windows.Forms.DataGridViewAutoSizeRowsMode.AllCells;
 			this._dataGridViewParamGrid.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-			dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-			dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.ControlLight;
-			dataGridViewCellStyle1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-			dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.ControlText;
-			dataGridViewCellStyle1.Padding = new System.Windows.Forms.Padding(0, 2, 0, 2);
-			dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-			dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-			dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-			this._dataGridViewParamGrid.DefaultCellStyle = dataGridViewCellStyle1;
+			dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+			dataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.ControlLight;
+			dataGridViewCellStyle2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+			dataGridViewCellStyle2.ForeColor = System.Drawing.SystemColors.ControlText;
+			dataGridViewCellStyle2.Padding = new System.Windows.Forms.Padding(0, 2, 0, 2);
+			dataGridViewCellStyle2.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+			dataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+			dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+			this._dataGridViewParamGrid.DefaultCellStyle = dataGridViewCellStyle2;
 			this._dataGridViewParamGrid.Dock = System.Windows.Forms.DockStyle.Fill;
 			this._dataGridViewParamGrid.Location = new System.Drawing.Point(133, 0);
 			this._dataGridViewParamGrid.Margin = new System.Windows.Forms.Padding(6, 5, 6, 5);

@@ -41,7 +41,6 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 			this._labelConstructorId = new System.Windows.Forms.Label();
 			this._labelTestDescription = new System.Windows.Forms.Label();
 			this._textBoxTestDescription = new System.Windows.Forms.TextBox();
-			this._groupBoxClass = new System.Windows.Forms.GroupBox();
 			this._comboBoxConstructorIndex = new System.Windows.Forms.ComboBox();
 			this._objectReferenceControlTestClass = new ProSuite.Commons.UI.WinForms.Controls.ObjectReferenceControl();
 			this._labelParameter = new System.Windows.Forms.Label();
@@ -63,7 +62,6 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 			this._toolStripElements = new ProSuite.Commons.UI.WinForms.Controls.ToolStripEx();
 			this.toolStripLabel1 = new System.Windows.Forms.ToolStripLabel();
 			((System.ComponentModel.ISupportInitialize)(this._errorProvider)).BeginInit();
-			this._groupBoxClass.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this._dataGridViewParameter)).BeginInit();
 			this._groupBoxClassOrFactory.SuspendLayout();
 			this._tabControl.SuspendLayout();
@@ -80,10 +78,10 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 			// _labelDescription
 			// 
 			this._labelDescription.AutoSize = true;
-			this._labelDescription.Location = new System.Drawing.Point(62, 85);
-			this._labelDescription.Margin = new System.Windows.Forms.Padding(5, 0, 5, 0);
+			this._labelDescription.Location = new System.Drawing.Point(48, 51);
+			this._labelDescription.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
 			this._labelDescription.Name = "_labelDescription";
-			this._labelDescription.Size = new System.Drawing.Size(106, 25);
+			this._labelDescription.Size = new System.Drawing.Size(70, 15);
 			this._labelDescription.TabIndex = 2;
 			this._labelDescription.Text = "Description:";
 			this._labelDescription.TextAlign = System.Drawing.ContentAlignment.TopRight;
@@ -92,21 +90,21 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 			// 
 			this._textBoxDescription.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-			this._textBoxDescription.Location = new System.Drawing.Point(177, 79);
-			this._textBoxDescription.Margin = new System.Windows.Forms.Padding(5, 6, 5, 6);
+			this._textBoxDescription.Location = new System.Drawing.Point(124, 47);
+			this._textBoxDescription.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
 			this._textBoxDescription.Multiline = true;
 			this._textBoxDescription.Name = "_textBoxDescription";
 			this._textBoxDescription.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-			this._textBoxDescription.Size = new System.Drawing.Size(864, 156);
+			this._textBoxDescription.Size = new System.Drawing.Size(620, 66);
 			this._textBoxDescription.TabIndex = 1;
 			// 
 			// _labelName
 			// 
 			this._labelName.AutoSize = true;
-			this._labelName.Location = new System.Drawing.Point(103, 33);
-			this._labelName.Margin = new System.Windows.Forms.Padding(5, 0, 5, 0);
+			this._labelName.Location = new System.Drawing.Point(77, 20);
+			this._labelName.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
 			this._labelName.Name = "_labelName";
-			this._labelName.Size = new System.Drawing.Size(63, 25);
+			this._labelName.Size = new System.Drawing.Size(42, 15);
 			this._labelName.TabIndex = 0;
 			this._labelName.Text = "Name:";
 			this._labelName.TextAlign = System.Drawing.ContentAlignment.TopRight;
@@ -115,10 +113,10 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 			// 
 			this._textBoxName.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-			this._textBoxName.Location = new System.Drawing.Point(177, 27);
-			this._textBoxName.Margin = new System.Windows.Forms.Padding(5, 6, 5, 6);
+			this._textBoxName.Location = new System.Drawing.Point(124, 16);
+			this._textBoxName.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
 			this._textBoxName.Name = "_textBoxName";
-			this._textBoxName.Size = new System.Drawing.Size(864, 31);
+			this._textBoxName.Size = new System.Drawing.Size(620, 23);
 			this._textBoxName.TabIndex = 0;
 			// 
 			// _errorProvider
@@ -129,10 +127,10 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 			// _labelTestClass
 			// 
 			this._labelTestClass.AutoSize = true;
-			this._labelTestClass.Location = new System.Drawing.Point(65, 42);
-			this._labelTestClass.Margin = new System.Windows.Forms.Padding(5, 0, 5, 0);
+			this._labelTestClass.Location = new System.Drawing.Point(58, 29);
+			this._labelTestClass.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
 			this._labelTestClass.Name = "_labelTestClass";
-			this._labelTestClass.Size = new System.Drawing.Size(56, 25);
+			this._labelTestClass.Size = new System.Drawing.Size(37, 15);
 			this._labelTestClass.TabIndex = 0;
 			this._labelTestClass.Text = "Class:";
 			this._labelTestClass.TextAlign = System.Drawing.ContentAlignment.TopRight;
@@ -140,10 +138,10 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 			// _labelConstructorId
 			// 
 			this._labelConstructorId.AutoSize = true;
-			this._labelConstructorId.Location = new System.Drawing.Point(17, 92);
-			this._labelConstructorId.Margin = new System.Windows.Forms.Padding(5, 0, 5, 0);
+			this._labelConstructorId.Location = new System.Drawing.Point(24, 59);
+			this._labelConstructorId.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
 			this._labelConstructorId.Name = "_labelConstructorId";
-			this._labelConstructorId.Size = new System.Drawing.Size(109, 25);
+			this._labelConstructorId.Size = new System.Drawing.Size(73, 15);
 			this._labelConstructorId.TabIndex = 2;
 			this._labelConstructorId.Text = "Constructor:";
 			this._labelConstructorId.TextAlign = System.Drawing.ContentAlignment.TopRight;
@@ -151,12 +149,12 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 			// _labelTestDescription
 			// 
 			this._labelTestDescription.AutoSize = true;
-			this._labelTestDescription.Location = new System.Drawing.Point(5, 60);
-			this._labelTestDescription.Margin = new System.Windows.Forms.Padding(5, 0, 5, 0);
+			this._labelTestDescription.Location = new System.Drawing.Point(7, 36);
+			this._labelTestDescription.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
 			this._labelTestDescription.Name = "_labelTestDescription";
-			this._labelTestDescription.Size = new System.Drawing.Size(106, 25);
+			this._labelTestDescription.Size = new System.Drawing.Size(92, 15);
 			this._labelTestDescription.TabIndex = 10;
-			this._labelTestDescription.Text = "Description:";
+			this._labelTestDescription.Text = "Test description:";
 			this._labelTestDescription.TextAlign = System.Drawing.ContentAlignment.TopRight;
 			// 
 			// _textBoxTestDescription
@@ -164,32 +162,15 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 			this._textBoxTestDescription.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-			this._textBoxTestDescription.Location = new System.Drawing.Point(153, 56);
-			this._textBoxTestDescription.Margin = new System.Windows.Forms.Padding(5, 6, 5, 6);
+			this._textBoxTestDescription.Location = new System.Drawing.Point(104, 33);
+			this._textBoxTestDescription.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
 			this._textBoxTestDescription.Multiline = true;
 			this._textBoxTestDescription.Name = "_textBoxTestDescription";
 			this._textBoxTestDescription.ReadOnly = true;
 			this._textBoxTestDescription.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-			this._textBoxTestDescription.Size = new System.Drawing.Size(884, 54);
+			this._textBoxTestDescription.Size = new System.Drawing.Size(604, 39);
 			this._textBoxTestDescription.TabIndex = 11;
 			this._textBoxTestDescription.TabStop = false;
-			// 
-			// _groupBoxClass
-			// 
-			this._groupBoxClass.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-			this._groupBoxClass.Controls.Add(this._comboBoxConstructorIndex);
-			this._groupBoxClass.Controls.Add(this._objectReferenceControlTestClass);
-			this._groupBoxClass.Controls.Add(this._labelTestClass);
-			this._groupBoxClass.Controls.Add(this._labelConstructorId);
-			this._groupBoxClass.Location = new System.Drawing.Point(22, 36);
-			this._groupBoxClass.Margin = new System.Windows.Forms.Padding(5, 6, 5, 6);
-			this._groupBoxClass.Name = "_groupBoxClass";
-			this._groupBoxClass.Padding = new System.Windows.Forms.Padding(5, 6, 5, 6);
-			this._groupBoxClass.Size = new System.Drawing.Size(998, 152);
-			this._groupBoxClass.TabIndex = 1;
-			this._groupBoxClass.TabStop = false;
-			this._groupBoxClass.Text = "Algorithm Implementation";
 			// 
 			// _comboBoxConstructorIndex
 			// 
@@ -198,10 +179,10 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 			this._comboBoxConstructorIndex.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
 			this._comboBoxConstructorIndex.Font = new System.Drawing.Font("Courier New", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
 			this._comboBoxConstructorIndex.FormattingEnabled = true;
-			this._comboBoxConstructorIndex.Location = new System.Drawing.Point(133, 87);
-			this._comboBoxConstructorIndex.Margin = new System.Windows.Forms.Padding(5, 6, 5, 6);
+			this._comboBoxConstructorIndex.Location = new System.Drawing.Point(104, 56);
+			this._comboBoxConstructorIndex.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
 			this._comboBoxConstructorIndex.Name = "_comboBoxConstructorIndex";
-			this._comboBoxConstructorIndex.Size = new System.Drawing.Size(826, 28);
+			this._comboBoxConstructorIndex.Size = new System.Drawing.Size(594, 22);
 			this._comboBoxConstructorIndex.TabIndex = 4;
 			// 
 			// _objectReferenceControlTestClass
@@ -212,22 +193,22 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 			this._objectReferenceControlTestClass.DisplayMember = null;
 			this._objectReferenceControlTestClass.FindObjectDelegate = null;
 			this._objectReferenceControlTestClass.FormatTextDelegate = null;
-			this._objectReferenceControlTestClass.Location = new System.Drawing.Point(133, 37);
-			this._objectReferenceControlTestClass.Margin = new System.Windows.Forms.Padding(5, 6, 5, 6);
+			this._objectReferenceControlTestClass.Location = new System.Drawing.Point(104, 26);
+			this._objectReferenceControlTestClass.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
 			this._objectReferenceControlTestClass.Name = "_objectReferenceControlTestClass";
 			this._objectReferenceControlTestClass.ReadOnly = false;
-			this._objectReferenceControlTestClass.Size = new System.Drawing.Size(828, 38);
+			this._objectReferenceControlTestClass.Size = new System.Drawing.Size(594, 23);
 			this._objectReferenceControlTestClass.TabIndex = 1;
 			// 
 			// _labelParameter
 			// 
 			this._labelParameter.AutoSize = true;
-			this._labelParameter.Location = new System.Drawing.Point(5, 8);
-			this._labelParameter.Margin = new System.Windows.Forms.Padding(5, 0, 5, 0);
+			this._labelParameter.Location = new System.Drawing.Point(7, 10);
+			this._labelParameter.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
 			this._labelParameter.Name = "_labelParameter";
-			this._labelParameter.Size = new System.Drawing.Size(103, 25);
+			this._labelParameter.Size = new System.Drawing.Size(92, 15);
 			this._labelParameter.TabIndex = 12;
-			this._labelParameter.Text = "Parameters:";
+			this._labelParameter.Text = "Test parameters:";
 			this._labelParameter.TextAlign = System.Drawing.ContentAlignment.TopRight;
 			// 
 			// _dataGridViewParameter
@@ -250,26 +231,27 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 			dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
 			dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
 			this._dataGridViewParameter.DefaultCellStyle = dataGridViewCellStyle1;
-			this._dataGridViewParameter.Location = new System.Drawing.Point(153, 6);
-			this._dataGridViewParameter.Margin = new System.Windows.Forms.Padding(5, 6, 5, 6);
+			this._dataGridViewParameter.Location = new System.Drawing.Point(104, 7);
 			this._dataGridViewParameter.Name = "_dataGridViewParameter";
 			this._dataGridViewParameter.ReadOnly = true;
 			this._dataGridViewParameter.RowHeadersVisible = false;
-			this._dataGridViewParameter.RowHeadersWidth = 62;
 			this._dataGridViewParameter.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-			this._dataGridViewParameter.Size = new System.Drawing.Size(887, 471);
+			this._dataGridViewParameter.Size = new System.Drawing.Size(604, 335);
 			this._dataGridViewParameter.TabIndex = 13;
 			// 
 			// _groupBoxClassOrFactory
 			// 
 			this._groupBoxClassOrFactory.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-			this._groupBoxClassOrFactory.Controls.Add(this._groupBoxClass);
-			this._groupBoxClassOrFactory.Location = new System.Drawing.Point(10, 12);
-			this._groupBoxClassOrFactory.Margin = new System.Windows.Forms.Padding(5, 6, 5, 6);
+			this._groupBoxClassOrFactory.Controls.Add(this._comboBoxConstructorIndex);
+			this._groupBoxClassOrFactory.Controls.Add(this._objectReferenceControlTestClass);
+			this._groupBoxClassOrFactory.Controls.Add(this._labelTestClass);
+			this._groupBoxClassOrFactory.Controls.Add(this._labelConstructorId);
+			this._groupBoxClassOrFactory.Location = new System.Drawing.Point(12, 14);
+			this._groupBoxClassOrFactory.Margin = new System.Windows.Forms.Padding(6, 7, 6, 7);
 			this._groupBoxClassOrFactory.Name = "_groupBoxClassOrFactory";
-			this._groupBoxClassOrFactory.Padding = new System.Windows.Forms.Padding(5, 6, 5, 6);
-			this._groupBoxClassOrFactory.Size = new System.Drawing.Size(1040, 212);
+			this._groupBoxClassOrFactory.Padding = new System.Windows.Forms.Padding(6, 7, 6, 7);
+			this._groupBoxClassOrFactory.Size = new System.Drawing.Size(708, 93);
 			this._groupBoxClassOrFactory.TabIndex = 8;
 			this._groupBoxClassOrFactory.TabStop = false;
 			this._groupBoxClassOrFactory.Text = "Specify a Class and Constructor Index";
@@ -281,11 +263,10 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
             | System.Windows.Forms.AnchorStyles.Right)));
 			this._tabControl.Controls.Add(this._tabPageImplementation);
 			this._tabControl.Controls.Add(this._tabPageQualityConditions);
-			this._tabControl.Location = new System.Drawing.Point(7, 260);
-			this._tabControl.Margin = new System.Windows.Forms.Padding(5, 6, 5, 6);
+			this._tabControl.Location = new System.Drawing.Point(4, 119);
 			this._tabControl.Name = "_tabControl";
 			this._tabControl.SelectedIndex = 0;
-			this._tabControl.Size = new System.Drawing.Size(1073, 922);
+			this._tabControl.Size = new System.Drawing.Size(740, 591);
 			this._tabControl.TabIndex = 5;
 			this._tabControl.SelectedIndexChanged += new System.EventHandler(this._tabControl_SelectedIndexChanged);
 			// 
@@ -293,11 +274,11 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 			// 
 			this._tabPageImplementation.Controls.Add(this._splitContainerDescription);
 			this._tabPageImplementation.Controls.Add(this._groupBoxClassOrFactory);
-			this._tabPageImplementation.Location = new System.Drawing.Point(4, 34);
-			this._tabPageImplementation.Margin = new System.Windows.Forms.Padding(5, 6, 5, 6);
+			this._tabPageImplementation.Location = new System.Drawing.Point(4, 24);
+			this._tabPageImplementation.Margin = new System.Windows.Forms.Padding(6, 7, 6, 7);
 			this._tabPageImplementation.Name = "_tabPageImplementation";
-			this._tabPageImplementation.Padding = new System.Windows.Forms.Padding(5, 6, 5, 6);
-			this._tabPageImplementation.Size = new System.Drawing.Size(1065, 884);
+			this._tabPageImplementation.Padding = new System.Windows.Forms.Padding(6, 7, 6, 7);
+			this._tabPageImplementation.Size = new System.Drawing.Size(732, 563);
 			this._tabPageImplementation.TabIndex = 0;
 			this._tabPageImplementation.Text = "Implementation";
 			this._tabPageImplementation.UseVisualStyleBackColor = true;
@@ -307,14 +288,15 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 			this._splitContainerDescription.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+			this._splitContainerDescription.BackColor = System.Drawing.SystemColors.ControlLight;
 			this._splitContainerDescription.FixedPanel = System.Windows.Forms.FixedPanel.Panel1;
-			this._splitContainerDescription.Location = new System.Drawing.Point(10, 236);
-			this._splitContainerDescription.Margin = new System.Windows.Forms.Padding(5, 6, 5, 6);
+			this._splitContainerDescription.Location = new System.Drawing.Point(12, 117);
 			this._splitContainerDescription.Name = "_splitContainerDescription";
 			this._splitContainerDescription.Orientation = System.Windows.Forms.Orientation.Horizontal;
 			// 
 			// _splitContainerDescription.Panel1
 			// 
+			this._splitContainerDescription.Panel1.BackColor = System.Drawing.SystemColors.ControlLightLight;
 			this._splitContainerDescription.Panel1.Controls.Add(this._textBoxCategories);
 			this._splitContainerDescription.Panel1.Controls.Add(this._textBoxTestDescription);
 			this._splitContainerDescription.Panel1.Controls.Add(this._labelTestCategories);
@@ -323,12 +305,13 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 			// 
 			// _splitContainerDescription.Panel2
 			// 
+			this._splitContainerDescription.Panel2.BackColor = System.Drawing.SystemColors.ControlLightLight;
 			this._splitContainerDescription.Panel2.Controls.Add(this._dataGridViewParameter);
 			this._splitContainerDescription.Panel2.Controls.Add(this._labelParameter);
 			this._splitContainerDescription.Panel2MinSize = 50;
-			this._splitContainerDescription.Size = new System.Drawing.Size(1040, 621);
-			this._splitContainerDescription.SplitterDistance = 120;
-			this._splitContainerDescription.SplitterWidth = 8;
+			this._splitContainerDescription.Size = new System.Drawing.Size(708, 436);
+			this._splitContainerDescription.SplitterDistance = 84;
+			this._splitContainerDescription.SplitterWidth = 5;
 			this._splitContainerDescription.TabIndex = 14;
 			this._splitContainerDescription.SplitterMoved += new System.Windows.Forms.SplitterEventHandler(this._splitContainerDescription_SplitterMoved);
 			// 
@@ -336,21 +319,21 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 			// 
 			this._textBoxCategories.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-			this._textBoxCategories.Location = new System.Drawing.Point(155, 6);
-			this._textBoxCategories.Margin = new System.Windows.Forms.Padding(5, 6, 5, 6);
+			this._textBoxCategories.Location = new System.Drawing.Point(104, 7);
+			this._textBoxCategories.Margin = new System.Windows.Forms.Padding(6, 7, 6, 7);
 			this._textBoxCategories.Name = "_textBoxCategories";
 			this._textBoxCategories.ReadOnly = true;
-			this._textBoxCategories.Size = new System.Drawing.Size(877, 31);
+			this._textBoxCategories.Size = new System.Drawing.Size(604, 23);
 			this._textBoxCategories.TabIndex = 11;
 			this._textBoxCategories.TabStop = false;
 			// 
 			// _labelTestCategories
 			// 
 			this._labelTestCategories.AutoSize = true;
-			this._labelTestCategories.Location = new System.Drawing.Point(5, 10);
-			this._labelTestCategories.Margin = new System.Windows.Forms.Padding(5, 0, 5, 0);
+			this._labelTestCategories.Location = new System.Drawing.Point(33, 10);
+			this._labelTestCategories.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
 			this._labelTestCategories.Name = "_labelTestCategories";
-			this._labelTestCategories.Size = new System.Drawing.Size(100, 25);
+			this._labelTestCategories.Size = new System.Drawing.Size(66, 15);
 			this._labelTestCategories.TabIndex = 10;
 			this._labelTestCategories.Text = "Categories:";
 			this._labelTestCategories.TextAlign = System.Drawing.ContentAlignment.TopRight;
@@ -360,11 +343,11 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 			this._tabPageQualityConditions.Controls.Add(this._dataGridViewQualityConditions);
 			this._tabPageQualityConditions.Controls.Add(this._dataGridViewFindToolStrip);
 			this._tabPageQualityConditions.Controls.Add(this._toolStripElements);
-			this._tabPageQualityConditions.Location = new System.Drawing.Point(4, 34);
-			this._tabPageQualityConditions.Margin = new System.Windows.Forms.Padding(5, 6, 5, 6);
+			this._tabPageQualityConditions.Location = new System.Drawing.Point(4, 24);
+			this._tabPageQualityConditions.Margin = new System.Windows.Forms.Padding(6, 7, 6, 7);
 			this._tabPageQualityConditions.Name = "_tabPageQualityConditions";
-			this._tabPageQualityConditions.Padding = new System.Windows.Forms.Padding(5, 6, 5, 6);
-			this._tabPageQualityConditions.Size = new System.Drawing.Size(1065, 884);
+			this._tabPageQualityConditions.Padding = new System.Windows.Forms.Padding(6, 7, 6, 7);
+			this._tabPageQualityConditions.Size = new System.Drawing.Size(732, 563);
 			this._tabPageQualityConditions.TabIndex = 1;
 			this._tabPageQualityConditions.Text = "Configurations";
 			this._tabPageQualityConditions.UseVisualStyleBackColor = true;
@@ -383,13 +366,13 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
             this._columnQualityConditionDescription});
 			this._dataGridViewQualityConditions.Dock = System.Windows.Forms.DockStyle.Fill;
 			this._dataGridViewQualityConditions.EditMode = System.Windows.Forms.DataGridViewEditMode.EditOnEnter;
-			this._dataGridViewQualityConditions.Location = new System.Drawing.Point(5, 82);
-			this._dataGridViewQualityConditions.Margin = new System.Windows.Forms.Padding(5, 6, 5, 6);
+			this._dataGridViewQualityConditions.Location = new System.Drawing.Point(6, 61);
+			this._dataGridViewQualityConditions.Margin = new System.Windows.Forms.Padding(6, 7, 6, 7);
 			this._dataGridViewQualityConditions.Name = "_dataGridViewQualityConditions";
 			this._dataGridViewQualityConditions.RowHeadersVisible = false;
 			this._dataGridViewQualityConditions.RowHeadersWidth = 62;
 			this._dataGridViewQualityConditions.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-			this._dataGridViewQualityConditions.Size = new System.Drawing.Size(1055, 796);
+			this._dataGridViewQualityConditions.Size = new System.Drawing.Size(720, 495);
 			this._dataGridViewQualityConditions.TabIndex = 26;
 			this._dataGridViewQualityConditions.CellDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this._dataGridViewQualityConditions_CellDoubleClick);
 			this._dataGridViewQualityConditions.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this._dataGridViewQualityConditions_CellEndEdit);
@@ -422,7 +405,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 			this._columnIssueType.MinimumWidth = 80;
 			this._columnIssueType.Name = "_columnIssueType";
 			this._columnIssueType.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
-			this._columnIssueType.Width = 120;
+			this._columnIssueType.Width = 80;
 			// 
 			// _columnStopOnError
 			// 
@@ -433,7 +416,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 			this._columnStopOnError.MinimumWidth = 80;
 			this._columnStopOnError.Name = "_columnStopOnError";
 			this._columnStopOnError.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
-			this._columnStopOnError.Width = 144;
+			this._columnStopOnError.Width = 95;
 			// 
 			// _columnQualityConditionDescription
 			// 
@@ -448,16 +431,16 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 			this._dataGridViewFindToolStrip.ClickThrough = true;
 			this._dataGridViewFindToolStrip.FilterRows = false;
 			this._dataGridViewFindToolStrip.FindText = "";
-			this._dataGridViewFindToolStrip.FindTextBoxWidth = 247;
+			this._dataGridViewFindToolStrip.FindTextBoxWidth = 288;
 			this._dataGridViewFindToolStrip.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
 			this._dataGridViewFindToolStrip.ImageScalingSize = new System.Drawing.Size(24, 24);
-			this._dataGridViewFindToolStrip.Location = new System.Drawing.Point(5, 54);
+			this._dataGridViewFindToolStrip.Location = new System.Drawing.Point(6, 36);
 			this._dataGridViewFindToolStrip.MatchCase = false;
 			this._dataGridViewFindToolStrip.Name = "_dataGridViewFindToolStrip";
 			this._dataGridViewFindToolStrip.Observer = null;
-			this._dataGridViewFindToolStrip.Padding = new System.Windows.Forms.Padding(0, 0, 3, 0);
+			this._dataGridViewFindToolStrip.Padding = new System.Windows.Forms.Padding(0, 0, 4, 0);
 			this._dataGridViewFindToolStrip.RenderMode = System.Windows.Forms.ToolStripRenderMode.System;
-			this._dataGridViewFindToolStrip.Size = new System.Drawing.Size(1055, 28);
+			this._dataGridViewFindToolStrip.Size = new System.Drawing.Size(720, 25);
 			this._dataGridViewFindToolStrip.TabIndex = 28;
 			this._dataGridViewFindToolStrip.Text = "_dataGridViewFindToolStrip";
 			// 
@@ -469,39 +452,38 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 			this._toolStripElements.ImageScalingSize = new System.Drawing.Size(24, 24);
 			this._toolStripElements.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripLabel1});
-			this._toolStripElements.Location = new System.Drawing.Point(5, 6);
+			this._toolStripElements.Location = new System.Drawing.Point(6, 7);
 			this._toolStripElements.Name = "_toolStripElements";
-			this._toolStripElements.Padding = new System.Windows.Forms.Padding(0, 0, 3, 0);
+			this._toolStripElements.Padding = new System.Windows.Forms.Padding(0, 0, 4, 0);
 			this._toolStripElements.RenderMode = System.Windows.Forms.ToolStripRenderMode.System;
-			this._toolStripElements.Size = new System.Drawing.Size(1055, 48);
+			this._toolStripElements.Size = new System.Drawing.Size(720, 29);
 			this._toolStripElements.TabIndex = 27;
 			this._toolStripElements.Text = "Element Tools";
 			// 
 			// toolStripLabel1
 			// 
 			this.toolStripLabel1.Name = "toolStripLabel1";
-			this.toolStripLabel1.Size = new System.Drawing.Size(86, 43);
-			this.toolStripLabel1.Text = "Configurations";
+			this.toolStripLabel1.Size = new System.Drawing.Size(228, 26);
+			this.toolStripLabel1.Text = "Configurations using this implementation";
 			// 
 			// InstanceDescriptorControl
 			// 
-			this.AutoScaleDimensions = new System.Drawing.SizeF(10F, 25F);
+			this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.Controls.Add(this._tabControl);
 			this.Controls.Add(this._labelDescription);
 			this.Controls.Add(this._textBoxDescription);
 			this.Controls.Add(this._labelName);
 			this.Controls.Add(this._textBoxName);
-			this.Margin = new System.Windows.Forms.Padding(5, 6, 5, 6);
+			this.Margin = new System.Windows.Forms.Padding(6, 7, 6, 7);
 			this.Name = "InstanceDescriptorControl";
-			this.Size = new System.Drawing.Size(1085, 1188);
+			this.Size = new System.Drawing.Size(760, 713);
 			this.Load += new System.EventHandler(this.TestDescriptorControl_Load);
 			this.Paint += new System.Windows.Forms.PaintEventHandler(this.TestDescriptorControl_Paint);
 			((System.ComponentModel.ISupportInitialize)(this._errorProvider)).EndInit();
-			this._groupBoxClass.ResumeLayout(false);
-			this._groupBoxClass.PerformLayout();
 			((System.ComponentModel.ISupportInitialize)(this._dataGridViewParameter)).EndInit();
 			this._groupBoxClassOrFactory.ResumeLayout(false);
+			this._groupBoxClassOrFactory.PerformLayout();
 			this._tabControl.ResumeLayout(false);
 			this._tabPageImplementation.ResumeLayout(false);
 			this._splitContainerDescription.Panel1.ResumeLayout(false);
@@ -531,7 +513,6 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
         private System.Windows.Forms.Label _labelTestDescription;
         private System.Windows.Forms.TextBox _textBoxTestDescription;
 		private System.Windows.Forms.Label _labelConstructorId;
-        private System.Windows.Forms.GroupBox _groupBoxClass;
         private ObjectReferenceControl _objectReferenceControlTestClass;
 		private System.Windows.Forms.Label _labelParameter;
         private System.Windows.Forms.GroupBox _groupBoxClassOrFactory;

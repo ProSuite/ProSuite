@@ -105,24 +105,17 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 
 		public IList<ReferenceCount> GetReferenceCounts<T>() where T : InstanceConfiguration
 		{
-			using (ISession session = OpenSession(true))
+			if (typeof(T) == typeof(IssueFilterConfiguration))
 			{
-				ReferenceCount referenceCount = null;
-
-				IQueryOver<DatasetTestParameterValue>
-					parametersQuery =
-						session.QueryOver<DatasetTestParameterValue>()
-						       .Where(p => p.ValueSource != null)
-						       //.JoinQueryOver(p => p.ValueSource, () => transformerAlias)
-						       .SelectList(lst => lst
-						                          .SelectGroup(p => p.ValueSource.Id)
-						                          .WithAlias(() => referenceCount.EntityId)
-						                          .SelectCount(p => p.Id)
-						                          .WithAlias(() => referenceCount.UsageCount))
-						       .TransformUsing(Transformers.AliasToBean<ReferenceCount>());
-
-				return parametersQuery.List<ReferenceCount>();
+				return GetFilterReferenceCounts();
 			}
+
+			if (typeof(T) == typeof(TransformerConfiguration))
+			{
+				return GetTransformerReferenceCounts<T>();
+			}
+
+			throw new NotImplementedException("Unknown instance configuration");
 		}
 
 		public IList<InstanceConfiguration> GetReferencingConfigurations(
@@ -147,38 +140,6 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 				return result;
 			}
 		}
-		
-		[NotNull]
-		private static HashSet<int> GetIdsInvolvingDeletedDatasets<T>([NotNull] ISession session)
-			where T : InstanceConfiguration
-		{
-			IList<int> datasetParameterIds =
-				DatasetParameterFetchingUtils.GetDeletedDatasetParameterIds(session);
-
-			return DatasetParameterFetchingUtils.GetInstanceConfigurationIdsForParameterIds<T>(
-				session,
-				datasetParameterIds,
-				_maxInParameterCount);
-		}
-
-		public IList<T> Get<T>(InstanceDescriptor descriptor) where T : InstanceConfiguration
-		{
-			Assert.ArgumentNotNull(descriptor, nameof(descriptor));
-
-			if (! descriptor.IsPersistent)
-			{
-				return new List<T>();
-			}
-
-			using (ISession session = OpenSession(true))
-			{
-				ICriteria criteria = session.CreateCriteria(typeof(T));
-
-				criteria.Add(Restrictions.Eq("InstanceDescriptor", descriptor));
-
-				return criteria.List<T>();
-			}
-		}
 
 		public IList<InstanceConfiguration> Get(InstanceDescriptor descriptor)
 		{
@@ -197,6 +158,38 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 		}
 
 		[NotNull]
+		private static HashSet<int> GetIdsInvolvingDeletedDatasets<T>([NotNull] ISession session)
+			where T : InstanceConfiguration
+		{
+			IList<int> datasetParameterIds =
+				DatasetParameterFetchingUtils.GetDeletedDatasetParameterIds(session);
+
+			return DatasetParameterFetchingUtils.GetInstanceConfigurationIdsForParameterIds<T>(
+				session,
+				datasetParameterIds,
+				_maxInParameterCount);
+		}
+
+		private IList<T> Get<T>(InstanceDescriptor descriptor) where T : InstanceConfiguration
+		{
+			Assert.ArgumentNotNull(descriptor, nameof(descriptor));
+
+			if (! descriptor.IsPersistent)
+			{
+				return new List<T>();
+			}
+
+			using (ISession session = OpenSession(true))
+			{
+				ICriteria criteria = session.CreateCriteria(typeof(T));
+
+				criteria.Add(Restrictions.Eq("InstanceDescriptor", descriptor));
+
+				return criteria.List<T>();
+			}
+		}
+
+		[NotNull]
 		private static IList<T> Get<T>(
 			[CanBeNull] DataQualityCategory category,
 			[NotNull] ISession session,
@@ -205,17 +198,14 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 		{
 			ICriteria criteria = session.CreateCriteria(typeof(T));
 
-			// TODO: Add Category to InstanceConfigs
-			//const string categoryProperty = "Category";
+			const string categoryProperty = "Category";
 
-			//ICriterion filterCriterion =
-			//	category == null
-			//		? (ICriterion)new NullExpression(categoryProperty)
-			//		: Restrictions.Eq(categoryProperty, category);
+			ICriterion filterCriterion =
+				category == null
+					? (ICriterion) new NullExpression(categoryProperty)
+					: Restrictions.Eq(categoryProperty, category);
 
-			//IList<T> all = criteria.Add(filterCriterion)
-			//					   .List<T>();
-			IList<T> all = criteria.List<T>();
+			IList<T> all = criteria.Add(filterCriterion).List<T>();
 
 			if (all.Count == 0 || includeQualityConditionsBasedOnDeletedDatasets)
 			{
@@ -231,6 +221,52 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 
 			return all.Where(qc => ! excludedIds.Contains(qc.Id))
 			          .ToList();
+		}
+
+		private IList<ReferenceCount> GetTransformerReferenceCounts<T>()
+			where T : InstanceConfiguration
+		{
+			using (ISession session = OpenSession(true))
+			{
+				ReferenceCount referenceCount = null;
+
+				IQueryOver<DatasetTestParameterValue>
+					parametersQuery =
+						session.QueryOver<DatasetTestParameterValue>()
+						       .Where(p => p.ValueSource != null)
+						       //.JoinQueryOver(p => p.ValueSource, () => transformerAlias)
+						       .SelectList(lst => lst
+						                          .SelectGroup(p => p.ValueSource.Id)
+						                          .WithAlias(() => referenceCount.EntityId)
+						                          .SelectCount(p => p.Id)
+						                          .WithAlias(() => referenceCount.UsageCount))
+						       .TransformUsing(Transformers.AliasToBean<ReferenceCount>());
+
+				return parametersQuery.List<ReferenceCount>();
+			}
+		}
+
+		private IList<ReferenceCount> GetFilterReferenceCounts()
+		{
+			using (ISession session = OpenSession(true))
+			{
+				ReferenceCount referenceCount = null;
+
+				IssueFilterConfiguration issueFilterAlias = null;
+
+				var parametersQuery =
+					session.QueryOver<QualityCondition>()
+					       .JoinQueryOver(qc => qc.IssueFilterConfigurations,
+					                      () => issueFilterAlias)
+					       .SelectList(list => list
+					                           .SelectGroup(() => issueFilterAlias.Id)
+					                           .WithAlias(() => referenceCount.EntityId)
+					                           .SelectCount(qc => qc.Id)
+					                           .WithAlias(() => referenceCount.UsageCount))
+					       .TransformUsing(Transformers.AliasToBean<ReferenceCount>());
+
+				return parametersQuery.List<ReferenceCount>();
+			}
 		}
 
 		#endregion

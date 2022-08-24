@@ -87,10 +87,26 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 		protected override InstanceConfigurationItem CreateNewItemCore(
 			CoreDomainModelItemModelBuilder modelBuilder)
 		{
-			var transformerConfig = new TransformerConfiguration();
+			var transformerConfig = new TransformerConfiguration(true);
 
 			return new InstanceConfigurationItem(modelBuilder, transformerConfig, this,
 			                                     modelBuilder.InstanceConfigurations);
+		}
+
+		protected override IEnumerable<InstanceConfiguration> GetInstanceConfigurations(
+			DataQualityCategory category)
+		{
+			IList<TransformerConfiguration> result = null;
+			bool includeForDelted = ModelBuilder.IncludeQualityConditionsBasedOnDeletedDatasets;
+
+			ModelBuilder.ReadOnlyTransaction(
+				delegate
+				{
+					result = ModelBuilder.InstanceConfigurations.Get<TransformerConfiguration>(
+						category, includeForDelted);
+				});
+
+			return result;
 		}
 
 		#endregion

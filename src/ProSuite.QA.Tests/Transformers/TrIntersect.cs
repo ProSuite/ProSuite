@@ -6,11 +6,13 @@ using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
+using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 
 namespace ProSuite.QA.Tests.Transformers
 {
 	[UsedImplicitly]
+	[GeometryTransformer]
 	public class TrIntersect : TableTransformer<TransformedFeatureClass>
 	{
 		private readonly IReadOnlyFeatureClass _intersected;

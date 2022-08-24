@@ -106,8 +106,8 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			       .To(_textBoxUrl)
 			       .WithLabel(_labelUrl);
 
-			//_binder.Bind(m => m.Notes)
-			//       .To(_textBoxNotes);
+			_binder.Bind(m => m.Notes)
+			       .To(_textBoxNotes);
 
 			_binder.AddElement(new ObjectReferenceScreenElement(
 				                   _binder.GetAccessor(m => m.InstanceDescriptor),

@@ -13,7 +13,6 @@ using ProSuite.DdxEditor.Framework.Commands;
 using ProSuite.DdxEditor.Framework.Dependencies;
 using ProSuite.DdxEditor.Framework.Items;
 using ProSuite.DdxEditor.Framework.ItemViews;
-using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.Repositories;
@@ -120,11 +119,15 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 		}
 
 		[CanBeNull]
-		private static ClassDescriptor FindTestClassProvider(
+		private ClassDescriptor FindTestClassProvider(
 			[NotNull] IWin32Window owner,
 			[CanBeNull] ClassDescriptor orig)
 		{
-			return FindClassDescriptor<ITest>(owner, orig);
+			InstanceDescriptor descriptor = Assert.NotNull(GetEntity());
+
+			return descriptor is TransformerDescriptor
+				       ? FindClassDescriptor<ITableTransformer>(owner, orig)
+				       : FindClassDescriptor<IIssueFilter>(owner, orig);
 		}
 
 		[CanBeNull]
@@ -194,33 +197,34 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 		}
 
 		[CanBeNull]
-		private TestFactory GetTestFactory()
+		private IInstanceInfo GetInstanceInfo()
 		{
-			return TestFactoryUtils.GetTestFactory(Assert.NotNull(GetEntity()));
+			return InstanceDescriptorUtils.GetInstanceInfo(Assert.NotNull(GetEntity()));
 		}
 
 		[NotNull]
 		public IList<TestParameter> GetTestParameters([CanBeNull] out string description,
 		                                              [NotNull] out string[] categories)
 		{
-			TestFactory factory = GetTestFactory();
-			if (factory == null)
+			IInstanceInfo instanceInfo = GetInstanceInfo();
+
+			if (instanceInfo == null)
 			{
 				description = string.Empty;
 				categories = Array.Empty<string>();
 				return new List<TestParameter>();
 			}
 
-			description = factory.TestDescription;
-			categories = factory.TestCategories;
+			description = instanceInfo.TestDescription;
+			categories = instanceInfo.TestCategories;
 
-			IList<TestParameter> testParameters = factory.Parameters;
+			IList<TestParameter> testParameters = instanceInfo.Parameters;
 
 			foreach (TestParameter testParameter in testParameters)
 			{
 				// TODO revise handling of parameter descriptions
 				testParameter.Description =
-					factory.GetParameterDescription(testParameter.Name);
+					instanceInfo.GetParameterDescription(testParameter.Name);
 			}
 
 			return testParameters;

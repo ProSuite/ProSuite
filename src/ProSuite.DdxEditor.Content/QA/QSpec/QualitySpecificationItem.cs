@@ -333,7 +333,7 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 
 			foreach (DataQualityCategory categoryToRefresh in categoriesToRefresh)
 			{
-				QualityConditionContainerUtils.RefreshAssignmentTarget(categoryToRefresh,
+				QualityConditionContainerUtils.RefreshQualityConditionAssignmentTarget(categoryToRefresh,
 					itemNavigation);
 			}
 

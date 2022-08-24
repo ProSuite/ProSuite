@@ -17,11 +17,14 @@ using ProSuite.QA.Container.Geometry;
 using ProSuite.QA.Container.PolygonGrower;
 using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Core;
+using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.Network;
 
 namespace ProSuite.QA.Tests.Transformers
 {
+	[UsedImplicitly]
+	[GeometryTransformer]
 	public class TrDissolve : TableTransformer<TransformedFeatureClass>
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();

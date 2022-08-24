@@ -4,13 +4,14 @@ using System.Reflection;
 using System.Windows.Forms;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.DdxEditor.Content.Properties;
+using ProSuite.DdxEditor.Content.QA.InstanceDescriptors;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Commands;
 
 namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 {
 	internal class CreateReportForAssemblyTestsCommand :
-		ExchangeCommand<TestDescriptorsItem>
+		ExchangeCommand<AlgorithmDescriptorsItem>
 	{
 		public const string DefaultExtension = "html";
 
@@ -26,16 +27,16 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 		/// <summary>
 		/// Initializes a new instance of the <see cref="CreateReportForAssemblyTestsCommand"/> class.
 		/// </summary>
-		/// <param name="testDescriptorsItem">The quality specification item.</param>
+		/// <param name="descriptorsItem">The algorithm descriptors item.</param>
 		/// <param name="applicationController">The application controller.</param>
 		public CreateReportForAssemblyTestsCommand(
-			TestDescriptorsItem testDescriptorsItem,
+			AlgorithmDescriptorsItem descriptorsItem,
 			IApplicationController applicationController)
-			: base(testDescriptorsItem, applicationController, DefaultExtension, FileFilter) { }
+			: base(descriptorsItem, applicationController, DefaultExtension, FileFilter) { }
 
 		public override Image Image => _image;
 
-		public override string Text => "Create Report For Tests in a .Net Assembly...";
+		public override string Text => "Create Report for Descriptors in a .Net Assembly...";
 
 		protected override bool EnabledCore => ! Item.IsDirty;
 
@@ -62,7 +63,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 
 				if (! string.IsNullOrEmpty(htmlFilePath))
 				{
-					Item.CreateTestReport(assembly, htmlFilePath, true);
+					Item.CreateReport(assembly, htmlFilePath, true);
 				}
 			}
 		}

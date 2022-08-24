@@ -139,7 +139,8 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			return GetReferencingConfigurations(instanceConfig);
 		}
 
-		private IEnumerable<InstanceConfiguration> GetReferencingConfigurations(InstanceConfiguration instanceConfig)
+		private IEnumerable<InstanceConfiguration> GetReferencingConfigurations(
+			InstanceConfiguration instanceConfig)
 		{
 			if (instanceConfig is TransformerConfiguration transformerConfiguration)
 			{
@@ -167,8 +168,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 				return;
 			}
 
-			//string url = configuration.Url;
-			string url = null;
+			string url = configuration.Url;
 
 			if (StringUtils.IsNullOrEmptyOrBlank(url))
 			{
@@ -226,9 +226,8 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			if (_containerItem != null)
 			{
 				commands.Add(new CopyInstanceConfigurationCommand(this, applicationController));
-				//commands.Add(new AssignQualityConditionsToCategoryCommand(new[] {this},
-				//	             _containerItem,
-				//	             applicationController));
+				commands.Add(new AssignInstanceConfigurationToCategoryCommand(new[] {this},
+					             _containerItem, applicationController));
 			}
 		}
 

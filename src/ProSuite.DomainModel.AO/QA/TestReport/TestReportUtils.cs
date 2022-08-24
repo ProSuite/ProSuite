@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-using System.Text;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Reflection;
@@ -34,7 +33,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 		{
 			Assert.ArgumentNotNull(assemblies, nameof(assemblies));
 
-			var builder = new HtmlReportBuilder(writer, "ProSuite QA Test Documentation");
+			var builder = new HtmlReportBuilder(writer, "ProSuite QA Documentation");
 
 			builder.AddHeaderItem("ProSuite Version",
 			                      ReflectionUtils.GetAssemblyVersionString(
@@ -45,6 +44,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 
 			IncludeTestClasses(builder, assemblies);
 			IncludeTransformerClasses(builder, assemblies);
+			IncludeIssueFilterClasses(builder, assemblies);
 			IncludeTestFactories(builder, assemblies);
 
 			builder.WriteReport();
@@ -144,6 +144,26 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 						         transformerType, includeObsolete, includeInternallyUsed))
 					{
 						reportBuilder.IncludeTransformer(transformerType, ctorIndex);
+					}
+				}
+			}
+		}
+
+		private static void IncludeIssueFilterClasses([NotNull] IReportBuilder reportBuilder,
+		                                              [NotNull] IEnumerable<Assembly> assemblies)
+		{
+			const bool includeObsolete = true;
+			const bool includeInternallyUsed = true;
+
+			foreach (Assembly assembly in assemblies)
+			{
+				foreach (Type transformerType in InstanceFactoryUtils.GetIssueFilterClasses(
+					         assembly, includeObsolete, includeInternallyUsed))
+				{
+					foreach (int ctorIndex in InstanceFactoryUtils.GetConstructorIndexes(
+						         transformerType, includeObsolete, includeInternallyUsed))
+					{
+						reportBuilder.IncludeIssueFilter(transformerType, ctorIndex);
 					}
 				}
 			}

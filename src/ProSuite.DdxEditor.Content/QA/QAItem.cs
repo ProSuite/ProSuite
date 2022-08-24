@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -49,7 +48,7 @@ namespace ProSuite.DdxEditor.Content.QA
 
 		protected override IEnumerable<Item> GetChildren()
 		{
-			if (Environment.Version >= new Version(6, 0))
+			if (_modelBuilder.SupportsTransformersAndFilters)
 			{
 				foreach (Item item in GetChildrenDdxCore())
 				{
@@ -59,6 +58,7 @@ namespace ProSuite.DdxEditor.Content.QA
 				yield break;
 			}
 
+			// Legacy setup:
 			yield return RegisterChild(new QualitySpecificationsItem(_modelBuilder, this));
 
 			yield return RegisterChild(new QualityConditionsItem(_modelBuilder, this));
@@ -73,7 +73,7 @@ namespace ProSuite.DdxEditor.Content.QA
 
 		private IEnumerable<Item> GetChildrenDdxCore()
 		{
-			yield return RegisterChild(new AlgorithmImplementationItem(_modelBuilder));
+			yield return RegisterChild(new AlgorithmDescriptorsItem(_modelBuilder));
 
 			yield return RegisterChild(new QualitySpecificationsItem(_modelBuilder, this));
 
@@ -216,41 +216,6 @@ namespace ProSuite.DdxEditor.Content.QA
 			                                 .Cast<Item>();
 		}
 
-		IEnumerable<Item> IInstanceConfigurationContainer.GetInstanceConfigurationItems(
-			IInstanceConfigurationContainerItem containerItem)
-		{
-			// TODO: Factory method on containerItem? Is the category the only thing taken from here? 
-			if (containerItem is QualityConditionsItem)
-			{
-				return GetQualityConditions().OrderBy(q => q.Name)
-				                             .Select(spec =>
-					                                     new QualityConditionItem(
-						                                     _modelBuilder, spec, containerItem,
-						                                     _modelBuilder.QualityConditions))
-				                             .Cast<Item>();
-			}
-
-			if (containerItem is TransformerConfigurationsItem)
-			{
-				return GetInstanceConfigurations<TransformerConfiguration>()
-				       .OrderBy(c => c.Name)
-				       .Select(c => new InstanceConfigurationItem(
-					               _modelBuilder, c, containerItem,
-					               _modelBuilder.InstanceConfigurations));
-			}
-
-			if (containerItem is IssueFilterConfigurationsItem)
-			{
-				return GetInstanceConfigurations<IssueFilterConfiguration>()
-				       .OrderBy(c => c.Name)
-				       .Select(c => new InstanceConfigurationItem(
-					               _modelBuilder, c, containerItem,
-					               _modelBuilder.InstanceConfigurations));
-			}
-
-			throw new NotImplementedException();
-		}
-
 		public DataQualityCategory Category => null;
 
 		QualityConditionItem IQualityConditionContainer.CreateQualityConditionItem(
@@ -309,25 +274,6 @@ namespace ProSuite.DdxEditor.Content.QA
 				updateTestDescriptorNames,
 				updateTestDescriptorProperties,
 				_modelBuilder.DataQualityImporter);
-		}
-
-		[NotNull]
-		private IEnumerable<QualityCondition> GetQualityConditions()
-		{
-			return _modelBuilder.ReadOnlyTransaction(
-				() => _modelBuilder.QualityConditions.Get(
-					null,
-					_modelBuilder
-						.IncludeQualityConditionsBasedOnDeletedDatasets));
-		}
-
-		[NotNull]
-		private IEnumerable<T> GetInstanceConfigurations<T>()
-			where T : InstanceConfiguration
-		{
-			return _modelBuilder.ReadOnlyTransaction(
-				() => _modelBuilder.InstanceConfigurations.Get<T>(
-					null, _modelBuilder.IncludeQualityConditionsBasedOnDeletedDatasets));
 		}
 
 		private void AddDataQualityCategoryItem([NotNull] DataQualityCategoryItem item)

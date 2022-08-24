@@ -39,9 +39,10 @@
   </ItemGroup>
   
   <ItemGroup>
-    <ProjectReference Condition=" '$(TargetFramework)' == 'net6.0-windows' " Include="..\ProSuite.DdxEditor.Content.Blazor\ProSuite.DdxEditor.Content.Blazor.csproj" />
+    <ProjectReference Include="..\ProSuite.Commons\ProSuite.Commons.csproj" />
     <ProjectReference Include="..\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj" />
     <ProjectReference Include="..\ProSuite.Commons.UI\ProSuite.Commons.UI.csproj" />
+    <ProjectReference Condition=" '$(TargetFramework)' == 'net6.0-windows' " Include="..\ProSuite.DdxEditor.Content.Blazor\ProSuite.DdxEditor.Content.Blazor.csproj" />
     <ProjectReference Include="..\ProSuite.DdxEditor.Framework\ProSuite.DdxEditor.Framework.csproj" />
     <ProjectReference Include="..\ProSuite.DomainModel.AO\ProSuite.DomainModel.AO.csproj" />
     <ProjectReference Include="..\ProSuite.UI\ProSuite.UI.csproj" />

@@ -1,7 +1,7 @@
-﻿using System;
+using System;
 using System.Runtime.Serialization;
 
-namespace ProSuite.DomainModel.AO.QA.Xml
+namespace ProSuite.Commons.Xml
 {
 	[Serializable]
 	public class XmlDeserializationException : Exception

@@ -15,6 +15,7 @@ using ProSuite.DdxEditor.Content.LinearNetworks;
 using ProSuite.DdxEditor.Content.Models;
 using ProSuite.DdxEditor.Content.ObjectCategories;
 using ProSuite.DdxEditor.Content.QA.Categories;
+using ProSuite.DdxEditor.Content.QA.InstanceConfig;
 using ProSuite.DdxEditor.Content.QA.InstanceDescriptors;
 using ProSuite.DdxEditor.Content.QA.QCon;
 using ProSuite.DdxEditor.Content.QA.QSpec;
@@ -112,6 +113,9 @@ namespace ProSuite.DdxEditor.Content
 		public abstract IXmlDataQualityImporter DataQualityImporter { get; }
 
 		public abstract IXmlDataQualityExporter DataQualityExporter { get; }
+
+		public virtual bool SupportsTransformersAndFilters =>
+			Environment.Version >= new Version(6, 0);
 
 		public abstract IEnumerable<Item> GetChildren([NotNull] ModelsItemBase modelItem);
 
@@ -264,6 +268,12 @@ namespace ProSuite.DdxEditor.Content
 					if (category.CanContainQualityConditions)
 					{
 						result.Add(new QualityConditionsItem(this, item));
+
+						if (SupportsTransformersAndFilters)
+						{
+							result.Add(new TransformerConfigurationsItem(this, item));
+							result.Add(new IssueFilterConfigurationsItem(this, item));
+						}
 					}
 
 					if (category.CanContainSubCategories && DataQualityCategories != null)

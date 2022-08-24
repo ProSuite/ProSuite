@@ -1,11 +1,13 @@
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 
 namespace ProSuite.QA.Tests.Transformers.Filters
 {
 	[UsedImplicitly]
+	[FilterTransformer]
 	public class TrOnlyContainedFeatures : TrSpatiallyFiltered
 	{
 		[DocTr(nameof(DocTrStrings.TrOnlyContainedFeatures_0))]
