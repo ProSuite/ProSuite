@@ -14,12 +14,14 @@ public abstract class ViewModelBase : Observable
 {
 	[CanBeNull] private object _value;
 
+	// todo daro refactor parameter order
 	protected ViewModelBase([NotNull] TestParameter parameter,
 	                        [CanBeNull] object value,
 	                        [NotNull] IInstanceConfigurationViewModel observer,
 	                        bool required = false,
+	                        bool validateOnPersistence = false,
 	                        [CanBeNull] string customErrorMessage = null) : base(
-		observer, customErrorMessage, required)
+		observer, customErrorMessage, required, validateOnPersistence)
 	{
 		Assert.ArgumentNotNull(parameter, nameof(parameter));
 

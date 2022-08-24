@@ -156,7 +156,9 @@ public class InstanceConfigurationViewModel<T> : NotifyPropertyChangedBase,
 			{
 				rowsByParameter[param]
 					.Add(new ScalarTestParameterValueViewModel(
-						     param, scalarValue.GetValue(), this, param.IsConstructorParameter));
+						     param, scalarValue.GetValue(), this,
+						     param.IsConstructorParameter,
+						     param.IsConstructorParameter));
 			}
 			else
 			{

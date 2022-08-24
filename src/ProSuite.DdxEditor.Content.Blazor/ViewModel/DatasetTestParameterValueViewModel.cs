@@ -30,8 +30,9 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 		bool usedAsReferenceData,
 		[NotNull] Either<Dataset, TransformerConfiguration> datasetSource,
 		[NotNull] IInstanceConfigurationViewModel observer,
-		bool required) :
-		base(parameter, value, observer, required, "Dataset not set")
+		bool required,
+		bool validateOnPersistence) :
+		base(parameter, value, observer, required, validateOnPersistence, "Dataset not set")
 	{
 		Assert.ArgumentNotNull(datasetSource, nameof(datasetSource));
 
@@ -151,7 +152,9 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 
 		return new DatasetTestParameterValueViewModel(parameter, value, imageSource, modelName,
 		                                              filterExpression, usedAsReferenceData, source,
-		                                              observer, parameter.IsConstructorParameter);
+		                                              observer,
+		                                              parameter.IsConstructorParameter,
+		                                              parameter.IsConstructorParameter);
 	}
 
 	private FinderForm<DatasetFinderItem> GetDatasetFinderForm(

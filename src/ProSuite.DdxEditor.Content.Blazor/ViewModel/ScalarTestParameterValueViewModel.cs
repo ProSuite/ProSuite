@@ -12,8 +12,9 @@ public class ScalarTestParameterValueViewModel : ViewModelBase
 	public ScalarTestParameterValueViewModel([NotNull] TestParameter parameter,
 	                                         [CanBeNull] object value,
 	                                         [NotNull] IInstanceConfigurationViewModel observer,
-	                                         bool required = false) :
-		base(parameter, value, observer, required)
+	                                         bool required,
+	                                         bool validateOnPersistence) :
+		base(parameter, value, observer, required, validateOnPersistence)
 	{
 		ComponentParameters.Add("ViewModel", this);
 

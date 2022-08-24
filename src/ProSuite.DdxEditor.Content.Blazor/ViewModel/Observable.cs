@@ -15,21 +15,30 @@ public abstract class Observable : IDisposable, INotifyPropertyChanged
 	[CanBeNull] private readonly string _customErrorMessage;
 	[NotNull] private readonly string _defaultErrorMessage = "Value not set";
 	private readonly bool _required;
+	private readonly bool _validateOnPersistence;
 
 	[CanBeNull] private SubscriptionToken _eventToken;
 
 	protected Observable([NotNull] IInstanceConfigurationViewModel observer,
 	                     [CanBeNull] string customErrorMessage,
-	                     bool required = false)
+	                     bool required = false,
+	                     bool validateOnPersistence = false)
 	{
 		Assert.ArgumentNotNull(observer, nameof(observer));
 
+		// todo daro: use RequiredAttribute on Transformer or QaTest
 		_required = required;
+		_validateOnPersistence = validateOnPersistence;
 		_customErrorMessage = customErrorMessage;
 
 		Observer = observer;
 
 		PropertyChanged += Observer.OnRowPropertyChanged;
+		
+		if (_validateOnPersistence)
+		{
+			WireEvent();
+		}
 	}
 
 	[NotNull]
@@ -99,24 +108,19 @@ public abstract class Observable : IDisposable, INotifyPropertyChanged
 
 		Validate();
 
-		if (! _required)
-		{
-			WireEvent();
-		}
-
 		PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 	}
 
 	private void OnValidateForPersistence(Notification notification)
 	{
-		Assert.True(_required, "Validation event should not fire");
+		Assert.True(_validateOnPersistence, "Validation event should not fire");
 
-		if (Validate())
+		if (ValidateCore())
 		{
 			return;
 		}
 
-		// message should be not null if it is not valid
+		// message should be null if it is valid
 		string message = Assert.NotNullOrEmpty(ErrorMessage);
 
 		RegisterMessageCore(notification, message);
