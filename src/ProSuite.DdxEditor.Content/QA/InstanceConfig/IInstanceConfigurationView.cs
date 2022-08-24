@@ -28,7 +28,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 
 		IInstanceConfigurationTableViewControl TableViewControl { get; }
 
-		void BindToQualityConditionReferences(
+		void BindToInstanceConfigReferences(
 			[NotNull] IList<InstanceConfigurationReferenceTableRow> tableRows);
 
 		void RenderCategory([CanBeNull] string categoryText);

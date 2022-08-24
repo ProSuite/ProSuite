@@ -171,7 +171,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 						: new LinkArea(0, 0);
 		}
 
-		void IInstanceConfigurationView.BindToQualityConditionReferences(
+		void IInstanceConfigurationView.BindToInstanceConfigReferences(
 			IList<InstanceConfigurationReferenceTableRow> tableRows)
 		{
 			if (_qSpecStateManager == null)

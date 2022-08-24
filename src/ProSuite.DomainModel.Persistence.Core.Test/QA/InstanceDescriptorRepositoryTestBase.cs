@@ -64,13 +64,19 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.QA
 
 					Assert.AreEqual(2, foundDescriptors.Count);
 
-					TransformerDescriptor foundTest2 =
+					TransformerDescriptor foundTrans2 =
 						foundDescriptors.Single(d => d.Name == "trans2");
-					Assert.AreEqual("desc", foundTest2.Description);
-					Assert.AreEqual(constructorId, foundTest2.ConstructorId);
-					Assert.AreEqual(t2.Class, foundTest2.Class);
+					Assert.AreEqual("desc", foundTrans2.Description);
+					Assert.AreEqual(constructorId, foundTrans2.ConstructorId);
+					Assert.AreEqual(t2.Class, foundTrans2.Class);
 
-					Assert.AreEqual(1, Repository.GetIssueFilterDescriptors());
+					IList<IssueFilterDescriptor> foundFilters =
+						Repository.GetIssueFilterDescriptors();
+
+					Assert.AreEqual(1, foundFilters.Count);
+					IssueFilterDescriptor issueFilter =
+						foundFilters.Single(f => f.Name == "ifilt1");
+					Assert.AreEqual("issueFilTypeName", issueFilter.Class.TypeName);
 				});
 		}
 

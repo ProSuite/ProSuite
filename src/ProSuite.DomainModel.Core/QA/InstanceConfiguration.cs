@@ -146,7 +146,7 @@ namespace ProSuite.DomainModel.Core.QA
 		/// Gets the dataset referenced directly by the condition and optionally also the datasets
 		/// referenced indirectly (and recursively) by any filters or transformers.
 		/// </summary>
-		/// <param name="includeReferencedProcessors">include RowFilters, IssueFilters and Transformers</param>
+		/// <param name="includeReferencedProcessors">include IssueFilters and Transformers</param>
 		/// <param name="includeSourceDatasets">include Transformers of dataset sources</param>
 		/// <returns></returns>
 		[NotNull]
