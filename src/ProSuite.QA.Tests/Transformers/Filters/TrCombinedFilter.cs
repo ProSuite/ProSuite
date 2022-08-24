@@ -11,7 +11,7 @@ namespace ProSuite.QA.Tests.Transformers.Filters
 {
 	[UsedImplicitly]
 	[FilterTransformer]
-	public class TrMultiFilter : TableTransformer<FilteredFeatureClass>
+	public class TrCombinedFilter : TableTransformer<FilteredFeatureClass>
 	{
 		[NotNull] private readonly IReadOnlyFeatureClass _featureClassToFilter;
 		[NotNull] private readonly IList<IReadOnlyFeatureClass> _inputFilters;
@@ -19,13 +19,13 @@ namespace ProSuite.QA.Tests.Transformers.Filters
 
 		private FilteredFeatureClass _resultingClass;
 
-		[DocTr(nameof(DocTrStrings.TrMultiFilter_0))]
-		public TrMultiFilter(
-			[NotNull] [DocTr(nameof(DocTrStrings.TrMultiFilter_featureClassToFilter))]
+		[DocTr(nameof(DocTrStrings.TrCombinedFilter_0))]
+		public TrCombinedFilter(
+			[NotNull] [DocTr(nameof(DocTrStrings.TrCombinedFilter_featureClassToFilter))]
 			IReadOnlyFeatureClass featureClassToFilter,
-			[NotNull] [DocTr(nameof(DocTrStrings.TrMultiFilter_inputFilters))]
+			[NotNull] [DocTr(nameof(DocTrStrings.TrCombinedFilter_inputFilters))]
 			IList<IReadOnlyFeatureClass> inputFilters,
-			[CanBeNull] [DocTr(nameof(DocTrStrings.TrMultiFilter_expression))]
+			[CanBeNull] [DocTr(nameof(DocTrStrings.TrCombinedFilter_expression))]
 			string expression)
 			: base(inputFilters.Prepend(featureClassToFilter))
 		{

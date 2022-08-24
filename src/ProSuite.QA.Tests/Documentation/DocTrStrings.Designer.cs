@@ -61,6 +61,44 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Creates a filtered feature class based on several other filters that use the same &apos;featureClassToFilter&apos;..
+        /// </summary>
+        public static string TrCombinedFilter_0 {
+            get {
+                return ResourceManager.GetString("TrCombinedFilter_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An expression that allows combining filters with AND or OR. Example: 
+        ///(islands_in_lakes OR islands_in_rivers) AND islands_in_bavaria
+        ///The input filters are referenced by the transformer configuration name. If not specified, all input filters are combined with AND, i.e. the feature passes all filters..
+        /// </summary>
+        public static string TrCombinedFilter_expression {
+            get {
+                return ResourceManager.GetString("TrCombinedFilter_expression", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The feature class to be filtered..
+        /// </summary>
+        public static string TrCombinedFilter_featureClassToFilter {
+            get {
+                return ResourceManager.GetString("TrCombinedFilter_featureClassToFilter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The filters which should be checked to determine if a feature passes the filter. By default, a feature passes the filter if it passes all input filters..
+        /// </summary>
+        public static string TrCombinedFilter_inputFilters {
+            get {
+                return ResourceManager.GetString("TrCombinedFilter_inputFilters", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Transforms line feature class &apos;featureClass&apos; by dissolving connected features.
         /// </summary>
         public static string TrDissolve_0 {
@@ -302,44 +340,6 @@ namespace ProSuite.QA.Tests.Documentation {
         public static string TrMakeTable_viewOrTableName {
             get {
                 return ResourceManager.GetString("TrMakeTable_viewOrTableName", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Creates a filtered feature class based on several other filters that use the same &apos;featureClassToFilter&apos;..
-        /// </summary>
-        public static string TrMultiFilter_0 {
-            get {
-                return ResourceManager.GetString("TrMultiFilter_0", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to An expression that allows combining filters with AND or OR. Example: 
-        ///(islands_in_lakes OR islands_in_rivers) AND islands_in_bavaria
-        ///The input filters are referenced by the transformer configuration name. If not specified, all input filters are combined with AND, i.e. the feature passes all filters..
-        /// </summary>
-        public static string TrMultiFilter_expression {
-            get {
-                return ResourceManager.GetString("TrMultiFilter_expression", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The feature class to be filtered..
-        /// </summary>
-        public static string TrMultiFilter_featureClassToFilter {
-            get {
-                return ResourceManager.GetString("TrMultiFilter_featureClassToFilter", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The filters which should be checked to determine if a feature passes the filter. By default, a feature passes the filter if it passes all input filters..
-        /// </summary>
-        public static string TrMultiFilter_inputFilters {
-            get {
-                return ResourceManager.GetString("TrMultiFilter_inputFilters", resourceCulture);
             }
         }
         
