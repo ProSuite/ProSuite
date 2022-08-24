@@ -51,7 +51,7 @@ public class QualityConditionBlazor : BlazorWebView, IInstanceConfigurationTable
 #endif
 		return serviceCollection.BuildServiceProvider();
 #else
-			throw new NotImplementedException();
+		throw new NotImplementedException();
 #endif
 	}
 

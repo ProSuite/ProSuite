@@ -21,7 +21,7 @@ public class InstanceConfigurationViewModel<T> : IInstanceConfigurationViewModel
 	[NotNull] private readonly EntityItem<T, T> _item;
 
 	[NotNull] private Dictionary<TestParameter, IList<ViewModelBase>> _rowsByParameter = new();
-	
+
 	public InstanceConfigurationViewModel([NotNull] EntityItem<T, T> item,
 	                                      [NotNull] ITestParameterDatasetProvider datasetProvider)
 	{
@@ -35,6 +35,7 @@ public class InstanceConfigurationViewModel<T> : IInstanceConfigurationViewModel
 		InstanceConfiguration = Assert.NotNull(_item.GetEntity());
 	}
 
+	[CanBeNull]
 	public IList<ViewModelBase> Values { get; private set; }
 
 	[NotNull]
@@ -42,19 +43,25 @@ public class InstanceConfigurationViewModel<T> : IInstanceConfigurationViewModel
 
 	[NotNull]
 	public ITestParameterDatasetProvider DatasetProvider { get; }
-	
+
 	public void NotifyChanged(bool dirty)
 	{
 		_item.NotifyChanged();
 	}
-	
+
 	public void BindTo([NotNull] InstanceConfiguration qualityCondition)
 	{
 		Assert.ArgumentNotNull(qualityCondition, nameof(qualityCondition));
 
 		_rowsByParameter = CreateRows(qualityCondition);
 
-		Values = new List<ViewModelBase>(GetTopLevelRows(_rowsByParameter).ToList());
+		Values = new List<ViewModelBase>(GetTopLevelRows(_rowsByParameter));
+
+	void IInstanceConfigurationViewModel.OnRowPropertyChanged(
+		object sender, PropertyChangedEventArgs e)
+	{
+		UpdateEntity(Assert.NotNull(_item.GetEntity()));
+	}
 	}
 
 	private IEnumerable<ViewModelBase> GetTopLevelRows(
@@ -96,7 +103,7 @@ public class InstanceConfigurationViewModel<T> : IInstanceConfigurationViewModel
 		}
 
 		InstanceFactory factory = InstanceFactoryUtils.CreateFactory(instanceConfiguration);
-		
+
 		if (factory == null)
 		{
 			_msg.Debug($"{nameof(InstanceFactory)} of {instanceConfiguration} is null");
@@ -190,20 +197,5 @@ public class InstanceConfigurationViewModel<T> : IInstanceConfigurationViewModel
 				}
 			}
 		}
-	}
-	
-	void IInstanceConfigurationViewModel.OnRowPropertyChanged(
-		object sender, PropertyChangedEventArgs e)
-	{
-		UpdateEntity(Assert.NotNull(_item.GetEntity()));
-	}
-
-	public void Dispose()
-	{
-		Values.Clear();
-		Values = null;
-
-		_rowsByParameter.Clear();
-		_rowsByParameter = null!;
 	}
 }
