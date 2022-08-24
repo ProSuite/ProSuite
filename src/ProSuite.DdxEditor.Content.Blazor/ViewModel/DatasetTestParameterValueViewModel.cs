@@ -80,10 +80,7 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 
 	public string ImageSource { get; set; }
 
-	// todo daro: rename to Value
-	public string DisplayValue => DatasetSource.Match(
-		GetDisplayName,
-		t => t?.Name);
+	public string DisplayValue => GetDisplayName();
 
 	public void FindDatasetClicked()
 	{
@@ -179,6 +176,11 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 		return FinderUtils.GetDatasetFinder(category, _viewModel.DatasetProvider,
 		                                    datasetParameterType,
 		                                    finder);
+	}
+
+	public string GetDisplayName()
+	{
+		return DatasetSource.Match(GetDisplayName, t => t?.Name);
 	}
 
 	private string GetDisplayName([CanBeNull] Dataset dataset)

@@ -24,6 +24,8 @@ public class TestParameterValueCollectionViewModel : ViewModelBase, IDataGridVie
 
 		_values = values;
 
+		IsDatasetType = TestParameterTypeUtils.IsDatasetType(DataType);
+
 		string displayName = StringUtils.Concatenate(values, v =>
 		{
 			if (v.Value == null)
@@ -31,17 +33,16 @@ public class TestParameterValueCollectionViewModel : ViewModelBase, IDataGridVie
 				return TestParameterTypeUtils.GetDefault(DataType)?.ToString();
 			}
 
+			if (IsDatasetType)
+			{
+				var datasetViewModel = (DatasetTestParameterValueViewModel)v.Value;
+				return datasetViewModel.GetDisplayName();
+			}
+
 			return v.Value.ToString();
 		}, "; ");
 
 		DisplayName = $"[{displayName}]";
-
-		IsDatasetType = TestParameterTypeUtils.IsDatasetType(DataType);
-
-		if (IsDatasetType)
-		{
-			ModelName = GetModelName(values);
-		}
 
 		ComponentType = typeof(TestParameterValueCollectionBlazor);
 		ComponentParameters.Add("ViewModel", this);
@@ -52,11 +53,7 @@ public class TestParameterValueCollectionViewModel : ViewModelBase, IDataGridVie
 	public bool IsDatasetType { get; }
 
 	public string DisplayName { get; }
-
-	[CanBeNull]
-	[UsedImplicitly]
-	public string ModelName { get; }
-
+	
 	public IList<ViewModelBase> Values
 	{
 		get => _values;
