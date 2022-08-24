@@ -69,4 +69,11 @@ public class QualityConditionBlazor : BlazorWebView, IInstanceConfigurationTable
 		// Note: necessary!
 		base.OnCreateControl();
 	}
+
+	protected override void Dispose(bool disposing)
+	{
+		_viewModel.Dispose();
+
+		base.Dispose(disposing);
+	}
 }

@@ -53,6 +53,9 @@ public class InstanceConfigurationViewModel<T> : IInstanceConfigurationViewModel
 	{
 		Assert.ArgumentNotNull(qualityCondition, nameof(qualityCondition));
 
+		// force dispose in case of discarding changes
+		Dispose();
+
 		_rowsByParameter = CreateRows(qualityCondition);
 
 		Values = new List<ViewModelBase>(GetTopLevelRows(_rowsByParameter));
@@ -62,6 +65,18 @@ public class InstanceConfigurationViewModel<T> : IInstanceConfigurationViewModel
 	{
 		UpdateEntity(Assert.NotNull(_item.GetEntity()));
 	}
+
+	public void Dispose()
+	{
+		Values?.Clear();
+		Values = null;
+
+		foreach (ViewModelBase vm in _rowsByParameter.Values.SelectMany(row => row))
+		{
+			vm.Dispose();
+		}
+
+		_rowsByParameter.Clear();
 	}
 
 	private IEnumerable<ViewModelBase> GetTopLevelRows(
