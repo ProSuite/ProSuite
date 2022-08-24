@@ -1378,7 +1378,6 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			return Equals(Format(dateTime1), Format(dateTime2));
 		}
 
-		[NotNull]
 		public static void CreateXmlDataQualityDocument<T>(
 			[NotNull] IEnumerable<QualitySpecification> qualitySpecifications,
 			[NotNull] IEnumerable<TestDescriptor> testDescriptors,
@@ -1803,13 +1802,15 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			         GetSortedConfigurations(transformerConfigurations))
 			{
 				document.AddTransformer(
-					CreateXmlTransformer(transformer, workspaceIdsByModel, exportMetadata));
+					CreateXmlTransformer(transformer, workspaceIdsByModel, exportMetadata,
+					                     exportNotes));
 			}
 			foreach (IssueFilterConfiguration issueFilter in
 			         GetSortedConfigurations(issueFilterConfigurations))
 			{
 				document.AddIssueFilter(
-					CreateXmlIssueFilter(issueFilter, workspaceIdsByModel, exportMetadata));
+					CreateXmlIssueFilter(issueFilter, workspaceIdsByModel, exportMetadata,
+					                     exportNotes));
 			}
 
 			// export root level quality specifications
@@ -2385,8 +2386,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		private static XmlQualityCondition CreateXmlQualityCondition(
 			[NotNull] QualityCondition qualityCondition,
 			[NotNull] IDictionary<Model, string> workspaceIdsByModel,
-			bool exportMetadata,
-			bool exportNotes)
+			bool exportMetadata, bool exportNotes)
 		{
 			Assert.ArgumentNotNull(qualityCondition, nameof(qualityCondition));
 			Assert.ArgumentNotNull(workspaceIdsByModel, nameof(workspaceIdsByModel));
@@ -2436,7 +2436,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		private static XmlTransformerConfiguration CreateXmlTransformer(
 			[NotNull] TransformerConfiguration transformer,
 			[NotNull] IDictionary<Model, string> workspaceIdsByModel,
-			bool exportMetadata)
+			bool exportMetadata, bool exportNotes)
 		{
 			Assert.ArgumentNotNull(transformer, nameof(transformer));
 			Assert.ArgumentNotNull(workspaceIdsByModel, nameof(workspaceIdsByModel));
@@ -2445,16 +2445,21 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 				new XmlTransformerConfiguration
 				{
 					Name = Escape(transformer.Name),
-					// TODO:
-					//Uuid = transformer.Uuid,
-					//VersionUuid = transformer.VersionUuid,
+					Uuid = transformer.Uuid,
+					// TODO: VersionUuid = transformer.VersionUuid,
+					Url = Escape(transformer.Url),
 					TransformerDescriptorName = Escape(transformer.TransformerDescriptor.Name),
 					Description = Escape(transformer.Description),
 				};
 
 			if (exportMetadata)
 			{
-				// TODO:				ExportMetadata(transformer, xmlTransformer);
+				ExportMetadata(transformer, xmlTransformer);
+			}
+
+			if (exportNotes)
+			{
+				xmlTransformer.Notes = Escape(transformer.Notes);
 			}
 
 			foreach (TestParameterValue parameterValue in transformer.ParameterValues)
@@ -2471,7 +2476,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		private static XmlIssueFilterConfiguration CreateXmlIssueFilter(
 			[NotNull] IssueFilterConfiguration issueFilter,
 			[NotNull] IDictionary<Model, string> workspaceIdsByModel,
-			bool exportMetadata)
+			bool exportMetadata, bool exportNotes)
 		{
 			Assert.ArgumentNotNull(issueFilter, nameof(issueFilter));
 			Assert.ArgumentNotNull(workspaceIdsByModel, nameof(workspaceIdsByModel));
@@ -2480,16 +2485,21 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 				new XmlIssueFilterConfiguration
 				{
 					Name = Escape(issueFilter.Name),
-					// TODO:
-					//Uuid = transformer.Uuid,
-					//VersionUuid = transformer.VersionUuid,
+					Uuid = issueFilter.Uuid,
+					// TODO: VersionUuid = issueFilter.VersionUuid,
+					Url = Escape(issueFilter.Url),
 					IssueFilterDescriptorName = Escape(issueFilter.IssueFilterDescriptor.Name),
 					Description = Escape(issueFilter.Description),
 				};
 
 			if (exportMetadata)
 			{
-				// TODO:				ExportMetadata(transformer, xmlTransformer);
+				ExportMetadata(issueFilter, xmlIssueFilter);
+			}
+
+			if (exportNotes)
+			{
+				xmlIssueFilter.Notes = Escape(issueFilter.Notes);
 			}
 
 			foreach (TestParameterValue parameterValue in issueFilter.ParameterValues)
