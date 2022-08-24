@@ -180,9 +180,14 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 		return DatasetSource.Match(dataset => GetDisplayName(dataset, qualified), t => t?.Name);
 	}
 
-	private string GetDisplayName([CanBeNull] Dataset dataset, bool qualified = true)
+	private string GetDisplayName([CanBeNull] IModelElement dataset, bool qualified = true)
 	{
 		string name = dataset == null ? null : $"{dataset.DisplayName ?? dataset.Name}";
+
+		if (string.IsNullOrEmpty(name))
+		{
+			return null;
+		}
 
 		return qualified ? $"{name} [{ModelName}]" : name;
 	}
