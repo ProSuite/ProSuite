@@ -172,6 +172,11 @@ public class InstanceConfigurationViewModel<T> : IInstanceConfigurationViewModel
 				}
 				else if (row is ScalarTestParameterValueViewModel)
 				{
+					if (testParameter.IsConstructorParameter)
+					{
+						Assert.NotNull(row.Value);
+					}
+
 					instanceConfiguration.AddParameterValue(
 						new ScalarTestParameterValue(testParameter, row.Value));
 				}
