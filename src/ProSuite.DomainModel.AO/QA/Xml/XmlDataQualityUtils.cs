@@ -69,9 +69,9 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			{
 				switch (version)
 				{
-					case (QaSpecVersion.v2_0):
+					case QaSpecVersion.v2_0:
 						return XmlUtils.Deserialize<XmlDataQualityDocument20>(xml, schema);
-					case (QaSpecVersion.v3_0):
+					case QaSpecVersion.v3_0:
 						return XmlUtils.Deserialize<XmlDataQualityDocument30>(xml, schema);
 					default:
 						throw new InvalidOperationException("Unknown schema");
@@ -79,8 +79,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			}
 			catch (Exception e)
 			{
-				throw new XmlDeserializationException(
-					string.Format("Error deserializing xml: {0}", e.Message), e);
+				throw new XmlDeserializationException($"Error deserializing file: {e.Message}", e);
 			}
 		}
 
@@ -97,8 +96,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			}
 			catch (Exception e)
 			{
-				throw new XmlDeserializationException(
-					string.Format("Error deserializing xml: {0}", e.Message), e);
+				throw new XmlDeserializationException($"Error deserializing xml: {e.Message}", e);
 			}
 		}
 
