@@ -85,6 +85,8 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			_headerItems.Add(new KeyValuePair<string, string>(name, value));
 		}
 
+		public bool ExcludeHeadersAndIndex { get; set; }
+
 		public override void WriteReport()
 		{
 			IncludedTestFactories.Sort();
@@ -100,19 +102,37 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 
 			includedTests.AddRange(IncludedTestFactories.Cast<IncludedInstanceBase>());
 
-			WriteHeader();
+			if (! ExcludeHeadersAndIndex)
+			{
+				WriteHeader();
 
-			WriteSubSectionHeader("Tests");
-			WriteTestsIndex();
+				WriteSubSectionHeader("Tests");
+				WriteTestsIndex();
 
-			WriteSubSectionHeader("Dataset Transformers");
-			WriteTransformersIndex();
+				WriteSubSectionHeader("Dataset Transformers");
+				WriteTransformersIndex();
 
-			WriteSubSectionHeader("Issue Filters");
-			WriteIssueFiltersIndex();
+				WriteSubSectionHeader("Issue Filters");
+				WriteIssueFiltersIndex();
 
-			AppendSeparator();
+				AppendSeparator();
+			}
 
+			AppendBody(includedTests, includedTransformers, includedIssueFilters);
+
+			if (! ExcludeHeadersAndIndex)
+			{
+				AppendIndexTitle("Index");
+				WriteAlphabeticalIndex();
+			}
+
+			XmlUtils.WriteFormatted(ReplaceBreaks(_xmlDocument.OuterXml), _textWriter);
+		}
+
+		private void AppendBody(List<IncludedInstanceBase> includedTests,
+		                        List<IncludedInstanceBase> includedTransformers,
+		                        List<IncludedInstanceBase> includedIssueFilters)
+		{
 			// Tests, TestFactories:
 			foreach (IncludedInstanceBase includedTest in includedTests)
 			{
@@ -155,11 +175,6 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 
 			const string issueFilterImplemantation = "Issue Filter class";
 			AppendInstanceDocumentations(includedIssueFilters, issueFilterImplemantation);
-
-			AppendIndexTitle("Index");
-			WriteAlphabeticalIndex();
-
-			XmlUtils.WriteFormatted(ReplaceBreaks(_xmlDocument.OuterXml), _textWriter);
 		}
 
 		private void AppendInstanceDocumentations(

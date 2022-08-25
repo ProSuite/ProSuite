@@ -34,7 +34,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			= new BindingList<ParameterValueListItem>();
 
 		[NotNull] private readonly SortableBindingList<InstanceConfigurationReferenceTableRow>
-			_qspecTableRows =
+			_instanceConfigRefTableRows =
 				new SortableBindingList<InstanceConfigurationReferenceTableRow>();
 
 		#region Constructors
@@ -98,10 +98,9 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 		}
 
 		void IInstanceConfigurationObserver.InstanceReferenceDoubleClicked(
-			InstanceConfigurationReferenceTableRow qualitySpecificationReferenceTableRow)
+			InstanceConfigurationReferenceTableRow instanceReferenceTableRow)
 		{
-			_itemNavigation.GoToItem(
-				qualitySpecificationReferenceTableRow.InstanceConfig);
+			_itemNavigation.GoToItem(instanceReferenceTableRow.InstanceConfig);
 		}
 
 		void IInstanceConfigurationObserver.InstanceDescriptorLinkClicked(
@@ -118,6 +117,11 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 		void IInstanceConfigurationObserver.OpenUrlClicked()
 		{
 			_item.OpenUrl();
+		}
+
+		public void DescriptorDocumentationLinkClicked()
+		{
+			_item.ExecuteWebHelpCommand();
 		}
 
 		#endregion
@@ -147,9 +151,9 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 
 			SetViewData();
 
-			PopulateQualityConditionReferenceTableRows(_qspecTableRows);
+			PopulateReferenceTableRows(_instanceConfigRefTableRows);
 
-			RenderQualitySpecificationReferences();
+			RenderInstanceConfigReferences();
 
 			_view.RenderCategory(instanceConfiguration.Category == null
 				                     ? string.Empty
@@ -163,18 +167,18 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			base.OnUnloaded();
 		}
 
-		private void RenderQualitySpecificationReferences()
+		private void RenderInstanceConfigReferences()
 		{
-			_view.BindToQualityConditionReferences(_qspecTableRows);
+			_view.BindToInstanceConfigReferences(_instanceConfigRefTableRows);
 
-			RenderQualitySpecificationSummary();
+			RenderReferencesSummary();
 		}
 
-		private void RenderQualitySpecificationSummary()
+		private void RenderReferencesSummary()
 		{
 			var sb = new StringBuilder();
 
-			foreach (InstanceConfigurationReferenceTableRow row in _qspecTableRows)
+			foreach (InstanceConfigurationReferenceTableRow row in _instanceConfigRefTableRows)
 			{
 				if (sb.Length > 0)
 				{
@@ -189,7 +193,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 				                                     : sb.ToString();
 		}
 
-		private void PopulateQualityConditionReferenceTableRows(
+		private void PopulateReferenceTableRows(
 			[NotNull] ICollection<InstanceConfigurationReferenceTableRow> tableRows)
 		{
 			Assert.ArgumentNotNull(tableRows, nameof(tableRows));
@@ -225,7 +229,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 #endif
 		}
 
-		private void GetTestParameterItems([NotNull] InstanceConfiguration qualityCondition)
+		private void GetTestParameterItems([NotNull] InstanceConfiguration instanceConfiguration)
 		{
 			_paramValues.Clear();
 
@@ -234,7 +238,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 				return;
 			}
 
-			foreach (TestParameterValue paramValue in qualityCondition.ParameterValues)
+			foreach (TestParameterValue paramValue in instanceConfiguration.ParameterValues)
 			{
 				_paramValues.Add(new ParameterValueListItem(paramValue));
 			}

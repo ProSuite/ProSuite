@@ -8,6 +8,7 @@ using NHibernate.Transform;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Orm.NHibernate;
+using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.Repositories;
 
@@ -34,6 +35,24 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 				}
 
 				return query.List();
+			}
+		}
+
+		public IEnumerable<Dataset> GetAllReferencedDatasets(
+			IEnumerable<QualityCondition> qualityConditions,
+			bool includeReferenceViaIssueFilters = false,
+			Predicate<DatasetTestParameterValue> testParameterPredicate = null)
+		{
+			// Strategy to reduce the number of round trips: collect transformer ids and
+			// load via list, then collect the next round of transformer ids
+			using (ISession session = OpenSession(true))
+			{
+				foreach (Dataset dataset in DatasetParameterFetchingUtils.GetAllReferencedDatasets(
+					         session, qualityConditions, includeReferenceViaIssueFilters,
+					         testParameterPredicate))
+				{
+					yield return dataset;
+				}
 			}
 		}
 
@@ -135,7 +154,7 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 
 				var result =
 					DatasetParameterFetchingUtils.GetParentConfiguration<InstanceConfiguration>(
-						null, session, parameterExpression);
+						session, parameterExpression);
 
 				return result;
 			}
