@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Windows.Forms;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
@@ -24,8 +23,7 @@ namespace ProSuite.DdxEditor.Framework
 	public class ApplicationController : IApplicationShellObserver,
 	                                     IApplicationController
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		[CanBeNull] private readonly IOptionsManager _optionsManager;
 		[NotNull] private readonly ItemHistory _history = new ItemHistory();
@@ -33,6 +31,7 @@ namespace ProSuite.DdxEditor.Framework
 		[NotNull] private readonly IUnitOfWork _unitOfWork;
 		[NotNull] private readonly IApplicationShell _view;
 		[CanBeNull] private Item _currentItem;
+		[CanBeNull] private HtmlHelpForm _htmlHelpForm;
 
 		#region Constructors
 
@@ -323,6 +322,21 @@ namespace ProSuite.DdxEditor.Framework
 		T IApplicationController.ReadInTransaction<T>(Func<T> function)
 		{
 			return _unitOfWork.ReadOnlyTransaction(function);
+		}
+
+		public void ShowHelpForm(string title, string html)
+		{
+			if (_htmlHelpForm == null || _htmlHelpForm.IsDisposed)
+			{
+				_htmlHelpForm = new HtmlHelpForm(html);
+				_htmlHelpForm.Show(_view);
+			}
+			else
+			{
+				_htmlHelpForm.NavigateToString(html);
+			}
+
+			_htmlHelpForm.Text = title;
 		}
 
 		#endregion

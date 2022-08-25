@@ -1,6 +1,5 @@
 using System;
 using System.Drawing;
-using System.Reflection;
 using System.Windows.Forms;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -10,8 +9,7 @@ namespace ProSuite.Commons.UI.Persistence.WinForms
 {
 	public class FormStateManager<T> where T : FormState
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		[NotNull] private readonly string _fileName;
 
@@ -189,6 +187,8 @@ namespace ProSuite.Commons.UI.Persistence.WinForms
 		private T GetCurrentState()
 		{
 			var formState = (T) Activator.CreateInstance(typeof(T));
+
+			Assert.NotNull(formState);
 
 			// get standard form state
 			formState.Width = Form.Size.Width;
