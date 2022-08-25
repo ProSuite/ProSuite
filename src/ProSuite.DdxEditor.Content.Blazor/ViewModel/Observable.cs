@@ -5,7 +5,7 @@ using Prism.Events;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Validation;
-using ProSuite.DdxEditor.Content.Blazor.Events;
+using ProSuite.DdxEditor.Framework.Events;
 using ProSuite.Shared.IoCRoot;
 
 namespace ProSuite.DdxEditor.Content.Blazor.ViewModel;

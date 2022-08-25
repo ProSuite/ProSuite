@@ -200,5 +200,8 @@
   <ItemGroup>
     <PackageReference Include="microsoft.web.webview2" Version="1.0.1210.39" />
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Prism.Core" Version="8.1.97" />
+  </ItemGroup>
 
 </Project>
