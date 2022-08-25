@@ -4,7 +4,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.DomainModel.AO.QA.Xml
 {
-	public class XmlTestDescriptor : XmlDescriptor
+	public class XmlTestDescriptor : XmlInstanceDescriptor
 	{
 		private const int _nullExecutionPriority = -1;
 

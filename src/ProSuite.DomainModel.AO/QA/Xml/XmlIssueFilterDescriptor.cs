@@ -3,7 +3,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.DomainModel.AO.QA.Xml
 {
-	public class XmlIssueFilterDescriptor : XmlDescriptor
+	public class XmlIssueFilterDescriptor : XmlInstanceDescriptor
 	{
 		[XmlElement("IssueFilterClass")]
 		[CanBeNull]

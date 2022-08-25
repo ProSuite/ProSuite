@@ -1241,20 +1241,20 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 
 		[NotNull]
 		public static T CreateInstanceDescriptor<T>(
-			[NotNull] XmlDescriptor xmlDescriptor)
+			[NotNull] XmlInstanceDescriptor xmlInstanceDescriptor)
 			where T : InstanceDescriptor, new()
 		{
-			Assert.ArgumentNotNull(xmlDescriptor, nameof(xmlDescriptor));
+			Assert.ArgumentNotNull(xmlInstanceDescriptor, nameof(xmlInstanceDescriptor));
 
-			Assert.NotNull(xmlDescriptor.ClassDescriptor);
+			Assert.NotNull(xmlInstanceDescriptor.ClassDescriptor);
 			T result = new T();
-			result.Name = xmlDescriptor.Name;
-			result.Class = CreateClassDescriptor(xmlDescriptor.ClassDescriptor);
-			result.ConstructorId = xmlDescriptor.ClassDescriptor.ConstructorId;
+			result.Name = xmlInstanceDescriptor.Name;
+			result.Class = CreateClassDescriptor(xmlInstanceDescriptor.ClassDescriptor);
+			result.ConstructorId = xmlInstanceDescriptor.ClassDescriptor.ConstructorId;
 
-			result.Description = xmlDescriptor.Description;
+			result.Description = xmlInstanceDescriptor.Description;
 
-			ImportMetadata(result, xmlDescriptor);
+			ImportMetadata(result, xmlInstanceDescriptor);
 
 			return result;
 		}
@@ -1809,14 +1809,14 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			         GetSortedConfigurations(transformerConfigurations))
 			{
 				document.AddTransformer(
-					CreateXmlTransformer(transformer, workspaceIdsByModel, exportMetadata,
+					CreateXmlTransformerConfiguration(transformer, workspaceIdsByModel, exportMetadata,
 					                     exportNotes));
 			}
 			foreach (IssueFilterConfiguration issueFilter in
 			         GetSortedConfigurations(issueFilterConfigurations))
 			{
 				document.AddIssueFilter(
-					CreateXmlIssueFilter(issueFilter, workspaceIdsByModel, exportMetadata,
+					CreateXmlIssueFilterConfiguration(issueFilter, workspaceIdsByModel, exportMetadata,
 					                     exportNotes));
 			}
 
@@ -2098,7 +2098,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		}
 
 		[NotNull]
-		private static XmlTestParameterValue CreateXmlTestParameterValue(
+		private static XmlScalarTestParameterValue CreateXmlScalarTestParameterValue(
 			[NotNull] ScalarTestParameterValue scValue)
 		{
 			return new XmlScalarTestParameterValue
@@ -2433,7 +2433,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 					NeverStoreRelatedGeometryForTableRowIssues =
 						qualityCondition.NeverStoreRelatedGeometryForTableRowIssues,
 
-					IssueFilterExpression = CreateFilterExpression(
+					IssueFilterExpression = CreateXmlFilterExpression(
 						qualityCondition.IssueFilterExpression,
 						qualityCondition.IssueFilterConfigurations)
 				};
@@ -2459,7 +2459,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		}
 
 		[NotNull]
-		private static XmlTransformerConfiguration CreateXmlTransformer(
+		private static XmlTransformerConfiguration CreateXmlTransformerConfiguration(
 			[NotNull] TransformerConfiguration transformer,
 			[NotNull] IDictionary<Model, string> workspaceIdsByModel,
 			bool exportMetadata, bool exportNotes)
@@ -2499,7 +2499,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		}
 		
 		[NotNull]
-		private static XmlIssueFilterConfiguration CreateXmlIssueFilter(
+		private static XmlIssueFilterConfiguration CreateXmlIssueFilterConfiguration(
 			[NotNull] IssueFilterConfiguration issueFilter,
 			[NotNull] IDictionary<Model, string> workspaceIdsByModel,
 			bool exportMetadata, bool exportNotes)
@@ -2565,11 +2565,11 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			{
 				if (parameterValue is ScalarTestParameterValue scValue)
 				{
-					xmlValue = CreateXmlTestParameterValue(scValue);
+					xmlValue = CreateXmlScalarTestParameterValue(scValue);
 				}
 				else if (parameterValue is DatasetTestParameterValue dsValue)
 				{
-					xmlValue = CreateXmlTestParameterValue(dsValue, workspaceIdsByModel);
+					xmlValue = CreateXmlDatasetTestParameterValue(dsValue, workspaceIdsByModel);
 				}
 				else
 				{
@@ -2592,7 +2592,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		}
 
 		[NotNull]
-		private static XmlTestParameterValue CreateXmlTestParameterValue(
+		private static XmlDatasetTestParameterValue CreateXmlDatasetTestParameterValue(
 			[NotNull] DatasetTestParameterValue datasetTestParameterValue,
 			[NotNull] IDictionary<Model, string> workspaceIdsByModel)
 		{
@@ -2629,9 +2629,8 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		}
 		
 		[CanBeNull]
-		private static XmlFilterExpression CreateFilterExpression<T>(
-			[CanBeNull] string expression,
-			[NotNull] IList<T> filters)
+		private static XmlFilterExpression CreateXmlFilterExpression<T>(
+			[CanBeNull] string expression, [NotNull] IList<T> filters)
 			where T : InstanceConfiguration
 		{
 			if (string.IsNullOrWhiteSpace(expression))

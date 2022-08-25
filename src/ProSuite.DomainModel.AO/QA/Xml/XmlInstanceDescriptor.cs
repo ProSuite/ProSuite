@@ -3,7 +3,7 @@ using System.Xml.Serialization;
 
 namespace ProSuite.DomainModel.AO.QA.Xml
 {
-	public class XmlDescriptor : IXmlEntityMetadata
+	public class XmlInstanceDescriptor : IXmlEntityMetadata
 	{
 		private string _description;
 
