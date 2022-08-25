@@ -119,6 +119,11 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			_item.OpenUrl();
 		}
 
+		public void DescriptorDocumentationLinkClicked()
+		{
+			_item.ExecuteWebHelpCommand();
+		}
+
 		#endregion
 
 		protected override void OnBoundTo(InstanceConfiguration instanceConfiguration)

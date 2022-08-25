@@ -55,7 +55,6 @@ namespace ProSuite.DdxEditor.Framework.Help
 			this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.SizableToolWindow;
 			this.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
 			this.Name = "HtmlHelpForm";
-			this.ShowInTaskbar = false;
 			this.Text = "Instance Descriptor";
 			this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.HtmlHelpForm_FormClosed);
 			this.Load += new System.EventHandler(this.HtmlDocumentationForm_Load);

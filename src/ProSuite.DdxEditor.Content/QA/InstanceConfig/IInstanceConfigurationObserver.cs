@@ -22,5 +22,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 		void InstanceDescriptorLinkClicked([CanBeNull] InstanceDescriptor instanceDescriptor);
 
 		void OpenUrlClicked();
+
+		void DescriptorDocumentationLinkClicked();
 	}
 }
