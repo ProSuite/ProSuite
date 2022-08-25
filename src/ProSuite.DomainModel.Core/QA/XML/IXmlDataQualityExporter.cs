@@ -10,7 +10,7 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 		            bool exportMetadata,
 		            bool? exportWorkspaceConnections,
 		            bool exportConnectionFilePaths,
-		            bool exportAllTestDescriptors,
+		            bool exportAllDescriptors,
 		            bool exportAllCategories,
 		            bool exportNotes);
 
@@ -19,7 +19,7 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 		            bool exportMetadata,
 		            bool? exportWorkspaceConnections,
 		            bool exportConnectionFilePaths,
-		            bool exportAllTestDescriptors,
+		            bool exportAllDescriptors,
 		            bool exportAllCategories,
 		            bool exportNotes);
 

@@ -64,7 +64,7 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 			bool exportMetadata,
 			bool? exportWorkspaceConnections,
 			bool exportConnectionFilePaths,
-			bool exportAllTestDescriptors,
+			bool exportAllDescriptors,
 			bool exportAllCategories,
 			bool exportNotes,
 			[NotNull] CoreDomainModelItemModelBuilder modelBuilder)
@@ -95,7 +95,7 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 								exportMetadata,
 								exportWorkspaceConnections,
 								exportConnectionFilePaths,
-								exportAllTestDescriptors,
+								exportAllDescriptors,
 								exportAllCategories,
 								exportNotes);
 
