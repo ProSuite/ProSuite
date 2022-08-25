@@ -20,8 +20,7 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 	{
 		[CanBeNull] private IExportQualitySpecificationsObserver _observer;
 
-		[NotNull] private readonly BoundDataGridHandler<QualitySpecificationListItem>
-			_gridHandler;
+		[NotNull] private readonly BoundDataGridHandler<QualitySpecificationListItem> _gridHandler;
 
 		#region Constructors
 
@@ -70,12 +69,11 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 
 		public bool ExportMetadata => _checkBoxExportMetadata.Checked;
 
-		public bool ExportWorkspaceConnections
-			=> _checkBoxExportWorkspaceConnections.Checked;
+		public bool ExportWorkspaceConnections => _checkBoxExportWorkspaceConnections.Checked;
 
 		public bool ExportConnectionFilePaths => _checkBoxExportConnectionFilePaths.Checked;
 
-		public bool ExportAllDescriptors => _radioButtonExportAllTestDescriptors.Checked;
+		public bool ExportAllDescriptors => _radioButtonExportAllDescriptors.Checked;
 
 		public bool ExportAllCategories => _radioButtonExportAllCategories.Checked;
 
@@ -83,12 +81,9 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 
 		public ExportTarget CurrentExportTarget
 		{
-			get
-			{
-				return _radioButtonDirectory.Checked
-					       ? ExportTarget.MultipleFiles
-					       : ExportTarget.SingleFile;
-			}
+			get => _radioButtonDirectory.Checked
+				       ? ExportTarget.MultipleFiles
+				       : ExportTarget.SingleFile;
 			set
 			{
 				switch (value)
@@ -111,55 +106,55 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 
 		bool IExportQualitySpecificationsView.FilePathEnabled
 		{
-			get { return _fileSystemPathControlSingleFile.Enabled; }
-			set { _fileSystemPathControlSingleFile.Enabled = value; }
+			get => _fileSystemPathControlSingleFile.Enabled;
+			set => _fileSystemPathControlSingleFile.Enabled = value;
 		}
 
 		bool IExportQualitySpecificationsView.DirectoryPathEnabled
 		{
-			get { return _fileSystemPathControlDirectory.Enabled; }
-			set { _fileSystemPathControlDirectory.Enabled = value; }
+			get => _fileSystemPathControlDirectory.Enabled;
+			set => _fileSystemPathControlDirectory.Enabled = value;
 		}
 
 		IExportQualitySpecificationsObserver IExportQualitySpecificationsView.Observer
 		{
-			set { _observer = value; }
+			set => _observer = value;
 		}
 
 		bool IExportQualitySpecificationsView.SelectAllEnabled
 		{
-			get { return _toolStripButtonSelectAll.Enabled; }
-			set { _toolStripButtonSelectAll.Enabled = value; }
+			get => _toolStripButtonSelectAll.Enabled;
+			set => _toolStripButtonSelectAll.Enabled = value;
 		}
 
 		bool IExportQualitySpecificationsView.SelectNoneEnabled
 		{
-			get { return _toolStripButtonSelectNone.Enabled; }
-			set { _toolStripButtonSelectNone.Enabled = value; }
+			get => _toolStripButtonSelectNone.Enabled;
+			set => _toolStripButtonSelectNone.Enabled = value;
 		}
 
 		bool IExportQualitySpecificationsView.OKEnabled
 		{
-			get { return _buttonOK.Enabled; }
-			set { _buttonOK.Enabled = value; }
+			get => _buttonOK.Enabled;
+			set => _buttonOK.Enabled = value;
 		}
 
 		bool IExportQualitySpecificationsView.ExportSdeConnectionFilePathsEnabled
 		{
-			get { return _checkBoxExportConnectionFilePaths.Enabled; }
-			set { _checkBoxExportConnectionFilePaths.Enabled = value; }
+			get => _checkBoxExportConnectionFilePaths.Enabled;
+			set => _checkBoxExportConnectionFilePaths.Enabled = value;
 		}
 
 		string IExportQualitySpecificationsView.CurrentFilePath
 		{
-			get { return _fileSystemPathControlSingleFile.TextBox.Text; }
-			set { _fileSystemPathControlSingleFile.TextBox.Text = value; }
+			get => _fileSystemPathControlSingleFile.TextBox.Text;
+			set => _fileSystemPathControlSingleFile.TextBox.Text = value;
 		}
 
 		string IExportQualitySpecificationsView.CurrentDirectoryPath
 		{
-			get { return _fileSystemPathControlDirectory.TextBox.Text; }
-			set { _fileSystemPathControlDirectory.TextBox.Text = value; }
+			get => _fileSystemPathControlDirectory.TextBox.Text;
+			set => _fileSystemPathControlDirectory.TextBox.Text = value;
 		}
 
 		void IExportQualitySpecificationsView.BindTo(
@@ -197,8 +192,8 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 
 		string IExportQualitySpecificationsView.StatusText
 		{
-			get { return _toolStripStatusLabel.Text; }
-			set { _toolStripStatusLabel.Text = value; }
+			get => _toolStripStatusLabel.Text;
+			set => _toolStripStatusLabel.Text = value;
 		}
 
 		IList<QualitySpecificationListItem> IExportQualitySpecificationsView.SelectedItems
@@ -357,8 +352,7 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 			}
 		}
 
-		private void _checkBoxExportWorkspaceConnections_CheckedChanged(object sender,
-			EventArgs e)
+		private void _checkBoxExportWorkspaceConnections_CheckedChanged(object sender, EventArgs e)
 		{
 			_observer?.ExportWorkspaceConnectionsChanged();
 		}
@@ -378,7 +372,7 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 				formState.ExportWorkspaceConnectionStrings;
 			_checkBoxExportConnectionFilePaths.Checked =
 				formState.ExportSdeConnectionFilePaths;
-			_radioButtonExportAllTestDescriptors.Checked = formState.ExportAllTestDescriptors;
+			_radioButtonExportAllDescriptors.Checked = formState.ExportAllTestDescriptors;
 			_radioButtonExportAllCategories.Checked = formState.ExportAllCategories;
 			CurrentExportTarget = formState.ExportTarget;
 			_checkBoxExportNotes.Checked = formState.ExportNotes;
@@ -395,7 +389,7 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 				_checkBoxExportWorkspaceConnections.Checked;
 			formState.ExportSdeConnectionFilePaths =
 				_checkBoxExportConnectionFilePaths.Checked;
-			formState.ExportAllTestDescriptors = _radioButtonExportAllTestDescriptors.Checked;
+			formState.ExportAllTestDescriptors = _radioButtonExportAllDescriptors.Checked;
 			formState.ExportAllCategories = _radioButtonExportAllCategories.Checked;
 			formState.ExportTarget = CurrentExportTarget;
 			formState.ExportNotes = _checkBoxExportNotes.Checked;
