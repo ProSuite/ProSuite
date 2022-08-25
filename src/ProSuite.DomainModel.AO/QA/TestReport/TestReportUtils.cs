@@ -5,6 +5,7 @@ using System.Reflection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Reflection;
+using ProSuite.DomainModel.Core.QA;
 
 namespace ProSuite.DomainModel.AO.QA.TestReport
 {
@@ -46,6 +47,34 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			IncludeTransformerClasses(builder, assemblies);
 			IncludeIssueFilterClasses(builder, assemblies);
 			IncludeTestFactories(builder, assemblies);
+
+			builder.WriteReport();
+		}
+
+		public static void WriteDescriptorDoc([NotNull] InstanceDescriptor descriptor,
+		                                      [NotNull] TextWriter writer)
+		{
+			Assert.ArgumentNotNull(descriptor, nameof(descriptor));
+
+			var builder = new HtmlReportBuilder(writer, "ProSuite QA Documentation")
+			              {
+				              ExcludeHeadersAndIndex = true
+			              };
+
+			builder.AddHeaderItem("ProSuite Version",
+			                      ReflectionUtils.GetAssemblyVersionString(
+				                      Assembly.GetExecutingAssembly()));
+
+			builder.IncludeObsolete = false;
+			builder.IncludeAssemblyInfo = true;
+
+			Type instanceType = Assert.NotNull(descriptor.Class).GetInstanceType();
+
+			foreach (int ctorIndex in InstanceFactoryUtils.GetConstructorIndexes(
+				         instanceType, false, false))
+			{
+				builder.IncludeTransformer(instanceType, ctorIndex);
+			}
 
 			builder.WriteReport();
 		}
