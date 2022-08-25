@@ -22,7 +22,7 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 				session.QueryOver<DatasetTestParameterValue>()
 				       .Select(p => p.Id)
 				       .Where(p => p.DatasetValue != null)
-				       .JoinQueryOver<Dataset>(p => p.DatasetValue)
+				       .JoinQueryOver(p => p.DatasetValue)
 				       //.Where(d => d != null)
 				       .And(d => d.Deleted);
 
@@ -103,7 +103,7 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 			TestParameterValue parameterValueAlias = null;
 
 			var parametersQuery =
-				session.QueryOver<T>(() => instanceConfigAlias)
+				session.QueryOver(() => instanceConfigAlias)
 				       .Select(i => i.Id)
 				       .Where(categoryFilter)
 				       .JoinAlias(i => instanceConfigAlias.ParameterValues,
@@ -149,14 +149,14 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 			DatasetTestParameterValue parameterValueAlias = null;
 
 			var parametersQuery =
-				session.QueryOver<T>(() => instanceConfigAlias)
+				session.QueryOver(() => instanceConfigAlias)
 				       .Where(categoryFilter)
 				       .JoinAlias(i => instanceConfigAlias.ParameterValues,
 				                  () => parameterValueAlias)
 				       //.Where(Restrictions.Eq("parameterValueAlias.class", nameof(DatasetTestParameterValue)))
 				       .Where(() => parameterValueAlias.GetType() ==
 				                    typeof(DatasetTestParameterValue))
-				       .Select(i => i.AsEntity<T>(), i => parameterValueAlias.AsEntity());
+				       .Select(i => i.AsEntity(), i => parameterValueAlias.AsEntity());
 
 			var parametersByConfigId = new Dictionary<int, List<DatasetTestParameterValue>>();
 			var configsById = new Dictionary<int, T>();
@@ -199,7 +199,7 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 			DatasetTestParameterValue parameterValueAlias = null;
 
 			var result =
-				session.QueryOver<T>(() => instanceConfigAlias)
+				session.QueryOver(() => instanceConfigAlias)
 				       //.Where(categoryFilter)
 				       .JoinAlias(i => instanceConfigAlias.ParameterValues,
 				                  () => parameterValueAlias)
@@ -242,7 +242,7 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 				       .Where(() => parameterValueAlias.GetType() ==
 				                    typeof(DatasetTestParameterValue))
 				       .And(parameterExpression)
-				       .Select(i => i.AsEntity<T>(), i => parameterValueAlias.AsEntity());
+				       .Select(i => i.AsEntity(), i => parameterValueAlias.AsEntity());
 
 			var parametersByConfigId = new Dictionary<int, List<DatasetTestParameterValue>>();
 			var configsById = new Dictionary<int, T>();
@@ -280,7 +280,6 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 		/// Returns all the IDs of transformers that directly or indirectly reference one of the
 		/// datasets identified by the provided <see cref="datasetIds"/>.
 		/// </summary>
-		/// <typeparam name="T"></typeparam>
 		/// <param name="session"></param>
 		/// <param name="datasetIds"></param>
 		/// <param name="excludeReferenceData"></param>
@@ -325,28 +324,6 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 			return allTransformerIds;
 		}
 
-		private static IList<int> GetReferencedTransformerIdentifiers(
-			[NotNull] ISession session,
-			[NotNull] IEnumerable<int> transformerIds)
-		{
-			TransformerConfiguration transformerAlias = null;
-			DatasetTestParameterValue parameterValueAlias = null;
-
-			var transformerIdArray = transformerIds.ToArray();
-
-			IList<int> result =
-				session.QueryOver<TransformerConfiguration>(
-					       () => transformerAlias)
-				       .JoinAlias(i => transformerAlias.ParameterValues,
-				                  () => parameterValueAlias)
-				       .Where(() => parameterValueAlias.GetType() ==
-				                    typeof(DatasetTestParameterValue))
-				       .And(() => parameterValueAlias.ValueSource.Id.IsIn(transformerIdArray))
-				       .Select(t => t.Id).List<int>();
-
-			return result;
-		}
-
 		public static IEnumerable<Dataset> GetAllReferencedDatasets(
 			[NotNull] ISession session,
 			[NotNull] IEnumerable<QualityCondition> qualityConditions,
@@ -378,6 +355,28 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 			}
 		}
 
+		private static IList<int> GetReferencedTransformerIdentifiers(
+			[NotNull] ISession session,
+			[NotNull] IEnumerable<int> transformerIds)
+		{
+			TransformerConfiguration transformerAlias = null;
+			DatasetTestParameterValue parameterValueAlias = null;
+
+			var transformerIdArray = transformerIds.ToArray();
+
+			IList<int> result =
+				session.QueryOver(
+					       () => transformerAlias)
+				       .JoinAlias(i => transformerAlias.ParameterValues,
+				                  () => parameterValueAlias)
+				       .Where(() => parameterValueAlias.GetType() ==
+				                    typeof(DatasetTestParameterValue))
+				       .And(() => parameterValueAlias.ValueSource.Id.IsIn(transformerIdArray))
+				       .Select(t => t.Id).List<int>();
+
+			return result;
+		}
+
 		private static IEnumerable<Dataset> GetReferencedDatasets(
 			[NotNull] ISession session,
 			[NotNull] IEnumerable<QualityCondition> referencedByConditions,
@@ -393,7 +392,7 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 			// Initial query, eagerly fetching transformers including their parameters
 			IQueryOver<QualityCondition>
 				parametersQuery =
-					session.QueryOver<QualityCondition>(() => qualityConditionAlias)
+					session.QueryOver(() => qualityConditionAlias)
 					       .Fetch(SelectMode.FetchLazyProperties,
 					              () => qualityConditionAlias.ParameterValues)
 					       .JoinQueryOver(qc => qc.ParameterValues, () => testParamAlias)
@@ -444,7 +443,7 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 			TestParameterValue testParamAlias = null;
 			IQueryOver<TransformerConfiguration>
 				transformersQuery =
-					session.QueryOver<TransformerConfiguration>(() => transformerConfigAlias)
+					session.QueryOver(() => transformerConfigAlias)
 					       .Fetch(SelectMode.FetchLazyProperties,
 					              () => transformerConfigAlias.ParameterValues)
 					       .JoinQueryOver(tc => tc.ParameterValues, () => testParamAlias)
