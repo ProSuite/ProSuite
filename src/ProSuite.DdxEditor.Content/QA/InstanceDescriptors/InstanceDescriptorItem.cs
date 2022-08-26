@@ -56,15 +56,17 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 		{
 			get
 			{
-				switch (GetEntity())
+				if (GetEntity() is TransformerDescriptor)
 				{
-					case TransformerDescriptor:
-						return "Transformer";
-					case IssueFilterDescriptor:
-						return "Issue Filter";
-					default:
-						throw new InvalidOperationException("Unknown descriptor type");
+					return "Transformer";
 				}
+
+				if (GetEntity() is IssueFilterDescriptor)
+				{
+					return "Issue Filter";
+				}
+
+				throw new InvalidOperationException("Unknown descriptor type");
 			}
 		}
 
