@@ -190,7 +190,7 @@ namespace ProSuite.DomainServices.AO.QA
 				}
 
 				QualityCondition condition = element.QualityCondition;
-				IList<TestParameterValue> deleted = condition.GetDeletedParameterValues();
+				IList<string> deleted = condition.GetDeletedParameterValues();
 				if (deleted.Count > 0)
 				{
 					ReportInvalidConditionWarning(condition, deleted);
@@ -387,7 +387,7 @@ namespace ProSuite.DomainServices.AO.QA
 		{
 			var result = new List<Dataset>();
 
-			foreach (var dataset in condition.GetDatasetParameterValues())
+			foreach (var dataset in condition.GetDatasetParameterValues(true))
 			{
 				if (knownExistingDatasets.Contains(dataset))
 				{
@@ -485,15 +485,15 @@ namespace ProSuite.DomainServices.AO.QA
 
 		private static void ReportInvalidConditionWarning(
 			[NotNull] QualityCondition qualityCondition,
-			[NotNull] IEnumerable<TestParameterValue> deletedTestParameterValues)
+			[NotNull] IEnumerable<string> deletedTestParameterValueMessages)
 		{
 			var sb = new StringBuilder();
 			sb.AppendFormat("Quality condition '{0}' has deleted values and is ignored.",
 			                qualityCondition.Name);
 			sb.AppendLine();
-			foreach (TestParameterValue value in deletedTestParameterValues)
+			foreach (string message in deletedTestParameterValueMessages)
 			{
-				sb.AppendFormat("- {0}: {1}", value.TestParameterName, value.StringValue);
+				sb.AppendFormat("- {0}", message);
 			}
 
 			_msg.Warn(sb.ToString());

@@ -147,7 +147,7 @@ namespace ProSuite.DomainModel.Core.QA
 		/// referenced indirectly (and recursively) by any filters or transformers.
 		/// </summary>
 		/// <param name="includeReferencedProcessors">include IssueFilters and Transformers</param>
-		/// <param name="includeSourceDatasets">include Transformers of dataset sources</param>
+		/// <param name="includeSourceDatasets">Recursively include datasets of transformers</param>
 		/// <returns></returns>
 		[NotNull]
 		public IEnumerable<Dataset> GetDatasetParameterValues(
@@ -191,7 +191,7 @@ namespace ProSuite.DomainModel.Core.QA
 		{
 			foreach (TestParameterValue parameterValue in ParameterValues)
 			{
-				// Transformers
+				// Transformers (issue filters are provided by override)
 				if (parameterValue.ValueSource != null)
 				{
 					foreach (Dataset referencedDataset in
