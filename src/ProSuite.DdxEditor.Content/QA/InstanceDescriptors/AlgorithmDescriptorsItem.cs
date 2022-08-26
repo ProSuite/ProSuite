@@ -5,6 +5,7 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Essentials.System;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.UI.WinForms;
 using ProSuite.DdxEditor.Content.Properties;
 using ProSuite.DdxEditor.Content.QA.TestDescriptors;
 using ProSuite.DdxEditor.Framework;
@@ -58,10 +59,34 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 		{
 			base.CollectCommands(commands, applicationController);
 
+			commands.Add(new ImportInstanceDescriptorsCommand(this, applicationController,
+			                                                  _modelBuilder
+				                                                  .DefaultTestDescriptorsXmlFile));
 			commands.Add(new CreateReportForAssemblyTestsCommand(this, applicationController));
 		}
 
 		#endregion
+
+		public void ImportInstanceDescriptors([NotNull] string fileName)
+		{
+			Assert.ArgumentNotNullOrEmpty(fileName, nameof(fileName));
+
+			using (new WaitCursor())
+			{
+				using (_msg.IncrementIndentation("Importing all descriptors from {0}", fileName))
+				{
+					const bool updateDescriptorNames = true;
+					const bool updateDescriptorProperties = false;
+
+					_modelBuilder.DataQualityImporter.ImportInstanceDescriptors(
+						fileName, updateDescriptorNames, updateDescriptorProperties);
+				}
+
+				// TODO report stats (inserted, updated descriptors)
+
+				_msg.InfoFormat("Descriptors imported from {0}", fileName);
+			}
+		}
 
 		public void CreateReport([NotNull] Assembly assembly,
 		                         [NotNull] string htmlFileName,
@@ -73,10 +98,11 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 			string location = assembly.Location;
 			Assert.NotNull(location, "assembly location is null");
 
-			TestReportUtils.WriteTestReport(new[] {assembly}, htmlFileName, overwrite);
+			TestReportUtils.WriteTestReport(new[] { assembly }, htmlFileName, overwrite);
 
-			_msg.InfoFormat("Report of tests in assembly {0} created: {1}",
-			                assembly.Location, htmlFileName);
+			_msg.InfoFormat(
+				"Report of test, transformer and filter implementations in assembly {0} created: {1}",
+				assembly.Location, htmlFileName);
 
 			_msg.Info("Opening report...");
 			ProcessUtils.StartProcess(htmlFileName);

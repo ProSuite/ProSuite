@@ -12,7 +12,6 @@ namespace ProSuite.DomainModel.Core.QA
 		private readonly string _testFactoryAssemblyName;
 		private readonly string _testFactoryTypeName;
 		private readonly string _typeName;
-		private readonly string _name;
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="InstanceDefinition" /> class.
@@ -22,7 +21,7 @@ namespace ProSuite.DomainModel.Core.QA
 		{
 			Assert.ArgumentNotNull(testDescriptor, nameof(testDescriptor));
 
-			_name = testDescriptor.Name;
+			Name = testDescriptor.Name;
 
 			if (testDescriptor.TestClass != null)
 			{
@@ -40,12 +39,12 @@ namespace ProSuite.DomainModel.Core.QA
 		/// <summary>
 		/// Initializes a new instance of the <see cref="InstanceDefinition" /> class.
 		/// </summary>
-		/// <param name="instanceDescriptor">The test descriptor for which the definition should be created.</param>
+		/// <param name="instanceDescriptor">The instance descriptor for which the definition should be created.</param>
 		public InstanceDefinition([NotNull] InstanceDescriptor instanceDescriptor)
 		{
 			Assert.ArgumentNotNull(instanceDescriptor, nameof(instanceDescriptor));
 
-			_name = instanceDescriptor.Name;
+			Name = instanceDescriptor.Name;
 
 			if (instanceDescriptor.Class != null)
 			{
@@ -56,7 +55,7 @@ namespace ProSuite.DomainModel.Core.QA
 		}
 
 		[NotNull]
-		public string Name => _name;
+		public string Name { get; }
 
 		#region IEquatable<InstanceDefinition> Members
 
@@ -85,16 +84,7 @@ namespace ProSuite.DomainModel.Core.QA
 				return true;
 			}
 
-			if (Equals(other._typeName, _typeName) &&
-			    Equals(other._assemblyName, _assemblyName) &&
-			    Equals(other._testFactoryTypeName, _testFactoryTypeName) &&
-			    Equals(other._testFactoryAssemblyName, _testFactoryAssemblyName))
-			{
-				return true;
-			}
-
-			if (PrivateTypeEquals(other._assemblyName, other._typeName,
-			                      _assemblyName, _typeName)
+			if (PrivateTypeEquals(other._assemblyName, other._typeName, _assemblyName, _typeName)
 			    && PrivateTypeEquals(other._testFactoryAssemblyName, other._testFactoryTypeName,
 			                         _testFactoryAssemblyName, _testFactoryTypeName))
 			{
@@ -104,11 +94,12 @@ namespace ProSuite.DomainModel.Core.QA
 			return false;
 		}
 
-		private bool PrivateTypeEquals([CanBeNull] string xAssembly, [CanBeNull] string xType,
-		                               [CanBeNull] string yAssembly, [CanBeNull] string yType)
+		private static bool PrivateTypeEquals(
+			[CanBeNull] string xAssembly, [CanBeNull] string xType,
+			[CanBeNull] string yAssembly, [CanBeNull] string yType)
 		{
-			if ((xType == null) != (yType == null)) return false;
-			if ((xAssembly == null) != (yAssembly == null)) return false;
+			if (xType == null != (yType == null)) return false;
+			if (xAssembly == null != (yAssembly == null)) return false;
 
 			if (xType == yType && xAssembly == yAssembly)
 			{
@@ -161,7 +152,7 @@ namespace ProSuite.DomainModel.Core.QA
 				result = (result * 397) ^ (GetCoreName(_testFactoryTypeName)?.GetHashCode() ?? 0);
 				result = (result * 397) ^
 				         (GetCoreName(_testFactoryAssemblyName)?.GetHashCode() ?? 0);
-				result = (result * 397) ^ (GetCoreName(_name)?.GetHashCode() ?? 0);
+				result = (result * 397) ^ (GetCoreName(Name)?.GetHashCode() ?? 0);
 				return result;
 			}
 		}

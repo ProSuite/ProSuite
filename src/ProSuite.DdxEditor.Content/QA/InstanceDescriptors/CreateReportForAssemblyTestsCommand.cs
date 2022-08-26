@@ -4,11 +4,11 @@ using System.Reflection;
 using System.Windows.Forms;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.DdxEditor.Content.Properties;
-using ProSuite.DdxEditor.Content.QA.InstanceDescriptors;
+using ProSuite.DdxEditor.Content.QA.TestDescriptors;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Commands;
 
-namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
+namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 {
 	internal class CreateReportForAssemblyTestsCommand :
 		ExchangeCommand<AlgorithmDescriptorsItem>
@@ -36,9 +36,9 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 
 		public override Image Image => _image;
 
-		public override string Text => "Create Report for Descriptors in a .Net Assembly...";
+		public override string Text => "Create Report for Implementations in a .Net Assembly...";
 
-		protected override bool EnabledCore => ! Item.IsDirty;
+		protected override bool EnabledCore => !Item.IsDirty;
 
 		protected override void ExecuteCore()
 		{
@@ -57,11 +57,11 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 			using (FileDialog dialog = new SaveFileDialog())
 			{
 				dialog.FileName = string.Format("{0}.html",
-				                                Path.GetFileNameWithoutExtension(location));
+												Path.GetFileNameWithoutExtension(location));
 
 				string htmlFilePath = GetSelectedFileName(dialog);
 
-				if (! string.IsNullOrEmpty(htmlFilePath))
+				if (!string.IsNullOrEmpty(htmlFilePath))
 				{
 					Item.CreateReport(assembly, htmlFilePath, true);
 				}

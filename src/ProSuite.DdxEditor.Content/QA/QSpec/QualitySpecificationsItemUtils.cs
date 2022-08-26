@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -19,8 +18,7 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 {
 	public static class QualitySpecificationsItemUtils
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		public static void ExportDatasetDependencies(
 			[NotNull] ICollection<KeyValuePair<string, ICollection<QualitySpecification>>>
@@ -108,8 +106,8 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 		public static void ImportQualitySpecifications(
 			[NotNull] string fileName,
 			bool ignoreConditionsForUnknownDatasets,
-			bool updateTestDescriptorNames,
-			bool updateTestDescriptorProperties,
+			bool updateDescriptorNames,
+			bool updateDescriptorProperties,
 			[NotNull] IXmlDataQualityImporter importer)
 		{
 			using (new WaitCursor())
@@ -122,8 +120,8 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 					imported = importer.Import(
 						fileName, QualitySpecificationImportType.UpdateOrAdd,
 						ignoreConditionsForUnknownDatasets,
-						updateTestDescriptorNames,
-						updateTestDescriptorProperties);
+						updateDescriptorNames,
+						updateDescriptorProperties);
 				}
 
 				// TODO report stats (inserted, updated qcons and testdescs)

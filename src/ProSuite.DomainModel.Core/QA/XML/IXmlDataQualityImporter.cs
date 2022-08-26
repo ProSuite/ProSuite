@@ -11,18 +11,18 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 		/// <param name="xmlFilePath">The XML file path.</param>
 		/// <param name="qualitySpecificationsToUpdate">The quality specifications to update.</param>
 		/// <param name="ignoreConditionsForUnknownDatasets">Indicates if quality conditions that reference unknown datasets should be ignored.</param>
-		/// <param name="updateTestDescriptorNames">if set to <c>true</c> the names of existing 
-		/// test descriptors are updated based on the names of test descriptors in the xml file which have the same implementation.</param>
-		/// <param name="updateTestDescriptorProperties">if set to <c>true</c> the other properties of existing 
-		/// test descriptors (except the name) are updated.</param>
+		/// <param name="updateDescriptorNames">if set to <c>true</c> the names of existing 
+		/// descriptors are updated based on the names of descriptors in the xml file which have the same implementation.</param>
+		/// <param name="updateDescriptorProperties">if set to <c>true</c> the other properties of existing 
+		/// descriptors (except the name) are updated.</param>
 		/// <returns></returns>
 		[NotNull]
 		IList<QualitySpecification> Import(
 			[NotNull] string xmlFilePath,
 			[NotNull] ICollection<QualitySpecification> qualitySpecificationsToUpdate,
 			bool ignoreConditionsForUnknownDatasets,
-			bool updateTestDescriptorNames,
-			bool updateTestDescriptorProperties);
+			bool updateDescriptorNames,
+			bool updateDescriptorProperties);
 
 		/// <summary>
 		/// Imports the specified XML file path.
@@ -32,30 +32,30 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 		/// specifications in the xml file that don't exist in the data dictionary, or if
 		/// all specifications in the file should be imported, updating existing ones and adding new ones.</param>
 		/// <param name="ignoreConditionsForUnknownDatasets">Indicates if quality conditions that reference unknown datasets should be ignored.</param>
-		/// <param name="updateTestDescriptorNames">if set to <c>true</c> the names of existing 
-		/// test descriptors are updated based on the names of test descriptors in the xml file which have the same implementation.</param>
-		/// <param name="updateTestDescriptorProperties">if set to <c>true</c> the other properties of existing 
-		/// test descriptors (except the name) are updated.</param>
+		/// <param name="updateDescriptorNames">if set to <c>true</c> the names of existing 
+		/// descriptors are updated based on the names of descriptors in the xml file which have the same implementation.</param>
+		/// <param name="updateDescriptorProperties">if set to <c>true</c> the other properties of existing 
+		/// descriptors (except the name) are updated.</param>
 		/// <returns></returns>
 		[NotNull]
 		IList<QualitySpecification> Import(
 			[NotNull] string xmlFilePath,
 			QualitySpecificationImportType importType,
 			bool ignoreConditionsForUnknownDatasets,
-			bool updateTestDescriptorNames,
-			bool updateTestDescriptorProperties);
+			bool updateDescriptorNames,
+			bool updateDescriptorProperties);
 
 		/// <summary>
-		/// Imports the test descriptors only from the specified XML file path
+		/// Imports only the instance descriptors from the specified XML file path
 		/// </summary>
 		/// <param name="xmlFilePath">The XML file path.</param>
-		/// <param name="updateTestDescriptorNames">if set to <c>true</c> the names of existing 
-		/// test descriptors are updated based on the names of test descriptors in the xml file which have the same implementation.</param>
-		/// <param name="updateTestDescriptorProperties">if set to <c>true</c> the other properties of existing 
-		/// test descriptors (except the name) are updated.</param>
-		void ImportTestDescriptors(
+		/// <param name="updateDescriptorNames">if set to <c>true</c> the names of existing 
+		/// descriptors are updated based on the names of descriptors in the xml file which have the same implementation.</param>
+		/// <param name="updateDescriptorProperties">if set to <c>true</c> the other properties of existing 
+		/// descriptors (except the name) are updated.</param>
+		void ImportInstanceDescriptors(
 			[NotNull] string xmlFilePath,
-			bool updateTestDescriptorNames,
-			bool updateTestDescriptorProperties);
+			bool updateDescriptorNames,
+			bool updateDescriptorProperties);
 	}
 }

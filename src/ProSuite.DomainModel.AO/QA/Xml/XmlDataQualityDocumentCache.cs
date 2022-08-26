@@ -131,11 +131,9 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 						$"IssueFilter descriptor not found for {xmlIssueFilter.IssueFilterDescriptorName}");
 				}
 
-				issueFilter =
-					new IssueFilterConfiguration(
-						xmlIssueFilter.Name,
-						XmlDataQualityUtils
-							.CreateInstanceDescriptor<IssueFilterDescriptor>(xmlDesc));
+				issueFilter = new IssueFilterConfiguration(
+					xmlIssueFilter.Name,
+					XmlDataQualityUtils.CreateIssueFilterDescriptor(xmlDesc));
 				CompleteConfiguration(issueFilter, xmlIssueFilter, datasetSettings);
 
 				Assert.NotNull(_issueFilterInstances).Add(xmlIssueFilter, issueFilter);
@@ -436,14 +434,12 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 					    out XmlTransformerDescriptor xmlDesc))
 				{
 					Assert.Fail(
-						$"Test descriptor not found for {xmlTransformer.TransformerDescriptorName}");
+						$"Transformer descriptor not found for {xmlTransformer.TransformerDescriptorName}");
 				}
 
-				transformer =
-					new TransformerConfiguration(
-						xmlTransformer.Name,
-						XmlDataQualityUtils
-							.CreateInstanceDescriptor<TransformerDescriptor>(xmlDesc));
+				transformer = new TransformerConfiguration(
+					xmlTransformer.Name,
+					XmlDataQualityUtils.CreateTransformerDescriptor(xmlDesc));
 				CompleteConfiguration(transformer, xmlTransformer, datasetSettings);
 				Assert.NotNull(_transformerInstances).Add(xmlTransformer, transformer);
 			}
