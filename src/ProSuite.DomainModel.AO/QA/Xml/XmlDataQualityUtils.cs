@@ -448,7 +448,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			AssertUniqueInstanceConfigurationNames(document.IssueFilters, "issue filter");
 		}
 
-		private static void AssertUniqueInstanceConfigurationNames<T>(
+		public static void AssertUniqueInstanceConfigurationNames<T>(
 			[CanBeNull] IEnumerable<T> instanceConfigurations, [NotNull] string type)
 			where T : XmlInstanceConfiguration
 		{
@@ -525,7 +525,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			                                    "instance descriptor");
 		}
 
-		private static void AssertUniqueInstanceDescriptorNames<T>(
+		public static void AssertUniqueInstanceDescriptorNames<T>(
 			[CanBeNull] IEnumerable<T> instanceDescriptors, [NotNull] string type)
 			where T : XmlInstanceDescriptor
 		{
