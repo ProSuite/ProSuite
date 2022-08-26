@@ -234,7 +234,7 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 			//	() => p => parameterExpression(parameterValueAlias);
 
 			var parametersQuery =
-				session.QueryOver<T>(() => instanceConfigAlias)
+				session.QueryOver(() => instanceConfigAlias)
 				       //.Where(categoryFilter)
 				       .JoinAlias(i => instanceConfigAlias.ParameterValues,
 				                  () => parameterValueAlias)
@@ -466,12 +466,12 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 
 		private static IEnumerable<Dataset> GetReferencedDatasets(
 			[NotNull] IEnumerable<InstanceConfiguration> instanceConfigurations,
-			[NotNull] List<InstanceConfiguration> referencedTransformers,
+			[NotNull] ICollection<InstanceConfiguration> referencedTransformers,
 			[CanBeNull] Predicate<DatasetTestParameterValue> testParameterPredicate = null)
 		{
-			foreach (InstanceConfiguration transformer in instanceConfigurations)
+			foreach (InstanceConfiguration configuration in instanceConfigurations)
 			{
-				foreach (TestParameterValue parameterValue in transformer.ParameterValues)
+				foreach (TestParameterValue parameterValue in configuration.ParameterValues)
 				{
 					if (TryGetDataset(parameterValue, testParameterPredicate, out Dataset dataset,
 					                  out TransformerConfiguration referencedTransformer))
@@ -480,7 +480,9 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 					}
 					else if (referencedTransformer != null)
 					{
-						// These have already been fetched:
+						// These have already been fetched. The goal is not to find all referenced
+						// transformers, but those which need loading of more upstream transformers
+						// or datasets.
 						foreach (TestParameterValue sourceParameterValue in referencedTransformer
 							         .ParameterValues)
 						{
@@ -490,7 +492,7 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 							{
 								yield return sourceRefDataset;
 							}
-							else if (sourceParameterValue != null)
+							else if (sourceRefTransformer != null)
 							{
 								// not yet fetched, add for next round trip:
 								referencedTransformers.Add(sourceRefTransformer);
