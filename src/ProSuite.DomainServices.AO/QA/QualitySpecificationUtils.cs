@@ -45,10 +45,11 @@ namespace ProSuite.DomainServices.AO.QA
 				enabledConditions.Add(condition);
 			}
 
-			// TODO: Find out where the specification is loaded for the first time and make sure the number
-			//       of round-trips is somewhat limited! This approach here could potentially limit the number
-			//       of round trips to the maximum depth of the tree.
-			// Idea: https://github.com/nhibernate/nhibernate-core/pull/1599
+			// TODO: Find out where the specification is loaded for the first time and make sure
+			//       this method is called.
+			// TODO: Call IInstanceConfigurationRepository.GetAllReferencedDatasets() to fetch
+			//       all the needed entities in as few round trips as possible.
+			//       -> but make sure they come from the cache!
 			ReattachAllTransformersAndFilters(enabledConditions, domainTransactions);
 
 			ICollection<Dataset> datasets = GetQualityConditionDatasets(enabledConditions);
