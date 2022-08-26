@@ -300,6 +300,11 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 				                             $"A {targetType.Name} with the same name already exists",
 				                             Severity.Error);
 			}
+
+			var eventAggregator =
+				ContainerRegistry.Current.Resolve<IEventAggregator>();
+
+			eventAggregator.GetEvent<ValidateForPersistenceEvent>().Publish(notification);
 		}
 
 		protected override void DiscardChangesCore()
