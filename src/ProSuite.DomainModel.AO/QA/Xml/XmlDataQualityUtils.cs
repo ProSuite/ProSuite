@@ -48,7 +48,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 
 			AssertUniqueQualitySpecificationNames(document);
 			AssertUniqueQualityConditionNames(document);
-			AssertUniqueTestDescriptorNames(document);
+			AssertUniqueInstanceDescriptorNames(document);
 
 			qualitySpecifications = document.GetAllQualitySpecifications()
 											.Select(p => p.Key)
@@ -308,16 +308,14 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		}
 
 		public static void AssertUniqueInstanceConfigurationUuids<T>(
-			[NotNull] IEnumerable<T> instanceConfigurations,
-			[NotNull] string type)
+			[NotNull] IEnumerable<T> instanceConfigurations, [NotNull] string type)
 			where T : XmlInstanceConfiguration
 		{
 			Assert.ArgumentNotNull(instanceConfigurations, nameof(instanceConfigurations));
 
 			var uuids = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
 
-			foreach (T xmlInstanceConfiguration in
-				instanceConfigurations)
+			foreach (T xmlInstanceConfiguration in instanceConfigurations)
 			{
 				foreach (string uuid in new[]
 										{
@@ -405,8 +403,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 
 			var names = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
 
-			foreach (
-				XmlQualitySpecificationElement xmlQualitySpecificationElement in
+			foreach (XmlQualitySpecificationElement xmlQualitySpecificationElement in
 				qualitySpecification.Elements)
 			{
 				string name = xmlQualitySpecificationElement.QualityConditionName;
@@ -452,8 +449,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		}
 
 		private static void AssertUniqueInstanceConfigurationNames<T>(
-			[CanBeNull] IEnumerable<T> instanceConfigurations,
-			[NotNull] string type)
+			[CanBeNull] IEnumerable<T> instanceConfigurations, [NotNull] string type)
 			where T : XmlInstanceConfiguration
 		{
 			if (instanceConfigurations == null)
@@ -467,8 +463,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			{
 				string name = xmlInstanceConfiguration.Name;
 
-				Assert.True(StringUtils.IsNotEmpty(name),
-							$"Missing {type} name in document");
+				Assert.True(StringUtils.IsNotEmpty(name), $"Missing {type} name in document");
 
 				string trimmedName = name.Trim();
 
@@ -484,6 +479,8 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		public static void AssertUniqueQualifiedCategoryNames(
 			[NotNull] XmlDataQualityDocument document)
 		{
+			Assert.ArgumentNotNull(document, nameof(document));
+
 			if (document.Categories != null)
 			{
 				AssertUniqueCategoryNames(document.Categories);
@@ -517,38 +514,40 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			}
 		}
 
-		public static void AssertUniqueTestDescriptorNames(
+		public static void AssertUniqueInstanceDescriptorNames(
 			[NotNull] XmlDataQualityDocument document)
 		{
 			Assert.ArgumentNotNull(document, nameof(document));
 
-			List<XmlTestDescriptor> testDescriptors = document.TestDescriptors;
+			IEnumerable<XmlInstanceDescriptor> xmlInstanceDescriptors =
+				document.GetAllInstanceDescriptors();
+			AssertUniqueInstanceDescriptorNames(xmlInstanceDescriptors,
+			                                    "instance descriptor");
+		}
 
-			if (testDescriptors == null)
+		private static void AssertUniqueInstanceDescriptorNames<T>(
+			[CanBeNull] IEnumerable<T> instanceDescriptors, [NotNull] string type)
+			where T : XmlInstanceDescriptor
+		{
+			if (instanceDescriptors == null)
 			{
 				return;
 			}
 
-			AssertUniqueTestDescriptorNames(testDescriptors);
-		}
-
-		private static void AssertUniqueTestDescriptorNames(
-			[NotNull] IEnumerable<XmlTestDescriptor> testDescriptors)
-		{
 			var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-			foreach (XmlTestDescriptor testDescriptor in testDescriptors)
+			foreach (T xmlInstanceDescriptor in instanceDescriptors)
 			{
-				string name = testDescriptor.Name;
-				Assert.True(StringUtils.IsNotEmpty(name),
-							"Test descriptor with undefined name encountered");
+				string name = xmlInstanceDescriptor.Name;
+				Assert.True(StringUtils.IsNotEmpty(name), $"Missing {type} name in document");
 
 				string trimmedName = name.Trim();
 
-				Assert.False(names.Contains(trimmedName),
-							 "Duplicate test descriptor name: {0}",
-							 trimmedName);
-
+				if (names.Contains(trimmedName))
+				{
+					Assert.Fail($"Duplicate {type} name in document: {trimmedName}");
+				}
+				
 				names.Add(trimmedName);
 			}
 		}
@@ -1343,42 +1342,64 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 				ClassDescriptor testConfigDescriptor =
 					CreateClassDescriptor(xmlTestDescriptor.TestConfigurator);
 
-				var configurator = testConfigDescriptor.CreateInstance<ITestConfigurator>();
-
-				Type testClassType = configurator.GetTestClassType();
-				Type factoryType = configurator.GetFactoryType();
-
-				Assert.True(testClassType == null != (factoryType == null),
-							"Invalid TestConfigurator {0}: Combination testClass = {1} and factory = {2} not allowed",
-							testConfigDescriptor, testClassType, factoryType);
-
-				if (testClassType != null)
+				try
 				{
-					int constructorId = configurator.GetTestConstructorId();
-					Assert.True(constructorId >= 0, "Invalid constructorId {0}", constructorId);
+					var configurator = testConfigDescriptor.CreateInstance<ITestConfigurator>();
 
-					result.TestClass = new ClassDescriptor(testClassType);
-					result.TestConstructorId = constructorId;
-					result.TestFactoryDescriptor = null;
+					Type testClassType = configurator.GetTestClassType();
+					Type factoryType = configurator.GetFactoryType();
+
+					Assert.True(testClassType == null != (factoryType == null),
+					            "Invalid TestConfigurator {0}: Combination testClass = {1} and factory = {2} not allowed",
+					            testConfigDescriptor, testClassType, factoryType);
+
+					if (testClassType != null)
+					{
+						int constructorId = configurator.GetTestConstructorId();
+						Assert.True(constructorId >= 0, "Invalid constructorId {0}", constructorId);
+
+						result.TestClass = new ClassDescriptor(testClassType);
+						result.TestConstructorId = constructorId;
+						result.TestFactoryDescriptor = null;
+					}
+					else
+					{
+						result.TestFactoryDescriptor = new ClassDescriptor(factoryType);
+						result.TestClass = null;
+						result.TestConstructorId = 0;
+					}
 				}
-				else
+				catch (Exception e)
 				{
-					result.TestFactoryDescriptor = new ClassDescriptor(factoryType);
-					result.TestClass = null;
-					result.TestConstructorId = 0;
+					_msg.Debug($"Unable to load TestConfigurator for {xmlTestDescriptor.Name}.", e);
 				}
-
+				
 				result.TestConfigurator = testConfigDescriptor;
 			}
-
-			Assert.NotNull(TestFactoryUtils.GetTestFactory(result),
-						   "Error in xml test descriptor '{0}'", result.Name);
-
+			
 			return result;
 		}
 
 		[NotNull]
-		public static T CreateInstanceDescriptor<T>(
+		public static TransformerDescriptor CreateTransformerDescriptor(
+			[NotNull] XmlTransformerDescriptor xmlTransformerDescriptor)
+		{
+			Assert.ArgumentNotNull(xmlTransformerDescriptor, nameof(xmlTransformerDescriptor));
+
+			return CreateInstanceDescriptor<TransformerDescriptor>(xmlTransformerDescriptor);
+		}
+
+		[NotNull]
+		public static IssueFilterDescriptor CreateIssueFilterDescriptor(
+			[NotNull] XmlIssueFilterDescriptor xmlIssueFilterDescriptor)
+		{
+			Assert.ArgumentNotNull(xmlIssueFilterDescriptor, nameof(xmlIssueFilterDescriptor));
+
+			return CreateInstanceDescriptor<IssueFilterDescriptor>(xmlIssueFilterDescriptor);
+		}
+
+		[NotNull]
+		private static T CreateInstanceDescriptor<T>(
 			[NotNull] XmlInstanceDescriptor xmlInstanceDescriptor)
 			where T : InstanceDescriptor, new()
 		{
@@ -1408,20 +1429,21 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			                           xmlClassDescriptor.Description);
 		}
 
-		public static void TransferProperties([NotNull] TestDescriptor from,
-		                                      [NotNull] TestDescriptor to,
+		public static void TransferProperties([NotNull] InstanceDescriptor from,
+		                                      [NotNull] InstanceDescriptor to,
 		                                      bool updateName,
 		                                      bool updateProperties)
 		{
 			Assert.ArgumentNotNull(from, nameof(from));
 			Assert.ArgumentNotNull(to, nameof(to));
+			Assert.AreEqual(from.GetType(), to.GetType(), "Type mismatch");
 
 			if (updateName)
 			{
-				if (!string.Equals(to.Name, from.Name))
+				if (! string.Equals(to.Name, from.Name))
 				{
-					_msg.InfoFormat("Updating name of test descriptor {0} -> {1}", to.Name,
-									from.Name);
+					_msg.InfoFormat("Updating name of {0} {1} -> {2}", to.TypeDisplayName, to.Name,
+					                from.Name);
 
 					to.Name = from.Name;
 				}
@@ -1429,20 +1451,23 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 
 			if (updateProperties)
 			{
-				_msg.InfoFormat("Updating properties of test descriptor {0}", to.Name);
+				_msg.InfoFormat("Updating properties of {0} {1}", to.TypeDisplayName, to.Name);
 
 				to.Description = from.Description;
 
-				to.AllowErrors = from.AllowErrors;
-				to.StopOnError = from.StopOnError;
-				to.ExecutionPriority = from.ExecutionPriority;
+				if (from is TestDescriptor fromTd && to is TestDescriptor toTd)
+				{
+					toTd.AllowErrors = fromTd.AllowErrors;
+					toTd.StopOnError = fromTd.StopOnError;
+					toTd.ExecutionPriority = fromTd.ExecutionPriority;
+
+					if (fromTd.TestConfigurator != null)
+					{
+						toTd.TestConfigurator = fromTd.TestConfigurator;
+					}
+				}
 
 				TransferMetadata(from, to);
-
-				if (from.TestConfigurator != null)
-				{
-					to.TestConfigurator = from.TestConfigurator;
-				}
 			}
 		}
 
