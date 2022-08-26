@@ -69,7 +69,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		public GdbTable(ITable template, bool useTemplateForQuerying = false)
 			: this(GetObjectClassId(template), DatasetUtils.GetName(template),
-			       GetAliasName(template))
+			       GetAliasName(template), null, DatasetUtils.GetWorkspace(template))
 		{
 			for (int i = 0; i < template.Fields.FieldCount; i++)
 			{
