@@ -7,7 +7,6 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Essentials.System;
 using ProSuite.Commons.Logging;
-using ProSuite.Commons.UI.WinForms;
 using ProSuite.DdxEditor.Content.Properties;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Commands;
@@ -60,15 +59,10 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 		{
 			base.CollectCommands(commands, applicationController);
 
-			commands.Add(new ImportTestDescriptorsCommand(
-				             this, applicationController,
-				             _modelBuilder.DefaultTestDescriptorsXmlFile));
 			commands.Add(new AddTestDescriptorCommand(this, applicationController));
-			commands.Add(
-				new AddTestDescriptorsFromAssemblyCommand(this, applicationController));
+			commands.Add(new AddTestDescriptorsFromAssemblyCommand(this, applicationController));
 
-			commands.Add(
-				new CreateReportForRegisteredTestsCommand(this, applicationController));
+			commands.Add(new CreateReportForTestDescriptorsCommand(this, applicationController));
 			commands.Add(new DeleteAllChildItemsCommand(this, applicationController));
 		}
 
@@ -218,29 +212,6 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 			_msg.InfoFormat("{0} test descriptor(s) added", addedCount);
 
 			RefreshChildren();
-		}
-
-		public void ImportTestDescriptors([NotNull] string fileName)
-		{
-			Assert.ArgumentNotNullOrEmpty(fileName, nameof(fileName));
-
-			using (new WaitCursor())
-			{
-				using (_msg.IncrementIndentation(
-					       "Importing all test descriptors from {0}", fileName))
-				{
-					const bool updateTestDescriptorNames = true;
-					const bool updateTestDescriptorProperties = false;
-
-					_modelBuilder.DataQualityImporter.ImportTestDescriptors(
-						fileName, updateTestDescriptorNames,
-						updateTestDescriptorProperties);
-				}
-
-				// TODO report stats (inserted, updated qcons and testdescs)
-
-				_msg.InfoFormat("Test descriptors imported from {0}", fileName);
-			}
 		}
 	}
 }

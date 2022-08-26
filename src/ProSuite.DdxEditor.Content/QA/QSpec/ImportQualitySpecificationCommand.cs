@@ -56,8 +56,8 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 					Item.ImportQualitySpecification(
 						form.FilePath,
 						form.IgnoreQualityConditionsForUnknownDatasets,
-						form.UpdateTestDescriptorNames,
-						form.UpdateTestDescriptorProperties);
+						form.UpdateDescriptorNames,
+						form.UpdateDescriptorProperties);
 				}
 
 				ApplicationController.RefreshItem(Item);

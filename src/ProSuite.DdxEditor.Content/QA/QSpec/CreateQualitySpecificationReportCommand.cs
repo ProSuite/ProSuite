@@ -5,7 +5,6 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.IO;
 using ProSuite.DdxEditor.Content.Properties;
-using ProSuite.DdxEditor.Content.QA.TestDescriptors;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Commands;
 
@@ -21,9 +20,6 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 		[NotNull] private static readonly Image _image;
 		[NotNull] private readonly string _reportTemplate;
 
-		/// <summary>
-		/// Initializes the <see cref="CreateReportForRegisteredTestsCommand"/> class.
-		/// </summary>
 		static CreateQualitySpecificationReportCommand()
 		{
 			_image = Resources.CreateReport;

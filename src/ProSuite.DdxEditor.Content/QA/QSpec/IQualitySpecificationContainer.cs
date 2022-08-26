@@ -38,7 +38,7 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 
 		void ImportQualitySpecifications([NotNull] string fileName,
 		                                 bool ignoreConditionsForUnknownDatasets,
-		                                 bool updateTestDescriptorNames,
-		                                 bool updateTestDescriptorProperties);
+		                                 bool updateDescriptorNames,
+		                                 bool updateDescriptorProperties);
 	}
 }
