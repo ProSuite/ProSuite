@@ -307,11 +307,28 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 				"quality condition");
 		}
 
+		public static void AssertUniqueTransformerUuids(
+			[NotNull] XmlDataQualityDocument document)
+		{
+			Assert.ArgumentNotNull(document, nameof(document));
+			AssertUniqueInstanceConfigurationUuids(document.Transformers, "transformer");
+		}
+
+		public static void AssertUniqueIssueFilterUuids(
+			[NotNull] XmlDataQualityDocument document)
+		{
+			Assert.ArgumentNotNull(document, nameof(document));
+			AssertUniqueInstanceConfigurationUuids(document.IssueFilters, "issue filter");
+		}
+
 		public static void AssertUniqueInstanceConfigurationUuids<T>(
-			[NotNull] IEnumerable<T> instanceConfigurations, [NotNull] string type)
+			[CanBeNull] IEnumerable<T> instanceConfigurations, [NotNull] string type)
 			where T : XmlInstanceConfiguration
 		{
-			Assert.ArgumentNotNull(instanceConfigurations, nameof(instanceConfigurations));
+			if (instanceConfigurations == null)
+			{
+				return;
+			}
 
 			var uuids = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
 
