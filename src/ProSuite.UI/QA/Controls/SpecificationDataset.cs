@@ -7,6 +7,7 @@ using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.UI.DataModel.ResourceLookup;
 using ProSuite.UI.Properties;
+using ProSuite.UI.QA.ResourceLookup;
 
 namespace ProSuite.UI.QA.Controls
 {
@@ -80,6 +81,12 @@ namespace ProSuite.UI.QA.Controls
 				string datasetImageKey = DatasetTypeImageLookup.GetImageKey(dataset);
 				DatasetType = _datasetImageList[datasetImageKey];
 			}
+			else if (datasetTestParameterValue.ValueSource != null)
+			{
+				string datasetImageKey =
+					TestTypeImageLookup.GetImageKey(datasetTestParameterValue.ValueSource);
+				DatasetType = _datasetImageList[Assert.NotNull(datasetImageKey)];
+			}
 		}
 
 		[NotNull]
@@ -102,7 +109,7 @@ namespace ProSuite.UI.QA.Controls
 				}
 
 				var dsParam = (DatasetTestParameterValue) param;
-				if (dsParam.DatasetValue == null)
+				if (dsParam.DatasetValue == null && dsParam.ValueSource == null)
 				{
 					continue;
 				}
@@ -138,7 +145,7 @@ namespace ProSuite.UI.QA.Controls
 			set
 			{
 				QualitySpecificationElement element = Assert.NotNull(QualitySpecificationElement,
-				                                                     "quality specification element is null");
+					"quality specification element is null");
 
 				element.Enabled = value;
 			}
