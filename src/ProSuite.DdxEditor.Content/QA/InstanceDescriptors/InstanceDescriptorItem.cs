@@ -52,7 +52,21 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 
 		public override string ImageKey => _imageKey;
 
-		public string TypeName => GetEntity()?.TypeDisplayName;
+		public string TypeName
+		{
+			get
+			{
+				switch (GetEntity())
+				{
+					case TransformerDescriptor:
+						return "Transformer";
+					case IssueFilterDescriptor:
+						return "Issue Filter";
+					default:
+						throw new InvalidOperationException("Unknown descriptor type");
+				}
+			}
+		}
 
 		private void UpdateImage([CanBeNull] InstanceDescriptor instanceDescriptor)
 		{

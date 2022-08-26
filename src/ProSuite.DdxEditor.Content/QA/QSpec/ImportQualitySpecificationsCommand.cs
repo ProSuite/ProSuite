@@ -8,15 +8,11 @@ using ProSuite.DdxEditor.Framework.Items;
 
 namespace ProSuite.DdxEditor.Content.QA.QSpec
 {
-	public class ImportQualitySpecificationsCommand :
-		ExchangeQualitySpecificationCommand<Item>
+	public class ImportQualitySpecificationsCommand : ExchangeQualitySpecificationCommand<Item>
 	{
 		[NotNull] private static readonly Image _image;
 		[NotNull] private readonly IQualitySpecificationContainer _container;
 
-		/// <summary>
-		/// Initializes the <see cref="ImportQualitySpecificationsCommand"/> class.
-		/// </summary>
 		static ImportQualitySpecificationsCommand()
 		{
 			_image = Resources.Import;
@@ -62,8 +58,8 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 					_container.ImportQualitySpecifications(
 						form.FilePath,
 						form.IgnoreQualityConditionsForUnknownDatasets,
-						form.UpdateTestDescriptorNames,
-						form.UpdateTestDescriptorProperties);
+						form.UpdateDescriptorNames,
+						form.UpdateDescriptorProperties);
 
 					ApplicationController.RefreshFirstItem<QAItem>();
 				}

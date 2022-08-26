@@ -1,7 +1,6 @@
 using System.Drawing;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.DdxEditor.Content.Properties;
-using ProSuite.DdxEditor.Content.QA.QCon;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Commands;
 
@@ -12,16 +11,13 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 		private static readonly Image _image;
 		private readonly IApplicationController _applicationController;
 
-		/// <summary>
-		/// Initializes the <see cref="CopyQualityConditionCommand"/> class.
-		/// </summary>
 		static CopyInstanceConfigurationCommand()
 		{
 			_image = Resources.Copy;
 		}
 
 		/// <summary>
-		/// Initializes a new instance of the <see cref="CopyQualityConditionCommand"/> class.
+		/// Initializes a new instance of the <see cref="CopyInstanceConfigurationCommand"/> class.
 		/// </summary>
 		/// <param name="item">The item.</param>
 		/// <param name="applicationController">The application controller.</param>

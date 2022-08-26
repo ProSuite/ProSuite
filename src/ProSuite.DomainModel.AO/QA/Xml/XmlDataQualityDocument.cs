@@ -197,6 +197,34 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		}
 
 		[NotNull]
+		public IEnumerable<XmlInstanceDescriptor> GetAllInstanceDescriptors()
+		{
+			if (TestDescriptors != null)
+			{
+				foreach (var descriptor in TestDescriptors)
+				{
+					yield return descriptor;
+				}
+			}
+
+			if (TransformerDescriptors != null)
+			{
+				foreach (var descriptor in TransformerDescriptors)
+				{
+					yield return descriptor;
+				}
+			}
+
+			if (IssueFilterDescriptors != null)
+			{
+				foreach (var descriptor in IssueFilterDescriptors)
+				{
+					yield return descriptor;
+				}
+			}
+		}
+
+		[NotNull]
 		private IEnumerable<XmlDataQualityCategory> GetCategories(
 			[NotNull] IEnumerable<XmlDataQualityCategory> categories)
 		{

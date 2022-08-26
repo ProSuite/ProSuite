@@ -6,7 +6,7 @@ using ProSuite.DdxEditor.Framework.Commands;
 
 namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 {
-	internal class CreateReportForRegisteredTestsCommand
+	internal class CreateReportForTestDescriptorsCommand
 		: ExchangeCommand<TestDescriptorsItem>
 	{
 		public const string DefaultExtension = "html";
@@ -15,27 +15,24 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 
 		private static readonly Image _image;
 
-		/// <summary>
-		/// Initializes the <see cref="CreateReportForRegisteredTestsCommand"/> class.
-		/// </summary>
-		static CreateReportForRegisteredTestsCommand()
+		static CreateReportForTestDescriptorsCommand()
 		{
 			_image = Resources.CreateReport;
 		}
 
 		/// <summary>
-		/// Initializes a new instance of the <see cref="CreateReportForAssemblyTestsCommand"/> class.
+		/// Initializes a new instance of the <see cref="CreateReportForTestDescriptorsCommand"/> class.
 		/// </summary>
-		/// <param name="testDescriptorsItem">The quality specification item.</param>
+		/// <param name="testDescriptorsItem">The test descriptors item.</param>
 		/// <param name="applicationController">The application controller.</param>
-		public CreateReportForRegisteredTestsCommand(
+		public CreateReportForTestDescriptorsCommand(
 			TestDescriptorsItem testDescriptorsItem,
 			IApplicationController applicationController)
 			: base(testDescriptorsItem, applicationController, DefaultExtension, FileFilter) { }
 
 		public override Image Image => _image;
 
-		public override string Text => "Create Report for Registered Tests...";
+		public override string Text => "Create Report for Registered Test Descriptors...";
 
 		public override string ToolTip => Text;
 

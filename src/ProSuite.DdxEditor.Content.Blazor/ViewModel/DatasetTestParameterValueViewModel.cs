@@ -105,7 +105,7 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 
 		ModelName = source.Match(d => d?.Model?.Name, TestParameterValueUtils.GetDatasetModelName);
 
-		ImageSource = source.Match(BlazorImageUtils.GetImageSource, _ => null);
+		ImageSource = selectedItem.Source.Match(BlazorImageUtils.GetImageSource, BlazorImageUtils.GetImageSource);
 
 		FilterExpression = null;
 		UsedAsReferenceData = false;

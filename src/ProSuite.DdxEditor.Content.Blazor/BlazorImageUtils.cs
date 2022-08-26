@@ -1,7 +1,9 @@
+using System;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom.EsriShape;
 using ProSuite.DomainModel.Core.DataModel;
+using ProSuite.DomainModel.Core.QA;
 
 namespace ProSuite.DdxEditor.Content.Blazor;
 
@@ -19,6 +21,9 @@ internal static class BlazorImageUtils
 	private const string _keyMosaicDataset = "mosaicdataset";
 	private const string _keyRasterDataset = "rasterdataset";
 	private const string _keyUnknown = "unknown";
+	private const string _keyTransform = "transform";
+	private const string _keyRowFilter = "rowfilter";
+	private const string _keyIssueFilter = "issuefilter";
 
 	public static string GetImageSource(GeometryType geometryType)
 	{
@@ -73,6 +78,17 @@ internal static class BlazorImageUtils
 			       : GetImageSource(dataset.GeometryType);
 	}
 
+	public static string GetImageSource(InstanceConfiguration configuration)
+	{
+		return configuration switch
+		{
+			TransformerConfiguration => $"{GetImage(_keyTransform)}.png",
+			IssueFilterConfiguration => $"{GetImage(_keyIssueFilter)}.png",
+			RowFilterConfiguration => $"{GetImage(_keyRowFilter)}.png",
+			_ => throw new NotImplementedException()
+		};
+	}
+
 	private static string GetImageSource(string key)
 	{
 		// todo daro!
@@ -111,8 +127,11 @@ internal static class BlazorImageUtils
 				break;
 		}
 
-		Assert.NotNull(file);
+		return GetImage(Assert.NotNull(file));
+	}
 
-		return $"images/{file}";
+	private static string GetImage(string name)
+	{
+		return $"images/{name}";
 	}
 }

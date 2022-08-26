@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
@@ -25,7 +26,7 @@ public class TestParameterValueCollectionViewModel : ViewModelBase, IDataGridVie
 
 		IsDatasetType = TestParameterTypeUtils.IsDatasetType(DataType);
 
-		_displayName = GetDisplayName();
+		_displayName = GetDisplayName(Values);
 
 		ComponentType = typeof(TestParameterValueCollectionBlazor);
 		ComponentParameters.Add("ViewModel", this);
@@ -57,45 +58,44 @@ public class TestParameterValueCollectionViewModel : ViewModelBase, IDataGridVie
 	public IList<ViewModelBase> Values => (IList<ViewModelBase>) Value;
 
 	[NotNull]
-	private string GetDisplayName()
-	{
-		return GetDisplayName(Values);
-	}
-
-	[NotNull]
 	private string GetDisplayName(IEnumerable<ViewModelBase> values)
 	{
-		string displayName = StringUtils.Concatenate(values, v =>
+		return $"[{StringUtils.Concatenate(GetNames(values), "; ")}]";
+	}
+
+	private IEnumerable<string> GetNames(IEnumerable<ViewModelBase> values)
+	{
+		foreach (ViewModelBase v in values)
 		{
 			if (v.Value == null)
 			{
-				return TestParameterTypeUtils.GetDefault(DataType)?.ToString();
+				yield return TestParameterTypeUtils.GetDefault(DataType)?.ToString();
 			}
 
-			if (v is DummyTestParameterValueViewModel)
+			else if (v is DummyTestParameterValueViewModel)
 			{
-				return null;
+				continue;
 			}
 
-			if (DataType.IsEnum)
+			else if (DataType.IsEnum)
 			{
-				return Enum.GetName(DataType, v.Value);
+				yield return Enum.GetName(DataType, v.Value);
 			}
 
-			if (IsDatasetType)
+			else if (IsDatasetType)
 			{
-				return ((DatasetTestParameterValueViewModel) v).GetDisplayName(false);
+				yield return ((DatasetTestParameterValueViewModel) v).GetDisplayName(false);
 			}
-
-			return v.Value.ToString();
-		}, "; ");
-
-		return $"[{displayName}]";
+			else
+			{
+				yield return Assert.NotNull(v.Value).ToString();
+			}
+		}
 	}
 
 	protected override bool ValidateCore()
 	{
-		DisplayName = GetDisplayName();
+		DisplayName = GetDisplayName(Values);
 
 		return base.ValidateCore();
 	}
