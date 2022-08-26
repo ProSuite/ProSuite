@@ -3,6 +3,7 @@ using System.Data;
 using System.Linq;
 using NUnit.Framework;
 using ProSuite.DomainModel.Core;
+using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.Repositories;
 using ProSuite.QA.Core;
@@ -13,6 +14,10 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.QA
 	public abstract class InstanceConfigurationRepositoryTestBase
 		: RepositoryTestBase<IInstanceConfigurationRepository>
 	{
+		protected abstract DdxModel CreateModel();
+
+		protected abstract VectorDataset CreateVectorDataset(string name);
+
 		[Test]
 		public void CanGetAll()
 		{
@@ -28,11 +33,6 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.QA
 			var tc2 = new TransformerConfiguration("transConfig2", t2, "bla bla2");
 			var tc2b = new TransformerConfiguration("transConfig2b", t2, "bla bla2");
 
-			var f1 = new RowFilterDescriptor(
-				"filt1", new ClassDescriptor("rowFiltTypeName", "factAssemblyName"), 0);
-
-			var fc1 = new RowFilterConfiguration("filterConfig2", f1, "bla bla1");
-
 			const int testConstructorId = 1;
 			var i1 = new IssueFilterDescriptor(
 				"ifilt1", new ClassDescriptor("issueFilTypeName", "factAssemblyName"),
@@ -40,7 +40,7 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.QA
 
 			var ic1 = new IssueFilterConfiguration("issueFilterConfig1", i1);
 
-			CreateSchema(t1, t2, f1, i1, tc1, tc2, tc2b, fc1, ic1);
+			CreateSchema(t1, t2, i1, tc1, tc2, tc2b, ic1);
 
 			UnitOfWork.NewTransaction(
 				delegate
@@ -59,7 +59,7 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.QA
 
 					IList<InstanceConfiguration> foundConfigs = Repository.GetAll();
 
-					Assert.AreEqual(5, foundConfigs.Count);
+					Assert.AreEqual(4, foundConfigs.Count);
 					Assert.False(foundConfigs.Any(t => t.InstanceDescriptor == null));
 
 					InstanceConfiguration foundI1 =
@@ -162,6 +162,92 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.QA
 					                foundTrans.TransformerDescriptor.ConstructorId);
 					Assert.AreEqual(t2.Class, foundTrans.TransformerDescriptor.Class);
 				});
+		}
+
+		[Test]
+		public void CanGetTransformersRecursively()
+		{
+			// Reproduces TOP-5575
+
+			const string dsName0 = "SCHEMA.TLM_DATASET0";
+			const string dsName1 = "SCHEMA.TLM_DATASET1";
+			DdxModel m = CreateModel();
+
+			Dataset ds0 = m.AddDataset(CreateVectorDataset(dsName0));
+			Dataset ds1 = m.AddDataset(CreateVectorDataset(dsName1));
+
+			// spec 0: Contains both a direct dataset reference and a transformer
+			var spec0 = new QualitySpecification("spec0");
+
+			var qaMinLength = new TestDescriptor(
+				"name",
+				new ClassDescriptor(
+					"ProSuite.QA.Tests.QaMinLength",
+					"ProSuite.QA.Tests"), 0, false, false);
+
+			var transformerDescriptor = new TransformerDescriptor(
+				"transformer",
+				new ClassDescriptor("ProSuite.QA.Tests.Transformers.TrFootprint",
+				                    "ProSuite.QA.Tests"), 0);
+
+			var transformerConfig1 =
+				new TransformerConfiguration("footprint1", transformerDescriptor);
+			InstanceConfigurationUtils.AddParameterValue(transformerConfig1, "multipatchClass",
+			                                             ds0);
+
+			var transformerConfig2 =
+				new TransformerConfiguration("footprint2", transformerDescriptor);
+			InstanceConfigurationUtils.AddParameterValue(transformerConfig2, "multipatchClass",
+			                                             transformerConfig1);
+
+			var transformerConfig3 =
+				new TransformerConfiguration("footprint3", transformerDescriptor);
+			InstanceConfigurationUtils.AddParameterValue(transformerConfig3, "multipatchClass",
+			                                             transformerConfig2);
+
+			var transformerConfig4 =
+				new TransformerConfiguration("footprint4", transformerDescriptor);
+			InstanceConfigurationUtils.AddParameterValue(transformerConfig4, "multipatchClass",
+			                                             transformerConfig3);
+
+			var cond0 = new QualityCondition("cond0", qaMinLength);
+			InstanceConfigurationUtils.AddParameterValue(cond0, "limit", "0.5");
+			InstanceConfigurationUtils.AddParameterValue(cond0, "featureClass", transformerConfig4);
+
+			var cond1 = new QualityCondition("cond1", qaMinLength);
+			InstanceConfigurationUtils.AddParameterValue(cond1, "limit", "0.5");
+			InstanceConfigurationUtils.AddParameterValue(cond1, "featureClass", ds1);
+
+			spec0.AddElement(cond0);
+			spec0.AddElement(cond1);
+
+			// spec 1: contains only an indirect reference via transformer
+			var spec1 = new QualitySpecification("spec1");
+			spec1.AddElement(cond0);
+
+			// spec 2 (hidden)
+			QualitySpecification spec2 = spec1.CreateCopy();
+			spec2.Hidden = true;
+
+			CreateSchema(m, ds0, ds1, transformerDescriptor,
+			             transformerConfig1, transformerConfig2, transformerConfig3,
+			             transformerConfig4,
+			             cond0.TestDescriptor, cond1.TestDescriptor,
+			             cond1, cond0);
+
+			IList<Dataset> foundDatasets = null;
+			UnitOfWork.NewTransaction(
+				delegate
+				{
+					AssertUnitOfWorkHasNoChanges();
+
+					List<QualityCondition> qCondIds = new List<QualityCondition> {cond0, cond1};
+					foundDatasets = Repository.GetAllReferencedDatasets(qCondIds).ToList();
+				});
+
+			Assert.AreEqual(2, foundDatasets.Count);
+			Assert.IsTrue(foundDatasets.Contains(ds0));
+			Assert.IsTrue(foundDatasets.Contains(ds1));
 		}
 	}
 }

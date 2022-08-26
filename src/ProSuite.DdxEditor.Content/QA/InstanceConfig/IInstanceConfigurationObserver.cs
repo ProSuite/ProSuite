@@ -17,10 +17,12 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 		BindingList<ParameterValueListItem> GetTestParameterItems();
 
 		void InstanceReferenceDoubleClicked(
-			[NotNull] InstanceConfigurationReferenceTableRow qualitySpecificationReferenceTableRow);
+			[NotNull] InstanceConfigurationReferenceTableRow instanceReferenceTableRow);
 
 		void InstanceDescriptorLinkClicked([CanBeNull] InstanceDescriptor instanceDescriptor);
 
 		void OpenUrlClicked();
+
+		void DescriptorDocumentationLinkClicked();
 	}
 }

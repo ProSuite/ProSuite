@@ -15,7 +15,7 @@ namespace ProSuite.QA.Tests.Transformers
 	/// cached in the <see cref="DataContainer"/>.
 	/// </summary>
 	/// <typeparam name="T"></typeparam>
-	public abstract class TransformedTableBase<T> : GdbTable, ITransformedValue
+	public abstract class TransformedTableBase<T> : GdbTable, IDataContainerAware
 		where T : TransformedBackingData
 	{
 		protected TransformedTableBase(
@@ -31,7 +31,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 		public IList<IReadOnlyTable> InvolvedTables => BackingData.InvolvedTables;
 
-		public ISearchable DataContainer
+		public IDataContainer DataContainer
 		{
 			get => BackingData.DataSearchContainer;
 			set => BackingData.DataSearchContainer = value;
@@ -46,7 +46,7 @@ namespace ProSuite.QA.Tests.Transformers
 	/// cached in the <see cref="DataContainer"/>.
 	/// </summary>
 	/// <typeparam name="T"></typeparam>
-	public abstract class TransformedFeatureClassBase<T> : GdbFeatureClass, ITransformedValue
+	public abstract class TransformedFeatureClassBase<T> : GdbFeatureClass, IDataContainerAware
 		where T : TransformedBackingData
 	{
 		protected TransformedFeatureClassBase(
@@ -63,7 +63,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 		public IList<IReadOnlyTable> InvolvedTables => BackingData.InvolvedTables;
 
-		public ISearchable DataContainer
+		public IDataContainer DataContainer
 		{
 			get => BackingData.DataSearchContainer;
 			set => BackingData.DataSearchContainer = value;

@@ -5,11 +5,13 @@ using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
+using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 
 namespace ProSuite.QA.Tests.Transformers
 {
 	[UsedImplicitly]
+	[TableTransformer]
 	public class TrTableJoin : ITableTransformer<IReadOnlyTable>
 	{
 		private readonly IReadOnlyTable _t0;

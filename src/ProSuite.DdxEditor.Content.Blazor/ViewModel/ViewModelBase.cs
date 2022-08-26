@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Microsoft.AspNetCore.Components;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Validation;
@@ -15,10 +14,14 @@ public abstract class ViewModelBase : Observable
 {
 	[CanBeNull] private object _value;
 
+	// todo daro refactor parameter order
 	protected ViewModelBase([NotNull] TestParameter parameter,
 	                        [CanBeNull] object value,
 	                        [NotNull] IInstanceConfigurationViewModel observer,
-	                        bool required = false) : base(observer, required)
+	                        bool required = false,
+	                        bool validateOnPersistence = false,
+	                        [CanBeNull] string customErrorMessage = null) : base(
+		observer, customErrorMessage, required, validateOnPersistence)
 	{
 		Assert.ArgumentNotNull(parameter, nameof(parameter));
 
@@ -53,9 +56,6 @@ public abstract class ViewModelBase : Observable
 	[NotNull]
 	protected Type DataType { get; }
 
-	[CanBeNull]
-	public DynamicComponent DynamicRowFilterComponent { get; set; }
-
 	public void StartEditing()
 	{
 		Editing = true;
@@ -69,6 +69,11 @@ public abstract class ViewModelBase : Observable
 	protected override void RegisterMessageCore(Notification notification, string message)
 	{
 		notification.RegisterMessage(ParameterName, message, Severity.Error);
+	}
+
+	protected override bool ValidateCore()
+	{
+		return Value != null;
 	}
 
 	public override string ToString()

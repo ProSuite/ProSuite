@@ -347,9 +347,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased.Options
 			}
 			catch (Exception e)
 			{
-				throw new ArgumentException(
-					string.Format("Error deserializing file: {0}", e.Message),
-					nameof(xmlFilePath), e);
+				throw new XmlDeserializationException($"Error deserializing file: {e.Message}", e);
 			}
 		}
 
@@ -366,9 +364,8 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased.Options
 			}
 			catch (Exception e)
 			{
-				throw new ArgumentException(
-					string.Format("Error deserializing file: {0}", e.Message),
-					nameof(xml), e);
+				throw new XmlDeserializationException($"Error deserializing string: {e.Message}",
+				                                      e);
 			}
 		}
 

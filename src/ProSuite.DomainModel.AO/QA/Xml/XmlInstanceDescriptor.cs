@@ -3,7 +3,7 @@ using System.Xml.Serialization;
 
 namespace ProSuite.DomainModel.AO.QA.Xml
 {
-	public class XmlDescriptor : IXmlEntityMetadata
+	public class XmlInstanceDescriptor : IXmlEntityMetadata
 	{
 		private string _description;
 
@@ -14,13 +14,10 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		[DefaultValue(null)]
 		public string Description
 		{
-			get
-			{
-				return string.IsNullOrEmpty(_description)
-					       ? null
-					       : _description;
-			}
-			set { _description = value; }
+			get => string.IsNullOrEmpty(_description)
+				       ? null
+				       : _description;
+			set => _description = value;
 		}
 
 		[XmlAttribute("createdDate")]

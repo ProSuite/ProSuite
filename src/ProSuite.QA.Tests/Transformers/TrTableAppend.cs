@@ -8,10 +8,12 @@ using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
+using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests.Transformers
 {
 	[UsedImplicitly]
+	[TableTransformer]
 	public class TrTableAppend : InvolvesTablesBase, ITableTransformer<IReadOnlyTable>
 	{
 		private AppendedTable _transformedTable;
@@ -39,7 +41,7 @@ namespace ProSuite.QA.Tests.Transformers
 			return transformedTable;
 		}
 
-		private class AppendedTable : VirtualTable, ITransformedValue, ITransformedTable
+		private class AppendedTable : VirtualTable, IDataContainerAware, ITransformedTable
 		{
 			private IWorkspace _workspace;
 
@@ -62,7 +64,8 @@ namespace ProSuite.QA.Tests.Transformers
 			private readonly IList<QueryFilterHelper> _filterHelpers;
 
 			protected AppendedTable(
-				[NotNull] IList<IReadOnlyTable> tables, [NotNull] IList<QueryFilterHelper> filterHelpers,
+				[NotNull] IList<IReadOnlyTable> tables,
+				[NotNull] IList<QueryFilterHelper> filterHelpers,
 				string name = "appended")
 				: base(name)
 			{
@@ -114,7 +117,7 @@ namespace ProSuite.QA.Tests.Transformers
 			}
 
 			public IList<IReadOnlyTable> InvolvedTables { get; }
-			public ISearchable DataContainer { get; set; }
+			public IDataContainer DataContainer { get; set; }
 
 			bool ITransformedTable.NoCaching => true;
 
@@ -181,7 +184,8 @@ namespace ProSuite.QA.Tests.Transformers
 				: base(CastToTables(featureClasses), filterHelpers, name) { }
 
 			public override ISpatialReference SpatialReference =>
-				InvolvedTables.Select(x => (x as IReadOnlyFeatureClass)?.SpatialReference).FirstOrDefault();
+				InvolvedTables.Select(x => (x as IReadOnlyFeatureClass)?.SpatialReference)
+				              .FirstOrDefault();
 
 			public override IEnvelope Extent => _extent ?? (_extent = GetExtent());
 
@@ -247,7 +251,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 				if (index == TableT.BaseRowFieldIndex)
 				{
-					return new List<IReadOnlyRow> { SourceRow };
+					return new List<IReadOnlyRow> {SourceRow};
 				}
 
 				int sourceFieldIndex = TableT.GetSourceFieldIndex(SourceTableIndex, index);
@@ -316,7 +320,7 @@ namespace ProSuite.QA.Tests.Transformers
 			}
 
 			private static IGeometry EnsureMAware(IGeometry geom, ref bool isCloned,
-												  IReadOnlyFeatureClass target)
+			                                      IReadOnlyFeatureClass target)
 			{
 				IField shp = target.Fields.Field[target.FindField(target.ShapeFieldName)];
 				IGeometryDef def = shp.GeometryDef;
@@ -336,7 +340,7 @@ namespace ProSuite.QA.Tests.Transformers
 			private readonly IReadOnlyFeature _sourceFeature;
 
 			public AppendedFeature(AppendedTable table, int sourceTableIndex,
-								   IReadOnlyFeature sourceFeature)
+			                       IReadOnlyFeature sourceFeature)
 				: base(table, sourceTableIndex, sourceFeature)
 			{
 				_sourceFeature = sourceFeature;

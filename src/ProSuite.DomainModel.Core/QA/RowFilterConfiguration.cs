@@ -11,7 +11,7 @@ namespace ProSuite.DomainModel.Core.QA
 		/// </summary>
 		/// <remarks>Required for NHibernate</remarks>
 		[UsedImplicitly]
-		public RowFilterConfiguration() { }
+		public RowFilterConfiguration() : base(assignUuid: false) { }
 
 		public RowFilterConfiguration(string name,
 		                              [NotNull] RowFilterDescriptor rowFilterDescriptor,
@@ -32,7 +32,16 @@ namespace ProSuite.DomainModel.Core.QA
 
 		#region Overrides of InstanceConfiguration
 
-		public override DataQualityCategory Category { get; set; }
+		
+
+		#endregion
+
+		#region Overrides of InstanceConfiguration
+
+		public override InstanceConfiguration CreateCopy()
+		{
+			throw new System.NotImplementedException();
+		}
 
 		#endregion
 	}

@@ -321,19 +321,6 @@ namespace ProSuite.DdxEditor.Content.QA.Categories
 			AddQualitySpecificationItem(CreateQualitySpecificationItem(this));
 		}
 
-		IEnumerable<Item> IInstanceConfigurationContainer.GetInstanceConfigurationItems(
-			IInstanceConfigurationContainerItem containerItem)
-		{
-			return GetQualityConditions()
-			       .OrderBy(q => q.Name)
-			       .Select(qcon => new QualityConditionItem(
-				               _modelBuilder,
-				               qcon,
-				               containerItem,
-				               _modelBuilder.QualityConditions))
-			       .Cast<Item>();
-		}
-
 		public IEnumerable<QualityConditionDatasetTableRow>
 			GetQualityConditionDatasetTableRows()
 		{
@@ -373,7 +360,7 @@ namespace ProSuite.DdxEditor.Content.QA.Categories
 
 		void IInstanceConfigurationContainerItem.CreateCopy(QualityConditionItem item)
 		{
-			QualityCondition copy = _modelBuilder.ReadOnlyTransaction(
+			QualityCondition copy = (QualityCondition) _modelBuilder.ReadOnlyTransaction(
 				() => Assert.NotNull(item.GetEntity()).CreateCopy());
 
 			copy.Name = string.Format("Copy of {0}", copy.Name);
@@ -419,7 +406,7 @@ namespace ProSuite.DdxEditor.Content.QA.Categories
 			bool exportMetadata,
 			bool? exportWorkspaceConnections,
 			bool exportConnectionFilePaths,
-			bool exportAllTestDescriptors,
+			bool exportAllDescriptors,
 			bool exportAllCategories,
 			bool exportNotes)
 		{
@@ -429,7 +416,7 @@ namespace ProSuite.DdxEditor.Content.QA.Categories
 				exportMetadata,
 				exportWorkspaceConnections,
 				exportConnectionFilePaths,
-				exportAllTestDescriptors,
+				exportAllDescriptors,
 				exportAllCategories,
 				exportNotes,
 				_modelBuilder);
@@ -569,16 +556,6 @@ namespace ProSuite.DdxEditor.Content.QA.Categories
 			// then the currently selected one could be non-selectable in the list
 			var finder = new Finder<Model>();
 			return finder.ShowDialog(owner, allModels, columns);
-		}
-
-		[NotNull]
-		private IEnumerable<QualityCondition> GetQualityConditions()
-		{
-			return _modelBuilder.ReadOnlyTransaction(
-				() => _modelBuilder.QualityConditions.Get(
-					Assert.NotNull(GetEntity()),
-					_modelBuilder
-						.IncludeQualityConditionsBasedOnDeletedDatasets));
 		}
 
 		private void AddQualitySpecificationItem([NotNull] QualitySpecificationItem item)

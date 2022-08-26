@@ -96,7 +96,7 @@ namespace ProSuite.QA.Tests.Test
 			}
 
 			{
-				QualityCondition condWithFields = condition.CreateCopy();
+				QualityCondition condWithFields = (QualityCondition) condition.CreateCopy();
 				InstanceConfigurationUtils.AddParameterValue(
 					condWithFields, "Fields", "CvField");
 
@@ -112,7 +112,7 @@ namespace ProSuite.QA.Tests.Test
 				Assert.AreEqual(2, runner.Errors.Count);
 			}
 			{
-				QualityCondition condWithFields = condition.CreateCopy();
+				QualityCondition condWithFields = (QualityCondition) condition.CreateCopy();
 				InstanceConfigurationUtils.AddParameterValue(
 					condWithFields, "Fields", "CvField");
 				InstanceConfigurationUtils.AddParameterValue(

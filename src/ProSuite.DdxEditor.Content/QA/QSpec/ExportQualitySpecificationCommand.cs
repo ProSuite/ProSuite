@@ -70,7 +70,7 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 				                                 form.ExportMetadata,
 				                                 form.ExportWorkspaceConnections,
 				                                 form.ExportConnectionFilePaths,
-				                                 form.ExportAllTestDescriptors,
+				                                 form.ExportAllDescriptors,
 				                                 form.ExportAllCategories,
 				                                 form.ExportNotes);
 			}

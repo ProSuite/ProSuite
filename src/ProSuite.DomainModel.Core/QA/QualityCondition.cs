@@ -17,15 +17,6 @@ namespace ProSuite.DomainModel.Core.QA
 		#region Persisted fields
 
 		[UsedImplicitly] [Obfuscation(Exclude = true)]
-		private DataQualityCategory _category;
-
-		[UsedImplicitly] [Obfuscation(Exclude = true)]
-		private string _url;
-
-		[UsedImplicitly] [Obfuscation(Exclude = true)]
-		private string _notes;
-
-		[UsedImplicitly] [Obfuscation(Exclude = true)]
 		private bool? _stopOnErrorOverride;
 
 		[UsedImplicitly] [Obfuscation(Exclude = true)]
@@ -44,9 +35,6 @@ namespace ProSuite.DomainModel.Core.QA
 		private bool _neverFilterTableRowsUsingRelatedGeometry;
 
 		[UsedImplicitly] [Obfuscation(Exclude = true)]
-		private string _uuid;
-
-		[UsedImplicitly] [Obfuscation(Exclude = true)]
 		private string _versionUuid;
 
 		#endregion
@@ -59,11 +47,10 @@ namespace ProSuite.DomainModel.Core.QA
 		/// <remarks>Required for NHibernate</remarks>
 		protected QualityCondition() : this(assignUuids: false) { }
 
-		public QualityCondition(bool assignUuids)
+		public QualityCondition(bool assignUuids) : base(assignUuids)
 		{
 			if (assignUuids)
 			{
-				_uuid = GenerateUuid();
 				_versionUuid = GenerateUuid();
 			}
 		}
@@ -80,7 +67,7 @@ namespace ProSuite.DomainModel.Core.QA
 
 			if (assignUuids)
 			{
-				_uuid = GenerateUuid();
+				Uuid = GenerateUuid();
 				_versionUuid = GenerateUuid();
 			}
 		}
@@ -94,18 +81,6 @@ namespace ProSuite.DomainModel.Core.QA
 		{
 			get { return _testDescriptor; }
 			set { _testDescriptor = value; }
-		}
-
-		[Required]
-		public string Uuid
-		{
-			get { return _uuid; }
-			set
-			{
-				Assert.ArgumentNotNull(value, nameof(value));
-
-				_uuid = GetUuid(value);
-			}
 		}
 
 		[Required]
@@ -125,20 +100,6 @@ namespace ProSuite.DomainModel.Core.QA
 		public void AssignNewVersionUuid()
 		{
 			_versionUuid = GenerateUuid();
-		}
-
-		[MaximumStringLength(2000)]
-		public string Url
-		{
-			get { return _url; }
-			set { _url = value; }
-		}
-
-		[MaximumStringLength(2000)]
-		public string Notes
-		{
-			get { return _notes; }
-			set { _notes = value; }
 		}
 
 		public bool StopOnError
@@ -217,13 +178,6 @@ namespace ProSuite.DomainModel.Core.QA
 		{
 			get { return _neverFilterTableRowsUsingRelatedGeometry; }
 			set { _neverFilterTableRowsUsingRelatedGeometry = value; }
-		}
-
-		[CanBeNull]
-		public override DataQualityCategory Category
-		{
-			get { return _category; }
-			set { _category = value; }
 		}
 
 		public new int Id
@@ -311,7 +265,7 @@ namespace ProSuite.DomainModel.Core.QA
 		}
 
 		[NotNull]
-		public QualityCondition CreateCopy()
+		public override InstanceConfiguration CreateCopy()
 		{
 			var copy = new QualityCondition(assignUuids: true);
 
@@ -434,37 +388,13 @@ namespace ProSuite.DomainModel.Core.QA
 			return result;
 		}
 
-		[NotNull]
-		private static string GetUuid([NotNull] string value)
-		{
-			// this fails if the string is not a valid guid:
-			var guid = new Guid(value);
-
-			return FormatUuid(guid);
-		}
-
-		[NotNull]
-		private static string GenerateUuid()
-		{
-			return FormatUuid(Guid.NewGuid());
-		}
-
-		[NotNull]
-		private static string FormatUuid(Guid guid)
-		{
-			// default format (no curly braces)
-			return guid.ToString().ToUpper();
-		}
-
 		private void CopyProperties([NotNull] QualityCondition target)
 		{
 			Assert.ArgumentNotNull(target, nameof(target));
 
-			target.Name = Name;
+			CopyBaseProperties(target);
+
 			target._testDescriptor = TestDescriptor;
-			target.Description = Description;
-			target._notes = Notes;
-			target._url = Url;
 
 			target._allowErrorsOverride = AllowErrorsOverride;
 			target._stopOnErrorOverride = StopOnErrorOverride;
@@ -475,13 +405,6 @@ namespace ProSuite.DomainModel.Core.QA
 				NeverFilterTableRowsUsingRelatedGeometry;
 			target._neverStoreRelatedGeometryForTableRowIssues =
 				NeverStoreRelatedGeometryForTableRowIssues;
-
-			foreach (TestParameterValue testParameterValue in ParameterValues)
-			{
-				target.AddParameterValue(testParameterValue.Clone());
-			}
-
-			target._category = _category;
 		}
 
 		protected override IEnumerable<Dataset> EnumReferencedDatasetParameterValues()

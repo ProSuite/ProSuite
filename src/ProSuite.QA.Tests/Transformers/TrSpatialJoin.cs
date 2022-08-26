@@ -12,11 +12,13 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Core;
+using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 
 namespace ProSuite.QA.Tests.Transformers
 {
 	[UsedImplicitly]
+	[TableTransformer]
 	public class TrSpatialJoin : TableTransformer<TransformedFeatureClass>
 	{
 		public enum SearchOption
@@ -126,7 +128,7 @@ namespace ProSuite.QA.Tests.Transformers
 				       conciseMessage: true) { }
 		}
 
-		private class TransformedFc : TransformedFeatureClass, ITransformedValue
+		private class TransformedFc : TransformedFeatureClass, IDataContainerAware
 		{
 			private string _constraintSql;
 			private JoinConstraint _constraint;
@@ -177,7 +179,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 			public IList<IReadOnlyTable> InvolvedTables { get; }
 
-			public ISearchable DataContainer
+			public IDataContainer DataContainer
 			{
 				get => BackingDs.DataContainer;
 				set => BackingDs.DataContainer = value;

@@ -348,7 +348,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				Assert.AreEqual(2, runner.Errors.Count);
 			}
 
-			TrPolyToLine trP2l = new TrPolyToLine(trMp2p.GetTransformed());
+			TrPolygonToLine trP2l = new TrPolygonToLine(trMp2p.GetTransformed());
 			{
 				QaConstraint test = new QaConstraint(
 					trP2l.GetTransformed(),
@@ -416,7 +416,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 		}
 	}
 
-	public class UncachedDataContainer : ISearchable
+	public class UncachedDataContainer : IDataContainer
 	{
 		private readonly WKSEnvelope _extent;
 

@@ -147,21 +147,21 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			IDictionary<XmlDataQualityCategory, DataQualityCategory> categoryMap =
 				GetCategoryMap(document);
 
-			XmlQualityConditionsCache xmlDocumentCache =
-				XmlDataQualityUtils.GetReferencedXmlQualityConditions(
+			XmlDataQualityDocumentCache documentCache =
+				XmlDataQualityUtils.GetDocumentCache(
 					document, new[] {xmlQualitySpecification});
 
 			IList<XmlWorkspace> referencedXmlWorkspaces =
-				XmlDataQualityUtils.GetReferencedWorkspaces(xmlDocumentCache);
+				XmlDataQualityUtils.GetReferencedWorkspaces(documentCache);
 
 			IDictionary<string, Model> modelsByWorkspaceId = GetModelsByWorkspaceId(
 				referencedXmlWorkspaces, dataSources,
-				xmlDocumentCache.EnumReferencedConfigurationInstances().ToList());
+				documentCache.EnumReferencedConfigurationInstances().ToList());
 
-			xmlDocumentCache.ReferencedModels = modelsByWorkspaceId;
+			documentCache.ReferencedModels = modelsByWorkspaceId;
 			
 			Dictionary<string, QualityCondition> qualityConditions =
-				CreateQualityConditions(xmlDocumentCache,
+				CreateQualityConditions(documentCache,
 				                        categoryMap,
 				                        modelsByWorkspaceId,
 				                        ignoreConditionsForUnknownDatasets);
@@ -263,7 +263,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 		}
 
 		private static Dictionary<string, QualityCondition> CreateQualityConditions(
-			XmlQualityConditionsCache xmlDocumentCache,
+			XmlDataQualityDocumentCache xmlDataDocumentCache,
 			IDictionary<XmlDataQualityCategory, DataQualityCategory> categoryMap,
 			IDictionary<string, Model> modelsByWorkspaceId,
 			bool ignoreConditionsForUnknownDatasets)
@@ -274,7 +274,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			Func<string, IList<Dataset>> getDatasetsByName = name => new List<Dataset>();
 
 			foreach (KeyValuePair<XmlQualityCondition, XmlDataQualityCategory> pair in
-				xmlDocumentCache.QualityConditionsWithCategories)
+				xmlDataDocumentCache.QualityConditionsWithCategories)
 			{
 				XmlQualityCondition xmlCondition = pair.Key;
 				XmlDataQualityCategory xmlCategory = pair.Value;
@@ -285,7 +285,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 						: null;
 
 				QualityCondition createdCondition = XmlDataQualityUtils.CreateQualityCondition(
-					xmlCondition, xmlDocumentCache, getDatasetsByName, category, ignoreConditionsForUnknownDatasets,
+					xmlCondition, xmlDataDocumentCache, getDatasetsByName, category, ignoreConditionsForUnknownDatasets,
 					out ICollection<XmlDatasetTestParameterValue> unknownDatasetParameters);
 
 				if (createdCondition == null)

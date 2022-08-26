@@ -12,7 +12,7 @@ namespace ProSuite.QA.Container
 		protected InvolvesTablesBase([NotNull] IEnumerable<IReadOnlyTable> tables)
 			: base(tables) { }
 
-		internal ISearchable DataContainer { get; set; }
+		internal IDataContainer DataContainer { get; set; }
 
 		protected sealed override ISpatialReference GetSpatialReference()
 		{
@@ -23,9 +23,9 @@ namespace ProSuite.QA.Container
 
 		[NotNull]
 		protected IEnumerable<IReadOnlyRow> Search([NotNull] IReadOnlyTable table,
-		                                   [NotNull] IQueryFilter queryFilter,
-		                                   [NotNull] QueryFilterHelper filterHelper,
-		                                   [CanBeNull] IGeometry cacheGeometry = null)
+		                                           [NotNull] IQueryFilter queryFilter,
+		                                           [NotNull] QueryFilterHelper filterHelper,
+		                                           [CanBeNull] IGeometry cacheGeometry = null)
 		{
 			Assert.ArgumentNotNull(table, nameof(table));
 			Assert.ArgumentNotNull(queryFilter, nameof(queryFilter));
@@ -34,7 +34,7 @@ namespace ProSuite.QA.Container
 			if (DataContainer != null)
 			{
 				IEnumerable<IReadOnlyRow> rows = DataContainer.Search(table, queryFilter,
-				                                              filterHelper, cacheGeometry);
+					filterHelper, cacheGeometry);
 
 				if (rows != null)
 				{

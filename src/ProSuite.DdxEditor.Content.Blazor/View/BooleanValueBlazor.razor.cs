@@ -5,7 +5,7 @@ using ProSuite.DdxEditor.Content.Blazor.ViewModel;
 
 namespace ProSuite.DdxEditor.Content.Blazor.View;
 
-public partial class SwitchValueBlazor : IDisposable
+public partial class BooleanValueBlazor : IDisposable
 {
 	[Parameter]
 	public ScalarTestParameterValueViewModel ViewModel { get; set; }

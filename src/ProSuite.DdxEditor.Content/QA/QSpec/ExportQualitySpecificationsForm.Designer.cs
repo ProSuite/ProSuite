@@ -36,7 +36,7 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 			this._statusStrip = new System.Windows.Forms.StatusStrip();
 			this._toolStripStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
 			this._groupBoxQualitySpecifications = new System.Windows.Forms.GroupBox();
-			this._dataGridView = new global::ProSuite.Commons.UI.WinForms.Controls.DoubleBufferedDataGridView();
+			this._dataGridView = new ProSuite.Commons.UI.WinForms.Controls.DoubleBufferedDataGridView();
 			this._columnSelected = new System.Windows.Forms.DataGridViewCheckBoxColumn();
 			this._columnImage = new System.Windows.Forms.DataGridViewImageColumn();
 			this._columnName = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -46,8 +46,8 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 			this._columnCreatedBy = new System.Windows.Forms.DataGridViewTextBoxColumn();
 			this._columnLastChanged = new System.Windows.Forms.DataGridViewTextBoxColumn();
 			this._columnLastChangedBy = new System.Windows.Forms.DataGridViewTextBoxColumn();
-			this._dataGridViewFindToolStrip = new global::ProSuite.Commons.UI.WinForms.Controls.DataGridViewFindToolStrip();
-			this.toolStrip1 = new global::ProSuite.Commons.UI.WinForms.Controls.ToolStripEx();
+			this._dataGridViewFindToolStrip = new ProSuite.Commons.UI.WinForms.Controls.DataGridViewFindToolStrip();
+			this.toolStrip1 = new ProSuite.Commons.UI.WinForms.Controls.ToolStripEx();
 			this._toolStripButtonSelectAll = new System.Windows.Forms.ToolStripButton();
 			this._toolStripButtonSelectNone = new System.Windows.Forms.ToolStripButton();
 			this._groupBoxExportTo = new System.Windows.Forms.GroupBox();
@@ -55,15 +55,15 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 			this._labelFile = new System.Windows.Forms.Label();
 			this._radioButtonDirectory = new System.Windows.Forms.RadioButton();
 			this._radioButtonSingleFile = new System.Windows.Forms.RadioButton();
-			this._fileSystemPathControlDirectory = new global::ProSuite.Commons.UI.WinForms.Controls.FileSystemPathControl();
-			this._fileSystemPathControlSingleFile = new global::ProSuite.Commons.UI.WinForms.Controls.FileSystemPathControl();
+			this._fileSystemPathControlDirectory = new ProSuite.Commons.UI.WinForms.Controls.FileSystemPathControl();
+			this._fileSystemPathControlSingleFile = new ProSuite.Commons.UI.WinForms.Controls.FileSystemPathControl();
 			this._groupBoxOptions = new System.Windows.Forms.GroupBox();
 			this._groupBoxCategories = new System.Windows.Forms.GroupBox();
 			this._radioButtonExportReferencedCategories = new System.Windows.Forms.RadioButton();
 			this._radioButtonExportAllCategories = new System.Windows.Forms.RadioButton();
-			this._groupBoxTestDescriptors = new System.Windows.Forms.GroupBox();
-			this._radioButtonExportReferencedTestDescriptors = new System.Windows.Forms.RadioButton();
-			this._radioButtonExportAllTestDescriptors = new System.Windows.Forms.RadioButton();
+			this._groupBoxDescriptors = new System.Windows.Forms.GroupBox();
+			this._radioButtonExportReferencedDescriptors = new System.Windows.Forms.RadioButton();
+			this._radioButtonExportAllDescriptors = new System.Windows.Forms.RadioButton();
 			this._checkBoxExportNotes = new System.Windows.Forms.CheckBox();
 			this._checkBoxExportConnectionFilePaths = new System.Windows.Forms.CheckBox();
 			this._checkBoxExportWorkspaceConnections = new System.Windows.Forms.CheckBox();
@@ -76,7 +76,7 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 			this._groupBoxExportTo.SuspendLayout();
 			this._groupBoxOptions.SuspendLayout();
 			this._groupBoxCategories.SuspendLayout();
-			this._groupBoxTestDescriptors.SuspendLayout();
+			this._groupBoxDescriptors.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this._errorProvider)).BeginInit();
 			this.SuspendLayout();
 			// 
@@ -84,9 +84,10 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 			// 
 			this._buttonCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
 			this._buttonCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-			this._buttonCancel.Location = new System.Drawing.Point(517, 642);
+			this._buttonCancel.Location = new System.Drawing.Point(603, 741);
+			this._buttonCancel.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
 			this._buttonCancel.Name = "_buttonCancel";
-			this._buttonCancel.Size = new System.Drawing.Size(75, 23);
+			this._buttonCancel.Size = new System.Drawing.Size(88, 27);
 			this._buttonCancel.TabIndex = 4;
 			this._buttonCancel.Text = "Cancel";
 			this._buttonCancel.UseVisualStyleBackColor = true;
@@ -95,9 +96,10 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 			// _buttonOK
 			// 
 			this._buttonOK.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-			this._buttonOK.Location = new System.Drawing.Point(436, 642);
+			this._buttonOK.Location = new System.Drawing.Point(509, 741);
+			this._buttonOK.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
 			this._buttonOK.Name = "_buttonOK";
-			this._buttonOK.Size = new System.Drawing.Size(75, 23);
+			this._buttonOK.Size = new System.Drawing.Size(88, 27);
 			this._buttonOK.TabIndex = 3;
 			this._buttonOK.Text = "OK";
 			this._buttonOK.UseVisualStyleBackColor = true;
@@ -107,9 +109,10 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 			// 
 			this._statusStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this._toolStripStatusLabel});
-			this._statusStrip.Location = new System.Drawing.Point(0, 673);
+			this._statusStrip.Location = new System.Drawing.Point(0, 780);
 			this._statusStrip.Name = "_statusStrip";
-			this._statusStrip.Size = new System.Drawing.Size(604, 22);
+			this._statusStrip.Padding = new System.Windows.Forms.Padding(1, 0, 16, 0);
+			this._statusStrip.Size = new System.Drawing.Size(705, 22);
 			this._statusStrip.TabIndex = 2;
 			this._statusStrip.Text = "statusStrip1";
 			// 
@@ -127,9 +130,11 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 			this._groupBoxQualitySpecifications.Controls.Add(this._dataGridView);
 			this._groupBoxQualitySpecifications.Controls.Add(this._dataGridViewFindToolStrip);
 			this._groupBoxQualitySpecifications.Controls.Add(this.toolStrip1);
-			this._groupBoxQualitySpecifications.Location = new System.Drawing.Point(12, 157);
+			this._groupBoxQualitySpecifications.Location = new System.Drawing.Point(14, 181);
+			this._groupBoxQualitySpecifications.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
 			this._groupBoxQualitySpecifications.Name = "_groupBoxQualitySpecifications";
-			this._groupBoxQualitySpecifications.Size = new System.Drawing.Size(580, 210);
+			this._groupBoxQualitySpecifications.Padding = new System.Windows.Forms.Padding(4, 3, 4, 3);
+			this._groupBoxQualitySpecifications.Size = new System.Drawing.Size(677, 242);
 			this._groupBoxQualitySpecifications.TabIndex = 1;
 			this._groupBoxQualitySpecifications.TabStop = false;
 			this._groupBoxQualitySpecifications.Text = "Quality specifications";
@@ -153,11 +158,12 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
             this._columnLastChangedBy});
 			this._dataGridView.Dock = System.Windows.Forms.DockStyle.Fill;
 			this._dataGridView.EditMode = System.Windows.Forms.DataGridViewEditMode.EditOnEnter;
-			this._dataGridView.Location = new System.Drawing.Point(3, 68);
+			this._dataGridView.Location = new System.Drawing.Point(4, 75);
+			this._dataGridView.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
 			this._dataGridView.Name = "_dataGridView";
 			this._dataGridView.RowHeadersVisible = false;
 			this._dataGridView.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-			this._dataGridView.Size = new System.Drawing.Size(574, 139);
+			this._dataGridView.Size = new System.Drawing.Size(669, 164);
 			this._dataGridView.TabIndex = 2;
 			this._dataGridView.FilteredRowsChanged += new System.EventHandler(this._dataGridView_FilteredRowsChanged);
 			this._dataGridView.CellValueChanged += new System.Windows.Forms.DataGridViewCellEventHandler(this._dataGridView_CellValueChanged);
@@ -194,7 +200,7 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 			this._columnName.MinimumWidth = 40;
 			this._columnName.Name = "_columnName";
 			this._columnName.ReadOnly = true;
-			this._columnName.Width = 60;
+			this._columnName.Width = 64;
 			// 
 			// _columnCategory
 			// 
@@ -222,7 +228,7 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 			this._columnCreated.HeaderText = "Created";
 			this._columnCreated.MinimumWidth = 30;
 			this._columnCreated.Name = "_columnCreated";
-			this._columnCreated.Width = 69;
+			this._columnCreated.Width = 73;
 			// 
 			// _columnCreatedBy
 			// 
@@ -231,7 +237,7 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 			this._columnCreatedBy.HeaderText = "By";
 			this._columnCreatedBy.MinimumWidth = 30;
 			this._columnCreatedBy.Name = "_columnCreatedBy";
-			this._columnCreatedBy.Width = 44;
+			this._columnCreatedBy.Width = 45;
 			// 
 			// _columnLastChanged
 			// 
@@ -240,7 +246,7 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 			this._columnLastChanged.HeaderText = "Changed";
 			this._columnLastChanged.MinimumWidth = 30;
 			this._columnLastChanged.Name = "_columnLastChanged";
-			this._columnLastChanged.Width = 75;
+			this._columnLastChanged.Width = 80;
 			// 
 			// _columnLastChangedBy
 			// 
@@ -249,7 +255,7 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 			this._columnLastChangedBy.HeaderText = "By";
 			this._columnLastChangedBy.MinimumWidth = 30;
 			this._columnLastChangedBy.Name = "_columnLastChangedBy";
-			this._columnLastChangedBy.Width = 44;
+			this._columnLastChangedBy.Width = 45;
 			// 
 			// _dataGridViewFindToolStrip
 			// 
@@ -257,14 +263,14 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 			this._dataGridViewFindToolStrip.ClickThrough = true;
 			this._dataGridViewFindToolStrip.FilterRows = false;
 			this._dataGridViewFindToolStrip.FindText = "";
-			this._dataGridViewFindToolStrip.FindTextBoxWidth = 150;
+			this._dataGridViewFindToolStrip.FindTextBoxWidth = 174;
 			this._dataGridViewFindToolStrip.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
-			this._dataGridViewFindToolStrip.Location = new System.Drawing.Point(3, 41);
+			this._dataGridViewFindToolStrip.Location = new System.Drawing.Point(4, 44);
 			this._dataGridViewFindToolStrip.MatchCase = false;
 			this._dataGridViewFindToolStrip.Name = "_dataGridViewFindToolStrip";
 			this._dataGridViewFindToolStrip.Observer = null;
 			this._dataGridViewFindToolStrip.RenderMode = System.Windows.Forms.ToolStripRenderMode.System;
-			this._dataGridViewFindToolStrip.Size = new System.Drawing.Size(574, 27);
+			this._dataGridViewFindToolStrip.Size = new System.Drawing.Size(669, 31);
 			this._dataGridViewFindToolStrip.TabIndex = 1;
 			this._dataGridViewFindToolStrip.Text = "dataGridViewFindToolStrip1";
 			// 
@@ -275,10 +281,10 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 			this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this._toolStripButtonSelectAll,
             this._toolStripButtonSelectNone});
-			this.toolStrip1.Location = new System.Drawing.Point(3, 16);
+			this.toolStrip1.Location = new System.Drawing.Point(4, 19);
 			this.toolStrip1.Name = "toolStrip1";
 			this.toolStrip1.RenderMode = System.Windows.Forms.ToolStripRenderMode.System;
-			this.toolStrip1.Size = new System.Drawing.Size(574, 25);
+			this.toolStrip1.Size = new System.Drawing.Size(669, 25);
 			this.toolStrip1.TabIndex = 0;
 			this.toolStrip1.Text = "toolStrip1";
 			// 
@@ -308,9 +314,11 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 			this._groupBoxExportTo.Controls.Add(this._radioButtonSingleFile);
 			this._groupBoxExportTo.Controls.Add(this._fileSystemPathControlDirectory);
 			this._groupBoxExportTo.Controls.Add(this._fileSystemPathControlSingleFile);
-			this._groupBoxExportTo.Location = new System.Drawing.Point(12, 12);
+			this._groupBoxExportTo.Location = new System.Drawing.Point(14, 14);
+			this._groupBoxExportTo.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
 			this._groupBoxExportTo.Name = "_groupBoxExportTo";
-			this._groupBoxExportTo.Size = new System.Drawing.Size(580, 139);
+			this._groupBoxExportTo.Padding = new System.Windows.Forms.Padding(4, 3, 4, 3);
+			this._groupBoxExportTo.Size = new System.Drawing.Size(677, 160);
 			this._groupBoxExportTo.TabIndex = 0;
 			this._groupBoxExportTo.TabStop = false;
 			this._groupBoxExportTo.Text = "Export to";
@@ -318,27 +326,30 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 			// _labelDirectory
 			// 
 			this._labelDirectory.AutoSize = true;
-			this._labelDirectory.Location = new System.Drawing.Point(33, 104);
+			this._labelDirectory.Location = new System.Drawing.Point(38, 120);
+			this._labelDirectory.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
 			this._labelDirectory.Name = "_labelDirectory";
-			this._labelDirectory.Size = new System.Drawing.Size(52, 13);
+			this._labelDirectory.Size = new System.Drawing.Size(58, 15);
 			this._labelDirectory.TabIndex = 8;
 			this._labelDirectory.Text = "Directory:";
 			// 
 			// _labelFile
 			// 
 			this._labelFile.AutoSize = true;
-			this._labelFile.Location = new System.Drawing.Point(59, 49);
+			this._labelFile.Location = new System.Drawing.Point(69, 57);
+			this._labelFile.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
 			this._labelFile.Name = "_labelFile";
-			this._labelFile.Size = new System.Drawing.Size(26, 13);
+			this._labelFile.Size = new System.Drawing.Size(28, 15);
 			this._labelFile.TabIndex = 8;
 			this._labelFile.Text = "File:";
 			// 
 			// _radioButtonDirectory
 			// 
 			this._radioButtonDirectory.AutoSize = true;
-			this._radioButtonDirectory.Location = new System.Drawing.Point(16, 79);
+			this._radioButtonDirectory.Location = new System.Drawing.Point(19, 91);
+			this._radioButtonDirectory.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
 			this._radioButtonDirectory.Name = "_radioButtonDirectory";
-			this._radioButtonDirectory.Size = new System.Drawing.Size(281, 17);
+			this._radioButtonDirectory.Size = new System.Drawing.Size(319, 19);
 			this._radioButtonDirectory.TabIndex = 2;
 			this._radioButtonDirectory.TabStop = true;
 			this._radioButtonDirectory.Text = "directory with one file per exported quality specification";
@@ -348,9 +359,10 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 			// 
 			this._radioButtonSingleFile.AutoSize = true;
 			this._radioButtonSingleFile.Checked = true;
-			this._radioButtonSingleFile.Location = new System.Drawing.Point(16, 24);
+			this._radioButtonSingleFile.Location = new System.Drawing.Point(19, 28);
+			this._radioButtonSingleFile.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
 			this._radioButtonSingleFile.Name = "_radioButtonSingleFile";
-			this._radioButtonSingleFile.Size = new System.Drawing.Size(277, 17);
+			this._radioButtonSingleFile.Size = new System.Drawing.Size(314, 19);
 			this._radioButtonSingleFile.TabIndex = 0;
 			this._radioButtonSingleFile.TabStop = true;
 			this._radioButtonSingleFile.Text = "single file containing all exported quality specifications";
@@ -361,16 +373,17 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 			// 
 			this._fileSystemPathControlDirectory.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-			this._fileSystemPathControlDirectory.ControlPathType = global::ProSuite.Commons.UI.WinForms.Controls.FileSystemPathType.ChooseFolder;
+			this._fileSystemPathControlDirectory.ControlPathType = ProSuite.Commons.UI.WinForms.Controls.FileSystemPathType.ChooseFolder;
 			this._fileSystemPathControlDirectory.FileCheckFileExists = false;
 			this._fileSystemPathControlDirectory.FileCheckPathExists = true;
 			this._fileSystemPathControlDirectory.FileDefaultExtension = null;
 			this._fileSystemPathControlDirectory.FileFilter = null;
 			this._fileSystemPathControlDirectory.FolderGroupTitle = "Choose Folder";
 			this._fileSystemPathControlDirectory.FolderShowNewFolderButton = true;
-			this._fileSystemPathControlDirectory.Location = new System.Drawing.Point(91, 99);
+			this._fileSystemPathControlDirectory.Location = new System.Drawing.Point(106, 114);
+			this._fileSystemPathControlDirectory.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
 			this._fileSystemPathControlDirectory.Name = "_fileSystemPathControlDirectory";
-			this._fileSystemPathControlDirectory.Size = new System.Drawing.Size(466, 26);
+			this._fileSystemPathControlDirectory.Size = new System.Drawing.Size(544, 30);
 			this._fileSystemPathControlDirectory.TabIndex = 3;
 			this._fileSystemPathControlDirectory.ValueChanged += new System.EventHandler(this._fileSystemPathControlDirectory_ValueChanged);
 			this._fileSystemPathControlDirectory.LeaveTextBox += new System.EventHandler(this._fileSystemPathControlDirectory_LeaveTextBox);
@@ -379,16 +392,17 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 			// 
 			this._fileSystemPathControlSingleFile.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-			this._fileSystemPathControlSingleFile.ControlPathType = global::ProSuite.Commons.UI.WinForms.Controls.FileSystemPathType.ChooseFileName;
+			this._fileSystemPathControlSingleFile.ControlPathType = ProSuite.Commons.UI.WinForms.Controls.FileSystemPathType.ChooseFileName;
 			this._fileSystemPathControlSingleFile.FileCheckFileExists = false;
 			this._fileSystemPathControlSingleFile.FileCheckPathExists = true;
 			this._fileSystemPathControlSingleFile.FileDefaultExtension = null;
 			this._fileSystemPathControlSingleFile.FileFilter = null;
 			this._fileSystemPathControlSingleFile.FolderGroupTitle = "Choose Folder";
 			this._fileSystemPathControlSingleFile.FolderShowNewFolderButton = true;
-			this._fileSystemPathControlSingleFile.Location = new System.Drawing.Point(91, 44);
+			this._fileSystemPathControlSingleFile.Location = new System.Drawing.Point(106, 51);
+			this._fileSystemPathControlSingleFile.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
 			this._fileSystemPathControlSingleFile.Name = "_fileSystemPathControlSingleFile";
-			this._fileSystemPathControlSingleFile.Size = new System.Drawing.Size(466, 26);
+			this._fileSystemPathControlSingleFile.Size = new System.Drawing.Size(544, 30);
 			this._fileSystemPathControlSingleFile.TabIndex = 1;
 			this._fileSystemPathControlSingleFile.ValueChanged += new System.EventHandler(this._fileSystemPathControlFile_ValueChanged);
 			this._fileSystemPathControlSingleFile.LeaveTextBox += new System.EventHandler(this._fileSystemPathControlFile_LeaveTextBox);
@@ -398,14 +412,16 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 			this._groupBoxOptions.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
 			this._groupBoxOptions.Controls.Add(this._groupBoxCategories);
-			this._groupBoxOptions.Controls.Add(this._groupBoxTestDescriptors);
+			this._groupBoxOptions.Controls.Add(this._groupBoxDescriptors);
 			this._groupBoxOptions.Controls.Add(this._checkBoxExportNotes);
 			this._groupBoxOptions.Controls.Add(this._checkBoxExportConnectionFilePaths);
 			this._groupBoxOptions.Controls.Add(this._checkBoxExportWorkspaceConnections);
 			this._groupBoxOptions.Controls.Add(this._checkBoxExportMetadata);
-			this._groupBoxOptions.Location = new System.Drawing.Point(13, 373);
+			this._groupBoxOptions.Location = new System.Drawing.Point(15, 430);
+			this._groupBoxOptions.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
 			this._groupBoxOptions.Name = "_groupBoxOptions";
-			this._groupBoxOptions.Size = new System.Drawing.Size(579, 263);
+			this._groupBoxOptions.Padding = new System.Windows.Forms.Padding(4, 3, 4, 3);
+			this._groupBoxOptions.Size = new System.Drawing.Size(676, 303);
 			this._groupBoxOptions.TabIndex = 2;
 			this._groupBoxOptions.TabStop = false;
 			this._groupBoxOptions.Text = "Options";
@@ -416,9 +432,11 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
             | System.Windows.Forms.AnchorStyles.Right)));
 			this._groupBoxCategories.Controls.Add(this._radioButtonExportReferencedCategories);
 			this._groupBoxCategories.Controls.Add(this._radioButtonExportAllCategories);
-			this._groupBoxCategories.Location = new System.Drawing.Point(6, 187);
+			this._groupBoxCategories.Location = new System.Drawing.Point(7, 216);
+			this._groupBoxCategories.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
 			this._groupBoxCategories.Name = "_groupBoxCategories";
-			this._groupBoxCategories.Size = new System.Drawing.Size(567, 69);
+			this._groupBoxCategories.Padding = new System.Windows.Forms.Padding(4, 3, 4, 3);
+			this._groupBoxCategories.Size = new System.Drawing.Size(662, 80);
 			this._groupBoxCategories.TabIndex = 5;
 			this._groupBoxCategories.TabStop = false;
 			this._groupBoxCategories.Text = "Data quality categories";
@@ -427,9 +445,10 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 			// 
 			this._radioButtonExportReferencedCategories.AutoSize = true;
 			this._radioButtonExportReferencedCategories.Checked = true;
-			this._radioButtonExportReferencedCategories.Location = new System.Drawing.Point(9, 19);
+			this._radioButtonExportReferencedCategories.Location = new System.Drawing.Point(10, 22);
+			this._radioButtonExportReferencedCategories.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
 			this._radioButtonExportReferencedCategories.Name = "_radioButtonExportReferencedCategories";
-			this._radioButtonExportReferencedCategories.Size = new System.Drawing.Size(201, 17);
+			this._radioButtonExportReferencedCategories.Size = new System.Drawing.Size(221, 19);
 			this._radioButtonExportReferencedCategories.TabIndex = 0;
 			this._radioButtonExportReferencedCategories.TabStop = true;
 			this._radioButtonExportReferencedCategories.Text = "Export only the referenced categories";
@@ -438,64 +457,71 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 			// _radioButtonExportAllCategories
 			// 
 			this._radioButtonExportAllCategories.AutoSize = true;
-			this._radioButtonExportAllCategories.Location = new System.Drawing.Point(9, 42);
+			this._radioButtonExportAllCategories.Location = new System.Drawing.Point(10, 48);
+			this._radioButtonExportAllCategories.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
 			this._radioButtonExportAllCategories.Name = "_radioButtonExportAllCategories";
-			this._radioButtonExportAllCategories.Size = new System.Drawing.Size(120, 17);
+			this._radioButtonExportAllCategories.Size = new System.Drawing.Size(131, 19);
 			this._radioButtonExportAllCategories.TabIndex = 1;
 			this._radioButtonExportAllCategories.Text = "Export all categories";
 			this._radioButtonExportAllCategories.UseVisualStyleBackColor = true;
 			// 
-			// _groupBoxTestDescriptors
+			// _groupBoxDescriptors
 			// 
-			this._groupBoxTestDescriptors.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+			this._groupBoxDescriptors.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-			this._groupBoxTestDescriptors.Controls.Add(this._radioButtonExportReferencedTestDescriptors);
-			this._groupBoxTestDescriptors.Controls.Add(this._radioButtonExportAllTestDescriptors);
-			this._groupBoxTestDescriptors.Location = new System.Drawing.Point(6, 112);
-			this._groupBoxTestDescriptors.Name = "_groupBoxTestDescriptors";
-			this._groupBoxTestDescriptors.Size = new System.Drawing.Size(567, 69);
-			this._groupBoxTestDescriptors.TabIndex = 4;
-			this._groupBoxTestDescriptors.TabStop = false;
-			this._groupBoxTestDescriptors.Text = "Test descriptors";
+			this._groupBoxDescriptors.Controls.Add(this._radioButtonExportReferencedDescriptors);
+			this._groupBoxDescriptors.Controls.Add(this._radioButtonExportAllDescriptors);
+			this._groupBoxDescriptors.Location = new System.Drawing.Point(7, 129);
+			this._groupBoxDescriptors.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+			this._groupBoxDescriptors.Name = "_groupBoxDescriptors";
+			this._groupBoxDescriptors.Padding = new System.Windows.Forms.Padding(4, 3, 4, 3);
+			this._groupBoxDescriptors.Size = new System.Drawing.Size(662, 80);
+			this._groupBoxDescriptors.TabIndex = 4;
+			this._groupBoxDescriptors.TabStop = false;
+			this._groupBoxDescriptors.Text = "Algorithm descriptors";
 			// 
-			// _radioButtonExportReferencedTestDescriptors
+			// _radioButtonExportReferencedDescriptors
 			// 
-			this._radioButtonExportReferencedTestDescriptors.AutoSize = true;
-			this._radioButtonExportReferencedTestDescriptors.Checked = true;
-			this._radioButtonExportReferencedTestDescriptors.Location = new System.Drawing.Point(9, 19);
-			this._radioButtonExportReferencedTestDescriptors.Name = "_radioButtonExportReferencedTestDescriptors";
-			this._radioButtonExportReferencedTestDescriptors.Size = new System.Drawing.Size(223, 17);
-			this._radioButtonExportReferencedTestDescriptors.TabIndex = 0;
-			this._radioButtonExportReferencedTestDescriptors.TabStop = true;
-			this._radioButtonExportReferencedTestDescriptors.Text = "Export only the referenced test descriptors";
-			this._radioButtonExportReferencedTestDescriptors.UseVisualStyleBackColor = true;
+			this._radioButtonExportReferencedDescriptors.AutoSize = true;
+			this._radioButtonExportReferencedDescriptors.Checked = true;
+			this._radioButtonExportReferencedDescriptors.Location = new System.Drawing.Point(10, 22);
+			this._radioButtonExportReferencedDescriptors.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+			this._radioButtonExportReferencedDescriptors.Name = "_radioButtonExportReferencedDescriptors";
+			this._radioButtonExportReferencedDescriptors.Size = new System.Drawing.Size(225, 19);
+			this._radioButtonExportReferencedDescriptors.TabIndex = 0;
+			this._radioButtonExportReferencedDescriptors.TabStop = true;
+			this._radioButtonExportReferencedDescriptors.Text = "Export only the referenced descriptors";
+			this._radioButtonExportReferencedDescriptors.UseVisualStyleBackColor = true;
 			// 
-			// _radioButtonExportAllTestDescriptors
+			// _radioButtonExportAllDescriptors
 			// 
-			this._radioButtonExportAllTestDescriptors.AutoSize = true;
-			this._radioButtonExportAllTestDescriptors.Location = new System.Drawing.Point(9, 42);
-			this._radioButtonExportAllTestDescriptors.Name = "_radioButtonExportAllTestDescriptors";
-			this._radioButtonExportAllTestDescriptors.Size = new System.Drawing.Size(142, 17);
-			this._radioButtonExportAllTestDescriptors.TabIndex = 1;
-			this._radioButtonExportAllTestDescriptors.Text = "Export all test descriptors";
-			this._radioButtonExportAllTestDescriptors.UseVisualStyleBackColor = true;
+			this._radioButtonExportAllDescriptors.AutoSize = true;
+			this._radioButtonExportAllDescriptors.Location = new System.Drawing.Point(10, 48);
+			this._radioButtonExportAllDescriptors.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+			this._radioButtonExportAllDescriptors.Name = "_radioButtonExportAllDescriptors";
+			this._radioButtonExportAllDescriptors.Size = new System.Drawing.Size(135, 19);
+			this._radioButtonExportAllDescriptors.TabIndex = 1;
+			this._radioButtonExportAllDescriptors.Text = "Export all descriptors";
+			this._radioButtonExportAllDescriptors.UseVisualStyleBackColor = true;
 			// 
 			// _checkBoxExportNotes
 			// 
 			this._checkBoxExportNotes.AutoSize = true;
-			this._checkBoxExportNotes.Location = new System.Drawing.Point(15, 89);
+			this._checkBoxExportNotes.Location = new System.Drawing.Point(18, 103);
+			this._checkBoxExportNotes.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
 			this._checkBoxExportNotes.Name = "_checkBoxExportNotes";
-			this._checkBoxExportNotes.Size = new System.Drawing.Size(278, 17);
+			this._checkBoxExportNotes.Size = new System.Drawing.Size(92, 19);
 			this._checkBoxExportNotes.TabIndex = 3;
-			this._checkBoxExportNotes.Text = "Export notes (quality conditions, quality specifications)";
+			this._checkBoxExportNotes.Text = "Export notes";
 			this._checkBoxExportNotes.UseVisualStyleBackColor = true;
 			// 
 			// _checkBoxExportConnectionFilePaths
 			// 
 			this._checkBoxExportConnectionFilePaths.AutoSize = true;
-			this._checkBoxExportConnectionFilePaths.Location = new System.Drawing.Point(35, 66);
+			this._checkBoxExportConnectionFilePaths.Location = new System.Drawing.Point(41, 76);
+			this._checkBoxExportConnectionFilePaths.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
 			this._checkBoxExportConnectionFilePaths.Name = "_checkBoxExportConnectionFilePaths";
-			this._checkBoxExportConnectionFilePaths.Size = new System.Drawing.Size(332, 17);
+			this._checkBoxExportConnectionFilePaths.Size = new System.Drawing.Size(357, 19);
 			this._checkBoxExportConnectionFilePaths.TabIndex = 2;
 			this._checkBoxExportConnectionFilePaths.Text = "Use file paths to connection files (ArcSDE: *.sde; OLE DB: *.odc)";
 			this._checkBoxExportConnectionFilePaths.UseVisualStyleBackColor = true;
@@ -503,9 +529,10 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 			// _checkBoxExportWorkspaceConnections
 			// 
 			this._checkBoxExportWorkspaceConnections.AutoSize = true;
-			this._checkBoxExportWorkspaceConnections.Location = new System.Drawing.Point(15, 43);
+			this._checkBoxExportWorkspaceConnections.Location = new System.Drawing.Point(18, 50);
+			this._checkBoxExportWorkspaceConnections.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
 			this._checkBoxExportWorkspaceConnections.Name = "_checkBoxExportWorkspaceConnections";
-			this._checkBoxExportWorkspaceConnections.Size = new System.Drawing.Size(221, 17);
+			this._checkBoxExportWorkspaceConnections.Size = new System.Drawing.Size(248, 19);
 			this._checkBoxExportWorkspaceConnections.TabIndex = 1;
 			this._checkBoxExportWorkspaceConnections.Text = "Export workspace connection information";
 			this._checkBoxExportWorkspaceConnections.UseVisualStyleBackColor = true;
@@ -514,9 +541,10 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 			// _checkBoxExportMetadata
 			// 
 			this._checkBoxExportMetadata.AutoSize = true;
-			this._checkBoxExportMetadata.Location = new System.Drawing.Point(15, 20);
+			this._checkBoxExportMetadata.Location = new System.Drawing.Point(18, 23);
+			this._checkBoxExportMetadata.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
 			this._checkBoxExportMetadata.Name = "_checkBoxExportMetadata";
-			this._checkBoxExportMetadata.Size = new System.Drawing.Size(300, 17);
+			this._checkBoxExportMetadata.Size = new System.Drawing.Size(329, 19);
 			this._checkBoxExportMetadata.TabIndex = 0;
 			this._checkBoxExportMetadata.Text = "Export metadata (User and Date of Creation/Last Change)";
 			this._checkBoxExportMetadata.UseVisualStyleBackColor = true;
@@ -529,10 +557,10 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 			// ExportQualitySpecificationsForm
 			// 
 			this.AcceptButton = this._buttonOK;
-			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+			this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.CancelButton = this._buttonCancel;
-			this.ClientSize = new System.Drawing.Size(604, 695);
+			this.ClientSize = new System.Drawing.Size(705, 802);
 			this.Controls.Add(this._groupBoxOptions);
 			this.Controls.Add(this._groupBoxExportTo);
 			this.Controls.Add(this._groupBoxQualitySpecifications);
@@ -540,8 +568,9 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 			this.Controls.Add(this._buttonOK);
 			this.Controls.Add(this._buttonCancel);
 			this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.SizableToolWindow;
+			this.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
 			this.MinimizeBox = false;
-			this.MinimumSize = new System.Drawing.Size(490, 650);
+			this.MinimumSize = new System.Drawing.Size(569, 744);
 			this.Name = "ExportQualitySpecificationsForm";
 			this.ShowInTaskbar = false;
 			this.Text = "Export Quality Specifications";
@@ -559,8 +588,8 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 			this._groupBoxOptions.PerformLayout();
 			this._groupBoxCategories.ResumeLayout(false);
 			this._groupBoxCategories.PerformLayout();
-			this._groupBoxTestDescriptors.ResumeLayout(false);
-			this._groupBoxTestDescriptors.PerformLayout();
+			this._groupBoxDescriptors.ResumeLayout(false);
+			this._groupBoxDescriptors.PerformLayout();
 			((System.ComponentModel.ISupportInitialize)(this._errorProvider)).EndInit();
 			this.ResumeLayout(false);
 			this.PerformLayout();
@@ -582,8 +611,8 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 		private System.Windows.Forms.CheckBox _checkBoxExportMetadata;
 		private System.Windows.Forms.CheckBox _checkBoxExportWorkspaceConnections;
 		private ToolStripEx toolStrip1;
-		private System.Windows.Forms.RadioButton _radioButtonExportReferencedTestDescriptors;
-		private System.Windows.Forms.RadioButton _radioButtonExportAllTestDescriptors;
+		private System.Windows.Forms.RadioButton _radioButtonExportReferencedDescriptors;
+		private System.Windows.Forms.RadioButton _radioButtonExportAllDescriptors;
 		private System.Windows.Forms.ErrorProvider _errorProvider;
 		private System.Windows.Forms.Label _labelDirectory;
 		private System.Windows.Forms.Label _labelFile;
@@ -592,7 +621,7 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 		private FileSystemPathControl _fileSystemPathControlDirectory;
 		private DoubleBufferedDataGridView _dataGridView;
 		private DataGridViewFindToolStrip _dataGridViewFindToolStrip;
-		private System.Windows.Forms.GroupBox _groupBoxTestDescriptors;
+		private System.Windows.Forms.GroupBox _groupBoxDescriptors;
 		private System.Windows.Forms.GroupBox _groupBoxCategories;
 		private System.Windows.Forms.RadioButton _radioButtonExportReferencedCategories;
 		private System.Windows.Forms.RadioButton _radioButtonExportAllCategories;

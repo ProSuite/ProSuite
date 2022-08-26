@@ -12,7 +12,7 @@ using ProSuite.Commons.UI.ScreenBinding.Elements;
 using ProSuite.Commons.UI.WinForms.Controls;
 using ProSuite.DdxEditor.Content.QA.TestDescriptors;
 using ProSuite.DdxEditor.Framework.ItemViews;
-using ProSuite.DomainModel.AO.QA;
+using ProSuite.DomainModel.AO.QA.TestReport;
 using ProSuite.DomainModel.Core;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Core;
@@ -27,6 +27,8 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 	public partial class InstanceConfigurationControl : UserControl, IInstanceConfigurationView
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
+		public int LastSplitterDistance => _splitContainer.SplitterDistance;
 
 		[NotNull] private readonly ScreenBinder<InstanceConfiguration> _binder;
 		[NotNull] private readonly Latch _latch = new Latch();
@@ -79,9 +81,8 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			_splitContainer.SuspendLayout();
 			_instanceConfigTableViewControlPanel.SuspendLayout();
 
-			_splitContainer.Panel2.Controls.Add(instanceConfigTableViewControl);
-			_splitContainer.Size = new Size(569, 282);
-			_splitContainer.SplitterDistance = 155;
+			_panelParametersEdit.Controls.Add(instanceConfigTableViewControl);
+
 			_instanceConfigTableViewControlPanel.Controls.RemoveByKey(
 				"_tabControlParameterValues");
 			_instanceConfigTableViewControlPanel.Controls.Add(_splitContainer);
@@ -106,8 +107,8 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			       .To(_textBoxUrl)
 			       .WithLabel(_labelUrl);
 
-			//_binder.Bind(m => m.Notes)
-			//       .To(_textBoxNotes);
+			_binder.Bind(m => m.Notes)
+			       .To(_textBoxNotes);
 
 			_binder.AddElement(new ObjectReferenceScreenElement(
 				                   _binder.GetAccessor(m => m.InstanceDescriptor),
@@ -119,8 +120,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 
 			_parameterTbl = TestParameterGridUtils.BindParametersDataGridView(
 				_dataGridViewParamGrid);
-
-			_propertyGrid.ToolbarVisible = false;
+			
 
 			_qSpecGridHandler =
 				new BoundDataGridHandler<InstanceConfigurationReferenceTableRow>(
@@ -171,7 +171,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 						: new LinkArea(0, 0);
 		}
 
-		void IInstanceConfigurationView.BindToQualityConditionReferences(
+		void IInstanceConfigurationView.BindToInstanceConfigReferences(
 			IList<InstanceConfigurationReferenceTableRow> tableRows)
 		{
 			if (_qSpecStateManager == null)
@@ -310,21 +310,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			_lastSelectedParameterValuesTab =
 				TabControlUtils.GetSelectedTabPageName(_tabControlParameterValues);
 		}
-
-		private void _propertyGrid_PropertyValueChanged(object s,
-		                                                PropertyValueChangedEventArgs e)
-		{
-			var configurator = (ITestConfigurator) _propertyGrid.SelectedObject;
-			if (_propertyGrid.SelectedGridItem.Expandable)
-			{
-				_propertyGrid.SelectedGridItem.Expanded = true;
-			}
-
-			Observer?.SetTestParameterValues(configurator.GetTestParameterValues());
-
-			Observer?.NotifyChanged(true);
-		}
-
+		
 		private void _dataGridViewQualitySpecifications_CellValueChanged(
 			object sender, DataGridViewCellEventArgs e)
 		{
@@ -402,6 +388,17 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 					_msg.Warn("Error binding table rows", ex);
 				}
 			}
+		}
+
+		private void _linkDocumentation_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+		{
+			Observer.DescriptorDocumentationLinkClicked();
+
+		}
+
+		private void _splitContainer_SplitterMoved(object sender, SplitterEventArgs e)
+		{
+
 		}
 	}
 }

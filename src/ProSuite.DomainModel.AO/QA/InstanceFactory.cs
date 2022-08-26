@@ -465,34 +465,7 @@ namespace ProSuite.DomainModel.AO.QA
 			throw new InvalidOperationException(
 				"Cannot handle multi dimensional parameter array");
 		}
-
-		[CanBeNull]
-		private static List<IRowFilter> GetRowFilters(
-			[CanBeNull] IList<RowFilterConfiguration> rowFilterConfigurations,
-			[NotNull] IOpenDataset context)
-		{
-			if (rowFilterConfigurations == null)
-			{
-				return null;
-			}
-
-			List<IRowFilter> filters = new List<IRowFilter>();
-			foreach (RowFilterConfiguration rowFilterConfig in rowFilterConfigurations)
-			{
-				RowFilterFactory rowFilterFactory =
-					InstanceFactoryUtils.CreateRowFilterFactory(rowFilterConfig);
-
-				Assert.NotNull(rowFilterFactory,
-				               $"Cannot create RowFilterFactory for {rowFilterConfig}");
-
-				IRowFilter filter = rowFilterFactory.Create(context, rowFilterConfig);
-				filter.Name = rowFilterConfig.Name;
-				filters.Add(filter);
-			}
-
-			return filters;
-		}
-
+		
 		protected class TableConstraint
 		{
 			/// <summary>

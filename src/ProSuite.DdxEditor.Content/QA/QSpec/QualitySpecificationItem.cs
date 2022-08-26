@@ -133,7 +133,7 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 			bool exportMetadata,
 			bool? exportWorkspaceConnections,
 			bool exportConnectionFilePaths,
-			bool exportAllTestDescriptors,
+			bool exportAllDescriptors,
 			bool exportAllCategories,
 			bool exportNotes)
 		{
@@ -143,7 +143,7 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 				exportMetadata,
 				exportWorkspaceConnections,
 				exportConnectionFilePaths,
-				exportAllTestDescriptors,
+				exportAllDescriptors,
 				exportAllCategories,
 				exportNotes,
 				_modelBuilder);
@@ -333,7 +333,7 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 
 			foreach (DataQualityCategory categoryToRefresh in categoriesToRefresh)
 			{
-				QualityConditionContainerUtils.RefreshAssignmentTarget(categoryToRefresh,
+				QualityConditionContainerUtils.RefreshQualityConditionAssignmentTarget(categoryToRefresh,
 					itemNavigation);
 			}
 

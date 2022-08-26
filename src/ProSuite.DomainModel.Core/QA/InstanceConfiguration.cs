@@ -26,12 +26,35 @@ namespace ProSuite.DomainModel.Core.QA
 
 		[UsedImplicitly] private InstanceDescriptor _instanceDescriptor;
 
+		[UsedImplicitly] [Obfuscation(Exclude = true)]
+		private DataQualityCategory _category;
+
+		[UsedImplicitly] [Obfuscation(Exclude = true)]
+		private string _url;
+
+		[UsedImplicitly] [Obfuscation(Exclude = true)]
+		private string _notes;
+
+		[UsedImplicitly] [Obfuscation(Exclude = true)]
+		private string _uuid;
+
 		#endregion
 
-		protected InstanceConfiguration() { }
+		/// <summary>
+		/// Initializes a new instance of the <see cref="InstanceConfiguration"/> class.
+		/// </summary>
+		/// <remarks>Required for NHibernate</remarks>
+		protected InstanceConfiguration(bool assignUuid)
+		{
+			if (assignUuid)
+			{
+				Uuid = GenerateUuid();
+			}
+		}
 
 		protected InstanceConfiguration([NotNull] string name,
 		                                [CanBeNull] string description = "")
+			: this(assignUuid: true)
 		{
 			Name = name;
 			Description = description;
@@ -48,8 +71,38 @@ namespace ProSuite.DomainModel.Core.QA
 			set => _instanceDescriptor = value;
 		}
 
-		// TODO: Persistence
-		public abstract DataQualityCategory Category { get; set; }
+		[Required]
+		public string Uuid
+		{
+			get { return _uuid; }
+			set
+			{
+				Assert.ArgumentNotNull(value, nameof(value));
+
+				_uuid = GetUuid(value);
+			}
+		}
+
+		[CanBeNull]
+		public DataQualityCategory Category
+		{
+			get { return _category; }
+			set { _category = value; }
+		}
+
+		[MaximumStringLength(2000)]
+		public string Url
+		{
+			get { return _url; }
+			set { _url = value; }
+		}
+
+		[MaximumStringLength(2000)]
+		public string Notes
+		{
+			get { return _notes; }
+			set { _notes = value; }
+		}
 
 		#region INamed, IAnnotated members
 
@@ -67,9 +120,6 @@ namespace ProSuite.DomainModel.Core.QA
 			get => _name;
 			set => _name = value;
 		}
-
-		// TODO: Persistence
-		public string Url { get; set; }
 
 		#endregion
 
@@ -96,7 +146,7 @@ namespace ProSuite.DomainModel.Core.QA
 		/// Gets the dataset referenced directly by the condition and optionally also the datasets
 		/// referenced indirectly (and recursively) by any filters or transformers.
 		/// </summary>
-		/// <param name="includeReferencedProcessors">include RowFilters, IssueFilters and Transformers</param>
+		/// <param name="includeReferencedProcessors">include IssueFilters and Transformers</param>
 		/// <param name="includeSourceDatasets">include Transformers of dataset sources</param>
 		/// <returns></returns>
 		[NotNull]
@@ -198,9 +248,46 @@ namespace ProSuite.DomainModel.Core.QA
 			return Name;
 		}
 
-		public InstanceConfiguration CreateCopy()
+		public abstract InstanceConfiguration CreateCopy();
+
+		[NotNull]
+		protected static string GetUuid([NotNull] string value)
 		{
-			throw new NotImplementedException();
+			// this fails if the string is not a valid guid:
+			var guid = new Guid(value);
+
+			return FormatUuid(guid);
+		}
+
+		[NotNull]
+		protected static string GenerateUuid()
+		{
+			return FormatUuid(Guid.NewGuid());
+		}
+
+		[NotNull]
+		protected static string FormatUuid(Guid guid)
+		{
+			// default format (no curly braces)
+			return guid.ToString().ToUpper();
+		}
+
+		protected void CopyBaseProperties(InstanceConfiguration target)
+		{
+			Assert.ArgumentNotNull(target, nameof(target));
+
+			target.Name = Name;
+
+			target.Description = Description;
+			target.Notes = Notes;
+			target.Url = Url;
+
+			foreach (TestParameterValue testParameterValue in ParameterValues)
+			{
+				target.AddParameterValue(testParameterValue.Clone());
+			}
+
+			target.Category = Category;
 		}
 	}
 }

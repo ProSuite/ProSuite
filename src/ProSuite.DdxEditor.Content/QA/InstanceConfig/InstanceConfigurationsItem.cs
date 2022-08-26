@@ -19,12 +19,12 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 	public abstract class InstanceConfigurationsItem : EntityTypeItem<InstanceConfiguration>,
 	                                                   IInstanceConfigurationContainerItem
 	{
-		[NotNull] private readonly IQualityConditionContainer _container;
+		[NotNull] private readonly IInstanceConfigurationContainer _container;
 
 		protected InstanceConfigurationsItem([NotNull] CoreDomainModelItemModelBuilder modelBuilder,
 		                                     [NotNull] string text,
 		                                     [CanBeNull] string description,
-		                                     [NotNull] IQualityConditionContainer container)
+		                                     [NotNull] IInstanceConfigurationContainer container)
 			: base(text, description)
 		{
 			Assert.ArgumentNotNull(modelBuilder, nameof(modelBuilder));
@@ -41,7 +41,11 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 
 		protected override IEnumerable<Item> GetChildren()
 		{
-			return _container.GetInstanceConfigurationItems(this);
+			return GetInstanceConfigurations(_container.Category)
+			       .OrderBy(c => c.Name)
+			       .Select(c => new InstanceConfigurationItem(
+				               ModelBuilder, c, this,
+				               ModelBuilder.InstanceConfigurations));
 		}
 
 		protected override Control CreateControlCore(IItemNavigation itemNavigation)
@@ -65,18 +69,22 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 		protected abstract IEnumerable<InstanceConfigurationInCategoryTableRow> GetConfigTableRows(
 			[CanBeNull] DataQualityCategory category);
 
+		[NotNull]
+		protected abstract IEnumerable<InstanceConfiguration> GetInstanceConfigurations(
+			[CanBeNull] DataQualityCategory category);
+
 		protected override void CollectCommands(List<ICommand> commands,
 		                                        IApplicationController applicationController,
 		                                        ICollection<Item> selectedChildren)
 		{
 			base.CollectCommands(commands, applicationController, selectedChildren);
 
-			List<QualityConditionItem> selectedConditionItems =
-				selectedChildren.OfType<QualityConditionItem>().ToList();
+			List<InstanceConfigurationItem> selectedConditionItems =
+				selectedChildren.OfType<InstanceConfigurationItem>().ToList();
 
 			if (selectedConditionItems.Count > 0)
 			{
-				commands.Add(new AssignQualityConditionsToCategoryCommand(
+				commands.Add(new AssignInstanceConfigurationToCategoryCommand(
 					             selectedConditionItems, this, applicationController));
 			}
 		}

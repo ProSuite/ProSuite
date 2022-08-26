@@ -58,7 +58,7 @@ namespace ProSuite.QA.Container.TestContainer
 	}
 
 	// TODO revise MoveNextCachedRow (IsFirstOccurrence assignment)
-	internal class TestRowEnum : ISearchable, IDisposable
+	internal class TestRowEnum : IDataContainer, IDisposable
 	{
 		#region Fields
 
@@ -256,21 +256,22 @@ namespace ProSuite.QA.Container.TestContainer
 
 		#region ISearchable Members
 
-		UniqueIdProvider ISearchable.GetUniqueIdProvider(IReadOnlyTable table)
+		UniqueIdProvider IDataContainer.GetUniqueIdProvider(IReadOnlyTable table)
 		{
 			int tableIndex = _cachedTables.IndexOf(table);
 
 			return _uniqueIdProviders[tableIndex];
 		}
 
-		IEnumerable<IReadOnlyRow> ISearchable.Search(IReadOnlyTable table, IQueryFilter queryFilter,
-		                                             QueryFilterHelper filterHelper,
-		                                             IGeometry cacheGeometry)
+		IEnumerable<IReadOnlyRow> IDataContainer.Search(IReadOnlyTable table,
+		                                                IQueryFilter queryFilter,
+		                                                QueryFilterHelper filterHelper,
+		                                                IGeometry cacheGeometry)
 		{
 			return Search(table, queryFilter, filterHelper, cacheGeometry);
 		}
 
-		WKSEnvelope ISearchable.CurrentTileExtent
+		WKSEnvelope IDataContainer.CurrentTileExtent
 		{
 			get
 			{
@@ -286,13 +287,13 @@ namespace ProSuite.QA.Container.TestContainer
 			}
 		}
 
-		IEnvelope ISearchable.GetLoadedExtent(IReadOnlyTable table)
+		IEnvelope IDataContainer.GetLoadedExtent(IReadOnlyTable table)
 		{
 			int tableIndex = _cachedTables.IndexOf(table);
 			return _tileCache?.LoadedExtents[tableIndex];
 		}
 
-		double ISearchable.GetSearchTolerance(IReadOnlyTable table)
+		double IDataContainer.GetSearchTolerance(IReadOnlyTable table)
 		{
 			return _tileCache.OverlappingFeatures.GetSearchTolerance(table);
 		}
@@ -805,7 +806,7 @@ namespace ProSuite.QA.Container.TestContainer
 		private static void AddRecursive(IReadOnlyTable table,
 		                                 Dictionary<IReadOnlyTable, double> cachedTables)
 		{
-			if (! (table is ITransformedValue transformed))
+			if (! (table is IDataContainerAware transformed))
 			{
 				return;
 			}

@@ -25,7 +25,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 		private readonly TransformedFeatureClass _resulting;
 
-		public ISearchable DataContainer { get; set; }
+		public IDataContainer DataContainer { get; set; }
 		public TransformedFeatureClass Resulting => _resulting;
 
 		public void AddToCache(VirtualRow row)

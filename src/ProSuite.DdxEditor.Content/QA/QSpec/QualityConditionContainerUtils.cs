@@ -192,8 +192,9 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 			return true;
 		}
 
-		public static void RefreshAssignmentTarget([CanBeNull] DataQualityCategory category,
-		                                           [NotNull] IItemNavigation itemNavigation)
+		public static void RefreshQualityConditionAssignmentTarget(
+			[CanBeNull] DataQualityCategory category,
+			[NotNull] IItemNavigation itemNavigation)
 		{
 			if (category == null)
 			{
@@ -210,6 +211,31 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 				{
 					RefreshQualityConditionsItem(
 						itemNavigation.FindItem(category), itemNavigation);
+				}
+			}
+		}
+
+		public static void RefreshAssignmentTarget(
+			[CanBeNull] DataQualityCategory category,
+			[NotNull] IItemNavigation itemNavigation,
+			[NotNull] IInstanceConfigurationContainerItem containerItem)
+		{
+			if (category == null)
+			{
+				RefreshInstanceConfigurationsItem(
+					itemNavigation.FindFirstItem<QAItem>(), itemNavigation,
+					containerItem.GetType());
+			}
+			else
+			{
+				if (category.CanContainOnlyQualityConditions)
+				{
+					itemNavigation.RefreshItem(category);
+				}
+				else
+				{
+					RefreshInstanceConfigurationsItem(
+						itemNavigation.FindItem(category), itemNavigation, containerItem.GetType());
 				}
 			}
 		}
@@ -332,6 +358,27 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 			QualityConditionsItem childItem = parentItem.Children
 			                                            .OfType<QualityConditionsItem>()
 			                                            .FirstOrDefault();
+			if (childItem != null)
+			{
+				itemNavigation.RefreshItem(childItem);
+			}
+		}
+
+		private static void RefreshInstanceConfigurationsItem(
+			[CanBeNull] Item parentItem,
+			[NotNull] IItemNavigation itemNavigation,
+			Type itemType)
+		{
+			if (parentItem == null || ! parentItem.HasChildrenLoaded)
+			{
+				return;
+			}
+
+			var childItem = parentItem.Children
+			                          .FirstOrDefault(
+				                          child => child.GetType() == itemType) as
+				                InstanceConfigurationsItem;
+
 			if (childItem != null)
 			{
 				itemNavigation.RefreshItem(childItem);

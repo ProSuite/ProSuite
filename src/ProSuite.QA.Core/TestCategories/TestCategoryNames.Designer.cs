@@ -79,6 +79,15 @@ namespace ProSuite.QA.Core.TestCategories {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Filter.
+        /// </summary>
+        internal static string Filter {
+            get {
+                return ResourceManager.GetString("Filter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Geometry.
         /// </summary>
         internal static string Geometry {
@@ -156,6 +165,15 @@ namespace ProSuite.QA.Core.TestCategories {
         internal static string Symbology {
             get {
                 return ResourceManager.GetString("Symbology", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Table.
+        /// </summary>
+        internal static string Table {
+            get {
+                return ResourceManager.GetString("Table", resourceCulture);
             }
         }
         

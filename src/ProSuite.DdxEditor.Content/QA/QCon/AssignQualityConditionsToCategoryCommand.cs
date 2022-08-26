@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -43,8 +44,6 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 
 		protected override void ExecuteCore()
 		{
-			Item currentItem = _applicationController.CurrentItem;
-
 			DataQualityCategory category;
 			if (! _containerItem.AssignToCategory(Items, _applicationController.Window,
 			                                      out category))
@@ -52,10 +51,12 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 				return;
 			}
 
-			QualityConditionContainerUtils.RefreshAssignmentTarget(category,
+			QualityConditionContainerUtils.RefreshQualityConditionAssignmentTarget(category,
 				_applicationController);
 
-			GoToItem<QualityCondition>(currentItem);
+			Item gotoItem = Items.FirstOrDefault();
+
+			GoToItem<QualityCondition>(gotoItem);
 		}
 
 		private void GoToItem<T>([CanBeNull] Item currentItem) where T : InstanceConfiguration

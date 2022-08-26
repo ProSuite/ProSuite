@@ -25,7 +25,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 		}
 
 		public TransformerDescriptorsItem([NotNull] CoreDomainModelItemModelBuilder modelBuilder) :
-			base("Transformer Descriptors", "Dataset transformer algorithm implementations",
+			base("Transformer Descriptors", "Transformer implementations",
 			     modelBuilder) { }
 
 		public override Image Image => _image;

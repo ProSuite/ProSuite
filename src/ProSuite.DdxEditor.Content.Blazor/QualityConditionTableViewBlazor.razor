@@ -8,7 +8,7 @@
 <style>
     /*Control color*/
 	html, body {
-        background-color: #f0f0f0
+        background-color: #ffffff
     }
 	
 	.rz-datatable {
@@ -99,14 +99,13 @@
 	    border-radius: unset;
     }
 
-	.rz-button {
+	/*.rz-button {
 		border-radius: 0;
 		border: 1px solid #adadad;
 		background-color: #e1e1e1;
 		height: 20px ! important;
 		padding: 0 8px ! important;
-		margin: 0 0 0 0;
-	}
+	}*/
 
     /*button border when button is disbled*/
 	.rz-button.rz-state-disabled, .rz-state-disabled.rz-paginator-element {
@@ -122,17 +121,18 @@
 <div class="container-fluid" style="margin: 0.625rem 0 0 -0.75rem;">
     <div class="col">
 	    <RadzenDataGrid @ref="DataGrid"
-                            TItem="ViewModelBase"
-                            Data="ViewModel.Values"
-                            SelectionMode="DataGridSelectionMode.Single"
-                            ExpandMode="DataGridExpandMode.Multiple"
-                            EditMode="DataGridEditMode.Single"
-                            AllowColumnResize="true"
-                            AllowRowSelectOnRowClick="true"
-                            @bind-Value="@SelectedRows"
-                            RowClick="OnRowClick"
-                            CellRender="OnCellRender"
-                            RowRender="OnRowRender">
+	                    TItem="ViewModelBase"
+	                    Data="Values"
+	                    SelectionMode="DataGridSelectionMode.Single"
+	                    ExpandMode="DataGridExpandMode.Multiple"
+	                    EditMode="DataGridEditMode.Single"
+	                    AllowColumnResize="true"
+	                    AllowRowSelectOnRowClick="true"
+	                    @bind-Value="@SelectedRows"
+	                    RowClick="OnRowClick"
+	                    CellRender="OnCellRender"
+	                    RowRender="OnRowRender"
+	                    LoadData="OnLoadData">
 	            <Template Context="viewModel">
                     @{
 	                    var vm = viewModel as TestParameterValueCollectionViewModel;
@@ -185,13 +185,13 @@
                         <Template Context="viewModel">
                             @if (viewModel is DatasetTestParameterValueViewModel vm)
                             {
-                                <RadzenSwitch  @bind-Value="vm.UsedAsReferenceData"/>
+                                <RadzenCheckBox  @bind-Value="vm.UsedAsReferenceData"/>
                             }
                         </Template>
                         <EditTemplate Context="viewModel">
                             @if (viewModel is DatasetTestParameterValueViewModel vm)
                             {
-	                            <RadzenSwitch  @bind-Value="vm.UsedAsReferenceData"/>
+	                            <RadzenCheckBox  @bind-Value="vm.UsedAsReferenceData"/>
                             }
                         </EditTemplate>
                     </RadzenDataGridColumn>

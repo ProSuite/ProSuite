@@ -25,7 +25,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 		}
 
 		public IssueFilterDescriptorsItem([NotNull] CoreDomainModelItemModelBuilder modelBuilder) :
-			base("Issue Filter Descriptors", "Issue Filter algorithm implementations",
+			base("Issue Filter Descriptors", "Issue Filter implementations",
 			     modelBuilder) { }
 
 		public override Image Image => _image;

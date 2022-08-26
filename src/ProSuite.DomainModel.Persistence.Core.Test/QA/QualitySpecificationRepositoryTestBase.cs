@@ -167,7 +167,9 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.QA
 
 					dsList.Add(rDs0);
 					IList<QualitySpecification> qspecList = Repository.Get(dsList, excludeHidden);
-					Assert.AreEqual(1, qspecList.Count);
+
+					// All non-hidden that contain cond0
+					Assert.AreEqual(2, qspecList.Count);
 					Assert.AreEqual(rqspec0, qspecList[0]);
 
 					Dataset rDs1 = datasets.Get(ds1.Id);
@@ -177,10 +179,12 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.QA
 					dsList.Add(rDs1);
 					qspecList = Repository.Get(dsList, excludeHidden);
 					Assert.AreEqual(1, qspecList.Count);
-					Assert.AreEqual(rqspec1, qspecList[0]);
+					Assert.AreEqual(rqspec0, qspecList[0]);
 
 					dsList.Add(rDs0);
 					qspecList = Repository.Get(dsList, excludeHidden);
+
+					// All non-hidden that contain cond0 or cond1:
 					Assert.AreEqual(2, qspecList.Count);
 
 					// get hidden spec also

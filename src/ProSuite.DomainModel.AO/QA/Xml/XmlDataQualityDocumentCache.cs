@@ -12,7 +12,7 @@ using ProSuite.QA.Core;
 
 namespace ProSuite.DomainModel.AO.QA.Xml
 {
-	public class XmlQualityConditionsCache
+	public class XmlDataQualityDocumentCache
 	{
 		private class DatasetSettings
 		{
@@ -42,7 +42,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		private Dictionary<string, XmlTestDescriptor> _testDescriptors;
 		private Dictionary<string, XmlIssueFilterDescriptor> _issueFilterDescriptors;
 		private Dictionary<string, XmlTransformerDescriptor> _transformerDescriptors;
-		
+
 		[CanBeNull] private Dictionary<XmlIssueFilterConfiguration, IssueFilterConfiguration>
 			_issueFilterInstances;
 
@@ -55,7 +55,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		private Dictionary<string, XmlIssueFilterConfiguration> IssueFilters => _issueFilters ??
 			(_issueFilters = _document.IssueFilters?.ToDictionary(x => x.Name) ??
 			                 new Dictionary<string, XmlIssueFilterConfiguration>());
-		
+
 		[NotNull]
 		private Dictionary<string, XmlTransformerConfiguration> Transformers => _transformers ??
 			(_transformers = _document.Transformers?.ToDictionary(x => x.Name) ??
@@ -65,7 +65,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		private Dictionary<string, XmlTestDescriptor> TestDescriptors => _testDescriptors ??
 			(_testDescriptors = _document.TestDescriptors?.ToDictionary(x => x.Name) ??
 			                    new Dictionary<string, XmlTestDescriptor>());
-		
+
 		[NotNull]
 		private Dictionary<string, XmlIssueFilterDescriptor> IssueFilterDescriptors =>
 			_issueFilterDescriptors ??
@@ -91,9 +91,9 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		[CanBeNull]
 		public IDictionary<string, Model> ReferencedModels { get; set; }
 
-		public XmlQualityConditionsCache(XmlDataQualityDocument document,
-		                                 IEnumerable<KeyValuePair<XmlQualityCondition,
-			                                 XmlDataQualityCategory>> qualityConditions)
+		public XmlDataQualityDocumentCache(XmlDataQualityDocument document,
+		                                   IEnumerable<KeyValuePair<XmlQualityCondition,
+			                                   XmlDataQualityCategory>> qualityConditions)
 		{
 			_document = document;
 			_qualityConditions =
@@ -106,13 +106,13 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		{
 			return IssueFilters.TryGetValue(name, out issueFilterConfiguration);
 		}
-		
+
 		public bool TryGetTransformer(string name,
 		                              out XmlTransformerConfiguration transformerConfiguration)
 		{
 			return Transformers.TryGetValue(name, out transformerConfiguration);
 		}
-		
+
 		private IssueFilterConfiguration GetIssueFilterConfiguration(
 			[NotNull] XmlIssueFilterConfiguration xmlIssueFilter, DatasetSettings datasetSettings)
 		{
@@ -149,7 +149,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			foreach (XmlQualityCondition xmlCondition in _qualityConditions.Select(x => x.Key))
 			{
 				foreach (XmlInstanceConfiguration config in EnumReferencedConfigurationInstances(
-					xmlCondition))
+					         xmlCondition))
 				{
 					yield return config;
 				}
@@ -212,7 +212,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			}
 
 			foreach (XmlTestParameterValue xmlParamValue in
-				xmlInstanceConfiguration.ParameterValues)
+			         xmlInstanceConfiguration.ParameterValues)
 			{
 				TestParameter testParameter;
 				if (! testParametersByName.TryGetValue(xmlParamValue.TestParameterName,
@@ -370,10 +370,9 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 				testParameter, dataset,
 				xmlDatasetTestParameterValue.WhereClause,
 				xmlDatasetTestParameterValue.UsedAsReferenceData);
-			
+
 			return paramValue;
 		}
-		
 
 		public IEnumerable<XmlInstanceConfiguration> EnumReferencedConfigurationInstances(
 			XmlInstanceConfiguration config)

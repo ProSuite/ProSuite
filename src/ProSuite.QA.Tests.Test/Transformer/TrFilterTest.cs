@@ -214,7 +214,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 		public void CanGetMultiFilteredAndCombination()
 		{
 			IFeatureWorkspace ws =
-				TestWorkspaceUtils.CreateInMemoryWorkspace("TrMultiFilter");
+				TestWorkspaceUtils.CreateInMemoryWorkspace("TrCombinedFilter");
 
 			IFeatureClass lineFc =
 				CreateFeatureClass(
@@ -294,7 +294,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			                   };
 
 			var trCombined =
-				new TrMultiFilter(ReadOnlyTableFactory.Create(pointFc), inputFilters, null)
+				new TrCombinedFilter(ReadOnlyTableFactory.Create(pointFc), inputFilters, null)
 				{TransformerName = "filtered_by_both"};
 
 			{

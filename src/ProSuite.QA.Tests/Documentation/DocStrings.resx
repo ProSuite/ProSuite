@@ -788,7 +788,7 @@ Remark: The feature classes in 'polylineClasses' must have the same spatial refe
     <value>include z-coordinate for checking</value>
   </data>
   <data name="QaLineIntersectAngle_limit" xml:space="preserve">
-    <value>minimum permitted angle (in radians)</value>
+    <value>minimum permitted angle (in 'AngularUnit', default value of 'AngularUnit' is radian)</value>
   </data>
   <data name="QaLineIntersectAngle_polylineClasses" xml:space="preserve">
     <value>polyline or polygon feature classes</value>
@@ -866,7 +866,7 @@ if 'limit' &lt;= 0, only constraint is checked (in arbitrary order of the involv
     <value>polyline or polygon feature class</value>
   </data>
   <data name="QaMaxSlope_limit" xml:space="preserve">
-    <value>maximum slope (in radians)</value>
+    <value>maximum slope (in 'AngularUnit', default value of 'AngularUnit' is radian)</value>
   </data>
   <data name="QaMinAngle_0" xml:space="preserve">
     <value>Finds all pair of (From/To-) points in 'polylineClass' where the angle built by the lines is smaller than 'limit'</value>
@@ -880,7 +880,7 @@ Remark: The feature classes in 'polylineClasses' must have the same spatial refe
     <value>include z-coordinate for checking</value>
   </data>
   <data name="QaMinAngle_limit" xml:space="preserve">
-    <value>minimum angle (in radians)</value>
+    <value>minimum angle (in 'AngularUnit', default value of 'AngularUnit' is radian)</value>
   </data>
   <data name="QaMinAngle_polylineClass" xml:space="preserve">
     <value>polyline feature class</value>
@@ -1274,10 +1274,10 @@ The sort order must correspond with 'polylineClasses'.</value>
     <value>Finds all segments in 'featureClass' where the discretized second derivative of the slope angle exceeds 'limit'. This means that there are to abrupt changes in the slope angle.</value>
   </data>
   <data name="QaSmooth_featureClass" xml:space="preserve">
-    <value>polyline or polygon feature class with z-coorindates</value>
+    <value>polyline or polygon feature class with z-coordinates</value>
   </data>
   <data name="QaSmooth_limit" xml:space="preserve">
-    <value>the maximum permitted second derivative of the angle in radians</value>
+    <value>the maximum permitted second derivative of the angle (in 'AngularUnit', default value of 'AngularUnit' is radian)</value>
   </data>
   <data name="QaTrimmedTextFields_0" xml:space="preserve">
     <value>Finds rows with text fields having leading or trailing whitespace characters. All text fields of the table are checked. Fields with only whitespace characters are also reported.</value>
@@ -4795,6 +4795,9 @@ The sort order must correspond with 'polylineClasses'.</value>
     <value>Unit of 'limit', default = 'radian'.</value>
   </data>
   <data name="QaSmooth_AngularUnit" xml:space="preserve">
+    <value>Unit of 'limit', default = 'radian'.</value>
+  </data>
+  <data name="QaMaxSlope_AngularUnit" xml:space="preserve">
     <value>Unit of 'limit', default = 'radian'.</value>
   </data>
 </root>

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DomainModel.Core.QA.Repositories
 {
@@ -30,5 +31,20 @@ namespace ProSuite.DomainModel.Core.QA.Repositories
 			[NotNull] TransformerConfiguration transformer);
 
 		IList<InstanceConfiguration> Get(InstanceDescriptor descriptor);
+
+		/// <summary>
+		/// Returns the datasets that are directly or indirectly referenced by one of the specified
+		/// conditions.
+		/// </summary>
+		/// <param name="qualityConditions">The referencing conditions</param>
+		/// <param name="includeReferenceViaIssueFilters">Whether or not datasets referenced by an
+		/// issue filter of a specified conditon should be included.</param>
+		/// <param name="testParameterPredicate">Extra predicate to be evaluated on the test
+		/// parameter values.</param>
+		/// <returns></returns>
+		IEnumerable<Dataset> GetAllReferencedDatasets(
+			[NotNull] IEnumerable<QualityCondition> qualityConditions,
+			bool includeReferenceViaIssueFilters = false,
+			[CanBeNull] Predicate<DatasetTestParameterValue> testParameterPredicate = null);
 	}
 }

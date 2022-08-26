@@ -40,7 +40,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			//TODO
 		}
 
-		internal class PolyFc : FeatureClassMock, ITransformedValue
+		internal class PolyFc : FeatureClassMock, IDataContainerAware
 		{
 			private readonly IReadOnlyFeatureClass _borderFc;
 			private readonly QueryFilterHelper _filterHelper;
@@ -56,7 +56,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			}
 
 			public IList<IReadOnlyTable> InvolvedTables { get; }
-			public ISearchable DataContainer { get; set; }
+			public IDataContainer DataContainer { get; set; }
 
 			protected override IEnvelope Extent => _borderFc.Extent;
 

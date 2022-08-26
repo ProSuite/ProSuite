@@ -140,9 +140,9 @@ namespace ProSuite.QA.Container
 			return DataContainer?.GetUniqueIdProvider(InvolvedTables[tableIndex]);
 		}
 
-		internal ISearchable DataContainer { get; private set; }
+		internal IDataContainer DataContainer { get; private set; }
 
-		internal void SetDataContainer(ISearchable dataContainer)
+		internal void SetDataContainer(IDataContainer dataContainer)
 		{
 			DataContainer = dataContainer;
 
@@ -164,11 +164,12 @@ namespace ProSuite.QA.Container
 				}
 			}
 		}
-		private void SetSearchable(ISearchable dataContainer, IEnumerable<IReadOnlyTable> tables)
+
+		private void SetSearchable(IDataContainer dataContainer, IEnumerable<IReadOnlyTable> tables)
 		{
 			foreach (IReadOnlyTable table in tables)
 			{
-				if (table is ITransformedValue transformed)
+				if (table is IDataContainerAware transformed)
 				{
 					transformed.DataContainer = dataContainer;
 
@@ -176,7 +177,6 @@ namespace ProSuite.QA.Container
 				}
 			}
 		}
-
 
 		/// <summary>
 		/// Disables recycling of rows in Execute()
@@ -404,7 +404,7 @@ namespace ProSuite.QA.Container
 				}
 
 				if (row is IReadOnlyFeature feature && AreaOfInterest != null &&
-						((IRelationalOperator)AreaOfInterest).Disjoint(feature.Shape))
+				    ((IRelationalOperator) AreaOfInterest).Disjoint(feature.Shape))
 				{
 					continue;
 				}
@@ -753,7 +753,7 @@ namespace ProSuite.QA.Container
 			if (DataContainer != null && (table as ITransformedTable)?.NoCaching != true)
 			{
 				IEnumerable<IReadOnlyRow> rows = DataContainer.Search(table, queryFilter,
-				                                              filterHelper, cacheGeometry);
+					filterHelper, cacheGeometry);
 
 				if (rows != null)
 				{
@@ -825,7 +825,8 @@ namespace ProSuite.QA.Container
 			return 0;
 		}
 
-		internal int Execute([NotNull] IReadOnlyRow row, int tableIndex, Guid? recycledUnique = null)
+		internal int Execute([NotNull] IReadOnlyRow row, int tableIndex,
+		                     Guid? recycledUnique = null)
 		{
 			if (CancelTestingRow(row, recycledUnique))
 			{

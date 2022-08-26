@@ -2,9 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using System.Runtime.CompilerServices;
+using ProSuite.Commons;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 using ProSuite.DdxEditor.Content.Blazor.ViewModel;
 using ProSuite.DdxEditor.Framework.Items;
 using ProSuite.DomainModel.AO.QA;
@@ -13,19 +14,16 @@ using ProSuite.QA.Core;
 
 namespace ProSuite.DdxEditor.Content.Blazor;
 
-// todo daro implement IDisposable
-public class InstanceConfigurationViewModel<T> : IInstanceConfigurationViewModel
+public class InstanceConfigurationViewModel<T> : NotifyPropertyChangedBase,
+                                                 IInstanceConfigurationViewModel
 	where T : InstanceConfiguration
 {
+	private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 	[NotNull] private readonly EntityItem<T, T> _item;
 
-	// todo daro refactor to list
 	[NotNull] private Dictionary<TestParameter, IList<ViewModelBase>> _rowsByParameter = new();
 
-	// todo daro refactor to list
-	private Dictionary<TestParameter, ViewModelBase> _topLevelRowsByParameter;
-
-	// todo daro InstanceConfiguration?
 	public InstanceConfigurationViewModel([NotNull] EntityItem<T, T> item,
 	                                      [NotNull] ITestParameterDatasetProvider datasetProvider)
 	{
@@ -39,62 +37,53 @@ public class InstanceConfigurationViewModel<T> : IInstanceConfigurationViewModel
 		InstanceConfiguration = Assert.NotNull(_item.GetEntity());
 	}
 
-	public IList<ViewModelBase> Values { get; set; }
+	[CanBeNull]
+	public IList<ViewModelBase> Values { get; private set; }
 
 	[NotNull]
 	public InstanceConfiguration InstanceConfiguration { get; }
 
 	[NotNull]
 	public ITestParameterDatasetProvider DatasetProvider { get; }
-	
+
 	public void NotifyChanged(bool dirty)
 	{
 		_item.NotifyChanged();
 	}
 
-	// todo daro refactor
 	public void BindTo([NotNull] InstanceConfiguration qualityCondition)
 	{
 		Assert.ArgumentNotNull(qualityCondition, nameof(qualityCondition));
 
-		if (_rowsByParameter.Count > 0)
-		{
-			UnwireEvents(_rowsByParameter.Values.SelectMany(row => row));
-		}
-
-		if (_topLevelRowsByParameter is { Count: > 0 })
-		{
-			UnwireEvents(_topLevelRowsByParameter.Values
-			                                     .OfType<TestParameterValueCollectionViewModel>());
-		}
+		// force dispose in case of discarding changes
+		Dispose();
 
 		_rowsByParameter = CreateRows(qualityCondition);
 
-		WireEvents(_rowsByParameter.Values.SelectMany(row => row));
-
-		_topLevelRowsByParameter =
-			new Dictionary<TestParameter, ViewModelBase>(GetTopLevelRows(_rowsByParameter));
-
-		WireEvents(_topLevelRowsByParameter.Values.OfType<TestParameterValueCollectionViewModel>());
-
-		Values = new List<ViewModelBase>(_topLevelRowsByParameter.Values);
+		Values = new List<ViewModelBase>(GetTopLevelRows(_rowsByParameter));
+		OnPropertyChanged(nameof(Values));
 	}
 
-	public void WireEvents([NotNull] ViewModelBase row)
+	void IInstanceConfigurationViewModel.OnRowPropertyChanged(
+		object sender, PropertyChangedEventArgs e)
 	{
-		Assert.ArgumentNotNull(row, nameof(row));
-
-		row.PropertyChanged += OnRowPropertyChanged;
+		UpdateEntity(Assert.NotNull(_item.GetEntity()));
 	}
 
-	public void UnwireEvents([NotNull] ViewModelBase row)
+	public void Dispose()
 	{
-		Assert.ArgumentNotNull(row, nameof(row));
+		Values?.Clear();
+		Values = null;
 
-		row.PropertyChanged -= OnRowPropertyChanged;
+		foreach (ViewModelBase vm in _rowsByParameter.Values.SelectMany(row => row))
+		{
+			vm.Dispose();
+		}
+
+		_rowsByParameter.Clear();
 	}
 
-	private IEnumerable<KeyValuePair<TestParameter, ViewModelBase>> GetTopLevelRows(
+	private IEnumerable<ViewModelBase> GetTopLevelRows(
 		[NotNull] Dictionary<TestParameter, IList<ViewModelBase>> rowsByParameter)
 	{
 		Assert.ArgumentNotNull(rowsByParameter, nameof(rowsByParameter));
@@ -104,23 +93,27 @@ public class InstanceConfigurationViewModel<T> : IInstanceConfigurationViewModel
 			TestParameter parameter = pair.Key;
 			IList<ViewModelBase> rows = pair.Value;
 
-			if (parameter.ArrayDimension > 0)
+			if (parameter.ArrayDimension == 1)
 			{
-				yield return new KeyValuePair<TestParameter, ViewModelBase>(
-					parameter, new TestParameterValueCollectionViewModel(parameter, rows, this));
+				yield return new TestParameterValueCollectionViewModel(parameter, rows, this);
 			}
-			else if (rows.Count == 1)
+			else if (parameter.ArrayDimension == 0)
 			{
-				yield return new KeyValuePair<TestParameter, ViewModelBase>(parameter, rows[0]);
+				Assert.True(rows.Count == 1,
+				            $"Unexpected row count for {parameter.ArrayDimension} dimensional test parameter {parameter}");
+				yield return rows[0];
 			}
-			// todo daro log
+			else
+			{
+				throw new ArgumentOutOfRangeException(
+					$"Unexpected array dimension ${parameter.ArrayDimension} for test parameter {parameter}");
+			}
 		}
 	}
 
 	private Dictionary<TestParameter, IList<ViewModelBase>> CreateRows(
 		[CanBeNull] InstanceConfiguration instanceConfiguration)
 	{
-		// todo daro use _rowsByParameter?
 		var rowsByParameter = new Dictionary<TestParameter, IList<ViewModelBase>>();
 
 		if (instanceConfiguration == null)
@@ -130,9 +123,9 @@ public class InstanceConfigurationViewModel<T> : IInstanceConfigurationViewModel
 
 		InstanceFactory factory = InstanceFactoryUtils.CreateFactory(instanceConfiguration);
 
-		// todo daro log
 		if (factory == null)
 		{
+			_msg.Debug($"{nameof(InstanceFactory)} of {instanceConfiguration} is null");
 			return rowsByParameter;
 		}
 
@@ -163,7 +156,9 @@ public class InstanceConfigurationViewModel<T> : IInstanceConfigurationViewModel
 			{
 				rowsByParameter[param]
 					.Add(new ScalarTestParameterValueViewModel(
-						     param, scalarValue.GetValue(), this));
+						     param, scalarValue.GetValue(), this,
+						     param.IsConstructorParameter,
+						     param.IsConstructorParameter));
 			}
 			else
 			{
@@ -174,101 +169,6 @@ public class InstanceConfigurationViewModel<T> : IInstanceConfigurationViewModel
 
 		return rowsByParameter;
 	}
-
-	//public ViewModelBase InsertRow(TestParameter parameter)
-	//{
-	//	Assert.ArgumentNotNull(parameter, nameof(parameter));
-	//	Assert.ArgumentCondition(_rowsByParameter.ContainsKey(parameter), nameof(parameter));
-
-	//	var collectionRow =
-	//		Assert.NotNull(
-	//			(TestParameterValueCollectionViewModel) _topLevelRowsByParameter[parameter]);
-
-	//	ViewModelBase insertRow;
-
-	//	if (TestParameterTypeUtils.IsDatasetType(parameter.Type))
-	//	{
-	//		insertRow = DatasetTestParameterValueViewModel.CreateInstance(parameter, null, this);
-	//	}
-	//	else
-	//	{
-	//		insertRow = new ScalarTestParameterValueViewModel(parameter, null, this);
-	//	}
-
-	//	insertRow.New = true;
-
-	//	WireEvents(insertRow);
-
-	//	_rowsByParameter[parameter].Add(insertRow);
-
-	//	collectionRow.Insert(insertRow);
-
-	//	return insertRow;
-	//}
-
-	//public void DeleteRow(ViewModelBase row)
-	//{
-	//	TestParameter parameter = row.Parameter;
-
-	//	var collectionRow =
-	//		Assert.NotNull(
-	//			(TestParameterValueCollectionViewModel) _topLevelRowsByParameter[parameter]);
-
-	//	Assert.True(_rowsByParameter[parameter].Remove(row), $"cannot remove {row}");
-
-	//	collectionRow.Remove(row);
-	//}
-
-	//public bool TryMoveDown([NotNull] ViewModelBase row)
-	//{
-	//	Assert.ArgumentNotNull(row, nameof(row));
-
-	//	TestParameter parameter = row.Parameter;
-
-	//	var collectionRow =
-	//		Assert.NotNull(
-	//			(TestParameterValueCollectionViewModel) _topLevelRowsByParameter[parameter]);
-
-	//	IList<ViewModelBase> values = Assert.NotNull(collectionRow.Values);
-
-	//	int index = values.IndexOf(row);
-
-	//	if (index == -1 || index == values.Count - 1)
-	//	{
-	//		// selected row is not in this collection view model
-	//		return false;
-	//	}
-
-	//	Assert.True(_rowsByParameter[parameter].Remove(row), $"cannot remove {row}");
-	//	_rowsByParameter[parameter].Insert(index + 1, row);
-
-	//	return collectionRow.TryMoveDown(row);
-	//}
-
-	//public bool TryMoveUp([NotNull] ViewModelBase row)
-	//{
-	//	Assert.ArgumentNotNull(row, nameof(row));
-
-	//	TestParameter parameter = row.Parameter;
-
-	//	var collectionRow =
-	//		Assert.NotNull(
-	//			(TestParameterValueCollectionViewModel) _topLevelRowsByParameter[parameter]);
-
-	//	IList<ViewModelBase> values = Assert.NotNull(collectionRow.Values);
-
-	//	int index = values.IndexOf(row);
-
-	//	if (index is -1 or 0)
-	//	{
-	//		return false;
-	//	}
-
-	//	Assert.True(_rowsByParameter[parameter].Remove(row), $"cannot remove {row}");
-	//	_rowsByParameter[parameter].Insert(index - 1, row);
-
-	//	return collectionRow.TryMoveUp(row);
-	//}
 
 	private void UpdateEntity([NotNull] InstanceConfiguration instanceConfiguration)
 	{
@@ -298,8 +198,13 @@ public class InstanceConfigurationViewModel<T> : IInstanceConfigurationViewModel
 					instanceConfiguration.AddParameterValue(
 						newValue);
 				}
-				else if (row is ScalarTestParameterValueViewModel scalar)
+				else if (row is ScalarTestParameterValueViewModel)
 				{
+					if (testParameter.IsConstructorParameter)
+					{
+						Assert.NotNull(row.Value);
+					}
+
 					instanceConfiguration.AddParameterValue(
 						new ScalarTestParameterValue(testParameter, row.Value));
 				}
@@ -313,117 +218,5 @@ public class InstanceConfigurationViewModel<T> : IInstanceConfigurationViewModel
 				}
 			}
 		}
-	}
-
-	#region events
-
-	private void WireEvents([NotNull] IEnumerable<ViewModelBase> rows)
-	{
-		Assert.ArgumentNotNull(rows, nameof(rows));
-
-		foreach (ViewModelBase row in rows)
-		{
-			WireEvents(row);
-		}
-	}
-
-	private void UnwireEvents([NotNull] IEnumerable<ViewModelBase> rows)
-	{
-		Assert.ArgumentNotNull(rows, nameof(rows));
-
-		foreach (ViewModelBase row in rows)
-		{
-			UnwireEvents(row);
-		}
-	}
-
-	private void OnRowPropertyChanged(object sender, PropertyChangedEventArgs e)
-	{
-		UpdateEntity(Assert.NotNull(_item.GetEntity()));
-	}
-
-	#endregion
-
-	#region unused
-
-	private static string GetDatasetParameterName(IEnumerable<TestParameter> parameters)
-	{
-		string datasetParameterName = null;
-
-		foreach (TestParameter parameter in parameters)
-		{
-			if (TestParameterTypeUtils.IsDatasetType(parameter.Type))
-			{
-				if (datasetParameterName != null)
-				{
-					return datasetParameterName;
-				}
-
-				datasetParameterName = parameter.Name;
-
-				if (parameter.ArrayDimension > 0 &&
-				    parameter.IsConstructorParameter)
-				{
-					return datasetParameterName;
-				}
-			}
-			else
-			{
-				// scalar parameter - no arrays allowed if a required constructor parameter
-				if (parameter.ArrayDimension > 0 &&
-				    parameter.IsConstructorParameter)
-				{
-					return datasetParameterName;
-				}
-			}
-		}
-
-		return datasetParameterName;
-	}
-
-	[NotNull]
-	private static IList<TestParameter> GetEditableScalarParameters(
-		[NotNull] IEnumerable<TestParameter> testParameters,
-		[NotNull] string datasetParameterName)
-	{
-		var result = new List<TestParameter>();
-
-		foreach (TestParameter testParameter in testParameters)
-		{
-			if (testParameter.ArrayDimension > 0)
-			{
-				if (! testParameter.IsConstructorParameter)
-				{
-					// ignore *optional* parameters with array dimension > 0
-					continue;
-				}
-
-				// fail for constructor parameters
-				Assert.Fail("Unexpected array dimension: {0}",
-				            testParameter.ArrayDimension);
-			}
-
-			if (TestParameterTypeUtils.IsDatasetType(testParameter.Type))
-			{
-				Assert.AreEqual(testParameter.Name, datasetParameterName,
-				                "Unexpected dataset parameter name");
-				continue;
-			}
-
-			// it's a scalar parameter
-			result.Add(testParameter);
-		}
-
-		return result;
-	}
-
-	#endregion
-
-	public event PropertyChangedEventHandler PropertyChanged;
-
-	[NotifyPropertyChangedInvocator]
-	protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
-	{
-		PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 	}
 }

@@ -33,7 +33,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 		public IList<IReadOnlyTable> InvolvedTables { get; }
 
-		public ISearchable DataSearchContainer { get; set; }
+		public IDataContainer DataSearchContainer { get; set; }
 
 		protected IReadOnlyList<QueryFilterHelper> QueryHelpers => _queryHelpers;
 

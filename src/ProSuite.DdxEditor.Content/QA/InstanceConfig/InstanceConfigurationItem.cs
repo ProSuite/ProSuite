@@ -35,6 +35,8 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 		[CanBeNull] private Image _image;
 		[CanBeNull] private string _imageKey;
 
+		private ICommand _webHelpCommand;
+
 		#region Constructors
 
 		/// <summary>
@@ -139,7 +141,8 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			return GetReferencingConfigurations(instanceConfig);
 		}
 
-		private IEnumerable<InstanceConfiguration> GetReferencingConfigurations(InstanceConfiguration instanceConfig)
+		private IEnumerable<InstanceConfiguration> GetReferencingConfigurations(
+			InstanceConfiguration instanceConfig)
 		{
 			if (instanceConfig is TransformerConfiguration transformerConfiguration)
 			{
@@ -167,8 +170,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 				return;
 			}
 
-			//string url = configuration.Url;
-			string url = null;
+			string url = configuration.Url;
 
 			if (StringUtils.IsNullOrEmptyOrBlank(url))
 			{
@@ -226,9 +228,13 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			if (_containerItem != null)
 			{
 				commands.Add(new CopyInstanceConfigurationCommand(this, applicationController));
-				//commands.Add(new AssignQualityConditionsToCategoryCommand(new[] {this},
-				//	             _containerItem,
-				//	             applicationController));
+				commands.Add(new AssignInstanceConfigurationToCategoryCommand(new[] {this},
+					             _containerItem, applicationController));
+
+				_webHelpCommand = new ShowInstanceWebHelpCommand<InstanceConfigurationItem>(
+					this, applicationController);
+
+				commands.Add(_webHelpCommand);
 			}
 		}
 
@@ -321,6 +327,11 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			InstanceFactory factory = InstanceFactoryUtils.CreateFactory(entity);
 
 			return factory;
+		}
+
+		public void ExecuteWebHelpCommand()
+		{
+			_webHelpCommand?.Execute();
 		}
 	}
 }

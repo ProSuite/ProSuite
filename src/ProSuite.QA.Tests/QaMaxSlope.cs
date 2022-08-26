@@ -55,7 +55,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[TestParameter(_defaultAngularUnit)]
-		[Doc(nameof(DocStrings.QaSmooth_AngularUnit))]
+		[Doc(nameof(DocStrings.QaMaxSlope_AngularUnit))]
 		public AngleUnit AngularUnit
 		{
 			get { return AngleUnit; }
@@ -87,7 +87,7 @@ namespace ProSuite.QA.Tests
 
 			if (! (shape is IPolycurve))
 			{
-				return 0;
+				return NoError;
 			}
 
 			var segments = (ISegmentCollection) shape;

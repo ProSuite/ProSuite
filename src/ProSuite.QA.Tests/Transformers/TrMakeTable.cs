@@ -6,10 +6,13 @@ using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
+using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 
 namespace ProSuite.QA.Tests.Transformers
 {
+	[UsedImplicitly]
+	[TableTransformer]
 	public class TrMakeTable : ITableTransformer<IReadOnlyTable>
 	{
 		[NotNull] private readonly IReadOnlyTable _baseTable;
