@@ -9,12 +9,17 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 	{
 		private readonly ITable _backingTable;
 		private readonly GdbTable _gdbTable;
+		private readonly int _oidFieldIndex;
 
 		public BackingTable([NotNull] ITable backingTable,
 		                    [NotNull] GdbTable gdbTable)
 		{
 			_backingTable = backingTable;
 			_gdbTable = gdbTable;
+
+			_oidFieldIndex = backingTable.HasOID
+				                 ? backingTable.FindField(backingTable.OIDFieldName)
+				                 : -1;
 		}
 
 		public override IEnvelope Extent =>
@@ -23,7 +28,8 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		public override VirtualRow GetRow(int id)
 		{
 			var row = _backingTable.GetRow(id);
-			return new GdbRow(row.OID, _gdbTable, new RowBasedValues(row));
+
+			return CreateRow(row);
 		}
 
 		public override int GetRowCount(IQueryFilter queryFilter)
@@ -35,10 +41,15 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		{
 			foreach (IRow row in GdbQueryUtils.GetRows(_backingTable, filter, recycling))
 			{
-				IValueList values = new RowBasedValues(row);
-
-				yield return new GdbRow(row.OID, _gdbTable, values);
+				yield return CreateRow(row);
 			}
+		}
+
+		private VirtualRow CreateRow(IRow baseRow)
+		{
+			var rowValueList = new RowBasedValues(baseRow, _oidFieldIndex);
+
+			return new GdbRow(baseRow.OID, _gdbTable, rowValueList);
 		}
 	}
 }
