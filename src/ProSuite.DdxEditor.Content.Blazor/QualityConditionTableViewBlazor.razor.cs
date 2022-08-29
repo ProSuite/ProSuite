@@ -15,7 +15,7 @@ namespace ProSuite.DdxEditor.Content.Blazor;
 public partial class QualityConditionTableViewBlazor
 {
 	// ReSharper disable once NotNullMemberIsNotInitialized
-	[NotNull] private IDataGridViewModel _viewModel;
+	[NotNull] private IInstanceConfigurationViewModel _viewModel;
 	private bool _discardChanges;
 
 	protected override void OnInitializedCore()
@@ -36,7 +36,7 @@ public partial class QualityConditionTableViewBlazor
 	[NotNull]
 	[Parameter]
 	// ReSharper disable once NotNullMemberIsNotInitialized
-	public IDataGridViewModel ViewModel
+	public IInstanceConfigurationViewModel ViewModel
 	{
 		get => _viewModel;
 		set
@@ -56,6 +56,14 @@ public partial class QualityConditionTableViewBlazor
 			DataGrid.Reload();
 
 			_discardChanges = false;
+		}
+		else if (! ViewModel.IsPersistent)
+		{
+			// When instance descriptor is changed
+			// and
+			// entity is persistent
+			// => refresh the grid
+			DataGrid.Reload();
 		}
 	}
 

@@ -51,6 +51,8 @@ public class InstanceConfigurationViewModel<T> : NotifyPropertyChangedBase,
 		_item.NotifyChanged();
 	}
 
+	public bool IsPersistent => InstanceConfiguration.IsPersistent;
+
 	public void BindTo([NotNull] InstanceConfiguration qualityCondition)
 	{
 		Assert.ArgumentNotNull(qualityCondition, nameof(qualityCondition));

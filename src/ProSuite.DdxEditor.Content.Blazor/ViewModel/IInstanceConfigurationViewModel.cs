@@ -11,6 +11,8 @@ public interface IInstanceConfigurationViewModel : IViewObserver, IDataGridViewM
 
 	ITestParameterDatasetProvider DatasetProvider { get; }
 
+	bool IsPersistent { get; }
+
 	void BindTo(InstanceConfiguration instanceConfiguration);
 
 	void OnRowPropertyChanged(object sender, PropertyChangedEventArgs e);
