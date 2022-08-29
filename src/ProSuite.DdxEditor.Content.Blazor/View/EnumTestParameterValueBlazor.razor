@@ -2,16 +2,9 @@
 @inherits TestParameterValueBlazorBase<int>
 
 <Validation ErrorMessage="@ErrorMessage">
-	@if (ViewModel.Editing)
-	{
-		<RadzenDropDown TValue="int" @bind-Value="IntValue" Data="@IntValues">
-			<Template Context="value">
-				@Enum.ToObject(DataType, value)
-			</Template>
-		</RadzenDropDown>
-	}
-	else
-	{
-		@Enum.ToObject(DataType, IntValue)
-	}
+	<RadzenDropDown TValue="int" @bind-Value="IntValue" Data="@IntValues" Style="">
+		<Template Context="value">
+			@Enum.ToObject(DataType, value)
+		</Template>
+	</RadzenDropDown>
 </Validation>
