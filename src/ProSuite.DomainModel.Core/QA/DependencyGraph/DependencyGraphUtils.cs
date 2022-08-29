@@ -157,7 +157,7 @@ namespace ProSuite.DomainModel.Core.QA.DependencyGraph
 
 			foreach (QualitySpecificationElement element in qualitySpecification.Elements)
 			{
-				foreach (Dataset dataset in element.QualityCondition.GetDatasetParameterValues())
+				foreach (Dataset dataset in element.QualityCondition.GetDatasetParameterValues(true))
 				{
 					result.Add(dataset); // only added if not yet present
 				}
