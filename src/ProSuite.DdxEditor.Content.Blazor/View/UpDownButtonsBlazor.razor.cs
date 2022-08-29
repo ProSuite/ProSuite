@@ -36,9 +36,6 @@ public partial class UpDownButtonsBlazor
 		Assert.NotNull(Grid);
 
 		OnUpClicked.InvokeAsync(EventArgs.Empty);
-
-		// todo daro to early?
-		Grid.Reload();
 	}
 
 	private void DownClicked()
@@ -47,9 +44,6 @@ public partial class UpDownButtonsBlazor
 		Assert.NotNull(Grid);
 
 		OnDownClicked.InvokeAsync(EventArgs.Empty);
-
-		// todo daro to early?
-		Grid.Reload();
 	}
 
 	private void DeleteRowClicked()
@@ -58,10 +52,6 @@ public partial class UpDownButtonsBlazor
 		Assert.NotNull(Grid);
 
 		OnDeleteClicked.InvokeAsync(EventArgs.Empty);
-
-		Grid.Reload();
-
-		Selected = null;
 	}
 
 	private bool ButtonDisabledCore([CanBeNull] List<ViewModelBase> rows)

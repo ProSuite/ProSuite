@@ -17,18 +17,30 @@ public abstract class TestParameterValueDataGridBlazorBase : DataGridBlazorBase
 	{
 		Assert.NotNull(SelectedRow);
 		ViewModel.MoveUp(SelectedRow);
+
+		DataGrid.Reload();
 	}
 
 	protected void OnDownClicked()
 	{
 		Assert.NotNull(SelectedRow);
 		ViewModel.MoveDown(SelectedRow);
+
+		DataGrid.Reload();
 	}
 
 	protected void OnDeleteClicked()
 	{
 		Assert.NotNull(SelectedRow);
-		ViewModel.Remove(SelectedRow);
+
+		ViewModelBase newSelectedRow;
+		ViewModel.Remove(SelectedRow, out newSelectedRow);
+
+		DataGrid.Reload();
+
+		DataGrid.SelectRow(newSelectedRow);
+
+		SelectedRow = newSelectedRow;
 	}
 
 	protected override void OnRowClickCore(ViewModelBase row)

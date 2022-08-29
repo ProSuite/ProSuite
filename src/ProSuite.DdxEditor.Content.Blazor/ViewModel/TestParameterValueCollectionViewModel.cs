@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -131,12 +132,34 @@ public class TestParameterValueCollectionViewModel : ViewModelBase, IDataGridVie
 		return row;
 	}
 
-	public void Remove([NotNull] ViewModelBase row)
+	public void Remove([NotNull] ViewModelBase row, [CanBeNull] out ViewModelBase newSelectedRow)
 	{
 		Assert.ArgumentNotNull(row, nameof(row));
+		Assert.True(Values.Count > 0, "grid has no rows");
+
+		// the last row is always a dummy row
+		int rowsCount = Values.Count - 1;
+		int indexOfLast = rowsCount - 1;
+
+		int index = Values.IndexOf(row);
+		if (index < indexOfLast)
+		{
+			// many rows and not the last?
+			newSelectedRow = Values[index + 1];
+		}
+		else if (rowsCount == 1)
+		{
+			// only one row?
+			newSelectedRow = null;
+		}
+		else
+		{
+			// the last row?
+			newSelectedRow = Values[rowsCount - 2];
+		}
 
 		Assert.True(Values.Remove(row), $"cannot remove {row}");
-
+		
 		OnPropertyChanged(nameof(Values));
 	}
 
