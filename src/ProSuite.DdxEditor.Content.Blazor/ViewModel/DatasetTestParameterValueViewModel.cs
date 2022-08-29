@@ -139,7 +139,7 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 		string modelName =
 			source.Match(d => d?.Model?.Name, TestParameterValueUtils.GetDatasetModelName);
 
-		string imageSource = source.Match(BlazorImageUtils.GetImageSource, _ => null);
+		string imageSource = source.Match(BlazorImageUtils.GetImageSource, BlazorImageUtils.GetImageSource);
 
 		string filterExpression = null;
 		var usedAsReferenceData = false;
