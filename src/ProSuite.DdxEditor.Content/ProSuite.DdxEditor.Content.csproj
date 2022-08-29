@@ -70,7 +70,6 @@
 
   <ItemGroup>
     <Compile Include="..\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
-    <PackageReference Include="Prism.Core" Version="8.1.97" />
     <Compile Update="AssociationEnds\AssociationEndControl.cs">
       <SubType>UserControl</SubType>
     </Compile>

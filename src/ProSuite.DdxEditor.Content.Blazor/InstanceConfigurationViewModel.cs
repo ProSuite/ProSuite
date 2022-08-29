@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
 using ProSuite.Commons;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -23,6 +22,7 @@ public class InstanceConfigurationViewModel<T> : NotifyPropertyChangedBase,
 	[NotNull] private readonly EntityItem<T, T> _item;
 
 	[NotNull] private Dictionary<TestParameter, IList<ViewModelBase>> _rowsByParameter = new();
+	private int _version;
 
 	public InstanceConfigurationViewModel([NotNull] EntityItem<T, T> item,
 	                                      [NotNull] ITestParameterDatasetProvider datasetProvider)
@@ -46,6 +46,10 @@ public class InstanceConfigurationViewModel<T> : NotifyPropertyChangedBase,
 	[NotNull]
 	public ITestParameterDatasetProvider DatasetProvider { get; }
 
+	public bool IsPersistent => InstanceConfiguration.IsPersistent;
+
+	public bool Discard { get; set; }
+
 	public void NotifyChanged(bool dirty)
 	{
 		_item.NotifyChanged();
@@ -55,32 +59,29 @@ public class InstanceConfigurationViewModel<T> : NotifyPropertyChangedBase,
 	{
 		Assert.ArgumentNotNull(qualityCondition, nameof(qualityCondition));
 
-		// force dispose in case of discarding changes
-		Dispose();
+		try
+		{
+			_rowsByParameter = CreateRows(qualityCondition);
 
-		_rowsByParameter = CreateRows(qualityCondition);
+			Values = new List<ViewModelBase>(GetTopLevelRows(_rowsByParameter));
 
-		Values = new List<ViewModelBase>(GetTopLevelRows(_rowsByParameter));
-		OnPropertyChanged(nameof(Values));
+			Discard = qualityCondition.Version == _version;
+
+			OnPropertyChanged(nameof(Values));
+		}
+		finally
+		{
+			_version = qualityCondition.Version;
+			Discard = false;
+		}
 	}
+
+	public void Dispose() { }
 
 	void IInstanceConfigurationViewModel.OnRowPropertyChanged(
 		object sender, PropertyChangedEventArgs e)
 	{
 		UpdateEntity(Assert.NotNull(_item.GetEntity()));
-	}
-
-	public void Dispose()
-	{
-		Values?.Clear();
-		Values = null;
-
-		foreach (ViewModelBase vm in _rowsByParameter.Values.SelectMany(row => row))
-		{
-			vm.Dispose();
-		}
-
-		_rowsByParameter.Clear();
 	}
 
 	private IEnumerable<ViewModelBase> GetTopLevelRows(
@@ -157,7 +158,6 @@ public class InstanceConfigurationViewModel<T> : NotifyPropertyChangedBase,
 				rowsByParameter[param]
 					.Add(new ScalarTestParameterValueViewModel(
 						     param, scalarValue.GetValue(), this,
-						     param.IsConstructorParameter,
 						     param.IsConstructorParameter));
 			}
 			else
@@ -200,11 +200,6 @@ public class InstanceConfigurationViewModel<T> : NotifyPropertyChangedBase,
 				}
 				else if (row is ScalarTestParameterValueViewModel)
 				{
-					if (testParameter.IsConstructorParameter)
-					{
-						Assert.NotNull(row.Value);
-					}
-
 					instanceConfiguration.AddParameterValue(
 						new ScalarTestParameterValue(testParameter, row.Value));
 				}

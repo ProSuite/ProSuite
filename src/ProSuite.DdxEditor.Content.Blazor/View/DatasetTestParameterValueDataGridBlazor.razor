@@ -39,15 +39,9 @@
 						<Template Context="subViewModel">
 							@if (subViewModel is DatasetTestParameterValueViewModel vm)
 							{
-								@vm.FilterExpression
+								<RadzenTextBox @bind-Value="vm.FilterExpression"/>
 							}
 						</Template>
-						<EditTemplate Context="subViewModel">
-							@if (subViewModel is DatasetTestParameterValueViewModel vm)
-							{
-								<RadzenTextBox @bind-Value="vm.FilterExpression" Style="width: 100%;"/>
-							}
-						</EditTemplate>
 					</RadzenDataGridColumn>
 					<RadzenDataGridColumn TItem="ViewModelBase" Property="UsedAsReferenceData" Title="Reference" Width="80px">
 						<Template Context="subViewModel">

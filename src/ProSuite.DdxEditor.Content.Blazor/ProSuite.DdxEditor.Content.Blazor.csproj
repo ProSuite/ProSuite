@@ -39,7 +39,6 @@
   </ItemGroup>
 
   <ItemGroup>
-	  <ProjectReference Include="..\..\..\ProSuite.Shared\src\ProSuite.Shared.IoCRoot\ProSuite.Shared.IoCRoot.csproj" />
 	  <ProjectReference Include="..\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj" />
 	  <ProjectReference Include="..\ProSuite.Commons.UI\ProSuite.Commons.UI.csproj" />
 	  <ProjectReference Include="..\ProSuite.DdxEditor.Framework\ProSuite.DdxEditor.Framework.csproj" />
