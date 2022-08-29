@@ -1,13 +1,10 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using Microsoft.AspNetCore.Components;
-using Prism.Events;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DdxEditor.Content.Blazor.ViewModel;
-using ProSuite.DdxEditor.Framework.Events;
 using ProSuite.DomainModel.AO.QA;
-using ProSuite.Shared.IoCRoot;
 using Radzen;
 
 namespace ProSuite.DdxEditor.Content.Blazor;
@@ -16,22 +13,6 @@ public partial class QualityConditionTableViewBlazor
 {
 	// ReSharper disable once NotNullMemberIsNotInitialized
 	[NotNull] private IInstanceConfigurationViewModel _viewModel;
-	private bool _discardChanges;
-
-	protected override void OnInitializedCore()
-	{
-		base.OnInitializedCore();
-
-		var eventAggregator =
-			ContainerRegistry.Current.Resolve<IEventAggregator>();
-
-		eventAggregator.GetEvent<DiscardChangesEvent>().Subscribe(OnDiscardChanges);
-	}
-
-	private void OnDiscardChanges()
-	{
-		_discardChanges = true;
-	}
 
 	[NotNull]
 	[Parameter]
@@ -48,14 +29,9 @@ public partial class QualityConditionTableViewBlazor
 
 	private void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
 	{
-		// QualityConditionItem.DiscardChangesCore()
-		// fires prior to
-		// Item.DiscardChangesCore()
-		if (_discardChanges)
+		if (ViewModel.Discard)
 		{
 			DataGrid.Reload();
-
-			_discardChanges = false;
 		}
 		else if (! ViewModel.IsPersistent)
 		{
@@ -65,16 +41,6 @@ public partial class QualityConditionTableViewBlazor
 			// => refresh the grid
 			DataGrid.Reload();
 		}
-	}
-
-	protected override void DisposeCore()
-	{
-		_viewModel.PropertyChanged -= OnPropertyChanged;
-
-		var eventAggregator =
-			ContainerRegistry.Current.Resolve<IEventAggregator>();
-
-		eventAggregator.GetEvent<DiscardChangesEvent>().Unsubscribe(OnDiscardChanges);
 	}
 
 	private IEnumerable<ViewModelBase> Values { get; set; }

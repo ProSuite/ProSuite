@@ -12,6 +12,7 @@ public interface IInstanceConfigurationViewModel : IViewObserver, IDataGridViewM
 	ITestParameterDatasetProvider DatasetProvider { get; }
 
 	bool IsPersistent { get; }
+	bool Discard { get; set; }
 
 	void BindTo(InstanceConfiguration instanceConfiguration);
 

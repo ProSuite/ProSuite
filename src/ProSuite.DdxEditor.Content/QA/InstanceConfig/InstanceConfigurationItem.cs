@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
-using Prism.Events;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -16,13 +15,11 @@ using ProSuite.DdxEditor.Content.QA.QCon;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Commands;
 using ProSuite.DdxEditor.Framework.Dependencies;
-using ProSuite.DdxEditor.Framework.Events;
 using ProSuite.DdxEditor.Framework.Items;
 using ProSuite.DdxEditor.Framework.ItemViews;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Core;
-using ProSuite.Shared.IoCRoot;
 using ProSuite.UI.QA.ResourceLookup;
 
 namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
@@ -300,16 +297,6 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 				                             $"A {targetType.Name} with the same name already exists",
 				                             Severity.Error);
 			}
-		}
-
-		protected override void DiscardChangesCore()
-		{
-			base.DiscardChangesCore();
-
-			var eventAggregator =
-				ContainerRegistry.Current.Resolve<IEventAggregator>();
-
-			eventAggregator.GetEvent<DiscardChangesEvent>().Publish();
 		}
 
 		private static bool IsParameterOptional(
