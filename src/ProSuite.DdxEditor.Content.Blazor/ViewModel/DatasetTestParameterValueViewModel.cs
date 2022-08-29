@@ -98,11 +98,9 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 
 		DatasetFinderItem selectedItem = selection[0];
 
-		Either<Dataset, TransformerConfiguration> source = selectedItem.Source;
+		DatasetSource = selectedItem.Source;
 
-		DatasetSource = source;
-
-		ModelName = source.Match(d => d?.Model?.Name, TestParameterValueUtils.GetDatasetModelName);
+		ModelName = DatasetSource.Match(d => d?.Model?.Name, TestParameterValueUtils.GetDatasetModelName);
 
 		ImageSource = selectedItem.Source.Match(BlazorImageUtils.GetImageSource, BlazorImageUtils.GetImageSource);
 
@@ -111,12 +109,13 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 
 		// IMPORTANT: set last because it triggers OnPropertyChanged
 		// which updates the entity
-		Value = source.Match(d => d?.Name, t => t.Name);
+		Value = selectedItem.Source.Match(d => d?.Name, t => t.Name);
 	}
 
 	protected override bool ValidateCore()
 	{
-		return DisplayValue != null;
+		return DatasetSource.Match(dataset => dataset != null,
+		                           configuration => configuration != null);
 	}
 
 	[NotNull]
