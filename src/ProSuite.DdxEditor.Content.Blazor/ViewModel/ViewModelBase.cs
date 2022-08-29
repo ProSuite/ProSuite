@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Validation;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.QA.Core;
 
@@ -19,9 +18,8 @@ public abstract class ViewModelBase : Observable
 	                        [CanBeNull] object value,
 	                        [NotNull] IInstanceConfigurationViewModel observer,
 	                        bool required = false,
-	                        bool validateOnPersistence = false,
 	                        [CanBeNull] string customErrorMessage = null) : base(
-		observer, customErrorMessage, required, validateOnPersistence)
+		observer, customErrorMessage, required)
 	{
 		Assert.ArgumentNotNull(parameter, nameof(parameter));
 
@@ -64,11 +62,6 @@ public abstract class ViewModelBase : Observable
 	public void StopEditing()
 	{
 		Editing = false;
-	}
-
-	protected override void RegisterMessageCore(Notification notification, string message)
-	{
-		notification.RegisterMessage(ParameterName, message, Severity.Error);
 	}
 
 	protected override bool ValidateCore()

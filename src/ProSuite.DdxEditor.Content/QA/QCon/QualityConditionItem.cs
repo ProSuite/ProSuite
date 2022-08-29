@@ -526,11 +526,6 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 				                             "A quality condition with the same name already exists",
 				                             Severity.Error);
 			}
-
-			var eventAggregator =
-				ContainerRegistry.Current.Resolve<IEventAggregator>();
-
-			eventAggregator.GetEvent<ValidateForPersistenceEvent>().Publish(notification);
 		}
 
 		protected override void DiscardChangesCore()

@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
@@ -20,7 +19,7 @@ public class TestParameterValueCollectionViewModel : ViewModelBase, IDataGridVie
 	public TestParameterValueCollectionViewModel([NotNull] TestParameter parameter,
 	                                             [NotNull] IList<ViewModelBase> values,
 	                                             IInstanceConfigurationViewModel observer) : base(
-		parameter, values, observer, false, true)
+		parameter, values, observer)
 	{
 		Assert.ArgumentNotNull(values, nameof(values));
 
@@ -125,8 +124,7 @@ public class TestParameterValueCollectionViewModel : ViewModelBase, IDataGridVie
 			Assert.NotNull(testParameterValue);
 
 			row = new ScalarTestParameterValueViewModel(Parameter, testParameterValue.GetValue(),
-			                                            Observer, Parameter.IsConstructorParameter,
-			                                            Parameter.IsConstructorParameter);
+			                                            Observer, Parameter.IsConstructorParameter);
 			Insert(row, position);
 		}
 
