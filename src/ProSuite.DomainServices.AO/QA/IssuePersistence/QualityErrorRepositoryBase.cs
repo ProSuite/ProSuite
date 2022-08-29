@@ -198,7 +198,7 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 					foreach (KeyValuePair<IObjectClass, IList<IObject>> pair in objectsByClass)
 					{
 						IObjectClass issueClass = pair.Key;
-						bool isFeatureClass = issueClass is ESRI.ArcGIS.Geodatabase.IFeatureClass;
+						bool isFeatureClass = issueClass is IFeatureClass;
 
 						int fieldIndexErrorType = issueClass.Fields.FindField(FieldNameErrorType);
 
@@ -216,9 +216,9 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 								// move to issue table without geometry
 								IssueDatasetWriter issueWriter =
 									IssueDatasets.GetIssueWriterNoGeometry();
-								ESRI.ArcGIS.Geodatabase.ITable issueTable = issueWriter.Table;
+								ITable issueTable = issueWriter.Table;
 
-								ESRI.ArcGIS.Geodatabase.IRow row = issueTable.CreateRow();
+								IRow row = issueTable.CreateRow();
 								GdbObjectUtils.CopyAttributeValues(issueObject, row);
 
 								RemoveReferenceGeometryFlag(row);
@@ -275,7 +275,7 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 			}
 		}
 
-		private void RemoveReferenceGeometryFlag([NotNull] ESRI.ArcGIS.Geodatabase.IRow row)
+		private void RemoveReferenceGeometryFlag([NotNull] IRow row)
 		{
 			int fieldIndex = row.Fields.FindField(FieldNameDescription);
 
@@ -295,7 +295,7 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 			row.set_Value(fieldIndex, newIssueDescription);
 		}
 
-		private bool IsTableIssueStoredWithReferenceGeometry([NotNull] ESRI.ArcGIS.Geodatabase.IRow issueRow)
+		private bool IsTableIssueStoredWithReferenceGeometry([NotNull] IRow issueRow)
 		{
 			string issueDescription = GetIssueDescription(issueRow);
 
@@ -304,7 +304,7 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 		}
 
 		[NotNull]
-		private string GetIssueDescription([NotNull] ESRI.ArcGIS.Geodatabase.IRow issueRow)
+		private string GetIssueDescription([NotNull] IRow issueRow)
 		{
 			int fieldIndex = issueRow.Fields.FindField(FieldNameDescription);
 
@@ -620,7 +620,7 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 
 		private static bool UsesDeletedDatasets([NotNull] QualityCondition qualityCondition)
 		{
-			return qualityCondition.GetDatasetParameterValues()
+			return qualityCondition.GetDatasetParameterValues(includeReferencedProcessors: true)
 			                       .Any(dataset => dataset.Deleted);
 		}
 
@@ -1020,7 +1020,7 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 			foreach (IssueDatasetWriter issueDatasetWriter in IssueDatasets.GetIssueWriters())
 			{
 				foreach (AllowedError allowedError in AllowedErrorUtils.GetAllowedErrors(
-					issueDatasetWriter, areaOfInterest, spatialFilter, factory))
+					         issueDatasetWriter, areaOfInterest, spatialFilter, factory))
 				{
 					yield return allowedError;
 				}
@@ -1046,7 +1046,7 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 				_objectSelection = objectSelection;
 			}
 
-			public bool IsDeletable(ESRI.ArcGIS.Geodatabase.IRow errorRow,
+			public bool IsDeletable(IRow errorRow,
 			                        QualityCondition qualityCondition)
 			{
 				var hasUnknownTables = false;
@@ -1054,7 +1054,7 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 				{
 					bool tableIsUnknown;
 					if (_objectSelection.Contains(involvedRow, qualityCondition, out tableIsUnknown)
-					)
+					   )
 					{
 						return true;
 					}

@@ -201,7 +201,7 @@ namespace ProSuite.DomainServices.AO.QA.Exceptions
 				if (_ignoredGeometryInvolvedRowsIndex != null)
 				{
 					foreach (ExceptionObject candidate in
-						_ignoredGeometryInvolvedRowsIndex.Search(exceptionObject))
+					         _ignoredGeometryInvolvedRowsIndex.Search(exceptionObject))
 					{
 						yield return new ExceptionObjectCandidate(candidate, true);
 					}
@@ -213,8 +213,8 @@ namespace ProSuite.DomainServices.AO.QA.Exceptions
 				if (_noGeometryInvolvedRowsIndex != null)
 				{
 					foreach (ExceptionObject candidate in
-						_noGeometryInvolvedRowsIndex.Search(exceptionObject)
-					)
+					         _noGeometryInvolvedRowsIndex.Search(exceptionObject)
+					        )
 					{
 						yield return new ExceptionObjectCandidate(candidate, true);
 					}
@@ -291,7 +291,8 @@ namespace ProSuite.DomainServices.AO.QA.Exceptions
 
 				HashSet<IObjectDataset> result = null;
 
-				foreach (Dataset dataset in qualityCondition.GetDatasetParameterValues())
+				foreach (Dataset dataset in qualityCondition.GetDatasetParameterValues(
+					         includeSourceDatasets: true))
 				{
 					var objectDataset = dataset as IObjectDataset;
 					if (objectDataset == null || ! criteria.IgnoreDataset(objectDataset))
@@ -319,7 +320,7 @@ namespace ProSuite.DomainServices.AO.QA.Exceptions
 
 				IObjectDataset objectDataset =
 					_datasetResolver.GetDatasetByInvolvedRowTableName(tableName,
-					                                                  _qualityCondition);
+						_qualityCondition);
 
 				return objectDataset != null && _ignoredObjectDatasets.Contains(objectDataset);
 			}

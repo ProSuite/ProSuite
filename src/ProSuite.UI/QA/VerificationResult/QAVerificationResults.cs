@@ -1,9 +1,12 @@
+using System.Collections.Generic;
+using System.Linq;
 using System.Windows.Forms;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.UI.Env;
 using ProSuite.DomainModel.Core.QA;
+using ProSuite.DomainModel.Core.QA.Repositories;
 
 namespace ProSuite.UI.QA.VerificationResult
 {
@@ -14,7 +17,8 @@ namespace ProSuite.UI.QA.VerificationResult
 			[NotNull] QualityVerification verification,
 			string contextType,
 			string contextName,
-			[NotNull] IDomainTransactionManager domainTransactionManager)
+			[NotNull] IDomainTransactionManager domainTransactionManager,
+			[CanBeNull] IInstanceConfigurationRepository transformerConfigurations = null)
 		{
 			Assert.ArgumentNotNull(verification, nameof(verification));
 			Assert.ArgumentNotNull(domainTransactionManager, nameof(domainTransactionManager));
@@ -24,7 +28,8 @@ namespace ProSuite.UI.QA.VerificationResult
 				domainTransactionManager.UseTransaction(
 					delegate
 					{
-						Initialize(verification, domainTransactionManager);
+						Initialize(verification, domainTransactionManager,
+						           transformerConfigurations);
 
 						// ReSharper disable once AccessToDisposedClosure
 						form.SetVerification(verification,
@@ -43,7 +48,8 @@ namespace ProSuite.UI.QA.VerificationResult
 
 		private static void Initialize(
 			[NotNull] QualityVerification verification,
-			[NotNull] IDomainTransactionManager domainTransactionManager)
+			[NotNull] IDomainTransactionManager domainTransactionManager,
+			[CanBeNull] IInstanceConfigurationRepository transformerConfigurations)
 		{
 			Assert.ArgumentNotNull(verification, nameof(verification));
 			Assert.ArgumentNotNull(domainTransactionManager, nameof(domainTransactionManager));
@@ -54,35 +60,11 @@ namespace ProSuite.UI.QA.VerificationResult
 				domainTransactionManager.Initialize(verification.VerificationDatasets);
 			}
 
-			foreach (
-				QualityConditionVerification conditionVerification in
-				verification.ConditionVerifications)
-			{
-				QualityCondition qualityCondition =
-					conditionVerification.DisplayableCondition;
+			IList<QualityCondition> displayableConditions = verification.ConditionVerifications
+				.Select(v => v.DisplayableCondition).ToList();
 
-				if (qualityCondition.IsPersistent)
-				{
-					domainTransactionManager.Reattach(qualityCondition);
-				}
-
-				foreach (TestParameterValue value in qualityCondition.ParameterValues)
-				{
-					if (value.IsPersistent)
-					{
-						domainTransactionManager.Reattach(value);
-					}
-				}
-			}
-
-			// NOTE this causes NonUniqueObjectExceptions in case of datasets from other models (only?)
-			// But: it does not seem to be really needed
-			//foreach (
-			//    QualityVerificationDataset verificationDataset in
-			//        verification.VerificationDatasets)
-			//{
-			//    domainTransactionManager.Reattach(verificationDataset.Dataset);
-			//}
+			InstanceConfigurationUtils.InitializeAssociatedConfigurationsTx(
+				displayableConditions, domainTransactionManager, transformerConfigurations);
 		}
 	}
 }

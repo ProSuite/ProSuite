@@ -389,15 +389,16 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 			QualityCondition qualityConditionAlias = null;
 			TestParameterValue testParamAlias = null;
 
-			// Initial query, eagerly fetching transformers including their parameters
+			// Initial query, eagerly fetching transformers including their parameters.
+			// NOTE: Do not restrict to only dataset parameter type, otherwise the scalar
+			// parameters will be null in the ParameterValues list. However, the performance
+			// would increase considerably by just loading the dataset test parameter values.
 			IQueryOver<QualityCondition>
 				parametersQuery =
 					session.QueryOver(() => qualityConditionAlias)
 					       .Fetch(SelectMode.FetchLazyProperties,
 					              () => qualityConditionAlias.ParameterValues)
 					       .JoinQueryOver(qc => qc.ParameterValues, () => testParamAlias)
-					       .Where(() => testParamAlias.GetType() ==
-					                    typeof(DatasetTestParameterValue))
 					       .Fetch(SelectMode.FetchLazyProperties,
 					              () => testParamAlias.ValueSource.ParameterValues)
 					       .Where(() => qualityConditionAlias.Id.IsIn(conditionIds))
@@ -413,11 +414,16 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 
 			var initialResult = parametersQuery.List<QualityCondition>();
 
+			var returnedDatasetIds = new HashSet<int>();
 			foreach (Dataset dataset in
 			         GetReferencedDatasets(initialResult, referencedTransformers,
 			                               testParameterPredicate))
 			{
-				yield return dataset;
+				if (! returnedDatasetIds.Contains(dataset.Id))
+				{
+					yield return dataset;
+					returnedDatasetIds.Add(dataset.Id);
+				}
 			}
 
 			if (includeReferencesViaIssueFilters)
@@ -428,7 +434,11 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 				         GetReferencedDatasets(issueFilters, referencedTransformers,
 				                               testParameterPredicate))
 				{
-					yield return dataset;
+					if (! returnedDatasetIds.Contains(dataset.Id))
+					{
+						yield return dataset;
+						returnedDatasetIds.Add(dataset.Id);
+					}
 				}
 			}
 		}
@@ -447,8 +457,6 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 					       .Fetch(SelectMode.FetchLazyProperties,
 					              () => transformerConfigAlias.ParameterValues)
 					       .JoinQueryOver(tc => tc.ParameterValues, () => testParamAlias)
-					       .Where(() => testParamAlias.GetType() ==
-					                    typeof(DatasetTestParameterValue))
 					       .Fetch(SelectMode.FetchLazyProperties,
 					              () => testParamAlias.ValueSource.ParameterValues)
 					       .Where(() => transformerConfigAlias.Id.IsIn(

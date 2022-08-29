@@ -64,7 +64,8 @@ namespace ProSuite.DomainModel.Core.QA
 
 				Assert.NotNull(condition);
 
-				foreach (Dataset dataset in condition.GetDatasetParameterValues())
+				foreach (Dataset dataset in condition.GetDatasetParameterValues(
+					         includeSourceDatasets: true))
 				{
 					datasets.Add(dataset);
 				}
@@ -112,7 +113,8 @@ namespace ProSuite.DomainModel.Core.QA
 
 				_conditionVerifications.Add(new QualityConditionVerification(element));
 
-				foreach (Dataset dataset in element.QualityCondition.GetDatasetParameterValues())
+				foreach (Dataset dataset in element.QualityCondition.GetDatasetParameterValues(
+					         includeSourceDatasets: true))
 				{
 					datasets.Add(dataset);
 				}

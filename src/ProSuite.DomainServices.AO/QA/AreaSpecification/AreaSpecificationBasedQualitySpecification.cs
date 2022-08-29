@@ -152,7 +152,8 @@ namespace ProSuite.DomainServices.AO.QA.AreaSpecification
 					continue;
 				}
 
-				foreach (Dataset dataset in qualityCondition.GetDatasetParameterValues())
+				foreach (Dataset dataset in qualityCondition.GetDatasetParameterValues(
+					         includeSourceDatasets: true))
 				{
 					result.Add(dataset.Name);
 				}
@@ -263,7 +264,8 @@ namespace ProSuite.DomainServices.AO.QA.AreaSpecification
 					involvedDatasetNames =
 						involvedRows.Count != 0
 							? involvedRows.Select(row => row.TableName).ToList()
-							: qualityCondition.GetDatasetParameterValues().Select(
+							: qualityCondition.GetDatasetParameterValues(
+								includeSourceDatasets: true).Select(
 								dataset => dataset.Name).ToList();
 				}
 
@@ -327,7 +329,8 @@ namespace ProSuite.DomainServices.AO.QA.AreaSpecification
 
 		[CanBeNull]
 		private IEnumerable<AreaSpecification> GetAreaSpecifications(
-			[NotNull] IReadOnlyFeature feature, bool recycled, Guid recycleUnique, bool ignoreTestArea)
+			[NotNull] IReadOnlyFeature feature, bool recycled, Guid recycleUnique,
+			bool ignoreTestArea)
 		{
 			if (feature != _currentFeature ||
 			    recycled && _currentRecycleUnique != recycleUnique)
@@ -356,7 +359,7 @@ namespace ProSuite.DomainServices.AO.QA.AreaSpecification
 				else
 				{
 					_currentFeatureAreaSpecifications = CalculateAreaSpecifications(feature,
-					                                                                ignoreTestArea);
+						ignoreTestArea);
 				}
 			}
 
