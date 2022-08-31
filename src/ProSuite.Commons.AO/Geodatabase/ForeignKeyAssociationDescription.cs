@@ -45,5 +45,19 @@ namespace ProSuite.Commons.AO.Geodatabase
 		/// flexibility in the choice of ID for outer joins.
 		/// </summary>
 		public bool HasOneToOneCardinality { get; set; }
+
+		#region Overrides of Object
+
+		public override string ToString()
+		{
+			string associationName = HasOneToOneCardinality ? "One-to-One" : "Many-to-One";
+
+			return
+				$"{associationName} association between referencing table {ReferencingTable.Name} " +
+				$"and referenced table {ReferencedTable.Name} using referencing (foreign) key " +
+				$"{ReferencingKeyName} and referenced (primary) key {ReferencedKeyName}.";
+		}
+
+		#endregion
 	}
 }
