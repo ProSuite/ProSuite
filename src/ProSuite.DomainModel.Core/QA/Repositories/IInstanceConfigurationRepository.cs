@@ -8,6 +8,8 @@ namespace ProSuite.DomainModel.Core.QA.Repositories
 {
 	public interface IInstanceConfigurationRepository : IRepository<InstanceConfiguration>
 	{
+		IList<T> GetInstanceConfigurations<T>() where T : InstanceConfiguration;
+
 		IList<TransformerConfiguration> GetTransformerConfigurations(
 			[CanBeNull] IList<int> excludedIds = null);
 
@@ -38,7 +40,7 @@ namespace ProSuite.DomainModel.Core.QA.Repositories
 		/// </summary>
 		/// <param name="qualityConditions">The referencing conditions</param>
 		/// <param name="includeReferenceViaIssueFilters">Whether or not datasets referenced by an
-		/// issue filter of a specified conditon should be included.</param>
+		/// issue filter of a specified condition should be included.</param>
 		/// <param name="testParameterPredicate">Extra predicate to be evaluated on the test
 		/// parameter values.</param>
 		/// <returns></returns>

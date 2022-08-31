@@ -195,11 +195,11 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 				return created;
 			}
 
-			TestFactory testFactory =
-				Assert.NotNull(TestFactoryUtils.GetTestFactory(created.InstanceDescriptor));
-
+			InstanceFactory instanceFactory =
+				Assert.NotNull(InstanceFactoryUtils.CreateFactory(created));
+			
 			Dictionary<string, TestParameter> testParametersByName =
-				testFactory.Parameters.ToDictionary(
+				instanceFactory.Parameters.ToDictionary(
 					parameter => parameter.Name,
 					StringComparer.OrdinalIgnoreCase);
 
