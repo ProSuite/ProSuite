@@ -1,8 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Runtime.CompilerServices;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
@@ -15,8 +12,6 @@ namespace ProSuite.DdxEditor.Content.Blazor.ViewModel;
 
 public class TestParameterValueCollectionViewModel : ViewModelBase, IDataGridViewModel
 {
-	[NotNull] private string _displayName;
-
 	public TestParameterValueCollectionViewModel([NotNull] TestParameter parameter,
 	                                             [NotNull] IList<ViewModelBase> values,
 	                                             IInstanceConfigurationViewModel observer) : base(
@@ -26,34 +21,16 @@ public class TestParameterValueCollectionViewModel : ViewModelBase, IDataGridVie
 
 		IsDatasetType = TestParameterTypeUtils.IsDatasetType(DataType);
 
-		_displayName = GetDisplayName(Values);
-
 		ComponentType = typeof(TestParameterValueCollectionBlazor);
 		ComponentParameters.Add("ViewModel", this);
 
 		InsertDummyRow();
 	}
-	
-	public event PropertyChangedEventHandler DisplayNameChanged;
-
-	[NotifyPropertyChangedInvocator]
-	protected virtual void OnDisplayNameChanged([CallerMemberName] string propertyName = null)
-	{
-		DisplayNameChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-	}
 
 	public bool IsDatasetType { get; }
 
 	[NotNull]
-	public string DisplayName
-	{
-		get => _displayName;
-		private set
-		{
-			_displayName = value;
-			OnDisplayNameChanged();
-		}
-	}
+	public string DisplayName => GetDisplayName(Values);
 
 	public IList<ViewModelBase> Values => (IList<ViewModelBase>) Value;
 
@@ -91,13 +68,6 @@ public class TestParameterValueCollectionViewModel : ViewModelBase, IDataGridVie
 				yield return Assert.NotNull(v.Value).ToString();
 			}
 		}
-	}
-
-	protected override bool ValidateCore()
-	{
-		DisplayName = GetDisplayName(Values);
-
-		return base.ValidateCore();
 	}
 
 	[NotNull]
