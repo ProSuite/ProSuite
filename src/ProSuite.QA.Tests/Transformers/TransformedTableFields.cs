@@ -6,6 +6,7 @@ using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
+using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
@@ -22,6 +23,8 @@ namespace ProSuite.QA.Tests.Transformers
 	/// </summary>
 	public class TransformedTableFields
 	{
+		private const string _tablePrefixFormat = "{0}_{1}";
+
 		private readonly IReadOnlyTable _sourceTable;
 
 		/// <summary>
@@ -55,8 +58,12 @@ namespace ProSuite.QA.Tests.Transformers
 		/// source. Especially if the resulting rows are grouped calculated fields are used
 		/// to provide aggregate functions such as SUM, COUNT etc.
 		/// </summary>
-		[CanBeNull] public IReadOnlyList<FieldInfo> CalculatedFields => _calculatedFields;
+		[CanBeNull]
+		public IReadOnlyList<FieldInfo> CalculatedFields => _calculatedFields;
+
 		private List<FieldInfo> _calculatedFields;
+
+		public IList<string> ExcludedSourceFields { get; } = new List<string>();
 
 		[CanBeNull]
 		internal TableView TableView { get; private set; }
@@ -79,22 +86,25 @@ namespace ProSuite.QA.Tests.Transformers
 			IFields sourceFields = _sourceTable.Fields;
 			for (int sourceIdx = 0; sourceIdx < sourceFields.FieldCount; sourceIdx++)
 			{
-				string targetName = null;
-				if (NonUserDefinedFieldPrefix != null)
-				{
-					IField sourceField = _sourceTable.Fields.Field[sourceIdx];
+				IField sourceField = _sourceTable.Fields.Field[sourceIdx];
 
-					targetName = NonUserDefinedFieldPrefix + sourceField.Name;
-				}
+				string targetName = NonUserDefinedFieldPrefix != null
+					                    ? NonUserDefinedFieldPrefix + sourceField.Name
+					                    : sourceField.Name;
+
+				bool alreadyExists = toOutputClass.FindField(targetName) >= 0;
 
 				if (skipIfAlreadyExist)
 				{
-					IField sourceField = _sourceTable.Fields.Field[sourceIdx];
-
-					if (toOutputClass.FindField(sourceField.Name) >= 0)
+					if (alreadyExists)
 					{
 						continue;
 					}
+				}
+				else if (alreadyExists)
+				{
+					// Prefix with tableName_
+					targetName = PrefixDuplicate(targetName);
 				}
 
 				CopyField(sourceIdx, toOutputClass, sourceFields, targetName);
@@ -102,6 +112,17 @@ namespace ProSuite.QA.Tests.Transformers
 
 			if (! ExcludeBaseRowsField)
 				EnsureBaseRowField(toOutputClass);
+		}
+
+		private string PrefixDuplicate(string targetName)
+		{
+			// TODO: Consider remembering the list of duplicates to also pre-fix the other table's fields
+
+			// Un-qualify the table name
+			ModelElementNameUtils.TryUnqualifyName(_sourceTable.Name,
+			                                       out string unqualifiedTableName);
+
+			return string.Format(_tablePrefixFormat, unqualifiedTableName, targetName);
 		}
 
 		public void AddUserDefinedFields([NotNull] IList<string> userAttributes,
@@ -237,6 +258,27 @@ namespace ProSuite.QA.Tests.Transformers
 			toOutputClass.AddFieldT(shapeField);
 		}
 
+		public void ExcludeAllShapeFields()
+		{
+			if (_sourceTable is IReadOnlyFeatureClass featureClass)
+			{
+				ExcludedSourceFields.Add(featureClass.ShapeFieldName);
+
+				string lengthField = DatasetUtils.GetLengthField(featureClass)?.Name;
+				string areaField = DatasetUtils.GetAreaField(featureClass)?.Name;
+
+				if (lengthField != null)
+				{
+					ExcludedSourceFields.Add(lengthField);
+				}
+
+				if (areaField != null)
+				{
+					ExcludedSourceFields.Add(areaField);
+				}
+			}
+		}
+
 		public bool ValidateFieldNames([NotNull] IList<string> userAttributes,
 		                               bool allowExpressions,
 		                               out string message)
@@ -344,6 +386,12 @@ namespace ProSuite.QA.Tests.Transformers
 			if (field.Type == esriFieldType.esriFieldTypeGeometry && HasShapeField(toOutputClass))
 			{
 				// It's already got one
+				return;
+			}
+
+			if (ExcludedSourceFields.Contains(field.Name))
+			{
+				// NOTE: Included Length/Area fields fail in search if the respective shape is excluded
 				return;
 			}
 

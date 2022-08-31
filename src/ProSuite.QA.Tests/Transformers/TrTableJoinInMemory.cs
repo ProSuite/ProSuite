@@ -1,12 +1,11 @@
 using System;
-using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
-using ProSuite.QA.Container;
 using ProSuite.QA.Core;
 using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
@@ -17,6 +16,8 @@ namespace ProSuite.QA.Tests.Transformers
 	[TableTransformer]
 	public class TrTableJoinInMemory : TableTransformer<GdbTable>
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		private readonly IReadOnlyTable _leftTable;
 		private readonly IReadOnlyTable _rightTable;
 		private readonly string _leftTableKey;
@@ -54,6 +55,7 @@ namespace ProSuite.QA.Tests.Transformers
 		}
 
 		[TestParameter]
+		[CanBeNull]
 		[DocTr(nameof(DocTrStrings.TrTableJoinInMemory_manyToManyTable))]
 		public IReadOnlyTable ManyToManyTable
 		{
@@ -68,6 +70,7 @@ namespace ProSuite.QA.Tests.Transformers
 		}
 
 		[TestParameter]
+		[CanBeNull]
 		[DocTr(nameof(DocTrStrings.TrTableJoinInMemory_manyToManyTableLeftKey))]
 		public string ManyToManyTableLeftKey
 		{
@@ -76,6 +79,7 @@ namespace ProSuite.QA.Tests.Transformers
 		}
 
 		[TestParameter]
+		[CanBeNull]
 		[DocTr(nameof(DocTrStrings.TrTableJoinInMemory_manyToManyTableRightKey))]
 		public string ManyToManyTableRightKey
 		{
@@ -88,38 +92,114 @@ namespace ProSuite.QA.Tests.Transformers
 
 		protected override GdbTable GetTransformedCore(string name)
 		{
-			// TODO: In order to use the DataContainer at least for the left rows, wrap or subclass JoinedDataset
 			if (_joinedTable == null)
 			{
 				AssociationDescription association = CreateAssociationDescription();
 
 				const bool ensureUniqueIds = true;
 
-				// TODO: Constraints on the tables!
-				_joinedTable = TableJoinUtils.CreateJoinedGdbFeatureClass(
+				_joinedTable = CreateJoinedGdbFeatureClass(
 					association, _leftTable, name, ensureUniqueIds, _joinType);
 
-				// To store the involved base rows in issue:
-				IField baseRowField = FieldUtils.CreateBlobField(InvolvedRowUtils.BaseRowField);
-				_joinedTable.AddField(baseRowField);
+				JoinedBackingDataset joinedDataset =
+					(JoinedBackingDataset) Assert.NotNull(_joinedTable.BackingDataset);
 
-				JoinedDataset joinedDataset =
-					(JoinedDataset) Assert.NotNull(_joinedTable.BackingDataset);
+				AddFields(association, joinedDataset);
 
-				//// Case sensitivity?!
-				//joinedDataset.LeftRowsFilter = GetConstraint(0);
-				//joinedDataset.RightRowsFilter = GetConstraint(1);
-				//if (ManyToManyTable != null)
-				//{
-				//	joinedDataset.ManyToManyRowsFilter = GetConstraint(2);
-				//}
-
-				// or: joinedDataset.SearchMethod = () => DataContainer.Search();
-
-				joinedDataset.OnRowCreatingAction = AddBaseRowsAction;
+				// Once the schema is created, we can set up the field-lookups:
+				joinedDataset.SetupRowFactory();
 			}
 
 			return _joinedTable;
+		}
+
+		#endregion
+
+		/// <summary>
+		/// Creates a GdbTable or GdbFeatureClass representing the join of the specified association.
+		/// </summary>
+		/// <param name="associationDescription">The definition of the join</param>
+		/// <param name="geometryTable">The 'left' table which, if it has a geometry field, will
+		/// be used to define the resulting FeatureClass.</param>
+		/// <param name="name">The name of the result class.</param>
+		/// <param name="ensureUniqueIds">Whether some extra performance penalty should be accepted
+		/// in order to guarantee the uniqueness of the OBJECTID field. This is relevant for
+		/// many-to-many joins.</param>
+		/// <param name="joinType"></param>
+		/// <returns></returns>
+		/// <exception cref="NotImplementedException"></exception>
+		private static GdbTable CreateJoinedGdbFeatureClass(
+			[NotNull] AssociationDescription associationDescription,
+			[CanBeNull] IReadOnlyTable geometryTable,
+			[NotNull] string name,
+			bool ensureUniqueIds,
+			JoinType joinType = JoinType.InnerJoin)
+		{
+			// TODO: Support both tables having no geometry -> get all records from the smaller?
+			//       Or possibly always query the left table first (in inner joins) to allow for optimization by user.
+			//       support left table having the geometry but using right join -> swap, leftJoin
+			if (joinType == JoinType.RightJoin)
+			{
+				throw new NotImplementedException("RightJoin is not yet implemented.");
+			}
+
+			// TODO: Constraints on the input tables! Idea: IReadOnlyFeatureClass implementation
+			//       that wraps the filter helper and container access logic
+
+			// If the geometry table is null, the 'left' table will be used (if it has a geometry).
+			geometryTable = geometryTable ?? associationDescription.Table1;
+
+			IReadOnlyTable otherTable = associationDescription.Table1.Equals(geometryTable)
+				                            ? associationDescription.Table2
+				                            : associationDescription.Table1;
+
+			JoinedBackingDataset BackingDatasetFactoryFunc(GdbTable joinedSchema)
+			{
+				return new JoinedBackingDataset(
+					       associationDescription, geometryTable, otherTable, joinedSchema)
+				       {
+					       JoinType = joinType,
+				       };
+			}
+
+			var result =
+				CreateJoinedGdbTable(name, BackingDatasetFactoryFunc, geometryTable);
+
+			return result;
+		}
+
+		private void AddFields(AssociationDescription association,
+		                       JoinedBackingDataset joinedDataset)
+		{
+			// Suggestion for multi-table transformers: fields are only qualified to avoid duplicates
+			// using <input table name>_ 
+			TransformedTableFields leftFields = new TransformedTableFields(_leftTable);
+			TransformedTableFields rightFields = new TransformedTableFields(_rightTable);
+			rightFields.ExcludeAllShapeFields();
+
+			joinedDataset.TableFieldsBySource.Add(_leftTable, leftFields);
+			joinedDataset.TableFieldsBySource.Add(_rightTable, rightFields);
+
+			TransformedTableFields bridgeTableFields = null;
+
+			// In case of m:n ensure the field is in the result schema:
+			if (association is ManyToManyAssociationDescription manyToMany)
+			{
+				bridgeTableFields = new TransformedTableFields(manyToMany.AssociationTable);
+				joinedDataset.TableFieldsBySource.Add(manyToMany.AssociationTable,
+				                                      bridgeTableFields);
+			}
+
+			IReadOnlyTable oidSourceTable = joinedDataset.ObjectIdSourceTable;
+
+			if (oidSourceTable != null && oidSourceTable.HasOID)
+			{
+				joinedDataset.TableFieldsBySource[oidSourceTable].AddOIDField(_joinedTable);
+			}
+
+			leftFields.AddAllFields(_joinedTable);
+			rightFields.AddAllFields(_joinedTable);
+			bridgeTableFields?.AddAllFields(_joinedTable);
 		}
 
 		private AssociationDescription CreateAssociationDescription()
@@ -150,46 +230,35 @@ namespace ProSuite.QA.Tests.Transformers
 					_manyToManyTable, _manyToManyTableLeftKey, _manyToManyTableRightKey);
 			}
 
+			_msg.DebugFormat("Creating join {0} using {1}", TransformerName, association);
+
 			return association;
 		}
 
-		private Action<MultiListValues, IReadOnlyRow, IReadOnlyRow> AddBaseRowsAction
+		private static GdbTable CreateJoinedGdbTable(
+			[NotNull] string name,
+			[NotNull] Func<GdbTable, JoinedBackingDataset> datasetFactoryFunc,
+			IReadOnlyTable geometryEndClass)
 		{
-			get
+			GdbTable result;
+
+			IWorkspace workspace = geometryEndClass.Workspace;
+
+			if (geometryEndClass is IReadOnlyFeatureClass featureClass)
 			{
-				int baseRowsFieldIdxResult = _joinedTable.FindField(InvolvedRowUtils.BaseRowField);
-
-				var baseRowField = _joinedTable.Fields.Field[baseRowsFieldIdxResult];
-
-				GdbTable extraRowTable = new GdbTable(-1, "BASE_ROW_TBL");
-				int baseRowsIndex = extraRowTable.AddFieldT(baseRowField);
-
-				return (joinedRows, leftRow, otherRow) =>
-				{
-					var involvedRows = new List<IReadOnlyRow>(2);
-
-					if (leftRow != null)
-					{
-						involvedRows.Add(leftRow);
-					}
-
-					if (otherRow != null)
-					{
-						involvedRows.Add(otherRow);
-					}
-
-					VirtualRow rowContainingBaseRows = extraRowTable.CreateRow();
-
-					IDictionary<int, int> indexMatrix = new Dictionary<int, int>(1);
-					indexMatrix.Add(baseRowsFieldIdxResult, baseRowsIndex);
-
-					joinedRows.AddRow(rowContainingBaseRows, indexMatrix);
-
-					rowContainingBaseRows.set_Value(baseRowsIndex, involvedRows);
-				};
+				result = new TransformedFeatureClass<JoinedBackingDataset>(
+					         -1, name, featureClass.ShapeType, datasetFactoryFunc, workspace)
+				         {
+					         NoCaching = false
+				         };
 			}
-		}
+			else
+			{
+				result = new TransformedTable<JoinedBackingDataset>(
+					-1, name, datasetFactoryFunc, workspace);
+			}
 
-		#endregion
+			return result;
+		}
 	}
 }

@@ -27,7 +27,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 		public T BackingData => (T) BackingDataset;
 
-		#region Implementation of ITransformedValue
+		#region Implementation of IDataContainerAware
 
 		public IList<IReadOnlyTable> InvolvedTables => BackingData.InvolvedTables;
 
@@ -59,7 +59,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 		public T BackingData => (T) BackingDataset;
 
-		#region Implementation of ITransformedValue
+		#region Implementation of IDataContainerAware
 
 		public IList<IReadOnlyTable> InvolvedTables => BackingData.InvolvedTables;
 

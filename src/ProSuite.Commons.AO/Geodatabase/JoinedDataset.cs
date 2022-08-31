@@ -131,12 +131,6 @@ namespace ProSuite.Commons.AO.Geodatabase
 		/// optionally the association table row). Extra values can be injected by subclasses of
 		/// the default row factory.
 		/// </summary>
-		[CanBeNull]
-		public Action<MultiListValues, IReadOnlyRow, IReadOnlyRow> OnRowCreatingAction
-		{
-			get;
-			set;
-		}
 		public JoinedRowFactory JoinedRowFactory { get; set; }
 
 		#region BackingDataset implementation
