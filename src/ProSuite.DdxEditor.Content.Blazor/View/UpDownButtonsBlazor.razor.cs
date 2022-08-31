@@ -15,8 +15,7 @@ public partial class UpDownButtonsBlazor
 	public RadzenDataGrid<ViewModelBase> Grid { get; set; }
 
 	[CanBeNull]
-	[Parameter]
-	public ViewModelBase Selected { get; set; }
+	public ViewModelBase Selected => Grid.Value.LastOrDefault();
 
 	[Parameter]
 	public EventCallback<ViewModelBase> SelectedChanged { get; set; }

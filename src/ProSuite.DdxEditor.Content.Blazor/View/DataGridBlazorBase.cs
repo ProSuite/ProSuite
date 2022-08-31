@@ -14,8 +14,6 @@ namespace ProSuite.DdxEditor.Content.Blazor.View;
 
 public abstract class DataGridBlazorBase : ComponentBase, IDisposable
 {
-	[NotNull] private IList<ViewModelBase> _selectedRows = new List<ViewModelBase>();
-
 	// ReSharper disable once NotNullMemberIsNotInitialized
 	[NotNull] protected RadzenDataGrid<ViewModelBase> DataGrid;
 
@@ -25,27 +23,10 @@ public abstract class DataGridBlazorBase : ComponentBase, IDisposable
 	public IEventAggregator EventAggregator { get; set; }
 
 	[CanBeNull]
-	public ViewModelBase SelectedRow { get; set; }
+	public ViewModelBase SelectedRow => SelectedRows.LastOrDefault(row => row is not DummyTestParameterValueViewModel);
 
 	[NotNull]
-	public IList<ViewModelBase> SelectedRows
-	{
-		get => _selectedRows;
-		set
-		{
-			ViewModelBase row = value.LastOrDefault();
-
-			// prevent dummy row from being selected
-			if (row is DummyTestParameterValueViewModel)
-			{
-				return;
-			}
-
-			_selectedRows = value;
-
-			SelectedRow = row;
-		}
-	}
+	public IList<ViewModelBase> SelectedRows { get; set; } = new List<ViewModelBase>();
 
 	protected IEnumerable<ViewModelBase> Rows { get; set; }
 
@@ -91,7 +72,7 @@ public abstract class DataGridBlazorBase : ComponentBase, IDisposable
 		{
 			await DataGrid.UpdateIfNotNull(recent);
 
-			SelectedRows = new List<ViewModelBase>();
+			await DataGrid.SelectRow(null);
 		}
 
 		StateHasChanged();

@@ -8,7 +8,7 @@
 <div class="container-fluid" style="margin: 0.625rem 0 0 -0.75rem;">
 	<div class="row">
 		<div class="col-auto">
-			<UpDownButtonsBlazor Grid="DataGrid" @bind-Selected="SelectedRow" OnUpClicked="OnUpClicked" OnDownClicked="OnDownClicked" OnDeleteClicked="OnDeleteClicked"/>
+			<UpDownButtonsBlazor Grid="DataGrid" OnUpClicked="OnUpClicked" OnDownClicked="OnDownClicked" OnDeleteClicked="OnDeleteClicked"/>
 		</div>
 		<div class="col">
 			<RadzenDataGrid @ref="DataGrid"

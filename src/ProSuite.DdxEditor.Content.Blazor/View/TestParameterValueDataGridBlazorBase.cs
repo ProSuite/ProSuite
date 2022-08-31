@@ -45,8 +45,6 @@ public abstract class TestParameterValueDataGridBlazorBase : DataGridBlazorBase
 		DataGrid.Reload();
 
 		DataGrid.SelectRow(newSelectedRow);
-
-		SelectedRow = newSelectedRow;
 	}
 
 	protected override void OnRowClickCore(ViewModelBase row)
@@ -61,7 +59,7 @@ public abstract class TestParameterValueDataGridBlazorBase : DataGridBlazorBase
 			base.OnRowClickCore(insertedRow);
 
 			// select inserted row
-			SelectedRows = new List<ViewModelBase> { insertedRow };
+			DataGrid.SelectRow(insertedRow);
 		}
 		else
 		{
