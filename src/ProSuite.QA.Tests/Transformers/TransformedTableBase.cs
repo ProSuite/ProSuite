@@ -27,7 +27,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 		public T BackingData => (T) BackingDataset;
 
-		#region Implementation of ITransformedValue
+		#region Implementation of IDataContainerAware
 
 		public IList<IReadOnlyTable> InvolvedTables => BackingData.InvolvedTables;
 
@@ -46,7 +46,8 @@ namespace ProSuite.QA.Tests.Transformers
 	/// cached in the <see cref="DataContainer"/>.
 	/// </summary>
 	/// <typeparam name="T"></typeparam>
-	public abstract class TransformedFeatureClassBase<T> : GdbFeatureClass, IDataContainerAware
+	public abstract class TransformedFeatureClassBase<T> : GdbFeatureClass, IDataContainerAware,
+	                                                       ITransformedTable
 		where T : TransformedBackingData
 	{
 		protected TransformedFeatureClassBase(
@@ -59,7 +60,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 		public T BackingData => (T) BackingDataset;
 
-		#region Implementation of ITransformedValue
+		#region Implementation of IDataContainerAware
 
 		public IList<IReadOnlyTable> InvolvedTables => BackingData.InvolvedTables;
 
@@ -68,6 +69,14 @@ namespace ProSuite.QA.Tests.Transformers
 			get => BackingData.DataSearchContainer;
 			set => BackingData.DataSearchContainer = value;
 		}
+
+		#endregion
+
+		#region Implementation of ITransformedTable
+
+		public virtual void SetKnownTransformedRows(IEnumerable<VirtualRow> knownRows) { }
+
+		public abstract bool NoCaching { get; internal set; }
 
 		#endregion
 	}

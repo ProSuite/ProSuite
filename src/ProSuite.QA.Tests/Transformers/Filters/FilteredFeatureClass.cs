@@ -26,5 +26,16 @@ namespace ProSuite.QA.Tests.Transformers.Filters
 		{
 			return BackingData.PassesFilter(feature);
 		}
+
+		#region Overrides of TransformedFeatureClassBase<FilteredBackingDataset>
+
+		public override bool NoCaching
+		{
+			// TODO: Caching results in wrong results in the test
+			get => false;
+			internal set => throw new NotImplementedException();
+		}
+
+		#endregion
 	}
 }

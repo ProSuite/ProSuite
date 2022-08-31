@@ -44,5 +44,18 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		[NotNull]
 		public string AssociationTableKey2 => _associationTableKey2;
+
+		#region Overrides of Object
+
+		public override string ToString()
+		{
+			return
+				$"Many-to-many association between {Table1.Name} and {Table2.Name} using " +
+				$"association table {AssociationTable.Name}. Table1 key: {Table1KeyName}, " +
+				$"Table2 key: {Table2KeyName}, Association-Table1 key: {AssociationTableKey1}, " +
+				$"Association-Table2 key: {AssociationTableKey2}.";
+		}
+
+		#endregion
 	}
 }

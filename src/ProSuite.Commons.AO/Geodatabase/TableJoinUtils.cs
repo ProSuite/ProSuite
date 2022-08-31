@@ -319,16 +319,12 @@ namespace ProSuite.Commons.AO.Geodatabase
 			IReadOnlyTable otherTable = associationDescription.Table1.Equals(geometryTable)
 				                            ? associationDescription.Table2
 				                            : associationDescription.Table1;
-
-			IReadOnlyTable oidSourceTable =
-				DetermineOIDTable(associationDescription, joinType, geometryTable);
-
+			
 			Func<GdbTable, BackingDataset> datasetFactoryFunc = t =>
 				new JoinedDataset(associationDescription, geometryTable, otherTable, t)
 				{
 					JoinType = joinType,
-					IncludeMtoNAssociationRows = ensureUniqueIds,
-					ObjectIdSourceTable = oidSourceTable
+					IncludeMtoNAssociationRows = ensureUniqueIds
 				};
 
 			var result = CreateJoinedGdbTable(name, datasetFactoryFunc, geometryTable, otherTable);

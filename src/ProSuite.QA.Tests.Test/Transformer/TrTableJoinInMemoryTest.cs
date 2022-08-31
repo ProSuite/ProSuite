@@ -93,7 +93,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				CheckInvolvedRows(error.InvolvedRows, 4, realTableNames);
 			}
 			{
-				QaConstraint test = new QaConstraint(tr.GetTransformed(), "polyFc.Nr_Poly > 12");
+				QaConstraint test = new QaConstraint(tr.GetTransformed(), "Nr_Poly > 12");
 				IFilterEditTest ft = test;
 				var runner = new QaContainerTestRunner(1000, test);
 				runner.Execute();
@@ -202,7 +202,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				CheckInvolvedRows(error.InvolvedRows, 4, realTableNames);
 			}
 			{
-				QaConstraint test = new QaConstraint(tr.GetTransformed(), "polyFc.Nr_Poly > 11");
+				QaConstraint test = new QaConstraint(tr.GetTransformed(), "Nr_Poly > 11");
 				IFilterEditTest ft = test;
 				var runner = new QaContainerTestRunner(1000, test);
 				runner.Execute();
@@ -219,7 +219,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				// TODO: This has currently no effect and should be implemented
 				tr.SetConstraint(0, "Nr_Poly < 10");
 
-				QaConstraint test = new QaConstraint(tr.GetTransformed(), "polyFc.Nr_Poly > 11");
+				QaConstraint test = new QaConstraint(tr.GetTransformed(), "Nr_Poly > 11");
 				IFilterEditTest ft = test;
 				var runner = new QaContainerTestRunner(1000, test);
 				runner.Execute();

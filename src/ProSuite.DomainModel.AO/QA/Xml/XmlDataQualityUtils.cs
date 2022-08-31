@@ -1979,7 +1979,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 					if (allIssueFilters.Add(issueFilter))
 					{
 						Assert.NotNull(
-							TestFactoryUtils.CreateTestFactory(issueFilter),
+							InstanceFactoryUtils.CreateFactory(issueFilter),
 							$"Cannot create factory for issue filter {issueFilter.Name}");
 					}
 
@@ -2003,7 +2003,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 					if (allTransformers.Add(transformer))
 					{
 						Assert.NotNull(
-							TestFactoryUtils.CreateTestFactory(transformer),
+							InstanceFactoryUtils.CreateFactory(transformer),
 							$"Cannot create factory for transformer {transformer.Name}");
 					}
 

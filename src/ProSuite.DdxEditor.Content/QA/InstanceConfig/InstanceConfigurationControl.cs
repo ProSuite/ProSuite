@@ -12,7 +12,6 @@ using ProSuite.Commons.UI.ScreenBinding.Elements;
 using ProSuite.Commons.UI.WinForms.Controls;
 using ProSuite.DdxEditor.Content.QA.TestDescriptors;
 using ProSuite.DdxEditor.Framework.ItemViews;
-using ProSuite.DomainModel.AO.QA.TestReport;
 using ProSuite.DomainModel.Core;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Core;
@@ -27,8 +26,6 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 	public partial class InstanceConfigurationControl : UserControl, IInstanceConfigurationView
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
-
-		public int LastSplitterDistance => _splitContainer.SplitterDistance;
 
 		[NotNull] private readonly ScreenBinder<InstanceConfiguration> _binder;
 		[NotNull] private readonly Latch _latch = new Latch();
@@ -120,7 +117,6 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 
 			_parameterTbl = TestParameterGridUtils.BindParametersDataGridView(
 				_dataGridViewParamGrid);
-			
 
 			_qSpecGridHandler =
 				new BoundDataGridHandler<InstanceConfigurationReferenceTableRow>(
@@ -310,7 +306,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			_lastSelectedParameterValuesTab =
 				TabControlUtils.GetSelectedTabPageName(_tabControlParameterValues);
 		}
-		
+
 		private void _dataGridViewQualitySpecifications_CellValueChanged(
 			object sender, DataGridViewCellEventArgs e)
 		{
@@ -393,12 +389,8 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 		private void _linkDocumentation_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
 		{
 			Observer.DescriptorDocumentationLinkClicked();
-
 		}
 
-		private void _splitContainer_SplitterMoved(object sender, SplitterEventArgs e)
-		{
-
-		}
+		private void _splitContainer_SplitterMoved(object sender, SplitterEventArgs e) { }
 	}
 }
