@@ -20,8 +20,6 @@ public class InstanceConfigurationViewModel<T> : NotifyPropertyChangedBase,
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 	[NotNull] private readonly EntityItem<T, T> _item;
-
-	[NotNull] private Dictionary<TestParameter, IList<ViewModelBase>> _rowsByParameter = new();
 	private int _version;
 
 	public InstanceConfigurationViewModel([NotNull] EntityItem<T, T> item,
@@ -61,9 +59,7 @@ public class InstanceConfigurationViewModel<T> : NotifyPropertyChangedBase,
 
 		try
 		{
-			_rowsByParameter = CreateRows(qualityCondition);
-
-			Values = new List<ViewModelBase>(GetTopLevelRows(_rowsByParameter));
+			Values = new List<ViewModelBase>(GetTopLevelRows(CreateRows(qualityCondition)));
 
 			Discard = qualityCondition.Version == _version;
 
@@ -81,7 +77,7 @@ public class InstanceConfigurationViewModel<T> : NotifyPropertyChangedBase,
 	void IInstanceConfigurationViewModel.OnRowPropertyChanged(
 		object sender, PropertyChangedEventArgs e)
 	{
-		UpdateEntity(Assert.NotNull(_item.GetEntity()));
+		UpdateEntity(Assert.NotNull(_item.GetEntity()), Assert.NotNull(Values));
 	}
 
 	private IEnumerable<ViewModelBase> GetTopLevelRows(
@@ -170,48 +166,61 @@ public class InstanceConfigurationViewModel<T> : NotifyPropertyChangedBase,
 		return rowsByParameter;
 	}
 
-	private void UpdateEntity([NotNull] InstanceConfiguration instanceConfiguration)
+	private static void UpdateEntity([NotNull] InstanceConfiguration instanceConfiguration,
+	                                 [NotNull] IEnumerable<ViewModelBase> values)
 	{
 		Assert.ArgumentNotNull(instanceConfiguration, nameof(instanceConfiguration));
+		Assert.ArgumentNotNull(values, nameof(values));
 
 		instanceConfiguration.ClearParameterValues();
 
-		foreach (KeyValuePair<TestParameter, IList<ViewModelBase>> pair in _rowsByParameter)
+		foreach (ViewModelBase row in values)
 		{
-			TestParameter testParameter = pair.Key;
-			IList<ViewModelBase> rows = pair.Value;
+			AddTestParameterValue(instanceConfiguration, row);
+		}
+	}
 
-			foreach (ViewModelBase row in rows)
+	private static void AddTestParameterValue([NotNull] InstanceConfiguration instanceConfiguration,
+	                                          [NotNull] ViewModelBase row)
+	{
+		Assert.ArgumentNotNull(instanceConfiguration, nameof(instanceConfiguration));
+		Assert.ArgumentNotNull(row, nameof(row));
+
+		TestParameter testParameter = row.Parameter;
+		object value = row.Value;
+
+		if (row is DatasetTestParameterValueViewModel datasetParamVM)
+		{
+			var newValue = new DatasetTestParameterValue(
+				               testParameter,
+				               datasetParamVM.DatasetSource.Match(d => d, t => null),
+				               datasetParamVM.FilterExpression,
+				               datasetParamVM.UsedAsReferenceData)
+			               {
+				               ValueSource = datasetParamVM.DatasetSource.Match(
+					               d => null, t => t)
+			               };
+
+			instanceConfiguration.AddParameterValue(
+				newValue);
+		}
+		else if (row is ScalarTestParameterValueViewModel)
+		{
+			instanceConfiguration.AddParameterValue(
+				new ScalarTestParameterValue(testParameter, value));
+		}
+		else if (row is TestParameterValueCollectionViewModel)
+		{
+			Assert.NotNull(value);
+			foreach (ViewModelBase childRow in (IEnumerable<ViewModelBase>) value)
 			{
-				if (row is DatasetTestParameterValueViewModel datasetParamVM)
-				{
-					var newValue = new DatasetTestParameterValue(
-						               testParameter,
-						               datasetParamVM.DatasetSource.Match(d => d, t => null),
-						               datasetParamVM.FilterExpression,
-						               datasetParamVM.UsedAsReferenceData)
-					               {
-						               ValueSource = datasetParamVM.DatasetSource.Match(
-							               d => null, t => t)
-					               };
-
-					instanceConfiguration.AddParameterValue(
-						newValue);
-				}
-				else if (row is ScalarTestParameterValueViewModel)
-				{
-					instanceConfiguration.AddParameterValue(
-						new ScalarTestParameterValue(testParameter, row.Value));
-				}
-				else if (row is DummyTestParameterValueViewModel)
-				{
-					// do nothing
-				}
-				else
-				{
-					throw new ArgumentOutOfRangeException(nameof(row), @"Unkown view model type");
-				}
+				// recursive
+				AddTestParameterValue(instanceConfiguration, childRow);
 			}
+		}
+		else if (row is DummyTestParameterValueViewModel)
+		{
+			// do nothing
 		}
 	}
 }
