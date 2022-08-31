@@ -25,6 +25,12 @@ namespace ProSuite.QA.Tests.Transformers
 			[CanBeNull] IWorkspace workspace = null)
 			: base(objectClassId, name, shapeType, createBackingDataset, workspace) { }
 
+		#region Overrides of TransformedFeatureClassBase<T>
+
+		// TODO: NoCaching == true results in wrong results!
+		public override bool NoCaching { get; internal set; } = false;
+
+		#endregion
 	}
 
 	// TODO: Consider renaming to CachedTransformedFeatureClass, derive from TransformedFeatureClassBase?

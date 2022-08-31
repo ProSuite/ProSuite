@@ -115,6 +115,7 @@ namespace ProSuite.QA.Container
 	{
 		void SetKnownTransformedRows([CanBeNull] IEnumerable<VirtualRow> knownRows);
 
+		// TODO: What are the rules and restrictions if a transformer wants to use caching?
 		bool NoCaching { get; }
 	}
 
