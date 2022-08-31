@@ -125,11 +125,13 @@
 
 </style>
 
+<RadzenTooltip/>
+
 <div class="container-fluid" style="margin: 0.625rem 0 0 -0.75rem;">
     <div class="col">
 	    <RadzenDataGrid @ref="DataGrid"
 	                    TItem="ViewModelBase"
-	                    Data="Values"
+	                    Data="Rows"
 	                    SelectionMode="DataGridSelectionMode.Single"
 	                    ExpandMode="DataGridExpandMode.Multiple"
 	                    EditMode="DataGridEditMode.Single"

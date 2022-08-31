@@ -3,13 +3,14 @@ using System.ComponentModel;
 using Microsoft.AspNetCore.Components;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.DdxEditor.Content.Blazor.View;
 using ProSuite.DdxEditor.Content.Blazor.ViewModel;
 using ProSuite.DomainModel.AO.QA;
 using Radzen;
 
 namespace ProSuite.DdxEditor.Content.Blazor;
 
-public partial class QualityConditionTableViewBlazor
+public partial class QualityConditionTableViewBlazor : DataGridBlazorBase
 {
 	// ReSharper disable once NotNullMemberIsNotInitialized
 	[NotNull] private IInstanceConfigurationViewModel _viewModel;
@@ -42,12 +43,10 @@ public partial class QualityConditionTableViewBlazor
 			DataGrid.Reload();
 		}
 	}
-
-	private IEnumerable<ViewModelBase> Values { get; set; }
-
+	
 	private void OnLoadData(LoadDataArgs args)
 	{
-		Values = Assert.NotNull(ViewModel).Values;
+		Rows = Assert.NotNull(ViewModel).Values;
 	}
 
 	#region layout

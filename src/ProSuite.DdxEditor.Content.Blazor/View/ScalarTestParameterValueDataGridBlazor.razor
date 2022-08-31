@@ -8,17 +8,18 @@
 <div class="container-fluid" style="margin: 0.625rem 0 0 -0.75rem;">
 	<div class="row">
 		<div class="col-auto">
-			<UpDownButtonsBlazor Grid="DataGrid" @bind-Selected="SelectedRow" OnUpClicked="OnUpClicked" OnDownClicked="OnDownClicked" OnDeleteClicked="OnDeleteClicked"/>
+			<UpDownButtonsBlazor Grid="DataGrid" OnUpClicked="OnUpClicked" OnDownClicked="OnDownClicked" OnDeleteClicked="OnDeleteClicked"/>
 		</div>
 		<div class="col">
 			<RadzenDataGrid @ref="DataGrid"
 			                TItem="ViewModelBase"
-			                Data="ViewModel.Values"
+			                Data="Rows"
 			                SelectionMode="DataGridSelectionMode.Single"
 			                AllowColumnResize="true"
 			                AllowRowSelectOnRowClick="true"
 			                @bind-Value="SelectedRows"
-			                RowClick="OnRowClick">
+			                RowClick="OnRowClick"
+			                LoadData="OnLoadData">
 				<Columns>
 					<RadzenDataGridColumn TItem="ViewModelBase" Property="ParameterName" Title="Parameter" Width="150px"/>
 					<RadzenDataGridColumn TItem="ViewModelBase" Property="Value" Title="Value">
