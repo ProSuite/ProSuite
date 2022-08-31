@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 {
@@ -30,19 +31,22 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		/// <param name="row">The source row from which the values shall be taken</param>
 		/// <param name="copyMatrix">The copy matrix containing the {target-schema, source schema}
 		/// key-value pairs of the associated field indexes. </param>
-		public void AddRow(IReadOnlyRow row, IDictionary<int, int> copyMatrix)
+		public void AddRow([CanBeNull] IReadOnlyRow row,
+		                   [NotNull] IDictionary<int, int> copyMatrix)
 		{
-			_rows.Add(new ReadOnlyRowBasedValues(row));
+			IValueList valuesToAdd = row == null ? null : new ReadOnlyRowBasedValues(row);
+			_rows.Add(valuesToAdd);
 			_copyMatrices.Add(copyMatrix);
 		}
 
 		/// <summary>
-		/// Add a list its associated copyMatrix.
+		/// Add a list with its associated copyMatrix.
 		/// </summary>
 		/// <param name="list">The source list from which the values shall be taken</param>
 		/// <param name="copyMatrix">The copy matrix containing the {target-index, source-index}
 		/// key-value pairs of the associated list indexes. </param>
-		public void AddList(IValueList list, IDictionary<int, int> copyMatrix)
+		public void AddList([CanBeNull] IValueList list,
+		                    [NotNull] IDictionary<int, int> copyMatrix)
 		{
 			_rows.Add(list);
 			_copyMatrices.Add(copyMatrix);
@@ -99,7 +103,9 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			return false;
 		}
 
-		private bool TryGetSource(int targetIndex, out IValueList sourceRow, out int fieldIndex)
+		private bool TryGetSource(int targetIndex,
+		                          [CanBeNull] out IValueList sourceRow,
+		                          out int fieldIndex)
 		{
 			for (int i = 0; i < _rows.Count; i++)
 			{
