@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Components;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DdxEditor.Content.Blazor.ViewModel;
+using Radzen;
 
 namespace ProSuite.DdxEditor.Content.Blazor.View;
 
@@ -12,6 +13,11 @@ public abstract class TestParameterValueDataGridBlazorBase : DataGridBlazorBase
 	[Parameter]
 	// ReSharper disable once NotNullMemberIsNotInitialized
 	public TestParameterValueCollectionViewModel ViewModel { get; set; }
+
+	protected void OnLoadData(LoadDataArgs args)
+	{
+		Rows = Assert.NotNull(ViewModel).Values;
+	}
 
 	protected void OnUpClicked()
 	{

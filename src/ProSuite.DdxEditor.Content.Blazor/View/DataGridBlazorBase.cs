@@ -47,6 +47,8 @@ public abstract class DataGridBlazorBase : ComponentBase, IDisposable
 		}
 	}
 
+	protected IEnumerable<ViewModelBase> Rows { get; set; }
+
 	public async void Dispose()
 	{
 		DisposeCore();
