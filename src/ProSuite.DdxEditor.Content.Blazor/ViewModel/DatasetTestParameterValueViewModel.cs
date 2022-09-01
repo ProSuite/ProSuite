@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Windows.Forms;
+using Microsoft.AspNetCore.Components;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Misc;
@@ -87,6 +88,11 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 		{
 			_viewModel.ItemNavigation.GoToItem(match);
 		}
+	}
+
+	public void OnInput(ChangeEventArgs args)
+	{
+		FilterExpression = args.Value?.ToString();
 	}
 
 	public void FindDatasetClicked()

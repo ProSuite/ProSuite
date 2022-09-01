@@ -180,7 +180,7 @@
                         <Template Context="viewModel">
                             @if (viewModel is DatasetTestParameterValueViewModel vm)
                             {
-	                            <RadzenTextBox @bind-Value="vm.FilterExpression" />
+	                            <RadzenTextBox @bind-Value="vm.FilterExpression" oninput="@(vm.OnInput)" />
                             }
                         </Template>
                     </RadzenDataGridColumn>

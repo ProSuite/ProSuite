@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Components;
+
 namespace ProSuite.DdxEditor.Content.Blazor.View;
 
 public partial class StringValueBlazor : TestParameterValueBlazorBase<string>
@@ -6,5 +8,10 @@ public partial class StringValueBlazor : TestParameterValueBlazorBase<string>
 	{
 		get => GetValue();
 		set => SetValue(value);
+	}
+
+	private void OnInput(ChangeEventArgs args)
+	{
+		SetValue(args.Value);
 	}
 }
