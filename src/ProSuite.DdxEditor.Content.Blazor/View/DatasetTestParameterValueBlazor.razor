@@ -1,17 +1,26 @@
 @using Radzen.Blazor
+@inherits TestParameterValueBlazorBase<string>
+
 <Validation ErrorMessage="@ErrorMessage">
 	<span>
 		<button onclick="@OnClick" class="ddx-button">
 			<img alt="Find Dataset" src="images/Find.png" style="padding: 0 0 7px"/>
 		</button>
 		<span>
-			@if (ViewModel.IsDataset)
+			@if (DatasetViewModel.IsDataset)
 			{
-				@Value
+				@DatasetViewModel.DisplayValue
 			}
 			else
 			{
-				<RadzenLink Text="@((string) Value)" onclick="@(() => OnLinkClicked())"/>
+				if (Selected)
+				{
+					<RadzenLink Text="@DatasetViewModel.DisplayValue" onclick="@(() => OnLinkClicked())" Style="color: white" />
+				}
+				else
+				{
+					<RadzenLink Text="@DatasetViewModel.DisplayValue" onclick="@(() => OnLinkClicked())" />
+				}
 			}
 		</span>
 	</span>

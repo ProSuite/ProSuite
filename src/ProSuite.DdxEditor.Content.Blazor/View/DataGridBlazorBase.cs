@@ -51,31 +51,14 @@ public abstract class DataGridBlazorBase : ComponentBase, IDisposable
 		EventAggregator.GetEvent<SelectedRowChangedEvent>().Subscribe(OnSelectedRowChangedAsync);
 	}
 
-	protected async void OnSelectedRowChangedAsync([NotNull] ViewModelBase current)
+	private async void OnSelectedRowChangedAsync([NotNull] ViewModelBase current)
 	{
 		Assert.ArgumentNotNull(current, nameof(current));
 
-		ViewModelBase recent = SelectedRow;
-
-		if (DataGrid.Contains(current))
+		if (! DataGrid.Contains(current))
 		{
-			if (Equals(recent, current))
-			{
-				return;
-			}
-
-			await DataGrid.UpdateIfNotNull(recent);
-
-			await DataGrid.Edit(current);
-		}
-		else
-		{
-			await DataGrid.UpdateIfNotNull(recent);
-
 			await DataGrid.SelectRow(null);
 		}
-
-		StateHasChanged();
 	}
 
 	protected void OnRowClick(DataGridRowMouseEventArgs<ViewModelBase> args)

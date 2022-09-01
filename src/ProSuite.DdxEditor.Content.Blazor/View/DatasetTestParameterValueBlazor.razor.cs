@@ -4,28 +4,18 @@ using ProSuite.DdxEditor.Content.Blazor.ViewModel;
 
 namespace ProSuite.DdxEditor.Content.Blazor.View;
 
-public partial class DatasetTestParameterValueBlazor : IDisposable
+public partial class DatasetTestParameterValueBlazor : TestParameterValueBlazorBase<string>
 {
-	// todo daro use TestParameterValueBlazorBase
-	[Parameter]
-	public DatasetTestParameterValueViewModel ViewModel { get; set; }
-
-	public string ErrorMessage => ViewModel.ErrorMessage;
-
-	public object Value => ViewModel.DisplayValue;
-
-	public void Dispose()
-	{
-		ViewModel?.Dispose();
-	}
-
+	public DatasetTestParameterValueViewModel DatasetViewModel =>
+		(DatasetTestParameterValueViewModel) ViewModel;
+	
 	private void OnClick()
 	{
-		ViewModel.FindDatasetClicked();
+		DatasetViewModel.FindDatasetClicked();
 	}
 
 	private void OnLinkClicked()
 	{
-		ViewModel.GoTo();
+		DatasetViewModel.GoTo();
 	}
 }
