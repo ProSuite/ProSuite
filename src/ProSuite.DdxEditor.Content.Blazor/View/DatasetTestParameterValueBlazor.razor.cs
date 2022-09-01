@@ -6,6 +6,7 @@ namespace ProSuite.DdxEditor.Content.Blazor.View;
 
 public partial class DatasetTestParameterValueBlazor : IDisposable
 {
+	// todo daro use TestParameterValueBlazorBase
 	[Parameter]
 	public DatasetTestParameterValueViewModel ViewModel { get; set; }
 
@@ -21,5 +22,10 @@ public partial class DatasetTestParameterValueBlazor : IDisposable
 	private void OnClick()
 	{
 		ViewModel.FindDatasetClicked();
+	}
+
+	private void OnLinkClicked()
+	{
+		ViewModel.GoTo();
 	}
 }

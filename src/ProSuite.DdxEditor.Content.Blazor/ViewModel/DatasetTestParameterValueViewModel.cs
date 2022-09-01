@@ -35,6 +35,7 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 	{
 		Assert.ArgumentNotNull(datasetSource, nameof(datasetSource));
 
+		// todo daro rename
 		_viewModel = observer;
 
 		_filterExpression = filterExpression;
@@ -75,6 +76,18 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 	public string ImageSource { get; private set; }
 
 	public string DisplayValue => GetDisplayName();
+
+	public bool IsDataset =>  DatasetSource.Match(dataset => dataset != null, _ => false);
+
+	public void GoTo()
+	{
+		TransformerConfiguration match = DatasetSource.Match(d => null, t => t);
+
+		if (match != null)
+		{
+			_viewModel.ItemNavigation.GoToItem(match);
+		}
+	}
 
 	public void FindDatasetClicked()
 	{

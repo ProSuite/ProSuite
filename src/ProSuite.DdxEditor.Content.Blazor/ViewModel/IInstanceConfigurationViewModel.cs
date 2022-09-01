@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.ItemViews;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.QA;
@@ -13,6 +14,7 @@ public interface IInstanceConfigurationViewModel : IViewObserver, IDataGridViewM
 
 	bool IsPersistent { get; }
 	bool Discard { get; set; }
+	IItemNavigation ItemNavigation { get; }
 
 	void BindTo(InstanceConfiguration instanceConfiguration);
 

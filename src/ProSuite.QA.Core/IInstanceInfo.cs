@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Validation;
 
 namespace ProSuite.QA.Core
 {
@@ -18,5 +19,7 @@ namespace ProSuite.QA.Core
 		TestParameter GetParameter([NotNull] string parameterName);
 
 		string GetParameterDescription([NotNull] string parameterName);
+
+		//Notification GetValidation();
 	}
 }

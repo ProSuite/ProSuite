@@ -6,6 +6,7 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.DdxEditor.Content.Blazor.ViewModel;
+using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Items;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.QA;
@@ -23,14 +24,17 @@ public class InstanceConfigurationViewModel<T> : NotifyPropertyChangedBase,
 	private int _version;
 
 	public InstanceConfigurationViewModel([NotNull] EntityItem<T, T> item,
-	                                      [NotNull] ITestParameterDatasetProvider datasetProvider)
+	                                      [NotNull] ITestParameterDatasetProvider datasetProvider,
+	                                      [NotNull] IItemNavigation itemNavigation)
 	{
 		Assert.ArgumentNotNull(item, nameof(item));
 		Assert.ArgumentNotNull(datasetProvider, nameof(datasetProvider));
+		Assert.ArgumentNotNull(itemNavigation, nameof(itemNavigation));
 
 		_item = item;
 
 		DatasetProvider = datasetProvider;
+		ItemNavigation = itemNavigation;
 
 		InstanceConfiguration = Assert.NotNull(_item.GetEntity());
 	}
@@ -43,6 +47,9 @@ public class InstanceConfigurationViewModel<T> : NotifyPropertyChangedBase,
 
 	[NotNull]
 	public ITestParameterDatasetProvider DatasetProvider { get; }
+
+	[NotNull]
+	public IItemNavigation ItemNavigation { get; }
 
 	public bool IsPersistent => InstanceConfiguration.IsPersistent;
 

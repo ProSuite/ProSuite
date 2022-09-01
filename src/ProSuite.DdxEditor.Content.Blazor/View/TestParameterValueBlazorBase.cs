@@ -1,5 +1,6 @@
 using System;
 using Microsoft.AspNetCore.Components;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DdxEditor.Content.Blazor.ViewModel;
 
 namespace ProSuite.DdxEditor.Content.Blazor.View;
@@ -16,7 +17,7 @@ public abstract class TestParameterValueBlazorBase<T> : ComponentBase, IDisposab
 		ViewModel?.Dispose();
 	}
 
-	protected void SetValue(object value)
+	protected void SetValue([CanBeNull] object value)
 	{
 		ViewModel.Value = value;
 	}
