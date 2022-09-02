@@ -30,13 +30,11 @@ public abstract class DataGridBlazorBase : ComponentBase, IDisposable
 
 	protected IEnumerable<ViewModelBase> Rows { get; set; }
 
-	public async void Dispose()
+	public void Dispose()
 	{
 		DisposeCore();
 
 		EventAggregator.GetEvent<SelectedRowChangedEvent>().Unsubscribe(OnSelectedRowChangedAsync);
-
-		await DataGrid.UpdateIfNotNull(SelectedRow);
 	}
 
 	protected virtual void DisposeCore(){}

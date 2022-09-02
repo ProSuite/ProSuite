@@ -86,9 +86,11 @@ public abstract class Observable : IDisposable, INotifyPropertyChanged
 	[NotifyPropertyChangedInvocator]
 	protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
 	{
-		NotifyDirty();
-
+		// todo daro should validation prevent from being able to save?
+		// Then do not notify dirty.
 		Validate();
+
+		NotifyDirty();
 
 		PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 	}

@@ -40,8 +40,6 @@ public abstract class ViewModelBase : Observable
 	[NotNull]
 	public string ParameterName { get; }
 
-	public bool Editing { get; private set; }
-
 	public Type ComponentType { get; protected init; }
 
 	[NotNull]
@@ -53,16 +51,6 @@ public abstract class ViewModelBase : Observable
 
 	[NotNull]
 	protected Type DataType { get; }
-
-	public void StartEditing()
-	{
-		Editing = true;
-	}
-
-	public void StopEditing()
-	{
-		Editing = false;
-	}
 
 	protected override bool ValidateCore()
 	{
