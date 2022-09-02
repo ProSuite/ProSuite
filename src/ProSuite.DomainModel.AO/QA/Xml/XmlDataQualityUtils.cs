@@ -806,7 +806,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 				result.Uuid = uuid;
 			}
 
-			UpdateSpecification(result,
+			UpdateQualitySpecification(result,
 								xmlSpecification,
 								qualityConditionsByName,
 								category,
@@ -834,7 +834,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			return result;
 		}
 
-		public static void UpdateSpecification(
+		public static void UpdateQualitySpecification(
 			[NotNull] QualitySpecification qualitySpecification,
 			[NotNull] XmlQualitySpecification xmlSpecification,
 			[NotNull] IDictionary<string, QualityCondition> qualityConditionsByName,
@@ -926,7 +926,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 				return null;
 			}
 
-			InitializeProperties(result, xmlQualityCondition, category);
+			UpdateQualityCondition(result, xmlQualityCondition, category);
 
 			return result;
 		}
@@ -958,7 +958,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 
 			var result = new QualityCondition(xmlQualityCondition.Name, testDescriptor);
 
-			InitializeProperties(result, xmlQualityCondition, category);
+			UpdateQualityCondition(result, xmlQualityCondition, category);
 
 			foreach (XmlTestParameterValue xmlTestParameterValue in
 				xmlQualityCondition.EnumParameterValues(ignoreEmptyValues: true))
@@ -1020,37 +1020,111 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			return result;
 		}
 
-		private static void InitializeProperties(QualityCondition qualityCondition,
-												 XmlQualityCondition fromXmlQualityCondition,
-												 DataQualityCategory category)
+		public static void UpdateQualityCondition([NotNull] QualityCondition qualityCondition,
+		                                          [NotNull] XmlQualityCondition xmlCondition,
+		                                          [CanBeNull] DataQualityCategory category)
 		{
-			qualityCondition.Description = fromXmlQualityCondition.Description;
-			qualityCondition.Notes = fromXmlQualityCondition.Notes;
-			qualityCondition.Url = fromXmlQualityCondition.Url;
+			Assert.ArgumentNotNull(qualityCondition, nameof(qualityCondition));
+			Assert.ArgumentNotNull(xmlCondition, nameof(xmlCondition));
+
+			UpdateInstanceConfiguration(qualityCondition, xmlCondition, category);
+
 			qualityCondition.AllowErrorsOverride =
-				TranslateOverride(fromXmlQualityCondition.AllowErrors);
+				TranslateOverride(xmlCondition.AllowErrors);
 			qualityCondition.StopOnErrorOverride =
-				TranslateOverride(fromXmlQualityCondition.StopOnError);
+				TranslateOverride(xmlCondition.StopOnError);
 			qualityCondition.NeverFilterTableRowsUsingRelatedGeometry =
-				fromXmlQualityCondition.NeverFilterTableRowsUsingRelatedGeometry;
+				xmlCondition.NeverFilterTableRowsUsingRelatedGeometry;
 			qualityCondition.NeverStoreRelatedGeometryForTableRowIssues =
-				fromXmlQualityCondition.NeverStoreRelatedGeometryForTableRowIssues;
+				xmlCondition.NeverStoreRelatedGeometryForTableRowIssues;
 
-			string uuid = fromXmlQualityCondition.Uuid;
-			if (StringUtils.IsNotEmpty(uuid))
-			{
-				qualityCondition.Uuid = uuid;
-			}
-
-			string versionUuid = fromXmlQualityCondition.VersionUuid;
+			string versionUuid = xmlCondition.VersionUuid;
 			if (StringUtils.IsNotEmpty(versionUuid))
 			{
 				qualityCondition.VersionUuid = versionUuid;
 			}
+		}
 
-			ImportMetadata(qualityCondition, fromXmlQualityCondition);
+		public static void UpdateIssueFilters(
+			[NotNull] QualityCondition qualityCondition,
+			[NotNull] XmlQualityCondition xmlCondition,
+			[NotNull] IDictionary<string, IssueFilterConfiguration> issueFiltersByName)
+		{
+			Assert.ArgumentNotNull(qualityCondition, nameof(qualityCondition));
+			Assert.ArgumentNotNull(xmlCondition, nameof(xmlCondition));
+			Assert.ArgumentNotNull(issueFiltersByName, nameof(issueFiltersByName));
 
-			qualityCondition.Category = category;
+			qualityCondition.ClearIssueFilterConfigurations();
+
+			string issueFilterExpression = xmlCondition.IssueFilterExpression?.Expression;
+			if (!string.IsNullOrWhiteSpace(issueFilterExpression))
+			{
+				IList<string> issueFilterNames =
+					XmlDataQualityUtils.GetFilterNames(issueFilterExpression);
+
+				Assert.NotNull(issueFilterNames,
+				               "Unable to get issue filter names from IssueFilterExpression defined for '{0}'",
+				               xmlCondition.Name);
+
+				foreach (string issueFilterName in issueFilterNames)
+				{
+					var issueFilterConfig = issueFiltersByName[issueFilterName.Trim()];
+
+					Assert.NotNull(issueFilterConfig,
+					               "IssueFilter '{0}' defined in IssueFilterExpression for '{1}' does not exist",
+					               issueFilterName.Trim(), xmlCondition.Name);
+
+					qualityCondition.AddIssueFilterConfiguration(issueFilterConfig);
+				}
+			}
+
+			qualityCondition.IssueFilterExpression = issueFilterExpression;
+		}
+
+		public static void UpdateTransformerConfiguration(
+			[NotNull] TransformerConfiguration transformer,
+			[NotNull] XmlTransformerConfiguration xmlTransformer,
+			[CanBeNull] DataQualityCategory category)
+		{
+			Assert.ArgumentNotNull(transformer, nameof(transformer));
+			Assert.ArgumentNotNull(xmlTransformer, nameof(xmlTransformer));
+
+			UpdateInstanceConfiguration(transformer, xmlTransformer, category);
+		}
+
+		public static void UpdateIssueFilterConfiguration(
+			[NotNull] IssueFilterConfiguration issueFilter,
+			[NotNull] XmlIssueFilterConfiguration xmlIssueFilter,
+			[CanBeNull] DataQualityCategory category)
+		{
+			Assert.ArgumentNotNull(issueFilter, nameof(issueFilter));
+			Assert.ArgumentNotNull(xmlIssueFilter, nameof(xmlIssueFilter));
+
+			UpdateInstanceConfiguration(issueFilter, xmlIssueFilter, category);
+		}
+
+		private static void UpdateInstanceConfiguration<T>(
+			[NotNull] T instanceConfiguration,
+			[NotNull] XmlInstanceConfiguration xmlInstanceConfiguration,
+			[CanBeNull] DataQualityCategory category)
+			where T : InstanceConfiguration
+		{
+			Assert.ArgumentNotNull(instanceConfiguration, nameof(instanceConfiguration));
+			Assert.ArgumentNotNull(xmlInstanceConfiguration, nameof(xmlInstanceConfiguration));
+
+			instanceConfiguration.Description = xmlInstanceConfiguration.Description;
+			instanceConfiguration.Notes = xmlInstanceConfiguration.Notes;
+			instanceConfiguration.Url = xmlInstanceConfiguration.Url;
+
+			string uuid = xmlInstanceConfiguration.Uuid;
+			if (StringUtils.IsNotEmpty(uuid))
+			{
+				instanceConfiguration.Uuid = uuid;
+			}
+
+			ImportMetadata(instanceConfiguration, xmlInstanceConfiguration);
+
+			instanceConfiguration.Category = category;
 		}
 
 		[NotNull]
