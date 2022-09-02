@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
-using ProSuite.QA.Tests;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.QA.Container;
 using ProSuite.DomainModel.AO.QA;
+using ProSuite.QA.Container;
 using ProSuite.QA.Core;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Tests;
 
 namespace ProSuite.QA.TestFactories
 {
@@ -71,9 +71,17 @@ namespace ProSuite.QA.TestFactories
 
 			var nearClasses = ValidateType<IList<IReadOnlyFeatureClass>>(objParams[3]);
 			var maximumDistance = ValidateType<double>(objParams[4]);
-			var relevantRelationCondition = ValidateType<string>(objParams[5]);
 
-			IReadOnlyTable queryTable = CreateQueryTable(datasetContext, associationName, tables, join);
+			// TOP-5291: relevantRelationCondition is nullable in the test
+			string relevantRelationCondition = null;
+			object relevantRelParam = objParams[5];
+			if (relevantRelParam != null)
+			{
+				relevantRelationCondition = ValidateType<string>(relevantRelParam);
+			}
+
+			IReadOnlyTable queryTable =
+				CreateQueryTable(datasetContext, associationName, tables, join);
 
 			var objects = new object[5];
 

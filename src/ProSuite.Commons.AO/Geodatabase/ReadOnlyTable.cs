@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase.GdbSchema;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AO.Geodatabase
 {
@@ -33,7 +35,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		private readonly string
 			_name; // cache name for debugging purposes (avoid all ArcObjects threading issues)
 
-		protected ReadOnlyTable(ITable table)
+		protected ReadOnlyTable([NotNull] ITable table)
 		{
 			_table = table;
 			_name = DatasetUtils.GetName(_table);
@@ -59,24 +61,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		public bool Equals(IReadOnlyTable otherTable)
 		{
-			if (otherTable is IObjectClass otherObjectClass)
-			{
-				return DatasetUtils.IsSameObjectClass((IObjectClass) _table, otherObjectClass);
-			}
-
-			if (otherTable is ReadOnlyTable roTable)
-			{
-				return DatasetUtils.IsSameObjectClass((IObjectClass) _table,
-				                                      (IObjectClass) roTable.BaseTable);
-			}
-
-			if (otherTable == null)
-			{
-				return false;
-			}
-
-			// Some other implementation!?
-			return Name.Equals(otherTable.Name);
+			return Equals((object) otherTable);
 		}
 
 		public virtual ReadOnlyRow CreateRow(IRow row)
@@ -136,5 +121,90 @@ namespace ProSuite.Commons.AO.Geodatabase
 			=> _subtypes.SubtypeName[subtypeCode];
 
 		IEnumSubtype ISubtypes.Subtypes => _subtypes.Subtypes;
+
+		#region Equality members
+
+		public bool Equals([NotNull] GdbTable other)
+		{
+			IWorkspace workspace = ((IDataset) _table).Workspace;
+
+			if (! Equals(workspace, other.Workspace))
+			{
+				return false;
+			}
+
+			if (_table is IObjectClass baseObjectClass)
+			{
+				return baseObjectClass.ObjectClassID == other.ObjectClassID;
+			}
+
+			// Same workspace, potentially 'virtual' classes;
+			return Name.Equals(other.Name);
+		}
+
+		public bool Equals(ReadOnlyTable other)
+		{
+			if (other == null)
+			{
+				return false;
+			}
+
+			if (_table is IObjectClass thisClass)
+			{
+				if (! (other._table is IObjectClass otherClass))
+				{
+					return false;
+				}
+
+				return DatasetUtils.IsSameObjectClass(thisClass, otherClass);
+			}
+
+			if (_name != other._name)
+			{
+				return false;
+			}
+
+			return DatasetUtils.GetWorkspace(_table) == DatasetUtils.GetWorkspace(other._table);
+		}
+
+		public override bool Equals(object obj)
+		{
+			if (ReferenceEquals(null, obj)) return false;
+
+			if (ReferenceEquals(this, obj)) return true;
+
+			if (obj is GdbTable gdbTable)
+			{
+				return Equals(gdbTable);
+			}
+
+			if (_table is IObjectClass thisClass && obj is IObjectClass objectClass)
+			{
+				return DatasetUtils.IsSameObjectClass(thisClass, objectClass);
+			}
+
+			if (obj is ReadOnlyTable roTable)
+			{
+				return Equals(roTable);
+			}
+
+			return false;
+		}
+
+		public override int GetHashCode()
+		{
+			unchecked
+			{
+				IWorkspace workspace = ((IDataset) _table).Workspace;
+
+				IObjectClass objectClass = _table as IObjectClass;
+
+				int classHash = objectClass?.ObjectClassID ?? Name.GetHashCode();
+
+				return (workspace.GetHashCode() * 397) ^ classHash;
+			}
+		}
+
+		#endregion
 	}
 }

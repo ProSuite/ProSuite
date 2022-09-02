@@ -24,8 +24,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			: base(oid, featureClass, valueList)
 		{
 			_featureClass = featureClass;
-			_shapeFieldIndex =
-				_featureClass.FindField(_featureClass.ShapeFieldName);
+			_shapeFieldIndex = featureClass.ShapeFieldIndex;
 		}
 
 		#endregion

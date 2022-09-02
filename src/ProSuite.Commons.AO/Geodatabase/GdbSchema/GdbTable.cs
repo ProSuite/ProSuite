@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
@@ -93,18 +94,30 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			return ++_lastUsedOid;
 		}
 
-		protected virtual VirtualRow CreateObject(int oid)
+		/// <summary>
+		/// Create a row with a pre-determined OID. Calling this method as opposed to the
+		/// GdbRow constructor allows for certain optimizations.
+		/// </summary>
+		/// <param name="oid"></param>
+		/// <param name="valueList"></param>
+		/// <returns></returns>
+		public virtual GdbRow CreateObject(int oid,
+		                                   [CanBeNull] IValueList valueList = null)
 		{
-			return new GdbRow(oid, this);
+			return new GdbRow(oid, this, valueList);
 		}
 
 		protected virtual void FieldAddedCore(IField field) { }
 
 		#endregion
 
+		public int OidFieldIndex { get; private set; }
+
 		public void SetOIDFieldName(string fieldName)
 		{
 			_oidFieldName = fieldName;
+			OidFieldIndex = FindField(_oidFieldName);
+			Assert.False(OidFieldIndex < 0, "OID field does not exist");
 		}
 
 		private static string GetAliasName(ITable template)
@@ -125,58 +138,6 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			}
 
 			return -1;
-		}
-
-		public bool Equals(GdbTable other)
-		{
-			if (! Equals(_workspace, other._workspace))
-			{
-				return false;
-			}
-
-			if (ObjectClassID >= 0 && other.ObjectClassID >= 0 &&
-			    ObjectClassID == other.ObjectClassID)
-			{
-				return true;
-			}
-
-			// Same workspace, potentially 'virtual' classes;
-			return Name.Equals(other.Name);
-		}
-
-		public bool Equals(IObjectClass other)
-		{
-			if (other == null) return false;
-
-			if (other is GdbTable otherGdbTable && otherGdbTable._workspace == _workspace)
-			{
-				// Allow both workspaces to be null and hence equal!
-				return ObjectClassID == other.ObjectClassID;
-			}
-
-			return ObjectClassID == other.ObjectClassID &&
-			       WorkspaceUtils.IsSameWorkspace(_workspace, ((IDataset) other).Workspace,
-			                                      WorkspaceComparison.Exact);
-		}
-
-		public override bool Equals(object obj)
-		{
-			if (ReferenceEquals(null, obj)) return false;
-
-			if (ReferenceEquals(this, obj)) return true;
-
-			if (obj.GetType() != GetType()) return false;
-
-			return Equals((GdbTable) obj);
-		}
-
-		public override int GetHashCode()
-		{
-			unchecked
-			{
-				return ((_workspace != null ? _workspace.GetHashCode() : 0) * 397) ^
-				       ObjectClassID;
-			}
 		}
 
 		#region VirtualTable overrides
@@ -213,7 +174,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			if (_oidFieldName == null && field.Type == esriFieldType.esriFieldTypeOID)
 			{
 				// If nothing was set, the first one to be added determines the OID field.
-				_oidFieldName = field.Name;
+				SetOIDFieldName(field.Name);
 			}
 
 			FieldAddedCore(field);

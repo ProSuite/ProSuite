@@ -18,6 +18,15 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		#region Constructors
 
+		/// <summary>
+		/// Initializes a new instance of the <see cref="GdbRow"/> class.
+		/// </summary>
+		/// <param name="oid">The object ID of the row. It will be added to the row values using
+		/// set_Value, except if it is a negative number, in which case the
+		/// <see cref="GdbRow.HasOID"/>HasOID property will return false.</param>
+		/// <param name="gdbTable">The table which determines the row's schema.</param>
+		/// <param name="valueList">The optional value list implementation that shall be used to
+		/// store and retrieve the row values.</param>
 		public GdbRow(int oid, [NotNull] GdbTable gdbTable,
 		              [CanBeNull] IValueList valueList = null)
 		{
@@ -26,11 +35,14 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 			ValueSet = valueList ?? new PropertySetValueList();
 
-			var oidFieldIndex = _gdbTable.FindField(_gdbTable.OIDFieldName);
-
-			if (oidFieldIndex >= 0)
+			// NOTE: In AO, if a a query filter excludes the OBJECTID field, the row has no OID
+			// regardless of the table having one. 
+			if (oid >= 0)
 			{
-				set_Value(oidFieldIndex, oid);
+				if (_gdbTable.OidFieldIndex >= 0)
+				{
+					set_Value(_gdbTable.OidFieldIndex, oid);
+				}
 			}
 		}
 
@@ -99,7 +111,10 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		}
 
 		private int _oid;
-		public override int OID => _oid;
+
+		public override int OID => _oid < 0
+			                           ? throw new InvalidOperationException("Row has no OID")
+			                           : _oid;
 
 		public override VirtualTable Table => _gdbTable;
 		//		public GdbTable Table => _gdbTable;

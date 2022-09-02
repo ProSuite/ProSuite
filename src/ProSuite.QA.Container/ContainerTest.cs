@@ -487,6 +487,7 @@ namespace ProSuite.QA.Container
 		/// </summary>
 		/// <param name="row"></param>
 		/// <returns></returns>
+		[Obsolete("use InvolvedRowUtils.GetInvolvedRows(row), TODO: (?) remove class RelatedTables ?, _dictRelated")]
 		protected InvolvedRows GetInvolvedRows([NotNull] IReadOnlyRow row)
 		{
 			RelatedTables related = GetRelatedTables(row);

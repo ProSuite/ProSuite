@@ -338,10 +338,20 @@ namespace ProSuite.QA.Tests.Test.Transformer
 
 			TrMultipolygonToPolygon trMp2p =
 				new TrMultipolygonToPolygon(ReadOnlyTableFactory.Create(polyFc));
+//			trMp2p.Attributes = new List<string> { "IntField" };
 			{
 				QaConstraint test = new QaConstraint(
 					trMp2p.GetTransformed(),
-					$"T0.IntField < 12 AND {TrMultipolygonToPolygon.AttrInnerRingIndex} = 1 OR {TrMultipolygonToPolygon.AttrOuterRingIndex} = 1");
+					$"IntField < 12 AND {TrMultipolygonToPolygon.AttrInnerRingIndex} = 1 OR {TrMultipolygonToPolygon.AttrOuterRingIndex} = 1");
+
+				var runner = new QaContainerTestRunner(1000, test);
+				runner.Execute();
+				Assert.AreEqual(2, runner.Errors.Count);
+			}
+			{
+				QaConstraint test = new QaConstraint(
+					trMp2p.GetTransformed(),
+					$"IntField < 12 AND {TrMultipolygonToPolygon.AttrInnerRingIndex} = 1 OR {TrMultipolygonToPolygon.AttrOuterRingIndex} = 1");
 
 				var runner = new QaContainerTestRunner(1000, test);
 				runner.Execute();
@@ -352,7 +362,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			{
 				QaConstraint test = new QaConstraint(
 					trP2l.GetTransformed(),
-					$"t0.T0.IntField < 12 AND t0.{TrMultipolygonToPolygon.AttrInnerRingIndex} = 1 OR t0.{TrMultipolygonToPolygon.AttrOuterRingIndex} = 1");
+					$"IntField < 12 AND {TrMultipolygonToPolygon.AttrInnerRingIndex} = 1 OR {TrMultipolygonToPolygon.AttrOuterRingIndex} = 1");
 
 				var runner = new QaContainerTestRunner(1000, test);
 				runner.Execute();
@@ -362,9 +372,9 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			TrMultilineToLine trMl2l = new TrMultilineToLine(trP2l.GetTransformed());
 			{
 				string constr =
-					$"t0.t0.T0.IntField < 12 " +
-					$" AND t0.t0.{TrMultipolygonToPolygon.AttrInnerRingIndex} = 1" +
-					$" OR t0.t0.{TrMultipolygonToPolygon.AttrOuterRingIndex} = 1" +
+					$"IntField < 12 " +
+					$" AND {TrMultipolygonToPolygon.AttrInnerRingIndex} = 1" +
+					$" OR {TrMultipolygonToPolygon.AttrOuterRingIndex} = 1" +
 					$" OR {TrMultilineToLine.AttrPartIndex} <> 0";
 				QaConstraint test = new QaConstraint(
 					trMl2l.GetTransformed(), constr);
@@ -378,9 +388,9 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				new TrGeometryToPoints(trP2l.GetTransformed(), GeometryComponent.Vertices);
 			{
 				string constr =
-					$"t0.t0.T0.IntField < 12 " +
-					$" AND t0.t0.{TrMultipolygonToPolygon.AttrInnerRingIndex} = 1" +
-					$" OR t0.t0.{TrMultipolygonToPolygon.AttrOuterRingIndex} = 1" +
+					$"IntField < 12 " +
+					$" AND {TrMultipolygonToPolygon.AttrInnerRingIndex} = 1" +
+					$" OR {TrMultipolygonToPolygon.AttrOuterRingIndex} = 1" +
 					$" OR {TrGeometryToPoints.AttrPartIndex} <> 0" +
 					$" OR {TrGeometryToPoints.AttrVertexIndex} <> 0";
 				QaConstraint test = new QaConstraint(
