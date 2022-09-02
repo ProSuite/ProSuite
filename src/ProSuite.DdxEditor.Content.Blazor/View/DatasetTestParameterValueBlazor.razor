@@ -7,7 +7,7 @@
 			<img alt="Find Dataset" src="images/Find.png" style="padding: 0 0 7px"/>
 		</button>
 		<span>
-			@if (DatasetViewModel.IsDataset)
+			@if (DatasetViewModel.IsDataset.HasValue && DatasetViewModel.IsDataset.Value)
 			{
 				@DatasetViewModel.DisplayValue
 			}

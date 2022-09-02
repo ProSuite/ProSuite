@@ -8,8 +8,6 @@ namespace ProSuite.DdxEditor.Content.Blazor.ViewModel;
 
 public interface IInstanceConfigurationViewModel : IViewObserver, IDataGridViewModel
 {
-	InstanceConfiguration InstanceConfiguration { get; }
-
 	ITestParameterDatasetProvider DatasetProvider { get; }
 
 	bool IsPersistent { get; }
@@ -19,4 +17,6 @@ public interface IInstanceConfigurationViewModel : IViewObserver, IDataGridViewM
 	void BindTo(InstanceConfiguration instanceConfiguration);
 
 	void OnRowPropertyChanged(object sender, PropertyChangedEventArgs e);
+
+	InstanceConfiguration GetEntity();
 }

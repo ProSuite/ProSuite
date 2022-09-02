@@ -3,8 +3,12 @@ using System.Windows.Forms;
 using Microsoft.AspNetCore.Components;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 using ProSuite.Commons.Misc;
+using ProSuite.Commons.Notifications;
+using ProSuite.Commons.Text;
 using ProSuite.Commons.UI.Finder;
+using ProSuite.Commons.Validation;
 using ProSuite.DdxEditor.Content.Blazor.View;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.DataModel;
@@ -16,8 +20,10 @@ namespace ProSuite.DdxEditor.Content.Blazor.ViewModel;
 
 public class DatasetTestParameterValueViewModel : ViewModelBase
 {
-	[NotNull] private readonly IInstanceConfigurationViewModel _viewModel;
+	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
+	[NotNull] private readonly IInstanceConfigurationViewModel _viewModel;
+	[CanBeNull] private Either<Dataset, TransformerConfiguration> _datasetSource;
 	[CanBeNull] private string _filterExpression;
 
 	private bool _usedAsReferenceData;
@@ -41,8 +47,8 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 
 		_filterExpression = filterExpression;
 		_usedAsReferenceData = usedAsReferenceData;
+		_datasetSource = datasetSource;
 
-		DatasetSource = datasetSource;
 		ImageSource = imageSource;
 		ModelName = modelName;
 
@@ -52,8 +58,12 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 		Validate();
 	}
 
-	[NotNull]
-	public Either<Dataset, TransformerConfiguration> DatasetSource { get; private set; }
+	[CanBeNull]
+	public Either<Dataset, TransformerConfiguration> DatasetSource
+	{
+		get => _datasetSource;
+		private set => SetProperty(ref _datasetSource, value);
+	}
 
 	[CanBeNull]
 	[UsedImplicitly]
@@ -74,15 +84,16 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 		set => SetProperty(ref _usedAsReferenceData, value);
 	}
 
+	[CanBeNull]
 	public string ImageSource { get; private set; }
 
 	public string DisplayValue => GetDisplayName();
 
-	public bool IsDataset =>  DatasetSource.Match(dataset => dataset != null, _ => false);
+	public bool? IsDataset => DatasetSource?.Match(dataset => dataset != null, _ => false);
 
 	public void GoTo()
 	{
-		TransformerConfiguration match = DatasetSource.Match(d => null, t => t);
+		TransformerConfiguration match = DatasetSource?.Match(d => null, t => t);
 
 		if (match != null)
 		{
@@ -117,24 +128,60 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 
 		DatasetFinderItem selectedItem = selection[0];
 
-		DatasetSource = selectedItem.Source;
+		Either<Dataset, TransformerConfiguration> source = selectedItem.Source;
 
-		ModelName = DatasetSource.Match(d => d?.Model?.Name, TestParameterValueUtils.GetDatasetModelName);
+		ModelName = source.Match(d => d?.Model?.Name, TestParameterValueUtils.GetDatasetModelName);
 
-		ImageSource = selectedItem.Source.Match(BlazorImageUtils.GetImageSource, BlazorImageUtils.GetImageSource);
+		ImageSource = source.Match(BlazorImageUtils.GetImageSource, BlazorImageUtils.GetImageSource);
 
 		FilterExpression = null;
 		UsedAsReferenceData = false;
 
-		// IMPORTANT: set last because it triggers OnPropertyChanged
-		// which updates the entity
-		Value = selectedItem.Source.Match(d => d?.Name, t => t.Name);
+		// triggers OnPropertyChanged and updates the entity
+		DatasetSource = source;
 	}
 
 	protected override bool ValidateCore()
 	{
-		return DatasetSource.Match(dataset => dataset != null,
-		                           configuration => configuration != null);
+		if (DatasetSource == null)
+		{
+			return false;
+		}
+
+		bool valid = DatasetSource.Match(dataset => dataset != null, newConfiguration =>
+		{
+			InstanceConfiguration current = _viewModel.GetEntity();
+
+			var configurationNames = new NotificationCollection();
+
+			NotificationUtils.Add(configurationNames, current.Name);
+
+			if (! TestParameterValueUtils.CheckCircularReferencesInGraph(
+				    current, newConfiguration, configurationNames))
+			{
+				return true;
+			}
+
+			_msg.Warn(
+				$"Not allowed circular {current.GetType().Name} references: {NotificationUtils.Concatenate(configurationNames, " -> ")}. Value is reset.");
+
+			return false;
+		});
+
+		if (valid)
+		{
+			return true;
+		}
+
+		// don't set on property because this
+		// triggers validation again.
+		_datasetSource = null;
+		ModelName = null;
+		ImageSource = null;
+		FilterExpression = null;
+		UsedAsReferenceData = false;
+
+		return false;
 	}
 
 	[NotNull]
@@ -150,7 +197,7 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 			datasetValue?.ValueSource != null
 				? new Either<Dataset, TransformerConfiguration>(datasetValue.ValueSource)
 				: new Either<Dataset, TransformerConfiguration>(datasetValue?.DatasetValue);
-
+		
 		object value = source.Match(d => d?.Name, t => t?.Name);
 
 		string modelName =
@@ -178,9 +225,11 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 	{
 		var finder = new Finder<DatasetFinderItem>();
 
-		DataQualityCategory category = _viewModel.InstanceConfiguration.Category;
+		InstanceConfiguration instanceConfiguration = _viewModel.GetEntity();
 
-		if (_viewModel.InstanceConfiguration is TransformerConfiguration transformer)
+		DataQualityCategory category = instanceConfiguration.Category;
+
+		if (instanceConfiguration is TransformerConfiguration transformer)
 		{
 			// Do not allow circular references!
 			_viewModel.DatasetProvider.Exclude(transformer);
@@ -193,7 +242,7 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 
 	public string GetDisplayName(bool qualified = true)
 	{
-		return DatasetSource.Match(dataset => GetDisplayName(dataset, qualified), t => t?.Name);
+		return DatasetSource?.Match(dataset => GetDisplayName(dataset, qualified), t => t?.Name);
 	}
 
 	private string GetDisplayName([CanBeNull] IModelElement dataset, bool qualified = true)
