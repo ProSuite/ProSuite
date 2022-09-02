@@ -99,7 +99,8 @@ namespace ProSuite.QA.Tests.Transformers
 
 			public IGeometryTransformer Transformer { get; }
 
-			protected override VirtualRow CreateObject(int oid)
+			public override GdbRow CreateObject(int oid,
+			                                    IValueList valueList = null)
 			{
 				return new TransformedFeature(oid, this);
 			}

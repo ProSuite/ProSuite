@@ -9,6 +9,8 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 	public class GdbFeatureClass : GdbTable, IFeatureClass, IGeoDataset, IReadOnlyFeatureClass,
 	                               IRowCreator<GdbFeature>
 	{
+		private int _shapeFieldIndex = -1;
+
 		public GdbFeatureClass(int objectClassId,
 		                       [NotNull] string name,
 		                       esriGeometryType shapeType,
@@ -30,13 +32,31 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		public GdbFields FieldsT => GdbFields;
 
+		public int ShapeFieldIndex
+		{
+			get
+			{
+				if (_shapeFieldIndex < 0)
+				{
+					string shapeFieldName = ShapeFieldName;
+
+					if (shapeFieldName != null)
+					{
+						_shapeFieldIndex = FindField(shapeFieldName);
+					}
+				}
+
+				return _shapeFieldIndex;
+			}
+		}
+
 		protected override void FieldAddedCore(IField field)
 		{
 			base.FieldAddedCore(field);
 
 			if (field.Type == esriFieldType.esriFieldTypeGeometry)
 			{
-				_shapeField = field.Name;
+				_shapeFieldName = field.Name;
 			}
 		}
 
@@ -44,11 +64,14 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		public new GdbFeature CreateFeature() => (GdbFeature) CreateRow();
 
-		protected override VirtualRow CreateObject(int oid) => CreateFeature(oid);
+		public override GdbRow CreateObject(int oid,
+		                                    IValueList valueList = null)
+			=> CreateFeature(oid, valueList);
 
-		public GdbFeature CreateFeature(int oid)
+		public GdbFeature CreateFeature(int oid,
+		                                [CanBeNull] IValueList valueList = null)
 		{
-			return new GdbFeature(oid, this);
+			return new GdbFeature(oid, this, valueList);
 		}
 
 		public override esriDatasetType DatasetType => esriDatasetType.esriDTFeatureClass;
@@ -87,8 +110,8 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		public override esriFeatureType FeatureType => esriFeatureType.esriFTSimple;
 
-		private string _shapeField;
-		public override string ShapeFieldName => _shapeField ?? base.ShapeFieldName;
+		private string _shapeFieldName;
+		public override string ShapeFieldName => _shapeFieldName ?? base.ShapeFieldName;
 
 		public override IField AreaField => null;
 

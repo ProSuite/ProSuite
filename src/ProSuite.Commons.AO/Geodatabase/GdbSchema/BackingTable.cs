@@ -45,11 +45,13 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			}
 		}
 
-		private VirtualRow CreateRow(IRow baseRow)
+		private GdbRow CreateRow(IRow baseRow)
 		{
 			var rowValueList = new RowBasedValues(baseRow, _oidFieldIndex);
 
-			return new GdbRow(baseRow.OID, _gdbTable, rowValueList);
+			int oid = baseRow.HasOID ? baseRow.OID : -1;
+
+			return _gdbTable.CreateObject(oid, rowValueList);
 		}
 	}
 }

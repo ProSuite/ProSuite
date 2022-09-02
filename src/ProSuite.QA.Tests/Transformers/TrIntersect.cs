@@ -59,7 +59,8 @@ namespace ProSuite.QA.Tests.Transformers
 						geomDef.SpatialReference, geomDef.GridSize[0], geomDef.HasZ, geomDef.HasM));
 			}
 
-			protected override VirtualRow CreateObject(int oid)
+			public override GdbRow CreateObject(int oid,
+			                                    IValueList valueList = null)
 			{
 				return new TransformedFeature(oid, this);
 			}

@@ -101,13 +101,11 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		private GdbRow CreateRow(GdbTable schema, IRow row)
 		{
-			if (row is IFeature f)
-			{
-				return new GdbFeature(row.OID, (GdbFeatureClass) schema,
-				                      new RowBasedValues(row, _oidFieldIndex));
-			}
+			var rowBasedValues = new RowBasedValues(row, _oidFieldIndex);
 
-			return new GdbRow(row.OID, schema, new RowBasedValues(row, _oidFieldIndex));
+			int oid = row.HasOID ? row.OID : -1;
+
+			return schema.CreateObject(oid, rowBasedValues);
 		}
 	}
 }

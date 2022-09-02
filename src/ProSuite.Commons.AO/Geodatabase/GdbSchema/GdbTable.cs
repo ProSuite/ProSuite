@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
@@ -93,18 +94,30 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			return ++_lastUsedOid;
 		}
 
-		protected virtual VirtualRow CreateObject(int oid)
+		/// <summary>
+		/// Create a row with a pre-determined OID. Calling this method as opposed to the
+		/// GdbRow constructor allows for certain optimizations.
+		/// </summary>
+		/// <param name="oid"></param>
+		/// <param name="valueList"></param>
+		/// <returns></returns>
+		public virtual GdbRow CreateObject(int oid,
+		                                   [CanBeNull] IValueList valueList = null)
 		{
-			return new GdbRow(oid, this);
+			return new GdbRow(oid, this, valueList);
 		}
 
 		protected virtual void FieldAddedCore(IField field) { }
 
 		#endregion
 
+		public int OidFieldIndex { get; private set; }
+
 		public void SetOIDFieldName(string fieldName)
 		{
 			_oidFieldName = fieldName;
+			OidFieldIndex = FindField(_oidFieldName);
+			Assert.False(OidFieldIndex < 0, "OID field does not exist");
 		}
 
 		private static string GetAliasName(ITable template)
@@ -161,7 +174,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			if (_oidFieldName == null && field.Type == esriFieldType.esriFieldTypeOID)
 			{
 				// If nothing was set, the first one to be added determines the OID field.
-				_oidFieldName = field.Name;
+				SetOIDFieldName(field.Name);
 			}
 
 			FieldAddedCore(field);
