@@ -66,7 +66,9 @@ namespace ProSuite.QA.Tests.Transformers
 			}
 			else
 			{
-				transformedFc.BaseRowValuesDict = transformedFc.AddFields(fc);
+				TransformedTableFields fcFields = new TransformedTableFields(fc);
+				fcFields.AddAllFields(transformedFc);
+				transformedFc.BaseRowValuesDict = fcFields.FieldIndexMapping;
 			}
 
 			return transformedFc;
@@ -120,15 +122,20 @@ namespace ProSuite.QA.Tests.Transformers
 			{
 				Transformer = transformer;
 				InvolvedTables = new List<IReadOnlyTable> {fc};
+				AddStandardFields(fc, derivedShapeType);
+			}
 
+			private void AddStandardFields(IReadOnlyFeatureClass fc, esriGeometryType derivedShapeType)
+			{
 				IGeometryDef geomDef =
 					fc.Fields.Field[
 						fc.Fields.FindField(fc.ShapeFieldName)].GeometryDef;
-				FieldsT.AddFields(
-					FieldUtils.CreateOIDField(),
-					FieldUtils.CreateShapeField(
-						derivedShapeType,
-						geomDef.SpatialReference, geomDef.GridSize[0], geomDef.HasZ, geomDef.HasM));
+
+				AddFieldT(FieldUtils.CreateOIDField());
+				AddFieldT(FieldUtils.CreateShapeField(
+					          derivedShapeType,
+					          geomDef.SpatialReference, geomDef.GridSize[0], geomDef.HasZ,
+					          geomDef.HasM));
 			}
 
 			public IGeometryTransformer Transformer { get; }
@@ -156,29 +163,6 @@ namespace ProSuite.QA.Tests.Transformers
 				IDictionary<int, int> shapeDict = new ConcurrentDictionary<int, int>();
 				shapeDict.Add(FieldsT.FindField(ShapeFieldName), 0);
 				return shapeDict;
-			}
-
-
-
-			[Obsolete("Move to / Use corrected place")]
-			public IDictionary<int, int> AddFields(IReadOnlyFeatureClass fc)
-			{
-				IDictionary<int, int> fieldMapping = new ConcurrentDictionary<int, int>();
-				for (int iField = 0; iField < fc.Fields.FieldCount; iField++)
-				{
-					IField f = fc.Fields.Field[iField];
-					string fieldName = f.Name.Replace(".", "_");
-					while (FieldsT.FindField(fieldName) >= 0)
-					{
-						fieldName += "_1";
-					}
-
-					List<int> indexes =
-						FieldsT.AddFields(FieldUtils.CreateField($"{fieldName}", f.Type));
-					fieldMapping.Add(indexes[0], iField);
-				}
-
-				return fieldMapping;
 			}
 
 			public IList<IReadOnlyTable> InvolvedTables { get; }

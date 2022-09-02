@@ -337,7 +337,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			}
 
 			TrMultipolygonToPolygon trMp2p =
-				new TrMultipolygonToPolygon(ReadOnlyTableFactory.Create(polyFc)) {TransformerName = "trMp2p"};
+				new TrMultipolygonToPolygon(ReadOnlyTableFactory.Create(polyFc));
 //			trMp2p.Attributes = new List<string> { "IntField" };
 			{
 				QaConstraint test = new QaConstraint(
@@ -358,7 +358,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				Assert.AreEqual(2, runner.Errors.Count);
 			}
 
-			TrPolygonToLine trP2l = new TrPolygonToLine(trMp2p.GetTransformed()) { TransformerName = "trP2l" };
+			TrPolygonToLine trP2l = new TrPolygonToLine(trMp2p.GetTransformed());
 			{
 				QaConstraint test = new QaConstraint(
 					trP2l.GetTransformed(),
@@ -369,20 +369,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				Assert.AreEqual(2, runner.Errors.Count);
 			}
 
-			TrMultilineToLine trMl2l = new TrMultilineToLine(trP2l.GetTransformed()) { TransformerName = "trMl2l" };
-			{
-				QaExportTables test = new QaExportTables(
-					new List<IReadOnlyTable>
-					{
-						ReadOnlyTableFactory.Create(polyFc),
-						trMp2p.GetTransformed(),
-						trP2l.GetTransformed(),
-						trMl2l.GetTransformed(),
-					}, @"C:\temp\test.gdb");
-				var runner = new QaContainerTestRunner(1000, test);
-				runner.Execute();
-			}
-
+			TrMultilineToLine trMl2l = new TrMultilineToLine(trP2l.GetTransformed());
 			{
 				string constr =
 					$"IntField < 12 " +
@@ -398,7 +385,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			}
 
 			TrGeometryToPoints trG2p =
-				new TrGeometryToPoints(trP2l.GetTransformed(), GeometryComponent.Vertices) { TransformerName = "trG2p" };
+				new TrGeometryToPoints(trP2l.GetTransformed(), GeometryComponent.Vertices);
 			{
 				string constr =
 					$"IntField < 12 " +
