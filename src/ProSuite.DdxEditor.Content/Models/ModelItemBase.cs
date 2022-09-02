@@ -77,8 +77,11 @@ namespace ProSuite.DdxEditor.Content.Models
 					             this, applicationController));
 			}
 
-			commands.Add(new AssignLayerFilesCommand<E>(
-				             this, applicationController));
+			if (Environment.Version < new Version(6, 0))
+			{
+				commands.Add(new AssignLayerFilesCommand<E>(
+					             this, applicationController));
+			}
 
 			commands.Add(new RefreshModelContentCommand<E>(
 				             this, applicationController));
