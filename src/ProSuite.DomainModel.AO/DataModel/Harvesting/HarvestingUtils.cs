@@ -10,7 +10,6 @@ using ProSuite.Commons.NamedValuesExpressions;
 using ProSuite.Commons.Notifications;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.DataModel.LegacyTypes;
-using FieldType = ProSuite.DomainModel.Core.DataModel.FieldType;
 
 namespace ProSuite.DomainModel.AO.DataModel.Harvesting
 {
@@ -62,8 +61,8 @@ namespace ProSuite.DomainModel.AO.DataModel.Harvesting
 			}
 
 			DatasetFilter filter = DatasetFilterFactory.TryCreate(inclusionExpressions,
-			                                                      exclusionExpressions,
-			                                                      out notifications);
+				exclusionExpressions,
+				out notifications);
 			if (filter == null)
 			{
 				throw new RuleViolationException(notifications, "Error creating dataset filter");
@@ -297,7 +296,7 @@ namespace ProSuite.DomainModel.AO.DataModel.Harvesting
 
 			IDatasetName featureDatasetName = DatasetUtils.GetFeatureDatasetName(datasetName);
 			Assert.NotNull(featureDatasetName,
-			               "Unable to determine feature dataset name for {0}",
+			               "Unable to determine feature dataset name for {0}. The dataset type is probably not supported on this plattform.",
 			               datasetName.Name);
 
 			featureDatasetElement.FeatureDatasetName =
