@@ -10,11 +10,13 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 	{
 		private readonly IReadOnlyTable _schema;
 		private IEnvelope _extent;
+		private readonly int _oidFieldIndex;
 
 		public InMemoryDataset(GdbTable schema,
 		                       IList<IRow> allRows)
 		{
 			_schema = schema;
+			_oidFieldIndex = schema.HasOID ? schema.FindField(schema.OIDFieldName) : -1;
 			AllRows = allRows.Select(r =>
 			{
 				VirtualRow v = CreateRow(schema, r);
@@ -97,14 +99,13 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			return GeometryUtils.Intersects(searchGeometry, feature.Shape);
 		}
 
-		private static GdbRow CreateRow(GdbTable schema, IRow row)
+		private GdbRow CreateRow(GdbTable schema, IRow row)
 		{
-			if (row is IFeature f)
-			{
-				return new GdbFeature(row.OID, (GdbFeatureClass) schema, new RowBasedValues(row));
-			}
+			var rowBasedValues = new RowBasedValues(row, _oidFieldIndex);
 
-			return new GdbRow(row.OID, schema, new RowBasedValues(row));
+			int oid = row.HasOID ? row.OID : -1;
+
+			return schema.CreateObject(oid, rowBasedValues);
 		}
 	}
 }

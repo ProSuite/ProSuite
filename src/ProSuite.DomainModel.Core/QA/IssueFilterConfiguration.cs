@@ -7,14 +7,14 @@ namespace ProSuite.DomainModel.Core.QA
 	public class IssueFilterConfiguration : InstanceConfiguration
 	{
 		/// <summary>
-		/// Initializes a new instance of the <see cref="RowFilterConfiguration" /> class.
+		/// Initializes a new instance of the <see cref="IssueFilterConfiguration" /> class.
 		/// </summary>
 		/// <remarks>Required for NHibernate</remarks>
 		[UsedImplicitly]
 		public IssueFilterConfiguration() : this(false) { }
 
 		/// <summary>
-		/// Initializes a new instance of the <see cref="RowFilterConfiguration" /> class.
+		/// Initializes a new instance of the <see cref="IssueFilterConfiguration" /> class.
 		/// </summary>
 		[UsedImplicitly]
 		public IssueFilterConfiguration(bool assignUuid = false) : base(assignUuid) { }
@@ -37,6 +37,8 @@ namespace ProSuite.DomainModel.Core.QA
 		}
 
 		#region Overrides of InstanceConfiguration
+
+		public override string TypeDisplayName => "Issue Filter ";
 
 		[NotNull]
 		public override InstanceConfiguration CreateCopy()

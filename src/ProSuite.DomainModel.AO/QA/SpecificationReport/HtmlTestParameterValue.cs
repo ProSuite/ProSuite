@@ -35,6 +35,15 @@ namespace ProSuite.DomainModel.AO.QA.SpecificationReport
 					Value = dataset.Name;
 				}
 
+				// Simply show the transformer for the time being. Theoretically we could
+				// also extract the full tree.
+				TransformerConfiguration transformer = datasetParameterValue.ValueSource;
+				if (transformer != null)
+				{
+					Dataset = transformer.Name;
+					Value = transformer.Name;
+				}
+
 				DatasetValue = dataset;
 
 				return;

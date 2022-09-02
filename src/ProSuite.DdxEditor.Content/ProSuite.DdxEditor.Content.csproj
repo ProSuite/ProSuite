@@ -46,6 +46,7 @@
     <ProjectReference Condition=" '$(TargetFramework)' == 'net6.0-windows' " Include="..\ProSuite.DdxEditor.Content.Blazor\ProSuite.DdxEditor.Content.Blazor.csproj" />
     <ProjectReference Include="..\ProSuite.DdxEditor.Framework\ProSuite.DdxEditor.Framework.csproj" />
     <ProjectReference Include="..\ProSuite.DomainModel.AO\ProSuite.DomainModel.AO.csproj" />
+    <ProjectReference Include="..\ProSuite.DomainModel.Core\ProSuite.DomainModel.Core.csproj" />
     <ProjectReference Include="..\ProSuite.UI\ProSuite.UI.csproj" />
   </ItemGroup>
 
@@ -70,7 +71,6 @@
 
   <ItemGroup>
     <Compile Include="..\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
-    <PackageReference Include="Prism.Core" Version="8.1.97" />
     <Compile Update="AssociationEnds\AssociationEndControl.cs">
       <SubType>UserControl</SubType>
     </Compile>

@@ -2,12 +2,5 @@
 @inherits TestParameterValueBlazorBase<int?>
 
 <Validation ErrorMessage="@ErrorMessage">
-	@if (ViewModel.Editing)
-	{
-		<RadzenNumeric TValue="int" @bind-Value="IntegerValue"/>
-	}
-	else
-	{
-		@IntegerValue
-	}
+	<RadzenNumeric TValue="int" @bind-Value="IntegerValue"/>
 </Validation>

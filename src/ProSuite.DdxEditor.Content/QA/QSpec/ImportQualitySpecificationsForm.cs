@@ -23,8 +23,8 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 			InitializeComponent();
 
 			_toolStripStatusLabel.Text = null;
-			_checkBoxUpdateTestDescriptorNames.Checked = false;
-			_checkBoxUpdateTestDescriptorProperties.Checked = false;
+			_checkBoxUpdateDescriptorNames.Checked = false;
+			_checkBoxUpdateDescriptorProperties.Checked = false;
 			_checkBoxIgnoreQualityConditionsForUnknownDatasets.Checked = true;
 
 			var formStateManager = new FormStateManager<ImportQualitySpecificationsFormState>(this);
@@ -40,10 +40,9 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 
 		public string FilePath { get; private set; }
 
-		public bool UpdateTestDescriptorNames => _checkBoxUpdateTestDescriptorNames.Checked;
+		public bool UpdateDescriptorNames => _checkBoxUpdateDescriptorNames.Checked;
 
-		public bool UpdateTestDescriptorProperties =>
-			_checkBoxUpdateTestDescriptorProperties.Checked;
+		public bool UpdateDescriptorProperties => _checkBoxUpdateDescriptorProperties.Checked;
 
 		public bool IgnoreQualityConditionsForUnknownDatasets =>
 			_checkBoxIgnoreQualityConditionsForUnknownDatasets.Checked;
@@ -119,8 +118,8 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 		void IFormStateAware<ImportQualitySpecificationsFormState>.RestoreState(
 			ImportQualitySpecificationsFormState formState)
 		{
-			_checkBoxUpdateTestDescriptorNames.Checked = formState.UpdateTestDescriptorNames;
-			_checkBoxUpdateTestDescriptorProperties.Checked =
+			_checkBoxUpdateDescriptorNames.Checked = formState.UpdateTestDescriptorNames;
+			_checkBoxUpdateDescriptorProperties.Checked =
 				formState.UpdateTestDescriptorProperties;
 			_checkBoxIgnoreQualityConditionsForUnknownDatasets.Checked =
 				formState.IgnoreQualityConditionsForUnknownDatasets;
@@ -129,9 +128,9 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 		void IFormStateAware<ImportQualitySpecificationsFormState>.GetState(
 			ImportQualitySpecificationsFormState formState)
 		{
-			formState.UpdateTestDescriptorNames = _checkBoxUpdateTestDescriptorNames.Checked;
+			formState.UpdateTestDescriptorNames = _checkBoxUpdateDescriptorNames.Checked;
 			formState.UpdateTestDescriptorProperties =
-				_checkBoxUpdateTestDescriptorProperties.Checked;
+				_checkBoxUpdateDescriptorProperties.Checked;
 			formState.IgnoreQualityConditionsForUnknownDatasets =
 				_checkBoxIgnoreQualityConditionsForUnknownDatasets.Checked;
 		}

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Components;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DdxEditor.Content.Blazor.ViewModel;
+using Radzen;
 
 namespace ProSuite.DdxEditor.Content.Blazor.View;
 
@@ -13,22 +14,37 @@ public abstract class TestParameterValueDataGridBlazorBase : DataGridBlazorBase
 	// ReSharper disable once NotNullMemberIsNotInitialized
 	public TestParameterValueCollectionViewModel ViewModel { get; set; }
 
+	protected void OnLoadData(LoadDataArgs args)
+	{
+		Rows = Assert.NotNull(ViewModel).Values;
+	}
+
 	protected void OnUpClicked()
 	{
 		Assert.NotNull(SelectedRow);
 		ViewModel.MoveUp(SelectedRow);
+
+		DataGrid.Reload();
 	}
 
 	protected void OnDownClicked()
 	{
 		Assert.NotNull(SelectedRow);
 		ViewModel.MoveDown(SelectedRow);
+
+		DataGrid.Reload();
 	}
 
 	protected void OnDeleteClicked()
 	{
 		Assert.NotNull(SelectedRow);
-		ViewModel.Remove(SelectedRow);
+
+		ViewModelBase newSelectedRow;
+		ViewModel.Remove(SelectedRow, out newSelectedRow);
+
+		DataGrid.Reload();
+
+		DataGrid.SelectRow(newSelectedRow);
 	}
 
 	protected override void OnRowClickCore(ViewModelBase row)
@@ -43,7 +59,7 @@ public abstract class TestParameterValueDataGridBlazorBase : DataGridBlazorBase
 			base.OnRowClickCore(insertedRow);
 
 			// select inserted row
-			SelectedRows = new List<ViewModelBase> { insertedRow };
+			DataGrid.SelectRow(insertedRow);
 		}
 		else
 		{

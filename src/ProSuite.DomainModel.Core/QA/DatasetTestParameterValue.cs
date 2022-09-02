@@ -181,8 +181,8 @@ namespace ProSuite.DomainModel.Core.QA
 
 		/// <summary>
 		/// Gets the source dataset(s) referenced either directly by this parameter or recursively
-		/// through the referenced transformer. Datasets only referenced by (row/issue-) filters
-		/// are not returned.
+		/// through the referenced transformer. Datasets only referenced by issue-filters are not
+		/// returned.
 		/// </summary>
 		/// <returns></returns>
 		public IEnumerable<Dataset> GetAllSourceDatasets()

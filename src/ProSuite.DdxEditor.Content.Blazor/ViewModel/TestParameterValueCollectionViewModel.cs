@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
@@ -14,90 +12,62 @@ namespace ProSuite.DdxEditor.Content.Blazor.ViewModel;
 
 public class TestParameterValueCollectionViewModel : ViewModelBase, IDataGridViewModel
 {
-	[NotNull] private string _displayName;
-
 	public TestParameterValueCollectionViewModel([NotNull] TestParameter parameter,
 	                                             [NotNull] IList<ViewModelBase> values,
 	                                             IInstanceConfigurationViewModel observer) : base(
-		parameter, values, observer, false, true)
+		parameter, values, observer)
 	{
 		Assert.ArgumentNotNull(values, nameof(values));
 
 		IsDatasetType = TestParameterTypeUtils.IsDatasetType(DataType);
-
-		_displayName = GetDisplayName();
 
 		ComponentType = typeof(TestParameterValueCollectionBlazor);
 		ComponentParameters.Add("ViewModel", this);
 
 		InsertDummyRow();
 	}
-	
-	public event PropertyChangedEventHandler DisplayNameChanged;
-
-	[NotifyPropertyChangedInvocator]
-	protected virtual void OnDisplayNameChanged([CallerMemberName] string propertyName = null)
-	{
-		DisplayNameChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-	}
 
 	public bool IsDatasetType { get; }
 
 	[NotNull]
-	public string DisplayName
-	{
-		get => _displayName;
-		private set
-		{
-			_displayName = value;
-			OnDisplayNameChanged();
-		}
-	}
+	public string DisplayName => GetDisplayName(Values);
 
 	public IList<ViewModelBase> Values => (IList<ViewModelBase>) Value;
 
 	[NotNull]
-	private string GetDisplayName()
-	{
-		return GetDisplayName(Values);
-	}
-
-	[NotNull]
 	private string GetDisplayName(IEnumerable<ViewModelBase> values)
 	{
-		string displayName = StringUtils.Concatenate(values, v =>
+		return $"[{StringUtils.Concatenate(GetNames(values), "; ")}]";
+	}
+
+	private IEnumerable<string> GetNames(IEnumerable<ViewModelBase> values)
+	{
+		foreach (ViewModelBase v in values)
 		{
 			if (v.Value == null)
 			{
-				return TestParameterTypeUtils.GetDefault(DataType)?.ToString();
+				yield return TestParameterTypeUtils.GetDefault(DataType)?.ToString();
 			}
 
-			if (v is DummyTestParameterValueViewModel)
+			else if (v is DummyTestParameterValueViewModel)
 			{
-				return null;
+				continue;
 			}
 
-			if (DataType.IsEnum)
+			else if (DataType.IsEnum)
 			{
-				return Enum.GetName(DataType, v.Value);
+				yield return Enum.GetName(DataType, v.Value);
 			}
 
-			if (IsDatasetType)
+			else if (IsDatasetType)
 			{
-				return ((DatasetTestParameterValueViewModel) v).GetDisplayName(false);
+				yield return ((DatasetTestParameterValueViewModel) v).GetDisplayName(false);
 			}
-
-			return v.Value.ToString();
-		}, "; ");
-
-		return $"[{displayName}]";
-	}
-
-	protected override bool ValidateCore()
-	{
-		DisplayName = GetDisplayName();
-
-		return base.ValidateCore();
+			else
+			{
+				yield return Assert.NotNull(v.Value).ToString();
+			}
+		}
 	}
 
 	[NotNull]
@@ -125,20 +95,41 @@ public class TestParameterValueCollectionViewModel : ViewModelBase, IDataGridVie
 			Assert.NotNull(testParameterValue);
 
 			row = new ScalarTestParameterValueViewModel(Parameter, testParameterValue.GetValue(),
-			                                            Observer, Parameter.IsConstructorParameter,
-			                                            Parameter.IsConstructorParameter);
+			                                            Observer, Parameter.IsConstructorParameter);
 			Insert(row, position);
 		}
 
 		return row;
 	}
 
-	public void Remove([NotNull] ViewModelBase row)
+	public void Remove([NotNull] ViewModelBase row, [CanBeNull] out ViewModelBase newSelectedRow)
 	{
 		Assert.ArgumentNotNull(row, nameof(row));
+		Assert.True(Values.Count > 0, "grid has no rows");
+
+		// the last row is always a dummy row
+		int rowsCount = Values.Count - 1;
+		int indexOfLast = rowsCount - 1;
+
+		int index = Values.IndexOf(row);
+		if (index < indexOfLast)
+		{
+			// many rows and not the last?
+			newSelectedRow = Values[index + 1];
+		}
+		else if (rowsCount == 1)
+		{
+			// only one row?
+			newSelectedRow = null;
+		}
+		else
+		{
+			// the last row?
+			newSelectedRow = Values[rowsCount - 2];
+		}
 
 		Assert.True(Values.Remove(row), $"cannot remove {row}");
-
+		
 		OnPropertyChanged(nameof(Values));
 	}
 
@@ -187,8 +178,6 @@ public class TestParameterValueCollectionViewModel : ViewModelBase, IDataGridVie
 		int i = index is > -1 ? index.Value : Values.Count;
 
 		InsertCore(row, i);
-
-		OnPropertyChanged(nameof(Values));
 	}
 
 	private void InsertDummyRow()

@@ -259,7 +259,8 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 					continue;
 				}
 
-				foreach (Dataset dataset in qualityCondition.GetDatasetParameterValues())
+				foreach (Dataset dataset in qualityCondition.GetDatasetParameterValues(
+					         includeSourceDatasets: true))
 				{
 					if (! datasets.Contains(dataset) && datasetContext.CanOpen(dataset))
 					{

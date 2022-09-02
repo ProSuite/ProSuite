@@ -234,7 +234,7 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 			//	() => p => parameterExpression(parameterValueAlias);
 
 			var parametersQuery =
-				session.QueryOver<T>(() => instanceConfigAlias)
+				session.QueryOver(() => instanceConfigAlias)
 				       //.Where(categoryFilter)
 				       .JoinAlias(i => instanceConfigAlias.ParameterValues,
 				                  () => parameterValueAlias)
@@ -389,15 +389,16 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 			QualityCondition qualityConditionAlias = null;
 			TestParameterValue testParamAlias = null;
 
-			// Initial query, eagerly fetching transformers including their parameters
+			// Initial query, eagerly fetching transformers including their parameters.
+			// NOTE: Do not restrict to only dataset parameter type, otherwise the scalar
+			// parameters will be null in the ParameterValues list. However, the performance
+			// would increase considerably by just loading the dataset test parameter values.
 			IQueryOver<QualityCondition>
 				parametersQuery =
 					session.QueryOver(() => qualityConditionAlias)
 					       .Fetch(SelectMode.FetchLazyProperties,
 					              () => qualityConditionAlias.ParameterValues)
 					       .JoinQueryOver(qc => qc.ParameterValues, () => testParamAlias)
-					       .Where(() => testParamAlias.GetType() ==
-					                    typeof(DatasetTestParameterValue))
 					       .Fetch(SelectMode.FetchLazyProperties,
 					              () => testParamAlias.ValueSource.ParameterValues)
 					       .Where(() => qualityConditionAlias.Id.IsIn(conditionIds))
@@ -413,11 +414,16 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 
 			var initialResult = parametersQuery.List<QualityCondition>();
 
+			var returnedDatasetIds = new HashSet<int>();
 			foreach (Dataset dataset in
 			         GetReferencedDatasets(initialResult, referencedTransformers,
 			                               testParameterPredicate))
 			{
-				yield return dataset;
+				if (! returnedDatasetIds.Contains(dataset.Id))
+				{
+					yield return dataset;
+					returnedDatasetIds.Add(dataset.Id);
+				}
 			}
 
 			if (includeReferencesViaIssueFilters)
@@ -428,7 +434,11 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 				         GetReferencedDatasets(issueFilters, referencedTransformers,
 				                               testParameterPredicate))
 				{
-					yield return dataset;
+					if (! returnedDatasetIds.Contains(dataset.Id))
+					{
+						yield return dataset;
+						returnedDatasetIds.Add(dataset.Id);
+					}
 				}
 			}
 		}
@@ -447,8 +457,6 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 					       .Fetch(SelectMode.FetchLazyProperties,
 					              () => transformerConfigAlias.ParameterValues)
 					       .JoinQueryOver(tc => tc.ParameterValues, () => testParamAlias)
-					       .Where(() => testParamAlias.GetType() ==
-					                    typeof(DatasetTestParameterValue))
 					       .Fetch(SelectMode.FetchLazyProperties,
 					              () => testParamAlias.ValueSource.ParameterValues)
 					       .Where(() => transformerConfigAlias.Id.IsIn(
@@ -466,12 +474,12 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 
 		private static IEnumerable<Dataset> GetReferencedDatasets(
 			[NotNull] IEnumerable<InstanceConfiguration> instanceConfigurations,
-			[NotNull] List<InstanceConfiguration> referencedTransformers,
+			[NotNull] ICollection<InstanceConfiguration> referencedTransformers,
 			[CanBeNull] Predicate<DatasetTestParameterValue> testParameterPredicate = null)
 		{
-			foreach (InstanceConfiguration transformer in instanceConfigurations)
+			foreach (InstanceConfiguration configuration in instanceConfigurations)
 			{
-				foreach (TestParameterValue parameterValue in transformer.ParameterValues)
+				foreach (TestParameterValue parameterValue in configuration.ParameterValues)
 				{
 					if (TryGetDataset(parameterValue, testParameterPredicate, out Dataset dataset,
 					                  out TransformerConfiguration referencedTransformer))
@@ -480,7 +488,9 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 					}
 					else if (referencedTransformer != null)
 					{
-						// These have already been fetched:
+						// These have already been fetched. The goal is not to find all referenced
+						// transformers, but those which need loading of more upstream transformers
+						// or datasets.
 						foreach (TestParameterValue sourceParameterValue in referencedTransformer
 							         .ParameterValues)
 						{
@@ -490,7 +500,7 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 							{
 								yield return sourceRefDataset;
 							}
-							else if (sourceParameterValue != null)
+							else if (sourceRefTransformer != null)
 							{
 								// not yet fetched, add for next round trip:
 								referencedTransformers.Add(sourceRefTransformer);

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
@@ -9,8 +10,7 @@ using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DomainModel.Core.QA
 {
-	public class QualityCondition : InstanceConfiguration,
-	                                IPersistenceAware
+	public class QualityCondition : InstanceConfiguration, IPersistenceAware
 	{
 		private int _cloneId = -1;
 
@@ -264,6 +264,8 @@ namespace ProSuite.DomainModel.Core.QA
 			return clone;
 		}
 
+		public override string TypeDisplayName => "Quality Condition";
+
 		[NotNull]
 		public override InstanceConfiguration CreateCopy()
 		{
@@ -369,11 +371,28 @@ namespace ProSuite.DomainModel.Core.QA
 		}
 
 		[NotNull]
-		public IList<TestParameterValue> GetDeletedParameterValues()
+		public IList<string> GetDeletedParameterValues()
 		{
-			List<TestParameterValue> result = new List<TestParameterValue>();
+			List<string> result = new List<string>();
 
-			foreach (TestParameterValue parameterValue in ParameterValues)
+			result.AddRange(GetDeletedParameterValueMessages(ParameterValues));
+
+			foreach (IssueFilterConfiguration issueFilter in IssueFilterConfigurations)
+			{
+				foreach (string deletedFilterParam in GetDeletedParameterValueMessages(
+					         issueFilter.ParameterValues))
+				{
+					result.Add($"Issue filter {issueFilter.Name}: {deletedFilterParam}");
+				}
+			}
+
+			return result;
+		}
+
+		private static IEnumerable<string> GetDeletedParameterValueMessages(
+			[NotNull] IEnumerable<TestParameterValue> parameterValues)
+		{
+			foreach (TestParameterValue parameterValue in parameterValues)
 			{
 				var datasetTestParameterValue = parameterValue as DatasetTestParameterValue;
 
@@ -381,11 +400,18 @@ namespace ProSuite.DomainModel.Core.QA
 
 				if (dataset != null && dataset.Deleted)
 				{
-					result.Add(datasetTestParameterValue);
+					yield return $"{parameterValue.TestParameterName}: {dataset.Name}";
+				}
+
+				if (datasetTestParameterValue?.ValueSource != null)
+				{
+					foreach (Dataset deleted in datasetTestParameterValue.GetAllSourceDatasets()
+						         .Where(d => d.Deleted))
+					{
+						yield return $"{parameterValue.TestParameterName}: {deleted.Name}";
+					}
 				}
 			}
-
-			return result;
 		}
 
 		private void CopyProperties([NotNull] QualityCondition target)

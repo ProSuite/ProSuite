@@ -30,9 +30,8 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 		bool usedAsReferenceData,
 		[NotNull] Either<Dataset, TransformerConfiguration> datasetSource,
 		[NotNull] IInstanceConfigurationViewModel observer,
-		bool required,
-		bool validateOnPersistence) :
-		base(parameter, value, observer, required, validateOnPersistence, "Dataset not set")
+		bool required) :
+		base(parameter, value, observer, required, "Dataset not set")
 	{
 		Assert.ArgumentNotNull(datasetSource, nameof(datasetSource));
 
@@ -99,25 +98,24 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 
 		DatasetFinderItem selectedItem = selection[0];
 
-		Either<Dataset, TransformerConfiguration> source = selectedItem.Source;
+		DatasetSource = selectedItem.Source;
 
-		DatasetSource = source;
+		ModelName = DatasetSource.Match(d => d?.Model?.Name, TestParameterValueUtils.GetDatasetModelName);
 
-		ModelName = source.Match(d => d?.Model?.Name, TestParameterValueUtils.GetDatasetModelName);
-
-		ImageSource = source.Match(BlazorImageUtils.GetImageSource, _ => null);
+		ImageSource = selectedItem.Source.Match(BlazorImageUtils.GetImageSource, BlazorImageUtils.GetImageSource);
 
 		FilterExpression = null;
 		UsedAsReferenceData = false;
 
 		// IMPORTANT: set last because it triggers OnPropertyChanged
 		// which updates the entity
-		Value = source.Match(d => d?.Name, t => t.Name);
+		Value = selectedItem.Source.Match(d => d?.Name, t => t.Name);
 	}
 
 	protected override bool ValidateCore()
 	{
-		return DisplayValue != null;
+		return DatasetSource.Match(dataset => dataset != null,
+		                           configuration => configuration != null);
 	}
 
 	[NotNull]
@@ -139,7 +137,7 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 		string modelName =
 			source.Match(d => d?.Model?.Name, TestParameterValueUtils.GetDatasetModelName);
 
-		string imageSource = source.Match(BlazorImageUtils.GetImageSource, _ => null);
+		string imageSource = source.Match(BlazorImageUtils.GetImageSource, BlazorImageUtils.GetImageSource);
 
 		string filterExpression = null;
 		var usedAsReferenceData = false;
@@ -153,7 +151,6 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 		return new DatasetTestParameterValueViewModel(parameter, value, imageSource, modelName,
 		                                              filterExpression, usedAsReferenceData, source,
 		                                              observer,
-		                                              parameter.IsConstructorParameter,
 		                                              parameter.IsConstructorParameter);
 	}
 

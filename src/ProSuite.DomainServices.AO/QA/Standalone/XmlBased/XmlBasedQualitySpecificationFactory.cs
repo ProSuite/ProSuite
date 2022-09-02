@@ -125,7 +125,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			                         "The document must contain at least one quality specification");
 
 			XmlDataQualityUtils.AssertUniqueWorkspaceIds(document);
-			XmlDataQualityUtils.AssertUniqueTestDescriptorNames(document);
+			XmlDataQualityUtils.AssertUniqueInstanceDescriptorNames(document);
 			XmlDataQualityUtils.AssertUniqueQualityConditionNames(document);
 			XmlDataQualityUtils.AssertUniqueIssueFilterNames(document);
 			XmlDataQualityUtils.AssertUniqueTransformerNames(document);
@@ -148,8 +148,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 				GetCategoryMap(document);
 
 			XmlDataQualityDocumentCache documentCache =
-				XmlDataQualityUtils.GetDocumentCache(
-					document, new[] {xmlQualitySpecification});
+				XmlDataQualityUtils.GetDocumentCache(document, new[] {xmlQualitySpecification});
 
 			IList<XmlWorkspace> referencedXmlWorkspaces =
 				XmlDataQualityUtils.GetReferencedWorkspaces(documentCache);
@@ -200,10 +199,11 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			Assert.ArgumentCondition(xmlDescriptors.Any(),
 			                         "At least one xml test descriptor must be provided");
 
-			var xmlConditions = specificationElements.Select(x => x.XmlCondition).ToList();
+			IList<XmlQualityCondition> xmlConditions =
+				specificationElements.Select(x => x.XmlCondition).ToList();
 
-			XmlDataQualityUtils.AssertUniqueTestDescriptorNames(xmlDescriptors);
-//			XmlDataQualityUtils.AssertUniqueQualityConditionNames(xmlConditions);
+			XmlDataQualityUtils.AssertUniqueInstanceDescriptorNames(xmlDescriptors, "test descriptor");
+			XmlDataQualityUtils.AssertUniqueInstanceConfigurationNames(xmlConditions, "quality condition");
 
 			IDictionary<string, Model> modelsByWorkspaceId = GetModelsByWorkspaceId(
 				dataSources, xmlConditions);
@@ -302,8 +302,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 
 			return qualityConditions;
 		}
-
-
+		
 		private static Dictionary<string, QualityCondition> CreateQualityConditions(
 			[NotNull] IList<KeyValuePair<XmlQualityCondition, DataQualityCategory>> conditions,
 			[NotNull] IDictionary<string, TestDescriptor> testDescriptorsByName,

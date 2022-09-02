@@ -243,7 +243,8 @@ namespace ProSuite.UI.QA.VerificationResult
 			{
 				var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-				foreach (Dataset dataset in qualityCondition.GetDatasetParameterValues())
+				foreach (Dataset dataset in qualityCondition.GetDatasetParameterValues(
+					         includeSourceDatasets: true))
 				{
 					names.Add(dataset.Name);
 				}

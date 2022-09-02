@@ -21,6 +21,14 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 
 		#region Implementation of IInstanceConfigurationRepository
 
+		public IList<T> GetInstanceConfigurations<T>() where T : InstanceConfiguration
+		{
+			using (ISession session = OpenSession(true))
+			{
+				return session.QueryOver<T>().List();
+			}
+		}
+
 		public IList<TransformerConfiguration> GetTransformerConfigurations(
 			IList<int> excludedIds = null)
 		{
@@ -35,6 +43,15 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 				}
 
 				return query.List();
+			}
+		}
+
+		public IList<IssueFilterConfiguration> GetIssueFilterConfigurations()
+		{
+			using (ISession session = OpenSession(true))
+			{
+				return session.CreateCriteria(typeof(IssueFilterConfiguration))
+				              .List<IssueFilterConfiguration>();
 			}
 		}
 
@@ -53,15 +70,6 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 				{
 					yield return dataset;
 				}
-			}
-		}
-
-		public IList<IssueFilterConfiguration> GetIssueFilterConfigurations()
-		{
-			using (ISession session = OpenSession(true))
-			{
-				return session.CreateCriteria(typeof(IssueFilterConfiguration))
-				              .List<IssueFilterConfiguration>();
 			}
 		}
 

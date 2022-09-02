@@ -8,6 +8,7 @@ using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
+using ProSuite.DomainModel.Core.QA.Repositories;
 
 namespace ProSuite.DomainServices.AO.QA
 {
@@ -23,151 +24,21 @@ namespace ProSuite.DomainServices.AO.QA
 		/// </summary>
 		/// <param name="specification"></param>
 		/// <param name="domainTransactions"></param>
+		/// <param name="instanceConfigurations"></param>
 		/// <returns>All datasets that are involved in any associated entity of the
 		/// conditions in the specification.</returns>
 		public static ICollection<Dataset> InitializeAssociatedEntitiesTx(
 			[NotNull] QualitySpecification specification,
-			[NotNull] IDomainTransactionManager domainTransactions)
+			[NotNull] IDomainTransactionManager domainTransactions,
+			[CanBeNull] IInstanceConfigurationRepository instanceConfigurations = null)
 		{
-			// Avoid no session while getting referenced datasets, attach conditions first:
-			var enabledConditions = new List<QualityCondition>();
-			foreach (QualitySpecificationElement element in specification.Elements.Where(
-				         e => e.Enabled))
-			{
-				QualityCondition condition = element.QualityCondition;
+			var enabledConditions =
+				specification.Elements.Where(e => e.Enabled)
+				             .Select(e => e.QualityCondition)
+				             .ToList();
 
-				if (condition.IsPersistent)
-				{
-					// Do not re-attach un-persisted (e.g. customized) conditions.
-					domainTransactions.Reattach(condition);
-				}
-
-				enabledConditions.Add(condition);
-			}
-
-			// TODO: Find out where the specification is loaded for the first time and make sure the number
-			//       of round-trips is somewhat limited! This approach here could potentially limit the number
-			//       of round trips to the maximum depth of the tree.
-			// Idea: https://github.com/nhibernate/nhibernate-core/pull/1599
-			ReattachAllTransformersAndFilters(enabledConditions, domainTransactions);
-
-			ICollection<Dataset> datasets = GetQualityConditionDatasets(enabledConditions);
-
-			// Re-attach conditions because otherwise a LazyLoadException occurs when getting
-			// the issue filters
-			foreach (QualityCondition condition in enabledConditions)
-			{
-				foreach (Dataset dataset in GetIssueFilterDatasets(condition))
-				{
-					datasets.Add(dataset);
-				}
-			}
-
-			domainTransactions.Reattach(datasets);
-
-			return datasets;
-		}
-
-		private static void ReattachAllTransformersAndFilters(
-			[NotNull] IEnumerable<QualityCondition> conditions,
-			[NotNull] IDomainTransactionManager domainTransactions)
-		{
-			var topLevelTransformers = new List<TransformerConfiguration>();
-			foreach (QualityCondition condition in conditions)
-			{
-				ReattachAndAddTransformers(condition.ParameterValues, topLevelTransformers,
-				                           domainTransactions);
-
-				foreach (IssueFilterConfiguration issueFilter in
-				         condition.IssueFilterConfigurations)
-				{
-					domainTransactions.Reattach(issueFilter);
-
-					ReattachAndAddTransformers(issueFilter.ParameterValues, topLevelTransformers,
-					                           domainTransactions);
-				}
-			}
-
-			// Now we have the top-level transformers. Recursively re-attach the referenced transformers
-			ReattachTransformersRecursively(topLevelTransformers, domainTransactions);
-		}
-
-		private static void ReattachAndAddTransformers(
-			IEnumerable<TestParameterValue> parameterValues,
-			ICollection<TransformerConfiguration> toResultList,
-			IDomainTransactionManager domainTransactions)
-		{
-			foreach (var parameterValue in parameterValues)
-			{
-				if (! (parameterValue is DatasetTestParameterValue datasetParamterValue))
-				{
-					continue;
-				}
-
-				TransformerConfiguration transformer = datasetParamterValue.ValueSource;
-
-				if (transformer == null)
-				{
-					continue;
-				}
-
-				domainTransactions.Reattach(transformer);
-				toResultList.Add(transformer);
-			}
-		}
-
-		private static void ReattachTransformersRecursively(
-			[NotNull] List<TransformerConfiguration> transformers,
-			IDomainTransactionManager domainTransactions)
-		{
-			while (transformers.Count > 0)
-			{
-				var nextLevelTransformers = new List<TransformerConfiguration>();
-
-				foreach (TransformerConfiguration transformer in transformers)
-				{
-					ReattachAndAddTransformers(transformer.ParameterValues, nextLevelTransformers,
-					                           domainTransactions);
-				}
-
-				transformers = nextLevelTransformers;
-			}
-		}
-
-		/// <summary>
-		/// Gets all datasets that are involved in any of the conditions of the provided specification,
-		/// including datasets that are part of a transformer or filter used in a condition.
-		/// </summary>
-		/// <param name="conditions"></param>
-		/// <returns></returns>
-		private static ICollection<Dataset> GetQualityConditionDatasets(
-			IEnumerable<QualityCondition> conditions)
-		{
-			var datasets = new HashSet<Dataset>();
-			foreach (QualityCondition condition in conditions)
-			{
-				const bool includeRecursively = true;
-				foreach (Dataset dataset in condition.GetDatasetParameterValues(
-					         includeRecursively, includeRecursively))
-				{
-					datasets.Add(dataset);
-				}
-			}
-
-			return datasets;
-		}
-
-		private static IEnumerable<Dataset> GetIssueFilterDatasets(
-			[NotNull] QualityCondition condition)
-		{
-			// Initialize Issue filters:
-			foreach (var issueFilterConfig in condition.IssueFilterConfigurations)
-			{
-				foreach (Dataset dataset in issueFilterConfig.GetDatasetParameterValues(true, true))
-				{
-					yield return dataset;
-				}
-			}
+			return InstanceConfigurationUtils.InitializeAssociatedConfigurationsTx(
+				enabledConditions, domainTransactions, instanceConfigurations);
 		}
 
 		[NotNull]
@@ -189,7 +60,7 @@ namespace ProSuite.DomainServices.AO.QA
 				}
 
 				QualityCondition condition = element.QualityCondition;
-				IList<TestParameterValue> deleted = condition.GetDeletedParameterValues();
+				IList<string> deleted = condition.GetDeletedParameterValues();
 				if (deleted.Count > 0)
 				{
 					ReportInvalidConditionWarning(condition, deleted);
@@ -386,7 +257,7 @@ namespace ProSuite.DomainServices.AO.QA
 		{
 			var result = new List<Dataset>();
 
-			foreach (var dataset in condition.GetDatasetParameterValues())
+			foreach (var dataset in condition.GetDatasetParameterValues(true))
 			{
 				if (knownExistingDatasets.Contains(dataset))
 				{
@@ -484,15 +355,15 @@ namespace ProSuite.DomainServices.AO.QA
 
 		private static void ReportInvalidConditionWarning(
 			[NotNull] QualityCondition qualityCondition,
-			[NotNull] IEnumerable<TestParameterValue> deletedTestParameterValues)
+			[NotNull] IEnumerable<string> deletedTestParameterValueMessages)
 		{
 			var sb = new StringBuilder();
 			sb.AppendFormat("Quality condition '{0}' has deleted values and is ignored.",
 			                qualityCondition.Name);
 			sb.AppendLine();
-			foreach (TestParameterValue value in deletedTestParameterValues)
+			foreach (string message in deletedTestParameterValueMessages)
 			{
-				sb.AppendFormat("- {0}: {1}", value.TestParameterName, value.StringValue);
+				sb.AppendFormat("- {0}", message);
 			}
 
 			_msg.Warn(sb.ToString());

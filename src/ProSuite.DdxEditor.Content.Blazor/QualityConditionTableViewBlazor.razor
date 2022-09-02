@@ -88,16 +88,23 @@
 		max-height: 1.8rem;
 		margin: 0;
 		border-radius: unset;
+		border: none;
+		box-shadow: none;
 	}
 
     .rz-dropdown {
-	    height: 1.8rem;
-	    max-height: 1.8rem;
-	    padding-top: 0;
-	    padding-bottom: 0.25rem;
+		height: 1.8rem;
+		padding-top: 0;
 	    margin: 0.25rem 0 0 0;
 	    border-radius: unset;
+	    box-shadow: none;
     }
+
+	.rz-spinner {
+		/*margin: 0.25rem 0 0.25rem 0;*/
+		border-radius: unset;
+		box-shadow: none;
+	}
 
 	/*.rz-button {
 		border-radius: 0;
@@ -118,11 +125,13 @@
 
 </style>
 
+<RadzenTooltip/>
+
 <div class="container-fluid" style="margin: 0.625rem 0 0 -0.75rem;">
     <div class="col">
 	    <RadzenDataGrid @ref="DataGrid"
 	                    TItem="ViewModelBase"
-	                    Data="Values"
+	                    Data="Rows"
 	                    SelectionMode="DataGridSelectionMode.Single"
 	                    ExpandMode="DataGridExpandMode.Multiple"
 	                    EditMode="DataGridEditMode.Single"
@@ -171,15 +180,9 @@
                         <Template Context="viewModel">
                             @if (viewModel is DatasetTestParameterValueViewModel vm)
                             {
-                                @vm.FilterExpression
+	                            <RadzenTextBox @bind-Value="vm.FilterExpression" />
                             }
                         </Template>
-                        <EditTemplate Context="viewModel">
-                            @if (viewModel is DatasetTestParameterValueViewModel vm)
-                            {
-	                            <RadzenTextBox @bind-Value="vm.FilterExpression" Style="width: 100%;" />
-                            }
-                        </EditTemplate>
                     </RadzenDataGridColumn>
                     <RadzenDataGridColumn TItem="ViewModelBase" Property="UsedAsReferenceData" Title="Reference" Width="80px">
                         <Template Context="viewModel">

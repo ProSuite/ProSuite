@@ -1,3 +1,4 @@
+using System;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Validation;
@@ -32,15 +33,11 @@ namespace ProSuite.DomainModel.Core.QA
 
 		#region Overrides of InstanceConfiguration
 
-		
-
-		#endregion
-
-		#region Overrides of InstanceConfiguration
+		public override string TypeDisplayName => "Row Filter";
 
 		public override InstanceConfiguration CreateCopy()
 		{
-			throw new System.NotImplementedException();
+			throw new NotImplementedException();
 		}
 
 		#endregion

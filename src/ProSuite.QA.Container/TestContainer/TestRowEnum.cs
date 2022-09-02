@@ -819,6 +819,11 @@ namespace ProSuite.QA.Container.TestContainer
 					continue;
 				}
 
+				if (! (baseTable is IReadOnlyFeatureClass))
+				{
+					continue;
+				}
+
 				if (! cachedTables.TryGetValue(baseTable, out double searchDist))
 				{
 					searchDist = 0;

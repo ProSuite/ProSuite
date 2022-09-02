@@ -425,16 +425,16 @@ namespace ProSuite.DdxEditor.Content.QA.Categories
 		void IQualitySpecificationContainer.ImportQualitySpecifications(
 			string fileName,
 			bool ignoreConditionsForUnknownDatasets,
-			bool updateTestDescriptorNames,
-			bool updateTestDescriptorProperties)
+			bool updateDescriptorNames,
+			bool updateDescriptorProperties)
 		{
 			Assert.ArgumentNotNullOrEmpty(fileName, nameof(fileName));
 
 			QualitySpecificationsItemUtils.ImportQualitySpecifications(
 				fileName,
 				ignoreConditionsForUnknownDatasets,
-				updateTestDescriptorNames,
-				updateTestDescriptorProperties,
+				updateDescriptorNames,
+				updateDescriptorProperties,
 				_modelBuilder.DataQualityImporter);
 		}
 

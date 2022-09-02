@@ -192,6 +192,7 @@ namespace ProSuite.DomainServices.AO.QA
 			                                         .Select(e => e.QualityCondition)
 			                                         .Where(qcon => qcon != null))
 			{
+				// TODO: Limit number of round trips, use QualitySpecificationUtils.InitializeAssociatedEntitiesTx() ?
 				foreach (Dataset dataset in qcon
 				                            .GetDatasetParameterValues(true, true)
 				                            .Where(ds => ds.Model != null))

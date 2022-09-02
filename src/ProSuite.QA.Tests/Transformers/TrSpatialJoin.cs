@@ -172,7 +172,8 @@ namespace ProSuite.QA.Tests.Transformers
 				return _constraint.IsFulfilled(t0, 0, t1, 1, out string _);
 			}
 
-			protected override VirtualRow CreateObject(int oid)
+			public override GdbRow CreateObject(int oid,
+			                                    IValueList valueList = null)
 			{
 				return new TfcFeature(oid, this);
 			}

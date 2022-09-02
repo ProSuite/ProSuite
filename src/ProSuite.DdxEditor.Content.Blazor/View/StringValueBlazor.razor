@@ -2,12 +2,5 @@
 @inherits TestParameterValueBlazorBase<string>
 
 <Validation ErrorMessage="@ErrorMessage">
-	@if (ViewModel.Editing)
-	{
-		<RadzenTextBox @bind-Value="StringValue" Style="width: 100%;"/>
-	}
-	else
-	{
-		@StringValue
-	}
+	<RadzenTextBox @bind-Value="StringValue"/>
 </Validation>

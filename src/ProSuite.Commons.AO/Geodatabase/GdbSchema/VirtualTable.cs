@@ -4,6 +4,7 @@ using System.Linq;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 {
@@ -260,26 +261,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		public bool Equals(IReadOnlyTable otherTable)
 		{
-			VirtualTable other = otherTable as VirtualTable;
-
-			if (other == null)
-			{
-				return false;
-			}
-
-			if (! Equals(Workspace, other.Workspace))
-			{
-				return false;
-			}
-
-			if (ObjectClassID >= 0 && other.ObjectClassID >= 0 &&
-			    ObjectClassID == other.ObjectClassID)
-			{
-				return true;
-			}
-
-			// Same workspace but negative class ids:
-			return Name.Equals(other.Name);
+			return Equals((object) otherTable);
 		}
 
 		public int FeatureCount(IQueryFilter QueryFilter) => RowCount(QueryFilter);
@@ -486,6 +468,85 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		public virtual IEnumSubtype Subtypes =>
 			throw new NotImplementedException("Implement in derived class");
+
+		#region Equality members
+
+		public bool Equals([NotNull] IObjectClass other)
+		{
+			IWorkspace otherWorkspace = ((IDataset) other).Workspace;
+
+			if (! Equals(Workspace, otherWorkspace))
+			{
+				return false;
+			}
+
+			if (ObjectClassID >= 0 && other.ObjectClassID >= 0 &&
+			    ObjectClassID == other.ObjectClassID)
+			{
+				return true;
+			}
+
+			return Name == DatasetUtils.GetName(other);
+		}
+
+		public bool Equals(VirtualTable other)
+		{
+			if (other == null)
+			{
+				return false;
+			}
+
+			if (! Equals(Workspace, other.Workspace))
+			{
+				return false;
+			}
+
+			if (ObjectClassID >= 0 && other.ObjectClassID >= 0 &&
+			    ObjectClassID == other.ObjectClassID)
+			{
+				return true;
+			}
+
+			// Same workspace, potentially 'virtual' classes;
+			return Name == other.Name;
+		}
+
+		public override bool Equals(object obj)
+		{
+			if (ReferenceEquals(null, obj)) return false;
+
+			if (ReferenceEquals(this, obj)) return true;
+
+			// Other virtual table
+			if (obj is VirtualTable virtualTable)
+			{
+				return Equals(virtualTable);
+			}
+
+			// Vanilla Esri table
+			if (obj is IObjectClass otherObjectClass)
+			{
+				return Equals(otherObjectClass);
+			}
+
+			// Wrapped Esri table
+			if (obj is ReadOnlyTable roTable)
+			{
+				return Equals((IObjectClass) roTable.BaseTable);
+			}
+
+			return false;
+		}
+
+		public override int GetHashCode()
+		{
+			unchecked
+			{
+				return (Workspace != null ? Workspace.GetHashCode() : 0) * 397 ^ ObjectClassID;
+			}
+		}
+
+		#endregion
 
 		protected class TableName : IName, IDatasetName, IObjectClassName, ITableName
 		{
