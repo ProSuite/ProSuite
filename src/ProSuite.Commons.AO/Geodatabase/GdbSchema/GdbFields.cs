@@ -46,12 +46,15 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			return _fields.Count - 1;
 		}
 
-		public void AddFields(params IField[] fields)
+		public List<int> AddFields(params IField[] fields)
 		{
+			List<int> added = new List<int>();
 			foreach (var field in fields)
 			{
-				AddField(field);
+				added.Add(AddField(field));
 			}
+
+			return added;
 		}
 	}
 }

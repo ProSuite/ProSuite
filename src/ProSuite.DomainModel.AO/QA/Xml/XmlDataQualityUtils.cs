@@ -532,7 +532,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			AssertUniqueTestDescriptorNames(testDescriptors);
 		}
 
-		private static void AssertUniqueTestDescriptorNames(
+		public static void AssertUniqueTestDescriptorNames(
 			[NotNull] IEnumerable<XmlTestDescriptor> testDescriptors)
 		{
 			var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);

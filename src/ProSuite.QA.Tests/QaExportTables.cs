@@ -93,7 +93,7 @@ namespace ProSuite.QA.Tests
 						j++;
 					}
 
-					_exportTables.Add(CreateTable(ws, involvedTable, baseName,
+					_exportTables.Add(CreateTable(ws, involvedTable, name,
 					                              out Dictionary<int, int> fieldMappings));
 					_fieldMappings.Add(fieldMappings);
 					tableNames.Add(name, iInvolved);

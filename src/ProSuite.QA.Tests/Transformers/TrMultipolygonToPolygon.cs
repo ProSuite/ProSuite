@@ -39,12 +39,13 @@ namespace ProSuite.QA.Tests.Transformers
 			IReadOnlyFeatureClass featureClass)
 			: base(featureClass, esriGeometryType.esriGeometryPolygon) { }
 
-		protected override void AddCustomAttributes(TransformedFeatureClass transformedFc)
+		protected override IList<int> AddCustomAttributes(TransformedFeatureClass transformedFc)
 		{
-			transformedFc.FieldsT.AddFields(
-				FieldUtils.CreateField(AttrOuterRingIndex, esriFieldType.esriFieldTypeInteger));
-			transformedFc.FieldsT.AddFields(
-				FieldUtils.CreateField(AttrInnerRingIndex, esriFieldType.esriFieldTypeInteger));
+			return new List<int>(
+				transformedFc.FieldsT.AddFields(
+					FieldUtils.CreateField(AttrOuterRingIndex, esriFieldType.esriFieldTypeInteger),
+					FieldUtils.CreateField(AttrInnerRingIndex,
+					                       esriFieldType.esriFieldTypeInteger)));
 		}
 
 		[TestParameter(_defaultPolygonPart)]

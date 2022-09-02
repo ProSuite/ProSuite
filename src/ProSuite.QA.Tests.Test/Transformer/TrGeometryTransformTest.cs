@@ -337,34 +337,57 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			}
 
 			TrMultipolygonToPolygon trMp2p =
-				new TrMultipolygonToPolygon(ReadOnlyTableFactory.Create(polyFc));
+				new TrMultipolygonToPolygon(ReadOnlyTableFactory.Create(polyFc)) {TransformerName = "trMp2p"};
+//			trMp2p.Attributes = new List<string> { "IntField" };
 			{
 				QaConstraint test = new QaConstraint(
 					trMp2p.GetTransformed(),
-					$"T0.IntField < 12 AND {TrMultipolygonToPolygon.AttrInnerRingIndex} = 1 OR {TrMultipolygonToPolygon.AttrOuterRingIndex} = 1");
+					$"IntField < 12 AND {TrMultipolygonToPolygon.AttrInnerRingIndex} = 1 OR {TrMultipolygonToPolygon.AttrOuterRingIndex} = 1");
+
+				var runner = new QaContainerTestRunner(1000, test);
+				runner.Execute();
+				Assert.AreEqual(2, runner.Errors.Count);
+			}
+			{
+				QaConstraint test = new QaConstraint(
+					trMp2p.GetTransformed(),
+					$"IntField < 12 AND {TrMultipolygonToPolygon.AttrInnerRingIndex} = 1 OR {TrMultipolygonToPolygon.AttrOuterRingIndex} = 1");
 
 				var runner = new QaContainerTestRunner(1000, test);
 				runner.Execute();
 				Assert.AreEqual(2, runner.Errors.Count);
 			}
 
-			TrPolygonToLine trP2l = new TrPolygonToLine(trMp2p.GetTransformed());
+			TrPolygonToLine trP2l = new TrPolygonToLine(trMp2p.GetTransformed()) { TransformerName = "trP2l" };
 			{
 				QaConstraint test = new QaConstraint(
 					trP2l.GetTransformed(),
-					$"t0.T0.IntField < 12 AND t0.{TrMultipolygonToPolygon.AttrInnerRingIndex} = 1 OR t0.{TrMultipolygonToPolygon.AttrOuterRingIndex} = 1");
+					$"IntField < 12 AND {TrMultipolygonToPolygon.AttrInnerRingIndex} = 1 OR {TrMultipolygonToPolygon.AttrOuterRingIndex} = 1");
 
 				var runner = new QaContainerTestRunner(1000, test);
 				runner.Execute();
 				Assert.AreEqual(2, runner.Errors.Count);
 			}
 
-			TrMultilineToLine trMl2l = new TrMultilineToLine(trP2l.GetTransformed());
+			TrMultilineToLine trMl2l = new TrMultilineToLine(trP2l.GetTransformed()) { TransformerName = "trMl2l" };
+			{
+				QaExportTables test = new QaExportTables(
+					new List<IReadOnlyTable>
+					{
+						ReadOnlyTableFactory.Create(polyFc),
+						trMp2p.GetTransformed(),
+						trP2l.GetTransformed(),
+						trMl2l.GetTransformed(),
+					}, @"C:\temp\test.gdb");
+				var runner = new QaContainerTestRunner(1000, test);
+				runner.Execute();
+			}
+
 			{
 				string constr =
-					$"t0.t0.T0.IntField < 12 " +
-					$" AND t0.t0.{TrMultipolygonToPolygon.AttrInnerRingIndex} = 1" +
-					$" OR t0.t0.{TrMultipolygonToPolygon.AttrOuterRingIndex} = 1" +
+					$"IntField < 12 " +
+					$" AND {TrMultipolygonToPolygon.AttrInnerRingIndex} = 1" +
+					$" OR {TrMultipolygonToPolygon.AttrOuterRingIndex} = 1" +
 					$" OR {TrMultilineToLine.AttrPartIndex} <> 0";
 				QaConstraint test = new QaConstraint(
 					trMl2l.GetTransformed(), constr);
@@ -375,12 +398,12 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			}
 
 			TrGeometryToPoints trG2p =
-				new TrGeometryToPoints(trP2l.GetTransformed(), GeometryComponent.Vertices);
+				new TrGeometryToPoints(trP2l.GetTransformed(), GeometryComponent.Vertices) { TransformerName = "trG2p" };
 			{
 				string constr =
-					$"t0.t0.T0.IntField < 12 " +
-					$" AND t0.t0.{TrMultipolygonToPolygon.AttrInnerRingIndex} = 1" +
-					$" OR t0.t0.{TrMultipolygonToPolygon.AttrOuterRingIndex} = 1" +
+					$"IntField < 12 " +
+					$" AND {TrMultipolygonToPolygon.AttrInnerRingIndex} = 1" +
+					$" OR {TrMultipolygonToPolygon.AttrOuterRingIndex} = 1" +
 					$" OR {TrGeometryToPoints.AttrPartIndex} <> 0" +
 					$" OR {TrGeometryToPoints.AttrVertexIndex} <> 0";
 				QaConstraint test = new QaConstraint(

@@ -23,10 +23,12 @@ namespace ProSuite.QA.Tests.Transformers
 			IReadOnlyFeatureClass featureClass)
 			: base(featureClass, esriGeometryType.esriGeometryPolyline) { }
 
-		protected override void AddCustomAttributes(TransformedFeatureClass transformedFc)
+		protected override IList<int> AddCustomAttributes(TransformedFeatureClass transformedFc)
 		{
-			transformedFc.FieldsT.AddFields(
-				FieldUtils.CreateField(AttrPartIndex, esriFieldType.esriFieldTypeInteger));
+			return new List<int>(
+				transformedFc.FieldsT.AddFields(
+					FieldUtils.CreateField(AttrPartIndex,
+					                       esriFieldType.esriFieldTypeInteger)));
 		}
 
 		protected override IEnumerable<GdbFeature> Transform(IGeometry source)

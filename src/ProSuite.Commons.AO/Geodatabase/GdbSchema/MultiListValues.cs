@@ -68,15 +68,12 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		{
 			if (TryGetSource(index, out IValueList sourceRow, out int fieldIndex))
 			{
-				// No updating of actual features, just ensure the value is equal!
-
-				// TODO: Check DBNull, reference types
+				//// TODO: Check DBNull, reference types
 				object sourceValue = sourceRow?.GetValue(fieldIndex) ?? DBNull.Value;
 
-				if (! sourceValue.Equals(value))
+				if (!sourceValue.Equals(value))
 				{
-					// TODO: Add updateabiliy to the interface
-					throw new InvalidOperationException("Cannot update read-only list");
+					sourceRow?.SetValue(fieldIndex, value);
 				}
 			}
 			else

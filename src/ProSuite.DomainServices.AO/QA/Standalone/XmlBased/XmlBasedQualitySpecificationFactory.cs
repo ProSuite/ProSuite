@@ -142,7 +142,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			                         $"Specification '{qualitySpecificationName}' not found in document",
 			                         nameof(qualitySpecificationName));
 
-			XmlDataQualityUtils.AssertUniqueElementNames(xmlQualitySpecification);
+			XmlDataQualityUtils.AssertUniqueQualitySpecificationElementNames(xmlQualitySpecification);
 
 			IDictionary<XmlDataQualityCategory, DataQualityCategory> categoryMap =
 				GetCategoryMap(document);
@@ -172,7 +172,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 					: null;
 
 			return XmlDataQualityUtils.CreateQualitySpecification(
-				qualityConditions, xmlQualitySpecification, specificationCategory,
+				xmlQualitySpecification, qualityConditions, specificationCategory,
 				ignoreConditionsForUnknownDatasets);
 		}
 
@@ -203,7 +203,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			var xmlConditions = specificationElements.Select(x => x.XmlCondition).ToList();
 
 			XmlDataQualityUtils.AssertUniqueTestDescriptorNames(xmlDescriptors);
-			XmlDataQualityUtils.AssertUniqueQualityConditionNames(xmlConditions);
+//			XmlDataQualityUtils.AssertUniqueQualityConditionNames(xmlConditions);
 
 			IDictionary<string, Model> modelsByWorkspaceId = GetModelsByWorkspaceId(
 				dataSources, xmlConditions);
