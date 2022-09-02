@@ -442,7 +442,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			if (_associationDescription is ForeignKeyAssociationDescription foreignKeyAssociation)
 			{
-				if (AreEqual(GeometryEndClass, foreignKeyAssociation.ReferencedTable))
+				if (GeometryEndClass.Equals(foreignKeyAssociation.ReferencedTable))
 				{
 					GeometryClassKeyField = foreignKeyAssociation.ReferencedKeyName;
 					OtherClassKeyField = foreignKeyAssociation.ReferencingKeyName;
@@ -458,7 +458,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 				ManyToManyAssociationDescription manyToManyAssociation =
 					(ManyToManyAssociationDescription) _associationDescription;
 
-				if (AreEqual(GeometryEndClass, manyToManyAssociation.Table1))
+				if (GeometryEndClass.Equals(manyToManyAssociation.Table1))
 				{
 					GeometryClassKeyField = manyToManyAssociation.Table1KeyName;
 					OtherClassKeyField = manyToManyAssociation.Table2KeyName;
@@ -488,7 +488,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			if (_associationDescription is ForeignKeyAssociationDescription)
 			{
-				return AreEqual(GeometryEndClass, oidSourceTable)
+				return GeometryEndClass.Equals(oidSourceTable)
 					       ? JoinSourceTable.Left
 					       : JoinSourceTable.Right;
 			}
@@ -694,36 +694,23 @@ namespace ProSuite.Commons.AO.Geodatabase
 		                                          out string bridgeTableGeoKeyField,
 		                                          out string bridgeTableOtherKeyField)
 		{
-			if (AreEqual(GeometryEndClass, m2nAssociation.Table1))
+			if (GeometryEndClass.Equals(m2nAssociation.Table1))
 			{
 				bridgeTableGeoKeyField = m2nAssociation.AssociationTableKey1;
 				bridgeTableOtherKeyField = m2nAssociation.AssociationTableKey2;
 			}
 			else
 			{
+				// Test for correct equals implementation:
+				Assert.True(OtherEndClass.Equals(m2nAssociation.Table1),
+				            "Table equality implementation: unexpected results");
+
 				bridgeTableGeoKeyField = m2nAssociation.AssociationTableKey2;
 				bridgeTableOtherKeyField = m2nAssociation.AssociationTableKey1;
 			}
 		}
 
 		#endregion
-
-		private static bool AreEqual(IReadOnlyTable table1, IReadOnlyTable table2)
-		{
-			if (table1.Equals(table2))
-			{
-				return true;
-			}
-
-			if (table1 is ReadOnlyTable roTable1 && table2 is ReadOnlyTable roTable2)
-			{
-				// TODO: Move to Equals implementation of ReadOnlyTable? Add Equals to IReadOnlyTable?
-				return DatasetUtils.IsSameObjectClass((IObjectClass) roTable1.BaseTable,
-				                                      (IObjectClass) roTable2.BaseTable);
-			}
-
-			return false;
-		}
 
 		private IEnumerable<IReadOnlyRow> FetchBridgeTableRowsByKey(
 			[NotNull] HashSet<string> keys,
