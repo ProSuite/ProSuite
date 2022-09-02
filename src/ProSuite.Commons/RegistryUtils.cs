@@ -1,7 +1,8 @@
-﻿using System;
+using System;
+using System.Collections.Generic;
+using Microsoft.Win32;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using Microsoft.Win32;
 
 namespace ProSuite.Commons
 {
@@ -31,6 +32,24 @@ namespace ProSuite.Commons
 				       : Convert.ToInt32(value);
 		}
 
+		public static IEnumerable<string> GetKeyNames(RegistryRootKey rootKey,
+		                                              [NotNull] string path)
+		{
+			RegistryKey rootRegKey = GetRootKey(rootKey);
+
+			RegistryKey subKey = rootRegKey.OpenSubKey(path);
+
+			if (subKey == null)
+			{
+				yield break;
+			}
+
+			foreach (string subKeyName in subKey.GetSubKeyNames())
+			{
+				yield return subKeyName;
+			}
+		}
+
 		[CanBeNull]
 		private static object GetValue(RegistryRootKey rootKey,
 		                               [NotNull] string path,
@@ -50,6 +69,7 @@ namespace ProSuite.Commons
 			Assert.ArgumentNotNullOrEmpty(name, nameof(name));
 
 			RegistryKey subKey = registryKey.OpenSubKey(path);
+
 			return subKey?.GetValue(name);
 		}
 
