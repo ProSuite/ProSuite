@@ -133,6 +133,12 @@ namespace ProSuite.Commons.AO.Geodatabase
 		/// </summary>
 		public JoinedRowFactory JoinedRowFactory { get; set; }
 
+		/// <summary>
+		/// Whether the features from the left table should be assumed to be cached and therefore
+		/// the filtering can take place in client code rather than the database.
+		/// </summary>
+		public bool AssumeLeftTableCached { get; set; }
+
 		#region BackingDataset implementation
 
 		public override IEnvelope Extent => (GeometryEndClass as IReadOnlyFeatureClass)?.Extent;
@@ -367,7 +373,11 @@ namespace ProSuite.Commons.AO.Geodatabase
 			Assert.True(featureClassKeyIdx >= 0, $"Key field not found: {featureClassKeyIdx}");
 
 			bool clientSideKeyFiltering;
-			if (_joinStrategy == "INDEX")
+			if (AssumeLeftTableCached)
+			{
+				clientSideKeyFiltering = true;
+			}
+			else if (_joinStrategy == "INDEX")
 			{
 				clientSideKeyFiltering = true;
 			}
