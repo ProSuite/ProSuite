@@ -480,13 +480,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 				return false;
 			}
 
-			if (ObjectClassID >= 0 && other.ObjectClassID >= 0 &&
-			    ObjectClassID == other.ObjectClassID)
-			{
-				return true;
-			}
-
-			return Name == DatasetUtils.GetName(other);
+			return ObjectClassID == other.ObjectClassID;
 		}
 
 		public bool Equals(VirtualTable other)
@@ -501,10 +495,9 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 				return false;
 			}
 
-			if (ObjectClassID >= 0 && other.ObjectClassID >= 0 &&
-			    ObjectClassID == other.ObjectClassID)
+			if (ObjectClassID >= 0 || other.ObjectClassID >= 0)
 			{
-				return true;
+				return ObjectClassID == other.ObjectClassID;
 			}
 
 			// Same workspace, potentially 'virtual' classes;

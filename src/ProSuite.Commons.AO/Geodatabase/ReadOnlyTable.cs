@@ -135,11 +135,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			if (_table is IObjectClass baseObjectClass)
 			{
-				if (baseObjectClass.ObjectClassID >= 0 && other.ObjectClassID >= 0 &&
-				    baseObjectClass.ObjectClassID == other.ObjectClassID)
-				{
-					return true;
-				}
+				return baseObjectClass.ObjectClassID == other.ObjectClassID;
 			}
 
 			// Same workspace, potentially 'virtual' classes;
