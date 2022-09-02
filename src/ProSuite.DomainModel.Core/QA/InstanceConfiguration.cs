@@ -121,6 +121,8 @@ namespace ProSuite.DomainModel.Core.QA
 			set => _name = value;
 		}
 
+		public abstract string TypeDisplayName { get; }
+
 		#endregion
 
 		public TestParameterValue AddParameterValue([NotNull] TestParameterValue parameterValue)
@@ -272,7 +274,7 @@ namespace ProSuite.DomainModel.Core.QA
 			return guid.ToString().ToUpper();
 		}
 
-		protected void CopyBaseProperties(InstanceConfiguration target)
+		protected void CopyBaseProperties([NotNull] InstanceConfiguration target)
 		{
 			Assert.ArgumentNotNull(target, nameof(target));
 

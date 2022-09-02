@@ -10,8 +10,7 @@ using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DomainModel.Core.QA
 {
-	public class QualityCondition : InstanceConfiguration,
-	                                IPersistenceAware
+	public class QualityCondition : InstanceConfiguration, IPersistenceAware
 	{
 		private int _cloneId = -1;
 
@@ -264,6 +263,8 @@ namespace ProSuite.DomainModel.Core.QA
 
 			return clone;
 		}
+
+		public override string TypeDisplayName => "Quality Condition";
 
 		[NotNull]
 		public override InstanceConfiguration CreateCopy()

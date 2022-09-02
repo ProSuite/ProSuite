@@ -54,6 +54,8 @@ namespace ProSuite.DomainModel.Core.QA
 
 		#region Overrides of InstanceConfiguration
 
+		public override string TypeDisplayName => "Transformer";
+
 		[NotNull]
 		public override InstanceConfiguration CreateCopy()
 		{
@@ -66,7 +68,7 @@ namespace ProSuite.DomainModel.Core.QA
 
 		#endregion
 
-		private void CopyProperties(TransformerConfiguration target)
+		private void CopyProperties([NotNull] TransformerConfiguration target)
 		{
 			Assert.ArgumentNotNull(target, nameof(target));
 
