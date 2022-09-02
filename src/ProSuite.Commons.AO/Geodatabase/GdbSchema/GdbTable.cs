@@ -127,58 +127,6 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			return -1;
 		}
 
-		public bool Equals(GdbTable other)
-		{
-			if (! Equals(_workspace, other._workspace))
-			{
-				return false;
-			}
-
-			if (ObjectClassID >= 0 && other.ObjectClassID >= 0 &&
-			    ObjectClassID == other.ObjectClassID)
-			{
-				return true;
-			}
-
-			// Same workspace, potentially 'virtual' classes;
-			return Name.Equals(other.Name);
-		}
-
-		public bool Equals(IObjectClass other)
-		{
-			if (other == null) return false;
-
-			if (other is GdbTable otherGdbTable && otherGdbTable._workspace == _workspace)
-			{
-				// Allow both workspaces to be null and hence equal!
-				return ObjectClassID == other.ObjectClassID;
-			}
-
-			return ObjectClassID == other.ObjectClassID &&
-			       WorkspaceUtils.IsSameWorkspace(_workspace, ((IDataset) other).Workspace,
-			                                      WorkspaceComparison.Exact);
-		}
-
-		public override bool Equals(object obj)
-		{
-			if (ReferenceEquals(null, obj)) return false;
-
-			if (ReferenceEquals(this, obj)) return true;
-
-			if (obj.GetType() != GetType()) return false;
-
-			return Equals((GdbTable) obj);
-		}
-
-		public override int GetHashCode()
-		{
-			unchecked
-			{
-				return ((_workspace != null ? _workspace.GetHashCode() : 0) * 397) ^
-				       ObjectClassID;
-			}
-		}
-
 		#region VirtualTable overrides
 
 		public override IEnumerable<IReadOnlyRow> EnumReadOnlyRows(

@@ -507,6 +507,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 				return true;
 			}
 
+			// Same workspace, potentially 'virtual' classes;
 			return Name == other.Name;
 		}
 
@@ -516,19 +517,22 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 			if (ReferenceEquals(this, obj)) return true;
 
+			// Other virtual table
 			if (obj is VirtualTable virtualTable)
 			{
 				return Equals(virtualTable);
 			}
 
+			// Vanilla Esri table
 			if (obj is IObjectClass otherObjectClass)
 			{
 				return Equals(otherObjectClass);
 			}
 
+			// Wrapped Esri table
 			if (obj is ReadOnlyTable roTable)
 			{
-				return Equals(roTable);
+				return Equals((IObjectClass) roTable.BaseTable);
 			}
 
 			return false;
@@ -538,7 +542,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		{
 			unchecked
 			{
-				return (Workspace.GetHashCode() * 397) ^ ObjectClassID;
+				return (Workspace != null ? Workspace.GetHashCode() : 0) * 397 ^ ObjectClassID;
 			}
 		}
 
