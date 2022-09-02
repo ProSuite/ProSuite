@@ -57,7 +57,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		bool IRow.HasOID => HasOID;
 		bool IObject.HasOID => HasOID;
-		public virtual bool HasOID => Table.HasOID;
+		public virtual bool HasOID => Table.HasOID && OID >= 0;
 
 		int IRow.OID => OID;
 		int IObject.OID => OID;

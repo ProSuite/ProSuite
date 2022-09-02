@@ -26,13 +26,13 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 			ValueSet = valueList ?? new PropertySetValueList();
 
-			var oidFieldIndex = _gdbTable.FindField(_gdbTable.OIDFieldName);
+				var oidFieldIndex = _gdbTable.FindField(_gdbTable.OIDFieldName);
 
-			if (oidFieldIndex >= 0)
-			{
-				set_Value(oidFieldIndex, oid);
+				if (oidFieldIndex >= 0)
+				{
+					set_Value(oidFieldIndex, oid);
+				}
 			}
-		}
 
 		#endregion
 
@@ -99,7 +99,10 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		}
 
 		private int _oid;
-		public override int OID => _oid;
+
+		public override int OID => _oid < 0
+			                           ? throw new InvalidOperationException("Row has no OID")
+			                           : _oid;
 
 		public override VirtualTable Table => _gdbTable;
 		//		public GdbTable Table => _gdbTable;
