@@ -383,6 +383,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 		// TODO temporary solution to allow setting current catalog; replace with full solution for
 		// - varying field db catalog name (same model in different databases)
 		// - handling central / local case (parent / child replicas)
+		[Obsolete]
 		protected virtual void OnHarvesting() { }
 
 		[NotNull]
