@@ -83,6 +83,7 @@
     <Compile Include="ChangeAlong\ChangeGeometryAlongToolBase.cs" />
     <Compile Include="ChangeAlong\CutAlongToolBase.cs" />
     <Compile Include="ChangeAlong\ReshapeAlongToolBase.cs" />
+    <Compile Include="CreateFeatures\CreateMultiplePointsToolBase.cs" />
     <Compile Include="GdbPersistenceUtils.cs" />
     <Compile Include="OneClick\ConstructionToolBase.cs" />
     <Compile Include="OneClick\OneClickToolBase.cs" />
