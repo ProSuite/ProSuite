@@ -5,9 +5,12 @@ using ProSuite.Commons;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.Misc;
 using ProSuite.DdxEditor.Content.Blazor.ViewModel;
+using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Items;
 using ProSuite.DomainModel.AO.QA;
+using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Core;
 
@@ -23,28 +26,35 @@ public class InstanceConfigurationViewModel<T> : NotifyPropertyChangedBase,
 	private int _version;
 
 	public InstanceConfigurationViewModel([NotNull] EntityItem<T, T> item,
-	                                      [NotNull] ITestParameterDatasetProvider datasetProvider)
+	                                      [NotNull] ITestParameterDatasetProvider datasetProvider,
+	                                      [NotNull] IItemNavigation itemNavigation)
 	{
 		Assert.ArgumentNotNull(item, nameof(item));
 		Assert.ArgumentNotNull(datasetProvider, nameof(datasetProvider));
+		Assert.ArgumentNotNull(itemNavigation, nameof(itemNavigation));
 
 		_item = item;
 
 		DatasetProvider = datasetProvider;
-
-		InstanceConfiguration = Assert.NotNull(_item.GetEntity());
+		ItemNavigation = itemNavigation;
 	}
 
 	[CanBeNull]
 	public IList<ViewModelBase> Values { get; private set; }
 
 	[NotNull]
-	public InstanceConfiguration InstanceConfiguration { get; }
+	public InstanceConfiguration GetEntity()
+	{
+		return Assert.NotNull(_item.GetEntity());
+	}
 
 	[NotNull]
 	public ITestParameterDatasetProvider DatasetProvider { get; }
 
-	public bool IsPersistent => InstanceConfiguration.IsPersistent;
+	[NotNull]
+	public IItemNavigation ItemNavigation { get; }
+
+	public bool IsPersistent => GetEntity().IsPersistent;
 
 	public bool Discard { get; set; }
 
@@ -191,18 +201,8 @@ public class InstanceConfigurationViewModel<T> : NotifyPropertyChangedBase,
 
 		if (row is DatasetTestParameterValueViewModel datasetParamVM)
 		{
-			var newValue = new DatasetTestParameterValue(
-				               testParameter,
-				               datasetParamVM.DatasetSource.Match(d => d, t => null),
-				               datasetParamVM.FilterExpression,
-				               datasetParamVM.UsedAsReferenceData)
-			               {
-				               ValueSource = datasetParamVM.DatasetSource.Match(
-					               d => null, t => t)
-			               };
-
 			instanceConfiguration.AddParameterValue(
-				newValue);
+				CreateDatasetValue(datasetParamVM, testParameter));
 		}
 		else if (row is ScalarTestParameterValueViewModel)
 		{
@@ -222,5 +222,36 @@ public class InstanceConfigurationViewModel<T> : NotifyPropertyChangedBase,
 		{
 			// do nothing
 		}
+	}
+
+	[NotNull]
+	private static DatasetTestParameterValue CreateDatasetValue(
+		[NotNull] DatasetTestParameterValueViewModel datasetParamVm,
+		[NotNull] TestParameter testParameter)
+	{
+		Either<Dataset, TransformerConfiguration> datasetSource = datasetParamVm.DatasetSource;
+
+		Dataset dataset;
+		TransformerConfiguration transformerConfiguration;
+
+		if (datasetSource != null)
+		{
+			dataset = datasetSource.Match(ds => ds, _ => null);
+			transformerConfiguration = datasetSource.Match(_ => null, t => t);
+		}
+		else
+		{
+			dataset = null;
+			transformerConfiguration = null;
+		}
+
+		return new DatasetTestParameterValue(
+			       testParameter,
+			       dataset,
+			       datasetParamVm.FilterExpression,
+			       datasetParamVm.UsedAsReferenceData)
+		       {
+			       ValueSource = transformerConfiguration
+		       };
 	}
 }

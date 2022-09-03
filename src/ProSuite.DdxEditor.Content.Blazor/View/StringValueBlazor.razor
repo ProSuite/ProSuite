@@ -2,5 +2,5 @@
 @inherits TestParameterValueBlazorBase<string>
 
 <Validation ErrorMessage="@ErrorMessage">
-	<RadzenTextBox @bind-Value="StringValue"/>
+	<RadzenTextBox @bind-Value="StringValue" oninput="@(OnInput)"/>
 </Validation>

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Notifications;
 using ProSuite.Commons.Text;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
@@ -334,6 +335,68 @@ namespace ProSuite.DomainModel.AO.QA
 			}
 
 			return defaultValue;
+		}
+
+		public static bool CheckCircularReferencesInGraph(
+			[NotNull] InstanceConfiguration testable,
+			[CanBeNull] out string testParameterName,
+			[NotNull] out NotificationCollection configurationNames)
+		{
+			Assert.ArgumentNotNull(testable, nameof(testable));
+
+			configurationNames = new NotificationCollection();
+
+			NotificationUtils.Add(configurationNames, testable.Name);
+
+			foreach (var dsValue in testable.ParameterValues.OfType<DatasetTestParameterValue>())
+			{
+				testParameterName = dsValue.TestParameterName;
+
+				if (testable.Equals(dsValue.ValueSource) && dsValue.ValueSource != null)
+				{
+					return true;
+				}
+
+				if (CheckCircularReferencesInGraph(testable, dsValue.ValueSource, configurationNames))
+				{
+					return true;
+				}
+
+				testParameterName = null;
+				return false;
+			}
+			
+			testParameterName = null;
+			return false;
+		}
+
+		public static bool CheckCircularReferencesInGraph([NotNull] InstanceConfiguration testable,
+		                                                  [CanBeNull] InstanceConfiguration instanceConfiguration,
+		                                                  [NotNull] NotificationCollection configurationNames)
+		{
+			Assert.ArgumentNotNull(testable, nameof(testable));
+			Assert.ArgumentNotNull(configurationNames, nameof(configurationNames));
+
+			if (instanceConfiguration == null)
+			{
+				return false;
+			}
+
+			NotificationUtils.Add(configurationNames, instanceConfiguration.Name);
+
+			foreach (var dsValue in instanceConfiguration.ParameterValues
+			                                             .OfType<DatasetTestParameterValue>())
+			{
+				if (testable.Equals(dsValue.ValueSource))
+				{
+					NotificationUtils.Add(configurationNames, testable.Name);
+					return true;
+				}
+
+				return CheckCircularReferencesInGraph(testable, dsValue.ValueSource, configurationNames);
+			}
+
+			return false;
 		}
 	}
 }

@@ -35,12 +35,11 @@
 							<DynamicComponent Type="subViewModel.ComponentType" Parameters="subViewModel.ComponentParameters"/>
 						</Template>
 					</RadzenDataGridColumn>
-
 					<RadzenDataGridColumn TItem="ViewModelBase" Property="FilterExpression" Title="Filter Expression">
 						<Template Context="subViewModel">
 							@if (subViewModel is DatasetTestParameterValueViewModel vm)
 							{
-								<RadzenTextBox @bind-Value="vm.FilterExpression"/>
+								<RadzenTextBox @bind-Value="vm.FilterExpression" oninput="@(vm.OnInput)"/>
 							}
 						</Template>
 					</RadzenDataGridColumn>

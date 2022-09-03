@@ -8,6 +8,7 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Essentials.System;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.Notifications;
 using ProSuite.Commons.Text;
 using ProSuite.Commons.Validation;
 using ProSuite.DdxEditor.Content.QA.InstanceDescriptors;
@@ -21,6 +22,7 @@ using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Core;
 using ProSuite.UI.QA.ResourceLookup;
+using Notification = ProSuite.Commons.Validation.Notification;
 
 namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 {
@@ -296,6 +298,16 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 				notification.RegisterMessage("Name",
 				                             $"A {targetType.Name} with the same name already exists",
 				                             Severity.Error);
+			}
+
+			if (TestParameterValueUtils.CheckCircularReferencesInGraph(
+				    entity, out string testParameterName,
+				    out NotificationCollection configurationNames))
+			{
+				var message =
+					$"Not allowed circular {entity.GetType().Name} references {NotificationUtils.Concatenate(configurationNames, " -> ")}";
+
+				notification.RegisterMessage($"{testParameterName}", message, Severity.Error);
 			}
 		}
 

@@ -178,6 +178,8 @@ public class TestParameterValueCollectionViewModel : ViewModelBase, IDataGridVie
 		int i = index is > -1 ? index.Value : Values.Count;
 
 		InsertCore(row, i);
+
+		OnPropertyChanged(nameof(Values));
 	}
 
 	private void InsertDummyRow()
