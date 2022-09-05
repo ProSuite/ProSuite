@@ -35,6 +35,9 @@ namespace ProSuite.DomainModel.Core.QA
 		private bool _neverFilterTableRowsUsingRelatedGeometry;
 
 		[UsedImplicitly] [Obfuscation(Exclude = true)]
+		private string _issueFilterExpression;
+
+		[UsedImplicitly] [Obfuscation(Exclude = true)]
 		private string _versionUuid;
 
 		#endregion
@@ -245,7 +248,11 @@ namespace ProSuite.DomainModel.Core.QA
 		}
 
 		[CanBeNull]
-		public string IssueFilterExpression { get; set; }
+		public string IssueFilterExpression
+		{
+			get => _issueFilterExpression;
+			set => _issueFilterExpression = value;
+		}
 
 		[NotNull]
 		public IList<IssueFilterConfiguration> IssueFilterConfigurations
