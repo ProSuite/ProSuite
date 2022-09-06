@@ -58,18 +58,17 @@ namespace ProSuite.QA.Tests.Transformers
 
 			transformedFc.CustomValuesDict = customValuesDict;
 
+			TransformedTableFields fcFields = new TransformedTableFields(fc);
 			if (Attributes != null)
 			{
-				transformedFc.BackingDs.Attributes = Attributes;
-				// TODO
-				throw new NotImplementedException("Attributes");
+				fcFields.AddUserDefinedFields(Attributes, transformedFc);
 			}
 			else
 			{
-				TransformedTableFields fcFields = new TransformedTableFields(fc);
 				fcFields.AddAllFields(transformedFc);
-				transformedFc.BaseRowValuesDict = fcFields.FieldIndexMapping;
 			}
+
+			transformedFc.BaseRowValuesDict = fcFields.FieldIndexMapping;
 
 			return transformedFc;
 		}
@@ -316,13 +315,6 @@ namespace ProSuite.QA.Tests.Transformers
 
 						List<IReadOnlyRow> involved = new List<IReadOnlyRow> {row};
 						f.set_Value(IdxBaseRowField, involved);
-
-						foreach (var pair in AttrDict)
-						{
-							int iTarget = pair.Key;
-							int iSource = pair.Value;
-							f.set_Value(iTarget, baseFeature.get_Value(iSource));
-						}
 
 						if (Resulting.BaseRowValuesDict != null)
 						{
