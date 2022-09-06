@@ -34,7 +34,6 @@ namespace ProSuite.QA.Tests.Transformers
 		[DocTr(nameof(DocTrStrings.TrGeometryTransform_Attributes))]
 		public IList<string> Attributes { get; set; }
 
-
 		protected override TransformedFeatureClass GetTransformedCore(string name)
 		{
 			IReadOnlyFeatureClass fc = (IReadOnlyFeatureClass) InvolvedTables[0];
@@ -109,9 +108,6 @@ namespace ProSuite.QA.Tests.Transformers
 		private class TransformedFc : TransformedFeatureClass, IDataContainerAware,
 		                              ITransformedTable
 		{
-			public Dictionary<IReadOnlyTable, TransformedTableFields> TableFieldsBySource { get; }
-				= new Dictionary<IReadOnlyTable, TransformedTableFields>();
-
 			public TransformedFc(IReadOnlyFeatureClass fc, esriGeometryType derivedShapeType,
 			                     IGeometryTransformer transformer, string name)
 				: base(-1, ! string.IsNullOrWhiteSpace(name) ? name : "derivedGeometry",
@@ -124,7 +120,8 @@ namespace ProSuite.QA.Tests.Transformers
 				AddStandardFields(fc, derivedShapeType);
 			}
 
-			private void AddStandardFields(IReadOnlyFeatureClass fc, esriGeometryType derivedShapeType)
+			private void AddStandardFields(IReadOnlyFeatureClass fc,
+			                               esriGeometryType derivedShapeType)
 			{
 				IGeometryDef geomDef =
 					fc.Fields.Field[
@@ -144,7 +141,8 @@ namespace ProSuite.QA.Tests.Transformers
 			{
 				var joinedValueList = new MultiListValues();
 				{
-					joinedValueList.AddList(new SimpleValueList(CustomValuesDict.Count), CustomValuesDict);
+					joinedValueList.AddList(new SimpleValueList(CustomValuesDict.Count),
+					                        CustomValuesDict);
 				}
 				{
 					joinedValueList.AddList(new PropertySetValueList(), ShapeDict);
@@ -157,6 +155,7 @@ namespace ProSuite.QA.Tests.Transformers
 			public IDictionary<int, int> BaseRowValuesDict { get; set; }
 			public IDictionary<int, int> ShapeDict => _shapeDict ?? (_shapeDict = GetShapeDict());
 			private IDictionary<int, int> _shapeDict;
+
 			private IDictionary<int, int> GetShapeDict()
 			{
 				IDictionary<int, int> shapeDict = new ConcurrentDictionary<int, int>();
@@ -191,7 +190,8 @@ namespace ProSuite.QA.Tests.Transformers
 
 		private class TransformedFeature : GdbFeature
 		{
-			public TransformedFeature(int oid, TransformedFc featureClass, MultiListValues valueList)
+			public TransformedFeature(int oid, TransformedFc featureClass,
+			                          MultiListValues valueList)
 				: base(oid, featureClass, valueList) { }
 
 			public new TransformedFc Table => (TransformedFc) base.Table;
@@ -230,60 +230,6 @@ namespace ProSuite.QA.Tests.Transformers
 				return _t0.RowCount(queryFilter);
 			}
 
-			private IList<string> _attributes;
-
-			public IList<string> Attributes
-			{
-				get => _attributes;
-				set
-				{
-					_attributes = value;
-					if (_attributes != null)
-					{
-						foreach (string attr in _attributes)
-						{
-							int iSource = _t0.FindField(attr);
-							if (iSource < 0)
-							{
-								throw new InvalidOperationException(
-									$"Field {attr} does not exist in {_t0.Name}");
-							}
-
-							Resulting.AddField(_t0.Fields.Field[iSource]);
-						}
-					}
-
-					_attrDict = null;
-				}
-			}
-
-			private Dictionary<int, int> _attrDict;
-
-			[NotNull]
-			private Dictionary<int, int> AttrDict
-			{
-				get
-				{
-					if (_attrDict == null)
-					{
-						Dictionary<int, int> dict = new Dictionary<int, int>();
-						if (_attributes != null)
-						{
-							foreach (string attr in _attributes)
-							{
-								int iSource = _t0.FindField(attr);
-								int iTarget = Resulting.FindField(attr);
-								dict.Add(iTarget, iSource);
-							}
-						}
-
-						_attrDict = dict;
-					}
-
-					return _attrDict;
-				}
-			}
-
 			private int? _idxBaseRowField;
 
 			private int IdxBaseRowField =>
@@ -311,7 +257,7 @@ namespace ProSuite.QA.Tests.Transformers
 					foreach (GdbFeature featureWithTransformedGeom
 					         in Resulting.Transformer.Transform(geom))
 					{
-						TransformedFeature f = (TransformedFeature)featureWithTransformedGeom;
+						TransformedFeature f = (TransformedFeature) featureWithTransformedGeom;
 
 						List<IReadOnlyRow> involved = new List<IReadOnlyRow> {row};
 						f.set_Value(IdxBaseRowField, involved);
@@ -320,6 +266,7 @@ namespace ProSuite.QA.Tests.Transformers
 						{
 							f.SetBaseValues(baseFeature);
 						}
+
 						f.Store();
 
 						yield return f;

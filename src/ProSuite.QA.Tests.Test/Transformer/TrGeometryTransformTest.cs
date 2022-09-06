@@ -338,7 +338,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 
 			TrMultipolygonToPolygon trMp2p =
 				new TrMultipolygonToPolygon(ReadOnlyTableFactory.Create(polyFc));
-//			trMp2p.Attributes = new List<string> { "IntField" };
+			//			trMp2p.Attributes = new List<string> { "IntField" };
 			{
 				QaConstraint test = new QaConstraint(
 					trMp2p.GetTransformed(),
@@ -454,7 +454,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 		                                        QueryFilterHelper filterHelper,
 		                                        IGeometry cacheGeometry = null)
 		{
-			return table.EnumRows(queryFilter, true);
+			return table.EnumRows(queryFilter, false);
 		}
 
 		public UniqueIdProvider GetUniqueIdProvider(IReadOnlyTable table)
