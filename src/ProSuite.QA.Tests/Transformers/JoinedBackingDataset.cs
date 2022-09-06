@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
@@ -28,8 +27,9 @@ namespace ProSuite.QA.Tests.Transformers
 		                            [NotNull] GdbTable joinedSchema)
 			: base(GetInvolvedTables(geometryTable, otherTable, associationDescription).ToList())
 		{
-			// Wrap the input tables to allow searching features in the container:
-			// Must be in the same order as the InvolvedTables list!
+			// Wrap the input tables to allow searching features in the container and support
+			// constraints provided by the parent transformer.
+			// They must be added in the same order as the InvolvedTables list!
 			geometryTable = WrapTable(geometryTable);
 			otherTable = WrapTable(otherTable);
 
@@ -49,7 +49,18 @@ namespace ProSuite.QA.Tests.Transformers
 
 		private IReadOnlyTable WrapTable(IReadOnlyTable inputTable)
 		{
-			GdbTable wrappedTable = CreateContainerSearchingClass(inputTable);
+			GdbTable wrappedTable;
+			if (inputTable is IReadOnlyFeatureClass featureClass)
+			{
+				wrappedTable =
+					new WrappedFeatureClass(featureClass,
+					                        t => new ContainerSearchingDataset(inputTable, t));
+			}
+			else
+			{
+				wrappedTable =
+					new WrappedTable(inputTable, t => new ContainerSearchingDataset(inputTable, t));
+			}
 
 			ContainerSearchingDataset backingDataset =
 				(ContainerSearchingDataset) wrappedTable.BackingDataset;
@@ -158,50 +169,5 @@ namespace ProSuite.QA.Tests.Transformers
 		}
 
 		#endregion
-
-		private static GdbTable CreateContainerSearchingClass(
-			[NotNull] IReadOnlyTable baseClass)
-		{
-			// NOTE: Exact same objectClassId is required for correct equality (dictionary usage)
-			int classId = -1;
-			string aliasName = null;
-			if (baseClass is IObjectClass objectClass)
-			{
-				classId = objectClass.ObjectClassID;
-				aliasName = objectClass.AliasName;
-			}
-			else if (baseClass is ReadOnlyTable roTable)
-			{
-				// Consider adding this to IReadOnly interface
-				classId = ((IObjectClass) roTable.BaseTable).ObjectClassID;
-				aliasName = ((IObjectClass) roTable.BaseTable).AliasName;
-			}
-
-			IWorkspace workspace = baseClass.Workspace;
-
-			Func<GdbTable, BackingDataset> datasetFactory =
-				t => new ContainerSearchingDataset(baseClass, t);
-
-			GdbTable result;
-			if (baseClass is IReadOnlyFeatureClass baseFeatureClass)
-			{
-				result = new GdbFeatureClass(
-					classId, baseClass.Name, baseFeatureClass.ShapeType, aliasName,
-					datasetFactory, workspace);
-			}
-			else
-			{
-				result = new GdbTable(classId, baseClass.Name, aliasName, datasetFactory,
-				                      workspace);
-			}
-
-			for (int i = 0; i < baseClass.Fields.FieldCount; i++)
-			{
-				IField field = baseClass.Fields.Field[i];
-				result.AddField(field);
-			}
-
-			return result;
-		}
 	}
 }

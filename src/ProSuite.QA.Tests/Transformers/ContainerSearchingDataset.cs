@@ -32,7 +32,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 		#region Overrides of BackingDataset
 
-		public override IEnvelope Extent => throw new NotImplementedException();
+		public override IEnvelope Extent => (_sourceTable as IReadOnlyFeatureClass)?.Extent;
 
 		public override VirtualRow GetRow(int id)
 		{

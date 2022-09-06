@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
-using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AO.Geodatabase
@@ -124,24 +123,6 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		#region Equality members
 
-		public bool Equals([NotNull] GdbTable other)
-		{
-			IWorkspace workspace = ((IDataset) _table).Workspace;
-
-			if (! Equals(workspace, other.Workspace))
-			{
-				return false;
-			}
-
-			if (_table is IObjectClass baseObjectClass)
-			{
-				return baseObjectClass.ObjectClassID == other.ObjectClassID;
-			}
-
-			// Same workspace, potentially 'virtual' classes;
-			return Name.Equals(other.Name);
-		}
-
 		public bool Equals(ReadOnlyTable other)
 		{
 			if (other == null)
@@ -149,22 +130,11 @@ namespace ProSuite.Commons.AO.Geodatabase
 				return false;
 			}
 
-			if (_table is IObjectClass thisClass)
-			{
-				if (! (other._table is IObjectClass otherClass))
-				{
-					return false;
-				}
+			// NOTE: Stick to the AO-equality logic of tables. The problem with anything else is
+			// that the AO-workspace sometimes changes its hash-code!
+			// -> never use workspaces in dictionaries!
 
-				return DatasetUtils.IsSameObjectClass(thisClass, otherClass);
-			}
-
-			if (_name != other._name)
-			{
-				return false;
-			}
-
-			return DatasetUtils.GetWorkspace(_table) == DatasetUtils.GetWorkspace(other._table);
+			return _table.Equals(other._table);
 		}
 
 		public override bool Equals(object obj)
@@ -172,11 +142,6 @@ namespace ProSuite.Commons.AO.Geodatabase
 			if (ReferenceEquals(null, obj)) return false;
 
 			if (ReferenceEquals(this, obj)) return true;
-
-			if (obj is GdbTable gdbTable)
-			{
-				return Equals(gdbTable);
-			}
 
 			if (_table is IObjectClass thisClass && obj is IObjectClass objectClass)
 			{
@@ -193,16 +158,9 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		public override int GetHashCode()
 		{
-			unchecked
-			{
-				IWorkspace workspace = ((IDataset) _table).Workspace;
-
-				IObjectClass objectClass = _table as IObjectClass;
-
-				int classHash = objectClass?.ObjectClassID ?? Name.GetHashCode();
-
-				return (workspace.GetHashCode() * 397) ^ classHash;
-			}
+			// NOTE: Never make the AO-workspace part of the hash code calculation because it
+			// has been observed to change its hash code! 
+			return _table.GetHashCode();
 		}
 
 		#endregion

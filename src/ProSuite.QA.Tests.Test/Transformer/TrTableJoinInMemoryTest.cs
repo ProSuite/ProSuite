@@ -216,14 +216,13 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				CheckInvolvedRows(error.InvolvedRows, 2, realTableNames);
 			}
 			{
-				// TODO: This has currently no effect and should be implemented
 				tr.SetConstraint(0, "Nr_Poly < 10");
 
 				QaConstraint test = new QaConstraint(tr.GetTransformed(), "Nr_Poly > 11");
 				IFilterEditTest ft = test;
 				var runner = new QaContainerTestRunner(1000, test);
 				runner.Execute();
-				Assert.AreEqual(1, runner.Errors.Count);
+				Assert.AreEqual(0, runner.Errors.Count);
 			}
 		}
 
