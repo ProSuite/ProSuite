@@ -28,6 +28,8 @@ namespace ProSuite.QA.Tests.Transformers
 		public IDataContainer DataContainer { get; set; }
 		public TransformedFeatureClass Resulting => _resulting;
 
+		protected int BaseRowsFieldIndex { get; }
+
 		public void AddToCache(VirtualRow row)
 		{
 			_rowsCache[row.OID] = row;
@@ -54,7 +56,9 @@ namespace ProSuite.QA.Tests.Transformers
 		                                    IList<IReadOnlyTable> involvedTables)
 			: base(involvedTables)
 		{
-			gdbTable.AddField(FieldUtils.CreateBlobField(InvolvedRowUtils.BaseRowField));
+			BaseRowsFieldIndex =
+				gdbTable.AddFieldT(FieldUtils.CreateBlobField(InvolvedRowUtils.BaseRowField));
+
 			_resulting = gdbTable;
 			_rowsCache = new Dictionary<int, VirtualRow>();
 		}

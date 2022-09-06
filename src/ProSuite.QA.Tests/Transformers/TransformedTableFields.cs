@@ -10,6 +10,7 @@ using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.TestSupport;
@@ -25,6 +26,8 @@ namespace ProSuite.QA.Tests.Transformers
 	public class TransformedTableFields
 	{
 		private const string _tablePrefixFormat = "{0}_{1}";
+
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private readonly IReadOnlyTable _sourceTable;
 
@@ -65,6 +68,8 @@ namespace ProSuite.QA.Tests.Transformers
 		private List<FieldInfo> _calculatedFields;
 
 		public IList<string> ExcludedSourceFields { get; } = new List<string>();
+
+		public int ShapeFieldIndex { get; private set; } = -1;
 
 		[CanBeNull]
 		private TableView TableView { get; set; }
@@ -206,8 +211,9 @@ namespace ProSuite.QA.Tests.Transformers
 		/// field index mapping to the <see cref="FieldIndexMapping"/>. This shall be used if the
 		/// target rows should transparently provide the source rows' shape.
 		/// </summary>
-		/// <returns></returns>
-		public void AddShapeField([NotNull] GdbFeatureClass toOutputClass)
+		public void AddShapeField([NotNull] GdbFeatureClass toOutputClass,
+		                          [CanBeNull] string fieldName = "SHAPE",
+		                          bool omitFromFieldIndexMapping = false)
 		{
 			var sourceFeatureClass = _sourceTable as IReadOnlyFeatureClass;
 
@@ -221,7 +227,13 @@ namespace ProSuite.QA.Tests.Transformers
 
 			int sourceIndex = sourceFeatureClass.FindField(sourceFeatureClass.ShapeFieldName);
 
-			CopyField(sourceIndex, toOutputClass, _sourceTable.Fields);
+			int targetIndex = CopyField(sourceIndex, toOutputClass, _sourceTable.Fields, fieldName,
+			                            omitFromFieldIndexMapping);
+
+			if (targetIndex >= 0)
+			{
+				ShapeFieldIndex = targetIndex;
+			}
 		}
 
 		/// <summary>
@@ -430,10 +442,11 @@ namespace ProSuite.QA.Tests.Transformers
 			       && featureClass.FindField(featureClass.ShapeFieldName) >= 0;
 		}
 
-		private void CopyField(int sourceIdx,
-		                       [NotNull] GdbTable toOutputClass,
-		                       [NotNull] IFields sourceFields,
-		                       [CanBeNull] string resultFieldName = null)
+		private int CopyField(int sourceIdx,
+		                      [NotNull] GdbTable toOutputClass,
+		                      [NotNull] IFields sourceFields,
+		                      [CanBeNull] string resultFieldName = null,
+		                      bool omitFromFieldIndexMapping = false)
 		{
 			Assert.True(sourceIdx >= 0 && sourceIdx < sourceFields.FieldCount,
 			            $"Invalid source index: {sourceIdx}");
@@ -443,13 +456,13 @@ namespace ProSuite.QA.Tests.Transformers
 			if (field.Type == esriFieldType.esriFieldTypeGeometry && HasShapeField(toOutputClass))
 			{
 				// It's already got one
-				return;
+				return -1;
 			}
 
 			if (ExcludedSourceFields.Contains(field.Name))
 			{
 				// NOTE: Included Length/Area fields fail in search if the respective shape is excluded
-				return;
+				return -1;
 			}
 
 			string targetName = resultFieldName ?? field.Name;
@@ -461,15 +474,31 @@ namespace ProSuite.QA.Tests.Transformers
 				field = clone;
 			}
 
-			int targetIdx = toOutputClass.AddFieldT(field);
-
-			if (field.Type == esriFieldType.esriFieldTypeOID &&
-			    ! toOutputClass.HasOID)
+			int targetIdx;
+			try
 			{
-				toOutputClass.SetOIDFieldName(field.Name);
+				targetIdx = toOutputClass.AddFieldT(field);
+
+				if (field.Type == esriFieldType.esriFieldTypeOID &&
+				    ! toOutputClass.HasOID)
+				{
+					toOutputClass.SetOIDFieldName(field.Name);
+				}
+			}
+			catch (Exception e)
+			{
+				_msg.Debug($"Error adding field {field.Name} to {toOutputClass.Name}.", e);
+				_msg.Debug(GetFieldListMessage(toOutputClass));
+
+				throw;
 			}
 
-			FieldIndexMapping.Add(targetIdx, sourceIdx);
+			if (! omitFromFieldIndexMapping)
+			{
+				FieldIndexMapping.Add(targetIdx, sourceIdx);
+			}
+
+			return targetIdx;
 		}
 
 		private bool ValidateField(IReadOnlyTable sourceTable, string fieldName,
@@ -540,6 +569,18 @@ namespace ProSuite.QA.Tests.Transformers
 			{
 				inTable.AddFieldT(FieldUtils.CreateBlobField(InvolvedRowUtils.BaseRowField));
 			}
+		}
+
+		private static string GetFieldListMessage(IReadOnlyTable table)
+		{
+			var fieldList = DatasetUtils.GetFields(table.Fields)
+			                            .Where(f => f.Name != InvolvedRowUtils.BaseRowField)
+			                            .Select(f => f.Name).ToList();
+
+			string fieldDisplayList = $"List of fields of {table.Name}: " +
+			                          $"{Environment.NewLine}{StringUtils.Concatenate(fieldList, Environment.NewLine)}";
+
+			return fieldDisplayList;
 		}
 
 		#region Calculated field set up originally from TrSpatialJoin

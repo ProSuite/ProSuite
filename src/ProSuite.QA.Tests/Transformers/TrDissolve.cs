@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
@@ -8,10 +7,9 @@ using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom.SpatialIndex;
-using ProSuite.Commons.Logging;
-using ProSuite.Commons.Text;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.Geometry;
 using ProSuite.QA.Container.PolygonGrower;
@@ -27,8 +25,6 @@ namespace ProSuite.QA.Tests.Transformers
 	[GeometryTransformer]
 	public class TrDissolve : TableTransformer<TransformedFeatureClass>
 	{
-		private static readonly IMsg _msg = Msg.ForCurrentClass();
-
 		public enum SearchOption
 		{
 			Tile,
@@ -79,16 +75,28 @@ namespace ProSuite.QA.Tests.Transformers
 
 			dissolvedFc.SearchDistance = Search;
 			dissolvedFc.NeighborSearchOption = NeighborSearchOption;
+
+			TransformedTableFields tableFields = new TransformedTableFields(_toDissolve)
+			                                     {
+				                                     AreResultRowsGrouped = true
+			                                     };
+
+			tableFields.AddOIDField(dissolvedFc, "OBJECTID");
+			tableFields.AddShapeField(dissolvedFc);
+
 			if (Attributes != null)
 			{
-				AddFields(dissolvedFc, Attributes, isGrouped: true);
+				tableFields.AddUserDefinedFields(Attributes, dissolvedFc);
 			}
 
 			if (GroupBy != null)
 			{
-				AddFields(dissolvedFc, GroupBy, isGrouped: false);
+				tableFields.AddUserDefinedFields(GroupBy, dissolvedFc);
 				dissolvedFc.GroupBy = GroupBy;
 			}
+
+			var dissolvedDataset = (TransformedDataset) Assert.NotNull(dissolvedFc.BackingDataset);
+			dissolvedDataset.TableFields = tableFields;
 
 			if (! string.IsNullOrWhiteSpace(Constraint))
 			{
@@ -98,99 +106,6 @@ namespace ProSuite.QA.Tests.Transformers
 			dissolvedFc.CreateMultipartFeatures = CreateMultipartFeatures;
 
 			return dissolvedFc;
-		}
-
-		// TODO: Unify with TrSpatialJoin
-		private void AddFields([NotNull] TransformedFc dissolveFc,
-		                       [CanBeNull] IList<string> fieldNames, bool isGrouped)
-		{
-			if (fieldNames == null)
-			{
-				return;
-			}
-
-			IReadOnlyTable fc = InvolvedTables[0];
-
-			try
-			{
-				if (isGrouped)
-				{
-					AssertValidFieldNames(fieldNames, fc);
-				}
-
-				Dictionary<string, string>
-					expressionDict = ExpressionUtils.GetFieldDict(fieldNames);
-				Dictionary<string, string> aliasFieldDict =
-					ExpressionUtils.CreateAliases(expressionDict);
-
-				TableView tv = dissolveFc.TableView;
-				if (tv == null)
-				{
-					tv = TableViewFactory.Create(fc, expressionDict, aliasFieldDict, isGrouped);
-					dissolveFc.TableView = tv;
-				}
-				else
-				{
-					foreach (string fieldName in fieldNames)
-					{
-						FieldColumnInfo ci = FieldColumnInfo.Create(fc, fieldName);
-						tv.AddColumn(ci);
-					}
-				}
-
-				foreach (string field in expressionDict.Keys)
-				{
-					dissolveFc.AddCustomField(field);
-				}
-			}
-			catch (Exception e)
-			{
-				_msg.Warn(
-					$"Error adding fields to {dissolveFc.Name}: {StringUtils.Concatenate(fieldNames, ", ")}.",
-					e);
-				_msg.Info(PrintFieldList(fc));
-				throw;
-			}
-		}
-
-		private static string PrintFieldList(IReadOnlyTable table)
-		{
-			var fieldList = DatasetUtils.GetFields(table.Fields)
-			                            .Where(f => f.Name != InvolvedRowUtils.BaseRowField)
-			                            .Select(f => f.Name).ToList();
-
-			string fieldDisplayList = $"List of fields of {table.Name}: " +
-			                          $"{Environment.NewLine}{StringUtils.Concatenate(fieldList, Environment.NewLine)}";
-
-			return fieldDisplayList;
-		}
-
-		private static void AssertValidFieldNames([NotNull] IList<string> fieldNames,
-		                                          [NotNull] IReadOnlyTable table)
-		{
-			var fieldList = DatasetUtils.GetFields(table.Fields)
-			                            .Where(f => f.Name != InvolvedRowUtils.BaseRowField)
-			                            .Select(f => f.Name).ToList();
-
-			foreach (string fieldName in fieldNames)
-			{
-				if (string.IsNullOrEmpty(fieldName))
-				{
-					throw new InvalidOperationException(
-						$"Null or empty field name defined for {table.Name}");
-				}
-
-				// Quick and dirty. TODO: AttributeValidator
-				bool isExpression =
-					fieldName.IndexOf("AS", StringComparison.OrdinalIgnoreCase) >= 0;
-
-				if (! isExpression &&
-				    ! fieldList.Any(
-					    f => f.Equals(fieldName, StringComparison.InvariantCultureIgnoreCase)))
-				{
-					_msg.Warn($"Field name {fieldName} does not exist in {table.Name}.");
-				}
-			}
 		}
 
 		private class TransformedFc : TransformedFeatureClass, ITransformedTable,
@@ -208,48 +123,16 @@ namespace ProSuite.QA.Tests.Transformers
 				       workspace: new GdbWorkspace(new TransformerWorkspace()))
 			{
 				InvolvedTables = new List<IReadOnlyTable> {dissolve};
-
-				IGeometryDef geomDef =
-					dissolve.Fields.Field[
-						dissolve.Fields.FindField(dissolve.ShapeFieldName)].GeometryDef;
-
-				FieldsT.AddFields(
-					FieldUtils.CreateOIDField(),
-					FieldUtils.CreateShapeField(
-						dissolve.ShapeType,
-						geomDef.SpatialReference,
-						geomDef.GridCount > 0 ? geomDef.GridSize[0] : 0,
-						geomDef.HasZ, geomDef.HasM));
 			}
 
 			public double SearchDistance { get; set; }
 			public SearchOption NeighborSearchOption { get; set; }
 			public bool CreateMultipartFeatures { get; set; }
-			public List<FieldInfo> CustomFields { get; private set; }
 
 			public IList<string> GroupBy
 			{
 				get => _groupBy;
 				set => _groupBy = value;
-			}
-
-			public void AddCustomField(string field)
-			{
-				try
-				{
-					IField f =
-						FieldUtils.CreateField(
-							field, FieldUtils.GetFieldType(TableView.GetColumnType(field)));
-					FieldsT.AddFields(f);
-
-					CustomFields = CustomFields ?? new List<FieldInfo>();
-					CustomFields.Add(new FieldInfo(field, Fields.FindField(field), -1));
-				}
-				catch (Exception e)
-				{
-					throw new InvalidOperationException(
-						$"{this.Name}: Unable to add field {field}.", e);
-				}
 			}
 
 			public string Constraint
@@ -274,7 +157,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 			bool ITransformedTable.NoCaching => false;
 
-			public TransformedDataset BackingDs => (TransformedDataset) BackingDataset;
+			private TransformedDataset BackingDs => (TransformedDataset) BackingDataset;
 
 			[CanBeNull]
 			public BoxTree<VirtualRow> KnownRows { get; private set; }
@@ -323,8 +206,9 @@ namespace ProSuite.QA.Tests.Transformers
 
 			public override int GetRowCount(IQueryFilter queryFilter)
 			{
-				// TODO
-				return _dissolve.RowCount(queryFilter);
+				return Search(queryFilter, true).Count();
+				// TODO: Consider new Method GetRowCountEstimate()? Or add progress token to Search()?
+				//return _dissolve.RowCount(queryFilter);
 			}
 
 			public string Constraint
@@ -529,36 +413,49 @@ namespace ProSuite.QA.Tests.Transformers
 				return CreateResultRow(shape, rows);
 			}
 
+			public TransformedTableFields TableFields { get; set; }
+
+			private IDictionary<int, int> _shapeDict;
+			private IDictionary<int, int> ShapeDict => _shapeDict ?? (_shapeDict = GetShapeDict());
+
+			private IDictionary<int, int> GetShapeDict()
+			{
+				IDictionary<int, int> shapeDict = new Dictionary<int, int>(1);
+				shapeDict.Add(TableFields.ShapeFieldIndex, 0);
+				return shapeDict;
+			}
+
 			private VirtualRow CreateResultRow(IGeometry shape, List<IReadOnlyRow> rows)
 			{
-				GdbFeature dissolved = Resulting.CreateFeature();
+				Assert.True(rows.Count > 0, "No rows to dissolve");
+
+				var joinedValueList = new MultiListValues();
+				{
+					joinedValueList.AddList(new PropertySetValueList(), ShapeDict);
+				}
+				{
+					var calculatedValues = TableFields.GetCalculatedValues(rows).ToList();
+
+					// Add the BaseRows:
+					calculatedValues.Add(new CalculatedValue(BaseRowsFieldIndex, rows));
+
+					IValueList simpleList =
+						TransformedAttributeUtils.ToSimpleValueList(
+							calculatedValues, out IDictionary<int, int> calculatedCopyMatrix);
+
+					joinedValueList.AddList(simpleList, calculatedCopyMatrix);
+				}
+
+				// Consider using the one with the smallest OID?
+				IReadOnlyRow mainRow = rows[0];
+
+				// For potential GroupBy value(s) and the ObjectID field.
+				IValueList rowValues = new ReadOnlyRowBasedValues(mainRow);
+				joinedValueList.AddList(rowValues, TableFields.FieldIndexMapping);
+
+				GdbFeature dissolved = Resulting.CreateFeature(mainRow.OID, joinedValueList);
 
 				dissolved.Shape = shape;
-
-				dissolved.set_Value(
-					Resulting.FindField(InvolvedRowUtils.BaseRowField),
-					rows);
-
-				TransformedFc r = Resulting;
-				if (r.CustomFields?.Count > 0)
-				{
-					r.TableView.ClearRows();
-					DataRow tableRow = null;
-					foreach (IReadOnlyRow row in rows)
-					{
-						tableRow = r.TableView.Add(row);
-					}
-
-					if (tableRow != null)
-					{
-						foreach (FieldInfo fieldInfo in r.CustomFields)
-						{
-							dissolved.set_Value(fieldInfo.Index, tableRow[fieldInfo.Name]);
-						}
-					}
-
-					r.TableView.ClearRows();
-				}
 
 				return dissolved;
 			}
