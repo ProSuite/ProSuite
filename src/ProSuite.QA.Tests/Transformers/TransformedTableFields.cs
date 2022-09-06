@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
@@ -66,7 +67,7 @@ namespace ProSuite.QA.Tests.Transformers
 		public IList<string> ExcludedSourceFields { get; } = new List<string>();
 
 		[CanBeNull]
-		internal TableView TableView { get; private set; }
+		private TableView TableView { get; set; }
 
 		/// <summary>
 		/// Adds all fields from the source table to the specified output table in the exact same
@@ -169,7 +170,10 @@ namespace ProSuite.QA.Tests.Transformers
 				CopyField(sourceIndex, toOutputClass, _sourceTable.Fields, resultField);
 			}
 
-			AddExpressionFields(expressionAttributes, toOutputClass, calculatedFields);
+			if (expressionAttributes.Count > 0)
+			{
+				AddExpressionFields(expressionAttributes, toOutputClass, calculatedFields);
+			}
 
 			if (! ExcludeBaseRowsField)
 				EnsureBaseRowField(toOutputClass);
@@ -320,8 +324,61 @@ namespace ProSuite.QA.Tests.Transformers
 			return true;
 		}
 
-		private bool IsExpression([NotNull] string sourceField,
-		                          out List<string> expressionTokens)
+		public IEnumerable<CalculatedValue> GetCalculatedValues(
+			[NotNull] IList<IReadOnlyRow> rowsToGroup)
+		{
+			if (rowsToGroup.Count == 0)
+			{
+				yield break;
+			}
+
+			// For several source rows, they all must be grouped into one by calculation functions:
+			// TODO: Are there exceptions? Group-by value? -> Test
+
+			IReadOnlyList<FieldInfo> calculatedFields = CalculatedFields;
+
+			if (calculatedFields == null)
+			{
+				yield break;
+			}
+
+			foreach (CalculatedValue calculatedValue in GetCalculatedValues(
+				         rowsToGroup, calculatedFields,
+				         Assert.NotNull(TableView)))
+			{
+				yield return calculatedValue;
+			}
+		}
+
+		private static IEnumerable<CalculatedValue> GetCalculatedValues(
+			[NotNull] IList<IReadOnlyRow> sources,
+			[NotNull] IReadOnlyList<FieldInfo> calculatedFields,
+			[NotNull] TableView tableView)
+		{
+			// NOTE: The tableView never contains columns from several source tables
+
+			DataRow tableRow = null;
+			foreach (IReadOnlyRow row in sources)
+			{
+				tableRow = tableView.Add(row);
+			}
+
+			if (tableRow != null)
+			{
+				Assert.NotNull(calculatedFields);
+
+				foreach (FieldInfo fieldInfo in calculatedFields)
+				{
+					yield return new CalculatedValue(targetIndex: fieldInfo.Index,
+					                                 value: tableRow[fieldInfo.Name]);
+				}
+			}
+
+			tableView.ClearRows();
+		}
+
+		private static bool IsExpression([NotNull] string sourceField,
+		                                 out List<string> expressionTokens)
 		{
 			expressionTokens = ExpressionUtils.GetExpressionTokens(sourceField).ToList();
 

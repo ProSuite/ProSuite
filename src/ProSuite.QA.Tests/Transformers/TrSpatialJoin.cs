@@ -1,13 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.Data;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
-using ProSuite.Commons.AO.Geodatabase.GdbSchema.RowValues;
 using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.TestSupport;
@@ -90,7 +87,7 @@ namespace ProSuite.QA.Tests.Transformers
 			transformedFc.TableFieldsBySource.Add(InvolvedTables[0], t0Fields);
 			transformedFc.TableFieldsBySource.Add(InvolvedTables[1], t1Fields);
 
-			// Add the minimal fields that mus always be present:
+			// Add the minimal fields that must always be present:
 			t0Fields.AddOIDField(transformedFc, "OBJECTID");
 			t0Fields.AddShapeField(transformedFc);
 
@@ -380,12 +377,13 @@ namespace ProSuite.QA.Tests.Transformers
 				}
 				else
 				{
-					extraValues.AddRange(GetCalculatedValues(joineds, joinedTableFields));
+					extraValues.AddRange(joinedTableFields.GetCalculatedValues(joineds));
 				}
 
 				// Add all the collected extra values with their own copy-matrix:
 				IValueList simpleList =
-					ToSimpleValueList(extraValues, out IDictionary<int, int> extraCopyMatrix);
+					TransformedAttributeUtils.ToSimpleValueList(
+						extraValues, out IDictionary<int, int> extraCopyMatrix);
 
 				rowValues.AddList(simpleList, extraCopyMatrix);
 
@@ -407,95 +405,13 @@ namespace ProSuite.QA.Tests.Transformers
 				if (sourceTableFields.CalculatedFields != null)
 				{
 					var sources = new List<IReadOnlyRow> {sourceRow};
-					foreach (CalculatedValue calculatedValue in GetCalculatedValues(
-						         sources, sourceTableFields.CalculatedFields,
-						         Assert.NotNull(sourceTableFields.TableView)))
+
+					foreach (CalculatedValue calculatedValue in sourceTableFields
+						         .GetCalculatedValues(sources))
 					{
 						yield return calculatedValue;
 					}
 				}
-			}
-
-			private static IEnumerable<CalculatedValue> GetCalculatedValues(
-				[NotNull] IList<IReadOnlyRow> rowsToGroup,
-				[NotNull] TransformedTableFields sourceTableFields)
-			{
-				if (rowsToGroup.Count == 0)
-				{
-					yield break;
-				}
-
-				// For several source rows, they all must be grouped into one by calculation functions:
-				// TODO: Are there exceptions? Group-by value? -> Test
-
-				IReadOnlyList<FieldInfo> calculatedFields = sourceTableFields.CalculatedFields;
-
-				Assert.NotNull(calculatedFields,
-				               "No calculated fields definitions for rows to group");
-
-				foreach (CalculatedValue calculatedValue in GetCalculatedValues(
-					         rowsToGroup, calculatedFields,
-					         Assert.NotNull(sourceTableFields.TableView)))
-				{
-					yield return calculatedValue;
-				}
-			}
-
-			private static IEnumerable<CalculatedValue> GetCalculatedValues(
-				[NotNull] IList<IReadOnlyRow> sources,
-				[NotNull] IReadOnlyList<FieldInfo> calculatedFields,
-				[NotNull] TableView tableView)
-			{
-				// NOTE: The tableView never contains columns from several source tables
-
-				DataRow tableRow = null;
-				foreach (IReadOnlyRow row in sources)
-				{
-					tableRow = tableView.Add(row);
-				}
-
-				if (tableRow != null)
-				{
-					Assert.NotNull(calculatedFields);
-
-					foreach (FieldInfo fieldInfo in calculatedFields)
-					{
-						yield return new CalculatedValue(targetIndex: fieldInfo.Index,
-						                                 value: tableRow[fieldInfo.Name]);
-					}
-				}
-
-				tableView.ClearRows();
-			}
-
-			private static IValueList ToSimpleValueList(List<CalculatedValue> extraValues,
-			                                            out IDictionary<int, int> extraCopyMatrix)
-			{
-				extraCopyMatrix = new Dictionary<int, int>();
-				IValueList simpleList = new SimpleValueList(extraValues.Count);
-				int index = 0;
-				foreach (CalculatedValue calculated in extraValues)
-				{
-					simpleList.SetValue(index, calculated.Value);
-
-					// Update the target-source copy matrix to redirect from the calculated index
-					// in the target to the local row-value count + index:
-					extraCopyMatrix[calculated.TargetIndex] = index++;
-				}
-
-				return simpleList;
-			}
-
-			private class CalculatedValue
-			{
-				public CalculatedValue(int targetIndex, object value)
-				{
-					TargetIndex = targetIndex;
-					Value = value;
-				}
-
-				public object Value { get; set; }
-				public int TargetIndex { get; set; }
 			}
 		}
 	}
