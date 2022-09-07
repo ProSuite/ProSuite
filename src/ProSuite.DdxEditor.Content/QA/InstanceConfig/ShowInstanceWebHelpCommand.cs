@@ -70,17 +70,25 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			                                   stringWriter.ToString());
 		}
 
-		private static InstanceDescriptor GetInstanceDescriptor(Item item)
+		[CanBeNull]
+		private static InstanceDescriptor GetInstanceDescriptor([NotNull] Item item)
 		{
-			var instanceConfigItem = item as InstanceConfigurationItem;
-
-			if (instanceConfigItem == null)
+			InstanceConfiguration instanceConfiguration;
+			if (item is QualityConditionItem qualityConditionItem)
+			{
+				instanceConfiguration = qualityConditionItem.GetEntity();
+			}
+			else if (item is InstanceConfigurationItem instanceConfigItem)
+			{
+				instanceConfiguration = instanceConfigItem.GetEntity();
+			}
+			else
 			{
 				return null;
 			}
 
-			InstanceConfiguration instanceConfiguration = instanceConfigItem.GetEntity();
 			InstanceDescriptor descriptor = instanceConfiguration?.InstanceDescriptor;
+
 			return descriptor;
 		}
 

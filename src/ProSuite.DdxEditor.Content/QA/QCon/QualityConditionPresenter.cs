@@ -310,6 +310,11 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			}
 		}
 
+		public void DescriptorDocumentationLinkClicked()
+		{
+			_item.ExecuteWebHelpCommand();
+		}
+
 		protected override void OnBoundTo(QualityCondition qualityCondition)
 		{
 			Assert.ArgumentNotNull(qualityCondition, nameof(qualityCondition));

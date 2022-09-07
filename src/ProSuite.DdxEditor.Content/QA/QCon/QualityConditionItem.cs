@@ -46,6 +46,8 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 		[CanBeNull] private Image _image;
 		[CanBeNull] private string _imageKey;
 
+		private ICommand _webHelpCommand;
+
 		#region Constructors
 
 		/// <summary>
@@ -338,6 +340,11 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			NotifyChanged();
 		}
 
+		public void ExecuteWebHelpCommand()
+		{
+			_webHelpCommand?.Execute();
+		}
+
 		private void UpdateImage([CanBeNull] QualityCondition qualityCondition)
 		{
 			if (qualityCondition == null)
@@ -465,6 +472,12 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 				commands.Add(new AssignQualityConditionsToCategoryCommand(new[] {this},
 					             _containerItem,
 					             applicationController));
+
+
+				_webHelpCommand = new ShowInstanceWebHelpCommand<QualityConditionItem>(
+					this, applicationController);
+
+				commands.Add(_webHelpCommand);
 			}
 		}
 

@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
-using System.Drawing;
 using System.Windows.Forms;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -33,6 +32,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 
 		[NotNull] private readonly
 			BoundDataGridHandler<QualitySpecificationReferenceTableRow> _qSpecGridHandler;
+
 		[NotNull] private readonly
 			BoundDataGridHandler<InstanceConfigurationReferenceTableRow> _issueFilterGridHandler;
 
@@ -69,32 +69,21 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			_tableViewControl = tableViewControl;
 			var qualityConditionTableViewControl = (Control) tableViewControl;
 
-#if NET6_0
-			qualityConditionTableViewControl.SuspendLayout();
-			qualityConditionTableViewControl.Dock = DockStyle.Fill;
-			qualityConditionTableViewControl.Location = new Point(0, 0);
-			qualityConditionTableViewControl.Name = "_qualityConditionTableViewControl";
-			qualityConditionTableViewControl.Size = new Size(569, 123);
-			qualityConditionTableViewControl.TabIndex = 0;
-#endif
-
 			InitializeComponent();
 
 #if NET6_0
 			// hack!
-			_splitContainer.SuspendLayout();
-			_qualityConditionTableViewControlPanel.SuspendLayout();
+			_panelParameters.SuspendLayout();
 
-			_splitContainer.Panel2.Controls.Add(qualityConditionTableViewControl);
-			_splitContainer.Size = new Size(569, 282);
-			_splitContainer.SplitterDistance = 155;
-			_qualityConditionTableViewControlPanel.Controls.RemoveByKey(
-				"_tabControlParameterValues");
-			_qualityConditionTableViewControlPanel.Controls.Add(_splitContainer);
+			_panelParameters.Controls.RemoveByKey("_qualityConditionTableViewControlPanel");
+			_panelParameters.Controls.RemoveByKey("_exportButtonPanel");
 
-			_splitContainer.ResumeLayout(false);
+			_instanceParameterConfigControl.Visible = true;
+			_instanceParameterConfigControl.AddBlazorControl(tableViewControl);
+
+			_panelParameters.ResumeLayout(false);
+
 			qualityConditionTableViewControl.ResumeLayout(false);
-			_qualityConditionTableViewControlPanel.ResumeLayout(false);
 #endif
 
 			NullableBooleanItems.UseFor(_columnIssueType,
@@ -174,7 +163,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			_issueFilterGridHandler =
 				new BoundDataGridHandler<InstanceConfigurationReferenceTableRow>(
 					_dataGridViewIssueFilters, restoreSelectionAfterUserSort: true);
-			_issueFilterGridHandler.SelectionChanged+=_issueFilterGridHandler_SelectionChanged;
+			_issueFilterGridHandler.SelectionChanged += _issueFilterGridHandler_SelectionChanged;
 
 			TabControlUtils.SelectTabPage(_tabControlDetails, _lastSelectedDetailsTab);
 			TabControlUtils.SelectTabPage(_tabControlParameterValues,
@@ -182,7 +171,6 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 
 			_tableViewShown = _tabControlParameterValues.SelectedTab == _tabPageTableView;
 		}
-
 
 		#endregion
 
@@ -637,7 +625,6 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			OnSpecificationSelectionChanged();
 		}
 
-
 		private void _issueFilterGridHandler_SelectionChanged(object sender, EventArgs e)
 		{
 			if (_latch.IsLatched)
@@ -659,7 +646,8 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			Observer?.NotifyChanged(true);
 		}
 
-		private void _dataGridViewIssueFilters_CellValueChanged(object sender, DataGridViewCellEventArgs e)
+		private void _dataGridViewIssueFilters_CellValueChanged(
+			object sender, DataGridViewCellEventArgs e)
 		{
 			if (e.RowIndex < 0 || e.ColumnIndex < 0)
 			{
@@ -675,7 +663,8 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			_dataGridViewQualitySpecifications.InvalidateRow(e.RowIndex);
 		}
 
-		private void _dataGridViewIssueFilters_CellEndEdit(object sender, DataGridViewCellEventArgs e)
+		private void _dataGridViewIssueFilters_CellEndEdit(object sender,
+		                                                   DataGridViewCellEventArgs e)
 		{
 			_dataGridViewIssueFilters.InvalidateRow(e.RowIndex);
 		}
@@ -696,14 +685,16 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			}
 		}
 
-		private void _dataGridViewIssueFilters_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
+		private void _dataGridViewIssueFilters_CellDoubleClick(
+			object sender, DataGridViewCellEventArgs e)
 		{
 			if (_dataGridViewIssueFilters.IsCurrentCellInEditMode)
 			{
 				return; // ignore
 			}
 
-			InstanceConfigurationReferenceTableRow tableRow = _issueFilterGridHandler.GetRow(e.RowIndex);
+			InstanceConfigurationReferenceTableRow tableRow =
+				_issueFilterGridHandler.GetRow(e.RowIndex);
 
 			if (tableRow != null)
 			{
@@ -760,6 +751,12 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 				_initialIssueFilterTableRows = null;
 				BindTo(filterTableRows);
 			}
+		}
+
+		private void _instanceParameterConfigControl_DocumentationLinkClicked(
+			object sender, EventArgs e)
+		{
+			Observer.DescriptorDocumentationLinkClicked();
 		}
 	}
 }
