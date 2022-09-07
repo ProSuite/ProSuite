@@ -82,7 +82,7 @@ namespace ProSuite.QA.Tests.Transformers
 			                                     };
 
 			tableFields.AddOIDField(dissolvedFc, "OBJECTID");
-			tableFields.AddShapeField(dissolvedFc);
+			tableFields.AddShapeField(dissolvedFc, "SHAPE", true);
 
 			if (Attributes != null)
 			{

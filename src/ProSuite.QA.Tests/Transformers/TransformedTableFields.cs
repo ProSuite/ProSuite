@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Text.RegularExpressions;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
@@ -86,7 +87,7 @@ namespace ProSuite.QA.Tests.Transformers
 		/// </summary>
 		/// <param name="toOutputClass"></param>
 		/// <param name="skipIfAlreadyExist"></param>
-		public void AddAllFields(GdbTable toOutputClass,
+		public void AddAllFields([NotNull] GdbTable toOutputClass,
 		                         bool skipIfAlreadyExist = false)
 		{
 			IFields sourceFields = _sourceTable.Fields;
@@ -110,7 +111,7 @@ namespace ProSuite.QA.Tests.Transformers
 				else if (alreadyExists)
 				{
 					// Prefix with tableName_
-					targetName = PrefixDuplicate(targetName);
+					targetName = MakeUnique(targetName, toOutputClass);
 				}
 
 				CopyField(sourceIdx, toOutputClass, sourceFields, targetName);
@@ -129,6 +130,38 @@ namespace ProSuite.QA.Tests.Transformers
 			                                       out string unqualifiedTableName);
 
 			return string.Format(_tablePrefixFormat, unqualifiedTableName, targetName);
+		}
+
+		private string MakeUnique([NotNull] string targetName,
+		                          [NotNull] GdbTable targetTable)
+		{
+			// TODO: Consider remembering the list of duplicates to also pre-fix the other table's fields
+
+			string result = PrefixDuplicate(targetName);
+
+			if (targetTable.FindField(result) < 0)
+			{
+				return result;
+			}
+
+			// Typically foreign keys are also prefixed with related table name
+			var regex = new Regex(@"[0-9]+$");
+			var match = regex.Match(result);
+
+			int number = 0;
+			int numberIndex = result.Length;
+			if (match.Success)
+			{
+				int.TryParse(match.Value, out number);
+				numberIndex = match.Index - 1;
+			}
+
+			while (targetTable.FindField(result) >= 0)
+			{
+				result = string.Format($"{result.Substring(0, numberIndex)}_{++number}");
+			}
+
+			return result;
 		}
 
 		public void AddUserDefinedFields([NotNull] IList<string> userAttributes,
@@ -189,9 +222,9 @@ namespace ProSuite.QA.Tests.Transformers
 		/// field index mapping to the <see cref="FieldIndexMapping"/>. Make sure to provided
 		/// the OID value from the source row when creating the target row.
 		/// </summary>
-		/// <returns></returns>
 		public void AddOIDField([NotNull] GdbTable toOutputClass,
-		                        string name = null)
+		                        string name = null,
+		                        bool omitFromFieldIndexMapping = false)
 		{
 			if (! _sourceTable.HasOID)
 			{
@@ -203,7 +236,8 @@ namespace ProSuite.QA.Tests.Transformers
 
 			Assert.False(sourceIndex < 0, "No OID field found in source table");
 
-			CopyField(sourceIndex, toOutputClass, _sourceTable.Fields, name);
+			CopyField(sourceIndex, toOutputClass, _sourceTable.Fields, name,
+			          omitFromFieldIndexMapping);
 		}
 
 		/// <summary>

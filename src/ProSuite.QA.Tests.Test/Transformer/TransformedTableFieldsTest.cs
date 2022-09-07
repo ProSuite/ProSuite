@@ -8,7 +8,6 @@ using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Licensing;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.Test;
 using ProSuite.QA.Tests.Transformers;
 
 namespace ProSuite.QA.Tests.Test.Transformer
@@ -72,6 +71,38 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			WriteFieldNames(targetTable);
 		}
 
+		[Test]
+		public void CanAddAllFieldsWithDuplicates()
+		{
+			GdbTable sourceTable1 = CreateSampleTable("TAB1");
+			GdbTable sourceTable2 = CreateSampleTable("TAB2");
+
+			GdbTable targetTable = new GdbTable(-1, "OUTPUT_TABLE");
+
+			TransformedTableFields tableFields1 = new TransformedTableFields(sourceTable1);
+			TransformedTableFields tableFields2 = new TransformedTableFields(sourceTable2);
+
+			tableFields1.AddAllFields(targetTable);
+			tableFields2.AddAllFields(targetTable);
+
+			Assert.AreEqual("OBJECTID", targetTable.Fields.Field[0].Name);
+			Assert.AreEqual("OBJEKTART", targetTable.Fields.Field[1].Name);
+			Assert.AreEqual("FIELD_NAME", targetTable.Fields.Field[2].Name);
+			Assert.AreEqual("FIELD_VALUE", targetTable.Fields.Field[3].Name);
+			Assert.AreEqual("NOALIAS_FIELD", targetTable.Fields.Field[4].Name);
+			Assert.AreEqual("NO_ALIAS_EITHER", targetTable.Fields.Field[5].Name);
+			Assert.AreEqual(InvolvedRowUtils.BaseRowField, targetTable.Fields.Field[6].Name);
+
+			Assert.AreEqual("TAB2_OBJECTID", targetTable.Fields.Field[7].Name);
+			Assert.AreEqual("TAB2_OBJEKTART", targetTable.Fields.Field[8].Name);
+			Assert.AreEqual("TAB2_FIELD_NAME", targetTable.Fields.Field[9].Name);
+			Assert.AreEqual("TAB2_FIELD_VALUE", targetTable.Fields.Field[10].Name);
+			Assert.AreEqual("TAB2_NOALIAS_FIELD", targetTable.Fields.Field[11].Name);
+			Assert.AreEqual("TAB2_NO_ALIAS_EITHER", targetTable.Fields.Field[12].Name);
+
+			WriteFieldNames(targetTable);
+		}
+
 		private static void WriteFieldNames(GdbTable targetTable)
 		{
 			for (int i = 0; i < targetTable.Fields.FieldCount; i++)
@@ -97,27 +128,27 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			//	esriGeometryType.esriGeometryPolygon,
 			//	SpatialReferenceUtils.CreateSpatialReference(WellKnownHorizontalCS.LV95));
 
+			//IField shapeField = FieldUtils.CreateShapeField(
+			//				esriGeometryType.esriGeometryPolygon,
+			//				SpatialReferenceUtils.CreateSpatialReference(WellKnownHorizontalCS.LV95));
 
-//IField shapeField = FieldUtils.CreateShapeField(
-//				esriGeometryType.esriGeometryPolygon,
-//				SpatialReferenceUtils.CreateSpatialReference(WellKnownHorizontalCS.LV95));
-
-			GdbFeatureClass targetTable = new GdbFeatureClass(-1, "OUTPUT_TABLE", esriGeometryType.esriGeometryPoint);
+			GdbFeatureClass targetTable =
+				new GdbFeatureClass(-1, "OUTPUT_TABLE", esriGeometryType.esriGeometryPoint);
 
 			TransformedTableFields tableFields = new TransformedTableFields(sourceTable);
 
 			int oidFieldIdx = tableFields.AddCustomOIDField(targetTable);
 			Assert.False(oidFieldIdx < 0);
 			tableFields.AddCustomShapeField(targetTable,
-			                          esriGeometryType.esriGeometryPolygon,
-			                          shapeField.GeometryDef);
+			                                esriGeometryType.esriGeometryPolygon,
+			                                shapeField.GeometryDef);
 
 			tableFields.AddUserDefinedFields(new List<string>
 			                                 {
-												 "TABLE_NAME.OBJEKTART",
-												 "field_value as bla",
-												 "NOALIAS_FIELD"
-											 }, targetTable);
+				                                 "TABLE_NAME.OBJEKTART",
+				                                 "field_value as bla",
+				                                 "NOALIAS_FIELD"
+			                                 }, targetTable);
 
 			Assert.AreEqual("OBJECTID", targetTable.Fields.Field[0].Name);
 			Assert.AreEqual("SHAPE", targetTable.Fields.Field[1].Name);
@@ -134,9 +165,9 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			}
 		}
 
-		private static GdbTable CreateSampleTable()
+		private static GdbTable CreateSampleTable(string tableName = "TABLE_NAME")
 		{
-			GdbTable table = new GdbTable(-1, "TABLE_NAME", "TableName");
+			GdbTable table = new GdbTable(-1, tableName, "TableName");
 			table.AddFieldT(FieldUtils.CreateOIDField());
 			table.AddFieldT(
 				FieldUtils.CreateIntegerField("OBJEKTART"));
