@@ -64,10 +64,13 @@ namespace ProSuite.QA.Tests.Transformers
 			{
 				_manyToManyTable = value;
 
+				if (value != null)
+				{
 					// Does queriedOnly mean anything in case of transformers?
 					AddInvolvedTable(_manyToManyTable, null, false, true);
 				}
 			}
+		}
 
 		[TestParameter]
 		[CanBeNull]

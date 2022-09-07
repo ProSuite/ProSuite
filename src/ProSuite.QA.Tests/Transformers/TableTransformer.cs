@@ -115,8 +115,10 @@ namespace ProSuite.QA.Tests.Transformers
 					string constraint = GetConstraint(i);
 					bool useCaseSensitiveSql = GetSqlCaseSensitivity(i);
 
+					string tableName = InvolvedTables[i]?.Name;
+
 					_msg.Debug(
-						$"Adding constraint to {InvolvedTables[i].Name}: {constraint ?? "<null>"}. " +
+						$"Adding constraint to {tableName}: {constraint ?? "<null>"}. " +
 						$"Case-sensitive: {useCaseSensitiveSql}");
 
 					backingData.SetConstraint(i, constraint);
