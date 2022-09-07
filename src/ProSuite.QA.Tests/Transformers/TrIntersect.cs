@@ -76,14 +76,8 @@ namespace ProSuite.QA.Tests.Transformers
 				_intersected = intersected;
 				_intersecting = intersecting;
 
-				IntersectedFields = new TransformedTableFields(_intersected)
-				                    {
-					                    NonUserDefinedFieldPrefix = "t0."
-				                    };
-				IntersectingFields = new TransformedTableFields(_intersecting)
-				                     {
-					                     NonUserDefinedFieldPrefix = "t1."
-				                     };
+				IntersectedFields = new TransformedTableFields(_intersected);
+				IntersectingFields = new TransformedTableFields(_intersecting);
 
 				IntersectedFields.AddOIDField(gdbTable, "OBJECTID", true);
 				IntersectedFields.AddShapeField(gdbTable, "SHAPE", true);
@@ -91,13 +85,16 @@ namespace ProSuite.QA.Tests.Transformers
 				IntersectedFields.AddAllFields(gdbTable);
 				IntersectingFields.AddAllFields(gdbTable);
 
-				gdbTable.AddField(FieldUtils.CreateDoubleField(PartIntersectedField));
+				PartIntersectedFieldIndex =
+					gdbTable.AddFieldT(FieldUtils.CreateDoubleField(PartIntersectedField));
 
 				Resulting.SpatialReference = intersected.SpatialReference;
 			}
 
-			private TransformedTableFields IntersectedFields { get; set; }
-			private TransformedTableFields IntersectingFields { get; set; }
+			private TransformedTableFields IntersectedFields { get; }
+			private TransformedTableFields IntersectingFields { get; }
+
+			private int PartIntersectedFieldIndex { get; }
 
 			public override IEnvelope Extent => _intersected.Extent;
 
@@ -118,8 +115,6 @@ namespace ProSuite.QA.Tests.Transformers
 
 				ISpatialFilter intersectingFilter = new SpatialFilterClass();
 				intersectingFilter.SpatialRel = esriSpatialRelEnum.esriSpatialRelEnvelopeIntersects;
-
-				int iPartIntersected = Resulting.FindField(PartIntersectedField);
 
 				foreach (var toIntersect in DataContainer.Search(
 					         _intersected, filter, QueryHelpers[0]))
@@ -177,12 +172,11 @@ namespace ProSuite.QA.Tests.Transformers
 				extraValues.Add(
 					new CalculatedValue(BaseRowsFieldIndex, baseRows));
 
-				int iPartIntersected = Resulting.FindField(PartIntersectedField);
 				double partIntersected =
 					GetPartIntersected(intersectedFeature.Shape, intersectionGeometry);
 
 				extraValues.Add(
-					new CalculatedValue(iPartIntersected, partIntersected));
+					new CalculatedValue(PartIntersectedFieldIndex, partIntersected));
 
 				extraValues.Add(new CalculatedValue(Resulting.OidFieldIndex, null));
 

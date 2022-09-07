@@ -109,13 +109,13 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			TrIntersect tr = new TrIntersect(ReadOnlyTableFactory.Create(pointFc),
 			                                 ReadOnlyTableFactory.Create(polyFc));
 			{
-				QaConstraint test = new QaConstraint(tr.GetTransformed(), "t0.IntVal < 2");
+				QaConstraint test = new QaConstraint(tr.GetTransformed(), "IntVal < 2");
 				var runner = new QaContainerTestRunner(1000, test);
 				runner.Execute();
 				Assert.AreEqual(1, runner.Errors.Count);
 			}
 			{
-				QaConstraint test = new QaConstraint(tr.GetTransformed(), "t0.IntVal < 8");
+				QaConstraint test = new QaConstraint(tr.GetTransformed(), "IntVal < 8");
 				var runner = new QaContainerTestRunner(1000, test);
 				runner.Execute();
 				Assert.AreEqual(0, runner.Errors.Count);
@@ -262,7 +262,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				ft.SetIssueFilters(
 					"filter",
 					new List<IIssueFilter>
-					{new IfInvolvedRows("t0.Nr = 12 OR t1.Nr = 6") {Name = "filter"}});
+					{new IfInvolvedRows("Nr = 12 OR polyFc_Nr = 6") {Name = "filter"}});
 				var runner = new QaContainerTestRunner(1000, test);
 				runner.Execute();
 				Assert.AreEqual(1, runner.Errors.Count);

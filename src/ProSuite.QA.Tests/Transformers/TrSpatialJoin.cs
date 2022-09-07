@@ -76,11 +76,9 @@ namespace ProSuite.QA.Tests.Transformers
 
 			// Suggestion for multi-table transformers: fields are only qualified to avoid duplicates
 			// using <input table name>_ 
-			TransformedTableFields t0Fields = new TransformedTableFields(InvolvedTables[0])
-			                                  {NonUserDefinedFieldPrefix = "t0."};
+			TransformedTableFields t0Fields = new TransformedTableFields(InvolvedTables[0]);
 			TransformedTableFields t1Fields = new TransformedTableFields(InvolvedTables[1])
 			                                  {
-				                                  NonUserDefinedFieldPrefix = "t1.",
 				                                  AreResultRowsGrouped = Grouped
 			                                  };
 

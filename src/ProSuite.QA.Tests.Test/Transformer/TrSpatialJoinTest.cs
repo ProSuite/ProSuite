@@ -145,7 +145,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			}
 			{
 				QaConstraint test = new QaConstraint(transformedClass,
-				                                     "t1.OBJECTID IS NULL AND PolyCount IS NULL");
+													 "polyFc_OBJECTID IS NULL AND PolyCount IS NULL");
 				var runner = new QaContainerTestRunner(1000, test);
 				runner.Execute();
 				Assert.AreEqual(2, runner.Errors.Count);
@@ -234,6 +234,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			tr.T0Attributes = new List<string>
 			                  {
 				                  "MIN(OBJECTID) AS t0Oid",
+								  "Nr AS liNR"
 			                  };
 			tr.T1Attributes = new List<string>
 			                  {
@@ -256,18 +257,18 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			WriteFieldNames(transformedClass);
 
 			{
-				QaConstraint test = new QaConstraint(transformedClass, "t0.Nr > 10");
+				QaConstraint test = new QaConstraint(transformedClass, "liNR > 10");
 				var runner = new QaContainerTestRunner(1000, test);
 				runner.Execute();
 				Assert.AreEqual(4, runner.Errors.Count);
 			}
 			{
-				QaConstraint test = new QaConstraint(transformedClass, "t0.Nr > 10");
+				QaConstraint test = new QaConstraint(transformedClass, "liNR > 10");
 				IFilterEditTest ft = test;
 				ft.SetIssueFilters(
 					"filter",
 					new List<IIssueFilter>
-					{new IfInvolvedRows("t0.Nr + t1.Nr = 20") {Name = "filter"}});
+					{new IfInvolvedRows("liNR + Nr = 20") {Name = "filter"}});
 				var runner = new QaContainerTestRunner(1000, test);
 				runner.Execute();
 				Assert.AreEqual(2, runner.Errors.Count);
