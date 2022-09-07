@@ -325,7 +325,7 @@ namespace ProSuite.DomainServices.AO.QA
 				                                   qualityCondition.Name,
 				                                   e.Message);
 
-				var involvedRows = new InvolvedRow[] { };
+				var involvedRows = new List<InvolvedRow>();
 				IGeometry exceptionErrorGeometry = null;
 
 				if (_currentRow != null)
@@ -335,7 +335,7 @@ namespace ProSuite.DomainServices.AO.QA
 					{
 						// second part: ESRI Bug for IQueryDefTables
 						// which returns row.HasOID = true
-						involvedRows = new[] {new InvolvedRow(_currentRow)};
+						involvedRows = InvolvedRowUtils.GetInvolvedRows(_currentRow);
 					}
 
 					try

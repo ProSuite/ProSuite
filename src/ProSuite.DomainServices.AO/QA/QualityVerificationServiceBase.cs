@@ -1328,13 +1328,22 @@ namespace ProSuite.DomainServices.AO.QA
 			QualityCondition qualityCondition = conditionVerification.QualityCondition;
 			Assert.NotNull(qualityCondition, "no quality condition for verification");
 
-			// Consider extracting separate ErrorFilter class / interface
-			if (! IsErrorRelevant(qaError, qualityCondition,
-			                      conditionVerification.AllowErrors))
+			try
 			{
-				_msg.VerboseDebug(() => "Issue is not relevant for current verification context");
+				// Consider extracting separate ErrorFilter class / interface
+				if (! IsErrorRelevant(qaError, qualityCondition,
+				                      conditionVerification.AllowErrors))
+				{
+					_msg.VerboseDebug(
+						() => "Issue is not relevant for current verification context");
 
-				return false;
+					return false;
+				}
+			}
+			catch (Exception e)
+			{
+				_msg.Warn($"Error checking error for relevance: {qaError}", e);
+				throw;
 			}
 
 			// Moved to single threaded test runner:
