@@ -254,6 +254,10 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 				                                  ? null
 				                                  : _item.GetParameterDescription();
 
+			// Refresh blazor parameters:
+			InstanceConfiguration instanceConfig = Assert.NotNull(_item.GetEntity());
+			_view.TableViewControl.BindTo(instanceConfig);
+
 			_view.SetParameterDescriptions(testParams);
 
 			InstanceDescriptor instanceDescriptor = _item.GetInstanceDescriptor();

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
 using System.Windows.Forms;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -10,7 +9,6 @@ using ProSuite.Commons.Misc;
 using ProSuite.Commons.UI.ScreenBinding;
 using ProSuite.Commons.UI.ScreenBinding.Elements;
 using ProSuite.Commons.UI.WinForms.Controls;
-using ProSuite.DdxEditor.Content.QA.TestDescriptors;
 using ProSuite.DdxEditor.Framework.ItemViews;
 using ProSuite.DomainModel.Core;
 using ProSuite.DomainModel.Core.QA;
@@ -30,14 +28,10 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 		[NotNull] private readonly ScreenBinder<InstanceConfiguration> _binder;
 		[NotNull] private readonly Latch _latch = new Latch();
 
-		[NotNull] private readonly DataTable _parameterTbl;
-
 		[NotNull] private readonly
 			BoundDataGridHandler<InstanceConfigurationReferenceTableRow> _qSpecGridHandler;
 
 		[CanBeNull] private static string _lastSelectedDetailsTab;
-		[CanBeNull] private static string _lastSelectedParameterValuesTab;
-		private readonly bool _tableViewShown;
 
 		private TableStateManager<InstanceConfigurationReferenceTableRow> _qSpecStateManager;
 
@@ -115,18 +109,11 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 
 			_binder.OnChange = BinderChanged;
 
-			_parameterTbl = TestParameterGridUtils.BindParametersDataGridView(
-				_dataGridViewParamGrid);
-
 			_qSpecGridHandler =
 				new BoundDataGridHandler<InstanceConfigurationReferenceTableRow>(
 					_dataGridViewReferences, restoreSelectionAfterUserSort: true);
 
 			TabControlUtils.SelectTabPage(_tabControlDetails, _lastSelectedDetailsTab);
-			TabControlUtils.SelectTabPage(_tabControlParameterValues,
-			                              _lastSelectedParameterValuesTab);
-
-			_tableViewShown = _tabControlParameterValues.SelectedTab == _tabPageTableView;
 		}
 
 		#endregion
@@ -152,9 +139,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 		void IInstanceConfigurationView.SetParameterDescriptions(
 			IList<TestParameter> testParameters)
 		{
-			TestParameterGridUtils.PopulateDataTable(_parameterTbl, testParameters);
-
-			_dataGridViewParamGrid.ClearSelection();
+			// No legacy implementation for instance configuration control
 		}
 
 		bool IInstanceConfigurationView.InstanceDescriptorLinkEnabled
@@ -290,23 +275,6 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			_lastSelectedDetailsTab = TabControlUtils.GetSelectedTabPageName(_tabControlDetails);
 		}
 
-		private void _tabControlParameterValues_SelectedIndexChanged(object sender, EventArgs e)
-		{
-			if (_tabControlParameterValues.SelectedTab == _tabPageTableView)
-			{
-				BindToParameterValues(Observer?.GetTestParameterItems() ??
-				                      new BindingList<ParameterValueListItem>());
-
-				if (! _tableViewShown)
-				{
-					_dataGridViewParamGrid.ClearSelection();
-				}
-			}
-
-			_lastSelectedParameterValuesTab =
-				TabControlUtils.GetSelectedTabPageName(_tabControlParameterValues);
-		}
-
 		private void _dataGridViewQualitySpecifications_CellValueChanged(
 			object sender, DataGridViewCellEventArgs e)
 		{
@@ -354,18 +322,6 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			Observer?.OpenUrlClicked();
 		}
 
-		private void QualityConditionControl_Load(object sender, EventArgs e)
-		{
-			_dataGridViewParamGrid.ClearSelection();
-		}
-
-		private void _dataGridViewParamGrid_DataBindingComplete(object sender,
-		                                                        DataGridViewBindingCompleteEventArgs
-			                                                        e)
-		{
-			_dataGridViewParamGrid.ClearSelection();
-		}
-
 		private void QualityConditionControl_Paint(object sender, PaintEventArgs e)
 		{
 			// on the initial load, the bind to the table rows (applying stored state) must be delayed to 
@@ -390,7 +346,5 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 		{
 			Observer.DescriptorDocumentationLinkClicked();
 		}
-
-		private void _splitContainer_SplitterMoved(object sender, SplitterEventArgs e) { }
 	}
 }
