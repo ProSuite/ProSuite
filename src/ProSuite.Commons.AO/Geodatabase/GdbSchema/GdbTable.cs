@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Data;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 
 namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 {
@@ -17,6 +19,8 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 	public class GdbTable : VirtualTable
 	{
 		private const string _defaultOidFieldName = "OBJECTID";
+
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private int _lastUsedOid;
 		private readonly IWorkspace _workspace;
@@ -161,7 +165,15 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 				throw new NotImplementedException("No backing dataset provided for Search().");
 			}
 
-			return BackingDataset.Search(queryFilter, recycling);
+			try
+			{
+				return BackingDataset.Search(queryFilter, recycling);
+			}
+			catch (Exception e)
+			{
+				// Due to the possibility of nested tables, add the name to the exception: 
+				throw new DataException($"Error getting rows from {Name}", e);
+			}
 		}
 
 		#endregion
