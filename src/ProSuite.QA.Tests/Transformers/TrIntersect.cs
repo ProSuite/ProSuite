@@ -116,6 +116,7 @@ namespace ProSuite.QA.Tests.Transformers
 				ISpatialFilter intersectingFilter = new SpatialFilterClass();
 				intersectingFilter.SpatialRel = esriSpatialRelEnum.esriSpatialRelEnvelopeIntersects;
 
+				bool sameFeatureClass = _intersected.Equals(_intersecting);
 				foreach (var toIntersect in DataContainer.Search(
 					         _intersected, filter, QueryHelpers[0]))
 				{
@@ -123,6 +124,11 @@ namespace ProSuite.QA.Tests.Transformers
 					foreach (var intersecting in DataContainer.Search(
 						         _intersecting, intersectingFilter, QueryHelpers[1]))
 					{
+						if (sameFeatureClass && intersecting.OID >= toIntersect.OID)
+						{
+							continue;
+						}
+
 						IGeometry intersectingGeom = ((IReadOnlyFeature) intersecting).Shape;
 						IGeometry toIntersectGeom = ((IReadOnlyFeature) toIntersect).Shape;
 						var op = (ITopologicalOperator) toIntersectGeom;
