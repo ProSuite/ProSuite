@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -16,7 +17,6 @@ namespace ProSuite.QA.Container
 	public class QaError
 	{
 		private readonly QaErrorGeometry _errorGeometry;
-		private IEnvelope _involvedExtent;
 
 		#region Constructors
 
@@ -33,7 +33,6 @@ namespace ProSuite.QA.Container
 			Assert.ArgumentNotNullOrEmpty(description, nameof(description));
 			Assert.ArgumentNotNull(involvedRows, nameof(involvedRows));
 
-
 			Test = test;
 			InvolvedRows = new List<InvolvedRow>(involvedRows);
 
@@ -45,7 +44,6 @@ namespace ProSuite.QA.Container
 			AssertionFailed = assertionFailed;
 			Values = values?.ToList();
 
-			_involvedExtent = GetInvolvedExtent(involvedRows as InvolvedRows);
 			Duplicate = false;
 		}
 
@@ -74,7 +72,8 @@ namespace ProSuite.QA.Container
 		public bool AssertionFailed { get; }
 
 		[CanBeNull]
-		public IEnvelope InvolvedExtent => _involvedExtent;
+		[Obsolete]
+		public IEnvelope InvolvedExtent => GetInvolvedExtent(InvolvedRows);
 
 		[CanBeNull]
 		public IList<object> Values { get; }
@@ -118,24 +117,39 @@ namespace ProSuite.QA.Container
 			_errorGeometry.ReduceGeometry();
 		}
 
-		private IEnvelope GetInvolvedExtent([CanBeNull] InvolvedRows involvedRows)
+		[CanBeNull]
+		[Obsolete]
+		private static IEnvelope GetInvolvedExtent(
+			[CanBeNull] IEnumerable<InvolvedRow> involvedRows)
 		{
 			if (involvedRows == null)
 			{
 				return null;
 			}
+
 			IEnvelope involvedExtent = null;
-			foreach (IReadOnlyRow testedRow in involvedRows.TestedRows)
+			foreach (IReadOnlyRow testedRow in involvedRows)
 			{
 				if (testedRow is IReadOnlyFeature testedFeature)
 				{
+					IEnvelope shapeEnvelope = null;
+					try
+					{
+						// This fails if the Shape field was not in the SubFields:
+						shapeEnvelope = testedFeature.Shape.Envelope;
+					}
+					catch (Exception)
+					{
+						continue;
+					}
+
 					if (involvedExtent == null)
 					{
-						involvedExtent = GeometryFactory.Clone(testedFeature.Shape.Envelope);
+						involvedExtent = GeometryFactory.Clone(shapeEnvelope);
 					}
 					else
 					{
-						involvedExtent.Union(GeometryFactory.Clone(testedFeature.Shape.Envelope));
+						involvedExtent.Union(GeometryFactory.Clone(shapeEnvelope));
 					}
 				}
 			}
