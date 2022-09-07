@@ -121,49 +121,6 @@ namespace ProSuite.QA.Tests.Transformers
 				EnsureBaseRowField(toOutputClass);
 		}
 
-		private string PrefixDuplicate(string targetName)
-		{
-			// TODO: Consider remembering the list of duplicates to also pre-fix the other table's fields
-
-			// Un-qualify the table name
-			ModelElementNameUtils.TryUnqualifyName(_sourceTable.Name,
-			                                       out string unqualifiedTableName);
-
-			return string.Format(_tablePrefixFormat, unqualifiedTableName, targetName);
-		}
-
-		private string MakeUnique([NotNull] string targetName,
-		                          [NotNull] GdbTable targetTable)
-		{
-			// TODO: Consider remembering the list of duplicates to also pre-fix the other table's fields
-
-			string result = PrefixDuplicate(targetName);
-
-			if (targetTable.FindField(result) < 0)
-			{
-				return result;
-			}
-
-			// Typically foreign keys are also prefixed with related table name
-			var regex = new Regex(@"[0-9]+$");
-			var match = regex.Match(result);
-
-			int number = 0;
-			int numberIndex = result.Length;
-			if (match.Success)
-			{
-				int.TryParse(match.Value, out number);
-				numberIndex = match.Index - 1;
-			}
-
-			while (targetTable.FindField(result) >= 0)
-			{
-				result = string.Format($"{result.Substring(0, numberIndex)}_{++number}");
-			}
-
-			return result;
-		}
-
 		public void AddUserDefinedFields([NotNull] IList<string> userAttributes,
 		                                 [NotNull] GdbTable toOutputClass,
 		                                 [CanBeNull] IList<string> calculatedFields = null)
@@ -465,9 +422,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 		private static bool HasShapeField(IReadOnlyTable table)
 		{
-			IReadOnlyFeatureClass featureClass = table as IReadOnlyFeatureClass;
-
-			if (featureClass == null)
+			if (! (table is IReadOnlyFeatureClass featureClass))
 			{
 				return false;
 			}
@@ -485,18 +440,33 @@ namespace ProSuite.QA.Tests.Transformers
 			Assert.True(sourceIdx >= 0 && sourceIdx < sourceFields.FieldCount,
 			            $"Invalid source index: {sourceIdx}");
 
+			IField field = CanAddField(sourceIdx, toOutputClass, sourceFields, resultFieldName);
+
+			if (field != null)
+			{
+				return AddField(field, toOutputClass, sourceIdx, omitFromFieldIndexMapping);
+			}
+
+			return -1;
+		}
+
+		private IField CanAddField(int sourceIdx,
+		                           [NotNull] GdbTable toOutputClass,
+		                           [NotNull] IFields sourceFields,
+		                           [CanBeNull] string resultFieldName)
+		{
 			IField field = sourceFields.Field[sourceIdx];
 
 			if (field.Type == esriFieldType.esriFieldTypeGeometry && HasShapeField(toOutputClass))
 			{
 				// It's already got one
-				return -1;
+				return null;
 			}
 
 			if (ExcludedSourceFields.Contains(field.Name))
 			{
 				// NOTE: Included Length/Area fields fail in search if the respective shape is excluded
-				return -1;
+				return null;
 			}
 
 			string targetName = resultFieldName ?? field.Name;
@@ -508,6 +478,12 @@ namespace ProSuite.QA.Tests.Transformers
 				field = clone;
 			}
 
+			return field;
+		}
+
+		private int AddField(IField field, GdbTable toOutputClass, int sourceIdx,
+		                     bool omitFromFieldIndexMapping)
+		{
 			int targetIdx;
 			try
 			{
@@ -615,6 +591,49 @@ namespace ProSuite.QA.Tests.Transformers
 			                          $"{Environment.NewLine}{StringUtils.Concatenate(fieldList, Environment.NewLine)}";
 
 			return fieldDisplayList;
+		}
+
+		private string PrefixDuplicate(string targetName)
+		{
+			// TODO: Consider remembering the list of duplicates to also pre-fix the other table's fields
+
+			// Un-qualify the table name
+			ModelElementNameUtils.TryUnqualifyName(_sourceTable.Name,
+			                                       out string unqualifiedTableName);
+
+			return string.Format(_tablePrefixFormat, unqualifiedTableName, targetName);
+		}
+
+		private string MakeUnique([NotNull] string targetName,
+		                          [NotNull] GdbTable targetTable)
+		{
+			// TODO: Consider remembering the list of duplicates to also pre-fix the other table's fields
+
+			string result = PrefixDuplicate(targetName);
+
+			if (targetTable.FindField(result) < 0)
+			{
+				return result;
+			}
+
+			// Typically foreign keys are also prefixed with related table name
+			var regex = new Regex(@"[0-9]+$");
+			var match = regex.Match(result);
+
+			int number = 0;
+			int numberIndex = result.Length;
+			if (match.Success)
+			{
+				int.TryParse(match.Value, out number);
+				numberIndex = match.Index - 1;
+			}
+
+			while (targetTable.FindField(result) >= 0)
+			{
+				result = string.Format($"{result.Substring(0, numberIndex)}_{++number}");
+			}
+
+			return result;
 		}
 
 		#region Calculated field set up originally from TrSpatialJoin
