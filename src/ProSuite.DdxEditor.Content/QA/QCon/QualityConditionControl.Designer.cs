@@ -124,6 +124,9 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			this._panelParametersTop = new System.Windows.Forms.Panel();
 			this._linkDocumentation = new System.Windows.Forms.LinkLabel();
 			this._panelParametersEdit = new System.Windows.Forms.Panel();
+			this._issueFilterPanelBottom = new System.Windows.Forms.Panel();
+			this._labelFilterExpression = new System.Windows.Forms.Label();
+			this._textBoxFilterExpression = new System.Windows.Forms.TextBox();
 			((System.ComponentModel.ISupportInitialize)(this._errorProvider)).BeginInit();
 			this._tabControlParameterValues.SuspendLayout();
 			this.tabPageProperties.SuspendLayout();
@@ -157,6 +160,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			this._groupBoxTablesWithoutGeometry.SuspendLayout();
 			this._tabPageNotes.SuspendLayout();
 			this._panelParametersTop.SuspendLayout();
+			this._issueFilterPanelBottom.SuspendLayout();
 			this.SuspendLayout();
 			// 
 			// _textBoxName
@@ -564,6 +568,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			// 
 			// _tabPageIssueFilters
 			// 
+			this._tabPageIssueFilters.Controls.Add(this._issueFilterPanelBottom);
 			this._tabPageIssueFilters.Controls.Add(this._dataGridViewIssueFilters);
 			this._tabPageIssueFilters.Controls.Add(this.toolStripEx1);
 			this._tabPageIssueFilters.Location = new System.Drawing.Point(4, 24);
@@ -1147,6 +1152,35 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			this._panelParametersEdit.Size = new System.Drawing.Size(690, 318);
 			this._panelParametersEdit.TabIndex = 2;
 			// 
+			// _issueFilterPanelBottom
+			// 
+			this._issueFilterPanelBottom.Controls.Add(this._textBoxFilterExpression);
+			this._issueFilterPanelBottom.Controls.Add(this._labelFilterExpression);
+			this._issueFilterPanelBottom.Dock = System.Windows.Forms.DockStyle.Bottom;
+			this._issueFilterPanelBottom.Location = new System.Drawing.Point(0, 339);
+			this._issueFilterPanelBottom.Name = "_issueFilterPanelBottom";
+			this._issueFilterPanelBottom.Size = new System.Drawing.Size(698, 47);
+			this._issueFilterPanelBottom.TabIndex = 28;
+			// 
+			// _labelFilterExpression
+			// 
+			this._labelFilterExpression.AutoSize = true;
+			this._labelFilterExpression.Location = new System.Drawing.Point(6, 15);
+			this._labelFilterExpression.Name = "_labelFilterExpression";
+			this._labelFilterExpression.Size = new System.Drawing.Size(95, 15);
+			this._labelFilterExpression.TabIndex = 0;
+			this._labelFilterExpression.Text = "Filter Expression:";
+			// 
+			// _textBoxFilterExpression
+			// 
+			this._textBoxFilterExpression.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+			this._textBoxFilterExpression.Location = new System.Drawing.Point(108, 12);
+			this._textBoxFilterExpression.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+			this._textBoxFilterExpression.Name = "_textBoxFilterExpression";
+			this._textBoxFilterExpression.Size = new System.Drawing.Size(570, 23);
+			this._textBoxFilterExpression.TabIndex = 1;
+			// 
 			// QualityConditionControl
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
@@ -1219,6 +1253,8 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			this._tabPageNotes.PerformLayout();
 			this._panelParametersTop.ResumeLayout(false);
 			this._panelParametersTop.PerformLayout();
+			this._issueFilterPanelBottom.ResumeLayout(false);
+			this._issueFilterPanelBottom.PerformLayout();
 			this.ResumeLayout(false);
 			this.PerformLayout();
 
@@ -1309,5 +1345,8 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 		private System.Windows.Forms.Panel _panelParametersTop;
 		private System.Windows.Forms.LinkLabel _linkDocumentation;
 		private InstanceConfig.InstanceParameterConfigControl _instanceParameterConfigControl;
+		private System.Windows.Forms.Panel _issueFilterPanelBottom;
+		private System.Windows.Forms.TextBox _textBoxFilterExpression;
+		private System.Windows.Forms.Label _labelFilterExpression;
 	}
 }

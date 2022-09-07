@@ -165,6 +165,10 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 					_dataGridViewIssueFilters, restoreSelectionAfterUserSort: true);
 			_issueFilterGridHandler.SelectionChanged += _issueFilterGridHandler_SelectionChanged;
 
+			_binder.Bind(m => m.IssueFilterExpression)
+			       .To(_textBoxFilterExpression)
+			       .WithLabel(_labelFilterExpression);
+
 			TabControlUtils.SelectTabPage(_tabControlDetails, _lastSelectedDetailsTab);
 			TabControlUtils.SelectTabPage(_tabControlParameterValues,
 			                              _lastSelectedParameterValuesTab);
