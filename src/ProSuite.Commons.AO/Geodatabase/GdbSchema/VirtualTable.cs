@@ -260,7 +260,23 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		public bool Equals(IReadOnlyTable otherTable)
 		{
-			return Equals((object) otherTable);
+			if (ReferenceEquals(null, otherTable)) return false;
+
+			// By default use the AO-semantic. Subclasses can change this.
+			if (ReferenceEquals(this, otherTable)) return true;
+
+			if (EqualsCore(otherTable))
+			{
+				return true;
+			}
+
+			if (otherTable is VirtualTable otherVirtualTable)
+			{
+				// Allow the other to find out that we're equal (e.g. Wrapper-Class)
+				return otherVirtualTable.EqualsCore(this);
+			}
+
+			return false;
 		}
 
 		public int FeatureCount(IQueryFilter QueryFilter) => RowCount(QueryFilter);
@@ -467,6 +483,34 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		public virtual IEnumSubtype Subtypes =>
 			throw new NotImplementedException("Implement in derived class");
+
+		protected virtual bool EqualsCore(IReadOnlyTable otherTable)
+		{
+			return false;
+		}
+
+		public override bool Equals(object obj)
+		{
+			if (ReferenceEquals(null, obj)) return false;
+
+			if (ReferenceEquals(this, obj)) return true;
+
+			if (obj is IReadOnlyTable otherTable)
+			{
+				return Equals(otherTable);
+			}
+
+			return false;
+		}
+
+		public override int GetHashCode()
+		{
+			// Keep the reference-equality semantic of AO except in specific
+			// circumstances (e.g. the other implementation just wraps this instance)
+
+			// ReSharper disable once BaseObjectGetHashCodeCallInGetHashCode
+			return base.GetHashCode();
+		}
 
 		protected class TableName : IName, IDatasetName, IObjectClassName, ITableName
 		{

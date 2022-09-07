@@ -122,6 +122,12 @@ namespace ProSuite.QA.Tests.Transformers
 
 		public override IEnvelope Extent => _joinDatasetImpl.Extent;
 
+		public IReadOnlyTable LeftTable => _joinDatasetImpl.GeometryEndClass;
+
+		public IReadOnlyTable RightTable => _joinDatasetImpl.OtherEndClass;
+
+		public IReadOnlyTable AssociationTable => _joinDatasetImpl.AssociationTable;
+
 		public override VirtualRow GetRow(int id)
 		{
 			AssignFiltersAndContainer();

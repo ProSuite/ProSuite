@@ -38,8 +38,12 @@ namespace ProSuite.QA.Tests.Transformers
 
 		#endregion
 
-
 		#region Equality members
+
+		protected override bool EqualsCore(IReadOnlyTable otherTable)
+		{
+			return Equals(_baseClass, otherTable);
+		}
 
 		protected bool Equals(WrappedFeatureClass other)
 		{

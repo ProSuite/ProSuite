@@ -64,10 +64,10 @@ namespace ProSuite.QA.Tests.Transformers
 			{
 				_manyToManyTable = value;
 
-				// Does queriedOnly mean anything in case of transformers?
-				AddInvolvedTable(_manyToManyTable, null, false, true);
+					// Does queriedOnly mean anything in case of transformers?
+					AddInvolvedTable(_manyToManyTable, null, false, true);
+				}
 			}
-		}
 
 		[TestParameter]
 		[CanBeNull]
@@ -104,7 +104,7 @@ namespace ProSuite.QA.Tests.Transformers
 				JoinedBackingDataset joinedDataset =
 					(JoinedBackingDataset) Assert.NotNull(_joinedTable.BackingDataset);
 
-				AddFields(association, joinedDataset);
+				AddFields(association, joinedDataset, _joinedTable);
 
 				// Once the schema is created, we can set up the field-lookups:
 				joinedDataset.SetupRowFactory();
@@ -168,38 +168,44 @@ namespace ProSuite.QA.Tests.Transformers
 			return result;
 		}
 
-		private void AddFields(AssociationDescription association,
-		                       JoinedBackingDataset joinedDataset)
+		private static void AddFields(AssociationDescription association,
+		                              JoinedBackingDataset joinedDataset,
+		                              GdbTable resultTable)
 		{
 			// Suggestion for multi-table transformers: fields are only qualified to avoid duplicates
-			// using <input table name>_ 
-			TransformedTableFields leftFields = new TransformedTableFields(_leftTable);
-			TransformedTableFields rightFields = new TransformedTableFields(_rightTable);
+			// using <input table name>_
+
+			// Use already wrapped instances for correct equality comparison!
+			var leftTable = joinedDataset.LeftTable;
+			var rightTable = joinedDataset.RightTable;
+			var associationTable = joinedDataset.AssociationTable;
+
+			TransformedTableFields leftFields = new TransformedTableFields(leftTable);
+			TransformedTableFields rightFields = new TransformedTableFields(rightTable);
 			rightFields.ExcludeAllShapeFields();
 
-			joinedDataset.TableFieldsBySource.Add(_leftTable, leftFields);
-			joinedDataset.TableFieldsBySource.Add(_rightTable, rightFields);
+			joinedDataset.TableFieldsBySource.Add(leftTable, leftFields);
+			joinedDataset.TableFieldsBySource.Add(rightTable, rightFields);
 
 			TransformedTableFields bridgeTableFields = null;
 
 			// In case of m:n ensure the field is in the result schema:
-			if (association is ManyToManyAssociationDescription manyToMany)
+			if (associationTable != null)
 			{
-				bridgeTableFields = new TransformedTableFields(manyToMany.AssociationTable);
-				joinedDataset.TableFieldsBySource.Add(manyToMany.AssociationTable,
-				                                      bridgeTableFields);
+				bridgeTableFields = new TransformedTableFields(associationTable);
+				joinedDataset.TableFieldsBySource.Add(associationTable, bridgeTableFields);
 			}
 
 			IReadOnlyTable oidSourceTable = joinedDataset.ObjectIdSourceTable;
 
 			if (oidSourceTable != null && oidSourceTable.HasOID)
 			{
-				joinedDataset.TableFieldsBySource[oidSourceTable].AddOIDField(_joinedTable);
+				joinedDataset.TableFieldsBySource[oidSourceTable].AddOIDField(resultTable);
 			}
 
-			leftFields.AddAllFields(_joinedTable);
-			rightFields.AddAllFields(_joinedTable);
-			bridgeTableFields?.AddAllFields(_joinedTable);
+			leftFields.AddAllFields(resultTable);
+			rightFields.AddAllFields(resultTable);
+			bridgeTableFields?.AddAllFields(resultTable);
 		}
 
 		private AssociationDescription CreateAssociationDescription()
