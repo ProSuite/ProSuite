@@ -128,7 +128,12 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				                   ReadOnlyTableFactory.Create(polyFc))
 			                   {
 				                   Grouped = false,
-				                   T1Attributes = new[] {"COUNT(OBJECTID) AS PolyCount"},
+				                   T1Attributes = new[]
+				                                  {
+					                                  // If T1Attribute is not not null, only specified attributes are added
+					                                  "OBJECTID as Poly_OID",
+					                                  "COUNT(OBJECTID) AS PolyCount"
+				                                  },
 				                   OuterJoin = true
 			                   };
 
@@ -145,7 +150,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			}
 			{
 				QaConstraint test = new QaConstraint(transformedClass,
-													 "polyFc_OBJECTID IS NULL AND PolyCount IS NULL");
+				                                     "Poly_OID IS NULL AND PolyCount IS NULL");
 				var runner = new QaContainerTestRunner(1000, test);
 				runner.Execute();
 				Assert.AreEqual(2, runner.Errors.Count);
@@ -234,7 +239,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			tr.T0Attributes = new List<string>
 			                  {
 				                  "MIN(OBJECTID) AS t0Oid",
-								  "Nr AS liNR"
+				                  "Nr AS liNR"
 			                  };
 			tr.T1Attributes = new List<string>
 			                  {

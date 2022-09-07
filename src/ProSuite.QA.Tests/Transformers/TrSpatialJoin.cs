@@ -91,26 +91,22 @@ namespace ProSuite.QA.Tests.Transformers
 
 			// Add fields defined by Attribute parameter:
 			if (T0Attributes != null)
-				t0Fields.AddUserDefinedFields(T0Attributes, transformedFc);
-
-			if (T1Attributes != null)
-				t1Fields.AddUserDefinedFields(T1Attributes, transformedFc, T1CalcAttributes);
-
-			//AddFields(transformedFc, T0Attributes, InvolvedTables[0], isGrouped: false);
-			//AddFields(transformedFc, T1Attributes, InvolvedTables[1], isGrouped: Grouped, T1CalcAttributes);
-
-			// Add all fields (not already defined by the user?)
-			t0Fields.AddAllFields(transformedFc, false);
-			if (! Grouped)
 			{
-				t1Fields.AddAllFields(transformedFc, false);
+				t0Fields.AddUserDefinedFields(T0Attributes, transformedFc);
+			}
+			else
+			{
+				t0Fields.AddAllFields(transformedFc);
 			}
 
-			//AddFields(transformedFc, InvolvedTables[0], "t0");
-			//if (!Grouped)
-			//{
-			//	AddFields(transformedFc, InvolvedTables[1], "t1");
-			//}
+			if (T1Attributes != null)
+			{
+				t1Fields.AddUserDefinedFields(T1Attributes, transformedFc, T1CalcAttributes);
+			}
+			else if (! Grouped)
+			{
+				t1Fields.AddAllFields(transformedFc);
+			}
 
 			return transformedFc;
 		}
