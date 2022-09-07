@@ -6,6 +6,8 @@ using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Exceptions;
+using ProSuite.Commons.Text;
 
 namespace ProSuite.QA.Container.TestSupport
 {
@@ -18,7 +20,8 @@ namespace ProSuite.QA.Container.TestSupport
 			[NotNull] IList<string> tableAliases,
 			[NotNull] string expression,
 			bool caseSensitive = false,
-			[CanBeNull] Action<Action<string, Type>, IList<IReadOnlyTable>> customizeDataTable = null,
+			[CanBeNull] Action<Action<string, Type>, IList<IReadOnlyTable>> customizeDataTable =
+				null,
 			bool useAsConstraint = true)
 		{
 			Assert.ArgumentNotNull(tables, nameof(tables));
@@ -57,7 +60,7 @@ namespace ProSuite.QA.Container.TestSupport
 
 			const bool toUpper = true;
 			foreach (string expressionToken in
-				ExpressionUtils.GetExpressionTokens(expression, toUpper))
+			         ExpressionUtils.GetExpressionTokens(expression, toUpper))
 			{
 				if (addedFields.Contains(expressionToken))
 				{
@@ -88,9 +91,20 @@ namespace ProSuite.QA.Container.TestSupport
 				tables);
 
 			var dataView = new DataView(dataTable);
+
 			if (useAsConstraint)
 			{
-				dataView.RowFilter = expression;
+				try
+				{
+					dataView.RowFilter = expression;
+				}
+				catch (Exception e)
+				{
+					// Provide a more useful error message by adding the table names
+					throw new InvalidConfigurationException(
+						$"Expression {expression} fails for table(s) " +
+						$"{StringUtils.Concatenate(tables, t => t.Name, ", ")}", e);
+				}
 			}
 
 			return new MultiTableView(columnInfos, tableAliasIndexes, dataView);
@@ -153,7 +167,8 @@ namespace ProSuite.QA.Container.TestSupport
 		                               [NotNull] Dictionary<string, string> expressionDict,
 		                               [NotNull] Dictionary<string, string> aliasFieldDict,
 		                               bool isGrouped,
-		                               [CanBeNull] Dictionary<string,string> calcExpressionDict = null)
+		                               [CanBeNull] Dictionary<string, string> calcExpressionDict =
+			                               null)
 		{
 			Assert.ArgumentNotNull(table, nameof(table));
 			Assert.ArgumentNotNull(expressionDict, nameof(expressionDict));

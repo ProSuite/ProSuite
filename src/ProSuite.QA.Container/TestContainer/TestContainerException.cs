@@ -3,6 +3,8 @@ using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Exceptions;
+using ProSuite.Commons.Text;
 
 namespace ProSuite.QA.Container.TestContainer
 {
@@ -24,7 +26,7 @@ namespace ProSuite.QA.Container.TestContainer
 		public TestContainerException([NotNull] ITest test,
 		                              [NotNull] IReadOnlyRow row,
 		                              [CanBeNull] Exception innerException)
-			: base(GetMessage(test, row), innerException)
+			: base(GetMessage(test, row, innerException), innerException)
 		{
 			_test = test;
 			_row = row;
@@ -61,7 +63,9 @@ namespace ProSuite.QA.Container.TestContainer
 			return string.Format("Error while processing test {0}", test);
 		}
 
-		private static string GetMessage([NotNull] ITest test, [NotNull] IReadOnlyRow row)
+		private static string GetMessage([NotNull] ITest test,
+		                                 [NotNull] IReadOnlyRow row,
+		                                 [CanBeNull] Exception exception)
 		{
 			Assert.ArgumentNotNull(test, nameof(test));
 			Assert.ArgumentNotNull(row, nameof(row));
@@ -70,13 +74,22 @@ namespace ProSuite.QA.Container.TestContainer
 
 			if (table is IReadOnlyDataset dataset)
 			{
-				return table.HasOID
-					       ? string.Format(
-						       "Error in test {0} while processing row of table {1}, OID = {2}",
-						       test, dataset.Name, row.OID)
-					       : string.Format(
-						       "Error in test {0} while processing row of table {1} (no OID)",
-						       test, dataset.Name);
+				string rowMessage = table.HasOID
+					                    ? string.Format(
+						                    "Error in test {0} while processing row of table {1}, OID = {2}",
+						                    test, dataset.Name, row.OID)
+					                    : string.Format(
+						                    "Error in test {0} while processing row of table {1} (no OID)",
+						                    test, dataset.Name);
+
+				string errorMessages = null;
+				if (exception != null)
+				{
+					errorMessages =
+						StringUtils.Concatenate(ExceptionUtils.GetMessages(exception), ". ");
+				}
+
+				return errorMessages != null ? $"{rowMessage}: {errorMessages}" : rowMessage;
 			}
 
 			if (row is TerrainRow)
