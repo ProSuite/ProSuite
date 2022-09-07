@@ -13,7 +13,6 @@ using ProSuite.Commons.Geom.SpatialIndex;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.Geometry;
 using ProSuite.QA.Container.PolygonGrower;
-using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Core;
 using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
@@ -112,9 +111,6 @@ namespace ProSuite.QA.Tests.Transformers
 		                              IDataContainerAware,
 		                              IHasSearchDistance
 		{
-			public TableView TableView { get; set; }
-			[CanBeNull] private IList<string> _groupBy;
-
 			public TransformedFc(IReadOnlyFeatureClass dissolve, string name = null)
 				: base(-1, ! string.IsNullOrEmpty(name) ? name : "dissolveResult",
 				       dissolve.ShapeType,
@@ -129,11 +125,8 @@ namespace ProSuite.QA.Tests.Transformers
 			public SearchOption NeighborSearchOption { get; set; }
 			public bool CreateMultipartFeatures { get; set; }
 
-			public IList<string> GroupBy
-			{
-				get => _groupBy;
-				set => _groupBy = value;
-			}
+			[CanBeNull]
+			public IList<string> GroupBy { get; set; }
 
 			public string Constraint
 			{
