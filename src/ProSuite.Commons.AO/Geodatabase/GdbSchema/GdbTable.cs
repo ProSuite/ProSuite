@@ -107,6 +107,17 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			return new GdbRow(oid, this, valueList);
 		}
 
+		/// <summary>
+		/// Create a row without OID (and hence provided by internal sequence) but with a list of
+		/// values.
+		/// </summary>
+		/// <param name="withValues"></param>
+		/// <returns></returns>
+		public GdbRow CreateObject(IValueList withValues)
+		{
+			return CreateObject(GetNextOid(), withValues);
+		}
+
 		protected virtual void FieldAddedCore(IField field) { }
 
 		#endregion
