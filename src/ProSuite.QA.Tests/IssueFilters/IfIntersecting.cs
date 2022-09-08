@@ -1,24 +1,24 @@
+using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
 using ProSuite.QA.Tests.Documentation;
-using System.Collections.Generic;
 
 namespace ProSuite.QA.Tests.IssueFilters
 {
 	[UsedImplicitly]
-	public class IfContains : IssueFilter
+	public class IfIntersecting : IssueFilter
 	{
 		private IList<QueryFilterHelper> _filterHelpers;
 		private IList<ISpatialFilter> _spatialFilters;
 
-		[DocIf(nameof(DocIfStrings.IfContains_0))]
-		public IfContains(
-			[DocIf(nameof(DocIfStrings.IfContains_featureClass))]
+		[DocIf(nameof(DocIfStrings.IfIntersecting_0))]
+		public IfIntersecting(
+			[DocIf(nameof(DocIfStrings.IfIntersects_featureClass))]
 			IReadOnlyFeatureClass featureClass)
-			: base(new[] { featureClass }) { }
+			: base(new[] {featureClass}) { }
 
 		public override bool Check(QaErrorEventArgs error)
 		{
@@ -38,7 +38,8 @@ namespace ProSuite.QA.Tests.IssueFilters
 			filter.Geometry = errorGeometry;
 			foreach (var searched in Search(table, filter, helper))
 			{
-				if (((IRelationalOperator)errorGeometry).Within(((IReadOnlyFeature)searched).Shape))
+				if (! ((IRelationalOperator) errorGeometry).Disjoint(
+					    ((IReadOnlyFeature) searched).Shape))
 				{
 					return true;
 				}

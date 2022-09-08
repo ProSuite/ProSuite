@@ -110,7 +110,7 @@ namespace ProSuite.QA.Tests.Test
 			                                 ReadOnlyTableFactory.Create(areaFc));
 
 			IFilterEditTest fTest = test;
-			IfContains issueFilter = new IfContains(ReadOnlyTableFactory.Create(ignoreFc));
+			IfWithin issueFilter = new IfWithin(ReadOnlyTableFactory.Create(ignoreFc));
 			issueFilter.SetConstraint(0, "objektart in (10)");
 			issueFilter.Name = "IfContains";
 			fTest.SetIssueFilters($"{issueFilter.Name}",

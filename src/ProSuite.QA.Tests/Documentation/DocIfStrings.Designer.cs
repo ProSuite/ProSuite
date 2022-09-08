@@ -61,15 +61,6 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Filters errors that intersect any feature in a &apos;featureClass&apos;.
-        /// </summary>
-        public static string IfContains_0 {
-            get {
-                return ResourceManager.GetString("IfContains_0", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to polygon feature class or point, multipoint, polyline feature class.
         /// </summary>
         public static string IfContains_featureClass {
@@ -81,9 +72,9 @@ namespace ProSuite.QA.Tests.Documentation {
         /// <summary>
         ///   Looks up a localized string similar to Filters errors that intersect any feature in a &apos;featureClass&apos;.
         /// </summary>
-        public static string IfIntersects_0 {
+        public static string IfIntersecting_0 {
             get {
-                return ResourceManager.GetString("IfIntersects_0", resourceCulture);
+                return ResourceManager.GetString("IfIntersecting_0", resourceCulture);
             }
         }
         
@@ -121,6 +112,15 @@ namespace ProSuite.QA.Tests.Documentation {
         public static string IfInvolvedRows_Tables {
             get {
                 return ResourceManager.GetString("IfInvolvedRows_Tables", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Filters errors that are completely within any feature in a &apos;featureClass&apos;.
+        /// </summary>
+        public static string IfWithin_0 {
+            get {
+                return ResourceManager.GetString("IfWithin_0", resourceCulture);
             }
         }
     }

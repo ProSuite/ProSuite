@@ -9,16 +9,16 @@ using ProSuite.QA.Tests.Documentation;
 namespace ProSuite.QA.Tests.IssueFilters
 {
 	[UsedImplicitly]
-	public class IfIntersects : IssueFilter
+	public class IfWithin : IssueFilter
 	{
 		private IList<QueryFilterHelper> _filterHelpers;
 		private IList<ISpatialFilter> _spatialFilters;
 
-		[DocIf(nameof(DocIfStrings.IfIntersects_0))]
-		public IfIntersects(
-			[DocIf(nameof(DocIfStrings.IfIntersects_featureClass))]
+		[DocIf(nameof(DocIfStrings.IfWithin_0))]
+		public IfWithin(
+			[DocIf(nameof(DocIfStrings.IfContains_featureClass))]
 			IReadOnlyFeatureClass featureClass)
-			: base(new[] { featureClass}) { }
+			: base(new[] {featureClass}) { }
 
 		public override bool Check(QaErrorEventArgs error)
 		{
@@ -38,7 +38,8 @@ namespace ProSuite.QA.Tests.IssueFilters
 			filter.Geometry = errorGeometry;
 			foreach (var searched in Search(table, filter, helper))
 			{
-				if (! ((IRelationalOperator) errorGeometry).Disjoint(((IReadOnlyFeature) searched).Shape))
+				if (((IRelationalOperator) errorGeometry).Within(
+					    ((IReadOnlyFeature) searched).Shape))
 				{
 					return true;
 				}

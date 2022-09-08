@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -117,13 +117,13 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="IfContains_0" xml:space="preserve">
-    <value>Filters errors that intersect any feature in a 'featureClass'</value>
+  <data name="IfWithin_0" xml:space="preserve">
+    <value>Filters errors that are completely within any feature in a 'featureClass'</value>
   </data>
   <data name="IfContains_featureClass" xml:space="preserve">
     <value>polygon feature class or point, multipoint, polyline feature class</value>
   </data>
-  <data name="IfIntersects_0" xml:space="preserve">
+  <data name="IfIntersecting_0" xml:space="preserve">
     <value>Filters errors that intersect any feature in a 'featureClass'</value>
   </data>
   <data name="IfIntersects_featureClass" xml:space="preserve">
