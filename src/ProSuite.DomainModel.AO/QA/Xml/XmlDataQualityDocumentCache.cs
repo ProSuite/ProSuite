@@ -8,6 +8,7 @@ using ProSuite.Commons.Text;
 using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
+using ProSuite.QA.Container;
 using ProSuite.QA.Core;
 
 namespace ProSuite.DomainModel.AO.QA.Xml
@@ -197,7 +198,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 
 			InstanceFactory instanceFactory =
 				Assert.NotNull(InstanceFactoryUtils.CreateFactory(created));
-			
+
 			Dictionary<string, TestParameter> testParametersByName =
 				instanceFactory.Parameters.ToDictionary(
 					parameter => parameter.Name,
@@ -310,12 +311,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			}
 
 			IList<string> issueFilterNames =
-				XmlDataQualityUtils.GetFilterNames(issueFilterExpression);
-
-			if (issueFilterNames == null)
-			{
-				return;
-			}
+				FilterUtils.GetFilterNames(issueFilterExpression);
 
 			foreach (string issueFilterName in issueFilterNames)
 			{
@@ -379,23 +375,20 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 
 			if (config is XmlQualityCondition xmlCondition)
 			{
-				IList<string> filterNames =
-					XmlDataQualityUtils.GetFilterNames(
-						xmlCondition.IssueFilterExpression?.Expression);
-				if (filterNames != null)
-				{
-					foreach (string filterName in filterNames)
-					{
-						if (! IssueFilters.TryGetValue(filterName,
-						                               out XmlIssueFilterConfiguration filter))
-						{
-							Assert.Fail($"missing issue filter {filterName}");
-						}
+				IList<string> filterNames = FilterUtils.GetFilterNames(
+					xmlCondition.IssueFilterExpression?.Expression);
 
-						foreach (var referenced in EnumReferencedConfigurationInstances(filter))
-						{
-							yield return referenced;
-						}
+				foreach (string filterName in filterNames)
+				{
+					if (! IssueFilters.TryGetValue(filterName,
+					                               out XmlIssueFilterConfiguration filter))
+					{
+						Assert.Fail($"missing issue filter {filterName}");
+					}
+
+					foreach (var referenced in EnumReferencedConfigurationInstances(filter))
+					{
+						yield return referenced;
 					}
 				}
 			}

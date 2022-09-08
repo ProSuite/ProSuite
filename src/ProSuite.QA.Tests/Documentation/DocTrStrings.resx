@@ -210,9 +210,13 @@ If the table is part of the geodatabase and registered as versioned it will be o
     <value>Creates a filtered feature class based on several other filters that use the same 'featureClassToFilter'.</value>
   </data>
   <data name="TrCombinedFilter_expression" xml:space="preserve">
-    <value>An expression that allows combining filters with AND or OR. Example: 
+    <value>An expression that allows combining input filters with AND or OR. An input filter which is passed by a feature evaluates to 'true', a filter that excludes a feature evaluates to 'false'. 
+The input filters are referenced by the transformer configuration name. If not specified, all input filters are combined with AND, i.e. the feature must pass all filters to be in the result.
+Example to get all islands in Bavaria: 
 (islands_in_lakes OR islands_in_rivers) AND islands_in_bavaria
-The input filters are referenced by the transformer configuration name. If not specified, all input filters are combined with AND, i.e. the feature passes all filters.</value>
+islands_in_lakes uses the OnlyContained transformer with 'containing' feature class Lakes (polygon)
+islands_in_rivers uses the OnlyContained transformer with 'containing' feature class Rivers (polygon)
+islands_in_bavaria uses the OnlyIntersecting transformer with 'intersecting' feature class States (polygon) with constraint NAME = 'Bayern'</value>
   </data>
   <data name="TrCombinedFilter_featureClassToFilter" xml:space="preserve">
     <value>The feature class to be filtered.</value>

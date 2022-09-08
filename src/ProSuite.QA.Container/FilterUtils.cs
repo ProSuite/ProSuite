@@ -1,12 +1,40 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.QA.Container
 {
 	public static class FilterUtils
 	{
-		public static DataView GetFiltersView<T>(string filtersExpression, IEnumerable<T> filters)
+		[NotNull]
+		public static IList<string> GetFilterNames([CanBeNull] string filterExpression)
+		{
+			if (string.IsNullOrEmpty(filterExpression))
+			{
+				return new List<string>(0);
+			}
+
+			IList<string> filterNames = null;
+			foreach (string token in ExpressionUtils.GetExpressionTokens(
+				         filterExpression))
+			{
+				const StringComparison ii = StringComparison.InvariantCultureIgnoreCase;
+				if (token.Equals("AND", ii) || token.Equals("OR") || token.Equals("NOT"))
+				{
+					continue;
+				}
+
+				filterNames = filterNames ?? new List<string>();
+				filterNames.Add(token);
+			}
+
+			return filterNames;
+		}
+
+		[CanBeNull]
+		public static DataView GetFiltersView<T>([CanBeNull] string filtersExpression,
+		                                         [NotNull] IEnumerable<T> filters)
 			where T : INamedFilter
 		{
 			if (string.IsNullOrWhiteSpace(filtersExpression))
@@ -25,8 +53,9 @@ namespace ProSuite.QA.Container
 			return filtersView;
 		}
 
-		public static bool IsFulfilled<T>(DataView filtersView, IEnumerable<T> filters,
-		                                  Func<T, bool> fulfilledFunc)
+		public static bool IsFulfilled<T>([CanBeNull] DataView filtersView,
+		                                  [NotNull] IEnumerable<T> filters,
+		                                  [NotNull] Func<T, bool> fulfilledFunc)
 			where T : INamedFilter
 		{
 			DataRow filterRow = null;

@@ -91,9 +91,22 @@ namespace ProSuite.QA.Tests.Transformers.Filters
 				               FilterUtils.GetFiltersView(_expression, Filters);
 
 				if (FilterUtils.IsFulfilled(_filtersView, Filters,
-				                            filter => IsFiltered(filter, resultFeature)))
+				                            filter => PassesFilter(filter, resultFeature)))
 				{
-					return false;
+					// NOTE:
+					// Inversion of filter-logic in row filters: if the condition is fulfilled the row is NOT
+					// filtered, but passed on!
+					// Example 1: true/true
+					// filter1 fulfilled (i.e. row passes filter): true1, filter2 fulfilled (i.e. row passes filtered): true2
+					// filter1 AND filter2  (true1 AND true2): true -> row passes combined filter
+					// filter1 OR filter2 (true1 OR true2): true -> row passes combined filter
+
+					// Example : true/false
+					// filter1 fulfilled (i.e. row passes filter): true1, filter2 is not fulfilled (i.e. row passes filtered): false2
+					// filter1 AND filter2 (true1 AND false2): false -> row does not pass, filtered out
+					// filter1 OR filter2 (true1 OR false2): true -> row passes combined filter
+
+					return true;
 				}
 			}
 
@@ -102,11 +115,11 @@ namespace ProSuite.QA.Tests.Transformers.Filters
 
 		#endregion
 
-		private static bool IsFiltered(INamedFilter filter, IReadOnlyFeature feature)
+		private static bool PassesFilter(INamedFilter filter, IReadOnlyFeature feature)
 		{
 			FilteredBackingDataset filterDataset = (FilteredBackingDataset) filter;
 
-			return ! filterDataset.PassesFilter(feature);
+			return filterDataset.PassesFilter(feature);
 		}
 
 		private bool PassesAllFilters(IReadOnlyFeature resultFeature)

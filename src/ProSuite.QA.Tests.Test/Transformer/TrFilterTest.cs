@@ -211,7 +211,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 		}
 
 		[Test]
-		public void CanGetMultiFilteredAndCombination()
+		public void CanGetFilteredWithCombinedFilters()
 		{
 			IFeatureWorkspace ws =
 				TestWorkspaceUtils.CreateInMemoryWorkspace("TrCombinedFilter");
@@ -293,9 +293,75 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				                   trOnLine.GetTransformed()
 			                   };
 
+			// Without expression (i.e. implicit AND condition)
 			var trCombined =
 				new TrCombinedFilter(ReadOnlyTableFactory.Create(pointFc), inputFilters, null)
 				{TransformerName = "filtered_by_both"};
+			{
+				QaConstraint test = new QaConstraint(trCombined.GetTransformed(), "Nr_Point = 0");
+
+				var runner = new QaContainerTestRunner(1000, test);
+				runner.Execute();
+				Assert.AreEqual(1, runner.Errors.Count);
+
+				// Check involved rows:
+				QaError error = runner.Errors[0];
+
+				// Check involved rows. They must be from a 'real' feature class, not form a transformed feature class.
+				List<string> realTableNames = new List<string> {"pointFc"};
+				CheckInvolvedRows(error.InvolvedRows, 1, realTableNames);
+			}
+
+			// Now with explicit AND condition
+			string expression = "filtered_by_poly AND filtered_by_line";
+			trCombined =
+				new TrCombinedFilter(ReadOnlyTableFactory.Create(pointFc), inputFilters, expression)
+				{TransformerName = "filtered_by_both"};
+			{
+				QaConstraint test = new QaConstraint(trCombined.GetTransformed(), "Nr_Point = 0");
+
+				var runner = new QaContainerTestRunner(1000, test);
+				runner.Execute();
+				Assert.AreEqual(1, runner.Errors.Count);
+
+				// Check involved rows:
+				QaError error = runner.Errors[0];
+
+				// Check involved rows. They must be from a 'real' feature class, not form a transformed feature class.
+				List<string> realTableNames = new List<string> {"pointFc"};
+				CheckInvolvedRows(error.InvolvedRows, 1, realTableNames);
+			}
+
+			// Now with OR expression: All 3 are returned (and generate an error)
+			expression = "filtered_by_poly OR filtered_by_line";
+			trCombined =
+				new TrCombinedFilter(ReadOnlyTableFactory.Create(pointFc), inputFilters, expression)
+				{
+					TransformerName = "filtered_by_either"
+				};
+
+			{
+				QaConstraint test = new QaConstraint(trCombined.GetTransformed(), "Nr_Point = 0");
+
+				var runner = new QaContainerTestRunner(1000, test);
+				runner.Execute();
+				Assert.AreEqual(3, runner.Errors.Count);
+
+				// Check involved rows:
+				QaError error = runner.Errors[0];
+
+				// Check involved rows. They must be from a 'real' feature class, not form a transformed feature class.
+				List<string> realTableNames = new List<string> {"pointFc"};
+				CheckInvolvedRows(error.InvolvedRows, 1, realTableNames);
+			}
+
+			// Now with NOT - OR expression: 1 feature is on polygon but not on line
+			expression = "filtered_by_poly AND (NOT filtered_by_line)";
+			trCombined =
+				new TrCombinedFilter(ReadOnlyTableFactory.Create(pointFc), inputFilters, expression)
+				{
+					TransformerName = "filtered_by_either"
+				};
 
 			{
 				QaConstraint test = new QaConstraint(trCombined.GetTransformed(), "Nr_Point = 0");
