@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
@@ -5,10 +6,11 @@ using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.QA.Container;
 
 namespace ProSuite.QA.Tests.Transformers.Filters
 {
-	public abstract class FilteredBackingDataset : TransformedBackingData
+	public abstract class FilteredBackingDataset : TransformedBackingData, INamedFilter
 	{
 		[NotNull]
 		protected IReadOnlyFeatureClass FeatureClassToFilter { get; set; }
@@ -60,5 +62,15 @@ namespace ProSuite.QA.Tests.Transformers.Filters
 
 			return new GdbFeature(feature.OID, ResultFeatureClass, wrappedAttributeValues);
 		}
+
+		#region Implementation of INamedFilter
+
+		public string Name
+		{
+			get => ResultFeatureClass.Name;
+			set => throw new NotImplementedException();
+		}
+
+		#endregion
 	}
 }

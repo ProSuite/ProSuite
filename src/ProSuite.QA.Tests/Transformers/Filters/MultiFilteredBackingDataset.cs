@@ -1,5 +1,5 @@
-using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
@@ -14,6 +14,9 @@ namespace ProSuite.QA.Tests.Transformers.Filters
 	{
 		[NotNull] private readonly IDictionary<string, FilteredFeatureClass> _inputFiltersByName;
 		[CanBeNull] private readonly string _expression;
+
+		private DataView _filtersView;
+		private IList<INamedFilter> _filters;
 
 		public MultiFilteredBackingDataset(
 			[NotNull] FilteredFeatureClass resultFeatureClass,
@@ -55,6 +58,22 @@ namespace ProSuite.QA.Tests.Transformers.Filters
 
 		#endregion
 
+		private IList<INamedFilter> Filters
+		{
+			get
+			{
+				if (_filters == null)
+				{
+					_filters = _inputFiltersByName.Values
+					                              .Select(fc => fc.BackingData)
+					                              .Cast<INamedFilter>()
+					                              .ToList();
+				}
+
+				return _filters;
+			}
+		}
+
 		#region Overrides of FilteredBackingDataset
 
 		public override bool PassesFilter(IReadOnlyFeature resultFeature)
@@ -68,21 +87,27 @@ namespace ProSuite.QA.Tests.Transformers.Filters
 			}
 			else
 			{
-				// Should be possible similar to ContainerTest.IsFulfilled():
-				// Make table view with columns named by the input filters
-				// Add true/false values for each column
-				// Implement INamedFilter here and de-couple filter functionality from ContainerTest?
-				IDictionary<string, bool> passesByFiltername =
-					GetPassingByFilterName(resultFeature);
+				_filtersView = _filtersView ??
+				               FilterUtils.GetFiltersView(_expression, Filters);
 
-				throw new NotImplementedException(
-					"Multi-filter expressions are not yet implemented");
+				if (FilterUtils.IsFulfilled(_filtersView, Filters,
+				                            filter => IsFiltered(filter, resultFeature)))
+				{
+					return false;
+				}
 			}
 
 			return false;
 		}
 
 		#endregion
+
+		private static bool IsFiltered(INamedFilter filter, IReadOnlyFeature feature)
+		{
+			FilteredBackingDataset filterDataset = (FilteredBackingDataset) filter;
+
+			return ! filterDataset.PassesFilter(feature);
+		}
 
 		private bool PassesAllFilters(IReadOnlyFeature resultFeature)
 		{
@@ -95,23 +120,6 @@ namespace ProSuite.QA.Tests.Transformers.Filters
 			}
 
 			return true;
-		}
-
-		private IDictionary<string, bool> GetPassingByFilterName(IReadOnlyFeature resultFeature)
-		{
-			IDictionary<string, bool> result = new Dictionary<string, bool>();
-
-			foreach (var pair in _inputFiltersByName)
-			{
-				string filterName = pair.Key;
-				FilteredFeatureClass subFilter = pair.Value;
-
-				bool passesFilter = subFilter.PassesFilter(resultFeature);
-
-				result.Add(filterName, passesFilter);
-			}
-
-			return result;
 		}
 	}
 }

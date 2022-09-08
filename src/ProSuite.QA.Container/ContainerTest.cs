@@ -197,7 +197,7 @@ namespace ProSuite.QA.Container
 
 				EnsureIssueFilter();
 
-				if (IsFulfilled(_issueFiltersView, _issueFilters,
+				if (FilterUtils.IsFulfilled(_issueFiltersView, _issueFilters,
 				                filter => filter.Check(args)))
 				{
 					args.Cancel = true;
@@ -208,60 +208,13 @@ namespace ProSuite.QA.Container
 			base.OnQaError(args);
 		}
 
-		private static bool IsFulfilled<T>(DataView filtersView, IEnumerable<T> filters,
-		                                   Func<T, bool> fulfilledFunc)
-			where T : INamedFilter
-		{
-			DataRow filterRow = null;
-			foreach (T filter in filters)
-			{
-				bool fulfilled = fulfilledFunc(filter);
-				if (fulfilled && string.IsNullOrWhiteSpace(filtersView?.RowFilter))
-				{
-					return true;
-				}
-
-				if (filtersView != null)
-				{
-					filterRow = filterRow ?? filtersView.Table.NewRow();
-					filterRow[filter.Name] = fulfilled;
-				}
-			}
-
-			filterRow?.Table.Rows.Add(filterRow);
-			filterRow?.AcceptChanges();
-
-			bool allFulfilled = filtersView?.Count == 1;
-			filtersView?.Table.Clear();
-			filtersView?.Table.AcceptChanges();
-
-			return allFulfilled;
-		}
 
 		private void EnsureIssueFilter()
 		{
 			_issueFiltersView = _issueFiltersView ??
-			                    GetFiltersView(IssueFiltersExpression, _issueFilters);
+			                    FilterUtils.GetFiltersView(IssueFiltersExpression, _issueFilters);
 		}
 
-		private static DataView GetFiltersView<T>(string filtersExpression, IEnumerable<T> filters)
-			where T : INamedFilter
-		{
-			if (string.IsNullOrWhiteSpace(filtersExpression))
-			{
-				return null;
-			}
-
-			DataTable tbl = new DataTable();
-			foreach (T issueFilter in filters)
-			{
-				tbl.Columns.Add(issueFilter.Name, typeof(bool));
-			}
-
-			DataView filtersView = new DataView(tbl);
-			filtersView.RowFilter = filtersExpression;
-			return filtersView;
-		}
 
 		#region ITest Members
 
@@ -942,10 +895,10 @@ namespace ProSuite.QA.Container
 				if (! RowFiltersViewDict.TryGetValue(tableIndex, out DataView view))
 				{
 					RowFiltersExpressionDict.TryGetValue(tableIndex, out string expression);
-					RowFiltersViewDict[tableIndex] = GetFiltersView(expression, filters);
+					RowFiltersViewDict[tableIndex] = FilterUtils.GetFiltersView(expression, filters);
 				}
 
-				cancel = IsFulfilled(view, filters, filter => ! filter.VerifyExecute(row));
+				cancel = FilterUtils.IsFulfilled(view, filters, filter => ! filter.VerifyExecute(row));
 			}
 
 			return cancel;
