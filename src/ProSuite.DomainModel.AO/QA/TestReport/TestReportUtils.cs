@@ -68,12 +68,21 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			builder.IncludeObsolete = false;
 			builder.IncludeAssemblyInfo = true;
 
-			Type instanceType = Assert.NotNull(descriptor.Class).GetInstanceType();
-
-			foreach (int ctorIndex in InstanceFactoryUtils.GetConstructorIndexes(
-				         instanceType, false, false))
+			if (descriptor is TestDescriptor testDescriptor &&
+			    testDescriptor.TestFactoryDescriptor != null)
 			{
-				builder.IncludeTransformer(instanceType, ctorIndex);
+				builder.IncludeTestFactory(
+					testDescriptor.TestFactoryDescriptor.GetInstanceType());
+			}
+			else
+			{
+				Type instanceType = Assert.NotNull(descriptor.Class).GetInstanceType();
+
+				foreach (int ctorIndex in InstanceFactoryUtils.GetConstructorIndexes(
+					         instanceType, false, false))
+				{
+					builder.IncludeTransformer(instanceType, ctorIndex);
+				}
 			}
 
 			builder.WriteReport();
