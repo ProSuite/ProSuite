@@ -35,7 +35,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 		[Test]
 		public void CanIntersect()
 		{
-			IFeatureWorkspace ws = TestWorkspaceUtils.CreateInMemoryWorkspace("TrIntersect");
+			IFeatureWorkspace ws = TestWorkspaceUtils.CreateInMemoryWorkspace("TrSpatialJoin");
 
 			IFeatureClass lineFc =
 				CreateFeatureClass(ws, "lineFc", esriGeometryType.esriGeometryPolyline);
@@ -93,7 +93,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 		[Test]
 		public void CanOuterJoin()
 		{
-			IFeatureWorkspace ws = TestWorkspaceUtils.CreateInMemoryWorkspace("TrIntersect");
+			IFeatureWorkspace ws = TestWorkspaceUtils.CreateInMemoryWorkspace("TrSpatialJoin");
 
 			IFeatureClass lineFc =
 				CreateFeatureClass(ws, "lineFc", esriGeometryType.esriGeometryPolyline);
@@ -194,7 +194,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 		[Test]
 		public void CanAccessAttributes()
 		{
-			IFeatureWorkspace ws = TestWorkspaceUtils.CreateInMemoryWorkspace("TrIntersect");
+			IFeatureWorkspace ws = TestWorkspaceUtils.CreateInMemoryWorkspace("TrSpatialJoin");
 
 			IFeatureClass lineFc =
 				CreateFeatureClass(
@@ -239,7 +239,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			tr.T0Attributes = new List<string>
 			                  {
 				                  "MIN(OBJECTID) AS t0Oid",
-				                  "Nr AS liNR"
+				                  "Nr AS liNR",
 			                  };
 			tr.T1Attributes = new List<string>
 			                  {
@@ -274,6 +274,83 @@ namespace ProSuite.QA.Tests.Test.Transformer
 					"filter",
 					new List<IIssueFilter>
 					{new IfInvolvedRows("liNR + Nr = 20") {Name = "filter"}});
+				var runner = new QaContainerTestRunner(1000, test);
+				runner.Execute();
+				Assert.AreEqual(2, runner.Errors.Count);
+			}
+		}
+
+		[Test]
+		public void CanDeDuplicateAutoAddedAttributes()
+		{
+			IFeatureWorkspace ws = TestWorkspaceUtils.CreateInMemoryWorkspace("TrSpatialJoin");
+
+			IFeatureClass lineFc =
+				CreateFeatureClass(
+					ws, "lineFc", esriGeometryType.esriGeometryPolyline,
+					new[] {FieldUtils.CreateIntegerField("Nr")});
+			IFeatureClass polyFc =
+				CreateFeatureClass(
+					ws, "polyFc", esriGeometryType.esriGeometryPolygon,
+					new[] {FieldUtils.CreateIntegerField("Nr")});
+			{
+				IFeature f = lineFc.CreateFeature();
+				f.Value[1] = 12;
+				f.Shape = CurveConstruction.StartLine(0, 0).LineTo(69.5, 69.5).Curve;
+				f.Store();
+			}
+			{
+				IFeature f = lineFc.CreateFeature();
+				f.Value[1] = 14;
+				f.Shape = CurveConstruction.StartLine(60, 40).LineTo(60, 80).Curve;
+				f.Store();
+			}
+			{
+				IFeature f = polyFc.CreateFeature();
+				f.Value[1] = 8;
+				f.Shape = CurveConstruction.StartPoly(50, 50).LineTo(50, 70).LineTo(70, 70)
+				                           .LineTo(70, 50).ClosePolygon();
+				f.Store();
+			}
+			{
+				IFeature f = polyFc.CreateFeature();
+				f.Value[1] = 6;
+				f.Shape = CurveConstruction.StartPoly(50, 50).LineTo(50, 70).LineTo(70, 70)
+				                           .LineTo(70, 50).ClosePolygon();
+				f.Store();
+			}
+
+			TrSpatialJoin tr = new TrSpatialJoin(
+				                   ReadOnlyTableFactory.Create(polyFc),
+				                   ReadOnlyTableFactory.Create(lineFc))
+			                   {Grouped = false};
+
+			// NOTE: Cross-Field Calculations are only supported on t1 and only for
+			//       pre-existing fields!
+			// -> Consider separate transformer for more flexibility: trCalculateFields
+			tr.T1CalcAttributes = new List<string>
+			                      {
+				                      "OBJECTID + NR as crossFieldSum"
+			                      };
+
+			TransformedFeatureClass transformedClass = tr.GetTransformed();
+			WriteFieldNames(transformedClass);
+			Assert.True(transformedClass.Fields.FindField("polyFc_Nr") > 0);
+			Assert.True(transformedClass.Fields.FindField("lineFc_Nr") > 0);
+
+			{
+				QaConstraint test = new QaConstraint(transformedClass, "polyFc_NR > 10");
+				var runner = new QaContainerTestRunner(1000, test);
+				runner.Execute();
+				Assert.AreEqual(4, runner.Errors.Count);
+			}
+			{
+				QaConstraint test = new QaConstraint(transformedClass, "polyFc_NR > 10");
+				IFilterEditTest ft = test;
+				ft.SetIssueFilters(
+					"filter",
+					new List<IIssueFilter>
+					{new IfInvolvedRows("lineFc_NR + polyFc_Nr = 20") {Name = "filter"}});
 				var runner = new QaContainerTestRunner(1000, test);
 				runner.Execute();
 				Assert.AreEqual(2, runner.Errors.Count);

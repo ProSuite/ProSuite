@@ -207,7 +207,11 @@ namespace ProSuite.QA.Tests.Transformers
 			}
 
 			leftFields.AddAllFields(resultTable);
+
+			rightFields.PreviouslyAddedFields.Add(leftFields);
 			rightFields.AddAllFields(resultTable);
+
+			bridgeTableFields?.PreviouslyAddedFields.Add(rightFields);
 			bridgeTableFields?.AddAllFields(resultTable);
 		}
 

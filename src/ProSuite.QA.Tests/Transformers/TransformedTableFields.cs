@@ -30,7 +30,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		private readonly IReadOnlyTable _sourceTable;
+		public IReadOnlyTable SourceTable { get; }
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="TransformedTableFields"/> class.
@@ -38,7 +38,7 @@ namespace ProSuite.QA.Tests.Transformers
 		/// <param name="sourceTable"></param>
 		public TransformedTableFields([NotNull] IReadOnlyTable sourceTable)
 		{
-			_sourceTable = sourceTable;
+			SourceTable = sourceTable;
 		}
 
 		/// <summary>
@@ -75,6 +75,14 @@ namespace ProSuite.QA.Tests.Transformers
 		[CanBeNull]
 		private TableView TableView { get; set; }
 
+		public IDictionary<int, string> AddedFieldsSourceTable { get; } =
+			new Dictionary<int, string>();
+
+		public HashSet<int> AddedFields { get; } = new HashSet<int>();
+
+		public IList<TransformedTableFields> PreviouslyAddedFields { get; } =
+			new List<TransformedTableFields>();
+
 		/// <summary>
 		/// Adds all fields from the source table to the specified output table in the exact same
 		/// order. If no fields have been previously added, the field indexes are identical and the
@@ -90,17 +98,19 @@ namespace ProSuite.QA.Tests.Transformers
 		public void AddAllFields([NotNull] GdbTable toOutputClass,
 		                         bool skipIfAlreadyExist = false)
 		{
-			IFields sourceFields = _sourceTable.Fields;
+			IFields sourceFields = SourceTable.Fields;
 			for (int sourceIdx = 0; sourceIdx < sourceFields.FieldCount; sourceIdx++)
 			{
-				IField sourceField = _sourceTable.Fields.Field[sourceIdx];
+				IField sourceField = SourceTable.Fields.Field[sourceIdx];
 
 				string targetName = NonUserDefinedFieldPrefix != null
 					                    ? NonUserDefinedFieldPrefix + sourceField.Name
 					                    : sourceField.Name;
 
-				bool alreadyExists = toOutputClass.FindField(targetName) >= 0;
+				int conflictingFieldIndex = toOutputClass.FindField(targetName);
+				bool alreadyExists = conflictingFieldIndex >= 0;
 
+				string newFieldName = targetName;
 				if (skipIfAlreadyExist)
 				{
 					if (alreadyExists)
@@ -111,10 +121,17 @@ namespace ProSuite.QA.Tests.Transformers
 				else if (alreadyExists)
 				{
 					// Prefix with tableName_
-					targetName = MakeUnique(targetName, toOutputClass);
+					newFieldName = MakeUnique(targetName, toOutputClass);
 				}
 
-				CopyField(sourceIdx, toOutputClass, sourceFields, targetName);
+				int targetIndex = CopyField(sourceIdx, toOutputClass, sourceFields, newFieldName);
+
+				if (alreadyExists && targetIndex >= 0)
+				{
+					// The field was actually added but there is an existing field that should
+					// also  be qualified
+					PrefixConflictingField(toOutputClass, conflictingFieldIndex, targetName);
+				}
 			}
 
 			if (! ExcludeBaseRowsField)
@@ -147,9 +164,9 @@ namespace ProSuite.QA.Tests.Transformers
 					continue;
 				}
 
-				string unqualifiedInputField = GetUnqualifiedFieldName(_sourceTable, inputField);
+				string unqualifiedInputField = GetUnqualifiedFieldName(SourceTable, inputField);
 
-				int sourceIndex = _sourceTable.FindField(unqualifiedInputField);
+				int sourceIndex = SourceTable.FindField(unqualifiedInputField);
 
 				if (resultField.Equals(inputField, StringComparison.InvariantCultureIgnoreCase))
 				{
@@ -162,7 +179,7 @@ namespace ProSuite.QA.Tests.Transformers
 				//		$"Error adding fields to {toOutputClass.Name}: Result field {resultField} should be unqualified name");
 				//}
 
-				CopyField(sourceIndex, toOutputClass, _sourceTable.Fields, resultField);
+				CopyField(sourceIndex, toOutputClass, SourceTable.Fields, resultField);
 			}
 
 			if (expressionAttributes.Count > 0)
@@ -183,17 +200,17 @@ namespace ProSuite.QA.Tests.Transformers
 		                        string name = null,
 		                        bool omitFromFieldIndexMapping = false)
 		{
-			if (! _sourceTable.HasOID)
+			if (! SourceTable.HasOID)
 			{
 				throw new InvalidOperationException(
-					$"Source table {_sourceTable.Name} has no OID field that can be used in target");
+					$"Source table {SourceTable.Name} has no OID field that can be used in target");
 			}
 
-			int sourceIndex = _sourceTable.FindField(_sourceTable.OIDFieldName);
+			int sourceIndex = SourceTable.FindField(SourceTable.OIDFieldName);
 
 			Assert.False(sourceIndex < 0, "No OID field found in source table");
 
-			CopyField(sourceIndex, toOutputClass, _sourceTable.Fields, name,
+			CopyField(sourceIndex, toOutputClass, SourceTable.Fields, name,
 			          omitFromFieldIndexMapping);
 		}
 
@@ -206,7 +223,7 @@ namespace ProSuite.QA.Tests.Transformers
 		                          [CanBeNull] string fieldName = "SHAPE",
 		                          bool omitFromFieldIndexMapping = false)
 		{
-			var sourceFeatureClass = _sourceTable as IReadOnlyFeatureClass;
+			var sourceFeatureClass = SourceTable as IReadOnlyFeatureClass;
 
 			Assert.NotNull(sourceFeatureClass, "Source is no feature class");
 
@@ -218,7 +235,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 			int sourceIndex = sourceFeatureClass.FindField(sourceFeatureClass.ShapeFieldName);
 
-			int targetIndex = CopyField(sourceIndex, toOutputClass, _sourceTable.Fields, fieldName,
+			int targetIndex = CopyField(sourceIndex, toOutputClass, SourceTable.Fields, fieldName,
 			                            omitFromFieldIndexMapping);
 
 			if (targetIndex >= 0)
@@ -267,7 +284,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 		public void ExcludeAllShapeFields()
 		{
-			if (_sourceTable is IReadOnlyFeatureClass featureClass)
+			if (SourceTable is IReadOnlyFeatureClass featureClass)
 			{
 				ExcludedSourceFields.Add(featureClass.ShapeFieldName);
 
@@ -317,7 +334,7 @@ namespace ProSuite.QA.Tests.Transformers
 				}
 				else
 				{
-					if (! ValidateField(_sourceTable, sourceField, out message))
+					if (! ValidateField(SourceTable, sourceField, out message))
 					{
 						return false;
 					}
@@ -403,7 +420,7 @@ namespace ProSuite.QA.Tests.Transformers
 			bool any = false;
 			foreach (string candidate in expressionTokens)
 			{
-				if (ValidateField(_sourceTable, candidate, out message))
+				if (ValidateField(SourceTable, candidate, out message))
 				{
 					any = true;
 				}
@@ -471,11 +488,13 @@ namespace ProSuite.QA.Tests.Transformers
 
 			string targetName = resultFieldName ?? field.Name;
 
+			// Always clone the field, even if it is not re-named now! It could be re-named
+			// somewhere down the road:
+			field = (IField) ((IClone) field).Clone();
+
 			if (field.Name != targetName)
 			{
-				IField clone = (IField) ((IClone) field).Clone();
-				((IFieldEdit) clone).Name_2 = targetName;
-				field = clone;
+				((IFieldEdit) field).Name_2 = targetName;
 			}
 
 			return field;
@@ -506,6 +525,7 @@ namespace ProSuite.QA.Tests.Transformers
 			if (! omitFromFieldIndexMapping)
 			{
 				FieldIndexMapping.Add(targetIdx, sourceIdx);
+				AddedFields.Add(targetIdx);
 			}
 
 			return targetIdx;
@@ -593,12 +613,12 @@ namespace ProSuite.QA.Tests.Transformers
 			return fieldDisplayList;
 		}
 
-		private string PrefixDuplicate(string targetName)
+		private static string PrefixDuplicate(string sourceTableName, string targetName)
 		{
 			// TODO: Consider remembering the list of duplicates to also pre-fix the other table's fields
 
 			// Un-qualify the table name
-			ModelElementNameUtils.TryUnqualifyName(_sourceTable.Name,
+			ModelElementNameUtils.TryUnqualifyName(sourceTableName,
 			                                       out string unqualifiedTableName);
 
 			return string.Format(_tablePrefixFormat, unqualifiedTableName, targetName);
@@ -609,7 +629,7 @@ namespace ProSuite.QA.Tests.Transformers
 		{
 			// TODO: Consider remembering the list of duplicates to also pre-fix the other table's fields
 
-			string result = PrefixDuplicate(targetName);
+			string result = PrefixDuplicate(SourceTable.Name, targetName);
 
 			if (targetTable.FindField(result) < 0)
 			{
@@ -634,6 +654,52 @@ namespace ProSuite.QA.Tests.Transformers
 			}
 
 			return result;
+		}
+
+		private void PrefixConflictingField(GdbTable toOutputClass, int conflictingFieldIndex,
+		                                    string targetName)
+		{
+			IField existingField = toOutputClass.Fields.Field[conflictingFieldIndex];
+
+			if (targetName == toOutputClass.OIDFieldName)
+			{
+				return;
+			}
+
+			if (targetName == toOutputClass.ShapeFieldName)
+			{
+				return;
+			}
+
+			// Make sure there is no reference by name:
+			if (CalculatedFields != null &&
+			    CalculatedFields.Any(c => c.Name == existingField.Name))
+			{
+				return;
+			}
+
+			string otherSourceTable = null;
+			foreach (TransformedTableFields otherFields in PreviouslyAddedFields)
+			{
+				if (otherFields.AddedFields.Contains(conflictingFieldIndex))
+				{
+					otherSourceTable = otherFields.SourceTable.Name;
+				}
+			}
+
+			if (otherSourceTable != null)
+			{
+				string newName = PrefixDuplicate(otherSourceTable, targetName);
+
+				if (toOutputClass.FindField(newName) >= 0)
+				{
+					// Rather keep it than make the field names in-transparent to the user:
+					return;
+				}
+
+				// Rename the existing fields:
+				((IFieldEdit) existingField).Name_2 = newName;
+			}
 		}
 
 		#region Calculated field set up originally from TrSpatialJoin
@@ -663,7 +729,7 @@ namespace ProSuite.QA.Tests.Transformers
 			}
 
 			TableView =
-				TableViewFactory.Create(_sourceTable, expressionDict, aliasFieldDict,
+				TableViewFactory.Create(SourceTable, expressionDict, aliasFieldDict,
 				                        AreResultRowsGrouped, calcExpressionDict);
 
 			foreach (string field in expressionDict.Keys)

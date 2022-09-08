@@ -112,6 +112,7 @@ namespace ProSuite.QA.Tests.Transformers
 			}
 			else if (! Grouped)
 			{
+				t1Fields.PreviouslyAddedFields.Add(t0Fields);
 				t1Fields.AddAllFields(transformedFc);
 			}
 
