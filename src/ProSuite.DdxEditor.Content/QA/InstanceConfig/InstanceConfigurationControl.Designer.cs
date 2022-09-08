@@ -66,18 +66,18 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			this._tabPageParameters = new System.Windows.Forms.TabPage();
 			this._instanceConfigTableViewControlPanel = new System.Windows.Forms.Panel();
 			this._splitContainer = new ProSuite.Commons.UI.WinForms.Controls.SplitContainerEx();
-			this._splitContainerHeader = new ProSuite.Commons.UI.WinForms.Controls.SplitContainerEx();
+			this._panelParamsDesc = new System.Windows.Forms.Panel();
 			this._textBoxDescGrid = new System.Windows.Forms.TextBox();
 			this.labelDescGrid = new System.Windows.Forms.Label();
 			this._panelParametersEdit = new System.Windows.Forms.Panel();
 			this._panelParametersTop = new System.Windows.Forms.Panel();
 			this._linkDocumentation = new System.Windows.Forms.LinkLabel();
+			this._splitContainerHeader = new ProSuite.Commons.UI.WinForms.Controls.SplitContainerEx();
 			this._splitContainerProperties = new ProSuite.Commons.UI.WinForms.Controls.SplitContainerEx();
 			this._textBoxDescProps = new System.Windows.Forms.TextBox();
 			this._panelDescriptionLabel = new System.Windows.Forms.Panel();
 			this._labelParameterDescription = new System.Windows.Forms.Label();
 			this._tabControlDetails = new System.Windows.Forms.TabControl();
-			this._panelParamsDesc = new System.Windows.Forms.Panel();
 			((System.ComponentModel.ISupportInitialize)(this._errorProvider)).BeginInit();
 			this._tabPageNotes.SuspendLayout();
 			this._tabPageReferencing.SuspendLayout();
@@ -89,11 +89,10 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			this._splitContainer.Panel1.SuspendLayout();
 			this._splitContainer.Panel2.SuspendLayout();
 			this._splitContainer.SuspendLayout();
-			((System.ComponentModel.ISupportInitialize)(this._splitContainerHeader)).BeginInit();
-			this._splitContainerHeader.Panel1.SuspendLayout();
-			this._splitContainerHeader.Panel2.SuspendLayout();
-			this._splitContainerHeader.SuspendLayout();
+			this._panelParamsDesc.SuspendLayout();
 			this._panelParametersTop.SuspendLayout();
+			((System.ComponentModel.ISupportInitialize)(this._splitContainerHeader)).BeginInit();
+			this._splitContainerHeader.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this._splitContainerProperties)).BeginInit();
 			this._splitContainerProperties.Panel1.SuspendLayout();
 			this._splitContainerProperties.SuspendLayout();
@@ -131,7 +130,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			this._textBoxDescription.Multiline = true;
 			this._textBoxDescription.Name = "_textBoxDescription";
 			this._textBoxDescription.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-			this._textBoxDescription.Size = new System.Drawing.Size(586, 56);
+			this._textBoxDescription.Size = new System.Drawing.Size(592, 56);
 			this._textBoxDescription.TabIndex = 2;
 			// 
 			// _labelDescription
@@ -171,7 +170,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			this._textBoxQualitySpecifications.Margin = new System.Windows.Forms.Padding(6, 5, 6, 5);
 			this._textBoxQualitySpecifications.Name = "_textBoxQualitySpecifications";
 			this._textBoxQualitySpecifications.ReadOnly = true;
-			this._textBoxQualitySpecifications.Size = new System.Drawing.Size(585, 23);
+			this._textBoxQualitySpecifications.Size = new System.Drawing.Size(592, 23);
 			this._textBoxQualitySpecifications.TabIndex = 8;
 			this._textBoxQualitySpecifications.TabStop = false;
 			// 
@@ -213,7 +212,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			this._buttonOpenUrl.FlatAppearance.BorderSize = 0;
 			this._buttonOpenUrl.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
 			this._buttonOpenUrl.Image = global::ProSuite.DdxEditor.Content.Properties.Resources.OpenUrl;
-			this._buttonOpenUrl.Location = new System.Drawing.Point(666, 106);
+			this._buttonOpenUrl.Location = new System.Drawing.Point(671, 106);
 			this._buttonOpenUrl.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
 			this._buttonOpenUrl.Name = "_buttonOpenUrl";
 			this._buttonOpenUrl.Size = new System.Drawing.Size(30, 30);
@@ -228,7 +227,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			this._textBoxCategory.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
 			this._textBoxCategory.Name = "_textBoxCategory";
 			this._textBoxCategory.ReadOnly = true;
-			this._textBoxCategory.Size = new System.Drawing.Size(228, 23);
+			this._textBoxCategory.Size = new System.Drawing.Size(234, 23);
 			this._textBoxCategory.TabIndex = 1;
 			this._textBoxCategory.TabStop = false;
 			// 
@@ -266,7 +265,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			this._objectReferenceControlInstanceDescriptor.Margin = new System.Windows.Forms.Padding(6, 5, 6, 5);
 			this._objectReferenceControlInstanceDescriptor.Name = "_objectReferenceControlInstanceDescriptor";
 			this._objectReferenceControlInstanceDescriptor.ReadOnly = false;
-			this._objectReferenceControlInstanceDescriptor.Size = new System.Drawing.Size(585, 23);
+			this._objectReferenceControlInstanceDescriptor.Size = new System.Drawing.Size(592, 23);
 			this._objectReferenceControlInstanceDescriptor.TabIndex = 10;
 			// 
 			// dataGridViewTextBoxColumn1
@@ -486,7 +485,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			this._panelParamsDesc.Location = new System.Drawing.Point(5, 5);
 			this._panelParamsDesc.Margin = new System.Windows.Forms.Padding(6, 5, 6, 5);
 			this._panelParamsDesc.Name = "_panelParamsDesc";
-			this._panelParamsDesc.Size = new System.Drawing.Size(200, 100);
+			this._panelParamsDesc.Size = new System.Drawing.Size(671, 30);
 			this._panelParamsDesc.TabIndex = 27;
 			// 
 			// _textBoxDescGrid
@@ -498,8 +497,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			this._textBoxDescGrid.Multiline = true;
 			this._textBoxDescGrid.Name = "_textBoxDescGrid";
 			this._textBoxDescGrid.ReadOnly = true;
-			this._textBoxDescGrid.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-			this._textBoxDescGrid.Size = new System.Drawing.Size(571, 50);
+			this._textBoxDescGrid.Size = new System.Drawing.Size(596, 30);
 			this._textBoxDescGrid.TabIndex = 21;
 			// 
 			// labelDescGrid
@@ -508,7 +506,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			this.labelDescGrid.Location = new System.Drawing.Point(0, 0);
 			this.labelDescGrid.Margin = new System.Windows.Forms.Padding(6, 5, 6, 0);
 			this.labelDescGrid.Name = "labelDescGrid";
-			this.labelDescGrid.Size = new System.Drawing.Size(75, 50);
+			this.labelDescGrid.Size = new System.Drawing.Size(75, 30);
 			this.labelDescGrid.TabIndex = 22;
 			this.labelDescGrid.Text = "Description:";
 			this.labelDescGrid.TextAlign = System.Drawing.ContentAlignment.TopRight;
@@ -518,6 +516,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			this._panelParametersEdit.BackColor = System.Drawing.Color.Transparent;
 			this._panelParametersEdit.Dock = System.Windows.Forms.DockStyle.Fill;
 			this._panelParametersEdit.Location = new System.Drawing.Point(0, 27);
+			this._panelParametersEdit.Margin = new System.Windows.Forms.Padding(0);
 			this._panelParametersEdit.Name = "_panelParametersEdit";
 			this._panelParametersEdit.Size = new System.Drawing.Size(681, 238);
 			this._panelParametersEdit.TabIndex = 1;
@@ -544,6 +543,13 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			this._linkDocumentation.Text = "Show Parameter Documentation";
 			this._linkDocumentation.TextAlign = System.Drawing.ContentAlignment.TopRight;
 			this._linkDocumentation.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this._linkDocumentation_LinkClicked);
+			// 
+			// _splitContainerHeader
+			// 
+			this._splitContainerHeader.Location = new System.Drawing.Point(0, 0);
+			this._splitContainerHeader.Name = "_splitContainerHeader";
+			this._splitContainerHeader.Size = new System.Drawing.Size(150, 100);
+			this._splitContainerHeader.TabIndex = 0;
 			// 
 			// _splitContainerProperties
 			// 
@@ -653,13 +659,12 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			this._splitContainer.Panel2.ResumeLayout(false);
 			((System.ComponentModel.ISupportInitialize)(this._splitContainer)).EndInit();
 			this._splitContainer.ResumeLayout(false);
-			this._splitContainerHeader.Panel1.ResumeLayout(false);
-			this._splitContainerHeader.Panel1.PerformLayout();
-			this._splitContainerHeader.Panel2.ResumeLayout(false);
-			((System.ComponentModel.ISupportInitialize)(this._splitContainerHeader)).EndInit();
-			this._splitContainerHeader.ResumeLayout(false);
+			this._panelParamsDesc.ResumeLayout(false);
+			this._panelParamsDesc.PerformLayout();
 			this._panelParametersTop.ResumeLayout(false);
 			this._panelParametersTop.PerformLayout();
+			((System.ComponentModel.ISupportInitialize)(this._splitContainerHeader)).EndInit();
+			this._splitContainerHeader.ResumeLayout(false);
 			this._splitContainerProperties.Panel1.ResumeLayout(false);
 			this._splitContainerProperties.Panel1.PerformLayout();
 			((System.ComponentModel.ISupportInitialize)(this._splitContainerProperties)).EndInit();

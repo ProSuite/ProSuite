@@ -132,7 +132,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 			// _labelTestClass
 			// 
 			this._labelTestClass.AutoSize = true;
-			this._labelTestClass.Location = new System.Drawing.Point(58, 29);
+			this._labelTestClass.Location = new System.Drawing.Point(58, 24);
 			this._labelTestClass.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
 			this._labelTestClass.Name = "_labelTestClass";
 			this._labelTestClass.Size = new System.Drawing.Size(37, 15);
@@ -143,7 +143,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 			// _labelConstructorId
 			// 
 			this._labelConstructorId.AutoSize = true;
-			this._labelConstructorId.Location = new System.Drawing.Point(24, 59);
+			this._labelConstructorId.Location = new System.Drawing.Point(24, 54);
 			this._labelConstructorId.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
 			this._labelConstructorId.Name = "_labelConstructorId";
 			this._labelConstructorId.Size = new System.Drawing.Size(73, 15);
@@ -173,7 +173,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 			this._textBoxTestDescription.Name = "_textBoxTestDescription";
 			this._textBoxTestDescription.ReadOnly = true;
 			this._textBoxTestDescription.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-			this._textBoxTestDescription.Size = new System.Drawing.Size(622, 87);
+			this._textBoxTestDescription.Size = new System.Drawing.Size(630, 87);
 			this._textBoxTestDescription.TabIndex = 11;
 			this._textBoxTestDescription.TabStop = false;
 			// 
@@ -198,7 +198,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 			this._objectReferenceControlTestClass.DisplayMember = null;
 			this._objectReferenceControlTestClass.FindObjectDelegate = null;
 			this._objectReferenceControlTestClass.FormatTextDelegate = null;
-			this._objectReferenceControlTestClass.Location = new System.Drawing.Point(104, 26);
+			this._objectReferenceControlTestClass.Location = new System.Drawing.Point(104, 21);
 			this._objectReferenceControlTestClass.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
 			this._objectReferenceControlTestClass.Name = "_objectReferenceControlTestClass";
 			this._objectReferenceControlTestClass.ReadOnly = false;
@@ -242,7 +242,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 			this._dataGridViewParameter.RowHeadersVisible = false;
 			this._dataGridViewParameter.RowHeadersWidth = 62;
 			this._dataGridViewParameter.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-			this._dataGridViewParameter.Size = new System.Drawing.Size(622, 74);
+			this._dataGridViewParameter.Size = new System.Drawing.Size(630, 73);
 			this._dataGridViewParameter.TabIndex = 13;
 			// 
 			// _groupBoxClassOrFactory
@@ -254,11 +254,11 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 			this._groupBoxClassOrFactory.Controls.Add(this._objectReferenceControlTestClass);
 			this._groupBoxClassOrFactory.Controls.Add(this._labelTestClass);
 			this._groupBoxClassOrFactory.Controls.Add(this._labelConstructorId);
-			this._groupBoxClassOrFactory.Location = new System.Drawing.Point(0, 4);
+			this._groupBoxClassOrFactory.Location = new System.Drawing.Point(0, -1);
 			this._groupBoxClassOrFactory.Margin = new System.Windows.Forms.Padding(6, 7, 6, 7);
 			this._groupBoxClassOrFactory.Name = "_groupBoxClassOrFactory";
 			this._groupBoxClassOrFactory.Padding = new System.Windows.Forms.Padding(6, 7, 6, 7);
-			this._groupBoxClassOrFactory.Size = new System.Drawing.Size(734, 80);
+			this._groupBoxClassOrFactory.Size = new System.Drawing.Size(734, 89);
 			this._groupBoxClassOrFactory.TabIndex = 8;
 			this._groupBoxClassOrFactory.TabStop = false;
 			this._groupBoxClassOrFactory.Text = "Specify a Class and Constructor Index";
@@ -271,7 +271,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 			this._tabControl.Location = new System.Drawing.Point(0, 103);
 			this._tabControl.Name = "_tabControl";
 			this._tabControl.SelectedIndex = 0;
-			this._tabControl.Size = new System.Drawing.Size(760, 352);
+			this._tabControl.Size = new System.Drawing.Size(760, 376);
 			this._tabControl.TabIndex = 5;
 			this._tabControl.SelectedIndexChanged += new System.EventHandler(this._tabControl_SelectedIndexChanged);
 			// 
@@ -283,7 +283,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 			this._tabPageImplementation.Margin = new System.Windows.Forms.Padding(6, 7, 6, 7);
 			this._tabPageImplementation.Name = "_tabPageImplementation";
 			this._tabPageImplementation.Padding = new System.Windows.Forms.Padding(6, 7, 6, 7);
-			this._tabPageImplementation.Size = new System.Drawing.Size(752, 324);
+			this._tabPageImplementation.Size = new System.Drawing.Size(752, 348);
 			this._tabPageImplementation.TabIndex = 0;
 			this._tabPageImplementation.Text = "Implementation";
 			this._tabPageImplementation.UseVisualStyleBackColor = true;
@@ -312,7 +312,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 			this._splitContainerDescription.Panel2.Controls.Add(this._dataGridViewParameter);
 			this._splitContainerDescription.Panel2.Controls.Add(this._labelParameter);
 			this._splitContainerDescription.Panel2MinSize = 50;
-			this._splitContainerDescription.Size = new System.Drawing.Size(740, 222);
+			this._splitContainerDescription.Size = new System.Drawing.Size(740, 246);
 			this._splitContainerDescription.SplitterDistance = 130;
 			this._splitContainerDescription.SplitterWidth = 5;
 			this._splitContainerDescription.TabIndex = 14;
@@ -326,7 +326,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 			this._textBoxCategories.Margin = new System.Windows.Forms.Padding(6, 7, 6, 7);
 			this._textBoxCategories.Name = "_textBoxCategories";
 			this._textBoxCategories.ReadOnly = true;
-			this._textBoxCategories.Size = new System.Drawing.Size(622, 23);
+			this._textBoxCategories.Size = new System.Drawing.Size(630, 23);
 			this._textBoxCategories.TabIndex = 11;
 			this._textBoxCategories.TabStop = false;
 			// 
