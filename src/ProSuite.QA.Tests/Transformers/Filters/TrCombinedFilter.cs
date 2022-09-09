@@ -32,7 +32,7 @@ namespace ProSuite.QA.Tests.Transformers.Filters
 			_featureClassToFilter = featureClassToFilter;
 			_inputFilters = inputFilters;
 
-			// TODO: Is can be null allowed ? Make optional parameter? Extra overload?
+			// NOTE: Even constructor parameters can be null!
 			_expression = expression;
 
 			bool valid = ValidateParameters(featureClassToFilter, inputFilters, expression,
@@ -82,6 +82,7 @@ namespace ProSuite.QA.Tests.Transformers.Filters
 		                                       out string message)
 		{
 			message = null;
+
 			foreach (IReadOnlyFeatureClass inputClass in inputFilters)
 			{
 				FilteredFeatureClass inputFilteredClass = inputClass as FilteredFeatureClass;
@@ -102,28 +103,34 @@ namespace ProSuite.QA.Tests.Transformers.Filters
 				}
 			}
 
-			if (expression != null)
-			{
-				return ValidateExpression(inputFilters, expression, out message);
-			}
-
-			return true;
+			return expression == null || ValidateExpression(inputFilters, expression, out message);
 		}
 
 		private static bool ValidateExpression(IList<IReadOnlyFeatureClass> inputFilters,
 		                                       string expression, out string message)
 		{
-			// TODO: Implement expression-based filtering
+			message = null;
 
-			if (! string.IsNullOrEmpty(expression))
+			if (string.IsNullOrEmpty(expression))
 			{
-				message =
-					"Expressions are not yet supported. Currently all input filter conditions " +
-					"are AND-combined, i.e. a row must pass all filters";
-				return false;
+				return true;
 			}
 
-			message = null;
+			List<string> validFilterNames =
+				inputFilters.Select(filterClass => filterClass.Name).ToList();
+
+			foreach (string expressionToken in FilterUtils.GetFilterNames(expression))
+			{
+				if (! validFilterNames.Any(
+					    n => expressionToken.Equals(
+						    n, StringComparison.InvariantCultureIgnoreCase)))
+				{
+					message = $"Filter-Transformer '{expressionToken}' defined in filter " +
+					          "expression is not in the list of input filters";
+					return false;
+				}
+			}
+
 			return true;
 		}
 	}

@@ -70,9 +70,11 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to An expression that allows combining filters with AND or OR. Example: 
+        ///   Looks up a localized string similar to An expression that allows combining input filters with AND or OR. An input filter which is passed by a feature evaluates to &apos;true&apos;, a filter that excludes a feature evaluates to &apos;false&apos;. 
+        ///The input filters are referenced by the transformer configuration name. If not specified, all input filters are combined with AND, i.e. the feature must pass all filters to be in the result.
+        ///Example to get all islands in Bavaria: 
         ///(islands_in_lakes OR islands_in_rivers) AND islands_in_bavaria
-        ///The input filters are referenced by the transformer configuration name. If not specified, all input filters are combined with AND, i.e. the feature passes all filters..
+        ///islands_in_lakes uses the  [rest of string was truncated]&quot;;.
         /// </summary>
         public static string TrCombinedFilter_expression {
             get {
