@@ -351,13 +351,17 @@ namespace ProSuite.DomainModel.AO.DataModel
 				                                 ! HarvestQualifiedElementNames,
 				                                 datasetFilter);
 
-			return Harvest(datasetListBuilder, attributeConfigurator);
+			IGeometryTypeConfigurator geometryTypeConfigurator =
+				new GeometryTypeConfigurator(datasetListBuilderFactory.GeometryTypes);
+
+			return Harvest(datasetListBuilder, attributeConfigurator, geometryTypeConfigurator);
 		}
 
 		[NotNull]
 		public IEnumerable<ObjectAttributeType> Harvest(
 			[NotNull] IDatasetListBuilder datasetListBuilder,
-			[NotNull] IEnumerable<AttributeType> existingAttributeTypes)
+			[NotNull] IEnumerable<AttributeType> existingAttributeTypes,
+			[NotNull] IGeometryTypeConfigurator geometryTypeConfigurator)
 		{
 			Assert.ArgumentNotNull(datasetListBuilder, nameof(datasetListBuilder));
 			Assert.ArgumentNotNull(existingAttributeTypes, nameof(existingAttributeTypes));
@@ -377,7 +381,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 					attributeConfiguratorFactory.Create(existingAttributeTypes);
 			}
 
-			return Harvest(datasetListBuilder, attributeConfigurator);
+			return Harvest(datasetListBuilder, attributeConfigurator, geometryTypeConfigurator);
 		}
 
 		// TODO temporary solution to allow setting current catalog; replace with full solution for
@@ -389,21 +393,24 @@ namespace ProSuite.DomainModel.AO.DataModel
 		[NotNull]
 		public IEnumerable<ObjectAttributeType> Harvest(
 			[NotNull] IDatasetListBuilder datasetListBuilder,
-			[CanBeNull] IAttributeConfigurator attributeConfigurator)
+			[CanBeNull] IAttributeConfigurator attributeConfigurator,
+			[NotNull] IGeometryTypeConfigurator geometryTypeConfigurator)
 		{
 			Assert.ArgumentNotNull(datasetListBuilder, nameof(datasetListBuilder));
 
 			IWorkspaceContext workspaceContext = MasterDatabaseWorkspaceContext;
 			Assert.NotNull(workspaceContext, "The master database is not accessible");
 
-			return Harvest(workspaceContext, datasetListBuilder, attributeConfigurator);
+			return Harvest(workspaceContext, datasetListBuilder, attributeConfigurator,
+			               geometryTypeConfigurator);
 		}
 
 		[NotNull]
 		private IEnumerable<ObjectAttributeType> Harvest(
 			[NotNull] IWorkspaceContext workspaceContext,
 			[NotNull] IDatasetListBuilder datasetListBuilder,
-			[CanBeNull] IAttributeConfigurator attributeConfigurator)
+			[CanBeNull] IAttributeConfigurator attributeConfigurator,
+			[NotNull] IGeometryTypeConfigurator geometryTypeConfigurator)
 		{
 			OnHarvesting();
 
@@ -419,7 +426,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 				{
 					HarvestDatasets(workspaceContext,
 					                datasetListBuilder,
-					                attributeConfigurator);
+					                attributeConfigurator, geometryTypeConfigurator);
 				}
 
 				bool datasetNamesAreQualified = HarvestQualifiedElementNames &&
@@ -630,7 +637,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 			var factory = (IDatasetListBuilderFactory)
 				_datasetListBuilderFactoryClassDescriptor.CreateInstance();
 
-			factory.SetGeometryTypes(geometryTypes);
+			factory.GeometryTypes = geometryTypes;
 			return factory;
 		}
 
@@ -659,7 +666,8 @@ namespace ProSuite.DomainModel.AO.DataModel
 		private void HarvestDatasets(
 			[NotNull] IWorkspaceContext workspaceContext,
 			[NotNull] IDatasetListBuilder datasetListBuilder,
-			[CanBeNull] IAttributeConfigurator attributeConfigurator)
+			[CanBeNull] IAttributeConfigurator attributeConfigurator,
+			[NotNull] IGeometryTypeConfigurator geometryTypeConfigurator)
 		{
 			Assert.ArgumentNotNull(workspaceContext, nameof(workspaceContext));
 			Assert.ArgumentNotNull(datasetListBuilder, nameof(datasetListBuilder));
@@ -691,7 +699,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 			var anyRelevantDatasetsFound = false;
 
 			foreach (IDatasetName datasetName in
-				HarvestingUtils.GetHarvestableDatasetNames(featureWorkspace))
+			         HarvestingUtils.GetHarvestableDatasetNames(featureWorkspace))
 			{
 				// ALL dataset names in the workspace are returned!
 
@@ -786,8 +794,8 @@ namespace ProSuite.DomainModel.AO.DataModel
 			foreach (Dataset dataset in Datasets)
 			{
 				string gdbDatasetName = ModelElementUtils.GetGdbElementName(dataset, workspace,
-				                                                            DefaultDatabaseName,
-				                                                            DefaultDatabaseSchemaOwner);
+					DefaultDatabaseName,
+					DefaultDatabaseSchemaOwner);
 
 				bool datasetExists = gdbDatasetNames.Contains(gdbDatasetName);
 
@@ -851,7 +859,8 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 					// TODO determine if dataset was newly created
 					// -> only warn about alias update if the dataset already existed
-					HarvestObjectDataset(objectDataset, objectClass, attributeConfigurator);
+					HarvestObjectDataset(objectDataset, objectClass, attributeConfigurator,
+					                     geometryTypeConfigurator);
 				}
 				else
 				{
@@ -1000,10 +1009,11 @@ namespace ProSuite.DomainModel.AO.DataModel
 			return result ?? GetDataset(gdbDatasetName, useIndex);
 		}
 
-		private void HarvestObjectDataset(
-			[NotNull] ObjectDataset objectDataset,
-			[NotNull] IObjectClass objectClass,
-			[CanBeNull] IAttributeConfigurator attributeConfigurator)
+		private void HarvestObjectDataset([NotNull] ObjectDataset objectDataset,
+		                                  [NotNull] IObjectClass objectClass,
+		                                  [CanBeNull] IAttributeConfigurator attributeConfigurator,
+		                                  [NotNull]
+		                                  IGeometryTypeConfigurator geometryTypeConfigurator)
 		{
 			// alias name
 			if (UpdateAliasNamesOnHarvest)
@@ -1058,6 +1068,17 @@ namespace ProSuite.DomainModel.AO.DataModel
 			{
 				AttributeHarvestingUtils.HarvestAttributes(objectDataset, attributeConfigurator,
 				                                           objectClass);
+			}
+
+			// shape type
+			if (objectDataset.HasGeometry)
+			{
+				using (_msg.IncrementIndentation("Refreshing geometry type for dataset '{0}'",
+				                                 objectDataset.Name))
+				{
+					AttributeHarvestingUtils.HarvestGeometryType(
+						objectDataset, geometryTypeConfigurator, objectClass);
+				}
 			}
 		}
 

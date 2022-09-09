@@ -6,7 +6,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 {
 	public interface IDatasetListBuilderFactory
 	{
-		void SetGeometryTypes([NotNull] IList<GeometryType> geometryTypes);
+		IList<GeometryType> GeometryTypes { get; set; }
 
 		[NotNull]
 		IDatasetListBuilder Create([CanBeNull] string modelSchemaOwner,
