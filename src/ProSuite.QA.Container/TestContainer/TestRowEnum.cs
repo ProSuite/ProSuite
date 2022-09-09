@@ -22,42 +22,6 @@ using ProSuite.QA.Container.Geometry;
 
 namespace ProSuite.QA.Container.TestContainer
 {
-	public class Tile
-	{
-		private readonly IEnvelope _filterEnvelope;
-		private readonly Box _box;
-		private readonly ISpatialFilter _filter;
-
-		public Tile(double tileXMin, double tileYMin, double tileXMax, double tileYMax,
-		            ISpatialReference spatialReference, int totalTileCount)
-		{
-			_filterEnvelope = new EnvelopeClass();
-			_filterEnvelope.PutCoords(tileXMin, tileYMin, tileXMax, tileYMax);
-			_filterEnvelope.SpatialReference = spatialReference;
-
-			_box = new Box(new Pnt2D(tileXMin, tileYMin), new Pnt2D(tileXMax, tileYMax));
-
-			_filter = new SpatialFilterClass();
-			_filter.Geometry = _filterEnvelope;
-			_filter.SpatialRel = totalTileCount == 1
-				                     ? esriSpatialRelEnum.esriSpatialRelIntersects
-				                     : esriSpatialRelEnum.esriSpatialRelEnvelopeIntersects;
-		}
-
-		public Box Box => _box;
-		public IEnvelope FilterEnvelope => _filterEnvelope;
-		public ISpatialFilter SpatialFilter => _filter;
-
-		#region Overrides of Object
-
-		public override string ToString()
-		{
-			return $"Tile {_box.Min.X} {_box.Min.Y} {_box.Max.X} {_box.Max.Y}";
-		}
-
-		#endregion
-	}
-
 	// TODO revise MoveNextCachedRow (IsFirstOccurrence assignment)
 	internal class TestRowEnum : IDataContainer, IDisposable
 	{
@@ -73,7 +37,7 @@ namespace ProSuite.QA.Container.TestContainer
 		private readonly IEnvelope _executeEnvelope;
 		private readonly IPolygon _executePolygon;
 		private readonly IRelationalOperator _executePolygonRelOp;
-		private readonly TileCache _tileCache;
+		private TileCache _tileCache;
 		private readonly OverlappingFeatures _overlappingFeatures;
 
 		private readonly IDictionary<IReadOnlyTable, UniqueIdProvider> _uniqueIdProviders;
@@ -238,12 +202,13 @@ namespace ProSuite.QA.Container.TestContainer
 
 		private TileCache GetTileCache()
 		{
-			TileCache tileCache = new TileCache(new List<IReadOnlyTable>(_cachedSet.Keys), _tileEnum.TestRunBox, _container,
-			                           _testSorter.TestsPerTable);
-
+			TileCache tileCache = new TileCache(
+				new List<IReadOnlyTable>(_cachedSet.Keys), _tileEnum.TestRunBox, _container,
+				_testSorter.TestsPerTable);
 
 			return tileCache;
 		}
+
 		#endregion
 
 		// whose boxes intersect with (extended) Box or _pRow
@@ -282,7 +247,7 @@ namespace ProSuite.QA.Container.TestContainer
 					yield break;
 				}
 
-				foreach (var testRow in EnumRows(tile))
+				foreach (var testRow in EnumRows(tile, _tileCache))
 				{
 					if (_container.Cancelled)
 					{
@@ -418,7 +383,7 @@ namespace ProSuite.QA.Container.TestContainer
 		/// <summary>
 		/// Iterate cached rows that are at least partly within the current tile
 		/// </summary>
-		private IEnumerable<TestRow> EnumCachedRows(Tile tile, int tileRowIndex, int tileRowCount)
+		private IEnumerable<TestRow> EnumCachedRows(Tile tile, TileCache tileCache, int tileRowIndex, int tileRowCount)
 		{
 			foreach (var pair in _cachedSet)
 			{
@@ -428,7 +393,7 @@ namespace ProSuite.QA.Container.TestContainer
 				_testSorter.TestsPerTable.TryGetValue(
 					cachedTable, out IList<ContainerTest> testsPerTable);
 
-				foreach (BoxTree<CachedRow>.TileEntry entry in _tileCache.EnumEntries(
+				foreach (BoxTree<CachedRow>.TileEntry entry in tileCache.EnumEntries(
 					         cachedTable, tile.Box))
 				{
 					tileRowIndex++;
@@ -644,15 +609,6 @@ namespace ProSuite.QA.Container.TestContainer
 			}
 
 			return ! test.IsOutsideAreaOfInterest(row);
-		}
-
-		/// <summary>
-		/// Gets the number of cached rows for the current tile
-		/// </summary>
-		/// <returns></returns>
-		private int GetTileCachedTablesRowCount()
-		{
-			return _tileCache.GetTablesRowCount();
 		}
 
 		/// <summary>
@@ -1039,7 +995,7 @@ namespace ProSuite.QA.Container.TestContainer
 
 		#region moving to next tile
 
-		private void LoadCachedRows(Tile tile)
+		private void LoadCachedRows(Tile tile, TileCache tileCache)
 		{
 			int cachedTableIndex = 0;
 			foreach (IReadOnlyTable cachedTable in _cachedSet.Keys)
@@ -1048,13 +1004,18 @@ namespace ProSuite.QA.Container.TestContainer
 					       Step.DataLoading, Step.DataLoaded, cachedTableIndex, _cachedTableCount,
 					       cachedTable))
 				{
-					LoadCachedTableRows(cachedTable, tile);
+					if (tileCache.IsLoaded(cachedTable, tile))
+					{
+						continue;
+					}
+
+					LoadCachedTableRows(cachedTable, tile, tileCache);
 				}
 
 				cachedTableIndex++;
 			}
 
-			_tileCache.SetCurrentTileBox(tile.Box);
+			tileCache.SetCurrentTileBox(tile.Box);
 		}
 
 		private IEnumerable<Tile> EnumTiles()
@@ -1073,7 +1034,11 @@ namespace ProSuite.QA.Container.TestContainer
 				                             previousTileEnvelope, testRunEnvelope);
 
 				_overlappingFeatures.SetCurrentTile(tile.Box);
-				LoadCachedRows(tile);
+
+				// TODO: check if tileCache for tile already created (when preloading different tiles)
+				// TODO: _tileCache = _tileCache.Clone();
+
+				LoadCachedRows(tile, _tileCache);
 
 				_container.OnProgressChanged(Step.TileProcessing,
 				                             currentTileIndex + 1, totalTileCount,
@@ -1096,9 +1061,9 @@ namespace ProSuite.QA.Container.TestContainer
 			ClearDelegates();
 		}
 
-		private IEnumerable<TestRow> EnumRows(Tile tile)
+		private IEnumerable<TestRow> EnumRows(Tile tile, TileCache tileCache)
 		{
-			int cachedRowCount = GetTileCachedTablesRowCount();
+			int cachedRowCount = tileCache.GetTablesRowCount();
 			int nonCachedRowCount = GetTileNonCachedTablesRowCount(tile.SpatialFilter);
 			int rasterRowCount = GetTileRasterRowCount(tile);
 
@@ -1108,7 +1073,7 @@ namespace ProSuite.QA.Container.TestContainer
 			tileRowCount += GetTileTerrainRowCount(tile);
 
 			int preRowCount = 0;
-			foreach (var cachedRow in EnumCachedRows(tile, preRowCount, tileRowCount))
+			foreach (var cachedRow in EnumCachedRows(tile, tileCache, preRowCount, tileRowCount))
 			{
 				yield return cachedRow;
 			}
@@ -1140,15 +1105,38 @@ namespace ProSuite.QA.Container.TestContainer
 		#region loading the cache
 
 		private void LoadCachedTableRows([NotNull] IReadOnlyTable table,
-
-		                                 [NotNull] Tile tile)
+		                                 [NotNull] Tile tile,
+		                                 [NotNull] TileCache tileCache)
 		{
-			IBox allBox = null;
-
 			IDictionary<BaseRow, CachedRow> cachedRows =
 				_overlappingFeatures.GetOverlappingCachedRows(table, tile.Box);
-
 			int previousCachedRowCount = cachedRows.Count;
+
+			LoadCachedTableRows(cachedRows, table, tile, tileCache);
+
+			UpdateXYOccurance(cachedRows.Values, tile);
+
+			int newlyLoadedRows = cachedRows.Count - previousCachedRowCount;
+
+			if (_loadedRowCountPerTable != null)
+			{
+				_loadedRowCountPerTable[table] += newlyLoadedRows;
+			}
+
+			_msg.VerboseDebug(() => $"{table.Name}: Added additional {newlyLoadedRows} rows " +
+			                        $"to the previous {previousCachedRowCount} rows in {tile}");
+
+			tileCache.IgnoredRowsByTableAndTest[table] =
+				GetIgnoredRows(table, cachedRows.Values, tile.SpatialFilter.Geometry);
+
+		}
+
+		private void LoadCachedTableRows(
+			[NotNull] IDictionary<BaseRow, CachedRow> cachedRows,
+			[NotNull] IReadOnlyTable table,
+			[NotNull] Tile tile, [NotNull] TileCache tileCache)
+		{
+			IBox allBox = null;
 
 			// avoid rereading overlapping large features (with a max extent > tile size)
 			double maxExtent = _tileEnum.TileSize;
@@ -1161,30 +1149,15 @@ namespace ProSuite.QA.Container.TestContainer
 
 			ISpatialFilter loadSpatialFilter =
 				GetLoadSpatialFilter(table, tile.SpatialFilter, notInExpression);
-			IEnvelope loadExtent = GeometryFactory.Clone((IEnvelope) loadSpatialFilter.Geometry);
+			IEnvelope loadExtent = GeometryFactory.Clone((IEnvelope)loadSpatialFilter.Geometry);
 
 			AddRowsToCache(cachedRows, table, loadSpatialFilter, _uniqueIdProviders[table],
 			               ref allBox);
-
-			UpdateXYOccurance(cachedRows.Values, tile);
-
-			_tileCache.CreateBoxTree(table, cachedRows.Values, allBox, loadExtent);
-
-			int newlyLoadedRows = cachedRows.Count - previousCachedRowCount;
-
-			if (_loadedRowCountPerTable != null)
-			{
-				_loadedRowCountPerTable[table] += newlyLoadedRows;
-			}
-
-			_msg.VerboseDebug(() => $"{table.Name}: Added additional {newlyLoadedRows} rows " +
-			                        $"to the previous {previousCachedRowCount} rows in {tile}");
-
-			_tileCache.IgnoredRowsByTableAndTest[table] =
-				GetIgnoredRows(table, cachedRows.Values, tile.SpatialFilter.Geometry);
-
 			Marshal.ReleaseComObject(loadSpatialFilter);
+
+			tileCache.CreateBoxTree(table, cachedRows.Values, allBox, loadExtent);
 		}
+
 
 		private void UpdateXYOccurance(IEnumerable<CachedRow> cachedRows, Tile tile)
 		{
