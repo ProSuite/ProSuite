@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
 using ProSuite.QA.Container.Geometry;
@@ -14,6 +15,8 @@ namespace ProSuite.QA.Container.TestContainer
 		private readonly IEnvelope _executeEnvelope;
 		public double TileSize { get; }
 		[CanBeNull] private readonly IBox _firstTerrainBox;
+
+		private Dictionary<int[], Tile> _tileCache = new Dictionary<int[], Tile>(new TileKeyComparer());
 
 		/// <summary>
 		/// Gets the current tile spatial reference.
@@ -216,6 +219,19 @@ namespace ProSuite.QA.Container.TestContainer
 			return result;
 		}
 
+		private class TileKeyComparer : IEqualityComparer<int[]>
+		{
+			public bool Equals(int[] x, int[] y)
+			{
+				return Assert.NotNull(x)[0] == Assert.NotNull(y)[0] && x[1] == y[1];
+			}
+
+			public int GetHashCode(int[] obj)
+			{
+				return obj[0] ^ 29 * obj[1];
+			}
+		}
+
 		public IEnumerable<Tile> EnumTiles()
 		{
 			double tileXMin = TestRunBox.Min.X;
@@ -223,16 +239,27 @@ namespace ProSuite.QA.Container.TestContainer
 
 			int totalTileCount = GetTotalTileCount();
 
+			int ix = 0;
+			int iy = 0;
 			for (int i = 0; i < totalTileCount; i++)
 			{
-				Tile tile = GetTile(tileXMin, tileYMin, totalTileCount);
+				int[] tileKey = { ix, iy };
+				if (! _tileCache.TryGetValue(tileKey, out Tile tile))
+				{
+					tile = GetTile(tileXMin, tileYMin, totalTileCount);
+				}
 				yield return tile;
+
+				ix++;
 
 				tileXMin = tile.Box.Max.X;
 				if (tileXMin >= TestRunBox.Max.X)
 				{
 					tileXMin = TestRunBox.Min.X;
 					tileYMin = tile.Box.Max.Y;
+
+					iy++;
+					ix = 0;
 				}
 
 				if (tileYMin > TestRunBox.Max.Y)

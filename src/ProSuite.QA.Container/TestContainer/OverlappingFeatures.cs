@@ -31,13 +31,8 @@ namespace ProSuite.QA.Container.TestContainer
 		/// <summary>
 		/// Initializes a new instance of the <see cref="OverlappingFeatures"/> class.
 		/// </summary>
-		public OverlappingFeatures() : this(-1) { }
-
-		/// <summary>
-		/// Initializes a new instance of the <see cref="OverlappingFeatures"/> class.
-		/// </summary>
 		/// <param name="maxCachedPointCount">The maximum number of cached vertices.</param>
-		public OverlappingFeatures(int maxCachedPointCount)
+		public OverlappingFeatures(int maxCachedPointCount = -1)
 		{
 			MaxCachedPointCount = maxCachedPointCount;
 		}

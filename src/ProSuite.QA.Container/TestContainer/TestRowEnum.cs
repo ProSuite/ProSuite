@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -65,7 +66,7 @@ namespace ProSuite.QA.Container.TestContainer
 		private readonly bool _nothingToDo;
 
 		private readonly int _cachedTableCount;
-		private readonly IList<IReadOnlyTable> _cachedTables;
+		private readonly IDictionary<IReadOnlyTable, double> _cachedSet;
 		private readonly IList<TableFields> _nonCachedTables;
 
 		private readonly ITestContainer _container;
@@ -73,7 +74,9 @@ namespace ProSuite.QA.Container.TestContainer
 		private readonly IPolygon _executePolygon;
 		private readonly IRelationalOperator _executePolygonRelOp;
 		private readonly TileCache _tileCache;
-		private readonly UniqueIdProvider[] _uniqueIdProviders;
+		private readonly OverlappingFeatures _overlappingFeatures;
+
+		private readonly IDictionary<IReadOnlyTable, UniqueIdProvider> _uniqueIdProviders;
 		private readonly Dictionary<IReadOnlyTable, string> _commonFilterExpressions;
 
 		private readonly IList<TerrainRowEnumerable> _terrainRowEnumerables;
@@ -140,9 +143,9 @@ namespace ProSuite.QA.Container.TestContainer
 			_nonCachedTables =
 				new List<TableFields>(nonCachedTables.Where(x => ! cachedSet.ContainsKey(x.Table)));
 
-			_cachedTables = new List<IReadOnlyTable>(cachedSet.Keys);
+			_cachedSet = cachedSet;
 
-			_cachedTableCount = _cachedTables.Count;
+			_cachedTableCount = _cachedSet.Count;
 
 			if (_testSorter.TestsPerTable.Count == 0 && _testSorter.TestsPerTerrain.Count == 0)
 			{
@@ -171,17 +174,14 @@ namespace ProSuite.QA.Container.TestContainer
 				return;
 			}
 
-			_tileCache = new TileCache(_cachedTables, _tileEnum.TestRunBox, _container,
-			                           _testSorter.TestsPerTable);
-			foreach (KeyValuePair<IReadOnlyTable, double> pair in cachedSet)
-			{
-				_tileCache.OverlappingFeatures.AdaptSearchTolerance(pair.Key, pair.Value);
-			}
+			_tileCache = GetTileCache();
+			_overlappingFeatures = InitOverlappingFeatures();
 
-			_uniqueIdProviders = new UniqueIdProvider[_cachedTables.Count];
-			for (var i = 0; i < _cachedTables.Count; i++)
+
+			_uniqueIdProviders = new ConcurrentDictionary<IReadOnlyTable, UniqueIdProvider>();
+			foreach (IReadOnlyTable cachedTable in _cachedSet.Keys)
 			{
-				_uniqueIdProviders[i] = UniqueIdProviderFactory.Create(_cachedTables[i]);
+				_uniqueIdProviders.Add(cachedTable, UniqueIdProviderFactory.Create(cachedTable));
 			}
 
 			_commonFilterExpressions = GetCommonFilterExpressions(_testSorter.TestsPerTable);
@@ -201,6 +201,49 @@ namespace ProSuite.QA.Container.TestContainer
 			InitDelegates();
 		}
 
+		private OverlappingFeatures InitOverlappingFeatures()
+		{
+			OverlappingFeatures overlappingFeatures =
+				new OverlappingFeatures(_container.MaxCachedPointCount);
+
+			foreach (KeyValuePair<IReadOnlyTable, double> pair in _cachedSet)
+			{
+				overlappingFeatures.AdaptSearchTolerance(pair.Key, pair.Value);
+			}
+
+			foreach (IList<ContainerTest> tests in _testSorter.TestsPerTable.Values)
+			{
+				foreach (ContainerTest containerTest in tests)
+				{
+					if (Math.Abs(containerTest.SearchDistance) < double.Epsilon)
+					{
+						continue;
+					}
+
+					foreach (IReadOnlyTable involvedTable in containerTest.InvolvedTables)
+					{
+						if (!_cachedSet.ContainsKey(involvedTable))
+						{
+							continue;
+						}
+
+						overlappingFeatures.AdaptSearchTolerance(
+							involvedTable, containerTest.SearchDistance);
+					}
+				}
+			}
+
+			return overlappingFeatures;
+		}
+
+		private TileCache GetTileCache()
+		{
+			TileCache tileCache = new TileCache(new List<IReadOnlyTable>(_cachedSet.Keys), _tileEnum.TestRunBox, _container,
+			                           _testSorter.TestsPerTable);
+
+
+			return tileCache;
+		}
 		#endregion
 
 		// whose boxes intersect with (extended) Box or _pRow
@@ -258,9 +301,7 @@ namespace ProSuite.QA.Container.TestContainer
 
 		UniqueIdProvider IDataContainer.GetUniqueIdProvider(IReadOnlyTable table)
 		{
-			int tableIndex = _cachedTables.IndexOf(table);
-
-			return _uniqueIdProviders[tableIndex];
+			return _uniqueIdProviders[table];
 		}
 
 		IEnumerable<IReadOnlyRow> IDataContainer.Search(IReadOnlyTable table,
@@ -289,13 +330,12 @@ namespace ProSuite.QA.Container.TestContainer
 
 		IEnvelope IDataContainer.GetLoadedExtent(IReadOnlyTable table)
 		{
-			int tableIndex = _cachedTables.IndexOf(table);
-			return _tileCache?.LoadedExtents[tableIndex];
+			return _tileCache?.GetLoadedExtent(table);
 		}
 
 		double IDataContainer.GetSearchTolerance(IReadOnlyTable table)
 		{
-			return _tileCache.OverlappingFeatures.GetSearchTolerance(table);
+			return _overlappingFeatures.GetSearchTolerance(table);
 		}
 
 		#endregion
@@ -308,14 +348,15 @@ namespace ProSuite.QA.Container.TestContainer
 		                                         [NotNull] QueryFilterHelper filterHelper,
 		                                         [CanBeNull] IGeometry cacheGeometry)
 		{
-			int tableIndex = _cachedTables.IndexOf(table);
+			if (! _cachedSet.ContainsKey(table))
+			{
+				return null;
+			}
 
 			// if the table was not passed to the container, return null
 			// to trigger a search in the database
-			return tableIndex < 0
-				       ? null
-				       : _tileCache.Search(table, tableIndex, queryFilter, filterHelper,
-				                           cacheGeometry);
+			return _tileCache.Search(table, queryFilter, filterHelper,
+			                          cacheGeometry);
 		}
 
 		#endregion
@@ -379,28 +420,27 @@ namespace ProSuite.QA.Container.TestContainer
 		/// </summary>
 		private IEnumerable<TestRow> EnumCachedRows(Tile tile, int tileRowIndex, int tileRowCount)
 		{
-			int cachedTableIndex = 0;
-			foreach (IReadOnlyTable table in _cachedTables)
+			foreach (var pair in _cachedSet)
 			{
 				double? cachedRowSearchTolerance = null;
 
-				IReadOnlyTable cachedTable = _cachedTables[cachedTableIndex];
+				IReadOnlyTable cachedTable = pair.Key;
 				_testSorter.TestsPerTable.TryGetValue(
 					cachedTable, out IList<ContainerTest> testsPerTable);
 
 				foreach (BoxTree<CachedRow>.TileEntry entry in _tileCache.EnumEntries(
-					         cachedTableIndex, tile.Box))
+					         cachedTable, tile.Box))
 				{
 					tileRowIndex++;
 
 					cachedRowSearchTolerance = cachedRowSearchTolerance ??
-					                           _tileCache.OverlappingFeatures.GetSearchTolerance(
+					                           _overlappingFeatures.GetSearchTolerance(
 						                           cachedTable);
 
 					CachedRow cachedRow = entry.Value;
 					if (testsPerTable == null)
 					{
-						_tileCache.OverlappingFeatures.RegisterTestedFeature(
+						_overlappingFeatures.RegisterTestedFeature(
 							cachedRow, cachedRowSearchTolerance.Value, null);
 						continue;
 					}
@@ -415,7 +455,7 @@ namespace ProSuite.QA.Container.TestContainer
 						testsPerTable, cachedRow.Feature, tile.SpatialFilter.Geometry,
 						out IList<ContainerTest> reducedTests);
 
-					_tileCache.OverlappingFeatures.RegisterTestedFeature(
+					_overlappingFeatures.RegisterTestedFeature(
 						cachedRow, cachedRowSearchTolerance.Value, reducedTests);
 
 					TestRow cachedTestRow =
@@ -427,8 +467,6 @@ namespace ProSuite.QA.Container.TestContainer
 
 					yield return cachedTestRow;
 				}
-
-				cachedTableIndex++;
 			}
 		}
 
@@ -464,7 +502,7 @@ namespace ProSuite.QA.Container.TestContainer
 							if (! shapeFieldExcluded)
 							{
 								BaseRow cachedRow = new SimpleBaseRow(feature);
-								_tileCache.OverlappingFeatures.RegisterTestedFeature(
+								_overlappingFeatures.RegisterTestedFeature(
 									cachedRow, 0, reducedTests);
 							}
 						}
@@ -526,7 +564,7 @@ namespace ProSuite.QA.Container.TestContainer
 				return false;
 			}
 
-			if (! _tileCache.OverlappingFeatures.WasAlreadyTested(feature, test))
+			if (!_overlappingFeatures.WasAlreadyTested(feature, test))
 			{
 				return false;
 			}
@@ -1003,27 +1041,20 @@ namespace ProSuite.QA.Container.TestContainer
 
 		private void LoadCachedRows(Tile tile)
 		{
-			//if (!PrepareNextTile()) return false;
-
-			for (var cachedTableIndex = 0;
-			     cachedTableIndex < _cachedTableCount;
-			     cachedTableIndex++)
+			int cachedTableIndex = 0;
+			foreach (IReadOnlyTable cachedTable in _cachedSet.Keys)
 			{
-				IReadOnlyTable cachedTable = _cachedTables[cachedTableIndex];
-
 				using (_container.UseProgressWatch(
 					       Step.DataLoading, Step.DataLoaded, cachedTableIndex, _cachedTableCount,
 					       cachedTable))
 				{
-					LoadCachedTableRows(cachedTable, cachedTableIndex, tile);
+					LoadCachedTableRows(cachedTable, tile);
 				}
+
+				cachedTableIndex++;
 			}
 
 			_tileCache.SetCurrentTileBox(tile.Box);
-
-			//InitializeTile();
-			//// TestUtils.AddGarbageCollectionRequest();
-			//_currentTileIndex++;
 		}
 
 		private IEnumerable<Tile> EnumTiles()
@@ -1032,7 +1063,7 @@ namespace ProSuite.QA.Container.TestContainer
 			IEnvelope testRunEnvelope = _tileEnum.GetTestRunEnvelope();
 			int totalTileCount = _tileEnum.GetTotalTileCount();
 			_container.CompleteTile(TileState.Initial, previousTileEnvelope, testRunEnvelope,
-			                        _tileCache.OverlappingFeatures);
+			                        _overlappingFeatures);
 
 			int currentTileIndex = 0;
 			foreach (Tile tile in _tileEnum.EnumTiles())
@@ -1041,7 +1072,7 @@ namespace ProSuite.QA.Container.TestContainer
 				                             totalTileCount,
 				                             previousTileEnvelope, testRunEnvelope);
 
-				_tileCache.OverlappingFeatures.SetCurrentTile(tile.Box);
+				_overlappingFeatures.SetCurrentTile(tile.Box);
 				LoadCachedRows(tile);
 
 				_container.OnProgressChanged(Step.TileProcessing,
@@ -1057,7 +1088,7 @@ namespace ProSuite.QA.Container.TestContainer
 					                  ? TileState.Progressing
 					                  : TileState.Final;
 				_container.CompleteTile(state, tile.FilterEnvelope,
-				                        testRunEnvelope, _tileCache.OverlappingFeatures);
+				                        testRunEnvelope, _overlappingFeatures);
 
 				currentTileIndex++;
 			}
@@ -1109,13 +1140,13 @@ namespace ProSuite.QA.Container.TestContainer
 		#region loading the cache
 
 		private void LoadCachedTableRows([NotNull] IReadOnlyTable table,
-		                                 int tableIndex,
+
 		                                 [NotNull] Tile tile)
 		{
 			IBox allBox = null;
 
 			IDictionary<BaseRow, CachedRow> cachedRows =
-				_tileCache.OverlappingFeatures.GetOverlappingCachedRows(table, tile.Box);
+				_overlappingFeatures.GetOverlappingCachedRows(table, tile.Box);
 
 			int previousCachedRowCount = cachedRows.Count;
 
@@ -1132,12 +1163,12 @@ namespace ProSuite.QA.Container.TestContainer
 				GetLoadSpatialFilter(table, tile.SpatialFilter, notInExpression);
 			IEnvelope loadExtent = GeometryFactory.Clone((IEnvelope) loadSpatialFilter.Geometry);
 
-			AddRowsToCache(cachedRows, table, loadSpatialFilter, _uniqueIdProviders[tableIndex],
+			AddRowsToCache(cachedRows, table, loadSpatialFilter, _uniqueIdProviders[table],
 			               ref allBox);
 
 			UpdateXYOccurance(cachedRows.Values, tile);
 
-			_tileCache.CreateBoxTree(tableIndex, cachedRows.Values, allBox, loadExtent);
+			_tileCache.CreateBoxTree(table, cachedRows.Values, allBox, loadExtent);
 
 			int newlyLoadedRows = cachedRows.Count - previousCachedRowCount;
 
@@ -1149,7 +1180,7 @@ namespace ProSuite.QA.Container.TestContainer
 			_msg.VerboseDebug(() => $"{table.Name}: Added additional {newlyLoadedRows} rows " +
 			                        $"to the previous {previousCachedRowCount} rows in {tile}");
 
-			_tileCache.IgnoredRowsByTableAndTest[tableIndex] =
+			_tileCache.IgnoredRowsByTableAndTest[table] =
 				GetIgnoredRows(table, cachedRows.Values, tile.SpatialFilter.Geometry);
 
 			Marshal.ReleaseComObject(loadSpatialFilter);
@@ -1225,7 +1256,7 @@ namespace ProSuite.QA.Container.TestContainer
 					                     : result.WhereClause + " AND " + notInExpression;
 			}
 
-			double searchTolerance = _tileCache.OverlappingFeatures.GetSearchTolerance(table);
+			double searchTolerance = _overlappingFeatures.GetSearchTolerance(table);
 
 			if (searchTolerance > 0)
 			{

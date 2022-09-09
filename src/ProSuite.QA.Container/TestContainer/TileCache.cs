@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
@@ -17,22 +18,23 @@ namespace ProSuite.QA.Container.TestContainer
 	internal class TileCache
 	{
 		private readonly IList<IReadOnlyTable> _cachedTables;
-		private readonly RowBoxTree[] _rowBoxTrees;
+		private readonly IDictionary<IReadOnlyTable, RowBoxTree> _rowBoxTrees;
 		private readonly IEnvelope _envelopeTemplate = new EnvelopeClass();
 		private readonly IBox _testRunBox;
-		private readonly double[] _xyToleranceByTableIndex;
+		private readonly IDictionary<IReadOnlyTable, double> _xyToleranceByTable;
 		private readonly ITestContainer _container;
-		private readonly int _cachedTableCount;
 		private readonly IDictionary<IReadOnlyTable, IList<ContainerTest>> _testsPerTable;
-		private readonly IEnvelope[] _loadedExtents;
+		private readonly IDictionary<IReadOnlyTable, IEnvelope> _loadedExtents;
 
 		private double _maximumSearchTolerance;
-		private double[][] _searchToleranceFromTo;
 
-		private int _cachedTableIndex;
+		private IDictionary<IReadOnlyTable, IDictionary<IReadOnlyTable, double>>
+			_searchToleranceFromTo;
+
+		private IReadOnlyTable _cachedTable;
 		private CachedRow _cachedRow;
 
-		private BoxSelection[] _currentRowNeighbors;
+		private IDictionary<IReadOnlyTable, BoxSelection> _currentRowNeighbors;
 
 		public TileCache([NotNull] IList<IReadOnlyTable> cachedTables, [NotNull] IBox testRunBox,
 		                 [NotNull] ITestContainer container,
@@ -43,24 +45,20 @@ namespace ProSuite.QA.Container.TestContainer
 			_container = container;
 			_testsPerTable = testsPerTable;
 
-			_cachedTableCount = cachedTables.Count;
-			_rowBoxTrees = new RowBoxTree[_cachedTables.Count];
-			_xyToleranceByTableIndex = GetXYTolerancePerTable(_cachedTables);
-			_loadedExtents = new IEnvelope[_cachedTableCount];
-			IgnoredRowsByTableAndTest = new List<IList<BaseRow>>[_cachedTableCount];
-			OverlappingFeatures = new OverlappingFeatures(_container.MaxCachedPointCount);
+			_rowBoxTrees = new ConcurrentDictionary<IReadOnlyTable, RowBoxTree>();
+			_xyToleranceByTable = GetXYTolerancePerTable(_cachedTables);
+			_loadedExtents = new ConcurrentDictionary<IReadOnlyTable, IEnvelope>();
+			IgnoredRowsByTableAndTest =
+				new ConcurrentDictionary<IReadOnlyTable, IReadOnlyList<IList<BaseRow>>>();
 
 			CollectSearchTolerances();
 		}
 
-		public OverlappingFeatures OverlappingFeatures { get; }
-		public IReadOnlyList<IEnvelope> LoadedExtents => _loadedExtents;
-
-		public List<IList<BaseRow>>[] IgnoredRowsByTableAndTest { get; }
+		public IDictionary<IReadOnlyTable, IReadOnlyList<IList<BaseRow>>> IgnoredRowsByTableAndTest { get; }
 
 		public TestRow CurrentTestRow { get; set; }
 		public Box CurrentTileBox { get; private set; }
-
+		public IEnvelope GetLoadedExtent(IReadOnlyTable table) => _loadedExtents[table];
 		public Box SetCurrentTileBox(Box tileBox)
 		{
 			_currentRowNeighbors = null;
@@ -69,25 +67,22 @@ namespace ProSuite.QA.Container.TestContainer
 		}
 
 		[NotNull]
-		private static double[] GetXYTolerancePerTable(
+		private static IDictionary<IReadOnlyTable, double> GetXYTolerancePerTable(
 			[NotNull] ICollection<IReadOnlyTable> tables)
 		{
 			Assert.ArgumentNotNull(tables, nameof(tables));
 
-			var result = new double[tables.Count];
+			var result = new ConcurrentDictionary<IReadOnlyTable, double>();
 
 			const double defaultTolerance = 0;
 
-			var tableIndex = 0;
 			foreach (IReadOnlyTable table in tables)
 			{
 				var geoDataset = table as IReadOnlyGeoDataset;
-				result[tableIndex] = geoDataset == null
+				result[table] = geoDataset == null
 					                     ? defaultTolerance
 					                     : GeometryUtils.GetXyTolerance(geoDataset.SpatialReference,
 						                     defaultTolerance);
-
-				tableIndex++;
 			}
 
 			return result;
@@ -96,17 +91,14 @@ namespace ProSuite.QA.Container.TestContainer
 		private void CollectSearchTolerances()
 		{
 			_maximumSearchTolerance = 0;
-			_searchToleranceFromTo = new double[_cachedTableCount][];
+			_searchToleranceFromTo =
+				new ConcurrentDictionary<IReadOnlyTable, IDictionary<IReadOnlyTable, double>>();
 
-			for (var queriedTableIndex = 0;
-			     queriedTableIndex < _cachedTables.Count;
-			     queriedTableIndex++)
+			foreach (IReadOnlyTable table in _cachedTables)
 			{
-				var searchToleranceByTable = new double[_cachedTableCount];
+				var searchToleranceByTable = new ConcurrentDictionary<IReadOnlyTable, double>();
+				_searchToleranceFromTo[table] = searchToleranceByTable;
 
-				_searchToleranceFromTo[queriedTableIndex] = searchToleranceByTable;
-
-				IReadOnlyTable table = GetCachedTable(queriedTableIndex);
 				if (! _testsPerTable.TryGetValue(table, out IList<ContainerTest> tableTests))
 				{
 					continue;
@@ -131,31 +123,20 @@ namespace ProSuite.QA.Container.TestContainer
 							continue;
 						}
 
-						searchToleranceByTable[involvedTableIndex] =
-							Math.Max(searchToleranceByTable[involvedTableIndex],
+						searchToleranceByTable[involvedTable] =
+							Math.Max(searchToleranceByTable[involvedTable],
 							         containerTest.SearchDistance);
-
-						OverlappingFeatures.AdaptSearchTolerance(
-							involvedTable, containerTest.SearchDistance);
 					}
 				}
 			}
 		}
-
-		[NotNull]
-		private IReadOnlyTable GetCachedTable(int tableIndex)
+		private double GetXYTolerance(IReadOnlyTable table)
 		{
-			return _cachedTables[tableIndex];
-		}
-
-		private double GetXYTolerance(int tableIndex)
-		{
-			return _xyToleranceByTableIndex[tableIndex];
+			return _xyToleranceByTable[table];
 		}
 
 		[CanBeNull]
 		public IList<IReadOnlyRow> Search([NotNull] IReadOnlyTable table,
-		                          int tableIndex,
 		                          [NotNull] IQueryFilter queryFilter,
 		                          [NotNull] QueryFilterHelper filterHelper,
 		                          [CanBeNull] IGeometry cacheGeometry)
@@ -191,8 +172,8 @@ namespace ProSuite.QA.Container.TestContainer
 				}
 			}
 
-			List<BoxTree<CachedRow>.TileEntry> searchList = SearchList(filterGeometry,
-				tableIndex);
+			List<BoxTree<CachedRow>.TileEntry> searchList =
+				SearchList(filterGeometry, table);
 			if (searchList == null || searchList.Count == 0)
 			{
 				return result;
@@ -238,7 +219,7 @@ namespace ProSuite.QA.Container.TestContainer
 				if (filterHelper.ContainerTest != null)
 				{
 					int indexTest = tests.IndexOf(filterHelper.ContainerTest);
-					ignoredRows = IgnoredRowsByTableAndTest[tableIndex][indexTest];
+					ignoredRows = IgnoredRowsByTableAndTest[table][indexTest];
 				}
 			}
 
@@ -308,26 +289,22 @@ namespace ProSuite.QA.Container.TestContainer
 
 		[CanBeNull]
 		private List<BoxTree<CachedRow>.TileEntry> SearchList(
-			[NotNull] IGeometry searchGeometry, int tableIndex)
+			[NotNull] IGeometry searchGeometry, IReadOnlyTable table)
 		{
 			Assert.ArgumentNotNull(searchGeometry, nameof(searchGeometry));
 
 			IBox searchGeometryBox = QaGeometryUtils.CreateBox(searchGeometry,
-			                                                   GetXYTolerance(tableIndex));
+			                                                   GetXYTolerance(table));
 
-			BoxTree<CachedRow> boxTree = _rowBoxTrees[tableIndex];
+			BoxTree<CachedRow> boxTree = _rowBoxTrees[table];
 
-			if (_currentRowNeighbors == null)
+			_currentRowNeighbors = _currentRowNeighbors ??
+			                       new ConcurrentDictionary<IReadOnlyTable, BoxSelection>();
+
+			if (! _currentRowNeighbors.TryGetValue(table, out BoxSelection currentRowBoxSelection))
 			{
-				_currentRowNeighbors = new BoxSelection[_cachedTableCount];
-			}
-
-			BoxSelection currentRowBoxSelection = _currentRowNeighbors[tableIndex];
-			if (currentRowBoxSelection == null)
-			{
-				currentRowBoxSelection = CreateCurrentRowToleranceSelection(tableIndex);
-
-				_currentRowNeighbors[tableIndex] = currentRowBoxSelection;
+				currentRowBoxSelection = CreateCurrentRowToleranceSelection(table);
+				_currentRowNeighbors[table] = currentRowBoxSelection;
 			}
 
 			IBox searchBox = null;
@@ -389,10 +366,10 @@ namespace ProSuite.QA.Container.TestContainer
 			return reducedList;
 		}
 
-		public IEnumerable<BoxTree<CachedRow>.TileEntry> EnumEntries(int cachedTableIndex, IBox box)
+		public IEnumerable<BoxTree<CachedRow>.TileEntry> EnumEntries(IReadOnlyTable cachedTable, IBox box)
 		{
-			_cachedTableIndex = cachedTableIndex;
-			RowBoxTree rowBoxTree = _rowBoxTrees[cachedTableIndex];
+			_cachedTable = cachedTable;
+			RowBoxTree rowBoxTree = _rowBoxTrees[cachedTable];
 			foreach (BoxTree<CachedRow>.TileEntry entry in rowBoxTree.Search(box))
 			{
 				_cachedRow = entry.Value;
@@ -400,7 +377,7 @@ namespace ProSuite.QA.Container.TestContainer
 			}
 
 			_cachedRow = null;
-			_cachedTableIndex = 0;
+			_cachedTable = null;
 		}
 
 		/// <summary>
@@ -411,7 +388,7 @@ namespace ProSuite.QA.Container.TestContainer
 		{
 			var result = 0;
 
-			foreach (RowBoxTree rowBoxTree in _rowBoxTrees)
+			foreach (RowBoxTree rowBoxTree in _rowBoxTrees.Values)
 			{
 				result += rowBoxTree.Count;
 			}
@@ -420,9 +397,9 @@ namespace ProSuite.QA.Container.TestContainer
 		}
 
 		[CanBeNull]
-		private BoxSelection CreateCurrentRowToleranceSelection(int tableIndex)
+		private BoxSelection CreateCurrentRowToleranceSelection(IReadOnlyTable table)
 		{
-			IBox toleranceBox = GetCurrentRowToleranceBox(tableIndex);
+			IBox toleranceBox = GetCurrentRowToleranceBox(table);
 			if (toleranceBox == null)
 			{
 				return null;
@@ -435,7 +412,7 @@ namespace ProSuite.QA.Container.TestContainer
 		}
 
 		[CanBeNull]
-		private IBox GetCurrentRowToleranceBox(int tableIndex)
+		private IBox GetCurrentRowToleranceBox(IReadOnlyTable table)
 		{
 			if (CurrentTestRow == null)
 			{
@@ -449,7 +426,7 @@ namespace ProSuite.QA.Container.TestContainer
 
 			IBox currentBox = _cachedRow.Extent;
 
-			double searchTolerance = GetSearchTolerance(_cachedTableIndex, tableIndex);
+			double searchTolerance = GetSearchTolerance(_cachedTable, table);
 
 			IBox toleranceBox = currentBox.Clone();
 
@@ -461,17 +438,17 @@ namespace ProSuite.QA.Container.TestContainer
 			return toleranceBox;
 		}
 
-		private double GetSearchTolerance(int fromTableIndex, int tableIndex)
+		private double GetSearchTolerance(IReadOnlyTable fromTable, IReadOnlyTable table)
 		{
-			return Math.Max(GetXYTolerance(tableIndex),
-			                _searchToleranceFromTo[fromTableIndex][tableIndex]);
+			return Math.Max(GetXYTolerance(table),
+			                _searchToleranceFromTo[fromTable][table]);
 		}
 
-		public void CreateBoxTree(int tableIndex, [NotNull] IEnumerable<CachedRow> cachedRows,
+		public void CreateBoxTree(IReadOnlyTable table, [NotNull] IEnumerable<CachedRow> cachedRows,
 		                          [CanBeNull] IBox allBox, IEnvelope loadedEnvelope)
 		{
-			_rowBoxTrees[tableIndex] = CreateBoxTree(cachedRows, allBox);
-			_loadedExtents[tableIndex] = loadedEnvelope;
+			_rowBoxTrees[table] = CreateBoxTree(cachedRows, allBox);
+			_loadedExtents[table] = loadedEnvelope;
 		}
 
 		[NotNull]
