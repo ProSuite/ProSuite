@@ -257,6 +257,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 			this._dataGridViewParameter.RowHeadersVisible = false;
 			this._dataGridViewParameter.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
 			this._dataGridViewParameter.Size = new System.Drawing.Size(532, 96);
+			this._dataGridViewParameter.ShowCellToolTips = false;
 			this._dataGridViewParameter.TabIndex = 13;
 			// 
 			// _objectReferenceControlTestFactory

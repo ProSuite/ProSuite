@@ -16,9 +16,9 @@ namespace ProSuite.DdxEditor.Framework.ItemViews
         private void InitializeComponent()
         {
 			this.components = new System.ComponentModel.Container();
-			this._dataGridView = new global::ProSuite.Commons.UI.WinForms.Controls.DoubleBufferedDataGridView();
+			this._dataGridView = new ProSuite.Commons.UI.WinForms.Controls.DoubleBufferedDataGridView();
 			this._contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
-			this._dataGridViewFindToolStrip = new global::ProSuite.Commons.UI.WinForms.Controls.DataGridViewFindToolStrip();
+			this._dataGridViewFindToolStrip = new ProSuite.Commons.UI.WinForms.Controls.DataGridViewFindToolStrip();
 			((System.ComponentModel.ISupportInitialize)(this._dataGridView)).BeginInit();
 			this.SuspendLayout();
 			// 
@@ -34,6 +34,7 @@ namespace ProSuite.DdxEditor.Framework.ItemViews
 			this._dataGridView.Name = "_dataGridView";
 			this._dataGridView.ReadOnly = true;
 			this._dataGridView.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
+			this._dataGridView.ShowCellToolTips = false;
 			this._dataGridView.Size = new System.Drawing.Size(577, 465);
 			this._dataGridView.TabIndex = 0;
 			this._dataGridView.CellDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this._dataGridView_CellDoubleClick);
@@ -47,9 +48,12 @@ namespace ProSuite.DdxEditor.Framework.ItemViews
 			// _dataGridViewFindToolStrip
 			// 
 			this._dataGridViewFindToolStrip.ClickThrough = true;
+			this._dataGridViewFindToolStrip.FilterRows = false;
+			this._dataGridViewFindToolStrip.FindText = "";
 			this._dataGridViewFindToolStrip.FindTextBoxWidth = 150;
 			this._dataGridViewFindToolStrip.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
 			this._dataGridViewFindToolStrip.Location = new System.Drawing.Point(0, 0);
+			this._dataGridViewFindToolStrip.MatchCase = false;
 			this._dataGridViewFindToolStrip.Name = "_dataGridViewFindToolStrip";
 			this._dataGridViewFindToolStrip.Observer = null;
 			this._dataGridViewFindToolStrip.RenderMode = System.Windows.Forms.ToolStripRenderMode.System;

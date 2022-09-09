@@ -243,6 +243,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 			this._dataGridViewParameter.RowHeadersWidth = 62;
 			this._dataGridViewParameter.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
 			this._dataGridViewParameter.Size = new System.Drawing.Size(630, 73);
+			this._dataGridViewParameter.ShowCellToolTips = false;
 			this._dataGridViewParameter.TabIndex = 13;
 			// 
 			// _groupBoxClassOrFactory
