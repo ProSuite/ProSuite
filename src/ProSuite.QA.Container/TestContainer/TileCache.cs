@@ -18,7 +18,7 @@ namespace ProSuite.QA.Container.TestContainer
 	internal class TileCache
 	{
 		private readonly IList<IReadOnlyTable> _cachedTables;
-		private readonly IDictionary<IReadOnlyTable, RowBoxTree> _rowBoxTrees;
+		private IDictionary<IReadOnlyTable, RowBoxTree> _rowBoxTrees;
 		private readonly IEnvelope _envelopeTemplate = new EnvelopeClass();
 		private readonly IBox _testRunBox;
 		private readonly IDictionary<IReadOnlyTable, double> _xyToleranceByTable;
@@ -54,6 +54,13 @@ namespace ProSuite.QA.Container.TestContainer
 			CollectSearchTolerances();
 		}
 
+		public TileCache Clone()
+		{
+			var clone = (TileCache) MemberwiseClone();
+			clone._rowBoxTrees = new ConcurrentDictionary<IReadOnlyTable, RowBoxTree>();
+			return clone;
+		}
+
 		public IDictionary<IReadOnlyTable, IReadOnlyList<IList<BaseRow>>> IgnoredRowsByTableAndTest { get; }
 
 		public TestRow CurrentTestRow { get; set; }
@@ -64,6 +71,21 @@ namespace ProSuite.QA.Container.TestContainer
 			_currentRowNeighbors = null;
 			CurrentTileBox = tileBox;
 			return CurrentTileBox;
+		}
+
+		public bool IsLoaded(IReadOnlyTable table, Tile tile)
+		{
+			if (! _rowBoxTrees.ContainsKey(table))
+			{
+				return false;
+			}
+
+			if (!((IRelationalOperator) tile.FilterEnvelope).Within(_loadedExtents[table]))
+			{
+				return false;
+			}
+
+			return true;
 		}
 
 		[NotNull]
