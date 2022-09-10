@@ -80,7 +80,10 @@ namespace ProSuite.QA.Tests
 			: this(featureClass, GetSpatialReference(referenceFeatureClass),
 			       compareXYPrecision, compareZPrecision, compareMPrecision,
 			       compareTolerances, compareTolerances, compareTolerances,
-			       compareVerticalCoordinateSystems) { }
+			       compareVerticalCoordinateSystems)
+		{
+			AddMissingFeatureClass(referenceFeatureClass);
+		}
 
 		// TODO document
 		/// <summary>
@@ -137,7 +140,19 @@ namespace ProSuite.QA.Tests
 			       compareTolerances,
 			       compareTolerances && DatasetUtils.HasZ(featureClass),
 			       compareTolerances && DatasetUtils.HasM(featureClass),
-			       compareVerticalCoordinateSystems) { }
+			       compareVerticalCoordinateSystems)
+		{
+			AddMissingFeatureClass(referenceFeatureClass);
+		}
+
+		/// <summary>
+		/// Prevents an exception saying that the number of constraints is not equal the number of involved tables.
+		/// </summary>
+		/// <param name="referenceFeatureClass"></param>
+		private void AddMissingFeatureClass(IFeatureClass referenceFeatureClass)
+		{
+			AddInvolvedTable((ITable) referenceFeatureClass, null, false);
+		}
 
 		// TODO document
 		/// <summary>
