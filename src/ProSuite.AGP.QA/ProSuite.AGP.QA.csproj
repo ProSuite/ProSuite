@@ -15,6 +15,7 @@
     <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' ">v4.8</TargetFrameworkVersion>
     <ProAssemblyPath Condition=" '$(ProAssemblyPath)' == '' ">C:\Program Files\ArcGIS\Pro</ProAssemblyPath>
     <OutputDirectory Condition=" '$(OutputDirectory)' == '' ">..\..\bin</OutputDirectory>
+    <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -63,6 +64,7 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xaml" />
     <Reference Include="System.Xml" />
     <Reference Include="WindowsBase" />
   </ItemGroup>
@@ -74,6 +76,9 @@
     <Compile Include="ProPlugins\SelectIssueFeaturesToolBase.cs" />
     <Compile Include="ProPlugins\VerificationPlugInController.cs" />
     <Compile Include="ProPlugins\VerifyLastCmdBase.cs" />
+    <Compile Include="VerificationProgress\VerificationProgressWindow.xaml.cs">
+      <DependentUpon>VerificationProgressWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="WorkList\IssueWorkListEnvironmentBase.cs" />
     <Compile Include="DdxSpecificationReferencesProvider.cs" />
     <Compile Include="ProPlugins\VerifyPerimeterToolBase.cs" />
@@ -144,6 +149,11 @@
       <Name>ProSuite.UI</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Page Include="VerificationProgress\VerificationProgressWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
