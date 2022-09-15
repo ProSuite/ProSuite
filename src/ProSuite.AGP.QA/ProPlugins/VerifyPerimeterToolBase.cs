@@ -49,9 +49,6 @@ namespace ProSuite.AGP.QA.ProPlugins
 
 		protected abstract IMapBasedSessionContext SessionContext { get; }
 
-		protected abstract Window CreateProgressWindow(
-			VerificationProgressViewModel progressViewModel);
-
 		protected abstract IProSuiteFacade ProSuiteImpl { get; }
 
 		protected override Task OnToolActivateAsync(bool active)
@@ -124,7 +121,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 
 			string actionTitle = "Verify Perimeter";
 
-			Window window = CreateProgressWindow(qaProgressViewmodel);
+			Window window = VerificationProgressWindow.Create(qaProgressViewmodel);
 
 			VerifyUtils.ShowProgressWindow(window, qualitySpecification,
 			                               qaEnvironment.BackendDisplayName, actionTitle);
