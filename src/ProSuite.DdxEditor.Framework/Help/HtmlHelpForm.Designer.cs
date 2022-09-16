@@ -42,7 +42,6 @@ namespace ProSuite.DdxEditor.Framework.Help
 			this._webView.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
 			this._webView.Name = "_webView";
 			this._webView.Size = new System.Drawing.Size(1143, 750);
-			this._webView.Source = new System.Uri("https://dirageosystems.ch", System.UriKind.Absolute);
 			this._webView.TabIndex = 0;
 			this._webView.ZoomFactor = 1D;
 			// 
