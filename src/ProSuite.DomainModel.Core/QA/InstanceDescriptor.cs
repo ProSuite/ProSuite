@@ -63,6 +63,8 @@ namespace ProSuite.DomainModel.Core.QA
 		#region INamed Members
 
 		[Required]
+		[MaximumStringLength(200)]
+		[ValidName]
 		public string Name
 		{
 			get => _name;

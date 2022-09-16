@@ -115,6 +115,7 @@ namespace ProSuite.DomainModel.Core.QA
 
 		[Required]
 		[MaximumStringLength(200)]
+		[ValidName]
 		public string Name
 		{
 			get => _name;
