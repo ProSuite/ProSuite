@@ -5,11 +5,9 @@ using System.Linq;
 using System.Text;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.Commons.AO;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.Geometry;
 using ProSuite.QA.Container.PolygonGrower;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Container.TestContainer;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
@@ -20,6 +18,8 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
 using ProSuite.QA.Core;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
 {
@@ -310,7 +310,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaGroupConnected_0))]
 		public QaGroupConnected(
 			[Doc(nameof(DocStrings.QaGroupConnected_polylineClass))]
-			IFeatureClass polylineClass,
+			IReadOnlyFeatureClass polylineClass,
 			[Doc(nameof(DocStrings.QaGroupConnected_groupBy))] [NotNull]
 			IList<string> groupBy,
 			[Doc(nameof(DocStrings.QaGroupConnected_allowedShape))] ShapeAllowed allowedShape)
@@ -320,7 +320,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaGroupConnected_1))]
 		public QaGroupConnected(
 			[Doc(nameof(DocStrings.QaGroupConnected_polylineClasses))] [NotNull]
-			IList<IFeatureClass>
+			IList<IReadOnlyFeatureClass>
 				polylineClasses,
 			[Doc(nameof(DocStrings.QaGroupConnected_groupBy))] [NotNull]
 			IList<string> groupBy,
@@ -333,7 +333,7 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaGroupConnected_minimumErrorConnectionLineLength))]
 			double
 				minimumErrorConnectionLineLength)
-			: base(CastToTables((IEnumerable<IFeatureClass>) polylineClasses), groupBy)
+			: base(CastToTables((IEnumerable<IReadOnlyFeatureClass>) polylineClasses), groupBy)
 		{
 			Assert.ArgumentNotNull(groupBy, nameof(groupBy));
 
@@ -404,7 +404,7 @@ namespace ProSuite.QA.Tests
 			IList<QueryFilterHelper> filterHelpers = null;
 			for (var tableIndex = 0; tableIndex < InvolvedTables.Count; tableIndex++)
 			{
-				ITable polylineClass = InvolvedTables[tableIndex];
+				IReadOnlyTable polylineClass = InvolvedTables[tableIndex];
 				UniqueIdProvider uniqueIdProvider = GetUniqueIdProvider(tableIndex);
 
 				#region init handlig of table constraint
@@ -427,7 +427,7 @@ namespace ProSuite.QA.Tests
 
 				#endregion
 
-				foreach (IRow row in new EnumCursor(polylineClass, filter, recycle: true))
+				foreach (IReadOnlyRow row in polylineClass.EnumRows(filter, recycle: true))
 				{
 					if (filterHelper?.MatchesConstraint(row) == false)
 					{
@@ -463,14 +463,14 @@ namespace ProSuite.QA.Tests
 		}
 
 		[NotNull]
-		private IQueryFilter GetQueryFilter([NotNull] ITable polylineClass,
+		private IQueryFilter GetQueryFilter([NotNull] IReadOnlyTable polylineClass,
 		                                    int tableIndex,
 		                                    [CanBeNull] UniqueIdProvider uniqueIdProvider,
 		                                    bool getAllFields)
 		{
 			IQueryFilter filter = new QueryFilterClass();
 
-			if (WorkspaceUtils.IsInMemoryWorkspace(((IDataset) polylineClass).Workspace)
+			if (WorkspaceUtils.IsInMemoryWorkspace(polylineClass.Workspace)
 			    || getAllFields)
 			{
 				// filter for inMemoryWorkspace does not allow specific subfields
@@ -487,7 +487,7 @@ namespace ProSuite.QA.Tests
 				}
 			}
 
-			filter.AddField(((IFeatureClass) polylineClass).ShapeFieldName);
+			filter.AddField(((IReadOnlyFeatureClass) polylineClass).ShapeFieldName);
 
 			foreach (GroupBy groupBy in GroupBys)
 			{
@@ -500,7 +500,7 @@ namespace ProSuite.QA.Tests
 
 		[NotNull]
 		private List<ConnectedLine> GetLineParts(
-			[NotNull] IRow row, int tableIndex,
+			[NotNull] IReadOnlyRow row, int tableIndex,
 			[CanBeNull] UniqueIdProvider uniqueIdProvider)
 		{
 			bool? cancelledRow = null;
@@ -512,7 +512,7 @@ namespace ProSuite.QA.Tests
 			{
 				rowKeys = rowKeys ??
 				          (uniqueIdProvider != null
-					           ? uniqueIdProvider.GetKeys((IFeature) row)
+					           ? uniqueIdProvider.GetKeys((IReadOnlyFeature) row)
 					           : new[] {(int?) row.OID});
 				cancelledRow = cancelledRow ??
 				               RecheckMultiplePartIssues
@@ -746,7 +746,7 @@ namespace ProSuite.QA.Tests
 			return line.UniqueIdProvider?.GetInvolvedRows(line.Keys) ??
 			       new List<InvolvedRow>
 			       {
-				       new InvolvedRow(((IDataset) InvolvedTables[line.TableIndex]).Name,
+				       new InvolvedRow(InvolvedTables[line.TableIndex].Name,
 				                       line.RowIndex)
 			       };
 		}
@@ -1029,7 +1029,7 @@ namespace ProSuite.QA.Tests
 				return NoError;
 			}
 
-			var involvedRows = new List<InvolvedRow>(lineCount);
+			InvolvedRows involvedRows = new InvolvedRows();
 			foreach (DirectedRow row in groupRows)
 			{
 				InvolvedRowUtils.AddUniqueInvolvedRows(
@@ -1038,10 +1038,9 @@ namespace ProSuite.QA.Tests
 			}
 
 			const string description = "Group branches";
-			return ReportError(description,
+			return ReportError(description, involvedRows,
 			                   groupRows[0].FromPoint,
-			                   LocalCodes[Code.InvalidLineGroup_Branch], null,
-			                   involvedRows);
+			                   LocalCodes[Code.InvalidLineGroup_Branch], null);
 		}
 
 		[NotNull]
@@ -1079,7 +1078,7 @@ namespace ProSuite.QA.Tests
 			}
 
 			int endRowCount = groupEndRows.Count;
-			var involvedRows = new List<InvolvedRow>(endRowCount + otherPartEnds.Count);
+			InvolvedRows involvedRows = new InvolvedRows();
 
 			for (var i = 0; i < endRowCount; i++)
 			{
@@ -1122,10 +1121,9 @@ namespace ProSuite.QA.Tests
 				              " (Errorgeometry = endpoints of one group and any point(s) of another group)",
 				              group.GetInfo(GroupBys));
 
-			return ReportError(description,
+			return ReportError(description, involvedRows,
 			                   (IGeometry) endPoints,
-			                   LocalCodes[Code.InvalidLineGroup_MultipleParts], null,
-			                   involvedRows);
+			                   LocalCodes[Code.InvalidLineGroup_MultipleParts], null);
 		}
 
 		private int ReportCombinedErrors([NotNull] Group group,
@@ -1220,9 +1218,9 @@ namespace ProSuite.QA.Tests
 					description = baseDescription;
 				}
 
-				errorCount += ReportError(description, errorLines,
-				                          LocalCodes[Code.InvalidLineGroup_MultipleParts], null,
-				                          GetInvolvedRows(longGaps));
+				errorCount += ReportError(
+					description, GetInvolvedRows(longGaps), errorLines,
+					LocalCodes[Code.InvalidLineGroup_MultipleParts], null);
 			}
 
 			if (errorPoints != null)
@@ -1250,9 +1248,8 @@ namespace ProSuite.QA.Tests
 					description = baseDescription;
 				}
 
-				errorCount += ReportError(description, errorPoints,
-				                          LocalCodes[Code.InvalidLineGroup_MultipleParts], null,
-				                          GetInvolvedRows(shortGaps));
+				errorCount += ReportError(description, GetInvolvedRows(shortGaps), errorPoints,
+				                          LocalCodes[Code.InvalidLineGroup_MultipleParts], null);
 			}
 
 			return errorCount;
@@ -1286,9 +1283,8 @@ namespace ProSuite.QA.Tests
 						groupInfo,
 						FormatLength(gap.Distance, errorGeometry.SpatialReference).Trim());
 
-				errorCount += ReportError(description, errorGeometry,
-				                          LocalCodes[Code.InvalidLineGroup_MultipleParts], null,
-				                          GetInvolvedRows(gap));
+				errorCount += ReportError(description, GetInvolvedRows(gap), errorGeometry,
+				                          LocalCodes[Code.InvalidLineGroup_MultipleParts], null);
 			}
 
 			return errorCount;
@@ -1498,9 +1494,9 @@ namespace ProSuite.QA.Tests
 		}
 
 		[NotNull]
-		private static IEnumerable<InvolvedRow> GetInvolvedRows([NotNull] EndsGap gap)
+		private static InvolvedRows GetInvolvedRows([NotNull] EndsGap gap)
 		{
-			var result = new List<InvolvedRow>(2);
+			var result = new InvolvedRows();
 
 			InvolvedRowUtils.AddUniqueInvolvedRows(result, gap.ThisEnd.InvolvedRows);
 			InvolvedRowUtils.AddUniqueInvolvedRows(result, gap.OtherEnd.InvolvedRows);
@@ -1527,10 +1523,10 @@ namespace ProSuite.QA.Tests
 		//}
 
 		[NotNull]
-		private static IEnumerable<InvolvedRow> GetInvolvedRows(
+		private static InvolvedRows GetInvolvedRows(
 			[NotNull] ICollection<EndsGap> gaps)
 		{
-			var result = new List<InvolvedRow>(gaps.Count * 2);
+			InvolvedRows result = new InvolvedRows();
 
 			foreach (EndsGap gap in gaps)
 			{
@@ -1666,9 +1662,9 @@ namespace ProSuite.QA.Tests
 
 				const string description = "Cycle found";
 				_groupCompletedErrorsCount +=
-					ReportError(description, errList.GetPolygon(),
-					            LocalCodes[Code.InvalidLineGroup_Cycle], null,
-					            GetUniqueInvolvedRows(errList.GetUniqueRows(InvolvedTables)));
+					ReportError(
+						description, GetUniqueInvolvedRows(errList.GetUniqueRows(InvolvedTables)),
+						errList.GetPolygon(), LocalCodes[Code.InvalidLineGroup_Cycle], null);
 			}
 
 			if (orientation > 0 && (_allowedShape & ShapeAllowed.InsideBranches) == 0)
@@ -1746,9 +1742,9 @@ namespace ProSuite.QA.Tests
 
 			string description = string.Format("Found {0} ends, expected <= {1}",
 			                                   endRows.Count, maxEnd);
-			return ReportError(description, (IGeometry) points,
-			                   issueCode, null,
-			                   GetUniqueInvolvedRows(lineList.GetUniqueRows(InvolvedTables)));
+			return ReportError(
+				description, GetUniqueInvolvedRows(lineList.GetUniqueRows(InvolvedTables)),
+				(IGeometry) points, issueCode, null);
 		}
 
 		[NotNull]
@@ -1951,12 +1947,12 @@ namespace ProSuite.QA.Tests
 
 			int ITableIndexRow.TableIndex => TableIndex;
 
-			IRow ITableIndexRow.GetRow(IList<ITable> tableIndexTables)
+			IReadOnlyRow ITableIndexRow.GetRow(IList<IReadOnlyTable> tableIndexTables)
 			{
 				return tableIndexTables[TableIndex].GetRow(RowIndex);
 			}
 
-			IRow ITableIndexRow.CachedRow => null;
+			IReadOnlyRow ITableIndexRow.CachedRow => null;
 
 			public override string ToString()
 			{

@@ -1,19 +1,16 @@
 using System;
 using System.IO;
+using System.IO.Compression;
+using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.IO;
 using ProSuite.Commons.Reflection;
 
 namespace ProSuite.Commons.Testing
 {
-	/// <summary>
-	/// Helper class to get at test data in unit tests.
-	/// Our convention is that test data is in the TestData
-	/// folder within the project. The test runner seems to
-	/// use the assembly from the main bin/Debug directory,
-	/// so test data is at ../../src/$PROJECT/TestData/.
-	/// </summary>
 	public class TestDataLocator
 	{
 		private readonly string _testDataRoot;
@@ -59,25 +56,27 @@ namespace ProSuite.Commons.Testing
 		#endregion
 
 		[NotNull]
-		public string GetPath([NotNull] string fileName)
+		public string GetPath([NotNull] string fileName, [CallerMemberName] string testName = null)
 		{
-			return GetPath(fileName, _testDataRoot);
+			return GetPath(fileName, _testDataRoot, testName);
 		}
 
 		[NotNull]
 		public string GetPath([NotNull] string fileName,
 		                      [NotNull] string assemblyRelativePath,
-		                      [NotNull] string currentDirRelativePath)
+		                      [NotNull] string currentDirRelativePath,
+		                      string testName)
 		{
 			string testDataDirectory = GetTestDataRoot(assemblyRelativePath,
 			                                           currentDirRelativePath);
 
-			return GetPath(fileName, testDataDirectory);
+			return GetPath(fileName, testDataDirectory, testName);
 		}
 
 		[NotNull]
-		public string GetPath([NotNull] string fileName,
-		                      [NotNull] string testDataDirectory)
+		private static string GetPath([NotNull] string fileName,
+		                              [NotNull] string testDataDirectory,
+		                              [CanBeNull] string testName)
 		{
 			string path = Path.Combine(testDataDirectory, fileName);
 
@@ -86,7 +85,88 @@ namespace ProSuite.Commons.Testing
 				throw new FileNotFoundException($"File or directory not found: {path}");
 			}
 
-			return Path.GetFullPath(path);
+			if (path.EndsWith(".7z", StringComparison.InvariantCultureIgnoreCase))
+			{
+				throw new ArgumentException(
+					"7-zip archives are not supported, please create a zip archive");
+			}
+
+			string targetGdb;
+			string targetDir;
+
+			if (! string.IsNullOrEmpty(testName))
+			{
+				targetDir = Path.Combine(@"C:\temp\UnitTestData", testName);
+
+				if (Directory.Exists(targetDir))
+				{
+					try
+					{
+						FileSystemUtils.DeleteDirectory(targetDir, true);
+					}
+					catch (Exception)
+					{
+						// caught deliberately
+					}
+				}
+
+				Directory.CreateDirectory(targetDir);
+			}
+			else
+			{
+				targetDir = @"C:\temp\UnitTestData";
+				targetGdb = GetFileGeodatabasePath(targetDir, fileName);
+
+				if (Directory.Exists(targetGdb))
+				{
+					try
+					{
+						FileSystemUtils.DeleteDirectory(targetGdb, true);
+					}
+					catch (Exception)
+					{
+						// caught deliberately
+					}
+				}
+			}
+
+			if (fileName.EndsWith(".gdb", StringComparison.InvariantCultureIgnoreCase))
+			{
+				targetGdb = Path.Combine(targetDir, fileName);
+
+				FileSystemUtils.CopyDirectory(path, targetGdb, true);
+
+				return targetGdb;
+			}
+			if (fileName.EndsWith(".mdb", StringComparison.InvariantCultureIgnoreCase))
+			{
+				targetGdb = Path.Combine(targetDir, fileName);
+
+				File.Copy(path, targetGdb);
+
+				return targetGdb;
+			}
+			if (fileName.EndsWith(".zip", StringComparison.InvariantCultureIgnoreCase))
+			{
+				ZipFile.ExtractToDirectory(path, targetDir);
+			
+				targetGdb = GetFileGeodatabasePath(targetDir, fileName);
+			
+				Assert.True(Directory.Exists(targetGdb), $"{targetGdb} does not exist");
+
+				return targetGdb;
+			}
+
+			throw new ArgumentException(
+				$"{Path.GetExtension(path)} files are not supported, please create a zip archive");
+		}
+
+		private static string GetFileGeodatabasePath(string testDataDirectory, string fileName)
+		{
+			string path = Directory.GetDirectories(testDataDirectory, $"{Path.GetFileNameWithoutExtension(fileName)}*")
+			                         .FirstOrDefault(candidate => candidate.EndsWith(".gdb"));
+
+			return path;
 		}
 
 		/// <summary>
@@ -208,7 +288,11 @@ namespace ProSuite.Commons.Testing
 		{
 			string binDir = ReflectionUtils.GetAssemblyDirectory(Assembly.GetCallingAssembly());
 
-			string repoRoot = Path.Combine(binDir, @"..\..\");
+			// for Swisstopo.Topgis.Server.sln
+			string repoRoot =
+				Path.Combine(binDir, EnvironmentUtils.Is64BitProcess
+					                     ? @"..\..\..\"
+					                     : @"..\..\");
 
 			var directory = new DirectoryInfo(repoRoot);
 

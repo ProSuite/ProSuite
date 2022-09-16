@@ -162,7 +162,7 @@ namespace ProSuite.DomainModel.AO.QA
 			[NotNull] string gdbDatasetName,
 			[NotNull] QualityCondition qualityCondition)
 		{
-			foreach (Dataset involvedDataset in qualityCondition.GetDatasetParameterValues())
+			foreach (Dataset involvedDataset in qualityCondition.GetDatasetParameterValues(true))
 			{
 				IWorkspaceContext workspaceContext =
 					_workspaceContextLookup.GetWorkspaceContext(involvedDataset);

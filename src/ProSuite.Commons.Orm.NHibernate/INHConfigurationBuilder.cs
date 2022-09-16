@@ -15,5 +15,12 @@ namespace ProSuite.Commons.Orm.NHibernate
 		/// using the 
 		/// </summary>
 		bool DatabaseSupportsSequence { get; }
+
+		/// <summary>
+		/// The DDX environment name relevant for multi-DDX setups. It is used to uniquely identify
+		/// a specific DDX and look up its connection details in servers that serve requests from
+		/// various DDX environments.
+		/// </summary>
+		string DdxEnvironmentName { get; }
 	}
 }

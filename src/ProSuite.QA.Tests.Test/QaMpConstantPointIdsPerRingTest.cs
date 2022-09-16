@@ -6,6 +6,7 @@ using ProSuite.QA.Tests.Test.TestRunners;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.AO.Test.TestSupport;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests.Test
 {
@@ -45,12 +46,12 @@ namespace ProSuite.QA.Tests.Test
 			const bool includeInnerRings = true;
 			const bool doNotIncludeInnerRings = false;
 
-			var test = new QaMpConstantPointIdsPerRing(fc, doNotIncludeInnerRings);
+			var test = new QaMpConstantPointIdsPerRing(ReadOnlyTableFactory.Create(fc), doNotIncludeInnerRings);
 			var runner = new QaTestRunner(test);
 			runner.Execute(row1);
 			Assert.AreEqual(0, runner.Errors.Count);
 
-			test = new QaMpConstantPointIdsPerRing(fc, includeInnerRings);
+			test = new QaMpConstantPointIdsPerRing(ReadOnlyTableFactory.Create(fc), includeInnerRings);
 			runner = new QaTestRunner(test);
 			runner.Execute(row1);
 			Assert.AreEqual(1, runner.Errors.Count);
@@ -76,7 +77,7 @@ namespace ProSuite.QA.Tests.Test
 			const bool includeInnerRings = true;
 			const bool doNotIncludeInnerRings = false;
 
-			var test = new QaMpConstantPointIdsPerRing(fc, includeInnerRings);
+			var test = new QaMpConstantPointIdsPerRing(ReadOnlyTableFactory.Create(fc), includeInnerRings);
 			var runner = new QaTestRunner(test);
 			runner.Execute(row1);
 			Assert.AreEqual(1, runner.Errors.Count);
@@ -91,7 +92,7 @@ namespace ProSuite.QA.Tests.Test
 
 			row1 = fc.CreateFeature(multiPatch);
 
-			test = new QaMpConstantPointIdsPerRing(fc, includeInnerRings);
+			test = new QaMpConstantPointIdsPerRing(ReadOnlyTableFactory.Create(fc), includeInnerRings);
 			runner = new QaTestRunner(test);
 			runner.Execute(row1);
 			Assert.AreEqual(1, runner.Errors.Count);
@@ -106,7 +107,7 @@ namespace ProSuite.QA.Tests.Test
 
 			row1 = fc.CreateFeature(multiPatch);
 
-			test = new QaMpConstantPointIdsPerRing(fc, includeInnerRings);
+			test = new QaMpConstantPointIdsPerRing(ReadOnlyTableFactory.Create(fc), includeInnerRings);
 			runner = new QaTestRunner(test);
 			runner.Execute(row1);
 			Assert.AreEqual(1, runner.Errors.Count);
@@ -121,7 +122,7 @@ namespace ProSuite.QA.Tests.Test
 
 			row1 = fc.CreateFeature(multiPatch);
 
-			test = new QaMpConstantPointIdsPerRing(fc, doNotIncludeInnerRings);
+			test = new QaMpConstantPointIdsPerRing(ReadOnlyTableFactory.Create(fc), doNotIncludeInnerRings);
 			runner = new QaTestRunner(test);
 			runner.Execute(row1);
 			Assert.AreEqual(1, runner.Errors.Count);
@@ -136,7 +137,7 @@ namespace ProSuite.QA.Tests.Test
 
 			row1 = fc.CreateFeature(multiPatch);
 
-			test = new QaMpConstantPointIdsPerRing(fc, doNotIncludeInnerRings);
+			test = new QaMpConstantPointIdsPerRing(ReadOnlyTableFactory.Create(fc), doNotIncludeInnerRings);
 			runner = new QaTestRunner(test);
 			runner.Execute(row1);
 			Assert.AreEqual(1, runner.Errors.Count);

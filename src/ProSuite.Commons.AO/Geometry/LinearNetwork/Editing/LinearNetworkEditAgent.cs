@@ -5,6 +5,7 @@ using System.Reflection;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -353,7 +354,7 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork.Editing
 				IPolyline newPolyline = (IPolyline) edgeFeature.Shape;
 
 				bool newPolylineChanged = nodeUpdater.UpdateEdgeNodes(edgeFeature, originalPolyline,
-				                                                      newPolyline);
+					newPolyline);
 
 				if (newPolylineChanged)
 				{
@@ -544,13 +545,14 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork.Editing
 				IPoint junctionPoint = (IPoint) junctionFeature.Shape;
 
 				foreach (IFeature edgeFeature in NetworkFeatureFinder.FindEdgeFeaturesAt(
-					junctionPoint))
+					         junctionPoint))
 				{
 					IPolyline edge = (IPolyline) edgeFeature.ShapeCopy;
 
 					if (GeometryUtils.InteriorIntersects(edge, junctionPoint))
 					{
-						AddToList(junctionsPerEdge, edgeFeature, junctionFeature);
+						CollectionUtils.AddToValueList(junctionsPerEdge, edgeFeature,
+						                               junctionFeature);
 					}
 				}
 			}
@@ -587,7 +589,7 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork.Editing
 			{
 				IPolyline polyline = edgeFeature.Shape as IPolyline;
 
-				if (polyline != null)
+				if (polyline != null && ! polyline.IsEmpty)
 				{
 					DeleteOrphanedJunctions(polyline.FromPoint);
 					DeleteOrphanedJunctions(polyline.ToPoint);
@@ -622,21 +624,6 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork.Editing
 		private IEnumerable<IFeature> GetJunctionFeatures([NotNull] IEnumerable<IFeature> fromList)
 		{
 			return fromList.Where(f => NetworkDefinition.IsJunctionFeature(f));
-		}
-
-		private static void AddToList<TKey, TValue>(
-			[NotNull] IDictionary<TKey, List<TValue>> dictionary,
-			[NotNull] TKey key,
-			[NotNull] TValue value)
-		{
-			List<TValue> list;
-			if (! dictionary.TryGetValue(key, out list))
-			{
-				list = new List<TValue>();
-				dictionary.Add(key, list);
-			}
-
-			list.Add(value);
 		}
 
 		private bool HasEdits()

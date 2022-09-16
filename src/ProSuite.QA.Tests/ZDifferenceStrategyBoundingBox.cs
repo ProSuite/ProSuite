@@ -1,12 +1,13 @@
 using System;
 using System.Runtime.InteropServices;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Core.IssueCodes;
 
 namespace ProSuite.QA.Tests
 {
@@ -52,8 +53,8 @@ namespace ProSuite.QA.Tests
 			       zRelationConstraint, expressionCaseSensitivity,
 			       errorReporting, formatComparisonFunction) { }
 
-		protected override int ReportErrors(IFeature feature1, int tableIndex1,
-		                                    IFeature feature2, int tableIndex2)
+		protected override int ReportErrors(IReadOnlyFeature feature1, int tableIndex1,
+		                                    IReadOnlyFeature feature2, int tableIndex2)
 		{
 			var zRangeFeature1 =
 				new ZRangeFeature(feature1, tableIndex1, _envelopeTemplate);
@@ -117,11 +118,11 @@ namespace ProSuite.QA.Tests
 					description = $"The feature Z ranges overlap by {overlapDistance:N2}";
 				}
 
-				errorCount += ErrorReporting.Report(description,
-				                                    geometryProvider.Geometry,
-				                                    issueCode, null,
-				                                    minFeature.Feature,
-				                                    maxFeature.Feature);
+				errorCount += ErrorReporting.Report(
+					description,
+					InvolvedRowUtils.GetInvolvedRows(minFeature.Feature, maxFeature.Feature),
+					geometryProvider.Geometry,
+					issueCode, null);
 			}
 
 			if (maximumZDifference > 0 && dz > maximumZDifference)
@@ -132,11 +133,9 @@ namespace ProSuite.QA.Tests
 					FormatComparison(dz, maximumZDifference, ">"));
 
 				errorCount += ErrorReporting.Report(
-					description,
+					description, InvolvedRowUtils.GetInvolvedRows(feature1, feature2),
 					geometryProvider.Geometry, Codes[Code.TooLarge],
-					TestUtils.GetShapeFieldName(feature1),
-					new object[] {dz},
-					feature1, feature2);
+					TestUtils.GetShapeFieldName(feature1), values: new object[] { dz });
 			}
 
 			errorCount += CheckConstraint(minFeature, maxFeature, geometryProvider, dz);
@@ -162,24 +161,23 @@ namespace ProSuite.QA.Tests
 			}
 
 			IGeometry errorGeometry = geometryProvider.Geometry;
-			return ErrorReporting.Report(conditionMessage, errorGeometry,
-			                             Codes[Code.ConstraintNotFulfilled], null,
-			                             maxFeature.Feature,
-			                             minFeature.Feature);
+			return ErrorReporting.Report(
+				conditionMessage,
+				InvolvedRowUtils.GetInvolvedRows(maxFeature.Feature, minFeature.Feature),
+				errorGeometry, Codes[Code.ConstraintNotFulfilled], null);
 		}
 
 		private int ValidateZNotNull([NotNull] ZRangeFeature feature)
 		{
 			return double.IsNaN(feature.ZMin) || double.IsNaN(feature.ZMax)
-				       ? ErrorReporting.Report("Z is NaN", feature.Shape,
-				                               Codes[Code.UndefinedZ],
-				                               TestUtils.GetShapeFieldName(
-					                               feature.Feature),
-				                               feature.Feature)
+				       ? ErrorReporting.Report(
+					       "Z is NaN", InvolvedRowUtils.GetInvolvedRows(feature.Feature),
+					       feature.Shape, Codes[Code.UndefinedZ],
+					       TestUtils.GetShapeFieldName(feature.Feature))
 				       : 0;
 		}
 
-		private static void GetZRange([NotNull] IFeature feature,
+		private static void GetZRange([NotNull] IReadOnlyFeature feature,
 		                              [NotNull] IEnvelope template,
 		                              out double zMin,
 		                              out double zMax)
@@ -195,7 +193,7 @@ namespace ProSuite.QA.Tests
 			private readonly double _zMin;
 			private readonly double _zMax;
 
-			public ZRangeFeature([NotNull] IFeature feature,
+			public ZRangeFeature([NotNull] IReadOnlyFeature feature,
 			                     int tableIndex,
 			                     [NotNull] IEnvelope template)
 			{
@@ -213,7 +211,7 @@ namespace ProSuite.QA.Tests
 			public IGeometry Shape => Feature.Shape;
 
 			[NotNull]
-			public IFeature Feature { get; }
+			public IReadOnlyFeature Feature { get; }
 
 			public int TableIndex { get; }
 		}

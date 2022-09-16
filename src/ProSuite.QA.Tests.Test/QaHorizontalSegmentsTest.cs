@@ -5,6 +5,7 @@ using ProSuite.QA.Tests.Test.Construction;
 using ProSuite.QA.Tests.Test.TestRunners;
 using NUnit.Framework;
 using ProSuite.Commons;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.AO.Test.TestSupport;
@@ -43,7 +44,8 @@ namespace ProSuite.QA.Tests.Test
 
 			IFeature row1 = featureClassMock.CreateFeature(construction.MultiPatch);
 
-			var test = new QaHorizontalSegments(featureClassMock, 5, 0);
+			var test =
+				new QaHorizontalSegments(ReadOnlyTableFactory.Create(featureClassMock), 5, 0);
 			var runner = new QaTestRunner(test);
 			runner.KeepGeometry = true;
 
@@ -67,7 +69,8 @@ namespace ProSuite.QA.Tests.Test
 			IFeature row1 = featureClassMock.CreateFeature(construction.Curve);
 			GeometryUtils.EnsureSpatialReference(row1.Shape, featureClassMock);
 
-			var test = new QaHorizontalSegments(featureClassMock, 5, 0);
+			var test = new QaHorizontalSegments(
+				ReadOnlyTableFactory.Create(featureClassMock), 5, 0);
 			var runner = new QaTestRunner(test);
 			runner.KeepGeometry = true;
 
@@ -91,7 +94,8 @@ namespace ProSuite.QA.Tests.Test
 			IFeature row1 = featureClassMock.CreateFeature(construction.ClosePolygon());
 			GeometryUtils.EnsureSpatialReference(row1.Shape, featureClassMock);
 
-			var test = new QaHorizontalSegments(featureClassMock, 5, 0);
+			var test = new QaHorizontalSegments(
+				ReadOnlyTableFactory.Create(featureClassMock), 5, 0);
 			var runner = new QaTestRunner(test);
 			runner.KeepGeometry = true;
 
@@ -119,7 +123,8 @@ namespace ProSuite.QA.Tests.Test
 
 			IFeature row1 = featureClassMock.CreateFeature(construction.MultiPatch);
 
-			var test = new QaHorizontalSegments(featureClassMock, 5, toleranceAngle);
+			var test = new QaHorizontalSegments(
+				ReadOnlyTableFactory.Create(featureClassMock), 5, toleranceAngle);
 			var runner = new QaTestRunner(test);
 
 			runner.Execute(row1);
@@ -134,7 +139,8 @@ namespace ProSuite.QA.Tests.Test
 
 			row1 = featureClassMock.CreateFeature(construction.MultiPatch);
 
-			test = new QaHorizontalSegments(featureClassMock, 5, toleranceAngle);
+			test = new QaHorizontalSegments(
+				ReadOnlyTableFactory.Create(featureClassMock), 5, toleranceAngle);
 			runner = new QaTestRunner(test);
 			runner.Execute(row1);
 
@@ -159,7 +165,8 @@ namespace ProSuite.QA.Tests.Test
 
 			IFeature row1 = featureClassMock.CreateFeature(construction.MultiPatch);
 
-			var test = new QaHorizontalSegments(featureClassMock, limitAngle, 0);
+			var test = new QaHorizontalSegments(
+				ReadOnlyTableFactory.Create(featureClassMock), limitAngle, 0);
 			var runner = new QaTestRunner(test);
 
 			runner.Execute(row1);
@@ -174,7 +181,8 @@ namespace ProSuite.QA.Tests.Test
 
 			row1 = featureClassMock.CreateFeature(construction.MultiPatch);
 
-			test = new QaHorizontalSegments(featureClassMock, limitAngle, 0);
+			test = new QaHorizontalSegments(
+				ReadOnlyTableFactory.Create(featureClassMock), limitAngle, 0);
 			runner = new QaTestRunner(test);
 			runner.Execute(row1);
 
@@ -198,7 +206,8 @@ namespace ProSuite.QA.Tests.Test
 
 			IFeature row1 = featureClassMock.CreateFeature(construction.MultiPatch);
 
-			var test = new QaHorizontalSegments(featureClassMock, 5, 0);
+			var test = new QaHorizontalSegments(
+				ReadOnlyTableFactory.Create(featureClassMock), 5, 0);
 			var runner = new QaTestRunner(test);
 
 			runner.Execute(row1);

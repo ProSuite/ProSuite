@@ -1,15 +1,15 @@
 using System.Collections.Generic;
-using ESRI.ArcGIS.Geodatabase;
-using ProSuite.QA.Container;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Core.IssueCodes;
 
 namespace ProSuite.QA.Tests.Schema
 {
 	public abstract class QaSchemaFieldPropertiesBase : QaSchemaTestBase
 	{
-		private readonly ITable _table;
+		private readonly IReadOnlyTable _table;
 		private readonly bool _matchAliasName;
 		private FieldSpecifications _fieldSpecifications;
 
@@ -32,9 +32,9 @@ namespace ProSuite.QA.Tests.Schema
 		/// specification that matches their alias name.</param>
 		/// <param name="referenceTable">The reference table containing field properties (read by 
 		/// subclass, but needs to be passed to base class to enable constraint filtering etc.).</param>
-		protected QaSchemaFieldPropertiesBase([NotNull] ITable table,
+		protected QaSchemaFieldPropertiesBase([NotNull] IReadOnlyTable table,
 		                                      bool matchAliasName,
-		                                      [CanBeNull] ITable referenceTable = null)
+		                                      [CanBeNull] IReadOnlyTable referenceTable)
 			: base(table, referenceTable)
 		{
 			Assert.ArgumentNotNull(table, nameof(table));

@@ -528,14 +528,12 @@ namespace ProSuite.Commons.Collections
 			return result;
 		}
 
-		public static TSource MaxElement<TSource, TKey>(this IEnumerable<TSource> source,
-		                                                Func<TSource, TKey> selector)
+		public static TSource MaxElement<TSource, TKey>([NotNull] this IEnumerable<TSource> source,
+		                                                [NotNull] Func<TSource, TKey> selector)
 			where TKey : IComparable<TKey>
 		{
-			if (source == null)
-				throw new ArgumentNullException(nameof(source));
-			if (selector == null)
-				throw new ArgumentNullException(nameof(selector));
+			Assert.ArgumentNotNull(source, nameof(source));
+			Assert.ArgumentNotNull(selector, nameof(selector));
 
 			TSource maxElement = default(TSource);
 			TKey maxOrdinal = default(TKey);
@@ -569,18 +567,12 @@ namespace ProSuite.Commons.Collections
 		}
 
 		public static TSource MaxElementOrDefault<TSource, TKey>(
-			this IEnumerable<TSource> source, Func<TSource, TKey> selector)
+			[NotNull] this IEnumerable<TSource> source,
+			[NotNull] Func<TSource, TKey> selector)
 			where TKey : IComparable<TKey>
 		{
-			if (source == null)
-			{
-				throw new ArgumentNullException(nameof(source));
-			}
-
-			if (selector == null)
-			{
-				throw new ArgumentNullException(nameof(selector));
-			}
+			Assert.ArgumentNotNull(source, nameof(source));
+			Assert.ArgumentNotNull(selector, nameof(selector));
 
 			TSource maxElement = default(TSource);
 			TKey maxOrdinal = default(TKey);
@@ -606,6 +598,36 @@ namespace ProSuite.Commons.Collections
 			}
 
 			return gotAny ? maxElement : default;
+		}
+
+		public static TSource MinElement<TSource, TKey>([NotNull] this IEnumerable<TSource> source,
+		                                                [NotNull] Func<TSource, TKey> selector)
+			where TKey : IComparable<TKey>
+		{
+			Assert.ArgumentNotNull(source, nameof(source));
+			Assert.ArgumentNotNull(selector, nameof(selector));
+
+			bool gotAny = TryGetMinElement(source, selector, out TSource minElement);
+
+			if (gotAny)
+			{
+				return minElement;
+			}
+
+			throw new InvalidOperationException("Sequence contains no elements");
+		}
+
+		public static TSource MinElementOrDefault<TSource, TKey>(
+			[NotNull] this IEnumerable<TSource> source,
+			[NotNull] Func<TSource, TKey> selector)
+			where TKey : IComparable<TKey>
+		{
+			Assert.ArgumentNotNull(source, nameof(source));
+			Assert.ArgumentNotNull(selector, nameof(selector));
+
+			bool gotAny = TryGetMinElement(source, selector, out TSource minElement);
+
+			return gotAny ? minElement : default;
 		}
 
 		[NotNull]
@@ -678,6 +700,36 @@ namespace ProSuite.Commons.Collections
 			}
 		}
 
+		public static void AddToValueList<TKey, TValue>(
+			[NotNull] IDictionary<TKey, List<TValue>> dictionary,
+			[NotNull] TKey key,
+			[NotNull] TValue value)
+		{
+			List<TValue> list;
+			if (! dictionary.TryGetValue(key, out list))
+			{
+				list = new List<TValue>();
+				dictionary.Add(key, list);
+			}
+
+			list.Add(value);
+		}
+
+		public static void AddToValueList<TKey, TValue>(
+			[NotNull] IDictionary<TKey, IList<TValue>> dictionary,
+			[NotNull] TKey key,
+			[NotNull] TValue value)
+		{
+			IList<TValue> list;
+			if (! dictionary.TryGetValue(key, out list))
+			{
+				list = new List<TValue>();
+				dictionary.Add(key, list);
+			}
+
+			list.Add(value);
+		}
+
 		#region Non-public
 
 		private static int GetFirstIndex<T>(ICollection<ListItem<T>> listItems)
@@ -745,6 +797,37 @@ namespace ProSuite.Commons.Collections
 			return listItems;
 		}
 
+		private static bool TryGetMinElement<TSource, TKey>(IEnumerable<TSource> source,
+		                                                    Func<TSource, TKey> selector,
+		                                                    out TSource minElement)
+			where TKey : IComparable<TKey>
+		{
+			minElement = default;
+			TKey minOrdinal = default(TKey);
+			var gotAny = false;
+
+			foreach (TSource element in source)
+			{
+				if (gotAny)
+				{
+					TKey ordinal = selector(element);
+					if (ordinal.CompareTo(minOrdinal) < 0)
+					{
+						minElement = element;
+						minOrdinal = ordinal;
+					}
+				}
+				else
+				{
+					minElement = element;
+					minOrdinal = selector(element);
+					gotAny = true;
+				}
+			}
+
+			return gotAny;
+		}
+
 		#endregion
 
 		#region Nested types
@@ -783,7 +866,7 @@ namespace ProSuite.Commons.Collections
 		}
 
 		[NotNull]
-		public static List<T> Zip<T>([NotNull] this IEnumerable<T> first,
+		public static List<T> Zip<T>([NotNull] IEnumerable<T> first,
 		                             [NotNull] IEnumerable<T> second)
 		{
 			Assert.ArgumentNotNull(first, nameof(first));
@@ -816,7 +899,7 @@ namespace ProSuite.Commons.Collections
 		}
 
 		[NotNull]
-		public static List<T> Zip<T>([NotNull] this IEnumerable<T> first,
+		public static List<T> Zip<T>([NotNull] IEnumerable<T> first,
 		                             [NotNull] IEnumerable<T> second,
 		                             [NotNull] IEnumerable<T> third)
 		{

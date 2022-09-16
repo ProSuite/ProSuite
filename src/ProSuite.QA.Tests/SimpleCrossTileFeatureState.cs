@@ -1,10 +1,10 @@
-using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests
 {
 	public class SimpleCrossTileFeatureState : CrossTileFeatureState<PendingFeature>
 	{
-		protected override PendingFeature CreatePendingFeature(IFeature feature,
+		protected override PendingFeature CreatePendingFeature(IReadOnlyFeature feature,
 		                                                       double xMin, double yMin,
 		                                                       double xMax, double yMax)
 		{

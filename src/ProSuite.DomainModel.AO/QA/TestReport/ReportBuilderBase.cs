@@ -6,11 +6,14 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 {
 	public abstract class ReportBuilderBase : IReportBuilder
 	{
-		private readonly IDictionary<Type, IncludedTestClass> _includedTestClasses =
-			new Dictionary<Type, IncludedTestClass>();
+		private readonly IDictionary<Type, IncludedInstanceClass> _includedTestClasses =
+			new Dictionary<Type, IncludedInstanceClass>();
 
-		private readonly IDictionary<Type, IncludedTransformer> _includedTransformerClasses =
-			new Dictionary<Type, IncludedTransformer>();
+		private readonly IDictionary<Type, IncludedInstanceClass> _includedTransformerClasses =
+			new Dictionary<Type, IncludedInstanceClass>();
+
+		private readonly IDictionary<Type, IncludedInstanceClass> _includedFilterClasses =
+			new Dictionary<Type, IncludedInstanceClass>();
 
 		private readonly List<IncludedTestFactory> _includedTestFactories =
 			new List<IncludedTestFactory>();
@@ -18,15 +21,21 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 		public bool IncludeAssemblyInfo { get; set; }
 
 		/// <summary>
-		/// Gets or sets a value indicating whether obsolete tests or factories are
+		/// Gets or sets a value indicating whether obsolete instance descriptors are
 		/// included.
 		/// </summary>
-		/// <value><c>true</c> if obsolete tests or factories should be included; otherwise, <c>false</c>.</value>
+		/// <value><c>true</c> if obsolete tests, factories, transformers or filters should be
+		/// included; otherwise, <c>false</c>.</value>
 		public bool IncludeObsolete { get; set; }
 
-		protected IDictionary<Type, IncludedTestClass> IncludedTestClasses => _includedTestClasses;
+		protected IDictionary<Type, IncludedInstanceClass> IncludedTestClasses =>
+			_includedTestClasses;
 
-		protected IDictionary<Type, IncludedTransformer> IncludedTransformerClasses => _includedTransformerClasses;
+		protected IDictionary<Type, IncludedInstanceClass> IncludedTransformerClasses =>
+			_includedTransformerClasses;
+
+		protected IDictionary<Type, IncludedInstanceClass> IncludedFilterClasses =>
+			_includedFilterClasses;
 
 		protected List<IncludedTestFactory> IncludedTestFactories => _includedTestFactories;
 
@@ -47,126 +56,100 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			IncludedTestFactories.Add(testFactory);
 		}
 
-		public void IncludeTransformer(Type testType, int constructorIndex)
+		public void IncludeTransformer(Type transformerType, int constructorIndex)
 		{
-			var newTransformer = false;
-			IncludedTransformer transformerClass;
-			if (!IncludedTransformerClasses.TryGetValue(testType, out transformerClass))
-			{
-				transformerClass = new IncludedTransformer(testType);
+			Include(transformerType, constructorIndex, IncludedTransformerClasses);
+		}
 
-				if (!IncludeObsolete && transformerClass.Obsolete)
-				{
-					return;
-				}
-
-				if (transformerClass.InternallyUsed)
-				{
-					return;
-				}
-
-				// this test class is to be added, if the constructor is not obsolete
-				newTransformer = true;
-			}
-
-			if (transformerClass.Obsolete)
-			{
-				return;
-			}
-
-			IncludedTestConstructor testConstructor =
-				transformerClass.CreateTestConstructor(constructorIndex);
-
-			if (!IncludeObsolete && testConstructor.Obsolete)
-			{
-				return;
-			}
-
-			if (testConstructor.InternallyUsed)
-			{
-				return;
-			}
-
-			transformerClass.IncludeConstructor(testConstructor);
-
-			if (newTransformer)
-			{
-				IncludedTransformerClasses.Add(testType, transformerClass);
-			}
-
+		public void IncludeIssueFilter(Type issueFilterType, int ctorIndex)
+		{
+			Include(issueFilterType, ctorIndex, IncludedFilterClasses);
 		}
 
 		public void IncludeTest(Type testType, int constructorIndex)
 		{
-			var newTestClass = false;
-			IncludedTestClass testClass;
-			if (! IncludedTestClasses.TryGetValue(testType, out testClass))
-			{
-				testClass = new IncludedTestClass(testType);
-
-				if (! IncludeObsolete && testClass.Obsolete)
-				{
-					return;
-				}
-
-				if (testClass.InternallyUsed)
-				{
-					return;
-				}
-
-				// this test class is to be added, if the constructor is not obsolete
-				newTestClass = true;
-			}
-
-			if (testClass.Obsolete)
-			{
-				return;
-			}
-
-			IncludedTestConstructor testConstructor =
-				testClass.CreateTestConstructor(constructorIndex);
-
-			if (! IncludeObsolete && testConstructor.Obsolete)
-			{
-				return;
-			}
-
-			if (testConstructor.InternallyUsed)
-			{
-				return;
-			}
-
-			testClass.IncludeConstructor(testConstructor);
-
-			if (newTestClass)
-			{
-				IncludedTestClasses.Add(testType, testClass);
-			}
+			Include(testType, constructorIndex, IncludedTestClasses);
 		}
 
 		public abstract void AddHeaderItem(string name, string value);
 
 		public abstract void WriteReport();
 
-		[NotNull]
-		protected IEnumerable<IncludedTestClass> GetSortedTestClasses()
+		private void Include(Type transformerType, int constructorIndex,
+		                     IDictionary<Type, IncludedInstanceClass> result)
 		{
-			var result = new List<IncludedTestClass>(IncludedTestClasses.Values);
+			var isNewInstance = false;
+			IncludedInstanceClass classToInclude;
+			if (! result.TryGetValue(transformerType, out classToInclude))
+			{
+				classToInclude = new IncludedInstanceClass(transformerType);
+
+				if (! IncludeObsolete && classToInclude.Obsolete)
+				{
+					return;
+				}
+
+				if (classToInclude.InternallyUsed)
+				{
+					return;
+				}
+
+				// this test class is to be added, if the constructor is not obsolete
+				isNewInstance = true;
+			}
+
+			if (classToInclude.Obsolete)
+			{
+				return;
+			}
+
+			IncludedInstanceConstructor instanceConstructor =
+				classToInclude.CreateInstanceConstructor(constructorIndex);
+
+			if (! IncludeObsolete && instanceConstructor.Obsolete)
+			{
+				return;
+			}
+
+			if (instanceConstructor.InternallyUsed)
+			{
+				return;
+			}
+
+			classToInclude.IncludeConstructor(instanceConstructor);
+
+			if (isNewInstance)
+			{
+				result.Add(transformerType, classToInclude);
+			}
+		}
+
+		[NotNull]
+		protected IEnumerable<IncludedInstanceClass> GetSortedTestClasses()
+		{
+			return GetSorted(IncludedTestClasses.Values);
+		}
+
+		[NotNull]
+		protected IEnumerable<IncludedInstanceClass> GetSortedTransformerClasses()
+		{
+			return GetSorted(IncludedTransformerClasses.Values);
+		}
+
+		[NotNull]
+		protected IEnumerable<IncludedInstanceClass> GetSortedIssueFilterClasses()
+		{
+			return GetSorted(IncludedFilterClasses.Values);
+		}
+
+		private static IEnumerable<IncludedInstanceClass> GetSorted(
+			[NotNull] IEnumerable<IncludedInstanceClass> instanceClasses)
+		{
+			var result = new List<IncludedInstanceClass>(instanceClasses);
 
 			result.Sort();
 
 			return result;
 		}
-
-		[NotNull]
-		protected IEnumerable<IncludedTransformer> GetSortedTransformerClasses()
-		{
-			var result = new List<IncludedTransformer>(IncludedTransformerClasses.Values);
-
-			result.Sort();
-
-			return result;
-		}
-
 	}
 }

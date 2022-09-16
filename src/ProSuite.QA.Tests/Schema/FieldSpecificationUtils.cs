@@ -14,7 +14,7 @@ namespace ProSuite.QA.Tests.Schema
 	{
 		[NotNull]
 		public static IEnumerable<FieldSpecification> ReadFieldSpecifications(
-			[NotNull] ITable table, [NotNull] IQueryFilter queryFilter)
+			[NotNull] IReadOnlyTable table, [NotNull] IQueryFilter queryFilter)
 		{
 			Assert.ArgumentNotNull(table, nameof(table));
 			Assert.ArgumentNotNull(queryFilter, nameof(queryFilter));
@@ -24,22 +24,22 @@ namespace ProSuite.QA.Tests.Schema
 			int lengthFieldIndex = GetFieldIndex(table, false, "FIELDLENGTH", "FIELDTYPE_ORACLE");
 			int aliasFieldIndex = GetFieldIndex(table, true, "ALIASNAME", "ALIAS");
 
-			foreach (IRow row in GdbQueryUtils.GetRows(table, queryFilter, recycle: true))
+			foreach (IReadOnlyRow row in table.EnumRows(queryFilter, recycle : true))
 			{
-				var name = row.Value[nameFieldIndex] as string;
+				var name = row.get_Value(nameFieldIndex) as string;
 				if (string.IsNullOrEmpty(name))
 				{
 					continue;
 				}
 
-				var typeString = row.Value[typeFieldIndex] as string;
+				var typeString = row.get_Value(typeFieldIndex) as string;
 				Assert.NotNull(typeString, "Undefined value in field {0} (for FIELDNAME={1})",
-				               row.Fields.Field[typeFieldIndex].Name, name);
+				               table.Fields.Field[typeFieldIndex].Name, name);
 				esriFieldType expectedType = GetFieldType(typeString);
 
-				var lengthString = row.Value[lengthFieldIndex] as string;
+				var lengthString = row.get_Value(lengthFieldIndex) as string;
 				Assert.NotNull(lengthString, "Undefined value in field {0} (for FIELDNAME={1})",
-				               row.Fields.Field[lengthFieldIndex].Name, name);
+				               table.Fields.Field[lengthFieldIndex].Name, name);
 
 				int length = expectedType != esriFieldType.esriFieldTypeString
 					             ? -1
@@ -47,13 +47,13 @@ namespace ProSuite.QA.Tests.Schema
 
 				var alias = aliasFieldIndex == -1
 					            ? null
-					            : row.Value[aliasFieldIndex] as string;
+					            : row.get_Value(aliasFieldIndex) as string;
 
 				yield return new FieldSpecification(name, expectedType, length, alias, null, true);
 			}
 		}
 
-		private static int GetFieldIndex([NotNull] ITable table, bool fieldIsOptional,
+		private static int GetFieldIndex([NotNull] IReadOnlyTable table, bool fieldIsOptional,
 		                                 [NotNull] params string[] fieldNames)
 		{
 			Assert.ArgumentNotNull(table, nameof(table));
@@ -75,7 +75,7 @@ namespace ProSuite.QA.Tests.Schema
 				return -1;
 			}
 
-			string name = DatasetUtils.GetName(table);
+			string name = table.Name;
 			throw new InvalidConfigurationException(
 				fieldNames.Length == 1
 					? $"Field '{fieldNames[0]}' does not exist in table {name}"

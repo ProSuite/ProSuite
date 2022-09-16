@@ -9,7 +9,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 {
 	/// <inheritdoc cref="GdbRow" />
-	public class GdbFeature : GdbRow, IFeature, IFeatureBuffer, IFeatureChanges
+	public class GdbFeature : GdbRow, IFeature, IFeatureBuffer, IFeatureChanges, IReadOnlyFeature
 	{
 		private readonly int _shapeFieldIndex;
 
@@ -19,23 +19,23 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		#region Constructors
 
-		public GdbFeature(int oid,
-		                  [NotNull] IFeatureClass featureClass,
+		public GdbFeature(int oid, [NotNull] GdbFeatureClass featureClass,
 		                  [CanBeNull] IValueList valueList = null)
 			: base(oid, featureClass, valueList)
 		{
 			_featureClass = featureClass;
-			_shapeFieldIndex =
-				_featureClass.FindField(_featureClass.ShapeFieldName);
+			_shapeFieldIndex = featureClass.ShapeFieldIndex;
 		}
 
 		#endregion
 
 		#region IFeature implementation
 
-		public IGeometry ShapeCopy => Shape != null ? GeometryFactory.Clone(Shape) : null;
+		public override IGeometry ShapeCopy => Shape != null ? GeometryFactory.Clone(Shape) : null;
+		ITable IFeature.Table => Table;
+		IReadOnlyFeatureClass IReadOnlyFeature.FeatureClass => (IReadOnlyFeatureClass) Table;
 
-		public IGeometry Shape
+		public override IGeometry Shape
 		{
 			get
 			{
@@ -72,9 +72,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			}
 		}
 
-		public IEnvelope Extent => Shape?.Envelope;
-
-		public esriFeatureType FeatureType => _featureClass.FeatureType;
+		public override esriFeatureType FeatureType => _featureClass.FeatureType;
 
 		#endregion
 

@@ -265,7 +265,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 				polyWithExtremelyAcuteAngle, false, 0.00001);
 
 			IList<Line3D> selfIntersections =
-				GeomTopoOpUtils.GetLinearSelfIntersectionsXY(multiPolycurve, 0.001);
+				GeomTopoOpUtils.GetLinearSelfIntersectionsXY(multiPolycurve, 0.001).ToList();
 
 			Assert.IsTrue(selfIntersections.Count > 0);
 		}

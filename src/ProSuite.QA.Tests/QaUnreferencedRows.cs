@@ -4,9 +4,7 @@ using System.Reflection;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.Commons.AO;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.QA.Tests.KeySets;
@@ -15,6 +13,8 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Logging;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
 {
@@ -22,9 +22,9 @@ namespace ProSuite.QA.Tests
 	[AttributeTest]
 	public class QaUnreferencedRows : NonContainerTest
 	{
-		[NotNull] private readonly ITable _referencedTable;
+		[NotNull] private readonly IReadOnlyTable _referencedTable;
 		[NotNull] private readonly string _referencedTableKey;
-		[NotNull] private readonly IList<ITable> _referencingTables;
+		[NotNull] private readonly IList<IReadOnlyTable> _referencingTables;
 		[NotNull] private readonly IList<string> _relations;
 
 		private IQueryFilter _referencedTableFilter;
@@ -33,7 +33,7 @@ namespace ProSuite.QA.Tests
 		private IList<ReferencingTableInfo> _referencingTableInfos;
 
 		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+			new Msg(MethodBase.GetCurrentMethod()?.DeclaringType);
 
 		#region issue codes
 
@@ -56,9 +56,9 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaUnreferencedRows_0))]
 		public QaUnreferencedRows(
 			[Doc(nameof(DocStrings.QaUnreferencedRows_referencedTable))] [NotNull]
-			ITable referencedTable,
+			IReadOnlyTable referencedTable,
 			[Doc(nameof(DocStrings.QaUnreferencedRows_referencingTables))] [NotNull]
-			IList<ITable>
+			IList<IReadOnlyTable>
 				referencingTables,
 			[Doc(nameof(DocStrings.QaUnreferencedRows_relations))] [NotNull]
 			IList<string> relations)
@@ -95,11 +95,11 @@ namespace ProSuite.QA.Tests
 			return ExecuteGeometry(area);
 		}
 
-		public override int Execute(IEnumerable<IRow> selectedRows)
+		public override int Execute(IEnumerable<IReadOnlyRow> selectedRows)
 		{
-			var referencedTableRows = new List<IRow>();
+			var referencedTableRows = new List<IReadOnlyRow>();
 
-			foreach (IRow row in selectedRows)
+			foreach (IReadOnlyRow row in selectedRows)
 			{
 				if (row.Table != _referencedTable)
 				{
@@ -112,7 +112,7 @@ namespace ProSuite.QA.Tests
 			return VerifyRows(referencedTableRows);
 		}
 
-		public override int Execute(IRow row)
+		public override int Execute(IReadOnlyRow row)
 		{
 			return row.Table != _referencedTable
 				       ? NoError
@@ -121,7 +121,7 @@ namespace ProSuite.QA.Tests
 
 		protected override ISpatialReference GetSpatialReference()
 		{
-			var geoDataset = _referencedTable as IGeoDataset;
+			var geoDataset = _referencedTable as IReadOnlyGeoDataset;
 			return geoDataset?.SpatialReference;
 		}
 
@@ -129,7 +129,7 @@ namespace ProSuite.QA.Tests
 
 		private int ExecuteGeometry([CanBeNull] IGeometry geometry)
 		{
-			if (! (_referencedTable is IFeatureClass))
+			if (! (_referencedTable is IReadOnlyFeatureClass))
 			{
 				geometry = null;
 			}
@@ -144,13 +144,12 @@ namespace ProSuite.QA.Tests
 			                           _referencedTable.OIDFieldName,
 			                           _referencedTableKey);
 
-			const bool recycle = true;
-			var enumCursor = new EnumCursor(_referencedTable, filter, recycle);
+			var enumCursor = _referencedTable.EnumRows(filter, recycle: true);
 
 			return VerifyRows(enumCursor);
 		}
 
-		private int VerifyRows([NotNull] IEnumerable<IRow> referencedTableRows)
+		private int VerifyRows([NotNull] IEnumerable<IReadOnlyRow> referencedTableRows)
 		{
 			EnsureReferenceInfos();
 
@@ -159,7 +158,7 @@ namespace ProSuite.QA.Tests
 			var errorCount = 0;
 			var count = 0;
 
-			foreach (IRow row in referencedTableRows)
+			foreach (IReadOnlyRow row in referencedTableRows)
 			{
 				_referencedTableInfo.AddReferencedRow(row);
 
@@ -189,19 +188,19 @@ namespace ProSuite.QA.Tests
 			}
 
 			const bool recycle = true;
-			foreach (IRow row in GdbQueryUtils.GetRowsInList(referencedTableInfo.Table,
-			                                                 referencedTableInfo
-				                                                 .KeyFieldName,
-			                                                 referencedTableInfo.KeySet,
-			                                                 recycle,
-			                                                 _referencedTableFilter))
+			foreach (IReadOnlyRow row in GdbQueryUtils.GetRowsInList(
+				         referencedTableInfo.Table,
+				         referencedTableInfo.KeyFieldName,
+				         referencedTableInfo.KeySet,
+				         recycle,
+				         _referencedTableFilter))
 			{
 				if (CancelTestingRow(row, recycleUnique: Guid.NewGuid()))
 				{
 					continue;
 				}
 
-				object key = row.Value[referencedTableInfo.KeyFieldIndex];
+				object key = row.get_Value(referencedTableInfo.KeyFieldIndex);
 
 				string description =
 					string.Format(
@@ -212,9 +211,9 @@ namespace ProSuite.QA.Tests
 				TestUtils.GetFieldDisplayName(row, referencedTableInfo.KeyFieldIndex,
 				                              out fieldName);
 
-				errorCount += ReportError(description, TestUtils.GetShapeCopy(row),
-				                          Codes[Code.ValueNotReferenced], fieldName,
-				                          row);
+				errorCount += ReportError(
+					description, InvolvedRowUtils.GetInvolvedRows(row), TestUtils.GetShapeCopy(row),
+					Codes[Code.ValueNotReferenced], fieldName);
 			}
 
 			referencedTableInfo.KeySet.Clear();
@@ -228,7 +227,7 @@ namespace ProSuite.QA.Tests
 		{
 			foreach (ReferencingTableInfo referencingTableInfo in referencingTableInfos)
 			{
-				foreach (IRow row in
+				foreach (IReadOnlyRow row in
 					GetReferencingRows(referencedTableInfo, referencingTableInfo))
 				{
 					object foreignKey = referencingTableInfo.GetForeignKey(row);
@@ -239,9 +238,9 @@ namespace ProSuite.QA.Tests
 					                           referencedTableInfo,
 					                           out errorDescription, out convertedValue))
 					{
-						return ReportError(errorDescription, TestUtils.GetShapeCopy(row),
-						                   Codes[Code.ConversionError], null,
-						                   row);
+						return ReportError(
+							errorDescription, InvolvedRowUtils.GetInvolvedRows(row),
+							TestUtils.GetShapeCopy(row), Codes[Code.ConversionError], null);
 					}
 
 					referencedTableInfo.RemoveObject(convertedValue);
@@ -283,7 +282,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[NotNull]
-		private static IEnumerable<IRow> GetReferencingRows(
+		private static IEnumerable<IReadOnlyRow> GetReferencingRows(
 			[NotNull] ReferencedTableInfo referencedTableInfo,
 			[NotNull] ReferencingTableInfo referencingTableInfo)
 		{
@@ -306,8 +305,7 @@ namespace ProSuite.QA.Tests
 					                            referencingTableInfo.ForeignKeyFieldName)
 				};
 
-			return GdbQueryUtils.GetRows(referencingTableInfo.Table, queryFilter,
-			                             recycle);
+			return referencingTableInfo.Table.EnumRows(queryFilter, recycle);
 		}
 
 		private void EnsureReferenceInfos()
@@ -323,7 +321,7 @@ namespace ProSuite.QA.Tests
 
 			for (var i = 0; i < _referencingTables.Count; i++)
 			{
-				ITable referencingTable = _referencingTables[i];
+				IReadOnlyTable referencingTable = _referencingTables[i];
 
 				int referencingTableIndex = i + 1; // first index is referenced table
 				string whereClause = GetConstraint(referencingTableIndex);
@@ -342,7 +340,7 @@ namespace ProSuite.QA.Tests
 					supported,
 					"key fields have unsupported combination of types: " +
 					"referencing table = {0}, foreign key = {1}, referenced key = {2}",
-					((IDataset) referencingTableInfo.Table).Name,
+					referencingTableInfo.Table.Name,
 					referencingTableInfo.ForeignKeyFieldType,
 					_referencedTableInfo.KeyFieldType);
 
@@ -411,7 +409,7 @@ namespace ProSuite.QA.Tests
 
 		private class ReferencedTableInfo
 		{
-			public ReferencedTableInfo([NotNull] ITable keyTable,
+			public ReferencedTableInfo([NotNull] IReadOnlyTable keyTable,
 			                           [NotNull] string keyFieldName)
 			{
 				Table = keyTable;
@@ -421,14 +419,14 @@ namespace ProSuite.QA.Tests
 				const string format = "'field '{0}' not found in table '{1}'";
 				Assert.ArgumentCondition(KeyFieldIndex >= 0,
 				                         format, keyFieldName,
-				                         DatasetUtils.GetName(keyTable));
+				                         keyTable.Name);
 
 				KeyFieldType = KeySetUtils.GetFieldValueType(keyTable, KeyFieldIndex);
 				KeySet = KeySetUtils.CreateKeySet(KeyFieldType);
 			}
 
 			[NotNull]
-			public ITable Table { get; }
+			public IReadOnlyTable Table { get; }
 
 			[NotNull]
 			public string KeyFieldName { get; }
@@ -440,9 +438,9 @@ namespace ProSuite.QA.Tests
 			[NotNull]
 			public IKeySet KeySet { get; }
 
-			public void AddReferencedRow([NotNull] IRow row)
+			public void AddReferencedRow([NotNull] IReadOnlyRow row)
 			{
-				object key = row.Value[KeyFieldIndex];
+				object key = row.get_Value(KeyFieldIndex);
 
 				if (key == DBNull.Value || key == null)
 				{
@@ -457,7 +455,7 @@ namespace ProSuite.QA.Tests
 				{
 					_msg.DebugFormat(
 						"Ignored duplicate key found in field '{0}' in table '{1}': {2}",
-						KeyFieldName, DatasetUtils.GetName(Table), key);
+						KeyFieldName, Table.Name, key);
 				}
 			}
 
@@ -473,7 +471,7 @@ namespace ProSuite.QA.Tests
 
 			private readonly int _foreignKeyFieldIndex;
 
-			public ReferencingTableInfo([NotNull] ITable table,
+			public ReferencingTableInfo([NotNull] IReadOnlyTable table,
 			                            [NotNull] string relation,
 			                            [CanBeNull] string whereClause)
 			{
@@ -487,7 +485,7 @@ namespace ProSuite.QA.Tests
 			}
 
 			[NotNull]
-			private static ITable GetQueryTable([NotNull] ITable referencingTable,
+			private static IReadOnlyTable GetQueryTable([NotNull] IReadOnlyTable referencingTable,
 			                                    [NotNull] string relation,
 			                                    [NotNull] out string foreignKeyFieldName)
 			{
@@ -503,7 +501,7 @@ namespace ProSuite.QA.Tests
 
 				if (relationCount == 5)
 				{
-					string referencingTableName = DatasetUtils.GetName(referencingTable);
+					string referencingTableName = referencingTable.Name;
 
 					string relationReferencedTableFK = relationTokens[1];
 					string relationTable = relationTokens[2];
@@ -511,7 +509,7 @@ namespace ProSuite.QA.Tests
 					string referencingTablePK = relationTokens[4];
 
 					var workspace =
-						(IFeatureWorkspace) DatasetUtils.GetWorkspace(referencingTable);
+						(IFeatureWorkspace) referencingTable.Workspace;
 					IQueryDef queryDef = workspace.CreateQueryDef();
 
 					queryDef.Tables =
@@ -556,7 +554,7 @@ namespace ProSuite.QA.Tests
 
 					try
 					{
-						return (ITable) ((IName) queryName).Open();
+						return ReadOnlyTableFactory.Create((ESRI.ArcGIS.Geodatabase.ITable) ((IName) queryName).Open());
 					}
 					catch (Exception e)
 					{
@@ -591,16 +589,16 @@ namespace ProSuite.QA.Tests
 			public string ForeignKeyFieldName => _foreignKeyFieldName;
 
 			[NotNull]
-			public ITable Table { get; }
+			public IReadOnlyTable Table { get; }
 
 			[NotNull]
 			public IQueryFilter Filter { get; }
 
 			public esriFieldType ForeignKeyFieldType { get; }
 
-			public object GetForeignKey([NotNull] IRow row)
+			public object GetForeignKey([NotNull] IReadOnlyRow row)
 			{
-				return row.Value[_foreignKeyFieldIndex];
+				return row.get_Value(_foreignKeyFieldIndex);
 			}
 		}
 	}

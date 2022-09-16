@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Validation;
 
 namespace ProSuite.QA.Core
 {
@@ -9,12 +10,16 @@ namespace ProSuite.QA.Core
 	/// </summary>
 	public interface IInstanceInfo
 	{
-		IList<TestParameter> Parameters { get; }
+		string TestDescription { get; }
 
 		string[] TestCategories { get; }
 
+		IList<TestParameter> Parameters { get; }
+
 		TestParameter GetParameter([NotNull] string parameterName);
 
-		string GetTestDescription();
+		string GetParameterDescription([NotNull] string parameterName);
+
+		//Notification GetValidation();
 	}
 }

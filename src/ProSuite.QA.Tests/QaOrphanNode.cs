@@ -1,15 +1,16 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ESRI.ArcGIS.Geodatabase;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.PolygonGrower;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.QA.Tests.Network;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
 {
@@ -42,22 +43,22 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaOrphanNode_0))]
 		public QaOrphanNode(
-				[Doc(nameof(DocStrings.QaOrphanNode_pointClasses))] IList<IFeatureClass> pointClasses,
-				[Doc(nameof(DocStrings.QaOrphanNode_polylineClasses))] IList<IFeatureClass> polylineClasses)
+				[Doc(nameof(DocStrings.QaOrphanNode_pointClasses))] IList<IReadOnlyFeatureClass> pointClasses,
+				[Doc(nameof(DocStrings.QaOrphanNode_polylineClasses))] IList<IReadOnlyFeatureClass> polylineClasses)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(pointClasses, polylineClasses, OrphanErrorType.Both) { }
 
 		[Doc(nameof(DocStrings.QaOrphanNode_1))]
 		public QaOrphanNode(
-				[Doc(nameof(DocStrings.QaOrphanNode_pointClass))] IFeatureClass pointClass,
-				[Doc(nameof(DocStrings.QaOrphanNode_polylineClass))] IFeatureClass polylineClass)
+				[Doc(nameof(DocStrings.QaOrphanNode_pointClass))] IReadOnlyFeatureClass pointClass,
+				[Doc(nameof(DocStrings.QaOrphanNode_polylineClass))] IReadOnlyFeatureClass polylineClass)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(pointClass, polylineClass, OrphanErrorType.Both) { }
 
 		[Doc(nameof(DocStrings.QaOrphanNode_2))]
 		public QaOrphanNode(
-			[Doc(nameof(DocStrings.QaOrphanNode_pointClasses))] IList<IFeatureClass> pointClasses,
-			[Doc(nameof(DocStrings.QaOrphanNode_polylineClasses))] IList<IFeatureClass> polylineClasses,
+			[Doc(nameof(DocStrings.QaOrphanNode_pointClasses))] IList<IReadOnlyFeatureClass> pointClasses,
+			[Doc(nameof(DocStrings.QaOrphanNode_polylineClasses))] IList<IReadOnlyFeatureClass> polylineClasses,
 			[Doc(nameof(DocStrings.QaOrphanNode_errorType))] OrphanErrorType errorType)
 			: base(CastToTables(pointClasses, polylineClasses), false)
 		{
@@ -66,10 +67,10 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaOrphanNode_3))]
 		public QaOrphanNode(
-			[Doc(nameof(DocStrings.QaOrphanNode_pointClass))] IFeatureClass pointClass,
-			[Doc(nameof(DocStrings.QaOrphanNode_polylineClass))] IFeatureClass polylineClass,
+			[Doc(nameof(DocStrings.QaOrphanNode_pointClass))] IReadOnlyFeatureClass pointClass,
+			[Doc(nameof(DocStrings.QaOrphanNode_polylineClass))] IReadOnlyFeatureClass polylineClass,
 			[Doc(nameof(DocStrings.QaOrphanNode_errorType))] OrphanErrorType errorType)
-			: base(new[] {(ITable) pointClass, (ITable) polylineClass}, false)
+			: base(new[] {pointClass, polylineClass}, false)
 		{
 			_errorType = errorType;
 		}
@@ -128,12 +129,11 @@ namespace ProSuite.QA.Tests
 			var p = (NetPoint) connectedElements[0];
 			const string description = "Orphan Node";
 
-			IRow errorRow = p.Row.Row;
+			IReadOnlyRow errorRow = p.Row.Row;
 
-			return ReportError(description, p.NetPoint,
-			                   Codes[Code.OrphanNode],
-			                   TestUtils.GetShapeFieldName(errorRow),
-			                   errorRow);
+			return ReportError(
+				description, InvolvedRowUtils.GetInvolvedRows(errorRow), p.NetPoint,
+				Codes[Code.OrphanNode], TestUtils.GetShapeFieldName(errorRow));
 		}
 
 		/// <summary>
@@ -154,16 +154,12 @@ namespace ProSuite.QA.Tests
 				}
 			}
 
-			var involved = new List<InvolvedRow>(connectedElements.Count);
-			foreach (NetElement elem in connectedElements)
-			{
-				involved.Add(new InvolvedRow(elem.Row.Row));
-			}
 
 			const string description = "Missing Node";
-			return ReportError(description, connectedElements[0].NetPoint,
-			                   Codes[Code.MissingNode], null,
-			                   involved);
+			return ReportError(
+				description,
+				InvolvedRowUtils.GetInvolvedRows(connectedElements.Select(e => e.Row.Row)),
+				connectedElements[0].NetPoint, Codes[Code.MissingNode], null);
 		}
 	}
 }

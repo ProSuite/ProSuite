@@ -19,13 +19,16 @@ namespace ProSuite.Commons.Orm.NHibernate
 			string dialect,
 			string showSql,
 			string useSecondLevelCache,
-			IMappingConfigurator mappingConfigurator)
+			IMappingConfigurator mappingConfigurator,
+			[CanBeNull] string ddxEnvironmentName = null)
 		{
 			DefaultSchema = defaultSchema;
 			ConnectionString = connectionString;
 			Dialect = dialect;
 			ShowSql = showSql;
 			UseSecondLevelCache = useSecondLevelCache;
+
+			DdxEnvironmentName = ddxEnvironmentName;
 
 			_mappingConfigurator = mappingConfigurator;
 		}
@@ -44,6 +47,8 @@ namespace ProSuite.Commons.Orm.NHibernate
 			// TODO: Also check if the sequence exists. 
 			! Dialect.Equals("NHibernate.Dialect.SQLiteDialect",
 			                 StringComparison.InvariantCultureIgnoreCase);
+
+		public string DdxEnvironmentName { get; protected set; }
 
 		/// <summary>
 		/// Builds the Configuration object from the specified configuration

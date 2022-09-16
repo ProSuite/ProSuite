@@ -2,11 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
+using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Logging;
 
 namespace ProSuite.Commons.AO.Geodatabase
@@ -15,63 +18,181 @@ namespace ProSuite.Commons.AO.Geodatabase
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		[NotNull] private readonly IFeatureClass _geometryEndClass;
-		[NotNull] private readonly IObjectClass _otherEndClass;
-		[NotNull] private readonly IFeatureClass _joinedSchema;
-
-		private IDictionary<int, int> _geometryEndCopyMatrix;
-		private IDictionary<int, int> _otherEndCopyMatrix;
+		[NotNull] private readonly GdbTable _joinedSchema;
 
 		private readonly AssociationDescription _associationDescription;
+
+		// A short-term (or in the future potentially long-term) cache of the association rows.
+		// As short-term cache within read operations it is used to included the bridge table
+		// attributes and hence provide a unique Id from the bridge table.
+		// As Long-term could it can be used in read-only scenarios to improve performance.
+		// TODO: Implement long-term cache
+		private AssociationTableRowCache _associationRows;
 
 		private readonly string
 			_joinStrategy = Environment.GetEnvironmentVariable("PROSUITE_MEMORY_JOIN_STRATEGY");
 
-		private readonly Dictionary<ITable, int> _tableRowStatistics =
-			new Dictionary<ITable, int>(3);
+		private readonly Dictionary<IReadOnlyTable, int> _tableRowStatistics =
+			new Dictionary<IReadOnlyTable, int>(3);
 
-		public JoinedDataset([NotNull] IRelationshipClass relationshipClass,
-		                     [NotNull] IFeatureClass geometryEndClass,
-		                     [NotNull] IFeatureClass joinedSchema)
-			: this(AssociationDescriptionUtils.CreateAssociationDescription(relationshipClass),
-			       geometryEndClass,
-			       RelationshipClassUtils.GetOtherEndObjectClass(
-				       relationshipClass, geometryEndClass),
-			       joinedSchema) { }
+		private string GeometryClassKeyField { get; set; }
+		private string OtherClassKeyField { get; set; }
+
+		private int GeometryClassKeyFieldIndex { get; set; }
+		private int OtherClassKeyFieldIndex { get; set; }
 
 		public JoinedDataset([NotNull] AssociationDescription associationDescription,
-		                     [NotNull] IFeatureClass geometryEndClass,
-		                     [NotNull] IObjectClass otherEndClass,
-		                     [NotNull] IFeatureClass joinedSchema)
+		                     [NotNull] IReadOnlyTable geometryTable,
+		                     [NotNull] IReadOnlyTable otherTable,
+		                     [NotNull] GdbTable joinedSchema)
 		{
-			_geometryEndClass = geometryEndClass;
-			_otherEndClass = otherEndClass;
+			GeometryEndClass = geometryTable;
+			OtherEndClass = otherTable;
 
 			_associationDescription = associationDescription;
 
 			_joinedSchema = joinedSchema;
 		}
 
-		public override IEnvelope Extent => ((IGeoDataset) _geometryEndClass).Extent;
+		[NotNull]
+		public IReadOnlyTable GeometryEndClass { get; }
 
-		public override IRow GetRow(int id)
+		[NotNull]
+		public IReadOnlyTable OtherEndClass { get; }
+
+		[CanBeNull]
+		public IReadOnlyTable AssociationTable
 		{
-			throw new NotImplementedException();
+			get
+			{
+				var manyToManyAssociation =
+					_associationDescription as ManyToManyAssociationDescription;
+
+				return manyToManyAssociation?.AssociationTable;
+			}
+		}
+
+		public JoinType JoinType { get; set; } = JoinType.InnerJoin;
+
+		private JoinSourceTable _objectIdSource;
+
+		public JoinSourceTable ObjectIdSource
+		{
+			get
+			{
+				if (_objectIdSource == JoinSourceTable.None)
+				{
+					_objectIdSource = GetObjectIdTable();
+				}
+
+				return _objectIdSource;
+			}
+		}
+
+		public IReadOnlyTable ObjectIdSourceTable
+		{
+			get
+			{
+				switch (ObjectIdSource)
+				{
+					case JoinSourceTable.Left:
+						return GeometryEndClass;
+					case JoinSourceTable.Right:
+						return OtherEndClass;
+					case JoinSourceTable.Association:
+						return AssociationTable;
+					default:
+						return null;
+				}
+			}
+		}
+
+		public bool IncludeMtoNAssociationRows
+		{
+			get => _associationRows != null;
+			set
+			{
+				if (value)
+				{
+					if (_associationRows == null)
+					{
+						_associationRows = new AssociationTableRowCache();
+					}
+				}
+				else
+				{
+					_associationRows = null;
+				}
+			}
+		}
+
+		/// <summary>
+		/// The factory that creates the final row from the rows to be joined (left row, other row,
+		/// optionally the association table row). Extra values can be injected by subclasses of
+		/// the default row factory.
+		/// </summary>
+		public JoinedRowFactory JoinedRowFactory { get; set; }
+
+		/// <summary>
+		/// Whether the features from the left table should be assumed to be cached and therefore
+		/// the filtering can take place in client code rather than the database.
+		/// </summary>
+		public bool AssumeLeftTableCached { get; set; }
+
+		#region BackingDataset implementation
+
+		public override IEnvelope Extent => (GeometryEndClass as IReadOnlyFeatureClass)?.Extent;
+
+		public override VirtualRow GetRow(int id)
+		{
+			EnsureKeyFieldNames();
+			// This is ok if there is 1 left row with the provided id. For 1:many several results exist.
+			// Consider using UniqueIdProvider. For many:many we should probably use the ObjectID on the
+			// bridge table in the first place!
+			// TODO: In case of m:n take the RID (if exists) and fill it into the OBJECTID field.
+			//       In  case of 1:m take the right table's OBJECT id and fill it into the OBJECTID field.
+			//       -> here, do a reverse look-up if necessary
+			if (ObjectIdSource == JoinSourceTable.Left)
+			{
+				IReadOnlyRow leftRow = GeometryEndClass.GetRow(id);
+
+				return GetJoinedRows(new List<IReadOnlyRow> {leftRow}).FirstOrDefault();
+			}
+
+			if (ObjectIdSource == JoinSourceTable.Right)
+			{
+				IReadOnlyRow rightRow = OtherEndClass.GetRow(id);
+
+				string otherKeyValue = GetNonNullKeyValue(rightRow, OtherClassKeyFieldIndex);
+
+				var otherKeyList = new List<string> {otherKeyValue};
+				IList<IReadOnlyRow> resultGeoFeatures = FetchRowsByKey(
+						GeometryEndClass, otherKeyList, GeometryClassKeyField, false)
+					.ToList();
+
+				Assert.True(resultGeoFeatures.Count <= 1,
+				            $"Unexpected number of joined features: {resultGeoFeatures.Count}");
+
+				IReadOnlyRow geoFeature = resultGeoFeatures[0];
+
+				return CreateJoinedFeature(geoFeature, rightRow);
+			}
+
+			var m2nAssociation = ((ManyToManyAssociationDescription) _associationDescription);
+
+			return GetRowManyToMany(id, m2nAssociation);
 		}
 
 		public override int GetRowCount(IQueryFilter filter)
 		{
 			if (filter != null && ! string.IsNullOrEmpty(filter.WhereClause))
 			{
-				throw new NotImplementedException(
-					"This join implementation does not support the where clause");
+				return Search(filter, true).Count();
 			}
 
-			GetKeyFieldNames(out string featureClassKeyField, out string otherClassKeyField);
+			EnsureKeyFieldNames();
 
-			IDictionary<string, IList<IRow>> otherRows =
-				GetOtherRowsByFeatureKey(filter, featureClassKeyField, otherClassKeyField,
-				                         out int _);
+			IDictionary<string, IList<IReadOnlyRow>> otherRows = GetOtherRowsByFeatureKey(filter);
 
 			if (_associationDescription is ManyToManyAssociationDescription)
 			{
@@ -80,49 +201,84 @@ namespace ProSuite.Commons.AO.Geodatabase
 			else
 			{
 				// TODO: This could be optimized if the side of the primary key was known
-				return PerformFinalGeoClassRead(
-					otherRows, featureClassKeyField, filter).Count();
+				return PerformFinalGeoClassRead(otherRows, filter, true).Count();
 			}
 		}
 
-		public override IEnumerable<IRow> Search(IQueryFilter filter, bool recycling)
+		public override IEnumerable<VirtualRow> Search(IQueryFilter filter, bool recycling)
 		{
-			if (filter != null && ! string.IsNullOrEmpty(filter.WhereClause))
+			var filterHelper = FilterHelper.Create(_joinedSchema, filter?.WhereClause);
+
+			// The filter's where clause must use the fully qualified rows. But the spatial
+			// constraint is applied during the creation of the join.
+			foreach (VirtualRow virtualRow in GetJoinedRows(filter, recycling))
 			{
-				throw new NotImplementedException(
-					"This join implementation does not support the where clause");
-			}
-
-			GetKeyFieldNames(out string featureClassKeyField, out string otherClassKeyField);
-
-			IDictionary<string, IList<IRow>> otherRows =
-				GetOtherRowsByFeatureKey(filter, featureClassKeyField, otherClassKeyField,
-				                         out int featureClassKeyIdx);
-
-			foreach (IFeature feature in PerformFinalGeoClassRead(
-				         otherRows, featureClassKeyField, filter))
-			{
-				string keyValue = Assert.NotNull(GetKeyValue(feature, featureClassKeyIdx));
-
-				foreach (IRow otherRow in otherRows[keyValue])
+				if (filterHelper.Check(virtualRow))
 				{
-					yield return CreateJoinedFeature(feature, otherRow);
+					yield return virtualRow;
 				}
 			}
 		}
 
-		private IDictionary<string, IList<IRow>> GetOtherRowsByFeatureKey(
-			[CanBeNull] IQueryFilter filter,
-			[NotNull] string featureClassKeyField,
-			[NotNull] string otherClassKeyField,
-			out int featureClassKeyIdx)
+		#endregion
+
+		/// <summary>
+		/// Performs the join using the filter only by applying the spatial constraint.
+		/// </summary>
+		/// <param name="filter"></param>
+		/// <param name="recycle"></param>
+		/// <returns></returns>
+		private IEnumerable<VirtualRow> GetJoinedRows([CanBeNull] IQueryFilter filter,
+		                                              bool recycle)
 		{
-			Assert.NotNull(_otherEndClass);
-			Assert.NotNull(otherClassKeyField);
+			if (filter != null && (! string.IsNullOrEmpty(filter.WhereClause)))
+			{
+				filter = (IQueryFilter) ((IClone) filter).Clone();
+				filter.WhereClause = null;
+			}
+
+			EnsureKeyFieldNames();
+
+			IDictionary<string, IList<IReadOnlyRow>> otherRowsByFeatureKey =
+				GetOtherRowsByFeatureKey(filter);
+
+			IEnumerable<IReadOnlyRow> leftRows = PerformFinalGeoClassRead(
+				otherRowsByFeatureKey, filter, recycle);
+
+			foreach (VirtualRow virtualRow in Join(leftRows, otherRowsByFeatureKey))
+			{
+				yield return virtualRow;
+			}
+		}
+
+		/// <summary>
+		/// Performs the join with the provided left rows.
+		/// </summary>
+		/// <param name="leftRows">The collection of left rows to join to the right rows to be retrieved
+		/// from the database.</param>
+		/// <returns></returns>
+		private IEnumerable<VirtualRow> GetJoinedRows([NotNull] ICollection<IReadOnlyRow> leftRows)
+		{
+			EnsureKeyFieldNames();
+
+			IDictionary<string, IList<IReadOnlyRow>> otherRowsByFeatureKey =
+				GetOtherRowsByFeatureKey(leftRows);
+
+			foreach (VirtualRow virtualRow in Join(leftRows, otherRowsByFeatureKey))
+			{
+				yield return virtualRow;
+			}
+		}
+
+		private IDictionary<string, IList<IReadOnlyRow>> GetOtherRowsByFeatureKey(
+			[CanBeNull] IQueryFilter filter)
+		{
+			Assert.NotNull(OtherEndClass);
+			Assert.NotNull(OtherClassKeyField);
 
 			string originalSubfields = filter?.SubFields;
 			if (filter != null)
-				filter.SubFields = featureClassKeyField;
+				filter.SubFields = GeometryClassKeyField;
 
 			// TODO: More testing, does not seem to make a difference:
 			//esriSpatialRelEnum originalSpatialRel = esriSpatialRelEnum.esriSpatialRelUndefined;
@@ -135,9 +291,21 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			// TODO: Deal with where-clause
 
-			featureClassKeyIdx = _geometryEndClass.FindField(featureClassKeyField);
-			Assert.True(featureClassKeyIdx >= 0, $"Key field not found: {featureClassKeyIdx}");
+			IEnumerable<IReadOnlyRow> leftFeatures = GeometryEndClass.EnumRows(filter, true);
 
+			IDictionary<string, IList<IReadOnlyRow>> otherRows =
+				GetOtherRowsByFeatureKey(leftFeatures);
+
+			// Revert the filter change:
+			if (filter != null)
+				filter.SubFields = originalSubfields;
+
+			return otherRows;
+		}
+
+		private IDictionary<string, IList<IReadOnlyRow>> GetOtherRowsByFeatureKey(
+			[NotNull] IEnumerable<IReadOnlyRow> leftFeatures)
+		{
 			Stopwatch watch = _msg.DebugStartTiming();
 
 			HashSet<string> fClassKeys = new HashSet<string>();
@@ -146,11 +314,12 @@ namespace ProSuite.Commons.AO.Geodatabase
 			//       which table should be queried first.
 
 			int featureCount = 0;
-			foreach (IFeature feature in GdbQueryUtils.GetFeatures(_geometryEndClass, filter, true))
+
+			foreach (IReadOnlyRow feature in leftFeatures)
 			{
 				featureCount++;
 
-				string keyValue = GetKeyValue(feature, featureClassKeyIdx);
+				string keyValue = GetKeyValue(feature, GeometryClassKeyFieldIndex);
 
 				if (keyValue != null)
 				{
@@ -161,28 +330,54 @@ namespace ProSuite.Commons.AO.Geodatabase
 			_msg.DebugStopTiming(watch, "Initial search found {0} geo-keys in {1} features",
 			                     fClassKeys.Count, featureCount);
 
-			IDictionary<string, IList<IRow>> otherRows =
-				GetOtherRowListsByFeatureKey(otherClassKeyField, fClassKeys);
-
-			// Revert the filter change:
-			if (filter != null)
-				filter.SubFields = originalSubfields;
+			IDictionary<string, IList<IReadOnlyRow>> otherRows =
+				GetOtherRowListsByFeatureKey(fClassKeys);
 
 			return otherRows;
 		}
 
-		private IEnumerable<IFeature> PerformFinalGeoClassRead(
-			IDictionary<string, IList<IRow>> otherRowsByGeoKey,
-			string featureClassKeyField,
-			[CanBeNull] IQueryFilter filter)
+		private IEnumerable<IReadOnlyRow> PerformFinalGeoClassRead(
+			IDictionary<string, IList<IReadOnlyRow>> otherRowsByGeoKey,
+			[CanBeNull] IQueryFilter filter,
+			bool recycling)
 		{
 			Stopwatch watch = _msg.DebugStartTiming();
 
-			int featureClassKeyIdx = _geometryEndClass.FindField(featureClassKeyField);
+			if (JoinType == JoinType.InnerJoin)
+			{
+				foreach (IReadOnlyRow feature in PerformFinalGeoClassReadFilteredByKeys(
+					         otherRowsByGeoKey, GeometryClassKeyField, filter, recycling))
+				{
+					yield return feature;
+				}
+			}
+			else if (JoinType == JoinType.LeftJoin)
+			{
+				// All records from the left table:
+				foreach (IReadOnlyRow feature in GeometryEndClass.EnumRows(filter, recycling))
+				{
+					yield return feature;
+				}
+			}
+
+			_msg.DebugStopTiming(watch, "Final read of geo-features with result processing");
+		}
+
+		private IEnumerable<IReadOnlyRow> PerformFinalGeoClassReadFilteredByKeys(
+			[NotNull] IDictionary<string, IList<IReadOnlyRow>> otherRowsByGeoKey,
+			[NotNull] string featureClassKeyField,
+			[CanBeNull] IQueryFilter filter,
+			bool recycling)
+		{
+			int featureClassKeyIdx = GeometryEndClass.FindField(featureClassKeyField);
 			Assert.True(featureClassKeyIdx >= 0, $"Key field not found: {featureClassKeyIdx}");
 
 			bool clientSideKeyFiltering;
-			if (_joinStrategy == "INDEX")
+			if (AssumeLeftTableCached)
+			{
+				clientSideKeyFiltering = true;
+			}
+			else if (_joinStrategy == "INDEX")
 			{
 				clientSideKeyFiltering = true;
 			}
@@ -197,35 +392,75 @@ namespace ProSuite.Commons.AO.Geodatabase
 				clientSideKeyFiltering = false;
 			}
 
-			IEnumerable<IRow> resultGeoFeatures = FetchRowsByKey(
-				(ITable) _geometryEndClass, otherRowsByGeoKey.Keys, featureClassKeyField, true,
+			IEnumerable<IReadOnlyRow> resultGeoFeatures = FetchRowsByKey(
+				GeometryEndClass, otherRowsByGeoKey.Keys, featureClassKeyField, recycling,
 				clientSideKeyFiltering, filter);
 
-			foreach (IRow row in resultGeoFeatures)
+			foreach (IReadOnlyRow row in resultGeoFeatures)
 			{
-				IFeature feature = (IFeature) row;
-
-				yield return feature;
+				yield return row;
 			}
-
-			_msg.DebugStopTiming(watch, "Final read of geo-features with result processing");
 		}
 
-		private void GetKeyFieldNames(out string featureClassKeyField,
-		                              out string otherClassKeyField)
+		private IEnumerable<VirtualRow> Join(
+			[NotNull] IEnumerable<IReadOnlyRow> leftRows,
+			[NotNull] IDictionary<string, IList<IReadOnlyRow>> otherRowsByFeatureKey)
 		{
-			if (_associationDescription is ForeignKeyAssociationDescription foreignKeyAssociation)
+			foreach (IReadOnlyRow feature in leftRows)
 			{
-				if (DatasetUtils.IsSameObjectClass(
-					    _geometryEndClass, (IObjectClass) foreignKeyAssociation.ReferencedTable))
+				string featureKeyValue = GetKeyValue(feature, GeometryClassKeyFieldIndex);
+				IList<IReadOnlyRow> otherRowList;
+				if (JoinType == JoinType.InnerJoin)
 				{
-					featureClassKeyField = foreignKeyAssociation.ReferencedKeyName;
-					otherClassKeyField = foreignKeyAssociation.ReferencingKeyName;
+					Assert.NotNull(featureKeyValue);
+					otherRowList = otherRowsByFeatureKey[featureKeyValue];
 				}
 				else
 				{
-					featureClassKeyField = foreignKeyAssociation.ReferencingKeyName;
-					otherClassKeyField = foreignKeyAssociation.ReferencedKeyName;
+					if (featureKeyValue == null ||
+					    ! otherRowsByFeatureKey.TryGetValue(featureKeyValue, out otherRowList))
+					{
+						// No relationship or no relational integrity
+						yield return CreateJoinedFeature(feature, null);
+						continue;
+					}
+				}
+
+				int listIdx = 0;
+				foreach (IReadOnlyRow otherRow in otherRowList)
+				{
+					IReadOnlyRow associationRow = null;
+					if (_associationRows != null && otherRow != null)
+					{
+						string otherRowKey = GetKeyValue(otherRow, OtherClassKeyFieldIndex);
+						associationRow =
+							_associationRows.LookUp(featureKeyValue, otherRowKey, listIdx);
+					}
+
+					yield return CreateJoinedFeature(feature, otherRow, associationRow);
+					listIdx++;
+				}
+			}
+		}
+
+		private void EnsureKeyFieldNames()
+		{
+			if (GeometryClassKeyField != null && OtherClassKeyField != null)
+			{
+				return;
+			}
+
+			if (_associationDescription is ForeignKeyAssociationDescription foreignKeyAssociation)
+			{
+				if (GeometryEndClass.Equals(foreignKeyAssociation.ReferencedTable))
+				{
+					GeometryClassKeyField = foreignKeyAssociation.ReferencedKeyName;
+					OtherClassKeyField = foreignKeyAssociation.ReferencingKeyName;
+				}
+				else
+				{
+					GeometryClassKeyField = foreignKeyAssociation.ReferencingKeyName;
+					OtherClassKeyField = foreignKeyAssociation.ReferencedKeyName;
 				}
 			}
 			else
@@ -233,62 +468,88 @@ namespace ProSuite.Commons.AO.Geodatabase
 				ManyToManyAssociationDescription manyToManyAssociation =
 					(ManyToManyAssociationDescription) _associationDescription;
 
-				if (DatasetUtils.IsSameObjectClass(
-					    _geometryEndClass, (IObjectClass) manyToManyAssociation.Table1))
+				if (GeometryEndClass.Equals(manyToManyAssociation.Table1))
 				{
-					featureClassKeyField = manyToManyAssociation.Table1KeyName;
-					otherClassKeyField = manyToManyAssociation.Table2KeyName;
+					GeometryClassKeyField = manyToManyAssociation.Table1KeyName;
+					OtherClassKeyField = manyToManyAssociation.Table2KeyName;
 				}
 				else
 				{
-					featureClassKeyField = manyToManyAssociation.Table2KeyName;
-					otherClassKeyField = manyToManyAssociation.Table1KeyName;
+					GeometryClassKeyField = manyToManyAssociation.Table2KeyName;
+					OtherClassKeyField = manyToManyAssociation.Table1KeyName;
 				}
 			}
+
+			// Set up field indexes
+			GeometryClassKeyFieldIndex = GeometryEndClass.FindField(GeometryClassKeyField);
+			Assert.True(GeometryClassKeyFieldIndex >= 0,
+			            $"Key field {GeometryClassKeyField} not found in {GeometryEndClass.Name}");
+
+			OtherClassKeyFieldIndex = OtherEndClass.FindField(OtherClassKeyField);
+			Assert.True(OtherClassKeyFieldIndex >= 0,
+			            $"Key field {OtherClassKeyField} not found in {OtherEndClass.Name}");
 		}
 
-		private IFeature CreateJoinedFeature(IFeature feature, IRow otherRow)
+		private JoinSourceTable GetObjectIdTable()
 		{
-			var joinedValueList = new JoinedValueList {Readonly = true};
+			IReadOnlyTable oidSourceTable =
+				TableJoinUtils.DetermineOIDTable(_associationDescription, JoinType,
+				                                 GeometryEndClass);
 
-			joinedValueList.AddRow(feature, GeometryEndCopyMatrix);
-			joinedValueList.AddRow(otherRow, OtherEndCopyMatrix);
+			if (_associationDescription is ForeignKeyAssociationDescription)
+			{
+				return GeometryEndClass.Equals(oidSourceTable)
+					       ? JoinSourceTable.Left
+					       : JoinSourceTable.Right;
+			}
 
-			IFeature resultFeature = new GdbFeature(feature.OID, _joinedSchema,
-			                                        joinedValueList);
-
-			return resultFeature;
+			// The LeftTable is a non-unique fallback with a very slight performance gain due to left-out association rows. 
+			return IncludeMtoNAssociationRows ? JoinSourceTable.Association : JoinSourceTable.Left;
 		}
 
-		private IDictionary<string, IRow> GetOtherRowsByKey(
-			[NotNull] string otherClassField,
+		private GdbRow CreateJoinedFeature([NotNull] IReadOnlyRow leftRow,
+		                                   [CanBeNull] IReadOnlyRow otherRow,
+		                                   [CanBeNull] IReadOnlyRow associationRow = null)
+		{
+			if (JoinedRowFactory == null)
+			{
+				JoinedRowFactory = new JoinedRowFactory(
+					                   _joinedSchema, GeometryEndClass, OtherEndClass)
+				                   {
+					                   AssociationTable = AssociationTable
+				                   };
+			}
+
+			return JoinedRowFactory.CreateRow(leftRow, otherRow, ObjectIdSource, associationRow);
+		}
+
+		private IDictionary<string, IReadOnlyRow> GetOtherRowsByKey(
 			[NotNull] IEnumerable<string> keyValues)
 		{
 			// Get the non-feature-rows:
-			int otherClassKeyIdx = _otherEndClass.FindField(otherClassField);
-			string otherTableName = DatasetUtils.GetName(_otherEndClass);
-			Assert.True(otherClassKeyIdx >= 0,
-			            $"Key field {otherClassField} not found in {otherTableName}");
-
-			IDictionary<string, IRow> otherRows = new Dictionary<string, IRow>();
-			foreach (IRow row in GdbQueryUtils.GetRowsInList(
-				         (ITable) _otherEndClass, otherClassField, keyValues, false))
+			IDictionary<string, IReadOnlyRow> otherRows = new Dictionary<string, IReadOnlyRow>();
+			foreach (IReadOnlyRow row in GdbQueryUtils.GetRowsInList(
+				         OtherEndClass, OtherClassKeyField, keyValues, false))
 			{
-				object otherRowKey = row.get_Value(otherClassKeyIdx);
-				Assert.True(otherRowKey != null && DBNull.Value != otherRowKey,
-				            $"No key value in {otherTableName}");
+				string otherRowKey = GetKeyValue(row, OtherClassKeyFieldIndex);
 
-				otherRows.Add(otherRowKey.ToString(), row);
+				if (otherRowKey == null)
+				{
+					throw new InvalidDataException(
+						$"No key value in {GdbObjectUtils.ToString(row)}");
+				}
+
+				otherRows.Add(otherRowKey, row);
 			}
 
 			return otherRows;
 		}
 
-		private IDictionary<string, IList<IRow>> GetOtherRowListsByFeatureKey(
-			string otherClassKeyField,
+		private IDictionary<string, IList<IReadOnlyRow>> GetOtherRowListsByFeatureKey(
 			HashSet<string> fClassKeys)
 		{
-			IDictionary<string, IList<IRow>> result = new Dictionary<string, IList<IRow>>();
+			IDictionary<string, IList<IReadOnlyRow>> result =
+				new Dictionary<string, IList<IReadOnlyRow>>();
 
 			// M:N - Get the bridge table rows:
 			if (_associationDescription is ManyToManyAssociationDescription m2n)
@@ -305,8 +566,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 				watch = _msg.DebugStartTiming();
 
-				IDictionary<string, IRow> otherRowsByKey =
-					GetOtherRowsByKey(otherClassKeyField, geoKeysByOtherKey.Keys);
+				IDictionary<string, IReadOnlyRow> otherRowsByKey =
+					GetOtherRowsByKey(geoKeysByOtherKey.Keys);
 
 				_msg.DebugStopTiming(watch, "Retrieved all {0} other rows.", otherRowsByKey.Count);
 
@@ -316,9 +577,9 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 					foreach (string geoKey in keyValuePair.Value)
 					{
-						if (! result.TryGetValue(geoKey, out IList<IRow> otherRowList))
+						if (! result.TryGetValue(geoKey, out _))
 						{
-							otherRowList = new List<IRow>(5);
+							IList<IReadOnlyRow> otherRowList = new List<IReadOnlyRow>(5);
 
 							result.Add(geoKey, otherRowList);
 						}
@@ -334,14 +595,14 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 
 			// Get the non-feature-rows:
-			foreach (KeyValuePair<string, IRow> keyValuePair in GetOtherRowsByKey(
-				         otherClassKeyField, fClassKeys))
+			foreach (KeyValuePair<string, IReadOnlyRow> keyValuePair in GetOtherRowsByKey(
+				         fClassKeys))
 			{
 				string otherRowKey = keyValuePair.Key;
 
-				if (! result.TryGetValue(otherRowKey, out IList<IRow> otherRowList))
+				if (! result.TryGetValue(otherRowKey, out IList<IReadOnlyRow> otherRowList))
 				{
-					otherRowList = new List<IRow>(3);
+					otherRowList = new List<IReadOnlyRow>(3);
 
 					result.Add(otherRowKey, otherRowList);
 				}
@@ -352,6 +613,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 			return result;
 		}
 
+		#region Many-to-many row access
+
 		private Dictionary<string, List<string>> GeoKeysByOtherKeyManyToMany(
 			[NotNull] HashSet<string> geoKeys,
 			[NotNull] ManyToManyAssociationDescription m2nAssociation)
@@ -359,52 +622,44 @@ namespace ProSuite.Commons.AO.Geodatabase
 			Dictionary<string, List<string>> geoKeysByOtherKey =
 				new Dictionary<string, List<string>>();
 
-			ITable bridgeTable = m2nAssociation.AssociationTable;
-			string bridgeTableGeoKeyField;
-			string bridgeTableOtherKeyField;
-			if (DatasetUtils.IsSameObjectClass(_geometryEndClass,
-			                                   (IObjectClass) m2nAssociation.Table1))
-			{
-				bridgeTableGeoKeyField = m2nAssociation.AssociationTableKey1;
-				bridgeTableOtherKeyField = m2nAssociation.AssociationTableKey2;
-			}
-			else
-			{
-				bridgeTableGeoKeyField = m2nAssociation.AssociationTableKey2;
-				bridgeTableOtherKeyField = m2nAssociation.AssociationTableKey1;
-			}
+			IReadOnlyTable bridgeTable = m2nAssociation.AssociationTable;
+			GetAssociationTableKeyFields(m2nAssociation, out string bridgeTableGeoKeyField,
+			                             out string bridgeTableOtherKeyField);
 
-			string bridgeTableName = DatasetUtils.GetName(bridgeTable);
+			string bridgeTableName = bridgeTable.Name;
 
 			int bridgeTableOtherKeyIdx = bridgeTable.FindField(bridgeTableOtherKeyField);
 			Assert.True(bridgeTableOtherKeyIdx >= 0,
-			            $"Key field {bridgeTableOtherKeyField} not found in {bridgeTable}");
+			            $"Key field {bridgeTableOtherKeyField} not found in {bridgeTableName}");
 
 			int bridgeTableGeoKeyIdx = bridgeTable.FindField(bridgeTableGeoKeyField);
 			Assert.True(bridgeTableGeoKeyIdx >= 0,
-			            $"Key field {bridgeTableGeoKeyField} not found in {bridgeTable}");
+			            $"Key field {bridgeTableGeoKeyField} not found in {bridgeTableName}");
 
-			foreach (IRow row in FetchBridgeTableRowsByKey(geoKeys, bridgeTable,
-			                                               bridgeTableGeoKeyField))
+			// This is the short-term cache. In a strictly read-only environment it could also be
+			// used to retrieve the result in specific cases (requires caching geoKeys without match)
+			_associationRows?.Clear();
+
+			var recycle = _associationRows == null;
+			foreach (IReadOnlyRow row in FetchBridgeTableRowsByKey(geoKeys, bridgeTable,
+				         bridgeTableGeoKeyField, recycle))
 			{
 				// The primary key of the other table:
-				object bridgeOtherKey = row.get_Value(bridgeTableOtherKeyIdx);
-				Assert.True(bridgeOtherKey != null && DBNull.Value != bridgeOtherKey,
-				            $"Missing other key value in {bridgeTableName}");
-				string bridgeOtherKeyValue = Convert.ToString(bridgeOtherKey);
-
-				object bridgeGeoKey = row.get_Value(bridgeTableGeoKeyIdx);
-				Assert.True(bridgeGeoKey != null && DBNull.Value != bridgeGeoKey,
-				            $"Missing feature key value in {bridgeTableName}");
+				string bridgeOtherKeyValue = GetNonNullKeyValue(row, bridgeTableOtherKeyIdx);
 
 				// The primary key of the geo table:
-				string bridgeGeoKeyValue = Convert.ToString(bridgeGeoKey);
+				string bridgeGeoKeyValue = GetNonNullKeyValue(row, bridgeTableGeoKeyIdx);
+
+				// NOTE: For long-term global caching if memory was no issue, the bridgeRow could be cached already here
 
 				// Double check, the fetch might use a FTS or deliver the full cache:
 				if (! geoKeys.Contains(bridgeGeoKeyValue))
 				{
 					continue;
 				}
+
+				// Cache the bridgeRow, if desired:
+				_associationRows?.Add(bridgeGeoKeyValue, bridgeOtherKeyValue, row);
 
 				// Collect the list of geo-end keys per other-table key
 				if (! geoKeysByOtherKey.TryGetValue(bridgeOtherKeyValue, out List<string> other))
@@ -419,10 +674,59 @@ namespace ProSuite.Commons.AO.Geodatabase
 			return geoKeysByOtherKey;
 		}
 
-		private IEnumerable<IRow> FetchBridgeTableRowsByKey(
+		private VirtualRow GetRowManyToMany(int id, ManyToManyAssociationDescription m2nAssociation)
+		{
+			GetAssociationTableKeyFields(m2nAssociation, out string bridgeTableGeoKeyField,
+			                             out string _);
+
+			IReadOnlyTable bridgeTable = m2nAssociation.AssociationTable;
+
+			int bridgeTableGeoKeyIdx = bridgeTable.FindField(bridgeTableGeoKeyField);
+			Assert.True(bridgeTableGeoKeyIdx >= 0,
+			            $"Key field {bridgeTableGeoKeyField} not found in {bridgeTable.Name}");
+
+			IReadOnlyRow associationRow = bridgeTable.GetRow(id);
+
+			string geoKeyValue = GetNonNullKeyValue(associationRow, bridgeTableGeoKeyIdx);
+
+			var geoKeyList = new List<string> {geoKeyValue};
+
+			IList<IReadOnlyRow> geoFeatures = FetchRowsByKey(
+					GeometryEndClass, geoKeyList, GeometryClassKeyField, false)
+				.ToList();
+
+			Assert.AreEqual(1, geoFeatures.Count, $"Unexpected number of left table features");
+
+			return GetJoinedRows(new List<IReadOnlyRow> {geoFeatures[0]}).FirstOrDefault();
+		}
+
+		private void GetAssociationTableKeyFields(ManyToManyAssociationDescription m2nAssociation,
+		                                          out string bridgeTableGeoKeyField,
+		                                          out string bridgeTableOtherKeyField)
+		{
+			if (GeometryEndClass.Equals(m2nAssociation.Table1))
+			{
+				bridgeTableGeoKeyField = m2nAssociation.AssociationTableKey1;
+				bridgeTableOtherKeyField = m2nAssociation.AssociationTableKey2;
+			}
+			else
+			{
+				// Test for correct equals implementation:
+				Assert.True(OtherEndClass.Equals(m2nAssociation.Table1),
+				            "Table equality implementation: unexpected results");
+
+				bridgeTableGeoKeyField = m2nAssociation.AssociationTableKey2;
+				bridgeTableOtherKeyField = m2nAssociation.AssociationTableKey1;
+			}
+		}
+
+		#endregion
+
+		private IEnumerable<IReadOnlyRow> FetchBridgeTableRowsByKey(
 			[NotNull] HashSet<string> keys,
-			[NotNull] ITable bridgeTable,
-			[NotNull] string keyFieldName)
+			[NotNull] IReadOnlyTable bridgeTable,
+			[NotNull] string keyFieldName,
+			bool recycle)
 		{
 			bool clientSideKeyFiltering;
 
@@ -445,11 +749,11 @@ namespace ProSuite.Commons.AO.Geodatabase
 				clientSideKeyFiltering = (double) keys.Count / ftsCount > 0.025;
 			}
 
-			return FetchRowsByKey(bridgeTable, keys, keyFieldName, true, clientSideKeyFiltering);
+			return FetchRowsByKey(bridgeTable, keys, keyFieldName, recycle, clientSideKeyFiltering);
 		}
 
-		private static IEnumerable<IRow> FetchRowsByKey(
-			[NotNull] ITable table,
+		private static IEnumerable<IReadOnlyRow> FetchRowsByKey(
+			[NotNull] IReadOnlyTable table,
 			[NotNull] ICollection<string> keys,
 			[NotNull] string keyFieldName,
 			bool recycle,
@@ -468,29 +772,35 @@ namespace ProSuite.Commons.AO.Geodatabase
 			// 3.5K rows in key list: ~1.2s
 			// -> Use 2% of key-count / all rows count
 
+			string originalSubfields = filter?.SubFields;
+			if (filter != null)
+			{
+				filter.SubFields = null;
+			}
+
 			if (clientSideKeyFiltering)
 			{
 				_msg.DebugFormat(
 					"Fetching rows from {0} and filtering for key list on the client...",
-					DatasetUtils.GetName(table));
+					table.Name);
 
 				int keyFieldIdx = table.FindField(keyFieldName);
 				Assert.True(keyFieldIdx >= 0,
-				            $"Key field {keyFieldName} not found in {DatasetUtils.GetName(table)}");
+				            $"Key field {keyFieldName} not found in {table.Name}");
 
 				int totalCount = 0, yieldCount = 0;
-				foreach (IRow row in GdbQueryUtils.GetRows(table, filter, recycle))
+
+				foreach (IReadOnlyRow row in table.EnumRows(filter, recycle))
 				{
 					totalCount++;
-					object rowKeyValue = row.Value[keyFieldIdx];
 
-					if (rowKeyValue == null || rowKeyValue == DBNull.Value)
+					// The primary key of the geo table:
+					string rowKeyValueString = GetKeyValue(row, keyFieldIdx);
+
+					if (rowKeyValueString == null)
 					{
 						continue;
 					}
-
-					// The primary key of the geo table:
-					string rowKeyValueString = Convert.ToString(rowKeyValue);
 
 					if (! keys.Contains(rowKeyValueString))
 					{
@@ -507,10 +817,10 @@ namespace ProSuite.Commons.AO.Geodatabase
 			{
 				_msg.DebugFormat(
 					"Fetching rows from {0} using select-in-list strategy (filtering on the server)",
-					DatasetUtils.GetName(table));
+					table.Name);
 
 				int count = 0;
-				foreach (IRow row in GdbQueryUtils.GetRowsInList(
+				foreach (IReadOnlyRow row in GdbQueryUtils.GetRowsInList(
 					         table, keyFieldName, keys, recycle, filter))
 				{
 					yield return row;
@@ -519,61 +829,50 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 				_msg.DebugFormat("Yielded {0} rows", count);
 			}
-		}
 
-		private IDictionary<int, int> GeometryEndCopyMatrix
-		{
-			get
+			if (filter != null)
 			{
-				if (_geometryEndCopyMatrix == null)
-				{
-					_geometryEndCopyMatrix =
-						GdbObjectUtils.CreateMatchingIndexMatrix(
-							              _joinedSchema, _geometryEndClass, true, true, null,
-							              FieldComparison.FieldName)
-						              .ToDictionary(pair => pair.Value, pair => pair.Key);
-				}
-
-				return _geometryEndCopyMatrix;
+				filter.SubFields = originalSubfields;
 			}
 		}
 
-		private IDictionary<int, int> OtherEndCopyMatrix
-		{
-			get
-			{
-				if (_otherEndCopyMatrix == null)
-				{
-					_otherEndCopyMatrix =
-						GdbObjectUtils.CreateMatchingIndexMatrix(
-							              _joinedSchema, _otherEndClass, true, true, null,
-							              FieldComparison.FieldName)
-						              .ToDictionary(pair => pair.Value, pair => pair.Key);
-				}
-
-				return _otherEndCopyMatrix;
-			}
-		}
-
-		private int GetTableRowCount(ITable table)
+		private int GetTableRowCount(IReadOnlyTable table)
 		{
 			if (! _tableRowStatistics.TryGetValue(table, out int rowCount))
 			{
 				Stopwatch watch = _msg.DebugStartTiming();
 
-				rowCount = GdbQueryUtils.Count((IObjectClass) table);
+				IQueryFilter filter = new QueryFilterClass
+				                      {
+					                      SubFields = table.OIDFieldName
+				                      };
+
+				rowCount = table.RowCount(filter);
+
 				_tableRowStatistics.Add(table, rowCount);
 
-				_msg.DebugStopTiming(watch, "Determined row count of {0}",
-				                     DatasetUtils.GetName(table));
+				_msg.DebugStopTiming(watch, "Determined row count of {0}", table.Name);
 			}
 
 			return rowCount;
 		}
 
-		private static string GetKeyValue(IRow row, int fieldIndex)
+		private static string GetNonNullKeyValue(IReadOnlyRow row, int fieldIndex)
 		{
-			object value = row.Value[fieldIndex];
+			string result = GetKeyValue(row, fieldIndex);
+
+			if (result == null)
+			{
+				throw new InvalidDataException(
+					$"No key value in {GdbObjectUtils.ToString(row)} (field index: {fieldIndex}).");
+			}
+
+			return result;
+		}
+
+		private static string GetKeyValue(IReadOnlyRow row, int fieldIndex)
+		{
+			object value = row.get_Value(fieldIndex);
 
 			if (value != null && DBNull.Value != value)
 			{
@@ -581,6 +880,72 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 
 			return null;
+		}
+
+		private class AssociationTableRowCache
+		{
+			private readonly IDictionary<string, IList<AssociationRow>>
+				_knownAssociationRowsByGeoKey =
+					new Dictionary<string, IList<AssociationRow>>();
+
+			public void Clear()
+			{
+				_knownAssociationRowsByGeoKey.Clear();
+			}
+
+			public void Add([NotNull] string geoKey,
+			                [NotNull] string otherKey,
+			                IReadOnlyRow row)
+			{
+				AssociationRow associationRow = new AssociationRow()
+				                                {
+					                                Row = row,
+					                                GeoKey = geoKey,
+					                                OtherKey = otherKey
+				                                };
+
+				CollectionUtils.AddToValueList(_knownAssociationRowsByGeoKey, geoKey,
+				                               associationRow);
+			}
+
+			[CanBeNull]
+			public IReadOnlyRow LookUp(string geoKey, string otherKey,
+			                           int assumedListIndex = -1)
+			{
+				IList<AssociationRow> candidates;
+				if (! _knownAssociationRowsByGeoKey.TryGetValue(geoKey, out candidates))
+				{
+					return null;
+				}
+
+				if (assumedListIndex >= 0 && assumedListIndex < candidates.Count)
+				{
+					var guessedCandidate = candidates[assumedListIndex];
+
+					if (guessedCandidate.OtherKey == otherKey)
+					{
+						return guessedCandidate.Row;
+					}
+				}
+
+				// Iterate all candidates
+				foreach (AssociationRow candidate in candidates)
+				{
+					if (candidate.OtherKey == otherKey)
+					{
+						return candidate.Row;
+					}
+				}
+
+				return null;
+			}
+
+			private class AssociationRow
+			{
+				public IReadOnlyRow Row { get; set; }
+				public string GeoKey { get; set; }
+				public string OtherKey { get; set; }
+			}
 		}
 	}
 }

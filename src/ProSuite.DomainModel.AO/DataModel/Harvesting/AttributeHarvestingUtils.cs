@@ -42,7 +42,8 @@ namespace ProSuite.DomainModel.AO.DataModel.Harvesting
 			attributedAssociation.ClearAttributeMaps();
 
 			using (_msg.IncrementIndentation(
-				"Harvesting attributes for attributed association {0}", attributedAssociation.Name))
+				       "Harvesting attributes for attributed association {0}",
+				       attributedAssociation.Name))
 			{
 				const bool allowAlways = true;
 				IRelationshipClass relationshipClass =
@@ -152,6 +153,34 @@ namespace ProSuite.DomainModel.AO.DataModel.Harvesting
 			DeleteAttributesNotInList(objectDataset, fields);
 
 			objectDataset.ClearAttributeMaps();
+		}
+
+		public static void HarvestGeometryType([NotNull] ObjectDataset objectDataset,
+		                                       [NotNull]
+		                                       IGeometryTypeConfigurator geometryTypeConfigurator,
+		                                       [NotNull] IObjectClass objectClass)
+		{
+			if (! (objectDataset is VectorDataset))
+			{
+				return;
+			}
+
+			if (! (objectClass is IFeatureClass featureClass))
+			{
+				return;
+			}
+
+			GeometryTypeShape correctGeometryType =
+				geometryTypeConfigurator.GetGeometryType(featureClass.ShapeType);
+
+			if (correctGeometryType?.Id != objectDataset.GeometryType?.Id)
+			{
+				_msg.InfoFormat("Dataset {0} has changed geometry type. Previous: {1}, New: {2}",
+				                objectDataset.Name, objectDataset.GeometryType?.Name,
+				                correctGeometryType?.Name);
+
+				objectDataset.GeometryType = correctGeometryType;
+			}
 		}
 
 		private static void AddOrUpdateAttribute([NotNull] ObjectDataset objectDataset,

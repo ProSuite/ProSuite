@@ -11,9 +11,23 @@ namespace ProSuite.DomainModel.Core.QA
 		public TransformerDescriptor() { }
 
 		public TransformerDescriptor([NotNull] string name,
-		                             [NotNull] ClassDescriptor testClass,
-		                             int testConstructorId,
+		                             [NotNull] ClassDescriptor implementationClass,
+		                             int constructorId,
 		                             string description = null)
-			: base(name, testClass, testConstructorId, description) { }
+			: base(name, implementationClass, constructorId, description) { }
+
+		#region Overrides of InstanceDescriptor
+
+		public override string TypeDisplayName => "Transformer Descriptor";
+
+		public override InstanceConfiguration CreateConfiguration()
+		{
+			return new TransformerConfiguration(true)
+			       {
+				       InstanceDescriptor = this
+			       };
+		}
+
+		#endregion
 	}
 }

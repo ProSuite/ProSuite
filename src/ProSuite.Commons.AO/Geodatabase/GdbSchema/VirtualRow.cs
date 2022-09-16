@@ -8,12 +8,15 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 	/// <summary>
 	/// template for Feature derived from an implementation of VirtualRow 
 	/// </summary>
-	public class VirtualFeature : VirtualRow, IFeature { }
+	public class VirtualFeature : VirtualRow, IFeature
+	{
+		ITable IFeature.Table => Table;
+	}
 
 	/// <summary>
 	/// see VirtualFeature for template for Feature derived from an implementation of VirtualRow 
 	/// </summary>
-	public class VirtualRow : IObject
+	public class VirtualRow : IObject, IReadOnlyRow
 	{
 		void IRow.Store() => Store();
 
@@ -54,16 +57,19 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		bool IRow.HasOID => HasOID;
 		bool IObject.HasOID => HasOID;
-		public virtual bool HasOID => Table.HasOID;
+		public virtual bool HasOID => Table.HasOID && OID >= 0;
 
 		int IRow.OID => OID;
 		int IObject.OID => OID;
+
 		public virtual int OID =>
 			throw new NotImplementedException("Implement in derived class");
 
 		ITable IRow.Table => Table;
 		ITable IObject.Table => Table;
-		public virtual ITable Table =>
+		IReadOnlyTable IReadOnlyRow.Table => Table;
+
+		public virtual VirtualTable Table =>
 			throw new NotImplementedException("Implement in derived class");
 
 		IObjectClass IObject.Class => Class;
@@ -78,7 +84,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		public virtual IGeometry ShapeCopy => GeometryFactory.Clone(Shape);
 		public virtual IEnvelope Extent => Shape.Envelope;
 
-		public esriFeatureType FeatureType =>
+		public virtual esriFeatureType FeatureType =>
 			throw new NotImplementedException("Implement in derived class");
 	}
 }

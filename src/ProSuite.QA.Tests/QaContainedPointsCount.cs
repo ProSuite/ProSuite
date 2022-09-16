@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
@@ -13,6 +12,8 @@ using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Core;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
 {
@@ -74,9 +75,9 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaContainedPointsCount_0))]
 		public QaContainedPointsCount(
 			[Doc(nameof(DocStrings.QaContainedPointsCount_polygonClass))] [NotNull]
-			IFeatureClass polygonClass,
+			IReadOnlyFeatureClass polygonClass,
 			[Doc(nameof(DocStrings.QaContainedPointsCount_pointClass))] [NotNull]
-			IFeatureClass pointClass,
+			IReadOnlyFeatureClass pointClass,
 			[Doc(nameof(DocStrings.QaContainedPointsCount_expectedPointCount))]
 			int expectedPointCount,
 			[Doc(nameof(DocStrings.QaContainedPointsCount_relevantPointCondition))] [CanBeNull]
@@ -92,9 +93,9 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaContainedPointsCount_1))]
 		public QaContainedPointsCount(
 			[Doc(nameof(DocStrings.QaContainedPointsCount_polygonClass))] [NotNull]
-			IFeatureClass polygonClass,
+			IReadOnlyFeatureClass polygonClass,
 			[Doc(nameof(DocStrings.QaContainedPointsCount_pointClass))] [NotNull]
-			IFeatureClass pointClass,
+			IReadOnlyFeatureClass pointClass,
 			[Doc(nameof(DocStrings.QaContainedPointsCount_minimumPointCount))]
 			int minimumPointCount,
 			[Doc(nameof(DocStrings.QaContainedPointsCount_maximumPointCount))]
@@ -112,9 +113,9 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaContainedPointsCount_2))]
 		public QaContainedPointsCount(
 			[Doc(nameof(DocStrings.QaContainedPointsCount_polygonClass))] [NotNull]
-			IFeatureClass polygonClass,
+			IReadOnlyFeatureClass polygonClass,
 			[Doc(nameof(DocStrings.QaContainedPointsCount_pointClass))] [NotNull]
-			IFeatureClass pointClass,
+			IReadOnlyFeatureClass pointClass,
 			[Doc(nameof(DocStrings.QaContainedPointsCount_minimumPointCount))]
 			int minimumPointCount,
 			[Doc(nameof(DocStrings.QaContainedPointsCount_maximumPointCount))]
@@ -135,10 +136,10 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaContainedPointsCount_3))]
 		public QaContainedPointsCount(
 			[Doc(nameof(DocStrings.QaContainedPointsCount_polygonClasses))] [NotNull]
-			IList<IFeatureClass>
+			IList<IReadOnlyFeatureClass>
 				polygonClasses,
 			[Doc(nameof(DocStrings.QaContainedPointsCount_pointClasses))] [NotNull]
-			IList<IFeatureClass>
+			IList<IReadOnlyFeatureClass>
 				pointClasses,
 			[Doc(nameof(DocStrings.QaContainedPointsCount_expectedPointCount))]
 			int expectedPointCount,
@@ -152,10 +153,10 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaContainedPointsCount_4))]
 		public QaContainedPointsCount(
 			[Doc(nameof(DocStrings.QaContainedPointsCount_polygonClasses))] [NotNull]
-			IList<IFeatureClass>
+			IList<IReadOnlyFeatureClass>
 				polygonClasses,
 			[Doc(nameof(DocStrings.QaContainedPointsCount_pointClasses))] [NotNull]
-			IList<IFeatureClass>
+			IList<IReadOnlyFeatureClass>
 				pointClasses,
 			[Doc(nameof(DocStrings.QaContainedPointsCount_minimumPointCount))]
 			int minimumPointCount,
@@ -266,7 +267,7 @@ namespace ProSuite.QA.Tests
 			}
 		}
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
 			if (tableIndex >= _polygonClassesCount)
 			{
@@ -279,7 +280,7 @@ namespace ProSuite.QA.Tests
 				Assert.NotNull(_queryFilter, "_queryFilter");
 			}
 
-			var feature = (IFeature) row;
+			var feature = (IReadOnlyFeature) row;
 			IGeometry containingShape = feature.Shape;
 
 			if (containingShape == null || containingShape.IsEmpty)
@@ -294,8 +295,9 @@ namespace ProSuite.QA.Tests
 				{
 					if (PolylineUsage == PolylineUsage.AsPolygonIfClosedElseReportIssue)
 					{
-						return ReportError("Unclosed line", line, Codes[Code.NotClosed_Line], null,
-						                   InvolvedRowUtils.GetInvolvedRows(feature));
+						return ReportError(
+							"Unclosed line", InvolvedRowUtils.GetInvolvedRows(feature),
+							line, Codes[Code.NotClosed_Line], null);
 					}
 
 					if (PolylineUsage == PolylineUsage.AsPolygonIfClosedElseIgnore)
@@ -328,11 +330,11 @@ namespace ProSuite.QA.Tests
 			{
 				_queryFilter[pointClassIndex].Geometry = containingShape;
 
-				foreach (IRow pointRow in Search(InvolvedTables[pointClassIndex],
+				foreach (IReadOnlyRow pointRow in Search(InvolvedTables[pointClassIndex],
 				                                 _queryFilter[pointClassIndex],
 				                                 _helper[pointClassIndex]))
 				{
-					var pointFeature = (IFeature) pointRow;
+					var pointFeature = (IReadOnlyFeature) pointRow;
 					// point feature is POINT, polygon feature is POLYGON
 					if (! _relevantPointCondition.IsFulfilled(
 						    pointFeature, pointClassIndex,
@@ -353,7 +355,7 @@ namespace ProSuite.QA.Tests
 		#region Non-public
 
 		[NotNull]
-		private PolygonPoints GetPolygonPoints([NotNull] IFeature feature, int tableIndex)
+		private PolygonPoints GetPolygonPoints([NotNull] IReadOnlyFeature feature, int tableIndex)
 		{
 			Dictionary<int, PolygonPoints> polygonPointsByOid;
 			if (! _polygonPointsByTableIndex.TryGetValue(tableIndex, out polygonPointsByOid))
@@ -470,21 +472,22 @@ namespace ProSuite.QA.Tests
 				int tableIndex = pair.Key;
 				List<PolygonPointsError> errors = pair.Value;
 
-				var featureClass = (IFeatureClass) InvolvedTables[tableIndex];
+				var featureClass = (IReadOnlyFeatureClass) InvolvedTables[tableIndex];
 				Dictionary<int, PolygonPointsError> errorsByOid = GetErrorsByOid(errors);
 
 				const bool recycle = true;
 				foreach (
-					IFeature polygonFeature in
-					GdbQueryUtils.GetFeatures(featureClass, errorsByOid.Keys, recycle))
+					IReadOnlyRow polygonRow in
+					GdbQueryUtils.GetRows(featureClass, errorsByOid.Keys, recycle))
 				{
+					IReadOnlyFeature polygonFeature = (IReadOnlyFeature) polygonRow;
 					IGeometry errorGeometry = polygonFeature.ShapeCopy;
 
 					PolygonPointsError error = errorsByOid[polygonFeature.OID];
 
-					errorCount += ReportError(error.ErrorDescription, errorGeometry,
-					                          error.IssueCode, null,
-					                          GetInvolvedRows(polygonFeature, error));
+					errorCount += ReportError(
+						error.ErrorDescription, GetInvolvedRows(polygonFeature, error),
+						errorGeometry, error.IssueCode, null);
 				}
 			}
 
@@ -492,19 +495,20 @@ namespace ProSuite.QA.Tests
 		}
 
 		[NotNull]
-		private IEnumerable<InvolvedRow> GetInvolvedRows(
-			[NotNull] IFeature polygonFeature,
+		private InvolvedRows GetInvolvedRows(
+			[NotNull] IReadOnlyFeature polygonFeature,
 			[NotNull] PolygonPointsError error)
 		{
-			yield return new InvolvedRow(polygonFeature);
+			InvolvedRows result = InvolvedRowUtils.GetInvolvedRows(polygonFeature);
 
 			foreach (PointFeature pointFeature in error.PointFeatures)
 			{
-				ITable pointFeatureClass = InvolvedTables[pointFeature.TableIndex];
+				IReadOnlyTable pointFeatureClass = InvolvedTables[pointFeature.TableIndex];
 
-				yield return new InvolvedRow(
-					DatasetUtils.GetName(pointFeatureClass), pointFeature.OID);
+				result.Add(new InvolvedRow(pointFeatureClass.Name, pointFeature.OID));
 			}
+
+			return result;
 		}
 
 		[NotNull]
@@ -615,7 +619,7 @@ namespace ProSuite.QA.Tests
 			/// </summary>
 			/// <param name="feature">The feature.</param>
 			/// <param name="tableIndex">The table index for the feature</param>
-			public PolygonPoints([NotNull] IFeature feature, int tableIndex)
+			public PolygonPoints([NotNull] IReadOnlyFeature feature, int tableIndex)
 			{
 				Assert.ArgumentNotNull(feature, nameof(feature));
 
@@ -645,7 +649,7 @@ namespace ProSuite.QA.Tests
 				return TestUtils.IsFeatureFullyChecked(_extent, tileEnvelope, testRunEnvelope);
 			}
 
-			public void AddPointFeature(IFeature feature, int tableIndex)
+			public void AddPointFeature(IReadOnlyFeature feature, int tableIndex)
 			{
 				_pointFeatures.TryAdd(new PointFeature(feature, tableIndex));
 			}
@@ -681,7 +685,7 @@ namespace ProSuite.QA.Tests
 			private readonly int _oid;
 			private readonly int _tableIndex;
 
-			public PointFeature([NotNull] IFeature feature, int tableIndex)
+			public PointFeature([NotNull] IReadOnlyFeature feature, int tableIndex)
 			{
 				_oid = feature.OID;
 				_tableIndex = tableIndex;

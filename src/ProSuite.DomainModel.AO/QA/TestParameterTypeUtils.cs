@@ -12,6 +12,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Core;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.DomainModel.AO.QA
 {
@@ -52,8 +53,13 @@ namespace ProSuite.DomainModel.AO.QA
 
 			// NOTE: test more specific types first, base types last
 
+			if (typeof(IReadOnlyFeatureClass).IsAssignableFrom(dataType))
+				return TestParameterType.VectorDataset;
 			if (typeof(IFeatureClass).IsAssignableFrom(dataType))
 				return TestParameterType.VectorDataset;
+
+			if (typeof(IReadOnlyTable).IsAssignableFrom(dataType))
+				return TestParameterType.ObjectDataset;
 			if (typeof(ITable).IsAssignableFrom(dataType))
 				return TestParameterType.ObjectDataset;
 			if (typeof(IObjectClass).IsAssignableFrom(dataType))
@@ -105,6 +111,35 @@ namespace ProSuite.DomainModel.AO.QA
 			return TestParameterType.CustomScalar;
 		}
 
+		public static bool IsDatasetType([NotNull] Type type)
+		{
+			Assert.ArgumentNotNull(type, nameof(type));
+
+			if (type.IsValueType)
+			{
+				return false;
+			}
+
+			return typeof(IReadOnlyFeatureClass).IsAssignableFrom(type) ||
+			       typeof(IReadOnlyTable).IsAssignableFrom(type) ||
+			       typeof(IFeatureClass).IsAssignableFrom(type) ||
+			       typeof(ITable).IsAssignableFrom(type) ||
+			       typeof(IObjectClass).IsAssignableFrom(type) ||
+			       typeof(ITopology).IsAssignableFrom(type) ||
+			       typeof(IRasterDataset).IsAssignableFrom(type) ||
+			       typeof(IRasterDataset2).IsAssignableFrom(type) ||
+			       typeof(IMosaicDataset).IsAssignableFrom(type) ||
+
+			       // Remove once all 3d and GdbNetwork tests are officially de-supported:
+#if ArcGIS // 10.x:
+			       type.Name == "IMosaicLayer" ||
+			       type.Name == "ITerrain" ||
+			       type.Name == "IGeometricNetwork" ||
+#endif
+			       typeof(TerrainReference).IsAssignableFrom(type) ||
+			       typeof(SimpleRasterMosaic).IsAssignableFrom(type);
+		}
+
 		public static bool IsValidDataset(TestParameterType parameterType,
 		                                  [NotNull] Dataset dataset)
 		{
@@ -142,6 +177,59 @@ namespace ProSuite.DomainModel.AO.QA
 						string.Format("Unsupported parameter type: {0}",
 						              Enum.GetName(typeof(TestParameterType), parameterType)));
 			}
+		}
+
+		[NotNull]
+		public static TestParameterValue GetEmptyParameterValue(
+			[NotNull] TestParameter testParameter)
+		{
+			Assert.ArgumentNotNull(testParameter, nameof(testParameter));
+
+			if (IsDatasetType(testParameter.Type))
+			{
+				return new DatasetTestParameterValue(testParameter);
+			}
+
+			if (testParameter.Type == typeof(double) ||
+			    testParameter.Type == typeof(int) ||
+			    testParameter.Type == typeof(bool) ||
+			    testParameter.Type == typeof(string) ||
+			    testParameter.Type == typeof(DateTime) ||
+			    testParameter.Type.IsEnum)
+			{
+				return new ScalarTestParameterValue(testParameter,
+				                                    $"{testParameter.DefaultValue ?? GetDefault(testParameter.Type)}");
+			}
+
+			return new ScalarTestParameterValue(testParameter,
+			                                    $"{testParameter.DefaultValue ?? GetDefault(testParameter.Type)}");
+			//throw new ArgumentException("Unhandled type " + _type);
+		}
+
+		[CanBeNull]
+		public static object GetDefault([NotNull] Type type)
+		{
+			if (! type.IsValueType)
+			{
+				return null;
+			}
+
+			object defaultValue = Activator.CreateInstance(type);
+
+			if (type.IsEnum)
+			{
+				// Ensure valid value for enums: if default value (0) is not in list, return the first enum item value
+				if (! Enum.IsDefined(type, defaultValue))
+				{
+					string[] values = Enum.GetNames(type);
+					if (values.Length > 0)
+					{
+						return values[0];
+					}
+				}
+			}
+
+			return defaultValue;
 		}
 	}
 }

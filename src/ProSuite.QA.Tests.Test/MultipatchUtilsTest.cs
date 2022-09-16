@@ -292,7 +292,7 @@ namespace ProSuite.QA.Tests.Test
 				            //			            		new QaSegmentLength(gebaeude, 0.1),
 				            //			            		new QaSliverPolygon(gebaeude, 50),
 				            //			            		new QaCoplanarRings(gebaeude, 0, false),
-				            new QaMpFootprintHoles(gebaeude, InnerRingHandling.IgnoreInnerRings)
+				            new QaMpFootprintHoles(ReadOnlyTableFactory.Create(gebaeude), InnerRingHandling.IgnoreInnerRings)
 			            };
 			var runner = new QaContainerTestRunner(10000, tests);
 			runner.LogErrors = false;

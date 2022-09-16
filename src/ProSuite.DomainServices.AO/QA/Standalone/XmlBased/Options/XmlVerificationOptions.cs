@@ -4,8 +4,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased.Options
 {
-	[XmlRoot("VerificationOptions",
-	         Namespace = "urn:EsriDE.ProSuite.QA.XmlBasedVerificationOptions-1.0")]
+	[XmlRoot("VerificationOptions", Namespace = "urn:ProSuite.QA.XmlBasedVerificationOptions-1.0")]
 	public class XmlVerificationOptions
 	{
 		[XmlElement("KeyFields")]

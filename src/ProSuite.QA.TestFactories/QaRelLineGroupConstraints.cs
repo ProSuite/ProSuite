@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
-using ESRI.ArcGIS.Geodatabase;
 using ProSuite.QA.Tests;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
 using ProSuite.DomainModel.AO.QA;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Core;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.TestFactories
 {
@@ -35,7 +35,7 @@ namespace ProSuite.QA.TestFactories
 			var list =
 				new List<TestParameter>
 				{
-					new TestParameter("relationTables", typeof(IList<ITable>),
+					new TestParameter("relationTables", typeof(IList<IReadOnlyTable>),
 					                  DocStrings.QaRelGroupConnected_relationTables),
 					new TestParameter("relation", typeof(string),
 					                  DocStrings.QaRelGroupConnected_relation),
@@ -72,10 +72,7 @@ namespace ProSuite.QA.TestFactories
 			return list.AsReadOnly();
 		}
 
-		public override string GetTestDescription()
-		{
-			return DocStrings.QaRelLineGroupConstraints;
-		}
+		public override string TestDescription => DocStrings.QaRelLineGroupConstraints;
 
 		protected override object[] Args(IOpenDataset datasetContext,
 		                                 IList<TestParameter> testParameters,
@@ -91,7 +88,7 @@ namespace ProSuite.QA.TestFactories
 
 			var objects = new object[6];
 
-			var tables = ValidateType<IList<ITable>>(objParams[0], "IList<ITable>");
+			var tables = ValidateType<IList<IReadOnlyTable>>(objParams[0], "IList<IReadOnlyTable>");
 			var associationName =
 				ValidateType<string>(objParams[1], "string (for relation)");
 			var join = ValidateType<JoinType>(objParams[2]);
@@ -102,9 +99,9 @@ namespace ProSuite.QA.TestFactories
 			objects[4] = ValidateType<string>(objParams[6]); // groupBy
 			objects[5] = tables;
 
-			ITable queryTable = CreateQueryTable(datasetContext, associationName, tables, join);
+			IReadOnlyTable queryTable = CreateQueryTable(datasetContext, associationName, tables, join);
 
-			if (queryTable is IFeatureClass == false)
+			if (queryTable is IReadOnlyFeatureClass == false)
 			{
 				throw new InvalidOperationException(
 					"Relation table is not a FeatureClass, try change join type");
@@ -128,10 +125,10 @@ namespace ProSuite.QA.TestFactories
 		protected override ITest CreateTestInstance(object[] args)
 		{
 			var test = new QaLineGroupConstraints(
-				new[] {(IFeatureClass) args[0]}, (double) args[1], (double) args[2],
+				new[] {(IReadOnlyFeatureClass) args[0]}, (double) args[1], (double) args[2],
 				(double) args[3], new[] {(string) args[4]});
 
-			test.AddRelatedTables((ITable) args[0], (IList<ITable>) args[5]);
+			test.AddRelatedTables((IReadOnlyTable) args[0], (IList<IReadOnlyTable>) args[5]);
 			return test;
 		}
 

@@ -11,14 +11,14 @@ namespace ProSuite.QA.Container
 {
 	internal class TerrainRow : ISurfaceRow, IDataReference
 	{
-		[NotNull] private readonly ITestProgress _testProgress;
+		[CanBeNull] private readonly ITestProgress _testProgress;
 
 		private readonly double _resolution;
 
 		[CanBeNull] private ISimpleSurface _tinSurface;
 
 		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+			new Msg(MethodBase.GetCurrentMethod()?.DeclaringType);
 
 		#region Constructors
 
@@ -32,11 +32,10 @@ namespace ProSuite.QA.Container
 		internal TerrainRow([NotNull] IEnvelope box,
 		                    [NotNull] TerrainReference terrainReference,
 		                    double resolution,
-		                    [NotNull] ITestProgress testProgress)
+		                    [CanBeNull] ITestProgress testProgress)
 		{
 			Assert.ArgumentNotNull(box, nameof(box));
 			Assert.ArgumentNotNull(terrainReference, nameof(terrainReference));
-			Assert.ArgumentNotNull(testProgress, nameof(testProgress));
 
 			Extent = box;
 			TerrainReference = terrainReference;
@@ -100,8 +99,8 @@ namespace ProSuite.QA.Container
 				if (_tinSurface == null)
 				{
 					_msg.Debug("Getting tin for tile");
-					using (_testProgress.UseProgressWatch(
-						Step.TinLoading, Step.TinLoaded, 0, 1, TerrainReference))
+					using (_testProgress?.UseProgressWatch(
+						       Step.TinLoading, Step.TinLoaded, 0, 1, TerrainReference))
 					{
 						ITin tin = TerrainReference.CreateTin(Extent, _resolution);
 

@@ -3,7 +3,6 @@ using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
@@ -11,6 +10,8 @@ using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
 {
@@ -43,7 +44,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaMustTouchSelf_0))]
 		public QaMustTouchSelf(
 			[Doc(nameof(DocStrings.QaMustTouchSelf_featureClass))] [NotNull]
-			IFeatureClass featureClass,
+			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaMustTouchSelf_relevantRelationCondition))] [CanBeNull]
 			string
 				relevantRelationCondition)
@@ -55,12 +56,12 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaMustTouchSelf_1))]
 		public QaMustTouchSelf(
 			[Doc(nameof(DocStrings.QaMustTouchSelf_featureClasses))] [NotNull]
-			ICollection<IFeatureClass>
+			ICollection<IReadOnlyFeatureClass>
 				featureClasses,
 			[Doc(nameof(DocStrings.QaMustTouchSelf_relevantRelationCondition))] [CanBeNull]
 			string
 				relevantRelationCondition)
-			: base(featureClasses.Cast<ITable>())
+			: base(featureClasses)
 		{
 			Assert.ArgumentNotNull(featureClasses, nameof(featureClasses));
 
@@ -72,7 +73,7 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
 			if (_queryFilter == null)
 			{
@@ -87,7 +88,7 @@ namespace ProSuite.QA.Tests
 					                              GetSqlCaseSensitivity());
 			}
 
-			var feature = (IFeature) row;
+			var feature = (IReadOnlyFeature) row;
 
 			if (_crossTileFeatureState.IsFeatureKnownOK(tableIndex, feature.OID))
 			{
@@ -105,7 +106,7 @@ namespace ProSuite.QA.Tests
 			     relatedTableIndex < _totalClassesCount;
 			     relatedTableIndex++)
 			{
-				foreach (IFeature relatedFeature in GetRelatedFeatures(shape, relatedTableIndex))
+				foreach (IReadOnlyFeature relatedFeature in GetRelatedFeatures(shape, relatedTableIndex))
 				{
 					if (! _relevantRelationCondition.IsFulfilled(row, tableIndex,
 					                                             relatedFeature, relatedTableIndex))
@@ -142,17 +143,17 @@ namespace ProSuite.QA.Tests
 		}
 
 		[NotNull]
-		private IEnumerable<IFeature> GetRelatedFeatures([NotNull] IGeometry shape,
+		private IEnumerable<IReadOnlyFeature> GetRelatedFeatures([NotNull] IGeometry shape,
 		                                                 int relatedTableIndex)
 		{
-			ITable table = InvolvedTables[relatedTableIndex];
+			IReadOnlyTable table = InvolvedTables[relatedTableIndex];
 
 			ISpatialFilter spatialFilter = _queryFilter[relatedTableIndex];
 			spatialFilter.Geometry = shape;
 
 			QueryFilterHelper filterHelper = _helper[relatedTableIndex];
 
-			return Search(table, spatialFilter, filterHelper).Cast<IFeature>();
+			return Search(table, spatialFilter, filterHelper).Cast<IReadOnlyFeature>();
 		}
 
 		private int ReportErrors(int tableIndex,
@@ -163,19 +164,19 @@ namespace ProSuite.QA.Tests
 				return NoError;
 			}
 
-			var featureClass = (IFeatureClass) InvolvedTables[tableIndex];
+			var featureClass = (IReadOnlyFeatureClass) InvolvedTables[tableIndex];
 			List<int> oids = errorFeatures.Select(feature => feature.OID).ToList();
 
 			// TODO extract base class (QaRequiredSpatialRelationSelf)
 			// TODO use issue code NoTouchingFeature_WithFulfilledConstraint
 			const bool recycling = true;
-			return GdbQueryUtils.GetFeatures(featureClass, oids, recycling)
+			return GdbQueryUtils.GetRows(featureClass, oids, recycling).Cast<IReadOnlyFeature>()
 			                    .Sum(feature => ReportError(
 				                         "Feature is not touched by another feature",
+				                         GetInvolvedRows(feature),
 				                         feature.ShapeCopy,
 				                         Codes[MustTouchIssueCodes.NoTouchingFeature],
-				                         TestUtils.GetShapeFieldName(feature),
-				                         GetInvolvedRows(feature)));
+				                         TestUtils.GetShapeFieldName(feature)));
 		}
 
 		/// <summary>

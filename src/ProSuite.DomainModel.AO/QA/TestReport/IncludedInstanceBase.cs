@@ -3,8 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Text;
-using ProSuite.QA.Container;
+using ProSuite.QA.Core.IssueCodes;
 
 namespace ProSuite.DomainModel.AO.QA.TestReport
 {
@@ -47,15 +46,9 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 
 		public abstract string Description { get; }
 
-		public abstract Type TestType { get; }
+		public abstract Type InstanceType { get; }
 
 		public virtual IList<IssueCode> IssueCodes => null;
-
-		[NotNull]
-		public string GetCommaSeparatedCategories()
-		{
-			return StringUtils.ConcatenateSorted(Categories, ", ");
-		}
 
 		#region IComparable<IncludedInstanceBase> Members
 

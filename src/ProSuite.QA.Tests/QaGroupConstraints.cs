@@ -5,15 +5,15 @@ using System.Linq;
 using System.Text;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.Commons.AO;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Core;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
 
@@ -27,7 +27,7 @@ namespace ProSuite.QA.Tests
 
 		private const string _distinctColumn = "__Distinct";
 
-		private readonly IList<ITable> _tables;
+		private readonly IList<IReadOnlyTable> _tables;
 		private readonly IList<string> _tableNames;
 		private readonly IList<string> _groupByExpressions;
 		private readonly bool _limitToTestedRows;
@@ -73,7 +73,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaGroupConstraints_0))]
 		public QaGroupConstraints(
 			[Doc(nameof(DocStrings.QaGroupConstraints_table))] [NotNull]
-			ITable table,
+			IReadOnlyTable table,
 			[Doc(nameof(DocStrings.QaGroupConstraints_groupByExpression))] [NotNull]
 			string groupByExpression,
 			[Doc(nameof(DocStrings.QaGroupConstraints_distinctExpression))] [NotNull]
@@ -88,7 +88,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaGroupConstraints_1))]
 		public QaGroupConstraints(
 			[Doc(nameof(DocStrings.QaGroupConstraints_tables))] [NotNull]
-			IList<ITable> tables,
+			IList<IReadOnlyTable> tables,
 			[Doc(nameof(DocStrings.QaGroupConstraints_groupByExpressions))] [NotNull]
 			IList<string> groupByExpressions,
 			[Doc(nameof(DocStrings.QaGroupConstraints_distinctExpressions))] [NotNull]
@@ -104,7 +104,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaGroupConstraints_1))]
 		public QaGroupConstraints(
 			[Doc(nameof(DocStrings.QaGroupConstraints_tables))] [NotNull]
-			IList<ITable> tables,
+			IList<IReadOnlyTable> tables,
 			[Doc(nameof(DocStrings.QaGroupConstraints_groupByExpressions))] [NotNull]
 			IList<string> groupByExpressions,
 			[Doc(nameof(DocStrings.QaGroupConstraints_distinctExpressions))] [NotNull]
@@ -138,9 +138,9 @@ namespace ProSuite.QA.Tests
 			_minDistinctCount = minDistinctCount;
 
 			_tableNames = new List<string>(tables.Count);
-			foreach (ITable table in tables)
+			foreach (IReadOnlyTable table in tables)
 			{
-				_tableNames.Add(DatasetUtils.GetName(table));
+				_tableNames.Add(table.Name);
 			}
 		}
 
@@ -179,7 +179,7 @@ namespace ProSuite.QA.Tests
 			return ExecuteGeometry(area);
 		}
 
-		public override int Execute(IEnumerable<IRow> selection)
+		public override int Execute(IEnumerable<IReadOnlyRow> selection)
 		{
 			Init();
 
@@ -194,21 +194,21 @@ namespace ProSuite.QA.Tests
 			                  GetStatisticsPerGroup(GetTableIndexRows(selection)));
 		}
 
-		public override int Execute(IRow row)
+		public override int Execute(IReadOnlyRow row)
 		{
 			return Execute(new[] {row});
 		}
 
 		protected override ISpatialReference GetSpatialReference()
 		{
-			return _tables.OfType<IGeoDataset>()
+			return _tables.OfType<IReadOnlyGeoDataset>()
 			              .Select(gds => gds.SpatialReference)
 			              .FirstOrDefault();
 		}
 
 		#endregion
 
-		public void SetRelatedTables([NotNull] IList<ITable> relatedTables)
+		public void SetRelatedTables([NotNull] IList<IReadOnlyTable> relatedTables)
 		{
 			Assert.True(_tables.Count == 1,
 			            "Related tables are not supported for multiple test tables");
@@ -218,14 +218,14 @@ namespace ProSuite.QA.Tests
 
 		[NotNull]
 		private IEnumerable<TableIndexRow> GetTableIndexRows(
-			[NotNull] IEnumerable<IRow> rows)
+			[NotNull] IEnumerable<IReadOnlyRow> rows)
 		{
-			var helpers = new Dictionary<ITable, IDictionary<int, TableView>>();
+			var helpers = new Dictionary<IReadOnlyTable, IDictionary<int, TableView>>();
 			// ITable with associated TableIndices/TableViews
 
-			foreach (IRow row in rows)
+			foreach (IReadOnlyRow row in rows)
 			{
-				var feature = row as IFeature;
+				var feature = row as IReadOnlyFeature;
 				if (feature != null && AreaOfInterest != null &&
 				    ((IRelationalOperator) AreaOfInterest).Disjoint(feature.Shape))
 				{
@@ -237,7 +237,7 @@ namespace ProSuite.QA.Tests
 					continue;
 				}
 
-				ITable table = row.Table;
+				IReadOnlyTable table = row.Table;
 				IDictionary<int, TableView> tableHelpers;
 				if (! helpers.TryGetValue(table, out tableHelpers))
 				{
@@ -281,7 +281,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[NotNull]
-		private IDictionary<int, TableView> CreateHelpers([NotNull] ITable table)
+		private IDictionary<int, TableView> CreateHelpers([NotNull] IReadOnlyTable table)
 		{
 			return _tables.Where(t => t == table)
 			              .Select((t, i) => new KeyValuePair<int, TableView>(
@@ -297,7 +297,7 @@ namespace ProSuite.QA.Tests
 
 			foreach (TableIndexRow tableIndexRow in selection)
 			{
-				var feature = tableIndexRow.Row as IFeature;
+				var feature = tableIndexRow.Row as IReadOnlyFeature;
 
 				if (feature != null && AreaOfInterest != null &&
 				    ((IRelationalOperator) AreaOfInterest).Disjoint(feature.Shape))
@@ -330,11 +330,11 @@ namespace ProSuite.QA.Tests
 
 			for (var tableIndex = 0; tableIndex < _tables.Count; tableIndex++)
 			{
-				ITable table = _tables[tableIndex];
+				IReadOnlyTable table = _tables[tableIndex];
 
 				IGeometry filterGeometry = geometry;
 
-				if (! (table is IFeatureClass))
+				if (! (table is IReadOnlyFeatureClass))
 				{
 					filterGeometry = null;
 				}
@@ -342,9 +342,9 @@ namespace ProSuite.QA.Tests
 				IQueryFilter queryFilterFullScan =
 					CreateQueryFilter(filterGeometry, tableIndex);
 
-				var rowsToTest = new EnumCursor(table, queryFilterFullScan, recycle);
+				var rowsToTest = table.EnumRows(queryFilterFullScan, recycle);
 
-				foreach (IRow row in rowsToTest)
+				foreach (IReadOnlyRow row in rowsToTest)
 				{
 					yield return new TableIndexRow(tableIndex, row);
 				}
@@ -475,7 +475,7 @@ namespace ProSuite.QA.Tests
 		[NotNull]
 		private TableView CreateHelper(int tableIndex)
 		{
-			ITable table = _tables[tableIndex];
+			IReadOnlyTable table = _tables[tableIndex];
 			// all used expressions must exist in all tables
 
 			// TODO parse/remove/use case sensitivity hint
@@ -493,14 +493,14 @@ namespace ProSuite.QA.Tests
 
 			if (_relatedTables == null && _tables.Count == 1)
 			{
-				IDataset ds = (IDataset) _tables[0];
+				IReadOnlyDataset ds = (IReadOnlyDataset) _tables[0];
 				if (ds.FullName is IQueryName qn)
 				{
 					IFeatureWorkspace ws = (IFeatureWorkspace) ds.Workspace;
-					List<ITable> relTables = new List<ITable>();
+					List<IReadOnlyTable> relTables = new List<IReadOnlyTable>();
 					foreach (string tableName in qn.QueryDef.Tables.Split(','))
 					{
-						ITable relTable = ws.OpenTable(tableName);
+						IReadOnlyTable relTable = ReadOnlyTableFactory.Create(ws.OpenTable(tableName));
 						if (relTable.HasOID &&
 						    relTable.OIDFieldName.Equals(
 							    "RID", StringComparison.InvariantCultureIgnoreCase))
@@ -585,9 +585,9 @@ namespace ProSuite.QA.Tests
 		private class TableIndexRow
 		{
 			public readonly int TableIndex;
-			public readonly IRow Row;
+			public readonly IReadOnlyRow Row;
 
-			public TableIndexRow(int tableIndex, [NotNull] IRow row)
+			public TableIndexRow(int tableIndex, [NotNull] IReadOnlyRow row)
 			{
 				TableIndex = tableIndex;
 				Row = row;
@@ -601,12 +601,12 @@ namespace ProSuite.QA.Tests
 		}
 
 		private delegate int ErrorReporting([NotNull] string description,
+		                                    [NotNull] InvolvedRows involvedRows,
 		                                    [CanBeNull] IGeometry geometry,
 		                                    [NotNull] IssueCode issueCode,
 		                                    [CanBeNull] string affectedComponent,
-		                                    [NotNull] InvolvedRows involvedRows,
-		                                    [CanBeNull] IEnumerable<object> values =
-			                                    null);
+											bool reportIndividualParts = false,
+		                                    [CanBeNull] IEnumerable<object> values = null);
 
 		private abstract class GroupStatistics
 		{
@@ -751,11 +751,8 @@ namespace ProSuite.QA.Tests
 				string errorMessage =
 					GetErrorMessage(incompleteInvolvedRows, out issueCode);
 
-				return errorReporting(errorMessage,
-				                      errorGeometry,
-				                      issueCode,
-				                      null,
-				                      involvedList);
+				return errorReporting(
+					errorMessage, involvedList, errorGeometry, issueCode, null);
 			}
 
 			[NotNull]

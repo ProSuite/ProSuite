@@ -22,7 +22,7 @@ namespace ProSuite.QA.Container.TestSupport
 		private static readonly IMsg _msg =
 			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
 
-		public CodedDomainValueProvider([NotNull] ITable table,
+		public CodedDomainValueProvider([NotNull] IReadOnlyTable table,
 		                                [NotNull] string codedDomainField,
 		                                [CanBeNull] IFormatProvider formatProvider)
 		{
@@ -52,9 +52,9 @@ namespace ProSuite.QA.Container.TestSupport
 			}
 		}
 
-		T? IValueProvider<T>.GetValue(IRow row)
+		T? IValueProvider<T>.GetValue(IReadOnlyRow row)
 		{
-			object code = row.Value[_codedFieldIndex];
+			object code = row.get_Value(_codedFieldIndex);
 
 			T? value;
 			return _valueDict.TryGetValue(code, out value)

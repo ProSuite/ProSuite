@@ -1,11 +1,13 @@
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.SpatialRelations;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Core;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
 {
@@ -38,7 +40,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaZDifferenceSelf_0))]
 		public QaZDifferenceSelf(
 			[Doc(nameof(DocStrings.QaZDifferenceSelf_featureClass))] [NotNull]
-			IFeatureClass featureClass,
+			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaZDifferenceSelf_limit))] double limit,
 			[Doc(nameof(DocStrings.QaZDifferenceSelf_zComparisonMethod))]
 			ZComparisonMethod zComparisonMethod,
@@ -50,7 +52,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaZDifferenceSelf_1))]
 		public QaZDifferenceSelf(
 			[Doc(nameof(DocStrings.QaZDifferenceSelf_featureClasses))] [NotNull]
-			IList<IFeatureClass> featureClasses,
+			IList<IReadOnlyFeatureClass> featureClasses,
 			[Doc(nameof(DocStrings.QaZDifferenceSelf_limit))] double limit,
 			[Doc(nameof(DocStrings.QaZDifferenceSelf_zComparisonMethod))]
 			ZComparisonMethod zComparisonMethod,
@@ -61,7 +63,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaZDifferenceSelf_2))]
 		public QaZDifferenceSelf(
 			[Doc(nameof(DocStrings.QaZDifferenceSelf_featureClass))] [NotNull]
-			IFeatureClass featureClass,
+			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaZDifferenceSelf_minimumZDifference))]
 			double minimumZDifference,
 			[Doc(nameof(DocStrings.QaZDifferenceSelf_maximumZDifference))]
@@ -76,7 +78,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaZDifferenceSelf_3))]
 		public QaZDifferenceSelf(
 			[Doc(nameof(DocStrings.QaZDifferenceSelf_featureClasses))] [NotNull]
-			IList<IFeatureClass> featureClasses,
+			IList<IReadOnlyFeatureClass> featureClasses,
 			[Doc(nameof(DocStrings.QaZDifferenceSelf_minimumZDifference))]
 			double minimumZDifference,
 			[Doc(nameof(DocStrings.QaZDifferenceSelf_maximumZDifference))]
@@ -109,8 +111,8 @@ namespace ProSuite.QA.Tests
 			set { _maximumZDifferenceExpressionSql = value?.Trim(); }
 		}
 
-		protected override int FindErrors(IRow row1, int tableIndex1,
-		                                  IRow row2, int tableIndex2)
+		protected override int FindErrors(IReadOnlyRow row1, int tableIndex1,
+										  IReadOnlyRow row2, int tableIndex2)
 		{
 			if (_zDifferenceStrategy == null)
 			{

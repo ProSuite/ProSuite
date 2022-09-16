@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
@@ -31,16 +32,16 @@ namespace ProSuite.QA.Tests.Network
 
 		#region Constructors
 
-		protected QaNetworkBase([NotNull] IFeatureClass polylineClass,
+		protected QaNetworkBase([NotNull] IReadOnlyFeatureClass polylineClass,
 		                        bool includeBorderNodes)
 			: this(CastToTables(polylineClass), includeBorderNodes) { }
 
-		protected QaNetworkBase([NotNull] IEnumerable<ITable> featureClasses,
+		protected QaNetworkBase([NotNull] IEnumerable<IReadOnlyTable> featureClasses,
 		                        bool includeBorderNodes,
 		                        [CanBeNull] IList<int> nonNetworkClassIndexList = null)
 			: this(featureClasses, 0, includeBorderNodes, nonNetworkClassIndexList) { }
 
-		protected QaNetworkBase([NotNull] IEnumerable<ITable> featureClasses,
+		protected QaNetworkBase([NotNull] IEnumerable<IReadOnlyTable> featureClasses,
 		                        double tolerance,
 		                        bool includeBorderNodes,
 		                        [CanBeNull] IList<int> nonNetworkClassIndexList)
@@ -77,7 +78,7 @@ namespace ProSuite.QA.Tests.Network
 		[NotNull]
 		protected IList<int> NonNetworkClassIndexList { get; }
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
 			if (NonNetworkClassIndexList.Contains(tableIndex))
 			{
@@ -96,7 +97,7 @@ namespace ProSuite.QA.Tests.Network
 
 		protected IEnumerable<DirectedRow> GetDirectedRows(TableIndexRow row)
 		{
-			IGeometry geom = ((IFeature) row.Row).Shape;
+			IGeometry geom = ((IReadOnlyFeature) row.Row).Shape;
 			var paths = (IGeometryCollection) geom;
 
 			if (! UseMultiParts)
@@ -248,7 +249,7 @@ namespace ProSuite.QA.Tests.Network
 
 				_filters[iTable].Geometry = _queryEnv;
 				foreach (
-					IRow feature in
+					IReadOnlyRow feature in
 					Search(InvolvedTables[iTable], _filters[iTable], _helpers[iTable]))
 				{
 					_networkBuilder.AddNetElements(feature, iTable);
@@ -257,23 +258,9 @@ namespace ProSuite.QA.Tests.Network
 		}
 
 		[NotNull]
-		protected static IEnumerable<InvolvedRow> GetInvolvedRows(
-			[NotNull] ICollection<IRow> connectedRows)
-		{
-			var result = new List<InvolvedRow>(connectedRows.Count);
-
-			foreach (IRow row in connectedRows)
-			{
-				result.Add(new InvolvedRow(row));
-			}
-
-			return result;
-		}
-
-		[NotNull]
 		protected IList<InvolvedRow> GetInvolvedRows([NotNull] ITableIndexRow tableIndexRow)
 		{
-			IRow row = tableIndexRow.GetRow(InvolvedTables);
+			IReadOnlyRow row = tableIndexRow.GetRow(InvolvedTables);
 			RelatedTables related = GetRelatedTables(row);
 
 			return related?.GetInvolvedRows(row) ?? new InvolvedRows {new InvolvedRow(row)};

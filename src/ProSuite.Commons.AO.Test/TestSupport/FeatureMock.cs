@@ -3,12 +3,13 @@ using System.Runtime.InteropServices;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AO.Test.TestSupport
 {
-	public class FeatureMock : ObjectMock, IFeature, IFeatureBuffer, IFeatureChanges
+	public class FeatureMock : ObjectMock, IFeature, IFeatureBuffer, IFeatureChanges, IReadOnlyFeature
 	{
 		private readonly int _shapeFieldIndex;
 		[NotNull] private readonly FeatureClassMock _featureClassMock;
@@ -60,6 +61,8 @@ namespace ProSuite.Commons.AO.Test.TestSupport
 		public IEnvelope Extent => Shape.Envelope;
 
 		public esriFeatureType FeatureType => _featureClassMock.FeatureType;
+
+		IReadOnlyFeatureClass IReadOnlyFeature.FeatureClass => _featureClassMock;
 
 		#endregion
 

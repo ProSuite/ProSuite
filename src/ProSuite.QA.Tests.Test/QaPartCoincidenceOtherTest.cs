@@ -46,9 +46,10 @@ namespace ProSuite.QA.Tests.Test
 			IFeatureClass avr_lie = ws.OpenFeatureClass("avr_lie");
 			IFeatureClass avr_gem = ws.OpenFeatureClass("avr_gem");
 
-			var test = new QaPartCoincidenceOther(avr_lie, avr_gem,
-			                                      0.02, 1, 0.1,
-			                                      false, 5000, 0);
+			var test = new QaPartCoincidenceOther(
+				ReadOnlyTableFactory.Create(avr_lie), ReadOnlyTableFactory.Create(avr_gem),
+				                            0.02, 1, 0.1,
+				                            false, 5000, 0);
 			test.SetConstraint(0, "ObjectId=2988");
 			test.SetConstraint(1, "ObjectId=3");
 			var runner = new QaContainerTestRunner(10000, test);
@@ -121,9 +122,10 @@ namespace ProSuite.QA.Tests.Test
 			rowRef.Shape = referencePoly;
 			rowRef.Store();
 
-			var test = new QaPartCoincidenceOther(featureClass, reference,
-			                                      0.02, 0.05, 0.1,
-			                                      false, 5000, 0);
+			var test = new QaPartCoincidenceOther(
+				ReadOnlyTableFactory.Create(featureClass), ReadOnlyTableFactory.Create(reference),
+				                            0.02, 0.05, 0.1,
+				                            false, 5000, 0);
 			var runner = new QaTestRunner(test);
 			runner.Execute(row1);
 			Assert.AreEqual(3, runner.Errors.Count);
@@ -158,7 +160,8 @@ namespace ProSuite.QA.Tests.Test
 			IEnvelope verificationEnvelope =
 				GeometryFactory.CreateEnvelope(0, 0, 500, 500);
 
-			var test = new QaPartCoincidenceOther(testedClass, referenceClass, 3, 50);
+			var test = new QaPartCoincidenceOther(
+				ReadOnlyTableFactory.Create(testedClass), ReadOnlyTableFactory.Create(referenceClass), 3, 50);
 
 			var runner = new QaContainerTestRunner(200, test);
 			runner.Execute(verificationEnvelope);
@@ -194,7 +197,8 @@ namespace ProSuite.QA.Tests.Test
 			IEnvelope verificationEnvelope =
 				GeometryFactory.CreateEnvelope(0, 0, 500, 500);
 
-			var test = new QaPartCoincidenceOther(testedClass, referenceClass, 3, 50);
+			var test = new QaPartCoincidenceOther(
+				ReadOnlyTableFactory.Create(testedClass), ReadOnlyTableFactory.Create(referenceClass), 3, 50);
 
 			var runner = new QaContainerTestRunner(200, test);
 			runner.Execute(verificationEnvelope);
@@ -230,7 +234,8 @@ namespace ProSuite.QA.Tests.Test
 			IEnvelope verificationEnvelope =
 				GeometryFactory.CreateEnvelope(0, 0, 500, 500);
 
-			var test = new QaPartCoincidenceOther(testedClass, referenceClass, 3, 50);
+			var test = new QaPartCoincidenceOther(
+				ReadOnlyTableFactory.Create(testedClass), ReadOnlyTableFactory.Create(referenceClass), 3, 50);
 
 			var runner = new QaContainerTestRunner(200, test);
 			runner.Execute(verificationEnvelope);
@@ -284,13 +289,15 @@ namespace ProSuite.QA.Tests.Test
 			}
 
 			// test without ignore conditions --> line is near, but not coincident
-			var test = new QaPartCoincidenceOther(fc1, fc2, 1, 10);
+			var test = new QaPartCoincidenceOther(
+				ReadOnlyTableFactory.Create(fc1), ReadOnlyTableFactory.Create(fc2), 1, 10);
 			var testRunner = new QaTestRunner(test);
 			testRunner.Execute();
 			Assert.AreEqual(1, testRunner.Errors.Count);
 
 			// Same test with ignore conditions --> nothing near
-			test = new QaPartCoincidenceOther(fc1, fc2, 1, 10);
+			test = new QaPartCoincidenceOther(
+				ReadOnlyTableFactory.Create(fc1), ReadOnlyTableFactory.Create(fc2), 1, 10);
 			test.IgnoreNeighborCondition = "G1.LandID = G2.LandID";
 
 			testRunner = new QaTestRunner(test);

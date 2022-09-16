@@ -7,22 +7,24 @@ using ESRI.ArcGIS.Geometry;
 
 namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 {
-	public class VirtualFeatureClass : VirtualTable, IFeatureClass, IGeoDataset
+	public abstract class VirtualFeatureClass : VirtualTable, IFeatureClass, IGeoDataset
 	{
-		public VirtualFeatureClass(string name) : base(name) { }
+		protected VirtualFeatureClass(string name) : base(name) { }
 	}
 
-	public class VirtualTable : IDataset, ITable, IObjectClass, IDatasetEdit, ISchemaLock, ISubtypes
+	public abstract class VirtualTable : IDataset, ITable, IObjectClass, IDatasetEdit, ISchemaLock,
+	                                     ISubtypes, IReadOnlyTable, IRowCreator<VirtualRow>
 	{
 		protected GdbFields _fields;
 		private TableName _tableName;
 		protected GdbFields GdbFields => _fields ?? (_fields = new GdbFields());
 		private string _name;
 
-		public VirtualTable(string name)
+		protected VirtualTable(string name)
 		{
 			_name = name;
 		}
+
 		public override string ToString() => $"{Name} ({base.ToString()})";
 
 		bool IDataset.CanCopy() => CanCopy();
@@ -202,28 +204,34 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		IRow ITable.CreateRow() => CreateRow();
 
-		public IFeature CreateFeature() => (IFeature)CreateRow();
+		public IFeature CreateFeature() => (IFeature) CreateRow();
 
-		public virtual IRow CreateRow() =>
+		public virtual VirtualRow CreateRow() =>
 			throw new NotImplementedException("Implement in derived class");
 
 		IRow ITable.GetRow(int OID) => GetRow(OID);
 
-		public IFeature GetFeature(int OID) => (IFeature)GetRow(OID);
+		public IFeature GetFeature(int OID) => (IFeature) GetRow(OID);
 
 		public virtual IRow GetRow(int OID) =>
+			throw new NotImplementedException("Implement in derived class");
+
+		IReadOnlyRow IReadOnlyTable.GetRow(int OID) => GetReadOnlyRow(OID);
+
+		public virtual IReadOnlyRow GetReadOnlyRow(int OID) =>
 			throw new NotImplementedException("Implement in derived class");
 
 		ICursor ITable.GetRows(object oids, bool Recycling) => GetRows(oids, Recycling);
 
 		public IFeatureCursor GetFeatures(object oids, bool Recycling) =>
-			(IFeatureCursor)GetRows(oids, Recycling);
+			(IFeatureCursor) GetRows(oids, Recycling);
 
 		public virtual ICursor GetRows(object oids, bool Recycling)
 		{
-			if (!(oids is IEnumerable<int> oidList))
+			if (! (oids is IEnumerable<int> oidList))
 			{
-				throw new InvalidOperationException($"Cannot convert oids ({oids})to IEnumerable<int>");
+				throw new InvalidOperationException(
+					$"Cannot convert oids ({oids})to IEnumerable<int>");
 			}
 
 			return new CursorImpl(this, oidList.Select(oid => GetRow(oid)));
@@ -231,7 +239,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		IRowBuffer ITable.CreateRowBuffer() => CreateRowBuffer();
 
-		public IFeatureBuffer CreateFeatureBuffer() => (IFeatureBuffer)CreateRowBuffer();
+		public IFeatureBuffer CreateFeatureBuffer() => (IFeatureBuffer) CreateRowBuffer();
 
 		public virtual IRowBuffer CreateRowBuffer() =>
 			throw new NotImplementedException("Implement in derived class");
@@ -249,6 +257,27 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			throw new NotImplementedException("Implement in derived class");
 
 		int ITable.RowCount(IQueryFilter QueryFilter) => RowCount(QueryFilter);
+
+		public bool Equals(IReadOnlyTable otherTable)
+		{
+			if (ReferenceEquals(null, otherTable)) return false;
+
+			// By default use the AO-semantic. Subclasses can change this.
+			if (ReferenceEquals(this, otherTable)) return true;
+
+			if (EqualsCore(otherTable))
+			{
+				return true;
+			}
+
+			if (otherTable is VirtualTable otherVirtualTable)
+			{
+				// Allow the other to find out that we're equal (e.g. Wrapper-Class)
+				return otherVirtualTable.EqualsCore(this);
+			}
+
+			return false;
+		}
 
 		public int FeatureCount(IQueryFilter QueryFilter) => RowCount(QueryFilter);
 
@@ -268,11 +297,18 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			EnumRows(IQueryFilter queryFilter, bool recycling) =>
 			throw new NotImplementedException("Implement in derived class");
 
+		IEnumerable<IReadOnlyRow> IReadOnlyTable.EnumRows(IQueryFilter filter, bool recycling)
+			=> EnumReadOnlyRows(filter, recycling);
+
+		public virtual IEnumerable<IReadOnlyRow>
+			EnumReadOnlyRows(IQueryFilter queryFilter, bool recycling) =>
+			throw new NotImplementedException("Implement in derived class");
+
 		ICursor ITable.Update(IQueryFilter QueryFilter, bool Recycling) =>
 			UpdateT(QueryFilter, Recycling);
 
 		public virtual IFeatureCursor Update(IQueryFilter QueryFilter, bool Recycling) =>
-			(IFeatureCursor)UpdateT(QueryFilter, Recycling);
+			(IFeatureCursor) UpdateT(QueryFilter, Recycling);
 
 		public virtual ICursor UpdateT(IQueryFilter QueryFilter, bool Recycling) =>
 			throw new NotImplementedException("Implement in derived class");
@@ -280,19 +316,19 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		ICursor ITable.Insert(bool useBuffering) => InsertT(useBuffering);
 
 		public IFeatureCursor Insert(bool useBuffering) =>
-			(IFeatureCursor)InsertT(useBuffering);
+			(IFeatureCursor) InsertT(useBuffering);
 
 		public virtual ICursor InsertT(bool useBuffering) =>
 			throw new NotImplementedException("Implement in derived class");
 
 		ISelectionSet ITable.Select(IQueryFilter QueryFilter, esriSelectionType selType,
-																esriSelectionOption selOption, IWorkspace selectionContainer) =>
+		                            esriSelectionOption selOption, IWorkspace selectionContainer) =>
 			Select(QueryFilter, selType, selOption, selectionContainer);
 
 		public virtual ISelectionSet Select(IQueryFilter QueryFilter,
-																				esriSelectionType selType,
-																				esriSelectionOption selOption,
-																				IWorkspace selectionContainer) =>
+		                                    esriSelectionType selType,
+		                                    esriSelectionOption selOption,
+		                                    IWorkspace selectionContainer) =>
 			throw new NotImplementedException("Implement in derived class");
 
 		int IObjectClass.ObjectClassID => ObjectClassID;
@@ -344,6 +380,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			Fields.Field[FindField("Length")];
 
 		private ISpatialReference _sr;
+
 		public virtual ISpatialReference SpatialReference
 		{
 			get => _sr ?? GeometryDef.SpatialReference;
@@ -360,6 +397,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		void ISubtypes.AddSubtype(int SubtypeCode, string SubtypeName)
 			=> AddSubtype(SubtypeCode, SubtypeName);
+
 		public virtual void AddSubtype(int SubtypeCode, string SubtypeName)
 		{
 			throw new NotImplementedException("Implement in derived class");
@@ -394,8 +432,12 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		void ISubtypes.set_DefaultValue(int SubtypeCode, string FieldName, object Value) =>
 			set_DefaultValue(SubtypeCode, FieldName, Value);
-		public virtual object get_DefaultValue(int SubtypeCode, string FieldName) => throw new NotImplementedException("Implement in derived class");
-		public virtual void set_DefaultValue(int SubtypeCode, string FieldName, object Value) => throw new NotImplementedException("Implement in derived class");
+
+		public virtual object get_DefaultValue(int SubtypeCode, string FieldName) =>
+			throw new NotImplementedException("Implement in derived class");
+
+		public virtual void set_DefaultValue(int SubtypeCode, string FieldName, object Value) =>
+			throw new NotImplementedException("Implement in derived class");
 
 		public virtual object DefaultValue
 		{
@@ -442,6 +484,34 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		public virtual IEnumSubtype Subtypes =>
 			throw new NotImplementedException("Implement in derived class");
 
+		protected virtual bool EqualsCore(IReadOnlyTable otherTable)
+		{
+			return false;
+		}
+
+		public override bool Equals(object obj)
+		{
+			if (ReferenceEquals(null, obj)) return false;
+
+			if (ReferenceEquals(this, obj)) return true;
+
+			if (obj is IReadOnlyTable otherTable)
+			{
+				return Equals(otherTable);
+			}
+
+			return false;
+		}
+
+		public override int GetHashCode()
+		{
+			// Keep the reference-equality semantic of AO except in specific
+			// circumstances (e.g. the other implementation just wraps this instance)
+
+			// ReSharper disable once BaseObjectGetHashCodeCallInGetHashCode
+			return base.GetHashCode();
+		}
+
 		protected class TableName : IName, IDatasetName, IObjectClassName, ITableName
 		{
 			private readonly VirtualTable _table;
@@ -453,7 +523,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 				Name = ds.Name;
 
 				IWorkspace workspace = ds.Workspace;
-				WorkspaceName = (IWorkspaceName)((IDataset)workspace).FullName;
+				WorkspaceName = (IWorkspaceName) ((IDataset) workspace).FullName;
 			}
 
 			#region IName members
@@ -471,7 +541,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 			public string Name { get; set; }
 
-			public esriDatasetType Type => ((IDataset)_table).Type;
+			public esriDatasetType Type => ((IDataset) _table).Type;
 
 			public string Category { get; set; }
 

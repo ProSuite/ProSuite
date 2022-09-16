@@ -80,10 +80,11 @@ namespace ProSuite.QA.Tests.Test
 
 			const int maxLength = 25;
 			const bool noDuplicates = true;
-			var runner =
-				new QaTestRunner(new QaSchemaFieldDomainDescriptions(table, maxLength,
-				                                                     noDuplicates,
-				                                                     null));
+			var runner = new QaTestRunner(
+				new QaSchemaFieldDomainDescriptions(
+					ReadOnlyTableFactory.Create(table), maxLength,
+					noDuplicates,
+					null));
 
 			runner.Execute();
 
@@ -122,10 +123,9 @@ namespace ProSuite.QA.Tests.Test
 
 			const int maxLength = 25;
 			const bool noDuplicates = true;
-			var runner =
-				new QaTestRunner(new QaSchemaFieldDomainDescriptions(table, maxLength,
-				                                                     noDuplicates,
-				                                                     null));
+			var runner = new QaTestRunner(
+				new QaSchemaFieldDomainDescriptions(
+					ReadOnlyTableFactory.Create(table), maxLength, noDuplicates, null));
 
 			runner.Execute();
 
@@ -153,13 +153,13 @@ namespace ProSuite.QA.Tests.Test
 			// domain (not used in table) with duplicate name
 			DomainUtils.AddDomain(_workspace,
 			                      DomainUtils.CreateCodedValueDomain("DOM_FIELD3",
-			                                                         esriFieldType
-				                                                         .esriFieldTypeInteger,
-			                                                         "Description of DOM_FIELD2",
-			                                                         new CodedValue(1,
-			                                                                        "Value 1"),
-			                                                         new CodedValue(2,
-			                                                                        "Value 2")));
+				                      esriFieldType
+					                      .esriFieldTypeInteger,
+				                      "Description of DOM_FIELD2",
+				                      new CodedValue(1,
+				                                     "Value 1"),
+				                      new CodedValue(2,
+				                                     "Value 2")));
 
 			DomainUtils.AddDomain(_workspace,
 			                      DomainUtils.CreateRangeDomain("DOM_FIELD4",
@@ -181,10 +181,9 @@ namespace ProSuite.QA.Tests.Test
 
 			const int maxLength = 25;
 			const bool noDuplicates = true;
-			var runner =
-				new QaTestRunner(new QaSchemaFieldDomainDescriptions(table, maxLength,
-				                                                     noDuplicates,
-				                                                     null));
+			var runner = new QaTestRunner(
+				new QaSchemaFieldDomainDescriptions(
+					ReadOnlyTableFactory.Create(table), maxLength, noDuplicates, null));
 
 			runner.Execute();
 
@@ -212,13 +211,13 @@ namespace ProSuite.QA.Tests.Test
 			// domain (not used in table) with duplicate name - this should not be reported since duplicates are searched in target (?)
 			DomainUtils.AddDomain(_workspace,
 			                      DomainUtils.CreateCodedValueDomain("DOM_FIELD3",
-			                                                         esriFieldType
-				                                                         .esriFieldTypeInteger,
-			                                                         "Description of DOM_FIELD2",
-			                                                         new CodedValue(1,
-			                                                                        "Value 1"),
-			                                                         new CodedValue(2,
-			                                                                        "Value 2")));
+				                      esriFieldType
+					                      .esriFieldTypeInteger,
+				                      "Description of DOM_FIELD2",
+				                      new CodedValue(1,
+				                                     "Value 1"),
+				                      new CodedValue(2,
+				                                     "Value 2")));
 
 			IField field1 = FieldUtils.CreateField("FIELD1", esriFieldType.esriFieldTypeInteger);
 			IField field2 = FieldUtils.CreateField("FIELD2", esriFieldType.esriFieldTypeInteger);
@@ -240,24 +239,24 @@ namespace ProSuite.QA.Tests.Test
 			// same name, same description --> should be considered equal, no duplicate
 			DomainUtils.AddDomain(targetWorkspace,
 			                      DomainUtils.CreateCodedValueDomain("DOM_FIELD1",
-			                                                         esriFieldType
-				                                                         .esriFieldTypeInteger,
-			                                                         "Description of DOM_FIELD1",
-			                                                         new CodedValue(1,
-			                                                                        "Value 1"),
-			                                                         new CodedValue(2,
-			                                                                        "Value 2")));
+				                      esriFieldType
+					                      .esriFieldTypeInteger,
+				                      "Description of DOM_FIELD1",
+				                      new CodedValue(1,
+				                                     "Value 1"),
+				                      new CodedValue(2,
+				                                     "Value 2")));
 
 			// different name, same description --> should be reported
 			DomainUtils.AddDomain(targetWorkspace,
 			                      DomainUtils.CreateCodedValueDomain("DOM_FIELD4",
-			                                                         esriFieldType
-				                                                         .esriFieldTypeInteger,
-			                                                         "Description of DOM_FIELD2",
-			                                                         new CodedValue(1,
-			                                                                        "Value 1"),
-			                                                         new CodedValue(2,
-			                                                                        "Value 2")));
+				                      esriFieldType
+					                      .esriFieldTypeInteger,
+				                      "Description of DOM_FIELD2",
+				                      new CodedValue(1,
+				                                     "Value 1"),
+				                      new CodedValue(2,
+				                                     "Value 2")));
 
 			// different name, same description --> should be reported
 			DomainUtils.AddDomain(targetWorkspace,
@@ -270,14 +269,14 @@ namespace ProSuite.QA.Tests.Test
 			                                              MethodBase.GetCurrentMethod().Name,
 			                                              FieldUtils.CreateOIDField(),
 			                                              FieldUtils.CreateTextField("FIELD1",
-			                                                                         10));
+				                                              10));
 
 			const int maxLength = 25;
 			const bool noDuplicates = true;
-			var runner =
-				new QaTestRunner(new QaSchemaFieldDomainDescriptions(table, maxLength,
-				                                                     noDuplicates,
-				                                                     targetTable));
+			var runner = new QaTestRunner(
+				new QaSchemaFieldDomainDescriptions(
+					ReadOnlyTableFactory.Create(table), maxLength, noDuplicates,
+					ReadOnlyTableFactory.Create(targetTable)));
 
 			runner.Execute();
 
@@ -380,8 +379,9 @@ namespace ProSuite.QA.Tests.Test
 			IFeatureWorkspace workspace = WorkspaceUtils.OpenPgdbFeatureWorkspace(path);
 
 			ITable table = workspace.OpenTable(tableName);
-			var test = new QaSchemaFieldDomainDescriptions(table, maximumLength,
-			                                               noDuplicateDescriptions, null);
+			var test = new QaSchemaFieldDomainDescriptions(
+				ReadOnlyTableFactory.Create(table), maximumLength,
+				noDuplicateDescriptions, null);
 
 			var runner = new QaTestRunner(test);
 			runner.Execute();

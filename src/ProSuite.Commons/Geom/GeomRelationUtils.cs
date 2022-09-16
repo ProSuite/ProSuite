@@ -131,7 +131,7 @@ namespace ProSuite.Commons.Geom
 		}
 
 		/// <summary>
-		/// Determines whether <see cref="geometry1"/> is contained in <see cref="geometry2"/>.
+		/// Determines whether <paramref name="geometry1"/> is contained in <paramref cref="geometry2"/>.
 		/// </summary>
 		/// <param name="geometry1">The test geometry.</param>
 		/// <param name="geometry2">The containing geometry.</param>
@@ -527,8 +527,16 @@ namespace ProSuite.Commons.Geom
 			IList<IntersectionPoint3D> intersectionPoints = null,
 			int? filterTargetByPartIndex = null)
 		{
-			Assert.False(closedPolycurve.IsEmpty, "Input containing polygon is empty.");
-			Assert.False(targetSegments.IsEmpty, "Input contained curve is empty.");
+			if (closedPolycurve.IsEmpty)
+			{
+				return false;
+			}
+
+			if (targetSegments.IsEmpty)
+			{
+				return true;
+			}
+
 			Assert.True(closedPolycurve.IsClosed, "Input containing polygon is not closed.");
 
 			if (AreBoundsDisjoint(closedPolycurve, targetSegments, tolerance))
@@ -654,7 +662,7 @@ namespace ProSuite.Commons.Geom
 		}
 
 		/// <summary>
-		/// Determines whether the source ring contains the target.
+		/// Determines whether the source ring contains the target. The source ring can be negative.
 		/// </summary>
 		/// <param name="sourceRing"></param>
 		/// <param name="target"></param>
@@ -668,45 +676,97 @@ namespace ProSuite.Commons.Geom
 			[NotNull] IEnumerable<IntersectionPoint3D> intersectionPoints,
 			double tolerance, bool disregardRingOrientation)
 		{
-			Pnt3D nonIntersectingTargetPnt =
-				GetNonIntersectingTargetPoint(target, intersectionPoints);
+			List<IntersectionPoint3D> intersectionPointList = intersectionPoints.ToList();
 
-			// Check if ring1 contains ring2 (or its check points):
-			IEnumerable<Pnt3D> checkPoints = nonIntersectingTargetPnt != null
-				                                 ? new[] {nonIntersectingTargetPnt}
-				                                 : target.GetPoints();
+			if (! disregardRingOrientation && sourceRing.ClockwiseOriented == true)
+			{
+				return AreaContainsXY(sourceRing, target, tolerance, intersectionPointList);
+			}
 
-			return Contains(sourceRing, checkPoints, tolerance, disregardRingOrientation);
+			if (sourceRing.IsEmpty)
+			{
+				return false;
+			}
+
+			if (sourceRing.IsEmpty)
+			{
+				return true;
+			}
+
+			Assert.True(sourceRing.IsClosed, "Input source ring is not closed.");
+
+			if (AreBoundsDisjoint(sourceRing, target, tolerance))
+			{
+				if (disregardRingOrientation)
+				{
+					return false;
+				}
+
+				return sourceRing.ClockwiseOriented == false;
+			}
+
+			if (intersectionPointList.Count == 0)
+			{
+				Pnt3D anyPoint = target.GetSegment(0).StartPoint;
+
+				return AreaContainsXY(sourceRing, anyPoint, tolerance, disregardRingOrientation);
+			}
+
+			bool? properOrientationResult =
+				AreaContainsXY(sourceRing, target, tolerance, intersectionPointList);
+
+			if (! disregardRingOrientation || sourceRing.ClockwiseOriented == true)
+			{
+				return properOrientationResult;
+			}
+
+			if (properOrientationResult == null)
+			{
+				return null;
+			}
+
+			// The source ring is an island. In case the proper orientation result is false, the
+			// target is actually inside the ring:
+			return properOrientationResult == false;
 		}
 
 		/// <summary>
 		/// Determines whether the specified closed polycurve contains (including the boundary) the
 		/// specified test geometry.
 		/// </summary>
-		/// <param name="contained">The source curve to be checked whether it is contained or not.</param>
-		/// <param name="withinClosedPolycurve">The closed and properly oriented polycurve.</param>
+		/// <param name="containedSource">The source curve to be checked whether it is contained or not.</param>
+		/// <param name="containingClosedTarget">The closed and properly oriented polycurve.</param>
 		/// <param name="tolerance"></param>
-		/// <param name="intersectionPoints">The known intersection points, including linear intersection
-		/// breaks at the start end point (if congruence should be detected correctly).</param>
-		/// <param name="filterSourceByPartIndex">Specify the source (contained) part, that should be checked.
-		/// If null, the entire source geometry is checked.</param>
-		/// <returns>true, if the <paramref name="contained"/> are contained inside the
-		/// <paramref name="withinClosedPolycurve"/>.
-		/// false, if the <paramref name="contained"/> is not contained inside the
-		/// <paramref name="withinClosedPolycurve"/>.
-		/// null, if <paramref name="withinClosedPolycurve"/> is congruent with <paramref name="contained"/></returns>
+		/// <param name="intersectionPoints">The known intersection points between source and target,
+		/// including linear intersection breaks at the start end point (if congruence should be
+		/// detected correctly).</param>
+		/// <param name="filterSourceByPartIndex">Specify the source (contained) part, that should be
+		/// checked. If null, the entire source geometry is checked.</param>
+		/// <returns>true, if the <paramref name="containedSource"/> is contained inside the
+		/// <paramref name="containingClosedTarget"/>.
+		/// false, if the <paramref name="containedSource"/> is not contained inside the
+		/// <paramref name="containingClosedTarget"/>.
+		/// null, if <paramref name="containingClosedTarget"/> is congruent with <paramref name="containedSource"/></returns>
 		public static bool? IsContainedXY(
-			[NotNull] ISegmentList contained,
-			[NotNull] ISegmentList withinClosedPolycurve,
+			[NotNull] ISegmentList containedSource,
+			[NotNull] ISegmentList containingClosedTarget,
 			double tolerance,
 			IList<IntersectionPoint3D> intersectionPoints = null,
 			int? filterSourceByPartIndex = null)
 		{
-			Assert.False(contained.IsEmpty, "Input containing polygon is empty.");
-			Assert.False(withinClosedPolycurve.IsEmpty, "Input contained curve is empty.");
-			Assert.True(withinClosedPolycurve.IsClosed, "Input within-polygon is not closed.");
+			if (containingClosedTarget.IsEmpty)
+			{
+				return false;
+			}
 
-			if (AreBoundsDisjoint(contained, withinClosedPolycurve, tolerance))
+			if (containedSource.IsEmpty)
+			{
+				return true;
+			}
+
+			Assert.True(containingClosedTarget.IsClosed, "Input within-polygon is not closed.");
+
+			if (AreBoundsDisjoint(containedSource, containingClosedTarget, tolerance))
 			{
 				return false;
 			}
@@ -717,7 +777,7 @@ namespace ProSuite.Commons.Geom
 						i => i.SourcePartIndex == filterSourceByPartIndex)
 					: null;
 
-			intersectionPoints = GetRealIntersectionPoints(contained, withinClosedPolycurve,
+			intersectionPoints = GetRealIntersectionPoints(containedSource, containingClosedTarget,
 			                                               tolerance, intersectionPoints,
 			                                               predicate);
 
@@ -725,16 +785,16 @@ namespace ProSuite.Commons.Geom
 			if (intersectionPoints.Count == 0)
 			{
 				int partIndex = filterSourceByPartIndex ?? 0;
-				Pnt3D anyPoint = contained.GetPart(partIndex).GetSegment(0).StartPoint;
+				Pnt3D anyPoint = containedSource.GetPart(partIndex).GetSegment(0).StartPoint;
 
-				return AreaContainsXY(withinClosedPolycurve, anyPoint, tolerance);
+				return AreaContainsXY(containingClosedTarget, anyPoint, tolerance);
 			}
 
 			bool hasAnyRightSideDeviation = false;
 			foreach (IntersectionPoint3D intersectionPoint in intersectionPoints)
 			{
-				DetermineSourceDeviationAtIntersection(intersectionPoint, contained,
-				                                       withinClosedPolycurve, tolerance,
+				DetermineSourceDeviationAtIntersection(intersectionPoint, containedSource,
+				                                       containingClosedTarget, tolerance,
 				                                       out bool hasRightSideDeviation,
 				                                       out bool hasLeftSideDeviation);
 				if (hasLeftSideDeviation)
@@ -758,26 +818,72 @@ namespace ProSuite.Commons.Geom
 		/// <summary>
 		/// Determines whether the source ring is contained within the target.
 		/// </summary>
-		/// <param name="sourceRing"></param>
-		/// <param name="targetRing"></param>
+		/// <param name="source"></param>
+		/// <param name="containingTargetRing"></param>
 		/// <param name="intersectionPoints"></param>
 		/// <param name="tolerance"></param>
 		/// <param name="disregardRingOrientation"></param>
 		/// <returns></returns>
-		public static bool? IsWithinAreaXY(
-			[NotNull] Linestring sourceRing,
-			[NotNull] Linestring targetRing,
+		private static bool? IsWithinAreaXY(
+			[NotNull] Linestring source,
+			[NotNull] Linestring containingTargetRing,
 			[NotNull] IEnumerable<IntersectionPoint3D> intersectionPoints,
 			double tolerance, bool disregardRingOrientation)
 		{
-			Pnt3D nonIntersectingSourcePnt =
-				GetNonIntersectingSourcePoint(sourceRing, intersectionPoints);
+			var intersectionPointList = intersectionPoints.ToList();
 
-			IEnumerable<Pnt3D> checkPoints = nonIntersectingSourcePnt != null
-				                                 ? new[] {nonIntersectingSourcePnt}
-				                                 : sourceRing.GetPoints();
+			if (! disregardRingOrientation && containingTargetRing.ClockwiseOriented == true)
+			{
+				return IsContainedXY(source, containingTargetRing, tolerance,
+				                     intersectionPointList);
+			}
 
-			return Contains(targetRing, checkPoints, tolerance, disregardRingOrientation);
+			if (containingTargetRing.IsEmpty)
+			{
+				return false;
+			}
+
+			if (source.IsEmpty)
+			{
+				return true;
+			}
+
+			Assert.True(containingTargetRing.IsClosed, "Input containing-ring is not closed.");
+
+			if (AreBoundsDisjoint(source, containingTargetRing, tolerance))
+			{
+				if (disregardRingOrientation)
+				{
+					return false;
+				}
+
+				return containingTargetRing.ClockwiseOriented == false;
+			}
+
+			if (intersectionPointList.Count == 0)
+			{
+				Pnt3D anyPoint = source.GetSegment(0).StartPoint;
+
+				return AreaContainsXY(containingTargetRing, anyPoint, tolerance,
+				                      disregardRingOrientation);
+			}
+
+			bool? properOrientationResult =
+				IsContainedXY(source, containingTargetRing, tolerance, intersectionPointList);
+
+			if (! disregardRingOrientation || containingTargetRing.ClockwiseOriented != false)
+			{
+				return properOrientationResult;
+			}
+
+			// The target ring is an island. In case the proper orientation result is false, the
+			// target is source is actually inside the ring:
+			if (properOrientationResult == null)
+			{
+				return null;
+			}
+
+			return properOrientationResult != true;
 		}
 
 		public static bool SourceInteriorIntersectsXY([NotNull] Line3D line1,
@@ -949,6 +1055,11 @@ namespace ProSuite.Commons.Geom
 			Assert.ArgumentCondition(ring1.IsClosed && ring2.IsClosed,
 			                         "Both rings must be closed.");
 
+			// Determine if the second ring really is partially or fully vertical:
+			bool ring2HasLinarSelfIntersections =
+				ring2CanHaveLinearSelfIntersections &&
+				GeomTopoOpUtils.GetLinearSelfIntersectionsXY(ring2, tolerance).Any();
+
 			IEnumerable<SegmentIntersection> segmentIntersections =
 				SegmentIntersectionUtils.GetSegmentIntersectionsXY(
 					ring1, ring2, tolerance);
@@ -970,20 +1081,20 @@ namespace ProSuite.Commons.Geom
 
 				if (intersection.HasLinearIntersection)
 				{
-					//// TODO/Experimental: Test with more exception cases
-					//if (intersection.IsPotentialPseudoLinearIntersection(
-					//	    ring1[intersection.SourceIndex], ring2[intersection.TargetIndex],
-					//	    tolerance))
-					//{
-					//	continue;
-					//}
+					// Zero-length segment intersections have random opposite direction property values!
 					if (! intersection.IsSegmentZeroLength2D)
 					{
-						if (! disregardRingOrientation &&
+						if (! ring2HasLinarSelfIntersections &&
 						    ! intersection.LinearIntersectionInOppositeDirection)
 						{
-							// Optimization if the ring orientation is known to be correct
-							return false;
+							// Optimization if the ring orientation is known to be correct or both
+							// rings have the same orientation.
+							if (! disregardRingOrientation ||
+							    ring1.ClockwiseOriented != null &&
+							    ring1.ClockwiseOriented == ring2.ClockwiseOriented)
+							{
+								return false;
+							}
 						}
 
 						if (linearIntersectionsInverted == null)
@@ -993,7 +1104,7 @@ namespace ProSuite.Commons.Geom
 						}
 						else if (linearIntersectionsInverted.Value !=
 						         intersection.LinearIntersectionInOppositeDirection &&
-						         ! ring2CanHaveLinearSelfIntersections)
+						         ! ring2HasLinarSelfIntersections)
 						{
 							return false;
 						}
@@ -1006,7 +1117,8 @@ namespace ProSuite.Commons.Geom
 			IList<IntersectionPoint3D> intersectionPoints = GeomTopoOpUtils.GetIntersectionPoints(
 				ring1, ring2, tolerance, allIntersections, false);
 
-			if (HasSourceCrossingIntersections(ring1, ring2, intersectionPoints, tolerance))
+			if (HasSourceCrossingIntersections(ring1, ring2, intersectionPoints,
+			                                   ring2HasLinarSelfIntersections, tolerance))
 			{
 				return false;
 			}
@@ -1014,7 +1126,7 @@ namespace ProSuite.Commons.Geom
 			// No intersection or no deviation of target from source or all deviations to the same side
 			bool contained = RingsContainEachOther(ring1, ring2, intersectionPoints, tolerance,
 			                                       disregardRingOrientation,
-			                                       ring2CanHaveLinearSelfIntersections);
+			                                       ring2HasLinarSelfIntersections);
 
 			ringsAreDisjoint = ringsAreDisjoint && ! contained;
 
@@ -1025,6 +1137,7 @@ namespace ProSuite.Commons.Geom
 			[NotNull] Linestring ring1,
 			[NotNull] Linestring ring2,
 			[NotNull] IList<IntersectionPoint3D> intersectionPoints,
+			bool ring2HasSelfIntersections,
 			double tolerance)
 		{
 			var leftDeviationCount = 0;
@@ -1037,6 +1150,12 @@ namespace ProSuite.Commons.Geom
 				if (intersectionPoint.Type == IntersectionPointType.Crossing)
 				{
 					return true;
+				}
+
+				if (ring2HasSelfIntersections)
+				{
+					// Left/right determination cannot be used for vertical rings
+					continue;
 				}
 
 				bool? continuesToRightSide =
@@ -1094,8 +1213,18 @@ namespace ProSuite.Commons.Geom
 
 			bool? ring2ContainsRing1 = false;
 
+			// TODO: Simplify ring2 and check contains?
 			if (! ring2IsVertical)
 			{
+				//ring2ContainsRing1 = IsContainedXY(ring1, ring2, tolerance, intersectionPoints,
+
+				//									disregardRingOrientation);
+
+				//if (ring2ContainsRing1 == true)
+				//{
+				//	return true;
+				//}
+
 				ring2ContainsRing1 = IsWithinAreaXY(ring1, ring2, intersectionPoints, tolerance,
 				                                    disregardRingOrientation);
 
@@ -1165,7 +1294,10 @@ namespace ProSuite.Commons.Geom
 				Pnt3D nonIntersectingTargetPnt =
 					intersectionPoint.GetNonIntersectingTargetPoint(targetRing, 0.5);
 
-				return nonIntersectingTargetPnt;
+				if (nonIntersectingTargetPnt != null)
+				{
+					return nonIntersectingTargetPnt;
+				}
 			}
 
 			return null;

@@ -6,6 +6,8 @@ using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Exceptions;
+using ProSuite.Commons.Text;
 
 namespace ProSuite.QA.Container.TestSupport
 {
@@ -14,11 +16,12 @@ namespace ProSuite.QA.Container.TestSupport
 		private const char _tableSeparator = '.';
 
 		public static MultiTableView Create(
-			[NotNull] IList<ITable> tables,
+			[NotNull] IList<IReadOnlyTable> tables,
 			[NotNull] IList<string> tableAliases,
 			[NotNull] string expression,
 			bool caseSensitive = false,
-			[CanBeNull] Action<Action<string, Type>, IList<ITable>> customizeDataTable = null,
+			[CanBeNull] Action<Action<string, Type>, IList<IReadOnlyTable>> customizeDataTable =
+				null,
 			bool useAsConstraint = true)
 		{
 			Assert.ArgumentNotNull(tables, nameof(tables));
@@ -57,7 +60,7 @@ namespace ProSuite.QA.Container.TestSupport
 
 			const bool toUpper = true;
 			foreach (string expressionToken in
-				ExpressionUtils.GetExpressionTokens(expression, toUpper))
+			         ExpressionUtils.GetExpressionTokens(expression, toUpper))
 			{
 				if (addedFields.Contains(expressionToken))
 				{
@@ -88,9 +91,20 @@ namespace ProSuite.QA.Container.TestSupport
 				tables);
 
 			var dataView = new DataView(dataTable);
+
 			if (useAsConstraint)
 			{
-				dataView.RowFilter = expression;
+				try
+				{
+					dataView.RowFilter = expression;
+				}
+				catch (Exception e)
+				{
+					// Provide a more useful error message by adding the table names
+					throw new InvalidConfigurationException(
+						$"Expression {expression} fails for table(s) " +
+						$"{StringUtils.Concatenate(tables, t => t.Name, ", ")}", e);
+				}
 			}
 
 			return new MultiTableView(columnInfos, tableAliasIndexes, dataView);
@@ -140,7 +154,7 @@ namespace ProSuite.QA.Container.TestSupport
 		}
 
 		[NotNull]
-		public static TableView Create([NotNull] ITable table,
+		public static TableView Create([NotNull] IReadOnlyTable table,
 		                               [CanBeNull] string constraint)
 		{
 			Assert.ArgumentNotNull(table, nameof(table));
@@ -149,10 +163,12 @@ namespace ProSuite.QA.Container.TestSupport
 		}
 
 		[NotNull]
-		public static TableView Create([NotNull] ITable table,
+		public static TableView Create([NotNull] IReadOnlyTable table,
 		                               [NotNull] Dictionary<string, string> expressionDict,
 		                               [NotNull] Dictionary<string, string> aliasFieldDict,
-		                               bool isGrouped)
+		                               bool isGrouped,
+		                               [CanBeNull] Dictionary<string, string> calcExpressionDict =
+			                               null)
 		{
 			Assert.ArgumentNotNull(table, nameof(table));
 			Assert.ArgumentNotNull(expressionDict, nameof(expressionDict));
@@ -160,6 +176,10 @@ namespace ProSuite.QA.Container.TestSupport
 
 			string joined = string.Concat(expressionDict.Values.Select(x => $"{x} ")) +
 			                string.Concat(aliasFieldDict.Values.Select(x => $"{x} "));
+			if (calcExpressionDict != null)
+			{
+				joined += string.Concat(calcExpressionDict.Values.Select(x => $"{x} "));
+			}
 
 			Dictionary<string, string> fieldAliasDict =
 				new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
@@ -174,6 +194,14 @@ namespace ProSuite.QA.Container.TestSupport
 			{
 				tv.AddDummyRow();
 
+				if (calcExpressionDict != null)
+				{
+					foreach (KeyValuePair<string, string> pair in calcExpressionDict)
+					{
+						tv.AddExpressionColumn(pair.Key, pair.Value, isGroupExpression: false);
+					}
+				}
+
 				foreach (KeyValuePair<string, string> pair in expressionDict)
 				{
 					tv.AddExpressionColumn(pair.Key, pair.Value, isGrouped);
@@ -186,13 +214,13 @@ namespace ProSuite.QA.Container.TestSupport
 		}
 
 		[NotNull]
-		public static TableView Create([NotNull] ITable table,
+		public static TableView Create([NotNull] IReadOnlyTable table,
 		                               [CanBeNull] string expression,
 		                               bool useAsConstraint,
 		                               bool caseSensitive = false)
 			=> Create(table, expression, null, useAsConstraint, caseSensitive);
 
-		private static TableView Create([NotNull] ITable table,
+		private static TableView Create([NotNull] IReadOnlyTable table,
 		                                [CanBeNull] string expression,
 		                                [CanBeNull] Dictionary<string, string> aliasDict,
 		                                bool useAsConstraint,
@@ -249,7 +277,7 @@ namespace ProSuite.QA.Container.TestSupport
 				}
 			}
 
-			var dataTable = new DataTable(DatasetUtils.GetName(table))
+			var dataTable = new DataTable(table.Name)
 			                {
 				                CaseSensitive = caseSensitive
 			                };

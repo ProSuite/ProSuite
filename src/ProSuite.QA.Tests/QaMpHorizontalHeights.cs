@@ -1,14 +1,15 @@
 using System;
 using System.Collections.Generic;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.Geometry;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Container.TestContainer;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
 {
@@ -46,13 +47,13 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaMpHorizontalHeights_0))]
 		public QaMpHorizontalHeights(
 			[Doc(nameof(DocStrings.QaMpHorizontalHeights_multiPatchClass))] [NotNull]
-			IFeatureClass
+			IReadOnlyFeatureClass
 				multiPatchClass,
 			[Doc(nameof(DocStrings.QaMpHorizontalHeights_nearHeight))]
 			double nearHeight,
 			[Doc(nameof(DocStrings.QaMpHorizontalHeights_heightTolerance))]
 			double heightTolerance)
-			: base((ITable) multiPatchClass)
+			: base(multiPatchClass)
 		{
 			_nearHeight = nearHeight;
 			_heightTolerance = heightTolerance;
@@ -68,9 +69,9 @@ namespace ProSuite.QA.Tests
 			return false;
 		}
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
-			var feature = row as IFeature;
+			var feature = row as IReadOnlyFeature;
 
 			var multiPatch = feature?.Shape as IMultiPatch;
 			if (multiPatch == null)
@@ -99,7 +100,7 @@ namespace ProSuite.QA.Tests
 
 		[NotNull]
 		private HeightSegmentPairProvider GetHeightSegmentPairProvider(
-			[NotNull] IFeature feature)
+			[NotNull] IReadOnlyFeature feature)
 		{
 			var indexedFeature = feature as IIndexedMultiPatchFeature;
 			IIndexedMultiPatch multiPatch = indexedFeature?.IndexedMultiPatch ??
@@ -110,7 +111,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		private int ReportErrors([NotNull] IEnumerable<HeightSegmentPair> errorSegments,
-		                         [NotNull] IRow row)
+		                         [NotNull] IReadOnlyRow row)
 		{
 			var errorCount = 0;
 			var unhandledPairs = new List<HeightSegmentPair>(errorSegments);
@@ -129,7 +130,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		private int ReportError([NotNull] IList<HeightSegmentPair> relatedPairs,
-		                        [NotNull] IRow row)
+		                        [NotNull] IReadOnlyRow row)
 		{
 			if (relatedPairs.Count == 0)
 			{
@@ -146,7 +147,7 @@ namespace ProSuite.QA.Tests
 				}
 			}
 
-			ISpatialReference sr = ((IFeature) row).Shape.SpatialReference;
+			ISpatialReference sr = ((IReadOnlyFeature) row).Shape.SpatialReference;
 			string description;
 			string offsetDescription = FormatLengthComparison(maxHeightOffset, ">",
 			                                                  _heightTolerance, sr);
@@ -171,9 +172,9 @@ namespace ProSuite.QA.Tests
 
 			IGeometry errorGeometry = SegmentPairUtils.CreateGeometry(relatedPairs);
 
-			return ReportError(description, errorGeometry,
-			                   issueCode, TestUtils.GetShapeFieldName(row),
-			                   row);
+			return ReportError(
+				description, InvolvedRowUtils.GetInvolvedRows(row), errorGeometry,
+				issueCode, TestUtils.GetShapeFieldName(row));
 		}
 
 		/// <summary>

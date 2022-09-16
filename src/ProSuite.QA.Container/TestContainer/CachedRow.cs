@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -16,7 +17,7 @@ namespace ProSuite.QA.Container.TestContainer
 
 		private int _pointCount = -1;
 
-		public CachedRow([NotNull] IFeature feature,
+		public CachedRow([NotNull] IReadOnlyFeature feature,
 		                 [CanBeNull] UniqueIdProvider uniqueIdProvider = null)
 			: this(GetFeatureProxy(feature, uniqueIdProvider)) { }
 
@@ -33,7 +34,7 @@ namespace ProSuite.QA.Container.TestContainer
 
 		[NotNull]
 		private static FeatureProxy GetFeatureProxy(
-			[NotNull] IFeature feature,
+			[NotNull] IReadOnlyFeature feature,
 			[CanBeNull] UniqueIdProvider uniqueIdProvider)
 		{
 			FeatureProxy result = feature as FeatureProxy;
@@ -49,7 +50,7 @@ namespace ProSuite.QA.Container.TestContainer
 			return result;
 		}
 
-		public void UpdateFeature([NotNull] IFeature feature,
+		public void UpdateFeature([NotNull] IReadOnlyFeature feature,
 		                          [CanBeNull] UniqueIdProvider uniqueIdProvider)
 		{
 			if (_feature == null)
@@ -72,7 +73,7 @@ namespace ProSuite.QA.Container.TestContainer
 		public IGeometry Geometry => _feature.Shape;
 
 		[NotNull]
-		public IFeature Feature => _feature;
+		public IReadOnlyFeature Feature => _feature;
 
 		protected override Box GetExtent()
 		{
@@ -105,21 +106,21 @@ namespace ProSuite.QA.Container.TestContainer
 
 		#region Nested type: FeatureProxy
 
-		private abstract class FeatureProxy : IFeature, IRowSubtypes, IFeatureSimplify2,
+		private abstract class FeatureProxy : IReadOnlyFeature, IRowSubtypes, IFeatureSimplify2,
 		                                      IFeatureProxy, IUniqueIdObject
 		{
-			[NotNull] private readonly IFeature _feature;
+			[NotNull] private readonly IReadOnlyFeature _feature;
 			[NotNull] private readonly IGeometry _shape;
 
 			[CanBeNull] private readonly UniqueId _uniqueId;
 
 			[CanBeNull] private IFields _fields;
-			[CanBeNull] private ITable _table;
+			[CanBeNull] private IReadOnlyTable _table;
 
 			/// <summary>
 			/// Initializes a new instance of the <see cref="FeatureProxy"/> class.
 			/// </summary>
-			protected FeatureProxy([NotNull] IFeature feature,
+			protected FeatureProxy([NotNull] IReadOnlyFeature feature,
 			                       [NotNull] IGeometry shape,
 			                       [CanBeNull] UniqueId uniqueId)
 			{
@@ -138,30 +139,21 @@ namespace ProSuite.QA.Container.TestContainer
 				return $"OID: {_feature.OID}; UniqueID: {_uniqueId}";
 			}
 
-			IFeature IFeatureProxy.Inner => _feature;
+			IReadOnlyFeature IFeatureProxy.Inner => _feature;
 
 			UniqueId IUniqueIdObject.UniqueId => _uniqueId;
 
 			#region IFeature Members
 
-			public void Store()
-			{
-				_feature.Store();
-			}
-
-			public void Delete()
-			{
-				_feature.Delete();
-			}
-
-			public IFields Fields => _fields ?? (_fields = _feature.Fields);
+			public IFields Fields => _fields ?? (_fields = _feature.Table.Fields);
 
 			public bool HasOID => _feature.HasOID;
 
 			public int OID => _feature.OID;
 
-			public ITable Table => _table ?? (_table = _feature.Table);
+			public IReadOnlyTable Table => _table ?? (_table = _feature.Table);
 
+			public IReadOnlyFeatureClass FeatureClass => (IReadOnlyFeatureClass) Table;
 			public IObjectClass Class => (IObjectClass) Table;
 
 			public IGeometry ShapeCopy => _feature.ShapeCopy;
@@ -178,12 +170,7 @@ namespace ProSuite.QA.Container.TestContainer
 
 			public object get_Value(int index)
 			{
-				return _feature.Value[index];
-			}
-
-			public void set_Value(int index, object value)
-			{
-				_feature.set_Value(index, value);
+				return _feature.get_Value(index);
 			}
 
 			#endregion
@@ -223,7 +210,7 @@ namespace ProSuite.QA.Container.TestContainer
 		{
 			private IndexedMultiPatch _indexedMultiPatch;
 
-			public MultiPatchFeatureProxy([NotNull] IFeature feature,
+			public MultiPatchFeatureProxy([NotNull] IReadOnlyFeature feature,
 			                              [NotNull] IMultiPatch shape,
 			                              [CanBeNull] UniqueId uniqueIdProvider)
 				: base(feature, shape, uniqueIdProvider) { }
@@ -239,7 +226,7 @@ namespace ProSuite.QA.Container.TestContainer
 
 		private class AnyFeatureProxy : FeatureProxy
 		{
-			public AnyFeatureProxy([NotNull] IFeature feature, IGeometry shape,
+			public AnyFeatureProxy([NotNull] IReadOnlyFeature feature, IGeometry shape,
 			                       [CanBeNull] UniqueId uniqueId)
 				: base(feature, shape, uniqueId) { }
 		}
@@ -248,7 +235,7 @@ namespace ProSuite.QA.Container.TestContainer
 		{
 			private IndexedPolycurve _indexedPolycurve;
 
-			public PolycurveFeatureProxy(IFeature feature, IPolycurve shape,
+			public PolycurveFeatureProxy(IReadOnlyFeature feature, IPolycurve shape,
 			                             [CanBeNull] UniqueId uniqueId)
 				: base(feature, shape, uniqueId) { }
 
@@ -262,7 +249,7 @@ namespace ProSuite.QA.Container.TestContainer
 		private static class FeatureProxyFactory
 		{
 			[NotNull]
-			public static FeatureProxy Create([NotNull] IFeature feature,
+			public static FeatureProxy Create([NotNull] IReadOnlyFeature feature,
 			                                  [CanBeNull] UniqueIdProvider uniqueIdProvider)
 			{
 				UniqueId uniqueId = uniqueIdProvider != null

@@ -1,16 +1,17 @@
 using System;
 using System.Collections.Generic;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.Geometry;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.QA.Tests.PointEnumerators;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
 using IPnt = ProSuite.Commons.Geom.IPnt;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
 {
@@ -50,19 +51,18 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaCoplanarRings_0))]
 		public QaCoplanarRings(
 			[Doc(nameof(DocStrings.QaCoplanarRings_featureClass))] [NotNull]
-			IFeatureClass featureClass,
+			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaCoplanarRings_coplanarityTolerance))]
 			double coplanarityTolerance,
 			[Doc(nameof(DocStrings.QaCoplanarRings_includeAssociatedParts))]
 			bool includeAssociatedParts)
-			: base((ITable) featureClass)
+			: base(featureClass)
 		{
 			_coplanarityTolerance = coplanarityTolerance;
 			_includeAssociatedParts = includeAssociatedParts;
 			_shapeType = featureClass.ShapeType;
 
-			var geodataset = (IGeoDataset) featureClass;
-			var srt = (ISpatialReferenceResolution) geodataset.SpatialReference;
+			var srt = (ISpatialReferenceResolution) featureClass.SpatialReference;
 			_xyResolution = srt.XYResolution[false];
 			_zResolution = srt.XYResolution[false];
 		}
@@ -77,10 +77,10 @@ namespace ProSuite.QA.Tests
 			return false;
 		}
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
 			int errorCount = 0;
-			var feature = row as IFeature;
+			var feature = row as IReadOnlyFeature;
 			if (feature == null)
 			{
 				return errorCount;
@@ -150,10 +150,9 @@ namespace ProSuite.QA.Tests
 						"The segments of this face are collinear and do not define a valid plane";
 					IGeometry errorGeometry = GetErrorGeometry(feature.Shape.GeometryType,
 					                                           segmentsPlane.Segments);
-					errorCount += ReportError(description, errorGeometry,
-					                          Codes[Code.FaceDoesNotDefineValidPlane],
-					                          null,
-					                          row);
+					errorCount += ReportError(
+						description, InvolvedRowUtils.GetInvolvedRows(row),
+						errorGeometry, Codes[Code.FaceDoesNotDefineValidPlane], null);
 					continue;
 				}
 
@@ -166,11 +165,10 @@ namespace ProSuite.QA.Tests
 						$"Face with {segmentsCount} segments is not planar, max. offset = {comparison}";
 					IGeometry errorGeometry = GetErrorGeometry(feature.Shape.GeometryType,
 					                                           segmentsPlane.Segments);
-					errorCount += ReportError(description, errorGeometry,
-					                          Codes[Code.FaceNotCoplanar],
-					                          TestUtils.GetShapeFieldName(feature),
-					                          InvolvedRowUtils.GetInvolvedRows(row),
-					                          new object[] {maxOffset});
+					errorCount += ReportError(
+						description, InvolvedRowUtils.GetInvolvedRows(row), errorGeometry,
+						Codes[Code.FaceNotCoplanar], TestUtils.GetShapeFieldName(feature),
+						values: new object[] { maxOffset });
 				}
 			}
 
@@ -179,14 +177,13 @@ namespace ProSuite.QA.Tests
 
 		private int ReportInvalidPlane([NotNull] string description,
 		                               [NotNull] SegmentsPlane segmentsPlane,
-		                               [NotNull] IFeature feature)
+		                               [NotNull] IReadOnlyFeature feature)
 		{
 			IGeometry errorGeometry = GetErrorGeometry(feature.Shape.GeometryType,
 			                                           segmentsPlane.Segments);
-			return ReportError(description, errorGeometry,
-			                   Codes[Code.FaceDoesNotDefineValidPlane],
-			                   null,
-			                   feature);
+			return ReportError(
+				description, InvolvedRowUtils.GetInvolvedRows(feature), errorGeometry,
+				Codes[Code.FaceDoesNotDefineValidPlane], null);
 		}
 
 		[NotNull]
@@ -200,7 +197,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[NotNull]
-		private SegmentsPlaneProvider GetPlaneProvider([NotNull] IFeature feature)
+		private SegmentsPlaneProvider GetPlaneProvider([NotNull] IReadOnlyFeature feature)
 		{
 			return SegmentsPlaneProvider.Create(feature, _shapeType,
 			                                    _includeAssociatedParts);

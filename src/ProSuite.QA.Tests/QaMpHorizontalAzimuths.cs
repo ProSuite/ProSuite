@@ -1,10 +1,8 @@
 using System;
 using System.Collections.Generic;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.Geometry;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Container.TestContainer;
 using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Tests.Documentation;
@@ -12,6 +10,9 @@ using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.Commons;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
 {
@@ -53,8 +54,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaMpHorizontalAzimuths_0))]
 		public QaMpHorizontalAzimuths(
 			[Doc(nameof(DocStrings.QaMpHorizontalAzimuths_multiPatchClass))] [NotNull]
-			IFeatureClass
-				multiPatchClass,
+			IReadOnlyFeatureClass multiPatchClass,
 			[Doc(nameof(DocStrings.QaMpHorizontalAzimuths_nearAngle))]
 			double nearAngle,
 			[Doc(nameof(DocStrings.QaMpHorizontalAzimuths_azimuthTolerance))]
@@ -63,14 +63,14 @@ namespace ProSuite.QA.Tests
 			double horizontalTolerance,
 			[Doc(nameof(DocStrings.QaMpHorizontalAzimuths_perRing))]
 			bool perRing)
-			: base((ITable) multiPatchClass)
+			: base(multiPatchClass)
 		{
 			_nearAngleRad = MathUtils.ToRadians(nearAngle);
 			_azimuthToleranceRad = MathUtils.ToRadians(azimuthTolerance);
 			_horizontalToleranceRad = MathUtils.ToRadians(horizontalTolerance);
 			_perRing = perRing;
 
-			_xyResolution = GeometryUtils.GetXyResolution(multiPatchClass);
+			_xyResolution = SpatialReferenceUtils.GetXyResolution(multiPatchClass.SpatialReference);
 
 			AngleUnit = AngleUnit.Degree;
 		}
@@ -85,10 +85,10 @@ namespace ProSuite.QA.Tests
 			return false;
 		}
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
 			var errorCount = 0;
-			var feature = row as IFeature;
+			var feature = row as IReadOnlyFeature;
 			if (feature == null)
 			{
 				return errorCount;
@@ -135,7 +135,7 @@ namespace ProSuite.QA.Tests
 
 		[NotNull]
 		private ParallelSegmentPairProvider GetParallelSegmentPairProvider(
-			[NotNull] IFeature feature)
+			[NotNull] IReadOnlyFeature feature)
 		{
 			var indexedFeature = feature as IIndexedMultiPatchFeature;
 			IIndexedMultiPatch multiPatch = indexedFeature?.IndexedMultiPatch ??
@@ -155,7 +155,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		private int ReportErrors([NotNull] IEnumerable<ParallelSegmentPair> errorSegments,
-		                         [NotNull] IRow row)
+		                         [NotNull] IReadOnlyRow row)
 		{
 			var errorCount = 0;
 
@@ -175,7 +175,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		private int ReportError([NotNull] IList<ParallelSegmentPair> relatedPairs,
-		                        [NotNull] IRow row)
+		                        [NotNull] IReadOnlyRow row)
 		{
 			if (relatedPairs.Count == 0)
 			{
@@ -197,9 +197,9 @@ namespace ProSuite.QA.Tests
 
 			IGeometry errorGeometry = SegmentPairUtils.CreateGeometry(relatedPairs);
 
-			return ReportError(description, errorGeometry,
-			                   issueCode, TestUtils.GetShapeFieldName(row),
-			                   row);
+			return ReportError(
+				description, InvolvedRowUtils.GetInvolvedRows(row), errorGeometry,
+				issueCode, TestUtils.GetShapeFieldName(row));
 		}
 
 		[NotNull]

@@ -12,8 +12,6 @@ using ProSuite.DomainModel.Core.QA;
 using ProSuite.UI.DataModel.ResourceLookup;
 using ProSuite.UI.Properties;
 
-//using ProSuite.UI.QA.VerificationResult;
-
 namespace ProSuite.UI.QA.Controls
 {
 	public partial class TestTreeViewControl : TreeView
@@ -265,8 +263,8 @@ namespace ProSuite.UI.QA.Controls
 				BuildTree(node.Nodes, categoryItem.SubCategories, comparer);
 
 				foreach (SpecificationDataset specificationDataset in
-					categoryItem.SpecificationDatasets
-					            .OrderBy(v => v.QualityCondition?.Name))
+				         categoryItem.SpecificationDatasets
+				                     .OrderBy(v => v.QualityCondition?.Name))
 				{
 					AddNode(node.Nodes, specificationDataset);
 				}
@@ -293,8 +291,8 @@ namespace ProSuite.UI.QA.Controls
 				else
 				{
 					DataQualityCategoryItem item = GetDataQualityCategoryItem(itemsByCategory,
-					                                                          qualityCondition
-						                                                          .Category);
+						qualityCondition
+							.Category);
 
 					item.SpecificationDatasets.Add(specificationDataset);
 				}
@@ -338,8 +336,8 @@ namespace ProSuite.UI.QA.Controls
 			if (category.ParentCategory != null)
 			{
 				DataQualityCategoryItem parentItem = GetDataQualityCategoryItem(itemsByCategory,
-				                                                                category
-					                                                                .ParentCategory);
+					category
+						.ParentCategory);
 				parentItem.SubCategories.Add(item);
 			}
 
@@ -364,7 +362,7 @@ namespace ProSuite.UI.QA.Controls
 					continue;
 				}
 
-				foreach (Dataset dataset in condition.GetDatasetParameterValues())
+				foreach (Dataset dataset in condition.GetDatasetParameterValues(true))
 				{
 					var datasetList =
 						(IDictionary) categoryList[new DatasetCategoryItem(
@@ -425,7 +423,7 @@ namespace ProSuite.UI.QA.Controls
 					continue;
 				}
 
-				foreach (Dataset dataset in condition.GetDatasetParameterValues())
+				foreach (Dataset dataset in condition.GetDatasetParameterValues(true))
 				{
 					if (! parentDatasets.Contains(dataset) &&
 					    ! siblingDatasets.Contains(dataset))
@@ -483,7 +481,7 @@ namespace ProSuite.UI.QA.Controls
 
 				var mustDs = new HashSet<Dataset>(parameterDatasets);
 
-				foreach (Dataset dataset in condition.GetDatasetParameterValues())
+				foreach (Dataset dataset in condition.GetDatasetParameterValues(true))
 				{
 					mustDs.Remove(dataset);
 				}
@@ -536,7 +534,7 @@ namespace ProSuite.UI.QA.Controls
 				// List specification only once per dataset ==>
 				var uniqueDatasets = new Dictionary<string, Dataset>();
 
-				foreach (Dataset dataset in condition.GetDatasetParameterValues())
+				foreach (Dataset dataset in condition.GetDatasetParameterValues(true))
 				{
 					if (uniqueDatasets.ContainsKey(dataset.Name))
 					{
@@ -585,7 +583,7 @@ namespace ProSuite.UI.QA.Controls
 					continue;
 				}
 
-				foreach (Dataset dataset in condition.GetDatasetParameterValues())
+				foreach (Dataset dataset in condition.GetDatasetParameterValues(true))
 				{
 					var datasetCategoryItem = new DatasetCategoryItem(dataset.DatasetCategory);
 

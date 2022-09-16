@@ -46,7 +46,9 @@ namespace ProSuite.QA.Tests.Test
 			const int maxLength = 15;
 			const int uniqueLength = 6;
 			var runner = new QaTestRunner(
-				new QaSchemaFieldNames(table, maxLength, ExpectedCase.AllUpper, uniqueLength));
+				new QaSchemaFieldNames(
+					ReadOnlyTableFactory.Create(table), maxLength, ExpectedCase.AllUpper,
+					uniqueLength));
 
 			runner.Execute();
 
@@ -66,7 +68,9 @@ namespace ProSuite.QA.Tests.Test
 			const int maxLength = 15;
 			const int uniqueLength = 6;
 			var runner = new QaTestRunner(
-				new QaSchemaFieldNames(table, maxLength, ExpectedCase.AllUpper, uniqueLength));
+				new QaSchemaFieldNames(
+					ReadOnlyTableFactory.Create(table), maxLength, ExpectedCase.AllUpper,
+					uniqueLength));
 
 			runner.Execute();
 
@@ -86,7 +90,9 @@ namespace ProSuite.QA.Tests.Test
 			const int maxLength = 15;
 			const int uniqueLength = 6;
 			var runner = new QaTestRunner(
-				new QaSchemaFieldNames(table, maxLength, ExpectedCase.Mixed, uniqueLength));
+				new QaSchemaFieldNames(
+					ReadOnlyTableFactory.Create(table), maxLength, ExpectedCase.Mixed,
+					uniqueLength));
 
 			runner.Execute();
 
@@ -106,7 +112,9 @@ namespace ProSuite.QA.Tests.Test
 			const int maxLength = 15;
 			const int uniqueLength = 6;
 			var runner = new QaTestRunner(
-				new QaSchemaFieldNames(table, maxLength, ExpectedCase.NotAllLower, uniqueLength));
+				new QaSchemaFieldNames(
+					ReadOnlyTableFactory.Create(table), maxLength, ExpectedCase.NotAllLower,
+					uniqueLength));
 
 			runner.Execute();
 
@@ -127,7 +135,8 @@ namespace ProSuite.QA.Tests.Test
 			const int uniqueLength = 6;
 
 			var runner = new QaTestRunner(
-				new QaSchemaFieldNames(table, maxLength, ExpectedCase.Any, uniqueLength));
+				new QaSchemaFieldNames(
+					ReadOnlyTableFactory.Create(table), maxLength, ExpectedCase.Any, uniqueLength));
 			runner.Execute();
 
 			Assert.AreEqual(0, runner.Errors.Count);
@@ -146,7 +155,9 @@ namespace ProSuite.QA.Tests.Test
 			const int maxLength = 15;
 			const int uniqueLength = 6;
 			var runner = new QaTestRunner(
-				new QaSchemaFieldNames(table, maxLength, ExpectedCase.NotAllUpper, uniqueLength));
+				new QaSchemaFieldNames(
+					ReadOnlyTableFactory.Create(table), maxLength, ExpectedCase.NotAllUpper,
+					uniqueLength));
 
 			runner.Execute();
 
@@ -167,7 +178,9 @@ namespace ProSuite.QA.Tests.Test
 			const int uniqueLength = 6;
 
 			var runner = new QaTestRunner(
-				new QaSchemaFieldNames(table, maxLength, ExpectedCase.AllLower, uniqueLength));
+				new QaSchemaFieldNames(
+					ReadOnlyTableFactory.Create(table), maxLength, ExpectedCase.AllLower,
+					uniqueLength));
 			runner.Execute();
 
 			Assert.AreEqual(2, runner.Errors.Count);
@@ -186,7 +199,9 @@ namespace ProSuite.QA.Tests.Test
 			const int maxLength = 10;
 			const int uniqueLength = 6;
 			var runner = new QaTestRunner(
-				new QaSchemaFieldNames(table, maxLength, ExpectedCase.AllUpper, uniqueLength));
+				new QaSchemaFieldNames(
+					ReadOnlyTableFactory.Create(table), maxLength, ExpectedCase.AllUpper,
+					uniqueLength));
 
 			runner.Execute();
 
@@ -207,7 +222,9 @@ namespace ProSuite.QA.Tests.Test
 			const int maxLength = 15;
 			const int uniqueLength = 6;
 			var runner = new QaTestRunner(
-				new QaSchemaFieldNames(table, maxLength, ExpectedCase.AllUpper, uniqueLength));
+				new QaSchemaFieldNames(
+					ReadOnlyTableFactory.Create(table), maxLength, ExpectedCase.AllUpper,
+					uniqueLength));
 
 			runner.Execute();
 
@@ -295,8 +312,9 @@ namespace ProSuite.QA.Tests.Test
 			IFeatureWorkspace workspace = WorkspaceUtils.OpenPgdbFeatureWorkspace(path);
 
 			ITable table = workspace.OpenTable(tableName);
-			var test = new QaSchemaFieldNames(table, maximumLength, expectedCase,
-			                                  uniqueSubstringLength);
+			var test = new QaSchemaFieldNames(
+				ReadOnlyTableFactory.Create(table), maximumLength, expectedCase,
+				uniqueSubstringLength);
 
 			var runner = new QaTestRunner(test);
 			runner.Execute();

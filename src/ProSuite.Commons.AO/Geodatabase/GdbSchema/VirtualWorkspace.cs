@@ -47,6 +47,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		IName IDataset.FullName => FullName;
 
 		private IName _name;
+
 		public virtual IName FullName =>
 			_name ?? (_name = new WorkspaceName(this));
 
@@ -208,7 +209,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			CreateTable(name, fields, clsid, extclsid, configKeyword);
 
 		public virtual ITable CreateTable(string name, IFields fields, UID clsid,
-		                                            UID extclsid, string configKeyword) =>
+		                                  UID extclsid, string configKeyword) =>
 			throw new NotImplementedException("Implement in derived class");
 
 		IFeatureClass IFeatureWorkspace.OpenFeatureClass(string name) =>
@@ -223,7 +224,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		                                                   string shapeFieldName,
 		                                                   string configKeyword) =>
 			CreateFeatureClass(name, fields, clsid, extclsid, featureType, shapeFieldName,
-			                          configKeyword);
+			                   configKeyword);
 
 		public virtual IFeatureClass CreateFeatureClass(
 			string name, IFields fields, UID clsid, UID extclsid,
@@ -270,11 +271,11 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			string originPrimaryKey, string destPrimaryKey, string originForeignKey,
 			string destForeignKey)
 			=> CreateRelationshipClass(relClassName, originClass, destinationClass,
-			                                  forwardLabel, backwardLabel, cardinality,
-			                                  notification,
-			                                  isComposite, isAttributed, relAttrFields,
-			                                  originPrimaryKey, destPrimaryKey, originForeignKey,
-			                                  destForeignKey);
+			                           forwardLabel, backwardLabel, cardinality,
+			                           notification,
+			                           isComposite, isAttributed, relAttrFields,
+			                           originPrimaryKey, destPrimaryKey, originForeignKey,
+			                           destForeignKey);
 
 		public virtual IRelationshipClass CreateRelationshipClass(
 			string relClassName, IObjectClass originClass, IObjectClass destinationClass,
@@ -291,7 +292,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		                                               ISelectionSet srcSelectionSet,
 		                                               string targetColumns, bool doNotPushJoinToDb)
 			=> OpenRelationshipQuery(relClass, joinForward, srcQueryFilter, srcSelectionSet,
-			                                targetColumns, doNotPushJoinToDb);
+			                         targetColumns, doNotPushJoinToDb);
 
 		public virtual ITable OpenRelationshipQuery(
 			IRelationshipClass relClass, bool joinForward,

@@ -25,9 +25,5 @@ namespace ProSuite.DomainServices.AO.QA.VerificationReports.Xml
 
 		[XmlElement("valueSource")]
 		public XmlInstanceConfiguration ValueSource { get; set; }
-
-		[XmlArray("rowFilters")]
-		[XmlArrayItem("rowFilter")]
-		public List<XmlInstanceConfiguration> RowFilters { get; set; }
 	}
 }

@@ -104,9 +104,10 @@ namespace ProSuite.QA.Tests.Test
 			ITable table = workspace.OpenTable(tableName);
 			ITable fieldSpecificationsTable = workspace.OpenTable("FieldProperties");
 
-			const bool matchAliasName = true;
-			var test = new QaSchemaFieldPropertiesFromTable(table, fieldSpecificationsTable,
-			                                                matchAliasName);
+			var test = new QaSchemaFieldPropertiesFromTable(
+				ReadOnlyTableFactory.Create(table),
+				ReadOnlyTableFactory.Create(fieldSpecificationsTable),
+				matchAliasName : true);
 
 			var runner = new QaTestRunner(test);
 			runner.Execute();

@@ -6,13 +6,18 @@ namespace ProSuite.DomainModel.Core.QA
 {
 	public class IssueFilterConfiguration : InstanceConfiguration
 	{
-		[UsedImplicitly] private IssueFilterDescriptor _issueFilterDescriptor;
-
 		/// <summary>
-		/// Initializes a new instance of the <see cref="RowFilterConfiguration" /> class.
+		/// Initializes a new instance of the <see cref="IssueFilterConfiguration" /> class.
 		/// </summary>
 		/// <remarks>Required for NHibernate</remarks>
-		protected IssueFilterConfiguration() { }
+		[UsedImplicitly]
+		public IssueFilterConfiguration() : this(false) { }
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="IssueFilterConfiguration" /> class.
+		/// </summary>
+		[UsedImplicitly]
+		public IssueFilterConfiguration(bool assignUuid = false) : base(assignUuid) { }
 
 		public IssueFilterConfiguration(string name,
 		                                [NotNull] IssueFilterDescriptor issueFilterDescriptor,
@@ -21,16 +26,39 @@ namespace ProSuite.DomainModel.Core.QA
 		{
 			Assert.ArgumentNotNull(issueFilterDescriptor, nameof(issueFilterDescriptor));
 
-			_issueFilterDescriptor = issueFilterDescriptor;
+			IssueFilterDescriptor = issueFilterDescriptor;
 		}
-
-		public override InstanceDescriptor InstanceDescriptor => IssueFilterDescriptor;
 
 		[Required]
 		public IssueFilterDescriptor IssueFilterDescriptor
 		{
-			get => _issueFilterDescriptor;
-			set => _issueFilterDescriptor = value;
+			get => (IssueFilterDescriptor) InstanceDescriptor;
+			private set => InstanceDescriptor = value;
+		}
+
+		#region Overrides of InstanceConfiguration
+
+		public override string TypeDisplayName => "Issue Filter ";
+
+		[NotNull]
+		public override InstanceConfiguration CreateCopy()
+		{
+			var copy = new IssueFilterConfiguration(assignUuid: true);
+
+			CopyProperties(copy);
+
+			return copy;
+		}
+
+		#endregion
+
+		private void CopyProperties(IssueFilterConfiguration target)
+		{
+			Assert.ArgumentNotNull(target, nameof(target));
+
+			CopyBaseProperties(target);
+
+			target.IssueFilterDescriptor = IssueFilterDescriptor;
 		}
 	}
 }

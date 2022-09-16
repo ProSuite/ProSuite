@@ -30,7 +30,7 @@ namespace ProSuite.DomainServices.AO.QA
 		{
 			Assert.ArgumentNotNull(allowedErrors, nameof(allowedErrors));
 
-			IEnumerable<KeyValuePair<ITable, IList<int>>> allowedObjectIDsByErrorTable =
+			IEnumerable<KeyValuePair<ESRI.ArcGIS.Geodatabase.ITable, IList<int>>> allowedObjectIDsByErrorTable =
 				GetObjectIDsByAllowedErrorTable(allowedErrors);
 
 			DeleteAllowedErrors(allowedObjectIDsByErrorTable);
@@ -38,18 +38,18 @@ namespace ProSuite.DomainServices.AO.QA
 
 		public static void DeleteAllowedErrors(
 			[NotNull] IEnumerable<GdbObjectReference> allowedErrorObjRefs,
-			[NotNull] IEnumerable<ITable> allowedErrorTables)
+			[NotNull] IEnumerable<ESRI.ArcGIS.Geodatabase.ITable> allowedErrorTables)
 		{
-			IEnumerable<KeyValuePair<ITable, IList<int>>> allowedObjectIDsByErrorTable =
+			IEnumerable<KeyValuePair<ESRI.ArcGIS.Geodatabase.ITable, IList<int>>> allowedObjectIDsByErrorTable =
 				GetObjectIDsByAllowedErrorTable(allowedErrorObjRefs, allowedErrorTables);
 
 			DeleteAllowedErrors(allowedObjectIDsByErrorTable);
 		}
 
 		public static void DeleteAllowedErrors(
-			[NotNull] IEnumerable<KeyValuePair<ITable, IList<int>>> allowedObjectIDsByErrorTable)
+			[NotNull] IEnumerable<KeyValuePair<ESRI.ArcGIS.Geodatabase.ITable, IList<int>>> allowedObjectIDsByErrorTable)
 		{
-			foreach (KeyValuePair<ITable, IList<int>> pair in allowedObjectIDsByErrorTable)
+			foreach (KeyValuePair<ESRI.ArcGIS.Geodatabase.ITable, IList<int>> pair in allowedObjectIDsByErrorTable)
 			{
 				IList<int> oids = pair.Value;
 
@@ -60,7 +60,7 @@ namespace ProSuite.DomainServices.AO.QA
 
 				Stopwatch watch = _msg.DebugStartTiming();
 
-				ITable table = pair.Key;
+				ESRI.ArcGIS.Geodatabase.ITable table = pair.Key;
 				DatasetUtils.DeleteRows(table, oids);
 
 				_msg.VerboseDebug(() => $"Deleted from {DatasetUtils.GetName(table)}: {StringUtils.Concatenate(oids, ", ")}");
@@ -137,10 +137,10 @@ namespace ProSuite.DomainServices.AO.QA
 
 			Stopwatch watch = _msg.DebugStartTiming();
 
-			ITable errorTable = issueWriter.Table;
+			ESRI.ArcGIS.Geodatabase.ITable errorTable = issueWriter.Table;
 			IQueryFilter filter;
 
-			var errorFeatureClass = errorTable as IFeatureClass;
+			var errorFeatureClass = errorTable as ESRI.ArcGIS.Geodatabase.IFeatureClass;
 			if (errorFeatureClass != null)
 			{
 				if (areaOfInterest != null)
@@ -166,7 +166,7 @@ namespace ProSuite.DomainServices.AO.QA
 
 			const bool recycling = true;
 
-			foreach (IRow row in GdbQueryUtils.GetRows(errorTable, filter, recycling))
+			foreach (ESRI.ArcGIS.Geodatabase.IRow row in GdbQueryUtils.GetRows(errorTable, filter, recycling))
 			{
 				readRowCount++;
 				AllowedError allowedError =
@@ -510,13 +510,13 @@ namespace ProSuite.DomainServices.AO.QA
 		}
 
 		[NotNull]
-		private static IEnumerable<KeyValuePair<ITable, IList<int>>>
+		private static IEnumerable<KeyValuePair<ESRI.ArcGIS.Geodatabase.ITable, IList<int>>>
 			GetObjectIDsByAllowedErrorTable(
 				[NotNull] IEnumerable<AllowedError> allowedErrors)
 		{
 			Assert.ArgumentNotNull(allowedErrors, nameof(allowedErrors));
 
-			var result = new Dictionary<ITable, IList<int>>();
+			var result = new Dictionary<ESRI.ArcGIS.Geodatabase.ITable, IList<int>>();
 
 			foreach (AllowedError allowedError in allowedErrors)
 			{
@@ -534,19 +534,19 @@ namespace ProSuite.DomainServices.AO.QA
 		}
 
 		[NotNull]
-		private static IEnumerable<KeyValuePair<ITable, IList<int>>>
+		private static IEnumerable<KeyValuePair<ESRI.ArcGIS.Geodatabase.ITable, IList<int>>>
 			GetObjectIDsByAllowedErrorTable(
 				[NotNull] IEnumerable<GdbObjectReference> allowedErrorObjRefs,
-				[NotNull] IEnumerable<ITable> allowedErrorTables)
+				[NotNull] IEnumerable<ESRI.ArcGIS.Geodatabase.ITable> allowedErrorTables)
 		{
 			Assert.ArgumentNotNull(allowedErrorObjRefs, nameof(allowedErrorObjRefs));
 			Assert.ArgumentNotNull(allowedErrorTables, nameof(allowedErrorTables));
 
-			var result = new Dictionary<ITable, IList<int>>();
+			var result = new Dictionary<ESRI.ArcGIS.Geodatabase.ITable, IList<int>>();
 
 			var allowedErrorObjRefCollection = CollectionUtils.GetCollection(allowedErrorObjRefs);
 
-			foreach (ITable allowedErrorTable in allowedErrorTables)
+			foreach (ESRI.ArcGIS.Geodatabase.ITable allowedErrorTable in allowedErrorTables)
 			{
 				int objectClassID = ((IObjectClass) allowedErrorTable).ObjectClassID;
 

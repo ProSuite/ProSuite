@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using ProSuite.Commons.DomainModels;
@@ -23,12 +24,37 @@ namespace ProSuite.DomainModel.Core.QA
 		[UsedImplicitly] [Obfuscation(Exclude = true)]
 		private string _description;
 
+		[UsedImplicitly] private InstanceDescriptor _instanceDescriptor;
+
+		[UsedImplicitly] [Obfuscation(Exclude = true)]
+		private DataQualityCategory _category;
+
+		[UsedImplicitly] [Obfuscation(Exclude = true)]
+		private string _url;
+
+		[UsedImplicitly] [Obfuscation(Exclude = true)]
+		private string _notes;
+
+		[UsedImplicitly] [Obfuscation(Exclude = true)]
+		private string _uuid;
+
 		#endregion
 
-		protected InstanceConfiguration() { }
+		/// <summary>
+		/// Initializes a new instance of the <see cref="InstanceConfiguration"/> class.
+		/// </summary>
+		/// <remarks>Required for NHibernate</remarks>
+		protected InstanceConfiguration(bool assignUuid)
+		{
+			if (assignUuid)
+			{
+				Uuid = GenerateUuid();
+			}
+		}
 
 		protected InstanceConfiguration([NotNull] string name,
 		                                [CanBeNull] string description = "")
+			: this(assignUuid: true)
 		{
 			Name = name;
 			Description = description;
@@ -38,7 +64,45 @@ namespace ProSuite.DomainModel.Core.QA
 		public IList<TestParameterValue> ParameterValues =>
 			new ReadOnlyList<TestParameterValue>(_parameterValues);
 
-		public abstract InstanceDescriptor InstanceDescriptor { get; }
+		[Required]
+		public virtual InstanceDescriptor InstanceDescriptor
+		{
+			get => _instanceDescriptor;
+			set => _instanceDescriptor = value;
+		}
+
+		[Required]
+		public string Uuid
+		{
+			get { return _uuid; }
+			set
+			{
+				Assert.ArgumentNotNull(value, nameof(value));
+
+				_uuid = GetUuid(value);
+			}
+		}
+
+		[CanBeNull]
+		public DataQualityCategory Category
+		{
+			get { return _category; }
+			set { _category = value; }
+		}
+
+		[MaximumStringLength(2000)]
+		public string Url
+		{
+			get { return _url; }
+			set { _url = value; }
+		}
+
+		[MaximumStringLength(2000)]
+		public string Notes
+		{
+			get { return _notes; }
+			set { _notes = value; }
+		}
 
 		#region INamed, IAnnotated members
 
@@ -51,11 +115,14 @@ namespace ProSuite.DomainModel.Core.QA
 
 		[Required]
 		[MaximumStringLength(200)]
+		[ValidName]
 		public string Name
 		{
 			get => _name;
 			set => _name = value;
 		}
+
+		public abstract string TypeDisplayName { get; }
 
 		#endregion
 
@@ -79,10 +146,11 @@ namespace ProSuite.DomainModel.Core.QA
 		}
 
 		/// <summary>
-		/// 
+		/// Gets the dataset referenced directly by the condition and optionally also the datasets
+		/// referenced indirectly (and recursively) by any filters or transformers.
 		/// </summary>
-		/// <param name="includeReferencedProcessors">include RowFilters, IssueFilters and Transformers</param>
-		/// <param name="includeSourceDatasets">include Transformers of dataset sources</param>
+		/// <param name="includeReferencedProcessors">include IssueFilters and Transformers</param>
+		/// <param name="includeSourceDatasets">Recursively include datasets of transformers</param>
 		/// <returns></returns>
 		[NotNull]
 		public IEnumerable<Dataset> GetDatasetParameterValues(
@@ -103,11 +171,10 @@ namespace ProSuite.DomainModel.Core.QA
 				{
 					yield return dataset;
 				}
-				else if (includeSourceDatasets && datasetTestParameterValue.ValueSource != null)
+				else if (includeSourceDatasets)
 				{
 					foreach (Dataset referencedDataset in
-						datasetTestParameterValue.ValueSource.GetDatasetParameterValues(
-							includeSourceDatasets: true))
+					         datasetTestParameterValue.GetAllSourceDatasets())
 					{
 						yield return referencedDataset;
 					}
@@ -127,29 +194,12 @@ namespace ProSuite.DomainModel.Core.QA
 		{
 			foreach (TestParameterValue parameterValue in ParameterValues)
 			{
-				var datasetTestParameterValue = parameterValue as DatasetTestParameterValue;
-
-				// Row filters
-				if (datasetTestParameterValue?.RowFilterConfigurations != null)
-				{
-					foreach (var rowFilterConfiguration in
-						datasetTestParameterValue.RowFilterConfigurations)
-					{
-						foreach (Dataset referencedDataset in
-							rowFilterConfiguration.GetDatasetParameterValues(
-								includeReferencedProcessors: true))
-						{
-							yield return referencedDataset;
-						}
-					}
-				}
-
-				// Transformers
+				// Transformers (issue filters are provided by override)
 				if (parameterValue.ValueSource != null)
 				{
 					foreach (Dataset referencedDataset in
-						parameterValue.ValueSource.GetDatasetParameterValues(
-							includeReferencedProcessors: true))
+					         parameterValue.ValueSource.GetDatasetParameterValues(
+						         includeReferencedProcessors: true))
 					{
 						yield return referencedDataset;
 					}
@@ -199,6 +249,48 @@ namespace ProSuite.DomainModel.Core.QA
 		public override string ToString()
 		{
 			return Name;
+		}
+
+		public abstract InstanceConfiguration CreateCopy();
+
+		[NotNull]
+		protected static string GetUuid([NotNull] string value)
+		{
+			// this fails if the string is not a valid guid:
+			var guid = new Guid(value);
+
+			return FormatUuid(guid);
+		}
+
+		[NotNull]
+		protected static string GenerateUuid()
+		{
+			return FormatUuid(Guid.NewGuid());
+		}
+
+		[NotNull]
+		protected static string FormatUuid(Guid guid)
+		{
+			// default format (no curly braces)
+			return guid.ToString().ToUpper();
+		}
+
+		protected void CopyBaseProperties([NotNull] InstanceConfiguration target)
+		{
+			Assert.ArgumentNotNull(target, nameof(target));
+
+			target.Name = Name;
+
+			target.Description = Description;
+			target.Notes = Notes;
+			target.Url = Url;
+
+			foreach (TestParameterValue testParameterValue in ParameterValues)
+			{
+				target.AddParameterValue(testParameterValue.Clone());
+			}
+
+			target.Category = Category;
 		}
 	}
 }

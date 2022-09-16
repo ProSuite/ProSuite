@@ -4,11 +4,10 @@ namespace ProSuite.Commons.Validation
 {
 	/// <summary>
 	/// Property validation attribute:
-	/// Require a property to be a valid Entity name,
-	/// that is, a non-empty string without fancy characters.
-	/// By default, "\0\a\b\f\n\r\t\v" are considered fancy
-	/// characters, but this can be redefined with an overloaded
-	/// constructor. Implies that a property is required.
+	/// Require a property to be a valid Entity name, that is, a non-empty string without fancy
+	/// characters and no white space at the start or end.
+	/// By default, "\0\a\b\f\n\r\t\v" are considered fancy characters, but this can be redefined
+	/// with an overloaded constructor. Implies that a property is required.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Property)]
 	public class ValidNameAttribute : ValidationAttribute
@@ -53,13 +52,18 @@ namespace ProSuite.Commons.Validation
 				return;
 			}
 
-			stringValue = stringValue.Trim();
+			string trimmedStringValue = stringValue.Trim();
 
-			if (stringValue.Length < 1)
+			if (trimmedStringValue.Length < 1)
 			{
 				LogMessage(notification, GetMessage("is empty"));
 			}
-			else if (stringValue.IndexOfAny(_invalidChars.ToCharArray()) >= 0)
+			else if (trimmedStringValue != stringValue)
+			{
+				LogMessage(notification,
+				           GetMessage("contains white space at the beginning or end"));
+			}
+			else if (trimmedStringValue.IndexOfAny(_invalidChars.ToCharArray()) >= 0)
 			{
 				LogMessage(notification, GetMessage("contains invalid characters"));
 			}

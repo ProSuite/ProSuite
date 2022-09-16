@@ -1272,34 +1272,89 @@ namespace ProSuite.Commons.AO.Geometry
 						return 0;
 					}
 
-					// it's the ToPoint of the last segment:
-					var curve = GetPart(geometry, partIndex) as ICurve;
-
-					if (curve != null && curve.IsClosed)
+					if (TryGetLastSegmentIdxInRing(geometry, partIndex,
+					                               out int adaptedSegmentIndex))
 					{
-						int partSegmentCount = ((ISegmentCollection) curve).SegmentCount;
-
-						return partSegmentCount - 1;
+						return adaptedSegmentIndex;
 					}
 				}
 			}
 
-			if (pointIsSegmentFromPoint)
+			if (GeometryUtils.HasNonLinearSegments(geometry))
 			{
-				int partSegmentCount =
-					((ISegmentCollection) GetPart(geometry, partIndex)).SegmentCount;
+				// For non-linear segments, not always the first hit segment is reported
+				ISegment segment = GetSegment(geometry, partIndex, segmentIndex);
 
-				if (segmentIndex != partSegmentCount - 1)
+				// Better play it safe:
+				if (pointIsSegmentFromPoint &&
+				    GeometryUtils.AreEqualInXY(segment.ToPoint, segmentPoint))
 				{
-					segmentIndex++;
+					segmentIndex =
+						TryGetNextSegmentIndex(geometry, segmentPoint, segmentIndex, partIndex);
 				}
-				else
+
+				if (! pointIsSegmentFromPoint &&
+				    GeometryUtils.AreEqualInXY(segment.FromPoint, segmentPoint))
 				{
-					// Don't throw! Client code does not always check for this situation! (same for 1. vertex and ! pointIsSegmentFromPoint)
-					_msg.DebugFormat(
-						"The point {0} is the last point of the geometry {1} and cannot be segment from point.",
-						GeometryUtils.ToString(segmentPoint), GeometryUtils.ToString(geometry));
+					if (segmentIndex > 0)
+					{
+						segmentIndex--;
+					}
+					else if (TryGetLastSegmentIdxInRing(geometry, partIndex,
+					                                    out int adaptedSegmentIndex))
+					{
+						return adaptedSegmentIndex;
+					}
 				}
+			}
+			else if (pointIsSegmentFromPoint)
+			{
+				// In linear segments (so far) always the first hit segment is reported
+				segmentIndex =
+					TryGetNextSegmentIndex(geometry, segmentPoint, segmentIndex, partIndex);
+			}
+
+			return segmentIndex;
+		}
+
+		private static bool TryGetLastSegmentIdxInRing(IGeometry geometry, int partIndex,
+		                                               out int adaptedSegmentIndex)
+		{
+			// it's the ToPoint of the last segment:
+			var curve = GetPart(geometry, partIndex) as ICurve;
+
+			if (curve != null && curve.IsClosed)
+			{
+				int partSegmentCount = ((ISegmentCollection) curve).SegmentCount;
+
+				{
+					adaptedSegmentIndex = partSegmentCount - 1;
+					return true;
+				}
+			}
+
+			adaptedSegmentIndex = -1;
+			return false;
+		}
+
+		private static int TryGetNextSegmentIndex([NotNull] IGeometry geometry,
+		                                          [NotNull] IPoint segmentPoint,
+		                                          int segmentIndex,
+		                                          int partIndex)
+		{
+			int partSegmentCount =
+				((ISegmentCollection) GetPart(geometry, partIndex)).SegmentCount;
+
+			if (segmentIndex != partSegmentCount - 1)
+			{
+				segmentIndex++;
+			}
+			else
+			{
+				// Don't throw! Client code does not always check for this situation! (same for 1. vertex and ! pointIsSegmentFromPoint)
+				_msg.DebugFormat(
+					"The point {0} is the last point of the geometry {1} and cannot be segment from point.",
+					GeometryUtils.ToString(segmentPoint), GeometryUtils.ToString(geometry));
 			}
 
 			return segmentIndex;

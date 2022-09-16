@@ -136,7 +136,7 @@ namespace ProSuite.QA.Tests.Schema
 		}
 
 		[NotNull]
-		internal static IList<DomainUsage> GetDomainUsages([NotNull] ITable table)
+		internal static IList<DomainUsage> GetDomainUsages([NotNull] IReadOnlyTable table)
 		{
 			Assert.ArgumentNotNull(table, nameof(table));
 
@@ -144,9 +144,9 @@ namespace ProSuite.QA.Tests.Schema
 
 			var subtypes = table as ISubtypes;
 
-			IList<Subtype> subtypeValues = DatasetUtils.GetSubtypes((IObjectClass) table);
+			IList<Subtype> subtypeValues = DatasetUtils.GetSubtypes(subtypes);
 
-			foreach (IField field in DatasetUtils.GetFields(table))
+			foreach (IField field in DatasetUtils.GetFields(table.Fields))
 			{
 				IDomain domain = field.Domain;
 

@@ -1,5 +1,6 @@
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AO.Surface
@@ -7,7 +8,7 @@ namespace ProSuite.Commons.AO.Surface
 	public abstract class TerrainReference
 	{
 		[NotNull]
-		public abstract IGeoDataset Dataset { get; }
+		public abstract IReadOnlyGeoDataset Dataset { get; }
 
 		[NotNull]
 		public abstract RectangularTilingStructure Tiling { get; }

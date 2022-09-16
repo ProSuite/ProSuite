@@ -8,6 +8,7 @@ using ProSuite.Commons;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.AO.Test.TestSupport;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests.Test
 {
@@ -37,7 +38,7 @@ namespace ProSuite.QA.Tests.Test
 			construction.StartRing(5, 4, 0).Add(5, 8, 0).Add(5.01, 4, 10);
 			IFeature f = fc.CreateFeature(construction.MultiPatch);
 
-			var test = new QaMpVerticalFaces(fc, 85, 0);
+			var test = new QaMpVerticalFaces(ReadOnlyTableFactory.Create(fc), 85, 0);
 			var runner = new QaTestRunner(test);
 			runner.Execute(f);
 			Assert.AreEqual(1, runner.Errors.Count);
@@ -58,7 +59,7 @@ namespace ProSuite.QA.Tests.Test
 			// slight flatter than limit
 			IFeature f = fc.CreateFeature(construction.MultiPatch);
 
-			var test = new QaMpVerticalFaces(fc, slopeAngleDeg, 0);
+			var test = new QaMpVerticalFaces(ReadOnlyTableFactory.Create(fc), slopeAngleDeg, 0);
 			var runner = new QaTestRunner(test);
 			runner.Execute(f);
 			Assert.AreEqual(0, runner.Errors.Count);
@@ -68,7 +69,7 @@ namespace ProSuite.QA.Tests.Test
 			// slight steeper than limit
 			f = fc.CreateFeature(construction.MultiPatch);
 
-			test = new QaMpVerticalFaces(fc, slopeAngleDeg, 0);
+			test = new QaMpVerticalFaces(ReadOnlyTableFactory.Create(fc), slopeAngleDeg, 0);
 			runner = new QaTestRunner(test);
 			runner.Execute(f);
 			Assert.AreEqual(1, runner.Errors.Count);
@@ -88,7 +89,7 @@ namespace ProSuite.QA.Tests.Test
 			construction.StartRing(x0, 4, 0).Add(x0, 8, 0).Add(x0, 4, height); // full vertical
 			IFeature f = fc.CreateFeature(construction.MultiPatch);
 
-			var test = new QaMpVerticalFaces(fc, 85, 0);
+			var test = new QaMpVerticalFaces(ReadOnlyTableFactory.Create(fc), 85, 0);
 			var runner = new QaTestRunner(test);
 			runner.Execute(f);
 			Assert.AreEqual(0, runner.Errors.Count);
@@ -98,7 +99,7 @@ namespace ProSuite.QA.Tests.Test
 			// slightly steeper than tolerance
 			f = fc.CreateFeature(construction.MultiPatch);
 
-			test = new QaMpVerticalFaces(fc, 85, toleranceAngleDeg);
+			test = new QaMpVerticalFaces(ReadOnlyTableFactory.Create(fc), 85, toleranceAngleDeg);
 			runner = new QaTestRunner(test);
 			runner.Execute(f);
 			Assert.AreEqual(0, runner.Errors.Count);
@@ -108,7 +109,7 @@ namespace ProSuite.QA.Tests.Test
 			// slightly less steep than tolerance
 			f = fc.CreateFeature(construction.MultiPatch);
 
-			test = new QaMpVerticalFaces(fc, 85, toleranceAngleDeg);
+			test = new QaMpVerticalFaces(ReadOnlyTableFactory.Create(fc), 85, toleranceAngleDeg);
 			runner = new QaTestRunner(test);
 			runner.Execute(f);
 			Assert.AreEqual(1, runner.Errors.Count);
@@ -129,7 +130,7 @@ namespace ProSuite.QA.Tests.Test
 			// less than xyTolerance
 			IFeature f = fc.CreateFeature(construction.MultiPatch);
 
-			var test = new QaMpVerticalFaces(fc, slopeAngleDeg, 0);
+			var test = new QaMpVerticalFaces(ReadOnlyTableFactory.Create(fc), slopeAngleDeg, 0);
 			var runner = new QaTestRunner(test);
 			runner.Execute(f);
 			Assert.AreEqual(0, runner.Errors.Count);
@@ -139,7 +140,7 @@ namespace ProSuite.QA.Tests.Test
 			// more than xyTolerance
 			f = fc.CreateFeature(construction.MultiPatch);
 
-			test = new QaMpVerticalFaces(fc, slopeAngleDeg, 0);
+			test = new QaMpVerticalFaces(ReadOnlyTableFactory.Create(fc), slopeAngleDeg, 0);
 			runner = new QaTestRunner(test);
 			runner.Execute(f);
 			Assert.AreEqual(1, runner.Errors.Count);

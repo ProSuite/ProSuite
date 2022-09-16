@@ -192,8 +192,9 @@ namespace ProSuite.DomainServices.AO.QA
 			                                         .Select(e => e.QualityCondition)
 			                                         .Where(qcon => qcon != null))
 			{
+				// TODO: Limit number of round trips, use QualitySpecificationUtils.InitializeAssociatedEntitiesTx() ?
 				foreach (Dataset dataset in qcon
-				                            .GetDatasetParameterValues()
+				                            .GetDatasetParameterValues(true, true)
 				                            .Where(ds => ds.Model != null))
 				{
 					ObjectDataset objectDataset = dataset as ObjectDataset;
@@ -232,8 +233,8 @@ namespace ProSuite.DomainServices.AO.QA
 			}
 
 			foreach (QualitySpecificationElement element in
-				specification.Elements
-				             .Where(e => e.Enabled))
+			         specification.Elements
+			                      .Where(e => e.Enabled))
 			{
 				QualityCondition condition = element.QualityCondition;
 
@@ -353,8 +354,8 @@ namespace ProSuite.DomainServices.AO.QA
 
 			var datasetsInvolvedInSelection = new HashSet<IObjectDataset>();
 			foreach (IObjectDataset objectDataset in
-				VerificationUtils.GetDatasetsByObjectClass(_selection, _datasetLookup)
-				                 .Values)
+			         VerificationUtils.GetDatasetsByObjectClass(_selection, _datasetLookup)
+			                          .Values)
 			{
 				if (objectDataset != null)
 				{
@@ -423,7 +424,7 @@ namespace ProSuite.DomainServices.AO.QA
 				new HashSet<QualityCondition>(
 					QualitySpecificationUtils.GetOrderedQualityConditions(
 						qualitySpecification, datasetOpener));
-			
+
 			qualityVerification = GetQualityVerification(
 				qualitySpecification, orderedQualityConditions,
 				out _elementsByConditionVerification);
@@ -803,13 +804,13 @@ namespace ProSuite.DomainServices.AO.QA
 			_verificationReportBuilder.BeginVerification(areaOfInterest);
 
 			foreach (QualityVerificationDataset verifiedDataset in
-				qualityVerification.VerificationDatasets)
+			         qualityVerification.VerificationDatasets)
 			{
 				_verificationReportBuilder.AddVerifiedDataset(verifiedDataset.Dataset);
 			}
 
 			foreach (QualityConditionVerification conditionVerification in
-				qualityVerification.ConditionVerifications)
+			         qualityVerification.ConditionVerifications)
 			{
 				_verificationReportBuilder.AddVerifiedQualityCondition(
 					_elementsByConditionVerification[conditionVerification]);
@@ -1327,13 +1328,22 @@ namespace ProSuite.DomainServices.AO.QA
 			QualityCondition qualityCondition = conditionVerification.QualityCondition;
 			Assert.NotNull(qualityCondition, "no quality condition for verification");
 
-			// Consider extracting separate ErrorFilter class / interface
-			if (! IsErrorRelevant(qaError, qualityCondition,
-			                      conditionVerification.AllowErrors))
+			try
 			{
-				_msg.VerboseDebug(() => "Issue is not relevant for current verification context");
+				// Consider extracting separate ErrorFilter class / interface
+				if (! IsErrorRelevant(qaError, qualityCondition,
+				                      conditionVerification.AllowErrors))
+				{
+					_msg.VerboseDebug(
+						() => "Issue is not relevant for current verification context");
 
-				return false;
+					return false;
+				}
+			}
+			catch (Exception e)
+			{
+				_msg.Warn($"Error checking error for relevance: {qaError}", e);
+				throw;
 			}
 
 			// Moved to single threaded test runner:
@@ -1485,7 +1495,7 @@ namespace ProSuite.DomainServices.AO.QA
 				{
 					// the error is outside the perimeter -> search in *all* allowed errors
 					if (_verificationContextIssueRepository.IsAllowedError(
-						qaError, qualityCondition))
+						    qaError, qualityCondition))
 					{
 						// filtered out by allowed error
 						return false;

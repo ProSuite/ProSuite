@@ -6,7 +6,6 @@ using System.Text;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Tests.Constraints;
 using ProSuite.QA.Tests.Documentation;
@@ -15,6 +14,9 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Globalization;
 using ProSuite.Commons.Text;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
 {
@@ -25,7 +27,7 @@ namespace ProSuite.QA.Tests
 	[AttributeTest]
 	public class QaConstraint : ContainerTest
 	{
-		[NotNull] private readonly ITable _table;
+		[NotNull] private readonly IReadOnlyTable _table;
 		private readonly string _constraint;
 
 		private readonly bool _usesSimpleConstraint;
@@ -58,7 +60,7 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaConstraint_0))]
 		public QaConstraint(
-				[Doc(nameof(DocStrings.QaConstraint_table))] [NotNull] ITable table,
+				[Doc(nameof(DocStrings.QaConstraint_table))] [NotNull] IReadOnlyTable table,
 				[Doc(nameof(DocStrings.QaConstraint_constraint))] string constraint)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(table, constraint, 0) { }
@@ -66,7 +68,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaConstraint_1))]
 		[InternallyUsedTest]
 		public QaConstraint(
-				[Doc(nameof(DocStrings.QaConstraint_table))] [NotNull] ITable table,
+				[Doc(nameof(DocStrings.QaConstraint_table))] [NotNull] IReadOnlyTable table,
 				[Doc(nameof(DocStrings.QaConstraint_constraints))] [NotNull]
 				IList<ConstraintNode> constraints)
 			// ReSharper disable once IntroduceOptionalParameters.Global
@@ -75,7 +77,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaConstraint_0))]
 		[InternallyUsedTest]
 		public QaConstraint(
-			[Doc(nameof(DocStrings.QaConstraint_table))] [NotNull] ITable table,
+			[Doc(nameof(DocStrings.QaConstraint_table))] [NotNull] IReadOnlyTable table,
 			[Doc(nameof(DocStrings.QaConstraint_constraint))] string constraint,
 			int errorDescriptionVersion)
 			: base(table)
@@ -89,7 +91,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaConstraint_1))]
 		[InternallyUsedTest]
 		public QaConstraint(
-			[Doc(nameof(DocStrings.QaConstraint_table))] [NotNull] ITable table,
+			[Doc(nameof(DocStrings.QaConstraint_table))] [NotNull] IReadOnlyTable table,
 			[Doc(nameof(DocStrings.QaConstraint_constraints))] [NotNull]
 			IList<ConstraintNode> constraints,
 			int errorDescriptionVersion)
@@ -121,7 +123,7 @@ namespace ProSuite.QA.Tests
 			return false;
 		}
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
 			if (! _usesSimpleConstraint)
 			{
@@ -160,11 +162,11 @@ namespace ProSuite.QA.Tests
 				}
 			}
 
-			return ReportError(description,
-			                   GetErrorGeometry(row),
-			                   Codes[Code.ConstraintNotFulfilled],
-			                   GetSimpleConstraintAffectedComponent(),
-			                   GetInvolvedRows(row));
+			return ReportError(
+				description, GetInvolvedRows(row),
+				GetErrorGeometry(row),
+				Codes[Code.ConstraintNotFulfilled],
+				GetSimpleConstraintAffectedComponent());
 		}
 
 		[CanBeNull]
@@ -198,7 +200,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		private static void CreateNodeHelpers(
-			[NotNull] ITable table,
+			[NotNull] IReadOnlyTable table,
 			[NotNull] ICollection<ConstraintNode> constraints,
 			bool caseSensitive)
 		{
@@ -226,7 +228,7 @@ namespace ProSuite.QA.Tests
 			return sb.ToString();
 		}
 
-		private int CheckNodes([NotNull] IRow row,
+		private int CheckNodes([NotNull] IReadOnlyRow row,
 		                       [NotNull] IEnumerable<ConstraintNode> constraintNodes,
 		                       [NotNull] IList<TableView> parentHelpers)
 		{
@@ -249,11 +251,10 @@ namespace ProSuite.QA.Tests
 						// of an un-convertable input type)
 						string description = string.Format(
 							"Error evaluating expression: {0}", e.Message);
-						errorCount += ReportError(description,
+						errorCount += ReportError(description, GetInvolvedRows(row),
 						                          GetErrorGeometry(row),
 						                          Codes[Code.ErrorEvaluatingExpression],
-						                          constraintNode.AffectedComponent,
-						                          GetInvolvedRows(row));
+						                          constraintNode.AffectedComponent);
 
 						return errorCount;
 					}
@@ -279,14 +280,12 @@ namespace ProSuite.QA.Tests
 					IssueCode issueCode = constraintNode.IssueCode ??
 					                      Codes[Code.ConstraintNotFulfilled];
 
-					object[] values = {GetFieldValues(row, constraintNode.Helper, parentHelpers)};
+					object[] values = { GetFieldValues(row, constraintNode.Helper, parentHelpers) };
 
-					errorCount += ReportError(description,
-					                          GetErrorGeometry(row),
-					                          issueCode,
-					                          constraintNode.AffectedComponent,
-					                          GetInvolvedRows(row),
-					                          values);
+					errorCount += ReportError(
+						description, GetInvolvedRows(row),
+						GetErrorGeometry(row),
+						issueCode, constraintNode.AffectedComponent, values: values);
 				}
 			}
 
@@ -320,14 +319,14 @@ namespace ProSuite.QA.Tests
 		}
 
 		[CanBeNull]
-		private IGeometry GetErrorGeometry([NotNull] IRow row)
+		private IGeometry GetErrorGeometry([NotNull] IReadOnlyRow row)
 		{
 			return TestUtils.GetShapeCopy(row, GetRelatedTables(row));
 		}
 
 		[NotNull]
 		private string GetErrorDescription(
-			[NotNull] IRow row,
+			[NotNull] IReadOnlyRow row,
 			[NotNull] ICollection<TableView> parentHelpers,
 			[NotNull] TableView filterHelper,
 			[CanBeNull] string constraintDescription)
@@ -369,7 +368,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		private static void AppendFieldValues(
-			[NotNull] IRow row,
+			[NotNull] IReadOnlyRow row,
 			[NotNull] StringBuilder sb,
 			[NotNull] TableView filterHelper,
 			[NotNull] IEnumerable<TableView> parentHelpers)
@@ -392,7 +391,7 @@ namespace ProSuite.QA.Tests
 
 		[NotNull]
 		private static string GetFieldValues(
-			[NotNull] IRow row,
+			[NotNull] IReadOnlyRow row,
 			[NotNull] TableView filterHelper,
 			[NotNull] IEnumerable<TableView> parentHelpers)
 		{

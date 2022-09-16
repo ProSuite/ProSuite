@@ -66,8 +66,9 @@ namespace ProSuite.QA.Tests.Test
 			// connected to border, exact match:
 			AddLineFeature(fcLine2, 7, 0, 5, 0, stateId: "B");
 
-			var test = new QaEdgeMatchBorderingLines(fcLine1, fcBorder1,
-			                                         fcLine2, fcBorder2, 0);
+			var test = new QaEdgeMatchBorderingLines(
+				ReadOnlyTableFactory.Create(fcLine1), ReadOnlyTableFactory.Create(fcBorder1),
+				ReadOnlyTableFactory.Create(fcLine2), ReadOnlyTableFactory.Create(fcBorder2), 0);
 
 			AssertNoErrors(Run(test, 1000));
 
@@ -95,8 +96,9 @@ namespace ProSuite.QA.Tests.Test
 			// connected to border, exact match:
 			AddLineFeature(fcLine2, 7, 0, 5, 0, stateId: "B");
 
-			var test = new QaEdgeMatchBorderingLines(fcLine1, fcBorder1,
-			                                         fcLine2, fcBorder2, 0)
+			var test = new QaEdgeMatchBorderingLines(
+				           ReadOnlyTableFactory.Create(fcLine1), ReadOnlyTableFactory.Create(fcBorder1),
+				           ReadOnlyTableFactory.Create(fcLine2), ReadOnlyTableFactory.Create(fcBorder2), 0)
 			           {
 				           LineClass1BorderMatchCondition = "LINE.STATE = BORDER.STATE",
 				           LineClass2BorderMatchCondition = "LINE.STATE = BORDER.STATE",
@@ -129,8 +131,9 @@ namespace ProSuite.QA.Tests.Test
 			// connected to border, exact match:
 			AddLineFeature(fcLine2, 7, 0, 5, 0, stateId: "B");
 
-			var test = new QaEdgeMatchBorderingLines(fcLine1, fcBorder1,
-			                                         fcLine2, fcBorder2, 0)
+			var test = new QaEdgeMatchBorderingLines(
+				           ReadOnlyTableFactory.Create(fcLine1), ReadOnlyTableFactory.Create(fcBorder1),
+				           ReadOnlyTableFactory.Create(fcLine2), ReadOnlyTableFactory.Create(fcBorder2), 0)
 			           {
 				           LineClass1BorderMatchCondition = "LINE.STATE = BORDER.STATE",
 				           LineClass2BorderMatchCondition = "LINE.STATE = BORDER.STATE",
@@ -163,8 +166,9 @@ namespace ProSuite.QA.Tests.Test
 			// connected to border, exact match:
 			AddLineFeature(fcLine2, 7, 0, 5, 0, stateId: "B");
 
-			var test = new QaEdgeMatchBorderingLines(fcLine1, fcBorder1,
-			                                         fcLine2, fcBorder2, 0)
+			var test = new QaEdgeMatchBorderingLines(
+				           ReadOnlyTableFactory.Create(fcLine1), ReadOnlyTableFactory.Create(fcBorder1),
+				           ReadOnlyTableFactory.Create(fcLine2), ReadOnlyTableFactory.Create(fcBorder2), 0)
 			           {
 				           LineClass1BorderMatchCondition = "LINE.STATE = BORDER.STATE",
 				           LineClass2BorderMatchCondition = "LINE.STATE = BORDER.STATE",
@@ -198,8 +202,9 @@ namespace ProSuite.QA.Tests.Test
 			// connected to border, exact match:
 			AddLineFeature(fcLine2, 7, 0, 5, 0, stateId: "B");
 
-			var test = new QaEdgeMatchBorderingLines(fcLine1, fcBorder1,
-			                                         fcLine2, fcBorder2, 0)
+			var test = new QaEdgeMatchBorderingLines(
+				           ReadOnlyTableFactory.Create(fcLine1), ReadOnlyTableFactory.Create(fcBorder1),
+				           ReadOnlyTableFactory.Create(fcLine2), ReadOnlyTableFactory.Create(fcBorder2), 0)
 			           {
 				           LineClass1BorderMatchCondition = "LINE.STATE = BORDER.STATE",
 				           LineClass2BorderMatchCondition = "LINE.STATE = BORDER.STATE",
@@ -235,8 +240,9 @@ namespace ProSuite.QA.Tests.Test
 
 			using (AssertUtils.UseInvariantCulture())
 			{
-				var test = new QaEdgeMatchBorderingLines(fcLine1, fcBorder1,
-				                                         fcLine2, fcBorder2, 0)
+				var test = new QaEdgeMatchBorderingLines(
+					           ReadOnlyTableFactory.Create(fcLine1), ReadOnlyTableFactory.Create(fcBorder1),
+					           ReadOnlyTableFactory.Create(fcLine2), ReadOnlyTableFactory.Create(fcBorder2), 0)
 				           {
 					           LineClass1BorderMatchCondition = "LINE.STATE = BORDER.STATE",
 					           LineClass2BorderMatchCondition = "LINE.STATE = BORDER.STATE",
@@ -288,8 +294,9 @@ namespace ProSuite.QA.Tests.Test
 			// connected to border, exact match:
 			AddLineFeature(fcLine2, 7, 0, 5, 0, stateId: "B");
 
-			var test = new QaEdgeMatchBorderingLines(fcLine1, fcBorder1,
-			                                         fcLine2, fcBorder2, 0)
+			var test = new QaEdgeMatchBorderingLines(
+				           ReadOnlyTableFactory.Create(fcLine1), ReadOnlyTableFactory.Create(fcBorder1),
+				           ReadOnlyTableFactory.Create(fcLine2), ReadOnlyTableFactory.Create(fcBorder2), 0)
 			           {
 				           LineClass1BorderMatchCondition = "LINE.STATE = BORDER.STATE",
 				           LineClass2BorderMatchCondition = "LINE.STATE = BORDER.STATE",
@@ -326,8 +333,9 @@ namespace ProSuite.QA.Tests.Test
 			                            .LineTo(5, 0).LineTo(5, -2).Curve,
 			           stateId: "B");
 
-			var test = new QaEdgeMatchBorderingLines(fcLine1, fcBorder1,
-			                                         fcLine2, fcBorder2, 0)
+			var test = new QaEdgeMatchBorderingLines(
+				           ReadOnlyTableFactory.Create(fcLine1), ReadOnlyTableFactory.Create(fcBorder1),
+				           ReadOnlyTableFactory.Create(fcLine2), ReadOnlyTableFactory.Create(fcBorder2), 0)
 			           {
 				           LineClass1BorderMatchCondition = "LINE.STATE = BORDER.STATE",
 				           LineClass2BorderMatchCondition = "LINE.STATE = BORDER.STATE",
@@ -356,8 +364,9 @@ namespace ProSuite.QA.Tests.Test
 			// dummy to run
 			AddLineFeature(fcLine1, 5, 1, 7, 1, stateId: "A");
 
-			var test = new QaEdgeMatchBorderingLines(fcLine1, fcBorder1,
-			                                         fcLine2, fcBorder2, 0)
+			var test = new QaEdgeMatchBorderingLines(
+				           ReadOnlyTableFactory.Create(fcLine1), ReadOnlyTableFactory.Create(fcBorder1),
+				           ReadOnlyTableFactory.Create(fcLine2), ReadOnlyTableFactory.Create(fcBorder2), 0)
 			           {
 				           LineClass1BorderMatchCondition = "LINE.STATE = BORDER.STATE",
 				           LineClass2BorderMatchCondition = "LINE.STATE = BORDER.STATE",
@@ -386,8 +395,9 @@ namespace ProSuite.QA.Tests.Test
 			// dummy to run
 			AddLineFeature(fcLine1, 5, 1, 7, 1, stateId: "A");
 
-			var test = new QaEdgeMatchBorderingLines(fcLine1, fcBorder1,
-			                                         fcLine2, fcBorder2, 0)
+			var test = new QaEdgeMatchBorderingLines(
+				           ReadOnlyTableFactory.Create(fcLine1), ReadOnlyTableFactory.Create(fcBorder1),
+				           ReadOnlyTableFactory.Create(fcLine2), ReadOnlyTableFactory.Create(fcBorder2), 0)
 			           {
 				           LineClass1BorderMatchCondition = "LINE.STATE = BORDER.STATE",
 				           LineClass2BorderMatchCondition = "LINE.STATE = BORDER.STATE",
@@ -422,8 +432,9 @@ namespace ProSuite.QA.Tests.Test
 			AddLineFeature(fcLine2, 8, 0, 5, 0, stateId: "B");
 			AddLineFeature(fcLine2, 5, 0, 4, 0, stateId: "B");
 
-			var test = new QaEdgeMatchBorderingLines(fcLine1, fcBorder1,
-			                                         fcLine2, fcBorder2, 0)
+			var test = new QaEdgeMatchBorderingLines(
+				           ReadOnlyTableFactory.Create(fcLine1), ReadOnlyTableFactory.Create(fcBorder1),
+				           ReadOnlyTableFactory.Create(fcLine2), ReadOnlyTableFactory.Create(fcBorder2), 0)
 			           {
 				           LineClass1BorderMatchCondition = "LINE.STATE = BORDER.STATE",
 				           LineClass2BorderMatchCondition = "LINE.STATE = BORDER.STATE",
@@ -457,8 +468,9 @@ namespace ProSuite.QA.Tests.Test
 			AddLineFeature(fcLine2, 8, 0, 5, 0, stateId: "B");
 			AddLineFeature(fcLine2, 5, 0, 4, 0, stateId: "B");
 
-			var test = new QaEdgeMatchBorderingLines(fcLine1, fcBorder1,
-			                                         fcLine2, fcBorder2, 0)
+			var test = new QaEdgeMatchBorderingLines(
+				           ReadOnlyTableFactory.Create(fcLine1), ReadOnlyTableFactory.Create(fcBorder1),
+				           ReadOnlyTableFactory.Create(fcLine2), ReadOnlyTableFactory.Create(fcBorder2), 0)
 			           {
 				           LineClass1BorderMatchCondition = "LINE.STATE = BORDER.STATE",
 				           LineClass2BorderMatchCondition = "LINE.STATE = BORDER.STATE",
@@ -490,8 +502,9 @@ namespace ProSuite.QA.Tests.Test
 			// connected to border, exact match:
 			AddLineFeature(fcLine2, 7, 0, 5, 0, stateId: "B");
 
-			var test = new QaEdgeMatchBorderingLines(fcLine1, fcBorder1,
-			                                         fcLine2, fcBorder2, 0.3)
+			var test = new QaEdgeMatchBorderingLines(
+				           ReadOnlyTableFactory.Create(fcLine1), ReadOnlyTableFactory.Create(fcBorder1),
+				           ReadOnlyTableFactory.Create(fcLine2), ReadOnlyTableFactory.Create(fcBorder2), 0.3)
 			           {
 				           LineClass1BorderMatchCondition = "LINE.STATE = BORDER.STATE",
 				           LineClass2BorderMatchCondition = "LINE.STATE = BORDER.STATE",
@@ -522,8 +535,9 @@ namespace ProSuite.QA.Tests.Test
 			// connected to border, exact match:
 			AddLineFeature(fcLine2, 7, 0, 5, 0, stateId: "B");
 
-			var test = new QaEdgeMatchBorderingLines(fcLine1, fcBorder1,
-			                                         fcLine2, fcBorder2, 0.3)
+			var test = new QaEdgeMatchBorderingLines(
+				           ReadOnlyTableFactory.Create(fcLine1), ReadOnlyTableFactory.Create(fcBorder1),
+				           ReadOnlyTableFactory.Create(fcLine2), ReadOnlyTableFactory.Create(fcBorder2), 0.3)
 			           {
 				           LineClass1BorderMatchCondition = "LINE.STATE = BORDER.STATE",
 				           LineClass2BorderMatchCondition = "LINE.STATE = BORDER.STATE",
@@ -560,9 +574,10 @@ namespace ProSuite.QA.Tests.Test
 			AddLineFeature(fcLine2, 50, -0.1, 55, -0.1, stateId: "B", textFieldValue: "Y");
 			AddLineFeature(fcLine2, 55, -0.1, 90, -0.1, stateId: "B", textFieldValue: "Y");
 
-			var test = new QaEdgeMatchBorderingLines(fcLine1, fcBorder1,
-			                                         fcLine2, fcBorder2,
-			                                         0.5)
+			var test = new QaEdgeMatchBorderingLines(
+				           ReadOnlyTableFactory.Create(fcLine1), ReadOnlyTableFactory.Create(fcBorder1),
+				           ReadOnlyTableFactory.Create(fcLine2), ReadOnlyTableFactory.Create(fcBorder2),
+				           0.5)
 			           {
 				           LineClass1BorderMatchCondition = "LINE.STATE = BORDER.STATE",
 				           LineClass2BorderMatchCondition = "LINE.STATE = BORDER.STATE",

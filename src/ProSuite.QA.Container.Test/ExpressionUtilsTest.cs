@@ -14,8 +14,8 @@ namespace ProSuite.QA.Container.Test
 
 			var replacements = new Dictionary<string, string>
 			                   {
-				                   {"a_mdl", "a_ds"},
-				                   {"b_mdl", "b_ds"}
+				                   { "a_mdl", "a_ds" },
+				                   { "b_mdl", "b_ds" }
 			                   };
 
 			Assert.AreEqual(exeSql,
@@ -29,8 +29,8 @@ namespace ProSuite.QA.Container.Test
 
 			var replacements = new Dictionary<string, string>
 			                   {
-				                   {"a_mdl", "a_ds"},
-				                   {"b_mdl", "b_ds"}
+				                   { "a_mdl", "a_ds" },
+				                   { "b_mdl", "b_ds" }
 			                   };
 
 			Assert.AreEqual(sql,
@@ -46,8 +46,8 @@ namespace ProSuite.QA.Container.Test
 
 			var replacements = new Dictionary<string, string>
 			                   {
-				                   {"a_mdl", "xx.a_ds"},
-				                   {"b_mdl", "yy.b_ds"}
+				                   { "a_mdl", "xx.a_ds" },
+				                   { "b_mdl", "yy.b_ds" }
 			                   };
 
 			Assert.AreEqual(exeSql,
@@ -63,8 +63,8 @@ namespace ProSuite.QA.Container.Test
 
 			var replacements = new Dictionary<string, string>
 			                   {
-				                   {"a", "a.a"},
-				                   {"b", "a.b"}
+				                   { "a", "a.a" },
+				                   { "b", "a.b" }
 			                   };
 
 			Assert.AreEqual(exeSql,
@@ -79,8 +79,8 @@ namespace ProSuite.QA.Container.Test
 				@"x.a_mdl.f1 > x.b_mdl.f1 and (x.a_mdl.f2 * x.b_mdl.f2 < 100)";
 			var replacements = new Dictionary<string, string>
 			                   {
-				                   {"x.a_mdl", "a_ds"},
-				                   {"x.b_mdl", "b_ds"}
+				                   { "x.a_mdl", "a_ds" },
+				                   { "x.b_mdl", "b_ds" }
 			                   };
 
 			Assert.AreEqual(exeSql,
@@ -95,7 +95,7 @@ namespace ProSuite.QA.Container.Test
 			bool? caseSensitive;
 			Assert.AreEqual(expression,
 			                ExpressionUtils.ParseCaseSensitivityHint(expression,
-			                                                         out caseSensitive));
+				                out caseSensitive));
 			Assert.IsNull(caseSensitive);
 		}
 
@@ -107,7 +107,7 @@ namespace ProSuite.QA.Container.Test
 			bool? caseSensitive;
 			Assert.AreEqual(expression,
 			                ExpressionUtils.ParseCaseSensitivityHint(expression,
-			                                                         out caseSensitive));
+				                out caseSensitive));
 			Assert.IsNull(caseSensitive);
 		}
 

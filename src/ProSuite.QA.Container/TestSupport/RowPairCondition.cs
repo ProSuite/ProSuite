@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
@@ -79,8 +79,8 @@ namespace ProSuite.QA.Container.TestSupport
 		public string Row2Alias { get; }
 
 		public bool IsFulfilled(
-			[NotNull] IRow row1, int tableIndex1,
-			[NotNull] IRow row2, int tableIndex2,
+			[NotNull] IReadOnlyRow row1, int tableIndex1,
+			[NotNull] IReadOnlyRow row2, int tableIndex2,
 			[CanBeNull] IDictionary<string, object> overridingFieldValues = null)
 		{
 			if (Condition == null)
@@ -96,15 +96,15 @@ namespace ProSuite.QA.Container.TestSupport
 			                   overridingFieldValues);
 		}
 
-		public bool IsFulfilled([NotNull] IRow row1, int tableIndex1,
-		                        [NotNull] IRow row2, int tableIndex2,
+		public bool IsFulfilled([NotNull] IReadOnlyRow row1, int tableIndex1,
+		                        [NotNull] IReadOnlyRow row2, int tableIndex2,
 		                        [NotNull] out string conditionMessage)
 		{
 			return IsFulfilled(row1, tableIndex1, row2, tableIndex2, out conditionMessage, null);
 		}
 
-		public bool IsFulfilled([NotNull] IRow row1, int tableIndex1,
-		                        [NotNull] IRow row2, int tableIndex2,
+		public bool IsFulfilled([NotNull] IReadOnlyRow row1, int tableIndex1,
+		                        [NotNull] IReadOnlyRow row2, int tableIndex2,
 		                        [NotNull] out string conditionMessage,
 		                        [CanBeNull] IDictionary<string, object> overridingFieldValues)
 		{
@@ -116,8 +116,8 @@ namespace ProSuite.QA.Container.TestSupport
 		[ContractAnnotation(
 			"=>true, conditionMessage:canbenull,errorColumnNames:canbenull; " +
 			"=>false, conditionMessage:notnull,errorColumnNames:notnull")]
-		public bool IsFulfilled([NotNull] IRow row1, int tableIndex1,
-		                        [NotNull] IRow row2, int tableIndex2,
+		public bool IsFulfilled([NotNull] IReadOnlyRow row1, int tableIndex1,
+		                        [NotNull] IReadOnlyRow row2, int tableIndex2,
 		                        [NotNull] out string conditionMessage,
 		                        [CanBeNull] out IColumnNames errorColumnNames,
 		                        [CanBeNull] IDictionary<string, object> overridingFieldValues =
@@ -140,14 +140,14 @@ namespace ProSuite.QA.Container.TestSupport
 		}
 
 		protected virtual void AddUnboundColumns([NotNull] Action<string, Type> addColumn,
-		                                         [NotNull] IList<ITable> tables) { }
+		                                         [NotNull] IList<IReadOnlyTable> tables) { }
 
 		[ContractAnnotation(
 			"=>true, conditionMessage:canbenull,errorColumnNames:canbenull; " +
 			"=>false, conditionMessage:notnull,errorColumnNames:notnull")]
 		private bool IsFulfilled(
-			[NotNull] IRow row1, int tableIndex1,
-			[NotNull] IRow row2, int tableIndex2,
+			[NotNull] IReadOnlyRow row1, int tableIndex1,
+			[NotNull] IReadOnlyRow row2, int tableIndex2,
 			[NotNull] out string conditionMessage,
 			bool returnEmptyConditionMessage,
 			[CanBeNull] out IColumnNames errorColumnNames,
@@ -234,8 +234,8 @@ namespace ProSuite.QA.Container.TestSupport
 		}
 
 		[NotNull]
-		private MultiTableView GetTableView([NotNull] IRow row1, int tableIndex1,
-		                                    [NotNull] IRow row2, int tableIndex2)
+		private MultiTableView GetTableView([NotNull] IReadOnlyRow row1, int tableIndex1,
+		                                    [NotNull] IReadOnlyRow row2, int tableIndex2)
 		{
 			string condition = Assert.NotNull(Condition, "condition is not defined");
 
@@ -253,8 +253,8 @@ namespace ProSuite.QA.Container.TestSupport
 		}
 
 		[NotNull]
-		private MultiTableView CreateConstraintView([NotNull] IRow row1,
-		                                            [NotNull] IRow row2,
+		private MultiTableView CreateConstraintView([NotNull] IReadOnlyRow row1,
+		                                            [NotNull] IReadOnlyRow row2,
 		                                            [NotNull] string constraint,
 		                                            bool caseSensitive)
 		{

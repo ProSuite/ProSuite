@@ -1,17 +1,17 @@
 using System;
-using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.QA.Container
 {
 	public class RowEventArgs : EventArgs
 	{
-		public RowEventArgs([NotNull] IRow row)
+		public RowEventArgs([NotNull] IReadOnlyRow row)
 		{
 			Row = row;
 		}
 
-		public RowEventArgs([NotNull] IRow row, Guid recycleUnique)
+		public RowEventArgs([NotNull] IReadOnlyRow row, Guid recycleUnique)
 		{
 			Row = row;
 			Recycled = true;
@@ -21,7 +21,7 @@ namespace ProSuite.QA.Container
 		public bool Cancel { get; set; }
 
 		[NotNull]
-		public IRow Row { get; }
+		public IReadOnlyRow Row { get; }
 
 		public bool Recycled { get; }
 

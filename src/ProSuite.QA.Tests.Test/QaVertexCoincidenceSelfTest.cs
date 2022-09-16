@@ -49,7 +49,7 @@ namespace ProSuite.QA.Tests.Test
 			IEnvelope verificationEnvelope =
 				GeometryFactory.CreateEnvelope(0, 0, 500, 500);
 
-			var test = new QaVertexCoincidenceSelf(vertexClass)
+			var test = new QaVertexCoincidenceSelf(ReadOnlyTableFactory.Create(vertexClass))
 			           {
 				           PointTolerance = 3
 			           };
@@ -80,7 +80,7 @@ namespace ProSuite.QA.Tests.Test
 			IEnvelope verificationEnvelope =
 				GeometryFactory.CreateEnvelope(0, 0, 500, 500);
 
-			var test = new QaVertexCoincidenceSelf(vertexClass)
+			var test = new QaVertexCoincidenceSelf(ReadOnlyTableFactory.Create(vertexClass))
 			           {
 				           PointTolerance = 3
 			           };
@@ -118,7 +118,7 @@ namespace ProSuite.QA.Tests.Test
 			IEnvelope verificationEnvelope =
 				GeometryFactory.CreateEnvelope(0, 0, 500, 500);
 
-			var test = new QaVertexCoincidenceSelf(vertexClass)
+			var test = new QaVertexCoincidenceSelf(ReadOnlyTableFactory.Create(vertexClass))
 			           {
 				           PointTolerance = 3,
 				           ZTolerance = 2,
@@ -186,7 +186,7 @@ namespace ProSuite.QA.Tests.Test
 			IEnvelope verificationEnvelope =
 				GeometryFactory.CreateEnvelope(0, 0, 500, 500);
 
-			var test = new QaVertexCoincidenceSelf(vertexClass)
+			var test = new QaVertexCoincidenceSelf(ReadOnlyTableFactory.Create(vertexClass))
 			           {
 				           PointTolerance = 3,
 				           ZTolerance = -1,
@@ -220,7 +220,7 @@ namespace ProSuite.QA.Tests.Test
 			IEnvelope verificationEnvelope =
 				GeometryFactory.CreateEnvelope(0, 0, 500, 500);
 
-			var test = new QaVertexCoincidenceSelf(vertexClass)
+			var test = new QaVertexCoincidenceSelf(ReadOnlyTableFactory.Create(vertexClass))
 			           {
 				           PointTolerance = 3,
 				           ReportCoordinates = true
@@ -252,7 +252,7 @@ namespace ProSuite.QA.Tests.Test
 			IEnvelope verificationEnvelope =
 				GeometryFactory.CreateEnvelope(0, 0, 500, 500);
 
-			var test = new QaVertexCoincidenceSelf(vertexClass)
+			var test = new QaVertexCoincidenceSelf(ReadOnlyTableFactory.Create(vertexClass))
 			           {
 				           PointTolerance = 3,
 				           ReportCoordinates = true
@@ -286,7 +286,7 @@ namespace ProSuite.QA.Tests.Test
 			IEnvelope verificationEnvelope =
 				GeometryFactory.CreateEnvelope(0, 0, 500, 500);
 
-			var test = new QaVertexCoincidenceSelf(vertexClass)
+			var test = new QaVertexCoincidenceSelf(ReadOnlyTableFactory.Create(vertexClass))
 			           {
 				           EdgeTolerance = 3
 			           };
@@ -320,7 +320,7 @@ namespace ProSuite.QA.Tests.Test
 			IEnvelope verificationEnvelope =
 				GeometryFactory.CreateEnvelope(0, 0, 500, 500);
 
-			var test = new QaVertexCoincidenceSelf(vertexClass)
+			var test = new QaVertexCoincidenceSelf(ReadOnlyTableFactory.Create(vertexClass))
 			           {
 				           EdgeTolerance = 3
 			           };

@@ -49,7 +49,8 @@ namespace ProSuite.QA.Tests.Test
 			row2.set_Value(fc.Fields.FindField(_nrFieldName), 1);
 			row2.Store();
 
-			var test = new QaPseudoNodes(fc, new string[] { });
+			var test = new QaPseudoNodes(
+				ReadOnlyTableFactory.Create(fc), new string[] { });
 
 			var runner = new QaTestRunner(test);
 			runner.Execute();
@@ -69,7 +70,7 @@ namespace ProSuite.QA.Tests.Test
 			row1.set_Value(fc.Fields.FindField(_nrFieldName), 1);
 			row1.Store();
 
-			var test = new QaPseudoNodes(fc, new string[] { });
+			var test = new QaPseudoNodes(ReadOnlyTableFactory.Create(fc), new string[] { });
 
 			var runner = new QaTestRunner(test);
 			runner.Execute();

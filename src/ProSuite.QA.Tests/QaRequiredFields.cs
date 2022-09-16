@@ -2,12 +2,13 @@ using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
 {
@@ -39,7 +40,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaRequiredFields_0))]
 		public QaRequiredFields(
 				[Doc(nameof(DocStrings.QaRequiredFields_table))] [NotNull]
-				ITable table,
+				IReadOnlyTable table,
 				[Doc(nameof(DocStrings.QaRequiredFields_requiredFieldNames))] [NotNull]
 				IEnumerable<string>
 					requiredFieldNames)
@@ -49,7 +50,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaRequiredFields_0))]
 		public QaRequiredFields(
 				[Doc(nameof(DocStrings.QaRequiredFields_table))] [NotNull]
-				ITable table,
+				IReadOnlyTable table,
 				[Doc(nameof(DocStrings.QaRequiredFields_requiredFieldNames))] [NotNull]
 				IEnumerable<string>
 					requiredFieldNames,
@@ -61,7 +62,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaRequiredFields_0))]
 		public QaRequiredFields(
 			[Doc(nameof(DocStrings.QaRequiredFields_table))] [NotNull]
-			ITable table,
+			IReadOnlyTable table,
 			[Doc(nameof(DocStrings.QaRequiredFields_requiredFieldNames))] [NotNull]
 			IEnumerable<string>
 				requiredFieldNames,
@@ -88,7 +89,7 @@ namespace ProSuite.QA.Tests
 
 					throw new ArgumentException(
 						string.Format("Field not found in table {0}: {1}",
-						              DatasetUtils.GetName(table),
+						              table.Name,
 						              fieldName), nameof(requiredFieldNames));
 				}
 
@@ -99,7 +100,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaRequiredFields_0))]
 		public QaRequiredFields(
 			[Doc(nameof(DocStrings.QaRequiredFields_table))] [NotNull]
-			ITable table,
+			IReadOnlyTable table,
 			[Doc(nameof(DocStrings.QaRequiredFields_requiredFieldNamesString))] [NotNull]
 			string
 				requiredFieldNamesString,
@@ -113,7 +114,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaRequiredFields_0))]
 		public QaRequiredFields(
 			[Doc(nameof(DocStrings.QaRequiredFields_table))] [NotNull]
-			ITable table,
+			IReadOnlyTable table,
 			[Doc(nameof(DocStrings.QaRequiredFields_allowEmptyStrings))]
 			bool allowEmptyStrings)
 			: this(table, GetAllEditableFieldNames(table),
@@ -134,7 +135,7 @@ namespace ProSuite.QA.Tests
 			return false;
 		}
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
 			int errorCount = 0;
 
@@ -150,9 +151,10 @@ namespace ProSuite.QA.Tests
 						              TestUtils.GetFieldDisplayName(
 							              row, fieldIndex, out fieldName));
 
-					errorCount += ReportError(description, TestUtils.GetShapeCopy(row),
-					                          Codes[Code.NullValue], fieldName,
-					                          row);
+					errorCount += ReportError(
+						description, InvolvedRowUtils.GetInvolvedRows(row),
+						TestUtils.GetShapeCopy(row),
+						Codes[Code.NullValue], fieldName);
 				}
 				else
 				{
@@ -165,9 +167,9 @@ namespace ProSuite.QA.Tests
 								"Required field has empty string value: {0}",
 								TestUtils.GetFieldDisplayName(row, fieldIndex, out fieldName));
 
-							errorCount += ReportError(description, TestUtils.GetShapeCopy(row),
-							                          Codes[Code.EmptyString], fieldName,
-							                          row);
+							errorCount += ReportError(
+								description, InvolvedRowUtils.GetInvolvedRows(row),
+								TestUtils.GetShapeCopy(row), Codes[Code.EmptyString], fieldName);
 						}
 					}
 				}
@@ -177,14 +179,14 @@ namespace ProSuite.QA.Tests
 		}
 
 		[NotNull]
-		private static IEnumerable<string> GetAllEditableFieldNames([NotNull] ITable table)
+		private static IEnumerable<string> GetAllEditableFieldNames([NotNull] IReadOnlyTable table)
 		{
 			Assert.ArgumentNotNull(table, nameof(table));
 
-			var featureClass = table as IFeatureClass;
+			var featureClass = table as IReadOnlyFeatureClass;
 			string shapeFieldName = featureClass?.ShapeFieldName;
 
-			foreach (IField field in DatasetUtils.GetFields(table))
+			foreach (IField field in DatasetUtils.GetFields(table.Fields))
 			{
 				if (! field.Editable || ! field.IsNullable)
 				{

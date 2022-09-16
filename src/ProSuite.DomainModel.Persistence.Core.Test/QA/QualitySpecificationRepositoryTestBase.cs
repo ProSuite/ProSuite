@@ -98,6 +98,102 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.QA
 		}
 
 		[Test]
+		public void CanGetSpecificationsFromTransformer()
+		{
+			// Reproduces TOP-5575
+
+			const string dsName0 = "SCHEMA.TLM_DATASET0";
+			const string dsName1 = "SCHEMA.TLM_DATASET1";
+			DdxModel m = CreateModel();
+
+			Dataset ds0 = m.AddDataset(CreateVectorDataset(dsName0));
+			Dataset ds1 = m.AddDataset(CreateVectorDataset(dsName1));
+
+			// spec 0: Contains both a direct dataset reference and a transformer
+			var spec0 = new QualitySpecification("spec0");
+
+			var qaMinLength = new TestDescriptor(
+				"name",
+				new ClassDescriptor(
+					"ProSuite.QA.Tests.QaMinLength",
+					"ProSuite.QA.Tests"), 0, false, false);
+
+			var transformerDescriptor = new TransformerDescriptor(
+				"transformer",
+				new ClassDescriptor("ProSuite.QA.Tests.Transformers.TrFootprint",
+				                    "ProSuite.QA.Tests"), 0);
+
+			var transformerConfig =
+				new TransformerConfiguration("footprint", transformerDescriptor);
+			InstanceConfigurationUtils.AddParameterValue(transformerConfig, "multipatchClass", ds0);
+
+			var cond0 = new QualityCondition("cond0", qaMinLength);
+			InstanceConfigurationUtils.AddParameterValue(cond0, "limit", "0.5");
+			InstanceConfigurationUtils.AddParameterValue(cond0, "featureClass", transformerConfig);
+
+			var cond1 = new QualityCondition("cond1", qaMinLength);
+			InstanceConfigurationUtils.AddParameterValue(cond1, "limit", "0.5");
+			InstanceConfigurationUtils.AddParameterValue(cond1, "featureClass", ds1);
+
+			spec0.AddElement(cond0);
+			spec0.AddElement(cond1);
+
+			// spec 1: contains only an indirect reference via transformer
+			var spec1 = new QualitySpecification("spec1");
+			spec1.AddElement(cond0);
+
+			// spec 2 (hidden)
+			QualitySpecification spec2 = spec1.CreateCopy();
+			spec2.Hidden = true;
+
+			CreateSchema(m, transformerDescriptor, transformerConfig, cond0.TestDescriptor,
+			             cond1.TestDescriptor,
+			             cond0, cond1,
+			             spec0, spec1, spec2);
+
+			const bool excludeHidden = true;
+
+			UnitOfWork.NewTransaction(
+				delegate
+				{
+					// reread spec
+
+					var datasets = Resolve<IDatasetRepository>();
+
+					var dsList = new List<Dataset>();
+
+					Dataset rDs0 = datasets.Get(ds0.Id);
+					QualitySpecification rqspec0 = Repository.Get(spec0.Id);
+
+					dsList.Add(rDs0);
+					IList<QualitySpecification> qspecList = Repository.Get(dsList, excludeHidden);
+
+					// All non-hidden that contain cond0
+					Assert.AreEqual(2, qspecList.Count);
+					Assert.AreEqual(rqspec0, qspecList[0]);
+
+					Dataset rDs1 = datasets.Get(ds1.Id);
+					QualitySpecification rqspec1 = Repository.Get(spec1.Id);
+
+					dsList.Clear();
+					dsList.Add(rDs1);
+					qspecList = Repository.Get(dsList, excludeHidden);
+					Assert.AreEqual(1, qspecList.Count);
+					Assert.AreEqual(rqspec0, qspecList[0]);
+
+					dsList.Add(rDs0);
+					qspecList = Repository.Get(dsList, excludeHidden);
+
+					// All non-hidden that contain cond0 or cond1:
+					Assert.AreEqual(2, qspecList.Count);
+
+					// get hidden spec also
+					qspecList = Repository.Get(dsList);
+					Assert.AreEqual(3, qspecList.Count);
+				});
+		}
+
+		[Test]
 		public void CanReorderElements()
 		{
 			var specification = new QualitySpecification("specName");

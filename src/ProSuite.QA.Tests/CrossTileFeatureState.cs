@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Tests.Transformers;
@@ -21,7 +21,7 @@ namespace ProSuite.QA.Tests
 
 		private readonly IEnvelope _envelopeTemplate = new EnvelopeClass();
 
-		public void FlagFeatureAsOK(int tableIndex, [NotNull] IFeature feature)
+		public void FlagFeatureAsOK(int tableIndex, [NotNull] IReadOnlyFeature feature)
 		{
 			IDictionary<int, T> pendingFeatures;
 			if (_suspiciousFeaturesByTableIndex.TryGetValue(tableIndex, out pendingFeatures))
@@ -50,7 +50,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		public void FlagFeatureAsSuspicious(int tableIndex,
-		                                    [NotNull] IFeature feature,
+		                                    [NotNull] IReadOnlyFeature feature,
 		                                    [NotNull] out T pendingFeature)
 		{
 			Assert.ArgumentNotNull(feature, nameof(feature));
@@ -68,6 +68,10 @@ namespace ProSuite.QA.Tests
 			{
 				pendingFeature = GetPendingFeature(feature);
 				pendingFeatures.Add(oid, pendingFeature);
+
+				// EMA: Why does the feature need to be cached (only) if it is a transformer?
+				//      Is this an optimization or needed for correctness? Where is it used?
+				//      If GetRow(oid) was implemented, would this be needed?
 				(feature.Table as IRowsCache)?.Add(feature);
 			}
 		}
@@ -131,7 +135,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[NotNull]
-		private T GetPendingFeature([NotNull] IFeature feature)
+		private T GetPendingFeature([NotNull] IReadOnlyFeature feature)
 		{
 			feature.Shape.QueryEnvelope(_envelopeTemplate);
 
@@ -145,7 +149,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[NotNull]
-		protected abstract T CreatePendingFeature([NotNull] IFeature feature,
+		protected abstract T CreatePendingFeature([NotNull] IReadOnlyFeature feature,
 		                                          double xMin, double yMin,
 		                                          double xMax, double yMax);
 	}

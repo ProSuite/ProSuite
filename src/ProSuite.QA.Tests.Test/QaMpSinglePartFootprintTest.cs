@@ -7,6 +7,7 @@ using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.AO.Test.TestSupport;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests.Test
 {
@@ -41,7 +42,8 @@ namespace ProSuite.QA.Tests.Test
 
 			IFeature row = featureClassMock.CreateFeature(construction.MultiPatch);
 
-			var test = new QaMpSinglePartFootprint(featureClassMock);
+			var test = new QaMpSinglePartFootprint(
+				ReadOnlyTableFactory.Create(featureClassMock));
 			var runner = new QaTestRunner(test);
 			runner.Execute(row);
 
@@ -66,7 +68,8 @@ namespace ProSuite.QA.Tests.Test
 
 			IFeature row = featureClassMock.CreateFeature(construction.MultiPatch);
 
-			var test = new QaMpSinglePartFootprint(featureClassMock);
+			var test = new QaMpSinglePartFootprint(
+				ReadOnlyTableFactory.Create(featureClassMock));
 			var runner = new QaTestRunner(test);
 			runner.Execute(row);
 
@@ -92,7 +95,8 @@ namespace ProSuite.QA.Tests.Test
 
 			IFeature row = featureClassMock.CreateFeature(construction.MultiPatch);
 
-			var test = new QaMpSinglePartFootprint(featureClassMock);
+			var test = new QaMpSinglePartFootprint(
+				ReadOnlyTableFactory.Create(featureClassMock));
 			var runner = new QaTestRunner(test);
 			runner.Execute(row);
 
@@ -117,7 +121,8 @@ namespace ProSuite.QA.Tests.Test
 
 			IFeature row = featureClassMock.CreateFeature(construction.MultiPatch);
 
-			var test = new QaMpSinglePartFootprint(featureClassMock);
+			var test = new QaMpSinglePartFootprint(
+				ReadOnlyTableFactory.Create(featureClassMock));
 			var runner = new QaTestRunner(test);
 			runner.Execute(row);
 
@@ -142,7 +147,8 @@ namespace ProSuite.QA.Tests.Test
 
 			IFeature row = featureClassMock.CreateFeature(construction.MultiPatch);
 
-			var test = new QaMpSinglePartFootprint(featureClassMock);
+			var test = new QaMpSinglePartFootprint(
+				ReadOnlyTableFactory.Create(featureClassMock));
 			var runner = new QaTestRunner(test);
 			runner.Execute(row);
 

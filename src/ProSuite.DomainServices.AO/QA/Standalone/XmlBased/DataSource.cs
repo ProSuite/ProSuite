@@ -139,6 +139,16 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 				$"Workspace connection parameters not defined for data source {ID}");
 		}
 
+		#region Overrides of Object
+
+		public override string ToString()
+		{
+			return
+				$"{DisplayName} (Id: {ID}, Database Name: {DatabaseName}, Catalog Path: {_catalogPath})";
+		}
+
+		#endregion
+
 		[NotNull]
 		public string ID { get; }
 

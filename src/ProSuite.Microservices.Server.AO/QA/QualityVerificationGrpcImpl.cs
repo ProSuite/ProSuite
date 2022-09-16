@@ -2,43 +2,39 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using ESRI.ArcGIS.esriSystem;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using Grpc.Core;
 using log4net.Core;
 using ProSuite.Commons;
 using ProSuite.Commons.AO.Geodatabase;
-using ProSuite.Commons.Callbacks;
+using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Com;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Progress;
 using ProSuite.Commons.Text;
+using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.AO.QA.Xml;
 using ProSuite.DomainModel.Core.QA;
-using ProSuite.DomainModel.Core.QA.VerificationProgress;
 using ProSuite.DomainServices.AO.QA;
 using ProSuite.DomainServices.AO.QA.IssuePersistence;
-using ProSuite.DomainServices.AO.QA.Issues;
+using ProSuite.DomainServices.AO.QA.Standalone;
 using ProSuite.DomainServices.AO.QA.Standalone.XmlBased;
 using ProSuite.Microservices.AO;
 using ProSuite.Microservices.Definitions.QA;
 using ProSuite.Microservices.Definitions.Shared;
-using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestContainer;
 using Quaestor.LoadReporting;
 
 namespace ProSuite.Microservices.Server.AO.QA
 {
 	public class QualityVerificationGrpcImpl : QualityVerificationGrpc.QualityVerificationGrpcBase
 	{
-		private static readonly IMsg _msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private readonly StaTaskScheduler _staThreadScheduler;
 
@@ -47,8 +43,6 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 		private readonly Func<VerificationRequest, IBackgroundVerificationInputs>
 			_verificationInputsFactoryMethod;
-
-		private static DateTime _lastProgressTime = DateTime.MinValue;
 
 		public QualityVerificationGrpcImpl(
 			Func<VerificationRequest, IBackgroundVerificationInputs> inputsFactoryMethod,
@@ -203,21 +197,31 @@ namespace ProSuite.Microservices.Server.AO.QA
 				                context.Peer);
 				_msg.VerboseDebug(() => $"Request details: {request}");
 
-				Action<LoggingEvent> action =
-					SendInfoLogAction(responseStream, ServiceCallStatus.Running);
+				var responseStreamer =
+					new VerificationProgressStreamer<StandaloneVerificationResponse>(
+						responseStream);
 
+				responseStreamer.CreateResponseAction = responseStreamer.CreateStandaloneResponse;
+
+				Action<LoggingEvent> action =
+					SendStandaloneProgressAction(responseStreamer, ServiceCallStatus.Running);
+
+				ServiceCallStatus result;
 				using (MessagingUtils.TemporaryRootAppender(new ActionAppender(action)))
 				{
 					Func<ITrackCancel, ServiceCallStatus> func =
-						trackCancel => VerifyStandaloneXmlCore(request, responseStream,
-						                                       trackCancel);
+						trackCancel =>
+							VerifyStandaloneXmlCore(request, responseStreamer, trackCancel);
 
-					ServiceCallStatus result =
-						await GrpcServerUtils.ExecuteServiceCall(
-							func, context, _staThreadScheduler);
+					result = await GrpcServerUtils.ExecuteServiceCall(
+						         func, context, _staThreadScheduler);
 
-					_msg.InfoFormat("Verification {0}", result);
+					// final message:
+					responseStreamer.WriteProgressAndIssues(
+						new VerificationProgressEventArgs($"Verification {result}"), result);
 				}
+
+				_msg.InfoFormat("Verification {0}", result);
 			}
 			catch (Exception e)
 			{
@@ -287,8 +291,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 			return result;
 		}
 
-		private static Action<LoggingEvent> SendInfoLogAction(
-			[NotNull] IServerStreamWriter<StandaloneVerificationResponse> responseStream,
+		private static Action<LoggingEvent> SendStandaloneProgressAction(
+			[NotNull] VerificationProgressStreamer<StandaloneVerificationResponse> progressStreamer,
 			ServiceCallStatus callStatus)
 		{
 			Action<LoggingEvent> action =
@@ -299,17 +303,12 @@ namespace ProSuite.Microservices.Server.AO.QA
 						return;
 					}
 
-					var response = new StandaloneVerificationResponse
-					               {
-						               Message = new LogMsg
-						                         {
-							                         Message = e.RenderedMessage,
-							                         MessageLevel = e.Level.Value
-						                         },
-						               ServiceCallStatus = (int) callStatus
-					               };
+					progressStreamer.CurrentLogLevel = e.Level.Value;
 
-					MessagingUtils.TrySendResponse(responseStream, response);
+					VerificationProgressEventArgs progressEventArgs =
+						new VerificationProgressEventArgs(e.RenderedMessage);
+
+					progressStreamer.WriteProgressAndIssues(progressEventArgs, callStatus);
 				};
 
 			return action;
@@ -352,13 +351,12 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			SetupUserNameProvider(request);
 
-			void SendResponse(VerificationResponse r) => responseStream.WriteAsync(
-				new DataVerificationResponse {Response = r});
-
 			BackgroundVerificationService qaService = null;
+			VerificationProgressStreamer<DataVerificationResponse> responseStreamer =
+				new VerificationProgressStreamer<DataVerificationResponse>(responseStream);
+
 			List<GdbObjRefMsg> deletableAllowedErrorRefs = new List<GdbObjRefMsg>();
 			QualityVerification verification = null;
-			var issueCollection = new ConcurrentBag<IssueMsg>();
 			string cancellationMessage = null;
 			try
 			{
@@ -380,8 +378,12 @@ namespace ProSuite.Microservices.Server.AO.QA
 					backgroundVerificationInputs.SetRemoteDataAccess(moreDataRequest);
 				}
 
-				qaService = CreateVerificationService(backgroundVerificationInputs, issueCollection,
-				                                      SendResponse, trackCancel);
+				responseStreamer.BackgroundVerificationInputs = backgroundVerificationInputs;
+				responseStreamer.CreateResponseAction =
+					responseStreamer.CreateDataVerificationResponse;
+
+				qaService = CreateVerificationService(
+					backgroundVerificationInputs, responseStreamer, trackCancel);
 
 				verification = qaService.Verify(backgroundVerificationInputs, trackCancel);
 
@@ -396,9 +398,9 @@ namespace ProSuite.Microservices.Server.AO.QA
 				SetUnhealthy();
 			}
 
-			ServiceCallStatus result = SendFinalResponse(
-				verification, cancellationMessage ?? qaService.CancellationMessage, issueCollection,
-				deletableAllowedErrorRefs, qaService?.VerifiedPerimeter, SendResponse);
+			ServiceCallStatus result = responseStreamer.SendFinalResponse(verification,
+				cancellationMessage ?? qaService.CancellationMessage, deletableAllowedErrorRefs,
+				qaService?.VerifiedPerimeter);
 
 			return result;
 		}
@@ -410,9 +412,10 @@ namespace ProSuite.Microservices.Server.AO.QA
 		{
 			SetupUserNameProvider(request);
 
-			void SendResponse(VerificationResponse r) => responseStream.WriteAsync(r);
-
 			BackgroundVerificationService qaService = null;
+			VerificationProgressStreamer<VerificationResponse> responseStreamer =
+				new VerificationProgressStreamer<VerificationResponse>(responseStream);
+
 			List<GdbObjRefMsg> deletableAllowedErrorRefs = new List<GdbObjRefMsg>();
 			QualityVerification verification = null;
 			var issueCollection = new ConcurrentBag<IssueMsg>();
@@ -424,8 +427,11 @@ namespace ProSuite.Microservices.Server.AO.QA
 				IBackgroundVerificationInputs backgroundVerificationInputs =
 					_verificationInputsFactoryMethod(request);
 
-				qaService = CreateVerificationService(backgroundVerificationInputs, issueCollection,
-				                                      SendResponse, trackCancel);
+				responseStreamer.BackgroundVerificationInputs = backgroundVerificationInputs;
+				responseStreamer.CreateResponseAction = responseStreamer.CreateVerificationResponse;
+
+				qaService = CreateVerificationService(
+					backgroundVerificationInputs, responseStreamer, trackCancel);
 
 				int maxParallelRequested = request.MaxParallelProcessing;
 
@@ -454,16 +460,16 @@ namespace ProSuite.Microservices.Server.AO.QA
 				}
 			}
 
-			ServiceCallStatus result = SendFinalResponse(
-				verification, cancellationMessage ?? qaService.CancellationMessage, issueCollection,
-				deletableAllowedErrorRefs, qaService?.VerifiedPerimeter, SendResponse);
+			ServiceCallStatus result = responseStreamer.SendFinalResponse(verification,
+				cancellationMessage ?? qaService.CancellationMessage, deletableAllowedErrorRefs,
+				qaService?.VerifiedPerimeter);
 
 			return result;
 		}
 
 		private ServiceCallStatus VerifyStandaloneXmlCore(
 			StandaloneVerificationRequest request,
-			IServerStreamWriter<StandaloneVerificationResponse> responseStream,
+			VerificationProgressStreamer<StandaloneVerificationResponse> responseStreamer,
 			ITrackCancel trackCancel)
 		{
 			// Machine login
@@ -478,8 +484,13 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 				var aoi = perimeter == null ? null : new AreaOfInterest(perimeter);
 
+				_msg.DebugFormat("Provided perimeter: {0}", GeometryUtils.ToString(perimeter));
+
 				XmlBasedVerificationService qaService = new XmlBasedVerificationService(
 					HtmlReportTemplatePath, QualitySpecificationTemplatePath);
+
+				qaService.IssueFound +=
+					(sender, args) => responseStreamer.AddPendingIssue(args);
 
 				QualitySpecification qualitySpecification;
 
@@ -505,6 +516,11 @@ namespace ProSuite.Microservices.Server.AO.QA
 					}
 					default: throw new ArgumentOutOfRangeException();
 				}
+
+				Model primaryModel =
+					StandaloneVerificationUtils.GetPrimaryModel(qualitySpecification);
+				responseStreamer.KnownIssueSpatialReference =
+					primaryModel?.SpatialReferenceDescriptor.SpatialReference;
 
 				qaService.ExecuteVerification(
 					qualitySpecification, aoi, null, parameters.TileSize,
@@ -573,10 +589,14 @@ namespace ProSuite.Microservices.Server.AO.QA
 				dsMsg => new DataSource(dsMsg.ModelName, dsMsg.Id, dsMsg.CatalogPath,
 				                        dsMsg.Database, dsMsg.SchemaOwner)).ToList();
 
+			_msg.DebugFormat("{0} data sources provided:{1} {2}",
+			                 dataSources.Count, Environment.NewLine,
+			                 StringUtils.Concatenate(dataSources, Environment.NewLine));
+
 			var specificationElements = new List<SpecificationElement>();
 
 			foreach (QualitySpecificationElementMsg specificationElementMsg in
-				conditionsSpecificationMsg.Elements)
+			         conditionsSpecificationMsg.Elements)
 			{
 				// Temporary - TODO: Remove de-tour via xml condition
 
@@ -631,10 +651,10 @@ namespace ProSuite.Microservices.Server.AO.QA
 			}
 		}
 
-		private static BackgroundVerificationService CreateVerificationService(
+		private static BackgroundVerificationService CreateVerificationService<T>(
 			IBackgroundVerificationInputs backgroundVerificationInputs,
-			ConcurrentBag<IssueMsg> issueCollection,
-			Action<VerificationResponse> writeAction, ITrackCancel trackCancel)
+			VerificationProgressStreamer<T> responseStreamer, ITrackCancel trackCancel)
+			where T : class
 		{
 			var qaService = new BackgroundVerificationService(
 				                backgroundVerificationInputs.DomainTransactions,
@@ -643,16 +663,12 @@ namespace ProSuite.Microservices.Server.AO.QA
 				                CustomErrorFilter = backgroundVerificationInputs.CustomErrorFilter
 			                };
 
-			var currentProgress = new VerificationProgressMsg();
-
 			qaService.IssueFound +=
-				(sender, args) =>
-					issueCollection.Add(CreateIssueProto(args, backgroundVerificationInputs));
+				(sender, args) => responseStreamer.AddPendingIssue(args);
 
 			qaService.Progress += (sender, args) =>
 				SendProgress(
-					sender, args, issueCollection,
-					currentProgress, writeAction, trackCancel);
+					sender, args, responseStreamer, trackCancel);
 
 			return qaService;
 		}
@@ -674,13 +690,11 @@ namespace ProSuite.Microservices.Server.AO.QA
 			}
 		}
 
-		private static void SendProgress(
+		private static void SendProgress<T>(
 			object sender,
 			VerificationProgressEventArgs args,
-			ConcurrentBag<IssueMsg> issueCollection,
-			VerificationProgressMsg currentProgress,
-			Action<VerificationResponse> writeAction,
-			ITrackCancel trackCancel)
+			VerificationProgressStreamer<T> responseStreamer,
+			ITrackCancel trackCancel) where T : class
 		{
 			if (trackCancel != null && ! trackCancel.Continue())
 			{
@@ -690,74 +704,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 				return;
 			}
 
-			SendProgress(args, issueCollection, currentProgress, writeAction);
-		}
-
-		private static void SendProgress(VerificationProgressEventArgs args,
-		                                 ConcurrentBag<IssueMsg> issueCollection,
-		                                 VerificationProgressMsg currentProgress,
-		                                 Action<VerificationResponse> writeAction)
-		{
-			if (! IsPriorityProgress(args, currentProgress, issueCollection) &&
-			    DateTime.Now - _lastProgressTime < TimeSpan.FromSeconds(1))
-			{
-				return;
-			}
-
-			_lastProgressTime = DateTime.Now;
-
-			WriteProgressAndIssues(args, issueCollection, currentProgress, writeAction);
-		}
-
-		private static bool IsPriorityProgress(VerificationProgressEventArgs args,
-		                                       VerificationProgressMsg currentProgress,
-		                                       ConcurrentBag<IssueMsg> issueCollection)
-		{
-			if (args.ProgressType == VerificationProgressType.Error && issueCollection.Count < 10)
-			{
-				return false;
-			}
-
-			if (args.ProgressType == VerificationProgressType.ProcessParallel)
-			{
-				// TODO: Work out better overall progress steps
-				return true;
-			}
-
-			if (currentProgress.ProgressType != (int) args.ProgressType)
-			{
-				return true;
-			}
-
-			if (! IsRelevantStep(args.ProgressStep))
-			{
-				return false;
-			}
-
-			return currentProgress.ProgressStep != (int) args.ProgressStep;
-		}
-
-		private static bool IsRelevantStep(Step progressStep)
-		{
-			return ToVerificationStep(progressStep) != VerificationProgressStep.Undefined;
-		}
-
-		private static VerificationProgressStep ToVerificationStep(Step step)
-		{
-			switch (step)
-			{
-				case Step.DataLoading:
-					return VerificationProgressStep.DataLoading;
-				case Step.TileProcessing:
-					return VerificationProgressStep.TileProcessing;
-				case Step.ITestProcessing:
-				case Step.TestRowCreated:
-					return VerificationProgressStep.Testing;
-				case Step.TileCompleting:
-					return VerificationProgressStep.TileCompleting;
-				default:
-					return VerificationProgressStep.Undefined;
-			}
+			responseStreamer.WriteProgressAndIssues(args, ServiceCallStatus.Running);
 		}
 
 		private static GdbObjRefMsg GetGdbObjRefMsg(AllowedError allowedError)
@@ -772,224 +719,6 @@ namespace ProSuite.Microservices.Server.AO.QA
 				};
 
 			return result;
-		}
-
-		private static IssueMsg CreateIssueProto(
-			[NotNull] IssueFoundEventArgs args,
-			[NotNull] IBackgroundVerificationInputs backgroundVerificationInputs)
-		{
-			QualityCondition qualityCondition =
-				args.QualitySpecificationElement.QualityCondition;
-
-			IssueMsg issueProto = new IssueMsg();
-
-			issueProto.ConditionId = qualityCondition.Id;
-			issueProto.Allowable = args.IsAllowable;
-			issueProto.StopCondition = args.Issue.StopCondition;
-
-			CallbackUtils.DoWithNonNull(
-				args.Issue.Description, s => issueProto.Description = s);
-
-			IssueCode issueCode = args.Issue.IssueCode;
-
-			if (issueCode != null)
-			{
-				CallbackUtils.DoWithNonNull(
-					issueCode.ID, s => issueProto.IssueCodeId = s);
-
-				CallbackUtils.DoWithNonNull(
-					issueCode.Description, s => issueProto.IssueCodeDescription = s);
-			}
-
-			CallbackUtils.DoWithNonNull(
-				args.Issue.AffectedComponent,
-				(value) => issueProto.AffectedComponent = value);
-
-			issueProto.InvolvedTables.AddRange(GetInvolvedTableMessages(args.Issue.InvolvedTables));
-
-			CallbackUtils.DoWithNonNull(
-				args.LegacyInvolvedObjectsString,
-				(value) => issueProto.LegacyInvolvedRows = value);
-
-			IVerificationContext verificationContext =
-				Assert.NotNull(backgroundVerificationInputs.VerificationContext);
-
-			var supportedGeometryTypes =
-				GetSupportedErrorRepoGeometryTypes(verificationContext).ToList();
-
-			// create valid Error geometry (geometry type, min dimensions) if possible
-			IGeometry geometry = ErrorRepositoryUtils.GetGeometryToStore(
-				args.ErrorGeometry,
-				verificationContext.SpatialReferenceDescriptor.SpatialReference,
-				supportedGeometryTypes);
-
-			issueProto.IssueGeometry =
-				ProtobufGeometryUtils.ToShapeMsg(geometry);
-
-			// NOTE: Multipatches are not restored from byte arrays in EsriShape (10.6.1)
-			ShapeMsg.FormatOneofCase format =
-				geometry?.GeometryType == esriGeometryType.esriGeometryMultiPatch
-					? ShapeMsg.FormatOneofCase.Wkb
-					: ShapeMsg.FormatOneofCase.EsriShape;
-
-			issueProto.IssueGeometry =
-				ProtobufGeometryUtils.ToShapeMsg(geometry, format);
-
-			issueProto.CreationDateTimeTicks = DateTime.Now.Ticks;
-
-			//issueProto.IsInvalidException = args.us;
-
-			//if (args.IsAllowed)
-			//{
-			//	issueProto.ExceptedObjRef = new GdbObjRefMsg()
-			//	                            {
-			//		                            ClassHandle = args.AllowedErrorRef.ClassId,
-			//		                            ObjectId = args.AllowedErrorRef.ObjectId
-			//	                            };
-			//}
-
-			return issueProto;
-		}
-
-		private static IEnumerable<esriGeometryType> GetSupportedErrorRepoGeometryTypes(
-			IVerificationContext verificationContext)
-		{
-			if (verificationContext.NoGeometryIssueDataset != null)
-				yield return esriGeometryType.esriGeometryNull;
-
-			if (verificationContext.MultipointIssueDataset != null)
-				yield return esriGeometryType.esriGeometryMultipoint;
-
-			if (verificationContext.LineIssueDataset != null)
-				yield return esriGeometryType.esriGeometryPolyline;
-
-			if (verificationContext.PolygonIssueDataset != null)
-				yield return esriGeometryType.esriGeometryPolygon;
-
-			if (verificationContext.MultiPatchIssueDataset != null)
-				yield return esriGeometryType.esriGeometryMultiPatch;
-		}
-
-		private static IEnumerable<InvolvedTableMsg> GetInvolvedTableMessages(
-			IEnumerable<InvolvedTable> involvedTables)
-		{
-			foreach (InvolvedTable involvedTable in involvedTables)
-			{
-				var involvedTableMsg = new InvolvedTableMsg();
-				involvedTableMsg.TableName = involvedTable.TableName;
-
-				yield return involvedTableMsg;
-			}
-		}
-
-		private static void WriteProgressAndIssues(
-			VerificationProgressEventArgs e,
-			ConcurrentBag<IssueMsg> issues,
-			VerificationProgressMsg currentProgress,
-			Action<VerificationResponse> writeAction)
-		{
-			VerificationResponse response = new VerificationResponse
-			                                {
-				                                ServiceCallStatus = (int) ServiceCallStatus.Running
-			                                };
-
-			if (! UpdateProgress(currentProgress, e) && issues.Count == 0)
-			{
-				return;
-			}
-
-			response.Progress = currentProgress;
-
-			//List<IssueMsg> sentIssues = new List<IssueMsg>(issues.Count);
-
-			while (issues.TryTake(out IssueMsg issue))
-			{
-				response.Issues.Add(issue);
-			}
-
-			_msg.DebugFormat("Sending {0} errors back to client...", issues.Count);
-
-			try
-			{
-				writeAction(response);
-			}
-			catch (InvalidOperationException ex)
-			{
-				// For example: System.InvalidOperationException: Only one write can be pending at a time
-				_msg.VerboseDebug(() => "Error sending progress to the client", ex);
-
-				// The issues would be lost, so put them back into the collection
-				foreach (IssueMsg issue in response.Issues)
-				{
-					issues.Add(issue);
-				}
-			}
-		}
-
-		private static ServiceCallStatus SendFinalResponse(
-			[CanBeNull] QualityVerification verification,
-			[CanBeNull] string qaServiceCancellationMessage,
-			ConcurrentBag<IssueMsg> issues,
-			List<GdbObjRefMsg> deletableAllowedErrors,
-			[CanBeNull] IEnvelope verifiedPerimeter,
-			Action<VerificationResponse> writeAction)
-		{
-			var response = new VerificationResponse();
-
-			while (issues.TryTake(out IssueMsg issue))
-			{
-				response.Issues.Add(issue);
-			}
-
-			response.ObsoleteExceptions.AddRange(deletableAllowedErrors);
-
-			ServiceCallStatus finalStatus =
-				GetFinalCallStatus(verification, qaServiceCancellationMessage);
-
-			response.ServiceCallStatus = (int) finalStatus;
-
-			response.Progress = new VerificationProgressMsg();
-
-			if (! string.IsNullOrEmpty(qaServiceCancellationMessage))
-			{
-				response.Progress.Message = qaServiceCancellationMessage;
-			}
-
-			// Ensure that progress is at 100%:
-			response.Progress.OverallProgressCurrentStep = 10;
-			response.Progress.OverallProgressTotalSteps = 10;
-			response.Progress.DetailedProgressCurrentStep = 10;
-			response.Progress.DetailedProgressTotalSteps = 10;
-
-			PackVerification(verification, response);
-
-			if (verifiedPerimeter != null)
-			{
-				response.VerifiedPerimeter =
-					ProtobufGeometryUtils.ToShapeMsg(verifiedPerimeter);
-			}
-
-			_msg.DebugFormat(
-				"Sending final message with {0} errors back to client...",
-				issues.Count);
-
-			try
-			{
-				writeAction(response);
-			}
-			catch (InvalidOperationException ex)
-			{
-				// For example: System.InvalidOperationException: Only one write can be pending at a time
-				_msg.Warn(
-					"Error sending progress to the client. Retrying the last response in 1s...",
-					ex);
-
-				// Re-try (only for final message)
-				Task.Delay(1000);
-				writeAction(response);
-			}
-
-			return finalStatus;
 		}
 
 		private static void SendFatalException(
@@ -1064,283 +793,5 @@ namespace ProSuite.Microservices.Server.AO.QA
 				Health?.SetStatus(GetType(), false);
 			}
 		}
-
-		private static ServiceCallStatus GetFinalCallStatus(
-			[CanBeNull] QualityVerification verification,
-			[CanBeNull] string qaServiceCancellationMessage)
-		{
-			ServiceCallStatus finalStatus;
-
-			if (verification == null)
-			{
-				return ServiceCallStatus.Failed;
-			}
-
-			if (verification.Cancelled)
-			{
-				if (string.IsNullOrEmpty(qaServiceCancellationMessage))
-				{
-					finalStatus = ServiceCallStatus.Cancelled;
-				}
-				else
-				{
-					finalStatus = ServiceCallStatus.Failed;
-				}
-			}
-			else
-			{
-				finalStatus = ServiceCallStatus.Finished;
-			}
-
-			return finalStatus;
-		}
-
-		private static void PackVerification([CanBeNull] QualityVerification verification,
-		                                     [NotNull] VerificationResponse response)
-		{
-			if (verification == null)
-			{
-				return;
-			}
-
-			QualityVerificationMsg result = new QualityVerificationMsg();
-
-			result.SavedVerificationId = verification.Id;
-			result.SpecificationId = verification.SpecificationId;
-
-			CallbackUtils.DoWithNonNull(
-				verification.SpecificationName, s => result.SpecificationName = s);
-
-			CallbackUtils.DoWithNonNull(
-				verification.SpecificationDescription,
-				s => result.SpecificationDescription = s);
-
-			CallbackUtils.DoWithNonNull(verification.Operator, s => result.UserName = s);
-
-			result.StartTimeTicks = verification.StartDate.Ticks;
-			result.EndTimeTicks = verification.EndDate.Ticks;
-
-			result.Fulfilled = verification.Fulfilled;
-			result.Cancelled = verification.Cancelled;
-
-			result.ProcessorTimeSeconds = verification.ProcessorTimeSeconds;
-
-			CallbackUtils.DoWithNonNull(verification.ContextType, (s) => result.ContextType = s);
-			CallbackUtils.DoWithNonNull(verification.ContextName, (s) => result.ContextName = s);
-
-			result.RowsWithStopConditions = verification.RowsWithStopConditions;
-
-			foreach (var conditionVerification in verification.ConditionVerifications)
-			{
-				var conditionVerificationMsg =
-					new QualityConditionVerificationMsg
-					{
-						QualityConditionId =
-							Assert.NotNull(conditionVerification.QualityCondition).Id,
-						StopConditionId = conditionVerification.StopCondition?.Id ?? -1,
-						Fulfilled = conditionVerification.Fulfilled,
-						ErrorCount = conditionVerification.ErrorCount,
-						ExecuteTime = conditionVerification.ExecuteTime,
-						RowExecuteTime = conditionVerification.RowExecuteTime,
-						TileExecuteTime = conditionVerification.TileExecuteTime
-					};
-
-				result.ConditionVerifications.Add(conditionVerificationMsg);
-			}
-
-			foreach (var verificationDataset in verification.VerificationDatasets)
-			{
-				var verificationDatasetMsg =
-					new QualityVerificationDatasetMsg
-					{
-						DatasetId = verificationDataset.Dataset.Id,
-						LoadTime = verificationDataset.LoadTime
-					};
-
-				result.VerificationDatasets.Add(verificationDatasetMsg);
-			}
-
-			response.QualityVerification = result;
-		}
-
-		#region Progress
-
-		private static bool UpdateProgress(VerificationProgressMsg currentProgress,
-		                                   VerificationProgressEventArgs e)
-		{
-			if (e.ProgressType == VerificationProgressType.PreProcess)
-			{
-				currentProgress.ProcessingStepMessage = e.Tag as string ?? string.Empty;
-				SetOverallStep(currentProgress, e);
-			}
-			else if (e.ProgressType == VerificationProgressType.ProcessNonCache)
-			{
-				UpdateNonContainerProgress(currentProgress, e);
-			}
-			else if (e.ProgressType == VerificationProgressType.ProcessContainer)
-			{
-				if (! UpdateContainerProgress(currentProgress, e))
-				{
-					return false;
-				}
-			}
-			else if (e.ProgressType == VerificationProgressType.ProcessParallel)
-			{
-				if (! UpdateParallelProgress(currentProgress, e))
-				{
-					return false;
-				}
-			}
-
-			currentProgress.ProgressType = (int) e.ProgressType;
-
-			return true;
-		}
-
-		private static bool UpdateParallelProgress(VerificationProgressMsg currentProgress,
-		                                           VerificationProgressEventArgs e)
-		{
-			SetOverallStep(currentProgress, e);
-
-			if (e.CurrentBox != null)
-			{
-				currentProgress.CurrentBox =
-					ProtobufGeometryUtils.ToEnvelopeMsg(e.CurrentBox);
-			}
-
-			return true;
-		}
-
-		private static bool UpdateContainerProgress(VerificationProgressMsg currentProgress,
-		                                            VerificationProgressEventArgs e)
-		{
-			VerificationProgressStep newProgressStep = ToVerificationStep(e.ProgressStep);
-
-			switch (newProgressStep)
-			{
-				case VerificationProgressStep.TileProcessing:
-					// New tile:
-					SetOverallStep(currentProgress, e);
-					ResetDetailStep(currentProgress);
-					currentProgress.CurrentBox =
-						ProtobufGeometryUtils.ToEnvelopeMsg(e.CurrentBox);
-					break;
-				case VerificationProgressStep.DataLoading:
-					//SetOverallStep(currentProgress, e);
-					SetDetailStep(currentProgress, e);
-					currentProgress.ProcessingStepMessage = "Loading data";
-					currentProgress.Message = ((IDataset) e.Tag).Name;
-					break;
-
-				case VerificationProgressStep.Testing:
-
-					if (currentProgress.ProgressStep != (int) newProgressStep)
-					{
-						// First time
-						ResetDetailStep(currentProgress);
-						currentProgress.ProcessingStepMessage = "Testing rows";
-					}
-
-					double relativeProgress =
-						((double) e.Current - currentProgress.DetailedProgressCurrentStep) /
-						e.Total;
-
-					if (relativeProgress > 0.05)
-					{
-						SetDetailStep(currentProgress, e);
-						var testRow = e.Tag as TestRow;
-						currentProgress.Message = testRow?.DataReference.DatasetName;
-					}
-					else
-					{
-						return false;
-					}
-
-					break;
-				case VerificationProgressStep.TileCompleting:
-					SetDetailStep(currentProgress, e);
-					currentProgress.ProcessingStepMessage = "Completing tile";
-					currentProgress.Message = ((QualityCondition) e.Tag).Name;
-					break;
-			}
-
-			currentProgress.ProgressStep = (int) newProgressStep;
-
-			string message = e.Tag as string;
-
-			CallbackUtils.DoWithNonNull(message, s => currentProgress.Message = s);
-			return true;
-		}
-
-		private static void UpdateNonContainerProgress(VerificationProgressMsg currentProgress,
-		                                               VerificationProgressEventArgs e)
-		{
-			VerificationProgressStep newProgressStep = ToVerificationStep(e.ProgressStep);
-
-			if (currentProgress.ProgressType != (int) e.ProgressType)
-			{
-				// First non-container progress
-				ResetOverallStep(currentProgress);
-				currentProgress.Message = string.Empty;
-				currentProgress.ProcessingStepMessage = string.Empty;
-			}
-
-			if (newProgressStep == VerificationProgressStep.DataLoading)
-			{
-				SetOverallStep(currentProgress, e);
-				ResetDetailStep(currentProgress);
-				currentProgress.Message = $"Loading {((IDataset) e.Tag).Name}";
-			}
-			else if (newProgressStep == VerificationProgressStep.Testing)
-			{
-				SetDetailStep(currentProgress, e);
-				currentProgress.Message = ((QualityCondition) e.Tag).Name;
-			}
-
-			currentProgress.ProgressStep = (int) newProgressStep;
-		}
-
-		private static void SetMessageFromCondition(VerificationProgressMsg progressMsg,
-		                                            VerificationProgressEventArgs e)
-		{
-			progressMsg.Message =
-				e.ProgressType == VerificationProgressType.ProcessNonCache
-					? ((QualityCondition) e.Tag).Name
-					: string.Empty;
-		}
-
-		private static void SetOverallStep([NotNull] VerificationProgressMsg progressMsg,
-		                                   [NotNull] VerificationProgressEventArgs e)
-		{
-			if (e.Total == 0)
-			{
-				// no update
-				return;
-			}
-
-			progressMsg.OverallProgressCurrentStep = e.Current + 1;
-			progressMsg.OverallProgressTotalSteps = e.Total;
-		}
-
-		private static void SetDetailStep([NotNull] VerificationProgressMsg progressMsg,
-		                                  [NotNull] VerificationProgressEventArgs e)
-		{
-			progressMsg.DetailedProgressCurrentStep = e.Current + 1;
-			progressMsg.DetailedProgressTotalSteps = e.Total;
-		}
-
-		private static void ResetDetailStep([NotNull] VerificationProgressMsg progressMsg)
-		{
-			progressMsg.DetailedProgressCurrentStep = 0;
-			progressMsg.DetailedProgressTotalSteps = 10;
-		}
-
-		private static void ResetOverallStep([NotNull] VerificationProgressMsg progressMsg)
-		{
-			progressMsg.OverallProgressCurrentStep = 0;
-			progressMsg.OverallProgressTotalSteps = 10;
-		}
-
-		#endregion
 	}
 }

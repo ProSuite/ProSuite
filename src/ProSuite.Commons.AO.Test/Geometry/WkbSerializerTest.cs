@@ -135,7 +135,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 
 			Assert.IsTrue(
 				GeomRelationUtils.AreEqualXY(multipnt, deserializedPnts,
-				                                        double.Epsilon));
+				                             double.Epsilon));
 		}
 
 		[Test]
@@ -757,32 +757,34 @@ namespace ProSuite.Commons.AO.Test.Geometry
 		[Test]
 		public void CanConvertMultipatchesSpecialCasesWithInnerRings()
 		{
-			IWorkspace workspace = TestUtils.OpenSDEWorkspaceOracle();
+			// NOTE: XML serialization for multipatches loses inner rings
+			//       -> Use wkb in the first place.
+			ISpatialReference sr = SpatialReferenceUtils.CreateSpatialReference(
+				WellKnownHorizontalCS.LV95, WellKnownVerticalCS.LHN95);
 
-			IFeatureClass featureClass = DatasetUtils.OpenFeatureClass(
-				workspace, "TOPGIS_TLM.TLM_GEBAEUDE");
+			var mockFeature = TestUtils.CreateMockFeature("mediamarktMuriBB.wkb", sr);
 
-			const int rolexLearningCenter = 321430;
-			const int mediamarktMuriBB = 565844;
-			const int hintermBahnhofGraenichen = 2269631;
-			IQueryFilter qf = new QueryFilterClass()
-			                  {
-				                  WhereClause = "OBJECTID IN (" +
-				                                $"{hintermBahnhofGraenichen}, " +
-				                                $"{mediamarktMuriBB}, " +
-				                                $"{rolexLearningCenter})"
-			                  };
-			int count = 0;
+			IMultiPatch rehydrated = AssertWkbSerialization(mockFeature, false);
+			Assert.AreEqual(1, CountInnerRings(rehydrated));
+			rehydrated = AssertWkbSerialization(mockFeature, true);
+			Assert.AreEqual(1, CountInnerRings(rehydrated));
+		}
 
-			foreach (IFeature feature in GdbQueryUtils.GetFeatures(featureClass, qf, true))
+		private static int CountInnerRings(IMultiPatch multipatch)
+		{
+			int innerRingCount = 0;
+			foreach (IRing ring in GeometryUtils.GetRings(multipatch))
 			{
-				count++;
+				bool isBeginning = true;
+				esriMultiPatchRingType ringType = multipatch.GetRingType(ring, ref isBeginning);
 
-				AssertWkbSerialization(feature, false);
-				AssertWkbSerialization(feature, true);
+				if (ringType == esriMultiPatchRingType.esriMultiPatchInnerRing)
+				{
+					innerRingCount++;
+				}
 			}
 
-			Assert.AreEqual(3, count);
+			return innerRingCount;
 		}
 
 		[Ignore(
@@ -822,10 +824,10 @@ namespace ProSuite.Commons.AO.Test.Geometry
 			}
 		}
 
-		private static void AssertWkbSerialization(IFeature feature,
+		private IMultiPatch AssertWkbSerialization(IFeature multipatchFeature,
 		                                           bool groupPartsByPointId)
 		{
-			IMultiPatch multipatch = (IMultiPatch) feature.Shape;
+			IMultiPatch multipatch = (IMultiPatch) multipatchFeature.Shape;
 			IMultiPatch rehydrated = null;
 			groupPartsByPointId = groupPartsByPointId && GeometryUtils.IsPointIDAware(multipatch);
 
@@ -850,7 +852,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 				// This does not compare ring types
 				Assert.AreEqual(GeometryUtils.ToXmlString(multipatch),
 				                GeometryUtils.ToXmlString(rehydrated),
-				                $"GEBAEUDE {feature.OID} failed xml test");
+				                $"GEBAEUDE {multipatchFeature.OID} failed xml test");
 
 				// Most of the features fail this test, even though they are identical
 				//Assert.IsTrue(GeometryUtils.AreEqual(multipatch, rehydrated),
@@ -858,7 +860,8 @@ namespace ProSuite.Commons.AO.Test.Geometry
 			}
 			catch
 			{
-				Console.WriteLine("Error serializing/deserializing feature {0}", feature.OID);
+				Console.WriteLine("Error serializing/deserializing feature {0}",
+				                  multipatchFeature.OID);
 
 				GeometryUtils.ToXmlFile(multipatch, @"C:\temp\orig.xml");
 
@@ -869,6 +872,8 @@ namespace ProSuite.Commons.AO.Test.Geometry
 
 				throw;
 			}
+
+			return rehydrated;
 		}
 
 		private static void AssertEqual(IMultiPatch multipatch1, IMultiPatch multipatch2)

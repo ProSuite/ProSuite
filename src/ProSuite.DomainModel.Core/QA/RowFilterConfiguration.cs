@@ -1,3 +1,4 @@
+using System;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Validation;
@@ -6,13 +7,12 @@ namespace ProSuite.DomainModel.Core.QA
 {
 	public class RowFilterConfiguration : InstanceConfiguration
 	{
-		[UsedImplicitly] private RowFilterDescriptor _rowFilterDescriptor;
-
 		/// <summary>
 		/// Initializes a new instance of the <see cref="RowFilterConfiguration" /> class.
 		/// </summary>
 		/// <remarks>Required for NHibernate</remarks>
-		protected RowFilterConfiguration() { }
+		[UsedImplicitly]
+		public RowFilterConfiguration() : base(assignUuid: false) { }
 
 		public RowFilterConfiguration(string name,
 		                              [NotNull] RowFilterDescriptor rowFilterDescriptor,
@@ -21,16 +21,25 @@ namespace ProSuite.DomainModel.Core.QA
 		{
 			Assert.ArgumentNotNull(rowFilterDescriptor, nameof(rowFilterDescriptor));
 
-			_rowFilterDescriptor = rowFilterDescriptor;
+			RowFilterDescriptor = rowFilterDescriptor;
 		}
-
-		public override InstanceDescriptor InstanceDescriptor => RowFilterDescriptor;
 
 		[Required]
 		public RowFilterDescriptor RowFilterDescriptor
 		{
-			get => _rowFilterDescriptor;
-			set => _rowFilterDescriptor = value;
+			get => (RowFilterDescriptor) InstanceDescriptor;
+			private set => InstanceDescriptor = value;
 		}
+
+		#region Overrides of InstanceConfiguration
+
+		public override string TypeDisplayName => "Row Filter";
+
+		public override InstanceConfiguration CreateCopy()
+		{
+			throw new NotImplementedException();
+		}
+
+		#endregion
 	}
 }

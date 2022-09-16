@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
 using ProSuite.Commons.Essentials.Assertions;
@@ -45,6 +46,23 @@ namespace ProSuite.Commons.Exceptions
 			return exception.InnerException == null
 				       ? exception.Message
 				       : GetInnermostMessage(exception.InnerException);
+		}
+
+		/// <summary>
+		/// Gets the messages of the given exception and all inner exceptions' messages.
+		/// </summary>
+		/// <param name="exception"></param>
+		/// <returns></returns>
+		[NotNull]
+		public static IEnumerable<string> GetMessages([NotNull] Exception exception)
+		{
+			var innerException = exception;
+
+			do
+			{
+				yield return innerException.Message;
+				innerException = innerException.InnerException;
+			} while (innerException != null);
 		}
 
 		private static void AppendException([NotNull] StringBuilder sb,

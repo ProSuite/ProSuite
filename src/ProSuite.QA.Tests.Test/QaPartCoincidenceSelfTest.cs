@@ -112,7 +112,8 @@ namespace ProSuite.QA.Tests.Test
 				}
 			}
 
-			var test = new QaPartCoincidenceSelf(fc, 1, 10, false);
+			var test = new QaPartCoincidenceSelf(
+				ReadOnlyTableFactory.Create(fc), 1, 10, false);
 			using (var runner = new QaTestRunner(test))
 			{
 				runner.Execute();
@@ -171,7 +172,8 @@ namespace ProSuite.QA.Tests.Test
 				row.Store();
 			}
 
-			var test = new QaPartCoincidenceSelf(fc, 2.5, 5, false);
+			var test = new QaPartCoincidenceSelf(
+				ReadOnlyTableFactory.Create(fc), 2.5, 5, false);
 			using (var r = new QaTestRunner(test))
 			{
 				r.Execute();
@@ -239,7 +241,8 @@ namespace ProSuite.QA.Tests.Test
 				row.Store();
 			}
 
-			var test = new QaPartCoincidenceSelf(new[] {fc}, 0.9, 5, 0, false, 1000, 0);
+			var test = new QaPartCoincidenceSelf(
+				new[] { ReadOnlyTableFactory.Create(fc) }, 0.9, 5, 0, false, 1000, 0);
 			using (var r = new QaTestRunner(test))
 			{
 				r.Execute();
@@ -296,17 +299,21 @@ namespace ProSuite.QA.Tests.Test
 			}
 
 			// test without ignore conditions --> near, but not conincident
-			var test = new QaPartCoincidenceSelf(new[] {fc1, fc2}, 1, 10);
+			var test = new QaPartCoincidenceSelf(
+				new[] { ReadOnlyTableFactory.Create(fc1), ReadOnlyTableFactory.Create(fc2) }, 1,
+				10);
 			var testRunner = new QaTestRunner(test);
 			testRunner.Execute();
 			Assert.AreEqual(2, testRunner.Errors.Count);
 
 			// Same test with ignore conditions --> nothing near
-			test = new QaPartCoincidenceSelf(new[] {fc1, fc2}, 1, 10);
+			test = new QaPartCoincidenceSelf(
+				new[] { ReadOnlyTableFactory.Create(fc1), ReadOnlyTableFactory.Create(fc2) }, 1,
+				10);
 			var success = false;
 			try
 			{
-				test.IgnoreNeighborConditions = new[] {"too", "few", "conditions"};
+				test.IgnoreNeighborConditions = new[] { "too", "few", "conditions" };
 				success = true;
 			}
 			catch { }
@@ -361,7 +368,8 @@ namespace ProSuite.QA.Tests.Test
 				row.Store();
 			}
 
-			var test = new QaPartCoincidenceSelf(new[] {fc}, 0.9, 150, 0, false, 1000, 0);
+			var test = new QaPartCoincidenceSelf(
+				new[] { ReadOnlyTableFactory.Create(fc) }, 0.9, 150, 0, false, 1000, 0);
 			using (var r = new QaTestRunner(test))
 			{
 				r.Execute();
@@ -372,7 +380,8 @@ namespace ProSuite.QA.Tests.Test
 			container.Execute();
 			Assert.AreEqual(2, container.Errors.Count);
 
-			test = new QaPartCoincidenceSelf(new[] {fc}, 0.9, 250, 0, false, 1000, 0);
+			test = new QaPartCoincidenceSelf(
+				new[] { ReadOnlyTableFactory.Create(fc) }, 0.9, 250, 0, false, 1000, 0);
 			using (var r = new QaTestRunner(test))
 			{
 				r.Execute();
@@ -427,7 +436,8 @@ namespace ProSuite.QA.Tests.Test
 				row.Store();
 			}
 
-			var test = new QaPartCoincidenceSelf(fc, 2.5, 5, false);
+			var test = new QaPartCoincidenceSelf(
+				ReadOnlyTableFactory.Create(fc), 2.5, 5, false);
 			using (var r = new QaTestRunner(test))
 			{
 				r.Execute();
@@ -516,7 +526,8 @@ namespace ProSuite.QA.Tests.Test
 				row.Store();
 			}
 
-			var test = new QaPartCoincidenceSelf(new[] {fc}, 0.5, 2, false);
+			var test = new QaPartCoincidenceSelf(
+				new[] { ReadOnlyTableFactory.Create(fc) }, 0.5, 2, false);
 			var ctr = new QaContainerTestRunner(70, test);
 			ctr.Execute();
 			Assert.AreEqual(0, ctr.Errors.Count);
@@ -576,7 +587,8 @@ namespace ProSuite.QA.Tests.Test
 				row.Store();
 			}
 
-			var test = new QaPartCoincidenceSelf(new[] {fc}, 0.5, 5, 5, false, 1000, 0.1);
+			var test = new QaPartCoincidenceSelf(
+				new[] { ReadOnlyTableFactory.Create(fc) }, 0.5, 5, 5, false, 1000, 0.1);
 			using (var r = new QaTestRunner(test))
 			{
 				r.Execute();
@@ -643,7 +655,8 @@ namespace ProSuite.QA.Tests.Test
 				row.Store();
 			}
 
-			var test = new QaPartCoincidenceSelf(new[] {fc}, 0.5, 5, 2.5, false, 1000, 0.1);
+			var test = new QaPartCoincidenceSelf(
+				new[] { ReadOnlyTableFactory.Create(fc) }, 0.5, 5, 2.5, false, 1000, 0.1);
 			using (var tr = new QaTestRunner(test))
 			{
 				tr.Execute();
@@ -712,7 +725,8 @@ namespace ProSuite.QA.Tests.Test
 				}
 			}
 
-			var test = new QaPartCoincidenceSelf(fc, 1, 10, false);
+			var test = new QaPartCoincidenceSelf(
+				ReadOnlyTableFactory.Create(fc), 1, 10, false);
 			using (var r = new QaTestRunner(test))
 			{
 				r.Execute();
@@ -762,7 +776,8 @@ namespace ProSuite.QA.Tests.Test
 				f0.Store();
 			}
 
-			var test = new QaPartCoincidenceSelf(fc, 1, 10, false);
+			var test = new QaPartCoincidenceSelf(
+				ReadOnlyTableFactory.Create(fc), 1, 10, false);
 			using (var r = new QaTestRunner(test))
 			{
 				r.Execute();
@@ -836,7 +851,8 @@ namespace ProSuite.QA.Tests.Test
 				}
 			}
 
-			var test = new QaPartCoincidenceSelf(fc, 1, 5, false);
+			var test = new QaPartCoincidenceSelf(
+				ReadOnlyTableFactory.Create(fc), 1, 5, false);
 			using (var r = new QaTestRunner(test))
 			{
 				r.Execute();
@@ -899,7 +915,8 @@ namespace ProSuite.QA.Tests.Test
 				}
 			}
 
-			var test = new QaPartCoincidenceSelf(fc, 1, 5, false);
+			var test = new QaPartCoincidenceSelf(
+				ReadOnlyTableFactory.Create(fc), 1, 5, false);
 			using (var r = new QaTestRunner(test))
 			{
 				r.Execute();
@@ -924,7 +941,8 @@ namespace ProSuite.QA.Tests.Test
 			IEnvelope testArea = GeometryFactory.CreateEnvelope(2477000, 1136000, 2482000,
 			                                                    1141000);
 			{
-				var test = new QaPartCoincidenceSelf(featureClass, 0.15, 5, false);
+				var test = new QaPartCoincidenceSelf(
+					ReadOnlyTableFactory.Create(featureClass), 0.15, 5, false);
 				var runner = new QaContainerTestRunner(10000, test);
 
 				runner.Execute();
@@ -935,7 +953,8 @@ namespace ProSuite.QA.Tests.Test
 			}
 
 			{
-				var test = new QaPartCoincidenceSelf(featureClass, 1, 5, false);
+				var test = new QaPartCoincidenceSelf(
+					ReadOnlyTableFactory.Create(featureClass), 1, 5, false);
 				var runner = new QaContainerTestRunner(10000, test);
 
 				runner.Execute();
@@ -969,7 +988,8 @@ namespace ProSuite.QA.Tests.Test
 
 			IFeatureClass featureClass = ws.OpenFeatureClass("bigPolygons");
 
-			var test = new QaPartCoincidenceSelf(featureClass, 0.15, 5, false);
+			var test = new QaPartCoincidenceSelf(
+				ReadOnlyTableFactory.Create(featureClass), 0.15, 5, false);
 			var runner = new QaContainerTestRunner(10000, test);
 
 			if (testArea == null)
@@ -1024,7 +1044,8 @@ namespace ProSuite.QA.Tests.Test
 				row.Store();
 			}
 
-			var test = new QaPartCoincidenceSelf(new[] {fc}, 3, 20, 0.001, false, 1000, 0.5);
+			var test = new QaPartCoincidenceSelf(
+				new[] { ReadOnlyTableFactory.Create(fc) }, 3, 20, 0.001, false, 1000, 0.5);
 			using (var r = new QaTestRunner(test))
 			{
 				r.Execute();
@@ -1085,7 +1106,8 @@ namespace ProSuite.QA.Tests.Test
 				row.Store();
 			}
 
-			var test = new QaPartCoincidenceSelf(new[] {fc}, 1.5, 5, 0.01, false, 1000, 0.04);
+			var test = new QaPartCoincidenceSelf(
+				new[] { ReadOnlyTableFactory.Create(fc) }, 1.5, 5, 0.01, false, 1000, 0.04);
 			using (var r = new QaTestRunner(test))
 			{
 				r.Execute();
@@ -1146,7 +1168,8 @@ namespace ProSuite.QA.Tests.Test
 				row.Store();
 			}
 
-			var test = new QaPartCoincidenceSelf(new[] {fc}, 1.5, 5, 0.01, false, 1000, 0.04);
+			var test = new QaPartCoincidenceSelf(
+				new[] { ReadOnlyTableFactory.Create(fc) }, 1.5, 5, 0.01, false, 1000, 0.04);
 
 			var container = new QaContainerTestRunner(10000, test);
 			container.Execute();
@@ -1195,7 +1218,8 @@ namespace ProSuite.QA.Tests.Test
 				row.Store();
 			}
 
-			var test = new QaPartCoincidenceSelf(new[] {fc}, 1.5, 5, 0.01, false, 1000, 0.04);
+			var test = new QaPartCoincidenceSelf(
+				new[] { ReadOnlyTableFactory.Create(fc) }, 1.5, 5, 0.01, false, 1000, 0.04);
 
 			var container = new QaContainerTestRunner(10000, test);
 			container.Execute();
@@ -1211,7 +1235,8 @@ namespace ProSuite.QA.Tests.Test
 				((IFeatureWorkspace) ws).OpenFeatureClass("xeig_fgdl_GISADMIN_fgd_we_f");
 
 			{
-				var test = new QaPartCoincidenceSelf(new[] {fc}, 2, 3, 1, false, 1000, 0.5);
+				var test = new QaPartCoincidenceSelf(
+					new[] { ReadOnlyTableFactory.Create(fc) }, 2, 3, 1, false, 1000, 0.5);
 				var ctr = new QaContainerTestRunner(10000, test);
 				ctr.Execute();
 				Assert.AreEqual(0, ctr.Errors.Count);
@@ -1227,7 +1252,8 @@ namespace ProSuite.QA.Tests.Test
 				((IFeatureWorkspace) ws).OpenFeatureClass("xeig_fgdl_GISADMIN_fgd_we_f");
 
 			{
-				var test = new QaPartCoincidenceSelf(new[] {fc}, 0.5, 5, 0.01, false, 1000, 0.01);
+				var test = new QaPartCoincidenceSelf(
+					new[] { ReadOnlyTableFactory.Create(fc) }, 0.5, 5, 0.01, false, 1000, 0.01);
 				var ctr = new QaContainerTestRunner(10000, test);
 				ctr.Execute();
 				Assert.AreEqual(0, ctr.Errors.Count);
@@ -1243,7 +1269,8 @@ namespace ProSuite.QA.Tests.Test
 				((IFeatureWorkspace) ws).OpenFeatureClass("qacoincidence");
 
 			{
-				var test = new QaPartCoincidenceSelf(new[] {fc}, 0.5, 5, 0, false, 1000, 0.01);
+				var test = new QaPartCoincidenceSelf(
+					new[] { ReadOnlyTableFactory.Create(fc) }, 0.5, 5, 0, false, 1000, 0.01);
 				var ctr = new QaContainerTestRunner(10000, test);
 				ctr.Execute();
 				Assert.AreEqual(0, ctr.Errors.Count);
@@ -1259,7 +1286,8 @@ namespace ProSuite.QA.Tests.Test
 			IFeatureClass fc =
 				((IFeatureWorkspace) ws).OpenFeatureClass("ka_arch_20151208");
 
-			var test = new QaPartCoincidenceSelf(new[] {fc}, 0.5, 5);
+			var test = new QaPartCoincidenceSelf(
+				new[] { ReadOnlyTableFactory.Create(fc) }, 0.5, 5);
 			var ctr = new QaContainerTestRunner(10000, test);
 			ctr.Execute();
 		}
@@ -1273,7 +1301,8 @@ namespace ProSuite.QA.Tests.Test
 				((IFeatureWorkspace) ws).OpenFeatureClass("qacoincidence_1");
 
 			{
-				var test = new QaPartCoincidenceSelf(new[] {fc}, 0.5, 5, 0, false, 1000, 0.01);
+				var test = new QaPartCoincidenceSelf(
+					new[] { ReadOnlyTableFactory.Create(fc) }, 0.5, 5, 0, false, 1000, 0.01);
 				var ctr = new QaContainerTestRunner(10000, test);
 				ctr.Execute();
 				Assert.AreEqual(2, ctr.Errors.Count);
@@ -1289,7 +1318,8 @@ namespace ProSuite.QA.Tests.Test
 				((IFeatureWorkspace) ws).OpenFeatureClass("xeig_fgdl_GISADMIN_fgd_we_f");
 
 			{
-				var test = new QaPartCoincidenceSelf(new[] {fc}, 1, 10, 0, false, 1000, 0.1);
+				var test = new QaPartCoincidenceSelf(
+					new[] { ReadOnlyTableFactory.Create(fc) }, 1, 10, 0, false, 1000, 0.1);
 				var ctr = new QaContainerTestRunner(10000, test);
 				ctr.TestContainer.QaError += TestContainer_QaError;
 				ctr.Execute();
@@ -1310,7 +1340,8 @@ namespace ProSuite.QA.Tests.Test
 			IFeatureClass fc =
 				((IFeatureWorkspace) ws).OpenFeatureClass("xeig_fgdl_GISADMIN_fgd_we_f");
 
-			var test = new QaPartCoincidenceSelf(new[] {fc}, 0.5, 5, 0, false, 1000, 0.01);
+			var test = new QaPartCoincidenceSelf(
+				new[] { ReadOnlyTableFactory.Create(fc) }, 0.5, 5, 0, false, 1000, 0.01);
 			test.SetConstraint(0, "ObjectId = 4994");
 
 			var ctr = new QaContainerTestRunner(10000, test);
@@ -1326,7 +1357,8 @@ namespace ProSuite.QA.Tests.Test
 			IFeatureClass fc =
 				((IFeatureWorkspace) ws).OpenFeatureClass("xeig_fgdl_GISADMIN_fgd_we_f");
 
-			var test = new QaPartCoincidenceSelf(new[] {fc}, 0.5, 5, 0, false, 1000, 0.01);
+			var test = new QaPartCoincidenceSelf(
+				new[] { ReadOnlyTableFactory.Create(fc) }, 0.5, 5, 0, false, 1000, 0.01);
 			test.SetConstraint(0, "ObjectId = 5799");
 
 			var ctr = new QaContainerTestRunner(10000, test);
@@ -1342,7 +1374,8 @@ namespace ProSuite.QA.Tests.Test
 			IFeatureClass fc =
 				((IFeatureWorkspace) ws).OpenFeatureClass("xeig_fgdl_GISADMIN_fgd_we_f");
 
-			var test = new QaPartCoincidenceSelf(new[] {fc}, 0.5, 5, 0, false, 1000, 0.01);
+			var test = new QaPartCoincidenceSelf(
+				new[] { ReadOnlyTableFactory.Create(fc) }, 0.5, 5, 0, false, 1000, 0.01);
 
 			var ctr = new QaContainerTestRunner(10000, test);
 			ctr.Execute();
@@ -1357,7 +1390,8 @@ namespace ProSuite.QA.Tests.Test
 			IFeatureClass fc =
 				((IFeatureWorkspace) ws).OpenFeatureClass("xeig_fgdl_GISADMIN_fgd_we_f");
 
-			var test = new QaPartCoincidenceSelf(new[] {fc}, 0.5, 5, 0, false, 1000, 0.01);
+			var test = new QaPartCoincidenceSelf(
+				new[] { ReadOnlyTableFactory.Create(fc) }, 0.5, 5, 0, false, 1000, 0.01);
 			test.SetConstraint(0, "ObjectId = 766");
 
 			var ctr = new QaContainerTestRunner(10000, test);
@@ -1373,7 +1407,8 @@ namespace ProSuite.QA.Tests.Test
 			IFeatureClass fc =
 				((IFeatureWorkspace) ws).OpenFeatureClass("xeig_fgdl_GISADMIN_fgd_we_f");
 
-			var test = new QaPartCoincidenceSelf(new[] {fc}, 0.001, 0.01, 0.01, false, 1000, 0);
+			var test = new QaPartCoincidenceSelf(
+				new[] { ReadOnlyTableFactory.Create(fc) }, 0.001, 0.01, 0.01, false, 1000, 0);
 			test.SetConstraint(0, "ObjectId in (5398, 5966, 5971)");
 
 			var ctr = new QaContainerTestRunner(10000, test);
@@ -1389,7 +1424,8 @@ namespace ProSuite.QA.Tests.Test
 			IFeatureClass fc =
 				((IFeatureWorkspace) ws).OpenFeatureClass("xeig_fgdl_GISADMIN_fgd_we_f");
 
-			var test = new QaPartCoincidenceSelf(new[] {fc}, 0.001, 0.01, 0.01, false, 1000, 0);
+			var test = new QaPartCoincidenceSelf(
+				new[] { ReadOnlyTableFactory.Create(fc) }, 0.001, 0.01, 0.01, false, 1000, 0);
 			test.SetConstraint(0, "ObjectId in (4582, 4579)");
 
 			var ctr = new QaContainerTestRunner(10000, test);

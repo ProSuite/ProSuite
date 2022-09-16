@@ -9,14 +9,17 @@ namespace ProSuite.Commons.Geom
 	{
 		private readonly ISegmentList _source;
 
-		private readonly Dictionary<int, HashSet<double>> _usedIntersectionFactorsByPart =
-			new Dictionary<int, HashSet<double>>();
+		private readonly IntersectionFactors _usedIntersectionFactors;
 
 		private static readonly List<int> _collectedShortSourceSegments = new List<int>();
 
 		public SegmentIntersectionFilter(ISegmentList source)
 		{
 			_source = source;
+
+			_usedIntersectionFactors =
+				new IntersectionFactors(
+					MathUtils.GetDoubleSignificanceEpsilon(_source.XMax, _source.YMax));
 		}
 
 		public IEnumerable<SegmentIntersection> GetFilteredIntersectionsOrderedAlongSourceSegments(
@@ -43,7 +46,7 @@ namespace ProSuite.Commons.Geom
 					intersectionsForCurrentSourceSegment.Clear();
 				}
 
-				CollectIntersection(intersection, _source, _usedIntersectionFactorsByPart,
+				CollectIntersection(intersection, _source, _usedIntersectionFactors,
 				                    intersectionsForCurrentSourceSegment);
 			}
 
@@ -87,23 +90,19 @@ namespace ProSuite.Commons.Geom
 							Assert.NotNull(intersection.TargetEndFactor).Value;
 					}
 
-					int partIndex;
 					int localSegmentIndex =
-						source.GetLocalSegmentIndex(intersection.SourceIndex, out partIndex);
+						source.GetLocalSegmentIndex(intersection.SourceIndex, out int partIndex);
 
 					double intersectionFactorPartGlobal = localSegmentIndex + intersectionFactor;
 
-					// TODO: Extract class IntersectionFactors which encapsulates all the
-					// Contains, Add etc. methods, probably even the filtering
-					if (ContainsIntersection(_usedIntersectionFactorsByPart, partIndex,
-					                         intersectionFactorPartGlobal))
+					if (_usedIntersectionFactors.Contains(partIndex, intersectionFactorPartGlobal))
 					{
 						filter = true;
 					}
 					else
 					{
 						AddIntersectionFactor(intersectionFactorPartGlobal, partIndex,
-						                      _usedIntersectionFactorsByPart, source);
+						                      _usedIntersectionFactors, source);
 					}
 				}
 
@@ -114,37 +113,10 @@ namespace ProSuite.Commons.Geom
 			}
 		}
 
-		private static bool ContainsIntersection(
-			IDictionary<int, HashSet<double>> usedIntersectionFactorsByPart,
-			int sourcePartIndex, double intersectionFactor)
-		{
-			HashSet<double> usedIntersectionFactors;
-			return usedIntersectionFactorsByPart.TryGetValue(
-				       sourcePartIndex, out usedIntersectionFactors) &&
-			       usedIntersectionFactors.Contains(intersectionFactor);
-		}
-
 		private static void AddIntersectionFactor(
 			double localIntersectionFactor,
 			int partIndex,
-			[NotNull] IDictionary<int, HashSet<double>> usedIntersectionFactorsByPart)
-		{
-			HashSet<double> localIntersectionFactors;
-
-			if (! usedIntersectionFactorsByPart.TryGetValue(partIndex, out
-			                                                localIntersectionFactors))
-			{
-				localIntersectionFactors = new HashSet<double>();
-				usedIntersectionFactorsByPart.Add(partIndex, localIntersectionFactors);
-			}
-
-			localIntersectionFactors.Add(localIntersectionFactor);
-		}
-
-		private static void AddIntersectionFactor(
-			double localIntersectionFactor,
-			int partIndex,
-			[NotNull] IDictionary<int, HashSet<double>> usedIntersectionFactorsByPart,
+			[NotNull] IntersectionFactors intersectionFactors,
 			[NotNull] ISegmentList source)
 		{
 			Linestring part = source.GetPart(partIndex);
@@ -152,13 +124,12 @@ namespace ProSuite.Commons.Geom
 			if (IsRingStartOrEnd(part, localIntersectionFactor))
 			{
 				// add both start and end point
-				AddIntersectionFactor(0, partIndex, usedIntersectionFactorsByPart);
-				AddIntersectionFactor(part.SegmentCount, partIndex, usedIntersectionFactorsByPart);
+				intersectionFactors.Add(partIndex, 0);
+				intersectionFactors.Add(partIndex, part.SegmentCount);
 			}
 			else
 			{
-				AddIntersectionFactor(localIntersectionFactor, partIndex,
-				                      usedIntersectionFactorsByPart);
+				intersectionFactors.Add(partIndex, localIntersectionFactor);
 			}
 		}
 
@@ -189,7 +160,7 @@ namespace ProSuite.Commons.Geom
 		private static void CollectIntersection(
 			[NotNull] SegmentIntersection intersection,
 			[NotNull] ISegmentList source,
-			[NotNull] IDictionary<int, HashSet<double>> allLinearIntersectionFactors,
+			[NotNull] IntersectionFactors allLinearIntersectionFactors,
 			[NotNull] ICollection<SegmentIntersection> resultIntersections)
 		{
 			// Collect segments for current index in list, unless they are clearly not needed 
@@ -212,8 +183,8 @@ namespace ProSuite.Commons.Geom
 					intersection.GetLinearIntersectionEndFactor(true);
 
 				if (intersection.IsSourceZeroLength2D &&
-				    ContainsIntersection(allLinearIntersectionFactors,
-				                         partIndex, linearIntersectionEndFactor))
+				    allLinearIntersectionFactors.Contains(
+					    partIndex, linearIntersectionEndFactor))
 				{
 					if (intersection.SourceEndIntersects &&
 					    source.IsLastSegmentInPart(intersection.SourceIndex) &&
@@ -233,8 +204,8 @@ namespace ProSuite.Commons.Geom
 				}
 
 				if (intersection.IsTargetZeroLength2D &&
-				    ContainsIntersection(allLinearIntersectionFactors,
-				                         partIndex, linearIntersectionEndFactor))
+				    allLinearIntersectionFactors.Contains(
+					    partIndex, linearIntersectionEndFactor))
 				{
 					// avoid double linear segments if the target segment is 2D-'short' (or vertical) 
 					return;
@@ -262,6 +233,77 @@ namespace ProSuite.Commons.Geom
 			}
 
 			resultIntersections.Add(intersection);
+		}
+
+		private class IntersectionFactors
+		{
+			private readonly IntersectionFactorComparer _comparer;
+
+			private readonly Dictionary<int, SortedList<double, int>> _intersectionFactorsByPart =
+				new Dictionary<int, SortedList<double, int>>();
+
+			internal IntersectionFactors(double epsilon)
+			{
+				_comparer = new IntersectionFactorComparer(epsilon);
+			}
+
+			internal void Add(int partIndex, double localIntersectionFactor)
+			{
+				SortedList<double, int> localIntersectionFactors;
+
+				if (! _intersectionFactorsByPart.TryGetValue(partIndex, out
+				                                             localIntersectionFactors))
+				{
+					localIntersectionFactors = new SortedList<double, int>(_comparer);
+					_intersectionFactorsByPart.Add(partIndex, localIntersectionFactors);
+				}
+
+				if (! localIntersectionFactors.ContainsKey(localIntersectionFactor))
+				{
+					localIntersectionFactors.Add(localIntersectionFactor, 0);
+				}
+			}
+
+			internal bool Contains(
+				int sourcePartIndex, double intersectionFactor)
+			{
+				SortedList<double, int> usedIntersectionFactors;
+
+				if (! _intersectionFactorsByPart.TryGetValue(
+					    sourcePartIndex, out usedIntersectionFactors))
+				{
+					return false;
+				}
+
+				return usedIntersectionFactors.ContainsKey(intersectionFactor);
+			}
+		}
+
+		private class IntersectionFactorComparer : IComparer<double>
+		{
+			private readonly double _epsilon;
+
+			public IntersectionFactorComparer(double epsilon)
+			{
+				_epsilon = epsilon;
+			}
+
+			#region Implementation of IComparer<in double>
+
+			public int Compare(double x, double y)
+			{
+				double delta = x - y;
+
+				if (delta < -_epsilon)
+					return -1;
+
+				if (delta > _epsilon)
+					return 1;
+
+				return 0;
+			}
+
+			#endregion
 		}
 	}
 }

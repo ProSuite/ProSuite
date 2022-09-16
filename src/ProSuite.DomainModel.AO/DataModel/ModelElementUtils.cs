@@ -176,30 +176,30 @@ namespace ProSuite.DomainModel.AO.DataModel
 			return model.MasterDatabaseWorkspaceContext;
 		}
 
-		public static bool UseCaseSensitiveSql([NotNull] ITable table,
+		public static bool UseCaseSensitiveSql([NotNull] IReadOnlyTable table,
 		                                       SqlCaseSensitivity caseSensitivity)
 		{
 			switch (caseSensitivity)
 			{
 				case SqlCaseSensitivity.CaseInsensitive:
-					_msg.VerboseDebug(() => $"{DatasetUtils.GetName(table)}: not case sensitive");
+					_msg.VerboseDebug(() => $"{table.Name}: not case sensitive");
 
 					return false;
 
 				case SqlCaseSensitivity.CaseSensitive:
-					_msg.VerboseDebug(() => $"{DatasetUtils.GetName(table)}: case sensitive");
+					_msg.VerboseDebug(() => $"{table.Name}: case sensitive");
 
 					return true;
 
 				case SqlCaseSensitivity.SameAsDatabase:
-					var sqlSyntax = DatasetUtils.GetWorkspace(table) as ISQLSyntax;
+					var sqlSyntax = table.Workspace as ISQLSyntax;
 					bool result = sqlSyntax != null && sqlSyntax.GetStringComparisonCase();
 
 					if (_msg.IsVerboseDebugEnabled)
 					{
 						_msg.VerboseDebug(() => sqlSyntax == null
-							                        ? $"{DatasetUtils.GetName(table)}: database case sensitivity: UNKNOWN (use {result})"
-							                        : $"{DatasetUtils.GetName(table)}: database case sensitivity: {result}");
+							                        ? $"{table.Name}: database case sensitivity: UNKNOWN (use {result})"
+							                        : $"{table.Name}: database case sensitivity: {result}");
 					}
 
 					return result;

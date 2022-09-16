@@ -1,9 +1,10 @@
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
-using ProSuite.QA.Container.TestCategories;
+using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.Schema;
 
@@ -13,15 +14,15 @@ namespace ProSuite.QA.Tests
 	[SchemaTest]
 	public class QaSchemaFieldPropertiesFromTable : QaSchemaFieldPropertiesBase
 	{
-		private readonly ITable _fieldSpecificationsTable;
+		private readonly IReadOnlyTable _fieldSpecificationsTable;
 
 		[Doc(nameof(DocStrings.QaSchemaFieldPropertiesFromTable_0))]
 		public QaSchemaFieldPropertiesFromTable(
 			[Doc(nameof(DocStrings.QaSchemaFieldPropertiesFromTable_table))] [NotNull]
-			ITable table,
+			IReadOnlyTable table,
 			[Doc(nameof(DocStrings.QaSchemaFieldPropertiesFromTable_fieldSpecificationsTable))]
 			[NotNull]
-			ITable fieldSpecificationsTable,
+			IReadOnlyTable fieldSpecificationsTable,
 			[Doc(nameof(DocStrings.QaSchemaFieldPropertiesFromTable_matchAliasName))]
 			bool matchAliasName)
 			: base(table, matchAliasName, fieldSpecificationsTable)

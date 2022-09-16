@@ -1,497 +1,241 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="12.0">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{FDA8452C-41F0-404C-A17D-FBA8CB56B935}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>ProSuite.Commons.UI</RootNamespace>
-    <AssemblyName>ProSuite.Commons.UI</AssemblyName>
     <SignAssembly>true</SignAssembly>
     <ProSuiteKeyFile Condition=" '$(ProSuiteKeyFile)' == '' ">..\ProSuite.Key.snk</ProSuiteKeyFile>
     <AssemblyOriginatorKeyFile>$(ProSuiteKeyFile)</AssemblyOriginatorKeyFile>
-    <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' ">v4.8</TargetFrameworkVersion>
+
     <OutputDirectory Condition=" '$(OutputDirectory)' == '' ">..\..\bin</OutputDirectory>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>$(OutputDirectory)\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <OutputPath>$(OutputDirectory)\$(Configuration)\</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+
     <NoWarn>1591</NoWarn>
-    <PlatformTarget>AnyCPU</PlatformTarget>
+
+    <!-- NOTE: Multi-targeting leads to problems in build if Winforms are included. 
+		Supported target frameworks: net48 (v4.8) or net6.0-windows -->
+    <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' Or '$(TargetFrameworkVersion)' == 'v4.8' ">net48</TargetFrameworkVersion>
+
+    <TargetFramework>$(TargetFrameworkVersion)</TargetFramework>
+
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugType>full</DebugType>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>$(OutputDirectory)\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <DocumentationFile>$(OutputDirectory)\Release\ProSuite.Commons.UI.xml</DocumentationFile>
-    <NoWarn>1591</NoWarn>
+    <DocumentationFile>$(OutputDirectory)\$(Configuration)\ProSuite.Commons.UI.xml</DocumentationFile>
   </PropertyGroup>
-  <ItemGroup>
+
+  <PropertyGroup>
+    <UseWpf>true</UseWpf>
+    <UseWindowsForms>true</UseWindowsForms>
+  </PropertyGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net48' ">
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
-    <Reference Include="System" />
-    <Reference Include="System.Core">
-      <RequiredTargetFramework>3.5</RequiredTargetFramework>
-    </Reference>
-    <Reference Include="System.Data" />
-    <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xaml" />
-    <Reference Include="System.Xml" />
     <Reference Include="WindowsBase" />
     <Reference Include="WindowsFormsIntegration" />
   </ItemGroup>
+
   <ItemGroup>
-    <Compile Include="..\SharedAssemblyInfo.cs">
-      <Link>Properties\SharedAssemblyInfo.cs</Link>
-    </Compile>
-    <Compile Include="Dialogs\PendingChangesAction.cs" />
-    <Compile Include="Dialogs\PendingChangesDialog.cs" />
-    <Compile Include="Dialogs\PendingChangesOption.cs" />
-    <Compile Include="Finder\ContextSpecificSettings.cs" />
-    <Compile Include="Finder\FinderQuery.cs" />
-    <Compile Include="Finder\TypeFinderFormState.cs" />
-    <Compile Include="Logging\LogWindowColors.cs" />
-    <Compile Include="Properties\LocalizableStrings.Designer.cs">
+    <Compile Include="..\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
+    <Compile Update="Properties\LocalizableStrings.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>LocalizableStrings.resx</DependentUpon>
     </Compile>
-    <Compile Include="PropertyEditors\ReadOnlyListEditor.cs" />
-    <Compile Include="ScreenBinding\ActivationMode.cs" />
-    <Compile Include="ScreenBinding\ChildScreenBinder.cs" />
-    <Compile Include="ScreenBinding\CoercionUtility.cs" />
-    <Compile Include="ScreenBinding\Configuration\BasicElementExpression.cs" />
-    <Compile Include="ScreenBinding\Configuration\IBindingData.cs" />
-    <Compile Include="ScreenBinding\Configuration\PropertyBindingExpression.cs" />
-    <Compile Include="ScreenBinding\Configuration\RadioGroupExpression.cs" />
-    <Compile Include="ScreenBinding\Configuration\ScreenElementExpression.cs" />
-    <Compile Include="ScreenBinding\ControlSet.cs" />
-    <Compile Include="ScreenBinding\Drivers\ControlDriverFactory.cs" />
-    <Compile Include="ScreenBinding\Drivers\IControlDriver.cs" />
-    <Compile Include="ScreenBinding\Drivers\WinFormsControlDriver.cs" />
-    <Compile Include="ScreenBinding\Elements\BooleanComboboxElement.cs" />
-    <Compile Include="ScreenBinding\Elements\BooleanComboboxElementExpression.cs" />
-    <Compile Include="ScreenBinding\Elements\BoundScreenElement.cs" />
-    <Compile Include="ScreenBinding\Elements\ButtonElement.cs" />
-    <Compile Include="ScreenBinding\Elements\CheckboxElement.cs" />
-    <Compile Include="ScreenBinding\Elements\CheckboxElementExpression.cs" />
-    <Compile Include="ScreenBinding\Elements\CoerceFunction.cs" />
-    <Compile Include="ScreenBinding\Elements\FormatValue.cs" />
-    <Compile Include="ScreenBinding\Elements\IDateElement.cs" />
-    <Compile Include="ScreenBinding\Elements\IListElement.cs" />
-    <Compile Include="ScreenBinding\Elements\ITextEditingElement.cs" />
-    <Compile Include="ScreenBinding\Elements\KeyboardShortcutTextboxElement.cs" />
-    <Compile Include="ScreenBinding\Elements\LabelElement.cs" />
-    <Compile Include="ScreenBinding\Elements\ListElementExpression.cs" />
-    <Compile Include="ScreenBinding\Elements\NullableBooleanComboboxElement.cs" />
-    <Compile Include="ScreenBinding\Elements\NulloBinder.cs" />
-    <Compile Include="ScreenBinding\Elements\NumericUpDownElement.cs" />
-    <Compile Include="ScreenBinding\Elements\NumericUpDownElementExpression.cs" />
-    <Compile Include="ScreenBinding\Elements\NumericUpDownNullableElement.cs" />
-    <Compile Include="ScreenBinding\Elements\ObjectReferenceScreenElement.cs" />
-    <Compile Include="ScreenBinding\Elements\PicklistElement.cs" />
-    <Compile Include="ScreenBinding\Elements\RadioButtonGroup.cs" />
-    <Compile Include="ScreenBinding\Elements\RadioElement.cs" />
-    <Compile Include="ScreenBinding\Elements\ScreenElement.cs" />
-    <Compile Include="ScreenBinding\Elements\TextboxElement.cs" />
-    <Compile Include="ScreenBinding\Elements\TextEditingElement.cs" />
-    <Compile Include="ScreenBinding\Elements\TextEditingElementExpression.cs" />
-    <Compile Include="ScreenBinding\ErrorProviderValidationMonitor.cs" />
-    <Compile Include="ScreenBinding\IBoundPart.cs" />
-    <Compile Include="ScreenBinding\IBoundScreenElement.cs" />
-    <Compile Include="ScreenBinding\IPropertyAccessor.cs" />
-    <Compile Include="ScreenBinding\IScreenBinder.cs" />
-    <Compile Include="ScreenBinding\IScreenDriver.cs" />
-    <Compile Include="ScreenBinding\IScreenElement.cs" />
-    <Compile Include="ScreenBinding\IValidationMonitor.cs" />
-    <Compile Include="ScreenBinding\IWatcher.cs" />
-    <Compile Include="ScreenBinding\Lists\FancyPicklist.cs" />
-    <Compile Include="ScreenBinding\Lists\IListSource.cs" />
-    <Compile Include="ScreenBinding\Lists\IPicklist.cs" />
-    <Compile Include="ScreenBinding\Lists\ListRepository.cs" />
-    <Compile Include="ScreenBinding\Lists\ListValue.cs" />
-    <Compile Include="ScreenBinding\Lists\NulloListSource.cs" />
-    <Compile Include="ScreenBinding\Lists\NulloPicklist.cs" />
-    <Compile Include="ScreenBinding\Lists\Picklist.cs" />
-    <Compile Include="ScreenBinding\NulloValidationMonitor.cs" />
-    <Compile Include="ScreenBinding\PropertyChainAccessor.cs" />
-    <Compile Include="ScreenBinding\ReflectionHelper.cs" />
-    <Compile Include="ScreenBinding\ScreenBinder.cs" />
-    <Compile Include="ScreenBinding\ScreenStates\DisableAllButScreenState.cs" />
-    <Compile Include="ScreenBinding\ScreenStates\DisableAllScreenState.cs" />
-    <Compile Include="ScreenBinding\ScreenStates\EnableAllButScreenState.cs" />
-    <Compile Include="ScreenBinding\ScreenStates\EnableAllScreenState.cs" />
-    <Compile Include="ScreenBinding\ScreenStates\IScreenState.cs" />
-    <Compile Include="ScreenBinding\ScreenStates\NormalScreenState.cs" />
-    <Compile Include="ScreenBinding\ScreenStates\NulloScreenState.cs" />
-    <Compile Include="ScreenBinding\ScreenStates\ReadOnlyScreenState.cs" />
-    <Compile Include="ScreenBinding\Settings\LastChosenValues.cs" />
-    <Compile Include="ScreenBinding\SinglePropertyAccessor.cs" />
-    <Compile Include="ScreenBinding\StateMachine\ScreenStateMachine.cs" />
-    <Compile Include="ScreenBinding\StateMachine\VisibilityStateMachine.cs" />
-    <Compile Include="ScreenBinding\StateMachine\VisibleState.cs" />
-    <Compile Include="ScreenBinding\Stylers\Styler.cs" />
-    <Compile Include="ScreenBinding\TabOrderManager.cs" />
-    <Compile Include="Dialogs\Dialog.cs" />
-    <Compile Include="Dialogs\DialogService.cs" />
-    <Compile Include="Dialogs\DialogServiceBase.cs" />
-    <Compile Include="Dialogs\ErrorHandler.cs" />
-    <Compile Include="Dialogs\IDialogService.cs" />
-    <Compile Include="Dialogs\IErrorHandler.cs" />
-    <Compile Include="Env\IMainWindowProvider.cs" />
-    <Compile Include="Dialogs\MessageListForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Dialogs\MessageListForm.Designer.cs">
+    <Compile Update="Dialogs\MessageListForm.cs" />
+    <Compile Update="Dialogs\MessageListForm.Designer.cs">
       <DependentUpon>MessageListForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="Dialogs\YesNoCancelDialogResult.cs" />
-    <Compile Include="Env\IModalDialog.cs" />
-    <Compile Include="Env\IUIEnvironment.cs" />
-    <Compile Include="Env\CursorState.cs" />
-    <Compile Include="Env\UIEnvironment.cs" />
-    <Compile Include="Env\UIEnvironmentDecorator.cs" />
-    <Compile Include="Env\UIEnvironmentImpl.cs" />
-    <Compile Include="Keyboard\KeyTranslator.cs" />
-    <Compile Include="Keyboard\KeyboardUtils.cs" />
-    <Compile Include="Logging\LogWindowAppenderBase.cs" />
-    <Compile Include="Logging\StandaloneLogWindowSetup.cs" />
-    <Compile Include="Logging\StandaloneLogWindowAppender.cs" />
-    <Compile Include="Progress\WinFormsProgressFeedback.cs" />
-    <Compile Include="PropertyEditors\EditorForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="PropertyEditors\EditorForm.designer.cs">
+    <Compile Update="PropertyEditors\EditorForm.cs" />
+    <Compile Update="PropertyEditors\EditorForm.designer.cs">
       <DependentUpon>EditorForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="PropertyEditors\IAttributeInfoProvider.cs" />
-    <Compile Include="PropertyEditors\IDataChanged.cs" />
-    <Compile Include="PropertyEditors\ListEditor.cs" />
-    <Compile Include="PropertyEditors\ListEditorForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="PropertyEditors\ListEditorForm.designer.cs">
+    <Compile Update="PropertyEditors\ListEditorForm.cs" />
+    <Compile Update="PropertyEditors\ListEditorForm.designer.cs">
       <DependentUpon>ListEditorForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="PropertyEditors\ListEditorFormState.cs" />
-    <Compile Include="WinForms\Controls\ClassicComboBox.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="WinForms\Controls\ClassicDateTimePickerNullable.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="WinForms\Controls\ClassicTextBox.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="WinForms\Controls\ClassicToolStrip.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="WinForms\Controls\DataGridViewFindResultCell.cs" />
-    <Compile Include="WinForms\Controls\DataGridViewFindResultRow.cs" />
-    <Compile Include="WinForms\Controls\DataGridViewFindResults.cs" />
-    <Compile Include="WinForms\Controls\FilterableDataGridView.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="WinForms\Controls\GroupedListView.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="WinForms\Controls\GroupedListView.Designer.cs">
+    <Compile Update="WinForms\Controls\ClassicComboBox.cs" />
+    <Compile Update="WinForms\Controls\ClassicDateTimePickerNullable.cs" />
+    <Compile Update="WinForms\Controls\ClassicTextBox.cs" />
+    <Compile Update="WinForms\Controls\ClassicToolStrip.cs" />
+    <Compile Update="WinForms\Controls\FilterableDataGridView.cs" />
+    <Compile Update="WinForms\Controls\GroupedListView.cs" />
+    <Compile Update="WinForms\Controls\GroupedListView.Designer.cs">
       <DependentUpon>GroupedListView.cs</DependentUpon>
     </Compile>
-    <Compile Include="WinForms\Controls\IFilterableDataGridView.cs" />
-    <Compile Include="WinForms\Controls\IGroupedListViewItem.cs" />
-    <Compile Include="WinForms\Controls\SortAwareDataGridView.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="WinForms\Controls\SortingColumnEventArgs.cs" />
-    <Compile Include="WinForms\Controls\SplitContainerEx.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="WinForms\Controls\TabControlUtils.cs" />
-    <Compile Include="WinForms\Controls\ToolStripCheckBox.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="WinForms\Controls\ComboBoxHandler.cs" />
-    <Compile Include="WinForms\Controls\BooleanCombobox.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="WinForms\Controls\BooleanCombobox.Designer.cs">
+    <Compile Update="WinForms\Controls\SortAwareDataGridView.cs" />
+    <Compile Update="WinForms\Controls\SplitContainerEx.cs" />
+    <Compile Update="WinForms\Controls\ToolStripCheckBox.cs" />
+    <Compile Update="WinForms\Controls\BooleanCombobox.cs" />
+    <Compile Update="WinForms\Controls\BooleanCombobox.Designer.cs">
       <DependentUpon>BooleanCombobox.cs</DependentUpon>
     </Compile>
-    <Compile Include="WinForms\Controls\BoundDataGridHandler.cs" />
-    <Compile Include="WinForms\Controls\BoundDataGridSelectionState.cs" />
-    <Compile Include="WinForms\Controls\ColumnConfigurationAttribute.cs" />
-    <Compile Include="WinForms\Controls\ComboBoxUtils.cs" />
-    <Compile Include="WinForms\Controls\DataGridViewFindController.cs" />
-    <Compile Include="WinForms\Controls\DataGridViewFindResult.cs">
-    </Compile>
-    <Compile Include="WinForms\Controls\DataGridViewFindToolStrip.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="WinForms\Controls\DoubleBufferedDataGridView.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="WinForms\Controls\IDataGridViewFindObserver.cs" />
-    <Compile Include="WinForms\Controls\IDataGridViewFindToolsView.cs" />
-    <Compile Include="WinForms\Controls\MessageConstants.cs" />
-    <Compile Include="WinForms\Controls\ColumnSortState.cs" />
-    <Compile Include="WinForms\Controls\StatusStripEx.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="WinForms\Controls\DataGridViewUtils.cs" />
-    <Compile Include="WinForms\Controls\ColumnDescriptor.cs" />
-    <Compile Include="WinForms\Controls\DataGridViewNumericUpDownCell.cs" />
-    <Compile Include="WinForms\Controls\DataGridViewNumericUpDownColumn.cs" />
-    <Compile Include="WinForms\Controls\DataGridViewNumericUpDownEditingControl.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="WinForms\Controls\DataGridViewSortState.cs" />
-    <Compile Include="WinForms\Controls\DateTimePickerNullable.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="WinForms\Controls\KeyboardShortcutTextbox.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="WinForms\Controls\NullableBooleanCombobox.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="WinForms\Controls\NullableBooleanCombobox.Designer.cs">
+    <Compile Update="WinForms\Controls\DataGridViewFindToolStrip.cs" />
+    <Compile Update="WinForms\Controls\DoubleBufferedDataGridView.cs" />
+    <Compile Update="WinForms\Controls\StatusStripEx.cs" />
+    <Compile Update="WinForms\Controls\DataGridViewNumericUpDownEditingControl.cs" />
+    <Compile Update="WinForms\Controls\DateTimePickerNullable.cs" />
+    <Compile Update="WinForms\Controls\KeyboardShortcutTextbox.cs" />
+    <Compile Update="WinForms\Controls\NullableBooleanCombobox.cs" />
+    <Compile Update="WinForms\Controls\NullableBooleanCombobox.Designer.cs">
       <DependentUpon>NullableBooleanCombobox.cs</DependentUpon>
     </Compile>
-    <Compile Include="WinForms\Controls\NumericUpDownNullable.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="WinForms\Controls\NumericUpDownNullable.Designer.cs">
+    <Compile Update="WinForms\Controls\NumericUpDownNullable.cs" />
+    <Compile Update="WinForms\Controls\NumericUpDownNullable.Designer.cs">
       <DependentUpon>NumericUpDownNullable.cs</DependentUpon>
     </Compile>
-    <Compile Include="WinForms\Controls\ObjectReferenceControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="WinForms\Controls\ObjectReferenceControl.Designer.cs">
+    <Compile Update="WinForms\Controls\ObjectReferenceControl.cs" />
+    <Compile Update="WinForms\Controls\ObjectReferenceControl.Designer.cs">
       <DependentUpon>ObjectReferenceControl.cs</DependentUpon>
     </Compile>
-    <Compile Include="WinForms\Controls\StackedPanelsControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="WinForms\Controls\StackedPanelsControl.Designer.cs">
+    <Compile Update="WinForms\Controls\StackedPanelsControl.cs" />
+    <Compile Update="WinForms\Controls\StackedPanelsControl.Designer.cs">
       <DependentUpon>StackedPanelsControl.cs</DependentUpon>
     </Compile>
-    <Compile Include="WinForms\Controls\DoubleBufferedTableLayoutPanel.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="WinForms\Controls\ToolStripEx.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="WinForms\Controls\TriState.cs" />
-    <Compile Include="WinForms\Controls\ExpanderControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="WinForms\Controls\ExpanderControl.Designer.cs">
+    <Compile Update="WinForms\Controls\DoubleBufferedTableLayoutPanel.cs" />
+    <Compile Update="WinForms\Controls\ToolStripEx.cs" />
+    <Compile Update="WinForms\Controls\ExpanderControl.cs" />
+    <Compile Update="WinForms\Controls\ExpanderControl.Designer.cs">
       <DependentUpon>ExpanderControl.cs</DependentUpon>
     </Compile>
-    <Compile Include="WinForms\Controls\FileSystemPathControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="WinForms\Controls\FileSystemPathControl.Designer.cs">
+    <Compile Update="WinForms\Controls\FileSystemPathControl.cs" />
+    <Compile Update="WinForms\Controls\FileSystemPathControl.Designer.cs">
       <DependentUpon>FileSystemPathControl.cs</DependentUpon>
     </Compile>
-    <Compile Include="WinForms\Controls\FileSystemPathType.cs" />
-    <Compile Include="WinForms\Controls\ToolStripStretchComboBox.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="Finder\Finder.cs" />
-    <Compile Include="Finder\FinderForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Finder\FinderForm.Designer.cs">
+    <Compile Update="WinForms\Controls\ToolStripStretchComboBox.cs" />
+    <Compile Update="Finder\FinderForm.cs" />
+    <Compile Update="Finder\FinderForm.Designer.cs">
       <DependentUpon>FinderForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="Finder\FinderFormState.cs" />
-    <Compile Include="Finder\FinderPresenter.cs" />
-    <Compile Include="Finder\IFinder.cs" />
-    <Compile Include="Finder\IFinderObserver.cs" />
-    <Compile Include="Finder\IFinderView.cs" />
-    <Compile Include="Finder\ISelectable.cs" />
-    <Compile Include="Finder\ITypeFinderObserver.cs" />
-    <Compile Include="Finder\ITypeFinderView.cs" />
-    <Compile Include="Finder\TypeFinder.cs" />
-    <Compile Include="Finder\TypeFinderForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Finder\TypeFinderForm.Designer.cs">
+    <Compile Update="Finder\TypeFinderForm.cs" />
+    <Compile Update="Finder\TypeFinderForm.Designer.cs">
       <DependentUpon>TypeFinderForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="Finder\TypeFinderPresenter.cs" />
-    <Compile Include="Finder\TypeTableRow.cs" />
-    <Compile Include="Logging\LogLevel.cs" />
-    <Compile Include="Logging\LogWindowUtils.cs" />
-    <Compile Include="WinForms\Controls\CustomStateTreeView.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="WinForms\Controls\IStateTreeNode.cs" />
-    <Compile Include="WinForms\Controls\TreeViewUtils.cs" />
-    <Compile Include="WinForms\Controls\TriStateTreeNode.cs" />
-    <Compile Include="WinForms\Controls\TriStateTreeView.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="Persistence\WinForms\BasicFormStateManager.cs" />
-    <Compile Include="Persistence\WinForms\FormState.cs" />
-    <Compile Include="Persistence\WinForms\FormStateManager.cs" />
-    <Compile Include="Persistence\WinForms\FormStateRestoreOption.cs" />
-    <Compile Include="Persistence\WinForms\IFormState.cs" />
-    <Compile Include="Persistence\WinForms\IFormStateAware.cs" />
-    <Compile Include="Persistence\WinForms\IWindowSettingsTarget.cs" />
-    <Compile Include="Persistence\FormStatePersistence.cs" />
-    <Compile Include="Persistence\WinForms\WindowSettings.cs" />
-    <Compile Include="Persistence\WinForms\WindowSettingsManager.cs" />
-    <Compile Include="WinForms\IdleCallback.cs" />
-    <Compile Include="WinForms\WaitCursor.cs" />
-    <Compile Include="WinForms\WinFormUtils.cs" />
-    <Compile Include="Logging\LogHistoryForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Logging\LogHistoryForm.Designer.cs">
+    <Compile Update="WinForms\Controls\CustomStateTreeView.cs" />
+    <Compile Update="WinForms\Controls\TriStateTreeView.cs" />
+    <Compile Update="Logging\LogHistoryForm.cs" />
+    <Compile Update="Logging\LogHistoryForm.Designer.cs">
       <DependentUpon>LogHistoryForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="Logging\ILogWindow.cs" />
-    <Compile Include="Logging\LogEventItem.cs" />
-    <Compile Include="Logging\LogEventItemDetailsForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Logging\LogEventItemDetailsForm.Designer.cs">
+    <Compile Update="Logging\LogEventItemDetailsForm.cs" />
+    <Compile Update="Logging\LogEventItemDetailsForm.Designer.cs">
       <DependentUpon>LogEventItemDetailsForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="Logging\LogWindowControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="Logging\LogWindowControl.Designer.cs">
+    <Compile Update="Logging\LogWindowControl.cs" />
+    <Compile Update="Logging\LogWindowControl.Designer.cs">
       <DependentUpon>LogWindowControl.cs</DependentUpon>
     </Compile>
-    <Compile Include="Properties\Resources.Designer.cs">
+    <Compile Update="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="WinForms\WpfHostingWinForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="WinForms\WpfHostingWinForm.Designer.cs">
+    <Compile Update="WinForms\WpfHostingWinForm.cs" />
+    <Compile Update="WinForms\WpfHostingWinForm.Designer.cs">
       <DependentUpon>WpfHostingWinForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="WPF\BindableRadioButton.cs" />
-    <Compile Include="WPF\BoolToColorBrushConverter.cs" />
-    <Compile Include="WPF\DisplayUtils.cs" />
-    <Compile Include="WPF\DropDownButtonBehaviour.cs" />
-    <Compile Include="WPF\IWinFormHostable.cs" />
-    <Compile Include="WPF\RelayCommand.cs" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Logging\LogWindowControl.resx">
+    <EmbeddedResource Update="Logging\LogWindowControl.resx">
       <SubType>Designer</SubType>
       <DependentUpon>LogWindowControl.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="WinForms\WpfHostingWinForm.resx">
+    <EmbeddedResource Update="WinForms\WpfHostingWinForm.resx">
       <DependentUpon>WpfHostingWinForm.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Dialogs\MessageListForm.resx">
+    <EmbeddedResource Update="Dialogs\MessageListForm.resx">
       <DependentUpon>MessageListForm.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Properties\LocalizableStrings.resx">
+    <EmbeddedResource Update="Properties\LocalizableStrings.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>LocalizableStrings.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="PropertyEditors\EditorForm.resx">
+    <EmbeddedResource Update="PropertyEditors\EditorForm.resx">
       <DependentUpon>EditorForm.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="PropertyEditors\ListEditorForm.resx">
+    <EmbeddedResource Update="PropertyEditors\ListEditorForm.resx">
       <DependentUpon>ListEditorForm.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="WinForms\Controls\BooleanCombobox.resx">
+    <EmbeddedResource Update="WinForms\Controls\BooleanCombobox.resx">
       <SubType>Designer</SubType>
       <DependentUpon>BooleanCombobox.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="WinForms\Controls\ExpanderControl.resx">
+    <EmbeddedResource Update="WinForms\Controls\ExpanderControl.resx">
       <DependentUpon>ExpanderControl.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="WinForms\Controls\FileSystemPathControl.resx">
+    <EmbeddedResource Update="WinForms\Controls\FileSystemPathControl.resx">
       <DependentUpon>FileSystemPathControl.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="WinForms\Controls\GroupedListView.resx">
+    <EmbeddedResource Update="WinForms\Controls\GroupedListView.resx">
       <DependentUpon>GroupedListView.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="WinForms\Controls\NullableBooleanCombobox.resx">
+    <EmbeddedResource Update="WinForms\Controls\NullableBooleanCombobox.resx">
       <SubType>Designer</SubType>
       <DependentUpon>NullableBooleanCombobox.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="WinForms\Controls\NumericUpDownNullable.resx">
+    <EmbeddedResource Update="WinForms\Controls\NumericUpDownNullable.resx">
       <SubType>Designer</SubType>
       <DependentUpon>NumericUpDownNullable.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="WinForms\Controls\ObjectReferenceControl.resx">
+    <EmbeddedResource Update="WinForms\Controls\ObjectReferenceControl.resx">
       <DependentUpon>ObjectReferenceControl.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="WinForms\Controls\StackedPanelsControl.resx">
+    <EmbeddedResource Update="WinForms\Controls\StackedPanelsControl.resx">
       <SubType>Designer</SubType>
       <DependentUpon>StackedPanelsControl.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Finder\FinderForm.resx">
+    <EmbeddedResource Update="Finder\FinderForm.resx">
       <DependentUpon>FinderForm.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Finder\TypeFinderForm.resx">
+    <EmbeddedResource Update="Finder\TypeFinderForm.resx">
       <SubType>Designer</SubType>
       <DependentUpon>TypeFinderForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Properties\Resources.resx">
+    <EmbeddedResource Update="Properties\Resources.resx">
       <SubType>Designer</SubType>
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <EmbeddedResource Include="Logging\LogHistoryForm.resx">
+    <EmbeddedResource Update="Logging\LogHistoryForm.resx">
       <SubType>Designer</SubType>
       <DependentUpon>LogHistoryForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Logging\LogEventItemDetailsForm.resx">
+    <EmbeddedResource Update="Logging\LogEventItemDetailsForm.resx">
       <SubType>Designer</SubType>
       <DependentUpon>LogEventItemDetailsForm.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
+
   <ItemGroup>
-    <ProjectReference Include="..\ProSuite.Commons.Logging\ProSuite.Commons.Logging.csproj">
-      <Project>{A227D52C-0536-498F-ACF2-2A5A67C3D9FF}</Project>
-      <Name>ProSuite.Commons.Logging</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ProSuite.Commons\ProSuite.Commons.csproj">
-      <Project>{66E5D99B-26AB-4FFF-834D-D96347DF4FA4}</Project>
-      <Name>ProSuite.Commons</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj">
-      <Project>{384763D9-F7A1-4AA2-9ABD-EE338CD8D4C1}</Project>
-      <Name>ProSuite.Commons.Essentials</Name>
-    </ProjectReference>
+    <ProjectReference Include="..\ProSuite.Commons.Logging\ProSuite.Commons.Logging.csproj" />
+    <ProjectReference Include="..\ProSuite.Commons\ProSuite.Commons.csproj" />
+    <ProjectReference Include="..\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj" />
   </ItemGroup>
+
   <ItemGroup>
+    <Content Include="..\..\lib\licenses\Microsoft.MIT.XamlBehaviorsWpf.license.txt">
+      <Link>Licenses\Microsoft.MIT.XamlBehaviorsWpf.license.txt</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Properties\Images\Browse.png" />
     <Content Include="Properties\Images\ClearFilter.png" />
     <Content Include="Properties\Images\Collapse.png" />
@@ -506,20 +250,9 @@
     <Content Include="Properties\Images\SelectAll.png" />
     <Content Include="Properties\Images\UpArrow.png" />
   </ItemGroup>
+
   <ItemGroup>
-    <PackageReference Include="log4net">
-      <Version>2.0.12</Version>
-    </PackageReference>
-    <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf">
-      <Version>1.1.31</Version>
-    </PackageReference>
+    <PackageReference Include="log4net" Version="2.0.12" />
+    <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.39" />
   </ItemGroup>
-  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
 </Project>

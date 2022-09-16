@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Reflection;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Container;
 using ProSuite.QA.Core;
@@ -16,18 +14,19 @@ namespace ProSuite.DomainModel.AO.QA
 		[UsedImplicitly] private int _constructorId;
 
 		/// <summary>
-		/// Initializes a new instance of the <see cref="RowFilterFactory"/> class.
+		/// Initializes a new instance of the <see cref="TransformerFactory"/> class.
 		/// </summary>
 		public TransformerFactory([NotNull] Type type, int constructorId = 0)
 		{
 			Assert.ArgumentNotNull(type, nameof(type));
+			InstanceUtils.AssertConstructorExists(type, constructorId);
 
 			_transformerType = type;
 			_constructorId = constructorId;
 		}
 
 		/// <summary>
-		/// Initializes a new instance of the <see cref="RowFilterFactory"/> class.
+		/// Initializes a new instance of the <see cref="TransformerFactory"/> class.
 		/// </summary>
 		public TransformerFactory([NotNull] string assemblyName,
 		                          [NotNull] string typeName,
@@ -41,19 +40,13 @@ namespace ProSuite.DomainModel.AO.QA
 			_constructorId = constructorId;
 		}
 
+		[NotNull]
 		public Type TransformerType => _transformerType;
 
-		#region ParameterizedInstanceFactory overrides
+		public override string TestDescription =>
+			InstanceUtils.GetDescription(TransformerType, _constructorId);
 
-		[NotNull]
-		public override string[] TestCategories => ReflectionUtils.GetCategories(GetType());
-
-		public override string GetTestDescription()
-		{
-			ConstructorInfo ctor = TransformerType.GetConstructors()[_constructorId];
-
-			return InstanceUtils.GetDescription(ctor);
-		}
+		public override string[] TestCategories => InstanceUtils.GetCategories(TransformerType);
 
 		public override string GetTestTypeDescription()
 		{
@@ -65,8 +58,6 @@ namespace ProSuite.DomainModel.AO.QA
 			return InstanceUtils.CreateParameters(TransformerType, _constructorId);
 		}
 
-		#endregion
-
 		[NotNull]
 		public ITableTransformer Create([NotNull] IOpenDataset datasetContext,
 		                                [NotNull] TransformerConfiguration transformerConfiguration)
@@ -77,8 +68,7 @@ namespace ProSuite.DomainModel.AO.QA
 
 		private T CreateInstance<T>(object[] args)
 		{
-			return InstanceUtils.CreateInstance<T>(
-				TransformerType, _constructorId, args);
+			return InstanceUtils.CreateInstance<T>(TransformerType, _constructorId, args);
 		}
 
 		public override string ToString()

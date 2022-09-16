@@ -1,4 +1,4 @@
-using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.QA.Container.TestContainer
@@ -6,6 +6,6 @@ namespace ProSuite.QA.Container.TestContainer
 	public interface IFeatureProxy
 	{
 		[NotNull]
-		IFeature Inner { get; }
+		IReadOnlyFeature Inner { get; }
 	}
 }

@@ -55,7 +55,7 @@ namespace ProSuite.QA.Tests.Test
 			row1.Shape = line1;
 			row1.Store();
 
-			var test = new QaMonotonicZ(featureClass)
+			var test = new QaMonotonicZ(ReadOnlyTableFactory.Create(featureClass))
 			           {
 				           AllowConstantValues = false,
 				           ExpectedMonotonicity = MonotonicityDirection.Decreasing
@@ -81,7 +81,7 @@ namespace ProSuite.QA.Tests.Test
 			row1.Shape = line1;
 			row1.Store();
 
-			var test = new QaMonotonicZ(featureClass)
+			var test = new QaMonotonicZ(ReadOnlyTableFactory.Create(featureClass))
 			           {
 				           AllowConstantValues = true,
 				           ExpectedMonotonicity = MonotonicityDirection.Increasing
@@ -112,7 +112,7 @@ namespace ProSuite.QA.Tests.Test
 			row1.Shape = line1;
 			row1.Store();
 
-			var test = new QaMonotonicZ(featureClass)
+			var test = new QaMonotonicZ(ReadOnlyTableFactory.Create(featureClass))
 			           {
 				           AllowConstantValues = false,
 				           ExpectedMonotonicity = MonotonicityDirection.Increasing
@@ -141,7 +141,7 @@ namespace ProSuite.QA.Tests.Test
 			row3.Shape = CurveConstruction.StartLine(0, 0, 6).LineTo(1, 0, 5).Curve;
 			row3.Store();
 
-			var test = new QaMonotonicZ(featureClass)
+			var test = new QaMonotonicZ(ReadOnlyTableFactory.Create(featureClass))
 			           {
 				           AllowConstantValues = false,
 				           ExpectedMonotonicity = MonotonicityDirection.Decreasing,

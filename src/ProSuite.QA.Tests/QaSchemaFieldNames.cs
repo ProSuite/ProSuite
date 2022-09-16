@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using ESRI.ArcGIS.Geodatabase;
-using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.QA.Tests.Properties;
@@ -12,6 +10,8 @@ using ProSuite.QA.Tests.Schema;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
 {
@@ -19,7 +19,7 @@ namespace ProSuite.QA.Tests
 	[SchemaTest]
 	public class QaSchemaFieldNames : QaSchemaTestBase
 	{
-		private readonly ITable _table;
+		private readonly IReadOnlyTable _table;
 		private readonly int _maximumLength;
 		private readonly ExpectedCase _expectedCase;
 		private readonly int _uniqueSubstringLength;
@@ -51,7 +51,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaSchemaFieldNames_0))]
 		public QaSchemaFieldNames(
 			[Doc(nameof(DocStrings.QaSchemaFieldNames_table))] [NotNull]
-			ITable table,
+			IReadOnlyTable table,
 			[Doc(nameof(DocStrings.QaSchemaFieldNames_maximumLength))]
 			int maximumLength,
 			[Doc(nameof(DocStrings.QaSchemaFieldNames_expectedCase))]
@@ -71,7 +71,7 @@ namespace ProSuite.QA.Tests
 
 		public override int Execute()
 		{
-			IList<IField> fields = DatasetUtils.GetFields(_table);
+			IList<IField> fields = DatasetUtils.GetFields(_table.Fields);
 
 			int errorCount = fields.Sum(field => ValidateFieldName(field));
 
@@ -264,7 +264,7 @@ namespace ProSuite.QA.Tests
 				return true;
 			}
 
-			var featureClass = _table as IFeatureClass;
+			var featureClass = _table as IReadOnlyFeatureClass;
 
 			if (featureClass != null)
 			{

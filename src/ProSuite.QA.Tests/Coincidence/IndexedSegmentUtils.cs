@@ -1,17 +1,17 @@
 using System;
 using ESRI.ArcGIS.esriSystem;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container.Geometry;
 using ProSuite.QA.Container.TestContainer;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests.Coincidence
 {
 	public static class IndexedSegmentUtils
 	{
 		[NotNull]
-		public static IIndexedSegments GetIndexedGeometry([NotNull] IFeature feature,
+		public static IIndexedSegments GetIndexedGeometry([NotNull] IReadOnlyFeature feature,
 		                                                  bool releaseOnDispose)
 		{
 			var polycurveProxy = feature as IIndexedPolycurveFeature;

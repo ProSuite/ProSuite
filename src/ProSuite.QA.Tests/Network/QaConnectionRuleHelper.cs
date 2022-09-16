@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
 using System.Text;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container.TestSupport;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests.Network
 {
@@ -21,7 +21,7 @@ namespace ProSuite.QA.Tests.Network
 		private string _countFilter;
 		private List<TableView> _countRuleFilterHelpers;
 
-		private QaConnectionRuleHelper([NotNull] ICollection<ITable> tables)
+		private QaConnectionRuleHelper([NotNull] ICollection<IReadOnlyTable> tables)
 		{
 			Assert.ArgumentNotNull(tables, nameof(tables));
 
@@ -85,7 +85,7 @@ namespace ProSuite.QA.Tests.Network
 			[NotNull] IList<QaConnectionRule> rules,
 			[NotNull] out TableView[] tableFilterHelpers)
 		{
-			IList<ITable> tableList = rules[0].TableList;
+			IList<IReadOnlyTable> tableList = rules[0].TableList;
 
 			foreach (QaConnectionRule rule in rules)
 			{
@@ -141,7 +141,7 @@ namespace ProSuite.QA.Tests.Network
 
 			for (int tableIndex = 0; tableIndex < tableCount; tableIndex++)
 			{
-				ITable table = tableList[tableIndex];
+				IReadOnlyTable table = tableList[tableIndex];
 
 				string lowerCaseCondition =
 					baseConditions[tableIndex].ToString().ToLower().Replace(startsInLower, "true");
@@ -149,7 +149,7 @@ namespace ProSuite.QA.Tests.Network
 				TableView tableFilterHelper = TableViewFactory.Create(table, lowerCaseCondition);
 				tableFilterHelper.Constraint = null;
 
-				if (((IFeatureClass) table).ShapeType == esriGeometryType.esriGeometryPolyline)
+				if (((IReadOnlyFeatureClass) table).ShapeType == esriGeometryType.esriGeometryPolyline)
 				{
 					tableFilterHelper.AddColumn(QaConnections.StartsIn, typeof(bool));
 				}

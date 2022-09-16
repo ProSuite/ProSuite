@@ -7,9 +7,10 @@ using System.Text;
 using System.Xml;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Text;
 using ProSuite.Commons.Xml;
-using ProSuite.QA.Container;
 using ProSuite.QA.Core;
+using ProSuite.QA.Core.IssueCodes;
 
 namespace ProSuite.DomainModel.AO.QA.TestReport
 {
@@ -84,6 +85,8 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			_headerItems.Add(new KeyValuePair<string, string>(name, value));
 		}
 
+		public bool ExcludeHeadersAndIndex { get; set; }
+
 		public override void WriteReport()
 		{
 			IncludedTestFactories.Sort();
@@ -94,91 +97,120 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			List<IncludedInstanceBase> includedTransformers =
 				GetSortedTransformerClasses().Cast<IncludedInstanceBase>().ToList();
 
+			List<IncludedInstanceBase> includedIssueFilters =
+				GetSortedIssueFilterClasses().Cast<IncludedInstanceBase>().ToList();
+
 			includedTests.AddRange(IncludedTestFactories.Cast<IncludedInstanceBase>());
 
-			WriteHeader();
-
-			WriteSubSectionHeader("Tests");
-
-			WriteCategoryIndex();
-
-			WriteSubSectionHeader("Transformers");
-
-			WriteTransformerIndex();
-
-			AppendSeparator();
-
-			if (includedTests.Count > 0)
-
+			if (! ExcludeHeadersAndIndex)
 			{
-				foreach (IncludedInstanceBase includedTest in includedTests)
+				WriteHeader();
+
+				WriteSubSectionHeader("Tests");
+				WriteTestsIndex();
+
+				WriteSubSectionHeader("Dataset Transformers");
+				WriteTransformersIndex();
+
+				WriteSubSectionHeader("Issue Filters");
+				WriteIssueFiltersIndex();
+
+				AppendSeparator();
+			}
+
+			AppendBody(includedTests, includedTransformers, includedIssueFilters);
+
+			if (! ExcludeHeadersAndIndex)
+			{
+				AppendIndexTitle("Index");
+				WriteAlphabeticalIndex();
+			}
+
+			XmlUtils.WriteFormatted(ReplaceBreaks(_xmlDocument.OuterXml), _textWriter);
+		}
+
+		private void AppendBody(List<IncludedInstanceBase> includedTests,
+		                        List<IncludedInstanceBase> includedTransformers,
+		                        List<IncludedInstanceBase> includedIssueFilters)
+		{
+			// Tests, TestFactories:
+			foreach (IncludedInstanceBase includedTest in includedTests)
+			{
+				if (includedTest is IncludedInstanceClass includedTestClass)
 				{
-					if (includedTest is IncludedTestClass)
-					{
-						var includedTestClass = (IncludedTestClass) includedTest;
-						if (includedTestClass.TestConstructors.Count <= 0)
-						{
-							continue;
-						}
-
-						AppendTestClassTitle(includedTestClass);
-
-						AppendTestClassDescription(includedTestClass);
-
-						foreach (
-							IncludedTestConstructor includedTestConstructor in
-							includedTestClass.TestConstructors)
-						{
-							AppendTestConstructorTitle(includedTestConstructor);
-
-							AppendTestParameters(includedTestConstructor);
-						}
-
-						AppendSeparator();
-					}
-					else if (includedTest is IncludedTestFactory)
-					{
-						var test = (IncludedTestFactory) includedTest;
-
-						AppendTestFactoryTitle(test);
-
-						AppendTestClassDescription(test);
-
-						AppendTestParameters(test);
-
-						AppendSeparator();
-					}
-				}
-
-				foreach (IncludedInstanceBase testBase in includedTransformers)
-				{
-					var includedTransformer = (IncludedTransformer) testBase;
-					if (includedTransformer.TestConstructors.Count <= 0)
+					if (includedTestClass.InstanceConstructors.Count <= 0)
 					{
 						continue;
 					}
 
-					AppendTransformerClassTitle(includedTransformer);
+					AppendClassTitle(includedTestClass);
 
-					AppendTestClassDescription(includedTransformer);
+					AppendTestClassDescription(includedTestClass);
 
 					foreach (
-						IncludedTestConstructor includedTestConstructor in
-						includedTransformer.TestConstructors)
+						IncludedInstanceConstructor includedTestConstructor in
+						includedTestClass.InstanceConstructors)
 					{
-						AppendTestConstructorTitle(includedTestConstructor);
+						AppendConstructorTitle(includedTestConstructor);
 
 						AppendTestParameters(includedTestConstructor);
 					}
 
 					AppendSeparator();
 				}
+				else if (includedTest is IncludedTestFactory testFactory)
+				{
+					AppendTestFactoryTitle(testFactory);
 
-				AppendIndexTitle("Index");
-				WriteAlphabeticalIndex();
+					AppendTestClassDescription(testFactory);
+
+					AppendTestParameters(testFactory);
+
+					AppendSeparator();
+				}
 			}
 
-			XmlUtils.WriteFormatted(ReplaceBreaks(_xmlDocument.OuterXml), _textWriter);
+			const string transformerImplementation = "Transformer class";
+			AppendInstanceDocumentations(includedTransformers, transformerImplementation);
+
+			const string issueFilterImplemantation = "Issue Filter class";
+			AppendInstanceDocumentations(includedIssueFilters, issueFilterImplemantation);
+		}
+
+		private void AppendInstanceDocumentations(
+			[NotNull] List<IncludedInstanceBase> includedIssueFilters,
+			[NotNull] string implementationPattern)
+		{
+			foreach (IncludedInstanceBase filterInstance in includedIssueFilters)
+			{
+				AppendInstanceDocumentation(filterInstance, implementationPattern);
+			}
+		}
+
+		private void AppendInstanceDocumentation(IncludedInstanceBase instance,
+		                                         string implementationPattern)
+		{
+			var includedInstance = (IncludedInstanceClass) instance;
+
+			if (includedInstance.InstanceConstructors.Count <= 0)
+			{
+				return;
+			}
+
+			AppendClassTitle(includedInstance);
+
+			AppendClassDescription(includedInstance, implementationPattern);
+
+			foreach (
+				IncludedInstanceConstructor includedTestConstructor in
+				includedInstance.InstanceConstructors)
+			{
+				AppendConstructorTitle(includedTestConstructor);
+
+				AppendTestParameters(includedTestConstructor);
+			}
+
+			AppendSeparator();
 		}
 
 		#endregion
@@ -255,12 +287,15 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			AddHeaderRow("Test Classes",
 			             IncludedTestClasses.Count.ToString(CultureInfo.InvariantCulture));
 			AddHeaderRow("Test Class Constructors",
-			             GetTestConstructorCount(IncludedTestClasses.Values)
-				             .ToString(CultureInfo.InvariantCulture));
+			             IncludedTestClasses.Values
+			                                .Sum(included => included.InstanceConstructors.Count)
+			                                .ToString(CultureInfo.InvariantCulture));
 			AddHeaderRow("Test Factories",
 			             IncludedTestFactories.Count.ToString(CultureInfo.InvariantCulture));
 			AddHeaderRow("Transformer Classes",
 			             IncludedTransformerClasses.Count.ToString(CultureInfo.InvariantCulture));
+			AddHeaderRow("Issue Filter Classes",
+			             IncludedFilterClasses.Count.ToString(CultureInfo.InvariantCulture));
 			AddHeaderRow("Report Created", DateTime.Now.ToString(CultureInfo.InvariantCulture));
 		}
 
@@ -271,13 +306,13 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			_htmlTable.AppendChild(sectionRow);
 		}
 
-		private void WriteTransformerIndex()
+		private void WriteIssueFiltersIndex()
 		{
 			var indexEntries = new List<IndexEntry>();
 
-			foreach (IncludedTransformer transformer in GetSortedTransformerClasses())
+			foreach (IncludedInstanceClass filter in GetSortedIssueFilterClasses())
 			{
-				indexEntries.Add(new TestIndexEntry(transformer));
+				indexEntries.Add(new InstanceIndexEntry(filter));
 			}
 
 			if (indexEntries.Count == 0)
@@ -288,7 +323,42 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			RenderIndexEntries(indexEntries);
 		}
 
-		private void WriteCategoryIndex()
+		private void WriteTransformersIndex()
+		{
+			var categories = new Dictionary<string, List<IncludedInstanceBase>>();
+
+			ExtractCategories(categories, IncludedTransformerClasses.Values);
+
+			var indexEntries = new List<IndexEntry>();
+
+			foreach (string category in GetSortedCategories(categories.Keys))
+			{
+				List<IncludedInstanceBase> instances = categories[category];
+
+				instances.Sort();
+
+				if (instances.Count <= 0)
+				{
+					continue;
+				}
+
+				indexEntries.Add(new SectionTitleIndexEntry(string.Format("{0}:", category)));
+
+				foreach (IncludedInstanceBase test in instances)
+				{
+					indexEntries.Add(new InstanceIndexEntry(test));
+				}
+			}
+
+			if (indexEntries.Count == 0)
+			{
+				return;
+			}
+
+			RenderIndexEntries(indexEntries);
+		}
+
+		private void WriteTestsIndex()
 		{
 			var categories = new Dictionary<string, List<IncludedInstanceBase>>();
 
@@ -312,7 +382,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 
 				foreach (IncludedInstanceBase test in categoryTests)
 				{
-					indexEntries.Add(new TestIndexEntry(test));
+					indexEntries.Add(new InstanceIndexEntry(test));
 				}
 			}
 
@@ -331,27 +401,37 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			{
 				indexEntries.Add(new SectionTitleIndexEntry("Tests:"));
 
-				foreach (IncludedTestClass test in GetSortedTestClasses())
+				foreach (IncludedInstanceClass test in GetSortedTestClasses())
 				{
-					indexEntries.Add(new TestClassIndexEntry(test));
+					indexEntries.Add(new InstanceIndexEntry(test));
 				}
 			}
 
 			if (IncludedTestFactories.Count > 0)
 			{
 				indexEntries.Add(new SectionTitleIndexEntry("Test Factories:"));
+
 				foreach (IncludedTestFactory factory in IncludedTestFactories)
 				{
-					indexEntries.Add(new TestFactoryIndexEntry(factory));
+					indexEntries.Add(new InstanceIndexEntry(factory));
 				}
 			}
 
 			if (IncludedTransformerClasses.Count > 0)
 			{
 				indexEntries.Add(new SectionTitleIndexEntry("Transformers:"));
-				foreach (IncludedTransformer transformer in GetSortedTransformerClasses())
+				foreach (IncludedInstanceClass transformer in GetSortedTransformerClasses())
 				{
-					indexEntries.Add(new TestIndexEntry(transformer));
+					indexEntries.Add(new InstanceIndexEntry(transformer));
+				}
+			}
+
+			if (IncludedFilterClasses.Count > 0)
+			{
+				indexEntries.Add(new SectionTitleIndexEntry("Issue filters:"));
+				foreach (IncludedInstanceClass issueFilter in GetSortedIssueFilterClasses())
+				{
+					indexEntries.Add(new InstanceIndexEntry(issueFilter));
 				}
 			}
 
@@ -483,31 +563,19 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			return result;
 		}
 
-		private static int GetTestConstructorCount(
-			[NotNull] IEnumerable<IncludedTestClass> includedTestClasses)
-		{
-			var result = 0;
-
-			foreach (IncludedTestClass includedTestClass in includedTestClasses)
-			{
-				result += includedTestClass.TestConstructors.Count;
-			}
-
-			return result;
-		}
-
 		[NotNull]
-		private IEnumerable<XmlElement> GetTestParameterRows([NotNull] IncludedInstance test)
+		private IEnumerable<XmlElement> GetTestParameterRows(
+			[NotNull] IncludedInstance includedInstance)
 		{
-			IInstanceInfo testFactory = test.InstanceFactory;
+			IInstanceInfo instanceInfo = includedInstance.InstanceInfo;
 
 			var rows = new List<XmlElement>();
 
-			if (test is IncludedTestConstructor)
+			if (includedInstance is IncludedInstanceConstructor)
 			{
-				XmlElement signatureRow = GetSignatureRow(testFactory);
+				XmlElement signatureRow = GetSignatureRow(instanceInfo);
 				rows.Add(signatureRow);
-				rows.Add(GetTestDescriptionTextRow(test));
+				rows.Add(GetTestDescriptionTextRow(includedInstance));
 			}
 
 			// create Html-Row for Parameter Description title 
@@ -517,15 +585,16 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			parameterHeadingRow.AppendChild(CreateTableCell("Description", "header"));
 			rows.Add(parameterHeadingRow);
 
-			foreach (TestParameter testParameter in testFactory.Parameters)
+			foreach (TestParameter testParameter in instanceInfo.Parameters)
 			{
 				string parameterDescription =
-					test.InstanceFactory.GetParameterDescription(testParameter.Name);
+					includedInstance.InstanceInfo.GetParameterDescription(testParameter.Name);
 
 				XmlElement parameterRow = CreateTableRow();
 				rows.Add(parameterRow);
 
-				parameterRow.AppendChild(CreateTableCell(testParameter.Name));
+				parameterRow.AppendChild(
+					CreateTableCell(InstanceUtils.GetParameterNameString(testParameter)));
 				parameterRow.AppendChild(
 					CreateTableCell(InstanceUtils.GetParameterTypeString(testParameter)));
 				parameterRow.AppendChild(
@@ -535,9 +604,9 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			return rows;
 		}
 
-		private XmlElement GetSignatureRow([NotNull] IInstanceInfo testFactory)
+		private XmlElement GetSignatureRow([NotNull] IInstanceInfo instanceInfo)
 		{
-			string signature = InstanceUtils.GetTestSignature(testFactory);
+			string signature = InstanceUtils.GetTestSignature(instanceInfo);
 
 			XmlElement signatureRow = CreateTableRow();
 			signatureRow.AppendChild(CreateTableCell("Signature:"));
@@ -704,74 +773,70 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			_htmlTable.AppendChild(row);
 		}
 
-		private void AppendTestClassTitle([NotNull] IncludedTestClass test)
+		private void AppendClassTitle([NotNull] IncludedInstanceClass instanceClass)
 		{
 			XmlElement row = CreateTableRow();
-			XmlElement cell = CreateTableCell(test.Title, 3, test.Obsolete
-				                                                 ? "obsoleteTitle"
-				                                                 : "title");
-			row.AppendChild(cell);
-			cell.AppendChild(CreateAnchor(test.Key));
-
-			_htmlTable.AppendChild(row);
-		}
-
-		private void AppendTransformerClassTitle([NotNull] IncludedTransformer transformer)
-		{
-			XmlElement row = CreateTableRow();
-			XmlElement cell = CreateTableCell(transformer.Title, 3, transformer.Obsolete
+			XmlElement cell = CreateTableCell(instanceClass.Title, 3, instanceClass.Obsolete
 				                                  ? "obsoleteTitle"
 				                                  : "title");
 			row.AppendChild(cell);
-			cell.AppendChild(CreateAnchor(transformer.Key));
+			cell.AppendChild(CreateAnchor(instanceClass.Key));
 
 			_htmlTable.AppendChild(row);
 		}
 
 		private void AppendTestClassDescription(IncludedInstanceBase test)
 		{
-			if (test.Description != null)
+			string implementationPattern = "";
+
+			if (test is IncludedInstanceClass)
 			{
-				AppendTestDescriptionText(test);
+				implementationPattern = "Test class";
+			}
+			else if (test is IncludedTestFactory)
+			{
+				implementationPattern = "Test factory";
+			}
+
+			AppendClassDescription(test, implementationPattern);
+
+			if (test is IncludedTestFactory)
+			{
+				_htmlTable.AppendChild(
+					GetSignatureRow(((IncludedInstance) test).InstanceInfo));
+			}
+
+			AppendTestIssueCodes(test.IssueCodes);
+		}
+
+		private void AppendClassDescription([NotNull] IncludedInstanceBase instance,
+		                                    [NotNull] string implementationPattern)
+		{
+			if (instance.Description != null)
+			{
+				AppendTestDescriptionText(instance);
 			}
 
 			XmlElement categoryRow = CreateTableRow();
 			categoryRow.AppendChild(CreateTableCell("Categories:"));
-			categoryRow.AppendChild(CreateTableCell(test.GetCommaSeparatedCategories(), 2));
+			categoryRow.AppendChild(CreateTableCell(
+				                        StringUtils.ConcatenateSorted(instance.Categories, ", "),
+				                        2));
 
 			_htmlTable.AppendChild(categoryRow);
 
 			if (IncludeAssemblyInfo)
 			{
-				var implementationPattern = "";
-
-				if (test is IncludedTestClass)
-				{
-					implementationPattern = "Test class";
-				}
-				else if (test is IncludedTestFactory)
-				{
-					implementationPattern = "Test factory";
-				}
-
 				string assemblyInfo = string.Format(
 					"{2} {1} in {0}",
-					Path.GetFileName(test.Assembly.Location),
-					test.TestType.FullName,
+					Path.GetFileName(instance.Assembly.Location),
+					instance.InstanceType.FullName,
 					implementationPattern);
 				XmlElement assemblyRow = CreateTableRow();
 				assemblyRow.AppendChild(CreateTableCell("Implementation:"));
 				assemblyRow.AppendChild(CreateTableCell(assemblyInfo, 2));
 				_htmlTable.AppendChild(assemblyRow);
 			}
-
-			if (test is IncludedTestFactory)
-			{
-				_htmlTable.AppendChild(
-					GetSignatureRow(((IncludedInstance) test).InstanceFactory));
-			}
-
-			AppendTestIssueCodes(test.IssueCodes);
 		}
 
 		private void AppendTestIssueCodes(IEnumerable<IssueCode> issueCodes)
@@ -824,7 +889,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			_htmlTable.AppendChild(parentRow);
 		}
 
-		private void AppendTestConstructorTitle([NotNull] IncludedTestConstructor test)
+		private void AppendConstructorTitle([NotNull] IncludedInstanceConstructor test)
 		{
 			XmlElement row = CreateTableRow();
 			XmlElement cell = CreateTableCell(test.Title, 3, test.Obsolete

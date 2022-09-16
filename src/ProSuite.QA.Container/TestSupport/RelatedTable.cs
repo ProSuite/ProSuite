@@ -1,5 +1,5 @@
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.QA.Container.TestSupport
@@ -13,7 +13,7 @@ namespace ProSuite.QA.Container.TestSupport
 		/// <param name="tableName">Name of the table.</param>
 		/// <param name="fullOidFieldName">Full name of the oid field.</param>
 		/// <param name="oidFieldIndex">Index of the oid field.</param>
-		public RelatedTable([NotNull] ITable table,
+		public RelatedTable([NotNull] IReadOnlyTable table,
 		                    [NotNull] string tableName,
 		                    [NotNull] string fullOidFieldName,
 		                    int oidFieldIndex)
@@ -23,7 +23,7 @@ namespace ProSuite.QA.Container.TestSupport
 			OidFieldIndex = oidFieldIndex;
 			FullOidFieldName = fullOidFieldName;
 
-			IsFeatureClass = table is IFeatureClass;
+			IsFeatureClass = table is IReadOnlyFeatureClass;
 		}
 
 		[NotNull]
@@ -33,7 +33,7 @@ namespace ProSuite.QA.Container.TestSupport
 		public string TableName { get; }
 
 		[NotNull]
-		public ITable Table { get; }
+		public IReadOnlyTable Table { get; }
 
 		public int OidFieldIndex { get; }
 

@@ -1,10 +1,11 @@
 using System.Collections.Generic;
 using System.Globalization;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.QA.Core.IssueCodes;
 
 namespace ProSuite.QA.Container.TestSupport
 {
@@ -46,8 +47,8 @@ namespace ProSuite.QA.Container.TestSupport
 
 		#endregion
 
-		public int ReportErrors([NotNull] IFeature feature1, int tableIndex1,
-		                        [NotNull] IFeature feature2, int tableIndex2,
+		public int ReportErrors([NotNull] IReadOnlyFeature feature1, int tableIndex1,
+		                        [NotNull] IReadOnlyFeature feature2, int tableIndex2,
 		                        [NotNull] IErrorReporting reportError,
 		                        [CanBeNull] IssueCode issueCode,
 		                        bool reportIndividualErrors)
@@ -107,18 +108,18 @@ namespace ProSuite.QA.Container.TestSupport
 							_intersectionGeometryConstraint.Constraint.Replace("$", string.Empty),
 							displayValues);
 
-						errorCount += reportError.Report(description, reportableGeometry,
-						                                 issueCode, null,
-						                                 new object[] {rawValues},
-						                                 feature1, feature2);
+						errorCount += reportError.Report(
+							description, InvolvedRowUtils.GetInvolvedRows(feature1, feature2),
+							reportableGeometry, issueCode, null,
+							values: new object[] { rawValues });
 					}
 					else
 					{
 						string description = GetErrorDescription(conditionMessage);
 
-						errorCount += reportError.Report(description, reportableGeometry,
-						                                 issueCode, null,
-						                                 feature1, feature2);
+						errorCount += reportError.Report(
+							description, InvolvedRowUtils.GetInvolvedRows(feature1, feature2),
+							reportableGeometry, issueCode, null);
 					}
 				}
 			}
@@ -180,8 +181,8 @@ namespace ProSuite.QA.Container.TestSupport
 		}
 
 		[NotNull]
-		private IEnumerable<IGeometry> GetIntersections([NotNull] IFeature feature1,
-		                                                [NotNull] IFeature feature2)
+		private IEnumerable<IGeometry> GetIntersections([NotNull] IReadOnlyFeature feature1,
+		                                                [NotNull] IReadOnlyFeature feature2)
 		{
 			IGeometry g1 = feature1.Shape;
 			IGeometry g2 = feature2.Shape;

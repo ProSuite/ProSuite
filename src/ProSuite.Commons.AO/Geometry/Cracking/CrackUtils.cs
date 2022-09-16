@@ -250,7 +250,8 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 				                          : GeometryFactory.CreatePolyline(inputGeometry);
 
 			IList<CrackPoint> crackPoints = crackPointCalculator.DetermineCrackPoints3d(
-				clusteredIntersections, segmentSalad, inputGeometry, polylineSalad, null);
+				clusteredIntersections, segmentSalad, inputGeometry, polylineSalad,
+				(IPointList) segmentSalad);
 
 			toVertexInfo.AddCrackPoints(crackPoints);
 		}
@@ -316,15 +317,22 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 					return;
 				}
 
-				IGeometry intersectionTarget;
 				// Due to the target transformation (extracting only vertices) the intersection is not symmetrical
 				// and has to be performed in both directions:
-				IPointCollection intersectionPoints = crackPointCalculator.GetIntersectionPoints(
-					geo1, geo2, out intersectionTarget);
+				var intersectionPnts = crackPointCalculator.GetIntersectionPoints(
+					geo1, geo2, out IGeometry _);
+
+				IPointCollection intersectionPoints = GeometryConversionUtils.CreatePointCollection(
+					geo1, intersectionPnts.Select(kvp => kvp.Key).ToList());
+
 				allIntersections.AddPointCollection(intersectionPoints);
 
-				intersectionPoints = crackPointCalculator.GetIntersectionPoints(
-					geo2, geo1, out intersectionTarget);
+				intersectionPnts = crackPointCalculator.GetIntersectionPoints(
+					geo2, geo1, out IGeometry _);
+
+				intersectionPoints = GeometryConversionUtils.CreatePointCollection(
+					geo1, intersectionPnts.Select(kvp => kvp.Key).ToList());
+
 				allIntersections.AddPointCollection(intersectionPoints);
 
 				calculationCount++;
@@ -382,7 +390,7 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 				                      GdbObjectUtils.ToString(sourceFeature),
 				                      GdbObjectUtils.ToString(targetFeature));
 
-			IPointCollection intersectionPoints = null;
+			IList<KeyValuePair<IPnt, List<IntersectionPoint3D>>> intersectionPnts = null;
 			try
 			{
 				IGeometry targetGeometry = targetFeature.ShapeCopy;
@@ -395,13 +403,16 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 				crackPointCalculator.SetDataResolution(sourceFeature);
 
 				IGeometry intersectionTarget;
-				intersectionPoints = crackPointCalculator.GetIntersectionPoints(
+				intersectionPnts = crackPointCalculator.GetIntersectionPoints(
 					clippedSource, targetGeometry, out intersectionTarget);
+
+				var intersectionPoints = GeometryConversionUtils.CreatePointCollection(
+					originalGeometry, intersectionPnts.Select(kvp => kvp.Key).ToList());
 
 				featureVertexInfo.AddIntersectionPoints(intersectionPoints);
 
 				IList<CrackPoint> crackPoints = crackPointCalculator.DetermineCrackPoints(
-					intersectionPoints, originalGeometry, clippedSource, intersectionTarget);
+					intersectionPnts, originalGeometry, clippedSource, intersectionTarget);
 
 				// TODO: rename to AddNonCrackablePoints / sort out whether drawing can happen straight from List<CrackPoint>
 				featureVertexInfo.AddCrackPoints(crackPoints);
@@ -431,7 +442,7 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			}
 
 			_msg.DebugStopTiming(watch, "Calculated and processed {0} intersection points",
-			                     intersectionPoints?.PointCount);
+			                     intersectionPnts?.Count);
 		}
 
 		#endregion
@@ -712,7 +723,7 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 
 		/// <summary>
 		/// Gets the points that are removed by the Douglas-Peucker algorithm using the specified
-		/// tolerance. Non-linear segments are handled according to the <see cref="omitNonLinearSegments"/>
+		/// tolerance. Non-linear segments are handled according to the <paramref name="omitNonLinearSegments"/>
 		/// parameter.
 		/// </summary>
 		/// <param name="polycurve"></param>

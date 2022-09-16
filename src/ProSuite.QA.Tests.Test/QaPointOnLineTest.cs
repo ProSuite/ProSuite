@@ -87,7 +87,8 @@ namespace ProSuite.QA.Tests.Test
 			fLine2.Shape = l2;
 			fLine2.Store();
 
-			var test = new QaPointOnLine(fcPoints, new[] {fcLines}, 1);
+			var test = new QaPointOnLine(
+				ReadOnlyTableFactory.Create(fcPoints), new[] { ReadOnlyTableFactory.Create(fcLines)}, 1);
 
 			using (var r = new QaTestRunner(test)) // no tiling no problem
 			{

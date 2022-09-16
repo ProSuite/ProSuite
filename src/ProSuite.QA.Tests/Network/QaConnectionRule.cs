@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -8,11 +8,11 @@ namespace ProSuite.QA.Tests.Network
 	public class QaConnectionRule
 	{
 		private readonly IList<string> _selectionExpressions;
-		private readonly IList<ITable> _tables;
+		private readonly IList<IReadOnlyTable> _tables;
 		private string _constraint;
 		private Dictionary<string, QaConnectionCountRule> _countRulesByVariableName;
 
-		public QaConnectionRule([NotNull] IList<ITable> tables,
+		public QaConnectionRule([NotNull] IList<IReadOnlyTable> tables,
 		                        [NotNull] IList<string> tableRuleStrings)
 		{
 			Assert.ArgumentCondition(tableRuleStrings.Count == tables.Count,
@@ -76,7 +76,7 @@ namespace ProSuite.QA.Tests.Network
 			}
 		}
 
-		internal IList<ITable> TableList => _tables;
+		internal IList<IReadOnlyTable> TableList => _tables;
 
 		internal IList<string> SelectionExpressions => _selectionExpressions;
 

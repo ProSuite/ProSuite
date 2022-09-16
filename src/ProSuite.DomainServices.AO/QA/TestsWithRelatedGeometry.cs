@@ -1,5 +1,6 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.QA.Container;
@@ -8,7 +9,7 @@ namespace ProSuite.DomainServices.AO.QA
 {
 	internal class TestsWithRelatedGeometry
 	{
-		public TestsWithRelatedGeometry([NotNull] ITable table, [NotNull] IList<ITest> tests,
+		public TestsWithRelatedGeometry([NotNull] IReadOnlyTable table, [NotNull] IList<ITest> tests,
 		                                [NotNull] IObjectDataset objectDataset,
 		                                [NotNull]
 		                                IEnumerable<IList<IRelationshipClass>> relClassChains)
@@ -20,7 +21,7 @@ namespace ProSuite.DomainServices.AO.QA
 		}
 
 		[NotNull]
-		public ITable Table { get; }
+		public IReadOnlyTable Table { get; }
 
 		[NotNull]
 		public IList<ITest> Tests { get; }

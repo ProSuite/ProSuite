@@ -693,8 +693,6 @@ namespace ProSuite.DomainServices.AO.QA.VerificationReports.Xml
 
 						xmlValue.Dataset = dataset.Name;
 					}
-
-					xmlValue.RowFilters = GetRowFilters(datasetParameter.RowFilterConfigurations);
 				}
 				else
 				{
@@ -728,33 +726,7 @@ namespace ProSuite.DomainServices.AO.QA.VerificationReports.Xml
 
 			return result;
 		}
-
-		private static List<XmlInstanceConfiguration> GetRowFilters(
-			[CanBeNull] IList<RowFilterConfiguration> rowFilterConfigurations)
-		{
-			if (rowFilterConfigurations == null || rowFilterConfigurations.Count == 0)
-			{
-				return null;
-			}
-
-			List<XmlInstanceConfiguration> filters = new List<XmlInstanceConfiguration>();
-			foreach (var filterConfiguration in rowFilterConfigurations)
-			{
-				var item =
-					new XmlInstanceConfiguration
-					{
-						Name = Escape(filterConfiguration.Name)
-					};
-
-				item.TestDescriptor = GetInstanceDescriptor(filterConfiguration.InstanceDescriptor);
-				item.AddParameters(GetParameters(filterConfiguration));
-
-				filters.Add(item);
-			}
-
-			return filters;
-		}
-
+		
 		private void AssertVerifying()
 		{
 			Assert.True(_verificationOngoing, "verification not begun");

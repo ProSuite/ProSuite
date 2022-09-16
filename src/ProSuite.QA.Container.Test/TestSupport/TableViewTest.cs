@@ -1,5 +1,8 @@
-﻿using System.Data;
+using System.Collections;
+using System.Collections.Generic;
+using System.Data;
 using System.Globalization;
+using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
@@ -13,6 +16,23 @@ using Assert = ProSuite.Commons.Essentials.Assertions.Assert;
 
 namespace ProSuite.QA.Container.Test.TestSupport
 {
+	public static class ReadOnlyUtils
+	{
+		[NotNull]
+		public static ReadOnlyFeature Create(ESRI.ArcGIS.Geodatabase.IFeature feature)
+		{
+			return new ReadOnlyFeature(
+				(ReadOnlyFeatureClass) ReadOnlyTableFactory.Create(feature.Table), feature);
+		}
+		public static ReadOnlyRow Create(ESRI.ArcGIS.Geodatabase.IRow row)
+		{
+			if (row is ESRI.ArcGIS.Geodatabase.IFeature f)
+			{
+				return Create(f);
+			}
+			return new ReadOnlyRow(ReadOnlyTableFactory.Create(row.Table), row);
+		}
+	}
 	[TestFixture]
 	public class TableViewTest
 	{
@@ -35,42 +55,42 @@ namespace ProSuite.QA.Container.Test.TestSupport
 		[Test]
 		public void CanUseShapeAreaAlias()
 		{
-			IFeatureClass featureClass = CreateFeatureClass(
+			ESRI.ArcGIS.Geodatabase.IFeatureClass featureClass = CreateFeatureClass(
 				"CanUseShapeAreaAlias",
 				esriGeometryType.esriGeometryPolygon);
 
-			IFeature f1 = featureClass.CreateFeature();
+			ESRI.ArcGIS.Geodatabase.IFeature f1 = featureClass.CreateFeature();
 			f1.Shape = GeometryFactory.CreatePolygon(0, 0, 5, 5);
 			f1.Store();
 
-			IFeature f2 = featureClass.CreateFeature();
+			ESRI.ArcGIS.Geodatabase.IFeature f2 = featureClass.CreateFeature();
 			f2.Shape = GeometryFactory.CreatePolygon(0, 0, 100, 100);
 			f2.Store();
 
-			AssertFilteredRowCount(1, "$ShapeArea < 100", f1, f2);
-			AssertFilteredRowCount(1, "$ShapeArea > 100", f1, f2);
+			AssertFilteredRowCount(1, "$ShapeArea < 100", ReadOnlyUtils.Create(f1), ReadOnlyUtils.Create(f2));
+			AssertFilteredRowCount(1, "$ShapeArea > 100", ReadOnlyUtils.Create(f1), ReadOnlyUtils.Create(f2));
 		}
 
 		[Test]
 		public void CanUseInteriorRingCountAlias()
 		{
-			IFeatureClass featureClass = CreateFeatureClass(
+			ESRI.ArcGIS.Geodatabase.IFeatureClass featureClass = CreateFeatureClass(
 				"CanUseInteriorRingCountAlias",
 				esriGeometryType.esriGeometryPolygon);
 
-			IFeature f1 = featureClass.CreateFeature();
+			ESRI.ArcGIS.Geodatabase.IFeature f1 = featureClass.CreateFeature();
 			IGeometry polygon = GeometryFactory.CreatePolygonWithHole(
 				GeometryFactory.CreatePolygon(0, 0, 10, 10), 1, -1);
 			GeometryUtils.Simplify(polygon);
 			f1.Shape = polygon;
 			f1.Store();
 
-			IFeature f2 = featureClass.CreateFeature();
+			ESRI.ArcGIS.Geodatabase.IFeature f2 = featureClass.CreateFeature();
 			f2.Shape = GeometryFactory.CreatePolygon(0, 0, 100, 100);
 			GeometryUtils.Simplify(f2.Shape);
 			f2.Store();
 
-			IFeature f3 = featureClass.CreateFeature();
+			ESRI.ArcGIS.Geodatabase.IFeature f3 = featureClass.CreateFeature();
 			f3.Shape = GeometryFactory.CreatePolygonWithHole(
 				GeometryFactory.CreatePolygon(0, 0, 10, 10), 1, -1);
 			// NOTE: result is non-simple
@@ -84,11 +104,11 @@ namespace ProSuite.QA.Container.Test.TestSupport
 		[Test]
 		public void CanUseExteriorRingCountAlias()
 		{
-			IFeatureClass featureClass = CreateFeatureClass(
+			ESRI.ArcGIS.Geodatabase.IFeatureClass featureClass = CreateFeatureClass(
 				"CanUseExteriorRingCountAlias",
 				esriGeometryType.esriGeometryPolygon);
 
-			IFeature f1 = featureClass.CreateFeature();
+			ESRI.ArcGIS.Geodatabase.IFeature f1 = featureClass.CreateFeature();
 
 			IGeometry polygon = GeometryUtils.Union(
 				GeometryFactory.CreatePolygon(0, 0, 10, 10),
@@ -96,12 +116,12 @@ namespace ProSuite.QA.Container.Test.TestSupport
 			f1.Shape = polygon;
 			f1.Store();
 
-			IFeature f2 = featureClass.CreateFeature();
+			ESRI.ArcGIS.Geodatabase.IFeature f2 = featureClass.CreateFeature();
 			f2.Shape = GeometryFactory.CreatePolygon(0, 0, 100, 100);
 			GeometryUtils.Simplify(f2.Shape);
 			f2.Store();
 
-			IFeature f3 = featureClass.CreateFeature();
+			ESRI.ArcGIS.Geodatabase.IFeature f3 = featureClass.CreateFeature();
 			f3.Shape = GeometryFactory.CreatePolygonWithHole(
 				GeometryFactory.CreatePolygon(0, 0, 10, 10), 1, -1);
 			// NOTE: result is non-simple
@@ -115,18 +135,18 @@ namespace ProSuite.QA.Container.Test.TestSupport
 		[Test]
 		public void CanUsePartCountAlias()
 		{
-			IFeatureClass featureClass = CreateFeatureClass(
+			ESRI.ArcGIS.Geodatabase.IFeatureClass featureClass = CreateFeatureClass(
 				"CanUsePartCountAlias",
 				esriGeometryType.esriGeometryPolygon);
 
-			IFeature f1 = featureClass.CreateFeature();
+			ESRI.ArcGIS.Geodatabase.IFeature f1 = featureClass.CreateFeature();
 			IGeometry polygon = GeometryFactory.CreatePolygonWithHole(
 				GeometryFactory.CreatePolygon(0, 0, 10, 10), 1, -1);
 			GeometryUtils.Simplify(polygon);
 			f1.Shape = polygon;
 			f1.Store();
 
-			IFeature f2 = featureClass.CreateFeature();
+			ESRI.ArcGIS.Geodatabase.IFeature f2 = featureClass.CreateFeature();
 			f2.Shape = GeometryFactory.CreatePolygon(0, 0, 100, 100);
 			GeometryUtils.Simplify(f2.Shape);
 			f2.Store();
@@ -138,15 +158,15 @@ namespace ProSuite.QA.Container.Test.TestSupport
 		[Test]
 		public void CanUseShapeVertexCountAlias()
 		{
-			IFeatureClass featureClass = CreateFeatureClass(
+			ESRI.ArcGIS.Geodatabase.IFeatureClass featureClass = CreateFeatureClass(
 				"CanUseShapeVertexCountAlias",
 				esriGeometryType.esriGeometryMultipoint);
 
-			IFeature f1 = featureClass.CreateFeature();
+			ESRI.ArcGIS.Geodatabase.IFeature f1 = featureClass.CreateFeature();
 			f1.Shape = GeometryFactory.CreateMultipoint(GeometryFactory.CreatePoint(0, 0));
 			f1.Store();
 
-			IFeature f2 = featureClass.CreateFeature();
+			ESRI.ArcGIS.Geodatabase.IFeature f2 = featureClass.CreateFeature();
 			f2.Shape = GeometryFactory.CreateMultipoint(GeometryFactory.CreatePoint(0, 0),
 			                                            GeometryFactory.CreatePoint(10, 10),
 			                                            GeometryFactory.CreatePoint(20, 20));
@@ -159,15 +179,15 @@ namespace ProSuite.QA.Container.Test.TestSupport
 		[Test]
 		public void CanUseShapeLengthAlias()
 		{
-			IFeatureClass featureClass = CreateFeatureClass(
+			ESRI.ArcGIS.Geodatabase.IFeatureClass featureClass = CreateFeatureClass(
 				"CanUseShapeLengthAlias",
 				esriGeometryType.esriGeometryPolygon);
 
-			IFeature f1 = featureClass.CreateFeature();
+			ESRI.ArcGIS.Geodatabase.IFeature f1 = featureClass.CreateFeature();
 			f1.Shape = GeometryFactory.CreatePolygon(0, 0, 5, 5);
 			f1.Store();
 
-			IFeature f2 = featureClass.CreateFeature();
+			ESRI.ArcGIS.Geodatabase.IFeature f2 = featureClass.CreateFeature();
 			f2.Shape = GeometryFactory.CreatePolygon(0, 0, 100, 100);
 			f2.Store();
 
@@ -178,7 +198,7 @@ namespace ProSuite.QA.Container.Test.TestSupport
 		[Test]
 		public void CanUseMMinMaxAlias()
 		{
-			IFeatureClass featureClass = CreateFeatureClass(
+			ESRI.ArcGIS.Geodatabase.IFeatureClass featureClass = CreateFeatureClass(
 				"CanUseMMinMaxAlias",
 				esriGeometryType.esriGeometryPolyline,
 				zAware: true, mAware: true);
@@ -187,7 +207,7 @@ namespace ProSuite.QA.Container.Test.TestSupport
 				GeometryFactory.CreatePoint(0, 0, 1000, 100),
 				GeometryFactory.CreatePoint(5, 5, 1000, 200));
 
-			IFeature feature = featureClass.CreateFeature();
+			ESRI.ArcGIS.Geodatabase.IFeature feature = featureClass.CreateFeature();
 			feature.Shape = polyline;
 			feature.Store();
 
@@ -197,7 +217,7 @@ namespace ProSuite.QA.Container.Test.TestSupport
 		[Test]
 		public void CanUseXyMinMaxAlias()
 		{
-			IFeatureClass featureClass = CreateFeatureClass(
+			ESRI.ArcGIS.Geodatabase.IFeatureClass featureClass = CreateFeatureClass(
 				"CanUseXyMinMaxAlias",
 				esriGeometryType.esriGeometryPolyline);
 
@@ -205,7 +225,7 @@ namespace ProSuite.QA.Container.Test.TestSupport
 				GeometryFactory.CreatePoint(0, 100),
 				GeometryFactory.CreatePoint(5, 105));
 
-			IFeature feature = featureClass.CreateFeature();
+			ESRI.ArcGIS.Geodatabase.IFeature feature = featureClass.CreateFeature();
 			feature.Shape = polyline;
 			feature.Store();
 
@@ -217,22 +237,22 @@ namespace ProSuite.QA.Container.Test.TestSupport
 		[Test]
 		public void CanUseMMinMaxAliasInMultiTableView()
 		{
-			IFeatureClass featureClass = CreateFeatureClass(
+			ESRI.ArcGIS.Geodatabase.IFeatureClass featureClass = CreateFeatureClass(
 				"CanUseMMinMaxAliasInMultiTableView",
 				esriGeometryType.esriGeometryPolyline,
 				zAware: true, mAware: true);
 
-			ITable table = CreateTable("CanUseMMinMaxAliasInMultiTableView_table",
-			                           FieldUtils.CreateOIDField(),
-			                           FieldUtils.CreateIntegerField("NUMBER"));
+			ESRI.ArcGIS.Geodatabase.ITable table = CreateTable("CanUseMMinMaxAliasInMultiTableView_table",
+			                                                   FieldUtils.CreateOIDField(),
+			                                                   FieldUtils.CreateIntegerField("NUMBER"));
 
-			IFeature f1 = featureClass.CreateFeature();
+			ESRI.ArcGIS.Geodatabase.IFeature f1 = featureClass.CreateFeature();
 			f1.Shape = GeometryFactory.CreatePolyline(
 				GeometryFactory.CreatePoint(0, 0, 1000, 100),
 				GeometryFactory.CreatePoint(5, 5, 1000, 200));
 			f1.Store();
 
-			IFeature f2 = featureClass.CreateFeature();
+			ESRI.ArcGIS.Geodatabase.IFeature f2 = featureClass.CreateFeature();
 			f2.Shape = GeometryFactory.CreatePolyline(
 				GeometryFactory.CreatePoint(0, 0, 1000, 300),
 				GeometryFactory.CreatePoint(5, 5, 1000, 400));
@@ -240,11 +260,11 @@ namespace ProSuite.QA.Container.Test.TestSupport
 
 			int fieldIndexNumber = table.FindField("NUMBER");
 
-			IRow r1 = table.CreateRow();
+			ESRI.ArcGIS.Geodatabase.IRow r1 = table.CreateRow();
 			r1.Value[fieldIndexNumber] = 100;
 			r1.Store();
 
-			IRow r2 = table.CreateRow();
+			ESRI.ArcGIS.Geodatabase.IRow r2 = table.CreateRow();
 			r2.Value[fieldIndexNumber] = 200;
 			r2.Store();
 
@@ -266,29 +286,29 @@ namespace ProSuite.QA.Container.Test.TestSupport
 		[Test]
 		public void CanUseObjectIdAliasInMultiTableView()
 		{
-			IFeatureClass featureClass = CreateFeatureClass(
+			ESRI.ArcGIS.Geodatabase.IFeatureClass featureClass = CreateFeatureClass(
 				"CanUseObjectIdAliasInMultiTableView",
 				esriGeometryType.esriGeometryPoint);
 
-			ITable table = CreateTable("CanUseObjectIdAliasInMultiTableView_table",
-			                           FieldUtils.CreateOIDField(),
-			                           FieldUtils.CreateIntegerField("NUMBER"));
+			ESRI.ArcGIS.Geodatabase.ITable table = CreateTable("CanUseObjectIdAliasInMultiTableView_table",
+			                                                   FieldUtils.CreateOIDField(),
+			                                                   FieldUtils.CreateIntegerField("NUMBER"));
 
-			IFeature f1 = featureClass.CreateFeature();
+			ESRI.ArcGIS.Geodatabase.IFeature f1 = featureClass.CreateFeature();
 			f1.Shape = GeometryFactory.CreatePoint(0, 0);
 			f1.Store();
 
-			IFeature f2 = featureClass.CreateFeature();
+			ESRI.ArcGIS.Geodatabase.IFeature f2 = featureClass.CreateFeature();
 			f2.Shape = GeometryFactory.CreatePoint(5, 5);
 			f2.Store();
 
 			int fieldIndexNumber = table.FindField("NUMBER");
 
-			IRow r1 = table.CreateRow();
+			ESRI.ArcGIS.Geodatabase.IRow r1 = table.CreateRow();
 			r1.Value[fieldIndexNumber] = 100;
 			r1.Store();
 
-			IRow r2 = table.CreateRow();
+			ESRI.ArcGIS.Geodatabase.IRow r2 = table.CreateRow();
 			r2.Value[fieldIndexNumber] = 200;
 			r2.Store();
 
@@ -310,12 +330,12 @@ namespace ProSuite.QA.Container.Test.TestSupport
 		[Test]
 		public void CanUseMMinMaxAliasIgnoringNaN()
 		{
-			IFeatureClass featureClass = CreateFeatureClass(
+			ESRI.ArcGIS.Geodatabase.IFeatureClass featureClass = CreateFeatureClass(
 				"CanUseMMinMaxAliasIgnoringNaN",
 				esriGeometryType.esriGeometryPolyline,
 				zAware: true, mAware: true);
 
-			IFeature feature = featureClass.CreateFeature();
+			ESRI.ArcGIS.Geodatabase.IFeature feature = featureClass.CreateFeature();
 			feature.Shape = GeometryFactory.CreatePolyline(
 				GeometryFactory.CreatePoint(0, 0, 1000, 100),
 				GeometryFactory.CreatePoint(5, 5, 1000, double.NaN));
@@ -327,15 +347,15 @@ namespace ProSuite.QA.Container.Test.TestSupport
 		[Test]
 		public void CanUseObjectIdAlias()
 		{
-			IFeatureClass featureClass = CreateFeatureClass(
+			ESRI.ArcGIS.Geodatabase.IFeatureClass featureClass = CreateFeatureClass(
 				"CanUseObjectIdAlias",
 				esriGeometryType.esriGeometryPoint);
 
-			IFeature f1 = featureClass.CreateFeature();
+			ESRI.ArcGIS.Geodatabase.IFeature f1 = featureClass.CreateFeature();
 			f1.Shape = GeometryFactory.CreatePoint(0, 0);
 			f1.Store();
 
-			IFeature f2 = featureClass.CreateFeature();
+			ESRI.ArcGIS.Geodatabase.IFeature f2 = featureClass.CreateFeature();
 			f2.Shape = GeometryFactory.CreatePoint(5, 5);
 			f2.Store();
 
@@ -347,12 +367,12 @@ namespace ProSuite.QA.Container.Test.TestSupport
 		[Test]
 		public void CanUseZMinMaxAlias()
 		{
-			IFeatureClass featureClass = CreateFeatureClass(
+			ESRI.ArcGIS.Geodatabase.IFeatureClass featureClass = CreateFeatureClass(
 				"CanUseZMinMaxAlias",
 				esriGeometryType.esriGeometryPolyline,
 				zAware: true);
 
-			IFeature feature = featureClass.CreateFeature();
+			ESRI.ArcGIS.Geodatabase.IFeature feature = featureClass.CreateFeature();
 			feature.Shape = GeometryFactory.CreatePolyline(
 				GeometryFactory.CreatePoint(0, 0, 1000),
 				GeometryFactory.CreatePoint(5, 5, 2000));
@@ -364,11 +384,11 @@ namespace ProSuite.QA.Container.Test.TestSupport
 		[Test]
 		public void CanUseMMinMaxAliasEvenIfNotMAware()
 		{
-			IFeatureClass featureClass = CreateFeatureClass(
+			ESRI.ArcGIS.Geodatabase.IFeatureClass featureClass = CreateFeatureClass(
 				"CanUseMMinMaxAliasEvenIfNotMAware",
 				esriGeometryType.esriGeometryPolyline);
 
-			IFeature feature = featureClass.CreateFeature();
+			ESRI.ArcGIS.Geodatabase.IFeature feature = featureClass.CreateFeature();
 			feature.Shape = GeometryFactory.CreatePolyline(0, 0, 5, 5);
 			feature.Store();
 
@@ -378,11 +398,11 @@ namespace ProSuite.QA.Container.Test.TestSupport
 		[Test]
 		public void CanUseZMinMaxAliasEvenIfNotZAware()
 		{
-			IFeatureClass featureClass = CreateFeatureClass(
+			ESRI.ArcGIS.Geodatabase.IFeatureClass featureClass = CreateFeatureClass(
 				"CanUseZMinMaxAliasEvenIfNotZAware",
 				esriGeometryType.esriGeometryPolyline);
 
-			IFeature feature = featureClass.CreateFeature();
+			ESRI.ArcGIS.Geodatabase.IFeature feature = featureClass.CreateFeature();
 			feature.Shape = GeometryFactory.CreatePolyline(0, 0, 5, 5);
 			feature.Store();
 
@@ -399,12 +419,12 @@ namespace ProSuite.QA.Container.Test.TestSupport
 			fields.AddField(FieldUtils.CreateIntegerField(intField));
 			fields.AddField(FieldUtils.CreateDoubleField(doubleField, doubleField));
 
-			ITable tbl = DatasetUtils.CreateTable(_testWs, "TestExpression", null, fields);
+			ESRI.ArcGIS.Geodatabase.ITable tbl = DatasetUtils.CreateTable(_testWs, "TestExpression", null, fields);
 
 			const int n = 10;
 			for (var i = 0; i < n; i++)
 			{
-				IRow row = tbl.CreateRow();
+				ESRI.ArcGIS.Geodatabase.IRow row = tbl.CreateRow();
 				row.set_Value(1, i);
 				row.set_Value(2, i);
 				row.Store();
@@ -413,7 +433,7 @@ namespace ProSuite.QA.Container.Test.TestSupport
 			const double x = 2;
 			string expression = string.Format("{0}, {1}, {2}", x, intField, doubleField);
 			const bool useAsConstraint = false;
-			TableView view = TableViewFactory.Create(tbl, expression, useAsConstraint);
+			TableView view = TableViewFactory.Create(ReadOnlyTableFactory.Create(tbl), expression, useAsConstraint);
 
 			DataColumn constColumn = view.AddColumn("constValue", typeof(double));
 			constColumn.Expression = x.ToString(CultureInfo.InvariantCulture);
@@ -428,13 +448,13 @@ namespace ProSuite.QA.Container.Test.TestSupport
 			DataColumn doubleColumn = view.AddColumn("doubleValue", typeof(double));
 			doubleColumn.Expression = doubleField;
 
-			foreach (IRow row in new EnumCursor(tbl, null, false))
+			foreach (ESRI.ArcGIS.Geodatabase.IRow row in new EnumCursor(tbl, null, false))
 			{
 				view.ClearRows();
 				var i = (int) row.Value[1];
 				var d = (double) row.Value[2];
 
-				DataRow expressionRow = Assert.NotNull(view.Add(row));
+				DataRow expressionRow = Assert.NotNull(view.Add(ReadOnlyUtils.Create(row)));
 
 				var constVal = (double) expressionRow[constColumn.ColumnName];
 				NUnit.Framework.Assert.AreEqual(x, constVal);
@@ -521,9 +541,30 @@ namespace ProSuite.QA.Container.Test.TestSupport
 		}
 
 		private static void AssertFilteredRowCount(
+			int expectedCount, [NotNull] string expression,
+			params ESRI.ArcGIS.Geodatabase.IFeature[] features)
+		{
+			IList<IReadOnlyFeature> fs = features.Select((x) =>
+			{
+				IReadOnlyFeature ro = ReadOnlyUtils.Create(x);
+				return ro;
+			}).ToList();
+			AssertFilteredRowCount(expectedCount, expression, fs);
+		}
+
+
+		private static void AssertFilteredRowCount(
+			int expectedCount, [NotNull] string expression,
+			params IReadOnlyFeature[] features)
+		{
+			IList<IReadOnlyFeature> fs = features;
+			AssertFilteredRowCount(expectedCount, expression, fs);
+		}
+
+		private static void AssertFilteredRowCount(
 			int expectedCount,
 			[NotNull] string expression,
-			params IFeature[] features)
+			[NotNull] IList<IReadOnlyFeature> features)
 		{
 			TableView view = CreateTableView(expression, features);
 
@@ -533,14 +574,16 @@ namespace ProSuite.QA.Container.Test.TestSupport
 
 		private static void AssertFilteredMultiViewRowCount(
 			int expectedCount, [NotNull] string expression,
-			[NotNull] IFeatureClass featureClass, [NotNull] IFeature feature,
-			[NotNull] ITable table, [NotNull] IRow row)
+			[NotNull] ESRI.ArcGIS.Geodatabase.IFeatureClass featureClass, [NotNull] ESRI.ArcGIS.Geodatabase.IFeature feature,
+			[NotNull] ESRI.ArcGIS.Geodatabase.ITable table, [NotNull] ESRI.ArcGIS.Geodatabase.IRow row)
 		{
-			MultiTableView view = TableViewFactory.Create(new[] {(ITable) featureClass, table},
+			ReadOnlyFeatureClass roFc = ReadOnlyTableFactory.Create(featureClass);
+			ReadOnlyTable roTbl = ReadOnlyTableFactory.Create(table);
+			MultiTableView view = TableViewFactory.Create(new[] {roFc, roTbl},
 			                                              new[] {"F", "T"},
 			                                              expression);
 
-			view.Add(feature, row);
+			view.Add(ReadOnlyUtils.Create(feature), ReadOnlyUtils.Create(row));
 
 			Assert.AreEqual(expectedCount, view.FilteredRowCount,
 			                "Unexpected filtered row count");
@@ -548,15 +591,15 @@ namespace ProSuite.QA.Container.Test.TestSupport
 
 		[NotNull]
 		private static TableView CreateTableView([NotNull] string expression,
-		                                         params IFeature[] features)
+		                                         IList<IReadOnlyFeature> features)
 		{
-			Assert.ArgumentCondition(features.Length > 0, "no feature");
+			Assert.ArgumentCondition(features.Count > 0, "no feature");
 
-			var table = (ITable) features[0].Class;
+			var table = features[0].Table;
 
 			const bool useAsConstraint = true;
 			TableView view = TableViewFactory.Create(table, expression, useAsConstraint);
-			foreach (IFeature feature in features)
+			foreach (var feature in features)
 			{
 				view.Add(feature);
 			}
@@ -565,7 +608,7 @@ namespace ProSuite.QA.Container.Test.TestSupport
 		}
 
 		[NotNull]
-		private IFeatureClass CreateFeatureClass([NotNull] string name,
+		private ESRI.ArcGIS.Geodatabase.IFeatureClass CreateFeatureClass([NotNull] string name,
 		                                         esriGeometryType geometryType,
 		                                         bool zAware = false,
 		                                         bool mAware = false)
@@ -588,7 +631,7 @@ namespace ProSuite.QA.Container.Test.TestSupport
 		}
 
 		[NotNull]
-		private ITable CreateTable([NotNull] string name, [NotNull] params IField[] fields)
+		private ESRI.ArcGIS.Geodatabase.ITable CreateTable([NotNull] string name, [NotNull] params IField[] fields)
 		{
 			return DatasetUtils.CreateTable(_testWs, name, fields);
 		}

@@ -8,6 +8,7 @@ using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.AO.Geometry.Serialization;
 using ProSuite.Commons.AO.Test.TestSupport;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.IO;
@@ -144,6 +145,30 @@ namespace ProSuite.Commons.AO.Test
 			return CreateMockFeature(geometry);
 		}
 
+		public static IFeature CreateMockFeature([NotNull] string xmlOrWkbGeometryFileName,
+		                                         [CanBeNull] ISpatialReference spatialRef)
+		{
+			string filePath = GetGeometryTestDataPath(xmlOrWkbGeometryFileName);
+
+			IGeometry geometry;
+			if (xmlOrWkbGeometryFileName.EndsWith(
+				    "wkb", StringComparison.InvariantCultureIgnoreCase))
+			{
+				geometry = ReadGeometryFromWkb(filePath);
+			}
+			else
+			{
+				geometry = ReadGeometryFromXml(filePath);
+			}
+
+			if (spatialRef != null)
+			{
+				geometry.SpatialReference = spatialRef;
+			}
+
+			return CreateMockFeature(geometry);
+		}
+
 		public static IFeature CreateMockFeature(IGeometry geometry,
 		                                         double featureClassTolerance = 0.0125,
 		                                         double featureClassResolution = 0.00125)
@@ -188,6 +213,17 @@ namespace ProSuite.Commons.AO.Test
 			reader.ReadFrom((IStream) stream);
 
 			return (IGeometry) serializer.ReadObject(reader, null, null);
+		}
+
+		public static IGeometry ReadGeometryFromWkb(string filePath)
+		{
+			byte[] bytes = File.ReadAllBytes(filePath);
+
+			WkbGeometryReader wkbReader = new WkbGeometryReader();
+
+			IGeometry geometry = wkbReader.ReadGeometry(new MemoryStream(bytes));
+
+			return geometry;
 		}
 
 		public static void TryDeleteDirectory(string testFile)

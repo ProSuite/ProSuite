@@ -16,5 +16,20 @@ namespace ProSuite.DomainModel.AO.QA
 		[NotNull]
 		IEnumerable<Dataset> GetDatasets(TestParameterType validTypes,
 		                                 [CanBeNull] DdxModel model);
+
+		/// <summary>
+		/// Gets the transformer configurations for the specified model / types.
+		/// </summary>
+		/// <param name="validType"></param>
+		/// <param name="model"></param>
+		/// <returns></returns>
+		IEnumerable<TransformerConfiguration> GetTransformers(TestParameterType validType,
+		                                                      [CanBeNull] DdxModel model);
+
+		/// <summary>
+		/// Exclude a specific transformer from the transformers result (to avoid circular references).
+		/// </summary>
+		/// <param name="transformer"></param>
+		void Exclude(TransformerConfiguration transformer);
 	}
 }

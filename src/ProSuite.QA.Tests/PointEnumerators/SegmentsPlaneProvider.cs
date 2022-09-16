@@ -1,10 +1,10 @@
 using System.Collections.Generic;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container.Geometry;
 using ProSuite.QA.Container.TestContainer;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests.PointEnumerators
 {
@@ -12,14 +12,14 @@ namespace ProSuite.QA.Tests.PointEnumerators
 	{
 		private readonly IIndexedSegments _indexedSegments;
 
-		public static SegmentsPlaneProvider Create([NotNull] IFeature feature,
+		public static SegmentsPlaneProvider Create([NotNull] IReadOnlyFeature feature,
 		                                           bool includeAssociatedParts)
 		{
 			return Create(feature, feature.Shape.GeometryType, includeAssociatedParts);
 		}
 
 		public static SegmentsPlaneProvider Create(
-			[NotNull] IFeature feature,
+			[NotNull] IReadOnlyFeature feature,
 			esriGeometryType shapeType,
 			bool includeAssociatedParts)
 		{
@@ -42,7 +42,7 @@ namespace ProSuite.QA.Tests.PointEnumerators
 		}
 
 		[NotNull]
-		private static IIndexedSegments GetIndexedSegments([NotNull] IFeature feature)
+		private static IIndexedSegments GetIndexedSegments([NotNull] IReadOnlyFeature feature)
 		{
 			var indexedSegmentsFeature = feature as IIndexedPolycurveFeature;
 
@@ -53,7 +53,7 @@ namespace ProSuite.QA.Tests.PointEnumerators
 		}
 
 		[NotNull]
-		private static IIndexedMultiPatch GetIndexedMultiPatch([NotNull] IFeature feature)
+		private static IIndexedMultiPatch GetIndexedMultiPatch([NotNull] IReadOnlyFeature feature)
 		{
 			var indexedMultiPatchFeature = feature as IIndexedMultiPatchFeature;
 

@@ -5,7 +5,6 @@ using System.Reflection;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
@@ -18,6 +17,8 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
 using ProSuite.QA.Core;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
 {
@@ -128,10 +129,10 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaIsCoveredByOther_0))]
 		public QaIsCoveredByOther(
 				[Doc(nameof(DocStrings.QaIsCoveredByOther_covering_0))] [NotNull]
-				IList<IFeatureClass>
+				IList<IReadOnlyFeatureClass>
 					covering,
 				[Doc(nameof(DocStrings.QaIsCoveredByOther_covered_0))] [NotNull]
-				IList<IFeatureClass>
+				IList<IReadOnlyFeatureClass>
 					covered)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(covering, covered, null) { }
@@ -139,18 +140,18 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaIsCoveredByOther_1))]
 		public QaIsCoveredByOther(
 			[Doc(nameof(DocStrings.QaIsCoveredByOther_covering_1))] [NotNull]
-			IFeatureClass covering,
+			IReadOnlyFeatureClass covering,
 			[Doc(nameof(DocStrings.QaIsCoveredByOther_covered_1))] [NotNull]
-			IFeatureClass covered)
+			IReadOnlyFeatureClass covered)
 			: this(new[] {covering}, new[] {covered}, null) { }
 
 		[Doc(nameof(DocStrings.QaIsCoveredByOther_2))]
 		public QaIsCoveredByOther(
 			[Doc(nameof(DocStrings.QaIsCoveredByOther_covering_0))] [NotNull]
-			IList<IFeatureClass>
+			IList<IReadOnlyFeatureClass>
 				covering,
 			[Doc(nameof(DocStrings.QaIsCoveredByOther_covered_0))] [NotNull]
-			IList<IFeatureClass>
+			IList<IReadOnlyFeatureClass>
 				covered,
 			[Doc(nameof(DocStrings.QaIsCoveredByOther_isCoveringCondition))]
 			string isCoveringCondition)
@@ -161,9 +162,9 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaIsCoveredByOther_3))]
 		public QaIsCoveredByOther(
 			[Doc(nameof(DocStrings.QaIsCoveredByOther_covering_1))] [NotNull]
-			IFeatureClass covering,
+			IReadOnlyFeatureClass covering,
 			[Doc(nameof(DocStrings.QaIsCoveredByOther_covered_1))] [NotNull]
-			IFeatureClass covered,
+			IReadOnlyFeatureClass covered,
 			[Doc(nameof(DocStrings.QaIsCoveredByOther_isCoveringCondition))]
 			string isCoveringCondition)
 			: this(new[] {covering}, new[] {covered}, isCoveringCondition) { }
@@ -171,12 +172,12 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaIsCoveredByOther_4))]
 		public QaIsCoveredByOther(
 			[Doc(nameof(DocStrings.QaIsCoveredByOther_covering_0))] [NotNull]
-			IList<IFeatureClass>
+			IList<IReadOnlyFeatureClass>
 				covering,
 			[Doc(nameof(DocStrings.QaIsCoveredByOther_coveringGeometryComponents_0))] [NotNull]
 			IList<GeometryComponent> coveringGeometryComponents,
 			[Doc(nameof(DocStrings.QaIsCoveredByOther_covered_0))] [NotNull]
-			IList<IFeatureClass>
+			IList<IReadOnlyFeatureClass>
 				covered,
 			[Doc(nameof(DocStrings.QaIsCoveredByOther_coveredGeometryComponents_0))] [NotNull]
 			IList<GeometryComponent> coveredGeometryComponents,
@@ -191,12 +192,12 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaIsCoveredByOther_5))]
 		public QaIsCoveredByOther(
 			[Doc(nameof(DocStrings.QaIsCoveredByOther_covering_0))] [NotNull]
-			IList<IFeatureClass>
+			IList<IReadOnlyFeatureClass>
 				covering,
 			[Doc(nameof(DocStrings.QaIsCoveredByOther_coveringGeometryComponents_0))] [NotNull]
 			IList<GeometryComponent> coveringGeometryComponents,
 			[Doc(nameof(DocStrings.QaIsCoveredByOther_covered_0))] [NotNull]
-			IList<IFeatureClass>
+			IList<IReadOnlyFeatureClass>
 				covered,
 			[Doc(nameof(DocStrings.QaIsCoveredByOther_coveredGeometryComponents_0))] [NotNull]
 			IList<GeometryComponent> coveredGeometryComponents,
@@ -216,12 +217,12 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaIsCoveredByOther_6))]
 		public QaIsCoveredByOther(
 			[Doc(nameof(DocStrings.QaIsCoveredByOther_covering_0))] [NotNull]
-			IList<IFeatureClass>
+			IList<IReadOnlyFeatureClass>
 				covering,
 			[Doc(nameof(DocStrings.QaIsCoveredByOther_coveringGeometryComponents_0))] [NotNull]
 			IList<GeometryComponent> coveringGeometryComponents,
 			[Doc(nameof(DocStrings.QaIsCoveredByOther_covered_0))] [NotNull]
-			IList<IFeatureClass>
+			IList<IReadOnlyFeatureClass>
 				covered,
 			[Doc(nameof(DocStrings.QaIsCoveredByOther_coveredGeometryComponents_0))] [NotNull]
 			IList<GeometryComponent> coveredGeometryComponents,
@@ -235,17 +236,17 @@ namespace ProSuite.QA.Tests
 			       covered, coveredGeometryComponents,
 			       isCoveringConditions,
 			       allowedUncoveredPercentage,
-			       new List<IFeatureClass>()) { }
+			       new List<IReadOnlyFeatureClass>()) { }
 
 		[Doc(nameof(DocStrings.QaIsCoveredByOther_7))]
 		public QaIsCoveredByOther(
 			[Doc(nameof(DocStrings.QaIsCoveredByOther_covering_0))] [NotNull]
-			IList<IFeatureClass>
+			IList<IReadOnlyFeatureClass>
 				covering,
 			[Doc(nameof(DocStrings.QaIsCoveredByOther_coveringGeometryComponents_0))] [NotNull]
 			IList<GeometryComponent> coveringGeometryComponents,
 			[Doc(nameof(DocStrings.QaIsCoveredByOther_covered_0))] [NotNull]
-			IList<IFeatureClass>
+			IList<IReadOnlyFeatureClass>
 				covered,
 			[Doc(nameof(DocStrings.QaIsCoveredByOther_coveredGeometryComponents_0))] [NotNull]
 			IList<GeometryComponent> coveredGeometryComponents,
@@ -256,7 +257,7 @@ namespace ProSuite.QA.Tests
 			double
 				allowedUncoveredPercentage,
 			[Doc(nameof(DocStrings.QaIsCoveredByOther_areaOfInterestClasses))] [NotNull]
-			IList<IFeatureClass>
+			IList<IReadOnlyFeatureClass>
 				areaOfInterestClasses)
 			: base(CastToTables(covering, covered, areaOfInterestClasses))
 		{
@@ -304,10 +305,10 @@ namespace ProSuite.QA.Tests
 			                              .ToList();
 
 			_coveringClassSpatialReferenceXyTolerances = new List<double>();
-			foreach (IFeatureClass featureClass in covering)
+			foreach (IReadOnlyFeatureClass featureClass in covering)
 			{
 				double xyTolerance;
-				if (! DatasetUtils.TryGetXyTolerance(featureClass, out xyTolerance))
+				if (! DatasetUtils.TryGetXyTolerance(featureClass.SpatialReference, out xyTolerance))
 				{
 					xyTolerance = double.Epsilon;
 				}
@@ -359,7 +360,7 @@ namespace ProSuite.QA.Tests
 		// [TestParameter]
 		public bool UseSecondaryFilterForTolerance { get; [UsedImplicitly] set; }
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
 			if (_queryFilter == null)
 			{
@@ -374,7 +375,7 @@ namespace ProSuite.QA.Tests
 
 			EnsureIsCoveredConditionsInitialized();
 
-			var feature = (IFeature) row;
+			var feature = (IReadOnlyFeature) row;
 
 			if (IsFeatureKnownCovered(tableIndex, feature))
 			{
@@ -401,9 +402,9 @@ namespace ProSuite.QA.Tests
 			var intersectingCount = 0;
 			foreach (int coveringClassIndex in _coveringClassIndexes)
 			{
-				var coveringClass = (IFeatureClass) InvolvedTables[coveringClassIndex];
+				var coveringClass = (IReadOnlyFeatureClass) InvolvedTables[coveringClassIndex];
 
-				foreach (IFeature intersectingFeature in searcher.Search(uncoveredGeometry,
+				foreach (IReadOnlyFeature intersectingFeature in searcher.Search(uncoveredGeometry,
 				                                                         coveringClass,
 				                                                         coveringClassIndex))
 				{
@@ -469,7 +470,7 @@ namespace ProSuite.QA.Tests
 			return true;
 		}
 
-		private bool TreatSameFeatureAsCovering([NotNull] IFeature feature,
+		private bool TreatSameFeatureAsCovering([NotNull] IReadOnlyFeature feature,
 		                                        int coveredClassIndex,
 		                                        int coveringClassIndex)
 		{
@@ -597,14 +598,13 @@ namespace ProSuite.QA.Tests
 		}
 
 		private static double GetBufferDensifyDeviation(
-			[NotNull] IFeatureClass featureClass)
+			[NotNull] IReadOnlyFeatureClass featureClass)
 		{
-			ISpatialReference spatialReference =
-				DatasetUtils.GetSpatialReference(featureClass);
+			ISpatialReference spatialReference = featureClass.SpatialReference;
 
 			Assert.NotNull(spatialReference,
 			               "spatial reference not defined for {0}",
-			               DatasetUtils.GetName(featureClass));
+			               featureClass.Name);
 
 			double xyTolerance =
 				((ISpatialReferenceTolerance) spatialReference).XYTolerance;
@@ -648,7 +648,7 @@ namespace ProSuite.QA.Tests
 
 		[CanBeNull]
 		private IGeometry GetCoveringGeometry(int coveringClassIndex,
-		                                      [NotNull] IFeature coveringFeature)
+		                                      [NotNull] IReadOnlyFeature coveringFeature)
 		{
 			CoveringGeometryCache coveringGeometryCache = GetCache(coveringClassIndex);
 
@@ -692,7 +692,7 @@ namespace ProSuite.QA.Tests
 
 		private double GetDensifyDeviation(int coveringClassIndex)
 		{
-			var featureClass = (IFeatureClass) InvolvedTables[coveringClassIndex];
+			var featureClass = (IReadOnlyFeatureClass) InvolvedTables[coveringClassIndex];
 
 			double result;
 
@@ -764,9 +764,9 @@ namespace ProSuite.QA.Tests
 			}
 		}
 
-		private bool IsCoveringConditionFulfilled([NotNull] IRow coveredRow,
+		private bool IsCoveringConditionFulfilled([NotNull] IReadOnlyRow coveredRow,
 		                                          int coveredClassIndex,
-		                                          [NotNull] IRow coveringRow,
+		                                          [NotNull] IReadOnlyRow coveringRow,
 		                                          int coveringClassIndex)
 		{
 			IsCoveringCondition isCoveringCondition = GetIsCoveringCondition(
@@ -1035,9 +1035,9 @@ namespace ProSuite.QA.Tests
 
 		[NotNull]
 		private static IEnumerable<GeometryComponent> GetGeometryComponents(
-			[NotNull] ICollection<IFeatureClass> covering,
+			[NotNull] ICollection<IReadOnlyFeatureClass> covering,
 			[NotNull] IList<GeometryComponent> coveringGeometryComponents,
-			[NotNull] ICollection<IFeatureClass> covered,
+			[NotNull] ICollection<IReadOnlyFeatureClass> covered,
 			[NotNull] IList<GeometryComponent> coveredGeometryComponents)
 		{
 			foreach (GeometryComponent component in GetGeometryComponents(
@@ -1092,7 +1092,7 @@ namespace ProSuite.QA.Tests
 		/// </summary>
 		/// <param name="tableIndex">Index of the table.</param>
 		/// <param name="feature">The feature.</param>
-		private void FlagFeatureAsCovered(int tableIndex, [NotNull] IFeature feature)
+		private void FlagFeatureAsCovered(int tableIndex, [NotNull] IReadOnlyFeature feature)
 		{
 			Dictionary<int, UnCoveredFeature> unCoveredGeometriesByOID;
 			if (_uncoveredFeatures.TryGetValue(tableIndex,
@@ -1112,7 +1112,7 @@ namespace ProSuite.QA.Tests
 			featuresKnownCovered.Add(feature.OID);
 		}
 
-		private bool IsFeatureKnownCovered(int tableIndex, [NotNull] IFeature feature)
+		private bool IsFeatureKnownCovered(int tableIndex, [NotNull] IReadOnlyFeature feature)
 		{
 			SimpleSet<int> featuresKnownCovered;
 			return
@@ -1121,7 +1121,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		private void StoreUncoveredGeometry(int tableIndex,
-		                                    [NotNull] IFeature feature,
+		                                    [NotNull] IReadOnlyFeature feature,
 		                                    [NotNull] IGeometry geometry,
 		                                    int intersectingCount)
 		{
@@ -1159,7 +1159,7 @@ namespace ProSuite.QA.Tests
 		/// returned (not a copy of it). Therefore the result should not be changed.</returns>
 		[CanBeNull]
 		private IGeometry GetUncoveredGeometry(int tableIndex,
-		                                       [NotNull] IFeature feature)
+		                                       [NotNull] IReadOnlyFeature feature)
 		{
 			Assert.ArgumentNotNull(feature, nameof(feature));
 
@@ -1180,7 +1180,7 @@ namespace ProSuite.QA.Tests
 				       : null;
 		}
 
-		private bool IsInAreaOfInterest([NotNull] IFeature feature)
+		private bool IsInAreaOfInterest([NotNull] IReadOnlyFeature feature)
 		{
 			if (_areaOfInterestClassesCount == 0)
 			{
@@ -1190,12 +1190,12 @@ namespace ProSuite.QA.Tests
 			foreach (int aoiClassIndex in _areaOfInterestClassIndexes)
 			{
 				ISpatialFilter filter = _queryFilter[aoiClassIndex];
-				ITable table = InvolvedTables[aoiClassIndex];
+				IReadOnlyTable table = InvolvedTables[aoiClassIndex];
 				QueryFilterHelper helper = _helper[aoiClassIndex];
 
 				filter.Geometry = feature.Shape;
 
-				if (Search(table, filter, helper).OfType<IFeature>()
+				if (Search(table, filter, helper).OfType<IReadOnlyFeature>()
 				                                 .Any())
 				{
 					// intersecting feature found
@@ -1209,7 +1209,7 @@ namespace ProSuite.QA.Tests
 
 		[CanBeNull]
 		private IGeometry GetGeometryComponent(int tableIndex,
-		                                       [NotNull] IFeature feature)
+		                                       [NotNull] IReadOnlyFeature feature)
 		{
 			return GeometryComponentUtils.GetGeometryComponent(feature,
 			                                                   _geometryComponents[tableIndex]);
@@ -1218,7 +1218,7 @@ namespace ProSuite.QA.Tests
 		private int ReportError([NotNull] UnCoveredFeature unCoveredFeature,
 		                        bool completelyTested)
 		{
-			IFeature feature = unCoveredFeature.Feature;
+			IReadOnlyFeature feature = unCoveredFeature.Feature;
 
 			bool hasIsCoveredConditions =
 				_hasIsCoveredConditionByCoveredClassIndex[unCoveredFeature.TableIndex];
@@ -1254,11 +1254,10 @@ namespace ProSuite.QA.Tests
 					return NoError;
 				}
 
-				return ReportError(uncoveredDescription,
-				                   errorGeometry,
-				                   Codes[codeId],
-				                   GetAffectedComponent(unCoveredFeature.TableIndex),
-				                   feature);
+				return ReportError(
+					uncoveredDescription, InvolvedRowUtils.GetInvolvedRows(feature),
+					errorGeometry, Codes[codeId],
+					GetAffectedComponent(unCoveredFeature.TableIndex));
 			}
 
 			// there are some intersecting features, but the feature is not covered completely
@@ -1328,10 +1327,9 @@ namespace ProSuite.QA.Tests
 					continue;
 				}
 
-				errorCount += ReportError(partlyCoveredDescription, part,
-				                          issueCode,
-				                          GetAffectedComponent(unCoveredFeature.TableIndex),
-				                          feature);
+				errorCount += ReportError(
+					partlyCoveredDescription, InvolvedRowUtils.GetInvolvedRows(feature), part,
+					issueCode, GetAffectedComponent(unCoveredFeature.TableIndex));
 			}
 
 			return errorCount;
@@ -1340,7 +1338,7 @@ namespace ProSuite.QA.Tests
 		[CanBeNull]
 		private IGeometry GetErrorGeometry(
 			[NotNull] UnCoveredFeature unCoveredFeature,
-			[NotNull] IFeature feature)
+			[NotNull] IReadOnlyFeature feature)
 		{
 			IGeometry geometry = unCoveredFeature.Geometry;
 
@@ -1387,12 +1385,12 @@ namespace ProSuite.QA.Tests
 			foreach (int aoiClassIndex in _areaOfInterestClassIndexes)
 			{
 				ISpatialFilter filter = _queryFilter[aoiClassIndex];
-				ITable table = InvolvedTables[aoiClassIndex];
+				IReadOnlyTable table = InvolvedTables[aoiClassIndex];
 				QueryFilterHelper helper = _helper[aoiClassIndex];
 
 				filter.Geometry = geometry;
 
-				foreach (IFeature aoiFeature in Search(table, filter, helper).OfType<IFeature>())
+				foreach (IReadOnlyFeature aoiFeature in Search(table, filter, helper).OfType<IReadOnlyFeature>())
 				{
 					// intersecting feature found
 					if (dimension == esriGeometryDimension.esriGeometry0Dimension)
@@ -1459,7 +1457,7 @@ namespace ProSuite.QA.Tests
 		[NotNull]
 		private string CollectAffectedComponent(int coveredClassIndex)
 		{
-			var featureClass = (IFeatureClass) InvolvedTables[coveredClassIndex];
+			var featureClass = (IReadOnlyFeatureClass) InvolvedTables[coveredClassIndex];
 
 			string shapeField = featureClass.ShapeFieldName;
 
@@ -1584,7 +1582,7 @@ namespace ProSuite.QA.Tests
 			private readonly QueryFilterHelper[] _queryFilterHelpers;
 
 			private readonly
-				Func<ITable, IQueryFilter, QueryFilterHelper, IGeometry, IEnumerable<IRow>>
+				Func<IReadOnlyTable, IQueryFilter, QueryFilterHelper, IGeometry, IEnumerable<IReadOnlyRow>>
 				_searchFunction;
 
 			private readonly Func<int, double> _getTolerance;
@@ -1609,7 +1607,7 @@ namespace ProSuite.QA.Tests
 				[NotNull] ISpatialFilter[] queryFilters,
 				[NotNull] QueryFilterHelper[] queryFilterHelpers,
 				[NotNull]
-				Func<ITable, IQueryFilter, QueryFilterHelper, IGeometry, IEnumerable<IRow>>
+				Func<IReadOnlyTable, IQueryFilter, QueryFilterHelper, IGeometry, IEnumerable<IReadOnlyRow>>
 					searchFunction,
 				[NotNull] Func<int, double> getTolerance,
 				double tileEnvelopeXMin,
@@ -1626,8 +1624,8 @@ namespace ProSuite.QA.Tests
 			}
 
 			[NotNull]
-			public IEnumerable<IFeature> Search([NotNull] IGeometry uncoveredGeometry,
-			                                    [NotNull] IFeatureClass coveringFeatureClass,
+			public IEnumerable<IReadOnlyFeature> Search([NotNull] IGeometry uncoveredGeometry,
+			                                    [NotNull] IReadOnlyFeatureClass coveringFeatureClass,
 			                                    int coveringClassIndex)
 			{
 				double tolerance = _getTolerance(coveringClassIndex);
@@ -1654,9 +1652,9 @@ namespace ProSuite.QA.Tests
 				                                                      new EnvelopeClass());
 
 			[NotNull]
-			private IEnumerable<IFeature> SearchToleranceWithEnvelope(
+			private IEnumerable<IReadOnlyFeature> SearchToleranceWithEnvelope(
 				[NotNull] IGeometry uncoveredGeometry,
-				[NotNull] IFeatureClass coveringFeatureClass,
+				[NotNull] IReadOnlyFeatureClass coveringFeatureClass,
 				int coveringClassIndex,
 				double tolerance)
 			{
@@ -1674,12 +1672,12 @@ namespace ProSuite.QA.Tests
 					                                                        tolerance)
 					                                  : null;
 
-				foreach (IRow row in
-					_searchFunction((ITable) coveringFeatureClass,
+				foreach (IReadOnlyRow row in
+					_searchFunction(coveringFeatureClass,
 					                _queryFilters[coveringClassIndex],
 					                filterHelper, null))
 				{
-					var feature = (IFeature) row;
+					var feature = (IReadOnlyFeature) row;
 
 					if (secondaryFilter != null && secondaryFilter.Exclude(feature))
 					{
@@ -1705,9 +1703,9 @@ namespace ProSuite.QA.Tests
 			}
 
 			[NotNull]
-			private IEnumerable<IFeature> SearchNoTolerance(
+			private IEnumerable<IReadOnlyFeature> SearchNoTolerance(
 				[NotNull] IGeometry uncoveredGeometry,
-				[NotNull] IFeatureClass coveringFeatureClass,
+				[NotNull] IReadOnlyFeatureClass coveringFeatureClass,
 				int coveringClassIndex)
 			{
 				_queryFilters[coveringClassIndex].Geometry = uncoveredGeometry;
@@ -1715,12 +1713,12 @@ namespace ProSuite.QA.Tests
 				QueryFilterHelper filterHelper = _queryFilterHelpers[coveringClassIndex];
 				filterHelper.ForNetwork = false;
 
-				foreach (IRow row in
-					_searchFunction((ITable) coveringFeatureClass,
+				foreach (IReadOnlyRow row in
+					_searchFunction(coveringFeatureClass,
 					                _queryFilters[coveringClassIndex],
 					                filterHelper, null))
 				{
-					yield return (IFeature) row;
+					yield return (IReadOnlyFeature) row;
 				}
 			}
 
@@ -1789,7 +1787,7 @@ namespace ProSuite.QA.Tests
 					_uncoveredProximityOperator = EnvelopeTemplate as IProximityOperator;
 				}
 
-				public bool Exclude([NotNull] IFeature coveringFeature)
+				public bool Exclude([NotNull] IReadOnlyFeature coveringFeature)
 				{
 					IGeometry coveringGeometry = coveringFeature.Shape;
 
@@ -1821,7 +1819,7 @@ namespace ProSuite.QA.Tests
 			/// </summary>
 			/// <param name="feature">The feature.</param>
 			/// <param name="tableIndex">The table index for the feature</param>
-			public UnCoveredFeature([NotNull] IFeature feature, int tableIndex)
+			public UnCoveredFeature([NotNull] IReadOnlyFeature feature, int tableIndex)
 			{
 				Assert.ArgumentNotNull(feature, nameof(feature));
 
@@ -1836,7 +1834,7 @@ namespace ProSuite.QA.Tests
 
 			// TODO don't keep the feature around, get it back when needed (only during error reporting)
 			[NotNull]
-			public IFeature Feature { get; }
+			public IReadOnlyFeature Feature { get; }
 
 			[NotNull]
 			public IGeometry Geometry => Assert.NotNull(_geometry, "geometry not defined");

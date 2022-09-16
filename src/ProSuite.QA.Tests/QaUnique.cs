@@ -10,7 +10,6 @@ using System.Text;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
@@ -21,6 +20,8 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
 {
@@ -39,7 +40,7 @@ namespace ProSuite.QA.Tests
 		private const int _maxTokens = 2000;
 
 		private readonly int _maxRows;
-		private readonly IList<ITable> _tables;
+		private readonly IList<IReadOnlyTable> _tables;
 		private readonly IList<string[]> _uniqueFieldsList;
 		private readonly IList<string> _firstUniqueFieldNames;
 		private esriFieldType? _firstUniqueFieldType;
@@ -85,14 +86,14 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaUnique_0))]
 		public QaUnique(
-				[Doc(nameof(DocStrings.QaUnique_table))] ITable table,
+				[Doc(nameof(DocStrings.QaUnique_table))] IReadOnlyTable table,
 				[Doc(nameof(DocStrings.QaUnique_unique))] string unique)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(table, unique, _defaultMaxRows) { }
 
 		[Doc(nameof(DocStrings.QaUnique_0))]
 		public QaUnique(
-			[Doc(nameof(DocStrings.QaUnique_table))] ITable table,
+			[Doc(nameof(DocStrings.QaUnique_table))] IReadOnlyTable table,
 			[Doc(nameof(DocStrings.QaUnique_unique))] string unique,
 			[Doc(nameof(DocStrings.QaUnique_maxRows))] [DefaultValue(_defaultMaxRows)]
 			int maxRows)
@@ -103,7 +104,7 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaUnique_1))]
 		public QaUnique(
-			[Doc(nameof(DocStrings.QaUnique_tables))] IList<ITable> tables,
+			[Doc(nameof(DocStrings.QaUnique_tables))] IList<IReadOnlyTable> tables,
 			[Doc(nameof(DocStrings.QaUnique_uniques))] IList<string> uniques)
 			: base(tables)
 		{
@@ -163,7 +164,7 @@ namespace ProSuite.QA.Tests
 			return ExecuteGeometry(area);
 		}
 
-		public override int Execute(IEnumerable<IRow> selection)
+		public override int Execute(IEnumerable<IReadOnlyRow> selection)
 		{
 			Init();
 
@@ -173,9 +174,9 @@ namespace ProSuite.QA.Tests
 			int tablesCount = _tables.Count;
 			var constraintViews = new TableView[tablesCount];
 
-			foreach (IRow row in selection)
+			foreach (IReadOnlyRow row in selection)
 			{
-				var feature = row as IFeature;
+				var feature = row as IReadOnlyFeature;
 				if (feature != null && AreaOfInterest != null &&
 				    ((IRelationalOperator) AreaOfInterest).Disjoint(
 					    feature.Shape))
@@ -185,7 +186,7 @@ namespace ProSuite.QA.Tests
 
 				for (var tableIndex = 0; tableIndex < _tables.Count; tableIndex++)
 				{
-					ITable table = _tables[tableIndex];
+					IReadOnlyTable table = _tables[tableIndex];
 
 					if (row.Table != table)
 					{
@@ -213,7 +214,7 @@ namespace ProSuite.QA.Tests
 
 					int firstUniqueFieldIndex = _firstUniqueFieldIndexes[tableIndex];
 
-					errorCount += AddToKeySet(row.Value[firstUniqueFieldIndex],
+					errorCount += AddToKeySet(row.get_Value(firstUniqueFieldIndex),
 					                          _sortedView, minTableIndex);
 				}
 			}
@@ -224,16 +225,16 @@ namespace ProSuite.QA.Tests
 			return errorCount;
 		}
 
-		public override int Execute(IRow row)
+		public override int Execute(IReadOnlyRow row)
 		{
 			return Execute(new[] {row});
 		}
 
 		protected override ISpatialReference GetSpatialReference()
 		{
-			foreach (ITable table in _tables)
+			foreach (IReadOnlyTable table in _tables)
 			{
-				var geoDataset = table as IGeoDataset;
+				var geoDataset = table as IReadOnlyGeoDataset;
 				if (geoDataset != null)
 				{
 					return geoDataset.SpatialReference;
@@ -243,7 +244,7 @@ namespace ProSuite.QA.Tests
 			return null;
 		}
 
-		public void SetRelatedTables([NotNull] IList<ITable> relatedTables)
+		public void SetRelatedTables([NotNull] IList<IReadOnlyTable> relatedTables)
 		{
 			Assert.AreEqual(1, _tables.Count,
 			                "Cannot set relatedTables if more than 1 table is checked");
@@ -255,9 +256,9 @@ namespace ProSuite.QA.Tests
 			Init();
 			var canUseTableSort = true;
 
-			foreach (ITable table in _tables)
+			foreach (IReadOnlyTable table in _tables)
 			{
-				if (! (table is IFeatureClass))
+				if (! (table is IReadOnlyFeatureClass))
 				{
 					geometry = null;
 				}
@@ -300,9 +301,9 @@ namespace ProSuite.QA.Tests
 				       : CheckUnorderedRows(geometry);
 		}
 
-		private static bool CanUseTableSort([NotNull] ITable table)
+		private static bool CanUseTableSort([NotNull] IReadOnlyTable table)
 		{
-			IWorkspace workspace = DatasetUtils.GetWorkspace(table);
+			IWorkspace workspace = table.Workspace;
 			if (WorkspaceUtils.IsSDEGeodatabase(workspace))
 			{
 				return true;
@@ -318,7 +319,7 @@ namespace ProSuite.QA.Tests
 				return false;
 			}
 
-			var queryName = ((IDataset) table).FullName as IQueryName2;
+			var queryName = table.FullName as IQueryName2;
 			if (queryName == null)
 			{
 				return true;
@@ -337,14 +338,14 @@ namespace ProSuite.QA.Tests
 		}
 
 		private static bool CanCompareUsingOrderByQueries(
-			[NotNull] IEnumerable<ITable> tables,
+			[NotNull] IEnumerable<IReadOnlyTable> tables,
 			esriFieldType firstUniqueFieldType)
 		{
 			var workspaces = new HashSet<IWorkspace>();
 
-			foreach (ITable table in tables)
+			foreach (IReadOnlyTable table in tables)
 			{
-				IWorkspace workspace = DatasetUtils.GetWorkspace(table);
+				IWorkspace workspace = table.Workspace;
 
 				if (! IsOrderBySupported(workspace))
 				{
@@ -544,7 +545,7 @@ namespace ProSuite.QA.Tests
 						RowEnumerator rowEnumerator = sameKeyEnumerators[maxIndex];
 						sameKeyEnumerators.RemoveAt(maxIndex);
 
-						IRow row = Assert.NotNull(rowEnumerator.CurrentRow);
+						IReadOnlyRow row = Assert.NotNull(rowEnumerator.CurrentRow);
 
 						if (! CancelTestingRow(row))
 						{
@@ -626,7 +627,7 @@ namespace ProSuite.QA.Tests
 			int tableIndex,
 			[CanBeNull] IComparer<object> inMemoryObjectComparer)
 		{
-			ITable table = _tables[tableIndex];
+			IReadOnlyTable table = _tables[tableIndex];
 			IList<string> uniqueFields = GetUniqueFields(tableIndex);
 			string firstUniqueFieldName = GetFirstUniqueFieldName(tableIndex);
 
@@ -712,7 +713,7 @@ namespace ProSuite.QA.Tests
 
 			for (var tableIndex = 0; tableIndex < _tables.Count; tableIndex++)
 			{
-				ITable table = _tables[tableIndex];
+				IReadOnlyTable table = _tables[tableIndex];
 				IList<string> uniqueFields = GetUniqueFields(tableIndex);
 				TableView helperView = _helperViews[tableIndex];
 				int firstUniqueFieldIndex = _firstUniqueFieldIndexes[tableIndex];
@@ -721,14 +722,14 @@ namespace ProSuite.QA.Tests
 					CreateQueryFilter(table, uniqueFields, helperView, geometry);
 
 				const bool recycle = true;
-				foreach (IRow row in new EnumCursor(table, filter, recycle))
+				foreach (IReadOnlyRow row in table.EnumRows(filter, recycle))
 				{
 					if (CancelTestingRow(row, recycleUnique: Guid.NewGuid()))
 					{
 						continue;
 					}
 
-					object newKey = row.Value[firstUniqueFieldIndex];
+					object newKey = row.get_Value(firstUniqueFieldIndex);
 
 					errorCount += AddToKeySet(newKey, _sortedView, tableIndex);
 				}
@@ -741,7 +742,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[NotNull]
-		private IQueryFilter CreateQueryFilter([NotNull] ITable table,
+		private IQueryFilter CreateQueryFilter([NotNull] IReadOnlyTable table,
 		                                       [NotNull] IEnumerable<string> uniqueFields,
 		                                       TableView tableView,
 		                                       [CanBeNull] IGeometry geometry)
@@ -869,7 +870,7 @@ namespace ProSuite.QA.Tests
 			int tablesCount = _tables.Count;
 			for (var tableIndex = 0; tableIndex < tablesCount; tableIndex++)
 			{
-				ITable table = _tables[tableIndex];
+				IReadOnlyTable table = _tables[tableIndex];
 				IQueryFilter filter = _globalFilters[tableIndex];
 				string firstUniqueFieldName = GetFirstUniqueFieldName(tableIndex);
 
@@ -914,8 +915,8 @@ namespace ProSuite.QA.Tests
 
 					filter.WhereClause = where.ToString();
 
-					var cursor = new EnumCursor(table, filter, true);
-					foreach (IRow row in cursor)
+					var cursor = table.EnumRows(filter, true);
+					foreach (IReadOnlyRow row in cursor)
 					{
 						DataRow added =
 							Assert.NotNull(sortedView.Add(row, _mappings[tableIndex]));
@@ -964,7 +965,7 @@ namespace ProSuite.QA.Tests
 			for (var tableIndex = 0; tableIndex < tablesCount; tableIndex++)
 			{
 				string fields = GetCommaSeparatedFieldNames(tableIndex);
-				ITable table = _tables[tableIndex];
+				IReadOnlyTable table = _tables[tableIndex];
 
 				// TODO apparently not needed. 
 				// Does nothing, and TableView also adds OID field
@@ -1107,17 +1108,17 @@ namespace ProSuite.QA.Tests
 		private int ReportError([NotNull] DataRow dataRow)
 		{
 			IGeometry geometry = null;
-			var involvedList = new List<InvolvedRow>();
+			InvolvedRows involvedList = new InvolvedRows();
 
 			var tableIndex = (int) dataRow[_tableIndexColumn];
-			ITable table = _tables[tableIndex];
+			IReadOnlyTable table = _tables[tableIndex];
 			IList<string> uniqueFields = GetUniqueFields(tableIndex);
 			string commaSeparatedFieldNames = GetCommaSeparatedFieldNames(tableIndex);
 
 			if (_relatedOidFields == null) // simple Table
 			{
 				object oid = dataRow[_oidColumn];
-				if (table is IFeatureClass)
+				if (table is IReadOnlyFeatureClass)
 				{
 					if (oid is int)
 					{
@@ -1127,7 +1128,7 @@ namespace ProSuite.QA.Tests
 
 				if (oid is int)
 				{
-					involvedList.Add(new InvolvedRow(((IDataset) table).Name, (int) oid));
+					involvedList.Add(new InvolvedRow(table.Name, (int) oid));
 				}
 			}
 			else // joined Table
@@ -1161,10 +1162,9 @@ namespace ProSuite.QA.Tests
 
 			string affectedComponent = commaSeparatedFieldNames;
 
-			return ReportError(description, geometry,
-			                   Codes[Code.NotUnique],
-			                   affectedComponent,
-			                   involvedList);
+			return ReportError(
+				description, involvedList, geometry,
+				Codes[Code.NotUnique], affectedComponent);
 		}
 
 		[NotNull]
@@ -1293,7 +1293,7 @@ namespace ProSuite.QA.Tests
 		private class RowEnumerator : IDisposable
 		{
 			[NotNull]
-			public static RowEnumerator CreateOrderBy([NotNull] ITable table,
+			public static RowEnumerator CreateOrderBy([NotNull] IReadOnlyTable table,
 			                                          [NotNull] IQueryFilter filter,
 			                                          [NotNull] string firstUniqueFieldName,
 			                                          int tableIndex)
@@ -1303,12 +1303,12 @@ namespace ProSuite.QA.Tests
 				                                               firstUniqueFieldName);
 
 				int firstUniqueFieldIndex = table.FindField(firstUniqueFieldName);
-				return new RowEnumerator(table.Search(filter, Recycling: true),
+				return new RowEnumerator(table.EnumRows(filter, recycle: true),
 				                         firstUniqueFieldIndex, tableIndex);
 			}
 
 			[NotNull]
-			public static RowEnumerator CreateTableSort([NotNull] ITable table,
+			public static RowEnumerator CreateTableSort([NotNull] IReadOnlyTable table,
 			                                            [CanBeNull] IQueryFilter filter,
 			                                            [NotNull] string firstUniqueFieldName,
 			                                            [NotNull] IComparer<object> comparer,
@@ -1316,29 +1316,32 @@ namespace ProSuite.QA.Tests
 			{
 				int firstUniqueFieldIndex = table.FindField(firstUniqueFieldName);
 
-				ITableSort tableSort =
-					TableSortUtils.CreateTableSort(table, firstUniqueFieldName);
+				ESRI.ArcGIS.Geodatabase.ITable aoTable = (ESRI.ArcGIS.Geodatabase.ITable) table.FullName.Open();
+				ReadOnlyTable roTable = ReadOnlyTableFactory.Create(aoTable);
+				ITableSort tableSort = TableSortUtils.CreateTableSort(aoTable, firstUniqueFieldName);
 
 				tableSort.Compare = new FieldSortCallback(comparer);
 				tableSort.QueryFilter = filter;
 				tableSort.Sort(null);
 
-				return new RowEnumerator(tableSort.Rows, firstUniqueFieldIndex,
-				                         tableIndex);
+				return new RowEnumerator(
+					new EnumCursor(aoTable, tableSort.Rows).Select(
+						r => new ReadOnlyRow(roTable, r)),
+					firstUniqueFieldIndex, tableIndex);
 			}
 
-			[NotNull] private readonly ICursor _cursor;
+			[NotNull] private readonly IEnumerator<IReadOnlyRow> _cursor;
 			private readonly int _firstUniqueFieldIndex;
 
 			private bool _disposed;
 
-			private RowEnumerator([NotNull] ICursor cursor,
+			private RowEnumerator([NotNull] IEnumerable<IReadOnlyRow> cursor,
 			                      int firstUniqueFieldIndex,
 			                      int tableIndex)
 			{
 				Assert.ArgumentNotNull(cursor, nameof(cursor));
 
-				_cursor = cursor;
+				_cursor = cursor.GetEnumerator();
 				_firstUniqueFieldIndex = firstUniqueFieldIndex;
 				TableIndex = tableIndex;
 			}
@@ -1348,13 +1351,11 @@ namespace ProSuite.QA.Tests
 			public bool TryAddNext(
 				[NotNull] IDictionary<object, List<RowEnumerator>> enumerators)
 			{
-				CurrentRow = _cursor.NextRow();
-
-				bool success = CurrentRow != null;
-
+				bool success = _cursor.MoveNext();
+				CurrentRow = _cursor.Current;
 				if (success)
 				{
-					object key = CurrentRow.Value[_firstUniqueFieldIndex];
+					object key = Assert.NotNull(CurrentRow).get_Value(_firstUniqueFieldIndex);
 
 					if (key == null)
 					{
@@ -1384,7 +1385,7 @@ namespace ProSuite.QA.Tests
 			}
 
 			[CanBeNull]
-			public IRow CurrentRow { get; private set; }
+			public IReadOnlyRow CurrentRow { get; private set; }
 
 			private void DisposeEnumerator()
 			{

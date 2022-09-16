@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
-using ESRI.ArcGIS.Geodatabase;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Tests.Constraints;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
 {
@@ -14,11 +14,11 @@ namespace ProSuite.QA.Tests
 	{
 		[Doc(nameof(DocStrings.QaRelationConstraint_0))]
 		public QaRelationConstraint(
-			[Doc(nameof(DocStrings.QaRelationConstraint_table))] ITable table,
+			[Doc(nameof(DocStrings.QaRelationConstraint_table))] IReadOnlyTable table,
 			[Doc(nameof(DocStrings.QaRelationConstraint_constraint))]
 			string constraint,
 			[Doc(nameof(DocStrings.QaRelationConstraint_relatedTables))]
-			IList<ITable> relatedTables)
+			IList<IReadOnlyTable> relatedTables)
 			: base(table, constraint)
 		{
 			AddRelatedTables(table, relatedTables);
@@ -26,11 +26,11 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaRelationConstraint_1))]
 		public QaRelationConstraint(
-			[Doc(nameof(DocStrings.QaRelationConstraint_table))] ITable table,
+			[Doc(nameof(DocStrings.QaRelationConstraint_table))] IReadOnlyTable table,
 			[Doc(nameof(DocStrings.QaRelationConstraint_constraints))]
 			IList<ConstraintNode> constraints,
 			[Doc(nameof(DocStrings.QaRelationConstraint_relatedTables))]
-			IList<ITable> relatedTables)
+			IList<IReadOnlyTable> relatedTables)
 			: base(table, constraints)
 		{
 			AddRelatedTables(table, relatedTables);
@@ -49,13 +49,13 @@ namespace ProSuite.QA.Tests
 				return true;
 			}
 
-			ITable tbl = InvolvedTables[0];
+			IReadOnlyTable tbl = InvolvedTables[0];
 			if (tbl.HasOID) // TODO intention?
 			{
 				return false;
 			}
 
-			if (tbl is IFeatureClass)
+			if (tbl is IReadOnlyFeatureClass)
 			{
 				return true;
 			}

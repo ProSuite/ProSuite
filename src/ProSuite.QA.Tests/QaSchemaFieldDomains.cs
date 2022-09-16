@@ -1,12 +1,12 @@
 using ESRI.ArcGIS.Geodatabase;
-using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.QA.Tests.Schema;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
 {
@@ -14,7 +14,7 @@ namespace ProSuite.QA.Tests
 	[SchemaTest]
 	public class QaSchemaFieldDomains : QaSchemaTestBase
 	{
-		[NotNull] private readonly ITable _table;
+		[NotNull] private readonly IReadOnlyTable _table;
 
 		#region issue codes
 
@@ -36,7 +36,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaSchemaFieldDomains_0))]
 		public QaSchemaFieldDomains(
 			[Doc(nameof(DocStrings.QaSchemaFieldDomains_table))] [NotNull]
-			ITable table)
+			IReadOnlyTable table)
 			: base(table)
 		{
 			Assert.ArgumentNotNull(table, nameof(table));

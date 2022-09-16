@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
 
@@ -21,7 +21,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 
 		public string GetTransformed() => _rule;
 
-		IList<ITable> IInvolvesTables.InvolvedTables => new ITable[] { };
+		IList<IReadOnlyTable> IInvolvesTables.InvolvedTables => new IReadOnlyTable[] { };
 
 		void IInvolvesTables.SetConstraint(int tableIndex, string constraint) { }
 
@@ -50,7 +50,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 
 		public IList<string[]> GetTransformed() => _rules;
 
-		IList<ITable> IInvolvesTables.InvolvedTables => new ITable[] { };
+		IList<IReadOnlyTable> IInvolvesTables.InvolvedTables => new IReadOnlyTable[] { };
 
 		void IInvolvesTables.SetConstraint(int tableIndex, string constraint) { }
 

@@ -1,3 +1,5 @@
+using System;
+using System.ComponentModel;
 using System.Diagnostics;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -28,6 +30,27 @@ namespace ProSuite.Commons.Essentials.System
 			virtualBytes = GetMemoryWorkaround(process.VirtualMemorySize64);
 			privateBytes = GetMemoryWorkaround(process.PrivateMemorySize64);
 			workingSet = GetMemoryWorkaround(process.WorkingSet64);
+		}
+
+		/// <summary>
+		/// Starts a new process by specifying the name of a document or application file, such as an html document
+		/// being shown by the browser. The associated process will be started with UseShellExecute.
+		/// </summary>
+		/// <param name="fileName">The full path of the document/file to be opened with the associated process.</param>
+		/// <returns>The started process.</returns>
+		[PublicAPI]
+		public static Process StartProcess([NotNull] string fileName)
+		{
+			var process = new Process();
+
+			// NOTE: In .net 6 UseShellExecute defaults to false and therefore must be set explicitly.
+			process.StartInfo = new ProcessStartInfo(fileName)
+			                    {
+				                    UseShellExecute = true
+			                    };
+			process.Start();
+
+			return process;
 		}
 
 		/// <summary>
@@ -94,6 +117,21 @@ namespace ProSuite.Commons.Essentials.System
 			process.PriorityClass = priorityClass;
 
 			return process;
+		}
+
+		[PublicAPI]
+		public static TimeSpan TryGetUserProcessorTime([CanBeNull] Process process = null)
+		{
+			try
+			{
+				if (process == null) process = Process.GetCurrentProcess();
+
+				return process.UserProcessorTime;
+			}
+			catch (Win32Exception)
+			{
+				return TimeSpan.Zero;
+			}
 		}
 
 		[PublicAPI]

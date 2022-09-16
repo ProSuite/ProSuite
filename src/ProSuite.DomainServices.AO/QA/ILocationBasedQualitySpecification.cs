@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Container;
@@ -25,7 +25,7 @@ namespace ProSuite.DomainServices.AO.QA
 		/// <returns>
 		///   <c>true</c> if the feature is to be tested for the quality condition given its location; otherwise, <c>false</c>.
 		/// </returns>
-		bool IsFeatureToBeTested([NotNull] IFeature feature,
+		bool IsFeatureToBeTested([NotNull] IReadOnlyFeature feature,
 		                         bool recycled,
 		                         Guid recycleUnique,
 		                         [NotNull] QualityCondition qualityCondition,

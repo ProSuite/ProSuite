@@ -4,13 +4,15 @@ using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.PolygonGrower;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.QA.Tests.Network;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
 {
@@ -44,16 +46,16 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaConnections_0))]
 		public QaConnections(
-			[Doc(nameof(DocStrings.QaConnections_featureClasses))] IList<IFeatureClass> featureClasses,
+			[Doc(nameof(DocStrings.QaConnections_featureClasses))] IList<IReadOnlyFeatureClass> featureClasses,
 			[Doc(nameof(DocStrings.QaConnections_rules_0))] IList<string[]> rules)
-			: base(CastToTables((IEnumerable<IFeatureClass>) featureClasses), false)
+			: base(CastToTables((IEnumerable<IReadOnlyFeatureClass>) featureClasses), false)
 		{
 			Init(rules);
 		}
 
 		[Doc(nameof(DocStrings.QaConnections_1))]
 		public QaConnections(
-			[Doc(nameof(DocStrings.QaConnections_featureClass))] IFeatureClass featureClass,
+			[Doc(nameof(DocStrings.QaConnections_featureClass))] IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaConnections_rules_1))] IEnumerable<string> rules)
 			: base(featureClass, false)
 		{
@@ -64,24 +66,24 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaConnections_2))]
 		public QaConnections(
-				[Doc(nameof(DocStrings.QaConnections_featureClasses))] IList<IFeatureClass> featureClasses,
+				[Doc(nameof(DocStrings.QaConnections_featureClasses))] IList<IReadOnlyFeatureClass> featureClasses,
 				[Doc(nameof(DocStrings.QaConnections_rules_1))] IList<QaConnectionRule> rules)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(featureClasses, rules, 0) { }
 
 		[Doc(nameof(DocStrings.QaConnections_3))]
 		public QaConnections(
-			[Doc(nameof(DocStrings.QaConnections_featureClass))] IFeatureClass featureClass,
+			[Doc(nameof(DocStrings.QaConnections_featureClass))] IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaConnections_rules_1))] IList<QaConnectionRule> rules)
 			: this(new[] {featureClass}, rules) { }
 
 		// TODO document/private?
 		public QaConnections(
-			IList<IFeatureClass> featureClasses,
+			IList<IReadOnlyFeatureClass> featureClasses,
 			IList<QaConnectionRule> rules,
 			double tolerance)
 			: base(
-				CastToTables((IEnumerable<IFeatureClass>) featureClasses), tolerance, false, null)
+				CastToTables((IEnumerable<IReadOnlyFeatureClass>) featureClasses), tolerance, false, null)
 		{
 			_ruleHelpers = QaConnectionRuleHelper.CreateList(rules, out _tableFilterHelpers);
 		}
@@ -105,7 +107,7 @@ namespace ProSuite.QA.Tests
 		                                             IQueryFilter queryFilter)
 		{
 			base.ConfigureQueryFilter(tableIndex, queryFilter);
-			ITable table = InvolvedTables[tableIndex];
+			IReadOnlyTable table = InvolvedTables[tableIndex];
 
 			foreach (QaConnectionRuleHelper ruleHelper in _ruleHelpers)
 			{
@@ -145,7 +147,7 @@ namespace ProSuite.QA.Tests
 
 			int connectedElementsCount = connectedElements.Count;
 
-			var connectedRows = new List<IRow>(connectedElementsCount);
+			var connectedRows = new List<IReadOnlyRow>(connectedElementsCount);
 			var connectedRowTableIndices = new List<int>(connectedElementsCount);
 
 			foreach (NetElement netElement in connectedElements)
@@ -199,9 +201,9 @@ namespace ProSuite.QA.Tests
 
 			// no rule fulfills all the rows
 			const string description = "Rows do not fulfill rules";
-			return ReportError(description, connectedElements[0].NetPoint,
-			                   Codes[Code.RulesNotFulfilled], null,
-			                   GetInvolvedRows(connectedRows));
+			return ReportError(
+				description, InvolvedRowUtils.GetInvolvedRows(connectedRows),
+				connectedElements[0].NetPoint, Codes[Code.RulesNotFulfilled], null);
 		}
 
 		private int GetMatchingRowsCount(int tableIndex,

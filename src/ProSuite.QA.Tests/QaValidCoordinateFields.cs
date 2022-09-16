@@ -3,7 +3,6 @@ using System.Globalization;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.Commons.AO.Geodatabase;
@@ -13,6 +12,8 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Text;
 using ProSuite.QA.Core;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
 {
@@ -66,7 +67,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaValidCoordinateFields_0))]
 		public QaValidCoordinateFields(
 			[Doc(nameof(DocStrings.QaValidCoordinateFields_featureClass))] [NotNull]
-			IFeatureClass featureClass,
+			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaValidCoordinateFields_xCoordinateFieldName))] [CanBeNull]
 			string
 				xCoordinateFieldName,
@@ -82,7 +83,7 @@ namespace ProSuite.QA.Tests
 			double zTolerance,
 			[Doc(nameof(DocStrings.QaValidCoordinateFields_culture))] [CanBeNull]
 			string culture)
-			: base((ITable) featureClass)
+			: base(featureClass)
 		{
 			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
 			Assert.ArgumentCondition(
@@ -117,7 +118,7 @@ namespace ProSuite.QA.Tests
 				if (Math.Abs(_xyTolerance) < double.Epsilon)
 				{
 					double srefXyTolerance;
-					if (DatasetUtils.TryGetXyTolerance(featureClass, out srefXyTolerance))
+					if (DatasetUtils.TryGetXyTolerance(featureClass.SpatialReference, out srefXyTolerance))
 					{
 						_xyTolerance = srefXyTolerance;
 					}
@@ -131,18 +132,18 @@ namespace ProSuite.QA.Tests
 				if (Math.Abs(_zTolerance) < double.Epsilon)
 				{
 					double srefZTolerance;
-					if (DatasetUtils.TryGetZTolerance(featureClass, out srefZTolerance))
+					if (DatasetUtils.TryGetZTolerance(featureClass.SpatialReference, out srefZTolerance))
 					{
 						_zTolerance = srefZTolerance;
 					}
 				}
 
-				if (! DatasetUtils.HasZ(featureClass))
+				if (! DatasetUtils.GetGeometryDef(featureClass).HasZ)
 				{
 					throw new InvalidConfigurationException(
 						string.Format(
 							"Feature class '{0}' does not have Z values, unable to verify Z coordinate field",
-							DatasetUtils.GetName(featureClass)));
+							featureClass.Name));
 				}
 			}
 
@@ -151,7 +152,7 @@ namespace ProSuite.QA.Tests
 			_cultureInfo = culture == null || StringUtils.IsNullOrEmptyOrBlank(culture)
 				               ? CultureInfo.InvariantCulture
 				               : CultureInfo.GetCultureInfo(culture);
-			_spatialReference = ((IGeoDataset) featureClass).SpatialReference;
+			_spatialReference = featureClass.SpatialReference;
 		}
 
 		[TestParameter(false)]
@@ -170,16 +171,16 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaValidCoordinateFields_AllowMissingXYFieldValueForDefinedShape))]
 		public bool AllowMissingXYFieldValueForDefinedShape { get; set; }
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
-			var feature = row as IFeature;
+			var feature = row as IReadOnlyFeature;
 
 			return feature == null
 				       ? NoError
 				       : CheckFeature(feature);
 		}
 
-		private int CheckFeature([NotNull] IFeature feature)
+		private int CheckFeature([NotNull] IReadOnlyFeature feature)
 		{
 			IGeometry shape = feature.Shape;
 
@@ -198,7 +199,7 @@ namespace ProSuite.QA.Tests
 			return errorCount;
 		}
 
-		private int CheckXYValues([NotNull] IFeature feature,
+		private int CheckXYValues([NotNull] IReadOnlyFeature feature,
 		                          [CanBeNull] IPoint point,
 		                          [CanBeNull] CoordinateField xCoordinateField,
 		                          [CanBeNull] CoordinateField yCoordinateField)
@@ -350,7 +351,7 @@ namespace ProSuite.QA.Tests
 			return errorCount;
 		}
 
-		private int CheckSingleXYFieldCoordinate([NotNull] IFeature feature,
+		private int CheckSingleXYFieldCoordinate([NotNull] IReadOnlyFeature feature,
 		                                         [NotNull] IPoint point,
 		                                         [NotNull] CoordinateField coordinateField,
 		                                         double fieldValue,
@@ -369,7 +370,7 @@ namespace ProSuite.QA.Tests
 				fieldValue, shapeValue, coordinateAxis);
 		}
 
-		private int CheckZValue([NotNull] IFeature feature,
+		private int CheckZValue([NotNull] IReadOnlyFeature feature,
 		                        [CanBeNull] IPoint point,
 		                        [NotNull] CoordinateField zCoordinateField)
 		{
@@ -422,7 +423,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		private int ReportSingleXYFieldCoordinateTooFarFromShape(
-			[NotNull] IFeature feature,
+			[NotNull] IReadOnlyFeature feature,
 			[NotNull] IPoint point,
 			double distance,
 			[NotNull] CoordinateField coordinateField,
@@ -439,9 +440,9 @@ namespace ProSuite.QA.Tests
 					FormatLengthComparison(distance, ">", _xyTolerance,
 					                       _spatialReference).Trim());
 
-			return ReportError(description, GetErrorGeometry(point),
-			                   Codes[Code.XYFieldCoordinateValueTooFarFromShape],
-			                   coordinateField.FieldName, feature);
+			return ReportError(
+				description, InvolvedRowUtils.GetInvolvedRows(feature), GetErrorGeometry(point),
+				Codes[Code.XYFieldCoordinateValueTooFarFromShape], coordinateField.FieldName);
 		}
 
 		private string GetNonEqualValueMessage([NotNull] CoordinateField coordinateField,
@@ -454,7 +455,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		private int ReportXYFieldCoordinatesTooFarFromShape(
-			[NotNull] IFeature feature, [NotNull] IPoint point, double xyDistance,
+			[NotNull] IReadOnlyFeature feature, [NotNull] IPoint point, double xyDistance,
 			[NotNull] CoordinateField xCoordinateField, double xFieldValue, double shapeX,
 			[NotNull] CoordinateField yCoordinateField, double yFieldValue, double shapeY)
 		{
@@ -500,13 +501,13 @@ namespace ProSuite.QA.Tests
 					                       _spatialReference).Trim(),
 					comparisonMessage);
 
-			return ReportError(description, GetErrorGeometry(point),
-			                   Codes[Code.XYFieldCoordinatesTooFarFromShape],
-			                   affectedComponent, feature);
+			return ReportError(
+				description, InvolvedRowUtils.GetInvolvedRows(feature), GetErrorGeometry(point),
+				Codes[Code.XYFieldCoordinatesTooFarFromShape], affectedComponent);
 		}
 
 		private int ReportZFieldCoordinateTooFarFromShape(
-			[NotNull] IFeature feature,
+			[NotNull] IReadOnlyFeature feature,
 			[NotNull] IPoint point,
 			[NotNull] CoordinateField zCoordinateField,
 			double zFieldValue,
@@ -520,13 +521,13 @@ namespace ProSuite.QA.Tests
 					FormatLengthComparison(zDistance, ">", _zTolerance,
 					                       _spatialReference).Trim());
 
-			return ReportError(description, GetErrorGeometry(point),
-			                   Codes[Code.ZFieldCoordinateTooFarFromShape],
-			                   zCoordinateField.FieldName, feature);
+			return ReportError(
+				description, InvolvedRowUtils.GetInvolvedRows(feature), GetErrorGeometry(point),
+				Codes[Code.ZFieldCoordinateTooFarFromShape], zCoordinateField.FieldName);
 		}
 
 		private int ReportFieldValueForUndefinedShape(
-			[NotNull] IFeature feature,
+			[NotNull] IReadOnlyFeature feature,
 			[NotNull] CoordinateField coordinateField,
 			double value)
 		{
@@ -535,13 +536,13 @@ namespace ProSuite.QA.Tests
 					"The shape is not defined, but the field '{0}' has a value ({1})",
 					coordinateField.FieldName, value);
 
-			return ReportError(description, null,
-			                   Codes[Code.ShapeIsUndefinedButCoordinateFieldHasValue],
-			                   coordinateField.FieldName, feature);
+			return ReportError(
+				description, InvolvedRowUtils.GetInvolvedRows(feature), null,
+				Codes[Code.ShapeIsUndefinedButCoordinateFieldHasValue], coordinateField.FieldName);
 		}
 
 		private int ReportMissingFieldValueForDefinedShape(
-			[NotNull] IFeature feature,
+			[NotNull] IReadOnlyFeature feature,
 			[NotNull] IPoint point,
 			[NotNull] CoordinateField coordinateField)
 		{
@@ -550,10 +551,9 @@ namespace ProSuite.QA.Tests
 					"The shape is defined, but the field '{0}' does not contain a value",
 					coordinateField.FieldName);
 
-			return ReportError(description,
-			                   GetErrorGeometry(point),
-			                   Codes[Code.ShapeIsDefinedButCoordinateFieldHasNoValue],
-			                   coordinateField.FieldName, feature);
+			return ReportError(
+				description, InvolvedRowUtils.GetInvolvedRows(feature), GetErrorGeometry(point),
+				Codes[Code.ShapeIsDefinedButCoordinateFieldHasNoValue], coordinateField.FieldName);
 		}
 
 		private static double GetDistanceSquared(double x0, double y0,
@@ -573,7 +573,7 @@ namespace ProSuite.QA.Tests
 				       : GeometryFactory.Clone(point);
 		}
 
-		private int TryReadValue([NotNull] IFeature feature,
+		private int TryReadValue([NotNull] IReadOnlyFeature feature,
 		                         [NotNull] CoordinateField coordinateField,
 		                         [CanBeNull] IPoint point,
 		                         out double? value,
@@ -585,21 +585,22 @@ namespace ProSuite.QA.Tests
 			                   out value, out message, out issueCode))
 			{
 				errorReadingValue = true;
-				return ReportError(message, GetErrorGeometry(point),
-				                   issueCode, coordinateField.FieldName, feature);
+				return ReportError(
+					message, InvolvedRowUtils.GetInvolvedRows(feature), GetErrorGeometry(point),
+					issueCode, coordinateField.FieldName);
 			}
 
 			errorReadingValue = false;
 			return NoError;
 		}
 
-		private bool TryReadValue([NotNull] IRow row,
+		private bool TryReadValue([NotNull] IReadOnlyRow row,
 		                          [NotNull] CoordinateField coordinateField,
 		                          out double? value,
 		                          [NotNull] out string message,
 		                          [CanBeNull] out IssueCode issueCode)
 		{
-			object rawValue = row.Value[coordinateField.FieldIndex];
+			object rawValue = row.get_Value(coordinateField.FieldIndex);
 
 			if (rawValue == null || rawValue is DBNull)
 			{
@@ -651,7 +652,7 @@ namespace ProSuite.QA.Tests
 
 		[NotNull]
 		private static CoordinateField GetCoordinateField(
-			[NotNull] IFeatureClass featureClass,
+			[NotNull] IReadOnlyFeatureClass featureClass,
 			[NotNull] string fieldName)
 		{
 			int fieldIndex = featureClass.FindField(fieldName);
@@ -661,7 +662,7 @@ namespace ProSuite.QA.Tests
 				throw new InvalidConfigurationException(
 					string.Format("Field '{0}' does not exist in feature class '{1}'",
 					              fieldName,
-					              DatasetUtils.GetName(featureClass)));
+					              featureClass));
 			}
 
 			IField field = featureClass.Fields.Field[fieldIndex];

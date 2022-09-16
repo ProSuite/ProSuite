@@ -28,7 +28,7 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 		#region Fields
 
 		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+			new Msg(MethodBase.GetCurrentMethod()?.DeclaringType);
 
 		private readonly IVerificationContext _verificationContext;
 
@@ -620,7 +620,7 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 
 		private static bool UsesDeletedDatasets([NotNull] QualityCondition qualityCondition)
 		{
-			return qualityCondition.GetDatasetParameterValues()
+			return qualityCondition.GetDatasetParameterValues(includeReferencedProcessors: true)
 			                       .Any(dataset => dataset.Deleted);
 		}
 
@@ -1020,7 +1020,7 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 			foreach (IssueDatasetWriter issueDatasetWriter in IssueDatasets.GetIssueWriters())
 			{
 				foreach (AllowedError allowedError in AllowedErrorUtils.GetAllowedErrors(
-					issueDatasetWriter, areaOfInterest, spatialFilter, factory))
+					         issueDatasetWriter, areaOfInterest, spatialFilter, factory))
 				{
 					yield return allowedError;
 				}
@@ -1054,7 +1054,7 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 				{
 					bool tableIsUnknown;
 					if (_objectSelection.Contains(involvedRow, qualityCondition, out tableIsUnknown)
-					)
+					   )
 					{
 						return true;
 					}

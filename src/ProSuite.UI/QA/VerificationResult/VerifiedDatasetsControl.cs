@@ -8,6 +8,7 @@ using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Misc;
+using ProSuite.Commons.UI.ScreenBinding.Lists;
 using ProSuite.Commons.UI.WinForms.Controls;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
@@ -94,7 +95,8 @@ namespace ProSuite.UI.QA.VerificationResult
 
 				QualityCondition condition = conditionVerification.DisplayableCondition;
 
-				foreach (Dataset dataset in condition.GetDatasetParameterValues())
+				foreach (Dataset dataset in condition.GetDatasetParameterValues(
+					         includeSourceDatasets: true))
 				{
 					if (datasets.Contains(dataset))
 					{

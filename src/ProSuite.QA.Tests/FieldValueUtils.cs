@@ -1,5 +1,4 @@
 using System;
-using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -9,7 +8,7 @@ namespace ProSuite.QA.Tests
 	{
 		[NotNull]
 		public static string GetTypeConversionErrorDescription(
-			[NotNull] ITable table,
+			[NotNull] IReadOnlyTable table,
 			[CanBeNull] object foreignKey,
 			[NotNull] string fkField,
 			[NotNull] string pkField,
@@ -18,7 +17,7 @@ namespace ProSuite.QA.Tests
 			return string.Format(
 				"Unable to convert value [{0}] in field '{1}' to the type of field '{2}' in table '{3}': {4}",
 				FormatValue(foreignKey), fkField, pkField,
-				DatasetUtils.GetName(table),
+				table.Name,
 				errorMessage);
 		}
 

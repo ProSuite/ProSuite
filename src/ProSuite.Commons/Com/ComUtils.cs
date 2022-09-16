@@ -12,25 +12,7 @@ namespace ProSuite.Commons.Com
 {
 	public static class ComUtils
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
-
-		/// <summary>
-		/// Determines whether a given type can be activated via Com.
-		/// </summary>
-		/// <param name="type">The type.</param>
-		/// <returns>
-		/// 	<c>true</c> if the type can be activated via Com; otherwise, <c>false</c>.
-		/// </returns>
-		public static bool IsCreatableComClass([NotNull] Type type)
-		{
-			Assert.ArgumentNotNull(type, nameof(type));
-
-			return type.IsPublic &&
-			       ! type.IsAbstract &&
-			       HasPublicParameterlessConstructor(type) &&
-			       IsComVisible(type);
-		}
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		/// <summary>
 		/// Method to avoid Creation Problems of COM-Singletons
@@ -111,13 +93,6 @@ namespace ProSuite.Commons.Com
 			}
 
 			while (Marshal.ReleaseComObject(o) > 0) { }
-		}
-
-		public static bool IsComVisible([NotNull] Type type)
-		{
-			Assert.ArgumentNotNull(type, nameof(type));
-
-			return Marshal.IsTypeVisibleFromCom(type);
 		}
 
 		/// <summary>
@@ -214,13 +189,6 @@ namespace ProSuite.Commons.Com
 			}
 
 			return result;
-		}
-
-		private static bool HasPublicParameterlessConstructor([NotNull] Type type)
-		{
-			Assert.ArgumentNotNull(type, nameof(type));
-
-			return type.GetConstructor(new Type[] { }) != null;
 		}
 	}
 }

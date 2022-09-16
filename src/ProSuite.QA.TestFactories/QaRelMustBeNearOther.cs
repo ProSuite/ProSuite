@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
-using ESRI.ArcGIS.Geodatabase;
-using ProSuite.QA.Tests;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.QA.Container;
 using ProSuite.DomainModel.AO.QA;
-using ProSuite.QA.Container.TestCategories;
+using ProSuite.QA.Container;
 using ProSuite.QA.Core;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Tests;
 
 namespace ProSuite.QA.TestFactories
 {
@@ -33,7 +33,7 @@ namespace ProSuite.QA.TestFactories
 			var list =
 				new List<TestParameter>
 				{
-					new TestParameter("relationTables", typeof(IList<ITable>),
+					new TestParameter("relationTables", typeof(IList<IReadOnlyTable>),
 					                  DocStrings.QaRelMustBeNearOther_relationTables),
 					new TestParameter("relation", typeof(string),
 					                  DocStrings.QaRelMustBeNearOther_relation),
@@ -50,10 +50,7 @@ namespace ProSuite.QA.TestFactories
 			return list.AsReadOnly();
 		}
 
-		public override string GetTestDescription()
-		{
-			return DocStrings.QaRelMustBeNearOther;
-		}
+		public override string TestDescription => DocStrings.QaRelMustBeNearOther;
 
 		protected override object[] Args(IOpenDataset datasetContext,
 		                                 IList<TestParameter> testParameters,
@@ -67,16 +64,24 @@ namespace ProSuite.QA.TestFactories
 				                                          objParams.Length));
 			}
 
-			var tables = ValidateType<IList<ITable>>(objParams[0], "IList<ITable>");
+			var tables = ValidateType<IList<IReadOnlyTable>>(objParams[0], "IList<ITable>");
 			var associationName =
 				ValidateType<string>(objParams[1], "string (for relation)");
 			var join = ValidateType<JoinType>(objParams[2]);
 
-			var nearClasses = ValidateType<IList<IFeatureClass>>(objParams[3]);
+			var nearClasses = ValidateType<IList<IReadOnlyFeatureClass>>(objParams[3]);
 			var maximumDistance = ValidateType<double>(objParams[4]);
-			var relevantRelationCondition = ValidateType<string>(objParams[5]);
 
-			ITable queryTable = CreateQueryTable(datasetContext, associationName, tables, join);
+			// TOP-5291: relevantRelationCondition is nullable in the test
+			string relevantRelationCondition = null;
+			object relevantRelParam = objParams[5];
+			if (relevantRelParam != null)
+			{
+				relevantRelationCondition = ValidateType<string>(relevantRelParam);
+			}
+
+			IReadOnlyTable queryTable =
+				CreateQueryTable(datasetContext, associationName, tables, join);
 
 			var objects = new object[5];
 
@@ -102,11 +107,11 @@ namespace ProSuite.QA.TestFactories
 
 		protected override ITest CreateTestInstance(object[] args)
 		{
-			var test = new QaMustBeNearOther((IFeatureClass) args[0],
-			                                 (ICollection<IFeatureClass>) args[1],
+			var test = new QaMustBeNearOther((IReadOnlyFeatureClass) args[0],
+			                                 (ICollection<IReadOnlyFeatureClass>) args[1],
 			                                 (double) args[2],
 			                                 (string) args[3]);
-			test.AddRelatedTables((ITable) args[0], (IList<ITable>) args[4]);
+			test.AddRelatedTables((IReadOnlyTable) args[0], (IList<IReadOnlyTable>) args[4]);
 			return test;
 		}
 	}

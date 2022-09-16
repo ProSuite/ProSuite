@@ -1,12 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container;
 using ProSuite.QA.Tests.Test.TestRunners;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Core.IssueCodes;
 
 namespace ProSuite.QA.Tests.Test.SpatialRelations
 {
@@ -21,78 +22,17 @@ namespace ProSuite.QA.Tests.Test.SpatialRelations
 			Errors.Clear();
 		}
 
-		public int Report(string description, params IRow[] rows)
-		{
-			return ReportCore(description, null, null, null,
-			                  false,
-			                  null, rows);
-		}
 
-		public int Report(string description, IssueCode issueCode,
+
+		public int Report(string description, InvolvedRows involved,
+		                  IGeometry errorGeometry,
+		                  IssueCode issueCode,
 		                  string affectedComponent,
-		                  params IRow[] rows)
+		                  bool reportIndividualParts = false,
+		                  IEnumerable<object> values = null)
 		{
-			return ReportCore(description, null, issueCode, affectedComponent,
-			                  false,
-			                  null, rows);
-		}
-
-		public int Report(string description, IGeometry errorGeometry, params IRow[] rows)
-		{
-			return ReportCore(description, errorGeometry, null, null,
-			                  false,
-			                  null, rows);
-		}
-
-		public int Report(string description, IGeometry errorGeometry,
-		                  IssueCode issueCode,
-		                  string affectedComponent, params IRow[] rows)
-		{
-			return ReportCore(description, errorGeometry, issueCode, null,
-			                  false,
-			                  null, rows);
-		}
-
-		public int Report(string description, IGeometry errorGeometry,
-		                  IssueCode issueCode,
-		                  bool reportIndividualParts, params IRow[] rows)
-		{
-			return ReportCore(description, errorGeometry, issueCode, null,
-			                  reportIndividualParts,
-			                  null, rows);
-		}
-
-		public int Report(string description, IGeometry errorGeometry,
-		                  IssueCode issueCode,
-		                  string affectedComponent, IEnumerable<object> values,
-		                  params IRow[] rows)
-		{
-			return ReportCore(description, errorGeometry, issueCode, affectedComponent,
-			                  false,
-			                  values, rows);
-		}
-
-		public int Report(string description, IGeometry errorGeometry,
-		                  IssueCode issueCode,
-		                  string affectedComponent, bool reportIndividualParts,
-		                  params IRow[] rows)
-		{
-			return ReportCore(description, errorGeometry, issueCode, affectedComponent,
-			                  reportIndividualParts,
-			                  null, rows);
-		}
-
-		private int ReportCore([NotNull] string description,
-		                       [CanBeNull] IGeometry errorGeometry,
-		                       [CanBeNull] IssueCode issueCode,
-		                       [CanBeNull] string affectedComponent,
-		                       bool reportIndividualParts,
-		                       [CanBeNull] IEnumerable<object> values,
-		                       [NotNull] params IRow[] rows)
-		{
-			var errors = CreateErrors(description, errorGeometry, issueCode,
-			                          affectedComponent, reportIndividualParts, values,
-			                          rows);
+			var errors = CreateErrors(description, involved, errorGeometry, issueCode,
+			                          affectedComponent, reportIndividualParts, values);
 
 			errors.ForEach(TestRunnerUtils.PrintError);
 
@@ -103,25 +43,25 @@ namespace ProSuite.QA.Tests.Test.SpatialRelations
 
 		[NotNull]
 		private static List<QaError> CreateErrors([NotNull] string description,
+												  [NotNull] InvolvedRows involved,
 		                                          [CanBeNull] IGeometry errorGeometry,
 		                                          [CanBeNull] IssueCode issueCode,
 		                                          [CanBeNull] string affectedComponent,
 		                                          bool reportIndividualParts,
-		                                          [CanBeNull] IEnumerable<object> values,
-		                                          [NotNull] IRow[] rows)
+		                                          [CanBeNull] IEnumerable<object> values)
 		{
 			return reportIndividualParts && errorGeometry != null
 				       ? GeometryUtils.Explode(errorGeometry)
 				                      .Select(g => new QaError(
 					                              new DummyTest(), description,
-					                              InvolvedRowUtils.GetInvolvedRows(rows),
+					                              involved,
 					                              g, issueCode,
 					                              affectedComponent, false, values))
 				                      .ToList()
 				       : new List<QaError>
 				         {
 					         new QaError(new DummyTest(), description,
-					                     InvolvedRowUtils.GetInvolvedRows(rows),
+					                     involved,
 					                     errorGeometry, issueCode,
 					                     affectedComponent, false, values)
 				         };
@@ -129,7 +69,7 @@ namespace ProSuite.QA.Tests.Test.SpatialRelations
 
 		private class DummyTest : TestBase
 		{
-			public DummyTest() : base(new ITable[] { }) { }
+			public DummyTest() : base(new IReadOnlyTable[] { }) { }
 
 			public override int Execute()
 			{
@@ -146,12 +86,12 @@ namespace ProSuite.QA.Tests.Test.SpatialRelations
 				throw new NotImplementedException();
 			}
 
-			public override int Execute(IEnumerable<IRow> selectedRows)
+			public override int Execute(IEnumerable<IReadOnlyRow> selectedRows)
 			{
 				throw new NotImplementedException();
 			}
 
-			public override int Execute(IRow row)
+			public override int Execute(IReadOnlyRow row)
 			{
 				throw new NotImplementedException();
 			}

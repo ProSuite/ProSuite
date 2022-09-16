@@ -27,7 +27,7 @@ namespace ProSuite.QA.Tests
 
 		public EqualFieldValuesCondition([CanBeNull] string fields,
 		                                 [CanBeNull] IEnumerable<string> fieldOptions,
-		                                 [NotNull] IEnumerable<ITable> comparedTables,
+		                                 [NotNull] IEnumerable<IReadOnlyTable> comparedTables,
 		                                 bool caseSensitive)
 		{
 			Assert.ArgumentNotNull(comparedTables, nameof(comparedTables));
@@ -47,8 +47,8 @@ namespace ProSuite.QA.Tests
 		}
 
 		public IEnumerable<UnequalField> GetNonEqualFields(
-			[NotNull] IRow row1, int tableIndex1,
-			[NotNull] IRow row2, int tableIndex2)
+			[NotNull] IReadOnlyRow row1, int tableIndex1,
+			[NotNull] IReadOnlyRow row2, int tableIndex2)
 		{
 			foreach (FieldInfo fieldInfo in _fieldInfos)
 			{
@@ -67,14 +67,14 @@ namespace ProSuite.QA.Tests
 		private List<FieldInfo> GetFieldInfos(
 			[NotNull] string fields,
 			[CanBeNull] IEnumerable<string> fieldOptions,
-			[NotNull] ICollection<ITable> tables)
+			[NotNull] ICollection<IReadOnlyTable> tables)
 		{
 			List<FieldInfo> result =
 				ParseFieldInfos(fields, fieldOptions, _caseSensitive).ToList();
 
 			foreach (FieldInfo fieldInfo in result)
 			{
-				foreach (ITable table in tables)
+				foreach (IReadOnlyTable table in tables)
 				{
 					fieldInfo.AddComparedTable(table);
 				}
@@ -323,7 +323,7 @@ namespace ProSuite.QA.Tests
 				_ignoreRegex = regex;
 			}
 
-			public object TransformValue(IRow row, object value)
+			public object TransformValue(IReadOnlyRow row, object value)
 			{
 				if (_ignoreRegex == null)
 				{
@@ -353,8 +353,8 @@ namespace ProSuite.QA.Tests
 			private readonly bool _caseSensitive;
 			private const string _valueFieldName = "_VALUE";
 
-			[NotNull] private readonly IDictionary<ITable, TableView> _tableViews =
-				new Dictionary<ITable, TableView>();
+			[NotNull] private readonly IDictionary<IReadOnlyTable, TableView> _tableViews =
+				new Dictionary<IReadOnlyTable, TableView>();
 
 			public IgnoreConditionValueTransformation([NotNull] string condition,
 			                                          [NotNull] string fieldName,
@@ -367,9 +367,9 @@ namespace ProSuite.QA.Tests
 				_caseSensitive = caseSensitive;
 			}
 
-			public object TransformValue(IRow row, object value)
+			public object TransformValue(IReadOnlyRow row, object value)
 			{
-				ITable table = row.Table;
+				IReadOnlyTable table = row.Table;
 
 				TableView tableView;
 				if (! _tableViews.TryGetValue(table, out tableView))
@@ -393,7 +393,7 @@ namespace ProSuite.QA.Tests
 			}
 
 			[CanBeNull]
-			private static TableView CreateTableView([NotNull] ITable table,
+			private static TableView CreateTableView([NotNull] IReadOnlyTable table,
 			                                         [NotNull] string fieldName,
 			                                         [NotNull] string condition,
 			                                         bool caseSensitive)
@@ -438,7 +438,7 @@ namespace ProSuite.QA.Tests
 			}
 
 			protected override void AddUnboundColumns(Action<string, Type> addColumn,
-			                                          IList<ITable> tables)
+			                                          IList<IReadOnlyTable> tables)
 			{
 				Assert.ArgumentNotNull(addColumn, nameof(addColumn));
 				Assert.ArgumentNotNull(tables, nameof(tables));
@@ -448,8 +448,8 @@ namespace ProSuite.QA.Tests
 				addColumn(_valueField2, GetFieldType(tables[1], _fieldName));
 			}
 
-			public bool IsFulfilled([NotNull] IRow row1, int tableIndex1, object value1,
-			                        [NotNull] IRow row2, int tableIndex2, object value2)
+			public bool IsFulfilled([NotNull] IReadOnlyRow row1, int tableIndex1, object value1,
+			                        [NotNull] IReadOnlyRow row2, int tableIndex2, object value2)
 			{
 				var fieldValues = new Dictionary<string, object>
 				                  {
@@ -462,14 +462,14 @@ namespace ProSuite.QA.Tests
 		}
 
 		[NotNull]
-		private static Type GetFieldType([NotNull] ITable table, [NotNull] string fieldName)
+		private static Type GetFieldType([NotNull] IReadOnlyTable table, [NotNull] string fieldName)
 		{
 			int fieldIndex = table.FindField(fieldName);
 
 			if (fieldIndex < 0)
 			{
 				throw new ArgumentException(
-					$@"Field '{fieldName}' not found in table {DatasetUtils.GetName(table)}",
+					$@"Field '{fieldName}' not found in table {table.Name}",
 					nameof(fieldName));
 			}
 
@@ -488,7 +488,7 @@ namespace ProSuite.QA.Tests
 				_valueTransformations.Add(valueTransformation);
 			}
 
-			public object TransformValue(IRow row, object value)
+			public object TransformValue(IReadOnlyRow row, object value)
 			{
 				object result = value;
 
@@ -508,8 +508,8 @@ namespace ProSuite.QA.Tests
 
 			[CanBeNull] private readonly AllowedDifferenceCondition _allowedDifferenceCondition;
 
-			[NotNull] private readonly IDictionary<ITable, TableFieldInfo> _tableFieldInfos =
-				new Dictionary<ITable, TableFieldInfo>();
+			[NotNull] private readonly IDictionary<IReadOnlyTable, TableFieldInfo> _tableFieldInfos =
+				new Dictionary<IReadOnlyTable, TableFieldInfo>();
 
 			[NotNull] private static readonly HashSet<string> _nullStringSet =
 				new HashSet<string>(new[] {(string) null});
@@ -532,7 +532,7 @@ namespace ProSuite.QA.Tests
 						                      : multiValueSeparator;
 			}
 
-			public void AddComparedTable([NotNull] ITable table)
+			public void AddComparedTable([NotNull] IReadOnlyTable table)
 			{
 				if (_tableFieldInfos.ContainsKey(table))
 				{
@@ -543,7 +543,7 @@ namespace ProSuite.QA.Tests
 
 				Assert.True(fieldIndex >= 0,
 				            "Field {0} does not exist in table {1}",
-				            FieldName, DatasetUtils.GetName(table));
+				            FieldName, table.Name);
 
 				esriFieldType fieldType = table.Fields.Field[fieldIndex].Type;
 
@@ -551,16 +551,16 @@ namespace ProSuite.QA.Tests
 			}
 
 			[ContractAnnotation("=>true, message:canbenull; =>false, message:notnull")]
-			public bool AreValuesEqual([NotNull] IRow row1, int tableIndex1,
-			                           [NotNull] IRow row2, int tableIndex2,
+			public bool AreValuesEqual([NotNull] IReadOnlyRow row1, int tableIndex1,
+			                           [NotNull] IReadOnlyRow row2, int tableIndex2,
 			                           bool caseSensitive,
 			                           [CanBeNull] out string message)
 			{
 				TableFieldInfo tableFieldInfo1 = GetTableFieldInfo(row1.Table);
 				TableFieldInfo tableFieldInfo2 = GetTableFieldInfo(row2.Table);
 
-				object value1 = row1.Value[tableFieldInfo1.FieldIndex];
-				object value2 = row2.Value[tableFieldInfo2.FieldIndex];
+				object value1 = row1.get_Value(tableFieldInfo1.FieldIndex);
+				object value2 = row2.get_Value(tableFieldInfo2.FieldIndex);
 
 				bool value1IsNull = value1 == null || value1 is DBNull;
 				bool value2IsNull = value2 == null || value2 is DBNull;
@@ -605,8 +605,8 @@ namespace ProSuite.QA.Tests
 				return false;
 			}
 
-			public bool AreValuesEqual([NotNull] IRow row1, int tableIndex1, object value1,
-			                           [NotNull] IRow row2, int tableIndex2, object value2,
+			public bool AreValuesEqual([NotNull] IReadOnlyRow row1, int tableIndex1, object value1,
+			                           [NotNull] IReadOnlyRow row2, int tableIndex2, object value2,
 			                           bool caseSensitive)
 			{
 				object transformedValue1 = GetTransformedValue(row1, value1);
@@ -635,8 +635,8 @@ namespace ProSuite.QA.Tests
 			public string MultiValueSeparator { get; }
 
 			private bool AreSetsEqual(
-				[NotNull] IRow row1, int tableIndex1, [CanBeNull] string value1,
-				[NotNull] IRow row2, int tableIndex2, [CanBeNull] string value2,
+				[NotNull] IReadOnlyRow row1, int tableIndex1, [CanBeNull] string value1,
+				[NotNull] IReadOnlyRow row2, int tableIndex2, [CanBeNull] string value2,
 				[NotNull] string separator,
 				bool caseSensitive)
 			{
@@ -659,9 +659,9 @@ namespace ProSuite.QA.Tests
 				                                _allowedDifferenceCondition);
 			}
 
-			private static bool AreAllDifferencesAllowed([NotNull] IRow row1, int tableIndex1,
+			private static bool AreAllDifferencesAllowed([NotNull] IReadOnlyRow row1, int tableIndex1,
 			                                             [NotNull] HashSet<string> set1,
-			                                             [NotNull] IRow row2, int tableIndex2,
+			                                             [NotNull] IReadOnlyRow row2, int tableIndex2,
 			                                             [NotNull] HashSet<string> set2,
 			                                             [NotNull]
 			                                             AllowedDifferenceCondition condition)
@@ -676,7 +676,7 @@ namespace ProSuite.QA.Tests
 
 			[NotNull]
 			private HashSet<string> GetSet(
-				[NotNull] IRow row,
+				[NotNull] IReadOnlyRow row,
 				[CanBeNull] string value,
 				[NotNull] string separator,
 				[NotNull] IEqualityComparer<string> equalityComparer)
@@ -705,7 +705,7 @@ namespace ProSuite.QA.Tests
 				return result;
 			}
 
-			private T GetTransformedValue<T>([NotNull] IRow row, T value)
+			private T GetTransformedValue<T>([NotNull] IReadOnlyRow row, T value)
 			{
 				return _valueTransformation == null
 					       ? value
@@ -785,7 +785,7 @@ namespace ProSuite.QA.Tests
 			}
 
 			[NotNull]
-			private TableFieldInfo GetTableFieldInfo([NotNull] ITable table)
+			private TableFieldInfo GetTableFieldInfo([NotNull] IReadOnlyTable table)
 			{
 				return _tableFieldInfos[table];
 			}

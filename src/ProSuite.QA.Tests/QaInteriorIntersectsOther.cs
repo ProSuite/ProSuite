@@ -1,7 +1,5 @@
 using System.Collections.Generic;
-using ESRI.ArcGIS.Geodatabase;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
@@ -10,6 +8,9 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
 using ProSuite.QA.Core;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
 {
@@ -21,7 +22,6 @@ namespace ProSuite.QA.Tests
 		private const string _intersectionMatrix = "T********";
 		private IntersectionMatrixHelper _matrixHelper;
 		[CanBeNull] private GeometryConstraint _validIntersectionGeometryConstraint;
-		[CanBeNull] private ContainsPostProcessor _ignoreAreaProcessor;
 
 		#region issue codes
 
@@ -39,17 +39,17 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaInteriorIntersectsOther_0))]
 		public QaInteriorIntersectsOther(
 			[Doc(nameof(DocStrings.QaInteriorIntersectsOther_featureClass))] [NotNull]
-			IFeatureClass featureClass,
+			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaInteriorIntersectsOther_relatedClass))] [NotNull]
-			IFeatureClass relatedClass)
+			IReadOnlyFeatureClass relatedClass)
 			: this(featureClass, relatedClass, string.Empty) { }
 
 		[Doc(nameof(DocStrings.QaInteriorIntersectsOther_1))]
 		public QaInteriorIntersectsOther(
 			[Doc(nameof(DocStrings.QaInteriorIntersectsOther_featureClass))] [NotNull]
-			IFeatureClass featureClass,
+			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaInteriorIntersectsOther_relatedClass))] [NotNull]
-			IFeatureClass relatedClass,
+			IReadOnlyFeatureClass relatedClass,
 			[Doc(nameof(DocStrings.QaInteriorIntersectsOther_constraint))] [CanBeNull]
 			string constraint)
 			: this(new[] {featureClass}, new[] {relatedClass}, constraint) { }
@@ -57,17 +57,17 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaInteriorIntersectsOther_2))]
 		public QaInteriorIntersectsOther(
 			[Doc(nameof(DocStrings.QaInteriorIntersectsOther_featureClasses))] [NotNull]
-			IList<IFeatureClass> featureClasses,
+			IList<IReadOnlyFeatureClass> featureClasses,
 			[Doc(nameof(DocStrings.QaInteriorIntersectsOther_relatedClasses))] [NotNull]
-			IList<IFeatureClass> relatedClasses)
+			IList<IReadOnlyFeatureClass> relatedClasses)
 			: this(featureClasses, relatedClasses, string.Empty) { }
 
 		[Doc(nameof(DocStrings.QaInteriorIntersectsOther_3))]
 		public QaInteriorIntersectsOther(
 			[Doc(nameof(DocStrings.QaInteriorIntersectsOther_featureClasses))] [NotNull]
-			IList<IFeatureClass> featureClasses,
+			IList<IReadOnlyFeatureClass> featureClasses,
 			[Doc(nameof(DocStrings.QaInteriorIntersectsOther_relatedClasses))] [NotNull]
-			IList<IFeatureClass> relatedClasses,
+			IList<IReadOnlyFeatureClass> relatedClasses,
 			[Doc(nameof(DocStrings.QaInteriorIntersectsOther_constraint))] [CanBeNull]
 			string constraint)
 			: base(featureClasses, relatedClasses, _intersectionMatrix)
@@ -92,23 +92,10 @@ namespace ProSuite.QA.Tests
 			}
 		}
 
-		[TestParameter]
-		[Doc(nameof(DocStrings.QaInteriorIntersectsOther_IgnoreArea))]
-		public IFeatureClass IgnoreArea
-		{
-			get { return _ignoreAreaProcessor?.FeatureClass; }
-			set
-			{
-				_ignoreAreaProcessor?.Dispose();
-				_ignoreAreaProcessor =
-					value != null ? new ContainsPostProcessor(this, value) : null;
-			}
-		}
-
 		#region Overrides of QaSpatialRelationOtherBase
 
-		protected override int FindErrors(IRow row1, int tableIndex1,
-		                                  IRow row2, int tableIndex2)
+		protected override int FindErrors(IReadOnlyRow row1, int tableIndex1,
+										  IReadOnlyRow row2, int tableIndex2)
 		{
 			Assert.ArgumentNotNull(row1, nameof(row1));
 			Assert.ArgumentNotNull(row2, nameof(row2));
@@ -118,8 +105,8 @@ namespace ProSuite.QA.Tests
 				return 0;
 			}
 
-			var feature1 = (IFeature) row1;
-			var feature2 = (IFeature) row2;
+			var feature1 = (IReadOnlyFeature) row1;
+			var feature2 = (IReadOnlyFeature) row2;
 
 			// if the test is made from a To row to a From row, then the roles 
 			// of the features must be inverted

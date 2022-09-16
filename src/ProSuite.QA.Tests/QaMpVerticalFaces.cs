@@ -1,11 +1,9 @@
 using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.esriSystem;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.Geometry;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Container.TestContainer;
 using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Tests.Documentation;
@@ -14,6 +12,9 @@ using ProSuite.Commons;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
 {
@@ -46,11 +47,11 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaMpVerticalFaces_0))]
 		public QaMpVerticalFaces(
 			[Doc(nameof(DocStrings.QaMpVerticalFaces_multiPatchClass))] [NotNull]
-			IFeatureClass multiPatchClass,
+			IReadOnlyFeatureClass multiPatchClass,
 			[Doc(nameof(DocStrings.QaMpVerticalFaces_nearAngle))] double nearAngle,
 			[Doc(nameof(DocStrings.QaMpVerticalFaces_toleranceAngle))]
 			double toleranceAngle)
-			: base((ITable) multiPatchClass)
+			: base(multiPatchClass)
 		{
 			AngleUnit = AngleUnit.Degree;
 
@@ -60,7 +61,7 @@ namespace ProSuite.QA.Tests
 			_nearCosinus = Math.Cos(nearAngleRad);
 			_toleranceSinus = Math.Sin(_toleranceAngleRad);
 
-			_xyTolerance = GeometryUtils.GetXyTolerance(multiPatchClass);
+			_xyTolerance = GeometryUtils.GetXyTolerance(multiPatchClass.SpatialReference);
 		}
 
 		public override bool IsQueriedTable(int tableIndex)
@@ -73,9 +74,9 @@ namespace ProSuite.QA.Tests
 			return false;
 		}
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
-			var feature = row as IFeature;
+			var feature = row as IReadOnlyFeature;
 			if (feature == null)
 			{
 				return NoError;
@@ -122,10 +123,10 @@ namespace ProSuite.QA.Tests
 				string description = GetIssueDescription(nonVerticalAngle);
 				IGeometry errorGeometry = verticalFaceProvider.GetErrorGeometry();
 
-				errorCount += ReportError(description, errorGeometry,
-				                          Codes[Code.NotSufficientlyVertical],
-				                          TestUtils.GetShapeFieldName(row),
-				                          row);
+				errorCount += ReportError(
+					description, InvolvedRowUtils.GetInvolvedRows(row), errorGeometry,
+					Codes[Code.NotSufficientlyVertical],
+					TestUtils.GetShapeFieldName(row));
 			}
 
 			return errorCount;
@@ -146,7 +147,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[NotNull]
-		private static VerticalFaceProvider GetPlaneProvider([NotNull] IFeature feature)
+		private static VerticalFaceProvider GetPlaneProvider([NotNull] IReadOnlyFeature feature)
 		{
 			var indexedMultiPatchFeature = feature as IIndexedMultiPatchFeature;
 

@@ -66,7 +66,8 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			}
 
 			TrDissolve dissolve =
-				new TrDissolve(fc) {Search = 1, NeighborSearchOption = TrDissolve.SearchOption.All};
+				new TrDissolve(ReadOnlyTableFactory.Create(fc))
+				{Search = 1, NeighborSearchOption = TrDissolve.SearchOption.All};
 			QaMinLength test = new QaMinLength(dissolve.GetTransformed(), 100);
 
 			{
@@ -75,6 +76,63 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				Assert.AreEqual(1, runner.Errors.Count);
 			}
 			{
+				var runner = new QaContainerTestRunner(25, test);
+				runner.Execute();
+				Assert.AreEqual(1, runner.Errors.Count);
+			}
+		}
+
+		[Test]
+		public void CanDissolvePolygon()
+		{
+			IFeatureWorkspace ws = TestWorkspaceUtils.CreateInMemoryWorkspace("TrDissolve");
+
+			IFieldsEdit fields = new FieldsClass();
+			fields.AddField(FieldUtils.CreateOIDField());
+			ISpatialReference sr =
+				SpatialReferenceUtils.CreateSpatialReference(
+					(int) esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95, true);
+
+			fields.AddField(
+				FieldUtils.CreateShapeField("Shape", esriGeometryType.esriGeometryPolygon, sr,
+				                            1000));
+
+			const string fclassName = "polyFc";
+			IFeatureClass fc = DatasetUtils.CreateSimpleFeatureClass(ws, fclassName, fields);
+
+			{
+				IFeature f = fc.CreateFeature();
+				f.Shape = GeometryFactory.CreatePolygon(0, 0, 70, 70, sr);
+				f.Store();
+			}
+			{
+				IFeature f = fc.CreateFeature();
+				f.Shape = GeometryFactory.CreatePolygon(70, 70, 80, 80, sr);
+				f.Store();
+			}
+			{
+				IFeature f = fc.CreateFeature();
+				f.Shape = GeometryFactory.CreatePolygon(20, 70, 30, 80, sr);
+				f.Store();
+			}
+			{
+				IFeature f = fc.CreateFeature();
+				f.Shape = GeometryFactory.CreatePolygon(20, 20, 30, 30, sr);
+				f.Store();
+			}
+
+			TrDissolve dissolve =
+				new TrDissolve(ReadOnlyTableFactory.Create(fc))
+				{Search = 1, NeighborSearchOption = TrDissolve.SearchOption.All};
+
+			QaMinArea test = new QaMinArea(dissolve.GetTransformed(), 110);
+			{
+				var runner = new QaContainerTestRunner(1000, test);
+				runner.Execute();
+				Assert.AreEqual(1, runner.Errors.Count);
+			}
+			{
+				// TODO: Implement proper handling of the SearchOption All in the polygon case
 				var runner = new QaContainerTestRunner(25, test);
 				runner.Execute();
 				Assert.AreEqual(1, runner.Errors.Count);
@@ -129,7 +187,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			}
 
 			TrDissolve dissolve =
-				new TrDissolve(fc)
+				new TrDissolve(ReadOnlyTableFactory.Create(fc))
 				{
 					Search = 1,
 					NeighborSearchOption = TrDissolve.SearchOption.All,
@@ -296,32 +354,33 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			}
 
 			TrTableJoin joined =
-				new TrTableJoin((ITable) lineFc, table, relRoute, JoinType.InnerJoin);
+				new TrTableJoin(ReadOnlyTableFactory.Create(lineFc),
+				                ReadOnlyTableFactory.Create(table), relRoute, JoinType.InnerJoin);
 			TrDissolve dissolve =
-				new TrDissolve((IFeatureClass) joined.GetTransformed())
+				new TrDissolve((IReadOnlyFeatureClass) joined.GetTransformed())
 				{
 					Search = 1,
 					Attributes = new List<string> {"Min(RouteTbl.RouteFk) AS MinRouteFk"},
 					GroupBy = new List<string> {"RouteTbl.RouteNr"}
 				};
-			TrLineToPoly lineToPoly =
-				new TrLineToPoly(dissolve.GetTransformed())
+			TrLineToPolygon lineToPolygon =
+				new TrLineToPolygon(dissolve.GetTransformed())
 				{Attributes = new[] {"RouteTbl.RouteNr"}};
 
 			{
-				QaMinArea test = new QaMinArea(lineToPoly.GetTransformed(), 1000);
+				QaMinArea test = new QaMinArea(lineToPolygon.GetTransformed(), 1000);
 				var runner = new QaContainerTestRunner(1000, test);
 				runner.Execute();
 				Assert.AreEqual(3, runner.Errors.Count);
 			}
 			{
-				QaMinArea test = new QaMinArea(lineToPoly.GetTransformed(), 150);
+				QaMinArea test = new QaMinArea(lineToPolygon.GetTransformed(), 150);
 				var runner = new QaContainerTestRunner(1000, test);
 				runner.Execute();
 				Assert.AreEqual(1, runner.Errors.Count);
 			}
 			{
-				QaMinArea test = new QaMinArea(lineToPoly.GetTransformed(), 1000);
+				QaMinArea test = new QaMinArea(lineToPolygon.GetTransformed(), 1000);
 				test.SetConstraint(0, "RouteTbl.RouteNr > 100");
 				var runner = new QaContainerTestRunner(1000, test);
 				runner.Execute();
@@ -406,13 +465,15 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			}
 
 			TrDissolve dissolve =
-				new TrDissolve(lineFc)
+				new TrDissolve(ReadOnlyTableFactory.Create(lineFc))
 				{
 					Search = 1,
 					NeighborSearchOption = TrDissolve.SearchOption.All
 				};
-			TrLineToPoly lineToPoly = new TrLineToPoly(dissolve.GetTransformed());
-			QaIntersectsOther test = new QaIntersectsOther(lineToPoly.GetTransformed(), ptFc);
+			TrLineToPolygon lineToPolygon = new TrLineToPolygon(dissolve.GetTransformed());
+			QaIntersectsOther test = new QaIntersectsOther(
+				lineToPolygon.GetTransformed(),
+				ReadOnlyTableFactory.Create(ptFc));
 
 			{
 				var runner = new QaContainerTestRunner(1000, test);
