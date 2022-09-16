@@ -38,5 +38,19 @@
   <ItemGroup>
     <Compile Remove="QA\DependencyGraph\GraphML\graphml-structure.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <Compile Update="Schemas\Schema.Designer.cs">
+      <DependentUpon>Schema.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Update="Schemas\Schema.resx">
+      <SubType>Designer</SubType>
+      <LastGenOutput>Schema.Designer.cs</LastGenOutput>
+      <Generator>ResXFileCodeGenerator</Generator>
+    </EmbeddedResource>
+  </ItemGroup>
 </Project>
 
