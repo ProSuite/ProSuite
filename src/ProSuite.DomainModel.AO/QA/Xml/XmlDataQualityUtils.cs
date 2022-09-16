@@ -754,7 +754,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			IEnumerable<KeyValuePair<XmlQualityCondition, XmlDataQualityCategory>>
 				qualityConditions = document.GetAllQualityConditions()
 				                            .Where(pair => referencedConditionNames.Contains(
-					                                   pair.Key.Name?.Trim()));
+					                                   pair.Key.Name));
 
 			return new XmlDataQualityDocumentCache(document, qualityConditions);
 		}
