@@ -145,9 +145,14 @@ namespace ProSuite.QA.Container.TestContainer
 							continue;
 						}
 
+						if (! searchToleranceByTable.TryGetValue(
+							    involvedTable, out double currentTolerance))
+						{
+							currentTolerance = 0;
+						}
+
 						searchToleranceByTable[involvedTable] =
-							Math.Max(searchToleranceByTable[involvedTable],
-							         containerTest.SearchDistance);
+							Math.Max(currentTolerance, containerTest.SearchDistance);
 					}
 				}
 			}
@@ -462,8 +467,11 @@ namespace ProSuite.QA.Container.TestContainer
 
 		private double GetSearchTolerance(IReadOnlyTable fromTable, IReadOnlyTable table)
 		{
-			return Math.Max(GetXYTolerance(table),
-			                _searchToleranceFromTo[fromTable][table]);
+			if (! _searchToleranceFromTo[fromTable].TryGetValue(table, out double tolerance))
+			{
+				tolerance = 0;
+			}
+			return Math.Max(GetXYTolerance(table), tolerance);
 		}
 
 		public void CreateBoxTree(IReadOnlyTable table, [NotNull] IEnumerable<CachedRow> cachedRows,
