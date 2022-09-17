@@ -1,25 +1,25 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.30128.74
+# Visual Studio Version 17
+VisualStudioVersion = 17.2.32616.157
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.Commons.Essentials", "ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj", "{384763D9-F7A1-4AA2-9ABD-EE338CD8D4C1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProSuite.Commons.Essentials", "ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj", "{384763D9-F7A1-4AA2-9ABD-EE338CD8D4C1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.Commons.Logging", "ProSuite.Commons.Logging\ProSuite.Commons.Logging.csproj", "{A227D52C-0536-498F-ACF2-2A5A67C3D9FF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProSuite.Commons.Logging", "ProSuite.Commons.Logging\ProSuite.Commons.Logging.csproj", "{A227D52C-0536-498F-ACF2-2A5A67C3D9FF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.Commons.Logging.Test", "ProSuite.Commons.Logging.Test\ProSuite.Commons.Logging.Test.csproj", "{2497991A-EE91-4355-864A-DB6DB9782096}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProSuite.Commons.Logging.Test", "ProSuite.Commons.Logging.Test\ProSuite.Commons.Logging.Test.csproj", "{2497991A-EE91-4355-864A-DB6DB9782096}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.Commons", "ProSuite.Commons\ProSuite.Commons.csproj", "{66E5D99B-26AB-4FFF-834D-D96347DF4FA4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProSuite.Commons", "ProSuite.Commons\ProSuite.Commons.csproj", "{66E5D99B-26AB-4FFF-834D-D96347DF4FA4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.Commons.Test", "ProSuite.Commons.Test\ProSuite.Commons.Test.csproj", "{5B741064-38D8-4BEE-87C0-3F8E1C0247BF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProSuite.Commons.Test", "ProSuite.Commons.Test\ProSuite.Commons.Test.csproj", "{5B741064-38D8-4BEE-87C0-3F8E1C0247BF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.Commons.UI", "ProSuite.Commons.UI\ProSuite.Commons.UI.csproj", "{FDA8452C-41F0-404C-A17D-FBA8CB56B935}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProSuite.Commons.UI", "ProSuite.Commons.UI\ProSuite.Commons.UI.csproj", "{FDA8452C-41F0-404C-A17D-FBA8CB56B935}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.Commons.UI.Test", "ProSuite.Commons.UI.Test\ProSuite.Commons.UI.Test.csproj", "{510D9436-E3AC-465F-9A8B-24F2093C6214}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProSuite.Commons.UI.Test", "ProSuite.Commons.UI.Test\ProSuite.Commons.UI.Test.csproj", "{510D9436-E3AC-465F-9A8B-24F2093C6214}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.DomainModel.Core", "ProSuite.DomainModel.Core\ProSuite.DomainModel.Core.csproj", "{0B48B56F-3A3D-4367-AA76-A356519AF2AB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProSuite.DomainModel.Core", "ProSuite.DomainModel.Core\ProSuite.DomainModel.Core.csproj", "{0B48B56F-3A3D-4367-AA76-A356519AF2AB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.DomainModel.Core.Test", "ProSuite.DomainModel.Core.Test\ProSuite.DomainModel.Core.Test.csproj", "{4DE3C160-E2E4-4491-A4CB-1B5DC26D2EFC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProSuite.DomainModel.Core.Test", "ProSuite.DomainModel.Core.Test\ProSuite.DomainModel.Core.Test.csproj", "{4DE3C160-E2E4-4491-A4CB-1B5DC26D2EFC}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{859A416A-47F4-45D2-B44B-70F7CE93F821}"
 	ProjectSection(SolutionItems) = preProject
@@ -50,7 +50,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.QA.ServiceProvider
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.AGP.Editing", "ProSuite.AGP.Editing\ProSuite.AGP.Editing.csproj", "{EC3D575D-7B9D-467F-BC76-2E093A3126EC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.Commons.AGP.Hosting", "ProSuite.Commons.AGP.Hosting\ProSuite.Commons.AGP.Hosting.csproj", "{D6540148-8790-4C77-8A65-518BD10487D7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProSuite.Commons.AGP.Hosting", "ProSuite.Commons.AGP.Hosting\ProSuite.Commons.AGP.Hosting.csproj", "{D6540148-8790-4C77-8A65-518BD10487D7}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.Commons.AGP.Hosting.Test", "ProSuite.Commons.AGP.Hosting.Test\ProSuite.Commons.AGP.Hosting.Test.csproj", "{F334EF2E-5B6C-463B-8EB1-B4C35E5F6697}"
 EndProject
@@ -64,11 +64,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.Commons.AGP.Core.T
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.AGP.Editing.Test", "ProSuite.AGP.Editing.Test\ProSuite.AGP.Editing.Test.csproj", "{A6DE7214-500C-4AD9-A9BA-28F36930862F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.Processing", "ProSuite.Processing\ProSuite.Processing.csproj", "{0B72E886-B428-48ED-BA96-9CD6FCC5E171}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProSuite.Processing", "ProSuite.Processing\ProSuite.Processing.csproj", "{0B72E886-B428-48ED-BA96-9CD6FCC5E171}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.QA.Core", "ProSuite.QA.Core\ProSuite.QA.Core.csproj", "{01CBBA9E-0D4D-439F-9147-6A5685884A65}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProSuite.QA.Core", "ProSuite.QA.Core\ProSuite.QA.Core.csproj", "{01CBBA9E-0D4D-439F-9147-6A5685884A65}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.Microservices.Client", "ProSuite.Microservices.Client\ProSuite.Microservices.Client.csproj", "{413917C0-7EB3-4D86-8448-0A3CA70C2ED4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProSuite.Microservices.Client", "ProSuite.Microservices.Client\ProSuite.Microservices.Client.csproj", "{413917C0-7EB3-4D86-8448-0A3CA70C2ED4}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.Microservices.Client.AGP", "ProSuite.Microservices.Client.AGP\ProSuite.Microservices.Client.AGP.csproj", "{5D500C94-FF3A-4BC8-8EDB-3A7177898B81}"
 EndProject
@@ -80,13 +80,15 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.DomainModel.AGP", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.AGP.QA", "ProSuite.AGP.QA\ProSuite.AGP.QA.csproj", "{1745D9A7-BF58-414E-A840-6A3EE1847FE0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.UI", "ProSuite.UI\ProSuite.UI.csproj", "{44C24B7C-FFD8-4968-95A0-9D3C7C77861B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProSuite.UI", "ProSuite.UI\ProSuite.UI.csproj", "{44C24B7C-FFD8-4968-95A0-9D3C7C77861B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.Microservices.Client.AGP.Test", "ProSuite.Microservices.Client.AGP.Test\ProSuite.Microservices.Client.AGP.Test.csproj", "{8FB162AA-3A08-4279-901E-7B2ED158ECA6}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.Processing.AGP.Core", "ProSuite.Processing.AGP.Core\ProSuite.Processing.AGP.Core.csproj", "{24D24089-C337-43FF-BE11-2F01AF1E6783}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.Processing.Test", "ProSuite.Processing.Test\ProSuite.Processing.Test.csproj", "{12C7BA8F-E068-43B6-AC41-F02F0DE49152}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProSuite.Processing.Test", "ProSuite.Processing.Test\ProSuite.Processing.Test.csproj", "{12C7BA8F-E068-43B6-AC41-F02F0DE49152}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProSuite.DdxEditor.Framework", "ProSuite.DdxEditor.Framework\ProSuite.DdxEditor.Framework.csproj", "{4EF1ACD5-6F18-45C0-BADD-44F26420AB77}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -240,6 +242,10 @@ Global
 		{12C7BA8F-E068-43B6-AC41-F02F0DE49152}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{12C7BA8F-E068-43B6-AC41-F02F0DE49152}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{12C7BA8F-E068-43B6-AC41-F02F0DE49152}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4EF1ACD5-6F18-45C0-BADD-44F26420AB77}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4EF1ACD5-6F18-45C0-BADD-44F26420AB77}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4EF1ACD5-6F18-45C0-BADD-44F26420AB77}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4EF1ACD5-6F18-45C0-BADD-44F26420AB77}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
