@@ -1,7 +1,5 @@
 using System.Collections.Generic;
-using System.Reflection;
 using ProSuite.Commons.AO.Geodatabase;
-using ProSuite.Commons.Logging;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Core;
@@ -11,9 +9,6 @@ namespace ProSuite.QA.Tests.IssueFilters
 {
 	public class IfInvolvedRows : IssueFilter
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod()?.DeclaringType);
-
 		private readonly string _constraint;
 		private Dictionary<IReadOnlyTable, TableView> _tableViews;
 

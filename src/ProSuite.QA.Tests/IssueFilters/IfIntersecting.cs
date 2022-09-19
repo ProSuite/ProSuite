@@ -16,7 +16,7 @@ namespace ProSuite.QA.Tests.IssueFilters
 
 		[DocIf(nameof(DocIfStrings.IfIntersecting_0))]
 		public IfIntersecting(
-			[DocIf(nameof(DocIfStrings.IfIntersects_featureClass))]
+			[DocIf(nameof(DocIfStrings.IfIntersecting_featureClass))]
 			IReadOnlyFeatureClass featureClass)
 			: base(new[] {featureClass}) { }
 

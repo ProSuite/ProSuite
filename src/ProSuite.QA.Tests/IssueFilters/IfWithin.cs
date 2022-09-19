@@ -16,7 +16,7 @@ namespace ProSuite.QA.Tests.IssueFilters
 
 		[DocIf(nameof(DocIfStrings.IfWithin_0))]
 		public IfWithin(
-			[DocIf(nameof(DocIfStrings.IfContains_featureClass))]
+			[DocIf(nameof(DocIfStrings.IfWithin_featureClass))]
 			IReadOnlyFeatureClass featureClass)
 			: base(new[] {featureClass}) { }
 
