@@ -621,7 +621,7 @@ namespace ProSuite.DomainModel.Core.QA
 			Assert.ArgumentNotNull(condition, nameof(condition));
 			Assert.ArgumentNotNull(verifiedDatasets, nameof(verifiedDatasets));
 
-			IList<TestParameterValue> deleted = condition.GetDeletedParameterValues();
+			IList<string> deleted = condition.GetDeletedParameterValues();
 			if (deleted.Count > 0)
 			{
 				// there are deleted parameter values

@@ -1,7 +1,4 @@
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.QA.Tests.Properties;
@@ -10,6 +7,8 @@ using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
 {
@@ -17,7 +16,7 @@ namespace ProSuite.QA.Tests
 	[SchemaTest]
 	public class QaSchemaSpatialReference : QaSchemaTestBase
 	{
-		private readonly IFeatureClass _featureClass;
+		private readonly IReadOnlyFeatureClass _featureClass;
 		private readonly ISpatialReference _expectedSpatialReference;
 		private readonly bool _compareXyPrecision;
 		private readonly bool _compareZPrecision;
@@ -68,9 +67,9 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaSchemaSpatialReference_0))]
 		public QaSchemaSpatialReference(
 			[Doc(nameof(DocStrings.QaSchemaSpatialReference_featureClass))] [NotNull]
-			IFeatureClass featureClass,
+			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaSchemaSpatialReference_referenceFeatureClass))] [NotNull]
-			IFeatureClass
+			IReadOnlyFeatureClass
 				referenceFeatureClass,
 			bool compareXYPrecision,
 			bool compareZPrecision,
@@ -99,7 +98,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaSchemaSpatialReference_1))]
 		public QaSchemaSpatialReference(
 			[Doc(nameof(DocStrings.QaSchemaSpatialReference_featureClass))] [NotNull]
-			IFeatureClass featureClass,
+			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaSchemaSpatialReference_spatialReferenceXml))] [NotNull]
 			string
 				spatialReferenceXml,
@@ -126,20 +125,20 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaSchemaSpatialReference_2))]
 		public QaSchemaSpatialReference(
 			[Doc(nameof(DocStrings.QaSchemaSpatialReference_featureClass))] [NotNull]
-			IFeatureClass featureClass,
+			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaSchemaSpatialReference_referenceFeatureClass))] [NotNull]
-			IFeatureClass
+			IReadOnlyFeatureClass
 				referenceFeatureClass,
 			bool compareUsedPrecisions,
 			bool compareTolerances,
 			bool compareVerticalCoordinateSystems)
 			: this(featureClass, GetSpatialReference(referenceFeatureClass),
 			       compareUsedPrecisions,
-			       compareUsedPrecisions && DatasetUtils.HasZ(featureClass),
-			       compareUsedPrecisions && DatasetUtils.HasM(featureClass),
+			       compareUsedPrecisions && DatasetUtils.GetGeometryDef(featureClass).HasZ,
+			       compareUsedPrecisions && DatasetUtils.GetGeometryDef(featureClass).HasM,
 			       compareTolerances,
-			       compareTolerances && DatasetUtils.HasZ(featureClass),
-			       compareTolerances && DatasetUtils.HasM(featureClass),
+			       compareTolerances && DatasetUtils.GetGeometryDef(featureClass).HasZ,
+			       compareTolerances && DatasetUtils.GetGeometryDef(featureClass).HasM,
 			       compareVerticalCoordinateSystems)
 		{
 			AddMissingFeatureClass(referenceFeatureClass);
@@ -166,7 +165,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaSchemaSpatialReference_3))]
 		public QaSchemaSpatialReference(
 			[Doc(nameof(DocStrings.QaSchemaSpatialReference_featureClass))] [NotNull]
-			IFeatureClass featureClass,
+			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaSchemaSpatialReference_spatialReferenceXml))] [NotNull]
 			string
 				spatialReferenceXml,
@@ -176,11 +175,11 @@ namespace ProSuite.QA.Tests
 			: this(featureClass,
 			       SpatialReferenceUtils.FromXmlString(spatialReferenceXml),
 			       compareUsedPrecisions,
-			       compareUsedPrecisions && DatasetUtils.HasZ(featureClass),
-			       compareUsedPrecisions && DatasetUtils.HasM(featureClass),
+			       compareUsedPrecisions && DatasetUtils.GetGeometryDef(featureClass).HasZ,
+			       compareUsedPrecisions && DatasetUtils.GetGeometryDef(featureClass).HasM,
 			       compareTolerances,
-			       compareTolerances && DatasetUtils.HasZ(featureClass),
-			       compareTolerances && DatasetUtils.HasM(featureClass),
+			       compareTolerances && DatasetUtils.GetGeometryDef(featureClass).HasZ,
+			       compareTolerances && DatasetUtils.GetGeometryDef(featureClass).HasM,
 			       compareVerticalCoordinateSystems) { }
 
 		/// <summary>
@@ -196,7 +195,7 @@ namespace ProSuite.QA.Tests
 		/// <param name="compareMTolerance">if set to <c>true</c>, m tolerance must be equal.</param>
 		/// <param name="compareVerticalCoordinateSystems">if set to <c>true</c>, vertical coordinate system must be equal.</param>
 		private QaSchemaSpatialReference(
-			[NotNull] IFeatureClass featureClass,
+			[NotNull] IReadOnlyFeatureClass featureClass,
 			[NotNull] ISpatialReference expectedSpatialReference,
 			bool compareXyPrecision,
 			bool compareZPrecision,
@@ -205,7 +204,7 @@ namespace ProSuite.QA.Tests
 			bool compareZTolerance,
 			bool compareMTolerance,
 			bool compareVerticalCoordinateSystems)
-			: base((ITable) featureClass)
+			: base(featureClass)
 		{
 			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
 			Assert.ArgumentNotNull(expectedSpatialReference, nameof(expectedSpatialReference));
@@ -455,15 +454,15 @@ namespace ProSuite.QA.Tests
 
 		[NotNull]
 		private static ISpatialReference GetSpatialReference(
-			[NotNull] IFeatureClass featureClass)
+			[NotNull] IReadOnlyFeatureClass featureClass)
 		{
 			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
 
-			ISpatialReference result = ((IGeoDataset) featureClass).SpatialReference;
+			ISpatialReference result = featureClass.SpatialReference;
 
 			return Assert.NotNull(result,
 			                      "Feature class has no spatial reference: {0}",
-			                      DatasetUtils.GetName(featureClass));
+			                      featureClass.Name);
 		}
 
 		#endregion

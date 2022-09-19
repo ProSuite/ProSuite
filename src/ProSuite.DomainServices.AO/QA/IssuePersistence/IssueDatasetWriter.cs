@@ -28,7 +28,7 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 		private static readonly IMsg _msg =
 			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
 
-		[CanBeNull] private readonly IFeatureClass _featureClass;
+		[CanBeNull] private readonly ESRI.ArcGIS.Geodatabase.IFeatureClass _featureClass;
 
 		[NotNull] private readonly IErrorDataset _issueObjectDataset;
 		[NotNull] private readonly IFieldIndexCache _fieldIndexCache;
@@ -51,10 +51,10 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 		/// <param name="issueFeatureClass">The error feature class.</param>
 		/// <param name="issueObjectDataset">The error object dataset.</param>
 		/// <param name="fieldIndexCache">The field index cache.</param>
-		public IssueDatasetWriter([NotNull] IFeatureClass issueFeatureClass,
+		public IssueDatasetWriter([NotNull] ESRI.ArcGIS.Geodatabase.IFeatureClass issueFeatureClass,
 		                          [NotNull] IErrorDataset issueObjectDataset,
 		                          [NotNull] IFieldIndexCache fieldIndexCache)
-			: this((ITable) issueFeatureClass, issueObjectDataset, fieldIndexCache) { }
+			: this((ESRI.ArcGIS.Geodatabase.ITable) issueFeatureClass, issueObjectDataset, fieldIndexCache) { }
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="IssueDatasetWriter"/> class.
@@ -62,7 +62,7 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 		/// <param name="issueTable">The error table.</param>
 		/// <param name="issueObjectDataset">The error object dataset.</param>
 		/// <param name="fieldIndexCache">The field index cache.</param>
-		public IssueDatasetWriter([NotNull] ITable issueTable,
+		public IssueDatasetWriter([NotNull] ESRI.ArcGIS.Geodatabase.ITable issueTable,
 		                          [NotNull] IErrorDataset issueObjectDataset,
 		                          [NotNull] IFieldIndexCache fieldIndexCache)
 		{
@@ -74,7 +74,7 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 			_issueObjectDataset = issueObjectDataset;
 			_fieldIndexCache = fieldIndexCache;
 
-			_featureClass = Table as IFeatureClass;
+			_featureClass = Table as ESRI.ArcGIS.Geodatabase.IFeatureClass;
 
 			HasM = _featureClass != null && DatasetUtils.HasM(_featureClass);
 			HasZ = _featureClass != null && DatasetUtils.HasZ(_featureClass);
@@ -93,7 +93,7 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 		public int MaxBufferedPointCount { get; set; } = 10000;
 
 		[NotNull]
-		public ITable Table { get; }
+		public ESRI.ArcGIS.Geodatabase.ITable Table { get; }
 
 		public ISpatialReference SpatialReference
 		{
@@ -101,7 +101,7 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 			{
 				if (_spatialReference == null && _featureClass != null)
 				{
-					_spatialReference = ((IGeoDataset) _featureClass).SpatialReference;
+					_spatialReference = ((ESRI.ArcGIS.Geodatabase.IGeoDataset) _featureClass).SpatialReference;
 				}
 
 				return _spatialReference;
@@ -207,19 +207,19 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 		}
 
 		[NotNull]
-		public IList<InvolvedRow> GetInvolvedRows([NotNull] IRow errorRow)
+		public IList<InvolvedRow> GetInvolvedRows([NotNull] ESRI.ArcGIS.Geodatabase.IRow errorRow)
 		{
 			return RowParser.Parse(GetString(errorRow, AttributeRole.ErrorObjects));
 		}
 
-		public T? Get<T>([NotNull] IRow errorRow,
+		public T? Get<T>([NotNull] ESRI.ArcGIS.Geodatabase.IRow errorRow,
 		                 [NotNull] AttributeRole role) where T : struct
 		{
 			return GdbObjectUtils.ReadRowValue<T>(errorRow, GetFieldIndex(role));
 		}
 
 		[NotNull]
-		public string GetString([NotNull] IRow errorRow,
+		public string GetString([NotNull] ESRI.ArcGIS.Geodatabase.IRow errorRow,
 		                        [NotNull] AttributeRole role)
 		{
 			const bool roleIsOptional = false;
@@ -227,7 +227,7 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 		}
 
 		[CanBeNull]
-		public string GetString([NotNull] IRow errorRow,
+		public string GetString([NotNull] ESRI.ArcGIS.Geodatabase.IRow errorRow,
 		                        [NotNull] AttributeRole role,
 		                        bool roleIsOptional)
 		{

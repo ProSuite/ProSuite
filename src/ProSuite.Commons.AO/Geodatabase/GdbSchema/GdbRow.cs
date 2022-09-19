@@ -10,28 +10,39 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 	/// an existing feature on the client. Its parent can be a real object class or a fake
 	/// <see cref="GdbTable"/> also provided through the wire.
 	/// </summary>
-	public class GdbRow : IObject, IRowSubtypes, IEquatable<IObject>
+	public class GdbRow : VirtualRow, IRowSubtypes
 	{
-		[NotNull] private readonly IObjectClass _gdbTable;
+		[NotNull] private readonly GdbTable _gdbTable;
 
 		protected IValueList ValueSet { get; }
 
 		#region Constructors
 
-		public GdbRow(int oid,
-		              [NotNull] IObjectClass gdbTable,
+		/// <summary>
+		/// Initializes a new instance of the <see cref="GdbRow"/> class.
+		/// </summary>
+		/// <param name="oid">The object ID of the row. It will be added to the row values using
+		/// set_Value, except if it is a negative number, in which case the
+		/// <see cref="GdbRow.HasOID"/>HasOID property will return false.</param>
+		/// <param name="gdbTable">The table which determines the row's schema.</param>
+		/// <param name="valueList">The optional value list implementation that shall be used to
+		/// store and retrieve the row values.</param>
+		public GdbRow(int oid, [NotNull] GdbTable gdbTable,
 		              [CanBeNull] IValueList valueList = null)
 		{
-			OID = oid;
+			_oid = oid;
 			_gdbTable = gdbTable;
 
 			ValueSet = valueList ?? new PropertySetValueList();
 
-			var oidFieldIndex = _gdbTable.FindField(_gdbTable.OIDFieldName);
-
-			if (oidFieldIndex >= 0)
+			// NOTE: In AO, if a a query filter excludes the OBJECTID field, the row has no OID
+			// regardless of the table having one. 
+			if (oid >= 0)
 			{
-				set_Value(oidFieldIndex, oid);
+				if (_gdbTable.OidFieldIndex >= 0)
+				{
+					set_Value(_gdbTable.OidFieldIndex, oid);
+				}
 			}
 		}
 
@@ -48,7 +59,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		/// <param name="newOid"></param>
 		public void Recycle(int newOid)
 		{
-			OID = newOid;
+			_oid = newOid;
 
 			RecycleCore();
 		}
@@ -85,29 +96,30 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		#region IObject implementation
 
-		public void Store()
+		public override void Store()
 		{
 			StoreCalled = true;
 
 			StoreCore();
 		}
 
-		public void Delete()
+		protected virtual void StoreCore() { }
+
+		public override void Delete()
 		{
 			DeleteCalled = true;
 		}
 
-		public IFields Fields => _gdbTable.Fields;
+		private int _oid;
 
-		public bool HasOID => _gdbTable.HasOID;
+		public override int OID => _oid < 0
+			                           ? throw new InvalidOperationException("Row has no OID")
+			                           : _oid;
 
-		public int OID { get; private set; }
+		public override VirtualTable Table => _gdbTable;
+		//		public GdbTable Table => _gdbTable;
 
-		public ITable Table => (ITable) _gdbTable;
-
-		public IObjectClass Class => _gdbTable;
-
-		public virtual object get_Value(int index)
+		public override object get_Value(int index)
 		{
 			var result = ValueSet.GetValue(index);
 
@@ -120,7 +132,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			return result;
 		}
 
-		public void set_Value(int index, object value)
+		public sealed override void set_Value(int index, object value)
 		{
 			if (value == null)
 			{
@@ -141,7 +153,5 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		#endregion
 
 		protected virtual void RecycleCore() { }
-
-		protected virtual void StoreCore() { }
 	}
 }

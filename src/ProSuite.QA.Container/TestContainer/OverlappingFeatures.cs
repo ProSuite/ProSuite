@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
@@ -12,12 +12,12 @@ namespace ProSuite.QA.Container.TestContainer
 		[NotNull] private static readonly BaseRowComparer _comparer =
 			new BaseRowComparer();
 
-		[NotNull] private readonly IDictionary<ITable, IDictionary<BaseRow, TestedRow>>
+		[NotNull] private readonly IDictionary<IReadOnlyTable, IDictionary<BaseRow, TestedRow>>
 			_overlappingRows =
-				new Dictionary<ITable, IDictionary<BaseRow, TestedRow>>();
+				new Dictionary<IReadOnlyTable, IDictionary<BaseRow, TestedRow>>();
 
-		[NotNull] private readonly Dictionary<ITable, double> _searchTolerance =
-			new Dictionary<ITable, double>();
+		[NotNull] private readonly Dictionary<IReadOnlyTable, double> _searchTolerance =
+			new Dictionary<IReadOnlyTable, double>();
 
 		[CanBeNull] private IBox _currentTileBox;
 
@@ -31,13 +31,8 @@ namespace ProSuite.QA.Container.TestContainer
 		/// <summary>
 		/// Initializes a new instance of the <see cref="OverlappingFeatures"/> class.
 		/// </summary>
-		public OverlappingFeatures() : this(-1) { }
-
-		/// <summary>
-		/// Initializes a new instance of the <see cref="OverlappingFeatures"/> class.
-		/// </summary>
 		/// <param name="maxCachedPointCount">The maximum number of cached vertices.</param>
-		public OverlappingFeatures(int maxCachedPointCount)
+		public OverlappingFeatures(int maxCachedPointCount = -1)
 		{
 			MaxCachedPointCount = maxCachedPointCount;
 		}
@@ -58,7 +53,7 @@ namespace ProSuite.QA.Container.TestContainer
 			                                      ? -1
 			                                      : _currentCachedPointCount;
 
-		public bool WasAlreadyTested([NotNull] IFeature feature,
+		public bool WasAlreadyTested([NotNull] IReadOnlyFeature feature,
 		                             [NotNull] ContainerTest containerTest)
 		{
 			TestedRow testedRow = GetTestedRow(feature);
@@ -66,7 +61,7 @@ namespace ProSuite.QA.Container.TestContainer
 			return testedRow != null && testedRow.WasTestedFor(containerTest);
 		}
 
-		public void AdaptSearchTolerance([NotNull] ITable table, double searchDistance)
+		public void AdaptSearchTolerance([NotNull] IReadOnlyTable table, double searchDistance)
 		{
 			double existingDistance;
 			if (_searchTolerance.TryGetValue(table, out existingDistance))
@@ -79,7 +74,7 @@ namespace ProSuite.QA.Container.TestContainer
 			}
 		}
 
-		public double GetSearchTolerance([CanBeNull] ITable table)
+		public double GetSearchTolerance([CanBeNull] IReadOnlyTable table)
 		{
 			const double defaultTolerance = 0;
 
@@ -105,10 +100,10 @@ namespace ProSuite.QA.Container.TestContainer
 			_currentCachedPointCount = 0;
 
 			foreach (
-				KeyValuePair<ITable, IDictionary<BaseRow, TestedRow>> pairRows in
+				KeyValuePair<IReadOnlyTable, IDictionary<BaseRow, TestedRow>> pairRows in
 				_overlappingRows)
 			{
-				ITable table = pairRows.Key;
+				IReadOnlyTable table = pairRows.Key;
 				IDictionary<BaseRow, TestedRow> testedRows = pairRows.Value;
 
 				double searchTolerance = GetSearchTolerance(table);
@@ -162,7 +157,7 @@ namespace ProSuite.QA.Container.TestContainer
 		                                    double searchTolerance,
 		                                    [CanBeNull] IList<ContainerTest> reducedTests)
 		{
-			ITable table = row.Table;
+			IReadOnlyTable table = row.Table;
 			if (table == null)
 			{
 				return;
@@ -183,7 +178,7 @@ namespace ProSuite.QA.Container.TestContainer
 
 		[NotNull]
 		internal IDictionary<BaseRow, CachedRow> GetOverlappingCachedRows(
-			[NotNull] ITable table,
+			[NotNull] IReadOnlyTable table,
 			[NotNull] IBox currentTileBox)
 		{
 			return GetOverlappingCachedRows(table, currentTileBox, GetSearchTolerance(table));
@@ -191,7 +186,7 @@ namespace ProSuite.QA.Container.TestContainer
 
 		[NotNull]
 		private IDictionary<BaseRow, CachedRow> GetOverlappingCachedRows(
-			[NotNull] ITable table,
+			[NotNull] IReadOnlyTable table,
 			[NotNull] IBox currentTileBox,
 			double searchTolerance)
 		{
@@ -221,8 +216,8 @@ namespace ProSuite.QA.Container.TestContainer
 		}
 
 		private static void Register(
-			[NotNull] ITable table,
-			[NotNull] IDictionary<ITable, IDictionary<BaseRow, TestedRow>> overlapping,
+			[NotNull] IReadOnlyTable table,
+			[NotNull] IDictionary<IReadOnlyTable, IDictionary<BaseRow, TestedRow>> overlapping,
 			[NotNull] BaseRow cachedRow,
 			[CanBeNull] IList<ContainerTest> reducedTests)
 		{
@@ -293,9 +288,9 @@ namespace ProSuite.QA.Container.TestContainer
 		}
 
 		[CanBeNull]
-		private TestedRow GetTestedRow([NotNull] IFeature feature)
+		private TestedRow GetTestedRow([NotNull] IReadOnlyFeature feature)
 		{
-			ITable table = feature.Table;
+			IReadOnlyTable table = feature.Table;
 			if (table == null)
 			{
 				return null;

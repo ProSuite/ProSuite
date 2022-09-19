@@ -1,11 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.Geometry;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Container.TestContainer;
 using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Tests.Documentation;
@@ -13,6 +11,9 @@ using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.Commons;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
 {
@@ -51,11 +52,11 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaHorizontalSegments_0))]
 		public QaHorizontalSegments(
 			[Doc(nameof(DocStrings.QaHorizontalSegments_featureClass))] [NotNull]
-			IFeatureClass featureClass,
+			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaHorizontalSegments_limit))] double limit,
 			[Doc(nameof(DocStrings.QaHorizontalSegments_tolerance))]
 			double tolerance)
-			: base((ITable) featureClass)
+			: base(featureClass)
 		{
 			_limitRad = MathUtils.ToRadians(limit);
 			_toleranceRad = MathUtils.ToRadians(tolerance);
@@ -73,11 +74,11 @@ namespace ProSuite.QA.Tests
 			return false;
 		}
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
 			using (
 				SegmentSlopeAngleProvider segmentSlopeAngleProvider =
-					GetSegmentSlopeAngleProvider((IFeature) row))
+					GetSegmentSlopeAngleProvider((IReadOnlyFeature) row))
 			{
 				var errorCount = 0;
 				var errorSegments = new List<SegmentSlopeAngle>();
@@ -130,7 +131,7 @@ namespace ProSuite.QA.Tests
 
 		[NotNull]
 		private static SegmentSlopeAngleProvider GetSegmentSlopeAngleProvider(
-			[NotNull] IFeature row)
+			[NotNull] IReadOnlyFeature row)
 		{
 			var segmentsFeature = row as IIndexedSegmentsFeature;
 			if (segmentsFeature != null && segmentsFeature.AreIndexedSegmentsLoaded)
@@ -152,7 +153,7 @@ namespace ProSuite.QA.Tests
 			[NotNull] SegmentSlopeAngleProvider segmentSlopeAngleProvider,
 			[NotNull] List<SegmentSlopeAngle> errorSegments,
 			double maxAngleRad, double maxZDifference,
-			[NotNull] IRow row)
+			[NotNull] IReadOnlyRow row)
 		{
 			int part = errorSegments[0].PartIndex;
 			int startSegmentIndex = errorSegments[0].SegmentIndex;
@@ -164,7 +165,7 @@ namespace ProSuite.QA.Tests
 			return ReportError(row, line, maxAngleRad, maxZDifference);
 		}
 
-		private int ReportError([NotNull] IRow row,
+		private int ReportError([NotNull] IReadOnlyRow row,
 		                        [NotNull] IGeometry errorGeometry,
 		                        double angleRad,
 		                        double zDifference)
@@ -201,9 +202,8 @@ namespace ProSuite.QA.Tests
 				issueCode = Codes[Code.NotSufficientlyHorizontal_ConsecutiveSegments];
 			}
 
-			return ReportError(description, errorGeometry,
-			                   issueCode, TestUtils.GetShapeFieldName(row),
-			                   row);
+			return ReportError(description, InvolvedRowUtils.GetInvolvedRows(row), errorGeometry,
+			                   issueCode, TestUtils.GetShapeFieldName(row));
 		}
 
 		private class SegmentSlopeAngle

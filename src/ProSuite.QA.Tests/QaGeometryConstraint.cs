@@ -1,14 +1,15 @@
 using System.Globalization;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.QA.Tests.Properties;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
 {
@@ -45,12 +46,12 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaGeometryConstraint_0))]
 		public QaGeometryConstraint(
 			[Doc(nameof(DocStrings.QaGeometryConstraint_featureClass))] [NotNull]
-			IFeatureClass featureClass,
+			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaGeometryConstraint_geometryConstraint))] [NotNull]
 			string
 				geometryConstraint,
 			[Doc(nameof(DocStrings.QaGeometryConstraint_perPart))] bool perPart)
-			: base((ITable) featureClass)
+			: base(featureClass)
 		{
 			Assert.ArgumentNotNullOrEmpty(geometryConstraint, nameof(geometryConstraint));
 
@@ -72,16 +73,16 @@ namespace ProSuite.QA.Tests
 			return false;
 		}
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
-			var feature = (IFeature) row;
+			var feature = (IReadOnlyFeature) row;
 
 			return _perPart
 				       ? CheckPerPart(feature)
 				       : CheckShape(feature);
 		}
 
-		private int CheckPerPart([NotNull] IFeature feature)
+		private int CheckPerPart([NotNull] IReadOnlyFeature feature)
 		{
 			Assert.ArgumentNotNull(feature, nameof(feature));
 
@@ -104,7 +105,7 @@ namespace ProSuite.QA.Tests
 			return CheckShape(feature);
 		}
 
-		private int CheckParts([NotNull] IFeature feature,
+		private int CheckParts([NotNull] IReadOnlyFeature feature,
 		                       [NotNull] IGeometryCollection parts)
 		{
 			Assert.ArgumentNotNull(feature, nameof(feature));
@@ -125,7 +126,7 @@ namespace ProSuite.QA.Tests
 			return errorCount;
 		}
 
-		private int CheckPoints([NotNull] IFeature feature,
+		private int CheckPoints([NotNull] IReadOnlyFeature feature,
 		                        [NotNull] IPointCollection points)
 		{
 			Assert.ArgumentNotNull(feature, nameof(feature));
@@ -143,14 +144,14 @@ namespace ProSuite.QA.Tests
 			return errorCount;
 		}
 
-		private int CheckShape([NotNull] IFeature feature)
+		private int CheckShape([NotNull] IReadOnlyFeature feature)
 		{
 			return _constraint.IsFulfilled(feature.Shape)
 				       ? NoError
 				       : ReportError(feature, feature.Shape, isPart: false);
 		}
 
-		private int ReportError([NotNull] IFeature feature,
+		private int ReportError([NotNull] IReadOnlyFeature feature,
 		                        [NotNull] IGeometry geometry,
 		                        bool isPart)
 		{
@@ -178,10 +179,9 @@ namespace ProSuite.QA.Tests
 				issueCode = Codes[Code.ConstraintNotFulfilled_ForShape];
 			}
 
-			return ReportError(description, errorGeometry,
-			                   issueCode, _shapeFieldName,
-			                   new[] {rawValues},
-			                   feature);
+			return ReportError(
+				description, InvolvedRowUtils.GetInvolvedRows(feature), errorGeometry,
+				issueCode, _shapeFieldName, values: new[] { rawValues });
 		}
 
 		[NotNull]

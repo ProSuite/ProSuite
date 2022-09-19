@@ -4,6 +4,7 @@ using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container;
 using ProSuite.QA.Tests.Test.TestRunners;
 using NUnit.Framework;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.AO.Test.TestSupport;
@@ -254,7 +255,8 @@ namespace ProSuite.QA.Tests.Test
 		{
 			IFeature feature = CreateTestFeature();
 
-			var test = new QaInteriorRings((IFeatureClass) feature.Class,
+			var test = new QaInteriorRings(
+				           ReadOnlyTableFactory.Create( (IFeatureClass) feature.Class),
 			                               maximumInteriorRingCount)
 			           {
 				           IgnoreInnerRingsLargerThan = ignoreInnerRingsLargerThan,

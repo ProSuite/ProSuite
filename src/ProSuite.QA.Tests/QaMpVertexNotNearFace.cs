@@ -6,7 +6,6 @@ using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.Geometry;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.QA.Tests.PointEnumerators;
@@ -18,6 +17,9 @@ using ProSuite.Commons.Geom;
 using ProSuite.QA.Core;
 using IPnt = ProSuite.Commons.Geom.IPnt;
 using Pnt = ProSuite.Commons.Geom.Pnt;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
 {
@@ -81,10 +83,10 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaMpVertexNotNearFace_0))]
 		public QaMpVertexNotNearFace(
 			[Doc(nameof(DocStrings.QaMpVertexNotNearFace_multiPatchClass))] [NotNull]
-			IFeatureClass
+			IReadOnlyFeatureClass
 				multiPatchClass,
 			[Doc(nameof(DocStrings.QaMpVertexNotNearFace_vertexClasses))] [NotNull]
-			IList<IFeatureClass>
+			IList<IReadOnlyFeatureClass>
 				vertexClasses,
 			[Doc(nameof(DocStrings.QaMpVertexNotNearFace_minimumDistanceAbove))]
 			double minimumDistanceAbove,
@@ -92,7 +94,7 @@ namespace ProSuite.QA.Tests
 			double minimumDistanceBelow)
 			: base(
 				CastToTables(Union(new[] {multiPatchClass}, vertexClasses)
-					             .Cast<IFeatureClass>()))
+					             .Cast<IReadOnlyFeatureClass>()))
 		{
 			_minimumDistanceAbove = minimumDistanceAbove;
 			_minimumDistanceBelow = minimumDistanceBelow;
@@ -104,7 +106,7 @@ namespace ProSuite.QA.Tests
 
 			PlaneCoincidence = _defaultPlaneCoincidence;
 
-			var geodataset = (IGeoDataset) multiPatchClass;
+			var geodataset = (IReadOnlyGeoDataset) multiPatchClass;
 			var srt = (ISpatialReferenceTolerance) geodataset.SpatialReference;
 			_xySrTolerance = srt.XYTolerance;
 			_zSrTolerance = srt.ZTolerance;
@@ -154,14 +156,14 @@ namespace ProSuite.QA.Tests
 
 		public OffsetMethod CheckMethod { get; set; }
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
 			if (tableIndex != 0)
 			{
 				return NoError;
 			}
 
-			var feature = row as IFeature;
+			var feature = row as IReadOnlyFeature;
 			if (feature == null)
 			{
 				return NoError;
@@ -183,10 +185,10 @@ namespace ProSuite.QA.Tests
 				_filters[relatedTableIndex].Geometry = searchGeometry;
 				int i = relatedTableIndex;
 
-				foreach (IRow relatedRow in
+				foreach (IReadOnlyRow relatedRow in
 					Search(InvolvedTables[i], _filters[i], _filterHelpers[i]))
 				{
-					var relatedFeature = (IFeature) relatedRow;
+					var relatedFeature = (IReadOnlyFeature) relatedRow;
 					if (! VerifyWithinFeature && relatedFeature == row)
 					{
 						continue;
@@ -211,7 +213,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[NotNull]
-		private List<PlaneHelper> GetPlaneHelpers([NotNull] IFeature feature)
+		private List<PlaneHelper> GetPlaneHelpers([NotNull] IReadOnlyFeature feature)
 		{
 			const bool includeAssociatedParts = true;
 			SegmentsPlaneProvider planeProvider =
@@ -232,8 +234,8 @@ namespace ProSuite.QA.Tests
 
 		private int Check([NotNull] PlaneHelper planeHelper,
 		                  [NotNull] IPointsEnumerator points,
-		                  [NotNull] IFeature feature,
-		                  [NotNull] IFeature related)
+		                  [NotNull] IReadOnlyFeature feature,
+		                  [NotNull] IReadOnlyFeature related)
 		{
 			var errorCount = 0;
 
@@ -272,8 +274,8 @@ namespace ProSuite.QA.Tests
 		                  [NotNull] Pnt point,
 		                  double xyTolerance,
 		                  OffsetMethod checkMethod,
-		                  [NotNull] IFeature feature,
-		                  [NotNull] IFeature related)
+		                  [NotNull] IReadOnlyFeature feature,
+		                  [NotNull] IReadOnlyFeature related)
 		{
 			if (IsCoincident(planeHelper, point, xyTolerance))
 			{
@@ -298,8 +300,8 @@ namespace ProSuite.QA.Tests
 
 		private int CheckNonCoincidentVertical([NotNull] PlaneHelper planeHelper,
 		                                       [NotNull] Pnt point,
-		                                       [NotNull] IFeature feature,
-		                                       [NotNull] IFeature related)
+		                                       [NotNull] IReadOnlyFeature feature,
+		                                       [NotNull] IReadOnlyFeature related)
 		{
 			if (! planeHelper.IsInFootprint(point))
 			{
@@ -336,9 +338,9 @@ namespace ProSuite.QA.Tests
 				errorCount +=
 					ReportError(
 						$"Point is {cmp} below face",
+						InvolvedRowUtils.GetInvolvedRows(feature, related),
 						GeometryFactory.CreatePoint(point.X, point.Y, point[2]),
-						Codes[Code.PointTooCloseBelowFace], null,
-						feature, related);
+						Codes[Code.PointTooCloseBelowFace], null);
 			}
 
 			if (dzMax >= 0 && dzMax < _minimumDistanceAbove)
@@ -351,9 +353,9 @@ namespace ProSuite.QA.Tests
 				errorCount +=
 					ReportError(
 						$"Point is {cmp} above face",
+						InvolvedRowUtils.GetInvolvedRows(feature, related),
 						GeometryFactory.CreatePoint(point.X, point.Y, point[2]),
-						Codes[Code.PointTooCloseAboveFace], null,
-						feature, related);
+						Codes[Code.PointTooCloseAboveFace], null);
 			}
 
 			if (dzMin <= 0 && dzMax <= 0)
@@ -361,9 +363,9 @@ namespace ProSuite.QA.Tests
 				errorCount +=
 					ReportError(
 						"Point is within non-coplanarity of face",
+						InvolvedRowUtils.GetInvolvedRows(feature, related),
 						GeometryFactory.CreatePoint(point.X, point.Y, point[2]),
-						Codes[Code.PointInNonCoplanarityOfFace], null,
-						feature, related);
+						Codes[Code.PointInNonCoplanarityOfFace], null);
 			}
 
 			return errorCount;
@@ -411,20 +413,20 @@ namespace ProSuite.QA.Tests
 		}
 
 		private int ReportCollinearSegments([NotNull] IMultiPatch errorGeometry,
-		                                    [NotNull] IFeature feature)
+		                                    [NotNull] IReadOnlyFeature feature)
 		{
 			const string description =
 				"The segments of this face are collinear and do not define a valid plane";
 
-			return ReportError(description, errorGeometry,
-			                   Codes[Code.FaceDoesNotDefineValidPlane], null,
-			                   feature);
+			return ReportError(
+				description, InvolvedRowUtils.GetInvolvedRows(feature), errorGeometry,
+				Codes[Code.FaceDoesNotDefineValidPlane], null);
 		}
 
 		private int ReportNonCoplanarFace(int segmentsCount,
 		                                  double maxOffset,
 		                                  [NotNull] IMultiPatch errorGeometry,
-		                                  [NotNull] IFeature involvedFeature)
+		                                  [NotNull] IReadOnlyFeature involvedFeature)
 		{
 			string comparison = FormatLengthComparison(
 				maxOffset, ">", CoplanarityTolerance,
@@ -432,9 +434,8 @@ namespace ProSuite.QA.Tests
 
 			return ReportError(
 				$"Face with {segmentsCount} segments is not planar, max. offset = {comparison}",
-				errorGeometry,
-				Codes[Code.FaceNotCoplanar], null,
-				involvedFeature);
+				InvolvedRowUtils.GetInvolvedRows(involvedFeature), errorGeometry,
+				Codes[Code.FaceNotCoplanar], null);
 		}
 
 		private class PlaneVerticalHelper : PlaneHelper
@@ -569,7 +570,7 @@ namespace ProSuite.QA.Tests
 			}
 
 			private int InitPlaneOffsets(bool reportErrors,
-			                             [CanBeNull] IFeature involvedFeature)
+			                             [CanBeNull] IReadOnlyFeature involvedFeature)
 			{
 				const int noError = 0;
 
@@ -650,7 +651,7 @@ namespace ProSuite.QA.Tests
 				return tan2;
 			}
 
-			public int ReportErrors([NotNull] IFeature feature)
+			public int ReportErrors([NotNull] IReadOnlyFeature feature)
 			{
 				if (! Plane.IsDefined)
 				{

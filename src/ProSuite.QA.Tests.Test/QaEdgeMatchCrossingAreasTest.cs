@@ -63,11 +63,12 @@ namespace ProSuite.QA.Tests.Test
 			// connected to border, exact match:
 			AddAreaFeature(fcArea2, 5, -5, 7, 0, stateId: "B");
 
-			var test = new QaEdgeMatchCrossingAreas(fcArea1, fcBorder1,
-			                                        fcArea2, fcBorder2,
-			                                        searchDistance: 0.5,
-			                                        boundingClasses1: null,
-			                                        boundingClasses2: null)
+			var test = new QaEdgeMatchCrossingAreas(
+				           ReadOnlyTableFactory.Create(fcArea1), ReadOnlyTableFactory.Create(fcBorder1),
+				           ReadOnlyTableFactory.Create(fcArea2), ReadOnlyTableFactory.Create(fcBorder2),
+				                                       searchDistance: 0.5,
+				                                       boundingClasses1: null,
+				                                       boundingClasses2: null)
 			           {
 				           AreaClass1BorderMatchCondition = "AREA.STATE = BORDER.STATE",
 				           AreaClass2BorderMatchCondition = "AREA.STATE = BORDER.STATE",
@@ -101,11 +102,12 @@ namespace ProSuite.QA.Tests.Test
 			AddAreaFeature(fcArea2, 2, 0, 5, 100, stateId: "B"); // split point at x=5
 			AddAreaFeature(fcArea2, 5, 0, 8, 100, stateId: "B");
 
-			var test = new QaEdgeMatchCrossingAreas(fcArea1, fcBorder1,
-			                                        fcArea2, fcBorder2,
-			                                        searchDistance: 1,
-			                                        boundingClasses1: null,
-			                                        boundingClasses2: null)
+			var test = new QaEdgeMatchCrossingAreas(
+				           ReadOnlyTableFactory.Create(fcArea1), ReadOnlyTableFactory.Create(fcBorder1),
+				           ReadOnlyTableFactory.Create(fcArea2), ReadOnlyTableFactory.Create(fcBorder2),
+				                                       searchDistance: 1,
+				                                       boundingClasses1: null,
+				                                       boundingClasses2: null)
 			           {
 				           AreaClass1BorderMatchCondition = "AREA.STATE = BORDER.STATE",
 				           AreaClass2BorderMatchCondition = "AREA.STATE = BORDER.STATE",
@@ -149,11 +151,12 @@ namespace ProSuite.QA.Tests.Test
 			                            .LineTo(5, -3)
 			                            .ClosePolygon(), stateId: "B");
 
-			var test = new QaEdgeMatchCrossingAreas(fcArea1, fcBorder1,
-			                                        fcArea2, fcBorder2,
-			                                        searchDistance: 1,
-			                                        boundingClasses1: null,
-			                                        boundingClasses2: null)
+			var test = new QaEdgeMatchCrossingAreas(
+				           ReadOnlyTableFactory.Create(fcArea1), ReadOnlyTableFactory.Create(fcBorder1),
+				           ReadOnlyTableFactory.Create(fcArea2), ReadOnlyTableFactory.Create(fcBorder2),
+				                                       searchDistance: 1,
+				                                       boundingClasses1: null,
+				                                       boundingClasses2: null)
 			           {
 				           AreaClass1BorderMatchCondition = "AREA.STATE = BORDER.STATE",
 				           AreaClass2BorderMatchCondition = "AREA.STATE = BORDER.STATE",
@@ -194,11 +197,12 @@ namespace ProSuite.QA.Tests.Test
 			                                     .LineTo(9, 9)
 			                                     .ClosePolygon(), stateId: "B");
 
-			var test = new QaEdgeMatchCrossingAreas(fcArea1, fcBorder1,
-			                                        fcArea2, fcBorder2,
-			                                        searchDistance: 1,
-			                                        boundingClasses1: null,
-			                                        boundingClasses2: null)
+			var test = new QaEdgeMatchCrossingAreas(
+				           ReadOnlyTableFactory.Create(fcArea1), ReadOnlyTableFactory.Create(fcBorder1),
+				           ReadOnlyTableFactory.Create(fcArea2), ReadOnlyTableFactory.Create(fcBorder2),
+				                                       searchDistance: 1,
+				                                       boundingClasses1: null,
+				                                       boundingClasses2: null)
 			           {
 				           AreaClass1BorderMatchCondition = "AREA.STATE = BORDER.STATE",
 				           AreaClass2BorderMatchCondition = "AREA.STATE = BORDER.STATE",
@@ -228,11 +232,12 @@ namespace ProSuite.QA.Tests.Test
 			// connected to border, exact match:
 			AddAreaFeature(fcArea2, 4, -5, 7, 0, stateId: "B");
 
-			var test = new QaEdgeMatchCrossingAreas(fcArea1, fcBorder1,
-			                                        fcArea2, fcBorder2,
-			                                        searchDistance: 0.5,
-			                                        boundingClasses1: null,
-			                                        boundingClasses2: null)
+			var test = new QaEdgeMatchCrossingAreas(
+				           ReadOnlyTableFactory.Create(fcArea1), ReadOnlyTableFactory.Create(fcBorder1),
+				           ReadOnlyTableFactory.Create(fcArea2), ReadOnlyTableFactory.Create(fcBorder2),
+				                                       searchDistance: 0.5,
+				                                       boundingClasses1: null,
+				                                       boundingClasses2: null)
 			           {
 				           AreaClass1BorderMatchCondition = "AREA.STATE = BORDER.STATE",
 				           AreaClass2BorderMatchCondition = "AREA.STATE = BORDER.STATE",
@@ -273,11 +278,12 @@ namespace ProSuite.QA.Tests.Test
 			// connected to border, exact match:
 			AddAreaFeature(fcArea2, 4, -5, 7, 0, stateId: "B");
 
-			var test = new QaEdgeMatchCrossingAreas(fcArea1, fcBorder1,
-			                                        fcArea2, fcBorder2,
-			                                        searchDistance: 0.5,
-			                                        boundingClasses1: null,
-			                                        boundingClasses2: null)
+			var test = new QaEdgeMatchCrossingAreas(
+				           ReadOnlyTableFactory.Create(fcArea1), ReadOnlyTableFactory.Create(fcBorder1),
+				           ReadOnlyTableFactory.Create(fcArea2), ReadOnlyTableFactory.Create(fcBorder2),
+				                                       searchDistance: 0.5,
+				                                       boundingClasses1: null,
+				                                       boundingClasses2: null)
 			           {
 				           AreaClass1BorderMatchCondition = "AREA.STATE = BORDER.STATE",
 				           AreaClass2BorderMatchCondition = "AREA.STATE = BORDER.STATE",
@@ -305,11 +311,12 @@ namespace ProSuite.QA.Tests.Test
 			AddAreaFeature(fcArea1, 5, 0, 8, 5, stateId: "A"); // connected
 			AddAreaFeature(fcArea2, 4, -5, 7, -0.3, stateId: "B"); // connected
 
-			var test = new QaEdgeMatchCrossingAreas(fcArea1, fcBorder1,
-			                                        fcArea2, fcBorder2,
-			                                        searchDistance: 0.5,
-			                                        boundingClasses1: null,
-			                                        boundingClasses2: null)
+			var test = new QaEdgeMatchCrossingAreas(
+				           ReadOnlyTableFactory.Create(fcArea1), ReadOnlyTableFactory.Create(fcBorder1),
+				           ReadOnlyTableFactory.Create(fcArea2), ReadOnlyTableFactory.Create(fcBorder2),
+				                                       searchDistance: 0.5,
+				                                       boundingClasses1: null,
+				                                       boundingClasses2: null)
 			           {
 				           AreaClass1BorderMatchCondition = "AREA.STATE = BORDER.STATE",
 				           AreaClass2BorderMatchCondition = "AREA.STATE = BORDER.STATE",
@@ -361,11 +368,12 @@ namespace ProSuite.QA.Tests.Test
 			AddAreaFeature(fcArea1, 0.7, -5, 10, -0.3, stateId: "A"); // connected
 			AddAreaFeature(fcArea2, 0.3, 0, 10, 10, stateId: "B"); // connected
 
-			var test = new QaEdgeMatchCrossingAreas(fcArea1, fcBorder1,
-			                                        fcArea2, fcBorder2,
-			                                        searchDistance: 0.5,
-			                                        boundingClasses1: null,
-			                                        boundingClasses2: null)
+			var test = new QaEdgeMatchCrossingAreas(
+				           ReadOnlyTableFactory.Create(fcArea1), ReadOnlyTableFactory.Create(fcBorder1),
+				           ReadOnlyTableFactory.Create(fcArea2), ReadOnlyTableFactory.Create(fcBorder2),
+				                                       searchDistance: 0.5,
+				                                       boundingClasses1: null,
+				                                       boundingClasses2: null)
 			           {
 				           AreaClass1BorderMatchCondition = "AREA.STATE = BORDER.STATE",
 				           AreaClass2BorderMatchCondition = "AREA.STATE = BORDER.STATE",
@@ -408,11 +416,12 @@ namespace ProSuite.QA.Tests.Test
 			                            .LineTo(5, 10)
 			                            .ClosePolygon(), stateId: "B"); // connected
 
-			var test = new QaEdgeMatchCrossingAreas(fcArea1, fcBorder1,
-			                                        fcArea2, fcBorder2,
-			                                        searchDistance: 0.2,
-			                                        boundingClasses1: null,
-			                                        boundingClasses2: null)
+			var test = new QaEdgeMatchCrossingAreas(
+				           ReadOnlyTableFactory.Create(fcArea1), ReadOnlyTableFactory.Create(fcBorder1),
+				           ReadOnlyTableFactory.Create(fcArea2), ReadOnlyTableFactory.Create(fcBorder2),
+				                                       searchDistance: 0.2,
+				                                       boundingClasses1: null,
+				                                       boundingClasses2: null)
 			           {
 				           AreaClass1BorderMatchCondition = "AREA.STATE = BORDER.STATE",
 				           AreaClass2BorderMatchCondition = "AREA.STATE = BORDER.STATE",
@@ -447,11 +456,12 @@ namespace ProSuite.QA.Tests.Test
 			AddAreaFeature(fcArea1, 5, 0, 8, 5, stateId: "A"); // connected
 			AddAreaFeature(fcArea2, 4, -5, 7, -0.3, stateId: "B"); // connected
 
-			var test = new QaEdgeMatchCrossingAreas(fcArea1, fcBorder1,
-			                                        fcArea2, fcBorder2,
-			                                        searchDistance: 0.5,
-			                                        boundingClasses1: null,
-			                                        boundingClasses2: null)
+			var test = new QaEdgeMatchCrossingAreas(
+				           ReadOnlyTableFactory.Create(fcArea1), ReadOnlyTableFactory.Create(fcBorder1),
+				           ReadOnlyTableFactory.Create(fcArea2), ReadOnlyTableFactory.Create(fcBorder2),
+				                                       searchDistance: 0.5,
+				                                       boundingClasses1: null,
+				                                       boundingClasses2: null)
 			           {
 				           AreaClass1BorderMatchCondition = "AREA.STATE = BORDER.STATE",
 				           AreaClass2BorderMatchCondition = "AREA.STATE = BORDER.STATE",
@@ -500,11 +510,12 @@ namespace ProSuite.QA.Tests.Test
 			AddAreaFeature(fcArea2, 30, -5, 50, 0, stateId: "B"); // connected
 			AddAreaFeature(fcArea2, 50, -5, 80, 0, stateId: "B"); // connected
 
-			var test = new QaEdgeMatchCrossingAreas(fcArea1, fcBorder1,
-			                                        fcArea2, fcBorder2,
-			                                        searchDistance: 0.5,
-			                                        boundingClasses1: null,
-			                                        boundingClasses2: null)
+			var test = new QaEdgeMatchCrossingAreas(
+				           ReadOnlyTableFactory.Create(fcArea1), ReadOnlyTableFactory.Create(fcBorder1),
+				           ReadOnlyTableFactory.Create(fcArea2), ReadOnlyTableFactory.Create(fcBorder2),
+				                                       searchDistance: 0.5,
+				                                       boundingClasses1: null,
+				                                       boundingClasses2: null)
 			           {
 				           AreaClass1BorderMatchCondition = "AREA.STATE = BORDER.STATE",
 				           AreaClass2BorderMatchCondition = "AREA.STATE = BORDER.STATE",
@@ -554,11 +565,12 @@ namespace ProSuite.QA.Tests.Test
 			AddAreaFeature(fcArea2, 30, -5, 50, 0, stateId: "B"); // connected
 			AddAreaFeature(fcArea2, 50, -5, 80, 0.2, stateId: "B"); // not connected
 
-			var test = new QaEdgeMatchCrossingAreas(fcArea1, fcBorder1,
-			                                        fcArea2, fcBorder2,
-			                                        searchDistance: 0.5,
-			                                        boundingClasses1: null,
-			                                        boundingClasses2: null)
+			var test = new QaEdgeMatchCrossingAreas(
+				           ReadOnlyTableFactory.Create(fcArea1), ReadOnlyTableFactory.Create(fcBorder1),
+				           ReadOnlyTableFactory.Create(fcArea2), ReadOnlyTableFactory.Create(fcBorder2),
+				                                       searchDistance: 0.5,
+				                                       boundingClasses1: null,
+				                                       boundingClasses2: null)
 			           {
 				           AreaClass1BorderMatchCondition = "AREA.STATE = BORDER.STATE",
 				           AreaClass2BorderMatchCondition = "AREA.STATE = BORDER.STATE",
@@ -641,11 +653,12 @@ namespace ProSuite.QA.Tests.Test
 			                            .LineTo(10, 100)
 			                            .ClosePolygon(), stateId: "B"); // connected
 
-			var test = new QaEdgeMatchCrossingAreas(fcArea1, fcBorder1,
-			                                        fcArea2, fcBorder2,
-			                                        searchDistance: 10,
-			                                        boundingClasses1: null,
-			                                        boundingClasses2: null)
+			var test = new QaEdgeMatchCrossingAreas(
+				           ReadOnlyTableFactory.Create(fcArea1), ReadOnlyTableFactory.Create(fcBorder1),
+				           ReadOnlyTableFactory.Create(fcArea2), ReadOnlyTableFactory.Create(fcBorder2),
+				                                       searchDistance: 10,
+				                                       boundingClasses1: null,
+				                                       boundingClasses2: null)
 			           {
 				           AreaClass1BorderMatchCondition = "AREA.STATE = BORDER.STATE",
 				           AreaClass2BorderMatchCondition = "AREA.STATE = BORDER.STATE",
@@ -684,15 +697,18 @@ namespace ProSuite.QA.Tests.Test
 			AddFeature(boundingPointClass, GeometryFactory.CreatePoint(85, 0));
 			AddFeature(boundingPointClass, GeometryFactory.CreatePoint(4, 0));
 
-			var test = new QaEdgeMatchCrossingAreas(fcArea1, fcBorder1,
-			                                        fcArea2, fcBorder2,
-			                                        0.5,
-			                                        new[]
-			                                        {
-				                                        boundingLineClass,
-				                                        boundingPointClass
-			                                        },
-			                                        boundingClasses2: null)
+			var test = new QaEdgeMatchCrossingAreas(
+				           ReadOnlyTableFactory.Create(fcArea1),
+				           ReadOnlyTableFactory.Create(fcBorder1),
+				           ReadOnlyTableFactory.Create(fcArea2),
+				           ReadOnlyTableFactory.Create(fcBorder2),
+				           0.5,
+				           new[]
+				           {
+					           ReadOnlyTableFactory.Create(boundingLineClass),
+					           ReadOnlyTableFactory.Create(boundingPointClass)
+				           },
+				           boundingClasses2: null)
 			           {
 				           AreaClass1BorderMatchCondition = "AREA.STATE = BORDER.STATE",
 				           AreaClass2BorderMatchCondition = "AREA.STATE = BORDER.STATE",
@@ -793,11 +809,12 @@ namespace ProSuite.QA.Tests.Test
 			AddAreaFeature(fcArea2, 55, -5, 90, -0.1, stateId: "B", textFieldValue: "Y");
 			// not connected
 
-			var test = new QaEdgeMatchCrossingAreas(fcArea1, fcBorder1,
-			                                        fcArea2, fcBorder2,
-			                                        0.5,
-			                                        boundingClasses1: null,
-			                                        boundingClasses2: null)
+			var test = new QaEdgeMatchCrossingAreas(
+				           ReadOnlyTableFactory.Create(fcArea1), ReadOnlyTableFactory.Create(fcBorder1),
+				           ReadOnlyTableFactory.Create(fcArea2), ReadOnlyTableFactory.Create(fcBorder2),
+				                                       0.5,
+				                                       boundingClasses1: null,
+				                                       boundingClasses2: null)
 			           {
 				           AreaClass1BorderMatchCondition = "AREA.STATE = BORDER.STATE",
 				           AreaClass2BorderMatchCondition = "AREA.STATE = BORDER.STATE",
@@ -842,9 +859,10 @@ namespace ProSuite.QA.Tests.Test
 				AddFeature(fcBorder2, border, stateId: "B");
 			}
 
-			var test = new QaEdgeMatchCrossingAreas(fcArea1, fcBorder1,
-			                                        fcArea2, fcBorder2,
-			                                        10, null, null)
+			var test = new QaEdgeMatchCrossingAreas(
+				           ReadOnlyTableFactory.Create(fcArea1), ReadOnlyTableFactory.Create(fcBorder1),
+				           ReadOnlyTableFactory.Create(fcArea2), ReadOnlyTableFactory.Create(fcBorder2),
+				                                       10, null, null)
 			           {
 				           AreaClass1BorderMatchCondition = "AREA.STATE = BORDER.STATE",
 				           AreaClass2BorderMatchCondition = "AREA.STATE = BORDER.STATE",

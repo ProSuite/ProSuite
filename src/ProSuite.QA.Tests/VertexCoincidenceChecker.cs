@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ESRI.ArcGIS.esriSystem;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.Geometry;
@@ -17,6 +16,8 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
 using IPnt = ProSuite.Commons.Geom.IPnt;
 using Pnt = ProSuite.Commons.Geom.Pnt;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Core.IssueCodes;
 
 namespace ProSuite.QA.Tests
 {
@@ -132,7 +133,7 @@ namespace ProSuite.QA.Tests
 
 		public bool ReportCoordinates { get; set; }
 
-		private double GetZCoincidenceTolerance([NotNull] IEnumerable<IFeature> features)
+		private double GetZCoincidenceTolerance([NotNull] IEnumerable<IReadOnlyFeature> features)
 		{
 			if (ZCoincidenceTolerance >= 0)
 			{
@@ -140,7 +141,7 @@ namespace ProSuite.QA.Tests
 			}
 
 			double tolerance = 0;
-			foreach (IFeature feature in features)
+			foreach (IReadOnlyFeature feature in features)
 			{
 				ISpatialReference sr = feature.Shape.SpatialReference;
 				var srt = (ISpatialReferenceTolerance) sr;
@@ -162,7 +163,7 @@ namespace ProSuite.QA.Tests
 		public bool VerifyWithinFeature { get; set; }
 
 		public int CheckCoincidence([NotNull] IPointsEnumerator pointsEnumerator,
-		                            [NotNull] IFeature nearFeature)
+		                            [NotNull] IReadOnlyFeature nearFeature)
 		{
 			NearFeatureCoincidence nearFeatureCoincidence =
 				CreateCoincidenceChecker(nearFeature);
@@ -195,7 +196,7 @@ namespace ProSuite.QA.Tests
 			return _formatComparisonFunction(closestDistance, "<", tolerance, "N2");
 		}
 
-		private int CheckCoincidence([NotNull] IFeature feature,
+		private int CheckCoincidence([NotNull] IReadOnlyFeature feature,
 		                             [NotNull] Pnt point,
 		                             [NotNull] ISpatialReference spatialReference,
 		                             double xyTolerance,
@@ -250,8 +251,8 @@ namespace ProSuite.QA.Tests
 
 		private int CheckCoincidenceDifferentFeatures(
 			[NotNull] IPnt point,
-			[NotNull] IFeature feature,
-			[NotNull] IFeature nearFeature,
+			[NotNull] IReadOnlyFeature feature,
+			[NotNull] IReadOnlyFeature nearFeature,
 			[NotNull] IEnumerable<Proximity> proximities,
 			double pointTolerance,
 			double edgeTolerance,
@@ -381,7 +382,7 @@ namespace ProSuite.QA.Tests
 
 		private int CheckCoincidenceSameFeature(
 			[NotNull] IPnt point,
-			[NotNull] IFeature feature,
+			[NotNull] IReadOnlyFeature feature,
 			[NotNull] IEnumerable<Proximity> proximities,
 			double pointTolerance,
 			double edgeTolerance,
@@ -493,7 +494,7 @@ namespace ProSuite.QA.Tests
 			double pointTolerance,
 			double vertexDistance,
 			[NotNull] ISpatialReference spatialReference,
-			params IFeature[] features)
+			params IReadOnlyFeature[] features)
 		{
 			bool sameFeature = features.Length == 1;
 
@@ -518,19 +519,18 @@ namespace ProSuite.QA.Tests
 					              point.X, point.Y, nearbyVertex.X, nearbyVertex.Y);
 			}
 
-			return _errorReporting.Report(description,
-			                              CreateErrorGeometry(point, spatialReference),
-			                              Codes[code],
-			                              GetAffectedComponent(features),
-			                              new object[] {vertexDistance},
-			                              features.Cast<IRow>().ToArray());
+			return _errorReporting.Report(
+				description, InvolvedRowUtils.GetInvolvedRows((IEnumerable<IReadOnlyFeature>)features),
+				CreateErrorGeometry(point, spatialReference),
+				Codes[code], GetAffectedComponent(features),
+				values: new object[] { vertexDistance });
 		}
 
 		private int ReportZDiffersCoincidentVertex(
 			[NotNull] IPnt point,
 			double zCoincidenceTolerance, double deltaZ,
 			[NotNull] ISpatialReference spatialReference,
-			params IFeature[] features)
+			params IReadOnlyFeature[] features)
 		{
 			bool sameFeature = features.Length == 1;
 
@@ -548,12 +548,11 @@ namespace ProSuite.QA.Tests
 				format,
 				_formatComparisonFunction(Math.Abs(deltaZ), ">", zCoincidenceTolerance, "N2"));
 
-			return _errorReporting.Report(description,
-			                              CreateErrorGeometry(point, spatialReference),
-			                              Codes[code],
-			                              GetAffectedComponent(features),
-			                              new object[] {Math.Abs(deltaZ)},
-			                              features.Cast<IRow>().ToArray());
+			return _errorReporting.Report(
+				description, InvolvedRowUtils.GetInvolvedRows((IEnumerable<IReadOnlyFeature>)features),
+				CreateErrorGeometry(point, spatialReference),
+				Codes[code], GetAffectedComponent(features),
+				values: new object[] { Math.Abs(deltaZ) });
 		}
 
 		private int ReportNearbyEdgeNotPassingThroughVertex(
@@ -561,7 +560,7 @@ namespace ProSuite.QA.Tests
 			double edgeTolerance,
 			double edgeDistance,
 			[NotNull] ISpatialReference spatialReference,
-			params IFeature[] features)
+			params IReadOnlyFeature[] features)
 		{
 			bool sameFeature = features.Length == 1;
 
@@ -587,19 +586,17 @@ namespace ProSuite.QA.Tests
 					              point.X, point.Y);
 			}
 
-			return _errorReporting.Report(description,
-			                              CreateErrorGeometry(point, spatialReference),
-			                              Codes[code],
-			                              GetAffectedComponent(features),
-			                              new object[] {edgeDistance},
-			                              features.Cast<IRow>().ToArray());
+			return _errorReporting.Report(
+				description, InvolvedRowUtils.GetInvolvedRows((IEnumerable<IReadOnlyFeature>)features),
+				CreateErrorGeometry(point, spatialReference),
+				Codes[code], GetAffectedComponent(features), values: new object[] { edgeDistance });
 		}
 
 		private int ReportZDiffersCoincidentEdge(
 			[NotNull] IPnt point,
 			double zTolerance, double deltaZ,
 			[NotNull] ISpatialReference spatialReference,
-			params IFeature[] features)
+			params IReadOnlyFeature[] features)
 		{
 			bool sameFeature = features.Length == 1;
 
@@ -617,12 +614,11 @@ namespace ProSuite.QA.Tests
 			                                   _formatComparisonFunction(Math.Abs(deltaZ), ">",
 			                                                             zTolerance, "N2"));
 
-			return _errorReporting.Report(description,
-			                              CreateErrorGeometry(point, spatialReference),
-			                              Codes[code],
-			                              GetAffectedComponent(features),
-			                              new object[] {Math.Abs(deltaZ)},
-			                              features.Cast<IRow>().ToArray());
+			return _errorReporting.Report(
+				description, InvolvedRowUtils.GetInvolvedRows((IEnumerable<IReadOnlyFeature>)features),
+				CreateErrorGeometry(point, spatialReference),
+				Codes[code], GetAffectedComponent(features),
+				values: new object[] { Math.Abs(deltaZ) });
 		}
 
 		private int ReportNoVertexOnNearbyEdge(
@@ -630,7 +626,7 @@ namespace ProSuite.QA.Tests
 			double edgeTolerance,
 			double edgeDistance,
 			[NotNull] ISpatialReference spatialReference,
-			params IFeature[] features)
+			params IReadOnlyFeature[] features)
 		{
 			bool sameFeature = features.Length == 1;
 
@@ -655,17 +651,15 @@ namespace ProSuite.QA.Tests
 					              point.X, point.Y);
 			}
 
-			return _errorReporting.Report(description,
-			                              CreateErrorGeometry(point, spatialReference),
-			                              Codes[code],
-			                              GetAffectedComponent(features),
-			                              new object[] {edgeDistance},
-			                              features.Cast<IRow>().ToArray());
+			return _errorReporting.Report(
+				description, InvolvedRowUtils.GetInvolvedRows((IEnumerable<IReadOnlyFeature>)features),
+				CreateErrorGeometry(point, spatialReference),
+				Codes[code], GetAffectedComponent(features), values: new object[] { edgeDistance });
 		}
 
 		[CanBeNull]
 		private static string GetAffectedComponent(
-			[NotNull] IEnumerable<IFeature> features)
+			[NotNull] IEnumerable<IReadOnlyFeature> features)
 			=> TestUtils.GetShapeFieldNames(features);
 
 		[NotNull]
@@ -692,7 +686,7 @@ namespace ProSuite.QA.Tests
 
 		[NotNull]
 		private static NearFeatureCoincidence CreateCoincidenceChecker(
-			[NotNull] IFeature feature)
+			[NotNull] IReadOnlyFeature feature)
 		{
 			var indexedSegmentsFeature = feature as IIndexedSegmentsFeature;
 			if (indexedSegmentsFeature != null)
@@ -737,7 +731,7 @@ namespace ProSuite.QA.Tests
 
 		private abstract class NearFeatureCoincidence
 		{
-			protected NearFeatureCoincidence([NotNull] IFeature feature)
+			protected NearFeatureCoincidence([NotNull] IReadOnlyFeature feature)
 			{
 				Assert.ArgumentNotNull(feature, nameof(feature));
 
@@ -745,7 +739,7 @@ namespace ProSuite.QA.Tests
 			}
 
 			[NotNull]
-			public IFeature Feature { get; }
+			public IReadOnlyFeature Feature { get; }
 
 			[NotNull]
 			public abstract IEnumerable<Proximity> GetProximities([NotNull] Pnt point,
@@ -825,7 +819,7 @@ namespace ProSuite.QA.Tests
 			[NotNull] private readonly IIndexedSegments _indexedSegments;
 
 			public IndexedSegmentsNearFeatureCoincidence(
-				[NotNull] IFeature feature,
+				[NotNull] IReadOnlyFeature feature,
 				[NotNull] IIndexedSegments indexedSegments)
 				: base(feature)
 			{
@@ -854,7 +848,7 @@ namespace ProSuite.QA.Tests
 		{
 			[NotNull] private readonly Pnt _point;
 
-			public PointNearFeatureCoincidence([NotNull] IFeature feature,
+			public PointNearFeatureCoincidence([NotNull] IReadOnlyFeature feature,
 			                                   [NotNull] IPoint point)
 				: base(feature)
 			{
@@ -876,7 +870,7 @@ namespace ProSuite.QA.Tests
 		{
 			[NotNull] private readonly WKSPointZ[] _wksPoints;
 
-			public MultipointNearFeatureCoincidence([NotNull] IFeature feature,
+			public MultipointNearFeatureCoincidence([NotNull] IReadOnlyFeature feature,
 			                                        IMultipoint multipoint)
 				: base(feature)
 			{

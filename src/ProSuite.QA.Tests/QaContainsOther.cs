@@ -3,13 +3,15 @@ using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
 {
@@ -51,26 +53,26 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaContainsOther_0))]
 		public QaContainsOther(
 				[Doc(nameof(DocStrings.QaContainsOther_contains_0))] [NotNull]
-				IList<IFeatureClass> contains,
+				IList<IReadOnlyFeatureClass> contains,
 				[Doc(nameof(DocStrings.QaContainsOther_isWithin_0))] [NotNull]
-				IList<IFeatureClass> isWithin)
+				IList<IReadOnlyFeatureClass> isWithin)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(contains, isWithin, null, false) { }
 
 		[Doc(nameof(DocStrings.QaContainsOther_1))]
 		public QaContainsOther(
 			[Doc(nameof(DocStrings.QaContainsOther_contains_1))] [NotNull]
-			IFeatureClass contains,
+			IReadOnlyFeatureClass contains,
 			[Doc(nameof(DocStrings.QaContainsOther_isWithin_1))] [NotNull]
-			IFeatureClass isWithin)
+			IReadOnlyFeatureClass isWithin)
 			: this(new[] {contains}, new[] {isWithin}, null, false) { }
 
 		[Doc(nameof(DocStrings.QaContainsOther_2))]
 		public QaContainsOther(
 			[Doc(nameof(DocStrings.QaContainsOther_contains_0))] [NotNull]
-			IList<IFeatureClass> contains,
+			IList<IReadOnlyFeatureClass> contains,
 			[Doc(nameof(DocStrings.QaContainsOther_isWithin_0))] [NotNull]
-			IList<IFeatureClass> isWithin,
+			IList<IReadOnlyFeatureClass> isWithin,
 			[Doc(nameof(DocStrings.QaContainsOther_isContainingCondition))] [CanBeNull]
 			string
 				isContainingCondition,
@@ -94,9 +96,9 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaContainsOther_3))]
 		public QaContainsOther(
 			[Doc(nameof(DocStrings.QaContainsOther_contains_1))] [NotNull]
-			IFeatureClass contains,
+			IReadOnlyFeatureClass contains,
 			[Doc(nameof(DocStrings.QaContainsOther_isWithin_1))] [NotNull]
-			IFeatureClass isWithin,
+			IReadOnlyFeatureClass isWithin,
 			[Doc(nameof(DocStrings.QaContainsOther_isContainingCondition))] [CanBeNull]
 			string
 				isContainingCondition,
@@ -107,7 +109,7 @@ namespace ProSuite.QA.Tests
 			       isContainingCondition,
 			       reportIndividualParts) { }
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
 			// Currently, rows that are on equal layers are tested twice in the same direction,
 			// as Test.CheckConstraint just looks for first constraint in layer
@@ -118,7 +120,7 @@ namespace ProSuite.QA.Tests
 
 			ISpatialFilter[] filters = GetQueryFilters();
 
-			IGeometry shape = ((IFeature) row).Shape;
+			IGeometry shape = ((IReadOnlyFeature) row).Shape;
 
 			if (_isContainingCondition == null)
 			{
@@ -134,7 +136,7 @@ namespace ProSuite.QA.Tests
 			{
 				filters[containsClassIndex].Geometry = shape;
 
-				foreach (IRow containingRow in GetContainingRows(containsClassIndex))
+				foreach (IReadOnlyRow containingRow in GetContainingRows(containsClassIndex))
 				{
 					anyContainingFound = true;
 
@@ -165,9 +167,9 @@ namespace ProSuite.QA.Tests
 				                      ? Codes[Code.NoContainingFeature_WithFulfilledConstraint]
 				                      : Codes[Code.NoContainingFeature];
 
-			return ReportError(description, errorGeometry,
-			                   issueCode, null,
-			                   _reportIndividualParts, row);
+			return ReportError(
+				description, InvolvedRowUtils.GetInvolvedRows(row),
+				errorGeometry, issueCode, null, _reportIndividualParts);
 		}
 
 		[NotNull]
@@ -184,22 +186,22 @@ namespace ProSuite.QA.Tests
 
 		[NotNull]
 		private static IEnumerable<esriGeometryType> GetShapeTypesByTableIndex(
-			[NotNull] IEnumerable<IFeatureClass> covering,
-			[NotNull] IEnumerable<IFeatureClass> covered)
+			[NotNull] IEnumerable<IReadOnlyFeatureClass> covering,
+			[NotNull] IEnumerable<IReadOnlyFeatureClass> covered)
 		{
-			foreach (IFeatureClass featureClass in covering)
+			foreach (IReadOnlyFeatureClass featureClass in covering)
 			{
 				yield return featureClass.ShapeType;
 			}
 
-			foreach (IFeatureClass featureClass in covered)
+			foreach (IReadOnlyFeatureClass featureClass in covered)
 			{
 				yield return featureClass.ShapeType;
 			}
 		}
 
 		[NotNull]
-		private IEnumerable<IRow> GetContainingRows(int containsClassIndex)
+		private IEnumerable<IReadOnlyRow> GetContainingRows(int containsClassIndex)
 		{
 			return Search(InvolvedTables[containsClassIndex],
 			              _queryFilter[containsClassIndex],
@@ -213,7 +215,7 @@ namespace ProSuite.QA.Tests
 
 		[CanBeNull]
 		private IGeometry GetErrorGeometry([NotNull] IGeometry geometry,
-		                                   [NotNull] IRow row,
+		                                   [NotNull] IReadOnlyRow row,
 		                                   int tableIndex)
 		{
 			var differences = new List<IGeometry>();
@@ -222,10 +224,10 @@ namespace ProSuite.QA.Tests
 			     containsClassIndex < _containsClassesCount;
 			     containsClassIndex++)
 			{
-				foreach (IRow intersectingRow in
+				foreach (IReadOnlyRow intersectingRow in
 					SearchIntersectingFeatures(containsClassIndex, geometry))
 				{
-					var intersectingFeature = (IFeature) intersectingRow;
+					var intersectingFeature = (IReadOnlyFeature) intersectingRow;
 
 					if (! _isContainingCondition.IsFulfilled(
 						    intersectingFeature, containsClassIndex,
@@ -271,7 +273,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[NotNull]
-		private IEnumerable<IRow> SearchIntersectingFeatures(int classIndex,
+		private IEnumerable<IReadOnlyRow> SearchIntersectingFeatures(int classIndex,
 		                                                     [NotNull] IGeometry geometry)
 		{
 			_intersectsFilter[classIndex].Geometry = geometry;

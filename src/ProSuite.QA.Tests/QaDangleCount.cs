@@ -2,11 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.PolygonGrower;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
@@ -15,6 +13,9 @@ using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
 {
@@ -23,7 +24,7 @@ namespace ProSuite.QA.Tests
 	[UsedImplicitly]
 	public class QaDangleCount : QaNetworkBase
 	{
-		[NotNull] private readonly IList<IFeatureClass> _polylineClasses;
+		[NotNull] private readonly IList<IReadOnlyFeatureClass> _polylineClasses;
 
 		[NotNull] private readonly IDictionary<int, IDictionary<int, FeatureDangleCount>>
 			_dangleCounts = new Dictionary<int, IDictionary<int, FeatureDangleCount>>();
@@ -54,7 +55,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaDangleCount_0))]
 		public QaDangleCount(
 			[Doc(nameof(DocStrings.QaDangleCount_polylineClass))] [NotNull]
-			IFeatureClass polylineClass,
+			IReadOnlyFeatureClass polylineClass,
 			[Doc(nameof(DocStrings.QaDangleCount_dangleCountExpression))] [NotNull]
 			string dangleCountExpression,
 			[Doc(nameof(DocStrings.QaDangleCount_tolerance))] double tolerance)
@@ -63,14 +64,14 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaDangleCount_1))]
 		public QaDangleCount(
 			[Doc(nameof(DocStrings.QaDangleCount_polylineClasses))] [NotNull]
-			IList<IFeatureClass>
+			IList<IReadOnlyFeatureClass>
 				polylineClasses,
 			[Doc(nameof(DocStrings.QaDangleCount_dangleCountExpressions))] [NotNull]
 			IList<string>
 				dangleCountExpressions,
 			[Doc(nameof(DocStrings.QaDangleCount_tolerance))] double tolerance)
 			: base(
-				CastToTables((IEnumerable<IFeatureClass>) polylineClasses), tolerance,
+				CastToTables((IEnumerable<IReadOnlyFeatureClass>) polylineClasses), tolerance,
 				false, null
 			)
 		{
@@ -89,7 +90,7 @@ namespace ProSuite.QA.Tests
 
 		[NotNull]
 		private List<TableView> GetDangleCountExpressions(
-			[NotNull] IEnumerable<IFeatureClass> polylineClasses,
+			[NotNull] IEnumerable<IReadOnlyFeatureClass> polylineClasses,
 			[NotNull] IList<string> dangleCountExpressions)
 		{
 			var result = new List<TableView>();
@@ -103,7 +104,7 @@ namespace ProSuite.QA.Tests
 			else
 			{
 				int tableIndex = 0;
-				foreach (IFeatureClass polylineClass in polylineClasses)
+				foreach (IReadOnlyFeatureClass polylineClass in polylineClasses)
 				{
 					result.Add(CreateDangleCountExpression(
 						           polylineClass,
@@ -117,14 +118,14 @@ namespace ProSuite.QA.Tests
 
 		[NotNull]
 		private TableView CreateDangleCountExpression(
-			[NotNull] IFeatureClass polylineClass,
+			[NotNull] IReadOnlyFeatureClass polylineClass,
 			[NotNull] string dangleCountExpression)
 		{
 			TableView tableView = TableViewFactory.Create(
-				(ITable) polylineClass,
+				polylineClass,
 				dangleCountExpression,
 				false,
-				GetSqlCaseSensitivity((ITable) polylineClass));
+				GetSqlCaseSensitivity(polylineClass));
 
 			tableView.AddColumn(_dangleCountPlaceHolder, typeof(int));
 
@@ -223,12 +224,12 @@ namespace ProSuite.QA.Tests
 					                     featureDangleCount.DanglingPointCount,
 					                     constraintValues);
 
-			return ReportError(description,
-			                   GeometryFactory.CreateMultipoint(
-				                   featureDangleCount.DanglingPoints),
-			                   Codes[Code.InvalidNumberOfDangles],
-			                   TestUtils.GetShapeFieldName(featureDangleCount.Feature),
-			                   featureDangleCount.Feature);
+			return ReportError(
+				description, InvolvedRowUtils.GetInvolvedRows(featureDangleCount.Feature),
+				GeometryFactory.CreateMultipoint(
+					featureDangleCount.DanglingPoints),
+				Codes[Code.InvalidNumberOfDangles],
+				TestUtils.GetShapeFieldName(featureDangleCount.Feature));
 		}
 
 		private bool IsAllowedDangleCount(int tableIndex,
@@ -301,7 +302,7 @@ namespace ProSuite.QA.Tests
 				_dangleCounts.Add(tableIndex, dangleCountPerFeature);
 			}
 
-			var feature = (IFeature) tableIndexRow.Row;
+			var feature = (IReadOnlyFeature) tableIndexRow.Row;
 			int oid = feature.OID;
 
 			FeatureDangleCount dangleCount;
@@ -323,7 +324,7 @@ namespace ProSuite.QA.Tests
 		{
 			[NotNull] private readonly List<IPoint> _danglingPoints = new List<IPoint>();
 
-			public FeatureDangleCount([NotNull] IFeature feature,
+			public FeatureDangleCount([NotNull] IReadOnlyFeature feature,
 			                          double xMax,
 			                          double yMax)
 			{
@@ -333,7 +334,7 @@ namespace ProSuite.QA.Tests
 			}
 
 			[NotNull]
-			public IFeature Feature { get; }
+			public IReadOnlyFeature Feature { get; }
 
 			[NotNull]
 			public IEnumerable<IPoint> DanglingPoints => _danglingPoints;

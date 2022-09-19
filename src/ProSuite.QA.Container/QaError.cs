@@ -1,9 +1,13 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.QA.Core.IssueCodes;
 
 namespace ProSuite.QA.Container
 {
@@ -68,6 +72,10 @@ namespace ProSuite.QA.Container
 		public bool AssertionFailed { get; }
 
 		[CanBeNull]
+		[Obsolete]
+		public IEnvelope InvolvedExtent => GetInvolvedExtent(InvolvedRows);
+
+		[CanBeNull]
 		public IList<object> Values { get; }
 
 		public int CompareEnvelope(QaError other)
@@ -107,6 +115,46 @@ namespace ProSuite.QA.Container
 		public void ReduceGeometry()
 		{
 			_errorGeometry.ReduceGeometry();
+		}
+
+		[CanBeNull]
+		[Obsolete]
+		private static IEnvelope GetInvolvedExtent(
+			[CanBeNull] IEnumerable<InvolvedRow> involvedRows)
+		{
+			if (involvedRows == null)
+			{
+				return null;
+			}
+
+			IEnvelope involvedExtent = null;
+			foreach (IReadOnlyRow testedRow in involvedRows)
+			{
+				if (testedRow is IReadOnlyFeature testedFeature)
+				{
+					IEnvelope shapeEnvelope = null;
+					try
+					{
+						// This fails if the Shape field was not in the SubFields:
+						shapeEnvelope = testedFeature.Shape.Envelope;
+					}
+					catch (Exception)
+					{
+						continue;
+					}
+
+					if (involvedExtent == null)
+					{
+						involvedExtent = GeometryFactory.Clone(shapeEnvelope);
+					}
+					else
+					{
+						involvedExtent.Union(GeometryFactory.Clone(shapeEnvelope));
+					}
+				}
+			}
+
+			return involvedExtent;
 		}
 
 		public bool IsProcessed(double xMax, double yMax)

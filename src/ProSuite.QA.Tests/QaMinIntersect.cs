@@ -2,12 +2,14 @@ using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.QA.Tests.SpatialRelations;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
 {
@@ -37,7 +39,7 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaMinIntersect_0))]
 		public QaMinIntersect(
-			[Doc(nameof(DocStrings.QaMinIntersect_polygonClasses))] IList<IFeatureClass> polygonClasses,
+			[Doc(nameof(DocStrings.QaMinIntersect_polygonClasses))] IList<IReadOnlyFeatureClass> polygonClasses,
 			[Doc(nameof(DocStrings.QaMinIntersect_limit))] double limit)
 			: base(polygonClasses, esriSpatialRelEnum.esriSpatialRelIntersects)
 		{
@@ -46,20 +48,20 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaMinIntersect_1))]
 		public QaMinIntersect(
-			[Doc(nameof(DocStrings.QaMinIntersect_polygonClass))] IFeatureClass polygonClass,
+			[Doc(nameof(DocStrings.QaMinIntersect_polygonClass))] IReadOnlyFeatureClass polygonClass,
 			[Doc(nameof(DocStrings.QaMinIntersect_limit))] double limit)
 			: this(new[] {polygonClass}, limit) { }
 
-		protected override int FindErrors(IRow row1, int tableIndex1,
-		                                  IRow row2, int tableIndex2)
+		protected override int FindErrors(IReadOnlyRow row1, int tableIndex1,
+										  IReadOnlyRow row2, int tableIndex2)
 		{
 			if (row1 == row2)
 			{
 				return NoError;
 			}
 
-			IGeometry shape1 = ((IFeature) row1).Shape;
-			IGeometry shape2 = ((IFeature) row2).Shape;
+			IGeometry shape1 = ((IReadOnlyFeature) row1).Shape;
+			IGeometry shape2 = ((IReadOnlyFeature) row2).Shape;
 
 			var intersection = ((ITopologicalOperator) shape1).Intersect(
 				                   shape2,
@@ -87,8 +89,8 @@ namespace ProSuite.QA.Tests
 		}
 
 		private int CheckIntersectionArea([NotNull] IGeometry intersection,
-		                                  [NotNull] IRow row1,
-		                                  [NotNull] IRow row2,
+		                                  [NotNull] IReadOnlyRow row1,
+		                                  [NotNull] IReadOnlyRow row2,
 		                                  [NotNull] IGeometry shape2)
 		{
 			if (intersection.IsEmpty)
@@ -111,12 +113,12 @@ namespace ProSuite.QA.Tests
 
 			string description = string.Format("Intersect area {0}",
 			                                   FormatAreaComparison(area, "<", _limit,
-			                                                        shape2.SpatialReference));
+				                                   shape2.SpatialReference));
 
-			return ReportError(description, intersection,
-			                   Codes[Code.SmallIntersectionArea],
-			                   TestUtils.GetShapeFieldName(row1),
-			                   row1, row2);
+			return ReportError(
+				description, InvolvedRowUtils.GetInvolvedRows(row1, row2),
+				intersection, Codes[Code.SmallIntersectionArea],
+				TestUtils.GetShapeFieldName(row1));
 		}
 	}
 }

@@ -1,8 +1,6 @@
 using System.Collections.Generic;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
@@ -10,6 +8,9 @@ using ProSuite.QA.Tests.SpatialRelations;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
 {
@@ -37,10 +38,10 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaIntersectionMatrixOther_0))]
 		public QaIntersectionMatrixOther(
 			[Doc(nameof(DocStrings.QaIntersectionMatrixOther_featureClasses))] [NotNull]
-			IList<IFeatureClass>
+			IList<IReadOnlyFeatureClass>
 				featureClasses,
 			[Doc(nameof(DocStrings.QaIntersectionMatrixOther_relatedClasses))] [NotNull]
-			IList<IFeatureClass>
+			IList<IReadOnlyFeatureClass>
 				relatedClasses,
 			[Doc(nameof(DocStrings.QaIntersectionMatrixOther_intersectionMatrix))] [NotNull]
 			string
@@ -50,10 +51,10 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaIntersectionMatrixOther_1))]
 		public QaIntersectionMatrixOther(
 				[Doc(nameof(DocStrings.QaIntersectionMatrixOther_featureClasses))] [NotNull]
-				IList<IFeatureClass>
+				IList<IReadOnlyFeatureClass>
 					featureClasses,
 				[Doc(nameof(DocStrings.QaIntersectionMatrixOther_relatedClasses))] [NotNull]
-				IList<IFeatureClass>
+				IList<IReadOnlyFeatureClass>
 					relatedClasses,
 				[Doc(nameof(DocStrings.QaIntersectionMatrixOther_intersectionMatrix))] [NotNull]
 				string
@@ -66,10 +67,10 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaIntersectionMatrixOther_2))]
 		public QaIntersectionMatrixOther(
 			[Doc(nameof(DocStrings.QaIntersectionMatrixOther_featureClass))] [NotNull]
-			IFeatureClass
+			IReadOnlyFeatureClass
 				featureClass,
 			[Doc(nameof(DocStrings.QaIntersectionMatrixOther_relatedClass))] [NotNull]
-			IFeatureClass
+			IReadOnlyFeatureClass
 				relatedClass,
 			[Doc(nameof(DocStrings.QaIntersectionMatrixOther_intersectionMatrix))] [NotNull]
 			string
@@ -79,10 +80,10 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaIntersectionMatrixOther_3))]
 		public QaIntersectionMatrixOther(
 			[Doc(nameof(DocStrings.QaIntersectionMatrixOther_featureClass))] [NotNull]
-			IFeatureClass
+			IReadOnlyFeatureClass
 				featureClass,
 			[Doc(nameof(DocStrings.QaIntersectionMatrixOther_relatedClass))] [NotNull]
-			IFeatureClass
+			IReadOnlyFeatureClass
 				relatedClass,
 			[Doc(nameof(DocStrings.QaIntersectionMatrixOther_intersectionMatrix))] [NotNull]
 			string
@@ -94,10 +95,10 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaIntersectionMatrixOther_4))]
 		public QaIntersectionMatrixOther(
 			[Doc(nameof(DocStrings.QaIntersectionMatrixOther_featureClasses))] [NotNull]
-			IList<IFeatureClass>
+			IList<IReadOnlyFeatureClass>
 				featureClasses,
 			[Doc(nameof(DocStrings.QaIntersectionMatrixOther_relatedClasses))] [NotNull]
-			IList<IFeatureClass>
+			IList<IReadOnlyFeatureClass>
 				relatedClasses,
 			[Doc(nameof(DocStrings.QaIntersectionMatrixOther_intersectionMatrix))] [NotNull]
 			string
@@ -119,8 +120,8 @@ namespace ProSuite.QA.Tests
 
 		#region Overrides of QaSpatialRelationOtherBase
 
-		protected override int FindErrors(IRow row1, int tableIndex1,
-		                                  IRow row2, int tableIndex2)
+		protected override int FindErrors(IReadOnlyRow row1, int tableIndex1,
+										  IReadOnlyRow row2, int tableIndex2)
 		{
 			Assert.ArgumentNotNull(row1, nameof(row1));
 			Assert.ArgumentNotNull(row2, nameof(row2));
@@ -130,8 +131,8 @@ namespace ProSuite.QA.Tests
 				return NoError;
 			}
 
-			var feature1 = (IFeature) row1;
-			var feature2 = (IFeature) row2;
+			var feature1 = (IReadOnlyFeature) row1;
+			var feature2 = (IReadOnlyFeature) row2;
 
 			// if the test is made from a To row to a From row, then the roles of the features must 
 			// be inverted
@@ -171,15 +172,16 @@ namespace ProSuite.QA.Tests
 				       : Codes[IntersectionMatrixIssueCodes.GeometriesIntersectWithMatrix];
 		}
 
-		protected override int FindErrorsNoRelated(IRow row)
+		protected override int FindErrorsNoRelated(IReadOnlyRow row)
 		{
-			IGeometry errorGeometry = ((IFeature) row).ShapeCopy;
+			IGeometry errorGeometry = ((IReadOnlyFeature) row).ShapeCopy;
 
 			const string description = "No intersection";
 
-			return ReportError(description, errorGeometry,
-			                   Codes[IntersectionMatrixIssueCodes.NoIntersection],
-			                   TestUtils.GetShapeFieldName(row), row);
+			return ReportError(
+				description, InvolvedRowUtils.GetInvolvedRows(row), errorGeometry,
+				Codes[IntersectionMatrixIssueCodes.NoIntersection],
+				TestUtils.GetShapeFieldName(row));
 		}
 	}
 }

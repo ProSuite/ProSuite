@@ -12,8 +12,22 @@ namespace ProSuite.DomainModel.Core.QA
 
 		public RowFilterDescriptor([NotNull] string name,
 		                           [NotNull] ClassDescriptor testClass,
-		                           int testConstructorId,
+		                           int constructorId,
 		                           string description = null)
-			: base(name, testClass, testConstructorId, description) { }
+			: base(name, testClass, constructorId, description) { }
+
+		#region Overrides of InstanceDescriptor
+
+		public override string TypeDisplayName => "Row Filter Descriptor";
+
+		public override InstanceConfiguration CreateConfiguration()
+		{
+			return new RowFilterConfiguration()
+			       {
+				       InstanceDescriptor = this
+			       };
+		}
+
+		#endregion
 	}
 }

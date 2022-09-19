@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
@@ -6,7 +7,7 @@ using ProSuite.Commons.AO.Geodatabase;
 namespace ProSuite.Commons.AO.Test.TestSupport
 {
 	public class ObjectClassMock : IObjectClass, ITable, IDataset, ISubtypes, IDatasetEdit,
-	                               IEquatable<IObjectClass>
+	                               IReadOnlyTable
 	{
 		private readonly FieldsMock _fieldsMock = new FieldsMock();
 		private const string _oidFieldName = "OBJECTID";
@@ -158,8 +159,10 @@ namespace ProSuite.Commons.AO.Test.TestSupport
 		}
 
 		string IDataset.Name => _name;
+		string IReadOnlyDataset.Name => _name;
 
 		IName IDataset.FullName => null;
+		IName IReadOnlyDataset.FullName => null;
 
 		string IDataset.BrowseName
 		{
@@ -180,6 +183,7 @@ namespace ProSuite.Commons.AO.Test.TestSupport
 		}
 
 		IWorkspace IDataset.Workspace => _workspaceMock;
+		IWorkspace IReadOnlyDataset.Workspace => _workspaceMock;
 
 		internal void SetWorkspace(WorkspaceMock workspaceMock)
 		{
@@ -198,6 +202,11 @@ namespace ProSuite.Commons.AO.Test.TestSupport
 		IRow ITable.CreateRow()
 		{
 			return CreateObject(GetNextOID());
+		}
+
+		IReadOnlyRow IReadOnlyTable.GetRow(int oid)
+		{
+			throw new NotImplementedException();
 		}
 
 		IRow ITable.GetRow(int OID)
@@ -225,7 +234,11 @@ namespace ProSuite.Commons.AO.Test.TestSupport
 			throw new NotImplementedException();
 		}
 
-		int ITable.RowCount(IQueryFilter QueryFilter)
+		int IReadOnlyTable.RowCount(IQueryFilter filter) => RowCount(filter);
+
+		int ITable.RowCount(IQueryFilter QueryFilter) => RowCount(QueryFilter);
+
+		private int RowCount(IQueryFilter QueryFilter)
 		{
 			if (RowCountResult.HasValue)
 			{
@@ -235,12 +248,26 @@ namespace ProSuite.Commons.AO.Test.TestSupport
 			throw new InvalidOperationException("No row count result specified for mock");
 		}
 
+		IEnumerable<IReadOnlyRow> IReadOnlyTable.EnumRows(IQueryFilter filter, bool recycle)
+		{
+			foreach (var row in new EnumCursor(this, filter, recycle))
+			{
+				if (row is IReadOnlyRow roRow)
+				{
+					yield return roRow;
+				}
+				else
+				{
+					throw new NotImplementedException();
+				}
+			}
+		}
+
 		ICursor ITable.Search(IQueryFilter QueryFilter, bool Recycling) =>
 			Search(QueryFilter, Recycling);
 
 		protected virtual ICursor Search(IQueryFilter QueryFilter, bool Recycling)
 			=> throw new NotImplementedException();
-
 
 		ICursor ITable.Update(IQueryFilter QueryFilter, bool Recycling)
 		{
@@ -354,6 +381,11 @@ namespace ProSuite.Commons.AO.Test.TestSupport
 		}
 
 		#endregion
+
+		public bool Equals(IReadOnlyTable otherTable)
+		{
+			return Equals(otherTable as IObjectClass);
+		}
 
 		protected bool Equals(ObjectClassMock other)
 		{

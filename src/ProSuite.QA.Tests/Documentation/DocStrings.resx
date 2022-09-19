@@ -788,7 +788,7 @@ Remark: The feature classes in 'polylineClasses' must have the same spatial refe
     <value>include z-coordinate for checking</value>
   </data>
   <data name="QaLineIntersectAngle_limit" xml:space="preserve">
-    <value>minimum permitted angle (in radians)</value>
+    <value>minimum permitted angle (in 'AngularUnit', default value of 'AngularUnit' is radian)</value>
   </data>
   <data name="QaLineIntersectAngle_polylineClasses" xml:space="preserve">
     <value>polyline or polygon feature classes</value>
@@ -866,7 +866,7 @@ if 'limit' &lt;= 0, only constraint is checked (in arbitrary order of the involv
     <value>polyline or polygon feature class</value>
   </data>
   <data name="QaMaxSlope_limit" xml:space="preserve">
-    <value>maximum slope (in radians)</value>
+    <value>maximum slope (in 'AngularUnit', default value of 'AngularUnit' is radian)</value>
   </data>
   <data name="QaMinAngle_0" xml:space="preserve">
     <value>Finds all pair of (From/To-) points in 'polylineClass' where the angle built by the lines is smaller than 'limit'</value>
@@ -880,7 +880,7 @@ Remark: The feature classes in 'polylineClasses' must have the same spatial refe
     <value>include z-coordinate for checking</value>
   </data>
   <data name="QaMinAngle_limit" xml:space="preserve">
-    <value>minimum angle (in radians)</value>
+    <value>minimum angle (in 'AngularUnit', default value of 'AngularUnit' is radian)</value>
   </data>
   <data name="QaMinAngle_polylineClass" xml:space="preserve">
     <value>polyline feature class</value>
@@ -1274,10 +1274,10 @@ The sort order must correspond with 'polylineClasses'.</value>
     <value>Finds all segments in 'featureClass' where the discretized second derivative of the slope angle exceeds 'limit'. This means that there are to abrupt changes in the slope angle.</value>
   </data>
   <data name="QaSmooth_featureClass" xml:space="preserve">
-    <value>polyline or polygon feature class with z-coorindates</value>
+    <value>polyline or polygon feature class with z-coordinates</value>
   </data>
   <data name="QaSmooth_limit" xml:space="preserve">
-    <value>the maximum permitted second derivative of the angle in radians</value>
+    <value>the maximum permitted second derivative of the angle (in 'AngularUnit', default value of 'AngularUnit' is radian)</value>
   </data>
   <data name="QaTrimmedTextFields_0" xml:space="preserve">
     <value>Finds rows with text fields having leading or trailing whitespace characters. All text fields of the table are checked. Fields with only whitespace characters are also reported.</value>
@@ -4720,18 +4720,6 @@ Can either be empty, have one value or have as many values as there are feature 
   <data name="QaGdbRelease_table" xml:space="preserve">
     <value>table to check</value>
   </data>
-  <data name="QaInteriorIntersectsOther_IgnoreArea" xml:space="preserve">
-    <value>Area feature class. Errors found that lie within any feature of 'IgnoreArea' are not reported.
-A sql-constraint can be provided to this feature class.</value>
-  </data>
-  <data name="QaIntersectsOther_IgnoreArea" xml:space="preserve">
-    <value>Area feature class. Errors found that lie within any feature of 'IgnoreArea' are not reported.
-A sql-constraint can be provided to this feature class.</value>
-  </data>
-  <data name="QaNeighbourAreas_IgnoreArea" xml:space="preserve">
-    <value>Area feature class. Errors found that lie within any feature of 'IgnoreArea' are not reported.
-A sql-constraint can be provided to this feature class.</value>
-  </data>
   <data name="QaGroupConstraints_minDistinctCount" xml:space="preserve">
     <value>The minimum number of distinct values returned from 'distinctExpression', per group value defined by 'groupByExpression'</value>
   </data>
@@ -4788,136 +4776,6 @@ Remark: All feature classes in 'featureClasses' must have the same spatial refer
 For each feature class in 'polylineClasses', the ignore field list must be defined as a string of fields separated by ','.
 The sort order must correspond with 'polylineClasses'.</value>
   </data>
-  <data name="TrDissolve_0" xml:space="preserve">
-    <value>transformes line feature class 'featureclass' by dissolving connected features</value>
-  </data>
-  <data name="TrDissolve_Attributes" xml:space="preserve">
-    <value>Attributes to be transfered to transformed feature class. Must be used with alias and group expression, i.e. 'MAX(LAUF_NR) AS MAX_LAUF_NR'.
-In the resulting feature class, only attributes defined in 'Attributes' or 'GroupBy' can be used.</value>
-  </data>
-  <data name="TrDissolve_Constraint" xml:space="preserve">
-    <value>Only feature that fulfill constraint between each other are dissolved</value>
-  </data>
-  <data name="TrDissolve_CreateMultipartFeatures" xml:space="preserve">
-    <value>(Default = false)
-- false: create separate features when 3 or more features are connected. Only connections with 2 features are dissolved.
-- true: create multpart features for all connected source features.</value>
-  </data>
-  <data name="TrDissolve_featureclass" xml:space="preserve">
-    <value>Line feature class to dissolve</value>
-  </data>
-  <data name="TrDissolve_GroupBy" xml:space="preserve">
-    <value>Group features by 'GroupBy' before dissolving
-In the resulting feature class, only attributes defined in 'Attributes' or 'GroupBy' can be used.</value>
-  </data>
-  <data name="TrDissolve_NeighborSearchOption" xml:space="preserve">
-    <value>(Default = Tile)
--Tile: dissolve features only within the current tile
-- All: if features start/end outside tile, load additional connected features (recursively)</value>
-  </data>
-  <data name="TrDissolve_SearchDistance" xml:space="preserve">
-    <value>Additonal distance to cache 'featureclass' features per tile</value>
-  </data>
-  <data name="TrFootprint_0" xml:space="preserve">
-    <value>Transforms multipatches to polygons by taking their footprints</value>
-  </data>
-  <data name="TrFootprint_multipatchClass" xml:space="preserve">
-    <value>multipatch feature class to transform</value>
-  </data>
-  <data name="TrGeometryToPoints_0" xml:space="preserve">
-    <value>Transforms geometries to points. The transformed feature class has the attribute PartIndex and VertexIndex. These fields index from which polygon part the transformed polygon part was generated</value>
-  </data>
-  <data name="TrGeometryToPoints_component" xml:space="preserve">
-    <value>GeometryComponent to extract</value>
-  </data>
-  <data name="TrGeometryToPoints_featureClass" xml:space="preserve">
-    <value>multipoint, line, polygon or multpatch class to transform</value>
-  </data>
-  <data name="TrLineToPoly_0" xml:space="preserve">
-    <value>Transforms closed lines of 'closedLineClass' to polygons</value>
-  </data>
-  <data name="TrLineToPoly_closedLineClass" xml:space="preserve">
-    <value>line feature class to transform</value>
-  </data>
-  <data name="TrLineToPoly_PolylineUsage" xml:space="preserve">
-    <value>Defines how to handle not closed lines
-- AsPolygonIfClosedElseIgnore (default) : ignore not closed lines</value>
-  </data>
-  <data name="TrMultilineToLine_0" xml:space="preserve">
-    <value>Transforms multi-lines to single lines. The transformed feature class has the attribute PartIndex. This field index from which polygon part the transformed polygon part was generated</value>
-  </data>
-  <data name="TrMultilineToLine_featureClass" xml:space="preserve">
-    <value>line feature class to transform</value>
-  </data>
-  <data name="TrMultipolygonToPolygon_0" xml:space="preserve">
-    <value>Transforms multi-polygons to single polygons. The transformed feature class has the attributes OuterRingIndex and InnerRingIndex. These fields index from which polygon part the transformed polygon part was generated</value>
-  </data>
-  <data name="TrMultipolygonToPolygon_featureClass" xml:space="preserve">
-    <value>polygon feature class to transform</value>
-  </data>
-  <data name="TrMultipolygonToPolygon_TransformedParts" xml:space="preserve">
-    <value>Default = SinglePolygons
--SinglePolygon: converts multi polygon to single polygons (Remark: InnerRingIndex = -2)
--OuterRings: converts all out rings to polygons (Remark: InnerRingIndex = -1)
--InnerRings: converts all inner rings to polygons
--AllRings: converts all rings to polygons (Remark: polygons generated from outer rings: InnerRingIndex = -1)</value>
-  </data>
-  <data name="TrPolyToLine_0" xml:space="preserve">
-    <value>Transform polygon to line by taking the boundary of the polygons in 'featureClass'</value>
-  </data>
-  <data name="TrPolyToLine_featureClass" xml:space="preserve">
-    <value>polygon feature class</value>
-  </data>
-  <data name="TrSpatialJoin_0" xml:space="preserve">
-    <value>Transforms features of 't0' and features of 't1' to features, with shape of 't0' if they intersect.</value>
-  </data>
-  <data name="TrSpatialJoin_Grouped" xml:space="preserve">
-    <value>Default = false.
-If false: create one feature for each (t0,t1)-feature pair that intersects
-if true: create one feature for each feature in 't0', that intersects any feature of 't1'</value>
-  </data>
-  <data name="TrSpatialJoin_t0" xml:space="preserve">
-    <value>Feature class that provides the shape for the new features</value>
-  </data>
-  <data name="TrSpatialJoin_T0Attributes" xml:space="preserve">
-    <value>Attributes of 't0' that are transfered to transformed feature class. Can be used with alias, i.e. 'TOPGIS_TLM.TLM_GEWAESSER_LAUF.LAUF_NR AS T1_LAUF_NR'.
-In the resulting feature class, only attributes defined in T0Attributes or T1Attributes can be used. </value>
-  </data>
-  <data name="TrSpatialJoin_t1" xml:space="preserve">
-    <value>Feature class to join</value>
-  </data>
-  <data name="TrSpatialJoin_T1Attributes" xml:space="preserve">
-    <value>See T0Attributes.
-If 'Grouped'=true, the attributes must be defined by Group-Expressions like COUNT(),MIN(),MAX()... </value>
-  </data>
-  <data name="TrTableJoin_0" xml:space="preserve">
-    <value>Transforms table 't0' and table 't1', which must be related by 'relationName', to a joined table</value>
-  </data>
-  <data name="TrTableJoin_joinType" xml:space="preserve">
-    <value>JoinType</value>
-  </data>
-  <data name="TrTableJoin_relationName" xml:space="preserve">
-    <value>name of existing relation between 't0' and 't1'</value>
-  </data>
-  <data name="TrTableJoin_t0" xml:space="preserve">
-    <value>table to join with 't1'</value>
-  </data>
-  <data name="TrTableJoin_t1" xml:space="preserve">
-    <value>table to join with 't0'</value>
-  </data>
-  <data name="TrGeometryTransform_Attributes" xml:space="preserve">
-    <value>Attributes that are copied from source featureclass to resulting featureclass</value>
-  </data>
-  <data name="TrSpatialJoin_OuterJoin" xml:space="preserve">
-    <value>Default = false.Left outer Join.
-If true: transform features from t0-features that have no spatial relation to any feature of t1
-If false: ignore features from t0 that have no spatial relation to any feature of t1</value>
-  </data>
-  <data name="TrSpatialJoin_Constraint" xml:space="preserve">
-    <value>Constraint on spatially joined features. Only spatially joined feature pairs that fulfill the constraint will be transformed to resulting features.
-The involved features are aliased using "T0" and T1".
-Example: T0.Level = T1.Level</value>
-  </data>
   <data name="QaSchemaFieldPropertiesFromTable_0" xml:space="preserve">
     <value>Verifies that fields have expected properties based on a list of field specifications defined in another table. The field specifications table can be filtered to a subset of rows relevant for the verified table.</value>
   </data>
@@ -4929,5 +4787,17 @@ Example: T0.Level = T1.Level</value>
   </data>
   <data name="QaSchemaFieldPropertiesFromTable_table" xml:space="preserve">
     <value>The table to check the field properties in.</value>
+  </data>
+  <data name="QaLineIntersectAngle_AngularUnit" xml:space="preserve">
+    <value>Unit of 'limit', default = 'radian'.</value>
+  </data>
+  <data name="QaMinAngle_AngularUnit" xml:space="preserve">
+    <value>Unit of 'limit', default = 'radian'.</value>
+  </data>
+  <data name="QaSmooth_AngularUnit" xml:space="preserve">
+    <value>Unit of 'limit', default = 'radian'.</value>
+  </data>
+  <data name="QaMaxSlope_AngularUnit" xml:space="preserve">
+    <value>Unit of 'limit', default = 'radian'.</value>
   </data>
 </root>

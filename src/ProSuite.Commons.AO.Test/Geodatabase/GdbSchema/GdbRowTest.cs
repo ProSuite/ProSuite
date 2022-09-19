@@ -31,7 +31,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase.GdbSchema
 		[Test]
 		public void CanCreateFeatureAndComReleaseShape()
 		{
-			IFeatureClass schema = CreateSchema();
+			GdbFeatureClass schema = CreateSchema();
 
 			IGeometry shape =
 				GeometryFactory.CreatePoint(2600000, 1200000,
@@ -72,7 +72,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase.GdbSchema
 			// NOTE regarding PropertySetValueList:
 			// Putting the shape into a NEW propertySet each time eats half of the performance
 			// The other half is probably the instantiation of the property set.
-			IFeatureClass schema = CreateSchema();
+			GdbFeatureClass schema = CreateSchema();
 
 			IGeometry shape =
 				GeometryFactory.CreatePoint(2600000, 1200000,
@@ -120,7 +120,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase.GdbSchema
 		{
 			// This unit test shows that getting the object from the property set is
 			// the same and pretty fast.
-			IFeatureClass schema = CreateSchema();
+			GdbFeatureClass schema = CreateSchema();
 
 			IGeometry shape =
 				GeometryFactory.CreatePoint(2600000, 1200000,
@@ -175,7 +175,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase.GdbSchema
 		[Test]
 		public void CanRecycleRow()
 		{
-			IFeatureClass schema = CreateSchema();
+			GdbFeatureClass schema = CreateSchema();
 
 			IGeometry shape =
 				GeometryFactory.CreatePoint(2600000, 1200000,
@@ -228,7 +228,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase.GdbSchema
 		}
 
 		private static GdbFeature CreateGdbFeature(int oid,
-		                                           IFeatureClass schema,
+		                                           GdbFeatureClass schema,
 		                                           IGeometry shape,
 		                                           IValueList valueListImpl)
 		{
@@ -249,7 +249,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase.GdbSchema
 			feature.set_Value(5, "bla");
 		}
 
-		private static IFeatureClass CreateSchema()
+		private static GdbFeatureClass CreateSchema()
 		{
 			GdbFeatureClass gdbFeatureClass =
 				new GdbFeatureClass(41, "TESTABLE", esriGeometryType.esriGeometryPoint,

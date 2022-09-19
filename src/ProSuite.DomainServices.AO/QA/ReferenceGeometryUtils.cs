@@ -22,7 +22,7 @@ namespace ProSuite.DomainServices.AO.QA
 		private const string _referencedGeometryInfo = "(referenced geometry stored)";
 
 		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+			new Msg(MethodBase.GetCurrentMethod()?.DeclaringType);
 
 		internal static string ReferencedGeometryInfo => _referencedGeometryInfo;
 
@@ -67,7 +67,7 @@ namespace ProSuite.DomainServices.AO.QA
 
 		[NotNull]
 		internal static HashSet<int> GetOidsByRelatedGeometry(
-			[NotNull] ITable table,
+			[NotNull] IReadOnlyTable table,
 			[NotNull] IEnumerable<IList<IRelationshipClass>> relClassChains,
 			[NotNull] IGeometry testPerimeter,
 			[NotNull] ITest testWithTable)
@@ -78,13 +78,27 @@ namespace ProSuite.DomainServices.AO.QA
 
 			string whereClause = string.Empty;
 			string postfixClause = string.Empty;
-			string tableName = DatasetUtils.GetName(table);
+			string tableName = table.Name;
 
 			Stopwatch watch =
 				_msg.DebugStartTiming("Getting row OIDs by related geometry for {0}",
 				                      tableName);
 
 			var result = new HashSet<int>();
+
+			IObjectClass objectClass = table as IObjectClass;
+
+			if (objectClass == null)
+			{
+				ReadOnlyTable roTable = table as ReadOnlyTable;
+
+				if (roTable != null)
+				{
+					objectClass = (IObjectClass) roTable.BaseTable;
+				}
+			}
+
+			Assert.NotNull(objectClass, "Unknown IReadOnlyTable implementation");
 
 			foreach (IList<IRelationshipClass> relClassChain in relClassChains)
 			{
@@ -94,7 +108,7 @@ namespace ProSuite.DomainServices.AO.QA
 				// - if only the OID plus the Shape field of the involved feature class are in the subfields, then
 				//   in those same cases a "Shape Integrity Error" exception is thrown.
 				foreach (FieldMappingRowProxy row in
-					GdbQueryUtils.GetRowProxys((IObjectClass) table,
+					GdbQueryUtils.GetRowProxys(objectClass,
 					                           testPerimeter,
 					                           whereClause,
 					                           relClassChain,

@@ -7,6 +7,7 @@ using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.AO.Test.TestSupport;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests.Test
 {
@@ -42,8 +43,9 @@ namespace ProSuite.QA.Tests.Test
 			IFeature row = featureClassMock.CreateFeature(construction.MultiPatch);
 
 			const bool allowIntersectionsForDifferentPointIds = true;
-			var test = new QaMpNonIntersectingRingFootprints(featureClassMock,
-			                                                 allowIntersectionsForDifferentPointIds);
+			var test = new QaMpNonIntersectingRingFootprints(
+				ReadOnlyTableFactory.Create(featureClassMock),
+				allowIntersectionsForDifferentPointIds);
 			var runner = new QaTestRunner(test);
 			runner.Execute(row);
 
@@ -68,8 +70,9 @@ namespace ProSuite.QA.Tests.Test
 			IFeature row = featureClassMock.CreateFeature(construction.MultiPatch);
 
 			const bool allowIntersectionsForDifferentPointIds = true;
-			var test = new QaMpNonIntersectingRingFootprints(featureClassMock,
-			                                                 allowIntersectionsForDifferentPointIds);
+			var test = new QaMpNonIntersectingRingFootprints(
+				ReadOnlyTableFactory.Create(featureClassMock),
+				allowIntersectionsForDifferentPointIds);
 			var runner = new QaTestRunner(test);
 			runner.Execute(row);
 
@@ -99,8 +102,9 @@ namespace ProSuite.QA.Tests.Test
 			IFeature row = featureClassMock.CreateFeature(construction.MultiPatch);
 
 			const bool allowIntersectionsForDifferentPointIds = true;
-			var test = new QaMpNonIntersectingRingFootprints(featureClassMock,
-			                                                 allowIntersectionsForDifferentPointIds);
+			var test = new QaMpNonIntersectingRingFootprints(
+				ReadOnlyTableFactory.Create(featureClassMock),
+				allowIntersectionsForDifferentPointIds);
 			var runner = new QaTestRunner(test);
 			runner.Execute(row);
 
@@ -130,8 +134,9 @@ namespace ProSuite.QA.Tests.Test
 			IFeature row = featureClassMock.CreateFeature(construction.MultiPatch);
 
 			const bool allowIntersectionsForDifferentPointIds = true;
-			var test = new QaMpNonIntersectingRingFootprints(featureClassMock,
-			                                                 allowIntersectionsForDifferentPointIds);
+			var test = new QaMpNonIntersectingRingFootprints(
+				ReadOnlyTableFactory.Create(featureClassMock),
+				allowIntersectionsForDifferentPointIds);
 			var runner = new QaTestRunner(test);
 			runner.Execute(row);
 
@@ -161,8 +166,9 @@ namespace ProSuite.QA.Tests.Test
 
 			const bool allowIntersectionsForDifferentPointIds = false;
 			// don't allow even for different point ids
-			var test = new QaMpNonIntersectingRingFootprints(featureClassMock,
-			                                                 allowIntersectionsForDifferentPointIds);
+			var test = new QaMpNonIntersectingRingFootprints(
+				ReadOnlyTableFactory.Create(featureClassMock),
+				allowIntersectionsForDifferentPointIds);
 			var runner = new QaTestRunner(test);
 			runner.Execute(row);
 
@@ -189,8 +195,9 @@ namespace ProSuite.QA.Tests.Test
 			IFeature row = featureClassMock.CreateFeature(construction.MultiPatch);
 
 			const bool allowIntersectionsForDifferentPointIds = true;
-			var test = new QaMpNonIntersectingRingFootprints(featureClassMock,
-			                                                 allowIntersectionsForDifferentPointIds);
+			var test = new QaMpNonIntersectingRingFootprints(
+				ReadOnlyTableFactory.Create(featureClassMock),
+				allowIntersectionsForDifferentPointIds);
 			var runner = new QaTestRunner(test);
 			runner.Execute(row);
 
@@ -216,8 +223,9 @@ namespace ProSuite.QA.Tests.Test
 			IFeature row1 = featureClassMock.CreateFeature(construction.MultiPatch);
 
 			const bool allowIntersectionsForDifferentPointIds = true;
-			var test = new QaMpNonIntersectingRingFootprints(featureClassMock,
-			                                                 allowIntersectionsForDifferentPointIds);
+			var test = new QaMpNonIntersectingRingFootprints(
+				ReadOnlyTableFactory.Create(featureClassMock),
+				allowIntersectionsForDifferentPointIds);
 			var runner = new QaTestRunner(test);
 			runner.Execute(row1);
 
@@ -244,8 +252,9 @@ namespace ProSuite.QA.Tests.Test
 			IFeature row = featureClassMock.CreateFeature(construction.MultiPatch);
 
 			const bool allowIntersectionsForDifferentPointIds = true;
-			var test = new QaMpNonIntersectingRingFootprints(featureClassMock,
-			                                                 allowIntersectionsForDifferentPointIds);
+			var test = new QaMpNonIntersectingRingFootprints(
+				ReadOnlyTableFactory.Create(featureClassMock),
+				allowIntersectionsForDifferentPointIds);
 			var runner = new QaTestRunner(test);
 			runner.Execute(row);
 

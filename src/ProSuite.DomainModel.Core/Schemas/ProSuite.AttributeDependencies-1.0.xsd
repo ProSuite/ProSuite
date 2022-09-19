@@ -1,0 +1,53 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<xs:schema targetNamespace="urn:EsriDE.ProSuite.AttributeDependencies-1.0" elementFormDefault="qualified"
+           xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="urn:EsriDE.ProSuite.AttributeDependencies-1.0">
+  <xs:element name="XmlAttributeDependenciesDocument" nillable="true" type="XmlAttributeDependenciesDocument" />
+  <xs:complexType name="XmlAttributeDependenciesDocument">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="1" name="AttributeDependencies" type="ArrayOfXmlAttributeDependency" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="ArrayOfXmlAttributeDependency">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="unbounded" name="AttributeDependency" nillable="true"
+                  type="XmlAttributeDependency" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="XmlAttributeDependency">
+    <xs:sequence>
+      <xs:element minOccurs="1" maxOccurs="1" name="ModelReference" type="XmlNameReference" />
+      <xs:element minOccurs="1" maxOccurs="1" name="SourceAttributes" type="ArrayOfXmlSourceAttribute" />
+      <xs:element minOccurs="1" maxOccurs="1" name="TargetAttributes" type="ArrayOfXmlTargetAttribute" />
+      <xs:element minOccurs="1" maxOccurs="1" name="AttributeValueMappings" type="ArrayOfXmlAttributeValueMapping" />
+    </xs:sequence>
+    <xs:attribute name="dataset" type="xs:string" use="required" />
+  </xs:complexType>
+  <xs:complexType name="XmlNameReference">
+    <xs:attribute name="name" type="xs:string" use="required" />
+  </xs:complexType>
+  <xs:complexType name="ArrayOfXmlSourceAttribute">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="unbounded" name="SourceAttribute" nillable="true" type="XmlAttribute" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="ArrayOfXmlTargetAttribute">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="unbounded" name="TargetAttribute" nillable="true" type="XmlAttribute" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="XmlAttribute">
+    <xs:attribute name="name" type="xs:string" use="required" />
+  </xs:complexType>
+  <xs:complexType name="ArrayOfXmlAttributeValueMapping">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="unbounded" name="AttributeValueMapping" nillable="true"
+                  type="XmlAttributeValueMapping" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="XmlAttributeValueMapping">
+    <xs:attribute name="sourceText" type="xs:string" use="required" />
+    <xs:attribute name="targetText" type="xs:string" use="required" />
+    <xs:attribute name="description" type="xs:string" />
+  </xs:complexType>
+</xs:schema>

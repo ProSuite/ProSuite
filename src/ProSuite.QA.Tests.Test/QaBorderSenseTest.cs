@@ -43,15 +43,13 @@ namespace ProSuite.QA.Tests.Test
 			IFeatureClass featureClass = workspace.OpenFeatureClass(featureClassName);
 
 			// expect counter-clockwise: 0 errors
-			var runnerCounterClockwise = new QaContainerTestRunner(1000,
-				new QaBorderSense(
-					featureClass, false));
+			var runnerCounterClockwise = new QaContainerTestRunner(
+				1000, new QaBorderSense(ReadOnlyTableFactory.Create(featureClass), false));
 			Assert.AreEqual(0, runnerCounterClockwise.Execute());
 
 			// expect clockwise: 1 error
-			var runnerClockwise = new QaContainerTestRunner(1000,
-			                                                new QaBorderSense(featureClass,
-				                                                true));
+			var runnerClockwise = new QaContainerTestRunner(
+				1000, new QaBorderSense(ReadOnlyTableFactory.Create(featureClass), true));
 			Assert.AreEqual(1, runnerClockwise.Execute());
 		}
 
@@ -84,7 +82,7 @@ namespace ProSuite.QA.Tests.Test
 
 			// expect clockwise: 1 error
 			var runnerClockwise = new QaContainerTestRunner(
-				1000, new QaBorderSense(featureClass, true));
+				1000, new QaBorderSense(ReadOnlyTableFactory.Create(featureClass), true));
 
 			// errors outside of checked area
 			Assert.AreEqual(
@@ -125,12 +123,12 @@ namespace ProSuite.QA.Tests.Test
 
 			// expect counter-clockwise: 0 errors
 			var runnerCounterClockwise = new QaContainerTestRunner(
-				1000, new QaBorderSense(featureClass, false));
+				1000, new QaBorderSense(ReadOnlyTableFactory.Create(featureClass), false));
 			Assert.AreEqual(0, runnerCounterClockwise.Execute());
 
 			// expect clockwise: 1 error
 			var runnerClockwise = new QaContainerTestRunner(
-				1000, new QaBorderSense(featureClass, true));
+				1000, new QaBorderSense(ReadOnlyTableFactory.Create(featureClass), true));
 
 			Assert.AreEqual(1, runnerClockwise.Execute());
 		}

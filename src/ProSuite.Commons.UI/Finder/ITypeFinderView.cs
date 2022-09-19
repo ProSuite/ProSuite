@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Windows.Forms;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.UI.ScreenBinding.Lists;
 
 namespace ProSuite.Commons.UI.Finder
 {

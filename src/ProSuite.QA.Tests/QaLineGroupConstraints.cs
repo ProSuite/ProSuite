@@ -5,7 +5,6 @@ using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.PolygonGrower;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.QA.Tests.Network;
@@ -13,6 +12,9 @@ using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Core;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
 {
@@ -156,7 +158,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaLineGroupConstraints_0))]
 		public QaLineGroupConstraints(
 			[Doc(nameof(DocStrings.QaLineGroupConstraints_networkFeatureClasses))] [NotNull]
-			IList<IFeatureClass> networkFeatureClasses,
+			IList<IReadOnlyFeatureClass> networkFeatureClasses,
 			[Doc(nameof(DocStrings.QaLineGroupConstraints_minGap))] double minGap,
 			[Doc(nameof(DocStrings.QaLineGroupConstraints_minGroupLength))]
 			double minGroupLength,
@@ -164,7 +166,7 @@ namespace ProSuite.QA.Tests
 			double minDangleLength,
 			[Doc(nameof(DocStrings.QaLineGroupConstraints_groupBy))] [NotNull]
 			IList<string> groupBy)
-			: base(CastToTables((IEnumerable<IFeatureClass>) networkFeatureClasses), groupBy)
+			: base(CastToTables((IEnumerable<IReadOnlyFeatureClass>) networkFeatureClasses), groupBy)
 		{
 			Assert.ArgumentCondition(minGap >= 0, "Invalid minGap value: {0}", minGap);
 			Assert.ArgumentCondition(minGroupLength >= 0, "Invalid minGroupLength value: {0}",
@@ -1062,7 +1064,7 @@ namespace ProSuite.QA.Tests
 				ISpatialFilter filter = _endFilters[tableIndex];
 				filter.Geometry = search;
 
-				foreach (IRow row in Search(InvolvedTables[tableIndex],
+				foreach (IReadOnlyRow row in Search(InvolvedTables[tableIndex],
 				                            filter,
 				                            _endHelpers[tableIndex]))
 				{
@@ -1520,13 +1522,12 @@ namespace ProSuite.QA.Tests
 		private int ReportError([NotNull] NearError error)
 		{
 			return ReportError(
-				error.Description, error.Geometry,
-				error.IssueCode, null,
-				GetInvolvedRows(error));
+				error.Description, GetInvolvedRows(error), error.Geometry,
+				error.IssueCode, null);
 		}
 
 		[NotNull]
-		private IEnumerable<InvolvedRow> GetInvolvedRows([NotNull] NearError error)
+		private InvolvedRows GetInvolvedRows([NotNull] NearError error)
 		{
 			return GetUniqueInvolvedRows(new[] {error.DirectedRow.Row, error.Near});
 		}
@@ -1593,9 +1594,8 @@ namespace ProSuite.QA.Tests
 				sumLength, "<", _minGroupLength, joinedLine.SpatialReference).Trim();
 			string description = string.Format("Group length too small: {0}", comparison);
 
-			return ReportError(description, joinedLine,
-			                   LocalCodes[Code.GroupTooSmall], null,
-			                   GetUniqueInvolvedRows(involved));
+			return ReportError(description, GetUniqueInvolvedRows(involved), joinedLine,
+			                   LocalCodes[Code.GroupTooSmall], null);
 		}
 
 		private int CheckDangle([NotNull] NodesDirectedRow endRow,
@@ -1717,8 +1717,8 @@ namespace ProSuite.QA.Tests
 				joinedLine.SpatialReference).Trim();
 			string description = string.Format("{0}: {1}", baseDescription, comparison);
 
-			return ReportError(description, joinedLine, issueCode, null,
-			                   GetUniqueInvolvedRows(involved));
+			return ReportError(description, GetUniqueInvolvedRows(involved), joinedLine,
+			                   issueCode, null);
 		}
 
 		private static double GetLength([NotNull] IEnumerable<NodesDirectedRow> leaf,
@@ -1780,12 +1780,12 @@ namespace ProSuite.QA.Tests
 
 			public int TableIndex { get; }
 
-			public IRow GetRow(IList<ITable> tableIndexTables)
+			public IReadOnlyRow GetRow(IList<IReadOnlyTable> tableIndexTables)
 			{
 				return tableIndexTables[TableIndex].GetRow(RowOID);
 			}
 
-			public IRow CachedRow => null;
+			public IReadOnlyRow CachedRow => null;
 
 			public int RowOID { get; }
 		}

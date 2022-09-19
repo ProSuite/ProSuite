@@ -131,7 +131,8 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 			// exclude qcon's based on deleted datasets
 			using (ISession session = OpenSession(true))
 			{
-				IList<int> deletedDatasetParameterIds = GetDeletedDatasetParameterIds(session);
+				IList<int> deletedDatasetParameterIds =
+					DatasetParameterFetchingUtils.GetDeletedDatasetParameterIds(session);
 
 				if (deletedDatasetParameterIds.Count == 0)
 				{
@@ -177,7 +178,8 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 		{
 			using (ISession session = OpenSession(true))
 			{
-				IList<int> deletedDatasetParameterIds = GetDeletedDatasetParameterIds(session);
+				IList<int> deletedDatasetParameterIds =
+					DatasetParameterFetchingUtils.GetDeletedDatasetParameterIds(session);
 
 				if (deletedDatasetParameterIds.Count == 0)
 				{
@@ -245,7 +247,7 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 						.ToDictionary(qcon => qcon.Id);
 
 				foreach (KeyValuePair<int, List<DatasetTestParameterValue>> pair in
-					GetDatasetValuesByConditionId(category, session))
+				         GetDatasetValuesByConditionId(category, session))
 				{
 					int conditionId = pair.Key;
 					List<DatasetTestParameterValue> values = pair.Value;
@@ -307,11 +309,36 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 			}
 		}
 
+		public IList<QualityCondition> GetReferencingConditions(
+			IssueFilterConfiguration issueFilter)
+		{
+			// Issue filters are only referenced directly by conditions
+			if (! issueFilter.IsPersistent)
+			{
+				return new List<QualityCondition>(0);
+			}
+
+			using (ISession session = OpenSession(true))
+			{
+				IssueFilterConfiguration issueFilterAlias = null;
+				var result =
+					session.QueryOver<QualityCondition>()
+					       //.Where(categoryFilter)
+					       .JoinAlias(qc => qc.IssueFilterConfigurations,
+					                  () => issueFilterAlias)
+					       .Where(() => issueFilterAlias.Id == issueFilter.Id)
+					       .List();
+
+				return result;
+			}
+		}
+
 		[NotNull]
 		private static HashSet<int> GetQualityConditionIdsInvolvingDeletedDatasets(
 			[NotNull] ISession session)
 		{
-			IList<int> deletedDatasetParameterIds = GetDeletedDatasetParameterIds(session);
+			IList<int> deletedDatasetParameterIds =
+				DatasetParameterFetchingUtils.GetDeletedDatasetParameterIds(session);
 
 			var result = new HashSet<int>();
 
@@ -358,11 +385,23 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 		[NotNull]
 		private static HashSet<int> GetIdsInvolvingDeletedDatasets([NotNull] ISession session)
 		{
-			IList<int> datasetParameterIds = GetDeletedDatasetParameterIds(session);
+			IList<int> datasetParameterIds =
+				DatasetParameterFetchingUtils.GetDeletedDatasetParameterIds(session);
 
-			return GetQualityConditionIdsForParameterIds(session,
-			                                             datasetParameterIds,
-			                                             _maxInParameterCount);
+			// New implementation to be tested
+			HashSet<int> queryOverResult =
+				DatasetParameterFetchingUtils
+					.GetInstanceConfigurationIdsForParameterIds<QualityCondition>(
+						session, datasetParameterIds, _maxInParameterCount);
+
+			HashSet<int> originalResult =
+				GetQualityConditionIdsForParameterIds(session, datasetParameterIds,
+				                                      _maxInParameterCount);
+
+			Assert.AreEqual(originalResult.Count, queryOverResult.Count,
+			                "Implementation change results in result difference");
+
+			return originalResult;
 		}
 
 		[NotNull]
@@ -503,19 +542,6 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 		}
 
 		[NotNull]
-		private static IList<int> GetDeletedDatasetParameterIds([NotNull] ISession session)
-		{
-			// get the list of test parameter ids based on deleted datasets
-			string hql = string.Format("select dsParam.Id " +
-			                           "  from DatasetTestParameterValue dsParam" +
-			                           " where dsParam.DatasetValue is not null" +
-			                           "   and dsParam.DatasetValue.Deleted = {0}",
-			                           GetHqlLiteral(true, session));
-
-			return session.CreateQuery(hql).List<int>();
-		}
-
-		[NotNull]
 		private static HashSet<int> GetQualityConditionIdsForParameterIds(
 			[NotNull] ISession session,
 			[NotNull] ICollection<int> parameterIds,
@@ -533,7 +559,7 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 
 			var first = true;
 			foreach (IList<int> subList in
-				CollectionUtils.Split(parameterIds, maxInParameterCount))
+			         CollectionUtils.Split(parameterIds, maxInParameterCount))
 			{
 				IList<int> qualityConditionIds =
 					session.CreateQuery(

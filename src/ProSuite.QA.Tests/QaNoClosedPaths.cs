@@ -1,13 +1,14 @@
 using System.Runtime.InteropServices;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
 {
@@ -37,8 +38,8 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaNoClosedPaths_0))]
 		public QaNoClosedPaths(
 			[Doc(nameof(DocStrings.QaNoClosedPaths_polylineClass))] [NotNull]
-			IFeatureClass polyLineClass)
-			: base((ITable) polyLineClass)
+			IReadOnlyFeatureClass polyLineClass)
+			: base(polyLineClass)
 		{
 			Assert.ArgumentNotNull(polyLineClass, nameof(polyLineClass));
 			Assert.ArgumentCondition(
@@ -58,9 +59,9 @@ namespace ProSuite.QA.Tests
 			return false;
 		}
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
-			var feature = row as IFeature;
+			var feature = row as IReadOnlyFeature;
 			if (feature == null)
 			{
 				return NoError;
@@ -92,12 +93,12 @@ namespace ProSuite.QA.Tests
 			return errorCount;
 		}
 
-		private int CheckCurve([NotNull] ICurve curve, [NotNull] IRow row)
+		private int CheckCurve([NotNull] ICurve curve, [NotNull] IReadOnlyRow row)
 		{
 			return ! curve.IsEmpty && curve.IsClosed
-				       ? ReportError("Closed path", curve.FromPoint,
-				                     Codes[Code.ClosedPath], _shapeFieldName,
-				                     row)
+				       ? ReportError(
+					       "Closed path", InvolvedRowUtils.GetInvolvedRows(row), curve.FromPoint,
+				                     Codes[Code.ClosedPath], _shapeFieldName)
 				       : NoError;
 		}
 	}

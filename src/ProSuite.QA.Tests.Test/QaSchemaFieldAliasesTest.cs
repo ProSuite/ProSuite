@@ -45,8 +45,9 @@ namespace ProSuite.QA.Tests.Test
 			const bool requireUniqueAliasNames = true;
 			const bool allowCustomSystemFieldAlias = true;
 			var runner = new QaTestRunner(
-				new QaSchemaFieldAliases(table, 30, ExpectedCase.Mixed,
-				                         requireUniqueAliasNames, allowCustomSystemFieldAlias));
+				new QaSchemaFieldAliases(
+					ReadOnlyTableFactory.Create(table), 30, ExpectedCase.Mixed,
+					requireUniqueAliasNames, allowCustomSystemFieldAlias));
 			runner.Execute();
 
 			NoErrors(runner.Errors);
@@ -66,9 +67,10 @@ namespace ProSuite.QA.Tests.Test
 			const bool requireUniqueAliasNames = true;
 			const bool allowCustomSystemFieldAlias = true;
 			var runner = new QaTestRunner(
-				new QaSchemaFieldAliases(table, 30, ExpectedCase.Mixed,
-				                         requireUniqueAliasNames, allowCustomSystemFieldAlias,
-				                         ExpectedStringDifference.CaseInsensitiveDifference));
+				new QaSchemaFieldAliases(
+					ReadOnlyTableFactory.Create(table), 30, ExpectedCase.Mixed,
+					requireUniqueAliasNames, allowCustomSystemFieldAlias,
+					ExpectedStringDifference.CaseInsensitiveDifference));
 			runner.Execute();
 
 			Assert.AreEqual(1, runner.Errors.Count);
@@ -88,9 +90,10 @@ namespace ProSuite.QA.Tests.Test
 			const bool requireUniqueAliasNames = true;
 			const bool allowCustomSystemFieldAlias = true;
 			var runner = new QaTestRunner(
-				new QaSchemaFieldAliases(table, 30, ExpectedCase.Mixed,
-				                         requireUniqueAliasNames, allowCustomSystemFieldAlias,
-				                         ExpectedStringDifference.CaseInsensitiveDifference));
+				new QaSchemaFieldAliases(
+					ReadOnlyTableFactory.Create(table), 30, ExpectedCase.Mixed,
+					requireUniqueAliasNames, allowCustomSystemFieldAlias,
+					ExpectedStringDifference.CaseInsensitiveDifference));
 			runner.Execute();
 
 			Assert.AreEqual(2, runner.Errors.Count);
@@ -109,8 +112,9 @@ namespace ProSuite.QA.Tests.Test
 			const bool requireUniqueAliasNames = true;
 			const bool allowCustomSystemFieldAlias = true;
 			var runner = new QaTestRunner(
-				new QaSchemaFieldAliases(table, 30, ExpectedCase.AllUpper,
-				                         requireUniqueAliasNames, allowCustomSystemFieldAlias));
+				new QaSchemaFieldAliases(
+					ReadOnlyTableFactory.Create(table), 30, ExpectedCase.AllUpper,
+					requireUniqueAliasNames, allowCustomSystemFieldAlias));
 			runner.Execute();
 
 			Assert.AreEqual(3, runner.Errors.Count);
@@ -129,9 +133,10 @@ namespace ProSuite.QA.Tests.Test
 			const bool requireUnique = true;
 			const bool allowCustomSystemFieldAlias = true;
 			var runner = new QaTestRunner(
-				new QaSchemaFieldAliases(table, 30, ExpectedCase.Mixed,
-				                         requireUnique, allowCustomSystemFieldAlias,
-				                         ExpectedStringDifference.CaseInsensitiveDifference));
+				new QaSchemaFieldAliases(
+					ReadOnlyTableFactory.Create(table), 30, ExpectedCase.Mixed,
+					requireUnique, allowCustomSystemFieldAlias,
+					ExpectedStringDifference.CaseInsensitiveDifference));
 			runner.Execute();
 
 			Assert.AreEqual(2, runner.Errors.Count);
@@ -150,8 +155,9 @@ namespace ProSuite.QA.Tests.Test
 			const bool requireUnique = true;
 			const bool allowCustomSystemFieldAlias = true;
 			var runner = new QaTestRunner(
-				new QaSchemaFieldAliases(table, 30, ExpectedCase.NotAllLower,
-				                         requireUnique, allowCustomSystemFieldAlias));
+				new QaSchemaFieldAliases(
+					ReadOnlyTableFactory.Create(table), 30, ExpectedCase.NotAllLower,
+					requireUnique, allowCustomSystemFieldAlias));
 			runner.Execute();
 
 			Assert.AreEqual(1, runner.Errors.Count);
@@ -170,9 +176,10 @@ namespace ProSuite.QA.Tests.Test
 			const bool requireUnique = true;
 			const bool allowCustomSystemFieldAlias = true;
 			var runner = new QaTestRunner(
-				new QaSchemaFieldAliases(table, 30, ExpectedCase.NotAllUpper,
-				                         requireUnique, allowCustomSystemFieldAlias,
-				                         ExpectedStringDifference.CaseInsensitiveDifference));
+				new QaSchemaFieldAliases(
+					ReadOnlyTableFactory.Create(table), 30, ExpectedCase.NotAllUpper,
+					requireUnique, allowCustomSystemFieldAlias,
+					ExpectedStringDifference.CaseInsensitiveDifference));
 			runner.Execute();
 
 			Assert.AreEqual(1, runner.Errors.Count);
@@ -191,8 +198,9 @@ namespace ProSuite.QA.Tests.Test
 			const bool requireUnique = true;
 			const bool allowCustomSystemFieldAlias = true;
 			var runner = new QaTestRunner(
-				new QaSchemaFieldAliases(table, 30, ExpectedCase.AllLower,
-				                         requireUnique, allowCustomSystemFieldAlias));
+				new QaSchemaFieldAliases(
+					ReadOnlyTableFactory.Create(table), 30, ExpectedCase.AllLower,
+					requireUnique, allowCustomSystemFieldAlias));
 			runner.Execute();
 
 			Assert.AreEqual(3, runner.Errors.Count);
@@ -211,8 +219,9 @@ namespace ProSuite.QA.Tests.Test
 			const bool requireUnique = true;
 			const bool allowCustomSystemFieldAlias = true;
 			var runner = new QaTestRunner(
-				new QaSchemaFieldAliases(table, 30, ExpectedCase.Any,
-				                         requireUnique, allowCustomSystemFieldAlias));
+				new QaSchemaFieldAliases(
+					ReadOnlyTableFactory.Create(table), 30, ExpectedCase.Any,
+					requireUnique, allowCustomSystemFieldAlias));
 			runner.Execute();
 
 			NoErrors(runner.Errors);
@@ -430,9 +439,10 @@ namespace ProSuite.QA.Tests.Test
 			IFeatureWorkspace workspace = WorkspaceUtils.OpenPgdbFeatureWorkspace(path);
 
 			ITable table = workspace.OpenTable(tableName);
-			var test = new QaSchemaFieldAliases(table, maximumLength, expectedCase,
-			                                    requireUnique, allowCustomSystemFieldAlias,
-			                                    expectedStringDifference);
+			var test = new QaSchemaFieldAliases(
+				ReadOnlyTableFactory.Create(table), maximumLength, expectedCase,
+				requireUnique, allowCustomSystemFieldAlias,
+				expectedStringDifference);
 
 			var runner = new QaTestRunner(test);
 			runner.Execute();

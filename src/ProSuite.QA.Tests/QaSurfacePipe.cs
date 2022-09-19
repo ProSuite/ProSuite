@@ -5,6 +5,7 @@ using System.Text;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Surface;
 using ProSuite.Commons.AO.Surface.Raster;
@@ -13,8 +14,9 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.Geometry;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Container.TestContainer;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.QA.Tests.Surface;
@@ -37,7 +39,7 @@ namespace ProSuite.QA.Tests
 		private ISpatialFilter _queryFilter;
 		private QueryFilterHelper _helper;
 		private readonly esriGeometryType _shapeType;
-		private SortedDictionary<IRow, ShortPartInfo> _shortParts;
+		private SortedDictionary<IReadOnlyRow, ShortPartInfo> _shortParts;
 		private readonly IEnvelope _removeBox = new EnvelopeClass();
 
 		#region issue codes
@@ -74,7 +76,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.Qa3dPipe_0))]
 		public QaSurfacePipe(
 			[Doc(nameof(DocStrings.QaSurfacePipe_featureClass))] [NotNull]
-			IFeatureClass featureClass,
+			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaSurfacePipe_terrain))] [NotNull]
 			TerrainReference terrain,
 			[Doc(nameof(DocStrings.QaSurfacePipe_limit))]
@@ -86,7 +88,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaSurfacePipe_1))]
 		public QaSurfacePipe(
 			[Doc(nameof(DocStrings.QaSurfacePipe_featureClass))] [NotNull]
-			IFeatureClass featureClass,
+			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaSurfacePipe_terrain))] [NotNull]
 			TerrainReference terrain,
 			[Doc(nameof(DocStrings.QaSurfacePipe_limit))]
@@ -105,13 +107,13 @@ namespace ProSuite.QA.Tests
 			_startEndIgnoreLength = startEndIgnoreLength;
 			_asRatio = asRatio;
 
-			_interpolateTolerance = 2 * GeometryUtils.GetXyResolution(featureClass);
+			_interpolateTolerance = 2 * SpatialReferenceUtils.GetXyResolution(featureClass.SpatialReference);
 		}
 
 		[Doc(nameof(DocStrings.QaSurfacePipe_2))]
 		public QaSurfacePipe(
 			[Doc(nameof(DocStrings.QaSurfacePipe_featureClass))] [NotNull]
-			IFeatureClass featureClass,
+			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaSurfacePipe_raster))] [NotNull]
 			IRasterDataset2 raster,
 			[Doc(nameof(DocStrings.QaSurfacePipe_limit))]
@@ -123,7 +125,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaSurfacePipe_2))]
 		public QaSurfacePipe(
 			[Doc(nameof(DocStrings.QaSurfacePipe_featureClass))] [NotNull]
-			IFeatureClass featureClass,
+			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaSurfacePipe_raster))] [NotNull]
 			IRasterDataset2 raster,
 			[Doc(nameof(DocStrings.QaSurfacePipe_limit))]
@@ -142,13 +144,13 @@ namespace ProSuite.QA.Tests
 			_startEndIgnoreLength = startEndIgnoreLength;
 			_asRatio = asRatio;
 
-			_interpolateTolerance = 2 * GeometryUtils.GetXyResolution(featureClass);
+			_interpolateTolerance = 2 * SpatialReferenceUtils.GetXyResolution(featureClass.SpatialReference);
 		}
 
 		[Doc(nameof(DocStrings.QaSurfacePipe_4))]
 		public QaSurfacePipe(
 			[Doc(nameof(DocStrings.QaSurfacePipe_featureClass))] [NotNull]
-			IFeatureClass featureClass,
+			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaSurfacePipe_mosaic))] [NotNull]
 			SimpleRasterMosaic rasterMosaic,
 			[Doc(nameof(DocStrings.QaSurfacePipe_limit))]
@@ -160,7 +162,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaSurfacePipe_4))]
 		public QaSurfacePipe(
 			[Doc(nameof(DocStrings.QaSurfacePipe_featureClass))] [NotNull]
-			IFeatureClass featureClass,
+			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaSurfacePipe_mosaic))] [NotNull]
 			SimpleRasterMosaic rasterMosaic,
 			[Doc(nameof(DocStrings.QaSurfacePipe_limit))]
@@ -181,7 +183,7 @@ namespace ProSuite.QA.Tests
 			_startEndIgnoreLength = startEndIgnoreLength;
 			_asRatio = asRatio;
 
-			_interpolateTolerance = 2 * GeometryUtils.GetXyResolution(featureClass);
+			_interpolateTolerance = 2 * SpatialReferenceUtils.GetXyResolution(featureClass.SpatialReference);
 		}
 
 		private static void ValidateAsRatio(double startEndIgnoreLength, bool asRatio)
@@ -197,13 +199,13 @@ namespace ProSuite.QA.Tests
 		}
 
 		[NotNull]
-		private SortedDictionary<IRow, ShortPartInfo> ShortParts =>
+		private SortedDictionary<IReadOnlyRow, ShortPartInfo> ShortParts =>
 			_shortParts ??
-			(_shortParts = new SortedDictionary<IRow, ShortPartInfo>(new RowComparer(this)));
+			(_shortParts = new SortedDictionary<IReadOnlyRow, ShortPartInfo>(new RowComparer(this)));
 
 		#endregion
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
 			return NoError;
 		}
@@ -227,7 +229,7 @@ namespace ProSuite.QA.Tests
 
 			var errorCount = 0;
 
-			foreach (IRow searchedRow in Search(InvolvedTables[0], _queryFilter, _helper))
+			foreach (IReadOnlyRow searchedRow in Search(InvolvedTables[0], _queryFilter, _helper))
 			{
 				if (surface == null)
 				{
@@ -235,14 +237,14 @@ namespace ProSuite.QA.Tests
 					surface = surfaceRow.Surface;
 				}
 
-				errorCount += CheckFeature(surface, (IFeature) searchedRow, wksBox);
+				errorCount += CheckFeature(surface, (IReadOnlyFeature) searchedRow, wksBox);
 			}
 
 			return errorCount;
 		}
 
 		private int CheckFeature([NotNull] ISimpleSurface surface,
-		                         [NotNull] IFeature searchedRow,
+		                         [NotNull] IReadOnlyFeature searchedRow,
 		                         WKSEnvelope wksBox)
 		{
 			IGeometry shape = searchedRow.Shape;
@@ -277,7 +279,7 @@ namespace ProSuite.QA.Tests
 
 		private int CheckPolycurve([NotNull] ISimpleSurface surface,
 		                           [NotNull] IPolycurve shape,
-		                           [NotNull] IFeature searchedRow,
+		                           [NotNull] IReadOnlyFeature searchedRow,
 		                           WKSEnvelope wksBox)
 		{
 			ICurve truncated;
@@ -306,7 +308,7 @@ namespace ProSuite.QA.Tests
 		private int CheckTruncatedPolycurve([NotNull] ISimpleSurface surface,
 		                                    [NotNull] IPolycurve fullCurve,
 		                                    [NotNull] ICurve truncated,
-		                                    [NotNull] IFeature searchedRow,
+		                                    [NotNull] IReadOnlyFeature searchedRow,
 		                                    WKSEnvelope wksBox)
 		{
 			IGeometry interpolatedShape = InterpolateShape(surface, truncated);
@@ -328,7 +330,7 @@ namespace ProSuite.QA.Tests
 
 		private int CheckMultiPatch([NotNull] ISimpleSurface surface,
 		                            [NotNull] IMultiPatch multiPatch,
-		                            [NotNull] IFeature searchedRow,
+		                            [NotNull] IReadOnlyFeature searchedRow,
 		                            WKSEnvelope wksBox)
 		{
 			var indexedMultiPatchFeature = searchedRow as IIndexedMultiPatchFeature;
@@ -395,7 +397,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		private int CheckShortPart([NotNull] ISimpleSurface surface,
-		                           [NotNull] IFeature searchedRow,
+		                           [NotNull] IReadOnlyFeature searchedRow,
 		                           [NotNull] IGeometry shape,
 		                           WKSEnvelope wksBox)
 		{
@@ -439,10 +441,10 @@ namespace ProSuite.QA.Tests
 				return errorCount;
 			}
 
-			var remove = new List<IRow>();
-			foreach (KeyValuePair<IRow, ShortPartInfo> pair in ShortParts)
+			var remove = new List<IReadOnlyRow>();
+			foreach (KeyValuePair<IReadOnlyRow, ShortPartInfo> pair in ShortParts)
 			{
-				IRow row = pair.Key;
+				IReadOnlyRow row = pair.Key;
 				ShortPartInfo partInfo = pair.Value;
 
 				partInfo.Shape.QueryEnvelope(_removeBox);
@@ -459,16 +461,16 @@ namespace ProSuite.QA.Tests
 					desc.AppendLine();
 					IssueCode issueCode;
 					desc.Append(GetOffsetMessage(partInfo.MaxOffset, out issueCode));
-					errorCount += ReportError(desc.ToString(), partInfo.Shape,
-					                          issueCode, null,
-					                          new object[] {partInfo.MaxOffset},
-					                          row);
+					errorCount += ReportError(
+						desc.ToString(), InvolvedRowUtils.GetInvolvedRows(row), partInfo.Shape,
+						issueCode, null, values: new object[] { partInfo.MaxOffset });
+
 				}
 
 				remove.Add(row);
 			}
 
-			foreach (IRow row in remove)
+			foreach (IReadOnlyRow row in remove)
 			{
 				ShortParts.Remove(row);
 			}
@@ -479,7 +481,7 @@ namespace ProSuite.QA.Tests
 		private bool CheckShortPart([NotNull] IPolycurve shape1,
 		                            [NotNull] ISimpleSurface surface,
 		                            WKSEnvelope wksBox,
-		                            [NotNull] IFeature searchedRow,
+		                            [NotNull] IReadOnlyFeature searchedRow,
 		                            out double maxOffset,
 		                            out int errorCount)
 		{
@@ -535,7 +537,7 @@ namespace ProSuite.QA.Tests
 		private int CheckSurfaceParts([NotNull] ISimpleSurface surface,
 		                              WKSEnvelope box,
 		                              [NotNull] IPointCollection polyCurvePoints,
-		                              [NotNull] IFeature searchedRow)
+		                              [NotNull] IReadOnlyFeature searchedRow)
 		{
 			int errorCount;
 			Dictionary<IPolyline, IPolycurve> surfaceParts =
@@ -560,7 +562,7 @@ namespace ProSuite.QA.Tests
 			[NotNull] ISimpleSurface surface,
 			WKSEnvelope box,
 			[NotNull] IPointCollection polyCurvePoints,
-			[NotNull] IFeature searchedRow,
+			[NotNull] IReadOnlyFeature searchedRow,
 			out int errorCount)
 		{
 			errorCount = 0;
@@ -575,9 +577,10 @@ namespace ProSuite.QA.Tests
 			foreach (IPolyline polyline in partsOutsideTerrain)
 			{
 				const string description = "Terrain is missing";
-				errorCount += ReportError(description, polyline,
-				                          Codes[Code.NoTerrainData], null,
-				                          searchedRow);
+				errorCount += ReportError(
+					description, InvolvedRowUtils.GetInvolvedRows(searchedRow), polyline,
+					Codes[Code.NoTerrainData], null);
+
 			}
 
 			IList<IPolyline> partsInsideTerrain = validTerrain.GetParts();
@@ -638,9 +641,9 @@ namespace ProSuite.QA.Tests
 					foreach (IPolyline invalidPart in invalidSegments.GetParts())
 					{
 						const string description = "Terrain is missing";
-						ReportError(description, invalidPart,
-						            Codes[Code.NoTerrainData], null,
-						            searchedRow);
+						ReportError(
+							description, InvolvedRowUtils.GetInvolvedRows(searchedRow), invalidPart,
+							Codes[Code.NoTerrainData], null);
 						errorCount++;
 					}
 
@@ -806,7 +809,7 @@ namespace ProSuite.QA.Tests
 
 		private int CheckPoint([NotNull] IPoint shape,
 		                       [NotNull] IPoint interpolatedPoint,
-		                       [NotNull] IRow row)
+		                       [NotNull] IReadOnlyRow row)
 		{
 			double diff = shape.Z - interpolatedPoint.Z;
 
@@ -836,9 +839,9 @@ namespace ProSuite.QA.Tests
 				values = new object[] {max};
 			}
 
-			return ReportError(description, GeometryFactory.Clone(shape),
-			                   issueCode, TestUtils.GetShapeFieldName(row),
-			                   values, row);
+			return ReportError(
+				description, InvolvedRowUtils.GetInvolvedRows(row), GeometryFactory.Clone(shape),
+				issueCode, TestUtils.GetShapeFieldName(row), values: values);
 		}
 
 		[NotNull]
@@ -856,7 +859,7 @@ namespace ProSuite.QA.Tests
 		private int CheckPolyCurve(WKSEnvelope box,
 		                           [NotNull] PolyCurveSearcher polyCurveSearcher,
 		                           [CanBeNull] IPolycurve polyCurve,
-		                           [NotNull] IRow row)
+		                           [NotNull] IReadOnlyRow row)
 		{
 			if (polyCurve == null)
 			{
@@ -951,7 +954,7 @@ namespace ProSuite.QA.Tests
 		                            [NotNull] PolyCurveSearcher polyCurveSearcher,
 		                            ref double maxOffset,
 		                            [NotNull] SegmentPartList error,
-		                            [NotNull] IRow row)
+		                            [NotNull] IReadOnlyRow row)
 		{
 			var errorCount = 0;
 			IList<WKSPointZ> points = GetOffsets(partPoints, box, polyCurveSearcher);
@@ -1036,7 +1039,7 @@ namespace ProSuite.QA.Tests
 
 		private int ReportAnyErrors([NotNull] SegmentPartList error,
 		                            double maxOffset,
-		                            [NotNull] IRow errorRow)
+		                            [NotNull] IReadOnlyRow errorRow)
 		{
 			var errorCount = 0;
 
@@ -1047,11 +1050,10 @@ namespace ProSuite.QA.Tests
 				IssueCode issueCode;
 				string description = GetOffsetMessage(maxOffset, out issueCode);
 
-				errorCount += ReportError(description, part,
-				                          issueCode,
-				                          TestUtils.GetShapeFieldName(errorRow),
-				                          new object[] {maxOffset},
-				                          errorRow);
+				errorCount += ReportError(
+					description, InvolvedRowUtils.GetInvolvedRows(errorRow), part,
+					issueCode, TestUtils.GetShapeFieldName(errorRow),
+					values: new object[] { maxOffset });
 			}
 
 			error.Clear();

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.TestSupport;
@@ -9,6 +8,8 @@ using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Core.IssueCodes;
 
 namespace ProSuite.QA.Tests.SpatialRelations
 {
@@ -46,8 +47,8 @@ namespace ProSuite.QA.Tests.SpatialRelations
 		private const int _noError = 0;
 
 		public static bool AreDuplicates(
-			[NotNull] IRow row1, int tableIndex1,
-			[NotNull] IRow row2, int tableIndex2,
+			[NotNull] IReadOnlyRow row1, int tableIndex1,
+			[NotNull] IReadOnlyRow row2, int tableIndex2,
 			[CanBeNull] IValidRelationConstraint validRelationConstraint,
 			[NotNull] out string errorDescription)
 		{
@@ -60,8 +61,8 @@ namespace ProSuite.QA.Tests.SpatialRelations
 				return false;
 			}
 
-			IGeometry g1 = ((IFeature) row1).Shape;
-			IGeometry g2 = ((IFeature) row2).Shape;
+			IGeometry g1 = ((IReadOnlyFeature) row1).Shape;
+			IGeometry g2 = ((IReadOnlyFeature) row2).Shape;
 
 			// equal if all corresponding vertices are within xy tolerance - z is ignored
 			if (! GeometryUtils.AreEqualInXY(g1, g2))
@@ -77,8 +78,8 @@ namespace ProSuite.QA.Tests.SpatialRelations
 		}
 
 		public static int ReportDuplicates(
-			[NotNull] IRow row1, int tableIndex1,
-			[NotNull] IRow row2, int tableIndex2,
+			[NotNull] IReadOnlyRow row1, int tableIndex1,
+			[NotNull] IReadOnlyRow row2, int tableIndex2,
 			[NotNull] IErrorReporting errorReporting,
 			[CanBeNull] IssueCode issueCode,
 			[CanBeNull] IValidRelationConstraint validRelationConstraint)
@@ -96,18 +97,16 @@ namespace ProSuite.QA.Tests.SpatialRelations
 				return _noError;
 			}
 
-			IGeometry errorGeometry = ((IFeature) row1).ShapeCopy;
+			IGeometry errorGeometry = ((IReadOnlyFeature) row1).ShapeCopy;
 
-			const bool reportIndividualParts = false;
-			return errorReporting.Report(errorDescription,
-			                             errorGeometry, issueCode,
-			                             reportIndividualParts,
-			                             row1, row2);
+			return errorReporting.Report(
+				errorDescription, InvolvedRowUtils.GetInvolvedRows(row1, row2),
+				errorGeometry, issueCode, null, reportIndividualParts: false);
 		}
 
 		public static int ReportTouches(
-			[NotNull] IRow row1, int tableIndex1,
-			[NotNull] IRow row2, int tableIndex2,
+			[NotNull] IReadOnlyRow row1, int tableIndex1,
+			[NotNull] IReadOnlyRow row2, int tableIndex2,
 			[NotNull] IErrorReporting errorReporting,
 			[CanBeNull] IssueCode issueCode,
 			[CanBeNull] IValidRelationConstraint validRelationConstraint,
@@ -123,8 +122,8 @@ namespace ProSuite.QA.Tests.SpatialRelations
 				return _noError;
 			}
 
-			IGeometry g1 = ((IFeature) row1).Shape;
-			IGeometry g2 = ((IFeature) row2).Shape;
+			IGeometry g1 = ((IReadOnlyFeature) row1).Shape;
+			IGeometry g2 = ((IReadOnlyFeature) row2).Shape;
 
 			string errorDescription;
 			if (HasFulfilledConstraint(row1, tableIndex1,
@@ -154,10 +153,10 @@ namespace ProSuite.QA.Tests.SpatialRelations
 							continue;
 						}
 
-						errorCount += errorReporting.Report(errorDescription,
-						                                    part, issueCode,
-						                                    false, // already exploded
-						                                    row1, row2);
+						errorCount += errorReporting.Report(
+							errorDescription, InvolvedRowUtils.GetInvolvedRows(row1, row2),
+							part, issueCode, null, reportIndividualParts: false // already exploded
+						);
 					}
 				}
 				else
@@ -168,10 +167,9 @@ namespace ProSuite.QA.Tests.SpatialRelations
 						continue;
 					}
 
-					errorCount += errorReporting.Report(errorDescription,
-					                                    geometry, issueCode,
-					                                    false,
-					                                    row1, row2);
+					errorCount += errorReporting.Report(
+						errorDescription, InvolvedRowUtils.GetInvolvedRows(row1, row2),
+						geometry, issueCode, null, reportIndividualParts: false);
 				}
 			}
 
@@ -179,8 +177,8 @@ namespace ProSuite.QA.Tests.SpatialRelations
 		}
 
 		public static int ReportOverlaps(
-			[NotNull] IRow row1, int tableIndex1,
-			[NotNull] IRow row2, int tableIndex2,
+			[NotNull] IReadOnlyRow row1, int tableIndex1,
+			[NotNull] IReadOnlyRow row2, int tableIndex2,
 			[NotNull] IErrorReporting errorReporting,
 			[CanBeNull] IssueCode issueCode,
 			[CanBeNull] IValidRelationConstraint validRelationConstraint,
@@ -194,8 +192,8 @@ namespace ProSuite.QA.Tests.SpatialRelations
 				return _noError;
 			}
 
-			IGeometry g1 = ((IFeature) row1).Shape;
-			IGeometry g2 = ((IFeature) row2).Shape;
+			IGeometry g1 = ((IReadOnlyFeature) row1).Shape;
+			IGeometry g2 = ((IReadOnlyFeature) row2).Shape;
 
 			string errorDescription;
 			if (HasFulfilledConstraint(row1, tableIndex1,
@@ -214,15 +212,14 @@ namespace ProSuite.QA.Tests.SpatialRelations
 				return _noError;
 			}
 
-			return errorReporting.Report(errorDescription,
-			                             intersection, issueCode,
-			                             reportIndividualParts,
-			                             row1, row2);
+			return errorReporting.Report(
+				errorDescription, InvolvedRowUtils.GetInvolvedRows(row1, row2),
+				intersection, issueCode, null, reportIndividualParts);
 		}
 
 		public static int ReportIntersections(
-			[NotNull] IRow row1, int tableIndex1,
-			[NotNull] IRow row2, int tableIndex2,
+			[NotNull] IReadOnlyRow row1, int tableIndex1,
+			[NotNull] IReadOnlyRow row2, int tableIndex2,
 			[NotNull] IErrorReporting errorReporting,
 			[CanBeNull] IssueCode issueCode,
 			[CanBeNull] IValidRelationConstraint validRelationConstraint,
@@ -249,8 +246,8 @@ namespace ProSuite.QA.Tests.SpatialRelations
 				return _noError;
 			}
 
-			IGeometry shape1 = ((IFeature) row1).Shape;
-			IGeometry shape2 = ((IFeature) row2).Shape;
+			IGeometry shape1 = ((IReadOnlyFeature) row1).Shape;
+			IGeometry shape2 = ((IReadOnlyFeature) row2).Shape;
 
 			var g1 = GeometryComponentUtils.GetGeometryComponent(shape1, geomComponent1);
 			var g2 = GeometryComponentUtils.GetGeometryComponent(shape2, geomComponent2);
@@ -264,10 +261,9 @@ namespace ProSuite.QA.Tests.SpatialRelations
 					if (validIntersectionGeometryConstraint == null ||
 					    ! validIntersectionGeometryConstraint.IsFulfilled(errorGeometry))
 					{
-						errorCount += errorReporting.Report(errorDescription,
-						                                    errorGeometry,
-						                                    issueCode, reportIndividualParts,
-						                                    row1, row2);
+						errorCount += errorReporting.Report(
+							errorDescription, InvolvedRowUtils.GetInvolvedRows(row1, row2),
+							errorGeometry, issueCode, null, reportIndividualParts);
 					}
 				}
 			}
@@ -276,8 +272,8 @@ namespace ProSuite.QA.Tests.SpatialRelations
 		}
 
 		public static int ReportCrossings(
-			[NotNull] IRow row1, int tableIndex1,
-			[NotNull] IRow row2, int tableIndex2,
+			[NotNull] IReadOnlyRow row1, int tableIndex1,
+			[NotNull] IReadOnlyRow row2, int tableIndex2,
 			[NotNull] IErrorReporting errorReporting,
 			[CanBeNull] IssueCode issueCode,
 			[CanBeNull] IValidRelationConstraint validRelationConstraint,
@@ -292,8 +288,8 @@ namespace ProSuite.QA.Tests.SpatialRelations
 				return _noError;
 			}
 
-			IGeometry g1 = ((IFeature) row1).Shape;
-			IGeometry g2 = ((IFeature) row2).Shape;
+			IGeometry g1 = ((IReadOnlyFeature) row1).Shape;
+			IGeometry g2 = ((IReadOnlyFeature) row2).Shape;
 
 			string errorDescription;
 			if (HasFulfilledConstraint(row1, tableIndex1,
@@ -312,10 +308,9 @@ namespace ProSuite.QA.Tests.SpatialRelations
 					continue;
 				}
 
-				errorCount += errorReporting.Report(errorDescription,
-				                                    errorGeometry, issueCode,
-				                                    reportIndividualParts,
-				                                    row1, row2);
+				errorCount += errorReporting.Report(
+					errorDescription, InvolvedRowUtils.GetInvolvedRows(row1, row2),
+					errorGeometry, issueCode, null, reportIndividualParts);
 			}
 
 			return errorCount;
@@ -485,8 +480,8 @@ namespace ProSuite.QA.Tests.SpatialRelations
 		}
 
 		private static bool HasFulfilledConstraint(
-			[NotNull] IRow row1, int tableIndex1,
-			[NotNull] IRow row2, int tableIndex2,
+			[NotNull] IReadOnlyRow row1, int tableIndex1,
+			[NotNull] IReadOnlyRow row2, int tableIndex2,
 			[CanBeNull] IValidRelationConstraint validRelationConstraint,
 			[NotNull] string message,
 			[NotNull] out string formattedMessage)

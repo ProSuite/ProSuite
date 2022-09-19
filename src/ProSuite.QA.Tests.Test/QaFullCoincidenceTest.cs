@@ -222,7 +222,7 @@ namespace ProSuite.QA.Tests.Test
 				}
 			}
 
-			var test = new QaFullCoincidence(fc, coincidence, 2, false);
+			var test = new QaFullCoincidence(ReadOnlyTableFactory.Create(fc), ReadOnlyTableFactory.Create(coincidence), 2, false);
 
 			var testRunner = new QaTestRunner(test);
 			testRunner.Execute();
@@ -302,7 +302,7 @@ namespace ProSuite.QA.Tests.Test
 				}
 			}
 
-			var test = new QaFullCoincidence(fc, coincidence, 2, false);
+			var test = new QaFullCoincidence(ReadOnlyTableFactory.Create(fc), ReadOnlyTableFactory.Create(coincidence), 2, false);
 			var testRunner = new QaTestRunner(test);
 			testRunner.KeepGeometry = true;
 			testRunner.Execute();
@@ -396,8 +396,8 @@ namespace ProSuite.QA.Tests.Test
 				}
 			}
 
-			var test1 = new QaFullCoincidence(fc, near1, 0.1, false);
-			var test2 = new QaFullCoincidence(fc, near2, 2, false);
+			var test1 = new QaFullCoincidence(ReadOnlyTableFactory.Create(fc), ReadOnlyTableFactory.Create( near1), 0.1, false);
+			var test2 = new QaFullCoincidence(ReadOnlyTableFactory.Create(fc), ReadOnlyTableFactory.Create(near2), 2, false);
 
 			var testRunner = new QaTestRunner(test1);
 			testRunner.Execute();
@@ -427,7 +427,7 @@ namespace ProSuite.QA.Tests.Test
 			IFeatureClass fc =
 				((IFeatureWorkspace) dtmWs).OpenFeatureClass("TOPGIS_TLM.TLM_BODENBEDECKUNG");
 
-			var test = new QaFullCoincidence(fc, fc, 0.1, false);
+			var test = new QaFullCoincidence(ReadOnlyTableFactory.Create(fc),  ReadOnlyTableFactory.Create(fc), 0.1, false);
 			test.SetConstraint(0, "Objektart = 12");
 			test.SetConstraint(1, "Objektart = 12");
 			//test.SetConstraint(0, "ObjectId = 1438259");
@@ -451,8 +451,8 @@ namespace ProSuite.QA.Tests.Test
 			IFeatureClass fcSee_copy = _testWs.OpenFeatureClass("see1_copy");
 			IFeatureClass fcUfer = _testWs.OpenFeatureClass("gew3");
 
-			var test = new QaFullCoincidence(fcUfer, fcSee, 0.1, false);
-			var test1 = new QaFullCoincidence(fcUfer, fcSee_copy, 2, false);
+			var test = new QaFullCoincidence(ReadOnlyTableFactory.Create(fcUfer), ReadOnlyTableFactory.Create(fcSee), 0.1, false);
+			var test1 = new QaFullCoincidence(ReadOnlyTableFactory.Create(fcUfer), ReadOnlyTableFactory.Create(fcSee_copy), 2, false);
 
 			var runner = new QaContainerTestRunner(10000, test, test1);
 			IEnvelope box = new EnvelopeClass();
@@ -477,7 +477,7 @@ namespace ProSuite.QA.Tests.Test
 			IFeatureClass fc = _testWs.OpenFeatureClass("wf_def");
 			IFeatureClass reference = _testWs.OpenFeatureClass("va_wflinie");
 
-			var test = new QaFullCoincidence(fc, reference, 0.1, false);
+			var test = new QaFullCoincidence(ReadOnlyTableFactory.Create(fc), ReadOnlyTableFactory.Create(reference), 0.1, false);
 
 			var runner = new QaContainerTestRunner(10000, test);
 			IEnvelope box = new EnvelopeClass();
@@ -562,7 +562,7 @@ namespace ProSuite.QA.Tests.Test
 				}
 			}
 
-			var test = new QaFullCoincidence(fc, coincidence, 2, false);
+			var test = new QaFullCoincidence(ReadOnlyTableFactory.Create(fc), ReadOnlyTableFactory.Create(coincidence), 2, false);
 			var testRunner = new QaTestRunner(test);
 			testRunner.Execute();
 			Assert.AreEqual(0, testRunner.Errors.Count);
@@ -630,7 +630,7 @@ namespace ProSuite.QA.Tests.Test
 				}
 			}
 
-			var test = new QaFullCoincidence(fc, coincidence, 2, false);
+			var test = new QaFullCoincidence(ReadOnlyTableFactory.Create(fc), ReadOnlyTableFactory.Create(coincidence), 2, false);
 			var testRunner = new QaTestRunner(test);
 			testRunner.Execute();
 			Assert.AreEqual(1, testRunner.Errors.Count);
@@ -692,13 +692,13 @@ namespace ProSuite.QA.Tests.Test
 			}
 
 			// test without ignore conditions --> fully covered
-			var test = new QaFullCoincidence(fc1, new[] {fc2, fc3}, 1, false);
+			var test = new QaFullCoincidence(ReadOnlyTableFactory.Create(fc1), new[] {ReadOnlyTableFactory.Create(fc2), ReadOnlyTableFactory.Create(fc3)}, 1, false);
 			var testRunner = new QaTestRunner(test);
 			testRunner.Execute();
 			Assert.AreEqual(0, testRunner.Errors.Count);
 
 			// Same test with ignore conditions --> part not covered
-			test = new QaFullCoincidence(fc1, new[] {fc2, fc3}, 1, false);
+			test = new QaFullCoincidence(ReadOnlyTableFactory.Create(fc1), new[] {ReadOnlyTableFactory.Create(fc2), ReadOnlyTableFactory.Create(fc3)}, 1, false);
 			bool success;
 			try
 			{
@@ -768,7 +768,7 @@ namespace ProSuite.QA.Tests.Test
 				// Make temporary circular arc based on tree points
 			}
 
-			var test = new QaFullCoincidence(fc, coincidence, 1, false);
+			var test = new QaFullCoincidence(ReadOnlyTableFactory.Create(fc), ReadOnlyTableFactory.Create(coincidence), 1, false);
 			var testRunner = new QaTestRunner(test);
 			testRunner.Execute();
 			Assert.AreEqual(2, testRunner.Errors.Count);
@@ -794,12 +794,12 @@ namespace ProSuite.QA.Tests.Test
 			IFeatureClass fcWater = testWs.OpenFeatureClass("stagnant_water01");
 			IFeatureClass fcCover = testWs.OpenFeatureClass("landcover01");
 
-			var test = new QaFullCoincidence(fcCover, fcWater, 1, false);
+			var test = new QaFullCoincidence(ReadOnlyTableFactory.Create(fcCover), ReadOnlyTableFactory.Create(fcWater), 1, false);
 			var cnt = new QaContainerTestRunner(10000, test);
 			int errorCount = cnt.Execute();
 			Assert.IsTrue(errorCount > 0);
 
-			test = new QaFullCoincidence(fcCover, fcWater, 2, false);
+			test = new QaFullCoincidence(ReadOnlyTableFactory.Create(fcCover), ReadOnlyTableFactory.Create(fcWater), 2, false);
 			cnt = new QaContainerTestRunner(10000, test);
 			errorCount = cnt.Execute();
 			Assert.AreEqual(0, errorCount);
@@ -807,12 +807,12 @@ namespace ProSuite.QA.Tests.Test
 			fcWater = testWs.OpenFeatureClass("stagnant_water02");
 			fcCover = testWs.OpenFeatureClass("landcover02");
 
-			test = new QaFullCoincidence(fcWater, fcCover, 0, false);
+			test = new QaFullCoincidence(ReadOnlyTableFactory.Create(fcWater), ReadOnlyTableFactory.Create(fcCover), 0, false);
 			cnt = new QaContainerTestRunner(10000, test);
 			errorCount = cnt.Execute();
 			Assert.AreEqual(0, errorCount);
 
-			test = new QaFullCoincidence(fcWater, fcCover, 2, false);
+			test = new QaFullCoincidence(ReadOnlyTableFactory.Create(fcWater), ReadOnlyTableFactory.Create(fcCover), 2, false);
 			cnt = new QaContainerTestRunner(10000, test);
 			errorCount = cnt.Execute();
 			Assert.AreEqual(0, errorCount);
@@ -820,12 +820,12 @@ namespace ProSuite.QA.Tests.Test
 			fcWater = testWs.OpenFeatureClass("stagnant_water03");
 			fcCover = testWs.OpenFeatureClass("landcover03");
 
-			test = new QaFullCoincidence(fcWater, fcCover, 1, false);
+			test = new QaFullCoincidence(ReadOnlyTableFactory.Create(fcWater), ReadOnlyTableFactory.Create(fcCover), 1, false);
 			cnt = new QaContainerTestRunner(10000, test);
 			errorCount = cnt.Execute();
 			Assert.IsTrue(errorCount > 0);
 
-			test = new QaFullCoincidence(fcWater, fcCover, 2, false);
+			test = new QaFullCoincidence(ReadOnlyTableFactory.Create(fcWater),  ReadOnlyTableFactory.Create(fcCover), 2, false);
 			cnt = new QaContainerTestRunner(10000, test);
 			errorCount = cnt.Execute();
 			Assert.AreEqual(0, errorCount);
@@ -839,7 +839,8 @@ namespace ProSuite.QA.Tests.Test
 
 			IFeatureClass eo = testWs.OpenFeatureClass("AVZH_EINZELOBJEKTE_L");
 
-			var test = new QaFullCoincidence(eo, new[] {eo}, 2, 10000);
+			var test = new QaFullCoincidence(ReadOnlyTableFactory.Create(eo),
+			                                 new[] { ReadOnlyTableFactory.Create(eo) }, 2, 10000);
 			test.SetConstraint(0, "ARTZHID = 9");
 			test.SetConstraint(1, "ARTZHID = 32");
 
@@ -882,8 +883,9 @@ namespace ProSuite.QA.Tests.Test
 
 			IEnvelope verificationEnvelope = GeometryFactory.CreateEnvelope(0, 0, 500, 500);
 
-			var test = new QaFullCoincidence(testedClass,
-			                                 new List<IFeatureClass> {referenceClass}, 3);
+			var test = new QaFullCoincidence(
+				ReadOnlyTableFactory.Create(testedClass),
+				new List<IReadOnlyFeatureClass> { ReadOnlyTableFactory.Create(referenceClass) }, 3);
 
 			var runner = new QaContainerTestRunner(200, test);
 			runner.Execute(verificationEnvelope);
@@ -916,8 +918,9 @@ namespace ProSuite.QA.Tests.Test
 
 			IEnvelope verificationEnvelope = GeometryFactory.CreateEnvelope(0, 0, 500, 500);
 
-			var test = new QaFullCoincidence(testedClass,
-			                                 new List<IFeatureClass> {referenceClass}, 3);
+			var test = new QaFullCoincidence(
+				ReadOnlyTableFactory.Create(testedClass),
+				new List<IReadOnlyFeatureClass> {ReadOnlyTableFactory.Create(referenceClass)}, 3);
 
 			var runner = new QaContainerTestRunner(200, test);
 			runner.Execute(verificationEnvelope);
@@ -949,8 +952,9 @@ namespace ProSuite.QA.Tests.Test
 
 			IEnvelope verificationEnvelope = GeometryFactory.CreateEnvelope(0, 0, 500, 500);
 
-			var test = new QaFullCoincidence(testedClass,
-			                                 new List<IFeatureClass> {referenceClass}, 3);
+			var test = new QaFullCoincidence(
+				ReadOnlyTableFactory.Create(testedClass),
+				new List<IReadOnlyFeatureClass> { ReadOnlyTableFactory.Create(referenceClass) }, 3);
 
 			var runner = new QaContainerTestRunner(200, test);
 			runner.Execute(verificationEnvelope);
@@ -1008,7 +1012,7 @@ namespace ProSuite.QA.Tests.Test
 				row.Store();
 			}
 
-			var test = new QaPolycurveCoincidenceTest(fc);
+			var test = new QaPolycurveCoincidenceTest(ReadOnlyTableFactory.Create(fc));
 			test.Execute();
 
 			var container = new TestContainer();
@@ -1038,7 +1042,7 @@ namespace ProSuite.QA.Tests.Test
 			AddFeature(fc, CurveConstruction.StartLine(2, 50).LineTo(53, 48).Curve);
 			AddFeature(fc, CurveConstruction.StartLine(47, 12).LineTo(45, 60).Curve);
 
-			var test = new QaEnvelopeIntersects(fc);
+			var test = new QaEnvelopeIntersects(ReadOnlyTableFactory.Create(fc));
 
 			Assert.AreEqual(2, Run(test, 1000).Count);
 			Assert.AreEqual(2, Run(test, 10).Count);
@@ -1073,12 +1077,12 @@ namespace ProSuite.QA.Tests.Test
 
 		private class QaEnvelopeIntersects : ContainerTest
 		{
-			private readonly IFeatureClass _lineClass;
+			private readonly IReadOnlyFeatureClass _lineClass;
 			private ISpatialFilter _filter;
 			private QueryFilterHelper _helper;
 
-			public QaEnvelopeIntersects(IFeatureClass lineClass)
-				: base((ITable) lineClass)
+			public QaEnvelopeIntersects(IReadOnlyFeatureClass lineClass)
+				: base(lineClass)
 			{
 				_lineClass = lineClass;
 			}
@@ -1093,32 +1097,28 @@ namespace ProSuite.QA.Tests.Test
 				}
 			}
 
-			protected override int ExecuteCore(IRow row, int tableIndex)
+			protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 			{
 				var errorCount = 0;
 				Init();
 
-				var feature = (IFeature) row;
+				var feature = (IReadOnlyFeature) row;
 
 				_filter.Geometry = feature.Shape.Envelope;
 				IGeometry cached = null;
 
-				foreach (IRow otherRow in Search((ITable) _lineClass, _filter, _helper, cached))
+				foreach (IReadOnlyRow otherRow in Search(_lineClass, _filter, _helper, cached))
 				{
-					var otherFeature = (IFeature) otherRow;
+					var otherFeature = (IReadOnlyFeature) otherRow;
 					if (otherFeature == feature)
 					{
 						continue;
 					}
 
 					string desc = string.Format("{0},{1}", feature.OID, otherFeature.OID);
-					errorCount +=
-						ReportError(desc, otherFeature.Shape, null, null,
-						            new[]
-						            {
-							            new InvolvedRow(feature),
-							            new InvolvedRow(otherFeature)
-						            });
+					errorCount += ReportError(
+						desc, InvolvedRowUtils.GetInvolvedRows(feature, otherFeature),
+						otherFeature.Shape, null, null);
 				}
 
 				return errorCount;
@@ -1144,14 +1144,14 @@ namespace ProSuite.QA.Tests.Test
 
 		private class QaPolycurveCoincidenceTest : QaPolycurveCoincidenceBase
 		{
-			public QaPolycurveCoincidenceTest([NotNull] IFeatureClass fc)
+			public QaPolycurveCoincidenceTest([NotNull] IReadOnlyFeatureClass fc)
 				: base(new[] {fc}, 0, new ConstantFeatureDistanceProvider(0), false) { }
 
 			protected override bool IsDirected => false;
 
-			public override int Execute(IRow row)
+			public override int Execute(IReadOnlyRow row)
 			{
-				var feature = (IFeature) row;
+				var feature = (IReadOnlyFeature) row;
 				IIndexedSegments geometry = IndexedSegmentUtils.GetIndexedGeometry(feature, true);
 
 				OneExistingPartTest(feature, geometry);
@@ -1165,7 +1165,7 @@ namespace ProSuite.QA.Tests.Test
 				return 0;
 			}
 
-			private static void OneExistingPartTest(IFeature feature,
+			private static void OneExistingPartTest(IReadOnlyFeature feature,
 			                                        IIndexedSegments geometry)
 			{
 				double fullLength;
@@ -1196,7 +1196,7 @@ namespace ProSuite.QA.Tests.Test
 				}
 			}
 
-			private static void TwoDistinctExistingPartTest(IFeature feature,
+			private static void TwoDistinctExistingPartTest(IReadOnlyFeature feature,
 			                                                IIndexedSegments geometry)
 			{
 				var parts = new SortedDictionary<SegmentPart, SegmentParts>();
@@ -1221,7 +1221,7 @@ namespace ProSuite.QA.Tests.Test
 				Assert.AreEqual(3, missing.Count);
 			}
 
-			private static void TwoTouchingExistingPartTest(IFeature feature,
+			private static void TwoTouchingExistingPartTest(IReadOnlyFeature feature,
 			                                                IIndexedSegments geometry)
 			{
 				var parts = new SortedDictionary<SegmentPart, SegmentParts>();
@@ -1246,7 +1246,7 @@ namespace ProSuite.QA.Tests.Test
 				Assert.AreEqual(2, missing.Count);
 			}
 
-			private static void TwoOverlappingExistingPartTest(IFeature feature,
+			private static void TwoOverlappingExistingPartTest(IReadOnlyFeature feature,
 			                                                   IIndexedSegments
 				                                                   geometry)
 			{
@@ -1282,7 +1282,7 @@ namespace ProSuite.QA.Tests.Test
 				}
 			}
 
-			private static void TwoAdjacentSegmentsTest(IFeature feature,
+			private static void TwoAdjacentSegmentsTest(IReadOnlyFeature feature,
 			                                            IIndexedSegments geometry)
 			{
 				var parts =
@@ -1312,7 +1312,7 @@ namespace ProSuite.QA.Tests.Test
 				Assert.AreEqual(1, missing.Count);
 			}
 
-			private static void TwoSeparatedSegmentsTest(IFeature feature,
+			private static void TwoSeparatedSegmentsTest(IReadOnlyFeature feature,
 			                                             IIndexedSegments geometry)
 			{
 				var parts =
@@ -1343,8 +1343,8 @@ namespace ProSuite.QA.Tests.Test
 			}
 
 			protected override NeighborhoodFinder GetNeighborhoodFinder(
-				IFeatureRowsDistance rowsDistance, IFeature feature, int tableIndex,
-				IFeature neighbor, int neighborTableIndex)
+				IFeatureRowsDistance rowsDistance, IReadOnlyFeature feature, int tableIndex,
+				IReadOnlyFeature neighbor, int neighborTableIndex)
 			{
 				return new TestNeighborHoodFinder(rowsDistance, feature, tableIndex, neighbor,
 				                                  neighborTableIndex);
@@ -1354,8 +1354,8 @@ namespace ProSuite.QA.Tests.Test
 			{
 				public TestNeighborHoodFinder(
 					IFeatureRowsDistance rowsDistance,
-					[NotNull] IFeature feature, int tableIndex,
-					[CanBeNull] IFeature neighbor, int neighborTableIndex)
+					[NotNull] IReadOnlyFeature feature, int tableIndex,
+					[CanBeNull] IReadOnlyFeature neighbor, int neighborTableIndex)
 					: base(rowsDistance, feature, tableIndex, neighbor, neighborTableIndex) { }
 
 				protected override bool VerifyContinue(SegmentProxy seg0,

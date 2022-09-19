@@ -1,316 +1,278 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{44C24B7C-FFD8-4968-95A0-9D3C7C77861B}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>ProSuite.UI</RootNamespace>
-    <AssemblyName>ProSuite.UI</AssemblyName>
     <SignAssembly>true</SignAssembly>
     <ProSuiteKeyFile Condition=" '$(ProSuiteKeyFile)' == '' ">..\ProSuite.Key.snk</ProSuiteKeyFile>
     <AssemblyOriginatorKeyFile>$(ProSuiteKeyFile)</AssemblyOriginatorKeyFile>
-    <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' ">v4.8</TargetFrameworkVersion>
+
+    <VSArcGISVersion Condition=" '$(VSArcGISVersion)' == '' ">10.8</VSArcGISVersion>
+    <VSArcGISProduct Condition=" '$(VSArcGISProduct)' == ''">ArcGIS</VSArcGISProduct>
+    <ArcGISAssemblyPath Condition=" '$(ArcGISAssemblyPath)' == '' ">C:\Program Files (x86)\ArcGIS\DeveloperKit10.6\DotNet</ArcGISAssemblyPath>
+
     <OutputDirectory Condition=" '$(OutputDirectory)' == '' ">..\..\bin</OutputDirectory>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>$(OutputDirectory)\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <OutputPath>$(OutputDirectory)\$(Configuration)\</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+
     <NoWarn>1591</NoWarn>
+
+    <!-- NOTE: Multi-targeting leads to problems in build if Winforms are included. 
+		Supported target frameworks: net48 (v4.8) or net6.0-windows -->
+    <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' Or '$(TargetFrameworkVersion)' == 'v4.8' ">net48</TargetFrameworkVersion>
+
+    <TargetFramework>$(TargetFrameworkVersion)</TargetFramework>
+
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugType>full</DebugType>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>$(OutputDirectory)\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <DocumentationFile>$(OutputDirectory)\Release\ProSuite.UI.xml</DocumentationFile>
-    <NoWarn>1591</NoWarn>
+    <DocumentationFile>$(OutputDirectory)\$(Configuration)\ProSuite.UI.xml</DocumentationFile>
   </PropertyGroup>
-  <ItemGroup>
+
+  <PropertyGroup>
+    <UseWpf>true</UseWpf>
+    <UseWindowsForms>true</UseWindowsForms>
+  </PropertyGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net48' ">
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
     <Reference Include="ProSuite.Microservices.Definitions.QA, Culture=neutral, PublicKeyToken=82d2e1509f982a73, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\lib\ProSuite.Microservices.ServiceDefinitions\ProSuite.Microservices.Definitions.QA.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
     </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Drawing" />
     <Reference Include="System.Windows" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xaml" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Xml" />
     <Reference Include="WindowsBase" />
   </ItemGroup>
+
   <ItemGroup>
-    <Compile Include="..\SharedAssemblyInfo.cs">
-      <Link>Properties\SharedAssemblyInfo.cs</Link>
-    </Compile>
-    <Compile Include="DataModel\DatasetCatalogControl.cs">
+    <Reference Include="ProSuite.Microservices.Definitions.QA, Culture=neutral, PublicKeyToken=82d2e1509f982a73, processorArchitecture=MSIL">
+      <HintPath>..\..\lib\ProSuite.Microservices.ServiceDefinitions\ProSuite.Microservices.Definitions.QA.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="ESRI.ArcGIS.DataSourcesRaster, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
+      <HintPath>$(ArcGISAssemblyPath)\$(VSArcGISVersion)\ESRI.$(VSArcGISProduct).DataSourcesRaster.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
+    </Reference>
+    <Reference Include="ESRI.ArcGIS.Geodatabase, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
+      <HintPath>$(ArcGISAssemblyPath)\$(VSArcGISVersion)\ESRI.$(VSArcGISProduct).Geodatabase.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
+    </Reference>
+    <Reference Include="ESRI.ArcGIS.Geometry, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
+      <HintPath>$(ArcGISAssemblyPath)\$(VSArcGISVersion)\ESRI.$(VSArcGISProduct).Geometry.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
+    </Reference>
+    <Reference Include="ESRI.ArcGIS.System, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
+      <HintPath>$(ArcGISAssemblyPath)\$(VSArcGISVersion)\ESRI.$(VSArcGISProduct).System.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
+    <Compile Update="DataModel\DatasetCatalogControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="DataModel\DatasetCatalogControl.Designer.cs">
+    <Compile Update="DataModel\DatasetCatalogControl.Designer.cs">
       <DependentUpon>DatasetCatalogControl.cs</DependentUpon>
     </Compile>
-    <Compile Include="DataModel\ResourceLookup\DatasetTypeImageLookup.cs" />
-    <Compile Include="DataModel\ResourceLookup\AssociationEndImageLookup.cs" />
-    <Compile Include="DataModel\ResourceLookup\AssociationImageLookup.cs" />
-    <Compile Include="DataModel\ResourceLookup\FieldTypeImageLookup.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Properties\AssociationEndImages.Designer.cs">
+    <Compile Update="Properties\AssociationEndImages.Designer.cs">
       <DependentUpon>AssociationEndImages.resx</DependentUpon>
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
     </Compile>
-    <Compile Include="Properties\AssociationImages.Designer.cs">
+    <Compile Update="Properties\AssociationImages.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>AssociationImages.resx</DependentUpon>
     </Compile>
-    <Compile Include="Properties\DatasetTypeImages.Designer.cs">
+    <Compile Update="Properties\DatasetTypeImages.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>DatasetTypeImages.resx</DependentUpon>
     </Compile>
-    <Compile Include="Properties\FieldTypeImages.Designer.cs">
+    <Compile Update="Properties\FieldTypeImages.Designer.cs">
       <DependentUpon>FieldTypeImages.resx</DependentUpon>
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
     </Compile>
-    <Compile Include="Properties\LocalizableStrings.Designer.cs">
+    <Compile Update="Properties\LocalizableStrings.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>LocalizableStrings.resx</DependentUpon>
     </Compile>
-    <Compile Include="Properties\QualitySpecificationImages.Designer.cs">
+    <Compile Update="Properties\QualitySpecificationImages.Designer.cs">
       <DependentUpon>QualitySpecificationImages.resx</DependentUpon>
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
     </Compile>
-    <Compile Include="Properties\QualityVerificationImages.Designer.cs">
+    <Compile Update="Properties\QualityVerificationImages.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>QualityVerificationImages.resx</DependentUpon>
     </Compile>
-    <Compile Include="Properties\Resources.Designer.cs">
+    <Compile Update="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Compile Include="Properties\TestTypeImages.Designer.cs">
+    <Compile Update="Properties\TestTypeImages.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>TestTypeImages.resx</DependentUpon>
     </Compile>
-    <Compile Include="QA\Controls\QualityConditionControl.cs">
+    <Compile Update="QA\Controls\QualityConditionControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="QA\Controls\QualityConditionControl.Designer.cs">
+    <Compile Update="QA\Controls\QualityConditionControl.Designer.cs">
       <DependentUpon>QualityConditionControl.cs</DependentUpon>
     </Compile>
-    <Compile Include="QA\Controls\QualityConditionTableViewControl.cs">
+    <Compile Update="QA\Controls\QualityConditionTableViewControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="QA\Controls\QualityConditionTableViewControl.Designer.cs">
+    <Compile Update="QA\Controls\QualityConditionTableViewControl.Designer.cs">
       <DependentUpon>QualityConditionTableViewControl.cs</DependentUpon>
     </Compile>
-    <Compile Include="QA\Controls\TestDescriptorControl.cs">
+    <Compile Update="QA\Controls\TestDescriptorControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="QA\Controls\TestDescriptorControl.Designer.cs">
+    <Compile Update="QA\Controls\TestDescriptorControl.Designer.cs">
       <DependentUpon>TestDescriptorControl.cs</DependentUpon>
     </Compile>
-    <Compile Include="QA\ParameterValueListItem.cs" />
-    <Compile Include="QA\QualityConditionType.cs" />
-    <Compile Include="QA\ResourceLookup\QualitySpecificationImageLookup.cs" />
-    <Compile Include="QA\ResourceLookup\QualityVerificationImageLookup.cs" />
-    <Compile Include="QA\ResourceLookup\TestTypeImageLookup.cs" />
-    <Compile Include="QA\VerificationProgress\BackgroundVerificationUtils.cs" />
-    <Compile Include="QA\VerificationProgress\UpdateIssuesOptionsControl.xaml.cs">
+    <Compile Update="QA\VerificationProgress\UpdateIssuesOptionsControl.xaml.cs">
       <DependentUpon>UpdateIssuesOptionsControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="QA\VerificationProgress\UpdateIssuesOptionsViewModel.cs" />
-    <Compile Include="QA\VerificationProgress\VerificationProgressViewModel.cs" />
-    <Compile Include="QA\VerificationProgress\VerificationProgressWpfControl.xaml.cs">
+    <Compile Update="QA\VerificationProgress\VerificationProgressWpfControl.xaml.cs">
       <DependentUpon>VerificationProgressWpfControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="QA\Controls\DataQualityCategoryItem.cs" />
-    <Compile Include="QA\Controls\DatasetCategoryItem.cs" />
-    <Compile Include="QA\Controls\DatasetCategoryItemComparer.cs" />
-    <Compile Include="QA\Controls\DatasetComparer.cs" />
-    <Compile Include="QA\VerificationResult\QAVerificationDisplayMode.cs" />
-    <Compile Include="QA\VerificationResult\QAVerificationForm.cs">
+    <Compile Update="QA\VerificationResult\QAVerificationForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="QA\VerificationResult\QAVerificationForm.Designer.cs">
+    <Compile Update="QA\VerificationResult\QAVerificationForm.Designer.cs">
       <DependentUpon>QAVerificationForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="QA\VerificationResult\QAVerificationFormState.cs" />
-    <Compile Include="QA\VerificationResult\QAVerificationResults.cs" />
-    <Compile Include="QA\VerificationResult\QualityConditionVerificationControl.cs">
+    <Compile Update="QA\VerificationResult\QualityConditionVerificationControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="QA\VerificationResult\QualityConditionVerificationControl.Designer.cs">
+    <Compile Update="QA\VerificationResult\QualityConditionVerificationControl.Designer.cs">
       <DependentUpon>QualityConditionVerificationControl.cs</DependentUpon>
     </Compile>
-    <Compile Include="QA\Controls\SpecificationDataset.cs" />
-    <Compile Include="QA\Controls\SpecificationDatasetComparer.cs" />
-    <Compile Include="QA\VerificationResult\StatusType.cs" />
-    <Compile Include="QA\Controls\TestTreeViewControl.cs">
+    <Compile Update="QA\Controls\TestTreeViewControl.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="QA\Controls\TestTreeViewControl.Designer.cs">
+    <Compile Update="QA\Controls\TestTreeViewControl.Designer.cs">
       <DependentUpon>TestTreeViewControl.cs</DependentUpon>
     </Compile>
-    <Compile Include="QA\VerificationResult\VerifiedConditionsControl.cs">
+    <Compile Update="QA\VerificationResult\VerifiedConditionsControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="QA\VerificationResult\VerifiedConditionsControl.Designer.cs">
+    <Compile Update="QA\VerificationResult\VerifiedConditionsControl.Designer.cs">
       <DependentUpon>VerifiedConditionsControl.cs</DependentUpon>
     </Compile>
-    <Compile Include="QA\VerificationResult\VerifiedConditionsHierarchyControl.cs">
+    <Compile Update="QA\VerificationResult\VerifiedConditionsHierarchyControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="QA\VerificationResult\VerifiedConditionsHierarchyControl.Designer.cs">
+    <Compile Update="QA\VerificationResult\VerifiedConditionsHierarchyControl.Designer.cs">
       <DependentUpon>VerifiedConditionsHierarchyControl.cs</DependentUpon>
     </Compile>
-    <Compile Include="QA\VerificationResult\VerifiedDatasetsControl.cs">
+    <Compile Update="QA\VerificationResult\VerifiedDatasetsControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="QA\VerificationResult\VerifiedDatasetsControl.Designer.cs">
+    <Compile Update="QA\VerificationResult\VerifiedDatasetsControl.Designer.cs">
       <DependentUpon>VerifiedDatasetsControl.cs</DependentUpon>
     </Compile>
   </ItemGroup>
+
   <ItemGroup>
-    <Page Include="QA\VerificationProgress\UpdateIssuesOptionsControl.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="QA\VerificationProgress\VerificationProgressWpfControl.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
+    <ProjectReference Include="..\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj" />
+    <ProjectReference Include="..\ProSuite.DdxEditor.Framework\ProSuite.DdxEditor.Framework.csproj" />
+    <ProjectReference Include="..\ProSuite.DomainModel.AO\ProSuite.DomainModel.AO.csproj" />
+    <ProjectReference Include="..\ProSuite.DomainModel.Core\ProSuite.DomainModel.Core.csproj" />
+    <ProjectReference Include="..\ProSuite.Commons.Logging\ProSuite.Commons.Logging.csproj" />
+    <ProjectReference Include="..\ProSuite.Commons.UI\ProSuite.Commons.UI.csproj" />
+    <ProjectReference Include="..\ProSuite.Commons\ProSuite.Commons.csproj" />
+    <ProjectReference Include="..\ProSuite.Microservices.Client\ProSuite.Microservices.Client.csproj" />
+    <ProjectReference Include="..\ProSuite.QA.Core\ProSuite.QA.Core.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj">
-      <Project>{384763d9-f7a1-4aa2-9abd-ee338cd8d4c1}</Project>
-      <Name>ProSuite.Commons.Essentials</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ProSuite.DomainModel.Core\ProSuite.DomainModel.Core.csproj">
-      <Project>{0B48B56F-3A3D-4367-AA76-A356519AF2AB}</Project>
-      <Name>ProSuite.DomainModel.Core</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ProSuite.Commons.Logging\ProSuite.Commons.Logging.csproj">
-      <Project>{A227D52C-0536-498F-ACF2-2A5A67C3D9FF}</Project>
-      <Name>ProSuite.Commons.Logging</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ProSuite.Commons.UI\ProSuite.Commons.UI.csproj">
-      <Project>{FDA8452C-41F0-404C-A17D-FBA8CB56B935}</Project>
-      <Name>ProSuite.Commons.UI</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ProSuite.Commons\ProSuite.Commons.csproj">
-      <Project>{66E5D99B-26AB-4FFF-834D-D96347DF4FA4}</Project>
-      <Name>ProSuite.Commons</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ProSuite.Microservices.Client\ProSuite.Microservices.Client.csproj">
-      <Project>{413917C0-7EB3-4D86-8448-0A3CA70C2ED4}</Project>
-      <Name>ProSuite.Microservices.Client</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ProSuite.QA.Core\ProSuite.QA.Core.csproj">
-      <Project>{01CBBA9E-0D4D-439F-9147-6A5685884A65}</Project>
-      <Name>ProSuite.QA.Core</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="DataModel\DatasetCatalogControl.resx">
+    <EmbeddedResource Update="DataModel\DatasetCatalogControl.resx">
       <DependentUpon>DatasetCatalogControl.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Properties\AssociationEndImages.resx">
+    <EmbeddedResource Update="Properties\AssociationEndImages.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>AssociationEndImages.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Properties\AssociationImages.resx">
+    <EmbeddedResource Update="Properties\AssociationImages.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
       <LastGenOutput>AssociationImages.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <EmbeddedResource Include="Properties\DatasetTypeImages.resx">
+    <EmbeddedResource Update="Properties\DatasetTypeImages.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>DatasetTypeImages.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Properties\FieldTypeImages.resx">
+    <EmbeddedResource Update="Properties\FieldTypeImages.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>FieldTypeImages.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Properties\LocalizableStrings.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>LocalizableStrings.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Properties\QualitySpecificationImages.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>QualitySpecificationImages.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Properties\QualityVerificationImages.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>QualityVerificationImages.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Properties\Resources.resx">
+    <EmbeddedResource Update="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Properties\TestTypeImages.resx">
+    <EmbeddedResource Update="Properties\TestTypeImages.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
       <LastGenOutput>TestTypeImages.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <EmbeddedResource Include="QA\Controls\QualityConditionControl.resx">
+    <EmbeddedResource Update="QA\Controls\QualityConditionControl.resx">
       <DependentUpon>QualityConditionControl.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="QA\Controls\QualityConditionTableViewControl.resx">
+    <EmbeddedResource Update="QA\Controls\QualityConditionTableViewControl.resx">
       <DependentUpon>QualityConditionTableViewControl.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="QA\Controls\TestDescriptorControl.resx">
+    <EmbeddedResource Update="QA\Controls\TestDescriptorControl.resx">
       <DependentUpon>TestDescriptorControl.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="QA\VerificationResult\QAVerificationForm.resx">
+    <EmbeddedResource Update="QA\VerificationResult\QAVerificationForm.resx">
       <DependentUpon>QAVerificationForm.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="QA\VerificationResult\QualityConditionVerificationControl.resx">
+    <EmbeddedResource Update="QA\VerificationResult\QualityConditionVerificationControl.resx">
       <DependentUpon>QualityConditionVerificationControl.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="QA\VerificationResult\VerifiedConditionsControl.resx">
+    <EmbeddedResource Update="QA\VerificationResult\VerifiedConditionsControl.resx">
       <DependentUpon>VerifiedConditionsControl.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="QA\VerificationResult\VerifiedConditionsHierarchyControl.resx">
+    <EmbeddedResource Update="QA\VerificationResult\VerifiedConditionsHierarchyControl.resx">
       <DependentUpon>VerifiedConditionsHierarchyControl.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="QA\VerificationResult\VerifiedDatasetsControl.resx">
+    <EmbeddedResource Update="QA\VerificationResult\VerifiedDatasetsControl.resx">
       <DependentUpon>VerifiedDatasetsControl.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
+
   <ItemGroup>
+    <Content Include="..\..\lib\licenses\Microsoft.MIT.XamlBehaviorsWpf.license.txt">
+      <Link>Licenses\Microsoft.MIT.XamlBehaviorsWpf.license.txt</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+
     <Content Include="Properties\AssociationEndImages\AssociationEndDeleted.png" />
     <Content Include="Properties\AssociationEndImages\AssociationEndManyToMany1.png" />
     <Content Include="Properties\AssociationEndImages\AssociationEndManyToMany2.png" />
@@ -371,9 +333,7 @@
     <Content Include="Properties\TestTypeImages\TestTypeWarning.png" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf">
-      <Version>1.1.31</Version>
-    </PackageReference>
+    <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.39" />
   </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+
 </Project>

@@ -512,6 +512,56 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 				"inMemoryJoined");
 
 			Assert.AreEqual(featureCount, GetRowCount((ITable) inMemoryJoinedClass));
+
+			Stopwatch watch = Stopwatch.StartNew();
+
+			CheckOIDs((ITable) inMemoryJoinedClass, true);
+
+			watch.Stop();
+			Console.WriteLine(@"Without unique IDs: {0}ms", watch.ElapsedMilliseconds);
+
+			inMemoryJoinedClass = TableJoinUtils.CreateJoinedGdbFeatureClass(
+				rc, RelationshipClassUtils.GetFeatureClasses(rc).Single(),
+				"inMemoryJoined", JoinType.InnerJoin, true);
+
+			Assert.AreEqual(featureCount, GetRowCount((ITable) inMemoryJoinedClass));
+
+			watch.Restart();
+			CheckOIDs((ITable) inMemoryJoinedClass, false);
+			watch.Stop();
+			Console.WriteLine(@"With unique IDs: {0}ms", watch.ElapsedMilliseconds);
+		}
+
+		private static void CheckOIDs(ITable table, bool allowDuplicates = false)
+		{
+			HashSet<int> oids = new HashSet<int>();
+
+			int duplicates = 0;
+			int lastOid = -1;
+			foreach (IRow row in GdbQueryUtils.GetRows(table, true))
+			{
+				lastOid = row.OID;
+				if (oids.Contains(lastOid))
+				{
+					duplicates++;
+				}
+
+				if (! allowDuplicates)
+					Assert.IsFalse(oids.Contains(lastOid), $"Duplicate OID: {lastOid}");
+
+				oids.Add(lastOid);
+			}
+
+			Console.WriteLine(@"Duplicates allowed: {0} ({1} duplicates)", allowDuplicates,
+			                  duplicates);
+
+			if (! allowDuplicates && lastOid > 0)
+			{
+				// Extra check
+				int checkId = table.GetRow(lastOid).OID;
+
+				Assert.AreEqual(lastOid, checkId);
+			}
 		}
 
 		[Test]
@@ -585,6 +635,18 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 			// all strasse features are expected in result
 			AssertOidsComplete(rc.OriginClass, table);
+
+			IFeatureClass inMemoryJoinedClass = TableJoinUtils.CreateJoinedGdbFeatureClass(
+				rc, RelationshipClassUtils.GetFeatureClasses(rc).Single(),
+				"inMemoryJoined", JoinType.LeftJoin);
+
+			Assert.AreEqual(featureCount, GetRowCount((ITable) inMemoryJoinedClass));
+
+			// Check if we can iterate also:
+			Assert.AreEqual(featureCount,
+			                GdbQueryUtils.GetFeatures(inMemoryJoinedClass, true).Count());
+
+			CheckOIDs((ITable) inMemoryJoinedClass);
 		}
 
 		[Test]
@@ -622,6 +684,75 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 				"inMemoryJoined");
 
 			Assert.AreEqual(featureCount, GetRowCount((ITable) inMemoryJoinedClass));
+
+			// Check if we can iterate also:
+			Assert.AreEqual(featureCount,
+			                GdbQueryUtils.GetFeatures(inMemoryJoinedClass, true).Count());
+
+			CheckOIDs((ITable) inMemoryJoinedClass);
+		}
+
+		[Test]
+		public void CanCreateQueryTable1To1InnerJoinBetweenFeatureClasses()
+		{
+			// On both sides there is a feature class (requires filtering of shape/area fields)
+
+			const string relClassName = "TOPGIS_TLM.TLM_GEBAEUDE_GRUNDRISS";
+
+			IFeatureWorkspace ws = OpenTestWorkspace();
+			IRelationshipClass rc = ws.OpenRelationshipClass(relClassName);
+
+			// origin = Grundriss, destination = Gebaeude
+			int originRowCount = ((ITable) rc.OriginClass).RowCount(null);
+			int destinationRowCount = ((ITable) rc.DestinationClass).RowCount(null);
+
+			Assert.IsTrue(TableJoinUtils.CanCreateQueryFeatureClass(rc, JoinType.InnerJoin));
+			ITable featureClass = TableJoinUtils.CreateQueryTable(rc, JoinType.InnerJoin);
+
+			int featureCount = GetRowCount(featureClass);
+			Console.WriteLine(@"origin: {0} dest: {1} query: {2}",
+			                  originRowCount, destinationRowCount, featureCount);
+
+			Assert.IsNotNull(featureClass);
+			Assert.IsTrue(featureClass is IFeatureClass);
+
+			// compare with oid-only, non-spatial table row count
+			const bool includeOnlyOIDFields = true;
+			const bool excludeShapeField = true;
+			ITable table = TableJoinUtils.CreateQueryTable(rc, JoinType.InnerJoin,
+			                                               includeOnlyOIDFields,
+			                                               excludeShapeField);
+			Assert.AreEqual(featureCount, GetRowCount(table));
+
+			IFeatureClass inMemoryJoinedClass = TableJoinUtils.CreateJoinedGdbFeatureClass(
+				rc, (IFeatureClass) rc.DestinationClass, "inMemoryJoined");
+
+			Assert.AreEqual(featureCount, GetRowCount((ITable) inMemoryJoinedClass));
+			// Check if we can iterate also:
+			Assert.AreEqual(featureCount,
+			                GdbQueryUtils.GetFeatures(inMemoryJoinedClass, true).Count());
+			CheckOIDs((ITable) inMemoryJoinedClass);
+
+			inMemoryJoinedClass = TableJoinUtils.CreateJoinedGdbFeatureClass(
+				rc, (IFeatureClass) rc.OriginClass, "inMemoryJoined");
+
+			Assert.AreEqual(featureCount, GetRowCount((ITable) inMemoryJoinedClass));
+			// Check if we can iterate also:
+			Assert.AreEqual(featureCount,
+			                GdbQueryUtils.GetFeatures(inMemoryJoinedClass, true).Count());
+			CheckOIDs((ITable) inMemoryJoinedClass);
+
+			// Test filter:
+			var filter = new QueryFilterClass()
+			             {
+				             WhereClause =
+					             "TOPGIS_TLM.TLM_GEBAEUDE.OPERATEUR = 'RevelJérém' AND TOPGIS_TLM.TLM_GRUNDRISS.OPERATEUR = 'RevelJérém'"
+			             };
+			int filteredCount =
+				GdbQueryUtils.GetFeatures(inMemoryJoinedClass, filter, true).Count();
+
+			Assert.Less(filteredCount, featureCount);
+			Assert.Greater(filteredCount, 0);
 		}
 
 		[Test]
@@ -778,6 +909,25 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 				"inMemoryJoined");
 
 			Assert.AreEqual(featureCount, GetRowCount((ITable) inMemoryJoinedClass));
+
+			Stopwatch watch = Stopwatch.StartNew();
+
+			CheckOIDs((ITable) inMemoryJoinedClass, true);
+
+			watch.Stop();
+			Console.WriteLine(@"Without unique IDs: {0}ms", watch.ElapsedMilliseconds);
+
+			inMemoryJoinedClass = TableJoinUtils.CreateJoinedGdbFeatureClass(
+				rc, RelationshipClassUtils.GetFeatureClasses(rc).Single(),
+				"inMemoryJoined", JoinType.InnerJoin, true);
+
+			Assert.AreEqual(featureCount, GetRowCount((ITable) inMemoryJoinedClass));
+
+			watch.Restart();
+			CheckOIDs((ITable) inMemoryJoinedClass, false);
+			watch.Stop();
+			Console.WriteLine(@"Wit unique IDs (and extra row in result): {0}ms",
+			                  watch.ElapsedMilliseconds);
 		}
 
 		[Test]
@@ -1473,7 +1623,13 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		[NotNull]
 		private static IFeatureWorkspace OpenTestWorkspace()
 		{
-			return (IFeatureWorkspace) TestUtils.OpenUserWorkspaceOracle();
+			string versionName = "TG_SERVICE.RC_TLM_2022-6-30";
+
+			IFeatureWorkspace defaultVersion =
+				(IFeatureWorkspace) TestUtils.OpenUserWorkspaceOracle();
+
+			return WorkspaceUtils.OpenFeatureWorkspaceVersion(defaultVersion, versionName);
+			return defaultVersion;
 		}
 
 		private static int GetRowCount([NotNull] IQueryDef queryDef)

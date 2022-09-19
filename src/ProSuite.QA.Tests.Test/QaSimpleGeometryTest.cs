@@ -9,6 +9,7 @@ using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.AO.Test.TestSupport;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Tests.Test.TestData;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests.Test
 {
@@ -52,12 +53,12 @@ namespace ProSuite.QA.Tests.Test
 
 			IFeature f = fc.CreateFeature(sourcePolyline);
 
-			var test = new QaSimpleGeometry(fc, true);
+			var test = new QaSimpleGeometry(ReadOnlyTableFactory.Create(fc), true);
 			var runner = new QaTestRunner(test);
 			runner.Execute(f);
 			Assert.AreEqual(0, runner.Errors.Count);
 
-			test = new QaSimpleGeometry(fc, false);
+			test = new QaSimpleGeometry(ReadOnlyTableFactory.Create(fc), false);
 			runner = new QaTestRunner(test) {KeepGeometry = true};
 
 			runner.Execute(f);
@@ -82,7 +83,7 @@ namespace ProSuite.QA.Tests.Test
 			IFeature f = fc.CreateFeature(nonZAwarePolyline);
 
 			const double toleranceFactor = 1.0;
-			var test = new QaSimpleGeometry(fc, false, toleranceFactor);
+			var test = new QaSimpleGeometry(ReadOnlyTableFactory.Create(fc), false, toleranceFactor);
 			var runner = new QaTestRunner(test) {KeepGeometry = true};
 
 			runner.Execute(f);
@@ -116,7 +117,7 @@ namespace ProSuite.QA.Tests.Test
 
 			IFeature f = fc.CreateFeature(sourcePolygon);
 
-			var test = new QaSimpleGeometry(fc, false);
+			var test = new QaSimpleGeometry(ReadOnlyTableFactory.Create(fc), false);
 			var runner = new QaTestRunner(test) {KeepGeometry = true};
 
 			runner.Execute(f);
@@ -155,7 +156,7 @@ namespace ProSuite.QA.Tests.Test
 
 			IFeature f = fc.CreateFeature(polyline);
 
-			var test = new QaSimpleGeometry(fc, false);
+			var test = new QaSimpleGeometry(ReadOnlyTableFactory.Create(fc), false);
 			var runner = new QaTestRunner(test) {KeepGeometry = true};
 
 			runner.Execute(f);

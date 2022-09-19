@@ -2,12 +2,13 @@ using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
 {
@@ -41,13 +42,13 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaEmptyNotNullTextFields_0))]
 		public QaEmptyNotNullTextFields(
 			[Doc(nameof(DocStrings.QaEmptyNotNullTextFields_table))] [NotNull]
-			ITable table)
+			IReadOnlyTable table)
 			: this(table, GetNotNullTextFields(table)) { }
 
 		[Doc(nameof(DocStrings.QaEmptyNotNullTextFields_1))]
 		public QaEmptyNotNullTextFields(
 			[Doc(nameof(DocStrings.QaEmptyNotNullTextFields_table))] [NotNull]
-			ITable table,
+			IReadOnlyTable table,
 			[Doc(nameof(DocStrings.QaEmptyNotNullTextFields_notNullTextFields))] [NotNull]
 			string[]
 				notNullTextFields)
@@ -60,7 +61,7 @@ namespace ProSuite.QA.Tests
 			{
 				int fieldIndex = table.FindField(notNullTextField);
 				Assert.True(fieldIndex >= 0, "field '{0}' not found in table '{1}'",
-				            notNullTextField, DatasetUtils.GetName(table));
+				            notNullTextField, table.Name);
 
 				fieldIndices.Add(fieldIndex);
 			}
@@ -70,7 +71,7 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
 			if (_notNullTextFieldIndices.Count == 0)
 			{
@@ -80,7 +81,7 @@ namespace ProSuite.QA.Tests
 			int errorCount = 0;
 			foreach (int fieldIndex in _notNullTextFieldIndices)
 			{
-				object value = row.Value[fieldIndex];
+				object value = row.get_Value(fieldIndex);
 
 				string fieldName;
 
@@ -90,9 +91,9 @@ namespace ProSuite.QA.Tests
 						"field value is null: {0}",
 						TestUtils.GetFieldDisplayName(row, fieldIndex, out fieldName));
 
-					errorCount += ReportError(description, TestUtils.GetShapeCopy(row),
-					                          Codes[Code.ValueIsNull], fieldName,
-					                          row);
+					errorCount += ReportError(
+						description, InvolvedRowUtils.GetInvolvedRows(row),
+						TestUtils.GetShapeCopy(row), Codes[Code.ValueIsNull], fieldName);
 				}
 				else
 				{
@@ -104,9 +105,9 @@ namespace ProSuite.QA.Tests
 							TestUtils.GetFieldDisplayName(row, fieldIndex, out fieldName),
 							value);
 
-						errorCount += ReportError(description, TestUtils.GetShapeCopy(row),
-						                          Codes[Code.UnexpectedValue], fieldName,
-						                          row);
+						errorCount += ReportError(
+							description, InvolvedRowUtils.GetInvolvedRows(row),
+							TestUtils.GetShapeCopy(row), Codes[Code.UnexpectedValue], fieldName);
 					}
 					else if (stringValue.Length == 0)
 					{
@@ -114,9 +115,9 @@ namespace ProSuite.QA.Tests
 							"Empty text in field {0}",
 							TestUtils.GetFieldDisplayName(row, fieldIndex, out fieldName));
 
-						errorCount += ReportError(description, TestUtils.GetShapeCopy(row),
-						                          Codes[Code.EmptyText], fieldName,
-						                          row);
+						errorCount += ReportError(
+							description, InvolvedRowUtils.GetInvolvedRows(row),
+							TestUtils.GetShapeCopy(row), Codes[Code.EmptyText], fieldName);
 					}
 				}
 			}
@@ -125,12 +126,12 @@ namespace ProSuite.QA.Tests
 		}
 
 		[NotNull]
-		private static string[] GetNotNullTextFields([NotNull] ITable table)
+		private static string[] GetNotNullTextFields([NotNull] IReadOnlyTable table)
 		{
 			Assert.ArgumentNotNull(table, nameof(table));
 
 			var list = new List<string>();
-			foreach (IField field in DatasetUtils.GetFields(table))
+			foreach (IField field in DatasetUtils.GetFields(table.Fields))
 			{
 				if (field.Type != esriFieldType.esriFieldTypeString)
 				{

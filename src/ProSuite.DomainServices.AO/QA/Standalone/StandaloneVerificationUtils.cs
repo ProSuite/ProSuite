@@ -186,12 +186,13 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 			Assert.ArgumentNotNull(document, nameof(document));
 			Assert.ArgumentNotNull(xmlQualitySpecification, nameof(xmlQualitySpecification));
 
-			XmlQualityConditionsCache conditionsCache = XmlDataQualityUtils.GetReferencedXmlQualityConditions(
-				document, new[] {xmlQualitySpecification});
+			XmlDataQualityDocumentCache documentCache =
+				XmlDataQualityUtils.GetDocumentCache(
+					document, new[] { xmlQualitySpecification });
 
 			bool hasUndefinedWorkspaceReference;
 			IList<XmlWorkspace> xmlWorkspaces = XmlDataQualityUtils.GetReferencedWorkspaces(
-				conditionsCache.QualityConditions, conditionsCache, out hasUndefinedWorkspaceReference);
+				documentCache.QualityConditions, documentCache, out hasUndefinedWorkspaceReference);
 
 			var result = new List<DataSource>();
 			if (hasUndefinedWorkspaceReference)

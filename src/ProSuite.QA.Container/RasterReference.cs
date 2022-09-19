@@ -1,5 +1,5 @@
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Surface;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -15,10 +15,10 @@ namespace ProSuite.QA.Container
 		public abstract ISimpleSurface CreateSurface([NotNull] IEnvelope extent);
 
 		[NotNull]
-		public abstract IDataset Dataset { get; }
+		public abstract IReadOnlyDataset Dataset { get; }
 
 		[NotNull]
-		public abstract IGeoDataset GeoDataset { get; }
+		public abstract IReadOnlyGeoDataset GeoDataset { get; }
 
 		public abstract double CellSize { get; }
 

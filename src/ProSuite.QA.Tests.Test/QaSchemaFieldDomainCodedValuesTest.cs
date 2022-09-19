@@ -80,11 +80,12 @@ namespace ProSuite.QA.Tests.Test
 			const int minimumValueCount = 1;
 			const int minimumNonEqualNameValueCount = 1;
 			const bool allowEmptyName = false;
-			var runner = new QaTestRunner(new QaSchemaFieldDomainCodedValues(
-				                              table, maxLength,
-				                              UniqueStringsConstraint.UniqueAnyCase,
-				                              minimumValueCount, minimumNonEqualNameValueCount,
-				                              allowEmptyName));
+			var runner = new QaTestRunner(
+				new QaSchemaFieldDomainCodedValues(
+					ReadOnlyTableFactory.Create(table), maxLength,
+					UniqueStringsConstraint.UniqueAnyCase,
+					minimumValueCount, minimumNonEqualNameValueCount,
+					allowEmptyName));
 
 			runner.Execute();
 
@@ -125,11 +126,12 @@ namespace ProSuite.QA.Tests.Test
 			const int minimumValueCount = 1;
 			const int minimumNonEqualNameValueCount = 1;
 			const bool allowEmptyName = false;
-			var runner = new QaTestRunner(new QaSchemaFieldDomainCodedValues(
-				                              table, maxLength,
-				                              UniqueStringsConstraint.UniqueAnyCase,
-				                              minimumValueCount, minimumNonEqualNameValueCount,
-				                              allowEmptyName));
+			var runner = new QaTestRunner(
+				new QaSchemaFieldDomainCodedValues(
+					ReadOnlyTableFactory.Create(table), maxLength,
+					UniqueStringsConstraint.UniqueAnyCase,
+					minimumValueCount, minimumNonEqualNameValueCount,
+					allowEmptyName));
 
 			runner.Execute();
 
@@ -170,11 +172,12 @@ namespace ProSuite.QA.Tests.Test
 			const int minimumValueCount = 1;
 			const int minimumNonEqualNameValueCount = 1;
 			const bool allowEmptyName = false;
-			var runner = new QaTestRunner(new QaSchemaFieldDomainCodedValues(
-				                              table, maxLength,
-				                              UniqueStringsConstraint.UniqueAnyCase,
-				                              minimumValueCount, minimumNonEqualNameValueCount,
-				                              allowEmptyName));
+			var runner = new QaTestRunner(
+				new QaSchemaFieldDomainCodedValues(
+					ReadOnlyTableFactory.Create(table), maxLength,
+					UniqueStringsConstraint.UniqueAnyCase,
+					minimumValueCount, minimumNonEqualNameValueCount,
+					allowEmptyName));
 
 			runner.Execute();
 
@@ -271,11 +274,12 @@ namespace ProSuite.QA.Tests.Test
 			const bool allowEmptyName = false;
 
 			ITable table = workspace.OpenTable(tableName);
-			var test = new QaSchemaFieldDomainCodedValues(table, maximumLength,
-			                                              UniqueStringsConstraint.UniqueAnyCase,
-			                                              minimumValueCount,
-			                                              minimumNonEqualNameValueCount,
-			                                              allowEmptyName);
+			var test = new QaSchemaFieldDomainCodedValues(
+				ReadOnlyTableFactory.Create(table), maximumLength,
+				UniqueStringsConstraint.UniqueAnyCase,
+				minimumValueCount,
+				minimumNonEqualNameValueCount,
+				allowEmptyName);
 
 			var runner = new QaTestRunner(test);
 			runner.Execute();

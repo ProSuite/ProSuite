@@ -5,7 +5,6 @@ using System.Runtime.InteropServices;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.Commons;
@@ -14,6 +13,8 @@ using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Core;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
 {
@@ -70,9 +71,9 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaNodeLineCoincidence_0))]
 		public QaNodeLineCoincidence(
 				[Doc(nameof(DocStrings.QaNodeLineCoincidence_nodeClass))] [NotNull]
-				IFeatureClass nodeClass,
+				IReadOnlyFeatureClass nodeClass,
 				[Doc(nameof(DocStrings.QaNodeLineCoincidence_nearClasses))] [NotNull]
-				IList<IFeatureClass>
+				IList<IReadOnlyFeatureClass>
 					nearClasses,
 				[Doc(nameof(DocStrings.QaNodeLineCoincidence_near))] double near)
 			// ReSharper disable once IntroduceOptionalParameters.Global
@@ -81,9 +82,9 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaNodeLineCoincidence_1))]
 		public QaNodeLineCoincidence(
 				[Doc(nameof(DocStrings.QaNodeLineCoincidence_nodeClass))] [NotNull]
-				IFeatureClass nodeClass,
+				IReadOnlyFeatureClass nodeClass,
 				[Doc(nameof(DocStrings.QaNodeLineCoincidence_nearClasses))] [NotNull]
-				IList<IFeatureClass>
+				IList<IReadOnlyFeatureClass>
 					nearClasses,
 				[Doc(nameof(DocStrings.QaNodeLineCoincidence_near))] double near,
 				[Doc(nameof(DocStrings.QaNodeLineCoincidence_ignoreNearEndpoints))]
@@ -94,9 +95,9 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaNodeLineCoincidence_1))]
 		public QaNodeLineCoincidence(
 			[Doc(nameof(DocStrings.QaNodeLineCoincidence_nodeClass))] [NotNull]
-			IFeatureClass nodeClass,
+			IReadOnlyFeatureClass nodeClass,
 			[Doc(nameof(DocStrings.QaNodeLineCoincidence_nearClasses))] [NotNull]
-			IList<IFeatureClass>
+			IList<IReadOnlyFeatureClass>
 				nearClasses,
 			[Doc(nameof(DocStrings.QaNodeLineCoincidence_near))] double near,
 			[Doc(nameof(DocStrings.QaNodeLineCoincidence_ignoreNearEndpoints))]
@@ -107,9 +108,9 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaNodeLineCoincidence_3))]
 		public QaNodeLineCoincidence(
 			[Doc(nameof(DocStrings.QaNodeLineCoincidence_nodeClass))] [NotNull]
-			IFeatureClass nodeClass,
+			IReadOnlyFeatureClass nodeClass,
 			[Doc(nameof(DocStrings.QaNodeLineCoincidence_nearClasses))] [NotNull]
-			IList<IFeatureClass>
+			IList<IReadOnlyFeatureClass>
 				nearClasses,
 			[Doc(nameof(DocStrings.QaNodeLineCoincidence_nearTolerances))] [NotNull]
 			IList<double>
@@ -133,8 +134,8 @@ namespace ProSuite.QA.Tests
 			_withinPolylineTolerance = withinPolylineTolerance;
 			_ignoreNearEndpoints = ignoreNearEndpoints;
 			_is3D = is3D;
-			_xyTolerance = GeometryUtils.GetXyTolerance(nodeClass);
-			_spatialReference = ((IGeoDataset) nodeClass).SpatialReference;
+			_xyTolerance = GeometryUtils.GetXyTolerance(nodeClass.SpatialReference);
+			_spatialReference = (nodeClass).SpatialReference;
 			_nodeClassShapeType = nodeClass.ShapeType;
 			_shapeFieldName = nodeClass.ShapeFieldName;
 
@@ -152,12 +153,12 @@ namespace ProSuite.QA.Tests
 			_pointTemplate = new PointClass();
 			_neighborPointTemplate = new PointClass();
 
-			_nodesHaveZ = DatasetUtils.HasZ(nodeClass);
+			_nodesHaveZ = DatasetUtils.GetGeometryDef(nodeClass).HasZ;
 			for (var tableIndex = 0; tableIndex < _tableCount; tableIndex++)
 			{
-				var featureClass = InvolvedTables[tableIndex] as IFeatureClass;
+				var featureClass = InvolvedTables[tableIndex] as IReadOnlyFeatureClass;
 
-				_hasZ.Add(featureClass != null && DatasetUtils.HasZ(featureClass));
+				_hasZ.Add(featureClass != null && DatasetUtils.GetGeometryDef(featureClass).HasZ);
 				_shapeTypes.Add(featureClass?.ShapeType ?? esriGeometryType.esriGeometryNull);
 			}
 		}
@@ -171,7 +172,7 @@ namespace ProSuite.QA.Tests
 			_tileEnvelope = parameters.TileEnvelope;
 		}
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
 			// preparing
 			if (_filter == null)
@@ -185,7 +186,7 @@ namespace ProSuite.QA.Tests
 				return NoError;
 			}
 
-			var feature = row as IFeature;
+			var feature = row as IReadOnlyFeature;
 			if (feature == null)
 			{
 				return NoError;
@@ -250,7 +251,7 @@ namespace ProSuite.QA.Tests
 
 		[NotNull]
 		private static IDictionary<int, double> GetTolerancesByTableIndex(
-			[NotNull] ICollection<IFeatureClass> nearClasses,
+			[NotNull] ICollection<IReadOnlyFeatureClass> nearClasses,
 			[NotNull] IList<double> nearTolerances,
 			double withinPolylineTolerance)
 		{
@@ -273,7 +274,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		private int CheckWithinMultipartPolyline(
-			[NotNull] IFeature feature,
+			[NotNull] IReadOnlyFeature feature,
 			[NotNull] IGeometryCollection pathCollection,
 			double searchDistance)
 		{
@@ -296,7 +297,7 @@ namespace ProSuite.QA.Tests
 			return CheckPaths(feature, pathCollection, searchDistance);
 		}
 
-		private int CheckPaths([NotNull] IFeature feature,
+		private int CheckPaths([NotNull] IReadOnlyFeature feature,
 		                       [NotNull] IGeometryCollection pathCollection,
 		                       double searchDistance)
 		{
@@ -336,15 +337,11 @@ namespace ProSuite.QA.Tests
 									                       : "<",
 								                       searchDistance, _spatialReference));
 
-						errorCount += ReportError(description, errorGeometry,
-						                          Codes[Code.NodeTooCloseToLine_WithinFeature],
-						                          _shapeFieldName,
-						                          new object[]
-						                          {
-							                          tooClosePath.Distance,
-							                          tooClosePath.PathIndex
-						                          },
-						                          feature);
+						errorCount += ReportError(
+							description, InvolvedRowUtils.GetInvolvedRows(feature), errorGeometry,
+							Codes[Code.NodeTooCloseToLine_WithinFeature],
+							_shapeFieldName,
+							values: new object[] { tooClosePath.Distance, tooClosePath.PathIndex });
 					}
 				}
 			}
@@ -423,7 +420,7 @@ namespace ProSuite.QA.Tests
 			}
 		}
 
-		private int CheckNode([NotNull] IFeature feature,
+		private int CheckNode([NotNull] IReadOnlyFeature feature,
 		                      int tableIndex,
 		                      [NotNull] IPoint node)
 		{
@@ -431,7 +428,7 @@ namespace ProSuite.QA.Tests
 
 			foreach (int nearTableIndex in GetNearTableIndexes())
 			{
-				var nearFeatureClass = (IFeatureClass) InvolvedTables[nearTableIndex];
+				var nearFeatureClass = (IReadOnlyFeatureClass) InvolvedTables[nearTableIndex];
 
 				bool isConnected;
 				GetTooCloseNeighbors(tooCloseNeighbors, feature, tableIndex, node,
@@ -449,12 +446,12 @@ namespace ProSuite.QA.Tests
 			return ReportErrors(feature, node, tooCloseNeighbors);
 		}
 
-		private int CheckShortLineNodes([NotNull] IFeature feature,
+		private int CheckShortLineNodes([NotNull] IReadOnlyFeature feature,
 		                                int tableIndex,
 		                                [NotNull] IGeometry shape,
 		                                double lineLength)
 		{
-			var connectedFeatures = new List<IFeature>();
+			var connectedFeatures = new List<IReadOnlyFeature>();
 			var unconnectedNodeCandidates = new List<UnconnectedNodeCandidate>();
 
 			foreach (IPoint node in GetNodes(shape, _pointTemplate))
@@ -464,7 +461,7 @@ namespace ProSuite.QA.Tests
 
 				foreach (int nearTableIndex in GetNearTableIndexes())
 				{
-					var nearFeatureClass = (IFeatureClass) InvolvedTables[nearTableIndex];
+					var nearFeatureClass = (IReadOnlyFeatureClass) InvolvedTables[nearTableIndex];
 
 					bool isConnectedToNeighbor;
 					const bool returnAllConnectedNeighbors = true;
@@ -503,7 +500,7 @@ namespace ProSuite.QA.Tests
 		[NotNull]
 		private IEnumerable<UnconnectedNodeCandidate> GetRelevantCandidates(
 			[NotNull] IEnumerable<UnconnectedNodeCandidate> unconnectedNodeCandidates,
-			[NotNull] ICollection<IFeature> connectedFeatures,
+			[NotNull] ICollection<IReadOnlyFeature> connectedFeatures,
 			double lineLength)
 		{
 			foreach (UnconnectedNodeCandidate candidate in unconnectedNodeCandidates)
@@ -537,7 +534,7 @@ namespace ProSuite.QA.Tests
 			}
 		}
 
-		private int ReportErrors([NotNull] IFeature feature,
+		private int ReportErrors([NotNull] IReadOnlyFeature feature,
 		                         [NotNull] IPoint node,
 		                         [NotNull] IEnumerable<TooCloseNeighbor> tooCloseNeighbors)
 		{
@@ -546,7 +543,7 @@ namespace ProSuite.QA.Tests
 			return tooCloseNeighbors.Sum(neighbor => ReportError(feature, node, neighbor));
 		}
 
-		private int ReportError([NotNull] IFeature feature,
+		private int ReportError([NotNull] IReadOnlyFeature feature,
 		                        [NotNull] IPoint node,
 		                        [NotNull] TooCloseNeighbor neighborTooClose)
 		{
@@ -567,10 +564,10 @@ namespace ProSuite.QA.Tests
 			IssueCode issueCode = feature == neighborTooClose.Feature
 				                      ? Codes[Code.NodeTooCloseToLine_WithinFeature]
 				                      : Codes[Code.NodeTooCloseToLine_BetweenFeatures];
-			return ReportError(description, errorGeometry,
-			                   issueCode, _shapeFieldName,
-			                   new object[] {neighborTooClose.Distance},
-			                   feature, neighborTooClose.Feature);
+			return ReportError(
+				description, InvolvedRowUtils.GetInvolvedRows(feature, neighborTooClose.Feature),
+				errorGeometry, issueCode, _shapeFieldName,
+				values: new object[] { neighborTooClose.Distance });
 		}
 
 		/// <summary>
@@ -635,13 +632,13 @@ namespace ProSuite.QA.Tests
 
 		private void GetTooCloseNeighbors(
 			[NotNull] ICollection<TooCloseNeighbor> tooCloseNeighbors,
-			[NotNull] IFeature feature,
+			[NotNull] IReadOnlyFeature feature,
 			int nodeTableIndex,
 			[NotNull] IPoint node,
-			[NotNull] IFeatureClass nearFeatureClass,
+			[NotNull] IReadOnlyFeatureClass nearFeatureClass,
 			int nearTableIndex,
 			out bool isConnected,
-			[CanBeNull] ICollection<IFeature> connectedNeighbors = null,
+			[CanBeNull] ICollection<IReadOnlyFeature> connectedNeighbors = null,
 			bool returnAllConnectedNeighbors = false)
 		{
 			double searchDistance = _nearTolerancesByTableIndex[nearTableIndex];
@@ -649,7 +646,7 @@ namespace ProSuite.QA.Tests
 			double epsilon = GetEpsilon(node);
 
 			isConnected = false;
-			foreach (IFeature neighborFeature in
+			foreach (IReadOnlyFeature neighborFeature in
 				Search(node, nearFeatureClass, nearTableIndex, searchDistance))
 			{
 				if (feature == neighborFeature)
@@ -755,20 +752,20 @@ namespace ProSuite.QA.Tests
 		}
 
 		[NotNull]
-		private IEnumerable<IFeature> Search(
+		private IEnumerable<IReadOnlyFeature> Search(
 			[NotNull] IPoint node,
-			[NotNull] IFeatureClass nearFeatureClass,
+			[NotNull] IReadOnlyFeatureClass nearFeatureClass,
 			int nearTableIndex,
 			double searchDistance)
 		{
-			var table = (ITable) nearFeatureClass;
+			var table = (IReadOnlyTable) nearFeatureClass;
 
 			ISpatialFilter filter = GetSearchFilter(nearTableIndex, node, searchDistance);
 
 			QueryFilterHelper filterHelper = _helper[nearTableIndex];
 			filterHelper.MinimumOID = -1; // not symmetrical, can't set MinimumOID
 
-			return Search(table, filter, filterHelper, node).Cast<IFeature>();
+			return Search(table, filter, filterHelper, node).Cast<IReadOnlyFeature>();
 		}
 
 		private double GetDistance([NotNull] IPoint node,
@@ -901,7 +898,7 @@ namespace ProSuite.QA.Tests
 
 		private class TooCloseNeighbor
 		{
-			public TooCloseNeighbor([NotNull] IFeature feature, int tableIndex,
+			public TooCloseNeighbor([NotNull] IReadOnlyFeature feature, int tableIndex,
 			                        double distance)
 			{
 				TableIndex = tableIndex;
@@ -910,7 +907,7 @@ namespace ProSuite.QA.Tests
 			}
 
 			[NotNull]
-			public IFeature Feature { get; }
+			public IReadOnlyFeature Feature { get; }
 
 			public int TableIndex { get; }
 

@@ -10,6 +10,10 @@ namespace ProSuite.QA.Core
 	{
 		private IList<TestParameter> _parameters;
 
+		public abstract string TestDescription { get; }
+
+		public abstract string[] TestCategories { get; }
+
 		[NotNull]
 		public IList<TestParameter> Parameters
 		{
@@ -23,8 +27,6 @@ namespace ProSuite.QA.Core
 				return new ReadOnlyList<TestParameter>(_parameters);
 			}
 		}
-
-		public abstract string[] TestCategories { get; }
 
 		[NotNull]
 		public TestParameter GetParameter(string parameterName)
@@ -44,10 +46,8 @@ namespace ProSuite.QA.Core
 			                                          parameterName, GetTestTypeDescription()));
 		}
 
-		public abstract string GetTestDescription();
-
 		[CanBeNull]
-		public virtual string GetParameterDescription([NotNull] string parameterName)
+		public virtual string GetParameterDescription(string parameterName)
 		{
 			// TODO: revise, case-insensitive match is ok? (parameter name search is insensitive elsewhere)
 			foreach (TestParameter parameter in Parameters)

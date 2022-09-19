@@ -4,6 +4,7 @@ using ProSuite.QA.Container;
 using ProSuite.QA.Tests.Test.Construction;
 using ProSuite.QA.Tests.Test.TestRunners;
 using NUnit.Framework;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.AO.Test.TestSupport;
@@ -41,7 +42,8 @@ namespace ProSuite.QA.Tests.Test
 			                                 .Curve;
 			feature.Store();
 
-			var test = new QaGeometryConstraint(fc, "$CircularArcCount = 0", perPart: false);
+			var test = new QaGeometryConstraint(ReadOnlyTableFactory.Create(fc),
+			                                    "$CircularArcCount = 0", perPart: false);
 			var runner = new QaTestRunner(test);
 			runner.Execute(feature);
 
@@ -70,7 +72,7 @@ namespace ProSuite.QA.Tests.Test
 			feature.Shape = GeometryUtils.Union(correctPath, incorrectPath);
 			feature.Store();
 
-			var test = new QaGeometryConstraint(fc, "$CircularArcCount = 0", perPart: true);
+			var test = new QaGeometryConstraint(ReadOnlyTableFactory.Create(fc), "$CircularArcCount = 0", perPart: true);
 			var runner = new QaTestRunner(test);
 			runner.Execute(feature);
 

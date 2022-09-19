@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -26,14 +25,14 @@ namespace ProSuite.DomainServices.AO.QA
 		}
 
 		[CanBeNull]
-		public StopInfo GetStopInfo([NotNull] IRow row)
+		public StopInfo GetStopInfo([NotNull] IReadOnlyRow row)
 		{
 			if (! row.HasOID)
 			{
 				return null;
 			}
 
-			var rowReference = new RowReference(DatasetUtils.GetName(row.Table), row.OID);
+			var rowReference = new RowReference(row.Table.Name, row.OID);
 
 			StopInfo stopInfo;
 			return _rowsWithStopConditions.TryGetValue(rowReference, out stopInfo)

@@ -1,11 +1,11 @@
 using System.Collections.Generic;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container.Geometry;
 using ProSuite.QA.Container.TestContainer;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
 using Pnt = ProSuite.Commons.Geom.Pnt;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests.PointEnumerators
 {
@@ -17,7 +17,7 @@ namespace ProSuite.QA.Tests.PointEnumerators
 		public IndexedSegmentsFeaturePointEnumerator(
 			[NotNull] IIndexedSegmentsFeature indexedSegmentsFeature,
 			[CanBeNull] IEnvelope envelope)
-			: base((IFeature) indexedSegmentsFeature)
+			: base((IReadOnlyFeature) indexedSegmentsFeature)
 		{
 			_indexedSegmentsFeature = indexedSegmentsFeature;
 

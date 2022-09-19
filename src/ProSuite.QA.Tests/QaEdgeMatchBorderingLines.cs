@@ -6,7 +6,6 @@ using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.Geometry;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.EdgeMatch;
@@ -18,6 +17,8 @@ using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Core;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
 {
@@ -122,14 +123,14 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaEdgeMatchBorderingLines_0))]
 		public QaEdgeMatchBorderingLines(
 			[Doc(nameof(DocStrings.QaEdgeMatchBorderingLines_lineClass1))] [NotNull]
-			IFeatureClass lineClass1,
+			IReadOnlyFeatureClass lineClass1,
 			[Doc(nameof(DocStrings.QaEdgeMatchBorderingLines_borderClass1))] [NotNull]
-			IFeatureClass
+			IReadOnlyFeatureClass
 				borderClass1,
 			[Doc(nameof(DocStrings.QaEdgeMatchBorderingLines_lineClass2))] [NotNull]
-			IFeatureClass lineClass2,
+			IReadOnlyFeatureClass lineClass2,
 			[Doc(nameof(DocStrings.QaEdgeMatchBorderingLines_borderClass2))] [NotNull]
-			IFeatureClass
+			IReadOnlyFeatureClass
 				borderClass2,
 			[Doc(nameof(DocStrings.QaEdgeMatchBorderingLines_searchDistance))]
 			double
@@ -140,16 +141,16 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaEdgeMatchBorderingLines_1))]
 		public QaEdgeMatchBorderingLines(
 			[Doc(nameof(DocStrings.QaEdgeMatchBorderingLines_lineClasses1))] [NotNull]
-			IList<IFeatureClass>
+			IList<IReadOnlyFeatureClass>
 				lineClasses1,
 			[Doc(nameof(DocStrings.QaEdgeMatchBorderingLines_borderClass1))] [NotNull]
-			IFeatureClass
+			IReadOnlyFeatureClass
 				borderClass1,
 			[Doc(nameof(DocStrings.QaEdgeMatchBorderingLines_lineClasses2))] [NotNull]
-			IList<IFeatureClass>
+			IList<IReadOnlyFeatureClass>
 				lineClasses2,
 			[Doc(nameof(DocStrings.QaEdgeMatchBorderingLines_borderClass2))] [NotNull]
-			IFeatureClass
+			IReadOnlyFeatureClass
 				borderClass2,
 			[Doc(nameof(DocStrings.QaEdgeMatchBorderingLines_searchDistance))]
 			double
@@ -165,21 +166,21 @@ namespace ProSuite.QA.Tests
 			SearchDistance = searchDistance;
 			_searchDistance = searchDistance;
 
-			foreach (IFeatureClass lineClass in Union(lineClasses1, lineClasses2))
+			foreach (IReadOnlyFeatureClass lineClass in Union(lineClasses1, lineClasses2))
 			{
 				Assert.ArgumentCondition(
 					lineClass.ShapeType == esriGeometryType.esriGeometryPolyline,
 					string.Format("Polyline feature class expected: {0}",
-					              DatasetUtils.GetName(lineClass)));
+					              lineClass.Name));
 			}
 
-			foreach (IFeatureClass borderClass in new[] {borderClass1, borderClass2})
+			foreach (IReadOnlyFeatureClass borderClass in new[] {borderClass1, borderClass2})
 			{
 				Assert.ArgumentCondition(
 					borderClass.ShapeType == esriGeometryType.esriGeometryPolyline ||
 					borderClass.ShapeType == esriGeometryType.esriGeometryPolygon,
 					string.Format("Polyline or polygon feature class expected: {0}",
-					              DatasetUtils.GetName(borderClass)));
+					             borderClass.Name));
 			}
 
 			_lineClass1Indexes = new List<int>(lineClasses1.Count);
@@ -374,9 +375,9 @@ namespace ProSuite.QA.Tests
 			}
 		}
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
-			var feature = row as IFeature;
+			var feature = row as IReadOnlyFeature;
 			if (feature == null)
 			{
 				return NoError;
@@ -472,8 +473,8 @@ namespace ProSuite.QA.Tests
 			}
 
 			ConstraintError first = constraintErrors[0];
-			IFeature lineFeature = first.BorderConnection.Feature;
-			IFeature neighborFeature = first.NeighborBorderConnection.Feature;
+			IReadOnlyFeature lineFeature = first.BorderConnection.Feature;
+			IReadOnlyFeature neighborFeature = first.NeighborBorderConnection.Feature;
 
 			if (tileInfo.State != TileState.Final &&
 			    (! EdgeMatchUtils.VerifyHandled(lineFeature, tileWksBox, allWksBox) ||
@@ -501,12 +502,10 @@ namespace ProSuite.QA.Tests
 				description = first.ConstraintDescription;
 			}
 
-			return ReportError(description,
-			                   GeometryFactory.Clone(errorGeometry),
-			                   first.IssueCode,
-			                   first.AffectedComponents,
-			                   new[] {first.TextValue},
-			                   lineFeature, neighborFeature);
+			return ReportError(
+				description, InvolvedRowUtils.GetInvolvedRows(lineFeature, neighborFeature),
+				GeometryFactory.Clone(errorGeometry),
+				first.IssueCode, first.AffectedComponents, values: new[] { first.TextValue });
 		}
 
 		private int CompareBorderConnectionList(
@@ -713,9 +712,9 @@ namespace ProSuite.QA.Tests
 								.QaEdgeMatchBorderingLines_NoMatch_NoCandidate;
 						}
 
-						errorCount += ReportError(description, uncoveredPart,
-						                          Codes[codeId], null,
-						                          borderConnection.Feature);
+						errorCount += ReportError(
+							description, InvolvedRowUtils.GetInvolvedRows(borderConnection.Feature),
+							uncoveredPart, Codes[codeId], null);
 					}
 				}
 			}
@@ -784,7 +783,7 @@ namespace ProSuite.QA.Tests
 			                                  ref _bufferFactory);
 		}
 
-		private int CheckConnections([NotNull] IFeature feature,
+		private int CheckConnections([NotNull] IReadOnlyFeature feature,
 		                             int lineClassIndex,
 		                             int borderLineClassIndex,
 		                             [NotNull] ICollection<int> neighborLineClassIndexes,
@@ -840,7 +839,7 @@ namespace ProSuite.QA.Tests
 
 			foreach (int neighborLineClassIndex in neighborLineClassIndexes)
 			{
-				foreach (IFeature neighborFeature in
+				foreach (IReadOnlyFeature neighborFeature in
 					SearchNeighborRows(borderConnection.GeometryAlongBoundary,
 					                   neighborLineClassIndex))
 				{
@@ -882,7 +881,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[NotNull]
-		private IEnumerable<IFeature> SearchNeighborRows([NotNull] IPolyline borderLine,
+		private IEnumerable<IReadOnlyFeature> SearchNeighborRows([NotNull] IPolyline borderLine,
 		                                                 int neighborLineClassIndex)
 		{
 			ISpatialFilter spatialFilter = _filters[neighborLineClassIndex];
@@ -903,7 +902,7 @@ namespace ProSuite.QA.Tests
 			QueryFilterHelper filterHelper = _filterHelpers[neighborLineClassIndex];
 
 			bool origForNetwork = filterHelper.ForNetwork;
-			IEnumerable<IFeature> features;
+			IEnumerable<IReadOnlyFeature> features;
 			try
 			{
 				// do not filter out previously found features, 
@@ -911,7 +910,7 @@ namespace ProSuite.QA.Tests
 				filterHelper.ForNetwork = true;
 				features =
 					Search(InvolvedTables[neighborLineClassIndex], spatialFilter, filterHelper,
-					       borderLine.Envelope).Cast<IFeature>();
+					       borderLine.Envelope).Cast<IReadOnlyFeature>();
 			}
 			finally
 			{
@@ -1007,14 +1006,14 @@ namespace ProSuite.QA.Tests
 		}
 
 		private int ReportEndPointError([NotNull] IPoint endPoint,
-		                                [NotNull] IFeature lineFeature,
-		                                [NotNull] IFeature neighborFeature)
+		                                [NotNull] IReadOnlyFeature lineFeature,
+		                                [NotNull] IReadOnlyFeature neighborFeature)
 		{
 			return ReportError(
 				LocalizableStrings.QaEdgeMatchBorderingLines_Match_EndPointNotCoincident,
+				InvolvedRowUtils.GetInvolvedRows(lineFeature, neighborFeature),
 				GeometryFactory.Clone(endPoint),
-				Codes[Code.Match_EndPointNotCoincident], null,
-				lineFeature, neighborFeature);
+				Codes[Code.Match_EndPointNotCoincident], null);
 		}
 
 		[CanBeNull]
@@ -1042,7 +1041,7 @@ namespace ProSuite.QA.Tests
 		[NotNull]
 		private IEnumerable<BorderConnection> GetBorderConnections(
 			[NotNull] IPolyline line,
-			[NotNull] IFeature lineFeature,
+			[NotNull] IReadOnlyFeature lineFeature,
 			int lineClassIndex,
 			int borderClassIndex)
 		{
@@ -1164,7 +1163,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[NotNull]
-		private IEnumerable<ITable> GetTables([NotNull] IEnumerable<int> tableIndexes)
+		private IEnumerable<IReadOnlyTable> GetTables([NotNull] IEnumerable<int> tableIndexes)
 		{
 			var result = new SimpleSet<int>();
 			foreach (int tableIndex in tableIndexes)
@@ -1191,18 +1190,18 @@ namespace ProSuite.QA.Tests
 
 		[NotNull]
 		private static IDictionary<int, double> GetXyToleranceByTableIndex(
-			[NotNull] ICollection<ITable> involvedTables)
+			[NotNull] ICollection<IReadOnlyTable> involvedTables)
 		{
 			var result = new Dictionary<int, double>(involvedTables.Count);
 
 			var index = 0;
-			foreach (ITable table in involvedTables)
+			foreach (IReadOnlyTable table in involvedTables)
 			{
-				var featureClass = table as IFeatureClass;
+				var featureClass = table as IReadOnlyFeatureClass;
 
 				double xyTolerance;
 				if (featureClass == null ||
-				    ! DatasetUtils.TryGetXyTolerance(featureClass, out xyTolerance))
+				    ! DatasetUtils.TryGetXyTolerance(featureClass.SpatialReference, out xyTolerance))
 				{
 					xyTolerance = 0;
 				}
@@ -1216,14 +1215,14 @@ namespace ProSuite.QA.Tests
 
 		[NotNull]
 		private static IDictionary<int, esriGeometryType> GetGeometryTypesByTableIndex(
-			[NotNull] ICollection<ITable> involvedTables)
+			[NotNull] ICollection<IReadOnlyTable> involvedTables)
 		{
 			var result = new Dictionary<int, esriGeometryType>(involvedTables.Count);
 
 			var index = 0;
-			foreach (ITable table in involvedTables)
+			foreach (IReadOnlyTable table in involvedTables)
 			{
-				result.Add(index, ((IFeatureClass) table).ShapeType);
+				result.Add(index, ((IReadOnlyFeatureClass) table).ShapeType);
 				index++;
 			}
 
@@ -1296,9 +1295,9 @@ namespace ProSuite.QA.Tests
 		private class BorderConnectionCache :
 			EdgeMatchBorderConnectionCache<BorderConnection>
 		{
-			protected override BorderConnection CreateBorderConnection(IFeature feature,
+			protected override BorderConnection CreateBorderConnection(IReadOnlyFeature feature,
 			                                                           int featureClassIndex,
-			                                                           IFeature borderFeature,
+																	   IReadOnlyFeature borderFeature,
 			                                                           int borderClassIndex,
 			                                                           IPolyline
 				                                                           lineAlongBorder,
@@ -1343,9 +1342,9 @@ namespace ProSuite.QA.Tests
 
 		private class BorderConnection : EdgeMatchSingleBorderConnection
 		{
-			public BorderConnection([NotNull] IFeature lineFeature,
+			public BorderConnection([NotNull] IReadOnlyFeature lineFeature,
 			                        int lineClassIndex,
-			                        [NotNull] IFeature borderFeature,
+			                        [NotNull] IReadOnlyFeature borderFeature,
 			                        int borderClassIndex,
 			                        [NotNull] IPolyline lineAlongBorder,
 			                        [NotNull] IPolyline uncoveredBoundary)

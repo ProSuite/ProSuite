@@ -3,7 +3,6 @@ using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
@@ -12,6 +11,8 @@ using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
 {
@@ -19,7 +20,7 @@ namespace ProSuite.QA.Tests
 	[TopologyTest]
 	public class QaDuplicateGeometrySelf : QaSpatialRelationSelfBase
 	{
-		private readonly IFeatureClass _featureClass;
+		private readonly IReadOnlyFeatureClass _featureClass;
 		private readonly bool _reportSingleErrorPerDuplicateSet;
 		private readonly string _shapeFieldName;
 		private readonly string _validRelationConstraintSql;
@@ -57,13 +58,13 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaDuplicateGeometrySelf_0))]
 		public QaDuplicateGeometrySelf(
 			[Doc(nameof(DocStrings.QaDuplicateGeometrySelf_featureClass))] [NotNull]
-			IFeatureClass featureClass)
+			IReadOnlyFeatureClass featureClass)
 			: this(featureClass, string.Empty) { }
 
 		[Doc(nameof(DocStrings.QaDuplicateGeometrySelf_1))]
 		public QaDuplicateGeometrySelf(
 				[Doc(nameof(DocStrings.QaDuplicateGeometrySelf_featureClass))] [NotNull]
-				IFeatureClass featureClass,
+				IReadOnlyFeatureClass featureClass,
 				[Doc(nameof(DocStrings.QaDuplicateGeometrySelf_validDuplicateConstraint))] [CanBeNull]
 				string
 					validDuplicateConstraint)
@@ -73,7 +74,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaDuplicateGeometrySelf_2))]
 		public QaDuplicateGeometrySelf(
 			[Doc(nameof(DocStrings.QaDuplicateGeometrySelf_featureClass))] [NotNull]
-			IFeatureClass featureClass,
+			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaDuplicateGeometrySelf_validDuplicateConstraint))] [CanBeNull]
 			string
 				validDuplicateConstraint,
@@ -98,8 +99,8 @@ namespace ProSuite.QA.Tests
 			return false;
 		}
 
-		protected override int FindErrors(IRow row1, int tableIndex1,
-		                                  IRow row2, int tableIndex2)
+		protected override int FindErrors(IReadOnlyRow row1, int tableIndex1,
+										  IReadOnlyRow row2, int tableIndex2)
 		{
 			if (_validRelationConstraint == null)
 			{
@@ -244,11 +245,12 @@ namespace ProSuite.QA.Tests
 			Dictionary<int, HashSet<int>> duplicatesByFirstOid =
 				GetDuplicatesByFirstOid(_duplicateSets);
 
-			string tableName = DatasetUtils.GetName(_featureClass);
+			string tableName = _featureClass.Name;
 			const bool recycle = true;
-			foreach (IFeature feature in GdbQueryUtils.GetFeatures(
+			foreach (IReadOnlyRow r in GdbQueryUtils.GetRows(
 				_featureClass, duplicatesByFirstOid.Keys, recycle))
 			{
+				IReadOnlyFeature feature = (IReadOnlyFeature) r;
 				HashSet<int> duplicates = duplicatesByFirstOid[feature.OID];
 
 				string errorDescription = _validRelationConstraintSql == null
@@ -256,9 +258,8 @@ namespace ProSuite.QA.Tests
 					                          : "Geometries are equal and constraint is not fulfilled";
 
 				IGeometry errorGeometry = feature.ShapeCopy;
-				errorCount += ReportError(errorDescription, errorGeometry,
-				                          GetIssueCode(), _shapeFieldName,
-				                          GetInvolvedRows(tableName, duplicates));
+				errorCount += ReportError(errorDescription, GetInvolvedRows(tableName, duplicates),
+				                          errorGeometry, GetIssueCode(), _shapeFieldName);
 			}
 
 			return errorCount;
@@ -284,11 +285,14 @@ namespace ProSuite.QA.Tests
 		}
 
 		[NotNull]
-		private static IEnumerable<InvolvedRow> GetInvolvedRows(
+		private static InvolvedRows GetInvolvedRows(
 			[NotNull] string tableName,
 			[NotNull] IEnumerable<int> oids)
 		{
-			return oids.Select(oid => new InvolvedRow(tableName, oid));
+			InvolvedRows result = new InvolvedRows();
+			result.AddRange(oids.Select(oid => new InvolvedRow(tableName, oid)));
+
+			return result;
 		}
 	}
 }

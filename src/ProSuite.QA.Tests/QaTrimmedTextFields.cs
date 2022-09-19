@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.QA.Tests.Properties;
@@ -11,6 +10,8 @@ using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
 {
@@ -45,13 +46,13 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaTrimmedTextFields_0))]
 		public QaTrimmedTextFields(
 			[Doc(nameof(DocStrings.QaTrimmedTextFields_table))] [NotNull]
-			ITable table)
+			IReadOnlyTable table)
 			: this(table, 0, GetAllTextFieldNames(table), FieldListType.RelevantFields) { }
 
 		[Doc(nameof(DocStrings.QaTrimmedTextFields_1))]
 		public QaTrimmedTextFields(
 			[Doc(nameof(DocStrings.QaTrimmedTextFields_table))] [NotNull]
-			ITable table,
+			IReadOnlyTable table,
 			[Doc(nameof(DocStrings.QaTrimmedTextFields_allowedWhiteSpaceOnlyCount))]
 			int
 				allowedWhiteSpaceOnlyCount)
@@ -61,7 +62,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaTrimmedTextFields_2))]
 		public QaTrimmedTextFields(
 			[Doc(nameof(DocStrings.QaTrimmedTextFields_table))] [NotNull]
-			ITable table,
+			IReadOnlyTable table,
 			[Doc(nameof(DocStrings.QaTrimmedTextFields_textFieldName))] [NotNull]
 			string textFieldName)
 			: this(table, 0, textFieldName) { }
@@ -69,7 +70,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaTrimmedTextFields_3))]
 		public QaTrimmedTextFields(
 			[Doc(nameof(DocStrings.QaTrimmedTextFields_table))] [NotNull]
-			ITable table,
+			IReadOnlyTable table,
 			[Doc(nameof(DocStrings.QaTrimmedTextFields_allowedWhiteSpaceOnlyCount))]
 			int
 				allowedWhiteSpaceOnlyCount,
@@ -81,7 +82,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaTrimmedTextFields_4))]
 		public QaTrimmedTextFields(
 			[Doc(nameof(DocStrings.QaTrimmedTextFields_table))] [NotNull]
-			ITable table,
+			IReadOnlyTable table,
 			[Doc(nameof(DocStrings.QaTrimmedTextFields_allowedWhiteSpaceOnlyCount))]
 			int
 				allowedWhiteSpaceOnlyCount,
@@ -95,7 +96,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaTrimmedTextFields_5))]
 		public QaTrimmedTextFields(
 			[Doc(nameof(DocStrings.QaTrimmedTextFields_table))] [NotNull]
-			ITable table,
+			IReadOnlyTable table,
 			[Doc(nameof(DocStrings.QaTrimmedTextFields_allowedWhiteSpaceOnlyCount))]
 			int
 				allowedWhiteSpaceOnlyCount,
@@ -111,7 +112,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaTrimmedTextFields_6))]
 		public QaTrimmedTextFields(
 			[Doc(nameof(DocStrings.QaTrimmedTextFields_table))] [NotNull]
-			ITable table,
+			IReadOnlyTable table,
 			[Doc(nameof(DocStrings.QaTrimmedTextFields_allowedWhiteSpaceOnlyCount))]
 			int
 				allowedWhiteSpaceOnlyCount,
@@ -132,7 +133,7 @@ namespace ProSuite.QA.Tests
 
 		[NotNull]
 		private static IEnumerable<int> GetFieldIndices(
-			[NotNull] ITable table,
+			[NotNull] IReadOnlyTable table,
 			[NotNull] IEnumerable<string> textFieldNames,
 			FieldListType fieldListType)
 		{
@@ -153,7 +154,7 @@ namespace ProSuite.QA.Tests
 
 		[NotNull]
 		private static IEnumerable<int> GetFieldIndicesFromRelevantFieldNames(
-			[NotNull] ITable table,
+			[NotNull] IReadOnlyTable table,
 			[NotNull] IEnumerable<string> textFieldNames)
 		{
 			IFields fields = table.Fields;
@@ -167,7 +168,7 @@ namespace ProSuite.QA.Tests
 				{
 					throw new ArgumentException(
 						string.Format("Field not found in table {0}: {1}",
-						              DatasetUtils.GetName(table),
+						              table.Name,
 						              fieldName), nameof(textFieldNames));
 				}
 
@@ -176,7 +177,7 @@ namespace ProSuite.QA.Tests
 					throw new ArgumentException(
 						string.Format("Field {0} in table {1} is not a text field",
 						              fieldName,
-						              DatasetUtils.GetName(table)), nameof(textFieldNames));
+						              table.Name), nameof(textFieldNames));
 				}
 
 				yield return index;
@@ -185,14 +186,14 @@ namespace ProSuite.QA.Tests
 
 		[NotNull]
 		private static IEnumerable<int> GetFieldIndicesFromIgnoredFieldNames(
-			[NotNull] ITable table,
+			[NotNull] IReadOnlyTable table,
 			[NotNull] IEnumerable<string> ignoredFieldNames)
 		{
 			var ignoredFields = new SimpleSet<string>(
 				ignoredFieldNames, StringComparer.InvariantCultureIgnoreCase);
 
 			int fieldIndex = 0;
-			foreach (IField field in DatasetUtils.GetFields(table))
+			foreach (IField field in DatasetUtils.GetFields(table.Fields))
 			{
 				if (field.Type == esriFieldType.esriFieldTypeString &&
 				    ! ignoredFields.Contains(field.Name))
@@ -219,14 +220,14 @@ namespace ProSuite.QA.Tests
 			return false;
 		}
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
 			return _textFieldIndices.Sum(fieldIndex => Checkfield(row, fieldIndex));
 		}
 
-		private int Checkfield([NotNull] IRow row, int fieldIndex)
+		private int Checkfield([NotNull] IReadOnlyRow row, int fieldIndex)
 		{
-			object value = row.Value[fieldIndex];
+			object value = row.get_Value(fieldIndex);
 
 			if (value == null || value is DBNull)
 			{
@@ -243,13 +244,14 @@ namespace ProSuite.QA.Tests
 			}
 			catch (Exception e)
 			{
-				fieldName = row.Fields.Field[fieldIndex].Name;
+				fieldName = row.Table.Fields.Field[fieldIndex].Name;
 				description =
 					string.Format(LocalizableStrings.QaTrimmedTextFields_InvalidStringValue,
 					              fieldName, value, e.Message);
 
-				return ReportError(description, TestUtils.GetShapeCopy(row),
-				                   Codes[Code.ErrorReadingString], fieldName, row);
+				return ReportError(
+					description, InvolvedRowUtils.GetInvolvedRows(row), TestUtils.GetShapeCopy(row),
+					Codes[Code.ErrorReadingString], fieldName);
 			}
 
 			// check for leading or trailing blanks
@@ -306,14 +308,15 @@ namespace ProSuite.QA.Tests
 					fieldDisplayName, blankCount);
 			}
 
-			return ReportError(description, TestUtils.GetShapeCopy(row),
-			                   issueCode, fieldName, row);
+			return ReportError(
+				description, InvolvedRowUtils.GetInvolvedRows(row), TestUtils.GetShapeCopy(row),
+				issueCode, fieldName);
 		}
 
 		[NotNull]
-		private static IEnumerable<string> GetAllTextFieldNames([NotNull] ITable table)
+		private static IEnumerable<string> GetAllTextFieldNames([NotNull] IReadOnlyTable table)
 		{
-			return DatasetUtils.GetFields(table)
+			return DatasetUtils.GetFields(table.Fields)
 			                   .Where(field => field.Type == esriFieldType.esriFieldTypeString)
 			                   .Select(field => field.Name);
 		}

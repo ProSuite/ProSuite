@@ -7,6 +7,7 @@ using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.QA.Core.IssueCodes;
 
 namespace ProSuite.QA.Tests
 {
@@ -28,8 +29,8 @@ namespace ProSuite.QA.Tests
 		/// <param name="featureClass">The featureClass.</param>
 		/// <param name="limit">The limit.</param>
 		/// <param name="perPart">if set to <c>true</c> inidividual parts are tested.</param>
-		protected QaAreaBase([NotNull] IFeatureClass featureClass,
-		                     double limit, bool perPart) : base((ITable) featureClass)
+		protected QaAreaBase([NotNull] IReadOnlyFeatureClass featureClass,
+		                     double limit, bool perPart) : base(featureClass)
 		{
 			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
 
@@ -39,7 +40,7 @@ namespace ProSuite.QA.Tests
 
 			NumberFormat = "N0";
 
-			IField areaField = DatasetUtils.GetAreaField(featureClass);
+			IField areaField = featureClass.AreaField;
 
 			_areaFieldIndex = areaField == null
 				                  ? -1
@@ -59,9 +60,9 @@ namespace ProSuite.QA.Tests
 			return false;
 		}
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
-			var feature = (IFeature) row;
+			var feature = (IReadOnlyFeature) row;
 
 			IGeometry shape = feature.Shape;
 
@@ -122,20 +123,20 @@ namespace ProSuite.QA.Tests
 		                          double area,
 		                          [NotNull] string relation,
 		                          [CanBeNull] IssueCode issueCode,
-		                          [NotNull] IRow row)
+		                          [NotNull] IReadOnlyRow row)
 		{
 			string description = string.Format("Area {0}",
 			                                   FormatAreaComparison(area, relation, Limit,
 			                                                        shape.SpatialReference));
 
-			return ReportError(description, GetErrorGeometry(shape),
-			                   issueCode, _shapeFieldName,
-			                   row);
+			return ReportError(description, InvolvedRowUtils.GetInvolvedRows(row),
+			                   GetErrorGeometry(shape),
+			                   issueCode, _shapeFieldName);
 		}
 
 		protected abstract int CheckArea(double area,
 		                                 [NotNull] IGeometry shape,
-		                                 [NotNull] IRow row);
+		                                 [NotNull] IReadOnlyRow row);
 
 		[NotNull]
 		private static IGeometry GetErrorGeometry([NotNull] IGeometry shape)
@@ -159,7 +160,7 @@ namespace ProSuite.QA.Tests
 			return result;
 		}
 
-		private int ExecutePart(IRow row, IGeometry shape)
+		private int ExecutePart(IReadOnlyRow row, IGeometry shape)
 		{
 			double area = ((IArea) shape).Area;
 			double absoluteArea = Math.Abs(area);

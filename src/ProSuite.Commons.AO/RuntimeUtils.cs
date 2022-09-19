@@ -1,13 +1,8 @@
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS;
-using Microsoft.Win32;
-using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Reflection;
@@ -22,8 +17,7 @@ namespace ProSuite.Commons.AO
 		private static bool? _is10_1;
 		private static bool? _is10_0;
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		public static bool Is10_4orHigher => ! Is10_0 && ! Is10_1 && ! Is10_2 && ! Is10_3;
 
@@ -118,66 +112,6 @@ namespace ProSuite.Commons.AO
 				runtimeInfo => runtimeInfo.Product == productCode);
 		}
 
-		[NotNull]
-		public static string GetInstallationDirectory(bool preferRunningProduct = false)
-		{
-			string version = Version;
-
-			Assert.NotNull(version, "Unable to determine runtime version");
-
-			List<string> registryKeys;
-
-			string result;
-			if (preferRunningProduct && TryGetInstallDirForActiveRuntime(out result))
-			{
-				return result;
-			}
-
-			if (SystemUtils.Is64BitProcess)
-			{
-				// must be either background geoprocessing or server
-				registryKeys =
-					new List<string>
-					{
-						@"HKEY_LOCAL_MACHINE\SOFTWARE\ESRI\Desktop Background Geoprocessing (64-bit)",
-						$@"HKEY_LOCAL_MACHINE\SOFTWARE\ESRI\Server{version}"
-					};
-			}
-			else
-			{
-				// must be either desktop or engine
-				registryKeys =
-					new List<string>
-					{
-						$@"HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\ESRI\Desktop{version}",
-						$@"HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\ESRI\Engine{version}"
-					};
-			}
-
-			const string valueName = "InstallDir";
-
-			foreach (string key in registryKeys)
-			{
-				object value = Registry.GetValue(key, valueName, null);
-				if (value == null)
-				{
-					continue;
-				}
-
-				var installDirectory = value as string;
-				Assert.NotNull(installDirectory,
-				               "unexpected value for '{0}' in key '{1}': {2}",
-				               valueName, key, value);
-
-				Assert.True(Directory.Exists(installDirectory),
-				            "Install directory does not exist: {0}", installDirectory);
-
-				return installDirectory;
-			}
-
-			throw new InvalidOperationException("Installation directory not found");
-		}
-
 		/// <summary>
 		/// Tries to the get the version from the ESRI.ArcGIS.Version assembly.
 		/// </summary>
@@ -261,48 +195,6 @@ namespace ProSuite.Commons.AO
 			_msg.DebugFormat("Unable to get ArcGIS version from assembly");
 
 			return false;
-		}
-
-		private static bool TryGetInstallDirForActiveRuntime(out string installDir)
-		{
-			installDir = null;
-
-			try
-			{
-				// the following code fails in the 64bit background environment (see COM-221)
-				RuntimeInfo runtime = RuntimeManager.ActiveRuntime;
-
-				if (runtime == null)
-				{
-					// not bound yet?
-
-					// There seems to be another scenario where this is null (observed
-					// for background gp on a particular setup, which also includes server).
-					_msg.Debug("RuntimeInfo not available.");
-
-					return false;
-				}
-
-				if (Process.GetCurrentProcess().ProcessName.Equals("python"))
-				{
-					// in x64-bit python the active runtime is Server (even if background GP is installed too).
-					// However, the (contour) GP tool fails (E_FAIL, TOP-5169) unless the Desktop(!) toolbox is referenced.
-					_msg.DebugFormat(
-						"Called from python. The active runtime ({0}) might be incorrect -> using default implementation, favoring Desktop.",
-						runtime.Product);
-					return false;
-				}
-
-				installDir = runtime.Path;
-				return true;
-			}
-			catch (DllNotFoundException e)
-			{
-				_msg.VerboseDebug(
-					() => $"Error accessing RuntimeManager: {e.Message}.", e);
-
-				return false;
-			}
 		}
 	}
 }

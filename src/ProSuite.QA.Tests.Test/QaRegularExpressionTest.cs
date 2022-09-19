@@ -82,7 +82,8 @@ namespace ProSuite.QA.Tests.Test
 
 				((IWorkspaceEdit) _testWs).StopEditing(true);
 
-				ITest test = new QaRegularExpression(table, "A", _textFieldName);
+				ITest test = new QaRegularExpression(
+					ReadOnlyTableFactory.Create(table), "A", _textFieldName);
 
 				IList<QaError> errors = Run(test, 1000);
 				AssertErrors(1, errors);
@@ -125,11 +126,11 @@ namespace ProSuite.QA.Tests.Test
 
 				((IWorkspaceEdit) _testWs).StopEditing(true);
 
-				var test =
-					new QaRegularExpression(table, "A", _textFieldName2)
-					{
-						FieldListType = FieldListType.IgnoredFields
-					};
+				var test = new QaRegularExpression(
+					           ReadOnlyTableFactory.Create(table), "A", _textFieldName2)
+				           {
+					           FieldListType = FieldListType.IgnoredFields
+				           };
 
 				IList<QaError> errors = Run(test, 1000);
 				AssertErrors(1, errors);
@@ -213,7 +214,7 @@ namespace ProSuite.QA.Tests.Test
 				InstanceConfigurationUtils.AddParameterValue(condition, "MatchIsError", false);
 				//condition.AddParameterValue("PatternDescription", "Hallo");
 
-				var factory = new QaRelRegularExpression {Condition = condition};
+				var factory = new QaRelRegularExpression { Condition = condition };
 
 				IList<ITest> tests =
 					factory.CreateTests(

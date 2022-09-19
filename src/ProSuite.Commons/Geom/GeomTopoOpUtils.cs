@@ -1,16 +1,21 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Exceptions;
+using ProSuite.Commons.Logging;
 
 namespace ProSuite.Commons.Geom
 {
 	public static class GeomTopoOpUtils
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		/// <summary>
-		/// Returns the lines that are part of <paramref name="linestring1"></paramref> but have
+		/// Returns the lines that are part of <paramref name="linestring1"/> but have
 		/// no linear intersection in the XY plane with <paramref name="multiLinestring2"/>.
 		/// Optionally the sequence of lines that exist in both geometries but differ in Z
 		/// are calculated (having vertices from both inputs but Z values of <paramref name="linestring1"/>).
@@ -38,16 +43,19 @@ namespace ProSuite.Commons.Geom
 			IEnumerable<Line3D> resultSegments = GetDifferenceLinesXY(
 				linestring1, multiLinestring2, tolerance, zOnlyDiffLines, zTolerance);
 
+			double epsilon =
+				MathUtils.GetDoubleSignificanceEpsilon(multiLinestring2.XMax,
+				                                       multiLinestring2.YMax);
 			if (zOnlyDiffLines != null)
 			{
 				foreach (Linestring zOnlyLinestring in CollectIntersectionPaths(
-					         zOnlyDiffLines))
+					         zOnlyDiffLines, epsilon))
 				{
 					zOnlyDifferences.Add(zOnlyLinestring);
 				}
 			}
 
-			return CollectIntersectionPaths(resultSegments);
+			return CollectIntersectionPaths(resultSegments, epsilon);
 		}
 
 		public static bool IsLinearIntersectionDifferentInZ(
@@ -86,8 +94,10 @@ namespace ProSuite.Commons.Geom
 			IEnumerable<Line3D> zOnlyDifferenceLines =
 				GetZOnlyDifferenceLines(linestring1, multiLinestring2, tolerance);
 
-			IList<Linestring> result =
-				CollectIntersectionPaths(zOnlyDifferenceLines);
+			double epsilon =
+				MathUtils.GetDoubleSignificanceEpsilon(linestring1.XMax, linestring1.YMax);
+
+			IList<Linestring> result = CollectIntersectionPaths(zOnlyDifferenceLines, epsilon);
 
 			return result;
 		}
@@ -241,6 +251,37 @@ namespace ProSuite.Commons.Geom
 			return resultXY.SelectMany(r => GetConnectedComponents(r, tolerance)).ToList();
 		}
 
+		public static Polyhedron GetDifferenceAreasXY(
+			[NotNull] Polyhedron sourcePolyhedron,
+			[NotNull] Polyhedron targetPolyhedron,
+			double tolerance,
+			ChangeAlongZSource zSource = ChangeAlongZSource.Target)
+		{
+			// Because the source rings of polyhedra can touch (along lines) and even interior-intersect,
+			// we cannot use the standard ring navigation. Each ring must be processed individually.
+
+			var resultRingGroups = new List<RingGroup>();
+			foreach (RingGroup ringGroup in sourcePolyhedron.RingGroups)
+			{
+				// TODO: Spatial index on the full target polyhedron, so we could calculate the intersection
+				//       points only once.
+
+				MultiLinestring perRingResult =
+					GetDifferenceAreasXY(ringGroup, targetPolyhedron, tolerance, zSource);
+
+				if (! perRingResult.IsEmpty)
+				{
+					foreach (RingGroup resultRing in
+					         GetConnectedComponents(perRingResult, tolerance))
+					{
+						resultRingGroups.Add(resultRing);
+					}
+				}
+			}
+
+			return new Polyhedron(resultRingGroups);
+		}
+
 		public static MultiLinestring GetDifferenceAreasXY(
 			[NotNull] MultiLinestring sourceRings,
 			[NotNull] Polyhedron targetPolyhedron,
@@ -252,14 +293,25 @@ namespace ProSuite.Commons.Geom
 			var result = sourceRings.Clone();
 
 			// TODO: Consider calculating the plane only once.
+			int count = 0;
 			foreach (var targetRingGroup in targetPolyhedron.RingGroups)
 			{
+				if (GeomRelationUtils.AreBoundsDisjoint(sourceRings, targetRingGroup, tolerance))
+				{
+					continue;
+				}
+
 				result = GetDifferenceAreasXY(result, targetRingGroup, tolerance, zSource);
 
 				if (result.IsEmpty)
 				{
 					return result;
 				}
+
+				// ReSharper disable once AccessToModifiedClosure
+				_msg.VerboseDebug(() => $"Processed target ring index at {count}");
+
+				count++;
 			}
 
 			return result;
@@ -282,10 +334,73 @@ namespace ProSuite.Commons.Geom
 						new SubcurveNavigator(source, target, tolerance);
 					var ringOperator = new RingOperator(subcurveNavigator);
 
-					return ringOperator.DifferenceXY();
+					if (_msg.IsVerboseDebugEnabled)
+					{
+						LogGeometries(nameof(GetDifferenceAreasXY), sourceRings, targetRings);
+					}
+
+					try
+					{
+						return ringOperator.DifferenceXY();
+					}
+					catch (Exception e)
+					{
+						IList<string> loggedGeometries =
+							LogGeometries(nameof(GetDifferenceAreasXY), sourceRings, targetRings);
+
+						_msg.Debug("Error calculating XY-difference areas with " +
+						           $"tolerance {tolerance}.", e);
+
+						throw new GeomException("Error calculating XY-difference areas with " +
+						                        $"tolerance {tolerance}.", e)
+						      {
+							      ErrorGeometries = loggedGeometries
+						      };
+					}
 				}, tolerance, zSource);
 
 			return result;
+		}
+
+		public static Polyhedron GetIntersectionAreasXY(
+			[NotNull] Polyhedron sourcePolyhedron,
+			[NotNull] Polyhedron targetPolyhedron,
+			double tolerance,
+			ChangeAlongZSource zSource = ChangeAlongZSource.Target)
+		{
+			// Because the source rings of polyhedra can touch (along lines) and even interior-intersect,
+			// we cannot use the standard ring navigation. Each ring must be processed individually.
+
+			var resultRingGroups = new List<RingGroup>();
+			foreach (RingGroup sourceRingGroup in sourcePolyhedron.RingGroups)
+			{
+				if (GeomRelationUtils.AreBoundsDisjoint(sourceRingGroup, targetPolyhedron,
+				                                        tolerance))
+				{
+					continue;
+				}
+
+				// TODO: Spatial index on the full target polyhedron, so we could calculate the intersection
+				//       points only once.
+
+				IList<IntersectionArea3D> perRingResult =
+					GetIntersectionAreasXY(sourceRingGroup, targetPolyhedron, tolerance, zSource);
+
+				foreach (MultiLinestring intersectionArea in perRingResult.Select(
+					         i => i.IntersectionArea))
+				{
+					if (! intersectionArea.IsEmpty)
+					{
+						foreach (RingGroup resultRing in
+						         GetConnectedComponents(intersectionArea, tolerance))
+						{
+							resultRingGroups.Add(resultRing);
+						}
+					}
+				}
+			}
+
+			return new Polyhedron(resultRingGroups);
 		}
 
 		public static IList<IntersectionArea3D> GetIntersectionAreasXY(
@@ -332,7 +447,29 @@ namespace ProSuite.Commons.Geom
 
 					var ringOperator = new RingOperator(subcurveNavigator);
 
-					return ringOperator.IntersectXY();
+					if (_msg.IsVerboseDebugEnabled)
+					{
+						LogGeometries(nameof(GetIntersectionAreasXY), sourceRings, targetRings);
+					}
+
+					try
+					{
+						return ringOperator.IntersectXY();
+					}
+					catch (Exception e)
+					{
+						IList<string> loggedGeometries =
+							LogGeometries(nameof(GetIntersectionAreasXY), sourceRings, targetRings);
+
+						_msg.Debug("Error calculating XY-intersection areas with " +
+						           $"tolerance {tolerance}.", e);
+
+						throw new GeomException("Error calculating XY-intersection areas with " +
+						                        $"tolerance {tolerance}.", e)
+						      {
+							      ErrorGeometries = loggedGeometries
+						      };
+					}
 				}, tolerance, zSource);
 
 			return result;
@@ -371,6 +508,54 @@ namespace ProSuite.Commons.Geom
 			return result;
 		}
 
+		public static MultiLinestring GetUnionAreasXY(
+			[NotNull] MultiLinestring sourceRings,
+			[NotNull] Polyhedron targetPolyhedron,
+			double tolerance)
+		{
+			// Use the source rings and iteratively go through all target rings and remove the intersections:
+
+			IEnumerable<RingGroup> allInputRings;
+			if (sourceRings is RingGroup sourceRingGroup)
+			{
+				allInputRings = targetPolyhedron.RingGroups.Prepend(sourceRingGroup);
+			}
+			else if (sourceRings is Polyhedron sourcePolyhedron)
+			{
+				allInputRings = sourcePolyhedron.RingGroups.Union(targetPolyhedron.RingGroups);
+			}
+			else
+			{
+				IEnumerable<RingGroup> sourceRingGroups =
+					GetConnectedComponents(sourceRings, tolerance);
+
+				allInputRings = sourceRingGroups.Union(targetPolyhedron.RingGroups);
+			}
+
+			return GetUnionAreasXY(allInputRings, tolerance);
+		}
+
+		public static MultiLinestring GetUnionAreasXY([NotNull] IEnumerable<RingGroup> ringGroups,
+		                                              double tolerance)
+		{
+			MultiLinestring result = null;
+
+			// TODO: Optimize and use potential spatial index (change to input polyhedron?)
+			foreach (RingGroup ringGroup in ringGroups)
+			{
+				if (result == null)
+				{
+					result = ringGroup.Clone();
+				}
+				else
+				{
+					result = GetUnionAreasXY(result, ringGroup, tolerance);
+				}
+			}
+
+			return result;
+		}
+
 		public static MultiLinestring GetUnionAreasXY([NotNull] MultiLinestring sourceRings,
 		                                              [NotNull] MultiLinestring targetRings,
 		                                              double tolerance)
@@ -382,7 +567,28 @@ namespace ProSuite.Commons.Geom
 
 			var ringOperator = new RingOperator(subcurveNavigator);
 
-			return ringOperator.UnionXY();
+			if (_msg.IsVerboseDebugEnabled)
+			{
+				LogGeometries(nameof(GetUnionAreasXY), sourceRings, targetRings);
+			}
+
+			try
+			{
+				return ringOperator.UnionXY();
+			}
+			catch (Exception e)
+			{
+				IList<string> loggedGeometries =
+					LogGeometries(nameof(GetUnionAreasXY), sourceRings, targetRings);
+
+				_msg.Debug("Error calculating XY-union areas with " +
+				           $"tolerance {tolerance}.", e);
+				throw new GeomException("Error calculating XY-union areas with " +
+				                        $"tolerance {tolerance}.", e)
+				      {
+					      ErrorGeometries = loggedGeometries
+				      };
+			}
 		}
 
 		[NotNull]
@@ -753,8 +959,7 @@ namespace ProSuite.Commons.Geom
 			double distanceFromNext = nextSegment.GetDistanceXYPerpendicularSigned(
 				testPoint, out double distanceAlongNextRatio);
 
-			if (Math.Abs(distanceFromNext) < tolerance &&
-			    distanceAlongNextRatio >= 0 && distanceAlongNextRatio <= 1)
+			if (Math.Abs(distanceFromNext) < tolerance && distanceAlongNextRatio >= 0)
 			{
 				return null;
 			}
@@ -765,8 +970,7 @@ namespace ProSuite.Commons.Geom
 			double distanceFromPrevious = previousSegment.GetDistanceXYPerpendicularSigned(
 				testPoint, out distanceAlongPreviousRatio);
 
-			if (Math.Abs(distanceFromPrevious) < tolerance &&
-			    distanceAlongPreviousRatio >= 0 && distanceAlongPreviousRatio <= 1)
+			if (Math.Abs(distanceFromPrevious) < tolerance && distanceAlongPreviousRatio <= 1)
 			{
 				return null;
 			}
@@ -2459,16 +2663,27 @@ namespace ProSuite.Commons.Geom
 
 		public static IList<IntersectionPoint3D> GetSelfIntersectionPoints(
 			[NotNull] ISegmentList linestring,
-			double tolerance)
+			double tolerance,
+			bool linearIntersectionsOnly = false)
 		{
 			var filteredSelfIntersections = new List<SegmentIntersection>();
+
+			Func<SegmentIntersection, bool> predicate;
+			if (linearIntersectionsOnly)
+			{
+				predicate = li => li.HasLinearIntersection;
+			}
+			else
+			{
+				predicate = li => true;
+			}
 
 			for (int i = 0; i < linestring.SegmentCount; i++)
 			{
 				var linearSelfIntersections = new List<SegmentIntersection>(
 					SegmentIntersectionUtils.GetRelevantSelfIntersectionsXY(i, linestring[i],
 						                        linestring, tolerance)
-					                        .Where(li => li.HasLinearIntersection));
+					                        .Where(predicate));
 
 				filteredSelfIntersections.AddRange(linearSelfIntersections);
 			}
@@ -2493,15 +2708,19 @@ namespace ProSuite.Commons.Geom
 			[NotNull] ISegmentList targetSegments,
 			[NotNull] ICollection<IntersectionPoint3D> intersectionPoints)
 		{
-			foreach (var ringStartIntersection in GetLinearIntersectionBreaksAtRingStart(
+			foreach (var linearBreaks in GetLinearIntersectionBreaksAtRingStart(
 				         sourceSegments, targetSegments, intersectionPoints))
 			{
-				yield return ringStartIntersection;
+				yield return linearBreaks.PreviousEnd;
+				yield return linearBreaks.Restart;
 			}
 
-			foreach (var pseudoBreak in GetLinearIntersectionPseudoBreaks(intersectionPoints))
+			foreach (var linearBreaks in
+			         GetLinearIntersectionPseudoBreaks(intersectionPoints, sourceSegments,
+			                                           targetSegments))
 			{
-				yield return pseudoBreak;
+				yield return linearBreaks.PreviousEnd;
+				yield return linearBreaks.Restart;
 			}
 		}
 
@@ -2514,11 +2733,16 @@ namespace ProSuite.Commons.Geom
 		/// <param name="sourceSegments"></param>
 		/// <param name="targetSegments"></param>
 		/// <param name="intersectionPoints"></param>
+		/// <param name="includeBoundaryLoops"></param>
+		/// <param name="tolerance"></param>
 		/// <returns></returns>
-		public static IEnumerable<IntersectionPoint3D> GetLinearIntersectionBreaksAtRingStart(
-			ISegmentList sourceSegments,
-			ISegmentList targetSegments,
-			ICollection<IntersectionPoint3D> intersectionPoints)
+		internal static IEnumerable<LinearIntersectionPseudoBreak>
+			GetLinearIntersectionBreaksAtRingStart(
+				ISegmentList sourceSegments,
+				ISegmentList targetSegments,
+				ICollection<IntersectionPoint3D> intersectionPoints,
+				bool includeBoundaryLoops = false,
+				double tolerance = double.NaN)
 		{
 			if (intersectionPoints.Count == 0)
 			{
@@ -2530,36 +2754,41 @@ namespace ProSuite.Commons.Geom
 				yield break;
 			}
 
-			IntersectionPoint3D previousLinearEnd = null;
-
-			// TODO: Use variables and be more expressive:
-			// bool linearSourceStartIntersection = ...
-			// bool linearTargetStartIntersection = ...
-
-			// To find source breaks also if a break at the target start exists:
-			// The last linear intersection can be connected to the first via ring null point
-			var orderedIntersections =
-				intersectionPoints.OrderBy(i => i.SourcePartIndex)
-				                  .ThenBy(i => i.VirtualSourceVertex).ToList();
-
-			orderedIntersections.Add(orderedIntersections[0]);
-
-			foreach (IntersectionPoint3D intersectionPoint in orderedIntersections)
+			foreach (IGrouping<int, IntersectionPoint3D> intersectionsByPart in
+			         intersectionPoints.GroupBy(p => p.SourcePartIndex))
 			{
-				if (intersectionPoint.Type == IntersectionPointType.LinearIntersectionStart &&
-				    previousLinearEnd != null &&
-				    intersectionPoint.Point.Equals(previousLinearEnd.Point) &&
-				    IsIntersectionAtPartStartOrEnd(sourceSegments, targetSegments,
-				                                   intersectionPoint))
+				var orderedIntersections =
+					intersectionsByPart.OrderBy(i => i.VirtualSourceVertex).ToList();
+
+				if (orderedIntersections.Count < 2)
 				{
-					yield return previousLinearEnd;
-					yield return intersectionPoint;
+					continue;
 				}
 
-				previousLinearEnd =
-					intersectionPoint.Type == IntersectionPointType.LinearIntersectionEnd
-						? intersectionPoint
-						: null;
+				// Target end/start break:
+				foreach (LinearIntersectionPseudoBreak pseudoBreak in
+				         GetLinearIntersectionPseudoBreaks(
+					         sourceSegments, targetSegments, orderedIntersections, true,
+					         includeBoundaryLoops, tolerance))
+				{
+					yield return pseudoBreak;
+				}
+
+				// Now check the source-end to source-start break
+				IntersectionPoint3D ringEnd = orderedIntersections.Last();
+				IntersectionPoint3D ringStart = orderedIntersections[0];
+
+				if (IsLinearIntersectionPseudoBreak(
+					    ringEnd, ringStart, sourceSegments, targetSegments,
+					    tolerance,
+					    out LinearIntersectionPseudoBreak ringNullPointBreak))
+				{
+					yield return ringNullPointBreak;
+				}
+				else if (includeBoundaryLoops && ringNullPointBreak?.IsBoundaryLoop == true)
+				{
+					yield return ringNullPointBreak;
+				}
 			}
 		}
 
@@ -2568,66 +2797,95 @@ namespace ProSuite.Commons.Geom
 		/// stretch and do not start or end the linear intersection from a 2D perspective.
 		/// </summary>
 		/// <param name="intersectionPoints"></param>
+		/// <param name="source"></param>
+		/// <param name="target"></param>
+		/// <param name="includeBoundaryLoops"></param>
 		/// <returns></returns>
-		public static IEnumerable<IntersectionPoint3D> GetLinearIntersectionPseudoBreaks(
-			[NotNull] IEnumerable<IntersectionPoint3D> intersectionPoints)
+		internal static IEnumerable<LinearIntersectionPseudoBreak>
+			GetLinearIntersectionPseudoBreaks(
+				[NotNull] IEnumerable<IntersectionPoint3D> intersectionPoints,
+				[NotNull] ISegmentList source,
+				[NotNull] ISegmentList target,
+				bool includeBoundaryLoops = false,
+				double tolerance = double.NaN)
 		{
 			var orderedIntersections =
 				intersectionPoints.OrderBy(i => i.SourcePartIndex)
 				                  .ThenBy(i => i.VirtualSourceVertex).ToList();
 
-			IntersectionPoint3D previous = null;
-			foreach (IntersectionPoint3D intersectionPoint in orderedIntersections)
+			foreach (LinearIntersectionPseudoBreak pseudoBreak in
+			         GetLinearIntersectionPseudoBreaks(source, target, orderedIntersections,
+			                                           false, includeBoundaryLoops))
 			{
-				// Also, filter other pseudo-breaks (e.g. due to vertical segments):
-				if (previous != null &&
-				    previous.Type == IntersectionPointType.LinearIntersectionEnd &&
-				    intersectionPoint.Type == IntersectionPointType.LinearIntersectionStart &&
-				    previous.SourcePartIndex == intersectionPoint.SourcePartIndex &&
-				    previous.TargetPartIndex == intersectionPoint.TargetPartIndex &&
-				    previous.Point.Equals(intersectionPoint.Point))
-				{
-					yield return previous;
-					yield return intersectionPoint;
-				}
-
-				previous = intersectionPoint;
+				yield return pseudoBreak;
 			}
 		}
 
-		/// <summary>
-		/// Determines whether the specified intersection point is touching the target (boundary)
-		/// interior.
-		/// </summary>
-		/// <param name="intersectionPoint"></param>
-		/// <param name="target"></param>
-		/// <returns></returns>
-		public static bool IsTargetInteriorTouchingIntersection(
-			IntersectionPoint3D intersectionPoint,
-			ISegmentList target)
+		private static IEnumerable<LinearIntersectionPseudoBreak> GetLinearIntersectionPseudoBreaks(
+			[NotNull] ISegmentList source,
+			[NotNull] ISegmentList target,
+			[NotNull] IEnumerable<IntersectionPoint3D> orderedIntersections,
+			bool onlyOnTargetNullPoint = false,
+			bool includeBoundaryLoops = false,
+			double tolerance = double.NaN)
 		{
-			if (intersectionPoint.Type != IntersectionPointType.TouchingInPoint)
+			IntersectionPoint3D previous = null;
+			foreach (IntersectionPoint3D current in orderedIntersections)
+			{
+				if (! onlyOnTargetNullPoint ||
+				    SegmentIntersectionUtils.IsTargetRingNullPoint(
+					    current.SegmentIntersection, previous?.SegmentIntersection,
+					    target))
+				{
+					if (IsLinearIntersectionPseudoBreak(
+						    previous, current, source, target, tolerance,
+						    out LinearIntersectionPseudoBreak pseudoBreak))
+					{
+						yield return pseudoBreak;
+					}
+					else if (includeBoundaryLoops && pseudoBreak?.IsBoundaryLoop == true)
+					{
+						yield return pseudoBreak;
+					}
+				}
+
+				previous = current;
+			}
+		}
+
+		private static bool IsLinearIntersectionPseudoBreak(
+			IntersectionPoint3D previousIntersection,
+			IntersectionPoint3D currentIntersection,
+			ISegmentList source,
+			ISegmentList target,
+			double tolerance,
+			out LinearIntersectionPseudoBreak pseudoBreak)
+		{
+			pseudoBreak = null;
+
+			if (previousIntersection == null ||
+			    previousIntersection.Type != IntersectionPointType.LinearIntersectionEnd ||
+			    currentIntersection.Type != IntersectionPointType.LinearIntersectionStart)
 			{
 				return false;
 			}
 
-			bool isTargetVertex = intersectionPoint.IsTargetVertex(out int localVertexIdx);
+			bool adjacent = SegmentIntersectionUtils.AreIntersectionsAdjacent(
+				previousIntersection, currentIntersection,
+				source, target, out bool isSourceBoundaryLoop, out bool isTargetBoundaryLoop,
+				tolerance);
 
-			var targetPart = target.GetPart(intersectionPoint.TargetPartIndex);
-
-			if (! isTargetVertex)
+			if (adjacent || isSourceBoundaryLoop || isTargetBoundaryLoop)
 			{
-				return true;
+				pseudoBreak =
+					new LinearIntersectionPseudoBreak(previousIntersection, currentIntersection)
+					{
+						IsSourceBoundaryLoop = isSourceBoundaryLoop,
+						IsTargetBoundaryLoop = isTargetBoundaryLoop
+					};
 			}
 
-			if (targetPart.IsClosed ||
-			    ! targetPart.IsFirstPointInPart(localVertexIdx) &&
-			    ! targetPart.IsLastPointInPart(localVertexIdx))
-			{
-				return true;
-			}
-
-			return false;
+			return adjacent;
 		}
 
 		private static void FilterLinearIntersectionBreaksAtRingStart(
@@ -2635,50 +2893,12 @@ namespace ProSuite.Commons.Geom
 			ISegmentList targetSegments,
 			IList<IntersectionPoint3D> intersectionPoints)
 		{
-			foreach (var linearStartOrEnd in GetLinearIntersectionBreaksAtRingStart(
+			foreach (var pseudoBreak in GetLinearIntersectionBreaksAtRingStart(
 				         sourceSegments, targetSegments, intersectionPoints))
 			{
-				intersectionPoints.Remove(linearStartOrEnd);
+				intersectionPoints.Remove(pseudoBreak.PreviousEnd);
+				intersectionPoints.Remove(pseudoBreak.Restart);
 			}
-		}
-
-		private static bool IsIntersectionAtPartStartOrEnd(
-			[NotNull] ISegmentList source,
-			[NotNull] ISegmentList target,
-			[NotNull] IntersectionPoint3D intersectionPoint)
-		{
-			return IsPointAtPartStartOrEnd(source, intersectionPoint.SourcePartIndex,
-			                               intersectionPoint.VirtualSourceVertex) ||
-			       IsPointAtPartStartOrEnd(target, intersectionPoint.TargetPartIndex,
-			                               intersectionPoint.VirtualTargetVertex);
-		}
-
-		private static bool IsPointAtPartStartOrEnd(ISegmentList segmentList,
-		                                            int partIndex,
-		                                            double localPointAlongIndex)
-		{
-			var vertexIndexIntegral = (int) localPointAlongIndex;
-
-			// ReSharper disable once CompareOfFloatsByEqualityOperator
-			bool isVertex = localPointAlongIndex == vertexIndexIntegral;
-
-			if (! isVertex)
-			{
-				return false;
-			}
-
-			// TODO: Add GetGlobalPointIndex and IsVertexIndexAtLinestringStart etc.?
-			//       Or even add GetLinestring(int index) to ISegmentList?
-
-			Linestring linestring = segmentList as Linestring;
-
-			if (linestring == null)
-			{
-				linestring = ((MultiLinestring) segmentList).GetLinestring(partIndex);
-			}
-
-			return linestring.IsFirstPointInPart(vertexIndexIntegral) ||
-			       linestring.IsLastPointInPart(vertexIndexIntegral);
 		}
 
 		#region Cut / Intersect
@@ -2707,6 +2927,15 @@ namespace ProSuite.Commons.Geom
 			return new Linestring(rotationAxis == RotationAxis.X
 				                      ? GeomUtils.RotateX90(linestring.GetPoints(), true)
 				                      : GeomUtils.RotateY90(linestring.GetPoints(), true));
+		}
+
+		public static Linestring Move([NotNull] Linestring linestring,
+		                              double dX, double dY, double dZ)
+		{
+			// TODO: Some rings have startPoint reference-equals endPoint which messes up when updating:
+			// -> for the moment, copy everything
+
+			return new Linestring(GeomUtils.Move(linestring.GetPoints(), dX, dY, dZ, true));
 		}
 
 		public static IEnumerable<Linestring> RotateBack(
@@ -2919,24 +3148,25 @@ namespace ProSuite.Commons.Geom
 					}
 				}
 
-				IEnumerable<IntersectionPath3D> rotatedResult = GetRingIntersectionLinesXY(
+				IEnumerable<Linestring> rotatedResult = GetRingIntersectionLinesXY(
 					sourceRotated, targetRotated, tolerance, excludeTargetBoundaryIntersections);
 
-				foreach (Linestring linestring in RotateBack(
-					         rotatedResult.Select(rr => rr.Segments), rotationAxis,
-					         orientationReversed))
+				foreach (Linestring linestring in RotateBack(rotatedResult, rotationAxis,
+				                                             orientationReversed))
 				{
 					yield return linestring;
 				}
 			}
 			else
 			{
-				// TODO: Re-use intersection points
-				foreach (IntersectionPath3D intersectionPath in GetRingIntersectionLinesXY(
-					         sourceLines, targetRings, tolerance,
-					         excludeTargetBoundaryIntersections))
+				SubcurveNavigator subcurveNavigator =
+					new SubcurveNavigator(sourceLines, targetRings, tolerance);
+
+				foreach (Linestring linearIntersection in subcurveNavigator
+					         .FollowIntersectionsThroughTargetRings(
+						         excludeTargetBoundaryIntersections))
 				{
-					yield return intersectionPath.Segments;
+					yield return linearIntersection;
 				}
 			}
 		}
@@ -2951,7 +3181,7 @@ namespace ProSuite.Commons.Geom
 		/// <param name="excludeTargetBoundaryIntersections">Whether the intersection of source
 		/// lines with the boundary of the target should be excluded.</param>
 		/// <returns></returns>
-		public static IEnumerable<IntersectionPath3D> GetRingIntersectionLinesXY(
+		public static IEnumerable<Linestring> GetRingIntersectionLinesXY(
 			ISegmentList sourceLines,
 			ISegmentList targetRings,
 			double tolerance,
@@ -2965,193 +3195,15 @@ namespace ProSuite.Commons.Geom
 			Assert.True(targetRings.IsClosed,
 			            "Target is must be closed if ring interior is required.");
 
-			IList<IntersectionPoint3D> intersectionPoints =
-				GetIntersectionPoints(sourceLines, targetRings, tolerance);
+			SubcurveNavigator subcurveNavigator =
+				new SubcurveNavigator(sourceLines, targetRings, tolerance);
 
-			var intersectionsPerSourcePartIdx = intersectionPoints.GroupBy(ip => ip.SourcePartIndex)
-				.ToDictionary(g => g.Key, g => g.ToList());
-
-			for (int i = 0; i < sourceLines.PartCount; i++)
+			foreach (Linestring linearIntersection in subcurveNavigator
+				         .FollowIntersectionsThroughTargetRings(
+					         excludeTargetBoundaryIntersections))
 			{
-				Linestring sourceLinestring = sourceLines.GetPart(i);
-
-				if (! intersectionsPerSourcePartIdx.TryGetValue(
-					    i, out List<IntersectionPoint3D> intersections) ||
-				    intersections.Count == 0)
-				{
-					// The source ring is completely inside or completely outside the target area:
-					if (GeomRelationUtils.PolycurveContainsXY(
-						    targetRings, sourceLinestring.StartPoint, tolerance))
-					{
-						yield return
-							new IntersectionPath3D(sourceLinestring,
-							                       RingPlaneTopology.InPlane)
-							{
-								StartIntersection =
-									IntersectionPoint3D.CreateAreaInteriorIntersection(
-										sourceLinestring.StartPoint, 0),
-								EndIntersection =
-									IntersectionPoint3D.CreateAreaInteriorIntersection(
-										sourceLinestring.EndPoint,
-										sourceLinestring.PointCount - 1)
-							};
-					}
-				}
-				else
-				{
-					foreach (IntersectionPath3D intersectionPath3D in
-					         FollowIntersectionsThroughTargetRings(
-						         intersections, sourceLinestring, targetRings, tolerance,
-						         excludeTargetBoundaryIntersections))
-					{
-						yield return intersectionPath3D;
-					}
-				}
+				yield return linearIntersection;
 			}
-		}
-
-		private static IEnumerable<IntersectionPath3D> FollowIntersectionsThroughTargetRings(
-			[NotNull] List<IntersectionPoint3D> intersections,
-			[NotNull] Linestring sourceLinestring,
-			[NotNull] ISegmentList targetRings,
-			double tolerance,
-			bool excludeTargetBoundaryIntersections)
-		{
-			IntersectionPoint3D linearStart = null;
-
-			if (intersections[0].VirtualSourceVertex > 0)
-			{
-				// Start is no intersection point. Start point within target?
-				if (GeomRelationUtils.PolycurveContainsXY(
-					    targetRings, sourceLinestring.StartPoint, tolerance))
-				{
-					linearStart = IntersectionPoint3D.CreateAreaInteriorIntersection(
-						sourceLinestring.StartPoint, 0);
-				}
-			}
-
-			foreach (IntersectionPoint3D intersectionPoint in intersections)
-			{
-				if (linearStart != null)
-				{
-					yield return EmitSourceSubcurve(sourceLinestring, linearStart,
-					                                intersectionPoint);
-
-					if (RestartLinearIntersection(sourceLinestring, intersectionPoint, targetRings,
-					                              excludeTargetBoundaryIntersections))
-					{
-						linearStart = intersectionPoint;
-					}
-					else
-					{
-						linearStart = null;
-					}
-				}
-				else
-				{
-					if (intersectionPoint.Type == IntersectionPointType.Crossing)
-					{
-						linearStart = intersectionPoint;
-					}
-
-					if (intersectionPoint.Type == IntersectionPointType.LinearIntersectionStart &&
-					    ! excludeTargetBoundaryIntersections)
-					{
-						linearStart = intersectionPoint;
-					}
-
-					if (intersectionPoint.Type == IntersectionPointType.TouchingInPoint ||
-					    intersectionPoint.Type == IntersectionPointType.LinearIntersectionEnd)
-					{
-						if (intersectionPoint.SourceContinuesInbound(
-							    sourceLinestring, targetRings) == true)
-						{
-							linearStart = intersectionPoint;
-						}
-					}
-				}
-			}
-
-			IntersectionPoint3D lastIntersection = intersections[intersections.Count - 1];
-
-			if (linearStart != null &&
-			    lastIntersection.VirtualSourceVertex < sourceLinestring.PointCount - 1 &&
-			    GeomRelationUtils.PolycurveContainsXY(
-				    targetRings, sourceLinestring.EndPoint, tolerance))
-			{
-				// Dangling to the inside:
-				var insideEnd =
-					IntersectionPoint3D.CreateAreaInteriorIntersection(
-						sourceLinestring.EndPoint, sourceLinestring.PointCount - 1);
-
-				yield return EmitSourceSubcurve(sourceLinestring, linearStart, insideEnd);
-			}
-		}
-
-		private static bool RestartLinearIntersection(
-			Linestring sourceLinestring, IntersectionPoint3D intersectionPoint,
-			ISegmentList targetRings,
-			bool excludeTargetBoundaryIntersections)
-		{
-			if (intersectionPoint.Type == IntersectionPointType.TouchingInPoint)
-			{
-				// Touching from the inside, re-start
-				return true;
-			}
-
-			if (intersectionPoint.Type == IntersectionPointType.LinearIntersectionStart)
-			{
-				return ! excludeTargetBoundaryIntersections;
-			}
-
-			if (intersectionPoint.Type == IntersectionPointType.Crossing)
-			{
-				return false;
-			}
-
-			if (intersectionPoint.Type == IntersectionPointType.LinearIntersectionEnd)
-			{
-				// But if it's not the last point, it could continue inbound after the stretch along the boundary
-				if (intersectionPoint.VirtualSourceVertex < sourceLinestring.PointCount - 1)
-				{
-					if (intersectionPoint.SourceContinuesInbound(
-						    sourceLinestring, targetRings) == true)
-					{
-						return true;
-					}
-				}
-			}
-
-			return false;
-		}
-
-		private static IntersectionPath3D EmitSourceSubcurve(Linestring sourceLinestring,
-		                                                     IntersectionPoint3D linearStart,
-		                                                     IntersectionPoint3D linearEnd)
-		{
-			int startSegmentIdx =
-				linearStart.GetLocalSourceIntersectionSegmentIdx(
-					sourceLinestring, out double startRatio);
-
-			int endSegmentIdx =
-				linearEnd.GetLocalSourceIntersectionSegmentIdx(
-					sourceLinestring, out double endRatio);
-
-			Linestring resultSubcurve = sourceLinestring.GetSubcurve(
-				startSegmentIdx, startRatio, endSegmentIdx, endRatio, false);
-
-			// TODO: The side should be determined by the plane!
-			RingPlaneTopology ringPlaneTopology =
-				linearStart.Type == IntersectionPointType.LinearIntersectionStart
-					? RingPlaneTopology.InPlane
-					: RingPlaneTopology.LeftPositive;
-
-			return new IntersectionPath3D(resultSubcurve,
-			                              ringPlaneTopology)
-			       {
-				       StartIntersection = linearStart,
-				       EndIntersection = linearEnd
-			       };
 		}
 
 		#endregion
@@ -3228,7 +3280,7 @@ namespace ProSuite.Commons.Geom
 		}
 
 		[NotNull]
-		public static IList<Line3D> GetLinearSelfIntersectionsXY(
+		public static IEnumerable<Line3D> GetLinearSelfIntersectionsXY(
 			[NotNull] ISegmentList segmentList,
 			double tolerance,
 			bool in3D = false)
@@ -3246,12 +3298,13 @@ namespace ProSuite.Commons.Geom
 
 					foreach (Linestring selfIntersection in linearSelfIntersections)
 					{
-						result.AddRange(selfIntersection.Segments);
+						foreach (Line3D segment in selfIntersection.Segments)
+						{
+							yield return segment;
+						}
 					}
 				}
 			}
-
-			return result;
 		}
 
 		[NotNull]
@@ -3324,10 +3377,15 @@ namespace ProSuite.Commons.Geom
 			[NotNull] ISegmentList segmentList2,
 			double tolerance)
 		{
-			return CollectIntersectionPaths(
+			double epsilon =
+				MathUtils.GetDoubleSignificanceEpsilon(segmentList1.XMax, segmentList1.YMax);
+
+			IEnumerable<Line3D> intersectionLines =
 				intersections.Select(i => IntersectLines3D(segmentList1[i.SourceIndex],
 				                                           segmentList2[i.TargetIndex], tolerance))
-				             .Where(l => l != null));
+				             .Where(l => l != null);
+
+			return CollectIntersectionPaths(intersectionLines, epsilon);
 		}
 
 		/// <summary>
@@ -3418,14 +3476,21 @@ namespace ProSuite.Commons.Geom
 			[NotNull] IEnumerable<SegmentIntersection> intersections,
 			[NotNull] ISegmentList segmentList1)
 		{
-			return CollectIntersectionPaths(
-				intersections.Select(i => i.TryGetIntersectionLine(segmentList1))
-				             .Where(l => l != null));
+			double epsilon =
+				MathUtils.GetDoubleSignificanceEpsilon(segmentList1.XMax, segmentList1.YMax);
+
+			IEnumerable<Line3D> intersectionLines = intersections
+			                                        .Select(i => i.TryGetIntersectionLine(
+				                                                segmentList1))
+			                                        .Where(l => l != null);
+
+			return CollectIntersectionPaths(intersectionLines, epsilon);
 		}
 
 		[NotNull]
 		public static IList<Linestring> CollectIntersectionPaths(
-			[NotNull] IEnumerable<Line3D> intersectionLines)
+			[NotNull] IEnumerable<Line3D> intersectionLines,
+			double epsilon)
 		{
 			var result = new List<Linestring>();
 
@@ -3441,7 +3506,7 @@ namespace ProSuite.Commons.Geom
 					nextResultPath.Add(segment);
 				}
 				else if (nextResultPath[nextResultPath.Count - 1]
-				         .StartPoint.Equals(segment.EndPoint))
+				         .StartPoint.Equals(segment.EndPoint, epsilon))
 				{
 					reversed = true;
 					nextResultPath.Add(segment);
@@ -3602,22 +3667,26 @@ namespace ProSuite.Commons.Geom
 				}
 			}
 
+			// NOTE: If short segments exist in a geometry, using the tolerance is probably not a good idea.
+			double epsilon =
+				MathUtils.GetDoubleSignificanceEpsilon(segmentList.XMax, segmentList.YMax);
+
 			SegmentIntersection previousIntersection = null;
 			foreach (SegmentIntersection intersection in orderedIntersections)
 			{
 				// Add non-intersecting source lines between the previous and this intersection:
 				AddSegmentsBetween(segmentList, intersection, previousIntersection,
-				                   result);
+				                   result, epsilon);
 
 				previousIntersection = intersection;
 			}
 
 			AddSegmentsBetween(segmentList, null, previousIntersection,
-			                   result);
+			                   result, epsilon);
 
 			// TODO: Crack at intersectionPoints1D where still necessary
 
-			return new MultiPolycurve(CollectIntersectionPaths(result));
+			return new MultiPolycurve(CollectIntersectionPaths(result, epsilon));
 		}
 
 		/// <summary>
@@ -3722,6 +3791,188 @@ namespace ProSuite.Commons.Geom
 			}
 
 			return result;
+		}
+
+		/// <summary>
+		/// Extremely rudimentary polygonization of a (potentially self-intersecting)
+		/// linestring. This would be better done by a martinez-union.
+		/// </summary>
+		/// <param name="linestring"></param>
+		/// <param name="tolerance"></param>
+		/// <param name="results"></param>
+		/// <returns></returns>
+		public static bool TryCrackSelfCrossingRing([NotNull] Linestring linestring,
+		                                            double tolerance,
+		                                            [NotNull] List<Linestring> results)
+		{
+			var linestrings = new List<Linestring>();
+
+			if (! TryCrackSelfCrossingLinestring(linestring, tolerance, linestrings))
+			{
+				return false;
+			}
+
+			BuildRings(linestrings, tolerance, results);
+
+			// Now the same using the other direction (try left-turns as well?)
+			foreach (Linestring potentialRing in results.ToList())
+			{
+				potentialRing.ReverseOrientation();
+
+				var reEvaluation = new List<Linestring>();
+				if (TryCrackSelfCrossingLinestring(potentialRing, tolerance, reEvaluation))
+				{
+					results.Remove(potentialRing);
+					BuildRings(reEvaluation, tolerance, results);
+				}
+			}
+
+			// Ensure proper orientation
+			foreach (Linestring ring in results.Where(ring => ring.ClockwiseOriented != true))
+			{
+				ring.ReverseOrientation();
+			}
+
+			return results.Count > 0;
+		}
+
+		/// <summary>
+		/// Splits the specified line at the points of self-intersection.
+		/// </summary>
+		/// <param name="linestring"></param>
+		/// <param name="tolerance"></param>
+		/// <param name="results">The collection to add the resulting subcurves to.</param>
+		/// <returns>Whether any self-intersection-point was found and subcurves were
+		/// added to the result collection.</returns>
+		public static bool TryCrackSelfCrossingLinestring(
+			[NotNull] Linestring linestring,
+			double tolerance,
+			[NotNull] List<Linestring> results)
+		{
+			IList<IntersectionPoint3D> intersectionPoints =
+				GetSelfIntersectionPoints(linestring, tolerance)
+					.Where(ip => ip.Type == IntersectionPointType.Crossing)
+					.ToList();
+
+			return TryCrackAtSelfIntersections(linestring, intersectionPoints, results);
+		}
+
+		private static bool TryCrackAtSelfIntersections(Linestring linestring,
+		                                                IEnumerable<IntersectionPoint3D>
+			                                                intersectionPoints,
+		                                                List<Linestring> results)
+		{
+			Linestring result = null;
+
+			int fromIndex = 0;
+			double fromDistanceAlongAsRatio = 0;
+			foreach (IntersectionPoint3D crackPoint in intersectionPoints.OrderBy(
+				         ip => ip.VirtualSourceVertex))
+			{
+				int toIndex = crackPoint.GetLocalSourceIntersectionSegmentIdx(
+					linestring, out double toDistanceAlongAsRatio);
+
+				result = linestring.GetSubcurve(fromIndex, fromDistanceAlongAsRatio, toIndex,
+				                                toDistanceAlongAsRatio, true, false, false);
+				results.Add(result);
+
+				fromIndex = toIndex;
+				fromDistanceAlongAsRatio = toDistanceAlongAsRatio;
+			}
+
+			if (fromIndex > 0 || fromDistanceAlongAsRatio > 0)
+			{
+				result = linestring.GetSubcurve(fromIndex, fromDistanceAlongAsRatio,
+				                                linestring.SegmentCount - 1, 1,
+				                                true, false, false);
+				results.Add(result);
+			}
+
+			return result != null;
+		}
+
+		private static void BuildRings(IList<Linestring> crackedLinestrings,
+		                               double tolerance,
+		                               ICollection<Linestring> results)
+		{
+			while (crackedLinestrings.Count > 0)
+			{
+				Linestring startString = crackedLinestrings[0];
+				crackedLinestrings.Remove(crackedLinestrings[0]);
+
+				if (startString.StartPoint.EqualsXY(startString.EndPoint, tolerance))
+				{
+					startString.Close();
+					results.Add(startString);
+				}
+				else
+				{
+					foreach (Linestring ring in FollowAndRemoveLinestringsClockwise(
+						         crackedLinestrings, startString, tolerance))
+					{
+						results.Add(ring);
+					}
+				}
+			}
+		}
+
+		private static Linestring BuildRing([NotNull] IList<Linestring> fromLinestrings,
+		                                    double tolerance)
+		{
+			Linestring merged = fromLinestrings.Count > 1
+				                    ? MergeConnectedLinestrings(fromLinestrings, null, tolerance)
+				                    : fromLinestrings[0];
+
+			if (merged.StartPoint.EqualsXY(merged.EndPoint, tolerance))
+			{
+				merged.Close();
+			}
+
+			return merged;
+		}
+
+		private static IEnumerable<Linestring> FollowAndRemoveLinestringsClockwise(
+			[NotNull] ICollection<Linestring> linestrings,
+			[NotNull] Linestring startLinestring,
+			double tolerance)
+		{
+			var result = new List<Linestring>();
+
+			Pnt3D startPoint = startLinestring.StartPoint;
+			Linestring previous = startLinestring;
+			result.Add(startLinestring);
+			while (! previous.EndPoint.EqualsXY(startPoint, tolerance) &&
+			       linestrings.Count > 0)
+			{
+				Line3D previousLine = previous.GetSegment(previous.SegmentCount - 1);
+
+				// Get the next fitting linestring that turns more right
+				var matchingStrings = linestrings.Where(
+					l => l.StartPoint.EqualsXY(previous.EndPoint, tolerance));
+
+				Linestring nextString = matchingStrings.MaxElement(
+					s => Assert.NotNull(GeomUtils.GetDirectionChange(previousLine, s.GetSegment(0)))
+					           .Value);
+
+				linestrings.Remove(nextString);
+
+				// Cut off and yield single-linestring rings
+				if (nextString.EndPoint.EqualsXY(nextString.StartPoint, tolerance))
+				{
+					nextString.Close();
+					yield return nextString;
+				}
+				else
+				{
+					result.Add(nextString);
+					previous = nextString;
+				}
+			}
+
+			if (result.Count > 0)
+			{
+				yield return BuildRing(result, tolerance);
+			}
 		}
 
 		[NotNull]
@@ -3856,7 +4107,7 @@ namespace ProSuite.Commons.Geom
 			result = null;
 
 			IList<IntersectionPoint3D> intersectionPoints =
-				GetSelfIntersectionPoints(ring, tolerance);
+				GetSelfIntersectionPoints(ring, tolerance, true);
 
 			var allCrackPoints = new List<CrackPoint>();
 			foreach (var intersectionPoint in intersectionPoints.OrderBy(
@@ -4280,7 +4531,7 @@ namespace ProSuite.Commons.Geom
 				Assert.True(ring.IsClosed, "Unclosed ring.");
 				Assert.NotNull(ring.ClockwiseOriented, "Undefined orientation");
 
-				if (ring.ClockwiseOriented == true)
+				if (ring.ClockwiseOriented != false)
 				{
 					result.Add(new RingGroup(ring));
 				}
@@ -4371,7 +4622,7 @@ namespace ProSuite.Commons.Geom
 					Linestring thisCurve = connectedLinestrings[thisCurveIdx];
 
 					int? startIdxThisCurve =
-						thisCurve.FindPointIdx(startPoint, inXY: true);
+						thisCurve.FindPointIdx(startPoint, inXY: true, tolerance);
 
 					if (startIdxThisCurve != null)
 					{
@@ -4494,7 +4745,8 @@ namespace ProSuite.Commons.Geom
 			[NotNull] ISegmentList source,
 			[CanBeNull] SegmentIntersection current,
 			[CanBeNull] SegmentIntersection previous,
-			[NotNull] List<Line3D> result)
+			[NotNull] List<Line3D> result,
+			double tolerance)
 		{
 			int startIndex = previous?.SourceIndex ?? 0;
 			int endIndex = current?.SourceIndex ?? source.SegmentCount;
@@ -4504,12 +4756,15 @@ namespace ProSuite.Commons.Geom
 				    previous.GetLinearIntersectionEndFactor(true) < 1)
 				{
 					// add remaining uncovered part of previous source segment
-					result.Add(
-						new Line3D(
-							source[previous.SourceIndex].GetPointAlong(
-								previous.GetLinearIntersectionEndFactor(true),
-								true),
-							source[previous.SourceIndex].EndPoint));
+					Line3D newLine = new Line3D(
+						source[previous.SourceIndex]
+							.GetPointAlong(previous.GetLinearIntersectionEndFactor(true), true),
+						source[previous.SourceIndex].EndPoint);
+
+					if (newLine.Length2D >= tolerance)
+					{
+						result.Add(newLine);
+					}
 				}
 
 				startIndex++;
@@ -4531,23 +4786,31 @@ namespace ProSuite.Commons.Geom
 					    previous.GetLinearIntersectionEndFactor(true))
 					{
 						Line3D sourceLine = source[previous.SourceIndex];
-						result.Add(
-							new Line3D(
-								sourceLine.GetPointAlong(
-									previous.GetLinearIntersectionEndFactor(true), true),
-								sourceLine.GetPointAlong(
-									current.GetLinearIntersectionStartFactor(true), true)));
+						var newLine = new Line3D(
+							sourceLine.GetPointAlong(previous.GetLinearIntersectionEndFactor(true),
+							                         true),
+							sourceLine.GetPointAlong(current.GetLinearIntersectionStartFactor(true),
+							                         true));
+
+						if (newLine.Length2D >= tolerance)
+						{
+							result.Add(newLine);
+						}
 					}
 				}
 				else if (current.GetLinearIntersectionStartFactor(true) > 0)
 				{
 					// The un-covered part is between from-point and the start factor
 					Line3D sourceLine = source[current.SourceIndex];
-					result.Add(
-						new Line3D(
-							sourceLine.StartPoint,
-							sourceLine.GetPointAlong(
-								current.GetLinearIntersectionStartFactor(true), true)));
+					Line3D newLine = new Line3D(
+						sourceLine.StartPoint,
+						sourceLine.GetPointAlong(
+							current.GetLinearIntersectionStartFactor(true), true));
+
+					if (newLine.Length2D >= tolerance)
+					{
+						result.Add(newLine);
+					}
 				}
 			}
 		}
@@ -4579,11 +4842,15 @@ namespace ProSuite.Commons.Geom
 			double zTolerance2 = zTolerance * zTolerance;
 
 			SegmentIntersection previousIntersection = null;
+
+			// Or use the actual tolerance?
+			double epsilon =
+				MathUtils.GetDoubleSignificanceEpsilon(linestring1.XMax, linestring1.YMax);
 			foreach (SegmentIntersection intersection in orderedIntersections)
 			{
 				// Add non-intersecting source lines between the previous and this intersection:
 				AddSegmentsBetween(linestring1, intersection, previousIntersection,
-				                   result);
+				                   result, epsilon);
 
 				previousIntersection = intersection;
 
@@ -4609,7 +4876,7 @@ namespace ProSuite.Commons.Geom
 			}
 
 			AddSegmentsBetween(linestring1, null, previousIntersection,
-			                   result);
+			                   result, epsilon);
 
 			return result;
 		}
@@ -4641,6 +4908,36 @@ namespace ProSuite.Commons.Geom
 				cutLine.GetLength2D() < tolerance &&
 				! MathUtils.AreEqual(cutLine.StartPoint.Z, cutLine.EndPoint.Z, tolerance);
 			return cutLineIsVertical;
+		}
+
+		private static IList<string> LogGeometries(string functionName,
+		                                           ISegmentList source,
+		                                           ISegmentList target)
+		{
+			string timeString = $"{DateTime.Now:yyyyMMdd_HHmmss}";
+
+			string directoryName = $"{functionName}_{timeString}";
+
+			string resultDirectory = Path.Combine(Path.GetTempPath(), directoryName);
+
+			if (Directory.Exists(resultDirectory))
+			{
+				resultDirectory += $"_{DateTime.Now.Millisecond}";
+			}
+
+			Directory.CreateDirectory(resultDirectory);
+
+			string sourcePath = Path.Combine(resultDirectory, $"source_{timeString}.wkb");
+			string targetPath = Path.Combine(resultDirectory, $"target_{timeString}.wkb");
+
+			GeomUtils.ToWkbFile(source, sourcePath);
+			GeomUtils.ToWkbFile(target, targetPath);
+
+			var resultPaths = new List<string> {sourcePath, targetPath};
+
+			_msg.DebugFormat("Geometries have been logged to {0}", resultDirectory);
+
+			return resultPaths;
 		}
 	}
 }

@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Reflection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Reflection;
-using ProSuite.QA.Container;
+using ProSuite.QA.Core;
+using ProSuite.QA.Core.IssueCodes;
 
 namespace ProSuite.DomainModel.AO.QA.TestReport
 {
@@ -16,20 +16,11 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			: base(GetTitle(testFactoryType),
 			       testFactoryType.Assembly,
 			       GetTestFactory(testFactoryType),
-			       ReflectionUtils.IsObsolete(testFactoryType),
-			       TestFactoryUtils.IsInternallyUsed(testFactoryType))
+			       InstanceUtils.IsObsolete(testFactoryType),
+			       InstanceUtils.IsInternallyUsed(testFactoryType))
 		{
 			_testFactoryType = testFactoryType;
 		}
-
-		#region IComparable<IncludedTestFactory> Members
-
-		public int CompareTo(IncludedTestFactory other)
-		{
-			return base.CompareTo(other);
-		}
-
-		#endregion
 
 		private static string GetTitle(Type testFactoryType)
 		{
@@ -43,15 +34,23 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			return (TestFactory) ctor.Invoke(new object[] { });
 		}
 
-		#region Overrides of IncludedTestBase
+		#region Overrides of IncludedInstanceBase
 
 		public override string Key => Assert.NotNull(_testFactoryType.FullName, "FullName");
 
-		public override string IndexTooltip => InstanceFactory.GetTestDescription();
+		public override Type InstanceType => _testFactoryType;
 
-		public override Type TestType => _testFactoryType;
+		public override IList<IssueCode> IssueCodes =>
+			IssueCodeUtils.GetIssueCodes(_testFactoryType);
 
-		public override IList<IssueCode> IssueCodes => IssueCodeUtils.GetIssueCodes(_testFactoryType);
+		#endregion
+
+		#region IComparable<IncludedTestFactory> Members
+
+		public int CompareTo(IncludedTestFactory other)
+		{
+			return base.CompareTo(other);
+		}
 
 		#endregion
 	}

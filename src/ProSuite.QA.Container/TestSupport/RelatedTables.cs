@@ -1,6 +1,6 @@
 using System.Collections.Generic;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -19,22 +19,22 @@ namespace ProSuite.QA.Container.TestSupport
 		}
 
 		[NotNull]
-		public static RelatedTables Create([NotNull] IList<ITable> relatedTables,
-		                                   [NotNull] ITable joinedTable)
+		public static RelatedTables Create([NotNull] IList<IReadOnlyTable> relatedTables,
+		                                   [NotNull] IReadOnlyTable joinedTable)
 		{
 			Assert.ArgumentNotNull(relatedTables, nameof(relatedTables));
 			Assert.ArgumentNotNull(joinedTable, nameof(joinedTable));
 
 			var list = new List<RelatedTable>();
 
-			foreach (ITable table in relatedTables)
+			foreach (IReadOnlyTable table in relatedTables)
 			{
 				if (! table.HasOID)
 				{
 					continue;
 				}
 
-				string tableName = ((IDataset) table).Name;
+				string tableName = table.Name;
 				string oidFieldName = tableName + "." + table.OIDFieldName;
 				int oidFieldIndex = joinedTable.FindField(oidFieldName);
 
@@ -51,14 +51,14 @@ namespace ProSuite.QA.Container.TestSupport
 		public IList<RelatedTable> Related => _relTables.AsReadOnly();
 
 		[NotNull]
-		public InvolvedRows GetInvolvedRows([NotNull] IRow row)
+		public InvolvedRows GetInvolvedRows([NotNull] IReadOnlyRow row)
 		{
 			InvolvedRows involved = new InvolvedRows();
 			involved.TestedRows.Add(row);
 
 			foreach (RelatedTable relatedTable in _relTables)
 			{
-				object oid = row.Value[relatedTable.OidFieldIndex];
+				object oid = row.get_Value(relatedTable.OidFieldIndex);
 
 				if (oid is int)
 				{
@@ -70,7 +70,7 @@ namespace ProSuite.QA.Container.TestSupport
 		}
 
 		[CanBeNull]
-		public IGeometry GetGeometry([NotNull] IRow row)
+		public IGeometry GetGeometry([NotNull] IReadOnlyRow row)
 		{
 			IGeometry geometry = TestUtils.GetShapeCopy(row);
 			if (geometry != null)
@@ -85,7 +85,7 @@ namespace ProSuite.QA.Container.TestSupport
 					continue;
 				}
 
-				object oid = row.Value[relatedTable.OidFieldIndex];
+				object oid = row.get_Value(relatedTable.OidFieldIndex);
 				if (! (oid is int))
 				{
 					continue;

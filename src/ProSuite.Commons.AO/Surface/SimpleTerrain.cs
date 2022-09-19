@@ -10,7 +10,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AO.Surface
 {
-	public class SimpleTerrain : TerrainReference, IDataset, IGeoDataset
+	public class SimpleTerrain : TerrainReference, IReadOnlyDataset, IReadOnlyGeoDataset
 	{
 		private IName _fullName;
 
@@ -55,7 +55,7 @@ namespace ProSuite.Commons.AO.Surface
 
 		public IList<SimpleTerrainDataSource> DataSources { get; }
 
-		public override IGeoDataset Dataset => this;
+		public override IReadOnlyGeoDataset Dataset => this;
 
 		public override RectangularTilingStructure Tiling { get; }
 
@@ -70,41 +70,11 @@ namespace ProSuite.Commons.AO.Surface
 		}
 
 		#region IDataset Members
-
-		bool IDataset.CanCopy()
-		{
-			return false;
-		}
-
-		IDataset IDataset.Copy(string copyName, IWorkspace copyWorkspace)
-		{
-			throw new NotImplementedException();
-		}
-
-		bool IDataset.CanDelete()
-		{
-			return false;
-		}
-
-		void IDataset.Delete()
-		{
-			throw new NotImplementedException();
-		}
-
-		bool IDataset.CanRename()
-		{
-			return false;
-		}
-
-		void IDataset.Rename(string name)
-		{
-			throw new NotImplementedException();
-		}
-
+		
 		[NotNull]
-		string IDataset.Name => Name;
+		string IReadOnlyDataset.Name => Name;
 
-		IName IDataset.FullName
+		IName IReadOnlyDataset.FullName
 		{
 			get
 			{
@@ -117,22 +87,8 @@ namespace ProSuite.Commons.AO.Surface
 			}
 		}
 
-		string IDataset.BrowseName
-		{
-			get => throw new NotImplementedException();
-			set => throw new NotImplementedException();
-		}
-
-		public esriDatasetType Type => esriDatasetType.esriDTTerrain;
-
-		string IDataset.Category => throw new NotImplementedException();
-
-		IEnumDataset IDataset.Subsets => throw new NotImplementedException();
-
-		IWorkspace IDataset.Workspace => ((IDataset) DataSources[0].FeatureClass).Workspace;
-
-		IPropertySet IDataset.PropertySet => throw new NotImplementedException();
-
+		IWorkspace IReadOnlyDataset.Workspace => ((IDataset) DataSources[0].FeatureClass).Workspace;
+		
 		#endregion
 
 		#region IGeoDataset Members
@@ -225,9 +181,9 @@ namespace ProSuite.Commons.AO.Surface
 
 		private class SimpleFeatureTerrainName : IName, IDatasetName
 		{
-			[NotNull] private readonly IDataset _simpleTerrain;
+			[NotNull] private readonly IReadOnlyDataset _simpleTerrain;
 
-			public SimpleFeatureTerrainName([NotNull] IDataset simpleTerrain)
+			public SimpleFeatureTerrainName([NotNull] IReadOnlyDataset simpleTerrain)
 			{
 				_simpleTerrain = simpleTerrain;
 				Name = simpleTerrain.Name;
@@ -251,7 +207,7 @@ namespace ProSuite.Commons.AO.Surface
 
 			public string Name { get; set; }
 
-			public esriDatasetType Type => _simpleTerrain.Type;
+			public esriDatasetType Type => esriDatasetType.esriDTTerrain;
 
 			public string Category { get; set; }
 

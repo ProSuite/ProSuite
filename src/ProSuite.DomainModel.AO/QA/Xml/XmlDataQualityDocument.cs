@@ -5,7 +5,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.DomainModel.AO.QA.Xml
 {
-	[XmlRoot("DataQuality", Namespace = "urn:EsriDE.ProSuite.QA.QualitySpecifications-3.0")]
+	[XmlRoot("DataQuality", Namespace = "urn:ProSuite.QA.QualitySpecifications-3.0")]
 	public class XmlDataQualityDocument30 : XmlDataQualityDocument { }
 
 	[XmlRoot("DataQuality", Namespace = "urn:EsriDE.ProSuite.QA.QualitySpecifications-2.0")]
@@ -20,17 +20,13 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		[XmlArrayItem(ElementName = "QualityCondition")]
 		public List<XmlQualityCondition> QualityConditions { get; set; }
 
-		[XmlArrayItem(ElementName = "IssueFilter")]
-		[CanBeNull]
-		public List<XmlIssueFilterConfiguration> IssueFilters { get; set; }
-
-		[XmlArrayItem(ElementName = "RowFilter")]
-		[CanBeNull]
-		public List<XmlRowFilterConfiguration> RowFilters { get; set; }
-
 		[XmlArrayItem(ElementName = "Transformer")]
 		[CanBeNull]
 		public List<XmlTransformerConfiguration> Transformers { get; set; }
+
+		[XmlArrayItem(ElementName = "IssueFilter")]
+		[CanBeNull]
+		public List<XmlIssueFilterConfiguration> IssueFilters { get; set; }
 
 		[XmlArrayItem("Category")]
 		[CanBeNull]
@@ -47,10 +43,6 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		[XmlArrayItem("IssueFilterDescriptor")]
 		[CanBeNull]
 		public List<XmlIssueFilterDescriptor> IssueFilterDescriptors { get; set; }
-
-		[XmlArrayItem("RowFilterDescriptor")]
-		[CanBeNull]
-		public List<XmlRowFilterDescriptor> RowFilterDescriptors { get; set; }
 
 		[XmlArrayItem("Workspace")]
 		[CanBeNull]
@@ -106,14 +98,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			IssueFilters = IssueFilters ?? new List<XmlIssueFilterConfiguration>();
 			IssueFilters.Add(xmlIssueFilter);
 		}
-
-		public void AddRowFilter([NotNull] XmlRowFilterConfiguration xmlRowFilter)
-		{
-			Assert.ArgumentNotNull(xmlRowFilter, nameof(xmlRowFilter));
-			RowFilters = RowFilters ?? new List<XmlRowFilterConfiguration>();
-			RowFilters.Add(xmlRowFilter);
-		}
-
+		
 		public void AddTransformer([NotNull] XmlTransformerConfiguration xmlTransformer)
 		{
 			Assert.ArgumentNotNull(xmlTransformer, nameof(xmlTransformer));
@@ -124,14 +109,24 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		public void AddTestDescriptor([NotNull] XmlTestDescriptor xmlTestDescriptor)
 		{
 			Assert.ArgumentNotNull(xmlTestDescriptor, nameof(xmlTestDescriptor));
-
-			if (TestDescriptors == null)
-			{
-				TestDescriptors = new List<XmlTestDescriptor>();
-			}
-
+			TestDescriptors = TestDescriptors ?? new List<XmlTestDescriptor>();
 			TestDescriptors.Add(xmlTestDescriptor);
 		}
+
+		public void AddIssueFilterDescriptor([NotNull] XmlIssueFilterDescriptor xmlIssueFilterDescriptor)
+		{
+			Assert.ArgumentNotNull(xmlIssueFilterDescriptor, nameof(xmlIssueFilterDescriptor));
+			IssueFilterDescriptors = IssueFilterDescriptors ?? new List<XmlIssueFilterDescriptor>();
+			IssueFilterDescriptors.Add(xmlIssueFilterDescriptor);
+		}
+		
+		public void AddTransformerDescriptor([NotNull] XmlTransformerDescriptor xmlTransformerDescriptor)
+		{
+			Assert.ArgumentNotNull(xmlTransformerDescriptor, nameof(xmlTransformerDescriptor));
+			TransformerDescriptors = TransformerDescriptors ?? new List<XmlTransformerDescriptor>();
+			TransformerDescriptors.Add(xmlTransformerDescriptor);
+		}
+
 
 		[NotNull]
 		public IEnumerable<XmlDataQualityCategory> GetAllCategories()
@@ -197,6 +192,34 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 					{
 						yield return pair;
 					}
+				}
+			}
+		}
+
+		[NotNull]
+		public IEnumerable<XmlInstanceDescriptor> GetAllInstanceDescriptors()
+		{
+			if (TestDescriptors != null)
+			{
+				foreach (var descriptor in TestDescriptors)
+				{
+					yield return descriptor;
+				}
+			}
+
+			if (TransformerDescriptors != null)
+			{
+				foreach (var descriptor in TransformerDescriptors)
+				{
+					yield return descriptor;
+				}
+			}
+
+			if (IssueFilterDescriptors != null)
+			{
+				foreach (var descriptor in IssueFilterDescriptors)
+				{
+					yield return descriptor;
 				}
 			}
 		}

@@ -94,9 +94,11 @@ namespace ProSuite.QA.Tests.Test
 
 			ITable table = workspace.OpenTable(tableName);
 			ITable reservedNamesTable = workspace.OpenTable("ReservedFieldNames");
-			var test = new QaSchemaReservedFieldNames(table, reservedNamesTable,
-			                                          "ReservedWord",
-			                                          "Reason", "ValidFieldName");
+			var test = new QaSchemaReservedFieldNames(
+				ReadOnlyTableFactory.Create(table),
+				ReadOnlyTableFactory.Create(reservedNamesTable),
+				"ReservedWord",
+				"Reason", "ValidFieldName");
 
 			var runner = new QaTestRunner(test);
 			runner.Execute();

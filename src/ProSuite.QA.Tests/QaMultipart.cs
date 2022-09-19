@@ -1,11 +1,12 @@
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
 {
@@ -36,15 +37,15 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaMultipart_0))]
 		public QaMultipart(
-				[Doc(nameof(DocStrings.QaMultipart_featureClass))] IFeatureClass featureClass)
+				[Doc(nameof(DocStrings.QaMultipart_featureClass))] IReadOnlyFeatureClass featureClass)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(featureClass, singleRing: false) { }
 
 		[Doc(nameof(DocStrings.QaMultipart_0))]
 		public QaMultipart(
-			[Doc(nameof(DocStrings.QaMultipart_featureClass))] IFeatureClass featureClass,
+			[Doc(nameof(DocStrings.QaMultipart_featureClass))] IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaMultipart_singleRing))] bool singleRing)
-			: base((ITable) featureClass)
+			: base(featureClass)
 		{
 			_singleRing = singleRing;
 			_shapeFieldName = featureClass.ShapeFieldName;
@@ -61,9 +62,9 @@ namespace ProSuite.QA.Tests
 			return false;
 		}
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
-			var feature = row as IFeature;
+			var feature = row as IReadOnlyFeature;
 
 			IGeometry shape = feature?.Shape;
 			if (shape == null || shape.IsEmpty)
@@ -86,9 +87,9 @@ namespace ProSuite.QA.Tests
 				if (partCount > 1)
 				{
 					string description = $"Geometry has {partCount} parts, allowed is 1";
-					return ReportError(description, shape,
-					                   Codes[Code.MultipleParts],
-					                   _shapeFieldName, row);
+					return ReportError(
+						description, GetInvolvedRows(row), shape,
+						Codes[Code.MultipleParts], _shapeFieldName);
 				}
 			}
 			else if (shape.GeometryType == esriGeometryType.esriGeometryPolygon)
@@ -101,9 +102,9 @@ namespace ProSuite.QA.Tests
 				{
 					string description =
 						$"Polygon has {exteriorRingCount} exterior rings, allowed is 1";
-					return ReportError(description, shape,
-					                   Codes[Code.MultipleExteriorRings],
-					                   _shapeFieldName, row);
+					return ReportError(
+						description, InvolvedRowUtils.GetInvolvedRows(row), shape,
+						Codes[Code.MultipleExteriorRings], _shapeFieldName);
 				}
 			}
 

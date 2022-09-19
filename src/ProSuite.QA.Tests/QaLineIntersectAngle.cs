@@ -3,10 +3,15 @@ using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestCategories;
+using ProSuite.QA.Container.Geometry;
+using ProSuite.QA.Container.TestSupport;
+using ProSuite.QA.Core;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.QA.Tests.SpatialRelations;
@@ -21,8 +26,12 @@ namespace ProSuite.QA.Tests
 	[UsedImplicitly]
 	public class QaLineIntersectAngle : QaSpatialRelationSelfBase
 	{
+		private const AngleUnit _defaultAngularUnit = DefaultAngleUnit;
+
 		private readonly bool _is3D;
-		private readonly double _limit;
+		private readonly double _limitCstr;
+
+		private double _limitRad;
 
 		#region issue codes
 
@@ -47,26 +56,27 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaLineIntersectAngle_0))]
 		public QaLineIntersectAngle(
 			[Doc(nameof(DocStrings.QaLineIntersectAngle_polylineClasses))] [NotNull]
-			IList<IFeatureClass>
+			IList<IReadOnlyFeatureClass>
 				polylineClasses,
 			[Doc(nameof(DocStrings.QaLineIntersectAngle_limit))] double limit,
 			[Doc(nameof(DocStrings.QaLineIntersectAngle_is3D))] bool is3d)
 			: base(polylineClasses, esriSpatialRelEnum.esriSpatialRelCrosses)
 		{
-			_limit = limit;
+			_limitCstr = limit;
+
 			_is3D = is3d;
 		}
 
 		[Obsolete(
 			"Incorrect parameter name will be renamed in a future release, use other constructor"
 		)]
-		public QaLineIntersectAngle([NotNull] IFeatureClass table, double limit, bool is3d)
+		public QaLineIntersectAngle([NotNull] IReadOnlyFeatureClass table, double limit, bool is3d)
 			: this(new[] {table}, limit, is3d) { }
 
 		[Doc(nameof(DocStrings.QaLineIntersectAngle_0))]
 		public QaLineIntersectAngle(
 				[Doc(nameof(DocStrings.QaLineIntersectAngle_polylineClasses))] [NotNull]
-				IList<IFeatureClass>
+				IList<IReadOnlyFeatureClass>
 					polylineClasses,
 				[Doc(nameof(DocStrings.QaLineIntersectAngle_limit))] double limit)
 			// ReSharper disable once IntroduceOptionalParameters.Global
@@ -75,22 +85,39 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaLineIntersectAngle_0))]
 		public QaLineIntersectAngle(
 			[Doc(nameof(DocStrings.QaLineIntersectAngle_polylineClass))] [NotNull]
-			IFeatureClass polylineClass,
+			IReadOnlyFeatureClass polylineClass,
 			[Doc(nameof(DocStrings.QaLineIntersectAngle_limit))] double limit)
 			: this(new[] {polylineClass}, limit) { }
 
 		#endregion
 
-		protected override int FindErrors(IRow row1, int tableIndex1,
-		                                  IRow row2, int tableIndex2)
+		[TestParameter(_defaultAngularUnit)]
+		[Doc(nameof(DocStrings.QaLineIntersectAngle_AngularUnit))]
+		public AngleUnit AngularUnit
 		{
+			get { return AngleUnit; }
+			set
+			{
+				AngleUnit = value;
+				_limitRad = -1; // gets initialized in next FindErrors()
+			}
+		}
+
+		protected override int FindErrors(IReadOnlyRow row1, int tableIndex1,
+										  IReadOnlyRow row2, int tableIndex2)
+		{
+			if (_limitRad <= 0)
+			{
+				_limitRad = FormatUtils.AngleInUnits2Radians(_limitCstr, AngleUnit);
+			}
+
 			if (row1 == row2)
 			{
 				return NoError;
 			}
 
-			var polyline1 = (IPolyline) ((IFeature) row1).Shape;
-			var polyline2 = (IPolyline) ((IFeature) row2).Shape;
+			var polyline1 = (IPolyline) ((IReadOnlyFeature) row1).Shape;
+			var polyline2 = (IPolyline) ((IReadOnlyFeature) row2).Shape;
 
 			if (((IRelationalOperator) polyline1).Disjoint(polyline2))
 			{
@@ -117,7 +144,7 @@ namespace ProSuite.QA.Tests
 
 				double angleRadians = intersection.Angle;
 
-				if (angleRadians >= _limit)
+				if (angleRadians >= _limitRad)
 				{
 					// angle is allowed
 					continue;
@@ -126,14 +153,14 @@ namespace ProSuite.QA.Tests
 				// The angle is smaller than limit. Report error
 				string description = string.Format("Intersect angle {0} < {1}",
 				                                   FormatAngle(angleRadians, "N2"),
-				                                   FormatAngle(_limit, "N2"));
+				                                   FormatAngle(_limitRad, "N2"));
 
-				errorCount += ReportError(description,
-				                          GeometryFactory.Clone(intersection.At),
-				                          Codes[Code.IntersectionAngleSmallerThanLimit],
-				                          TestUtils.GetShapeFieldName(row1),
-				                          new object[] {MathUtils.ToDegrees(angleRadians)},
-				                          row1, row2);
+				errorCount += ReportError(
+					description, InvolvedRowUtils.GetInvolvedRows(row1, row2),
+					GeometryFactory.Clone(intersection.At),
+					Codes[Code.IntersectionAngleSmallerThanLimit],
+					TestUtils.GetShapeFieldName(row1),
+					values: new object[] { MathUtils.ToDegrees(angleRadians) });
 			}
 
 			return errorCount;

@@ -5,7 +5,6 @@ using System.Text;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.QA.Tests.SpatialRelations;
@@ -13,6 +12,9 @@ using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
 {
@@ -51,10 +53,10 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaMustIntersectMatrixOther_0))]
 		public QaMustIntersectMatrixOther(
 			[Doc(nameof(DocStrings.QaMustIntersectMatrixOther_featureClass))] [NotNull]
-			IFeatureClass
+			IReadOnlyFeatureClass
 				featureClass,
 			[Doc(nameof(DocStrings.QaMustIntersectMatrixOther_otherFeatureClass))] [NotNull]
-			IFeatureClass
+			IReadOnlyFeatureClass
 				otherFeatureClass,
 			[Doc(nameof(DocStrings.QaMustIntersectMatrixOther_intersectionMatrix))] [NotNull]
 			string
@@ -70,10 +72,10 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaMustIntersectMatrixOther_1))]
 		public QaMustIntersectMatrixOther(
 			[Doc(nameof(DocStrings.QaMustIntersectMatrixOther_featureClass))] [NotNull]
-			IFeatureClass
+			IReadOnlyFeatureClass
 				featureClass,
 			[Doc(nameof(DocStrings.QaMustIntersectMatrixOther_otherFeatureClass))] [NotNull]
-			IFeatureClass
+			IReadOnlyFeatureClass
 				otherFeatureClass,
 			[Doc(nameof(DocStrings.QaMustIntersectMatrixOther_intersectionMatrix))] [NotNull]
 			string
@@ -98,9 +100,9 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaMustIntersectMatrixOther_2))]
 		public QaMustIntersectMatrixOther(
 			[Doc(nameof(DocStrings.QaMustIntersectMatrixOther_featureClasses))] [NotNull]
-			ICollection<IFeatureClass> featureClasses,
+			ICollection<IReadOnlyFeatureClass> featureClasses,
 			[Doc(nameof(DocStrings.QaMustIntersectMatrixOther_otherFeatureClasses))] [NotNull]
-			ICollection<IFeatureClass> otherFeatureClasses,
+			ICollection<IReadOnlyFeatureClass> otherFeatureClasses,
 			[Doc(nameof(DocStrings.QaMustIntersectMatrixOther_intersectionMatrix))] [NotNull]
 			string
 				intersectionMatrix,
@@ -116,9 +118,9 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaMustIntersectMatrixOther_3))]
 		public QaMustIntersectMatrixOther(
 			[Doc(nameof(DocStrings.QaMustIntersectMatrixOther_featureClasses))] [NotNull]
-			ICollection<IFeatureClass> featureClasses,
+			ICollection<IReadOnlyFeatureClass> featureClasses,
 			[Doc(nameof(DocStrings.QaMustIntersectMatrixOther_otherFeatureClasses))] [NotNull]
-			ICollection<IFeatureClass> otherFeatureClasses,
+			ICollection<IReadOnlyFeatureClass> otherFeatureClasses,
 			[Doc(nameof(DocStrings.QaMustIntersectMatrixOther_intersectionMatrix))] [NotNull]
 			string
 				intersectionMatrix,
@@ -157,7 +159,7 @@ namespace ProSuite.QA.Tests
 			return new SimpleCrossTileFeatureState();
 		}
 
-		protected override string GetErrorDescription(IFeature feature,
+		protected override string GetErrorDescription(IReadOnlyFeature feature,
 		                                              int tableIndex,
 		                                              PendingFeature pendingFeature,
 		                                              out IssueCode issueCode,
@@ -166,7 +168,7 @@ namespace ProSuite.QA.Tests
 			issueCode = HasRelevantRelationCondition
 				            ? Codes[Code.NoFeatureWithRequiredRelation_WithFulfilledConstraint]
 				            : Codes[Code.NoFeatureWithRequiredRelation];
-			affectedComponent = ((IFeatureClass) feature.Class).ShapeFieldName;
+			affectedComponent = ((IReadOnlyFeatureClass) feature.Table).ShapeFieldName;
 
 			if (_intersectionMatrices.Count == 1)
 			{
@@ -184,7 +186,7 @@ namespace ProSuite.QA.Tests
 				_relationString);
 		}
 
-		protected override bool IsValidRelation(IGeometry shape, IFeature relatedFeature)
+		protected override bool IsValidRelation(IGeometry shape, IReadOnlyFeature relatedFeature)
 		{
 			if (_intersectionMatrices.Count == 1)
 			{
@@ -234,7 +236,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		private bool HasExpectedIntersectionDimensions([NotNull] IGeometry shape,
-		                                               [NotNull] IFeature relatedFeature,
+		                                               [NotNull] IReadOnlyFeature relatedFeature,
 		                                               [NotNull] IntersectionMatrix matrix)
 		{
 			if (_requiredDimensions == null && _unallowedDimensions == null)

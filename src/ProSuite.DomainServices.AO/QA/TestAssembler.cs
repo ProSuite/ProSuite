@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
@@ -56,9 +57,9 @@ namespace ProSuite.DomainServices.AO.QA
 
 		[NotNull]
 		private IList<ITest> AssembleTests([NotNull] IEnumerable<ITest> tests,
-		                                   [CanBeNull] AreaOfInterest areaOfInterest,
-		                                   bool filterTableRowsUsingRelatedGeometry,
-		                                   [NotNull] out List<ITest> testsToVerifyByRelatedGeometry)
+										   [CanBeNull] AreaOfInterest areaOfInterest,
+										   bool filterTableRowsUsingRelatedGeometry,
+										   [NotNull] out List<ITest> testsToVerifyByRelatedGeometry)
 		{
 			Assert.ArgumentNotNull(tests, nameof(tests));
 
@@ -72,8 +73,8 @@ namespace ProSuite.DomainServices.AO.QA
 				bool filterByRelatedGeometry =
 					filterTableRowsUsingRelatedGeometry &&
 					areaOfInterest != null &&
-					! _getQualityCondition(test).NeverFilterTableRowsUsingRelatedGeometry &&
-					! TestUtils.UsesSpatialDataset(test);
+					!_getQualityCondition(test).NeverFilterTableRowsUsingRelatedGeometry &&
+					!TestUtils.UsesSpatialDataset(test);
 
 				if (filterByRelatedGeometry)
 				{
@@ -100,8 +101,8 @@ namespace ProSuite.DomainServices.AO.QA
 			}
 
 			TestUtils.ClassifyTests(tests, allowEditing: false, // remark :  is set again later
-			                        out IList<ContainerTest> containerTests,
-			                        out IList<ITest> nonContainerTests);
+									out IList<ContainerTest> containerTests,
+									out IList<ITest> nonContainerTests);
 
 			testGroups.Add(nonContainerTests); // TODO: split up?
 			int nGroups = maxProcesses - 1;
@@ -124,23 +125,54 @@ namespace ProSuite.DomainServices.AO.QA
 			return testGroups;
 		}
 
-		public List<IList<QualityCondition>> BuildQualityConditionGroups(
+		public IList<QualityConditionGroup> BuildQualityConditionGroups(
 			[NotNull] IList<ITest> tests,
 			[CanBeNull] AreaOfInterest areaOfInterest,
 			bool filterTableRowsUsingRelatedGeometry,
-			int maxProcesses)
+			bool singleProcess)
 		{
 			IList<ITest> containerTests = AssembleTests(
 				tests, areaOfInterest, filterTableRowsUsingRelatedGeometry,
 				out IList<TestsWithRelatedGeometry> testsWithRelatedGeometry);
 
-			return BuildQcGroups(containerTests, testsWithRelatedGeometry, maxProcesses);
+			return BuildQcGroups(containerTests, testsWithRelatedGeometry, singleProcess);
 		}
 
-		internal List<IList<QualityCondition>> BuildQcGroups(
+		public static bool CanBeExecutedWithTileThreads([NotNull] ITest test)
+		{
+			return CanBeExecutedWithTileThreads(test.GetType());
+		}
+
+		public static bool CanBeExecutedWithTileThreads([NotNull] Type testType)
+		{
+			Type ct = typeof(ContainerTest);
+			if (!ct.IsAssignableFrom(testType))
+			{
+				return false;
+			}
+
+			if (Overrides(testType, ct, ContainerTest.CompleteTileCoreMethod)
+				|| Overrides(testType, ct, ContainerTest.BeginTileCoreMethod))
+			{
+				return false;
+			}
+
+			return true;
+		}
+
+		private static bool Overrides(Type type, Type baseType, string methodName)
+		{
+			MethodInfo method = type.GetMethod(
+				methodName,
+				BindingFlags.Instance | BindingFlags.NonPublic);
+
+			return method?.DeclaringType != baseType;
+		}
+
+		internal IList<QualityConditionGroup> BuildQcGroups(
 			[NotNull] IList<ITest> tests,
 			[NotNull] IList<TestsWithRelatedGeometry> testsWithRelatedGeom,
-			int maxProcesses)
+			bool singleProcess)
 		{
 			Dictionary<QualityCondition, IList<ITest>> qcTests =
 				new Dictionary<QualityCondition, IList<ITest>>();
@@ -166,12 +198,46 @@ namespace ProSuite.DomainServices.AO.QA
 				}
 			}
 
+			if (singleProcess)
+			{
+				QualityConditionGroup single =
+					new QualityConditionGroup(QualityConditionExecType.Mixed, qcTests);
+				return new List<QualityConditionGroup> { single };
+			}
+
+			GroupTests(
+				tests, testsWithRelatedGeom, testQc, qcTests,
+				out HashSet<QualityCondition> nonContainerQcs,
+				out QualityConditionGroup nonTileParallelTest,
+				out QualityConditionGroup tileParallelTest);
+
+			// Create test groups
+			// ------------------
+
+			List<QualityConditionGroup> testGroups = new List<QualityConditionGroup>();
+			testGroups.Add(new QualityConditionGroup(
+				               QualityConditionExecType.NonContainer,
+				               nonContainerQcs.ToDictionary(x => x, y => qcTests[y])));
+			testGroups.Add(nonTileParallelTest);
+			testGroups.Add(tileParallelTest);
+			return testGroups;
+		}
+
+		private void GroupTests(
+			[NotNull] IList<ITest> tests,
+			[NotNull] IList<TestsWithRelatedGeometry> testsWithRelatedGeom,
+			[NotNull] Dictionary<ITest, QualityCondition> testQc,
+			[NotNull] Dictionary<QualityCondition, IList<ITest>> qcTests,
+			out HashSet<QualityCondition> nonContainerQcs,
+			out QualityConditionGroup nonTileParallelTest,
+			out QualityConditionGroup tileParallelTest)
+		{
 			TestUtils.ClassifyTests(tests, allowEditing: false, // remark :  is set again later
 			                        out IList<ContainerTest> containerTests,
 			                        out IList<ITest> nonContainerTests);
 
-			HashSet<QualityCondition> nonContainerQcs = new HashSet<QualityCondition>();
-			AddQcs(nonContainerQcs, nonContainerTests, testQc); // TODO: split up?
+			nonContainerQcs = new HashSet<QualityCondition>();
+			AddQcs(nonContainerQcs, nonContainerTests, testQc);
 			// Add geom-related tests to nonContainer tests
 			foreach (var relTests in testsWithRelatedGeom)
 			{
@@ -182,34 +248,37 @@ namespace ProSuite.DomainServices.AO.QA
 			foreach (ContainerTest test in containerTests)
 			{
 				QualityCondition qc = testQc[test];
-				if (! nonContainerQcs.Contains(qc))
+				if (!nonContainerQcs.Contains(qc))
 				{
 					containerQcs.Add(qc);
 				}
 			}
 
-			List<IList<QualityCondition>> testGroups = new List<IList<QualityCondition>>();
-			testGroups.Add(new List<QualityCondition>(nonContainerQcs));
-
-			int nGroups = maxProcesses - 1;
-			for (int iGroup = 0; iGroup < nGroups; iGroup++)
-			{
-				testGroups.Add(new List<QualityCondition>());
-			}
-
-			int group = 0;
-			int offset = maxProcesses > 1 ? 1 : 0;
+			nonTileParallelTest =
+				new QualityConditionGroup(QualityConditionExecType.Container);
+			tileParallelTest =
+				new QualityConditionGroup(QualityConditionExecType.TileParallel);
 			foreach (var qc in containerQcs)
 			{
-				testGroups[group + offset].Add(qc);
-				group++;
-				if (group >= maxProcesses - 1)
+				QualityConditionExecType execType = QualityConditionExecType.TileParallel;
+				foreach (ITest test in qcTests[qc])
 				{
-					group = 0;
+					if (!CanBeExecutedWithTileThreads(test))
+					{
+						execType = QualityConditionExecType.Container;
+					}
+				}
+
+				if (execType == QualityConditionExecType.Container)
+				{
+					nonTileParallelTest.QualityConditions.Add(qc, qcTests[qc]);
+				}
+				else
+				{
+					tileParallelTest.QualityConditions.Add(qc, qcTests[qc]);
 				}
 			}
 
-			return testGroups;
 		}
 
 		private void AddQcs(HashSet<QualityCondition> qualityConditions, IEnumerable<ITest> tests,
@@ -235,13 +304,13 @@ namespace ProSuite.DomainServices.AO.QA
 				return new List<TestsWithRelatedGeometry>();
 			}
 
-			Dictionary<ITable, IList<ITest>> testsByTable =
+			Dictionary<IReadOnlyTable, IList<ITest>> testsByTable =
 				TestUtils.GetTestsByTable(tests);
 
 			var testsWithRelatedGeometry = new List<TestsWithRelatedGeometry>();
-			foreach (KeyValuePair<ITable, IList<ITest>> pair in testsByTable)
+			foreach (KeyValuePair<IReadOnlyTable, IList<ITest>> pair in testsByTable)
 			{
-				ITable table = pair.Key;
+				IReadOnlyTable table = pair.Key;
 				IList<ITest> tableTests = pair.Value;
 				TestsWithRelatedGeometry testsWithRelGeom =
 					CreateTestsWithRelatedGeometry(table, tableTests, datasetResolver);
@@ -263,7 +332,7 @@ namespace ProSuite.DomainServices.AO.QA
 
 		[CanBeNull]
 		private TestsWithRelatedGeometry CreateTestsWithRelatedGeometry(
-			[NotNull] ITable table, [NotNull] IList<ITest> tests,
+			[NotNull] IReadOnlyTable table, [NotNull] IList<ITest> tests,
 			[NotNull] IQualityConditionObjectDatasetResolver datasetResolver)
 		{
 			ITest testWithTable = tests[0];
@@ -289,17 +358,17 @@ namespace ProSuite.DomainServices.AO.QA
 
 		[CanBeNull]
 		private IObjectDataset GetInvolvedObjectDataset(
-			[NotNull] ITable table,
+			[NotNull] IReadOnlyTable table,
 			[NotNull] ITest testWithTable,
 			[NotNull] IQualityConditionObjectDatasetResolver datasetResolver)
 		{
 			return datasetResolver.GetDatasetByGdbTableName(
-				DatasetUtils.GetName(table), _getQualityCondition(testWithTable));
+				table.Name, _getQualityCondition(testWithTable));
 		}
 
 		[NotNull]
 		private IEnumerable<IList<IRelationshipClass>> GetRelClassChains(
-			[NotNull] ITable table,
+			[NotNull] IReadOnlyTable table,
 			[NotNull] IObjectDataset objectDataset,
 			[NotNull] ITest testWithTable,
 			out bool hasAnyAssociationsToFeatureClasses)

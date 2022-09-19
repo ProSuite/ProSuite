@@ -20,7 +20,7 @@ namespace ProSuite.DomainModel.AO.QA
 	public static class ErrorObjectUtils
 	{
 		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+			new Msg(MethodBase.GetCurrentMethod()?.DeclaringType);
 
 		[NotNull]
 		public static IErrorObject CreateErrorObject(
@@ -152,8 +152,7 @@ namespace ProSuite.DomainModel.AO.QA
 
 			IErrorObject errorRow = CreateErrorObject(errorObject, errorTable, null);
 
-			foreach (
-				IRow involvedRow in
+			foreach (IRow involvedRow in
 				GetInvolvedRows(errorRow, modelContext, qualityConditionRepository))
 			{
 				var feature = involvedRow as IFeature;
@@ -164,7 +163,7 @@ namespace ProSuite.DomainModel.AO.QA
 				}
 				else
 				{
-					list.AddRange(GetDerivedTableGeometryFeatures((IObject) involvedRow,
+					list.AddRange(GetDerivedTableGeometryFeatures((IObject)involvedRow,
 					                                              datasetLookup,
 					                                              modelContext));
 				}
@@ -390,7 +389,7 @@ namespace ProSuite.DomainModel.AO.QA
 				catch (Exception e2)
 				{
 					_msg.WarnFormat("Error getting involved rows for table {0}: {1}",
-					                DatasetUtils.GetName(table),
+					                DatasetUtils.GetName( table),
 					                e2.Message);
 					using (_msg.IncrementIndentation())
 					{

@@ -4,9 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading;
-using ESRI.ArcGIS.Geodatabase;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
@@ -16,6 +14,8 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
 using ProSuite.QA.Core;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
 {
@@ -23,7 +23,7 @@ namespace ProSuite.QA.Tests
 	[UsedImplicitly]
 	public class QaValidUrls : ContainerTest
 	{
-		[NotNull] private readonly ITable _table;
+		[NotNull] private readonly IReadOnlyTable _table;
 		[NotNull] private readonly string _urlExpression;
 
 		/// <summary>
@@ -94,7 +94,7 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaValidUrls_0))]
 		public QaValidUrls(
-			[Doc(nameof(DocStrings.QaValidUrls_table))] [NotNull] ITable table,
+			[Doc(nameof(DocStrings.QaValidUrls_table))] [NotNull] IReadOnlyTable table,
 			[Doc(nameof(DocStrings.QaValidUrls_urlExpression))] [NotNull]
 			string urlExpression)
 			: base(table)
@@ -123,7 +123,7 @@ namespace ProSuite.QA.Tests
 				{
 					throw new ArgumentException(
 						string.Format("Field not found in table {0}: {1}",
-						              DatasetUtils.GetName(table),
+						              table.Name,
 						              urlExpression), nameof(urlExpression));
 				}
 
@@ -165,7 +165,7 @@ namespace ProSuite.QA.Tests
 			}
 		}
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
 			string url = GetUrl(row);
 
@@ -262,7 +262,7 @@ namespace ProSuite.QA.Tests
 			var errorCount = 0;
 
 			const bool recycling = false;
-			foreach (IRow row in GdbQueryUtils.GetRowsByObjectIds(_table, oids, recycling))
+			foreach (IReadOnlyRow row in GdbQueryUtils.GetRows(_table, oids, recycling))
 			{
 				errorCount += ReportError(errorsByOid[row.OID], row);
 			}
@@ -391,13 +391,11 @@ namespace ProSuite.QA.Tests
 			}
 		}
 
-		private int ReportError([NotNull] ErrorInfo errorInfo, [NotNull] IRow row)
+		private int ReportError([NotNull] ErrorInfo errorInfo, [NotNull] IReadOnlyRow row)
 		{
-			return ReportError(errorInfo.Description,
-			                   TestUtils.GetShapeCopy(row),
-			                   errorInfo.IssueCode,
-			                   _affectedComponent,
-			                   row);
+			return ReportError(
+				errorInfo.Description, InvolvedRowUtils.GetInvolvedRows(row),
+				TestUtils.GetShapeCopy(row), errorInfo.IssueCode, _affectedComponent);
 		}
 
 		[CanBeNull]
@@ -457,11 +455,11 @@ namespace ProSuite.QA.Tests
 		}
 
 		[CanBeNull]
-		private string GetUrl([NotNull] IRow row)
+		private string GetUrl([NotNull] IReadOnlyRow row)
 		{
 			if (_isSingleField)
 			{
-				object url = row.Value[_fieldIndex];
+				object url = row.get_Value(_fieldIndex);
 
 				return url is DBNull
 					       ? null

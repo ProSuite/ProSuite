@@ -24,13 +24,10 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		[DefaultValue(null)]
 		public string Description
 		{
-			get
-			{
-				return string.IsNullOrEmpty(_description)
-					       ? null
-					       : _description;
-			}
-			set { _description = value; }
+			get => string.IsNullOrEmpty(_description)
+				       ? null
+				       : _description;
+			set => _description = value;
 		}
 
 		[CanBeNull]
@@ -38,13 +35,10 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		[DefaultValue(null)]
 		public string Notes
 		{
-			get
-			{
-				return string.IsNullOrEmpty(_notes)
-					       ? null
-					       : _notes;
-			}
-			set { _notes = value; }
+			get => string.IsNullOrEmpty(_notes)
+				       ? null
+				       : _notes;
+			set => _notes = value;
 		}
 
 		[CanBeNull]
@@ -55,8 +49,8 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		[DefaultValue(_defaultListOrder)]
 		public int ListOrder
 		{
-			get { return _listOrder; }
-			set { _listOrder = value; }
+			get => _listOrder;
+			set => _listOrder = value;
 		}
 
 		[XmlAttribute("tileSize")]
@@ -74,10 +68,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		[NotNull]
 		[XmlArray("Elements")]
 		[XmlArrayItem("Element")]
-		public List<XmlQualitySpecificationElement> Elements
-		{
-			get { return _elements; }
-		}
+		public List<XmlQualitySpecificationElement> Elements => _elements;
 
 		[XmlAttribute("createdDate")]
 		public string CreatedDate { get; set; }

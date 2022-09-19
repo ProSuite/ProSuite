@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using ESRI.ArcGIS.esriSystem;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container.Geometry;
 using ProSuite.Commons.AO.Geometry;
@@ -8,6 +7,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
 using IPnt = ProSuite.Commons.Geom.IPnt;
 using Pnt = ProSuite.Commons.Geom.Pnt;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests.PointEnumerators
 {
@@ -15,7 +15,7 @@ namespace ProSuite.QA.Tests.PointEnumerators
 	{
 		private readonly WKSPointZ[] _wksPoints;
 
-		public PointCollectionFeaturePointEnumerator([NotNull] IFeature feature,
+		public PointCollectionFeaturePointEnumerator([NotNull] IReadOnlyFeature feature,
 		                                             [CanBeNull] IEnvelope envelope)
 			: base(feature)
 		{

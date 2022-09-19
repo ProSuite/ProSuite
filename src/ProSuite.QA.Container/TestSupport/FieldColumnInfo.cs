@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
@@ -10,14 +11,19 @@ namespace ProSuite.QA.Container.TestSupport
 	{
 		private readonly int _fieldIndex;
 
-		public static FieldColumnInfo Create(ITable table, string fieldName)
+		public static FieldColumnInfo Create(IReadOnlyTable table, string fieldName)
 		{
 			int fieldIndex = table.FindField(fieldName);
+			if (fieldIndex < 0)
+			{
+				throw new InvalidOperationException(
+					$"Unknown field {fieldName} in table {table.Name}");
+			}
 			IField field = table.Fields.Field[fieldIndex];
 			return new FieldColumnInfo(table, field, fieldIndex);
 		}
 
-		public FieldColumnInfo([NotNull] ITable table,
+		public FieldColumnInfo([NotNull] IReadOnlyTable table,
 		                       [NotNull] IField field,
 		                       int fieldIndex)
 			: base(table, field.Name.ToUpper(), TestUtils.GetColumnType(field))
@@ -29,17 +35,17 @@ namespace ProSuite.QA.Container.TestSupport
 
 		public override IEnumerable<string> BaseFieldNames => new[] {ColumnName};
 
-		protected override object ReadValueCore(IRow row)
+		protected override object ReadValueCore(IReadOnlyRow row)
 		{
 			// TODO the table may be different in case of "undirected" MultiTableView usage - search index based on field name
 			//int fieldIndex = row.Table != Table
 			//					 ? row.Table.FindField(ColumnName)
 			//					 : _fieldIndex;
 
-			return row.Value[_fieldIndex];
+			return row.get_Value(_fieldIndex);
 		}
 
-		protected override string FormatValueCore(IRow row, object rawValue)
+		protected override string FormatValueCore(IReadOnlyRow row, object rawValue)
 		{
 			string formattedRawValue = base.FormatValueCore(row, rawValue);
 

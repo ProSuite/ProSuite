@@ -5,6 +5,7 @@ using ProSuite.QA.Tests.Test.TestRunners;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.AO.Test.TestSupport;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests.Test
 {
@@ -40,13 +41,13 @@ namespace ProSuite.QA.Tests.Test
 
 			IFeature row1 = featureClassMock.CreateFeature(construction.MultiPatch);
 
-			var noErrorRunner =
-				new QaTestRunner(new QaSliverPolygon(featureClassMock, 50, 1000));
+			var noErrorRunner = new QaTestRunner(
+				new QaSliverPolygon(ReadOnlyTableFactory.Create(featureClassMock), 50, 1000));
 			noErrorRunner.Execute(row1);
 			Assert.AreEqual(0, noErrorRunner.Errors.Count);
 
-			var oneErrorRunner =
-				new QaTestRunner(new QaSliverPolygon(featureClassMock, 20, 1000));
+			var oneErrorRunner = new QaTestRunner(
+				new QaSliverPolygon(ReadOnlyTableFactory.Create(featureClassMock), 20, 1000));
 			oneErrorRunner.Execute(row1);
 			Assert.AreEqual(1, oneErrorRunner.Errors.Count);
 		}
@@ -77,7 +78,8 @@ namespace ProSuite.QA.Tests.Test
 			            .Add(5, 0, 0);
 			IFeature row4 = featureClassMock.CreateFeature(construction.MultiPatch);
 
-			var runner = new QaTestRunner(new QaSliverPolygon(featureClassMock, 50, 1000));
+			var runner = new QaTestRunner(
+				new QaSliverPolygon(ReadOnlyTableFactory.Create(featureClassMock), 50, 1000));
 			runner.Execute(row1);
 			runner.Execute(row2);
 			runner.Execute(row3);

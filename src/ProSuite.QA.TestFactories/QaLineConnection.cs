@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using ESRI.ArcGIS.Geodatabase;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Tests;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -11,6 +9,9 @@ using ProSuite.DomainModel.AO.QA;
 using ProSuite.QA.Core;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.DataModel;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.TestFactories
 {
@@ -20,27 +21,21 @@ namespace ProSuite.QA.TestFactories
 	{
 		[NotNull]
 		[UsedImplicitly]
-		public static ITestIssueCodes Codes
-		{
-			get { return QaConnections.Codes; }
-		}
+		public static ITestIssueCodes Codes => QaConnections.Codes;
 
 		public override string GetTestTypeDescription()
 		{
 			return typeof(QaConnections).Name;
 		}
 
-		public override string GetTestDescription()
-		{
-			return DocStrings.QaLineConnection;
-		}
+		public override string TestDescription => DocStrings.QaLineConnection;
 
 		protected override IList<TestParameter> CreateParameters()
 		{
 			var list =
 				new List<TestParameter>
 				{
-					new TestParameter("featureClasses", typeof(IFeatureClass[]),
+					new TestParameter("featureClasses", typeof(IReadOnlyFeatureClass[]),
 					                  DocStrings.QaLineConnection_featureClasses),
 					new TestParameter("rules", typeof(string[]),
 					                  DocStrings.QaLineConnection_rules)
@@ -60,9 +55,9 @@ namespace ProSuite.QA.TestFactories
 				                                          objParams.Length));
 			}
 
-			if (objParams[0] is IFeatureClass[] == false)
+			if (objParams[0] is IReadOnlyFeatureClass[] == false)
 			{
-				throw new ArgumentException(string.Format("expected IFeatureClass[], got {0}",
+				throw new ArgumentException(string.Format("expected IReadOnlyFeatureClass[], got {0}",
 				                                          objParams[0].GetType()));
 			}
 
@@ -75,7 +70,7 @@ namespace ProSuite.QA.TestFactories
 			var objects = new object[2];
 			objects[0] = objParams[0];
 
-			var featureClasses = (IFeatureClass[]) objParams[0];
+			var featureClasses = (IReadOnlyFeatureClass[]) objParams[0];
 			var ruleParts = (string[]) objParams[1];
 
 			objects[0] = featureClasses;
@@ -86,7 +81,7 @@ namespace ProSuite.QA.TestFactories
 
 		protected override ITest CreateTestInstance(object[] args)
 		{
-			var featureClasses = (IFeatureClass[]) args[0];
+			var featureClasses = (IReadOnlyFeatureClass[]) args[0];
 			var rules = (List<string[]>) args[1];
 
 			return new QaConnections(featureClasses, rules);
@@ -167,7 +162,7 @@ namespace ProSuite.QA.TestFactories
 
 		[NotNull]
 		private static List<string[]> GetRuleArrays(
-			[NotNull] ICollection<IFeatureClass> featureClasses,
+			[NotNull] ICollection<IReadOnlyFeatureClass> featureClasses,
 			[NotNull] IList<string> ruleParts)
 		{
 			Assert.ArgumentNotNull(featureClasses, nameof(featureClasses));

@@ -20,6 +20,7 @@ using ProSuite.QA.Container;
 using ProSuite.QA.Container.Test;
 using ProSuite.QA.Container.TestContainer;
 using ProSuite.QA.Core;
+using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.TestFactories;
 using ProSuite.QA.Tests.Test.Construction;
 using ProSuite.QA.Tests.Test.TestRunners;
@@ -107,10 +108,15 @@ namespace ProSuite.QA.Tests.Test
 			AddFeature(fc2, CurveConstruction.StartLine(26, 4).LineTo(28.1, 4).Curve,
 			           textFieldValue: "A");
 
-			var test = new QaLineGroupConstraints(new[] {fc1, fc2}, 2, 6, 2,
-			                                      new[] {_textFieldName})
+			var test = new QaLineGroupConstraints(
+				           new[]
+				           {
+					           ReadOnlyTableFactory.Create(fc1),
+					           ReadOnlyTableFactory.Create(fc2)
+				           }, 2, 6, 2,
+				           new[] { _textFieldName })
 			           {
-				           GroupConditions = new[] {$"{_textFieldName} IS NOT NULL"}
+				           GroupConditions = new[] { $"{_textFieldName} IS NOT NULL" }
 			           };
 
 			AssertErrors(5, Run(test, 1000));
@@ -141,11 +147,16 @@ namespace ProSuite.QA.Tests.Test
 			// add network connection, no group
 			AddFeature(fc1, CurveConstruction.StartLine(4, 8).LineTo(5, 8).Curve);
 
-			var test = new QaLineGroupConstraints(new[] {fc1, fc2}, 2, 6, 2,
-			                                      new[] {_textFieldName})
+			var test = new QaLineGroupConstraints(
+				           new[]
+				           {
+					           ReadOnlyTableFactory.Create(fc1),
+					           ReadOnlyTableFactory.Create(fc2)
+				           }, 2, 6, 2,
+				           new[] { _textFieldName })
 			           {
 				           MinGapToOtherGroupType = 2,
-				           GroupConditions = new[] {$"{_textFieldName} IS NOT NULL"}
+				           GroupConditions = new[] { $"{_textFieldName} IS NOT NULL" }
 			           };
 
 			AssertErrors(2, Run(test, 1000));
@@ -184,11 +195,16 @@ namespace ProSuite.QA.Tests.Test
 			                                 .LineTo(5, 8.5)
 			                                 .Curve);
 
-			var test = new QaLineGroupConstraints(new[] {fc1, fc2}, 2, 6, 2,
-			                                      new[] {_textFieldName})
+			var test = new QaLineGroupConstraints(
+				           new[]
+				           {
+					           ReadOnlyTableFactory.Create(fc1),
+					           ReadOnlyTableFactory.Create(fc2)
+				           }, 2, 6, 2,
+				           new[] { _textFieldName })
 			           {
 				           MinGapToOtherGroupType = 2,
-				           GroupConditions = new[] {$"{_textFieldName} IS NOT NULL"}
+				           GroupConditions = new[] { $"{_textFieldName} IS NOT NULL" }
 			           };
 
 			AssertErrors(2, Run(test, 1000));
@@ -218,20 +234,22 @@ namespace ProSuite.QA.Tests.Test
 			           CurveConstruction.StartLine(4, 8).LineTo(30, 12).Curve,
 			           textFieldValue: "C");
 
-			var testAtFork = new QaLineGroupConstraints(new[] {fc1}, 2, 6, 2,
-			                                            new[] {_textFieldName})
+			var testAtFork = new QaLineGroupConstraints(
+				                 new[] { ReadOnlyTableFactory.Create(fc1) }, 2, 6, 2,
+				                 new[] { _textFieldName })
 			                 {
 				                 MinGapToSameGroupTypeAtForkCovered = 3,
-				                 GroupConditions = new[] {$"{_textFieldName} IS NOT NULL"}
+				                 GroupConditions = new[] { $"{_textFieldName} IS NOT NULL" }
 			                 };
 
 			AssertErrors(0, Run(testAtFork, 1000));
 
-			var test = new QaLineGroupConstraints(new[] {fc1}, 2, 6, 2,
-			                                      new[] {_textFieldName})
+			var test = new QaLineGroupConstraints(
+				           new[] { ReadOnlyTableFactory.Create(fc1) }, 2, 6, 2,
+				           new[] { _textFieldName })
 			           {
 				           MinGapToSameGroupTypeCovered = 3,
-				           GroupConditions = new[] {$"{_textFieldName} IS NOT NULL"}
+				           GroupConditions = new[] { $"{_textFieldName} IS NOT NULL" }
 			           };
 
 			AssertErrors(0, Run(test, 1000));
@@ -261,10 +279,15 @@ namespace ProSuite.QA.Tests.Test
 			// add network connection, no group
 			AddFeature(fc2, CurveConstruction.StartLine(4, 8).LineTo(5, 8).Curve);
 
-			var test = new QaLineGroupConstraints(new[] {fc1, fc2}, 2, 6, 2,
-			                                      new[] {_textFieldName})
+			var test = new QaLineGroupConstraints(
+				           new[]
+				           {
+					           ReadOnlyTableFactory.Create(fc1),
+					           ReadOnlyTableFactory.Create(fc2)
+				           }, 2, 6, 2,
+				           new[] { _textFieldName })
 			           {
-				           GroupConditions = new[] {$"{_textFieldName} IS NOT NULL"}
+				           GroupConditions = new[] { $"{_textFieldName} IS NOT NULL" }
 			           };
 
 			AssertErrors(3, Run(test, 1000));
@@ -289,10 +312,15 @@ namespace ProSuite.QA.Tests.Test
 			AddFeature(fc2, CurveConstruction.StartLine(4, 1).LineTo(4, 10).Curve);
 			AddFeature(fc1, CurveConstruction.StartLine(4, 1).LineTo(5, 10).Curve);
 
-			var test = new QaLineGroupConstraints(new[] {fc1, fc2}, 2, 6, 2,
-			                                      new[] {_textFieldName})
+			var test = new QaLineGroupConstraints(
+				           new[]
+				           {
+					           ReadOnlyTableFactory.Create(fc1),
+					           ReadOnlyTableFactory.Create(fc2)
+				           }, 2, 6, 2,
+				           new[] { _textFieldName })
 			           {
-				           GroupConditions = new[] {$"{_textFieldName} IS NOT NULL"}
+				           GroupConditions = new[] { $"{_textFieldName} IS NOT NULL" }
 			           };
 
 			AssertErrors(1, Run(test, 1000));
@@ -322,10 +350,15 @@ namespace ProSuite.QA.Tests.Test
 			AddFeature(fc2, CurveConstruction.StartLine(4, 1).LineTo(5, 10).Curve,
 			           textFieldValue: "B");
 
-			var test = new QaLineGroupConstraints(new[] {fc1, fc2}, 2, 6, 2,
-			                                      new[] {_textFieldName})
+			var test = new QaLineGroupConstraints(
+				           new[]
+				           {
+					           ReadOnlyTableFactory.Create(fc1),
+					           ReadOnlyTableFactory.Create(fc2)
+				           }, 2, 6, 2,
+				           new[] { _textFieldName })
 			           {
-				           GroupConditions = new[] {$"{_textFieldName} IS NOT NULL"}
+				           GroupConditions = new[] { $"{_textFieldName} IS NOT NULL" }
 			           };
 
 			AssertErrors(1, Run(test, 1000));
@@ -363,10 +396,15 @@ namespace ProSuite.QA.Tests.Test
 			AddFeature(fc2, CurveConstruction.StartLine(4, 3).LineTo(14, 3).Curve,
 			           textFieldValue: "B");
 
-			var test = new QaLineGroupConstraints(new[] {fc1, fc2}, 2, 6, 2,
-			                                      new[] {_textFieldName})
+			var test = new QaLineGroupConstraints(
+				           new[]
+				           {
+					           ReadOnlyTableFactory.Create(fc1),
+					           ReadOnlyTableFactory.Create(fc2)
+				           }, 2, 6, 2,
+				           new[] { _textFieldName })
 			           {
-				           GroupConditions = new[] {$"{_textFieldName} IS NOT NULL"}
+				           GroupConditions = new[] { $"{_textFieldName} IS NOT NULL" }
 			           };
 
 			AssertErrors(2, Run(test, 1000));
@@ -404,10 +442,15 @@ namespace ProSuite.QA.Tests.Test
 			AddFeature(fc2, CurveConstruction.StartLine(4, 4).LineTo(14, 4).Curve,
 			           textFieldValue: "C");
 
-			var test = new QaLineGroupConstraints(new[] {fc1, fc2}, 2, 6, 2,
-			                                      new[] {_textFieldName})
+			var test = new QaLineGroupConstraints(
+				           new[]
+				           {
+					           ReadOnlyTableFactory.Create(fc1),
+					           ReadOnlyTableFactory.Create(fc2)
+				           }, 2, 6, 2,
+				           new[] { _textFieldName })
 			           {
-				           GroupConditions = new[] {$"{_textFieldName} IS NOT NULL"}
+				           GroupConditions = new[] { $"{_textFieldName} IS NOT NULL" }
 			           };
 
 			AssertErrors(1, Run(test, 1000));
@@ -442,10 +485,15 @@ namespace ProSuite.QA.Tests.Test
 			AddFeature(fc2, CurveConstruction.StartLine(4, 4).LineTo(0, 4).Curve);
 			AddFeature(fc1, CurveConstruction.StartLine(4, 3).LineTo(0, 4).Curve);
 
-			var test = new QaLineGroupConstraints(new[] {fc1, fc2}, 2, 6, 2,
-			                                      new[] {_textFieldName})
+			var test = new QaLineGroupConstraints(
+				           new[]
+				           {
+					           ReadOnlyTableFactory.Create(fc1),
+					           ReadOnlyTableFactory.Create(fc2)
+				           }, 2, 6, 2,
+				           new[] { _textFieldName })
 			           {
-				           GroupConditions = new[] {$"{_textFieldName} IS NOT NULL"},
+				           GroupConditions = new[] { $"{_textFieldName} IS NOT NULL" },
 				           MinGapToOtherGroupType = 2
 			           };
 
@@ -504,8 +552,13 @@ namespace ProSuite.QA.Tests.Test
 			AddFeature(fc2, CurveConstruction.StartLine(2, 39).LineTo(0, 40).Curve,
 			           textFieldValue: "B");
 
-			var test = new QaLineGroupConstraints(new[] {fc1, fc2}, 2, 6, 6,
-			                                      new[] {_textFieldName});
+			var test = new QaLineGroupConstraints(
+				new[]
+				{
+					ReadOnlyTableFactory.Create(fc1),
+					ReadOnlyTableFactory.Create(fc2)
+				}, 2, 6, 6,
+				new[] { _textFieldName });
 
 			AssertErrors(2, Run(test, 1000));
 		}
@@ -539,8 +592,9 @@ namespace ProSuite.QA.Tests.Test
 			AddFeature(fc1, CurveConstruction.StartLine(8, 9.5).LineTo(8, 10.5).Curve,
 			           textFieldValue: "A");
 
-			var test = new QaLineGroupConstraints(new[] {fc1}, 2, 6, 6,
-			                                      new[] {_textFieldName});
+			var test = new QaLineGroupConstraints(
+				new[] { ReadOnlyTableFactory.Create(fc1) }, 2, 6, 6,
+				new[] { _textFieldName });
 
 			AssertErrors(2, Run(test, 10));
 		}
@@ -596,7 +650,8 @@ namespace ProSuite.QA.Tests.Test
 					relClass, JoinType.InnerJoin);
 
 				string groupBy = string.Format("{0}.{1}", dsRel.Name, _textFieldName);
-				var test = new QaLineGroupConstraints(new[] {queryFeatureClass}, 2, 6, 2,
+				var test = new QaLineGroupConstraints(
+					new[] { ReadOnlyTableFactory.Create(queryFeatureClass)}, 2, 6, 2,
 				                                      new[] {groupBy});
 
 				AssertErrors(1, Run(test, 1000));
@@ -780,7 +835,7 @@ namespace ProSuite.QA.Tests.Test
 					fact.Parameters.Count,
 					condition.ParameterValues.Count - 1); // 'relationTables' exists twice
 
-				Assert.IsNotNull(fact.GetTestDescription(), "Description");
+				Assert.IsNotNull(fact.TestDescription, "Description");
 				foreach (TestParameter parameter in fact.Parameters)
 				{
 					Assert.IsNotNull(fact.GetParameterDescription(parameter.Name),
@@ -820,8 +875,9 @@ namespace ProSuite.QA.Tests.Test
 			AddFeature(fc1, CurveConstruction.StartLine(8, 0).LineTo(8, 9).Curve,
 			           textFieldValue: "B");
 
-			var test = new QaLineGroupConstraints(new[] {fc1}, 3, 4, 4,
-			                                      new[] {_textFieldName});
+			var test = new QaLineGroupConstraints(
+				new[] { ReadOnlyTableFactory.Create(fc1) }, 3, 4, 4,
+				new[] { _textFieldName });
 
 			AssertErrors(2, Run(test, 10));
 		}

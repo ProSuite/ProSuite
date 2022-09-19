@@ -4,11 +4,13 @@ using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Surface;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestCategories;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
 
@@ -49,7 +51,7 @@ namespace ProSuite.QA.Tests
 			double maxSlopeDegrees,
 			[Doc(nameof(DocStrings.QaTerrainSpikes_maxDeltaZ))]
 			double maxDeltaZ)
-			: base(new ITable[] { })
+			: base(new IReadOnlyTable[] { })
 		{
 			_maxSlopeDegrees = maxSlopeDegrees;
 			_maxDeltaZ = maxDeltaZ;
@@ -60,7 +62,7 @@ namespace ProSuite.QA.Tests
 			_maxSlopeRadians = MathUtils.ToRadians(maxSlopeDegrees);
 		}
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
 			return NoError;
 		}
@@ -134,8 +136,9 @@ namespace ProSuite.QA.Tests
 			IPoint point = new PointClass();
 			tinNode.QueryAsPoint(point);
 
-			return ReportError(description, point,
-			                   Codes[Code.MaximumSlopeAndDeltaZExceeded], null);
+			return ReportError(
+				description, new InvolvedRows(), point, Codes[Code.MaximumSlopeAndDeltaZExceeded],
+				null);
 		}
 
 		private static void GetAbsoluteDeltaZRange(double minDeltaZ, double maxDeltaZ,

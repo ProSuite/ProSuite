@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
@@ -9,21 +10,11 @@ using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DomainModel.Core.QA
 {
-	public class QualityCondition : InstanceConfiguration,
-	                                IPersistenceAware
+	public class QualityCondition : InstanceConfiguration, IPersistenceAware
 	{
 		private int _cloneId = -1;
 
 		#region Persisted fields
-
-		[UsedImplicitly] [Obfuscation(Exclude = true)]
-		private DataQualityCategory _category;
-
-		[UsedImplicitly] [Obfuscation(Exclude = true)]
-		private string _url;
-
-		[UsedImplicitly] [Obfuscation(Exclude = true)]
-		private string _notes;
 
 		[UsedImplicitly] [Obfuscation(Exclude = true)]
 		private bool? _stopOnErrorOverride;
@@ -44,7 +35,7 @@ namespace ProSuite.DomainModel.Core.QA
 		private bool _neverFilterTableRowsUsingRelatedGeometry;
 
 		[UsedImplicitly] [Obfuscation(Exclude = true)]
-		private string _uuid;
+		private string _issueFilterExpression;
 
 		[UsedImplicitly] [Obfuscation(Exclude = true)]
 		private string _versionUuid;
@@ -59,11 +50,10 @@ namespace ProSuite.DomainModel.Core.QA
 		/// <remarks>Required for NHibernate</remarks>
 		protected QualityCondition() : this(assignUuids: false) { }
 
-		public QualityCondition(bool assignUuids)
+		public QualityCondition(bool assignUuids) : base(assignUuids)
 		{
 			if (assignUuids)
 			{
-				_uuid = GenerateUuid();
 				_versionUuid = GenerateUuid();
 			}
 		}
@@ -80,7 +70,7 @@ namespace ProSuite.DomainModel.Core.QA
 
 			if (assignUuids)
 			{
-				_uuid = GenerateUuid();
+				Uuid = GenerateUuid();
 				_versionUuid = GenerateUuid();
 			}
 		}
@@ -94,18 +84,6 @@ namespace ProSuite.DomainModel.Core.QA
 		{
 			get { return _testDescriptor; }
 			set { _testDescriptor = value; }
-		}
-
-		[Required]
-		public string Uuid
-		{
-			get { return _uuid; }
-			set
-			{
-				Assert.ArgumentNotNull(value, nameof(value));
-
-				_uuid = GetUuid(value);
-			}
 		}
 
 		[Required]
@@ -125,20 +103,6 @@ namespace ProSuite.DomainModel.Core.QA
 		public void AssignNewVersionUuid()
 		{
 			_versionUuid = GenerateUuid();
-		}
-
-		[MaximumStringLength(2000)]
-		public string Url
-		{
-			get { return _url; }
-			set { _url = value; }
-		}
-
-		[MaximumStringLength(2000)]
-		public string Notes
-		{
-			get { return _notes; }
-			set { _notes = value; }
 		}
 
 		public bool StopOnError
@@ -219,13 +183,6 @@ namespace ProSuite.DomainModel.Core.QA
 			set { _neverFilterTableRowsUsingRelatedGeometry = value; }
 		}
 
-		[CanBeNull]
-		public DataQualityCategory Category
-		{
-			get { return _category; }
-			set { _category = value; }
-		}
-
 		public new int Id
 		{
 			get
@@ -279,8 +236,23 @@ namespace ProSuite.DomainModel.Core.QA
 			_issueFilterConfigurations.Add(issueFilterConfiguration);
 		}
 
+		public bool RemoveIssueFilterConfiguration(
+			[NotNull] IssueFilterConfiguration issueFilterConfiguration)
+		{
+			return _issueFilterConfigurations.Remove(issueFilterConfiguration);
+		}
+
+		public void ClearIssueFilterConfigurations()
+		{
+			_issueFilterConfigurations.Clear();
+		}
+
 		[CanBeNull]
-		public string IssueFilterExpression { get; set; }
+		public string IssueFilterExpression
+		{
+			get => _issueFilterExpression;
+			set => _issueFilterExpression = value;
+		}
 
 		[NotNull]
 		public IList<IssueFilterConfiguration> IssueFilterConfigurations
@@ -304,8 +276,10 @@ namespace ProSuite.DomainModel.Core.QA
 			return clone;
 		}
 
+		public override string TypeDisplayName => "Quality Condition";
+
 		[NotNull]
-		public QualityCondition CreateCopy()
+		public override InstanceConfiguration CreateCopy()
 		{
 			var copy = new QualityCondition(assignUuids: true);
 
@@ -396,9 +370,12 @@ namespace ProSuite.DomainModel.Core.QA
 					continue;
 				}
 
-				if (verifiedDatasets.Contains(datasetTestParameterValue.DatasetValue))
+				foreach (Dataset dataset in datasetTestParameterValue.GetAllSourceDatasets())
 				{
-					return true;
+					if (verifiedDatasets.Contains(dataset))
+					{
+						return true;
+					}
 				}
 			}
 
@@ -406,11 +383,28 @@ namespace ProSuite.DomainModel.Core.QA
 		}
 
 		[NotNull]
-		public IList<TestParameterValue> GetDeletedParameterValues()
+		public IList<string> GetDeletedParameterValues()
 		{
-			List<TestParameterValue> result = new List<TestParameterValue>();
+			List<string> result = new List<string>();
 
-			foreach (TestParameterValue parameterValue in ParameterValues)
+			result.AddRange(GetDeletedParameterValueMessages(ParameterValues));
+
+			foreach (IssueFilterConfiguration issueFilter in IssueFilterConfigurations)
+			{
+				foreach (string deletedFilterParam in GetDeletedParameterValueMessages(
+					         issueFilter.ParameterValues))
+				{
+					result.Add($"Issue filter {issueFilter.Name}: {deletedFilterParam}");
+				}
+			}
+
+			return result;
+		}
+
+		private static IEnumerable<string> GetDeletedParameterValueMessages(
+			[NotNull] IEnumerable<TestParameterValue> parameterValues)
+		{
+			foreach (TestParameterValue parameterValue in parameterValues)
 			{
 				var datasetTestParameterValue = parameterValue as DatasetTestParameterValue;
 
@@ -418,44 +412,27 @@ namespace ProSuite.DomainModel.Core.QA
 
 				if (dataset != null && dataset.Deleted)
 				{
-					result.Add(datasetTestParameterValue);
+					yield return $"{parameterValue.TestParameterName}: {dataset.Name}";
+				}
+
+				if (datasetTestParameterValue?.ValueSource != null)
+				{
+					foreach (Dataset deleted in datasetTestParameterValue.GetAllSourceDatasets()
+						         .Where(d => d.Deleted))
+					{
+						yield return $"{parameterValue.TestParameterName}: {deleted.Name}";
+					}
 				}
 			}
-
-			return result;
-		}
-
-		[NotNull]
-		private static string GetUuid([NotNull] string value)
-		{
-			// this fails if the string is not a valid guid:
-			var guid = new Guid(value);
-
-			return FormatUuid(guid);
-		}
-
-		[NotNull]
-		private static string GenerateUuid()
-		{
-			return FormatUuid(Guid.NewGuid());
-		}
-
-		[NotNull]
-		private static string FormatUuid(Guid guid)
-		{
-			// default format (no curly braces)
-			return guid.ToString().ToUpper();
 		}
 
 		private void CopyProperties([NotNull] QualityCondition target)
 		{
 			Assert.ArgumentNotNull(target, nameof(target));
 
-			target.Name = Name;
+			CopyBaseProperties(target);
+
 			target._testDescriptor = TestDescriptor;
-			target.Description = Description;
-			target._notes = Notes;
-			target._url = Url;
 
 			target._allowErrorsOverride = AllowErrorsOverride;
 			target._stopOnErrorOverride = StopOnErrorOverride;
@@ -466,13 +443,6 @@ namespace ProSuite.DomainModel.Core.QA
 				NeverFilterTableRowsUsingRelatedGeometry;
 			target._neverStoreRelatedGeometryForTableRowIssues =
 				NeverStoreRelatedGeometryForTableRowIssues;
-
-			foreach (TestParameterValue testParameterValue in ParameterValues)
-			{
-				target.AddParameterValue(testParameterValue.Clone());
-			}
-
-			target._category = _category;
 		}
 
 		protected override IEnumerable<Dataset> EnumReferencedDatasetParameterValues()
@@ -481,7 +451,7 @@ namespace ProSuite.DomainModel.Core.QA
 			         IssueFilterConfigurations)
 			{
 				foreach (Dataset dataset in issueFilterConfiguration.GetDatasetParameterValues(
-					includeReferencedProcessors: true))
+					         includeReferencedProcessors: true))
 				{
 					yield return dataset;
 				}

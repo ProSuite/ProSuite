@@ -1,15 +1,15 @@
 using System;
 using System.Collections.Generic;
-using ESRI.ArcGIS.Geodatabase;
 using ProSuite.QA.Container.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests.Coincidence
 {
 	public abstract class QaFullCoincidenceBase : QaPolycurveCoincidenceBase
 	{
 		protected QaFullCoincidenceBase(
-			[NotNull] IEnumerable<IFeatureClass> featureClasses,
+			[NotNull] IEnumerable<IReadOnlyFeatureClass> featureClasses,
 			double searchDistance,
 			[NotNull] IFeatureDistanceProvider nearDistanceProvider,
 			bool is3D)
@@ -17,7 +17,7 @@ namespace ProSuite.QA.Tests.Coincidence
 
 		[CanBeNull]
 		protected static IList<Subcurve> GetMissingSegments(
-			[NotNull] IFeature feature,
+			[NotNull] IReadOnlyFeature feature,
 			[NotNull] IIndexedSegments segList,
 			[NotNull] SortedDictionary<SegmentPart, SegmentParts> nearList)
 		{
@@ -64,7 +64,7 @@ namespace ProSuite.QA.Tests.Coincidence
 			return result;
 		}
 
-		private static void AddSegment([NotNull] IFeature feature,
+		private static void AddSegment([NotNull] IReadOnlyFeature feature,
 		                               [NotNull] IIndexedSegments geom,
 		                               [NotNull] IList<Subcurve> connectedList,
 		                               [NotNull] SegmentProxy segProxy, double min,
@@ -113,8 +113,8 @@ namespace ProSuite.QA.Tests.Coincidence
 		protected sealed class FullNeighborhoodFinder : NeighborhoodFinder
 		{
 			public FullNeighborhoodFinder(IFeatureRowsDistance rowsDistance,
-			                              [NotNull] IFeature feature, int tableIndex,
-			                              [CanBeNull] IFeature neighbor, int neighborTableIndex)
+			                              [NotNull] IReadOnlyFeature feature, int tableIndex,
+			                              [CanBeNull] IReadOnlyFeature neighbor, int neighborTableIndex)
 				: base(rowsDistance, feature, tableIndex, neighbor, neighborTableIndex) { }
 
 			protected override bool VerifyContinue(SegmentProxy seg0, SegmentProxy seg1,

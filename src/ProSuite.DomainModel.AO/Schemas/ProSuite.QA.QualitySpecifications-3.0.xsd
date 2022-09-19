@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<xs:schema xmlns:tns="urn:EsriDE.ProSuite.QA.QualitySpecifications-3.0" elementFormDefault="qualified"
-           targetNamespace="urn:EsriDE.ProSuite.QA.QualitySpecifications-3.0"
+<xs:schema xmlns:tns="urn:ProSuite.QA.QualitySpecifications-3.0" elementFormDefault="qualified"
+           targetNamespace="urn:ProSuite.QA.QualitySpecifications-3.0"
            xmlns:xs="http://www.w3.org/2001/XMLSchema">
   <xs:element name="DataQuality" nillable="true" type="tns:XmlDataQualityDocument" />
   <xs:complexType name="XmlDataQualityDocument">
     <xs:sequence>
       <xs:element minOccurs="0" maxOccurs="1" name="QualitySpecifications" type="tns:ArrayOfXmlQualitySpecification" />
       <xs:element minOccurs="0" maxOccurs="1" name="QualityConditions" type="tns:ArrayOfXmlQualityCondition" />
-      <xs:element minOccurs="0" maxOccurs="1" name="Categories" type="tns:ArrayOfXmlDataQualityCategory" />
       <xs:element minOccurs="0" maxOccurs="1" name="Transformers" type="tns:ArrayOfXmlTransformer" />
       <xs:element minOccurs="0" maxOccurs="1" name="IssueFilters" type="tns:ArrayOfXmlIssueFilter" />
+      <xs:element minOccurs="0" maxOccurs="1" name="Categories" type="tns:ArrayOfXmlDataQualityCategory" />
       <xs:element minOccurs="0" maxOccurs="1" name="RowFilters" type="tns:ArrayOfXmlRowFilter" />
       <xs:element minOccurs="0" maxOccurs="1" name="TestDescriptors" type="tns:ArrayOfXmlTestDescriptor" />
       <xs:element minOccurs="0" maxOccurs="1" name="TransformerDescriptors" type="tns:ArrayOfXmlTransformerDescriptor" />

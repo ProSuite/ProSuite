@@ -2,13 +2,15 @@ using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Surface;
 using ProSuite.Commons.AO.Surface.Raster;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.Geometry;
-using ProSuite.QA.Container.TestCategories;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.QA.Tests.Surface;
@@ -56,7 +58,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.Qa3dSmoothing_0))]
 		public QaSurfaceVertex(
 			[Doc(nameof(DocStrings.QaSurfaceVertex_featureClass))] [NotNull]
-			IFeatureClass featureClass,
+			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.Qa3dSmoothing_terrain))] [NotNull]
 			TerrainReference terrain,
 			[Doc(nameof(DocStrings.QaSurfaceVertex_limit))]
@@ -72,7 +74,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.Qa3dSmoothing_0))]
 		public QaSurfaceVertex(
 			[Doc(nameof(DocStrings.QaSurfaceVertex_featureClass))] [NotNull]
-			IFeatureClass featureClass,
+			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.Qa3dSmoothing_terrain))] [NotNull]
 			TerrainReference terrain,
 			[Doc(nameof(DocStrings.QaSurfaceVertex_limit))]
@@ -87,7 +89,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaSurfaceVertex_2))]
 		public QaSurfaceVertex(
 			[Doc(nameof(DocStrings.QaSurfaceVertex_featureClass))] [NotNull]
-			IFeatureClass featureClass,
+			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaSurfaceVertex_raster))] [NotNull]
 			IRasterDataset2 raster,
 			[Doc(nameof(DocStrings.QaSurfaceVertex_limit))]
@@ -103,7 +105,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaSurfaceVertex_2))]
 		public QaSurfaceVertex(
 			[Doc(nameof(DocStrings.QaSurfaceVertex_featureClass))] [NotNull]
-			IFeatureClass featureClass,
+			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaSurfaceVertex_raster))] [NotNull]
 			IRasterDataset2 raster,
 			[Doc(nameof(DocStrings.QaSurfaceVertex_limit))]
@@ -118,7 +120,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaSurfaceVertex_4))]
 		public QaSurfaceVertex(
 			[Doc(nameof(DocStrings.QaSurfaceVertex_featureClass))] [NotNull]
-			IFeatureClass featureClass,
+			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaSurfaceVertex_mosaic))] [NotNull]
 			SimpleRasterMosaic rasterMosaic,
 			[Doc(nameof(DocStrings.QaSurfaceVertex_limit))]
@@ -134,7 +136,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaSurfaceVertex_4))]
 		public QaSurfaceVertex(
 			[Doc(nameof(DocStrings.QaSurfaceVertex_featureClass))] [NotNull]
-			IFeatureClass featureClass,
+			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaSurfaceVertex_mosaic))] [NotNull]
 			SimpleRasterMosaic rasterMosaic,
 			[Doc(nameof(DocStrings.QaSurfaceVertex_limit))]
@@ -147,7 +149,7 @@ namespace ProSuite.QA.Tests
 			_shapeType = featureClass.ShapeType;
 		}
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
 			return NoError;
 		}
@@ -173,9 +175,9 @@ namespace ProSuite.QA.Tests
 			surfaceRow.Extent.QueryCoords(out xMin, out yMin,
 			                              out xMax, out yMax);
 
-			foreach (IRow searchRow in Search(InvolvedTables[0], _queryFilter, _helper))
+			foreach (IReadOnlyRow searchRow in Search(InvolvedTables[0], _queryFilter, _helper))
 			{
-				var feature = (IFeature) searchRow;
+				var feature = (IReadOnlyFeature) searchRow;
 
 				if (surface == null)
 				{
@@ -204,18 +206,18 @@ namespace ProSuite.QA.Tests
 								break;
 
 							case ErrorType.NoTerrain:
-								errorCount += ReportError("Missing Terrain", p,
-								                          Codes[Code.NoTerrainData],
-								                          TestUtils.GetShapeFieldName(feature),
-								                          feature);
+								errorCount += ReportError(
+									"Missing Terrain", InvolvedRowUtils.GetInvolvedRows(feature), p,
+									Codes[Code.NoTerrainData],
+									TestUtils.GetShapeFieldName(feature));
 								break;
 
 							default:
 								IssueCode issueCode;
-								errorCount += ReportError(GetOffsetMessage(max, out issueCode), p,
-								                          issueCode,
-								                          TestUtils.GetShapeFieldName(feature),
-								                          feature);
+								errorCount += ReportError(
+									GetOffsetMessage(max, out issueCode),
+									InvolvedRowUtils.GetInvolvedRows(feature), p,
+									issueCode, TestUtils.GetShapeFieldName(feature));
 								break;
 						}
 
@@ -262,7 +264,7 @@ namespace ProSuite.QA.Tests
 		                        double xMax, double yMax,
 		                        [NotNull] ISimpleSurface surface,
 		                        [NotNull] IPointCollection vertices,
-		                        [NotNull] IRow row)
+		                        [NotNull] IReadOnlyRow row)
 		{
 			var errorCount = 0;
 			IEnumVertex enumVertices = vertices.EnumVertices;
@@ -339,7 +341,7 @@ namespace ProSuite.QA.Tests
 		private int ReportOffsetError([NotNull] IList<PartVertex> errorPoints,
 		                              IPointCollection baseGeometry,
 		                              ref double offset,
-		                              IRow row,
+									  IReadOnlyRow row,
 		                              bool final)
 		{
 			var errorCount = 0;
@@ -359,7 +361,7 @@ namespace ProSuite.QA.Tests
 
 		private int ReportMissingTerrainError([NotNull] IList<PartVertex> errorPoints,
 		                                      IPointCollection geometry,
-		                                      IRow row,
+											  IReadOnlyRow row,
 		                                      bool final)
 		{
 			var errorCount = 0;
@@ -395,7 +397,7 @@ namespace ProSuite.QA.Tests
 		                        [NotNull] IPointCollection baseGeometry,
 		                        string description,
 		                        IssueCode issueCode,
-		                        [NotNull] IRow errorRow,
+		                        [NotNull] IReadOnlyRow errorRow,
 		                        bool final)
 		{
 			var errorCount = 0;
@@ -407,8 +409,9 @@ namespace ProSuite.QA.Tests
 
 				foreach (IPolyline part in parts)
 				{
-					errorCount += ReportError(description, part, issueCode,
-					                          TestUtils.GetShapeFieldName(errorRow), errorRow);
+					errorCount += ReportError(
+						description, InvolvedRowUtils.GetInvolvedRows(errorRow), part, issueCode,
+						TestUtils.GetShapeFieldName(errorRow));
 				}
 
 				error.Clear();
@@ -417,8 +420,9 @@ namespace ProSuite.QA.Tests
 			else if (final)
 			{
 				IMultipoint errorGeom = CreateMultipoint(baseGeometry, errorPoints);
-				errorCount += ReportError(description, errorGeom, issueCode,
-				                          TestUtils.GetShapeFieldName(errorRow), errorRow);
+				errorCount += ReportError(
+					description, InvolvedRowUtils.GetInvolvedRows(errorRow), errorGeom, issueCode,
+					TestUtils.GetShapeFieldName(errorRow));
 			}
 
 			return errorCount;

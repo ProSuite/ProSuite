@@ -86,8 +86,9 @@ namespace ProSuite.QA.Tests.Test
 			//                                            "TOPGIS_TLM.TLM_DTM_TERRAIN",
 			//                                            "TOPGIS_TLM.TLM_DTM");
 
-			var test = new QaSurfaceVertex(fc, terrain, 5,
-			                               ZOffsetConstraint.AboveLimit);
+			var test = new QaSurfaceVertex(
+				ReadOnlyTableFactory.Create(fc), terrain, 5,
+				                            ZOffsetConstraint.AboveLimit);
 			var runner = new QaContainerTestRunner(10000, test) {KeepGeometry = true};
 
 			IEnvelope box = row.Shape.Envelope;

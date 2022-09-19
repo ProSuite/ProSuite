@@ -42,6 +42,13 @@ namespace ProSuite.QA.Tests.Test.TestData
 		}
 
 		[NotNull]
+		public static IWorkspace OpenTopgisAlti()
+		{
+			return WorkspaceUtils.OpenSDEWorkspace(DirectConnectDriver.Oracle11g, "ALTIT",
+			                                       "SDE.DEFAULT");
+		}
+
+		[NotNull]
 		public static string GetFullPath(string testDataPath)
 		{
 			string fullPath = Path.Combine(LocalDataPath, testDataPath);

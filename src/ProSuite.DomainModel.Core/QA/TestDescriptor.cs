@@ -133,6 +133,8 @@ namespace ProSuite.DomainModel.Core.QA
 			_testConfigurator = null;
 		}
 
+		public override string TypeDisplayName => "Test Descriptor";
+
 		/// <summary>
 		/// Gets the name of the assembly which contains the test implementation.
 		/// </summary>
@@ -165,6 +167,11 @@ namespace ProSuite.DomainModel.Core.QA
 			result.Description = description;
 
 			return result;
+		}
+
+		public override InstanceConfiguration CreateConfiguration()
+		{
+			throw new NotImplementedException();
 		}
 
 		public override string ToString()

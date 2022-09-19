@@ -1,9 +1,9 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
@@ -20,8 +20,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 {
 	public static class GdbObjectUtils
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		[NotNull]
 		public static string ConcatenateObjectIds<T>([NotNull] IEnumerable<T> list,
@@ -284,7 +283,25 @@ namespace ProSuite.Commons.AO.Geodatabase
 			Assert.ArgumentNotNull(row, nameof(row));
 
 			object value = row.Value[fieldIndex];
+			return ReadRowValue<T>(value, fieldIndex, () => GetObjectId(row),
+			                       () => DatasetUtils.GetName(row.Table));
+		}
 
+		[CanBeNull]
+		public static T? ReadRowValue<T>([NotNull] IReadOnlyRow row, int fieldIndex)
+			where T : struct
+		{
+			Assert.ArgumentNotNull(row, nameof(row));
+
+			object value = row.get_Value(fieldIndex);
+			return ReadRowValue<T>(value, fieldIndex, () => row.OID, () => row.Table.Name);
+		}
+
+		[CanBeNull]
+		private static T? ReadRowValue<T>([NotNull] object value, int fieldIndex, Func<int?> getOid,
+		                                  Func<string> getTableName)
+			where T : struct
+		{
 			if (value == DBNull.Value)
 			{
 				_msg.VerboseDebug(
@@ -320,12 +337,12 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 			catch (Exception ex)
 			{
-				int? rowOid = GetObjectId(row);
+				int? rowOid = getOid();
 
 				_msg.ErrorFormat(
 					"ReadRowValue: Error casting value {0} of type {1} into type {2} for row <oid> {3} at field index {4} in {5}: {6}",
-					value, value.GetType(), typeof(T), fieldIndex, rowOid,
-					((IDataset) row.Table).Name, ex.Message);
+					value, value.GetType(), typeof(T), fieldIndex, rowOid, getTableName(),
+					ex.Message);
 
 				throw;
 			}
@@ -669,7 +686,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 				useGeometry = newGeometry;
 			}
 			else if (GeometryUtils.EnsureSpatialReference(
-				newGeometry, targetSpatialRefToEnsure, out useGeometry))
+				         newGeometry, targetSpatialRefToEnsure, out useGeometry))
 			{
 				// this is probably only necessary for non-simple features
 				_msg.Debug("SetFeatureShape: Spatial reference of feature class " +
@@ -1006,8 +1023,6 @@ namespace ProSuite.Commons.AO.Geodatabase
 			Assert.ArgumentNotNull(sourceClass, nameof(sourceClass));
 			Assert.ArgumentNotNull(targetClass, nameof(targetClass));
 
-			var result = new Dictionary<int, int>();
-
 			IFields sourceFields = sourceClass.Fields;
 			IFields targetFields = targetClass.Fields;
 
@@ -1017,6 +1032,77 @@ namespace ProSuite.Commons.AO.Geodatabase
 			{
 				targetTableName = ((IDataset) targetClass).Name;
 			}
+
+			return MatchingIndexMatrix(sourceFields, targetFields, includeReadOnlyFields,
+			                           targetTableName, includeTargetField, fieldComparison);
+		}
+
+		/// <summary>
+		/// Creates a matrix holding the target row field index as key and
+		/// the matching source row field index in the value. If none matching
+		/// source field is found for the target feature, the index will be -1.
+		/// </summary>
+		/// <param name="sourceTable">Source table</param>
+		/// <param name="targetTable">Target table</param>
+		/// <param name="includeReadOnlyFields">include readonly fields in matrix</param> 
+		/// <param name="searchJoinedFields">match fields in source table, that start with 
+		/// the table name of the target class</param>
+		/// <param name="includeTargetField">Predicate to determine the inclusion of a given 
+		/// target field (optional; field is included if null)</param>
+		/// <returns>Dictionary with the indices of the targetClass as key
+		/// and the matching index of the sourceClass as value (could be -1)</returns>
+		/// <param name="fieldComparison">The comparison options to identify matches.</param>
+		[NotNull]
+		public static IDictionary<int, int> CreateMatchingIndexMatrix(
+			[NotNull] IReadOnlyTable sourceTable,
+			[NotNull] IReadOnlyTable targetTable,
+			bool includeReadOnlyFields = false,
+			bool searchJoinedFields = false,
+			[CanBeNull] Predicate<IField> includeTargetField = null,
+			FieldComparison fieldComparison = FieldComparison.FieldNameDomainName)
+		{
+			Assert.ArgumentNotNull(sourceTable, nameof(sourceTable));
+			Assert.ArgumentNotNull(targetTable, nameof(targetTable));
+
+			IFields sourceFields = sourceTable.Fields;
+			IFields targetFields = targetTable.Fields;
+
+			string targetTableName = null;
+
+			if (searchJoinedFields)
+			{
+				targetTableName = targetTable.Name;
+			}
+
+			return MatchingIndexMatrix(sourceFields, targetFields, includeReadOnlyFields,
+			                           targetTableName, includeTargetField, fieldComparison);
+		}
+
+		/// <summary>
+		/// Creates a matrix holding the target row field index as key and
+		/// the matching source row field index in the value. If none matching
+		/// source field is found for the target feature, the index will be -1.
+		/// </summary>
+		/// <param name="sourceFields">Source feature class</param>
+		/// <param name="targetFields">Target feature class</param>
+		/// <param name="includeReadOnlyFields">include readonly fields in matrix</param> 
+		/// <param name="targetTableName">match fields in source fields, that start with 
+		/// the specified table name of the target table.</param>
+		/// <param name="includeTargetField">Predicate to determine the inclusion of a given 
+		/// target field (optional; field is included if null)</param>
+		/// <returns>Dictionary with the indices of the targetClass as key
+		/// and the matching index of the sourceClass as value (could be -1)</returns>
+		/// <param name="fieldComparison">The comparison options to identify matches.</param>
+		[NotNull]
+		public static IDictionary<int, int> MatchingIndexMatrix(
+			[NotNull] IFields sourceFields,
+			[NotNull] IFields targetFields,
+			bool includeReadOnlyFields = false,
+			[CanBeNull] string targetTableName = null,
+			[CanBeNull] Predicate<IField> includeTargetField = null,
+			FieldComparison fieldComparison = FieldComparison.FieldNameDomainName)
+		{
+			var result = new Dictionary<int, int>();
 
 			int targetFieldCount = targetFields.FieldCount;
 
@@ -1214,6 +1300,34 @@ namespace ProSuite.Commons.AO.Geodatabase
 			try
 			{
 				tableName = DatasetUtils.GetTableName(row.Table);
+			}
+			catch (Exception e)
+			{
+				tableName = string.Format("[error getting table name: {0}]", e.Message);
+			}
+
+			return string.Format("oid={0} table={1}", oid, tableName);
+		}
+
+		[NotNull]
+		public static string ToString([NotNull] IReadOnlyRow row)
+		{
+			string oid;
+			try
+			{
+				oid = row.HasOID
+					      ? row.OID.ToString(CultureInfo.InvariantCulture)
+					      : @"[n/a]";
+			}
+			catch (Exception e)
+			{
+				oid = string.Format("[error getting OID: {0}]", e.Message);
+			}
+
+			string tableName;
+			try
+			{
+				tableName = row.Table.Name;
 			}
 			catch (Exception e)
 			{
@@ -1494,6 +1608,60 @@ namespace ProSuite.Commons.AO.Geodatabase
 			return result;
 		}
 
+		public static IEnumerable<List<T>> GroupRowsByAttributes<T>(
+			IEnumerable<T> valuesToGroup,
+			Func<T, IReadOnlyRow> getRow,
+			IList<string> groupByFields)
+		{
+			if (! (groupByFields?.Count > 0))
+			{
+				yield return valuesToGroup.ToList();
+				yield break;
+			}
+
+			Dictionary<string, int> fieldDict = null;
+
+			Dictionary<List<object>, List<T>> groupDict =
+				new Dictionary<List<object>, List<T>>(new ListComparer());
+			foreach (T valueToGroup in valuesToGroup)
+			{
+				IReadOnlyRow row = getRow(valueToGroup);
+
+				if (fieldDict == null)
+				{
+					fieldDict = new Dictionary<string, int>(groupByFields.Count);
+					IFields f = row.Table.Fields;
+
+					foreach (string groupBy in groupByFields)
+					{
+						int idx = f.FindField(groupBy);
+						Assert.True(idx >= 0, $"Unknonw field '{groupBy}'");
+						fieldDict.Add(groupBy, idx);
+					}
+				}
+
+				List<object> key = new List<object>(groupByFields.Count);
+
+				foreach (int idx in fieldDict.Values)
+				{
+					key.Add(row.get_Value(idx));
+				}
+
+				if (! groupDict.TryGetValue(key, out List<T> group))
+				{
+					group = new List<T>();
+					groupDict.Add(key, group);
+				}
+
+				group.Add(valueToGroup);
+			}
+
+			foreach (KeyValuePair<List<object>, List<T>> pair in groupDict)
+			{
+				yield return pair.Value;
+			}
+		}
+
 		/// <summary>
 		/// Returns the list of distinct features from the provided features.
 		/// </summary>
@@ -1573,17 +1741,11 @@ namespace ProSuite.Commons.AO.Geodatabase
 		public static bool IsSameObject([NotNull] IObject obj1, [NotNull] IObject obj2,
 		                                ObjectClassEquality classEquality)
 		{
-			if (obj1 == obj2)
+			// Test for reference-equals in real ArcObjects IObject instances but also allow
+			// synthetic and mock features to provide their own equality implementation:
+			if (obj1.Equals(obj2))
 			{
 				return true;
-			}
-
-			// Allow specific IEquatable<IObject> implementation in mock objects or synthetic features
-			var equatableObj = obj1 as IEquatable<IObject>;
-
-			if (equatableObj != null)
-			{
-				return equatableObj.Equals(obj2);
 			}
 
 			// For real geodatabase objects:
@@ -1850,5 +2012,50 @@ namespace ProSuite.Commons.AO.Geodatabase
 		}
 
 		#endregion
+
+		private class ListComparer : IComparer<List<object>>, IEqualityComparer<List<object>>
+		{
+			public int Compare(List<object> x, List<object> y)
+			{
+				if (x == y) return 0;
+				if (x == null) return -1;
+				if (y == null) return +1;
+
+				int nx = x.Count;
+				int ny = y.Count;
+				int d = nx.CompareTo(ny);
+				if (d != 0)
+				{
+					return d;
+				}
+
+				for (int i = 0; i < nx; i++)
+				{
+					d = Comparer.Default.Compare(x[i], y[i]);
+					if (d != 0)
+					{
+						return d;
+					}
+				}
+
+				return 0;
+			}
+
+			public bool Equals(List<object> x, List<object> y)
+			{
+				return Compare(x, y) == 0;
+			}
+
+			public int GetHashCode(List<object> x)
+			{
+				int hashCode = 1;
+				foreach (object o in x)
+				{
+					hashCode = 29 * hashCode + (o?.GetHashCode() ?? 0);
+				}
+
+				return hashCode;
+			}
+		}
 	}
 }

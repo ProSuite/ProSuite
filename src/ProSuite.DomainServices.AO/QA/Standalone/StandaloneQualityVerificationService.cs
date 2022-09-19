@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geometry;
@@ -28,8 +27,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 		[NotNull] private readonly IVerificationReportBuilder _verificationReportBuilder;
 		private readonly Func<IDatasetContext, IOpenDataset> _openDatasetFactory;
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		#region Constructors
 
@@ -51,6 +49,8 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 		}
 
 		#endregion
+
+		public event EventHandler<IssueFoundEventArgs> IssueFound;
 
 		/// <summary>
 		/// Verifies the specified object classes.
@@ -134,7 +134,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 
 			var datasetCount = 0;
 			foreach (Dataset dataset in
-				GetVerifiedDatasets(qualitySpecification, datasetContext))
+			         GetVerifiedDatasets(qualitySpecification, datasetContext))
 			{
 				datasetCount++;
 				_verificationReportBuilder.AddVerifiedDataset(dataset);
@@ -163,6 +163,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 				                                          trackCancel);
 
 				testContainer.QaError += (sender, args) => issueProcessor.Process(args);
+				issueProcessor.IssueFound += (sender, args) => IssueFound?.Invoke(this, args);
 
 				testContainer.TestingRow +=
 					delegate(object o, RowEventArgs args)
@@ -258,7 +259,8 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 					continue;
 				}
 
-				foreach (Dataset dataset in qualityCondition.GetDatasetParameterValues())
+				foreach (Dataset dataset in qualityCondition.GetDatasetParameterValues(
+					         includeSourceDatasets: true))
 				{
 					if (! datasets.Contains(dataset) && datasetContext.CanOpen(dataset))
 					{
@@ -632,7 +634,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 
 			var listIndex = 0;
 			foreach (QualitySpecificationElement element in
-				qualitySpecification.Elements)
+			         qualitySpecification.Elements)
 			{
 				if (! element.Enabled)
 				{

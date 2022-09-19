@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Text;
 using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -22,14 +23,14 @@ namespace ProSuite.QA.Container.TestSupport
 			_tableAliasIndexes = tableAliasIndexes;
 		}
 
-		public bool MatchesConstraint(params IRow[] rows)
+		public bool MatchesConstraint(params IReadOnlyRow[] rows)
 		{
 			return MatchesConstraint(null, rows);
 		}
 
 		public bool MatchesConstraint(
 			[CanBeNull] IDictionary<string, object> overridingFieldValues,
-			params IRow[] rows)
+			params IReadOnlyRow[] rows)
 		{
 			DataView view = ConstraintView;
 			if (view == null)
@@ -83,11 +84,11 @@ namespace ProSuite.QA.Container.TestSupport
 			    showTableAliasNameIfDiffers)
 			{
 				IWorkspace commonWorkspace = null;
-				IDataset commonDataset = null;
+				IReadOnlyDataset commonDataset = null;
 				string commonAlias = null;
 				foreach (ColumnInfo columnInfo in ColumnInfos)
 				{
-					var dataset = (IDataset) columnInfo.Table;
+					var dataset = columnInfo.Table;
 
 					if (commonWorkspace == null || commonWorkspace == dataset.Workspace)
 					{
@@ -150,12 +151,12 @@ namespace ProSuite.QA.Container.TestSupport
 				var name = new StringBuilder();
 				if (showWorkspaceName || workspaceNamesDiffer)
 				{
-					name.AppendFormat("{0}.", ((IDataset) columnInfo.Table).Workspace.PathName);
+					name.AppendFormat("{0}.", columnInfo.Table.Workspace.PathName);
 				}
 
 				if (showTableName || tableNamesDiffer)
 				{
-					name.AppendFormat("{0}.", ((IDataset) columnInfo.Table).Name);
+					name.AppendFormat("{0}.", columnInfo.Table.Name);
 				}
 
 				if (showTableAliasName || aliasNameDiffers)
@@ -175,12 +176,12 @@ namespace ProSuite.QA.Container.TestSupport
 			return result;
 		}
 
-		public string ToString(params IRow[] rows)
+		public string ToString(params IReadOnlyRow[] rows)
 		{
 			return ToString(false, rows);
 		}
 
-		public string ToString(bool concise, params IRow[] rows)
+		public string ToString(bool concise, params IReadOnlyRow[] rows)
 		{
 			// TODO assertions? rows order matching table order?
 
@@ -203,7 +204,7 @@ namespace ProSuite.QA.Container.TestSupport
 					sb.Append(separator);
 				}
 
-				IRow row = GetRowForColumn(rows, columnIndex);
+				IReadOnlyRow row = GetRowForColumn(rows, columnIndex);
 
 				sb.AppendFormat(comparisonFormat,
 				                GetDataTableColumnName(columnIndex), columnInfo.FormatValue(row));
@@ -219,7 +220,7 @@ namespace ProSuite.QA.Container.TestSupport
 		/// <param name="rows">The collection of rows. The order must match that of the tables/aliases collections.</param>
 		/// <returns></returns>
 		[CanBeNull]
-		public DataRow Add(params IRow[] rows)
+		public DataRow Add(params IReadOnlyRow[] rows)
 		{
 			// TODO assertions? matching table order?
 
@@ -239,7 +240,7 @@ namespace ProSuite.QA.Container.TestSupport
 
 		[NotNull]
 		private DataRow CreateDataRow([NotNull] DataView constraintView,
-		                              [NotNull] IList<IRow> rows)
+		                              [NotNull] IList<IReadOnlyRow> rows)
 		{
 			DataTable dataTable = constraintView.Table;
 
@@ -248,7 +249,7 @@ namespace ProSuite.QA.Container.TestSupport
 			var columnIndex = 0;
 			foreach (ColumnInfo columnInfo in ColumnInfos)
 			{
-				IRow row = GetRowForColumn(rows, columnIndex);
+				IReadOnlyRow row = GetRowForColumn(rows, columnIndex);
 
 				Assert.AreEqual(row.Table, columnInfo.Table,
 				                "row order does not match table alias order");
@@ -262,12 +263,12 @@ namespace ProSuite.QA.Container.TestSupport
 		}
 
 		[NotNull]
-		private IRow GetRowForColumn([NotNull] IList<IRow> rows, int columnIndex)
+		private IReadOnlyRow GetRowForColumn([NotNull] IList<IReadOnlyRow> rows, int columnIndex)
 		{
 			// the rows MUST be in the same order as the table alias list
 
 			int tableAliasIndex = _tableAliasIndexes[columnIndex];
-			IRow row = rows[tableAliasIndex];
+			IReadOnlyRow row = rows[tableAliasIndex];
 
 			return row;
 		}

@@ -7,6 +7,7 @@ using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.UI.Persistence.WinForms;
+using ProSuite.Commons.UI.ScreenBinding.Lists;
 using ProSuite.Commons.UI.WinForms.Controls;
 
 namespace ProSuite.Commons.UI.Finder

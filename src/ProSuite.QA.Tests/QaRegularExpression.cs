@@ -5,7 +5,6 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.Commons.AO.Geodatabase;
@@ -13,6 +12,8 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
 using ProSuite.QA.Core;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
 {
@@ -20,7 +21,7 @@ namespace ProSuite.QA.Tests
 	[AttributeTest]
 	public class QaRegularExpression : ContainerTest
 	{
-		[NotNull] private readonly ITable _table;
+		[NotNull] private readonly IReadOnlyTable _table;
 		[NotNull] private readonly List<string> _fieldNames;
 		private readonly bool _matchIsError;
 		[CanBeNull] private readonly string _patternDescription;
@@ -55,7 +56,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaRegularExpression_0))]
 		public QaRegularExpression(
 				[Doc(nameof(DocStrings.QaRegularExpression_table))] [NotNull]
-				ITable table,
+				IReadOnlyTable table,
 				[Doc(nameof(DocStrings.QaRegularExpression_pattern))] [NotNull]
 				string pattern,
 				[Doc(nameof(DocStrings.QaRegularExpression_fieldName))] [NotNull]
@@ -66,7 +67,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaRegularExpression_1))]
 		public QaRegularExpression(
 				[Doc(nameof(DocStrings.QaRegularExpression_table))] [NotNull]
-				ITable table,
+				IReadOnlyTable table,
 				[Doc(nameof(DocStrings.QaRegularExpression_pattern))] [NotNull]
 				string pattern,
 				[Doc(nameof(DocStrings.QaRegularExpression_fieldNames))] [NotNull]
@@ -77,7 +78,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaRegularExpression_2))]
 		public QaRegularExpression(
 				[Doc(nameof(DocStrings.QaRegularExpression_table))] [NotNull]
-				ITable table,
+				IReadOnlyTable table,
 				[Doc(nameof(DocStrings.QaRegularExpression_pattern))] [NotNull]
 				string pattern,
 				[Doc(nameof(DocStrings.QaRegularExpression_fieldName))] [NotNull]
@@ -90,7 +91,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaRegularExpression_3))]
 		public QaRegularExpression(
 				[Doc(nameof(DocStrings.QaRegularExpression_table))] [NotNull]
-				ITable table,
+				IReadOnlyTable table,
 				[Doc(nameof(DocStrings.QaRegularExpression_pattern))] [NotNull]
 				string pattern,
 				[Doc(nameof(DocStrings.QaRegularExpression_fieldNames))] [NotNull]
@@ -103,7 +104,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaRegularExpression_4))]
 		public QaRegularExpression(
 			[Doc(nameof(DocStrings.QaRegularExpression_table))] [NotNull]
-			ITable table,
+			IReadOnlyTable table,
 			[Doc(nameof(DocStrings.QaRegularExpression_pattern))] [NotNull]
 			string pattern,
 			[Doc(nameof(DocStrings.QaRegularExpression_fieldName))] [NotNull]
@@ -119,7 +120,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaRegularExpression_5))]
 		public QaRegularExpression(
 			[Doc(nameof(DocStrings.QaRegularExpression_table))] [NotNull]
-			ITable table,
+			IReadOnlyTable table,
 			[Doc(nameof(DocStrings.QaRegularExpression_pattern))] [NotNull]
 			string pattern,
 			[Doc(nameof(DocStrings.QaRegularExpression_fieldNames))] [NotNull]
@@ -166,7 +167,7 @@ namespace ProSuite.QA.Tests
 			return false;
 		}
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
 			if (_fieldIndices == null)
 			{
@@ -183,7 +184,7 @@ namespace ProSuite.QA.Tests
 			return errorCount;
 		}
 
-		private static void ValidateFieldNames([NotNull] ITable table,
+		private static void ValidateFieldNames([NotNull] IReadOnlyTable table,
 		                                       [NotNull] IEnumerable<string> fieldNames)
 		{
 			var missingFields = fieldNames.Where(name => table.FindField(name) < 0)
@@ -193,14 +194,14 @@ namespace ProSuite.QA.Tests
 			{
 				throw new ArgumentException(
 					string.Format("Field(s) not found in table {0}: {1}",
-					              DatasetUtils.GetName(table),
+					              table.Name,
 					              StringUtils.Concatenate(missingFields, ",")),
 					nameof(fieldNames));
 			}
 		}
 
 		private static IEnumerable<int> GetFieldIndices(
-			[NotNull] ITable table,
+			[NotNull] IReadOnlyTable table,
 			[NotNull] IEnumerable<string> fieldNames,
 			FieldListType fieldListType)
 		{
@@ -211,7 +212,7 @@ namespace ProSuite.QA.Tests
 
 		[NotNull]
 		private static IEnumerable<string> GetRelevantNames(
-			[NotNull] ITable table,
+			[NotNull] IReadOnlyTable table,
 			[NotNull] IEnumerable<string> fieldNames,
 			FieldListType fieldListType)
 		{
@@ -225,16 +226,16 @@ namespace ProSuite.QA.Tests
 				          .Select(name => name.Trim()),
 				StringComparer.OrdinalIgnoreCase);
 
-			return DatasetUtils.GetFields(table)
+			return DatasetUtils.GetFields(table.Fields)
 			                   .Where(f => f.Type == esriFieldType.esriFieldTypeString &&
 			                               f.Editable)
 			                   .Select(f => f.Name)
 			                   .Where(name => ! excludedNames.Contains(name));
 		}
 
-		private int CheckField([NotNull] IRow row, int fieldIndex)
+		private int CheckField([NotNull] IReadOnlyRow row, int fieldIndex)
 		{
-			object value = row.Value[fieldIndex];
+			object value = row.get_Value(fieldIndex);
 
 			if (value == null || value is DBNull)
 			{
@@ -288,14 +289,15 @@ namespace ProSuite.QA.Tests
 		private int ReportFieldError([NotNull] string description,
 		                             [CanBeNull] IssueCode issueCode,
 		                             [NotNull] string fieldName,
-		                             [NotNull] IRow row)
+		                             [NotNull] IReadOnlyRow row)
 		{
-			return ReportError(description, TestUtils.GetShapeCopy(row),
-			                   issueCode, fieldName, GetInvolvedRows(row));
+			return ReportError(
+				description, GetInvolvedRows(row), TestUtils.GetShapeCopy(row),
+				issueCode, fieldName);
 		}
 
 		[NotNull]
-		private static string GetFormatErrorDescription([NotNull] IRow row, int fieldIndex,
+		private static string GetFormatErrorDescription([NotNull] IReadOnlyRow row, int fieldIndex,
 		                                                object value, [NotNull] Exception e,
 		                                                [NotNull] out string fieldName)
 		{
@@ -305,7 +307,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[NotNull]
-		private string GetMatchErrorDescription([NotNull] IRow row, int fieldIndex,
+		private string GetMatchErrorDescription([NotNull] IReadOnlyRow row, int fieldIndex,
 		                                        [NotNull] out string fieldName)
 		{
 			string fieldDisplayName = TestUtils.GetFieldDisplayName(row, fieldIndex,
@@ -322,7 +324,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[NotNull]
-		private string GetNoMatchErrorDescription([NotNull] IRow row, int fieldIndex,
+		private string GetNoMatchErrorDescription([NotNull] IReadOnlyRow row, int fieldIndex,
 		                                          [NotNull] out string fieldName)
 		{
 			string fieldDisplayName = TestUtils.GetFieldDisplayName(row, fieldIndex,

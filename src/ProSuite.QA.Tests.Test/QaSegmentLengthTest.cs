@@ -8,6 +8,7 @@ using ProSuite.QA.Tests.Test.Construction;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Licensing;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests.Test
 {
@@ -65,7 +66,7 @@ namespace ProSuite.QA.Tests.Test
 					row.Store();
 				}
 
-				var test = new QaSegmentLength(featureClass, 0.5, false);
+				var test = new QaSegmentLength(ReadOnlyTableFactory.Create(featureClass), 0.5, false);
 				test.QaError += Test_QaFormatError;
 				_errorCount = 0;
 				test.Execute();
@@ -103,7 +104,7 @@ namespace ProSuite.QA.Tests.Test
 				row.Store();
 			}
 
-			var test = new QaSegmentLength(featureClass, 0.5);
+			var test = new QaSegmentLength(ReadOnlyTableFactory.Create(featureClass), 0.5);
 			test.QaError += Test_QaFormatError;
 			_errorCount = 0;
 			test.Execute();

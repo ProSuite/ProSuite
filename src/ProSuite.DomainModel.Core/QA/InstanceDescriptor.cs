@@ -63,11 +63,15 @@ namespace ProSuite.DomainModel.Core.QA
 		#region INamed Members
 
 		[Required]
+		[MaximumStringLength(200)]
+		[ValidName]
 		public string Name
 		{
 			get => _name;
 			set => _name = value;
 		}
+
+		public abstract string TypeDisplayName { get; }
 
 		#endregion
 
@@ -136,6 +140,8 @@ namespace ProSuite.DomainModel.Core.QA
 		/// <value>The name of the assembly.</value>
 		public virtual string TestAssemblyName => Class?.AssemblyName;
 
+		public abstract InstanceConfiguration CreateConfiguration();
+
 		public override string ToString()
 		{
 			return string.IsNullOrEmpty(Name)
@@ -174,7 +180,7 @@ namespace ProSuite.DomainModel.Core.QA
 				return true;
 			}
 
-			if (obj.GetType() != typeof(InstanceDescriptor))
+			if (obj.GetType() != this.GetType())
 			{
 				return false;
 			}

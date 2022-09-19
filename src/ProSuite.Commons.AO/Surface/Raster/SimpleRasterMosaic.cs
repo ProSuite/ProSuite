@@ -20,7 +20,7 @@ using ProSuite.Commons.Logging;
 
 namespace ProSuite.Commons.AO.Surface.Raster
 {
-	public class SimpleRasterMosaic : IRasterProvider, IDataset, IGeoDataset
+	public class SimpleRasterMosaic : IRasterProvider, IDataset, IGeoDataset, IReadOnlyGeoDataset, IReadOnlyDataset
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 

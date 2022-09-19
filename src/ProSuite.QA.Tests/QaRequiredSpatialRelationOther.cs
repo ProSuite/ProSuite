@@ -8,6 +8,7 @@ using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
+using ProSuite.QA.Core.IssueCodes;
 
 namespace ProSuite.QA.Tests
 {
@@ -26,8 +27,8 @@ namespace ProSuite.QA.Tests
 		private ISpatialFilter[] _queryFilter;
 
 		protected QaRequiredSpatialRelationOther(
-			[NotNull] IFeatureClass featureClass,
-			[NotNull] IFeatureClass otherFeatureClass,
+			[NotNull] IReadOnlyFeatureClass featureClass,
+			[NotNull] IReadOnlyFeatureClass otherFeatureClass,
 			[CanBeNull] string relevantRelationCondition)
 			: this(new[] {featureClass}, new[] {otherFeatureClass},
 			       relevantRelationCondition)
@@ -37,11 +38,10 @@ namespace ProSuite.QA.Tests
 		}
 
 		protected QaRequiredSpatialRelationOther(
-			[NotNull] ICollection<IFeatureClass> featureClasses,
-			[NotNull] ICollection<IFeatureClass> otherFeatureClasses,
+			[NotNull] ICollection<IReadOnlyFeatureClass> featureClasses,
+			[NotNull] ICollection<IReadOnlyFeatureClass> otherFeatureClasses,
 			[CanBeNull] string relevantRelationCondition)
-			: base(Union(featureClasses.ToList(), otherFeatureClasses.ToList())
-				       .Cast<ITable>())
+			: base(Union(featureClasses.ToList(), otherFeatureClasses.ToList()))
 		{
 			Assert.ArgumentNotNull(featureClasses, nameof(featureClasses));
 			Assert.ArgumentNotNull(otherFeatureClasses, nameof(otherFeatureClasses));
@@ -66,7 +66,7 @@ namespace ProSuite.QA.Tests
 			return tableIndex >= _firstOtherClassIndex;
 		}
 
-		protected sealed override int ExecuteCore(IRow row, int tableIndex)
+		protected sealed override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
 			if (_queryFilter == null)
 			{
@@ -87,7 +87,7 @@ namespace ProSuite.QA.Tests
 				return NoError;
 			}
 
-			var feature = (IFeature) row;
+			var feature = (IReadOnlyFeature) row;
 
 			if (CrossTileFeatureState.IsFeatureKnownOK(tableIndex, feature.OID))
 			{
@@ -106,7 +106,7 @@ namespace ProSuite.QA.Tests
 				     relatedTableIndex < _totalClassesCount;
 				     relatedTableIndex++)
 				{
-					foreach (IFeature relatedFeature in
+					foreach (IReadOnlyFeature relatedFeature in
 						GetRelatedFeatures(searchGeometry, relatedTableIndex,
 						                   feature.Shape))
 					{
@@ -168,7 +168,7 @@ namespace ProSuite.QA.Tests
 
 		[NotNull]
 		protected abstract string GetErrorDescription(
-			[NotNull] IFeature feature,
+			[NotNull] IReadOnlyFeature feature,
 			int tableIndex,
 			[NotNull] T pendingFeature,
 			[CanBeNull] out IssueCode issueCode,
@@ -178,7 +178,7 @@ namespace ProSuite.QA.Tests
 			[NotNull] ISpatialFilter spatialFilter);
 
 		[CanBeNull]
-		protected virtual IGeometry GetSearchGeometry([NotNull] IFeature feature,
+		protected virtual IGeometry GetSearchGeometry([NotNull] IReadOnlyFeature feature,
 		                                              int tableIndex,
 		                                              out bool isExpanded)
 		{
@@ -187,14 +187,14 @@ namespace ProSuite.QA.Tests
 		}
 
 		protected virtual bool IsValidRelation([NotNull] IGeometry shape,
-		                                       [NotNull] IFeature relatedFeature)
+		                                       [NotNull] IReadOnlyFeature relatedFeature)
 		{
 			return true;
 		}
 
 		protected virtual void UpdateSuspiciousFeature([NotNull] T pendingFeature,
 		                                               int tableIndex,
-		                                               [NotNull] IFeature feature)
+		                                               [NotNull] IReadOnlyFeature feature)
 		{
 			// do nothing
 		}
@@ -204,7 +204,7 @@ namespace ProSuite.QA.Tests
 			_crossTileFeatureState ??
 			(_crossTileFeatureState = CreateCrossTileFeatureState());
 
-		private void FlagFeatureAsSuspicious(int tableIndex, [NotNull] IFeature feature)
+		private void FlagFeatureAsSuspicious(int tableIndex, [NotNull] IReadOnlyFeature feature)
 		{
 			T pendingFeature;
 			CrossTileFeatureState.FlagFeatureAsSuspicious(tableIndex, feature,
@@ -214,11 +214,11 @@ namespace ProSuite.QA.Tests
 		}
 
 		[NotNull]
-		private IEnumerable<IFeature> GetRelatedFeatures([NotNull] IGeometry shape,
+		private IEnumerable<IReadOnlyFeature> GetRelatedFeatures([NotNull] IGeometry shape,
 		                                                 int relatedTableIndex,
 		                                                 [NotNull] IGeometry cacheShape)
 		{
-			ITable table = InvolvedTables[relatedTableIndex];
+			IReadOnlyTable table = InvolvedTables[relatedTableIndex];
 
 			ISpatialFilter spatialFilter = _queryFilter[relatedTableIndex];
 			spatialFilter.Geometry = shape;
@@ -226,7 +226,7 @@ namespace ProSuite.QA.Tests
 			QueryFilterHelper filterHelper = _helper[relatedTableIndex];
 
 			return Search(table, spatialFilter, filterHelper, cacheShape)
-				.Cast<IFeature>();
+				.Cast<IReadOnlyFeature>();
 		}
 
 		private int ReportErrors(int tableIndex,
@@ -237,21 +237,20 @@ namespace ProSuite.QA.Tests
 				return NoError;
 			}
 
-			var featureClass = (IFeatureClass) InvolvedTables[tableIndex];
+			var featureClass = (IReadOnlyFeatureClass) InvolvedTables[tableIndex];
 
 			List<int> oids = errorFeatures.Select(feature => feature.OID).ToList();
 			Dictionary<int, T> errorFeaturesByOid =
 				errorFeatures.ToDictionary(errorFeature => errorFeature.OID);
 
 			const bool recycling = true;
-			return GdbQueryUtils.GetFeatures(featureClass, oids, recycling)
-			                    .Sum(
-				                    feature =>
-					                    ReportError(feature, tableIndex,
-					                                errorFeaturesByOid[feature.OID]));
+			return GdbQueryUtils
+			       .GetRows(featureClass, oids, recycling)
+			       .Sum(feature => ReportError((IReadOnlyFeature) feature, tableIndex,
+			                                   errorFeaturesByOid[feature.OID]));
 		}
 
-		private int ReportError([NotNull] IFeature feature,
+		private int ReportError([NotNull] IReadOnlyFeature feature,
 		                        int tableIndex,
 		                        [NotNull] T pendingFeature)
 		{
@@ -262,11 +261,9 @@ namespace ProSuite.QA.Tests
 			                                         out issueCode,
 			                                         out affectedComponent);
 
-			return ReportError(description,
-			                   feature.ShapeCopy,
-			                   issueCode,
-			                   affectedComponent,
-			                   GetInvolvedRows(feature));
+			return ReportError(
+				description, GetInvolvedRows(feature),
+				feature.ShapeCopy, issueCode, affectedComponent);
 		}
 
 		/// <summary>

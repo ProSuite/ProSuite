@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Reflection;
 
 namespace ProSuite.QA.Core
 {
@@ -12,14 +10,15 @@ namespace ProSuite.QA.Core
 	/// </summary>
 	public class InstanceInfo : InstanceInfoBase
 	{
-		private readonly Type _testType;
+		private readonly Type _instanceType;
 		private readonly int _constructorId;
 
 		public InstanceInfo([NotNull] Type type, int constructorId = 0)
 		{
 			Assert.ArgumentNotNull(type, nameof(type));
+			InstanceUtils.AssertConstructorExists(type, constructorId);
 
-			_testType = type;
+			_instanceType = type;
 			_constructorId = constructorId;
 		}
 
@@ -30,36 +29,32 @@ namespace ProSuite.QA.Core
 			Assert.ArgumentNotNull(assemblyName, nameof(assemblyName));
 			Assert.ArgumentNotNull(typeName, nameof(typeName));
 
-			_testType = InstanceUtils.LoadType(assemblyName, typeName, constructorId);
+			_instanceType = InstanceUtils.LoadType(assemblyName, typeName, constructorId);
 			_constructorId = constructorId;
 		}
 
+		[NotNull]
+		public Type InstanceType => _instanceType;
+
+		public override string TestDescription =>
+			InstanceUtils.GetDescription(InstanceType, _constructorId);
+
+		public override string[] TestCategories => InstanceUtils.GetCategories(InstanceType);
+
 		public override string GetTestTypeDescription()
 		{
-			return TestType.Name;
+			return InstanceType.Name;
 		}
 
 		protected override IList<TestParameter> CreateParameters()
 		{
-			return InstanceUtils.CreateParameters(TestType, _constructorId);
-		}
-
-		[NotNull]
-		private Type TestType => _testType;
-
-		public override string[] TestCategories => ReflectionUtils.GetCategories(TestType);
-
-		public override string GetTestDescription()
-		{
-			ConstructorInfo ctor = TestType.GetConstructors()[_constructorId];
-
-			return InstanceUtils.GetDescription(ctor);
+			return InstanceUtils.CreateParameters(InstanceType, _constructorId);
 		}
 
 		public override string ToString()
 		{
 			return
-				$"Instance {TestType.Name} with parameters: {InstanceUtils.GetTestSignature(this)}";
+				$"Instance {InstanceType.Name} with parameters: {InstanceUtils.GetTestSignature(this)}";
 		}
 	}
 }

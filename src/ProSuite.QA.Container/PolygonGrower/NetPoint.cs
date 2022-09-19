@@ -1,5 +1,5 @@
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Container.PolygonGrower
 {
@@ -9,7 +9,7 @@ namespace ProSuite.QA.Container.PolygonGrower
 
 		public NetPoint(TableIndexRow row) : base(row)
 		{
-			_point = new NetPoint_((IPoint) ((IFeature) row.Row).Shape);
+			_point = new NetPoint_((IPoint) ((IReadOnlyFeature) row.Row).Shape);
 		}
 
 		protected override NetPoint_ NetPoint__

@@ -1,11 +1,12 @@
 using System;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AO.Test.TestSupport
 {
-	public class ObjectMock : IObject, IRowSubtypes, IEquatable<IObject>
+	public class ObjectMock : IObject, IRowSubtypes, IReadOnlyRow
 	{
 		[NotNull] private readonly ObjectClassMock _objectClassMock;
 
@@ -62,6 +63,7 @@ namespace ProSuite.Commons.AO.Test.TestSupport
 
 		public int OID { get; }
 
+		IReadOnlyTable IReadOnlyRow.Table => _objectClassMock;
 		public ITable Table => _objectClassMock;
 
 		public IObjectClass Class => _objectClassMock;

@@ -1,7 +1,8 @@
-﻿using System.Collections.Generic;
-using ESRI.ArcGIS.Geodatabase;
+using System.Collections.Generic;
 using NUnit.Framework;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.QA.Core.IssueCodes;
 
 namespace ProSuite.QA.Container.Test
 {
@@ -70,9 +71,9 @@ namespace ProSuite.QA.Container.Test
 				get { return _issueCodes ?? (_issueCodes = new MyIssueCodes()); }
 			}
 
-			public TestWithIssueCodesInProperty(ITable table) : base(table) { }
+			public TestWithIssueCodesInProperty(IReadOnlyTable table) : base(table) { }
 
-			protected override int ExecuteCore(IRow row, int tableIndex)
+			protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 			{
 				return 0;
 			}
@@ -92,9 +93,9 @@ namespace ProSuite.QA.Container.Test
 		{
 			[UsedImplicitly] private static MyIssueCodes _issueCodes = new MyIssueCodes();
 
-			public TestWithIssueCodesInField(ITable table) : base(table) { }
+			public TestWithIssueCodesInField(IReadOnlyTable table) : base(table) { }
 
-			protected override int ExecuteCore(IRow row, int tableIndex)
+			protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 			{
 				return 0;
 			}

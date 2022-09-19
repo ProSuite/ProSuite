@@ -56,7 +56,7 @@ namespace ProSuite.QA.Tests.Test
 			IFeatureClass fc =
 				DatasetUtils.CreateSimpleFeatureClass(ws, "TestConnections", fields,
 				                                      null);
-			IList<ITable> tbls = new[] {(ITable) fc};
+			IList<IReadOnlyTable> tbls = new[] { ReadOnlyTableFactory.Create(fc)};
 
 			// make sure the table is known by the workspace
 			((IWorkspaceEdit) ws).StartEditing(false);
@@ -82,7 +82,7 @@ namespace ProSuite.QA.Tests.Test
 				                                new QaConnectionRule(tbls, new[] {"LineTyp = 1"}),
 				                                new QaConnectionRule(tbls, new[] {"LineTyp = 2"})
 			                                };
-			var test = new QaConnections(new[] {fc}, rules, 0);
+			var test = new QaConnections(new[] { ReadOnlyTableFactory.Create(fc)}, rules, 0);
 			test.QaError += Test_QaError;
 			_errorCount = 0;
 			test.Execute();
@@ -114,7 +114,7 @@ namespace ProSuite.QA.Tests.Test
 			IFeatureClass fc =
 				DatasetUtils.CreateSimpleFeatureClass(ws, "TestConnections", fields,
 				                                      null);
-			IList<ITable> tbls = new[] {(ITable) fc};
+			IList<IReadOnlyTable> tbls = new[] { ReadOnlyTableFactory.Create(fc)};
 
 			{
 				IFeature row = fc.CreateFeature();
@@ -136,7 +136,7 @@ namespace ProSuite.QA.Tests.Test
 				                                new QaConnectionRule(tbls, new[] {"LineTyp = 1"}),
 				                                new QaConnectionRule(tbls, new[] {"LineTyp = 2"})
 			                                };
-			var test = new QaConnections(new[] {fc}, rules, 0);
+			var test = new QaConnections(new[] { ReadOnlyTableFactory.Create(fc) }, rules, 0);
 
 			test.UseMultiParts = false;
 			var runner = new QaContainerTestRunner(1000, test);
@@ -167,7 +167,7 @@ namespace ProSuite.QA.Tests.Test
 			IFeatureClass fc =
 				DatasetUtils.CreateSimpleFeatureClass(ws, "TestWithTolerance", fields,
 				                                      null);
-			IList<ITable> tbls = new[] {(ITable) fc};
+			IList<IReadOnlyTable> tbls = new[] { ReadOnlyTableFactory.Create(fc)};
 
 			// make sure the table is known by the workspace
 			((IWorkspaceEdit) ws).StartEditing(false);
@@ -193,7 +193,7 @@ namespace ProSuite.QA.Tests.Test
 				                                new QaConnectionRule(tbls, new[] {"LineTyp = 1"}),
 				                                new QaConnectionRule(tbls, new[] {"LineTyp = 2"})
 			                                };
-			var test = new QaConnections(new[] {fc}, rules, 0.2);
+			var test = new QaConnections(new[] { ReadOnlyTableFactory.Create(fc) }, rules, 0.2);
 			test.QaError += Test_QaError;
 			_errorCount = 0;
 			test.Execute();

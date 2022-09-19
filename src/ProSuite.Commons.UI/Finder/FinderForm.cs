@@ -4,13 +4,13 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
-using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Misc;
 using ProSuite.Commons.Text;
 using ProSuite.Commons.UI.Persistence.WinForms;
 using ProSuite.Commons.UI.Properties;
+using ProSuite.Commons.UI.ScreenBinding.Lists;
 using ProSuite.Commons.UI.WinForms;
 using ProSuite.Commons.UI.WinForms.Controls;
 using ProSuite.Commons.Xml;
@@ -66,13 +66,13 @@ namespace ProSuite.Commons.UI.Finder
 			if (! StringUtils.IsNullOrEmptyOrBlank(filterSettingsContext))
 			{
 				_contextSettingsPersister = CreateContextSettingsPersister(typeName,
-				                                                           filterSettingsContext);
+					filterSettingsContext);
 				_restoredContextSpecificSettings = _contextSettingsPersister.Read();
 			}
 
 			_gridHandler = new BoundDataGridHandler<T>(
 				_dataGridView,
-				restoreSelectionAfterUserSort : true);
+				restoreSelectionAfterUserSort: true);
 			_gridHandler.SelectionChanged += _gridHandler_SelectionChanged;
 
 			// configure the datagrid
@@ -363,7 +363,7 @@ namespace ProSuite.Commons.UI.Finder
 			if (KeepFindTextBetweenCalls)
 			{
 				_dataGridViewFindToolStrip.FindText = GetRestoredFindText(state,
-				                                                          contextSpecificSettings);
+					contextSpecificSettings);
 			}
 		}
 
@@ -483,18 +483,18 @@ namespace ProSuite.Commons.UI.Finder
 				{
 					bool presorted = _gridHandler.BindTo(
 						new SortableBindingList<T>(_list ?? GetSelectedQueryResult()),
-						sortStateOverride : _restoredState?.DataGridViewSortState,
-						defaultSortState : GetDefaultSortState(_dataGridView));
+						sortStateOverride: _restoredState?.DataGridViewSortState,
+						defaultSortState: GetDefaultSortState(_dataGridView));
 
 					ApplyState(_restoredState, _restoredContextSpecificSettings,
-					           skipSorting : presorted);
+					           skipSorting: presorted);
 				});
 
 			_dataGridView.ResumeLayout(true);
 
 			Observer.ViewLoaded();
 
-			_dataGridViewFindToolStrip.ActivateFindField(this, selectAllText : true);
+			_dataGridViewFindToolStrip.ActivateFindField(this, selectAllText: true);
 
 			// start listening to selection changes in the list of finder queries (if defined)
 			if (_toolStripStretchComboBoxFinderQueries != null)
@@ -525,7 +525,7 @@ namespace ProSuite.Commons.UI.Finder
 							DataGridViewUtils.GetSortState(_dataGridView);
 
 						var list = new SortableBindingList<T>(GetSelectedQueryResult(),
-						                                      raiseListChangedEventAfterSort :
+						                                      raiseListChangedEventAfterSort:
 						                                      false);
 
 						bool presorted = DataGridViewUtils.TrySortBindingList<T>(
@@ -541,7 +541,7 @@ namespace ProSuite.Commons.UI.Finder
 						_gridHandler.RestoreSelection(selection);
 					});
 
-				_dataGridViewFindToolStrip.ActivateFindField(this, selectAllText : true);
+				_dataGridViewFindToolStrip.ActivateFindField(this, selectAllText: true);
 
 				Observer.SelectionChanged();
 			}

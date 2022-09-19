@@ -104,8 +104,9 @@ namespace ProSuite.QA.Tests.Test
 			                              .Curve;
 			str3.Store();
 
-			var test =
-				new QaLineIntersectZ(new[] {fcBahn, fcStr}, 0.5, "U.Stufe > L.Stufe");
+			var test = new QaLineIntersectZ(
+				new[] { ReadOnlyTableFactory.Create(fcBahn), ReadOnlyTableFactory.Create(fcStr) },
+				0.5, "U.Stufe > L.Stufe");
 
 			using (var testRunner = new QaTestRunner(test))
 			{
@@ -193,7 +194,9 @@ namespace ProSuite.QA.Tests.Test
 			                              .Curve;
 			str3.Store();
 
-			var test = new QaLineIntersectZ(new[] {fcBahn, fcStr}, 0.5, 2.5, null);
+			var test = new QaLineIntersectZ(
+				new[] { ReadOnlyTableFactory.Create(fcBahn), ReadOnlyTableFactory.Create(fcStr) },
+				0.5, 2.5, null);
 			using (var testRunner = new QaTestRunner(test))
 			{
 				testRunner.Execute();
@@ -272,7 +275,12 @@ namespace ProSuite.QA.Tests.Test
 			                              .Curve;
 			str3.Store();
 
-			var test = new QaLineIntersectZ(new[] {fcBahn, fcStr}, 9, 99, null)
+			var test = new QaLineIntersectZ(
+				           new[]
+				           {
+					           ReadOnlyTableFactory.Create(fcBahn),
+					           ReadOnlyTableFactory.Create(fcStr)
+				           }, 9, 99, null)
 			           {
 				           MinimumZDifferenceExpression = "IIF(L.OBJECTID > 0, 0.5, 999)",
 				           MaximumZDifferenceExpression = "IIF(L.OBJECTID > 0, 2.5, 9999)"
@@ -352,7 +360,8 @@ namespace ProSuite.QA.Tests.Test
 			                              .Curve;
 			str2.Store();
 
-			var test = new QaLineIntersectZ(new[] {fcBahn, fcStr}, 2.5);
+			var test = new QaLineIntersectZ(
+				new[] { ReadOnlyTableFactory.Create(fcBahn), ReadOnlyTableFactory.Create(fcStr)}, 2.5);
 
 			var handler = new ErrorHandler();
 			var ctr = new QaContainerTestRunner(1000, test);
@@ -393,10 +402,11 @@ namespace ProSuite.QA.Tests.Test
 
 			IFeatureClass fc = ((IFeatureWorkspace) ws).OpenFeatureClass("TLM_STRASSE");
 
-			var test1 = new QaLineIntersectZ(fc, 3);
+			var test1 = new QaLineIntersectZ(ReadOnlyTableFactory.Create(fc), 3);
 			test1.SetConstraint(0, "OBJEKTART IN (3,5,6) AND KUNSTBAUTE IN (100)");
 
-			var test2 = new QaLineIntersectZ(fc, 2, "U.Stufe > L.Stufe");
+			var test2 =
+				new QaLineIntersectZ(ReadOnlyTableFactory.Create(fc), 2, "U.Stufe > L.Stufe");
 
 			var handler = new ErrorHandler();
 			var ctr = new QaContainerTestRunner(10000, test1, test2);

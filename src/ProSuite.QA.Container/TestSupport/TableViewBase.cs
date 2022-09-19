@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
@@ -96,6 +97,8 @@ namespace ProSuite.QA.Container.TestSupport
 			return view.Table.Columns.Add(columnName, type);
 		}
 
+		public const string ColumnInfoKey = "__columnInfo__";
+
 		public DataColumn AddColumn([NotNull] ColumnInfo columnInfo)
 		{
 			DataView view = Assert.NotNull(ConstraintView, "constraint view not initialized");
@@ -107,7 +110,9 @@ namespace ProSuite.QA.Container.TestSupport
 
 			ColumnInfo ci = columnInfo;
 			_columnInfos.Add(columnInfo);
-			return view.Table.Columns.Add(ci.ColumnName, ci.DataColumnType);
+			DataColumn col = view.Table.Columns.Add(ci.ColumnName, ci.DataColumnType);
+			col.ExtendedProperties.Add(ColumnInfoKey, ci);
+			return col;
 		}
 
 		public void ClearRows()
@@ -133,7 +138,18 @@ namespace ProSuite.QA.Container.TestSupport
 			return ConstraintView.Table.Columns.IndexOf(columnName);
 		}
 
-		public DataColumn GetColumn([NotNull] string columnName)
+		[NotNull]
+		public Type GetColumnType([NotNull] string columnName)
+		{
+			ColumnInfo ci = ColumnInfos.FirstOrDefault(
+				x => x?.ColumnName.Equals(columnName,
+				                          StringComparison.InvariantCultureIgnoreCase) == true);
+			return ci?.ColumnType ?? GetColumn(columnName)?.DataType ??
+			       throw new InvalidOperationException($"Column {columnName} not found)");
+		}
+
+		[CanBeNull]
+		private DataColumn GetColumn([NotNull] string columnName)
 		{
 			if (ConstraintView == null)
 			{

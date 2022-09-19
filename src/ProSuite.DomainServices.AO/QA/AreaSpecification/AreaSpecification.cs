@@ -247,7 +247,8 @@ namespace ProSuite.DomainServices.AO.QA.AreaSpecification
 			{
 				QualityCondition qualityCondition = element.QualityCondition;
 
-				foreach (Dataset dataset in qualityCondition.GetDatasetParameterValues())
+				foreach (Dataset dataset in qualityCondition.GetDatasetParameterValues(
+					         includeSourceDatasets: true))
 				{
 					// TODO REFACTORMODEL
 					result.TryAdd(dataset.Name.ToUpper());

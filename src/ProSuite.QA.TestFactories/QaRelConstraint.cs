@@ -1,9 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ESRI.ArcGIS.Geodatabase;
-using ProSuite.QA.Tests;
-using ProSuite.QA.Tests.Constraints;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -11,8 +8,11 @@ using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Core;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Tests;
+using ProSuite.QA.Tests.Constraints;
 
 namespace ProSuite.QA.TestFactories
 {
@@ -40,7 +40,7 @@ namespace ProSuite.QA.TestFactories
 
 			var list = new List<TestParameter>
 			           {
-				           new TestParameter("relationTables", typeof(IList<ITable>),
+				           new TestParameter("relationTables", typeof(IList<IReadOnlyTable>),
 				                             DocStrings.QaRelConstraint_relationTables),
 				           new TestParameter("relation", typeof(string),
 				                             DocStrings.QaRelConstraint_relation),
@@ -57,10 +57,7 @@ namespace ProSuite.QA.TestFactories
 			return list.AsReadOnly();
 		}
 
-		public override string GetTestDescription()
-		{
-			return DocStrings.QaRelConstraint;
-		}
+		public override string TestDescription => DocStrings.QaRelConstraint;
 
 		protected override object[] Args(IOpenDataset datasetContext,
 		                                 IList<TestParameter> testParameters,
@@ -74,7 +71,7 @@ namespace ProSuite.QA.TestFactories
 				                                          objParams.Length));
 			}
 
-			if (! (objParams[0] is IList<ITable>))
+			if (! (objParams[0] is IList<IReadOnlyTable>))
 			{
 				throw new ArgumentException(string.Format("expected IList<ITable>, got {0}",
 				                                          objParams[0].GetType()));
@@ -101,7 +98,7 @@ namespace ProSuite.QA.TestFactories
 
 			var objects = new object[3];
 
-			var tables = (IList<ITable>) objParams[0];
+			var tables = (IList<IReadOnlyTable>) objParams[0];
 			var associationName = (string) objParams[1];
 			var join = (JoinType) objParams[2];
 			var constraints = (IList<string>) objParams[3];
@@ -116,8 +113,10 @@ namespace ProSuite.QA.TestFactories
 
 			string whereClause = applyFilterInDatabase ? tableConstraint : null;
 
-			ITable queryTable = CreateQueryTable(datasetContext, associationName, tables, join,
-			                                     whereClause, out string relationshipClassName);
+			IReadOnlyTable queryTable = CreateQueryTable(datasetContext, associationName, tables,
+			                                             join,
+			                                             whereClause,
+			                                             out string relationshipClassName);
 
 			IList<string> translatedConstraints = TranslateConstraints(
 				constraints,
@@ -137,8 +136,9 @@ namespace ProSuite.QA.TestFactories
 				                  ? new List<TableConstraint>()
 				                  : new List<TableConstraint>
 				                    {
-					                    new TableConstraint(queryTable, tableConstraint,
-					                                        useCaseSensitiveQaSql)
+					                    new TableConstraint(
+						                    queryTable,
+						                    tableConstraint, useCaseSensitiveQaSql)
 				                    };
 
 			return objects;
@@ -181,7 +181,7 @@ namespace ProSuite.QA.TestFactories
 			}
 
 			return constraints.Select(sql => ExpressionUtils.ReplaceTableNames(sql,
-			                                                                   replacements))
+				                          replacements))
 			                  .ToList();
 		}
 
@@ -208,15 +208,16 @@ namespace ProSuite.QA.TestFactories
 					continue;
 				}
 
-				var table = datasetContext.OpenDataset(
-					            dataset, Assert.NotNull(datasetParameterValue.DataType)) as ITable;
+				IReadOnlyTable table =
+					datasetContext.OpenDataset(
+						dataset, Assert.NotNull(datasetParameterValue.DataType)) as IReadOnlyTable;
 
 				if (table == null)
 				{
 					continue;
 				}
 
-				string tableName = DatasetUtils.GetName(table);
+				string tableName = table.Name;
 
 				if (! string.Equals(dataset.Name, tableName))
 				{
@@ -229,9 +230,9 @@ namespace ProSuite.QA.TestFactories
 
 		protected override ITest CreateTestInstance(object[] args)
 		{
-			var test = new QaRelationConstraint((ITable) args[0],
+			var test = new QaRelationConstraint((IReadOnlyTable) args[0],
 			                                    (IList<ConstraintNode>) args[1],
-			                                    (IList<ITable>) args[2]);
+			                                    (IList<IReadOnlyTable>) args[2]);
 			return test;
 		}
 

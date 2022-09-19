@@ -2,8 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
-using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.QA.Tests.Properties;
@@ -13,6 +11,8 @@ using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
 {
@@ -20,10 +20,10 @@ namespace ProSuite.QA.Tests
 	[SchemaTest]
 	public class QaSchemaFieldDomainDescriptions : QaSchemaTestBase
 	{
-		private readonly ITable _table;
+		private readonly IReadOnlyTable _table;
 		private readonly int _maximumLength;
 		private readonly bool _requireUniqueDescriptions;
-		private readonly ITable _targetWorkspaceTable;
+		private readonly IReadOnlyTable _targetWorkspaceTable;
 
 		#region issue codes
 
@@ -46,14 +46,14 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaSchemaFieldDomainDescriptions_0))]
 		public QaSchemaFieldDomainDescriptions(
 			[Doc(nameof(DocStrings.QaSchemaFieldDomainDescriptions_table))] [NotNull]
-			ITable table,
+			IReadOnlyTable table,
 			[Doc(nameof(DocStrings.QaSchemaFieldDomainDescriptions_maximumLength))]
 			int maximumLength,
 			[Doc(nameof(DocStrings.QaSchemaFieldDomainDescriptions_requireUniqueDescriptions))]
 			bool
 				requireUniqueDescriptions,
 			[Doc(nameof(DocStrings.QaSchemaFieldDomainDescriptions_targetWorkspaceTable))] [CanBeNull]
-			ITable
+			IReadOnlyTable
 				targetWorkspaceTable)
 			: base(table)
 		{
@@ -68,7 +68,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaSchemaFieldDomainDescriptions_0))]
 		public QaSchemaFieldDomainDescriptions(
 				[Doc(nameof(DocStrings.QaSchemaFieldDomainDescriptions_table))] [NotNull]
-				ITable table,
+				IReadOnlyTable table,
 				[Doc(nameof(DocStrings.QaSchemaFieldDomainDescriptions_maximumLength))]
 				int maximumLength,
 				[Doc(nameof(DocStrings.QaSchemaFieldDomainDescriptions_requireUniqueDescriptions))]
@@ -113,8 +113,7 @@ namespace ProSuite.QA.Tests
 		{
 			Assert.ArgumentNotNull(domainUsages, nameof(domainUsages));
 
-			IWorkspace targetWorkspace =
-				DatasetUtils.GetWorkspace(_targetWorkspaceTable ?? _table);
+			IWorkspace targetWorkspace = _targetWorkspaceTable?.Workspace ?? _table.Workspace;
 
 			// TODO also search for duplicates in the source workspace? Or would this be a separate test instance?
 

@@ -4,13 +4,14 @@ using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
 {
@@ -43,7 +44,7 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaValue_0))]
 		public QaValue(
-			[Doc(nameof(DocStrings.QaValue_table))] [NotNull] ITable table,
+			[Doc(nameof(DocStrings.QaValue_table))] [NotNull] IReadOnlyTable table,
 			[Doc(nameof(DocStrings.QaValue_fields))] [CanBeNull] IList<string> fields)
 			: base(table)
 		{
@@ -52,11 +53,11 @@ namespace ProSuite.QA.Tests
 
 		[NotNull]
 		private static List<string> GetFieldNames(
-			[NotNull] ITable table,
+			[NotNull] IReadOnlyTable table,
 			[CanBeNull] IEnumerable<string> fields)
 		{
 			return fields == null
-				       ? DatasetUtils.GetFields(table)
+				       ? DatasetUtils.GetFields(table.Fields)
 				                     .Select(field => field.Name)
 				                     .ToList()
 				       : new List<string>(fields);
@@ -90,14 +91,14 @@ namespace ProSuite.QA.Tests
 			}
 		}
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
 			return _fieldInfos.Values.Sum(fieldInfo => CheckField(row, fieldInfo));
 		}
 
 		[NotNull]
 		private static Dictionary<string, FieldInfo> GetFieldInfos(
-			[NotNull] ITable table,
+			[NotNull] IReadOnlyTable table,
 			[NotNull] ICollection<string> fieldNames)
 		{
 			var result = new Dictionary<string, FieldInfo>(fieldNames.Count);
@@ -114,7 +115,7 @@ namespace ProSuite.QA.Tests
 				Assert.ArgumentCondition(fieldIndex >= 0,
 				                         "field '{0}' not found in table '{1}'",
 				                         fieldName,
-				                         DatasetUtils.GetName(table));
+				                         table.Name);
 
 				IField field = fields.get_Field(fieldIndex);
 
@@ -124,7 +125,7 @@ namespace ProSuite.QA.Tests
 			return result;
 		}
 
-		private int CheckField([NotNull] IRow row, [NotNull] FieldInfo fieldInfo)
+		private int CheckField([NotNull] IReadOnlyRow row, [NotNull] FieldInfo fieldInfo)
 		{
 			object value = row.get_Value(fieldInfo.Index);
 
@@ -147,10 +148,10 @@ namespace ProSuite.QA.Tests
 					: string.Format("Invalid value in field {0}: {1} ({2})",
 					                fieldInfo.Name, value, fieldInfo.LastMessage);
 
-			return ReportError(description,
-			                   TestUtils.GetShapeCopy(row),
-			                   Codes[Code.ValueNotValidForFieldType],
-			                   fieldInfo.Name, row);
+			return ReportError(
+				description, InvolvedRowUtils.GetInvolvedRows(row),
+				TestUtils.GetShapeCopy(row),
+				Codes[Code.ValueNotValidForFieldType], fieldInfo.Name);
 		}
 
 		#region Nested type: FieldInfo

@@ -2,11 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
+using ProSuite.DomainModel.Core.QA.Repositories;
 
 namespace ProSuite.DomainServices.AO.QA
 {
@@ -14,30 +16,29 @@ namespace ProSuite.DomainServices.AO.QA
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		public static ICollection<Dataset> GetQualityConditionDatasets(
-			QualitySpecification qualitySpecification,
-			out ICollection<QualityCondition> conditions)
+		/// <summary>
+		/// Initializes all persistent entities that are part of the specified quality
+		/// specification are loaded and initialized. The entities are quality conditions,
+		/// their issue filters, transformers, row filters and their respective
+		/// TestParameterValues and finally all the referenced datasets.
+		/// </summary>
+		/// <param name="specification"></param>
+		/// <param name="domainTransactions"></param>
+		/// <param name="instanceConfigurations"></param>
+		/// <returns>All datasets that are involved in any associated entity of the
+		/// conditions in the specification.</returns>
+		public static ICollection<Dataset> InitializeAssociatedEntitiesTx(
+			[NotNull] QualitySpecification specification,
+			[NotNull] IDomainTransactionManager domainTransactions,
+			[CanBeNull] IInstanceConfigurationRepository instanceConfigurations = null)
 		{
-			conditions = new List<QualityCondition>();
-			var datasets = new List<Dataset>();
-			foreach (QualitySpecificationElement element in qualitySpecification.Elements)
-			{
-				if (! element.Enabled)
-				{
-					continue;
-				}
+			var enabledConditions =
+				specification.Elements.Where(e => e.Enabled)
+				             .Select(e => e.QualityCondition)
+				             .ToList();
 
-				QualityCondition condition = element.QualityCondition;
-
-				foreach (Dataset dataset in condition.GetDatasetParameterValues())
-				{
-					datasets.Add(dataset);
-				}
-
-				conditions.Add(condition);
-			}
-
-			return datasets;
+			return InstanceConfigurationUtils.InitializeAssociatedConfigurationsTx(
+				enabledConditions, domainTransactions, instanceConfigurations);
 		}
 
 		[NotNull]
@@ -59,7 +60,7 @@ namespace ProSuite.DomainServices.AO.QA
 				}
 
 				QualityCondition condition = element.QualityCondition;
-				IList<TestParameterValue> deleted = condition.GetDeletedParameterValues();
+				IList<string> deleted = condition.GetDeletedParameterValues();
 				if (deleted.Count > 0)
 				{
 					ReportInvalidConditionWarning(condition, deleted);
@@ -256,7 +257,7 @@ namespace ProSuite.DomainServices.AO.QA
 		{
 			var result = new List<Dataset>();
 
-			foreach (var dataset in condition.GetDatasetParameterValues())
+			foreach (var dataset in condition.GetDatasetParameterValues(true))
 			{
 				if (knownExistingDatasets.Contains(dataset))
 				{
@@ -354,15 +355,15 @@ namespace ProSuite.DomainServices.AO.QA
 
 		private static void ReportInvalidConditionWarning(
 			[NotNull] QualityCondition qualityCondition,
-			[NotNull] IEnumerable<TestParameterValue> deletedTestParameterValues)
+			[NotNull] IEnumerable<string> deletedTestParameterValueMessages)
 		{
 			var sb = new StringBuilder();
 			sb.AppendFormat("Quality condition '{0}' has deleted values and is ignored.",
 			                qualityCondition.Name);
 			sb.AppendLine();
-			foreach (TestParameterValue value in deletedTestParameterValues)
+			foreach (string message in deletedTestParameterValueMessages)
 			{
-				sb.AppendFormat("- {0}: {1}", value.TestParameterName, value.StringValue);
+				sb.AppendFormat("- {0}", message);
 			}
 
 			_msg.Warn(sb.ToString());

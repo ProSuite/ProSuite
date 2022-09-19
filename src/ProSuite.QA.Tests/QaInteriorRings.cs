@@ -1,10 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.Commons.AO.Geodatabase;
@@ -12,6 +10,8 @@ using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Core;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
 {
@@ -47,10 +47,10 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaInteriorRings_0))]
 		public QaInteriorRings(
 			[Doc(nameof(DocStrings.QaInteriorRings_polygonClass))] [NotNull]
-			IFeatureClass polygonClass,
+			IReadOnlyFeatureClass polygonClass,
 			[Doc(nameof(DocStrings.QaInteriorRings_maximumInteriorRingCount))]
 			int maximumInteriorRingCount)
-			: base((ITable) polygonClass)
+			: base(polygonClass)
 		{
 			Assert.ArgumentNotNull(polygonClass, nameof(polygonClass));
 			Assert.ArgumentCondition(
@@ -59,7 +59,7 @@ namespace ProSuite.QA.Tests
 
 			_maximumInteriorRingCount = maximumInteriorRingCount;
 			_shapeFieldName = polygonClass.ShapeFieldName;
-			_spatialReference = DatasetUtils.GetSpatialReference(polygonClass);
+			_spatialReference = polygonClass.SpatialReference;
 
 			IgnoreInnerRingsLargerThan = _defaultIgnoreInnerRingsLargerThan;
 			ReportIndividualRings = _defaultReportIndividualRings;
@@ -91,9 +91,9 @@ namespace ProSuite.QA.Tests
 			return false;
 		}
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
-			var feature = row as IFeature;
+			var feature = row as IReadOnlyFeature;
 			if (feature == null)
 			{
 				return NoError;
@@ -128,7 +128,7 @@ namespace ProSuite.QA.Tests
 				       : NoError;
 		}
 
-		private int ReportErrors([NotNull] IRow row,
+		private int ReportErrors([NotNull] IReadOnlyRow row,
 		                         [NotNull] ICollection<IRing> relevantInteriorRings,
 		                         [NotNull] IPolygon polygon,
 		                         int totalInteriorRingCount)
@@ -141,19 +141,19 @@ namespace ProSuite.QA.Tests
 					errorCount += ReportError(
 						GetIndividualErrorDescription(ring, relevantInteriorRings,
 						                              totalInteriorRingCount),
+						InvolvedRowUtils.GetInvolvedRows(row),
 						GetIndividualErrorGeometry(polygon, ring),
-						Codes[Code.UnallowedInteriorRings],
-						_shapeFieldName, row);
+						Codes[Code.UnallowedInteriorRings], _shapeFieldName);
 				}
 
 				return errorCount;
 			}
 
-			return ReportError(GetCombinedErrorDescription(relevantInteriorRings,
-			                                               totalInteriorRingCount),
-			                   GetCombinedErrorGeometry(polygon, relevantInteriorRings),
-			                   Codes[Code.UnallowedInteriorRings],
-			                   _shapeFieldName, row);
+			return ReportError(
+				GetCombinedErrorDescription(relevantInteriorRings, totalInteriorRingCount),
+				InvolvedRowUtils.GetInvolvedRows(row),
+				GetCombinedErrorGeometry(polygon, relevantInteriorRings),
+				Codes[Code.UnallowedInteriorRings], _shapeFieldName);
 		}
 
 		private string GetCombinedErrorDescription(

@@ -1,11 +1,9 @@
 using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.esriSystem;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.Geometry;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Container.TestContainer;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
@@ -14,6 +12,9 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Core;
 using Pnt = ProSuite.Commons.Geom.Pnt;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
 {
@@ -60,12 +61,12 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaMpFootprintHoles_0))]
 		public QaMpFootprintHoles(
 			[Doc(nameof(DocStrings.QaMpFootprintHoles_multiPatchClass))] [NotNull]
-			IFeatureClass
+			IReadOnlyFeatureClass
 				multiPatchClass,
 			[Doc(nameof(DocStrings.QaMpFootprintHoles_innerRingHandling))]
 			InnerRingHandling
 				innerRingHandling)
-			: base((ITable) multiPatchClass)
+			: base(multiPatchClass)
 		{
 			Assert.ArgumentNotNull(multiPatchClass, nameof(multiPatchClass));
 			Assert.ArgumentCondition(
@@ -73,7 +74,7 @@ namespace ProSuite.QA.Tests
 				"Multipatch feature class expected");
 
 			_innerRingHandling = innerRingHandling;
-			_spatialReference = ((IGeoDataset) multiPatchClass).SpatialReference;
+			_spatialReference = multiPatchClass.SpatialReference;
 			_shapeFieldName = multiPatchClass.ShapeFieldName;
 		}
 
@@ -137,9 +138,9 @@ namespace ProSuite.QA.Tests
 			return false;
 		}
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
-			var feature = row as IFeature;
+			var feature = row as IReadOnlyFeature;
 			if (feature == null)
 			{
 				return NoError;
@@ -182,7 +183,7 @@ namespace ProSuite.QA.Tests
 
 		[CanBeNull]
 		private IPolygon GetFootprint(
-			[NotNull] IFeature feature,
+			[NotNull] IReadOnlyFeature feature,
 			[CanBeNull] ISpatialReference alternateSpatialReference,
 			[NotNull] out ICollection<SegmentProxy> verticalFaceSegments)
 		{
@@ -192,7 +193,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		private int ValidateVerticalFaces(
-			[NotNull] IFeature feature,
+			[NotNull] IReadOnlyFeature feature,
 			[NotNull] IEnumerable<SegmentProxy> verticalFaceSegments,
 			[CanBeNull] IPolygon footPrint)
 		{
@@ -233,10 +234,10 @@ namespace ProSuite.QA.Tests
 						errorCount +=
 							ReportError(
 								"Multipatch has only vertical patches forming a ring",
+								InvolvedRowUtils.GetInvolvedRows(feature),
 								(IPolyline) errorParts,
 								Codes[Code.MultiPatchHasOnlyVerticalPatchesFormingARing],
-								_shapeFieldName,
-								feature);
+								_shapeFieldName);
 					}
 				}
 				else
@@ -246,10 +247,10 @@ namespace ProSuite.QA.Tests
 						errorCount +=
 							ReportError(
 								"Segments of vertical patch is not (completely) within footprint",
+								InvolvedRowUtils.GetInvolvedRows(feature),
 								(IPolyline) errorParts,
 								Codes[Code.VerticalPatchNotCompletelyWithinFootprint],
-								_shapeFieldName,
-								feature);
+								_shapeFieldName);
 					}
 				}
 			}
@@ -259,7 +260,7 @@ namespace ProSuite.QA.Tests
 
 		private int ReportError([NotNull] IPolygon footPrint,
 		                        [NotNull] IMultiPatch multiPatch,
-		                        [NotNull] IRow row)
+		                        [NotNull] IReadOnlyRow row)
 		{
 			IGeometryCollection innerRings = new PolygonClass();
 
@@ -296,12 +297,11 @@ namespace ProSuite.QA.Tests
 
 				string description = string.Format("Footprint has inner ring (area: {0})",
 				                                   FormatArea(area, _spatialReference));
-				errorCount += ReportError(description,
-				                          GeometryFactory.CreatePolygon(ring),
-				                          Codes[Code.FootprintHasInnerRing],
-				                          _shapeFieldName,
-				                          new object[] {area},
-				                          row);
+				errorCount += ReportError(
+					description, InvolvedRowUtils.GetInvolvedRows(row),
+					GeometryFactory.CreatePolygon(ring),
+					Codes[Code.FootprintHasInnerRing],
+					_shapeFieldName, values: new object[] { area });
 			}
 
 			return errorCount;
@@ -309,7 +309,7 @@ namespace ProSuite.QA.Tests
 
 		[NotNull]
 		private FootprintProvider GetFootprintProvider(
-			[NotNull] IFeature multiPatchFeature,
+			[NotNull] IReadOnlyFeature multiPatchFeature,
 			[CanBeNull] ISpatialReference alternateSpatialReference)
 		{
 			switch (_innerRingHandling)
@@ -370,7 +370,7 @@ namespace ProSuite.QA.Tests
 			}
 
 			[NotNull]
-			protected IMultiPatch GetMultiPatch([NotNull] IFeature multiPatchFeature)
+			protected IMultiPatch GetMultiPatch([NotNull] IReadOnlyFeature multiPatchFeature)
 			{
 				if (_alternateSpatialReference != null)
 				{
@@ -387,7 +387,7 @@ namespace ProSuite.QA.Tests
 
 			[NotNull]
 			protected IIndexedMultiPatch GetIndexedMultipatch(
-				[NotNull] IFeature multiPatchFeature)
+				[NotNull] IReadOnlyFeature multiPatchFeature)
 			{
 				Assert.ArgumentNotNull(multiPatchFeature, nameof(multiPatchFeature));
 
@@ -571,7 +571,7 @@ namespace ProSuite.QA.Tests
 			/// <param name="alternateSpatialReference">
 			/// An optional alternate spatial reference to get the multipatch in 
 			/// (must have the same coordinate system; resolution/tolerance may be different).</param>
-			public SimpleFootprintProvider([NotNull] IFeature multiPatchFeature,
+			public SimpleFootprintProvider([NotNull] IReadOnlyFeature multiPatchFeature,
 			                               [CanBeNull] ISpatialReference
 				                               alternateSpatialReference)
 				: base(alternateSpatialReference)
@@ -624,10 +624,10 @@ namespace ProSuite.QA.Tests
 
 		private class IgnoreInnerRingsFootprintProvider : InnerRingsFootprintProviderBase
 		{
-			private readonly IFeature _multiPatchFeature;
+			private readonly IReadOnlyFeature _multiPatchFeature;
 
 			public IgnoreInnerRingsFootprintProvider(
-				[NotNull] IFeature multiPatchFeature,
+				[NotNull] IReadOnlyFeature multiPatchFeature,
 				[CanBeNull] ISpatialReference alternateSpatialReference)
 				: base(alternateSpatialReference)
 			{
@@ -682,12 +682,12 @@ namespace ProSuite.QA.Tests
 		private class IgnoreHorizontalInnerRingsFootprintProvider :
 			InnerRingsFootprintProviderBase
 		{
-			private readonly IFeature _multiPatchFeature;
+			private readonly IReadOnlyFeature _multiPatchFeature;
 			private readonly double _horizontalZTolerance;
 			private readonly IEnvelope _envelopeTemplate;
 
 			public IgnoreHorizontalInnerRingsFootprintProvider(
-				[NotNull] IFeature multiPatchFeature,
+				[NotNull] IReadOnlyFeature multiPatchFeature,
 				double horizontalZTolerance,
 				[NotNull] IEnvelope envelopeTemplate,
 				[CanBeNull] ISpatialReference alternateSpatialReference)

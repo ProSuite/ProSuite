@@ -7,6 +7,7 @@ using ProSuite.QA.Container;
 using ProSuite.QA.Container.TestSupport;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests.EdgeMatch
 {
@@ -82,13 +83,13 @@ namespace ProSuite.QA.Tests.EdgeMatch
 		[NotNull]
 		public IEnumerable<T> GetBorderConnections<TG>(
 			[NotNull] TG geometry,
-			[NotNull] IFeature geometryFeature,
+			[NotNull] IReadOnlyFeature geometryFeature,
 			int geometryClassIndex,
 			int borderClassIndex,
-			ITable borderClass,
+			IReadOnlyTable borderClass,
 			ISpatialFilter spatialFilter,
 			QueryFilterHelper filterHelper,
-			Func<ITable, IQueryFilter, QueryFilterHelper, IEnumerable<IRow>> search,
+			Func<IReadOnlyTable, IQueryFilter, QueryFilterHelper, IEnumerable<IReadOnlyRow>> search,
 			RowPairCondition borderMatchCondition)
 			where TG : IGeometry
 		{
@@ -106,12 +107,12 @@ namespace ProSuite.QA.Tests.EdgeMatch
 				                         ? (IPolyline) geometry
 				                         : (IPolyline) ((ITopologicalOperator) geometry).Boundary;
 
-			IEnumerable<IFeature> borderFeatures =
+			IEnumerable<IReadOnlyFeature> borderFeatures =
 				GetConnectedBorderFeatures(geometry, geometryFeature, geometryClassIndex,
 				                           borderClassIndex, search, borderClass, spatialFilter,
 				                           filterHelper, borderMatchCondition);
 
-			foreach (IFeature borderFeature in borderFeatures)
+			foreach (IReadOnlyFeature borderFeature in borderFeatures)
 			{
 				var borderKey = new FeatureKey(borderFeature.OID, borderClassIndex);
 
@@ -135,21 +136,21 @@ namespace ProSuite.QA.Tests.EdgeMatch
 		}
 
 		[NotNull]
-		private IEnumerable<IFeature> GetConnectedBorderFeatures(
+		private IEnumerable<IReadOnlyFeature> GetConnectedBorderFeatures(
 			[NotNull] IGeometry geometry,
-			[NotNull] IFeature geometryFeature, int geometryClassIndex,
+			[NotNull] IReadOnlyFeature geometryFeature, int geometryClassIndex,
 			int borderClassIndex,
-			[NotNull] Func<ITable, IQueryFilter, QueryFilterHelper, IEnumerable<IRow>> search,
-			ITable borderClass,
+			[NotNull] Func<IReadOnlyTable, IQueryFilter, QueryFilterHelper, IEnumerable<IReadOnlyRow>> search,
+			IReadOnlyTable borderClass,
 			ISpatialFilter spatialFilter,
 			QueryFilterHelper filterHelper,
 			RowPairCondition borderMatchCondition)
 		{
 			spatialFilter.Geometry = geometry;
 
-			var result = new List<IFeature>(5);
+			var result = new List<IReadOnlyFeature>(5);
 
-			foreach (IRow borderRow in search(borderClass,
+			foreach (IReadOnlyRow borderRow in search(borderClass,
 			                                  spatialFilter,
 			                                  filterHelper))
 			{
@@ -159,22 +160,22 @@ namespace ProSuite.QA.Tests.EdgeMatch
 					continue;
 				}
 
-				result.Add((IFeature) borderRow);
+				result.Add((IReadOnlyFeature) borderRow);
 			}
 
 			return result;
 		}
 
-		protected abstract T CreateBorderConnection([NotNull] IFeature feature,
+		protected abstract T CreateBorderConnection([NotNull] IReadOnlyFeature feature,
 		                                            int featureClassIndex,
-		                                            [NotNull] IFeature borderFeature,
+		                                            [NotNull] IReadOnlyFeature borderFeature,
 		                                            int borderClassIndex,
 		                                            [NotNull] IPolyline lineAlongBorder,
 		                                            [NotNull] IPolyline uncoveredLine);
 
 		[NotNull]
 		protected static IPolyline GetGeometryAlongBorder(
-			[NotNull] IFeature borderFeature,
+			[NotNull] IReadOnlyFeature borderFeature,
 			[NotNull] IPolyline line)
 		{
 			IGeometry border = borderFeature.Shape;

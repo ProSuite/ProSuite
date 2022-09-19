@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
-using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Surface;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -14,8 +14,8 @@ namespace ProSuite.DomainServices.AO.QA
 {
 	public class VerificationTimeStats
 	{
-		private readonly Dictionary<IDataset, long> _datasetLoadTimes =
-			new Dictionary<IDataset, long>();
+		private readonly Dictionary<IReadOnlyDataset, long> _datasetLoadTimes =
+			new Dictionary<IReadOnlyDataset, long>();
 
 		private readonly Dictionary<ContainerTest, ContainerTestTimes> _containerTestTimes
 			= new Dictionary<ContainerTest, ContainerTestTimes>();
@@ -43,20 +43,20 @@ namespace ProSuite.DomainServices.AO.QA
 			{
 				case Step.DataLoaded:
 				{
-					var ds = (IDataset) args.Tag;
+					var ds = (IReadOnlyDataset) args.Tag;
 					Add(_datasetLoadTimes, ds, dt);
 				}
 					break;
 				case Step.RasterLoaded:
 				{
-					IDataset ds = ((RasterReference) args.Tag).Dataset;
+					IReadOnlyDataset ds = ((RasterReference) args.Tag).Dataset;
 					Add(_datasetLoadTimes, ds, dt);
 				}
 					break;
 				case Step.TinLoaded:
 				{
 					var dsr = (TerrainReference) args.Tag;
-					var ds = (IDataset) dsr.Dataset;
+					IReadOnlyDataset ds = (IReadOnlyDataset) dsr.Dataset;
 					Add(_datasetLoadTimes, ds, dt);
 				}
 					break;
@@ -139,12 +139,12 @@ namespace ProSuite.DomainServices.AO.QA
 		}
 
 		[NotNull]
-		public IEnumerable<KeyValuePair<IDataset, double>> DatasetLoadTimes
+		public IEnumerable<KeyValuePair<IReadOnlyDataset, double>> DatasetLoadTimes
 		{
 			get
 			{
 				return _datasetLoadTimes.Select(
-					pair => new KeyValuePair<IDataset, double>(
+					pair => new KeyValuePair<IReadOnlyDataset, double>(
 						pair.Key, GetMilliseconds(pair.Value)));
 			}
 		}

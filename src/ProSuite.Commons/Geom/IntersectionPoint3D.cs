@@ -39,7 +39,28 @@ namespace ProSuite.Commons.Geom
 
 		public IntersectionPointType Type { get; set; }
 
-		public bool? TargetDeviatesToLeftOfSource { get; set; }
+		private bool? TargetDeviatesToLeftOfSource { get; set; }
+
+		private bool? _linearIntersectionInOppositeDirection;
+
+		public bool? LinearIntersectionInOppositeDirection
+		{
+			get
+			{
+				if (_linearIntersectionInOppositeDirection.HasValue)
+				{
+					return _linearIntersectionInOppositeDirection;
+				}
+
+				if (SegmentIntersection.IsSegmentZeroLength2D)
+				{
+					return null;
+				}
+
+				return SegmentIntersection.LinearIntersectionInOppositeDirection;
+			}
+			set => _linearIntersectionInOppositeDirection = value;
+		}
 
 		public IntersectionPoint3D(
 			[NotNull] Pnt3D point,
@@ -58,11 +79,13 @@ namespace ProSuite.Commons.Geom
 		[NotNull]
 		public static IntersectionPoint3D CreateAreaInteriorIntersection(
 			[NotNull] Pnt3D sourcePoint,
-			int sourceIndex)
+			int sourceVertexIndex,
+			int sourcePartIndex)
 		{
-			return new IntersectionPoint3D(sourcePoint, sourceIndex)
+			return new IntersectionPoint3D(sourcePoint, sourceVertexIndex)
 			       {
-				       Type = IntersectionPointType.AreaInterior
+				       Type = IntersectionPointType.AreaInterior,
+				       SourcePartIndex = sourcePartIndex
 			       };
 		}
 
@@ -419,8 +442,69 @@ namespace ProSuite.Commons.Geom
 			return sourcePart.PointCount - 1 == VirtualSourceVertex && source.IsClosed;
 		}
 
+		public bool ReferencesSameSourceVertex([CanBeNull] IntersectionPoint3D other,
+		                                       ISegmentList source,
+		                                       double tolerance = double.NaN)
+		{
+			if (other == null)
+			{
+				return false;
+			}
+
+			if (other.SourcePartIndex != SourcePartIndex)
+			{
+				return false;
+			}
+
+			if (VirtualSourceVertex == 0 &&
+			    other.IsAtSourceRingEndPoint(source))
+			{
+				return true;
+			}
+
+			if (other.VirtualSourceVertex == 0 &&
+			    IsAtSourceRingEndPoint(source))
+			{
+				return true;
+			}
+
+			double delta = Math.Abs(VirtualSourceVertex - other.VirtualSourceVertex);
+
+			// Quick test: if they are more than 2 vertices away from each other -> false
+			if (delta > 2)
+			{
+				return false;
+			}
+
+			if (delta <= double.Epsilon)
+			{
+				// It does not make a difference whether measuring the ratio or absolute distance:
+				return true;
+			}
+
+			// Proper test:
+			Linestring sourcePart = source.GetPart(SourcePartIndex);
+
+			// This might not be optimal in a ring where one is 0 and the other just below segment count
+			int lowerSegmentIdx = (int) Math.Min(other.VirtualSourceVertex, VirtualSourceVertex);
+
+			double distanceAlongBetween =
+				GetDistanceAlong(sourcePart, VirtualSourceVertex, lowerSegmentIdx) -
+				GetDistanceAlong(sourcePart, other.VirtualSourceVertex, lowerSegmentIdx);
+
+			double alongDistance = Math.Abs(distanceAlongBetween);
+
+			if (double.IsNaN(tolerance))
+			{
+				tolerance = MathUtils.GetDoubleSignificanceEpsilon(Point.X, Point.Y);
+			}
+
+			return alongDistance < tolerance;
+		}
+
 		public bool ReferencesSameTargetVertex([CanBeNull] IntersectionPoint3D other,
-		                                       ISegmentList target)
+		                                       ISegmentList target,
+		                                       double tolerance = double.Epsilon)
 		{
 			if (other == null)
 			{
@@ -444,8 +528,33 @@ namespace ProSuite.Commons.Geom
 				return true;
 			}
 
-			// ReSharper disable once CompareOfFloatsByEqualityOperator
-			return VirtualTargetVertex == other.VirtualTargetVertex;
+			double delta = Math.Abs(VirtualTargetVertex - other.VirtualTargetVertex);
+
+			// Quick test: if they are more than 2 vertices away from each other -> false
+			if (delta > 2)
+			{
+				return false;
+			}
+
+			if (delta <= double.Epsilon)
+			{
+				// It does not make a difference whether measuring the ratio or absolute distance:
+				return true;
+			}
+
+			// Proper test:
+			Linestring targetPart = target.GetPart(TargetPartIndex);
+
+			// This might not be optimal in a ring where one is 0 and the other just below segment count
+			int lowerSegmentIdx = (int) Math.Min(other.VirtualTargetVertex, VirtualTargetVertex);
+
+			double distanceAlongBetween =
+				GetDistanceAlong(targetPart, VirtualTargetVertex, lowerSegmentIdx) -
+				GetDistanceAlong(targetPart, other.VirtualTargetVertex, lowerSegmentIdx);
+
+			double alongDistance = Math.Abs(distanceAlongBetween);
+
+			return alongDistance < tolerance;
 		}
 
 		public int GetLocalSourceIntersectionSegmentIdx(Linestring source,
@@ -583,10 +692,9 @@ namespace ProSuite.Commons.Geom
 			    Type == IntersectionPointType.LinearIntersectionEnd)
 			{
 				// the direction matters:
-				deviationIsBackward =
-					Type == IntersectionPointType.LinearIntersectionStart;
+				deviationIsBackward = Type == IntersectionPointType.LinearIntersectionStart;
 
-				if (SegmentIntersection.LinearIntersectionInOppositeDirection)
+				if (LinearIntersectionInOppositeDirection == true)
 				{
 					deviationIsBackward = ! deviationIsBackward;
 				}
@@ -682,15 +790,21 @@ namespace ProSuite.Commons.Geom
 				bool deviationIsBackward =
 					Type == IntersectionPointType.LinearIntersectionStart;
 
-				if (SegmentIntersection.LinearIntersectionInOppositeDirection)
+				// If it cannot be determined if the segments run in opposite direction there are
+				// potentially several zero-length segments that should probably be handled by
+				// the caller.
+				if (LinearIntersectionInOppositeDirection != null)
 				{
-					deviationIsBackward = ! deviationIsBackward;
-				}
+					if (LinearIntersectionInOppositeDirection == true)
+					{
+						deviationIsBackward = ! deviationIsBackward;
+					}
 
-				if (deviationIsBackward && forwardAlongTarget ||
-				    ! deviationIsBackward && ! forwardAlongTarget)
-				{
-					return null;
+					if (deviationIsBackward && forwardAlongTarget ||
+					    ! deviationIsBackward && ! forwardAlongTarget)
+					{
+						return null;
+					}
 				}
 
 				// get the first non-intersecting point after the linear intersection, check its side:
@@ -748,19 +862,47 @@ namespace ProSuite.Commons.Geom
 		/// </summary>
 		/// <param name="source"></param>
 		/// <param name="target"></param>
-		/// <param name="targetContinuesToRightSide"></param>
-		/// <param name="targetArrivesFromRightSide"></param>
-		public void ClassifyTargetTrajectory([NotNull] ISegmentList source,
+		/// <param name="sourceContinuesToRightSide"></param>
+		/// <param name="sourceArrivesFromRightSide"></param>
+		/// <param name="tolerance"></param>
+		public void ClassifySourceTrajectory([NotNull] ISegmentList source,
 		                                     [NotNull] ISegmentList target,
-		                                     out bool? targetContinuesToRightSide,
-		                                     out bool? targetArrivesFromRightSide)
+		                                     out bool? sourceContinuesToRightSide,
+		                                     out bool? sourceArrivesFromRightSide,
+		                                     double tolerance)
 		{
 			Assert.False(Type == IntersectionPointType.Unknown,
 			             "Cannot classify unknown intersection type.");
 
-			targetContinuesToRightSide = TargetContinuesToRightSide(source, target);
+			sourceContinuesToRightSide = SourceContinuesToRightSide(source, target, tolerance);
 
-			targetArrivesFromRightSide = TargetArrivesFromRightSide(source, target);
+			sourceArrivesFromRightSide = SourceArrivesFromRightSide(source, target, tolerance);
+		}
+
+		/// <summary>
+		/// Classifies the target trajectory with respect to this intersection.
+		/// Note: If this method is called for a linear intersection pseudo-break or for the break of the
+		/// linear intersection at a ring's start or end point, the result could be random because no
+		/// tolerance is used! In these cases, call <see cref="TargetContinuesToRightSide"/> or
+		/// <see cref="TargetArrivesFromRightSide"/> respectively.
+		/// </summary>
+		/// <param name="source"></param>
+		/// <param name="target"></param>
+		/// <param name="targetContinuesToRightSide"></param>
+		/// <param name="targetArrivesFromRightSide"></param>
+		/// <param name="tolerance"></param>
+		public void ClassifyTargetTrajectory([NotNull] ISegmentList source,
+		                                     [NotNull] ISegmentList target,
+		                                     out bool? targetContinuesToRightSide,
+		                                     out bool? targetArrivesFromRightSide,
+		                                     double tolerance = 0)
+		{
+			Assert.False(Type == IntersectionPointType.Unknown,
+			             "Cannot classify unknown intersection type.");
+
+			targetContinuesToRightSide = TargetContinuesToRightSide(source, target, tolerance);
+
+			targetArrivesFromRightSide = TargetArrivesFromRightSide(source, target, tolerance);
 		}
 
 		public bool? TargetContinuesToRightSide([NotNull] ISegmentList source,
@@ -1089,6 +1231,25 @@ namespace ProSuite.Commons.Geom
 			}
 
 			return localSegmentIdx;
+		}
+
+		private static double GetDistanceAlong([NotNull] Linestring linestring,
+		                                       double virtualVertexIdx,
+		                                       int startVertex = 0)
+		{
+			if (startVertex == linestring.SegmentCount)
+			{
+				startVertex = 0;
+			}
+
+			int segmentIdx = GetLocalIntersectionSegmentIdx(linestring, virtualVertexIdx,
+			                                                out double distanceAlongSegmentRatio);
+
+			double result = linestring.GetDistanceAlong2D(segmentIdx, startVertex);
+
+			result += distanceAlongSegmentRatio * linestring.GetSegment(segmentIdx).Length2D;
+
+			return result;
 		}
 
 		public override string ToString()

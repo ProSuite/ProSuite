@@ -3,6 +3,7 @@ using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.AO.Test.TestSupport;
@@ -207,7 +208,7 @@ namespace ProSuite.QA.Tests.Test
 
 			var intersectionPoints =
 				ZDifferenceStrategyIntersectionPoints.GetDistanceToPlane(
-					g1, feature, 0.01);
+					g1, ReadOnlyRow.Create(feature), 0.01);
 
 			foreach (var either in intersectionPoints)
 			{
@@ -247,7 +248,7 @@ namespace ProSuite.QA.Tests.Test
 
 			var intersectionPoints =
 				ZDifferenceStrategyIntersectionPoints.GetDistanceToPlane(
-					g1, feature, 0.01);
+					g1, ReadOnlyRow.Create(feature), 0.01);
 
 			foreach (var either in intersectionPoints)
 			{

@@ -166,7 +166,7 @@ namespace ProSuite.QA.Tests.Test
 			AddFeature(featureClass, shape3);
 			AddFeature(featureClass, shape3);
 
-			var test = new QaDuplicateGeometrySelf(featureClass, null, true);
+			var test = new QaDuplicateGeometrySelf(ReadOnlyTableFactory.Create(featureClass), null, true);
 
 			var testRunner = new QaContainerTestRunner(50, test);
 			testRunner.Execute();
@@ -212,7 +212,8 @@ namespace ProSuite.QA.Tests.Test
 			AddFeature(featureClass, shape2);
 			AddFeature(featureClass, shape3);
 
-			var test = new QaDuplicateGeometrySelf(featureClass, null, false);
+			var test = new QaDuplicateGeometrySelf(
+				ReadOnlyTableFactory.Create(featureClass), null, false);
 
 			var testRunner = new QaContainerTestRunner(1000, test);
 			testRunner.Execute();

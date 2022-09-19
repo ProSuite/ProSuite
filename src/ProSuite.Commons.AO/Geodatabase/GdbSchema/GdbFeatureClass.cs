@@ -6,33 +6,72 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 {
 	/// <inheritdoc cref="GdbTable" />
-	public class GdbFeatureClass : GdbTable, IFeatureClass, IGeoDataset
+	public class GdbFeatureClass : GdbTable, IFeatureClass, IGeoDataset, IReadOnlyFeatureClass,
+	                               IRowCreator<GdbFeature>
 	{
+		private int _shapeFieldIndex = -1;
+
 		public GdbFeatureClass(int objectClassId,
-													 [NotNull] string name,
-													 esriGeometryType shapeType,
-													 [CanBeNull] string aliasName = null,
-													 [CanBeNull] Func<GdbTable, BackingDataset> createBackingDataset = null,
-													 [CanBeNull] IWorkspace workspace = null)
+		                       [NotNull] string name,
+		                       esriGeometryType shapeType,
+		                       [CanBeNull] string aliasName = null,
+		                       [CanBeNull] Func<GdbTable, BackingDataset> createBackingDataset =
+			                       null,
+		                       [CanBeNull] IWorkspace workspace = null)
 			: base(objectClassId, name, aliasName, createBackingDataset, workspace)
 		{
 			ShapeType = shapeType;
 		}
 
+		public GdbFeatureClass([NotNull] IFeatureClass template,
+		                       bool useTemplateForQuerying = false)
+			: base((ITable) template, useTemplateForQuerying)
+		{
+			ShapeType = template.ShapeType;
+		}
+
 		public GdbFields FieldsT => GdbFields;
+
+		public int ShapeFieldIndex
+		{
+			get
+			{
+				if (_shapeFieldIndex < 0)
+				{
+					string shapeFieldName = ShapeFieldName;
+
+					if (shapeFieldName != null)
+					{
+						_shapeFieldIndex = FindField(shapeFieldName);
+					}
+				}
+
+				return _shapeFieldIndex;
+			}
+		}
+
 		protected override void FieldAddedCore(IField field)
 		{
 			base.FieldAddedCore(field);
 
 			if (field.Type == esriFieldType.esriFieldTypeGeometry)
 			{
-				_shapeField = field.Name;
+				_shapeFieldName = field.Name;
 			}
 		}
 
-		protected override IObject CreateObject(int oid)
+		GdbFeature IRowCreator<GdbFeature>.CreateRow() => (GdbFeature) CreateRow();
+
+		public new GdbFeature CreateFeature() => (GdbFeature) CreateRow();
+
+		public override GdbRow CreateObject(int oid,
+		                                    IValueList valueList = null)
+			=> CreateFeature(oid, valueList);
+
+		public GdbFeature CreateFeature(int oid,
+		                                [CanBeNull] IValueList valueList = null)
 		{
-			return new GdbFeature(oid, this);
+			return new GdbFeature(oid, this, valueList);
 		}
 
 		public override esriDatasetType DatasetType => esriDatasetType.esriDTFeatureClass;
@@ -62,6 +101,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			{
 				throw new NotImplementedException("No backing dataset provided for Search().");
 			}
+
 			var rows = BackingDataset.Search(filter, recycling);
 			return new CursorImpl(this, rows);
 		}
@@ -70,8 +110,8 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		public override esriFeatureType FeatureType => esriFeatureType.esriFTSimple;
 
-		private string _shapeField;
-		public override string ShapeFieldName => _shapeField ?? base.ShapeFieldName;
+		private string _shapeFieldName;
+		public override string ShapeFieldName => _shapeFieldName ?? base.ShapeFieldName;
 
 		public override IField AreaField => null;
 
@@ -80,6 +120,5 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		public override int FeatureClassID => ObjectClassID;
 
 		#endregion
-
 	}
 }

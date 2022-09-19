@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.Geom
@@ -159,15 +160,9 @@ namespace ProSuite.Commons.Geom
 					startPoint = fromPoint;
 				}
 
-				// For symmetry reasons, also the target ring start/end should break linear intersections.
-				// Otherwise the result is different in XY depending on the order of the arguments.
-				bool isTargetRingNullPoint = IsTargetRingNullPoint(
-					fromPoint.SegmentIntersection,
-					previousLinearEnd?.SegmentIntersection,
-					targetSegments);
-
 				if (previousLinearEnd == null ||
-				    ! isTargetRingNullPoint && previousLinearEnd.Point.Equals(fromPoint.Point))
+				    ContinueLinearIntersectionStretch(
+					    previousLinearEnd, fromPoint, sourceSegments, targetSegments))
 				{
 					// first, or connected to previous -> continue:
 					if (previousLinearEnd != null &&
@@ -194,6 +189,229 @@ namespace ProSuite.Commons.Geom
 			TryAddLinearIntersectionStretch(startPoint, previousLinearEnd, result);
 
 			return result;
+		}
+
+		private static bool ContinueLinearIntersectionStretch(
+			[NotNull] IntersectionPoint3D previousLinearEnd,
+			[NotNull] IntersectionPoint3D currentLinearStart,
+			[NotNull] ISegmentList sourceSegments,
+			[NotNull] ISegmentList targetSegments)
+		{
+			if (! AreIntersectionsAdjacent(previousLinearEnd, currentLinearStart, sourceSegments,
+			                               targetSegments, out _, out _))
+			{
+				return false;
+			}
+
+			// Connected segments should be exactly equal
+			if (! previousLinearEnd.Point.Equals(currentLinearStart.Point))
+			{
+				return false;
+			}
+
+			// For symmetry reasons, also the target ring start/end should break linear intersections.
+			// Otherwise the result is different in XY depending on the order of the arguments.
+			bool isTargetRingNullPoint = IsTargetRingNullPoint(
+				currentLinearStart.SegmentIntersection,
+				previousLinearEnd.SegmentIntersection,
+				targetSegments);
+
+			if (isTargetRingNullPoint)
+			{
+				return false;
+			}
+
+			// Connected segments should be exactly equal
+			return previousLinearEnd.Point.Equals(currentLinearStart.Point);
+		}
+
+		public static bool AreIntersectionsAdjacent(
+			[NotNull] IntersectionPoint3D previousLinearIntersectionEnd,
+			[NotNull] IntersectionPoint3D currentLinearIntersectionStart,
+			[NotNull] ISegmentList sourceSegments,
+			[NotNull] ISegmentList targetSegments,
+			out bool isSourceBoundaryLoop,
+			out bool isTargetBoundaryLoop,
+			double tolerance = double.NaN)
+		{
+			isSourceBoundaryLoop = false;
+			isTargetBoundaryLoop = false;
+
+			if (previousLinearIntersectionEnd.SourcePartIndex !=
+			    currentLinearIntersectionStart.SourcePartIndex)
+			{
+				return false;
+			}
+
+			if (previousLinearIntersectionEnd.TargetPartIndex !=
+			    currentLinearIntersectionStart.TargetPartIndex)
+			{
+				return false;
+			}
+
+			Linestring sourcePart =
+				sourceSegments.GetPart(previousLinearIntersectionEnd.SourcePartIndex);
+
+			bool sameDistanceAlongSource =
+				currentLinearIntersectionStart.ReferencesSameSourceVertex(
+					previousLinearIntersectionEnd, sourceSegments, tolerance);
+
+			if (! sameDistanceAlongSource)
+			{
+				// Exclude source boundary loops, but include very acute angle linear intersections
+				// as in CanGetIntersectionAreaXYWithLinearIntersectionWithinToleranceAcuteAngle()
+				if (currentLinearIntersectionStart.ReferencesSameTargetVertex(
+					    previousLinearIntersectionEnd, targetSegments))
+				{
+					// TODO: Proper count of source segments between, probably deal with short segments
+					// check if it's a real source boundary loop
+					double segmentRatioDistance =
+						currentLinearIntersectionStart.VirtualSourceVertex -
+						previousLinearIntersectionEnd.VirtualSourceVertex;
+
+					// Sometimes (see CanGetIntersectionAreaWithLinearIntersectionWithinToleranceAcuteAngleTop5502)
+					// The linear intersections starts just after the start point and ends just
+					// after the last point. This happens with acute angles and the actual start
+					// point is just outside the tolerance. For the time being, they shall be
+					// considered adjacent anyway (but not boundary loops!)
+					if (segmentRatioDistance < 0)
+					{
+						segmentRatioDistance =
+							MathUtils.Modulo(segmentRatioDistance, sourcePart.SegmentCount, true);
+					}
+
+					// Typically it is very very small, but theoretically it could be almost the entire segments
+					// if the angle is extremely acute.
+					if (Math.Abs(segmentRatioDistance) < 2)
+					{
+						return true;
+					}
+
+					isSourceBoundaryLoop = true;
+				}
+
+				return false;
+			}
+
+			Linestring targetPart =
+				targetSegments.GetPart(previousLinearIntersectionEnd.TargetPartIndex);
+
+			double targetSegmentsBetween = TargetSegmentCountBetween(
+				previousLinearIntersectionEnd, currentLinearIntersectionStart, targetPart);
+
+			// Exclude target boundary loops: More than one segment (and probably we should also
+			// make sure to call ! ReferencesSameTargetVertex which now checks for the distance > tolerance.
+			if (targetSegmentsBetween > 1)
+			{
+				isTargetBoundaryLoop = true;
+				return false;
+			}
+
+			// Connected lines must match exactly (they are typically reference-equal)
+			return previousLinearIntersectionEnd.Point.Equals(currentLinearIntersectionStart.Point);
+		}
+
+		/// <summary>
+		/// Corrects the LinearIntersectionInOppositeDirection property for zero-length
+		/// segments for either the previous or the current intersection point.
+		/// </summary>
+		/// <param name="previous"></param>
+		/// <param name="current"></param>
+		private static void EnsureLinearIntersectionDirection(
+			[NotNull] IntersectionPoint3D previous,
+			[NotNull] IntersectionPoint3D current)
+		{
+			// Not sure if correcting this property is really necessary.
+			bool startIsZeroLength = previous.SegmentIntersection.IsSegmentZeroLength2D;
+			bool endIsZeroLength = current.SegmentIntersection.IsSegmentZeroLength2D;
+
+			if (endIsZeroLength && ! startIsZeroLength)
+			{
+				// current's LinearIntersectionInOppositeDirection is random, correct it
+				current.LinearIntersectionInOppositeDirection =
+					previous.LinearIntersectionInOppositeDirection;
+			}
+			else if (startIsZeroLength && ! endIsZeroLength)
+			{
+				previous.LinearIntersectionInOppositeDirection =
+					current.LinearIntersectionInOppositeDirection;
+			}
+			else if (! MathUtils.AreEqual(previous.VirtualTargetVertex,
+			                              current.VirtualTargetVertex))
+			{
+				// Both intersections have zero length segments. Fall back, if possible:
+				bool oppositeDirection = previous.VirtualTargetVertex > current.VirtualTargetVertex;
+
+				previous.LinearIntersectionInOppositeDirection = oppositeDirection;
+				current.LinearIntersectionInOppositeDirection = oppositeDirection;
+			}
+		}
+
+		private static double TargetSegmentCountBetween(
+			[NotNull] IntersectionPoint3D firstIntersection,
+			[NotNull] IntersectionPoint3D secondIntersection,
+			[NotNull] Linestring targetPart)
+		{
+			Assert.AreEqual(firstIntersection.TargetPartIndex, secondIntersection.TargetPartIndex,
+			                "Intersections are not from the same target part.");
+
+			double forwardSegmentCount = secondIntersection.VirtualTargetVertex -
+			                             firstIntersection.VirtualTargetVertex;
+
+			if (MathUtils.AreEqual(forwardSegmentCount, 0))
+			{
+				return 0;
+			}
+
+			// Special case: last and first point or vice-versa
+			bool firstIsExactlyOnTargetVertex =
+				firstIntersection.IsTargetVertex(out int firstVertex);
+
+			if (firstIsExactlyOnTargetVertex)
+			{
+				if (targetPart.IsLastPointInPart(firstVertex) &&
+				    secondIntersection.VirtualTargetVertex == 0)
+				{
+					if (targetPart.IsClosed)
+					{
+						return 0;
+					}
+				}
+
+				bool secondIsOnTargetVertex =
+					secondIntersection.IsTargetVertex(out int secondVertex);
+
+				if (secondIsOnTargetVertex &&
+				    targetPart.IsLastPointInPart(secondVertex) &&
+				    targetPart.IsFirstPointInPart(firstVertex))
+				{
+					if (targetPart.IsClosed)
+					{
+						return 0;
+					}
+				}
+			}
+
+			if (! targetPart.IsClosed)
+			{
+				return Math.Abs(forwardSegmentCount);
+			}
+
+			// If the ring is closed, make sure to test the backward and forward path
+			double backwardSegmentCount = firstIntersection.VirtualTargetVertex -
+			                              secondIntersection.VirtualTargetVertex;
+
+			backwardSegmentCount =
+				MathUtils.Modulo(backwardSegmentCount, targetPart.SegmentCount, true);
+
+			if (forwardSegmentCount < 0)
+			{
+				forwardSegmentCount += targetPart.SegmentCount;
+			}
+
+			return forwardSegmentCount < backwardSegmentCount
+				       ? forwardSegmentCount
+				       : backwardSegmentCount;
 		}
 
 		/// <summary>
@@ -298,9 +516,14 @@ namespace ProSuite.Commons.Geom
 			{
 				result.Add(endPoint);
 			}
+
+			if (startPoint != null && endPoint != null)
+			{
+				EnsureLinearIntersectionDirection(startPoint, endPoint);
+			}
 		}
 
-		private static bool IsTargetRingNullPoint(
+		public static bool IsTargetRingNullPoint(
 			[NotNull] SegmentIntersection thisLinearIntersection,
 			[CanBeNull] SegmentIntersection previousLinearIntersection,
 			ISegmentList targetSegments)

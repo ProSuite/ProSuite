@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -14,7 +14,7 @@ namespace ProSuite.QA.Container
 		/// <param name="qaError">The error description.</param>
 		/// <param name="testedRows"></param>
 		public QaErrorEventArgs([NotNull] QaError qaError,
-		                        IList<IRow> testedRows = null)
+		                        IList<IReadOnlyRow> testedRows = null)
 		{
 			Assert.ArgumentNotNull(qaError, nameof(qaError));
 
@@ -26,7 +26,7 @@ namespace ProSuite.QA.Container
 		public QaError QaError { get; }
 
 		[CanBeNull]
-		public IList<IRow> TestedRows { get; }
+		public IList<IReadOnlyRow> TestedRows { get; }
 
 		public bool Cancel { get; set; }
 	}

@@ -1,16 +1,17 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.PolygonGrower;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.QA.Tests.Network;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
 {
@@ -53,20 +54,15 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaBorderSense_0))]
 		public QaBorderSense(
-			[Doc(nameof(DocStrings.QaBorderSense_polylineClass))]
-			IFeatureClass polylineClass,
-			[Doc(nameof(DocStrings.QaBorderSense_clockwise))]
-			bool clockwise)
-			: this(new[] { polylineClass }, clockwise) { }
+			[Doc(nameof(DocStrings.QaBorderSense_polylineClass))] IReadOnlyFeatureClass polylineClass,
+			[Doc(nameof(DocStrings.QaBorderSense_clockwise))] bool clockwise)
+			: this(new[] {polylineClass}, clockwise) { }
 
 		[Doc(nameof(DocStrings.QaBorderSense_1))]
 		public QaBorderSense(
-			[Doc(nameof(DocStrings.QaBorderSense_polylineClasses))]
-			IList<IFeatureClass> polylineClasses,
-			[Doc(nameof(DocStrings.QaBorderSense_clockwise))]
-			bool clockwise)
-			: base(CastToTables((IEnumerable<IFeatureClass>) polylineClasses),
-			       includeBorderNodes: true)
+			[Doc(nameof(DocStrings.QaBorderSense_polylineClasses))] IList<IReadOnlyFeatureClass> polylineClasses,
+			[Doc(nameof(DocStrings.QaBorderSense_clockwise))] bool clockwise)
+			: base(CastToTables((IEnumerable<IReadOnlyFeatureClass>) polylineClasses), true)
 		{
 			_orientation = clockwise;
 			_grower = new RingGrower<DirectedRow>(DirectedRow.Reverse);
@@ -97,13 +93,13 @@ namespace ProSuite.QA.Tests
 				// these are all not closed polygons and hence errors
 				const string description = "Incomplete line";
 
-				errorCount += ReportError(description,
-				                          CreateUnclosedErrorGeometry(list),
-				                          Codes[Code.IncompleteLine],
-				                          TestUtils.GetShapeFieldName(
-					                          (IFeature) list.DirectedRows.First.Value.Row.Row),
-				                          InvolvedRow.CreateList(
-					                          list.GetUniqueRows(InvolvedTables)));
+				errorCount += ReportError(
+					description,
+					InvolvedRowUtils.GetInvolvedRows(list.GetUniqueRows(InvolvedTables)),
+					CreateUnclosedErrorGeometry(list),
+					Codes[Code.IncompleteLine],
+					TestUtils.GetShapeFieldName(
+						(IReadOnlyFeature) list.DirectedRows.First.Value.Row.Row));
 			}
 
 			return errorCount;
@@ -135,9 +131,9 @@ namespace ProSuite.QA.Tests
 			{
 				const string description = "Dangling line";
 
-				_errorCount += ReportError(description, connectedRows[0].FromPoint,
-				                           Codes[Code.DanglingLine], null,
-				                           connectedRows[0].Row.Row);
+				_errorCount += ReportError(
+					description, InvolvedRowUtils.GetInvolvedRows(connectedRows[0].Row.Row),
+					connectedRows[0].FromPoint, Codes[Code.DanglingLine], null);
 			}
 
 			connectedRows.Sort(new DirectedRow.RowByLineAngleComparer());
@@ -182,10 +178,11 @@ namespace ProSuite.QA.Tests
 				{
 					const string description = "Empty polygon created";
 
-					return ReportError(description, border,
-					                   Codes[Code.EmptyPolygonCreated], null,
-					                   InvolvedRow.CreateList(
-						                   polygonLineList.GetUniqueRows(InvolvedTables)));
+					return ReportError(
+						description,
+						InvolvedRowUtils.GetInvolvedRows(
+							polygonLineList.GetUniqueRows(InvolvedTables)),
+						border, Codes[Code.EmptyPolygonCreated], null);
 				}
 
 				return 0;
@@ -199,10 +196,12 @@ namespace ProSuite.QA.Tests
 				{
 					const string description = "Inverted orientation";
 
-					return ReportError(description, polygonLineList.GetPolygon(),
-					                   Codes[Code.InvertedOrientation], null,
-					                   InvolvedRow.CreateList(
-						                   polygonLineList.GetUniqueRows(InvolvedTables)));
+					return ReportError(
+						description,
+						InvolvedRowUtils.GetInvolvedRows(
+							polygonLineList.GetUniqueRows(InvolvedTables)),
+						polygonLineList.GetPolygon(),
+						Codes[Code.InvertedOrientation], null);
 				}
 			}
 
@@ -221,10 +220,9 @@ namespace ProSuite.QA.Tests
 				{
 					const string description = "Inconsistent orientation";
 
-					errorCount += ReportError(description,
-					                          row0.ToPoint,
-					                          Codes[Code.InconsistentOrientation], null,
-					                          row0.Row.Row, row1.Row.Row);
+					errorCount += ReportError(
+						description, InvolvedRowUtils.GetInvolvedRows(row0.Row.Row, row1.Row.Row),
+						row0.ToPoint, Codes[Code.InconsistentOrientation], null);
 				}
 
 				row0 = row1;

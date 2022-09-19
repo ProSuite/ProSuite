@@ -21,13 +21,13 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			_values = new object[valueCount];
 		}
 
-		public object GetValue(int index, bool ensureRcwRefCountIncrease = false)
+		public object GetValue(int index, bool increaseRcwRefCount = false)
 		{
 			var result = HasValue(index)
 				             ? _values[index]
 				             : null;
 
-			if (ensureRcwRefCountIncrease && result != null)
+			if (increaseRcwRefCount && result != null)
 			{
 				result = IncrementRcwReferenceCount(result);
 			}
