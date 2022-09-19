@@ -53,28 +53,14 @@ namespace ProSuite.QA.Tests
 
 		#region Constructors
 
-		// TODO document
-		/// <summary>
-		/// Initializes a new instance of the <see cref="QaSchemaSpatialReference"/> class.
-		/// </summary>
-		/// <param name="featureClass">The feature class.</param>
-		/// <param name="referenceFeatureClass">The reference feature class.</param>
-		/// <param name="compareXYPrecision">if set to <c>true</c>, xy precision must be equal.</param>
-		/// <param name="compareZPrecision">if set to <c>true</c>, z precision must be equal.</param>
-		/// <param name="compareMPrecision">if set to <c>true</c>, m precision must be equal.</param>
-		/// <param name="compareTolerances">if set to <c>true</c>, tolerances must be equal.</param>
-		/// <param name="compareVerticalCoordinateSystems">if set to <c>true</c>, vertical coordinate system must be equal.</param>
 		[Doc(nameof(DocStrings.QaSchemaSpatialReference_0))]
 		public QaSchemaSpatialReference(
-			[Doc(nameof(DocStrings.QaSchemaSpatialReference_featureClass))] [NotNull]
-			IReadOnlyFeatureClass featureClass,
-			[Doc(nameof(DocStrings.QaSchemaSpatialReference_referenceFeatureClass))] [NotNull]
-			IReadOnlyFeatureClass
-				referenceFeatureClass,
-			bool compareXYPrecision,
-			bool compareZPrecision,
-			bool compareMPrecision,
-			bool compareTolerances,
+			[Doc(nameof(DocStrings.QaSchemaSpatialReference_featureClass))]
+			[NotNull] IReadOnlyFeatureClass featureClass,
+			[Doc(nameof(DocStrings.QaSchemaSpatialReference_referenceFeatureClass))]
+			[NotNull] IReadOnlyFeatureClass referenceFeatureClass,
+			bool compareXYPrecision, bool compareZPrecision,
+			bool compareMPrecision, bool compareTolerances,
 			bool compareVerticalCoordinateSystems)
 			: this(featureClass, GetSpatialReference(referenceFeatureClass),
 			       compareXYPrecision, compareZPrecision, compareMPrecision,
@@ -84,53 +70,27 @@ namespace ProSuite.QA.Tests
 			AddMissingFeatureClass(referenceFeatureClass);
 		}
 
-		// TODO document
-		/// <summary>
-		/// Initializes a new instance of the <see cref="QaSchemaSpatialReference"/> class.
-		/// </summary>
-		/// <param name="featureClass">The feature class.</param>
-		/// <param name="spatialReferenceXml">The spatial reference XML.</param>
-		/// <param name="compareXYPrecision">if set to <c>true</c>, xy precision must be equal.</param>
-		/// <param name="compareZPrecision">if set to <c>true</c>, z precision must be equal.</param>
-		/// <param name="compareMPrecision">if set to <c>true</c>, m precision must be equal.</param>
-		/// <param name="compareTolerances">if set to <c>true</c>, tolerances must be equal.</param>
-		/// <param name="compareVerticalCoordinateSystems">if set to <c>true</c>, vertical coordinate system must be equal.</param>
 		[Doc(nameof(DocStrings.QaSchemaSpatialReference_1))]
 		public QaSchemaSpatialReference(
-			[Doc(nameof(DocStrings.QaSchemaSpatialReference_featureClass))] [NotNull]
-			IReadOnlyFeatureClass featureClass,
-			[Doc(nameof(DocStrings.QaSchemaSpatialReference_spatialReferenceXml))] [NotNull]
-			string
-				spatialReferenceXml,
-			bool compareXYPrecision,
-			bool compareZPrecision,
-			bool compareMPrecision,
-			bool compareTolerances,
+			[Doc(nameof(DocStrings.QaSchemaSpatialReference_featureClass))]
+			[NotNull] IReadOnlyFeatureClass featureClass,
+			[Doc(nameof(DocStrings.QaSchemaSpatialReference_spatialReferenceXml))]
+			[NotNull] string spatialReferenceXml,
+			bool compareXYPrecision, bool compareZPrecision,
+			bool compareMPrecision, bool compareTolerances,
 			bool compareVerticalCoordinateSystems)
-			: this(featureClass,
-			       SpatialReferenceUtils.FromXmlString(spatialReferenceXml),
+			: this(featureClass, SpatialReferenceUtils.FromXmlString(spatialReferenceXml),
 			       compareXYPrecision, compareZPrecision, compareMPrecision,
 			       compareTolerances, compareTolerances, compareTolerances,
 			       compareVerticalCoordinateSystems) { }
 
-		// TODO document
-		/// <summary>
-		/// Initializes a new instance of the <see cref="QaSchemaSpatialReference"/> class.
-		/// </summary>
-		/// <param name="featureClass">The feature class.</param>
-		/// <param name="referenceFeatureClass">The reference feature class.</param>
-		/// <param name="compareUsedPrecisions">if set to <c>true</c> the precisions for the relevant dimensions must be equal.</param>
-		/// <param name="compareTolerances">if set to <c>true</c>, tolerances of the relevant dimensions must be equal.</param>
-		/// <param name="compareVerticalCoordinateSystems">if set to <c>true</c>, vertical coordinate system must be equal.</param>
 		[Doc(nameof(DocStrings.QaSchemaSpatialReference_2))]
 		public QaSchemaSpatialReference(
-			[Doc(nameof(DocStrings.QaSchemaSpatialReference_featureClass))] [NotNull]
-			IReadOnlyFeatureClass featureClass,
-			[Doc(nameof(DocStrings.QaSchemaSpatialReference_referenceFeatureClass))] [NotNull]
-			IReadOnlyFeatureClass
-				referenceFeatureClass,
-			bool compareUsedPrecisions,
-			bool compareTolerances,
+			[Doc(nameof(DocStrings.QaSchemaSpatialReference_featureClass))]
+			[NotNull] IReadOnlyFeatureClass featureClass,
+			[Doc(nameof(DocStrings.QaSchemaSpatialReference_referenceFeatureClass))]
+			[NotNull] IReadOnlyFeatureClass referenceFeatureClass,
+			bool compareUsedPrecisions, bool compareTolerances,
 			bool compareVerticalCoordinateSystems)
 			: this(featureClass, GetSpatialReference(referenceFeatureClass),
 			       compareUsedPrecisions,
@@ -144,33 +104,13 @@ namespace ProSuite.QA.Tests
 			AddMissingFeatureClass(referenceFeatureClass);
 		}
 
-		/// <summary>
-		/// Prevents an exception saying that the number of constraints is not equal the number of involved tables.
-		/// </summary>
-		/// <param name="referenceFeatureClass"></param>
-		private void AddMissingFeatureClass(IFeatureClass referenceFeatureClass)
-		{
-			AddInvolvedTable((ITable) referenceFeatureClass, null, false);
-		}
-
-		// TODO document
-		/// <summary>
-		/// Initializes a new instance of the <see cref="QaSchemaSpatialReference"/> class.
-		/// </summary>
-		/// <param name="featureClass">The feature class.</param>
-		/// <param name="spatialReferenceXml">The spatial reference XML.</param>
-		/// <param name="compareUsedPrecisions">if set to <c>true</c> the precisions for the relevant dimensions must be equal.</param>
-		/// <param name="compareTolerances">if set to <c>true</c>, tolerances of the relevant dimensions must be equal.</param>
-		/// <param name="compareVerticalCoordinateSystems">if set to <c>true</c>, vertical coordinate system must be equal.</param>
 		[Doc(nameof(DocStrings.QaSchemaSpatialReference_3))]
 		public QaSchemaSpatialReference(
-			[Doc(nameof(DocStrings.QaSchemaSpatialReference_featureClass))] [NotNull]
-			IReadOnlyFeatureClass featureClass,
-			[Doc(nameof(DocStrings.QaSchemaSpatialReference_spatialReferenceXml))] [NotNull]
-			string
-				spatialReferenceXml,
-			bool compareUsedPrecisions,
-			bool compareTolerances,
+			[Doc(nameof(DocStrings.QaSchemaSpatialReference_featureClass))]
+			[NotNull] IReadOnlyFeatureClass featureClass,
+			[Doc(nameof(DocStrings.QaSchemaSpatialReference_spatialReferenceXml))]
+			[NotNull] string spatialReferenceXml,
+			bool compareUsedPrecisions, bool compareTolerances,
 			bool compareVerticalCoordinateSystems)
 			: this(featureClass,
 			       SpatialReferenceUtils.FromXmlString(spatialReferenceXml),
@@ -185,26 +125,12 @@ namespace ProSuite.QA.Tests
 		/// <summary>
 		/// Prevents a default instance of the <see cref="QaSchemaSpatialReference"/> class from being created.
 		/// </summary>
-		/// <param name="featureClass">The feature class.</param>
-		/// <param name="expectedSpatialReference">The expected spatial reference.</param>
-		/// <param name="compareXyPrecision">if set to <c>true</c>, xy precision must be equal.</param>
-		/// <param name="compareZPrecision">if set to <c>true</c>, z precision must be equal.</param>
-		/// <param name="compareMPrecision">if set to <c>true</c>, m precision must be equal.</param>
-		/// <param name="compareXyTolerance">if set to <c>true</c>, xy tolerance must be equal.</param>
-		/// <param name="compareZTolerance">if set to <c>true</c>, z tolerance must be equal.</param>
-		/// <param name="compareMTolerance">if set to <c>true</c>, m tolerance must be equal.</param>
-		/// <param name="compareVerticalCoordinateSystems">if set to <c>true</c>, vertical coordinate system must be equal.</param>
 		private QaSchemaSpatialReference(
 			[NotNull] IReadOnlyFeatureClass featureClass,
 			[NotNull] ISpatialReference expectedSpatialReference,
-			bool compareXyPrecision,
-			bool compareZPrecision,
-			bool compareMPrecision,
-			bool compareXyTolerance,
-			bool compareZTolerance,
-			bool compareMTolerance,
-			bool compareVerticalCoordinateSystems)
-			: base(featureClass)
+			bool compareXyPrecision, bool compareZPrecision, bool compareMPrecision,
+			bool compareXyTolerance, bool compareZTolerance, bool compareMTolerance,
+			bool compareVerticalCoordinateSystems) : base(featureClass)
 		{
 			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
 			Assert.ArgumentNotNull(expectedSpatialReference, nameof(expectedSpatialReference));
@@ -219,6 +145,15 @@ namespace ProSuite.QA.Tests
 			_compareMTolerance = compareMTolerance;
 			_compareVerticalCoordinateSystems = compareVerticalCoordinateSystems;
 			_shapeFieldName = featureClass.ShapeFieldName;
+		}
+
+		/// <summary>
+		/// Prevents an exception saying that the number of constraints is not equal the number of involved tables.
+		/// </summary>
+		/// <param name="referenceFeatureClass"></param>
+		private void AddMissingFeatureClass(IReadOnlyFeatureClass referenceFeatureClass)
+		{
+			AddInvolvedTable(referenceFeatureClass, null, false);
 		}
 
 		#endregion
