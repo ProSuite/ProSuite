@@ -48,7 +48,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 			this._groupBoxClassOrFactory = new System.Windows.Forms.GroupBox();
 			this._tabControl = new System.Windows.Forms.TabControl();
 			this._tabPageImplementation = new System.Windows.Forms.TabPage();
-			this._splitContainerDescription = new System.Windows.Forms.SplitContainer();
+			this._splitContainerDescription = new ProSuite.Commons.UI.WinForms.Controls.SplitContainerEx();
 			this._textBoxCategories = new System.Windows.Forms.TextBox();
 			this._labelTestCategories = new System.Windows.Forms.Label();
 			this._panelImplementationTop = new System.Windows.Forms.Panel();
@@ -553,7 +553,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 		private DoubleBufferedDataGridView _dataGridViewQualityConditions;
 		private ToolStripEx _toolStripElements;
 		private DataGridViewFindToolStrip _dataGridViewFindToolStrip;
-		private System.Windows.Forms.SplitContainer _splitContainerDescription;
+		private SplitContainerEx _splitContainerDescription;
 		private System.Windows.Forms.TextBox _textBoxCategories;
 		private System.Windows.Forms.Label _labelTestCategories;
 		private System.Windows.Forms.DataGridViewImageColumn _columnQualityConditionImage;
