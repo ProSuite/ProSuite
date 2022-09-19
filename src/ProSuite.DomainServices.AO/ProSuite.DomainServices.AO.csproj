@@ -108,10 +108,10 @@
   <ItemGroup>
     <None Include="QA\Standalone\RuleBased\HtmlReportModel.cd" />
     <None Include="QA\Standalone\XmlBased\XmlBasedVerificationReportModel.cd" />
-    <None Include="Schemas\ProSuite.QA.XmlBasedVerificationOptions-1.0.xsd">
+    <Content Include="Schemas\ProSuite.QA.XmlBasedVerificationOptions-1.0.xsd">
       <SubType>Designer</SubType>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    </Content>
     <None Include="Schemas\update_XmlBasedVerificationOptions.bat" />
   </ItemGroup>
 </Project>
