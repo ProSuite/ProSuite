@@ -48,9 +48,6 @@ namespace ProSuite.AGP.QA.ProPlugins
 
 		protected abstract IProSuiteFacade ProSuiteImpl { get; }
 
-		protected abstract Window CreateProgressWindow(
-			VerificationProgressViewModel progressViewModel);
-
 		protected override void OnClick()
 		{
 			if (SessionContext?.VerificationEnvironment == null)
@@ -113,7 +110,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 
 			string actionTitle = "Verify Last";
 
-			Window window = CreateProgressWindow(qaProgressViewmodel);
+			Window window = VerificationProgressWindow.Create(qaProgressViewmodel);
 
 			VerifyUtils.ShowProgressWindow(window, qualitySpecification,
 			                               qaEnvironment.BackendDisplayName, actionTitle);

@@ -3,23 +3,19 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.32014.148
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.Commons.Essentials", "ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj", "{384763D9-F7A1-4AA2-9ABD-EE338CD8D4C1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProSuite.Commons.Essentials", "ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj", "{384763D9-F7A1-4AA2-9ABD-EE338CD8D4C1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.Commons.Logging", "ProSuite.Commons.Logging\ProSuite.Commons.Logging.csproj", "{A227D52C-0536-498F-ACF2-2A5A67C3D9FF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProSuite.Commons.Logging", "ProSuite.Commons.Logging\ProSuite.Commons.Logging.csproj", "{A227D52C-0536-498F-ACF2-2A5A67C3D9FF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.Commons.Logging.Test", "ProSuite.Commons.Logging.Test\ProSuite.Commons.Logging.Test.csproj", "{2497991A-EE91-4355-864A-DB6DB9782096}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProSuite.Commons.Logging.Test", "ProSuite.Commons.Logging.Test\ProSuite.Commons.Logging.Test.csproj", "{2497991A-EE91-4355-864A-DB6DB9782096}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.Commons", "ProSuite.Commons\ProSuite.Commons.csproj", "{66E5D99B-26AB-4FFF-834D-D96347DF4FA4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProSuite.Commons", "ProSuite.Commons\ProSuite.Commons.csproj", "{66E5D99B-26AB-4FFF-834D-D96347DF4FA4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.Commons.Test", "ProSuite.Commons.Test\ProSuite.Commons.Test.csproj", "{5B741064-38D8-4BEE-87C0-3F8E1C0247BF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProSuite.Commons.Test", "ProSuite.Commons.Test\ProSuite.Commons.Test.csproj", "{5B741064-38D8-4BEE-87C0-3F8E1C0247BF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.Commons.UI", "ProSuite.Commons.UI\ProSuite.Commons.UI.csproj", "{FDA8452C-41F0-404C-A17D-FBA8CB56B935}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProSuite.DomainModel.Core", "ProSuite.DomainModel.Core\ProSuite.DomainModel.Core.csproj", "{0B48B56F-3A3D-4367-AA76-A356519AF2AB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.Commons.UI.Test", "ProSuite.Commons.UI.Test\ProSuite.Commons.UI.Test.csproj", "{510D9436-E3AC-465F-9A8B-24F2093C6214}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.DomainModel.Core", "ProSuite.DomainModel.Core\ProSuite.DomainModel.Core.csproj", "{0B48B56F-3A3D-4367-AA76-A356519AF2AB}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.DomainModel.Core.Test", "ProSuite.DomainModel.Core.Test\ProSuite.DomainModel.Core.Test.csproj", "{4DE3C160-E2E4-4491-A4CB-1B5DC26D2EFC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProSuite.DomainModel.Core.Test", "ProSuite.DomainModel.Core.Test\ProSuite.DomainModel.Core.Test.csproj", "{4DE3C160-E2E4-4491-A4CB-1B5DC26D2EFC}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{859A416A-47F4-45D2-B44B-70F7CE93F821}"
 	ProjectSection(SolutionItems) = preProject
@@ -28,45 +24,45 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		SharedAssemblyInfo.cs = SharedAssemblyInfo.cs
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.QA.Core", "ProSuite.QA.Core\ProSuite.QA.Core.csproj", "{01CBBA9E-0D4D-439F-9147-6A5685884A65}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProSuite.QA.Core", "ProSuite.QA.Core\ProSuite.QA.Core.csproj", "{01CBBA9E-0D4D-439F-9147-6A5685884A65}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.Commons.AO", "ProSuite.Commons.AO\ProSuite.Commons.AO.csproj", "{7E4B0861-83ED-4D12-BE27-93C9053C88CA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProSuite.Commons.AO", "ProSuite.Commons.AO\ProSuite.Commons.AO.csproj", "{7E4B0861-83ED-4D12-BE27-93C9053C88CA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.Commons.AO.Test", "ProSuite.Commons.AO.Test\ProSuite.Commons.AO.Test.csproj", "{E9137523-483C-44D6-BE53-ADAACEFBBF5F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProSuite.Commons.AO.Test", "ProSuite.Commons.AO.Test\ProSuite.Commons.AO.Test.csproj", "{E9137523-483C-44D6-BE53-ADAACEFBBF5F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.Microservices.Server.AO", "ProSuite.Microservices.Server.AO\ProSuite.Microservices.Server.AO.csproj", "{F997B55F-C442-4224-A573-AE39F72BEB4A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProSuite.Microservices.Server.AO", "ProSuite.Microservices.Server.AO\ProSuite.Microservices.Server.AO.csproj", "{F997B55F-C442-4224-A573-AE39F72BEB4A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.Microservices.Server.AO.Test", "ProSuite.Microservices.Server.AO.Test\ProSuite.Microservices.Server.AO.Test.csproj", "{6608D0F5-E149-4C21-841A-C53FA6D59B05}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProSuite.Microservices.Server.AO.Test", "ProSuite.Microservices.Server.AO.Test\ProSuite.Microservices.Server.AO.Test.csproj", "{6608D0F5-E149-4C21-841A-C53FA6D59B05}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.Microservices.Server.Geometry.Console", "ProSuite.Microservices.Server.Geometry.Console\ProSuite.Microservices.Server.Geometry.Console.csproj", "{1B83E290-F24A-459A-BDB1-6041EB4AA8A2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.QA.Tests", "ProSuite.QA.Tests\ProSuite.QA.Tests.csproj", "{7A1D3AB3-A9A8-45B0-9452-A0DDEA004E2B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProSuite.QA.Tests", "ProSuite.QA.Tests\ProSuite.QA.Tests.csproj", "{7A1D3AB3-A9A8-45B0-9452-A0DDEA004E2B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.QA.Container", "ProSuite.QA.Container\ProSuite.QA.Container.csproj", "{D51693C1-F9F6-425D-8CD6-8DFBF5A52F6F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProSuite.QA.Container", "ProSuite.QA.Container\ProSuite.QA.Container.csproj", "{D51693C1-F9F6-425D-8CD6-8DFBF5A52F6F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.QA.Container.Test", "ProSuite.QA.Container.Test\ProSuite.QA.Container.Test.csproj", "{F7D731C0-8A36-4B2C-A8C0-AFEB81FA8DD1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProSuite.QA.Container.Test", "ProSuite.QA.Container.Test\ProSuite.QA.Container.Test.csproj", "{F7D731C0-8A36-4B2C-A8C0-AFEB81FA8DD1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.QA.Tests.Test", "ProSuite.QA.Tests.Test\ProSuite.QA.Tests.Test.csproj", "{5F00BBDF-0E58-4547-90F0-E5E8BC2512EE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProSuite.QA.Tests.Test", "ProSuite.QA.Tests.Test\ProSuite.QA.Tests.Test.csproj", "{5F00BBDF-0E58-4547-90F0-E5E8BC2512EE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.DomainModel.AO", "ProSuite.DomainModel.AO\ProSuite.DomainModel.AO.csproj", "{D360621D-D792-403B-A625-06A707A89D22}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProSuite.DomainModel.AO", "ProSuite.DomainModel.AO\ProSuite.DomainModel.AO.csproj", "{D360621D-D792-403B-A625-06A707A89D22}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.Commons.DotLiquid", "ProSuite.Commons.DotLiquid\ProSuite.Commons.DotLiquid.csproj", "{F67C25EA-4840-4B16-BAD0-C8E53C16D7BB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProSuite.Commons.DotLiquid", "ProSuite.Commons.DotLiquid\ProSuite.Commons.DotLiquid.csproj", "{F67C25EA-4840-4B16-BAD0-C8E53C16D7BB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.Commons.DotLiquid.Test", "ProSuite.Commons.DotLiquid.Test\ProSuite.Commons.DotLiquid.Test.csproj", "{391D98C4-0FF9-4ED0-9186-C6000BB472AC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProSuite.Commons.DotLiquid.Test", "ProSuite.Commons.DotLiquid.Test\ProSuite.Commons.DotLiquid.Test.csproj", "{391D98C4-0FF9-4ED0-9186-C6000BB472AC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.Microservices.AO", "ProSuite.Microservices.AO\ProSuite.Microservices.AO.csproj", "{53E0297E-F959-4D5D-B1CB-33D3A1D96623}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProSuite.Microservices.AO", "ProSuite.Microservices.AO\ProSuite.Microservices.AO.csproj", "{53E0297E-F959-4D5D-B1CB-33D3A1D96623}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.DomainServices.AO", "ProSuite.DomainServices.AO\ProSuite.DomainServices.AO.csproj", "{F931824E-C6AC-4E8E-B30B-F903C23600F5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProSuite.DomainServices.AO", "ProSuite.DomainServices.AO\ProSuite.DomainServices.AO.csproj", "{F931824E-C6AC-4E8E-B30B-F903C23600F5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.DomainServices.AO.Test", "ProSuite.DomainServices.AO.Test\ProSuite.DomainServices.AO.Test.csproj", "{1AD58439-D8F3-49B8-95F6-3FCD561398A6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProSuite.DomainServices.AO.Test", "ProSuite.DomainServices.AO.Test\ProSuite.DomainServices.AO.Test.csproj", "{1AD58439-D8F3-49B8-95F6-3FCD561398A6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.QA.TestFactories", "ProSuite.QA.TestFactories\ProSuite.QA.TestFactories.csproj", "{61704E1C-E13D-45E2-8388-BD3D1F8A1AF5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProSuite.QA.TestFactories", "ProSuite.QA.TestFactories\ProSuite.QA.TestFactories.csproj", "{61704E1C-E13D-45E2-8388-BD3D1F8A1AF5}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.Application.Configuration", "ProSuite.Application.Configuration\ProSuite.Application.Configuration.csproj", "{EAB868E4-D8FD-4AB4-9EDA-A9291E7CFEAB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.Microservices.Client", "ProSuite.Microservices.Client\ProSuite.Microservices.Client.csproj", "{413917C0-7EB3-4D86-8448-0A3CA70C2ED4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProSuite.Microservices.Client", "ProSuite.Microservices.Client\ProSuite.Microservices.Client.csproj", "{413917C0-7EB3-4D86-8448-0A3CA70C2ED4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.QA.Tests.External", "ProSuite.QA.Tests.External\ProSuite.QA.Tests.External.csproj", "{FE90B848-F449-47FE-8F3F-FF4C6A3BFF22}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProSuite.QA.Tests.External", "ProSuite.QA.Tests.External\ProSuite.QA.Tests.External.csproj", "{FE90B848-F449-47FE-8F3F-FF4C6A3BFF22}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -116,22 +112,6 @@ Global
 		{5B741064-38D8-4BEE-87C0-3F8E1C0247BF}.Release|Any CPU.Build.0 = Release|Any CPU
 		{5B741064-38D8-4BEE-87C0-3F8E1C0247BF}.Release|x86.ActiveCfg = Release|Any CPU
 		{5B741064-38D8-4BEE-87C0-3F8E1C0247BF}.Release|x86.Build.0 = Release|Any CPU
-		{FDA8452C-41F0-404C-A17D-FBA8CB56B935}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{FDA8452C-41F0-404C-A17D-FBA8CB56B935}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{FDA8452C-41F0-404C-A17D-FBA8CB56B935}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{FDA8452C-41F0-404C-A17D-FBA8CB56B935}.Debug|x86.Build.0 = Debug|Any CPU
-		{FDA8452C-41F0-404C-A17D-FBA8CB56B935}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{FDA8452C-41F0-404C-A17D-FBA8CB56B935}.Release|Any CPU.Build.0 = Release|Any CPU
-		{FDA8452C-41F0-404C-A17D-FBA8CB56B935}.Release|x86.ActiveCfg = Release|Any CPU
-		{FDA8452C-41F0-404C-A17D-FBA8CB56B935}.Release|x86.Build.0 = Release|Any CPU
-		{510D9436-E3AC-465F-9A8B-24F2093C6214}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{510D9436-E3AC-465F-9A8B-24F2093C6214}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{510D9436-E3AC-465F-9A8B-24F2093C6214}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{510D9436-E3AC-465F-9A8B-24F2093C6214}.Debug|x86.Build.0 = Debug|Any CPU
-		{510D9436-E3AC-465F-9A8B-24F2093C6214}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{510D9436-E3AC-465F-9A8B-24F2093C6214}.Release|Any CPU.Build.0 = Release|Any CPU
-		{510D9436-E3AC-465F-9A8B-24F2093C6214}.Release|x86.ActiveCfg = Release|Any CPU
-		{510D9436-E3AC-465F-9A8B-24F2093C6214}.Release|x86.Build.0 = Release|Any CPU
 		{0B48B56F-3A3D-4367-AA76-A356519AF2AB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{0B48B56F-3A3D-4367-AA76-A356519AF2AB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0B48B56F-3A3D-4367-AA76-A356519AF2AB}.Debug|x86.ActiveCfg = Debug|Any CPU

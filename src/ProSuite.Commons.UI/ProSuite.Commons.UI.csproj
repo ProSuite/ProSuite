@@ -29,11 +29,13 @@
     <DocumentationFile>$(OutputDirectory)\$(Configuration)\ProSuite.Commons.UI.xml</DocumentationFile>
   </PropertyGroup>
 
+  <!-- .net 6 Winforms and WPF references: -->
   <PropertyGroup>
     <UseWpf>true</UseWpf>
     <UseWindowsForms>true</UseWindowsForms>
   </PropertyGroup>
 
+  <!-- .NET framework 4.8 legacy reference for WPF, WinForms: -->
   <ItemGroup Condition=" '$(TargetFramework)' == 'net48' ">
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />

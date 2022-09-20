@@ -7,7 +7,6 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.UI.WinForms.Controls;
 using ProSuite.DdxEditor.Framework.TableRows;
-using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.UI.DataModel.ResourceLookup;
@@ -60,8 +59,8 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 				                      : "No";
 
 			DatasetName = datasetParameterValue.GetName();
-			ModelName = TestParameterValueUtils.GetDatasetModelName(datasetParameterValue);
-			DatasetCategory = TestParameterValueUtils.GetDatasetCategoryName(datasetParameterValue);
+			ModelName = InstanceConfigurationUtils.GetDatasetModelName(datasetParameterValue);
+			DatasetCategory = InstanceConfigurationUtils.GetDatasetCategoryName(datasetParameterValue);
 
 			if (dataset != null)
 			{

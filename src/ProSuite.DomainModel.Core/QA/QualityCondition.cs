@@ -197,6 +197,16 @@ namespace ProSuite.DomainModel.Core.QA
 		}
 
 		/// <summary>
+		/// This is a trick to avoid NHibernate creating a duplicate index name.
+		/// </summary>
+		[CanBeNull]
+		public new DataQualityCategory Category
+		{
+			get => base.Category;
+			set => base.Category = value;
+		}
+
+		/// <summary>
 		/// Get the parameter values for a test parameter name.
 		/// </summary>
 		/// <returns>List with parameter values (for collections there might be more than one)
