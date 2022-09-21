@@ -255,19 +255,7 @@ namespace ProSuite.DomainModel.AO.QA
 			       ! candidateType.IsAbstract &&
 			       candidateType.IsPublic;
 		}
-
-		private static RowFilterFactory CreateRowFilterFactory(
-			[NotNull] RowFilterDescriptor rowFilterDescriptor)
-		{
-			ClassDescriptor classDescriptor = rowFilterDescriptor.Class;
-
-			return classDescriptor != null
-				       ? new RowFilterFactory(classDescriptor.AssemblyName,
-				                              classDescriptor.TypeName,
-				                              rowFilterDescriptor.ConstructorId)
-				       : null;
-		}
-
+		
 		private static IssueFilterFactory CreateIssueFilterFactory(
 			[NotNull] IssueFilterDescriptor filterDescriptor)
 		{

@@ -3,7 +3,6 @@ using System.Drawing;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Misc;
-using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.UI.DataModel.ResourceLookup;
@@ -61,7 +60,7 @@ namespace ProSuite.UI.QA.BoundTableRows
 				{
 					_modelName =
 						Source.Match(d => d?.Model?.Name,
-						             TestParameterValueUtils.GetDatasetModelName);
+						             InstanceConfigurationUtils.GetDatasetModelName);
 				}
 
 				return _modelName;

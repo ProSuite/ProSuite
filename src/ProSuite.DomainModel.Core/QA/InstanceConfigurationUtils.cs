@@ -5,6 +5,7 @@ using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.Text;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA.Repositories;
 using ProSuite.QA.Core;
@@ -194,6 +195,88 @@ namespace ProSuite.DomainModel.Core.QA
 			                     datasets.Count);
 
 			return datasets;
+		}
+
+		public static string GetDatasetCategoryName(
+			[NotNull] DatasetTestParameterValue datasetParameterValue)
+		{
+			if (datasetParameterValue.DatasetValue != null)
+			{
+				return datasetParameterValue.DatasetValue.DatasetCategory?.Name;
+			}
+
+			return GetDatasetCategoryName(datasetParameterValue.ValueSource);
+		}
+
+		public static string GetDatasetModelName(
+			[NotNull] DatasetTestParameterValue datasetParameterValue)
+		{
+			if (datasetParameterValue.DatasetValue != null)
+			{
+				return datasetParameterValue.DatasetValue.Model?.Name;
+			}
+
+			if (datasetParameterValue.ValueSource != null)
+			{
+				return GetDatasetModelName(datasetParameterValue.ValueSource);
+			}
+
+			return null;
+		}
+
+		[CanBeNull]
+		public static string GetDatasetCategoryName(
+			[CanBeNull] InstanceConfiguration instanceConfiguration)
+		{
+			if (instanceConfiguration == null)
+			{
+				return null;
+			}
+
+			var distinctCategories = instanceConfiguration.GetDatasetParameterValues(false, true)
+			                                              .Select(d => d.DatasetCategory)
+			                                              .Distinct().ToList();
+
+			if (distinctCategories.Count == 0)
+			{
+				return null;
+			}
+
+			if (distinctCategories.Count == 1)
+			{
+				return distinctCategories[0].Name;
+			}
+
+			return StringUtils.Concatenate(distinctCategories.OrderBy(c => c?.Name),
+			                               c => c?.Name ?? "<no category>",
+			                               ", ");
+		}
+
+		[CanBeNull]
+		public static string GetDatasetModelName(
+			[CanBeNull] InstanceConfiguration instanceConfiguration)
+		{
+			if (instanceConfiguration == null)
+			{
+				return null;
+			}
+
+			var distinctModels = instanceConfiguration.GetDatasetParameterValues(false, true)
+			                                          .Select(d => d.Model)
+			                                          .Distinct().ToList();
+
+			if (distinctModels.Count == 0)
+			{
+				return null;
+			}
+			else if (distinctModels.Count == 1)
+			{
+				return distinctModels[0].Name;
+			}
+			else
+			{
+				return "<multiple>";
+			}
 		}
 
 		private static void ReattachAllTransformersAndFilters(

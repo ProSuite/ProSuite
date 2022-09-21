@@ -108,12 +108,7 @@ namespace ProSuite.UI.QA.ResourceLookup
 			{
 				return GetImage(_keyIssueFilter);
 			}
-
-			if (instanceDescriptor is RowFilterDescriptor)
-			{
-				return GetImage(_keyRowFilter);
-			}
-
+			
 			throw new NotImplementedException();
 		}
 
@@ -140,12 +135,7 @@ namespace ProSuite.UI.QA.ResourceLookup
 			{
 				return GetImage(_keyTransform);
 			}
-
-			if (instanceConfiguration is RowFilterConfiguration)
-			{
-				return GetImage(_keyRowFilter);
-			}
-
+			
 			if (instanceConfiguration is IssueFilterConfiguration)
 			{
 				return GetImage(_keyIssueFilter);

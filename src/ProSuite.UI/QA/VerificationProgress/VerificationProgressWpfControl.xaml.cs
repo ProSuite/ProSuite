@@ -56,6 +56,9 @@ namespace ProSuite.UI.QA.VerificationProgress
 			// This is too early for the host win form (must be wired separately in the setter):
 			WireClosingEvent(vm);
 
+			// In the designer:
+			if (vm == null) return;
+
 			await Assert.NotNull(vm).RunBackgroundVerificationAsync();
 		}
 
