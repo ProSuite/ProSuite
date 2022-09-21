@@ -128,7 +128,7 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 
 		Either<Dataset, TransformerConfiguration> source = selectedItem.Source;
 
-		ModelName = source.Match(d => d?.Model?.Name, TestParameterValueUtils.GetDatasetModelName);
+		ModelName = source.Match(d => d?.Model?.Name, InstanceConfigurationUtils.GetDatasetModelName);
 
 		ImageSource = source.Match(BlazorImageUtils.GetImageSource, BlazorImageUtils.GetImageSource);
 
@@ -199,7 +199,7 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 		object value = source.Match(d => d?.Name, t => t?.Name);
 
 		string modelName =
-			source.Match(d => d?.Model?.Name, TestParameterValueUtils.GetDatasetModelName);
+			source.Match(d => d?.Model?.Name, InstanceConfigurationUtils.GetDatasetModelName);
 
 		string imageSource = source.Match(BlazorImageUtils.GetImageSource, BlazorImageUtils.GetImageSource);
 

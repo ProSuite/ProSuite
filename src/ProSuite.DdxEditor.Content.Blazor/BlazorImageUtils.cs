@@ -11,7 +11,7 @@ internal static class BlazorImageUtils
 {
 	public const string _keyDeleted = "deleted";
 	private const string _keyGeometryNetwork = "network";
-	private const string _keyMultiPath = "multipatch";
+	private const string _keyMultiPatch = "multipatch";
 	private const string _keyPoint = "point";
 	private const string _keyPolygon = "polygon";
 	private const string _keyPolyline = "polyline";
@@ -84,7 +84,6 @@ internal static class BlazorImageUtils
 		{
 			TransformerConfiguration => $"{GetImage(_keyTransform)}.png",
 			IssueFilterConfiguration => $"{GetImage(_keyIssueFilter)}.png",
-			RowFilterConfiguration => $"{GetImage(_keyRowFilter)}.png",
 			_ => throw new NotImplementedException()
 		};
 	}
@@ -123,7 +122,7 @@ internal static class BlazorImageUtils
 				break;
 
 			default:
-				file = "DatasetTypeUnkown.png";
+				file = "DatasetTypeUnknown.png";
 				break;
 		}
 
