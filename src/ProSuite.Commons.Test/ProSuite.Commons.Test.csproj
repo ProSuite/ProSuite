@@ -73,6 +73,7 @@
     <Compile Include="RegistryUtilsTest.cs" />
     <Compile Include="SystemTest.cs" />
     <Compile Include="MathUtilsTest.cs" />
+    <Compile Include="Testing\TestDataLocatorTest.cs" />
     <Compile Include="Text\RegexUtilsTest.cs" />
     <Compile Include="Text\RichTextBuilderTest.cs" />
     <Compile Include="Text\StringUtilsTest.cs" />
