@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
@@ -34,10 +35,10 @@ namespace ProSuite.QA.Container.TestContainer
 		public IBox TestRunBox { get; }
 
 		public TileEnum([NotNull] IList<ContainerTest> tests,
-		                [CanBeNull] IEnvelope executeEnvelope, double tileSize,
-		                [CanBeNull] ISpatialReference spatialReference)
+						[CanBeNull] IEnvelope executeEnvelope, double tileSize,
+						[CanBeNull] ISpatialReference spatialReference)
 			: this(new TestSorter(tests), executeEnvelope,
-			       tileSize, spatialReference, null)
+				   tileSize, spatialReference, null)
 		{
 			var _terrainRowEnumerables = _testSorter.PrepareTerrains(null);
 			if (_terrainRowEnumerables?.Count > 0)
@@ -50,9 +51,9 @@ namespace ProSuite.QA.Container.TestContainer
 		}
 
 		internal TileEnum([NotNull] TestSorter assembledTests,
-		                  [CanBeNull] IEnvelope executeEnvelope, double tileSize,
-		                  [CanBeNull] ISpatialReference spatialReference,
-		                  [CanBeNull] IBox firstTerrainBox)
+						  [CanBeNull] IEnvelope executeEnvelope, double tileSize,
+						  [CanBeNull] ISpatialReference spatialReference,
+						  [CanBeNull] IBox firstTerrainBox)
 		{
 			_testSorter = assembledTests;
 			_executeEnvelope = executeEnvelope;
@@ -73,8 +74,8 @@ namespace ProSuite.QA.Container.TestContainer
 
 			IEnvelope tableExtentUnion = TestUtils.GetFullExtent(GetInvolvedGeoDatasets());
 			return tableExtentUnion == null
-				       ? null
-				       : QaGeometryUtils.CreateBox(tableExtentUnion);
+					   ? null
+					   : QaGeometryUtils.CreateBox(tableExtentUnion);
 		}
 
 		private IEnumerable<IReadOnlyGeoDataset> GetInvolvedGeoDatasets()
@@ -100,66 +101,117 @@ namespace ProSuite.QA.Container.TestContainer
 		}
 
 		// TODO get this after *really* adjusting the tile size to the terrain tiles
-		public int GetTotalTileCount()
+		private double GetXIndex(double x)
 		{
-			const int tileExtentFraction = 1000;
-			double roundingIncrement = TileSize / tileExtentFraction;
-
 			double tileXMin = TestRunBox.Min.X;
-			double tileYMin = TestRunBox.Min.Y;
-			double dSize = TileSize + roundingIncrement;
-			double allMaxX = TestRunBox.Max.X;
-			double allMaxY = TestRunBox.Max.Y;
-
-			double terrMinX = allMaxX + TileSize + roundingIncrement;
-			double terrMinY = allMaxY + TileSize + roundingIncrement;
-
-			if (_firstTerrainBox != null)
+			if (x < tileXMin)
 			{
-				IBox terrBox = _firstTerrainBox;
-				dSize = terrBox.Max.X - terrBox.Min.X;
-
-				if (dSize < TileSize)
-				{
-					terrMinX = terrBox.Min.X;
-					terrMinY = terrBox.Min.Y;
-				}
+				return (x - tileXMin) / TileSize;
 			}
 
-			var tileCountX = 0;
-			double dXMax = tileXMin;
-			while (dXMax < allMaxX)
+			double allMaxX = TestRunBox.Max.X;
+			int tileCountX = 0;
+			while (tileXMin < allMaxX)
 			{
-				dXMax += TileSize;
-				if (terrMinX < dXMax)
+				double nextX = GetTileXMax(tileXMin);
+				if (nextX > x && nextX < TestRunBox.Max.X)
 				{
-					dXMax = Math.Ceiling((dXMax - terrMinX) / dSize) * dSize + terrMinX;
+					// x in TestRunBox
+					return tileCountX + (x - tileXMin) / (nextX - tileXMin);
 				}
 
+				tileXMin = nextX;
 				tileCountX++;
 			}
 
-			var tileCountY = 0;
-			double dYMax = tileYMin;
-			while (dYMax < allMaxY)
+			// x > TestRunBox.Max.X
+			return tileCountX + (x - allMaxX) / TileSize;
+		}
+		private double GetYIndex(double y)
+		{
+			double tileYMin = TestRunBox.Min.Y;
+			if (y < tileYMin)
 			{
-				dYMax += TileSize;
-				if (terrMinY < dYMax)
+				return (y - tileYMin) / TileSize;
+			}
+
+			double allMaxY = TestRunBox.Max.Y;
+			int tileCountY = 0;
+			while (tileYMin < allMaxY)
+			{
+				double nextY = GetTileYMax(tileYMin);
+				if (nextY > y && nextY < TestRunBox.Max.Y)
 				{
-					dYMax = Math.Ceiling((dYMax - terrMinY) / dSize) * dSize + terrMinY;
+					// x in TestRunBox
+					return tileCountY + (y - tileYMin) / (nextY - tileYMin);
 				}
 
+				tileYMin = nextY;
 				tileCountY++;
 			}
+
+			// x > TestRunBox.Max.Y
+			return tileCountY + (y - allMaxY) / TileSize;
+		}
+
+		public int GetTotalTileCount()
+		{
+			int tileCountX = (int)GetXIndex(TestRunBox.Max.X);
+			int tileCountY = (int)GetYIndex(TestRunBox.Max.Y);
 
 			return tileCountX * tileCountY;
 		}
 
-		[NotNull]
-		internal Tile GetTile(double tileXMin, double tileYMin, int totalTileCount)
+		private double GetX(int ix)
+		{
+			if (ix <= 0)
+			{
+				return TestRunBox.Min.X + ix * TileSize;
+			}
+
+			double x = TestRunBox.Min.X;
+			for (int i = 0; i < ix; i++)
+			{
+				double xMax = GetTileXMax(x);
+
+				if (xMax > TestRunBox.Max.X)
+				{
+					x = TestRunBox.Max.X + (ix - i - 1) * TileSize;
+					break;
+				}
+				x = xMax;
+			}
+
+			return x;
+		}
+
+		private double GetY(int iy)
+		{
+			if (iy <= 0)
+			{
+				return TestRunBox.Min.Y + iy * TileSize;
+			}
+
+			double y = TestRunBox.Min.Y;
+			for (int i = 0; i < iy; i++)
+			{
+				double yMax = GetTileYMax(y);
+
+				if (yMax > TestRunBox.Max.Y)
+				{
+					y = TestRunBox.Max.Y + (iy - i - 1) * TileSize;
+					break;
+				}
+				y = yMax;
+			}
+
+			return y;
+		}
+
+
+		private double GetTileXMax(double tileXMin)
 		{
 			double tileXMax = tileXMin + TileSize;
-			double tileYMax = tileYMin + TileSize;
 
 			if (_firstTerrainBox != null)
 			{
@@ -176,7 +228,25 @@ namespace ProSuite.QA.Container.TestContainer
 						                        terrainTileSize)
 						           * terrainTileSize + terrainFirstTileExtent.Min.X;
 					}
+				}
+			}
 
+			return tileXMax;
+		}
+
+		private double GetTileYMax(double tileYMin)
+		{
+			double tileYMax = tileYMin + TileSize;
+
+			if (_firstTerrainBox != null)
+			{
+				IBox terrainFirstTileExtent = _firstTerrainBox;
+
+				double terrainTileSize = terrainFirstTileExtent.Max.X -
+				                         terrainFirstTileExtent.Min.X;
+
+				if (terrainTileSize < TileSize)
+				{
 					if (terrainFirstTileExtent.Min.Y < tileYMax)
 					{
 						tileYMax = Math.Ceiling((tileYMax - terrainFirstTileExtent.Min.Y) /
@@ -185,6 +255,15 @@ namespace ProSuite.QA.Container.TestContainer
 					}
 				}
 			}
+			return tileYMax;
+		}
+
+
+		[NotNull]
+		internal Tile GetTile(double tileXMin, double tileYMin, int totalTileCount)
+		{
+			double tileXMax = GetTileXMax(tileXMin);
+			double tileYMax = GetTileYMax(tileYMin);
 
 			Tile tile = new Tile(tileXMin, tileYMin,
 			                     Math.Min(tileXMax, TestRunBox.Max.X),
@@ -201,7 +280,7 @@ namespace ProSuite.QA.Container.TestContainer
 			IEnvelope result = new EnvelopeClass();
 
 			result.PutCoords(TestRunBox.Min.X, TestRunBox.Min.Y,
-			                 TestRunBox.Max.X, TestRunBox.Max.Y);
+							 TestRunBox.Max.X, TestRunBox.Max.Y);
 
 			return result;
 		}
@@ -213,7 +292,7 @@ namespace ProSuite.QA.Container.TestContainer
 
 			// no current tile box yet - create zero-sized box at minx, miny of test run box
 			result.PutCoords(TestRunBox.Min.X, TestRunBox.Min.Y,
-			                 TestRunBox.Min.X, TestRunBox.Min.Y);
+							 TestRunBox.Min.X, TestRunBox.Min.Y);
 			result.SpatialReference = SpatialReference;
 
 			return result;
@@ -232,6 +311,39 @@ namespace ProSuite.QA.Container.TestContainer
 			}
 		}
 
+		internal IEnumerable<Tile> EnumTiles(IGeometry geometry)
+		{
+			IEnvelope geomEnv = geometry.Envelope;
+			geomEnv.QueryWKSCoords(out WKSEnvelope wksEnv);
+			int ixMin = (int)Math.Floor(GetXIndex(wksEnv.XMin));
+			int iyMin = (int)Math.Floor(GetYIndex(wksEnv.YMin));
+
+			int ixMax = (int)Math.Ceiling(GetXIndex(wksEnv.XMax));
+			int iyMax = (int)Math.Ceiling(GetYIndex(wksEnv.YMax));
+
+			double tileYMax = GetY(iyMin);
+			double tileXMax0 = GetX(ixMin);
+
+
+			for (int iy = iyMin; iy < iyMax; iy++)
+			{
+				double tileYMin = tileYMax;
+				tileYMax = GetY(iy + 1);
+
+				double tileXMax = tileXMax0;
+				for (int ix = ixMin; ix < ixMax; ix++)
+				{
+					double tileXMin = tileXMax;
+					tileXMax = GetX(ix + 1);
+
+					Tile tile = new Tile(tileXMin, tileYMin,
+										 tileXMax, tileYMax,
+										 SpatialReference, -1);
+
+					yield return tile;
+				}
+			}
+		}
 		public IEnumerable<Tile> EnumTiles()
 		{
 			double tileXMin = TestRunBox.Min.X;
@@ -244,7 +356,7 @@ namespace ProSuite.QA.Container.TestContainer
 			for (int i = 0; i < totalTileCount; i++)
 			{
 				int[] tileKey = { ix, iy };
-				if (! _tileCache.TryGetValue(tileKey, out Tile tile))
+				if (!_tileCache.TryGetValue(tileKey, out Tile tile))
 				{
 					tile = GetTile(tileXMin, tileYMin, totalTileCount);
 				}

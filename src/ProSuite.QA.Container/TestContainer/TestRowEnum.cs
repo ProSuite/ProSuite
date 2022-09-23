@@ -3,27 +3,24 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Text;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO;
 using ProSuite.Commons.AO.Geodatabase;
-using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
 using ProSuite.Commons.Geom.SpatialIndex;
 using ProSuite.Commons.Logging;
-using ProSuite.Commons.Text;
 using ProSuite.QA.Container.Geometry;
 
 namespace ProSuite.QA.Container.TestContainer
 {
 	// TODO revise MoveNextCachedRow (IsFirstOccurrence assignment)
-	internal class TestRowEnum : IDataContainer, IDisposable
+	internal class TestRowEnum : IDataContainer, IDisposable, ITileEnumContext
 	{
 		#region Fields
 
@@ -37,7 +34,7 @@ namespace ProSuite.QA.Container.TestContainer
 		private readonly IEnvelope _executeEnvelope;
 		private readonly IPolygon _executePolygon;
 		private readonly IRelationalOperator _executePolygonRelOp;
-		private TileCache _tileCache;
+		private readonly TileCache _tileCache;
 		private readonly OverlappingFeatures _overlappingFeatures;
 
 		private readonly IDictionary<IReadOnlyTable, UniqueIdProvider> _uniqueIdProviders;
@@ -141,7 +138,6 @@ namespace ProSuite.QA.Container.TestContainer
 			_tileCache = GetTileCache();
 			_overlappingFeatures = InitOverlappingFeatures();
 
-
 			_uniqueIdProviders = new ConcurrentDictionary<IReadOnlyTable, UniqueIdProvider>();
 			foreach (IReadOnlyTable cachedTable in _cachedSet.Keys)
 			{
@@ -186,7 +182,7 @@ namespace ProSuite.QA.Container.TestContainer
 
 					foreach (IReadOnlyTable involvedTable in containerTest.InvolvedTables)
 					{
-						if (!_cachedSet.ContainsKey(involvedTable))
+						if (! _cachedSet.ContainsKey(involvedTable))
 						{
 							continue;
 						}
@@ -313,16 +309,32 @@ namespace ProSuite.QA.Container.TestContainer
 		                                         [NotNull] QueryFilterHelper filterHelper,
 		                                         [CanBeNull] IGeometry cacheGeometry)
 		{
+			// if the table was not passed to the container, return null
+			// to trigger a search in the database
 			if (! _cachedSet.ContainsKey(table))
 			{
 				return null;
 			}
 
-			// if the table was not passed to the container, return null
-			// to trigger a search in the database
+			if (filterHelper.FullGeometrySearch)
+			{
+				if (queryFilter is ISpatialFilter sf)
+				{
+					IEnvelope loaded = _tileCache.GetLoadedExtent(table);
+					if (sf.Geometry != null &&
+					    ! ((IRelationalOperator) loaded).Contains(sf.Geometry))
+					{
+						_tilesAdmin = _tilesAdmin ?? new TilesAdmin(this, _tileCache);
+						return _tilesAdmin.Search(table, sf, filterHelper);
+					}
+				}
+			}
+
 			return _tileCache.Search(table, queryFilter, filterHelper,
-			                          cacheGeometry);
+			                         cacheGeometry);
 		}
+
+		private TilesAdmin _tilesAdmin;
 
 		#endregion
 
@@ -383,7 +395,8 @@ namespace ProSuite.QA.Container.TestContainer
 		/// <summary>
 		/// Iterate cached rows that are at least partly within the current tile
 		/// </summary>
-		private IEnumerable<TestRow> EnumCachedRows(Tile tile, TileCache tileCache, int tileRowIndex, int tileRowCount)
+		private IEnumerable<TestRow> EnumCachedRows(Tile tile, TileCache tileCache,
+		                                            int tileRowIndex, int tileRowCount)
 		{
 			foreach (var pair in _cachedSet)
 			{
@@ -529,7 +542,7 @@ namespace ProSuite.QA.Container.TestContainer
 				return false;
 			}
 
-			if (!_overlappingFeatures.WasAlreadyTested(feature, test))
+			if (! _overlappingFeatures.WasAlreadyTested(feature, test))
 			{
 				return false;
 			}
@@ -997,6 +1010,8 @@ namespace ProSuite.QA.Container.TestContainer
 
 		private void LoadCachedRows(Tile tile, TileCache tileCache)
 		{
+			TileCache preloadedCache = _tilesAdmin?.PrepareNextTile(tile);
+
 			int cachedTableIndex = 0;
 			foreach (IReadOnlyTable cachedTable in _cachedSet.Keys)
 			{
@@ -1009,7 +1024,17 @@ namespace ProSuite.QA.Container.TestContainer
 						continue;
 					}
 
-					LoadCachedTableRows(cachedTable, tile, tileCache);
+					ICollection<CachedRow> cachedRows;
+					if (preloadedCache?.IsLoaded(cachedTable, tile) == true)
+					{
+						cachedRows = preloadedCache.TransferCachedRows(tileCache, cachedTable);
+					}
+					else
+					{
+						cachedRows = LoadCachedTableRows(cachedTable, tile, tileCache);
+					}
+
+					PreprocessCache(cachedTable, tile, tileCache, cachedRows);
 				}
 
 				cachedTableIndex++;
@@ -1104,60 +1129,40 @@ namespace ProSuite.QA.Container.TestContainer
 
 		#region loading the cache
 
-		private void LoadCachedTableRows([NotNull] IReadOnlyTable table,
-		                                 [NotNull] Tile tile,
-		                                 [NotNull] TileCache tileCache)
+		private ICollection<CachedRow> LoadCachedTableRows(
+			[NotNull] IReadOnlyTable table,
+			[NotNull] Tile tile,
+			[NotNull] TileCache tileCache)
 		{
 			IDictionary<BaseRow, CachedRow> cachedRows =
 				_overlappingFeatures.GetOverlappingCachedRows(table, tile.Box);
 			int previousCachedRowCount = cachedRows.Count;
 
-			LoadCachedTableRows(cachedRows, table, tile, tileCache);
-
-			UpdateXYOccurance(cachedRows.Values, tile);
+			tileCache.LoadCachedTableRows(cachedRows, table, tile, this);
+			// LoadCachedTableRows(cachedRows, table, tile, tileCache);
 
 			int newlyLoadedRows = cachedRows.Count - previousCachedRowCount;
+			_msg.VerboseDebug(() => $"{table.Name}: Added additional {newlyLoadedRows} rows " +
+			                        $"to the previous {previousCachedRowCount} rows in {tile}");
 
 			if (_loadedRowCountPerTable != null)
 			{
 				_loadedRowCountPerTable[table] += newlyLoadedRows;
 			}
 
-			_msg.VerboseDebug(() => $"{table.Name}: Added additional {newlyLoadedRows} rows " +
-			                        $"to the previous {previousCachedRowCount} rows in {tile}");
+			return cachedRows.Values;
+		}
+
+		private void PreprocessCache([NotNull] IReadOnlyTable table,
+		                             [NotNull] Tile tile,
+		                             [NotNull] TileCache tileCache,
+		                             [NotNull] ICollection<CachedRow> cachedRows)
+		{
+			UpdateXYOccurance(cachedRows, tile);
 
 			tileCache.IgnoredRowsByTableAndTest[table] =
-				GetIgnoredRows(table, cachedRows.Values, tile.SpatialFilter.Geometry);
-
+				GetIgnoredRows(table, cachedRows, tile.SpatialFilter.Geometry);
 		}
-
-		private void LoadCachedTableRows(
-			[NotNull] IDictionary<BaseRow, CachedRow> cachedRows,
-			[NotNull] IReadOnlyTable table,
-			[NotNull] Tile tile, [NotNull] TileCache tileCache)
-		{
-			IBox allBox = null;
-
-			// avoid rereading overlapping large features (with a max extent > tile size)
-			double maxExtent = _tileEnum.TileSize;
-			// TODO: use more detailed info ignore / improve notInExpression
-			bool isQueryTable = table.FullName is IQueryName2;
-			string notInExpression =
-				isQueryTable
-					? string.Empty
-					: GetFilterOldLargeRows(cachedRows.Values, maxExtent, ref allBox);
-
-			ISpatialFilter loadSpatialFilter =
-				GetLoadSpatialFilter(table, tile.SpatialFilter, notInExpression);
-			IEnvelope loadExtent = GeometryFactory.Clone((IEnvelope)loadSpatialFilter.Geometry);
-
-			AddRowsToCache(cachedRows, table, loadSpatialFilter, _uniqueIdProviders[table],
-			               ref allBox);
-			Marshal.ReleaseComObject(loadSpatialFilter);
-
-			tileCache.CreateBoxTree(table, cachedRows.Values, allBox, loadExtent);
-		}
-
 
 		private void UpdateXYOccurance(IEnumerable<CachedRow> cachedRows, Tile tile)
 		{
@@ -1198,174 +1203,6 @@ namespace ProSuite.QA.Container.TestContainer
 						// the feature must have been encountered by a tile to the bottom
 						cachedRow.IsFirstOccurrenceY = false;
 					}
-				}
-			}
-		}
-
-		/// <summary>
-		/// returns a spatial filter
-		/// with geometry = tileExtent expanded by searchTolerance('table')
-		/// and whereclause
-		/// </summary>
-		[NotNull]
-		private ISpatialFilter GetLoadSpatialFilter(
-			[NotNull] IReadOnlyTable table,
-			[NotNull] ISpatialFilter tileSpatialFilter,
-			[CanBeNull] string notInExpression)
-		{
-			Assert.ArgumentNotNull(table, nameof(table));
-			Assert.ArgumentNotNull(tileSpatialFilter, nameof(tileSpatialFilter));
-
-			var result = (ISpatialFilter) ((IClone) tileSpatialFilter).Clone();
-
-			result.WhereClause = _container.FilterExpressionsUseDbSyntax
-				                     ? _commonFilterExpressions[table]
-				                     : string.Empty;
-
-			if (StringUtils.IsNotEmpty(notInExpression))
-			{
-				result.WhereClause = string.IsNullOrEmpty(result.WhereClause)
-					                     ? notInExpression
-					                     : result.WhereClause + " AND " + notInExpression;
-			}
-
-			double searchTolerance = _overlappingFeatures.GetSearchTolerance(table);
-
-			if (searchTolerance > 0)
-			{
-				var loadEnvelope = (IEnvelope) ((IClone) tileSpatialFilter.Geometry).Clone();
-
-				loadEnvelope.Expand(searchTolerance, searchTolerance, false);
-
-				const bool filterOwnsGeometry = true;
-				result.set_GeometryEx(loadEnvelope, filterOwnsGeometry);
-			}
-
-			return result;
-		}
-
-		[NotNull]
-		private static string GetFilterOldLargeRows(
-			[NotNull] IEnumerable<CachedRow> cachedRows,
-			double maxExtent,
-			[CanBeNull] ref IBox allBox)
-		{
-			StringBuilder sb = null;
-
-			foreach (CachedRow cachedRow in cachedRows)
-			{
-				if (cachedRow.Extent.GetMaxExtent() > maxExtent && cachedRow.HasFeatureCached())
-				{
-					IReadOnlyFeature feature = cachedRow.Feature;
-
-					if (sb == null)
-					{
-						sb = new StringBuilder(
-							string.Format("{0} NOT IN ({1}",
-							              feature.Table.OIDFieldName, feature.OID));
-					}
-					else
-					{
-						sb.AppendFormat(",{0}", feature.OID);
-					}
-				}
-
-				if (allBox == null)
-				{
-					allBox = cachedRow.Extent.Clone();
-				}
-				else
-				{
-					allBox.Include(cachedRow.Extent);
-				}
-			}
-
-			if (sb != null)
-			{
-				sb.Append(")");
-			}
-
-			return string.Format("{0}", sb);
-		}
-
-		private void AddRowsToCache([NotNull] IDictionary<BaseRow, CachedRow> cachedRows,
-		                            [NotNull] IReadOnlyTable table,
-		                            [NotNull] ISpatialFilter filter,
-		                            [CanBeNull] UniqueIdProvider uniqueIdProvider,
-		                            [CanBeNull] ref IBox allBox)
-		{
-			// gather all cached rows that currently have no cached feature
-			// (the feature was released due to the max cached point count limit)
-			var rowsWithoutCachedFeature = new List<CachedRow>();
-			foreach (CachedRow cachedRow in cachedRows.Values)
-			{
-				if (! cachedRow.HasFeatureCached())
-				{
-					rowsWithoutCachedFeature.Add(cachedRow);
-				}
-			}
-
-			// get data from database
-			try
-			{
-				(table as ITransformedTable)?.SetKnownTransformedRows(
-					cachedRows.Values.Select(x => x.Feature as VirtualRow));
-				foreach (IReadOnlyRow row in GetRows(table, filter))
-				{
-					var feature = (IReadOnlyFeature) row;
-					IGeometry shape = feature.Shape;
-
-					if (shape == null || shape.IsEmpty)
-					{
-						_msg.DebugFormat(
-							"Skipping feature with null/empty geometry (not added to tile cache): {0}",
-							GdbObjectUtils.ToString(feature));
-
-						continue;
-					}
-
-					var keyRow = new CachedRow(feature, uniqueIdProvider);
-					CachedRow cachedRow;
-					if (cachedRows.TryGetValue(keyRow, out cachedRow))
-					{
-						cachedRow.UpdateFeature(feature, uniqueIdProvider);
-					}
-					else
-					{
-						cachedRow = new CachedRow(feature, uniqueIdProvider);
-						// cachedRow must always be added to cachedRows, even if disjoint !
-						// otherwise it may be processed several times
-						cachedRows.Add(keyRow, cachedRow);
-					}
-
-					IBox cachedRowExtent = cachedRow.Extent;
-
-					bool disjoint = IsDisjointFromExecuteArea(feature.Shape);
-
-					cachedRow.DisjointFromExecuteArea = disjoint;
-
-					if (allBox == null)
-					{
-						allBox = cachedRowExtent.Clone();
-					}
-					else
-					{
-						allBox.Include(cachedRowExtent);
-					}
-				}
-			}
-			finally
-			{
-				(table as ITransformedTable)?.SetKnownTransformedRows(null);
-			}
-
-			foreach (CachedRow cachedRow in rowsWithoutCachedFeature)
-			{
-				if (! cachedRow.HasFeatureCached())
-				{
-					// the missing feature was not restored during the load
-					// this would probably be some edge case related to snapped/non-snapped coordinates
-					cachedRows.Remove(cachedRow);
 				}
 			}
 		}
@@ -1445,7 +1282,25 @@ namespace ProSuite.QA.Container.TestContainer
 			return result;
 		}
 
-		private bool IsDisjointFromExecuteArea([NotNull] IGeometry geometry)
+		public TileEnum TileEnum => _tileEnum;
+		public double TileSize => _tileEnum.TileSize;
+
+		public OverlappingFeatures OverlappingFeatures => _overlappingFeatures;
+
+		string ITileEnumContext.GetCommonFilterExpression([NotNull] IReadOnlyTable table)
+		{
+			_commonFilterExpressions.TryGetValue(table, out string result);
+			return result;
+		}
+
+		UniqueIdProvider ITileEnumContext.GetUniqueIdProvider([NotNull] IReadOnlyTable table)
+		{
+			_uniqueIdProviders.TryGetValue(table, out UniqueIdProvider result);
+			return result;
+		}
+
+		[Obsolete("make private")]
+		public bool IsDisjointFromExecuteArea([NotNull] IGeometry geometry)
 		{
 			return _executePolygon != null && _executePolygonRelOp.Disjoint(geometry);
 		}

@@ -25,6 +25,8 @@ namespace ProSuite.QA.Container
 		public bool ForNetwork { get; set; }
 		public bool? RepeatCachedRows { get; set; }
 
+		public bool FullGeometrySearch { get; set; }
+
 		public string SubFields { get; }
 
 		public int MinimumOID { get; set; }
