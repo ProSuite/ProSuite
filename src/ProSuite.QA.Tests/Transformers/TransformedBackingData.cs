@@ -41,11 +41,15 @@ namespace ProSuite.QA.Tests.Transformers
 		{
 			if (tableIndex >= 0 && tableIndex < InvolvedTables.Count)
 			{
+				QueryFilterHelper current = _queryHelpers[tableIndex];
 				_queryHelpers[tableIndex] =
 					new QueryFilterHelper(
 						InvolvedTables[tableIndex], condition,
-						_queryHelpers[tableIndex]?.TableView?.CaseSensitive ?? true)
-					{RepeatCachedRows = true};
+						current?.TableView?.CaseSensitive ?? true)
+					{
+						RepeatCachedRows = true,
+						FullGeometrySearch = current?.FullGeometrySearch ?? false
+					};
 			}
 			else
 			{
@@ -58,9 +62,15 @@ namespace ProSuite.QA.Tests.Transformers
 		{
 			if (tableIndex >= 0 && tableIndex < InvolvedTables.Count)
 			{
-				_queryHelpers[tableIndex] = new QueryFilterHelper(
-					InvolvedTables[tableIndex], _queryHelpers[tableIndex]?.TableView?.Constraint,
-					useCaseSensitiveQaSql);
+				QueryFilterHelper current = _queryHelpers[tableIndex];
+				_queryHelpers[tableIndex] =
+					new QueryFilterHelper(
+						InvolvedTables[tableIndex], current?.TableView?.Constraint,
+						useCaseSensitiveQaSql)
+					{
+						RepeatCachedRows = true,
+						FullGeometrySearch = current?.FullGeometrySearch ?? false
+					};
 			}
 			else
 			{

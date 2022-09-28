@@ -7,6 +7,30 @@ namespace ProSuite.Commons.Geom
 {
 	public class Box : IBox
 	{
+		public class BoxComparer : IEqualityComparer<IBox>
+		{
+			public bool Equals(IBox x, IBox y)
+			{
+				if (x == y) return true;
+				if (x == null) return false;
+				if (y == null) return false;
+
+				double d = Math.Max(x.Max.X - x.Min.X, x.Max.Y - x.Min.Y);
+				double dMax = 0.1 * d;
+				if (Math.Abs(x.Min.X - y.Min.X) > dMax) return false;
+				if (Math.Abs(x.Min.Y - y.Min.Y) > dMax) return false;
+				if (Math.Abs(x.Max.X - y.Max.X) > dMax) return false;
+				if (Math.Abs(x.Max.Y - y.Max.Y) > dMax) return false;
+
+				return true;
+			}
+
+			public int GetHashCode(IBox obj)
+			{
+				return obj.Min.X.GetHashCode() ^ (29 * obj.Min.Y.GetHashCode());
+			}
+		}
+
 		/// <summary>
 		/// Initializes a new instance of the <see cref="Box"/> class.
 		/// </summary>

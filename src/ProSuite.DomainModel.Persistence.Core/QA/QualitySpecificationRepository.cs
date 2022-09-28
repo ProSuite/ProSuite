@@ -17,9 +17,8 @@ using ProSuite.DomainModel.Core.QA.Repositories;
 namespace ProSuite.DomainModel.Persistence.Core.QA
 {
 	[UsedImplicitly]
-	public class QualitySpecificationRepository :
-		NHibernateRepository<QualitySpecification>,
-		IQualitySpecificationRepository
+	public class QualitySpecificationRepository : NHibernateRepository<QualitySpecification>,
+	                                              IQualitySpecificationRepository
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -55,17 +54,15 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 				QualitySpecification qSpecAlias = null;
 				QualitySpecificationElement element = null;
 				QualityCondition qConAlias = null;
-				TestParameterValue paramValueAlias = null;
+				DatasetTestParameterValue paramValueAlias = null;
 
 				Stopwatch watch = _msg.DebugStartTiming();
 
-				const bool excludeReferenceData = true;
-				Expression<Func<bool>> noRefData = () =>
-					! ((DatasetTestParameterValue) paramValueAlias).UsedAsReferenceData;
+				Expression<Func<bool>> noRefData = () => ! paramValueAlias.UsedAsReferenceData;
 
 				var transformerIds =
 					DatasetParameterFetchingUtils.GetAllTransformerIdsForDatasets(
-						session, datasetIds, excludeReferenceData).ToArray();
+						session, datasetIds, excludeReferenceData: true).ToArray();
 
 				_msg.DebugStopTiming(watch, "Extracted {0} transformers depending on {1} datasets",
 				                     transformerIds.Length, datasetIds.Count);
@@ -74,20 +71,23 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 
 				watch = _msg.DebugStartTiming();
 
+				ICriterion criterion =
+					transformerIds.Length > 0
+						? Restrictions.Or(
+							Restrictions.On<DatasetTestParameterValue>(
+								p => paramValueAlias.DatasetValue.Id).IsIn(datasetIdArray),
+							Restrictions.On<DatasetTestParameterValue>(
+								p => paramValueAlias.ValueSource.Id).IsIn(transformerIds))
+						: Restrictions.On<DatasetTestParameterValue>(
+							p => paramValueAlias.DatasetValue.Id).IsIn(datasetIdArray);
+
 				var qSpecQuery =
 					session.QueryOver(() => qSpecAlias)
 					       .JoinQueryOver(() => qSpecAlias.Elements, () => element)
 					       .JoinQueryOver(() => element.QualityCondition, () => qConAlias)
 					       .JoinQueryOver(() => qConAlias.ParameterValues, () => paramValueAlias)
 					       .Where(noRefData)
-					       .And(Restrictions.Or(
-						            Restrictions.On<DatasetTestParameterValue>(
-							            p => ((DatasetTestParameterValue) paramValueAlias)
-							                 .DatasetValue.Id).IsIn(datasetIdArray),
-						            Restrictions
-							            .On<DatasetTestParameterValue>(
-								            p => ((DatasetTestParameterValue) paramValueAlias)
-								                 .ValueSource.Id).IsIn(transformerIds)))
+					       .And(criterion)
 					       .TransformUsing(Transformers.DistinctRootEntity);
 
 				if (excludeHidden)

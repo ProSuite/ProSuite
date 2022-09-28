@@ -188,6 +188,8 @@ namespace ProSuite.QA.Tests.Transformers
 				_dissolve = dissolve;
 
 				Resulting.SpatialReference = _dissolve.SpatialReference;
+
+				QueryHelpers[0].FullGeometrySearch = true;
 			}
 
 			public override IEnvelope Extent => _dissolve.Extent;
@@ -219,8 +221,9 @@ namespace ProSuite.QA.Tests.Transformers
 				if (DataContainer != null)
 				{
 					var ext = DataContainer.GetLoadedExtent(_dissolve);
-					if (filter is ISpatialFilter sf &&
-					    ((IRelationalOperator) ext).Contains(sf.Geometry))
+					if (QueryHelpers[0].FullGeometrySearch ||
+					    (filter is ISpatialFilter sf &&
+					     ((IRelationalOperator) ext).Contains(sf.Geometry)))
 					{
 						return DataContainer.Search(_dissolve, filter, QueryHelpers[0]);
 					}
@@ -393,10 +396,8 @@ namespace ProSuite.QA.Tests.Transformers
 				}
 				else
 				{
-					List<IGeometry> geometries = rows
-					                             .Select(
-						                             x => ((IReadOnlyFeature) x).Shape)
-					                             .ToList();
+					List<IGeometry> geometries =
+						rows.Select(x => ((IReadOnlyFeature) x).Shape).ToList();
 
 					IGeometry union = GeometryFactory.CreateUnion(geometries);
 					GeometryUtils.Simplify(union, true, false);
