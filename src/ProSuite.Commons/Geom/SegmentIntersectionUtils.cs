@@ -55,7 +55,7 @@ namespace ProSuite.Commons.Geom
 		}
 
 		/// <summary>
-		/// Gets the segment intersections between the specified path and multiline-string.
+		/// Gets the segment intersections between the specified segment lists.
 		/// </summary>
 		/// <param name="segmentList1"></param>
 		/// <param name="segmentList2"></param>
@@ -92,6 +92,84 @@ namespace ProSuite.Commons.Geom
 					}
 
 					yield return result;
+				}
+			}
+		}
+
+		/// <summary>
+		/// Gets the segment intersections between the specified segment list and the boundary of
+		/// the specified envelope.
+		/// </summary>
+		/// <param name="sourceSegments"></param>
+		/// <param name="envelopeBoundary"></param>
+		/// <param name="tolerance"></param>
+		/// <returns></returns>
+		public static IEnumerable<SegmentIntersection> GetSegmentIntersectionsXY(
+			[NotNull] ISegmentList sourceSegments,
+			[NotNull] IBoundedXY envelopeBoundary,
+			double tolerance)
+		{
+			if (GeomRelationUtils.AreBoundsDisjoint(sourceSegments, envelopeBoundary, tolerance))
+			{
+				yield break;
+			}
+
+			Linestring envelopeRing = GeomFactory.CreateRing(envelopeBoundary);
+
+			if ((sourceSegments is MultiLinestring mls && mls.SpatialIndex != null) ||
+			    (sourceSegments is Linestring ls && ls.SpatialIndex != null))
+			{
+				// Use the spatial index, i.e. the segmentList1 must be the target!
+				for (var envelopeLineIdx = 0;
+				     envelopeLineIdx < envelopeRing.SegmentCount;
+				     envelopeLineIdx++)
+				{
+					Line3D envelopeLine = envelopeRing.GetSegment(envelopeLineIdx);
+
+					if (GeomRelationUtils.AreBoundsDisjoint(envelopeLine, sourceSegments,
+					                                        tolerance))
+					{
+						continue;
+					}
+
+					IEnumerable<KeyValuePair<int, Line3D>> segmentsByIndex =
+						sourceSegments.FindSegments(envelopeLine, tolerance);
+
+					foreach (KeyValuePair<int, Line3D> sourceSegment in
+					         segmentsByIndex.OrderBy(kvp => kvp.Key))
+					{
+						int sourceIdx = sourceSegment.Key;
+						Line3D sourceLine = sourceSegment.Value;
+
+						SegmentIntersection intersection =
+							SegmentIntersection.CalculateIntersectionXY(
+								sourceIdx, envelopeLineIdx, sourceLine, envelopeLine, tolerance);
+
+						if (intersection.HasIntersection)
+						{
+							yield return intersection;
+						}
+					}
+				}
+			}
+			else
+			{
+				// No spatial index! We might as well loop through the segments just once:
+
+				for (var lineIdx = 0; lineIdx < sourceSegments.SegmentCount; lineIdx++)
+				{
+					Line3D line = sourceSegments.GetSegment(lineIdx);
+
+					if (GeomRelationUtils.AreBoundsDisjoint(line, envelopeBoundary, tolerance))
+					{
+						continue;
+					}
+
+					foreach (SegmentIntersection result in GetSegmentIntersectionsXY(
+						         lineIdx, line, envelopeRing, tolerance, null))
+					{
+						yield return result;
+					}
 				}
 			}
 		}

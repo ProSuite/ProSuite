@@ -118,6 +118,11 @@ namespace ProSuite.Commons.Geom
 
 				return _intersectionPoints;
 			}
+			set
+			{
+				_intersectionPoints = value;
+				_intersectionPointNavigator = null;
+			}
 		}
 
 		public IList<IntersectionPoint3D> TargetTargetIntersectionPoints

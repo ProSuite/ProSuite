@@ -475,6 +475,58 @@ namespace ProSuite.Commons.Geom
 			return result;
 		}
 
+		public static MultiLinestring GetClippedAreasXY(
+			[NotNull] MultiLinestring sourceRings,
+			[NotNull] IBoundedXY clipEnvelope,
+			double tolerance,
+			bool interpolateSourceZs = true)
+		{
+			Assert.ArgumentCondition(sourceRings.IsClosed, "Source must be closed.");
+
+			// In order to leverage the spatial index on the source (if pre-calculated), get the intersections first:
+			IList<IntersectionPoint3D> intersectionPoints =
+				GetIntersectionPoints(sourceRings, clipEnvelope, tolerance);
+
+			Linestring envelopeSegments = GeomFactory.CreateRing(clipEnvelope);
+
+			var subcurveNavigator =
+				new SubcurveNavigator(sourceRings, envelopeSegments, tolerance)
+				{
+					IntersectionPoints = intersectionPoints
+				};
+
+			var ringOperator = new RingOperator(subcurveNavigator);
+
+			if (_msg.IsVerboseDebugEnabled)
+			{
+				LogGeometries(nameof(GetIntersectionAreasXY), sourceRings, envelopeSegments);
+			}
+
+			try
+			{
+				MultiLinestring result = ringOperator.IntersectXY();
+
+				if (interpolateSourceZs)
+				{
+					result.InterpolateUndefinedZs();
+				}
+
+				return result;
+			}
+			catch (Exception e)
+			{
+				IList<string> loggedGeometries =
+					LogGeometries(nameof(GetIntersectionAreasXY), sourceRings, envelopeSegments);
+
+				_msg.Debug($"Error clipping polygon with tolerance {tolerance}.", e);
+
+				throw new GeomException($"Error clipping polygon with tolerance {tolerance}.", e)
+				      {
+					      ErrorGeometries = loggedGeometries
+				      };
+			}
+		}
+
 		private static MultiLinestring ProcessWithZChangesAlongTarget(
 			[NotNull] MultiLinestring sourceRings,
 			[NotNull] MultiLinestring targetRings,
@@ -2504,6 +2556,32 @@ namespace ProSuite.Commons.Geom
 
 			IList<IntersectionPoint3D> intersectionPoints = GetIntersectionPoints(
 				sourceSegments, targetSegments, tolerance, intersections,
+				includeLinearIntersectionIntermediateRingStartEndPoints,
+				includeLinearIntersectionIntermediatePoints);
+
+			return intersectionPoints;
+		}
+
+		public static IList<IntersectionPoint3D> GetIntersectionPoints(
+			[NotNull] ISegmentList sourceSegments,
+			[NotNull] IBoundedXY envelopeBoundary,
+			double tolerance,
+			bool includeLinearIntersectionIntermediateRingStartEndPoints = true,
+			bool includeLinearIntersectionIntermediatePoints = false)
+		{
+			List<SegmentIntersection> intersections =
+				SegmentIntersectionUtils.GetSegmentIntersectionsXY(
+					sourceSegments, envelopeBoundary, tolerance).ToList();
+
+			if (intersections.Count == 0)
+			{
+				return new List<IntersectionPoint3D>(0);
+			}
+
+			Linestring envelopeRing = GeomFactory.CreateRing(envelopeBoundary);
+
+			IList<IntersectionPoint3D> intersectionPoints = GetIntersectionPoints(
+				sourceSegments, envelopeRing, tolerance, intersections,
 				includeLinearIntersectionIntermediateRingStartEndPoints,
 				includeLinearIntersectionIntermediatePoints);
 
