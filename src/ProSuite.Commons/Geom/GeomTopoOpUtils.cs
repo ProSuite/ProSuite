@@ -515,8 +515,17 @@ namespace ProSuite.Commons.Geom
 			}
 			catch (Exception e)
 			{
-				IList<string> loggedGeometries =
-					LogGeometries(nameof(GetIntersectionAreasXY), sourceRings, envelopeSegments);
+				IList<string> loggedGeometries = null;
+				try
+				{
+					loggedGeometries =
+						LogGeometries(nameof(GetIntersectionAreasXY), sourceRings,
+						              envelopeSegments);
+				}
+				catch (Exception e2)
+				{
+					_msg.Debug("Error serializing error geometries.", e2);
+				}
 
 				_msg.Debug($"Error clipping polygon with tolerance {tolerance}.", e);
 
