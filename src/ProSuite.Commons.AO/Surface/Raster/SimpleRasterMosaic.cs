@@ -20,7 +20,8 @@ using ProSuite.Commons.Logging;
 
 namespace ProSuite.Commons.AO.Surface.Raster
 {
-	public class SimpleRasterMosaic : IRasterProvider, IDataset, IGeoDataset, IReadOnlyGeoDataset, IReadOnlyDataset
+	public class SimpleRasterMosaic : IRasterProvider, IDataset, IGeoDataset, IReadOnlyGeoDataset,
+	                                  IReadOnlyDataset
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -358,10 +359,12 @@ namespace ProSuite.Commons.AO.Surface.Raster
 		}
 
 		private IEnumerable<IFeature> GetCatalogFeatures([NotNull] IFeatureClass rasterCatalog,
-		                                                 [NotNull] IGeometry searchGeometry)
+		                                                 [CanBeNull] IGeometry searchGeometry)
 		{
 			IQueryFilter spatialFilter =
-				GdbQueryUtils.CreateSpatialFilter(rasterCatalog, searchGeometry);
+				searchGeometry == null
+					? null
+					: GdbQueryUtils.CreateSpatialFilter(rasterCatalog, searchGeometry);
 
 			// This could be more sophisticated (and slower) if there are non-rectangular catalog
 			// features, which should probably be tested here.
@@ -465,7 +468,7 @@ namespace ProSuite.Commons.AO.Surface.Raster
 				queryFilter.SubFields = lowPSFieldName;
 
 				foreach (IFeature feature in GdbQueryUtils.GetFeatures(
-					rasterCatalog, queryFilter, true))
+					         rasterCatalog, queryFilter, true))
 				{
 					object obj = feature.get_Value(lowPSFieldIndex);
 

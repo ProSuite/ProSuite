@@ -12,6 +12,12 @@ namespace ProSuite.Commons.AO.Surface.Raster
 		[CanBeNull]
 		ISimpleRaster GetSimpleRaster(double atX, double atY);
 
-		IEnumerable<ISimpleRaster> GetSimpleRasters([NotNull] IEnvelope envelope);
+		/// <summary>
+		/// Gets the simple rasters that intersect the specified envelope. If the envelope is null,
+		/// all rasters are returned.
+		/// </summary>
+		/// <param name="envelope"></param>
+		/// <returns></returns>
+		IEnumerable<ISimpleRaster> GetSimpleRasters([CanBeNull] IEnvelope envelope);
 	}
 }
