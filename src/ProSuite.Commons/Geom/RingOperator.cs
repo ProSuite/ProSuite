@@ -543,8 +543,10 @@ namespace ProSuite.Commons.Geom
 		private IList<Linestring> GetLeftSideRings(bool includeEqualRings = false,
 		                                           bool includeNotContained = false)
 		{
-			IList<Linestring> result = _subcurveNavigator.FollowSubcurvesClockwise(
-				_subcurveNavigator.IntersectionsInboundTarget.ToList());
+			List<IntersectionPoint3D> startPoints =
+			_subcurveNavigator.LeftSideRingStartIntersections.ToList();
+
+			IList<Linestring> result = _subcurveNavigator.FollowSubcurvesClockwise(startPoints);
 
 			if (includeEqualRings || includeNotContained)
 			{
@@ -562,8 +564,10 @@ namespace ProSuite.Commons.Geom
 		private IList<Linestring> GetRightSideRings(bool includeEqualRings = false,
 		                                            bool includeContainedSourceRings = false)
 		{
-			IList<Linestring> result = _subcurveNavigator.FollowSubcurvesClockwise(
-				_subcurveNavigator.IntersectionsOutboundTarget.ToList());
+			List<IntersectionPoint3D> startPoints =
+				_subcurveNavigator.RightSideRingStartIntersections.ToList();
+
+			IList<Linestring> result = _subcurveNavigator.FollowSubcurvesClockwise(startPoints);
 
 			if (! includeEqualRings && ! includeContainedSourceRings)
 			{

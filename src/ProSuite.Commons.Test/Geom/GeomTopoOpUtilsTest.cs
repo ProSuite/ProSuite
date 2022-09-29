@@ -4584,6 +4584,74 @@ namespace ProSuite.Commons.Test.Geom
 		}
 
 		[Test]
+		public void CanGetIntersectionAreaXYTargetCutsAndTouchesFromInside()
+		{
+			var ring1 = new List<Pnt3D>
+			            {
+				            new Pnt3D(0, 0, 9),
+				            new Pnt3D(0, 100, 9),
+				            new Pnt3D(100, 100, 9),
+				            new Pnt3D(100, 0, 9)
+			            };
+
+			RingGroup poly1 = GeomTestUtils.CreatePoly(ring1);
+
+			const double tolerance = 0.01;
+
+			// The target touches the island (from the inside) in a single point:
+			var ring2 = new List<Pnt3D>
+			            {
+				            new Pnt3D(0, 0, 9),
+				            new Pnt3D(50, 100, 9),
+				            new Pnt3D(100, 0, 9),
+				            new Pnt3D(0, 0, 9)
+			            };
+
+			var target = new RingGroup(new Linestring(ring2));
+
+			MultiLinestring intersection =
+				GeomTopoOpUtils.GetIntersectionAreasXY(poly1, target, tolerance);
+			Assert.AreEqual(1, intersection.PartCount);
+			Assert.AreEqual(poly1.GetArea2D() / 2, intersection.GetArea2D());
+
+			// Compare with difference:
+			MultiLinestring difference =
+				GeomTopoOpUtils.GetDifferenceAreasXY(poly1, target, tolerance);
+			Assert.AreEqual(2, difference.PartCount);
+			Assert.AreEqual(poly1.GetArea2D() / 2, difference.GetArea2D());
+
+			MultiLinestring union =
+				GeomTopoOpUtils.GetUnionAreasXY(intersection, difference, tolerance);
+			Assert.AreEqual(poly1.PartCount, union.PartCount);
+			Assert.AreEqual(poly1.GetArea2D(), union.GetArea2D());
+
+			// Now the intersection is on the other side,
+			// i.e. the target has the inverse orientation:
+			ring2 = new List<Pnt3D>
+			        {
+				        new Pnt3D(-60, 200, 9),
+				        new Pnt3D(160, 200, 9),
+				        new Pnt3D(100, 0, 9),
+				        new Pnt3D(50, 100, 9),
+				        new Pnt3D(0, 0, 9),
+				        new Pnt3D(-60, 200, 9)
+			        };
+
+			target = new RingGroup(new Linestring(ring2));
+
+			// The result should be the same but inverted (intersection==above difference)
+			intersection =
+				GeomTopoOpUtils.GetIntersectionAreasXY(poly1, target, tolerance);
+			Assert.AreEqual(2, intersection.PartCount);
+			Assert.AreEqual(poly1.GetArea2D() / 2, intersection.GetArea2D());
+
+			// Compare with difference:
+			difference = GeomTopoOpUtils.GetDifferenceAreasXY(poly1, target, tolerance);
+			Assert.AreEqual(1, difference.PartCount);
+			Assert.AreEqual(poly1.GetArea2D() / 2, difference.GetArea2D());
+		}
+
+		[Test]
 		public void CanGetIntersectionAreaXYTargetTouchesIslandInSinglePoint()
 		{
 			var ring1 = new List<Pnt3D>

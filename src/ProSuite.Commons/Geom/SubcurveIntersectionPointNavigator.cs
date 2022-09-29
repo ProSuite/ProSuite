@@ -20,6 +20,8 @@ namespace ProSuite.Commons.Geom
 		private IList<IntersectionPoint3D> _intersectionsInboundSource;
 		private IList<IntersectionPoint3D> _intersectionsOutboundSource;
 
+		private IList<KeyValuePair<IntersectionPoint3D, RelativeTrajectory>> _targetTrajectories;
+
 		private IntersectionPoint3D _currentStartIntersection;
 		private IList<IntersectionPoint3D> _navigableIntersections;
 
@@ -199,6 +201,121 @@ namespace ProSuite.Commons.Geom
 		public HashSet<Tuple<IntersectionPoint3D, IntersectionPoint3D>>
 			TargetBoundaryLoopIntersections { get; } =
 			new HashSet<Tuple<IntersectionPoint3D, IntersectionPoint3D>>();
+
+		public HashSet<IntersectionPoint3D> FirstIntersectionsPerPart
+		{
+			get
+			{
+				var result = new HashSet<IntersectionPoint3D>();
+
+				int? currentTargetPart = null;
+
+				foreach (IntersectionPoint3D intersection in IntersectionsAlongTarget)
+				{
+					if (currentTargetPart != intersection.TargetPartIndex)
+					{
+						result.Add(intersection);
+					}
+
+					currentTargetPart = intersection.TargetPartIndex;
+				}
+
+				return result;
+			}
+		}
+
+		public HashSet<IntersectionPoint3D> LastIntersectionsPerPart
+		{
+			get
+			{
+				var result = new HashSet<IntersectionPoint3D>();
+
+				IntersectionPoint3D previous = null;
+				foreach (IntersectionPoint3D intersection in IntersectionsAlongTarget)
+				{
+					if (previous != null &&
+					    intersection.TargetPartIndex != previous.TargetPartIndex)
+					{
+						// The previous was the last in part
+						result.Add(previous);
+					}
+
+					previous = intersection;
+				}
+
+				return result;
+			}
+		}
+
+		public IEnumerable<IntersectionPoint3D> GetIntersectionsWithOutBoundTarget(
+			Predicate<IntersectionPoint3D> touchPredicate = null)
+		{
+			if (_targetTrajectories == null)
+			{
+				_targetTrajectories = ClassifyIntersectionsTargetTrajectories(Source, Target);
+			}
+
+			foreach (KeyValuePair<IntersectionPoint3D, RelativeTrajectory> kvp in
+			         _targetTrajectories)
+			{
+				IntersectionPoint3D intersection = kvp.Key;
+				RelativeTrajectory targetTrajectory = kvp.Value;
+
+				if (targetTrajectory == RelativeTrajectory.None)
+				{
+					continue;
+				}
+
+				if (targetTrajectory == RelativeTrajectory.FromRight)
+				{
+					yield return intersection;
+				}
+
+				if (targetTrajectory == RelativeTrajectory.Both)
+				{
+					// Touching from inside
+					if (touchPredicate == null || touchPredicate(intersection))
+					{
+						yield return intersection;
+					}
+				}
+			}
+		}
+
+		public IEnumerable<IntersectionPoint3D> GetIntersectionsWithInBoundTarget(
+			Predicate<IntersectionPoint3D> touchPredicate = null)
+		{
+			if (_targetTrajectories == null)
+			{
+				_targetTrajectories = ClassifyIntersectionsTargetTrajectories(Source, Target);
+			}
+
+			foreach (KeyValuePair<IntersectionPoint3D, RelativeTrajectory> kvp in
+			         _targetTrajectories)
+			{
+				IntersectionPoint3D intersection = kvp.Key;
+				RelativeTrajectory targetTrajectory = kvp.Value;
+
+				if (targetTrajectory == RelativeTrajectory.None)
+				{
+					continue;
+				}
+
+				if (targetTrajectory == RelativeTrajectory.ToRight)
+				{
+					yield return intersection;
+				}
+
+				if (targetTrajectory == RelativeTrajectory.Both)
+				{
+					// Touching from inside
+					if (touchPredicate == null || touchPredicate(intersection))
+					{
+						yield return intersection;
+					}
+				}
+			}
+		}
 
 		public void SetStartIntersection(IntersectionPoint3D startIntersection)
 		{
@@ -1029,6 +1146,60 @@ namespace ProSuite.Commons.Geom
 			}
 		}
 
+		private List<KeyValuePair<IntersectionPoint3D, RelativeTrajectory>>
+			ClassifyIntersectionsTargetTrajectories(
+				[NotNull] ISegmentList source,
+				[NotNull] ISegmentList target)
+		{
+			var targetTrajectories =
+				new List<KeyValuePair<IntersectionPoint3D, RelativeTrajectory>>();
+
+			foreach (IntersectionPoint3D intersectionPoint in NavigableIntersections)
+			{
+				// Boundary loop intersections are important to navigate but not as start points
+				if (SourceBoundaryLoopIntersections.Any(
+					    bl => bl.Item1.Equals(intersectionPoint) ||
+					          bl.Item2.Equals(intersectionPoint)))
+				{
+					continue;
+				}
+
+				if (TargetBoundaryLoopIntersections.Any(
+					    bl => bl.Item1.Equals(intersectionPoint) ||
+					          bl.Item2.Equals(intersectionPoint)))
+				{
+					continue;
+				}
+
+				intersectionPoint.ClassifyTargetTrajectory(source, target,
+				                                           out bool? targetContinuesToRightSide,
+				                                           out bool? targetArrivesFromRightSide,
+				                                           Tolerance);
+
+				RelativeTrajectory targetTrajectory = RelativeTrajectory.None;
+
+				if (targetContinuesToRightSide == true)
+				{
+					// The target is in-bound, i.e. it departs to the inside
+					targetTrajectory = RelativeTrajectory.ToRight;
+				}
+
+				if (targetArrivesFromRightSide == true)
+				{
+					// The target arrives from the inside, i.e. it is 'out-bound'
+					targetTrajectory = targetTrajectory == RelativeTrajectory.None
+						                   ? RelativeTrajectory.FromRight
+						                   : RelativeTrajectory.Both;
+				}
+
+				targetTrajectories.Add(
+					new KeyValuePair<IntersectionPoint3D, RelativeTrajectory>(
+						intersectionPoint, targetTrajectory));
+			}
+
+			return targetTrajectories;
+		}
+
 		private void ClassifyIntersectionsSourceTrajectories(
 			[NotNull] ISegmentList source,
 			[NotNull] ISegmentList target,
@@ -1245,5 +1416,22 @@ namespace ProSuite.Commons.Geom
 				pairAction(previous, first);
 			}
 		}
+	}
+
+	public enum RelativeTrajectory
+	{
+		// TODO: Consider Flags
+		None,
+
+		FromRight,
+
+		/// <summary>
+		/// The curve continues to the right side of the relative geometry, i.e. the subject curve
+		/// 'departs' from the relative ring boundary to the inside in case of a ring.
+		/// The subject's linestring does not necessarily have to arrive from the left side/outside.
+		/// </summary>
+		ToRight,
+
+		Both
 	}
 }

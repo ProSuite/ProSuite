@@ -54,20 +54,67 @@ namespace ProSuite.Commons.Geom
 		private HashSet<IntersectionPoint3D> VisitedIntersectionsAlongSource { get; set; }
 
 		/// <summary>
-		/// Intersections at which the target 'arrives' at the source ring boundary
-		/// from the inside. The target linestring does not necessarily have to continue
-		/// to the outside.
+		/// Intersections to be used as start-intersections for right-side ring operations, i.e.
+		/// area-intersection.
+		/// These are the intersections at which the target 'arrives' at the source ring boundary
+		/// from the inside. The target linestring does not necessarily have to continue to the
+		/// outside.
 		/// </summary>
-		public IEnumerable<IntersectionPoint3D> IntersectionsOutboundTarget =>
-			Assert.NotNull(IntersectionPointNavigator.IntersectionsOutboundTarget);
+		public IEnumerable<IntersectionPoint3D> RightSideRingStartIntersections
+		{
+			get
+			{
+				// If the target touches from the inside, include it only if the target cuts the
+				// source into two touching rings, which is only the case if the source is on the
+				// right side (inside) of the target.
+
+				Predicate<IntersectionPoint3D> onlyIfSourceCutting =
+					ip =>
+						ip.SourceArrivesFromRightSide(Source, Target, Tolerance) == true ||
+						ip.SourceContinuesToRightSide(Source, Target, Tolerance) == true;
+
+				IEnumerable<IntersectionPoint3D> startIntersections =
+					IntersectionPointNavigator.GetIntersectionsWithOutBoundTarget(
+						onlyIfSourceCutting);
+
+				return Target.IsClosed
+					       ? startIntersections
+					       : FilterIntersections(startIntersections,
+					                             IntersectionPointNavigator
+						                             .FirstIntersectionsPerPart);
+			}
+		}
 
 		/// <summary>
-		/// Intersections at which the target 'departs' from the source ring boundary
-		/// to the inside. The target linestring does not necessarily have to arrive
-		/// from the outside.
+		/// Intersections to be used as start-intersections for left-side ring operations, i.e.
+		/// area-difference.
+		/// These are the intersections at which the target 'departs' from the source ring boundary
+		/// to the inside. The target linestring does not necessarily have to arrive from the
+		/// outside.
 		/// </summary>
-		public IEnumerable<IntersectionPoint3D> IntersectionsInboundTarget =>
-			Assert.NotNull(IntersectionPointNavigator.IntersectionsInboundTarget);
+		public IEnumerable<IntersectionPoint3D> LeftSideRingStartIntersections
+		{
+			get
+			{
+				// If the target touches from the inside, include it only if the source cuts the
+				// target into two touching rings, which is only the case if the source touches
+				// from the left (outside) of the target.
+				Predicate<IntersectionPoint3D> onlyIfTargetCutting =
+					ip =>
+						ip.SourceArrivesFromRightSide(Source, Target, Tolerance) == false ||
+						ip.SourceContinuesToRightSide(Source, Target, Tolerance) == false;
+
+				IEnumerable<IntersectionPoint3D> startIntersections =
+					IntersectionPointNavigator.GetIntersectionsWithInBoundTarget(
+						onlyIfTargetCutting);
+
+				return Target.IsClosed
+					       ? startIntersections
+					       : FilterIntersections(startIntersections,
+					                             IntersectionPointNavigator
+						                             .LastIntersectionsPerPart);
+			}
+		}
 
 		private TurnDirection PreferredTurnDirection { get; set; } = TurnDirection.Right;
 
@@ -96,6 +143,8 @@ namespace ProSuite.Commons.Geom
 
 					const bool includeLinearIntersectionIntermediateRingStartEndPoints = true;
 
+					// TODO: Why not calculate the entire source and get the correct (global) segment
+					//       indexes on the SegmentIntersections?
 					for (int i = 0; i < Source.PartCount; i++)
 					{
 						Linestring sourceRing = Source.GetPart(i);
@@ -2145,6 +2194,21 @@ namespace ProSuite.Commons.Geom
 			if (! double.IsNaN(targetPointAtFrom.Z))
 			{
 				resultPoint.Z = targetPointAtFrom.Z;
+			}
+		}
+
+		private static IEnumerable<IntersectionPoint3D> FilterIntersections(
+			[NotNull] IEnumerable<IntersectionPoint3D> intersections,
+			[NotNull] HashSet<IntersectionPoint3D> intersectionsToFilter)
+		{
+			foreach (IntersectionPoint3D intersection in intersections)
+			{
+				if (intersectionsToFilter.Contains(intersection))
+				{
+					continue;
+				}
+
+				yield return intersection;
 			}
 		}
 
