@@ -854,11 +854,7 @@ namespace ProSuite.Commons.Geom
 		}
 
 		/// <summary>
-		/// Classifies the target trajectory with respect to this intersection.
-		/// Note: If this method is called for a linear intersection pseudo-break or for the break of the
-		/// linear intersection at a ring's start or end point, the result could be random because no
-		/// tolerance is used! In these cases, call <see cref="TargetContinuesToRightSide"/> or
-		/// <see cref="TargetArrivesFromRightSide"/> respectively.
+		/// Classifies the source trajectory with respect to this intersection.
 		/// </summary>
 		/// <param name="source"></param>
 		/// <param name="target"></param>
@@ -881,10 +877,6 @@ namespace ProSuite.Commons.Geom
 
 		/// <summary>
 		/// Classifies the target trajectory with respect to this intersection.
-		/// Note: If this method is called for a linear intersection pseudo-break or for the break of the
-		/// linear intersection at a ring's start or end point, the result could be random because no
-		/// tolerance is used! In these cases, call <see cref="TargetContinuesToRightSide"/> or
-		/// <see cref="TargetArrivesFromRightSide"/> respectively.
 		/// </summary>
 		/// <param name="source"></param>
 		/// <param name="target"></param>
@@ -1007,26 +999,12 @@ namespace ProSuite.Commons.Geom
 				return true;
 			}
 
-			double factor;
-			if (Type == IntersectionPointType.LinearIntersectionEnd)
-			{
-				factor = SegmentIntersection.GetLinearIntersectionEndFactor(true);
-			}
-			else
-			{
-				factor = SegmentIntersection.GetIntersectionPointFactorAlongSource();
-			}
+			int sourceSegmentIdx =
+				GetLocalSourceIntersectionSegmentIdx(sourceLinestring, out double factor);
 
-			Line3D segment;
-
-			if (factor < 1)
-			{
-				segment = sourceLinestring[SegmentIntersection.SourceIndex];
-			}
-			else
-			{
-				segment = sourceLinestring.NextSegment(SegmentIntersection.SourceIndex);
-			}
+			Line3D segment = factor < 1
+				                 ? sourceLinestring[sourceSegmentIdx]
+				                 : sourceLinestring.NextSegment(sourceSegmentIdx);
 
 			Pnt3D sourceContinuationPoint = Assert.NotNull(segment).EndPoint;
 
@@ -1038,7 +1016,7 @@ namespace ProSuite.Commons.Geom
 		                                        double tolerance = 0)
 		{
 			Linestring sourceLinestring = source.GetPart(SourcePartIndex);
-			Linestring targetRing = target.GetPart(TargetPartIndex);
+			Linestring targetLinestring = target.GetPart(TargetPartIndex);
 
 			if (VirtualSourceVertex == 0 && ! sourceLinestring.IsClosed)
 			{
@@ -1059,30 +1037,23 @@ namespace ProSuite.Commons.Geom
 				return true;
 			}
 
-			double factor;
-			if (Type == IntersectionPointType.LinearIntersectionStart)
-			{
-				factor = SegmentIntersection.GetLinearIntersectionStartFactor(true);
-			}
-			else
-			{
-				factor = SegmentIntersection.GetIntersectionPointFactorAlongSource();
-			}
+			int sourceSegmentIdx =
+				GetLocalSourceIntersectionSegmentIdx(sourceLinestring, out double factor);
 
 			Line3D segment;
-
 			if (factor > 0)
 			{
-				segment = sourceLinestring[SegmentIntersection.SourceIndex];
+				segment = sourceLinestring[sourceSegmentIdx];
 			}
 			else
 			{
-				segment = sourceLinestring.PreviousSegment(SegmentIntersection.SourceIndex);
+				int? previousIdx = sourceLinestring.PreviousSegmentIndex(sourceSegmentIdx);
+				segment = previousIdx == null ? null : sourceLinestring[previousIdx.Value];
 			}
 
 			Pnt3D sourcePreviousPoint = Assert.NotNull(segment).StartPoint;
 
-			return IsOnTheRightSideOfTarget(targetRing, sourcePreviousPoint, tolerance);
+			return IsOnTheRightSideOfTarget(targetLinestring, sourcePreviousPoint, tolerance);
 		}
 
 		private bool? IsOnTheRightSideOfSource([NotNull] ISegmentList source,
@@ -1161,8 +1132,6 @@ namespace ProSuite.Commons.Geom
 		                                       IPnt testPoint,
 		                                       double tolerance = 0)
 		{
-			Assert.True(target.IsClosed, "Target must be closed ring(s)");
-
 			Linestring targetRing = target.GetPart(TargetPartIndex);
 
 			double targetRatio;
@@ -1184,19 +1153,19 @@ namespace ProSuite.Commons.Geom
 			if (targetRatio == 0)
 			{
 				previousSegment =
-					targetRing.PreviousSegmentInRing(targetSegmentIdx, true);
+					targetRing.PreviousSegment(targetSegmentIdx, true);
 
 				nextSegment = SegmentIntersection.IsTargetZeroLength2D
-					              ? targetRing.NextSegmentInRing(targetSegmentIdx, true)
+					              ? targetRing.NextSegment(targetSegmentIdx, true)
 					              : targetSegment;
 			}
 			else // sourceRatio == 1
 			{
 				previousSegment = SegmentIntersection.IsTargetZeroLength2D
-					                  ? targetRing.PreviousSegmentInRing(
+					                  ? targetRing.PreviousSegment(
 						                  targetSegmentIdx, true)
 					                  : targetSegment;
-				nextSegment = targetRing.NextSegmentInRing(targetSegmentIdx, true);
+				nextSegment = targetRing.NextSegment(targetSegmentIdx, true);
 			}
 
 			bool? result = IsOnTheRightOfVertex(testPoint, previousSegment, nextSegment, tolerance);
