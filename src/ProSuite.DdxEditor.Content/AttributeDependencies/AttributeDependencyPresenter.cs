@@ -6,6 +6,7 @@ using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
 using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.AttributeDependencies;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -201,7 +202,7 @@ namespace ProSuite.DdxEditor.Content.AttributeDependencies
 		{
 			FieldType fieldType = GetFieldType(columnIndex);
 
-			object typedValue = AttributeDependencyUtils.Convert(
+			object typedValue = AttributeDependency.Convert(
 				formattedValue, fieldType, CultureInfo.CurrentCulture);
 
 			return typedValue;

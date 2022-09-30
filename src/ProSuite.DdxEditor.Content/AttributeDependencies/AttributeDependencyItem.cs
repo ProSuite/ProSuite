@@ -5,6 +5,7 @@ using System.Drawing;
 using System.IO;
 using System.Text;
 using System.Windows.Forms;
+using ProSuite.Commons.AttributeDependencies;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -22,6 +23,7 @@ using ProSuite.DdxEditor.Framework.Items;
 using ProSuite.DdxEditor.Framework.ItemViews;
 using ProSuite.DomainModel.Core.AttributeDependencies;
 using ProSuite.DomainModel.Core.AttributeDependencies.Repositories;
+using ProSuite.DomainModel.Core.AttributeDependencies.Xml;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.DataModel.Repositories;
 using Attribute = ProSuite.DomainModel.Core.DataModel.Attribute;
@@ -315,11 +317,11 @@ namespace ProSuite.DdxEditor.Content.AttributeDependencies
 							{
 								if (filePath.EndsWith(".csv", StringComparison.OrdinalIgnoreCase))
 								{
-									AttributeDependencyUtils.ImportMappingsCsv(entity, reader);
+									XmlAttributeDependencyUtils.ImportMappingsCsv(entity, reader);
 								}
 								else
 								{
-									AttributeDependencyUtils.ImportMappingsTxt(entity, reader);
+									XmlAttributeDependencyUtils.ImportMappingsTxt(entity, reader);
 								}
 							}
 						}
@@ -350,11 +352,11 @@ namespace ProSuite.DdxEditor.Content.AttributeDependencies
 							{
 								if (filePath.EndsWith(".csv", StringComparison.OrdinalIgnoreCase))
 								{
-									AttributeDependencyUtils.ExportMappingsCsv(entity, writer);
+									XmlAttributeDependencyUtils.ExportMappingsCsv(entity, writer);
 								}
 								else
 								{
-									AttributeDependencyUtils.ExportMappingsTxt(entity, writer);
+									XmlAttributeDependencyUtils.ExportMappingsTxt(entity, writer);
 								}
 							}
 						}

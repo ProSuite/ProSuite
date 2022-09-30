@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AttributeDependencies;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -52,10 +53,9 @@ namespace ProSuite.DdxEditor.Content.AttributeDependencies
 				return;
 			}
 
-			bool source;
-			int index = AttributeDependencyUtils.GetAttributeIndex(attributeDependency,
-				configuredSubtypeField.Name,
-				out source);
+			int index = attributeDependency.
+				GetAttributeIndex(configuredSubtypeField.Name, out bool source);
+
 			foreach (var mapping in attributeDependency.AttributeValueMappings)
 			{
 				object subtypeValue = source
