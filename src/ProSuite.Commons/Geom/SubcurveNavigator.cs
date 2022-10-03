@@ -1014,12 +1014,12 @@ namespace ProSuite.Commons.Geom
 		}
 
 		private void DetermineRingRelation(Linestring sourceRing, Linestring targetRing,
-		                                   bool? isSourceContainedXY,
+		                                   bool? sourceIsKnownContainedXY,
 		                                   int sourcePartIndex, int targetPartIndex,
 		                                   IList<Linestring> equalOrientationCongruentRings,
 		                                   IList<Linestring> outsideOtherPolygonRings)
 		{
-			if (isSourceContainedXY == null)
+			if (sourceIsKnownContainedXY == null)
 			{
 				// Even if they have opposite orientation: They cancel each other out and should
 				// be disregarded in subsequent operations.
@@ -1027,13 +1027,13 @@ namespace ProSuite.Commons.Geom
 				IntersectedTargetPartIndexes.Add(targetPartIndex);
 			}
 
-			if (CheckRingRelation(sourceRing, targetRing, isContainedXY: isSourceContainedXY,
+			if (CheckRingRelation(sourceRing, targetRing, isContainedXY: sourceIsKnownContainedXY,
 			                      isCongruent: true, withSameOrientation: true,
 			                      isContained: false, isNotContained: false))
 			{
 				equalOrientationCongruentRings.Add(sourceRing);
 			}
-			else if (CheckRingRelation(sourceRing, targetRing, isSourceContainedXY,
+			else if (CheckRingRelation(sourceRing, targetRing, sourceIsKnownContainedXY,
 			                           false, false, false, true))
 			{
 				outsideOtherPolygonRings.Add(sourceRing);

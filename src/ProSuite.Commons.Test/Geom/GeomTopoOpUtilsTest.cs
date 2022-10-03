@@ -3898,6 +3898,14 @@ namespace ProSuite.Commons.Test.Geom
 			Assert.AreEqual(source.PartCount, unionResult.PartCount);
 			Assert.AreEqual(true, unionResult.GetLinestring(0).ClockwiseOriented);
 			Assert.AreEqual(source.GetArea2D(), unionResult.GetArea2D(), 0.0001);
+
+			// Now check spaghetti union:
+			var allInputs = new List<MultiLinestring> {source, target};
+			MultiLinestring unionResult2 = GeomTopoOpUtils.GetUnionAreasXY(allInputs, tolerance);
+
+			Assert.AreEqual(unionResult.PartCount, unionResult2.PartCount);
+			Assert.AreEqual(true, unionResult2.GetLinestring(0).ClockwiseOriented);
+			Assert.AreEqual(unionResult2.GetArea2D(), unionResult.GetArea2D(), 0.0001);
 		}
 
 		[Test]
@@ -3932,7 +3940,7 @@ namespace ProSuite.Commons.Test.Geom
 
 			var target = new RingGroup(GeomTestUtils.CreateRing(innerRing2Overlapping));
 
-			MultiLinestring result = GeomTopoOpUtils.GetUnionAreasXY(poly, target, 0.001);
+			MultiLinestring result = UnionAreasXY(poly, target);
 
 			Assert.AreEqual(2, result.PartCount);
 
@@ -3967,7 +3975,7 @@ namespace ProSuite.Commons.Test.Geom
 
 			poly.AddInteriorRing(GeomTestUtils.CreateRing(inner2));
 
-			result = GeomTopoOpUtils.GetUnionAreasXY(poly, target, 0.001);
+			result = UnionAreasXY(poly, target);
 			Assert.AreEqual(3, result.PartCount);
 
 			// Minus the remaining area of the intersected island
@@ -3987,7 +3995,7 @@ namespace ProSuite.Commons.Test.Geom
 			poly.AddInteriorRing(GeomTestUtils.CreateRing(inner3));
 
 			// The third ring should have been erased by the target;
-			result = GeomTopoOpUtils.GetUnionAreasXY(poly, target, 0.001);
+			result = UnionAreasXY(poly, target);
 			Assert.AreEqual(3, result.PartCount);
 			Assert.AreEqual(expectedResultArea, result.GetArea2D());
 
@@ -4002,7 +4010,7 @@ namespace ProSuite.Commons.Test.Geom
 
 			target.AddInteriorRing(GeomTestUtils.CreateRing(targetInner));
 
-			result = GeomTopoOpUtils.GetUnionAreasXY(poly, target, 0.001);
+			result = UnionAreasXY(poly, target);
 			Assert.AreEqual(3, result.PartCount);
 			Assert.AreEqual(expectedResultArea, result.GetArea2D());
 
@@ -4018,12 +4026,36 @@ namespace ProSuite.Commons.Test.Geom
 			target.AddInteriorRing(GeomTestUtils.CreateRing(targetInner2));
 
 			expectedResultArea -= 25 * 10;
-			result = GeomTopoOpUtils.GetUnionAreasXY(poly, target, 0.001);
+			result = UnionAreasXY(poly, target);
 			Assert.AreEqual(4, result.PartCount);
 			Assert.AreEqual(expectedResultArea, result.GetArea2D());
 
 			//result = CutPlanarBothWays(poly, openTarget, 2, 1);
 			//Assert.AreEqual(3, result.Sum(p => p.Count));
+		}
+
+		private static MultiLinestring UnionAreasXY(MultiLinestring poly,
+		                                            MultiLinestring target,
+		                                            double tolerance = 0.001)
+		{
+			MultiLinestring result = GeomTopoOpUtils.GetUnionAreasXY(poly, target, tolerance);
+
+			// In the meanwhile check the spaghetti union:
+			var allInputs = new List<MultiLinestring> {poly, target};
+			MultiLinestring unionResult2 = GeomTopoOpUtils.GetUnionAreasXY(allInputs, tolerance);
+
+			Assert.AreEqual(result.PartCount, unionResult2.PartCount);
+			if (result.PartCount > 0)
+			{
+				bool? clockwise1 = result.GetLinestring(0).ClockwiseOriented;
+				bool? clockwise2 = unionResult2.GetLinestring(0).ClockwiseOriented;
+
+				Assert.AreEqual(clockwise1, clockwise2);
+			}
+
+			Assert.AreEqual(result.GetArea2D(), unionResult2.GetArea2D(), 0.0001);
+
+			return result;
 		}
 
 		[Test]
@@ -4058,7 +4090,7 @@ namespace ProSuite.Commons.Test.Geom
 
 			var target = new RingGroup(GeomTestUtils.CreateRing(disjointTarget));
 
-			MultiLinestring result = GeomTopoOpUtils.GetUnionAreasXY(poly, target, 0.001);
+			MultiLinestring result = UnionAreasXY(poly, target);
 
 			Assert.AreEqual(3, result.PartCount);
 
@@ -4076,7 +4108,7 @@ namespace ProSuite.Commons.Test.Geom
 
 			poly.AddLinestring(GeomTestUtils.CreateRing(source2));
 
-			result = GeomTopoOpUtils.GetUnionAreasXY(poly, target, 0.001);
+			result = UnionAreasXY(poly, target);
 
 			Assert.AreEqual(3, result.PartCount);
 
@@ -4097,7 +4129,7 @@ namespace ProSuite.Commons.Test.Geom
 			target.AddLinestring(GeomTestUtils.CreateRing(target2));
 
 			// The second target ring should be part of the result;
-			result = GeomTopoOpUtils.GetUnionAreasXY(poly, target, 0.001);
+			result = UnionAreasXY(poly, target);
 			Assert.AreEqual(4, result.PartCount);
 
 			expectedArea += 10 * 10;
@@ -4150,7 +4182,7 @@ namespace ProSuite.Commons.Test.Geom
 
 					double tolerance = 0.001;
 					MultiLinestring union =
-						GeomTopoOpUtils.GetUnionAreasXY(source, target, tolerance);
+						UnionAreasXY(source, target, tolerance);
 
 					Assert.AreEqual(2, union.PartCount);
 

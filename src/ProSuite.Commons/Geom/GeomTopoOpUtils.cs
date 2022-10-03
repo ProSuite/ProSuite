@@ -6,6 +6,7 @@ using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Exceptions;
+using ProSuite.Commons.Geom.SpatialIndex;
 using ProSuite.Commons.Logging;
 
 namespace ProSuite.Commons.Geom
@@ -615,6 +616,145 @@ namespace ProSuite.Commons.Geom
 			}
 
 			return result;
+		}
+
+		public static MultiLinestring GetUnionAreasXY(
+			[NotNull] IList<MultiLinestring> multiPolygons,
+			double tolerance)
+		{
+			// 1. Create a spatially indexed list of all geometries. Often there are no actual intersections!
+			//    This strategy can make a gigantic difference (TOP-5595)
+			SpatialHashSearcher<MultiLinestring> polygonIndex =
+				SpatialHashSearcher<MultiLinestring>.CreateSpatialSearcher(
+					multiPolygons, p => p);
+
+			var disjointPolys = new HashSet<MultiLinestring>();
+			List<HashSet<MultiLinestring>> connectedGroups = new List<HashSet<MultiLinestring>>();
+
+			foreach (MultiLinestring polygon in multiPolygons)
+			{
+				int intersectedCount = 0;
+				foreach (MultiLinestring otherPoly in polygonIndex.Search(polygon, tolerance))
+				{
+					// ReSharper disable once PossibleUnintendedReferenceComparison
+					if (otherPoly == polygon)
+					{
+						continue;
+					}
+
+					if (disjointPolys.Contains(otherPoly))
+					{
+						// Already checked and found disjoint
+						continue;
+					}
+
+					if (! GeomRelationUtils.AreBoundsDisjoint(polygon, otherPoly, tolerance))
+					{
+						intersectedCount++;
+						AddToGroups(connectedGroups, polygon, otherPoly);
+					}
+				}
+
+				if (intersectedCount == 0)
+				{
+					disjointPolys.Add(polygon);
+				}
+			}
+
+			// 2. Union the geometries in the connected groups 
+			List<MultiLinestring> intersectingUnions =
+				new List<MultiLinestring>(connectedGroups.Count);
+
+			Assert.AreEqual(multiPolygons.Count,
+			                disjointPolys.Count + connectedGroups.Sum(g => g.Count),
+			                "Lost items");
+
+			foreach (HashSet<MultiLinestring> group in connectedGroups)
+			{
+				MultiLinestring allInputs = new MultiPolycurve(group);
+
+				//IList<IntersectionPoint3D> selfIntersectionPoints =
+				//	GetSelfIntersections(allInputs, tolerance);
+
+				// Very experimental:
+				//MultiLinestring union = GetSymmetricUnion(allInputs, group, selfIntersectionPoints, tolerance);
+				//intersectingUnions.Add(union);
+
+				// Classic one-by-one:
+				MultiLinestring groupResult = null;
+				foreach (MultiLinestring poly in group)
+				{
+					if (groupResult == null)
+					{
+						groupResult = poly.Clone();
+					}
+					else
+					{
+						groupResult = GetUnionAreasXY(groupResult, poly, tolerance);
+					}
+				}
+
+				intersectingUnions.Add(groupResult);
+			}
+
+			// 3. Build the result
+			IEnumerable<MultiLinestring> all = disjointPolys.Concat(intersectingUnions);
+
+			MultiLinestring result = new MultiPolycurve(all);
+
+			return result;
+		}
+		
+		private static void AddToGroups(List<HashSet<MultiLinestring>> connectedGroups,
+		                                MultiLinestring polygon,
+		                                MultiLinestring otherPoly)
+		{
+			HashSet<int> addedTo = new HashSet<int>();
+			for (var i = 0; i < connectedGroups.Count; i++)
+			{
+				HashSet<MultiLinestring> group = connectedGroups[i];
+
+				if (group.Contains(polygon))
+				{
+					group.Add(otherPoly);
+					addedTo.Add(i);
+				}
+				else if (group.Contains(otherPoly))
+				{
+					group.Add(polygon);
+					addedTo.Add(i);
+				}
+			}
+
+			if (addedTo.Count == 0)
+			{
+				// Both polys are new
+				var newGroup = new HashSet<MultiLinestring>();
+				newGroup.Add(polygon);
+				newGroup.Add(otherPoly);
+				connectedGroups.Add(newGroup);
+			}
+
+			if (addedTo.Count > 1)
+			{
+				// Merge groups:
+				var newGroup = new HashSet<MultiLinestring>();
+				foreach (int groupIdx in addedTo)
+				{
+					foreach (MultiLinestring poly in connectedGroups[groupIdx])
+					{
+						newGroup.Add(poly);
+					}
+				}
+
+				// Add new group at the end before removing old indexes
+				connectedGroups.Add(newGroup);
+
+				foreach (int mergedGroupIdx in addedTo.OrderByDescending(i => i))
+				{
+					connectedGroups.RemoveAt(mergedGroupIdx);
+				}
+			}
 		}
 
 		public static MultiLinestring GetUnionAreasXY([NotNull] MultiLinestring sourceRings,
