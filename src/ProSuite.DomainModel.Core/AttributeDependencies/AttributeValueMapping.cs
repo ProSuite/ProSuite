@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using ProSuite.Commons.AttributeDependencies;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 

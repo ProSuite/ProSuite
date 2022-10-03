@@ -1,113 +1,17 @@
+using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
-using System.Linq;
 using System.Text;
-using ProSuite.Commons;
-using ProSuite.Commons.Essentials.Assertions;
-using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.IO;
-using ProSuite.Commons.Text;
-using ProSuite.DomainModel.Core.DataModel;
-using Attribute = ProSuite.DomainModel.Core.DataModel.Attribute;
 
-namespace ProSuite.DomainModel.Core.AttributeDependencies
+namespace ProSuite.Commons.AttributeDependencies
 {
 	/// <summary>
 	/// A container for AttributeDependency-related utilities.
 	/// </summary>
 	public static class AttributeDependencyUtils
 	{
-		/// <summary>
-		/// Convert <i>value</i> to a type suitable for <i>fieldType</i>.
-		/// If <i>culture</i> is null, use InvariantCulture.
-		/// Impossible conversions will throw an exception.
-		/// </summary>
-		public static object Convert([CanBeNull] object value, FieldType fieldType,
-		                             [CanBeNull] IFormatProvider culture)
-		{
-			if (culture == null)
-			{
-				culture = CultureInfo.InvariantCulture;
-			}
-
-			if (value is string s)
-			{
-				s = s.Trim();
-
-				if (string.Equals(s, "null", StringComparison.OrdinalIgnoreCase))
-				{
-					return DBNull.Value;
-				}
-
-				if (string.Equals(s, Wildcard.ValueString))
-				{
-					return Wildcard.Value;
-				}
-
-				if (fieldType == FieldType.ShortInteger ||
-				    fieldType == FieldType.LongInteger)
-				{
-					if (string.Equals(s, "false", StringComparison.OrdinalIgnoreCase))
-					{
-						return 0;
-					}
-
-					if (string.Equals(s, "true", StringComparison.OrdinalIgnoreCase))
-					{
-						return 1;
-					}
-				}
-
-				if (fieldType == FieldType.Text)
-				{
-					if (s.Length > 1 && s[0] == '"' && s[s.Length - 1] == '"')
-					{
-						s = s.Substring(1, s.Length - 2); // strip quotes
-					}
-
-					return s; // trimmed, double quotes stripped
-				}
-			}
-
-			if (value == null || value == DBNull.Value || value == Wildcard.Value)
-			{
-				return value; // don't convert these special values
-			}
-
-			switch (fieldType)
-			{
-				case FieldType.ShortInteger:
-				case FieldType.LongInteger:
-					return System.Convert.ToInt32(value, culture);
-
-				case FieldType.Float:
-					return System.Convert.ToSingle(value, culture);
-				case FieldType.Double:
-					return System.Convert.ToDouble(value, culture);
-
-				case FieldType.Text:
-					return System.Convert.ToString(value, culture);
-
-				case FieldType.Date:
-					return System.Convert.ToDateTime(value, culture);
-
-				case FieldType.Guid:
-					throw new NotImplementedException(); // TODO string => GUID
-
-				//case esriFieldType.esriFieldTypeOID:
-				//case esriFieldType.esriFieldTypeGeometry:
-				//case esriFieldType.esriFieldTypeBlob:
-				//case esriFieldType.esriFieldTypeRaster:
-				//case esriFieldType.esriFieldTypeGlobalID:
-				//case esriFieldType.esriFieldTypeXML:
-
-				default:
-					throw new NotImplementedException("fieldType not supported");
-			}
-		}
-
 		/// <summary>
 		/// Compare two values, disregarding the multitude of numeric types.
 		/// For example, the value 1 can be represented by a Byte, an Int32,
@@ -116,8 +20,8 @@ namespace ProSuite.DomainModel.Core.AttributeDependencies
 		/// <returns>-1 if a &lt; b, 0 if a == b, +1 if a &gt; b</returns>
 		public static int Compare(object a, object b)
 		{
-			bool aIsNull = a == null || System.Convert.IsDBNull(a);
-			bool bIsNull = b == null || System.Convert.IsDBNull(b);
+			bool aIsNull = a == null || Convert.IsDBNull(a);
+			bool bIsNull = b == null || Convert.IsDBNull(b);
 
 			if (aIsNull && bIsNull)
 			{
@@ -175,8 +79,8 @@ namespace ProSuite.DomainModel.Core.AttributeDependencies
 			if (a is double && (b is double || b is long) ||
 			    b is double && (a is double || a is long))
 			{
-				double aa = System.Convert.ToDouble(a);
-				double bb = System.Convert.ToDouble(b);
+				double aa = Convert.ToDouble(a);
+				double bb = Convert.ToDouble(b);
 
 				//Treat insignificant differences as being equal
 				// see https://issuetracker04.eggits.net/browse/GEN-2746
@@ -187,8 +91,8 @@ namespace ProSuite.DomainModel.Core.AttributeDependencies
 			if (a is decimal && (b is decimal || b is double || b is long) ||
 			    b is decimal && (a is decimal || a is double || a is long))
 			{
-				decimal aa = System.Convert.ToDecimal(a);
-				decimal bb = System.Convert.ToDecimal(b);
+				decimal aa = Convert.ToDecimal(a);
+				decimal bb = Convert.ToDecimal(b);
 
 				return aa.CompareTo(bb);
 			}
@@ -206,8 +110,8 @@ namespace ProSuite.DomainModel.Core.AttributeDependencies
 
 			if (a is char && b is string || a is string && b is char)
 			{
-				string aa = System.Convert.ToString(a);
-				string bb = System.Convert.ToString(b);
+				string aa = Convert.ToString(a);
+				string bb = Convert.ToString(b);
 
 				return string.CompareOrdinal(aa, bb);
 				// TODO Consider overloads with ignoreCase and culture stuff
@@ -219,7 +123,7 @@ namespace ProSuite.DomainModel.Core.AttributeDependencies
 
 		private static TypeCode Widen(ref object value)
 		{
-			TypeCode typeCode = System.Convert.GetTypeCode(value);
+			TypeCode typeCode = Convert.GetTypeCode(value);
 
 			switch (typeCode)
 			{
@@ -229,11 +133,11 @@ namespace ProSuite.DomainModel.Core.AttributeDependencies
 				case TypeCode.UInt16:
 				case TypeCode.Int32:
 				case TypeCode.UInt32:
-					value = System.Convert.ToInt64(value);
+					value = Convert.ToInt64(value);
 					return TypeCode.Int64;
 
 				case TypeCode.Single:
-					value = System.Convert.ToDouble(value);
+					value = Convert.ToDouble(value);
 					return TypeCode.Double;
 			}
 
@@ -244,8 +148,8 @@ namespace ProSuite.DomainModel.Core.AttributeDependencies
 
 		public static int Compare2(object a, object b)
 		{
-			bool aIsNull = a == null || System.Convert.IsDBNull(a);
-			bool bIsNull = b == null || System.Convert.IsDBNull(b);
+			bool aIsNull = a == null || Convert.IsDBNull(a);
+			bool bIsNull = b == null || Convert.IsDBNull(b);
 
 			if (aIsNull && bIsNull)
 			{
@@ -261,12 +165,12 @@ namespace ProSuite.DomainModel.Core.AttributeDependencies
 				return aIsNull ? -1 : 1;
 			}
 
-			TypeCode ac = System.Convert.GetTypeCode(a);
-			TypeCode bc = System.Convert.GetTypeCode(b);
+			TypeCode ac = Convert.GetTypeCode(a);
+			TypeCode bc = Convert.GetTypeCode(b);
 			TypeCode targetType = GetCompareType(ac, bc);
 
-			a = System.Convert.ChangeType(a, targetType);
-			b = System.Convert.ChangeType(b, targetType);
+			a = Convert.ChangeType(a, targetType);
+			b = Convert.ChangeType(b, targetType);
 
 			if (a is IComparable aa)
 			{
@@ -356,277 +260,7 @@ namespace ProSuite.DomainModel.Core.AttributeDependencies
 		                                                     };
 
 		#endregion
-
-		#region Export Mappings
-
-		public static void ExportMappingsTxt([NotNull] AttributeDependency dependency,
-		                                     [NotNull] TextWriter writer)
-		{
-			Assert.ArgumentNotNull(dependency, nameof(dependency));
-			Assert.ArgumentNotNull(writer, nameof(writer));
-
-			writer.WriteLine("# Lines starting with a hash are ignored.");
-			writer.WriteLine("#");
-			writer.WriteLine("# When writing numbers, use \"InvariantCulture\", that is:");
-			writer.WriteLine("#    period (.) as decimal separator and no thousands separator.");
-			writer.WriteLine("#    Correct example: 1234.5; bad example: 1'234,5.");
-			writer.WriteLine("#");
-
-			var sb = new StringBuilder();
-
-			// # one, two, three => four, five # description
-			writer.WriteLine(GetHeaderText(dependency, sb));
-
-			foreach (AttributeValueMapping mapping in dependency.AttributeValueMappings)
-			{
-				sb.Length = 0; // clear
-				sb.Append(mapping.SourceText);
-				sb.Append(" => ");
-				sb.Append(mapping.TargetText);
-				if (! string.IsNullOrEmpty(mapping.Description))
-				{
-					sb.AppendFormat(" # {0}", mapping.Description);
-				}
-
-				writer.WriteLine(sb.ToString());
-			}
-		}
-
-		private static string GetHeaderText(AttributeDependency dependency,
-		                                    StringBuilder sb)
-		{
-			const char delimiter = ',';
-			Assert.True(_delimiters.IndexOf(delimiter) >= 0,
-			            "delimiter must be one of: {0}", _delimiters);
-
-			sb.Length = 0; // clear
-			sb.Append("# ");
-			sb.Append(StringUtils.Concatenate(
-				          dependency.SourceAttributes.Select(attribute => attribute.Name),
-				          delimiter.ToString()));
-			sb.Append(" => ");
-			sb.Append(StringUtils.Concatenate(
-				          dependency.TargetAttributes.Select(attribute => attribute.Name),
-				          delimiter.ToString()));
-			sb.Append(" # description");
-
-			return sb.ToString();
-		}
-
-		public static void ExportMappingsCsv(
-			[NotNull] AttributeDependency dependency, [NotNull] TextWriter writer)
-		{
-			Assert.ArgumentNotNull(dependency, nameof(dependency));
-			Assert.ArgumentNotNull(writer, nameof(writer));
-
-			const char separator = ';';
-			using (var csv = new CsvWriter(writer, separator))
-			{
-				var values = new List<object>();
-
-				// Write row header line:
-				values.AddRange(dependency.SourceAttributes.Select(attribute => attribute.Name)
-				                          .Cast<object>());
-				values.AddRange(dependency.TargetAttributes.Select(attribute => attribute.Name)
-				                          .Cast<object>());
-				values.Add("description");
-
-				csv.WriteRecord(values);
-
-				foreach (AttributeValueMapping mapping in dependency.AttributeValueMappings)
-				{
-					values.Clear();
-
-					values.AddRange(mapping.SourceValues);
-					values.AddRange(mapping.TargetValues);
-					values.Add(mapping.Description);
-
-					csv.WriteRecord(values);
-				}
-			}
-		}
-
-		#endregion
-
-		#region Import Mappings
-
-		public static void ImportMappingsTxt([NotNull] AttributeDependency dependency,
-		                                     [NotNull] TextReader reader)
-		{
-			Assert.ArgumentNotNull(dependency, nameof(dependency));
-			Assert.ArgumentNotNull(reader, nameof(reader));
-
-			dependency.AttributeValueMappings.Clear();
-			// drop all existing mappings (ensure HBM is cascading)
-
-			int sourceCount = dependency.SourceAttributes.Count;
-			int targetCount = dependency.TargetAttributes.Count;
-
-			var lineno = 0;
-			string line;
-			while ((line = reader.ReadLine()) != null)
-			{
-				lineno += 1;
-				line = line.Trim();
-				if (line.Length < 1)
-				{
-					continue; // skip blank line
-				}
-
-				if (line[0] == '#')
-				{
-					continue; // skip comment line
-				}
-
-				string sourceText, targetText, description;
-				if (SplitLine(line, out sourceText, out targetText, out description))
-				{
-					var mapping = new AttributeValueMapping(sourceText, targetText,
-					                                        description);
-
-					Assert.True(sourceCount == mapping.SourceValues.Count,
-					            "Line {0}: expected {1} source values, but got {2}",
-					            lineno, sourceCount, mapping.SourceValues.Count);
-
-					Assert.True(targetCount == mapping.TargetValues.Count,
-					            "Line {0}: expected {1} target values, but got {2}",
-					            lineno, targetCount, mapping.TargetValues.Count);
-
-					dependency.AttributeValueMappings.Add(mapping);
-				}
-				else
-				{
-					Assert.Fail("Line {0}: invalid syntax", lineno);
-				}
-			}
-		}
-
-		private static bool SplitLine(string line, out string sourceText,
-		                              out string targetText, out string description)
-		{
-			// Line format: "source => target [# description]"
-
-			sourceText = null;
-			targetText = null;
-			description = null;
-
-			int mapsToIndex = line.IndexOf("=>", StringComparison.Ordinal);
-
-			if (mapsToIndex < 0)
-			{
-				return false;
-			}
-
-			sourceText = line.Substring(0, mapsToIndex).Trim();
-
-			int commentIndex = line.IndexOf("#", mapsToIndex, StringComparison.Ordinal);
-
-			if (commentIndex < 0)
-			{
-				targetText = line.Substring(mapsToIndex + 2).Trim();
-			}
-			else
-			{
-				int start = mapsToIndex + 2;
-				int length = commentIndex - start;
-				targetText = line.Substring(start, length).Trim();
-
-				description = line.Substring(commentIndex + 1).Trim();
-			}
-
-			return true;
-		}
-
-		public static void ImportMappingsCsv(
-			[NotNull] AttributeDependency dependency,
-			[NotNull] TextReader reader)
-		{
-			Assert.ArgumentNotNull(dependency, nameof(dependency));
-			Assert.ArgumentNotNull(reader, nameof(reader));
-
-			const char delimiter = ',';
-			Assert.True(_delimiters.IndexOf(delimiter) >= 0,
-			            "delimiter must be one of: {0}", _delimiters);
-
-			dependency.AttributeValueMappings.Clear();
-			// drop all existing mappings (ensure HBM is cascading)
-
-			int sourceCount = dependency.SourceAttributes.Count;
-			int targetCount = dependency.TargetAttributes.Count;
-			int columnCount = sourceCount + targetCount + 1;
-
-			const char fieldSeparator = ';';
-			using (var csv = new CsvReader(reader, fieldSeparator))
-			{
-				csv.SkipBlankLines = true;
-				csv.SkipCommentLines = true;
-
-				// Skip first (non-comment) line which declares row headers:
-				if (! csv.ReadRecord())
-				{
-					throw new Exception("Need at least two records (but found none)");
-				}
-
-				try
-				{
-					while (csv.ReadRecord())
-					{
-						IList<string> values = csv.Values;
-
-						if (values.Count != columnCount)
-						{
-							throw new FormatException(
-								string.Format("Expect {0} fields but found {1}", columnCount,
-								              values.Count));
-						}
-
-						var sourceValues = new List<object>();
-						var targetValues = new List<object>();
-						string description = string.Empty;
-
-						for (var i = 0; i < values.Count; i++)
-						{
-							if (i < sourceCount)
-							{
-								string value = string.IsNullOrEmpty(values[i]) ? null : values[i];
-								FieldType fieldType = dependency.SourceAttributes[i].FieldType;
-								object typedValue = Convert(value, fieldType, null);
-								sourceValues.Add(typedValue);
-							}
-							else if (i < sourceCount + targetCount)
-							{
-								string value = string.IsNullOrEmpty(values[i]) ? null : values[i];
-								FieldType fieldType =
-									dependency.TargetAttributes[i - sourceCount].FieldType;
-								object typedValue = Convert(value, fieldType, null);
-								targetValues.Add(typedValue);
-							}
-							else
-							{
-								description = values[i];
-							}
-						}
-
-						var sb = new StringBuilder();
-						string sourceText = Format(sourceValues, sb);
-						string targetText = Format(targetValues, sb);
-
-						var mapping = new AttributeValueMapping(sourceText, targetText,
-						                                        description);
-
-						dependency.AttributeValueMappings.Add(mapping);
-					}
-				}
-				catch (Exception ex)
-				{
-					throw new FormatException(
-						string.Format("{0} (line {1})", ex.Message, csv.LineNumber - 1), ex);
-				}
-			}
-		}
-
-		#endregion
-
+		
 		[NotNull]
 		public static string Format([NotNull] IList<object> values,
 		                            [CanBeNull] StringBuilder sb = null)
@@ -653,7 +287,7 @@ namespace ProSuite.DomainModel.Core.AttributeDependencies
 					sb.Append(delimiter);
 				}
 
-				TypeCode typeCode = System.Convert.GetTypeCode(value);
+				TypeCode typeCode = Convert.GetTypeCode(value);
 
 				switch (typeCode)
 				{
@@ -688,7 +322,7 @@ namespace ProSuite.DomainModel.Core.AttributeDependencies
 					case TypeCode.UInt64:
 					case TypeCode.Single:
 					case TypeCode.Double:
-						sb.Append(System.Convert.ToString(value,
+						sb.Append(Convert.ToString(value,
 						                                  CultureInfo.InvariantCulture));
 						break;
 
@@ -787,64 +421,7 @@ namespace ProSuite.DomainModel.Core.AttributeDependencies
 
 			return true;
 		}
-
-		public static int GetAttributeIndex(AttributeDependency ad, string fieldName,
-		                                    out bool source)
-		{
-			// TODO Instead of out bool source, consider an enum { None, Source, Target }
-			var comparison = StringComparison.Ordinal;
-
-			int index = GetAttributeIndex(ad.SourceAttributes, fieldName, comparison);
-			if (index >= 0)
-			{
-				source = true;
-				return index;
-			}
-
-			index = GetAttributeIndex(ad.TargetAttributes, fieldName, comparison);
-			if (index >= 0)
-			{
-				source = false;
-				return index;
-			}
-
-			comparison = StringComparison.OrdinalIgnoreCase;
-
-			index = GetAttributeIndex(ad.SourceAttributes, fieldName, comparison);
-			if (index >= 0)
-			{
-				source = true;
-				return index;
-			}
-
-			index = GetAttributeIndex(ad.TargetAttributes, fieldName, comparison);
-			if (index >= 0)
-			{
-				source = false;
-				return index;
-			}
-
-			source = false; // ignored
-			return -1; // not found
-		}
-
-		private static int GetAttributeIndex(IList<Attribute> attributes, string name,
-		                                     StringComparison comparison)
-		{
-			int count = attributes.Count;
-
-			for (var index = 0; index < count; index++)
-			{
-				if (attributes[index] is ObjectAttribute attribute &&
-				    string.Equals(attribute.Name, name, comparison))
-				{
-					return index;
-				}
-			}
-
-			return -1; // not found
-		}
-
+		
 		#region Private methods
 
 		#region Parser
@@ -1429,4 +1006,6 @@ namespace ProSuite.DomainModel.Core.AttributeDependencies
 			return ValueString;
 		}
 	}
-}
+
+	}
+

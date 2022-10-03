@@ -165,6 +165,51 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Find rows in &apos;table&apos; that do not have a match in &apos;mappings&apos;.
+        /// </summary>
+        public static string QaAttributeDependency_0 {
+            get {
+                return ResourceManager.GetString("QaAttributeDependency_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to string representations of source values and target values.
+        /// </summary>
+        public static string QaAttributeDependency_mappings {
+            get {
+                return ResourceManager.GetString("QaAttributeDependency_mappings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to fields holding source values.
+        /// </summary>
+        public static string QaAttributeDependency_sourceFields {
+            get {
+                return ResourceManager.GetString("QaAttributeDependency_sourceFields", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to table.
+        /// </summary>
+        public static string QaAttributeDependency_table {
+            get {
+                return ResourceManager.GetString("QaAttributeDependency_table", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to fields holding target values.
+        /// </summary>
+        public static string QaAttributeDependency_targetFields {
+            get {
+                return ResourceManager.GetString("QaAttributeDependency_targetFields", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Finds features that are not involved in valid rings:
         ///Checks if features in &apos;polylineClass&apos; build rings and if the features in a ring are directed in clockwise / counterclockwise direction.
         /// </summary>

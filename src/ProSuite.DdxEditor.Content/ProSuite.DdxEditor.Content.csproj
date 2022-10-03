@@ -77,6 +77,9 @@
     <Compile Update="Associations\AssociationControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
+    <Compile Update="AttributeDependencies\AttributeDependencyControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
     <Compile Update="Attributes\AssociationAttributeControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -231,6 +234,9 @@
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Update="Associations\AssociationControl.resx">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Update="AttributeDependencies\AttributeDependencyControl.resx">
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Update="Attributes\AttributeControl.resx">

@@ -4800,4 +4800,19 @@ The sort order must correspond with 'polylineClasses'.</value>
   <data name="QaMaxSlope_AngularUnit" xml:space="preserve">
     <value>Unit of 'limit', default = 'radian'.</value>
   </data>
+  <data name="QaAttributeDependency_0" xml:space="preserve">
+    <value>Find rows in 'table' that do not have a match in 'mappings'</value>
+  </data>
+  <data name="QaAttributeDependency_mappings" xml:space="preserve">
+    <value>string representations of source values and target values</value>
+  </data>
+  <data name="QaAttributeDependency_sourceFields" xml:space="preserve">
+    <value>fields holding source values</value>
+  </data>
+  <data name="QaAttributeDependency_table" xml:space="preserve">
+    <value>table</value>
+  </data>
+  <data name="QaAttributeDependency_targetFields" xml:space="preserve">
+    <value>fields holding target values</value>
+  </data>
 </root>

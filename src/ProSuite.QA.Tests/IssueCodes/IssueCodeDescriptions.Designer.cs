@@ -19,7 +19,7 @@ namespace ProSuite.QA.Tests.IssueCodes {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class IssueCodeDescriptions {
@@ -57,6 +57,42 @@ namespace ProSuite.QA.Tests.IssueCodes {
             }
             set {
                 resourceCulture = value;
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No mapping (attribute value combination) defined in Attribute Dependency.
+        /// </summary>
+        internal static string AttributeDependency_NoMappingDefined {
+            get {
+                return ResourceManager.GetString("AttributeDependency_NoMappingDefined", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Either no source field or no target field defined in Attribute Dependency.
+        /// </summary>
+        internal static string AttributeDependency_SourceOrTargetFieldNotDefined {
+            get {
+                return ResourceManager.GetString("AttributeDependency_SourceOrTargetFieldNotDefined", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Source values not defined in Attribute Dependency.
+        /// </summary>
+        internal static string AttributeDependency_SourceValuesNotDefined {
+            get {
+                return ResourceManager.GetString("AttributeDependency_SourceValuesNotDefined", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Target values not defined in Attribute Dependency (given matching source values).
+        /// </summary>
+        internal static string AttributeDependency_TargetValuesNotDefined {
+            get {
+                return ResourceManager.GetString("AttributeDependency_TargetValuesNotDefined", resourceCulture);
             }
         }
         

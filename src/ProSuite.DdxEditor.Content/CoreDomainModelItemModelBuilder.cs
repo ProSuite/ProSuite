@@ -6,6 +6,7 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DdxEditor.Content.AssociationEnds;
 using ProSuite.DdxEditor.Content.Associations;
+using ProSuite.DdxEditor.Content.AttributeDependencies;
 using ProSuite.DdxEditor.Content.Attributes;
 using ProSuite.DdxEditor.Content.AttributeTypes;
 using ProSuite.DdxEditor.Content.Connections;
@@ -28,6 +29,9 @@ using ProSuite.DdxEditor.Framework.Items;
 using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.Geodatabase;
 using ProSuite.DomainModel.AO.QA;
+using ProSuite.DomainModel.Core.AttributeDependencies;
+using ProSuite.DomainModel.Core.AttributeDependencies.Repositories;
+using ProSuite.DomainModel.Core.AttributeDependencies.Xml;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.DataModel.Repositories;
 using ProSuite.DomainModel.Core.DataModel.Xml;
@@ -88,6 +92,16 @@ namespace ProSuite.DdxEditor.Content
 			get { throw new NotImplementedException(); }
 		}
 
+		public virtual IAttributeDependencyRepository AttributeDependencies
+		{
+			get { throw new NotImplementedException(); }
+		}
+
+		public virtual IAttributeValueMappingRepository AttributeValueMappings
+		{
+			get { throw new NotImplementedException(); }
+		}
+
 		public abstract IInstanceConfigurationRepository InstanceConfigurations { get; }
 		public abstract IQualityConditionRepository QualityConditions { get; }
 		public abstract IQualitySpecificationRepository QualitySpecifications { get; }
@@ -109,6 +123,10 @@ namespace ProSuite.DdxEditor.Content
 		public abstract IXmlSimpleTerrainsExporter SimpleTerrainsExporter { get; }
 
 		public abstract IXmlSimpleTerrainsImporter SimpleTerrainsImporter { get; }
+
+		public abstract IXmlAttributeDependenciesExporter AttributeDependenciesExporter { get; }
+
+		public abstract IXmlAttributeDependenciesImporter AttributeDependenciesImporter { get; }
 
 		public abstract IXmlDataQualityImporter DataQualityImporter { get; }
 
@@ -219,6 +237,27 @@ namespace ProSuite.DdxEditor.Content
 
 		public abstract IEnumerable<Item> GetChildren<T>(AssociationEndsItem<T> item)
 			where T : ObjectDataset;
+
+		[NotNull]
+		public IEnumerable<Item> GetChildren([NotNull] AttributeDependenciesItem parent)
+		{
+			Assert.ArgumentNotNull(parent, nameof(parent));
+
+			IList<AttributeDependency> entities;
+			try
+			{
+				entities = GetAll(AttributeDependencies);
+			}
+			catch // e.g. no tables in ddx; be silent here and react on parent?
+			{
+				yield break;
+			}
+
+			foreach (AttributeDependency entity in entities)
+			{
+				yield return new AttributeDependencyItem(this, entity, AttributeDependencies);
+			}
+		}
 
 		[NotNull]
 		public IEnumerable<Item> GetChildren(
@@ -361,6 +400,13 @@ namespace ProSuite.DdxEditor.Content
 
 		public abstract IList<DependingItem> GetDependingItems(
 			[CanBeNull] SpatialReferenceDescriptor spatialReferenceDescriptor);
+
+		[NotNull]
+		public virtual IList<DependingItem> GetDependingItems(
+			[CanBeNull] AttributeDependency attributeDependency)
+		{
+			return new List<DependingItem>();
+		}
 
 		[NotNull]
 		public virtual IList<DependingItem> GetDependingItems(
