@@ -2765,7 +2765,8 @@ namespace ProSuite.Commons.Geom
 				predicate = li => true;
 			}
 
-			for (int i = 0; i < linestring.SegmentCount; i++)
+			int segmentCount = linestring.SegmentCount;
+			for (int i = 0; i < segmentCount; i++)
 			{
 				var linearSelfIntersections = new List<SegmentIntersection>(
 					SegmentIntersectionUtils.GetRelevantSelfIntersectionsXY(i, linestring[i],

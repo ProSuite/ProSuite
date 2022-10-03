@@ -78,9 +78,15 @@ namespace ProSuite.Commons.Geom
 
 			SegmentIntersection previousLinearIntersection = null;
 
-			for (var lineIdx = 0; lineIdx < segmentList1.SegmentCount; lineIdx++)
+			var lineIdx = -1;
+			foreach (Line3D line in segmentList1)
 			{
-				Line3D line = segmentList1.GetSegment(lineIdx);
+				lineIdx++;
+
+				if (GeomRelationUtils.AreBoundsDisjoint(segmentList2, line, tolerance))
+				{
+					continue;
+				}
 
 				foreach (SegmentIntersection result in GetSegmentIntersectionsXY(
 					         lineIdx, line, segmentList2, tolerance,

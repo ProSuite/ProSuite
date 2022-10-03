@@ -644,21 +644,22 @@ namespace ProSuite.Commons.Geom
 			}
 			else
 			{
-				for (int i = 0; i < SegmentCount; i++)
+				// foreach is faster than index-access (due to global->local index conversions)
+				int index = 0;
+				foreach (Line3D segment in this)
 				{
-					if (predicate != null && ! predicate(i))
+					if (predicate != null && ! predicate(index))
 					{
 						continue;
 					}
 
-					Line3D segment = this[i];
-
 					if (segment.ExtentIntersectsXY(
 						    xMin, yMin, xMax, yMax, tolerance))
 					{
-						//var identifier = new SegmentIndex(p, s);
-						yield return new KeyValuePair<int, Line3D>(i, segment);
+						yield return new KeyValuePair<int, Line3D>(index, segment);
 					}
+
+					index++;
 				}
 			}
 		}

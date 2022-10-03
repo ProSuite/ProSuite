@@ -523,7 +523,7 @@ namespace ProSuite.Commons.AO.Surface.Raster
 				yield break;
 			}
 
-			foreach (ISimpleRaster simpleRaster in _rasterIndex.Search(new Pnt2D(x, y),
+			foreach (ISimpleRaster simpleRaster in _rasterIndex.Search((IBox) new Pnt2D(x, y),
 				         _searchTolerance))
 			{
 				if (GeomRelationUtils.AreBoundsDisjoint(simpleRaster.GetEnvelope(), x, y,

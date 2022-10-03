@@ -152,12 +152,12 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 
 		public static SpatialHashSearcher<T> CreateSpatialSearcher(
 			[NotNull] IList<T> values,
-			Func<T, EnvelopeXY> getBoundsFunc,
+			Func<T, IBoundedXY> getBoundsFunc,
 			double gridSize = double.NaN)
 		{
 			Assert.ArgumentCondition(values.Count > 0, "Empty value list");
 
-			List<EnvelopeXY> valueEnvelopes =
+			List<IBoundedXY> valueEnvelopes =
 				values.Select(getBoundsFunc).ToList();
 
 			EnvelopeXY fullExtent;
@@ -285,6 +285,13 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 			              searchBox.Max.Y, tolerance);
 		}
 
+		public IEnumerable<T> Search(IBoundedXY searchBox,
+		                             double tolerance)
+		{
+			return Search(searchBox.XMin, searchBox.YMin, searchBox.XMax, searchBox.YMax,
+			              tolerance);
+		}
+
 		public IEnumerable<T> Search(
 			double xMin, double yMin, double xMax, double yMax,
 			double tolerance, Predicate<T> predicate = null)
@@ -295,7 +302,7 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 			yMax += tolerance;
 
 			foreach (T identifier in _spatialHashIndex.FindIdentifiers(
-				xMin, yMin, xMax, yMax, predicate))
+				         xMin, yMin, xMax, yMax, predicate))
 			{
 				yield return identifier;
 			}
@@ -353,7 +360,7 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 		}
 
 		private static void GetEnvelopeStatistics(
-			[NotNull] ICollection<EnvelopeXY> envelopes,
+			[NotNull] ICollection<IBoundedXY> envelopes,
 			[CanBeNull] out EnvelopeXY unionedEnvelope,
 			out double averageDensity)
 		{
@@ -363,7 +370,7 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 
 			int count = 0;
 			double totalSideLengths = 0;
-			foreach (EnvelopeXY envelope in envelopes)
+			foreach (IBoundedXY envelope in envelopes)
 			{
 				count++;
 
@@ -376,8 +383,8 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 					unionedEnvelope.EnlargeToInclude(envelope);
 				}
 
-				totalSideLengths += envelope.Width;
-				totalSideLengths += envelope.Height;
+				totalSideLengths += envelope.XMax - envelope.XMin;
+				totalSideLengths += envelope.YMax - envelope.YMin;
 			}
 
 			if (totalSideLengths > 0)
