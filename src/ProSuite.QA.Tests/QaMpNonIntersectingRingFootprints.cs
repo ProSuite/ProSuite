@@ -1,10 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.Commons.AO.Geometry;
@@ -13,6 +11,9 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
 using ProSuite.QA.Core;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
 {
@@ -52,16 +53,16 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaMpNonIntersectingRingFootprints_0))]
 		public QaMpNonIntersectingRingFootprints(
 			[Doc(nameof(DocStrings.QaMpNonIntersectingRingFootprints_multiPatchClass))] [NotNull]
-			IFeatureClass
+			IReadOnlyFeatureClass
 				multiPatchClass,
 			[Doc(nameof(DocStrings.QaMpNonIntersectingRingFootprints_allowIntersectionsForDifferentPointIds))]
 			bool allowIntersectionsForDifferentPointIds)
-			: base((ITable) multiPatchClass)
+			: base(multiPatchClass)
 		{
 			Assert.ArgumentNotNull(multiPatchClass, nameof(multiPatchClass));
 
 			_allowIntersectionsForDifferentPointIds = allowIntersectionsForDifferentPointIds;
-			_spatialReference = ((IGeoDataset) multiPatchClass).SpatialReference;
+			_spatialReference = multiPatchClass.SpatialReference;
 			_shapeFieldName = multiPatchClass.ShapeFieldName;
 		}
 
@@ -89,9 +90,9 @@ namespace ProSuite.QA.Tests
 			return false;
 		}
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
-			var feature = row as IFeature;
+			var feature = row as IReadOnlyFeature;
 
 			var multiPatch = feature?.Shape as IMultiPatch;
 			if (multiPatch == null)
@@ -117,7 +118,7 @@ namespace ProSuite.QA.Tests
 
 		private static IPoint QueryPoint => _queryPoint ?? (_queryPoint = new PointClass());
 
-		private int CheckRings([NotNull] IMultiPatch multiPatch, [NotNull] IFeature feature)
+		private int CheckRings([NotNull] IMultiPatch multiPatch, [NotNull] IReadOnlyFeature feature)
 		{
 			int errorCount;
 			IEnumerable<KeyValuePair<int, List<IPolygon>>> ringPolygonGroups =
@@ -148,7 +149,7 @@ namespace ProSuite.QA.Tests
 			return errorCount;
 		}
 
-		private int ReportErrors([NotNull] IFeature feature,
+		private int ReportErrors([NotNull] IReadOnlyFeature feature,
 		                         [NotNull] IPolygon intersection,
 		                         int id)
 		{
@@ -167,7 +168,7 @@ namespace ProSuite.QA.Tests
 			return errorCount;
 		}
 
-		private int ReportError([NotNull] IFeature feature,
+		private int ReportError([NotNull] IReadOnlyFeature feature,
 		                        [NotNull] IPolygon intersection,
 		                        int id)
 		{
@@ -188,9 +189,9 @@ namespace ProSuite.QA.Tests
 					              FormatArea(area, _spatialReference));
 			}
 
-			return ReportError(description, intersection,
-			                   Codes[Code.RingFootprintsIntersect], _shapeFieldName,
-			                   feature);
+			return ReportError(
+				description, InvolvedRowUtils.GetInvolvedRows(feature), intersection,
+				Codes[Code.RingFootprintsIntersect], _shapeFieldName);
 		}
 
 		[NotNull]
@@ -251,7 +252,7 @@ namespace ProSuite.QA.Tests
 		[NotNull]
 		private IEnumerable<KeyValuePair<int, List<IPolygon>>> GetRingPolygonGroups(
 			[NotNull] IMultiPatch multiPatch,
-			[NotNull] IFeature feature,
+			[NotNull] IReadOnlyFeature feature,
 			out int errorCount)
 		{
 			var result = new Dictionary<int, List<IPolygon>>();
@@ -284,10 +285,9 @@ namespace ProSuite.QA.Tests
 								"Point ids are not unique within face. Point ids: {0}",
 								StringUtils.ConcatenateSorted(pointIds, ","));
 
-							errorCount += ReportError(description, polygon,
-							                          Codes[Code.PointIdNotUniqueWithinFace],
-							                          _shapeFieldName,
-							                          feature);
+							errorCount += ReportError(
+								description, InvolvedRowUtils.GetInvolvedRows(feature), polygon,
+								Codes[Code.PointIdNotUniqueWithinFace], _shapeFieldName);
 							continue;
 						}
 					}

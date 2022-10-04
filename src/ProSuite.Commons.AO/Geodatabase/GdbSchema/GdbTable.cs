@@ -1,8 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Data;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 
 namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 {
@@ -13,15 +16,17 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 	/// provided  <see cref="BackingDataset"/> allows for actual data-access, such as GetRow()
 	/// or Search().
 	/// </summary>
-	public class GdbTable : VirtualTable, IEquatable<IObjectClass>
+	public class GdbTable : VirtualTable
 	{
 		private const string _defaultOidFieldName = "OBJECTID";
+
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private int _lastUsedOid;
 		private readonly IWorkspace _workspace;
 
 		private IName _fullName;
-		private bool _hasOID;
+
 		private string _oidFieldName;
 
 		private static int _nextObjectClassId;
@@ -67,6 +72,22 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			}
 		}
 
+		public GdbTable(ITable template, bool useTemplateForQuerying = false)
+			: this(GetObjectClassId(template), DatasetUtils.GetName(template),
+			       GetAliasName(template), null, DatasetUtils.GetWorkspace(template))
+		{
+			for (int i = 0; i < template.Fields.FieldCount; i++)
+			{
+				IField field = template.Fields.Field[i];
+				AddField(field);
+			}
+
+			if (useTemplateForQuerying)
+			{
+				BackingDataset = new BackingTable(template, this);
+			}
+		}
+
 		[CanBeNull]
 		public BackingDataset BackingDataset { get; }
 
@@ -77,60 +98,85 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			return ++_lastUsedOid;
 		}
 
-		protected virtual IObject CreateObject(int oid)
+		/// <summary>
+		/// Create a row with a pre-determined OID. Calling this method as opposed to the
+		/// GdbRow constructor allows for certain optimizations.
+		/// </summary>
+		/// <param name="oid"></param>
+		/// <param name="valueList"></param>
+		/// <returns></returns>
+		public virtual GdbRow CreateObject(int oid,
+		                                   [CanBeNull] IValueList valueList = null)
 		{
-			return new GdbRow(oid, this);
+			return new GdbRow(oid, this, valueList);
+		}
+
+		/// <summary>
+		/// Create a row without OID (and hence provided by internal sequence) but with a list of
+		/// values.
+		/// </summary>
+		/// <param name="withValues"></param>
+		/// <returns></returns>
+		public GdbRow CreateObject(IValueList withValues)
+		{
+			return CreateObject(GetNextOid(), withValues);
 		}
 
 		protected virtual void FieldAddedCore(IField field) { }
 
 		#endregion
 
+		public int OidFieldIndex { get; private set; }
+
 		public void SetOIDFieldName(string fieldName)
 		{
 			_oidFieldName = fieldName;
+			OidFieldIndex = FindField(_oidFieldName);
+			Assert.False(OidFieldIndex < 0, "OID field does not exist");
 		}
 
-		public bool Equals(GdbTable other)
+		private static string GetAliasName(ITable template)
 		{
-			return Equals(_workspace, other._workspace) &&
-			       ObjectClassID == other.ObjectClassID;
-		}
-
-		public bool Equals(IObjectClass other)
-		{
-			if (other == null) return false;
-
-			if (other is GdbTable otherGdbTable && otherGdbTable._workspace == _workspace)
+			if (template is IObjectClass objectClass)
 			{
-				// Allow both workspaces to be null and hence equal!
-				return ObjectClassID == other.ObjectClassID;
+				return DatasetUtils.GetAliasName(objectClass);
 			}
 
-			return ObjectClassID == other.ObjectClassID &&
-			       WorkspaceUtils.IsSameWorkspace(_workspace, ((IDataset) other).Workspace,
-			                                      WorkspaceComparison.Exact);
+			return null;
 		}
 
-		public override bool Equals(object obj)
+		private static int GetObjectClassId(ITable template)
 		{
-			if (ReferenceEquals(null, obj)) return false;
-
-			if (ReferenceEquals(this, obj)) return true;
-
-			if (obj.GetType() != GetType()) return false;
-
-			return Equals((GdbTable) obj);
-		}
-
-		public override int GetHashCode()
-		{
-			unchecked
+			if (template is IObjectClass objectClass)
 			{
-				return ((_workspace != null ? _workspace.GetHashCode() : 0) * 397) ^
-				       ObjectClassID;
+				return objectClass.ObjectClassID;
+			}
+
+			return -1;
+		}
+
+		#region VirtualTable overrides
+
+		public override IEnumerable<IReadOnlyRow> EnumReadOnlyRows(
+			IQueryFilter queryFilter, bool recycling)
+		{
+			if (BackingDataset == null)
+			{
+				throw new NotImplementedException("No backing dataset provided for Search().");
+			}
+
+			try
+			{
+				return BackingDataset.Search(queryFilter, recycling);
+			}
+			catch (Exception e)
+			{
+				// Due to the possibility of nested tables, add the name to the exception: 
+				throw new DataException($"Error getting rows from {Name}", e);
 			}
 		}
+
+		#endregion
 
 		#region IDatasetEdit Member
 
@@ -147,19 +193,18 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		{
 			int i = base.AddFieldT(field);
 
-			if (field.Type == esriFieldType.esriFieldTypeOID)
+			// Do not overwrite previous a value that could have been set explicitly!
+			if (_oidFieldName == null && field.Type == esriFieldType.esriFieldTypeOID)
 			{
-				// Probably the same logic as AO (query) classes:
-				// The last one to be added determines the OID field
-				_hasOID = true;
-				_oidFieldName = field.Name;
+				// If nothing was set, the first one to be added determines the OID field.
+				SetOIDFieldName(field.Name);
 			}
 
 			FieldAddedCore(field);
 			return i;
 		}
 
-		public override bool HasOID => _hasOID;
+		public override bool HasOID => _oidFieldName != null;
 
 		public override string OIDFieldName => _oidFieldName;
 
@@ -204,19 +249,29 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		#region ITable members
 
-		public override IRow CreateRow()
+		public override VirtualRow CreateRow()
 		{
 			return CreateObject(GetNextOid());
 		}
 
-		public override IRow GetRow(int id)
+		public override IRow GetRow(int OID)
 		{
 			if (BackingDataset == null)
 			{
 				throw new NotImplementedException("No backing dataset provided for GetRow().");
 			}
 
-			return BackingDataset?.GetRow(id);
+			return BackingDataset.GetRow(OID);
+		}
+
+		public override IReadOnlyRow GetReadOnlyRow(int id)
+		{
+			if (BackingDataset == null)
+			{
+				throw new NotImplementedException("No backing dataset provided for GetRow().");
+			}
+
+			return BackingDataset.GetRow(id);
 		}
 
 		public override IRowBuffer CreateRowBuffer()
@@ -241,7 +296,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 				throw new NotImplementedException("No backing dataset provided for Search().");
 			}
 
-			IEnumerable<IRow> rows = BackingDataset.Search(queryFilter, recycling);
+			IEnumerable<VirtualRow> rows = BackingDataset.Search(queryFilter, recycling);
 
 			return new CursorImpl(this, rows);
 		}
@@ -267,54 +322,6 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 				}
 
 				return FindField(SubtypeFieldName);
-			}
-		}
-
-		#endregion
-
-		#region Nested class CursorImpl
-
-		protected class CursorImpl_ : ICursor
-		{
-			private readonly IEnumerator<IRow> _rowEnumerator;
-
-			public CursorImpl_(ITable table, IEnumerable<IRow> rows)
-			{
-				Fields = table.Fields;
-
-				_rowEnumerator = rows.GetEnumerator();
-			}
-
-			public IFields Fields { get; }
-
-			public int FindField(string name)
-			{
-				return Fields.FindField(name);
-			}
-
-			public IRow NextRow()
-			{
-				return _rowEnumerator.MoveNext() ? _rowEnumerator.Current : null;
-			}
-
-			public void UpdateRow(IRow row)
-			{
-				throw new NotImplementedException();
-			}
-
-			public void DeleteRow()
-			{
-				throw new NotImplementedException();
-			}
-
-			public object InsertRow(IRowBuffer buffer)
-			{
-				throw new NotImplementedException();
-			}
-
-			public void Flush()
-			{
-				throw new NotImplementedException();
 			}
 		}
 

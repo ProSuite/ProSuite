@@ -2,15 +2,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.esriSystem;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
 {
@@ -41,12 +42,12 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaNoTouchingParts_0))]
 		public QaNoTouchingParts(
 			[Doc(nameof(DocStrings.QaNoTouchingParts_featureClass))] [NotNull]
-			IFeatureClass featureClass)
-			: base((ITable) featureClass)
+			IReadOnlyFeatureClass featureClass)
+			: base(featureClass)
 		{
 			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
 
-			_tolerance = GeometryUtils.GetXyResolution(featureClass);
+			_tolerance = SpatialReferenceUtils.GetXyResolution(featureClass.SpatialReference);
 			_shapeFieldName = featureClass.ShapeFieldName;
 		}
 
@@ -60,9 +61,9 @@ namespace ProSuite.QA.Tests
 			return false;
 		}
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
-			var feature = row as IFeature;
+			var feature = row as IReadOnlyFeature;
 			if (feature == null)
 			{
 				return NoError;
@@ -108,7 +109,7 @@ namespace ProSuite.QA.Tests
 			[NotNull] IGeometry part,
 			bool isLastPart,
 			[NotNull] IDictionary<Location, short> locationsOnPreviousParts,
-			[NotNull] IRow row)
+			[NotNull] IReadOnlyRow row)
 		{
 			Assert.ArgumentNotNull(part, nameof(part));
 			Assert.ArgumentNotNull(locationsOnPreviousParts, nameof(locationsOnPreviousParts));
@@ -144,13 +145,13 @@ namespace ProSuite.QA.Tests
 			return errorCount;
 		}
 
-		private int ReportError([NotNull] IRow row, [NotNull] IGeometry part, int pointIndex)
+		private int ReportError([NotNull] IReadOnlyRow row, [NotNull] IGeometry part, int pointIndex)
 		{
 			IPoint point = ((IPointCollection) part).get_Point(pointIndex);
 
-			return ReportError("Parts touch", point,
-			                   Codes[Code.PartsTouch],
-			                   _shapeFieldName, row);
+			return ReportError(
+				"Parts touch", InvolvedRowUtils.GetInvolvedRows(row), point,
+				Codes[Code.PartsTouch], _shapeFieldName);
 		}
 
 		[NotNull]

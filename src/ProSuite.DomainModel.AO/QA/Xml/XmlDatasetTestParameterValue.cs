@@ -17,10 +17,6 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		[DefaultValue(null)]
 		public string WorkspaceId { get; set; }
 
-		[XmlElement(ElementName = "RowFilterExpression")]
-		[DefaultValue(null)]
-		public XmlFilterExpression RowFilterExpression { get; set; }
-
 		public bool IsEmpty()
 		{
 			return WorkspaceId == null && string.IsNullOrWhiteSpace(TransformerName);

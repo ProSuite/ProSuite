@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.QA.Container
@@ -9,6 +9,6 @@ namespace ProSuite.QA.Container
 	/// </summary>
 	public abstract class NonContainerTest : TestBase
 	{
-		protected NonContainerTest([NotNull] IEnumerable<ITable> tables) : base(tables) { }
+		protected NonContainerTest([NotNull] IEnumerable<IReadOnlyTable> tables) : base(tables) { }
 	}
 }

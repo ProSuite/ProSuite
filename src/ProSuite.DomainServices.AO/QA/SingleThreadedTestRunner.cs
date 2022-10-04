@@ -8,6 +8,7 @@ using ProSuite.Commons;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Essentials.System;
 using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.QA;
@@ -35,7 +36,7 @@ namespace ProSuite.DomainServices.AO.QA
 
 		private TestContainer _executeContainer;
 
-		private IRow _currentRow;
+		private IReadOnlyRow _currentRow;
 
 		public SingleThreadedTestRunner(
 			Dictionary<ITest, TestVerification> testVerifications,
@@ -69,7 +70,7 @@ namespace ProSuite.DomainServices.AO.QA
 
 			StartVerification(QualityVerification);
 
-			TimeSpan processorStartTime = Process.GetCurrentProcess().UserProcessorTime;
+			TimeSpan processorStartTime = ProcessUtils.TryGetUserProcessorTime();
 
 			CancellationTokenSource = cancellationTokenSource;
 
@@ -164,10 +165,10 @@ namespace ProSuite.DomainServices.AO.QA
 					continue;
 				}
 
-				ITable table = relGeomTest.Table;
+				IReadOnlyTable table = relGeomTest.Table;
 				IList<ITest> testsForTable = relGeomTest.Tests;
 
-				IList<IRow> rows;
+				IList<IReadOnlyRow> rows;
 				using (progressWatch.MakeTransaction(
 					Step.DataLoading, Step.DataLoaded, tableIndex, tableCount, table))
 				{
@@ -225,7 +226,7 @@ namespace ProSuite.DomainServices.AO.QA
 			_msg.DebugStopTiming(watch, "VerifyByRelatedGeometry()");
 		}
 
-		private void Verify([NotNull] ITest test, [NotNull] IEnumerable<IRow> rows)
+		private void Verify([NotNull] ITest test, [NotNull] IEnumerable<IReadOnlyRow> rows)
 		{
 			Assert.ArgumentNotNull(test, nameof(test));
 			Assert.ArgumentNotNull(rows, nameof(rows));
@@ -266,8 +267,8 @@ namespace ProSuite.DomainServices.AO.QA
 		}
 
 		[NotNull]
-		private IList<IRow> GetRowsByRelatedGeometry(
-			[NotNull] ITable table,
+		private IList<IReadOnlyRow> GetRowsByRelatedGeometry(
+			[NotNull] IReadOnlyTable table,
 			[NotNull] IObjectDataset objectDataset,
 			[NotNull] ITest testWithTable,
 			[NotNull] IEnumerable<IList<IRelationshipClass>> relClassChains)
@@ -287,10 +288,10 @@ namespace ProSuite.DomainServices.AO.QA
 
 			if (oids.Count == 0)
 			{
-				return new List<IRow>();
+				return new List<IReadOnlyRow>();
 			}
 
-			return new List<IRow>(GdbQueryUtils.GetRowsInList(
+			return new List<IReadOnlyRow>(GdbQueryUtils.GetRowsInList(
 				                      table, table.OIDFieldName, oids,
 				                      recycle: false));
 		}
@@ -324,7 +325,7 @@ namespace ProSuite.DomainServices.AO.QA
 				                                   qualityCondition.Name,
 				                                   e.Message);
 
-				var involvedRows = new InvolvedRow[] { };
+				var involvedRows = new List<InvolvedRow>();
 				IGeometry exceptionErrorGeometry = null;
 
 				if (_currentRow != null)
@@ -334,7 +335,7 @@ namespace ProSuite.DomainServices.AO.QA
 					{
 						// second part: ESRI Bug for IQueryDefTables
 						// which returns row.HasOID = true
-						involvedRows = new[] {new InvolvedRow(_currentRow)};
+						involvedRows = InvolvedRowUtils.GetInvolvedRows(_currentRow);
 					}
 
 					try
@@ -422,7 +423,7 @@ namespace ProSuite.DomainServices.AO.QA
 
 			if (LocationBasedQualitySpecification != null)
 			{
-				var feature = e.Row as IFeature;
+				var feature = e.Row as IReadOnlyFeature;
 
 				if (feature != null &&
 				    ! LocationBasedQualitySpecification.IsFeatureToBeTested(
@@ -518,7 +519,7 @@ namespace ProSuite.DomainServices.AO.QA
 
 		private bool TryReportStopInfo(
 			[NotNull] StopInfo stopInfo,
-			[NotNull] IRow row,
+			[NotNull] IReadOnlyRow row,
 			[NotNull] QualityConditionVerification qualityConditionVerification)
 		{
 			Assert.ArgumentNotNull(stopInfo, nameof(stopInfo));
@@ -621,19 +622,19 @@ namespace ProSuite.DomainServices.AO.QA
 
 		#endregion
 
-		private void EndVerification(QualityVerification qualityVerification,
-		                             TimeSpan startTime)
+		private void EndVerification([CanBeNull] QualityVerification qualityVerification,
+		                             TimeSpan processorStartTime)
 		{
 			if (qualityVerification == null)
 			{
 				return;
 			}
 
-			TimeSpan endTime = Process.GetCurrentProcess().UserProcessorTime;
+			TimeSpan processorEndTime = ProcessUtils.TryGetUserProcessorTime();
 
-			TimeSpan t = endTime - startTime;
+			TimeSpan processorTime = processorEndTime - processorStartTime;
 
-			qualityVerification.ProcessorTimeSeconds = t.TotalSeconds;
+			qualityVerification.ProcessorTimeSeconds = processorTime.TotalSeconds;
 
 			qualityVerification.EndDate = DateTime.Now;
 

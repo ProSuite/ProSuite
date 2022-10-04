@@ -7,6 +7,7 @@ using NUnit.Framework;
 using ProSuite.Commons;
 using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.AO.Test.TestSupport;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests.Test
 {
@@ -41,7 +42,8 @@ namespace ProSuite.QA.Tests.Test
 
 			IFeature row1 = featureClassMock.CreateFeature(construction.MultiPatch);
 
-			var test = new QaMpHorizontalAzimuths(featureClassMock, 5, 0, 0, false);
+			var test = new QaMpHorizontalAzimuths(
+				ReadOnlyTableFactory.Create(featureClassMock), 5, 0, 0, false);
 			var runner = new QaTestRunner(test);
 			runner.Execute(row1);
 			Assert.AreEqual(1, runner.Errors.Count);
@@ -68,8 +70,9 @@ namespace ProSuite.QA.Tests.Test
 
 			IFeature row1 = featureClassMock.CreateFeature(construction.MultiPatch);
 
-			var test = new QaMpHorizontalAzimuths(featureClassMock, 5, azimuthToleranceDeg, 0,
-			                                      false);
+			var test = new QaMpHorizontalAzimuths(
+				ReadOnlyTableFactory.Create(featureClassMock), 5, azimuthToleranceDeg, 0,
+				false);
 			var runner = new QaTestRunner(test);
 			runner.Execute(row1);
 			Assert.AreEqual(1, runner.Errors.Count);
@@ -84,8 +87,8 @@ namespace ProSuite.QA.Tests.Test
 
 			row1 = featureClassMock.CreateFeature(construction.MultiPatch);
 
-			test = new QaMpHorizontalAzimuths(featureClassMock, 5, azimuthToleranceDeg, 0,
-			                                  false);
+			test = new QaMpHorizontalAzimuths(
+				ReadOnlyTableFactory.Create(featureClassMock), 5, azimuthToleranceDeg, 0, false);
 			runner = new QaTestRunner(test);
 			runner.Execute(row1);
 			Assert.AreEqual(0, runner.Errors.Count);
@@ -112,7 +115,8 @@ namespace ProSuite.QA.Tests.Test
 
 			IFeature row1 = featureClassMock.CreateFeature(construction.MultiPatch);
 
-			var test = new QaMpHorizontalAzimuths(featureClassMock, nearAngle, 0, 0, false);
+			var test = new QaMpHorizontalAzimuths(
+				ReadOnlyTableFactory.Create(featureClassMock), nearAngle, 0, 0, false);
 			var runner = new QaTestRunner(test);
 			runner.Execute(row1);
 			Assert.AreEqual(0, runner.Errors.Count);
@@ -127,7 +131,8 @@ namespace ProSuite.QA.Tests.Test
 
 			row1 = featureClassMock.CreateFeature(construction.MultiPatch);
 
-			test = new QaMpHorizontalAzimuths(featureClassMock, nearAngle, 0, 0, false);
+			test = new QaMpHorizontalAzimuths(
+				ReadOnlyTableFactory.Create(featureClassMock), nearAngle, 0, 0, false);
 			runner = new QaTestRunner(test);
 			runner.Execute(row1);
 			Assert.AreEqual(1, runner.Errors.Count);
@@ -166,7 +171,8 @@ namespace ProSuite.QA.Tests.Test
 
 			IFeature row1 = featureClassMock.CreateFeature(construction.MultiPatch);
 
-			var test = new QaMpHorizontalAzimuths(featureClassMock, nearAngle, 0, 0, false);
+			var test = new QaMpHorizontalAzimuths(
+				ReadOnlyTableFactory.Create(featureClassMock), nearAngle, 0, 0, false);
 			var runner = new QaTestRunner(test);
 			runner.Execute(row1);
 			Assert.AreEqual(0, runner.Errors.Count);
@@ -194,7 +200,8 @@ namespace ProSuite.QA.Tests.Test
 
 			row1 = featureClassMock.CreateFeature(construction.MultiPatch);
 
-			test = new QaMpHorizontalAzimuths(featureClassMock, nearAngle, 0, 0, false);
+			test = new QaMpHorizontalAzimuths(
+				ReadOnlyTableFactory.Create(featureClassMock), nearAngle, 0, 0, false);
 			runner = new QaTestRunner(test);
 			runner.Execute(row1);
 			Assert.AreEqual(1, runner.Errors.Count);
@@ -221,8 +228,9 @@ namespace ProSuite.QA.Tests.Test
 
 			IFeature row1 = featureClassMock.CreateFeature(construction.MultiPatch);
 
-			var test = new QaMpHorizontalAzimuths(featureClassMock, 5, 0,
-			                                      horizontalToleranceDeg, false);
+			var test = new QaMpHorizontalAzimuths(
+				ReadOnlyTableFactory.Create(featureClassMock), 5, 0,
+				horizontalToleranceDeg, false);
 			var runner = new QaTestRunner(test);
 			runner.Execute(row1);
 			Assert.AreEqual(0, runner.Errors.Count);
@@ -237,8 +245,8 @@ namespace ProSuite.QA.Tests.Test
 
 			row1 = featureClassMock.CreateFeature(construction.MultiPatch);
 
-			test = new QaMpHorizontalAzimuths(featureClassMock, 5, 0, horizontalToleranceDeg,
-			                                  false);
+			test = new QaMpHorizontalAzimuths(
+				ReadOnlyTableFactory.Create(featureClassMock), 5, 0, horizontalToleranceDeg, false);
 			runner = new QaTestRunner(test);
 			runner.Execute(row1);
 			Assert.AreEqual(1, runner.Errors.Count);

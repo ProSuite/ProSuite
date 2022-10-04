@@ -1,0 +1,200 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+
+    <ProjectGuid>{4EF1ACD5-6F18-45C0-BADD-44F26420AB77}</ProjectGuid>
+
+    <SignAssembly>true</SignAssembly>
+    <ProSuiteKeyFile Condition=" '$(ProSuiteKeyFile)' == '' ">..\ProSuite.Key.snk</ProSuiteKeyFile>
+    <AssemblyOriginatorKeyFile>$(ProSuiteKeyFile)</AssemblyOriginatorKeyFile>
+
+    <OutputDirectory Condition=" '$(OutputDirectory)' == '' ">..\..\bin</OutputDirectory>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <OutputPath>$(OutputDirectory)\$(Configuration)\</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+
+    <NoWarn>1591</NoWarn>
+
+    <!-- NOTE: Multi-targeting leads to problems in build if Winforms are included. 
+		Supported target frameworks: net48 (v4.8) or net6.0-windows -->
+    <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' Or '$(TargetFrameworkVersion)' == 'v4.8' ">net48</TargetFrameworkVersion>
+    <TargetFramework>$(TargetFrameworkVersion)</TargetFramework>
+
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugType>full</DebugType>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>false</Optimize>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <UseWpf>true</UseWpf>
+    <UseWindowsForms>true</UseWindowsForms>
+  </PropertyGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net48' ">
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xaml" />
+    <Reference Include="WindowsBase" />
+    <Reference Include="WindowsFormsIntegration" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="Properties\Images\Add.png" />
+    <None Remove="Properties\Images\CannotRemoveDependency.png" />
+    <None Remove="Properties\Images\DdxEditor.ico" />
+    <None Remove="Properties\Images\DefaultItemImage.png" />
+    <None Remove="Properties\Images\Delete.png" />
+    <None Remove="Properties\Images\DiscardChanges.png" />
+    <None Remove="Properties\Images\Exit.png" />
+    <None Remove="Properties\Images\Find.png" />
+    <None Remove="Properties\Images\GoToLastVisited.png" />
+    <None Remove="Properties\Images\GoToNextVisited.png" />
+    <None Remove="Properties\Images\GoToParent.png" />
+    <None Remove="Properties\Images\GroupItem.png" />
+    <None Remove="Properties\Images\GroupItemSelected.png" />
+    <None Remove="Properties\Images\Options.png" />
+    <None Remove="Properties\Images\Properties.png" />
+    <None Remove="Properties\Images\Reload.png" />
+    <None Remove="Properties\Images\RemoveDependencyByCascadingDeletion.png" />
+    <None Remove="Properties\Images\RemoveDependencyByDeletingAssociation.png" />
+    <None Remove="Properties\Images\Save.png" />
+    <None Remove="Properties\Images\ShowAboutBoxCmd.png" />
+    <None Remove="Properties\Images\ShowOnlineHelpCmd.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj" />
+    <ProjectReference Include="..\ProSuite.Commons.Logging\ProSuite.Commons.Logging.csproj" />
+    <ProjectReference Include="..\ProSuite.Commons.UI\ProSuite.Commons.UI.csproj" />
+    <ProjectReference Include="..\ProSuite.Commons\ProSuite.Commons.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
+    <Content Include="Properties\Images\Add.png" />
+    <Content Include="Properties\Images\CannotRemoveDependency.png" />
+    <Content Include="Properties\Images\DdxEditor.ico" />
+    <Content Include="Properties\Images\DefaultItemImage.png" />
+    <Content Include="Properties\Images\Delete.png" />
+    <Content Include="Properties\Images\DiscardChanges.png" />
+    <Content Include="Properties\Images\Exit.png" />
+    <Content Include="Properties\Images\Find.png" />
+    <Content Include="Properties\Images\GoToLastVisited.png" />
+    <Content Include="Properties\Images\GoToNextVisited.png" />
+    <Content Include="Properties\Images\GoToParent.png" />
+    <Content Include="Properties\Images\GroupItem.png" />
+    <Content Include="Properties\Images\GroupItemSelected.png" />
+    <Content Include="Properties\Images\Options.png" />
+    <Content Include="Properties\Images\Properties.png" />
+    <Content Include="Properties\Images\Reload.png" />
+    <Content Include="Properties\Images\RemoveDependencyByCascadingDeletion.png" />
+    <Content Include="Properties\Images\RemoveDependencyByDeletingAssociation.png" />
+    <Content Include="Properties\Images\Save.png" />
+    <Content Include="Properties\Images\ShowAboutBoxCmd.png" />
+    <Content Include="Properties\Images\ShowOnlineHelpCmd.png" />
+    <Compile Update="AboutForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="ApplicationShell.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="ContentPanel\ContentControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Update="DeleteItemsForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="EntityProperties\EntityPropertiesForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Help\HtmlHelpForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="History\ItemHistory.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="ItemViews\EntityControlWrapper.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Update="ItemViews\ICompositeEntityPanel.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="ItemViews\IEntityPanel.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="ItemViews\ItemTableControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Update="ItemViews\SegmentedEntityControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Update="ItemViews\TabbedEntityControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Update="Menus\CommandMenuItem.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Update="Menus\CommandToolStripButton.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Update="Menus\CommandToolStripMenuItem.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Update="NavigationPanel\NavigationControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Update="Properties\Resources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Update="AboutForm.resx">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Update="ApplicationShell.resx">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Update="ContentPanel\ContentControl.resx">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Update="ItemViews\EntityControlWrapper.resx">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Update="ItemViews\ItemTableControl.resx">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Update="ItemViews\SegmentedEntityControl.resx">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Update="ItemViews\TabbedEntityControl.resx">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Update="NavigationPanel\NavigationControl.resx">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Properties\Resources.resx">
+      <SubType>Designer</SubType>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <Generator>PublicResXFileCodeGenerator</Generator>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <!-- License files: -->
+  <ItemGroup>
+    <Content Include="..\..\lib\licenses\Microsoft.Web.WebView2.txt">
+      <Link>Licenses\Microsoft.Web.WebView2.txt</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="microsoft.web.webview2" Version="1.0.1210.39" />
+  </ItemGroup>
+
+</Project>

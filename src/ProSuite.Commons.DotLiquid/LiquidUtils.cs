@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -85,8 +86,17 @@ namespace ProSuite.Commons.DotLiquid
 		[NotNull]
 		private static string Render([NotNull] string templatePath,
 		                             [NotNull] Hash hash,
-		                             bool rethrowErrors = false)
+		                             bool rethrowErrors = false,
+		                             IFormatProvider formatProvider = null)
 		{
+			if (formatProvider == null)
+			{
+				formatProvider = CultureInfo.CurrentCulture;
+			}
+
+			ErrorsOutputMode errorsOutputMode =
+				rethrowErrors ? ErrorsOutputMode.Rethrow : ErrorsOutputMode.Display;
+
 			string templateDirectory = Path.GetDirectoryName(Path.GetFullPath(templatePath));
 
 			IFileSystem origFileSystem = Template.FileSystem;
@@ -101,10 +111,11 @@ namespace ProSuite.Commons.DotLiquid
 				string templateString = FileSystemUtils.ReadTextFile(templatePath);
 
 				Template template = Template.Parse(templateString);
-				var parameters = new RenderParameters
+
+				var parameters = new RenderParameters(formatProvider)
 				                 {
 					                 LocalVariables = hash,
-					                 RethrowErrors = rethrowErrors
+					                 ErrorsOutputMode = errorsOutputMode
 				                 };
 
 				string result = template.Render(parameters) ?? string.Empty;

@@ -9,7 +9,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using ESRI.ArcGIS.esriSystem;
@@ -27,8 +26,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 {
 	public static class DatasetUtils
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private const string _queryPrefix = "%";
 
@@ -130,7 +128,41 @@ namespace ProSuite.Commons.AO.Geodatabase
 		}
 
 		[CanBeNull]
+		public static IField GetLengthField([NotNull] IReadOnlyFeatureClass featureClass)
+		{
+			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
+
+			try
+			{
+				return featureClass.LengthField;
+			}
+			catch (NotImplementedException)
+			{
+				// property is not implemented for feature classes from non-Gdb workspaces 
+				// ("query layers")
+				return null;
+			}
+		}
+
+		[CanBeNull]
 		public static IField GetAreaField([NotNull] IFeatureClass featureClass)
+		{
+			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
+
+			try
+			{
+				return featureClass.AreaField;
+			}
+			catch (NotImplementedException)
+			{
+				// property is not implemented for feature classes from non-Gdb workspaces 
+				// ("query layers")
+				return null;
+			}
+		}
+
+		[CanBeNull]
+		public static IField GetAreaField([NotNull] IReadOnlyFeatureClass featureClass)
 		{
 			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
 
@@ -590,6 +622,25 @@ namespace ProSuite.Commons.AO.Geodatabase
 		}
 
 		[NotNull]
+		public static IFeatureClass CreateAnnotationFeatureClass(
+			[NotNull] IFeatureDataset featureDataset,
+			[NotNull] string fclassName,
+			[NotNull] IFields fields,
+			[CanBeNull] string configKeyWord = null)
+		{
+			Assert.ArgumentNotNull(featureDataset, nameof(featureDataset));
+			Assert.ArgumentNotNullOrEmpty(fclassName, nameof(fclassName));
+			Assert.ArgumentNotNull(fields, nameof(fields));
+			
+			return featureDataset.CreateFeatureClass(
+				fclassName, fields, GetAnnotationFeatureUID(),
+				GetAnnotationFeatureClassExtensionUID(),
+				esriFeatureType.esriFTAnnotation,
+				FieldUtils.GetShapeFieldName(),
+				configKeyWord);
+		}
+
+		[NotNull]
 		public static ITable CreateTable([NotNull] IFeatureWorkspace workspace,
 		                                 [NotNull] string name,
 		                                 [NotNull] params IField[] fields)
@@ -803,6 +854,25 @@ namespace ProSuite.Commons.AO.Geodatabase
 			var versionedObj = dataset as IVersionedObject;
 
 			return versionedObj != null && versionedObj.IsRegisteredAsVersioned;
+		}
+
+		public static bool IsRegisteredAsObjectClass([NotNull] IReadOnlyTable readOnlyTable)
+		{
+			Assert.ArgumentNotNull(readOnlyTable, nameof(readOnlyTable));
+			if (! (readOnlyTable is ReadOnlyTable ro))
+			{
+				return false;
+			}
+
+			ITable table = ro.BaseTable;
+			if (table == null)
+			{
+				return false;
+			}
+
+			return table is IObjectClass objectClass
+				       ? IsRegisteredAsObjectClass(objectClass)
+				       : IsRegisteredAsObjectClass(GetWorkspace(table), GetName(table));
 		}
 
 		public static bool IsRegisteredAsObjectClass([NotNull] ITable table)
@@ -1042,25 +1112,28 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			var srTolerance = (ISpatialReferenceTolerance) queryDescription.SpatialReference;
 
-			if (! double.IsNaN(xyTolerance))
+			if (srTolerance != null)
 			{
-				// TOP-5355: In some environments (versions) the SR created by GetQueryDescription()
-				// has 0 tolerances which subsequently results in HRESULT E_FAIL in topo-operators
-				// because it is not simple. Typically the tolerance is just the default of the SR
-				// which, in some situations can be equal or even smaller than the resolution!
+				if (! double.IsNaN(xyTolerance))
+				{
+					// TOP-5355: In some environments (versions) the SR created by GetQueryDescription()
+					// has 0 tolerances which subsequently results in HRESULT E_FAIL in topo-operators
+					// because it is not simple. Typically the tolerance is just the default of the SR
+					// which, in some situations can be equal or even smaller than the resolution!
 
-				// NOTE: The spatial reference must not be set to anything even slightly different 
-				// from the one derived by the Srid (internally) or no rows are found.
+					// NOTE: The spatial reference must not be set to anything even slightly different 
+					// from the one derived by the Srid (internally) or no rows are found.
 
-				// However, just chaning the tolerance seems to work:
+					// However, just chaning the tolerance seems to work:
 
-				srTolerance.XYTolerance = xyTolerance;
-			}
+					srTolerance.XYTolerance = xyTolerance;
+				}
 
-			if (srTolerance.XYToleranceValid != esriSRToleranceEnum.esriSRToleranceOK)
-			{
-				// Safety net: Do not allow a tolerance equal or smaller than the resolution:
-				srTolerance.SetMinimumXYTolerance();
+				if (srTolerance.XYToleranceValid != esriSRToleranceEnum.esriSRToleranceOK)
+				{
+					// Safety net: Do not allow a tolerance equal or smaller than the resolution:
+					srTolerance.SetMinimumXYTolerance();
+				}
 			}
 
 			return queryDescription;
@@ -1136,6 +1209,22 @@ namespace ProSuite.Commons.AO.Geodatabase
 			return QualifyFieldName((ITable) objectClass, unqualifiedFieldName);
 		}
 
+		public static string QualifyFieldName([NotNull] IReadOnlyTable table,
+		                                      [NotNull] string unqualifiedFieldName)
+		{
+			Assert.ArgumentNotNull(table, nameof(table));
+			Assert.ArgumentNotNullOrEmpty(unqualifiedFieldName, nameof(unqualifiedFieldName));
+
+			IWorkspace workspace = table.Workspace;
+
+			if (workspace is ISQLSyntax sqlWorkspace)
+			{
+				return sqlWorkspace.QualifyColumnName(table.Name, unqualifiedFieldName);
+			}
+
+			return $"{table.Name}.{unqualifiedFieldName}";
+		}
+
 		[NotNull]
 		public static string QualifyFieldName([NotNull] ITable table,
 		                                      [NotNull] string unqualifiedFieldName)
@@ -1191,9 +1280,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 					featureDataset = Path.GetFileName(candidateWorkspace);
 				}
 
-				candidateWorkspace =
-					Path.GetDirectoryName(candidateWorkspace);
-			} while (candidateWorkspace != null);
+				candidateWorkspace = Path.GetDirectoryName(candidateWorkspace);
+			} while (! string.IsNullOrEmpty(candidateWorkspace));
 
 			return null;
 		}
@@ -1726,10 +1814,14 @@ namespace ProSuite.Commons.AO.Geodatabase
 		public static IList<Subtype> GetSubtypes([NotNull] IObjectClass objectClass)
 		{
 			Assert.ArgumentNotNull(objectClass, nameof(objectClass));
+			return GetSubtypes(objectClass as ISubtypes);
+		}
 
+		[NotNull]
+		public static IList<Subtype> GetSubtypes([CanBeNull] ISubtypes subtypes)
+		{
 			var result = new List<Subtype>();
 
-			var subtypes = objectClass as ISubtypes;
 			if (subtypes == null || ! subtypes.HasSubtype)
 			{
 				return result;
@@ -1869,16 +1961,11 @@ namespace ProSuite.Commons.AO.Geodatabase
 			Assert.ArgumentNotNull(class1, nameof(class1));
 			Assert.ArgumentNotNull(class2, nameof(class2));
 
-			if (class1 == class2)
+			// Test for reference-equals in real ArcObjects object class instances but also allow
+			// synthetic and mock feature classes to provide their own equality implementation:
+			if (class1.Equals(class2))
 			{
 				return true;
-			}
-
-			// Allow specific IEquatable<IObjectClass> implementation in mock objects or synthetic features
-
-			if (class1 is IEquatable<IObjectClass> equatableObj)
-			{
-				return equatableObj.Equals(class2);
 			}
 
 			bool class1IsRelQuery = class1 is IRelQueryTable;
@@ -1968,16 +2055,31 @@ namespace ProSuite.Commons.AO.Geodatabase
 		public static IGeometryDef GetGeometryDef([NotNull] IFeatureClass featureClass)
 		{
 			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
+			return GetGeometryDef(featureClass.Fields, featureClass.ShapeFieldName,
+			                      () => GetName(featureClass));
+		}
 
-			string shapeFieldName = featureClass.ShapeFieldName;
+		public static IGeometryDef GetGeometryDef([NotNull] IReadOnlyFeatureClass featureClass)
+		{
+			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
+			return GetGeometryDef(featureClass.Fields, featureClass.ShapeFieldName,
+			                      () => featureClass.Name);
+		}
 
-			IFields fields = featureClass.Fields;
+		[NotNull]
+		private static IGeometryDef GetGeometryDef([NotNull] IFields fields,
+		                                           [NotNull] string shapeFieldName,
+		                                           Func<string> getDatasetName)
+		{
+			Assert.ArgumentNotNull(fields, nameof(fields));
+			Assert.ArgumentNotNull(shapeFieldName, nameof(shapeFieldName));
+
 			int shapeIndex = fields.FindField(shapeFieldName);
 
 			// TODO: test with QueryFeatureClass etc.
 			Assert.True(shapeIndex >= 0,
 			            "Shape field not found in FeatureClass {0}.",
-			            ((IDataset) featureClass).Name);
+			            getDatasetName());
 
 			IGeometryDef geometryDef = fields.Field[shapeIndex].GeometryDef;
 
@@ -2981,6 +3083,19 @@ namespace ProSuite.Commons.AO.Geodatabase
 			                      fieldName, GetName(table));
 		}
 
+		[NotNull]
+		public static IField GetField([NotNull] IReadOnlyTable table,
+		                              [NotNull] string fieldName)
+		{
+			Assert.ArgumentNotNull(table, nameof(table));
+			Assert.ArgumentNotNullOrEmpty(fieldName, nameof(fieldName));
+
+			IField field = table.Fields.Field[GetFieldIndex(table, fieldName)];
+
+			return Assert.NotNull(field, "field '{0}' not found in '{1}'",
+			                      fieldName, table.Name);
+		}
+
 		/// <summary>
 		/// Gets the fields.
 		/// </summary>
@@ -3094,6 +3209,24 @@ namespace ProSuite.Commons.AO.Geodatabase
 			{
 				throw new ArgumentException(
 					string.Format("Field '{0}' not found in '{1}'", fieldName, GetName(table)),
+					nameof(fieldName));
+			}
+
+			return fieldIndex;
+		}
+
+		public static int GetFieldIndex([NotNull] IReadOnlyTable table,
+		                                [NotNull] string fieldName)
+		{
+			Assert.ArgumentNotNull(table, nameof(table));
+			Assert.ArgumentNotNullOrEmpty(fieldName, nameof(fieldName));
+
+			int fieldIndex = table.FindField(fieldName);
+
+			if (fieldIndex < 0)
+			{
+				throw new ArgumentException(
+					string.Format("Field '{0}' not found in '{1}'", fieldName, table.Name),
 					nameof(fieldName));
 			}
 
@@ -3254,19 +3387,20 @@ namespace ProSuite.Commons.AO.Geodatabase
 		}
 
 		public static bool TryGetXyTolerance([NotNull] IFeatureClass featureClass,
-		                                     out double xyTolerance)
-		{
-			const bool requireBigEnough = false;
-			return TryGetXyTolerance(featureClass, out xyTolerance, requireBigEnough);
-		}
-
-		public static bool TryGetXyTolerance([NotNull] IFeatureClass featureClass,
 		                                     out double xyTolerance,
-		                                     bool requireBigEnough)
+		                                     bool requireBigEnough = false)
 		{
 			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
 
 			ISpatialReference spatialReference = ((IGeoDataset) featureClass).SpatialReference;
+			return TryGetXyTolerance(spatialReference, out xyTolerance, requireBigEnough);
+		}
+
+		public static bool TryGetXyTolerance([NotNull] ISpatialReference spatialReference,
+		                                     out double xyTolerance,
+		                                     bool requireBigEnough = false)
+		{
+			Assert.ArgumentNotNull(spatialReference, nameof(spatialReference));
 
 			var spatialReferenceTolerance = spatialReference as ISpatialReferenceTolerance;
 
@@ -3310,7 +3444,13 @@ namespace ProSuite.Commons.AO.Geodatabase
 			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
 
 			ISpatialReference spatialReference = ((IGeoDataset) featureClass).SpatialReference;
+			return TryGetZTolerance(spatialReference, out zTolerance, requireBigEnough);
+		}
 
+		public static bool TryGetZTolerance([CanBeNull] ISpatialReference spatialReference,
+		                                    out double zTolerance,
+		                                    bool requireBigEnough = false)
+		{
 			var spatialReferenceTolerance = spatialReference as ISpatialReferenceTolerance;
 
 			if (spatialReferenceTolerance != null &&
@@ -3325,13 +3465,21 @@ namespace ProSuite.Commons.AO.Geodatabase
 			return false;
 		}
 
-		public static bool TryGetMTolerance([NotNull] IFeatureClass featureClass,
+		public static bool TryGetMTolerance([NotNull] IFeatureClass s,
 		                                    out double mTolerance,
 		                                    bool requireBigEnough = false)
 		{
-			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
+			Assert.ArgumentNotNull(s, nameof(s));
 
-			ISpatialReference spatialReference = ((IGeoDataset) featureClass).SpatialReference;
+			ISpatialReference spatialReference = ((IGeoDataset) s).SpatialReference;
+			return TryGetMTolerance(spatialReference, out mTolerance, requireBigEnough);
+		}
+
+		public static bool TryGetMTolerance([NotNull] ISpatialReference spatialReference,
+		                                    out double mTolerance,
+		                                    bool requireBigEnough = false)
+		{
+			Assert.ArgumentNotNull(spatialReference, nameof(spatialReference));
 
 			var spatialReferenceTolerance = spatialReference as ISpatialReferenceTolerance;
 
@@ -3893,6 +4041,24 @@ namespace ProSuite.Commons.AO.Geodatabase
 			Assert.ArgumentNotNull(subtypeFieldValue, nameof(subtypeFieldValue));
 
 			return subtypeFieldValue as int? ?? Convert.ToInt32(subtypeFieldValue);
+		}
+
+		[NotNull]
+		private static UID GetAnnotationFeatureClassExtensionUID()
+		{
+#if Server
+			return new UIDClass { Value = "{F245DFEB-851B-4981-9860-4BACC8C0A688}" };
+			//return new UIDClass { Value = "esriCarto.AnnotationFeatureClassExtension" };
+#else
+			return new UIDClass {Value = "{24429589-D711-11D2-9F41-00C04F6BC6A5}"};
+#endif
+		}
+
+		[NotNull]
+		private static UID GetAnnotationFeatureUID()
+		{
+			return new UIDClass {Value = "{3FF1675E-4FFB-4D9B-9438-767CE04DE34A}"};
+			//return new UIDClass {Value = "esriCarto.AnnotationFeature"};
 		}
 
 		[NotNull]

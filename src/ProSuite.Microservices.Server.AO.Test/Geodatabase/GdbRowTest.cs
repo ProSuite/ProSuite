@@ -73,7 +73,7 @@ namespace ProSuite.Microservices.Server.AO.Test.Geodatabase
 
 				GdbRow gdbRow =
 					ProtobufConversionUtils.FromGdbObjectMsg(
-						gdbObjectMsg, (ITable) realFeatureClass);
+						gdbObjectMsg, (GdbTable) realFeatureClass);
 
 				for (int i = 0; i < feature.Fields.FieldCount; i++)
 				{

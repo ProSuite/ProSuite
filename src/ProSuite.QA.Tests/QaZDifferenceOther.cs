@@ -1,13 +1,15 @@
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.SpatialRelations;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Core;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
 {
@@ -44,9 +46,9 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaZDifferenceOther_0))]
 		public QaZDifferenceOther(
 			[Doc(nameof(DocStrings.QaZDifferenceOther_featureClass))] [NotNull]
-			IFeatureClass featureClass,
+			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaZDifferenceOther_relatedClass))] [NotNull]
-			IFeatureClass relatedClass,
+			IReadOnlyFeatureClass relatedClass,
 			[Doc(nameof(DocStrings.QaZDifferenceOther_limit))] double limit,
 			[Doc(nameof(DocStrings.QaZDifferenceOther_zComparisonMethod))]
 			ZComparisonMethod zComparisonMethod,
@@ -58,9 +60,9 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaZDifferenceOther_1))]
 		public QaZDifferenceOther(
 			[Doc(nameof(DocStrings.QaZDifferenceOther_featureClasses))] [NotNull]
-			IList<IFeatureClass> featureClasses,
+			IList<IReadOnlyFeatureClass> featureClasses,
 			[Doc(nameof(DocStrings.QaZDifferenceOther_relatedClasses))] [NotNull]
-			IList<IFeatureClass> relatedClasses,
+			IList<IReadOnlyFeatureClass> relatedClasses,
 			[Doc(nameof(DocStrings.QaZDifferenceOther_limit))] double limit,
 			[Doc(nameof(DocStrings.QaZDifferenceOther_zComparisonMethod))]
 			ZComparisonMethod zComparisonMethod,
@@ -72,9 +74,9 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaZDifferenceOther_2))]
 		public QaZDifferenceOther(
 			[Doc(nameof(DocStrings.QaZDifferenceOther_featureClass))] [NotNull]
-			IFeatureClass featureClass,
+			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaZDifferenceOther_relatedClass))] [NotNull]
-			IFeatureClass relatedClass,
+			IReadOnlyFeatureClass relatedClass,
 			[Doc(nameof(DocStrings.QaZDifferenceOther_minimumZDifference))]
 			double minimumZDifference,
 			[Doc(nameof(DocStrings.QaZDifferenceOther_maximumZDifference))]
@@ -90,9 +92,9 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaZDifferenceOther_3))]
 		public QaZDifferenceOther(
 			[Doc(nameof(DocStrings.QaZDifferenceOther_featureClasses))] [NotNull]
-			IList<IFeatureClass> featureClasses,
+			IList<IReadOnlyFeatureClass> featureClasses,
 			[Doc(nameof(DocStrings.QaZDifferenceOther_relatedClasses))] [NotNull]
-			IList<IFeatureClass> relatedClasses,
+			IList<IReadOnlyFeatureClass> relatedClasses,
 			[Doc(nameof(DocStrings.QaZDifferenceOther_minimumZDifference))]
 			double minimumZDifference,
 			[Doc(nameof(DocStrings.QaZDifferenceOther_maximumZDifference))]
@@ -153,8 +155,8 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaZDifferenceOther_IgnoreNonCoplanarReferenceRings))]
 		public bool IgnoreNonCoplanarReferenceRings { get; set; }
 
-		protected override int FindErrors(IRow row1, int tableIndex1,
-		                                  IRow row2, int tableIndex2)
+		protected override int FindErrors(IReadOnlyRow row1, int tableIndex1,
+										  IReadOnlyRow row2, int tableIndex2)
 		{
 			if (_relevantRelationCondition == null)
 			{

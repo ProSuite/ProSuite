@@ -1,8 +1,8 @@
 using System.Collections.Generic;
+using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.PointEnumerators;
@@ -12,6 +12,8 @@ using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
 using ProSuite.QA.Core;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
 {
@@ -47,18 +49,18 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaVertexCoincidenceOther_0))]
 		public QaVertexCoincidenceOther(
 			[Doc(nameof(DocStrings.QaVertexCoincidenceOther_featureClass))] [NotNull]
-			IFeatureClass featureClass,
+			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaVertexCoincidenceOther_relatedClass))] [NotNull]
-			IFeatureClass relatedClass)
+			IReadOnlyFeatureClass relatedClass)
 			: this(new[] {featureClass}, new[] {relatedClass}) { }
 
 		[Doc(nameof(DocStrings.QaVertexCoincidenceOther_1))]
 		public QaVertexCoincidenceOther(
 				[Doc(nameof(DocStrings.QaVertexCoincidenceOther_featureClasses))] [NotNull]
-				IList<IFeatureClass>
+				IList<IReadOnlyFeatureClass>
 					featureClasses,
 				[Doc(nameof(DocStrings.QaVertexCoincidenceOther_relatedClasses))] [NotNull]
-				IList<IFeatureClass>
+				IList<IReadOnlyFeatureClass>
 					relatedClasses)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(featureClasses, relatedClasses, null) { }
@@ -66,20 +68,25 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaVertexCoincidenceOther_2))]
 		public QaVertexCoincidenceOther(
 			[Doc(nameof(DocStrings.QaVertexCoincidenceOther_featureClasses))] [NotNull]
-			IList<IFeatureClass>
+			IList<IReadOnlyFeatureClass>
 				featureClasses,
 			[Doc(nameof(DocStrings.QaVertexCoincidenceOther_relatedClasses))] [NotNull]
-			IList<IFeatureClass>
+			IList<IReadOnlyFeatureClass>
 				relatedClasses,
 			[Doc(nameof(DocStrings.QaVertexCoincidenceOther_allowedNonCoincidenceCondition))] [CanBeNull]
 			string
 				allowedNonCoincidenceCondition)
 			: base(featureClasses, relatedClasses, esriSpatialRelEnum.esriSpatialRelIntersects)
 		{
+			double maxXYTolerance = featureClasses
+			                        .Select(fc => DatasetUtils.TryGetXyTolerance(
+				                                      fc.SpatialReference, out double xyTolerance)
+				                                      ? xyTolerance
+				                                      : 0).Max();
 			_vertexCoincidenceChecker =
 				new VertexCoincidenceChecker(
 					this, FormatComparison,
-					DatasetUtils.GetMaximumXyTolerance(featureClasses))
+					maxXYTolerance)
 				{
 					Is3D = _defaultIs3D,
 					VerifyWithinFeature = _defaultVerifyWithinFeature,
@@ -193,14 +200,14 @@ namespace ProSuite.QA.Tests
       _pointSearchEnvelope?.Expand(SearchDistance, SearchDistance, false);
 		}
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
 			IgnoreUndirected = ! Bidirectional;
 
 			return base.ExecuteCore(row, tableIndex);
 		}
 
-		protected override IGeometry GetSearchGeometry(IFeature feature, int tableIndex)
+		protected override IGeometry GetSearchGeometry(IReadOnlyFeature feature, int tableIndex)
 		{
 			IEnvelope result = feature.Shape.Envelope;
 			// property returns a copy, no need to clone
@@ -211,11 +218,11 @@ namespace ProSuite.QA.Tests
 			return result;
 		}
 
-		protected override int FindErrors(IRow row1, int tableIndex1,
-		                                  IRow row2, int tableIndex2)
+		protected override int FindErrors(IReadOnlyRow row1, int tableIndex1,
+										  IReadOnlyRow row2, int tableIndex2)
 		{
-			var feature1 = row1 as IFeature;
-			var feature2 = row2 as IFeature;
+			var feature1 = row1 as IReadOnlyFeature;
+			var feature2 = row2 as IReadOnlyFeature;
 			if (feature1 == null || feature2 == null)
 			{
 				return NoError;

@@ -1,6 +1,6 @@
 using System.Collections.Generic;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -10,14 +10,14 @@ namespace ProSuite.QA.Container.TestSupport
 	{
 		private readonly List<string> _baseFieldNames = new List<string>();
 
-		public ShapePartCountAliasColumnInfo([NotNull] ITable table,
+		public ShapePartCountAliasColumnInfo([NotNull] IReadOnlyTable table,
 		                                     [NotNull] string columnName)
 			: base(table, columnName, typeof(int))
 		{
 			Assert.ArgumentNotNull(table, nameof(table));
 			Assert.ArgumentNotNullOrEmpty(columnName, nameof(columnName));
 
-			var featureClass = table as IFeatureClass;
+			var featureClass = table as IReadOnlyFeatureClass;
 			if (featureClass != null)
 			{
 				_baseFieldNames.Add(featureClass.ShapeFieldName);
@@ -29,9 +29,9 @@ namespace ProSuite.QA.Container.TestSupport
 			get { return _baseFieldNames; }
 		}
 
-		protected override object ReadValueCore(IRow row)
+		protected override object ReadValueCore(IReadOnlyRow row)
 		{
-			var feature = row as IFeature;
+			var feature = row as IReadOnlyFeature;
 
 			IGeometry shape = feature?.Shape;
 

@@ -6,85 +6,99 @@ using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
+using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Tests.Documentation;
 
 namespace ProSuite.QA.Tests.Transformers
 {
 	[UsedImplicitly]
-	public class TrIntersect : TableTransformer<IFeatureClass>
+	[GeometryTransformer]
+	public class TrIntersect : TableTransformer<TransformedFeatureClass>
 	{
-		private readonly IFeatureClass _intersected;
-		private readonly IFeatureClass _intersecting;
+		private readonly IReadOnlyFeatureClass _intersected;
+		private readonly IReadOnlyFeatureClass _intersecting;
 
-		public TrIntersect([NotNull] IFeatureClass intersected,
-											 [NotNull] IFeatureClass intersecting)
-			: base(new List<ITable> { (ITable)intersected, (ITable)intersecting })
+		[DocTr(nameof(DocTrStrings.TrIntersect_0))]
+		public TrIntersect(
+			[NotNull, DocTr(nameof(DocTrStrings.TrIntersect_intersected))]
+			IReadOnlyFeatureClass intersected,
+			[NotNull, DocTr(nameof(DocTrStrings.TrIntersect_intersecting))]
+			IReadOnlyFeatureClass intersecting)
+			: base(new List<IReadOnlyTable> {intersected, intersecting})
 		{
 			_intersected = intersected;
 			_intersecting = intersecting;
 		}
 
-		protected override IFeatureClass GetTransformedCore(string name)
+		protected override TransformedFeatureClass GetTransformedCore(string name)
 		{
 			TransformedFc transformedFc = new TransformedFc(_intersected, _intersecting, name);
 			return transformedFc;
 		}
 
-		private class TransformedFc : TransformedFeatureClass, ITransformedValue
+		private class TransformedFc : TransformedFeatureClass, IDataContainerAware
 		{
-			public TransformedFc(IFeatureClass intersected, IFeatureClass intersecting,
-													 string name = null)
-				: base(-1, !string.IsNullOrWhiteSpace(name) ? name : "intersectResult",
-							 intersected.ShapeType,
-							 createBackingDataset: (t) =>
-								 new TransformedDataset((TransformedFc)t, intersected, intersecting),
-							 workspace: new GdbWorkspace(new TransformerWorkspace()))
+			public TransformedFc(IReadOnlyFeatureClass intersected,
+			                     IReadOnlyFeatureClass intersecting,
+			                     string name = null)
+				: base(-1, ! string.IsNullOrWhiteSpace(name) ? name : "intersectResult",
+				       intersected.ShapeType,
+				       createBackingDataset: (t) =>
+					       new TransformedDataset((TransformedFc) t, intersected, intersecting),
+				       workspace: new GdbWorkspace(new TransformerWorkspace()))
 			{
-				InvolvedTables = new List<ITable> { (ITable)intersected, (ITable)intersecting };
-
-				IGeometryDef geomDef =
-					intersected.Fields.Field[
-						intersected.Fields.FindField(intersected.ShapeFieldName)].GeometryDef;
-				FieldsT.AddFields(
-					FieldUtils.CreateOIDField(),
-					FieldUtils.CreateShapeField(
-						intersected.ShapeType, // TODO: only true for intersecting is Polygon FC
-						geomDef.SpatialReference, geomDef.GridSize[0], geomDef.HasZ, geomDef.HasM));
+				InvolvedTables = new List<IReadOnlyTable> {intersected, intersecting};
 			}
 
-			public IList<ITable> InvolvedTables { get; }
+			public IList<IReadOnlyTable> InvolvedTables { get; }
 
-			public ISearchable DataContainer
+			public IDataContainer DataContainer
 			{
 				get => BackingDs.DataContainer;
 				set => BackingDs.DataContainer = value;
 			}
 
-			public TransformedDataset BackingDs => (TransformedDataset)BackingDataset;
+			private TransformedDataset BackingDs => (TransformedDataset) BackingDataset;
 		}
 
 		private class TransformedDataset : TransformedBackingDataset
 		{
 			private const string PartIntersectedField = "PartIntersected";
-			private readonly IFeatureClass _intersected;
-			private readonly IFeatureClass _intersecting;
+			private readonly IReadOnlyFeatureClass _intersected;
+			private readonly IReadOnlyFeatureClass _intersecting;
 
 			public TransformedDataset(
 				[NotNull] TransformedFc gdbTable,
-				[NotNull] IFeatureClass intersected,
-				[NotNull] IFeatureClass intersecting)
+				[NotNull] IReadOnlyFeatureClass intersected,
+				[NotNull] IReadOnlyFeatureClass intersecting)
 				: base(gdbTable, CastToTables(intersected, intersecting))
 			{
 				_intersected = intersected;
 				_intersecting = intersecting;
 
-				gdbTable.AddField(FieldUtils.CreateDoubleField(PartIntersectedField));
+				IntersectedFields = new TransformedTableFields(_intersected);
+				IntersectingFields = new TransformedTableFields(_intersecting);
 
-				Resulting.SpatialReference = ((IGeoDataset)intersected).SpatialReference;
+				IntersectedFields.AddOIDField(gdbTable, "OBJECTID", true);
+				IntersectedFields.AddShapeField(gdbTable, "SHAPE", true);
+
+				IntersectedFields.AddAllFields(gdbTable);
+				IntersectingFields.AddAllFields(gdbTable);
+
+				PartIntersectedFieldIndex =
+					gdbTable.AddFieldT(FieldUtils.CreateDoubleField(PartIntersectedField));
+
+				Resulting.SpatialReference = intersected.SpatialReference;
 			}
 
-			public override IEnvelope Extent => ((IGeoDataset)_intersected).Extent;
+			private TransformedTableFields IntersectedFields { get; }
+			private TransformedTableFields IntersectingFields { get; }
 
-			public override IRow GetUncachedRow(int id)
+			private int PartIntersectedFieldIndex { get; }
+
+			public override IEnvelope Extent => _intersected.Extent;
+
+			public override VirtualRow GetUncachedRow(int id)
 			{
 				throw new NotImplementedException();
 			}
@@ -92,54 +106,120 @@ namespace ProSuite.QA.Tests.Transformers
 			public override int GetRowCount(IQueryFilter queryFilter)
 			{
 				// TODO
-				return _intersected.FeatureCount(queryFilter);
+				return _intersected.RowCount(queryFilter);
 			}
 
-			public override IEnumerable<IRow> Search(IQueryFilter filter, bool recycling)
+			public override IEnumerable<VirtualRow> Search(IQueryFilter filter, bool recycling)
 			{
+				filter = filter ?? new QueryFilterClass();
+
 				ISpatialFilter intersectingFilter = new SpatialFilterClass();
 				intersectingFilter.SpatialRel = esriSpatialRelEnum.esriSpatialRelEnvelopeIntersects;
 
-				int iPartIntersected = Resulting.FindField(PartIntersectedField);
-
+				bool sameFeatureClass = _intersected.Equals(_intersecting);
 				foreach (var toIntersect in DataContainer.Search(
-									 (ITable)_intersected, filter, QueryHelpers[0]))
+					         _intersected, filter, QueryHelpers[0]))
 				{
-					intersectingFilter.Geometry = ((IFeature)toIntersect).Extent;
+					intersectingFilter.Geometry = ((IReadOnlyFeature) toIntersect).Extent;
 					foreach (var intersecting in DataContainer.Search(
-										 (ITable)_intersecting, intersectingFilter, QueryHelpers[1]))
+						         _intersecting, intersectingFilter, QueryHelpers[1]))
 					{
-						IGeometry intersectingGeom = ((IFeature)intersecting).Shape;
-						var op = (ITopologicalOperator)((IFeature)toIntersect).Shape;
-						if (((IRelationalOperator)op).Disjoint(intersectingGeom))
+						if (sameFeatureClass && intersecting.OID >= toIntersect.OID)
+						{
+							continue;
+						}
+
+						IGeometry intersectingGeom = ((IReadOnlyFeature) intersecting).Shape;
+						IGeometry toIntersectGeom = ((IReadOnlyFeature) toIntersect).Shape;
+						var op = (ITopologicalOperator) toIntersectGeom;
+						if (((IRelationalOperator) op).Disjoint(intersectingGeom))
 						{
 							continue;
 						}
 
 						IGeometry intersected = op.Intersect(
 							intersectingGeom,
-							esriGeometryDimension.esriGeometry1Dimension); // TODO
+							toIntersectGeom.Dimension);
 
 						if (intersected.IsEmpty)
 						{
 							continue;
 						}
 
-						double fullLength = ((IPolyline)op).Length;
-						double partLength = ((IPolyline)intersected).Length;
-
-						IFeature f = Resulting.CreateFeature();
-						f.Shape = intersected;
-						f.set_Value(iPartIntersected, partLength / fullLength);
-						f.Store();
-
-						f.set_Value(
-							Resulting.FindField(InvolvedRowUtils.BaseRowField),
-							new List<IRow> { toIntersect, intersecting }); // TODO
-
-						yield return f;
+						yield return CreateFeature((IReadOnlyFeature) toIntersect,
+						                           (IReadOnlyFeature) intersecting, intersected);
 					}
 				}
+			}
+
+			private GdbFeature CreateFeature([NotNull] IReadOnlyFeature intersectedFeature,
+			                                 [NotNull] IReadOnlyFeature intersectingFeature,
+			                                 [NotNull] IGeometry intersectionGeometry)
+			{
+				// Build an aggregate value list consisting of the intersected, the intersecting and
+				// the extra calculated values.
+				var rowValues = new MultiListValues();
+
+				List<IReadOnlyRow> baseRows = new List<IReadOnlyRow>
+				                              {intersectedFeature, intersectingFeature};
+
+				List<CalculatedValue> extraValues = new List<CalculatedValue>();
+
+				// 1. The intersected row, wrapped in a value list:
+				var intersectedValues = new ReadOnlyRowBasedValues(intersectedFeature);
+				rowValues.AddList(intersectedValues, IntersectedFields.FieldIndexMapping);
+
+				// 2. The intersecting row, wrapped in a value list:
+				var intersectingValues = new ReadOnlyRowBasedValues(intersectingFeature);
+				rowValues.AddList(intersectingValues, IntersectingFields.FieldIndexMapping);
+
+				extraValues.Add(
+					new CalculatedValue(Resulting.ShapeFieldIndex, intersectionGeometry));
+				extraValues.Add(
+					new CalculatedValue(BaseRowsFieldIndex, baseRows));
+
+				double partIntersected =
+					GetPartIntersected(intersectedFeature.Shape, intersectionGeometry);
+
+				extraValues.Add(
+					new CalculatedValue(PartIntersectedFieldIndex, partIntersected));
+
+				extraValues.Add(new CalculatedValue(Resulting.OidFieldIndex, null));
+
+				// Add all the collected extra values with their own copy-matrix:
+				IValueList simpleList =
+					TransformedAttributeUtils.ToSimpleValueList(
+						extraValues, out IDictionary<int, int> extraCopyMatrix);
+
+				rowValues.AddList(simpleList, extraCopyMatrix);
+
+				return (GdbFeature) Resulting.CreateObject(rowValues);
+			}
+
+			private static double GetPartIntersected(IGeometry toIntersectGeom,
+			                                         IGeometry intersected)
+			{
+				double partIntersected = 1;
+				if (toIntersectGeom is IPolyline l)
+				{
+					double fullLength = l.Length;
+					double partLength = ((IPolyline) intersected).Length;
+					partIntersected = partLength / fullLength;
+				}
+				else if (toIntersectGeom is IArea pg)
+				{
+					double fullArea = pg.Area;
+					double partArea = ((IArea) intersected).Area;
+					partIntersected = partArea / fullArea;
+				}
+				else if (toIntersectGeom is IPointCollection mp)
+				{
+					double fullCount = mp.PointCount;
+					double partCount = ((IPointCollection) intersected).PointCount;
+					partIntersected = partCount / fullCount;
+				}
+
+				return partIntersected;
 			}
 		}
 	}

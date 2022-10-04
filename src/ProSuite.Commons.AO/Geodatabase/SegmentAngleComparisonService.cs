@@ -26,7 +26,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		/// <param name="maximumRoundingEffectRatio">The maximum rounding effect ratio.</param>
 		public SegmentAngleComparisonService(
 			[NotNull] IIssueReporter issueReporter,
-			[NotNull] IFeatureClass sourceFeatureClass,
+			[NotNull] IReadOnlyFeatureClass sourceFeatureClass,
 			double maximumSegmentAngleDifferenceDegrees,
 			double maximumRoundingEffectRatio)
 		{
@@ -50,14 +50,14 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		public void CompareSegmentAngles(IPolyline sourceShape,
 		                                 IPolyline transformedShape,
-		                                 IFeature transformedFeature)
+										 IReadOnlyFeature transformedFeature)
 		{
 			CompareSegmentAnglesCore(sourceShape, transformedShape, transformedFeature);
 		}
 
 		public void CompareSegmentAngles(IPolygon sourceShape,
 		                                 IPolygon transformedShape,
-		                                 IFeature transformedFeature)
+										 IReadOnlyFeature transformedFeature)
 		{
 			CompareSegmentAnglesCore(sourceShape, transformedShape, transformedFeature);
 		}
@@ -66,7 +66,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		private void CompareSegmentAnglesCore([NotNull] IPolycurve sourceShape,
 		                                      [NotNull] IPolycurve transformedShape,
-		                                      [NotNull] IFeature transformedFeature)
+		                                      [NotNull] IReadOnlyFeature transformedFeature)
 		{
 			var sourceParts = (IGeometryCollection) sourceShape;
 			var transformedParts = (IGeometryCollection) transformedShape;
@@ -82,7 +82,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		}
 
 		private static double GetMinimumSegmentLength(
-			[NotNull] IFeatureClass featureClass,
+			[NotNull] IReadOnlyFeatureClass featureClass,
 			double maximumSegmentAngleDifferenceRadians,
 			double maximumRoundingEffectRatio)
 		{
@@ -104,7 +104,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		private void CompareSegmentAngles(
 			[NotNull] IPath sourcePath,
 			[NotNull] IPath transformedPath,
-			[NotNull] IFeature transformedFeature)
+			[NotNull] IReadOnlyFeature transformedFeature)
 		{
 			ICollection<int> ignoredSegmentIndexes = GetShortSegmentIndexes(
 				(ISegmentCollection) sourcePath, _minimumSegmentLength);
@@ -159,7 +159,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			[NotNull] IList<double> transformedAngles,
 			double maxSegmentAngleDifferenceRadians,
 			double ignoredAngleValue,
-			[NotNull] IFeature transformedFeature,
+			[NotNull] IReadOnlyFeature transformedFeature,
 			[NotNull] IPointCollection transformedPoints,
 			[NotNull] IIssueReporter issueReporter)
 		{

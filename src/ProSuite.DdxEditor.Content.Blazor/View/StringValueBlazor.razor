@@ -1,0 +1,6 @@
+@using Radzen.Blazor
+@inherits TestParameterValueBlazorBase<string>
+
+<Validation ErrorMessage="@ErrorMessage">
+	<RadzenTextBox @bind-Value="StringValue" oninput="@(OnInput)"/>
+</Validation>

@@ -109,6 +109,7 @@
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="Constants.cs" />
+    <Compile Include="Diagnostics\SaveXmlGeometryButton.cs" />
     <Compile Include="Editing\AdvancedReshapeTool.cs" />
     <Compile Include="Editing\CutAlongTool.cs" />
     <Compile Include="Editing\ReshapeAlongTool.cs" />

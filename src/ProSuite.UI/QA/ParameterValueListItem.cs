@@ -4,6 +4,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.UI.DataModel.ResourceLookup;
+using ProSuite.UI.QA.ResourceLookup;
 
 namespace ProSuite.UI.QA
 {
@@ -39,6 +40,14 @@ namespace ProSuite.UI.QA
 
 					Value = dataset.Name;
 					ModelName = dataset.Model?.Name;
+				}
+				else if (datasetParameterValue.ValueSource != null)
+				{
+					TransformerConfiguration transformerConfig = datasetParameterValue.ValueSource;
+
+					DatasetType = TestTypeImageLookup.GetImage(transformerConfig);
+
+					Value = transformerConfig?.Name;
 				}
 				else
 				{

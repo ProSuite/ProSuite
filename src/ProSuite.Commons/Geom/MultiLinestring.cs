@@ -20,6 +20,8 @@ namespace ProSuite.Commons.Geom
 		private List<int> _emptyPartIndexes;
 		private readonly List<int> _startSegmentIndexes = new List<int>();
 
+		private bool? _isKnownClosed;
+
 		protected MultiLinestring(IEnumerable<Linestring> linestrings)
 		{
 			Linestrings = new List<Linestring>(linestrings);
@@ -40,7 +42,19 @@ namespace ProSuite.Commons.Geom
 
 		public int SegmentCount => Linestrings.Sum(l => l.SegmentCount);
 
-		public bool IsClosed => Linestrings.All(l => l.IsClosed);
+		public bool IsClosed
+		{
+			get
+			{
+				// This is a significant difference for topo-op performance!
+				if (_isKnownClosed == null)
+				{
+					_isKnownClosed = Linestrings.All(l => l.IsClosed);
+				}
+
+				return _isKnownClosed.Value;
+			}
+		}
 
 		public Linestring GetLinestring(int index)
 		{
@@ -454,6 +468,8 @@ namespace ProSuite.Commons.Geom
 			CacheStartIndexes();
 
 			AddLinestringCore(linestring);
+
+			_isKnownClosed = null;
 		}
 
 		protected virtual void AddLinestringCore(Linestring linestring) { }
@@ -469,6 +485,8 @@ namespace ProSuite.Commons.Geom
 			CacheStartIndexes();
 
 			InsertLinestringCore(index, linestring);
+
+			_isKnownClosed = null;
 		}
 
 		protected virtual void InsertLinestringCore(int index, Linestring linestring) { }
@@ -476,6 +494,8 @@ namespace ProSuite.Commons.Geom
 		public bool RemoveLinestring(Linestring linestring)
 		{
 			bool result = Linestrings.Remove(linestring);
+
+			InitializeBounds();
 
 			foreach (Linestring l in Linestrings)
 			{
@@ -492,6 +512,27 @@ namespace ProSuite.Commons.Geom
 		}
 
 		protected virtual void RemoveLinestringCore(Linestring linestring) { }
+
+		/// <summary>
+		/// In case a linestring has been updated in a way that could effect cached properties
+		/// of this instance, such as bounds, spatial index, whether it is closed or not, etc.
+		/// this method should be called.
+		/// </summary>
+		public void InvalidateCachedProperties()
+		{
+			_isKnownClosed = null;
+
+			InitializeBounds();
+
+			foreach (Linestring l in Linestrings)
+			{
+				UpdateBounds(l);
+			}
+
+			SpatialIndex = null;
+
+			CacheStartIndexes();
+		}
 
 		public double GetLength2D()
 		{
@@ -603,21 +644,22 @@ namespace ProSuite.Commons.Geom
 			}
 			else
 			{
-				for (int i = 0; i < SegmentCount; i++)
+				// foreach is faster than index-access (due to global->local index conversions)
+				int index = 0;
+				foreach (Line3D segment in this)
 				{
-					if (predicate != null && ! predicate(i))
+					if (predicate != null && ! predicate(index))
 					{
 						continue;
 					}
 
-					Line3D segment = this[i];
-
 					if (segment.ExtentIntersectsXY(
 						    xMin, yMin, xMax, yMax, tolerance))
 					{
-						//var identifier = new SegmentIndex(p, s);
-						yield return new KeyValuePair<int, Line3D>(i, segment);
+						yield return new KeyValuePair<int, Line3D>(index, segment);
 					}
+
+					index++;
 				}
 			}
 		}
@@ -702,6 +744,8 @@ namespace ProSuite.Commons.Geom
 			{
 				linestring.TryInterpolateUndefinedZs();
 			}
+
+			_isKnownClosed = null;
 		}
 
 		public void AssignUndefinedZs([NotNull] Plane3D fromPlane)
@@ -710,6 +754,8 @@ namespace ProSuite.Commons.Geom
 			{
 				linestring.AssignUndefinedZs(fromPlane);
 			}
+
+			_isKnownClosed = null;
 		}
 
 		private void UpdateBounds([NotNull] Linestring additionalLinestring)
@@ -742,6 +788,8 @@ namespace ProSuite.Commons.Geom
 
 			XMax = double.MinValue;
 			YMax = double.MinValue;
+
+			_isKnownClosed = null;
 		}
 
 		private void UpdateSpatialIndex([NotNull] Linestring additionalLinestring,

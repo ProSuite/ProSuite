@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Data;
-using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AO.Geodatabase
@@ -28,7 +27,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		/// <param name="table">Table, which rows should be checked</param>
 		/// <param name="constraint">constraint to fulfill</param>
 		/// <returns>FilterHelper instance, use 'instance.Check(row)' to check if a row fulfills the constraint</returns>
-		public static FilterHelper Create([NotNull] ITable table,
+		public static FilterHelper Create([NotNull] IReadOnlyTable table,
 		                                  [CanBeNull] string constraint)
 		{
 			var helper = new FilterHelper();
@@ -66,7 +65,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 				}
 			}
 
-			var dataTable = new DataTable(((IDataset) table).Name);
+			var dataTable = new DataTable(table.Name);
 			// dataTable.CaseSensitive = true; TODO allow controlling case-sensitivity
 
 			int nFields = fields.Count;
@@ -94,7 +93,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			return helper;
 		}
 
-		public bool Check(IRow row)
+		public bool Check(IReadOnlyRow row)
 		{
 			if (_constraintView == null)
 			{
@@ -113,7 +112,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			table.Clear();
 		}
 
-		private void Add(IRow row)
+		private void Add(IReadOnlyRow row)
 		{
 			if (_constraintView != null)
 			{
@@ -122,7 +121,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 		}
 
-		private DataRow New(IRow row)
+		private DataRow New(IReadOnlyRow row)
 		{
 			if (_constraintView != null)
 			{
@@ -131,7 +130,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 				for (int iField = 0; iField < _fieldIdx.Count; iField++)
 				{
-					dataRow[iField] = row.Value[_fieldIdx[iField]];
+					dataRow[iField] = row.get_Value(_fieldIdx[iField]);
 				}
 
 				return dataRow;

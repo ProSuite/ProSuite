@@ -98,7 +98,8 @@ namespace ProSuite.QA.Tests.Test
 
 			IFeatureClass featureClass = ws.OpenFeatureClass("BigPolygons");
 
-			var test = new QaPartCoincidenceSelf(featureClass, 10, 40, false);
+			var test = new QaPartCoincidenceSelf(
+				ReadOnlyTableFactory.Create(featureClass), 10, 40, false);
 			var runner = new QaContainerTestRunner(tileSize, test);
 
 			IEnvelope box = new EnvelopeClass();

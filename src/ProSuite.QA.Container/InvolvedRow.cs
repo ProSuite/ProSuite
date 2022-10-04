@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -16,8 +16,8 @@ namespace ProSuite.QA.Container
 		/// Initializes a new instance of the <see cref="InvolvedRow"/> class.
 		/// </summary>
 		/// <param name="row">The row.</param>
-		public InvolvedRow([NotNull] IRow row)
-			: this(((IDataset) row.Table).Name,
+		public InvolvedRow([NotNull] IReadOnlyRow row)
+			: this(row.Table.Name,
 			       row.Table.HasOID
 				       ? row.OID
 				       : _oidForEntireTable) { }
@@ -36,7 +36,7 @@ namespace ProSuite.QA.Container
 		}
 
 		[NotNull]
-		public static IList<InvolvedRow> CreateList([NotNull] IList<IRow> rows)
+		public static IList<InvolvedRow> CreateList([NotNull] IList<IReadOnlyRow> rows)
 		{
 			int count = rows.Count;
 			var result = new InvolvedRow[count];

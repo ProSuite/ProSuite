@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -27,14 +28,14 @@ namespace ProSuite.QA.Container
 		}
 
 		[NotNull]
-		public static InvolvedRows GetInvolvedRows(params IRow[] rows)
+		public static InvolvedRows GetInvolvedRows(params IReadOnlyRow[] rows)
 		{
-			return GetInvolvedRows((IEnumerable<IRow>) rows);
+			return GetInvolvedRows((IEnumerable<IReadOnlyRow>) rows);
 		}
 
 		[NotNull]
 		public static InvolvedRows GetInvolvedRows<T>([NotNull] IEnumerable<T> rows)
-			where T : IRow
+			where T : IReadOnlyRow
 		{
 			Assert.ArgumentNotNull(rows, nameof(rows));
 
@@ -49,7 +50,7 @@ namespace ProSuite.QA.Container
 		}
 
 		public static IEnumerable<Involved> EnumInvolved<T>([NotNull] IEnumerable<T> rows)
-			where T : IRow
+			where T : IReadOnlyRow
 		{
 			foreach (T row in rows)
 			{
@@ -59,10 +60,10 @@ namespace ProSuite.QA.Container
 
 		public const string BaseRowField = "__BaseRows__";
 
-		private static Involved GetInvolvedCore(IRow row)
+		private static Involved GetInvolvedCore(IReadOnlyRow row)
 		{
-			int baseRowsField = row.Fields.FindField(BaseRowField);
-			if (baseRowsField >= 0 && row.get_Value(baseRowsField) is IList<IRow> baseRows)
+			int baseRowsField = row.Table.Fields.FindField(BaseRowField);
+			if (baseRowsField >= 0 && row.get_Value(baseRowsField) is IList<IReadOnlyRow> baseRows)
 			{
 				List<Involved> involveds = new List<Involved>();
 				foreach (var baseRow in baseRows)
@@ -70,10 +71,10 @@ namespace ProSuite.QA.Container
 					involveds.Add(GetInvolvedCore(baseRow));
 				}
 
-				return new InvolvedNested(((IDataset) row.Table).Name, involveds);
+				return new InvolvedNested(row.Table.Name, involveds);
 			}
 
-			if (((IDataset) row.Table).FullName is IQueryName qn)
+			if (row.Table.FullName is IQueryName qn)
 			{
 				List<Involved> involveds = new List<Involved>();
 				foreach (string table in qn.QueryDef.Tables.Split(','))
@@ -83,11 +84,11 @@ namespace ProSuite.QA.Container
 					int iOid = row.Table.FindField(oidField);
 					if (iOid >= 0)
 					{
-						involveds.Add(new InvolvedRow(t, (int) row.Value[iOid]));
+						involveds.Add(new InvolvedRow(t, (int) row.get_Value(iOid)));
 					}
 				}
 
-				return new InvolvedNested(((IDataset) row.Table).Name, involveds);
+				return new InvolvedNested(row.Table.Name, involveds);
 			}
 
 			return new InvolvedRow(row);

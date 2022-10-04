@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons;
 using ProSuite.Commons.AO.Geodatabase;
@@ -14,6 +13,7 @@ using ProSuite.Commons.Logging;
 using ProSuite.Commons.Misc;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.Geometry;
+using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.QA.Tests.PointEnumerators;
 
@@ -150,15 +150,15 @@ namespace ProSuite.QA.Tests
 
 		public static IEnumerable<Either<NonPlanarError, IEnumerable<IIntersectionPoint>>>
 			GetDistanceToPlane([NotNull] IGeometry vertices,
-			                   [NotNull] IFeature planarFeature,
+			                   [NotNull] IReadOnlyFeature planarFeature,
 			                   double coplanarityTolerance)
 		{
 			return GetPlanarRings(planarFeature, coplanarityTolerance)
 				.Select(e => e.Select(plane => GetIntersectionPoints(plane, vertices)));
 		}
 
-		protected override int ReportErrors(IFeature feature1, int tableIndex1,
-		                                    IFeature feature2, int tableIndex2)
+		protected override int ReportErrors(IReadOnlyFeature feature1, int tableIndex1,
+											IReadOnlyFeature feature2, int tableIndex2)
 		{
 			if (_useDistanceFromPlane != null)
 			{
@@ -176,8 +176,8 @@ namespace ProSuite.QA.Tests
 			}
 
 			return GetIntersections(feature1.Shape, feature2.Shape,
-			                        DatasetUtils.GetSpatialReference(feature1),
-			                        GeometryUtils.GetXyTolerance(feature1),
+			                        feature1.FeatureClass.SpatialReference,
+			                        GeometryUtils.GetXyTolerance(feature1.FeatureClass.SpatialReference),
 			                        () => GetLineStrings(feature1),
 			                        () => GetLineStrings(feature2))
 				.Sum(ip => CheckIntersection(ip.Point,
@@ -187,9 +187,9 @@ namespace ProSuite.QA.Tests
 				                             feature2, tableIndex2));
 		}
 
-		private int ReportPlaneErrors([NotNull] IFeature vertexFeature,
+		private int ReportPlaneErrors([NotNull] IReadOnlyFeature vertexFeature,
 		                              int vertexTableIndex,
-		                              [NotNull] IFeature planarFeature,
+		                              [NotNull] IReadOnlyFeature planarFeature,
 		                              int planarTableIndex)
 		{
 			Assert.False(_useDistanceFromPlane(planarTableIndex),
@@ -207,17 +207,17 @@ namespace ProSuite.QA.Tests
 		}
 
 		private int HandleNonPlanarError([NotNull] NonPlanarError nonPlanarError,
-		                                 [NotNull] IFeature planarFeature)
+		                                 [NotNull] IReadOnlyFeature planarFeature)
 		{
 			return _ignoreNonCoplanarReferenceRings
 				       ? NoError
 				       : ErrorReporting.Report(
 					       nonPlanarError.Message,
+					       InvolvedRowUtils.GetInvolvedRows(planarFeature),
 					       nonPlanarError.SegmentsPlane.Geometry,
 					       Codes[Code.FaceNotCoplanar],
-					       ((IFeatureClass) planarFeature.Class).ShapeFieldName,
-					       new object[] {nonPlanarError.MaximumOffset},
-					       planarFeature);
+					       ((IReadOnlyFeatureClass) planarFeature.Table).ShapeFieldName,
+					       values: new object[] { nonPlanarError.MaximumOffset });
 		}
 
 		[NotNull]
@@ -250,7 +250,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		private static IEnumerable<Either<NonPlanarError, SegmentsPlane>> GetPlanarRings(
-			[NotNull] IFeature planarFeature, double coplanarityTolerance)
+			[NotNull] IReadOnlyFeature planarFeature, double coplanarityTolerance)
 		{
 			SegmentsPlaneProvider provider =
 				SegmentsPlaneProvider.Create(planarFeature, false);
@@ -269,7 +269,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		private static bool IsCoplanar([NotNull] SegmentsPlane segmentsPlane,
-		                               [NotNull] IFeature planarFeature,
+		                               [NotNull] IReadOnlyFeature planarFeature,
 		                               double coplanarityTolerance,
 		                               out double maximumOffset)
 		{
@@ -279,7 +279,7 @@ namespace ProSuite.QA.Tests
 				return true;
 			}
 
-			var sref = Assert.NotNull(DatasetUtils.GetSpatialReference(planarFeature));
+			var sref = Assert.NotNull(planarFeature.FeatureClass.SpatialReference);
 
 			var xyResolution = SpatialReferenceUtils.GetXyResolution(sref);
 			var zResolution = SpatialReferenceUtils.GetZResolution(sref);
@@ -360,7 +360,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		private static IEnumerable<Linestring> GetLineStrings(
-			[NotNull] IFeature feature)
+			[NotNull] IReadOnlyFeature feature)
 		{
 			var shape = feature.Shape;
 			if (shape.GeometryType == esriGeometryType.esriGeometryMultiPatch)
@@ -460,8 +460,8 @@ namespace ProSuite.QA.Tests
 		private int CheckIntersection([NotNull] IPoint intersectionPoint,
 		                              double feature2Z,
 		                              double? dZ,
-		                              [NotNull] IFeature feature1, int tableIndex1,
-		                              [NotNull] IFeature feature2, int tableIndex2)
+		                              [NotNull] IReadOnlyFeature feature1, int tableIndex1,
+		                              [NotNull] IReadOnlyFeature feature2, int tableIndex2)
 		{
 			double feature1Z = intersectionPoint.Z;
 
@@ -469,10 +469,10 @@ namespace ProSuite.QA.Tests
 			{
 				return IgnoreUndefinedZValues
 					       ? NoError
-					       : ErrorReporting.Report("Z is NaN", intersectionPoint,
-					                               Codes[Code.UndefinedZ],
-					                               TestUtils.GetShapeFieldName(feature1),
-					                               feature1, feature2);
+					       : ErrorReporting.Report(
+						       "Z is NaN", InvolvedRowUtils.GetInvolvedRows(feature1, feature2),
+						       intersectionPoint, Codes[Code.UndefinedZ],
+						       TestUtils.GetShapeFieldName(feature1));
 			}
 
 			//double feature2Z = GeometryUtils.GetZValueFromGeometry(
@@ -501,11 +501,9 @@ namespace ProSuite.QA.Tests
 				errorCount += ErrorReporting.Report(
 					string.Format("The Z distance is too small ({0})",
 					              FormatComparison(dz, minimumZDifference, "<")),
-					intersectionPoint,
-					Codes[Code.TooSmall],
-					TestUtils.GetShapeFieldName(feature1),
-					new object[] {dz},
-					feature1, feature2);
+					InvolvedRowUtils.GetInvolvedRows(feature1, feature2),
+					intersectionPoint, Codes[Code.TooSmall],
+					TestUtils.GetShapeFieldName(feature1), values: new object[] { dz });
 			}
 
 			if (maximumZDifference > 0 && dz > maximumZDifference)
@@ -514,11 +512,9 @@ namespace ProSuite.QA.Tests
 				errorCount += ErrorReporting.Report(
 					string.Format("The Z distance is too large ({0})",
 					              FormatComparison(dz, maximumZDifference, ">")),
-					intersectionPoint,
-					Codes[Code.TooLarge],
-					TestUtils.GetShapeFieldName(feature1),
-					new object[] {dz},
-					feature1, feature2);
+					InvolvedRowUtils.GetInvolvedRows(feature1, feature2),
+					intersectionPoint, Codes[Code.TooLarge],
+					TestUtils.GetShapeFieldName(feature1), values: new object[] { dz });
 			}
 
 			return errorCount +
@@ -531,8 +527,8 @@ namespace ProSuite.QA.Tests
 				                          intersectionPoint, dz));
 		}
 
-		private void GetValidZDifferenceInterval(IFeature feature1, int tableIndex1,
-		                                         IFeature feature2, int tableIndex2,
+		private void GetValidZDifferenceInterval(IReadOnlyFeature feature1, int tableIndex1,
+												 IReadOnlyFeature feature2, int tableIndex2,
 		                                         double feature1Z, double feature2Z,
 		                                         out double minimumZDifference,
 		                                         out double maximumZDifference)
@@ -549,8 +545,8 @@ namespace ProSuite.QA.Tests
 				                                             feature1, tableIndex1);
 		}
 
-		private int CheckConstraint([NotNull] IFeature upperFeature, int upperTableIndex,
-		                            [NotNull] IFeature lowerFeature, int lowerTableIndex,
+		private int CheckConstraint([NotNull] IReadOnlyFeature upperFeature, int upperTableIndex,
+		                            [NotNull] IReadOnlyFeature lowerFeature, int lowerTableIndex,
 		                            [NotNull] IPoint intersectionPoint,
 		                            double zDifference)
 		{
@@ -569,10 +565,9 @@ namespace ProSuite.QA.Tests
 			string message = $"Z distance = {zDifference:N2}; {conditionMessage}";
 
 			return ErrorReporting.Report(
-				message, intersectionPoint,
-				Codes[Code.ConstraintNotFulfilled],
-				TestUtils.GetShapeFieldNames(upperFeature, lowerFeature),
-				upperFeature, lowerFeature);
+				message, InvolvedRowUtils.GetInvolvedRows(upperFeature, lowerFeature),
+				intersectionPoint, Codes[Code.ConstraintNotFulfilled],
+				TestUtils.GetShapeFieldNames(upperFeature, lowerFeature));
 		}
 
 		public interface IIntersectionPoint

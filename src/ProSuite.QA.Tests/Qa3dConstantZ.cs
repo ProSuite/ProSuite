@@ -3,15 +3,16 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using ESRI.ArcGIS.esriSystem;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
 {
@@ -47,9 +48,9 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.Qa3dConstantZ_0))]
 		public Qa3dConstantZ(
-			[Doc(nameof(DocStrings.Qa3dConstantZ_featureClass))] IFeatureClass featureClass,
+			[Doc(nameof(DocStrings.Qa3dConstantZ_featureClass))] IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.Qa3dConstantZ_tolerance))] double tolerance)
-			: base((ITable) featureClass)
+			: base((IReadOnlyTable) featureClass)
 		{
 			Assert.ArgumentCondition(tolerance >= 0, "tolerance must be >= 0");
 
@@ -66,9 +67,9 @@ namespace ProSuite.QA.Tests
 			return false;
 		}
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
-			IGeometry shape = ((IFeature) row).Shape;
+			IGeometry shape = ((IReadOnlyFeature) row).Shape;
 			if (! ((IZAware) shape).ZAware)
 			{
 				// Not z aware, consider as constant
@@ -106,8 +107,8 @@ namespace ProSuite.QA.Tests
 			// report consecutive points that are further away than half the tolerance from the most frequent Z value
 			// - if more than half the points are off: report the entire geometry once as error
 			IEnumerable<List<WKSPointZ>> errorPointSequences = GetErrorPointSequences(shape,
-			                                                                          minAllowedZ,
-			                                                                          maxAllowedZ);
+				minAllowedZ,
+				maxAllowedZ);
 
 			int totalPointCount = points.PointCount;
 			IList<List<WKSPointZ>> errorPointSequencesList =
@@ -125,13 +126,15 @@ namespace ProSuite.QA.Tests
 				// more than half the points are errors --> don't report individually	
 				IGeometry errorGeometry = GeometryFactory.Clone(shape);
 
-				return ReportError(errorMessage, errorGeometry, issueCode,
-				                   TestUtils.GetShapeFieldName(row), row);
+				return ReportError(errorMessage, InvolvedRowUtils.GetInvolvedRows(row),
+				                   errorGeometry, issueCode,
+				                   TestUtils.GetShapeFieldName(row));
 			}
 
 			return errorPointSequencesList.Sum(
-				errorPoints => ReportError(errorMessage, GetErrorGeometry(errorPoints),
-				                           issueCode, TestUtils.GetShapeFieldName(row), row));
+				errorPoints => ReportError(errorMessage, InvolvedRowUtils.GetInvolvedRows(row),
+				                           GetErrorGeometry(errorPoints),
+				                           issueCode, TestUtils.GetShapeFieldName(row)));
 		}
 
 		private static IssueCode GetIssueCode(int modalZPointCount)

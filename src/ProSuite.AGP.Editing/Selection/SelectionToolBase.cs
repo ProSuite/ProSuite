@@ -32,14 +32,14 @@ namespace ProSuite.AGP.Editing.Selection
 
 		protected override async Task OnToolActivateAsync(bool hasMapViewChanged)
 		{
-			SetCheckState("ProSuiteTools_Selection_SelectionToolButton", true);
+			SetCheckState("DiraProSuiteTools_Selection_SelectionToolButton", true);
 
 			await base.OnToolActivateAsync(hasMapViewChanged);
 		}
 
 		protected override async Task OnToolDeactivateAsync(bool hasMapViewChanged)
 		{
-			SetCheckState("ProSuiteTools_Selection_SelectionToolButton", false);
+			SetCheckState("DiraProSuiteTools_Selection_SelectionToolButton", false);
 
 			await base.OnToolDeactivateAsync(hasMapViewChanged);
 		}

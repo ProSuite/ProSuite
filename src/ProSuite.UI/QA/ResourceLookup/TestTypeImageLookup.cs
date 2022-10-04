@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
@@ -22,6 +23,9 @@ namespace ProSuite.UI.QA.ResourceLookup
 		private const string _keyProhibition = "prohibition";
 		private const string _keyStop = "stop";
 		private const string _keyUnknown = "unknown";
+		private const string _keyTransform = "transform";
+		private const string _keyRowFilter = "rowfilter";
+		private const string _keyIssueFilter = "issuefilter";
 
 		#region Constructor
 
@@ -34,17 +38,23 @@ namespace ProSuite.UI.QA.ResourceLookup
 			_mapKeyToImage.Add(_keyProhibition, TestTypeImages.TestTypeProhibition);
 			_mapKeyToImage.Add(_keyStop, TestTypeImages.TestTypeStop);
 			_mapKeyToImage.Add(_keyUnknown, TestTypeImages.TestTypeUnknown);
+			_mapKeyToImage.Add(_keyTransform, TestTypeImages.Transform);
+			_mapKeyToImage.Add(_keyRowFilter, TestTypeImages.RowFilter);
+			_mapKeyToImage.Add(_keyIssueFilter, TestTypeImages.IssueFilter);
 
 			foreach (KeyValuePair<string, Image> pair in _mapKeyToImage)
 			{
 				_mapImageToKey.Add(pair.Value, pair.Key);
 			}
 
-			int i = 0;
+			int i = 10;
 			_defaultSort.Add(_keyWarning, ++i);
 			_defaultSort.Add(_keyProhibition, ++i);
 			_defaultSort.Add(_keyStop, ++i);
 			_defaultSort.Add(_keyUnknown, ++i);
+			_defaultSort.Add(_keyTransform, ++i);
+			_defaultSort.Add(_keyRowFilter, ++i);
+			_defaultSort.Add(_keyIssueFilter, ++i);
 		}
 
 		#endregion
@@ -87,6 +97,22 @@ namespace ProSuite.UI.QA.ResourceLookup
 		}
 
 		[CanBeNull]
+		public static Image GetImage([CanBeNull] InstanceDescriptor instanceDescriptor)
+		{
+			if (instanceDescriptor is TransformerDescriptor)
+			{
+				return GetImage(_keyTransform);
+			}
+
+			if (instanceDescriptor is IssueFilterDescriptor)
+			{
+				return GetImage(_keyIssueFilter);
+			}
+			
+			throw new NotImplementedException();
+		}
+
+		[CanBeNull]
 		[ContractAnnotation("notnull => notnull")]
 		public static Image GetImage([CanBeNull] QualityCondition qualityCondition)
 		{
@@ -94,6 +120,29 @@ namespace ProSuite.UI.QA.ResourceLookup
 				       ? null
 				       : GetImage(qualityCondition.AllowErrors,
 				                  qualityCondition.StopOnError);
+		}
+
+		[CanBeNull]
+		[ContractAnnotation("notnull => notnull")]
+		public static Image GetImage([CanBeNull] InstanceConfiguration instanceConfiguration)
+		{
+			if (instanceConfiguration is QualityCondition qualityCondition)
+			{
+				return GetImage(qualityCondition);
+			}
+
+			if (instanceConfiguration is TransformerConfiguration)
+			{
+				return GetImage(_keyTransform);
+			}
+			
+			if (instanceConfiguration is IssueFilterConfiguration)
+			{
+				return GetImage(_keyIssueFilter);
+			}
+
+			throw new NotImplementedException(
+				$"Unsupported instance configuration: {instanceConfiguration}");
 		}
 
 		[CanBeNull]
@@ -116,11 +165,32 @@ namespace ProSuite.UI.QA.ResourceLookup
 
 		[CanBeNull]
 		[ContractAnnotation("notnull => notnull")]
+		public static string GetImageKey([CanBeNull] InstanceDescriptor descriptor)
+		{
+			return descriptor == null
+				       ? null
+				       : GetImageKey(GetImage(descriptor));
+		}
+
+		[CanBeNull]
+		[ContractAnnotation("notnull => notnull")]
 		public static string GetImageKey([CanBeNull] QualityCondition qualityCondition)
 		{
 			return qualityCondition == null
 				       ? null
 				       : GetImageKey(GetImage(qualityCondition));
+		}
+
+		[CanBeNull]
+		[ContractAnnotation("notnull => notnull")]
+		public static string GetImageKey([CanBeNull] InstanceConfiguration configuration)
+		{
+			if (configuration == null)
+			{
+				return null;
+			}
+
+			return GetImageKey(GetImage(configuration));
 		}
 
 		[CanBeNull]
@@ -146,9 +216,24 @@ namespace ProSuite.UI.QA.ResourceLookup
 			return GetDefaultSortIndex(GetImageKey(testDescriptor));
 		}
 
+		public static int GetDefaultSortIndex([NotNull] InstanceDescriptor instanceDescriptor)
+		{
+			return GetDefaultSortIndex(GetImageKey(instanceDescriptor));
+		}
+
+		public static int GetDefaultSortIndex([NotNull] TransformerDescriptor transformerDescriptor)
+		{
+			return GetDefaultSortIndex(GetImageKey(transformerDescriptor));
+		}
+
 		public static int GetDefaultSortIndex([NotNull] QualityCondition qualityCondition)
 		{
 			return GetDefaultSortIndex(GetImageKey(qualityCondition));
+		}
+
+		public static int GetDefaultSortIndex([NotNull] InstanceConfiguration configuration)
+		{
+			return GetDefaultSortIndex(GetImageKey(configuration));
 		}
 
 		public static int GetDefaultSortIndex(

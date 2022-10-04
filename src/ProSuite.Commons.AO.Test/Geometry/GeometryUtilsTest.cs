@@ -21,6 +21,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
 using ProSuite.Commons.Geom.EsriShape;
 using Array = System.Array;
+using IPnt = ProSuite.Commons.Geom.IPnt;
 
 namespace ProSuite.Commons.AO.Test.Geometry
 {
@@ -1454,7 +1455,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 			                                       ref missing);
 			// single point touches:
 			IPolygon polygon2Part0 = GeometryFactory.CreatePolygon(2000010, 999995,
-			                                                       2000020, 1000000, 999);
+				2000020, 1000000, 999);
 
 			Assert.IsTrue(GeometryUtils.Touches(polygon1, polygon2Part0, true));
 			Assert.IsTrue(GeometryUtils.Intersects(polygon1, polygon2Part0));
@@ -1507,20 +1508,20 @@ namespace ProSuite.Commons.AO.Test.Geometry
 			                                       ref missing);
 			// single point touches:
 			IPolyline polyline2part1 = GeometryFactory.CreatePolyline(_spatialReference,
-			                                                          Pt(2000010, 1000000,
-			                                                             100),
-			                                                          Pt(2000040, 1000000,
-			                                                             100));
+				Pt(2000010, 1000000,
+				   100),
+				Pt(2000040, 1000000,
+				   100));
 
 			Assert.IsTrue(GeometryUtils.Touches(polygon1, polyline2part1, true));
 			Assert.IsTrue(GeometryUtils.Intersects(polygon1, polyline2part1));
 
 			// intersects polygon
 			IPolyline polyline2part2 = GeometryFactory.CreatePolyline(_spatialReference,
-			                                                          Pt(1999998, 1000003,
-			                                                             300),
-			                                                          Pt(2000004, 1000006,
-			                                                             300));
+				Pt(1999998, 1000003,
+				   300),
+				Pt(2000004, 1000006,
+				   300));
 
 			Assert.IsFalse(GeometryUtils.Touches(polygon1, polyline2part2, true));
 			Assert.IsTrue(GeometryUtils.Intersects(polygon1, polyline2part2));
@@ -2262,9 +2263,9 @@ namespace ProSuite.Commons.AO.Test.Geometry
 			double origLenth = polyline.Length;
 
 			IList<IPoint> splitPoints = GeometryUtils.SplitPolycurve(polyline,
-			                                                         pointCollection,
-			                                                         true,
-			                                                         true, 0.01);
+				pointCollection,
+				true,
+				true, 0.01);
 
 			var lineCollection = (IGeometryCollection) polyline;
 
@@ -2346,9 +2347,9 @@ namespace ProSuite.Commons.AO.Test.Geometry
 			double origLenth = polyline.Length;
 
 			IList<IPoint> splitPoints = GeometryUtils.SplitPolycurve(polyline,
-			                                                         pointCollection,
-			                                                         true,
-			                                                         true, 0.01);
+				pointCollection,
+				true,
+				true, 0.01);
 
 			var lineCollection = (IGeometryCollection) polyline;
 
@@ -2800,6 +2801,13 @@ namespace ProSuite.Commons.AO.Test.Geometry
 
 			Assert.IsTrue(((IPointCollection) clone).PointCount ==
 			              ((IPointCollection) clone2).PointCount);
+
+			// Compare with new per-segment method:
+			int linearizedSegmentCount =
+				GeometryUtils.GetLinearizedSegments((ISegmentCollection) clone, 0.01)
+				             .Count();
+
+			Assert.AreEqual(((IPointCollection) clone2).PointCount, linearizedSegmentCount + 1);
 		}
 
 		[Test]
@@ -2835,6 +2843,41 @@ namespace ProSuite.Commons.AO.Test.Geometry
 		}
 
 		[Test]
+		public void CanLinearizeLinearArcSegments()
+		{
+			string testGeometryPath =
+				TestUtils.GetGeometryTestDataPath("PolygonWithLinearArcsTarget.xml");
+			IPolygon polygon = (IPolygon) GeometryUtils.FromXmlFile(testGeometryPath);
+			IPolyline polyline = GeometryFactory.CreatePolyline(polygon);
+
+			IPolyline clone = GeometryFactory.Clone(polyline);
+			double maxAllowableOffset = 0.005;
+
+			GeometryUtils.Linearize(clone, maxAllowableOffset);
+
+			// Compare with new per-segment method. Linear arcs must be handled specifically!
+			var linearizedSegments =
+				GeometryUtils.GetLinearizedSegments(
+					             (ISegmentCollection) polyline, maxAllowableOffset)
+				             .ToList();
+
+			IPolyline linearizedPolyline = GeometryFactory.CreateEmptyPolyline(polyline);
+
+			object missing = Type.Missing;
+			foreach (ILine line in linearizedSegments)
+			{
+				((ISegmentCollection) linearizedPolyline).AddSegment(
+					(ISegment) line, ref missing, ref missing);
+			}
+
+			// NOTE: GetLinearizedSegments() is presumably way too conservative. Generalize it:
+
+			linearizedPolyline.Generalize(maxAllowableOffset);
+
+			Assert.AreEqual(596, GeometryUtils.GetPointCount(linearizedPolyline));
+		}
+
+		[Test]
 		public void CanCalculateRegularPolyVertices()
 		{
 			IPoint centre = GeometryFactory.CreatePoint(100, 100);
@@ -2861,9 +2904,9 @@ namespace ProSuite.Commons.AO.Test.Geometry
 
 			// same with an intersecting vertex
 			fourPoints = GeometryUtils.CalculateRegularPolyVertices(centre, 10, 4,
-			                                                        GeometryFactory
-				                                                        .CreatePoint
-					                                                        (100, 110));
+				GeometryFactory
+					.CreatePoint
+						(100, 110));
 
 			Assert.AreEqual(100, fourPoints[0].X);
 			Assert.AreEqual(110, fourPoints[0].Y);
@@ -3127,7 +3170,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 
 			// Multipatches return with empty geometry (10.6.1)!
 			IMultiPatch multipatch = GeometryFactory.CreateMultiPatch(polygon);
-			
+
 			byte[] bytes = GeometryUtils.ToEsriShapeBuffer(multipatch);
 			IGeometry restoredGeometry = GeometryUtils.FromEsriShapeBuffer(bytes);
 			Assert.IsTrue(restoredGeometry.IsEmpty);
@@ -3430,7 +3473,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 			watch.Stop();
 			Console.WriteLine("Next 100 HitTests (AO): {0}", watch.ElapsedMilliseconds);
 
-			Multipoint<Commons.Geom.IPnt> multipnt =
+			Multipoint<IPnt> multipnt =
 				GeometryConversionUtils.CreateMultipoint(multipoint);
 
 			Pnt2D testPnt = new Pnt2D(2734500, 1200123);
@@ -3450,7 +3493,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 			watch.Restart();
 			for (int i = 1000; i < 10000; i += 100)
 			{
-				Commons.Geom.IPnt pnt = multipnt.GetPoint(i);
+				IPnt pnt = multipnt.GetPoint(i);
 
 				anyHit = multipnt
 				         .FindPointIndexes(pnt, 0.01, useSearchCircle: false,
@@ -3467,7 +3510,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 			watch.Restart();
 			for (int i = 1000; i < 10000; i += 100)
 			{
-				Commons.Geom.IPnt pnt = multipnt.GetPoint(i);
+				IPnt pnt = multipnt.GetPoint(i);
 
 				anyHit = multipnt
 				         .FindPointIndexes(pnt, 0.01, useSearchCircle: false,

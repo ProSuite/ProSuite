@@ -4,13 +4,15 @@ using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.PolygonGrower;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.QA.Tests.Network;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
 {
@@ -47,29 +49,29 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaFlowLogic_0))]
 		public QaFlowLogic(
-			[Doc(nameof(DocStrings.QaFlowLogic_polylineClass))] IFeatureClass polylineClass)
+			[Doc(nameof(DocStrings.QaFlowLogic_polylineClass))] IReadOnlyFeatureClass polylineClass)
 			: this(new[] {polylineClass}) { }
 
 		[Doc(nameof(DocStrings.QaFlowLogic_1))]
 		public QaFlowLogic(
-				[Doc(nameof(DocStrings.QaFlowLogic_polylineClasses))] IList<IFeatureClass> polylineClasses)
+				[Doc(nameof(DocStrings.QaFlowLogic_polylineClasses))] IList<IReadOnlyFeatureClass> polylineClasses)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(polylineClasses, null, false) { }
 
 		[Doc(nameof(DocStrings.QaFlowLogic_2))]
 		public QaFlowLogic(
-				[Doc(nameof(DocStrings.QaFlowLogic_polylineClasses))] IList<IFeatureClass> polylineClasses,
+				[Doc(nameof(DocStrings.QaFlowLogic_polylineClasses))] IList<IReadOnlyFeatureClass> polylineClasses,
 				[Doc(nameof(DocStrings.QaFlowLogic_flipExpressions))] IList<string> flipExpressions)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(polylineClasses, flipExpressions, false) { }
 
 		[Doc(nameof(DocStrings.QaFlowLogic_2))]
 		public QaFlowLogic(
-			[Doc(nameof(DocStrings.QaFlowLogic_polylineClasses))] IList<IFeatureClass> polylineClasses,
+			[Doc(nameof(DocStrings.QaFlowLogic_polylineClasses))] IList<IReadOnlyFeatureClass> polylineClasses,
 			[Doc(nameof(DocStrings.QaFlowLogic_flipExpressions))] IList<string> flipExpressions,
 			[Doc(nameof(DocStrings.QaFlowLogic_allowMultipleOutgoingLines))]
 			bool allowMultipleOutgoingLines)
-			: base(CastToTables((IEnumerable<IFeatureClass>) polylineClasses), false)
+			: base(CastToTables((IEnumerable<IReadOnlyFeatureClass>) polylineClasses), false)
 		{
 			Assert.ArgumentNotNull(polylineClasses, nameof(polylineClasses));
 			Assert.ArgumentCondition(flipExpressions == null ||
@@ -101,7 +103,7 @@ namespace ProSuite.QA.Tests
 		{
 			if (_flipExpressions != null)
 			{
-				ITable table = InvolvedTables[tableIndex];
+				IReadOnlyTable table = InvolvedTables[tableIndex];
 
 				foreach (string fieldName in
 					ExpressionUtils.GetExpressionFieldNames(table,
@@ -147,11 +149,10 @@ namespace ProSuite.QA.Tests
 					                      ? Codes[Code.OutgoingLines_None]
 					                      : Codes[Code.OutgoingLines_Multiple];
 
-				errorCount += ReportError(description, fromPoint,
-				                          issueCode,
-				                          TestUtils.GetShapeFieldName(
-					                          connectedRows[0].Row.Row),
-				                          GetInvolvedRows(connectedRows));
+				errorCount += ReportError(
+					description, GetInvolvedRows(connectedRows),
+					fromPoint, issueCode,
+					TestUtils.GetShapeFieldName(connectedRows[0].Row.Row));
 			}
 
 			return errorCount;
@@ -163,12 +164,13 @@ namespace ProSuite.QA.Tests
 		}
 
 		[NotNull]
-		private static IEnumerable<InvolvedRow> GetInvolvedRows(
+		private static InvolvedRows GetInvolvedRows(
 			[NotNull] IEnumerable<DirectedRow> connectedRows)
 		{
 			Assert.ArgumentNotNull(connectedRows, nameof(connectedRows));
 
-			return connectedRows.Select(dirRow => new InvolvedRow(dirRow.Row.Row));
+			return InvolvedRowUtils.GetInvolvedRows(
+				connectedRows.Select(dirRow => dirRow.Row.Row));
 		}
 
 		private bool IsBackward([NotNull] DirectedRow dirRow)
@@ -202,7 +204,7 @@ namespace ProSuite.QA.Tests
 		[NotNull]
 		private IList<RowCondition> CreateFlipConditions(
 			[NotNull] IList<string> flipExpressions,
-			[NotNull] IList<ITable> tables)
+			[NotNull] IList<IReadOnlyTable> tables)
 		{
 			Assert.ArgumentNotNull(flipExpressions, nameof(flipExpressions));
 			Assert.ArgumentNotNull(tables, nameof(tables));

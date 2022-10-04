@@ -69,24 +69,12 @@ namespace ProSuite.QA.Container
 				var list0 = new List<InvolvedRow>(error0.InvolvedRows);
 				var list1 = new List<InvolvedRow>(error1.InvolvedRows);
 
-				// TODO reuse instance?
-				var rowCompare = new InvolvedRowComparer();
-
-				list0.Sort(rowCompare);
-				list1.Sort(rowCompare);
-
-				for (var involvedRowIndex = 0;
-				     involvedRowIndex < involvedRowsCount;
-				     involvedRowIndex++)
+				SortInvolvedRows(list0);
+				SortInvolvedRows(list1);
+				int involvedRowDifference = CompareSortedInvolvedRows(list0, list1);
+				if (involvedRowDifference != 0)
 				{
-					int involvedRowDifference = rowCompare.Compare(
-						list0[involvedRowIndex],
-						list1[involvedRowIndex]);
-
-					if (involvedRowDifference != 0)
-					{
-						return involvedRowDifference;
-					}
+					return involvedRowDifference;
 				}
 			}
 
@@ -94,16 +82,53 @@ namespace ProSuite.QA.Container
 			return 0;
 		}
 
+		public static void SortInvolvedRows([NotNull]List<InvolvedRow> involvedRows)
+		{
+			involvedRows.Sort(new InvolvedRowComparer());
+		}
+
+		public static int CompareSortedInvolvedRows([NotNull] IList<InvolvedRow> sorted0,
+		                                            [NotNull] IList<InvolvedRow> sorted1,
+		                                            bool validateRowCount = false)
+		{
+			int involvedRowsCount = sorted0.Count;
+			if (validateRowCount)
+			{
+				int diffCount = involvedRowsCount - sorted1.Count;
+				if (diffCount != 0)
+				{
+					return diffCount;
+				}
+			}
+
+			var rowCompare = new InvolvedRowComparer();
+			for (var involvedRowIndex = 0;
+			     involvedRowIndex < involvedRowsCount;
+			     involvedRowIndex++)
+			{
+				int involvedRowDifference = rowCompare.Compare(
+					sorted0[involvedRowIndex],
+					sorted1[involvedRowIndex]);
+
+				if (involvedRowDifference != 0)
+				{
+					return involvedRowDifference;
+				}
+			}
+
+			return 0;
+		}
+
 		[NotNull]
 		public static IQueryFilter CreateFilter([CanBeNull] IGeometry queryArea,
 		                                        [CanBeNull] IPolygon constraintArea,
 		                                        [CanBeNull] string constraint,
-		                                        [NotNull] ITable table,
+		                                        [NotNull] IReadOnlyTable table,
 		                                        [CanBeNull] TableView tableView)
 		{
 			IQueryFilter filter;
 			if (constraintArea != null ||
-			    queryArea != null && table is IFeatureClass)
+			    queryArea != null && table is IReadOnlyFeatureClass)
 			{
 				ISpatialFilter s = new SpatialFilterClass();
 
@@ -119,7 +144,7 @@ namespace ProSuite.QA.Container
 				}
 
 				s.Geometry = queryArea;
-				s.GeometryField = ((IFeatureClass) table).ShapeFieldName;
+				s.GeometryField = ((IReadOnlyFeatureClass) table).ShapeFieldName;
 				s.SpatialRel = esriSpatialRelEnum.esriSpatialRelIntersects;
 
 				filter = s;
@@ -167,12 +192,12 @@ namespace ProSuite.QA.Container
 
 		[CanBeNull]
 		public static IEnvelope GetFullExtent(
-			[NotNull] IEnumerable<IGeoDataset> geoDatasets)
+			[NotNull] IEnumerable<IReadOnlyGeoDataset> geoDatasets)
 		{
 			IEnvelope extentUnion = null;
 			double maxXyTolerance = 0;
 
-			foreach (IGeoDataset geoDataset in geoDatasets)
+			foreach (IReadOnlyGeoDataset geoDataset in geoDatasets)
 			{
 				if (geoDataset == null)
 				{
@@ -186,17 +211,17 @@ namespace ProSuite.QA.Container
 					continue;
 				}
 
-				string datasetName = geoDataset is IDataset dataset
+				string datasetName = geoDataset is IReadOnlyDataset dataset
 					                     ? dataset.Name
 					                     : "raster";
 				_msg.DebugFormat("Adding extent of {0}: {1}",
 				                 datasetName,
 				                 GeometryUtils.Format(datasetExtent));
 
-				if (geoDataset is IFeatureClass featureClass)
+				if (geoDataset is IReadOnlyFeatureClass featureClass)
 				{
 					double xyTolerance;
-					if (DatasetUtils.TryGetXyTolerance(featureClass, out xyTolerance))
+					if (DatasetUtils.TryGetXyTolerance(featureClass.SpatialReference, out xyTolerance))
 					{
 						maxXyTolerance = Math.Max(maxXyTolerance, xyTolerance);
 					}
@@ -234,9 +259,9 @@ namespace ProSuite.QA.Container
 		}
 
 		[CanBeNull]
-		public static IGeometry GetShapeCopy([NotNull] IRow row)
+		public static IGeometry GetShapeCopy([NotNull] IReadOnlyRow row)
 		{
-			if (row is IFeature feature)
+			if (row is IReadOnlyFeature feature)
 			{
 				// TODO optimize
 				// - feature.Extent creates a copy (feature.Shape.QueryEnvelope() does not)
@@ -246,8 +271,7 @@ namespace ProSuite.QA.Container
 					// this may be the case when the ShapeField was not queried (i.e. QueryFilter.SubFields = 'OID, Field') 
 					if (row.HasOID && row.Table.HasOID)
 					{
-						feature =
-							GdbQueryUtils.GetFeature((IFeatureClass) row.Table, row.OID);
+						feature = GdbQueryUtils.GetFeature((IReadOnlyFeatureClass)feature.Table, row.OID);
 
 						if (feature != null)
 						{
@@ -265,7 +289,7 @@ namespace ProSuite.QA.Container
 		}
 
 		[CanBeNull]
-		public static IGeometry GetShapeCopy([NotNull] IRow row,
+		public static IGeometry GetShapeCopy([NotNull] IReadOnlyRow row,
 		                                     [CanBeNull] RelatedTables relatedTables)
 		{
 			return relatedTables == null
@@ -288,7 +312,7 @@ namespace ProSuite.QA.Container
 		{
 			Assert.ArgumentNotNull(test, nameof(test));
 
-			foreach (IGeoDataset geoDataset in GetGeodatasets(test))
+			foreach (IReadOnlyGeoDataset geoDataset in GetGeodatasets(test))
 			{
 				if (geoDataset.SpatialReference != null)
 				{
@@ -298,14 +322,14 @@ namespace ProSuite.QA.Container
 		}
 
 		[NotNull]
-		public static IEnumerable<IGeoDataset> GetGeodatasets(
+		public static IEnumerable<IReadOnlyGeoDataset> GetGeodatasets(
 			[NotNull] IInvolvesTables test)
 		{
 			Assert.ArgumentNotNull(test, nameof(test));
 
 			if (test is ContainerTest containerTest)
 			{
-				foreach (IGeoDataset involvedGeoDataset in containerTest
+				foreach (IReadOnlyGeoDataset involvedGeoDataset in containerTest
 					.GetInvolvedGeoDatasets())
 				{
 					yield return involvedGeoDataset;
@@ -313,9 +337,9 @@ namespace ProSuite.QA.Container
 			}
 			else
 			{
-				foreach (ITable table in test.InvolvedTables)
+				foreach (IReadOnlyTable table in test.InvolvedTables)
 				{
-					if (table is IGeoDataset geoDataset)
+					if (table is IReadOnlyGeoDataset geoDataset)
 					{
 						yield return geoDataset;
 					}
@@ -483,7 +507,7 @@ namespace ProSuite.QA.Container
 		/// <param name="fieldIndex">Index of the field.</param>
 		/// <param name="fieldName">Name of the field.</param>
 		/// <returns></returns>
-		public static string GetFieldDisplayName([NotNull] IRow row,
+		public static string GetFieldDisplayName([NotNull] IReadOnlyRow row,
 		                                         int fieldIndex,
 		                                         [NotNull] out string fieldName)
 		{
@@ -491,7 +515,7 @@ namespace ProSuite.QA.Container
 			Assert.ArgumentCondition(fieldIndex >= 0, "invalid field index: {0}",
 			                         fieldIndex);
 
-			IField field = row.Fields.Field[fieldIndex];
+			IField field = row.Table.Fields.Field[fieldIndex];
 
 			fieldName = field.Name;
 			string fieldAlias = field.AliasName;
@@ -609,20 +633,20 @@ namespace ProSuite.QA.Container
 
 		[NotNull]
 		public static IList<double> GetMTolerances(
-			[NotNull] IEnumerable<IFeatureClass> featureClasses)
+			[NotNull] IEnumerable<IReadOnlyFeatureClass> featureClasses)
 		{
 			Assert.ArgumentNotNull(featureClasses, nameof(featureClasses));
 
 			var result = new List<double>();
 
-			foreach (IFeatureClass featureClass in featureClasses)
+			foreach (IReadOnlyFeatureClass featureClass in featureClasses)
 			{
 				double mTolerance;
-				if (! DatasetUtils.TryGetMTolerance(featureClass, out mTolerance))
+				if (! DatasetUtils.TryGetMTolerance(featureClass.SpatialReference, out mTolerance))
 				{
 					throw new ArgumentException(
 						string.Format("{0} has an undefined or invalid M tolerance",
-						              DatasetUtils.GetName(featureClass)));
+						              featureClass.Name));
 				}
 
 				result.Add(mTolerance);
@@ -633,20 +657,20 @@ namespace ProSuite.QA.Container
 
 		[NotNull]
 		public static IList<double> GetXyTolerances(
-			[NotNull] IEnumerable<IFeatureClass> featureClasses)
+			[NotNull] IEnumerable<IReadOnlyFeatureClass> featureClasses)
 		{
 			Assert.ArgumentNotNull(featureClasses, nameof(featureClasses));
 
 			var result = new List<double>();
 
-			foreach (IFeatureClass featureClass in featureClasses)
+			foreach (IReadOnlyFeatureClass featureClass in featureClasses)
 			{
 				double xyTolerance;
-				if (! DatasetUtils.TryGetXyTolerance(featureClass, out xyTolerance))
+				if (! DatasetUtils.TryGetXyTolerance(featureClass.SpatialReference, out xyTolerance))
 				{
 					throw new ArgumentException(
 						string.Format("{0} has an undefined or invalid XY tolerance",
-						              DatasetUtils.GetName(featureClass)));
+						              featureClass.Name));
 				}
 
 				result.Add(xyTolerance);
@@ -657,20 +681,20 @@ namespace ProSuite.QA.Container
 
 		[NotNull]
 		public static IList<int> GetFieldIndexes(
-			[NotNull] IEnumerable<IFeatureClass> featureClasses,
+			[NotNull] IEnumerable<IReadOnlyFeatureClass> featureClasses,
 			[NotNull] IEnumerable<string> fieldNames)
 		{
-			return GetFieldIndexes(featureClasses.Cast<ITable>(), fieldNames);
+			return GetFieldIndexes(featureClasses.Cast<IReadOnlyTable>(), fieldNames);
 		}
 
 		[NotNull]
-		public static IList<int> GetFieldIndexes([NotNull] IEnumerable<ITable> tables,
+		public static IList<int> GetFieldIndexes([NotNull] IEnumerable<IReadOnlyTable> tables,
 		                                         [NotNull] IEnumerable<string> fieldNames)
 		{
 			Assert.ArgumentNotNull(tables, nameof(tables));
 			Assert.ArgumentNotNull(fieldNames, nameof(fieldNames));
 
-			ICollection<ITable> tableCollection = CollectionUtils.GetCollection(tables);
+			ICollection<IReadOnlyTable> tableCollection = CollectionUtils.GetCollection(tables);
 			ICollection<string> fieldNameCollection =
 				CollectionUtils.GetCollection(fieldNames);
 
@@ -741,31 +765,31 @@ namespace ProSuite.QA.Container
 		}
 
 		[CanBeNull]
-		public static string GetShapeFieldName([NotNull] IRow row)
+		public static string GetShapeFieldName([NotNull] IReadOnlyRow row)
 		{
 			Assert.ArgumentNotNull(row, nameof(row));
 
-			var featureClass = row.Table as IFeatureClass;
+			var featureClass = row.Table as IReadOnlyFeatureClass;
 
 			return featureClass?.ShapeFieldName;
 		}
 
 		[NotNull]
-		public static string GetShapeFieldName([NotNull] IFeature feature)
+		public static string GetShapeFieldName([NotNull] IReadOnlyFeature feature)
 		{
 			Assert.ArgumentNotNull(feature, nameof(feature));
 
-			return ((IFeatureClass) feature.Class).ShapeFieldName;
+			return ((IReadOnlyFeatureClass)feature.Table).ShapeFieldName;
 		}
 
 		[NotNull]
-		public static string GetShapeFieldNames([NotNull] params IFeature[] features)
+		public static string GetShapeFieldNames([NotNull] params IReadOnlyFeature[] features)
 		{
-			return GetShapeFieldNames((IEnumerable<IFeature>) features);
+			return GetShapeFieldNames((IEnumerable<IReadOnlyFeature>) features);
 		}
 
 		[NotNull]
-		public static string GetShapeFieldNames([NotNull] IEnumerable<IFeature> features)
+		public static string GetShapeFieldNames([NotNull] IEnumerable<IReadOnlyFeature> features)
 		{
 			Assert.ArgumentNotNull(features, nameof(features));
 
@@ -780,7 +804,7 @@ namespace ProSuite.QA.Container
 
 		public static bool UsesSpatialDataset([NotNull] ITest test)
 		{
-			if (test.InvolvedTables.OfType<IFeatureClass>().Any())
+			if (test.InvolvedTables.OfType<IReadOnlyFeatureClass>().Any())
 			{
 				return true;
 			}
@@ -791,7 +815,7 @@ namespace ProSuite.QA.Container
 		}
 
 		[NotNull]
-		public static Dictionary<ITable, IList<T>> GetTestsByTable<T>(
+		public static Dictionary<IReadOnlyTable, IList<T>> GetTestsByTable<T>(
 			[NotNull] IEnumerable<T> tests)
 			where T : ITest
 		{
@@ -877,9 +901,9 @@ namespace ProSuite.QA.Container
 
 				if (test is ContainerTest containerTest)
 				{
-					foreach (ITable table in containerTest.InvolvedTables)
+					foreach (IReadOnlyTable table in containerTest.InvolvedTables)
 					{
-						if (! (table is IFeatureClass))
+						if (! (table is IReadOnlyFeatureClass))
 						{
 							continue;
 						}
@@ -908,20 +932,20 @@ namespace ProSuite.QA.Container
 
 		[NotNull]
 		public static IDictionary<int, double> GetXyToleranceByTableIndex(
-			[NotNull] ICollection<ITable> tables)
+			[NotNull] ICollection<IReadOnlyTable> tables)
 		{
 			Assert.ArgumentNotNull(tables, nameof(tables));
 
 			var result = new Dictionary<int, double>(tables.Count);
 
 			var index = 0;
-			foreach (ITable table in tables)
+			foreach (IReadOnlyTable table in tables)
 			{
-				var featureClass = table as IFeatureClass;
+				var featureClass = table as IReadOnlyFeatureClass;
 
 				double xyTolerance;
 				if (featureClass == null ||
-				    ! DatasetUtils.TryGetXyTolerance(featureClass, out xyTolerance))
+				    ! DatasetUtils.TryGetXyTolerance(featureClass.SpatialReference, out xyTolerance))
 				{
 					xyTolerance = 0;
 				}
@@ -935,16 +959,16 @@ namespace ProSuite.QA.Container
 
 		[NotNull]
 		public static IDictionary<int, esriGeometryType> GetGeometryTypesByTableIndex(
-			[NotNull] ICollection<ITable> tables)
+			[NotNull] ICollection<IReadOnlyTable> tables)
 		{
 			Assert.ArgumentNotNull(tables, nameof(tables));
 
 			var result = new Dictionary<int, esriGeometryType>(tables.Count);
 
 			var index = 0;
-			foreach (ITable table in tables)
+			foreach (IReadOnlyTable table in tables)
 			{
-				var featureClass = table as IFeatureClass;
+				var featureClass = table as IReadOnlyFeatureClass;
 
 				result.Add(
 					index, featureClass?.ShapeType ?? esriGeometryType.esriGeometryNull);
@@ -954,7 +978,7 @@ namespace ProSuite.QA.Container
 			return result;
 		}
 
-		public static bool IsSameRow([NotNull] IRow row0, [NotNull] IRow row1) =>
+		public static bool IsSameRow([NotNull] IReadOnlyRow row0, [NotNull] IReadOnlyRow row1) =>
 			row0 == row1 || row0.OID == row1.OID && row0.Table == row1.Table;
 
 		/// <summary>
@@ -989,14 +1013,14 @@ namespace ProSuite.QA.Container
 		/// <param name="tableIndex">Index of the table.</param>
 		/// <param name="fieldNames">The field names (either a single field to be used for all tables, or one field name per table).</param>
 		/// <returns></returns>
-		private static int GetFieldIndex([NotNull] IEnumerable<ITable> tables,
+		private static int GetFieldIndex([NotNull] IEnumerable<IReadOnlyTable> tables,
 		                                 int tableIndex,
 		                                 [NotNull] IEnumerable<string> fieldNames)
 		{
 			Assert.ArgumentNotNull(tables, nameof(tables));
 			Assert.ArgumentNotNull(fieldNames, nameof(fieldNames));
 
-			List<ITable> tableList = tables.ToList();
+			List<IReadOnlyTable> tableList = tables.ToList();
 			List<string> fieldList = fieldNames.ToList();
 
 			AssertValidFieldNameCount(tableList, fieldList);
@@ -1006,7 +1030,7 @@ namespace ProSuite.QA.Container
 			Assert.ArgumentCondition(tableIndex < tableList.Count,
 			                         "Table index out of bounds: {0}", tableIndex);
 
-			ITable table = tableList[tableIndex];
+			IReadOnlyTable table = tableList[tableIndex];
 
 			string fieldName = fieldList.Count == 1
 				                   ? fieldList[0]
@@ -1018,14 +1042,14 @@ namespace ProSuite.QA.Container
 			{
 				throw new ArgumentException(
 					string.Format("Field {0} not found in table {1}",
-					              fieldName, DatasetUtils.GetName(table)));
+					              fieldName, table.Name));
 			}
 
 			return fieldIndex;
 		}
 
 		private static void AssertValidFieldNameCount(
-			[NotNull] IEnumerable<ITable> tables,
+			[NotNull] IEnumerable<IReadOnlyTable> tables,
 			[NotNull] IEnumerable<string>
 				fieldNames)
 		{

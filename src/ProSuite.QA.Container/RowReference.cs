@@ -1,5 +1,4 @@
 using System;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -10,16 +9,16 @@ namespace ProSuite.QA.Container
 	{
 		private Guid? _recycleUnique;
 
-		public RowReference([NotNull] IRow row, bool recycled)
+		public RowReference([NotNull] IReadOnlyRow row, bool recycled)
 		{
 			Row = row;
 			Recycled = recycled;
 		}
 
-		public IEnvelope Extent => ((IFeature) Row).Extent;
+		public IEnvelope Extent => ((IReadOnlyFeature) Row).Extent;
 
 		[NotNull]
-		public IRow Row { get; }
+		public IReadOnlyRow Row { get; }
 
 		public bool Recycled { get; }
 
@@ -33,7 +32,7 @@ namespace ProSuite.QA.Container
 			}
 		}
 
-		public string DatasetName => ((IDataset) Row.Table).Name;
+		public string DatasetName => Row.Table.Name;
 
 		public string GetDescription()
 		{
@@ -49,7 +48,7 @@ namespace ProSuite.QA.Container
 
 		public int Execute(ContainerTest containerTest, int occurance, out bool applicable)
 		{
-			IRow row = Row;
+			IReadOnlyRow row = Row;
 			int involvedTableIndex = containerTest.GetTableIndex(row.Table, occurance);
 
 			if (containerTest.GetQueriedOnly(involvedTableIndex))

@@ -1,0 +1,34 @@
+@using Radzen
+@using Radzen.Blazor
+@using Microsoft.AspNetCore.Components
+@using ProSuite.DdxEditor.Content.Blazor.ViewModel
+
+@inherits TestParameterValueDataGridBlazorBase
+
+<div class="container-fluid" style="margin: 0.625rem 0 0 -0.75rem;">
+	<div class="row">
+		<div class="col-auto">
+			<UpDownButtonsBlazor Grid="DataGrid" OnUpClicked="OnUpClicked" OnDownClicked="OnDownClicked" OnDeleteClicked="OnDeleteClicked"/>
+		</div>
+		<div class="col">
+			<RadzenDataGrid @ref="DataGrid"
+			                TItem="ViewModelBase"
+			                Data="Rows"
+			                SelectionMode="DataGridSelectionMode.Single"
+			                AllowColumnResize="true"
+			                AllowRowSelectOnRowClick="true"
+			                @bind-Value="SelectedRows"
+			                RowClick="OnRowClick"
+			                LoadData="OnLoadData">
+				<Columns>
+					<RadzenDataGridColumn TItem="ViewModelBase" Property="ParameterName" Title="Parameter" Width="150px"/>
+					<RadzenDataGridColumn TItem="ViewModelBase" Property="Value" Title="Value">
+						<Template Context="viewModel">
+							<DynamicComponent Type="viewModel.ComponentType" Parameters="viewModel.ComponentParameters"/>
+						</Template>
+					</RadzenDataGridColumn>
+				</Columns>
+			</RadzenDataGrid>
+		</div>
+	</div>
+</div>

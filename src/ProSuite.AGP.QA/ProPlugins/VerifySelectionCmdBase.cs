@@ -41,9 +41,6 @@ namespace ProSuite.AGP.QA.ProPlugins
 
 		protected abstract IMapBasedSessionContext SessionContext { get; }
 
-		protected abstract Window CreateProgressWindow(
-			VerificationProgressViewModel progressViewModel);
-
 		protected abstract IProSuiteFacade ProSuiteImpl { get; }
 
 		protected override void OnClick()
@@ -101,7 +98,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 
 			string actionTitle = "Verify Selection";
 
-			Window window = CreateProgressWindow(qaProgressViewmodel);
+			Window window = VerificationProgressWindow.Create(qaProgressViewmodel);
 
 			VerifyUtils.ShowProgressWindow(window, qualitySpecification,
 			                               qaEnvironment.BackendDisplayName, actionTitle);

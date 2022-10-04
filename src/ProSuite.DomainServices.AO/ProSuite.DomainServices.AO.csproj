@@ -1,419 +1,117 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="15.0">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{F931824E-C6AC-4E8E-B30B-F903C23600F5}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>ProSuite.DomainServices.AO</RootNamespace>
-    <AssemblyName>ProSuite.DomainServices.AO</AssemblyName>
     <SignAssembly>true</SignAssembly>
     <ProSuiteKeyFile Condition=" '$(ProSuiteKeyFile)' == '' ">..\ProSuite.Key.snk</ProSuiteKeyFile>
     <AssemblyOriginatorKeyFile>$(ProSuiteKeyFile)</AssemblyOriginatorKeyFile>
-    <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' ">v4.8</TargetFrameworkVersion>
+
     <VSArcGISVersion Condition=" '$(VSArcGISVersion)' == '' ">10.8</VSArcGISVersion>
     <VSArcGISProduct Condition=" '$(VSArcGISProduct)' == ''">ArcGIS</VSArcGISProduct>
     <ArcGISAssemblyPath Condition=" '$(ArcGISAssemblyPath)' == '' ">C:\Program Files (x86)\ArcGIS\DeveloperKit10.6\DotNet</ArcGISAssemblyPath>
-    <ProAssemblyPath Condition=" '$(ProAssemblyPath)' == '' ">C:\Program Files\ArcGIS\Pro</ProAssemblyPath>
+
+
     <OutputDirectory Condition=" '$(OutputDirectory)' == '' ">..\..\bin</OutputDirectory>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>$(OutputDirectory)\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE;$(VSArcGISProduct)</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <OutputPath>$(OutputDirectory)\$(Configuration)\</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+
     <NoWarn>1591</NoWarn>
+
+    <TargetFramework>netstandard2.0</TargetFramework>
+
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugType>full</DebugType>
+    <DefineConstants>DEBUG;TRACE;$(VSArcGISProduct)</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>$(OutputDirectory)\Release\</OutputPath>
     <DefineConstants>TRACE;$(VSArcGISProduct)</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <DocumentationFile>$(OutputDirectory)\Release\ProSuite.DomainServices.AO.xml</DocumentationFile>
-    <NoWarn>1591</NoWarn>
+    <DocumentationFile>$(OutputDirectory)\$(Configuration)\ProSuite.DomainServices.AO.xml</DocumentationFile>
   </PropertyGroup>
+
   <ItemGroup>
-    <Reference Include="ESRI.ArcGIS.DataSourcesGDB, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>$(ArcGISAssemblyPath)\$(VSArcGISVersion)\ESRI.$(VSArcGISProduct).DataSourcesGDB.dll</HintPath>
-    </Reference>
-    <Reference Include="ESRI.ArcGIS.DataSourcesRaster, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>$(ArcGISAssemblyPath)\$(VSArcGISVersion)\ESRI.$(VSArcGISProduct).DataSourcesRaster.dll</HintPath>
-    </Reference>
     <Reference Include="ESRI.ArcGIS.Geodatabase, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
       <HintPath>$(ArcGISAssemblyPath)\$(VSArcGISVersion)\ESRI.$(VSArcGISProduct).Geodatabase.dll</HintPath>
-    </Reference>
-    <Reference Include="ESRI.ArcGIS.GeoDatabaseExtensions, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>$(ArcGISAssemblyPath)\$(VSArcGISVersion)\ESRI.$(VSArcGISProduct).GeoDatabaseExtensions.dll</HintPath>
     </Reference>
     <Reference Include="ESRI.ArcGIS.Geometry, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
       <HintPath>$(ArcGISAssemblyPath)\$(VSArcGISVersion)\ESRI.$(VSArcGISProduct).Geometry.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
     </Reference>
     <Reference Include="ESRI.ArcGIS.System, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
       <HintPath>$(ArcGISAssemblyPath)\$(VSArcGISVersion)\ESRI.$(VSArcGISProduct).System.dll</HintPath>
-    </Reference>
-    <Reference Include="ESRI.ArcGIS.Version, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>$(ArcGISAssemblyPath)\$(VSArcGISVersion)\ESRI.ArcGIS.Version.dll</HintPath>
     </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Xml" />
   </ItemGroup>
+
   <ItemGroup>
-    <Compile Include="..\SharedAssemblyInfo.cs">
-      <Link>Properties\SharedAssemblyInfo.cs</Link>
-    </Compile>
-    <Compile Include="Properties\LocalizableStrings.de.Designer.cs">
+    <Compile Include="..\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
+    <Compile Update="Properties\LocalizableStrings.de.Designer.cs">
       <DependentUpon>LocalizableStrings.de.resx</DependentUpon>
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
     </Compile>
-    <Compile Include="Properties\LocalizableStrings.Designer.cs">
+    <Compile Update="Properties\LocalizableStrings.Designer.cs">
       <DependentUpon>LocalizableStrings.resx</DependentUpon>
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
     </Compile>
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="QA\AllowedError.cs" />
-    <Compile Include="QA\AllowedErrorFactory.cs" />
-    <Compile Include="QA\AllowedErrorUtils.cs" />
-    <Compile Include="QA\AreaOfInterest.cs" />
-    <Compile Include="QA\AreaOfInterestFactory.cs" />
-    <Compile Include="QA\AreaOfInterestWriter.cs" />
-    <Compile Include="QA\AreaSpecification\AreaSpecification.cs" />
-    <Compile Include="QA\AreaSpecification\AreaSpecificationBasedQualitySpecification.cs" />
-    <Compile Include="QA\DatasetReports\FieldValueRange.cs" />
-    <Compile Include="QA\DatasetReports\ObjectClassReportBuilder.cs" />
-    <Compile Include="QA\DatasetReports\Xml\FeatureClassReport.cs" />
-    <Compile Include="QA\DatasetReports\Xml\FieldDescriptor.cs" />
-    <Compile Include="QA\DatasetReports\Xml\FieldDistinctValue.cs" />
-    <Compile Include="QA\DatasetReports\Xml\FieldDistinctValues.cs" />
-    <Compile Include="QA\DatasetReports\Xml\FieldStatistics.cs" />
-    <Compile Include="QA\DatasetReports\Xml\ObjectClassReport.cs" />
-    <Compile Include="QA\DatasetReports\Xml\TableReport.cs" />
-    <Compile Include="QA\DatasetReports\Xml\XmlRange.cs" />
-    <Compile Include="QA\DatasetReports\Xml\XmlSpatialReferenceDescriptor.cs" />
-    <Compile Include="QA\DatasetReports\Xml\XmlSpatialReferenceDescriptorUtils.cs" />
-    <Compile Include="QA\QualityVerificationUtils.cs" />
-    <Compile Include="QA\Standalone\RuleBased\Category.cs" />
-    <Compile Include="QA\Standalone\RuleBased\HtmlReportModel.cs" />
-    <Compile Include="QA\Standalone\RuleBased\HtmlReportWriter.cs" />
-    <Compile Include="QA\Standalone\RuleBased\IObjectDatasetLookup.cs" />
-    <Compile Include="QA\Standalone\XmlBased\SpecificationElement.cs" />
-    <Compile Include="QA\Standalone\RuleBased\VerifiedModelUtils.cs" />
-    <Compile Include="QA\VerificationDataDictionary.cs" />
-    <Compile Include="QA\Standalone\BufferedIssueWriter.cs" />
-    <Compile Include="QA\Standalone\IIssueWriter.cs" />
-    <Compile Include="QA\Standalone\ImportExceptions\ExceptionAttributeConflict.cs" />
-    <Compile Include="QA\Standalone\ImportExceptions\ExceptionLineage.cs" />
-    <Compile Include="QA\Standalone\ImportExceptions\ExceptionUpdateDetector.cs" />
-    <Compile Include="QA\Standalone\ImportExceptions\ExceptionWriter.cs" />
-    <Compile Include="QA\Standalone\ImportExceptions\ImportExceptionsUtils.cs" />
-    <Compile Include="QA\Standalone\ImportExceptions\ManagedExceptionVersion.cs" />
-    <Compile Include="QA\Standalone\ImportExceptions\ManagedExceptionVersionFactory.cs" />
-    <Compile Include="QA\Standalone\StandaloneVerificationUtils.cs" />
-    <Compile Include="QA\Standalone\XmlBased\Options\HtmlReportDefinition.cs" />
-    <Compile Include="QA\Standalone\XmlBased\HtmlReportModel.cs" />
-    <Compile Include="QA\IssuePersistence\ErrorRepositoryUtils.cs" />
-    <Compile Include="QA\Exceptions\ExceptionCategory.cs" />
-    <Compile Include="QA\Exceptions\ExceptionDataset.cs" />
-    <Compile Include="QA\Exceptions\ExceptionFeatureClass.cs" />
-    <Compile Include="QA\Exceptions\ExceptionObject.cs" />
-    <Compile Include="QA\Exceptions\ExceptionObjectAffectedComponentPredicate.cs" />
-    <Compile Include="QA\Exceptions\ExceptionObjectEvaluator.cs" />
-    <Compile Include="QA\Exceptions\ExceptionObjectFactory.cs" />
-    <Compile Include="QA\Exceptions\ExceptionObjectFactoryBase.cs" />
-    <Compile Include="QA\Exceptions\ExceptionObjectInvolvedRowsIndex.cs" />
-    <Compile Include="QA\Exceptions\ExceptionObjectInvolvedRowsPredicate.cs" />
-    <Compile Include="QA\Exceptions\ExceptionObjectIssueCodePredicate.cs" />
-    <Compile Include="QA\Exceptions\ExceptionObjectPredicate.cs" />
-    <Compile Include="QA\Exceptions\ExceptionObjectRepository.cs" />
-    <Compile Include="QA\Exceptions\ExceptionObjectSpatialIndex.cs" />
-    <Compile Include="QA\Exceptions\ExceptionObjectStatus.cs" />
-    <Compile Include="QA\Exceptions\ExceptionObjectUtils.cs" />
-    <Compile Include="QA\Exceptions\ExceptionObjectValuesPredicate.cs" />
-    <Compile Include="QA\Exceptions\ExceptionStatistics.cs" />
-    <Compile Include="QA\Exceptions\ExceptionTable.cs" />
-    <Compile Include="QA\Exceptions\ExceptionUsage.cs" />
-    <Compile Include="QA\Exceptions\IExceptionDataset.cs" />
-    <Compile Include="QA\Exceptions\IExceptionEvaluationStatistics.cs" />
-    <Compile Include="QA\Exceptions\IExceptionFeatureClass.cs" />
-    <Compile Include="QA\Exceptions\IExceptionObjectEvaluator.cs" />
-    <Compile Include="QA\Exceptions\IExceptionObjectRepository.cs" />
-    <Compile Include="QA\Exceptions\IExceptionStatistics.cs" />
-    <Compile Include="QA\Exceptions\IExceptionTable.cs" />
-    <Compile Include="QA\Exceptions\InvolvedObjectsMatchCriteria.cs" />
-    <Compile Include="QA\Exceptions\IQualityConditionExceptionStatistics.cs" />
-    <Compile Include="QA\Exceptions\QualityConditionExceptions.cs" />
-    <Compile Include="QA\Exceptions\QualityConditionExceptionStatistics.cs" />
-    <Compile Include="QA\Exceptions\ShapeMatchCriterion.cs" />
-    <Compile Include="QA\Exceptions\XmlInvolvedObjectsMatchCriterionIgnoredDatasets.cs" />
-    <Compile Include="QA\HtmlReports\HtmlExceptionCategoryCount.cs" />
-    <Compile Include="QA\HtmlReports\HtmlReportAreaOfInterest.cs" />
-    <Compile Include="QA\HtmlReports\HtmlReportDataQualityCategory.cs" />
-    <Compile Include="QA\HtmlReports\HtmlReportDataQualityCategoryComparer.cs" />
-    <Compile Include="QA\HtmlReports\HtmlReportIssueGroup.cs" />
-    <Compile Include="QA\HtmlReports\HtmlReportIssueGroupComparer.cs" />
-    <Compile Include="QA\HtmlReports\HtmlReportQualityCondition.cs" />
-    <Compile Include="QA\HtmlReports\HtmlReportQualityConditionComparer.cs" />
-    <Compile Include="QA\HtmlReports\HtmlReportResources.Designer.cs">
+    <Compile Update="QA\HtmlReports\HtmlReportResources.Designer.cs">
       <DependentUpon>HtmlReportResources.resx</DependentUpon>
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
     </Compile>
-    <Compile Include="QA\HtmlReports\HtmlReportUtils.cs" />
-    <Compile Include="QA\HtmlReports\HtmlTexts.cs" />
-    <Compile Include="QA\HtmlReports\OutputFile.cs" />
-    <Compile Include="QA\ICustomErrorFilter.cs" />
-    <Compile Include="QA\IssuePersistence\IDeletableErrorRowFilter.cs" />
-    <Compile Include="QA\ILocationBasedQualitySpecification.cs" />
-    <Compile Include="QA\InvolvedDatasetRow.cs" />
-    <Compile Include="QA\IObjectSelection.cs" />
-    <Compile Include="QA\IssuePersistence\IssueDatasetWriter.cs" />
-    <Compile Include="QA\IssuePersistence\IssueFeatureInsertionFailedException.cs" />
-    <Compile Include="QA\IssuePersistence\ExternalIssueRepositoryUtils.cs" />
-    <Compile Include="QA\IssuePersistence\IssueRepositoryType.cs" />
-    <Compile Include="QA\IssueStatisticsWriter.cs" />
-    <Compile Include="QA\Issues\AlternateKeyConverterProvider.cs" />
-    <Compile Include="QA\Issues\AlternateKeyRowReference.cs" />
-    <Compile Include="QA\Issues\AttributeWriterBase.cs" />
-    <Compile Include="QA\Issues\DateFieldDefinition.cs" />
-    <Compile Include="QA\Issues\DefaultIssueGeometryProvider.cs" />
-    <Compile Include="QA\Issues\DoubleFieldDefinition.cs" />
-    <Compile Include="QA\Issues\FieldDefinition.cs" />
-    <Compile Include="QA\Issues\IAlternateKeyConverter.cs" />
-    <Compile Include="QA\Issues\IAlternateKeyConverterProvider.cs" />
-    <Compile Include="QA\Issues\IIssueAttributeWriter.cs" />
-    <Compile Include="QA\Issues\IIssueDataset.cs" />
-    <Compile Include="QA\Issues\IIssueFeatureClass.cs" />
-    <Compile Include="QA\Issues\IIssueGeometryTransformation.cs" />
-    <Compile Include="QA\Issues\IIssueRepository.cs" />
-    <Compile Include="QA\Issues\IIssueStatistics.cs" />
-    <Compile Include="QA\Issues\IIssueStatisticsTable.cs" />
-    <Compile Include="QA\Issues\IIssueStatisticsTableFieldNames.cs" />
-    <Compile Include="QA\Issues\IIssueTable.cs" />
-    <Compile Include="QA\Issues\IIssueTableFieldManagement.cs" />
-    <Compile Include="QA\Issues\IIssueTableFields.cs" />
-    <Compile Include="QA\Issues\IntegerFieldDefinition.cs" />
-    <Compile Include="QA\Issues\InvolvedTable.cs" />
-    <Compile Include="QA\Issues\Issue.cs" />
-    <Compile Include="QA\Issues\IssueAttribute.cs" />
-    <Compile Include="QA\Issues\IssueAttributeWriter.cs" />
-    <Compile Include="QA\Issues\IssueDataset.cs" />
-    <Compile Include="QA\Issues\IssueDatasetUtils.cs" />
-    <Compile Include="QA\Issues\IssueFeatureClass.cs" />
-    <Compile Include="QA\Issues\IssueFeatureWriter.cs" />
-    <Compile Include="QA\Issues\IssueFoundEventArgs.cs" />
-    <Compile Include="QA\Issues\IssueGeodatabaseCreator.cs" />
-    <Compile Include="QA\Issues\IssueGroup.cs" />
-    <Compile Include="QA\Issues\IssueGroupKey.cs" />
-    <Compile Include="QA\Issues\IssueRepository.cs" />
-    <Compile Include="QA\Issues\IssueRepositoryUtils.cs" />
-    <Compile Include="QA\Issues\IssueRowWriter.cs" />
-    <Compile Include="QA\Issues\IssueStatistics.cs" />
-    <Compile Include="QA\Issues\IssueStatisticsBuilder.cs" />
-    <Compile Include="QA\Issues\IssueStatisticsTable.cs" />
-    <Compile Include="QA\Issues\IssueStatisticsTableFieldNames.cs" />
-    <Compile Include="QA\Issues\IssueStatisticsTableFieldNamesFactory.cs" />
-    <Compile Include="QA\Issues\IssueTable.cs" />
-    <Compile Include="QA\Issues\IssueTableFieldAliases.Designer.cs">
+    <Compile Update="QA\Issues\IssueTableFieldAliases.Designer.cs">
       <DependentUpon>IssueTableFieldAliases.resx</DependentUpon>
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
     </Compile>
-    <Compile Include="QA\Issues\IssueTableFields.cs" />
-    <Compile Include="QA\Issues\IssueTableFieldsFactory.cs" />
-    <Compile Include="QA\Issues\IssueUtils.cs" />
-    <Compile Include="QA\Issues\IssueWriter.cs" />
-    <Compile Include="QA\Issues\OIDRowReference.cs" />
-    <Compile Include="QA\Issues\RowReference.cs" />
-    <Compile Include="QA\Issues\TextFieldDefintion.cs" />
-    <Compile Include="QA\ITestRunner.cs" />
-    <Compile Include="QA\IVerificationParameters.cs" />
-    <Compile Include="QA\ObjectSelection.cs" />
-    <Compile Include="QA\OrderedQualitySpecificationElement.cs" />
-    <Compile Include="QA\IssuePersistence\QualityErrorRepositoryBase.cs" />
-    <Compile Include="QA\IssuePersistence\QualityErrorRepositoryDatasets.cs" />
-    <Compile Include="QA\QualitySpecificationUtils.cs" />
-    <Compile Include="QA\QualityVerificationServiceBase.cs" />
-    <Compile Include="QA\ReferenceGeometryUtils.cs" />
-    <Compile Include="QA\RowsWithStopConditions.cs" />
-    <Compile Include="QA\RowWithStopCondition.cs" />
-    <Compile Include="QA\SingleThreadedTestRunner.cs" />
-    <Compile Include="QA\Standalone\IssueProcessor.cs" />
-    <Compile Include="QA\Standalone\ProgressProcessor.cs" />
-    <Compile Include="QA\Standalone\StandaloneQualityVerificationService.cs" />
-    <Compile Include="QA\Standalone\XmlBased\DataSource.cs" />
-    <Compile Include="QA\Standalone\XmlBased\KeyFieldLookup.cs" />
-    <Compile Include="QA\Standalone\XmlBased\Options\DisplayExpression.cs" />
-    <Compile Include="QA\Standalone\XmlBased\Options\FieldConfigurator.cs" />
-    <Compile Include="QA\Standalone\XmlBased\Options\IssueLayersGroupBy.cs" />
-    <Compile Include="QA\Standalone\XmlBased\Options\IssueMapDefinition.cs" />
-    <Compile Include="QA\Standalone\XmlBased\Options\LabelOptions.cs" />
-    <Compile Include="QA\Standalone\XmlBased\Options\SpecificationReportDefinition.cs" />
-    <Compile Include="QA\Standalone\XmlBased\Options\TrueFalseDefault.cs" />
-    <Compile Include="QA\Standalone\XmlBased\Options\VerificationOptionUtils.cs" />
-    <Compile Include="QA\Standalone\XmlBased\Options\XmlDatasetKeyField.cs" />
-    <Compile Include="QA\Standalone\XmlBased\Options\XmlDataSourceKeyFields.cs" />
-    <Compile Include="QA\Standalone\XmlBased\Options\XmlDisplayExpressionOptions.cs" />
-    <Compile Include="QA\Standalone\XmlBased\Options\XmlExceptionConfiguration.cs" />
-    <Compile Include="QA\Standalone\XmlBased\Options\XmlFieldOptions.cs" />
-    <Compile Include="QA\Standalone\XmlBased\Options\XmlHtmlReportDataQualityCategoryOptions.cs" />
-    <Compile Include="QA\Standalone\XmlBased\Options\XmlHtmlReportOptions.cs" />
-    <Compile Include="QA\Standalone\XmlBased\Options\XmlInvolvedObjectsMatchCriteria.cs" />
-    <Compile Include="QA\Standalone\XmlBased\Options\XmlIssueMapOptions.cs" />
-    <Compile Include="QA\Standalone\XmlBased\Options\XmlKeyFields.cs" />
-    <Compile Include="QA\Standalone\XmlBased\Options\XmlLabelOptions.cs" />
-    <Compile Include="QA\Standalone\XmlBased\Options\XmlSpecificationReportOptions.cs" />
-    <Compile Include="QA\Standalone\XmlBased\Options\XmlVerificationOptions.cs" />
-    <Compile Include="QA\Standalone\XmlBased\XmlBasedQualitySpecificationFactory.cs" />
-    <Compile Include="QA\Standalone\XmlBased\XmlBasedVerificationService.cs" />
-    <Compile Include="QA\StopInfo.cs" />
-    <Compile Include="QA\TestAssembler.cs" />
-    <Compile Include="QA\TestExecutionUtils.cs" />
-    <Compile Include="QA\TestsWithRelatedGeometry.cs" />
-    <Compile Include="QA\TestVerification.cs" />
-    <Compile Include="QA\AreaSpecification\TileRelation.cs" />
-    <Compile Include="QA\VerificationReports\InvolvedDatasetsCollector.cs" />
-    <Compile Include="QA\VerificationReports\IVerificationReportBuilder.cs" />
-    <Compile Include="QA\VerificationReports\LoggingVerificationReportBuilder.cs" />
-    <Compile Include="QA\VerificationReports\MultiReportBuilder.cs" />
-    <Compile Include="QA\VerificationReports\Xml\AreaOfInterestType.cs" />
-    <Compile Include="QA\VerificationReports\Xml\IssueReportingContexts.cs" />
-    <Compile Include="QA\VerificationReports\Xml\VerifiedCategoriesBuilder.cs" />
-    <Compile Include="QA\VerificationReports\Xml\VerifiedConditionContexts.cs" />
-    <Compile Include="QA\VerificationReports\Xml\XmlAreaOfInterest.cs" />
-    <Compile Include="QA\VerificationReports\Xml\XmlExceptionObject.cs" />
-    <Compile Include="QA\VerificationReports\Xml\XmlExceptionStatistics.cs" />
-    <Compile Include="QA\VerificationReports\Xml\XmlGdbObjectReference.cs" />
-    <Compile Include="QA\VerificationReports\Xml\XmlInstanceConfiguration.cs" />
-    <Compile Include="QA\VerificationReports\Xml\XmlInvolvedTable.cs" />
-    <Compile Include="QA\VerificationReports\Xml\XmlIssue.cs" />
-    <Compile Include="QA\VerificationReports\Xml\XmlQualityConditionExceptions.cs" />
-    <Compile Include="QA\VerificationReports\Xml\XmlQualityConditionType.cs" />
-    <Compile Include="QA\VerificationReports\Xml\XmlTableWithNonUniqueKeys.cs" />
-    <Compile Include="QA\VerificationReports\Xml\XmlTestDescriptor.cs" />
-    <Compile Include="QA\VerificationReports\Xml\XmlTestParameterValue.cs" />
-    <Compile Include="QA\VerificationReports\Xml\XmlUnknownTableName.cs" />
-    <Compile Include="QA\VerificationReports\Xml\XmlVerificationReport.cs" />
-    <Compile Include="QA\VerificationReports\Xml\XmlVerificationReportBuilder.cs" />
-    <Compile Include="QA\VerificationReports\Xml\XmlVerifiedCategory.cs" />
-    <Compile Include="QA\VerificationReports\Xml\XmlVerifiedDataset.cs" />
-    <Compile Include="QA\VerificationReports\Xml\XmlVerifiedQualityCondition.cs" />
-    <Compile Include="QA\VerificationTimeStats.cs" />
-    <Compile Include="QA\VerificationUtils.cs" />
-    <Compile Include="QA\VerifiedDataModel\IVerifiedModelFactory.cs" />
-    <Compile Include="QA\VerifiedDataModel\SimpleVerifiedDatasetHarvester.cs" />
-    <Compile Include="QA\VerifiedDataModel\VerifiedDatasetHarvesterBase.cs" />
-    <Compile Include="QA\VerifiedDataModel\VerifiedModel.cs" />
-    <Compile Include="QA\VerifiedDataModel\VerifiedModelFactory.cs" />
-    <Compile Include="QA\VerifiedDataModel\VerifiedRasterDataset.cs" />
-    <Compile Include="QA\VerifiedDataModel\VerifiedRasterMosaicDataset.cs" />
-    <Compile Include="QA\VerifiedDataModel\VerifiedTableDataset.cs" />
-    <Compile Include="QA\VerifiedDataModel\VerifiedTopologyDataset.cs" />
-    <Compile Include="QA\VerifiedDataModel\VerifiedVectorDataset.cs" />
-    <Compile Include="Schemas\Schema.Designer.cs">
+    <Compile Update="Schemas\Schema.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>Schema.resx</DependentUpon>
     </Compile>
-    <Compile Include="Xml\Xml2DEnvelope.cs" />
-    <Compile Include="Xml\XmlEnvelope.cs" />
-    <Compile Include="Xml\XmlNamed2DEnvelope.cs" />
-    <Compile Include="Xml\XmlNameValuePair.cs" />
   </ItemGroup>
+
   <ItemGroup>
-    <ProjectReference Include="..\ProSuite.Commons.AO\ProSuite.Commons.AO.csproj">
-      <Project>{7E4B0861-83ED-4D12-BE27-93C9053C88CA}</Project>
-      <Name>ProSuite.Commons.AO</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ProSuite.Commons.DotLiquid\ProSuite.Commons.DotLiquid.csproj">
-      <Project>{F67C25EA-4840-4B16-BAD0-C8E53C16D7BB}</Project>
-      <Name>ProSuite.Commons.DotLiquid</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj">
-      <Project>{384763D9-F7A1-4AA2-9ABD-EE338CD8D4C1}</Project>
-      <Name>ProSuite.Commons.Essentials</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ProSuite.Commons.Logging\ProSuite.Commons.Logging.csproj">
-      <Project>{A227D52C-0536-498F-ACF2-2A5A67C3D9FF}</Project>
-      <Name>ProSuite.Commons.Logging</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ProSuite.Commons\ProSuite.Commons.csproj">
-      <Project>{66E5D99B-26AB-4FFF-834D-D96347DF4FA4}</Project>
-      <Name>ProSuite.Commons</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ProSuite.DomainModel.AO\ProSuite.DomainModel.AO.csproj">
-      <Project>{D360621D-D792-403B-A625-06A707A89D22}</Project>
-      <Name>ProSuite.DomainModel.AO</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ProSuite.DomainModel.Core\ProSuite.DomainModel.Core.csproj">
-      <Project>{0B48B56F-3A3D-4367-AA76-A356519AF2AB}</Project>
-      <Name>ProSuite.DomainModel.Core</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ProSuite.QA.Container\ProSuite.QA.Container.csproj">
-      <Project>{D51693C1-F9F6-425D-8CD6-8DFBF5A52F6F}</Project>
-      <Name>ProSuite.QA.Container</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ProSuite.QA.Core\ProSuite.QA.Core.csproj">
-      <Project>{01CBBA9E-0D4D-439F-9147-6A5685884A65}</Project>
-      <Name>ProSuite.QA.Core</Name>
-    </ProjectReference>
+    <ProjectReference Include="..\ProSuite.Commons.AO\ProSuite.Commons.AO.csproj" />
+    <ProjectReference Include="..\ProSuite.Commons.DotLiquid\ProSuite.Commons.DotLiquid.csproj" />
+    <ProjectReference Include="..\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj" />
+    <ProjectReference Include="..\ProSuite.Commons.Logging\ProSuite.Commons.Logging.csproj" />
+    <ProjectReference Include="..\ProSuite.Commons\ProSuite.Commons.csproj" />
+    <ProjectReference Include="..\ProSuite.DomainModel.AO\ProSuite.DomainModel.AO.csproj" />
+    <ProjectReference Include="..\ProSuite.DomainModel.Core\ProSuite.DomainModel.Core.csproj" />
+    <ProjectReference Include="..\ProSuite.QA.Container\ProSuite.QA.Container.csproj" />
+    <ProjectReference Include="..\ProSuite.QA.Core\ProSuite.QA.Core.csproj" />
   </ItemGroup>
+
   <ItemGroup>
-    <EmbeddedResource Include="Properties\LocalizableStrings.de-CH.resx" />
-    <EmbeddedResource Include="Properties\LocalizableStrings.de.resx">
+    <EmbeddedResource Update="Properties\LocalizableStrings.de.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>LocalizableStrings.de.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Properties\LocalizableStrings.resx">
+    <EmbeddedResource Update="Properties\LocalizableStrings.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>LocalizableStrings.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="QA\HtmlReports\HtmlReportResources.de.resx" />
-    <EmbeddedResource Include="QA\HtmlReports\HtmlReportResources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>HtmlReportResources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-    <EmbeddedResource Include="QA\Issues\IssueTableFieldAliases.de.resx" />
-    <EmbeddedResource Include="QA\Issues\IssueTableFieldAliases.resx">
+    <EmbeddedResource Update="QA\Issues\IssueTableFieldAliases.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>IssueTableFieldAliases.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Schemas\Schema.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Schema.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
   </ItemGroup>
+
   <ItemGroup>
     <None Include="QA\Standalone\RuleBased\HtmlReportModel.cd" />
     <None Include="QA\Standalone\XmlBased\XmlBasedVerificationReportModel.cd" />
-    <None Include="Schemas\ProSuite.QA.XmlBasedVerificationOptions-1.0.xsd">
+    <Content Include="Schemas\ProSuite.QA.XmlBasedVerificationOptions-1.0.xsd">
       <SubType>Designer</SubType>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    </Content>
     <None Include="Schemas\update_XmlBasedVerificationOptions.bat" />
   </ItemGroup>
-  <ItemGroup />
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

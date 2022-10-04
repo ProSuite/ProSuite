@@ -5,6 +5,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Container;
+using ProSuite.QA.Core.IssueCodes;
 
 namespace ProSuite.DomainServices.AO.QA.Issues
 {

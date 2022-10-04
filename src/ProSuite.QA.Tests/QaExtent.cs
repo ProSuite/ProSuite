@@ -1,14 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
 {
@@ -42,17 +43,17 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaExtent_0))]
 		public QaExtent(
-				[Doc(nameof(DocStrings.QaExtent_featureClass))] IFeatureClass featureClass,
+				[Doc(nameof(DocStrings.QaExtent_featureClass))] IReadOnlyFeatureClass featureClass,
 				[Doc(nameof(DocStrings.QaExtent_limit))] double limit)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(featureClass, limit, false) { }
 
 		[Doc(nameof(DocStrings.QaExtent_1))]
 		public QaExtent(
-			[Doc(nameof(DocStrings.QaExtent_featureClass))] IFeatureClass featureClass,
+			[Doc(nameof(DocStrings.QaExtent_featureClass))] IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaExtent_limit))] double limit,
 			[Doc(nameof(DocStrings.QaExtent_perPart))] bool perPart)
-			: base((ITable) featureClass)
+			: base(featureClass)
 		{
 			_limit = limit;
 			NumberFormat = "N1";
@@ -70,9 +71,9 @@ namespace ProSuite.QA.Tests
 			return false;
 		}
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
-			var feature = (IFeature) row;
+			var feature = (IReadOnlyFeature) row;
 
 			IGeometry shape = feature.Shape;
 
@@ -121,7 +122,7 @@ namespace ProSuite.QA.Tests
 			}
 		}
 
-		private int ExecutePart([NotNull] IRow row, [NotNull] IGeometry geometry)
+		private int ExecutePart([NotNull] IReadOnlyRow row, [NotNull] IGeometry geometry)
 		{
 			IEnvelope envelope = GetEnvelope(geometry);
 
@@ -141,10 +142,10 @@ namespace ProSuite.QA.Tests
 			                                   FormatLengthComparison(
 				                                   max, ">", _limit,
 				                                   geometry.SpatialReference));
-			return ReportError(description, geometry,
-			                   Codes[Code.ExtentLargerThanLimit],
-			                   TestUtils.GetShapeFieldName(row),
-			                   row);
+			return ReportError(
+				description, InvolvedRowUtils.GetInvolvedRows(row),
+				geometry, Codes[Code.ExtentLargerThanLimit],
+				TestUtils.GetShapeFieldName(row));
 		}
 
 		[NotNull]

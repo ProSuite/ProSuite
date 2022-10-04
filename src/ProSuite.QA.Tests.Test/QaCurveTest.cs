@@ -5,6 +5,7 @@ using ProSuite.QA.Tests.Test.TestRunners;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.AO.Test.TestSupport;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests.Test
 {
@@ -42,20 +43,20 @@ namespace ProSuite.QA.Tests.Test
 			                           .Curve;
 			f.Store();
 
-			var test = new QaCurve(fc);
+			var test = new QaCurve(ReadOnlyTableFactory.Create(fc));
 			var runner = new QaTestRunner(test);
 			runner.Execute(f);
 			Assert.AreEqual(1, runner.Errors.Count);
 
 			// Group by curve type
-			test = new QaCurve(fc) {GroupIssuesBySegmentType = true};
+			test = new QaCurve(ReadOnlyTableFactory.Create(fc)) {GroupIssuesBySegmentType = true};
 
 			runner = new QaTestRunner(test);
 			runner.Execute(f);
 			Assert.AreEqual(3, runner.Errors.Count);
 
 			// allow circular arcs
-			test = new QaCurve(fc)
+			test = new QaCurve(ReadOnlyTableFactory.Create(fc))
 			       {
 				       AllowedNonLinearSegmentTypes =
 					       new[]
@@ -69,7 +70,7 @@ namespace ProSuite.QA.Tests.Test
 			Assert.AreEqual(2, runner.Errors.Count);
 
 			// allow circular arcs and beziers
-			test = new QaCurve(fc)
+			test = new QaCurve(ReadOnlyTableFactory.Create(fc))
 			       {
 				       AllowedNonLinearSegmentTypes =
 					       new[]

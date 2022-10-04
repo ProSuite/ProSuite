@@ -1,6 +1,7 @@
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.AO.Test.TestSupport;
 using ProSuite.Commons.Geom;
@@ -32,7 +33,8 @@ namespace ProSuite.QA.Container.Test
 			var overlaps = new OverlappingFeatures();
 
 			var fc = new FeatureClassMock(1, "", esriGeometryType.esriGeometryPolyline);
-			IFeature feature = fc.CreateFeature(new Pt(0, 0), new Pt(9.95, 9.95));
+			ReadOnlyFeatureClass roFc = ReadOnlyTableFactory.Create((ESRI.ArcGIS.Geodatabase.IFeatureClass)fc);
+			var feature = new ReadOnlyFeature(roFc, fc.CreateFeature(new Pt(0, 0), new Pt(9.95, 9.95)));
 			var cachedRow = new CachedRow(feature);
 
 			overlaps.RegisterTestedFeature(cachedRow, null);
@@ -44,31 +46,32 @@ namespace ProSuite.QA.Container.Test
 			var overlaps = new OverlappingFeatures();
 
 			var fc = new FeatureClassMock(1, "", esriGeometryType.esriGeometryPolyline);
-			IFeature f1 = fc.CreateFeature(new Pt(100, 0), new Pt(109.95, 9.95));
-			IFeature f2 = fc.CreateFeature(new Pt(100, 0), new Pt(109.8, 9.8));
-			IFeature fx = fc.CreateFeature(new Pt(100, 0), new Pt(109.95, 9.8));
-			IFeature fy = fc.CreateFeature(new Pt(100, 0), new Pt(109.8, 9.95));
+			ReadOnlyFeatureClass roFc = ReadOnlyTableFactory.Create((ESRI.ArcGIS.Geodatabase.IFeatureClass)fc);
+			var f1 = new ReadOnlyFeature(roFc, fc.CreateFeature(new Pt(100, 0), new Pt(109.95, 9.95)));
+			var f2 = new ReadOnlyFeature(roFc, fc.CreateFeature(new Pt(100, 0), new Pt(109.8, 9.8)));
+			var fx = new ReadOnlyFeature(roFc, fc.CreateFeature(new Pt(100, 0), new Pt(109.95, 9.8)));
+			var fy = new ReadOnlyFeature(roFc, fc.CreateFeature(new Pt(100, 0), new Pt(109.8, 9.95)));
 			var c1 = new CachedRow(f1);
 
-			var test = new VerifyingContainerTest(fc);
-			var t2 = new VerifyingContainerTest(fc);
-			var t3 = new VerifyingContainerTest(fc);
+			var test = new VerifyingContainerTest(roFc);
+			var t2 = new VerifyingContainerTest(roFc);
+			var t3 = new VerifyingContainerTest(roFc);
 
-			overlaps.RegisterTestedFeature(c1, new ContainerTest[] {test});
+			overlaps.RegisterTestedFeature(c1, new ContainerTest[] { test });
 
 			Assert.IsTrue(overlaps.WasAlreadyTested(f1, test));
 			Assert.IsFalse(overlaps.WasAlreadyTested(f2, test));
 
-			overlaps.RegisterTestedFeature(new CachedRow(f2), new ContainerTest[] {test});
+			overlaps.RegisterTestedFeature(new CachedRow(f2), new ContainerTest[] { test });
 			Assert.IsTrue(overlaps.WasAlreadyTested(f2, test));
 			overlaps.RegisterTestedFeature(new CachedRow(f2),
-			                               new ContainerTest[] {test, t2});
+										   new ContainerTest[] { test, t2 });
 			Assert.IsTrue(overlaps.WasAlreadyTested(f2, test));
 			Assert.IsTrue(overlaps.WasAlreadyTested(f2, t2));
 			Assert.IsFalse(overlaps.WasAlreadyTested(f2, t3));
 
-			overlaps.RegisterTestedFeature(new CachedRow(fx), new ContainerTest[] {test});
-			overlaps.RegisterTestedFeature(new CachedRow(fy), new ContainerTest[] {test});
+			overlaps.RegisterTestedFeature(new CachedRow(fx), new ContainerTest[] { test });
+			overlaps.RegisterTestedFeature(new CachedRow(fy), new ContainerTest[] { test });
 
 			overlaps.SetCurrentTile(CreateBox(100, 0, 105, 5));
 
@@ -77,7 +80,7 @@ namespace ProSuite.QA.Container.Test
 			Assert.IsTrue(overlaps.WasAlreadyTested(fx, test));
 			Assert.IsTrue(overlaps.WasAlreadyTested(fy, test));
 
-			overlaps.AdaptSearchTolerance(fc, 0.1);
+			overlaps.AdaptSearchTolerance(roFc, 0.1);
 			overlaps.SetCurrentTile(CreateBox(110, 0, 120, 10));
 			Assert.IsTrue(overlaps.WasAlreadyTested(f1, test));
 			Assert.IsFalse(overlaps.WasAlreadyTested(f2, test));
@@ -109,31 +112,31 @@ namespace ProSuite.QA.Container.Test
 			var overlaps = new OverlappingFeatures();
 
 			var fc = new FeatureClassMock(1, "", esriGeometryType.esriGeometryPolyline);
-			IFeature f1 = fc.CreateFeature(new Pt(100, 0), new Pt(109.95, 9.95));
-			IFeature f2 = fc.CreateFeature(new Pt(100, 0), new Pt(109.8, 9.8));
-			IFeature fx = fc.CreateFeature(new Pt(100, 0), new Pt(109.95, 9.8));
-			IFeature fy = fc.CreateFeature(new Pt(100, 0), new Pt(109.8, 9.95));
+			ReadOnlyFeatureClass roFc = ReadOnlyTableFactory.Create((ESRI.ArcGIS.Geodatabase.IFeatureClass)fc);
+			var f1 = new ReadOnlyFeature(roFc, fc.CreateFeature(new Pt(100, 0), new Pt(109.95, 9.95)));
+			var f2 = new ReadOnlyFeature(roFc, fc.CreateFeature(new Pt(100, 0), new Pt(109.8, 9.8)));
+			var fx = new ReadOnlyFeature(roFc, fc.CreateFeature(new Pt(100, 0), new Pt(109.95, 9.8)));
+			var fy = new ReadOnlyFeature(roFc, fc.CreateFeature(new Pt(100, 0), new Pt(109.8, 9.95)));
 			var c1 = new CachedRow(f1);
+			var test = new VerifyingContainerTest(roFc);
+			var t2 = new VerifyingContainerTest(roFc);
+			var t3 = new VerifyingContainerTest(roFc);
 
-			var test = new VerifyingContainerTest(fc);
-			var t2 = new VerifyingContainerTest(fc);
-			var t3 = new VerifyingContainerTest(fc);
-
-			overlaps.RegisterTestedFeature(c1, new ContainerTest[] {test});
+			overlaps.RegisterTestedFeature(c1, new ContainerTest[] { test });
 
 			Assert.IsTrue(overlaps.WasAlreadyTested(f1, test));
 			Assert.IsFalse(overlaps.WasAlreadyTested(f2, test));
 
-			overlaps.RegisterTestedFeature(GetSimpleRow(f2), new ContainerTest[] {test});
+			overlaps.RegisterTestedFeature(GetSimpleRow(f2), new ContainerTest[] { test });
 			Assert.IsTrue(overlaps.WasAlreadyTested(f2, test));
 			overlaps.RegisterTestedFeature(GetSimpleRow(f2),
-			                               new ContainerTest[] {test, t2});
+										   new ContainerTest[] { test, t2 });
 			Assert.IsTrue(overlaps.WasAlreadyTested(f2, test));
 			Assert.IsTrue(overlaps.WasAlreadyTested(f2, t2));
 			Assert.IsFalse(overlaps.WasAlreadyTested(f2, t3));
 
-			overlaps.RegisterTestedFeature(GetSimpleRow(fx), new ContainerTest[] {test});
-			overlaps.RegisterTestedFeature(GetSimpleRow(fy), new ContainerTest[] {test});
+			overlaps.RegisterTestedFeature(GetSimpleRow(fx), new ContainerTest[] { test });
+			overlaps.RegisterTestedFeature(GetSimpleRow(fy), new ContainerTest[] { test });
 
 			overlaps.SetCurrentTile(CreateBox(100, 0, 105, 5));
 
@@ -142,7 +145,7 @@ namespace ProSuite.QA.Container.Test
 			Assert.IsTrue(overlaps.WasAlreadyTested(fx, test));
 			Assert.IsTrue(overlaps.WasAlreadyTested(fy, test));
 
-			overlaps.AdaptSearchTolerance(fc, 0.1);
+			overlaps.AdaptSearchTolerance(roFc, 0.1);
 			overlaps.SetCurrentTile(CreateBox(110, 0, 120, 10));
 			Assert.IsTrue(overlaps.WasAlreadyTested(f1, test));
 			Assert.IsFalse(overlaps.WasAlreadyTested(f2, test));
@@ -168,7 +171,7 @@ namespace ProSuite.QA.Container.Test
 			Assert.IsFalse(overlaps.WasAlreadyTested(fy, test));
 		}
 
-		private static SimpleBaseRow GetSimpleRow(IFeature feature)
+		private static SimpleBaseRow GetSimpleRow(IReadOnlyFeature feature)
 		{
 			var row = new SimpleBaseRow(feature);
 			return row;

@@ -513,6 +513,86 @@ namespace ProSuite.Commons.Test.Geom
 			}
 		}
 
+		[Test]
+		public void CanCloseInXY()
+		{
+			var points = new List<Pnt3D>();
+
+			// ring1: horizontal:
+			points.Add(new Pnt3D(2600000.000, 1200000.00, 500.0004321));
+			points.Add(new Pnt3D(2600080.000, 1200060.000, 500.0004321));
+			points.Add(new Pnt3D(2600080.000, 1200030.000, 540.0004321));
+			points.Add(new Pnt3D(2600080.000, 1200000.0004321, 530.0004321));
+
+			Linestring linestring = new Linestring(points);
+			Assert.IsFalse(linestring.IsClosed);
+
+			linestring.Close();
+			Assert.IsTrue(linestring.IsClosed);
+
+			Assert.AreEqual(4, linestring.SegmentCount);
+		}
+
+		[Test]
+		public void CanCloseInXYAlreadyWithinTolerance()
+		{
+			var points = new List<Pnt3D>();
+
+			points.Add(new Pnt3D(2600000.000, 1200000.00, 500.000));
+			points.Add(new Pnt3D(2600080.000, 1200060.000, 500.000));
+			points.Add(new Pnt3D(2600080.000, 1200030.000, 540.000));
+			points.Add(new Pnt3D(2600080.000, 1200000.0004321, 530.000));
+			points.Add(new Pnt3D(2600000.000123, 1200000.003, 500.0004321));
+
+			Linestring linestring = new Linestring(points);
+			Assert.IsFalse(linestring.IsClosed);
+
+			linestring.Close(0.005);
+			Assert.IsTrue(linestring.IsClosed);
+
+			Assert.AreEqual(4, linestring.SegmentCount);
+		}
+
+		[Test]
+		public void CanCloseInZ()
+		{
+			var points = new List<Pnt3D>();
+
+			points.Add(new Pnt3D(2600000.000, 1200000.00, 500.0004321));
+			points.Add(new Pnt3D(2600080.000, 1200060.000, 500.0004321));
+			points.Add(new Pnt3D(2600080.000, 1200030.000, 540.0004321));
+			points.Add(new Pnt3D(2600080.000, 1200000.0004321, 530.0004321));
+			points.Add(new Pnt3D(2600000.000, 1200000.00, 300));
+
+			Linestring linestring = new Linestring(points);
+			Assert.IsFalse(linestring.IsClosed);
+
+			linestring.Close();
+			Assert.IsTrue(linestring.IsClosed);
+
+			Assert.AreEqual(4, linestring.SegmentCount);
+		}
+
+		[Test]
+		public void CanCloseInZAlreadyWithinTolerance()
+		{
+			var points = new List<Pnt3D>();
+
+			points.Add(new Pnt3D(2600000.000, 1200000.00, 500.0004321));
+			points.Add(new Pnt3D(2600080.000, 1200060.000, 500.0004321));
+			points.Add(new Pnt3D(2600080.000, 1200030.000, 540.0004321));
+			points.Add(new Pnt3D(2600080.000, 1200000.0004321, 530.0004321));
+			points.Add(new Pnt3D(2600000.000, 1200000.00, 500));
+
+			Linestring linestring = new Linestring(points);
+			Assert.IsFalse(linestring.IsClosed);
+
+			linestring.Close();
+			Assert.IsTrue(linestring.IsClosed);
+
+			Assert.AreEqual(4, linestring.SegmentCount);
+		}
+
 		private static Pnt3D GetRightMostBottomPoint(Linestring linestring)
 		{
 			return linestring.GetPoints(linestring.RightMostBottomIndex, 1, true).First();

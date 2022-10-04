@@ -3,7 +3,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.DomainModel.AO.QA.Xml
 {
-	public class XmlTransformerDescriptor : XmlDescriptor
+	public class XmlTransformerDescriptor : XmlInstanceDescriptor
 	{
 		[XmlElement("TransformerClass")]
 		[CanBeNull]

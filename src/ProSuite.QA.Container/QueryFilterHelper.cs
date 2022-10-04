@@ -1,4 +1,4 @@
-using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container.TestSupport;
 
@@ -8,7 +8,7 @@ namespace ProSuite.QA.Container
 	{
 		private readonly TableView _tableView;
 
-		public QueryFilterHelper([NotNull] ITable table,
+		public QueryFilterHelper([NotNull] IReadOnlyTable table,
 		                         [CanBeNull] string constraint,
 		                         bool caseSensitive)
 		{
@@ -25,13 +25,15 @@ namespace ProSuite.QA.Container
 		public bool ForNetwork { get; set; }
 		public bool? RepeatCachedRows { get; set; }
 
+		public bool FullGeometrySearch { get; set; }
+
 		public string SubFields { get; }
 
 		public int MinimumOID { get; set; }
 
 		public bool AttributeFirst { get; set; } = true;
 
-		public bool MatchesConstraint([NotNull] IRow row)
+		public bool MatchesConstraint([NotNull] IReadOnlyRow row)
 		{
 			bool match = _tableView.MatchesConstraint(row);
 			return match;

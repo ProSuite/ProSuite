@@ -1,9 +1,10 @@
 using System.Collections.Generic;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Core.IssueCodes;
 
 namespace ProSuite.QA.Tests.Schema
 {
@@ -12,7 +13,7 @@ namespace ProSuite.QA.Tests.Schema
 	/// </summary>
 	public abstract class QaSchemaTestBase : NonContainerTest
 	{
-		private readonly ITable _table;
+		private readonly IReadOnlyTable _table;
 
 		#region Constructors
 
@@ -21,8 +22,8 @@ namespace ProSuite.QA.Tests.Schema
 		/// </summary>
 		/// <param name="table">The table.</param>
 		/// <param name="referenceTable">The reference table.</param>
-		protected QaSchemaTestBase([NotNull] ITable table,
-		                           [CanBeNull] ITable referenceTable = null)
+		protected QaSchemaTestBase([NotNull] IReadOnlyTable table,
+		                           [CanBeNull] IReadOnlyTable referenceTable = null)
 			: base(GetTables(table, referenceTable))
 		{
 			Assert.ArgumentNotNull(table, nameof(table));
@@ -35,8 +36,8 @@ namespace ProSuite.QA.Tests.Schema
 		/// </summary>
 		/// <param name="table">The table.</param>
 		/// <param name="referenceTables">The reference tables.</param>
-		protected QaSchemaTestBase([NotNull] ITable table,
-		                           [CanBeNull] IEnumerable<ITable> referenceTables)
+		protected QaSchemaTestBase([NotNull] IReadOnlyTable table,
+		                           [CanBeNull] IEnumerable<IReadOnlyTable> referenceTables)
 			: base(GetTables(table, referenceTables))
 		{
 			Assert.ArgumentNotNull(table, nameof(table));
@@ -46,12 +47,12 @@ namespace ProSuite.QA.Tests.Schema
 
 		#endregion
 
-		public override int Execute(IRow row)
+		public override int Execute(IReadOnlyRow row)
 		{
 			return Execute();
 		}
 
-		public override int Execute(IEnumerable<IRow> selection)
+		public override int Execute(IEnumerable<IReadOnlyRow> selection)
 		{
 			return Execute();
 		}
@@ -70,8 +71,8 @@ namespace ProSuite.QA.Tests.Schema
 
 		protected override ISpatialReference GetSpatialReference()
 		{
-			var featureClass = _table as IFeatureClass;
-			return ((IGeoDataset) featureClass)?.SpatialReference;
+			var featureClass = _table as IReadOnlyFeatureClass;
+			return featureClass?.SpatialReference;
 		}
 
 		/// <summary>
@@ -137,8 +138,8 @@ namespace ProSuite.QA.Tests.Schema
 		}
 
 		[NotNull]
-		private static IEnumerable<ITable> GetTables([NotNull] ITable table,
-		                                             [CanBeNull] ITable referenceTable)
+		private static IEnumerable<IReadOnlyTable> GetTables([NotNull] IReadOnlyTable table,
+		                                             [CanBeNull] IReadOnlyTable referenceTable)
 		{
 			return referenceTable == null
 				       ? new[] {table}
@@ -146,13 +147,13 @@ namespace ProSuite.QA.Tests.Schema
 		}
 
 		[NotNull]
-		private static IEnumerable<ITable> GetTables(
-			[NotNull] ITable table,
-			[CanBeNull] IEnumerable<ITable> referenceTables)
+		private static IEnumerable<IReadOnlyTable> GetTables(
+			[NotNull] IReadOnlyTable table,
+			[CanBeNull] IEnumerable<IReadOnlyTable> referenceTables)
 		{
 			return referenceTables == null
 				       ? new[] {table}
-				       : Union(new[] {table}, new List<ITable>(referenceTables));
+				       : Union(new[] {table}, new List<IReadOnlyTable>(referenceTables));
 		}
 
 		#endregion

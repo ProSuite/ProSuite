@@ -2,8 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
-using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.QA.Tests.Schema;
@@ -12,6 +10,8 @@ using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
 {
@@ -19,7 +19,7 @@ namespace ProSuite.QA.Tests
 	[SchemaTest]
 	public class QaSchemaFieldDomainCodedValues : QaSchemaTestBase
 	{
-		private readonly ITable _table;
+		private readonly IReadOnlyTable _table;
 		private readonly int _maximumNameLength;
 		private readonly UniqueStringsConstraint _uniqueNamesConstraint;
 		private readonly int _minimumValueCount;
@@ -54,7 +54,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaSchemaFieldDomainCodedValues_0))]
 		public QaSchemaFieldDomainCodedValues(
 			[Doc(nameof(DocStrings.QaSchemaFieldDomainCodedValues_table))] [NotNull]
-			ITable table,
+			IReadOnlyTable table,
 			[Doc(nameof(DocStrings.QaSchemaFieldDomainCodedValues_maximumNameLength))]
 			int maximumNameLength,
 			[Doc(nameof(DocStrings.QaSchemaFieldDomainCodedValues_uniqueNamesConstraint))]

@@ -146,6 +146,24 @@ namespace ProSuite.Commons.AO.Geometry
 			                pointId);
 		}
 
+		public static IMultiPatch CreateMultipatch([NotNull] IEnumerable<RingGroup> fromRingGroups,
+		                                           [NotNull] IGeometry prototypeGeometry)
+		{
+			IMultiPatch resultMultipatch =
+				GeometryFactory.CreateEmptyMultiPatch(prototypeGeometry);
+
+			foreach (RingGroup poly in fromRingGroups)
+			{
+				// TODO: Support vertical ring group with inner rings
+				bool simplify = poly.InteriorRings.Any();
+
+				AddRingGroup(
+					resultMultipatch, poly, simplify, poly.Id != null);
+			}
+
+			return resultMultipatch;
+		}
+
 		public static IPolygon CreatePolygon(IGeometry template,
 		                                     IRing ringTemplate,
 		                                     RingGroup ringGroup)
@@ -204,7 +222,7 @@ namespace ProSuite.Commons.AO.Geometry
 		}
 
 		public static IPointCollection CreatePointCollection(
-			[NotNull] IPolycurve templateGeometry,
+			[NotNull] IGeometry templateGeometry,
 			[NotNull] IEnumerable<IPnt> points,
 			[CanBeNull] EnvelopeXY insideAoi = null,
 			double xyTolerance = 0)
@@ -480,10 +498,12 @@ namespace ProSuite.Commons.AO.Geometry
 		}
 
 		public static Polyhedron CreatePolyhedron(IMultiPatch multipatch,
-		                                          bool assumePartVertexIds = false)
+		                                          bool assumePartVertexIds = false,
+		                                          bool orientRingsClockwise = false)
 		{
 			var ringGroups = new List<RingGroup>();
 
+			int index = 0;
 			foreach (GeometryPart multipatchPart in GeometryPart.FromGeometry(multipatch))
 			{
 				RingGroup ringGroup = CreateRingGroup(multipatchPart);
@@ -492,6 +512,17 @@ namespace ProSuite.Commons.AO.Geometry
 				    GeometryUtils.HasUniqueVertexId(multipatchPart.FirstGeometry, out int vertexId))
 				{
 					ringGroup.Id = vertexId;
+				}
+				else
+				{
+					ringGroup.Id = index;
+				}
+
+				index += ringGroup.PartCount;
+
+				if (orientRingsClockwise)
+				{
+					ringGroup.TryOrientProperly();
 				}
 
 				ringGroups.Add(ringGroup);

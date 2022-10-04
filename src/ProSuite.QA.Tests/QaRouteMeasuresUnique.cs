@@ -9,7 +9,8 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestCategories;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
 
@@ -23,7 +24,7 @@ namespace ProSuite.QA.Tests
 		private readonly IList<int> _routeIdFieldIndexes;
 		private readonly IList<double> _mTolerances;
 		private readonly IList<double> _xyTolerances;
-		private readonly List<IFeatureClass> _polylineClasses;
+		private readonly List<IReadOnlyFeatureClass> _polylineClasses;
 
 		private readonly int _totalClassCount;
 
@@ -50,7 +51,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaRouteMeasuresUnique_0))]
 		public QaRouteMeasuresUnique(
 			[Doc(nameof(DocStrings.QaRouteMeasuresUnique_polylineClass))] [NotNull]
-			IFeatureClass
+			IReadOnlyFeatureClass
 				polylineClass,
 			[Doc(nameof(DocStrings.QaRouteMeasuresUnique_routeIdField))] [NotNull]
 			string
@@ -60,7 +61,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaRouteMeasuresUnique_1))]
 		public QaRouteMeasuresUnique(
 			[Doc(nameof(DocStrings.QaRouteMeasuresUnique_polylineClasses))] [NotNull]
-			ICollection<IFeatureClass>
+			ICollection<IReadOnlyFeatureClass>
 				polylineClasses,
 			[Doc(nameof(DocStrings.QaRouteMeasuresUnique_routeIdFields))] [NotNull]
 			IEnumerable<string>
@@ -70,7 +71,7 @@ namespace ProSuite.QA.Tests
 			Assert.ArgumentNotNull(polylineClasses, nameof(polylineClasses));
 			Assert.ArgumentNotNull(routeIdFields, nameof(routeIdFields));
 
-			_polylineClasses = new List<IFeatureClass>(polylineClasses);
+			_polylineClasses = new List<IReadOnlyFeatureClass>(polylineClasses);
 
 			_totalClassCount = polylineClasses.Count;
 
@@ -94,14 +95,14 @@ namespace ProSuite.QA.Tests
 			return CheckFeatures(GetFeatures(area));
 		}
 
-		public override int Execute(IEnumerable<IRow> selectedRows)
+		public override int Execute(IEnumerable<IReadOnlyRow> selectedRows)
 		{
-			return CheckFeatures(GetFeatures(selectedRows.Cast<IFeature>()));
+			return CheckFeatures(GetFeatures(selectedRows.Cast<IReadOnlyFeature>()));
 		}
 
-		public override int Execute(IRow row)
+		public override int Execute(IReadOnlyRow row)
 		{
-			return CheckFeatures(GetFeatures(new[] {(IFeature) row}));
+			return CheckFeatures(GetFeatures(new[] {(IReadOnlyFeature) row}));
 		}
 
 		protected override ISpatialReference GetSpatialReference()
@@ -109,13 +110,13 @@ namespace ProSuite.QA.Tests
 			return DatasetUtils.GetUniqueSpatialReference(_polylineClasses);
 		}
 
-		private int GetTableIndex([NotNull] IRow row)
+		private int GetTableIndex([NotNull] IReadOnlyRow row)
 		{
 			int tableCount = InvolvedTables.Count;
 
 			for (var tableIndex = 0; tableIndex < tableCount; tableIndex++)
 			{
-				ITable table = InvolvedTables[tableIndex];
+				IReadOnlyTable table = InvolvedTables[tableIndex];
 
 				if (table == row.Table)
 				{
@@ -127,43 +128,43 @@ namespace ProSuite.QA.Tests
 		}
 
 		[NotNull]
-		private IEnumerable<KeyValuePair<int, IFeature>> GetFeatures(
-			[NotNull] IEnumerable<IFeature> features)
+		private IEnumerable<KeyValuePair<int, IReadOnlyFeature>> GetFeatures(
+			[NotNull] IEnumerable<IReadOnlyFeature> features)
 		{
 			Assert.ArgumentNotNull(features, nameof(features));
 
-			foreach (IFeature feature in features)
+			foreach (IReadOnlyFeature feature in features)
 			{
 				int tableIndex = GetTableIndex(feature);
 
 				if (tableIndex >= 0)
 				{
-					yield return new KeyValuePair<int, IFeature>(tableIndex, feature);
+					yield return new KeyValuePair<int, IReadOnlyFeature>(tableIndex, feature);
 				}
 			}
 		}
 
 		[NotNull]
-		private IEnumerable<KeyValuePair<int, IFeature>> GetFeatures(
+		private IEnumerable<KeyValuePair<int, IReadOnlyFeature>> GetFeatures(
 			[CanBeNull] IGeometry geometry)
 		{
 			for (var tableIndex = 0; tableIndex < _totalClassCount; tableIndex++)
 			{
-				IFeatureClass featureClass = _polylineClasses[tableIndex];
+				IReadOnlyFeatureClass featureClass = _polylineClasses[tableIndex];
 
 				IQueryFilter queryFilter = GetQueryFilter(featureClass, tableIndex, geometry);
 
 				const bool recycle = true;
-				foreach (IFeature feature in
-					GdbQueryUtils.GetFeatures(featureClass, queryFilter, recycle))
+				foreach (IReadOnlyRow feature in
+					featureClass.EnumRows(queryFilter, recycle))
 				{
-					yield return new KeyValuePair<int, IFeature>(tableIndex, feature);
+					yield return new KeyValuePair<int, IReadOnlyFeature>(tableIndex, (IReadOnlyFeature)feature);
 				}
 			}
 		}
 
 		private int CheckFeatures(
-			[NotNull] IEnumerable<KeyValuePair<int, IFeature>> features)
+			[NotNull] IEnumerable<KeyValuePair<int, IReadOnlyFeature>> features)
 		{
 			Assert.ArgumentNotNull(features, nameof(features));
 
@@ -171,17 +172,17 @@ namespace ProSuite.QA.Tests
 
 			var errorCount = 0;
 
-			foreach (KeyValuePair<int, IFeature> pair in features)
+			foreach (KeyValuePair<int, IReadOnlyFeature> pair in features)
 			{
 				int tableIndex = pair.Key;
-				IFeature feature = pair.Value;
+				IReadOnlyFeature feature = pair.Value;
 
 				if (CancelTestingRow(feature))
 				{
 					continue;
 				}
 
-				object routeId = feature.Value[_routeIdFieldIndexes[tableIndex]];
+				object routeId = feature.get_Value(_routeIdFieldIndexes[tableIndex]);
 
 				if (routeId == null || routeId is DBNull)
 				{
@@ -231,7 +232,7 @@ namespace ProSuite.QA.Tests
 			}
 		}
 
-		private int ReportNonUniqueMeasuresWithinFeature([NotNull] IFeature feature)
+		private int ReportNonUniqueMeasuresWithinFeature([NotNull] IReadOnlyFeature feature)
 		{
 			IGeometry geometry = feature.Shape;
 			if (geometry == null || geometry.IsEmpty)
@@ -262,10 +263,10 @@ namespace ProSuite.QA.Tests
 				errorCount += MeasureUtils.GetMonotonicitySequences(polyline, invalidTypes)
 				                          .Sum(sequence => ReportError(
 					                               description,
+					                               InvolvedRowUtils.GetInvolvedRows(feature),
 					                               sequence.CreatePolyline(),
 					                               Codes[Code.MeasuresNotUnique_WithinFeature],
-					                               TestUtils.GetShapeFieldName(feature),
-					                               feature));
+					                               TestUtils.GetShapeFieldName(feature)));
 			}
 
 			return errorCount;
@@ -290,17 +291,16 @@ namespace ProSuite.QA.Tests
 
 			if (lineErrorGeometry != null)
 			{
-				errorCount += ReportError(description, lineErrorGeometry,
-				                          Codes[Code.MeasuresNotUnique_WithinRoute], null,
-				                          involvedRows);
+				errorCount += ReportError(
+					description, involvedRows, lineErrorGeometry,
+					Codes[Code.MeasuresNotUnique_WithinRoute], null);
 			}
 
 			if (pointErrorGeometry != null)
 			{
-				errorCount += ReportError(description,
-				                          pointErrorGeometry,
-				                          Codes[Code.MeasuresNotUnique_WithinRoute], null,
-				                          involvedRows);
+				errorCount += ReportError(
+					description, involvedRows, pointErrorGeometry,
+					Codes[Code.MeasuresNotUnique_WithinRoute], null);
 			}
 
 			if (lineErrorGeometry == null && pointErrorGeometry == null)
@@ -328,7 +328,7 @@ namespace ProSuite.QA.Tests
 
 			foreach (TestRowReference testRowReference in overlap.Features)
 			{
-				IFeature feature = GetFeature(testRowReference);
+				IReadOnlyFeature feature = GetFeature(testRowReference);
 
 				involvedRows.AddRange(InvolvedRowUtils.GetInvolvedRows(feature));
 
@@ -372,22 +372,22 @@ namespace ProSuite.QA.Tests
 		}
 
 		[NotNull]
-		private IFeature GetFeature([NotNull] TestRowReference testRowReference)
+		private IReadOnlyFeature GetFeature([NotNull] TestRowReference testRowReference)
 		{
 			Assert.ArgumentNotNull(testRowReference, nameof(testRowReference));
 
-			ITable table = InvolvedTables[testRowReference.TableIndex];
+			IReadOnlyTable table = InvolvedTables[testRowReference.TableIndex];
 
-			IRow row = table.GetRow(testRowReference.ObjectId);
+			IReadOnlyRow row = table.GetRow(testRowReference.ObjectId);
 			Assert.NotNull(row, "Row {0} not found in {1}",
 			               testRowReference.ObjectId,
-			               DatasetUtils.GetName(table));
+			               table.Name);
 
-			return (IFeature) row;
+			return (IReadOnlyFeature) row;
 		}
 
 		[NotNull]
-		private IQueryFilter GetQueryFilter([NotNull] IFeatureClass featureClass,
+		private IQueryFilter GetQueryFilter([NotNull] IReadOnlyFeatureClass featureClass,
 		                                    int tableIndex,
 		                                    [CanBeNull] IGeometry geometry)
 		{
@@ -433,7 +433,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[NotNull]
-		private string GetRouteIdFieldName([NotNull] IFeatureClass featureClass,
+		private string GetRouteIdFieldName([NotNull] IReadOnlyFeatureClass featureClass,
 		                                   int tableIndex)
 		{
 			return featureClass.Fields.Field[_routeIdFieldIndexes[tableIndex]].Name;

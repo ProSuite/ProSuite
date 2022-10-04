@@ -12,12 +12,7 @@ namespace ProSuite.DomainModel.Core.QA
 		[UsedImplicitly] private Dataset _datasetValue;
 		[UsedImplicitly] private string _filterExpression;
 		[UsedImplicitly] private bool _usedAsReferenceData;
-
-		[UsedImplicitly] private IList<RowFilterConfiguration> _rowFilterConfigurations =
-			new List<RowFilterConfiguration>();
-
-		[UsedImplicitly] private string _rowFiltersExpression;
-
+		
 		#region Constructors
 
 		/// <summary>
@@ -62,19 +57,26 @@ namespace ProSuite.DomainModel.Core.QA
 		{
 			get
 			{
-				if (_datasetValue == null)
+				string result;
+				if (_datasetValue != null)
+				{
+					result = _datasetValue.AliasName;
+				}
+				else if (ValueSource != null)
+				{
+					result = ValueSource.Name;
+				}
+				else
 				{
 					return null;
 				}
 
-				string val = _datasetValue.Name;
-
 				if (! string.IsNullOrEmpty(_filterExpression))
 				{
-					val = val + " ; " + _filterExpression;
+					result = result + " ; " + _filterExpression;
 				}
 
-				return val;
+				return result;
 			}
 			set
 			{
@@ -90,6 +92,12 @@ namespace ProSuite.DomainModel.Core.QA
 				{
 					throw new InvalidOperationException(
 						"Cannot set Value of DatasetValue, except filter expression");
+				}
+
+				if (ValueSource != null && datasetName != ValueSource.Name)
+				{
+					throw new InvalidOperationException(
+						"Cannot set Value of Transformer, except filter expression");
 				}
 
 				_filterExpression = tokens.Length > 1
@@ -109,16 +117,26 @@ namespace ProSuite.DomainModel.Core.QA
 		{
 			get
 			{
-				string val = _datasetValue != null
-					             ? _datasetValue.AliasName
-					             : "<not defined>";
+				string result;
+				if (_datasetValue != null)
+				{
+					result = _datasetValue.AliasName;
+				}
+				else if (ValueSource != null)
+				{
+					result = ValueSource.Name;
+				}
+				else
+				{
+					result = "<not defined>";
+				}
 
 				if (! string.IsNullOrEmpty(_filterExpression))
 				{
-					val = val + " ; " + _filterExpression;
+					result = result + " ; " + _filterExpression;
 				}
 
-				return val;
+				return result;
 			}
 		}
 
@@ -135,25 +153,52 @@ namespace ProSuite.DomainModel.Core.QA
 			get { return _filterExpression; }
 			set { _filterExpression = value; }
 		}
-
-		[CanBeNull]
-		public IList<RowFilterConfiguration> RowFilterConfigurations
-		{
-			get => _rowFilterConfigurations;
-			set => _rowFilterConfigurations = value;
-		}
-
-		[CanBeNull]
-		public string RowFiltersExpression
-		{
-			get => _rowFiltersExpression;
-			set => _rowFiltersExpression = value;
-		}
-
+		
 		public bool UsedAsReferenceData
 		{
 			get { return _usedAsReferenceData; }
 			set { _usedAsReferenceData = value; }
+		}
+
+		/// <summary>
+		/// Gets the name of the referenced dataset or the name of the referenced transformer.
+		/// </summary>
+		/// <returns></returns>
+		public string GetName()
+		{
+			if (DatasetValue != null)
+			{
+				return DatasetValue.Name;
+			}
+
+			if (ValueSource != null)
+			{
+				return ValueSource.Name;
+			}
+
+			return null;
+		}
+
+		/// <summary>
+		/// Gets the source dataset(s) referenced either directly by this parameter or recursively
+		/// through the referenced transformer. Datasets only referenced by issue-filters are not
+		/// returned.
+		/// </summary>
+		/// <returns></returns>
+		public IEnumerable<Dataset> GetAllSourceDatasets()
+		{
+			if (DatasetValue != null)
+			{
+				yield return DatasetValue;
+			}
+			else if (ValueSource != null)
+			{
+				foreach (Dataset referencedDataset in ValueSource.GetDatasetParameterValues(
+					         includeSourceDatasets: true))
+				{
+					yield return referencedDataset;
+				}
+			}
 		}
 
 		public override TestParameterValue Clone()
@@ -162,7 +207,8 @@ namespace ProSuite.DomainModel.Core.QA
 			             {
 				             _datasetValue = _datasetValue,
 				             _filterExpression = _filterExpression,
-				             _usedAsReferenceData = _usedAsReferenceData
+				             _usedAsReferenceData = _usedAsReferenceData,
+				             ValueSource = ValueSource
 			             };
 
 			return result;
@@ -176,6 +222,12 @@ namespace ProSuite.DomainModel.Core.QA
 			if (DatasetValue != datasetUpdateValue.DatasetValue)
 			{
 				DatasetValue = datasetUpdateValue.DatasetValue;
+				hasUpdates = true;
+			}
+
+			if (ValueSource != datasetUpdateValue.ValueSource)
+			{
+				ValueSource = datasetUpdateValue.ValueSource;
 				hasUpdates = true;
 			}
 
@@ -205,6 +257,7 @@ namespace ProSuite.DomainModel.Core.QA
 
 			bool equal = TestParameterName == o.TestParameterName &&
 			             DatasetValue == o.DatasetValue &&
+			             ValueSource == o.ValueSource &&
 			             FilterExpression == o.FilterExpression &&
 			             UsedAsReferenceData == o.UsedAsReferenceData;
 

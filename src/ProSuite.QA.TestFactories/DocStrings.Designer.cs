@@ -61,33 +61,6 @@ namespace ProSuite.QA.TestFactories {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to polyline feature classes.
-        /// </summary>
-        internal static string QaAngleFactory_featureClasses {
-            get {
-                return ResourceManager.GetString("QaAngleFactory_featureClasses", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to include z-coordinate for checking.
-        /// </summary>
-        internal static string QaAngleFactory_is3D {
-            get {
-                return ResourceManager.GetString("QaAngleFactory_is3D", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to minimum angle in °.
-        /// </summary>
-        internal static string QaAngleFactory_limit {
-            get {
-                return ResourceManager.GetString("QaAngleFactory_limit", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Finds rows in &apos;table&apos; based on a list of expressions defined in another table. The expression table can be filtered to a subset of expressions relevant for the verified table..
         /// </summary>
         internal static string QaConstraintsListFactory {
@@ -233,24 +206,6 @@ namespace ProSuite.QA.TestFactories {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to reference scale.
-        /// </summary>
-        internal static string QaLinearUnitFactory_referenceScale {
-            get {
-                return ResourceManager.GetString("QaLinearUnitFactory_referenceScale", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to linear units.
-        /// </summary>
-        internal static string QaLinearUnitFactory_units {
-            get {
-                return ResourceManager.GetString("QaLinearUnitFactory_units", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Finds all connected features in &apos;featureClasses&apos; that do not correspond with the &apos;rules&apos;.
         ///&apos;featureClasses&apos; can consist of line and point featureclasses. &apos;rules&apos; are checked at all distinct points that exist as start/endpoint (line featureclasses) or points (point featureclasses).
         ///Remark: the feature classes in &apos;featureClasses&apos; must have the same spatial reference. 
@@ -280,98 +235,6 @@ namespace ProSuite.QA.TestFactories {
         internal static string QaLineConnection_rules {
             get {
                 return ResourceManager.GetString("QaLineConnection_rules", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Finds all intersections between lines of &apos;featureClasses&apos; where the intersection angle is smaller than &apos;limit&apos;
-        ///Remark: The feature classes in &apos;featureClasses&apos; must have the same spatial reference.
-        /// </summary>
-        internal static string QaLineIntersectAngleFactory {
-            get {
-                return ResourceManager.GetString("QaLineIntersectAngleFactory", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to polyline or polygon feature classes.
-        /// </summary>
-        internal static string QaLineIntersectAngleFactory_featureClasses {
-            get {
-                return ResourceManager.GetString("QaLineIntersectAngleFactory_featureClasses", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Finds all segments in &apos;featureClass&apos; where the slope is larger than &apos;limit&apos;.
-        /// </summary>
-        internal static string QaMaxSlopeFactory {
-            get {
-                return ResourceManager.GetString("QaMaxSlopeFactory", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to polyline or polygon feature class.
-        /// </summary>
-        internal static string QaMaxSlopeFactory_featureClass {
-            get {
-                return ResourceManager.GetString("QaMaxSlopeFactory_featureClass", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to maximum angle in °.
-        /// </summary>
-        internal static string QaMaxSlopeFactory_limit {
-            get {
-                return ResourceManager.GetString("QaMaxSlopeFactory_limit", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Finds all pair of lines in &apos;featureClasses&apos; with common start or end point where the angle built by the lines is smaller than &apos;limit&apos;
-        ///Remark: The feature classes in &apos;featureClasses&apos; must have the same spatial reference.
-        /// </summary>
-        internal static string QaMinNodeAngleFactory {
-            get {
-                return ResourceManager.GetString("QaMinNodeAngleFactory", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Finds all consecutive segments in &apos;featureClass&apos; where the angle between two segments is smaller than &apos;limit&apos;.
-        /// </summary>
-        internal static string QaMinSegAngleFactory {
-            get {
-                return ResourceManager.GetString("QaMinSegAngleFactory", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to polyline or polygon feature class.
-        /// </summary>
-        internal static string QaMinSegAngleFactory_featureClass {
-            get {
-                return ResourceManager.GetString("QaMinSegAngleFactory_featureClass", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to include z-coordinate for checking.
-        /// </summary>
-        internal static string QaMinSegAngleFactory_is3D {
-            get {
-                return ResourceManager.GetString("QaMinSegAngleFactory_is3D", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to minimum allowed angle between segments (in °).
-        /// </summary>
-        internal static string QaMinSegAngleFactory_limit {
-            get {
-                return ResourceManager.GetString("QaMinSegAngleFactory_limit", resourceCulture);
             }
         }
         

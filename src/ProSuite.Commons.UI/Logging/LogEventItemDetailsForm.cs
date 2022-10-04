@@ -1,11 +1,15 @@
 using System;
 using System.Text;
 using System.Windows.Forms;
+using ProSuite.Commons.Logging;
+using ProSuite.Commons.UI.Dialogs;
 
 namespace ProSuite.Commons.UI.Logging
 {
 	internal partial class LogEventItemDetailsForm : Form
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		private LogEventItem _logEventItem;
 
 		public LogEventItemDetailsForm()
@@ -24,7 +28,14 @@ namespace ProSuite.Commons.UI.Logging
 
 		private void LogEventItemDetails_Load(object sender, EventArgs e)
 		{
-			textBoxDetails.Text = FormatLogEventItem(_logEventItem);
+			try
+			{
+				textBoxDetails.Text = FormatLogEventItem(_logEventItem);
+			}
+			catch (Exception ex)
+			{
+				ErrorHandler.HandleError(ex, _msg);
+			}
 		}
 
 		private static string FormatLogEventItem(LogEventItem logEventItem)

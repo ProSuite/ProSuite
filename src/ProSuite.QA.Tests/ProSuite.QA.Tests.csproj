@@ -1,450 +1,134 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="12.0">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{7A1D3AB3-A9A8-45B0-9452-A0DDEA004E2B}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>ProSuite.QA.Tests</RootNamespace>
-    <AssemblyName>ProSuite.QA.Tests</AssemblyName>
+
     <SignAssembly>true</SignAssembly>
     <ProSuiteKeyFile Condition=" '$(ProSuiteKeyFile)' == '' ">..\ProSuite.Key.snk</ProSuiteKeyFile>
     <AssemblyOriginatorKeyFile>$(ProSuiteKeyFile)</AssemblyOriginatorKeyFile>
-    <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' ">v4.8</TargetFrameworkVersion>
+
     <VSArcGISVersion Condition=" '$(VSArcGISVersion)' == '' ">10.8</VSArcGISVersion>
     <VSArcGISProduct Condition=" '$(VSArcGISProduct)' == ''">ArcGIS</VSArcGISProduct>
     <ArcGISAssemblyPath Condition=" '$(ArcGISAssemblyPath)' == '' ">C:\Program Files (x86)\ArcGIS\DeveloperKit10.6\DotNet</ArcGISAssemblyPath>
-    <ProAssemblyPath Condition=" '$(ProAssemblyPath)' == '' ">C:\Program Files\ArcGIS\Pro</ProAssemblyPath>
+
     <OutputDirectory Condition=" '$(OutputDirectory)' == '' ">..\..\bin</OutputDirectory>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>$(OutputDirectory)\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE;$(VSArcGISProduct)</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <OutputPath>$(OutputDirectory)\$(Configuration)\</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+
     <NoWarn>1591</NoWarn>
+
+    <TargetFramework>netstandard2.0</TargetFramework>
+
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugType>full</DebugType>
+    <DefineConstants>DEBUG;TRACE;$(VSArcGISProduct)</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>$(OutputDirectory)\Release\</OutputPath>
     <DefineConstants>TRACE;$(VSArcGISProduct)</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <DocumentationFile>$(OutputDirectory)\Release\ProSuite.QA.Tests.xml</DocumentationFile>
-    <NoWarn>1591</NoWarn>
+    <DocumentationFile>$(OutputDirectory)\$(Configuration)\ProSuite.QA.Tests.xml</DocumentationFile>
   </PropertyGroup>
+
   <ItemGroup>
-    <Reference Include="ESRI.ArcGIS.DataSourcesGDB, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>$(ArcGISAssemblyPath)\$(VSArcGISVersion)\ESRI.$(VSArcGISProduct).DataSourcesGDB.dll</HintPath>
-    </Reference>
     <Reference Include="ESRI.ArcGIS.DataSourcesRaster, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
       <HintPath>$(ArcGISAssemblyPath)\$(VSArcGISVersion)\ESRI.$(VSArcGISProduct).DataSourcesRaster.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
     </Reference>
     <Reference Include="ESRI.ArcGIS.Geodatabase, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
       <HintPath>$(ArcGISAssemblyPath)\$(VSArcGISVersion)\ESRI.$(VSArcGISProduct).Geodatabase.dll</HintPath>
-    </Reference>
-    <Reference Include="ESRI.ArcGIS.GeoDatabaseExtensions, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>$(ArcGISAssemblyPath)\$(VSArcGISVersion)\ESRI.$(VSArcGISProduct).GeoDatabaseExtensions.dll</HintPath>
     </Reference>
     <Reference Include="ESRI.ArcGIS.Geometry, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
       <HintPath>$(ArcGISAssemblyPath)\$(VSArcGISVersion)\ESRI.$(VSArcGISProduct).Geometry.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
     </Reference>
     <Reference Include="ESRI.ArcGIS.System, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
       <HintPath>$(ArcGISAssemblyPath)\$(VSArcGISVersion)\ESRI.$(VSArcGISProduct).System.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
     </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Core">
-      <RequiredTargetFramework>3.5</RequiredTargetFramework>
-    </Reference>
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
   </ItemGroup>
+
   <ItemGroup>
-    <Compile Include="..\SharedAssemblyInfo.cs">
-      <Link>Properties\SharedAssemblyInfo.cs</Link>
+    <Compile Include="..\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
+    <Compile Update="Documentation\DocIfStrings.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>DocIfStrings.resx</DependentUpon>
     </Compile>
-    <Compile Include="AllowedEndpointInteriorIntersections.cs" />
-    <Compile Include="AllowedLineInteriorIntersections.cs" />
-    <Compile Include="AzimuthSegment.cs" />
-    <Compile Include="BoundaryLoopAreaRelation.cs" />
-    <Compile Include="BoundaryLoopErrorGeometry.cs" />
-    <Compile Include="Coincidence\ConnectionMode.cs" />
-    <Compile Include="Coincidence\IndexedSegmentUtils.cs" />
-    <Compile Include="Coincidence\LineCapStyle.cs" />
-    <Compile Include="Coincidence\QaFullCoincidenceBase.cs" />
-    <Compile Include="Coincidence\QaNearCoincidenceBase.cs" />
-    <Compile Include="Coincidence\QaNearTopoBase.cs" />
-    <Compile Include="Coincidence\QaPolycurveCoincidenceBase.cs" />
-    <Compile Include="Coincidence\QaTopoNotNear.CoincidentPartsAdapter.cs" />
-    <Compile Include="Coincidence\QaTopoNotNear.cs" />
-    <Compile Include="Coincidence\QaTopoNotNear.ErrorCleanup.cs" />
-    <Compile Include="Coincidence\QaTopoNotNear.Junctions.cs" />
-    <Compile Include="Coincidence\QaTopoNotNear.NestedClasses.cs" />
-    <Compile Include="Coincidence\QaTopoNotNear.UnconnectedEndsAdapter.cs" />
-    <Compile Include="Coincidence\SegmentSearcher.cs" />
-    <Compile Include="Constraints\ConstraintNode.cs" />
-    <Compile Include="Constraints\GdbConstraintUtils.cs" />
-    <Compile Include="CrossTileFeatureState.cs" />
-    <Compile Include="CurveMeasureRange.cs" />
-    <Compile Include="Documentation\DocAttribute.cs" />
-    <Compile Include="Documentation\DocStrings.Designer.cs">
+    <Compile Update="Documentation\DocStrings.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>DocStrings.resx</DependentUpon>
     </Compile>
-    <Compile Include="Documentation\RenamedAttribute.cs" />
-    <Compile Include="EdgeMatch\AttributeConstraintViolation.cs" />
-    <Compile Include="EdgeMatch\ConstraintError.cs" />
-    <Compile Include="EdgeMatch\ConstraintErrorCache.cs" />
-    <Compile Include="EdgeMatch\EdgeMatchBorderConnection.cs" />
-    <Compile Include="EdgeMatch\EdgeMatchBorderConnectionCache.cs" />
-    <Compile Include="EdgeMatch\EdgeMatchBorderConnectionUnion.cs" />
-    <Compile Include="EdgeMatch\EdgeMatchNeighborConnection.cs" />
-    <Compile Include="EdgeMatch\EdgeMatchNeighbors.cs" />
-    <Compile Include="EdgeMatch\EdgeMatchSingleBorderConnection.cs" />
-    <Compile Include="EdgeMatch\EdgeMatchUtils.cs" />
-    <Compile Include="EdgeMatch\FeatureKey.cs" />
-    <Compile Include="EdgeMatch\FeatureKeyComparer.cs" />
-    <Compile Include="EqualFieldValuesCondition.cs" />
-    <Compile Include="ExpectedCase.cs" />
-    <Compile Include="ExpectedStringDifference.cs" />
-    <Compile Include="FieldListType.cs" />
-    <Compile Include="FieldValueUtils.cs" />
-    <Compile Include="GeometryComponent.cs" />
-    <Compile Include="GeometryComponentUtils.cs" />
-    <Compile Include="GeometryMathUtils.cs" />
-    <Compile Include="InnerRingHandling.cs" />
-    <Compile Include="IPoints.cs" />
-    <Compile Include="ISegmentPair.cs" />
-    <Compile Include="IssueCodes\CrossesIssueCodes.cs" />
-    <Compile Include="IssueCodes\FieldPropertiesIssueCodes.cs" />
-    <Compile Include="IssueCodes\GdbConstraintIssueCodes.cs" />
-    <Compile Include="IssueCodes\IFieldSpecificationIssueCodes.cs" />
-    <Compile Include="IssueCodes\IFieldSpecificationsIssueCodes.cs" />
-    <Compile Include="IssueCodes\InteriorIntersectsIssueCodes.cs" />
-    <Compile Include="IssueCodes\IntersectionMatrixIssueCodes.cs" />
-    <Compile Include="IssueCodes\IntersectsIssueCodes.cs" />
-    <Compile Include="IssueCodes\IssueCodeDescriptions.de-CH.Designer.cs">
+    <Compile Update="Documentation\DocTrStrings.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>DocTrStrings.resx</DependentUpon>
+    </Compile>
+    <Compile Update="IssueCodes\IssueCodeDescriptions.de-CH.Designer.cs">
       <DependentUpon>IssueCodeDescriptions.de-CH.resx</DependentUpon>
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
     </Compile>
-    <Compile Include="IssueCodes\IssueCodeDescriptions.de.Designer.cs">
+    <Compile Update="IssueCodes\IssueCodeDescriptions.de.Designer.cs">
       <DependentUpon>IssueCodeDescriptions.de.resx</DependentUpon>
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
     </Compile>
-    <Compile Include="IssueCodes\IssueCodeDescriptions.Designer.cs">
+    <Compile Update="IssueCodes\IssueCodeDescriptions.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>IssueCodeDescriptions.resx</DependentUpon>
     </Compile>
-    <Compile Include="IssueCodes\LocalTestIssueCodes.cs" />
-    <Compile Include="IssueCodes\MustIntersectIssueCodes.cs" />
-    <Compile Include="IssueCodes\MustTouchIssueCodes.cs" />
-    <Compile Include="IssueCodes\OverlapsIssueCodes.cs" />
-    <Compile Include="IssueCodes\TouchesIssueCodes.cs" />
-    <Compile Include="IssueFilters\IfInvolvedRows.cs" />
-    <Compile Include="IValueTransformation.cs" />
-    <Compile Include="KeySets\GuidKeySet.cs" />
-    <Compile Include="KeySets\IKeySet.cs" />
-    <Compile Include="KeySets\ITupleKeySet.cs" />
-    <Compile Include="KeySets\KeySet.cs" />
-    <Compile Include="KeySets\KeySetUtils.cs" />
-    <Compile Include="KeySets\Tuple.cs" />
-    <Compile Include="KeySets\TupleKeySet.cs" />
-    <Compile Include="KnownGaps.cs" />
-    <Compile Include="LineFieldValuesConstraint.cs" />
-    <Compile Include="LineIntersection.cs" />
-    <Compile Include="LineIntersectionUtils.cs" />
-    <Compile Include="LineMSource.cs" />
-    <Compile Include="MeasureUtils.cs" />
-    <Compile Include="MMonotonicitySequence.cs" />
-    <Compile Include="MonotonicityDirection.cs" />
-    <Compile Include="MonotonicitySequence.cs" />
-    <Compile Include="MultiPatchUtils.cs" />
-    <Compile Include="Network\NetworkBuilder.cs" />
-    <Compile Include="Network\QaConnectionCountRule.cs" />
-    <Compile Include="Network\QaConnectionRule.cs" />
-    <Compile Include="Network\QaConnectionRuleHelper.cs" />
-    <Compile Include="Network\QaGroupNetworkBase.cs" />
-    <Compile Include="Network\QaNetworkBase.cs" />
-    <Compile Include="NonLinearSegmentType.cs" />
-    <Compile Include="OffsetSpecification.cs" />
-    <Compile Include="OrphanErrorType.cs" />
-    <Compile Include="OverlappingMeasures.cs" />
-    <Compile Include="PendingFeature.cs" />
-    <Compile Include="PointEnumerators\IndexedSegmentsFeaturePointEnumerator.cs" />
-    <Compile Include="PointEnumerators\IPointsEnumerator.cs" />
-    <Compile Include="PointEnumerators\PointCollectionFeaturePointEnumerator.cs" />
-    <Compile Include="PointEnumerators\PointFeaturePointEnumerator.cs" />
-    <Compile Include="PointEnumerators\PointsEnumerator.cs" />
-    <Compile Include="PointEnumerators\PointsEnumeratorFactory.cs" />
-    <Compile Include="PointEnumerators\SegmentsPlane.cs" />
-    <Compile Include="PointEnumerators\SegmentsPlaneProvider.cs" />
-    <Compile Include="PointFieldValuesConstraint.cs" />
-    <Compile Include="PolylineUsage.cs" />
-    <Compile Include="Properties\LocalizableStrings.Designer.cs">
+    <Compile Update="Properties\LocalizableStrings.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>LocalizableStrings.resx</DependentUpon>
     </Compile>
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Qa3dConstantZ.cs" />
-    <Compile Include="QaExportTables.cs" />
-    <Compile Include="QaGdbConstraint.cs" />
-    <Compile Include="QaSchemaFieldPropertiesFromTable.cs" />
-    <Compile Include="QaSchemaReservedFieldNameProperties.cs" />
-    <Compile Include="QaSurfaceOffset.cs" />
-    <Compile Include="QaSurfacePipe.cs" />
-    <Compile Include="QaAreaBase.cs" />
-    <Compile Include="QaBorderSense.cs" />
-    <Compile Include="QaCentroids.cs" />
-    <Compile Include="QaConnections.cs" />
-    <Compile Include="QaConstraint.cs" />
-    <Compile Include="QaContainedPointsCount.cs" />
-    <Compile Include="QaContainsOther.cs" />
-    <Compile Include="QaCoplanarRings.cs" />
-    <Compile Include="QaCrossesOther.cs" />
-    <Compile Include="QaCrossesSelf.cs" />
-    <Compile Include="QaCurve.cs" />
-    <Compile Include="QaDangleCount.cs" />
-    <Compile Include="QaDateFieldsWithoutTime.cs" />
-    <Compile Include="QaDuplicateGeometrySelf.cs" />
-    <Compile Include="QaEdgeMatchBorderingLines.cs" />
-    <Compile Include="QaEdgeMatchBorderingPoints.cs" />
-    <Compile Include="QaEdgeMatchCrossingAreas.cs" />
-    <Compile Include="QaEdgeMatchCrossingLines.cs" />
-    <Compile Include="QaEmptyNotNullTextFields.cs" />
-    <Compile Include="QaExtent.cs" />
-    <Compile Include="QaFlowLogic.cs" />
-    <Compile Include="QaForeignKey.cs" />
-    <Compile Include="QaFullCoincidence.cs" />
-    <Compile Include="QaGdbRelease.cs" />
-    <Compile Include="QaGeometryConstraint.cs" />
-    <Compile Include="QaGroupConnected.cs" />
-    <Compile Include="QaGroupConstraints.cs" />
-    <Compile Include="QaHorizontalSegments.cs" />
-    <Compile Include="QaInteriorIntersectsOther.cs" />
-    <Compile Include="QaInteriorIntersectsSelf.cs" />
-    <Compile Include="QaInteriorRings.cs" />
-    <Compile Include="QaIntersectionMatrixOther.cs" />
-    <Compile Include="QaIntersectionMatrixSelf.cs" />
-    <Compile Include="QaIntersectsOther.cs" />
-    <Compile Include="QaIntersectsSelf.cs" />
-    <Compile Include="QaIsCoveredByOther.cs" />
-    <Compile Include="QaLengthBase.cs" />
-    <Compile Include="QaLineConnectionFieldValues.cs" />
-    <Compile Include="QaLineGroupConstraints.cs" />
-    <Compile Include="QaLineIntersect.cs" />
-    <Compile Include="QaLineIntersectAngle.cs" />
-    <Compile Include="QaLineIntersectZ.cs" />
-    <Compile Include="QaMaxArea.cs" />
-    <Compile Include="QaMaxLength.cs" />
-    <Compile Include="QaMaxSlope.cs" />
-    <Compile Include="QaMaxVertexCount.cs" />
-    <Compile Include="QaMeasures.cs" />
-    <Compile Include="QaMeasuresAtPoints.cs" />
-    <Compile Include="QaMinAngle.cs" />
-    <Compile Include="QaMinArea.cs" />
-    <Compile Include="QaMinIntersect.cs" />
-    <Compile Include="QaMinLength.cs" />
-    <Compile Include="QaMinMeanSegmentLength.cs" />
-    <Compile Include="QaMinNodeDistance.cs" />
-    <Compile Include="QaMinSegAngle.cs" />
-    <Compile Include="QaMonotonicMeasures.cs" />
-    <Compile Include="QaMonotonicZ.cs" />
-    <Compile Include="QaMpAllowedPartTypes.cs" />
-    <Compile Include="QaMpConstantPointIdsPerRing.cs" />
-    <Compile Include="QaMpFootprintHoles.cs" />
-    <Compile Include="QaMpHorizontalAzimuths.cs" />
-    <Compile Include="QaMpHorizontalHeights.cs" />
-    <Compile Include="QaMpHorizontalPerpendicular.cs" />
-    <Compile Include="QaMpNonIntersectingRingFootprints.cs" />
-    <Compile Include="QaMpSinglePartFootprint.cs" />
-    <Compile Include="QaMpVertexNotNearFace.cs" />
-    <Compile Include="QaMpVerticalFaces.cs" />
-    <Compile Include="QaMultipart.cs" />
-    <Compile Include="QaMustBeNearOther.cs" />
-    <Compile Include="QaMustIntersectMatrixOther.cs" />
-    <Compile Include="QaMustIntersectOther.cs" />
-    <Compile Include="QaMustTouchOther.cs" />
-    <Compile Include="QaMustTouchSelf.cs" />
-    <Compile Include="QaNeighbourAreas.cs" />
-    <Compile Include="QaNoBoundaryLoops.cs" />
-    <Compile Include="QaNoClosedPaths.cs" />
-    <Compile Include="QaNodeLineCoincidence.cs" />
-    <Compile Include="QaNoGaps.cs" />
-    <Compile Include="QaNonEmptyGeometry.cs" />
-    <Compile Include="QaNotNear.cs" />
-    <Compile Include="QaNoTouchingParts.cs" />
-    <Compile Include="QaOrphanNode.cs" />
-    <Compile Include="QaOverlapsOther.cs" />
-    <Compile Include="QaOverlapsSelf.cs" />
-    <Compile Include="QaPartCoincidenceOther.cs" />
-    <Compile Include="QaPartCoincidenceSelf.cs" />
-    <Compile Include="QaPointNotNear.cs" />
-    <Compile Include="QaPointOnLine.cs" />
-    <Compile Include="QaPseudoNodes.cs" />
-    <Compile Include="QaRegularExpression.cs" />
-    <Compile Include="QaRelationConstraint.cs" />
-    <Compile Include="QaRequiredFields.cs" />
-    <Compile Include="QaRequiredSpatialRelationOther.cs" />
-    <Compile Include="QaRouteMeasuresContinuous.cs" />
-    <Compile Include="QaRouteMeasuresUnique.cs" />
-    <Compile Include="QaRowCount.cs" />
-    <Compile Include="QaSchemaFieldAliases.cs" />
-    <Compile Include="QaSchemaFieldDomainCodedValues.cs" />
-    <Compile Include="QaSchemaFieldDomainDescriptions.cs" />
-    <Compile Include="QaSchemaFieldDomainNameRegex.cs" />
-    <Compile Include="QaSchemaFieldDomainNames.cs" />
-    <Compile Include="QaSchemaFieldDomains.cs" />
-    <Compile Include="QaSchemaFieldNameRegex.cs" />
-    <Compile Include="QaSchemaFieldNames.cs" />
-    <Compile Include="QaSchemaFieldProperties.cs" />
-    <Compile Include="QaSchemaReservedFieldNames.cs" />
-    <Compile Include="QaSchemaSpatialReference.cs" />
-    <Compile Include="QaSegmentLength.cs" />
-    <Compile Include="QaSimpleGeometry.cs" />
-    <Compile Include="QaSliverPolygon.cs" />
-    <Compile Include="QaSmooth.cs" />
-    <Compile Include="QaSurfaceSpikes.cs" />
-    <Compile Include="QaSurfaceVertex.cs" />
-    <Compile Include="QaTouchesOther.cs" />
-    <Compile Include="QaTouchesSelf.cs" />
-    <Compile Include="QaTrimmedTextFields.cs" />
-    <Compile Include="QaUnique.cs" />
-    <Compile Include="QaUnreferencedRows.cs" />
-    <Compile Include="QaValidCoordinateFields.cs" />
-    <Compile Include="QaValidDateValues.cs" />
-    <Compile Include="QaValidNonLinearSegments.cs" />
-    <Compile Include="QaValidUrls.cs" />
-    <Compile Include="QaValue.cs" />
-    <Compile Include="QaVertexCoincidence.cs" />
-    <Compile Include="QaVertexCoincidenceOther.cs" />
-    <Compile Include="QaVertexCoincidenceSelf.cs" />
-    <Compile Include="QaWithinBox.cs" />
-    <Compile Include="QaWithinZRange.cs" />
-    <Compile Include="QaZDifferenceOther.cs" />
-    <Compile Include="QaZDifferenceSelf.cs" />
-    <Compile Include="RouteMeasures.cs" />
-    <Compile Include="RowFilters\RfExecuteArea.cs" />
-    <Compile Include="Schema\DomainUsage.cs" />
-    <Compile Include="Schema\FieldSpecification.cs" />
-    <Compile Include="Schema\FieldSpecifications.cs" />
-    <Compile Include="Schema\FieldSpecificationUtils.cs" />
-    <Compile Include="Schema\QaSchemaFieldPropertiesBase.cs" />
-    <Compile Include="Schema\QaSchemaReservedFieldNamesBase.cs" />
-    <Compile Include="Schema\QaSchemaTestBase.cs" />
-    <Compile Include="Schema\SchemaTestUtils.cs" />
-    <Compile Include="SegmentPairUtils.cs" />
-    <Compile Include="SimpleCrossTileFeatureState.cs" />
-    <Compile Include="SpatialRelations\QaSpatialRelationBase.cs" />
-    <Compile Include="SpatialRelations\QaSpatialRelationOtherBase.cs" />
-    <Compile Include="SpatialRelations\QaSpatialRelationSelfBase.cs" />
-    <Compile Include="SpatialRelations\QaSpatialRelationUtils.cs" />
-    <Compile Include="Surface\MosaicRasterReference.cs" />
-    <Compile Include="Surface\RasterDatasetReference.cs" />
-    <Compile Include="Surface\SurfaceUtils.cs" />
-    <Compile Include="TestRowReference.cs" />
-    <Compile Include="Transformers\FieldInfo.cs" />
-    <Compile Include="Transformers\IContainerTransformer.cs" />
-    <Compile Include="Transformers\IGeometryTransformer.cs" />
-    <Compile Include="Transformers\TableTransformer.cs" />
-    <Compile Include="Transformers\TransformedBackingDataset.cs" />
-    <Compile Include="Transformers\TransformerWorkspace.cs" />
-    <Compile Include="Transformers\TrDissolve.cs" />
-    <Compile Include="Transformers\TrFootprint.cs" />
-    <Compile Include="Transformers\TrPolyToLine.cs" />
-    <Compile Include="Transformers\TrMultilineToLine.cs" />
-    <Compile Include="Transformers\TrGeometryTransform.cs" />
-    <Compile Include="Transformers\TrGeometryToPoints.cs" />
-    <Compile Include="Transformers\TrLineToPoly.cs" />
-    <Compile Include="Transformers\TrSpatialJoin.cs" />
-    <Compile Include="Transformers\TrIntersect.cs" />
-    <Compile Include="Transformers\TrTableAppend.cs" />
-    <Compile Include="Transformers\TrTableJoin.cs" />
-    <Compile Include="Transformers\TrMultipolygonToPolygon.cs" />
-    <Compile Include="UnequalField.cs" />
-    <Compile Include="UniqueStringsConstraint.cs" />
-    <Compile Include="VersionSpecification.cs" />
-    <Compile Include="VertexCoincidenceChecker.cs" />
-    <Compile Include="WksPointVas.cs" />
-    <Compile Include="ZComparisonMethod.cs" />
-    <Compile Include="ZDifferenceStrategy.cs" />
-    <Compile Include="ZDifferenceStrategyBoundingBox.cs" />
-    <Compile Include="ZDifferenceStrategyFactory.cs" />
-    <Compile Include="ZDifferenceStrategyIntersectionPoints.cs" />
-    <Compile Include="ZMonotonicitySequence.cs" />
-    <Compile Include="ZOffsetConstraint.cs" />
-    <Compile Include="ZRangeErrorSegments.cs" />
-    <Compile Include="ZRangeRelation.cs" />
-    <Compile Include="ZRangeUtils.cs" />
   </ItemGroup>
+
   <ItemGroup>
-    <EmbeddedResource Include="Documentation\DocStrings.resx">
+    <EmbeddedResource Update="Documentation\DocIfStrings.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>DocIfStrings.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Documentation\DocStrings.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>DocStrings.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="IssueCodes\IssueCodeDescriptions.de-CH.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>IssueCodeDescriptions.de-CH.Designer.cs</LastGenOutput>
+    <EmbeddedResource Update="Documentation\DocTrStrings.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>DocTrStrings.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <EmbeddedResource Include="IssueCodes\IssueCodeDescriptions.de.resx">
+    <EmbeddedResource Update="IssueCodes\IssueCodeDescriptions.de.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>IssueCodeDescriptions.de.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="IssueCodes\IssueCodeDescriptions.resx">
+    <EmbeddedResource Update="IssueCodes\IssueCodeDescriptions.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>IssueCodeDescriptions.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Properties\LocalizableStrings.de.resx" />
-    <EmbeddedResource Include="Properties\LocalizableStrings.resx">
+    <EmbeddedResource Update="Properties\LocalizableStrings.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>LocalizableStrings.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
   </ItemGroup>
+
   <ItemGroup>
-    <ProjectReference Include="..\..\..\ProSuite\src\ProSuite.Commons.AO\ProSuite.Commons.AO.csproj">
-      <Project>{7E4B0861-83ED-4D12-BE27-93C9053C88CA}</Project>
-      <Name>ProSuite.Commons.AO</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\ProSuite\src\ProSuite.Commons.Logging\ProSuite.Commons.Logging.csproj">
-      <Project>{A227D52C-0536-498F-ACF2-2A5A67C3D9FF}</Project>
-      <Name>ProSuite.Commons.Logging</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\ProSuite\src\ProSuite.Commons\ProSuite.Commons.csproj">
-      <Project>{66E5D99B-26AB-4FFF-834D-D96347DF4FA4}</Project>
-      <Name>ProSuite.Commons</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\ProSuite\src\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj">
-      <Project>{384763D9-F7A1-4AA2-9ABD-EE338CD8D4C1}</Project>
-      <Name>ProSuite.Commons.Essentials</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\ProSuite\src\ProSuite.QA.Core\ProSuite.QA.Core.csproj">
-      <Project>{01CBBA9E-0D4D-439F-9147-6A5685884A65}</Project>
-      <Name>ProSuite.QA.Core</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\ProSuite\src\ProSuite.QA.Container\ProSuite.QA.Container.csproj">
-      <Project>{D51693C1-F9F6-425D-8CD6-8DFBF5A52F6F}</Project>
-      <Name>ProSuite.QA.Container</Name>
-    </ProjectReference>
+    <ProjectReference Include="..\..\..\ProSuite\src\ProSuite.Commons.AO\ProSuite.Commons.AO.csproj" />
+    <ProjectReference Include="..\..\..\ProSuite\src\ProSuite.Commons.Logging\ProSuite.Commons.Logging.csproj" />
+    <ProjectReference Include="..\..\..\ProSuite\src\ProSuite.Commons\ProSuite.Commons.csproj" />
+    <ProjectReference Include="..\..\..\ProSuite\src\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj" />
+    <ProjectReference Include="..\..\..\ProSuite\src\ProSuite.QA.Core\ProSuite.QA.Core.csproj" />
+    <ProjectReference Include="..\..\..\ProSuite\src\ProSuite.QA.Container\ProSuite.QA.Container.csproj" />
   </ItemGroup>
+
   <ItemGroup>
     <None Include="Documentation\de\EsriCH.QA.Tests.QuickReference_de.pdf" />
     <None Include="Documentation\en\EsriCH.QA.Tests.QuickReference_en.pdf" />
@@ -459,6 +143,4 @@
     <None Include="Documentation\Extended\de\QaNodeLineCoincidence.docx" />
     <None Include="Documentation\Extended\de\QaNodeLineCoincidence.pdf" />
   </ItemGroup>
-  <ItemGroup />
-  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -101,20 +101,27 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 
 		private void _numericUpDown_ValueChanged(object sender, EventArgs e)
 		{
+			// Important when initializing the control: Update number displays even if check box is
+			// not changed. Otherwise on .net 6 the check box will be displayed in the wrong location.
+			UpdateNumberControlsVisibility(_checkBoxNull.Checked);
+
 			OnValueChanged(EventArgs.Empty);
 		}
 
 		private void _checkBoxNull_CheckedChanged(object sender, EventArgs e)
 		{
-			bool isNull = _checkBoxNull.Checked;
+			UpdateNumberControlsVisibility(_checkBoxNull.Checked);
 
+			OnValueChanged(EventArgs.Empty);
+		}
+
+		private void UpdateNumberControlsVisibility(bool isNull)
+		{
 			_numericUpDown.Enabled = ! isNull;
 			_numericUpDown.Visible = ! isNull;
 
 			_textBoxNull.Enabled = isNull;
 			_textBoxNull.Visible = isNull;
-
-			OnValueChanged(EventArgs.Empty);
 		}
 
 		private void _numericUpDown_KeyDown(object sender, KeyEventArgs e)

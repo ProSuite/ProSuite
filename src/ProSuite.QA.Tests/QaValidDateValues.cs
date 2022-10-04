@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.Commons.AO.Geodatabase;
@@ -11,6 +10,8 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Globalization;
 using ProSuite.Commons.Text;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
 {
@@ -44,7 +45,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaValidDateValues_0))]
 		public QaValidDateValues(
 			[Doc(nameof(DocStrings.QaValidDateValues_table))] [NotNull]
-			ITable table,
+			IReadOnlyTable table,
 			[Doc(nameof(DocStrings.QaValidDateValues_minimumDateValue))]
 			DateTime minimumDateValue,
 			[Doc(nameof(DocStrings.QaValidDateValues_maximumDateValue))]
@@ -54,7 +55,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaValidDateValues_1))]
 		public QaValidDateValues(
 			[Doc(nameof(DocStrings.QaValidDateValues_table))] [NotNull]
-			ITable table,
+			IReadOnlyTable table,
 			[Doc(nameof(DocStrings.QaValidDateValues_minimumDateValue))]
 			DateTime minimumDateValue,
 			[Doc(nameof(DocStrings.QaValidDateValues_maximumDateValue))]
@@ -76,7 +77,7 @@ namespace ProSuite.QA.Tests
 				{
 					throw new ArgumentException(
 						string.Format("Date field not found in table {0}: {1}",
-						              DatasetUtils.GetName(table), dateFieldName),
+						              table.Name, dateFieldName),
 						nameof(dateFieldNames));
 				}
 
@@ -87,7 +88,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaValidDateValues_2))]
 		public QaValidDateValues(
 			[Doc(nameof(DocStrings.QaValidDateValues_table))] [NotNull]
-			ITable table,
+			IReadOnlyTable table,
 			[Doc(nameof(DocStrings.QaValidDateValues_minimumDateValue))]
 			DateTime minimumDateValue,
 			[Doc(nameof(DocStrings.QaValidDateValues_maximumDateValue))]
@@ -101,7 +102,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaValidDateValues_3))]
 		public QaValidDateValues(
 			[Doc(nameof(DocStrings.QaValidDateValues_table))] [NotNull]
-			ITable table,
+			IReadOnlyTable table,
 			[Doc(nameof(DocStrings.QaValidDateValues_minimumDateValue))]
 			DateTime minimumDateValue,
 			[Doc(nameof(DocStrings.QaValidDateValues_maximumDateTimeRelativeToNow))] [CanBeNull]
@@ -114,7 +115,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaValidDateValues_4))]
 		public QaValidDateValues(
 			[Doc(nameof(DocStrings.QaValidDateValues_table))] [NotNull]
-			ITable table,
+			IReadOnlyTable table,
 			[Doc(nameof(DocStrings.QaValidDateValues_minimumDateValue))]
 			DateTime minimumDateValue,
 			[Doc(nameof(DocStrings.QaValidDateValues_maximumDateTimeRelativeToNow))] [CanBeNull]
@@ -131,7 +132,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaValidDateValues_5))]
 		public QaValidDateValues(
 			[Doc(nameof(DocStrings.QaValidDateValues_table))] [NotNull]
-			ITable table,
+			IReadOnlyTable table,
 			[Doc(nameof(DocStrings.QaValidDateValues_minimumDateTimeRelativeToNow))] [CanBeNull]
 			string
 				minimumDateTimeRelativeToNow,
@@ -148,7 +149,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaValidDateValues_6))]
 		public QaValidDateValues(
 			[Doc(nameof(DocStrings.QaValidDateValues_table))] [NotNull]
-			ITable table,
+			IReadOnlyTable table,
 			[Doc(nameof(DocStrings.QaValidDateValues_minimumDateTimeRelativeToNow))] [CanBeNull]
 			string
 				minimumDateTimeRelativeToNow,
@@ -178,13 +179,13 @@ namespace ProSuite.QA.Tests
 			return false;
 		}
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
 			var errorCount = 0;
 
 			foreach (int dateFieldIndex in _dateFieldIndices)
 			{
-				object dateValue = row.Value[dateFieldIndex];
+				object dateValue = row.get_Value(dateFieldIndex);
 
 				if (dateValue == null || dateValue is DBNull)
 				{
@@ -204,9 +205,9 @@ namespace ProSuite.QA.Tests
 						TestUtils.GetFieldDisplayName(row, dateFieldIndex, out fieldName),
 						dateValue, e.Message);
 
-					errorCount += ReportError(description, TestUtils.GetShapeCopy(row),
-					                          Codes[Code.UnrecognizedDateValue], fieldName,
-					                          row);
+					errorCount += ReportError(
+						description, InvolvedRowUtils.GetInvolvedRows(row),
+						TestUtils.GetShapeCopy(row), Codes[Code.UnrecognizedDateValue], fieldName);
 					continue;
 				}
 
@@ -218,9 +219,10 @@ namespace ProSuite.QA.Tests
 						TestUtils.GetFieldDisplayName(row, dateFieldIndex, out fieldName),
 						_minimumDateValue);
 
-					errorCount += ReportError(description, TestUtils.GetShapeCopy(row),
-					                          Codes[Code.ValueBeforeEarliestValidDate], fieldName,
-					                          row);
+					errorCount += ReportError(
+						description, InvolvedRowUtils.GetInvolvedRows(row),
+						TestUtils.GetShapeCopy(row), Codes[Code.ValueBeforeEarliestValidDate],
+						fieldName);
 				}
 				else if (dateTime > _maximumDateValue)
 				{
@@ -230,9 +232,10 @@ namespace ProSuite.QA.Tests
 						TestUtils.GetFieldDisplayName(row, dateFieldIndex, out fieldName),
 						_maximumDateValue);
 
-					errorCount += ReportError(description, TestUtils.GetShapeCopy(row),
-					                          Codes[Code.ValueAfterLatestValidDate], fieldName,
-					                          row);
+					errorCount += ReportError(
+						description, InvolvedRowUtils.GetInvolvedRows(row),
+						TestUtils.GetShapeCopy(row), Codes[Code.ValueAfterLatestValidDate],
+						fieldName);
 				}
 			}
 
@@ -262,11 +265,11 @@ namespace ProSuite.QA.Tests
 		}
 
 		[NotNull]
-		private static IEnumerable<string> GetAllDateFieldNames([NotNull] ITable table)
+		private static IEnumerable<string> GetAllDateFieldNames([NotNull] IReadOnlyTable table)
 		{
 			var result = new List<string>();
 
-			foreach (IField field in DatasetUtils.GetFields(table))
+			foreach (IField field in DatasetUtils.GetFields(table.Fields))
 			{
 				if (field.Type == esriFieldType.esriFieldTypeDate)
 				{

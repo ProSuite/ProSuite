@@ -211,7 +211,7 @@ namespace ProSuite.QA.Tests.Test
 			const string fkTable = "fkTable";
 			IFeatureClass fc1 = CreateLineClass(
 				testWs, "Fc1_" + Environment.TickCount,
-				new List<IField> {FieldUtils.CreateIntegerField(fkTable)});
+				new List<IField> { FieldUtils.CreateIntegerField(fkTable) });
 			IFeatureClass fc2 = CreateLineClass(testWs, "Fc2_" + Environment.TickCount);
 
 			var ds1 = (IDataset) fc1;
@@ -224,7 +224,7 @@ namespace ProSuite.QA.Tests.Test
 
 			string relTableName = "Rel_" + ds1.Name;
 			ITable relTable = TestWorkspaceUtils.CreateSimpleTable(testWs, relTableName,
-			                                                       fields);
+				fields);
 
 			var dsRel = (IDataset) relTable;
 
@@ -234,13 +234,13 @@ namespace ProSuite.QA.Tests.Test
 
 			((IWorkspaceEdit) testWs).StartEditing(false);
 
-			IRow r1 = AddRow(relTable, new object[] {12});
-			IRow r2 = AddRow(relTable, new object[] {14});
+			IRow r1 = AddRow(relTable, new object[] { 12 });
+			IRow r2 = AddRow(relTable, new object[] { 14 });
 
 			IFeature f11 = AddFeature(
-				fc1, CurveConstruction.StartLine(0, 0).LineTo(4, 0).Curve, new object[] {r1.OID});
+				fc1, CurveConstruction.StartLine(0, 0).LineTo(4, 0).Curve, new object[] { r1.OID });
 			IFeature f12 = AddFeature(
-				fc1, CurveConstruction.StartLine(0, 0).LineTo(4, 0).Curve, new object[] {r2.OID});
+				fc1, CurveConstruction.StartLine(0, 0).LineTo(4, 0).Curve, new object[] { r2.OID });
 			IFeature f2 = AddFeature(fc2, CurveConstruction.StartLine(10, 1).LineTo(14, 1).Curve);
 
 			((IWorkspaceEdit) testWs).StopEditing(true);
@@ -281,8 +281,10 @@ namespace ProSuite.QA.Tests.Test
 			double tileSize,
 			double maximumDistance)
 		{
-			var test = new QaMustBeNearOther(featureClass, new[] {featureClass},
-			                                 maximumDistance, null);
+			var test = new QaMustBeNearOther(
+				ReadOnlyTableFactory.Create(featureClass),
+				new[] { ReadOnlyTableFactory.Create(featureClass) },
+				maximumDistance, null);
 			var runner = new QaContainerTestRunner(tileSize, test);
 
 			test.ErrorDistanceFormat = "{0:N2} m";
@@ -297,8 +299,10 @@ namespace ProSuite.QA.Tests.Test
 			double tileSize,
 			double maximumDistance)
 		{
-			var test = new QaMustBeNearOther(featureClass, new[] {nearClass},
-			                                 maximumDistance, null);
+			var test = new QaMustBeNearOther(
+				ReadOnlyTableFactory.Create(featureClass),
+				new[] { ReadOnlyTableFactory.Create(nearClass) },
+				maximumDistance, null);
 			var runner = new QaContainerTestRunner(tileSize, test);
 
 			test.ErrorDistanceFormat = "{0:N2} m";

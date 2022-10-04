@@ -32,7 +32,12 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 {
 	/// <summary>
 	/// Standalone (i.e. non-DDX dependent) verification service based on a xml specification or
-	/// based on a list of conditions (defined via xml).
+	/// based on a list of conditions (defined via xml). This service supports the exception-Gdb
+	/// mechanism. This class is currently named after the (legacy) XML-based GP Tool because it
+	/// provides the its functionality.
+	/// TODO: Rename to Standalone/UnRegisteredModelVerification or something like this
+	/// TODO: Report Errors, probably progress messages back via events to allow for error-streaming
+	/// TODO: Report final (probably simplified statistics) to be delivered to client.
 	/// </summary>
 	public class XmlBasedVerificationService
 	{
@@ -48,6 +53,8 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			_htmlReportTemplatePath = htmlReportTemplatePath;
 			_qualitySpecificationTemplatePath = qualitySpecificationTemplatePath;
 		}
+
+		public event EventHandler<IssueFoundEventArgs> IssueFound;
 
 		public QualitySpecification SetupQualitySpecification(
 			[NotNull] string dataQualityXml,
@@ -111,7 +118,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 				VerificationOptionUtils.GetIssueWorkspaceName(verificationOptions);
 
 			if (ExternalIssueRepositoryUtils.IssueRepositoryExists(
-				outputDirectoryPath, issueWorkspaceName, issueRepositoryType))
+				    outputDirectoryPath, issueWorkspaceName, issueRepositoryType))
 			{
 				_msg.WarnFormat("The {0} workspace '{1}' in {2} already exists",
 				                issueRepositoryType, issueWorkspaceName, outputDirectoryPath);
@@ -238,6 +245,8 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 				                       datasetsCollector),
 				(context) => new SimpleDatasetOpener(context));
 
+			service.IssueFound += (sender, args) => IssueFound?.Invoke(this, args);
+
 			// This context excludes geometric networks, terrains, topology, etc.:
 			var datasetContext = new MasterDatabaseDatasetContext();
 			var datasetResolver =
@@ -268,9 +277,9 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 					verificationOptions);
 
 			using (IIssueRepository issueRepository =
-				ExternalIssueRepositoryUtils.GetIssueRepository(
-					directory, issueWorkspaceName, spatialReference, issueRepositoryType,
-					addExceptionFields: true))
+			       ExternalIssueRepositoryUtils.GetIssueRepository(
+				       directory, issueWorkspaceName, spatialReference, issueRepositoryType,
+				       addExceptionFields: true))
 			{
 				fulfilled = service.Verify(qualitySpecification, datasetContext, datasetResolver,
 				                           issueRepository, exceptionObjectRepository, tileSize,

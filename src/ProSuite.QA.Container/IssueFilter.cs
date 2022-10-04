@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.QA.Container
@@ -8,7 +8,7 @@ namespace ProSuite.QA.Container
 	{
 		public string Name { get; set; }
 
-		protected IssueFilter([NotNull] IEnumerable<ITable> tables)
+		protected IssueFilter([NotNull] IEnumerable<IReadOnlyTable> tables)
 			: base(tables) { }
 
 		public abstract bool Check(QaErrorEventArgs error);

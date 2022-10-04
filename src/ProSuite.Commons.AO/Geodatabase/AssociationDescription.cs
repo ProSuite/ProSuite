@@ -1,24 +1,26 @@
-using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AO.Geodatabase
 {
 	public abstract class AssociationDescription
 	{
-		private readonly ITable _table1;
-		private readonly ITable _table2;
-
-		protected AssociationDescription([NotNull] ITable table1,
-		                                 [NotNull] ITable table2)
+		protected AssociationDescription([NotNull] IReadOnlyTable table1,
+		                                 [NotNull] IReadOnlyTable table2)
 		{
-			_table1 = table1;
-			_table2 = table2;
+			Table1 = table1;
+			Table2 = table2;
 		}
 
+		/// <summary>
+		/// The 'left' table in the join.
+		/// </summary>
 		[NotNull]
-		public ITable Table1 => _table1;
+		public IReadOnlyTable Table1 { get; set; }
 
+		/// <summary>
+		/// The 'right' table in the join.
+		/// </summary>
 		[NotNull]
-		public ITable Table2 => _table2;
+		public IReadOnlyTable Table2 { get; set; }
 	}
 }

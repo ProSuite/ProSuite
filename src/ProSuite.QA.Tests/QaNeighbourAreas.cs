@@ -4,7 +4,6 @@ using System.Text;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
@@ -13,7 +12,8 @@ using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
-using ProSuite.QA.Core;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
 {
@@ -26,15 +26,13 @@ namespace ProSuite.QA.Tests
 	public class QaNeighbourAreas : ContainerTest
 	{
 		private readonly string _constraint;
-		private readonly IFeatureClass _polygonClass;
+		private readonly IReadOnlyFeatureClass _polygonClass;
 		private readonly bool _allowPointIntersection;
 		private readonly List<int> _compareFieldIndexes;
 		private MultiTableView _compareHelper;
 		private QueryFilterHelper _selectHelper;
 		private ISpatialFilter _spatialFilter;
 		private string _comparedFieldsString;
-
-		[CanBeNull] private ContainsPostProcessor _ignoreAreaProcessor;
 
 		#region issue codes
 
@@ -64,7 +62,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaNeighbourAreas_0))]
 		public QaNeighbourAreas(
 				[Doc(nameof(DocStrings.QaNeighbourAreas_polygonClass))] [NotNull]
-				IFeatureClass polygonClass,
+				IReadOnlyFeatureClass polygonClass,
 				[Doc(nameof(DocStrings.QaNeighbourAreas_constraint))] [CanBeNull]
 				string constraint)
 			// ReSharper disable once IntroduceOptionalParameters.Global
@@ -73,12 +71,12 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaNeighbourAreas_1))]
 		public QaNeighbourAreas(
 			[Doc(nameof(DocStrings.QaNeighbourAreas_polygonClass))] [NotNull]
-			IFeatureClass polygonClass,
+			IReadOnlyFeatureClass polygonClass,
 			[Doc(nameof(DocStrings.QaNeighbourAreas_constraint))] [CanBeNull]
 			string constraint,
 			[Doc(nameof(DocStrings.QaNeighbourAreas_allowPointIntersection))]
 			bool allowPointIntersection)
-			: base((ITable) polygonClass)
+			: base(polygonClass)
 		{
 			_constraint = StringUtils.IsNotEmpty(constraint)
 				              ? constraint
@@ -89,7 +87,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaNeighbourAreas_2))]
 		public QaNeighbourAreas(
 			[Doc(nameof(DocStrings.QaNeighbourAreas_polygonClass))] [NotNull]
-			IFeatureClass polygonClass,
+			IReadOnlyFeatureClass polygonClass,
 			[Doc(nameof(DocStrings.QaNeighbourAreas_allowPointIntersection))]
 			bool allowPointIntersection)
 			: this(polygonClass, allowPointIntersection, new List<string>(),
@@ -98,7 +96,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaNeighbourAreas_3))]
 		public QaNeighbourAreas(
 			[Doc(nameof(DocStrings.QaNeighbourAreas_polygonClass))] [NotNull]
-			IFeatureClass polygonClass,
+			IReadOnlyFeatureClass polygonClass,
 			[Doc(nameof(DocStrings.QaNeighbourAreas_allowPointIntersection))]
 			bool allowPointIntersection,
 			[Doc(nameof(DocStrings.QaNeighbourAreas_fieldsString))] [CanBeNull]
@@ -112,14 +110,14 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaNeighbourAreas_4))]
 		public QaNeighbourAreas(
 			[Doc(nameof(DocStrings.QaNeighbourAreas_polygonClass))] [NotNull]
-			IFeatureClass polygonClass,
+			IReadOnlyFeatureClass polygonClass,
 			[Doc(nameof(DocStrings.QaNeighbourAreas_allowPointIntersection))]
 			bool allowPointIntersection,
 			[Doc(nameof(DocStrings.QaNeighbourAreas_fields))] [NotNull]
 			IEnumerable<string> fields,
 			[Doc(nameof(DocStrings.QaNeighbourAreas_fieldListType))]
 			FieldListType fieldListType)
-			: base((ITable) polygonClass)
+			: base(polygonClass)
 		{
 			Assert.ArgumentNotNull(polygonClass, nameof(polygonClass));
 			Assert.ArgumentNotNull(fields, nameof(fields));
@@ -133,20 +131,7 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[TestParameter]
-		[Doc(nameof(DocStrings.QaNeighbourAreas_IgnoreArea))]
-		public IFeatureClass IgnoreArea
-		{
-			get { return _ignoreAreaProcessor?.FeatureClass; }
-			set
-			{
-				_ignoreAreaProcessor?.Dispose();
-				_ignoreAreaProcessor =
-					value != null ? new ContainsPostProcessor(this, value) : null;
-			}
-		}
-
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
 			if (_spatialFilter == null)
 			{
@@ -155,7 +140,7 @@ namespace ProSuite.QA.Tests
 			}
 
 			// configure filter to find crossing "row"
-			IGeometry shape = ((IFeature) row).Shape;
+			IGeometry shape = ((IReadOnlyFeature) row).Shape;
 			_spatialFilter.Geometry = shape;
 
 			// optimize query if tests runs "directed"
@@ -165,18 +150,18 @@ namespace ProSuite.QA.Tests
 
 			var errorCount = 0;
 
-			ITable table = InvolvedTables[0];
-			foreach (IRow touchingRow in Search(table, _spatialFilter, _selectHelper))
+			IReadOnlyTable table = InvolvedTables[0];
+			foreach (IReadOnlyRow touchingRow in Search(table, _spatialFilter, _selectHelper))
 			{
-				errorCount += CheckRows(row, shape, (IFeature) touchingRow);
+				errorCount += CheckRows(row, shape, (IReadOnlyFeature) touchingRow);
 			}
 
 			return errorCount;
 		}
 
-		private int CheckRows([NotNull] IRow row,
+		private int CheckRows([NotNull] IReadOnlyRow row,
 		                      [NotNull] IGeometry shape,
-		                      [NotNull] IFeature touchingFeature)
+		                      [NotNull] IReadOnlyFeature touchingFeature)
 		{
 			if (_compareHelper != null)
 			{
@@ -189,7 +174,7 @@ namespace ProSuite.QA.Tests
 			{
 				foreach (int fieldIndex in _compareFieldIndexes)
 				{
-					if (! Equals(row.Value[fieldIndex], touchingFeature.Value[fieldIndex]))
+					if (! Equals(row.get_Value(fieldIndex), touchingFeature.get_Value(fieldIndex)))
 					{
 						// different field value -> area boundary is justified
 						return NoError;
@@ -205,14 +190,14 @@ namespace ProSuite.QA.Tests
 			}
 
 			IssueCode issueCode;
-			return ReportError(GetErrorDescription(row, touchingFeature, out issueCode),
-			                   errorGeometry,
-			                   issueCode, null,
-			                   row, touchingFeature);
+			return ReportError(
+				GetErrorDescription(row, touchingFeature, out issueCode),
+				InvolvedRowUtils.GetInvolvedRows(row, touchingFeature), errorGeometry,
+				issueCode, null);
 		}
 
 		[NotNull]
-		private string GetErrorDescription([NotNull] IRow row, [NotNull] IRow touchingRow,
+		private string GetErrorDescription([NotNull] IReadOnlyRow row, [NotNull] IReadOnlyRow touchingRow,
 		                                   out IssueCode issueCode)
 		{
 			if (_compareHelper != null)
@@ -251,7 +236,7 @@ namespace ProSuite.QA.Tests
 
 		[CanBeNull]
 		private IGeometry GetErrorGeometry([NotNull] IGeometry shape,
-		                                   [NotNull] IFeature touchingFeature)
+		                                   [NotNull] IReadOnlyFeature touchingFeature)
 		{
 			var shapeTopoOp = (ITopologicalOperator) shape;
 
@@ -306,7 +291,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[NotNull]
-		private static string GetCompareFieldsString([NotNull] IObjectClass objectClass,
+		private static string GetCompareFieldsString([NotNull] IReadOnlyTable objectClass,
 		                                             [NotNull] IEnumerable<int> fieldIndexes)
 		{
 			var sb = new StringBuilder();
@@ -345,7 +330,7 @@ namespace ProSuite.QA.Tests
 
 		[NotNull]
 		private static IEnumerable<int> GetCompareFieldIndexes(
-			[NotNull] IObjectClass objectClass,
+			[NotNull] IReadOnlyTable objectClass,
 			[NotNull] IEnumerable<string> fieldNames,
 			FieldListType fieldListType)
 		{
@@ -365,14 +350,14 @@ namespace ProSuite.QA.Tests
 
 		[NotNull]
 		private static IEnumerable<int> GetCompareFieldIndexesFromIgnoredFieldNames(
-			[NotNull] IObjectClass objectClass,
+			[NotNull] IReadOnlyTable objectClass,
 			[NotNull] IEnumerable<string> ignoredFieldNames)
 		{
 			var ignoredFields = new SimpleSet<string>(
 				ignoredFieldNames, StringComparer.InvariantCultureIgnoreCase);
 
 			var fieldIndex = 0;
-			foreach (IField field in DatasetUtils.GetFields(objectClass))
+			foreach (IField field in DatasetUtils.GetFields(objectClass.Fields))
 			{
 				if (field.Editable &&
 				    IsSupportedCompareFieldType(field.Type) &&
@@ -387,7 +372,7 @@ namespace ProSuite.QA.Tests
 
 		[NotNull]
 		private static IEnumerable<int> GetCompareFieldIndexes(
-			[NotNull] IObjectClass objectClass,
+			[NotNull] IReadOnlyTable objectClass,
 			[NotNull] IEnumerable<string> fieldNames)
 		{
 			IFields fields = objectClass.Fields;
@@ -396,7 +381,7 @@ namespace ProSuite.QA.Tests
 				int index = objectClass.FindField(fieldName);
 				Assert.ArgumentCondition(index >= 0,
 				                         "Field {0} not found in {1}", fieldName,
-				                         DatasetUtils.GetName(objectClass));
+				                         objectClass.Name);
 
 				IField field = fields.Field[index];
 

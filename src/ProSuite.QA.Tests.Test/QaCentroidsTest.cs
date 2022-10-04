@@ -54,7 +54,8 @@ namespace ProSuite.QA.Tests.Test
 
 			// expect counter-clockwise: 0 errors
 			var runner = new QaContainerTestRunner(
-				1000, new QaCentroids(linesFc, pointsFc));
+				1000, new QaCentroids(ReadOnlyTableFactory.Create(linesFc),
+				                      ReadOnlyTableFactory.Create(pointsFc)));
 			Assert.AreEqual(1, runner.Execute());
 		}
 
@@ -66,7 +67,8 @@ namespace ProSuite.QA.Tests.Test
 				TestDataUtils.OpenFileGdb("V200_admin.gdb");
 			IFeatureClass border = ws.OpenFeatureClass("VEC200_COM_BOUNDARY");
 			IFeatureClass center = ws.OpenFeatureClass("VEC200_COM_ZENTROID");
-			var test = new QaCentroids(border, center);
+			var test = new QaCentroids(ReadOnlyTableFactory.Create(border),
+			                           ReadOnlyTableFactory.Create(center));
 
 			var container = new TestContainer();
 			container.AddTest(test);

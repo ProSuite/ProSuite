@@ -2,15 +2,16 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Core;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
 {
@@ -52,8 +53,8 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaCurve_0))]
 		public QaCurve([Doc(nameof(DocStrings.QaCurve_featureClass))] [NotNull]
-		               IFeatureClass featureClass)
-			: base((ITable) featureClass)
+					   IReadOnlyFeatureClass featureClass)
+			: base(featureClass)
 		{
 			_shapeFieldName = featureClass.ShapeFieldName;
 		}
@@ -76,9 +77,9 @@ namespace ProSuite.QA.Tests
 			return false;
 		}
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
-			var feature = row as IFeature;
+			var feature = row as IReadOnlyFeature;
 			if (feature == null)
 			{
 				return NoError;
@@ -136,7 +137,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		private int ReportCurveSegments([NotNull] ISegmentCollection segments,
-		                                [NotNull] IRow row,
+		                                [NotNull] IReadOnlyRow row,
 		                                [CanBeNull] ISpatialReference spatialReference)
 		{
 			var errorCount = 0;
@@ -256,7 +257,7 @@ namespace ProSuite.QA.Tests
 				nonLinearSegmentType => nonLinearSegmentType == segmentType.Type);
 		}
 
-		private int ReportError([NotNull] IRow row,
+		private int ReportError([NotNull] IReadOnlyRow row,
 		                        [NotNull] IPolyline consecutiveErrorSegments)
 		{
 			var segments = (ISegmentCollection) consecutiveErrorSegments;
@@ -293,9 +294,9 @@ namespace ProSuite.QA.Tests
 			// polyline to become empty (short segments)
 			IGeometry errorGeometry = GetErrorGeometry(consecutiveErrorSegments);
 
-			return ReportError(description, errorGeometry,
-			                   Codes[issueCode], _shapeFieldName,
-			                   row);
+			return ReportError(
+				description, InvolvedRowUtils.GetInvolvedRows(row), errorGeometry,
+				Codes[issueCode], _shapeFieldName);
 		}
 
 		[NotNull]

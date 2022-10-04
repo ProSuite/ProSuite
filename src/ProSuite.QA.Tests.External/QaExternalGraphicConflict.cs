@@ -1,5 +1,5 @@
 using System.Globalization;
-using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Microservices.Definitions.QA.Test;
 using ProSuite.QA.Tests.Documentation;
 
@@ -16,11 +16,11 @@ namespace ProSuite.QA.Tests.External
 		[Doc(nameof(DocStrings.QaGraphicConflict_0))]
 		public QaExternalGraphicConflict(
 			[Doc(nameof(DocStrings.QaGraphicConflict_featureClass))]
-			IFeatureClass featureClass,
+			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaGraphicConflict_layerRepresentation))]
 			string layerFile,
 			[Doc(nameof(DocStrings.QaGraphicConflict_conflictClass))]
-			IFeatureClass conflictClass,
+			IReadOnlyFeatureClass conflictClass,
 			[Doc(nameof(DocStrings.QaGraphicConflict_conflictLayer))]
 			string conflictLayerFile,
 			[Doc(nameof(DocStrings.QaGraphicConflict_conflictDistance))]
@@ -30,7 +30,7 @@ namespace ProSuite.QA.Tests.External
 			[Doc(nameof(DocStrings.QaGraphicConflict_referenceScale))]
 			double referenceScale,
 			string connectionUrl)
-			: base(new[] {(ITable) featureClass, (ITable) conflictClass},
+			: base(new[] {featureClass, conflictClass},
 			       connectionUrl)
 		{
 			_layerFile = layerFile;

@@ -59,7 +59,9 @@ namespace ProSuite.QA.Tests.Test
 
 			((IWorkspaceEdit) _testWs).StopEditing(true);
 
-			var test = new QaMpVertexNotNearFace(fc, new[] {fc}, 1, 0.2)
+			var test = new QaMpVertexNotNearFace(
+				           ReadOnlyTableFactory.Create(fc),
+				           new[] { ReadOnlyTableFactory.Create(fc) }, 1, 0.2)
 			           {
 				           VerifyWithinFeature = false,
 				           MinimumSlopeDegrees = 30
@@ -96,7 +98,9 @@ namespace ProSuite.QA.Tests.Test
 
 			((IWorkspaceEdit) _testWs).StopEditing(true);
 
-			var test = new QaMpVertexNotNearFace(fc, new[] {fc}, 0.2, 0)
+			var test = new QaMpVertexNotNearFace(
+				           ReadOnlyTableFactory.Create(fc),
+				           new[] { ReadOnlyTableFactory.Create(fc) }, 0.2, 0)
 			           {
 				           VerifyWithinFeature = false,
 				           MinimumSlopeDegrees = 0
@@ -133,7 +137,9 @@ namespace ProSuite.QA.Tests.Test
 
 			((IWorkspaceEdit) _testWs).StopEditing(true);
 
-			var test = new QaMpVertexNotNearFace(fc, new[] {fc}, 0.2, 0)
+			var test = new QaMpVertexNotNearFace(
+				           ReadOnlyTableFactory.Create(fc),
+				           new[] { ReadOnlyTableFactory.Create(fc) }, 0.2, 0)
 			           {
 				           VerifyWithinFeature = false,
 				           MinimumSlopeDegrees = 0
@@ -170,7 +176,9 @@ namespace ProSuite.QA.Tests.Test
 
 			((IWorkspaceEdit) _testWs).StopEditing(true);
 
-			var test = new QaMpVertexNotNearFace(fc, new[] {fc}, 0, 0.2)
+			var test = new QaMpVertexNotNearFace(
+				           ReadOnlyTableFactory.Create(fc),
+				           new[] { ReadOnlyTableFactory.Create(fc) }, 0, 0.2)
 			           {
 				           VerifyWithinFeature = true,
 				           MinimumSlopeDegrees = 0
@@ -207,7 +215,9 @@ namespace ProSuite.QA.Tests.Test
 
 			((IWorkspaceEdit) _testWs).StopEditing(true);
 
-			var test = new QaMpVertexNotNearFace(fc, new[] {fc}, 0, 0.2)
+			var test = new QaMpVertexNotNearFace(
+				           ReadOnlyTableFactory.Create(fc),
+				           new[] { ReadOnlyTableFactory.Create(fc) }, 0, 0.2)
 			           {
 				           VerifyWithinFeature = true,
 				           MinimumSlopeDegrees = 0
@@ -252,7 +262,8 @@ namespace ProSuite.QA.Tests.Test
 					"TOPGIS_TLM.TLM_GEBAEUDE");
 
 			var test = new QaMpVertexNotNearFace(
-				gebaeude, new[] {gebaeude}, 1, 0.2);
+				ReadOnlyTableFactory.Create(gebaeude),
+				new[] { ReadOnlyTableFactory.Create(gebaeude) }, 1, 0.2);
 			test.VerifyWithinFeature = true;
 			test.PointCoincidence = 0.1;
 			test.EdgeCoincidence = 0.1;

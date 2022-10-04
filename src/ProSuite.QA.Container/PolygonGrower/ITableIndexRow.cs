@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.QA.Container.PolygonGrower
@@ -11,9 +11,9 @@ namespace ProSuite.QA.Container.PolygonGrower
 		int TableIndex { get; }
 
 		[NotNull]
-		IRow GetRow([NotNull] IList<ITable> tableIndexTables);
+		IReadOnlyRow GetRow([NotNull] IList<IReadOnlyTable> tableIndexTables);
 
 		[CanBeNull]
-		IRow CachedRow { get; }
+		IReadOnlyRow CachedRow { get; }
 	}
 }

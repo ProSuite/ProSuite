@@ -13,6 +13,9 @@ namespace ProSuite.Commons.Geom
 		private Box _boundingBox;
 		private readonly List<Line3D> _segments;
 
+		private bool? _isKnownClosed;
+		private double? _knownArea;
+
 		public static Linestring CreateEmpty()
 		{
 			var result = new Linestring(new List<Line3D>(0));
@@ -121,8 +124,19 @@ namespace ProSuite.Commons.Geom
 			}
 		}
 
-		public bool IsClosed => SegmentCount > 1 &&
-		                        StartPoint.Equals(EndPoint);
+		public bool IsClosed
+		{
+			get
+			{
+				if (_isKnownClosed == null)
+				{
+					_isKnownClosed = SegmentCount > 1 &&
+					                 StartPoint.Equals(EndPoint);
+				}
+
+				return _isKnownClosed.Value;
+			}
+		}
 
 		public bool? ClockwiseOriented
 		{
@@ -246,6 +260,43 @@ namespace ProSuite.Commons.Geom
 			return result;
 		}
 
+		public void Close(double tolerance = 0)
+		{
+			// double.Epsilon is not enough!
+			double epsilon = MathUtils.GetDoubleSignificanceEpsilon(StartPoint.X, StartPoint.Y);
+
+			if (StartPoint.Equals(EndPoint, epsilon))
+			{
+				// Absolutely equal
+				return;
+			}
+
+			if (StartPoint.EqualsXY(EndPoint, epsilon))
+			{
+				// Absolutely equal in XY, difference is only in Z
+				UpdatePoint(PointCount - 1, EndPoint.X, EndPoint.Y, StartPoint.Z);
+				return;
+			}
+
+			if (tolerance > double.Epsilon &&
+			    StartPoint.EqualsXY(EndPoint, tolerance))
+			{
+				// Equal within the geometry's tolerance. Do not add an extra segment,
+				// just update the current end point:
+				UpdatePoint(PointCount - 1, StartPoint.X, StartPoint.Y, StartPoint.Z);
+				return;
+			}
+
+			// Add a new segment
+			Pnt3D previousEnd = EndPoint.ClonePnt3D();
+			Pnt3D startPointClone = StartPoint.ClonePnt3D();
+			_segments.Add(new Line3D(previousEnd, startPointClone));
+
+			SpatialIndex = null;
+			_isKnownClosed = null;
+			_knownArea = null;
+		}
+
 		public void SetEmpty()
 		{
 			_segments.Clear();
@@ -257,6 +308,9 @@ namespace ProSuite.Commons.Geom
 
 			_boundingBox = null;
 			RightMostBottomIndex = -1;
+
+			_isKnownClosed = null;
+			_knownArea = null;
 
 			SpatialIndex = null;
 		}
@@ -497,6 +551,26 @@ namespace ProSuite.Commons.Geom
 
 			throw new ArgumentOutOfRangeException(nameof(distanceAlong),
 			                                      "The provided distance is outside the linestring");
+		}
+
+		public double GetDistanceAlong2D(int vertexIndex,
+		                                 int startVertexIndex = 0)
+		{
+			double result = 0;
+
+			int? segmentIndex = startVertexIndex;
+			Line3D segment = GetSegment(startVertexIndex);
+
+			while (segmentIndex != null && segmentIndex != vertexIndex)
+			{
+				segment = GetSegment(segmentIndex.Value);
+
+				result += segment.Length2D;
+
+				segmentIndex = NextSegmentIndex(segmentIndex.Value);
+			}
+
+			return result;
 		}
 
 		public IEnumerable<IPnt> AsEnumerablePoints(bool clone = false)
@@ -943,6 +1017,9 @@ namespace ProSuite.Commons.Geom
 			// TODO: To avoid grow-only bounds changes, make sure the replaced point was not an extreme point
 			//       ... if replacedPoint.X == XMax -> re-create envelope
 			UpdateBounds(newPoint, pointIndex, Segments, null);
+
+			_isKnownClosed = null;
+			_knownArea = null;
 		}
 
 		public void UpdatePoint(int pointIndex, double x, double y, double z)
@@ -1005,6 +1082,8 @@ namespace ProSuite.Commons.Geom
 
 			if (RightMostBottomIndex != 0)
 				RightMostBottomIndex = SegmentCount - RightMostBottomIndex;
+
+			_knownArea = null;
 		}
 
 		/// <summary>
@@ -1018,11 +1097,14 @@ namespace ProSuite.Commons.Geom
 		/// <param name="clonePoints"></param>
 		/// <param name="againstRingOrientation">If true, the resulting path will travel against
 		/// the segment orientation of this linestring. If the </param>
+		/// <param name="preferFullRingToZeroLength">In case the from-point equals the to-point:
+		/// Whether a the full ring should be returned or a zero-length segment.</param>
 		/// <returns></returns>
 		public Linestring GetSubcurve(int fromSegment, double fromSegmentRatio,
 		                              int toSegment, double toSegmentRatio,
 		                              bool clonePoints,
-		                              bool againstRingOrientation)
+		                              bool againstRingOrientation,
+		                              bool preferFullRingToZeroLength)
 		{
 			Assert.ArgumentCondition(fromSegmentRatio >= 0 && fromSegmentRatio <= 1.0,
 			                         "fromSegmentDistance must be >= 0 and <= 1");
@@ -1042,7 +1124,7 @@ namespace ProSuite.Commons.Geom
 
 			var result = GetSubcurve(fromSegment, fromSegmentRatio,
 			                         toSegment, toSegmentRatio,
-			                         clonePoints);
+			                         clonePoints, preferFullRingToZeroLength);
 
 			if (againstRingOrientation)
 			{
@@ -1065,7 +1147,8 @@ namespace ProSuite.Commons.Geom
 		/// <returns></returns>
 		public Linestring GetSubcurve(int fromSegment, double fromSegmentRatio,
 		                              int toSegment, double toSegmentRatio,
-		                              bool clonePoints)
+		                              bool clonePoints,
+		                              bool preferFullRingToZeroLength)
 		{
 			Line3D startSegment = _segments[fromSegment];
 
@@ -1090,6 +1173,11 @@ namespace ProSuite.Commons.Geom
 
 			double epsilon =
 				MathUtils.GetDoubleSignificanceEpsilon(startPoint.X, startPoint.Y);
+
+			if (preferFullRingToZeroLength)
+			{
+				epsilon = -epsilon;
+			}
 
 			bool fromBeforeTo = fromSegmentRatio - toSegmentRatio < epsilon;
 
@@ -1145,14 +1233,16 @@ namespace ProSuite.Commons.Geom
 			if (startSegmentIdx < SegmentCount - 1 || startRatioAlong < 1)
 			{
 				Linestring toEndSubcurve =
-					GetSubcurve(startSegmentIdx, startRatioAlong, SegmentCount - 1, 1, clonePoints);
+					GetSubcurve(startSegmentIdx, startRatioAlong, SegmentCount - 1, 1,
+					            clonePoints, false);
 
 				if (IsClosed && fullRing)
 				{
 					double epsilon = MathUtils.GetDoubleSignificanceEpsilon(XMax, YMax);
 
 					Linestring fromStartSubcurve =
-						GetSubcurve(0, 0, startSegmentIdx, startRatioAlong, clonePoints);
+						GetSubcurve(0, 0, startSegmentIdx, startRatioAlong,
+						            clonePoints, false);
 
 					return GeomTopoOpUtils.MergeConnectedLinestrings(
 						new List<Linestring> {toEndSubcurve, fromStartSubcurve}, null, epsilon);
@@ -1175,8 +1265,13 @@ namespace ProSuite.Commons.Geom
 		{
 			if (! IsClosed)
 			{
-				throw new NotImplementedException(
+				throw new InvalidOperationException(
 					"Area can only be calculated for closed linestrings.");
+			}
+
+			if (_knownArea == null)
+			{
+				_knownArea = GeomUtils.GetArea2D(GetPoints().ToList());
 			}
 
 			return GeomUtils.GetArea2D(GetPoints().ToList());
@@ -1299,6 +1394,8 @@ namespace ProSuite.Commons.Geom
 			RightMostBottomIndex = -1;
 
 			_boundingBox = null;
+			_isKnownClosed = null;
+			_knownArea = null;
 		}
 
 		public void TryOrientClockwise()

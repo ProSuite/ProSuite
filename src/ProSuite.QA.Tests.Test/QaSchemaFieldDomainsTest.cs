@@ -85,7 +85,7 @@ namespace ProSuite.QA.Tests.Test
 			IFeatureWorkspace workspace = WorkspaceUtils.OpenPgdbFeatureWorkspace(path);
 
 			ITable table = workspace.OpenTable(tableName);
-			var test = new QaSchemaFieldDomains(table);
+			var test = new QaSchemaFieldDomains(ReadOnlyTableFactory.Create(table));
 
 			var runner = new QaTestRunner(test);
 			runner.Execute();

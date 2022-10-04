@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using ESRI.ArcGIS.esriSystem;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container.Geometry;
 using ProSuite.QA.Container.TestSupport;
@@ -13,6 +12,7 @@ using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests.EdgeMatch
 {
@@ -24,7 +24,7 @@ namespace ProSuite.QA.Tests.EdgeMatch
 			return ((IRelationalOperator) geometry1).Disjoint(geometry2);
 		}
 
-		public static bool VerifyHandled([NotNull] IFeature feature,
+		public static bool VerifyHandled([NotNull] IReadOnlyFeature feature,
 		                                 WKSEnvelope tileEnvelope,
 		                                 WKSEnvelope allEnvelope)
 		{
@@ -218,8 +218,8 @@ namespace ProSuite.QA.Tests.EdgeMatch
 
 		public static IEnumerable<AttributeConstraintViolation>
 			GetAttributeConstraintViolations(
-				[NotNull] IFeature feature, int classIndex,
-				[NotNull] IFeature neighborFeature, int neighborClassIndex,
+				[NotNull] IReadOnlyFeature feature, int classIndex,
+				[NotNull] IReadOnlyFeature neighborFeature, int neighborClassIndex,
 				[NotNull] RowPairCondition rowPairCondition,
 				[NotNull] EqualFieldValuesCondition equalFieldValuesCondition,
 				bool reportIndividually = false)
@@ -339,8 +339,8 @@ namespace ProSuite.QA.Tests.EdgeMatch
 		[ContractAnnotation(
 			"=>true, affectedComponents:canbenull;=>false, affectedComponents:notnull")]
 		private static bool AreAttributeConstraintsFulfilled(
-			[NotNull] IFeature feature, int classIndex,
-			[NotNull] IFeature neighborFeature, int neighborClassIndex,
+			[NotNull] IReadOnlyFeature feature, int classIndex,
+			[NotNull] IReadOnlyFeature neighborFeature, int neighborClassIndex,
 			[NotNull] RowPairCondition rowPairCondition,
 			[NotNull] EqualFieldValuesCondition equalFieldValuesCondition,
 			[NotNull] out string errorDescription,

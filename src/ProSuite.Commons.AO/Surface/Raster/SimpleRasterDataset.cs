@@ -47,7 +47,8 @@ namespace ProSuite.Commons.AO.Surface.Raster
 
 		public IEnumerable<ISimpleRaster> GetSimpleRasters(IEnvelope envelope)
 		{
-			if (GeometryUtils.Intersects(_interpolationDomain, envelope))
+			if (envelope == null ||
+			    GeometryUtils.Intersects(_interpolationDomain, envelope))
 			{
 				yield return new SimpleAoRaster(_raster);
 			}

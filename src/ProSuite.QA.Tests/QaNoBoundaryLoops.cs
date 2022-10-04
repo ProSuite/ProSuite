@@ -3,15 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.esriSystem;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
 {
@@ -56,14 +57,14 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaNoBoundaryLoops_0))]
 		public QaNoBoundaryLoops(
 				[Doc(nameof(DocStrings.QaNoBoundaryLoops_polygonClass))] [NotNull]
-				IFeatureClass polygonClass)
+				IReadOnlyFeatureClass polygonClass)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(polygonClass, BoundaryLoopErrorGeometry.LoopPolygon) { }
 
 		[Doc(nameof(DocStrings.QaNoBoundaryLoops_1))]
 		public QaNoBoundaryLoops(
 			[Doc(nameof(DocStrings.QaNoBoundaryLoops_polygonClass))] [NotNull]
-			IFeatureClass polygonClass,
+			IReadOnlyFeatureClass polygonClass,
 			[Doc(nameof(DocStrings.QaNoBoundaryLoops_errorGeometry))]
 			BoundaryLoopErrorGeometry errorGeometry)
 			: this(
@@ -73,13 +74,13 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaNoBoundaryLoops_2))]
 		public QaNoBoundaryLoops(
 			[Doc(nameof(DocStrings.QaNoBoundaryLoops_polygonClass))] [NotNull]
-			IFeatureClass polygonClass,
+			IReadOnlyFeatureClass polygonClass,
 			[Doc(nameof(DocStrings.QaNoBoundaryLoops_errorGeometry))]
 			BoundaryLoopErrorGeometry errorGeometry,
 			[Doc(nameof(DocStrings.QaNoBoundaryLoops_areaRelation))]
 			BoundaryLoopAreaRelation areaRelation,
 			[Doc(nameof(DocStrings.QaNoBoundaryLoops_areaLimit))] double areaLimit)
-			: base((ITable) polygonClass)
+			: base(polygonClass)
 		{
 			Assert.ArgumentNotNull(polygonClass, nameof(polygonClass));
 			Assert.ArgumentCondition(
@@ -93,8 +94,8 @@ namespace ProSuite.QA.Tests
 			_shapeFieldName = polygonClass.ShapeFieldName;
 			_shapeType = polygonClass.ShapeType;
 
-			_spatialReference = ((IGeoDataset) polygonClass).SpatialReference;
-			double xyTolerance = GeometryUtils.GetXyResolution(polygonClass);
+			_spatialReference = polygonClass.SpatialReference;
+			double xyTolerance = SpatialReferenceUtils.GetXyResolution(polygonClass.SpatialReference);
 			_xyTolerance = xyTolerance;
 		}
 
@@ -108,9 +109,9 @@ namespace ProSuite.QA.Tests
 			return false;
 		}
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
-			var feature = row as IFeature;
+			var feature = row as IReadOnlyFeature;
 			if (feature == null)
 			{
 				return NoError;
@@ -129,7 +130,7 @@ namespace ProSuite.QA.Tests
 			}
 		}
 
-		private int CheckMultiPatch([NotNull] IFeature feature)
+		private int CheckMultiPatch([NotNull] IReadOnlyFeature feature)
 		{
 			var multiPatch = (IMultiPatch) feature.Shape;
 
@@ -155,7 +156,7 @@ namespace ProSuite.QA.Tests
 			return errorCount;
 		}
 
-		private int CheckPolygon([NotNull] IFeature feature)
+		private int CheckPolygon([NotNull] IReadOnlyFeature feature)
 		{
 			var polygon = (IPolygon) feature.Shape;
 
@@ -181,7 +182,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		private int CheckGeometry2D([NotNull] IGeometry geometry,
-		                            [NotNull] IRow row)
+		                            [NotNull] IReadOnlyRow row)
 		{
 			Assert.ArgumentNotNull(geometry, nameof(geometry));
 			Assert.ArgumentNotNull(row, nameof(row));
@@ -191,7 +192,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		private int CheckGeometry3D([NotNull] IGeometry geometry,
-		                            [NotNull] IRow row)
+		                            [NotNull] IReadOnlyRow row)
 		{
 			Assert.ArgumentNotNull(geometry, nameof(geometry));
 			Assert.ArgumentNotNull(row, nameof(row));
@@ -201,7 +202,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		private int CheckLocations<T>([NotNull] IGeometry geometry,
-		                              [NotNull] IRow row,
+		                              [NotNull] IReadOnlyRow row,
 		                              [NotNull] IEnumerable<T> locations,
 		                              [NotNull] IEqualityComparer<T> comparer)
 		{
@@ -248,7 +249,7 @@ namespace ProSuite.QA.Tests
 		private int CheckLoop([NotNull] IGeometry geometry,
 		                      int startVertexIndex,
 		                      int endVertexIndex,
-		                      [NotNull] IRow row)
+		                      [NotNull] IReadOnlyRow row)
 		{
 			Assert.ArgumentNotNull(geometry, nameof(geometry));
 			Assert.ArgumentNotNull(row, nameof(row));
@@ -277,10 +278,10 @@ namespace ProSuite.QA.Tests
 
 			if (_errorGeometry == BoundaryLoopErrorGeometry.LoopStartPoint)
 			{
-				return ReportError(baseMessage,
-				                   GetPoint(geometry, startVertexIndex),
-				                   Codes[Code.BoundaryLoop], _shapeFieldName,
-				                   row);
+				return ReportError(
+					baseMessage, InvolvedRowUtils.GetInvolvedRows(row),
+					GetPoint(geometry, startVertexIndex),
+					Codes[Code.BoundaryLoop], _shapeFieldName);
 			}
 
 			// polygon is requested as error geometry
@@ -289,23 +290,23 @@ namespace ProSuite.QA.Tests
 				// ... but the polygon could not be created
 				string description = string.Format("{0} - unable to determine loop polygon: {1}",
 				                                   baseMessageStartPoint, noPolygonReason);
-				return ReportError(description,
-				                   GetPoint(geometry, startVertexIndex),
-				                   Codes[Code.BoundaryLoop_UnableToConstructLoopPolygon],
-				                   _shapeFieldName,
-				                   row);
+				return ReportError(
+					description, InvolvedRowUtils.GetInvolvedRows(row),
+					GetPoint(geometry, startVertexIndex),
+					Codes[Code.BoundaryLoop_UnableToConstructLoopPolygon],
+					_shapeFieldName);
 			}
 
-			return ReportError(baseMessage, loopPolygon,
-			                   Codes[Code.BoundaryLoop], _shapeFieldName,
-			                   row);
+			return ReportError(
+				baseMessage, InvolvedRowUtils.GetInvolvedRows(row), loopPolygon,
+				Codes[Code.BoundaryLoop], _shapeFieldName);
 		}
 
 		private int CheckLoopArea([NotNull] IGeometry geometry,
 		                          int startVertexIndex,
 		                          [CanBeNull] IPolygon loopPolygon,
 		                          [NotNull] string noPolygonReason,
-		                          [NotNull] IRow row,
+		                          [NotNull] IReadOnlyRow row,
 		                          [NotNull] string baseMessage,
 		                          [NotNull] string baseMessageStartPoint)
 		{
@@ -315,11 +316,11 @@ namespace ProSuite.QA.Tests
 				description =
 					string.Format("{0} - unable to determine loop polygon for area comparison: {1}",
 					              baseMessageStartPoint, noPolygonReason);
-				return ReportError(description,
-				                   GetPoint(geometry, startVertexIndex),
-				                   Codes[Code.BoundaryLoop_UnableToConstructLoopPolygon],
-				                   _shapeFieldName,
-				                   row);
+				return ReportError(
+					description, InvolvedRowUtils.GetInvolvedRows(row),
+					GetPoint(geometry, startVertexIndex),
+					Codes[Code.BoundaryLoop_UnableToConstructLoopPolygon],
+					_shapeFieldName);
 			}
 
 			double loopArea = ((IArea) loopPolygon).Area;
@@ -340,9 +341,9 @@ namespace ProSuite.QA.Tests
 			if (_errorGeometry == BoundaryLoopErrorGeometry.LoopPolygon)
 			{
 				description = string.Format("{0}: {1}", baseMessage, comparison);
-				return ReportError(description, loopPolygon,
-				                   issueCode, _shapeFieldName,
-				                   row);
+				return ReportError(
+					description, InvolvedRowUtils.GetInvolvedRows(row), loopPolygon,
+					issueCode, _shapeFieldName);
 			}
 
 			// report start point only
@@ -351,10 +352,10 @@ namespace ProSuite.QA.Tests
 			Marshal.ReleaseComObject(loopPolygon);
 
 			description = string.Format("{0}: {1}", baseMessageStartPoint, comparison);
-			return ReportError(description,
-			                   GetPoint(geometry, startVertexIndex),
-			                   issueCode, _shapeFieldName,
-			                   row);
+			return ReportError(
+				description, InvolvedRowUtils.GetInvolvedRows(row),
+				GetPoint(geometry, startVertexIndex),
+				issueCode, _shapeFieldName);
 		}
 
 		private static IssueCode GetAreaRelationIssueCode(

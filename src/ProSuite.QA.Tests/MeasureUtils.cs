@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container.Geometry;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests
 {
@@ -335,7 +335,7 @@ namespace ProSuite.QA.Tests
 
 		[NotNull]
 		public static IEnumerable<CurveMeasureRange> GetMeasureRanges(
-			[NotNull] IFeature feature,
+			[NotNull] IReadOnlyFeature feature,
 			int tableIndex)
 		{
 			Assert.ArgumentNotNull(feature, nameof(feature));

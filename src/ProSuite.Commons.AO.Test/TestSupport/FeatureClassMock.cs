@@ -8,7 +8,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AO.Test.TestSupport
 {
-	public class FeatureClassMock : ObjectClassMock, IFeatureClass, IGeoDataset
+	public class FeatureClassMock : ObjectClassMock, IReadOnlyFeatureClass, IFeatureClass, IGeoDataset
 	{
 		private const int _gridSize = 1000;
 		private readonly bool _hasM;
@@ -80,8 +80,10 @@ namespace ProSuite.Commons.AO.Test.TestSupport
 
 		#region IGeoDataset Members
 
+		ISpatialReference IReadOnlyGeoDataset.SpatialReference => _spatialReference;
 		ISpatialReference IGeoDataset.SpatialReference => _spatialReference;
 
+		IEnvelope IReadOnlyGeoDataset.Extent => Extent;
 		IEnvelope IGeoDataset.Extent => Extent;
 		protected virtual IEnvelope Extent => throw new NotImplementedException();
 

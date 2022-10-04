@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Surface;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -10,7 +10,7 @@ namespace ProSuite.QA.Tests
 {
 	public abstract class QaSurfaceOffset : ContainerTest
 	{
-		protected QaSurfaceOffset([NotNull] IFeatureClass featureClass,
+		protected QaSurfaceOffset([NotNull] IReadOnlyFeatureClass featureClass,
 		                          [NotNull] TerrainReference terrain,
 		                          double terrainTolerance,
 		                          double limit,
@@ -23,7 +23,7 @@ namespace ProSuite.QA.Tests
 			TerrainTolerance = terrainTolerance;
 		}
 
-		protected QaSurfaceOffset([NotNull] IFeatureClass featureClass,
+		protected QaSurfaceOffset([NotNull] IReadOnlyFeatureClass featureClass,
 		                          [NotNull] RasterReference rasterReference,
 		                          double limit,
 		                          ZOffsetConstraint zOffsetConstraint)
@@ -34,10 +34,10 @@ namespace ProSuite.QA.Tests
 			InvolvedRasters = new List<RasterReference> {rasterReference};
 		}
 
-		private QaSurfaceOffset([NotNull] IFeatureClass featureClass,
+		private QaSurfaceOffset([NotNull] IReadOnlyFeatureClass featureClass,
 		                        double limit,
 		                        ZOffsetConstraint zOffsetConstraint)
-			: base((ITable) featureClass)
+			: base(featureClass)
 		{
 			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
 

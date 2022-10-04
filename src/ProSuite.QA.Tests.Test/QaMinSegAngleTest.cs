@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
@@ -7,16 +6,9 @@ using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Geom.EsriShape;
-using ProSuite.DomainModel.AO.QA;
-using ProSuite.DomainModel.Core;
-using ProSuite.DomainModel.Core.DataModel;
-using ProSuite.DomainModel.Core.QA;
-using ProSuite.QA.Container;
 using ProSuite.QA.Container.Geometry;
 using ProSuite.QA.Container.Test;
 using ProSuite.QA.Container.TestSupport;
-using ProSuite.QA.TestFactories;
 using ProSuite.QA.Tests.Test.Construction;
 using ProSuite.QA.Tests.Test.TestRunners;
 
@@ -58,7 +50,7 @@ namespace ProSuite.QA.Tests.Test
 				                 .Curve;
 			row1.Store();
 
-			var test = new QaMinSegAngle(fc, 0.1, true);
+			var test = new QaMinSegAngle(ReadOnlyTableFactory.Create(fc), 0.1, true);
 
 			var runner = new QaContainerTestRunner(1000, test);
 
@@ -84,67 +76,8 @@ namespace ProSuite.QA.Tests.Test
 			row1.Store();
 
 			double limit = FormatUtils.Radians2AngleInUnits(0.1, AngleUnit.Degree);
-			var test = new QaMinSegAngle(fc, limit, true);
+			var test = new QaMinSegAngle(ReadOnlyTableFactory.Create(fc), limit, true);
 			test.AngularUnit = AngleUnit.Degree;
-
-			var runner = new QaContainerTestRunner(1000, test);
-
-			runner.Execute();
-
-			Assert.AreEqual(2, runner.Errors.Count);
-		}
-
-		[Test]
-		public void CanTestFactory()
-		{
-			Type type = typeof(QaMinSegAngleFactory);
-
-			var testDescriptor = new TestDescriptor
-			                     {
-				                     TestFactoryDescriptor = new ClassDescriptor(type)
-			                     };
-
-			const string fcName = "CanTestFactory";
-			IFeatureClass fc = CreateLineClass(_testWs, fcName);
-
-			IFeature row1 = fc.CreateFeature();
-			row1.Shape =
-				CurveConstruction.StartLine(0, 0, 0)
-				                 .LineTo(0, 1, 0)
-				                 .LineTo(0.1, 0, 0)
-				                 .LineTo(0.1, 1, 100)
-				                 .LineTo(0.1, 2, 100)
-				                 .CircleTo(GeometryFactory.CreatePoint(0.2, 0, 100))
-				                 .Curve;
-			row1.Store();
-
-			double limit = FormatUtils.Radians2AngleInUnits(0.1, AngleUnit.Degree);
-
-			var model = new SimpleModel("model", fc);
-
-			esriGeometryType esriGeometryType = fc.ShapeType;
-
-			var suiteGeometryType = (ProSuiteGeometryType) esriGeometryType;
-
-			ModelVectorDataset ds = model.AddDataset(
-				new ModelVectorDataset(fcName)
-				{
-					GeometryType = new GeometryTypeShape(suiteGeometryType.ToString(),
-					                                     suiteGeometryType)
-				});
-
-			var condition = new QualityCondition("testtest", testDescriptor);
-			InstanceConfigurationUtils.AddParameterValue(condition, "featureClass", ds);
-			InstanceConfigurationUtils.AddParameterValue(condition, "limit", limit);
-			InstanceConfigurationUtils.AddParameterValue(condition, "is3D", true);
-
-			TestFactory factory = TestFactoryUtils.CreateTestFactory(condition);
-			Assert.IsNotNull(factory);
-
-			IList<ITest> tests =
-				factory.CreateTests(new SimpleDatasetOpener(model.MasterDatabaseWorkspaceContext));
-			Assert.AreEqual(1, tests.Count);
-			ITest test = tests[0];
 
 			var runner = new QaContainerTestRunner(1000, test);
 
@@ -169,7 +102,8 @@ namespace ProSuite.QA.Tests.Test
 				                 .Curve;
 			row1.Store();
 
-			var test = new QaMinSegAngle(fc, 0.1, true) {UseTangents = true};
+			var test = new QaMinSegAngle(ReadOnlyTableFactory.Create(fc), 0.1, true)
+			           { UseTangents = true };
 
 			var runner = new QaContainerTestRunner(1000, test);
 
@@ -202,7 +136,7 @@ namespace ProSuite.QA.Tests.Test
 			row1.Shape = polyline;
 			row1.Store();
 
-			var test = new QaMinSegAngle(fc, 0.1, true);
+			var test = new QaMinSegAngle(ReadOnlyTableFactory.Create(fc), 0.1, true);
 
 			var runner = new QaContainerTestRunner(1000, test);
 
@@ -226,7 +160,7 @@ namespace ProSuite.QA.Tests.Test
 			row1.Shape = CreatePolyLine((ISegment) arc);
 			row1.Store();
 
-			var test = new QaMinSegAngle(fc, 0.1, true);
+			var test = new QaMinSegAngle(ReadOnlyTableFactory.Create(fc), 0.1, true);
 
 			var runner = new QaContainerTestRunner(1000, test);
 
@@ -248,7 +182,7 @@ namespace ProSuite.QA.Tests.Test
 			row1.Shape = CreatePolyLine((ISegment) arc);
 			row1.Store();
 
-			var test = new QaMinSegAngle(fc, 0.1, true);
+			var test = new QaMinSegAngle(ReadOnlyTableFactory.Create(fc), 0.1, true);
 
 			var runner = new QaContainerTestRunner(1000, test);
 

@@ -1,9 +1,12 @@
 using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestCategories;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
 
@@ -39,12 +42,14 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaGdbConstraint_0))]
 		public QaGdbConstraint(
 			[Doc(nameof(DocStrings.QaGdbConstraint_table))]
-			ITable table)
+			IReadOnlyTable table)
 			: base(table)
 		{
 			_attrRules = new List<IAttributeRule>();
 
-			if (table is IValidation validation)
+			ESRI.ArcGIS.Geodatabase.ITable baseTable =
+				Assert.NotNull(table as ReadOnlyTable).BaseTable;
+			if (baseTable is IValidation validation)
 			{
 				IEnumRule rules = validation.Rules;
 				rules.Reset();
@@ -75,7 +80,7 @@ namespace ProSuite.QA.Tests
 			return false;
 		}
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
 			int errorCount = 0;
 			int? iSubtype = null;
@@ -105,12 +110,13 @@ namespace ProSuite.QA.Tests
 						}
 						else if (iSubtype.Value == rule.SubtypeCode)
 						{
-							valid = rule.Validate(row, out message);
+							valid = rule.Validate(Assert.NotNull(row as ReadOnlyRow).BaseRow, out message);
 						}
 					}
 					else
 					{
-						valid = rule.Validate(row, out message);
+						valid = rule.Validate(Assert.NotNull(row as ReadOnlyRow).BaseRow,
+						                      out message);
 					}
 				}
 				catch (Exception exp)
@@ -127,10 +133,9 @@ namespace ProSuite.QA.Tests
 				if (! valid)
 				{
 					string description = string.Format("First invalid rule: {0}", message);
-					errorCount += ReportError(description,
-					                          TestUtils.GetShapeCopy(row),
-					                          issueCode,
-					                          rule.FieldName, row);
+					errorCount += ReportError(
+						description, InvolvedRowUtils.GetInvolvedRows(row),
+						TestUtils.GetShapeCopy(row), issueCode, rule.FieldName);
 
 					break;
 				}

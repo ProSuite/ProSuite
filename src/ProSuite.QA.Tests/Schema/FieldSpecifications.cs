@@ -6,14 +6,14 @@ using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.QA.Container;
+using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Tests.IssueCodes;
 
 namespace ProSuite.QA.Tests.Schema
 {
 	public class FieldSpecifications
 	{
-		private readonly ITable _table;
+		private readonly IReadOnlyTable _table;
 		private readonly bool _matchAliasName;
 		private readonly IFieldSpecificationsIssueCodes _issueCodes;
 
@@ -32,7 +32,7 @@ namespace ProSuite.QA.Tests.Schema
 		/// <param name="matchAliasName">if set to <c>true</c> [match alias name].</param>
 		/// <param name="issueCodes">The issue codes.</param>
 		public FieldSpecifications(
-			[NotNull] ITable table,
+			[NotNull] IReadOnlyTable table,
 			[NotNull] IEnumerable<FieldSpecification> fieldSpecifications,
 			bool matchAliasName,
 			[NotNull] IFieldSpecificationsIssueCodes issueCodes)
@@ -111,7 +111,7 @@ namespace ProSuite.QA.Tests.Schema
 
 			if (_matchAliasName)
 			{
-				foreach (IField field in DatasetUtils.GetFields(_table))
+				foreach (IField field in DatasetUtils.GetFields(_table.Fields))
 				{
 					string aliasName = field.AliasName;
 					string fieldName = field.Name;

@@ -1,13 +1,14 @@
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
-using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.QA.Tests.SpatialRelations;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
 {
@@ -31,27 +32,27 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaOverlapsOther_0))]
 		public QaOverlapsOther(
 				[Doc(nameof(DocStrings.QaOverlapsOther_overlappedClasses))]
-				IList<IFeatureClass> overlapped,
+				IList<IReadOnlyFeatureClass> overlapped,
 				[Doc(nameof(DocStrings.QaOverlapsOther_overlappingClasses))]
-				IList<IFeatureClass> overlapping)
+				IList<IReadOnlyFeatureClass> overlapping)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(overlapped, overlapping, null) { }
 
 		[Doc(nameof(DocStrings.QaOverlapsOther_1))]
 		public QaOverlapsOther(
 				[Doc(nameof(DocStrings.QaOverlapsOther_overlappedClass))]
-				IFeatureClass overlapped,
+				IReadOnlyFeatureClass overlapped,
 				[Doc(nameof(DocStrings.QaOverlapsOther_overlappingClass))]
-				IFeatureClass overlapping)
+				IReadOnlyFeatureClass overlapping)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(overlapped, overlapping, null) { }
 
 		[Doc(nameof(DocStrings.QaOverlapsOther_2))]
 		public QaOverlapsOther(
 			[Doc(nameof(DocStrings.QaOverlapsOther_overlappedClasses))]
-			IList<IFeatureClass> overlappedClasses,
+			IList<IReadOnlyFeatureClass> overlappedClasses,
 			[Doc(nameof(DocStrings.QaOverlapsOther_overlappingClasses))]
-			IList<IFeatureClass> overlappingClasses,
+			IList<IReadOnlyFeatureClass> overlappingClasses,
 			[Doc(nameof(DocStrings.QaOverlapsOther_validRelationConstraint))]
 			string validRelationConstraint)
 			: base(
@@ -65,17 +66,17 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaOverlapsOther_3))]
 		public QaOverlapsOther(
 			[Doc(nameof(DocStrings.QaOverlapsOther_overlappedClass))]
-			IFeatureClass overlappedClass,
+			IReadOnlyFeatureClass overlappedClass,
 			[Doc(nameof(DocStrings.QaOverlapsOther_overlappingClass))]
-			IFeatureClass overlappingClass,
+			IReadOnlyFeatureClass overlappingClass,
 			[Doc(nameof(DocStrings.QaOverlapsOther_validRelationConstraint))]
 			string validRelationConstraint)
 			: this(new[] {overlappedClass}, new[] {overlappingClass}, validRelationConstraint) { }
 
 		#region Overrides of QaSpatialRelationOtherBase
 
-		protected override int FindErrors(IRow row1, int tableIndex1,
-		                                  IRow row2, int tableIndex2)
+		protected override int FindErrors(IReadOnlyRow row1, int tableIndex1,
+										  IReadOnlyRow row2, int tableIndex2)
 		{
 			if (_validRelationConstraint == null)
 			{

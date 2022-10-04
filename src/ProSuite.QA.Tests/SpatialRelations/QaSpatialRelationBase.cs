@@ -25,9 +25,9 @@ namespace ProSuite.QA.Tests.SpatialRelations
 
 		#region Constructors
 
-		protected QaSpatialRelationBase([NotNull] IList<IFeatureClass> featureClasses,
+		protected QaSpatialRelationBase([NotNull] IList<IReadOnlyFeatureClass> featureClasses,
 		                                esriSpatialRelEnum relation)
-			: base(CastToTables((IEnumerable<IFeatureClass>) featureClasses))
+			: base(CastToTables((IEnumerable<IReadOnlyFeatureClass>) featureClasses))
 		{
 			TotalClassCount = featureClasses.Count;
 			Relation = relation;
@@ -35,7 +35,7 @@ namespace ProSuite.QA.Tests.SpatialRelations
 			UsesSymmetricRelation = IsKnownSymmetric(relation);
 		}
 
-		protected QaSpatialRelationBase([NotNull] IList<IFeatureClass> featureClasses,
+		protected QaSpatialRelationBase([NotNull] IList<IReadOnlyFeatureClass> featureClasses,
 		                                [NotNull] string intersectionMatrix)
 			: this(featureClasses, esriSpatialRelEnum.esriSpatialRelRelation)
 		{
@@ -48,11 +48,11 @@ namespace ProSuite.QA.Tests.SpatialRelations
 			                   IntersectionMatrix.IntersectsExterior;
 		}
 
-		protected QaSpatialRelationBase([NotNull] IFeatureClass featureClass,
+		protected QaSpatialRelationBase([NotNull] IReadOnlyFeatureClass featureClass,
 		                                esriSpatialRelEnum relation)
 			: this(new[] {featureClass}, relation) { }
 
-		protected QaSpatialRelationBase([NotNull] IFeatureClass featureClass,
+		protected QaSpatialRelationBase([NotNull] IReadOnlyFeatureClass featureClass,
 		                                [NotNull] string intersectionMatrix)
 			: this(new[] {featureClass}, intersectionMatrix) { }
 
@@ -78,17 +78,17 @@ namespace ProSuite.QA.Tests.SpatialRelations
 			return false;
 		}
 
-		protected abstract int FindErrors([NotNull] IRow row1, int tableIndex1,
-		                                  [NotNull] IRow row2, int tableIndex2);
+		protected abstract int FindErrors([NotNull] IReadOnlyRow row1, int tableIndex1,
+		                                  [NotNull] IReadOnlyRow row2, int tableIndex2);
 
-		protected int FindErrors([NotNull] IFeature feature,
+		protected int FindErrors([NotNull] IReadOnlyFeature feature,
 		                         [NotNull] IGeometry searchGeometry,
 		                         int tableIndex, int relatedTableIndex)
 		{
 			Assert.ArgumentNotNull(feature, nameof(feature));
 			Assert.ArgumentNotNull(searchGeometry, nameof(searchGeometry));
 
-			ITable relatedTable = InvolvedTables[relatedTableIndex];
+			IReadOnlyTable relatedTable = InvolvedTables[relatedTableIndex];
 
 			// access through properties to allow lazy initialization:
 			ISpatialFilter relatedFilter = SpatialFilters[relatedTableIndex];
@@ -98,7 +98,7 @@ namespace ProSuite.QA.Tests.SpatialRelations
 
 			var errorCount = 0;
 			var anyFound = false;
-			foreach (IRow relatedRow in Search(relatedTable,
+			foreach (IReadOnlyRow relatedRow in Search(relatedTable,
 			                                   relatedFilter,
 			                                   relatedFilterHelper,
 			                                   feature.Shape))
@@ -150,13 +150,13 @@ namespace ProSuite.QA.Tests.SpatialRelations
 			}
 		}
 
-		protected virtual int FindErrorsNoRelated(IRow row)
+		protected virtual int FindErrorsNoRelated(IReadOnlyRow row)
 		{
 			return NoError;
 		}
 
 		private bool IsDisjoint([NotNull] IGeometry shape,
-		                        [NotNull] ITable relatedTable, int relatedTableIndex,
+		                        [NotNull] IReadOnlyTable relatedTable, int relatedTableIndex,
 		                        [NotNull] QueryFilterHelper relatedFilterHelper,
 		                        [NotNull] IGeometry cacheShape)
 		{
@@ -164,7 +164,7 @@ namespace ProSuite.QA.Tests.SpatialRelations
 			intersectsFilter.Geometry = shape;
 
 			foreach (
-				IRow row in
+				IReadOnlyRow row in
 				Search(relatedTable, intersectsFilter, relatedFilterHelper, cacheShape))
 			{
 				_msg.VerboseDebug(() => $"not disjoint (row found: {GdbObjectUtils.ToString(row)})");

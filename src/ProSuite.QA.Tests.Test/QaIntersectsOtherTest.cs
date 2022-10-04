@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container.Test;
@@ -8,6 +9,8 @@ using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Licensing;
+using ProSuite.QA.Container;
+using ProSuite.QA.Tests.IssueFilters;
 
 namespace ProSuite.QA.Tests.Test
 {
@@ -97,15 +100,25 @@ namespace ProSuite.QA.Tests.Test
 			                                     .LineTo(1, 2)
 			                                     .ClosePolygon());
 
-			Create(ignoreFc, 10, CurveConstruction.StartPoly(6, 6)
-			                                      .LineTo(7, 6)
-			                                      .LineTo(7, 7)
-			                                      .LineTo(6, 7)
+			Create(ignoreFc, 10, CurveConstruction.StartPoly(5, 5)
+			                                      .LineTo(8, 5)
+			                                      .LineTo(8, 8)
+			                                      .LineTo(5, 8)
 			                                      .ClosePolygon());
 
-			var test = new QaIntersectsOther(lineFc, areaFc);
-			test.IgnoreArea = ignoreFc;
-			test.SetConstraint(2, "objektart in (10)");
+			var test = new QaIntersectsOther(ReadOnlyTableFactory.Create(lineFc),
+			                                 ReadOnlyTableFactory.Create(areaFc));
+
+			IFilterEditTest fTest = test;
+			IfWithin issueFilter = new IfWithin(ReadOnlyTableFactory.Create(ignoreFc));
+			issueFilter.SetConstraint(0, "objektart in (10)");
+			issueFilter.Name = "IfContains";
+			fTest.SetIssueFilters($"{issueFilter.Name}",
+			                      new List<IIssueFilter>
+			                      {
+				                      issueFilter
+			                      });
+
 			{
 				// Container test
 				var runner = new QaContainerTestRunner(1000, test);
@@ -149,7 +162,7 @@ namespace ProSuite.QA.Tests.Test
 
 
 			var test = new QaInteriorIntersectsSelf(
-				new[] { fg },
+				new[] { ReadOnlyTableFactory.Create(fg) },
 				constraint:
 				"G1.TLM_GEWAESSER_NAME_UUID IS NULL OR G2.TLM_GEWAESSER_NAME_UUID IS NULL OR G1.TLM_GEWAESSER_NAME_UUID <> G2.TLM_GEWAESSER_NAME_UUID OR G1.TLM_GEWAESSER_NAME_UUID IN ('{8228BCF8-C4E1-4779-8309-389B0172DEC6}', '{6E1224EE-2E67-4B95-B5EE-58806BBD41B1}') AND G2.TLM_GEWAESSER_NAME_UUID IN ('{8228BCF8-C4E1-4779-8309-389B0172DEC6}','{6E1224EE-2E67-4B95-B5EE-58806BBD41B1}')");
 			test.SetConstraint(0, "OBJEKTART <> 0");

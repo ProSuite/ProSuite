@@ -7,6 +7,7 @@ using NUnit.Framework;
 using ProSuite.Commons;
 using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.AO.Test.TestSupport;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests.Test
 {
@@ -42,7 +43,8 @@ namespace ProSuite.QA.Tests.Test
 
 			IFeature row1 = featureClassMock.CreateFeature(construction.MultiPatch);
 
-			var test = new QaMpHorizontalPerpendicular(featureClassMock, 5, 0, 0, false, 0);
+			var test = new QaMpHorizontalPerpendicular(
+				ReadOnlyTableFactory.Create(featureClassMock), 5, 0, 0, false, 0);
 			var runner = new QaTestRunner(test);
 			runner.Execute(row1);
 			Assert.AreEqual(1, runner.Errors.Count);
@@ -67,8 +69,9 @@ namespace ProSuite.QA.Tests.Test
 
 			IFeature row1 = featureClassMock.CreateFeature(construction.MultiPatch);
 
-			var test = new QaMpHorizontalPerpendicular(featureClassMock, 5, azimuthToleranceDeg,
-			                                           0, false, 0);
+			var test = new QaMpHorizontalPerpendicular(
+				ReadOnlyTableFactory.Create(featureClassMock), 5, azimuthToleranceDeg,
+				0, false, 0);
 			var runner = new QaTestRunner(test);
 			runner.Execute(row1);
 			Assert.AreEqual(1, runner.Errors.Count);
@@ -81,8 +84,9 @@ namespace ProSuite.QA.Tests.Test
 
 			row1 = featureClassMock.CreateFeature(construction.MultiPatch);
 
-			test = new QaMpHorizontalPerpendicular(featureClassMock, 5, azimuthToleranceDeg, 0,
-			                                       false, 0);
+			test = new QaMpHorizontalPerpendicular(
+				ReadOnlyTableFactory.Create(featureClassMock), 5, azimuthToleranceDeg, 0,
+				false, 0);
 			runner = new QaTestRunner(test);
 			runner.Execute(row1);
 			Assert.AreEqual(0, runner.Errors.Count);
@@ -107,8 +111,8 @@ namespace ProSuite.QA.Tests.Test
 
 			IFeature row1 = featureClassMock.CreateFeature(construction.MultiPatch);
 
-			var test = new QaMpHorizontalPerpendicular(featureClassMock, nearAngle, 0, 0, false,
-			                                           0);
+			var test = new QaMpHorizontalPerpendicular(
+				ReadOnlyTableFactory.Create(featureClassMock), nearAngle, 0, 0, false, 0);
 			var runner = new QaTestRunner(test);
 			runner.Execute(row1);
 			Assert.AreEqual(0, runner.Errors.Count);
@@ -121,7 +125,8 @@ namespace ProSuite.QA.Tests.Test
 
 			row1 = featureClassMock.CreateFeature(construction.MultiPatch);
 
-			test = new QaMpHorizontalPerpendicular(featureClassMock, nearAngle, 0, 0, false, 0);
+			test = new QaMpHorizontalPerpendicular(
+				ReadOnlyTableFactory.Create(featureClassMock), nearAngle, 0, 0, false, 0);
 			runner = new QaTestRunner(test);
 			runner.Execute(row1);
 			Assert.AreEqual(1, runner.Errors.Count);
@@ -145,8 +150,8 @@ namespace ProSuite.QA.Tests.Test
 
 			IFeature row1 = featureClassMock.CreateFeature(construction.MultiPatch);
 
-			var test = new QaMpHorizontalPerpendicular(featureClassMock, nearAngle, 0, 0, false,
-			                                           0);
+			var test = new QaMpHorizontalPerpendicular(
+				ReadOnlyTableFactory.Create(featureClassMock), nearAngle, 0, 0, false, 0);
 			var runner = new QaTestRunner(test);
 			runner.Execute(row1);
 			Assert.AreEqual(1, runner.Errors.Count);
@@ -171,8 +176,9 @@ namespace ProSuite.QA.Tests.Test
 
 			IFeature feature = featureClassMock.CreateFeature(construction.MultiPatch);
 
-			var test = new QaMpHorizontalPerpendicular(featureClassMock, 5, 0,
-			                                           horizontalToleranceDeg, false, 0);
+			var test = new QaMpHorizontalPerpendicular(
+				ReadOnlyTableFactory.Create(featureClassMock), 5, 0,
+				horizontalToleranceDeg, false, 0);
 			var runner = new QaTestRunner(test);
 			runner.Execute(feature);
 			Assert.AreEqual(0, runner.Errors.Count);
@@ -185,8 +191,9 @@ namespace ProSuite.QA.Tests.Test
 
 			feature = featureClassMock.CreateFeature(construction.MultiPatch);
 
-			test = new QaMpHorizontalPerpendicular(featureClassMock, 5, 0,
-			                                       horizontalToleranceDeg, false, 0);
+			test = new QaMpHorizontalPerpendicular(
+				ReadOnlyTableFactory.Create(featureClassMock), 5, 0,
+				horizontalToleranceDeg, false, 0);
 
 			runner = new QaTestRunner(test);
 			runner.Execute(feature);
@@ -211,8 +218,9 @@ namespace ProSuite.QA.Tests.Test
 
 			IFeature feature = featureClassMock.CreateFeature(construction.MultiPatch);
 
-			var test = new QaMpHorizontalPerpendicular(featureClassMock, 5, 0,
-			                                           0, true, connected);
+			var test = new QaMpHorizontalPerpendicular(
+				ReadOnlyTableFactory.Create(featureClassMock), 5, 0,
+				0, true, connected);
 			var runner = new QaTestRunner(test);
 			runner.Execute(feature);
 			Assert.AreEqual(0, runner.Errors.Count);
@@ -225,7 +233,8 @@ namespace ProSuite.QA.Tests.Test
 
 			feature = featureClassMock.CreateFeature(construction.MultiPatch);
 
-			test = new QaMpHorizontalPerpendicular(featureClassMock, 5, 0, 0, true, connected);
+			test = new QaMpHorizontalPerpendicular(
+				ReadOnlyTableFactory.Create(featureClassMock), 5, 0, 0, true, connected);
 
 			runner = new QaTestRunner(test);
 			runner.Execute(feature);

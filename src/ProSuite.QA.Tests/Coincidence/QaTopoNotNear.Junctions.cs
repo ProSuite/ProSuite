@@ -6,6 +6,7 @@ using ProSuite.QA.Container.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
 using Pnt = ProSuite.Commons.Geom.Pnt;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests.Coincidence
 {
@@ -22,7 +23,7 @@ namespace ProSuite.QA.Tests.Coincidence
 				}
 
 				// --> junction was not searched
-				var thisFeature = (IFeature) key.Row;
+				var thisFeature = (IReadOnlyFeature) key.Row;
 				var thisCurve = (IGeometryCollection) thisFeature.Shape;
 				IIndexedSegments thisGeom =
 					IndexedSegmentUtils.GetIndexedGeometry(thisFeature, false);
@@ -57,14 +58,14 @@ namespace ProSuite.QA.Tests.Coincidence
 					IBox endBox = new Box(new Pnt2D(end.X - tolerance, end.Y - tolerance),
 					                      new Pnt2D(end.X + tolerance, end.Y + tolerance));
 
-					foreach (KeyValuePair<int, IFeatureClass> topoPair in _topoTables)
+					foreach (KeyValuePair<int, IReadOnlyFeatureClass> topoPair in _topoTables)
 					{
 						int neighborTableIdx = topoPair.Key;
 						ISpatialFilter filter = _topoFilters[neighborTableIdx];
 						filter.Geometry = searchBox;
 						QueryFilterHelper helper = _topoHelpers[neighborTableIdx];
 
-						foreach (IRow neighborRow in Search((ITable) topoPair.Value, filter, helper)
+						foreach (IReadOnlyRow neighborRow in Search(topoPair.Value, filter, helper)
 						)
 						{
 							if (neighborRow.OID == key.Row.OID &&
@@ -73,7 +74,7 @@ namespace ProSuite.QA.Tests.Coincidence
 								continue;
 							}
 
-							var neighborFeature = (IFeature) neighborRow;
+							var neighborFeature = (IReadOnlyFeature) neighborRow;
 							IIndexedSegments neighborGeom =
 								IndexedSegmentUtils.GetIndexedGeometry(neighborFeature, false);
 

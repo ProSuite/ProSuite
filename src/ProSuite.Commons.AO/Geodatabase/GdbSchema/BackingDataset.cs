@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 {
@@ -13,10 +14,11 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 	{
 		public abstract IEnvelope Extent { get; }
 
-		public abstract IRow GetRow(int id);
+		public abstract VirtualRow GetRow(int id);
 
-		public abstract int GetRowCount(IQueryFilter queryFilter);
+		public abstract int GetRowCount([CanBeNull] IQueryFilter queryFilter);
 
-		public abstract IEnumerable<IRow> Search(IQueryFilter filter, bool recycling);
+		public abstract IEnumerable<VirtualRow> Search([CanBeNull] IQueryFilter filter,
+		                                               bool recycling);
 	}
 }

@@ -1,9 +1,14 @@
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Linq.Expressions;
 using NHibernate;
 using NHibernate.Criterion;
+using NHibernate.Transform;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 using ProSuite.Commons.Orm.NHibernate;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
@@ -12,10 +17,11 @@ using ProSuite.DomainModel.Core.QA.Repositories;
 namespace ProSuite.DomainModel.Persistence.Core.QA
 {
 	[UsedImplicitly]
-	public class QualitySpecificationRepository :
-		NHibernateRepository<QualitySpecification>,
-		IQualitySpecificationRepository
+	public class QualitySpecificationRepository : NHibernateRepository<QualitySpecification>,
+	                                              IQualitySpecificationRepository
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		#region IQualitySpecificationRepository Members
 
 		public IList<QualitySpecification> Get(IList<Dataset> datasets,
@@ -31,6 +37,13 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 		public IList<QualitySpecification> Get(IList<int> datasetIds,
 		                                       bool excludeHidden)
 		{
+			// Get all transformer IDs that directly or indirectly reference one of the provided
+			// dataset ids.
+			// Then get all specs that contain a condition parameter that either references one
+			// of the provided datasets directly or one of the calculated transformers.
+
+			// Hierarchical queries are not supported in nhibernate.
+
 			if (datasetIds.Count <= 0)
 			{
 				return new List<QualitySpecification>();
@@ -38,26 +51,58 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 
 			using (ISession session = OpenSession(true))
 			{
-				// NOTE: for handling dataset lists larger than 1000 elements: 
-				// see QualityVerificationRepository.Get(Model model)
+				QualitySpecification qSpecAlias = null;
+				QualitySpecificationElement element = null;
+				QualityCondition qConAlias = null;
+				DatasetTestParameterValue paramValueAlias = null;
 
-				string hql = string.Format(
-					"select distinct qspec " +
-					"  from QualitySpecification qspec " +
-					"  join qspec.Elements elem " +
-					"  join elem.QualityCondition.ParameterValues paramVal " +
-					" where paramVal.Id in (select paramVal.Id " +
-					"                         from DatasetTestParameterValue paramVal " +
-					"                        where paramVal.DatasetValue.Id in (:datasetIds)) " +
-					"                          and paramVal.UsedAsReferenceData = {0}{1}",
-					GetHqlLiteral(false, session),
-					excludeHidden
-						? string.Format(" and qspec.Hidden <> {0}", GetHqlLiteral(true, session))
-						: string.Empty);
+				Stopwatch watch = _msg.DebugStartTiming();
 
-				return session.CreateQuery(hql)
-				              .SetParameterList("datasetIds", datasetIds)
-				              .List<QualitySpecification>();
+				Expression<Func<bool>> noRefData = () => ! paramValueAlias.UsedAsReferenceData;
+
+				var transformerIds =
+					DatasetParameterFetchingUtils.GetAllTransformerIdsForDatasets(
+						session, datasetIds, excludeReferenceData: true).ToArray();
+
+				_msg.DebugStopTiming(watch, "Extracted {0} transformers depending on {1} datasets",
+				                     transformerIds.Length, datasetIds.Count);
+
+				int[] datasetIdArray = datasetIds.ToArray();
+
+				watch = _msg.DebugStartTiming();
+
+				ICriterion criterion =
+					transformerIds.Length > 0
+						? Restrictions.Or(
+							Restrictions.On<DatasetTestParameterValue>(
+								p => paramValueAlias.DatasetValue.Id).IsIn(datasetIdArray),
+							Restrictions.On<DatasetTestParameterValue>(
+								p => paramValueAlias.ValueSource.Id).IsIn(transformerIds))
+						: Restrictions.On<DatasetTestParameterValue>(
+							p => paramValueAlias.DatasetValue.Id).IsIn(datasetIdArray);
+
+				var qSpecQuery =
+					session.QueryOver(() => qSpecAlias)
+					       .JoinQueryOver(() => qSpecAlias.Elements, () => element)
+					       .JoinQueryOver(() => element.QualityCondition, () => qConAlias)
+					       .JoinQueryOver(() => qConAlias.ParameterValues, () => paramValueAlias)
+					       .Where(noRefData)
+					       .And(criterion)
+					       .TransformUsing(Transformers.DistinctRootEntity);
+
+				if (excludeHidden)
+				{
+					qSpecQuery = qSpecQuery.Where(() => ! qSpecAlias.Hidden);
+				}
+
+				IList<QualitySpecification> result = qSpecQuery.List();
+
+				_msg.DebugStopTiming(
+					watch,
+					"Found {0} specifications depending directly or indirectly on {1} datasets",
+					result.Count, datasetIds.Count);
+
+				return result;
 			}
 		}
 

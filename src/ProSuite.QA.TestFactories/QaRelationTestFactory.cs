@@ -1,7 +1,6 @@
+using System;
 using System.Collections.Generic;
-using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
-using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
@@ -57,137 +56,59 @@ namespace ProSuite.QA.TestFactories
 			                               " AND ");
 		}
 
-		protected ITable CreateQueryTable([NotNull] IOpenDataset datasetContext,
-		                                  [NotNull] string associationName,
-		                                  [NotNull] IList<ITable> tables,
-		                                  JoinType joinType)
+		protected IReadOnlyTable CreateQueryTable([NotNull] IOpenDataset datasetOpener,
+		                                          [NotNull] string associationName,
+		                                          [NotNull] IList<IReadOnlyTable> tables,
+		                                          JoinType joinType)
 		{
-			return CreateQueryTable(datasetContext, associationName, tables, joinType, null, out _);
+			return CreateQueryTable(datasetOpener, associationName, tables, joinType, null, out _);
 		}
 
-		protected ITable CreateQueryTable([NotNull] IOpenDataset datasetContext,
-		                                  [NotNull] string associationName,
-		                                  [NotNull] IList<ITable> tables,
-		                                  JoinType joinType,
-		                                  [CanBeNull] string whereClause,
-		                                  out string relationshipClassName)
+		protected IReadOnlyTable CreateQueryTable([NotNull] IOpenDataset datasetOpener,
+		                                          [NotNull] string associationName,
+		                                          [NotNull] IList<IReadOnlyTable> tables,
+		                                          JoinType joinType,
+		                                          [CanBeNull] string whereClause,
+		                                          out string relationshipClassName)
 		{
-			ITable queryTable;
-			if (datasetContext is IQueryTableContext queryContext &&
-			    queryContext.CanOpenQueryTables())
+			if (! (datasetOpener is IOpenAssociation associationOpener))
 			{
-				Model uniqueModel =
-					GetUniqueModel(Assert.NotNull(Condition, "No quality condition assigned"));
-
-				relationshipClassName =
-					queryContext.GetRelationshipClassName(associationName, uniqueModel);
-
-				queryTable = queryContext.OpenQueryTable(relationshipClassName, uniqueModel,
-				                                         tables, joinType, whereClause);
-			}
-			else
-			{
-				IRelationshipClass relationshipClass = OpenRelationshipClass(associationName,
-				                                                             datasetContext);
-				queryTable = RelationshipClassUtils.GetQueryTable(
-					relationshipClass, tables, joinType, whereClause);
-
-				relationshipClassName = DatasetUtils.GetName(relationshipClass);
+				throw new NotSupportedException(
+					"Query tables are not supported by the current context.");
 			}
 
-			return queryTable;
-		}
+			IReadOnlyTable result = null;
 
-		[NotNull]
-		protected IRelationshipClass OpenRelationshipClass(
-			[NotNull] string associationName,
-			[NotNull] IOpenDataset datasetContext)
-		{
-			Assert.NotNull(Condition, "No quality condition assigned");
-
-			Model model = GetUniqueModel(Condition);
-
-			// TODO REFACTORMODEL: what if the association is not in the primary dataset context (e.g. work unit), but from another model?
+			Model model =
+				GetUniqueModel(Assert.NotNull(Condition, "No quality condition assigned"));
 
 			Association association = ModelElementUtils.GetAssociationFromStoredName(
 				associationName, model, ignoreUnknownAssociation: true);
 
-			if (association == null && ! model.UseDefaultDatabaseOnlyForSchema)
+			if (association == null)
 			{
-				IWorkspace masterWorkspace = model.GetMasterDatabaseWorkspace();
-				if (masterWorkspace != null)
+				if (! model.UseDefaultDatabaseOnlyForSchema)
 				{
-					return OpenRelationshipClassFromMasterWorkspace(
-						masterWorkspace, associationName,
-						model);
+					result = associationOpener.OpenQueryTable(
+						associationName, model, tables, joinType, whereClause);
+				}
+				else
+				{
+					Assert.NotNull(association, "Association not found in current context: {0}",
+					               associationName);
 				}
 			}
+			else
+			{
+				result = associationOpener.OpenQueryTable(
+					association, tables, joinType, whereClause);
+			}
 
-			Assert.NotNull(association, "Association not found in current context: {0}",
-			               associationName);
-
-			IRelationshipClass result = datasetContext.OpenRelationshipClass(association);
-			Assert.NotNull(result,
-			               "Unable to open relationship class for association {0} in current context",
-			               association.Name);
+			// Used in case it's the m:n bridge table name
+			relationshipClassName =
+				associationOpener.GetRelationshipClassName(associationName, model);
 
 			return result;
-		}
-
-		[NotNull]
-		private static IRelationshipClass OpenRelationshipClassFromMasterWorkspace(
-			[NotNull] IWorkspace masterWorkspace,
-			[NotNull] string associationName,
-			[NotNull] Model model)
-		{
-			string relClassName = GetRelationshipClassName(masterWorkspace, associationName,
-			                                               model);
-
-			return DatasetUtils.OpenRelationshipClass(
-				(IFeatureWorkspace) masterWorkspace,
-				relClassName);
-		}
-
-		[NotNull]
-		private static string GetRelationshipClassName([NotNull] IWorkspace masterWorkspace,
-		                                               [NotNull] string associationName,
-		                                               [NotNull] Model model)
-		{
-			if (masterWorkspace.Type != esriWorkspaceType.esriRemoteDatabaseWorkspace)
-			{
-				// the workspace uses unqualified names
-
-				return ModelElementNameUtils.IsQualifiedName(associationName)
-					       ? ModelElementNameUtils.GetUnqualifiedName(associationName)
-					       : associationName;
-			}
-
-			// the workspace uses qualified names
-
-			if (! ModelElementNameUtils.IsQualifiedName(associationName))
-			{
-				Assert.NotNullOrEmpty(
-					model.DefaultDatabaseSchemaOwner,
-					"The master database schema owner is not defined, cannot qualify unqualified association name ({0})",
-					associationName);
-
-				return ModelElementNameUtils.GetQualifiedName(
-					model.DefaultDatabaseName,
-					model.DefaultDatabaseSchemaOwner,
-					ModelElementNameUtils.GetUnqualifiedName(associationName));
-			}
-
-			// the association name is already qualified
-
-			if (StringUtils.IsNotEmpty(model.DefaultDatabaseSchemaOwner))
-			{
-				return ModelElementNameUtils.GetQualifiedName(
-					model.DefaultDatabaseName,
-					model.DefaultDatabaseSchemaOwner,
-					ModelElementNameUtils.GetUnqualifiedName(associationName));
-			}
-
-			return associationName;
 		}
 
 		[NotNull]

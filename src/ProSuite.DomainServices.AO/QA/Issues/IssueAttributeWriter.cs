@@ -1,7 +1,7 @@
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.QA.Container;
+using ProSuite.QA.Core.IssueCodes;
 
 namespace ProSuite.DomainServices.AO.QA.Issues
 {

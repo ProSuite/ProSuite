@@ -62,9 +62,10 @@ namespace ProSuite.QA.Tests.Test
 			// connected to border, exact match:
 			AddLineFeature(fcLine2, 5, 0, 5, -5, stateId: "B");
 
-			var test = new QaEdgeMatchCrossingLines(fcLine1, fcBorder1,
-			                                        fcLine2, fcBorder2,
-			                                        searchDistance: 0.5)
+			var test = new QaEdgeMatchCrossingLines(
+				           ReadOnlyTableFactory.Create(fcLine1), ReadOnlyTableFactory.Create(fcBorder1),
+				           ReadOnlyTableFactory.Create(fcLine2), ReadOnlyTableFactory.Create(fcBorder2),
+				                                       searchDistance: 0.5)
 			           {
 				           LineClass1BorderMatchCondition =
 					           "LINE.STATE = BORDER.STATE",
@@ -97,9 +98,10 @@ namespace ProSuite.QA.Tests.Test
 			AddLineFeature(fcLine2, 5, 0, 5, -5, stateId: "B", doubleValue: 1,
 			               textFieldValue: "Y");
 
-			var test = new QaEdgeMatchCrossingLines(fcLine1, fcBorder1,
-			                                        fcLine2, fcBorder2,
-			                                        searchDistance: 0.5)
+			var test = new QaEdgeMatchCrossingLines(
+				           ReadOnlyTableFactory.Create(fcLine1), ReadOnlyTableFactory.Create(fcBorder1),
+				           ReadOnlyTableFactory.Create(fcLine2), ReadOnlyTableFactory.Create(fcBorder2),
+				                                       searchDistance: 0.5)
 			           {
 				           LineClass1BorderMatchCondition =
 					           "LINE.STATE = BORDER.STATE",
@@ -141,9 +143,10 @@ namespace ProSuite.QA.Tests.Test
 
 			using (AssertUtils.UseInvariantCulture())
 			{
-				var test = new QaEdgeMatchCrossingLines(fcLine1, fcBorder1,
-				                                        fcLine2, fcBorder2,
-				                                        searchDistance: 0.5)
+				var test = new QaEdgeMatchCrossingLines(
+					           ReadOnlyTableFactory.Create(fcLine1), ReadOnlyTableFactory.Create(fcBorder1),
+					           ReadOnlyTableFactory.Create(fcLine2), ReadOnlyTableFactory.Create(fcBorder2),
+					                                       searchDistance: 0.5)
 				           {
 					           LineClass1BorderMatchCondition = "LINE.STATE = BORDER.STATE",
 					           LineClass2BorderMatchCondition = "LINE.STATE = BORDER.STATE",
@@ -194,9 +197,10 @@ namespace ProSuite.QA.Tests.Test
 			AddLineFeature(fcLine2, 5, 0, 5, -5, stateId: "B", doubleValue: 1,
 			               textFieldValue: "Y");
 
-			var test = new QaEdgeMatchCrossingLines(fcLine1, fcBorder1,
-			                                        fcLine2, fcBorder2,
-			                                        searchDistance: 0.5)
+			var test = new QaEdgeMatchCrossingLines(
+				           ReadOnlyTableFactory.Create(fcLine1), ReadOnlyTableFactory.Create(fcBorder1),
+				           ReadOnlyTableFactory.Create(fcLine2), ReadOnlyTableFactory.Create(fcBorder2),
+				                                       searchDistance: 0.5)
 			           {
 				           LineClass1BorderMatchCondition =
 					           "LINE.STATE = BORDER.STATE",
@@ -235,9 +239,12 @@ namespace ProSuite.QA.Tests.Test
 			// connected to border, touching interior, attribute constraints fulfilled:
 			AddLineFeature(fcLine2, 5, 0, 5, -5, stateId: "B", textFieldValue: "A");
 
-			var test = new QaEdgeMatchCrossingLines(fcLine1, fcBorder1,
-			                                        fcLine2, fcBorder2,
-			                                        searchDistance: 0.5)
+			var test = new QaEdgeMatchCrossingLines(
+				           ReadOnlyTableFactory.Create(fcLine1),
+				           ReadOnlyTableFactory.Create(fcBorder1),
+				           ReadOnlyTableFactory.Create(fcLine2),
+				           ReadOnlyTableFactory.Create(fcBorder2),
+				           searchDistance: 0.5)
 			           {
 				           LineClass1BorderMatchCondition =
 					           "LINE.STATE = BORDER.STATE",
@@ -278,9 +285,10 @@ namespace ProSuite.QA.Tests.Test
 			// connected to border, touching interior, attribute constraints fulfilled:
 			AddLineFeature(fcLine2, 5, 0, 5, -5, stateId: "B", textFieldValue: "A");
 
-			var test = new QaEdgeMatchCrossingLines(fcLine1, fcBorder1,
-			                                        fcLine2, fcBorder2,
-			                                        searchDistance: 0.5)
+			var test = new QaEdgeMatchCrossingLines(
+				           ReadOnlyTableFactory.Create(fcLine1), ReadOnlyTableFactory.Create(fcBorder1),
+				           ReadOnlyTableFactory.Create(fcLine2), ReadOnlyTableFactory.Create(fcBorder2),
+				                                       searchDistance: 0.5)
 			           {
 				           LineClass1BorderMatchCondition =
 					           "LINE.STATE = BORDER.STATE",
@@ -301,9 +309,10 @@ namespace ProSuite.QA.Tests.Test
 			AssertErrors(1, Run(test), "NoMatch.CandidateExists.ConstraintsFulfilled");
 
 			// Invert the order to check independence on sort order
-			test = new QaEdgeMatchCrossingLines(fcLine2, fcBorder2,
-			                                    fcLine1, fcBorder1,
-			                                    searchDistance: 0.5)
+			test = new QaEdgeMatchCrossingLines(
+				       ReadOnlyTableFactory.Create(fcLine2), ReadOnlyTableFactory.Create(fcBorder2),
+				       ReadOnlyTableFactory.Create(fcLine1), ReadOnlyTableFactory.Create(fcBorder1),
+				                                   searchDistance: 0.5)
 			       {
 				       LineClass1BorderMatchCondition = "LINE.STATE = BORDER.STATE",
 				       LineClass2BorderMatchCondition = "LINE.STATE = BORDER.STATE",
@@ -339,9 +348,10 @@ namespace ProSuite.QA.Tests.Test
 			AddLineFeature(fcLine2, 5, 0, 5, -5, stateId: "B",
 			               textFieldValue: "value2");
 
-			var test = new QaEdgeMatchCrossingLines(fcLine1, fcBorder1,
-			                                        fcLine2, fcBorder2,
-			                                        searchDistance: 0.5)
+			var test = new QaEdgeMatchCrossingLines(
+				           ReadOnlyTableFactory.Create(fcLine1), ReadOnlyTableFactory.Create(fcBorder1),
+				           ReadOnlyTableFactory.Create(fcLine2), ReadOnlyTableFactory.Create(fcBorder2),
+				                                       searchDistance: 0.5)
 			           {
 				           LineClass1BorderMatchCondition =
 					           "LINE.STATE = BORDER.STATE",
@@ -383,9 +393,10 @@ namespace ProSuite.QA.Tests.Test
 			// connected to border, touching interior:
 			AddLineFeature(fcLine2, 5, 0, 5, -5, stateId: "B");
 
-			var test = new QaEdgeMatchCrossingLines(fcLine1, fcBorder1,
-			                                        fcLine2, fcBorder2,
-			                                        searchDistance: 0.5)
+			var test = new QaEdgeMatchCrossingLines(
+				           ReadOnlyTableFactory.Create(fcLine1), ReadOnlyTableFactory.Create(fcBorder1),
+				           ReadOnlyTableFactory.Create(fcLine2), ReadOnlyTableFactory.Create(fcBorder2),
+				                                       searchDistance: 0.5)
 			           {
 				           LineClass1BorderMatchCondition =
 					           "LINE.STATE = BORDER.STATE",
@@ -427,9 +438,10 @@ namespace ProSuite.QA.Tests.Test
 			// connected to border, exact match:
 			AddLineFeature(fcLine2, 5, 0, 5, -5, "B", "X#Y", 10.002, dateValue);
 
-			var test = new QaEdgeMatchCrossingLines(fcLine1, fcBorder1,
-			                                        fcLine2, fcBorder2,
-			                                        searchDistance: 0.5)
+			var test = new QaEdgeMatchCrossingLines(
+				           ReadOnlyTableFactory.Create(fcLine1), ReadOnlyTableFactory.Create(fcBorder1),
+				           ReadOnlyTableFactory.Create(fcLine2), ReadOnlyTableFactory.Create(fcBorder2),
+				                                       searchDistance: 0.5)
 			           {
 				           LineClass1BorderMatchCondition =
 					           "LINE.STATE = BORDER.STATE",
@@ -461,9 +473,10 @@ namespace ProSuite.QA.Tests.Test
 			// connected to border
 			AddLineFeature(fcLine1, 5, 0, 5, 5, stateId: "A");
 
-			var test = new QaEdgeMatchCrossingLines(fcLine1, fcBorder1,
-			                                        fcLine2, fcBorder2,
-			                                        searchDistance: 0.5)
+			var test = new QaEdgeMatchCrossingLines(
+				           ReadOnlyTableFactory.Create(fcLine1), ReadOnlyTableFactory.Create(fcBorder1),
+				           ReadOnlyTableFactory.Create(fcLine2), ReadOnlyTableFactory.Create(fcBorder2),
+				                                       searchDistance: 0.5)
 			           {
 				           LineClass1BorderMatchCondition =
 					           "LINE.STATE = BORDER.STATE",
@@ -492,9 +505,10 @@ namespace ProSuite.QA.Tests.Test
 			// connected to border
 			AddLineFeature(fcLine1, 5, 0, 5, 5, stateId: "A");
 
-			var test = new QaEdgeMatchCrossingLines(fcLine1, fcBorder1,
-			                                        fcLine2, fcBorder2,
-			                                        searchDistance: 0.5)
+			var test = new QaEdgeMatchCrossingLines(
+				           ReadOnlyTableFactory.Create(fcLine1), ReadOnlyTableFactory.Create(fcBorder1),
+				           ReadOnlyTableFactory.Create(fcLine2), ReadOnlyTableFactory.Create(fcBorder2),
+				                                       searchDistance: 0.5)
 			           {
 				           LineClass1BorderMatchCondition =
 					           "LINE.STATE = BORDER.STATE",
@@ -526,9 +540,10 @@ namespace ProSuite.QA.Tests.Test
 			// second line on same side, connected to border
 			AddLineFeature(fcLine1, 5, 0, 5, 10, stateId: "A");
 
-			var test = new QaEdgeMatchCrossingLines(fcLine1, fcBorder1,
-			                                        fcLine2, fcBorder2,
-			                                        searchDistance: 0.5)
+			var test = new QaEdgeMatchCrossingLines(
+				           ReadOnlyTableFactory.Create(fcLine1), ReadOnlyTableFactory.Create(fcBorder1),
+				           ReadOnlyTableFactory.Create(fcLine2), ReadOnlyTableFactory.Create(fcBorder2),
+				                                       searchDistance: 0.5)
 			           {
 				           LineClass1BorderMatchCondition =
 					           "LINE.STATE = BORDER.STATE",
@@ -562,9 +577,10 @@ namespace ProSuite.QA.Tests.Test
 			// second line on same side, connected to border
 			AddLineFeature(fcLine1, 5, 0, 5, 10, stateId: "A");
 
-			var test = new QaEdgeMatchCrossingLines(fcLine1, fcBorder1,
-			                                        fcLine2, fcBorder2,
-			                                        searchDistance: 0.5)
+			var test = new QaEdgeMatchCrossingLines(
+				           ReadOnlyTableFactory.Create(fcLine1), ReadOnlyTableFactory.Create(fcBorder1),
+				           ReadOnlyTableFactory.Create(fcLine2), ReadOnlyTableFactory.Create(fcBorder2),
+				                                       searchDistance: 0.5)
 			           {
 				           LineClass1BorderMatchCondition =
 					           "LINE.STATE = BORDER.STATE",
@@ -594,9 +610,10 @@ namespace ProSuite.QA.Tests.Test
 			// connected to border, but different state id
 			AddLineFeature(fcLine1, 5, 0, 5, 5, stateId: "B");
 
-			var test = new QaEdgeMatchCrossingLines(fcLine1, fcBorder1,
-			                                        fcLine2, fcBorder2,
-			                                        searchDistance: 0.5)
+			var test = new QaEdgeMatchCrossingLines(
+				           ReadOnlyTableFactory.Create(fcLine1), ReadOnlyTableFactory.Create(fcBorder1),
+				           ReadOnlyTableFactory.Create(fcLine2), ReadOnlyTableFactory.Create(fcBorder2),
+				                                       searchDistance: 0.5)
 			           {
 				           LineClass1BorderMatchCondition =
 					           "LINE.STATE = BORDER.STATE",
@@ -627,9 +644,10 @@ namespace ProSuite.QA.Tests.Test
 			// connected to border, lateral offset
 			AddLineFeature(fcLine2, 4.9, 0, 5, -5, stateId: "B");
 
-			var test = new QaEdgeMatchCrossingLines(fcLine1, fcBorder1,
-			                                        fcLine2, fcBorder2,
-			                                        searchDistance: 0.5)
+			var test = new QaEdgeMatchCrossingLines(
+				           ReadOnlyTableFactory.Create(fcLine1), ReadOnlyTableFactory.Create(fcBorder1),
+				           ReadOnlyTableFactory.Create(fcLine2), ReadOnlyTableFactory.Create(fcBorder2),
+				                                       searchDistance: 0.5)
 			           {
 				           LineClass1BorderMatchCondition =
 					           "LINE.STATE = BORDER.STATE",
@@ -660,9 +678,10 @@ namespace ProSuite.QA.Tests.Test
 			// connected to border, lateral offset
 			AddLineFeature(fcLine2, 4.9, 0, 5, -5, stateId: "B");
 
-			var test = new QaEdgeMatchCrossingLines(fcLine1, fcBorder1,
-			                                        fcLine2, fcBorder2,
-			                                        searchDistance: 0.5)
+			var test = new QaEdgeMatchCrossingLines(
+				           ReadOnlyTableFactory.Create(fcLine1), ReadOnlyTableFactory.Create(fcBorder1),
+				           ReadOnlyTableFactory.Create(fcLine2), ReadOnlyTableFactory.Create(fcBorder2),
+				                                       searchDistance: 0.5)
 			           {
 				           LineClass1BorderMatchCondition =
 					           "LINE.STATE = BORDER.STATE",
@@ -699,9 +718,10 @@ namespace ProSuite.QA.Tests.Test
 			AddLineFeature(fcLine2, 4.9, 0, 5, -5, "B", "Y", 100.00000000000001,
 			               dateValue2);
 
-			var test = new QaEdgeMatchCrossingLines(fcLine1, fcBorder1,
-			                                        fcLine2, fcBorder2,
-			                                        searchDistance: 0.5)
+			var test = new QaEdgeMatchCrossingLines(
+				           ReadOnlyTableFactory.Create(fcLine1), ReadOnlyTableFactory.Create(fcBorder1),
+				           ReadOnlyTableFactory.Create(fcLine2), ReadOnlyTableFactory.Create(fcBorder2),
+				                                       searchDistance: 0.5)
 			           {
 				           LineClass1BorderMatchCondition =
 					           "LINE.STATE = BORDER.STATE",
@@ -735,9 +755,10 @@ namespace ProSuite.QA.Tests.Test
 			// connected to border
 			AddLineFeature(fcLine2, 5, -0.3, 5, -5, stateId: "B");
 
-			var test = new QaEdgeMatchCrossingLines(fcLine1, fcBorder1,
-			                                        fcLine2, fcBorder2,
-			                                        searchDistance: 0.5)
+			var test = new QaEdgeMatchCrossingLines(
+				           ReadOnlyTableFactory.Create(fcLine1), ReadOnlyTableFactory.Create(fcBorder1),
+				           ReadOnlyTableFactory.Create(fcLine2), ReadOnlyTableFactory.Create(fcBorder2),
+				                                       searchDistance: 0.5)
 			           {
 				           LineClass1BorderMatchCondition =
 					           "LINE.STATE = BORDER.STATE",
@@ -771,9 +792,10 @@ namespace ProSuite.QA.Tests.Test
 			// connected to border
 			AddLineFeature(fcLine2, 5, -0.1, 5, -5, stateId: "B");
 
-			var test = new QaEdgeMatchCrossingLines(fcLine1, fcBorder1,
-			                                        fcLine2, fcBorder2,
-			                                        searchDistance: 0.5)
+			var test = new QaEdgeMatchCrossingLines(
+				           ReadOnlyTableFactory.Create(fcLine1), ReadOnlyTableFactory.Create(fcBorder1),
+				           ReadOnlyTableFactory.Create(fcLine2), ReadOnlyTableFactory.Create(fcBorder2),
+				                                       searchDistance: 0.5)
 			           {
 				           LineClass1BorderMatchCondition =
 					           "LINE.STATE = BORDER.STATE",
@@ -810,9 +832,10 @@ namespace ProSuite.QA.Tests.Test
 			// connected to border
 			AddLineFeature(fcLine2, 5, 0, 5, -5, stateId: "B");
 
-			var test = new QaEdgeMatchCrossingLines(fcLine1, fcBorder1,
-			                                        fcLine2, fcBorder2,
-			                                        searchDistance: 0.5)
+			var test = new QaEdgeMatchCrossingLines(
+				           ReadOnlyTableFactory.Create(fcLine1), ReadOnlyTableFactory.Create(fcBorder1),
+				           ReadOnlyTableFactory.Create(fcLine2), ReadOnlyTableFactory.Create(fcBorder2),
+				                                       searchDistance: 0.5)
 			           {
 				           LineClass1BorderMatchCondition =
 					           "LINE.STATE = BORDER.STATE",
@@ -848,9 +871,10 @@ namespace ProSuite.QA.Tests.Test
 			// connected to border
 			AddLineFeature(fcLine2, 5, -0.3, 5, -5, stateId: "B");
 
-			var test = new QaEdgeMatchCrossingLines(fcLine1, fcBorder1,
-			                                        fcLine2, fcBorder2,
-			                                        searchDistance: 0.5)
+			var test = new QaEdgeMatchCrossingLines(
+				           ReadOnlyTableFactory.Create(fcLine1), ReadOnlyTableFactory.Create(fcBorder1),
+				           ReadOnlyTableFactory.Create(fcLine2), ReadOnlyTableFactory.Create(fcBorder2),
+				                                       searchDistance: 0.5)
 			           {
 				           LineClass1BorderMatchCondition =
 					           "LINE.STATE = BORDER.STATE",
@@ -883,9 +907,10 @@ namespace ProSuite.QA.Tests.Test
 			// connected to border
 			AddLineFeature(fcLine2, 5, 0.3, 5, -5, stateId: "B");
 
-			var test = new QaEdgeMatchCrossingLines(fcLine1, fcBorder1,
-			                                        fcLine2, fcBorder2,
-			                                        searchDistance: 0.5)
+			var test = new QaEdgeMatchCrossingLines(
+				           ReadOnlyTableFactory.Create(fcLine1), ReadOnlyTableFactory.Create(fcBorder1),
+				           ReadOnlyTableFactory.Create(fcLine2), ReadOnlyTableFactory.Create(fcBorder2),
+				                                       searchDistance: 0.5)
 			           {
 				           LineClass1BorderMatchCondition =
 					           "LINE.STATE = BORDER.STATE",
@@ -918,9 +943,10 @@ namespace ProSuite.QA.Tests.Test
 			// NOT connected to border
 			AddLineFeature(fcLine2, 5, 0.1, 5, -5, stateId: "B");
 
-			var test = new QaEdgeMatchCrossingLines(fcLine1, fcBorder1,
-			                                        fcLine2, fcBorder2,
-			                                        searchDistance: 0.5)
+			var test = new QaEdgeMatchCrossingLines(
+				           ReadOnlyTableFactory.Create(fcLine1), ReadOnlyTableFactory.Create(fcBorder1),
+				           ReadOnlyTableFactory.Create(fcLine2), ReadOnlyTableFactory.Create(fcBorder2),
+				                                       searchDistance: 0.5)
 			           {
 				           LineClass1BorderMatchCondition =
 					           "LINE.STATE = BORDER.STATE",
@@ -951,9 +977,10 @@ namespace ProSuite.QA.Tests.Test
 			// connected to border, offset > tol
 			AddLineFeature(fcLine2, 4.4, 0, 5, -5, stateId: "B");
 
-			var test = new QaEdgeMatchCrossingLines(fcLine1, fcBorder1,
-			                                        fcLine2, fcBorder2,
-			                                        searchDistance: 0.5)
+			var test = new QaEdgeMatchCrossingLines(
+				           ReadOnlyTableFactory.Create(fcLine1), ReadOnlyTableFactory.Create(fcBorder1),
+				           ReadOnlyTableFactory.Create(fcLine2), ReadOnlyTableFactory.Create(fcBorder2),
+				                                       searchDistance: 0.5)
 			           {
 				           LineClass1BorderMatchCondition =
 					           "LINE.STATE = BORDER.STATE",
@@ -987,9 +1014,10 @@ namespace ProSuite.QA.Tests.Test
 			// connected to border, different point
 			AddLineFeature(fcLine2, 5.2, 0, 5, -5, stateId: "B", textFieldValue: "R");
 
-			var test = new QaEdgeMatchCrossingLines(fcLine1, fcBorder1,
-			                                        fcLine2, fcBorder2,
-			                                        searchDistance: 0.5)
+			var test = new QaEdgeMatchCrossingLines(
+				           ReadOnlyTableFactory.Create(fcLine1), ReadOnlyTableFactory.Create(fcBorder1),
+				           ReadOnlyTableFactory.Create(fcLine2), ReadOnlyTableFactory.Create(fcBorder2),
+				                                       searchDistance: 0.5)
 			           {
 				           LineClass1BorderMatchCondition =
 					           "LINE.STATE = BORDER.STATE",
@@ -1024,9 +1052,10 @@ namespace ProSuite.QA.Tests.Test
 			// connected to border, same point
 			AddLineFeature(fcLine2, 5, 0, 5, -5, stateId: "B", textFieldValue: "S");
 
-			var test = new QaEdgeMatchCrossingLines(fcLine1, fcBorder1,
-			                                        fcLine2, fcBorder2,
-			                                        searchDistance: 0.5)
+			var test = new QaEdgeMatchCrossingLines(
+				           ReadOnlyTableFactory.Create(fcLine1), ReadOnlyTableFactory.Create(fcBorder1),
+			                                        ReadOnlyTableFactory.Create(fcLine2), ReadOnlyTableFactory.Create(fcBorder2),
+				                                        searchDistance: 0.5)
 			           {
 				           LineClass1BorderMatchCondition =
 					           "LINE.STATE = BORDER.STATE",
@@ -1063,9 +1092,10 @@ namespace ProSuite.QA.Tests.Test
 			AddLineFeature(fcLine2, 5.05, 0, 5, -5, stateId: "B",
 			               textFieldValue: "T");
 
-			var test = new QaEdgeMatchCrossingLines(fcLine1, fcBorder1,
-			                                        fcLine2, fcBorder2,
-			                                        searchDistance: 0.5)
+			var test = new QaEdgeMatchCrossingLines(
+				           ReadOnlyTableFactory.Create(fcLine1), ReadOnlyTableFactory.Create(fcBorder1),
+				           ReadOnlyTableFactory.Create(fcLine2), ReadOnlyTableFactory.Create(fcBorder2),
+				                                       searchDistance: 0.5)
 			           {
 				           LineClass1BorderMatchCondition =
 					           "LINE.STATE = BORDER.STATE",

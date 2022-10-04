@@ -16,7 +16,7 @@ namespace ProSuite.UI.DataModel.ResourceLookup
 	{
 		private const string _keyDeleted = "deleted";
 		private const string _keyGeometryNetwork = "network";
-		private const string _keyMultiPath = "multipatch";
+		private const string _keyMultipatch = "multipatch";
 		private const string _keyPoint = "point";
 		private const string _keyPolygon = "polygon";
 		private const string _keyPolyline = "polyline";
@@ -25,6 +25,7 @@ namespace ProSuite.UI.DataModel.ResourceLookup
 		private const string _keyTopology = "topology";
 		private const string _keyMosaicDataset = "mosaicdataset";
 		private const string _keyRasterDataset = "rasterdataset";
+		private const string _keyTransform = "transform";
 		private const string _keyUnknown = "unknown";
 
 		private static readonly SortedList<string, int> _defaultSort =
@@ -48,7 +49,7 @@ namespace ProSuite.UI.DataModel.ResourceLookup
 			_mapKeyToImage.Add(_keyGeometryNetwork,
 			                   DatasetTypeImages.DatasetTypeGeometricNetwork);
 			_mapKeyToImage.Add(_keyPolyline, DatasetTypeImages.DatasetTypeLine);
-			_mapKeyToImage.Add(_keyMultiPath, DatasetTypeImages.DatasetTypeMultipatch);
+			_mapKeyToImage.Add(_keyMultipatch, DatasetTypeImages.DatasetTypeMultipatch);
 			_mapKeyToImage.Add(_keyPoint, DatasetTypeImages.DatasetTypePoint);
 			_mapKeyToImage.Add(_keyTable, DatasetTypeImages.DatasetTypeTable);
 			_mapKeyToImage.Add(_keyTerrain, DatasetTypeImages.DatasetTypeTerrain);
@@ -56,6 +57,7 @@ namespace ProSuite.UI.DataModel.ResourceLookup
 			_mapKeyToImage.Add(_keyPolygon, DatasetTypeImages.DatasetTypePolygon);
 			_mapKeyToImage.Add(_keyMosaicDataset, DatasetTypeImages.DatasetTypeMosaicDataset);
 			_mapKeyToImage.Add(_keyRasterDataset, DatasetTypeImages.DatasetTypeRasterDataset);
+			_mapKeyToImage.Add(_keyTransform, TestTypeImages.Transform);
 
 			foreach (KeyValuePair<string, Image> pair in _mapKeyToImage)
 			{
@@ -69,12 +71,13 @@ namespace ProSuite.UI.DataModel.ResourceLookup
 			_defaultSort.Add(_keyPoint, ++i);
 			_defaultSort.Add(_keyPolyline, ++i);
 			_defaultSort.Add(_keyPolygon, ++i);
-			_defaultSort.Add(_keyMultiPath, ++i);
+			_defaultSort.Add(_keyMultipatch, ++i);
 			_defaultSort.Add(_keyGeometryNetwork, ++i);
 			_defaultSort.Add(_keyTopology, ++i);
 			_defaultSort.Add(_keyTerrain, ++i);
 			_defaultSort.Add(_keyMosaicDataset, ++i);
 			_defaultSort.Add(_keyRasterDataset, ++i);
+			_defaultSort.Add(_keyTransform, ++i);
 		}
 
 		#endregion
@@ -196,7 +199,7 @@ namespace ProSuite.UI.DataModel.ResourceLookup
 					return GetImage(_keyPolyline);
 
 				case ProSuiteGeometryType.MultiPatch:
-					return GetImage(_keyMultiPath);
+					return GetImage(_keyMultipatch);
 
 				case ProSuiteGeometryType.Null:
 					return GetImage(_keyTable);

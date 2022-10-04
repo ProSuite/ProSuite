@@ -69,8 +69,9 @@ namespace ProSuite.QA.Tests.Test
 			const int maxLength = 10;
 			const bool mustContainFieldName = true;
 			var runner = new QaTestRunner(
-				new QaSchemaFieldDomainNames(table, "DOM_", maxLength, mustContainFieldName,
-				                             ExpectedCase.AllUpper));
+				new QaSchemaFieldDomainNames(
+					ReadOnlyTableFactory.Create(table), "DOM_", maxLength, mustContainFieldName,
+					ExpectedCase.AllUpper));
 
 			runner.Execute();
 
@@ -98,8 +99,9 @@ namespace ProSuite.QA.Tests.Test
 			const int maxLength = 10;
 			const bool mustContainFieldName = true;
 			var runner = new QaTestRunner(
-				new QaSchemaFieldDomainNames(table, "PRE_", maxLength, mustContainFieldName,
-				                             ExpectedCase.AllUpper));
+				new QaSchemaFieldDomainNames(
+					ReadOnlyTableFactory.Create(table), "PRE_", maxLength, mustContainFieldName,
+					ExpectedCase.AllUpper));
 
 			runner.Execute();
 
@@ -129,8 +131,9 @@ namespace ProSuite.QA.Tests.Test
 			const int maxLength = 10;
 			const bool mustContainFieldName = true;
 			var runner = new QaTestRunner(
-				new QaSchemaFieldDomainNames(table, "PRE_", maxLength, mustContainFieldName,
-				                             ExpectedCase.AllUpper));
+				new QaSchemaFieldDomainNames(
+					ReadOnlyTableFactory.Create(table), "PRE_", maxLength, mustContainFieldName,
+					ExpectedCase.AllUpper));
 
 			runner.Execute();
 
@@ -160,8 +163,9 @@ namespace ProSuite.QA.Tests.Test
 			const int maxLength = 20;
 			const bool mustContainFieldName = true;
 			var runner = new QaTestRunner(
-				new QaSchemaFieldDomainNames(table, "PRE_", maxLength, mustContainFieldName,
-				                             ExpectedCase.AllUpper));
+				new QaSchemaFieldDomainNames(
+					ReadOnlyTableFactory.Create(table), "PRE_", maxLength, mustContainFieldName,
+					ExpectedCase.AllUpper));
 
 			runner.Execute();
 
@@ -191,8 +195,9 @@ namespace ProSuite.QA.Tests.Test
 			const int maxLength = 20;
 			const bool mustContainFieldName = true;
 			var runner = new QaTestRunner(
-				new QaSchemaFieldDomainNames(table, "PRE_", maxLength, mustContainFieldName,
-				                             ExpectedCase.Any));
+				new QaSchemaFieldDomainNames(
+					ReadOnlyTableFactory.Create(table), "PRE_", maxLength, mustContainFieldName,
+					ExpectedCase.Any));
 
 			runner.Execute();
 
@@ -444,8 +449,9 @@ namespace ProSuite.QA.Tests.Test
 			IFeatureWorkspace workspace = WorkspaceUtils.OpenPgdbFeatureWorkspace(path);
 
 			ITable table = workspace.OpenTable(tableName);
-			var test = new QaSchemaFieldDomainNames(table, expectedPrefix, maximumLength,
-			                                        mustContainFieldName, expectedCase);
+			var test = new QaSchemaFieldDomainNames(
+				ReadOnlyTableFactory.Create(table), expectedPrefix, maximumLength,
+				mustContainFieldName, expectedCase);
 
 			var runner = new QaTestRunner(test);
 			runner.Execute();

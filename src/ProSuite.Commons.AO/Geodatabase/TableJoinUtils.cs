@@ -272,43 +272,237 @@ namespace ProSuite.Commons.AO.Geodatabase
 		public static GdbFeatureClass CreateJoinedGdbFeatureClass(
 			[NotNull] IRelationshipClass relationshipClass,
 			[NotNull] IFeatureClass geometryEndClass,
-			[NotNull] string name)
+			[NotNull] string name,
+			JoinType joinType = JoinType.InnerJoin,
+			bool ensureUniqueIds = false)
 		{
-			IObjectClass otherEndClass =
-				RelationshipClassUtils.GetOtherEndObjectClass(relationshipClass, geometryEndClass);
+			AssociationDescription associationDescription =
+				AssociationDescriptionUtils.CreateAssociationDescription(relationshipClass);
 
-			var result = new GdbFeatureClass(-1, name, geometryEndClass.ShapeType,
-			                                 null,
-			                                 t => new JoinedDataset(
-				                                 relationshipClass, geometryEndClass,
-				                                 (IFeatureClass) t));
+			IReadOnlyTable roGeometryTable = ReadOnlyTableFactory.Create(geometryEndClass);
 
-			for (int i = 0; i < geometryEndClass.Fields.FieldCount; i++)
+			return (GdbFeatureClass) CreateJoinedGdbFeatureClass(
+				associationDescription, roGeometryTable, name, ensureUniqueIds, joinType);
+		}
+
+		/// <summary>
+		/// Creates a GdbTable or GdbFeatureClass representing the join of the specified association.
+		/// </summary>
+		/// <param name="associationDescription">The definition of the join</param>
+		/// <param name="geometryTable">The 'left' table which, if it has a geometry field, will
+		/// be used to define the resulting FeatureClass.</param>
+		/// <param name="name">The name of the result class.</param>
+		/// <param name="ensureUniqueIds">Whether some extra performance penalty should be accepted
+		/// in order to guarantee the uniqueness of the OBJECTID field. This is relevant for
+		/// many-to-many joins.</param>
+		/// <param name="joinType"></param>
+		/// <returns></returns>
+		/// <exception cref="NotImplementedException"></exception>
+		public static GdbTable CreateJoinedGdbFeatureClass(
+			[NotNull] AssociationDescription associationDescription,
+			[CanBeNull] IReadOnlyTable geometryTable,
+			[NotNull] string name,
+			bool ensureUniqueIds,
+			JoinType joinType = JoinType.InnerJoin)
+		{
+			// TODO: Support both tables having no geometry -> get all records from the smaller?
+			//       Or possibly always query the left table first (in inner joins) to allow for optimization by user.
+			//       support left table having the geometry but using right join -> swap, leftJoin
+			if (joinType == JoinType.RightJoin)
 			{
-				IField field = geometryEndClass.Fields.Field[i];
-				result.AddField(CreateQualifiedField(field, geometryEndClass));
+				throw new NotImplementedException("RightJoin is not yet implemented.");
 			}
 
-			for (int i = 0; i < otherEndClass.Fields.FieldCount; i++)
-			{
-				IField field = otherEndClass.Fields.Field[i];
+			// If the geometry table is null, the 'left' table will be used (if it has a geometry).
+			geometryTable = geometryTable ?? associationDescription.Table1;
 
-				if (field.Type == esriFieldType.esriFieldTypeGeometry)
+			IReadOnlyTable otherTable = associationDescription.Table1.Equals(geometryTable)
+				                            ? associationDescription.Table2
+				                            : associationDescription.Table1;
+			
+			Func<GdbTable, BackingDataset> datasetFactoryFunc = t =>
+				new JoinedDataset(associationDescription, geometryTable, otherTable, t)
 				{
-					continue;
-				}
+					JoinType = joinType,
+					IncludeMtoNAssociationRows = ensureUniqueIds
+				};
 
-				result.AddField(CreateQualifiedField(field, otherEndClass));
-			}
+			var result = CreateJoinedGdbTable(name, datasetFactoryFunc, geometryTable, otherTable);
 
-			// Make sure the OID field name is the one from the feature class
-			result.SetOIDFieldName(
-				DatasetUtils.QualifyFieldName(geometryEndClass, geometryEndClass.OIDFieldName));
+			// Make sure the ObjectID field is explicitly set (or unset) rather than relying on the
+			// implicit logic in AddField which just makes the last added field of type objectId the
+			// OID field.
+			DefineOIDField(ensureUniqueIds, associationDescription, joinType, result,
+			               geometryTable);
 
 			return result;
 		}
 
+		/// <summary>
+		/// Determines the table which will provide unique OIDs in the specified association.
+		/// </summary>
+		/// <param name="associationDescription"></param>
+		/// <param name="joinType"></param>
+		/// <param name="leftTable"></param>
+		/// <returns></returns>
+		/// <exception cref="NotImplementedException"></exception>
+		public static IReadOnlyTable DetermineOIDTable(
+			AssociationDescription associationDescription,
+			JoinType joinType, IReadOnlyTable leftTable)
+		{
+			IReadOnlyTable result;
+
+			if (associationDescription is ForeignKeyAssociationDescription fkAssociation)
+			{
+				// The referencing table contains the foreign key and hence can only point to one
+				// referenced row and hence exists at most once in the result -> OID
+				result = fkAssociation.ReferencingTable;
+
+				if (joinType == JoinType.LeftJoin)
+				{
+					bool isRightTableSuggested =
+						! leftTable.Equals(fkAssociation.ReferencingTable);
+
+					if (isRightTableSuggested)
+					{
+						// The right table provides the unique key, but it could have null-rows in LeftJoin
+						if (fkAssociation.HasOneToOneCardinality)
+						{
+							// -> Only allow the left table if the cardinality is known 1:1:
+							result = fkAssociation.ReferencedTable;
+						}
+						else
+						{
+							// No reasonable OID:
+							result = null;
+						}
+					}
+				}
+				else if (joinType == JoinType.RightJoin)
+				{
+					throw new NotImplementedException("Right Join not yet implemented");
+				}
+			}
+			else
+			{
+				ManyToManyAssociationDescription m2n =
+					(ManyToManyAssociationDescription) associationDescription;
+
+				result = m2n.AssociationTable;
+			}
+
+			return result;
+		}
+
+		private static void DefineOIDField(bool ensureUniqueIds,
+		                                   [NotNull] AssociationDescription associationDescription,
+		                                   JoinType joinType,
+		                                   [NotNull] GdbTable result,
+		                                   [NotNull] IReadOnlyTable geometryTable)
+		{
+			IReadOnlyTable oidSourceTable =
+				DetermineOIDTable(associationDescription, joinType, geometryTable);
+
+			if (oidSourceTable == null)
+			{
+				if (ensureUniqueIds)
+				{
+					_msg.Debug($"{result.Name} will have no OBJECT ID field.");
+					return;
+				}
+
+				oidSourceTable = geometryTable;
+			}
+
+			string oidFieldName = oidSourceTable.HasOID
+				                      ? DatasetUtils.QualifyFieldName(oidSourceTable,
+					                      oidSourceTable.OIDFieldName)
+				                      : null;
+
+			// In case of m:n ensure the field is in the result schema:
+			if (ensureUniqueIds &&
+			    associationDescription is ManyToManyAssociationDescription m2n)
+			{
+				var associationTable = m2n.AssociationTable;
+
+				AddFields(associationTable, result, true);
+			}
+
+			result.SetOIDFieldName(oidFieldName);
+
+			const string noOid = "<None>";
+			_msg.Debug(
+				$"{result.Name} will use the following OBJECT ID field: {oidFieldName ?? noOid}.");
+		}
+
+		private static GdbTable CreateJoinedGdbTable(
+			[NotNull] string name,
+			[NotNull] Func<GdbTable, BackingDataset> datasetFactoryFunc,
+			IReadOnlyTable geometryEndClass,
+			IReadOnlyTable otherEndClass)
+		{
+			GdbTable result;
+
+			IWorkspace workspace = geometryEndClass.Workspace;
+
+			if (geometryEndClass is IReadOnlyFeatureClass featureClass)
+			{
+				result = new GdbFeatureClass(-1, name, featureClass.ShapeType, null,
+				                             datasetFactoryFunc, workspace);
+			}
+			else
+			{
+				result = new GdbTable(-1, name, null, datasetFactoryFunc, workspace);
+			}
+
+			AddFields(geometryEndClass, result, false);
+			AddFields(otherEndClass, result, true);
+
+			return result;
+		}
+
+		private static void AddFields([NotNull] IReadOnlyTable fromClass,
+		                              [NotNull] GdbTable toResult,
+		                              bool exceptShapeFields)
+		{
+			IField lengthField = null;
+			IField areaField = null;
+			if (exceptShapeFields &&
+			    fromClass is IReadOnlyFeatureClass otherFeatureClass)
+			{
+				lengthField = DatasetUtils.GetLengthField(otherFeatureClass);
+				areaField = DatasetUtils.GetAreaField(otherFeatureClass);
+			}
+
+			for (int i = 0; i < fromClass.Fields.FieldCount; i++)
+			{
+				IField field = fromClass.Fields.Field[i];
+
+				if (exceptShapeFields && field.Type == esriFieldType.esriFieldTypeGeometry)
+				{
+					continue;
+				}
+
+				if (field == lengthField || field == areaField)
+				{
+					// ignore, it would fail in search
+					continue;
+				}
+
+				toResult.AddField(CreateQualifiedField(field, fromClass));
+			}
+		}
+
 		private static IField CreateQualifiedField(IField prototype, IObjectClass table)
+		{
+			var result = (IField) ((IClone) prototype).Clone();
+
+			((IFieldEdit) result).Name_2 = DatasetUtils.QualifyFieldName(table, prototype.Name);
+
+			return result;
+		}
+
+		private static IField CreateQualifiedField(IField prototype, IReadOnlyTable table)
 		{
 			var result = (IField) ((IClone) prototype).Clone();
 

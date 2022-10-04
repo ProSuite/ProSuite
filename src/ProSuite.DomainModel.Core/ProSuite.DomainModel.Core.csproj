@@ -1,258 +1,61 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="15.0">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{0B48B56F-3A3D-4367-AA76-A356519AF2AB}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>ProSuite.DomainModel.Core</RootNamespace>
-    <AssemblyName>ProSuite.DomainModel.Core</AssemblyName>
+
     <SignAssembly>true</SignAssembly>
     <ProSuiteKeyFile Condition=" '$(ProSuiteKeyFile)' == '' ">..\ProSuite.Key.snk</ProSuiteKeyFile>
     <AssemblyOriginatorKeyFile>$(ProSuiteKeyFile)</AssemblyOriginatorKeyFile>
-    <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' ">v4.8</TargetFrameworkVersion>
+
     <OutputDirectory Condition=" '$(OutputDirectory)' == '' ">..\..\bin</OutputDirectory>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>$(OutputDirectory)\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <OutputPath>$(OutputDirectory)\$(Configuration)\</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+
     <NoWarn>1591</NoWarn>
-    <PlatformTarget>AnyCPU</PlatformTarget>
+
+    <TargetFramework>netstandard2.0</TargetFramework>
+
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugType>full</DebugType>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>$(OutputDirectory)\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <DocumentationFile>$(OutputDirectory)\Release\ProSuite.DomainModel.Core.xml</DocumentationFile>
-    <NoWarn>1591</NoWarn>
+    <DocumentationFile>$(OutputDirectory)\$(Configuration)\ProSuite.DomainModel.Core.xml</DocumentationFile>
   </PropertyGroup>
+
   <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Core">
-      <RequiredTargetFramework>3.5</RequiredTargetFramework>
-    </Reference>
-    <Reference Include="System.Xml" />
+    <Compile Include="..\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\SharedAssemblyInfo.cs">
-      <Link>Properties\SharedAssemblyInfo.cs</Link>
+    <ProjectReference Include="..\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj" />
+    <ProjectReference Include="..\ProSuite.Commons.Logging\ProSuite.Commons.Logging.csproj" />
+    <ProjectReference Include="..\ProSuite.Commons\ProSuite.Commons.csproj" />
+    <ProjectReference Include="..\ProSuite.QA.Core\ProSuite.QA.Core.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="QA\DependencyGraph\GraphML\graphml-structure.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Schemas\ProSuite.AttributeDependencies-1.0.xsd">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Update="Schemas\Schema.Designer.cs">
+      <DependentUpon>Schema.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
     </Compile>
-    <Compile Include="ClassDescriptor.cs" />
-    <Compile Include="Commands\ICommandDescriptorRepository.cs" />
-    <Compile Include="DataModel\ITopologyDataset.cs" />
-    <Compile Include="DataModel\LinearNetwork.cs" />
-    <Compile Include="DataModel\LinearNetworkDataset.cs" />
-    <Compile Include="DataModel\ModelSimpleTerrainDataset.cs" />
-    <Compile Include="DataModel\RasterDataset.cs" />
-    <Compile Include="DataModel\Repositories\ILinearNetworkRepository.cs" />
-    <Compile Include="DataModel\Repositories\ISimpleTerrainDatasetRepository.cs" />
-    <Compile Include="DataModel\TopologyDataset.cs" />
-    <Compile Include="Processing\CartoProcess.cs" />
-    <Compile Include="Commands\CommandDescriptor.cs" />
-    <Compile Include="Commands\CommandKey.cs" />
-    <Compile Include="Commands\CommandType.cs" />
-    <Compile Include="DataModel\Association.cs" />
-    <Compile Include="DataModel\AssociationAttribute.cs" />
-    <Compile Include="DataModel\AssociationCardinality.cs" />
-    <Compile Include="DataModel\AssociationEnd.cs" />
-    <Compile Include="DataModel\AssociationEndType.cs" />
-    <Compile Include="DataModel\Attribute.cs" />
-    <Compile Include="DataModel\AttributedAssociation.cs" />
-    <Compile Include="DataModel\AttributeRole.cs" />
-    <Compile Include="DataModel\AttributeType.cs" />
-    <Compile Include="DataModel\CopyPolicy.cs" />
-    <Compile Include="DataModel\Dataset.cs" />
-    <Compile Include="DataModel\DatasetAccessException.cs" />
-    <Compile Include="DataModel\DatasetCategory.cs" />
-    <Compile Include="DataModel\DdxModel.cs" />
-    <Compile Include="DataModel\ErrorLineDataset.cs" />
-    <Compile Include="DataModel\ErrorMultiPatchDataset.cs" />
-    <Compile Include="DataModel\ErrorMultipointDataset.cs" />
-    <Compile Include="DataModel\ErrorPolygonDataset.cs" />
-    <Compile Include="DataModel\ErrorTableDataset.cs" />
-    <Compile Include="DataModel\ErrorType.cs" />
-    <Compile Include="DataModel\ErrorVectorDataset.cs" />
-    <Compile Include="DataModel\FieldNotFoundException.cs" />
-    <Compile Include="DataModel\FieldType.cs" />
-    <Compile Include="DataModel\ForeignKeyAssociation.cs" />
-    <Compile Include="DataModel\ForeignKeyAssociationEnd.cs" />
-    <Compile Include="DataModel\GeometryType.cs" />
-    <Compile Include="DataModel\GeometryTypeFactory.cs" />
-    <Compile Include="DataModel\GeometryTypeGeometricNetwork.cs" />
-    <Compile Include="DataModel\GeometryTypeNoGeometry.cs" />
-    <Compile Include="DataModel\GeometryTypeRasterDataset.cs" />
-    <Compile Include="DataModel\GeometryTypeRasterMosaic.cs" />
-    <Compile Include="DataModel\GeometryTypeShape.cs" />
-    <Compile Include="DataModel\GeometryTypeTerrain.cs" />
-    <Compile Include="DataModel\GeometryTypeTopology.cs" />
-    <Compile Include="DataModel\IAttributes.cs" />
-    <Compile Include="DataModel\IDatasetCollection.cs" />
-    <Compile Include="DataModel\IDdxDataset.cs" />
-    <Compile Include="DataModel\IDdxRasterDataset.cs" />
-    <Compile Include="DataModel\IErrorDataset.cs" />
-    <Compile Include="DataModel\IModelElement.cs" />
-    <Compile Include="DataModel\ModelElementAccessException.cs" />
-    <Compile Include="DataModel\RelationshipClassAccessException.cs" />
-    <Compile Include="DataModel\Repositories\IObjectCategoryAttributeConstraintRepository.cs" />
-    <Compile Include="DataModel\IObjectDataset.cs" />
-    <Compile Include="DataModel\IRegisteredGdbObject.cs" />
-    <Compile Include="DataModel\ISimpleRasterDataset.cs" />
-    <Compile Include="DataModel\IRasterMosaicDataset.cs" />
-    <Compile Include="DataModel\ISimpleTerrainDataset.cs" />
-    <Compile Include="DataModel\ISpatialDataset.cs" />
-    <Compile Include="DataModel\ITableDataset.cs" />
-    <Compile Include="DataModel\IVectorDataset.cs" />
-    <Compile Include="DataModel\ManyToManyAssociationEnd.cs" />
-    <Compile Include="DataModel\ModelElement.cs" />
-    <Compile Include="DataModel\ObjectAttribute.cs" />
-    <Compile Include="DataModel\ObjectAttributeType.cs" />
-    <Compile Include="DataModel\ObjectCategory.cs" />
-    <Compile Include="DataModel\ObjectCategoryAttributeCondition.cs" />
-    <Compile Include="DataModel\ObjectCategoryAttributeConstraint.cs" />
-    <Compile Include="DataModel\ObjectCategoryNonApplicableAttribute.cs" />
-    <Compile Include="DataModel\ObjectDataset.cs" />
-    <Compile Include="DataModel\ObjectSubtype.cs" />
-    <Compile Include="DataModel\ObjectSubtypeCriterion.cs" />
-    <Compile Include="DataModel\ObjectType.cs" />
-    <Compile Include="DataModel\PrimaryKeyAssociationEnd.cs" />
-    <Compile Include="DataModel\Repositories\IAssociationEndRepository.cs" />
-    <Compile Include="DataModel\Repositories\IAssociationRepository.cs" />
-    <Compile Include="DataModel\Repositories\IAttributeRepository.cs" />
-    <Compile Include="DataModel\Repositories\IAttributeTypeRepository.cs" />
-    <Compile Include="DataModel\Repositories\IDatasetCategoryRepository.cs" />
-    <Compile Include="DataModel\Repositories\IDatasetRepository.cs" />
-    <Compile Include="DataModel\Repositories\IGeometryTypeRepository.cs" />
-    <Compile Include="DataModel\Repositories\IObjectCategoryRepository.cs" />
-    <Compile Include="DataModel\SimpleRasterDataset.cs" />
-    <Compile Include="DataModel\RasterMosaicDataset.cs" />
-    <Compile Include="DataModel\SimpleTerrainDataset.cs" />
-    <Compile Include="DataModel\SqlCaseSensitivity.cs" />
-    <Compile Include="DataModel\TableDataset.cs" />
-    <Compile Include="DataModel\TinSurfaceType.cs" />
-    <Compile Include="DataModel\UnknownAttributeRole.cs" />
-    <Compile Include="DataModel\VariantValueFactory.cs" />
-    <Compile Include="DataModel\VectorDataset.cs" />
-    <Compile Include="Processing\CartoProcessGroup.cs" />
-    <Compile Include="Processing\CartoProcessParameter.cs" />
-    <Compile Include="Processing\CartoProcessType.cs" />
-    <Compile Include="Processing\FeatureProxy.cs" />
-    <Compile Include="Processing\GdbProcessCoreUtils.cs" />
-    <Compile Include="Processing\Repositories\ICartoProcessGroupRepository.cs" />
-    <Compile Include="Processing\Repositories\ICartoProcessRepository.cs" />
-    <Compile Include="Processing\Repositories\ICartoProcessTypeRepository.cs" />
-    <Compile Include="Processing\IProcessingDebug.cs" />
-    <Compile Include="Processing\IProcessingFeedback.cs" />
-    <Compile Include="Processing\IProcessReportBuilder.cs" />
-    <Compile Include="Processing\ParameterAttribute.cs" />
-    <Compile Include="Processing\ParameterDisplayTypes.cs" />
-    <Compile Include="Processing\ProcessDatasetName.cs" />
-    <Compile Include="Processing\ProcessExecutionType.cs" />
-    <Compile Include="Processing\ProcessSelectionType.cs" />
-    <Compile Include="Processing\Reporting\HtmlProcessReportBuilder.cs" />
-    <Compile Include="Processing\Xml\XmlCartoProcess.cs" />
-    <Compile Include="Processing\Xml\XmlCartoProcessesDocument.cs" />
-    <Compile Include="Processing\Xml\XmlCartoProcessGroup.cs" />
-    <Compile Include="Processing\Xml\XmlCartoProcessParameter.cs" />
-    <Compile Include="Processing\Xml\XmlCartoProcessType.cs" />
-    <Compile Include="Processing\Xml\XmlCartoProcessUtils.cs" />
-    <Compile Include="Processing\Xml\XmlClassDescriptor.cs" />
-    <Compile Include="QA\CustomQualitySpecification.cs" />
-    <Compile Include="QA\DataQualityCategory.cs" />
-    <Compile Include="QA\DataQualityCategoryComparer.cs" />
-    <Compile Include="QA\DatasetTestParameterValue.cs" />
-    <Compile Include="LayerFile.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="QA\DependencyGraph\DatasetDependency.cs" />
-    <Compile Include="QA\DependencyGraph\DatasetDependencyGraph.cs" />
-    <Compile Include="QA\DependencyGraph\DatasetNode.cs" />
-    <Compile Include="QA\DependencyGraph\DependencyGraphUtils.cs" />
-    <Compile Include="QA\DependencyGraph\GraphMLUtils.cs" />
-    <Compile Include="QA\DependencyGraph\GraphML\dataextensiontype.cs" />
-    <Compile Include="QA\DependencyGraph\GraphML\datatype.cs" />
-    <Compile Include="QA\DependencyGraph\GraphML\defaulttype.cs" />
-    <Compile Include="QA\DependencyGraph\GraphML\edgetype.cs" />
-    <Compile Include="QA\DependencyGraph\GraphML\endpointtype.cs" />
-    <Compile Include="QA\DependencyGraph\GraphML\endpointtypetype.cs" />
-    <Compile Include="QA\DependencyGraph\GraphML\graphedgedefaulttype.cs" />
-    <Compile Include="QA\DependencyGraph\GraphML\graphmltype.cs" />
-    <Compile Include="QA\DependencyGraph\GraphML\graphtype.cs" />
-    <Compile Include="QA\DependencyGraph\GraphML\hyperedgetype.cs" />
-    <Compile Include="QA\DependencyGraph\GraphML\keyfortype.cs" />
-    <Compile Include="QA\DependencyGraph\GraphML\keytype.cs" />
-    <Compile Include="QA\DependencyGraph\GraphML\locatortype.cs" />
-    <Compile Include="QA\DependencyGraph\GraphML\nodetype.cs" />
-    <Compile Include="QA\DependencyGraph\GraphML\porttype.cs" />
-    <Compile Include="QA\DependencyGraph\ModelNode.cs" />
-    <Compile Include="QA\ErrorDeletionInPerimeter.cs" />
-    <Compile Include="QA\Html\HtmlDataQualityCategoryOptions.cs" />
-    <Compile Include="QA\Html\IHtmlDataQualityCategoryOptionsProvider.cs" />
-    <Compile Include="QA\IQualitySpecificationReference.cs" />
-    <Compile Include="QA\IQualitySpecificationReferencesProvider.cs" />
-    <Compile Include="QA\InstanceDescriptor.cs" />
-    <Compile Include="QA\InstanceConfiguration.cs" />
-    <Compile Include="QA\IssueFilterConfiguration.cs" />
-    <Compile Include="QA\IssueFilterDescriptor.cs" />
-    <Compile Include="QA\InstanceConfigurationUtils.cs" />
-    <Compile Include="QA\Repositories\IDataQualityCategoryRepository.cs" />
-    <Compile Include="QA\Repositories\IQualitySpecificationRepository.cs" />
-    <Compile Include="QA\Repositories\IQualityVerificationRepository.cs" />
-    <Compile Include="QA\Repositories\IQualityConditionRepository.cs" />
-    <Compile Include="QA\QualityCondition.cs" />
-    <Compile Include="QA\QualityConditionVerification.cs" />
-    <Compile Include="QA\QualitySpecification.cs" />
-    <Compile Include="QA\QualitySpecificationElement.cs" />
-    <Compile Include="QA\QualitySpecificationListComparer.cs" />
-    <Compile Include="QA\QualityVerification.cs" />
-    <Compile Include="QA\QualityVerificationDataset.cs" />
-    <Compile Include="QA\Repositories\ITestDescriptorRepository.cs" />
-    <Compile Include="QA\RowFilterDescriptor.cs" />
-    <Compile Include="QA\TransformerConfiguration.cs" />
-    <Compile Include="QA\RowFilterConfiguration.cs" />
-    <Compile Include="QA\ScalarTestParameterValue.cs" />
-    <Compile Include="QA\TestDefinition.cs" />
-    <Compile Include="QA\TestDescriptor.cs" />
-    <Compile Include="QA\InstanceDescriptorUtils.cs" />
-    <Compile Include="QA\TestParameterType.cs" />
-    <Compile Include="QA\TestParameterStringUtils.cs" />
-    <Compile Include="QA\TestParameterValue.cs" />
-    <Compile Include="QA\TransformerDescriptor.cs" />
-    <Compile Include="QA\VerificationProgress\IQualityVerificationProgressTracker.cs" />
-    <Compile Include="QA\VerificationProgress\IQualityVerificationResult.cs" />
-    <Compile Include="QA\VerificationProgress\QualityVerificationProgressTracker.cs" />
-    <Compile Include="QA\VerificationProgress\VerificationProgressStep.cs" />
-    <Compile Include="QA\VerificationProgress\VerificationProgressType.cs" />
-    <Compile Include="DataModel\TerrainSourceDataset.cs" />
-    <Compile Include="QA\XML\IXmlDataQualityExporter.cs" />
-    <Compile Include="QA\XML\IXmlDataQualityImporter.cs" />
-    <Compile Include="QA\XML\QualitySpecificationImportType.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\ProSuite\src\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj">
-      <Project>{384763d9-f7a1-4aa2-9abd-ee338cd8d4c1}</Project>
-      <Name>ProSuite.Commons.Essentials</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\ProSuite\src\ProSuite.Commons.Logging\ProSuite.Commons.Logging.csproj">
-      <Project>{A227D52C-0536-498F-ACF2-2A5A67C3D9FF}</Project>
-      <Name>ProSuite.Commons.Logging</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\ProSuite\src\ProSuite.Commons\ProSuite.Commons.csproj">
-      <Project>{66e5d99b-26ab-4fff-834d-d96347df4fa4}</Project>
-      <Name>ProSuite.Commons</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ProSuite.QA.Core\ProSuite.QA.Core.csproj">
-      <Project>{01CBBA9E-0D4D-439F-9147-6A5685884A65}</Project>
-      <Name>ProSuite.QA.Core</Name>
-    </ProjectReference>
+    <EmbeddedResource Update="Schemas\Schema.resx">
+      <SubType>Designer</SubType>
+      <LastGenOutput>Schema.Designer.cs</LastGenOutput>
+      <Generator>ResXFileCodeGenerator</Generator>
+    </EmbeddedResource>
   </ItemGroup>
-  <ItemGroup />
-  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>
+

@@ -1,11 +1,11 @@
-using ESRI.ArcGIS.Geodatabase;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.PointEnumerators;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Core;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
 {
@@ -35,13 +35,14 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaVertexCoincidence_0))]
 		public QaVertexCoincidence(
 			[Doc(nameof(DocStrings.QaVertexCoincidence_featureClass))] [NotNull]
-			IFeatureClass featureClass)
-			: base((ITable) featureClass)
+			IReadOnlyFeatureClass featureClass)
+			: base(featureClass)
 		{
+			DatasetUtils.TryGetXyTolerance(featureClass.SpatialReference,
+			                               out double maxXYTolerance);
 			_vertexCoincidenceChecker =
 				new VertexCoincidenceChecker(
-					this, FormatComparison,
-					DatasetUtils.GetMaximumXyTolerance(new[] {featureClass}))
+					this, FormatComparison, maxXYTolerance)
 				{
 					Is3D = _defaultIs3D,
 					VerifyWithinFeature = true,
@@ -125,9 +126,9 @@ namespace ProSuite.QA.Tests
 			set { _vertexCoincidenceChecker.ReportCoordinates = value; }
 		}
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
-			var feature = row as IFeature;
+			var feature = row as IReadOnlyFeature;
 			if (feature == null)
 			{
 				return NoError;

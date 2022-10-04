@@ -1314,4 +1314,16 @@
   <data name="ContainedPoints_NotClosedLine" xml:space="preserve">
     <value>Unclosed line</value>
   </data>
+  <data name="AttributeDependency_NoMappingDefined" xml:space="preserve">
+    <value>No mapping (attribute value combination) defined in Attribute Dependency</value>
+  </data>
+  <data name="AttributeDependency_SourceOrTargetFieldNotDefined" xml:space="preserve">
+    <value>Either no source field or no target field defined in Attribute Dependency</value>
+  </data>
+  <data name="AttributeDependency_SourceValuesNotDefined" xml:space="preserve">
+    <value>Source values not defined in Attribute Dependency</value>
+  </data>
+  <data name="AttributeDependency_TargetValuesNotDefined" xml:space="preserve">
+    <value>Target values not defined in Attribute Dependency (given matching source values)</value>
+  </data>
 </root>

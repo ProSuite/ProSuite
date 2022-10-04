@@ -27,7 +27,12 @@ namespace ProSuite.QA.Container
 			' ',
 			'[',
 			']',
-			'`'
+			'`',
+			'+',
+			'-',
+			'*',
+			'/',
+			'%'
 		};
 
 		[CanBeNull] private static Regex _tableNameMatchRegex;
@@ -68,7 +73,7 @@ namespace ProSuite.QA.Container
 
 		[NotNull]
 		public static IEnumerable<string> GetExpressionFieldNames(
-			[NotNull] ITable table,
+			[NotNull] IReadOnlyTable table,
 			[NotNull] string expression,
 			bool toUpper = false)
 		{
@@ -86,7 +91,7 @@ namespace ProSuite.QA.Container
 
 		[NotNull]
 		public static IEnumerable<KeyValuePair<IField, int>> GetExpressionFields(
-			[NotNull] ITable table,
+			[NotNull] IReadOnlyTable table,
 			[NotNull] string expression)
 		{
 			Assert.ArgumentNotNull(table, nameof(table));
@@ -107,12 +112,12 @@ namespace ProSuite.QA.Container
 		[NotNull]
 		public static IEnumerable<string> GetExpressionFieldNames(
 			[NotNull] string expression,
-			[NotNull] ITable table,
+			[NotNull] IReadOnlyTable table,
 			[NotNull] string alias)
 		{
 			var tableFieldNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-			foreach (IField field in DatasetUtils.GetFields(table))
+			foreach (IField field in DatasetUtils.GetFields(table.Fields))
 			{
 				tableFieldNames.Add(field.Name);
 			}
@@ -160,7 +165,7 @@ namespace ProSuite.QA.Container
 
 						string fieldName;
 						if (IsFieldReferenceBasedOn(match.Value, searchedDatasetName, out fieldName)
-						)
+						   )
 						{
 							return $"{replacedDatasetName}.{fieldName}";
 						}
@@ -261,6 +266,7 @@ namespace ProSuite.QA.Container
 		{
 			Dictionary<string, string> expressionDict =
 				new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+
 			if (expressions == null)
 			{
 				return expressionDict;
@@ -268,33 +274,43 @@ namespace ProSuite.QA.Container
 
 			foreach (string expression in expressions)
 			{
-				string f = expression.Trim();
-				string key;
-				string expr;
-				IList<string> parts = expression.Split();
-				if (parts.Count >= 3 &&
-				    parts[parts.Count - 2]
-					    .Equals("AS", StringComparison.InvariantCultureIgnoreCase))
-				{
-					key = parts[parts.Count - 1];
-					f = f.Substring(0, f.Length - key.Length).Trim();
-					expr = f.Substring(0, f.Length - 2).Trim();
-				}
-				else
-				{
-					key = expression;
-					expr = expression;
-				}
+				string expr = GetExpression(expression, out string fieldName);
 
-				expressionDict.Add(key, expr);
+				expressionDict.Add(fieldName, expr);
 			}
 
 			return expressionDict;
 		}
 
+		[NotNull]
+		public static string GetExpression([NotNull] string expression,
+		                                   out string fieldName)
+		{
+			string trimmedExpr = expression.Trim();
+			string key;
+			string expr;
+			IList<string> parts = trimmedExpr.Split();
+			if (parts.Count >= 3 &&
+			    parts[parts.Count - 2]
+				    .Equals("AS", StringComparison.InvariantCultureIgnoreCase))
+			{
+				fieldName = parts[parts.Count - 1];
+				trimmedExpr = trimmedExpr.Substring(0, trimmedExpr.Length - fieldName.Length)
+				                         .Trim();
+				expr = trimmedExpr.Substring(0, trimmedExpr.Length - 2).Trim();
+			}
+			else
+			{
+				fieldName = trimmedExpr;
+				expr = trimmedExpr;
+			}
+
+			return expr;
+		}
 
 		[NotNull]
-		public static Dictionary<string, string> CreateAliases([CanBeNull] Dictionary<string, string> expressionDict)
+		public static Dictionary<string, string> CreateAliases(
+			[CanBeNull] Dictionary<string, string> expressionDict)
 		{
 			Dictionary<string, string> aliasFieldDict =
 				new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
@@ -305,31 +321,30 @@ namespace ProSuite.QA.Container
 
 			Dictionary<string, string> fieldAliasDict = new Dictionary<string, string>();
 
-
 			Dictionary<string, string> changedDict = new Dictionary<string, string>();
 
 			foreach (var pair in expressionDict)
 			{
 				string expression = pair.Value;
-				if (!expression.Contains("."))
+				if (! expression.Contains("."))
 				{
 					continue;
 				}
 
 				string aliasedExpression = expression;
 				bool completed = false;
-				while (!completed)
+				while (! completed)
 				{
 					completed = true;
 					foreach (string expressionToken in
-						ExpressionUtils.GetExpressionTokens(aliasedExpression, toUpper: true))
+					         GetExpressionTokens(aliasedExpression, toUpper: true))
 					{
-						if (!expressionToken.Contains("."))
+						if (! expressionToken.Contains("."))
 						{
 							continue;
 						}
 
-						if (!fieldAliasDict.TryGetValue(expressionToken, out string alias))
+						if (! fieldAliasDict.TryGetValue(expressionToken, out string alias))
 						{
 							alias = GetAlias(expressionToken, expressionDict.Values,
 							                 changedDict.Values);
@@ -355,7 +370,8 @@ namespace ProSuite.QA.Container
 			return aliasFieldDict;
 		}
 
-		private static string GetAlias([NotNull] string token, [NotNull]ICollection<string> expressions,
+		private static string GetAlias([NotNull] string token,
+		                               [NotNull] ICollection<string> expressions,
 		                               [NotNull] ICollection<string> aliasedExpressions)
 		{
 			string candidate = $"_{token.Substring(token.LastIndexOf('.') + 1)}";
@@ -375,19 +391,22 @@ namespace ProSuite.QA.Container
 
 			return candidate;
 		}
+
 		[NotNull]
-		private static string Replace([NotNull] string expression, [NotNull] string search, [NotNull] string replace)
+		private static string Replace([NotNull] string expression, [NotNull] string search,
+		                              [NotNull] string replace)
 		{
 			if (string.IsNullOrEmpty(search))
 			{
 				return expression;
 			}
+
 			int iStart = 0;
 			string replaced = expression;
 			while (true)
 			{
 				int iFound = replaced.Substring(iStart)
-													 .IndexOf(search, StringComparison.InvariantCultureIgnoreCase);
+				                     .IndexOf(search, StringComparison.InvariantCultureIgnoreCase);
 
 				if (iFound < 0)
 				{
@@ -398,17 +417,19 @@ namespace ProSuite.QA.Container
 				string extended = replaced.Substring(Math.Max(0, iFound - 1));
 				extended = extended.Substring(0, Math.Min(extended.Length, search.Length + 2));
 
-				foreach (string expressionToken in ExpressionUtils.GetExpressionTokens(extended, toUpper: true))
+				foreach (string expressionToken in GetExpressionTokens(extended, toUpper: true))
 				{
 					if (expressionToken == search)
 					{
-						replaced = $"{replaced.Substring(0, iFound)}{replace}{replaced.Substring(iFound + search.Length)}";
+						replaced =
+							$"{replaced.Substring(0, iFound)}{replace}{replaced.Substring(iFound + search.Length)}";
 						iStart = 0;
 					}
 					else
 					{
 						iStart = iFound + 1;
 					}
+
 					break;
 				}
 			}

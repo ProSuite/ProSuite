@@ -9,13 +9,14 @@ using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
+using ProSuite.QA.Core.IssueCodes;
 
 namespace ProSuite.QA.Tests.Schema
 {
 	public abstract class QaSchemaReservedFieldNamesBase : QaSchemaTestBase
 	{
-		private readonly ITable _table;
-		private readonly ITable _reservedNamesTable;
+		private readonly IReadOnlyTable _table;
+		private readonly IReadOnlyTable _reservedNamesTable;
 		private readonly string _reservedNameFieldName;
 		private readonly string _reservedReasonFieldName;
 		private readonly string _validNameFieldName;
@@ -39,7 +40,7 @@ namespace ProSuite.QA.Tests.Schema
 
 		#endregion
 
-		protected QaSchemaReservedFieldNamesBase([NotNull] ITable table,
+		protected QaSchemaReservedFieldNamesBase([NotNull] IReadOnlyTable table,
 		                                         [NotNull] IEnumerable<string> reservedNames)
 			: base(table)
 		{
@@ -55,16 +56,16 @@ namespace ProSuite.QA.Tests.Schema
 			}
 		}
 
-		protected QaSchemaReservedFieldNamesBase([NotNull] ITable table,
+		protected QaSchemaReservedFieldNamesBase([NotNull] IReadOnlyTable table,
 		                                         [NotNull] string reservedNamesString)
 			: this(table, TestUtils.GetTokens(reservedNamesString)) { }
 
-		protected QaSchemaReservedFieldNamesBase([NotNull] ITable table,
-		                                         [NotNull] ITable reservedNamesTable,
+		protected QaSchemaReservedFieldNamesBase([NotNull] IReadOnlyTable table,
+		                                         [NotNull] IReadOnlyTable reservedNamesTable,
 		                                         [NotNull] string reservedNameFieldName,
 		                                         [CanBeNull] string reservedReasonFieldName,
 		                                         [CanBeNull] string validNameFieldName,
-		                                         [CanBeNull] ITable referenceTable = null)
+		                                         [CanBeNull] IReadOnlyTable referenceTable = null)
 			: base(table, new[] {reservedNamesTable, referenceTable})
 		{
 			Assert.ArgumentNotNull(table, nameof(table));
@@ -84,7 +85,7 @@ namespace ProSuite.QA.Tests.Schema
 		{
 			EnsureReservedNames();
 
-			return DatasetUtils.GetFields(_table).Sum(field => CheckField(field));
+			return DatasetUtils.GetFields(_table.Fields).Sum(field => CheckField(field));
 		}
 
 		[NotNull]
@@ -121,8 +122,7 @@ namespace ProSuite.QA.Tests.Schema
 
 			const bool recycle = true;
 			foreach (
-				IRow row in GdbQueryUtils.GetRows(_reservedNamesTable, queryFilter,
-				                                  recycle))
+				IReadOnlyRow row in _reservedNamesTable.EnumRows(queryFilter, recycle))
 			{
 				var name = row.get_Value(nameFieldIndex) as string;
 

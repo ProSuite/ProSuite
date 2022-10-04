@@ -1,72 +1,150 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
+using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
-using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
+using ProSuite.Commons.Text;
 using ProSuite.QA.Container;
 
 namespace ProSuite.QA.Tests.Transformers
 {
 	public abstract class TableTransformer<T> : InvolvesTablesBase, ITableTransformer<T>
+		where T : IReadOnlyTable
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		private T _transformed;
 
-		protected TableTransformer(IList<ITable> involvedTables)
-			: base(involvedTables)
-		{
-			_tableConstraints = new Dictionary<int, string>();
-			_tableCaseSensitivity = new Dictionary<int, bool>();
-		}
-
-		[NotNull] private readonly Dictionary<int, string> _tableConstraints;
-		[NotNull] private readonly Dictionary<int, bool> _tableCaseSensitivity;
-		private string _transformerName;
+		protected TableTransformer(IEnumerable<IReadOnlyTable> involvedTables)
+			: base(involvedTables) { }
 
 		public T GetTransformed()
 		{
-			if (_transformed == null)
+			if (_transformed != null)
 			{
-				T transformed = GetTransformedCore(_transformerName);
-				if ((transformed as TransformedFeatureClass)?.BackingDataset is TransformedBackingDataset
-				    tbds)
-				{
-					foreach (var pair in _tableConstraints)
-					{
-						tbds.SetConstraint(pair.Key, pair.Value);
-					}
+				return _transformed;
+			}
 
-					foreach (var pair in _tableCaseSensitivity)
+			using (_msg.IncrementIndentation("Creating transformer {0}...", TransformerName))
+			{
+				try
+				{
+					T transformed = GetTransformedCore(TransformerName);
+
+					UpdateConstraints(transformed);
+
+					_transformed = transformed;
+
+					using (_msg.IncrementIndentation(
+						       $"Created transformed table {_transformed.Name}:"))
 					{
-						tbds.SetSqlCaseSensitivity(pair.Key, pair.Value);
+						LogTableProperties(_transformed);
 					}
 				}
-
-				_transformed = transformed;
+				catch (Exception exception)
+				{
+					_msg.Debug($"Error creating {TransformerName}", exception);
+					throw;
+				}
 			}
 
 			return _transformed;
 		}
 
-		protected abstract T GetTransformedCore(string name);
+		private static void LogTableProperties(IReadOnlyTable table)
+		{
+			if (table is IReadOnlyFeatureClass featureClass)
+			{
+				_msg.InfoFormat("Shape type: {0}", GetGeometryTypeText(featureClass.ShapeType));
+
+				IGeometryDef geometryDef = DatasetUtils.GetGeometryDef(featureClass);
+
+				_msg.InfoFormat("Has Z: {0}", geometryDef.HasZ);
+				_msg.InfoFormat("Has M: {0}", geometryDef.HasM);
+
+				_msg.InfoFormat(SpatialReferenceUtils.ToString(geometryDef.SpatialReference));
+			}
+
+			var fieldList = DatasetUtils.GetFields(table.Fields)
+			                            .Where(f => f.Name != InvolvedRowUtils.BaseRowField)
+			                            .Select(f => f.Name).ToList();
+
+			string fieldDisplayList = $"List of fields: " +
+			                          $"{Environment.NewLine}{StringUtils.Concatenate(fieldList, Environment.NewLine)}";
+
+			_msg.Info(fieldDisplayList);
+		}
+
+		[NotNull]
+		private static string GetGeometryTypeText(esriGeometryType shapeType)
+		{
+			switch (shapeType)
+			{
+				case esriGeometryType.esriGeometryPoint:
+					return "Point";
+
+				case esriGeometryType.esriGeometryMultipoint:
+					return "Multipoint";
+
+				case esriGeometryType.esriGeometryPolyline:
+					return "Polyline";
+
+				case esriGeometryType.esriGeometryPolygon:
+					return "Polygon";
+
+				case esriGeometryType.esriGeometryMultiPatch:
+					return "Multipatch";
+
+				default:
+					return shapeType.ToString();
+			}
+		}
+
+		private void UpdateConstraints(T transformed)
+		{
+			if (transformed is GdbTable gdbTable &&
+			    gdbTable.BackingDataset is TransformedBackingData backingData)
+
+				for (int i = 0; i < InvolvedTables.Count; i++)
+				{
+					string constraint = GetConstraint(i);
+					bool useCaseSensitiveSql = GetSqlCaseSensitivity(i);
+
+					string tableName = InvolvedTables[i]?.Name;
+
+					_msg.Debug(
+						$"Adding constraint to {tableName}: {constraint ?? "<null>"}. " +
+						$"Case-sensitive: {useCaseSensitiveSql}");
+
+					backingData.SetConstraint(i, constraint);
+					backingData.SetSqlCaseSensitivity(i, useCaseSensitiveSql);
+				}
+		}
+
+		protected abstract T GetTransformedCore(string tableName);
 
 		object ITableTransformer.GetTransformed() => GetTransformed();
 
-		string ITableTransformer.TransformerName
+		public string TransformerName { get; set; }
+
+		#region Overrides of ProcessBase
+
+		protected override void SetConstraintCore(IReadOnlyTable table, int tableIndex,
+		                                          string constraint)
 		{
-			get => _transformerName;
-			set => _transformerName = value;
+			if (_transformed == null)
+			{
+				return;
+			}
+
+			UpdateConstraints(_transformed);
 		}
 
-		void IInvolvesTables.SetConstraint(int tableIndex, string condition)
-		{
-			Assert.Null(_transformed, "transformed value already initialized");
-			_tableConstraints[tableIndex] = condition;
-		}
-
-		void IInvolvesTables.SetSqlCaseSensitivity(int tableIndex, bool useCaseSensitiveQaSql)
-		{
-			Assert.Null(_transformed, "transformed value  already initialized");
-			_tableCaseSensitivity[tableIndex] = useCaseSensitiveQaSql;
-		}
+		#endregion
 	}
 }

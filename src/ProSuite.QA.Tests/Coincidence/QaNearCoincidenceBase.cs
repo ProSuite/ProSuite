@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container;
 using ProSuite.QA.Container.Geometry;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.QA.Tests.Properties;
@@ -13,6 +11,9 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
 using IPnt = ProSuite.Commons.Geom.IPnt;
 using Pnt = ProSuite.Commons.Geom.Pnt;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Container;
+using ProSuite.QA.Core.IssueCodes;
 
 namespace ProSuite.QA.Tests.Coincidence
 {
@@ -49,7 +50,7 @@ namespace ProSuite.QA.Tests.Coincidence
 		#endregion
 
 		protected QaNearCoincidenceBase(
-			[NotNull] IEnumerable<IFeatureClass> featureClasses,
+			[NotNull] IEnumerable<IReadOnlyFeatureClass> featureClasses,
 			double searchDistance,
 			[NotNull] IFeatureDistanceProvider nearDistanceProvider,
 			[NotNull] IPairDistanceProvider connectedMinLengthProvider,
@@ -66,8 +67,8 @@ namespace ProSuite.QA.Tests.Coincidence
 		}
 
 		protected override NeighborhoodFinder GetNeighborhoodFinder(
-			IFeatureRowsDistance rowsDistance, IFeature feature, int tableIndex,
-			IFeature neighbor, int neighborTableIndex)
+			IFeatureRowsDistance rowsDistance, IReadOnlyFeature feature, int tableIndex,
+			IReadOnlyFeature neighbor, int neighborTableIndex)
 		{
 			return new NearNeighborhoodFinder(
 				rowsDistance, feature, tableIndex, neighbor, neighborTableIndex, _coincidentParts,
@@ -75,9 +76,9 @@ namespace ProSuite.QA.Tests.Coincidence
 				_coincidenceToleranceSquared, Is3D);
 		}
 
-		protected override int Check(IFeature feat0, int tableIndex,
+		protected override int Check(IReadOnlyFeature feat0, int tableIndex,
 		                             SortedDictionary<SegmentPart, SegmentParts> processed0,
-		                             IFeature feat1, int neighborTableIndex,
+		                             IReadOnlyFeature feat1, int neighborTableIndex,
 		                             SortedDictionary<SegmentPart, SegmentParts> processed1,
 		                             double near)
 		{
@@ -105,8 +106,8 @@ namespace ProSuite.QA.Tests.Coincidence
 		}
 
 		private int CheckPartCoincidence(
-			[NotNull] IRow row0,
-			[NotNull] IRow row1,
+			[NotNull] IReadOnlyRow row0,
+			[NotNull] IReadOnlyRow row1,
 			[NotNull] SortedDictionary<SegmentPart, SegmentParts> nearList0,
 			[NotNull] SortedDictionary<SegmentPart, SegmentParts> toleranceList0,
 			double near,
@@ -136,7 +137,7 @@ namespace ProSuite.QA.Tests.Coincidence
 			return errorCount;
 		}
 
-		private int CheckPartCoincidence([NotNull] IRow row0, [NotNull] IRow row1,
+		private int CheckPartCoincidence([NotNull] IReadOnlyRow row0, [NotNull] IReadOnlyRow row1,
 		                                 [NotNull] IList<SubClosedCurve> nearCurves,
 		                                 [NotNull] IList<SubClosedCurve> coincidentCurves,
 		                                 bool nearSelf,
@@ -271,14 +272,14 @@ namespace ProSuite.QA.Tests.Coincidence
 			return longCurves;
 		}
 
-		private void GetSubcurves(IRow row,
+		private void GetSubcurves(IReadOnlyRow row,
 		                          SortedDictionary<SegmentPart, SegmentParts> parts,
 		                          double near,
 		                          double connectedMinLength,
 		                          out IList<SubClosedCurve> connected,
 		                          out IList<SubClosedCurve> nearSelfConnected)
 		{
-			var feat = (IFeature) row;
+			var feat = (IReadOnlyFeature) row;
 			IIndexedSegments geom = IndexedSegmentUtils.GetIndexedGeometry(feat, false);
 			double nearSquared = near * near;
 
@@ -339,7 +340,7 @@ namespace ProSuite.QA.Tests.Coincidence
 			return connected;
 		}
 
-		private void AddSegment([NotNull] IFeature feature,
+		private void AddSegment([NotNull] IReadOnlyFeature feature,
 		                        [NotNull] IIndexedSegments geom,
 		                        [NotNull] IList<Subcurve> standardConnectedList,
 		                        [NotNull] IList<Subcurve> nearSelfConnectedList,
@@ -509,8 +510,8 @@ namespace ProSuite.QA.Tests.Coincidence
 			max = Math.Min(max, 1);
 		}
 
-		private int PartCoincidenceErrors([NotNull] IRow row0,
-		                                  [NotNull] IRow row1,
+		private int PartCoincidenceErrors([NotNull] IReadOnlyRow row0,
+		                                  [NotNull] IReadOnlyRow row1,
 		                                  [NotNull] SubClosedCurve connected,
 		                                  double near,
 		                                  double minLength,
@@ -522,8 +523,8 @@ namespace ProSuite.QA.Tests.Coincidence
 				return NoError;
 			}
 
-			IGeometry shape0 = ((IFeature) row0).Shape;
-			IGeometry shape1 = ((IFeature) row1).Shape;
+			IGeometry shape0 = ((IReadOnlyFeature) row0).Shape;
+			IGeometry shape1 = ((IReadOnlyFeature) row1).Shape;
 
 			bool isWithinFeature = row0 == row1;
 			bool zAware = ((IZAware) shape0).ZAware &&
@@ -536,7 +537,7 @@ namespace ProSuite.QA.Tests.Coincidence
 
 			var errorCount = 0;
 
-			string shapeFieldName = ((IFeatureClass) ((IFeature) row0).Class).ShapeFieldName;
+			string shapeFieldName = ((IReadOnlyFeatureClass) row0.Table).ShapeFieldName;
 
 			foreach (IPath errorPath in GeometryUtils.GetPaths(errorGeometry))
 			{
@@ -560,14 +561,15 @@ namespace ProSuite.QA.Tests.Coincidence
 					                                              out values);
 
 				errorCount += isWithinFeature
-					              ? ReportError(description, errorGeometry,
+					              ? ReportError(description, InvolvedRowUtils.GetInvolvedRows(row0),
+					                            errorGeometry,
 					                            Codes[Code.NearlyCoincidentSection_WithinFeature],
-					                            shapeFieldName, values,
-					                            row0)
-					              : ReportError(description, errorGeometry,
+					                            shapeFieldName, values: values)
+					              : ReportError(description,
+					                            InvolvedRowUtils.GetInvolvedRows(row0, row1),
+					                            errorGeometry,
 					                            Codes[Code.NearlyCoincidentSection_BetweenFeatures],
-					                            shapeFieldName, values,
-					                            row0, row1);
+					                            shapeFieldName, values: values);
 			}
 
 			return errorCount;
@@ -663,8 +665,8 @@ namespace ProSuite.QA.Tests.Coincidence
 
 			public NearNeighborhoodFinder(
 				[NotNull] IFeatureRowsDistance rowsDistance,
-				[NotNull] IFeature feature, int tableIndex,
-				[CanBeNull] IFeature neighbor, int neighborTableIndex,
+				[NotNull] IReadOnlyFeature feature, int tableIndex,
+				[CanBeNull] IReadOnlyFeature neighbor, int neighborTableIndex,
 				SegmentNeighbors coincidentParts,
 				double coincidenceTolerance,
 				double coincidenceToleranceSquared, bool is3D)

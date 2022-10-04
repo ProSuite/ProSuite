@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geometry.ExtractParts;
@@ -15,8 +14,7 @@ namespace ProSuite.Commons.AO.Geometry.Cut
 {
 	public static class CutGeometryUtils
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		/// <summary>
 		/// Cuts the provided multipatch along the specified cutLine.
@@ -145,7 +143,7 @@ namespace ProSuite.Commons.AO.Geometry.Cut
 			var existingFeature = new List<IPolygon>();
 			var newFeatures = new List<IPolygon>();
 			foreach (IPolygon connectedComponent in GeometryUtils.GetConnectedComponents(
-				inputPolygon))
+				         inputPolygon))
 			{
 				Plane3D plane = null;
 				if (zSource == ChangeAlongZSource.SourcePlane)
@@ -597,7 +595,7 @@ namespace ProSuite.Commons.AO.Geometry.Cut
 			var result = new List<IList<RingGroup>>();
 
 			foreach (IPolygon connectedComponent in GeometryUtils.GetConnectedComponents(
-				inputPolygon))
+				         inputPolygon))
 			{
 				RingGroup ringGroup =
 					GeometryConversionUtils.CreateRingGroup(connectedComponent);
@@ -762,7 +760,7 @@ namespace ProSuite.Commons.AO.Geometry.Cut
 
 			int pointId;
 			if (GeometryUtils.HasUniqueVertexId(
-				Assert.NotNull(multipatchPart.MainOuterRing), out pointId))
+				    Assert.NotNull(multipatchPart.MainOuterRing), out pointId))
 			{
 				ringGroup.Id = pointId;
 			}
@@ -859,17 +857,7 @@ namespace ProSuite.Commons.AO.Geometry.Cut
 				RingGroup footprintPart = outerRingsByFootprintPart.Key;
 				List<RingGroup> resultPolys = outerRingsByFootprintPart.Value;
 
-				IMultiPatch resultMultipatch =
-					GeometryFactory.CreateEmptyMultiPatch(prototype);
-
-				foreach (RingGroup poly in resultPolys)
-				{
-					// TODO: Support vertical ring group with inner rings
-					bool simplify = poly.InteriorRings.Any();
-
-					GeometryConversionUtils.AddRingGroup(
-						resultMultipatch, poly, simplify, poly.Id != null);
-				}
+				IMultiPatch resultMultipatch = GeometryConversionUtils.CreateMultipatch(resultPolys, prototype);
 
 				if (resultPolys.Any(p => p.Id != null))
 				{
@@ -906,6 +894,7 @@ namespace ProSuite.Commons.AO.Geometry.Cut
 
 			return result;
 		}
+
 
 		private static void AssignResultsToFootprintParts(
 			IEnumerable<RingGroup> resultRingGroups,
@@ -1012,15 +1001,9 @@ namespace ProSuite.Commons.AO.Geometry.Cut
 				return false;
 			}
 
-			IGeometry highLevelPart = GeometryUtils.GetHighLevelGeometry(ring);
+			Linestring closedLinestring = GeometryConversionUtils.CreateLinestring(ring);
 
-			GeometryUtils.Simplify(highLevelPart);
-
-			bool isVertical = highLevelPart.IsEmpty;
-
-			Marshal.ReleaseComObject(highLevelPart);
-
-			return isVertical;
+			return closedLinestring.IsVerticalRing(tolerance);
 		}
 
 		#endregion

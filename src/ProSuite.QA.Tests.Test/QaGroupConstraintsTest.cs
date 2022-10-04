@@ -3,7 +3,6 @@ using System.Data;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container;
 using ProSuite.QA.Container.Test;
 using ProSuite.QA.Tests.Test.TestRunners;
 using NUnit.Framework;
@@ -88,7 +87,7 @@ namespace ProSuite.QA.Tests.Test
 			row4.Store();
 
 			const bool limitToTestedRows = false;
-			var test = new QaGroupConstraints(tbl,
+			var test = new QaGroupConstraints(ReadOnlyTableFactory.Create(tbl),
 			                                  "IIF(LEN(Kostenstelle) >=6, SUBSTRING(Kostenstelle, 1, 6), '')",
 			                                  "SUBSTRING(Kostenstelle, 8, 9)",
 			                                  1,
@@ -152,7 +151,7 @@ namespace ProSuite.QA.Tests.Test
 			row4.Store();
 
 			const bool limitToTestedRows = false;
-			var test = new QaGroupConstraints((ITable) fc,
+			var test = new QaGroupConstraints(ReadOnlyTableFactory.Create(fc),
 			                                  "IIF(LEN(Kostenstelle) >=6, SUBSTRING(Kostenstelle, 1, 6), '')",
 			                                  "SUBSTRING(Kostenstelle, 8, 9)", 1,
 			                                  limitToTestedRows);
@@ -338,12 +337,16 @@ namespace ProSuite.QA.Tests.Test
 			const bool limitToTestedRows = false;
 			ITable relTab = TableJoinUtils.CreateQueryTable(rel, JoinType.InnerJoin);
 
-			var test = new QaGroupConstraints(relTab,
+			var test = new QaGroupConstraints(ReadOnlyTableFactory.Create(relTab),
 			                                  "IIF(LEN(TblRel1.Kostenstelle) >=6, SUBSTRING(TblRel1.Kostenstelle, 1, 6), '')",
 			                                  "SUBSTRING(TblRel1.Kostenstelle, 8, 9)", 1,
 			                                  limitToTestedRows);
 
-			test.SetRelatedTables(new[] {tableData, tableRel});
+			test.SetRelatedTables(new[]
+			                      {
+				                      ReadOnlyTableFactory.Create(tableData),
+				                      ReadOnlyTableFactory.Create(tableRel)
+			                      });
 			using (var runner = new QaTestRunner(test))
 			{
 				runner.Execute();
@@ -417,10 +420,11 @@ namespace ProSuite.QA.Tests.Test
 			row2.Store();
 
 			const bool limitToTestedRows = false;
-			var test = new QaGroupConstraints(new[] {table1, table2},
-			                                  new[] {"RouteID", "OtherId"},
-			                                  new[] {"'Haltung'", "'B'"},
-			                                  1, limitToTestedRows);
+			var test = new QaGroupConstraints(
+				new[] { ReadOnlyTableFactory.Create(table1), ReadOnlyTableFactory.Create(table2) },
+				new[] { "RouteID", "OtherId" },
+				new[] { "'Haltung'", "'B'" },
+				1, limitToTestedRows);
 
 			using (var runner = new QaTestRunner(test))
 			{

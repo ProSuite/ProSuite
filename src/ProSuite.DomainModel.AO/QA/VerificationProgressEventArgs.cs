@@ -31,6 +31,13 @@ namespace ProSuite.DomainModel.AO.QA
 			Total = -1;
 		}
 
+		// for Standalone messages -> remove once Standalone Verification provides proper events
+		public VerificationProgressEventArgs(string message)
+		{
+			ProgressType = VerificationProgressType.Undefined;
+			Tag = message;
+		}
+
 		public VerificationProgressEventArgs(
 			VerificationProgressType type, ProgressArgs args)
 		{

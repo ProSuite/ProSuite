@@ -7,8 +7,8 @@ namespace ProSuite.Commons.IoC
 {
 	/// <summary>
 	/// A basic 'Pure DI' container that allows registering objects with
-	/// - single-instance-per-container lifecycle (<see cref="Register{T}(object)"/>)
-	/// - transient lifecycle (creating a new instance when resolved, <see cref="Register{T}(System.Func{object})"/>
+	/// - single-instance-per-container lifecycle (<see cref="Register{T}(object, string)"/>)
+	/// - transient lifecycle (creating a new instance when resolved, <see cref="Register{T}(Func{object},string)"/>
 	/// Once only .net is supported, an implementation using IServiceCollection could be used.
 	/// </summary>
 	public class IoCContainer : IDisposable, IDependencyResolver
@@ -16,8 +16,14 @@ namespace ProSuite.Commons.IoC
 		private readonly IDictionary<Type, Func<object>> _transientComponents =
 			new Dictionary<Type, Func<object>>();
 
+		private readonly IDictionary<string, Func<object>> _transientComponentsByName =
+			new Dictionary<string, Func<object>>();
+
 		private readonly IDictionary<Type, object> _singletonComponents =
 			new Dictionary<Type, object>();
+
+		private readonly IDictionary<string, object> _singletonComponentsByName =
+			new Dictionary<string, object>();
 
 		/// <summary>
 		/// Returns the component instance of the specified type.
@@ -27,6 +33,20 @@ namespace ProSuite.Commons.IoC
 		/// <exception cref="InvalidConfigurationException"></exception>
 		public T Resolve<T>(string key = null)
 		{
+			if (key != null)
+			{
+				if (_singletonComponentsByName.TryGetValue(key, out object namedComponent))
+				{
+					return (T) namedComponent;
+				}
+
+				if (_transientComponentsByName.TryGetValue(
+					    key, out Func<object> namedFactoryMethod))
+				{
+					return (T) namedFactoryMethod();
+				}
+			}
+
 			if (_transientComponents.TryGetValue(typeof(T),
 			                                     out Func<object> factoryMethod))
 			{
@@ -49,9 +69,17 @@ namespace ProSuite.Commons.IoC
 		/// </summary>
 		/// <typeparam name="T"></typeparam>
 		/// <param name="componentFactory"></param>
-		public void Register<T>([NotNull] Func<object> componentFactory)
+		/// <param name="key">The key for the transient component.</param>
+		public void Register<T>([NotNull] Func<object> componentFactory, string key = null)
 		{
-			_transientComponents[typeof(T)] = componentFactory;
+			if (key != null)
+			{
+				_transientComponentsByName[key] = componentFactory;
+			}
+			else
+			{
+				_transientComponents[typeof(T)] = componentFactory;
+			}
 		}
 
 		/// <summary>
@@ -62,9 +90,17 @@ namespace ProSuite.Commons.IoC
 		/// </summary>
 		/// <typeparam name="T"></typeparam>
 		/// <param name="component"></param>
-		public void Register<T>([NotNull] object component)
+		/// <param name="key"></param>
+		public void Register<T>([NotNull] object component, string key = null)
 		{
-			_singletonComponents[typeof(T)] = component;
+			if (key != null)
+			{
+				_singletonComponentsByName[key] = component;
+			}
+			else
+			{
+				_singletonComponents[typeof(T)] = component;
+			}
 		}
 
 		/// <summary>

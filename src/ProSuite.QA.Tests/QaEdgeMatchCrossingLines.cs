@@ -4,7 +4,6 @@ using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.EdgeMatch;
@@ -15,6 +14,8 @@ using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Core;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
 {
@@ -160,16 +161,16 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaEdgeMatchCrossingLines_0))]
 		public QaEdgeMatchCrossingLines(
 			[Doc(nameof(DocStrings.QaEdgeMatchCrossingLines_lineClass1))] [NotNull]
-			IFeatureClass
+			IReadOnlyFeatureClass
 				lineClass1,
 			[Doc(nameof(DocStrings.QaEdgeMatchCrossingLines_borderClass1))] [NotNull]
-			IFeatureClass
+			IReadOnlyFeatureClass
 				borderClass1,
 			[Doc(nameof(DocStrings.QaEdgeMatchCrossingLines_lineClass2))] [NotNull]
-			IFeatureClass
+			IReadOnlyFeatureClass
 				lineClass2,
 			[Doc(nameof(DocStrings.QaEdgeMatchCrossingLines_borderClass2))] [NotNull]
-			IFeatureClass
+			IReadOnlyFeatureClass
 				borderClass2,
 			[Doc(nameof(DocStrings.QaEdgeMatchCrossingLines_searchDistance))]
 			double
@@ -181,16 +182,16 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaEdgeMatchCrossingLines_1))]
 		public QaEdgeMatchCrossingLines(
 			[Doc(nameof(DocStrings.QaEdgeMatchCrossingLines_lineClasses1))] [NotNull]
-			IList<IFeatureClass>
+			IList<IReadOnlyFeatureClass>
 				lineClasses1,
 			[Doc(nameof(DocStrings.QaEdgeMatchCrossingLines_borderClass1))] [NotNull]
-			IFeatureClass
+			IReadOnlyFeatureClass
 				borderClass1,
 			[Doc(nameof(DocStrings.QaEdgeMatchCrossingLines_lineClasses2))] [NotNull]
-			IList<IFeatureClass>
+			IList<IReadOnlyFeatureClass>
 				lineClasses2,
 			[Doc(nameof(DocStrings.QaEdgeMatchCrossingLines_borderClass2))] [NotNull]
-			IFeatureClass
+			IReadOnlyFeatureClass
 				borderClass2,
 			[Doc(nameof(DocStrings.QaEdgeMatchCrossingLines_searchDistance))]
 			double
@@ -205,21 +206,21 @@ namespace ProSuite.QA.Tests
 
 			SearchDistance = searchDistance;
 
-			foreach (IFeatureClass lineClass in Union(lineClasses1, lineClasses2))
+			foreach (IReadOnlyFeatureClass lineClass in Union(lineClasses1, lineClasses2))
 			{
 				Assert.ArgumentCondition(
 					lineClass.ShapeType == esriGeometryType.esriGeometryPolyline,
 					string.Format("Polyline feature class expected: {0}",
-					              DatasetUtils.GetName(lineClass)));
+					              lineClass.Name));
 			}
 
-			foreach (IFeatureClass borderClass in new[] {borderClass1, borderClass2})
+			foreach (IReadOnlyFeatureClass borderClass in new[] {borderClass1, borderClass2})
 			{
 				Assert.ArgumentCondition(
 					borderClass.ShapeType == esriGeometryType.esriGeometryPolyline ||
 					borderClass.ShapeType == esriGeometryType.esriGeometryPolygon,
 					string.Format("Polyline or polygon feature class expected: {0}",
-					              DatasetUtils.GetName(borderClass)));
+					              borderClass.Name));
 			}
 
 			_searchDistance = searchDistance;
@@ -442,9 +443,9 @@ namespace ProSuite.QA.Tests
 			_reportedPointPairs.Clear();
 		}
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
-			var feature = row as IFeature;
+			var feature = row as IReadOnlyFeature;
 			if (feature == null)
 			{
 				return NoError;
@@ -521,7 +522,7 @@ namespace ProSuite.QA.Tests
 			return null;
 		}
 
-		private int CheckConnections([NotNull] IFeature feature,
+		private int CheckConnections([NotNull] IReadOnlyFeature feature,
 		                             int tableIndex,
 		                             [NotNull] ICollection<int>
 			                             sameSideLineClassIndexes,
@@ -559,7 +560,7 @@ namespace ProSuite.QA.Tests
 					continue;
 				}
 
-				IList<IFeature> connectionsOnSameSide =
+				IList<IReadOnlyFeature> connectionsOnSameSide =
 					GetConnectionsOnSameSide(feature, tableIndex,
 					                         borderConnection.Point,
 					                         sameSideLineClassIndexes);
@@ -617,21 +618,21 @@ namespace ProSuite.QA.Tests
 		}
 
 		[NotNull]
-		private IEnumerable<ITable> GetTables([NotNull] IEnumerable<int> tableIndexes)
+		private IEnumerable<IReadOnlyTable> GetTables([NotNull] IEnumerable<int> tableIndexes)
 		{
 			return
 				tableIndexes.Distinct()
 				            .Select(tableIndex => InvolvedTables[tableIndex]);
 		}
 
-		private IList<IFeature> GetConnectionsOnSameSide(
-			[NotNull] IFeature feature,
+		private IList<IReadOnlyFeature> GetConnectionsOnSameSide(
+			[NotNull] IReadOnlyFeature feature,
 			int tableIndex,
 			[NotNull] IPoint borderConnection,
 			[NotNull] IEnumerable<int> sameSideLineClassIndexes)
 		{
-			var connectionsOnSameSide = new List<IFeature>();
-			var table = (ITable) feature.Class;
+			var connectionsOnSameSide = new List<IReadOnlyFeature>();
+			var table = feature.Table;
 
 			int oid = feature.OID;
 
@@ -640,14 +641,14 @@ namespace ProSuite.QA.Tests
 				ISpatialFilter spatialFilter = _filters[classIndex];
 				spatialFilter.Geometry = borderConnection;
 
-				ITable searchTable = InvolvedTables[classIndex];
+				IReadOnlyTable searchTable = InvolvedTables[classIndex];
 
 				bool sameTable = searchTable == table;
 
-				foreach (IFeature otherFeature in
+				foreach (IReadOnlyFeature otherFeature in
 					Search(InvolvedTables[classIndex], spatialFilter,
 					       _filterHelpers[classIndex])
-						.Cast<IFeature>())
+						.Cast<IReadOnlyFeature>())
 				{
 					if (sameTable && otherFeature.OID == oid)
 					{
@@ -699,10 +700,10 @@ namespace ProSuite.QA.Tests
 			[NotNull] IEnumerable<int> neighborLineClassIndexes,
 			int neighborBorderLineClassIndex,
 			[NotNull] LineMatchCondition crossingLineMatchCondition,
-			[NotNull] IList<IFeature> connectionsOnSameSide)
+			[NotNull] IList<IReadOnlyFeature> connectionsOnSameSide)
 		{
 			var errorCount = 0;
-			IFeature feature = borderConnection.Feature;
+			IReadOnlyFeature feature = borderConnection.Feature;
 			bool isStartPoint = borderConnection.EndPoint.IsStartPoint;
 			int lineClassIndex = borderConnection.ClassIndex;
 
@@ -755,12 +756,13 @@ namespace ProSuite.QA.Tests
 					GetAttributeConstraintViolations(
 						borderConnection, neighborConnection))
 				{
-					errorCount += ReportError(constraintViolation.Description,
-					                          GeometryFactory.Clone(borderConnection.Point),
-					                          Codes[Code.Match_ConstraintsNotFulfilled],
-					                          constraintViolation.AffectedComponents,
-					                          new[] {constraintViolation.TextValue},
-					                          feature, neighborConnection.Feature);
+					errorCount += ReportError(
+						constraintViolation.Description,
+						InvolvedRowUtils.GetInvolvedRows(feature, neighborConnection.Feature),
+						GeometryFactory.Clone(borderConnection.Point),
+						Codes[Code.Match_ConstraintsNotFulfilled],
+						constraintViolation.AffectedComponents,
+						values: new[] { constraintViolation.TextValue });
 				}
 			}
 
@@ -773,15 +775,16 @@ namespace ProSuite.QA.Tests
 				in connectionsWithNeighborBorder)
 			{
 				foreach (AttributeConstraintViolation constraintViolation in
-					GetAttributeConstraintViolations(
-						borderConnection, neighborConnection))
+				         GetAttributeConstraintViolations(
+					         borderConnection, neighborConnection))
 				{
-					errorCount += ReportError(constraintViolation.Description,
-					                          GeometryFactory.Clone(borderConnection.Point),
-					                          Codes[Code.Match_ConstraintsNotFulfilled],
-					                          constraintViolation.AffectedComponents,
-					                          new[] {constraintViolation.TextValue},
-					                          feature, neighborConnection.Feature);
+					errorCount += ReportError(
+						constraintViolation.Description,
+						InvolvedRowUtils.GetInvolvedRows(feature, neighborConnection.Feature),
+						GeometryFactory.Clone(borderConnection.Point),
+						Codes[Code.Match_ConstraintsNotFulfilled],
+						constraintViolation.AffectedComponents,
+						values: new[] { constraintViolation.TextValue });
 				}
 			}
 
@@ -801,9 +804,9 @@ namespace ProSuite.QA.Tests
 							errorCount += ReportError(
 								LocalizableStrings
 									.QaEdgeMatchCrossingLines_NoMatch_NoCandidate_ConnectedOnSameSide,
+								InvolvedRowUtils.GetInvolvedRows(feature),
 								GeometryFactory.Clone(borderConnection.Point),
-								Codes[Code.NoMatch_NoCandidate_ConnectedOnSameSide],
-								null, feature);
+								Codes[Code.NoMatch_NoCandidate_ConnectedOnSameSide], null);
 							return errorCount;
 						}
 					}
@@ -812,10 +815,9 @@ namespace ProSuite.QA.Tests
 						errorCount += ReportError(
 							LocalizableStrings
 								.QaEdgeMatchCrossingLines_NoMatch_NoCandidate,
+							InvolvedRowUtils.GetInvolvedRows(feature),
 							GeometryFactory.Clone(borderConnection.Point),
-							Codes[Code.NoMatch_NoCandidate], null,
-							feature);
-						return errorCount;
+							Codes[Code.NoMatch_NoCandidate], null);return errorCount;
 					}
 				}
 			}
@@ -873,10 +875,10 @@ namespace ProSuite.QA.Tests
 						unconnectedNeighborEndpoint.DistanceToEndpoint,
 						null, out issueCode);
 
-					errorCount += ReportError(description, errorGeometry,
-					                          issueCode, null,
-					                          feature,
-					                          neighborBorderConnection.Feature);
+					errorCount += ReportError(
+						description,
+						InvolvedRowUtils.GetInvolvedRows(feature, neighborBorderConnection.Feature),
+						errorGeometry, issueCode, null);
 				}
 				else
 				{
@@ -891,11 +893,12 @@ namespace ProSuite.QA.Tests
 							unconnectedNeighborEndpoint.DistanceToEndpoint,
 							constraintViolation, out issueCode);
 
-						errorCount += ReportError(description, errorGeometry,
-						                          issueCode,
-						                          constraintViolation.AffectedComponents,
-						                          new[] {constraintViolation.TextValue},
-						                          feature, neighborBorderConnection.Feature);
+						errorCount += ReportError(
+							description,
+							InvolvedRowUtils.GetInvolvedRows(
+								feature, neighborBorderConnection.Feature),
+							errorGeometry, issueCode, constraintViolation.AffectedComponents,
+							values: new[] { constraintViolation.TextValue });
 					}
 				}
 			}
@@ -929,14 +932,14 @@ namespace ProSuite.QA.Tests
 			                                unconnectedNeighborEndpoints,
 		                                out bool reportedAnyInOppositeDirection)
 		{
-			IFeature feature = borderConnection.Feature;
+			IReadOnlyFeature feature = borderConnection.Feature;
 			bool isStartPoint = borderConnection.EndPoint.IsStartPoint;
 			int lineClassIndex = borderConnection.ClassIndex;
 
 			double neighborXyTolerance =
 				_xyToleranceByTableIndex[neighborLineClassIndex];
 
-			foreach (IFeature neighborFeature in
+			foreach (IReadOnlyFeature neighborFeature in
 				SearchNeighborFeatures(borderConnection.Point, neighborLineClassIndex)
 			)
 			{
@@ -1095,10 +1098,10 @@ namespace ProSuite.QA.Tests
 			return proximity.ReturnDistance(point);
 		}
 
-		private bool WasReportedInOppositeDirection([NotNull] IRow row,
+		private bool WasReportedInOppositeDirection([NotNull] IReadOnlyRow row,
 		                                            bool isStartPoint,
 		                                            int tableIndex,
-		                                            [NotNull] IRow neighborRow,
+		                                            [NotNull] IReadOnlyRow neighborRow,
 		                                            bool isNeighborStartPoint,
 		                                            int neighborTableIndex)
 		{
@@ -1110,9 +1113,9 @@ namespace ProSuite.QA.Tests
 				                                                  isStartPoint));
 		}
 
-		private void AddReportedRowPair([NotNull] IRow row, bool isStartPoint,
+		private void AddReportedRowPair([NotNull] IReadOnlyRow row, bool isStartPoint,
 		                                int tableIndex,
-		                                [NotNull] IRow neighborRow,
+		                                [NotNull] IReadOnlyRow neighborRow,
 		                                bool isNeighborStartPoint,
 		                                int neighborTableIndex)
 		{
@@ -1124,7 +1127,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[NotNull]
-		private IEnumerable<IFeature> SearchNeighborFeatures(
+		private IEnumerable<IReadOnlyFeature> SearchNeighborFeatures(
 			[NotNull] IPoint borderConnection,
 			int neighborLineClassIndex)
 		{
@@ -1135,7 +1138,7 @@ namespace ProSuite.QA.Tests
 			return Search(InvolvedTables[neighborLineClassIndex],
 			              spatialFilter,
 			              _filterHelpers[neighborLineClassIndex],
-			              borderConnection).Cast<IFeature>();
+			              borderConnection).Cast<IReadOnlyFeature>();
 		}
 
 		[NotNull]
@@ -1299,7 +1302,7 @@ namespace ProSuite.QA.Tests
 		[NotNull]
 		private ICollection<BorderConnection> GetBorderConnections(
 			[NotNull] IPolyline polyline,
-			[NotNull] IFeature lineFeature,
+			[NotNull] IReadOnlyFeature lineFeature,
 			int lineClassIndex,
 			int borderClassIndex)
 		{
@@ -1337,10 +1340,10 @@ namespace ProSuite.QA.Tests
 
 		private bool IsCoincidentWithNeighborBorder(
 			[NotNull] BorderConnection borderConnection,
-			[NotNull] IFeature neighborFeature, int neighborLineClassIndex,
+			[NotNull] IReadOnlyFeature neighborFeature, int neighborLineClassIndex,
 			int neighborBorderClassIndex)
 		{
-			ITable neighborBorderClass = InvolvedTables[neighborBorderClassIndex];
+			IReadOnlyTable neighborBorderClass = InvolvedTables[neighborBorderClassIndex];
 
 			ISpatialFilter spatialFilter = _filters[neighborBorderClassIndex];
 			spatialFilter.Geometry = borderConnection.Point;
@@ -1348,7 +1351,7 @@ namespace ProSuite.QA.Tests
 			BorderMatchCondition neighborBorderMatchCondition =
 				GetBorderMatchCondition(neighborLineClassIndex);
 
-			foreach (IRow borderRow in Search(neighborBorderClass,
+			foreach (IReadOnlyRow borderRow in Search(neighborBorderClass,
 			                                  spatialFilter,
 			                                  _filterHelpers[neighborBorderClassIndex])
 			)
@@ -1368,10 +1371,10 @@ namespace ProSuite.QA.Tests
 		[NotNull]
 		private ICollection<IPolyline> GetConnectedBorderShapes(
 			[NotNull] IPoint point,
-			[NotNull] IFeature lineFeature, int lineClassIndex,
+			[NotNull] IReadOnlyFeature lineFeature, int lineClassIndex,
 			int borderClassIndex)
 		{
-			ITable borderClass = InvolvedTables[borderClassIndex];
+			IReadOnlyTable borderClass = InvolvedTables[borderClassIndex];
 
 			ISpatialFilter spatialFilter = _filters[borderClassIndex];
 			spatialFilter.Geometry = point;
@@ -1381,9 +1384,9 @@ namespace ProSuite.QA.Tests
 			BorderMatchCondition borderMatchCondition =
 				GetBorderMatchCondition(lineClassIndex);
 
-			foreach (IFeature borderFeature in
+			foreach (IReadOnlyFeature borderFeature in
 				Search(borderClass, spatialFilter, _filterHelpers[borderClassIndex])
-					.Cast<IFeature>())
+					.Cast<IReadOnlyFeature>())
 			{
 				if (! borderMatchCondition.IsFulfilled(lineFeature, lineClassIndex,
 				                                       borderFeature, borderClassIndex))
@@ -1580,7 +1583,7 @@ namespace ProSuite.QA.Tests
 			private readonly ICollection<IPolyline> _borderShapes;
 			private bool? _endSegmentFollowsBorder;
 
-			public BorderConnection([NotNull] IFeature feature,
+			public BorderConnection([NotNull] IReadOnlyFeature feature,
 			                        [NotNull] LineEndPoint endPoint,
 			                        int classIndex,
 			                        [NotNull] ICollection<IPolyline> borderShapes,

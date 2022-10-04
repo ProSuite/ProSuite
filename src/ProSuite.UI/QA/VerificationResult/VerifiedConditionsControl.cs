@@ -4,15 +4,16 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
-using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Misc;
 using ProSuite.Commons.Reflection;
 using ProSuite.Commons.Text;
+using ProSuite.Commons.UI.ScreenBinding.Lists;
 using ProSuite.Commons.UI.WinForms.Controls;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
+using ProSuite.QA.Core;
 using ProSuite.UI.Properties;
 
 namespace ProSuite.UI.QA.VerificationResult
@@ -214,7 +215,7 @@ namespace ProSuite.UI.QA.VerificationResult
 
 				return testType == null
 					       ? string.Empty
-					       : StringUtils.ConcatenateSorted(ReflectionUtils.GetCategories(testType),
+					       : StringUtils.ConcatenateSorted(InstanceUtils.GetCategories(testType),
 					                                       ", ");
 			}
 
@@ -242,7 +243,8 @@ namespace ProSuite.UI.QA.VerificationResult
 			{
 				var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-				foreach (Dataset dataset in qualityCondition.GetDatasetParameterValues())
+				foreach (Dataset dataset in qualityCondition.GetDatasetParameterValues(
+					         includeSourceDatasets: true))
 				{
 					names.Add(dataset.Name);
 				}

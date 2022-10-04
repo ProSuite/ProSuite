@@ -1,7 +1,8 @@
 using System;
 using System.Collections.Generic;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.QA.Container
@@ -9,7 +10,7 @@ namespace ProSuite.QA.Container
 	public interface IInvolvesTables
 	{
 		[NotNull]
-		IList<ITable> InvolvedTables { get; }
+		IList<IReadOnlyTable> InvolvedTables { get; }
 
 		/// <summary>
 		/// limits the data to execute corresponding to condition
@@ -58,14 +59,14 @@ namespace ProSuite.QA.Container
 		/// </summary>
 		/// <param name="selection"></param>
 		/// <returns></returns>
-		int Execute([NotNull] IEnumerable<IRow> selection);
+		int Execute([NotNull] IEnumerable<IReadOnlyRow> selection);
 
 		/// <summary>
 		/// executes test for specified row
 		/// </summary>
 		/// <param name="row"></param>
 		/// <returns></returns>
-		int Execute([NotNull] IRow row);
+		int Execute([NotNull] IReadOnlyRow row);
 
 		/// <summary>
 		/// limits the execute area to area
@@ -108,18 +109,13 @@ namespace ProSuite.QA.Container
 		double SearchDistance { get; }
 	}
 
-	public interface ITransformedValue
-	{
-		[NotNull]
-		IList<ITable> InvolvedTables { get; }
-
-		ISearchable DataContainer { get; set; }
-	}
-
+	// This is used to manage the caching of the transformed output features produced by implementors.
+	// Rename to CacheableTransformedTable?
 	public interface ITransformedTable
 	{
-		void SetKnownTransformedRows([CanBeNull] IEnumerable<IRow> knownRows);
+		void SetKnownTransformedRows([CanBeNull] IEnumerable<VirtualRow> knownRows);
 
+		// TODO: What are the rules and restrictions if a transformer wants to use caching?
 		bool NoCaching { get; }
 	}
 
@@ -130,7 +126,7 @@ namespace ProSuite.QA.Container
 
 	public interface IRowFilter : INamedFilter
 	{
-		bool VerifyExecute(IRow row);
+		bool VerifyExecute(IReadOnlyRow row);
 	}
 
 	public interface IIssueFilter : INamedFilter

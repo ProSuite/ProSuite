@@ -5,6 +5,7 @@ using ProSuite.QA.Tests.Test.TestRunners;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.AO.Test.TestSupport;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests.Test
 {
@@ -37,12 +38,14 @@ namespace ProSuite.QA.Tests.Test
 			IFeature row1 = featureClassMock.CreateFeature(construction.Curve);
 
 			var errorRunner =
-				new QaTestRunner(new QaMinMeanSegmentLength(featureClassMock, 1.5, false));
+				new QaTestRunner(new QaMinMeanSegmentLength(
+					                 ReadOnlyTableFactory.Create(featureClassMock), 1.5, false));
 			errorRunner.Execute(row1);
 			Assert.AreEqual(1, errorRunner.Errors.Count);
 
 			var noErrorRunner =
-				new QaTestRunner(new QaMinMeanSegmentLength(featureClassMock, 0.9, false));
+				new QaTestRunner(new QaMinMeanSegmentLength(
+					                 ReadOnlyTableFactory.Create(featureClassMock), 0.9, false));
 			noErrorRunner.Execute(row1);
 			Assert.AreEqual(0, noErrorRunner.Errors.Count);
 		}
@@ -62,27 +65,32 @@ namespace ProSuite.QA.Tests.Test
 			IFeature row1 = featureClassMock.CreateFeature(construction.Curve);
 
 			var noErrorNoPartsRunner =
-				new QaTestRunner(new QaMinMeanSegmentLength(featureClassMock, 0.9, false));
+				new QaTestRunner(new QaMinMeanSegmentLength(
+					                 ReadOnlyTableFactory.Create(featureClassMock), 0.9, false));
 			noErrorNoPartsRunner.Execute(row1);
 			Assert.AreEqual(0, noErrorNoPartsRunner.Errors.Count);
 
 			var oneErrorNoPartsRunner =
-				new QaTestRunner(new QaMinMeanSegmentLength(featureClassMock, 1.5, false));
+				new QaTestRunner(new QaMinMeanSegmentLength(
+					                 ReadOnlyTableFactory.Create(featureClassMock), 1.5, false));
 			oneErrorNoPartsRunner.Execute(row1);
 			Assert.AreEqual(1, oneErrorNoPartsRunner.Errors.Count);
 
 			var noErrorPerPartsRunner =
-				new QaTestRunner(new QaMinMeanSegmentLength(featureClassMock, 0.9, true));
+				new QaTestRunner(new QaMinMeanSegmentLength(
+					                 ReadOnlyTableFactory.Create(featureClassMock), 0.9, true));
 			noErrorPerPartsRunner.Execute(row1);
 			Assert.AreEqual(0, noErrorPerPartsRunner.Errors.Count);
 
 			var oneErrorRunner =
-				new QaTestRunner(new QaMinMeanSegmentLength(featureClassMock, 1.1, true));
+				new QaTestRunner(new QaMinMeanSegmentLength(
+					                 ReadOnlyTableFactory.Create(featureClassMock), 1.1, true));
 			oneErrorRunner.Execute(row1);
 			Assert.AreEqual(1, oneErrorRunner.Errors.Count);
 
 			var twoErrorRunner =
-				new QaTestRunner(new QaMinMeanSegmentLength(featureClassMock, 1.5, true));
+				new QaTestRunner(new QaMinMeanSegmentLength(
+					                 ReadOnlyTableFactory.Create(featureClassMock), 1.5, true));
 			twoErrorRunner.Execute(row1);
 			Assert.AreEqual(2, twoErrorRunner.Errors.Count);
 		}
@@ -103,12 +111,14 @@ namespace ProSuite.QA.Tests.Test
 			IFeature row1 = featureClassMock.CreateFeature(construction.MultiPatch);
 
 			var errorRunner =
-				new QaTestRunner(new QaMinMeanSegmentLength(featureClassMock, 1.5, false));
+				new QaTestRunner(new QaMinMeanSegmentLength(
+					                 ReadOnlyTableFactory.Create(featureClassMock), 1.5, false));
 			errorRunner.Execute(row1);
 			Assert.AreEqual(1, errorRunner.Errors.Count);
 
 			var noErrorRunner =
-				new QaTestRunner(new QaMinMeanSegmentLength(featureClassMock, 0.9, false));
+				new QaTestRunner(new QaMinMeanSegmentLength(
+					                 ReadOnlyTableFactory.Create(featureClassMock), 0.9, false));
 			noErrorRunner.Execute(row1);
 			Assert.AreEqual(0, noErrorRunner.Errors.Count);
 		}
@@ -132,27 +142,32 @@ namespace ProSuite.QA.Tests.Test
 			IFeature row1 = featureClassMock.CreateFeature(construction.MultiPatch);
 
 			var noErrorNoPartsRunner =
-				new QaTestRunner(new QaMinMeanSegmentLength(featureClassMock, 0.9, false));
+				new QaTestRunner(new QaMinMeanSegmentLength(
+					                 ReadOnlyTableFactory.Create(featureClassMock), 0.9, false));
 			noErrorNoPartsRunner.Execute(row1);
 			Assert.AreEqual(0, noErrorNoPartsRunner.Errors.Count);
 
 			var oneErrorNoPartsRunner =
-				new QaTestRunner(new QaMinMeanSegmentLength(featureClassMock, 1.5, false));
+				new QaTestRunner(new QaMinMeanSegmentLength(
+					                 ReadOnlyTableFactory.Create(featureClassMock), 1.5, false));
 			oneErrorNoPartsRunner.Execute(row1);
 			Assert.AreEqual(1, oneErrorNoPartsRunner.Errors.Count);
 
 			var noErrorPerPartsRunner =
-				new QaTestRunner(new QaMinMeanSegmentLength(featureClassMock, 0.9, true));
+				new QaTestRunner(new QaMinMeanSegmentLength(
+					                 ReadOnlyTableFactory.Create(featureClassMock), 0.9, true));
 			noErrorPerPartsRunner.Execute(row1);
 			Assert.AreEqual(0, noErrorPerPartsRunner.Errors.Count);
 
 			var oneErrorRunner =
-				new QaTestRunner(new QaMinMeanSegmentLength(featureClassMock, 1.1, true));
+				new QaTestRunner(new QaMinMeanSegmentLength(
+					                 ReadOnlyTableFactory.Create(featureClassMock), 1.1, true));
 			oneErrorRunner.Execute(row1);
 			Assert.AreEqual(1, oneErrorRunner.Errors.Count);
 
 			var twoErrorRunner =
-				new QaTestRunner(new QaMinMeanSegmentLength(featureClassMock, 1.5, true));
+				new QaTestRunner(new QaMinMeanSegmentLength(
+					                 ReadOnlyTableFactory.Create(featureClassMock), 1.5, true));
 			twoErrorRunner.Execute(row1);
 			Assert.AreEqual(2, twoErrorRunner.Errors.Count);
 		}

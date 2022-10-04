@@ -19,8 +19,8 @@ namespace ProSuite.QA.Tests.SpatialRelations
 		#region Constructors
 
 		protected QaSpatialRelationOtherBase(
-			[NotNull] IList<IFeatureClass> featureClasses,
-			[NotNull] IList<IFeatureClass> relatedClasses,
+			[NotNull] IList<IReadOnlyFeatureClass> featureClasses,
+			[NotNull] IList<IReadOnlyFeatureClass> relatedClasses,
 			esriSpatialRelEnum relation)
 			: base(Union(featureClasses, relatedClasses), relation)
 		{
@@ -28,21 +28,21 @@ namespace ProSuite.QA.Tests.SpatialRelations
 		}
 
 		protected QaSpatialRelationOtherBase(
-			[NotNull] IList<IFeatureClass> featureClasses,
-			[NotNull] IList<IFeatureClass> relatedClasses,
+			[NotNull] IList<IReadOnlyFeatureClass> featureClasses,
+			[NotNull] IList<IReadOnlyFeatureClass> relatedClasses,
 			[NotNull] string intersectionMatrix)
 			: base(Union(featureClasses, relatedClasses), intersectionMatrix)
 		{
 			_fromClassCount = featureClasses.Count;
 		}
 
-		protected QaSpatialRelationOtherBase([NotNull] IFeatureClass featureClass,
-		                                     [NotNull] IFeatureClass relatedClass,
+		protected QaSpatialRelationOtherBase([NotNull] IReadOnlyFeatureClass featureClass,
+		                                     [NotNull] IReadOnlyFeatureClass relatedClass,
 		                                     esriSpatialRelEnum relation)
 			: this(new[] {featureClass}, new[] {relatedClass}, relation) { }
 
-		protected QaSpatialRelationOtherBase([NotNull] IFeatureClass featureClass,
-		                                     [NotNull] IFeatureClass relatedClass,
+		protected QaSpatialRelationOtherBase([NotNull] IReadOnlyFeatureClass featureClass,
+		                                     [NotNull] IReadOnlyFeatureClass relatedClass,
 		                                     [NotNull] string intersectionMatrix)
 			: this(new[] {featureClass}, new[] {relatedClass}, intersectionMatrix) { }
 
@@ -59,7 +59,7 @@ namespace ProSuite.QA.Tests.SpatialRelations
 				}
 
 				error = string.Format("{0} exists multiple times as from featureClass",
-				                      DatasetUtils.GetName(InvolvedTables[i]));
+				                      InvolvedTables[i].Name);
 				return false;
 			}
 
@@ -67,11 +67,11 @@ namespace ProSuite.QA.Tests.SpatialRelations
 			return true;
 		}
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
 			Assert.ArgumentNotNull(row, nameof(row));
 
-			var feature = row as IFeature;
+			var feature = row as IReadOnlyFeature;
 			if (feature == null)
 			{
 				return NoError;
@@ -125,12 +125,12 @@ namespace ProSuite.QA.Tests.SpatialRelations
 			return IsInFromTableList(tableIndex);
 		}
 
-		private static IList<IFeatureClass> Union(
-			params IList<IFeatureClass>[] featureClasses)
+		private static IList<IReadOnlyFeatureClass> Union(
+			params IList<IReadOnlyFeatureClass>[] featureClasses)
 		{
-			var union = new List<IFeatureClass>();
+			var union = new List<IReadOnlyFeatureClass>();
 
-			foreach (IList<IFeatureClass> list in featureClasses)
+			foreach (IList<IReadOnlyFeatureClass> list in featureClasses)
 			{
 				union.AddRange(list);
 			}
@@ -139,7 +139,7 @@ namespace ProSuite.QA.Tests.SpatialRelations
 		}
 
 		[CanBeNull]
-		protected virtual IGeometry GetSearchGeometry([NotNull] IFeature feature,
+		protected virtual IGeometry GetSearchGeometry([NotNull] IReadOnlyFeature feature,
 		                                              int tableIndex)
 		{
 			return feature.Shape;

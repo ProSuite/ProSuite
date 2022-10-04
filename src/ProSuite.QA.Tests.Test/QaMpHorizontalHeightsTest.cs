@@ -5,6 +5,7 @@ using ProSuite.QA.Tests.Test.TestRunners;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.AO.Test.TestSupport;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests.Test
 {
@@ -37,7 +38,8 @@ namespace ProSuite.QA.Tests.Test
 
 			IFeature row1 = featureClassMock.CreateFeature(construction.MultiPatch);
 
-			var test = new QaMpHorizontalHeights(featureClassMock, 5, 0);
+			var test = new QaMpHorizontalHeights(
+				ReadOnlyTableFactory.Create(featureClassMock), 5, 0);
 			var runner = new QaTestRunner(test);
 			runner.Execute(row1);
 			Assert.AreEqual(1, runner.Errors.Count);
@@ -59,7 +61,8 @@ namespace ProSuite.QA.Tests.Test
 
 			IFeature row1 = featureClassMock.CreateFeature(construction.MultiPatch);
 
-			var test = new QaMpHorizontalHeights(featureClassMock, nearHeight, 0);
+			var test = new QaMpHorizontalHeights(
+				ReadOnlyTableFactory.Create(featureClassMock), nearHeight, 0);
 			var runner = new QaTestRunner(test);
 			runner.Execute(row1);
 			Assert.AreEqual(0, runner.Errors.Count);
@@ -71,7 +74,8 @@ namespace ProSuite.QA.Tests.Test
 
 			row1 = featureClassMock.CreateFeature(construction.MultiPatch);
 
-			test = new QaMpHorizontalHeights(featureClassMock, nearHeight, 0);
+			test = new QaMpHorizontalHeights(
+				ReadOnlyTableFactory.Create(featureClassMock), nearHeight, 0);
 			runner = new QaTestRunner(test);
 			runner.Execute(row1);
 			Assert.AreEqual(1, runner.Errors.Count);
@@ -94,7 +98,8 @@ namespace ProSuite.QA.Tests.Test
 
 			IFeature row1 = featureClassMock.CreateFeature(construction.MultiPatch);
 
-			var test = new QaMpHorizontalHeights(featureClassMock, nearHeight, tolerance);
+			var test = new QaMpHorizontalHeights(
+				ReadOnlyTableFactory.Create(featureClassMock), nearHeight, tolerance);
 			var runner = new QaTestRunner(test);
 			runner.Execute(row1);
 			Assert.AreEqual(1, runner.Errors.Count);
@@ -106,7 +111,8 @@ namespace ProSuite.QA.Tests.Test
 
 			row1 = featureClassMock.CreateFeature(construction.MultiPatch);
 
-			test = new QaMpHorizontalHeights(featureClassMock, nearHeight, tolerance);
+			test = new QaMpHorizontalHeights(
+				ReadOnlyTableFactory.Create(featureClassMock), nearHeight, tolerance);
 			runner = new QaTestRunner(test);
 			runner.Execute(row1);
 			Assert.AreEqual(0, runner.Errors.Count);

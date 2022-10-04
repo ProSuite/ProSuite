@@ -1,0 +1,6 @@
+@using Radzen.Blazor
+@inherits TestParameterValueBlazorBase<double?>
+
+<Validation ErrorMessage="@ErrorMessage">
+	<RadzenNumeric TValue="double" @bind-Value="DoubleValue"/>
+</Validation>

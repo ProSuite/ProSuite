@@ -220,8 +220,10 @@ namespace ProSuite.QA.Tests.Test
 			pointFeature2.Shape = GeometryFactory.CreatePoint(350, 100);
 			pointFeature2.Store();
 
-			var test = new QaContainedPointsCount(polylineFeatureClass, pointFeatureClass, 1,
-			                                      string.Empty)
+			var test = new QaContainedPointsCount(
+				           ReadOnlyTableFactory.Create(polylineFeatureClass),
+				           ReadOnlyTableFactory.Create(pointFeatureClass), 1,
+				                                       string.Empty)
 			           {
 				           PolylineUsage = PolylineUsage.AsIs
 			           };
@@ -229,8 +231,10 @@ namespace ProSuite.QA.Tests.Test
 			containerRunner.Execute();
 			Assert.AreEqual(3, containerRunner.Errors.Count);
 
-			test = new QaContainedPointsCount(polylineFeatureClass, pointFeatureClass, 1,
-			                                  string.Empty)
+			test = new QaContainedPointsCount(
+				       ReadOnlyTableFactory.Create(polylineFeatureClass),
+				       ReadOnlyTableFactory.Create(pointFeatureClass), 1,
+				                                   string.Empty)
 			       {
 				       PolylineUsage = PolylineUsage.AsPolygonIfClosedElseReportIssue
 			       };
@@ -238,8 +242,10 @@ namespace ProSuite.QA.Tests.Test
 			containerRunner.Execute();
 			Assert.AreEqual(2, containerRunner.Errors.Count);
 
-			test = new QaContainedPointsCount(polylineFeatureClass, pointFeatureClass, 1,
-			                                  string.Empty)
+			test = new QaContainedPointsCount(
+				       ReadOnlyTableFactory.Create(polylineFeatureClass),
+				       ReadOnlyTableFactory.Create(pointFeatureClass), 1,
+				                                   string.Empty)
 			       {
 				       PolylineUsage = PolylineUsage.AsPolygonIfClosedElseIgnore
 			       };
@@ -247,8 +253,10 @@ namespace ProSuite.QA.Tests.Test
 			containerRunner.Execute();
 			Assert.AreEqual(1, containerRunner.Errors.Count);
 
-			test = new QaContainedPointsCount(polylineFeatureClass, pointFeatureClass, 1,
-			                                  string.Empty)
+			test = new QaContainedPointsCount(
+				       ReadOnlyTableFactory.Create(polylineFeatureClass),
+				       ReadOnlyTableFactory.Create(pointFeatureClass), 1,
+				                                   string.Empty)
 			       {
 				       PolylineUsage = PolylineUsage.AsPolygonIfClosedElseAsPolyline
 			       };
@@ -308,10 +316,12 @@ namespace ProSuite.QA.Tests.Test
 		                            double tileSize,
 		                            [CanBeNull] IEnvelope envelope, int expectedErrorCount)
 		{
-			var test = new QaContainedPointsCount(polygonFeatureClass, pointFeatureClass,
-			                                      minimumPointCount, maximumPointCount,
-			                                      relevantPointCondition,
-			                                      countPointOnPolygonBorder);
+			var test = new QaContainedPointsCount(
+				ReadOnlyTableFactory.Create(polygonFeatureClass),
+				ReadOnlyTableFactory.Create(pointFeatureClass),
+				minimumPointCount, maximumPointCount,
+				relevantPointCondition,
+				countPointOnPolygonBorder);
 
 			// run in container without envelope
 

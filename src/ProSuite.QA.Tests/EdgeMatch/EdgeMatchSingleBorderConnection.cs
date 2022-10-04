@@ -1,5 +1,5 @@
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -7,9 +7,9 @@ namespace ProSuite.QA.Tests.EdgeMatch
 {
 	internal abstract class EdgeMatchSingleBorderConnection : EdgeMatchBorderConnection
 	{
-		protected EdgeMatchSingleBorderConnection([NotNull] IFeature feature,
+		protected EdgeMatchSingleBorderConnection([NotNull] IReadOnlyFeature feature,
 		                                          int classIndex,
-		                                          [NotNull] IFeature borderFeature,
+		                                          [NotNull] IReadOnlyFeature borderFeature,
 		                                          int borderClassIndex,
 		                                          [NotNull] IPolyline geometryAlongBoundary)
 			: base(feature, classIndex, borderClassIndex)
@@ -21,9 +21,9 @@ namespace ProSuite.QA.Tests.EdgeMatch
 		}
 
 		[NotNull]
-		public IFeature BorderFeature { get; private set; }
+		public IReadOnlyFeature BorderFeature { get; }
 
 		[NotNull]
-		public IPolyline GeometryAlongBoundary { get; private set; }
+		public IPolyline GeometryAlongBoundary { get; }
 	}
 }

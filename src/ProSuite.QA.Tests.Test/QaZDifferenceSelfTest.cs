@@ -7,6 +7,7 @@ using NUnit.Framework;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.AO.Test.TestSupport;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests.Test
 {
@@ -57,12 +58,17 @@ namespace ProSuite.QA.Tests.Test
 			IFeature polygonRow = polygonClass.CreateFeature(polygon.ClosePolygon());
 
 			var test = new QaZDifferenceSelfWrapper(
-				new[] {(IFeatureClass) multiPatchClass, polygonClass},
+				new[]
+				{
+					ReadOnlyTableFactory.Create(multiPatchClass),
+					ReadOnlyTableFactory.Create(polygonClass)
+				},
 				20, 0,
 				ZComparisonMethod.BoundingBox,
 				null);
 			var runner = new QaTestRunner(test);
-			int errorCount = test.TestDirect(multiPatchRow, 0, polygonRow, 1);
+			int errorCount = test.TestDirect(ReadOnlyRow.Create(multiPatchRow), 0,
+			                                 ReadOnlyRow.Create(polygonRow), 1);
 			Assert.AreEqual(1, errorCount);
 			Assert.AreEqual(1, runner.Errors.Count);
 		}
@@ -92,13 +98,18 @@ namespace ProSuite.QA.Tests.Test
 			IFeature polygonRow = polygonClass.CreateFeature(polygon.ClosePolygon());
 
 			var test = new QaZDifferenceSelfWrapper(
-				new[] {(IFeatureClass) multiPatchClass, polygonClass},
+				new[]
+				{
+					ReadOnlyTableFactory.Create(multiPatchClass),
+					ReadOnlyTableFactory.Create(polygonClass)
+				},
 				20, 0,
 				ZComparisonMethod.BoundingBox,
 				null);
 
 			var runner = new QaTestRunner(test);
-			int errorCount = test.TestDirect(multiPatchRow, 0, polygonRow, 1);
+			int errorCount = test.TestDirect(
+				ReadOnlyRow.Create(multiPatchRow), 0, ReadOnlyRow.Create(polygonRow), 1);
 			Assert.AreEqual(1, errorCount);
 			Assert.AreEqual(1, runner.Errors.Count);
 		}
@@ -122,12 +133,14 @@ namespace ProSuite.QA.Tests.Test
 
 			IFeature row2 = lineClass.CreateFeature(line2.Curve);
 
-			var test = new QaZDifferenceSelfWrapper(new[] {(IFeatureClass) lineClass},
-			                                        3, 0,
-			                                        ZComparisonMethod.BoundingBox,
-			                                        null);
+			var test = new QaZDifferenceSelfWrapper(
+				new[] { ReadOnlyTableFactory.Create(lineClass) },
+				3, 0,
+				ZComparisonMethod.BoundingBox,
+				null);
 			var runner = new QaTestRunner(test);
-			int errorCount = test.TestDirect(row1, 0, row2, 0);
+			int errorCount = test.TestDirect(
+				ReadOnlyRow.Create(row1), 0, ReadOnlyRow.Create(row2), 0);
 			Assert.AreEqual(1, errorCount);
 			Assert.AreEqual(1, runner.Errors.Count);
 		}
@@ -151,12 +164,14 @@ namespace ProSuite.QA.Tests.Test
 
 			IFeature row2 = lineClass.CreateFeature(line2.Curve);
 
-			var test = new QaZDifferenceSelfWrapper(new[] {(IFeatureClass) lineClass},
-			                                        3, 0,
-			                                        ZComparisonMethod.IntersectionPoints,
-			                                        null);
+			var test = new QaZDifferenceSelfWrapper(
+				new[] { ReadOnlyTableFactory.Create(lineClass) },
+				3, 0,
+				ZComparisonMethod.IntersectionPoints,
+				null);
 			var runner = new QaTestRunner(test);
-			int errorCount = test.TestDirect(row1, 0, row2, 0);
+			int errorCount =
+				test.TestDirect(ReadOnlyRow.Create(row1), 0, ReadOnlyRow.Create(row2), 0);
 			Assert.AreEqual(2, errorCount);
 			Assert.AreEqual(2, runner.Errors.Count);
 		}
@@ -180,12 +195,14 @@ namespace ProSuite.QA.Tests.Test
 
 			IFeature row2 = lineClass.CreateFeature(line2.Curve);
 
-			var test = new QaZDifferenceSelfWrapper(new[] {(IFeatureClass) lineClass},
-			                                        0, 10,
-			                                        ZComparisonMethod.BoundingBox,
-			                                        null);
+			var test = new QaZDifferenceSelfWrapper(
+				new[] { ReadOnlyTableFactory.Create(lineClass) },
+				0, 10,
+				ZComparisonMethod.BoundingBox,
+				null);
 			var runner = new QaTestRunner(test);
-			int errorCount = test.TestDirect(row1, 0, row2, 0);
+			int errorCount =
+				test.TestDirect(ReadOnlyRow.Create(row1), 0, ReadOnlyRow.Create(row2), 0);
 			Assert.AreEqual(1, errorCount);
 			Assert.AreEqual(1, runner.Errors.Count);
 		}
@@ -229,13 +246,18 @@ namespace ProSuite.QA.Tests.Test
 			polygonRow.set_Value(levelIndex, 1);
 
 			var test = new QaZDifferenceSelfWrapper(
-				new[] {(IFeatureClass) multiPatchClass, polygonClass},
+				new[]
+				{
+					ReadOnlyTableFactory.Create(multiPatchClass),
+					ReadOnlyTableFactory.Create(polygonClass)
+				},
 				20, 0,
 				ZComparisonMethod.BoundingBox,
 				"U.Level > L.Level");
 
 			var runner = new QaTestRunner(test);
-			int errorCount = test.TestDirect(multiPatchRow, 0, polygonRow, 1);
+			int errorCount = test.TestDirect(
+				ReadOnlyRow.Create(multiPatchRow), 0, ReadOnlyRow.Create(polygonRow), 1);
 			Assert.AreEqual(1, errorCount);
 			Assert.AreEqual(1, runner.Errors.Count);
 		}
@@ -243,7 +265,7 @@ namespace ProSuite.QA.Tests.Test
 		private class QaZDifferenceSelfWrapper : QaZDifferenceSelf
 		{
 			public QaZDifferenceSelfWrapper(
-				IList<IFeatureClass> featureClasses,
+				IList<IReadOnlyFeatureClass> featureClasses,
 				double minimumZDifference,
 				double maximumZDifference,
 				ZComparisonMethod zComparisonMethod, string zRelationConstraint)
@@ -253,7 +275,8 @@ namespace ProSuite.QA.Tests.Test
 			/// <summary>
 			/// Assumption calling this method: row0 and row1 do intersect
 			/// </summary>
-			public int TestDirect(IRow row0, int tableIndex0, IRow row1, int tableIndex1)
+			public int TestDirect(IReadOnlyRow row0, int tableIndex0, IReadOnlyRow row1,
+			                      int tableIndex1)
 			{
 				return FindErrors(row0, tableIndex0, row1, tableIndex1);
 			}

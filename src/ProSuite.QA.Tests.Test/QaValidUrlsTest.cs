@@ -131,7 +131,7 @@ namespace ProSuite.QA.Tests.Test
 			            string.Concat(urlRoot, "doesnotexist3.html"),
 			            string.Concat(urlRoot, "doesnotexist4.html"));
 
-			var test = new QaValidUrls((ITable) featureClass, urlFieldName);
+			var test = new QaValidUrls(ReadOnlyTableFactory.Create(featureClass), urlFieldName);
 			test.MaximumParallelTasks = 8;
 
 			// small tile size, lots of crossing features
@@ -211,7 +211,7 @@ namespace ProSuite.QA.Tests.Test
 			        string.Concat(urlRoot, "doesnotexist3.html"),
 			        string.Concat(urlRoot, "doesnotexist4.html"));
 
-			var test = new QaValidUrls(table, urlFieldName);
+			var test = new QaValidUrls(ReadOnlyTableFactory.Create(table), urlFieldName);
 			test.MaximumParallelTasks = 8;
 
 			var runner = new QaContainerTestRunner(500, test);
@@ -259,7 +259,7 @@ namespace ProSuite.QA.Tests.Test
 			{
 				webServer.Run();
 
-				var test = new QaValidUrls(objectClass, urlExpression);
+				var test = new QaValidUrls(ReadOnlyTableFactory.Create(objectClass), urlExpression);
 				var runner = new QaTestRunner(test);
 
 				errorCount += runner.Execute(rowWithExistingUrl);
@@ -285,7 +285,8 @@ namespace ProSuite.QA.Tests.Test
 
 				try
 				{
-					test = new QaValidUrls(objectClass, "doesnotexist");
+					test = new QaValidUrls(ReadOnlyTableFactory.Create(objectClass),
+					                       "doesnotexist");
 
 					Assert.Fail("Exception expected for non-existing field");
 				}
@@ -312,7 +313,7 @@ namespace ProSuite.QA.Tests.Test
 
 				try
 				{
-					test = new QaValidUrls(objectClass, "blah(blah)");
+					test = new QaValidUrls(ReadOnlyTableFactory.Create(objectClass), "blah(blah)");
 
 					Assert.Fail("Exception expected for invalid expression");
 				}
@@ -346,7 +347,7 @@ namespace ProSuite.QA.Tests.Test
 
 			string filePathExistingFile = string.Format("file:///{0}",
 			                                            Path.Combine(Path.GetTempPath(),
-			                                                         nameExistingFile));
+				                                            nameExistingFile));
 
 			CreateTextFile(pathExistingFile);
 
@@ -370,7 +371,7 @@ namespace ProSuite.QA.Tests.Test
 				                                             uncPathExistingDirectory);
 
 				var errorCount = 0;
-				var test = new QaValidUrls(objectClass, urlFieldName);
+				var test = new QaValidUrls(ReadOnlyTableFactory.Create(objectClass), urlFieldName);
 				var runner = new QaTestRunner(test);
 
 				errorCount += runner.Execute(rowNonExistingFile);
@@ -423,7 +424,7 @@ namespace ProSuite.QA.Tests.Test
 			{
 				webServer.Run();
 
-				var test = new QaValidUrls(objectClass, urlExpression);
+				var test = new QaValidUrls(ReadOnlyTableFactory.Create(objectClass), urlExpression);
 				var runner = new QaTestRunner(test);
 
 				errorCount += runner.Execute(rowWithExistingUrl);
@@ -470,7 +471,7 @@ namespace ProSuite.QA.Tests.Test
 			{
 				webServer.Run();
 
-				var test = new QaValidUrls(objectClass, urlExpression);
+				var test = new QaValidUrls(ReadOnlyTableFactory.Create(objectClass), urlExpression);
 				var runner = new QaTestRunner(test);
 
 				errorCount += runner.Execute(rowWithExistingUrl);
@@ -504,7 +505,7 @@ namespace ProSuite.QA.Tests.Test
 			{
 				webServer.Run();
 
-				var test = new QaValidUrls(objectClass, urlFieldName);
+				var test = new QaValidUrls(ReadOnlyTableFactory.Create(objectClass), urlFieldName);
 				var runner = new QaTestRunner(test);
 
 				errorCount += runner.Execute(rowWithEmptyValue);
@@ -535,7 +536,7 @@ namespace ProSuite.QA.Tests.Test
 
 			var errorCount = 0;
 
-			var test = new QaValidUrls(objectClass, urlFieldName);
+			var test = new QaValidUrls(ReadOnlyTableFactory.Create(objectClass), urlFieldName);
 
 			var runner = new QaTestRunner(test);
 			errorCount += runner.Execute(ftpUrl);

@@ -7,6 +7,7 @@ using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.AO.Test.TestSupport;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests.Test.SpatialRelations
 {
@@ -47,7 +48,7 @@ namespace ProSuite.QA.Tests.Test.SpatialRelations
 			var reporter = new TestErrorReporter();
 
 			QaSpatialRelationUtils.ReportIntersections(
-				f1, 0, f2, 0,
+				ReadOnlyRow.Create(f1), 0, ReadOnlyRow.Create(f2), 0,
 				reporter, null, null, false, null);
 
 			Assert.AreEqual(0, reporter.Errors.Count);
@@ -65,7 +66,7 @@ namespace ProSuite.QA.Tests.Test.SpatialRelations
 			var reporter = new TestErrorReporter();
 
 			QaSpatialRelationUtils.ReportIntersections(
-				f1, 0, f2, 0,
+				ReadOnlyRow.Create(f1), 0, ReadOnlyRow.Create(f2), 0,
 				reporter, null, null, false, null);
 
 			AssertUtils.ExpectedErrors(
@@ -87,7 +88,7 @@ namespace ProSuite.QA.Tests.Test.SpatialRelations
 			var reporter = new TestErrorReporter();
 
 			QaSpatialRelationUtils.ReportIntersections(
-				f1, 0, f2, 0,
+				ReadOnlyRow.Create(f1), 0, ReadOnlyRow.Create(f2), 0,
 				reporter, null, null, false, null,
 				GeometryComponent.LineEndPoint,
 				GeometryComponent.LineStartPoint);
@@ -102,7 +103,7 @@ namespace ProSuite.QA.Tests.Test.SpatialRelations
 
 			// no intersection expected for start point of first line and end point of second line
 			QaSpatialRelationUtils.ReportIntersections(
-				f1, 0, f2, 0,
+				ReadOnlyRow.Create(f1), 0, ReadOnlyRow.Create(f2), 0,
 				reporter, null, null, false, null,
 				GeometryComponent.LineStartPoint,
 				GeometryComponent.LineEndPoint);
@@ -135,7 +136,7 @@ namespace ProSuite.QA.Tests.Test.SpatialRelations
 				false);
 
 			QaSpatialRelationUtils.ReportIntersections(
-				f1, 0, f2, 0,
+				ReadOnlyRow.Create(f1), 0, ReadOnlyRow.Create(f2), 0,
 				reporter, null, validRelationConstraint, false, null);
 
 			Assert.AreEqual(0, reporter.Errors.Count);
@@ -144,7 +145,7 @@ namespace ProSuite.QA.Tests.Test.SpatialRelations
 
 			// f1 and f3 have same NAME value, intersection error is expected
 			QaSpatialRelationUtils.ReportIntersections(
-				f1, 0, f3, 0,
+				ReadOnlyRow.Create(f1), 0, ReadOnlyRow.Create(f3), 0,
 				reporter, null, validRelationConstraint, false, null);
 
 			AssertUtils.ExpectedErrors(

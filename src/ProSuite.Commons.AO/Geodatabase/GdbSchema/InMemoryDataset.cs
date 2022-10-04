@@ -8,17 +8,23 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 {
 	public class InMemoryDataset : BackingDataset
 	{
-		private readonly ITable _schema;
+		private readonly IReadOnlyTable _schema;
 		private IEnvelope _extent;
+		private readonly int _oidFieldIndex;
 
-		public InMemoryDataset(ITable schema,
+		public InMemoryDataset(GdbTable schema,
 		                       IList<IRow> allRows)
 		{
 			_schema = schema;
-			AllRows = allRows;
+			_oidFieldIndex = schema.HasOID ? schema.FindField(schema.OIDFieldName) : -1;
+			AllRows = allRows.Select(r =>
+			{
+				VirtualRow v = CreateRow(schema, r);
+				return v;
+			}).ToList();
 		}
 
-		public IList<IRow> AllRows { get; }
+		public IList<VirtualRow> AllRows { get; }
 
 		public override IEnvelope Extent
 		{
@@ -33,7 +39,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			}
 		}
 
-		public override IRow GetRow(int id)
+		public override VirtualRow GetRow(int id)
 		{
 			return AllRows.First(r => r.OID == id);
 
@@ -45,9 +51,9 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			return Search(filter, true).Count();
 		}
 
-		public override IEnumerable<IRow> Search(IQueryFilter filter, bool recycling)
+		public override IEnumerable<VirtualRow> Search(IQueryFilter filter, bool recycling)
 		{
-			var filterHelper = FilterHelper.Create(_schema, filter.WhereClause);
+			var filterHelper = FilterHelper.Create(_schema, filter?.WhereClause);
 
 			ISpatialFilter spatialFilter = filter as ISpatialFilter;
 
@@ -69,16 +75,16 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 				             SpatialReference = DatasetUtils.GetSpatialReference(featureClass)
 			             };
 
-			foreach (IRow row in AllRows)
+			foreach (var row in AllRows)
 			{
-				IFeature feature = (IFeature) row;
+				IReadOnlyFeature feature = (IReadOnlyFeature) row;
 				result.Union(feature.Extent);
 			}
 
 			return result;
 		}
 
-		private bool CheckSpatial(IRow row, ISpatialFilter spatialFilter)
+		private static bool CheckSpatial(IRow row, ISpatialFilter spatialFilter)
 		{
 			// TODO: Do it properly, see TileCache
 			IFeature feature = row as IFeature;
@@ -91,6 +97,15 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			IGeometry searchGeometry = spatialFilter.Geometry;
 
 			return GeometryUtils.Intersects(searchGeometry, feature.Shape);
+		}
+
+		private GdbRow CreateRow(GdbTable schema, IRow row)
+		{
+			var rowBasedValues = new RowBasedValues(row, _oidFieldIndex);
+
+			int oid = row.HasOID ? row.OID : -1;
+
+			return schema.CreateObject(oid, rowBasedValues);
 		}
 	}
 }

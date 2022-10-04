@@ -87,7 +87,7 @@ namespace ProSuite.QA.Tests.Test
 				                 .ClosePolygon();
 			row2.Store();
 
-			IEnvelope largeEnv = new EnvelopeClass {SpatialReference = sref};
+			IEnvelope largeEnv = new EnvelopeClass { SpatialReference = sref };
 			largeEnv.PutCoords(-100, 1, 300, 250);
 
 			for (int subdivisions = 0; subdivisions < 4; subdivisions++)
@@ -166,7 +166,7 @@ namespace ProSuite.QA.Tests.Test
 				                 .ClosePolygon();
 			row1.Store();
 
-			IEnvelope largeEnv = new EnvelopeClass {SpatialReference = sref};
+			IEnvelope largeEnv = new EnvelopeClass { SpatialReference = sref };
 			largeEnv.PutCoords(0, 0, 100, 200);
 
 			const double smallTileSize = 50;
@@ -255,7 +255,7 @@ namespace ProSuite.QA.Tests.Test
 				                 .ClosePolygon();
 			row1.Store();
 
-			IEnvelope largeEnv = new EnvelopeClass {SpatialReference = sref};
+			IEnvelope largeEnv = new EnvelopeClass { SpatialReference = sref };
 			largeEnv.PutCoords(0, 0, 200, 200);
 
 			const double smallTileSize = 50;
@@ -338,7 +338,7 @@ namespace ProSuite.QA.Tests.Test
 				                 .ClosePolygon();
 			row1.Store();
 
-			IEnvelope testEnvelope = new EnvelopeClass {SpatialReference = sref};
+			IEnvelope testEnvelope = new EnvelopeClass { SpatialReference = sref };
 			testEnvelope.PutCoords(0, 0, 200, 200);
 
 			const double tileSize = 100;
@@ -378,7 +378,7 @@ namespace ProSuite.QA.Tests.Test
 				                 .ClosePolygon();
 			row1.Store();
 
-			IEnvelope testEnvelope = new EnvelopeClass {SpatialReference = sref};
+			IEnvelope testEnvelope = new EnvelopeClass { SpatialReference = sref };
 			testEnvelope.PutCoords(0, 0, 200, 200);
 
 			const double tileSize = 100;
@@ -418,7 +418,7 @@ namespace ProSuite.QA.Tests.Test
 				                 .ClosePolygon();
 			row1.Store();
 
-			IEnvelope testEnvelope = new EnvelopeClass {SpatialReference = sref};
+			IEnvelope testEnvelope = new EnvelopeClass { SpatialReference = sref };
 			testEnvelope.PutCoords(0, 0, 200, 200);
 
 			const double tileSize = 100;
@@ -459,7 +459,7 @@ namespace ProSuite.QA.Tests.Test
 				                 .ClosePolygon();
 			row1.Store();
 
-			IEnvelope testEnvelope = new EnvelopeClass {SpatialReference = sref};
+			IEnvelope testEnvelope = new EnvelopeClass { SpatialReference = sref };
 			testEnvelope.PutCoords(0, 0, 200, 200);
 
 			const double tileSize = 100;
@@ -746,8 +746,9 @@ namespace ProSuite.QA.Tests.Test
 
 			// suppress obsolete warning
 #pragma warning disable 612,618
-			var test = new QaNoGaps(featureClass, sliverLimit, maxArea,
-			                        tileSubdivisions);
+			var test = new QaNoGaps(
+				ReadOnlyTableFactory.Create(featureClass), sliverLimit, maxArea,
+				tileSubdivisions);
 #pragma warning restore 612,618
 
 			Console.WriteLine(@"- simple test runner, no envelope:");
@@ -825,8 +826,9 @@ namespace ProSuite.QA.Tests.Test
 
 			string envelopeText = GeometryUtils.Format(envelope);
 
-			var test = new QaNoGaps(featureClass, sliverLimit, maxArea, subTileSize,
-			                        findGapsBelowTolerance);
+			var test = new QaNoGaps(
+				ReadOnlyTableFactory.Create(featureClass), sliverLimit, maxArea, subTileSize,
+				findGapsBelowTolerance);
 
 			Console.WriteLine(@"- simple test runner, no envelope");
 			var runner = new QaTestRunner(test);

@@ -1,4 +1,4 @@
-﻿<wpf:ResourceDictionary xml:space="preserve" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:ss="urn:shemas-jetbrains-com:settings-storage-xaml" xmlns:wpf="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
+<wpf:ResourceDictionary xml:space="preserve" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:ss="urn:shemas-jetbrains-com:settings-storage-xaml" xmlns:wpf="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
 	<s:Boolean x:Key="/Default/CodeEditing/ContextActionTable/DisabledContextActions/=JetBrains_002EReSharper_002EIntentions_002ECSharp_002EContextActions_002EInlineAsAnonymousTypeAction/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/CodeEditing/ContextActionTable/DisabledContextActions/=JetBrains_002EReSharper_002EIntentions_002ECSharp_002EContextActions_002ENonI18n_002ECSharpSurroundWithQuotesAction/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/CodeEditing/Intellisense/CodeCompletion/IntelliSenseCompletingCharacters/CSharpCompletingCharacters/UpgradedFromVSSettings/@EntryValue">True</s:Boolean>
@@ -187,7 +187,7 @@
 	<s:String x:Key="/Default/PatternsAndTemplates/LiveTemplates/Template/=24D8D4317BB10A40AA32E107654DBA97/Scope/=B68999B9D6B43E47A02B22C12A54C3CC/Type/@EntryValue">InCSharpTypeMember</s:String>
 	<s:String x:Key="/Default/PatternsAndTemplates/LiveTemplates/Template/=24D8D4317BB10A40AA32E107654DBA97/Shortcut/@EntryValue">msg</s:String>
 	<s:Boolean x:Key="/Default/PatternsAndTemplates/LiveTemplates/Template/=24D8D4317BB10A40AA32E107654DBA97/ShortenQualifiedReferences/@EntryValue">True</s:Boolean>
-	<s:String x:Key="/Default/PatternsAndTemplates/LiveTemplates/Template/=24D8D4317BB10A40AA32E107654DBA97/Text/@EntryValue">private static readonly ProSuite.Commons.Logging.IMsg _msg = new ProSuite.Commons.Logging.Msg(MethodBase.GetCurrentMethod().DeclaringType);&#xD;
+	<s:String x:Key="/Default/PatternsAndTemplates/LiveTemplates/Template/=24D8D4317BB10A40AA32E107654DBA97/Text/@EntryValue">private static readonly IMsg _msg = Msg.ForCurrentClass();&#xD;
 </s:String>
 	<s:Boolean x:Key="/Default/PatternsAndTemplates/Todo/TodoPatterns/=078E36C5E2A0474894DEC4FB1C714607/@KeyIndexDefined">True</s:Boolean>
 	<s:String x:Key="/Default/PatternsAndTemplates/Todo/TodoPatterns/=078E36C5E2A0474894DEC4FB1C714607/Color/@EntryValue">Blue</s:String>
@@ -226,4 +226,6 @@
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=Symbology/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=Topo/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=Worklist/@EntryIndexedValue">True</s:Boolean>
+	<s:Boolean x:Key="/Default/UserDictionary/Words/=Unregister/@EntryIndexedValue">True</s:Boolean>
+	<s:Boolean x:Key="/Default/UserDictionary/Words/=Unwire/@EntryIndexedValue">True</s:Boolean>
 </wpf:ResourceDictionary>

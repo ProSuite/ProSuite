@@ -1,0 +1,10 @@
+@using Radzen.Blazor
+@inherits TestParameterValueBlazorBase<int>
+
+<Validation ErrorMessage="@ErrorMessage">
+	<RadzenDropDown TValue="int" @bind-Value="IntValue" Data="@IntValues" Style="">
+		<Template Context="value">
+			@Enum.ToObject(DataType, value)
+		</Template>
+	</RadzenDropDown>
+</Validation>

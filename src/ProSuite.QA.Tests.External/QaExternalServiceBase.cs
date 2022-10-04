@@ -20,6 +20,7 @@ using ProSuite.Microservices.Client.QualityTestService;
 using ProSuite.Microservices.Definitions.QA.Test;
 using ProSuite.Microservices.Definitions.Shared;
 using ProSuite.QA.Container;
+using ProSuite.QA.Core.IssueCodes;
 
 namespace ProSuite.QA.Tests.External
 {
@@ -28,7 +29,7 @@ namespace ProSuite.QA.Tests.External
 		private readonly ExternalTestClient _externalService;
 		private ConcurrentBag<DetectedIssueMsg> _foundIssues;
 
-		protected QaExternalServiceBase([NotNull] IEnumerable<ITable> tables,
+		protected QaExternalServiceBase([NotNull] IEnumerable<IReadOnlyTable> tables,
 		                                string connectionUrl)
 			: base(tables)
 		{
@@ -50,13 +51,13 @@ namespace ProSuite.QA.Tests.External
 			return RunTest(_externalService.TestClient, area);
 		}
 
-		public override int Execute(IEnumerable<IRow> selectedRows)
+		public override int Execute(IEnumerable<IReadOnlyRow> selectedRows)
 		{
 			// TODO, if this is ever called
 			throw new NotImplementedException();
 		}
 
-		public override int Execute(IRow row)
+		public override int Execute(IReadOnlyRow row)
 		{
 			// TODO, if this is ever called
 			throw new NotImplementedException();
@@ -108,9 +109,9 @@ namespace ProSuite.QA.Tests.External
 
 			var testDatasets = new List<TestDatasetMsg>();
 
-			foreach (ITable table in InvolvedTables)
+			foreach (IReadOnlyTable table in InvolvedTables)
 			{
-				IWorkspace tableWorkspace = DatasetUtils.GetWorkspace(table);
+				IWorkspace tableWorkspace = table.Workspace;
 
 				int wsIndex = workspaces.FindIndex(w => w == tableWorkspace);
 
@@ -141,7 +142,7 @@ namespace ProSuite.QA.Tests.External
 			return request;
 		}
 
-		private TestDatasetMsg ToInvolvedTable(ITable table, int workspaceIndex)
+		private TestDatasetMsg ToInvolvedTable(IReadOnlyTable table, int workspaceIndex)
 		{
 			var testDataset = new TestDatasetMsg();
 
@@ -236,10 +237,10 @@ namespace ProSuite.QA.Tests.External
 				IssueCode issueCode =
 					new IssueCode(issueMsg.IssueCodeId, issueMsg.IssueCodeDescription);
 
-				IList<InvolvedRow> involvedRows = GetInvolvedRows(issueMsg.InvolvedObjects);
+				InvolvedRows involvedRows = GetInvolvedRows(issueMsg.InvolvedObjects);
 
-				errorCount += ReportError(issueMsg.Description, issueGeometry, issueCode,
-				                          issueMsg.AffectedComponent, involvedRows);
+				errorCount += ReportError(issueMsg.Description, involvedRows, issueGeometry, issueCode,
+				                          issueMsg.AffectedComponent);
 			}
 
 			// TODO: Make sure the obsolete exceptions are still handled in the domain verification service
@@ -254,10 +255,10 @@ namespace ProSuite.QA.Tests.External
 			return errorCount;
 		}
 
-		private static IList<InvolvedRow> GetInvolvedRows(
+		private static InvolvedRows GetInvolvedRows(
 			RepeatedField<InvolvedObjectsMsg> involvedObjectsMsg)
 		{
-			var result = new List<InvolvedRow>();
+			var result = new InvolvedRows();
 
 			foreach (InvolvedObjectsMsg involvedTableMsg in involvedObjectsMsg)
 			{

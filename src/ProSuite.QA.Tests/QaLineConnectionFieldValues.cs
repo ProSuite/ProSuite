@@ -3,10 +3,8 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Text;
-using ESRI.ArcGIS.Geodatabase;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.PolygonGrower;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
@@ -15,6 +13,9 @@ using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
 {
@@ -55,7 +56,7 @@ namespace ProSuite.QA.Tests
 		private readonly int _pointClassesMaxIndex;
 		private readonly IList<string> _lineFields;
 		private readonly LineFieldValuesConstraint _lineFieldValuesConstraint;
-		private readonly IList<IFeatureClass> _pointClasses;
+		private readonly IList<IReadOnlyFeatureClass> _pointClasses;
 		private readonly IList<string> _pointFields;
 		private readonly PointFieldValuesConstraint _pointFieldValuesConstraint;
 		private readonly IList<string> _allowedPointsExpressions;
@@ -88,13 +89,13 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaLineConnectionFieldValues_0))]
 		public QaLineConnectionFieldValues(
 			[Doc(nameof(DocStrings.QaLineConnectionFieldValues_lineClass))] [NotNull]
-			IFeatureClass lineClass,
+			IReadOnlyFeatureClass lineClass,
 			[Doc(nameof(DocStrings.QaLineConnectionFieldValues_lineField))] [NotNull]
 			string lineField,
 			[Doc(nameof(DocStrings.QaLineConnectionFieldValues_lineFieldValuesConstraint))]
 			LineFieldValuesConstraint lineFieldValuesConstraint,
 			[Doc(nameof(DocStrings.QaLineConnectionFieldValues_pointClass))] [NotNull]
-			IFeatureClass pointClass,
+			IReadOnlyFeatureClass pointClass,
 			[Doc(nameof(DocStrings.QaLineConnectionFieldValues_pointField))] [CanBeNull]
 			string pointField,
 			[Doc(nameof(DocStrings.QaLineConnectionFieldValues_pointFieldValuesConstraint))]
@@ -105,14 +106,14 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaLineConnectionFieldValues_1))]
 		public QaLineConnectionFieldValues(
 			[Doc(nameof(DocStrings.QaLineConnectionFieldValues_lineClasses))] [NotNull]
-			IList<IFeatureClass>
+			IList<IReadOnlyFeatureClass>
 				lineClasses,
 			[Doc(nameof(DocStrings.QaLineConnectionFieldValues_lineFields))] [NotNull]
 			IList<string> lineFields,
 			[Doc(nameof(DocStrings.QaLineConnectionFieldValues_lineFieldValuesConstraint))]
 			LineFieldValuesConstraint lineFieldValuesConstraint,
 			[Doc(nameof(DocStrings.QaLineConnectionFieldValues_pointClass))] [NotNull]
-			IFeatureClass pointClass,
+			IReadOnlyFeatureClass pointClass,
 			[Doc(nameof(DocStrings.QaLineConnectionFieldValues_pointField))] [CanBeNull]
 			string pointField,
 			[Doc(nameof(DocStrings.QaLineConnectionFieldValues_pointFieldValuesConstraint))]
@@ -125,27 +126,27 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaLineConnectionFieldValues_2))]
 		public QaLineConnectionFieldValues(
 			[Doc(nameof(DocStrings.QaLineConnectionFieldValues_lineClass))] [NotNull]
-			IFeatureClass lineClass,
+			IReadOnlyFeatureClass lineClass,
 			[Doc(nameof(DocStrings.QaLineConnectionFieldValues_lineField))] [NotNull]
 			string lineField,
 			[Doc(nameof(DocStrings.QaLineConnectionFieldValues_lineFieldValuesConstraint))]
 			LineFieldValuesConstraint lineFieldValuesConstraint,
 			[Doc(nameof(DocStrings.QaLineConnectionFieldValues_pointClass))] [NotNull]
-			IFeatureClass pointClass)
+			IReadOnlyFeatureClass pointClass)
 			: this(new[] {lineClass}, new[] {lineField}, lineFieldValuesConstraint,
 			       pointClass, null, PointFieldValuesConstraint.NoConstraint) { }
 
 		[Doc(nameof(DocStrings.QaLineConnectionFieldValues_3))]
 		public QaLineConnectionFieldValues(
 			[Doc(nameof(DocStrings.QaLineConnectionFieldValues_lineClasses))] [NotNull]
-			IList<IFeatureClass>
+			IList<IReadOnlyFeatureClass>
 				lineClasses,
 			[Doc(nameof(DocStrings.QaLineConnectionFieldValues_lineFields))] [NotNull]
 			IList<string> lineFields,
 			[Doc(nameof(DocStrings.QaLineConnectionFieldValues_lineFieldValuesConstraint))]
 			LineFieldValuesConstraint lineFieldValuesConstraint,
 			[Doc(nameof(DocStrings.QaLineConnectionFieldValues_pointClass))] [NotNull]
-			IFeatureClass pointClass,
+			IReadOnlyFeatureClass pointClass,
 			[Doc(nameof(DocStrings.QaLineConnectionFieldValues_pointField))] [CanBeNull]
 			string pointField,
 			[Doc(nameof(DocStrings.QaLineConnectionFieldValues_pointFieldValuesConstraint))]
@@ -163,14 +164,14 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaLineConnectionFieldValues_4))]
 		public QaLineConnectionFieldValues(
 			[Doc(nameof(DocStrings.QaLineConnectionFieldValues_lineClasses))] [NotNull]
-			IList<IFeatureClass>
+			IList<IReadOnlyFeatureClass>
 				lineClasses,
 			[Doc(nameof(DocStrings.QaLineConnectionFieldValues_lineFields))] [NotNull]
 			IList<string> lineFields,
 			[Doc(nameof(DocStrings.QaLineConnectionFieldValues_lineFieldValuesConstraint))]
 			LineFieldValuesConstraint lineFieldValuesConstraint,
 			[Doc(nameof(DocStrings.QaLineConnectionFieldValues_pointClasses))] [NotNull]
-			IList<IFeatureClass>
+			IList<IReadOnlyFeatureClass>
 				pointClasses,
 			[Doc(nameof(DocStrings.QaLineConnectionFieldValues_pointFields))] [CanBeNull]
 			IList<string>
@@ -230,7 +231,7 @@ namespace ProSuite.QA.Tests
 				string lineFieldName = _lineFields.Count == 1
 					                       ? _lineFields[0]
 					                       : _lineFields[lineClassIndex];
-				ITable lineClass = InvolvedTables[lineClassIndex];
+				IReadOnlyTable lineClass = InvolvedTables[lineClassIndex];
 
 				result.Add(GetTableView(lineClass, lineFieldName,
 				                        GetSqlCaseSensitivity(lineClassIndex)));
@@ -248,7 +249,7 @@ namespace ProSuite.QA.Tests
 						                        : _pointFields[pointClassIndex];
 
 					TableView pointClassFilterHelper = GetTableView(
-						(ITable) _pointClasses[pointClassIndex],
+						_pointClasses[pointClassIndex],
 						pointFieldName, GetSqlCaseSensitivity(tableIndex));
 					result.Add(pointClassFilterHelper);
 				}
@@ -276,7 +277,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[NotNull]
-		private static TableView GetTableView([NotNull] ITable table,
+		private static TableView GetTableView([NotNull] IReadOnlyTable table,
 		                                      [CanBeNull] string fieldName,
 		                                      bool caseSensitive)
 		{
@@ -336,7 +337,7 @@ namespace ProSuite.QA.Tests
 							                               : _allowedPointsExpressions[
 								                               pointClassIndex];
 						TableView allowedPointsTableView = TableViewFactory.Create(
-							(ITable) _pointClasses[pointClassIndex],
+							_pointClasses[pointClassIndex],
 							allowPointsExpression, useAsConstraint,
 							GetSqlCaseSensitivity(pointClassIndex + _pointClassesMinIndex));
 						allowedPointsTableViews.Add(allowedPointsTableView);
@@ -367,7 +368,7 @@ namespace ProSuite.QA.Tests
 			List<object> distinctPointFieldValues;
 			List<object> lineFieldValues;
 			int pointCount;
-			List<IRow> connectedRows = GetConnectedRows(elementsToCheck,
+			List<IReadOnlyRow> connectedRows = GetConnectedRows(elementsToCheck,
 			                                            getAllLineFieldValues,
 			                                            out lineFieldValues,
 			                                            out distinctPointFieldValues,
@@ -395,9 +396,9 @@ namespace ProSuite.QA.Tests
 			string description = GetErrorDescription(pointConstraintValid, lineConstraintValid,
 			                                         pointMessage, lineMessage);
 
-			return ReportError(description, elementsToCheck[0].NetPoint,
-			                   issueCode, null,
-			                   GetInvolvedRows(connectedRows));
+			return ReportError(
+				description, InvolvedRowUtils.GetInvolvedRows(connectedRows),
+				elementsToCheck[0].NetPoint, issueCode, null);
 		}
 
 		private bool HasPointsAndAllAreAllowed(
@@ -792,7 +793,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[NotNull]
-		private List<IRow> GetConnectedRows(
+		private List<IReadOnlyRow> GetConnectedRows(
 			[NotNull] ICollection<NetElement> connectedElements,
 			bool getAllLineFieldValues,
 			[NotNull] out List<object> lineFieldValues,
@@ -800,7 +801,7 @@ namespace ProSuite.QA.Tests
 			out int pointCount)
 		{
 			int connectedElementsCount = connectedElements.Count;
-			var result = new List<IRow>(connectedElementsCount);
+			var result = new List<IReadOnlyRow>(connectedElementsCount);
 
 			lineFieldValues = new List<object>();
 			distinctPointFieldValues = new List<object>();
@@ -861,7 +862,7 @@ namespace ProSuite.QA.Tests
 		private object GetFieldExpressionValue([NotNull] NetElement netElement,
 		                                       int tableIndex)
 		{
-			IRow row = netElement.Row.Row;
+			IReadOnlyRow row = netElement.Row.Row;
 			TableView tableView = _tableViews[tableIndex];
 
 			DataRow helperRow = tableView.Add(row);

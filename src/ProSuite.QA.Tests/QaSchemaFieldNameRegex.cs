@@ -1,7 +1,5 @@
 using System.Text.RegularExpressions;
 using ESRI.ArcGIS.Geodatabase;
-using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.QA.Tests.Schema;
@@ -9,6 +7,8 @@ using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
 {
@@ -16,7 +16,7 @@ namespace ProSuite.QA.Tests
 	[SchemaTest]
 	public class QaSchemaFieldNameRegex : QaSchemaTestBase
 	{
-		private readonly ITable _table;
+		private readonly IReadOnlyTable _table;
 		private readonly string _pattern;
 		private readonly bool _matchIsError;
 		private readonly string _patternDescription;
@@ -43,7 +43,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaSchemaFieldNameRegex_0))]
 		public QaSchemaFieldNameRegex(
 			[Doc(nameof(DocStrings.QaSchemaFieldNameRegex_table))] [NotNull]
-			ITable table,
+			IReadOnlyTable table,
 			[Doc(nameof(DocStrings.QaSchemaFieldNameRegex_pattern))] [NotNull]
 			string pattern,
 			[Doc(nameof(DocStrings.QaSchemaFieldNameRegex_matchIsError))]
@@ -68,7 +68,7 @@ namespace ProSuite.QA.Tests
 		{
 			int errorCount = 0;
 
-			foreach (IField field in DatasetUtils.GetFields(_table))
+			foreach (IField field in DatasetUtils.GetFields(_table.Fields))
 			{
 				// TODO ignore the system fields?
 

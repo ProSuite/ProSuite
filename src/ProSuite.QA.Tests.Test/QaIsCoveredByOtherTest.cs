@@ -64,7 +64,9 @@ namespace ProSuite.QA.Tests.Test
 
 			IEnvelope verificationEnvelope = GeometryFactory.CreateEnvelope(0, 0, 500, 500);
 
-			var test = new QaIsCoveredByOther(coveringClass, coveredClass);
+			var test = new QaIsCoveredByOther(
+				ReadOnlyTableFactory.Create(coveringClass),
+				ReadOnlyTableFactory.Create(coveredClass));
 			var runner = new QaContainerTestRunner(10000, test);
 			runner.Execute(verificationEnvelope);
 
@@ -74,7 +76,7 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanDetectUncoveredInteriorVertices()
 		{
-			var testName = MethodBase.GetCurrentMethod().Name;
+			var testName = MethodBase.GetCurrentMethod()?.Name;
 
 			IFeatureClass coveringClass = CreateFeatureClass(
 				string.Format("{0}_covering", testName),
@@ -103,11 +105,11 @@ namespace ProSuite.QA.Tests.Test
 				GeometryFactory.CreateEnvelope(0, 0, 500, 500);
 
 			var test = new QaIsCoveredByOther(
-				new List<IFeatureClass> {coveringClass},
+				new[] { ReadOnlyTableFactory.Create(coveringClass) },
 				new GeometryComponent[] { },
-				new List<IFeatureClass> {coveredClass},
-				new[] {GeometryComponent.InteriorVertices},
-				null, 0, new List<IFeatureClass>());
+				new[] { ReadOnlyTableFactory.Create(coveredClass) },
+				new[] { GeometryComponent.InteriorVertices },
+				null, 0, new List<IReadOnlyFeatureClass>());
 
 			var runner = new QaContainerTestRunner(10000, test);
 			runner.Execute(verificationEnvelope);
@@ -148,11 +150,11 @@ namespace ProSuite.QA.Tests.Test
 				GeometryFactory.CreateEnvelope(0, 0, 500, 500);
 
 			var test = new QaIsCoveredByOther(
-				new List<IFeatureClass> {coveringClass},
-				new[] {GeometryComponent.InteriorVertices},
-				new List<IFeatureClass> {coveredClass},
-				new[] {GeometryComponent.InteriorVertices},
-				null, 0, new List<IFeatureClass>());
+				new[] { ReadOnlyTableFactory.Create(coveringClass) },
+				new[] { GeometryComponent.InteriorVertices },
+				new[] { ReadOnlyTableFactory.Create(coveredClass) },
+				new[] { GeometryComponent.InteriorVertices },
+				null, 0, new List<IReadOnlyFeatureClass>());
 
 			var runner = new QaContainerTestRunner(10000, test);
 			runner.Execute(verificationEnvelope);
@@ -198,10 +200,10 @@ namespace ProSuite.QA.Tests.Test
 			                                                                500, 500);
 
 			var test = new QaIsCoveredByOther(
-				new[] {coveringClass}, new GeometryComponent[] { },
-				new[] {coveredClass}, new GeometryComponent[] { },
+				new[] { ReadOnlyTableFactory.Create(coveringClass) }, new GeometryComponent[] { },
+				new[] { ReadOnlyTableFactory.Create(coveredClass) }, new GeometryComponent[] { },
 				new string[] { }, 0,
-				new[] {areaOfInterestClass});
+				new[] { ReadOnlyTableFactory.Create(areaOfInterestClass) });
 			var runner = new QaContainerTestRunner(10000, test);
 			runner.Execute(verificationEnvelope);
 
@@ -253,10 +255,10 @@ namespace ProSuite.QA.Tests.Test
 			                                                                500, 500);
 
 			var test = new QaIsCoveredByOther(
-				new[] {coveringClass}, new GeometryComponent[] { },
-				new[] {coveredClass}, new GeometryComponent[] { },
+				new[] { ReadOnlyTableFactory.Create(coveringClass) }, new GeometryComponent[] { },
+				new[] { ReadOnlyTableFactory.Create(coveredClass) }, new GeometryComponent[] { },
 				new string[] { }, 0,
-				new[] {areaOfInterestClass});
+				new[] { ReadOnlyTableFactory.Create(areaOfInterestClass) });
 			var runner = new QaContainerTestRunner(10000, test) {KeepGeometry = true};
 			runner.Execute(verificationEnvelope);
 
@@ -306,10 +308,10 @@ namespace ProSuite.QA.Tests.Test
 			                                                                500, 500);
 
 			var test = new QaIsCoveredByOther(
-				new[] {coveringClass}, new GeometryComponent[] { },
-				new[] {coveredClass}, new GeometryComponent[] { },
+				new[] { ReadOnlyTableFactory.Create(coveringClass) }, new GeometryComponent[] { },
+				new[] { ReadOnlyTableFactory.Create(coveredClass) }, new GeometryComponent[] { },
 				new string[] { }, 0,
-				new[] {areaOfInterestClass});
+				new[] { ReadOnlyTableFactory.Create(areaOfInterestClass) });
 			var runner = new QaContainerTestRunner(10000, test);
 			runner.Execute(verificationEnvelope);
 
@@ -360,10 +362,10 @@ namespace ProSuite.QA.Tests.Test
 			                                                                500, 500);
 
 			var test = new QaIsCoveredByOther(
-				new[] {coveringClass}, new GeometryComponent[] { },
-				new[] {coveredClass}, new GeometryComponent[] { },
+				new[] { ReadOnlyTableFactory.Create(coveringClass) }, new GeometryComponent[] { },
+				new[] { ReadOnlyTableFactory.Create(coveredClass) }, new GeometryComponent[] { },
 				new string[] { }, 0,
-				new[] {areaOfInterestClass});
+				new[] { ReadOnlyTableFactory.Create(areaOfInterestClass) });
 			var runner = new QaContainerTestRunner(10000, test) {KeepGeometry = true};
 			runner.Execute(verificationEnvelope);
 
@@ -432,10 +434,10 @@ namespace ProSuite.QA.Tests.Test
 			                                                                500, 500);
 
 			var test = new QaIsCoveredByOther(
-				new[] {coveringClass}, new GeometryComponent[] { },
-				new[] {coveredClass}, new GeometryComponent[] { },
+				new[] { ReadOnlyTableFactory.Create(coveringClass) }, new GeometryComponent[] { },
+				new[] { ReadOnlyTableFactory.Create(coveredClass) }, new GeometryComponent[] { },
 				new string[] { }, 0,
-				new[] {areaOfInterestClass});
+				new[] { ReadOnlyTableFactory.Create(areaOfInterestClass) });
 			var runner = new QaContainerTestRunner(10000, test) {KeepGeometry = true};
 			runner.Execute(verificationEnvelope);
 
@@ -489,10 +491,10 @@ namespace ProSuite.QA.Tests.Test
 			                                                                500, 500);
 
 			var test = new QaIsCoveredByOther(
-				new[] {coveringClass}, new GeometryComponent[] { },
-				new[] {coveredClass}, new GeometryComponent[] { },
+				new[] { ReadOnlyTableFactory.Create(coveringClass) }, new GeometryComponent[] { },
+				new[] { ReadOnlyTableFactory.Create(coveredClass) }, new GeometryComponent[] { },
 				new string[] { }, 0,
-				new[] {areaOfInterestClass});
+				new[] { ReadOnlyTableFactory.Create(areaOfInterestClass) });
 			var runner = new QaContainerTestRunner(10000, test) {KeepGeometry = true};
 			runner.Execute(verificationEnvelope);
 
@@ -560,10 +562,10 @@ namespace ProSuite.QA.Tests.Test
 			                                                                500, 500);
 
 			var test = new QaIsCoveredByOther(
-				new[] {coveringClass}, new GeometryComponent[] { },
-				new[] {coveredClass}, new GeometryComponent[] { },
+				new[] { ReadOnlyTableFactory.Create(coveringClass) }, new GeometryComponent[] { },
+				new[] { ReadOnlyTableFactory.Create(coveredClass) }, new GeometryComponent[] { },
 				new string[] { }, 0,
-				new[] {areaOfInterestClass});
+				new[] { ReadOnlyTableFactory.Create(areaOfInterestClass) });
 			var runner = new QaContainerTestRunner(10000, test) {KeepGeometry = true};
 			runner.Execute(verificationEnvelope);
 
@@ -606,7 +608,9 @@ namespace ProSuite.QA.Tests.Test
 
 			IEnvelope verificationEnvelope = GeometryFactory.CreateEnvelope(0, 0, 500, 500);
 
-			var test = new QaIsCoveredByOther(coveringClass, coveredClass);
+			var test = new QaIsCoveredByOther(
+				ReadOnlyTableFactory.Create(coveringClass),
+				ReadOnlyTableFactory.Create(coveredClass));
 			var runner = new QaContainerTestRunner(10000, test);
 			runner.Execute(verificationEnvelope);
 
@@ -634,7 +638,9 @@ namespace ProSuite.QA.Tests.Test
 
 			IEnvelope verificationEnvelope = GeometryFactory.CreateEnvelope(0, 0, 150, 500);
 
-			var test = new QaIsCoveredByOther(coveringClass, coveredClass);
+			var test = new QaIsCoveredByOther(
+				ReadOnlyTableFactory.Create(coveringClass),
+				ReadOnlyTableFactory.Create(coveredClass));
 			var runner = new QaContainerTestRunner(10000, test);
 			runner.Execute(verificationEnvelope);
 
@@ -671,9 +677,11 @@ namespace ProSuite.QA.Tests.Test
 
 			IEnvelope verificationEnvelope = GeometryFactory.CreateEnvelope(0, 0, 500, 500);
 
-			var test = new QaIsCoveredByOther(coveringClass, coveredClass)
+			var test = new QaIsCoveredByOther(
+				           ReadOnlyTableFactory.Create(coveringClass),
+				           ReadOnlyTableFactory.Create(coveredClass))
 			           {
-				           CoveringClassTolerances = new[] {1d}
+				           CoveringClassTolerances = new[] { 1d }
 			           };
 
 			var runner = new QaContainerTestRunner(10000, test);
@@ -711,9 +719,11 @@ namespace ProSuite.QA.Tests.Test
 
 			IEnvelope verificationEnvelope = GeometryFactory.CreateEnvelope(0, 0, 100, 100);
 
-			var test = new QaIsCoveredByOther(coveringClass, coveredClass)
+			var test = new QaIsCoveredByOther(
+				           ReadOnlyTableFactory.Create(coveringClass),
+				           ReadOnlyTableFactory.Create(coveredClass))
 			           {
-				           CoveringClassTolerances = new[] {2d}
+				           CoveringClassTolerances = new[] { 2d }
 			           };
 
 			var runner = new QaContainerTestRunner(10000, test);
@@ -732,7 +742,9 @@ namespace ProSuite.QA.Tests.Test
 			                            out coveredClass);
 
 			Assert.Throws<ArgumentException>(
-				() => new QaIsCoveredByOther(coveringClass, coveredClass)
+				() => new QaIsCoveredByOther(
+					      ReadOnlyTableFactory.Create(coveringClass),
+					      ReadOnlyTableFactory.Create(coveredClass))
 				      {
 					      CoveringClassTolerances = new[] {2d, 3d, 1.234}
 				      });
@@ -768,12 +780,13 @@ namespace ProSuite.QA.Tests.Test
 			IEnvelope verificationEnvelope = GeometryFactory.CreateEnvelope(0, 0, 500, 500);
 
 			const double allowedUncoveredPercentage = 1;
-			var test = new QaIsCoveredByOther(new[] {coveringClass},
-			                                  new GeometryComponent[] { },
-			                                  new[] {coveredClass},
-			                                  new GeometryComponent[] { },
-			                                  (string) null,
-			                                  allowedUncoveredPercentage);
+			var test = new QaIsCoveredByOther(
+				new[] { ReadOnlyTableFactory.Create(coveringClass) },
+				new GeometryComponent[] { },
+				new[] { ReadOnlyTableFactory.Create(coveredClass) },
+				new GeometryComponent[] { },
+				(string) null,
+				allowedUncoveredPercentage);
 
 			var runner = new QaContainerTestRunner(10000, test);
 			runner.Execute(verificationEnvelope);
@@ -811,12 +824,13 @@ namespace ProSuite.QA.Tests.Test
 			IEnvelope verificationEnvelope = GeometryFactory.CreateEnvelope(0, 0, 500, 500);
 
 			const double allowedUncoveredPercentage = 0.1;
-			var test = new QaIsCoveredByOther(new[] {coveringClass},
-			                                  new GeometryComponent[] { },
-			                                  new[] {coveredClass},
-			                                  new GeometryComponent[] { },
-			                                  (string) null,
-			                                  allowedUncoveredPercentage);
+			var test = new QaIsCoveredByOther(
+				new[] { ReadOnlyTableFactory.Create(coveringClass) },
+				new GeometryComponent[] { },
+				new[] { ReadOnlyTableFactory.Create(coveredClass) },
+				new GeometryComponent[] { },
+				(string) null,
+				allowedUncoveredPercentage);
 
 			var runner = new QaContainerTestRunner(10000, test);
 			runner.Execute(verificationEnvelope);
@@ -848,7 +862,9 @@ namespace ProSuite.QA.Tests.Test
 
 			IEnvelope verificationEnvelope = GeometryFactory.CreateEnvelope(0, 0, 500, 500);
 
-			var test = new QaIsCoveredByOther(coveringClass, coveredClass);
+			var test = new QaIsCoveredByOther(
+				ReadOnlyTableFactory.Create(coveringClass),
+				ReadOnlyTableFactory.Create(coveredClass));
 			var runner = new QaContainerTestRunner(10000, test);
 			runner.Execute(verificationEnvelope);
 
@@ -884,9 +900,11 @@ namespace ProSuite.QA.Tests.Test
 
 			IEnvelope verificationEnvelope = GeometryFactory.CreateEnvelope(0, 0, 500, 500);
 
-			var test = new QaIsCoveredByOther(coveringClass, coveredClass)
+			var test = new QaIsCoveredByOther(
+				           ReadOnlyTableFactory.Create(coveringClass),
+				           ReadOnlyTableFactory.Create(coveredClass))
 			           {
-				           CoveringClassTolerances = new[] {100d}
+				           CoveringClassTolerances = new[] { 100d }
 			           };
 
 			var runner = new QaContainerTestRunner(10000, test);
@@ -914,7 +932,9 @@ namespace ProSuite.QA.Tests.Test
 
 			IEnvelope verificationEnvelope = GeometryFactory.CreateEnvelope(0, 0, 500, 500);
 
-			var test = new QaIsCoveredByOther(coveringClass, coveredClass);
+			var test = new QaIsCoveredByOther(
+				ReadOnlyTableFactory.Create(coveringClass),
+				ReadOnlyTableFactory.Create(coveredClass));
 
 			var runner = new QaContainerTestRunner(10000, test);
 			runner.Execute(verificationEnvelope);
@@ -951,7 +971,9 @@ namespace ProSuite.QA.Tests.Test
 
 			IEnvelope verificationEnvelope = GeometryFactory.CreateEnvelope(0, 0, 500, 500);
 
-			var test = new QaIsCoveredByOther(coveringClass, coveredClass)
+			var test = new QaIsCoveredByOther(
+				           ReadOnlyTableFactory.Create(coveringClass),
+				           ReadOnlyTableFactory.Create(coveredClass))
 			           {
 				           CoveringClassTolerances = new[] {5d}
 			           };
@@ -992,7 +1014,9 @@ namespace ProSuite.QA.Tests.Test
 
 			IEnvelope verificationEnvelope = GeometryFactory.CreateEnvelope(0, 0, 500, 500);
 
-			var test = new QaIsCoveredByOther(coveringClass, coveredClass)
+			var test = new QaIsCoveredByOther(
+				           ReadOnlyTableFactory.Create(coveringClass),
+				           ReadOnlyTableFactory.Create(coveredClass))
 			           {
 				           CoveringClassTolerances = new[] {5d}
 			           };
@@ -1053,11 +1077,12 @@ namespace ProSuite.QA.Tests.Test
 
 			IEnvelope verificationEnvelope = GeometryFactory.CreateEnvelope(0, 0, 500, 500);
 
-			var test = new QaIsCoveredByOther(new[] {coveringClass},
-			                                  new[] {GeometryComponent.LineEndPoints},
-			                                  new[] {coveredClass},
-			                                  new[] {GeometryComponent.EntireGeometry},
-			                                  (string) null, 0);
+			var test = new QaIsCoveredByOther(
+				new[] { ReadOnlyTableFactory.Create(coveringClass) },
+				new[] { GeometryComponent.LineEndPoints },
+				new[] { ReadOnlyTableFactory.Create(coveredClass) },
+				new[] { GeometryComponent.EntireGeometry },
+				(string) null, 0);
 
 			var runner = new QaContainerTestRunner(200, test);
 			runner.Execute(verificationEnvelope);
@@ -1095,7 +1120,9 @@ namespace ProSuite.QA.Tests.Test
 
 			IEnvelope verificationEnvelope = GeometryFactory.CreateEnvelope(0, 0, 500, 500);
 
-			var test = new QaIsCoveredByOther(coveringClass, coveredClass)
+			var test = new QaIsCoveredByOther(
+				           ReadOnlyTableFactory.Create(coveringClass),
+				           ReadOnlyTableFactory.Create(coveredClass))
 			           {
 				           CoveringClassTolerances = new[] {3d}
 			           };
@@ -1153,7 +1180,9 @@ namespace ProSuite.QA.Tests.Test
 
 			IEnvelope verificationEnvelope = GeometryFactory.CreateEnvelope(0, 0, 500, 500);
 
-			var test = new QaIsCoveredByOther(coveringClass, coveredClass);
+			var test = new QaIsCoveredByOther(
+				ReadOnlyTableFactory.Create(coveringClass),
+				ReadOnlyTableFactory.Create(coveredClass));
 
 			var runner = new QaContainerTestRunner(150, test);
 			runner.Execute(verificationEnvelope);
@@ -1190,7 +1219,9 @@ namespace ProSuite.QA.Tests.Test
 
 			IEnvelope verificationEnvelope = GeometryFactory.CreateEnvelope(0, 0, 500, 500);
 
-			var test = new QaIsCoveredByOther(coveringClass, coveredClass)
+			var test = new QaIsCoveredByOther(
+				           ReadOnlyTableFactory.Create(coveringClass),
+				           ReadOnlyTableFactory.Create(coveredClass))
 			           {
 				           CoveringClassTolerances = new[] {1d}
 			           };
@@ -1215,11 +1246,12 @@ namespace ProSuite.QA.Tests.Test
 			                                     .Curve;
 			lineFeature.Store();
 
-			var test = new QaIsCoveredByOther(new[] {lineClass},
-			                                  new[] {GeometryComponent.LineEndPoints},
-			                                  new[] {lineClass},
-			                                  new[] {GeometryComponent.LineEndPoints},
-			                                  null);
+			var test = new QaIsCoveredByOther(
+				new[] { ReadOnlyTableFactory.Create(lineClass) },
+				new[] { GeometryComponent.LineEndPoints },
+				new[] { ReadOnlyTableFactory.Create(lineClass) },
+				new[] { GeometryComponent.LineEndPoints },
+				null);
 
 			var runner = new QaContainerTestRunner(10000, test);
 			runner.Execute();
@@ -1242,13 +1274,14 @@ namespace ProSuite.QA.Tests.Test
 			                                     .Curve;
 			lineFeature.Store();
 
-			var test = new QaIsCoveredByOther(new[] {lineClass},
-			                                  new[] {GeometryComponent.LineEndPoints},
-			                                  new[] {lineClass},
-			                                  new[] {GeometryComponent.LineEndPoints},
-			                                  null)
+			var test = new QaIsCoveredByOther(
+				           new[] { ReadOnlyTableFactory.Create(lineClass) },
+				           new[] { GeometryComponent.LineEndPoints },
+				           new[] { ReadOnlyTableFactory.Create(lineClass) },
+				           new[] { GeometryComponent.LineEndPoints },
+				           null)
 			           {
-				           CoveringClassTolerances = new[] {2d}.ToList()
+				           CoveringClassTolerances = new[] { 2d }.ToList()
 			           };
 
 			var runner = new QaContainerTestRunner(10000, test);
@@ -1297,18 +1330,22 @@ namespace ProSuite.QA.Tests.Test
 			closedLine.Store();
 
 			var test = new QaIsCoveredByOther(
-				           new[] {lineClass, pointClass},
+				           new[]
+				           {
+					           ReadOnlyTableFactory.Create(lineClass),
+					           ReadOnlyTableFactory.Create(pointClass)
+				           },
 				           new[]
 				           {
 					           GeometryComponent.LineEndPoints,
 					           GeometryComponent.EntireGeometry
 				           },
-				           new[] {lineClass},
-				           new[] {GeometryComponent.LineEndPoints},
+				           new[] { ReadOnlyTableFactory.Create(lineClass) },
+				           new[] { GeometryComponent.LineEndPoints },
 				           null)
 			           {
 				           // use no tolerance for covering line end points, but tol=2 for covering points
-				           CoveringClassTolerances = new[] {0d, 2d}.ToList()
+				           CoveringClassTolerances = new[] { 0d, 2d }.ToList()
 			           };
 
 			var runner = new QaContainerTestRunner(10000, test);
@@ -1342,9 +1379,9 @@ namespace ProSuite.QA.Tests.Test
 			point.Store();
 
 			var test = new QaIsCoveredByOther(
-				new[] {pointClass},
+				new[] { ReadOnlyTableFactory.Create(pointClass)},
 				new[] {GeometryComponent.EntireGeometry},
-				new[] {lineClass},
+				new[] { ReadOnlyTableFactory.Create(lineClass)},
 				new[] {GeometryComponent.LineEndPoints},
 				null);
 
@@ -1387,9 +1424,9 @@ namespace ProSuite.QA.Tests.Test
 			// ring inside the test extent is not covered --> reported as error
 
 			var test = new QaIsCoveredByOther(
-				new[] {coveringClass},
+				new[] { ReadOnlyTableFactory.Create(coveringClass)},
 				new[] {GeometryComponent.EntireGeometry},
-				new[] {coveredClass},
+				new[] { ReadOnlyTableFactory.Create(coveredClass)},
 				new[] {GeometryComponent.EntireGeometry},
 				null);
 
@@ -1416,15 +1453,15 @@ namespace ProSuite.QA.Tests.Test
 				CreateFeatureClass("errors", esriGeometryType.esriGeometryPolygon, zAware: true);
 			QaIsCoveredByOther test =
 				new QaIsCoveredByOther(
-					new List<IFeatureClass>
+					new[]
 					{
-						ws.OpenFeatureClass("GC_SURFACES"),
-						ws.OpenFeatureClass("GC_UNCO_DESPOSIT"),
-						ws.OpenFeatureClass("GC_BEDROCK")
+						ReadOnlyTableFactory.Create(ws.OpenFeatureClass("GC_SURFACES")),
+						ReadOnlyTableFactory.Create(ws.OpenFeatureClass("GC_UNCO_DESPOSIT")),
+						ReadOnlyTableFactory.Create(ws.OpenFeatureClass("GC_BEDROCK"))
 					},
-					new List<IFeatureClass>
+					new[]
 					{
-						ws.OpenFeatureClass("GC_MAPSHEET")
+						ReadOnlyTableFactory.Create(ws.OpenFeatureClass("GC_MAPSHEET"))
 					});
 			test.SetConstraint(0, "KIND = 12701002 OR KIND = 12701003");
 			var runner = new QaContainerTestRunner(5000, test);
@@ -1446,13 +1483,15 @@ namespace ProSuite.QA.Tests.Test
 
 			QaIsCoveredByOther test =
 				new QaIsCoveredByOther(
-					new List<IFeatureClass>
+					new[]
 					{
-						ws1.OpenFeatureClass("DKM25_ANNOBLAU_MASK"),
+						ReadOnlyTableFactory.Create(
+							ws1.OpenFeatureClass("DKM25_ANNOBLAU_MASK")),
 					},
-					new List<IFeatureClass>
+					new[]
 					{
-						ws2.OpenFeatureClass("DKM25_ANNOBLAU_MASK")
+						ReadOnlyTableFactory.Create(
+							ws2.OpenFeatureClass("DKM25_ANNOBLAU_MASK"))
 					});
 			test.ValidUncoveredGeometryConstraint = "$SliverRatio < 50 OR $Area > 10";
 

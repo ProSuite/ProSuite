@@ -1,14 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainServices.AO.QA.Exceptions;
+using ProSuite.DomainServices.AO.QA.Issues;
 using ProSuite.QA.Container;
 
 namespace ProSuite.DomainServices.AO.QA.Standalone
@@ -29,7 +30,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 		[NotNull] private readonly IIssueWriter _issueWriter;
 
 		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+			new Msg(MethodBase.GetCurrentMethod()?.DeclaringType);
 
 		public IssueProcessor(
 			[NotNull] IIssueWriter issueWriter,
@@ -45,6 +46,8 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 			_testPerimeter = testPerimeter;
 			_exceptionObjectEvaluator = exceptionObjectEvaluator;
 		}
+
+		public event EventHandler<IssueFoundEventArgs> IssueFound;
 
 		public void Process([NotNull] QaErrorEventArgs args)
 		{
@@ -91,6 +94,8 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 				ErrorCount++;
 				Fulfilled = false;
 			}
+
+			OnIssueFound(element, qaError, element.AllowErrors);
 
 			_issueWriter.WriteIssue(qaError, element);
 		}
@@ -163,6 +168,23 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 			}
 		}
 
+		private void OnIssueFound(
+			[NotNull] QualitySpecificationElement qSpecElement,
+			[NotNull] QaError qaError,
+			bool isAllowable)
+		{
+			if (IssueFound == null)
+			{
+				return;
+			}
+
+			string involvedObjectsString = null;
+
+			IssueFound.Invoke(
+				this, new IssueFoundEventArgs(qSpecElement, qaError, isAllowable,
+				                              involvedObjectsString));
+		}
+
 		public int GetIssueCount([NotNull] QualityCondition qualityCondition,
 		                         out int exceptionCount)
 		{
@@ -186,7 +208,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 		// ReSharper disable once UnusedAutoPropertyAccessor.Global
 		public bool Fulfilled { get; private set; }
 
-		public bool HasStopCondition([NotNull] IRow row)
+		public bool HasStopCondition([NotNull] IReadOnlyRow row)
 		{
 			return _rowsWithStopConditions.GetStopInfo(row) != null;
 		}

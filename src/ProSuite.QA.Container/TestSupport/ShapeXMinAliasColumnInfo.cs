@@ -1,12 +1,12 @@
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.QA.Container.TestSupport
 {
 	public class ShapeXMinAliasColumnInfo : ShapeEnvelopePropertyAliasColumnInfoBase
 	{
-		public ShapeXMinAliasColumnInfo([NotNull] ITable table,
+		public ShapeXMinAliasColumnInfo([NotNull] IReadOnlyTable table,
 		                                [NotNull] string columnName)
 			: base(table, columnName) { }
 

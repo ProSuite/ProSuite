@@ -1,19 +1,19 @@
 using System;
-using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.QA.Container.TestSupport
 {
 	public class StringFieldExpression : FieldExpressionBase
 	{
-		public StringFieldExpression([NotNull] ITable table,
+		public StringFieldExpression([NotNull] IReadOnlyTable table,
 		                             [NotNull] string expression,
 		                             bool evaluateImmediately = false,
 		                             bool caseSensitive = false)
 			: base(table, expression, evaluateImmediately, caseSensitive) { }
 
 		[CanBeNull]
-		public string GetString([NotNull] IRow row)
+		public string GetString([NotNull] IReadOnlyRow row)
 		{
 			object value = GetValue(row);
 

@@ -4,10 +4,15 @@ using System.Runtime.InteropServices;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestCategories;
+using ProSuite.QA.Container.Geometry;
+using ProSuite.QA.Container.TestSupport;
+using ProSuite.QA.Core;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
 
@@ -17,11 +22,15 @@ namespace ProSuite.QA.Tests
 	[IntersectionParameterTest]
 	public class QaMinAngle : ContainerTest
 	{
+		private const AngleUnit _defaultAngularUnit = DefaultAngleUnit;
+
 		private IList<ISpatialFilter> _filter;
 		private IList<QueryFilterHelper> _helper;
 		private bool _is3D;
-		private double _limit;
-		private double _limitCos2;
+		private double _limitCstr;
+
+		private double _limitRad;
+		private double _limitCos2_;
 
 		// point templates to avoid creating Point Instances
 		private IPoint _firstSegmentStartPoint;
@@ -50,17 +59,17 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaMinAngle_0))]
 		public QaMinAngle(
-			[Doc(nameof(DocStrings.QaMinAngle_polylineClass))] IFeatureClass polylineClass,
+			[Doc(nameof(DocStrings.QaMinAngle_polylineClass))] IReadOnlyFeatureClass polylineClass,
 			[Doc(nameof(DocStrings.QaMinAngle_limit))] double limit,
 			[Doc(nameof(DocStrings.QaMinAngle_is3D))] bool is3D)
-			: base((ITable) polylineClass)
+			: base(polylineClass)
 		{
 			Init(limit, is3D);
 		}
 
 		[Doc(nameof(DocStrings.QaMinAngle_1))]
 		public QaMinAngle(
-				[Doc(nameof(DocStrings.QaMinAngle_polylineClasses))] IList<IFeatureClass> polylineClasses,
+				[Doc(nameof(DocStrings.QaMinAngle_polylineClasses))] IList<IReadOnlyFeatureClass> polylineClasses,
 				[Doc(nameof(DocStrings.QaMinAngle_limit))] double limit,
 				[Doc(nameof(DocStrings.QaMinAngle_is3D))] bool is3D)
 			// ReSharper disable once PossiblyMistakenUseOfParamsMethod
@@ -71,24 +80,38 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaMinAngle_1))]
 		public QaMinAngle(
-				[Doc(nameof(DocStrings.QaMinAngle_polylineClasses))] IList<IFeatureClass> polylineClasses,
+				[Doc(nameof(DocStrings.QaMinAngle_polylineClasses))] IList<IReadOnlyFeatureClass> polylineClasses,
 				[Doc(nameof(DocStrings.QaMinAngle_limit))] double limit)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(polylineClasses, limit, false) { }
 
+		[TestParameter(_defaultAngularUnit)]
+		[Doc(nameof(DocStrings.QaMinAngle_AngularUnit))]
+		public AngleUnit AngularUnit
+		{
+			get { return AngleUnit; }
+			set { AngleUnit = value; }
+		}
+
 		private void Init(double limit, bool is3D)
 		{
 			_filter = null;
-			_limit = limit;
+			_limitCstr = limit;
 			_is3D = is3D;
 
-			_limitCos2 = Math.Cos(limit);
-			if (_limitCos2 < 0)
+			_limitCos2_ = -1;
+		}
+
+		private void InitLimit()
+		{
+			_limitRad = FormatUtils.AngleInUnits2Radians(_limitCstr, AngularUnit);
+			double cos = Math.Cos(_limitRad);
+			if (cos < 0)
 			{
 				throw new ArgumentException("Angle must be smaller than PI / 2");
 			}
 
-			_limitCos2 = _limitCos2 * _limitCos2;
+			_limitCos2_ = cos * cos;
 
 			_firstSegmentStartPoint = new PointClass();
 			_firstSegmentEndPoint = new PointClass();
@@ -98,7 +121,7 @@ namespace ProSuite.QA.Tests
 			_comparePointTemplate = new PointClass();
 		}
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
 			// preparing
 			int errorCount = 0;
@@ -107,8 +130,13 @@ namespace ProSuite.QA.Tests
 				InitFilter();
 			}
 
+			if (_limitCos2_ < 0)
+			{
+				InitLimit();
+			}
+
 			// iterating over all needed tables
-			var feature = (IFeature) row;
+			var feature = (IReadOnlyFeature) row;
 
 			var polyline = (IPolyline) feature.Shape;
 
@@ -120,7 +148,7 @@ namespace ProSuite.QA.Tests
 			return errorCount;
 		}
 
-		private int CheckPathEndPoints([NotNull] IFeature feature, [NotNull] IPath path)
+		private int CheckPathEndPoints([NotNull] IReadOnlyFeature feature, [NotNull] IPath path)
 		{
 			var vertices = (IPointCollection) path;
 
@@ -148,7 +176,7 @@ namespace ProSuite.QA.Tests
 
 			foreach (var table in InvolvedTables)
 			{
-				var compareFeatureClass = (IFeatureClass) table;
+				var compareFeatureClass = (IReadOnlyFeatureClass) table;
 				compareTableIndex++;
 				_helper[compareTableIndex].MinimumOID = -1;
 
@@ -181,9 +209,9 @@ namespace ProSuite.QA.Tests
 		private int ExecutePoint([NotNull] IPoint connectPoint,
 		                         [NotNull] IPoint otherSegmentEndPoint,
 		                         double squaredSegmentLength,
-		                         [NotNull] IFeatureClass compareFeatureClass,
+		                         [NotNull] IReadOnlyFeatureClass compareFeatureClass,
 		                         int compareTableIndex,
-		                         [NotNull] IFeature feature)
+		                         [NotNull] IReadOnlyFeature feature)
 		{
 			ISpatialFilter filter = _filter[compareTableIndex];
 
@@ -191,11 +219,11 @@ namespace ProSuite.QA.Tests
 
 			int errorCount = 0;
 
-			foreach (var row in Search((ITable) compareFeatureClass,
+			foreach (var row in Search(compareFeatureClass,
 			                           _filter[compareTableIndex],
 			                           _helper[compareTableIndex]))
 			{
-				var compareFeature = (IFeature) row;
+				var compareFeature = (IReadOnlyFeature) row;
 				errorCount += CheckFeature(connectPoint, feature, compareFeature,
 				                           otherSegmentEndPoint, squaredSegmentLength);
 			}
@@ -204,8 +232,8 @@ namespace ProSuite.QA.Tests
 		}
 
 		private int CheckFeature([NotNull] IPoint connectPoint,
-		                         [NotNull] IFeature feature,
-		                         [NotNull] IFeature compareFeature,
+		                         [NotNull] IReadOnlyFeature feature,
+		                         [NotNull] IReadOnlyFeature compareFeature,
 		                         [NotNull] IPoint otherSegmentEndPoint,
 		                         double squaredSegmentLength)
 		{
@@ -282,11 +310,11 @@ namespace ProSuite.QA.Tests
 			if (! compareConnectionFound)
 			{
 				// this is possible because of tolerance and resolution
-				errorCount += ReportError("End points do not fit", connectPoint,
-				                          Codes[Code.EndPointsDoNotFit],
-				                          TestUtils.GetShapeFieldName(feature),
-				                          feature,
-				                          compareFeature);
+				errorCount += ReportError(
+					"End points do not fit",
+					InvolvedRowUtils.GetInvolvedRows(feature, compareFeature),
+					connectPoint, Codes[Code.EndPointsDoNotFit],
+					TestUtils.GetShapeFieldName(feature));
 			}
 
 			return errorCount;
@@ -305,8 +333,8 @@ namespace ProSuite.QA.Tests
 		                       [NotNull] IPoint otherSegmentEndPoint,
 		                       double squaredSegmentLength,
 		                       [NotNull] IPoint comparePoint,
-		                       [NotNull] IRow feature,
-		                       [NotNull] IRow compareFeature)
+		                       [NotNull] IReadOnlyRow feature,
+		                       [NotNull] IReadOnlyRow compareFeature)
 		{
 			double distanceSquaredToComparePoint;
 			double prod = GetProd(connectPoint, otherSegmentEndPoint, comparePoint,
@@ -316,19 +344,19 @@ namespace ProSuite.QA.Tests
 			{
 				double cos2 = prod * prod / (squaredSegmentLength * distanceSquaredToComparePoint);
 
-				if (cos2 > _limitCos2)
+				if (cos2 > _limitCos2_)
 				{
 					double angleRadians = Math.Acos(Math.Sqrt(cos2));
 
 					string description = string.Format("Angle {0} < {1}",
 					                                   FormatAngle(angleRadians, "N2"),
-					                                   FormatAngle(_limit, "N2"));
+					                                   FormatAngle(_limitRad, "N2"));
 
-					return ReportError(description, GeometryFactory.Clone(connectPoint),
-					                   Codes[Code.AngleTooSmall],
-					                   TestUtils.GetShapeFieldName(feature),
-					                   new object[] {MathUtils.ToDegrees(angleRadians)},
-					                   feature, compareFeature);
+					return ReportError(
+						description, InvolvedRowUtils.GetInvolvedRows(feature, compareFeature),
+						GeometryFactory.Clone(connectPoint),
+						Codes[Code.AngleTooSmall], TestUtils.GetShapeFieldName(feature),
+						values: new object[] { MathUtils.ToDegrees(angleRadians) });
 				}
 			}
 

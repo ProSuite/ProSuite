@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using System.Text;
 using ESRI.ArcGIS.esriSystem;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.QA.Container.PolygonGrower
@@ -155,7 +155,7 @@ namespace ProSuite.QA.Container.PolygonGrower
 			}
 		}
 
-		public IRow RightCentroid
+		public IReadOnlyRow RightCentroid
 		{
 			get
 			{
@@ -197,7 +197,7 @@ namespace ProSuite.QA.Container.PolygonGrower
 			}
 		}
 
-		public IRow LeftCentroid
+		public IReadOnlyRow LeftCentroid
 		{
 			get
 			{

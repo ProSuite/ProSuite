@@ -52,7 +52,7 @@ namespace ProSuite.QA.Tests.Test.Constraints
 			                                        integerField);
 
 			List<ConstraintNode> constraints =
-				GdbConstraintUtils.GetGdbConstraints(table);
+				GdbConstraintUtils.GetGdbConstraints(ReadOnlyTableFactory.Create(table));
 
 			Assert.NotNull(constraints);
 
@@ -90,7 +90,7 @@ namespace ProSuite.QA.Tests.Test.Constraints
 			                                        doubleField);
 
 			List<ConstraintNode> constraints =
-				GdbConstraintUtils.GetGdbConstraints(table);
+				GdbConstraintUtils.GetGdbConstraints(ReadOnlyTableFactory.Create(table));
 
 			Assert.NotNull(constraints);
 
@@ -132,7 +132,7 @@ namespace ProSuite.QA.Tests.Test.Constraints
 			                                        textField);
 
 			List<ConstraintNode> constraints =
-				GdbConstraintUtils.GetGdbConstraints(table);
+				GdbConstraintUtils.GetGdbConstraints(ReadOnlyTableFactory.Create(table));
 
 			Assert.NotNull(constraints);
 
@@ -171,7 +171,7 @@ namespace ProSuite.QA.Tests.Test.Constraints
 
 			List<ConstraintNode> constraints =
 				GdbConstraintUtils.GetGdbConstraints(
-					table, allowNullForCodedValueDomains: false);
+					ReadOnlyTableFactory.Create(table), allowNullForCodedValueDomains: false);
 
 			Assert.NotNull(constraints);
 
@@ -204,7 +204,7 @@ namespace ProSuite.QA.Tests.Test.Constraints
 			                                        integerField);
 
 			List<ConstraintNode> constraints =
-				GdbConstraintUtils.GetGdbConstraints(table);
+				GdbConstraintUtils.GetGdbConstraints(ReadOnlyTableFactory.Create(table));
 
 			Assert.NotNull(constraints);
 
@@ -239,7 +239,7 @@ namespace ProSuite.QA.Tests.Test.Constraints
 
 			List<ConstraintNode> constraints =
 				GdbConstraintUtils.GetGdbConstraints(
-					table, allowNullForRangeDomains: false);
+					ReadOnlyTableFactory.Create(table), allowNullForRangeDomains: false);
 
 			Assert.NotNull(constraints);
 
@@ -275,7 +275,7 @@ namespace ProSuite.QA.Tests.Test.Constraints
 
 			List<ConstraintNode> constraints =
 				GdbConstraintUtils.GetGdbConstraints(
-					table, allowNullForRangeDomains: false);
+					ReadOnlyTableFactory.Create(table), allowNullForRangeDomains: false);
 
 			Assert.NotNull(constraints);
 

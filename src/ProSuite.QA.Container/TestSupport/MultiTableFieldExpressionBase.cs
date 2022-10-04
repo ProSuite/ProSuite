@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
-using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -48,8 +48,8 @@ namespace ProSuite.QA.Container.TestSupport
 		public string Row2Alias { get; }
 
 		[CanBeNull]
-		protected object GetValue([NotNull] IRow row1, int tableIndex1,
-		                          [NotNull] IRow row2, int tableIndex2)
+		protected object GetValue([NotNull] IReadOnlyRow row1, int tableIndex1,
+		                          [NotNull] IReadOnlyRow row2, int tableIndex2)
 		{
 			var view = GetTableView(row1, tableIndex1, row2, tableIndex2);
 
@@ -67,8 +67,8 @@ namespace ProSuite.QA.Container.TestSupport
 		}
 
 		[NotNull]
-		private MultiTableView GetTableView([NotNull] IRow row1, int tableIndex1,
-		                                    [NotNull] IRow row2, int tableIndex2)
+		private MultiTableView GetTableView([NotNull] IReadOnlyRow row1, int tableIndex1,
+		                                    [NotNull] IReadOnlyRow row2, int tableIndex2)
 		{
 			var tableIndexPair = new TableIndexPair(tableIndex1, tableIndex2);
 
@@ -84,8 +84,8 @@ namespace ProSuite.QA.Container.TestSupport
 		}
 
 		[NotNull]
-		private MultiTableView CreateTableView([NotNull] IRow row1,
-		                                       [NotNull] IRow row2)
+		private MultiTableView CreateTableView([NotNull] IReadOnlyRow row1,
+		                                       [NotNull] IReadOnlyRow row2)
 		{
 			var table1 = row1.Table;
 			var table2 = row2.Table;

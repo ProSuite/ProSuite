@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
 using ProSuite.Commons;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -15,9 +14,9 @@ namespace ProSuite.Application.Configuration
 	/// Configuration search order:
 	/// <list type="number">
 	///    <item>Directory referenced in environment variable <c>PROSUITE_CONFIG_DIR</c></item>
-	///    <item><c>&lt;local application data&gt;\Esri Switzerland\ProSuite\Config</c></item>
-	///    <item><c>&lt;application data&gt;\Esri Switzerland\ProSuite\Config</c></item>
-	///    <item><c>&lt;common application data&gt;\Esri Switzerland\ProSuite\Config</c></item>
+	///    <item><c>&lt;local application data&gt;\{Company Name}\ProSuite\Config</c></item>
+	///    <item><c>&lt;application data&gt;\{Company Name}\ProSuite\Config</c></item>
+	///    <item><c>&lt;common application data&gt;\{Company Name}\ProSuite\Config</c></item>
 	///    <item><c>&lt;installdir&gt;\Config</c></item>
 	///    <item><c>&lt;installdir&gt;\bin\..\</c></item>
 	///    <item><c>&lt;installdir&gt;\bin\..\..\</c></item>
@@ -31,8 +30,7 @@ namespace ProSuite.Application.Configuration
 	{
 		private readonly string _directoryName;
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		[NotNull] private readonly string _installDirectory;
 
@@ -85,15 +83,6 @@ namespace ProSuite.Application.Configuration
 			                                            _directoryName);
 			paths.Add(overrideConfigDirPath);
 
-			// Add the path to the config directory defined in the registry.
-			// This allows the the add-in installation to use the configuration from the 32bit
-			// installation
-			DirectoryInfo registeredConfigDirectory = GetFromRegisteredInstallDirectory();
-			if (registeredConfigDirectory != null)
-			{
-				paths.Add(registeredConfigDirectory.FullName);
-			}
-
 			// get base method paths
 			base.CollectAllUserSearchPaths(paths);
 
@@ -108,23 +97,6 @@ namespace ProSuite.Application.Configuration
 			string cwdConfigDirPath = Path.Combine(Environment.CurrentDirectory,
 			                                       _directoryName);
 			paths.Add(cwdConfigDirPath);
-		}
-
-		[CanBeNull]
-		private DirectoryInfo GetFromRegisteredInstallDirectory()
-		{
-			string path = ConfigurationUtils.GetRegisteredInstallDirectory();
-
-			if (string.IsNullOrEmpty(path) || ! Directory.Exists(path))
-			{
-				return null;
-			}
-
-			string configPath = Path.Combine(path, _directoryName);
-
-			return Directory.Exists(configPath)
-				       ? new DirectoryInfo(configPath)
-				       : null;
 		}
 	}
 }

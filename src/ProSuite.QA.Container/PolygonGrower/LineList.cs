@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container.Geometry;
@@ -78,7 +78,7 @@ namespace ProSuite.QA.Container.PolygonGrower
 		}
 
 		[NotNull]
-		public IList<IRow> GetUniqueRows(IList<ITable> tableIndexTables)
+		public IList<IReadOnlyRow> GetUniqueRows(IList<IReadOnlyTable> tableIndexTables)
 		{
 			var sortList = new List<ITableIndexRow>(_directedRows.Count);
 
@@ -88,7 +88,7 @@ namespace ProSuite.QA.Container.PolygonGrower
 			}
 
 			sortList.Sort(_pathRowComparer.RowComparer);
-			var uniqueList = new List<IRow>(_directedRows.Count);
+			var uniqueList = new List<IReadOnlyRow>(_directedRows.Count);
 
 			ITableIndexRow previousRow = null;
 			foreach (ITableIndexRow row in sortList)
