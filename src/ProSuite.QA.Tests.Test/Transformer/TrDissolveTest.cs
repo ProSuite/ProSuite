@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
@@ -83,7 +84,71 @@ namespace ProSuite.QA.Tests.Test.Transformer
 		}
 
 		[Test]
-		public void CanDissolvePolygon()
+		public void CanDissolvePolygonTile()
+		{
+			IFeatureWorkspace ws = TestWorkspaceUtils.CreateInMemoryWorkspace("TrDissolve");
+
+			IFieldsEdit fields = new FieldsClass();
+			fields.AddField(FieldUtils.CreateOIDField());
+			ISpatialReference sr =
+				SpatialReferenceUtils.CreateSpatialReference(
+					(int) esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95, true);
+
+			fields.AddField(
+				FieldUtils.CreateShapeField("Shape", esriGeometryType.esriGeometryPolygon, sr,
+				                            1000));
+
+			const string fclassName = "polyFc";
+			IFeatureClass fc = DatasetUtils.CreateSimpleFeatureClass(ws, fclassName, fields);
+
+			{
+				IFeature f = fc.CreateFeature();
+				f.Shape = GeometryFactory.CreatePolygon(0, 0, 70, 70, sr);
+				f.Store();
+			}
+			{
+				IFeature f = fc.CreateFeature();
+				f.Shape = GeometryFactory.CreatePolygon(70, 70, 80, 80, sr);
+				f.Store();
+			}
+			{
+				IFeature f = fc.CreateFeature();
+				f.Shape = GeometryFactory.CreatePolygon(20, 70, 30, 80, sr);
+				f.Store();
+			}
+			{
+				IFeature f = fc.CreateFeature();
+				f.Shape = GeometryFactory.CreatePolygon(20, 20, 30, 30, sr);
+				f.Store();
+			}
+
+			TrDissolve dissolve =
+				new TrDissolve(ReadOnlyTableFactory.Create(fc))
+				{Search = 1, NeighborSearchOption = TrDissolve.SearchOption.Tile};
+
+			// Ensure unique OID:
+			List<int> objectIDs = dissolve
+			                      .GetTransformed().EnumReadOnlyRows(new QueryFilterClass(), false)
+			                      .Select(f => f.OID).ToList();
+
+			Assert.AreEqual(objectIDs.Count, objectIDs.Distinct().Count());
+
+			QaMinArea test = new QaMinArea(dissolve.GetTransformed(), 110);
+			{
+				var runner = new QaContainerTestRunner(1000, test);
+				runner.Execute();
+				Assert.AreEqual(1, runner.Errors.Count);
+			}
+			{
+				// Each tile sees some different combination of features...
+				var runner = new QaContainerTestRunner(25, test);
+				runner.Execute();
+				Assert.AreEqual(3, runner.Errors.Count);
+			}
+		}
+
+		[Test]
+		public void CanDissolvePolygonAll()
 		{
 			IFeatureWorkspace ws = TestWorkspaceUtils.CreateInMemoryWorkspace("TrDissolve");
 
@@ -132,17 +197,27 @@ namespace ProSuite.QA.Tests.Test.Transformer
 
 			Assert.AreEqual(objectIDs.Count, objectIDs.Distinct().Count());
 
+			IGeometry errorShape;
 			QaMinArea test = new QaMinArea(dissolve.GetTransformed(), 110);
 			{
 				var runner = new QaContainerTestRunner(1000, test);
+				runner.KeepGeometry = true;
 				runner.Execute();
 				Assert.AreEqual(1, runner.Errors.Count);
+				errorShape = runner.ErrorGeometries[0];
 			}
 			{
 				// TODO: Implement proper handling of the SearchOption All in the polygon case
 				var runner = new QaContainerTestRunner(25, test);
+				runner.KeepGeometry = true;
 				runner.Execute();
-				Assert.AreEqual(1, runner.Errors.Count);
+
+				// NOTE: The error is reported once per tile (de-duplication does not happen here)
+				// -> and to work properly, the features would need to be grouped into contiguous groups first...
+				foreach (IGeometry geometry in runner.ErrorGeometries)
+				{
+					Assert.IsTrue(GeometryUtils.AreEqualInXY(errorShape, geometry));
+				}
 			}
 		}
 
