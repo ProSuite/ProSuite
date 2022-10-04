@@ -108,8 +108,6 @@
 			<DependentUpon>DatasetCatalogControl.cs</DependentUpon>
 		</Compile>
 		<Compile Update="Properties\AssociationEndImages.Designer.cs">
-    <Compile Include="Processing\ProcessImageSet.cs" />
-    <Compile Include="Processing\ProcessImageSetUtils.cs" />
 			<DependentUpon>AssociationEndImages.resx</DependentUpon>
 			<AutoGen>True</AutoGen>
 			<DesignTime>True</DesignTime>
