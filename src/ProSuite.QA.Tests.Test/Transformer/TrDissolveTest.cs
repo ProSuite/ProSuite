@@ -125,6 +125,13 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				new TrDissolve(ReadOnlyTableFactory.Create(fc))
 				{Search = 1, NeighborSearchOption = TrDissolve.SearchOption.All};
 
+			// Ensure unique OID:
+			List<int> objectIDs = dissolve
+			                      .GetTransformed().EnumReadOnlyRows(new QueryFilterClass(), false)
+			                      .Select(f => f.OID).ToList();
+
+			Assert.AreEqual(objectIDs.Count, objectIDs.Distinct().Count());
+
 			QaMinArea test = new QaMinArea(dissolve.GetTransformed(), 110);
 			{
 				var runner = new QaContainerTestRunner(1000, test);

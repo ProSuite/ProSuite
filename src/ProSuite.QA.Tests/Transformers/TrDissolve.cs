@@ -80,7 +80,7 @@ namespace ProSuite.QA.Tests.Transformers
 				                                     AreResultRowsGrouped = true
 			                                     };
 
-			tableFields.AddOIDField(dissolvedFc, "OBJECTID");
+			//tableFields.AddOIDField(dissolvedFc, "OBJECTID");
 			tableFields.AddShapeField(dissolvedFc, "SHAPE", true);
 
 			if (Attributes != null)
@@ -447,7 +447,7 @@ namespace ProSuite.QA.Tests.Transformers
 				IValueList rowValues = new ReadOnlyRowBasedValues(mainRow);
 				joinedValueList.AddList(rowValues, TableFields.FieldIndexMapping);
 
-				GdbFeature dissolved = Resulting.CreateFeature(mainRow.OID, joinedValueList);
+				GdbFeature dissolved = (GdbFeature) Resulting.CreateObject(joinedValueList);
 
 				dissolved.Shape = shape;
 
