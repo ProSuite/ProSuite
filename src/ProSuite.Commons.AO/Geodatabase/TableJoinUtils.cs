@@ -400,8 +400,18 @@ namespace ProSuite.Commons.AO.Geodatabase
 		                                   [NotNull] GdbTable result,
 		                                   [NotNull] IReadOnlyTable geometryTable)
 		{
-			IReadOnlyTable oidSourceTable =
+			IReadOnlyTable oidSourceTable;
+
+			// For backward compatibility (route layer) assuming the geometry table's OID field is always added
+			if (! ensureUniqueIds)
+			{
+				oidSourceTable = geometryTable;
+			}
+			else
+			{
+				oidSourceTable =
 				DetermineOIDTable(associationDescription, joinType, geometryTable);
+			}
 
 			if (oidSourceTable == null)
 			{
