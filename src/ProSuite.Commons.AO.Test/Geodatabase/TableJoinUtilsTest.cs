@@ -593,7 +593,9 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			ITable table = TableJoinUtils.CreateQueryTable(rc, JoinType.RightJoin,
 			                                               includeOnlyOIDFields,
 			                                               excludeShapeField);
-			Assert.AreEqual("TOPGIS_TLM.TLM_STRASSE.OBJECTID", table.OIDFieldName);
+
+			// Right join uses destination table as primary key:
+			Assert.AreEqual("TOPGIS_TLM.TLM_STRASSEN_NAME.OBJECTID", table.OIDFieldName);
 
 			Assert.AreEqual(featureCount, GetRowCount(table));
 			Assert.AreEqual(destinationRowCount, featureCount);
