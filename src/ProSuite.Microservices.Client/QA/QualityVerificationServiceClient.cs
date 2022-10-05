@@ -23,7 +23,9 @@ namespace ProSuite.Microservices.Client.QA
 		                                        string clientCertificate = null)
 			: base(host, port, useTls, clientCertificate) { }
 
-		protected override string ServiceName => nameof(QualityVerificationGrpc);
+		public override string ServiceName => nameof(QualityVerificationGrpc);
+
+		public override string ServiceDisplayName => "Quality Verification";
 
 		[CanBeNull]
 		public QualityVerificationGrpc.QualityVerificationGrpcClient QaClient
@@ -72,7 +74,13 @@ namespace ProSuite.Microservices.Client.QA
 
 		protected override void ChannelOpenedCore(Channel channel)
 		{
-			if (! ChannelIsLoadBalancer)
+			// In case of fail-over from a fixed address to a load-balancer:
+			if (ChannelIsLoadBalancer)
+			{
+				_staticQaClient = null;
+				_staticDdxClient = null;
+			}
+			else
 			{
 				_staticQaClient =
 					new QualityVerificationGrpc.QualityVerificationGrpcClient(channel);

@@ -17,7 +17,9 @@ namespace ProSuite.Microservices.Client.QualityTestService
 		                          string clientCertificate = null)
 			: base(host, port, useTls, clientCertificate) { }
 
-		protected override string ServiceName => nameof(QualityTestGrpc);
+		public override string ServiceName => nameof(QualityTestGrpc);
+
+		public override string ServiceDisplayName => "Quality Test Service";
 
 		protected override void ChannelOpenedCore(Channel channel)
 		{
