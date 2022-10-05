@@ -231,16 +231,41 @@ namespace ProSuite.Commons.AO.Geodatabase
 		private IEnumerable<VirtualRow> GetJoinedRows([CanBeNull] IQueryFilter filter,
 		                                              bool recycle)
 		{
-			if (filter != null && (! string.IsNullOrEmpty(filter.WhereClause)))
+			EnsureKeyFieldNames();
+
+			IDictionary<string, IList<IReadOnlyRow>> otherRowsByFeatureKey = null;
+
+			bool filterHasWhereClause =
+				filter != null && ! string.IsNullOrEmpty(filter.WhereClause);
+
+			if (filterHasWhereClause)
+			{
+				try
+				{
+					// TOP-5597: Try using the where clause on the left table: It could improve performance
+					// tremendously in case there is no spatial filter and the where-clause is restrictive.
+					// However, it could fail if the where clause references fields from the right table.
+					// The where clause will be re-applied to the resulting joined rows.
+					otherRowsByFeatureKey = GetOtherRowsByFeatureKey(filter);
+				}
+				catch (Exception e)
+				{
+					_msg.Debug("Exception tentative executing the where-clause on the left table " +
+					           "only. Falling back to default.", e);
+				}
+			}
+
+			// Do not apply the where clause on the remaining queries (it will be applied applied to the resulting joined rows)
+			if (filterHasWhereClause)
 			{
 				filter = (IQueryFilter) ((IClone) filter).Clone();
 				filter.WhereClause = null;
 			}
 
-			EnsureKeyFieldNames();
-
-			IDictionary<string, IList<IReadOnlyRow>> otherRowsByFeatureKey =
-				GetOtherRowsByFeatureKey(filter);
+			if (otherRowsByFeatureKey == null)
+			{
+				otherRowsByFeatureKey = GetOtherRowsByFeatureKey(filter);
+			}
 
 			IEnumerable<IReadOnlyRow> leftRows = PerformFinalGeoClassRead(
 				otherRowsByFeatureKey, filter, recycle);
@@ -373,7 +398,13 @@ namespace ProSuite.Commons.AO.Geodatabase
 			Assert.True(featureClassKeyIdx >= 0, $"Key field not found: {featureClassKeyIdx}");
 
 			bool clientSideKeyFiltering;
-			if (AssumeLeftTableCached)
+
+			if (! FilterHasGeometry(filter))
+			{
+				// The container is of no help, leverage at least the WhereClause directly in the DB
+				clientSideKeyFiltering = false;
+			}
+			else if (AssumeLeftTableCached)
 			{
 				clientSideKeyFiltering = true;
 			}
@@ -400,6 +431,16 @@ namespace ProSuite.Commons.AO.Geodatabase
 			{
 				yield return row;
 			}
+		}
+
+		private static bool FilterHasGeometry(IQueryFilter filter)
+		{
+			if (filter is ISpatialFilter spatialFilter)
+			{
+				return spatialFilter.Geometry != null;
+			}
+
+			return false;
 		}
 
 		private IEnumerable<VirtualRow> Join(
