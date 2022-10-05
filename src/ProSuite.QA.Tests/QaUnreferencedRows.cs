@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
@@ -32,8 +31,7 @@ namespace ProSuite.QA.Tests
 		private ReferencedTableInfo _referencedTableInfo;
 		private IList<ReferencingTableInfo> _referencingTableInfos;
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod()?.DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		#region issue codes
 
@@ -554,28 +552,25 @@ namespace ProSuite.QA.Tests
 
 					try
 					{
-						return ReadOnlyTableFactory.Create((ESRI.ArcGIS.Geodatabase.ITable) ((IName) queryName).Open());
+						return ReadOnlyTableFactory.Create((ITable) ((IName) queryName).Open());
 					}
 					catch (Exception e)
 					{
-						_msg.DebugFormat("Error creating query-based table: {0}",
-						                 e.Message);
+						_msg.DebugFormat("Error creating query-based table: {0}", e.Message);
 						LogQueryName(queryName);
 
 						throw;
 					}
 				}
 
-				throw new InvalidConfigurationException(
-					$"Cannot parse relation: {relation}");
+				throw new InvalidConfigurationException($"Cannot parse relation: {relation}");
 			}
 
 			private static void LogQueryName([NotNull] IQueryName2 queryName)
 			{
 				IQueryDef queryDef = queryName.QueryDef;
 
-				_msg.DebugFormat("query table name: {0}",
-				                 ((IDatasetName) queryName).Name);
+				_msg.DebugFormat("query table name: {0}", ((IDatasetName) queryName).Name);
 				_msg.DebugFormat("copy locally: {0}", queryName.CopyLocally);
 				_msg.DebugFormat("primary key: [{0}]", queryName.PrimaryKey);
 				_msg.DebugFormat("query:");
