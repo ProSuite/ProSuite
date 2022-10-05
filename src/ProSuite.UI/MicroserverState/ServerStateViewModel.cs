@@ -105,6 +105,8 @@ namespace ProSuite.UI.MicroserverState
 
 		public bool HasAvailableService => ServerStates.Any(s => s.IsServing);
 
+		public bool AllServicesAvailable => ServerStates.All(s => s.IsServing);
+
 		public int AvailableServiceCount => ServerStates.Count(s => s.IsServing);
 
 		/// <summary>
