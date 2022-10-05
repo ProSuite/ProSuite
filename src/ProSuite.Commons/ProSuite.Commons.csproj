@@ -29,7 +29,6 @@
 
   <ItemGroup>
     <Compile Include="..\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
-    <Reference Include="System.IO.Compression.FileSystem" />
   </ItemGroup>
 
   <!-- Allow using a product-specific EncryptorFactory: -->
