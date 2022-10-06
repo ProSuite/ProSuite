@@ -319,7 +319,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			IReadOnlyTable otherTable = associationDescription.Table1.Equals(geometryTable)
 				                            ? associationDescription.Table2
 				                            : associationDescription.Table1;
-			
+
 			Func<GdbTable, BackingDataset> datasetFactoryFunc = t =>
 				new JoinedDataset(associationDescription, geometryTable, otherTable, t)
 				{
@@ -410,18 +410,13 @@ namespace ProSuite.Commons.AO.Geodatabase
 			else
 			{
 				oidSourceTable =
-				DetermineOIDTable(associationDescription, joinType, geometryTable);
+					DetermineOIDTable(associationDescription, joinType, geometryTable);
 			}
 
 			if (oidSourceTable == null)
 			{
-				if (ensureUniqueIds)
-				{
-					_msg.Debug($"{result.Name} will have no OBJECT ID field.");
-					return;
-				}
-
-				oidSourceTable = geometryTable;
+				_msg.Debug($"{result.Name} will have no OBJECT ID field.");
+				return;
 			}
 
 			string oidFieldName = oidSourceTable.HasOID

@@ -533,19 +533,39 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		private JoinSourceTable GetObjectIdTable()
 		{
-			IReadOnlyTable oidSourceTable =
-				TableJoinUtils.DetermineOIDTable(_associationDescription, JoinType,
-				                                 GeometryEndClass);
+			string oidFieldName = _joinedSchema.OIDFieldName;
 
-			if (_associationDescription is ForeignKeyAssociationDescription)
+			if (oidFieldName == null)
 			{
-				return GeometryEndClass.Equals(oidSourceTable)
-					       ? JoinSourceTable.Left
-					       : JoinSourceTable.Right;
+				return JoinSourceTable.None;
 			}
 
-			// The LeftTable is a non-unique fallback with a very slight performance gain due to left-out association rows. 
-			return IncludeMtoNAssociationRows ? JoinSourceTable.Association : JoinSourceTable.Left;
+			int splitPosition = oidFieldName.LastIndexOf('.');
+
+			Assert.False(splitPosition < 0, "OBJECTID field is not fully qualified.");
+
+			string tableName = oidFieldName.Substring(0, splitPosition);
+
+			if (tableName.Equals(GeometryEndClass.Name,
+			                     StringComparison.InvariantCultureIgnoreCase))
+			{
+				return JoinSourceTable.Left;
+			}
+
+			if (tableName.Equals(OtherEndClass.Name, StringComparison.InvariantCultureIgnoreCase))
+			{
+				return JoinSourceTable.Right;
+			}
+
+			Assert.True(_associationDescription is ManyToManyAssociationDescription,
+			            $"Unexpected association type for OID field {oidFieldName}");
+
+			Assert.True(
+				tableName.Equals(AssociationTable?.Name,
+				                 StringComparison.InvariantCultureIgnoreCase),
+				$"OID field {oidFieldName} not found in join tables");
+
+			return JoinSourceTable.Association;
 		}
 
 		private GdbRow CreateJoinedFeature([NotNull] IReadOnlyRow leftRow,
