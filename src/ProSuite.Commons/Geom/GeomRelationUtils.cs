@@ -709,7 +709,18 @@ namespace ProSuite.Commons.Geom
 			{
 				Pnt3D anyPoint = target.GetSegment(0).StartPoint;
 
-				return AreaContainsXY(sourceRing, anyPoint, tolerance, disregardRingOrientation);
+				bool? pointContained =
+					AreaContainsXY(sourceRing, anyPoint, tolerance, disregardRingOrientation);
+
+				if (pointContained == null)
+				{
+					// Make sure we have not used the (filtered out) start/end point intersection
+					anyPoint = target.GetSegment(0).EndPoint;
+					pointContained =
+						AreaContainsXY(sourceRing, anyPoint, tolerance, disregardRingOrientation);
+				}
+
+				return pointContained;
 			}
 
 			bool? properOrientationResult =
