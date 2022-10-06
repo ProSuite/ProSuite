@@ -738,9 +738,13 @@ namespace ProSuite.Commons.AO.Geodatabase
 		private VirtualRow GetRowManyToMany(int id, ManyToManyAssociationDescription m2nAssociation)
 		{
 			GetAssociationTableKeyFields(m2nAssociation, out string bridgeTableGeoKeyField,
-			                             out string _);
+			                             out string bridgeTableOtherKeyField);
 
 			IReadOnlyTable bridgeTable = m2nAssociation.AssociationTable;
+
+			int bridgeTableOtherKeyIdx = bridgeTable.FindField(bridgeTableOtherKeyField);
+			Assert.True(bridgeTableOtherKeyIdx >= 0,
+			            $"Key field {bridgeTableOtherKeyField} not found in {bridgeTable.Name}");
 
 			int bridgeTableGeoKeyIdx = bridgeTable.FindField(bridgeTableGeoKeyField);
 			Assert.True(bridgeTableGeoKeyIdx >= 0,
@@ -748,17 +752,29 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			IReadOnlyRow associationRow = bridgeTable.GetRow(id);
 
-			string geoKeyValue = GetNonNullKeyValue(associationRow, bridgeTableGeoKeyIdx);
+			// The primary key of the other table:
+			string bridgeOtherKeyValue = GetNonNullKeyValue(associationRow, bridgeTableOtherKeyIdx);
 
-			var geoKeyList = new List<string> {geoKeyValue};
+			// The primary key of the geo table:
+			string bridgeGeoKeyValue = GetNonNullKeyValue(associationRow, bridgeTableGeoKeyIdx);
+
+			var geoKeyList = new List<string> {bridgeGeoKeyValue};
 
 			IList<IReadOnlyRow> geoFeatures = FetchRowsByKey(
 					GeometryEndClass, geoKeyList, GeometryClassKeyField, false)
 				.ToList();
 
-			Assert.AreEqual(1, geoFeatures.Count, $"Unexpected number of left table features");
+			Assert.AreEqual(1, geoFeatures.Count, "Unexpected number of left table features");
 
-			return GetJoinedRows(new List<IReadOnlyRow> {geoFeatures[0]}).FirstOrDefault();
+			var otherKeyList = new List<string> {bridgeOtherKeyValue};
+
+			IList<IReadOnlyRow> otherFeatures = FetchRowsByKey(
+					OtherEndClass, otherKeyList, OtherClassKeyField, false)
+				.ToList();
+
+			Assert.AreEqual(1, otherFeatures.Count, "Unexpected number of right table features");
+
+			return CreateJoinedFeature(geoFeatures[0], otherFeatures[0], associationRow);
 		}
 
 		private void GetAssociationTableKeyFields(ManyToManyAssociationDescription m2nAssociation,
