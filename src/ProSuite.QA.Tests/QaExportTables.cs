@@ -46,14 +46,23 @@ namespace ProSuite.QA.Tests
 				_tileId = 0;
 				_tileFc = null;
 
-				if (File.Exists(_fileGdbPath))
 				{
-					File.Delete(_fileGdbPath);
-				}
+					string fileGdbPath = _fileGdbPath;
+					if (! Path.GetExtension(fileGdbPath)
+					          .Equals(".gdb", StringComparison.CurrentCultureIgnoreCase))
+					{
+						fileGdbPath += ".gdb";
+					}
 
-				if (Directory.Exists(_fileGdbPath))
-				{
-					Directory.Delete(_fileGdbPath, recursive: true);
+					if (File.Exists(fileGdbPath))
+					{
+						File.Delete(fileGdbPath);
+					}
+
+					if (Directory.Exists(fileGdbPath))
+					{
+						Directory.Delete(fileGdbPath, recursive: true);
+					}
 				}
 
 				IWorkspaceName wsName = WorkspaceUtils.CreateFileGdbWorkspace(
@@ -61,7 +70,7 @@ namespace ProSuite.QA.Tests
 					Path.GetFileName(_fileGdbPath));
 				var ws = (IFeatureWorkspace) ((IName) wsName).Open();
 
-				_exportTables = new List<ESRI.ArcGIS.Geodatabase.ITable>();
+				_exportTables = new List<ITable>();
 				_fieldMappings = new List<Dictionary<int, int>>();
 				Dictionary<string, int> tableNames =
 					new Dictionary<string, int>(StringComparer.InvariantCultureIgnoreCase);
@@ -71,7 +80,7 @@ namespace ProSuite.QA.Tests
 					string baseName = $"table_{iInvolved}";
 					if (involvedTable is IReadOnlyDataset ds)
 					{
-						baseName = ds.Name;
+						baseName = ds.Name.Replace(".", "_").Replace("(","_").Replace(")", "_");
 						int iP = baseName.LastIndexOf('.');
 						if (iP >= 0)
 						{
@@ -102,7 +111,7 @@ namespace ProSuite.QA.Tests
 
 				if (ExportTiles)
 				{
-					ISpatialReference sr = _exportTables.Select(x => x as ESRI.ArcGIS.Geodatabase.IGeoDataset)
+					ISpatialReference sr = _exportTables.Select(x => x as IGeoDataset)
 					                                    ?.FirstOrDefault(x => x != null)
 					                                    ?.SpatialReference;
 					if (sr != null)
@@ -116,7 +125,7 @@ namespace ProSuite.QA.Tests
 
 						if (tileInfo.AllBox != null)
 						{
-							ESRI.ArcGIS.Geodatabase.IFeature fullExtent = _tileFc.CreateFeature();
+							IFeature fullExtent = _tileFc.CreateFeature();
 							fullExtent.Value[_tileFc.FindField(tileIdField)] = -1;
 							fullExtent.Shape = GeometryFactory.CreatePolygon(tileInfo.AllBox);
 							fullExtent.Store();
@@ -129,7 +138,7 @@ namespace ProSuite.QA.Tests
 			{
 				if (tileInfo.CurrentEnvelope?.IsEmpty == false)
 				{
-					ESRI.ArcGIS.Geodatabase.IFeature tileExtent = _tileFc.CreateFeature();
+					IFeature tileExtent = _tileFc.CreateFeature();
 					tileExtent.Value[_tileFc.FindField(tileIdField)] = _tileId;
 					tileExtent.Shape = GeometryFactory.CreatePolygon(tileInfo.CurrentEnvelope);
 					tileExtent.Store();
@@ -154,7 +163,7 @@ namespace ProSuite.QA.Tests
 			return validIndexed;
 		}
 
-		private ESRI.ArcGIS.Geodatabase.ITable CreateTable(IFeatureWorkspace ws, IReadOnlyTable involvedTable, string name,
+		private ITable CreateTable(IFeatureWorkspace ws, IReadOnlyTable involvedTable, string name,
 		                           out Dictionary<int, int> fieldMappings)
 		{
 			IFields sourceFields = involvedTable.Fields;
@@ -232,10 +241,10 @@ namespace ProSuite.QA.Tests
 				exportFields.Add(FieldUtils.CreateIntegerField(tileIdFieldName));
 			}
 
-			ESRI.ArcGIS.Geodatabase.ITable created;
+			ITable created;
 			if (fc != null)
 			{
-				created = (ESRI.ArcGIS.Geodatabase.ITable) DatasetUtils.CreateSimpleFeatureClass(
+				created = (ITable) DatasetUtils.CreateSimpleFeatureClass(
 					ws, name, FieldUtils.CreateFields(exportFields),
 					shapeFieldName: shapeFieldName);
 			}
@@ -265,8 +274,8 @@ namespace ProSuite.QA.Tests
 
 		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
-			ESRI.ArcGIS.Geodatabase.ITable target = _exportTables[tableIndex];
-			ESRI.ArcGIS.Geodatabase.IRow targetRow = target.CreateRow();
+			ITable target = _exportTables[tableIndex];
+			IRow targetRow = target.CreateRow();
 			Dictionary<int, int> fieldMapping = _fieldMappings[tableIndex];
 			for (int iSourceField = 0; iSourceField < row.Table.Fields.FieldCount; iSourceField++)
 			{
