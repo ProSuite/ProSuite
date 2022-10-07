@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Reflection;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
@@ -21,8 +20,7 @@ namespace ProSuite.DomainServices.AO.QA
 	{
 		private const string _referencedGeometryInfo = "(referenced geometry stored)";
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod()?.DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		internal static string ReferencedGeometryInfo => _referencedGeometryInfo;
 

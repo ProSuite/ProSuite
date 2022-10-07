@@ -1,4 +1,3 @@
-using System.Reflection;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Surface;
@@ -17,8 +16,7 @@ namespace ProSuite.QA.Container
 
 		[CanBeNull] private ISimpleSurface _tinSurface;
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod()?.DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		#region Constructors
 
