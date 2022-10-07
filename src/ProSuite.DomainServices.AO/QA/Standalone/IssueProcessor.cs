@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
@@ -29,8 +28,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 		[CanBeNull] private readonly IExceptionObjectEvaluator _exceptionObjectEvaluator;
 		[NotNull] private readonly IIssueWriter _issueWriter;
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod()?.DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		public IssueProcessor(
 			[NotNull] IIssueWriter issueWriter,
