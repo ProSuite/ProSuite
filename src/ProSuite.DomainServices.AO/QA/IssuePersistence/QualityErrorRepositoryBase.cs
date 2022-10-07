@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
@@ -27,8 +26,7 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 	{
 		#region Fields
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod()?.DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private readonly IVerificationContext _verificationContext;
 
