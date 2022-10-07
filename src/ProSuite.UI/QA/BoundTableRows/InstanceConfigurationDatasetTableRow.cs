@@ -62,7 +62,8 @@ namespace ProSuite.UI.QA.BoundTableRows
 
 			DatasetName = datasetParameterValue.GetName();
 			ModelName = InstanceConfigurationUtils.GetDatasetModelName(datasetParameterValue);
-			DatasetCategory = InstanceConfigurationUtils.GetDatasetCategoryName(datasetParameterValue);
+			DatasetCategory =
+				InstanceConfigurationUtils.GetDatasetCategoryName(datasetParameterValue);
 
 			if (dataset != null)
 			{

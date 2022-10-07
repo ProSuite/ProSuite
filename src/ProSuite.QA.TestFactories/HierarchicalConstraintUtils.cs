@@ -1,7 +1,7 @@
 using System.Collections.Generic;
-using ProSuite.QA.Tests.Constraints;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.QA.Tests.Constraints;
 
 namespace ProSuite.QA.TestFactories
 {

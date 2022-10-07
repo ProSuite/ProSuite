@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 using ESRI.ArcGIS;
 using ESRI.ArcGIS.esriSystem;
@@ -16,8 +15,7 @@ namespace ProSuite.Commons.AO.Licensing
 {
 	internal sealed class LicenseInitializer
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private IAoInitialize _aoInitialize;
 

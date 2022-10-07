@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
@@ -43,8 +42,7 @@ namespace ProSuite.Commons.AO.Geometry
 		private const int _esriGeometryErrorUnknownError = -2147220930;
 		// NOTE: empirically determined. The official hex value is no int
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private const string _geometryEnvironmentProgID = "esriGeometry.GeometryEnvironment";
 
@@ -6712,13 +6710,14 @@ namespace ProSuite.Commons.AO.Geometry
 
 			return GetXyTolerance(sref);
 		}
+
 		public static double GetXyTolerance([NotNull] ISpatialReference spatialReference)
 		{
 			Assert.ArgumentNotNull(spatialReference, nameof(spatialReference));
 
 			ISpatialReference sref = spatialReference;
 
-			return ((ISpatialReferenceTolerance)sref).XYTolerance;
+			return ((ISpatialReferenceTolerance) sref).XYTolerance;
 		}
 
 		/// <summary>
@@ -6779,11 +6778,11 @@ namespace ProSuite.Commons.AO.Geometry
 			return GetXyTolerance(spatialReference, defaultTolerance);
 		}
 
-		public static double GetXyTolerance([CanBeNull] ISpatialReference spatialReference,	double defaultTolerance)
+		public static double GetXyTolerance([CanBeNull] ISpatialReference spatialReference,
+		                                    double defaultTolerance)
 		{
-			return ((ISpatialReferenceTolerance)spatialReference)?.XYTolerance ?? defaultTolerance;
+			return ((ISpatialReferenceTolerance) spatialReference)?.XYTolerance ?? defaultTolerance;
 		}
-
 
 		public static void SetMinimumXyTolerance([NotNull] IGeometry geometry)
 		{

@@ -70,7 +70,7 @@ namespace ProSuite.Commons.AO.Surface
 		}
 
 		#region IDataset Members
-		
+
 		[NotNull]
 		string IReadOnlyDataset.Name => Name;
 
@@ -88,7 +88,7 @@ namespace ProSuite.Commons.AO.Surface
 		}
 
 		IWorkspace IReadOnlyDataset.Workspace => ((IDataset) DataSources[0].FeatureClass).Workspace;
-		
+
 		#endregion
 
 		#region IGeoDataset Members

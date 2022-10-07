@@ -1,5 +1,4 @@
 using System;
-using System.Reflection;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Logging;
@@ -13,8 +12,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		private readonly IObjectCache _objectCache;
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		#region Constructors
 

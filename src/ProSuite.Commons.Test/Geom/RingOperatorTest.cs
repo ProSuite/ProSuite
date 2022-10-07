@@ -627,7 +627,6 @@ namespace ProSuite.Commons.Test.Geom
 			});
 		}
 
-
 		[Test]
 		public void SourceCappedSpikeTouchingTargetCorner()
 		{

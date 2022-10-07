@@ -2,13 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestSupport;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
-using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Container;
+using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Core.IssueCodes;
 
 namespace ProSuite.QA.Tests.SpatialRelations
@@ -256,7 +256,7 @@ namespace ProSuite.QA.Tests.SpatialRelations
 			if (g1 != null && g2 != null)
 			{
 				foreach (IGeometry errorGeometry in
-					IntersectionUtils.GetAllIntersections(g1, g2))
+				         IntersectionUtils.GetAllIntersections(g1, g2))
 				{
 					if (validIntersectionGeometryConstraint == null ||
 					    ! validIntersectionGeometryConstraint.IsFulfilled(errorGeometry))

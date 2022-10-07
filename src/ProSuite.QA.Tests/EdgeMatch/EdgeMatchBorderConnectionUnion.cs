@@ -1,11 +1,11 @@
 using System.Collections.Generic;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container;
-using ProSuite.QA.Container.Geometry;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.QA.Container;
+using ProSuite.QA.Container.Geometry;
 
 namespace ProSuite.QA.Tests.EdgeMatch
 {

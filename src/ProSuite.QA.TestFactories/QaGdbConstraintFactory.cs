@@ -175,8 +175,8 @@ namespace ProSuite.QA.TestFactories
 			                        };
 
 			if (ignoredParameters.Any(
-				param => string.Equals(testParameter.Name, param,
-				                       StringComparison.OrdinalIgnoreCase)))
+				    param => string.Equals(testParameter.Name, param,
+				                           StringComparison.OrdinalIgnoreCase)))
 			{
 				return;
 			}

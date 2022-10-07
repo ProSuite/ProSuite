@@ -17,7 +17,7 @@ namespace ProSuite.Commons.IO
 		                                      Func<string, bool> callback = null)
 		{
 			if (archive == null)
-				throw new ArgumentNullException(nameof (archive));
+				throw new ArgumentNullException(nameof(archive));
 			if (targetDirectory == null)
 				throw new ArgumentNullException(nameof(targetDirectory));
 
@@ -32,8 +32,9 @@ namespace ProSuite.Commons.IO
 
 				string fullPath = Path.GetFullPath(Path.Combine(targetPath, entry.FullName));
 
-				if (!fullPath.StartsWith(targetPath, StringComparison.OrdinalIgnoreCase))
-					throw new IOException("Zip archive attempts to extract outside target directory");
+				if (! fullPath.StartsWith(targetPath, StringComparison.OrdinalIgnoreCase))
+					throw new IOException(
+						"Zip archive attempts to extract outside target directory");
 
 				if (Path.GetFileName(fullPath).Length == 0)
 				{
@@ -71,13 +72,14 @@ namespace ProSuite.Commons.IO
 		                                 bool overwrite = false)
 		{
 			if (source == null)
-				throw new ArgumentNullException(nameof (source));
+				throw new ArgumentNullException(nameof(source));
 			if (targetFile == null)
-				throw new ArgumentNullException(nameof (targetFile));
+				throw new ArgumentNullException(nameof(targetFile));
 
 			FileMode mode = overwrite ? FileMode.Create : FileMode.CreateNew;
 
-			using (Stream destination = File.Open(targetFile, mode, FileAccess.Write, FileShare.None))
+			using (Stream destination =
+			       File.Open(targetFile, mode, FileAccess.Write, FileShare.None))
 			{
 				using (Stream stream = source.Open())
 				{

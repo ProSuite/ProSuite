@@ -1,4 +1,3 @@
-using System.Reflection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -8,8 +7,7 @@ namespace ProSuite.DdxEditor.Framework.ItemViews
 {
 	public abstract class ItemPresenter<I> : IItemPresenter, IViewObserver where I : Item
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="ItemPresenter&lt;T&gt;"/> class.

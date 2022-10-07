@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Reflection;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
@@ -13,8 +12,7 @@ namespace ProSuite.Commons.AO.Geometry
 {
 	public class GeometryComparison
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private readonly IGeometry _baseGeometry;
 		private readonly IGeometry _compareGeometry;

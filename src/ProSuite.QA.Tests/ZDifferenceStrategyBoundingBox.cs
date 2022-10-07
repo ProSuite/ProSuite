@@ -1,13 +1,13 @@
 using System;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container;
-using ProSuite.QA.Tests.IssueCodes;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Container;
 using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Tests.IssueCodes;
 
 namespace ProSuite.QA.Tests
 {
@@ -135,7 +135,7 @@ namespace ProSuite.QA.Tests
 				errorCount += ErrorReporting.Report(
 					description, InvolvedRowUtils.GetInvolvedRows(feature1, feature2),
 					geometryProvider.Geometry, Codes[Code.TooLarge],
-					TestUtils.GetShapeFieldName(feature1), values: new object[] { dz });
+					TestUtils.GetShapeFieldName(feature1), values: new object[] {dz});
 			}
 
 			errorCount += CheckConstraint(minFeature, maxFeature, geometryProvider, dz);
@@ -233,7 +233,7 @@ namespace ProSuite.QA.Tests
 			public IGeometry Geometry => _geometry ??
 			                             (_geometry =
 				                              GetIntersectionGeometry(_minFeature.Shape,
-				                                                      _maxFeature.Shape));
+					                              _maxFeature.Shape));
 
 			[NotNull]
 			private static IGeometry GetIntersectionGeometry([NotNull] IGeometry shape1,
@@ -242,7 +242,7 @@ namespace ProSuite.QA.Tests
 				IGeometry result = null;
 
 				foreach (IGeometry intersection in
-					IntersectionUtils.GetAllIntersections(shape1, shape2))
+				         IntersectionUtils.GetAllIntersections(shape1, shape2))
 				{
 					if (result == null || result.Dimension < intersection.Dimension)
 					{

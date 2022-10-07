@@ -16,6 +16,7 @@ namespace ProSuite.QA.Tests
 		private readonly IDictionary<int, IDictionary<int, T>>
 			_suspiciousFeaturesByTableIndex =
 				new Dictionary<int, IDictionary<int, T>>();
+
 		private readonly IDictionary<int, IRowsCache>
 			_rowsCacheByTableIndex = new Dictionary<int, IRowsCache>();
 

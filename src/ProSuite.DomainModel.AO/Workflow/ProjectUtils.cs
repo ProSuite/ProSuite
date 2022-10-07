@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Reflection;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons;
 using ProSuite.Commons.AO.Geodatabase;
@@ -20,8 +19,7 @@ namespace ProSuite.DomainModel.AO.Workflow
 {
 	public static class ProjectUtils
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		[CanBeNull]
 		public static ObjectDataset GetDataset<P, M>(

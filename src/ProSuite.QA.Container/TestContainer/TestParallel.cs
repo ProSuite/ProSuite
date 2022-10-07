@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -58,7 +59,7 @@ namespace ProSuite.QA.Container.TestContainer
 
 		private void Cnt_QaError(object sender, QaErrorEventArgs e)
 		{
-			throw new System.NotImplementedException();
+			throw new NotImplementedException();
 		}
 
 		private IEnumerable<TileInfo> EnumTiles()
@@ -66,9 +67,6 @@ namespace ProSuite.QA.Container.TestContainer
 			yield break;
 		}
 
-		private void LoadData(TileInfo tile)
-		{
-
-		}
+		private void LoadData(TileInfo tile) { }
 	}
 }

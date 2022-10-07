@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -11,8 +10,7 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 {
 	public class SpatialHashIndex<T> : IEnumerable<T>
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		// NOTE: Using a dictionary of int-lists is considerably faster than a dictionary of point-lists and the performance penalty of the index is small
 		// This is most likely due to more efficient memory management when creating one large array rather than many small ones (most likely not even on the LOH)
@@ -115,11 +113,11 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 
 			// check the intersecting neighbour tiles:
 			foreach (TileIndex neighborTileIdx in
-				_tilingDefinition.GetIntersectingTiles(
-					xMin, yMin, xMax, yMax))
+			         _tilingDefinition.GetIntersectingTiles(
+				         xMin, yMin, xMax, yMax))
 			{
 				foreach (T geometryIdentifier in
-					FindItemsWithinTile(neighborTileIdx, predicate))
+				         FindItemsWithinTile(neighborTileIdx, predicate))
 				{
 					if (! _foundIdentifiers.Contains(geometryIdentifier))
 					{

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -11,8 +10,7 @@ namespace ProSuite.Commons.AO.Geometry.ZAssignment
 {
 	public static class ChangeAlongZUtils
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		/// <summary>
 		/// Returns all ChangeAlongZSource values associated with a display string.
@@ -21,7 +19,7 @@ namespace ProSuite.Commons.AO.Geometry.ZAssignment
 		public static IEnumerable<KeyValuePair<ChangeAlongZSource, string>> GetZSources()
 		{
 			foreach (ChangeAlongZSource zSource in Enum.GetValues(
-				typeof(ChangeAlongZSource)))
+				         typeof(ChangeAlongZSource)))
 			{
 				yield return new KeyValuePair<ChangeAlongZSource, string>(
 					zSource, GetDisplayText(zSource));

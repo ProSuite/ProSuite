@@ -1,6 +1,5 @@
 using System;
 using System.Linq;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Grpc.Core;
@@ -26,7 +25,7 @@ namespace ProSuite.Microservices.Client.QA
 	/// </summary>
 	public class BackgroundVerificationRun
 	{
-		private static readonly IMsg _msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		[NotNull] private readonly IDomainTransactionManager _domainTransactions;
 		[NotNull] private readonly IQualityVerificationRepository _qualityVerificationRepository;

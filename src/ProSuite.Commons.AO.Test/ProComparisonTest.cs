@@ -92,10 +92,10 @@ namespace ProSuite.Commons.AO.Test
 
 				double length = 0;
 				foreach (IGeometry part in GeometryUtils.GetParts(
-					(IGeometryCollection) subcurve))
+					         (IGeometryCollection) subcurve))
 				{
 					foreach (var segment in GeometryUtils.GetSegments(
-						((ISegmentCollection) part).EnumSegments, true))
+						         ((ISegmentCollection) part).EnumSegments, true))
 					{
 						length += segment.Length;
 					}
@@ -199,8 +199,8 @@ namespace ProSuite.Commons.AO.Test
 
 				watch.Stop();
 				Console.WriteLine($@"Vertex count {pointCount}: {
-						                  watch.ElapsedMilliseconds / (double) count
-					                  } ms per operation");
+					watch.ElapsedMilliseconds / (double) count
+				} ms per operation");
 			}
 		}
 
@@ -244,8 +244,8 @@ namespace ProSuite.Commons.AO.Test
 
 				watch.Stop();
 				Console.WriteLine($@"Vertex count {pointCount}: {
-						                  watch.ElapsedMilliseconds / (double) count
-					                  } ms per operation");
+					watch.ElapsedMilliseconds / (double) count
+				} ms per operation");
 			}
 		}
 	}

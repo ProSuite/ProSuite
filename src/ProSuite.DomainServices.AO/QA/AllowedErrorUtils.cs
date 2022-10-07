@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Reflection;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
@@ -22,15 +21,14 @@ namespace ProSuite.DomainServices.AO.QA
 {
 	public static class AllowedErrorUtils
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		public static void DeleteAllowedErrors(
 			[NotNull] IEnumerable<AllowedError> allowedErrors)
 		{
 			Assert.ArgumentNotNull(allowedErrors, nameof(allowedErrors));
 
-			IEnumerable<KeyValuePair<ESRI.ArcGIS.Geodatabase.ITable, IList<int>>> allowedObjectIDsByErrorTable =
+			IEnumerable<KeyValuePair<ITable, IList<int>>> allowedObjectIDsByErrorTable =
 				GetObjectIDsByAllowedErrorTable(allowedErrors);
 
 			DeleteAllowedErrors(allowedObjectIDsByErrorTable);
@@ -38,18 +36,18 @@ namespace ProSuite.DomainServices.AO.QA
 
 		public static void DeleteAllowedErrors(
 			[NotNull] IEnumerable<GdbObjectReference> allowedErrorObjRefs,
-			[NotNull] IEnumerable<ESRI.ArcGIS.Geodatabase.ITable> allowedErrorTables)
+			[NotNull] IEnumerable<ITable> allowedErrorTables)
 		{
-			IEnumerable<KeyValuePair<ESRI.ArcGIS.Geodatabase.ITable, IList<int>>> allowedObjectIDsByErrorTable =
+			IEnumerable<KeyValuePair<ITable, IList<int>>> allowedObjectIDsByErrorTable =
 				GetObjectIDsByAllowedErrorTable(allowedErrorObjRefs, allowedErrorTables);
 
 			DeleteAllowedErrors(allowedObjectIDsByErrorTable);
 		}
 
 		public static void DeleteAllowedErrors(
-			[NotNull] IEnumerable<KeyValuePair<ESRI.ArcGIS.Geodatabase.ITable, IList<int>>> allowedObjectIDsByErrorTable)
+			[NotNull] IEnumerable<KeyValuePair<ITable, IList<int>>> allowedObjectIDsByErrorTable)
 		{
-			foreach (KeyValuePair<ESRI.ArcGIS.Geodatabase.ITable, IList<int>> pair in allowedObjectIDsByErrorTable)
+			foreach (KeyValuePair<ITable, IList<int>> pair in allowedObjectIDsByErrorTable)
 			{
 				IList<int> oids = pair.Value;
 
@@ -60,10 +58,12 @@ namespace ProSuite.DomainServices.AO.QA
 
 				Stopwatch watch = _msg.DebugStartTiming();
 
-				ESRI.ArcGIS.Geodatabase.ITable table = pair.Key;
+				ITable table = pair.Key;
 				DatasetUtils.DeleteRows(table, oids);
 
-				_msg.VerboseDebug(() => $"Deleted from {DatasetUtils.GetName(table)}: {StringUtils.Concatenate(oids, ", ")}");
+				_msg.VerboseDebug(
+					() =>
+						$"Deleted from {DatasetUtils.GetName(table)}: {StringUtils.Concatenate(oids, ", ")}");
 
 				_msg.DebugStopTiming(watch, "Deleted {0} allowed errors in {1}",
 				                     oids.Count, DatasetUtils.GetName(table));
@@ -108,7 +108,7 @@ namespace ProSuite.DomainServices.AO.QA
 			}
 
 			foreach (KeyValuePair<IObjectDataset, IDictionary<int, List<AllowedError>>> pair
-				in errorsByObjectDatasetAndInvolvedObjectID)
+			         in errorsByObjectDatasetAndInvolvedObjectID)
 			{
 				InvalidateAllowedErrorsByInvolvedObjectState(
 					pair.Key,
@@ -120,7 +120,7 @@ namespace ProSuite.DomainServices.AO.QA
 			if (invalidateIfQualityConditionWasUpdated)
 			{
 				InvalidateAllowedErrorsWithUpdatedQualityCondition(allowedErrorsCollection,
-				                                                   qualityConditions);
+					qualityConditions);
 			}
 		}
 
@@ -137,10 +137,10 @@ namespace ProSuite.DomainServices.AO.QA
 
 			Stopwatch watch = _msg.DebugStartTiming();
 
-			ESRI.ArcGIS.Geodatabase.ITable errorTable = issueWriter.Table;
+			ITable errorTable = issueWriter.Table;
 			IQueryFilter filter;
 
-			var errorFeatureClass = errorTable as ESRI.ArcGIS.Geodatabase.IFeatureClass;
+			var errorFeatureClass = errorTable as IFeatureClass;
 			if (errorFeatureClass != null)
 			{
 				if (areaOfInterest != null)
@@ -166,7 +166,7 @@ namespace ProSuite.DomainServices.AO.QA
 
 			const bool recycling = true;
 
-			foreach (ESRI.ArcGIS.Geodatabase.IRow row in GdbQueryUtils.GetRows(errorTable, filter, recycling))
+			foreach (IRow row in GdbQueryUtils.GetRows(errorTable, filter, recycling))
 			{
 				readRowCount++;
 				AllowedError allowedError =
@@ -281,9 +281,9 @@ namespace ProSuite.DomainServices.AO.QA
 			                   qaError.Description,
 			                   qaError.InvolvedRows,
 			                   ErrorRepositoryUtils.GetGeometryToStore(qaError.Geometry,
-			                                                           spatialReference,
-			                                                           storedGeometryTypes,
-			                                                           forPre10Geodatabase),
+				                   spatialReference,
+				                   storedGeometryTypes,
+				                   forPre10Geodatabase),
 			                   qaError.IssueCode,
 			                   qaError.AffectedComponent);
 		}
@@ -351,7 +351,7 @@ namespace ProSuite.DomainServices.AO.QA
 				// object with rowId does not exist any more in table,
 				// so it is deleted and an implicit change
 				foreach (AllowedError error in
-					allowedErrorsByInvolvedObjectID[objectId])
+				         allowedErrorsByInvolvedObjectID[objectId])
 				{
 					error.Invalidated = true;
 				}
@@ -424,10 +424,10 @@ namespace ProSuite.DomainServices.AO.QA
 
 			const bool recycle = true;
 			foreach (IRow involvedRow in GdbQueryUtils.GetRowsInList(
-				involvedTable,
-				involvedTable.OIDFieldName,
-				allowedErrorsByInvolvedObjectID.Keys,
-				recycle, queryFilter))
+				         involvedTable,
+				         involvedTable.OIDFieldName,
+				         allowedErrorsByInvolvedObjectID.Keys,
+				         recycle, queryFilter))
 			{
 				// these are all involved rows in all the allowed errors. 
 				int oid = involvedRow.OID;
@@ -510,13 +510,13 @@ namespace ProSuite.DomainServices.AO.QA
 		}
 
 		[NotNull]
-		private static IEnumerable<KeyValuePair<ESRI.ArcGIS.Geodatabase.ITable, IList<int>>>
+		private static IEnumerable<KeyValuePair<ITable, IList<int>>>
 			GetObjectIDsByAllowedErrorTable(
 				[NotNull] IEnumerable<AllowedError> allowedErrors)
 		{
 			Assert.ArgumentNotNull(allowedErrors, nameof(allowedErrors));
 
-			var result = new Dictionary<ESRI.ArcGIS.Geodatabase.ITable, IList<int>>();
+			var result = new Dictionary<ITable, IList<int>>();
 
 			foreach (AllowedError allowedError in allowedErrors)
 			{
@@ -534,19 +534,19 @@ namespace ProSuite.DomainServices.AO.QA
 		}
 
 		[NotNull]
-		private static IEnumerable<KeyValuePair<ESRI.ArcGIS.Geodatabase.ITable, IList<int>>>
+		private static IEnumerable<KeyValuePair<ITable, IList<int>>>
 			GetObjectIDsByAllowedErrorTable(
 				[NotNull] IEnumerable<GdbObjectReference> allowedErrorObjRefs,
-				[NotNull] IEnumerable<ESRI.ArcGIS.Geodatabase.ITable> allowedErrorTables)
+				[NotNull] IEnumerable<ITable> allowedErrorTables)
 		{
 			Assert.ArgumentNotNull(allowedErrorObjRefs, nameof(allowedErrorObjRefs));
 			Assert.ArgumentNotNull(allowedErrorTables, nameof(allowedErrorTables));
 
-			var result = new Dictionary<ESRI.ArcGIS.Geodatabase.ITable, IList<int>>();
+			var result = new Dictionary<ITable, IList<int>>();
 
 			var allowedErrorObjRefCollection = CollectionUtils.GetCollection(allowedErrorObjRefs);
 
-			foreach (ESRI.ArcGIS.Geodatabase.ITable allowedErrorTable in allowedErrorTables)
+			foreach (ITable allowedErrorTable in allowedErrorTables)
 			{
 				int objectClassID = ((IObjectClass) allowedErrorTable).ObjectClassID;
 
@@ -617,7 +617,7 @@ namespace ProSuite.DomainServices.AO.QA
 				{
 					errorsByInvolvedOID = new Dictionary<int, List<AllowedError>>();
 					allowedErrorsByUnresolvedTableNameAndObjectId.Add(tableName,
-					                                                  errorsByInvolvedOID);
+						errorsByInvolvedOID);
 				}
 
 				foreach (int oid in oids)

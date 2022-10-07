@@ -1,7 +1,6 @@
 using System;
 using System.Drawing;
 using System.Linq;
-using System.Reflection;
 using System.Windows.Forms;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
@@ -32,8 +31,7 @@ namespace ProSuite.UI.QA.VerificationResult
 		private readonly int _viewIndexTreeHierarchic;
 		private readonly int _viewIndexTreeConditionsByCategory;
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		#region Constructors
 
@@ -288,7 +286,7 @@ namespace ProSuite.UI.QA.VerificationResult
 			// show control
 			_verifiedConditionsHierarchyControl.Visible = true;
 			_verifiedConditionsHierarchyControl.RenderHierarchicView(_verification,
-			                                                         IncludeConditionVerification);
+				IncludeConditionVerification);
 		}
 
 		private void RenderConditionsByCategory()
@@ -302,7 +300,7 @@ namespace ProSuite.UI.QA.VerificationResult
 			// show control
 			_verifiedConditionsHierarchyControl.Visible = true;
 			_verifiedConditionsHierarchyControl.RenderConditionsByCategoryView(_verification,
-			                                                                   IncludeConditionVerification);
+				IncludeConditionVerification);
 		}
 
 		private void RenderLayerView()
@@ -544,7 +542,7 @@ namespace ProSuite.UI.QA.VerificationResult
 		}
 
 		private void _verifiedConditionsHierarchyControl_SelectionChanged(object sender,
-		                                                                  EventArgs e)
+			EventArgs e)
 		{
 			if (_verifiedConditionsHierarchyControl.SelectedNode == null)
 			{
@@ -572,7 +570,7 @@ namespace ProSuite.UI.QA.VerificationResult
 		}
 
 		private void _qualityConditionVerificationControl_EnabledChanged(object sender,
-		                                                                 EventArgs e)
+			EventArgs e)
 		{
 			if (_qualityConditionVerificationControl.Enabled)
 			{

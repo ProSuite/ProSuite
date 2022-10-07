@@ -2,14 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
-using ProSuite.QA.Container;
-using ProSuite.QA.Tests.Documentation;
-using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.QA.Container;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.IssueCodes;
 
 namespace ProSuite.QA.Tests
 {

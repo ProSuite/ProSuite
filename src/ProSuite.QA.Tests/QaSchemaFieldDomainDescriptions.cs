@@ -2,10 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
-using ProSuite.QA.Tests.Documentation;
-using ProSuite.QA.Tests.IssueCodes;
-using ProSuite.QA.Tests.Properties;
-using ProSuite.QA.Tests.Schema;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
@@ -13,6 +9,10 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.IssueCodes;
+using ProSuite.QA.Tests.Properties;
+using ProSuite.QA.Tests.Schema;
 
 namespace ProSuite.QA.Tests
 {
@@ -52,7 +52,8 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaSchemaFieldDomainDescriptions_requireUniqueDescriptions))]
 			bool
 				requireUniqueDescriptions,
-			[Doc(nameof(DocStrings.QaSchemaFieldDomainDescriptions_targetWorkspaceTable))] [CanBeNull]
+			[Doc(nameof(DocStrings.QaSchemaFieldDomainDescriptions_targetWorkspaceTable))]
+			[CanBeNull]
 			IReadOnlyTable
 				targetWorkspaceTable)
 			: base(table)

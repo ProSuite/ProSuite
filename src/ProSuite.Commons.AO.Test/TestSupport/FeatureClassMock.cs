@@ -8,7 +8,8 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AO.Test.TestSupport
 {
-	public class FeatureClassMock : ObjectClassMock, IReadOnlyFeatureClass, IFeatureClass, IGeoDataset
+	public class FeatureClassMock : ObjectClassMock, IReadOnlyFeatureClass, IFeatureClass,
+	                                IGeoDataset
 	{
 		private const int _gridSize = 1000;
 		private readonly bool _hasM;

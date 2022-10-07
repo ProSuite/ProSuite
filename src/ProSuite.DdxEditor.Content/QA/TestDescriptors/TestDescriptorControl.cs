@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Reflection;
 using System.Windows.Forms;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -53,7 +52,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 
 		private bool _loaded;
 
-		private static readonly IMsg _msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		#region Constructors
 

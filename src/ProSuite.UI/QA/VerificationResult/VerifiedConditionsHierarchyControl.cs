@@ -129,7 +129,7 @@ namespace ProSuite.UI.QA.VerificationResult
 				qualityVerifiation.ConditionVerifications.Count);
 
 			foreach (QualityConditionVerification conditionVerification in
-				qualityVerifiation.ConditionVerifications)
+			         qualityVerifiation.ConditionVerifications)
 			{
 				if (includeConditionVerification(conditionVerification))
 				{

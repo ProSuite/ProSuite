@@ -46,7 +46,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			Assert.ArgumentNotNull(obj, nameof(obj));
 
 			string format = FieldDisplayUtils.GetDefaultRowFormat(obj.Class,
-			                                                      includeClassAlias);
+				includeClassAlias);
 
 			return Format(format, obj);
 		}

@@ -73,27 +73,27 @@ namespace ProSuite.UI.QA.BoundTableRows
 		[UsedImplicitly]
 		public string Alias =>
 			Source.Match(d => d?.AliasName,
-						 t => t?.Description);
+			             t => t?.Description);
 
 		[UsedImplicitly]
 		public string Abbreviation =>
 			Source.Match(d => d?.Abbreviation,
-						 t => null);
+			             t => null);
 
 		[UsedImplicitly]
 		public string Category =>
 			Source.Match(d => d.DatasetCategory?.Name ?? string.Empty,
-						 t => t.Category?.Name ?? string.Empty);
+			             t => t.Category?.Name ?? string.Empty);
 
 		[UsedImplicitly]
 		public string Type =>
 			Source.Match(d => d.TypeDescription,
-						 t => t.TransformerDescriptor.TypeDisplayName);
+			             t => t.TransformerDescriptor.TypeDisplayName);
 
 		[UsedImplicitly]
 		public string Description =>
 			Source.Match(d => d.Description,
-						 t => t.Description);
+			             t => t.Description);
 
 		[Browsable(false)]
 		public Either<Dataset, TransformerConfiguration> Source { get; }

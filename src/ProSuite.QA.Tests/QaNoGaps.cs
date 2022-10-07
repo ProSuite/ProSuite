@@ -6,18 +6,18 @@ using System.Runtime.InteropServices;
 using System.Text;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container;
-using ProSuite.QA.Container.Geometry;
-using ProSuite.QA.Tests.Documentation;
-using ProSuite.QA.Tests.IssueCodes;
-using ProSuite.QA.Tests.Properties;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
-using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Container;
+using ProSuite.QA.Container.Geometry;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.IssueCodes;
+using ProSuite.QA.Tests.Properties;
 
 namespace ProSuite.QA.Tests
 {
@@ -40,7 +40,7 @@ namespace ProSuite.QA.Tests
 
 		private Box _allBox;
 		private KnownGaps _knownGaps;
-		
+
 		private readonly int _firstAreaOfInterestClassIndex;
 
 		#region issue codes
@@ -67,10 +67,13 @@ namespace ProSuite.QA.Tests
 		#endregion
 
 		[Doc(nameof(DocStrings.QaNoGaps_0))]
-		public QaNoGaps([Doc(nameof(DocStrings.QaNoGaps_polygonClass))] [NotNull]
-						IReadOnlyFeatureClass polygonClass,
-		                [Doc(nameof(DocStrings.QaNoGaps_sliverLimit))] double sliverLimit,
-		                [Doc(nameof(DocStrings.QaNoGaps_maxArea))] double maxArea)
+		public QaNoGaps(
+				[Doc(nameof(DocStrings.QaNoGaps_polygonClass))] [NotNull]
+				IReadOnlyFeatureClass polygonClass,
+				[Doc(nameof(DocStrings.QaNoGaps_sliverLimit))]
+				double sliverLimit,
+				[Doc(nameof(DocStrings.QaNoGaps_maxArea))]
+				double maxArea)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(polygonClass, sliverLimit, maxArea, 0d, false) { }
 
@@ -78,19 +81,25 @@ namespace ProSuite.QA.Tests
 		public QaNoGaps(
 				[Doc(nameof(DocStrings.QaNoGaps_polygonClasses))] [NotNull]
 				IList<IReadOnlyFeatureClass> polygonClasses,
-				[Doc(nameof(DocStrings.QaNoGaps_sliverLimit))] double sliverLimit,
-				[Doc(nameof(DocStrings.QaNoGaps_maxArea))] double maxArea)
+				[Doc(nameof(DocStrings.QaNoGaps_sliverLimit))]
+				double sliverLimit,
+				[Doc(nameof(DocStrings.QaNoGaps_maxArea))]
+				double maxArea)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(polygonClasses, sliverLimit, maxArea, 0d, false) { }
 
 		[Doc(nameof(DocStrings.QaNoGaps_2))]
-		public QaNoGaps([Doc(nameof(DocStrings.QaNoGaps_polygonClass))] [NotNull]
-						IReadOnlyFeatureClass polygonClass,
-		                [Doc(nameof(DocStrings.QaNoGaps_sliverLimit))] double sliverLimit,
-		                [Doc(nameof(DocStrings.QaNoGaps_maxArea))] double maxArea,
-		                [Doc(nameof(DocStrings.QaNoGaps_subtileWidth))] double subtileWidth,
-		                [Doc(nameof(DocStrings.QaNoGaps_findGapsBelowTolerance))]
-		                bool findGapsBelowTolerance)
+		public QaNoGaps(
+			[Doc(nameof(DocStrings.QaNoGaps_polygonClass))] [NotNull]
+			IReadOnlyFeatureClass polygonClass,
+			[Doc(nameof(DocStrings.QaNoGaps_sliverLimit))]
+			double sliverLimit,
+			[Doc(nameof(DocStrings.QaNoGaps_maxArea))]
+			double maxArea,
+			[Doc(nameof(DocStrings.QaNoGaps_subtileWidth))]
+			double subtileWidth,
+			[Doc(nameof(DocStrings.QaNoGaps_findGapsBelowTolerance))]
+			bool findGapsBelowTolerance)
 			: this(new List<IReadOnlyFeatureClass> {polygonClass}, sliverLimit, maxArea,
 			       subtileWidth, 0,
 			       findGapsBelowTolerance, new List<IReadOnlyFeatureClass>(0)) { }
@@ -99,9 +108,12 @@ namespace ProSuite.QA.Tests
 		public QaNoGaps(
 			[Doc(nameof(DocStrings.QaNoGaps_polygonClasses))] [NotNull]
 			IList<IReadOnlyFeatureClass> polygonClasses,
-			[Doc(nameof(DocStrings.QaNoGaps_sliverLimit))] double sliverLimit,
-			[Doc(nameof(DocStrings.QaNoGaps_maxArea))] double maxArea,
-			[Doc(nameof(DocStrings.QaNoGaps_subtileWidth))] double subtileWidth,
+			[Doc(nameof(DocStrings.QaNoGaps_sliverLimit))]
+			double sliverLimit,
+			[Doc(nameof(DocStrings.QaNoGaps_maxArea))]
+			double maxArea,
+			[Doc(nameof(DocStrings.QaNoGaps_subtileWidth))]
+			double subtileWidth,
 			[Doc(nameof(DocStrings.QaNoGaps_findGapsBelowTolerance))]
 			bool findGapsBelowTolerance)
 			: this(polygonClasses, sliverLimit, maxArea,
@@ -112,8 +124,10 @@ namespace ProSuite.QA.Tests
 		public QaNoGaps(
 			[Doc(nameof(DocStrings.QaNoGaps_polygonClasses))] [NotNull]
 			IList<IReadOnlyFeatureClass> polygonClasses,
-			[Doc(nameof(DocStrings.QaNoGaps_sliverLimit))] double sliverLimit,
-			[Doc(nameof(DocStrings.QaNoGaps_maxArea))] double maxArea,
+			[Doc(nameof(DocStrings.QaNoGaps_sliverLimit))]
+			double sliverLimit,
+			[Doc(nameof(DocStrings.QaNoGaps_maxArea))]
+			double maxArea,
 			[Doc(nameof(DocStrings.QaNoGaps_areaOfInterestClasses))] [NotNull]
 			IList<IReadOnlyFeatureClass>
 				areaOfInterestClasses)
@@ -123,9 +137,12 @@ namespace ProSuite.QA.Tests
 		public QaNoGaps(
 			[Doc(nameof(DocStrings.QaNoGaps_polygonClasses))] [NotNull]
 			IList<IReadOnlyFeatureClass> polygonClasses,
-			[Doc(nameof(DocStrings.QaNoGaps_sliverLimit))] double sliverLimit,
-			[Doc(nameof(DocStrings.QaNoGaps_maxArea))] double maxArea,
-			[Doc(nameof(DocStrings.QaNoGaps_subtileWidth))] double subtileWidth,
+			[Doc(nameof(DocStrings.QaNoGaps_sliverLimit))]
+			double sliverLimit,
+			[Doc(nameof(DocStrings.QaNoGaps_maxArea))]
+			double maxArea,
+			[Doc(nameof(DocStrings.QaNoGaps_subtileWidth))]
+			double subtileWidth,
 			[Doc(nameof(DocStrings.QaNoGaps_findGapsBelowTolerance))]
 			bool findGapsBelowTolerance,
 			[Doc(nameof(DocStrings.QaNoGaps_areaOfInterestClasses))] [NotNull]
@@ -177,7 +194,7 @@ namespace ProSuite.QA.Tests
 			{
 				double maximumResolution;
 				_spatialReference = GetSpatialReferenceAtMaximumResolution(polygonClasses,
-				                                                           out maximumResolution);
+					out maximumResolution);
 
 				_tolerance = maximumResolution * 2;
 				_minimumSubtileWidth = maximumResolution * 10000;
@@ -433,7 +450,7 @@ namespace ProSuite.QA.Tests
 			var errorCount = 0;
 
 			foreach (IPolygon completedGap in
-				knownGaps.GetCompletedGaps(gapPolygons, clipEnvelope, tileEnvelope))
+			         knownGaps.GetCompletedGaps(gapPolygons, clipEnvelope, tileEnvelope))
 			{
 				errorCount += CheckGapPolygon(completedGap);
 			}
@@ -569,7 +586,7 @@ namespace ProSuite.QA.Tests
 			if (gapCount > 0)
 			{
 				var gapInOffsetAreaEvaluator = new GapInOffsetAreaEvaluator(tileEnvelope,
-				                                                            clipEnvelope);
+					clipEnvelope);
 
 				for (var gapIndex = 0; gapIndex < gapCount; gapIndex++)
 				{

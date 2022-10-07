@@ -7,7 +7,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
@@ -28,8 +27,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
 		private string _simpleGdbPath;
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		[OneTimeSetUp]
 		public void SetupFixture()
@@ -166,7 +164,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 			int count = 0;
 			foreach (IFeature catalogFeature in GdbQueryUtils.GetFeatures(
-				rasterCatalog, spatialFilter, false))
+				         rasterCatalog, spatialFilter, false))
 			{
 				// Method 1 (slow):
 				var rasterCatalogItem = (IRasterCatalogItem) catalogFeature;

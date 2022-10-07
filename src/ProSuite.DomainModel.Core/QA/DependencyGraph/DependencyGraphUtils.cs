@@ -83,9 +83,9 @@ namespace ProSuite.DomainModel.Core.QA.DependencyGraph
 						if (value1.TestParameterName == value2.TestParameterName)
 						{
 							if (ExcludeDependenciesWithinMultiValuedParameter(qualityCondition,
-									value1
-										.TestParameterName)
-							)
+								    value1
+									    .TestParameterName)
+							   )
 							{
 								continue;
 							}
@@ -157,7 +157,8 @@ namespace ProSuite.DomainModel.Core.QA.DependencyGraph
 
 			foreach (QualitySpecificationElement element in qualitySpecification.Elements)
 			{
-				foreach (Dataset dataset in element.QualityCondition.GetDatasetParameterValues(true))
+				foreach (Dataset dataset in
+				         element.QualityCondition.GetDatasetParameterValues(true))
 				{
 					result.Add(dataset); // only added if not yet present
 				}

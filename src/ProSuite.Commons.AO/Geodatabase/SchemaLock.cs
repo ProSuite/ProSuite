@@ -1,5 +1,4 @@
 using System;
-using System.Reflection;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -24,8 +23,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 	{
 		private readonly ISchemaLock _schemaLock;
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		public SchemaLock([NotNull] IDataset dataset)
 			: this((ISchemaLock) dataset) { }

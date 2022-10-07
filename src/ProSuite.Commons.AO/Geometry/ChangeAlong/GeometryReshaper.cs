@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
@@ -14,8 +13,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 {
 	public class GeometryReshaper : GeometryReshaperBase
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private readonly IFeature _feature;
 

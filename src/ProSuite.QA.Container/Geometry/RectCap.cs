@@ -47,8 +47,8 @@ namespace ProSuite.QA.Container.Geometry
 		}
 
 		public override IEnumerable<IHullPart> GetInflatedHullParts(Pnt at, Pnt opposite,
-		                                                            double offset,
-		                                                            double inflate)
+			double offset,
+			double inflate)
 		{
 			Pnt l = opposite - at;
 			double l0 = Math.Sqrt(l * l);

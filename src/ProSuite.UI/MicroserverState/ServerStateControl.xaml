@@ -9,9 +9,9 @@
              mc:Ignorable="d"
              d:DesignHeight="250" d:DesignWidth="480">
 
-    <DockPanel LastChildFill="False" Width="Auto" Height="Auto" HorizontalAlignment="Stretch" >
+    <DockPanel LastChildFill="False" Width="Auto" Height="Auto" HorizontalAlignment="Stretch">
 
-        <ListView DockPanel.Dock="Top" HorizontalAlignment="Stretch" 
+        <ListView DockPanel.Dock="Top" HorizontalAlignment="Stretch"
                   ItemsSource="{Binding Path=ServerStates}">
             <ListView.ItemContainerStyle>
                 <Style TargetType="ListViewItem">
@@ -28,33 +28,34 @@
 
                     </GridView.ColumnHeaderContainerStyle>
 
-                    <GridViewColumn Header="Service Name" 
-                                    Width="Auto" 
-                                    DisplayMemberBinding="{Binding ServiceNameLabel}"/>
-                    <GridViewColumn Header="Address" 
+                    <GridViewColumn Header="Service Name"
                                     Width="Auto"
-                                    DisplayMemberBinding="{Binding FullAddress}"/>
-                    <GridViewColumn Header="Status" 
+                                    DisplayMemberBinding="{Binding ServiceNameLabel}" />
+                    <GridViewColumn Header="Address"
+                                    Width="Auto"
+                                    DisplayMemberBinding="{Binding FullAddress}" />
+                    <GridViewColumn Header="Status"
                                     Width="Auto">
                         <GridViewColumn.CellTemplate>
                             <DataTemplate>
                                 <Label Content="{Binding Text}" HorizontalAlignment="Stretch"
                                        HorizontalContentAlignment="Stretch" Margin="2,5,4,0"
-                                       VerticalAlignment="Top" Height="Auto" 
+                                       VerticalAlignment="Top" Height="Auto"
                                        Background="{Binding ServerStateColor}" />
                             </DataTemplate>
                         </GridViewColumn.CellTemplate>
                     </GridViewColumn>
-                    <GridViewColumn Header="Capacity" 
+                    <GridViewColumn Header="Capacity"
                                     Width="Auto"
-                                    DisplayMemberBinding="{Binding WorkerServiceCount}"/>
+                                    DisplayMemberBinding="{Binding WorkerServiceCount}" />
                     <GridViewColumn Width="70">
                         <GridViewColumn.CellTemplate>
                             <DataTemplate>
-                                <Button Content=" Re-start " HorizontalAlignment="Right" Padding="5" HorizontalContentAlignment="Right"
+                                <Button Content=" Re-start " HorizontalAlignment="Right" Padding="5"
+                                        HorizontalContentAlignment="Right"
                                         Visibility="{Binding RestartButtonVisibility}"
                                         IsEnabled="{Binding CanRestart}"
-                                        Command="{Binding RestartCommand}"></Button>
+                                        Command="{Binding RestartCommand}" />
                             </DataTemplate>
                         </GridViewColumn.CellTemplate>
                     </GridViewColumn>

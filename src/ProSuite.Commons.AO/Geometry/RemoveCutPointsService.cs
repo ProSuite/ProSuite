@@ -139,8 +139,8 @@ namespace ProSuite.Commons.AO.Geometry
 					Assert.NotNull(ring, "Multipatch has non-ring geometry");
 
 					IGeometry highLevelRing = GeometryUtils.GetHighLevelGeometry(ring,
-					                                                             dontClonePath:
-					                                                             true);
+						dontClonePath:
+						true);
 					RemovePoint(highLevelRing, point, searchRadius);
 				}
 			}
@@ -251,7 +251,7 @@ namespace ProSuite.Commons.AO.Geometry
 			points.RemovePoints(partEndRealIndex, 1);
 
 			int partStartRealIndex = GeometryUtils.GetGlobalIndex(wholeGeometry, hitPartIndex,
-			                                                      0);
+				0);
 			points.RemovePoints(partStartRealIndex, 1);
 
 			IPoint newPoint =

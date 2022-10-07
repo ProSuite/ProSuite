@@ -1,17 +1,17 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using ProSuite.QA.Container;
-using ProSuite.QA.Tests;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.AO.QA;
-using ProSuite.QA.Core;
-using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.DataModel;
-using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.DomainModel.Core.QA;
+using ProSuite.QA.Container;
+using ProSuite.QA.Core;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Tests;
 
 namespace ProSuite.QA.TestFactories
 {
@@ -57,8 +57,9 @@ namespace ProSuite.QA.TestFactories
 
 			if (objParams[0] is IReadOnlyFeatureClass[] == false)
 			{
-				throw new ArgumentException(string.Format("expected IReadOnlyFeatureClass[], got {0}",
-				                                          objParams[0].GetType()));
+				throw new ArgumentException(string.Format(
+					                            "expected IReadOnlyFeatureClass[], got {0}",
+					                            objParams[0].GetType()));
 			}
 
 			if (objParams[1] is string[] == false)

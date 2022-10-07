@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO;
@@ -36,8 +35,7 @@ namespace ProSuite.QA.Container.TestContainer
 		private int _totalErrorCount;
 		private OverlappingFeatures _currentCache;
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private ProgressWatch _progressWatch;
 
@@ -178,7 +176,7 @@ namespace ProSuite.QA.Container.TestContainer
 				try
 				{
 					using (UseProgressWatch(
-						Step.TileCompleting, Step.TileCompleted, testIndex, testCount, test))
+						       Step.TileCompleting, Step.TileCompleted, testIndex, testCount, test))
 					{
 						int origErrorEventCount = _errorEventCount;
 
@@ -326,7 +324,9 @@ namespace ProSuite.QA.Container.TestContainer
 								}
 
 								errorCount +=
-									test.Execute(ReadOnlyTableFactory.EnumRows(new EnumCursor(selectionSet, null, recycle:false)));
+									test.Execute(
+										ReadOnlyTableFactory.EnumRows(
+											new EnumCursor(selectionSet, null, recycle: false)));
 							}
 						}
 					}
@@ -372,7 +372,7 @@ namespace ProSuite.QA.Container.TestContainer
 		private IEnumerable<TestRow> GetTestRows()
 		{
 			using (TestRowEnum enumerator = new TestRowEnum(
-				this, _executeBox, _executePolygon, _tileSize))
+				       this, _executeBox, _executePolygon, _tileSize))
 			{
 				foreach (TestRow testRow in enumerator.EnumTestRows())
 				{
@@ -707,7 +707,8 @@ namespace ProSuite.QA.Container.TestContainer
 			{
 				OnQaError(errorEventArgs);
 				cancel = errorEventArgs.Cancel;
-				if (errorEventArgs.Cancel) // If errorEventArgs.Cancel == true, no error will be reported
+				if (errorEventArgs
+				    .Cancel) // If errorEventArgs.Cancel == true, no error will be reported
 				{
 					_errorEventCount--;
 				}

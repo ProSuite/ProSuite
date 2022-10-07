@@ -47,7 +47,7 @@ namespace ProSuite.DomainServices.AO.QA
 				() =>
 				{
 					foreach (var kvp in GetProjectContentByWorkspaceTx(
-						classesByWorkspace))
+						         classesByWorkspace))
 					{
 						allProjectWorkspaces.AddRange(kvp.Value);
 					}

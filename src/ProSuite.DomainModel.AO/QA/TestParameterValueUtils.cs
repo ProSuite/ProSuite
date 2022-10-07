@@ -293,8 +293,7 @@ namespace ProSuite.DomainModel.AO.QA
 		}
 
 		public static bool CheckCircularReferencesInGraph([NotNull] InstanceConfiguration testable,
-		                                                  [CanBeNull]
-		                                                  InstanceConfiguration
+		                                                  [CanBeNull] InstanceConfiguration
 			                                                  instanceConfiguration,
 		                                                  [NotNull]
 		                                                  NotificationCollection configurationNames)

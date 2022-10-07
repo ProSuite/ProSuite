@@ -1,7 +1,7 @@
-using ProSuite.Commons.Essentials.Assertions;
-using ProSuite.Commons.Essentials.CodeAnnotations;
 using System.Collections.Generic;
 using System.Xml.Serialization;
+using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.DomainServices.AO.QA.VerificationReports.Xml
 {

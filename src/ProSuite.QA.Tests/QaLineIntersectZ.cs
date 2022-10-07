@@ -2,17 +2,17 @@ using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.TestSupport;
+using ProSuite.QA.Core;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.QA.Tests.SpatialRelations;
-using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.QA.Core;
-using ProSuite.Commons.AO.Geodatabase;
-using ProSuite.QA.Core.IssueCodes;
-using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
 {
@@ -68,30 +68,36 @@ namespace ProSuite.QA.Tests
 		public QaLineIntersectZ(
 			[Doc(nameof(DocStrings.QaLineIntersectZ_polylineClasses))]
 			IList<IReadOnlyFeatureClass> polylineClasses,
-			[Doc(nameof(DocStrings.QaLineIntersectZ_limit_0))] double limit)
+			[Doc(nameof(DocStrings.QaLineIntersectZ_limit_0))]
+			double limit)
 			: this(polylineClasses, limit, string.Empty) { }
 
 		[Doc(nameof(DocStrings.QaLineIntersectZ_1))]
 		public QaLineIntersectZ(
 			[Doc(nameof(DocStrings.QaLineIntersectZ_polylineClass))]
 			IReadOnlyFeatureClass polylineClass,
-			[Doc(nameof(DocStrings.QaLineIntersectZ_limit_0))] double limit)
+			[Doc(nameof(DocStrings.QaLineIntersectZ_limit_0))]
+			double limit)
 			: this(polylineClass, limit, string.Empty) { }
 
 		[Doc(nameof(DocStrings.QaLineIntersectZ_2))]
 		public QaLineIntersectZ(
 			[Doc(nameof(DocStrings.QaLineIntersectZ_polylineClass))]
 			IReadOnlyFeatureClass polylineClass,
-			[Doc(nameof(DocStrings.QaLineIntersectZ_limit_1))] double limit,
-			[Doc(nameof(DocStrings.QaLineIntersectZ_constraint))] string constraint)
+			[Doc(nameof(DocStrings.QaLineIntersectZ_limit_1))]
+			double limit,
+			[Doc(nameof(DocStrings.QaLineIntersectZ_constraint))]
+			string constraint)
 			: this(new[] {polylineClass}, limit, constraint) { }
 
 		[Doc(nameof(DocStrings.QaLineIntersectZ_3))]
 		public QaLineIntersectZ(
 			[Doc(nameof(DocStrings.QaLineIntersectZ_polylineClasses))]
 			IList<IReadOnlyFeatureClass> polylineClasses,
-			[Doc(nameof(DocStrings.QaLineIntersectZ_limit_1))] double limit,
-			[Doc(nameof(DocStrings.QaLineIntersectZ_constraint))] string constraint)
+			[Doc(nameof(DocStrings.QaLineIntersectZ_limit_1))]
+			double limit,
+			[Doc(nameof(DocStrings.QaLineIntersectZ_constraint))]
+			string constraint)
 			: this(polylineClasses, limit, 0, constraint) { }
 
 		[Doc(nameof(DocStrings.QaLineIntersectZ_4))]
@@ -102,7 +108,8 @@ namespace ProSuite.QA.Tests
 			double minimumZDifference,
 			[Doc(nameof(DocStrings.QaLineIntersectZ_maximumZDifference))]
 			double maximumZDifference,
-			[Doc(nameof(DocStrings.QaLineIntersectZ_constraint))] string constraint)
+			[Doc(nameof(DocStrings.QaLineIntersectZ_constraint))]
+			string constraint)
 			: base(polylineClasses, esriSpatialRelEnum.esriSpatialRelCrosses)
 		{
 			_minimumZDifference = minimumZDifference;
@@ -150,7 +157,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		protected override int FindErrors(IReadOnlyRow row1, int tableIndex1,
-										  IReadOnlyRow row2, int tableIndex2)
+		                                  IReadOnlyRow row2, int tableIndex2)
 		{
 			if (row1 == row2)
 			{
@@ -358,7 +365,7 @@ namespace ProSuite.QA.Tests
 			IGeometry errorGeometry = GeometryFactory.Clone(intersectionPoint);
 			return ReportError(
 				description, InvolvedRowUtils.GetInvolvedRows(rows), errorGeometry,
-				issueCode, affectedComponent, values: new List<object> { zDifference });
+				issueCode, affectedComponent, values: new List<object> {zDifference});
 		}
 
 		private class ZOrderConstraint : RowPairCondition

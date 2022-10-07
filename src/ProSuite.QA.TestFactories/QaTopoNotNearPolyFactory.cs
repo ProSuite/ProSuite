@@ -3,17 +3,18 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using ProSuite.QA.Container;
-using ProSuite.QA.Tests;
-using ProSuite.QA.Tests.Coincidence;
+using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
+using ProSuite.QA.Container;
 using ProSuite.QA.Core;
-using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Tests;
+using ProSuite.QA.Tests.Coincidence;
 
 namespace ProSuite.QA.TestFactories
 {
@@ -131,8 +132,8 @@ namespace ProSuite.QA.TestFactories
 			                                  IList<int> referenceSubtypes,
 			                                  IList<string> featureClassRules)
 			{
-				string featureClassField = ((ESRI.ArcGIS.Geodatabase.ISubtypes) featureClass).SubtypeFieldName;
-				string referenceClassField = ((ESRI.ArcGIS.Geodatabase.ISubtypes) featureClass).SubtypeFieldName;
+				string featureClassField = ((ISubtypes) featureClass).SubtypeFieldName;
+				string referenceClassField = ((ISubtypes) featureClass).SubtypeFieldName;
 
 				double maxNear = 0;
 
@@ -188,8 +189,8 @@ namespace ProSuite.QA.TestFactories
 
 					StringBuilder sbRefIgnore = new StringBuilder();
 					foreach (int overlapIndex in
-						LineNotNearPolyOverlapConfigurator.EnumOverlapIndices(
-							ruleParts, featureClassRule, referenceSubtypes))
+					         LineNotNearPolyOverlapConfigurator.EnumOverlapIndices(
+						         ruleParts, featureClassRule, referenceSubtypes))
 					{
 						if (! int.TryParse(ruleParts[overlapIndex], out int overlapKey))
 						{

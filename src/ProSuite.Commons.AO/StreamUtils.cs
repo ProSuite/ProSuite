@@ -1,5 +1,4 @@
 using System;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.esriSystem;
 using ProSuite.Commons.Essentials.Assertions;
@@ -13,8 +12,7 @@ namespace ProSuite.Commons.AO
 	/// </summary>
 	public static class StreamUtils
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		/// <summary>
 		/// Reads from the specified stream.

@@ -2,18 +2,18 @@ using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestSupport;
-using ProSuite.QA.Tests.Documentation;
-using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.QA.Container;
+using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Core;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.IssueCodes;
 
 namespace ProSuite.QA.Tests
 {
@@ -223,7 +223,7 @@ namespace ProSuite.QA.Tests
 				var polygonPointsToCheck = new List<PolygonPoints>();
 
 				foreach (KeyValuePair<int, Dictionary<int, PolygonPoints>> pair
-					in _polygonPointsByTableIndex)
+				         in _polygonPointsByTableIndex)
 				{
 					Dictionary<int, PolygonPoints> polygonPointsByOid = pair.Value;
 
@@ -331,8 +331,8 @@ namespace ProSuite.QA.Tests
 				_queryFilter[pointClassIndex].Geometry = containingShape;
 
 				foreach (IReadOnlyRow pointRow in Search(InvolvedTables[pointClassIndex],
-				                                 _queryFilter[pointClassIndex],
-				                                 _helper[pointClassIndex]))
+				                                         _queryFilter[pointClassIndex],
+				                                         _helper[pointClassIndex]))
 				{
 					var pointFeature = (IReadOnlyFeature) pointRow;
 					// point feature is POINT, polygon feature is POLYGON

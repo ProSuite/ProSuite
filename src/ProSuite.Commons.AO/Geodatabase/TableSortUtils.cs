@@ -1,4 +1,3 @@
-using System.Reflection;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
@@ -9,7 +8,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 {
 	public static class TableSortUtils
 	{
-		private static readonly IMsg _msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		/// <summary>
 		/// Creates a table sort object for the provided table and sort field name.

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Text;
 using System.Windows.Forms;
 using ProSuite.Commons.Essentials.Assertions;
@@ -20,8 +19,7 @@ namespace ProSuite.Commons.UI.Logging
 		private IList<LogEventItem> _logEventItems;
 		private readonly int[] _textColumnIndices;
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		#region Constructors
 

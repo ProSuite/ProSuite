@@ -1,14 +1,14 @@
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Text;
 using ProSuite.QA.Container.TestSupport;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.QA.Tests.SpatialRelations;
-using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Text;
-using ProSuite.Commons.AO.Geodatabase;
-using ProSuite.QA.Core.IssueCodes;
-using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
 {
@@ -35,19 +35,22 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaOverlapsSelf_0))]
 		public QaOverlapsSelf(
-				[Doc(nameof(DocStrings.QaOverlapsSelf_featureClass))] IReadOnlyFeatureClass featureClass)
+				[Doc(nameof(DocStrings.QaOverlapsSelf_featureClass))]
+				IReadOnlyFeatureClass featureClass)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(featureClass, null) { }
 
 		[Doc(nameof(DocStrings.QaOverlapsSelf_1))]
 		public QaOverlapsSelf(
-				[Doc(nameof(DocStrings.QaOverlapsSelf_featureClasses))] IList<IReadOnlyFeatureClass> featureClasses)
+				[Doc(nameof(DocStrings.QaOverlapsSelf_featureClasses))]
+				IList<IReadOnlyFeatureClass> featureClasses)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(featureClasses, null) { }
 
 		[Doc(nameof(DocStrings.QaOverlapsSelf_2))]
 		public QaOverlapsSelf(
-			[Doc(nameof(DocStrings.QaOverlapsSelf_featureClasses))] IList<IReadOnlyFeatureClass> featureClasses,
+			[Doc(nameof(DocStrings.QaOverlapsSelf_featureClasses))]
+			IList<IReadOnlyFeatureClass> featureClasses,
 			[Doc(nameof(DocStrings.QaOverlapsSelf_validRelationConstraint))]
 			string validRelationConstraint)
 			: base(featureClasses, esriSpatialRelEnum.esriSpatialRelOverlaps)
@@ -59,7 +62,8 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaOverlapsSelf_3))]
 		public QaOverlapsSelf(
-			[Doc(nameof(DocStrings.QaOverlapsSelf_featureClass))] IReadOnlyFeatureClass featureClass,
+			[Doc(nameof(DocStrings.QaOverlapsSelf_featureClass))]
+			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaOverlapsSelf_validRelationConstraint))]
 			string validRelationConstraint)
 			: this(new[] {featureClass}, validRelationConstraint) { }
@@ -67,7 +71,7 @@ namespace ProSuite.QA.Tests
 		#region Overrides of QaSpatialRelationSelfBase
 
 		protected override int FindErrors(IReadOnlyRow row1, int tableIndex1,
-										  IReadOnlyRow row2, int tableIndex2)
+		                                  IReadOnlyRow row2, int tableIndex2)
 		{
 			if (_validRelationConstraint == null)
 			{

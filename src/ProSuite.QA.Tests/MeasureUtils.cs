@@ -4,12 +4,12 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container.Geometry;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Container.Geometry;
 
 namespace ProSuite.QA.Tests
 {
@@ -208,7 +208,7 @@ namespace ProSuite.QA.Tests
 					if (currentSequence == null)
 					{
 						currentSequence = new MMonotonicitySequence(currentMonotonicity,
-						                                            segment.SpatialReference);
+							segment.SpatialReference);
 					}
 
 					if (currentSequence.MonotonicityType != currentMonotonicity)
@@ -216,7 +216,7 @@ namespace ProSuite.QA.Tests
 						yield return currentSequence;
 
 						currentSequence = new MMonotonicitySequence(currentMonotonicity,
-						                                            segment.SpatialReference);
+							segment.SpatialReference);
 					}
 
 					currentSequence.Add(recycling

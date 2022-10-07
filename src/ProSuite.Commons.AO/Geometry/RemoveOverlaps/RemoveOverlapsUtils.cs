@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
@@ -18,7 +17,7 @@ namespace ProSuite.Commons.AO.Geometry.RemoveOverlaps
 {
 	public static class RemoveOverlapsUtils
 	{
-		private static readonly IMsg _msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		#region Calculation of selectable overlaps
 
@@ -88,13 +87,14 @@ namespace ProSuite.Commons.AO.Geometry.RemoveOverlaps
 			double tolerance = GeometryUtils.GetXyTolerance(sourceGeometry);
 
 			foreach (IFeature targetFeature in overlappingFeatures.Search(
-				sourceEnvelope.XMin, sourceEnvelope.YMin,
-				sourceEnvelope.XMax, sourceEnvelope.YMax, tolerance))
+				         sourceEnvelope.XMin, sourceEnvelope.YMin,
+				         sourceEnvelope.XMax, sourceEnvelope.YMax, tolerance))
 			{
 				if (trackCancel != null && ! trackCancel.Continue())
 					yield break;
 
-				_msg.VerboseDebug(() => $"Calculating overlap from {GdbObjectUtils.ToString(targetFeature)}");
+				_msg.VerboseDebug(
+					() => $"Calculating overlap from {GdbObjectUtils.ToString(targetFeature)}");
 
 				IGeometry targetGeometry = targetFeature.Shape;
 
@@ -289,7 +289,8 @@ namespace ProSuite.Commons.AO.Geometry.RemoveOverlaps
 					fromGeometryCollection))
 			{
 				if (selectionArea == null ||
-				    ! selectionAreaMustContain && GeometryUtils.Intersects(selectionArea, highLevelPart) ||
+				    ! selectionAreaMustContain &&
+				    GeometryUtils.Intersects(selectionArea, highLevelPart) ||
 				    GeometryUtils.Contains(selectionArea, highLevelPart))
 				{
 					if (result == null)

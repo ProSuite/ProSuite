@@ -1,12 +1,12 @@
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container;
-using ProSuite.QA.Tests.Documentation;
-using ProSuite.QA.Tests.IssueCodes;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Container;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.IssueCodes;
 
 namespace ProSuite.QA.Tests
 {
@@ -37,14 +37,17 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaMultipart_0))]
 		public QaMultipart(
-				[Doc(nameof(DocStrings.QaMultipart_featureClass))] IReadOnlyFeatureClass featureClass)
+				[Doc(nameof(DocStrings.QaMultipart_featureClass))]
+				IReadOnlyFeatureClass featureClass)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(featureClass, singleRing: false) { }
 
 		[Doc(nameof(DocStrings.QaMultipart_0))]
 		public QaMultipart(
-			[Doc(nameof(DocStrings.QaMultipart_featureClass))] IReadOnlyFeatureClass featureClass,
-			[Doc(nameof(DocStrings.QaMultipart_singleRing))] bool singleRing)
+			[Doc(nameof(DocStrings.QaMultipart_featureClass))]
+			IReadOnlyFeatureClass featureClass,
+			[Doc(nameof(DocStrings.QaMultipart_singleRing))]
+			bool singleRing)
 			: base(featureClass)
 		{
 			_singleRing = singleRing;

@@ -86,8 +86,8 @@ namespace ProSuite.Commons.AO.Geometry.Serialization
 				if (useSearchCircle)
 				{
 					if (GeomRelationUtils.IsWithinTolerance(
-						new Pnt2D(_wksPoints[i].X, _wksPoints[i].Y), searchPoint, xyTolerance,
-						true))
+						    new Pnt2D(_wksPoints[i].X, _wksPoints[i].Y), searchPoint, xyTolerance,
+						    true))
 					{
 						yield return i;
 					}

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
@@ -13,7 +12,7 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork.Editing
 {
 	public class NetworkEditValidator
 	{
-		private static readonly IMsg _msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		public bool AllowLoops { get; set; }
 
@@ -175,7 +174,7 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork.Editing
 				atLineEnd == LineEnd.From ? polyline.FromPoint : polyline.ToPoint;
 
 			foreach (IFeature connectedAtFrom in
-				connectedEdgeFeatures)
+			         connectedEdgeFeatures)
 			{
 				IPolyline connectedPolyline = (IPolyline) connectedAtFrom.Shape;
 

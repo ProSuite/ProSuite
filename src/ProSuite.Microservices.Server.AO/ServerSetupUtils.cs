@@ -23,7 +23,7 @@ namespace ProSuite.Microservices.Server.AO
 {
 	public static class ServerSetupUtils
 	{
-		private static readonly IMsg _msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private const string _verboseLoggingEnvVar = "PROSUITE_MICROSERVICE_VERBOSE_LOGGING";
 

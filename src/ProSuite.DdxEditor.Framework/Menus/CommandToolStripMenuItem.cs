@@ -1,5 +1,4 @@
 using System;
-using System.Reflection;
 using System.Windows.Forms;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -16,8 +15,7 @@ namespace ProSuite.DdxEditor.Framework.Menus
 	{
 		private readonly ICommand _command;
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="CommandToolStripButton"/> class.

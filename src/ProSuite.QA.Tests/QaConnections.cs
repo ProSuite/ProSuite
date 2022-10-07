@@ -2,17 +2,17 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.PolygonGrower;
 using ProSuite.QA.Container.TestSupport;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.QA.Tests.Network;
-using ProSuite.Commons.Essentials.Assertions;
-using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.AO.Geodatabase;
-using ProSuite.QA.Core.IssueCodes;
-using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
 {
@@ -20,7 +20,8 @@ namespace ProSuite.QA.Tests
 	[InternallyUsedTest]
 	public class QaConnections : QaNetworkBase
 	{
-		[Doc(nameof(DocStrings.QaConnections_StartsIn))] public static readonly string StartsIn = "_StartsIn";
+		[Doc(nameof(DocStrings.QaConnections_StartsIn))]
+		public static readonly string StartsIn = "_StartsIn";
 
 		private TableView[] _tableFilterHelpers;
 		private IList<QaConnectionRuleHelper> _ruleHelpers;
@@ -46,8 +47,10 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaConnections_0))]
 		public QaConnections(
-			[Doc(nameof(DocStrings.QaConnections_featureClasses))] IList<IReadOnlyFeatureClass> featureClasses,
-			[Doc(nameof(DocStrings.QaConnections_rules_0))] IList<string[]> rules)
+			[Doc(nameof(DocStrings.QaConnections_featureClasses))]
+			IList<IReadOnlyFeatureClass> featureClasses,
+			[Doc(nameof(DocStrings.QaConnections_rules_0))]
+			IList<string[]> rules)
 			: base(CastToTables((IEnumerable<IReadOnlyFeatureClass>) featureClasses), false)
 		{
 			Init(rules);
@@ -55,8 +58,10 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaConnections_1))]
 		public QaConnections(
-			[Doc(nameof(DocStrings.QaConnections_featureClass))] IReadOnlyFeatureClass featureClass,
-			[Doc(nameof(DocStrings.QaConnections_rules_1))] IEnumerable<string> rules)
+			[Doc(nameof(DocStrings.QaConnections_featureClass))]
+			IReadOnlyFeatureClass featureClass,
+			[Doc(nameof(DocStrings.QaConnections_rules_1))]
+			IEnumerable<string> rules)
 			: base(featureClass, false)
 		{
 			List<string[]> ruleArrays = rules.Select(rule => new[] {rule}).ToList();
@@ -66,15 +71,19 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaConnections_2))]
 		public QaConnections(
-				[Doc(nameof(DocStrings.QaConnections_featureClasses))] IList<IReadOnlyFeatureClass> featureClasses,
-				[Doc(nameof(DocStrings.QaConnections_rules_1))] IList<QaConnectionRule> rules)
+				[Doc(nameof(DocStrings.QaConnections_featureClasses))]
+				IList<IReadOnlyFeatureClass> featureClasses,
+				[Doc(nameof(DocStrings.QaConnections_rules_1))]
+				IList<QaConnectionRule> rules)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(featureClasses, rules, 0) { }
 
 		[Doc(nameof(DocStrings.QaConnections_3))]
 		public QaConnections(
-			[Doc(nameof(DocStrings.QaConnections_featureClass))] IReadOnlyFeatureClass featureClass,
-			[Doc(nameof(DocStrings.QaConnections_rules_1))] IList<QaConnectionRule> rules)
+			[Doc(nameof(DocStrings.QaConnections_featureClass))]
+			IReadOnlyFeatureClass featureClass,
+			[Doc(nameof(DocStrings.QaConnections_rules_1))]
+			IList<QaConnectionRule> rules)
 			: this(new[] {featureClass}, rules) { }
 
 		// TODO document/private?
@@ -83,7 +92,8 @@ namespace ProSuite.QA.Tests
 			IList<QaConnectionRule> rules,
 			double tolerance)
 			: base(
-				CastToTables((IEnumerable<IReadOnlyFeatureClass>) featureClasses), tolerance, false, null)
+				CastToTables((IEnumerable<IReadOnlyFeatureClass>) featureClasses), tolerance, false,
+				null)
 		{
 			_ruleHelpers = QaConnectionRuleHelper.CreateList(rules, out _tableFilterHelpers);
 		}

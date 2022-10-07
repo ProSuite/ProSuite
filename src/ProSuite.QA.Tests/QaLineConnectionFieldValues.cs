@@ -3,19 +3,19 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Text;
-using ProSuite.QA.Container;
-using ProSuite.QA.Container.PolygonGrower;
-using ProSuite.QA.Container.TestSupport;
-using ProSuite.QA.Tests.Documentation;
-using ProSuite.QA.Tests.IssueCodes;
-using ProSuite.QA.Tests.Network;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
-using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Container;
+using ProSuite.QA.Container.PolygonGrower;
+using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.IssueCodes;
+using ProSuite.QA.Tests.Network;
 
 namespace ProSuite.QA.Tests
 {
@@ -151,7 +151,8 @@ namespace ProSuite.QA.Tests
 			string pointField,
 			[Doc(nameof(DocStrings.QaLineConnectionFieldValues_pointFieldValuesConstraint))]
 			PointFieldValuesConstraint pointFieldValuesConstraint,
-			[Doc(nameof(DocStrings.QaLineConnectionFieldValues_allowedPointsExpression))] [CanBeNull]
+			[Doc(nameof(DocStrings.QaLineConnectionFieldValues_allowedPointsExpression))]
+			[CanBeNull]
 			string
 				allowedPointsExpression)
 			: this(lineClasses, lineFields, lineFieldValuesConstraint, new[] {pointClass},
@@ -178,7 +179,8 @@ namespace ProSuite.QA.Tests
 				pointFields,
 			[Doc(nameof(DocStrings.QaLineConnectionFieldValues_pointFieldValuesConstraint))]
 			PointFieldValuesConstraint pointFieldValuesConstraint,
-			[Doc(nameof(DocStrings.QaLineConnectionFieldValues_allowedPointsExpressions))] [CanBeNull]
+			[Doc(nameof(DocStrings.QaLineConnectionFieldValues_allowedPointsExpressions))]
+			[CanBeNull]
 			IList<string>
 				allowedPointsExpressions)
 			: base(CastToTables(lineClasses, pointClasses),
@@ -268,7 +270,7 @@ namespace ProSuite.QA.Tests
 			int errorCount = base.CompleteTileCore(args);
 
 			foreach (List<NetElement> connectedElements in Assert.NotNull(
-				ConnectedElementsList))
+				         ConnectedElementsList))
 			{
 				errorCount += CheckRows(connectedElements);
 			}
@@ -288,7 +290,7 @@ namespace ProSuite.QA.Tests
 				// parse/remove/use case sensitivty hint
 				bool? caseSensitivityOverride;
 				fieldName = ExpressionUtils.ParseCaseSensitivityHint(fieldName,
-				                                                     out caseSensitivityOverride);
+					out caseSensitivityOverride);
 				if (caseSensitivityOverride != null)
 				{
 					caseSensitive = caseSensitivityOverride.Value;
@@ -369,10 +371,10 @@ namespace ProSuite.QA.Tests
 			List<object> lineFieldValues;
 			int pointCount;
 			List<IReadOnlyRow> connectedRows = GetConnectedRows(elementsToCheck,
-			                                            getAllLineFieldValues,
-			                                            out lineFieldValues,
-			                                            out distinctPointFieldValues,
-			                                            out pointCount);
+			                                                    getAllLineFieldValues,
+			                                                    out lineFieldValues,
+			                                                    out distinctPointFieldValues,
+			                                                    out pointCount);
 
 			string pointMessage;
 			bool pointConstraintValid = IsPointConstraintFulfilled(

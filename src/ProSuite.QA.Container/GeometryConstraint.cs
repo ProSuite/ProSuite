@@ -60,7 +60,7 @@ namespace ProSuite.QA.Container
 			var propertyCache = new PropertyCache(geometry);
 
 			foreach (ColumnHandler<PropertyCache> columnHandler in
-				_columnHandlers.OrderBy(c => c.ColumnName))
+			         _columnHandlers.OrderBy(c => c.ColumnName))
 			{
 				if (sb.Length > 0)
 				{
@@ -89,7 +89,7 @@ namespace ProSuite.QA.Container
 			DataColumnCollection columns = dataTable.Columns;
 
 			foreach (ColumnHandler<PropertyCache> columnHandler in GetAvailableColumnHandlers()
-			)
+			        )
 			{
 				if (! UsesField(constraint, columnHandler.ColumnName))
 				{

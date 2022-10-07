@@ -63,8 +63,8 @@ namespace ProSuite.Commons.AO.Geometry
 						{
 							string noPolygonReason;
 							IPolygon loopPolygon = TryCreateLoopPolygon(ring, nearestVertex.Index,
-							                                            vertex.Index,
-							                                            out noPolygonReason);
+								vertex.Index,
+								out noPolygonReason);
 
 							if (loopPolygon != null)
 							{

@@ -5,21 +5,21 @@ using System.Linq;
 using System.Text;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container;
-using ProSuite.QA.Container.Geometry;
-using ProSuite.QA.Container.PolygonGrower;
-using ProSuite.QA.Container.TestContainer;
-using ProSuite.QA.Tests.Documentation;
-using ProSuite.QA.Tests.IssueCodes;
-using ProSuite.QA.Tests.Network;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
+using ProSuite.QA.Container;
+using ProSuite.QA.Container.Geometry;
+using ProSuite.QA.Container.PolygonGrower;
+using ProSuite.QA.Container.TestContainer;
 using ProSuite.QA.Core;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.IssueCodes;
+using ProSuite.QA.Tests.Network;
 
 namespace ProSuite.QA.Tests
 {
@@ -313,7 +313,8 @@ namespace ProSuite.QA.Tests
 			IReadOnlyFeatureClass polylineClass,
 			[Doc(nameof(DocStrings.QaGroupConnected_groupBy))] [NotNull]
 			IList<string> groupBy,
-			[Doc(nameof(DocStrings.QaGroupConnected_allowedShape))] ShapeAllowed allowedShape)
+			[Doc(nameof(DocStrings.QaGroupConnected_allowedShape))]
+			ShapeAllowed allowedShape)
 			: this(new[] {polylineClass}, groupBy, null, allowedShape,
 			       _defaultErrorReporting, -1) { }
 
@@ -326,7 +327,8 @@ namespace ProSuite.QA.Tests
 			IList<string> groupBy,
 			[Doc(nameof(DocStrings.QaGroupConnected_valueSeparator))] [CanBeNull]
 			string valueSeparator,
-			[Doc(nameof(DocStrings.QaGroupConnected_allowedShape))] ShapeAllowed allowedShape,
+			[Doc(nameof(DocStrings.QaGroupConnected_allowedShape))]
+			ShapeAllowed allowedShape,
 			[Doc(nameof(DocStrings.QaGroupConnected_errorReporting))]
 			[DefaultValue(GroupErrorReporting.ShortestGaps)]
 			GroupErrorReporting errorReporting,
@@ -1139,7 +1141,7 @@ namespace ProSuite.QA.Tests
 			}
 
 			List<List<EndsGap>> sortedEndsGaps = GetSortedEndsDistances(groupEndsList,
-			                                                            distancesExtent);
+				distancesExtent);
 
 			List<EndsGap> reportGaps = GetReportGaps(sortedEndsGaps, errorReporting);
 

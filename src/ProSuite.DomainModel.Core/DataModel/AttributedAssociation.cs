@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -16,7 +15,7 @@ namespace ProSuite.DomainModel.Core.DataModel
 
 		private IDictionary<string, AssociationAttribute> _attributesByName;
 
-		private static readonly IMsg _msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		#region Constructors
 

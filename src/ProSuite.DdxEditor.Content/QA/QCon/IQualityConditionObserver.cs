@@ -32,14 +32,17 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 		void QualitySpecificationSelectionChanged();
 
 		void IssueFilterSelectionChanged();
+
 		void AddIssueFilterClicked();
+
 		void RemoveIssueFilterClicked();
 
 		void QualitySpecificationReferenceDoubleClicked(
 			[NotNull] QualitySpecificationReferenceTableRow
 				qualitySpecificationReferenceTableRow);
 
-		void IssueFilterDoubleClicked([NotNull] InstanceConfigurationReferenceTableRow filterConfigTableRow);
+		void IssueFilterDoubleClicked(
+			[NotNull] InstanceConfigurationReferenceTableRow filterConfigTableRow);
 
 		void TestDescriptorLinkClicked([CanBeNull] TestDescriptor testDescriptor);
 

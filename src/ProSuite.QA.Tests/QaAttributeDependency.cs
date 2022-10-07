@@ -1,17 +1,16 @@
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using System.Text;
-using ProSuite.Commons.AttributeDependencies;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AttributeDependencies;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
 using ProSuite.QA.Container;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
-using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.IssueCodes;
 
 namespace ProSuite.QA.Tests
 {
@@ -91,6 +90,7 @@ namespace ProSuite.QA.Tests
 
 				fieldIndices.Add(fieldIndex);
 			}
+
 			return fieldIndices;
 		}
 
@@ -103,9 +103,9 @@ namespace ProSuite.QA.Tests
 				const string description =
 					"Either no source field or no target field defined in Attribute Dependency";
 
-                return ReportError(
-                    description, InvolvedRowUtils.GetInvolvedRows(row),
-                    TestUtils.GetShapeCopy(row), Codes[Code.SourceOrTargetFieldNotDefined], null);
+				return ReportError(
+					description, InvolvedRowUtils.GetInvolvedRows(row),
+					TestUtils.GetShapeCopy(row), Codes[Code.SourceOrTargetFieldNotDefined], null);
 			}
 
 			if (_mappings.Count == 0)
@@ -113,14 +113,14 @@ namespace ProSuite.QA.Tests
 				const string description =
 					"No mapping (attribute value combination) defined in Attribute Dependency";
 				return ReportError(
-                    description, InvolvedRowUtils.GetInvolvedRows(row),
-                    TestUtils.GetShapeCopy(row), Codes[Code.NoMappingDefined], null);
+					description, InvolvedRowUtils.GetInvolvedRows(row),
+					TestUtils.GetShapeCopy(row), Codes[Code.NoMappingDefined], null);
 			}
 
 			IList<object> sourceValues =
 				_sourceFieldIndices.Select(row.get_Value).ToList();
 			IList<IList<object>> combos = GetMatchingTargetValueCombinations(sourceValues,
-			                                                                 _mappings);
+				_mappings);
 
 			if (combos.Count < 1)
 			{
@@ -129,8 +129,8 @@ namespace ProSuite.QA.Tests
 					              StringUtils.Concatenate(_sourceFields, ","),
 					              AttributeDependencyUtils.Format(sourceValues));
 				return ReportError(
-                    noMatchingSource, InvolvedRowUtils.GetInvolvedRows(row),
-                    TestUtils.GetShapeCopy(row), Codes[Code.SourceValuesNotDefined], null);
+					noMatchingSource, InvolvedRowUtils.GetInvolvedRows(row),
+					TestUtils.GetShapeCopy(row), Codes[Code.SourceValuesNotDefined], null);
 			}
 
 			IList<object> targetValues =
@@ -151,8 +151,8 @@ namespace ProSuite.QA.Tests
 					StringUtils.Concatenate(_sourceFields, ","),
 					AttributeDependencyUtils.Format(sourceValues, sb));
 			return ReportError(
-                noMatchingTarget, InvolvedRowUtils.GetInvolvedRows(row),
-                TestUtils.GetShapeCopy(row), Codes[Code.TargetValuesNotDefined], null);
+				noMatchingTarget, InvolvedRowUtils.GetInvolvedRows(row),
+				TestUtils.GetShapeCopy(row), Codes[Code.TargetValuesNotDefined], null);
 		}
 
 		private static IList<IList<object>> GetMatchingTargetValueCombinations(

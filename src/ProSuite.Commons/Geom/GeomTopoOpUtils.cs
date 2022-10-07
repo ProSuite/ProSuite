@@ -704,7 +704,7 @@ namespace ProSuite.Commons.Geom
 
 			return result;
 		}
-		
+
 		private static void AddToGroups(List<HashSet<MultiLinestring>> connectedGroups,
 		                                MultiLinestring polygon,
 		                                MultiLinestring otherPoly)

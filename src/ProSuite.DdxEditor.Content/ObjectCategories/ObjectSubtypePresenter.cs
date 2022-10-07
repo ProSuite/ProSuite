@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Reflection;
 using System.Windows.Forms;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -20,8 +19,7 @@ namespace ProSuite.DdxEditor.Content.ObjectCategories
 
 		#endregion
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private readonly GetCriteriumToAdd _getCriteriumToAdd;
 		private readonly IObjectSubtypeView _view;

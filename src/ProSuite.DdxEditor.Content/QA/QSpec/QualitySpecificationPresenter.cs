@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -18,8 +17,7 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 		<QualitySpecification, IQualitySpecificationObserver, QualitySpecification>,
 		IQualitySpecificationObserver
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		[NotNull] private readonly SortableBindingList<QualitySpecificationElementTableRow>
 			_elementTableRows =

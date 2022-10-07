@@ -415,7 +415,7 @@ namespace ProSuite.Commons.AO.Test.Geometry.Cut
 				if (plane != null)
 				{
 					foreach (IPoint point in GeometryUtils.GetPoints(
-						(IPointCollection) result))
+						         (IPointCollection) result))
 					{
 						Assert.AreEqual(plane.GetZ(point.X, point.Y), point.Z, 0.001);
 					}

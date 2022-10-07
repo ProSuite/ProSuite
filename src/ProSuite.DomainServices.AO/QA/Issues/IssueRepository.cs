@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
@@ -25,8 +24,7 @@ namespace ProSuite.DomainServices.AO.QA.Issues
 		[NotNull] private readonly Dictionary<esriGeometryType, IssueWriter>
 			_issueWritersByGeometryType;
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		public IssueRepository([NotNull] IssueRowWriter rowWriter,
 		                       [NotNull] IEnumerable<IssueFeatureWriter> featureWriters,
@@ -43,7 +41,7 @@ namespace ProSuite.DomainServices.AO.QA.Issues
 			_featureWriters = featureWriters.ToList();
 
 			_issueWritersByGeometryType = GetIssueWritersByGeometryType(rowWriter,
-			                                                            _featureWriters);
+				_featureWriters);
 
 			_issueDatasets = GetIssueDatasets(rowWriter, _featureWriters, fields);
 
@@ -74,7 +72,7 @@ namespace ProSuite.DomainServices.AO.QA.Issues
 				if (IssueGeometryTransformation != null)
 				{
 					issueGeometry = IssueGeometryTransformation.TransformGeometry(issue,
-					                                                              issueGeometry);
+						issueGeometry);
 				}
 
 				IGeometry storableIssueGeometry = GetStorableIssueGeometry(issueGeometry);
@@ -95,7 +93,7 @@ namespace ProSuite.DomainServices.AO.QA.Issues
 		public void CreateIndexes(ITrackCancel trackCancel, bool ignoreErrors = false)
 		{
 			foreach (IssueFeatureWriter writer in
-				_featureWriters.Where(writer => writer.WriteCount != 0))
+			         _featureWriters.Where(writer => writer.WriteCount != 0))
 			{
 				CreateIndex(writer, trackCancel, ignoreErrors);
 			}

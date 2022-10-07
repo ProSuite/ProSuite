@@ -4,22 +4,22 @@ using System.Linq;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container;
-using ProSuite.QA.Container.Geometry;
-using ProSuite.QA.Container.TestSupport;
-using ProSuite.QA.Tests.Documentation;
-using ProSuite.QA.Tests.IssueCodes;
-using ProSuite.QA.Tests.Properties;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
 using ProSuite.Commons.Geom.SpatialIndex;
 using ProSuite.Commons.Text;
+using ProSuite.QA.Container;
+using ProSuite.QA.Container.Geometry;
+using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Core;
-using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.IssueCodes;
+using ProSuite.QA.Tests.Properties;
 
 namespace ProSuite.QA.Tests.Coincidence
 {
@@ -121,21 +121,30 @@ namespace ProSuite.QA.Tests.Coincidence
 
 		[Doc(nameof(DocStrings.QaNotNear_0))]
 		public QaTopoNotNear(
-				[Doc(nameof(DocStrings.QaNotNear_featureClass))] IReadOnlyFeatureClass featureClass,
-				[Doc(nameof(DocStrings.QaNotNear_near))] double near,
-				[Doc(nameof(DocStrings.QaNotNear_minLength))] double minLength,
-				[Doc(nameof(DocStrings.QaNotNear_is3D))] bool is3D)
+				[Doc(nameof(DocStrings.QaNotNear_featureClass))]
+				IReadOnlyFeatureClass featureClass,
+				[Doc(nameof(DocStrings.QaNotNear_near))]
+				double near,
+				[Doc(nameof(DocStrings.QaNotNear_minLength))]
+				double minLength,
+				[Doc(nameof(DocStrings.QaNotNear_is3D))]
+				bool is3D)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(featureClass, near, minLength, is3D, 1000.0) { }
 
 		// ctor 1
 		[Doc(nameof(DocStrings.QaNotNear_0))]
 		public QaTopoNotNear(
-			[Doc(nameof(DocStrings.QaNotNear_featureClass))] IReadOnlyFeatureClass featureClass,
-			[Doc(nameof(DocStrings.QaNotNear_near))] double near,
-			[Doc(nameof(DocStrings.QaNotNear_minLength))] double minLength,
-			[Doc(nameof(DocStrings.QaNotNear_is3D))] bool is3D,
-			[Doc(nameof(DocStrings.QaNotNear_tileSize))] double tileSize)
+			[Doc(nameof(DocStrings.QaNotNear_featureClass))]
+			IReadOnlyFeatureClass featureClass,
+			[Doc(nameof(DocStrings.QaNotNear_near))]
+			double near,
+			[Doc(nameof(DocStrings.QaNotNear_minLength))]
+			double minLength,
+			[Doc(nameof(DocStrings.QaNotNear_is3D))]
+			bool is3D,
+			[Doc(nameof(DocStrings.QaNotNear_tileSize))]
+			double tileSize)
 			: this(new[] {featureClass},
 			       near / 2,
 			       new ConstantFeatureDistanceProvider(near / 2),
@@ -150,23 +159,34 @@ namespace ProSuite.QA.Tests.Coincidence
 		// ctor 2
 		[Doc(nameof(DocStrings.QaNotNear_2))]
 		public QaTopoNotNear(
-				[Doc(nameof(DocStrings.QaNotNear_featureClass))] IReadOnlyFeatureClass featureClass,
-				[Doc(nameof(DocStrings.QaNotNear_reference))] IReadOnlyFeatureClass reference,
-				[Doc(nameof(DocStrings.QaNotNear_near))] double near,
-				[Doc(nameof(DocStrings.QaNotNear_minLength))] double minLength,
-				[Doc(nameof(DocStrings.QaNotNear_is3D))] bool is3D)
+				[Doc(nameof(DocStrings.QaNotNear_featureClass))]
+				IReadOnlyFeatureClass featureClass,
+				[Doc(nameof(DocStrings.QaNotNear_reference))]
+				IReadOnlyFeatureClass reference,
+				[Doc(nameof(DocStrings.QaNotNear_near))]
+				double near,
+				[Doc(nameof(DocStrings.QaNotNear_minLength))]
+				double minLength,
+				[Doc(nameof(DocStrings.QaNotNear_is3D))]
+				bool is3D)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(featureClass, reference, near, minLength, is3D, 1000.0) { }
 
 		// ctor 3
 		[Doc(nameof(DocStrings.QaNotNear_2))]
 		public QaTopoNotNear(
-			[Doc(nameof(DocStrings.QaNotNear_featureClass))] IReadOnlyFeatureClass featureClass,
-			[Doc(nameof(DocStrings.QaNotNear_reference))] IReadOnlyFeatureClass reference,
-			[Doc(nameof(DocStrings.QaNotNear_near))] double near,
-			[Doc(nameof(DocStrings.QaNotNear_minLength))] double minLength,
-			[Doc(nameof(DocStrings.QaNotNear_is3D))] bool is3D,
-			[Doc(nameof(DocStrings.QaNotNear_tileSize))] double tileSize)
+			[Doc(nameof(DocStrings.QaNotNear_featureClass))]
+			IReadOnlyFeatureClass featureClass,
+			[Doc(nameof(DocStrings.QaNotNear_reference))]
+			IReadOnlyFeatureClass reference,
+			[Doc(nameof(DocStrings.QaNotNear_near))]
+			double near,
+			[Doc(nameof(DocStrings.QaNotNear_minLength))]
+			double minLength,
+			[Doc(nameof(DocStrings.QaNotNear_is3D))]
+			bool is3D,
+			[Doc(nameof(DocStrings.QaNotNear_tileSize))]
+			double tileSize)
 			: this(new[] {featureClass, reference},
 			       near / 2,
 			       new ConstantFeatureDistanceProvider(near / 2),
@@ -185,49 +205,68 @@ namespace ProSuite.QA.Tests.Coincidence
 		// ctor 4
 		[Doc(nameof(DocStrings.QaNotNear_0))]
 		public QaTopoNotNear(
-				[Doc(nameof(DocStrings.QaNotNear_featureClass))] IReadOnlyFeatureClass featureClass,
-				[Doc(nameof(DocStrings.QaNotNear_near))] double near,
-				[Doc(nameof(DocStrings.QaNotNear_minLength))] double minLength)
+				[Doc(nameof(DocStrings.QaNotNear_featureClass))]
+				IReadOnlyFeatureClass featureClass,
+				[Doc(nameof(DocStrings.QaNotNear_near))]
+				double near,
+				[Doc(nameof(DocStrings.QaNotNear_minLength))]
+				double minLength)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(featureClass, near, minLength, false, 1000.0) { }
 
 		// ctor 5
 		[Doc(nameof(DocStrings.QaNotNear_0))]
 		public QaTopoNotNear(
-			[Doc(nameof(DocStrings.QaNotNear_featureClass))] IReadOnlyFeatureClass featureClass,
-			[Doc(nameof(DocStrings.QaNotNear_near))] double near,
-			[Doc(nameof(DocStrings.QaNotNear_minLength))] double minLength,
-			[Doc(nameof(DocStrings.QaNotNear_tileSize))] double tileSize)
+			[Doc(nameof(DocStrings.QaNotNear_featureClass))]
+			IReadOnlyFeatureClass featureClass,
+			[Doc(nameof(DocStrings.QaNotNear_near))]
+			double near,
+			[Doc(nameof(DocStrings.QaNotNear_minLength))]
+			double minLength,
+			[Doc(nameof(DocStrings.QaNotNear_tileSize))]
+			double tileSize)
 			: this(featureClass, near, minLength, false, tileSize) { }
 
 		// ctor 6
 		[Doc(nameof(DocStrings.QaNotNear_2))]
 		public QaTopoNotNear(
-				[Doc(nameof(DocStrings.QaNotNear_featureClass))] IReadOnlyFeatureClass featureClass,
-				[Doc(nameof(DocStrings.QaNotNear_reference))] IReadOnlyFeatureClass reference,
-				[Doc(nameof(DocStrings.QaNotNear_near))] double near,
-				[Doc(nameof(DocStrings.QaNotNear_minLength))] double minLength)
+				[Doc(nameof(DocStrings.QaNotNear_featureClass))]
+				IReadOnlyFeatureClass featureClass,
+				[Doc(nameof(DocStrings.QaNotNear_reference))]
+				IReadOnlyFeatureClass reference,
+				[Doc(nameof(DocStrings.QaNotNear_near))]
+				double near,
+				[Doc(nameof(DocStrings.QaNotNear_minLength))]
+				double minLength)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(featureClass, reference, near, minLength, false, 1000.0) { }
 
 		// ctor 7
 		[Doc(nameof(DocStrings.QaNotNear_2))]
 		public QaTopoNotNear(
-			[Doc(nameof(DocStrings.QaNotNear_featureClass))] IReadOnlyFeatureClass featureClass,
-			[Doc(nameof(DocStrings.QaNotNear_reference))] IReadOnlyFeatureClass reference,
-			[Doc(nameof(DocStrings.QaNotNear_near))] double near,
-			[Doc(nameof(DocStrings.QaNotNear_minLength))] double minLength,
-			[Doc(nameof(DocStrings.QaNotNear_tileSize))] double tileSize)
+			[Doc(nameof(DocStrings.QaNotNear_featureClass))]
+			IReadOnlyFeatureClass featureClass,
+			[Doc(nameof(DocStrings.QaNotNear_reference))]
+			IReadOnlyFeatureClass reference,
+			[Doc(nameof(DocStrings.QaNotNear_near))]
+			double near,
+			[Doc(nameof(DocStrings.QaNotNear_minLength))]
+			double minLength,
+			[Doc(nameof(DocStrings.QaNotNear_tileSize))]
+			double tileSize)
 			: this(featureClass, reference, near, minLength, false) { }
 
 		// ctor 8
 		public QaTopoNotNear(
-			[Doc(nameof(DocStrings.QaNotNear_featureClass))] IReadOnlyFeatureClass featureClass,
-			[Doc(nameof(DocStrings.QaNotNear_near))] double near,
+			[Doc(nameof(DocStrings.QaNotNear_featureClass))]
+			IReadOnlyFeatureClass featureClass,
+			[Doc(nameof(DocStrings.QaNotNear_near))]
+			double near,
 			[NotNull] string nearExpression,
 			double connectedMinLengthFactor,
 			double defaultUnconnectedMinLengthFactor,
-			[Doc(nameof(DocStrings.QaNotNear_is3D))] bool is3D)
+			[Doc(nameof(DocStrings.QaNotNear_is3D))]
+			bool is3D)
 			: this(featureClass,
 			       near,
 			       new ExpressionBasedDistanceProvider(new[] {nearExpression},
@@ -239,12 +278,17 @@ namespace ProSuite.QA.Tests.Coincidence
 		// ctor 9
 		[Doc(nameof(DocStrings.QaNotNear_2))]
 		public QaTopoNotNear(
-			[Doc(nameof(DocStrings.QaNotNear_featureClass))] IReadOnlyFeatureClass featureClass,
-			[Doc(nameof(DocStrings.QaNotNear_reference))] IReadOnlyFeatureClass reference,
-			[Doc(nameof(DocStrings.QaNotNear_near))] double near,
-			[Doc(nameof(DocStrings.QaNotNear_minLength))] double connectedMinLengthFactor,
+			[Doc(nameof(DocStrings.QaNotNear_featureClass))]
+			IReadOnlyFeatureClass featureClass,
+			[Doc(nameof(DocStrings.QaNotNear_reference))]
+			IReadOnlyFeatureClass reference,
+			[Doc(nameof(DocStrings.QaNotNear_near))]
+			double near,
+			[Doc(nameof(DocStrings.QaNotNear_minLength))]
+			double connectedMinLengthFactor,
 			double defaultUnconnectedMinLengthFactor,
-			[Doc(nameof(DocStrings.QaNotNear_is3D))] bool is3D)
+			[Doc(nameof(DocStrings.QaNotNear_is3D))]
+			bool is3D)
 			: this(new[] {featureClass, reference},
 			       near / 2,
 			       new ConstantFeatureDistanceProvider(near / 2),
@@ -266,14 +310,18 @@ namespace ProSuite.QA.Tests.Coincidence
 		// ctor 10
 		[Doc(nameof(DocStrings.QaNotNear_2))]
 		public QaTopoNotNear(
-			[Doc(nameof(DocStrings.QaNotNear_featureClass))] IReadOnlyFeatureClass featureClass,
-			[Doc(nameof(DocStrings.QaNotNear_reference))] IReadOnlyFeatureClass reference,
-			[Doc(nameof(DocStrings.QaNotNear_near))] double near,
+			[Doc(nameof(DocStrings.QaNotNear_featureClass))]
+			IReadOnlyFeatureClass featureClass,
+			[Doc(nameof(DocStrings.QaNotNear_reference))]
+			IReadOnlyFeatureClass reference,
+			[Doc(nameof(DocStrings.QaNotNear_near))]
+			double near,
 			[NotNull] string featureClassNear,
 			[NotNull] string referenceNear,
 			double connectedMinLengthFactor,
 			double defaultUnconnectedMinLengthFactor,
-			[Doc(nameof(DocStrings.QaNotNear_is3D))] bool is3D)
+			[Doc(nameof(DocStrings.QaNotNear_is3D))]
+			bool is3D)
 			: this(featureClass,
 			       reference,
 			       near / 2,
@@ -453,7 +501,8 @@ namespace ProSuite.QA.Tests.Coincidence
 				{
 					_usedJunctionCoincidenceTolerance = Math.Max(
 						JunctionCoincidenceTolerance,
-						GeometryUtils.GetXyTolerance(((IReadOnlyFeatureClass) InvolvedTables[0]).SpatialReference));
+						GeometryUtils.GetXyTolerance(
+							((IReadOnlyFeatureClass) InvolvedTables[0]).SpatialReference));
 				}
 
 				return _usedJunctionCoincidenceTolerance;
@@ -524,7 +573,7 @@ namespace ProSuite.QA.Tests.Coincidence
 				QueryFilterHelper helper = _conflictHelpers[conflictTableIndex];
 
 				foreach (IReadOnlyRow neighborRow in
-					Search(conflictTable, filter, helper, geom0))
+				         Search(conflictTable, filter, helper, geom0))
 				{
 					var neighborFeature = (IReadOnlyFeature) neighborRow;
 
@@ -802,10 +851,10 @@ namespace ProSuite.QA.Tests.Coincidence
 				SegmentNeighbors nearList = pair.Value;
 
 				foreach (NeighboredSegmentsSubpart subparts in
-					GetSplitAtJunctions(feat, featureKey.TableIndex,
-					                    IndexedSegmentUtils.GetIndexedGeometry(feat,
-					                                                           false),
-					                    nearList, featureJunctions))
+				         GetSplitAtJunctions(feat, featureKey.TableIndex,
+				                             IndexedSegmentUtils.GetIndexedGeometry(feat,
+					                             false),
+				                             nearList, featureJunctions))
 				{
 					var partKey = new FeaturePoint(
 						subparts.BaseFeature, subparts.TableIndex, subparts.PartIndex,
@@ -1249,7 +1298,7 @@ namespace ProSuite.QA.Tests.Coincidence
 			var fullLines = new List<ConnectedLinesEx>(fullTree.Count);
 
 			foreach (BoxTree<ConnectedLinesEx>.TileEntry pair in fullTree.Search(null)
-			)
+			        )
 			{
 				fullLines.Add(pair.Value);
 			}
@@ -1729,8 +1778,8 @@ namespace ProSuite.QA.Tests.Coincidence
 			[NotNull] ConnectedLinesEx parts)
 		{
 			IEnumerable<IReadOnlyRow> rows = GetInvolvedFeatures(parts,
-			                                             includeIrrelevantNeighbors:
-			                                             false);
+			                                                     includeIrrelevantNeighbors:
+			                                                     false);
 
 			InvolvedRows result = InvolvedRowUtils.GetInvolvedRows(rows);
 
@@ -1983,7 +2032,7 @@ namespace ProSuite.QA.Tests.Coincidence
 			DropConnectedParts(splittedParts);
 
 			foreach (List<NeighboredSegmentsSubpart> featureParts
-				in splittedParts.Values)
+			         in splittedParts.Values)
 			{
 				foreach (NeighboredSegmentsSubpart part in featureParts)
 				{
@@ -1992,7 +2041,7 @@ namespace ProSuite.QA.Tests.Coincidence
 						GetDisjointErrorCandidates(part, continuationFinder))
 					{
 						foreach (ConnectedLinesEx lineWithoutNotReported in
-							errorCleanup.CleanupNotReportedPairs(errorCandidate))
+						         errorCleanup.CleanupNotReportedPairs(errorCandidate))
 						{
 							if (lineWithoutNotReported != errorCandidate)
 							{
@@ -2112,16 +2161,16 @@ namespace ProSuite.QA.Tests.Coincidence
 
 						var connectedPartsGrower = new ConnectedPartsGrower(part);
 						var startConnected = new ConnectedPartsContinuer(part, 0,
-						                                                 continuationFinder);
+							continuationFinder);
 						var startNeighbored =
 							new ConnectedPartsNeighbor(
 								continuation, 0,
 								new List<NeighboredSegmentsSubpart> {continuation},
 								continuationFinder);
 						foreach (ConnectedPartsGrower connected in
-							GetConnected(connectedPartsGrower, startConnected,
-							             startNeighbored,
-							             addToPreviousIn: true))
+						         GetConnected(connectedPartsGrower, startConnected,
+						                      startNeighbored,
+						                      addToPreviousIn: true))
 						{
 							ConnectedLines connectedLines =
 								connected.GetConnectedLines();
@@ -2487,7 +2536,6 @@ namespace ProSuite.QA.Tests.Coincidence
 		{
 			IssueCode code = Codes[Code.CoincidentSection];
 
-
 			InvolvedRows involved = InvolvedRowUtils.GetInvolvedRows(
 				coincidenceError.DroppedPart.NeighborFeature,
 				coincidenceError.UsedPart.BaseFeature);
@@ -2504,8 +2552,8 @@ namespace ProSuite.QA.Tests.Coincidence
 
 			IGeometry errorGeometry =
 				coincidenceError.UsedPart.BaseSegments.GetSubpart(errorPart.PartIndex,
-				                                                  iMin, fullMin - iMin,
-				                                                  iMax, fullMax - iMax);
+					iMin, fullMin - iMin,
+					iMax, fullMax - iMax);
 			return ReportError(LocalizableStrings.QaTopoNotNear_CoincidentSectionFound,
 			                   involved, errorGeometry, code, null);
 		}
@@ -2604,8 +2652,8 @@ namespace ProSuite.QA.Tests.Coincidence
 					{
 						ConnectedPartsGrower copy = connectedSegments.Copy();
 						foreach (ConnectedPartsGrower nextConnected in
-							GetConnected(copy, connected, nextNeighbor,
-							             addToPreviousIn: true))
+						         GetConnected(copy, connected, nextNeighbor,
+						                      addToPreviousIn: true))
 						{
 							yield return nextConnected;
 						}
@@ -2673,8 +2721,8 @@ namespace ProSuite.QA.Tests.Coincidence
 					ConnectedPartsGrower copy = connectedSegments.Copy();
 					copy.Add(nextConnected);
 					foreach (ConnectedPartsGrower next in
-						GetConnected(copy, nextConnected, neighbored,
-						             addToPreviousIn: false))
+					         GetConnected(copy, nextConnected, neighbored,
+					                      addToPreviousIn: false))
 					{
 						yield return next;
 					}

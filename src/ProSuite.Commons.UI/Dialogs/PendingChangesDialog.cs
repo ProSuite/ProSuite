@@ -1,5 +1,4 @@
 using System;
-using System.Reflection;
 using System.Windows.Forms;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -9,8 +8,7 @@ namespace ProSuite.Commons.UI.Dialogs
 {
 	public class PendingChangesDialog
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private readonly string _messageTitle;
 		private readonly IWin32Window _owner;
@@ -107,7 +105,7 @@ namespace ProSuite.Commons.UI.Dialogs
 				if (! CanHandlePendingChanges())
 				{
 					_msg.VerboseDebug(() =>
-						$"Cannot handle pending changes. Reason: saving {_saving}, aborting {_aborting}, can save {_canSave}");
+						                  $"Cannot handle pending changes. Reason: saving {_saving}, aborting {_aborting}, can save {_canSave}");
 					return false;
 				}
 

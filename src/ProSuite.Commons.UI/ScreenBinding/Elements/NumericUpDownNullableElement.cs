@@ -1,6 +1,5 @@
 using System;
 using System.ComponentModel;
-using System.Reflection;
 using System.Windows.Forms;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI.WinForms.Controls;
@@ -13,8 +12,7 @@ namespace ProSuite.Commons.UI.ScreenBinding.Elements
 	{
 		private CoerceFunction<decimal?> _coercion;
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		#region Constructors
 
@@ -37,10 +35,10 @@ namespace ProSuite.Commons.UI.ScreenBinding.Elements
 			}
 
 			_coercion = delegate(IPropertyAccessor accessor, decimal? rawValue)
-			            {
-				            // default coercion
-				            return CoercionUtility.Coerce(accessor, rawValue);
-			            };
+			{
+				// default coercion
+				return CoercionUtility.Coerce(accessor, rawValue);
+			};
 		}
 
 		#endregion

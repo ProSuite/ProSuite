@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
@@ -18,8 +17,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 {
 	public class MultipleGeometriesReshaper : GeometryReshaperBase
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private IGeometry _originalUnion;
 		private IGeometry _unionToReshape;
@@ -420,7 +418,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			var handledContaining = new List<IGeometry>();
 
 			foreach (KeyValuePair<IGeometry, IGeometry> tuple in
-				CollectionUtils.GetAllTuples(reshapedGeometries.Keys))
+			         CollectionUtils.GetAllTuples(reshapedGeometries.Keys))
 			{
 				var keyPolygon = tuple.Key as IPolygon;
 				var valuePolygon = tuple.Value as IPolygon;
@@ -711,7 +709,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			var reshapedGeometries = new Dictionary<IGeometry, NotificationCollection>();
 
 			foreach (KeyValuePair<IFeature, IGeometry> source in
-				ReshapeGeometryCloneByFeature)
+			         ReshapeGeometryCloneByFeature)
 			{
 				IFeature featureToReshape = source.Key;
 				IGeometry geometryToReshape = source.Value;
@@ -906,7 +904,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 				                               notifications, ref useFallbacks);
 
 				foreach (PolycurveInUnionReshapeInfo singleGeometryReshapeInUnion in
-					singleGeometryReshapesInUnion)
+				         singleGeometryReshapesInUnion)
 				{
 					ReshapeSingleGeometryInUnion(singleGeometryReshapeInUnion,
 					                             useFallbacks,
@@ -1942,8 +1940,8 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			var pointsOnTarget = new List<IPoint>();
 
 			foreach (PolycurveInUnionReshapeInfo singleReshape in
-				singleGeometryReshapesInUnion
-			)
+			         singleGeometryReshapesInUnion
+			        )
 			{
 				ReshapeInfo reshapeInfo = useFallbacks
 					                          ? singleReshape.FallbackReshapeInfo
@@ -2125,8 +2123,8 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 
 			var reductionGeometries = new List<IGeometry>();
 			foreach (KeyValuePair<IFeature, IGeometry> containedGeometry in
-				containedGeometries
-			)
+			         containedGeometries
+			        )
 			{
 				IGeometry reshapedContainedPoly = containedGeometry.Value;
 				IGeometry originalContainedGeometry = containedGeometry.Key.Shape;

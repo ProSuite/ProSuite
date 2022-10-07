@@ -1,6 +1,5 @@
 using System;
 using System.Drawing;
-using System.Reflection;
 using System.Windows.Forms;
 using ProSuite.Commons.Logging;
 
@@ -17,8 +16,7 @@ namespace ProSuite.Commons.UI.Persistence.WinForms
 		private readonly string _fileName;
 		private readonly Type _settingsType;
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		#region Static factory methods
 

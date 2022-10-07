@@ -38,7 +38,7 @@ namespace ProSuite.QA.Tests.Transformers
 			_t1 = t1;
 			_relationName = relationName;
 			_joinType = joinType;
-			_involved = new List<IReadOnlyTable> { t0, t1 };
+			_involved = new List<IReadOnlyTable> {t0, t1};
 		}
 
 		IList<IReadOnlyTable> IInvolvesTables.InvolvedTables => _involved;
@@ -49,7 +49,7 @@ namespace ProSuite.QA.Tests.Transformers
 			{
 				IWorkspace ws = _involved.Select(x => x.Workspace).FirstOrDefault();
 				Assert.NotNull(ws);
-				List<ESRI.ArcGIS.Geodatabase.ITable> involved = new List<ESRI.ArcGIS.Geodatabase.ITable>();
+				List<ITable> involved = new List<ITable>();
 				_involved.ForEach(x => involved.Add(((IFeatureWorkspace) ws).OpenTable(x.Name)));
 
 				IRelationshipClass relClass =

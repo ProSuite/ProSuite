@@ -1,16 +1,16 @@
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Text;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.TestSupport;
+using ProSuite.QA.Core;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.QA.Tests.SpatialRelations;
-using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Text;
-using ProSuite.QA.Core;
-using ProSuite.Commons.AO.Geodatabase;
-using ProSuite.QA.Core.IssueCodes;
-using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
 {
@@ -36,14 +36,17 @@ namespace ProSuite.QA.Tests
 		public QaTouchesOther(
 				[Doc(nameof(DocStrings.QaTouchesOther_touchingClasses))]
 				IList<IReadOnlyFeatureClass> touching,
-				[Doc(nameof(DocStrings.QaTouchesOther_touchedClasses))] IList<IReadOnlyFeatureClass> touched)
+				[Doc(nameof(DocStrings.QaTouchesOther_touchedClasses))]
+				IList<IReadOnlyFeatureClass> touched)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(touching, touched, null) { }
 
 		[Doc(nameof(DocStrings.QaTouchesOther_1))]
 		public QaTouchesOther(
-				[Doc(nameof(DocStrings.QaTouchesOther_touchingClass))] IReadOnlyFeatureClass touching,
-				[Doc(nameof(DocStrings.QaTouchesOther_touchedClass))] IReadOnlyFeatureClass touched)
+				[Doc(nameof(DocStrings.QaTouchesOther_touchingClass))]
+				IReadOnlyFeatureClass touching,
+				[Doc(nameof(DocStrings.QaTouchesOther_touchedClass))]
+				IReadOnlyFeatureClass touched)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(touching, touched, null) { }
 
@@ -51,7 +54,8 @@ namespace ProSuite.QA.Tests
 		public QaTouchesOther(
 			[Doc(nameof(DocStrings.QaTouchesOther_touchingClasses))]
 			IList<IReadOnlyFeatureClass> touching,
-			[Doc(nameof(DocStrings.QaTouchesOther_touchedClasses))] IList<IReadOnlyFeatureClass> touched,
+			[Doc(nameof(DocStrings.QaTouchesOther_touchedClasses))]
+			IList<IReadOnlyFeatureClass> touched,
 			[Doc(nameof(DocStrings.QaTouchesOther_validRelationConstraint))]
 			string validRelationConstraint)
 			: base(touching, touched, esriSpatialRelEnum.esriSpatialRelTouches)
@@ -63,8 +67,10 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaTouchesOther_3))]
 		public QaTouchesOther(
-			[Doc(nameof(DocStrings.QaTouchesOther_touchingClass))] IReadOnlyFeatureClass touching,
-			[Doc(nameof(DocStrings.QaTouchesOther_touchedClass))] IReadOnlyFeatureClass touched,
+			[Doc(nameof(DocStrings.QaTouchesOther_touchingClass))]
+			IReadOnlyFeatureClass touching,
+			[Doc(nameof(DocStrings.QaTouchesOther_touchedClass))]
+			IReadOnlyFeatureClass touched,
 			[Doc(nameof(DocStrings.QaTouchesOther_validRelationConstraint))]
 			string validRelationConstraint)
 			: this(new[] {touching}, new[] {touched}, validRelationConstraint) { }

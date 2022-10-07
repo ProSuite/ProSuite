@@ -75,7 +75,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 				//// TODO: Check DBNull, reference types
 				object sourceValue = sourceRow?.GetValue(fieldIndex) ?? DBNull.Value;
 
-				if (!sourceValue.Equals(value))
+				if (! sourceValue.Equals(value))
 				{
 					sourceRow?.SetValue(fieldIndex, value);
 				}

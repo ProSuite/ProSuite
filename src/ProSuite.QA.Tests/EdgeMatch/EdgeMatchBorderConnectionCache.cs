@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestSupport;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Container;
+using ProSuite.QA.Container.TestSupport;
 
 namespace ProSuite.QA.Tests.EdgeMatch
 {
@@ -120,7 +120,7 @@ namespace ProSuite.QA.Tests.EdgeMatch
 				if (! borderConnections.TryGetValue(borderKey, out borderConnection))
 				{
 					IPolyline geometryAlongBorder = GetGeometryAlongBorder(borderFeature,
-					                                                       geometryLine);
+						geometryLine);
 
 					borderConnection = CreateBorderConnection(geometryFeature, geometryClassIndex,
 					                                          borderFeature,
@@ -140,7 +140,8 @@ namespace ProSuite.QA.Tests.EdgeMatch
 			[NotNull] IGeometry geometry,
 			[NotNull] IReadOnlyFeature geometryFeature, int geometryClassIndex,
 			int borderClassIndex,
-			[NotNull] Func<IReadOnlyTable, IQueryFilter, QueryFilterHelper, IEnumerable<IReadOnlyRow>> search,
+			[NotNull]
+			Func<IReadOnlyTable, IQueryFilter, QueryFilterHelper, IEnumerable<IReadOnlyRow>> search,
 			IReadOnlyTable borderClass,
 			ISpatialFilter spatialFilter,
 			QueryFilterHelper filterHelper,
@@ -151,8 +152,8 @@ namespace ProSuite.QA.Tests.EdgeMatch
 			var result = new List<IReadOnlyFeature>(5);
 
 			foreach (IReadOnlyRow borderRow in search(borderClass,
-			                                  spatialFilter,
-			                                  filterHelper))
+			                                          spatialFilter,
+			                                          filterHelper))
 			{
 				if (! borderMatchCondition.IsFulfilled(geometryFeature, geometryClassIndex,
 				                                       borderRow, borderClassIndex))

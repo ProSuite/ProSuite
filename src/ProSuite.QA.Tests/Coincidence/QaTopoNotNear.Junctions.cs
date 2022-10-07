@@ -1,12 +1,12 @@
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container;
-using ProSuite.QA.Container.Geometry;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
+using ProSuite.QA.Container;
+using ProSuite.QA.Container.Geometry;
 using Pnt = ProSuite.Commons.Geom.Pnt;
-using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests.Coincidence
 {
@@ -66,7 +66,7 @@ namespace ProSuite.QA.Tests.Coincidence
 						QueryFilterHelper helper = _topoHelpers[neighborTableIdx];
 
 						foreach (IReadOnlyRow neighborRow in Search(topoPair.Value, filter, helper)
-						)
+						        )
 						{
 							if (neighborRow.OID == key.Row.OID &&
 							    neighborTableIdx == key.TableIndex)

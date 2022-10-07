@@ -52,12 +52,13 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 		string QualitySpecificationSummary { get; set; }
 
 		IInstanceConfigurationTableViewControl TableViewControl { get; }
-		
+
 		void BindToQualitySpecificationReferences(
 			[NotNull] IList<QualitySpecificationReferenceTableRow> tableRows);
 
 		void BindToIssueFilters(
-			[NotNull] SortableBindingList<InstanceConfigurationReferenceTableRow> issueFilterTableRows);
+			[NotNull]
+			SortableBindingList<InstanceConfigurationReferenceTableRow> issueFilterTableRows);
 
 		[NotNull]
 		IList<QualitySpecificationReferenceTableRow>
@@ -78,7 +79,5 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 
 		void SelectIssueFilters(
 			IEnumerable<IssueFilterConfiguration> filtersToSelect);
-
-		
 	}
 }

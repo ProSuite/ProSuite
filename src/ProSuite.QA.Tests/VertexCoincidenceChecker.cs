@@ -1,23 +1,20 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container;
-using ProSuite.QA.Container.Geometry;
-using ProSuite.QA.Container.TestContainer;
-using ProSuite.QA.Tests.IssueCodes;
-using ProSuite.QA.Tests.PointEnumerators;
-using ProSuite.QA.Tests.Properties;
 using ProSuite.Commons;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
-using IPnt = ProSuite.Commons.Geom.IPnt;
-using Pnt = ProSuite.Commons.Geom.Pnt;
-using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Container;
+using ProSuite.QA.Container.Geometry;
+using ProSuite.QA.Container.TestContainer;
 using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Tests.IssueCodes;
+using ProSuite.QA.Tests.PointEnumerators;
+using ProSuite.QA.Tests.Properties;
 
 namespace ProSuite.QA.Tests
 {
@@ -227,7 +224,7 @@ namespace ProSuite.QA.Tests
 			return CheckCoincidenceDifferentFeatures(point, feature,
 			                                         nearFeatureCoincidence.Feature,
 			                                         GetProximities(point,
-			                                                        nearFeatureCoincidence),
+				                                         nearFeatureCoincidence),
 			                                         pointTolerance, edgeTolerance,
 			                                         spatialReference);
 		}
@@ -355,9 +352,9 @@ namespace ProSuite.QA.Tests
 				{
 					// the nearby edge does not pass through the vertex
 					return ReportNearbyEdgeNotPassingThroughVertex(point, edgeTolerance,
-					                                               closestEdgeDistance,
-					                                               spatialReference, feature,
-					                                               nearFeature);
+						closestEdgeDistance,
+						spatialReference, feature,
+						nearFeature);
 				}
 
 				if (CheckZ)
@@ -410,9 +407,9 @@ namespace ProSuite.QA.Tests
 						{
 							// not coincident
 							return ReportNearbyVertexNotCoincident(point, nearestVertex,
-							                                       pointTolerance,
-							                                       vertexDistance, spatialReference,
-							                                       feature);
+								pointTolerance,
+								vertexDistance, spatialReference,
+								feature);
 						}
 
 						if (CheckZ)
@@ -520,10 +517,11 @@ namespace ProSuite.QA.Tests
 			}
 
 			return _errorReporting.Report(
-				description, InvolvedRowUtils.GetInvolvedRows((IEnumerable<IReadOnlyFeature>)features),
+				description,
+				InvolvedRowUtils.GetInvolvedRows((IEnumerable<IReadOnlyFeature>) features),
 				CreateErrorGeometry(point, spatialReference),
 				Codes[code], GetAffectedComponent(features),
-				values: new object[] { vertexDistance });
+				values: new object[] {vertexDistance});
 		}
 
 		private int ReportZDiffersCoincidentVertex(
@@ -549,10 +547,11 @@ namespace ProSuite.QA.Tests
 				_formatComparisonFunction(Math.Abs(deltaZ), ">", zCoincidenceTolerance, "N2"));
 
 			return _errorReporting.Report(
-				description, InvolvedRowUtils.GetInvolvedRows((IEnumerable<IReadOnlyFeature>)features),
+				description,
+				InvolvedRowUtils.GetInvolvedRows((IEnumerable<IReadOnlyFeature>) features),
 				CreateErrorGeometry(point, spatialReference),
 				Codes[code], GetAffectedComponent(features),
-				values: new object[] { Math.Abs(deltaZ) });
+				values: new object[] {Math.Abs(deltaZ)});
 		}
 
 		private int ReportNearbyEdgeNotPassingThroughVertex(
@@ -587,9 +586,10 @@ namespace ProSuite.QA.Tests
 			}
 
 			return _errorReporting.Report(
-				description, InvolvedRowUtils.GetInvolvedRows((IEnumerable<IReadOnlyFeature>)features),
+				description,
+				InvolvedRowUtils.GetInvolvedRows((IEnumerable<IReadOnlyFeature>) features),
 				CreateErrorGeometry(point, spatialReference),
-				Codes[code], GetAffectedComponent(features), values: new object[] { edgeDistance });
+				Codes[code], GetAffectedComponent(features), values: new object[] {edgeDistance});
 		}
 
 		private int ReportZDiffersCoincidentEdge(
@@ -612,13 +612,14 @@ namespace ProSuite.QA.Tests
 
 			string description = string.Format(format,
 			                                   _formatComparisonFunction(Math.Abs(deltaZ), ">",
-			                                                             zTolerance, "N2"));
+				                                   zTolerance, "N2"));
 
 			return _errorReporting.Report(
-				description, InvolvedRowUtils.GetInvolvedRows((IEnumerable<IReadOnlyFeature>)features),
+				description,
+				InvolvedRowUtils.GetInvolvedRows((IEnumerable<IReadOnlyFeature>) features),
 				CreateErrorGeometry(point, spatialReference),
 				Codes[code], GetAffectedComponent(features),
-				values: new object[] { Math.Abs(deltaZ) });
+				values: new object[] {Math.Abs(deltaZ)});
 		}
 
 		private int ReportNoVertexOnNearbyEdge(
@@ -652,9 +653,10 @@ namespace ProSuite.QA.Tests
 			}
 
 			return _errorReporting.Report(
-				description, InvolvedRowUtils.GetInvolvedRows((IEnumerable<IReadOnlyFeature>)features),
+				description,
+				InvolvedRowUtils.GetInvolvedRows((IEnumerable<IReadOnlyFeature>) features),
 				CreateErrorGeometry(point, spatialReference),
-				Codes[code], GetAffectedComponent(features), values: new object[] { edgeDistance });
+				Codes[code], GetAffectedComponent(features), values: new object[] {edgeDistance});
 		}
 
 		[CanBeNull]
@@ -743,8 +745,8 @@ namespace ProSuite.QA.Tests
 
 			[NotNull]
 			public abstract IEnumerable<Proximity> GetProximities([NotNull] Pnt point,
-			                                                      bool as3D,
-			                                                      [NotNull] IBox box);
+				bool as3D,
+				[NotNull] IBox box);
 		}
 
 		private abstract class Proximity
@@ -829,8 +831,8 @@ namespace ProSuite.QA.Tests
 			}
 
 			public override IEnumerable<Proximity> GetProximities(Pnt point,
-			                                                      bool as3D,
-			                                                      IBox box)
+				bool as3D,
+				IBox box)
 			{
 				foreach (SegmentProxy segmentProxy in _indexedSegments.GetSegments(box))
 				{
@@ -856,8 +858,8 @@ namespace ProSuite.QA.Tests
 			}
 
 			public override IEnumerable<Proximity> GetProximities(Pnt point,
-			                                                      bool as3D,
-			                                                      IBox box)
+				bool as3D,
+				IBox box)
 			{
 				if (box.Contains((IPnt) _point))
 				{
@@ -880,8 +882,8 @@ namespace ProSuite.QA.Tests
 			}
 
 			public override IEnumerable<Proximity> GetProximities(Pnt point,
-			                                                      bool as3D,
-			                                                      IBox box)
+				bool as3D,
+				IBox box)
 			{
 				foreach (WKSPointZ wksPoint in _wksPoints)
 				{

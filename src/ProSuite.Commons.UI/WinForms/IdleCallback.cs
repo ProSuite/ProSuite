@@ -1,5 +1,4 @@
 using System;
-using System.Reflection;
 using System.Threading;
 using System.Windows.Forms;
 using ProSuite.Commons.Essentials.Assertions;
@@ -15,8 +14,7 @@ namespace ProSuite.Commons.UI.WinForms
 		private int _expectedThreadId;
 		private bool _pending;
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		public IdleCallback([NotNull] Action procedure)
 		{

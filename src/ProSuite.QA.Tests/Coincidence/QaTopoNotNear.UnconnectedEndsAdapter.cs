@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
-using ProSuite.QA.Container.Geometry;
-using ProSuite.QA.Container.TestSupport;
-using ProSuite.QA.Tests.Network;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
+using ProSuite.QA.Container.Geometry;
+using ProSuite.QA.Container.TestSupport;
+using ProSuite.QA.Tests.Network;
 
 namespace ProSuite.QA.Tests.Coincidence
 {
@@ -354,7 +354,7 @@ namespace ProSuite.QA.Tests.Coincidence
 							{
 								IFeatureRowsDistance rowsDistance =
 									NearDistanceProvider.GetRowsDistance(splitted.Key.Feature,
-									                                     splitted.Key.TableIndex);
+										splitted.Key.TableIndex);
 								double rowDistance = rowsDistance.GetRowDistance();
 
 								if (flatStart)
@@ -376,7 +376,7 @@ namespace ProSuite.QA.Tests.Coincidence
 									double sumLength = 0;
 									double limit = 2 * rowDistance;
 									foreach (SegmentProxy segmentProxy in segmentsSubpart
-										.GetSegments())
+										         .GetSegments())
 									{
 										sumLength += segmentProxy.Length;
 										if (sumLength > limit)
@@ -426,7 +426,7 @@ namespace ProSuite.QA.Tests.Coincidence
 				double sumLength = 0;
 				SegmentProxyInfo first = null;
 				foreach (SegmentProxyInfo info in
-					GetSegmentProxies(segmentsSubpartx, continuationFinder, atStart))
+				         GetSegmentProxies(segmentsSubpartx, continuationFinder, atStart))
 				{
 					first = first ?? info;
 
@@ -730,7 +730,7 @@ namespace ProSuite.QA.Tests.Coincidence
 				Dictionary<FeaturePoint, List<NeighboredSegmentsSubpart>> splittedParts)
 			{
 				foreach (KeyValuePair<FeaturePoint, List<NeighboredSegmentsSubpart>> pair in
-					splittedParts)
+				         splittedParts)
 				{
 					var cap = new RoundCap();
 					FeaturePoint p = pair.Key;

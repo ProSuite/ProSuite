@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
@@ -105,11 +104,11 @@ namespace ProSuite.QA.Container
 		}
 
 		private int ReportError([NotNull] string description,
-		                          [NotNull] InvolvedRows involvedRows,
-		                          [CanBeNull] IGeometry errorGeometry,
-		                          [CanBeNull] IssueCode issueCode,
-		                          [CanBeNull] string affectedComponent,
-		                          [CanBeNull] IEnumerable<object> values = null)
+		                        [NotNull] InvolvedRows involvedRows,
+		                        [CanBeNull] IGeometry errorGeometry,
+		                        [CanBeNull] IssueCode issueCode,
+		                        [CanBeNull] string affectedComponent,
+		                        [CanBeNull] IEnumerable<object> values = null)
 		{
 			var args = new QaErrorEventArgs(new QaError(this, description, involvedRows,
 			                                            errorGeometry,

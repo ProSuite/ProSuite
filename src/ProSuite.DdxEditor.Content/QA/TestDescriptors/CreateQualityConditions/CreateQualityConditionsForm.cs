@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Linq;
-using System.Reflection;
 using System.Windows.Forms;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -32,8 +31,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors.CreateQualityConditions
 		private readonly BoundDataGridHandler<QualitySpecificationTableRow>
 			_qualitySpecificationGridHandler;
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="CreateQualityConditionsForm"/> class.

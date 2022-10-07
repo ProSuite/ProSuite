@@ -4,22 +4,22 @@ using System.Linq;
 using System.Threading;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container;
-using ProSuite.QA.Container.Geometry;
-using ProSuite.QA.Tests.Documentation;
-using ProSuite.QA.Tests.IssueCodes;
-using ProSuite.QA.Tests.PointEnumerators;
 using ProSuite.Commons;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
+using ProSuite.QA.Container;
+using ProSuite.QA.Container.Geometry;
 using ProSuite.QA.Core;
-using IPnt = ProSuite.Commons.Geom.IPnt;
-using Pnt = ProSuite.Commons.Geom.Pnt;
-using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.IssueCodes;
+using ProSuite.QA.Tests.PointEnumerators;
+using IPnt = ProSuite.Commons.Geom.IPnt;
+using Pnt = ProSuite.Commons.Geom.Pnt;
 
 namespace ProSuite.QA.Tests
 {
@@ -186,7 +186,7 @@ namespace ProSuite.QA.Tests
 				int i = relatedTableIndex;
 
 				foreach (IReadOnlyRow relatedRow in
-					Search(InvolvedTables[i], _filters[i], _filterHelpers[i]))
+				         Search(InvolvedTables[i], _filters[i], _filterHelpers[i]))
 				{
 					var relatedFeature = (IReadOnlyFeature) relatedRow;
 					if (! VerifyWithinFeature && relatedFeature == row)
@@ -597,7 +597,7 @@ namespace ProSuite.QA.Tests
 					double offset = Math.Abs(distanceSigned);
 
 					if (distanceSigned > 0 == unitNormal[2] > 0
-					) // oriented same as normal
+					   ) // oriented same as normal
 					{
 						_maxOffset = Math.Max(offset, _maxOffset);
 					}

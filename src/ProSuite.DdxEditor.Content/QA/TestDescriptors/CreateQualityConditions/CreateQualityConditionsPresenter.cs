@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Data;
 using System.Drawing;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using System.Windows.Forms;
 using ProSuite.Commons.Essentials.Assertions;
@@ -75,8 +74,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors.CreateQualityConditions
 		private bool _hasUnappliedNamingConventionChange;
 		private readonly ICollection<string> _existingQualityConditionNames;
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		#region Constructors
 

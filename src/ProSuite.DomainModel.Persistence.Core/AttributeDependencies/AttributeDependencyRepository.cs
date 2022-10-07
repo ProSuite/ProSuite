@@ -33,7 +33,7 @@ namespace ProSuite.DomainModel.Persistence.Core.AttributeDependencies
 			using (ISession session = OpenSession(true))
 			{
 				return session.CreateQuery(
-								  "from AttributeDependency ad where ad.Dataset.Model.Id = :modelId")
+					              "from AttributeDependency ad where ad.Dataset.Model.Id = :modelId")
 				              .SetInt32("modelId", modelId)
 				              .List<AttributeDependency>();
 			}

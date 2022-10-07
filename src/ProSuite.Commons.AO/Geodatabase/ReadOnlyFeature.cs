@@ -10,15 +10,16 @@ namespace ProSuite.Commons.AO.Geodatabase
 			return new ReadOnlyFeature(
 				ReadOnlyTableFactory.Create((IFeatureClass) feature.Table), feature);
 		}
+
 		public ReadOnlyFeature(ReadOnlyFeatureClass featureClass, IFeature feature)
-			: base(featureClass, feature)
-		{ }
-		protected IFeature Feature => (IFeature)Row;
+			: base(featureClass, feature) { }
+
+		protected IFeature Feature => (IFeature) Row;
 		public IEnvelope Extent => Feature.Extent;
 		public IGeometry Shape => Feature.Shape;
 		public IGeometry ShapeCopy => Feature.ShapeCopy;
 		IReadOnlyFeatureClass IReadOnlyFeature.FeatureClass => FeatureClass;
-		public ReadOnlyFeatureClass FeatureClass => (ReadOnlyFeatureClass)Table;
+		public ReadOnlyFeatureClass FeatureClass => (ReadOnlyFeatureClass) Table;
 		public esriFeatureType FeatureType => Feature.FeatureType;
 	}
 }

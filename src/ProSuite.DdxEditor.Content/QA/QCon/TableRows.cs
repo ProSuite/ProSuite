@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Reflection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -13,8 +12,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 {
 	internal static class TableRows
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		[NotNull]
 		public static List<QualityConditionWithTestParametersTableRow> GetQualityConditions(

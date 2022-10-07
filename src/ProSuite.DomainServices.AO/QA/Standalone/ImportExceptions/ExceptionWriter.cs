@@ -81,8 +81,8 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.ImportExceptions
 			}
 
 			_targetFieldIndicesByImportFieldIndex = GetFieldIndexMap(importTable, importFields,
-			                                                         targetTable,
-			                                                         targetFields);
+				targetTable,
+				targetFields);
 		}
 
 		public void Dispose()

@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container.Geometry;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
+using ProSuite.QA.Container.Geometry;
 
 namespace ProSuite.QA.Tests
 {
@@ -137,7 +137,7 @@ namespace ProSuite.QA.Tests
 				else
 				{
 					throw new InvalidOperationException(string.Format("{0} not handled",
-					                                                  part.GeometryType));
+						                                    part.GeometryType));
 				}
 
 				Marshal.ReleaseComObject(part);

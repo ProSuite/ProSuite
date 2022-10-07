@@ -12,7 +12,7 @@ namespace ProSuite.DomainModel.Core.QA
 		[UsedImplicitly] private Dataset _datasetValue;
 		[UsedImplicitly] private string _filterExpression;
 		[UsedImplicitly] private bool _usedAsReferenceData;
-		
+
 		#region Constructors
 
 		/// <summary>
@@ -153,7 +153,7 @@ namespace ProSuite.DomainModel.Core.QA
 			get { return _filterExpression; }
 			set { _filterExpression = value; }
 		}
-		
+
 		public bool UsedAsReferenceData
 		{
 			get { return _usedAsReferenceData; }

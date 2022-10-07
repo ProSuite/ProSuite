@@ -107,7 +107,8 @@ namespace ProSuite.QA.Tests
 			_startEndIgnoreLength = startEndIgnoreLength;
 			_asRatio = asRatio;
 
-			_interpolateTolerance = 2 * SpatialReferenceUtils.GetXyResolution(featureClass.SpatialReference);
+			_interpolateTolerance =
+				2 * SpatialReferenceUtils.GetXyResolution(featureClass.SpatialReference);
 		}
 
 		[Doc(nameof(DocStrings.QaSurfacePipe_2))]
@@ -144,7 +145,8 @@ namespace ProSuite.QA.Tests
 			_startEndIgnoreLength = startEndIgnoreLength;
 			_asRatio = asRatio;
 
-			_interpolateTolerance = 2 * SpatialReferenceUtils.GetXyResolution(featureClass.SpatialReference);
+			_interpolateTolerance =
+				2 * SpatialReferenceUtils.GetXyResolution(featureClass.SpatialReference);
 		}
 
 		[Doc(nameof(DocStrings.QaSurfacePipe_4))]
@@ -183,7 +185,8 @@ namespace ProSuite.QA.Tests
 			_startEndIgnoreLength = startEndIgnoreLength;
 			_asRatio = asRatio;
 
-			_interpolateTolerance = 2 * SpatialReferenceUtils.GetXyResolution(featureClass.SpatialReference);
+			_interpolateTolerance =
+				2 * SpatialReferenceUtils.GetXyResolution(featureClass.SpatialReference);
 		}
 
 		private static void ValidateAsRatio(double startEndIgnoreLength, bool asRatio)
@@ -201,7 +204,8 @@ namespace ProSuite.QA.Tests
 		[NotNull]
 		private SortedDictionary<IReadOnlyRow, ShortPartInfo> ShortParts =>
 			_shortParts ??
-			(_shortParts = new SortedDictionary<IReadOnlyRow, ShortPartInfo>(new RowComparer(this)));
+			(_shortParts =
+				 new SortedDictionary<IReadOnlyRow, ShortPartInfo>(new RowComparer(this)));
 
 		#endregion
 
@@ -463,8 +467,7 @@ namespace ProSuite.QA.Tests
 					desc.Append(GetOffsetMessage(partInfo.MaxOffset, out issueCode));
 					errorCount += ReportError(
 						desc.ToString(), InvolvedRowUtils.GetInvolvedRows(row), partInfo.Shape,
-						issueCode, null, values: new object[] { partInfo.MaxOffset });
-
+						issueCode, null, values: new object[] {partInfo.MaxOffset});
 				}
 
 				remove.Add(row);
@@ -580,7 +583,6 @@ namespace ProSuite.QA.Tests
 				errorCount += ReportError(
 					description, InvolvedRowUtils.GetInvolvedRows(searchedRow), polyline,
 					Codes[Code.NoTerrainData], null);
-
 			}
 
 			IList<IPolyline> partsInsideTerrain = validTerrain.GetParts();
@@ -1053,7 +1055,7 @@ namespace ProSuite.QA.Tests
 				errorCount += ReportError(
 					description, InvolvedRowUtils.GetInvolvedRows(errorRow), part,
 					issueCode, TestUtils.GetShapeFieldName(errorRow),
-					values: new object[] { maxOffset });
+					values: new object[] {maxOffset});
 			}
 
 			error.Clear();

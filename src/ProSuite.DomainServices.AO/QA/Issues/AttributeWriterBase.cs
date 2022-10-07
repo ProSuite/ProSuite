@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
@@ -19,8 +18,7 @@ namespace ProSuite.DomainServices.AO.QA.Issues
 		[NotNull] private readonly IDictionary<int, string> _fieldNameByIndex;
 		private readonly int _maxFieldLength;
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		protected AttributeWriterBase([NotNull] ITable table)
 		{

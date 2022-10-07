@@ -4,16 +4,16 @@ using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 using ESRI.ArcGIS.Geodatabase;
-using ProSuite.QA.Container;
-using ProSuite.QA.Tests.Documentation;
-using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
+using ProSuite.QA.Container;
 using ProSuite.QA.Core;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.IssueCodes;
 
 namespace ProSuite.QA.Tests
 {
@@ -311,7 +311,7 @@ namespace ProSuite.QA.Tests
 		                                        [NotNull] out string fieldName)
 		{
 			string fieldDisplayName = TestUtils.GetFieldDisplayName(row, fieldIndex,
-			                                                        out fieldName);
+				out fieldName);
 
 			if (StringUtils.IsNotEmpty(_patternDescription))
 			{
@@ -328,7 +328,7 @@ namespace ProSuite.QA.Tests
 		                                          [NotNull] out string fieldName)
 		{
 			string fieldDisplayName = TestUtils.GetFieldDisplayName(row, fieldIndex,
-			                                                        out fieldName);
+				out fieldName);
 
 			if (StringUtils.IsNotEmpty(_patternDescription))
 			{

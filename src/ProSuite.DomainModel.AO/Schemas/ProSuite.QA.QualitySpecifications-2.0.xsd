@@ -3,174 +3,174 @@
 <xs:schema xmlns:tns="urn:EsriDE.ProSuite.QA.QualitySpecifications-2.0" elementFormDefault="qualified"
            targetNamespace="urn:EsriDE.ProSuite.QA.QualitySpecifications-2.0"
            xmlns:xs="http://www.w3.org/2001/XMLSchema">
-  <xs:element name="DataQuality" nillable="true" type="tns:XmlDataQualityDocument" />
-  <xs:complexType name="XmlDataQualityDocument">
-    <xs:sequence>
-      <xs:element minOccurs="0" maxOccurs="1" name="QualitySpecifications" type="tns:ArrayOfXmlQualitySpecification" />
-      <xs:element minOccurs="0" maxOccurs="1" name="QualityConditions" type="tns:ArrayOfXmlQualityCondition" />
-      <xs:element minOccurs="0" maxOccurs="1" name="Categories" type="tns:ArrayOfXmlDataQualityCategory" />
-      <xs:element minOccurs="0" maxOccurs="1" name="TestDescriptors" type="tns:ArrayOfXmlTestDescriptor" />
-      <xs:element minOccurs="0" maxOccurs="1" name="Workspaces" type="tns:ArrayOfXmlWorkspace" />
-    </xs:sequence>
-  </xs:complexType>
-  <xs:complexType name="ArrayOfXmlQualitySpecification">
-    <xs:sequence>
-      <xs:element minOccurs="0" maxOccurs="unbounded" name="QualitySpecification" nillable="true"
-                  type="tns:XmlQualitySpecification" />
-    </xs:sequence>
-  </xs:complexType>
-  <xs:complexType name="XmlQualitySpecification">
-    <xs:sequence>
-      <xs:element minOccurs="0" maxOccurs="1" name="Description" type="xs:string" />
-      <xs:element minOccurs="0" maxOccurs="1" name="Notes" type="xs:string" />
-      <xs:element minOccurs="0" maxOccurs="1" name="Elements" type="tns:ArrayOfXmlQualitySpecificationElement" />
-    </xs:sequence>
-    <xs:attribute name="name" type="xs:string" />
-    <xs:attribute name="uuid" type="xs:string" />
-    <xs:attribute default="-1" name="listOrder" type="xs:int" />
-    <xs:attribute default="0" name="tileSize" type="xs:double" />
-    <xs:attribute name="url" type="xs:string" />
-    <xs:attribute default="false" name="hidden" type="xs:boolean" />
-    <xs:attribute name="createdDate" type="xs:string" />
-    <xs:attribute name="createdByUser" type="xs:string" />
-    <xs:attribute name="lastChangedDate" type="xs:string" />
-    <xs:attribute name="lastChangedByUser" type="xs:string" />
-  </xs:complexType>
-  <xs:complexType name="ArrayOfXmlQualitySpecificationElement">
-    <xs:sequence>
-      <xs:element minOccurs="0" maxOccurs="unbounded" name="Element" nillable="true"
-                  type="tns:XmlQualitySpecificationElement" />
-    </xs:sequence>
-  </xs:complexType>
-  <xs:complexType name="XmlQualitySpecificationElement">
-    <xs:attribute name="qualityCondition" type="xs:string" />
-    <xs:attribute default="Null" name="allowErrors" type="tns:Override" />
-    <xs:attribute default="Null" name="stopOnError" type="tns:Override" />
-  </xs:complexType>
-  <xs:simpleType name="Override">
-    <xs:restriction base="xs:string">
-      <xs:enumeration value="Null" />
-      <xs:enumeration value="True" />
-      <xs:enumeration value="False" />
-    </xs:restriction>
-  </xs:simpleType>
-  <xs:complexType name="ArrayOfXmlQualityCondition">
-    <xs:sequence>
-      <xs:element minOccurs="0" maxOccurs="unbounded" name="QualityCondition" nillable="true"
-                  type="tns:XmlQualityCondition" />
-    </xs:sequence>
-  </xs:complexType>
-  <xs:complexType name="XmlQualityCondition">
-    <xs:sequence>
-      <xs:element minOccurs="0" maxOccurs="1" name="Description" type="xs:string" />
-      <xs:element minOccurs="0" maxOccurs="1" name="Notes" type="xs:string" />
-      <xs:element minOccurs="0" maxOccurs="1" name="Parameters" type="tns:ArrayOfChoice1" />
-    </xs:sequence>
-    <xs:attribute name="name" type="xs:string" />
-    <xs:attribute name="testDescriptor" type="xs:string" />
-    <xs:attribute name="url" type="xs:string" />
-    <xs:attribute name="uuid" type="xs:string" />
-    <xs:attribute name="versionUuid" type="xs:string" />
-    <xs:attribute default="Null" name="allowErrors" type="tns:Override" />
-    <xs:attribute default="Null" name="stopOnError" type="tns:Override" />
-    <xs:attribute default="false" name="neverFilterTableRowsUsingRelatedGeometry" type="xs:boolean" />
-    <xs:attribute default="false" name="neverStoreRelatedGeometryForTableRowIssues" type="xs:boolean" />
-    <xs:attribute name="createdDate" type="xs:string" />
-    <xs:attribute name="createdByUser" type="xs:string" />
-    <xs:attribute name="lastChangedDate" type="xs:string" />
-    <xs:attribute name="lastChangedByUser" type="xs:string" />
-  </xs:complexType>
-  <xs:complexType name="ArrayOfChoice1">
-    <xs:choice minOccurs="0" maxOccurs="unbounded">
-      <xs:element minOccurs="1" maxOccurs="1" name="Scalar" nillable="true" type="tns:XmlScalarTestParameterValue" />
-      <xs:element minOccurs="1" maxOccurs="1" name="Dataset" nillable="true" type="tns:XmlDatasetTestParameterValue" />
-    </xs:choice>
-  </xs:complexType>
-  <xs:complexType name="XmlScalarTestParameterValue">
-    <xs:complexContent mixed="false">
-      <xs:extension base="tns:XmlTestParameterValue" />
-    </xs:complexContent>
-  </xs:complexType>
-  <xs:complexType name="XmlTestParameterValue">
-    <xs:attribute name="parameter" type="xs:string" />
-    <xs:attribute name="value" type="xs:string" />
-  </xs:complexType>
-  <xs:complexType name="XmlDatasetTestParameterValue">
-    <xs:complexContent mixed="false">
-      <xs:extension base="tns:XmlTestParameterValue">
-        <xs:attribute name="where" type="xs:string" />
-        <xs:attribute default="false" name="usedAsReferenceData" type="xs:boolean" />
-        <xs:attribute name="workspace" type="xs:string" />
-      </xs:extension>
-    </xs:complexContent>
-  </xs:complexType>
-  <xs:complexType name="ArrayOfXmlDataQualityCategory">
-    <xs:sequence>
-      <xs:element minOccurs="0" maxOccurs="unbounded" name="Category" nillable="true" type="tns:XmlDataQualityCategory" />
-    </xs:sequence>
-  </xs:complexType>
-  <xs:complexType name="XmlDataQualityCategory">
-    <xs:sequence>
-      <xs:element minOccurs="0" maxOccurs="1" name="Description" type="xs:string" />
-      <xs:element minOccurs="0" maxOccurs="1" name="SubCategories" type="tns:ArrayOfXmlDataQualityCategory" />
-      <xs:element minOccurs="0" maxOccurs="1" name="QualitySpecifications" type="tns:ArrayOfXmlQualitySpecification" />
-      <xs:element minOccurs="0" maxOccurs="1" name="QualityConditions" type="tns:ArrayOfXmlQualityCondition" />
-    </xs:sequence>
-    <xs:attribute name="name" type="xs:string" />
-    <xs:attribute name="abbreviation" type="xs:string" />
-    <xs:attribute name="uuid" type="xs:string" />
-    <xs:attribute default="0" name="listOrder" type="xs:int" />
-    <xs:attribute name="defaultModelName" type="xs:string" />
-    <xs:attribute default="true" name="canContainQualityConditions" type="xs:boolean" />
-    <xs:attribute default="true" name="canContainQualitySpecifications" type="xs:boolean" />
-    <xs:attribute default="true" name="canContainSubCategories" type="xs:boolean" />
-    <xs:attribute name="createdDate" type="xs:string" />
-    <xs:attribute name="createdByUser" type="xs:string" />
-    <xs:attribute name="lastChangedDate" type="xs:string" />
-    <xs:attribute name="lastChangedByUser" type="xs:string" />
-  </xs:complexType>
-  <xs:complexType name="ArrayOfXmlTestDescriptor">
-    <xs:sequence>
-      <xs:element minOccurs="0" maxOccurs="unbounded" name="TestDescriptor" nillable="true"
-                  type="tns:XmlTestDescriptor" />
-    </xs:sequence>
-  </xs:complexType>
-  <xs:complexType name="XmlTestDescriptor">
-    <xs:sequence>
-      <xs:element minOccurs="0" maxOccurs="1" name="Description" type="xs:string" />
-      <xs:element minOccurs="0" maxOccurs="1" name="TestClass" type="tns:XmlClassDescriptor" />
-      <xs:element minOccurs="0" maxOccurs="1" name="TestFactory" type="tns:XmlClassDescriptor" />
-      <xs:element minOccurs="0" maxOccurs="1" name="TestConfigurator" type="tns:XmlClassDescriptor" />
-    </xs:sequence>
-    <xs:attribute name="name" type="xs:string" />
-    <xs:attribute default="-1" name="executionPriority" type="xs:int" />
-    <xs:attribute default="false" name="stopOnError" type="xs:boolean" />
-    <xs:attribute default="false" name="allowErrors" type="xs:boolean" />
-    <xs:attribute name="createdDate" type="xs:string" />
-    <xs:attribute name="createdByUser" type="xs:string" />
-    <xs:attribute name="lastChangedDate" type="xs:string" />
-    <xs:attribute name="lastChangedByUser" type="xs:string" />
-  </xs:complexType>
-  <xs:complexType name="XmlClassDescriptor">
-    <xs:sequence>
-      <xs:element minOccurs="0" maxOccurs="1" name="Description" type="xs:string" />
-    </xs:sequence>
-    <xs:attribute name="type" type="xs:string" />
-    <xs:attribute name="assembly" type="xs:string" />
-    <xs:attribute default="-1" name="constructorIndex" type="xs:int" />
-  </xs:complexType>
-  <xs:complexType name="ArrayOfXmlWorkspace">
-    <xs:sequence>
-      <xs:element minOccurs="0" maxOccurs="unbounded" name="Workspace" nillable="true" type="tns:XmlWorkspace" />
-    </xs:sequence>
-  </xs:complexType>
-  <xs:complexType name="XmlWorkspace">
-    <xs:attribute name="id" type="xs:string" />
-    <xs:attribute name="modelName" type="xs:string" />
-    <xs:attribute name="factoryProgId" type="xs:string" />
-    <xs:attribute name="connectionString" type="xs:string" />
-    <xs:attribute name="catalogPath" type="xs:string" />
-    <xs:attribute name="database" type="xs:string" />
-    <xs:attribute name="schemaOwner" type="xs:string" />
-  </xs:complexType>
+	<xs:element name="DataQuality" nillable="true" type="tns:XmlDataQualityDocument" />
+	<xs:complexType name="XmlDataQualityDocument">
+		<xs:sequence>
+			<xs:element minOccurs="0" maxOccurs="1" name="QualitySpecifications" type="tns:ArrayOfXmlQualitySpecification" />
+			<xs:element minOccurs="0" maxOccurs="1" name="QualityConditions" type="tns:ArrayOfXmlQualityCondition" />
+			<xs:element minOccurs="0" maxOccurs="1" name="Categories" type="tns:ArrayOfXmlDataQualityCategory" />
+			<xs:element minOccurs="0" maxOccurs="1" name="TestDescriptors" type="tns:ArrayOfXmlTestDescriptor" />
+			<xs:element minOccurs="0" maxOccurs="1" name="Workspaces" type="tns:ArrayOfXmlWorkspace" />
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="ArrayOfXmlQualitySpecification">
+		<xs:sequence>
+			<xs:element minOccurs="0" maxOccurs="unbounded" name="QualitySpecification" nillable="true"
+			            type="tns:XmlQualitySpecification" />
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="XmlQualitySpecification">
+		<xs:sequence>
+			<xs:element minOccurs="0" maxOccurs="1" name="Description" type="xs:string" />
+			<xs:element minOccurs="0" maxOccurs="1" name="Notes" type="xs:string" />
+			<xs:element minOccurs="0" maxOccurs="1" name="Elements" type="tns:ArrayOfXmlQualitySpecificationElement" />
+		</xs:sequence>
+		<xs:attribute name="name" type="xs:string" />
+		<xs:attribute name="uuid" type="xs:string" />
+		<xs:attribute default="-1" name="listOrder" type="xs:int" />
+		<xs:attribute default="0" name="tileSize" type="xs:double" />
+		<xs:attribute name="url" type="xs:string" />
+		<xs:attribute default="false" name="hidden" type="xs:boolean" />
+		<xs:attribute name="createdDate" type="xs:string" />
+		<xs:attribute name="createdByUser" type="xs:string" />
+		<xs:attribute name="lastChangedDate" type="xs:string" />
+		<xs:attribute name="lastChangedByUser" type="xs:string" />
+	</xs:complexType>
+	<xs:complexType name="ArrayOfXmlQualitySpecificationElement">
+		<xs:sequence>
+			<xs:element minOccurs="0" maxOccurs="unbounded" name="Element" nillable="true"
+			            type="tns:XmlQualitySpecificationElement" />
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="XmlQualitySpecificationElement">
+		<xs:attribute name="qualityCondition" type="xs:string" />
+		<xs:attribute default="Null" name="allowErrors" type="tns:Override" />
+		<xs:attribute default="Null" name="stopOnError" type="tns:Override" />
+	</xs:complexType>
+	<xs:simpleType name="Override">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="Null" />
+			<xs:enumeration value="True" />
+			<xs:enumeration value="False" />
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:complexType name="ArrayOfXmlQualityCondition">
+		<xs:sequence>
+			<xs:element minOccurs="0" maxOccurs="unbounded" name="QualityCondition" nillable="true"
+			            type="tns:XmlQualityCondition" />
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="XmlQualityCondition">
+		<xs:sequence>
+			<xs:element minOccurs="0" maxOccurs="1" name="Description" type="xs:string" />
+			<xs:element minOccurs="0" maxOccurs="1" name="Notes" type="xs:string" />
+			<xs:element minOccurs="0" maxOccurs="1" name="Parameters" type="tns:ArrayOfChoice1" />
+		</xs:sequence>
+		<xs:attribute name="name" type="xs:string" />
+		<xs:attribute name="testDescriptor" type="xs:string" />
+		<xs:attribute name="url" type="xs:string" />
+		<xs:attribute name="uuid" type="xs:string" />
+		<xs:attribute name="versionUuid" type="xs:string" />
+		<xs:attribute default="Null" name="allowErrors" type="tns:Override" />
+		<xs:attribute default="Null" name="stopOnError" type="tns:Override" />
+		<xs:attribute default="false" name="neverFilterTableRowsUsingRelatedGeometry" type="xs:boolean" />
+		<xs:attribute default="false" name="neverStoreRelatedGeometryForTableRowIssues" type="xs:boolean" />
+		<xs:attribute name="createdDate" type="xs:string" />
+		<xs:attribute name="createdByUser" type="xs:string" />
+		<xs:attribute name="lastChangedDate" type="xs:string" />
+		<xs:attribute name="lastChangedByUser" type="xs:string" />
+	</xs:complexType>
+	<xs:complexType name="ArrayOfChoice1">
+		<xs:choice minOccurs="0" maxOccurs="unbounded">
+			<xs:element minOccurs="1" maxOccurs="1" name="Scalar" nillable="true" type="tns:XmlScalarTestParameterValue" />
+			<xs:element minOccurs="1" maxOccurs="1" name="Dataset" nillable="true" type="tns:XmlDatasetTestParameterValue" />
+		</xs:choice>
+	</xs:complexType>
+	<xs:complexType name="XmlScalarTestParameterValue">
+		<xs:complexContent mixed="false">
+			<xs:extension base="tns:XmlTestParameterValue" />
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="XmlTestParameterValue">
+		<xs:attribute name="parameter" type="xs:string" />
+		<xs:attribute name="value" type="xs:string" />
+	</xs:complexType>
+	<xs:complexType name="XmlDatasetTestParameterValue">
+		<xs:complexContent mixed="false">
+			<xs:extension base="tns:XmlTestParameterValue">
+				<xs:attribute name="where" type="xs:string" />
+				<xs:attribute default="false" name="usedAsReferenceData" type="xs:boolean" />
+				<xs:attribute name="workspace" type="xs:string" />
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="ArrayOfXmlDataQualityCategory">
+		<xs:sequence>
+			<xs:element minOccurs="0" maxOccurs="unbounded" name="Category" nillable="true" type="tns:XmlDataQualityCategory" />
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="XmlDataQualityCategory">
+		<xs:sequence>
+			<xs:element minOccurs="0" maxOccurs="1" name="Description" type="xs:string" />
+			<xs:element minOccurs="0" maxOccurs="1" name="SubCategories" type="tns:ArrayOfXmlDataQualityCategory" />
+			<xs:element minOccurs="0" maxOccurs="1" name="QualitySpecifications" type="tns:ArrayOfXmlQualitySpecification" />
+			<xs:element minOccurs="0" maxOccurs="1" name="QualityConditions" type="tns:ArrayOfXmlQualityCondition" />
+		</xs:sequence>
+		<xs:attribute name="name" type="xs:string" />
+		<xs:attribute name="abbreviation" type="xs:string" />
+		<xs:attribute name="uuid" type="xs:string" />
+		<xs:attribute default="0" name="listOrder" type="xs:int" />
+		<xs:attribute name="defaultModelName" type="xs:string" />
+		<xs:attribute default="true" name="canContainQualityConditions" type="xs:boolean" />
+		<xs:attribute default="true" name="canContainQualitySpecifications" type="xs:boolean" />
+		<xs:attribute default="true" name="canContainSubCategories" type="xs:boolean" />
+		<xs:attribute name="createdDate" type="xs:string" />
+		<xs:attribute name="createdByUser" type="xs:string" />
+		<xs:attribute name="lastChangedDate" type="xs:string" />
+		<xs:attribute name="lastChangedByUser" type="xs:string" />
+	</xs:complexType>
+	<xs:complexType name="ArrayOfXmlTestDescriptor">
+		<xs:sequence>
+			<xs:element minOccurs="0" maxOccurs="unbounded" name="TestDescriptor" nillable="true"
+			            type="tns:XmlTestDescriptor" />
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="XmlTestDescriptor">
+		<xs:sequence>
+			<xs:element minOccurs="0" maxOccurs="1" name="Description" type="xs:string" />
+			<xs:element minOccurs="0" maxOccurs="1" name="TestClass" type="tns:XmlClassDescriptor" />
+			<xs:element minOccurs="0" maxOccurs="1" name="TestFactory" type="tns:XmlClassDescriptor" />
+			<xs:element minOccurs="0" maxOccurs="1" name="TestConfigurator" type="tns:XmlClassDescriptor" />
+		</xs:sequence>
+		<xs:attribute name="name" type="xs:string" />
+		<xs:attribute default="-1" name="executionPriority" type="xs:int" />
+		<xs:attribute default="false" name="stopOnError" type="xs:boolean" />
+		<xs:attribute default="false" name="allowErrors" type="xs:boolean" />
+		<xs:attribute name="createdDate" type="xs:string" />
+		<xs:attribute name="createdByUser" type="xs:string" />
+		<xs:attribute name="lastChangedDate" type="xs:string" />
+		<xs:attribute name="lastChangedByUser" type="xs:string" />
+	</xs:complexType>
+	<xs:complexType name="XmlClassDescriptor">
+		<xs:sequence>
+			<xs:element minOccurs="0" maxOccurs="1" name="Description" type="xs:string" />
+		</xs:sequence>
+		<xs:attribute name="type" type="xs:string" />
+		<xs:attribute name="assembly" type="xs:string" />
+		<xs:attribute default="-1" name="constructorIndex" type="xs:int" />
+	</xs:complexType>
+	<xs:complexType name="ArrayOfXmlWorkspace">
+		<xs:sequence>
+			<xs:element minOccurs="0" maxOccurs="unbounded" name="Workspace" nillable="true" type="tns:XmlWorkspace" />
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="XmlWorkspace">
+		<xs:attribute name="id" type="xs:string" />
+		<xs:attribute name="modelName" type="xs:string" />
+		<xs:attribute name="factoryProgId" type="xs:string" />
+		<xs:attribute name="connectionString" type="xs:string" />
+		<xs:attribute name="catalogPath" type="xs:string" />
+		<xs:attribute name="database" type="xs:string" />
+		<xs:attribute name="schemaOwner" type="xs:string" />
+	</xs:complexType>
 </xs:schema>

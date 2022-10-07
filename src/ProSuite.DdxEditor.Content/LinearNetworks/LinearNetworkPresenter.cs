@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Windows.Forms;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Logging;
@@ -23,8 +22,7 @@ namespace ProSuite.DdxEditor.Content.LinearNetworks
 
 		#endregion
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private readonly GetSnapNetworkDatasetsToAdd _getNetworkDatasetsToAdd;
 

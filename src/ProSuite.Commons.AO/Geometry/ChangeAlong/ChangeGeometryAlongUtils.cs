@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
@@ -15,8 +14,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 {
 	public static class ChangeGeometryAlongUtils
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		/// <summary>
 		/// Limited reshape curve calculation without support for multiple-sources-as-union, adjust and preview-calculation

@@ -12,12 +12,12 @@ namespace ProSuite.DomainServices.AO.QA.Issues
 		private const string _rowClassName = "IssueRows";
 
 		[NotNull] private static readonly List<string> _featureClassNames = new List<string>
-		                                                                    {
-			                                                                    _polygonClassName,
-			                                                                    _polylineClassName,
-			                                                                    _multipointClassName,
-			                                                                    _multiPatchClassName
-		                                                                    };
+			{
+				_polygonClassName,
+				_polylineClassName,
+				_multipointClassName,
+				_multiPatchClassName
+			};
 
 		[NotNull]
 		public static string PolygonClassName => _polygonClassName;

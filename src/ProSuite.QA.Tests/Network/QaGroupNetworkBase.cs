@@ -4,15 +4,15 @@ using System.Data;
 using System.Linq;
 using System.Text;
 using ESRI.ArcGIS.Geodatabase;
-using ProSuite.QA.Container;
-using ProSuite.QA.Container.PolygonGrower;
-using ProSuite.QA.Tests.IssueCodes;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
-using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Container;
+using ProSuite.QA.Container.PolygonGrower;
 using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Tests.IssueCodes;
 
 namespace ProSuite.QA.Tests.Network
 {

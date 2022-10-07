@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
@@ -21,8 +20,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.ImportExceptions
 {
 	public static class ImportExceptionsUtils
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		public static void Import(
 			[CanBeNull] string importWhereClause,
@@ -37,16 +35,16 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.ImportExceptions
 			IDictionary<Guid, QualityConditionExceptions> targetExceptionsByConditionVersion;
 
 			using (_msg.IncrementIndentation(
-				"Reading existing exceptions in target workspace"))
+				       "Reading existing exceptions in target workspace"))
 			{
 				targetExceptionsByConditionVersion = ReadTargetExceptions(targetExceptionClasses,
-				                                                          targetFields);
+					targetFields);
 			}
 
 			var replacedExceptionObjects = new Dictionary<esriGeometryType, HashSet<int>>();
 
 			using (_msg.IncrementIndentation("Importing new exceptions from issue datasets...")
-			)
+			      )
 			{
 				foreach (ITable importTable in importExceptionClasses.Cast<ITable>())
 				{
@@ -73,9 +71,9 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.ImportExceptions
 						                                        targetTable, targetFields))
 						{
 							foreach (IRow row in GdbQueryUtils.GetRows(importTable,
-							                                           GetQueryFilter(
-								                                           importWhereClause),
-							                                           recycle: true))
+								         GetQueryFilter(
+									         importWhereClause),
+								         recycle: true))
 							{
 								int matchCount;
 								bool added = ImportException(row, importOriginValue, importDate,
@@ -118,9 +116,9 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.ImportExceptions
 					{
 						int fixedStatusCount;
 						int updateCount = ProcessReplacedExceptions(targetTable, targetFields,
-						                                            replacedExceptionObjects,
-						                                            importDate,
-						                                            out fixedStatusCount);
+							replacedExceptionObjects,
+							importDate,
+							out fixedStatusCount);
 
 						_msg.InfoFormat("{0:N0} replaced exception(s) updated", updateCount);
 						if (fixedStatusCount > 0)
@@ -157,7 +155,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.ImportExceptions
 			                         };
 
 			using (_msg.IncrementIndentation(
-				"Updating exceptions based on exported exception datasets..."))
+				       "Updating exceptions based on exported exception datasets..."))
 			{
 				foreach (ITable updateTable in updateExceptionClasses.Cast<ITable>())
 				{
@@ -188,10 +186,10 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.ImportExceptions
 						var rowsWithConflictsCount = 0;
 
 						using (var exceptionWriter = new ExceptionWriter(updateTable, updateFields,
-						                                                 targetTable, targetFields))
+							       targetTable, targetFields))
 						{
 							foreach (IRow updateRow in GdbQueryUtils.GetRows(
-								updateTable, GetQueryFilter(whereClause), recycle: true))
+								         updateTable, GetQueryFilter(whereClause), recycle: true))
 							{
 								ManagedExceptionVersion updateExceptionVersion =
 									updateExceptionFactory.CreateExceptionVersion(updateRow);
@@ -244,7 +242,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.ImportExceptions
 
 									exceptionWriter.Write(updateRow, updateDate, mergedException,
 									                      FormatOriginValue(updateOriginValue,
-									                                        replacedExceptionVersion),
+										                      replacedExceptionVersion),
 									                      updateOriginValue, versionImportStatus);
 
 									if (replacedExceptionVersion != null)
@@ -266,8 +264,8 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.ImportExceptions
 						{
 							int fixedStatusCount;
 							int updateCount = ProcessReplacedExceptions(targetTable, targetFields,
-							                                            updateDate, replacedOids,
-							                                            out fixedStatusCount);
+								updateDate, replacedOids,
+								out fixedStatusCount);
 
 							_msg.DebugFormat("{0:N0} replaced exception version(s) updated",
 							                 updateCount);
@@ -455,7 +453,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.ImportExceptions
 			if (replacedExceptionVersion != null)
 			{
 				foreach (string replacedOrigin in
-					ExceptionObjectUtils.ParseOrigins(replacedExceptionVersion.ImportOrigin))
+				         ExceptionObjectUtils.ParseOrigins(replacedExceptionVersion.ImportOrigin))
 				{
 					origins.Add(replacedOrigin);
 				}
@@ -563,8 +561,8 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.ImportExceptions
 			              };
 
 			foreach (ExceptionObject matchingExceptionObject in GetMatchingExceptionObjects(
-				targetExceptionsByConditionVersion,
-				exceptionObject))
+				         targetExceptionsByConditionVersion,
+				         exceptionObject))
 			{
 				// add to Uuids of matching exceptions (usually, should be unique)
 				if (matchingExceptionObject.ManagedLineageUuid != null)
@@ -581,7 +579,8 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.ImportExceptions
 				if (matchingExceptionObject.ManagedVersionEndDate == null)
 				{
 					foreach (string replacedOrigin in
-						ExceptionObjectUtils.ParseOrigins(matchingExceptionObject.ManagedOrigin))
+					         ExceptionObjectUtils.ParseOrigins(
+						         matchingExceptionObject.ManagedOrigin))
 					{
 						origins.Add(replacedOrigin);
 					}

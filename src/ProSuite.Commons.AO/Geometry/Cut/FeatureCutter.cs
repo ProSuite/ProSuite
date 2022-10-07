@@ -6,7 +6,6 @@ using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry.ChangeAlong;
-using ProSuite.Commons.AO.Geometry.ZAssignment;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -227,7 +226,7 @@ namespace ProSuite.Commons.AO.Geometry.Cut
 			}
 
 			foreach (KeyValuePair<IFeature, IList<IGeometry>> keyValuePair in
-				ResultGeometriesByFeature)
+			         ResultGeometriesByFeature)
 			{
 				IFeature originalFeature = keyValuePair.Key;
 				IList<IGeometry> newGeometries = keyValuePair.Value;
@@ -521,7 +520,7 @@ namespace ProSuite.Commons.AO.Geometry.Cut
 
 			// store other new geometries as inserts
 			foreach (IGeometry modifyGeometry in
-				newGeometries.Where(polycurve => polycurve != geometryToStoreInOriginal))
+			         newGeometries.Where(polycurve => polycurve != geometryToStoreInOriginal))
 			{
 				if (trackCancel != null && ! trackCancel.Continue())
 				{

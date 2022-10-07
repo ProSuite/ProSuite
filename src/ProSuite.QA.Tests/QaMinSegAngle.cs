@@ -49,9 +49,12 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaMinSegAngle_0))]
 		public QaMinSegAngle(
-			[Doc(nameof(DocStrings.QaMinSegAngle_featureClass))] IReadOnlyFeatureClass featureClass,
-			[Doc(nameof(DocStrings.QaMinSegAngle_limit))] double limit,
-			[Doc(nameof(DocStrings.QaMinSegAngle_is3D))] bool is3D)
+			[Doc(nameof(DocStrings.QaMinSegAngle_featureClass))]
+			IReadOnlyFeatureClass featureClass,
+			[Doc(nameof(DocStrings.QaMinSegAngle_limit))]
+			double limit,
+			[Doc(nameof(DocStrings.QaMinSegAngle_is3D))]
+			bool is3D)
 			: base(featureClass)
 		{
 			_settings = new Settings(limit, _defaultAngularUnit, is3D);
@@ -64,8 +67,10 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaMinSegAngle_0))]
 		public QaMinSegAngle(
-				[Doc(nameof(DocStrings.QaMinSegAngle_featureClass))] IReadOnlyFeatureClass featureClass,
-				[Doc(nameof(DocStrings.QaMinSegAngle_limit))] double limit)
+				[Doc(nameof(DocStrings.QaMinSegAngle_featureClass))]
+				IReadOnlyFeatureClass featureClass,
+				[Doc(nameof(DocStrings.QaMinSegAngle_limit))]
+				double limit)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(featureClass, limit, false) { }
 
@@ -210,7 +215,7 @@ namespace ProSuite.QA.Tests
 						description, InvolvedRowUtils.GetInvolvedRows(row),
 						CreateErrorPoint(angleInfo), Codes[Code.SegmentAngleTooSmall],
 						_shapeFieldName,
-						values: new object[] { MathUtils.ToDegrees(angleRadians) });
+						values: new object[] {MathUtils.ToDegrees(angleRadians)});
 				}
 			}
 

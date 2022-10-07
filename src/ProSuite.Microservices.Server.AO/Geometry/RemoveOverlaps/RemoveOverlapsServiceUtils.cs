@@ -1,13 +1,11 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Reflection;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using Google.Protobuf.Collections;
 using ProSuite.Commons.AO.Geodatabase;
-using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Geometry.RemoveOverlaps;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -20,7 +18,7 @@ namespace ProSuite.Microservices.Server.AO.Geometry.RemoveOverlaps
 {
 	public static class RemoveOverlapsServiceUtils
 	{
-		private static readonly IMsg _msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		[NotNull]
 		public static CalculateOverlapsResponse CalculateOverlaps(
@@ -44,7 +42,7 @@ namespace ProSuite.Microservices.Server.AO.Geometry.RemoveOverlaps
 			var result = new CalculateOverlapsResponse();
 
 			foreach (var overlapByGdbRef
-				in selectableOverlaps.OverlapsBySourceRef)
+			         in selectableOverlaps.OverlapsBySourceRef)
 			{
 				var gdbObjRefMsg = ProtobufGdbUtils.ToGdbObjRefMsg(overlapByGdbRef.Key);
 
@@ -118,7 +116,7 @@ namespace ProSuite.Microservices.Server.AO.Geometry.RemoveOverlaps
 					selectedFeatureList
 						.Select(f => f.Class)
 						.First(c => c.ObjectClassID == gdbRef.ClassId) as IFeatureClass;
-				
+
 				List<IGeometry> overlapGeometries =
 					ProtobufGeometryUtils.FromShapeMsgList<IGeometry>(
 						overlapMsg.Overlaps,

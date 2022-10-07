@@ -1,11 +1,10 @@
+using System;
+using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
-using ProSuite.Commons.Geom;
-using System;
-using System.Collections.Generic;
-using System.Runtime;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Geom;
 
 namespace ProSuite.QA.Container.TestContainer
 {
@@ -26,7 +25,8 @@ namespace ProSuite.QA.Container.TestContainer
 			_caches = new Dictionary<Box, TileCache>(_boxComparer);
 		}
 
-		private void EnsureLoaded([NotNull] TileCache tileCache, [NotNull] Tile tile, [NotNull] IReadOnlyTable table)
+		private void EnsureLoaded([NotNull] TileCache tileCache, [NotNull] Tile tile,
+		                          [NotNull] IReadOnlyTable table)
 		{
 			if (tileCache.GetLoadedExtent(table) != null)
 			{
@@ -38,7 +38,8 @@ namespace ProSuite.QA.Container.TestContainer
 			tileCache.LoadCachedTableRows(cachedRows, table, tile, _tileEnumContext);
 		}
 
-		public IEnumerable<IReadOnlyRow> Search(IReadOnlyTable table, ISpatialFilter queryFilter, QueryFilterHelper filterHelper)
+		public IEnumerable<IReadOnlyRow> Search(IReadOnlyTable table, ISpatialFilter queryFilter,
+		                                        QueryFilterHelper filterHelper)
 		{
 			HashSet<int> handledOids = new HashSet<int>();
 			foreach (var tile in GetTiles(queryFilter.Geometry))
@@ -67,9 +68,8 @@ namespace ProSuite.QA.Container.TestContainer
 		{
 			foreach (Tile tile in _tileEnumContext.TileEnum.EnumTiles(geometry))
 			{
-				if (!_caches.TryGetValue(tile.Box, out TileCache cache))
+				if (! _caches.TryGetValue(tile.Box, out TileCache cache))
 				{
-
 					if (_boxComparer.Equals(_tileCache.CurrentTileBox, tile.Box))
 					{
 						cache = _tileCache;

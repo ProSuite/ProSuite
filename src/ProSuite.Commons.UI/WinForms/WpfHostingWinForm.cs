@@ -54,7 +54,7 @@ namespace ProSuite.Commons.UI.WinForms
 		{
 			try
 			{
-				_wpfControlHost = new ElementHost { Dock = DockStyle.Fill, Child = _wpfControl };
+				_wpfControlHost = new ElementHost {Dock = DockStyle.Fill, Child = _wpfControl};
 
 				Controls.Add(_wpfControlHost);
 

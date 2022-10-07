@@ -4,17 +4,17 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container;
-using ProSuite.QA.Tests.Documentation;
-using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.Commons;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.QA.Container;
 using ProSuite.QA.Core;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.IssueCodes;
 
 namespace ProSuite.QA.Tests
 {
@@ -75,7 +75,8 @@ namespace ProSuite.QA.Tests
 				[Doc(nameof(DocStrings.QaNodeLineCoincidence_nearClasses))] [NotNull]
 				IList<IReadOnlyFeatureClass>
 					nearClasses,
-				[Doc(nameof(DocStrings.QaNodeLineCoincidence_near))] double near)
+				[Doc(nameof(DocStrings.QaNodeLineCoincidence_near))]
+				double near)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(nodeClass, nearClasses, near, false) { }
 
@@ -86,7 +87,8 @@ namespace ProSuite.QA.Tests
 				[Doc(nameof(DocStrings.QaNodeLineCoincidence_nearClasses))] [NotNull]
 				IList<IReadOnlyFeatureClass>
 					nearClasses,
-				[Doc(nameof(DocStrings.QaNodeLineCoincidence_near))] double near,
+				[Doc(nameof(DocStrings.QaNodeLineCoincidence_near))]
+				double near,
 				[Doc(nameof(DocStrings.QaNodeLineCoincidence_ignoreNearEndpoints))]
 				bool ignoreNearEndpoints)
 			// ReSharper disable once IntroduceOptionalParameters.Global
@@ -99,10 +101,12 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaNodeLineCoincidence_nearClasses))] [NotNull]
 			IList<IReadOnlyFeatureClass>
 				nearClasses,
-			[Doc(nameof(DocStrings.QaNodeLineCoincidence_near))] double near,
+			[Doc(nameof(DocStrings.QaNodeLineCoincidence_near))]
+			double near,
 			[Doc(nameof(DocStrings.QaNodeLineCoincidence_ignoreNearEndpoints))]
 			bool ignoreNearEndpoints,
-			[Doc(nameof(DocStrings.QaNodeLineCoincidence_is3D))] bool is3D)
+			[Doc(nameof(DocStrings.QaNodeLineCoincidence_is3D))]
+			bool is3D)
 			: this(nodeClass, nearClasses, new[] {near}, near, ignoreNearEndpoints, is3D) { }
 
 		[Doc(nameof(DocStrings.QaNodeLineCoincidence_3))]
@@ -120,7 +124,8 @@ namespace ProSuite.QA.Tests
 				withinPolylineTolerance,
 			[Doc(nameof(DocStrings.QaNodeLineCoincidence_ignoreNearEndpoints))]
 			bool ignoreNearEndpoints,
-			[Doc(nameof(DocStrings.QaNodeLineCoincidence_is3D))] bool is3D) :
+			[Doc(nameof(DocStrings.QaNodeLineCoincidence_is3D))]
+			bool is3D) :
 			base(CastToTables(new[] {nodeClass}, nearClasses))
 		{
 			Assert.ArgumentNotNull(nodeClass, nameof(nodeClass));
@@ -314,8 +319,8 @@ namespace ProSuite.QA.Tests
 				{
 					bool isConnected;
 					List<TooClosePath> tooClosePaths = GetTooClosePaths(node, paths, i,
-					                                                    searchDistance,
-					                                                    out isConnected);
+						searchDistance,
+						out isConnected);
 
 					if (isConnected || tooClosePaths.Count <= 0)
 					{
@@ -341,7 +346,7 @@ namespace ProSuite.QA.Tests
 							description, InvolvedRowUtils.GetInvolvedRows(feature), errorGeometry,
 							Codes[Code.NodeTooCloseToLine_WithinFeature],
 							_shapeFieldName,
-							values: new object[] { tooClosePath.Distance, tooClosePath.PathIndex });
+							values: new object[] {tooClosePath.Distance, tooClosePath.PathIndex});
 					}
 				}
 			}
@@ -489,7 +494,7 @@ namespace ProSuite.QA.Tests
 			var errorCount = 0;
 
 			foreach (UnconnectedNodeCandidate candidate in GetRelevantCandidates(
-				unconnectedNodeCandidates, connectedFeatures, lineLength))
+				         unconnectedNodeCandidates, connectedFeatures, lineLength))
 			{
 				errorCount += ReportErrors(feature, candidate.Node, candidate.TooCloseNeighbors);
 			}
@@ -567,7 +572,7 @@ namespace ProSuite.QA.Tests
 			return ReportError(
 				description, InvolvedRowUtils.GetInvolvedRows(feature, neighborTooClose.Feature),
 				errorGeometry, issueCode, _shapeFieldName,
-				values: new object[] { neighborTooClose.Distance });
+				values: new object[] {neighborTooClose.Distance});
 		}
 
 		/// <summary>
@@ -647,7 +652,7 @@ namespace ProSuite.QA.Tests
 
 			isConnected = false;
 			foreach (IReadOnlyFeature neighborFeature in
-				Search(node, nearFeatureClass, nearTableIndex, searchDistance))
+			         Search(node, nearFeatureClass, nearTableIndex, searchDistance))
 			{
 				if (feature == neighborFeature)
 				{
@@ -688,9 +693,9 @@ namespace ProSuite.QA.Tests
 					if (_ignoreNearEndpoints)
 					{
 						if (IsNeighborEndPointWithinSearchDistance(node,
-						                                           neighborCurve,
-						                                           neighborHasZ,
-						                                           searchDistance))
+							    neighborCurve,
+							    neighborHasZ,
+							    searchDistance))
 						{
 							continue;
 						}
@@ -709,9 +714,9 @@ namespace ProSuite.QA.Tests
 								{
 									// check if an end point is within the search distance:
 									if (IsNeighborEndPointWithinSearchDistance(node,
-									                                           neighborCurve,
-									                                           neighborHasZ,
-									                                           searchDistance))
+										    neighborCurve,
+										    neighborHasZ,
+										    searchDistance))
 									{
 										// exclude this to avoid double reporting
 										continue;

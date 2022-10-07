@@ -598,7 +598,7 @@ namespace ProSuite.Commons.AO.Geometry.ZAssignment
 			}
 
 			_dtmSurface = _zSettingsDefaults.PrepareVirtualSurface(envelope, DtmSurface,
-			                                                       minimalResolution);
+				minimalResolution);
 		}
 
 		#endregion

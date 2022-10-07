@@ -29,7 +29,7 @@ namespace ProSuite.DomainModel.Persistence.Core.DataModel
 				const bool ignoreCase = true;
 				criteria.Add(GetEqualityExpression("Name", name, ignoreCase));
 
-				if (!includeDeleted)
+				if (! includeDeleted)
 				{
 					criteria.Add(GetEqualityExpression("Deleted", false));
 				}
@@ -46,12 +46,12 @@ namespace ProSuite.DomainModel.Persistence.Core.DataModel
 			using (ISession session = OpenSession(true))
 			{
 				return session.CreateQuery(
-												"from Dataset ds " +
-												"where ds.Model = :model " +
-												"  and upper(ds.Abbreviation) = :abbreviation")
-											.SetEntity("model", model)
-											.SetString("abbreviation", abbreviation.ToUpper())
-											.UniqueResult<Dataset>();
+					              "from Dataset ds " +
+					              "where ds.Model = :model " +
+					              "  and upper(ds.Abbreviation) = :abbreviation")
+				              .SetEntity("model", model)
+				              .SetString("abbreviation", abbreviation.ToUpper())
+				              .UniqueResult<Dataset>();
 			}
 		}
 
@@ -62,8 +62,8 @@ namespace ProSuite.DomainModel.Persistence.Core.DataModel
 				AssertInTransaction(session);
 
 				return session.CreateCriteria(typeof(T))
-											.Add(Restrictions.Eq("Model", model))
-											.List<T>();
+				              .Add(Restrictions.Eq("Model", model))
+				              .List<T>();
 			}
 		}
 
@@ -76,7 +76,7 @@ namespace ProSuite.DomainModel.Persistence.Core.DataModel
 		{
 			Assert.ArgumentNotNull(datasetCategory, nameof(datasetCategory));
 
-			if (!datasetCategory.IsPersistent)
+			if (! datasetCategory.IsPersistent)
 			{
 				return new List<Dataset>();
 			}
@@ -84,10 +84,10 @@ namespace ProSuite.DomainModel.Persistence.Core.DataModel
 			using (ISession session = OpenSession(true))
 			{
 				return session.CreateQuery(
-												"from Dataset ds " +
-												"where ds.DatasetCategory = :datasetCategory")
-											.SetEntity("datasetCategory", datasetCategory)
-											.List<Dataset>();
+					              "from Dataset ds " +
+					              "where ds.DatasetCategory = :datasetCategory")
+				              .SetEntity("datasetCategory", datasetCategory)
+				              .List<Dataset>();
 			}
 		}
 

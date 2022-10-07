@@ -151,7 +151,7 @@ namespace ProSuite.DomainModel.AO.QA
 			IErrorObject errorRow = CreateErrorObject(errorObject, errorTable, null);
 
 			foreach (IRow involvedRow in
-				GetInvolvedRows(errorRow, modelContext, qualityConditionRepository))
+			         GetInvolvedRows(errorRow, modelContext, qualityConditionRepository))
 			{
 				var feature = involvedRow as IFeature;
 
@@ -161,9 +161,9 @@ namespace ProSuite.DomainModel.AO.QA
 				}
 				else
 				{
-					list.AddRange(GetDerivedTableGeometryFeatures((IObject)involvedRow,
-					                                              datasetLookup,
-					                                              modelContext));
+					list.AddRange(GetDerivedTableGeometryFeatures((IObject) involvedRow,
+						              datasetLookup,
+						              modelContext));
 				}
 			}
 
@@ -215,7 +215,7 @@ namespace ProSuite.DomainModel.AO.QA
 			IList<InvolvedRow> involved = RowParser.Parse(errorObject.RawInvolvedObjects);
 
 			QualityCondition qualityCondition = GetQualityCondition(errorObject,
-			                                                        qualityConditionRepository);
+				qualityConditionRepository);
 
 			if (qualityCondition == null)
 			{
@@ -223,7 +223,7 @@ namespace ProSuite.DomainModel.AO.QA
 			}
 
 			foreach (KeyValuePair<string, IList<int>> pair in
-				GetInvolvedObjectIDsByTableName(involved))
+			         GetInvolvedObjectIDsByTableName(involved))
 			{
 				string tableName = pair.Key;
 				IList<int> objectIDs = pair.Value;
@@ -341,7 +341,7 @@ namespace ProSuite.DomainModel.AO.QA
 			}
 
 			foreach (IFeature feature in GetDerivedTableGeometryFeatures(
-				obj, dataset, modelContext))
+				         obj, dataset, modelContext))
 			{
 				yield return feature;
 			}
@@ -387,7 +387,7 @@ namespace ProSuite.DomainModel.AO.QA
 				catch (Exception e2)
 				{
 					_msg.WarnFormat("Error getting involved rows for table {0}: {1}",
-					                DatasetUtils.GetName( table),
+					                DatasetUtils.GetName(table),
 					                e2.Message);
 					using (_msg.IncrementIndentation())
 					{

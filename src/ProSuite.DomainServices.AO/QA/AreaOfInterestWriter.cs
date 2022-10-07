@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
@@ -18,8 +17,7 @@ namespace ProSuite.DomainServices.AO.QA
 		[NotNull] private readonly IFeatureWorkspace _featureWorkspace;
 		[NotNull] private readonly IDictionary<AttributeRole, string> _fieldNames;
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private enum AttributeRole
 		{

@@ -2,16 +2,16 @@ using System.Collections.Generic;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestSupport;
-using ProSuite.QA.Tests.Documentation;
-using ProSuite.QA.Tests.IssueCodes;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Container;
+using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.IssueCodes;
 
 namespace ProSuite.QA.Tests
 {
@@ -225,7 +225,7 @@ namespace ProSuite.QA.Tests
 			     containsClassIndex++)
 			{
 				foreach (IReadOnlyRow intersectingRow in
-					SearchIntersectingFeatures(containsClassIndex, geometry))
+				         SearchIntersectingFeatures(containsClassIndex, geometry))
 				{
 					var intersectingFeature = (IReadOnlyFeature) intersectingRow;
 
@@ -274,7 +274,7 @@ namespace ProSuite.QA.Tests
 
 		[NotNull]
 		private IEnumerable<IReadOnlyRow> SearchIntersectingFeatures(int classIndex,
-		                                                     [NotNull] IGeometry geometry)
+			[NotNull] IGeometry geometry)
 		{
 			_intersectsFilter[classIndex].Geometry = geometry;
 

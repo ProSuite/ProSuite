@@ -48,10 +48,12 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork
 
 			if (_filterHelper == null)
 			{
-				_filterHelper = FilterHelper.Create(ReadOnlyTableFactory.Create(FeatureClass), WhereClause);
+				_filterHelper =
+					FilterHelper.Create(ReadOnlyTableFactory.Create(FeatureClass), WhereClause);
 			}
 
-			return _filterHelper.Check(new ReadOnlyFeature(ReadOnlyTableFactory.Create(FeatureClass), feature));
+			return _filterHelper.Check(
+				new ReadOnlyFeature(ReadOnlyTableFactory.Create(FeatureClass), feature));
 		}
 
 		protected bool Equals(LinearNetworkClassDef other)

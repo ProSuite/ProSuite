@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
@@ -21,8 +20,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 	{
 		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		[OneTimeSetUp]
 		public void SetupFixture()
@@ -392,8 +390,8 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			IFeatureClass fc = ws.OpenFeatureClass("TOPGIS_TLM.TLM_STRASSE");
 
 			IEnvelope subResolutionEnv = GeometryFactory.CreateEnvelope(2600000, 1200000,
-			                                                            2600000.0001,
-			                                                            1200000.0001);
+				2600000.0001,
+				1200000.0001);
 
 			ISpatialReference spatialReference =
 				Assert.NotNull(DatasetUtils.GetSpatialReference(fc));
@@ -450,7 +448,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			IFeatureClass fc = ws.OpenFeatureClass("TOPGIS_TLM.TLM_STRASSE");
 
 			IEnvelope nonZSimpleEnvelope = GeometryFactory.CreateEnvelope(2600000, 1200000,
-			                                                              2700000, 1300000);
+				2700000, 1300000);
 
 			GeometryUtils.MakeZAware(nonZSimpleEnvelope);
 
@@ -478,8 +476,8 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			IFeatureClass fc = ws.OpenFeatureClass("TOPGIS_TLM.TLM_STRASSE");
 
 			IPolygon subResolutionPoly = GeometryFactory.CreatePolygon(2600000, 1200000,
-			                                                           2600000.0001,
-			                                                           1200000.0001);
+				2600000.0001,
+				1200000.0001);
 
 			subResolutionPoly.SpatialReference = ((IGeoDataset) fc).SpatialReference;
 
@@ -510,8 +508,8 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			IFeatureClass fc = ws.OpenFeatureClass("TOPGIS_TLM.TLM_STRASSE");
 
 			IEnvelope subResolutionEnv = GeometryFactory.CreateEnvelope(2600000, 1200000,
-			                                                            2600000.0001,
-			                                                            1200000.0001);
+				2600000.0001,
+				1200000.0001);
 
 			ISpatialReference spatialReference = DatasetUtils.GetSpatialReference(fc);
 
@@ -560,8 +558,8 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			IFeatureClass fc = ws.OpenFeatureClass("TOPGIS_TLM.TLM_STRASSE");
 
 			IPolyline subResolutionPolyline = GeometryFactory.CreatePolyline(2600000, 1200000,
-			                                                                 2600000.0001,
-			                                                                 1200000.0001);
+				2600000.0001,
+				1200000.0001);
 
 			subResolutionPolyline.SpatialReference = ((IGeoDataset) fc).SpatialReference;
 
@@ -607,11 +605,11 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			// test the exact half of the resolution - which is the limit
 			double resolution = GeometryUtils.GetXyResolution(fc);
 			subResolutionPolyline = GeometryFactory.CreatePolyline(2600000 - 0.00001,
-			                                                       1200000 - 0.00001,
-			                                                       2600000 + resolution -
-			                                                       0.00001,
-			                                                       1200000 + resolution -
-			                                                       0.00001);
+				1200000 - 0.00001,
+				2600000 + resolution -
+				0.00001,
+				1200000 + resolution -
+				0.00001);
 
 			filter = GdbQueryUtils.CreateSpatialFilter(
 				fc, subResolutionPolyline, esriSpatialRelEnum.esriSpatialRelIntersects, false,
@@ -631,8 +629,8 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			ISpatialReference spatialReference = DatasetUtils.GetSpatialReference(fc);
 
 			IEnvelope largeEnvelope = GeometryFactory.CreateEnvelope(2600000, 1200000,
-			                                                         2601000, 1201000,
-			                                                         445, spatialReference);
+				2601000, 1201000,
+				445, spatialReference);
 
 			IMultiPatch multiPatch =
 				GeometryFactory.CreateMultiPatch(GeometryFactory.CreatePolygon(largeEnvelope));
@@ -668,7 +666,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			IFeatureClass fc = ws.OpenFeatureClass("TOPGIS_TLM.TLM_STRASSE");
 
 			IEnvelope nonZSimpleEnvelope = GeometryFactory.CreateEnvelope(2600000, 1200000,
-			                                                              2700000, 1300000);
+				2700000, 1300000);
 
 			GeometryUtils.MakeZAware(nonZSimpleEnvelope);
 

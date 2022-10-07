@@ -511,7 +511,7 @@ namespace ProSuite.QA.Container.TestContainer
 
 			if (allBox != null)
 			{
-				rowBoxTree.InitSize(new IGmtry[] { allBox });
+				rowBoxTree.InitSize(new IGmtry[] {allBox});
 			}
 
 			foreach (CachedRow cachedRow in cachedRows)

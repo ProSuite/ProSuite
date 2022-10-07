@@ -857,7 +857,8 @@ namespace ProSuite.Commons.AO.Geometry.Cut
 				RingGroup footprintPart = outerRingsByFootprintPart.Key;
 				List<RingGroup> resultPolys = outerRingsByFootprintPart.Value;
 
-				IMultiPatch resultMultipatch = GeometryConversionUtils.CreateMultipatch(resultPolys, prototype);
+				IMultiPatch resultMultipatch =
+					GeometryConversionUtils.CreateMultipatch(resultPolys, prototype);
 
 				if (resultPolys.Any(p => p.Id != null))
 				{
@@ -894,7 +895,6 @@ namespace ProSuite.Commons.AO.Geometry.Cut
 
 			return result;
 		}
-
 
 		private static void AssignResultsToFootprintParts(
 			IEnumerable<RingGroup> resultRingGroups,

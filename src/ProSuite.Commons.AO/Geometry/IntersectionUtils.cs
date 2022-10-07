@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geometry.ExtractParts;
@@ -33,8 +32,7 @@ namespace ProSuite.Commons.AO.Geometry
 			esriGeometryDimension.esriGeometry0Dimension
 		};
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		public static bool UseCustomIntersect { get; set; } =
 			EnvironmentUtils.GetBooleanEnvironmentVariableValue(
@@ -122,7 +120,7 @@ namespace ProSuite.Commons.AO.Geometry
 					GeometryUtils.AllowIndexing(g1);
 
 					foreach (esriGeometryDimension dimension in
-						GetIntersectDimensions(GetMaximumIntersectDimension(g1, g2)))
+					         GetIntersectDimensions(GetMaximumIntersectDimension(g1, g2)))
 					{
 						GeometryUtils.AllowIndexing(g2);
 						IGeometry intersection = Intersect(g1, g2, dimension);
@@ -678,7 +676,7 @@ namespace ProSuite.Commons.AO.Geometry
 			    ! polycurve1.IsEmpty && ! polycurve1.IsClosed)
 			{
 				foreach (IGeometry geometry in
-					GeometryUtils.GetParts((IGeometryCollection) polycurve1))
+				         GeometryUtils.GetParts((IGeometryCollection) polycurve1))
 				{
 					var path = (IPath) geometry;
 
@@ -849,7 +847,7 @@ namespace ProSuite.Commons.AO.Geometry
 			{
 				var intersectionPointList = new List<IntersectionPoint3D>();
 				foreach (RingGroup ringGroup in GeometryConversionUtils.CreateRingGroups(
-					multipatch2))
+					         multipatch2))
 				{
 					intersectionPointList.AddRange(
 						GeomTopoOpUtils.GetIntersectionPoints(
@@ -1324,7 +1322,7 @@ namespace ProSuite.Commons.AO.Geometry
 					multiPatch1, false))
 			{
 				foreach (GeometryPart mp2Part in
-					GeometryPart.FromGeometry(multiPatch2, false))
+				         GeometryPart.FromGeometry(multiPatch2, false))
 				{
 					// Main outer ring is the first part by definition...
 					var mp1Ring = (IRing) mp1Part.LowLevelGeometries[0];
@@ -1552,7 +1550,7 @@ namespace ProSuite.Commons.AO.Geometry
 				var thisRingResult = new List<Linestring>();
 
 				if (GeomTopoOpUtils.TryDeleteLinearSelfIntersectionsXY(
-					linestring, tolerance, thisRingResult, minimumSegmentLength))
+					    linestring, tolerance, thisRingResult, minimumSegmentLength))
 				{
 					anyChange = true;
 					resultRings.AddRange(thisRingResult);
@@ -1895,7 +1893,7 @@ namespace ProSuite.Commons.AO.Geometry
 			var result = new List<IPoint>();
 
 			foreach (IPoint point in GeometryUtils.GetPoints(
-				(IPointCollection) multipoint))
+				         (IPointCollection) multipoint))
 			{
 				if (GeometryUtils.Intersects(geometry, point))
 				{

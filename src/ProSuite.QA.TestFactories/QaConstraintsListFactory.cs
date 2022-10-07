@@ -1,17 +1,17 @@
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using ESRI.ArcGIS.Geodatabase;
-using ProSuite.QA.Container;
-using ProSuite.QA.Tests;
-using ProSuite.QA.Tests.Constraints;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
 using ProSuite.DomainModel.AO.QA;
+using ProSuite.QA.Container;
 using ProSuite.QA.Core;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Tests;
+using ProSuite.QA.Tests.Constraints;
 
 namespace ProSuite.QA.TestFactories
 {
@@ -30,7 +30,6 @@ namespace ProSuite.QA.TestFactories
 		public static ITestIssueCodes Codes => QaConstraint.Codes;
 
 		public override string TestDescription => DocStrings.QaConstraintsListFactory;
-	
 
 		protected override IList<TestParameter> CreateParameters()
 		{
@@ -64,8 +63,10 @@ namespace ProSuite.QA.TestFactories
 			object[] args = base.Args(datasetContext, testParameters, out tableParameters);
 
 			Assert.True(args.Length == 5, "expected 5 arguments, got {0}", args.Length);
-			Assert.True(args[0] is IReadOnlyTable, "arg0 is {0}, expected ITable", args[0].GetType());
-			Assert.True(args[1] is IReadOnlyTable, "arg1 is {0}, expected ITable", args[1].GetType());
+			Assert.True(args[0] is IReadOnlyTable, "arg0 is {0}, expected ITable",
+			            args[0].GetType());
+			Assert.True(args[1] is IReadOnlyTable, "arg1 is {0}, expected ITable",
+			            args[1].GetType());
 			Assert.True(args[2] is string, "arg2 is {0}, expected string", args[2].GetType());
 			Assert.True(args[3] is bool, "arg3 is {0}, expected boolean", args[3].GetType());
 			Assert.True(args[4] is string, "arg4 is {0}, expected string", args[4].GetType());

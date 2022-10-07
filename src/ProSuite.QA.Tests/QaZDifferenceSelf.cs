@@ -1,13 +1,12 @@
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
-using ProSuite.QA.Container;
-using ProSuite.QA.Tests.Documentation;
-using ProSuite.QA.Tests.SpatialRelations;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Core;
-using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.SpatialRelations;
 
 namespace ProSuite.QA.Tests
 {
@@ -41,7 +40,8 @@ namespace ProSuite.QA.Tests
 		public QaZDifferenceSelf(
 			[Doc(nameof(DocStrings.QaZDifferenceSelf_featureClass))] [NotNull]
 			IReadOnlyFeatureClass featureClass,
-			[Doc(nameof(DocStrings.QaZDifferenceSelf_limit))] double limit,
+			[Doc(nameof(DocStrings.QaZDifferenceSelf_limit))]
+			double limit,
 			[Doc(nameof(DocStrings.QaZDifferenceSelf_zComparisonMethod))]
 			ZComparisonMethod zComparisonMethod,
 			[Doc(nameof(DocStrings.QaZDifferenceSelf_zRelationConstraint))] [CanBeNull]
@@ -53,7 +53,8 @@ namespace ProSuite.QA.Tests
 		public QaZDifferenceSelf(
 			[Doc(nameof(DocStrings.QaZDifferenceSelf_featureClasses))] [NotNull]
 			IList<IReadOnlyFeatureClass> featureClasses,
-			[Doc(nameof(DocStrings.QaZDifferenceSelf_limit))] double limit,
+			[Doc(nameof(DocStrings.QaZDifferenceSelf_limit))]
+			double limit,
 			[Doc(nameof(DocStrings.QaZDifferenceSelf_zComparisonMethod))]
 			ZComparisonMethod zComparisonMethod,
 			[Doc(nameof(DocStrings.QaZDifferenceSelf_zRelationConstraint))] [CanBeNull]
@@ -112,7 +113,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		protected override int FindErrors(IReadOnlyRow row1, int tableIndex1,
-										  IReadOnlyRow row2, int tableIndex2)
+		                                  IReadOnlyRow row2, int tableIndex2)
 		{
 			if (_zDifferenceStrategy == null)
 			{

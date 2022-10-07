@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.Collections;
@@ -21,8 +20,7 @@ namespace ProSuite.Commons.AO.Geometry
 
 		private IPolyline _dummyLine;
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		#region Constructors
 

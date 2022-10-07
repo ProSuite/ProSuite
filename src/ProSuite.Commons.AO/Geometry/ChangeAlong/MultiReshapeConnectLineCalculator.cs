@@ -1,4 +1,3 @@
-using System.Reflection;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -9,8 +8,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 {
 	public class MultiReshapeConnectLineCalculator : ConnectLineCalculatorBase
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private readonly IGeometry _originalUnion;
 		private readonly IGeometry _geometryPartToReshape;

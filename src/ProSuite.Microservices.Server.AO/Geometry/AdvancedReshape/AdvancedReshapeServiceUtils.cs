@@ -51,7 +51,7 @@ namespace ProSuite.Microservices.Server.AO.Geometry.AdvancedReshape
 			var response = new AdvancedReshapeResponse();
 
 			if (reshaper.ResultWithinOtherResultButNotInOriginal(
-				reshapedGeometries.Keys, out IPolygon containedPolygon))
+				    reshapedGeometries.Keys, out IPolygon containedPolygon))
 			{
 				response.OverlapPolygon = ProtobufGeometryUtils.ToShapeMsg(containedPolygon);
 			}

@@ -1,15 +1,15 @@
 using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.Geometry;
 using ProSuite.QA.Container.TestContainer;
-using ProSuite.QA.Tests.Documentation;
-using ProSuite.QA.Tests.IssueCodes;
-using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.IssueCodes;
 
 namespace ProSuite.QA.Tests
 {
@@ -84,7 +84,7 @@ namespace ProSuite.QA.Tests
 				GetHeightSegmentPairProvider(feature);
 
 			foreach (HeightSegmentPair heightSegmentPair in
-				heightSegmentPairProvider.ReadHeightSegmentPair())
+			         heightSegmentPairProvider.ReadHeightSegmentPair())
 			{
 				double heightDifference = heightSegmentPair.HeightDifference;
 				if (heightDifference <= _heightTolerance)

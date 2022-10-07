@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
@@ -20,8 +19,7 @@ namespace ProSuite.Commons.AO.Geometry.CreateFootprint
 {
 	public static class CreateFootprintUtils
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		[NotNull]
 		public static IList<IFeature> GetFootprintableFeatures(

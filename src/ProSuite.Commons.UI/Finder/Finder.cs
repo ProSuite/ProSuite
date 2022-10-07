@@ -100,7 +100,7 @@ namespace ProSuite.Commons.UI.Finder
 
 			var form = new FinderForm<T>(GetColumnDescriptors(columnDescriptors),
 			                             list, allowMultiSelection,
-			                             filterSettingsContext : filterSettingsContext);
+			                             filterSettingsContext: filterSettingsContext);
 			new FinderPresenter<T>(form);
 
 			return form;
@@ -115,7 +115,7 @@ namespace ProSuite.Commons.UI.Finder
 
 			var form = new FinderForm<T>(GetColumnDescriptors(columnDescriptors),
 			                             finderQueries, allowMultiSelection,
-			                             filterSettingsContext : filterSettingsContext);
+			                             filterSettingsContext: filterSettingsContext);
 			new FinderPresenter<T>(form);
 
 			return form;

@@ -20,8 +20,7 @@ namespace ProSuite.Commons.UI.ScreenBinding.Lists
 		private ListSortDirection _sortDirection;
 		[CanBeNull] private PropertyDescriptor _sortProperty;
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		#region Constructors
 

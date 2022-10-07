@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
@@ -12,8 +11,7 @@ namespace ProSuite.DomainModel.AO.DataModel.Harvesting
 {
 	public static class ObjectTypeHarvestingUtils
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		/// <summary>
 		/// Reads the object types from the geodatabase.

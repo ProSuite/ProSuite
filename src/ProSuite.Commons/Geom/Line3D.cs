@@ -705,11 +705,13 @@ namespace ProSuite.Commons.Geom
 				return false;
 			}
 
-			bool startEqual = StartPoint != null && cmpr.StartPoint != null && StartPoint.Equals(cmpr.StartPoint) ||
+			bool startEqual = StartPoint != null && cmpr.StartPoint != null &&
+			                  StartPoint.Equals(cmpr.StartPoint) ||
 			                  StartPoint == null && cmpr.StartPoint == null;
 
-			bool endEqual = EndPoint != null && cmpr.EndPoint != null && EndPoint.Equals(cmpr.EndPoint) ||
-			                EndPoint == null && cmpr.EndPoint == null;
+			bool endEqual =
+				EndPoint != null && cmpr.EndPoint != null && EndPoint.Equals(cmpr.EndPoint) ||
+				EndPoint == null && cmpr.EndPoint == null;
 
 			return startEqual && endEqual;
 		}

@@ -1,13 +1,13 @@
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container;
-using ProSuite.QA.Tests.Documentation;
-using ProSuite.QA.Tests.IssueCodes;
-using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.QA.Container;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.IssueCodes;
 
 namespace ProSuite.QA.Tests
 {
@@ -46,7 +46,8 @@ namespace ProSuite.QA.Tests
 			IReadOnlyFeatureClass pointClass,
 			[NotNull] [Doc(nameof(DocStrings.QaPointOnLine_nearClasses))]
 			IList<IReadOnlyFeatureClass> nearClasses,
-			[Doc(nameof(DocStrings.QaPointOnLine_near))] double near)
+			[Doc(nameof(DocStrings.QaPointOnLine_near))]
+			double near)
 			: base(CastToTables(new[] {pointClass}, nearClasses))
 		{
 			_spatialReference = pointClass.SpatialReference;
@@ -125,7 +126,7 @@ namespace ProSuite.QA.Tests
 			filter.Geometry = _box;
 
 			foreach (IReadOnlyRow row in
-				Search(neighbor, _filter[tableIndex], _helper[tableIndex], point))
+			         Search(neighbor, _filter[tableIndex], _helper[tableIndex], point))
 			{
 				var neighborFeature = (IReadOnlyFeature) row;
 				double distance = GetDistance(point, neighborFeature);

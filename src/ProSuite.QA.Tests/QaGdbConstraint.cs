@@ -47,7 +47,7 @@ namespace ProSuite.QA.Tests
 		{
 			_attrRules = new List<IAttributeRule>();
 
-			ESRI.ArcGIS.Geodatabase.ITable baseTable =
+			ITable baseTable =
 				Assert.NotNull(table as ReadOnlyTable).BaseTable;
 			if (baseTable is IValidation validation)
 			{
@@ -110,7 +110,8 @@ namespace ProSuite.QA.Tests
 						}
 						else if (iSubtype.Value == rule.SubtypeCode)
 						{
-							valid = rule.Validate(Assert.NotNull(row as ReadOnlyRow).BaseRow, out message);
+							valid = rule.Validate(Assert.NotNull(row as ReadOnlyRow).BaseRow,
+							                      out message);
 						}
 					}
 					else

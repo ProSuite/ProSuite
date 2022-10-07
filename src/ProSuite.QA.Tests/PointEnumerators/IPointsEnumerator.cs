@@ -3,7 +3,6 @@ using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
-using Pnt = ProSuite.Commons.Geom.Pnt;
 
 namespace ProSuite.QA.Tests.PointEnumerators
 {

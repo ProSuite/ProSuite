@@ -341,7 +341,7 @@ namespace ProSuite.QA.Tests
 		private int ReportOffsetError([NotNull] IList<PartVertex> errorPoints,
 		                              IPointCollection baseGeometry,
 		                              ref double offset,
-									  IReadOnlyRow row,
+		                              IReadOnlyRow row,
 		                              bool final)
 		{
 			var errorCount = 0;
@@ -361,7 +361,7 @@ namespace ProSuite.QA.Tests
 
 		private int ReportMissingTerrainError([NotNull] IList<PartVertex> errorPoints,
 		                                      IPointCollection geometry,
-											  IReadOnlyRow row,
+		                                      IReadOnlyRow row,
 		                                      bool final)
 		{
 			var errorCount = 0;

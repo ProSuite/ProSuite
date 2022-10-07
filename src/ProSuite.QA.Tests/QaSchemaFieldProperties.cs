@@ -1,10 +1,10 @@
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.Schema;
-using ProSuite.Commons.AO.Geodatabase;
-using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
 {
@@ -39,7 +39,7 @@ namespace ProSuite.QA.Tests
 
 		protected override IEnumerable<FieldSpecification> GetFieldSpecifications()
 		{
-			return new[] { _fieldSpecification };
+			return new[] {_fieldSpecification};
 		}
 	}
 }

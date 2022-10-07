@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using ProSuite.Commons.DotLiquid;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -16,7 +15,7 @@ namespace ProSuite.DomainModel.AO.QA.SpecificationReport
 {
 	public static class SpecificationReportUtils
 	{
-		private static readonly IMsg _msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		[NotNull]
 		public static string RenderHtmlQualitySpecification(
@@ -80,7 +79,7 @@ namespace ProSuite.DomainModel.AO.QA.SpecificationReport
 			                                    htmlCategories,
 			                                    htmlElements,
 			                                    htmlTestDescriptors.Values
-			                                                       .OrderBy(t => t.Name),
+				                                    .OrderBy(t => t.Name),
 			                                    dataModels,
 			                                    DateTime.Now)
 			       {
@@ -97,7 +96,7 @@ namespace ProSuite.DomainModel.AO.QA.SpecificationReport
 			foreach (HtmlQualitySpecificationElement element in htmlElements)
 			{
 				foreach (HtmlTestParameterValue parameterValue in
-					element.QualityCondition.ParameterValues)
+				         element.QualityCondition.ParameterValues)
 				{
 					if (! parameterValue.IsDatasetParameter)
 					{
@@ -179,7 +178,7 @@ namespace ProSuite.DomainModel.AO.QA.SpecificationReport
 					element.QualityCondition, htmlTestDescriptor, reportCategory);
 
 				var htmlElement = new HtmlQualitySpecificationElement(htmlQualityCondition,
-				                                                      element);
+					element);
 
 				reportCategory.AddQualitySpecificationElement(htmlElement);
 				htmlQualitySpecificationElements.Add(htmlElement);
@@ -290,10 +289,10 @@ namespace ProSuite.DomainModel.AO.QA.SpecificationReport
 			if (category?.ParentCategory != null)
 			{
 				HtmlDataQualityCategory parent = AddDataQualityCategory(category.ParentCategory,
-				                                                        categoryComparer,
-				                                                        elementComparer,
-				                                                        reportCategories,
-				                                                        optionsProvider);
+					categoryComparer,
+					elementComparer,
+					reportCategories,
+					optionsProvider);
 				if (! parent.IsUndefinedCategory)
 				{
 					result.ParentCategory = parent;

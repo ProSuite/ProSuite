@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
@@ -20,8 +19,7 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 	/// </summary>
 	public class FeatureVertexInfo
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		// TODO: Remove _perimeter together with snap tolerance!
 		[CanBeNull] private readonly IEnvelope _perimeter;

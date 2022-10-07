@@ -1,17 +1,16 @@
 using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Geom;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.Geometry;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.QA.Tests.PointEnumerators;
-using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Geom;
-using IPnt = ProSuite.Commons.Geom.IPnt;
-using ProSuite.Commons.AO.Geodatabase;
-using ProSuite.QA.Core.IssueCodes;
-using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
 {
@@ -118,9 +117,9 @@ namespace ProSuite.QA.Tests
 				}
 
 				double coplanarityTolerance = GeomUtils.AdjustCoplanarityTolerance(plane,
-				                                                                   _coplanarityTolerance,
-				                                                                   _zResolution,
-				                                                                   _xyResolution);
+					_coplanarityTolerance,
+					_zResolution,
+					_xyResolution);
 
 				double maxOffset = -1;
 				int segmentsCount = 0;
@@ -168,7 +167,7 @@ namespace ProSuite.QA.Tests
 					errorCount += ReportError(
 						description, InvolvedRowUtils.GetInvolvedRows(row), errorGeometry,
 						Codes[Code.FaceNotCoplanar], TestUtils.GetShapeFieldName(feature),
-						values: new object[] { maxOffset });
+						values: new object[] {maxOffset});
 				}
 			}
 

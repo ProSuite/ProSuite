@@ -2,16 +2,16 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.PolygonGrower;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.QA.Tests.Network;
-using ProSuite.Commons.AO.Geodatabase;
-using ProSuite.QA.Core.IssueCodes;
-using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
 {
@@ -54,14 +54,18 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaBorderSense_0))]
 		public QaBorderSense(
-			[Doc(nameof(DocStrings.QaBorderSense_polylineClass))] IReadOnlyFeatureClass polylineClass,
-			[Doc(nameof(DocStrings.QaBorderSense_clockwise))] bool clockwise)
+			[Doc(nameof(DocStrings.QaBorderSense_polylineClass))]
+			IReadOnlyFeatureClass polylineClass,
+			[Doc(nameof(DocStrings.QaBorderSense_clockwise))]
+			bool clockwise)
 			: this(new[] {polylineClass}, clockwise) { }
 
 		[Doc(nameof(DocStrings.QaBorderSense_1))]
 		public QaBorderSense(
-			[Doc(nameof(DocStrings.QaBorderSense_polylineClasses))] IList<IReadOnlyFeatureClass> polylineClasses,
-			[Doc(nameof(DocStrings.QaBorderSense_clockwise))] bool clockwise)
+			[Doc(nameof(DocStrings.QaBorderSense_polylineClasses))]
+			IList<IReadOnlyFeatureClass> polylineClasses,
+			[Doc(nameof(DocStrings.QaBorderSense_clockwise))]
+			bool clockwise)
 			: base(CastToTables((IEnumerable<IReadOnlyFeatureClass>) polylineClasses), true)
 		{
 			_orientation = clockwise;

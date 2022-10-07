@@ -3,18 +3,18 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container;
-using ProSuite.QA.Container.Geometry;
-using ProSuite.QA.Container.TestContainer;
-using ProSuite.QA.Tests.Documentation;
-using ProSuite.QA.Tests.IssueCodes;
-using ProSuite.QA.Tests.Properties;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.QA.Container;
+using ProSuite.QA.Container.Geometry;
+using ProSuite.QA.Container.TestContainer;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.IssueCodes;
+using ProSuite.QA.Tests.Properties;
 using Pnt = ProSuite.Commons.Geom.Pnt;
 
 namespace ProSuite.QA.Tests
@@ -56,16 +56,21 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaSliverPolygon_0))]
 		public QaSliverPolygon(
-				[Doc(nameof(DocStrings.QaSliverPolygon_polygonClass))] IReadOnlyFeatureClass polygonClass,
-				[Doc(nameof(DocStrings.QaSliverPolygon_limit))] double limit)
+				[Doc(nameof(DocStrings.QaSliverPolygon_polygonClass))]
+				IReadOnlyFeatureClass polygonClass,
+				[Doc(nameof(DocStrings.QaSliverPolygon_limit))]
+				double limit)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(polygonClass, limit, -1) { }
 
 		[Doc(nameof(DocStrings.QaSliverPolygon_0))]
 		public QaSliverPolygon(
-			[Doc(nameof(DocStrings.QaSliverPolygon_polygonClass))] IReadOnlyFeatureClass polygonClass,
-			[Doc(nameof(DocStrings.QaSliverPolygon_limit))] double limit,
-			[Doc(nameof(DocStrings.QaSliverPolygon_maxArea))] double maxArea)
+			[Doc(nameof(DocStrings.QaSliverPolygon_polygonClass))]
+			IReadOnlyFeatureClass polygonClass,
+			[Doc(nameof(DocStrings.QaSliverPolygon_limit))]
+			double limit,
+			[Doc(nameof(DocStrings.QaSliverPolygon_maxArea))]
+			double maxArea)
 			: base(polygonClass)
 		{
 			Assert.ArgumentNotNull(polygonClass, nameof(polygonClass));
@@ -262,7 +267,7 @@ namespace ProSuite.QA.Tests
 
 				double? areaValue = GdbObjectUtils.ReadRowValue<double>(_feature, _areaFieldIndex);
 				double? perimeterValue = GdbObjectUtils.ReadRowValue<double>(_feature,
-				                                                             _lengthFieldIndex);
+					_lengthFieldIndex);
 
 				if (areaValue == null || perimeterValue == null)
 				{

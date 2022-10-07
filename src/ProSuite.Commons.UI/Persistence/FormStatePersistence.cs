@@ -22,8 +22,7 @@ namespace ProSuite.Commons.UI.Persistence
 		private const string _folderName = "Forms";
 		private const string _fileExtension = "frm.xml";
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		public static bool UseRoamingProfile
 		{
@@ -204,7 +203,7 @@ namespace ProSuite.Commons.UI.Persistence
 			string searchPattern = string.Format("*.{0}", _fileExtension);
 
 			foreach (string legacyFilePath in Directory.GetFiles(
-				LegacyFolderPath, searchPattern))
+				         LegacyFolderPath, searchPattern))
 			{
 				string fileName = Assert.NotNull(Path.GetFileName(legacyFilePath));
 

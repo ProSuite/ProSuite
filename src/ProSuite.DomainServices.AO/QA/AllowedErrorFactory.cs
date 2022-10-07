@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -39,7 +40,7 @@ namespace ProSuite.DomainServices.AO.QA
 		[CanBeNull]
 		public AllowedError CreateAllowedError(
 			[NotNull] IssueDatasetWriter issueWriter,
-			[NotNull] ESRI.ArcGIS.Geodatabase.IRow errorRow)
+			[NotNull] IRow errorRow)
 		{
 			Assert.ArgumentNotNull(issueWriter, nameof(issueWriter));
 			Assert.ArgumentNotNull(errorRow, nameof(errorRow));
@@ -63,7 +64,7 @@ namespace ProSuite.DomainServices.AO.QA
 			}
 
 			IGeometry geometry = null;
-			var errorFeature = errorRow as ESRI.ArcGIS.Geodatabase.IFeature;
+			var errorFeature = errorRow as IFeature;
 			if (errorFeature != null)
 			{
 				geometry = errorFeature.Shape.Envelope;

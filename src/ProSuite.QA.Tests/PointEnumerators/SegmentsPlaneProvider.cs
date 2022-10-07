@@ -1,10 +1,10 @@
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container.Geometry;
-using ProSuite.QA.Container.TestContainer;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Container.Geometry;
+using ProSuite.QA.Container.TestContainer;
 
 namespace ProSuite.QA.Tests.PointEnumerators
 {

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using ESRI.ArcGIS.esriSystem;
@@ -18,8 +17,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 {
 	public static class RelationshipClassUtils
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		public static bool InvolvesObjectClass(
 			[NotNull] IRelationshipClass relationshipClass,

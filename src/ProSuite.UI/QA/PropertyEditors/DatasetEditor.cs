@@ -23,7 +23,8 @@ namespace ProSuite.UI.QA.PropertyEditors
 		                                 object value)
 		{
 			IWindowsFormsEditorService editorService =
-				provider?.GetService(typeof(IWindowsFormsEditorService)) as IWindowsFormsEditorService;
+				provider?.GetService(typeof(IWindowsFormsEditorService)) as
+					IWindowsFormsEditorService;
 
 			if (editorService == null)
 			{

@@ -4,7 +4,6 @@ using ESRI.ArcGIS.DatasourcesRaster;
 using ESRI.ArcGIS.DataSourcesRaster;
 #endif
 using System;
-using System.Reflection;
 using ESRI.ArcGIS.Geodatabase;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
@@ -19,8 +18,7 @@ namespace ProSuite.Commons.AO.Test.Surface
 	{
 		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		[OneTimeSetUp]
 		public void SetupFixture()

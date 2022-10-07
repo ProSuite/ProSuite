@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using ProSuite.Commons.Essentials.CodeAnnotations;
 using NUnit.Framework;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
 
 namespace ProSuite.Commons.Test.Text
@@ -80,7 +80,7 @@ namespace ProSuite.Commons.Test.Text
 		{
 			const string input = @"A|";
 			List<string> tokens =
-				StringUtils.Split(input, "|", '\\', removeEmptyEntries : true).ToList();
+				StringUtils.Split(input, "|", '\\', removeEmptyEntries: true).ToList();
 			WriteTokens(tokens);
 
 			Assert.AreEqual(1, tokens.Count);
@@ -133,7 +133,7 @@ namespace ProSuite.Commons.Test.Text
 		{
 			const string input = @"A\|\|";
 			List<string> tokens =
-				StringUtils.Split(input, "|", '\\', removeEmptyEntries : true).ToList();
+				StringUtils.Split(input, "|", '\\', removeEmptyEntries: true).ToList();
 			WriteTokens(tokens);
 
 			Assert.AreEqual(1, tokens.Count);

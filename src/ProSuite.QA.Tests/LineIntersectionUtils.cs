@@ -77,9 +77,9 @@ namespace ProSuite.QA.Tests
 			// NOTE: this does not reliably find endpoint/interior intersections -> empty!! (even if Disjoint does return false)
 			const bool assumeIntersecting = true;
 			IMultipoint intersections = IntersectionUtils.GetIntersectionPoints(polyline1,
-			                                                                    polyline2,
-			                                                                    assumeIntersecting,
-			                                                                    intersectionPointOptions);
+				polyline2,
+				assumeIntersecting,
+				intersectionPointOptions);
 
 			// TODO catch missed end point/interior intersections by checking end points explicitly
 
@@ -143,8 +143,8 @@ namespace ProSuite.QA.Tests
 			IGeometry shape2Endpoints = ((ITopologicalOperator) polyline2).Boundary;
 
 			IMultipoint innerIntersections = GetIntersectionsInvolvingInterior(intersections,
-			                                                                   shape1Endpoints,
-			                                                                   shape2Endpoints);
+				shape1Endpoints,
+				shape2Endpoints);
 
 			if (innerIntersections.IsEmpty)
 			{
@@ -279,7 +279,7 @@ namespace ProSuite.QA.Tests
 			var remainingPoints = new List<IPoint>();
 
 			foreach (IPoint intersectionPoint in
-				QueryPoints(intersectionPoints, TemplatePoint1))
+			         QueryPoints(intersectionPoints, TemplatePoint1))
 			{
 				if (IntersectsVertex(intersectionPoint, polyline2, TemplatePoint2,
 				                     vertexSearchDistance) &&
@@ -312,7 +312,7 @@ namespace ProSuite.QA.Tests
 			var remainingPoints = new List<IPoint>();
 
 			foreach (IPoint intersectionPoint in
-				QueryPoints(intersectionPoints, TemplatePoint1))
+			         QueryPoints(intersectionPoints, TemplatePoint1))
 			{
 				if (! polyline1EndpointsRelOp.Disjoint(intersectionPoint))
 				{

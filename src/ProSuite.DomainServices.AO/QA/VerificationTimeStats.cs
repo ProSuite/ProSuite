@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Reflection;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Surface;
 using ProSuite.Commons.Essentials.Assertions;
@@ -25,8 +24,7 @@ namespace ProSuite.DomainServices.AO.QA
 
 		private readonly double _ticksPerMilliseconds;
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		public VerificationTimeStats()
 		{

@@ -19,6 +19,7 @@ namespace ProSuite.QA.Container.TestSupport
 				throw new InvalidOperationException(
 					$"Unknown field {fieldName} in table {table.Name}");
 			}
+
 			IField field = table.Fields.Field[fieldIndex];
 			return new FieldColumnInfo(table, field, fieldIndex);
 		}

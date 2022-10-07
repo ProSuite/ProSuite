@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
@@ -16,8 +15,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 {
 	public class StickyIntersections
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private readonly List<IPoint> _targetPoints;
 
@@ -346,15 +344,15 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 				[NotNull] IPointCollection sketchOriginalIntersectionPoints)
 		{
 			IList<IPath> connectLines = GetExtendedSourceLinesForSinglePoints(reshapePath,
-			                                                                  geometriesToReshape,
-			                                                                  sketchOriginalIntersectionPoints);
+				geometriesToReshape,
+				sketchOriginalIntersectionPoints);
 			// Filter those connect lines that cross each other.
 			var crossingLines = new List<IPath>(connectLines.Count);
 
 			for (var i = 0; i < connectLines.Count; i++)
 			{
 				IGeometry highLevelPath = GeometryUtils.GetHighLevelGeometry(connectLines[i],
-				                                                             true);
+					true);
 
 				for (int j = i + 1; j < connectLines.Count; j++)
 				{
@@ -423,7 +421,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			if (_sourceIntersectionLines != null)
 			{
 				foreach (IPath intersectionPath in
-					GeometryUtils.GetPaths(_sourceIntersectionLines))
+				         GeometryUtils.GetPaths(_sourceIntersectionLines))
 				{
 					if (
 						GeometryUtils.AreEqualInXY(intersectionPath.FromPoint,
@@ -582,7 +580,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			                                           sourceConnectPoint, tolerance);
 
 			LineEnd segmentEndToProlong = GeometryUtils.AreEqualInXY(sourceSegment.FromPoint,
-			                                                         sourceConnectPoint)
+				                              sourceConnectPoint)
 				                              ? LineEnd.From
 				                              : LineEnd.To;
 
@@ -625,7 +623,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			[NotNull] IEnumerable<KeyValuePair<IPoint, IPoint>> sourceTargetPairs)
 		{
 			IGeometry highLevelTouchingPath = GeometryUtils.GetHighLevelGeometry(touchingPath,
-			                                                                     true);
+				true);
 
 			if (GeometryUtils.Intersects(highLevelTouchingPath,
 			                             (IGeometry) sketchOriginalIntersectionPoints))

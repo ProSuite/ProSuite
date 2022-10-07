@@ -1,5 +1,4 @@
-﻿using System;
-using System.Reflection;
+using System;
 using NHibernate;
 using NHibernate.Type;
 using ProSuite.Commons.DomainModels;
@@ -13,8 +12,7 @@ namespace ProSuite.Commons.Orm.NHibernate
 	{
 		[CanBeNull] private ISession _session;
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private string _lastStack;
 

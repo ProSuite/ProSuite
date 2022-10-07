@@ -104,7 +104,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 			{
 				QualityCondition condition = element.QualityCondition;
 				foreach (Dataset dataset in condition.GetDatasetParameterValues(
-					includeReferencedProcessors: true))
+					         includeReferencedProcessors: true))
 				{
 					if (! referenceCountByModel.ContainsKey((Model) dataset.Model))
 					{
@@ -147,13 +147,13 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 			var reportFilePaths = new List<string>();
 
 			foreach (XmlSpecificationReportOptions reportOptions in
-				VerificationOptionUtils.GetSpecificationReportOptions(options,
-				                                                      defaultTemplateFilePath))
+			         VerificationOptionUtils.GetSpecificationReportOptions(options,
+				         defaultTemplateFilePath))
 			{
 				SpecificationReportDefinition reportDefinition =
 					VerificationOptionUtils.GetSpecificationReportDefinition(reportOptions,
-					                                                         defaultTemplateFilePath,
-					                                                         defaultTemplateDirectory);
+						defaultTemplateFilePath,
+						defaultTemplateDirectory);
 
 				if (! File.Exists(reportDefinition.TemplatePath))
 				{
@@ -166,7 +166,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 
 				HtmlQualitySpecification model =
 					SpecificationReportUtils.CreateHtmlQualitySpecification(qualitySpecification,
-					                                                        reportDefinition);
+						reportDefinition);
 				SpecificationReportUtils.RenderHtmlQualitySpecification(
 					model,
 					reportDefinition.TemplatePath,
@@ -188,7 +188,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 
 			XmlDataQualityDocumentCache documentCache =
 				XmlDataQualityUtils.GetDocumentCache(
-					document, new[] { xmlQualitySpecification });
+					document, new[] {xmlQualitySpecification});
 
 			bool hasUndefinedWorkspaceReference;
 			IList<XmlWorkspace> xmlWorkspaces = XmlDataQualityUtils.GetReferencedWorkspaces(
@@ -242,8 +242,8 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 			var reportDefinitions = new List<HtmlReportDefinition>();
 
 			foreach (XmlHtmlReportOptions reportOptions in
-				VerificationOptionUtils.GetHtmlReportOptions(
-					options, defaultReportTemplatePath))
+			         VerificationOptionUtils.GetHtmlReportOptions(
+				         options, defaultReportTemplatePath))
 			{
 				HtmlReportDefinition reportDefinition =
 					VerificationOptionUtils.GetReportDefinition(reportOptions,

@@ -40,11 +40,11 @@ namespace ProSuite.Commons.AO.Test.Geometry
 			const int holes = 3;
 
 			IPolygon poly1a = GeometryUtilsTest.CreatePunchedSquarePolygon("1a",
-			                                                               fewPointsPerPart,
-			                                                               holes, 1);
+				fewPointsPerPart,
+				holes, 1);
 			IPolygon poly1b = GeometryUtilsTest.CreatePunchedSquarePolygon("1b",
-			                                                               fewPointsPerPart,
-			                                                               holes, -1);
+				fewPointsPerPart,
+				holes, -1);
 
 			var vertexComparer = new GeometryComparison(poly1a, poly1b, 0.001, 0.01);
 
@@ -115,11 +115,11 @@ namespace ProSuite.Commons.AO.Test.Geometry
 			const int holes = 3;
 
 			IPolygon poly2a = GeometryUtilsTest.CreatePunchedSquarePolygon("2a",
-			                                                               manyPointsPerPart,
-			                                                               holes, 1);
+				manyPointsPerPart,
+				holes, 1);
 			IPolygon poly2b = GeometryUtilsTest.CreatePunchedSquarePolygon("2b",
-			                                                               manyPointsPerPart,
-			                                                               holes, -1);
+				manyPointsPerPart,
+				holes, -1);
 
 			var watch = new Stopwatch();
 			watch.Start();
@@ -149,11 +149,11 @@ namespace ProSuite.Commons.AO.Test.Geometry
 			const int holes = 3;
 
 			IPolygon poly2a = GeometryUtilsTest.CreatePunchedSquarePolygon("2a",
-			                                                               manyPointsPerPart,
-			                                                               holes, 1);
+				manyPointsPerPart,
+				holes, 1);
 			IPolygon poly2b = GeometryUtilsTest.CreatePunchedSquarePolygon("2b",
-			                                                               manyPointsPerPart,
-			                                                               holes, -1);
+				manyPointsPerPart,
+				holes, -1);
 
 			GeometryUtils.MoveGeometry(poly2b, 7, 6);
 
@@ -192,13 +192,13 @@ namespace ProSuite.Commons.AO.Test.Geometry
 			const int fewPointsPerPart = 400;
 
 			IPolygon poly3a = GeometryUtilsTest.CreatePunchedSquarePolygon("3a",
-			                                                               fewPointsPerPart,
-			                                                               0,
-			                                                               1);
+				fewPointsPerPart,
+				0,
+				1);
 			IPolygon poly3b = GeometryUtilsTest.CreatePunchedSquarePolygon("3b",
-			                                                               fewPointsPerPart *
-			                                                               2,
-			                                                               0, 2);
+				fewPointsPerPart *
+				2,
+				0, 2);
 
 			GeometryUtils.MoveGeometry(poly3b, 7.77, 6.66);
 
@@ -207,7 +207,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 			const bool symmetric = true;
 			//bool reportDuplicateVertices = true;
 			IList<WKSPointZ> changes = vertexComparer.GetDifferentVertices(symmetric,
-			                                                               true);
+				true);
 
 			int totalPointCount = ((IPointCollection) poly3a).PointCount +
 			                      ((IPointCollection) poly3b).PointCount;
@@ -225,13 +225,13 @@ namespace ProSuite.Commons.AO.Test.Geometry
 			const int fewPointsPerPart = 400;
 
 			IPolygon poly3a = GeometryUtilsTest.CreatePunchedSquarePolygon("3a",
-			                                                               fewPointsPerPart,
-			                                                               0,
-			                                                               1);
+				fewPointsPerPart,
+				0,
+				1);
 			IPolygon poly3b = GeometryUtilsTest.CreatePunchedSquarePolygon("3b",
-			                                                               fewPointsPerPart *
-			                                                               2,
-			                                                               0, 2);
+				fewPointsPerPart *
+				2,
+				0, 2);
 
 			GeometryUtils.MoveGeometry(poly3b, 7.77, 6.66);
 
@@ -240,7 +240,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 			const bool symmetric = true;
 			//bool reportDuplicateVertices = true;
 			IList<WKSPointZ> changes = vertexComparer.GetDifferentVertices(symmetric,
-			                                                               true);
+				true);
 
 			int totalPointCount = ((IPointCollection) poly3a).PointCount +
 			                      ((IPointCollection) poly3b).PointCount;
@@ -258,13 +258,13 @@ namespace ProSuite.Commons.AO.Test.Geometry
 			const int fewPointsPerPart = 400;
 
 			IPolygon poly3a = GeometryUtilsTest.CreatePunchedSquarePolygon("3a",
-			                                                               fewPointsPerPart,
-			                                                               0,
-			                                                               1);
+				fewPointsPerPart,
+				0,
+				1);
 			IPolygon poly3b = GeometryUtilsTest.CreatePunchedSquarePolygon("3b",
-			                                                               fewPointsPerPart *
-			                                                               2,
-			                                                               0, 2);
+				fewPointsPerPart *
+				2,
+				0, 2);
 
 			GeometryUtils.MoveGeometry(poly3b, 700000, 600000);
 
@@ -273,7 +273,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 			const bool symmetric = true;
 			//bool reportDuplicateVertices = true;
 			IList<WKSPointZ> changes = vertexComparer.GetDifferentVertices(symmetric,
-			                                                               true);
+				true);
 
 			int totalPointCount = ((IPointCollection) poly3a).PointCount +
 			                      ((IPointCollection) poly3b).PointCount;
@@ -305,13 +305,13 @@ namespace ProSuite.Commons.AO.Test.Geometry
 			const int fewPointsPerPart = 400;
 
 			IPolygon poly3a = GeometryUtilsTest.CreatePunchedSquarePolygon("3a",
-			                                                               fewPointsPerPart,
-			                                                               0,
-			                                                               1);
+				fewPointsPerPart,
+				0,
+				1);
 			IPolygon poly3b = GeometryUtilsTest.CreatePunchedSquarePolygon("3b",
-			                                                               fewPointsPerPart *
-			                                                               2,
-			                                                               0, 2);
+				fewPointsPerPart *
+				2,
+				0, 2);
 
 			GeometryUtils.MoveGeometry(poly3b, 700000, 600000);
 
@@ -320,7 +320,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 			const bool symmetric = true;
 			//bool reportDuplicateVertices = true;
 			IList<WKSPointZ> changes = vertexComparer.GetDifferentVertices(symmetric,
-			                                                               true);
+				true);
 
 			int totalPointCount = ((IPointCollection) poly3a).PointCount +
 			                      ((IPointCollection) poly3b).PointCount;
@@ -368,7 +368,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 
 			const bool reportDuplicateVertices = true;
 			IList<WKSPointZ> changes = geometryComparison.GetDifferentVertices(false,
-			                                                                   reportDuplicateVertices);
+				reportDuplicateVertices);
 			Assert.AreEqual(2, changes.Count);
 			Assert.True(geometryComparison.HaveSameVertices());
 			Assert.False(geometryComparison.HaveSameVertices(false));
@@ -427,7 +427,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 			const bool nonSymmetric = false;
 
 			IList<WKSPointZ> changes = geometryComparison.GetDifferentVertices(symmetric,
-			                                                                   reportDuplicateVertices);
+				reportDuplicateVertices);
 			Assert.AreEqual(2, changes.Count);
 
 			changes = geometryComparison.GetDifferentVertices(symmetric,
@@ -498,7 +498,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 			const bool nonSymmetric = false;
 
 			IList<WKSPointZ> changes = geometryComparison.GetDifferentVertices(symmetric,
-			                                                                   reportDuplicateVertices);
+				reportDuplicateVertices);
 			Assert.AreEqual(3, changes.Count);
 
 			Assert.False(geometryComparison.HaveSameVertices());
@@ -571,7 +571,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 
 			const bool reportDuplicateVertices = true;
 			IList<WKSPointZ> changes = geometryComparison.GetDifferentVertices(false,
-			                                                                   reportDuplicateVertices);
+				reportDuplicateVertices);
 			Assert.AreEqual(2, changes.Count);
 
 			changes =

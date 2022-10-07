@@ -53,7 +53,7 @@ namespace ProSuite.Microservices.Server.AO.QualityTestService
 			ConcurrentBag<DetectedIssueMsg> issueCollection = new ConcurrentBag<DetectedIssueMsg>();
 
 			foreach (ExecuteTestResponse response in ExecuteTestCore(
-				request, issueCollection, trackCancel))
+				         request, issueCollection, trackCancel))
 			{
 				TrySendIssues(responseStream, response, issueCollection);
 			}

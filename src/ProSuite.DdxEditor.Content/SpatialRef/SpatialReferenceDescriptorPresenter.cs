@@ -1,4 +1,3 @@
-using System.Reflection;
 using System.Windows.Forms;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
@@ -14,7 +13,7 @@ namespace ProSuite.DdxEditor.Content.SpatialRef
 	{
 		private readonly ISpatialReferenceDescriptorView _view;
 
-		private static readonly IMsg _msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="SpatialReferenceDescriptorPresenter"/> class.

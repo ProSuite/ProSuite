@@ -79,8 +79,8 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.RuleBased
 					HtmlReportUtils.Format(featureClassReport.NonLinearSegmentFeatureCount);
 
 				GeometryType = HtmlReportUtils.FormatGeometryType(featureClassReport.ShapeType,
-				                                                  featureClassReport.HasZ,
-				                                                  featureClassReport.HasM);
+					featureClassReport.HasZ,
+					featureClassReport.HasM);
 			}
 
 			OutputDirectoryPath = outputDirectoryPath;

@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using System.Reflection;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
@@ -12,8 +11,7 @@ namespace ProSuite.Commons.Xml
 {
 	public class XmlSerializationHelper<T> where T : class
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		// store in field for access by event handlers - only for duration of read
 		private string _deserializingXmlFile;
@@ -105,7 +103,7 @@ namespace ProSuite.Commons.Xml
 
 		[NotNull]
 		public T ReadFromString([NotNull] string xmlContent,
-		                      [CanBeNull] Action<string> receiveNotification)
+		                        [CanBeNull] Action<string> receiveNotification)
 		{
 			Assert.ArgumentNotNullOrEmpty(xmlContent, nameof(xmlContent));
 
@@ -161,7 +159,6 @@ namespace ProSuite.Commons.Xml
 
 			return serializer.CanDeserialize(reader);
 		}
-
 
 		[NotNull]
 		private XmlSerializer GetSerializer()

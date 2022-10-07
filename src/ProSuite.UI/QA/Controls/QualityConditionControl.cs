@@ -1,8 +1,6 @@
 using System;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Drawing;
-using System.Reflection;
 using System.Windows.Forms;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -22,8 +20,7 @@ namespace ProSuite.UI.QA.Controls
 
 		private readonly Color _writableBackColor = SystemColors.Window;
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		public QualityConditionControl()
 		{

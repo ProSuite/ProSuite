@@ -199,36 +199,36 @@ namespace ProSuite.Commons.UI.ScreenBinding.Elements
 		public void BindVisibilityTo(IPropertyAccessor accessor)
 		{
 			_showAction = target =>
-			              {
-				              var isVisible = (bool) accessor.GetValue(target);
-				              if (isVisible)
-				              {
-					              Show();
-				              }
+			{
+				var isVisible = (bool) accessor.GetValue(target);
+				if (isVisible)
+				{
+					Show();
+				}
 
-				              if (! isVisible)
-				              {
-					              Hide();
-				              }
-			              };
+				if (! isVisible)
+				{
+					Hide();
+				}
+			};
 		}
 
 		public void BindEnabledTo(IPropertyAccessor accessor)
 		{
 			_enableAction = target =>
-			                {
-				                var isEnabled = (bool) accessor.GetValue(target);
+			{
+				var isEnabled = (bool) accessor.GetValue(target);
 
-				                if (isEnabled)
-				                {
-					                Enable();
-				                }
+				if (isEnabled)
+				{
+					Enable();
+				}
 
-				                if (! isEnabled)
-				                {
-					                Disable();
-				                }
-			                };
+				if (! isEnabled)
+				{
+					Disable();
+				}
+			};
 		}
 
 		#endregion

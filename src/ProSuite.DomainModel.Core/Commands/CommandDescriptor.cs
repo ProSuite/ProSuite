@@ -13,7 +13,10 @@ namespace ProSuite.DomainModel.Core.Commands
 		[UsedImplicitly] [NotNull] private readonly string _clsid;
 		[UsedImplicitly] private readonly int? _subtype;
 
-		[UsedImplicitly] private KeyboardShortcut _keyboardShortcut; // todo should be a string like "Alt-Shift-Q" and utils to translate to KeyboardShortcut
+		[UsedImplicitly]
+		private KeyboardShortcut
+			_keyboardShortcut; // todo should be a string like "Alt-Shift-Q" and utils to translate to KeyboardShortcut
+
 		[UsedImplicitly] private string _category;
 		[UsedImplicitly] private string _message;
 		[UsedImplicitly] private string _description;

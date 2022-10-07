@@ -7,7 +7,7 @@ namespace ProSuite.Commons.Text
 {
 	public static class TaggingUtils
 	{
-		private const string Separator = ",";   // used when joining
+		private const string Separator = ","; // used when joining
 		private const string Separators = ",;"; // used when splitting
 
 		public static string AddTag(string tags, string tag)

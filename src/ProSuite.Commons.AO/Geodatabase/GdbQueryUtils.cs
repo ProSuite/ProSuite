@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using ESRI.ArcGIS.esriSystem;
@@ -20,8 +19,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 {
 	public static class GdbQueryUtils
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		/// <summary>
 		/// enumerate rows of objectClass that satisfy a given where clause and for which
@@ -812,7 +810,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		[CanBeNull]
 		public static IReadOnlyFeature GetFeature([NotNull] IReadOnlyFeatureClass featureClass,
-		                                  int featureId)
+		                                          int featureId)
 		{
 			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
 
@@ -843,7 +841,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 		{
 			if (table is ReadOnlyTable roTable)
 			{
-				foreach (IRow baseFeature in GetRowsByObjectIds(roTable.BaseTable, objectIds, recycling))
+				foreach (IRow baseFeature in GetRowsByObjectIds(
+					         roTable.BaseTable, objectIds, recycling))
 				{
 					yield return roTable.CreateRow(baseFeature);
 				}
@@ -990,7 +989,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 				const int maxRowCount = 100;
 
 				foreach (IRow row in GetRowsByObjectIdsBatched(
-					table, oidArray, recycling, maxRowCount))
+					         table, oidArray, recycling, maxRowCount))
 				{
 					yield return row;
 				}
@@ -1153,10 +1152,10 @@ namespace ProSuite.Commons.AO.Geodatabase
 			Assert.ArgumentNotNull(valueList, nameof(valueList));
 
 			foreach (IRow row in GetRowsInList(DatasetUtils.GetWorkspace(table),
-			                                DatasetUtils.GetField(table, fieldName), valueList,
-			                                (q) => GetRows(table, q, recycle), queryFilter))
+			                                   DatasetUtils.GetField(table, fieldName), valueList,
+			                                   (q) => GetRows(table, q, recycle), queryFilter))
 			{
-				yield return (T)row;
+				yield return (T) row;
 			}
 		}
 
@@ -1179,7 +1178,6 @@ namespace ProSuite.Commons.AO.Geodatabase
 				yield return row;
 			}
 		}
-
 
 		private static IEnumerable<T> GetRowsInList<T>(
 			[NotNull] IWorkspace workspace,
@@ -1572,7 +1570,6 @@ namespace ProSuite.Commons.AO.Geodatabase
 			                      };
 
 			return table.RowCount(filter);
-
 		}
 
 		public static int Count([NotNull] IObjectClass objectClass,

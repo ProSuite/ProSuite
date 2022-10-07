@@ -16,8 +16,7 @@ namespace ProSuite.Commons.Reflection
 	/// </summary>
 	public static class PrivateAssemblyUtils
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private static string _binDirectory;
 
@@ -27,8 +26,8 @@ namespace ProSuite.Commons.Reflection
 		private static readonly Dictionary<string, string> _knownSubstitutes =
 			new Dictionary<string, string>
 			{
-				{ "EsriDE.ProSuite.QA.Tests", "ProSuite.QA.Tests" },
-				{ "EsriDE.ProSuite.QA.TestFactories", "ProSuite.QA.TestFactories" }
+				{"EsriDE.ProSuite.QA.Tests", "ProSuite.QA.Tests"},
+				{"EsriDE.ProSuite.QA.TestFactories", "ProSuite.QA.TestFactories"}
 			};
 
 		[NotNull]
@@ -125,6 +124,7 @@ namespace ProSuite.Commons.Reflection
 				string substituteType = typeName.Replace(assemblyName, substituteAssembly);
 				return substituteType;
 			}
+
 			return typeName;
 		}
 
@@ -177,7 +177,7 @@ namespace ProSuite.Commons.Reflection
 			string dllFileName = string.Format("{0}.dll", assemblyName);
 			string exeFileName = string.Format("{0}.exe", assemblyName);
 
-			foreach (string fileName in new[] { dllFileName, exeFileName })
+			foreach (string fileName in new[] {dllFileName, exeFileName})
 			{
 				string filePath = Path.Combine(binDirectory, fileName);
 
@@ -191,7 +191,7 @@ namespace ProSuite.Commons.Reflection
 
 				if (fileExists)
 				{
-					return new AssemblyName(assemblyName) { CodeBase = filePath };
+					return new AssemblyName(assemblyName) {CodeBase = filePath};
 				}
 			}
 

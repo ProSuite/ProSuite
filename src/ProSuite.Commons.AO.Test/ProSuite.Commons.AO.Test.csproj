@@ -30,6 +30,11 @@
     <Optimize>false</Optimize>
     <DefineConstants>TRACE;$(VSArcGISProduct)</DefineConstants>
   </PropertyGroup>
+  <ItemGroup>
+    <Compile Remove="TestData\**" />
+    <EmbeddedResource Remove="TestData\**" />
+    <None Remove="TestData\**" />
+  </ItemGroup>
 
   <ItemGroup>
     <Reference Include="ESRI.ArcGIS.DataSourcesRaster, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
@@ -55,9 +60,6 @@
     <ProjectReference Include="..\..\..\ProSuite\src\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj" />
     <ProjectReference Include="..\..\..\ProSuite\src\ProSuite.Commons.Logging\ProSuite.Commons.Logging.csproj" />
     <ProjectReference Include="..\..\..\ProSuite\src\ProSuite.Commons\ProSuite.Commons.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="TestData\README.txt" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="GDAL" Version="3.4.2" />

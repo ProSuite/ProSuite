@@ -682,12 +682,12 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 		                                            bool isFirstDisplayedRow)
 		{
 			Rectangle editingControlBounds = PositionEditingPanel(cellBounds,
-			                                                      cellClip,
-			                                                      cellStyle,
-			                                                      singleVerticalBorderAdded,
-			                                                      singleHorizontalBorderAdded,
-			                                                      isFirstDisplayedColumn,
-			                                                      isFirstDisplayedRow);
+				cellClip,
+				cellStyle,
+				singleVerticalBorderAdded,
+				singleHorizontalBorderAdded,
+				isFirstDisplayedColumn,
+				isFirstDisplayedRow);
 			editingControlBounds =
 				GetAdjustedEditingControlBounds(editingControlBounds, cellStyle);
 			DataGridView.EditingControl.Location =

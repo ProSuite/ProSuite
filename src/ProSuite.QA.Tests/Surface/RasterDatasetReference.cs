@@ -25,10 +25,10 @@ namespace ProSuite.QA.Tests.Surface
 			_rasterDataset = rasterDataset;
 		}
 
-		public override IReadOnlyDataset Dataset => new ReadOnlyDataset((ESRI.ArcGIS.Geodatabase.IDataset)_rasterDataset);
+		public override IReadOnlyDataset Dataset => new ReadOnlyDataset((IDataset) _rasterDataset);
 
 		public override IReadOnlyGeoDataset GeoDataset => new ReadOnlyGeoDataset(
-			(ESRI.ArcGIS.Geodatabase.IGeoDataset)_rasterDataset);
+			(IGeoDataset) _rasterDataset);
 
 		public override double CellSize => RasterUtils.GetMeanCellSize(FullRaster);
 
@@ -38,12 +38,12 @@ namespace ProSuite.QA.Tests.Surface
 
 		public override ISimpleSurface CreateSurface(IEnvelope extent)
 		{
-			ESRI.ArcGIS.Geodatabase.IDataset memoryRasterDataset;
+			IDataset memoryRasterDataset;
 
 			IRaster clipped =
 				RasterUtils.GetClippedRaster(FullRaster, extent, out memoryRasterDataset);
 
-			ESRI.ArcGIS.Geodatabase.IDataset disposableDataset = memoryRasterDataset;
+			IDataset disposableDataset = memoryRasterDataset;
 
 			IDisposable disposableCallback =
 				new DisposableCallback(
@@ -52,7 +52,7 @@ namespace ProSuite.QA.Tests.Surface
 			var simpleRasterDataset = new SimpleRasterDataset(
 				clipped, GeometryFactory.CreatePolygon(extent), disposableCallback);
 
-			ISpatialReference spatialReference = ((ESRI.ArcGIS.Geodatabase.IGeoDataset) FullRaster).SpatialReference;
+			ISpatialReference spatialReference = ((IGeoDataset) FullRaster).SpatialReference;
 
 			return new SimpleRasterSurface(simpleRasterDataset, spatialReference);
 		}

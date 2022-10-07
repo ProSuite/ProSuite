@@ -16,7 +16,7 @@ namespace ProSuite.UI.Processing
 		public Cursor ShiftCursor { get; private set; }
 
 		public ProcessImageSet([CanBeNull] Bitmap icon, [CanBeNull] Cursor cursor = null,
-		                        [CanBeNull] Cursor shiftCursor = null)
+		                       [CanBeNull] Cursor shiftCursor = null)
 		{
 			Icon = icon ?? new Bitmap(16, 16);
 			Cursor = cursor;

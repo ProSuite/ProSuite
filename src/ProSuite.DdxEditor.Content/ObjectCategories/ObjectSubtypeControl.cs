@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Windows.Forms;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI.Dialogs;
@@ -15,8 +14,7 @@ namespace ProSuite.DdxEditor.Content.ObjectCategories
 	                                               IObjectSubtypeView
 		where T : ObjectSubtype
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private IObjectSubtypeObserver _observer;
 

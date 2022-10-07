@@ -255,7 +255,7 @@ namespace ProSuite.DomainModel.AO.QA
 			       ! candidateType.IsAbstract &&
 			       candidateType.IsPublic;
 		}
-		
+
 		private static IssueFilterFactory CreateIssueFilterFactory(
 			[NotNull] IssueFilterDescriptor filterDescriptor)
 		{

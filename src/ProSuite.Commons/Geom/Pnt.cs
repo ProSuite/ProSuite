@@ -41,7 +41,7 @@ namespace ProSuite.Commons.Geom
 		public double YMax => Y;
 
 		#endregion
-		
+
 		#region IBox Members
 
 		bool IBox.Contains(IPnt p)

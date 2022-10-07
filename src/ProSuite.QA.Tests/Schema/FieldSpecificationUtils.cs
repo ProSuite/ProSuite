@@ -24,7 +24,7 @@ namespace ProSuite.QA.Tests.Schema
 			int lengthFieldIndex = GetFieldIndex(table, false, "FIELDLENGTH", "FIELDTYPE_ORACLE");
 			int aliasFieldIndex = GetFieldIndex(table, true, "ALIASNAME", "ALIAS");
 
-			foreach (IReadOnlyRow row in table.EnumRows(queryFilter, recycle : true))
+			foreach (IReadOnlyRow row in table.EnumRows(queryFilter, recycle: true))
 			{
 				var name = row.get_Value(nameFieldIndex) as string;
 				if (string.IsNullOrEmpty(name))

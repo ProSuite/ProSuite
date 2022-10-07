@@ -2,12 +2,12 @@ using System.Collections.Generic;
 using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestSupport;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
+using ProSuite.QA.Container;
+using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Core.IssueCodes;
 
 namespace ProSuite.QA.Tests
@@ -107,8 +107,8 @@ namespace ProSuite.QA.Tests
 				     relatedTableIndex++)
 				{
 					foreach (IReadOnlyFeature relatedFeature in
-						GetRelatedFeatures(searchGeometry, relatedTableIndex,
-						                   feature.Shape))
+					         GetRelatedFeatures(searchGeometry, relatedTableIndex,
+					                            feature.Shape))
 					{
 						if (relatedFeature == feature)
 						{
@@ -122,8 +122,8 @@ namespace ProSuite.QA.Tests
 						}
 
 						if (! _relevantRelationCondition.IsFulfilled(row, tableIndex,
-						                                             relatedFeature,
-						                                             relatedTableIndex))
+							    relatedFeature,
+							    relatedTableIndex))
 						{
 							continue; // the pair does not fulfill the condition
 						}
@@ -215,8 +215,8 @@ namespace ProSuite.QA.Tests
 
 		[NotNull]
 		private IEnumerable<IReadOnlyFeature> GetRelatedFeatures([NotNull] IGeometry shape,
-		                                                 int relatedTableIndex,
-		                                                 [NotNull] IGeometry cacheShape)
+		                                                         int relatedTableIndex,
+		                                                         [NotNull] IGeometry cacheShape)
 		{
 			IReadOnlyTable table = InvolvedTables[relatedTableIndex];
 

@@ -68,7 +68,7 @@ namespace ProSuite.DomainServices.AO.QA.Exceptions
 			IBox clippedIssueBox = null;
 
 			foreach (BoxTree<ExceptionObject>.TileEntry tileEntry in _boxTree.Search(searchBox)
-			)
+			        )
 			{
 				ExceptionObject exceptionObject = tileEntry.Value;
 
@@ -124,7 +124,7 @@ namespace ProSuite.DomainServices.AO.QA.Exceptions
 			IBox searchBox = GeomUtils.CreateBox(exceptionObject.ShapeEnvelope, _xyTolerance);
 
 			foreach (BoxTree<ExceptionObject>.TileEntry tileEntry in _boxTree.Search(searchBox)
-			)
+			        )
 			{
 				ExceptionObject candidateExceptionObject = tileEntry.Value;
 

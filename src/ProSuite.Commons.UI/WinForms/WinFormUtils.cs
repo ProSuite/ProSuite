@@ -307,7 +307,7 @@ namespace ProSuite.Commons.UI.WinForms
 			}
 
 			Control primeFather = GetHighestParentWithMultipleChildren(control.Parent,
-			                                                           out descendantIndex);
+				out descendantIndex);
 
 			if (primeFather != null)
 			{

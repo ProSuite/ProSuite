@@ -60,12 +60,12 @@ namespace ProSuite.Commons
 			[NotNull] ICollection<string> paths)
 		{
 			foreach (Environment.SpecialFolder folder
-				in new[]
-				   {
-					   Environment.SpecialFolder.LocalApplicationData,
-					   Environment.SpecialFolder.ApplicationData,
-					   Environment.SpecialFolder.CommonApplicationData
-				   })
+			         in new[]
+			            {
+				            Environment.SpecialFolder.LocalApplicationData,
+				            Environment.SpecialFolder.ApplicationData,
+				            Environment.SpecialFolder.CommonApplicationData
+			            })
 			{
 				string path = GetProfileConfigPath(folder);
 

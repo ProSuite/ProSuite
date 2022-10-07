@@ -2,17 +2,17 @@ using System.Collections.Generic;
 using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.PolygonGrower;
 using ProSuite.QA.Container.TestSupport;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.QA.Tests.Network;
-using ProSuite.Commons.Essentials.Assertions;
-using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.AO.Geodatabase;
-using ProSuite.QA.Core.IssueCodes;
-using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
 {
@@ -49,26 +49,32 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaFlowLogic_0))]
 		public QaFlowLogic(
-			[Doc(nameof(DocStrings.QaFlowLogic_polylineClass))] IReadOnlyFeatureClass polylineClass)
+			[Doc(nameof(DocStrings.QaFlowLogic_polylineClass))]
+			IReadOnlyFeatureClass polylineClass)
 			: this(new[] {polylineClass}) { }
 
 		[Doc(nameof(DocStrings.QaFlowLogic_1))]
 		public QaFlowLogic(
-				[Doc(nameof(DocStrings.QaFlowLogic_polylineClasses))] IList<IReadOnlyFeatureClass> polylineClasses)
+				[Doc(nameof(DocStrings.QaFlowLogic_polylineClasses))]
+				IList<IReadOnlyFeatureClass> polylineClasses)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(polylineClasses, null, false) { }
 
 		[Doc(nameof(DocStrings.QaFlowLogic_2))]
 		public QaFlowLogic(
-				[Doc(nameof(DocStrings.QaFlowLogic_polylineClasses))] IList<IReadOnlyFeatureClass> polylineClasses,
-				[Doc(nameof(DocStrings.QaFlowLogic_flipExpressions))] IList<string> flipExpressions)
+				[Doc(nameof(DocStrings.QaFlowLogic_polylineClasses))]
+				IList<IReadOnlyFeatureClass> polylineClasses,
+				[Doc(nameof(DocStrings.QaFlowLogic_flipExpressions))]
+				IList<string> flipExpressions)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(polylineClasses, flipExpressions, false) { }
 
 		[Doc(nameof(DocStrings.QaFlowLogic_2))]
 		public QaFlowLogic(
-			[Doc(nameof(DocStrings.QaFlowLogic_polylineClasses))] IList<IReadOnlyFeatureClass> polylineClasses,
-			[Doc(nameof(DocStrings.QaFlowLogic_flipExpressions))] IList<string> flipExpressions,
+			[Doc(nameof(DocStrings.QaFlowLogic_polylineClasses))]
+			IList<IReadOnlyFeatureClass> polylineClasses,
+			[Doc(nameof(DocStrings.QaFlowLogic_flipExpressions))]
+			IList<string> flipExpressions,
 			[Doc(nameof(DocStrings.QaFlowLogic_allowMultipleOutgoingLines))]
 			bool allowMultipleOutgoingLines)
 			: base(CastToTables((IEnumerable<IReadOnlyFeatureClass>) polylineClasses), false)
@@ -106,8 +112,8 @@ namespace ProSuite.QA.Tests
 				IReadOnlyTable table = InvolvedTables[tableIndex];
 
 				foreach (string fieldName in
-					ExpressionUtils.GetExpressionFieldNames(table,
-					                                        _flipExpressions[tableIndex]))
+				         ExpressionUtils.GetExpressionFieldNames(table,
+				                                                 _flipExpressions[tableIndex]))
 				{
 					// .AddField checks for multiple entries !					
 					queryFilter.AddField(fieldName);

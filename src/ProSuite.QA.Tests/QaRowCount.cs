@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.Globalization;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container;
-using ProSuite.QA.Tests.Documentation;
-using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.QA.Container;
 using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.IssueCodes;
 
 namespace ProSuite.QA.Tests
 {
@@ -44,9 +44,12 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaRowCount_0))]
 		public QaRowCount(
-			[Doc(nameof(DocStrings.QaRowCount_table))] [NotNull] IReadOnlyTable table,
-			[Doc(nameof(DocStrings.QaRowCount_minimumRowCount))] int minimumRowCount,
-			[Doc(nameof(DocStrings.QaRowCount_maximumRowCount))] int maximumRowCount)
+			[Doc(nameof(DocStrings.QaRowCount_table))] [NotNull]
+			IReadOnlyTable table,
+			[Doc(nameof(DocStrings.QaRowCount_minimumRowCount))]
+			int minimumRowCount,
+			[Doc(nameof(DocStrings.QaRowCount_maximumRowCount))]
+			int maximumRowCount)
 			: base(new[] {table})
 		{
 			Assert.ArgumentNotNull(table, nameof(table));
@@ -58,7 +61,8 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaRowCount_1))]
 		public QaRowCount(
-			[Doc(nameof(DocStrings.QaRowCount_table))] [NotNull] IReadOnlyTable table,
+			[Doc(nameof(DocStrings.QaRowCount_table))] [NotNull]
+			IReadOnlyTable table,
 			[Doc(nameof(DocStrings.QaRowCount_referenceTables))] [NotNull]
 			IList<IReadOnlyTable> referenceTables,
 			[Doc(nameof(DocStrings.QaRowCount_minimumValueOffset))] [CanBeNull]

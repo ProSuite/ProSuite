@@ -631,7 +631,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			Assert.ArgumentNotNull(featureDataset, nameof(featureDataset));
 			Assert.ArgumentNotNullOrEmpty(fclassName, nameof(fclassName));
 			Assert.ArgumentNotNull(fields, nameof(fields));
-			
+
 			return featureDataset.CreateFeatureClass(
 				fclassName, fields, GetAnnotationFeatureUID(),
 				GetAnnotationFeatureClassExtensionUID(),

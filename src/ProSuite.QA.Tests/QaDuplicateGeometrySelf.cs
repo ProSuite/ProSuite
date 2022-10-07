@@ -2,17 +2,17 @@ using System.Collections.Generic;
 using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestSupport;
-using ProSuite.QA.Tests.Documentation;
-using ProSuite.QA.Tests.IssueCodes;
-using ProSuite.QA.Tests.SpatialRelations;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
+using ProSuite.QA.Container;
+using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.IssueCodes;
+using ProSuite.QA.Tests.SpatialRelations;
 
 namespace ProSuite.QA.Tests
 {
@@ -65,7 +65,8 @@ namespace ProSuite.QA.Tests
 		public QaDuplicateGeometrySelf(
 				[Doc(nameof(DocStrings.QaDuplicateGeometrySelf_featureClass))] [NotNull]
 				IReadOnlyFeatureClass featureClass,
-				[Doc(nameof(DocStrings.QaDuplicateGeometrySelf_validDuplicateConstraint))] [CanBeNull]
+				[Doc(nameof(DocStrings.QaDuplicateGeometrySelf_validDuplicateConstraint))]
+				[CanBeNull]
 				string
 					validDuplicateConstraint)
 			// ReSharper disable once IntroduceOptionalParameters.Global
@@ -100,7 +101,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		protected override int FindErrors(IReadOnlyRow row1, int tableIndex1,
-										  IReadOnlyRow row2, int tableIndex2)
+		                                  IReadOnlyRow row2, int tableIndex2)
 		{
 			if (_validRelationConstraint == null)
 			{
@@ -124,10 +125,10 @@ namespace ProSuite.QA.Tests
 			if (! IsKnownDuplicate(oid1, oid2))
 			{
 				if (QaSpatialRelationUtils.AreDuplicates(
-					row1, tableIndex1,
-					row2, tableIndex2,
-					_validRelationConstraint,
-					out string _))
+					    row1, tableIndex1,
+					    row2, tableIndex2,
+					    _validRelationConstraint,
+					    out string _))
 				{
 					AddDuplicate(oid1, oid2);
 				}
@@ -248,7 +249,7 @@ namespace ProSuite.QA.Tests
 			string tableName = _featureClass.Name;
 			const bool recycle = true;
 			foreach (IReadOnlyRow r in GdbQueryUtils.GetRows(
-				_featureClass, duplicatesByFirstOid.Keys, recycle))
+				         _featureClass, duplicatesByFirstOid.Keys, recycle))
 			{
 				IReadOnlyFeature feature = (IReadOnlyFeature) r;
 				HashSet<int> duplicates = duplicatesByFirstOid[feature.OID];

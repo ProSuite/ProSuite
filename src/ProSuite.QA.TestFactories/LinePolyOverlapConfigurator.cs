@@ -219,7 +219,7 @@ namespace ProSuite.QA.TestFactories
 					string subtype = fcTypes.First(x => x.Code == fcSubtype).Name;
 					List<int> canOverlaps = new List<int>();
 					foreach (int overlapIndex in EnumOverlapIndices(
-						ruleParts, rule, referenceSubtypes))
+						         ruleParts, rule, referenceSubtypes))
 					{
 						if (! int.TryParse(ruleParts[overlapIndex], out int canOverlap))
 						{
@@ -295,7 +295,7 @@ namespace ProSuite.QA.TestFactories
 			[NotNull] IEnumerable<Dataset> datasets)
 		{
 			var dataset = ConfiguratorUtils.GetDataset<VectorDataset>(datasetName,
-			                                                          datasets);
+				datasets);
 			Assert.NotNull(dataset, "Vector dataset not found: {0}", datasetName);
 			return dataset;
 		}

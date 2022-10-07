@@ -1,9 +1,9 @@
-using ProSuite.Commons.Essentials.Assertions;
-using ProSuite.Commons.Essentials.CodeAnnotations;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
+using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AttributeDependencies
 {
@@ -260,7 +260,7 @@ namespace ProSuite.Commons.AttributeDependencies
 		                                                     };
 
 		#endregion
-		
+
 		[NotNull]
 		public static string Format([NotNull] IList<object> values,
 		                            [CanBeNull] StringBuilder sb = null)
@@ -323,7 +323,7 @@ namespace ProSuite.Commons.AttributeDependencies
 					case TypeCode.Single:
 					case TypeCode.Double:
 						sb.Append(Convert.ToString(value,
-						                                  CultureInfo.InvariantCulture));
+						                           CultureInfo.InvariantCulture));
 						break;
 
 					case TypeCode.Decimal:
@@ -421,7 +421,7 @@ namespace ProSuite.Commons.AttributeDependencies
 
 			return true;
 		}
-		
+
 		#region Private methods
 
 		#region Parser
@@ -1006,6 +1006,4 @@ namespace ProSuite.Commons.AttributeDependencies
 			return ValueString;
 		}
 	}
-
-	}
-
+}

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons;
 using ProSuite.Commons.AO.Geodatabase;
@@ -58,7 +57,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 		// private IWorkspaceProxy _workspaceProxy;
 		private bool? _isMasterDatabaseAccessible;
 
-		private static readonly IMsg _msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		#endregion
 

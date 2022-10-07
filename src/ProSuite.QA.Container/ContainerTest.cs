@@ -198,7 +198,7 @@ namespace ProSuite.QA.Container
 				EnsureIssueFilter();
 
 				if (FilterUtils.IsFulfilled(_issueFiltersView, _issueFilters,
-				                filter => filter.Check(args)))
+				                            filter => filter.Check(args)))
 				{
 					args.Cancel = true;
 					return;
@@ -208,13 +208,11 @@ namespace ProSuite.QA.Container
 			base.OnQaError(args);
 		}
 
-
 		private void EnsureIssueFilter()
 		{
 			_issueFiltersView = _issueFiltersView ??
 			                    FilterUtils.GetFiltersView(IssueFiltersExpression, _issueFilters);
 		}
-
 
 		#region ITest Members
 
@@ -440,7 +438,8 @@ namespace ProSuite.QA.Container
 		/// </summary>
 		/// <param name="row"></param>
 		/// <returns></returns>
-		[Obsolete("use InvolvedRowUtils.GetInvolvedRows(row), TODO: (?) remove class RelatedTables ?, _dictRelated")]
+		[Obsolete(
+			"use InvolvedRowUtils.GetInvolvedRows(row), TODO: (?) remove class RelatedTables ?, _dictRelated")]
 		protected InvolvedRows GetInvolvedRows([NotNull] IReadOnlyRow row)
 		{
 			RelatedTables related = GetRelatedTables(row);
@@ -895,10 +894,12 @@ namespace ProSuite.QA.Container
 				if (! RowFiltersViewDict.TryGetValue(tableIndex, out DataView view))
 				{
 					RowFiltersExpressionDict.TryGetValue(tableIndex, out string expression);
-					RowFiltersViewDict[tableIndex] = FilterUtils.GetFiltersView(expression, filters);
+					RowFiltersViewDict[tableIndex] =
+						FilterUtils.GetFiltersView(expression, filters);
 				}
 
-				cancel = FilterUtils.IsFulfilled(view, filters, filter => ! filter.VerifyExecute(row));
+				cancel = FilterUtils.IsFulfilled(view, filters,
+				                                 filter => ! filter.VerifyExecute(row));
 			}
 
 			return cancel;

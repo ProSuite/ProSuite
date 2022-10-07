@@ -27,12 +27,12 @@ namespace ProSuite.Commons.AO
 			_table = table;
 
 			GetFilterProperties(queryFilter, out _subFields, out _whereClause,
-													out _isSpatialFilter);
+			                    out _isSpatialFilter);
 		}
 
 		public EnumCursor([NotNull] ISelectionSet selectionSet,
-											[CanBeNull] IQueryFilter queryFilter,
-											bool recycle) : this(selectionSet.Target, queryFilter)
+		                  [CanBeNull] IQueryFilter queryFilter,
+		                  bool recycle) : this(selectionSet.Target, queryFilter)
 		{
 			Assert.ArgumentNotNull(selectionSet, nameof(selectionSet));
 
@@ -43,7 +43,8 @@ namespace ProSuite.Commons.AO
 			catch (Exception e)
 			{
 				throw new DataException(
-					CreateMessage(GetTableName(_table), _subFields, _whereClause, _isSpatialFilter), e);
+					CreateMessage(GetTableName(_table), _subFields, _whereClause, _isSpatialFilter),
+					e);
 			}
 		}
 
@@ -68,7 +69,8 @@ namespace ProSuite.Commons.AO
 			catch (Exception e)
 			{
 				throw new DataException(
-					CreateMessage(GetTableName(_table), _subFields, _whereClause, _isSpatialFilter), e);
+					CreateMessage(GetTableName(_table), _subFields, _whereClause, _isSpatialFilter),
+					e);
 			}
 		}
 
@@ -94,13 +96,13 @@ namespace ProSuite.Commons.AO
 		}
 
 		public static string CreateMessage([NotNull] ITable table,
-																			 [CanBeNull] IQueryFilter filter)
+		                                   [CanBeNull] IQueryFilter filter)
 		{
 			return CreateMessage(GetTableName(table), filter);
 		}
 
 		public static string CreateMessage([NotNull] string tableName,
-																	 [CanBeNull] IQueryFilter filter)
+		                                   [CanBeNull] IQueryFilter filter)
 		{
 			string fields;
 			string where;
@@ -130,9 +132,9 @@ namespace ProSuite.Commons.AO
 		}
 
 		private static void GetFilterProperties([CanBeNull] IQueryFilter queryFilter,
-																						out string subFields,
-																						out string whereClause,
-																						out bool isSpatialFilter)
+		                                        out string subFields,
+		                                        out string whereClause,
+		                                        out bool isSpatialFilter)
 		{
 			if (queryFilter == null)
 			{
@@ -172,16 +174,18 @@ namespace ProSuite.Commons.AO
 			return msg;
 		}
 
-		private static string GetTableName(ITable table) => table is IDataset ds ? ds.Name : "(unknown)";
+		private static string GetTableName(ITable table) =>
+			table is IDataset ds ? ds.Name : "(unknown)";
+
 		private static string CreateMessage([NotNull] string tableName,
-																				[CanBeNull] string fields,
-																				[CanBeNull] string where,
-																				bool spatial)
+		                                    [CanBeNull] string fields,
+		                                    [CanBeNull] string where,
+		                                    bool spatial)
 		{
 			string name = tableName;
 			string spatially = spatial ? "(spatially) " : string.Empty;
 
-			if (!string.IsNullOrEmpty(where))
+			if (! string.IsNullOrEmpty(where))
 			{
 				where = "WHERE " + where;
 			}

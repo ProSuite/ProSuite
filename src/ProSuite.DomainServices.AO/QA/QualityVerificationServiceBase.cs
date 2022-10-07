@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Reflection;
 using System.Threading;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
@@ -41,8 +40,7 @@ namespace ProSuite.DomainServices.AO.QA
 	{
 		#region Field declarations
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private readonly IGdbTransaction _gdbTransaction;
 		private readonly IDatasetLookup _datasetLookup;

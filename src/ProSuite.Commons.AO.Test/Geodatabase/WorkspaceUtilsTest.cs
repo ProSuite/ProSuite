@@ -1,6 +1,5 @@
 using System;
 using System.Diagnostics;
-using System.Reflection;
 using ESRI.ArcGIS.Geodatabase;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
@@ -17,8 +16,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		private string _nonDefaultRepositoryName;
 		private string _dbName;
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		[OneTimeSetUp]
 		public void SetupFixture()
@@ -57,7 +55,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			LogWorkspaceProperties(workspace);
 
 			foreach (IDatasetName datasetName in DatasetUtils.GetDatasetNames(
-				workspace, esriDatasetType.esriDTTable))
+				         workspace, esriDatasetType.esriDTTable))
 			{
 				Console.WriteLine(datasetName.Name);
 			}
@@ -79,7 +77,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			LogWorkspaceProperties(workspace);
 
 			foreach (IDatasetName datasetName in DatasetUtils.GetDatasetNames(
-				workspace, esriDatasetType.esriDTTable))
+				         workspace, esriDatasetType.esriDTTable))
 			{
 				Console.WriteLine(datasetName.Name);
 			}

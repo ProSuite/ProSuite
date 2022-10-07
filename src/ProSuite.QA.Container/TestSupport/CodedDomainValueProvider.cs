@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
@@ -19,8 +18,7 @@ namespace ProSuite.QA.Container.TestSupport
 		private readonly int _codedFieldIndex;
 		private readonly Dictionary<object, T?> _valueDict;
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		public CodedDomainValueProvider([NotNull] IReadOnlyTable table,
 		                                [NotNull] string codedDomainField,
@@ -46,7 +44,9 @@ namespace ProSuite.QA.Container.TestSupport
 				}
 				catch (Exception e)
 				{
-					_msg.VerboseDebug(() => $"Unable to convert '{name}' to type {typeof(T).Name}: {e.Message}", e);
+					_msg.VerboseDebug(
+						() => $"Unable to convert '{name}' to type {typeof(T).Name}: {e.Message}",
+						e);
 					_valueDict.Add(code, null);
 				}
 			}

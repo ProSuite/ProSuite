@@ -44,7 +44,7 @@ namespace ProSuite.DomainServices.AO.QA
 		public IEnumerable<RowWithStopCondition> GetRowsWithStopConditions()
 		{
 			foreach (KeyValuePair<RowReference, StopInfo> pair
-				in _rowsWithStopConditions)
+			         in _rowsWithStopConditions)
 			{
 				RowReference rowReference = pair.Key;
 				StopInfo stopInfo = pair.Value;

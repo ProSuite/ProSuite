@@ -1,5 +1,4 @@
 using System;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using ESRI.ArcGIS.Geodatabase;
@@ -17,8 +16,7 @@ namespace ProSuite.DdxEditor.Content.Connections
 	                                                    IEntityPanel<T>
 		where T : ConnectionProvider
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private readonly ConnectionProviderItem<T> _item;
 

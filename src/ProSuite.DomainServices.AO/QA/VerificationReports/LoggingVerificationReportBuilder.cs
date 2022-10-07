@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Reflection;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -12,8 +11,7 @@ namespace ProSuite.DomainServices.AO.QA.VerificationReports
 {
 	public class LoggingVerificationReportBuilder : IVerificationReportBuilder
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private readonly List<Issue> _errors = new List<Issue>();
 		private int _rowsWithStopConditions;
@@ -41,7 +39,7 @@ namespace ProSuite.DomainServices.AO.QA.VerificationReports
 			IEnumerable<RowWithStopCondition> rowsWithStopCondition)
 		{
 			using (IEnumerator<RowWithStopCondition> enumerator =
-				rowsWithStopCondition.GetEnumerator())
+			       rowsWithStopCondition.GetEnumerator())
 			{
 				while (enumerator.MoveNext())
 				{

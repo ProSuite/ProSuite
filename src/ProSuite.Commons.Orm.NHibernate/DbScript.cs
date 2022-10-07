@@ -1,7 +1,6 @@
 using System;
 using System.Data;
 using System.IO;
-using System.Reflection;
 using System.Text;
 using NHibernate;
 using NHibernate.Cfg;
@@ -23,8 +22,7 @@ namespace ProSuite.Commons.Orm.NHibernate
 
 		private const string _noValueString = "_";
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="DbScript"/> class.

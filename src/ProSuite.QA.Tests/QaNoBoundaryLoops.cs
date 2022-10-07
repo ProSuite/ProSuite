@@ -4,15 +4,15 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container;
-using ProSuite.QA.Tests.Documentation;
-using ProSuite.QA.Tests.IssueCodes;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Container;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.IssueCodes;
 
 namespace ProSuite.QA.Tests
 {
@@ -79,7 +79,8 @@ namespace ProSuite.QA.Tests
 			BoundaryLoopErrorGeometry errorGeometry,
 			[Doc(nameof(DocStrings.QaNoBoundaryLoops_areaRelation))]
 			BoundaryLoopAreaRelation areaRelation,
-			[Doc(nameof(DocStrings.QaNoBoundaryLoops_areaLimit))] double areaLimit)
+			[Doc(nameof(DocStrings.QaNoBoundaryLoops_areaLimit))]
+			double areaLimit)
 			: base(polygonClass)
 		{
 			Assert.ArgumentNotNull(polygonClass, nameof(polygonClass));
@@ -95,7 +96,8 @@ namespace ProSuite.QA.Tests
 			_shapeType = polygonClass.ShapeType;
 
 			_spatialReference = polygonClass.SpatialReference;
-			double xyTolerance = SpatialReferenceUtils.GetXyResolution(polygonClass.SpatialReference);
+			double xyTolerance =
+				SpatialReferenceUtils.GetXyResolution(polygonClass.SpatialReference);
 			_xyTolerance = xyTolerance;
 		}
 
@@ -263,8 +265,8 @@ namespace ProSuite.QA.Tests
 			{
 				// the loop polygon will be needed, try to create it
 				loopPolygon = BoundaryLoopUtils.TryCreateLoopPolygon(geometry, startVertexIndex,
-				                                                     endVertexIndex,
-				                                                     out noPolygonReason);
+					endVertexIndex,
+					out noPolygonReason);
 			}
 
 			if (_areaLimit > 0)

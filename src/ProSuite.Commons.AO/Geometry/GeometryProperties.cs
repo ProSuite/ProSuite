@@ -83,8 +83,8 @@ namespace ProSuite.Commons.AO.Geometry
 			var result = new SegmentCounts();
 
 			foreach (ISegment segment in
-				GeometryUtils.GetSegments(segmentCollection.EnumSegments,
-				                          allowRecycling: true))
+			         GeometryUtils.GetSegments(segmentCollection.EnumSegments,
+			                                   allowRecycling: true))
 			{
 				switch (segment.GeometryType)
 				{
@@ -277,7 +277,7 @@ namespace ProSuite.Commons.AO.Geometry
 			var count = 0;
 
 			foreach (IGeometry part in GeometryUtils.GetParts((IGeometryCollection) multiPatch)
-			)
+			        )
 			{
 				var ring = part as IRing;
 				if (ring == null)
@@ -304,7 +304,7 @@ namespace ProSuite.Commons.AO.Geometry
 			var count = 0;
 
 			foreach (IGeometry part in GeometryUtils.GetParts((IGeometryCollection) multiPatch)
-			)
+			        )
 			{
 				var ring = part as IRing;
 				if (ring == null)

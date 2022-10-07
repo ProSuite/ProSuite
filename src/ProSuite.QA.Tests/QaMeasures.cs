@@ -2,16 +2,16 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container;
-using ProSuite.QA.Tests.Documentation;
-using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
+using ProSuite.QA.Container;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.IssueCodes;
 
 namespace ProSuite.QA.Tests
 {
@@ -58,7 +58,8 @@ namespace ProSuite.QA.Tests
 		public QaMeasures(
 			[Doc(nameof(DocStrings.QaMeasures_featureClass))] [NotNull]
 			IReadOnlyFeatureClass featureClass,
-			[Doc(nameof(DocStrings.QaMeasures_invalidValue))] double invalidValue)
+			[Doc(nameof(DocStrings.QaMeasures_invalidValue))]
+			double invalidValue)
 			: base(featureClass)
 		{
 			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
@@ -441,7 +442,7 @@ namespace ProSuite.QA.Tests
 
 			const bool cloneSegments = false;
 			IPolyline errorGeometry = MeasureUtils.GetErrorGeometry(invalidMSegments,
-			                                                        cloneSegments);
+				cloneSegments);
 
 			IssueCode issueCode;
 			string errorDescription = GetErrorDescription(invalidValue, invalidMSegments,

@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Reflection;
 using ESRI.ArcGIS.Geodatabase;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
@@ -14,8 +13,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
 		private string _simpleGdbPath;
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		[OneTimeSetUp]
 		public void SetupFixture()

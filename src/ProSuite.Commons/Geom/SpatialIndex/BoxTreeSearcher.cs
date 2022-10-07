@@ -19,7 +19,7 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 		{
 			BoxTree<int> boxTree = BoxTreeUtils.CreateBoxTree<int>(
 				linestring.XMin, linestring.YMin, linestring.XMax, linestring.YMax,
-				maxElementsPerTile : 8);
+				maxElementsPerTile: 8);
 
 			var i = 0;
 			foreach (Line3D line in linestring.Segments)

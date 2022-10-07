@@ -42,7 +42,7 @@ namespace ProSuite.QA.Tests.IssueFilters
 					{
 						helper = TableViewFactory.Create(
 							row.Table, _constraint, useAsConstraint: true,
-							caseSensitive: false);// TODO;
+							caseSensitive: false); // TODO;
 					}
 
 					_tableViews.Add(row.Table, helper);

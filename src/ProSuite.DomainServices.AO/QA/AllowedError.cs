@@ -23,7 +23,7 @@ namespace ProSuite.DomainServices.AO.QA
 		private readonly IList<InvolvedRow> _involvedRows;
 		[NotNull] private readonly QaErrorGeometry _errorGeometry;
 		private readonly int? _qualityConditionVersion;
-		private readonly ESRI.ArcGIS.Geodatabase.ITable _table;
+		private readonly ITable _table;
 		private List<InvolvedDatasetRow> _involvedDatasetRows;
 
 		private readonly IDictionary<string, ICollection<int>>
@@ -40,7 +40,7 @@ namespace ProSuite.DomainServices.AO.QA
 		                    [CanBeNull] IGeometry geometry,
 		                    [NotNull] string errorDescription,
 		                    [NotNull] IList<InvolvedRow> involvedRows,
-		                    [NotNull] ESRI.ArcGIS.Geodatabase.ITable table,
+		                    [NotNull] ITable table,
 		                    int objectId,
 		                    DateTime dateOfCreation,
 		                    [NotNull] IQualityConditionObjectDatasetResolver datasetResolver)
@@ -93,7 +93,7 @@ namespace ProSuite.DomainServices.AO.QA
 			_usesGdbDatasetNames = usesGdbDatasetNames;
 		}
 
-		public ESRI.ArcGIS.Geodatabase.ITable Table => _table;
+		public ITable Table => _table;
 
 		public int ObjectId => _oid;
 
@@ -200,7 +200,7 @@ namespace ProSuite.DomainServices.AO.QA
 			return _usesGdbDatasetNames
 				       ? _datasetResolver.GetDatasetByGdbTableName(tableName, _qualityCondition)
 				       : _datasetResolver.GetDatasetByInvolvedRowTableName(tableName,
-				                                                           _qualityCondition);
+					       _qualityCondition);
 		}
 
 		private static int CompareInvolvedDatasetRows(

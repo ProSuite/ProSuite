@@ -27,7 +27,7 @@ namespace ProSuite.Commons.Testing
 
 		private const string _defaultTestDataDir = "TestData";
 		private const string _tempUnitTestData = @"C:\temp\UnitTestData";
-		
+
 		[Obsolete("Use TestDataLocator.Prepare() instead")]
 		public static TestDataLocator Create(string repositoryName,
 		                                     string testDataDirRelativeToProject =
@@ -40,22 +40,22 @@ namespace ProSuite.Commons.Testing
 		}
 
 		#region Constructors
-		
+
 		[Obsolete("Use TestDataLocator.Prepare() instead")]
 		public TestDataLocator()
 			: this(Assembly.GetCallingAssembly(),
 			       GetRelativePathFromBinToSrc("ProSuite"),
 			       _defaultTestDataDir) { }
-		
+
 		[Obsolete("Use TestDataLocator.Prepare() instead")]
 		public TestDataLocator([NotNull] string relativePath)
 			: this(Assembly.GetCallingAssembly(), relativePath, _defaultTestDataDir) { }
-		
+
 		[Obsolete("Use TestDataLocator.Prepare() instead")]
 		public TestDataLocator([NotNull] string relativePath,
 		                       [NotNull] string testDataDirectory)
 			: this(Assembly.GetCallingAssembly(), relativePath, testDataDirectory) { }
-		
+
 		[Obsolete("Use TestDataLocator.Prepare() instead")]
 		public TestDataLocator([NotNull] Assembly callingAssembly,
 		                       [NotNull] string relativePath,
@@ -180,7 +180,7 @@ namespace ProSuite.Commons.Testing
 			               subDirName,
 			               AssertPath(callerFilePath));
 		}
-		
+
 		/// <summary>
 		/// Copies test data to C:\temp. It is looking for test data in
 		/// ..\project directory\<see cref="testDataDirRelativeToProject"/>\.<br />
@@ -244,13 +244,13 @@ namespace ProSuite.Commons.Testing
 			if (fileName.EndsWith(".gdb", StringComparison.InvariantCultureIgnoreCase))
 			{
 				throw new ArgumentException(
-					"File Geodatabases are not supported. Please create a zip archive.");	
+					"File Geodatabases are not supported. Please create a zip archive.");
 			}
 
 			string projectName = GetAssemblyProjectDirectoryName(callingAssembly);
-			
+
 			string projectDir = GetProjectDirectory(callerFilePath, projectName);
-			
+
 			string source = GetSource(projectDir, testDataDirRelativeToProject, fileName);
 
 			string targetDir = GetTargetDirectory(projectName, testName);
@@ -266,8 +266,9 @@ namespace ProSuite.Commons.Testing
 		private static string GetProjectDirectory([NotNull] string callerFilePath,
 		                                          [NotNull] string projectName)
 		{
-			int length = callerFilePath.LastIndexOf(projectName, StringComparison.OrdinalIgnoreCase) +
-			             projectName.Length;
+			int length =
+				callerFilePath.LastIndexOf(projectName, StringComparison.OrdinalIgnoreCase) +
+				projectName.Length;
 
 			return AssertPath(callerFilePath.Substring(0, length));
 		}
@@ -278,10 +279,12 @@ namespace ProSuite.Commons.Testing
 		                                [NotNull] string fileName)
 		{
 			Assert.ArgumentNotNullOrEmpty(projectDirectory, nameof(projectDirectory));
-			Assert.ArgumentNotNullOrEmpty(testDataDirRelativeToProject, nameof(testDataDirRelativeToProject));
+			Assert.ArgumentNotNullOrEmpty(testDataDirRelativeToProject,
+			                              nameof(testDataDirRelativeToProject));
 			Assert.ArgumentNotNullOrEmpty(fileName, nameof(fileName));
 
-			_msg.Debug($"Search test data in {Path.Combine(projectDirectory, testDataDirRelativeToProject)}");
+			_msg.Debug(
+				$"Search test data in {Path.Combine(projectDirectory, testDataDirRelativeToProject)}");
 
 			string directory = Path.Combine(projectDirectory, testDataDirRelativeToProject);
 
@@ -313,18 +316,20 @@ namespace ProSuite.Commons.Testing
 			if (sourcePath.EndsWith(".zip", StringComparison.InvariantCultureIgnoreCase))
 			{
 				Extract(sourcePath, targetPath, overwrite);
-			
+
 				string targetGdb = GetFileGeodatabasePath(targetPath);
-			
+
 				Assert.True(Directory.Exists(targetGdb), $"{targetGdb} does not exist");
 
 				return targetGdb;
 			}
+
 			if (sourcePath.EndsWith(".7z", StringComparison.InvariantCultureIgnoreCase))
 			{
 				throw new ArgumentException(
 					"7-zip archives are not supported. Please create a zip archive.");
 			}
+
 			if (sourcePath.EndsWith(".gdb", StringComparison.InvariantCultureIgnoreCase))
 			{
 				throw new ArgumentException(
@@ -353,7 +358,7 @@ namespace ProSuite.Commons.Testing
 		{
 			Assert.ArgumentNotNullOrEmpty(sourcePath, nameof(sourcePath));
 			Assert.ArgumentNotNullOrEmpty(targetPath, nameof(targetPath));
-			
+
 			string target = Path.Combine(targetPath, Path.GetFileNameWithoutExtension(sourcePath));
 
 			if (Exists(target))
@@ -409,7 +414,7 @@ namespace ProSuite.Commons.Testing
 			{
 				return path;
 			}
-			
+
 			throw new FileNotFoundException($"File or directory not found: {path}");
 		}
 
@@ -465,7 +470,7 @@ namespace ProSuite.Commons.Testing
 		private static string GetAssemblyProjectDirectoryName([NotNull] Assembly assembly)
 		{
 			// NOTE assumes same name for assembly and project directory
-			
+
 			var asmFile = new FileInfo(assembly.Location);
 
 			return Assert.NotNull(

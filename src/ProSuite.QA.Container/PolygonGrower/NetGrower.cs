@@ -155,7 +155,7 @@ namespace ProSuite.QA.Container.PolygonGrower
 					List<TDirectedRow> existingNet = existingNets[i];
 					newNet.AddRange(existingNet);
 					foreach (KeyValuePair<IDirectedRow, TDirectedRow> pair in _netEnds[existingNet]
-					)
+					        )
 					{
 						endRows.Add(pair.Key, pair.Value);
 						_endRowNetDict[pair.Key] = newNet;

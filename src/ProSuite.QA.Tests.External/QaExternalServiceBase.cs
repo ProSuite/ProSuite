@@ -239,7 +239,8 @@ namespace ProSuite.QA.Tests.External
 
 				InvolvedRows involvedRows = GetInvolvedRows(issueMsg.InvolvedObjects);
 
-				errorCount += ReportError(issueMsg.Description, involvedRows, issueGeometry, issueCode,
+				errorCount += ReportError(issueMsg.Description, involvedRows, issueGeometry,
+				                          issueCode,
 				                          issueMsg.AffectedComponent);
 			}
 

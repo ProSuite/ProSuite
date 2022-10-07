@@ -1,14 +1,14 @@
-
+using System.Collections.Generic;
+using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using System.Collections.Generic;
 
 namespace ProSuite.Commons.AO.Geodatabase
 {
 	public interface IReadOnlyDataset
 	{
 		string Name { get; }
-		ESRI.ArcGIS.esriSystem.IName FullName { get; }
+		IName FullName { get; }
 		IWorkspace Workspace { get; }
 	}
 
@@ -17,18 +17,25 @@ namespace ProSuite.Commons.AO.Geodatabase
 	{
 		T CreateRow();
 	}
+
 	public interface IReadOnlyTable : IReadOnlyDataset
 	{
 		IFields Fields { get; }
+
 		int FindField(string fieldName);
+
 		bool HasOID { get; }
 		string OIDFieldName { get; }
+
 		IReadOnlyRow GetRow(int oid);
+
 		IEnumerable<IReadOnlyRow> EnumRows(IQueryFilter filter, bool recycle);
+
 		int RowCount(IQueryFilter filter);
 
 		bool Equals(IReadOnlyTable otherTable);
 	}
+
 	public interface IReadOnlyGeoDataset
 	{
 		IEnvelope Extent { get; }
@@ -47,9 +54,12 @@ namespace ProSuite.Commons.AO.Geodatabase
 	{
 		bool HasOID { get; }
 		int OID { get; }
+
 		object get_Value(int Index);
+
 		IReadOnlyTable Table { get; }
 	}
+
 	public interface IReadOnlyFeature : IReadOnlyRow
 	{
 		IGeometry Shape { get; }

@@ -44,7 +44,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase.GdbSchema
 			Assert.IsTrue(WorkspaceUtils.IsSameWorkspace(realWorkspace, gdbWorkspace,
 			                                             WorkspaceComparison.AnyUserSameVersion));
 		}
-		
+
 		[Test]
 		public void CanCompareWorkspacePaths()
 		{
@@ -56,7 +56,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase.GdbSchema
 			string path = new Uri(realWorkspace.PathName).AbsoluteUri;
 			IWorkspace mock = new WorkspaceMock(path);
 			Console.WriteLine(mock.PathName);
-			
+
 			GdbWorkspace gdbWorkspace = GdbWorkspace.CreateFromFgdb(mock);
 
 			Assert.IsTrue(WorkspaceUtils.IsSameDatabase(realWorkspace, gdbWorkspace));
@@ -88,7 +88,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase.GdbSchema
 
 			IWorkspace childVersion = null;
 			foreach (IVersionInfo childVersionInfo in WorkspaceUtils.GetChildVersionInfos(
-				(IVersion) defaultVersion))
+				         (IVersion) defaultVersion))
 			{
 				childVersion =
 					WorkspaceUtils.OpenWorkspaceVersion(defaultVersion,
@@ -126,7 +126,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase.GdbSchema
 		private static IFeatureWorkspace CreateTestWorkspace(string fgdbName)
 		{
 			string dir = Path.GetTempPath();
-			
+
 			string mdb = Path.Combine(dir, fgdbName) + ".gdb";
 
 			if (Directory.Exists(mdb))

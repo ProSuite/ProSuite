@@ -2,14 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container;
-using ProSuite.QA.Tests.Documentation;
-using ProSuite.QA.Tests.IssueCodes;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Container;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.IssueCodes;
 
 namespace ProSuite.QA.Tests
 {
@@ -43,16 +43,21 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaExtent_0))]
 		public QaExtent(
-				[Doc(nameof(DocStrings.QaExtent_featureClass))] IReadOnlyFeatureClass featureClass,
-				[Doc(nameof(DocStrings.QaExtent_limit))] double limit)
+				[Doc(nameof(DocStrings.QaExtent_featureClass))]
+				IReadOnlyFeatureClass featureClass,
+				[Doc(nameof(DocStrings.QaExtent_limit))]
+				double limit)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(featureClass, limit, false) { }
 
 		[Doc(nameof(DocStrings.QaExtent_1))]
 		public QaExtent(
-			[Doc(nameof(DocStrings.QaExtent_featureClass))] IReadOnlyFeatureClass featureClass,
-			[Doc(nameof(DocStrings.QaExtent_limit))] double limit,
-			[Doc(nameof(DocStrings.QaExtent_perPart))] bool perPart)
+			[Doc(nameof(DocStrings.QaExtent_featureClass))]
+			IReadOnlyFeatureClass featureClass,
+			[Doc(nameof(DocStrings.QaExtent_limit))]
+			double limit,
+			[Doc(nameof(DocStrings.QaExtent_perPart))]
+			bool perPart)
 			: base(featureClass)
 		{
 			_limit = limit;

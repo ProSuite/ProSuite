@@ -1,5 +1,4 @@
 using System;
-using System.Reflection;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Logging;
 
@@ -11,8 +10,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 	/// </summary>
 	public class GuidFieldSortCallback : ITableSortCallBack
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		#region Implementation of ITableSortCallBack
 
@@ -25,7 +23,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 				if (fieldSortIndex > 0)
 				{
 					_msg.VerboseDebug(
-						() => $"Assuming equal IDs: value1 {value1}, value2 {value2}, fieldIndex {fieldIndex}, fieldSortIndex {fieldSortIndex}");
+						() =>
+							$"Assuming equal IDs: value1 {value1}, value2 {value2}, fieldIndex {fieldIndex}, fieldSortIndex {fieldSortIndex}");
 
 					return 0;
 				}

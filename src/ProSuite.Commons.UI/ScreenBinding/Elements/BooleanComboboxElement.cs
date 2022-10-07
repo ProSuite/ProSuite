@@ -1,6 +1,5 @@
 using System;
 using System.ComponentModel;
-using System.Reflection;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI.WinForms.Controls;
@@ -10,8 +9,7 @@ namespace ProSuite.Commons.UI.ScreenBinding.Elements
 	public class BooleanComboboxElement :
 		BoundScreenElement<BooleanCombobox, object>
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private CoerceFunction<bool> _coercion;
 
@@ -29,10 +27,10 @@ namespace ProSuite.Commons.UI.ScreenBinding.Elements
 			WireEvents(control);
 
 			_coercion = delegate(IPropertyAccessor accessor, bool rawValue)
-			            {
-				            // default coercion
-				            return CoercionUtility.Coerce(accessor, rawValue);
-			            };
+			{
+				// default coercion
+				return CoercionUtility.Coerce(accessor, rawValue);
+			};
 		}
 
 		#endregion

@@ -4,15 +4,13 @@ using System.Linq;
 using System.Text;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container.Geometry;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
-using IPnt = ProSuite.Commons.Geom.IPnt;
-using Pnt = ProSuite.Commons.Geom.Pnt;
-using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Container.Geometry;
 
 namespace ProSuite.QA.Tests.Coincidence
 {
@@ -418,7 +416,7 @@ namespace ProSuite.QA.Tests.Coincidence
 					// filter neighbored segments
 					var filtered = new SegmentNeighbors(new SegmentPartComparer());
 					foreach (KeyValuePair<SegmentPart, SegmentParts> allNeighborsPair
-						in preNeighbor.SegmentNeighbors)
+					         in preNeighbor.SegmentNeighbors)
 					{
 						SegmentPart key = allNeighborsPair.Key;
 						var circleParts = new SegmentParts();
@@ -782,7 +780,7 @@ namespace ProSuite.QA.Tests.Coincidence
 				SegmentNeighborsWithSortedParts lastNeighbors = _neighbors[Subparts.Count - 1];
 
 				IList<DirectedMinMaxConnected> connectedLimits = GetSortedLimits(connectedParts,
-				                                                                 lastPart);
+					lastPart);
 
 				var addedAny = false;
 				foreach (DirectedMinMaxConnected connectedLimit in connectedLimits)
@@ -1217,8 +1215,8 @@ namespace ProSuite.QA.Tests.Coincidence
 				}
 
 				List<NeighboredSegmentsSubpart> continuations = GetContinuations(grouped,
-				                                                                 excludeList,
-				                                                                 breakOnExcludeFound);
+					excludeList,
+					breakOnExcludeFound);
 
 				return continuations;
 			}
@@ -1568,7 +1566,7 @@ namespace ProSuite.QA.Tests.Coincidence
 				foreach (ConnectedSegmentsSubpart subpart in BaseSegments)
 				{
 					foreach (KeyValuePair<SegmentPart, SegmentParts> pair in
-						subpart.SegmentNeighbors)
+					         subpart.SegmentNeighbors)
 					{
 						var first = true;
 						SegmentHull segmentHull = null;
@@ -1804,8 +1802,8 @@ namespace ProSuite.QA.Tests.Coincidence
 				if (baseStartIndex == baseEndIndex)
 				{
 					return BaseSegments[baseStartIndex].GetSubpart(baseStartSegment,
-					                                               startFraction,
-					                                               baseEndSegment, endFraction);
+						startFraction,
+						baseEndSegment, endFraction);
 				}
 
 				IList<IGeometry> lines = new List<IGeometry>(baseEndIndex - baseStartIndex + 1);
@@ -1839,7 +1837,7 @@ namespace ProSuite.QA.Tests.Coincidence
 				[CanBeNull] NeighboredSegmentsSubpart continuation)
 			{
 				List<NeighboredSegmentsSubpart> parts = GetFilteredParts(connectedParts,
-				                                                         continuation);
+					continuation);
 
 				if (continuation != null)
 				{
@@ -1864,7 +1862,7 @@ namespace ProSuite.QA.Tests.Coincidence
 								p as
 									SegmentPartWithNeighbor;
 							if (neighboredPart == null
-							)
+							   )
 							{
 								return false;
 							}
@@ -1906,7 +1904,7 @@ namespace ProSuite.QA.Tests.Coincidence
 						});
 
 					var continuationCopy = new NeighboredSegmentsSubpart(continuation,
-					                                                     copyNeighbors);
+						copyNeighbors);
 
 					parts.Add(continuationCopy);
 				}
@@ -1936,7 +1934,7 @@ namespace ProSuite.QA.Tests.Coincidence
 							if (partsToRemove == null ||
 							    partsToRemove.BaseFeature !=
 							    neighboredPart.NeighborFeature
-							)
+							   )
 							{
 								return true;
 							}
@@ -2216,7 +2214,7 @@ namespace ProSuite.QA.Tests.Coincidence
 
 					bool complete;
 					List<ConnectedSegmentsSubpart> startConnected = GetStartConnected(combinedParts,
-					                                                                  out complete);
+						out complete);
 
 					if (! complete)
 					{
@@ -2315,7 +2313,8 @@ namespace ProSuite.QA.Tests.Coincidence
 						{
 							var join = new Join(connected, _continuationFinder);
 							foreach (ConnectedLines continued in
-								join.Continue(sumLength, combinedMinLengths, combinedActivRelation))
+							         join.Continue(sumLength, combinedMinLengths,
+							                       combinedActivRelation))
 							{
 								yield return continued;
 							}
@@ -2467,9 +2466,9 @@ namespace ProSuite.QA.Tests.Coincidence
 			}
 
 			protected override IList<SegmentPart> GetSegmentParts(SegmentProxy seg0,
-			                                                      SegmentProxy neighborSeg,
-			                                                      IList<double[]> seg0Limits,
-			                                                      bool coincident)
+				SegmentProxy neighborSeg,
+				IList<double[]> seg0Limits,
+				bool coincident)
 			{
 				var result = new List<SegmentPart>(seg0Limits.Count);
 

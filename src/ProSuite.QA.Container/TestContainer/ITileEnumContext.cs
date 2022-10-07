@@ -10,7 +10,9 @@ namespace ProSuite.QA.Container.TestContainer
 		OverlappingFeatures OverlappingFeatures { get; }
 
 		bool IsDisjointFromExecuteArea(IGeometry shape);
+
 		string GetCommonFilterExpression(IReadOnlyTable table);
+
 		UniqueIdProvider GetUniqueIdProvider(IReadOnlyTable table);
 	}
 }

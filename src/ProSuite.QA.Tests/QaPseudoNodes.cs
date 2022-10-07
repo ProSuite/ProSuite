@@ -126,8 +126,7 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaPseudoNodes_validPseudoNodes))] [NotNull]
 			IList<IReadOnlyFeatureClass>
 				validPseudoNodes)
-			: this(polylineClasses, ParseFieldLists(ignoreFieldLists), validPseudoNodes)
-		{ }
+			: this(polylineClasses, ParseFieldLists(ignoreFieldLists), validPseudoNodes) { }
 
 		private static List<IList<string>> ParseFieldLists(IList<string> fieldLists)
 		{
@@ -249,9 +248,10 @@ namespace ProSuite.QA.Tests
 
 				QueryFilterHelper relatedFilterHelper = Helpers[nonNetworkClassIndex];
 
-				IEnumerable<IReadOnlyRow> searchResult = Search(InvolvedTables[nonNetworkClassIndex],
-				                                        relatedFilter,
-				                                        relatedFilterHelper);
+				IEnumerable<IReadOnlyRow> searchResult = Search(
+					InvolvedTables[nonNetworkClassIndex],
+					relatedFilter,
+					relatedFilterHelper);
 
 				if (searchResult.Any())
 				{

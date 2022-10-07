@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Reflection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -11,8 +10,7 @@ namespace ProSuite.Commons.Ado
 {
 	public static class AdoUtils
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		[NotNull]
 		[PublicAPI]
@@ -171,7 +169,7 @@ namespace ProSuite.Commons.Ado
 			Assert.ArgumentNotNull(procedure, nameof(procedure));
 
 			using (IDbTransaction transaction =
-				BeginTransaction(connection, isolationLevel))
+			       BeginTransaction(connection, isolationLevel))
 			{
 				command.Transaction = transaction;
 
@@ -224,7 +222,7 @@ namespace ProSuite.Commons.Ado
 			int result = 0;
 
 			using (IDbTransaction transaction =
-				BeginTransaction(connection, isolationLevel))
+			       BeginTransaction(connection, isolationLevel))
 			{
 				try
 				{

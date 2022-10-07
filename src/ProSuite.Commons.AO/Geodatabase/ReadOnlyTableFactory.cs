@@ -8,6 +8,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 	public class ReadOnlyTableFactory : ReadOnlyFeatureClass
 	{
 		[ThreadStatic] private static Dictionary<ITable, ReadOnlyTable> _cache;
+
 		protected static Dictionary<ITable, ReadOnlyTable> Cache =>
 			_cache ?? (_cache = new Dictionary<ITable, ReadOnlyTable>());
 
@@ -19,23 +20,28 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		public static ReadOnlyTable Create([NotNull] ITable table)
 		{
-			if (!Cache.TryGetValue(table, out ReadOnlyTable existing))
+			if (! Cache.TryGetValue(table, out ReadOnlyTable existing))
 			{
 				if (table is IFeatureClass fc)
-				{ existing = CreateReadOnlyFeatureClass(fc); }
+				{
+					existing = CreateReadOnlyFeatureClass(fc);
+				}
 				else
-				{ existing = CreateReadOnlyTable(table); }
+				{
+					existing = CreateReadOnlyTable(table);
+				}
 
 				Cache.Add(table, existing);
 			}
+
 			return existing;
 		}
+
 		public static void ClearCache()
 		{
 			Cache.Clear();
 		}
 
-		private ReadOnlyTableFactory() : base(null)
-		{ }
+		private ReadOnlyTableFactory() : base(null) { }
 	}
 }

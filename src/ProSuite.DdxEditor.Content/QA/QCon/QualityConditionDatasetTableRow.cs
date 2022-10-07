@@ -17,7 +17,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 	public class QualityConditionDatasetTableRow : IEntityRow
 	{
 		[NotNull] private readonly QualityCondition _qualityCondition;
-		
+
 		private QualityConditionDatasetTableRow(
 			[NotNull] QualityCondition qualityCondition,
 			int qualitySpecificationRefCount)
@@ -60,7 +60,8 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 
 			DatasetName = datasetParameterValue.GetName();
 			ModelName = InstanceConfigurationUtils.GetDatasetModelName(datasetParameterValue);
-			DatasetCategory = InstanceConfigurationUtils.GetDatasetCategoryName(datasetParameterValue);
+			DatasetCategory =
+				InstanceConfigurationUtils.GetDatasetCategoryName(datasetParameterValue);
 
 			if (dataset != null)
 			{

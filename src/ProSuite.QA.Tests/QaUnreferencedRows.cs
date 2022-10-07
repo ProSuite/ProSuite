@@ -3,17 +3,17 @@ using System.Collections.Generic;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container;
-using ProSuite.QA.Tests.Documentation;
-using ProSuite.QA.Tests.IssueCodes;
-using ProSuite.QA.Tests.KeySets;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Logging;
+using ProSuite.QA.Container;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.IssueCodes;
+using ProSuite.QA.Tests.KeySets;
 
 namespace ProSuite.QA.Tests
 {
@@ -226,7 +226,7 @@ namespace ProSuite.QA.Tests
 			foreach (ReferencingTableInfo referencingTableInfo in referencingTableInfos)
 			{
 				foreach (IReadOnlyRow row in
-					GetReferencingRows(referencedTableInfo, referencingTableInfo))
+				         GetReferencingRows(referencedTableInfo, referencingTableInfo))
 				{
 					object foreignKey = referencingTableInfo.GetForeignKey(row);
 
@@ -484,8 +484,8 @@ namespace ProSuite.QA.Tests
 
 			[NotNull]
 			private static IReadOnlyTable GetQueryTable([NotNull] IReadOnlyTable referencingTable,
-			                                    [NotNull] string relation,
-			                                    [NotNull] out string foreignKeyFieldName)
+			                                            [NotNull] string relation,
+			                                            [NotNull] out string foreignKeyFieldName)
 			{
 				IList<string> relationTokens = ParseRelationTokens(relation);
 

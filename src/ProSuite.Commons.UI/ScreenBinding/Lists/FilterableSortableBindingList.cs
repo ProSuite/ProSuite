@@ -9,7 +9,7 @@ namespace ProSuite.Commons.UI.ScreenBinding.Lists
 	{
 		private readonly List<T> _itemsCache = new List<T>();
 
-		public FilterableSortableBindingList() {}
+		public FilterableSortableBindingList() { }
 
 		public FilterableSortableBindingList([NotNull] IList<T> items,
 		                                     bool raiseListChangedEventAfterSort = false) :

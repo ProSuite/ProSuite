@@ -1,8 +1,8 @@
 using System;
-using ProSuite.QA.Container.Geometry;
 using ProSuite.Commons;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
+using ProSuite.QA.Container.Geometry;
 
 namespace ProSuite.QA.Tests
 {

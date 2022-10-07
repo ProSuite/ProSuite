@@ -148,8 +148,8 @@ namespace ProSuite.DomainServices.AO.QA.Exceptions
 			}
 
 			foreach (string token in managedExceptionOrigin.Split(
-				new[] {_originSeparator},
-				StringSplitOptions.RemoveEmptyEntries))
+				         new[] {_originSeparator},
+				         StringSplitOptions.RemoveEmptyEntries))
 			{
 				yield return ParseOrigin(token);
 			}

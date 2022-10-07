@@ -24,7 +24,6 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			QualityConditionControl control;
 
 #if NET6_0
-
 			var viewModel =
 				new InstanceConfigurationViewModel<QualityCondition>(
 					item, modelBuilder.GetTestParameterDatasetProvider(), itemNavigation);
@@ -54,7 +53,6 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			InstanceConfigurationControl control;
 
 #if NET6_0
-
 			var viewModel =
 				new InstanceConfigurationViewModel<InstanceConfiguration>(
 					item, modelBuilder.GetTestParameterDatasetProvider(), itemNavigation);
@@ -65,7 +63,8 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			control = new InstanceConfigurationControl(tableState, blazorControl);
 #else
 			control =
-				new InstanceConfigurationControl(tableState, new QualityConditionTableViewControl());
+				new InstanceConfigurationControl(tableState,
+				                                 new QualityConditionTableViewControl());
 #endif
 			new InstanceConfigurationPresenter(item, control, itemNavigation);
 

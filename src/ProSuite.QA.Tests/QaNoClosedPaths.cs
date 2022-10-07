@@ -1,14 +1,14 @@
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container;
-using ProSuite.QA.Tests.Documentation;
-using ProSuite.QA.Tests.IssueCodes;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Container;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.IssueCodes;
 
 namespace ProSuite.QA.Tests
 {
@@ -98,7 +98,7 @@ namespace ProSuite.QA.Tests
 			return ! curve.IsEmpty && curve.IsClosed
 				       ? ReportError(
 					       "Closed path", InvolvedRowUtils.GetInvolvedRows(row), curve.FromPoint,
-				                     Codes[Code.ClosedPath], _shapeFieldName)
+					       Codes[Code.ClosedPath], _shapeFieldName)
 				       : NoError;
 		}
 	}

@@ -1,9 +1,9 @@
 using System.Collections.Generic;
-using ProSuite.QA.Tests.IssueCodes;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Tests.IssueCodes;
 
 namespace ProSuite.QA.Tests.Schema
 {

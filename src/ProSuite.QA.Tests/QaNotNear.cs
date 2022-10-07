@@ -1,15 +1,15 @@
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container;
-using ProSuite.QA.Container.Geometry;
-using ProSuite.QA.Tests.Coincidence;
-using ProSuite.QA.Tests.Documentation;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.QA.Container;
+using ProSuite.QA.Container.Geometry;
 using ProSuite.QA.Core;
-using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Tests.Coincidence;
+using ProSuite.QA.Tests.Documentation;
 
 namespace ProSuite.QA.Tests
 {
@@ -27,20 +27,29 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaNotNear_0))]
 		public QaNotNear(
-				[Doc(nameof(DocStrings.QaNotNear_featureClass))] IReadOnlyFeatureClass featureClass,
-				[Doc(nameof(DocStrings.QaNotNear_near))] double near,
-				[Doc(nameof(DocStrings.QaNotNear_minLength))] double minLength,
-				[Doc(nameof(DocStrings.QaNotNear_is3D))] bool is3D)
+				[Doc(nameof(DocStrings.QaNotNear_featureClass))]
+				IReadOnlyFeatureClass featureClass,
+				[Doc(nameof(DocStrings.QaNotNear_near))]
+				double near,
+				[Doc(nameof(DocStrings.QaNotNear_minLength))]
+				double minLength,
+				[Doc(nameof(DocStrings.QaNotNear_is3D))]
+				bool is3D)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(featureClass, near, minLength, is3D, tileSize: 1000.0) { }
 
 		[Doc(nameof(DocStrings.QaNotNear_0))]
 		public QaNotNear(
-			[Doc(nameof(DocStrings.QaNotNear_featureClass))] IReadOnlyFeatureClass featureClass,
-			[Doc(nameof(DocStrings.QaNotNear_near))] double near,
-			[Doc(nameof(DocStrings.QaNotNear_minLength))] double minLength,
-			[Doc(nameof(DocStrings.QaNotNear_is3D))] bool is3D,
-			[Doc(nameof(DocStrings.QaNotNear_tileSize))] double tileSize)
+			[Doc(nameof(DocStrings.QaNotNear_featureClass))]
+			IReadOnlyFeatureClass featureClass,
+			[Doc(nameof(DocStrings.QaNotNear_near))]
+			double near,
+			[Doc(nameof(DocStrings.QaNotNear_minLength))]
+			double minLength,
+			[Doc(nameof(DocStrings.QaNotNear_is3D))]
+			bool is3D,
+			[Doc(nameof(DocStrings.QaNotNear_tileSize))]
+			double tileSize)
 			: base(new[] {featureClass}, near,
 			       new ConstantFeatureDistanceProvider(near / 2),
 			       new ConstantPairDistanceProvider(minLength),
@@ -53,23 +62,34 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaNotNear_2))]
 		public QaNotNear(
-				[Doc(nameof(DocStrings.QaNotNear_featureClass))] IReadOnlyFeatureClass featureClass,
-				[Doc(nameof(DocStrings.QaNotNear_reference))] IReadOnlyFeatureClass reference,
-				[Doc(nameof(DocStrings.QaNotNear_near))] double near,
-				[Doc(nameof(DocStrings.QaNotNear_minLength))] double minLength,
-				[Doc(nameof(DocStrings.QaNotNear_is3D))] bool is3D)
+				[Doc(nameof(DocStrings.QaNotNear_featureClass))]
+				IReadOnlyFeatureClass featureClass,
+				[Doc(nameof(DocStrings.QaNotNear_reference))]
+				IReadOnlyFeatureClass reference,
+				[Doc(nameof(DocStrings.QaNotNear_near))]
+				double near,
+				[Doc(nameof(DocStrings.QaNotNear_minLength))]
+				double minLength,
+				[Doc(nameof(DocStrings.QaNotNear_is3D))]
+				bool is3D)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(featureClass, reference, near, minLength, is3D: is3D,
 			       tileSize: 1000.0) { }
 
 		[Doc(nameof(DocStrings.QaNotNear_2))]
 		public QaNotNear(
-			[Doc(nameof(DocStrings.QaNotNear_featureClass))] IReadOnlyFeatureClass featureClass,
-			[Doc(nameof(DocStrings.QaNotNear_reference))] IReadOnlyFeatureClass reference,
-			[Doc(nameof(DocStrings.QaNotNear_near))] double near,
-			[Doc(nameof(DocStrings.QaNotNear_minLength))] double minLength,
-			[Doc(nameof(DocStrings.QaNotNear_is3D))] bool is3D,
-			[Doc(nameof(DocStrings.QaNotNear_tileSize))] double tileSize)
+			[Doc(nameof(DocStrings.QaNotNear_featureClass))]
+			IReadOnlyFeatureClass featureClass,
+			[Doc(nameof(DocStrings.QaNotNear_reference))]
+			IReadOnlyFeatureClass reference,
+			[Doc(nameof(DocStrings.QaNotNear_near))]
+			double near,
+			[Doc(nameof(DocStrings.QaNotNear_minLength))]
+			double minLength,
+			[Doc(nameof(DocStrings.QaNotNear_is3D))]
+			bool is3D,
+			[Doc(nameof(DocStrings.QaNotNear_tileSize))]
+			double tileSize)
 			: base(new[] {featureClass, reference},
 			       near, new ConstantFeatureDistanceProvider(near / 2),
 			       new ConstantPairDistanceProvider(minLength),
@@ -81,36 +101,52 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaNotNear_0))]
 		public QaNotNear(
-				[Doc(nameof(DocStrings.QaNotNear_featureClass))] IReadOnlyFeatureClass featureClass,
-				[Doc(nameof(DocStrings.QaNotNear_near))] double near,
-				[Doc(nameof(DocStrings.QaNotNear_minLength))] double minLength)
+				[Doc(nameof(DocStrings.QaNotNear_featureClass))]
+				IReadOnlyFeatureClass featureClass,
+				[Doc(nameof(DocStrings.QaNotNear_near))]
+				double near,
+				[Doc(nameof(DocStrings.QaNotNear_minLength))]
+				double minLength)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(featureClass, near, minLength, is3D: false, tileSize: 1000.0) { }
 
 		[Doc(nameof(DocStrings.QaNotNear_0))]
 		public QaNotNear(
-			[Doc(nameof(DocStrings.QaNotNear_featureClass))] IReadOnlyFeatureClass featureClass,
-			[Doc(nameof(DocStrings.QaNotNear_near))] double near,
-			[Doc(nameof(DocStrings.QaNotNear_minLength))] double minLength,
-			[Doc(nameof(DocStrings.QaNotNear_tileSize))] double tileSize)
+			[Doc(nameof(DocStrings.QaNotNear_featureClass))]
+			IReadOnlyFeatureClass featureClass,
+			[Doc(nameof(DocStrings.QaNotNear_near))]
+			double near,
+			[Doc(nameof(DocStrings.QaNotNear_minLength))]
+			double minLength,
+			[Doc(nameof(DocStrings.QaNotNear_tileSize))]
+			double tileSize)
 			: this(featureClass, near, minLength, is3D: false, tileSize: tileSize) { }
 
 		[Doc(nameof(DocStrings.QaNotNear_2))]
 		public QaNotNear(
-				[Doc(nameof(DocStrings.QaNotNear_featureClass))] IReadOnlyFeatureClass featureClass,
-				[Doc(nameof(DocStrings.QaNotNear_reference))] IReadOnlyFeatureClass reference,
-				[Doc(nameof(DocStrings.QaNotNear_near))] double near,
-				[Doc(nameof(DocStrings.QaNotNear_minLength))] double minLength)
+				[Doc(nameof(DocStrings.QaNotNear_featureClass))]
+				IReadOnlyFeatureClass featureClass,
+				[Doc(nameof(DocStrings.QaNotNear_reference))]
+				IReadOnlyFeatureClass reference,
+				[Doc(nameof(DocStrings.QaNotNear_near))]
+				double near,
+				[Doc(nameof(DocStrings.QaNotNear_minLength))]
+				double minLength)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(featureClass, reference, near, minLength, is3D: false, tileSize: 1000.0) { }
 
 		[Doc(nameof(DocStrings.QaNotNear_2))]
 		public QaNotNear(
-			[Doc(nameof(DocStrings.QaNotNear_featureClass))] IReadOnlyFeatureClass featureClass,
-			[Doc(nameof(DocStrings.QaNotNear_reference))] IReadOnlyFeatureClass reference,
-			[Doc(nameof(DocStrings.QaNotNear_near))] double near,
-			[Doc(nameof(DocStrings.QaNotNear_minLength))] double minLength,
-			[Doc(nameof(DocStrings.QaNotNear_tileSize))] double tileSize)
+			[Doc(nameof(DocStrings.QaNotNear_featureClass))]
+			IReadOnlyFeatureClass featureClass,
+			[Doc(nameof(DocStrings.QaNotNear_reference))]
+			IReadOnlyFeatureClass reference,
+			[Doc(nameof(DocStrings.QaNotNear_near))]
+			double near,
+			[Doc(nameof(DocStrings.QaNotNear_minLength))]
+			double minLength,
+			[Doc(nameof(DocStrings.QaNotNear_tileSize))]
+			double tileSize)
 			: this(featureClass, reference, near, minLength, is3D: false) { }
 
 		protected override bool IsDirected => ! _self.Value;

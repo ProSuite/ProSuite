@@ -1,10 +1,10 @@
 using System.Collections.Generic;
-using ProSuite.QA.Tests.Coincidence;
-using ProSuite.QA.Tests.Documentation;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Core;
-using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Tests.Coincidence;
+using ProSuite.QA.Tests.Documentation;
 
 namespace ProSuite.QA.Tests
 {
@@ -16,9 +16,12 @@ namespace ProSuite.QA.Tests
 		public QaPartCoincidenceSelf(
 				[Doc(nameof(DocStrings.QaPartCoincidence_featureClass))]
 				IReadOnlyFeatureClass featureClass,
-				[Doc(nameof(DocStrings.QaPartCoincidence_near))] double near,
-				[Doc(nameof(DocStrings.QaPartCoincidence_minLength))] double minLength,
-				[Doc(nameof(DocStrings.QaPartCoincidence_is3D))] bool is3D)
+				[Doc(nameof(DocStrings.QaPartCoincidence_near))]
+				double near,
+				[Doc(nameof(DocStrings.QaPartCoincidence_minLength))]
+				double minLength,
+				[Doc(nameof(DocStrings.QaPartCoincidence_is3D))]
+				bool is3D)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(featureClass, near, minLength, is3D, 1000.0) { }
 
@@ -26,10 +29,14 @@ namespace ProSuite.QA.Tests
 		public QaPartCoincidenceSelf(
 			[Doc(nameof(DocStrings.QaPartCoincidence_featureClass))]
 			IReadOnlyFeatureClass featureClass,
-			[Doc(nameof(DocStrings.QaPartCoincidence_near))] double near,
-			[Doc(nameof(DocStrings.QaPartCoincidence_minLength))] double minLength,
-			[Doc(nameof(DocStrings.QaPartCoincidence_is3D))] bool is3D,
-			[Doc(nameof(DocStrings.QaPartCoincidence_tileSize))] double tileSize)
+			[Doc(nameof(DocStrings.QaPartCoincidence_near))]
+			double near,
+			[Doc(nameof(DocStrings.QaPartCoincidence_minLength))]
+			double minLength,
+			[Doc(nameof(DocStrings.QaPartCoincidence_is3D))]
+			bool is3D,
+			[Doc(nameof(DocStrings.QaPartCoincidence_tileSize))]
+			double tileSize)
 			: this(new[] {featureClass}, near, minLength, is3D, tileSize) { }
 
 		[Doc(nameof(DocStrings.QaPartCoincidenceSelf_2))]
@@ -37,9 +44,12 @@ namespace ProSuite.QA.Tests
 				[Doc(nameof(DocStrings.QaPartCoincidence_featureClasses))]
 				IEnumerable<IReadOnlyFeatureClass>
 					featureClasses,
-				[Doc(nameof(DocStrings.QaPartCoincidence_near))] double near,
-				[Doc(nameof(DocStrings.QaPartCoincidence_minLength))] double minLength,
-				[Doc(nameof(DocStrings.QaPartCoincidence_is3D))] bool is3D)
+				[Doc(nameof(DocStrings.QaPartCoincidence_near))]
+				double near,
+				[Doc(nameof(DocStrings.QaPartCoincidence_minLength))]
+				double minLength,
+				[Doc(nameof(DocStrings.QaPartCoincidence_is3D))]
+				bool is3D)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(featureClasses, near, minLength, is3D, 1000.0) { }
 
@@ -47,10 +57,14 @@ namespace ProSuite.QA.Tests
 		public QaPartCoincidenceSelf(
 			[Doc(nameof(DocStrings.QaPartCoincidence_featureClasses))]
 			IEnumerable<IReadOnlyFeatureClass> featureClasses,
-			[Doc(nameof(DocStrings.QaPartCoincidence_near))] double near,
-			[Doc(nameof(DocStrings.QaPartCoincidence_minLength))] double minLength,
-			[Doc(nameof(DocStrings.QaPartCoincidence_is3D))] bool is3D,
-			[Doc(nameof(DocStrings.QaPartCoincidence_tileSize))] double tileSize)
+			[Doc(nameof(DocStrings.QaPartCoincidence_near))]
+			double near,
+			[Doc(nameof(DocStrings.QaPartCoincidence_minLength))]
+			double minLength,
+			[Doc(nameof(DocStrings.QaPartCoincidence_is3D))]
+			bool is3D,
+			[Doc(nameof(DocStrings.QaPartCoincidence_tileSize))]
+			double tileSize)
 			: this(featureClasses, near, minLength, minLength, is3D, tileSize, 0) { }
 
 		[Doc(nameof(DocStrings.QaPartCoincidenceSelf_2))]
@@ -58,8 +72,10 @@ namespace ProSuite.QA.Tests
 				[Doc(nameof(DocStrings.QaPartCoincidence_featureClasses))]
 				IEnumerable<IReadOnlyFeatureClass>
 					featureClasses,
-				[Doc(nameof(DocStrings.QaPartCoincidence_near))] double near,
-				[Doc(nameof(DocStrings.QaPartCoincidence_minLength))] double minLength)
+				[Doc(nameof(DocStrings.QaPartCoincidence_near))]
+				double near,
+				[Doc(nameof(DocStrings.QaPartCoincidence_minLength))]
+				double minLength)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(featureClasses, near, minLength, false, 1000.0) { }
 
@@ -67,22 +83,28 @@ namespace ProSuite.QA.Tests
 		public QaPartCoincidenceSelf(
 			[Doc(nameof(DocStrings.QaPartCoincidence_featureClasses))]
 			IEnumerable<IReadOnlyFeatureClass> featureClasses,
-			[Doc(nameof(DocStrings.QaPartCoincidence_near))] double near,
-			[Doc(nameof(DocStrings.QaPartCoincidence_minLength))] double minLength,
-			[Doc(nameof(DocStrings.QaPartCoincidence_tileSize))] double tileSize)
+			[Doc(nameof(DocStrings.QaPartCoincidence_near))]
+			double near,
+			[Doc(nameof(DocStrings.QaPartCoincidence_minLength))]
+			double minLength,
+			[Doc(nameof(DocStrings.QaPartCoincidence_tileSize))]
+			double tileSize)
 			: this(featureClasses, near, minLength, false, tileSize) { }
 
 		[Doc(nameof(DocStrings.QaPartCoincidenceSelf_6))]
 		public QaPartCoincidenceSelf(
 			[Doc(nameof(DocStrings.QaPartCoincidence_featureClasses))]
 			IEnumerable<IReadOnlyFeatureClass> featureClasses,
-			[Doc(nameof(DocStrings.QaPartCoincidence_near))] double near,
+			[Doc(nameof(DocStrings.QaPartCoincidence_near))]
+			double near,
 			[Doc(nameof(DocStrings.QaPartCoincidence_connectedMinLength))]
 			double connectedMinLength,
 			[Doc(nameof(DocStrings.QaPartCoincidence_disjointMinLength))]
 			double disjointMinLength,
-			[Doc(nameof(DocStrings.QaPartCoincidence_is3D))] bool is3D,
-			[Doc(nameof(DocStrings.QaPartCoincidence_tileSize))] double tileSize,
+			[Doc(nameof(DocStrings.QaPartCoincidence_is3D))]
+			bool is3D,
+			[Doc(nameof(DocStrings.QaPartCoincidence_tileSize))]
+			double tileSize,
 			[Doc(nameof(DocStrings.QaPartCoincidence_coincidenceTolerance))]
 			double coincidenceTolerance)
 			: base(
@@ -101,7 +123,8 @@ namespace ProSuite.QA.Tests
 			[NotNull] IEnumerable<string> nearExpressions,
 			[NotNull] IEnumerable<string> connectedMinLengthExpressions,
 			[NotNull] IEnumerable<string> disjointMinLengthExpressionsSql,
-			[Doc(nameof(DocStrings.QaPartCoincidence_is3D))] bool is3D,
+			[Doc(nameof(DocStrings.QaPartCoincidence_is3D))]
+			bool is3D,
 			[Doc(nameof(DocStrings.QaPartCoincidence_coincidenceTolerance))]
 			double coincidenceTolerance)
 			: this(featureClasses, searchDistance,

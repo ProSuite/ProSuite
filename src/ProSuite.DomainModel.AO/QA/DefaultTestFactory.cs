@@ -50,7 +50,7 @@ namespace ProSuite.DomainModel.AO.QA
 			where T : IInvolvesTables
 		{
 			IList<T> created = Create(context, Parameters,
-			                          args => new[] { CreateInstance<T>(args) });
+			                          args => new[] {CreateInstance<T>(args)});
 			return created[0];
 		}
 

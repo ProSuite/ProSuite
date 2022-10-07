@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -12,8 +11,7 @@ namespace ProSuite.Commons.UI.ScreenBinding.Elements
 	public abstract class BoundScreenElement<CONTROLTYPE, PROPERTYTYPE>
 		: ScreenElement<CONTROLTYPE>, IBoundScreenElement
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private readonly List<Action> _changeActions = new List<Action>();
 		private readonly List<Action> _lostFocusActions = new List<Action>();

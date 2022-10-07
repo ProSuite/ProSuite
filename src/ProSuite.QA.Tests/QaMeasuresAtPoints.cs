@@ -2,17 +2,17 @@ using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestSupport;
-using ProSuite.QA.Tests.Documentation;
-using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
+using ProSuite.QA.Container;
+using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.IssueCodes;
 
 namespace ProSuite.QA.Tests
 {
@@ -80,7 +80,8 @@ namespace ProSuite.QA.Tests
 			IList<IReadOnlyFeatureClass> lineClasses,
 			[Doc(nameof(DocStrings.QaMeasuresAtPoints_searchDistance))]
 			double searchDistance,
-			[Doc(nameof(DocStrings.QaMeasuresAtPoints_mTolerance))] double mTolerance,
+			[Doc(nameof(DocStrings.QaMeasuresAtPoints_mTolerance))]
+			double mTolerance,
 			[Doc(nameof(DocStrings.QaMeasuresAtPoints_lineMSource))]
 			LineMSource lineMSource,
 			[Doc(nameof(DocStrings.QaMeasuresAtPoints_requireLine))]
@@ -101,7 +102,8 @@ namespace ProSuite.QA.Tests
 			IList<IReadOnlyFeatureClass> lineClasses,
 			[Doc(nameof(DocStrings.QaMeasuresAtPoints_searchDistance))]
 			double searchDistance,
-			[Doc(nameof(DocStrings.QaMeasuresAtPoints_mTolerance))] double mTolerance,
+			[Doc(nameof(DocStrings.QaMeasuresAtPoints_mTolerance))]
+			double mTolerance,
 			[Doc(nameof(DocStrings.QaMeasuresAtPoints_lineMSource))]
 			LineMSource lineMSource,
 			[Doc(nameof(DocStrings.QaMeasuresAtPoints_requireLine))]
@@ -112,7 +114,8 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaMeasuresAtPoints_matchExpression))] [CanBeNull]
 			string matchExpression)
 			: base(
-				CastToTables((IEnumerable<IReadOnlyFeatureClass>) Union(new[] {pointClass}, lineClasses)))
+				CastToTables(
+					(IEnumerable<IReadOnlyFeatureClass>) Union(new[] {pointClass}, lineClasses)))
 		{
 			Assert.NotNull(pointClass, "pointClass");
 			Assert.NotNull(lineClasses, "lineClasses");
@@ -205,8 +208,9 @@ namespace ProSuite.QA.Tests
 				else
 				{
 					double datasetMTolerance;
-					bool hasValidMTolerance = DatasetUtils.TryGetMTolerance(lineClass.SpatialReference,
-					                                                        out datasetMTolerance);
+					bool hasValidMTolerance = DatasetUtils.TryGetMTolerance(
+						lineClass.SpatialReference,
+						out datasetMTolerance);
 
 					if (! hasValidMTolerance)
 					{
@@ -388,8 +392,8 @@ namespace ProSuite.QA.Tests
 			filter.Geometry = _box;
 
 			foreach (IReadOnlyRow row in Search(neighborClass,
-			                            _filter[neighborTableIndex],
-			                            _helper[neighborTableIndex], point))
+			                                    _filter[neighborTableIndex],
+			                                    _helper[neighborTableIndex], point))
 			{
 				var neighborFeature = (IReadOnlyFeature) row;
 
@@ -489,8 +493,8 @@ namespace ProSuite.QA.Tests
 
 			IPoint nearestVertex;
 			double nearestVertexDistance = GetNearestVertexDistance(point, neighborCurve,
-			                                                        partIndex, segmentIndex,
-			                                                        out nearestVertex);
+				partIndex, segmentIndex,
+				out nearestVertex);
 
 			if (_lineMSource == LineMSource.VertexRequired ||
 			    nearestVertexDistance < SearchDistance)

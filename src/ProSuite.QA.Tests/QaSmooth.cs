@@ -2,18 +2,18 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container;
-using ProSuite.QA.Container.Geometry;
-using ProSuite.QA.Tests.Documentation;
-using ProSuite.QA.Tests.IssueCodes;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Container;
+using ProSuite.QA.Container.Geometry;
 using ProSuite.QA.Container.TestSupport;
+using ProSuite.QA.Core;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
-using ProSuite.QA.Core;
+using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.IssueCodes;
 
 namespace ProSuite.QA.Tests
 {
@@ -52,8 +52,10 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaSmooth_0))]
 		public QaSmooth(
-			[Doc(nameof(DocStrings.QaSmooth_featureClass))] IReadOnlyFeatureClass featureClass,
-			[Doc(nameof(DocStrings.QaSmooth_limit))] double limit)
+			[Doc(nameof(DocStrings.QaSmooth_featureClass))]
+			IReadOnlyFeatureClass featureClass,
+			[Doc(nameof(DocStrings.QaSmooth_limit))]
+			double limit)
 			: base(featureClass)
 		{
 			_limitCstr = limit;
@@ -77,6 +79,7 @@ namespace ProSuite.QA.Tests
 			{
 				_limitRad = FormatUtils.AngleInUnits2Radians(_limitCstr, AngularUnit);
 			}
+
 			IGeometry shape = ((IReadOnlyFeature) row).Shape;
 
 			switch (shape.GeometryType)
@@ -155,8 +158,8 @@ namespace ProSuite.QA.Tests
 		                               [NotNull] IReadOnlyRow row)
 		{
 			double anglechange = GeometryMathUtils.CalculateSmoothness(threeSegments[0],
-			                                                           threeSegments[1],
-			                                                           threeSegments[2]);
+				threeSegments[1],
+				threeSegments[2]);
 
 			if (Math.Abs(anglechange) <= _limitRad)
 			{
@@ -164,7 +167,8 @@ namespace ProSuite.QA.Tests
 			}
 
 			string description = string.Format("Smoothness parameter {0:N4} > {1:N4}",
-			                                   Math.Abs(anglechange), _limitRad); // TODO: use AngularUnit
+			                                   Math.Abs(anglechange),
+			                                   _limitRad); // TODO: use AngularUnit
 
 			IGeometry errorGeometry = GetErrorGeometry(threeSegments[1]);
 

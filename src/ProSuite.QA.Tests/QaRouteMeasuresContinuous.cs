@@ -2,15 +2,15 @@ using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container;
-using ProSuite.QA.Tests.Documentation;
-using ProSuite.QA.Tests.IssueCodes;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Container;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.IssueCodes;
 
 namespace ProSuite.QA.Tests
 {
@@ -166,7 +166,8 @@ namespace ProSuite.QA.Tests
 			{
 				searchFilter.Geometry = endPoint;
 
-				foreach (IReadOnlyRow searchRow in Search(searchTable, searchFilter, searchFilterHelper))
+				foreach (IReadOnlyRow searchRow in Search(searchTable, searchFilter,
+				                                          searchFilterHelper))
 				{
 					errorCount += FindErrors(endPoint, row, routeId,
 					                         tableIndex, searchRow, searchTableIndex);

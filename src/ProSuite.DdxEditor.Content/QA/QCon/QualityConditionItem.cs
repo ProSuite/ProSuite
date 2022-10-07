@@ -473,7 +473,6 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 					             _containerItem,
 					             applicationController));
 
-
 				_webHelpCommand = new ShowInstanceWebHelpCommand<QualityConditionItem>(
 					this, applicationController);
 

@@ -4,21 +4,21 @@ using System.Linq;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container;
-using ProSuite.QA.Container.Geometry;
-using ProSuite.QA.Container.TestSupport;
-using ProSuite.QA.Tests.Documentation;
-using ProSuite.QA.Tests.EdgeMatch;
-using ProSuite.QA.Tests.IssueCodes;
-using ProSuite.QA.Tests.Properties;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.QA.Container;
+using ProSuite.QA.Container.Geometry;
+using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Core;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.EdgeMatch;
+using ProSuite.QA.Tests.IssueCodes;
+using ProSuite.QA.Tests.Properties;
 
 namespace ProSuite.QA.Tests
 {
@@ -327,7 +327,8 @@ namespace ProSuite.QA.Tests
 		}
 
 		[TestParameter(_defaultIsCrossingAreaAttributeConstraintSymmetric)]
-		[Doc(nameof(DocStrings.QaEdgeMatchCrossingAreas_IsCrossingAreaAttributeConstraintSymmetric))]
+		[Doc(nameof(DocStrings
+			            .QaEdgeMatchCrossingAreas_IsCrossingAreaAttributeConstraintSymmetric))]
 		public bool IsCrossingAreaAttributeConstraintSymmetric
 		{
 			get { return _isCrossingAreaAttributeConstraintSymmetric; }
@@ -363,7 +364,8 @@ namespace ProSuite.QA.Tests
 		}
 
 		[TestParameter]
-		[Doc(nameof(DocStrings.QaEdgeMatchCrossingAreas_ReportIndividualAttributeConstraintViolations))]
+		[Doc(nameof(DocStrings
+			            .QaEdgeMatchCrossingAreas_ReportIndividualAttributeConstraintViolations))]
 		public bool ReportIndividualAttributeConstraintViolations { get; set; }
 
 		[TestParameter(_defaultAllowNoFeatureWithinSearchDistance)]
@@ -371,13 +373,13 @@ namespace ProSuite.QA.Tests
 		public bool AllowNoFeatureWithinSearchDistance { get; set; }
 
 		[TestParameter(_defaultAllowDisjointCandidateFeatureIfBordersAreNotCoincident)]
-		[Doc(nameof(DocStrings.
-			QaEdgeMatchCrossingAreas_AllowDisjointCandidateFeatureIfBordersAreNotCoincident
+		[Doc(nameof(DocStrings
+			            .QaEdgeMatchCrossingAreas_AllowDisjointCandidateFeatureIfBordersAreNotCoincident
 		))]
 		public bool AllowDisjointCandidateFeatureIfBordersAreNotCoincident { get; set; }
 
-		[Doc(nameof(DocStrings.
-			QaEdgeMatchCrossingAreas_AllowDisjointCandidateFeatureIfAttributeConstraintsAreFulfilled
+		[Doc(nameof(DocStrings
+			            .QaEdgeMatchCrossingAreas_AllowDisjointCandidateFeatureIfAttributeConstraintsAreFulfilled
 		))]
 		[TestParameter(
 			_defaultAllowDisjointCandidateFeatureIfAttributeConstraintsAreFulfilled)]
@@ -496,7 +498,8 @@ namespace ProSuite.QA.Tests
 
 				double xyTolerance;
 				if (featureClass == null ||
-				    ! DatasetUtils.TryGetXyTolerance(featureClass.SpatialReference, out xyTolerance))
+				    ! DatasetUtils.TryGetXyTolerance(featureClass.SpatialReference,
+				                                     out xyTolerance))
 				{
 					xyTolerance = 0;
 				}
@@ -695,8 +698,8 @@ namespace ProSuite.QA.Tests
 			foreach (int neighborAreaClassIndex in neighborAreaClassIndexes)
 			{
 				foreach (IReadOnlyFeature neighborFeature in
-					SearchNeighborRows(borderConnection.AreaBoundaryAlongBorder,
-					                   neighborAreaClassIndex))
+				         SearchNeighborRows(borderConnection.AreaBoundaryAlongBorder,
+				                            neighborAreaClassIndex))
 				{
 					if (! crossingAreaMatchCondition.IsFulfilled(borderConnection.Feature,
 					                                             borderConnection.ClassIndex,
@@ -760,7 +763,7 @@ namespace ProSuite.QA.Tests
 			if (! commonBorder.IsEmpty)
 			{
 				foreach (AttributeConstraintViolation constraintViolation in
-					GetAttributeConstraintViolations(borderConnection, neighborConnection))
+				         GetAttributeConstraintViolations(borderConnection, neighborConnection))
 				{
 					AddConstraintError(borderConnection, neighborConnection,
 					                   GeometryFactory.Clone(commonBorder),
@@ -872,7 +875,7 @@ namespace ProSuite.QA.Tests
 			foreach (int boundingClassIndex in GetBoundingClassIndexes(areaClassIndex))
 			{
 				foreach (IReadOnlyFeature boundingFeature in
-					SearchBoundingRows(areaBoundaryAlongBorder, boundingClassIndex))
+				         SearchBoundingRows(areaBoundaryAlongBorder, boundingClassIndex))
 				{
 					if (! boundingFeatureMatchCondition.IsFulfilled(
 						    borderConnection.Feature, borderConnection.ClassIndex,
@@ -915,7 +918,7 @@ namespace ProSuite.QA.Tests
 
 		[NotNull]
 		private IEnumerable<IReadOnlyFeature> SearchNeighborRows([NotNull] IPolyline borderLine,
-		                                                 int neighborLineClassIndex)
+		                                                         int neighborLineClassIndex)
 		{
 			ISpatialFilter spatialFilter = GetSearchFilter(neighborLineClassIndex,
 			                                               borderLine,
@@ -944,7 +947,7 @@ namespace ProSuite.QA.Tests
 
 		[NotNull]
 		private IEnumerable<IReadOnlyFeature> SearchBoundingRows([NotNull] IPolyline borderLine,
-		                                                 int boundingClassIndex)
+		                                                         int boundingClassIndex)
 		{
 			ISpatialFilter spatialFilter = GetSearchFilter(boundingClassIndex,
 			                                               borderLine,
@@ -991,7 +994,7 @@ namespace ProSuite.QA.Tests
 				       (_areaClass1BorderMatchCondition =
 					        new BorderMatchCondition(_areaClass1BorderMatchConditionSql,
 					                                 GetSqlCaseSensitivity(areaClassIndex,
-					                                                       _borderClass1Index)));
+						                                 _borderClass1Index)));
 			}
 
 			if (IsAreaClass2(areaClassIndex))
@@ -1000,7 +1003,7 @@ namespace ProSuite.QA.Tests
 				       (_areaClass2BorderMatchCondition =
 					        new BorderMatchCondition(_areaClass2BorderMatchConditionSql,
 					                                 GetSqlCaseSensitivity(areaClassIndex,
-					                                                       _borderClass2Index)));
+						                                 _borderClass2Index)));
 			}
 
 			throw new ArgumentException("Not an area class index");
@@ -1156,7 +1159,7 @@ namespace ProSuite.QA.Tests
 			return ReportError(
 				description, InvolvedRowUtils.GetInvolvedRows(areaBorderFeature, neighborFeature),
 				GeometryFactory.Clone(errorGeometry), first.IssueCode, first.AffectedComponents,
-				values: new[] { first.TextValue });
+				values: new[] {first.TextValue});
 		}
 
 		private int CompareBorderConnectionList(
@@ -1269,7 +1272,7 @@ namespace ProSuite.QA.Tests
 							GetAttributeConstraintViolations(borderConnection, neighborConnection);
 
 						foreach (AttributeConstraintViolation constraintViolation in
-							constraintViolations)
+						         constraintViolations)
 						{
 							// description has final period
 							AddConstraintError(
@@ -1460,7 +1463,7 @@ namespace ProSuite.QA.Tests
 		{
 			protected override BorderConnection
 				CreateBorderConnection(IReadOnlyFeature feature, int featureClassIndex,
-									   IReadOnlyFeature borderFeature, int borderClassIndex,
+				                       IReadOnlyFeature borderFeature, int borderClassIndex,
 				                       IPolyline lineAlongBorder, IPolyline uncoveredLine)
 			{
 				var created = new BorderConnection(feature, featureClassIndex,
@@ -1475,7 +1478,8 @@ namespace ProSuite.QA.Tests
 			{
 				return
 					EdgeMatchUtils.VerifyHandled(borderConnection.Feature, tileWksBox, allWksBox) ||
-					EdgeMatchUtils.VerifyHandled(borderConnection.BorderFeature, tileWksBox, allWksBox);
+					EdgeMatchUtils.VerifyHandled(borderConnection.BorderFeature, tileWksBox,
+					                             allWksBox);
 			}
 		}
 
