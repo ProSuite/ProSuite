@@ -18,7 +18,7 @@ namespace ProSuite.Commons.AO.Test.Geometry.Cut
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout(EsriProduct.ArcEditor);
+			_lic.Checkout();
 		}
 
 		[OneTimeTearDown]
