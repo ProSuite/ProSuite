@@ -584,7 +584,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 					esriFeatureType.esriFTSimple,
 					shapeFieldName ?? FieldUtils.GetShapeFieldName(), configKeyWord);
 			}
-			catch (Exception)
+			catch (Exception ex)
 			{
 				try
 				{
@@ -599,7 +599,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 					_msg.Debug("Error writing to log", e);
 				}
 
-				throw;
+				throw new Exception($"Error creating feature class '{fclassName}'", ex);
 			}
 		}
 

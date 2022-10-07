@@ -46,14 +46,23 @@ namespace ProSuite.QA.Tests
 				_tileId = 0;
 				_tileFc = null;
 
-				if (File.Exists(_fileGdbPath))
 				{
-					File.Delete(_fileGdbPath);
-				}
+					string fileGdbPath = _fileGdbPath;
+					if (! Path.GetExtension(fileGdbPath)
+					          .Equals(".gdb", StringComparison.CurrentCultureIgnoreCase))
+					{
+						fileGdbPath += ".gdb";
+					}
 
-				if (Directory.Exists(_fileGdbPath))
-				{
-					Directory.Delete(_fileGdbPath, recursive: true);
+					if (File.Exists(fileGdbPath))
+					{
+						File.Delete(fileGdbPath);
+					}
+
+					if (Directory.Exists(fileGdbPath))
+					{
+						Directory.Delete(fileGdbPath, recursive: true);
+					}
 				}
 
 				IWorkspaceName wsName = WorkspaceUtils.CreateFileGdbWorkspace(
@@ -71,7 +80,7 @@ namespace ProSuite.QA.Tests
 					string baseName = $"table_{iInvolved}";
 					if (involvedTable is IReadOnlyDataset ds)
 					{
-						baseName = ds.Name;
+						baseName = ds.Name.Replace(".", "_").Replace("(","_").Replace(")", "_");
 						int iP = baseName.LastIndexOf('.');
 						if (iP >= 0)
 						{
