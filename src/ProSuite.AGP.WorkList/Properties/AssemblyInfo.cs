@@ -1,4 +1,4 @@
-﻿using System.Reflection;
+using System.Reflection;
 using System.Runtime.InteropServices;
 
 [assembly: AssemblyTitle("ProSuite.AGP.WorkList")]
@@ -8,4 +8,4 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // This GUID is for the ID of the typelib if this project is exposed to COM:
-[assembly: Guid("2efe37c6-29a4-4e51-8c9f-d7b895f9ce6d")]
+[assembly: Guid("2EFE37C6-29A4-4E51-8C9F-D7B895F9CE6D")]

@@ -1,93 +1,44 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{AF816619-A110-435B-A575-53A511593422}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>ProSuite.AGP.WorkList.Test</RootNamespace>
-    <AssemblyName>ProSuite.AGP.WorkList.Test</AssemblyName>
-    <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' ">v4.8</TargetFrameworkVersion>
+
     <ProAssemblyPath Condition=" '$(ProAssemblyPath)' == '' ">C:\Program Files\ArcGIS\Pro</ProAssemblyPath>
     <OutputDirectory Condition=" '$(OutputDirectory)' == '' ">..\..\bin</OutputDirectory>
+    <OutputPath>$(OutputDirectory)\$(Configuration)\</OutputPath>
+
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+
+    <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' Or '$(TargetFrameworkVersion)' == 'v4.8' ">net48</TargetFrameworkVersion>
+    <TargetFramework>$(TargetFrameworkVersion)</TargetFramework>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>$(OutputDirectory)\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>$(OutputDirectory)\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
     <NoWarn>1591</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="ArcGIS.Core">
-      <SpecificVersion>False</SpecificVersion>
       <HintPath>$(ProAssemblyPath)\bin\ArcGIS.Core.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
     </Reference>
     <Reference Include="ArcGIS.Desktop.Framework">
-      <SpecificVersion>False</SpecificVersion>
       <HintPath>$(ProAssemblyPath)\bin\ArcGIS.Desktop.Framework.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
     </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="GdbQueryWorkList.cs" />
-    <Compile Include="InvolvedTablesTest.cs" />
-    <Compile Include="IssueItemTest.cs" />
-    <Compile Include="ItemRepositoryMock.cs" />
-    <Compile Include="MemoryQueryWorkList.cs" />
-    <Compile Include="PolygonConstruction.cs" />
-    <Compile Include="WorkItemStateRepositoryTest.cs" />
-    <Compile Include="TestUtils.cs" />
-    <Compile Include="WorkItemMock.cs" />
-    <Compile Include="WorkItemRepositoryTest.cs" />
-    <Compile Include="WorkItemTest.cs" />
-    <Compile Include="WorkListTest.cs" />
-    <Compile Include="WorklistUtilsTest.cs" />
+    <PackageReference Include="NUnit" Version="3.12.0" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="NUnit">
-      <Version>3.12.0</Version>
-    </PackageReference>
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\ProSuite.AGP.WorkList.Contracts\ProSuite.AGP.WorkList.Contracts.csproj">
-      <Project>{47E134C6-B803-451E-8C33-7C71B158B2AC}</Project>
-      <Name>ProSuite.AGP.WorkList.Contracts</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ProSuite.AGP.WorkList\ProSuite.AGP.WorkList.csproj">
-      <Project>{2EFE37C6-29A4-4E51-8C9F-D7B895F9CE6D}</Project>
-      <Name>ProSuite.AGP.WorkList</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ProSuite.Commons.AGP.Core\ProSuite.Commons.AGP.Core.csproj">
-      <Project>{b80740ec-bb68-410c-a617-e79c467f1969}</Project>
-      <Name>ProSuite.Commons.AGP.Core</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ProSuite.Commons.AGP.Hosting\ProSuite.Commons.AGP.Hosting.csproj">
-      <Project>{d6540148-8790-4c77-8a65-518bd10487d7}</Project>
-      <Name>ProSuite.Commons.AGP.Hosting</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ProSuite.Commons.AGP\ProSuite.Commons.AGP.csproj">
-      <Project>{89f2c583-3022-43f8-9b69-27123836625f}</Project>
-      <Name>ProSuite.Commons.AGP</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ProSuite.Commons\ProSuite.Commons.csproj">
-      <Project>{66e5d99b-26ab-4fff-834d-d96347df4fa4}</Project>
-      <Name>ProSuite.Commons</Name>
-    </ProjectReference>
+    <ProjectReference Include="..\ProSuite.AGP.WorkList.Contracts\ProSuite.AGP.WorkList.Contracts.csproj" />
+    <ProjectReference Include="..\ProSuite.AGP.WorkList\ProSuite.AGP.WorkList.csproj" />
+    <ProjectReference Include="..\ProSuite.Commons.AGP.Core\ProSuite.Commons.AGP.Core.csproj" />
+    <ProjectReference Include="..\ProSuite.Commons.AGP.Hosting\ProSuite.Commons.AGP.Hosting.csproj" />
+    <ProjectReference Include="..\ProSuite.Commons.AGP\ProSuite.Commons.AGP.csproj" />
+    <ProjectReference Include="..\ProSuite.Commons\ProSuite.Commons.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="TestData\IssuePolygons.xml" />
@@ -96,5 +47,7 @@
   <ItemGroup>
     <None Include="TestData\work_list_definition_pointing_to_sde.xml.swl" />
   </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <ItemGroup>
+    <Compile Remove="IssuePolygonsGdbRepository.cs" />
+  </ItemGroup>
 </Project>
