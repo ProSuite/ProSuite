@@ -94,7 +94,9 @@
     <ProjectReference Include="..\ProSuite.Commons\ProSuite.Commons.csproj" />
     <ProjectReference Include="..\ProSuite.Microservices.Client\ProSuite.Microservices.Client.csproj" />
     <ProjectReference Include="..\ProSuite.QA.Core\ProSuite.QA.Core.csproj" />
+  </ItemGroup>
 
+  <ItemGroup Condition=" '$(VSArcGISProduct)' == 'ArcGIS' Or '$(VSArcGISProduct)' == 'Server' ">
     <!-- ProSuite.DomainModel.AO is used by legacy property editors -->
     <ProjectReference Include="..\ProSuite.DomainModel.AO\ProSuite.DomainModel.AO.csproj" />
   </ItemGroup>
