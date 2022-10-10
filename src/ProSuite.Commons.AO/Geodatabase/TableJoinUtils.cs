@@ -21,6 +21,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		/// <summary>
 		/// Creates a query table for a list of relationship classes and a join type.
+		/// NOTE: The OIDs of these tables are NOT unique (TOP-5598). Use CreateReadOnlyQueryTable instead.
 		/// </summary>
 		/// <param name="relationshipClass">The relationship class.</param>
 		/// <param name="joinType">Type of the join.</param>
@@ -52,6 +53,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		/// <summary>
 		/// Creates a query table for a list of relationship classes and a join type.
+		/// NOTE: The OIDs of these tables are NOT unique (TOP-5598). Use CreateReadOnlyQueryTable instead.
 		/// </summary>
 		/// <param name="relationshipClasses">The relationship classes.</param>
 		/// <param name="joinType">Type of the join.</param>
@@ -63,7 +65,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		/// <param name="queryTableName">An optional name for the query table. If not set, it's generated</param>
 		/// <returns>
 		/// A query table. This will be a feature class if
-		/// <see cref="CanCreateQueryFeatureClass(System.Collections.Generic.IList{ESRI.ArcGIS.Geodatabase.IRelationshipClass},JoinType)"/>
+		/// <see cref="CanCreateQueryFeatureClass(IList{IRelationshipClass},JoinType)"/>
 		/// returns true on the relationship classes and join type./&gt;
 		/// </returns>
 		[NotNull]
@@ -80,9 +82,84 @@ namespace ProSuite.Commons.AO.Geodatabase
 			string name = ! string.IsNullOrWhiteSpace(queryTableName)
 				              ? queryTableName
 				              : GenerateQueryTableName(relationshipClasses);
+
 			return CreateQueryTable(relationshipClasses, joinType, name,
 			                        includeOnlyOIDFields, excludeShapeField,
-			                        whereClause);
+			                        whereClause, out string _);
+		}
+
+		/// <summary>
+		/// Creates a query table for a list of relationship classes and a join type wrapped in a
+		/// read-only table.
+		/// The OIDs of this class are unique or NULL, in case of a right join with no left row where the foreign key
+		/// is in the left table or vice versa.
+		/// </summary>
+		/// <param name="relationshipClass">The relationship class.</param>
+		/// <param name="joinType">Type of the join.</param>
+		/// <param name="includeOnlyOIDFields">if set to <c>true</c> only key fields (plus the shape field if applicable) will be included
+		/// in the query table.</param>
+		/// <param name="excludeShapeField">if set to <c>true</c> no shape field will be included in the field list. 
+		/// In this case the resulting table can never be used as a feature class.</param>
+		/// <param name="whereClause">An optional where clause</param>
+		/// <param name="queryTableName">An optional name for the query table. If not set, it's generated</param>
+		/// <returns>
+		/// A query table. This will be a feature class if
+		/// <see cref="CanCreateQueryFeatureClass(IList{IRelationshipClass},JoinType)"/>
+		/// returns true on the relationship classes and join type./&gt;
+		/// </returns>
+		public static IReadOnlyTable CreateReadOnlyQueryTable(
+			[NotNull] IRelationshipClass relationshipClass,
+			JoinType joinType = JoinType.InnerJoin,
+			bool includeOnlyOIDFields = false,
+			bool excludeShapeField = false,
+			string whereClause = null,
+			string queryTableName = null)
+		{
+			Assert.ArgumentNotNull(relationshipClass, nameof(relationshipClass));
+
+			return CreateReadOnlyQueryTable(relationshipClass, joinType,
+			                                includeOnlyOIDFields, excludeShapeField,
+			                                whereClause, queryTableName);
+		}
+
+		/// <summary>
+		/// Creates a query table for a list of relationship classes and a join type wrapped in a
+		/// read-only table.
+		/// The OIDs of this class are unique or NULL, in case of a right join with no left row where the foreign key
+		/// is in the left table or vice versa.
+		/// </summary>
+		/// <param name="relationshipClasses">The relationship classes.</param>
+		/// <param name="joinType">Type of the join.</param>
+		/// <param name="includeOnlyOIDFields">if set to <c>true</c> only key fields (plus the shape field if applicable) will be included
+		/// in the query table.</param>
+		/// <param name="excludeShapeField">if set to <c>true</c> no shape field will be included in the field list. 
+		/// In this case the resulting table can never be used as a feature class.</param>
+		/// <param name="whereClause">An optional where clause</param>
+		/// <param name="queryTableName">An optional name for the query table. If not set, it's generated</param>
+		/// <returns>
+		/// A query table. This will be a feature class if
+		/// <see cref="CanCreateQueryFeatureClass(IList{IRelationshipClass},JoinType)"/>
+		/// returns true on the relationship classes and join type./&gt;
+		/// </returns>
+		public static IReadOnlyTable CreateReadOnlyQueryTable(
+			[NotNull] IList<IRelationshipClass> relationshipClasses,
+			JoinType joinType = JoinType.InnerJoin,
+			bool includeOnlyOIDFields = false,
+			bool excludeShapeField = false,
+			string whereClause = null,
+			string queryTableName = null)
+		{
+			Assert.ArgumentNotNull(relationshipClasses, nameof(relationshipClasses));
+
+			string name = ! string.IsNullOrWhiteSpace(queryTableName)
+				              ? queryTableName
+				              : GenerateQueryTableName(relationshipClasses);
+
+			ITable queryTable = CreateQueryTable(
+				relationshipClasses, joinType, name, includeOnlyOIDFields, excludeShapeField,
+				whereClause, out string primaryKeyField);
+
+			return ReadOnlyTableFactory.Create(queryTable, primaryKeyField);
 		}
 
 		[NotNull]
@@ -394,11 +471,11 @@ namespace ProSuite.Commons.AO.Geodatabase
 			return result;
 		}
 
-		private static void DefineOIDField(bool ensureUniqueIds,
-		                                   [NotNull] AssociationDescription associationDescription,
-		                                   JoinType joinType,
-		                                   [NotNull] GdbTable result,
-		                                   [NotNull] IReadOnlyTable geometryTable)
+		public static void DefineOIDField(bool ensureUniqueIds,
+		                                  [NotNull] AssociationDescription associationDescription,
+		                                  JoinType joinType,
+		                                  [NotNull] GdbTable result,
+		                                  [NotNull] IReadOnlyTable geometryTable)
 		{
 			IReadOnlyTable oidSourceTable;
 
@@ -733,7 +810,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 			JoinType joinType,
 			[NotNull] string queryTableName,
 			bool includeOnlyOIDFields, bool excludeShapeField,
-			[CanBeNull] string whereClause)
+			[CanBeNull] string whereClause,
+			out string primaryKeyField)
 		{
 			Assert.ArgumentNotNull(relationshipClasses, nameof(relationshipClasses));
 			Assert.ArgumentCondition(relationshipClasses.Count > 0, "0 relationship classes");
@@ -744,7 +822,6 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			string shapeFieldName;
 			esriGeometryType geometryType;
-			string primaryKeyField;
 			IQueryDef queryDef = CreateQueryDef(relationshipClasses, joinType,
 			                                    includeOnlyOIDFields, excludeShapeField,
 			                                    out shapeFieldName,

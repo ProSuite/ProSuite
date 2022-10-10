@@ -30,8 +30,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		public IRow BaseRow => Row;
 		protected IRow Row { get; }
-		public bool HasOID => Row.HasOID;
-		public int OID => Row.OID;
+		public bool HasOID => Table.AlternateOidFieldName != null || Row.HasOID;
+		public int OID => Table.GetRowOid(Row);
 
 		public object get_Value(int field) => Row.Value[field];
 

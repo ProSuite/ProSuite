@@ -721,7 +721,9 @@ namespace ProSuite.Commons.AO.Geodatabase
 		}
 
 		[CanBeNull]
-		public static IObject GetObject([NotNull] IObjectClass objectClass, int objectId)
+		public static IObject GetObject([NotNull] IObjectClass objectClass,
+		                                int objectId,
+		                                [CanBeNull] string oidFieldName = null)
 		{
 			Assert.ArgumentNotNull(objectClass, nameof(objectClass));
 
@@ -735,9 +737,12 @@ namespace ProSuite.Commons.AO.Geodatabase
 			//        ? GetFeature(featureClass, objectId)
 			//        : (IObject) GetRow((ITable) objectClass, objectId);
 
-			string whereClause = string.Format("{0}={1}",
-			                                   objectClass.OIDFieldName,
-			                                   objectId);
+			if (oidFieldName == null)
+			{
+				oidFieldName = objectClass.OIDFieldName;
+			}
+
+			string whereClause = string.Format("{0}={1}", oidFieldName, objectId);
 
 			IList<IObject> list = FindList<IObject>(objectClass, whereClause);
 
@@ -841,10 +846,21 @@ namespace ProSuite.Commons.AO.Geodatabase
 		{
 			if (table is ReadOnlyTable roTable)
 			{
-				foreach (IRow baseFeature in GetRowsByObjectIds(
-					         roTable.BaseTable, objectIds, recycling))
+				if (roTable.AlternateOidFieldName != null)
 				{
-					yield return roTable.CreateRow(baseFeature);
+					foreach (IReadOnlyRow row in GetRowsInList(
+						         table, roTable.AlternateOidFieldName, objectIds, recycling))
+					{
+						yield return row;
+					}
+				}
+				else
+				{
+					foreach (IRow baseFeature in GetRowsByObjectIds(
+						         roTable.BaseTable, objectIds, recycling))
+					{
+						yield return roTable.CreateRow(baseFeature);
+					}
 				}
 			}
 			else

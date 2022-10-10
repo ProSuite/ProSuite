@@ -18,7 +18,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 			return (ReadOnlyFeatureClass) Create((ITable) featureClass);
 		}
 
-		public static ReadOnlyTable Create([NotNull] ITable table)
+		public static ReadOnlyTable Create([NotNull] ITable table,
+		                                   [CanBeNull] string alternateOIDField = null)
 		{
 			if (! Cache.TryGetValue(table, out ReadOnlyTable existing))
 			{
@@ -30,6 +31,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 				{
 					existing = CreateReadOnlyTable(table);
 				}
+
+				existing.AlternateOidFieldName = alternateOIDField;
 
 				Cache.Add(table, existing);
 			}

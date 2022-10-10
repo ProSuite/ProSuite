@@ -47,10 +47,8 @@ namespace ProSuite.DomainModel.AO.QA
 			IRelationshipClass relationshipClass =
 				OpenRelationshipClass(associationName, model, datasetContext);
 
-			ITable queryTable = RelationshipClassUtils.GetQueryTable(
+			return RelationshipClassUtils.GetReadOnlyQueryTable(
 				relationshipClass, baseTables, joinType, whereClause);
-
-			return ReadOnlyTableFactory.Create(queryTable);
 		}
 
 		[NotNull]

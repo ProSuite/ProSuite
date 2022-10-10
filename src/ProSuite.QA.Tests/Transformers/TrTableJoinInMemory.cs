@@ -146,9 +146,6 @@ namespace ProSuite.QA.Tests.Transformers
 				throw new NotImplementedException("RightJoin is not yet implemented.");
 			}
 
-			// TODO: Constraints on the input tables! Idea: IReadOnlyFeatureClass implementation
-			//       that wraps the filter helper and container access logic
-
 			// If the geometry table is null, the 'left' table will be used (if it has a geometry).
 			geometryTable = geometryTable ?? associationDescription.Table1;
 
@@ -199,11 +196,17 @@ namespace ProSuite.QA.Tests.Transformers
 				joinedDataset.TableFieldsBySource.Add(associationTable, bridgeTableFields);
 			}
 
-			IReadOnlyTable oidSourceTable = joinedDataset.ObjectIdSourceTable;
+			IReadOnlyTable oidSourceTable =
+				TableJoinUtils.DetermineOIDTable(association, joinedDataset.JoinType, leftTable);
+			//IReadOnlyTable oidSourceTable = joinedDataset.ObjectIdSourceTable;
 
 			if (oidSourceTable != null && oidSourceTable.HasOID)
 			{
-				joinedDataset.TableFieldsBySource[oidSourceTable].AddOIDField(resultTable);
+				// It must be qualified in order to find out the source table name
+				string qualifiedOidName = DatasetUtils.QualifyFieldName(oidSourceTable,
+					oidSourceTable.OIDFieldName);
+				joinedDataset.TableFieldsBySource[oidSourceTable].AddOIDField(resultTable,
+					qualifiedOidName);
 			}
 
 			leftFields.AddAllFields(resultTable);

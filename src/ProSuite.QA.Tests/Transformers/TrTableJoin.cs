@@ -55,11 +55,9 @@ namespace ProSuite.QA.Tests.Transformers
 				IRelationshipClass relClass =
 					((IFeatureWorkspace) _t0.Workspace).OpenRelationshipClass(
 						_relationName);
-				var joined = RelationshipClassUtils.GetQueryTable(
+				_joined = RelationshipClassUtils.GetReadOnlyQueryTable(
 					relClass, involved, _joinType, whereClause: null,
 					queryTableName: _transformerName);
-
-				_joined = ReadOnlyTableFactory.Create(joined);
 			}
 
 			return _joined;
