@@ -117,7 +117,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 		{
 			Assert.ArgumentNotNull(relationshipClass, nameof(relationshipClass));
 
-			return CreateReadOnlyQueryTable(relationshipClass, joinType,
+			var relationshipClassList = new List<IRelationshipClass> {relationshipClass};
+			return CreateReadOnlyQueryTable(relationshipClassList, joinType,
 			                                includeOnlyOIDFields, excludeShapeField,
 			                                whereClause, queryTableName);
 		}
