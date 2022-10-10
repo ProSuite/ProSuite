@@ -39,8 +39,7 @@ namespace ProSuite.UI.MicroserverState
 
 		public ServerStateViewModel([NotNull] IEnumerable<MicroserviceClientBase> serviceClients)
 		{
-			//var serverState = new ServerState(serviceClient);
-			//CurrentServerState = serverState;
+			_msg.Debug("Adding new service states...");
 
 			ServerStates.AddRange(serviceClients.Select(c => new ServerState(c)));
 		}

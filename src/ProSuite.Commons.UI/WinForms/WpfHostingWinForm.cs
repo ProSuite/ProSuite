@@ -54,6 +54,8 @@ namespace ProSuite.Commons.UI.WinForms
 		{
 			try
 			{
+				_msg.DebugFormat("Loading WPF hosting win form...");
+
 				_wpfControlHost = new ElementHost {Dock = DockStyle.Fill, Child = _wpfControl};
 
 				Controls.Add(_wpfControlHost);
