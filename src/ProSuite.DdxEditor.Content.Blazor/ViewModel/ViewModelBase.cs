@@ -23,7 +23,8 @@ public abstract class ViewModelBase : Observable
 	{
 		Assert.ArgumentNotNull(parameter, nameof(parameter));
 
-		ParameterName = parameter.Name;
+		IsConstructorParameter = parameter.IsConstructorParameter;
+		ParameterName = IsConstructorParameter ? parameter.Name : $"[{parameter.Name}]";
 		Parameter = parameter;
 		DataType = parameter.Type;
 
@@ -51,6 +52,8 @@ public abstract class ViewModelBase : Observable
 
 	[NotNull]
 	protected Type DataType { get; }
+
+	public bool IsConstructorParameter { get; }
 
 	public void ResetValue()
 	{
