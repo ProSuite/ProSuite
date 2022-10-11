@@ -2,11 +2,13 @@
 @inherits TestParameterValueBlazorBase<string>
 
 <Validation ErrorMessage="@ErrorMessage">
-	<span>
-		<button onclick="@OnClick" class="ddx-button">
-			<img alt="Find Dataset" src="images/Find.png" style="padding: 0 0 7px"/>
-		</button>
-		<span>
+	<div class="row">
+		<div class="col-auto">
+			<button onclick="@OnClick" class="ddx-button">
+				<img alt="Find Dataset" src="images/Find.png" style="padding: 0 0 7px"/>
+			</button>
+		</div>
+		<div class="col w-100">
 			@if (DatasetViewModel.IsDataset.HasValue && DatasetViewModel.IsDataset.Value)
 			{
 				@DatasetViewModel.DisplayValue
@@ -15,13 +17,19 @@
 			{
 				if (Selected)
 				{
-					<RadzenLink Text="@DatasetViewModel.DisplayValue" onclick="@(() => OnLinkClicked())" Style="color: white" />
+					<RadzenLink Text="@DatasetViewModel.DisplayValue" onclick="@(() => OnLinkClicked())" Style="color: white"/>
 				}
 				else
 				{
-					<RadzenLink Text="@DatasetViewModel.DisplayValue" onclick="@(() => OnLinkClicked())" />
+					<RadzenLink Text="@DatasetViewModel.DisplayValue" onclick="@(() => OnLinkClicked())"/>
 				}
 			}
-		</span>
-	</span>
+		</div>
+		<div class="col-auto">
+			@if (DatasetViewModel.DatasetSource != null)
+			{
+				<div class="clear rzi" onclick="@OnClickResetValue"></div>
+			}
+		</div>
+	</div>
 </Validation>
