@@ -29,34 +29,46 @@ namespace ProSuite.Commons.AO.Geodatabase
 			return new ReadOnlyTable(table);
 		}
 
-		private readonly ITable _table;
-
-		private readonly string
-			_name; // cache name for debugging purposes (avoid all ArcObjects threading issues)
+		// cache name for debugging purposes (avoid all ArcObjects threading issues)
+		private readonly string _name;
+		private int _oidFieldIndex = -1;
 
 		protected ReadOnlyTable([NotNull] ITable table)
 		{
-			_table = table;
-			_name = DatasetUtils.GetName(_table);
+			BaseTable = table;
+			_name = DatasetUtils.GetName(BaseTable);
 		}
 
 		public override string ToString() => $"{_name} ({GetType().Name})";
 
-		public ITable BaseTable => _table;
-		protected ITable Table => _table;
-		IName IReadOnlyDataset.FullName => ((IDataset) _table).FullName;
-		IWorkspace IReadOnlyDataset.Workspace => ((IDataset) _table).Workspace;
-		public string Name => DatasetUtils.GetName(_table);
-		public IFields Fields => _table.Fields;
+		public string AlternateOidFieldName { get; set; }
 
-		public int FindField(string name) => _table.FindField(name);
+		public ITable BaseTable { get; }
 
-		public bool HasOID => _table.HasOID;
-		public string OIDFieldName => _table.OIDFieldName;
+		protected ITable Table => BaseTable;
 
-		public IReadOnlyRow GetRow(int oid) => CreateRow(_table.GetRow(oid));
+		IName IReadOnlyDataset.FullName => ((IDataset) BaseTable).FullName;
+		IWorkspace IReadOnlyDataset.Workspace => ((IDataset) BaseTable).Workspace;
+		public string Name => DatasetUtils.GetName(BaseTable);
+		public IFields Fields => BaseTable.Fields;
 
-		public int RowCount(IQueryFilter filter) => _table.RowCount(filter);
+		public int FindField(string name) => BaseTable.FindField(name);
+
+		public bool HasOID => AlternateOidFieldName != null || BaseTable.HasOID;
+
+		public string OIDFieldName => AlternateOidFieldName ?? BaseTable.OIDFieldName;
+
+		public IReadOnlyRow GetRow(int oid)
+		{
+			IRow row = AlternateOidFieldName != null
+				           ? GdbQueryUtils.GetObject((IObjectClass) BaseTable, oid,
+				                                     AlternateOidFieldName)
+				           : BaseTable.GetRow(oid);
+
+			return CreateRow(row);
+		}
+
+		public int RowCount(IQueryFilter filter) => BaseTable.RowCount(filter);
 
 		public bool Equals(IReadOnlyTable otherTable)
 		{
@@ -70,13 +82,13 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		public IEnumerable<IReadOnlyRow> EnumRows(IQueryFilter filter, bool recycle)
 		{
-			foreach (var row in new EnumCursor(_table, filter, recycle))
+			foreach (var row in new EnumCursor(BaseTable, filter, recycle))
 			{
 				yield return CreateRow(row);
 			}
 		}
 
-		private ISubtypes _subtypes => _table as ISubtypes;
+		private ISubtypes _subtypes => BaseTable as ISubtypes;
 
 		void ISubtypes.AddSubtype(int SubtypeCode, string SubtypeName)
 		{
@@ -134,7 +146,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			// that the AO-workspace sometimes changes its hash-code!
 			// -> never use workspaces in dictionaries!
 
-			return _table.Equals(other._table);
+			return BaseTable.Equals(other.BaseTable);
 		}
 
 		public override bool Equals(object obj)
@@ -143,7 +155,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			if (ReferenceEquals(this, obj)) return true;
 
-			if (_table is IObjectClass thisClass && obj is IObjectClass objectClass)
+			if (BaseTable is IObjectClass thisClass && obj is IObjectClass objectClass)
 			{
 				return DatasetUtils.IsSameObjectClass(thisClass, objectClass);
 			}
@@ -160,9 +172,32 @@ namespace ProSuite.Commons.AO.Geodatabase
 		{
 			// NOTE: Never make the AO-workspace part of the hash code calculation because it
 			// has been observed to change its hash code! 
-			return _table.GetHashCode();
+			return BaseTable.GetHashCode();
 		}
 
 		#endregion
+
+		public int GetRowOid(IRow row)
+		{
+			if (AlternateOidFieldName != null)
+			{
+				return (int) row.Value[OidFieldIndex];
+			}
+
+			return row.OID;
+		}
+
+		private int OidFieldIndex
+		{
+			get
+			{
+				if (_oidFieldIndex < 0)
+				{
+					_oidFieldIndex = Table.FindField(OIDFieldName);
+				}
+
+				return _oidFieldIndex;
+			}
+		}
 	}
 }

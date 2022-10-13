@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
@@ -18,8 +17,7 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork
 	/// </summary>
 	public abstract class LinearNetworkFeatureFinderBase : ILinearNetworkFeatureFinder
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		#region Implementation of ILinearNetworkFeatureFinder
 

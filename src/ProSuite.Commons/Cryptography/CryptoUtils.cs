@@ -52,12 +52,12 @@ namespace ProSuite.Commons.Cryptography
 			byte[] encryptedBytes = asciiEncoding.GetBytes(text);
 
 			using (ICryptoTransform cryptoTransform =
-				encryption.CreateEncryptor(key, iv))
+			       encryption.CreateEncryptor(key, iv))
 			{
 				using (var memoryStream = new MemoryStream())
 				{
 					using (var cryptoStream = new CryptoStream(
-						memoryStream, cryptoTransform, CryptoStreamMode.Write))
+						       memoryStream, cryptoTransform, CryptoStreamMode.Write))
 					{
 						cryptoStream.Write(encryptedBytes, 0, encryptedBytes.Length);
 						cryptoStream.FlushFinalBlock();
@@ -116,7 +116,7 @@ namespace ProSuite.Commons.Cryptography
 		                             [NotNull] byte[] iv)
 		{
 			using (ICryptoTransform cryptoTransform =
-				encryption.CreateDecryptor(key, iv))
+			       encryption.CreateDecryptor(key, iv))
 			{
 				using (var memoryStream = new MemoryStream(encryptedBytes))
 				{
@@ -124,7 +124,7 @@ namespace ProSuite.Commons.Cryptography
 
 					// decrypt the stream.
 					using (var cryptoStream = new CryptoStream(
-						memoryStream, cryptoTransform, CryptoStreamMode.Read))
+						       memoryStream, cryptoTransform, CryptoStreamMode.Read))
 					{
 						//Read the stream.
 						var reader = new StreamReader(cryptoStream);

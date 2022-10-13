@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Reflection;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
@@ -31,7 +30,7 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork.Editing
 	/// </summary>
 	public class LinearNetworkEditAgent : EditOperationObserverBase
 	{
-		private static readonly IMsg _msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private readonly HashSet<IFeature> _createdInOperation;
 		private readonly Dictionary<IFeature, IGeometry> _updatedInOperation;

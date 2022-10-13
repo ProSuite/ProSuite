@@ -17,7 +17,8 @@ namespace ProSuite.DomainModel.AO.QA
 		/// </summary>
 		/// <returns>TestFactory or null.</returns>
 		[CanBeNull]
-		public static TestFactory CreateTestFactory([NotNull] InstanceConfiguration instanceConfiguration)
+		public static TestFactory CreateTestFactory(
+			[NotNull] InstanceConfiguration instanceConfiguration)
 		{
 			Assert.ArgumentNotNull(instanceConfiguration, nameof(instanceConfiguration));
 
@@ -41,8 +42,10 @@ namespace ProSuite.DomainModel.AO.QA
 
 		private static void InitializeParameterValues([NotNull] TestFactory factory)
 		{
-			var parametersByName = factory.Parameters.ToDictionary(testParameter => testParameter.Name);
-			var parameterValues = factory.Condition?.ParameterValues ?? Enumerable.Empty<TestParameterValue>();
+			var parametersByName =
+				factory.Parameters.ToDictionary(testParameter => testParameter.Name);
+			var parameterValues = factory.Condition?.ParameterValues ??
+			                      Enumerable.Empty<TestParameterValue>();
 
 			foreach (TestParameterValue parameterValue in parameterValues)
 			{

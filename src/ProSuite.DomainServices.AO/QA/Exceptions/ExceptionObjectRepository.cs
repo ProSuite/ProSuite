@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
@@ -42,8 +41,7 @@ namespace ProSuite.DomainServices.AO.QA.Exceptions
 		[NotNull] private readonly string _rowClassName;
 		[NotNull] private readonly string _rowClassAliasName;
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		#region Constructor
 
@@ -297,7 +295,7 @@ namespace ProSuite.DomainServices.AO.QA.Exceptions
 					}
 
 					foreach (KeyValuePair<int, int> pair in
-						indexMatrix.Where(p => p.Key >= 0 && p.Value >= 0))
+					         indexMatrix.Where(p => p.Key >= 0 && p.Value >= 0))
 					{
 						rowBuffer.Value[pair.Key] = row.Value[pair.Value];
 					}
@@ -365,7 +363,7 @@ namespace ProSuite.DomainServices.AO.QA.Exceptions
 				                        out involvedTablesByLookupKey);
 
 			foreach (KeyValuePair<TableObjectIdLookupKey, List<InvolvedTable>> pair in
-				involvedTablesByLookupKey)
+			         involvedTablesByLookupKey)
 			{
 				TableObjectIdLookupKey key = pair.Key;
 				List<InvolvedTable> involvedTables = pair.Value;
@@ -460,7 +458,7 @@ namespace ProSuite.DomainServices.AO.QA.Exceptions
 					if (! result.TryGetValue(key, out tableObjectIdLookup))
 					{
 						tableObjectIdLookup = CreateTableObjectIdLookup(objectDataset,
-						                                                involvedTable.KeyField);
+							involvedTable.KeyField);
 
 						result.Add(key, tableObjectIdLookup);
 					}
@@ -541,19 +539,19 @@ namespace ProSuite.DomainServices.AO.QA.Exceptions
 			foreach (string featureClassName in _featureClassNames.Keys)
 			{
 				foreach (ExceptionObject exceptionObject in ReadExceptions(
-					featureClassName,
-					qualityConditionUuids,
-					alternateKeyConverterProvider,
-					defaultShapeMatchCriterion: defaultShapeMatchCriterion,
-					defaultStatus: defaultStatus))
+					         featureClassName,
+					         qualityConditionUuids,
+					         alternateKeyConverterProvider,
+					         defaultShapeMatchCriterion: defaultShapeMatchCriterion,
+					         defaultStatus: defaultStatus))
 				{
 					yield return exceptionObject;
 				}
 			}
 
 			foreach (ExceptionObject exceptionObject in
-				ReadExceptions(_rowClassName, qualityConditionUuids,
-				               alternateKeyConverterProvider))
+			         ReadExceptions(_rowClassName, qualityConditionUuids,
+			                        alternateKeyConverterProvider))
 			{
 				yield return exceptionObject;
 			}
@@ -638,9 +636,9 @@ namespace ProSuite.DomainServices.AO.QA.Exceptions
 			const bool recycle = true;
 			IEnumerable<IRow> rows = applyConditionQueryFilter
 				                         ? GdbQueryUtils.GetRowsInList(table,
-				                                                       uuidFieldName,
-				                                                       qualityConditionUuids,
-				                                                       recycle, queryFilter)
+					                         uuidFieldName,
+					                         qualityConditionUuids,
+					                         recycle, queryFilter)
 				                         : GdbQueryUtils.GetRows(table, queryFilter, recycle);
 
 			foreach (IRow row in rows)
@@ -800,7 +798,7 @@ namespace ProSuite.DomainServices.AO.QA.Exceptions
 				// NOTE: this assumes that the key values are of a compatible type for the key field
 				const bool recycle = true;
 				foreach (IRow row in GdbQueryUtils.GetRowsInList(
-					_table, _keyFieldName, keys, recycle, queryFilter))
+					         _table, _keyFieldName, keys, recycle, queryFilter))
 				{
 					yield return new KeyValuePair<object, int>(row.Value[_keyFieldIndex], row.OID);
 				}

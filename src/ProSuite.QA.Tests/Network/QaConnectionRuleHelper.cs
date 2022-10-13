@@ -4,11 +4,11 @@ using System.Data;
 using System.Globalization;
 using System.Text;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container.TestSupport;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
-using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Container.TestSupport;
 
 namespace ProSuite.QA.Tests.Network
 {
@@ -149,7 +149,8 @@ namespace ProSuite.QA.Tests.Network
 				TableView tableFilterHelper = TableViewFactory.Create(table, lowerCaseCondition);
 				tableFilterHelper.Constraint = null;
 
-				if (((IReadOnlyFeatureClass) table).ShapeType == esriGeometryType.esriGeometryPolyline)
+				if (((IReadOnlyFeatureClass) table).ShapeType ==
+				    esriGeometryType.esriGeometryPolyline)
 				{
 					tableFilterHelper.AddColumn(QaConnections.StartsIn, typeof(bool));
 				}

@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using ProSuite.Commons.Essentials.Assertions;
@@ -34,8 +33,7 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 
 		private bool _hasFilteredRows;
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private bool _sortingEventRegistered;
 		private bool _canFilterRows = true;
@@ -139,14 +137,14 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 
 				if (! string.IsNullOrEmpty(_findText))
 				{
-					Find(_findText, keepSelection : true);
+					Find(_findText, keepSelection: true);
 				}
 			}
 		}
 
 		public void Find(string text)
 		{
-			Find(text, keepSelection : false);
+			Find(text, keepSelection: false);
 		}
 
 		public void Find([CanBeNull] string text, bool keepSelection)
@@ -167,7 +165,7 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 			if (! string.IsNullOrEmpty(text))
 			{
 				IEnumerable<string> expressions = StringUtils.Split(text, "|", '\\',
-				                                                    removeEmptyEntries : true);
+					removeEmptyEntries: true);
 
 				List<Regex> regexes =
 					expressions.Select(exp => RegexUtils.GetWildcardMatchRegex(exp, MatchCase))
@@ -379,7 +377,7 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 			int currentFindResult = currentFindIndex + 1;
 
 			_toolsView.FindResultStatusText = GetFindResultStatusText(findResultCount,
-			                                                          currentFindResult);
+				currentFindResult);
 
 			bool moveButtonsEnabled = findResultCount > 1;
 
@@ -487,7 +485,7 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 					}
 
 					CurrentFindResultIndex = _findResults.GetFindCellIndex(row.Index,
-					                                                       cell.ColumnIndex);
+						cell.ColumnIndex);
 					minimumRowIndex = row.Index;
 					break;
 				}
@@ -570,7 +568,7 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 				_msg.VerboseDebug(() => "Applying filter (delayed)");
 
 				// ReSharper disable once RedundantArgumentName
-				Find(_findText, keepSelection : _sortingEventRegistered);
+				Find(_findText, keepSelection: _sortingEventRegistered);
 			}
 		}
 

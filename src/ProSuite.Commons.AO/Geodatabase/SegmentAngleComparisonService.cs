@@ -50,14 +50,14 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		public void CompareSegmentAngles(IPolyline sourceShape,
 		                                 IPolyline transformedShape,
-										 IReadOnlyFeature transformedFeature)
+		                                 IReadOnlyFeature transformedFeature)
 		{
 			CompareSegmentAnglesCore(sourceShape, transformedShape, transformedFeature);
 		}
 
 		public void CompareSegmentAngles(IPolygon sourceShape,
 		                                 IPolygon transformedShape,
-										 IReadOnlyFeature transformedFeature)
+		                                 IReadOnlyFeature transformedFeature)
 		{
 			CompareSegmentAnglesCore(sourceShape, transformedShape, transformedFeature);
 		}

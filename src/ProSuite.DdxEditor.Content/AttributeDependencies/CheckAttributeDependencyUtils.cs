@@ -53,8 +53,8 @@ namespace ProSuite.DdxEditor.Content.AttributeDependencies
 				return;
 			}
 
-			int index = attributeDependency.
-				GetAttributeIndex(configuredSubtypeField.Name, out bool source);
+			int index =
+				attributeDependency.GetAttributeIndex(configuredSubtypeField.Name, out bool source);
 
 			foreach (var mapping in attributeDependency.AttributeValueMappings)
 			{

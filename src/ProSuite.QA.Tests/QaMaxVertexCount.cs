@@ -1,14 +1,14 @@
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container;
-using ProSuite.QA.Tests.Documentation;
-using ProSuite.QA.Tests.IssueCodes;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Container;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.IssueCodes;
 
 namespace ProSuite.QA.Tests
 {
@@ -41,8 +41,10 @@ namespace ProSuite.QA.Tests
 		public QaMaxVertexCount(
 			[Doc(nameof(DocStrings.QaMaxVertexCount_featureClass))] [NotNull]
 			IReadOnlyFeatureClass featureClass,
-			[Doc(nameof(DocStrings.QaMaxVertexCount_limit))] double limit,
-			[Doc(nameof(DocStrings.QaMaxVertexCount_perPart))] bool perPart)
+			[Doc(nameof(DocStrings.QaMaxVertexCount_limit))]
+			double limit,
+			[Doc(nameof(DocStrings.QaMaxVertexCount_perPart))]
+			bool perPart)
 			: base(featureClass)
 		{
 			Assert.ArgumentNotNull(featureClass, nameof(featureClass));

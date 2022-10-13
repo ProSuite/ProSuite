@@ -153,8 +153,11 @@ namespace ProSuite.Microservices.Server.AO.QA
 			}
 		}
 
-		public enum TileParallelHandlingEnum { HalfOfMaxParallel, OnePerTile }
-
+		public enum TileParallelHandlingEnum
+		{
+			HalfOfMaxParallel,
+			OnePerTile
+		}
 
 		public enum NonContainerHandlingEnum
 		{
@@ -173,6 +176,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 		public TileParallelHandlingEnum TileParallelHandling { get; set; } =
 			TileParallelHandlingEnum.HalfOfMaxParallel;
+
 		public NonContainerHandlingEnum NonContainerHandling { get; set; } =
 			NonContainerHandlingEnum.OneSubverificationForAll;
 
@@ -605,7 +609,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 							subVerifications.Add(
 								CreateVerification(
 									originalRequest, specification,
-									new[] { qc }));
+									new[] {qc}));
 						}
 					}
 					else
@@ -626,11 +630,14 @@ namespace ProSuite.Microservices.Server.AO.QA
 			foreach (QualityConditionGroup parallelGroup in parallelGroups)
 			{
 				if (parallelGroup.QualityConditions.Count <= 0)
-				{continue;}
+				{
+					continue;
+				}
+
 				int nMaxTileParallel;
 				if (TileParallelHandling == TileParallelHandlingEnum.HalfOfMaxParallel)
 				{
-					nMaxTileParallel	= (maxParallel - subVerifications.Count) / 2;
+					nMaxTileParallel = (maxParallel - subVerifications.Count) / 2;
 				}
 				else if (TileParallelHandling == TileParallelHandlingEnum.OnePerTile)
 				{

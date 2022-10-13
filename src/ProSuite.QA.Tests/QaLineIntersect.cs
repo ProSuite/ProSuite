@@ -3,19 +3,19 @@ using System.Collections.Generic;
 using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container.TestSupport;
-using ProSuite.QA.Tests.Documentation;
-using ProSuite.QA.Tests.IssueCodes;
-using ProSuite.QA.Tests.SpatialRelations;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
-using ProSuite.QA.Core;
-using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.QA.Container;
+using ProSuite.QA.Container.TestSupport;
+using ProSuite.QA.Core;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.IssueCodes;
+using ProSuite.QA.Tests.SpatialRelations;
 
 namespace ProSuite.QA.Tests
 {
@@ -134,7 +134,8 @@ namespace ProSuite.QA.Tests
 			foreach (IReadOnlyFeatureClass polylineClass in polylineClasses)
 			{
 				_xyTolerances.Add(GeometryUtils.GetXyTolerance(polylineClass.SpatialReference));
-				_xyResolutions.Add(SpatialReferenceUtils.GetXyResolution(polylineClass.SpatialReference));
+				_xyResolutions.Add(
+					SpatialReferenceUtils.GetXyResolution(polylineClass.SpatialReference));
 			}
 		}
 
@@ -143,7 +144,7 @@ namespace ProSuite.QA.Tests
 		public AllowedLineInteriorIntersections AllowedInteriorIntersections { get; set; }
 
 		protected override int FindErrors(IReadOnlyRow row1, int tableIndex1,
-										  IReadOnlyRow row2, int tableIndex2)
+		                                  IReadOnlyRow row2, int tableIndex2)
 		{
 			if (row1 == row2)
 			{

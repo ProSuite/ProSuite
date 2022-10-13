@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
@@ -17,8 +16,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 {
 	public class CutPolygonSubcurveCalculator : ISubcurveCalculator
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private readonly ISubcurveCalculator _standardSubcurveCalculator;
 
@@ -151,9 +149,9 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			{
 				// add those cut-lines that are not fully covered by classic curves within the source polygon
 				foreach (IPath trimmedPath in
-					CutGeometryUtils.GetTrimmedCutLines(
-						targetPolyline, sourcePolygon, cutResults)
-				)
+				         CutGeometryUtils.GetTrimmedCutLines(
+					         targetPolyline, sourcePolygon, cutResults)
+				        )
 				{
 					if (! IsPathFullyCovered(trimmedPath, sourcePolygon,
 					                         usableClassicCurves))
@@ -178,7 +176,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 
 			object missing = Type.Missing;
 			foreach (IPath classicCurve in bySubCurves.Select(
-				cutSubcurve => cutSubcurve.Path))
+				         cutSubcurve => cutSubcurve.Path))
 			{
 				((IGeometryCollection) classicCurvesPolyline).AddGeometry(classicCurve,
 					ref missing,

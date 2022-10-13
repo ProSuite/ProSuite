@@ -3,24 +3,24 @@ using System.Collections.Generic;
 using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container;
-using ProSuite.QA.Container.Geometry;
-using ProSuite.QA.Container.TestSupport;
-using ProSuite.QA.Tests.Coincidence;
-using ProSuite.QA.Tests.Documentation;
-using ProSuite.QA.Tests.IssueCodes;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
 using ProSuite.Commons.Text;
+using ProSuite.QA.Container;
+using ProSuite.QA.Container.Geometry;
+using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Core;
-using IPnt = ProSuite.Commons.Geom.IPnt;
-using Pnt = ProSuite.Commons.Geom.Pnt;
-using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Tests.Coincidence;
+using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.IssueCodes;
+using IPnt = ProSuite.Commons.Geom.IPnt;
+using Pnt = ProSuite.Commons.Geom.Pnt;
 
 namespace ProSuite.QA.Tests
 {
@@ -96,7 +96,8 @@ namespace ProSuite.QA.Tests
 			IReadOnlyFeatureClass pointClass,
 			[NotNull] [Doc(nameof(DocStrings.QaPointNotNear_referenceClass))]
 			IReadOnlyFeatureClass referenceClass,
-			[Doc(nameof(DocStrings.QaPointNotNear_limit))] double limit)
+			[Doc(nameof(DocStrings.QaPointNotNear_limit))]
+			double limit)
 			: this(pointClass, new[] {referenceClass}, limit) { }
 
 		[Doc(nameof(DocStrings.QaPointNotNear_1))]
@@ -106,7 +107,8 @@ namespace ProSuite.QA.Tests
 			[NotNull] [Doc(nameof(DocStrings.QaPointNotNear_referenceClasses))]
 			IList<IReadOnlyFeatureClass>
 				referenceClasses,
-			[Doc(nameof(DocStrings.QaPointNotNear_limit))] double limit)
+			[Doc(nameof(DocStrings.QaPointNotNear_limit))]
+			double limit)
 			: base(CastToTables(new[] {pointClass}, referenceClasses))
 		{
 			Assert.ArgumentNotNull(pointClass, nameof(pointClass));
@@ -132,7 +134,8 @@ namespace ProSuite.QA.Tests
 				[NotNull] [Doc(nameof(DocStrings.QaPointNotNear_referenceClasses))]
 				IList<IReadOnlyFeatureClass>
 					referenceClasses,
-				[Doc(nameof(DocStrings.QaPointNotNear_searchDistance))] double searchDistance,
+				[Doc(nameof(DocStrings.QaPointNotNear_searchDistance))]
+				double searchDistance,
 				[CanBeNull] [Doc(nameof(DocStrings.QaPointNotNear_pointDistanceExpression))]
 				string
 					pointDistanceExpression,
@@ -152,7 +155,8 @@ namespace ProSuite.QA.Tests
 			[NotNull] [Doc(nameof(DocStrings.QaPointNotNear_referenceClasses))]
 			IList<IReadOnlyFeatureClass>
 				referenceClasses,
-			[Doc(nameof(DocStrings.QaPointNotNear_searchDistance))] double searchDistance,
+			[Doc(nameof(DocStrings.QaPointNotNear_searchDistance))]
+			double searchDistance,
 			[CanBeNull] [Doc(nameof(DocStrings.QaPointNotNear_pointDistanceExpression))]
 			string
 				pointDistanceExpression,
@@ -280,8 +284,8 @@ namespace ProSuite.QA.Tests
 				_validConstraints =
 					_validRelationConstraints
 						.Select(constraint => new ValidRelationConstraint(constraint,
-						                                                  constraintIsDirected,
-						                                                  GetSqlCaseSensitivity()))
+							        constraintIsDirected,
+							        GetSqlCaseSensitivity()))
 						.Cast<IValidRelationConstraint>()
 						.ToList();
 			}
@@ -453,7 +457,7 @@ namespace ProSuite.QA.Tests
 
 				const int pointClassIndex = 0;
 				foreach (IReadOnlyRow referenceRow in Search(referenceClass,
-				                                     filter, helper, point))
+				                                             filter, helper, point))
 				{
 					if (TestUtils.IsSameRow(feature, referenceRow))
 					{
@@ -821,7 +825,7 @@ namespace ProSuite.QA.Tests
 				point.QueryCoords(out x, out y);
 				Pnt qaPoint = new Pnt2D(x, y);
 				foreach (SegmentProxy segmentProxy in
-					EnumSegments(qaPoint, neighbourFeature, maxNeededDistance))
+				         EnumSegments(qaPoint, neighbourFeature, maxNeededDistance))
 				{
 					bool? onSegmentRightSide;
 					double alongFraction;

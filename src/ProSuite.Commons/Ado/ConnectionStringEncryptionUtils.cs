@@ -1,6 +1,6 @@
-﻿using System.Collections.Generic;
-using ProSuite.Commons.Essentials.CodeAnnotations;
+using System.Collections.Generic;
 using ProSuite.Commons.Cryptography;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.Ado
 {

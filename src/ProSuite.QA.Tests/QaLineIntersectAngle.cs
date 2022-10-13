@@ -58,8 +58,10 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaLineIntersectAngle_polylineClasses))] [NotNull]
 			IList<IReadOnlyFeatureClass>
 				polylineClasses,
-			[Doc(nameof(DocStrings.QaLineIntersectAngle_limit))] double limit,
-			[Doc(nameof(DocStrings.QaLineIntersectAngle_is3D))] bool is3d)
+			[Doc(nameof(DocStrings.QaLineIntersectAngle_limit))]
+			double limit,
+			[Doc(nameof(DocStrings.QaLineIntersectAngle_is3D))]
+			bool is3d)
 			: base(polylineClasses, esriSpatialRelEnum.esriSpatialRelCrosses)
 		{
 			_limitCstr = limit;
@@ -78,7 +80,8 @@ namespace ProSuite.QA.Tests
 				[Doc(nameof(DocStrings.QaLineIntersectAngle_polylineClasses))] [NotNull]
 				IList<IReadOnlyFeatureClass>
 					polylineClasses,
-				[Doc(nameof(DocStrings.QaLineIntersectAngle_limit))] double limit)
+				[Doc(nameof(DocStrings.QaLineIntersectAngle_limit))]
+				double limit)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(polylineClasses, limit, false) { }
 
@@ -86,7 +89,8 @@ namespace ProSuite.QA.Tests
 		public QaLineIntersectAngle(
 			[Doc(nameof(DocStrings.QaLineIntersectAngle_polylineClass))] [NotNull]
 			IReadOnlyFeatureClass polylineClass,
-			[Doc(nameof(DocStrings.QaLineIntersectAngle_limit))] double limit)
+			[Doc(nameof(DocStrings.QaLineIntersectAngle_limit))]
+			double limit)
 			: this(new[] {polylineClass}, limit) { }
 
 		#endregion
@@ -104,7 +108,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		protected override int FindErrors(IReadOnlyRow row1, int tableIndex1,
-										  IReadOnlyRow row2, int tableIndex2)
+		                                  IReadOnlyRow row2, int tableIndex2)
 		{
 			if (_limitRad <= 0)
 			{
@@ -160,7 +164,7 @@ namespace ProSuite.QA.Tests
 					GeometryFactory.Clone(intersection.At),
 					Codes[Code.IntersectionAngleSmallerThanLimit],
 					TestUtils.GetShapeFieldName(row1),
-					values: new object[] { MathUtils.ToDegrees(angleRadians) });
+					values: new object[] {MathUtils.ToDegrees(angleRadians)});
 			}
 
 			return errorCount;

@@ -98,7 +98,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			IssueFilters = IssueFilters ?? new List<XmlIssueFilterConfiguration>();
 			IssueFilters.Add(xmlIssueFilter);
 		}
-		
+
 		public void AddTransformer([NotNull] XmlTransformerConfiguration xmlTransformer)
 		{
 			Assert.ArgumentNotNull(xmlTransformer, nameof(xmlTransformer));
@@ -113,20 +113,21 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			TestDescriptors.Add(xmlTestDescriptor);
 		}
 
-		public void AddIssueFilterDescriptor([NotNull] XmlIssueFilterDescriptor xmlIssueFilterDescriptor)
+		public void AddIssueFilterDescriptor(
+			[NotNull] XmlIssueFilterDescriptor xmlIssueFilterDescriptor)
 		{
 			Assert.ArgumentNotNull(xmlIssueFilterDescriptor, nameof(xmlIssueFilterDescriptor));
 			IssueFilterDescriptors = IssueFilterDescriptors ?? new List<XmlIssueFilterDescriptor>();
 			IssueFilterDescriptors.Add(xmlIssueFilterDescriptor);
 		}
-		
-		public void AddTransformerDescriptor([NotNull] XmlTransformerDescriptor xmlTransformerDescriptor)
+
+		public void AddTransformerDescriptor(
+			[NotNull] XmlTransformerDescriptor xmlTransformerDescriptor)
 		{
 			Assert.ArgumentNotNull(xmlTransformerDescriptor, nameof(xmlTransformerDescriptor));
 			TransformerDescriptors = TransformerDescriptors ?? new List<XmlTransformerDescriptor>();
 			TransformerDescriptors.Add(xmlTransformerDescriptor);
 		}
-
 
 		[NotNull]
 		public IEnumerable<XmlDataQualityCategory> GetAllCategories()

@@ -31,7 +31,7 @@ namespace ProSuite.DomainModel.Core.AttributeDependencies.Xml
 			try
 			{
 				return XmlUtils.DeserializeFile<XmlAttributeDependenciesDocument>(xmlFilePath,
-				                                                                  schema);
+					schema);
 			}
 			catch (Exception ex)
 			{
@@ -410,7 +410,8 @@ namespace ProSuite.DomainModel.Core.AttributeDependencies.Xml
 							{
 								string value = string.IsNullOrEmpty(values[i]) ? null : values[i];
 								FieldType fieldType = dependency.SourceAttributes[i].FieldType;
-								object typedValue = AttributeDependency.Convert(value, fieldType, null);
+								object typedValue =
+									AttributeDependency.Convert(value, fieldType, null);
 								sourceValues.Add(typedValue);
 							}
 							else if (i < sourceCount + targetCount)
@@ -418,7 +419,8 @@ namespace ProSuite.DomainModel.Core.AttributeDependencies.Xml
 								string value = string.IsNullOrEmpty(values[i]) ? null : values[i];
 								FieldType fieldType =
 									dependency.TargetAttributes[i - sourceCount].FieldType;
-								object typedValue = AttributeDependency.Convert(value, fieldType, null);
+								object typedValue =
+									AttributeDependency.Convert(value, fieldType, null);
 								targetValues.Add(typedValue);
 							}
 							else

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
@@ -23,8 +22,7 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork.ShortestPath
 		// TODO:
 		// - Consider adding an interface with only the relevant methods
 		// - Make the public Nodes getter an IReadonlyList (Requires .net 4.5)
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private readonly IPoint _queryPointFrom;
 		private readonly IPoint _queryPointTo;
@@ -334,7 +332,7 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork.ShortestPath
 
 				_queryPointFrom.PutCoords(existingNode.X, existingNode.Y);
 				double distanceAlongExisting = GeometryUtils.GetDistanceAlongCurve(polyline,
-				                                                                   _queryPointFrom);
+					_queryPointFrom);
 
 				if (distanceAlongExisting < distanceAlong)
 				{

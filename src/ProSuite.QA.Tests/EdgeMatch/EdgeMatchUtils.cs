@@ -4,15 +4,15 @@ using System.Linq;
 using System.Text;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container.Geometry;
-using ProSuite.QA.Container.TestSupport;
-using ProSuite.QA.Tests.Properties;
 using ProSuite.Commons;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
-using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Container.Geometry;
+using ProSuite.QA.Container.TestSupport;
+using ProSuite.QA.Tests.Properties;
 
 namespace ProSuite.QA.Tests.EdgeMatch
 {
@@ -272,8 +272,8 @@ namespace ProSuite.QA.Tests.EdgeMatch
 				if (! areConstraintsFulfilled)
 				{
 					yield return new AttributeConstraintViolation(description,
-					                                              affectedComponents,
-					                                              textValue);
+						affectedComponents,
+						textValue);
 				}
 			}
 		}

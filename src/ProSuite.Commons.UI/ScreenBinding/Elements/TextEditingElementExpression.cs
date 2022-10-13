@@ -30,8 +30,8 @@ namespace ProSuite.Commons.UI.ScreenBinding.Elements
 		public TextEditingElementExpression ThePrecisionIs(int numDigitsAfterDecimal)
 		{
 			_element.Format = o => string.Format(
-				                  string.Format(PRECISION_FORMAT_PATTERN,
-				                                numDigitsAfterDecimal), o);
+				string.Format(PRECISION_FORMAT_PATTERN,
+				              numDigitsAfterDecimal), o);
 
 			return this;
 		}

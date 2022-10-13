@@ -32,7 +32,7 @@ namespace ProSuite.Commons.Reflection
 			}
 
 			object[] attributes = propertyInfo.GetCustomAttributes(
-				typeof(BrowsableAttribute), inherit : true);
+				typeof(BrowsableAttribute), inherit: true);
 
 			return attributes.OfType<BrowsableAttribute>()
 			                 .All(browsableAttribute => browsableAttribute.Browsable);
@@ -66,7 +66,7 @@ namespace ProSuite.Commons.Reflection
 			Assert.ArgumentNotNull(attributeProvider, nameof(attributeProvider));
 
 			object[] obsoleteAttributes = attributeProvider.GetCustomAttributes(
-				typeof(ObsoleteAttribute), inherit : true);
+				typeof(ObsoleteAttribute), inherit: true);
 
 			bool isObsolete = obsoleteAttributes.Length > 0;
 			if (! isObsolete)
@@ -119,7 +119,7 @@ namespace ProSuite.Commons.Reflection
 			Assert.ArgumentNotNull(attributeProvider, nameof(attributeProvider));
 
 			object[] attributes = attributeProvider.GetCustomAttributes(typeof(T),
-			                                                            inherit);
+				inherit);
 
 			if (attributes.Length == 0)
 			{

@@ -1,13 +1,13 @@
 using ESRI.ArcGIS.Geodatabase;
-using ProSuite.QA.Tests.Documentation;
-using ProSuite.QA.Tests.IssueCodes;
-using ProSuite.QA.Tests.Schema;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.IssueCodes;
+using ProSuite.QA.Tests.Schema;
 
 namespace ProSuite.QA.Tests
 {
@@ -40,21 +40,23 @@ namespace ProSuite.QA.Tests
 
 		[UsedImplicitly]
 		[Doc(nameof(DocStrings.QaGdbRelease_0))]
-		public QaGdbRelease([Doc(nameof(DocStrings.QaGdbRelease_table))] [NotNull] IReadOnlyTable table,
-		                    [Doc(nameof(DocStrings.QaGdbRelease_expectedVersion))] [CanBeNull]
-		                    string
-			                    expectedVersion)
+		public QaGdbRelease(
+			[Doc(nameof(DocStrings.QaGdbRelease_table))] [NotNull] IReadOnlyTable table,
+			[Doc(nameof(DocStrings.QaGdbRelease_expectedVersion))] [CanBeNull]
+			string
+				expectedVersion)
 			: this(table, expectedVersion, expectedVersion) { }
 
 		[UsedImplicitly]
 		[Doc(nameof(DocStrings.QaGdbRelease_1))]
-		public QaGdbRelease([Doc(nameof(DocStrings.QaGdbRelease_table))] [NotNull] IReadOnlyTable table,
-		                    [Doc(nameof(DocStrings.QaGdbRelease_minimumVersion))] [CanBeNull]
-		                    string
-			                    minimumVersion,
-		                    [Doc(nameof(DocStrings.QaGdbRelease_maximumVersion))] [CanBeNull]
-		                    string
-			                    maximumVersion)
+		public QaGdbRelease(
+			[Doc(nameof(DocStrings.QaGdbRelease_table))] [NotNull] IReadOnlyTable table,
+			[Doc(nameof(DocStrings.QaGdbRelease_minimumVersion))] [CanBeNull]
+			string
+				minimumVersion,
+			[Doc(nameof(DocStrings.QaGdbRelease_maximumVersion))] [CanBeNull]
+			string
+				maximumVersion)
 			: base(table)
 		{
 			Assert.ArgumentNotNull(table, nameof(table));

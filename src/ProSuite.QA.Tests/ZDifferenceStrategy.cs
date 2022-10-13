@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
-using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestSupport;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
-using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Container;
+using ProSuite.QA.Container.TestSupport;
 
 namespace ProSuite.QA.Tests
 {

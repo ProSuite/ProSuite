@@ -1,14 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using ProSuite.QA.Container;
-using ProSuite.QA.Tests;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.AO.QA;
+using ProSuite.QA.Container;
 using ProSuite.QA.Core;
-using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Tests;
 
 namespace ProSuite.QA.TestFactories
 {
@@ -52,8 +52,9 @@ namespace ProSuite.QA.TestFactories
 
 			if (objParams[0] is IReadOnlyFeatureClass[] == false)
 			{
-				throw new ArgumentException(string.Format("expected IReadOnlyFeatureClass[], got {0}",
-				                                          objParams[0].GetType()));
+				throw new ArgumentException(string.Format(
+					                            "expected IReadOnlyFeatureClass[], got {0}",
+					                            objParams[0].GetType()));
 			}
 
 			var objects = new object[2];

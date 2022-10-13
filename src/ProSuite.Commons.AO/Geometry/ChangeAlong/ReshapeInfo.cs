@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
@@ -21,8 +20,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 
 		#region Field Declarations
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private const int _useSimplifiedReshapeSideDeterminationVertexThreshold = 7500;
 
@@ -329,7 +327,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 				else if (intersectPoints.PointCount == 1)
 				{
 					if (BothEndsIntersectInSamePoint((ICurve) highLevelReshapePath, intersectPoints)
-					)
+					   )
 					{
 						canReshape = true;
 					}

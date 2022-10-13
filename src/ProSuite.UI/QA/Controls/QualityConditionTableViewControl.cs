@@ -11,7 +11,8 @@ using ProSuite.DomainModel.Core.QA;
 
 namespace ProSuite.UI.QA.Controls
 {
-	public partial class QualityConditionTableViewControl : UserControl, IInstanceConfigurationTableViewControl
+	public partial class QualityConditionTableViewControl : UserControl,
+	                                                        IInstanceConfigurationTableViewControl
 	{
 		[CanBeNull] private TestDescriptor _testDescriptor;
 
@@ -89,7 +90,7 @@ namespace ProSuite.UI.QA.Controls
 		}
 
 		private void _dataGridViewTestParameters_CurrentCellChanged(object sender,
-		                                                            EventArgs e)
+			EventArgs e)
 		{
 			if (! ShowDescription)
 			{
@@ -104,8 +105,8 @@ namespace ProSuite.UI.QA.Controls
 		}
 
 		private void _dataGridViewTestParameters_DataBindingComplete(object sender,
-		                                                             DataGridViewBindingCompleteEventArgs
-			                                                             e)
+			DataGridViewBindingCompleteEventArgs
+				e)
 		{
 			_dataGridViewTestParameters.ClearSelection();
 		}

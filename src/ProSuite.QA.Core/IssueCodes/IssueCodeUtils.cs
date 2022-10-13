@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -8,8 +8,7 @@ namespace ProSuite.QA.Core.IssueCodes
 {
 	public static class IssueCodeUtils
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private static readonly IDictionary<Type, ITestIssueCodes> _testIssueCodesByType =
 			new Dictionary<Type, ITestIssueCodes>();
@@ -116,10 +115,10 @@ namespace ProSuite.QA.Core.IssueCodes
 			var result = new List<PropertyInfo>();
 
 			foreach (PropertyInfo propertyInfo in type.GetProperties(
-				BindingFlags.Public |
-				BindingFlags.NonPublic |
-				BindingFlags.Static |
-				BindingFlags.FlattenHierarchy))
+				         BindingFlags.Public |
+				         BindingFlags.NonPublic |
+				         BindingFlags.Static |
+				         BindingFlags.FlattenHierarchy))
 			{
 				if (propertyInfo.CanRead &&
 				    propertyType.IsAssignableFrom(propertyInfo.PropertyType))

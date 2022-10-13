@@ -212,7 +212,8 @@ namespace ProSuite.QA.TestFactories
 
 			if (string.IsNullOrEmpty(field))
 			{
-				throw new ArgumentException($"{nameof(field)} is null but {nameof(subtypes)} list is specified");
+				throw new ArgumentException(
+					$"{nameof(field)} is null but {nameof(subtypes)} list is specified");
 			}
 
 			foreach (ConnectionType connectionType in connectionTypes)
@@ -945,7 +946,8 @@ namespace ProSuite.QA.TestFactories
 			for (int i = 1; i < n; i++)
 			{
 				string statement = statements[i];
-				int sd = statement.IndexOf(":", StringComparison.Ordinal); // Statement to assign variable --> sd > 0
+				int sd = statement.IndexOf(
+					":", StringComparison.Ordinal); // Statement to assign variable --> sd > 0
 				if (sd < 0)
 				{
 					Assert.Null(maxCondition,
@@ -970,7 +972,8 @@ namespace ProSuite.QA.TestFactories
 			for (int i = 1; i < n; i++)
 			{
 				string statement = statements[i];
-				int sd = statement.IndexOf(":", StringComparison.Ordinal); // Statement to assign variable --> sd > 0
+				int sd = statement.IndexOf(
+					":", StringComparison.Ordinal); // Statement to assign variable --> sd > 0
 				if (sd < 0)
 				{
 					continue;
@@ -1055,7 +1058,7 @@ namespace ProSuite.QA.TestFactories
 			[NotNull] IEnumerable<Dataset> datasets)
 		{
 			var dataset = ConfiguratorUtils.GetDataset<VectorDataset>(datasetName,
-			                                                          datasets);
+				datasets);
 			Assert.NotNull(dataset, "Vector dataset not found: {0}", datasetName);
 			return dataset;
 		}

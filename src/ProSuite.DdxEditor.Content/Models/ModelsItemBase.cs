@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using System.Reflection;
 using System.Windows.Forms;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -15,8 +14,7 @@ namespace ProSuite.DdxEditor.Content.Models
 {
 	public abstract class ModelsItemBase : EntityTypeItem<Model>
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		[NotNull] private readonly CoreDomainModelItemModelBuilder _modelBuilder;
 		[NotNull] private static readonly Image _image;

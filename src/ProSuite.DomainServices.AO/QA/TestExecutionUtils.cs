@@ -31,7 +31,7 @@ namespace ProSuite.DomainServices.AO.QA
 
 			// TODO move enlarging by search distance WITHIN the container?
 			IGeometry enlargedTestPerimeter = GetEnlargedTestPerimeter(container,
-			                                                           testPerimeter);
+				testPerimeter);
 
 			var box = enlargedTestPerimeter as IEnvelope;
 			if (box != null)
@@ -94,7 +94,8 @@ namespace ProSuite.DomainServices.AO.QA
 
 			// Assign load time
 			foreach (
-				KeyValuePair<IReadOnlyDataset, double> pair in verificationTimeStats.DatasetLoadTimes)
+				KeyValuePair<IReadOnlyDataset, double> pair in verificationTimeStats
+					.DatasetLoadTimes)
 			{
 				IReadOnlyDataset gdbDataset = pair.Key;
 

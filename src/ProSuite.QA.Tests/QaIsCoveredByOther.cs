@@ -1,13 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestSupport;
-using ProSuite.QA.Tests.Documentation;
-using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Collections;
@@ -16,9 +11,13 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
+using ProSuite.QA.Container;
+using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Core;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.IssueCodes;
 
 namespace ProSuite.QA.Tests
 {
@@ -74,8 +73,7 @@ namespace ProSuite.QA.Tests
 		//TODO find reasonable maximum point count
 		private const int _maximumBufferCachePointCount = 1000000;
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private IList<double> _coveringClassTolerances =
 			new ReadOnlyList<double>(new List<double>());
@@ -308,7 +306,8 @@ namespace ProSuite.QA.Tests
 			foreach (IReadOnlyFeatureClass featureClass in covering)
 			{
 				double xyTolerance;
-				if (! DatasetUtils.TryGetXyTolerance(featureClass.SpatialReference, out xyTolerance))
+				if (! DatasetUtils.TryGetXyTolerance(featureClass.SpatialReference,
+				                                     out xyTolerance))
 				{
 					xyTolerance = double.Epsilon;
 				}
@@ -405,8 +404,8 @@ namespace ProSuite.QA.Tests
 				var coveringClass = (IReadOnlyFeatureClass) InvolvedTables[coveringClassIndex];
 
 				foreach (IReadOnlyFeature intersectingFeature in searcher.Search(uncoveredGeometry,
-				                                                         coveringClass,
-				                                                         coveringClassIndex))
+					         coveringClass,
+					         coveringClassIndex))
 				{
 					if (TestUtils.IsSameRow(intersectingFeature, feature) &&
 					    ! TreatSameFeatureAsCovering(feature, tableIndex, coveringClassIndex))
@@ -1004,7 +1003,8 @@ namespace ProSuite.QA.Tests
 				double evictableYMax = yMax + tolerance;
 
 				_msg.VerboseDebug(
-					() => $"Removing cache entries for (xMax <= {evictableXMax} && yMax <= {evictableYMax}) for covering class index {coveringClassIndex}");
+					() =>
+						$"Removing cache entries for (xMax <= {evictableXMax} && yMax <= {evictableYMax}) for covering class index {coveringClassIndex}");
 
 				// remove all entries that are fully to the left/bottom of the tile upper/right boundary 
 				// (plus the tolerance, since the tolerance is guaranteed to be applied for searching 
@@ -1041,15 +1041,15 @@ namespace ProSuite.QA.Tests
 			[NotNull] IList<GeometryComponent> coveredGeometryComponents)
 		{
 			foreach (GeometryComponent component in GetGeometryComponents(
-				coveringGeometryComponents, covering.Count,
-				"coveringGeometryComponents"))
+				         coveringGeometryComponents, covering.Count,
+				         "coveringGeometryComponents"))
 			{
 				yield return component;
 			}
 
 			foreach (GeometryComponent component in GetGeometryComponents(
-				coveredGeometryComponents, covered.Count,
-				"coveredGeometryComponents"))
+				         coveredGeometryComponents, covered.Count,
+				         "coveredGeometryComponents"))
 			{
 				yield return component;
 			}
@@ -1240,7 +1240,7 @@ namespace ProSuite.QA.Tests
 						: $"The feature is not covered by any feature{completenessSuffix}";
 
 				string codeId = GetIssueCodeIdNotCoveredByAnyFeature(completelyTested,
-				                                                     hasIsCoveredConditions);
+					hasIsCoveredConditions);
 
 				errorGeometry = GetErrorGeometry(unCoveredFeature, feature);
 				if (errorGeometry == null)
@@ -1390,7 +1390,8 @@ namespace ProSuite.QA.Tests
 
 				filter.Geometry = geometry;
 
-				foreach (IReadOnlyFeature aoiFeature in Search(table, filter, helper).OfType<IReadOnlyFeature>())
+				foreach (IReadOnlyFeature aoiFeature in Search(table, filter, helper)
+					         .OfType<IReadOnlyFeature>())
 				{
 					// intersecting feature found
 					if (dimension == esriGeometryDimension.esriGeometry0Dimension)
@@ -1401,7 +1402,7 @@ namespace ProSuite.QA.Tests
 
 					// reduce result to the part within the area of interest
 					IGeometry intersection = IntersectionUtils.GetIntersection(geometry,
-					                                                           aoiFeature.Shape);
+						aoiFeature.Shape);
 
 					if (! intersection.IsEmpty)
 					{
@@ -1582,7 +1583,8 @@ namespace ProSuite.QA.Tests
 			private readonly QueryFilterHelper[] _queryFilterHelpers;
 
 			private readonly
-				Func<IReadOnlyTable, IQueryFilter, QueryFilterHelper, IGeometry, IEnumerable<IReadOnlyRow>>
+				Func<IReadOnlyTable, IQueryFilter, QueryFilterHelper, IGeometry,
+					IEnumerable<IReadOnlyRow>>
 				_searchFunction;
 
 			private readonly Func<int, double> _getTolerance;
@@ -1607,7 +1609,8 @@ namespace ProSuite.QA.Tests
 				[NotNull] ISpatialFilter[] queryFilters,
 				[NotNull] QueryFilterHelper[] queryFilterHelpers,
 				[NotNull]
-				Func<IReadOnlyTable, IQueryFilter, QueryFilterHelper, IGeometry, IEnumerable<IReadOnlyRow>>
+				Func<IReadOnlyTable, IQueryFilter, QueryFilterHelper, IGeometry,
+						IEnumerable<IReadOnlyRow>>
 					searchFunction,
 				[NotNull] Func<int, double> getTolerance,
 				double tileEnvelopeXMin,
@@ -1625,8 +1628,9 @@ namespace ProSuite.QA.Tests
 
 			[NotNull]
 			public IEnumerable<IReadOnlyFeature> Search([NotNull] IGeometry uncoveredGeometry,
-			                                    [NotNull] IReadOnlyFeatureClass coveringFeatureClass,
-			                                    int coveringClassIndex)
+			                                            [NotNull]
+			                                            IReadOnlyFeatureClass coveringFeatureClass,
+			                                            int coveringClassIndex)
 			{
 				double tolerance = _getTolerance(coveringClassIndex);
 
@@ -1649,7 +1653,7 @@ namespace ProSuite.QA.Tests
 			[NotNull]
 			private static IEnvelope ExpandedEnvelopeTemplate => _expandedEnvelopeTemplate ??
 			                                                     (_expandedEnvelopeTemplate =
-				                                                      new EnvelopeClass());
+					                                                     new EnvelopeClass());
 
 			[NotNull]
 			private IEnumerable<IReadOnlyFeature> SearchToleranceWithEnvelope(
@@ -1665,17 +1669,17 @@ namespace ProSuite.QA.Tests
 				QueryFilterHelper filterHelper = _queryFilterHelpers[coveringClassIndex];
 
 				filterHelper.ForNetwork = RepeatCoveringFeaturesPerTile(uncoveredGeometry,
-				                                                        expandedEnvelope);
+					expandedEnvelope);
 
 				SecondaryFilter secondaryFilter = _useSecondaryFilterForTolerance
 					                                  ? new SecondaryFilter(uncoveredGeometry,
-					                                                        tolerance)
+						                                  tolerance)
 					                                  : null;
 
 				foreach (IReadOnlyRow row in
-					_searchFunction(coveringFeatureClass,
-					                _queryFilters[coveringClassIndex],
-					                filterHelper, null))
+				         _searchFunction(coveringFeatureClass,
+				                         _queryFilters[coveringClassIndex],
+				                         filterHelper, null))
 				{
 					var feature = (IReadOnlyFeature) row;
 
@@ -1714,9 +1718,9 @@ namespace ProSuite.QA.Tests
 				filterHelper.ForNetwork = false;
 
 				foreach (IReadOnlyRow row in
-					_searchFunction(coveringFeatureClass,
-					                _queryFilters[coveringClassIndex],
-					                filterHelper, null))
+				         _searchFunction(coveringFeatureClass,
+				                         _queryFilters[coveringClassIndex],
+				                         filterHelper, null))
 				{
 					yield return (IReadOnlyFeature) row;
 				}
@@ -1916,7 +1920,9 @@ namespace ProSuite.QA.Tests
 
 				if (_pointCount > _maximumPointCount)
 				{
-					_msg.VerboseDebug(() => $"Maximum point count exceeded: {_pointCount} > {_maximumPointCount}");
+					_msg.VerboseDebug(
+						() =>
+							$"Maximum point count exceeded: {_pointCount} > {_maximumPointCount}");
 
 					foreach (int oid in GetSmallestEntries(_pointCount - _maximumPointCount))
 					{

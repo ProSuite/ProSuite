@@ -4,14 +4,14 @@ using System.Runtime.InteropServices;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
-using ProSuite.QA.Container;
-using ProSuite.QA.Tests.Documentation;
-using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.QA.Container;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.IssueCodes;
 
 namespace ProSuite.QA.Tests
 {
@@ -92,7 +92,7 @@ namespace ProSuite.QA.Tests
 
 			int partIndex = 0;
 			foreach (IGeometry part in OrderByAscendingPointCount(
-				GeometryUtils.GetParts(geometryCollection)))
+				         GeometryUtils.GetParts(geometryCollection)))
 			{
 				bool isLastPart = partIndex == partCount - 1;
 
@@ -145,7 +145,8 @@ namespace ProSuite.QA.Tests
 			return errorCount;
 		}
 
-		private int ReportError([NotNull] IReadOnlyRow row, [NotNull] IGeometry part, int pointIndex)
+		private int ReportError([NotNull] IReadOnlyRow row, [NotNull] IGeometry part,
+		                        int pointIndex)
 		{
 			IPoint point = ((IPointCollection) part).get_Point(pointIndex);
 

@@ -57,9 +57,9 @@ namespace ProSuite.DomainServices.AO.QA
 
 		[NotNull]
 		private IList<ITest> AssembleTests([NotNull] IEnumerable<ITest> tests,
-										   [CanBeNull] AreaOfInterest areaOfInterest,
-										   bool filterTableRowsUsingRelatedGeometry,
-										   [NotNull] out List<ITest> testsToVerifyByRelatedGeometry)
+		                                   [CanBeNull] AreaOfInterest areaOfInterest,
+		                                   bool filterTableRowsUsingRelatedGeometry,
+		                                   [NotNull] out List<ITest> testsToVerifyByRelatedGeometry)
 		{
 			Assert.ArgumentNotNull(tests, nameof(tests));
 
@@ -73,8 +73,8 @@ namespace ProSuite.DomainServices.AO.QA
 				bool filterByRelatedGeometry =
 					filterTableRowsUsingRelatedGeometry &&
 					areaOfInterest != null &&
-					!_getQualityCondition(test).NeverFilterTableRowsUsingRelatedGeometry &&
-					!TestUtils.UsesSpatialDataset(test);
+					! _getQualityCondition(test).NeverFilterTableRowsUsingRelatedGeometry &&
+					! TestUtils.UsesSpatialDataset(test);
 
 				if (filterByRelatedGeometry)
 				{
@@ -101,8 +101,8 @@ namespace ProSuite.DomainServices.AO.QA
 			}
 
 			TestUtils.ClassifyTests(tests, allowEditing: false, // remark :  is set again later
-									out IList<ContainerTest> containerTests,
-									out IList<ITest> nonContainerTests);
+			                        out IList<ContainerTest> containerTests,
+			                        out IList<ITest> nonContainerTests);
 
 			testGroups.Add(nonContainerTests); // TODO: split up?
 			int nGroups = maxProcesses - 1;
@@ -146,13 +146,13 @@ namespace ProSuite.DomainServices.AO.QA
 		public static bool CanBeExecutedWithTileThreads([NotNull] Type testType)
 		{
 			Type ct = typeof(ContainerTest);
-			if (!ct.IsAssignableFrom(testType))
+			if (! ct.IsAssignableFrom(testType))
 			{
 				return false;
 			}
 
 			if (Overrides(testType, ct, ContainerTest.CompleteTileCoreMethod)
-				|| Overrides(testType, ct, ContainerTest.BeginTileCoreMethod))
+			    || Overrides(testType, ct, ContainerTest.BeginTileCoreMethod))
 			{
 				return false;
 			}
@@ -202,7 +202,7 @@ namespace ProSuite.DomainServices.AO.QA
 			{
 				QualityConditionGroup single =
 					new QualityConditionGroup(QualityConditionExecType.Mixed, qcTests);
-				return new List<QualityConditionGroup> { single };
+				return new List<QualityConditionGroup> {single};
 			}
 
 			GroupTests(
@@ -248,7 +248,7 @@ namespace ProSuite.DomainServices.AO.QA
 			foreach (ContainerTest test in containerTests)
 			{
 				QualityCondition qc = testQc[test];
-				if (!nonContainerQcs.Contains(qc))
+				if (! nonContainerQcs.Contains(qc))
 				{
 					containerQcs.Add(qc);
 				}
@@ -263,7 +263,7 @@ namespace ProSuite.DomainServices.AO.QA
 				QualityConditionExecType execType = QualityConditionExecType.TileParallel;
 				foreach (ITest test in qcTests[qc])
 				{
-					if (!CanBeExecutedWithTileThreads(test))
+					if (! CanBeExecutedWithTileThreads(test))
 					{
 						execType = QualityConditionExecType.Container;
 					}
@@ -278,7 +278,6 @@ namespace ProSuite.DomainServices.AO.QA
 					tileParallelTest.QualityConditions.Add(qc, qcTests[qc]);
 				}
 			}
-
 		}
 
 		private void AddQcs(HashSet<QualityCondition> qualityConditions, IEnumerable<ITest> tests,

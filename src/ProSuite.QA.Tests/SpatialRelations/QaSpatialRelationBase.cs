@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
@@ -20,8 +19,7 @@ namespace ProSuite.QA.Tests.SpatialRelations
 		private ISpatialFilter[] _spatialFiltersIntersects;
 		private readonly bool _disjointIsError;
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		#region Constructors
 
@@ -99,9 +97,9 @@ namespace ProSuite.QA.Tests.SpatialRelations
 			var errorCount = 0;
 			var anyFound = false;
 			foreach (IReadOnlyRow relatedRow in Search(relatedTable,
-			                                   relatedFilter,
-			                                   relatedFilterHelper,
-			                                   feature.Shape))
+			                                           relatedFilter,
+			                                           relatedFilterHelper,
+			                                           feature.Shape))
 			{
 				anyFound = true;
 
@@ -142,11 +140,11 @@ namespace ProSuite.QA.Tests.SpatialRelations
 				case esriSpatialRelEnum.esriSpatialRelIndexIntersects:
 				case esriSpatialRelEnum.esriSpatialRelUndefined:
 					throw new ArgumentOutOfRangeException(string.Format("Unsupported relation: {0}",
-					                                                    relation));
+						                                      relation));
 
 				default:
 					throw new ArgumentOutOfRangeException(string.Format("Unknown relation: {0}",
-					                                                    relation));
+						                                      relation));
 			}
 		}
 
@@ -167,7 +165,8 @@ namespace ProSuite.QA.Tests.SpatialRelations
 				IReadOnlyRow row in
 				Search(relatedTable, intersectsFilter, relatedFilterHelper, cacheShape))
 			{
-				_msg.VerboseDebug(() => $"not disjoint (row found: {GdbObjectUtils.ToString(row)})");
+				_msg.VerboseDebug(
+					() => $"not disjoint (row found: {GdbObjectUtils.ToString(row)})");
 
 				return false;
 			}

@@ -12,8 +12,7 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 {
 	public class VerifiedModelFactory : IVerifiedModelFactory
 	{
-		[NotNull]
-		private readonly IMasterDatabaseWorkspaceContextFactory _workspaceContextFactory;
+		[NotNull] private readonly IMasterDatabaseWorkspaceContextFactory _workspaceContextFactory;
 
 		[NotNull] private readonly VerifiedDatasetHarvesterBase _datasetHarvester;
 
@@ -114,7 +113,7 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 		                                   [NotNull] ICollection<string> harvestedNames)
 		{
 			foreach (IDatasetName datasetName in
-				DatasetUtils.GetDatasetNames(workspace, esriDatasetType.esriDTFeatureClass))
+			         DatasetUtils.GetDatasetNames(workspace, esriDatasetType.esriDTFeatureClass))
 			{
 				HarvestDataset(datasetName, harvestedNames);
 			}
@@ -125,7 +124,7 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 		                           [NotNull] ICollection<string> harvestedNames)
 		{
 			foreach (IDatasetName datasetName in
-				DatasetUtils.GetDatasetNames(workspace, esriDatasetType.esriDTTable))
+			         DatasetUtils.GetDatasetNames(workspace, esriDatasetType.esriDTTable))
 			{
 				HarvestDataset(datasetName, harvestedNames);
 			}
@@ -137,7 +136,7 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 			[NotNull] ICollection<string> harvestedNames)
 		{
 			foreach (IDatasetName datasetName in
-				DatasetUtils.GetDatasetNames(workspace, esriDatasetType.esriDTTopology))
+			         DatasetUtils.GetDatasetNames(workspace, esriDatasetType.esriDTTopology))
 			{
 				HarvestDataset(datasetName, harvestedNames);
 			}
@@ -149,7 +148,7 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 			[NotNull] ICollection<string> harvestedNames)
 		{
 			foreach (IDatasetName datasetName in
-				DatasetUtils.GetDatasetNames(workspace, esriDatasetType.esriDTRasterDataset))
+			         DatasetUtils.GetDatasetNames(workspace, esriDatasetType.esriDTRasterDataset))
 			{
 				HarvestDataset(datasetName, harvestedNames);
 			}
@@ -161,7 +160,7 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 			[NotNull] ICollection<string> harvestedNames)
 		{
 			foreach (IDatasetName datasetName in
-				DatasetUtils.GetDatasetNames(workspace, esriDatasetType.esriDTMosaicDataset))
+			         DatasetUtils.GetDatasetNames(workspace, esriDatasetType.esriDTMosaicDataset))
 			{
 				HarvestDataset(datasetName, harvestedNames);
 			}
@@ -173,7 +172,7 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 			[NotNull] ICollection<string> harvestedNames)
 		{
 			foreach (IDatasetName datasetName in
-				DatasetUtils.GetDatasetNames(workspace, esriDatasetType.esriDTTerrain))
+			         DatasetUtils.GetDatasetNames(workspace, esriDatasetType.esriDTTerrain))
 			{
 				HarvestDataset(datasetName, harvestedNames);
 			}
@@ -185,7 +184,8 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 			[NotNull] ICollection<string> harvestedNames)
 		{
 			foreach (IDatasetName datasetName in
-				DatasetUtils.GetDatasetNames(workspace, esriDatasetType.esriDTGeometricNetwork))
+			         DatasetUtils.GetDatasetNames(workspace,
+			                                      esriDatasetType.esriDTGeometricNetwork))
 			{
 				HarvestDataset(datasetName, harvestedNames);
 			}

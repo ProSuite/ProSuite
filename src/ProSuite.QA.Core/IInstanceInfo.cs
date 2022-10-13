@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Validation;
 
 namespace ProSuite.QA.Core
 {

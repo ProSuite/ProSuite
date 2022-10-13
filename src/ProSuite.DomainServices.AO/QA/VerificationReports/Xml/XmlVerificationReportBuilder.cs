@@ -726,7 +726,7 @@ namespace ProSuite.DomainServices.AO.QA.VerificationReports.Xml
 
 			return result;
 		}
-		
+
 		private void AssertVerifying()
 		{
 			Assert.True(_verificationOngoing, "verification not begun");

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
@@ -13,8 +12,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 	public class StickyIntersectionConnectLineCalculator : IDisposable
 		// : ConnectLineCalculatorBase
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private static readonly IPoint _pointTemplate = new PointClass();
 

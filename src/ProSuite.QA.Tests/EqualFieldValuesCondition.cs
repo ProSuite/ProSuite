@@ -5,14 +5,14 @@ using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 using ESRI.ArcGIS.Geodatabase;
-using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestSupport;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Text;
+using ProSuite.QA.Container;
+using ProSuite.QA.Container.TestSupport;
 
 namespace ProSuite.QA.Tests
 {
@@ -102,7 +102,7 @@ namespace ProSuite.QA.Tests
 			var fieldNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
 			foreach (string fieldDefinition in StringUtils.Split(
-				fields, separators, escapeCharacter, removeEmptyEntries: true))
+				         fields, separators, escapeCharacter, removeEmptyEntries: true))
 			{
 				string fieldName;
 				string multiValueSeparator;
@@ -508,7 +508,8 @@ namespace ProSuite.QA.Tests
 
 			[CanBeNull] private readonly AllowedDifferenceCondition _allowedDifferenceCondition;
 
-			[NotNull] private readonly IDictionary<IReadOnlyTable, TableFieldInfo> _tableFieldInfos =
+			[NotNull]
+			private readonly IDictionary<IReadOnlyTable, TableFieldInfo> _tableFieldInfos =
 				new Dictionary<IReadOnlyTable, TableFieldInfo>();
 
 			[NotNull] private static readonly HashSet<string> _nullStringSet =
@@ -659,9 +660,11 @@ namespace ProSuite.QA.Tests
 				                                _allowedDifferenceCondition);
 			}
 
-			private static bool AreAllDifferencesAllowed([NotNull] IReadOnlyRow row1, int tableIndex1,
+			private static bool AreAllDifferencesAllowed([NotNull] IReadOnlyRow row1,
+			                                             int tableIndex1,
 			                                             [NotNull] HashSet<string> set1,
-			                                             [NotNull] IReadOnlyRow row2, int tableIndex2,
+			                                             [NotNull] IReadOnlyRow row2,
+			                                             int tableIndex2,
 			                                             [NotNull] HashSet<string> set2,
 			                                             [NotNull]
 			                                             AllowedDifferenceCondition condition)
@@ -671,7 +674,7 @@ namespace ProSuite.QA.Tests
 
 				return nonEmptySet1.All(v1 => nonEmptySet2.All(
 					                        v2 => condition.IsFulfilled(row1, tableIndex1, v1,
-					                                                    row2, tableIndex2, v2)));
+						                        row2, tableIndex2, v2)));
 			}
 
 			[NotNull]

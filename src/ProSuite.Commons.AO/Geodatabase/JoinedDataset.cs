@@ -231,16 +231,41 @@ namespace ProSuite.Commons.AO.Geodatabase
 		private IEnumerable<VirtualRow> GetJoinedRows([CanBeNull] IQueryFilter filter,
 		                                              bool recycle)
 		{
-			if (filter != null && (! string.IsNullOrEmpty(filter.WhereClause)))
+			EnsureKeyFieldNames();
+
+			IDictionary<string, IList<IReadOnlyRow>> otherRowsByFeatureKey = null;
+
+			bool filterHasWhereClause =
+				filter != null && ! string.IsNullOrEmpty(filter.WhereClause);
+
+			if (filterHasWhereClause)
+			{
+				try
+				{
+					// TOP-5597: Try using the where clause on the left table: It could improve performance
+					// tremendously in case there is no spatial filter and the where-clause is restrictive.
+					// However, it could fail if the where clause references fields from the right table.
+					// The where clause will be re-applied to the resulting joined rows.
+					otherRowsByFeatureKey = GetOtherRowsByFeatureKey(filter);
+				}
+				catch (Exception e)
+				{
+					_msg.Debug("Exception tentative executing the where-clause on the left table " +
+					           "only. Falling back to default.", e);
+				}
+			}
+
+			// Do not apply the where clause on the remaining queries (it will be applied applied to the resulting joined rows)
+			if (filterHasWhereClause)
 			{
 				filter = (IQueryFilter) ((IClone) filter).Clone();
 				filter.WhereClause = null;
 			}
 
-			EnsureKeyFieldNames();
-
-			IDictionary<string, IList<IReadOnlyRow>> otherRowsByFeatureKey =
-				GetOtherRowsByFeatureKey(filter);
+			if (otherRowsByFeatureKey == null)
+			{
+				otherRowsByFeatureKey = GetOtherRowsByFeatureKey(filter);
+			}
 
 			IEnumerable<IReadOnlyRow> leftRows = PerformFinalGeoClassRead(
 				otherRowsByFeatureKey, filter, recycle);
@@ -373,7 +398,13 @@ namespace ProSuite.Commons.AO.Geodatabase
 			Assert.True(featureClassKeyIdx >= 0, $"Key field not found: {featureClassKeyIdx}");
 
 			bool clientSideKeyFiltering;
-			if (AssumeLeftTableCached)
+
+			if (! FilterHasGeometry(filter))
+			{
+				// The container is of no help, leverage at least the WhereClause directly in the DB
+				clientSideKeyFiltering = false;
+			}
+			else if (AssumeLeftTableCached)
 			{
 				clientSideKeyFiltering = true;
 			}
@@ -400,6 +431,16 @@ namespace ProSuite.Commons.AO.Geodatabase
 			{
 				yield return row;
 			}
+		}
+
+		private static bool FilterHasGeometry(IQueryFilter filter)
+		{
+			if (filter is ISpatialFilter spatialFilter)
+			{
+				return spatialFilter.Geometry != null;
+			}
+
+			return false;
 		}
 
 		private IEnumerable<VirtualRow> Join(
@@ -492,19 +533,39 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		private JoinSourceTable GetObjectIdTable()
 		{
-			IReadOnlyTable oidSourceTable =
-				TableJoinUtils.DetermineOIDTable(_associationDescription, JoinType,
-				                                 GeometryEndClass);
+			string oidFieldName = _joinedSchema.OIDFieldName;
 
-			if (_associationDescription is ForeignKeyAssociationDescription)
+			if (oidFieldName == null)
 			{
-				return GeometryEndClass.Equals(oidSourceTable)
-					       ? JoinSourceTable.Left
-					       : JoinSourceTable.Right;
+				return JoinSourceTable.None;
 			}
 
-			// The LeftTable is a non-unique fallback with a very slight performance gain due to left-out association rows. 
-			return IncludeMtoNAssociationRows ? JoinSourceTable.Association : JoinSourceTable.Left;
+			int splitPosition = oidFieldName.LastIndexOf('.');
+
+			Assert.False(splitPosition < 0, "OBJECTID field is not fully qualified.");
+
+			string tableName = oidFieldName.Substring(0, splitPosition);
+
+			if (tableName.Equals(GeometryEndClass.Name,
+			                     StringComparison.InvariantCultureIgnoreCase))
+			{
+				return JoinSourceTable.Left;
+			}
+
+			if (tableName.Equals(OtherEndClass.Name, StringComparison.InvariantCultureIgnoreCase))
+			{
+				return JoinSourceTable.Right;
+			}
+
+			Assert.True(_associationDescription is ManyToManyAssociationDescription,
+			            $"Unexpected association type for OID field {oidFieldName}");
+
+			Assert.True(
+				tableName.Equals(AssociationTable?.Name,
+				                 StringComparison.InvariantCultureIgnoreCase),
+				$"OID field {oidFieldName} not found in join tables");
+
+			return JoinSourceTable.Association;
 		}
 
 		private GdbRow CreateJoinedFeature([NotNull] IReadOnlyRow leftRow,
@@ -677,9 +738,13 @@ namespace ProSuite.Commons.AO.Geodatabase
 		private VirtualRow GetRowManyToMany(int id, ManyToManyAssociationDescription m2nAssociation)
 		{
 			GetAssociationTableKeyFields(m2nAssociation, out string bridgeTableGeoKeyField,
-			                             out string _);
+			                             out string bridgeTableOtherKeyField);
 
 			IReadOnlyTable bridgeTable = m2nAssociation.AssociationTable;
+
+			int bridgeTableOtherKeyIdx = bridgeTable.FindField(bridgeTableOtherKeyField);
+			Assert.True(bridgeTableOtherKeyIdx >= 0,
+			            $"Key field {bridgeTableOtherKeyField} not found in {bridgeTable.Name}");
 
 			int bridgeTableGeoKeyIdx = bridgeTable.FindField(bridgeTableGeoKeyField);
 			Assert.True(bridgeTableGeoKeyIdx >= 0,
@@ -687,17 +752,29 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			IReadOnlyRow associationRow = bridgeTable.GetRow(id);
 
-			string geoKeyValue = GetNonNullKeyValue(associationRow, bridgeTableGeoKeyIdx);
+			// The primary key of the other table:
+			string bridgeOtherKeyValue = GetNonNullKeyValue(associationRow, bridgeTableOtherKeyIdx);
 
-			var geoKeyList = new List<string> {geoKeyValue};
+			// The primary key of the geo table:
+			string bridgeGeoKeyValue = GetNonNullKeyValue(associationRow, bridgeTableGeoKeyIdx);
+
+			var geoKeyList = new List<string> {bridgeGeoKeyValue};
 
 			IList<IReadOnlyRow> geoFeatures = FetchRowsByKey(
 					GeometryEndClass, geoKeyList, GeometryClassKeyField, false)
 				.ToList();
 
-			Assert.AreEqual(1, geoFeatures.Count, $"Unexpected number of left table features");
+			Assert.AreEqual(1, geoFeatures.Count, "Unexpected number of left table features");
 
-			return GetJoinedRows(new List<IReadOnlyRow> {geoFeatures[0]}).FirstOrDefault();
+			var otherKeyList = new List<string> {bridgeOtherKeyValue};
+
+			IList<IReadOnlyRow> otherFeatures = FetchRowsByKey(
+					OtherEndClass, otherKeyList, OtherClassKeyField, false)
+				.ToList();
+
+			Assert.AreEqual(1, otherFeatures.Count, "Unexpected number of right table features");
+
+			return CreateJoinedFeature(geoFeatures[0], otherFeatures[0], associationRow);
 		}
 
 		private void GetAssociationTableKeyFields(ManyToManyAssociationDescription m2nAssociation,

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using Grpc.Core;
@@ -13,7 +12,7 @@ namespace ProSuite.Microservices.Client
 {
 	public static class GrpcUtils
 	{
-		private static readonly IMsg _msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		public static IList<ChannelOption> CreateChannelOptions(int maxMessageLength,
 		                                                        bool disableProxy = false)
@@ -132,7 +131,6 @@ namespace ProSuite.Microservices.Client
 			catch (RpcException rpcException)
 			{
 				_msg.Debug($"Error checking health of service {serviceName}", rpcException);
-
 				statusCode = rpcException.StatusCode;
 			}
 			catch (Exception e)
@@ -171,7 +169,6 @@ namespace ProSuite.Microservices.Client
 			catch (RpcException rpcException)
 			{
 				_msg.Debug($"Error checking health of service {serviceName}", rpcException);
-
 				statusCode = rpcException.StatusCode;
 			}
 			catch (Exception e)

@@ -1,9 +1,9 @@
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Container;
 using ProSuite.QA.Core.IssueCodes;
 
 namespace ProSuite.QA.Tests.Schema
@@ -139,7 +139,8 @@ namespace ProSuite.QA.Tests.Schema
 
 		[NotNull]
 		private static IEnumerable<IReadOnlyTable> GetTables([NotNull] IReadOnlyTable table,
-		                                             [CanBeNull] IReadOnlyTable referenceTable)
+		                                                     [CanBeNull]
+		                                                     IReadOnlyTable referenceTable)
 		{
 			return referenceTable == null
 				       ? new[] {table}

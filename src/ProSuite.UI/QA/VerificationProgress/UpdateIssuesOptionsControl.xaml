@@ -9,42 +9,44 @@
              mc:Ignorable="d"
              d:DesignHeight="200" d:DesignWidth="400">
 
-  <DockPanel LastChildFill="False" Background="GhostWhite" Height="200" Width="400">
-    <Grid DockPanel.Dock="Top" Margin="6">
-      <Grid.RowDefinitions>
-        <RowDefinition Height="Auto" />
-        <RowDefinition Height="Auto" />
-        <RowDefinition Height="Auto" />
-      </Grid.RowDefinitions>
+    <DockPanel LastChildFill="False" Background="GhostWhite" Height="200" Width="400">
+        <Grid DockPanel.Dock="Top" Margin="6">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
 
-      <TextBox Text="Save Options" FontWeight="Bold"
-               TextWrapping="Wrap" BorderThickness="0" Background="Transparent" />
+            <TextBox Text="Save Options" FontWeight="Bold"
+                     TextWrapping="Wrap" BorderThickness="0" Background="Transparent" />
 
-      <GroupBox Grid.Row="1" BorderBrush="DarkGray" BorderThickness="1" Margin="4" Header="Existing issues: Delete...">
+            <GroupBox Grid.Row="1" BorderBrush="DarkGray" BorderThickness="1" Margin="4"
+                      Header="Existing issues: Delete...">
 
-        <StackPanel Margin="4, 4">
-          <commonswpf:BindableRadioButton GroupName="rdoGroup" Content="Issues of verified conditions in perimeter"
-                                          Margin="0, 2"
-                                          RadioValue="VerifiedQualityConditions"
-                                          RadioBinding="{Binding ErrorDeletionType}" />
-          <commonswpf:BindableRadioButton GroupName="rdoGroup" Content="All issues in perimeter"
-                                          Margin="0, 2"
-                                          RadioValue="AllQualityConditions"
-                                          RadioBinding="{Binding ErrorDeletionType}" />
-        </StackPanel>
-      </GroupBox>
+                <StackPanel Margin="4, 4">
+                    <commonswpf:BindableRadioButton GroupName="rdoGroup"
+                                                    Content="Issues of verified conditions in perimeter"
+                                                    Margin="0, 2"
+                                                    RadioValue="VerifiedQualityConditions"
+                                                    RadioBinding="{Binding ErrorDeletionType}" />
+                    <commonswpf:BindableRadioButton GroupName="rdoGroup" Content="All issues in perimeter"
+                                                    Margin="0, 2"
+                                                    RadioValue="AllQualityConditions"
+                                                    RadioBinding="{Binding ErrorDeletionType}" />
+                </StackPanel>
+            </GroupBox>
 
-      <GroupBox Grid.Row="2" BorderBrush="DarkGray" BorderThickness="1" Margin="4"
-                Header="Work list filter 'Latest test'">
-        <CheckBox
-          Height="Auto" HorizontalAlignment="Left" Margin="4, 8"
-          IsChecked="{Binding Path=KeepPreviousIssues, Mode=TwoWay}"
-          ToolTip="Determines filter date of 'Latest test' filter">
-          <TextBox
-            Text="Keep the issues from the previous test run and add newly found issues to the work list. By default the work list is filtered to the issues found by latest saved verification."
-            TextWrapping="Wrap" BorderThickness="0" Background="Transparent" />
-        </CheckBox>
-      </GroupBox>
-    </Grid>
-  </DockPanel>
+            <GroupBox Grid.Row="2" BorderBrush="DarkGray" BorderThickness="1" Margin="4"
+                      Header="Work list filter 'Latest test'">
+                <CheckBox
+                    Height="Auto" HorizontalAlignment="Left" Margin="4, 8"
+                    IsChecked="{Binding Path=KeepPreviousIssues, Mode=TwoWay}"
+                    ToolTip="Determines filter date of 'Latest test' filter">
+                    <TextBox
+                        Text="Keep the issues from the previous test run and add newly found issues to the work list. By default the work list is filtered to the issues found by latest saved verification."
+                        TextWrapping="Wrap" BorderThickness="0" Background="Transparent" />
+                </CheckBox>
+            </GroupBox>
+        </Grid>
+    </DockPanel>
 </UserControl>

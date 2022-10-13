@@ -47,7 +47,5 @@ namespace ProSuite.Commons.Test.Xml
 
 			Assert.AreEqual("#aaaa[0x0B]bbb[0x0C]#", escaped);
 		}
-
-		
 	}
 }

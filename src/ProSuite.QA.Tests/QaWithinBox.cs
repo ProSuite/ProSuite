@@ -1,14 +1,14 @@
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container;
-using ProSuite.QA.Tests.Documentation;
-using ProSuite.QA.Tests.IssueCodes;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Container;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.IssueCodes;
 
 namespace ProSuite.QA.Tests
 {
@@ -47,10 +47,14 @@ namespace ProSuite.QA.Tests
 		public QaWithinBox(
 				[Doc(nameof(DocStrings.QaWithinBox_featureClass))] [NotNull]
 				IReadOnlyFeatureClass featureClass,
-				[Doc(nameof(DocStrings.QaWithinBox_xMin))] double xMin,
-				[Doc(nameof(DocStrings.QaWithinBox_yMin))] double yMin,
-				[Doc(nameof(DocStrings.QaWithinBox_xMax))] double xMax,
-				[Doc(nameof(DocStrings.QaWithinBox_yMax))] double yMax)
+				[Doc(nameof(DocStrings.QaWithinBox_xMin))]
+				double xMin,
+				[Doc(nameof(DocStrings.QaWithinBox_yMin))]
+				double yMin,
+				[Doc(nameof(DocStrings.QaWithinBox_xMax))]
+				double xMax,
+				[Doc(nameof(DocStrings.QaWithinBox_yMax))]
+				double yMax)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(featureClass, xMin, yMin, xMax, yMax, false) { }
 
@@ -58,10 +62,14 @@ namespace ProSuite.QA.Tests
 		public QaWithinBox(
 			[Doc(nameof(DocStrings.QaWithinBox_featureClass))] [NotNull]
 			IReadOnlyFeatureClass featureClass,
-			[Doc(nameof(DocStrings.QaWithinBox_xMin))] double xMin,
-			[Doc(nameof(DocStrings.QaWithinBox_yMin))] double yMin,
-			[Doc(nameof(DocStrings.QaWithinBox_xMax))] double xMax,
-			[Doc(nameof(DocStrings.QaWithinBox_yMax))] double yMax,
+			[Doc(nameof(DocStrings.QaWithinBox_xMin))]
+			double xMin,
+			[Doc(nameof(DocStrings.QaWithinBox_yMin))]
+			double yMin,
+			[Doc(nameof(DocStrings.QaWithinBox_xMax))]
+			double xMax,
+			[Doc(nameof(DocStrings.QaWithinBox_yMax))]
+			double yMax,
 			[Doc(nameof(DocStrings.QaWithinBox_reportOnlyOutsideParts))]
 			bool reportOnlyOutsideParts)
 			: base(featureClass)

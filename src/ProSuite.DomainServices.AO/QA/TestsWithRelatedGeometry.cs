@@ -9,7 +9,8 @@ namespace ProSuite.DomainServices.AO.QA
 {
 	internal class TestsWithRelatedGeometry
 	{
-		public TestsWithRelatedGeometry([NotNull] IReadOnlyTable table, [NotNull] IList<ITest> tests,
+		public TestsWithRelatedGeometry([NotNull] IReadOnlyTable table,
+		                                [NotNull] IList<ITest> tests,
 		                                [NotNull] IObjectDataset objectDataset,
 		                                [NotNull]
 		                                IEnumerable<IList<IRelationshipClass>> relClassChains)

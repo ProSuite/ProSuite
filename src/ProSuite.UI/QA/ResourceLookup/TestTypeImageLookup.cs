@@ -108,7 +108,7 @@ namespace ProSuite.UI.QA.ResourceLookup
 			{
 				return GetImage(_keyIssueFilter);
 			}
-			
+
 			throw new NotImplementedException();
 		}
 
@@ -135,7 +135,7 @@ namespace ProSuite.UI.QA.ResourceLookup
 			{
 				return GetImage(_keyTransform);
 			}
-			
+
 			if (instanceConfiguration is IssueFilterConfiguration)
 			{
 				return GetImage(_keyIssueFilter);

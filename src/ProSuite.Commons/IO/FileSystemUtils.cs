@@ -18,12 +18,12 @@ namespace ProSuite.Commons.IO
 			_specialFolderNames =
 				new Dictionary<string, Environment.SpecialFolder>
 				{
-					{ "APPDATA", Environment.SpecialFolder.ApplicationData },
-					{ "LOCALAPPDATA", Environment.SpecialFolder.LocalApplicationData },
-					{ "PROGRAMDATA", Environment.SpecialFolder.CommonApplicationData }
+					{"APPDATA", Environment.SpecialFolder.ApplicationData},
+					{"LOCALAPPDATA", Environment.SpecialFolder.LocalApplicationData},
+					{"PROGRAMDATA", Environment.SpecialFolder.CommonApplicationData}
 				};
 
-		private static readonly string[] _variableFormats = { @"${{{0}}}", "%{0}%" };
+		private static readonly string[] _variableFormats = {@"${{{0}}}", "%{0}%"};
 		private static char[] _invalidPathChars;
 		private static char[] _invalidFileNameChars;
 

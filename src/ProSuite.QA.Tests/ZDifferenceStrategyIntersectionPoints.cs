@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons;
 using ProSuite.Commons.AO.Geodatabase;
@@ -49,8 +48,7 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		public ZDifferenceStrategyIntersectionPoints(
 			double minimumZDifference, [CanBeNull] string minimumZDifferenceExpression,
@@ -121,7 +119,7 @@ namespace ProSuite.QA.Tests
 
 				// linestrings (from multipatch or polycurve) to other linestrings (multipatch/polycurve)
 				foreach (var p in GetIntersections(
-					linestrings1, linestrings2, spatialReference, xyTolerance))
+					         linestrings1, linestrings2, spatialReference, xyTolerance))
 				{
 					yield return p;
 				}
@@ -158,7 +156,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		protected override int ReportErrors(IReadOnlyFeature feature1, int tableIndex1,
-											IReadOnlyFeature feature2, int tableIndex2)
+		                                    IReadOnlyFeature feature2, int tableIndex2)
 		{
 			if (_useDistanceFromPlane != null)
 			{
@@ -177,7 +175,8 @@ namespace ProSuite.QA.Tests
 
 			return GetIntersections(feature1.Shape, feature2.Shape,
 			                        feature1.FeatureClass.SpatialReference,
-			                        GeometryUtils.GetXyTolerance(feature1.FeatureClass.SpatialReference),
+			                        GeometryUtils.GetXyTolerance(
+				                        feature1.FeatureClass.SpatialReference),
 			                        () => GetLineStrings(feature1),
 			                        () => GetLineStrings(feature2))
 				.Sum(ip => CheckIntersection(ip.Point,
@@ -217,7 +216,7 @@ namespace ProSuite.QA.Tests
 					       nonPlanarError.SegmentsPlane.Geometry,
 					       Codes[Code.FaceNotCoplanar],
 					       ((IReadOnlyFeatureClass) planarFeature.Table).ShapeFieldName,
-					       values: new object[] { nonPlanarError.MaximumOffset });
+					       values: new object[] {nonPlanarError.MaximumOffset});
 		}
 
 		[NotNull]
@@ -503,7 +502,7 @@ namespace ProSuite.QA.Tests
 					              FormatComparison(dz, minimumZDifference, "<")),
 					InvolvedRowUtils.GetInvolvedRows(feature1, feature2),
 					intersectionPoint, Codes[Code.TooSmall],
-					TestUtils.GetShapeFieldName(feature1), values: new object[] { dz });
+					TestUtils.GetShapeFieldName(feature1), values: new object[] {dz});
 			}
 
 			if (maximumZDifference > 0 && dz > maximumZDifference)
@@ -514,7 +513,7 @@ namespace ProSuite.QA.Tests
 					              FormatComparison(dz, maximumZDifference, ">")),
 					InvolvedRowUtils.GetInvolvedRows(feature1, feature2),
 					intersectionPoint, Codes[Code.TooLarge],
-					TestUtils.GetShapeFieldName(feature1), values: new object[] { dz });
+					TestUtils.GetShapeFieldName(feature1), values: new object[] {dz});
 			}
 
 			return errorCount +
@@ -528,7 +527,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		private void GetValidZDifferenceInterval(IReadOnlyFeature feature1, int tableIndex1,
-												 IReadOnlyFeature feature2, int tableIndex2,
+		                                         IReadOnlyFeature feature2, int tableIndex2,
 		                                         double feature1Z, double feature2Z,
 		                                         out double minimumZDifference,
 		                                         out double maximumZDifference)

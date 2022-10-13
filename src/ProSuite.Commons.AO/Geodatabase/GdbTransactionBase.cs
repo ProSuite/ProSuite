@@ -1,5 +1,4 @@
 using System;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
@@ -12,8 +11,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 {
 	public abstract class GdbTransactionBase : IGdbTransaction
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private bool _aborted;
 		[CanBeNull] private IWorkspaceEdit _workspaceEdit;
@@ -214,7 +212,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 						}
 					}
 
-					if (! _aborted && ! isInEditOperation && (state & EditStateInfo.KeepOperation) == 0 ||
+					if (! _aborted && ! isInEditOperation &&
+					    (state & EditStateInfo.KeepOperation) == 0 ||
 					    (state & EditStateInfo.StopOperation) != 0)
 					{
 						// if the edit operation violates rule engine rules, the edit operation won't succeed. However

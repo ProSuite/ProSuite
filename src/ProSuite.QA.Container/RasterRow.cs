@@ -1,4 +1,3 @@
-using System.Reflection;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Surface;
 using ProSuite.Commons.Essentials.Assertions;
@@ -14,8 +13,7 @@ namespace ProSuite.QA.Container
 
 		[CanBeNull] private ISimpleSurface _rasterSurface;
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		#region Constructors
 

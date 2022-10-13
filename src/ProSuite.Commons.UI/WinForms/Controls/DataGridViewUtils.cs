@@ -4,7 +4,6 @@ using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Linq;
-using System.Reflection;
 using System.Windows.Forms;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -17,8 +16,7 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 	/// </summary>
 	public static class DataGridViewUtils
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		/// <summary>
 		/// Determines whether a given event is triggers sorting on a column.
@@ -288,7 +286,7 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 			Assert.ArgumentNotNull(e, nameof(e));
 
 			Rectangle cellRect = dataGridView.GetCellDisplayRectangle(
-				e.ColumnIndex, e.RowIndex, cutOverflow : false);
+				e.ColumnIndex, e.RowIndex, cutOverflow: false);
 
 			Point location = e.Location;
 

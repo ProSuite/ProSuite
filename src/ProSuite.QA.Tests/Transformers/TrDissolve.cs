@@ -80,7 +80,7 @@ namespace ProSuite.QA.Tests.Transformers
 				                                     AreResultRowsGrouped = true
 			                                     };
 
-			tableFields.AddOIDField(dissolvedFc, "OBJECTID");
+			tableFields.AddOIDField(dissolvedFc, "OBJECTID", true);
 			tableFields.AddShapeField(dissolvedFc, "SHAPE", true);
 
 			if (Attributes != null)
@@ -253,14 +253,14 @@ namespace ProSuite.QA.Tests.Transformers
 				if (_dissolve.ShapeType == esriGeometryType.esriGeometryPolygon)
 				{
 					foreach (VirtualRow dissolvedArea in DissolveSearchedAreaFeatures(
-						         filter, recycling))
+						         filter))
 					{
 						yield return dissolvedArea;
 					}
 				}
 				else
 				{
-					foreach (VirtualRow virtualRow in DissolveSearchedLineFeaatures(
+					foreach (VirtualRow virtualRow in DissolveSearchedLineFeatures(
 						         filter, recycling))
 					{
 						yield return virtualRow;
@@ -268,7 +268,7 @@ namespace ProSuite.QA.Tests.Transformers
 				}
 			}
 
-			private IEnumerable<VirtualRow> DissolveSearchedLineFeaatures(
+			private IEnumerable<VirtualRow> DissolveSearchedLineFeatures(
 				IQueryFilter filter, bool recycling)
 			{
 				// TODO: implement GroupBy
@@ -433,6 +433,9 @@ namespace ProSuite.QA.Tests.Transformers
 					// Add the BaseRows:
 					calculatedValues.Add(new CalculatedValue(BaseRowsFieldIndex, rows));
 
+					// Add space for the generated OID
+					calculatedValues.Add(new CalculatedValue(Resulting.OidFieldIndex, null));
+
 					IValueList simpleList =
 						TransformedAttributeUtils.ToSimpleValueList(
 							calculatedValues, out IDictionary<int, int> calculatedCopyMatrix);
@@ -447,29 +450,104 @@ namespace ProSuite.QA.Tests.Transformers
 				IValueList rowValues = new ReadOnlyRowBasedValues(mainRow);
 				joinedValueList.AddList(rowValues, TableFields.FieldIndexMapping);
 
-				GdbFeature dissolved = Resulting.CreateFeature(mainRow.OID, joinedValueList);
+				GdbFeature dissolved = (GdbFeature) Resulting.CreateObject(joinedValueList);
 
 				dissolved.Shape = shape;
 
 				return dissolved;
 			}
 
-			private IEnumerable<VirtualRow> DissolveSearchedAreaFeatures(IQueryFilter filter,
-				bool recycling)
+			private IEnumerable<VirtualRow> DissolveSearchedAreaFeatures(IQueryFilter filter)
 			{
+				bool searchAcrossTiles = Resulting.NeighborSearchOption == SearchOption.All;
+
+				IEnvelope requestedArea = (filter as ISpatialFilter)?.Geometry?.Envelope;
+
 				// TODO:
 				// Use proper geometry grouping as it is used in CleanMultipatchUtils or some optimized polygon network builder
-				foreach (List<IReadOnlyRow> rowsToDissolve in GroupedBaseFeatures(filter, recycling)
+				// See also UnionPolygonsGeom in GPFunctionBase for performance considerations!
+				foreach (List<IReadOnlyRow> rowsToDissolve in GroupedBaseFeatures(filter, false)
 					         .ToList())
 				{
 					IGeometry fullUnion = GeometryUtils.Union(
 						rowsToDissolve.Select(r => ((IReadOnlyFeature) r).Shape).ToList());
+
+					IEnvelope unionEnvelope = fullUnion.Envelope;
+
+					while (searchAcrossTiles &&
+					       requestedArea != null &&
+					       ! GeometryUtils.Contains(requestedArea, unionEnvelope))
+					{
+						var expanded = UnionExtraRows(rowsToDissolve, fullUnion, filter);
+
+						if (expanded == null)
+						{
+							break;
+						}
+
+						if (((IArea) expanded).Area <= ((IArea) fullUnion).Area)
+						{
+							// No growth
+							break;
+						}
+
+						fullUnion = expanded;
+					}
 
 					foreach (IGeometry dissolvedGeometry in GeometryUtils.Explode(fullUnion))
 					{
 						yield return CreateResultRow(dissolvedGeometry, rowsToDissolve);
 					}
 				}
+			}
+
+			private IGeometry UnionExtraRows(List<IReadOnlyRow> originalRows,
+			                                 IGeometry fullUnion, IQueryFilter filter)
+			{
+				IEnvelope unionEnvelope = fullUnion.Envelope;
+				// Quick and dirty! Needs proper filtering by difference with already searched are
+				// and association with the group in case of GroupBy
+				ISpatialFilter clone = (ISpatialFilter) ((IClone) filter).Clone();
+
+				IEnvelope currentTile =
+					GeometryFactory.CreateEnvelope(DataContainer.CurrentTileExtent);
+				currentTile.SpatialReference = unionEnvelope.SpatialReference;
+
+				clone.Geometry =
+					IntersectionUtils.Difference(GeometryFactory.CreatePolygon(unionEnvelope),
+					                             GeometryFactory.CreatePolygon(currentTile));
+
+				IGeometry extraRowUnion = null;
+
+				// Get extra rows
+				foreach (List<IReadOnlyRow> expandedGroup in GroupedBaseFeatures(clone, false))
+				{
+					if (expandedGroup.Count == 0)
+					{
+						continue;
+					}
+
+					// Check if the new group matches the original group (without necessarily relying on OIDs...)
+					var all = new HashSet<IReadOnlyRow>(originalRows.Concat(expandedGroup));
+
+					var allGrouped =
+						GdbObjectUtils.GroupRowsByAttributes(all, r => r, Resulting.GroupBy);
+
+					if (allGrouped.Count() != 1)
+					{
+						// The new values were not grouped into the old
+						continue;
+					}
+
+					extraRowUnion = GeometryUtils.Union(
+						expandedGroup.Select(r => ((IReadOnlyFeature) r).Shape).ToList());
+
+					// TODO: Remove duplicates, if possible
+					originalRows.Clear();
+					originalRows.AddRange(all);
+				}
+
+				return extraRowUnion != null ? GeometryUtils.Union(fullUnion, extraRowUnion) : null;
 			}
 
 			private IEnumerable<List<IReadOnlyRow>> GroupedBaseFeatures(IQueryFilter filter,

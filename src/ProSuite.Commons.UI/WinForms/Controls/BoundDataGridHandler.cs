@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Windows.Forms;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
@@ -20,8 +19,7 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 		[NotNull] private readonly DataGridView _dataGridView;
 		[CanBeNull] private BoundDataGridSelectionState<ROW> _savedSelection;
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		#region Constructors
 
@@ -292,7 +290,8 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 
 			if (_msg.IsVerboseDebugEnabled)
 			{
-				_msg.VerboseDebug(() => $"Restoring selection ({selectionState.SelectionCount} row(s))");
+				_msg.VerboseDebug(
+					() => $"Restoring selection ({selectionState.SelectionCount} row(s))");
 			}
 
 			DataGridViewUtils.RestoreSelection(_dataGridView, selectionState);

@@ -38,7 +38,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 
 		public override string Text => "Create Report for Implementations in a .Net Assembly...";
 
-		protected override bool EnabledCore => !Item.IsDirty;
+		protected override bool EnabledCore => ! Item.IsDirty;
 
 		protected override void ExecuteCore()
 		{
@@ -57,11 +57,11 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 			using (FileDialog dialog = new SaveFileDialog())
 			{
 				dialog.FileName = string.Format("{0}.html",
-												Path.GetFileNameWithoutExtension(location));
+				                                Path.GetFileNameWithoutExtension(location));
 
 				string htmlFilePath = GetSelectedFileName(dialog);
 
-				if (!string.IsNullOrEmpty(htmlFilePath))
+				if (! string.IsNullOrEmpty(htmlFilePath))
 				{
 					Item.CreateReport(assembly, htmlFilePath, true);
 				}

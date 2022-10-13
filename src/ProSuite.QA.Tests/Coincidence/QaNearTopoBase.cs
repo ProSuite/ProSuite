@@ -2,17 +2,16 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container.Geometry;
-using ProSuite.QA.Tests.IssueCodes;
-using ProSuite.QA.Tests.Properties;
 using ProSuite.Commons;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using IPnt = ProSuite.Commons.Geom.IPnt;
-using Pnt = ProSuite.Commons.Geom.Pnt;
-using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.Geom;
 using ProSuite.QA.Container;
+using ProSuite.QA.Container.Geometry;
 using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Tests.IssueCodes;
+using ProSuite.QA.Tests.Properties;
 
 namespace ProSuite.QA.Tests.Coincidence
 {
@@ -606,7 +605,7 @@ namespace ProSuite.QA.Tests.Coincidence
 
 			var errorCount = 0;
 
-			string shapeFieldName = ((IReadOnlyFeatureClass)row0.Table).ShapeFieldName;
+			string shapeFieldName = ((IReadOnlyFeatureClass) row0.Table).ShapeFieldName;
 
 			foreach (IPath errorPath in GeometryUtils.GetPaths(errorGeometry))
 			{
@@ -623,11 +622,11 @@ namespace ProSuite.QA.Tests.Coincidence
 					                     ? GetShortDescription(minLength, errorPartGeometry,
 					                                           spatialReference, out values)
 					                     : GetExtendedDescription(minLength, near,
-					                                              errorPartGeometry,
-					                                              spatialReference,
-					                                              shape0, shape1,
-					                                              isDisjoint, isWithinFeature,
-					                                              out values);
+						                     errorPartGeometry,
+						                     spatialReference,
+						                     shape0, shape1,
+						                     isDisjoint, isWithinFeature,
+						                     out values);
 
 				errorCount += isWithinFeature
 					              ? ReportError(description,

@@ -3,6 +3,8 @@ using System.Drawing;
 using System.Windows.Forms;
 using System.Windows.Forms.Integration;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
+using ProSuite.Commons.UI.Dialogs;
 using ProSuite.Commons.UI.Persistence.WinForms;
 using ProSuite.Commons.UI.WPF;
 using UserControl = System.Windows.Controls.UserControl;
@@ -14,6 +16,8 @@ namespace ProSuite.Commons.UI.WinForms
 	/// </summary>
 	public partial class WpfHostingWinForm : Form
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		private readonly UserControl _wpfControl;
 		private ElementHost _wpfControlHost;
 
@@ -48,17 +52,26 @@ namespace ProSuite.Commons.UI.WinForms
 
 		private void WpfHostingWinForm_Load(object sender, EventArgs e)
 		{
-			_wpfControlHost = new ElementHost {Dock = DockStyle.Fill, Child = _wpfControl};
-
-			Controls.Add(_wpfControlHost);
-
-			AdjustFormSizeToHostedControl();
-
-			FixDesiredDimension();
-
-			if (_wpfControl is IWinFormHostable winFormHostable)
+			try
 			{
-				winFormHostable.HostFormsWindow = this;
+				_msg.DebugFormat("Loading WPF hosting win form...");
+
+				_wpfControlHost = new ElementHost {Dock = DockStyle.Fill, Child = _wpfControl};
+
+				Controls.Add(_wpfControlHost);
+
+				AdjustFormSizeToHostedControl();
+
+				FixDesiredDimension();
+
+				if (_wpfControl is IWinFormHostable winFormHostable)
+				{
+					winFormHostable.HostFormsWindow = this;
+				}
+			}
+			catch (Exception ex)
+			{
+				ErrorHandler.HandleError(ex, _msg, null, "Error showing server state dialog");
 			}
 		}
 

@@ -1,6 +1,5 @@
-﻿using System;
+using System;
 using System.IO;
-using System.Reflection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -16,8 +15,7 @@ namespace ProSuite.Commons.ManagedOptions
 	/// <typeparam name="T"></typeparam>
 	public class OverridableSettingsProvider<T> where T : PartialOptionsBase
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private T _centralConfiguration;
 		private readonly T _hardCodedDefaults;

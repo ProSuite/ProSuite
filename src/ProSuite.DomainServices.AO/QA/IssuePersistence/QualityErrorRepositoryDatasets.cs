@@ -140,11 +140,11 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 			var result = new Dictionary<esriGeometryType, IssueDatasetWriter>();
 
 			foreach (KeyValuePair<esriGeometryType, IErrorDataset> pair in
-				VerificationContextUtils.GetIssueDatasetsByGeometryType(verificationContext))
+			         VerificationContextUtils.GetIssueDatasetsByGeometryType(verificationContext))
 			{
 				IssueDatasetWriter issueWriter = CreateIssueWriter(pair.Value,
-				                                                   verificationContext,
-				                                                   fieldIndexCache);
+					verificationContext,
+					fieldIndexCache);
 
 				if (issueWriter != null)
 				{

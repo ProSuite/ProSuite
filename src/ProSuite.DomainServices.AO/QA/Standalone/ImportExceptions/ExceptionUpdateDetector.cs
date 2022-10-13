@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -17,8 +16,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.ImportExceptions
 
 		[NotNull] private readonly IList<IssueAttribute> _editableAttributes;
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		public ExceptionUpdateDetector(
 			[NotNull] IEnumerable<IssueAttribute> editableAttributes)
@@ -203,8 +201,8 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.ImportExceptions
 			importDate = null;
 
 			foreach (ManagedExceptionVersion exceptionObject in
-				lineage.GetAll()
-				       .OrderByDescending(e => e.VersionBeginDate))
+			         lineage.GetAll()
+			                .OrderByDescending(e => e.VersionBeginDate))
 			{
 				if (! Equals(exceptionObject.GetValue(attribute), currentValue))
 				{

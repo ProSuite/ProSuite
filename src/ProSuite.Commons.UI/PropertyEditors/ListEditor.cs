@@ -14,7 +14,7 @@ namespace ProSuite.Commons.UI.PropertyEditors
 		private readonly bool _readOnly;
 
 		[UsedImplicitly]
-		public ListEditor() : this(readOnly : false) { }
+		public ListEditor() : this(readOnly: false) { }
 
 		protected ListEditor(bool readOnly)
 		{

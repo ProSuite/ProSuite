@@ -51,7 +51,7 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork
 		public ISpatialReference GetSpatialReference()
 		{
 			foreach (IFeatureClass featureClass in NetworkClassDefinitions.Select(
-				c => c.FeatureClass))
+				         c => c.FeatureClass))
 			{
 				ISpatialReference sr = DatasetUtils.GetSpatialReference(featureClass);
 
@@ -105,7 +105,7 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork
 			}
 
 			foreach (LinearNetworkClassDef edgeClassDef in NetworkClassDefinitions.Where(
-				nc => nc.GeometryType == esriGeometryType.esriGeometryPolyline))
+				         nc => nc.GeometryType == esriGeometryType.esriGeometryPolyline))
 			{
 				if (! DatasetUtils.IsSameObjectClass(feature.Class, edgeClassDef.FeatureClass))
 				{
@@ -126,7 +126,7 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork
 			}
 
 			foreach (LinearNetworkClassDef junctionClassDef in NetworkClassDefinitions.Where(
-				nc => nc.GeometryType == esriGeometryType.esriGeometryPoint))
+				         nc => nc.GeometryType == esriGeometryType.esriGeometryPoint))
 			{
 				if (! IsFeatureInNetworkClass(feature, junctionClassDef))
 				{

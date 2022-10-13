@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
-using System.Reflection;
 using System.Threading.Tasks;
 using Grpc.Core;
 using Grpc.Health.V1;
@@ -17,7 +16,7 @@ namespace ProSuite.Microservices.Client
 {
 	public abstract class MicroserviceClientBase
 	{
-		private static readonly IMsg _msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private const string _localhost = "localhost";
 
@@ -41,10 +40,7 @@ namespace ProSuite.Microservices.Client
 
 			if (Port >= 0)
 			{
-				bool assumeLoadBalancer =
-					! host.Equals(_localhost, StringComparison.InvariantCultureIgnoreCase);
-
-				OpenChannel(useTls, clientCertificate, assumeLoadBalancer);
+				OpenChannel(useTls, clientCertificate);
 			}
 			else
 			{
@@ -70,7 +66,7 @@ namespace ProSuite.Microservices.Client
 
 		public int Port { get; private set; }
 
-		protected bool UseTls { get; private set; }
+		public bool UseTls { get; private set; }
 
 		protected string ClientCertificate { get; private set; }
 
@@ -80,11 +76,16 @@ namespace ProSuite.Microservices.Client
 		protected bool ChannelIsLoadBalancer { get; private set; }
 
 		[NotNull]
-		protected abstract string ServiceName { get; }
+		public abstract string ServiceName { get; }
+
+		[NotNull]
+		public abstract string ServiceDisplayName { get; }
 
 		[NotNull]
 		private string ChannelServiceName =>
 			ChannelIsLoadBalancer ? nameof(ServiceDiscoveryGrpc) : ServiceName;
+
+		public bool CanFailOver => _allChannelConfigs?.Count > 1;
 
 		public void Disconnect()
 		{
@@ -107,12 +108,9 @@ namespace ProSuite.Microservices.Client
 			[NotNull] string executable,
 			[CanBeNull] string extraArguments = null)
 		{
-			if (_allChannelConfigs != null)
-			{
-				// Remember in case we need to switch to different channel later on
-				_executable = executable;
-				_executableArguments = extraArguments;
-			}
+			// Remember in case we need to switch to different channel or re-start later on
+			_executable = executable;
+			_executableArguments = extraArguments;
 
 			if (! HostName.Equals(_localhost, StringComparison.InvariantCultureIgnoreCase))
 			{
@@ -134,12 +132,9 @@ namespace ProSuite.Microservices.Client
 		public bool AllowStartingLocalServer([NotNull] string executable,
 		                                     [CanBeNull] string extraArguments = null)
 		{
-			if (_allChannelConfigs != null)
-			{
-				// Remember in case we need to switch to different channel later on
-				_executable = executable;
-				_executableArguments = extraArguments;
-			}
+			// Remember in case we need to switch to different channel or re-start later on
+			_executable = executable;
+			_executableArguments = extraArguments;
 
 			if (! HostName.Equals(_localhost, StringComparison.InvariantCultureIgnoreCase))
 			{
@@ -152,6 +147,26 @@ namespace ProSuite.Microservices.Client
 			}
 
 			StartLocalServer(executable, extraArguments);
+
+			return true;
+		}
+
+		public bool TryRestart()
+		{
+			// First try fail-over in case we have the option:
+			bool canAcceptCalls = CanAcceptCalls(true);
+
+			if (canAcceptCalls)
+			{
+				return true;
+			}
+
+			if (_executable == null)
+			{
+				return false;
+			}
+
+			StartLocalServer(_executable, _executableArguments);
 
 			return true;
 		}
@@ -201,9 +216,31 @@ namespace ProSuite.Microservices.Client
 			return statusCode == StatusCode.OK;
 		}
 
+		public async Task<int> GetWorkerServiceCountAsync()
+		{
+			if (! ChannelIsLoadBalancer)
+			{
+				return 1;
+			}
+
+			ServiceDiscoveryGrpc.ServiceDiscoveryGrpcClient lbClient =
+				new ServiceDiscoveryGrpc.ServiceDiscoveryGrpcClient(Channel);
+
+			string serviceName = ServiceName;
+
+			var discoverServicesRequest = new DiscoverServicesRequest
+			                              {
+				                              ServiceName = serviceName
+			                              };
+
+			DiscoverServicesResponse lbResponse = await lbClient.DiscoverServicesAsync(
+				                                      discoverServicesRequest);
+
+			return lbResponse.ServiceLocations.Count;
+		}
+
 		protected void OpenChannel(bool useTls,
-		                           string clientCertificate = null,
-		                           bool assumeLoadBalancer = false)
+		                           string clientCertificate = null)
 		{
 			if (string.IsNullOrEmpty(HostName))
 			{
@@ -219,11 +256,21 @@ namespace ProSuite.Microservices.Client
 			Channel channel = GrpcUtils.CreateChannel(
 				HostName, Port, credentials, enoughForLargeGeometries);
 
+			bool assumeLoadBalancer =
+				! HostName.Equals(_localhost, StringComparison.InvariantCultureIgnoreCase);
+
 			if (assumeLoadBalancer)
 			{
+				_msg.Debug(
+					"Checking if the specified channel is a load-balancer channel (host is not localhost)...");
 				ChannelIsLoadBalancer =
 					IsServingLoadBalancerEndpoint(channel, credentials, ServiceName,
 					                              enoughForLargeGeometries);
+			}
+			else
+			{
+				// Could be failing-over back to non-LB channel:
+				ChannelIsLoadBalancer = false;
 			}
 
 			Channel = channel;
@@ -259,17 +306,12 @@ namespace ProSuite.Microservices.Client
 
 				_msg.DebugFormat("Trying alternate channel {0}...", otherChannel);
 
-				bool assumeLoadBalancer =
-					! otherChannel.HostName.Equals(_localhost,
-					                               StringComparison.InvariantCultureIgnoreCase);
-
 				HostName = otherChannel.HostName;
 				Port = otherChannel.Port;
 				UseTls = otherChannel.UseTls;
 				ClientCertificate = otherChannel.ClientCertificate;
 
-				OpenChannel(otherChannel.UseTls, otherChannel.ClientCertificate,
-				            assumeLoadBalancer);
+				OpenChannel(otherChannel.UseTls, otherChannel.ClientCertificate);
 
 				// In case of localhost and known server exe:
 				if (! string.IsNullOrEmpty(_executable) &&
@@ -435,10 +477,8 @@ namespace ProSuite.Microservices.Client
 
 			_msg.DebugFormat(
 				"Second try failed as well, creating a new channel and trying for the third (and last) time.");
-			bool assumeLoadBalancer =
-				! HostName.Equals(_localhost, StringComparison.InvariantCultureIgnoreCase);
 
-			OpenChannel(UseTls, ClientCertificate, assumeLoadBalancer);
+			OpenChannel(UseTls, ClientCertificate);
 
 			if (CanAcceptCalls(allowFailOver: false))
 			{

@@ -28,7 +28,7 @@ namespace ProSuite.QA.Container.TestSupport
 			// parse/remove/use case sensitivity hint
 			bool? caseSensitivityOverride;
 			_expression = ExpressionUtils.ParseCaseSensitivityHint(expression,
-			                                                       out caseSensitivityOverride);
+				out caseSensitivityOverride);
 			if (caseSensitivityOverride != null)
 			{
 				caseSensitive = caseSensitivityOverride.Value;

@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Reflection;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
@@ -16,8 +15,7 @@ namespace ProSuite.Commons.AO.Geometry.RemoveOverlaps
 {
 	public class OverlapsRemover
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private readonly bool _explodeMultipartResult;
 
@@ -341,7 +339,7 @@ namespace ProSuite.Commons.AO.Geometry.RemoveOverlaps
 
 			// now select the multipatch of the right side...
 			foreach (KeyValuePair<IPolygon, IMultiPatch> footprintWithMultipatch in
-				cutResultByFootprintPart)
+			         cutResultByFootprintPart)
 			{
 				IMultiPatch resultMultipatch = footprintWithMultipatch.Value;
 

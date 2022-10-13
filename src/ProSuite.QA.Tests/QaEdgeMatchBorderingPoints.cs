@@ -3,19 +3,19 @@ using System.Collections.Generic;
 using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestSupport;
-using ProSuite.QA.Tests.Documentation;
-using ProSuite.QA.Tests.EdgeMatch;
-using ProSuite.QA.Tests.IssueCodes;
-using ProSuite.QA.Tests.Properties;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.QA.Container;
+using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Core;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.EdgeMatch;
+using ProSuite.QA.Tests.IssueCodes;
+using ProSuite.QA.Tests.Properties;
 
 namespace ProSuite.QA.Tests
 {
@@ -241,7 +241,8 @@ namespace ProSuite.QA.Tests
 			}
 		}
 
-		[Doc(nameof(DocStrings.QaEdgeMatchBorderingPoints_IsBorderingPointAttributeConstraintSymmetric))]
+		[Doc(nameof(DocStrings
+			            .QaEdgeMatchBorderingPoints_IsBorderingPointAttributeConstraintSymmetric))]
 		[TestParameter(_defaultIsBorderingPointAttributeConstraintSymmetric)]
 		public bool IsBorderingPointAttributeConstraintSymmetric
 		{
@@ -279,16 +280,17 @@ namespace ProSuite.QA.Tests
 		}
 
 		[TestParameter(false)]
-		[Doc(nameof(DocStrings.QaEdgeMatchBorderingPoints_ReportIndividualAttributeConstraintViolations))]
+		[Doc(nameof(DocStrings
+			            .QaEdgeMatchBorderingPoints_ReportIndividualAttributeConstraintViolations))]
 		public bool ReportIndividualAttributeConstraintViolations { get; set; }
 
 		[Doc(nameof(DocStrings.QaEdgeMatchBorderingPoints_CoincidenceTolerance))]
 		[TestParameter(_defaultCoincidenceTolerance)]
 		public double CoincidenceTolerance { get; set; }
 
-		[Doc(nameof(DocStrings.
-				QaEdgeMatchBorderingPoints_AllowDisjointCandidateFeatureIfBordersAreNotCoincident
-			))]
+		[Doc(nameof(DocStrings
+			            .QaEdgeMatchBorderingPoints_AllowDisjointCandidateFeatureIfBordersAreNotCoincident
+		))]
 		[TestParameter(_defaultAllowDisjointCandidateFeatureIfBordersAreNotCoincident)]
 		public bool AllowDisjointCandidateFeatureIfBordersAreNotCoincident { get; set; }
 
@@ -296,8 +298,8 @@ namespace ProSuite.QA.Tests
 		[TestParameter(_defaultAllowNoFeatureWithinSearchDistance)]
 		public bool AllowNoFeatureWithinSearchDistance { get; set; }
 
-		[Doc(nameof(DocStrings.
-			QaEdgeMatchBorderingPoints_AllowDisjointCandidateFeatureIfAttributeConstraintsAreFulfilled
+		[Doc(nameof(DocStrings
+			            .QaEdgeMatchBorderingPoints_AllowDisjointCandidateFeatureIfAttributeConstraintsAreFulfilled
 		))]
 		[TestParameter(
 			_defaultAllowDisjointCandidateFeatureIfAttributeConstraintsAreFulfilled)]
@@ -370,8 +372,8 @@ namespace ProSuite.QA.Tests
 			EnsureBorderingLineEqualFieldValuesCondition();
 
 			BorderConnection borderConnection = GetBorderConnection(point, pointFeature,
-			                                                        pointClassIndex,
-			                                                        borderClassIndex);
+				pointClassIndex,
+				borderClassIndex);
 
 			if (borderConnection == null)
 			{
@@ -399,7 +401,7 @@ namespace ProSuite.QA.Tests
 			foreach (int neighborPointClassIndex in neighborPointClassIndexes)
 			{
 				foreach (IReadOnlyRow neighborRow in SearchNeighborRows(borderConnection.Point,
-				                                                neighborPointClassIndex))
+					         neighborPointClassIndex))
 				{
 					if (WasReportedInOppositeDirection(borderConnection.Feature,
 					                                   borderConnection.ClassIndex,
@@ -410,9 +412,9 @@ namespace ProSuite.QA.Tests
 					}
 
 					if (! borderingPointMatchCondition.IsFulfilled(borderConnection.Feature,
-					                                               borderConnection.ClassIndex,
-					                                               neighborRow,
-					                                               neighborPointClassIndex))
+						    borderConnection.ClassIndex,
+						    neighborRow,
+						    neighborPointClassIndex))
 					{
 						continue;
 					}
@@ -421,7 +423,7 @@ namespace ProSuite.QA.Tests
 					var neighborPoint = (IPoint) neighborFeature.Shape;
 
 					double pointDistance = GeometryUtils.GetPointDistance(borderConnection.Point,
-					                                                      neighborPoint);
+						neighborPoint);
 
 					if (pointDistance > _searchDistance)
 					{
@@ -431,9 +433,9 @@ namespace ProSuite.QA.Tests
 
 					// determine if the neighbor point is connected to it's border
 					BorderConnection neighborBorderConnection = GetBorderConnection(neighborPoint,
-					                                                                neighborFeature,
-					                                                                neighborPointClassIndex,
-					                                                                neighborBorderClassIndex);
+						neighborFeature,
+						neighborPointClassIndex,
+						neighborBorderClassIndex);
 
 					if (neighborBorderConnection == null)
 					{
@@ -462,7 +464,7 @@ namespace ProSuite.QA.Tests
 						                   neighborPointClassIndex);
 
 						foreach (AttributeConstraintViolation constraintViolation in
-							constraintViolations)
+						         constraintViolations)
 						{
 							errorCount += ReportError(
 								constraintViolation.Description,
@@ -471,7 +473,7 @@ namespace ProSuite.QA.Tests
 								GeometryFactory.Clone(borderConnection.Point),
 								Codes[Code.Match_ConstraintsNotFulfilled],
 								constraintViolation.AffectedComponents,
-								values: new[] { constraintViolation.TextValue });
+								values: new[] {constraintViolation.TextValue});
 						}
 
 						return errorCount;
@@ -586,7 +588,7 @@ namespace ProSuite.QA.Tests
 					description, InvolvedRowUtils.GetInvolvedRows(
 						borderConnection.Feature, neighborBorderConnection.Feature),
 					errorGeometry, issueCode, constraintViolation.AffectedComponents,
-					values: new[] { constraintViolation.TextValue }
+					values: new[] {constraintViolation.TextValue}
 				);
 			}
 
@@ -642,8 +644,8 @@ namespace ProSuite.QA.Tests
 				GetBorderMatchCondition(neighborLineClassIndex);
 
 			foreach (IReadOnlyRow borderRow in Search(neighborBorderClass,
-			                                  spatialFilter,
-			                                  _filterHelpers[neighborBorderClassIndex]))
+			                                          spatialFilter,
+			                                          _filterHelpers[neighborBorderClassIndex]))
 			{
 				if (neighborBorderMatchCondition.IsFulfilled(neighborFeature,
 				                                             neighborLineClassIndex,
@@ -674,7 +676,7 @@ namespace ProSuite.QA.Tests
 
 		[NotNull]
 		private IEnumerable<IReadOnlyRow> SearchNeighborRows([NotNull] IPoint borderConnection,
-		                                             int neighborPointClassIndex)
+		                                                     int neighborPointClassIndex)
 		{
 			ISpatialFilter spatialFilter = GetSearchFilter(neighborPointClassIndex,
 			                                               borderConnection,
@@ -712,9 +714,9 @@ namespace ProSuite.QA.Tests
 		                                             int borderClassIndex)
 		{
 			ICollection<IReadOnlyFeature> borderFeatures = GetConnectedBorderFeatures(point,
-			                                                                  pointFeature,
-			                                                                  pointClassIndex,
-			                                                                  borderClassIndex);
+				pointFeature,
+				pointClassIndex,
+				borderClassIndex);
 
 			return borderFeatures.Count <= 0
 				       ? null
@@ -739,8 +741,8 @@ namespace ProSuite.QA.Tests
 				GetBorderMatchCondition(lineClassIndex);
 
 			foreach (IReadOnlyRow borderRow in Search(borderClass,
-			                                  spatialFilter,
-			                                  _filterHelpers[borderClassIndex]))
+			                                          spatialFilter,
+			                                          _filterHelpers[borderClassIndex]))
 			{
 				if (! borderMatchCondition.IsFulfilled(lineFeature, lineClassIndex,
 				                                       borderRow, borderClassIndex))
@@ -763,7 +765,7 @@ namespace ProSuite.QA.Tests
 				       (_pointClass1BorderMatchCondition =
 					        new BorderMatchCondition(_pointClass1BorderMatchConditionSql,
 					                                 GetSqlCaseSensitivity(pointClassIndex,
-					                                                       _borderClass1Index)));
+						                                 _borderClass1Index)));
 			}
 
 			if (IsPointClass2(pointClassIndex))
@@ -772,7 +774,7 @@ namespace ProSuite.QA.Tests
 				       (_pointClass2BorderMatchCondition =
 					        new BorderMatchCondition(_pointClass2BorderMatchConditionSql,
 					                                 GetSqlCaseSensitivity(pointClassIndex,
-					                                                       _borderClass2Index)));
+						                                 _borderClass2Index)));
 			}
 
 			throw new ArgumentException("Not a line class index");
@@ -916,7 +918,8 @@ namespace ProSuite.QA.Tests
 
 				double xyTolerance;
 				if (featureClass == null ||
-				    ! DatasetUtils.TryGetXyTolerance(featureClass.SpatialReference, out xyTolerance))
+				    ! DatasetUtils.TryGetXyTolerance(featureClass.SpatialReference,
+				                                     out xyTolerance))
 				{
 					xyTolerance = 0;
 				}

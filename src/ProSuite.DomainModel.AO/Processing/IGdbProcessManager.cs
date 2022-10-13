@@ -22,7 +22,6 @@ namespace ProSuite.DomainModel.AO.Processing
 
 		// TODO: Test in a solution with implementations:
 #if NETFRAMEWORK || NET6_0_OR_GREATER
-
 		[CanBeNull]
 		Image GetProcessIcon([NotNull] string processName);
 

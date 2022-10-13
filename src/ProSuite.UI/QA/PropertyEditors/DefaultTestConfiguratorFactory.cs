@@ -660,13 +660,14 @@ namespace ProSuite.UI.QA.PropertyEditors
 			bool canClearDataset = false;
 
 			Type converter = null;
-			if (!TestParameterTypeUtils.IsDatasetType(parameter.Type))
+			if (! TestParameterTypeUtils.IsDatasetType(parameter.Type))
 			{
 				simpleType = parameter.Type;
 			}
 			else
 			{
-				TestParameterType parameterType = TestParameterTypeUtils.GetParameterType(parameter.Type);
+				TestParameterType parameterType =
+					TestParameterTypeUtils.GetParameterType(parameter.Type);
 				switch (parameterType)
 				{
 					case TestParameterType.Dataset:
@@ -800,7 +801,8 @@ namespace ProSuite.UI.QA.PropertyEditors
 					if (canClearDataset)
 					{
 						uiText = string.Format(", Editor(typeof({0}), typeof({1}))",
-						                       ReflectionUtils.GetFullName(typeof(DatasetClearEditor)),
+						                       ReflectionUtils.GetFullName(
+							                       typeof(DatasetClearEditor)),
 						                       ReflectionUtils.GetFullName(typeof(UITypeEditor)));
 					}
 

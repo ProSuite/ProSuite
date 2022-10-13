@@ -500,7 +500,8 @@ namespace ProSuite.QA.Tests
 					List<IReadOnlyTable> relTables = new List<IReadOnlyTable>();
 					foreach (string tableName in qn.QueryDef.Tables.Split(','))
 					{
-						IReadOnlyTable relTable = ReadOnlyTableFactory.Create(ws.OpenTable(tableName));
+						IReadOnlyTable relTable =
+							ReadOnlyTableFactory.Create(ws.OpenTable(tableName));
 						if (relTable.HasOID &&
 						    relTable.OIDFieldName.Equals(
 							    "RID", StringComparison.InvariantCultureIgnoreCase))
@@ -605,7 +606,7 @@ namespace ProSuite.QA.Tests
 		                                    [CanBeNull] IGeometry geometry,
 		                                    [NotNull] IssueCode issueCode,
 		                                    [CanBeNull] string affectedComponent,
-											bool reportIndividualParts = false,
+		                                    bool reportIndividualParts = false,
 		                                    [CanBeNull] IEnumerable<object> values = null);
 
 		private abstract class GroupStatistics
@@ -797,8 +798,8 @@ namespace ProSuite.QA.Tests
 									Assert.NotNull(_relatedTables).Related.Count);
 
 							foreach (RelatedTable relatedTable in Assert
-								.NotNull(_relatedTables)
-								.Related)
+								         .NotNull(_relatedTables)
+								         .Related)
 							{
 								int relatedTableOID =
 									oidTuple[relatedTableIndex].ObjectId;
@@ -912,7 +913,7 @@ namespace ProSuite.QA.Tests
 			{
 				var distinctValueIndex = 0;
 				foreach (KeyValuePair<string, List<TestRowReference[]>> pair in
-					_distinctValues)
+				         _distinctValues)
 				{
 					if (distinctValueIndex >= maxReport)
 					{

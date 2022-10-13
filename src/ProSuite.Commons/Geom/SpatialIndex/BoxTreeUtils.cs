@@ -33,7 +33,7 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 		}
 
 		[CanBeNull]
-		public static BoxTree<T> CreateBoxTree<T>([CanBeNull]IEnumerable<T> items,
+		public static BoxTree<T> CreateBoxTree<T>([CanBeNull] IEnumerable<T> items,
 		                                          Func<T, Box> getBox,
 		                                          int maxElementsPerTile = 64,
 		                                          bool dynamic = true)
@@ -42,7 +42,6 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 			{
 				return null;
 			}
-
 
 			Box allBox = null;
 			List<KeyValuePair<IBox, T>> itemList = new List<KeyValuePair<IBox, T>>();
@@ -69,6 +68,7 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 			{
 				return null;
 			}
+
 			var result = CreateBoxTree<T>(allBox, maxElementsPerTile, dynamic);
 
 			foreach (KeyValuePair<IBox, T> pair in itemList)
@@ -78,6 +78,5 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 
 			return result;
 		}
-
 	}
 }

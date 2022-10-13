@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
@@ -16,8 +15,7 @@ namespace ProSuite.DomainServices.AO.QA
 {
 	public static class QualityVerificationUtils
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		public static void IncludeBaseDatasets([NotNull] ICollection<Dataset> datasets,
 		                                       [NotNull] IModelContext datasetContext)

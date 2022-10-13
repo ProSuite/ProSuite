@@ -20,8 +20,7 @@ namespace ProSuite.UI.QA.PropertyEditors
 		private QualityCondition _qualityCondition;
 		private string _testDescription;
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		protected override void SetQualityCondition(QualityCondition qualityCondition)
 		{
@@ -70,7 +69,8 @@ namespace ProSuite.UI.QA.PropertyEditors
 							if (! parameter.IsConstructorParameter
 							    && value is DatasetTestParameterValue dsValue
 							    && dsValue.DatasetValue == null
-							    && type.GetProperty(parameter.Name)?.GetSetMethod() is MethodInfo setMethod)
+							    && type.GetProperty(parameter.Name)?.GetSetMethod() is MethodInfo
+								    setMethod)
 							{
 								setMethod.Invoke(this, new object[] {null});
 							}

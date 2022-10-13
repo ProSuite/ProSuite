@@ -107,7 +107,7 @@ namespace ProSuite.QA.Tests.Constraints
 					                        allowNullForRangeDomains)
 					: null;
 
-			IEnumRule rules = ((IValidation) ((ReadOnlyTable)table).BaseTable).Rules;
+			IEnumRule rules = ((IValidation) ((ReadOnlyTable) table).BaseTable).Rules;
 			rules.Reset();
 
 			IRule rule;

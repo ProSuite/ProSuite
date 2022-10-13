@@ -1,5 +1,4 @@
 using System;
-using System.Reflection;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -11,8 +10,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 	{
 		private readonly int _sourceFieldIndex;
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		public FieldMapping([NotNull] IField sourceField, int sourceFieldIndex,
 		                    [NotNull] IField targetField, int targetFieldIndex)

@@ -2,17 +2,17 @@ using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestSupport;
-using ProSuite.QA.Tests.Documentation;
-using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.Commons;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
-using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Container;
+using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.IssueCodes;
 
 namespace ProSuite.QA.Tests
 {
@@ -72,8 +72,10 @@ namespace ProSuite.QA.Tests
 		public QaMinNodeDistance(
 			[Doc(nameof(DocStrings.QaMinNodeDistance_featureClass))]
 			IReadOnlyFeatureClass featureClass,
-			[Doc(nameof(DocStrings.QaMinNodeDistance_near))] double near,
-			[Doc(nameof(DocStrings.QaMinNodeDistance_is3D))] bool is3D)
+			[Doc(nameof(DocStrings.QaMinNodeDistance_near))]
+			double near,
+			[Doc(nameof(DocStrings.QaMinNodeDistance_is3D))]
+			bool is3D)
 			: this(featureClass, near, GeometryUtils.GetXyTolerance(featureClass.SpatialReference),
 			       is3D, _noMaxZDifference, null) { }
 
@@ -81,54 +83,69 @@ namespace ProSuite.QA.Tests
 		public QaMinNodeDistance(
 			[Doc(nameof(DocStrings.QaMinNodeDistance_featureClasses))]
 			IList<IReadOnlyFeatureClass> featureClasses,
-			[Doc(nameof(DocStrings.QaMinNodeDistance_near))] double near,
-			[Doc(nameof(DocStrings.QaMinNodeDistance_is3D))] bool is3D)
-			: this(featureClasses, near, GeometryUtils.GetXyTolerance(featureClasses[0].SpatialReference), is3D) { }
+			[Doc(nameof(DocStrings.QaMinNodeDistance_near))]
+			double near,
+			[Doc(nameof(DocStrings.QaMinNodeDistance_is3D))]
+			bool is3D)
+			: this(featureClasses, near,
+			       GeometryUtils.GetXyTolerance(featureClasses[0].SpatialReference), is3D) { }
 
 		[Doc(nameof(DocStrings.QaMinNodeDistance_2))]
 		public QaMinNodeDistance(
 			[Doc(nameof(DocStrings.QaMinNodeDistance_featureClass))]
 			IReadOnlyFeatureClass featureClass,
-			[Doc(nameof(DocStrings.QaMinNodeDistance_near))] double near,
-			[Doc(nameof(DocStrings.QaMinNodeDistance_tolerance))] double tolerance,
-			[Doc(nameof(DocStrings.QaMinNodeDistance_is3D))] bool is3D)
+			[Doc(nameof(DocStrings.QaMinNodeDistance_near))]
+			double near,
+			[Doc(nameof(DocStrings.QaMinNodeDistance_tolerance))]
+			double tolerance,
+			[Doc(nameof(DocStrings.QaMinNodeDistance_is3D))]
+			bool is3D)
 			: this(featureClass, near, tolerance, is3D, _noMaxZDifference, null) { }
 
 		[Doc(nameof(DocStrings.QaMinNodeDistance_3))]
 		public QaMinNodeDistance(
 			[Doc(nameof(DocStrings.QaMinNodeDistance_featureClasses))]
 			IList<IReadOnlyFeatureClass> featureClasses,
-			[Doc(nameof(DocStrings.QaMinNodeDistance_near))] double near,
-			[Doc(nameof(DocStrings.QaMinNodeDistance_tolerance))] double tolerance,
-			[Doc(nameof(DocStrings.QaMinNodeDistance_is3D))] bool is3D)
+			[Doc(nameof(DocStrings.QaMinNodeDistance_near))]
+			double near,
+			[Doc(nameof(DocStrings.QaMinNodeDistance_tolerance))]
+			double tolerance,
+			[Doc(nameof(DocStrings.QaMinNodeDistance_is3D))]
+			bool is3D)
 			: this(featureClasses, near, tolerance, is3D, _noMaxZDifference, null) { }
 
 		[Doc(nameof(DocStrings.QaMinNodeDistance_4))]
 		public QaMinNodeDistance(
 			[Doc(nameof(DocStrings.QaMinNodeDistance_featureClass))]
 			IReadOnlyFeatureClass featureClass,
-			[Doc(nameof(DocStrings.QaMinNodeDistance_near))] double near,
+			[Doc(nameof(DocStrings.QaMinNodeDistance_near))]
+			double near,
 			[Doc(nameof(DocStrings.QaMinNodeDistance_maxZDifference))]
 			double maxZDifference)
-			: this(featureClass, near, GeometryUtils.GetXyTolerance(featureClass.SpatialReference), false,
+			: this(featureClass, near, GeometryUtils.GetXyTolerance(featureClass.SpatialReference),
+			       false,
 			       maxZDifference, null) { }
 
 		[Doc(nameof(DocStrings.QaMinNodeDistance_5))]
 		public QaMinNodeDistance(
 			[Doc(nameof(DocStrings.QaMinNodeDistance_featureClasses))]
 			IList<IReadOnlyFeatureClass> featureClasses,
-			[Doc(nameof(DocStrings.QaMinNodeDistance_near))] double near,
+			[Doc(nameof(DocStrings.QaMinNodeDistance_near))]
+			double near,
 			[Doc(nameof(DocStrings.QaMinNodeDistance_maxZDifference))]
 			double maxZDifference)
-			: this(featureClasses, near, GeometryUtils.GetXyTolerance(featureClasses[0].SpatialReference),
+			: this(featureClasses, near,
+			       GeometryUtils.GetXyTolerance(featureClasses[0].SpatialReference),
 			       maxZDifference) { }
 
 		[Doc(nameof(DocStrings.QaMinNodeDistance_6))]
 		public QaMinNodeDistance(
 				[Doc(nameof(DocStrings.QaMinNodeDistance_featureClass))]
 				IReadOnlyFeatureClass featureClass,
-				[Doc(nameof(DocStrings.QaMinNodeDistance_near))] double near,
-				[Doc(nameof(DocStrings.QaMinNodeDistance_tolerance))] double tolerance,
+				[Doc(nameof(DocStrings.QaMinNodeDistance_near))]
+				double near,
+				[Doc(nameof(DocStrings.QaMinNodeDistance_tolerance))]
+				double tolerance,
 				[Doc(nameof(DocStrings.QaMinNodeDistance_maxZDifference))]
 				double maxZDifference)
 			// ReSharper disable once IntroduceOptionalParameters.Global
@@ -138,8 +155,10 @@ namespace ProSuite.QA.Tests
 		public QaMinNodeDistance(
 				[Doc(nameof(DocStrings.QaMinNodeDistance_featureClasses))]
 				IList<IReadOnlyFeatureClass> featureClasses,
-				[Doc(nameof(DocStrings.QaMinNodeDistance_near))] double near,
-				[Doc(nameof(DocStrings.QaMinNodeDistance_tolerance))] double tolerance,
+				[Doc(nameof(DocStrings.QaMinNodeDistance_near))]
+				double near,
+				[Doc(nameof(DocStrings.QaMinNodeDistance_tolerance))]
+				double tolerance,
 				[Doc(nameof(DocStrings.QaMinNodeDistance_maxZDifference))]
 				double maxZDifference)
 			// ReSharper disable once IntroduceOptionalParameters.Global
@@ -149,7 +168,8 @@ namespace ProSuite.QA.Tests
 		public QaMinNodeDistance(
 			[Doc(nameof(DocStrings.QaMinNodeDistance_featureClasses))]
 			IList<IReadOnlyFeatureClass> featureClasses,
-			[Doc(nameof(DocStrings.QaMinNodeDistance_near))] double near)
+			[Doc(nameof(DocStrings.QaMinNodeDistance_near))]
+			double near)
 			: this(featureClasses, near,
 			       GeometryUtils.GetXyTolerance(featureClasses[0].SpatialReference), false) { }
 
@@ -157,8 +177,10 @@ namespace ProSuite.QA.Tests
 		public QaMinNodeDistance(
 			[Doc(nameof(DocStrings.QaMinNodeDistance_featureClass))]
 			IReadOnlyFeatureClass featureClass,
-			[Doc(nameof(DocStrings.QaMinNodeDistance_near))] double near,
-			[Doc(nameof(DocStrings.QaMinNodeDistance_tolerance))] double tolerance,
+			[Doc(nameof(DocStrings.QaMinNodeDistance_near))]
+			double near,
+			[Doc(nameof(DocStrings.QaMinNodeDistance_tolerance))]
+			double tolerance,
 			[Doc(nameof(DocStrings.QaMinNodeDistance_maxZDifference))]
 			double maxZDifference,
 			[Doc(nameof(DocStrings.QaMinNodeDistance_validRelationConstraint))] [CanBeNull]
@@ -171,8 +193,10 @@ namespace ProSuite.QA.Tests
 		public QaMinNodeDistance(
 			[Doc(nameof(DocStrings.QaMinNodeDistance_featureClasses))]
 			IList<IReadOnlyFeatureClass> featureClasses,
-			[Doc(nameof(DocStrings.QaMinNodeDistance_near))] double near,
-			[Doc(nameof(DocStrings.QaMinNodeDistance_tolerance))] double tolerance,
+			[Doc(nameof(DocStrings.QaMinNodeDistance_near))]
+			double near,
+			[Doc(nameof(DocStrings.QaMinNodeDistance_tolerance))]
+			double tolerance,
 			[Doc(nameof(DocStrings.QaMinNodeDistance_maxZDifference))]
 			double maxZDifference,
 			[Doc(nameof(DocStrings.QaMinNodeDistance_validRelationConstraint))] [CanBeNull]
@@ -185,9 +209,12 @@ namespace ProSuite.QA.Tests
 		public QaMinNodeDistance(
 			[Doc(nameof(DocStrings.QaMinNodeDistance_featureClass))]
 			IReadOnlyFeatureClass featureClass,
-			[Doc(nameof(DocStrings.QaMinNodeDistance_near))] double near,
-			[Doc(nameof(DocStrings.QaMinNodeDistance_tolerance))] double tolerance,
-			[Doc(nameof(DocStrings.QaMinNodeDistance_is3D))] bool is3D,
+			[Doc(nameof(DocStrings.QaMinNodeDistance_near))]
+			double near,
+			[Doc(nameof(DocStrings.QaMinNodeDistance_tolerance))]
+			double tolerance,
+			[Doc(nameof(DocStrings.QaMinNodeDistance_is3D))]
+			bool is3D,
 			[Doc(nameof(DocStrings.QaMinNodeDistance_validRelationConstraint))] [CanBeNull]
 			string
 				validRelationConstraint)
@@ -198,9 +225,12 @@ namespace ProSuite.QA.Tests
 		public QaMinNodeDistance(
 			[Doc(nameof(DocStrings.QaMinNodeDistance_featureClasses))]
 			IList<IReadOnlyFeatureClass> featureClasses,
-			[Doc(nameof(DocStrings.QaMinNodeDistance_near))] double near,
-			[Doc(nameof(DocStrings.QaMinNodeDistance_tolerance))] double tolerance,
-			[Doc(nameof(DocStrings.QaMinNodeDistance_is3D))] bool is3D,
+			[Doc(nameof(DocStrings.QaMinNodeDistance_near))]
+			double near,
+			[Doc(nameof(DocStrings.QaMinNodeDistance_tolerance))]
+			double tolerance,
+			[Doc(nameof(DocStrings.QaMinNodeDistance_is3D))]
+			bool is3D,
 			[Doc(nameof(DocStrings.QaMinNodeDistance_validRelationConstraint))] [CanBeNull]
 			string
 				validRelationConstraint)
@@ -317,8 +347,8 @@ namespace ProSuite.QA.Tests
 			int errorCount = 0;
 
 			foreach (IReadOnlyRow neighborRow in Search(neighbor,
-			                                    _filter[neighborTableIndex],
-			                                    _helper[neighborTableIndex], point))
+			                                            _filter[neighborTableIndex],
+			                                            _helper[neighborTableIndex], point))
 			{
 				var neighborFeature = (IReadOnlyFeature) neighborRow;
 				bool sameFeature = tableIndex0 == neighborTableIndex &&
@@ -441,8 +471,8 @@ namespace ProSuite.QA.Tests
 				double dist = Math.Sqrt(pointDistanceSquared);
 				string description = string.Format("Nodedistance {0}",
 				                                   FormatLengthComparison(dist, "<",
-				                                                          SearchDistance,
-				                                                          p0.SpatialReference));
+					                                   SearchDistance,
+					                                   p0.SpatialReference));
 
 				IssueCode issueCode = _validRelationConstraintSql == null
 					                      ? Codes[Code.NodeDistanceTooSmall]
@@ -452,7 +482,7 @@ namespace ProSuite.QA.Tests
 				return ReportError(
 					description, InvolvedRowUtils.GetInvolvedRows(row0, row1),
 					errorGeometry, issueCode, TestUtils.GetShapeFieldName(row0),
-					values: new object[] { dist });
+					values: new object[] {dist});
 			}
 
 			if (_maxZDifference >= 0 && pointDistanceSquared < _searchDistanceSquared)
@@ -481,7 +511,7 @@ namespace ProSuite.QA.Tests
 
 					string description = string.Format("Z-Difference {0}",
 					                                   FormatComparison(absZDifference, ">",
-					                                                    _maxZDifference, "N1"));
+						                                   _maxZDifference, "N1"));
 					IssueCode issueCode = _validRelationConstraintSql == null
 						                      ? Codes[Code.ZDifferenceTooLarge]
 						                      : Codes[
@@ -490,7 +520,7 @@ namespace ProSuite.QA.Tests
 					return ReportError(
 						description, InvolvedRowUtils.GetInvolvedRows(row0, row1), errorGeometry,
 						issueCode, TestUtils.GetShapeFieldName(row0),
-						values: new object[] { absZDifference });
+						values: new object[] {absZDifference});
 				}
 			}
 

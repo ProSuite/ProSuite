@@ -181,6 +181,5 @@ namespace ProSuite.Commons
 				(dateTime.Ticks + roundingInterval.Ticks - 1) /
 				roundingInterval.Ticks * roundingInterval.Ticks, dateTime.Kind);
 		}
-
 	}
 }

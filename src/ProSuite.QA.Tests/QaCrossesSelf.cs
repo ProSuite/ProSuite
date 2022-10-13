@@ -1,14 +1,14 @@
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Text;
 using ProSuite.QA.Container.TestSupport;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.QA.Tests.SpatialRelations;
-using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Text;
-using ProSuite.Commons.AO.Geodatabase;
-using ProSuite.QA.Core.IssueCodes;
-using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
 {
@@ -32,19 +32,22 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaCrossesSelf_0))]
 		public QaCrossesSelf(
-				[Doc(nameof(DocStrings.QaCrossesSelf_featureClasses))] IList<IReadOnlyFeatureClass> featureClasses)
+				[Doc(nameof(DocStrings.QaCrossesSelf_featureClasses))]
+				IList<IReadOnlyFeatureClass> featureClasses)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(featureClasses, null) { }
 
 		[Doc(nameof(DocStrings.QaCrossesSelf_1))]
 		public QaCrossesSelf(
-				[Doc(nameof(DocStrings.QaCrossesSelf_featureClass))] IReadOnlyFeatureClass featureClass)
+				[Doc(nameof(DocStrings.QaCrossesSelf_featureClass))]
+				IReadOnlyFeatureClass featureClass)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(featureClass, null) { }
 
 		[Doc(nameof(DocStrings.QaCrossesSelf_2))]
 		public QaCrossesSelf(
-			[Doc(nameof(DocStrings.QaCrossesSelf_featureClasses))] IList<IReadOnlyFeatureClass> featureClasses,
+			[Doc(nameof(DocStrings.QaCrossesSelf_featureClasses))]
+			IList<IReadOnlyFeatureClass> featureClasses,
 			[Doc(nameof(DocStrings.QaCrossesSelf_validRelationConstraint))]
 			string validRelationConstraint)
 			: base(featureClasses, esriSpatialRelEnum.esriSpatialRelCrosses)
@@ -56,7 +59,8 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaCrossesSelf_3))]
 		public QaCrossesSelf(
-			[Doc(nameof(DocStrings.QaCrossesSelf_featureClass))] IReadOnlyFeatureClass featureClass,
+			[Doc(nameof(DocStrings.QaCrossesSelf_featureClass))]
+			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaCrossesSelf_validRelationConstraint))]
 			string validRelationConstraint)
 			: this(new[] {featureClass}, validRelationConstraint) { }

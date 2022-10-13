@@ -29,7 +29,7 @@ namespace ProSuite.Commons.Test.DomainModels
 		{
 			string unqualified;
 			Assert.IsFalse(ModelElementNameUtils.TryUnqualifyName("SOMETABLE",
-			                                                      out unqualified));
+				               out unqualified));
 			Assert.AreEqual("SOMETABLE", unqualified);
 		}
 
@@ -38,12 +38,12 @@ namespace ProSuite.Commons.Test.DomainModels
 		{
 			string unqualified;
 			Assert.IsFalse(ModelElementNameUtils.TryUnqualifyName("SOMETABLE.",
-			                                                      out unqualified));
+				               out unqualified));
 			Assert.AreEqual("SOMETABLE.", unqualified);
 
 			// with trailing blank:
 			Assert.IsFalse(ModelElementNameUtils.TryUnqualifyName("SOMETABLE. ",
-			                                                      out unqualified));
+				               out unqualified));
 			Assert.AreEqual("SOMETABLE. ", unqualified);
 		}
 

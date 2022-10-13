@@ -29,7 +29,7 @@ namespace ProSuite.Commons.Geom
 			Coordinates[1] = v[1];
 			Coordinates[2] = v[2];
 		}
-		
+
 		public Pnt3D(IPnt pnt) : base(3)
 		{
 			Coordinates[0] = pnt[0];

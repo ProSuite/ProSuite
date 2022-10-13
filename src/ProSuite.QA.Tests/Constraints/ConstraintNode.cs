@@ -1,8 +1,8 @@
 using System.Collections.Generic;
-using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestSupport;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.QA.Container;
+using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Core.IssueCodes;
 
 namespace ProSuite.QA.Tests.Constraints

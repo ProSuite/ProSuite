@@ -157,6 +157,8 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 			var joinedFeatureClass = (IFeatureClass) queryName.Open();
 
+			// NOTE: QueryName's primary key is not honoured (TOP-5598) -> Use TableJoinUtils.CreateReadOnlyQueryTable
+			//       which encapsulates work-around
 			string queryNamePkAfterOpen =
 				((IQueryName2) ((IDataset) joinedFeatureClass).FullName).PrimaryKey;
 			Console.WriteLine($@"QueryName primary key after open: {queryNamePkAfterOpen}");
@@ -229,12 +231,19 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 					                                   "TOPGIS_TLM.TLM_NAMEN_NAMENSTEIL_NAME")
 				};
 
-			ITable queryTable = TableJoinUtils.CreateQueryTable(relClasses,
-			                                                    JoinType.InnerJoin,
-			                                                    includeOnlyOIDFields: true);
+			ITable queryTableWithWrongOid = TableJoinUtils.CreateQueryTable(
+				relClasses, JoinType.InnerJoin, includeOnlyOIDFields: true);
+
+			// Wrong OID Field: TOPGIS_TLM.TLM_NAMEN_NAME.OBJECTID
+			Console.WriteLine(@"Wrong OID Field: {0}", queryTableWithWrongOid.OIDFieldName);
+
+			IReadOnlyTable queryTable = TableJoinUtils.CreateReadOnlyQueryTable(
+				relClasses, JoinType.InnerJoin, includeOnlyOIDFields: true);
+
+			// Correct OID field (corrected in RoTable using alternate OID field):
 			Assert.AreEqual("TOPGIS_TLM.TLM_GEBIETSNAME.OBJECTID", queryTable.OIDFieldName);
 
-			var featureClass = (IFeatureClass) queryTable;
+			var featureClass = (IReadOnlyFeatureClass) queryTable;
 
 			var envelope = new EnvelopeClass
 			               {
@@ -244,11 +253,25 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 				               YMax = 1350000
 			               };
 
-			int rowCount;
-			int totalSegmentCount = GetTotalSegmentCount(envelope, featureClass, out rowCount);
+			int rowCount = 0;
+			var filter = new SpatialFilterClass
+			             {
+				             Geometry = envelope,
+				             GeometryField = featureClass.ShapeFieldName,
+				             SpatialRel = esriSpatialRelEnum.esriSpatialRelIntersects
+			             };
+
+			foreach (IReadOnlyRow row in featureClass.EnumRows(filter, false))
+			{
+				rowCount++;
+				IFeature gottenFeature = (IFeature) featureClass.GetRow(row.OID);
+
+				Assert.AreEqual(row.OID, gottenFeature.OID);
+				Assert.IsTrue(GeometryUtils.AreEqual(gottenFeature.Shape,
+				                                     ((IReadOnlyFeature) row).Shape));
+			}
 
 			Console.WriteLine(@"Rows: {0}", rowCount);
-			Console.WriteLine(@"Total segments: {0}", totalSegmentCount);
 		}
 
 		[Test]
@@ -578,7 +601,10 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 			Assert.IsTrue(TableJoinUtils.CanCreateQueryFeatureClass(rc, JoinType.RightJoin));
 			ITable featureClass = TableJoinUtils.CreateQueryTable(rc, JoinType.RightJoin);
-			//Assert.AreEqual("TOPGIS_TLM.TLM_STRASSE.OBJECTID", featureClass.OIDFieldName);
+
+			// It has the destination table's OIDField (with non-unique values, but guaranteed not null)
+			const string rightSideOidField = "TOPGIS_TLM.TLM_STRASSEN_NAME.OBJECTID";
+			Assert.AreEqual(rightSideOidField, featureClass.OIDFieldName);
 
 			int featureCount = GetRowCount(featureClass);
 			Console.WriteLine(@"origin: {0} dest: {1} query: {2}",
@@ -593,13 +619,24 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			ITable table = TableJoinUtils.CreateQueryTable(rc, JoinType.RightJoin,
 			                                               includeOnlyOIDFields,
 			                                               excludeShapeField);
-			Assert.AreEqual("TOPGIS_TLM.TLM_STRASSE.OBJECTID", table.OIDFieldName);
+
+			// Right join uses destination table as primary key:
+			Assert.AreEqual(rightSideOidField, table.OIDFieldName);
 
 			Assert.AreEqual(featureCount, GetRowCount(table));
 			Assert.AreEqual(destinationRowCount, featureCount);
 
 			// all strasse features are expected in result
 			AssertOidsComplete(rc.DestinationClass, table);
+
+			// Regarding OIDFieldName, compare with CreateReadOnlyTable
+			IReadOnlyTable roFeatureClass = TableJoinUtils.CreateReadOnlyQueryTable(
+				rc, JoinType.RightJoin);
+
+			// The Strasse contains the foreign key (and is therefore unique OR NULL)
+			// TLM_STRASSEN_NAME.OBJECTID is NOT unique but not NULL!
+			// We prefer uniqueness or no OID
+			Assert.AreEqual("TOPGIS_TLM.TLM_STRASSE.OBJECTID", roFeatureClass.OIDFieldName);
 		}
 
 		[Test]
@@ -1401,7 +1438,13 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			// 3 street features have no related route
 			AssertOidsComplete(rc.OriginClass, queryTable,
 			                   expectedMissingBaseClassRowsCount: 3);
-			// Assert.AreEqual("Routes.OBJECTID", ((IObjectClass) queryTable).OIDFieldName);
+			Assert.AreEqual("Routes.OBJECTID", ((IObjectClass) queryTable).OIDFieldName);
+
+			// In the many-to-many case the association table always has a non-null unique OID
+			IReadOnlyTable roQueryTable =
+				TableJoinUtils.CreateReadOnlyQueryTable(rc, JoinType.RightJoin);
+
+			Assert.AreEqual("rel_streets_routes.OBJECTID", roQueryTable.OIDFieldName);
 		}
 
 		private static void CanLeftJoin_NtoM([NotNull] IFeatureWorkspace ws)

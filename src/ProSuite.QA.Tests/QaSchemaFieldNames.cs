@@ -3,15 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using ESRI.ArcGIS.Geodatabase;
-using ProSuite.QA.Tests.Documentation;
-using ProSuite.QA.Tests.IssueCodes;
-using ProSuite.QA.Tests.Properties;
-using ProSuite.QA.Tests.Schema;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.IssueCodes;
+using ProSuite.QA.Tests.Properties;
+using ProSuite.QA.Tests.Schema;
 
 namespace ProSuite.QA.Tests
 {
@@ -141,7 +141,7 @@ namespace ProSuite.QA.Tests
 			int errorCount = 0;
 
 			foreach (KeyValuePair<string, List<IField>> pair in
-				GetFieldNameSubstrings(fields, uniqueSubstringLength))
+			         GetFieldNameSubstrings(fields, uniqueSubstringLength))
 			{
 				List<IField> fieldsForSubstring = pair.Value;
 

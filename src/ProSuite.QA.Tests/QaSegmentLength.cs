@@ -2,16 +2,16 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.Geometry;
 using ProSuite.QA.Container.TestContainer;
-using ProSuite.QA.Tests.Documentation;
-using ProSuite.QA.Tests.IssueCodes;
-using ProSuite.Commons.Essentials.Assertions;
-using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.IssueCodes;
 
 namespace ProSuite.QA.Tests
 {
@@ -50,9 +50,12 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaSegmentLength_0))]
 		public QaSegmentLength(
-			[Doc(nameof(DocStrings.QaSegmentLength_featureClass))] IReadOnlyFeatureClass featureClass,
-			[Doc(nameof(DocStrings.QaSegmentLength_limit))] double limit,
-			[Doc(nameof(DocStrings.QaSegmentLength_is3D))] bool is3D)
+			[Doc(nameof(DocStrings.QaSegmentLength_featureClass))]
+			IReadOnlyFeatureClass featureClass,
+			[Doc(nameof(DocStrings.QaSegmentLength_limit))]
+			double limit,
+			[Doc(nameof(DocStrings.QaSegmentLength_is3D))]
+			bool is3D)
 			: base(featureClass)
 		{
 			_limit = limit;
@@ -63,8 +66,10 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaSegmentLength_0))]
 		public QaSegmentLength(
-			[Doc(nameof(DocStrings.QaSegmentLength_featureClass))] IReadOnlyFeatureClass featureClass,
-			[Doc(nameof(DocStrings.QaSegmentLength_limit))] double limit)
+			[Doc(nameof(DocStrings.QaSegmentLength_featureClass))]
+			IReadOnlyFeatureClass featureClass,
+			[Doc(nameof(DocStrings.QaSegmentLength_limit))]
+			double limit)
 			: this(
 				featureClass, limit,
 				featureClass.ShapeType == esriGeometryType.esriGeometryMultiPatch) { }
@@ -83,7 +88,8 @@ namespace ProSuite.QA.Tests
 
 		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
-			using (SegmentLengthProvider provider = GetSegmentLengthProvider((IReadOnlyFeature) row))
+			using (SegmentLengthProvider
+			       provider = GetSegmentLengthProvider((IReadOnlyFeature) row))
 			{
 				int errorCount = 0;
 				var errorSegments = new List<SegmentLength>();
@@ -176,7 +182,7 @@ namespace ProSuite.QA.Tests
 			{
 				description = string.Format("Segment length {0}",
 				                            FormatLengthComparison(minLength, "<", _limit,
-				                                                   errorGeometry.SpatialReference));
+					                            errorGeometry.SpatialReference));
 				issueCode = Codes[Code.SmallerThanLimit_OneSegment];
 			}
 			else
@@ -184,8 +190,8 @@ namespace ProSuite.QA.Tests
 				description = string.Format("{0} consecutive segment lengths {1}",
 				                            pointCount - 1,
 				                            FormatLengthComparison(minLength, "<", _limit,
-				                                                   errorGeometry.SpatialReference,
-				                                                   "(min {0}) < {2}"));
+					                            errorGeometry.SpatialReference,
+					                            "(min {0}) < {2}"));
 				issueCode = Codes[Code.SmallerThanLimit_ConsecutiveSegments];
 			}
 

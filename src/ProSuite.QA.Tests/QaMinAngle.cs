@@ -59,9 +59,12 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaMinAngle_0))]
 		public QaMinAngle(
-			[Doc(nameof(DocStrings.QaMinAngle_polylineClass))] IReadOnlyFeatureClass polylineClass,
-			[Doc(nameof(DocStrings.QaMinAngle_limit))] double limit,
-			[Doc(nameof(DocStrings.QaMinAngle_is3D))] bool is3D)
+			[Doc(nameof(DocStrings.QaMinAngle_polylineClass))]
+			IReadOnlyFeatureClass polylineClass,
+			[Doc(nameof(DocStrings.QaMinAngle_limit))]
+			double limit,
+			[Doc(nameof(DocStrings.QaMinAngle_is3D))]
+			bool is3D)
 			: base(polylineClass)
 		{
 			Init(limit, is3D);
@@ -69,9 +72,12 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaMinAngle_1))]
 		public QaMinAngle(
-				[Doc(nameof(DocStrings.QaMinAngle_polylineClasses))] IList<IReadOnlyFeatureClass> polylineClasses,
-				[Doc(nameof(DocStrings.QaMinAngle_limit))] double limit,
-				[Doc(nameof(DocStrings.QaMinAngle_is3D))] bool is3D)
+				[Doc(nameof(DocStrings.QaMinAngle_polylineClasses))]
+				IList<IReadOnlyFeatureClass> polylineClasses,
+				[Doc(nameof(DocStrings.QaMinAngle_limit))]
+				double limit,
+				[Doc(nameof(DocStrings.QaMinAngle_is3D))]
+				bool is3D)
 			// ReSharper disable once PossiblyMistakenUseOfParamsMethod
 			: base(CastToTables(polylineClasses))
 		{
@@ -80,8 +86,10 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaMinAngle_1))]
 		public QaMinAngle(
-				[Doc(nameof(DocStrings.QaMinAngle_polylineClasses))] IList<IReadOnlyFeatureClass> polylineClasses,
-				[Doc(nameof(DocStrings.QaMinAngle_limit))] double limit)
+				[Doc(nameof(DocStrings.QaMinAngle_polylineClasses))]
+				IList<IReadOnlyFeatureClass> polylineClasses,
+				[Doc(nameof(DocStrings.QaMinAngle_limit))]
+				double limit)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(polylineClasses, limit, false) { }
 
@@ -356,7 +364,7 @@ namespace ProSuite.QA.Tests
 						description, InvolvedRowUtils.GetInvolvedRows(feature, compareFeature),
 						GeometryFactory.Clone(connectPoint),
 						Codes[Code.AngleTooSmall], TestUtils.GetShapeFieldName(feature),
-						values: new object[] { MathUtils.ToDegrees(angleRadians) });
+						values: new object[] {MathUtils.ToDegrees(angleRadians)});
 				}
 			}
 

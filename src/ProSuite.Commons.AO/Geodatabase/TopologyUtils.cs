@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
@@ -13,8 +12,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 {
 	public static class TopologyUtils
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		[NotNull]
 		public static ITopology OpenTopology([NotNull] IFeatureWorkspace featureWorkspace,
@@ -145,7 +143,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 				ITopologyProperties topoProps = (ITopologyProperties) candidateTopo;
 
 				foreach (IFeatureClass topoClass in
-					DatasetUtils.GetFeatureClasses(topoProps.Classes))
+				         DatasetUtils.GetFeatureClasses(topoProps.Classes))
 				{
 					if (DatasetUtils.IsSameObjectClass(topoClass, featureClass))
 					{

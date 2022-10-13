@@ -28,8 +28,8 @@ namespace ProSuite.Commons.DotLiquid
 
 			_validTemplatePathRegex = new Regex(string.Format("^{0}",
 			                                                  _root.Replace(@"\", @"\\")
-			                                                       .Replace("(", @"\(")
-			                                                       .Replace(")", @"\)")),
+				                                                  .Replace("(", @"\(")
+				                                                  .Replace(")", @"\)")),
 			                                    RegexOptions.Compiled |
 			                                    RegexOptions.IgnoreCase);
 		}

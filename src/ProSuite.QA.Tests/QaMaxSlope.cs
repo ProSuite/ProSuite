@@ -1,17 +1,17 @@
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container;
-using ProSuite.QA.Tests.Documentation;
-using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.Commons;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.AO.Geodatabase;
-using ProSuite.QA.Core.IssueCodes;
-using ProSuite.QA.Core.TestCategories;
-using ProSuite.QA.Core;
+using ProSuite.QA.Container;
 using ProSuite.QA.Container.Geometry;
 using ProSuite.QA.Container.TestSupport;
+using ProSuite.QA.Core;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.IssueCodes;
 
 namespace ProSuite.QA.Tests
 {
@@ -47,8 +47,10 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaMaxSlope_0))]
 		public QaMaxSlope(
-			[Doc(nameof(DocStrings.QaMaxSlope_featureClass))] IReadOnlyFeatureClass featureClass,
-			[Doc(nameof(DocStrings.QaMaxSlope_limit))] double limit)
+			[Doc(nameof(DocStrings.QaMaxSlope_featureClass))]
+			IReadOnlyFeatureClass featureClass,
+			[Doc(nameof(DocStrings.QaMaxSlope_limit))]
+			double limit)
 			: base(featureClass)
 		{
 			_limitCstr = limit;
@@ -123,7 +125,7 @@ namespace ProSuite.QA.Tests
 					errorCount += ReportError(
 						description, InvolvedRowUtils.GetInvolvedRows(row), errorGeometry,
 						Codes[Code.SlopeTooSteep], TestUtils.GetShapeFieldName(row),
-						values: new object[] { MathUtils.ToDegrees(slopeRadians) });
+						values: new object[] {MathUtils.ToDegrees(slopeRadians)});
 				}
 
 				if (recycling)

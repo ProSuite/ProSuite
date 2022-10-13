@@ -133,7 +133,8 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 						// If the end of the selection is at the end of the string,
 						// let the DataGridView treat the key message
 						if (RightToLeft == RightToLeft.No &&
-						    ! (textBox.SelectionLength == 0 && textBox.SelectionStart == textBox.Text.Length) ||
+						    ! (textBox.SelectionLength == 0 &&
+						       textBox.SelectionStart == textBox.Text.Length) ||
 						    RightToLeft == RightToLeft.Yes &&
 						    ! (textBox.SelectionLength == 0 && textBox.SelectionStart == 0))
 						{
@@ -154,7 +155,8 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 						if (RightToLeft == RightToLeft.No &&
 						    ! (textBox.SelectionLength == 0 && textBox.SelectionStart == 0) ||
 						    RightToLeft == RightToLeft.Yes &&
-						    ! (textBox.SelectionLength == 0 && textBox.SelectionStart == textBox.Text.Length))
+						    ! (textBox.SelectionLength == 0 &&
+						       textBox.SelectionStart == textBox.Text.Length))
 						{
 							return true;
 						}

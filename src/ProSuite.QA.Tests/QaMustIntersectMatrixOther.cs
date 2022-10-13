@@ -4,17 +4,17 @@ using System.Linq;
 using System.Text;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container;
-using ProSuite.QA.Tests.Documentation;
-using ProSuite.QA.Tests.IssueCodes;
-using ProSuite.QA.Tests.SpatialRelations;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
-using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Container;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.IssueCodes;
+using ProSuite.QA.Tests.SpatialRelations;
 
 namespace ProSuite.QA.Tests
 {
@@ -61,7 +61,8 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaMustIntersectMatrixOther_intersectionMatrix))] [NotNull]
 			string
 				intersectionMatrix,
-			[Doc(nameof(DocStrings.QaMustIntersectMatrixOther_relevantRelationCondition))] [CanBeNull]
+			[Doc(nameof(DocStrings.QaMustIntersectMatrixOther_relevantRelationCondition))]
+			[CanBeNull]
 			string
 				relevantRelationCondition)
 			: this(featureClass, otherFeatureClass,
@@ -80,7 +81,8 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaMustIntersectMatrixOther_intersectionMatrix))] [NotNull]
 			string
 				intersectionMatrix,
-			[Doc(nameof(DocStrings.QaMustIntersectMatrixOther_relevantRelationCondition))] [CanBeNull]
+			[Doc(nameof(DocStrings.QaMustIntersectMatrixOther_relevantRelationCondition))]
+			[CanBeNull]
 			string
 				relevantRelationCondition,
 			[Doc(nameof(DocStrings.QaMustIntersectMatrixOther_requiredIntersectionDimensions))]
@@ -106,7 +108,8 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaMustIntersectMatrixOther_intersectionMatrix))] [NotNull]
 			string
 				intersectionMatrix,
-			[Doc(nameof(DocStrings.QaMustIntersectMatrixOther_relevantRelationCondition))] [CanBeNull]
+			[Doc(nameof(DocStrings.QaMustIntersectMatrixOther_relevantRelationCondition))]
+			[CanBeNull]
 			string
 				relevantRelationCondition)
 			: this(
@@ -124,13 +127,16 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaMustIntersectMatrixOther_intersectionMatrix))] [NotNull]
 			string
 				intersectionMatrix,
-			[Doc(nameof(DocStrings.QaMustIntersectMatrixOther_relevantRelationCondition))] [CanBeNull]
+			[Doc(nameof(DocStrings.QaMustIntersectMatrixOther_relevantRelationCondition))]
+			[CanBeNull]
 			string
 				relevantRelationCondition,
-			[Doc(nameof(DocStrings.QaMustIntersectMatrixOther_requiredIntersectionDimensions))] [CanBeNull]
+			[Doc(nameof(DocStrings.QaMustIntersectMatrixOther_requiredIntersectionDimensions))]
+			[CanBeNull]
 			string
 				requiredIntersectionDimensions,
-			[Doc(nameof(DocStrings.QaMustIntersectMatrixOther_unallowedIntersectionDimensions))] [CanBeNull]
+			[Doc(nameof(DocStrings.QaMustIntersectMatrixOther_unallowedIntersectionDimensions))]
+			[CanBeNull]
 			string
 				unallowedIntersectionDimensions)
 			: base(featureClasses, otherFeatureClasses, relevantRelationCondition)

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.DomainModels;
@@ -30,8 +29,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 		[NotNull] private readonly IAssociationRepository _associationRepository;
 		[CanBeNull] private readonly ICurrentModelContext _currentModelContext;
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="GlobalDatasetLookup"/> class.

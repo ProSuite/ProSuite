@@ -2,18 +2,18 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container;
-using ProSuite.QA.Tests.Documentation;
-using ProSuite.QA.Tests.IssueCodes;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
+using ProSuite.QA.Container;
 using ProSuite.QA.Core;
-using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.IssueCodes;
 
 namespace ProSuite.QA.Tests
 {
@@ -55,7 +55,8 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaMpNonIntersectingRingFootprints_multiPatchClass))] [NotNull]
 			IReadOnlyFeatureClass
 				multiPatchClass,
-			[Doc(nameof(DocStrings.QaMpNonIntersectingRingFootprints_allowIntersectionsForDifferentPointIds))]
+			[Doc(nameof(DocStrings
+				            .QaMpNonIntersectingRingFootprints_allowIntersectionsForDifferentPointIds))]
 			bool allowIntersectionsForDifferentPointIds)
 			: base(multiPatchClass)
 		{
@@ -206,11 +207,11 @@ namespace ProSuite.QA.Tests
 			// sort the ring polygons ascending on the point count
 			// -> check/union the least complex rings first (assumed to reduce overall complexity)
 			List<PolygonWithPointCount> sortedPolygons = ringPolygons.Select(
-				                                                         polygon =>
-					                                                         new
-						                                                         PolygonWithPointCount
-						                                                         (polygon))
-			                                                         .ToList();
+					polygon =>
+						new
+							PolygonWithPointCount
+							(polygon))
+				.ToList();
 			sortedPolygons.Sort((p1, p2) => p1.PointCount.CompareTo(p2.PointCount));
 
 			var intersections = new List<IPolygon>();

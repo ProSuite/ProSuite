@@ -2,19 +2,19 @@ using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.Geometry;
 using ProSuite.QA.Container.TestContainer;
 using ProSuite.QA.Container.TestSupport;
-using ProSuite.QA.Tests.Documentation;
-using ProSuite.QA.Tests.IssueCodes;
-using ProSuite.Commons;
-using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.Essentials.Assertions;
-using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.IssueCodes;
 
 namespace ProSuite.QA.Tests
 {
@@ -48,7 +48,8 @@ namespace ProSuite.QA.Tests
 		public QaMpVerticalFaces(
 			[Doc(nameof(DocStrings.QaMpVerticalFaces_multiPatchClass))] [NotNull]
 			IReadOnlyFeatureClass multiPatchClass,
-			[Doc(nameof(DocStrings.QaMpVerticalFaces_nearAngle))] double nearAngle,
+			[Doc(nameof(DocStrings.QaMpVerticalFaces_nearAngle))]
+			double nearAngle,
 			[Doc(nameof(DocStrings.QaMpVerticalFaces_toleranceAngle))]
 			double toleranceAngle)
 			: base(multiPatchClass)

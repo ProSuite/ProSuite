@@ -57,6 +57,7 @@ namespace ProSuite.QA.Container
 		}
 
 		IRaster ISimpleSurface.AsRaster() => null;
+
 		public void Dispose()
 		{
 			Marshal.ReleaseComObject(_tin);

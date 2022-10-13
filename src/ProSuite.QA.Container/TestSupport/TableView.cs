@@ -60,7 +60,7 @@ namespace ProSuite.QA.Container.TestSupport
 			DataRow r = ConstraintView.Table.NewRow();
 			foreach (DataColumn col in ConstraintView.Table.Columns)
 			{
-				if (!string.IsNullOrEmpty(col.Expression))
+				if (! string.IsNullOrEmpty(col.Expression))
 				{
 					continue;
 				}
@@ -200,7 +200,7 @@ namespace ProSuite.QA.Container.TestSupport
 			if (constraintOnly)
 			{
 				foreach (string fieldNameCandidate in
-					ExpressionUtils.GetExpressionTokens(dataView.RowFilter))
+				         ExpressionUtils.GetExpressionTokens(dataView.RowFilter))
 				{
 					int columnIndex = dataTable.Columns.IndexOf(fieldNameCandidate);
 

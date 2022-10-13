@@ -39,7 +39,7 @@ namespace ProSuite.UI.QA.PropertyEditors
 						TestParameterTypeUtils.GetParameterType(Assert.NotNull(dsValue.DataType));
 
 					if (_dataset != null &&
-					    !TestParameterTypeUtils.IsValidDataset(parameterType, _dataset))
+					    ! TestParameterTypeUtils.IsValidDataset(parameterType, _dataset))
 					{
 						throw new ArgumentException(
 							string.Format(

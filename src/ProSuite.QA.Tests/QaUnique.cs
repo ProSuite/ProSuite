@@ -4,15 +4,10 @@ using System.ComponentModel;
 using System.Data;
 using System.Globalization;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestSupport;
-using ProSuite.QA.Tests.Documentation;
-using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.Commons.AO;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Collections;
@@ -20,8 +15,12 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
+using ProSuite.QA.Container;
+using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.IssueCodes;
 
 namespace ProSuite.QA.Tests
 {
@@ -64,8 +63,7 @@ namespace ProSuite.QA.Tests
 
 		private const int _defaultMaxRows = short.MaxValue;
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		#region issue codes
 
@@ -86,15 +84,19 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaUnique_0))]
 		public QaUnique(
-				[Doc(nameof(DocStrings.QaUnique_table))] IReadOnlyTable table,
-				[Doc(nameof(DocStrings.QaUnique_unique))] string unique)
+				[Doc(nameof(DocStrings.QaUnique_table))]
+				IReadOnlyTable table,
+				[Doc(nameof(DocStrings.QaUnique_unique))]
+				string unique)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(table, unique, _defaultMaxRows) { }
 
 		[Doc(nameof(DocStrings.QaUnique_0))]
 		public QaUnique(
-			[Doc(nameof(DocStrings.QaUnique_table))] IReadOnlyTable table,
-			[Doc(nameof(DocStrings.QaUnique_unique))] string unique,
+			[Doc(nameof(DocStrings.QaUnique_table))]
+			IReadOnlyTable table,
+			[Doc(nameof(DocStrings.QaUnique_unique))]
+			string unique,
 			[Doc(nameof(DocStrings.QaUnique_maxRows))] [DefaultValue(_defaultMaxRows)]
 			int maxRows)
 			: this(new[] {table}, new[] {unique})
@@ -104,8 +106,10 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaUnique_1))]
 		public QaUnique(
-			[Doc(nameof(DocStrings.QaUnique_tables))] IList<IReadOnlyTable> tables,
-			[Doc(nameof(DocStrings.QaUnique_uniques))] IList<string> uniques)
+			[Doc(nameof(DocStrings.QaUnique_tables))]
+			IList<IReadOnlyTable> tables,
+			[Doc(nameof(DocStrings.QaUnique_uniques))]
+			IList<string> uniques)
 			: base(tables)
 		{
 			Assert.ArgumentNotNull(tables, nameof(tables));
@@ -196,8 +200,8 @@ namespace ProSuite.QA.Tests
 					if (constraintViews[tableIndex] == null)
 					{
 						constraintViews[tableIndex] = TableViewFactory.Create(table,
-						                                                      GetConstraint(
-							                                                      tableIndex));
+							GetConstraint(
+								tableIndex));
 					}
 
 					TableView constraintView = constraintViews[tableIndex];
@@ -614,7 +618,7 @@ namespace ProSuite.QA.Tests
 			for (var tableIndex = 0; tableIndex < tableCount; tableIndex++)
 			{
 				RowEnumerator rowEnumerator = CreateRowEnumerator(tableIndex,
-				                                                  inMemoryObjectComparer);
+					inMemoryObjectComparer);
 
 				rowEnumerator.TryAddNext(enumerators);
 			}
@@ -1316,9 +1320,10 @@ namespace ProSuite.QA.Tests
 			{
 				int firstUniqueFieldIndex = table.FindField(firstUniqueFieldName);
 
-				ESRI.ArcGIS.Geodatabase.ITable aoTable = (ESRI.ArcGIS.Geodatabase.ITable) table.FullName.Open();
+				ITable aoTable = (ITable) table.FullName.Open();
 				ReadOnlyTable roTable = ReadOnlyTableFactory.Create(aoTable);
-				ITableSort tableSort = TableSortUtils.CreateTableSort(aoTable, firstUniqueFieldName);
+				ITableSort tableSort =
+					TableSortUtils.CreateTableSort(aoTable, firstUniqueFieldName);
 
 				tableSort.Compare = new FieldSortCallback(comparer);
 				tableSort.QueryFilter = filter;

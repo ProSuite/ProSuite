@@ -122,7 +122,7 @@ namespace ProSuite.Commons.Test.IO
 			                                                     out freeBytes));
 			Assert.True(freeBytes > 0);
 			Assert.True(FileSystemUtils.TryGetAvailableFreeGigaBytes(tempWithBackslash,
-			                                                         out freeGigaBytes));
+				            out freeGigaBytes));
 			Assert.AreEqual(freeBytes / Math.Pow(1024, 3), freeGigaBytes);
 
 			Assert.True(FileSystemUtils.TryGetAvailableFreeBytes(uncPath, out freeBytes));

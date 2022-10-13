@@ -68,10 +68,10 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 
 				var first = true;
 				foreach (IList<int> datasetIdSublist in
-					CollectionUtils.Split(datasetIds, maxSublistLength))
+				         CollectionUtils.Split(datasetIds, maxSublistLength))
 				{
 					foreach (QualityVerification verification in
-						GetQualityVerifications(session, datasetIdSublist))
+					         GetQualityVerifications(session, datasetIdSublist))
 					{
 						// avoid the cost of unnecessary Contains() call for first sub list
 						// (verification should be unique *within* each sub list)

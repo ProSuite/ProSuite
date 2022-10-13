@@ -226,6 +226,107 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			}
 		}
 
+		/// <summary>
+		/// This test currently fails because (most) transformers cannot deal with non-spatial queries
+		/// which are necessary in order to get the rows from the 'rightTable'.
+		/// Options:
+		/// - All transformers check if the filter is non-spatial and if so, circumvent the DataContainer
+		/// - The DataContainer naively or cleverly handles non-spatial queries by
+		///    - either reading and pass-through-yielding the DB rows directly.
+		///    - or, in case there is a where-clause (typically 'KEY_FIELD IN (long-list-of-uuids)')
+		///      gets the OIDs only, checks which rows are already cached and which need to be properly
+		///      fetched from the DB.
+		/// </summary>
+		[Test]
+		[Ignore("Requires not yet implemented functionality")]
+		public void CanJoinPreTransformedTables()
+		{
+			IFeatureWorkspace ws =
+				TestWorkspaceUtils.CreateInMemoryWorkspace("TrTableJoinInMemory");
+
+			IFeatureClass lineFc =
+				CreateFeatureClass(
+					ws, "lineFc", esriGeometryType.esriGeometryPolyline,
+					new[] {FieldUtils.CreateIntegerField("Nr_Line")});
+			IFeatureClass polyFc =
+				CreateFeatureClass(
+					ws, "polyFc", esriGeometryType.esriGeometryPolygon,
+					new[] {FieldUtils.CreateIntegerField("Nr_Poly")});
+			{
+				IFeature f = lineFc.CreateFeature();
+				f.Value[1] = 12;
+				f.Shape = CurveConstruction.StartLine(0, 0).LineTo(69.5, 69.5).Curve;
+				f.Store();
+			}
+			{
+				IFeature f = lineFc.CreateFeature();
+				f.Value[1] = 14;
+				f.Shape = CurveConstruction.StartLine(60, 40).LineTo(60, 80).Curve;
+				f.Store();
+			}
+			{
+				IFeature f = polyFc.CreateFeature();
+				f.Value[1] = 12;
+				f.Shape = CurveConstruction.StartPoly(0, 0).LineTo(20, 50).LineTo(40, 50)
+				                           .LineTo(40, 0).ClosePolygon();
+				f.Store();
+			}
+			{
+				IFeature f = polyFc.CreateFeature();
+				f.Value[1] = 14;
+				f.Shape = CurveConstruction.StartPoly(0, 0).LineTo(50, 70).LineTo(70, 70)
+				                           .LineTo(70, 50).ClosePolygon();
+				f.Store();
+			}
+
+			TrGeometryToPoints trPoly2Pt =
+				new TrGeometryToPoints(
+					ReadOnlyTableFactory.Create(polyFc), GeometryComponent.Vertices)
+				{TransformerName = "polgon2Points"};
+			TrGeometryToPoints trLine2Pt =
+				new TrGeometryToPoints(
+					ReadOnlyTableFactory.Create(lineFc), GeometryComponent.Vertices)
+				{TransformerName = "line2Points"};
+
+			TrTableJoinInMemory tr = new TrTableJoinInMemory(
+				trPoly2Pt.GetTransformed(),
+				trLine2Pt.GetTransformed(),
+				"Nr_Poly", "Nr_Line", JoinType.InnerJoin);
+
+			tr.SetConstraint(1, "Nr_Line < 10");
+
+			// The name is used as the table name and thus necessary
+			((ITableTransformer) tr).TransformerName = "test_join";
+			{
+				var intersectsSelf =
+					new QaIntersectsSelf((IReadOnlyFeatureClass) tr.GetTransformed());
+				var runner = new QaContainerTestRunner(1000, intersectsSelf) {KeepGeometry = true};
+				runner.Execute();
+				Assert.AreEqual(1, runner.Errors.Count);
+
+				// Check involved rows:
+				QaError error = runner.Errors[0];
+
+				// Check involved rows. They must be from a 'real' feature class, not form a transformed feature class.
+				List<string> realTableNames = new List<string> {"lineFc", "polyFc"};
+				CheckInvolvedRows(error.InvolvedRows, 4, realTableNames);
+			}
+			{
+				QaConstraint test = new QaConstraint(tr.GetTransformed(), "Nr_Poly > 12");
+				IFilterEditTest ft = test;
+				var runner = new QaContainerTestRunner(1000, test);
+				runner.Execute();
+				Assert.AreEqual(1, runner.Errors.Count);
+
+				// Check involved rows:
+				QaError error = runner.Errors[0];
+
+				// Check involved rows. They must be from a 'real' feature class, not form a transformed feature class.
+				List<string> realTableNames = new List<string> {"lineFc", "polyFc"};
+				CheckInvolvedRows(error.InvolvedRows, 2, realTableNames);
+			}
+		}
+
 		private static void CheckInvolvedRows(IList<InvolvedRow> involvedRows, int expectedCount,
 		                                      IList<string> realTableNames)
 		{

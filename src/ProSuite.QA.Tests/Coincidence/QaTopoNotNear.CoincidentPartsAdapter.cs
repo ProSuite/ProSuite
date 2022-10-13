@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
-using ProSuite.QA.Container.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.QA.Container.Geometry;
 
 namespace ProSuite.QA.Tests.Coincidence
 {
@@ -201,7 +201,7 @@ namespace ProSuite.QA.Tests.Coincidence
 				var dropNeighbors =
 					new Dictionary<SegmentPartWithNeighbor, SegmentPartWithNeighbor>();
 				foreach (List<SegmentPartWithNeighbor> coincidentParts in
-					coincidents.Values)
+				         coincidents.Values)
 				{
 					foreach (
 						SegmentPartWithNeighbor coincidentPart in
@@ -305,7 +305,7 @@ namespace ProSuite.QA.Tests.Coincidence
 					foreach (NeighboredSegmentsSubpart featurePart in featureParts)
 					{
 						foreach (KeyValuePair<SegmentPart, SegmentParts> pair
-							in featurePart.SegmentNeighbors)
+						         in featurePart.SegmentNeighbors)
 						{
 							SegmentPart segmentKey = pair.Key;
 							SegmentParts neighboredParts = pair.Value;

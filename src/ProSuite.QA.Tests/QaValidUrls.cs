@@ -4,18 +4,18 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading;
-using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestSupport;
-using ProSuite.QA.Tests.Documentation;
-using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
+using ProSuite.QA.Container;
+using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Core;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.IssueCodes;
 
 namespace ProSuite.QA.Tests
 {
@@ -94,7 +94,8 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaValidUrls_0))]
 		public QaValidUrls(
-			[Doc(nameof(DocStrings.QaValidUrls_table))] [NotNull] IReadOnlyTable table,
+			[Doc(nameof(DocStrings.QaValidUrls_table))] [NotNull]
+			IReadOnlyTable table,
 			[Doc(nameof(DocStrings.QaValidUrls_urlExpression))] [NotNull]
 			string urlExpression)
 			: base(table)
@@ -230,8 +231,8 @@ namespace ProSuite.QA.Tests
 			try
 			{
 				ICollection<RowErrorInfo> errorRows = CheckParallel(_rowUrls,
-				                                                    _maximumThreadCount.Value,
-				                                                    _knownUrlStatus);
+					_maximumThreadCount.Value,
+					_knownUrlStatus);
 
 				return ReportErrors(errorRows);
 			}

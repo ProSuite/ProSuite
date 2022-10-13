@@ -21,8 +21,7 @@ namespace ProSuite.Commons.UI.ScreenBinding
 		private readonly List<IBoundPart> _boundElements = new List<IBoundPart>();
 		private readonly IValidationMonitor _monitor;
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		#region Constructors
 

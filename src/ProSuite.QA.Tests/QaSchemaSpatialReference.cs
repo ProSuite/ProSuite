@@ -1,14 +1,14 @@
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Tests.Documentation;
-using ProSuite.QA.Tests.IssueCodes;
-using ProSuite.QA.Tests.Properties;
-using ProSuite.QA.Tests.Schema;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.IssueCodes;
+using ProSuite.QA.Tests.Properties;
+using ProSuite.QA.Tests.Schema;
 
 namespace ProSuite.QA.Tests
 {
@@ -55,10 +55,10 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaSchemaSpatialReference_0))]
 		public QaSchemaSpatialReference(
-			[Doc(nameof(DocStrings.QaSchemaSpatialReference_featureClass))]
-			[NotNull] IReadOnlyFeatureClass featureClass,
-			[Doc(nameof(DocStrings.QaSchemaSpatialReference_referenceFeatureClass))]
-			[NotNull] IReadOnlyFeatureClass referenceFeatureClass,
+			[Doc(nameof(DocStrings.QaSchemaSpatialReference_featureClass))] [NotNull]
+			IReadOnlyFeatureClass featureClass,
+			[Doc(nameof(DocStrings.QaSchemaSpatialReference_referenceFeatureClass))] [NotNull]
+			IReadOnlyFeatureClass referenceFeatureClass,
 			bool compareXYPrecision, bool compareZPrecision,
 			bool compareMPrecision, bool compareTolerances,
 			bool compareVerticalCoordinateSystems)
@@ -72,10 +72,10 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaSchemaSpatialReference_1))]
 		public QaSchemaSpatialReference(
-			[Doc(nameof(DocStrings.QaSchemaSpatialReference_featureClass))]
-			[NotNull] IReadOnlyFeatureClass featureClass,
-			[Doc(nameof(DocStrings.QaSchemaSpatialReference_spatialReferenceXml))]
-			[NotNull] string spatialReferenceXml,
+			[Doc(nameof(DocStrings.QaSchemaSpatialReference_featureClass))] [NotNull]
+			IReadOnlyFeatureClass featureClass,
+			[Doc(nameof(DocStrings.QaSchemaSpatialReference_spatialReferenceXml))] [NotNull]
+			string spatialReferenceXml,
 			bool compareXYPrecision, bool compareZPrecision,
 			bool compareMPrecision, bool compareTolerances,
 			bool compareVerticalCoordinateSystems)
@@ -86,10 +86,10 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaSchemaSpatialReference_2))]
 		public QaSchemaSpatialReference(
-			[Doc(nameof(DocStrings.QaSchemaSpatialReference_featureClass))]
-			[NotNull] IReadOnlyFeatureClass featureClass,
-			[Doc(nameof(DocStrings.QaSchemaSpatialReference_referenceFeatureClass))]
-			[NotNull] IReadOnlyFeatureClass referenceFeatureClass,
+			[Doc(nameof(DocStrings.QaSchemaSpatialReference_featureClass))] [NotNull]
+			IReadOnlyFeatureClass featureClass,
+			[Doc(nameof(DocStrings.QaSchemaSpatialReference_referenceFeatureClass))] [NotNull]
+			IReadOnlyFeatureClass referenceFeatureClass,
 			bool compareUsedPrecisions, bool compareTolerances,
 			bool compareVerticalCoordinateSystems)
 			: this(featureClass, GetSpatialReference(referenceFeatureClass),
@@ -106,10 +106,10 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaSchemaSpatialReference_3))]
 		public QaSchemaSpatialReference(
-			[Doc(nameof(DocStrings.QaSchemaSpatialReference_featureClass))]
-			[NotNull] IReadOnlyFeatureClass featureClass,
-			[Doc(nameof(DocStrings.QaSchemaSpatialReference_spatialReferenceXml))]
-			[NotNull] string spatialReferenceXml,
+			[Doc(nameof(DocStrings.QaSchemaSpatialReference_featureClass))] [NotNull]
+			IReadOnlyFeatureClass featureClass,
+			[Doc(nameof(DocStrings.QaSchemaSpatialReference_spatialReferenceXml))] [NotNull]
+			string spatialReferenceXml,
 			bool compareUsedPrecisions, bool compareTolerances,
 			bool compareVerticalCoordinateSystems)
 			: this(featureClass,

@@ -16,32 +16,36 @@ namespace ProSuite.Commons.Test.Testing
 		public void Can_copy_test_data_and_get_path()
 		{
 			TryDelete(BasePath);
-			
+
 			string fileName = "FileGDB.gdb.zip";
 			string result = "FileGDB.gdb";
 
 			string path = TestDataLocator.Prepare(fileName);
 			Assert.True(Directory.Exists(path));
-			Assert.AreEqual(Path.Combine(BasePath, nameof(Can_copy_test_data_and_get_path), result), path);
-			
+			Assert.AreEqual(Path.Combine(BasePath, nameof(Can_copy_test_data_and_get_path), result),
+			                path);
+
 			TryDelete(BasePath);
 
 			fileName = "FileGDB.zip";
 			path = TestDataLocator.Prepare(fileName);
 			Assert.True(Directory.Exists(path));
-			Assert.AreEqual(Path.Combine(BasePath, nameof(Can_copy_test_data_and_get_path), result), path);
+			Assert.AreEqual(Path.Combine(BasePath, nameof(Can_copy_test_data_and_get_path), result),
+			                path);
 		}
 
 		[Test]
 		public void Can_copy_test_data_with_relative_path_and_get_path()
 		{
 			var fileName = "almost_linear_intersection_target.wkb";
-			
+
 			TryDelete(BasePath);
 
 			string path = TestDataLocator.Prepare(fileName, @"TestData\Geom");
 			Assert.True(File.Exists(path));
-			Assert.AreEqual(Path.Combine(BasePath, nameof(Can_copy_test_data_with_relative_path_and_get_path), fileName), path);
+			Assert.AreEqual(
+				Path.Combine(BasePath, nameof(Can_copy_test_data_with_relative_path_and_get_path),
+				             fileName), path);
 		}
 
 		[Test]
@@ -58,7 +62,7 @@ namespace ProSuite.Commons.Test.Testing
 				Console.WriteLine(e);
 			}
 		}
-		
+
 		[Test]
 		public void Can_throw_exception_if_it_is_directory()
 		{
@@ -107,7 +111,8 @@ namespace ProSuite.Commons.Test.Testing
 
 			try
 			{
-				TestDataLocator.Prepare("almost_linear_intersection_target.wkb", @"does_not_exist\somewhere");
+				TestDataLocator.Prepare("almost_linear_intersection_target.wkb",
+				                        @"does_not_exist\somewhere");
 			}
 			catch (DirectoryNotFoundException e)
 			{

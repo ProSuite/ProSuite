@@ -347,12 +347,12 @@ namespace ProSuite.DomainServices.AO.QA.HtmlReports
 			if (category?.ParentCategory != null)
 			{
 				HtmlReportDataQualityCategory parent = AddReportCategory(category.ParentCategory,
-				                                                         exceptionCategories,
-				                                                         categoryComparer,
-				                                                         qualityConditionComparer,
-				                                                         issueGroupComparer,
-				                                                         reportCategories,
-				                                                         optionsProvider);
+					exceptionCategories,
+					categoryComparer,
+					qualityConditionComparer,
+					issueGroupComparer,
+					reportCategories,
+					optionsProvider);
 				if (! parent.IsUndefinedCategory)
 				{
 					result.ParentCategory = parent;

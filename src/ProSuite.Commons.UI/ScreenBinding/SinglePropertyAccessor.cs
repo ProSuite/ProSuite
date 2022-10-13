@@ -11,8 +11,7 @@ namespace ProSuite.Commons.UI.ScreenBinding
 {
 	public class SinglePropertyAccessor : IPropertyAccessor
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="SinglePropertyAccessor"/> class.

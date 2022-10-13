@@ -71,7 +71,7 @@ namespace ProSuite.Commons.Geom
 
 		public double LengthSquared => GetLengthSquared(Dimension);
 
-		public double Length2DSquared => GetLengthSquared(dimension : 2);
+		public double Length2DSquared => GetLengthSquared(dimension: 2);
 
 		private double GetLengthSquared(int dimension)
 		{

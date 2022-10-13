@@ -365,7 +365,7 @@ namespace ProSuite.Commons.AO.Geometry.Serialization
 				var geometryBuilder = new WksPointListBuilder(reverse);
 
 				foreach (WKSPointZ[] wksPoints in ReadLinestringsCore(
-					reader, ordinates, ringCount, geometryBuilder))
+					         reader, ordinates, ringCount, geometryBuilder))
 				{
 					IRing resultRing = GeometryFactory.Clone(ringTemplate);
 

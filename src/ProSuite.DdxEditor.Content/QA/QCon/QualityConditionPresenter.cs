@@ -234,7 +234,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			_view.BindToIssueFilters(_issueFilterTableRows);
 			_view.SelectIssueFilters(
 				filterTableRows.Select(r => (IssueFilterConfiguration) r.InstanceConfiguration));
-			
+
 			if (anyChange)
 			{
 				Item.NotifyChanged();
@@ -244,7 +244,8 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 		public void RemoveIssueFilterClicked()
 		{
 			// get selected targets
-			IList<InstanceConfigurationReferenceTableRow> selected = _view.GetSelectedIssueFilterTableRows();
+			IList<InstanceConfigurationReferenceTableRow> selected =
+				_view.GetSelectedIssueFilterTableRows();
 
 			QualityCondition qualityCondition = Assert.NotNull(Item.GetEntity());
 
@@ -453,7 +454,6 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 				                      ? null
 				                      : _item.GetConfigurator());
 #elif NET6_0
-
 			_view.TableViewControl.BindTo(qualityCondition);
 #endif
 		}

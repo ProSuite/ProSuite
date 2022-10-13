@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Threading;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container.Geometry;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Com;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
+using ProSuite.QA.Container.Geometry;
 
 namespace ProSuite.QA.Tests.Coincidence
 {

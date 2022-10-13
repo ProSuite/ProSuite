@@ -2,18 +2,18 @@ using System.Collections.Generic;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.Geometry;
+using ProSuite.QA.Core;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Coincidence;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.QA.Tests.Properties;
-using ProSuite.Commons.Essentials.Assertions;
-using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.QA.Core;
-using ProSuite.Commons.AO.Geodatabase;
-using ProSuite.QA.Core.IssueCodes;
-using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
 {
@@ -55,9 +55,12 @@ namespace ProSuite.QA.Tests
 		public QaFullCoincidence(
 				[Doc(nameof(DocStrings.QaFullCoincidence_featureClass))]
 				IReadOnlyFeatureClass featureClass,
-				[Doc(nameof(DocStrings.QaFullCoincidence_reference))] IReadOnlyFeatureClass reference,
-				[Doc(nameof(DocStrings.QaFullCoincidence_near))] double near,
-				[Doc(nameof(DocStrings.QaFullCoincidence_is3D))] bool is3D)
+				[Doc(nameof(DocStrings.QaFullCoincidence_reference))]
+				IReadOnlyFeatureClass reference,
+				[Doc(nameof(DocStrings.QaFullCoincidence_near))]
+				double near,
+				[Doc(nameof(DocStrings.QaFullCoincidence_is3D))]
+				bool is3D)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(featureClass, reference, near, is3D, _defaultTileSize) { }
 
@@ -65,10 +68,14 @@ namespace ProSuite.QA.Tests
 		public QaFullCoincidence(
 			[Doc(nameof(DocStrings.QaFullCoincidence_featureClass))]
 			IReadOnlyFeatureClass featureClass,
-			[Doc(nameof(DocStrings.QaFullCoincidence_reference))] IReadOnlyFeatureClass reference,
-			[Doc(nameof(DocStrings.QaFullCoincidence_near))] double near,
-			[Doc(nameof(DocStrings.QaFullCoincidence_is3D))] bool is3D,
-			[Doc(nameof(DocStrings.QaFullCoincidence_tileSize))] double tileSize)
+			[Doc(nameof(DocStrings.QaFullCoincidence_reference))]
+			IReadOnlyFeatureClass reference,
+			[Doc(nameof(DocStrings.QaFullCoincidence_near))]
+			double near,
+			[Doc(nameof(DocStrings.QaFullCoincidence_is3D))]
+			bool is3D,
+			[Doc(nameof(DocStrings.QaFullCoincidence_tileSize))]
+			double tileSize)
 			: base(
 				new[] {featureClass, reference}, near,
 				new ConstantFeatureDistanceProvider(near / 2), is3D)
@@ -82,9 +89,12 @@ namespace ProSuite.QA.Tests
 		public QaFullCoincidence(
 				[Doc(nameof(DocStrings.QaFullCoincidence_featureClass))]
 				IReadOnlyFeatureClass featureClass,
-				[Doc(nameof(DocStrings.QaFullCoincidence_references))] IList<IReadOnlyFeatureClass> references,
-				[Doc(nameof(DocStrings.QaFullCoincidence_near))] double near,
-				[Doc(nameof(DocStrings.QaFullCoincidence_is3D))] bool is3D)
+				[Doc(nameof(DocStrings.QaFullCoincidence_references))]
+				IList<IReadOnlyFeatureClass> references,
+				[Doc(nameof(DocStrings.QaFullCoincidence_near))]
+				double near,
+				[Doc(nameof(DocStrings.QaFullCoincidence_is3D))]
+				bool is3D)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(featureClass, references, near, is3D, _defaultTileSize) { }
 
@@ -92,10 +102,14 @@ namespace ProSuite.QA.Tests
 		public QaFullCoincidence(
 			[Doc(nameof(DocStrings.QaFullCoincidence_featureClass))]
 			IReadOnlyFeatureClass featureClass,
-			[Doc(nameof(DocStrings.QaFullCoincidence_references))] IList<IReadOnlyFeatureClass> references,
-			[Doc(nameof(DocStrings.QaFullCoincidence_near))] double near,
-			[Doc(nameof(DocStrings.QaFullCoincidence_is3D))] bool is3D,
-			[Doc(nameof(DocStrings.QaFullCoincidence_tileSize))] double tileSize)
+			[Doc(nameof(DocStrings.QaFullCoincidence_references))]
+			IList<IReadOnlyFeatureClass> references,
+			[Doc(nameof(DocStrings.QaFullCoincidence_near))]
+			double near,
+			[Doc(nameof(DocStrings.QaFullCoincidence_is3D))]
+			bool is3D,
+			[Doc(nameof(DocStrings.QaFullCoincidence_tileSize))]
+			double tileSize)
 			: base(
 				Union(new[] {featureClass}, references), near,
 				new ConstantFeatureDistanceProvider(near / 2), is3D)
@@ -109,8 +123,10 @@ namespace ProSuite.QA.Tests
 		public QaFullCoincidence(
 				[Doc(nameof(DocStrings.QaFullCoincidence_featureClass))]
 				IReadOnlyFeatureClass featureClass,
-				[Doc(nameof(DocStrings.QaFullCoincidence_references))] IList<IReadOnlyFeatureClass> references,
-				[Doc(nameof(DocStrings.QaFullCoincidence_near))] double near)
+				[Doc(nameof(DocStrings.QaFullCoincidence_references))]
+				IList<IReadOnlyFeatureClass> references,
+				[Doc(nameof(DocStrings.QaFullCoincidence_near))]
+				double near)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(featureClass, references, near, false, _defaultTileSize) { }
 
@@ -118,9 +134,12 @@ namespace ProSuite.QA.Tests
 		public QaFullCoincidence(
 			[Doc(nameof(DocStrings.QaFullCoincidence_featureClass))]
 			IReadOnlyFeatureClass featureClass,
-			[Doc(nameof(DocStrings.QaFullCoincidence_references))] IList<IReadOnlyFeatureClass> references,
-			[Doc(nameof(DocStrings.QaFullCoincidence_near))] double near,
-			[Doc(nameof(DocStrings.QaFullCoincidence_tileSize))] double tileSize)
+			[Doc(nameof(DocStrings.QaFullCoincidence_references))]
+			IList<IReadOnlyFeatureClass> references,
+			[Doc(nameof(DocStrings.QaFullCoincidence_near))]
+			double near,
+			[Doc(nameof(DocStrings.QaFullCoincidence_tileSize))]
+			double tileSize)
 			: this(featureClass, references, near, false, tileSize) { }
 
 		protected override bool IsDirected => true;
@@ -189,7 +208,8 @@ namespace ProSuite.QA.Tests
 				var neighborTable = (IReadOnlyTable) neighborFeatureClass;
 
 				foreach (IReadOnlyRow neighborRow in
-					Search(neighborTable, spatialFilter, _helperList[neighborTableIndex], geom0))
+				         Search(neighborTable, spatialFilter, _helperList[neighborTableIndex],
+				                geom0))
 				{
 					if (IgnoreNeighbor(row, neighborRow, neighborTableIndex))
 					{
@@ -257,8 +277,8 @@ namespace ProSuite.QA.Tests
 				foreach (string condition in _ignoreNeighborConditionsSql)
 				{
 					_ignoreNeighborConditions.Add(new IgnoreRowNeighborCondition(condition,
-					                                                             caseSensitivity,
-					                                                             IsDirected));
+						                              caseSensitivity,
+						                              IsDirected));
 				}
 			}
 
@@ -346,11 +366,11 @@ namespace ProSuite.QA.Tests
 
 			const bool releaseOnDispose = true;
 			using (IIndexedSegments indexedGeometry =
-				IndexedSegmentUtils.GetIndexedGeometry(feature, releaseOnDispose))
+			       IndexedSegmentUtils.GetIndexedGeometry(feature, releaseOnDispose))
 			{
 				IList<Subcurve> missingSegments = GetMissingSegments(feature,
-				                                                     indexedGeometry,
-				                                                     nearList);
+					indexedGeometry,
+					nearList);
 
 				return missingSegments != null
 					       ? ReportErrors(feature, missingSegments, processEnvelope)

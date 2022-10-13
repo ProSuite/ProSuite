@@ -645,9 +645,11 @@ namespace ProSuite.Commons.Geom
 			else
 			{
 				// foreach is faster than index-access (due to global->local index conversions)
-				int index = 0;
+				int index = -1;
 				foreach (Line3D segment in this)
 				{
+					index++;
+
 					if (predicate != null && ! predicate(index))
 					{
 						continue;
@@ -658,8 +660,6 @@ namespace ProSuite.Commons.Geom
 					{
 						yield return new KeyValuePair<int, Line3D>(index, segment);
 					}
-
-					index++;
 				}
 			}
 		}

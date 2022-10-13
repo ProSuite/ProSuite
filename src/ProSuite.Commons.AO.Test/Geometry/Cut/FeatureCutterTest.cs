@@ -8,7 +8,6 @@ using NUnit.Framework;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Geometry.ChangeAlong;
 using ProSuite.Commons.AO.Geometry.Cut;
-using ProSuite.Commons.AO.Geometry.ZAssignment;
 using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.Geom;
 
@@ -22,7 +21,7 @@ namespace ProSuite.Commons.AO.Test.Geometry.Cut
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout(EsriProduct.ArcEditor);
+			_lic.Checkout();
 		}
 
 		[OneTimeTearDown]
@@ -59,7 +58,7 @@ namespace ProSuite.Commons.AO.Test.Geometry.Cut
 			Assert.AreEqual(5, cutter.ResultGeometriesByFeature[polygonFeature].Count);
 
 			foreach (IGeometry geometry in cutter.ResultGeometriesByFeature[
-				polygonFeature])
+				         polygonFeature])
 			{
 				var polygon = (IPolygon) geometry;
 
@@ -70,7 +69,7 @@ namespace ProSuite.Commons.AO.Test.Geometry.Cut
 				Assert.False(GeometryUtils.HasUndefinedZValues(polygon));
 
 				foreach (IPoint point in GeometryUtils.GetPoints(
-					(IPointCollection) polygon))
+					         (IPointCollection) polygon))
 				{
 					Assert.AreNotEqual(0, point.Z);
 				}

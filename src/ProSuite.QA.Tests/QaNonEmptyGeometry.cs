@@ -150,9 +150,9 @@ namespace ProSuite.QA.Tests
 			try
 			{
 				foreach (IReadOnlyRow feature in
-					featureClass.EnumRows(filter, recycling))
+				         featureClass.EnumRows(filter, recycling))
 				{
-					errorCount += TestFeature((IReadOnlyFeature)feature);
+					errorCount += TestFeature((IReadOnlyFeature) feature);
 					previousOid = feature.OID;
 				}
 			}
@@ -182,11 +182,11 @@ namespace ProSuite.QA.Tests
 			filter.SubFields = featureClass.OIDFieldName;
 
 			foreach (IReadOnlyRow feature in
-				featureClass.EnumRows(filter, recycling))
+			         featureClass.EnumRows(filter, recycling))
 			{
 				try
 				{
-					var featureWithGeometry = (IReadOnlyFeature)featureClass.GetRow(feature.OID);
+					var featureWithGeometry = (IReadOnlyFeature) featureClass.GetRow(feature.OID);
 					Marshal.ReleaseComObject(featureWithGeometry);
 				}
 				catch (Exception e)

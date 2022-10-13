@@ -10,7 +10,6 @@ namespace ProSuite.QA.Tests.Documentation
 	public class DocAttribute : LocalizedDescriptionAttribute
 	{
 		public DocAttribute([NotNull] string resourceName)
-			: base(DocStrings.ResourceManager, resourceName)
-		{ }
+			: base(DocStrings.ResourceManager, resourceName) { }
 	}
 }

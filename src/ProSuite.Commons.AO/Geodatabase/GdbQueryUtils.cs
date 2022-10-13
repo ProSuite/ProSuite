@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using ESRI.ArcGIS.esriSystem;
@@ -20,8 +19,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 {
 	public static class GdbQueryUtils
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		/// <summary>
 		/// enumerate rows of objectClass that satisfy a given where clause and for which
@@ -723,7 +721,9 @@ namespace ProSuite.Commons.AO.Geodatabase
 		}
 
 		[CanBeNull]
-		public static IObject GetObject([NotNull] IObjectClass objectClass, int objectId)
+		public static IObject GetObject([NotNull] IObjectClass objectClass,
+		                                int objectId,
+		                                [CanBeNull] string oidFieldName = null)
 		{
 			Assert.ArgumentNotNull(objectClass, nameof(objectClass));
 
@@ -737,9 +737,12 @@ namespace ProSuite.Commons.AO.Geodatabase
 			//        ? GetFeature(featureClass, objectId)
 			//        : (IObject) GetRow((ITable) objectClass, objectId);
 
-			string whereClause = string.Format("{0}={1}",
-			                                   objectClass.OIDFieldName,
-			                                   objectId);
+			if (oidFieldName == null)
+			{
+				oidFieldName = objectClass.OIDFieldName;
+			}
+
+			string whereClause = string.Format("{0}={1}", oidFieldName, objectId);
 
 			IList<IObject> list = FindList<IObject>(objectClass, whereClause);
 
@@ -812,7 +815,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		[CanBeNull]
 		public static IReadOnlyFeature GetFeature([NotNull] IReadOnlyFeatureClass featureClass,
-		                                  int featureId)
+		                                          int featureId)
 		{
 			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
 
@@ -843,9 +846,21 @@ namespace ProSuite.Commons.AO.Geodatabase
 		{
 			if (table is ReadOnlyTable roTable)
 			{
-				foreach (IRow baseFeature in GetRowsByObjectIds(roTable.BaseTable, objectIds, recycling))
+				if (roTable.AlternateOidFieldName != null)
 				{
-					yield return roTable.CreateRow(baseFeature);
+					foreach (IReadOnlyRow row in GetRowsInList(
+						         table, roTable.AlternateOidFieldName, objectIds, recycling))
+					{
+						yield return row;
+					}
+				}
+				else
+				{
+					foreach (IRow baseFeature in GetRowsByObjectIds(
+						         roTable.BaseTable, objectIds, recycling))
+					{
+						yield return roTable.CreateRow(baseFeature);
+					}
 				}
 			}
 			else
@@ -990,7 +1005,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 				const int maxRowCount = 100;
 
 				foreach (IRow row in GetRowsByObjectIdsBatched(
-					table, oidArray, recycling, maxRowCount))
+					         table, oidArray, recycling, maxRowCount))
 				{
 					yield return row;
 				}
@@ -1153,10 +1168,10 @@ namespace ProSuite.Commons.AO.Geodatabase
 			Assert.ArgumentNotNull(valueList, nameof(valueList));
 
 			foreach (IRow row in GetRowsInList(DatasetUtils.GetWorkspace(table),
-			                                DatasetUtils.GetField(table, fieldName), valueList,
-			                                (q) => GetRows(table, q, recycle), queryFilter))
+			                                   DatasetUtils.GetField(table, fieldName), valueList,
+			                                   (q) => GetRows(table, q, recycle), queryFilter))
 			{
-				yield return (T)row;
+				yield return (T) row;
 			}
 		}
 
@@ -1179,7 +1194,6 @@ namespace ProSuite.Commons.AO.Geodatabase
 				yield return row;
 			}
 		}
-
 
 		private static IEnumerable<T> GetRowsInList<T>(
 			[NotNull] IWorkspace workspace,
@@ -1572,7 +1586,6 @@ namespace ProSuite.Commons.AO.Geodatabase
 			                      };
 
 			return table.RowCount(filter);
-
 		}
 
 		public static int Count([NotNull] IObjectClass objectClass,

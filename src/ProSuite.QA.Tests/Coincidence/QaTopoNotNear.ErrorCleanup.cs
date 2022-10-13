@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using ProSuite.QA.Container.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.QA.Container.Geometry;
 
 namespace ProSuite.QA.Tests.Coincidence
 {
@@ -68,9 +68,9 @@ namespace ProSuite.QA.Tests.Coincidence
 					foreach (SegmentPartWithNeighbor segmentPart in neighbors)
 					{
 						if (notReportedCondition.IsFulfilled(
-							allParts.BaseFeature, allParts.TableIndex,
-							segmentPart.NeighborFeature,
-							segmentPart.NeighborTableIndex))
+							    allParts.BaseFeature, allParts.TableIndex,
+							    segmentPart.NeighborFeature,
+							    segmentPart.NeighborTableIndex))
 						{
 							continue;
 						}

@@ -2,18 +2,18 @@ using System;
 using System.Globalization;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container;
-using ProSuite.QA.Tests.Documentation;
-using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Text;
+using ProSuite.QA.Container;
 using ProSuite.QA.Core;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.IssueCodes;
 
 namespace ProSuite.QA.Tests
 {
@@ -118,7 +118,8 @@ namespace ProSuite.QA.Tests
 				if (Math.Abs(_xyTolerance) < double.Epsilon)
 				{
 					double srefXyTolerance;
-					if (DatasetUtils.TryGetXyTolerance(featureClass.SpatialReference, out srefXyTolerance))
+					if (DatasetUtils.TryGetXyTolerance(featureClass.SpatialReference,
+					                                   out srefXyTolerance))
 					{
 						_xyTolerance = srefXyTolerance;
 					}
@@ -132,7 +133,8 @@ namespace ProSuite.QA.Tests
 				if (Math.Abs(_zTolerance) < double.Epsilon)
 				{
 					double srefZTolerance;
-					if (DatasetUtils.TryGetZTolerance(featureClass.SpatialReference, out srefZTolerance))
+					if (DatasetUtils.TryGetZTolerance(featureClass.SpatialReference,
+					                                  out srefZTolerance))
 					{
 						_zTolerance = srefZTolerance;
 					}
@@ -233,17 +235,17 @@ namespace ProSuite.QA.Tests
 					if (xFieldValue != null)
 					{
 						errorCount += ReportFieldValueForUndefinedShape(feature,
-						                                                xCoordinateField,
-						                                                xFieldValue
-							                                                .Value);
+							xCoordinateField,
+							xFieldValue
+								.Value);
 					}
 
 					if (yFieldValue != null)
 					{
 						errorCount += ReportFieldValueForUndefinedShape(feature,
-						                                                yCoordinateField,
-						                                                yFieldValue
-							                                                .Value);
+							yCoordinateField,
+							yFieldValue
+								.Value);
 					}
 				}
 			}
@@ -257,8 +259,8 @@ namespace ProSuite.QA.Tests
 					if (! AllowMissingXYFieldValueForDefinedShape)
 					{
 						errorCount += ReportMissingFieldValueForDefinedShape(feature,
-						                                                     point,
-						                                                     xCoordinateField);
+							point,
+							xCoordinateField);
 					}
 				}
 
@@ -269,8 +271,8 @@ namespace ProSuite.QA.Tests
 					if (! AllowMissingXYFieldValueForDefinedShape)
 					{
 						errorCount += ReportMissingFieldValueForDefinedShape(feature,
-						                                                     point,
-						                                                     yCoordinateField);
+							point,
+							yCoordinateField);
 					}
 				}
 
@@ -385,8 +387,8 @@ namespace ProSuite.QA.Tests
 				if (! AllowZFieldValueForUndefinedShape && zFieldValue != null)
 				{
 					errorCount += ReportFieldValueForUndefinedShape(feature,
-					                                                zCoordinateField,
-					                                                zFieldValue.Value);
+						zCoordinateField,
+						zFieldValue.Value);
 				}
 			}
 			else
@@ -413,8 +415,8 @@ namespace ProSuite.QA.Tests
 					if (! AllowMissingZFieldValueForDefinedShape)
 					{
 						errorCount += ReportMissingFieldValueForDefinedShape(feature,
-						                                                     point,
-						                                                     zCoordinateField);
+							point,
+							zCoordinateField);
 					}
 				}
 			}

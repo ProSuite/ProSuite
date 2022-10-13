@@ -1,7 +1,7 @@
-using ESRI.ArcGIS.Geodatabase;
-using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using System;
 using System.Collections.Generic;
+using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 
 namespace ProSuite.QA.Tests.Transformers
 {
@@ -27,5 +27,4 @@ namespace ProSuite.QA.Tests.Transformers
 			throw new NotImplementedException();
 		}
 	}
-
 }

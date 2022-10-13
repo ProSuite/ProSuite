@@ -2,15 +2,15 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container;
-using ProSuite.QA.Tests.Documentation;
-using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.QA.Container;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.IssueCodes;
 
 namespace ProSuite.QA.Tests
 {
@@ -50,8 +50,10 @@ namespace ProSuite.QA.Tests
 		public QaWithinZRange(
 				[Doc(nameof(DocStrings.QaWithinZRange_featureClass))] [NotNull]
 				IReadOnlyFeatureClass featureClass,
-				[Doc(nameof(DocStrings.QaWithinZRange_minimumZValue))] double minimumZValue,
-				[Doc(nameof(DocStrings.QaWithinZRange_maximumZValue))] double maximumZValue)
+				[Doc(nameof(DocStrings.QaWithinZRange_minimumZValue))]
+				double minimumZValue,
+				[Doc(nameof(DocStrings.QaWithinZRange_maximumZValue))]
+				double maximumZValue)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(featureClass, minimumZValue, maximumZValue, null) { }
 
@@ -59,8 +61,10 @@ namespace ProSuite.QA.Tests
 		public QaWithinZRange(
 			[Doc(nameof(DocStrings.QaWithinZRange_featureClass))] [NotNull]
 			IReadOnlyFeatureClass featureClass,
-			[Doc(nameof(DocStrings.QaWithinZRange_minimumZValue))] double minimumZValue,
-			[Doc(nameof(DocStrings.QaWithinZRange_maximumZValue))] double maximumZValue,
+			[Doc(nameof(DocStrings.QaWithinZRange_minimumZValue))]
+			double minimumZValue,
+			[Doc(nameof(DocStrings.QaWithinZRange_maximumZValue))]
+			double maximumZValue,
 			[Doc(nameof(DocStrings.QaWithinZRange_allowedZValues))] [CanBeNull]
 			IEnumerable<double>
 				allowedZValues)
@@ -288,8 +292,8 @@ namespace ProSuite.QA.Tests
 
 				// TODO allowed Z values
 				foreach (ZRangeErrorSegments errorSegments in
-					ZRangeUtils.GetErrorSegments(
-						ring, _minimumZValue, _maximumZValue, IsAllowed))
+				         ZRangeUtils.GetErrorSegments(
+					         ring, _minimumZValue, _maximumZValue, IsAllowed))
 				{
 					errorCount += ReportError(feature, errorSegments);
 				}
@@ -314,8 +318,8 @@ namespace ProSuite.QA.Tests
 
 				// TODO allowed Z values
 				foreach (ZRangeErrorSegments errorSegments in
-					ZRangeUtils.GetErrorSegments(
-						path, _minimumZValue, _maximumZValue, IsAllowed))
+				         ZRangeUtils.GetErrorSegments(
+					         path, _minimumZValue, _maximumZValue, IsAllowed))
 				{
 					errorCount += ReportError(feature, errorSegments);
 				}

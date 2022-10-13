@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
@@ -19,7 +18,7 @@ namespace ProSuite.DomainModel.AO.DataModel.Harvesting
 	/// </summary>
 	public static class AttributeHarvestingUtils
 	{
-		private static readonly IMsg _msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		// TODO: Is this a static Utils class? Or does each IAttributes implementation have
 		// its specific AttributeHarvester? Or will there be a DatasetHarvester/ModelHarvester

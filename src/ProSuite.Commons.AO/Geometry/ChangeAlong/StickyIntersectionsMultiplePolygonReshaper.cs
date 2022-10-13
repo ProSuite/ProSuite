@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.Collections;
@@ -13,8 +12,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 {
 	public class StickyIntersectionsMultiplePolygonReshaper
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private readonly Dictionary<IGeometry, IGeometry> _reshapeGeometryCloneByOriginal;
 
@@ -82,13 +80,13 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 
 			IPointCollection sketchOriginalIntersectionPoints = Assert.NotNull(
 				GetSketchIntersectionPointsWithOriginalGeometries(geometriesToReshape,
-				                                                  highLevelReshapePath));
+					highLevelReshapePath));
 
 			IList<KeyValuePair<IPoint, IPoint>> sourceTargetPairs =
 				AddAutomaticSourceTargetPairs
 					? _stickyIntersections.AddAutomaticSourceTargetPairs(reshapePath,
-					                                                     geometriesToReshape,
-					                                                     sketchOriginalIntersectionPoints)
+						geometriesToReshape,
+						sketchOriginalIntersectionPoints)
 					: _stickyIntersections.SourceTargetPairs;
 
 			var connectLinesAtCutOffs = new Dictionary<AdjustedCutSubcurve, IGeometry>();
@@ -139,7 +137,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 					if (reshaped)
 					{
 						foreach (IPoint point in
-							adjustedCutSubcurve.GetPotentialTargetInsertPoints())
+						         adjustedCutSubcurve.GetPotentialTargetInsertPoints())
 						{
 							AddUsedTargetIntersection(point, sourceTargetPairs);
 						}
@@ -373,7 +371,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 				foreach (IGeometry geometry in allGeometriesToReshape)
 				{
 					bool interiorIntersects = GeometryUtils.InteriorIntersects(geometry,
-					                                                           highLevelAdjustLine);
+						highLevelAdjustLine);
 
 					bool boundaryConnectWithTargetOutside =
 						geometry == geometryToReshape &&
@@ -575,13 +573,13 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 					highLevelReshapePath, potentialStitchpoint, searchTolerance, out partIdx);
 
 				_stitchPoints.Add(new KeyValuePair<IPoint, ISegment>(potentialStitchpoint,
-				                                                     GeometryUtils.GetSegment(
-					                                                     (ISegmentCollection)
-					                                                     highLevelReshapePath,
-					                                                     partIdx,
-					                                                     (int)
-					                                                     Assert.NotNull(
-						                                                     segmentIndex))));
+					                  GeometryUtils.GetSegment(
+						                  (ISegmentCollection)
+						                  highLevelReshapePath,
+						                  partIdx,
+						                  (int)
+						                  Assert.NotNull(
+							                  segmentIndex))));
 			}
 		}
 
@@ -652,7 +650,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			IGeometry originalShape)
 		{
 			bool targetPointOnReshapePath = GeometryUtils.Intersects(sourceTargetPair.Value,
-			                                                         highLevelDanglingReshapeLine);
+				highLevelDanglingReshapeLine);
 
 			// NOTE: Corner points (<< tolerance outside the envelope) are sometimes considered disjoint
 			// Most likely related to the issue in Repro_IRelationalOperatorDisjointIncorrectAfterOtherDisjoint()
@@ -724,7 +722,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 				//									 out connectLineAtEnd);
 
 				if (! connectLineCalculator.IsTargetIntersectionPoint(usablePathOnTarget.ToPoint,
-				                                                      out IPoint _))
+					    out IPoint _))
 				{
 					// try adding the next part of the sketch to the usable part
 					continue;
@@ -764,7 +762,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 
 			IPath connectLine =
 				connectLineCalculator.FindConnectionAtBoundaryCutOff(usablePathOnTarget,
-				                                                     searchForward);
+					searchForward);
 
 			if (connectLine != null)
 			{

@@ -26,7 +26,8 @@ namespace ProSuite.Commons.Geom.Wkb
 			return new Linestring(pointEnum);
 		}
 
-		public override Multipoint<IPnt> CreateMultipoint(IEnumerable<IPnt> points, int? knownPointCount = null)
+		public override Multipoint<IPnt> CreateMultipoint(IEnumerable<IPnt> points,
+		                                                  int? knownPointCount = null)
 		{
 			return new Multipoint<IPnt>(points, knownPointCount);
 		}

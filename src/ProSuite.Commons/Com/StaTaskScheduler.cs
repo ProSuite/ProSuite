@@ -50,16 +50,16 @@ namespace ProSuite.Commons.Com
 				{
 					var thread =
 						new Thread(() =>
-						           {
-							           // Continually get the next task and try to execute it.
-							           // This will continue until the scheduler is disposed and no more tasks remain.
-							           foreach (
-								           Task t in _tasks
-									           .GetConsumingEnumerable())
-							           {
-								           TryExecuteTask(t);
-							           }
-						           });
+						{
+							// Continually get the next task and try to execute it.
+							// This will continue until the scheduler is disposed and no more tasks remain.
+							foreach (
+								Task t in _tasks
+									.GetConsumingEnumerable())
+							{
+								TryExecuteTask(t);
+							}
+						});
 					thread.IsBackground = true;
 					thread.SetApartmentState(
 						ApartmentState.STA);

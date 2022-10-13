@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geometry.ZAssignment;
@@ -14,8 +13,7 @@ namespace ProSuite.Commons.AO.Geometry.CreateFootprint
 {
 	public class FootprintZCalculator
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private readonly FootprintSourceTargetMapping _mapping;
 		private readonly IZSettingsModel _zSettingsModel;

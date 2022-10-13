@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
@@ -23,8 +22,7 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork.Editing
 	/// </summary>
 	public class LinearNetworkNodeUpdater
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		public LinearNetworkNodeUpdater([NotNull] ILinearNetworkFeatureFinder networkFeatureFinder)
 		{
@@ -316,7 +314,7 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork.Editing
 
 			bool avoidBarrier = BarrierGeometryOriginal != null &&
 			                    ! GeometryUtils.InteriorIntersects(polyline,
-			                                                       BarrierGeometryOriginal);
+				                    BarrierGeometryOriginal);
 
 			SetEndpoint(result, newEndPoint, atFromPoint);
 
@@ -467,7 +465,8 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork.Editing
 			Assert.ArgumentNotNull(thirdEdge, nameof(thirdEdge));
 
 			_msg.VerboseDebug(
-				() => $"The third connected edge {GdbObjectUtils.ToString(thirdEdge)} is prolonged with cut-off line {GeometryUtils.ToString(cutOffLine)}");
+				() =>
+					$"The third connected edge {GdbObjectUtils.ToString(thirdEdge)} is prolonged with cut-off line {GeometryUtils.ToString(cutOffLine)}");
 
 			// add the cut off line to the third edge, take along the junction
 			// (if using MaintainConnectivityStretchLastSegment here, it can result in 

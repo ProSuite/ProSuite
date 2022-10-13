@@ -1,6 +1,5 @@
 using System;
 using System.Diagnostics;
-using System.Reflection;
 using System.Threading.Tasks;
 using ESRI.ArcGIS.esriSystem;
 using Grpc.Core;
@@ -14,7 +13,7 @@ namespace ProSuite.Microservices.Server.AO.Geometry.RemoveOverlaps
 {
 	public class RemoveOverlapsGrpcImpl : RemoveOverlapsGrpc.RemoveOverlapsGrpcBase
 	{
-		private static readonly IMsg _msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private readonly StaTaskScheduler _staTaskScheduler;
 

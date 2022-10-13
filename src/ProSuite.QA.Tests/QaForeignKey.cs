@@ -2,16 +2,16 @@ using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container;
-using ProSuite.QA.Tests.Documentation;
-using ProSuite.QA.Tests.IssueCodes;
-using ProSuite.QA.Tests.KeySets;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
+using ProSuite.QA.Container;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.IssueCodes;
+using ProSuite.QA.Tests.KeySets;
 using Tuple = ProSuite.QA.Tests.KeySets.Tuple;
 
 namespace ProSuite.QA.Tests
@@ -60,7 +60,8 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaForeignKey_0))]
 		public QaForeignKey(
-			[Doc(nameof(DocStrings.QaForeignKey_table))] [NotNull] IReadOnlyTable table,
+			[Doc(nameof(DocStrings.QaForeignKey_table))] [NotNull]
+			IReadOnlyTable table,
 			[Doc(nameof(DocStrings.QaForeignKey_foreignKeyField))] [NotNull]
 			string foreignKeyField,
 			[Doc(nameof(DocStrings.QaForeignKey_referencedTable))] [NotNull]
@@ -71,7 +72,8 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaForeignKey_1))]
 		public QaForeignKey(
-				[Doc(nameof(DocStrings.QaForeignKey_table))] [NotNull] IReadOnlyTable table,
+				[Doc(nameof(DocStrings.QaForeignKey_table))] [NotNull]
+				IReadOnlyTable table,
 				[Doc(nameof(DocStrings.QaForeignKey_foreignKeyFields))] [NotNull]
 				IEnumerable<string>
 					foreignKeyFields,
@@ -85,7 +87,8 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaForeignKey_2))]
 		public QaForeignKey(
-			[Doc(nameof(DocStrings.QaForeignKey_table))] [NotNull] IReadOnlyTable table,
+			[Doc(nameof(DocStrings.QaForeignKey_table))] [NotNull]
+			IReadOnlyTable table,
 			[Doc(nameof(DocStrings.QaForeignKey_foreignKeyFields))] [NotNull]
 			IEnumerable<string>
 				foreignKeyFields,
@@ -94,7 +97,8 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaForeignKey_referencedKeyFields))] [NotNull]
 			IEnumerable<string>
 				referencedKeyFields,
-			[Doc(nameof(DocStrings.QaForeignKey_referenceIsError))] bool referenceIsError)
+			[Doc(nameof(DocStrings.QaForeignKey_referenceIsError))]
+			bool referenceIsError)
 			: base(new[] {table, referencedTable})
 		{
 			Assert.ArgumentNotNull(table, nameof(table));

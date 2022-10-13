@@ -29,6 +29,7 @@ namespace ProSuite.DomainModel.AO.Processing
 		ISpatialReference SpatialReference { get; }
 
 		double PointsToMapUnits(double pointDistance);
+
 		double MapUnitsToPoints(double mapDistance);
 
 		#endregion

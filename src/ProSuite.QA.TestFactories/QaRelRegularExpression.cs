@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
-using ProSuite.QA.Tests;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.QA.Container;
 using ProSuite.DomainModel.AO.QA;
+using ProSuite.QA.Container;
 using ProSuite.QA.Core;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Tests;
 
 namespace ProSuite.QA.TestFactories
 {
@@ -139,7 +139,8 @@ namespace ProSuite.QA.TestFactories
 				}
 			}
 
-			IReadOnlyTable queryTable = CreateQueryTable(datasetContext, associationName, tables, join);
+			IReadOnlyTable queryTable =
+				CreateQueryTable(datasetContext, associationName, tables, join);
 
 			var objects = new object[6];
 

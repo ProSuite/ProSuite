@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Text;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -14,8 +13,7 @@ namespace ProSuite.DomainModel.AO.QA
 		private const char _delimiter = ';';
 		private const string _overflow = "+";
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		[NotNull]
 		public static string Format([CanBeNull] IEnumerable<InvolvedRow> involvedRows,

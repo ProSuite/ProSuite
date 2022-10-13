@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
@@ -18,8 +17,7 @@ namespace ProSuite.QA.Container
 {
 	public static class TestUtils
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		//private static int _garbageCollectionRequestCount;
 
@@ -82,7 +80,7 @@ namespace ProSuite.QA.Container
 			return 0;
 		}
 
-		public static void SortInvolvedRows([NotNull]List<InvolvedRow> involvedRows)
+		public static void SortInvolvedRows([NotNull] List<InvolvedRow> involvedRows)
 		{
 			involvedRows.Sort(new InvolvedRowComparer());
 		}
@@ -221,7 +219,8 @@ namespace ProSuite.QA.Container
 				if (geoDataset is IReadOnlyFeatureClass featureClass)
 				{
 					double xyTolerance;
-					if (DatasetUtils.TryGetXyTolerance(featureClass.SpatialReference, out xyTolerance))
+					if (DatasetUtils.TryGetXyTolerance(featureClass.SpatialReference,
+					                                   out xyTolerance))
 					{
 						maxXyTolerance = Math.Max(maxXyTolerance, xyTolerance);
 					}
@@ -271,7 +270,8 @@ namespace ProSuite.QA.Container
 					// this may be the case when the ShapeField was not queried (i.e. QueryFilter.SubFields = 'OID, Field') 
 					if (row.HasOID && row.Table.HasOID)
 					{
-						feature = GdbQueryUtils.GetFeature((IReadOnlyFeatureClass)feature.Table, row.OID);
+						feature = GdbQueryUtils.GetFeature((IReadOnlyFeatureClass) feature.Table,
+						                                   row.OID);
 
 						if (feature != null)
 						{
@@ -330,7 +330,7 @@ namespace ProSuite.QA.Container
 			if (test is ContainerTest containerTest)
 			{
 				foreach (IReadOnlyGeoDataset involvedGeoDataset in containerTest
-					.GetInvolvedGeoDatasets())
+					         .GetInvolvedGeoDatasets())
 				{
 					yield return involvedGeoDataset;
 				}
@@ -666,7 +666,8 @@ namespace ProSuite.QA.Container
 			foreach (IReadOnlyFeatureClass featureClass in featureClasses)
 			{
 				double xyTolerance;
-				if (! DatasetUtils.TryGetXyTolerance(featureClass.SpatialReference, out xyTolerance))
+				if (! DatasetUtils.TryGetXyTolerance(featureClass.SpatialReference,
+				                                     out xyTolerance))
 				{
 					throw new ArgumentException(
 						string.Format("{0} has an undefined or invalid XY tolerance",
@@ -779,7 +780,7 @@ namespace ProSuite.QA.Container
 		{
 			Assert.ArgumentNotNull(feature, nameof(feature));
 
-			return ((IReadOnlyFeatureClass)feature.Table).ShapeFieldName;
+			return ((IReadOnlyFeatureClass) feature.Table).ShapeFieldName;
 		}
 
 		[NotNull]
@@ -945,7 +946,8 @@ namespace ProSuite.QA.Container
 
 				double xyTolerance;
 				if (featureClass == null ||
-				    ! DatasetUtils.TryGetXyTolerance(featureClass.SpatialReference, out xyTolerance))
+				    ! DatasetUtils.TryGetXyTolerance(featureClass.SpatialReference,
+				                                     out xyTolerance))
 				{
 					xyTolerance = 0;
 				}

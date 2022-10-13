@@ -2,19 +2,19 @@ using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container;
-using ProSuite.QA.Container.Geometry;
-using ProSuite.QA.Container.TestContainer;
-using ProSuite.QA.Tests.Documentation;
-using ProSuite.QA.Tests.IssueCodes;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Geom;
+using ProSuite.QA.Container;
+using ProSuite.QA.Container.Geometry;
+using ProSuite.QA.Container.TestContainer;
 using ProSuite.QA.Core;
-using Pnt = ProSuite.Commons.Geom.Pnt;
-using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.IssueCodes;
 
 namespace ProSuite.QA.Tests
 {
@@ -124,7 +124,8 @@ namespace ProSuite.QA.Tests
 
 		[UsedImplicitly]
 		[TestParameter(true)]
-		[Doc(nameof(DocStrings.QaMpFootprintHoles_ReportVerticalPatchesNotCompletelyWithinFootprint))]
+		[Doc(nameof(DocStrings
+			            .QaMpFootprintHoles_ReportVerticalPatchesNotCompletelyWithinFootprint))]
 		public bool ReportVerticalPatchesNotCompletelyWithinFootprint { get; set; } =
 			true;
 
@@ -301,7 +302,7 @@ namespace ProSuite.QA.Tests
 					description, InvolvedRowUtils.GetInvolvedRows(row),
 					GeometryFactory.CreatePolygon(ring),
 					Codes[Code.FootprintHasInnerRing],
-					_shapeFieldName, values: new object[] { area });
+					_shapeFieldName, values: new object[] {area});
 			}
 
 			return errorCount;
@@ -607,7 +608,7 @@ namespace ProSuite.QA.Tests
 					int followingRingCount = result.FollowingRingCount[ring];
 					var followingRings = new IRing[followingRingCount];
 					GeometryUtils.GeometryBridge.QueryFollowingRings(result, ring,
-					                                                 ref followingRings);
+						ref followingRings);
 
 					allFollowingRings.AddRange(followingRings);
 				}

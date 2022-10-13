@@ -159,7 +159,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 			var result = new List<InvolvedTable>();
 
 			foreach (KeyValuePair<string, List<InvolvedRow>> tableRows in
-				InvolvedRowUtils.GroupByTableName(involvedRows))
+			         InvolvedRowUtils.GroupByTableName(involvedRows))
 			{
 				string tableName = tableRows.Key;
 				List<InvolvedRow> involvedRowsForTable = tableRows.Value;
@@ -399,7 +399,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 
 				const bool recycle = true;
 				foreach (IRow row in GdbQueryUtils.GetRowsInList(
-					_table, oidFieldName, oids, recycle, queryFilter))
+					         _table, oidFieldName, oids, recycle, queryFilter))
 				{
 					yield return new KeyValuePair<int, object>(row.OID, row.Value[_keyFieldIndex]);
 				}

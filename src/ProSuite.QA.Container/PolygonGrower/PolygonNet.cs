@@ -110,7 +110,8 @@ namespace ProSuite.QA.Container.PolygonGrower
 
 				poly.Processed = true;
 				line.Path.QueryEnvelope(QueryBox.Value);
-				if (QueryBox.Value.XMax < outerRingsBox.XMin || QueryBox.Value.YMax < outerRingsBox.YMin)
+				if (QueryBox.Value.XMax < outerRingsBox.XMin ||
+				    QueryBox.Value.YMax < outerRingsBox.YMin)
 				{
 					continue;
 				}

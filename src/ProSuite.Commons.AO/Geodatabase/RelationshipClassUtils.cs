@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using ESRI.ArcGIS.esriSystem;
@@ -18,8 +17,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 {
 	public static class RelationshipClassUtils
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		public static bool InvolvesObjectClass(
 			[NotNull] IRelationshipClass relationshipClass,
@@ -780,7 +778,45 @@ namespace ProSuite.Commons.AO.Geodatabase
 		/// <summary>
 		/// Creates the joined table by joining the specified tables according to the specified
 		/// join type. The tables must be the origin/destination tables of the specified
+		/// RelationshipClass. The result class has unique OIDs.
+		/// </summary>
+		/// <param name="relationshipClass">The relationship class that connects the ...</param>
+		/// <param name="tables">to be joined</param>
+		/// <param name="joinType">The join type w.r.t. the list order of the tables.</param>
+		/// <param name="whereClause">Optional where clause</param>
+		/// <param name="queryTableName">An optional name for the query table. If not set, it's generated</param>
+		/// <returns></returns>
+		[NotNull]
+		public static IReadOnlyTable GetReadOnlyQueryTable(
+			[NotNull] IRelationshipClass relationshipClass,
+			[NotNull] IList<ITable> tables,
+			JoinType joinType,
+			string whereClause = null,
+			string queryTableName = null)
+		{
+			Assert.ArgumentNotNull(relationshipClass, nameof(relationshipClass));
+			Assert.ArgumentNotNull(tables, nameof(tables));
+			Assert.ArgumentCondition(tables.Count > 1, "2 tables required");
+
+			Assert.ArgumentCondition(
+				IsOriginClass(relationshipClass, tables[0]) &&
+				IsDestinationClass(relationshipClass, tables[1]) ||
+				IsDestinationClass(relationshipClass, tables[0]) &&
+				IsOriginClass(relationshipClass, tables[1]),
+				"tables must be origin/destination of relationship class");
+
+			return TableJoinUtils.CreateReadOnlyQueryTable(
+				relationshipClass,
+				AdaptJoinTypeToRelationshipDirection(relationshipClass, tables, joinType),
+				whereClause: whereClause, queryTableName: queryTableName,
+				includeOnlyOIDFields: false);
+		}
+
+		/// <summary>
+		/// Creates the joined table by joining the specified tables according to the specified
+		/// join type. The tables must be the origin/destination tables of the specified
 		/// RelationshipClass.
+		/// NOTE: The OIDs of these tables are NOT unique (TOP-5598). Use GetReadOnlyQueryTable instead.
 		/// </summary>
 		/// <param name="relationshipClass">The relationship class that connects the ...</param>
 		/// <param name="tables">to be joined</param>

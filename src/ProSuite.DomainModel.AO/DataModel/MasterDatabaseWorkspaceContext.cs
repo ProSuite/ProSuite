@@ -33,8 +33,8 @@ namespace ProSuite.DomainModel.AO.DataModel
 			_model = model;
 
 			_workspaceProxy = model.KeepDatasetLocks
-				                    ? (IWorkspaceProxy) new CachedWorkspaceProxy(featureWorkspace)
-				                    : new SimpleWorkspaceProxy(featureWorkspace);
+				                  ? (IWorkspaceProxy) new CachedWorkspaceProxy(featureWorkspace)
+				                  : new SimpleWorkspaceProxy(featureWorkspace);
 		}
 
 		public override bool CanOpen(IDdxDataset dataset)

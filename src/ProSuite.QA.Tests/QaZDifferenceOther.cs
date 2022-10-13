@@ -1,15 +1,14 @@
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
-using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestSupport;
-using ProSuite.QA.Tests.Documentation;
-using ProSuite.QA.Tests.SpatialRelations;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Core;
-using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.SpatialRelations;
 
 namespace ProSuite.QA.Tests
 {
@@ -49,7 +48,8 @@ namespace ProSuite.QA.Tests
 			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaZDifferenceOther_relatedClass))] [NotNull]
 			IReadOnlyFeatureClass relatedClass,
-			[Doc(nameof(DocStrings.QaZDifferenceOther_limit))] double limit,
+			[Doc(nameof(DocStrings.QaZDifferenceOther_limit))]
+			double limit,
 			[Doc(nameof(DocStrings.QaZDifferenceOther_zComparisonMethod))]
 			ZComparisonMethod zComparisonMethod,
 			[Doc(nameof(DocStrings.QaZDifferenceOther_zRelationConstraint))] [CanBeNull]
@@ -63,7 +63,8 @@ namespace ProSuite.QA.Tests
 			IList<IReadOnlyFeatureClass> featureClasses,
 			[Doc(nameof(DocStrings.QaZDifferenceOther_relatedClasses))] [NotNull]
 			IList<IReadOnlyFeatureClass> relatedClasses,
-			[Doc(nameof(DocStrings.QaZDifferenceOther_limit))] double limit,
+			[Doc(nameof(DocStrings.QaZDifferenceOther_limit))]
+			double limit,
 			[Doc(nameof(DocStrings.QaZDifferenceOther_zComparisonMethod))]
 			ZComparisonMethod zComparisonMethod,
 			[Doc(nameof(DocStrings.QaZDifferenceOther_zRelationConstraint))] [CanBeNull]
@@ -156,7 +157,7 @@ namespace ProSuite.QA.Tests
 		public bool IgnoreNonCoplanarReferenceRings { get; set; }
 
 		protected override int FindErrors(IReadOnlyRow row1, int tableIndex1,
-										  IReadOnlyRow row2, int tableIndex2)
+		                                  IReadOnlyRow row2, int tableIndex2)
 		{
 			if (_relevantRelationCondition == null)
 			{

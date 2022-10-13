@@ -1,7 +1,6 @@
 using System;
 using System.Diagnostics;
 using System.IO;
-using System.Reflection;
 using System.Windows.Forms;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -13,7 +12,7 @@ namespace ProSuite.DdxEditor.Framework.Help
 	{
 		[NotNull] private readonly string _expectedExtension;
 
-		private static readonly IMsg _msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		protected FilebasedHelpProviderBase([NotNull] string name,
 		                                    [NotNull] string expectedExtension,

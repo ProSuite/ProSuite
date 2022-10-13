@@ -1,5 +1,4 @@
 using System;
-using System.Reflection;
 using System.Text;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -8,8 +7,7 @@ namespace ProSuite.Commons.CommandLine
 {
 	public class UsageWriter
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private readonly UsageTarget _target;
 

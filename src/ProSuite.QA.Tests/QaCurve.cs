@@ -3,15 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container;
-using ProSuite.QA.Tests.Documentation;
-using ProSuite.QA.Tests.IssueCodes;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.QA.Container;
 using ProSuite.QA.Core;
-using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.IssueCodes;
 
 namespace ProSuite.QA.Tests
 {
@@ -52,8 +52,9 @@ namespace ProSuite.QA.Tests
 		#endregion
 
 		[Doc(nameof(DocStrings.QaCurve_0))]
-		public QaCurve([Doc(nameof(DocStrings.QaCurve_featureClass))] [NotNull]
-					   IReadOnlyFeatureClass featureClass)
+		public QaCurve(
+			[Doc(nameof(DocStrings.QaCurve_featureClass))] [NotNull]
+			IReadOnlyFeatureClass featureClass)
 			: base(featureClass)
 		{
 			_shapeFieldName = featureClass.ShapeFieldName;

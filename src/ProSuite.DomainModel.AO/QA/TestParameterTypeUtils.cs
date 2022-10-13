@@ -5,6 +5,7 @@ using ESRI.ArcGIS.DataSourcesRaster;
 #endif
 using System;
 using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Surface;
 using ProSuite.Commons.AO.Surface.Raster;
 using ProSuite.Commons.Essentials.Assertions;
@@ -12,7 +13,6 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Core;
-using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.DomainModel.AO.QA
 {

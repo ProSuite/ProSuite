@@ -1,5 +1,4 @@
 using System;
-using System.Reflection;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geometry.ZAssignment;
@@ -12,8 +11,7 @@ namespace ProSuite.Commons.AO.Geometry
 {
 	public static class ApplyZService
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		#region Public members
 

@@ -84,14 +84,14 @@ namespace ProSuite.QA.Container.Geometry
 			Lin2D centerLin = lin.GetParallel(capOffset);
 
 			foreach (HullLine startPart in hull.StartCap.GetHullLines(
-				centerLin, meanOffset, atEnd: false))
+				         centerLin, meanOffset, atEnd: false))
 			{
 				startPart.CutPart = CutPart.StartCap;
 				yield return startPart;
 			}
 
 			foreach (HullLine endPart in hull.EndCap.GetHullLines(centerLin, meanOffset,
-			                                                      atEnd: true))
+				         atEnd: true))
 			{
 				endPart.CutPart = CutPart.EndCap;
 				yield return endPart;
@@ -117,14 +117,14 @@ namespace ProSuite.QA.Container.Geometry
 			double meanOffset = (hull.LeftOffset + hull.RightOffset) / 2;
 
 			foreach (IHullPart startPart in hull.StartCap.GetInflatedHullParts(
-				pCapS, pCapE, meanOffset, 0))
+				         pCapS, pCapE, meanOffset, 0))
 			{
 				startPart.CutPart = CutPart.StartCap;
 				yield return startPart;
 			}
 
 			foreach (IHullPart endPart in hull.EndCap.GetInflatedHullParts(
-				pCapE, pCapS, meanOffset, 0))
+				         pCapE, pCapS, meanOffset, 0))
 			{
 				endPart.CutPart = CutPart.EndCap;
 				yield return endPart;

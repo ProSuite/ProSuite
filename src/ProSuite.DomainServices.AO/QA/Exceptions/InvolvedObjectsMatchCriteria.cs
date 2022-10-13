@@ -19,7 +19,7 @@ namespace ProSuite.DomainServices.AO.QA.Exceptions
 			[NotNull] IEnumerable<XmlInvolvedObjectsMatchCriterionIgnoredDatasets> ignored)
 		{
 			foreach (XmlInvolvedObjectsMatchCriterionIgnoredDatasets ignoredDatasets in ignored
-			)
+			        )
 			{
 				string modelName = ignoredDatasets.ModelName;
 				if (StringUtils.IsNullOrEmptyOrBlank(modelName))
@@ -39,7 +39,7 @@ namespace ProSuite.DomainServices.AO.QA.Exceptions
 					HashSet<string> datasetNameSet;
 					if (! _ignoredDatasetsByDataSource.TryGetValue(
 						    dataSourceKey, out datasetNameSet)
-					)
+					   )
 					{
 						datasetNameSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 						_ignoredDatasetsByDataSource.Add(dataSourceKey, datasetNameSet);

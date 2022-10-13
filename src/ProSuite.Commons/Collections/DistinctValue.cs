@@ -1,4 +1,4 @@
-﻿using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.Collections

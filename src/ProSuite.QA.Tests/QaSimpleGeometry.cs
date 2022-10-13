@@ -1,21 +1,20 @@
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container;
-using ProSuite.QA.Tests.Documentation;
-using ProSuite.QA.Tests.IssueCodes;
-using ProSuite.QA.Tests.Properties;
 using ProSuite.Commons;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.QA.Container;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.IssueCodes;
+using ProSuite.QA.Tests.Properties;
 
 namespace ProSuite.QA.Tests
 {
@@ -43,8 +42,7 @@ namespace ProSuite.QA.Tests
 
 		private readonly string _shapeFieldName;
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		#region Issue codes
 
@@ -79,13 +77,15 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaSimpleGeometry_0))]
 		public QaSimpleGeometry(
-				[Doc(nameof(DocStrings.QaSimpleGeometry_featureClass))] IReadOnlyFeatureClass featureClass)
+				[Doc(nameof(DocStrings.QaSimpleGeometry_featureClass))]
+				IReadOnlyFeatureClass featureClass)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(featureClass, false, _defaultToleranceFactor) { }
 
 		[Doc(nameof(DocStrings.QaSimpleGeometry_1))]
 		public QaSimpleGeometry(
-				[Doc(nameof(DocStrings.QaSimpleGeometry_featureClass))] IReadOnlyFeatureClass featureClass,
+				[Doc(nameof(DocStrings.QaSimpleGeometry_featureClass))]
+				IReadOnlyFeatureClass featureClass,
 				[Doc(nameof(DocStrings.QaSimpleGeometry_allowNonPlanarLines))]
 				bool allowNonPlanarLines)
 			// ReSharper disable once IntroduceOptionalParameters.Global
@@ -93,7 +93,8 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaSimpleGeometry_2))]
 		public QaSimpleGeometry(
-			[Doc(nameof(DocStrings.QaSimpleGeometry_featureClass))] IReadOnlyFeatureClass featureClass,
+			[Doc(nameof(DocStrings.QaSimpleGeometry_featureClass))]
+			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaSimpleGeometry_allowNonPlanarLines))]
 			bool allowNonPlanarLines,
 			[Doc(nameof(DocStrings.QaSimpleGeometry_toleranceFactor))]
@@ -110,7 +111,7 @@ namespace ProSuite.QA.Tests
 
 			_shapeType = featureClass.ShapeType;
 			_allowNonPlanarLines = allowNonPlanarLines;
-			_spatialReference =  featureClass.SpatialReference;
+			_spatialReference = featureClass.SpatialReference;
 			_shapeFieldName = featureClass.ShapeFieldName;
 
 			Assert.ArgumentCondition(_spatialReference != null,
@@ -265,8 +266,8 @@ namespace ProSuite.QA.Tests
 				                                     out projectedShape);
 
 				IList<WKSPointZ> changedPoints = GetChangedPoints(projectedShape,
-				                                                  simplified,
-				                                                  allowNonPlanarLines);
+					simplified,
+					allowNonPlanarLines);
 
 				if (changedPoints.Count > 0)
 				{
@@ -344,7 +345,7 @@ namespace ProSuite.QA.Tests
 			}
 
 			foreach (ISegment segment in GeometryUtils.GetSegments(
-				segments.EnumSegments, allowRecycling: true))
+				         segments.EnumSegments, allowRecycling: true))
 			{
 				bool isVertical = IsVertical(segment, zTolerance);
 
@@ -511,7 +512,8 @@ namespace ProSuite.QA.Tests
 			changedPoints.CopyTo(changedPointArray, 0);
 
 			IGeometry result = GeometryFactory.CreateMultipoint(
-				changedPointArray, DatasetUtils.GetGeometryDef((IReadOnlyFeatureClass)feature.Table));
+				changedPointArray,
+				DatasetUtils.GetGeometryDef((IReadOnlyFeatureClass) feature.Table));
 
 			// duplicate points are returned for self-intersections -> simplify
 			GeometryUtils.Simplify(result);

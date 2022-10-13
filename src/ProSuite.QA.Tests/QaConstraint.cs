@@ -5,18 +5,18 @@ using System.Linq;
 using System.Text;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestSupport;
-using ProSuite.QA.Tests.Constraints;
-using ProSuite.QA.Tests.Documentation;
-using ProSuite.QA.Tests.IssueCodes;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Globalization;
 using ProSuite.Commons.Text;
-using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Container;
+using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Tests.Constraints;
+using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.IssueCodes;
 
 namespace ProSuite.QA.Tests
 {
@@ -60,15 +60,18 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaConstraint_0))]
 		public QaConstraint(
-				[Doc(nameof(DocStrings.QaConstraint_table))] [NotNull] IReadOnlyTable table,
-				[Doc(nameof(DocStrings.QaConstraint_constraint))] string constraint)
+				[Doc(nameof(DocStrings.QaConstraint_table))] [NotNull]
+				IReadOnlyTable table,
+				[Doc(nameof(DocStrings.QaConstraint_constraint))]
+				string constraint)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(table, constraint, 0) { }
 
 		[Doc(nameof(DocStrings.QaConstraint_1))]
 		[InternallyUsedTest]
 		public QaConstraint(
-				[Doc(nameof(DocStrings.QaConstraint_table))] [NotNull] IReadOnlyTable table,
+				[Doc(nameof(DocStrings.QaConstraint_table))] [NotNull]
+				IReadOnlyTable table,
 				[Doc(nameof(DocStrings.QaConstraint_constraints))] [NotNull]
 				IList<ConstraintNode> constraints)
 			// ReSharper disable once IntroduceOptionalParameters.Global
@@ -77,8 +80,10 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaConstraint_0))]
 		[InternallyUsedTest]
 		public QaConstraint(
-			[Doc(nameof(DocStrings.QaConstraint_table))] [NotNull] IReadOnlyTable table,
-			[Doc(nameof(DocStrings.QaConstraint_constraint))] string constraint,
+			[Doc(nameof(DocStrings.QaConstraint_table))] [NotNull]
+			IReadOnlyTable table,
+			[Doc(nameof(DocStrings.QaConstraint_constraint))]
+			string constraint,
 			int errorDescriptionVersion)
 			: base(table)
 		{
@@ -91,7 +96,8 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaConstraint_1))]
 		[InternallyUsedTest]
 		public QaConstraint(
-			[Doc(nameof(DocStrings.QaConstraint_table))] [NotNull] IReadOnlyTable table,
+			[Doc(nameof(DocStrings.QaConstraint_table))] [NotNull]
+			IReadOnlyTable table,
 			[Doc(nameof(DocStrings.QaConstraint_constraints))] [NotNull]
 			IList<ConstraintNode> constraints,
 			int errorDescriptionVersion)
@@ -140,9 +146,9 @@ namespace ProSuite.QA.Tests
 			{
 				const bool useAsConstraint = true;
 				_simpleConstraintHelper = TableViewFactory.Create(_table, _constraint,
-				                                                  useAsConstraint,
-				                                                  GetSqlCaseSensitivity(
-					                                                  tableIndex));
+					useAsConstraint,
+					GetSqlCaseSensitivity(
+						tableIndex));
 			}
 
 			if (_simpleConstraintHelper.MatchesConstraint(row))
@@ -177,7 +183,7 @@ namespace ProSuite.QA.Tests
 				var uniqueFieldNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
 				foreach (string fieldName in ExpressionUtils.GetExpressionFieldNames(
-					_table, _simpleConstraintHelper.Constraint ?? string.Empty))
+					         _table, _simpleConstraintHelper.Constraint ?? string.Empty))
 				{
 					uniqueFieldNames.Add(fieldName);
 				}
@@ -280,7 +286,7 @@ namespace ProSuite.QA.Tests
 					IssueCode issueCode = constraintNode.IssueCode ??
 					                      Codes[Code.ConstraintNotFulfilled];
 
-					object[] values = { GetFieldValues(row, constraintNode.Helper, parentHelpers) };
+					object[] values = {GetFieldValues(row, constraintNode.Helper, parentHelpers)};
 
 					errorCount += ReportError(
 						description, GetInvolvedRows(row),

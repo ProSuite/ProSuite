@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
@@ -16,8 +15,7 @@ namespace ProSuite.Commons.AO.Geometry
 {
 	public static class GeometryFactory
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private static object _emptyRef = Type.Missing;
 
@@ -919,7 +917,7 @@ namespace ProSuite.Commons.AO.Geometry
 							if (allowProjectingInput)
 							{
 								GeometryUtils.EnsureSpatialReference(geometry,
-								                                     spatialReference);
+									spatialReference);
 							}
 							else
 							{
@@ -2321,7 +2319,7 @@ namespace ProSuite.Commons.AO.Geometry
 			var unionResults = new List<IGeometry>();
 
 			foreach (KeyValuePair<esriGeometryType, List<IGeometry>> pair
-				in GetGeometriesByType(input))
+			         in GetGeometriesByType(input))
 			{
 				unionResults.Add(GeometryUtils.Union(pair.Value));
 			}

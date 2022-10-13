@@ -78,7 +78,7 @@ namespace ProSuite.QA.Container.TestSupport
 			foreach (IGeometry geometry in GetIntersections(feature1, feature2))
 			{
 				foreach (IGeometry reportableGeometry in GetGeometries(geometry,
-				                                                       reportIndividualErrors))
+					         reportIndividualErrors))
 				{
 					if (_validIntersectionDimensions != null &&
 					    _validIntersectionDimensions.Contains(reportableGeometry.Dimension))
@@ -95,12 +95,12 @@ namespace ProSuite.QA.Container.TestSupport
 
 						string displayValues =
 							_intersectionGeometryConstraint.FormatValues(reportableGeometry,
-							                                             CultureInfo.CurrentCulture)
+								                               CultureInfo.CurrentCulture)
 							                               .Replace("$", string.Empty);
 						string rawValues =
 							_intersectionGeometryConstraint.FormatValues(reportableGeometry,
-							                                             CultureInfo
-								                                             .InvariantCulture);
+								CultureInfo
+									.InvariantCulture);
 
 						// format for display to the user (current culture)
 						string description = GetErrorDescription(
@@ -111,7 +111,7 @@ namespace ProSuite.QA.Container.TestSupport
 						errorCount += reportError.Report(
 							description, InvolvedRowUtils.GetInvolvedRows(feature1, feature2),
 							reportableGeometry, issueCode, null,
-							values: new object[] { rawValues });
+							values: new object[] {rawValues});
 					}
 					else
 					{

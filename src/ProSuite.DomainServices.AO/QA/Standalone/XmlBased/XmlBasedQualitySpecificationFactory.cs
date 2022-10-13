@@ -142,7 +142,8 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			                         $"Specification '{qualitySpecificationName}' not found in document",
 			                         nameof(qualitySpecificationName));
 
-			XmlDataQualityUtils.AssertUniqueQualitySpecificationElementNames(xmlQualitySpecification);
+			XmlDataQualityUtils.AssertUniqueQualitySpecificationElementNames(
+				xmlQualitySpecification);
 
 			IDictionary<XmlDataQualityCategory, DataQualityCategory> categoryMap =
 				GetCategoryMap(document);
@@ -158,7 +159,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 				documentCache.EnumReferencedConfigurationInstances().ToList());
 
 			documentCache.ReferencedModels = modelsByWorkspaceId;
-			
+
 			Dictionary<string, QualityCondition> qualityConditions =
 				CreateQualityConditions(documentCache,
 				                        categoryMap,
@@ -202,8 +203,10 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			IList<XmlQualityCondition> xmlConditions =
 				specificationElements.Select(x => x.XmlCondition).ToList();
 
-			XmlDataQualityUtils.AssertUniqueInstanceDescriptorNames(xmlDescriptors, "test descriptor");
-			XmlDataQualityUtils.AssertUniqueInstanceConfigurationNames(xmlConditions, "quality condition");
+			XmlDataQualityUtils.AssertUniqueInstanceDescriptorNames(
+				xmlDescriptors, "test descriptor");
+			XmlDataQualityUtils.AssertUniqueInstanceConfigurationNames(
+				xmlConditions, "quality condition");
 
 			IDictionary<string, Model> modelsByWorkspaceId = GetModelsByWorkspaceId(
 				dataSources, xmlConditions);
@@ -274,7 +277,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			Func<string, IList<Dataset>> getDatasetsByName = name => new List<Dataset>();
 
 			foreach (KeyValuePair<XmlQualityCondition, XmlDataQualityCategory> pair in
-				xmlDataDocumentCache.QualityConditionsWithCategories)
+			         xmlDataDocumentCache.QualityConditionsWithCategories)
 			{
 				XmlQualityCondition xmlCondition = pair.Key;
 				XmlDataQualityCategory xmlCategory = pair.Value;
@@ -285,7 +288,8 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 						: null;
 
 				QualityCondition createdCondition = XmlDataQualityUtils.CreateQualityCondition(
-					xmlCondition, xmlDataDocumentCache, getDatasetsByName, category, ignoreConditionsForUnknownDatasets,
+					xmlCondition, xmlDataDocumentCache, getDatasetsByName, category,
+					ignoreConditionsForUnknownDatasets,
 					out ICollection<XmlDatasetTestParameterValue> unknownDatasetParameters);
 
 				if (createdCondition == null)
@@ -302,7 +306,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 
 			return qualityConditions;
 		}
-		
+
 		private static Dictionary<string, QualityCondition> CreateQualityConditions(
 			[NotNull] IList<KeyValuePair<XmlQualityCondition, DataQualityCategory>> conditions,
 			[NotNull] IDictionary<string, TestDescriptor> testDescriptorsByName,
@@ -320,14 +324,15 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 				DataQualityCategory conditionCategory = pair.Value;
 
 				ICollection<XmlDatasetTestParameterValue> unknownDatasetParameters;
-				QualityCondition qualityCondition = XmlDataQualityUtils.CreateQualityConditionLegacy(
-					xmlCondition,
-					testDescriptorsByName[xmlCondition.TestDescriptorName],
-					modelsByWorkspaceId,
-					getDatasetsByName,
-					conditionCategory,
-					ignoreConditionsForUnknownDatasets,
-					out unknownDatasetParameters);
+				QualityCondition qualityCondition =
+					XmlDataQualityUtils.CreateQualityConditionLegacy(
+						xmlCondition,
+						testDescriptorsByName[xmlCondition.TestDescriptorName],
+						modelsByWorkspaceId,
+						getDatasetsByName,
+						conditionCategory,
+						ignoreConditionsForUnknownDatasets,
+						out unknownDatasetParameters);
 
 				if (qualityCondition == null)
 				{
@@ -347,7 +352,8 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 		private static void HandleNoConditionCreated(XmlQualityCondition xmlCondition,
 		                                             IDictionary<string, Model> modelsByWorkspaceId,
 		                                             bool ignoreConditionsForUnknownDatasets,
-		                                             ICollection<XmlDatasetTestParameterValue> unknownDatasetParameters)
+		                                             ICollection<XmlDatasetTestParameterValue>
+			                                             unknownDatasetParameters)
 		{
 			Assert.True(ignoreConditionsForUnknownDatasets,
 			            "ignoreConditionsForUnknownDatasets");
@@ -444,8 +450,8 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 				}
 
 				XmlTestDescriptor xmlTestDescriptor;
-				if (!xmlTestDescriptorsByName.TryGetValue(testDescriptorName,
-				                                          out xmlTestDescriptor))
+				if (! xmlTestDescriptorsByName.TryGetValue(testDescriptorName,
+				                                           out xmlTestDescriptor))
 				{
 					throw new InvalidConfigurationException(
 						string.Format(
@@ -459,7 +465,6 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 
 			return result;
 		}
-
 
 		private IDictionary<string, Model> GetModelsByWorkspaceId(
 			[NotNull] IEnumerable<XmlWorkspace> xmlWorkspaces,
@@ -507,7 +512,6 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			return result;
 		}
 
-
 		[NotNull]
 		private IDictionary<string, Model> GetModelsByWorkspaceId(
 			[NotNull] IEnumerable<DataSource> allDataSources,
@@ -528,7 +532,6 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 
 			return result;
 		}
-
 
 		[NotNull]
 		private Model CreateModel(
@@ -612,7 +615,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 				new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
 
 			foreach (Dataset dataset in XmlDataQualityUtils.GetReferencedDatasets(
-				model, workspaceId, referencedConditions))
+				         model, workspaceId, referencedConditions))
 			{
 				if (! (dataset is ISpatialDataset))
 				{
@@ -630,7 +633,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			}
 
 			foreach (KeyValuePair<string, int> pair in
-				spatialDatasetReferenceCount.OrderByDescending(kvp => kvp.Value))
+			         spatialDatasetReferenceCount.OrderByDescending(kvp => kvp.Value))
 			{
 				string datasetName = pair.Key;
 

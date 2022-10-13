@@ -2,17 +2,17 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container;
-using ProSuite.QA.Container.Geometry;
-using ProSuite.QA.Container.TestContainer;
-using ProSuite.QA.Tests.Documentation;
-using ProSuite.QA.Tests.IssueCodes;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Container;
+using ProSuite.QA.Container.Geometry;
+using ProSuite.QA.Container.TestContainer;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.IssueCodes;
 
 namespace ProSuite.QA.Tests
 {
@@ -51,7 +51,8 @@ namespace ProSuite.QA.Tests
 		public QaMinMeanSegmentLength(
 			[Doc(nameof(DocStrings.QaMinMeanSegmentLength_featureClass))] [NotNull]
 			IReadOnlyFeatureClass featureClass,
-			[Doc(nameof(DocStrings.QaMinMeanSegmentLength_limit))] double limit,
+			[Doc(nameof(DocStrings.QaMinMeanSegmentLength_limit))]
+			double limit,
 			[Doc(nameof(DocStrings.QaMinMeanSegmentLength_perPart))]
 			bool perPart)
 			: this(
@@ -62,10 +63,12 @@ namespace ProSuite.QA.Tests
 		public QaMinMeanSegmentLength(
 			[Doc(nameof(DocStrings.QaMinMeanSegmentLength_featureClass))] [NotNull]
 			IReadOnlyFeatureClass featureClass,
-			[Doc(nameof(DocStrings.QaMinMeanSegmentLength_limit))] double limit,
+			[Doc(nameof(DocStrings.QaMinMeanSegmentLength_limit))]
+			double limit,
 			[Doc(nameof(DocStrings.QaMinMeanSegmentLength_perPart))]
 			bool perPart,
-			[Doc(nameof(DocStrings.QaMinMeanSegmentLength_is3D))] bool is3D)
+			[Doc(nameof(DocStrings.QaMinMeanSegmentLength_is3D))]
+			bool is3D)
 			: base(featureClass)
 		{
 			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
@@ -92,7 +95,8 @@ namespace ProSuite.QA.Tests
 		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
 			using (
-				MeanSegmentLengthProvider provider = GetMeanSegmentLengthProvider((IReadOnlyFeature) row))
+				MeanSegmentLengthProvider provider =
+				GetMeanSegmentLengthProvider((IReadOnlyFeature) row))
 			{
 				int errorCount = 0;
 				foreach (MeanSegmentLength meanSegmentLength in provider.ReadSegmentLength())

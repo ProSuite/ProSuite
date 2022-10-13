@@ -5,18 +5,18 @@ using System.Text;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container;
-using ProSuite.QA.Container.Geometry;
-using ProSuite.QA.Container.PolygonGrower;
-using ProSuite.QA.Container.TestSupport;
 using ProSuite.Commons;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
+using ProSuite.QA.Container;
+using ProSuite.QA.Container.Geometry;
+using ProSuite.QA.Container.PolygonGrower;
+using ProSuite.QA.Container.TestSupport;
 using IPnt = ProSuite.Commons.Geom.IPnt;
 using Pnt = ProSuite.Commons.Geom.Pnt;
-using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests.Coincidence
 {
@@ -192,7 +192,7 @@ namespace ProSuite.QA.Tests.Coincidence
 				foreach (IReadOnlyRow neighborRow in Search(fcNeighbor, filter, helper, geom0))
 				{
 					double maxNear = rowsDistance.GetAddedDistance(neighborRow,
-					                                               involvedTableIndex);
+						involvedTableIndex);
 
 					if (maxNear <= 0)
 					{
@@ -491,8 +491,12 @@ namespace ProSuite.QA.Tests.Coincidence
 			const double defaultTolerance = 0;
 			return
 				Math.Max(
-					GeometryUtils.GetXyTolerance(((IReadOnlyFeatureClass) feature0.Table).SpatialReference, defaultTolerance),
-					GeometryUtils.GetXyTolerance(((IReadOnlyFeatureClass) feature1.Table).SpatialReference, defaultTolerance));
+					GeometryUtils.GetXyTolerance(
+						((IReadOnlyFeatureClass) feature0.Table).SpatialReference,
+						defaultTolerance),
+					GeometryUtils.GetXyTolerance(
+						((IReadOnlyFeatureClass) feature1.Table).SpatialReference,
+						defaultTolerance));
 		}
 
 		private static bool IsDirectNeighbor([NotNull] SegmentProxy neighbor,
@@ -673,8 +677,9 @@ namespace ProSuite.QA.Tests.Coincidence
 				// TODO debug why the spatial references on the geometries sometimes become null because of preceding tests
 				// TODO get appropriate tolerance for *projected* geometries
 				const double defaultTolerance = 0;
-				double tolerance = GeometryUtils.GetXyTolerance(((IReadOnlyFeatureClass) _feature.Table).SpatialReference,
-				                                                defaultTolerance);
+				double tolerance = GeometryUtils.GetXyTolerance(
+					((IReadOnlyFeatureClass) _feature.Table).SpatialReference,
+					defaultTolerance);
 
 				IBox testAreaBox = null;
 				if (allBox != null)
@@ -761,8 +766,8 @@ namespace ProSuite.QA.Tests.Coincidence
 							new SegmentHull(neighborSegment, _maxNear, roundCap, roundCap);
 						bool coincident;
 						IEnumerable<double[]> limits = CutCurveHull(neighborHull, sourceHull,
-						                                            tolerance, is3D,
-						                                            out coincident);
+							tolerance, is3D,
+							out coincident);
 
 						foreach (double[] limit in limits)
 						{
@@ -1517,7 +1522,7 @@ namespace ProSuite.QA.Tests.Coincidence
 				else
 				{
 					SegmentProxy segmentProxy = _baseGeometry.GetSegment(_partIndex,
-					                                                     _startSegmentIndex);
+						_startSegmentIndex);
 					postStart = segmentProxy.GetEnd(false);
 				}
 
@@ -1813,7 +1818,8 @@ namespace ProSuite.QA.Tests.Coincidence
 				_rightSideDistanceProvider = rightSideDistanceProvider;
 			}
 
-			IFeatureRowsDistance IFeatureDistanceProvider.GetRowsDistance(IReadOnlyRow row, int tableIndex)
+			IFeatureRowsDistance IFeatureDistanceProvider.GetRowsDistance(
+				IReadOnlyRow row, int tableIndex)
 				=> GetRowsDistance(row, tableIndex);
 
 			public SideRowsDistance GetRowsDistance(IReadOnlyRow row, int tableIndex)
@@ -1850,7 +1856,8 @@ namespace ProSuite.QA.Tests.Coincidence
 			public double GetLeftSideDistance(IReadOnlyRow neighborfeature, int neighborTableIndex)
 				=> _defaultDistance.GetNearDistance(neighborfeature, neighborTableIndex);
 
-			public double GetRightSideDistance(IReadOnlyRow neighborfeature, int neighborTableIndex) =>
+			public double
+				GetRightSideDistance(IReadOnlyRow neighborfeature, int neighborTableIndex) =>
 				_rightSideDistance.GetNearDistance(neighborfeature, neighborTableIndex);
 
 			double IFeatureRowsDistance.GetRowDistance() => _maxRowDistance;
@@ -1994,13 +2001,14 @@ namespace ProSuite.QA.Tests.Coincidence
 				set { _getSqlCaseSensitivityForTableIndex = value; }
 			}
 
-			IPairRowsDistance IPairDistanceProvider.GetRowsDistance(IReadOnlyRow row1, int tableIndex)
+			IPairRowsDistance IPairDistanceProvider.GetRowsDistance(
+				IReadOnlyRow row1, int tableIndex)
 			{
 				return GetRowsDistance(row1, tableIndex);
 			}
 
 			IFeatureRowsDistance IFeatureDistanceProvider.GetRowsDistance(IReadOnlyRow row1,
-			                                                              int tableIndex)
+				int tableIndex)
 			{
 				return GetRowsDistance(row1, tableIndex);
 			}
@@ -2075,13 +2083,15 @@ namespace ProSuite.QA.Tests.Coincidence
 					nearDistance = Row1 == neighborRow
 						               ? _distance1 * 2
 						               : _distance1 +
-						                 (_expressions[neighborTableIndex].GetDouble(neighborRow) ?? 0);
+						                 (_expressions[neighborTableIndex].GetDouble(neighborRow) ??
+						                  0);
 				}
 				else
 				{
 					nearDistance = Row1 == neighborRow
 						               ? _distance1
-						               : _expressions[neighborTableIndex].GetDouble(neighborRow) ?? 0;
+						               : _expressions[neighborTableIndex].GetDouble(neighborRow) ??
+						                 0;
 				}
 
 				return nearDistance;

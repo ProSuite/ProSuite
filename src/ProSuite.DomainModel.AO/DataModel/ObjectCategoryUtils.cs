@@ -1,5 +1,4 @@
 using System;
-using System.Reflection;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
@@ -11,7 +10,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 {
 	public static class ObjectCategoryUtils
 	{
-		private static readonly IMsg _msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		public static void ApplyObjectCategoryValuesTo(
 			[NotNull] ObjectCategory objectCategory,

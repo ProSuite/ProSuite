@@ -2,18 +2,18 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.PolygonGrower;
 using ProSuite.QA.Container.TestContainer;
 using ProSuite.QA.Container.TestSupport;
+using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.QA.Tests.Network;
-using ProSuite.Commons.Essentials.Assertions;
-using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.AO.Geodatabase;
-using ProSuite.QA.Core.IssueCodes;
-using ProSuite.QA.Core.TestCategories;
 
 namespace ProSuite.QA.Tests
 {
@@ -58,16 +58,21 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaCentroids_0))]
 		public QaCentroids(
-				[Doc(nameof(DocStrings.QaCentroids_polylineClass))] IReadOnlyFeatureClass polylineClass,
-				[Doc(nameof(DocStrings.QaCentroids_pointClass))] IReadOnlyFeatureClass pointClass)
+				[Doc(nameof(DocStrings.QaCentroids_polylineClass))]
+				IReadOnlyFeatureClass polylineClass,
+				[Doc(nameof(DocStrings.QaCentroids_pointClass))]
+				IReadOnlyFeatureClass pointClass)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(polylineClass, pointClass, null) { }
 
 		[Doc(nameof(DocStrings.QaCentroids_0))]
 		public QaCentroids(
-			[Doc(nameof(DocStrings.QaCentroids_polylineClass))] IReadOnlyFeatureClass polylineClass,
-			[Doc(nameof(DocStrings.QaCentroids_pointClass))] IReadOnlyFeatureClass pointClass,
-			[Doc(nameof(DocStrings.QaCentroids_constraint))] string constraint)
+			[Doc(nameof(DocStrings.QaCentroids_polylineClass))]
+			IReadOnlyFeatureClass polylineClass,
+			[Doc(nameof(DocStrings.QaCentroids_pointClass))]
+			IReadOnlyFeatureClass pointClass,
+			[Doc(nameof(DocStrings.QaCentroids_constraint))]
+			string constraint)
 			: base(CastToTables(polylineClass, pointClass), false)
 		{
 			Init(constraint);
@@ -75,16 +80,21 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaCentroids_2))]
 		public QaCentroids(
-				[Doc(nameof(DocStrings.QaCentroids_polylineClasses))] IList<IReadOnlyFeatureClass> polylineClasses,
-				[Doc(nameof(DocStrings.QaCentroids_pointClasses))] IList<IReadOnlyFeatureClass> pointClasses)
+				[Doc(nameof(DocStrings.QaCentroids_polylineClasses))]
+				IList<IReadOnlyFeatureClass> polylineClasses,
+				[Doc(nameof(DocStrings.QaCentroids_pointClasses))]
+				IList<IReadOnlyFeatureClass> pointClasses)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(polylineClasses, pointClasses, null) { }
 
 		[Doc(nameof(DocStrings.QaCentroids_2))]
 		public QaCentroids(
-			[Doc(nameof(DocStrings.QaCentroids_polylineClasses))] IList<IReadOnlyFeatureClass> polylineClasses,
-			[Doc(nameof(DocStrings.QaCentroids_pointClasses))] IList<IReadOnlyFeatureClass> pointClasses,
-			[Doc(nameof(DocStrings.QaCentroids_constraint))] string constraint)
+			[Doc(nameof(DocStrings.QaCentroids_polylineClasses))]
+			IList<IReadOnlyFeatureClass> polylineClasses,
+			[Doc(nameof(DocStrings.QaCentroids_pointClasses))]
+			IList<IReadOnlyFeatureClass> pointClasses,
+			[Doc(nameof(DocStrings.QaCentroids_constraint))]
+			string constraint)
 			: base(CastToTables(polylineClasses, pointClasses), false)
 		{
 			Init(constraint);

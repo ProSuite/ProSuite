@@ -1,5 +1,4 @@
 using System;
-using System.Reflection;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -14,8 +13,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 	/// </summary>
 	public static class AttributeUtils
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		public static int GetFieldIndex([NotNull] IObjectClass objectClass,
 		                                [NotNull] ObjectAttribute objectAttribute,

@@ -26,7 +26,7 @@ namespace ProSuite.Commons.Collections
 			[CanBeNull] IEqualityComparer<TKey> equalityComparer = null)
 		{
 			return new ConsistentHashLargeDictionary<TKey, TValue>(keyValuePairs,
-			                                                       equalityComparer);
+				equalityComparer);
 		}
 
 		[NotNull]
@@ -36,7 +36,7 @@ namespace ProSuite.Commons.Collections
 			[CanBeNull] IEqualityComparer<TKey> equalityComparer = null)
 		{
 			return new ConsistentHashLargeDictionary<TKey, TValue>(expectedCount,
-			                                                       equalityComparer);
+				equalityComparer);
 		}
 
 		private static int DetermineMaximumDictionaryEntries()

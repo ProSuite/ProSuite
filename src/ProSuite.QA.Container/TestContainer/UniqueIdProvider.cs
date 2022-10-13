@@ -73,7 +73,8 @@ namespace ProSuite.QA.Container.TestContainer
 
 		private int _uniqueIdCount;
 
-		public UniqueIdProvider([NotNull] IDictionary<int, IReadOnlyTable> baseTablePerOidFieldIndex)
+		public UniqueIdProvider(
+			[NotNull] IDictionary<int, IReadOnlyTable> baseTablePerOidFieldIndex)
 		{
 			Assert.ArgumentNotNull(baseTablePerOidFieldIndex, nameof(baseTablePerOidFieldIndex));
 

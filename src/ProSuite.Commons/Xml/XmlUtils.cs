@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml;
@@ -14,8 +13,7 @@ namespace ProSuite.Commons.Xml
 {
 	public static class XmlUtils
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		// see http://stackoverflow.com/questions/397250/unicode-regex-invalid-xml-characters
 		private static readonly Regex _invalidXmlChars = new Regex(

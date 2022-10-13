@@ -166,8 +166,8 @@ namespace ProSuite.QA.Container.Geometry
 		                            int endSegmentIndex, double endFraction)
 		{
 			IPolyline subpart = _partProxies[partIndex].GetSubpart(startSegmentIndex,
-			                                                       startFraction,
-			                                                       endSegmentIndex, endFraction);
+				startFraction,
+				endSegmentIndex, endFraction);
 			return subpart;
 		}
 

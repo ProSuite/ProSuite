@@ -1,6 +1,6 @@
 using System.Collections.Generic;
-using System.Reflection;
 using ESRI.ArcGIS.esriSystem;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -16,8 +16,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 		[NotNull] private readonly IDictionary<ITest, QualitySpecificationElement>
 			_elementsByTest;
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private bool _firstNonContainerTestReported;
 		private bool _firstTileProcessingReported;
@@ -74,7 +73,9 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 					break;
 
 				case Step.DataLoading:
-					_msg.Debug("    Loading data...");
+					string tableName = (progressArgs.Tag as IReadOnlyTable)?.Name;
+					_msg.DebugFormat("    Loading data{0}...",
+					                 tableName == null ? string.Empty : $" ({tableName})");
 					break;
 
 				case Step.DataLoaded:

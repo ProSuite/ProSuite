@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Reflection;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Diagnostics;
@@ -18,8 +17,7 @@ namespace ProSuite.QA.Tests.KeySets
 	/// </summary>
 	internal static class KeySetUtils
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		[NotNull]
 		public static IKeySet ReadKeySet([NotNull] IReadOnlyTable table,
@@ -107,7 +105,8 @@ namespace ProSuite.QA.Tests.KeySets
 				if (! added)
 				{
 					_msg.VerboseDebug(
-						() => $"Ignored duplicate key found in field '{keyField}' in table '{tableName}': {key}");
+						() =>
+							$"Ignored duplicate key found in field '{keyField}' in table '{tableName}': {key}");
 				}
 			}
 

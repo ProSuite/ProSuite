@@ -27,7 +27,11 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 				return;
 			}
 
-			_row.Value[index] = value;
+			// Important in case it is a read-only field (such as the OID)
+			if (! _row.Value[index].Equals(value))
+			{
+				_row.Value[index] = value;
+			}
 		}
 
 		public bool HasValue(int index)

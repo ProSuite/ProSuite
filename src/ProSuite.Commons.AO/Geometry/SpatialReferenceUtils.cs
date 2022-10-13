@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using ESRI.ArcGIS.esriSystem;
@@ -19,8 +18,7 @@ namespace ProSuite.Commons.AO.Geometry
 	/// </summary>
 	public static class SpatialReferenceUtils
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		#region Fields
 
@@ -984,7 +982,7 @@ namespace ProSuite.Commons.AO.Geometry
 				new List<KeyValuePair<IGeoTransformation, esriTransformDirection>>();
 
 			foreach (IGeoTransformation geoTransformation in
-				GetPredefinedGeoTransformations())
+			         GetPredefinedGeoTransformations())
 			{
 				esriTransformDirection? direction = GetTransformationDirection(
 					geoTransformation,

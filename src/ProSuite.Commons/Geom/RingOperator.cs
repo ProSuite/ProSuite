@@ -544,7 +544,7 @@ namespace ProSuite.Commons.Geom
 		                                           bool includeNotContained = false)
 		{
 			List<IntersectionPoint3D> startPoints =
-			_subcurveNavigator.LeftSideRingStartIntersections.ToList();
+				_subcurveNavigator.LeftSideRingStartIntersections.ToList();
 
 			IList<Linestring> result = _subcurveNavigator.FollowSubcurvesClockwise(startPoints);
 

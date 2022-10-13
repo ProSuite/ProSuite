@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
-using System.Reflection;
 using System.Threading;
 using System.Windows.Forms;
 using log4net.Core;
@@ -23,8 +22,7 @@ namespace ProSuite.Commons.UI.Logging
 		private const int _fullListRemoveCount = 20;
 		private const int _refreshIntervalMs = 800;
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private readonly List<LogEventItem> _logMessages = new List<LogEventItem>();
 
@@ -313,7 +311,7 @@ namespace ProSuite.Commons.UI.Logging
 		}
 
 		private void _toolStripMenuItemShowLogEventItemDetails_Click(object sender,
-		                                                             EventArgs e)
+			EventArgs e)
 		{
 			ShowLastClickedRowDetails();
 		}
@@ -351,7 +349,7 @@ namespace ProSuite.Commons.UI.Logging
 		}
 
 		private void _toolStripMenuItemVerboseDebugLogging_CheckedChanged(object sender,
-		                                                                  EventArgs e)
+			EventArgs e)
 		{
 			if (_initialized)
 			{
@@ -379,7 +377,7 @@ namespace ProSuite.Commons.UI.Logging
 		}
 
 		private void _toolStripMenuItemHideDebugMessages_CheckedChanged(object sender,
-		                                                                EventArgs e)
+			EventArgs e)
 		{
 			_hideDebugMessages = _toolStripMenuItemHideDebugMessages.Checked;
 		}

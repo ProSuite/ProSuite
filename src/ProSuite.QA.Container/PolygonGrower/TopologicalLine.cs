@@ -94,8 +94,8 @@ namespace ProSuite.QA.Container.PolygonGrower
 				{
 					double angle;
 					if (TopologicalLineUtils.CalculateFromAngle(
-						(ISegmentCollection) Path, out angle)
-					)
+						    (ISegmentCollection) Path, out angle)
+					   )
 					{
 						_fromAngle = angle;
 						_fromAngleKnown = true;

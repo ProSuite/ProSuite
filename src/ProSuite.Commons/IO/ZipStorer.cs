@@ -24,6 +24,7 @@ namespace ProSuite.Commons.IO
 		{
 			/// <summary>Uncompressed storage</summary> 
 			Store = 0,
+
 			/// <summary>Deflate compression method</summary>
 			Deflate = 8
 		}
@@ -79,8 +80,10 @@ namespace ProSuite.Commons.IO
 
 		// List of files to store
 		private readonly List<ZipFileEntry> _files;
+
 		// Central dir image
 		private byte[] _centralDirImage;
+
 		// Existing files in zip
 		private ushort _existingFiles;
 
@@ -180,7 +183,8 @@ namespace ProSuite.Commons.IO
 
 		public void AddStream(Stream sourceStream, string zippedFilePath, DateTime lastWriteTime)
 		{
-			AddStream(sourceStream, zippedFilePath, lastWriteTime, CompressionMethod.Deflate, string.Empty);
+			AddStream(sourceStream, zippedFilePath, lastWriteTime, CompressionMethod.Deflate,
+			          string.Empty);
 		}
 
 		/// <summary>
@@ -300,7 +304,7 @@ namespace ProSuite.Commons.IO
 
 			string parentPath = Path.GetDirectoryName(targetPath);
 
-			if (parentPath != null && !Directory.Exists(parentPath))
+			if (parentPath != null && ! Directory.Exists(parentPath))
 			{
 				Directory.CreateDirectory(parentPath);
 			}
@@ -329,7 +333,7 @@ namespace ProSuite.Commons.IO
 		/// Store and Deflate.</remarks>
 		public void ExtractFile(ZipFileEntry entry, Stream targetStream)
 		{
-			if (!targetStream.CanWrite)
+			if (! targetStream.CanWrite)
 			{
 				throw new InvalidOperationException("Target stream not writable");
 			}
@@ -498,7 +502,7 @@ namespace ProSuite.Commons.IO
 		{
 			// By contract, Dispose() may be called many times
 			// and all but the first invocation are no-ops.
-			if (!IsClosed)
+			if (! IsClosed)
 			{
 				Close();
 			}
@@ -617,7 +621,8 @@ namespace ProSuite.Commons.IO
 			WriteUInt16(buffer, 32, commentLength);
 			WriteUInt16(buffer, 34, 0); // disk num where file starts
 			WriteUInt16(buffer, 36, 0); // internal file attrs
-			WriteUInt32(buffer, 38, 0); // external file attrs (was 0x8100, but this is system dependent)
+			WriteUInt32(buffer, 38,
+			            0); // external file attrs (was 0x8100, but this is system dependent)
 			WriteUInt32(buffer, 42, entry.HeaderOffset);
 			WriteBytes(buffer, 46, fileNameBytes);
 			WriteBytes(buffer, 46 + fileNameBytes.Length, commentBytes);
@@ -671,8 +676,9 @@ namespace ProSuite.Commons.IO
 			long sourceStart = sourceStream.Position;
 
 			Stream targetStream = entry.Method == CompressionMethod.Deflate
-			                      	? new DeflateStream(_zipStream, CompressionMode.Compress, true)
-			                      	: _zipStream;
+				                      ? new DeflateStream(_zipStream, CompressionMode.Compress,
+				                                          true)
+				                      : _zipStream;
 
 			uint crc32 = 0 ^ 0xffffffff;
 
@@ -703,7 +709,7 @@ namespace ProSuite.Commons.IO
 			// Lossless compression algorithms may enlarge the data!
 			// If this happened, try again without compression:
 
-			if (entry.Method == CompressionMethod.Deflate && !ForceDeflating &&
+			if (entry.Method == CompressionMethod.Deflate && ! ForceDeflating &&
 			    sourceStream.CanSeek && entry.CompressedSize > entry.OriginalSize)
 			{
 				entry.Method = CompressionMethod.Store;
@@ -732,6 +738,7 @@ namespace ProSuite.Commons.IO
 						c >>= 1;
 					}
 				}
+
 				table[i] = c;
 			}
 
@@ -812,7 +819,7 @@ namespace ProSuite.Commons.IO
 
 			if (commentLength > 0)
 			{
-				Comment = DecodeGeneralComment(buffer, start+22, commentLength);
+				Comment = DecodeGeneralComment(buffer, start + 22, commentLength);
 			}
 
 			_existingFiles = entryCount;
@@ -884,8 +891,8 @@ namespace ProSuite.Commons.IO
 		private static void WriteUInt16(byte[] bytes, int index, ushort value)
 		{
 			// Write the low 16 bits of value in little endian
-			bytes[index + 0] = (byte)(value & 255);
-			bytes[index + 1] = (byte)((value >> 8) & 255);
+			bytes[index + 0] = (byte) (value & 255);
+			bytes[index + 1] = (byte) ((value >> 8) & 255);
 		}
 
 		private static uint ReadUInt32(byte[] bytes, int index)
@@ -901,10 +908,10 @@ namespace ProSuite.Commons.IO
 		private static void WriteUInt32(byte[] bytes, int index, uint value)
 		{
 			// Write the low 32 bits of value in little endian
-			bytes[index + 0] = (byte)(value & 255);
-			bytes[index + 1] = (byte)((value >> 8) & 255);
-			bytes[index + 2] = (byte)((value >> 16) & 255);
-			bytes[index + 3] = (byte)((value >> 24) & 255);
+			bytes[index + 0] = (byte) (value & 255);
+			bytes[index + 1] = (byte) ((value >> 8) & 255);
+			bytes[index + 2] = (byte) ((value >> 16) & 255);
+			bytes[index + 3] = (byte) ((value >> 24) & 255);
 		}
 
 		private static DateTime ReadDateTime(byte[] bytes, int index)

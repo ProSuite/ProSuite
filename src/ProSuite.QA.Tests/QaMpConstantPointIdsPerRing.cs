@@ -1,14 +1,14 @@
 using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container;
-using ProSuite.QA.Tests.Documentation;
-using ProSuite.QA.Tests.IssueCodes;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Container;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.IssueCodes;
 
 namespace ProSuite.QA.Tests
 {
@@ -556,8 +556,8 @@ namespace ProSuite.QA.Tests
 							{
 								var followingRings = new IRing[followingRingCount];
 								GeometryUtils.GeometryBridge.QueryFollowingRings(multiPatch, ring,
-								                                                 ref
-								                                                 followingRings);
+									ref
+									followingRings);
 
 								rings.AddRange(followingRings);
 							}

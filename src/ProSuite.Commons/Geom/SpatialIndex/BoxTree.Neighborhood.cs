@@ -69,7 +69,7 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 					public IEnumerable<TileEntry> GetEntries(IBox search)
 					{
 						foreach (TileEntry entry in new TileEntryEnumerable(
-							_tree, _tile, _tileBox, search))
+							         _tree, _tile, _tileBox, search))
 						{
 							yield return entry;
 						}
@@ -360,8 +360,8 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 						neighbourEntryEnumerators)
 					{
 						foreach (TileEntry neighbourEntry in neighbourEntryEnumerator.GetEntries(
-							search)
-						)
+							         search)
+						        )
 						{
 							yield return neighbourEntry;
 						}
@@ -389,7 +389,7 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 				private double[] GetNeighbourSearchDimExtent(BoxTile neighbourTile)
 				{
 					double[] neighbourExtent = _master._neighbourTree.GetExtent(neighbourTile,
-					                                                            _searchDim);
+						_searchDim);
 					if (_searchExtent[1] >= neighbourExtent[0] &&
 					    _searchExtent[0] <= neighbourExtent[1])
 					{
@@ -573,7 +573,8 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 						{
 							// MoveUp;
 							while (nextParent?._parent?._searchingTile != null &&
-							       nextParent._parent._searchingTile.Child1 == nextParent._searchingTile)
+							       nextParent._parent._searchingTile.Child1 ==
+							       nextParent._searchingTile)
 							{
 								nextParent = nextParent._parent;
 							}

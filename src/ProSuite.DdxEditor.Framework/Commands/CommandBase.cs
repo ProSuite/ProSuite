@@ -1,5 +1,4 @@
 using System.Drawing;
-using System.Reflection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Logging;
 
@@ -7,8 +6,7 @@ namespace ProSuite.DdxEditor.Framework.Commands
 {
 	public abstract class CommandBase : ICommand
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		/// <summary>
 		/// Template method for indicating if the command is enabled or not.

@@ -9,7 +9,8 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AO.Test.TestSupport
 {
-	public class FeatureMock : ObjectMock, IFeature, IFeatureBuffer, IFeatureChanges, IReadOnlyFeature
+	public class FeatureMock : ObjectMock, IFeature, IFeatureBuffer, IFeatureChanges,
+	                           IReadOnlyFeature
 	{
 		private readonly int _shapeFieldIndex;
 		[NotNull] private readonly FeatureClassMock _featureClassMock;

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Windows.Forms;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Misc;
@@ -33,8 +32,7 @@ namespace ProSuite.DdxEditor.Content.LinearNetworks
 
 		private readonly Latch _latch = new Latch();
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		public ILinearNetworkObserver Observer { get; set; }
 

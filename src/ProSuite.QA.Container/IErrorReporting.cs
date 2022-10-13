@@ -11,11 +11,11 @@ namespace ProSuite.QA.Container
 	public interface IErrorReporting
 	{
 		int Report([NotNull] string description,
-				   [NotNull] InvolvedRows rows,
+		           [NotNull] InvolvedRows rows,
 		           [CanBeNull] IGeometry errorGeometry,
 		           [CanBeNull] IssueCode issueCode,
 		           [CanBeNull] string affectedComponent,
-				   bool reportIndividualParts = false,
+		           bool reportIndividualParts = false,
 		           [CanBeNull] IEnumerable<object> values = null);
 	}
 }

@@ -1,15 +1,15 @@
 using System.Globalization;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container;
-using ProSuite.QA.Tests.Documentation;
-using ProSuite.QA.Tests.IssueCodes;
-using ProSuite.QA.Tests.Properties;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Container;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.IssueCodes;
+using ProSuite.QA.Tests.Properties;
 
 namespace ProSuite.QA.Tests
 {
@@ -50,7 +50,8 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaGeometryConstraint_geometryConstraint))] [NotNull]
 			string
 				geometryConstraint,
-			[Doc(nameof(DocStrings.QaGeometryConstraint_perPart))] bool perPart)
+			[Doc(nameof(DocStrings.QaGeometryConstraint_perPart))]
+			bool perPart)
 			: base(featureClass)
 		{
 			Assert.ArgumentNotNullOrEmpty(geometryConstraint, nameof(geometryConstraint));
@@ -181,7 +182,7 @@ namespace ProSuite.QA.Tests
 
 			return ReportError(
 				description, InvolvedRowUtils.GetInvolvedRows(feature), errorGeometry,
-				issueCode, _shapeFieldName, values: new[] { rawValues });
+				issueCode, _shapeFieldName, values: new[] {rawValues});
 		}
 
 		[NotNull]

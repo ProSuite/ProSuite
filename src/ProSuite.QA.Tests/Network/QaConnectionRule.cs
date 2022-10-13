@@ -57,7 +57,7 @@ namespace ProSuite.QA.Tests.Network
 
 						AddVariableDeclaration(variableName,
 						                       new QaConnectionCountRule(_tables[tableIndex],
-						                                                 countSelectionExpression));
+							                       countSelectionExpression));
 					}
 					else
 					{

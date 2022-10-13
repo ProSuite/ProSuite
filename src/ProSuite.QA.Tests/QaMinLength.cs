@@ -1,10 +1,10 @@
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Tests.Documentation;
-using ProSuite.QA.Tests.IssueCodes;
-using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.IssueCodes;
 
 namespace ProSuite.QA.Tests
 {
@@ -34,23 +34,32 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaMinLength_0))]
 		public QaMinLength(
-			[Doc(nameof(DocStrings.QaMinLength_featureClass))] IReadOnlyFeatureClass featureClass,
-			[Doc(nameof(DocStrings.QaMinLength_limit))] double limit,
-			[Doc(nameof(DocStrings.QaMinLength_is3D))] bool is3D)
+			[Doc(nameof(DocStrings.QaMinLength_featureClass))]
+			IReadOnlyFeatureClass featureClass,
+			[Doc(nameof(DocStrings.QaMinLength_limit))]
+			double limit,
+			[Doc(nameof(DocStrings.QaMinLength_is3D))]
+			bool is3D)
 			: base(featureClass, limit, is3D) { }
 
 		[Doc(nameof(DocStrings.QaMinLength_0))]
 		public QaMinLength(
-			[Doc(nameof(DocStrings.QaMinLength_featureClass))] IReadOnlyFeatureClass featureClass,
-			[Doc(nameof(DocStrings.QaMinLength_limit))] double limit)
+			[Doc(nameof(DocStrings.QaMinLength_featureClass))]
+			IReadOnlyFeatureClass featureClass,
+			[Doc(nameof(DocStrings.QaMinLength_limit))]
+			double limit)
 			: base(featureClass, limit) { }
 
 		[Doc(nameof(DocStrings.QaMinLength_0))]
 		public QaMinLength(
-			[Doc(nameof(DocStrings.QaMinLength_featureClass))] IReadOnlyFeatureClass featureClass,
-			[Doc(nameof(DocStrings.QaMinLength_limit))] double limit,
-			[Doc(nameof(DocStrings.QaMinLength_is3D))] bool is3D,
-			[Doc(nameof(DocStrings.QaMinLength_perPart))] bool perPart)
+			[Doc(nameof(DocStrings.QaMinLength_featureClass))]
+			IReadOnlyFeatureClass featureClass,
+			[Doc(nameof(DocStrings.QaMinLength_limit))]
+			double limit,
+			[Doc(nameof(DocStrings.QaMinLength_is3D))]
+			bool is3D,
+			[Doc(nameof(DocStrings.QaMinLength_perPart))]
+			bool perPart)
 			: base(featureClass, limit, is3D, perPart) { }
 
 		protected override int CheckLength(double length, ICurve curve, IReadOnlyRow row)
@@ -62,7 +71,7 @@ namespace ProSuite.QA.Tests
 
 			string description = string.Format("Length {0}",
 			                                   FormatLengthComparison(length, "<", Limit,
-			                                                          curve.SpatialReference));
+				                                   curve.SpatialReference));
 
 			return ReportError(curve, description, Codes[Code.LengthTooSmall], row);
 		}

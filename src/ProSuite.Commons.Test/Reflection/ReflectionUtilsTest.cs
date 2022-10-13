@@ -1,7 +1,7 @@
 using System;
 using System.Reflection;
-using ProSuite.Commons.Essentials.CodeAnnotations;
 using NUnit.Framework;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Reflection;
 
 namespace ProSuite.Commons.Test.Reflection
@@ -70,12 +70,12 @@ namespace ProSuite.Commons.Test.Reflection
 			int eventCount;
 			int constructorCount;
 			int memberCount = ReflectionUtils.GetPublicMemberCount(assembly,
-			                                                       out methodCount,
-			                                                       out propertyCount,
-			                                                       out fieldCount,
-			                                                       out nestedTypeCount,
-			                                                       out eventCount,
-			                                                       out constructorCount);
+				out methodCount,
+				out propertyCount,
+				out fieldCount,
+				out nestedTypeCount,
+				out eventCount,
+				out constructorCount);
 
 			Console.WriteLine(@"- public members: {0}", memberCount);
 			Console.WriteLine(@"  - methods: {0}", methodCount);

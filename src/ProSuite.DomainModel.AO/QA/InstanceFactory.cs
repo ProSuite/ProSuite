@@ -465,7 +465,7 @@ namespace ProSuite.DomainModel.AO.QA
 			throw new InvalidOperationException(
 				"Cannot handle multi dimensional parameter array");
 		}
-		
+
 		protected class TableConstraint
 		{
 			/// <summary>

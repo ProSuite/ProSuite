@@ -84,7 +84,7 @@ namespace ProSuite.QA.Tests
 			RememberLargeGapTileBoundaryIntersections(largeCrossingGaps, tileBoundary);
 
 			foreach (IPolygon polygon in GetCompletedCrossingGaps(
-				smallCrossingGaps, clipEnvelope, tileEnvelope, advancingTileBoundary))
+				         smallCrossingGaps, clipEnvelope, tileEnvelope, advancingTileBoundary))
 			{
 				yield return polygon;
 			}
@@ -237,7 +237,7 @@ namespace ProSuite.QA.Tests
 						// just remember the linear intersection between gap polygon and 
 						// the advancing boundary of the *current* tile
 						IPolyline intersection = GetLinearIntersection(crossingGap,
-						                                               advancingTileBoundary);
+							advancingTileBoundary);
 
 						if (intersection != null)
 						{

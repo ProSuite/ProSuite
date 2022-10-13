@@ -330,7 +330,7 @@ namespace ProSuite.Commons.Collections
 			}
 
 			return new C5Lib.KeyValuePair<int, IDictionary<TKey, TValue>>(midHash,
-			                                                              dictionaryForMidNode);
+				dictionaryForMidNode);
 		}
 
 		#region Implementation of IDictionary<TKey,TValue>

@@ -1,5 +1,4 @@
 using System;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geometry;
@@ -11,8 +10,7 @@ namespace ProSuite.Commons.AO.Geometry
 {
 	public static class WksGeometryUtils
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		public static double GetXyDistance(WKSPointZ a, WKSPointZ b)
 		{

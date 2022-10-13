@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
@@ -19,8 +18,7 @@ namespace ProSuite.Commons.AO.Surface
 {
 	public class FeatureTinGenerator : ITinGenerator
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private readonly SimpleTerrain _terrainDef;
 		private readonly double? _tinBufferDistance;
@@ -547,7 +545,7 @@ namespace ProSuite.Commons.AO.Surface
 				featureClass.ShapeType == esriGeometryType.esriGeometryPolygon;
 
 			foreach (IFeature feature in GdbQueryUtils.GetFeatures(
-				featureClass, filter, recycle: true))
+				         featureClass, filter, recycle: true))
 			{
 				shape = feature.Shape;
 

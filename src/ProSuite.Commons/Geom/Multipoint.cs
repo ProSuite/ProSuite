@@ -292,7 +292,8 @@ namespace ProSuite.Commons.Geom
 			{
 				// No need to add the tolerance to the search box, it is added by the index
 				foreach (int foundPointIdx in SpatialIndex.Search(
-					searchPoint.X, searchPoint.Y, searchPoint.X, searchPoint.Y, xyTolerance))
+					         searchPoint.X, searchPoint.Y, searchPoint.X, searchPoint.Y,
+					         xyTolerance))
 				{
 					T foundPoint = _points[foundPointIdx];
 

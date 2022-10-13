@@ -1,10 +1,9 @@
-using System;
-using System.Reflection;
 #if Server
 using ESRI.ArcGIS.DatasourcesRaster;
 #else
 using ESRI.ArcGIS.DataSourcesRaster;
 #endif
+using System;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geometry;
@@ -16,8 +15,7 @@ namespace ProSuite.QA.Tests.Surface
 {
 	public static class SurfaceUtils
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private static int? _lastErrorSurface;
 
@@ -58,7 +56,7 @@ namespace ProSuite.QA.Tests.Surface
 						_msg.DebugFormat("Raster width: {0}", rasterProps.Width);
 						_msg.DebugFormat("Raster height: {0}", rasterProps.Height);
 						_msg.DebugFormat("Raster envelope: {0}",
-														 GeometryUtils.Format(rasterProps.Extent));
+						                 GeometryUtils.Format(rasterProps.Extent));
 					}
 				}
 			}

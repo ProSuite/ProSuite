@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using ProSuite.QA.Container.Geometry;
-using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.QA.Container.Geometry;
 
 namespace ProSuite.QA.Tests.Coincidence
 {
@@ -114,7 +114,8 @@ namespace ProSuite.QA.Tests.Coincidence
 		{
 			public FullNeighborhoodFinder(IFeatureRowsDistance rowsDistance,
 			                              [NotNull] IReadOnlyFeature feature, int tableIndex,
-			                              [CanBeNull] IReadOnlyFeature neighbor, int neighborTableIndex)
+			                              [CanBeNull] IReadOnlyFeature neighbor,
+			                              int neighborTableIndex)
 				: base(rowsDistance, feature, tableIndex, neighbor, neighborTableIndex) { }
 
 			protected override bool VerifyContinue(SegmentProxy seg0, SegmentProxy seg1,

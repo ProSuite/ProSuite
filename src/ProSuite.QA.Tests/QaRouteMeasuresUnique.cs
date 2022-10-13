@@ -156,9 +156,10 @@ namespace ProSuite.QA.Tests
 
 				const bool recycle = true;
 				foreach (IReadOnlyRow feature in
-					featureClass.EnumRows(queryFilter, recycle))
+				         featureClass.EnumRows(queryFilter, recycle))
 				{
-					yield return new KeyValuePair<int, IReadOnlyFeature>(tableIndex, (IReadOnlyFeature)feature);
+					yield return new KeyValuePair<int, IReadOnlyFeature>(
+						tableIndex, (IReadOnlyFeature) feature);
 				}
 			}
 		}
@@ -190,7 +191,7 @@ namespace ProSuite.QA.Tests
 				}
 
 				foreach (CurveMeasureRange range in
-					MeasureUtils.GetMeasureRanges(feature, tableIndex))
+				         MeasureUtils.GetMeasureRanges(feature, tableIndex))
 				{
 					routeMeasures.Add(routeId, range);
 				}
@@ -250,9 +251,9 @@ namespace ProSuite.QA.Tests
 			var errorCount = 0;
 
 			if (MeasureUtils.ContainsAllMonotonicityTypes(
-				polyline,
-				esriMonotinicityEnum.esriValueDecreases,
-				esriMonotinicityEnum.esriValueIncreases))
+				    polyline,
+				    esriMonotinicityEnum.esriValueDecreases,
+				    esriMonotinicityEnum.esriValueIncreases))
 			{
 				IEnumerable<esriMonotinicityEnum> invalidTypes =
 					GetInvalidMonotonicityTypes(polyline);

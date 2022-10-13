@@ -2,18 +2,18 @@ using System.Collections.Generic;
 using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestSupport;
-using ProSuite.QA.Tests.Documentation;
-using ProSuite.QA.Tests.PointEnumerators;
-using ProSuite.QA.Tests.SpatialRelations;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
+using ProSuite.QA.Container;
+using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Core;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.PointEnumerators;
+using ProSuite.QA.Tests.SpatialRelations;
 
 namespace ProSuite.QA.Tests
 {
@@ -73,7 +73,8 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaVertexCoincidenceOther_relatedClasses))] [NotNull]
 			IList<IReadOnlyFeatureClass>
 				relatedClasses,
-			[Doc(nameof(DocStrings.QaVertexCoincidenceOther_allowedNonCoincidenceCondition))] [CanBeNull]
+			[Doc(nameof(DocStrings.QaVertexCoincidenceOther_allowedNonCoincidenceCondition))]
+			[CanBeNull]
 			string
 				allowedNonCoincidenceCondition)
 			: base(featureClasses, relatedClasses, esriSpatialRelEnum.esriSpatialRelIntersects)
@@ -192,12 +193,13 @@ namespace ProSuite.QA.Tests
 
 			_pointsEnumerator = null; // points enumerator is valid only within same tile
 
-      _pointSearchEnvelope = null;
-      if (parameters.TileEnvelope != null)
-      {
-        _pointSearchEnvelope = GeometryFactory.Clone(parameters.TileEnvelope);
-      }
-      _pointSearchEnvelope?.Expand(SearchDistance, SearchDistance, false);
+			_pointSearchEnvelope = null;
+			if (parameters.TileEnvelope != null)
+			{
+				_pointSearchEnvelope = GeometryFactory.Clone(parameters.TileEnvelope);
+			}
+
+			_pointSearchEnvelope?.Expand(SearchDistance, SearchDistance, false);
 		}
 
 		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
@@ -219,7 +221,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		protected override int FindErrors(IReadOnlyRow row1, int tableIndex1,
-										  IReadOnlyRow row2, int tableIndex2)
+		                                  IReadOnlyRow row2, int tableIndex2)
 		{
 			var feature1 = row1 as IReadOnlyFeature;
 			var feature2 = row2 as IReadOnlyFeature;
@@ -256,7 +258,7 @@ namespace ProSuite.QA.Tests
 			if (_pointsEnumerator == null || _pointsEnumerator.Feature != feature1)
 			{
 				_pointsEnumerator = PointsEnumeratorFactory.Create(feature1,
-				                                                   _pointSearchEnvelope);
+					_pointSearchEnvelope);
 			}
 
 			return _vertexCoincidenceChecker.CheckCoincidence(_pointsEnumerator, feature2);

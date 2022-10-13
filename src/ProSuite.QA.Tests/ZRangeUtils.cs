@@ -96,7 +96,7 @@ namespace ProSuite.QA.Tests
 
 			ZRangeErrorSegments errorSegmentsAtStart = null;
 			foreach (ZRangeErrorSegments errorSegments in GetErrorSegments(
-				segments, minimumZ, maximumZ, isAllowed))
+				         segments, minimumZ, maximumZ, isAllowed))
 			{
 				if (errorSegments.StartsOnFirstSegment && ! errorSegments.EndsOnLastSegment)
 				{

@@ -3,18 +3,18 @@ using System.Collections.Generic;
 using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container;
-using ProSuite.QA.Container.PolygonGrower;
-using ProSuite.QA.Tests.Documentation;
-using ProSuite.QA.Tests.IssueCodes;
-using ProSuite.QA.Tests.Network;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.QA.Container;
+using ProSuite.QA.Container.PolygonGrower;
 using ProSuite.QA.Core;
-using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.IssueCodes;
+using ProSuite.QA.Tests.Network;
 
 namespace ProSuite.QA.Tests
 {
@@ -159,14 +159,16 @@ namespace ProSuite.QA.Tests
 		public QaLineGroupConstraints(
 			[Doc(nameof(DocStrings.QaLineGroupConstraints_networkFeatureClasses))] [NotNull]
 			IList<IReadOnlyFeatureClass> networkFeatureClasses,
-			[Doc(nameof(DocStrings.QaLineGroupConstraints_minGap))] double minGap,
+			[Doc(nameof(DocStrings.QaLineGroupConstraints_minGap))]
+			double minGap,
 			[Doc(nameof(DocStrings.QaLineGroupConstraints_minGroupLength))]
 			double minGroupLength,
 			[Doc(nameof(DocStrings.QaLineGroupConstraints_minDangleLength))]
 			double minDangleLength,
 			[Doc(nameof(DocStrings.QaLineGroupConstraints_groupBy))] [NotNull]
 			IList<string> groupBy)
-			: base(CastToTables((IEnumerable<IReadOnlyFeatureClass>) networkFeatureClasses), groupBy)
+			: base(CastToTables((IEnumerable<IReadOnlyFeatureClass>) networkFeatureClasses),
+			       groupBy)
 		{
 			Assert.ArgumentCondition(minGap >= 0, "Invalid minGap value: {0}", minGap);
 			Assert.ArgumentCondition(minGroupLength >= 0, "Invalid minGroupLength value: {0}",
@@ -480,16 +482,16 @@ namespace ProSuite.QA.Tests
 							preRow.FromPoint,
 							otherEnd.FromPoint);
 						var simpleDangleTopo = new SimpleTopoLine(-1, simpleDangleLine,
-						                                          dangleLength -
-						                                          preRow.TopoLine.Length -
-						                                          otherEnd.TopoLine.Length,
-						                                          preRow.FromAngle + 1,
-						                                          otherEnd.FromAngle - 1);
+							dangleLength -
+							preRow.TopoLine.Length -
+							otherEnd.TopoLine.Length,
+							preRow.FromAngle + 1,
+							otherEnd.FromAngle - 1);
 						SimpleTableIndexRow simpleDangleRow =
 							SimpleTableIndexRow.Create(dangleRows[1].Row);
 
 						var simpleNodesRow = new NodesDirectedRow(simpleDangleTopo,
-						                                          simpleDangleRow, false);
+							simpleDangleRow, false);
 
 						var dangleNode =
 							new NetNode<NodesDirectedRow>(new List<NodesDirectedRow>
@@ -512,7 +514,7 @@ namespace ProSuite.QA.Tests
 				else if (dangleRows.Count > 1)
 				{
 					IPolyline simpleDangleLine = GeometryFactory.CreatePolyline(preRow.FromPoint,
-					                                                            preRow.FromPoint);
+						preRow.FromPoint);
 					var simpleDangleTopo = new SimpleTopoLine(-1, simpleDangleLine,
 					                                          dangleLength -
 					                                          preRow.TopoLine.Length,
@@ -540,7 +542,7 @@ namespace ProSuite.QA.Tests
 			if (! bothEndsIncomplete)
 			{
 				IPolyline simpleLine = GeometryFactory.CreatePolyline(preRow.FromPoint,
-				                                                      preRow.FromPoint);
+					preRow.FromPoint);
 				var simpleTopoLine = new SimpleTopoLine(-1, simpleLine, restLength,
 				                                        preRow.FromAngle + 1,
 				                                        preRow.FromAngle - 1);
@@ -647,7 +649,7 @@ namespace ProSuite.QA.Tests
 						NodesDirectedRow row = groupRows[0];
 						ITopologicalLine line = row.TopoLine;
 						IPolyline simpleLine = GeometryFactory.CreatePolyline(line.FromPoint,
-						                                                      line.ToPoint);
+							line.ToPoint);
 						var simpleTopoLine = new SimpleTopoLine(
 							line.PartIndex, simpleLine, line.Length,
 							line.FromAngle, line.ToAngle);
@@ -1065,8 +1067,8 @@ namespace ProSuite.QA.Tests
 				filter.Geometry = search;
 
 				foreach (IReadOnlyRow row in Search(InvolvedTables[tableIndex],
-				                            filter,
-				                            _endHelpers[tableIndex]))
+				                                    filter,
+				                                    _endHelpers[tableIndex]))
 				{
 					foreach (
 						DirectedRow directedRow in GetDirectedRows(
@@ -1194,9 +1196,9 @@ namespace ProSuite.QA.Tests
 				var preNodes = new Dictionary<NodeGroups, object> {{_startNode, 1}};
 
 				foreach (NearError errorInfo in
-					GetErrors(_startRow, preNodes, _startNode, 0, _minGapDistance,
-					          _minGapDistanceOther, new List<IDirectedRow>(), _isAtFork,
-					          isAllCovered: true))
+				         GetErrors(_startRow, preNodes, _startNode, 0, _minGapDistance,
+				                   _minGapDistanceOther, new List<IDirectedRow>(), _isAtFork,
+				                   isAllCovered: true))
 				{
 					yield return errorInfo;
 				}
@@ -1330,9 +1332,9 @@ namespace ProSuite.QA.Tests
 					nextAlong.Add(connected);
 
 					foreach (NearError errorInfo in GetErrors(
-						inverted, pre, nextNode, fullLength, nextMinEndDistance,
-						nextMinEndDistanceOther, nextAlong, isAtFork,
-						isAllCovered && isCovered))
+						         inverted, pre, nextNode, fullLength, nextMinEndDistance,
+						         nextMinEndDistanceOther, nextAlong, isAtFork,
+						         isAllCovered && isCovered))
 					{
 						yield return errorInfo;
 					}

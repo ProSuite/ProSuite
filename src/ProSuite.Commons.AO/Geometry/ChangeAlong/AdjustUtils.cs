@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
 using ESRI.ArcGIS.Geometry;
@@ -14,8 +13,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 {
 	public static class AdjustUtils
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private static readonly ThreadLocal<IPoint> _point =
 			new ThreadLocal<IPoint>(() => new PointClass());

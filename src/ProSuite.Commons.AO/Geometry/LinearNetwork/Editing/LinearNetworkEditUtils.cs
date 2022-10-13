@@ -39,13 +39,13 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork.Editing
 
 				// store the update
 				IFeature existingFeature = AssignGeometryToFeature(geometryToStoreInOriginal,
-				                                                   edgeFeature,
-				                                                   false);
+					edgeFeature,
+					false);
 				existingFeature.Store();
 
 				// store other new geometries as inserts
 				foreach (IGeometry modifyGeometry in
-					splitGeometries.Where(polycurve => polycurve != geometryToStoreInOriginal))
+				         splitGeometries.Where(polycurve => polycurve != geometryToStoreInOriginal))
 				{
 					IFeature newEdgeFeature =
 						AssignGeometryToFeature(modifyGeometry, edgeFeature, true);

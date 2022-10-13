@@ -170,7 +170,7 @@ namespace ProSuite.DomainServices.AO.QA
 
 				IList<IReadOnlyRow> rows;
 				using (progressWatch.MakeTransaction(
-					Step.DataLoading, Step.DataLoaded, tableIndex, tableCount, table))
+					       Step.DataLoading, Step.DataLoaded, tableIndex, tableCount, table))
 				{
 					rows = GetRowsByRelatedGeometry(
 						table, Assert.NotNull(relGeomTest.ObjectDataset), testsForTable[0],
@@ -200,7 +200,8 @@ namespace ProSuite.DomainServices.AO.QA
 						test.QaError += HandleError;
 
 						using (progressWatch.MakeTransaction(
-							Step.ITestProcessing, Step.ITestProcessed, testIndex, testCount, test))
+							       Step.ITestProcessing, Step.ITestProcessed, testIndex, testCount,
+							       test))
 						{
 							Verify(test, rows);
 						}
@@ -292,8 +293,8 @@ namespace ProSuite.DomainServices.AO.QA
 			}
 
 			return new List<IReadOnlyRow>(GdbQueryUtils.GetRowsInList(
-				                      table, table.OIDFieldName, oids,
-				                      recycle: false));
+				                              table, table.OIDFieldName, oids,
+				                              recycle: false));
 		}
 
 		private void Verify([NotNull] TestContainer container,

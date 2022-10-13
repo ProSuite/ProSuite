@@ -3,19 +3,19 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container;
-using ProSuite.QA.Container.PolygonGrower;
-using ProSuite.QA.Container.TestSupport;
-using ProSuite.QA.Tests.Documentation;
-using ProSuite.QA.Tests.IssueCodes;
-using ProSuite.QA.Tests.Network;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Container;
+using ProSuite.QA.Container.PolygonGrower;
+using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.IssueCodes;
+using ProSuite.QA.Tests.Network;
 
 namespace ProSuite.QA.Tests
 {
@@ -58,7 +58,8 @@ namespace ProSuite.QA.Tests
 			IReadOnlyFeatureClass polylineClass,
 			[Doc(nameof(DocStrings.QaDangleCount_dangleCountExpression))] [NotNull]
 			string dangleCountExpression,
-			[Doc(nameof(DocStrings.QaDangleCount_tolerance))] double tolerance)
+			[Doc(nameof(DocStrings.QaDangleCount_tolerance))]
+			double tolerance)
 			: this(new[] {polylineClass}, new[] {dangleCountExpression}, tolerance) { }
 
 		[Doc(nameof(DocStrings.QaDangleCount_1))]
@@ -69,7 +70,8 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaDangleCount_dangleCountExpressions))] [NotNull]
 			IList<string>
 				dangleCountExpressions,
-			[Doc(nameof(DocStrings.QaDangleCount_tolerance))] double tolerance)
+			[Doc(nameof(DocStrings.QaDangleCount_tolerance))]
+			double tolerance)
 			: base(
 				CastToTables((IEnumerable<IReadOnlyFeatureClass>) polylineClasses), tolerance,
 				false, null
@@ -176,7 +178,7 @@ namespace ProSuite.QA.Tests
 				IDictionary<int, FeatureDangleCount> dangleCountPerOid = tablePair.Value;
 
 				foreach (KeyValuePair<int, FeatureDangleCount> featurePair in
-					dangleCountPerOid)
+				         dangleCountPerOid)
 				{
 					int oid = featurePair.Key;
 					FeatureDangleCount dangleCount = featurePair.Value;
@@ -239,7 +241,7 @@ namespace ProSuite.QA.Tests
 			if (_dangleCountExpressions == null)
 			{
 				_dangleCountExpressions = GetDangleCountExpressions(_polylineClasses,
-				                                                    _dangleCountExpressionsSql);
+					_dangleCountExpressionsSql);
 			}
 
 			TableView tableView = _dangleCountExpressions[tableIndex];

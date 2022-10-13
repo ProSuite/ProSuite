@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons;
 using ProSuite.Commons.AO.Geodatabase;
@@ -23,8 +22,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased.Options
 
 		private const string _rolePrefix = "@";
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		public FieldConfigurator(
 			[NotNull] IEnumerable<XmlFieldOptions> fieldOptionsCollection)

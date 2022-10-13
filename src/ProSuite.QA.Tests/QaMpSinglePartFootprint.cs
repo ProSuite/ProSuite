@@ -2,16 +2,16 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container;
-using ProSuite.QA.Tests.Documentation;
-using ProSuite.QA.Tests.IssueCodes;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.QA.Container;
 using ProSuite.QA.Core;
-using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.IssueCodes;
 
 namespace ProSuite.QA.Tests
 {
@@ -149,18 +149,18 @@ namespace ProSuite.QA.Tests
 				if (footprint != null)
 				{
 					var completeFootprint = (IPolygon) GeometryUtils.Union(footprint,
-					                                                       bufferedSmallRings);
+						bufferedSmallRings);
 
 					if (completeFootprint.ExteriorRingCount > 1)
 					{
 						foreach (IPolygon smallPolygon in
-							GetSmallestDisjointPolygons(completeFootprint))
+						         GetSmallestDisjointPolygons(completeFootprint))
 						{
 							// for each small polygon, get the contained vertical segments (if any)
 							// and use those to report the disjoint part. If none contained: use ring as is
 							errorCount += ReportDisjointFootprintPolygon(feature,
-							                                             smallPolygon,
-							                                             multiPatch);
+								smallPolygon,
+								multiPatch);
 						}
 					}
 				}
@@ -169,11 +169,11 @@ namespace ProSuite.QA.Tests
 					if (bufferedSmallRings.ExteriorRingCount > 1)
 					{
 						foreach (IPolygon smallPolygon in
-							GetSmallestDisjointPolygons(bufferedSmallRings))
+						         GetSmallestDisjointPolygons(bufferedSmallRings))
 						{
 							errorCount += ReportDisjointFootprintPolygon(feature,
-							                                             smallPolygon,
-							                                             multiPatch);
+								smallPolygon,
+								multiPatch);
 						}
 					}
 				}
@@ -187,8 +187,8 @@ namespace ProSuite.QA.Tests
 						foreach (IPolygon smallPolygon in GetSmallestDisjointPolygons(footprint))
 						{
 							errorCount += ReportDisjointFootprintPolygon(feature,
-							                                             smallPolygon,
-							                                             multiPatch);
+								smallPolygon,
+								multiPatch);
 						}
 					}
 				}
@@ -227,7 +227,7 @@ namespace ProSuite.QA.Tests
 			object missing = Type.Missing;
 
 			foreach (IGeometry part in GeometryUtils.GetParts(
-				(IGeometryCollection) multiPatch))
+				         (IGeometryCollection) multiPatch))
 			{
 				var ring = part as IRing;
 				if (ring == null)
@@ -279,7 +279,7 @@ namespace ProSuite.QA.Tests
 
 					var followingRings = new IRing[followingRingCount];
 					GeometryUtils.GeometryBridge.QueryFollowingRings(multiPatch, ring,
-					                                                 ref followingRings);
+						ref followingRings);
 
 					foreach (IRing followingRing in followingRings)
 					{
@@ -291,7 +291,7 @@ namespace ProSuite.QA.Tests
 						IRing clonedFollowingRing = GeometryFactory.Clone(followingRing);
 
 						((IGeometryCollection) result).AddGeometry(clonedFollowingRing,
-						                                           ref missing, ref missing);
+							ref missing, ref missing);
 
 						result.PutRingType(clonedFollowingRing, followingRingType);
 					}
@@ -365,7 +365,7 @@ namespace ProSuite.QA.Tests
 			object missing = Type.Missing;
 
 			foreach (IGeometry part in GeometryUtils.GetParts(
-				(IGeometryCollection) multiPatch))
+				         (IGeometryCollection) multiPatch))
 			{
 				var ring = part as IRing;
 				if (ring == null)
@@ -398,8 +398,8 @@ namespace ProSuite.QA.Tests
 
 					IRing clone = GeometryFactory.Clone(ring);
 					((IGeometryCollection) largeEnoughRingsMultiPatch).AddGeometry(clone,
-					                                                               ref missing,
-					                                                               ref missing);
+						ref missing,
+						ref missing);
 
 					largeEnoughRingsMultiPatch.PutRingType(clone, ringType);
 				}

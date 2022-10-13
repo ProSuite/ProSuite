@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using System.Windows.Forms;
 using ProSuite.Commons.DomainModels;
@@ -26,8 +25,7 @@ namespace ProSuite.DdxEditor.Framework
 	// - revise names of depending items
 	internal partial class DeleteItemsForm : Form, IFormStateAware<DeleteItemsFormState>
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private readonly Latch _latch = new Latch();
 		private readonly BoundDataGridHandler<DependingItemTableRow> _gridHandler;

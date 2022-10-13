@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
 using ProSuite.Commons.DotLiquid;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -17,8 +16,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.RuleBased
 	{
 		private readonly string _htmlReportTemplatePath;
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		public HtmlReportWriter([NotNull] string htmlReportTemplatePath)
 		{

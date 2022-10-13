@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
@@ -11,8 +10,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 {
 	public class SubcurveFilter
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private readonly IExtentProvider _extentProvider;
 
@@ -318,7 +316,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 
 			// TOP-4915: Must also handle boundary loops between source and target
 			foreach (IPolygon boundaryLoop in BoundaryLoopUtils.GetBoundaryLoops(
-				fullUnionPolygon, GeometryUtils.GetXyTolerance(fullUnionPolygon)))
+				         fullUnionPolygon, GeometryUtils.GetXyTolerance(fullUnionPolygon)))
 			{
 				// remove from result, add to rings
 				IPolyline boundaryLoopLine = GeometryFactory.CreatePolyline(boundaryLoop);
@@ -356,7 +354,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 				}
 
 				foreach (IPath fullUnionInnerRing in GeometryUtils.GetPaths(
-					fullUnionInnerRings))
+					         fullUnionInnerRings))
 				{
 					IGeometry highLevelFullUnionInnerRing =
 						GeometryUtils.GetHighLevelGeometry(fullUnionInnerRing, true);

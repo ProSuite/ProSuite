@@ -1267,8 +1267,10 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 
 			double zResolution = DataZResolution ?? fallBackResolution;
 
-			Assert.NotNaN(zResolution,
-			              "Neither the EqualityToleranceZ nor the DataZResolution is defined.");
+			if (double.IsNaN(zResolution))
+			{
+				return zResolution;
+			}
 
 			double epsilon = MathUtils.GetDoubleSignificanceEpsilon(envelope.XMax, envelope.YMax);
 

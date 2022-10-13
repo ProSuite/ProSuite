@@ -38,9 +38,9 @@ namespace ProSuite.DomainServices.AO.QA
 			foreach (InvolvedRow involvedRow in involvedRows)
 			{
 				relatedGeometries.AddRange(GetReferenceGeometries(involvedRow, qualityCondition,
-				                                                  verificationContext,
-				                                                  datasetResolver,
-				                                                  isRelevantVectorDataset));
+					                           verificationContext,
+					                           datasetResolver,
+					                           isRelevantVectorDataset));
 			}
 
 			return UnionReferenceGeometry(relatedGeometries, maximumPointCount);
@@ -106,13 +106,13 @@ namespace ProSuite.DomainServices.AO.QA
 				// - if only the OID plus the Shape field of the involved feature class are in the subfields, then
 				//   in those same cases a "Shape Integrity Error" exception is thrown.
 				foreach (FieldMappingRowProxy row in
-					GdbQueryUtils.GetRowProxys(objectClass,
-					                           testPerimeter,
-					                           whereClause,
-					                           relClassChain,
-					                           postfixClause,
-					                           subfields: null, includeOnlyOIDFields: true,
-					                           recycle: true))
+				         GdbQueryUtils.GetRowProxys(objectClass,
+				                                    testPerimeter,
+				                                    whereClause,
+				                                    relClassChain,
+				                                    postfixClause,
+				                                    subfields: null, includeOnlyOIDFields: true,
+				                                    recycle: true))
 				{
 					result.Add(row.OID);
 				}
@@ -339,14 +339,14 @@ namespace ProSuite.DomainServices.AO.QA
 			else
 			{
 				foreach (IList<IRelationshipClass> relClassChain
-					in GetRelationshipClassChainsToVerifiedFeatureClasses(
-						objectDataset,
-						verificationContext,
-						isRelevantVectorDataset,
-						out bool _))
+				         in GetRelationshipClassChainsToVerifiedFeatureClasses(
+					         objectDataset,
+					         verificationContext,
+					         isRelevantVectorDataset,
+					         out bool _))
 				{
 					foreach (IGeometry shape in
-						GetReferenceGeometries(obj, relClassChain))
+					         GetReferenceGeometries(obj, relClassChain))
 					{
 						if (shape != null && ! shape.IsEmpty)
 						{
@@ -370,7 +370,7 @@ namespace ProSuite.DomainServices.AO.QA
 			if (relationshipChainToFeatureClass.Count == 1)
 			{
 				foreach (IObject relatedObject in
-					GdbQueryUtils.GetRelatedObjects(obj, relationshipChainToFeatureClass))
+				         GdbQueryUtils.GetRelatedObjects(obj, relationshipChainToFeatureClass))
 				{
 					var relatedFeature = relatedObject as IFeature;
 
@@ -430,12 +430,12 @@ namespace ProSuite.DomainServices.AO.QA
 			const bool recycle = false;
 
 			foreach (FieldMappingRowProxy rowProxy in GdbQueryUtils.GetRowProxys(
-				obj.Class,
-				intersectedGeometry,
-				whereClause,
-				relationshipChainToFeatureClass,
-				postfixClause,
-				subfields, includeOnlyOIDFields, recycle))
+				         obj.Class,
+				         intersectedGeometry,
+				         whereClause,
+				         relationshipChainToFeatureClass,
+				         postfixClause,
+				         subfields, includeOnlyOIDFields, recycle))
 			{
 				yield return rowProxy.BaseRow;
 			}
