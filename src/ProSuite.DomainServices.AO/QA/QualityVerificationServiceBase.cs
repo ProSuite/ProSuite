@@ -408,69 +408,13 @@ namespace ProSuite.DomainServices.AO.QA
 		{
 			Assert.ArgumentNotNull(qualitySpecification, nameof(qualitySpecification));
 
-			_qualityConditions = new List<QualityCondition>();
-			_testsByCondition = new Dictionary<QualityCondition, IList<ITest>>();
-			_testVerifications = new Dictionary<ITest, TestVerification>();
-
-			ReportPreProcessing("Loading tests...");
-
-			var testList = new List<ITest>();
-
 			IOpenDataset datasetOpener = CreateDatasetOpener(_verificationContext);
 
-			HashSet<QualityCondition> orderedQualityConditions =
-				new HashSet<QualityCondition>(
-					QualitySpecificationUtils.GetOrderedQualityConditions(
-						qualitySpecification, datasetOpener));
-
-			qualityVerification = GetQualityVerification(
-				qualitySpecification, orderedQualityConditions,
-				out _elementsByConditionVerification);
-
-			int index = 0;
-			int count = orderedQualityConditions.Count;
-			foreach (QualityCondition condition in orderedQualityConditions)
-			{
-				ReportPreProcessing("Loading tests...", index++, count);
-
-				TestFactory factory =
-					Assert.NotNull(TestFactoryUtils.CreateTestFactory(condition),
-					               $"Cannot create test factory for condition {condition.Name}");
-
-				// This test can only be performed here because the DataType must be initialized:
-				// It should probably be deleted once no IMosaicLayer, ITerrain is used any more
-				if (QualitySpecificationUtils.HasUnsupportedDatasetParameterValues(
-					    condition, datasetOpener, out string message))
-				{
-					_msg.WarnFormat(
-						"Condition '{0}' has unsupported parameter value(s) and is ignored: {1}",
-						condition.Name, message);
-					continue;
-				}
-
-				IList<ITest> tests = factory.CreateTests(datasetOpener);
-				if (tests.Count == 0)
-				{
-					continue;
-				}
-
-				QualityConditionVerification conditionVerification =
-					qualityVerification.GetConditionVerification(condition);
-				Assert.NotNull(conditionVerification,
-				               "Verification not found for quality condition");
-
-				var testIndex = 0;
-				foreach (ITest test in tests)
-				{
-					testList.Add(test);
-					_testVerifications.Add(test,
-					                       new TestVerification(conditionVerification, testIndex));
-					testIndex++;
-				}
-
-				_qualityConditions.Add(condition);
-				_testsByCondition.Add(condition, tests);
-			}
+			IList<ITest> testList = QualityVerificationUtils.GetTestsAndDictionaries(
+				qualitySpecification, datasetOpener,
+				out qualityVerification, out _elementsByConditionVerification,
+				out _qualityConditions, out _testVerifications, out _testsByCondition,
+				ReportPreProcessing);
 
 			return testList;
 		}
