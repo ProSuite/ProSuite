@@ -51,6 +51,9 @@ namespace ProSuite.UI.MicroserverState
 			string protocol = _serviceClient.UseTls ? "https" : "http";
 			FullAddress = $"{protocol}://{_serviceClient.HostName}:{_serviceClient.Port}";
 
+			// Ensure max text size to avoid scrollbars appearing on status change:
+			Text = "Evaluating Status";
+
 			_timer.Interval = TimeSpan.FromSeconds(_initialCheckIntervalSeconds);
 			_timer.Tick += (sender, args) => CheckHealth(sender, args);
 		}
