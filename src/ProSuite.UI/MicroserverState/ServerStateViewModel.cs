@@ -76,9 +76,9 @@ namespace ProSuite.UI.MicroserverState
 				bool result = true;
 				foreach (ServerState serverState in ServerStates)
 				{
-					bool serviceRunning = await serverState.Evaluate();
+					bool? serviceRunning = await serverState.Evaluate();
 
-					result &= serviceRunning;
+					result &= serviceRunning == true;
 				}
 
 				LastEvaluation = DateTime.Now;

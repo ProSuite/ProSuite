@@ -71,6 +71,8 @@ namespace ProSuite.Commons.UI.WinForms
 			}
 			catch (Exception ex)
 			{
+				_msg.Debug("Error loading form", ex);
+
 				ErrorHandler.HandleError(ex, _msg, null, "Error showing server state dialog");
 			}
 		}

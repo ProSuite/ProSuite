@@ -12,7 +12,7 @@
     <DockPanel LastChildFill="False" Width="Auto" Height="Auto" HorizontalAlignment="Stretch">
 
         <ListView DockPanel.Dock="Top" HorizontalAlignment="Stretch"
-                  ItemsSource="{Binding Path=ServerStates}">
+                  ItemsSource="{Binding Path=ServerStates, Mode=OneTime}">
             <ListView.ItemContainerStyle>
                 <Style TargetType="ListViewItem">
                     <Setter Property="HorizontalContentAlignment" Value="Stretch" />
