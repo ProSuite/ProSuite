@@ -30,7 +30,7 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 
 		private readonly IVerificationContext _verificationContext;
 
-		private readonly Dictionary<QualityCondition, IList<ITest>> _testsByQualityCondition;
+		private readonly IDictionary<QualityCondition, IList<ITest>> _testsByQualityCondition;
 
 		private List<AllowedError> _allowedErrors;
 		private IGeometry _perimeter;
@@ -55,7 +55,7 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 		/// <param name="qualityConditionRepository">The quality condition repository.</param>
 		protected QualityErrorRepositoryBase(
 			[NotNull] IVerificationContext verificationContext,
-			[NotNull] Dictionary<QualityCondition, IList<ITest>> testsByQualityCondition,
+			[NotNull] IDictionary<QualityCondition, IList<ITest>> testsByQualityCondition,
 			[NotNull] IQualityConditionObjectDatasetResolver datasetResolver,
 			[NotNull] IQualityConditionRepository qualityConditionRepository)
 		{

@@ -118,7 +118,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 		protected override QualityErrorRepositoryBase CreateQualityErrorRepository(
 			IVerificationContext verificationContext,
-			Dictionary<QualityCondition, IList<ITest>> qualityConditionTests,
+			IDictionary<QualityCondition, IList<ITest>> qualityConditionTests,
 			IQualityConditionObjectDatasetResolver datasetResolver)
 		{
 			// TODO get rid of subclass; but allow injecting things like an AttributeWriter etc.

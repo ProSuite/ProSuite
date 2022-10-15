@@ -119,11 +119,8 @@ namespace ProSuite.DomainServices.AO.QA
 			[NotNull] QualitySpecification qualitySpecification,
 			[NotNull] IOpenDataset datasetOpener,
 			[NotNull] out QualityVerification qualityVerification,
-			[NotNull] out Dictionary<QualityConditionVerification, QualitySpecificationElement>
-				elementsByConditionVerification,
 			[NotNull] out IList<QualityCondition> qualityConditions,
-			[NotNull] out Dictionary<ITest, TestVerification> testVerifications,
-			[NotNull] out Dictionary<QualityCondition, IList<ITest>> testsByCondition,
+			[NotNull] out VerificationElements verificationDictionaries,
 			[CanBeNull] Action<string, int, int> ReportPreProcessing)
 		{
 			Assert.ArgumentNotNull(qualitySpecification, nameof(qualitySpecification));
@@ -137,13 +134,16 @@ namespace ProSuite.DomainServices.AO.QA
 					QualitySpecificationUtils.GetOrderedQualityConditions(
 						qualitySpecification, datasetOpener));
 
+			Dictionary<QualityConditionVerification, QualitySpecificationElement>
+				elementsByConditionVerification;
+
 			qualityVerification = GetQualityVerification(
 				qualitySpecification, orderedQualityConditions,
 				out elementsByConditionVerification);
 
 			qualityConditions = new List<QualityCondition>();
-			testsByCondition = new Dictionary<QualityCondition, IList<ITest>>();
-			testVerifications = new Dictionary<ITest, TestVerification>();
+			var testsByCondition = new Dictionary<QualityCondition, IList<ITest>>();
+			var testVerifications = new Dictionary<ITest, TestVerification>();
 
 			int index = 0;
 			int count = orderedQualityConditions.Count;
@@ -190,6 +190,10 @@ namespace ProSuite.DomainServices.AO.QA
 				testsByCondition.Add(condition, tests);
 			}
 
+			verificationDictionaries =
+				new VerificationElements(testVerifications, testsByCondition,
+				                         elementsByConditionVerification);
+
 			return testList;
 		}
 
@@ -230,7 +234,6 @@ namespace ProSuite.DomainServices.AO.QA
 			                          .Where(v => v.QualityCondition != null)
 			                          .ToDictionary(v => v.QualityCondition);
 		}
-
 
 		[NotNull]
 		public static IDictionary<IFeatureClass, IVectorDataset> GetDatasetsByFeatureClass(

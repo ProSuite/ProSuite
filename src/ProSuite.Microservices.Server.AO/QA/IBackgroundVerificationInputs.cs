@@ -76,7 +76,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 		/// <returns></returns>
 		QualityErrorRepositoryBase CreateQualityErrorRepository(
 			[NotNull] IVerificationContext verificationContext,
-			[NotNull] Dictionary<QualityCondition, IList<ITest>> qualityConditionTests,
+			[NotNull] IDictionary<QualityCondition, IList<ITest>> qualityConditionTests,
 			[NotNull] IQualityConditionObjectDatasetResolver datasetResolver);
 
 		/// <summary>
