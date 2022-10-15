@@ -67,6 +67,8 @@ namespace ProSuite.DomainServices.AO.QA
 			}
 		}
 
+		public IEnumerable<QualitySpecificationElement> Elements => ElementsByTest.Values;
+
 		public IList<ITest> GetTests([NotNull] QualityCondition condition)
 		{
 			return TestsByCondition[condition];

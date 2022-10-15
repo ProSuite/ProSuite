@@ -121,11 +121,11 @@ namespace ProSuite.DomainServices.AO.QA
 			[NotNull] out QualityVerification qualityVerification,
 			[NotNull] out IList<QualityCondition> qualityConditions,
 			[NotNull] out VerificationElements verificationDictionaries,
-			[CanBeNull] Action<string, int, int> ReportPreProcessing)
+			[CanBeNull] Action<string, int, int> reportPreProcessing)
 		{
 			Assert.ArgumentNotNull(qualitySpecification, nameof(qualitySpecification));
 
-			ReportPreProcessing?.Invoke("Loading tests...", 0, 0);
+			reportPreProcessing?.Invoke("Loading tests...", 0, 0);
 
 			var testList = new List<ITest>();
 
@@ -149,7 +149,7 @@ namespace ProSuite.DomainServices.AO.QA
 			int count = orderedQualityConditions.Count;
 			foreach (QualityCondition condition in orderedQualityConditions)
 			{
-				ReportPreProcessing?.Invoke("Loading tests...", index++, count);
+				reportPreProcessing?.Invoke("Loading tests...", index++, count);
 
 				TestFactory factory =
 					Assert.NotNull(TestFactoryUtils.CreateTestFactory(condition),

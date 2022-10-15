@@ -39,7 +39,7 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 
 			string tempDirPath = TestUtils.GetTempDirPath(null);
 
-			service.ExecuteVerification(qualitySpecification, null, null, 1000,
+			service.ExecuteVerification(qualitySpecification, null, 1000,
 			                            tempDirPath);
 
 			Assert.IsTrue(Directory.Exists(Path.Combine(tempDirPath, "issues.gdb")));

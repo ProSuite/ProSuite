@@ -203,6 +203,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 				responseStreamer.CreateResponseAction = responseStreamer.CreateStandaloneResponse;
 
+				// Attach to logging infrastructure
 				Action<LoggingEvent> action =
 					SendStandaloneProgressAction(responseStreamer, ServiceCallStatus.Running);
 
@@ -472,25 +473,10 @@ namespace ProSuite.Microservices.Server.AO.QA
 			VerificationProgressStreamer<StandaloneVerificationResponse> responseStreamer,
 			ITrackCancel trackCancel)
 		{
-			// Machine login
-			SetupUserNameProvider(Environment.UserName);
 
 			try
 			{
 				VerificationParametersMsg parameters = request.Parameters;
-
-				IGeometry perimeter =
-					ProtobufGeometryUtils.FromShapeMsg(parameters.Perimeter);
-
-				var aoi = perimeter == null ? null : new AreaOfInterest(perimeter);
-
-				_msg.DebugFormat("Provided perimeter: {0}", GeometryUtils.ToString(perimeter));
-
-				XmlBasedVerificationService qaService = new XmlBasedVerificationService(
-					HtmlReportTemplatePath, QualitySpecificationTemplatePath);
-
-				qaService.IssueFound +=
-					(sender, args) => responseStreamer.AddPendingIssue(args);
 
 				QualitySpecification qualitySpecification;
 
@@ -500,8 +486,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 					{
 						XmlQualitySpecificationMsg xmlSpecification = request.XmlSpecification;
 
-						qualitySpecification =
-							SetupQualitySpecification(xmlSpecification, qaService);
+						qualitySpecification = SetupQualitySpecification(xmlSpecification);
 						break;
 					}
 					case StandaloneVerificationRequest.SpecificationOneofCase
@@ -510,21 +495,14 @@ namespace ProSuite.Microservices.Server.AO.QA
 						ConditionListSpecificationMsg conditionListSpec =
 							request.ConditionListSpecification;
 
-						qualitySpecification =
-							SetupQualitySpecification(conditionListSpec, qaService);
+						qualitySpecification = SetupQualitySpecification(conditionListSpec);
 						break;
 					}
 					default: throw new ArgumentOutOfRangeException();
 				}
 
-				Model primaryModel =
-					StandaloneVerificationUtils.GetPrimaryModel(qualitySpecification);
-				responseStreamer.KnownIssueSpatialReference =
-					primaryModel?.SpatialReferenceDescriptor.SpatialReference;
-
-				qaService.ExecuteVerification(
-					qualitySpecification, aoi, null, parameters.TileSize,
-					request.OutputDirectory, IssueRepositoryType.FileGdb, trackCancel);
+				return VerifyStandaloneXmlCore(Environment.UserName, qualitySpecification, parameters,
+				                               null, responseStreamer, trackCancel);
 			}
 			catch (Exception e)
 			{
@@ -541,6 +519,57 @@ namespace ProSuite.Microservices.Server.AO.QA
 			}
 
 			// TODO: Final result message (error, warning count, row count with stop conditions, fulfilled)
+		}
+
+		private ServiceCallStatus VerifyStandaloneXmlCore(
+			[NotNull] string userName,
+			[NotNull] QualitySpecification qualitySpecification,
+			[NotNull] VerificationParametersMsg parameters,
+			[CanBeNull] DistributedTestRunner distributedTestrunner,
+			[NotNull] VerificationProgressStreamer<StandaloneVerificationResponse> responseStreamer,
+			ITrackCancel trackCancel)
+		{
+			SetupUserNameProvider(userName);
+
+			IGeometry perimeter =
+				ProtobufGeometryUtils.FromShapeMsg(parameters.Perimeter);
+
+			var aoi = perimeter == null ? null : new AreaOfInterest(perimeter);
+
+			_msg.DebugFormat("Provided perimeter: {0}", GeometryUtils.ToString(perimeter));
+
+			XmlBasedVerificationService xmlService = new XmlBasedVerificationService(
+				HtmlReportTemplatePath, QualitySpecificationTemplatePath);
+
+			// TODO: Determine if the report paths are including the files or just the dirs (probably better: dirs)
+			xmlService.SetupOutputPaths(parameters.IssueFileGdbPath,
+			                            parameters.VerificationReportPath,
+			                            parameters.HtmlReportPath);
+
+			xmlService.IssueFound +=
+				(sender, args) => responseStreamer.AddPendingIssue(args);
+
+			Model primaryModel =
+				StandaloneVerificationUtils.GetPrimaryModel(qualitySpecification);
+			responseStreamer.KnownIssueSpatialReference =
+				primaryModel?.SpatialReferenceDescriptor.SpatialReference;
+
+			IssueRepositoryType issueRepositoryType = IssueRepositoryType.FileGdb;
+
+			if (ExternalIssueRepositoryUtils.IssueRepositoryExists(
+				    parameters.IssueFileGdbPath, IssueRepositoryType.FileGdb))
+			{
+				_msg.WarnFormat("The {0} workspace '{1}' already exists",
+				                issueRepositoryType, parameters.IssueFileGdbPath);
+
+				// TODO: Failed? More info is required (Warning messages..)
+				return ServiceCallStatus.Finished;
+			}
+
+			xmlService.ExecuteVerification(qualitySpecification, aoi, parameters.TileSize,
+			                               trackCancel);
+
+			// TODO: Final result message (error, warning count, row count with stop conditions, fulfilled)
 
 			return trackCancel.Continue()
 				       ? ServiceCallStatus.Finished
@@ -548,7 +577,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 		}
 
 		private static QualitySpecification SetupQualitySpecification(
-			XmlQualitySpecificationMsg xmlSpecification, XmlBasedVerificationService qaService)
+			[NotNull] XmlQualitySpecificationMsg xmlSpecification)
 		{
 			QualitySpecification qualitySpecification;
 			var dataSources = new List<DataSource>();
@@ -569,15 +598,14 @@ namespace ProSuite.Microservices.Server.AO.QA
 			}
 
 			qualitySpecification =
-				qaService.SetupQualitySpecification(
-					xmlSpecification.Xml, xmlSpecification.SelectedSpecificationName,
-					dataSources);
+				QualitySpecificationUtils.CreateQualitySpecification(
+					xmlSpecification.Xml, xmlSpecification.SelectedSpecificationName, dataSources);
+
 			return qualitySpecification;
 		}
 
 		private QualitySpecification SetupQualitySpecification(
-			ConditionListSpecificationMsg conditionsSpecificationMsg,
-			XmlBasedVerificationService qaService)
+			[NotNull] ConditionListSpecificationMsg conditionsSpecificationMsg)
 		{
 			if (SupportedTestDescriptors == null || SupportedTestDescriptors.Count == 0)
 			{
@@ -622,9 +650,10 @@ namespace ProSuite.Microservices.Server.AO.QA
 				//}
 			}
 
-			QualitySpecification qualitySpecification = qaService.SetupQualitySpecification(
-				conditionsSpecificationMsg.Name, SupportedTestDescriptors, specificationElements,
-				dataSources, false);
+			QualitySpecification qualitySpecification =
+				QualitySpecificationUtils.CreateQualitySpecification(
+					conditionsSpecificationMsg.Name, SupportedTestDescriptors,
+					specificationElements, dataSources, false);
 
 			return qualitySpecification;
 		}

@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Text;
+using System.Threading;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geometry;
@@ -14,11 +14,11 @@ using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
+using ProSuite.DomainModel.Core.QA.VerificationProgress;
 using ProSuite.DomainServices.AO.QA.Exceptions;
 using ProSuite.DomainServices.AO.QA.Issues;
 using ProSuite.DomainServices.AO.QA.VerificationReports;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestContainer;
 
 namespace ProSuite.DomainServices.AO.QA.Standalone
 {
@@ -50,6 +50,33 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 
 		#endregion
 
+		/// <summary>
+		/// The optional exception object repository.
+		/// </summary>
+		[CanBeNull]
+		public IExceptionObjectRepository ExceptionObjectRepository { get; set; }
+
+		/// <summary>
+		/// Function for getting the key field name for an object dataset.
+		/// </summary>
+		[CanBeNull]
+		public Func<IObjectDataset, string> GetKeyFieldNameFunc { get; set; }
+
+		/// <summary>
+		/// The test runner to be used if parallel processing has been requested. No parallel
+		/// processing will take place if this property has not been set.
+		/// </summary>
+		[CanBeNull]
+		public ITestRunner DistributedTestRunner { get; set; }
+
+		private CancellationTokenSource _cancellationTokenSource;
+
+		private CancellationTokenSource CancellationTokenSource =>
+			_cancellationTokenSource ??
+			(_cancellationTokenSource = new CancellationTokenSource());
+
+		public event EventHandler<VerificationProgressEventArgs> Progress;
+
 		public event EventHandler<IssueFoundEventArgs> IssueFound;
 
 		/// <summary>
@@ -59,39 +86,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 		/// <param name="datasetContext">The model context.</param>
 		/// <param name="datasetResolver">The resolver for getting the object dataset based on a table name, in the context of a quality condition</param>
 		/// <param name="issueRepository">The issue repository.</param>
-		/// <param name="exceptionObjectRepository">The exception object repository</param>
 		/// <param name="tileSize">Tile size for the quality verification.</param>
-		/// <param name="getKeyFieldName">Function for getting the key field name for an object dataset</param>
-		/// <param name="areaOfInterest">The area of interest for the verification (optional).</param>
-		/// <param name="trackCancel">The cancel tracker.</param>
-		/// <returns></returns>
-		public bool Verify(
-			[NotNull] QualitySpecification qualitySpecification,
-			[NotNull] IDatasetContext datasetContext,
-			[NotNull] IQualityConditionObjectDatasetResolver datasetResolver,
-			[CanBeNull] IIssueRepository issueRepository,
-			[CanBeNull] IExceptionObjectRepository exceptionObjectRepository,
-			double tileSize,
-			[CanBeNull] Func<IObjectDataset, string> getKeyFieldName,
-			[CanBeNull] AreaOfInterest areaOfInterest,
-			[CanBeNull] ITrackCancel trackCancel)
-		{
-			return Verify(qualitySpecification, datasetContext, datasetResolver,
-			              issueRepository, exceptionObjectRepository, tileSize,
-			              getKeyFieldName, areaOfInterest, trackCancel,
-			              out int _, out int _, out int _);
-		}
-
-		/// <summary>
-		/// Verifies the specified object classes.
-		/// </summary>
-		/// <param name="qualitySpecification">The quality specification to verify.</param>
-		/// <param name="datasetContext">The model context.</param>
-		/// <param name="datasetResolver">The resolver for getting the object dataset based on a table name, in the context of a quality condition</param>
-		/// <param name="issueRepository">The issue repository.</param>
-		/// <param name="exceptionObjectRepository">The exception object repository</param>
-		/// <param name="tileSize">Tile size for the quality verification.</param>
-		/// <param name="getKeyFieldName">Function for getting the key field name for an object dataset</param>
 		/// <param name="areaOfInterest">The test run perimeter (optional).</param>
 		/// <param name="trackCancel">The cancel tracker.</param>
 		/// <param name="errorCount">The number of (hard) errors.</param>
@@ -102,9 +97,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 		                   [NotNull] IDatasetContext datasetContext,
 		                   [NotNull] IQualityConditionObjectDatasetResolver datasetResolver,
 		                   [CanBeNull] IIssueRepository issueRepository,
-		                   [CanBeNull] IExceptionObjectRepository exceptionObjectRepository,
 		                   double tileSize,
-		                   [CanBeNull] Func<IObjectDataset, string> getKeyFieldName,
 		                   [CanBeNull] AreaOfInterest areaOfInterest,
 		                   [CanBeNull] ITrackCancel trackCancel,
 		                   out int errorCount,
@@ -118,15 +111,12 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 
 			_verificationReportBuilder.BeginVerification(areaOfInterest);
 
-			IEnumerable<QualitySpecificationElement> elements =
-				GetOrderedElements(qualitySpecification).ToList();
-
-			IDictionary<ITest, QualitySpecificationElement> elementsByTest;
-			IEnumerable<ITest> tests =
-				CreateTests(elements, datasetContext, out elementsByTest).ToList();
+			IList<ITest> tests =
+				CreateTests(qualitySpecification, datasetContext,
+				            out VerificationElements verificationElements);
 
 			var qualityConditionCount = 0;
-			foreach (QualitySpecificationElement element in elements)
+			foreach (QualitySpecificationElement element in verificationElements.Elements)
 			{
 				qualityConditionCount++;
 				_verificationReportBuilder.AddVerifiedQualityCondition(element);
@@ -142,52 +132,48 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 
 			Stopwatch watch = _msg.DebugStartTiming();
 
-			LogTests(tests, elementsByTest);
+			LogTests(tests, verificationElements.ElementsByTest);
 
-			TestContainer testContainer = CreateTestContainer(tests, tileSize);
+			ITestRunner testRunner = DistributedTestRunner ??
+			                         CreateSingleThreadedTestRunner(
+				                         verificationElements, tileSize);
+
+			testRunner.TestAssembler =
+				new TestAssembler(t => verificationElements.GetQualityCondition(t));
 
 			LogBeginVerification(qualitySpecification, tileSize, areaOfInterest);
 
+			ProgressProcessor progressProcessor = new ProgressProcessor(
+				CancellationTokenSource, verificationElements.ElementsByTest, trackCancel);
+
 			IssueProcessor issueProcessor;
-			ProgressProcessor progressProcessor;
+
 			using (var issueWriter = new BufferedIssueWriter(_verificationReportBuilder,
 			                                                 datasetContext, datasetResolver,
 			                                                 issueRepository,
-			                                                 getKeyFieldName))
+			                                                 GetKeyFieldNameFunc))
 			{
-				issueProcessor = CreateIssueProcessor(testContainer, issueWriter,
-				                                      areaOfInterest, exceptionObjectRepository,
-				                                      elementsByTest);
+				issueProcessor = CreateIssueProcessor(
+					tests, issueWriter, areaOfInterest, ExceptionObjectRepository,
+					verificationElements.ElementsByTest);
 
-				progressProcessor = new ProgressProcessor(testContainer, elementsByTest,
-				                                          trackCancel);
+				testRunner.Progress += (sender, args) => progressProcessor.Process(args);
+				testRunner.Progress += (sender, args) => Progress?.Invoke(sender, args);
 
-				testContainer.QaError += (sender, args) => issueProcessor.Process(args);
+				testRunner.QaError += (sender, args) => issueProcessor.Process(args);
 				issueProcessor.IssueFound += (sender, args) => IssueFound?.Invoke(this, args);
 
-				testContainer.TestingRow +=
-					delegate(object o, RowEventArgs args)
-					{
-						if (issueProcessor.HasStopCondition(args.Row))
-						{
-							args.Cancel = true;
-						}
-					};
-
-				testContainer.ProgressChanged +=
-					(sender, args) => progressProcessor.Process(args);
-
 				// run the tests
-				TestExecutionUtils.Execute(testContainer, areaOfInterest);
+				testRunner.Execute(tests, areaOfInterest, CancellationTokenSource);
 			}
 
 			_verificationReportBuilder.AddRowsWithStopConditions(
 				issueProcessor.GetRowsWithStopConditions());
 
-			if (exceptionObjectRepository != null)
+			if (ExceptionObjectRepository != null)
 			{
 				_verificationReportBuilder.AddExceptionStatistics(
-					exceptionObjectRepository.ExceptionStatistics);
+					ExceptionObjectRepository.ExceptionStatistics);
 			}
 
 			_verificationReportBuilder.EndVerification(progressProcessor.Cancelled);
@@ -200,39 +186,58 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 
 			bool fulfilled = errorCount == 0 && ! progressProcessor.Cancelled;
 
-			LogResults(elements, issueProcessor,
+			LogResults(verificationElements.Elements, issueProcessor,
 			           qualityConditionCount, datasetCount,
 			           fulfilled, progressProcessor.Cancelled,
-			           exceptionObjectRepository?.ExceptionStatistics);
+			           ExceptionObjectRepository?.ExceptionStatistics);
 
 			return fulfilled;
 		}
 
+		private static ITestRunner CreateSingleThreadedTestRunner(
+			VerificationElements verificationElements,
+			double tileSize)
+		{
+			SingleThreadedTestRunner testRunner =
+				new SingleThreadedTestRunner(verificationElements, tileSize)
+				{
+					AllowEditing = false,
+					FilterTableRowsUsingRelatedGeometry = false,
+					ForceFullScanForNonContainerTests = false, //parameters.ForceFullScan...?,
+					ObjectSelection = null,
+					LocationBasedQualitySpecification = null,
+					QualityVerification = null,
+					DatasetLookup = null
+				};
+
+			return testRunner;
+		}
+
 		[CanBeNull]
 		private static IGeometry GetTestPerimeter([CanBeNull] AreaOfInterest areaOfInterest,
-		                                          [NotNull] TestContainer testContainer)
+		                                          [NotNull] IEnumerable<ITest> tests)
 		{
 			if (areaOfInterest == null)
 			{
 				return null;
 			}
 
-			IGeometry result;
-			GeometryUtils.EnsureSpatialReference(areaOfInterest.Geometry,
-			                                     testContainer.GetSpatialReference(), false,
-			                                     out result);
+			ISpatialReference spatialReference = TestUtils.GetUniqueSpatialReference(tests);
+
+			GeometryUtils.EnsureSpatialReference(areaOfInterest.Geometry, spatialReference, false,
+			                                     out IGeometry result);
 			return result;
 		}
 
 		[NotNull]
 		private static IssueProcessor CreateIssueProcessor(
-			[NotNull] TestContainer testContainer,
+			[NotNull] IEnumerable<ITest> tests,
 			[NotNull] IIssueWriter issueWriter,
 			[CanBeNull] AreaOfInterest areaOfInterest,
 			[CanBeNull] IExceptionObjectRepository exceptionObjectRepository,
 			[NotNull] IDictionary<ITest, QualitySpecificationElement> elementsByTest)
 		{
-			IGeometry testPerimeter = GetTestPerimeter(areaOfInterest, testContainer);
+			IGeometry testPerimeter = GetTestPerimeter(areaOfInterest, tests);
 
 			return new IssueProcessor(
 				issueWriter,
@@ -576,80 +581,34 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 		}
 
 		[NotNull]
-		private static TestContainer CreateTestContainer([NotNull] IEnumerable<ITest> tests,
-		                                                 double tileSize)
+		private IList<ITest> CreateTests(
+			[NotNull] QualitySpecification qualitySpecification,
+			[NotNull] IDatasetContext datasetContext,
+			out VerificationElements verificationElements)
 		{
-			var result = new TestContainer
-			             {
-				             AllowEditing = false,
-				             TileSize = tileSize
-			             };
-
-			foreach (ITest test in tests)
-			{
-				result.AddTest(test);
-			}
-
-			return result;
-		}
-
-		[NotNull]
-		private IEnumerable<ITest> CreateTests(
-			[NotNull] IEnumerable<QualitySpecificationElement> qualitySpecificationElements,
-			[CanBeNull] IDatasetContext datasetContext,
-			out IDictionary<ITest, QualitySpecificationElement> qualityConditionsByTest)
-		{
-			var result = new List<ITest>();
-			qualityConditionsByTest = new Dictionary<ITest, QualitySpecificationElement>();
-
-			if (datasetContext == null)
-			{
-				return result;
-			}
-
 			IOpenDataset datasetOpener = _openDatasetFactory(datasetContext);
-			foreach (QualitySpecificationElement element in qualitySpecificationElements)
-			{
-				QualityCondition condition = element.QualityCondition;
 
-				TestFactory factory = Assert.NotNull(
-					TestFactoryUtils.CreateTestFactory(condition),
-					$"Cannot create test factory for condition {condition.Name}");
+			QualityVerification qualityVerification;
 
-				foreach (ITest test in factory.CreateTests(datasetOpener))
-				{
-					result.Add(test);
-					qualityConditionsByTest.Add(test, element);
-				}
-			}
+			IList<ITest> testList = QualityVerificationUtils.GetTestsAndDictionaries(
+				qualitySpecification, datasetOpener,
+				out qualityVerification, out IList<QualityCondition> _, out verificationElements,
+				ReportPreProcessing);
 
-			return result;
+			return testList;
 		}
 
-		[NotNull]
-		private static IEnumerable<QualitySpecificationElement> GetOrderedElements(
-			[NotNull] QualitySpecification qualitySpecification)
+		private void ReportPreProcessing([NotNull] string message,
+		                                 int currentStep = 0,
+		                                 int stepCount = 0)
 		{
-			var list = new List<OrderedQualitySpecificationElement>();
+			var args = new VerificationProgressEventArgs(
+				           VerificationProgressType.PreProcess, currentStep, stepCount)
+			           {
+				           Tag = message
+			           };
 
-			var listIndex = 0;
-			foreach (QualitySpecificationElement element in
-			         qualitySpecification.Elements)
-			{
-				if (! element.Enabled)
-				{
-					continue;
-				}
-
-				list.Add(new OrderedQualitySpecificationElement(
-					         element,
-					         listIndex));
-				listIndex++;
-			}
-
-			list.Sort();
-
-			return list.Select(ordered => ordered.QualitySpecificationElement);
+			Progress?.Invoke(this, args);
 		}
 
 		#endregion
