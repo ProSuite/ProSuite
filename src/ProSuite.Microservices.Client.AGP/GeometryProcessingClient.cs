@@ -23,8 +23,10 @@ namespace ProSuite.Microservices.Client.AGP
 		public GeometryProcessingClient([NotNull] ClientChannelConfig channelConfig) : base(
 			channelConfig) { }
 
-		protected override string ServiceName =>
-			RemoveOverlapsClient?.GetType().DeclaringType?.Name;
+		public override string ServiceName =>
+			RemoveOverlapsClient?.GetType().DeclaringType?.Name ?? "<no service name>";
+
+		public override string ServiceDisplayName => "Geometry Processing Service";
 
 		protected override void ChannelOpenedCore(Channel channel)
 		{
