@@ -14,6 +14,9 @@
     <OutputPath>$(OutputDirectory)\$(Configuration)\</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
 
+    <!-- Remove this after .net48 is deprecated -->
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+
     <NoWarn>1591</NoWarn>
 
     <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' Or '$(TargetFrameworkVersion)' == 'v4.8' ">net48</TargetFrameworkVersion>
@@ -21,6 +24,7 @@
     <TargetFramework>$(TargetFrameworkVersion)</TargetFramework>
 
   </PropertyGroup>
+
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugType>full</DebugType>
     <DefineConstants>DEBUG;TRACE;$(VSArcGISProduct)</DefineConstants>
@@ -69,9 +73,7 @@
 
   <ItemGroup>
     <Compile Include="..\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
-    <Compile Update="GrpcWindowsService.cs">
-      <SubType>Component</SubType>
-    </Compile>
+    <Compile Update="GrpcWindowsService.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -79,6 +81,11 @@
     <PackageReference Include="Google.Protobuf" Version="3.19.2" />
     <PackageReference Include="Grpc" Version="2.44.0" />
     <PackageReference Include="Grpc.HealthCheck" Version="2.44.0" />
+
+    <!--NOTE: System.Runtime.CompilerServices.Unsafe" Version="6.0.0 is here just to force a redirect and avoid 
+        System.IO.FileLoadException: Could not load file or assembly 'System.Runtime.CompilerServices.Unsafe,...
+        This is probably not needed for x64 and certainly not for .net6 -->
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.0" />
   </ItemGroup>
 
   <ItemGroup>
