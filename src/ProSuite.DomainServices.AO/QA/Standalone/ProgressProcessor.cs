@@ -68,9 +68,13 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 						_firstNonContainerTestReported = true;
 					}
 
-					var test = (ITest) progressArgs.Tag;
-					QualityCondition qualityCondition =
-						_elementsByTest[test].QualityCondition;
+					QualityCondition qualityCondition = progressArgs.Tag as QualityCondition;
+					if (qualityCondition == null)
+					{
+						var test = (ITest) progressArgs.Tag;
+						qualityCondition = _elementsByTest[test].QualityCondition;
+					}
+
 					_msg.InfoFormat("  {0}", qualityCondition.Name);
 					break;
 
