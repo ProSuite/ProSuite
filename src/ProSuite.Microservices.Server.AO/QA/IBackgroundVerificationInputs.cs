@@ -52,9 +52,6 @@ namespace ProSuite.Microservices.Server.AO.QA
 		/// </summary>
 		ICollection<IObject> VerifiedObjects { get; }
 
-		[CanBeNull]
-		QualityVerificationGrpc.QualityVerificationGrpcClient WorkerClient { get; }
-
 		/// <summary>
 		/// Allows loading all required entities inside a transaction.
 		/// </summary>

@@ -101,6 +101,16 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 		public IList<XmlTestDescriptor> SupportedTestDescriptors { get; set; }
 
+		/// <summary>
+		/// The client end point used for parallel processing.
+		/// </summary>
+		[CanBeNull]
+		public QualityVerificationGrpc.QualityVerificationGrpcClient DistributedProcessingClient
+		{
+			get;
+			set;
+		}
+
 		public override async Task VerifyQuality(
 			VerificationRequest request,
 			IServerStreamWriter<VerificationResponse> responseStream,
