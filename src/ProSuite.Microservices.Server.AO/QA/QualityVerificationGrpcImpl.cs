@@ -279,7 +279,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			CurrentLoad?.EndRequest();
 		}
 
-		public async Task<bool> EnsureLicenseAsync()
+		private async Task<bool> EnsureLicenseAsync()
 		{
 			if (LicenseAction == null)
 			{
@@ -429,32 +429,36 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			List<GdbObjRefMsg> deletableAllowedErrorRefs = new List<GdbObjRefMsg>();
 			QualityVerification verification = null;
-			var issueCollection = new ConcurrentBag<IssueMsg>();
+
 			string cancellationMessage = null;
+
 			try
 			{
-				// TODO: Separate long-lived objects, such as datasetLookup, domainTransactions (add to this class) from
-				// short-term objects (request) -> add to background verification inputs
-				IBackgroundVerificationInputs backgroundVerificationInputs =
-					_verificationInputsFactoryMethod(request);
+				DistributedTestRunner distributedTestRunner = null;
 
-				responseStreamer.BackgroundVerificationInputs = backgroundVerificationInputs;
-				responseStreamer.CreateResponseAction = responseStreamer.CreateVerificationResponse;
-
-				qaService = CreateVerificationService(
-					backgroundVerificationInputs, responseStreamer, trackCancel);
-
-				int maxParallelRequested = request.MaxParallelProcessing;
-
-				if (backgroundVerificationInputs.WorkerClient != null &&
-				    maxParallelRequested > 1)
+				var issueCollection = new ConcurrentBag<IssueMsg>();
+				if (DistributedProcessingClient != null && request.MaxParallelProcessing > 1)
 				{
 					// allow directly adding issues found by client processes:
-					qaService.DistributedTestRunner = new DistributedTestRunner(
-						backgroundVerificationInputs.WorkerClient, request, issueCollection);
+					distributedTestRunner = new DistributedTestRunner(
+						DistributedProcessingClient, request, issueCollection);
 				}
 
-				verification = qaService.Verify(backgroundVerificationInputs, trackCancel);
+				bool useStandaloneService =
+					IsStandAloneVerification(request, out QualitySpecification specification);
+
+				// Stand-alone: Currently Xml or specification list (WorkContextMsg is null)
+				if (useStandaloneService)
+				{
+					// TODO: Same final response
+					return VerifyStandaloneXmlCore(specification, request.Parameters,
+					                               distributedTestRunner,
+					                               responseStreamer, trackCancel);
+				}
+
+				// DDX:
+				verification = VerifyDdxQualityCore(request, distributedTestRunner,
+				                                    responseStreamer, trackCancel, out qaService);
 
 				deletableAllowedErrorRefs.AddRange(
 					GetDeletableAllowedErrorRefs(request.Parameters, qaService));
@@ -472,7 +476,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			}
 
 			ServiceCallStatus result = responseStreamer.SendFinalResponse(verification,
-				cancellationMessage ?? qaService.CancellationMessage, deletableAllowedErrorRefs,
+				cancellationMessage ?? qaService?.CancellationMessage, deletableAllowedErrorRefs,
 				qaService?.VerifiedPerimeter);
 
 			return result;
@@ -483,10 +487,14 @@ namespace ProSuite.Microservices.Server.AO.QA
 			VerificationProgressStreamer<StandaloneVerificationResponse> responseStreamer,
 			ITrackCancel trackCancel)
 		{
-
+			SetupUserNameProvider(request.UserName);
 			try
 			{
 				VerificationParametersMsg parameters = request.Parameters;
+
+				// Currently no parallel processing for VerifyStandaloneXml() call. Use
+				// VerifyQuality() with XML instead.
+				DistributedTestRunner distributedTestRunner = null;
 
 				QualitySpecification qualitySpecification;
 
@@ -511,8 +519,9 @@ namespace ProSuite.Microservices.Server.AO.QA
 					default: throw new ArgumentOutOfRangeException();
 				}
 
-				return VerifyStandaloneXmlCore(Environment.UserName, qualitySpecification, parameters,
-				                               null, responseStreamer, trackCancel);
+				return VerifyStandaloneXmlCore(qualitySpecification, parameters,
+				                               distributedTestRunner, responseStreamer,
+				                               trackCancel);
 			}
 			catch (Exception e)
 			{
@@ -531,16 +540,38 @@ namespace ProSuite.Microservices.Server.AO.QA
 			// TODO: Final result message (error, warning count, row count with stop conditions, fulfilled)
 		}
 
-		private ServiceCallStatus VerifyStandaloneXmlCore(
-			[NotNull] string userName,
+		private QualityVerification VerifyDdxQualityCore(
+			VerificationRequest request,
+			DistributedTestRunner distributedTestRunner,
+			VerificationProgressStreamer<VerificationResponse> responseStreamer,
+			ITrackCancel trackCancel,
+			out BackgroundVerificationService qaService)
+		{
+			// TODO: Separate long-lived objects, such as datasetLookup, domainTransactions (add to this class) from
+			// short-term objects (request) -> add to background verification inputs
+			IBackgroundVerificationInputs backgroundVerificationInputs =
+				_verificationInputsFactoryMethod(request);
+
+			responseStreamer.BackgroundVerificationInputs = backgroundVerificationInputs;
+			responseStreamer.CreateResponseAction = responseStreamer.CreateVerificationResponse;
+
+			qaService = CreateVerificationService(
+				backgroundVerificationInputs, responseStreamer, trackCancel);
+
+			qaService.DistributedTestRunner = distributedTestRunner;
+
+			QualityVerification verification = qaService.Verify(backgroundVerificationInputs, trackCancel);
+
+			return verification;
+		}
+
+		private ServiceCallStatus VerifyStandaloneXmlCore<T>(
 			[NotNull] QualitySpecification qualitySpecification,
 			[NotNull] VerificationParametersMsg parameters,
 			[CanBeNull] DistributedTestRunner distributedTestrunner,
-			[NotNull] VerificationProgressStreamer<StandaloneVerificationResponse> responseStreamer,
-			ITrackCancel trackCancel)
+			[NotNull] VerificationProgressStreamer<T> responseStreamer,
+			ITrackCancel trackCancel) where T : class
 		{
-			SetupUserNameProvider(userName);
-
 			IGeometry perimeter =
 				ProtobufGeometryUtils.FromShapeMsg(parameters.Perimeter);
 
@@ -558,6 +589,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			xmlService.IssueFound +=
 				(sender, args) => responseStreamer.AddPendingIssue(args);
+
+			xmlService.DistributedTestRunner = distributedTestrunner;
 
 			Model primaryModel =
 				StandaloneVerificationUtils.GetPrimaryModel(qualitySpecification);
@@ -586,10 +619,40 @@ namespace ProSuite.Microservices.Server.AO.QA
 				       : ServiceCallStatus.Cancelled;
 		}
 
+		private bool IsStandAloneVerification([NotNull] VerificationRequest request,
+		                                      out QualitySpecification qualitySpecification)
+		{
+			QualitySpecificationMsg specificationMsg = request.Specification;
+
+			qualitySpecification = null;
+
+			switch (specificationMsg.SpecificationCase)
+			{
+				case QualitySpecificationMsg.SpecificationOneofCase.XmlSpecification:
+				{
+					XmlQualitySpecificationMsg xmlSpecification = specificationMsg.XmlSpecification;
+
+					qualitySpecification = SetupQualitySpecification(xmlSpecification);
+
+					return true;
+				}
+				case QualitySpecificationMsg.SpecificationOneofCase.ConditionListSpecification:
+				{
+					ConditionListSpecificationMsg conditionListSpec =
+						specificationMsg.ConditionListSpecification;
+
+					qualitySpecification = SetupQualitySpecification(conditionListSpec);
+
+					return true;
+				}
+
+				default: return false;
+			}
+		}
+
 		private static QualitySpecification SetupQualitySpecification(
 			[NotNull] XmlQualitySpecificationMsg xmlSpecification)
 		{
-			QualitySpecification qualitySpecification;
 			var dataSources = new List<DataSource>();
 			foreach (string replacement in xmlSpecification.DataSourceReplacements)
 			{
@@ -607,7 +670,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 				dataSources.Add(dataSource);
 			}
 
-			qualitySpecification =
+			QualitySpecification qualitySpecification =
 				QualitySpecificationUtils.CreateQualitySpecification(
 					xmlSpecification.Xml, xmlSpecification.SelectedSpecificationName, dataSources);
 
@@ -695,9 +758,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			VerificationProgressStreamer<T> responseStreamer, ITrackCancel trackCancel)
 			where T : class
 		{
-			var qaService = new BackgroundVerificationService(
-				                backgroundVerificationInputs.DomainTransactions,
-				                backgroundVerificationInputs.DatasetLookup)
+			var qaService = new BackgroundVerificationService(backgroundVerificationInputs)
 			                {
 				                CustomErrorFilter = backgroundVerificationInputs.CustomErrorFilter
 			                };
