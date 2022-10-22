@@ -21,7 +21,7 @@ namespace ProSuite.Commons.AGP.Test
 		public void CanCreateBezierCircle()
 		{
 			const double radius = 5.0;
-			var center = MapPointBuilder.CreateMapPoint(1, 2);
+			var center = MapPointBuilderEx.CreateMapPoint(1, 2);
 			const double delta = 0.000001;
 
 			var circle = GeometryFactory.CreateBezierCircle(radius, center);

@@ -96,14 +96,14 @@ namespace ProSuite.AGP.WorkList.Datasource
 
 			if (UseExtent(item))
 			{
-				return PolygonBuilder.CreatePolygon(extent, extent.SpatialReference);
+				return PolygonBuilderEx.CreatePolygon(extent, extent.SpatialReference);
 			}
 
 			item.QueryPoints(out double xmin, out double ymin,
 			                 out double xmax, out double ymax,
 			                 out double zmax);
 
-			return PolygonBuilder.CreatePolygon(EnvelopeBuilder.CreateEnvelope(
+			return PolygonBuilderEx.CreatePolygon(EnvelopeBuilderEx.CreateEnvelope(
 				                                    new Coordinate3D(xmin, ymin, zmax),
 				                                    new Coordinate3D(xmax, ymax, zmax),
 				                                    extent.SpatialReference));

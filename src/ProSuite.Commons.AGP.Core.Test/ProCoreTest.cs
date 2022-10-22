@@ -30,25 +30,25 @@ namespace ProSuite.Commons.AGP.Test
 		[Test]
 		public void CanMapPointBuilderStatic()
 		{
-			MapPoint pt1 = MapPointBuilder.CreateMapPoint(1.0, 2.0);
+			MapPoint pt1 = MapPointBuilderEx.CreateMapPoint(1.0, 2.0);
 			Assert.False(pt1.HasZ);
 			Assert.False(pt1.HasM);
 			Assert.False(pt1.HasID);
 			Assert.False(pt1.IsEmpty);
 
-			MapPoint pt2 = MapPointBuilder.CreateMapPoint(1.0, 2.0, 3.0);
+			MapPoint pt2 = MapPointBuilderEx.CreateMapPoint(1.0, 2.0, 3.0);
 			Assert.True(pt2.HasZ);
 			Assert.False(pt2.HasM);
 			Assert.False(pt2.HasID);
 			Assert.False(pt2.IsEmpty);
 
-			MapPoint pt3 = MapPointBuilder.CreateMapPoint(1.0, 2.0, 3.0, 4.0);
+			MapPoint pt3 = MapPointBuilderEx.CreateMapPoint(1.0, 2.0, 3.0, 4.0);
 			Assert.True(pt3.HasZ);
 			Assert.True(pt3.HasM);
 			Assert.False(pt3.HasID);
 			Assert.False(pt3.IsEmpty);
 
-			MapPoint pt3Copy = MapPointBuilder.CreateMapPoint(pt3);
+			MapPoint pt3Copy = MapPointBuilderEx.CreateMapPoint(pt3);
 			Assert.True(pt3Copy.IsEqual(pt3));
 			Assert.False(
 				ReferenceEquals(

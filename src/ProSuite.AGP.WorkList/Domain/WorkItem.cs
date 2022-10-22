@@ -235,13 +235,13 @@ namespace ProSuite.AGP.WorkList.Domain
 					_zmin = extent.ZMin;
 					_zmax = extent.ZMax;
 
-					Extent = EnvelopeBuilder.CreateEnvelope(new Coordinate3D(_xmin, _ymin, _zmin),
+					Extent = EnvelopeBuilderEx.CreateEnvelope(new Coordinate3D(_xmin, _ymin, _zmin),
 					                                        new Coordinate3D(_xmax, _ymax, _zmax),
 					                                        extent.SpatialReference);
 				}
 				else
 				{
-					Extent = EnvelopeBuilder.CreateEnvelope(new Coordinate2D(_xmin, _ymin),
+					Extent = EnvelopeBuilderEx.CreateEnvelope(new Coordinate2D(_xmin, _ymin),
 					                                        new Coordinate2D(_xmax, _ymax),
 					                                        extent.SpatialReference);
 				}

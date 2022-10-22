@@ -961,7 +961,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			// Should return null and not an empty envelope. Pluggable Datasource cannot handle
 			// an empty envelope.
 			return count > 0
-				       ? EnvelopeBuilder.CreateEnvelope(new Coordinate3D(xmin, ymin, zmin),
+				       ? EnvelopeBuilderEx.CreateEnvelope(new Coordinate3D(xmin, ymin, zmin),
 				                                        new Coordinate3D(xmax, ymax, zmax), sref)
 				       : null;
 		}

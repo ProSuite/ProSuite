@@ -76,7 +76,7 @@ namespace ProSuite.AGP.Editing.OneClick
 				return Task.FromResult(true);
 			}
 
-			if (CanUseSelection(e.Selection))
+			if (CanUseSelection(SelectionUtils.GetSelection(e)))
 			{
 				StartSketchPhase();
 			}

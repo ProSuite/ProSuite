@@ -381,7 +381,8 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			[NotNull] ICollection<Feature> selectedFeatures,
 			[CanBeNull] CancelableProgressor cancellabelProgressor)
 		{
-			Dictionary<MapMember, List<long>> selection = ActiveMapView.Map.GetSelection();
+			Dictionary<MapMember, List<long>> selection =
+				SelectionUtils.GetSelection(ActiveMapView.Map);
 
 			if (! selection.Keys.Any(mm => mm is FeatureLayer fl &&
 			                               fl.ShapeType == esriGeometryType.esriGeometryPolyline))
