@@ -5,7 +5,7 @@ using ArcGIS.Core.CIM;
 using NUnit.Framework;
 using ProSuite.Commons.AGP.Core.Carto;
 
-namespace ProSuite.Commons.AGP.Test
+namespace ProSuite.Commons.AGP.Core.Test
 {
 	[TestFixture]
 	[Apartment(ApartmentState.STA)]

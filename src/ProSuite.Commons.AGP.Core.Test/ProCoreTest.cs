@@ -3,7 +3,7 @@ using ArcGIS.Core.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AGP.Hosting;
 
-namespace ProSuite.Commons.AGP.Test
+namespace ProSuite.Commons.AGP.Core.Test
 {
 	/// <summary>
 	/// Testing assumptions about ArcGIS.Core from the ArcGIS Pro SDK/API.

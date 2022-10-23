@@ -5,7 +5,7 @@ using NUnit.Framework;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Hosting;
 
-namespace ProSuite.Commons.AGP.Test
+namespace ProSuite.Commons.AGP.Core.Test
 {
 	[TestFixture]
 	[Apartment(ApartmentState.STA)]
