@@ -53,14 +53,12 @@ namespace ProSuite.Commons.AGP.Core.Test
 		{
 			var coords = new List<MapPoint>
 			             {
-				             MapPointBuilder.CreateMapPoint(140, 0, SpatialReferences.WebMercator),
-				             MapPointBuilder.CreateMapPoint(160, 0, SpatialReferences.WebMercator),
-				             MapPointBuilder.CreateMapPoint(175, 0, SpatialReferences.WebMercator),
-				             MapPointBuilder.CreateMapPoint(
-					             -175, 10, SpatialReferences.WebMercator),
-				             MapPointBuilder.CreateMapPoint(
-					             -145, 10, SpatialReferences.WebMercator),
-				             MapPointBuilder.CreateMapPoint(-125, 10, SpatialReferences.WebMercator)
+							 MapPointBuilderEx.CreateMapPoint(140, 0, SpatialReferences.WebMercator),
+							 MapPointBuilderEx.CreateMapPoint(160, 0, SpatialReferences.WebMercator),
+							 MapPointBuilderEx.CreateMapPoint(175, 0, SpatialReferences.WebMercator),
+							 MapPointBuilderEx.CreateMapPoint(-175, 10, SpatialReferences.WebMercator),
+							 MapPointBuilderEx.CreateMapPoint(-145, 10, SpatialReferences.WebMercator),
+							 MapPointBuilderEx.CreateMapPoint(-125, 10, SpatialReferences.WebMercator)
 			             };
 
 			//var coords = new List<MapPoint>
@@ -74,20 +72,18 @@ namespace ProSuite.Commons.AGP.Core.Test
 			//			 };
 
 			Polyline line =
-				PolylineBuilder.CreatePolyline(coords);
+				PolylineBuilderEx.CreatePolyline(coords);
 
 			Polyline dateline =
-				PolylineBuilder.CreatePolyline(new List<MapPoint>
+				PolylineBuilderEx.CreatePolyline(new List<MapPoint>
 				                               {
-					                               MapPointBuilder.CreateMapPoint(
-						                               180, 90, SpatialReferences.WebMercator),
-					                               MapPointBuilder.CreateMapPoint(
-						                               180, -90, SpatialReferences.WebMercator)
+					                               MapPointBuilderEx.CreateMapPoint(180, 90, SpatialReferences.WebMercator),
+					                               MapPointBuilderEx.CreateMapPoint(180, -90, SpatialReferences.WebMercator)
 				                               });
 
 			Geometry intersection =
 				GeometryEngine.Instance.Intersection(line, dateline,
-				                                     GeometryDimension.esriGeometry0Dimension);
+				                                     GeometryDimensionType.EsriGeometry0Dimension);
 
 			var multipoint = intersection as Multipoint;
 

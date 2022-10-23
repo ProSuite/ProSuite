@@ -38,7 +38,7 @@ namespace ProSuite.AGP.WorkList.Test
 
 		public Polygon ClosePolygon()
 		{
-			Polygon polygon = PolygonBuilder.CreatePolygon(_points);
+			Polygon polygon = PolygonBuilderEx.CreatePolygon(_points);
 
 			// todo daro: remove when equality is assured
 			// CreatePolygon() should close the polygon. Simplify it to check equality

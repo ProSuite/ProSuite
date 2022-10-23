@@ -99,8 +99,10 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 
 		public static double GetDistanceAlongCurve(Multipart curve, MapPoint point)
 		{
+			var segmentExtension = SegmentExtensionType.NoExtension;
+
 			Engine.QueryPointAndDistance(
-				curve, SegmentExtension.NoExtension, point, AsRatioOrLength.AsLength,
+				curve, segmentExtension, point, AsRatioOrLength.AsLength,
 				out double distanceAlong, out _, out _);
 			return distanceAlong;
 		}

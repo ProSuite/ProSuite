@@ -253,15 +253,16 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 
 			if (IsInSelectionPhase())
 			{
-				if (CanUseSelection(e.Selection))
+				var selection = SelectionUtils.GetSelection(e);
+				if (CanUseSelection(selection))
 				{
-					var selectedFeatures = GetApplicableSelectedFeatures(e.Selection).ToList();
+					var selectedFeatures = GetApplicableSelectedFeatures(selection).ToList();
 
 					AfterSelection(selectedFeatures, progressor);
 
 					var sketch = GetCurrentSketchAsync().Result;
 
-					SelectAndProcessDerivedGeometry(e.Selection, sketch, progressor);
+					SelectAndProcessDerivedGeometry(selection, sketch, progressor);
 				}
 			}
 
@@ -440,7 +441,8 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			[NotNull] ICollection<Feature> selectedFeatures,
 			[CanBeNull] CancelableProgressor cancellabelProgressor)
 		{
-			Dictionary<MapMember, List<long>> selection = ActiveMapView.Map.GetSelection();
+			Dictionary<MapMember, List<long>> selection =
+				SelectionUtils.GetSelection(ActiveMapView.Map);
 
 			Envelope inExtent = ActiveMapView.Extent;
 

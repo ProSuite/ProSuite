@@ -307,7 +307,9 @@ namespace ProSuite.Commons.AGP.Core.Carto
 		{
 			if (marker.MarkerPlacement is CIMMarkerPlacementAlongLine placement)
 			{
-				placement.ControlPointPlacement = endings;
+				// TODO: How is this done in 3.0?
+				throw new NotImplementedException();
+				//placement.ControlPointPlacement = endings;
 			}
 			else
 			{

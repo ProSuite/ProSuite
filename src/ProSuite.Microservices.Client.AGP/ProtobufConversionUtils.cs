@@ -43,7 +43,7 @@ namespace ProSuite.Microservices.Client.AGP
 
 					return string.IsNullOrEmpty(xml)
 						       ? null
-						       : SpatialReferenceBuilder.FromXML(xml);
+						       : SpatialReferenceBuilder.FromXml(xml);
 
 				case SpatialReferenceMsg.FormatOneofCase.SpatialReferenceWkid:
 
@@ -81,7 +81,7 @@ namespace ProSuite.Microservices.Client.AGP
 					break;
 
 				case SpatialReferenceMsg.FormatOneofCase.SpatialReferenceEsriXml:
-					result.SpatialReferenceEsriXml = spatialReference.ToXML();
+					result.SpatialReferenceEsriXml = spatialReference.ToXml();
 					break;
 
 				case SpatialReferenceMsg.FormatOneofCase.SpatialReferenceWkid:
@@ -167,7 +167,7 @@ namespace ProSuite.Microservices.Client.AGP
 			}
 
 			var result =
-				EnvelopeBuilder.CreateEnvelope(new Coordinate2D(envProto.XMin, envProto.YMin),
+				EnvelopeBuilderEx.CreateEnvelope(new Coordinate2D(envProto.XMin, envProto.YMin),
 				                               new Coordinate2D(envProto.XMax, envProto.YMax),
 				                               spatialReference);
 
@@ -492,22 +492,22 @@ namespace ProSuite.Microservices.Client.AGP
 			switch (geometryType)
 			{
 				case ProSuiteGeometryType.Point:
-					result = MapPointBuilder.FromEsriShape(byteArray, spatialReference);
+					result = MapPointBuilderEx.FromEsriShape(byteArray, spatialReference);
 					break;
 				case ProSuiteGeometryType.Polyline:
-					result = PolylineBuilder.FromEsriShape(byteArray, spatialReference);
+					result = MapPointBuilderEx.FromEsriShape(byteArray, spatialReference);
 					break;
 				case ProSuiteGeometryType.Polygon:
-					result = PolygonBuilder.FromEsriShape(byteArray, spatialReference);
+					result = MapPointBuilderEx.FromEsriShape(byteArray, spatialReference);
 					break;
 				case ProSuiteGeometryType.Multipoint:
-					result = MultipointBuilder.FromEsriShape(byteArray, spatialReference);
+					result = MapPointBuilderEx.FromEsriShape(byteArray, spatialReference);
 					break;
 				case ProSuiteGeometryType.MultiPatch:
-					result = MultipatchBuilder.FromEsriShape(byteArray, spatialReference);
+					result = MapPointBuilderEx.FromEsriShape(byteArray, spatialReference);
 					break;
 				case ProSuiteGeometryType.Bag:
-					result = GeometryBagBuilder.FromEsriShape(
+					result = MapPointBuilderEx.FromEsriShape(
 						byteArray, spatialReference); // experimental
 					break;
 

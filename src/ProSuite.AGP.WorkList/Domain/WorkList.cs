@@ -534,7 +534,7 @@ namespace ProSuite.AGP.WorkList.Domain
 						intersection =
 							(Polygon) GeometryEngine.Instance.Intersection(
 								intersection, projectedPerimeter,
-								GeometryDimension.esriGeometry2Dimension);
+								GeometryDimensionType.EsriGeometry2Dimension);
 					}
 					catch (Exception e)
 					{

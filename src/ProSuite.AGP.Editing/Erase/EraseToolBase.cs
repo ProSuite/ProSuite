@@ -110,7 +110,7 @@ namespace ProSuite.AGP.Editing.Erase
 		private static IDictionary<Feature, Geometry> CalculateResultFeatures(
 			MapView activeView, Polygon sketchPolygon)
 		{
-			Dictionary<MapMember, List<long>> selectedFeatures = activeView.Map.GetSelection();
+			SelectionSet selectedFeatures = activeView.Map.GetSelection();
 
 			var resultFeatures = CalculateResultFeatures(selectedFeatures, sketchPolygon);
 
@@ -118,7 +118,7 @@ namespace ProSuite.AGP.Editing.Erase
 		}
 
 		private static IDictionary<Feature, Geometry> CalculateResultFeatures(
-			Dictionary<MapMember, List<long>> selection,
+			SelectionSet selection,
 			Polygon cutPolygon)
 		{
 			var result = new Dictionary<Feature, Geometry>();

@@ -23,7 +23,7 @@ namespace ProSuite.Commons.AGP.Carto
 				return;
 			}
 
-			Dictionary<MapMember, List<long>> selection = mapView.Map.GetSelection();
+			Dictionary<MapMember, List<long>> selection = mapView.Map.GetSelection().ToDictionary();
 
 			foreach (MapMember mapMembersWithSelection in selection.Keys)
 			{
@@ -90,11 +90,11 @@ namespace ProSuite.Commons.AGP.Carto
 
 		public static IEnumerable<Feature> GetSelectedFeatures([NotNull] MapView activeView)
 		{
-			Dictionary<MapMember, List<long>> selection = activeView.Map.GetSelection();
+			Dictionary<MapMember, List<long>> selection = GetSelection(activeView.Map);
 
-			foreach (Feature feature1 in MapUtils.GetFeatures(selection))
+			foreach (Feature feature in MapUtils.GetFeatures(selection))
 			{
-				yield return feature1;
+				yield return feature;
 			}
 		}
 
@@ -118,13 +118,19 @@ namespace ProSuite.Commons.AGP.Carto
 
 		public static Dictionary<MapMember, List<long>> GetSelection(Map map)
 		{
-			return map.GetSelection();
+			return map.GetSelection().ToDictionary();
+		}
+
+		public static Dictionary<MapMember, List<long>> GetSelectedOidsByLayer(
+			SelectionSet selectionSet)
+		{
+			return selectionSet.ToDictionary();
 		}
 
 		public static Dictionary<MapMember, List<long>> GetSelection(
 			MapSelectionChangedEventArgs selectionChangedArgs)
 		{
-			return selectionChangedArgs.Selection;
+			return selectionChangedArgs.Selection.ToDictionary();
 		}
 	}
 }

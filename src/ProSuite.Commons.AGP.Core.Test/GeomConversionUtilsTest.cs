@@ -26,7 +26,7 @@ namespace ProSuite.Commons.AGP.Core.Test
 
 			var patches = new List<Patch>();
 
-			Patch patch1 = mpBuilder.MakePatch(esriPatchType.FirstRing);
+			Patch patch1 = mpBuilder.MakePatch(PatchType.FirstRing);
 
 			patch1.Coords = new List<Coordinate3D>(
 				new[]
@@ -40,7 +40,7 @@ namespace ProSuite.Commons.AGP.Core.Test
 
 			patches.Add(patch1);
 
-			Patch patch2 = mpBuilder.MakePatch(esriPatchType.Ring);
+			Patch patch2 = mpBuilder.MakePatch(PatchType.Ring);
 
 			patch2.Coords = new List<Coordinate3D>(
 				new[]
@@ -56,7 +56,7 @@ namespace ProSuite.Commons.AGP.Core.Test
 
 			mpBuilder.Patches = patches;
 
-			var multipatch = mpBuilder.ToGeometry() as Multipatch;
+			var multipatch = mpBuilder.ToGeometry();
 
 			Polyhedron polyhedron = GeomConversionUtils.CreatePolyhedron(multipatch);
 

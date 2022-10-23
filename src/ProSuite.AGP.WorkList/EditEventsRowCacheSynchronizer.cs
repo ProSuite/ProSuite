@@ -8,6 +8,7 @@ using ArcGIS.Desktop.Editing.Events;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.WorkList.Contracts;
+using ProSuite.Commons.AGP.Carto;
 
 namespace ProSuite.AGP.WorkList
 {
@@ -67,9 +68,15 @@ namespace ProSuite.AGP.WorkList
 			//}
 
 			// todo daro: Use GdbTableIdentity and dispose tables immediately?
-			Dictionary<Table, List<long>> creates = GetOidsByTable(args.Creates);
-			Dictionary<Table, List<long>> deletes = GetOidsByTable(args.Deletes);
-			Dictionary<Table, List<long>> modifies = GetOidsByTable(args.Modifies);
+
+			var createsByLayer = SelectionUtils.GetSelectedOidsByLayer(args.Creates);
+			var deletesByLayer = SelectionUtils.GetSelectedOidsByLayer(args.Deletes);
+			var modsByLayer = SelectionUtils.GetSelectedOidsByLayer(args.Modifies);
+
+			Dictionary<Table, List<long>> creates = GetOidsByTable(createsByLayer);
+			Dictionary<Table, List<long>> deletes = GetOidsByTable(deletesByLayer);
+			Dictionary<Table, List<long>> modifies = GetOidsByTable(modsByLayer);
+
 			try
 			{
 				_rowCache.ProcessChanges(creates, deletes, modifies);
@@ -91,11 +98,11 @@ namespace ProSuite.AGP.WorkList
 		}
 
 		private static Dictionary<Table, List<long>> GetOidsByTable(
-			IReadOnlyDictionary<MapMember, IReadOnlyCollection<long>> oidsByMapMember)
+			Dictionary<MapMember, List<long>> oidsByMapMember)
 		{
 			var result = new Dictionary<Table, List<long>>();
 
-			foreach (KeyValuePair<MapMember, IReadOnlyCollection<long>> pair in oidsByMapMember)
+			foreach (var pair in oidsByMapMember)
 			{
 				MapMember mapMember = pair.Key;
 				if (! (mapMember is FeatureLayer featureLayer))

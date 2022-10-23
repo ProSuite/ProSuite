@@ -96,7 +96,7 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			var q4 = CubicBezierBuilderEx.CreateCubicBezierSegment(p3, p30, p03, p0);
 			var segments = new[] {q1, q2, q3, q4};
 
-			return PolygonBuilderEx.CreatePolygon(segments, AttributeFlags.NoAttributes);
+			return PolygonBuilderEx.CreatePolygon(segments, AttributeFlags.None);
 		}
 
 		public static SpatialReference CreateSpatialReference(int srid)

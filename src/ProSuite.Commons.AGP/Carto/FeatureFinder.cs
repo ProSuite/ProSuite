@@ -293,7 +293,8 @@ namespace ProSuite.Commons.AGP.Carto
 			if (intersectingGeometries.Count != 0)
 			{
 				var sr = intersectingGeometries[0].SpatialReference;
-				result = GeometryBagBuilder.CreateGeometryBag(intersectingGeometries, sr);
+
+				result = GeometryBagBuilderEx.CreateGeometryBag(intersectingGeometries, sr);
 				//result = GeometryEngine.Instance.Union(intersectingGeometries);
 			}
 
@@ -331,7 +332,7 @@ namespace ProSuite.Commons.AGP.Carto
 
 				// multipatches are not supported by ISpatialFilter (and neither are bags containing them)
 				var polycurve = multiPatch != null
-					                ? PolygonBuilder.CreatePolygon(
+					                ? PolygonBuilderEx.CreatePolygon(
 						                multiPatch
 							                .Extent) // GeometryFactory.CreatePolygon(multiPatch)
 					                : geometry as Multipart;

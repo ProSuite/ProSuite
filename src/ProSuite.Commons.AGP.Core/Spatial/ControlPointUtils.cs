@@ -1,5 +1,6 @@
 using System;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Core.Internal.Geometry;
 
 namespace ProSuite.Commons.AGP.Core.Spatial
 {
