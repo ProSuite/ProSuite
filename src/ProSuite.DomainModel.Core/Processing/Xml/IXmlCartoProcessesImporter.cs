@@ -1,6 +1,6 @@
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
-namespace ProSuite.DomainModel.AO.Processing
+namespace ProSuite.DomainModel.Core.Processing.Xml
 {
 	public interface IXmlCartoProcessesImporter
 	{
