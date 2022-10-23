@@ -82,7 +82,7 @@ namespace ProSuite.Commons.AGP.Carto
 
 				if (! result.ContainsKey(geodatabase))
 				{
-					result.Add(geodatabase, new SimpleSet<Table> { table });
+					result.Add(geodatabase, new SimpleSet<Table> {table});
 				}
 				else
 				{

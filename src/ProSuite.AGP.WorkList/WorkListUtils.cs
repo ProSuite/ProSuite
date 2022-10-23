@@ -102,7 +102,8 @@ namespace ProSuite.AGP.WorkList
 
 			try
 			{
-				return descriptor.CreateInstance<IWorkList>(repository, definition.Name, displayName);
+				return descriptor.CreateInstance<IWorkList>(repository, definition.Name,
+				                                            displayName);
 			}
 			catch (Exception e)
 			{
@@ -356,7 +357,8 @@ namespace ProSuite.AGP.WorkList
 		{
 			Assert.ArgumentNotNull(dataSource, nameof(dataSource));
 
-			return new PluginDatastore(new PluginDatasourceConnectionPath(PluginIdentifier, dataSource));
+			return new PluginDatastore(
+				new PluginDatasourceConnectionPath(PluginIdentifier, dataSource));
 		}
 
 		[NotNull]

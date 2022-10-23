@@ -84,7 +84,5 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 		{
 			_newObjectId = newObjectId;
 		}
-
-
 	}
 }

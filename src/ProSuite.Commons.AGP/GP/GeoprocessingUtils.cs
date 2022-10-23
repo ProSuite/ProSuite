@@ -136,7 +136,8 @@ namespace ProSuite.Commons.AGP.GP
 			Assert.ArgumentNotNull(parameters, nameof(parameters));
 			Assert.ArgumentCondition(parameters.Count > 0, "no parameter");
 
-			_msg.VerboseDebug(() => $"{tool}, Parameters: {StringUtils.Concatenate(parameters, ", ")}");
+			_msg.VerboseDebug(
+				() => $"{tool}, Parameters: {StringUtils.Concatenate(parameters, ", ")}");
 
 			IReadOnlyList<KeyValuePair<string, string>> environments =
 				Geoprocessing.MakeEnvironmentArray(overwriteoutput: true);

@@ -57,7 +57,7 @@ namespace ProSuite.Commons.AGP.Framework
 			item = null;
 
 			var projectItem = ItemFactory.Instance.Create(path) as IProjectItem;
-			
+
 			if (projectItem == null || ! Project.Current.AddItem(projectItem))
 			{
 				return false;
@@ -104,11 +104,10 @@ namespace ProSuite.Commons.AGP.Framework
 			return true;
 		}
 
-		
 		public static bool Remove([NotNull] string path)
 		{
 			Assert.ArgumentNotNullOrEmpty(path, nameof(path));
-			
+
 			var item = ItemFactory.Instance.Create(path) as IProjectItem;
 			Assert.NotNull(item);
 

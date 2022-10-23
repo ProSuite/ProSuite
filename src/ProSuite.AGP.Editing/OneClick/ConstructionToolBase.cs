@@ -71,7 +71,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			//       Is there another way to get the global selection changed event? What if we need the selection changed in a button?
 
 			if (_intermittentSelectionPhase
-			) // always false -> toolkeyup is first. This method is apparently scheduled to run after key up
+			   ) // always false -> toolkeyup is first. This method is apparently scheduled to run after key up
 			{
 				return Task.FromResult(true);
 			}

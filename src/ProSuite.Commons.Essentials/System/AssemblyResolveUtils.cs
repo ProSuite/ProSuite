@@ -36,7 +36,7 @@ namespace ProSuite.Commons.Essentials.System
 
 				TryLog(logMethod, "Attempting to load assembly '{0}' from codebase '{1}'",
 				       name, codeBase);
-				var assemblyName = new AssemblyName(name) { CodeBase = codeBase };
+				var assemblyName = new AssemblyName(name) {CodeBase = codeBase};
 
 				return Assembly.Load(assemblyName);
 			}

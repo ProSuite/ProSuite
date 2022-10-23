@@ -28,7 +28,10 @@ namespace ProSuite.Commons.Logging.Inspector
 
 		public int Capacity
 		{
-			get { lock(_sync) return _buffer.Capacity; }
+			get
+			{
+				lock (_sync) return _buffer.Capacity;
+			}
 		}
 
 		public DateTime StartTime { get; }

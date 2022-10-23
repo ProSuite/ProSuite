@@ -94,7 +94,7 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			var q2 = CubicBezierBuilderEx.CreateCubicBezierSegment(p1, p12, p21, p2);
 			var q3 = CubicBezierBuilderEx.CreateCubicBezierSegment(p2, p23, p32, p3);
 			var q4 = CubicBezierBuilderEx.CreateCubicBezierSegment(p3, p30, p03, p0);
-			var segments = new[] { q1, q2, q3, q4 };
+			var segments = new[] {q1, q2, q3, q4};
 
 			return PolygonBuilderEx.CreatePolygon(segments, AttributeFlags.NoAttributes);
 		}

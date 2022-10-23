@@ -134,7 +134,8 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		protected virtual string GetDescriptionCore(Row row)
 		{
-			return $"{DatasetUtils.GetTableDisplayName(row.GetTable())} OID={row.GetObjectID()} (item ID={OID})";
+			return
+				$"{DatasetUtils.GetTableDisplayName(row.GetTable())} OID={row.GetObjectID()} (item ID={OID})";
 		}
 
 		[CanBeNull]
@@ -236,14 +237,14 @@ namespace ProSuite.AGP.WorkList.Domain
 					_zmax = extent.ZMax;
 
 					Extent = EnvelopeBuilderEx.CreateEnvelope(new Coordinate3D(_xmin, _ymin, _zmin),
-					                                        new Coordinate3D(_xmax, _ymax, _zmax),
-					                                        extent.SpatialReference);
+					                                          new Coordinate3D(_xmax, _ymax, _zmax),
+					                                          extent.SpatialReference);
 				}
 				else
 				{
 					Extent = EnvelopeBuilderEx.CreateEnvelope(new Coordinate2D(_xmin, _ymin),
-					                                        new Coordinate2D(_xmax, _ymax),
-					                                        extent.SpatialReference);
+					                                          new Coordinate2D(_xmax, _ymax),
+					                                          extent.SpatialReference);
 				}
 			}
 		}

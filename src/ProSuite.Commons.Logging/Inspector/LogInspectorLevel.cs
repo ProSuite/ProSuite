@@ -2,6 +2,11 @@
 {
 	public enum LogInspectorLevel
 	{
-		All, Debug, Info, Warn, Error, Off
+		All,
+		Debug,
+		Info,
+		Warn,
+		Error,
+		Off
 	}
 }

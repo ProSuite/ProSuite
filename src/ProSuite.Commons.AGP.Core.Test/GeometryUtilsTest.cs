@@ -52,14 +52,16 @@ namespace ProSuite.Commons.AGP.Test
 		public void Can_get_nearest_vertex()
 		{
 			var coords = new List<MapPoint>
-						 {
-							 MapPointBuilder.CreateMapPoint(140, 0, SpatialReferences.WebMercator),
-							 MapPointBuilder.CreateMapPoint(160, 0, SpatialReferences.WebMercator),
-							 MapPointBuilder.CreateMapPoint(175, 0, SpatialReferences.WebMercator),
-							 MapPointBuilder.CreateMapPoint(-175, 10, SpatialReferences.WebMercator),
-							 MapPointBuilder.CreateMapPoint(-145, 10, SpatialReferences.WebMercator),
-							 MapPointBuilder.CreateMapPoint(-125, 10, SpatialReferences.WebMercator)
-						 };
+			             {
+				             MapPointBuilder.CreateMapPoint(140, 0, SpatialReferences.WebMercator),
+				             MapPointBuilder.CreateMapPoint(160, 0, SpatialReferences.WebMercator),
+				             MapPointBuilder.CreateMapPoint(175, 0, SpatialReferences.WebMercator),
+				             MapPointBuilder.CreateMapPoint(
+					             -175, 10, SpatialReferences.WebMercator),
+				             MapPointBuilder.CreateMapPoint(
+					             -145, 10, SpatialReferences.WebMercator),
+				             MapPointBuilder.CreateMapPoint(-125, 10, SpatialReferences.WebMercator)
+			             };
 
 			//var coords = new List<MapPoint>
 			//			 {
@@ -77,8 +79,10 @@ namespace ProSuite.Commons.AGP.Test
 			Polyline dateline =
 				PolylineBuilder.CreatePolyline(new List<MapPoint>
 				                               {
-					                               MapPointBuilder.CreateMapPoint(180, 90, SpatialReferences.WebMercator),
-					                               MapPointBuilder.CreateMapPoint(180, -90, SpatialReferences.WebMercator)
+					                               MapPointBuilder.CreateMapPoint(
+						                               180, 90, SpatialReferences.WebMercator),
+					                               MapPointBuilder.CreateMapPoint(
+						                               180, -90, SpatialReferences.WebMercator)
 				                               });
 
 			Geometry intersection =
@@ -92,7 +96,8 @@ namespace ProSuite.Commons.AGP.Test
 				for (var i = 0; i < multipoint.PointCount; i++)
 				{
 					MapPoint point = multipoint.Points[i];
-					ProximityResult result = GeometryEngine.Instance.NearestVertex(intersection, point);
+					ProximityResult result =
+						GeometryEngine.Instance.NearestVertex(intersection, point);
 
 					MapPoint resultPoint = result.Point;
 

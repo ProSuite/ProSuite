@@ -106,7 +106,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 				if (layer != null)
 				{
 					await QueuedTask.Run(() => layer.Select(
-						                     new QueryFilter { ObjectIDs = keyValuePair.Value },
+						                     new QueryFilter {ObjectIDs = keyValuePair.Value},
 						                     SelectionCombinationMethod.Add));
 					continue;
 				}
@@ -121,7 +121,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 				if (table != null)
 				{
 					await QueuedTask.Run(() => table.Select(
-						                     new QueryFilter { ObjectIDs = keyValuePair.Value },
+						                     new QueryFilter {ObjectIDs = keyValuePair.Value},
 						                     SelectionCombinationMethod.Add));
 					continue;
 				}

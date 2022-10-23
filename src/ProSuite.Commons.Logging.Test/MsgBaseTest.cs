@@ -74,6 +74,7 @@ namespace ProSuite.Commons.Logging.Test
 			{
 				msg.VerboseDebug(() => $"iteration {i}");
 			}
+
 			watch.Stop();
 
 			Console.Out.WriteLine(

@@ -92,6 +92,7 @@ namespace ProSuite.AGP.WorkList.Domain
 				{
 					return GetDisplayNameCore();
 				}
+
 				return _displayName;
 			}
 		}
@@ -457,8 +458,10 @@ namespace ProSuite.AGP.WorkList.Domain
 		}
 
 		private IEnumerable<IWorkItem> GetItems(QueryFilter filter = null, int startIndex = -1,
-		                                        CurrentSearchOption currentSearch = CurrentSearchOption.ExcludeCurrent,
-		                                        VisitedSearchOption visitedSearch = VisitedSearchOption.ExcludeVisited)
+		                                        CurrentSearchOption currentSearch =
+			                                        CurrentSearchOption.ExcludeCurrent,
+		                                        VisitedSearchOption visitedSearch =
+			                                        VisitedSearchOption.ExcludeVisited)
 		{
 			IEnumerable<IWorkItem> query = GetItems(filter, false, startIndex);
 
@@ -962,7 +965,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			// an empty envelope.
 			return count > 0
 				       ? EnvelopeBuilderEx.CreateEnvelope(new Coordinate3D(xmin, ymin, zmin),
-				                                        new Coordinate3D(xmax, ymax, zmax), sref)
+				                                          new Coordinate3D(xmax, ymax, zmax), sref)
 				       : null;
 		}
 
@@ -1030,7 +1033,8 @@ namespace ProSuite.AGP.WorkList.Domain
 		                                     [CanBeNull] List<long> oids = null)
 		{
 			// todo daro oids to IEnumerable<>?
-			await WorkListChangedEvent.PublishAsync(new WorkListChangedEventArgs(this, extent, oids));
+			await WorkListChangedEvent.PublishAsync(
+				new WorkListChangedEventArgs(this, extent, oids));
 		}
 
 		public void Invalidate()
@@ -1099,7 +1103,7 @@ namespace ProSuite.AGP.WorkList.Domain
 				// ObjectIds of source feature not the work item OIDs.
 				//IEnumerable<IWorkItem> workItems = GetItems(filter);
 			}
-			
+
 			// If a item visibility changes to Done the item is not part
 			// of the work list anymore, respectively GetItems(QuerFilter, bool, int)
 			// does not return the Done-item anymore. Therefor use the item's Extent

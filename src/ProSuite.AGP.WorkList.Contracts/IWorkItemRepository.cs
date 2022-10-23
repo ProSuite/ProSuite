@@ -13,7 +13,8 @@ namespace ProSuite.AGP.WorkList.Contracts
 		IEnumerable<IWorkItem> GetItems(QueryFilter filter = null, bool recycle = true);
 
 		// todo daro: extract Interface ISource
-		IEnumerable<IWorkItem> GetItems(GdbTableIdentity tableId, QueryFilter filter, bool recycle = true);
+		IEnumerable<IWorkItem> GetItems(GdbTableIdentity tableId, QueryFilter filter,
+		                                bool recycle = true);
 
 		void Refresh(IWorkItem item);
 
@@ -27,6 +28,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 
 		// todo daro: is this the right way?
 		void SetCurrentIndex(int currentIndex);
+
 		int GetCurrentIndex();
 
 		void SetVisited(IWorkItem item);

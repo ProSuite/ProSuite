@@ -104,9 +104,9 @@ namespace ProSuite.AGP.WorkList.Datasource
 			                 out double zmax);
 
 			return PolygonBuilderEx.CreatePolygon(EnvelopeBuilderEx.CreateEnvelope(
-				                                    new Coordinate3D(xmin, ymin, zmax),
-				                                    new Coordinate3D(xmax, ymax, zmax),
-				                                    extent.SpatialReference));
+				                                      new Coordinate3D(xmin, ymin, zmax),
+				                                      new Coordinate3D(xmax, ymax, zmax),
+				                                      extent.SpatialReference));
 		}
 
 		private static bool UseExtent([NotNull] IWorkItem item)
