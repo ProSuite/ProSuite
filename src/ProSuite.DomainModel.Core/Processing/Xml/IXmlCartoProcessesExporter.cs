@@ -1,7 +1,7 @@
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.Core.DataModel;
 
-namespace ProSuite.DomainModel.AO.Processing
+namespace ProSuite.DomainModel.Core.Processing.Xml
 {
 	public interface IXmlCartoProcessesExporter
 	{
