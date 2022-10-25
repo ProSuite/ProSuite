@@ -10,21 +10,35 @@ namespace ProSuite.Processing
 {
 	public class CartoProcessConfig
 	{
-		private readonly IList<KeyValuePair<string, object>> _settings;
+		private readonly IList<Setting> _settings;
 
 		public CartoProcessConfig(string name, string description = null)
 		{
 			Name = name ?? string.Empty;
 			Description = description ?? string.Empty;
 
-			_settings = new List<KeyValuePair<string, object>>(); // todo keep triples (name, value, lineno) for better error reporting
+			_settings = new List<Setting>();
 		}
 
-		public static CartoProcessConfig FromString(string name, string text, string description = null)
+		/// <summary>
+		/// Parse config from given simple text format: name = value {; name = value}
+		/// </summary>
+		/// <param name="name">Optional name for this config</param>
+		/// <param name="text">Config text to be parsed</param>
+		/// <param name="description">Optional description for this config</param>
+		public static CartoProcessConfig FromText(string name, string text, string description = null)
 		{
 			var config = new CartoProcessConfig(name, description);
 			config.LoadString(text);
 			return config;
+		}
+
+		/// <summary>
+		/// Parse config from given XML (part of our old .cp.xml format)
+		/// </summary>
+		public static CartoProcessConfig FromXmlFile(object todo)
+		{
+			throw new NotImplementedException();
 		}
 
 		public string Name { get; }
@@ -35,11 +49,11 @@ namespace ProSuite.Processing
 		{
 			var converter = TypeDescriptor.GetConverter(typeof(T));
 
-			foreach (var pair in _settings)
+			foreach (var setting in _settings)
 			{
-				if (string.Equals(pair.Key, parameterName, StringComparison.Ordinal))
+				if (string.Equals(setting.Name, parameterName, StringComparison.Ordinal))
 				{
-					yield return ConvertValue<T>(converter, pair.Value, parameterName);
+					yield return ConvertValue<T>(converter, setting.Value, parameterName);
 				}
 			}
 		}
@@ -49,6 +63,16 @@ namespace ProSuite.Processing
 			var values = GetValues<T>(parameterName).ToArray();
 			if (values.Length < 1)
 				return default;
+			if (values.Length > 1)
+				throw ConfigError("Parameter {0} is defined more than once", parameterName);
+			return values[0];
+		}
+
+		public T GetOptionalValue<T>(string parameterName, T defaultValue)
+		{
+			var values = GetValues<T>(parameterName).ToArray();
+			if (values.Length < 1)
+				return defaultValue;
 			if (values.Length > 1)
 				throw ConfigError("Parameter {0} is defined more than once", parameterName);
 			return values[0];
@@ -77,7 +101,9 @@ namespace ProSuite.Processing
 			}
 		}
 
-		public void LoadString(string text)
+		#region Config Parser
+
+		private void LoadString(string text)
 		{
 			_settings.Clear();
 
@@ -89,6 +115,13 @@ namespace ProSuite.Processing
 
 			while (position.Index < text.Length)
 			{
+				if (text[position.Index] == '#')
+				{
+					SkipLine(text, position);
+					SkipWhite(text, position);
+					continue;
+				}
+
 				string name = ScanName(text, position);
 				if (string.IsNullOrEmpty(name))
 					throw SyntaxError(position, "Expect parameter name");
@@ -101,10 +134,11 @@ namespace ProSuite.Processing
 				string value = ScanValue(text, position);
 				if (value == null)
 					throw SyntaxError(position, "Expect a value");
-				_settings.Add(new KeyValuePair<string, object>(name, value));
+				_settings.Add(new Setting(name, value, position.LineNumber));
 
 				SkipWhite(text, position);
 				SkipOperator(text, position, ';', '\n');
+
 				SkipWhite(text, position);
 			}
 		}
@@ -121,14 +155,14 @@ namespace ProSuite.Processing
 			if (c == '"')
 				return ScanString(text, position);
 
-			return ScanToDelim(text, position, ';', '\n');
+			return ScanToDelim(text, position, ';', '#', '\n');
 		}
 
-		private static string ScanToDelim(string text, Position position, char d1, char d2)
+		private static string ScanToDelim(string text, Position position, char d1, char d2, char d3)
 		{
 			char c;
 			int anchor = position.Index;
-			while (position.Index < text.Length && (c = text[position.Index]) != d1 && c != d2)
+			while (position.Index < text.Length && (c = text[position.Index]) != d1 && c != d2 && c != d3)
 			{
 				position.Advance(text);
 			}
@@ -229,7 +263,7 @@ namespace ProSuite.Processing
 							sb.Append('\t');
 							break;
 						case 'u':
-							throw SyntaxError(position, "\\u#### is not yet implemented");
+							throw SyntaxError(position, "\\u#### is not yet implemented"); // TODO implement \uXXXX escapes
 						default:
 							throw SyntaxError(position, "Invalid escape '\\{0}' in string", cc);
 					}
@@ -277,6 +311,14 @@ namespace ProSuite.Processing
 			position.Advance(text);
 		}
 
+		private static void SkipLine(string text, Position position)
+		{
+			while (position.Index < text.Length && text[position.Index] != '\n')
+			{
+				position.Advance(text);
+			}
+		}
+
 		private static void SkipWhite(string text, Position position)
 		{
 			while (position.Index < text.Length && char.IsWhiteSpace(text, position.Index))
@@ -304,10 +346,31 @@ namespace ProSuite.Processing
 			                           $" (line {position.LineNumber} position {position.LinePosition}");
 		}
 
+		#endregion
+
 		[StringFormatMethod("format")]
 		private static Exception ConfigError(string format, params object[] args)
 		{
-			return new Exception(string.Format(format, args));
+			return new CartoConfigException(string.Format(format, args));
+		}
+
+		private readonly struct Setting
+		{
+			public string Name { get; }
+			public object Value { get; }
+			public int LineNumber { get; }
+
+			public Setting(string name, object value, int lineNumber)
+			{
+				Name = name ?? throw new ArgumentNullException(nameof(name));
+				Value = value;
+				LineNumber = lineNumber;
+			}
+
+			public override string ToString()
+			{
+				return $"{Name} = {Value} (line {LineNumber})";
+			}
 		}
 
 		private class Position

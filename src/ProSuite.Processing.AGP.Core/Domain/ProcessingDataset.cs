@@ -35,6 +35,24 @@ namespace ProSuite.Processing.AGP.Core.Domain
 			XYTolerance = SpatialReference.XYTolerance;
 		}
 
+		public int GetFieldIndex(string fieldName)
+		{
+			if (fieldName == null)
+				throw new ArgumentNullException(nameof(fieldName));
+
+			var definition = FeatureClass.GetDefinition();
+			int result = definition.FindField(fieldName);
+
+			if (result < 0)
+			{
+				string datasetName = FeatureClass.GetName();
+				throw new CartoConfigException(
+					$"Field '{fieldName}' does not exist on {datasetName}");
+			}
+
+			return result;
+		}
+
 		public override string ToString()
 		{
 			if (string.IsNullOrWhiteSpace(WhereClause))

@@ -9,6 +9,8 @@ namespace ProSuite.Processing.AGP.Core.Domain
 	{
 		string Name { get; }
 
+		IEnumerable<CartoProcessParam> Parameters { get; }
+
 		bool Validate(CartoProcessConfig config);
 
 		void Initialize(CartoProcessConfig config);
