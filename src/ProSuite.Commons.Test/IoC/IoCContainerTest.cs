@@ -22,6 +22,18 @@ namespace ProSuite.Commons.Test.IoC
 		}
 
 		[Test]
+		public void ThrowsIfComponentNotFound()
+		{
+			IoCContainer container = new IoCContainer();
+
+			Assert.Throws<ComponentNotFoundException>(
+				() => container.Resolve<INotification>());
+
+			Assert.Throws<ComponentNotFoundException>(
+				() => container.Resolve<INotification>("does not exist"));
+		}
+
+		[Test]
 		public void CanRegisterNamedComponent()
 		{
 			IoCContainer container = new IoCContainer();
