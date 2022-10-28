@@ -46,6 +46,33 @@ namespace ProSuite.DomainServices.AO.QA
 			                                  ignoreConditionsForUnknownDatasets);
 		}
 
+		[NotNull]
+		public static List<DataSource> GetDataSources([NotNull] string dataQualityXml)
+		{
+			XmlDataQualityDocument document;
+			using (Stream baseStream = new MemoryStream(Encoding.UTF8.GetBytes(dataQualityXml)))
+			using (StreamReader xmlReader = new StreamReader(baseStream))
+			{
+				document = XmlDataQualityUtils.ReadXmlDocument(xmlReader,out _);
+			}
+
+			List<DataSource> dataSources = new List<DataSource>();
+			if (document.Workspaces != null)
+			{
+				foreach (XmlWorkspace xmlWorkspace in document.Workspaces)
+				{
+					if (! string.IsNullOrWhiteSpace(xmlWorkspace.CatalogPath) ||
+					    string.IsNullOrWhiteSpace(xmlWorkspace.ConnectionString))
+					{
+						DataSource ds = new DataSource(xmlWorkspace);
+						dataSources.Add(ds);
+					}
+				}
+			}
+
+			return dataSources;
+		}
+
 		public static QualitySpecification CreateQualitySpecification(
 			[NotNull] string specificationName,
 			IList<XmlTestDescriptor> supportedDescriptors,

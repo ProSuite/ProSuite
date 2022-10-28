@@ -654,20 +654,28 @@ namespace ProSuite.Microservices.Server.AO.QA
 			[NotNull] XmlQualitySpecificationMsg xmlSpecification)
 		{
 			var dataSources = new List<DataSource>();
-			foreach (string replacement in xmlSpecification.DataSourceReplacements)
+			if (dataSources.Count > 0)
 			{
-				List<string> replacementStrings =
-					StringUtils.SplitAndTrim(replacement, '|');
-				Assert.AreEqual(2, replacementStrings.Count,
-				                "Data source workspace is not of the format \"workspace_id | catalog_path\"");
+				foreach (string replacement in xmlSpecification.DataSourceReplacements)
+				{
+					List<string> replacementStrings =
+						StringUtils.SplitAndTrim(replacement, '|');
+					Assert.AreEqual(2, replacementStrings.Count,
+					                "Data source workspace is not of the format \"workspace_id | catalog_path\"");
 
-				var dataSource =
-					new DataSource(replacementStrings[0], replacementStrings[0])
-					{
-						WorkspaceAsText = replacementStrings[1]
-					};
+					var dataSource =
+						new DataSource(replacementStrings[0], replacementStrings[0])
+						{
+							WorkspaceAsText = replacementStrings[1]
+						};
 
-				dataSources.Add(dataSource);
+					dataSources.Add(dataSource);
+				}
+			}
+			else
+			{
+				dataSources.AddRange(
+					QualitySpecificationUtils.GetDataSources(xmlSpecification.Xml));
 			}
 
 			QualitySpecification qualitySpecification =
