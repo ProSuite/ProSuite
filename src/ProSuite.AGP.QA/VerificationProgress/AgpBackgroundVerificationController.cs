@@ -15,6 +15,7 @@ using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.WPF;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Essentials.System;
 using ProSuite.Commons.Geom;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Progress;
@@ -208,7 +209,7 @@ namespace ProSuite.AGP.QA.VerificationProgress
 				return;
 			}
 
-			Process.Start(verificationResult.HtmlReportPath);
+			ProcessUtils.StartProcess(verificationResult.HtmlReportPath);
 		}
 
 		public bool CanShowReport(ServiceCallStatus? currentProgressStep,
