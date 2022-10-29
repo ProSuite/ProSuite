@@ -436,16 +436,20 @@ namespace ProSuite.Microservices.Server.AO.QA
 			{
 				DistributedTestRunner distributedTestRunner = null;
 
+				bool useStandaloneService =
+					IsStandAloneVerification(request, out QualitySpecification specification);
+
 				var issueCollection = new ConcurrentBag<IssueMsg>();
 				if (DistributedProcessingClient != null && request.MaxParallelProcessing > 1)
 				{
 					// allow directly adding issues found by client processes:
-					distributedTestRunner = new DistributedTestRunner(
-						DistributedProcessingClient, request, issueCollection);
+					distributedTestRunner =
+						new DistributedTestRunner(
+							DistributedProcessingClient, request, issueCollection)
+						{
+							QualitySpecification = specification
+						};
 				}
-
-				bool useStandaloneService =
-					IsStandAloneVerification(request, out QualitySpecification specification);
 
 				// Stand-alone: Currently Xml or specification list (WorkContextMsg is null)
 				if (useStandaloneService)
@@ -634,6 +638,19 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 					qualitySpecification = SetupQualitySpecification(xmlSpecification);
 
+					HashSet<int> excludedQcIds = new HashSet<int>(request.Specification.ExcludedConditionIds);
+					if (excludedQcIds.Count > 0)
+					{
+						foreach (QualitySpecificationElement element in qualitySpecification
+							         .Elements)
+						{
+							if (excludedQcIds.Contains(element.QualityCondition.Id))
+							{
+								element.Enabled = false;
+							}
+						}
+					}
+
 					return true;
 				}
 				case QualitySpecificationMsg.SpecificationOneofCase.ConditionListSpecification:
@@ -654,25 +671,46 @@ namespace ProSuite.Microservices.Server.AO.QA
 			[NotNull] XmlQualitySpecificationMsg xmlSpecification)
 		{
 			var dataSources = new List<DataSource>();
-			foreach (string replacement in xmlSpecification.DataSourceReplacements)
+			if (dataSources.Count > 0)
 			{
-				List<string> replacementStrings =
-					StringUtils.SplitAndTrim(replacement, '|');
-				Assert.AreEqual(2, replacementStrings.Count,
-				                "Data source workspace is not of the format \"workspace_id | catalog_path\"");
+				foreach (string replacement in xmlSpecification.DataSourceReplacements)
+				{
+					List<string> replacementStrings =
+						StringUtils.SplitAndTrim(replacement, '|');
+					Assert.AreEqual(2, replacementStrings.Count,
+					                "Data source workspace is not of the format \"workspace_id | catalog_path\"");
 
-				var dataSource =
-					new DataSource(replacementStrings[0], replacementStrings[0])
-					{
-						WorkspaceAsText = replacementStrings[1]
-					};
+					var dataSource =
+						new DataSource(replacementStrings[0], replacementStrings[0])
+						{
+							WorkspaceAsText = replacementStrings[1]
+						};
 
-				dataSources.Add(dataSource);
+					dataSources.Add(dataSource);
+				}
+			}
+			else
+			{
+				dataSources.AddRange(
+					QualitySpecificationUtils.GetDataSources(xmlSpecification.Xml));
 			}
 
 			QualitySpecification qualitySpecification =
 				QualitySpecificationUtils.CreateQualitySpecification(
 					xmlSpecification.Xml, xmlSpecification.SelectedSpecificationName, dataSources);
+
+			// ensure Xml- QualityConditionIds
+			int nextQcId = 0;
+			foreach (QualitySpecificationElement element in qualitySpecification.Elements)
+			{
+				if (element.QualityCondition.Id < 0)
+				{
+					Commons.DomainModels.IEntityTest qc = element.QualityCondition;
+					qc.SetId(nextQcId);
+				}
+
+				nextQcId++;
+			}
 
 			return qualitySpecification;
 		}
