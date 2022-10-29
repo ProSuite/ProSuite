@@ -103,8 +103,8 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 
 		private IPointCollection AllCrackPoints { get; set; }
 
-		public IDictionary<int, string> FailedOperations { get; } =
-			new Dictionary<int, string>();
+		public IDictionary<long, string> FailedOperations { get; } =
+			new Dictionary<long, string>();
 
 		public bool ContinueOnException { get; set; }
 

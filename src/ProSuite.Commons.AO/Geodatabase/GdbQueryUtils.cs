@@ -2,13 +2,11 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Runtime.InteropServices;
 using System.Text;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.Collections;
 using ProSuite.Commons.Com;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -276,10 +274,10 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			foreach (IRow queryRow in GetRows(queryTable, filter, recycle))
 			{
-				int oid;
+				long oid;
 				try
 				{
-					oid = (int) queryRow.Value[sourceOidField];
+					oid = (long) queryRow.Value[sourceOidField];
 				}
 				catch
 				{
@@ -722,7 +720,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		[CanBeNull]
 		public static IObject GetObject([NotNull] IObjectClass objectClass,
-		                                int objectId,
+		                                long objectId,
 		                                [CanBeNull] string oidFieldName = null)
 		{
 			Assert.ArgumentNotNull(objectClass, nameof(objectClass));
@@ -762,34 +760,17 @@ namespace ProSuite.Commons.AO.Geodatabase
 		}
 
 		[CanBeNull]
-		public static IRow GetRow([NotNull] ITable table, int rowId)
+		public static IRow GetRow([NotNull] ITable table, long rowId)
 		{
 			Assert.ArgumentNotNull(table, nameof(table));
 
 			var objectClass = (IObjectClass) table;
 			return GetObject(objectClass, rowId);
-
-			// NOTE: the GetFeature() based implementations cause massive memory growth
-			// with large geometries since features remain in cache until the end of 
-			// the edit operation
-
-			//try
-			//{
-			//    return table.GetRow(rowId);
-			//}
-			//catch (COMException e)
-			//{
-			//    if (e.ErrorCode == (int)fdoError.FDO_E_ROW_NOT_FOUND)
-			//    {
-			//        return null;
-			//    }
-			//    throw;
-			//}
 		}
 
 		[CanBeNull]
 		public static IFeature GetFeature([NotNull] IFeatureClass featureClass,
-		                                  int featureId)
+		                                  long featureId)
 		{
 			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
 
@@ -815,7 +796,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		[CanBeNull]
 		public static IReadOnlyFeature GetFeature([NotNull] IReadOnlyFeatureClass featureClass,
-		                                          int featureId)
+		                                          long featureId)
 		{
 			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
 
@@ -841,7 +822,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		public static IEnumerable<IReadOnlyRow> GetRows(
 			[NotNull] IReadOnlyTable table,
-			[NotNull] IEnumerable<int> objectIds,
+			[NotNull] IEnumerable<long> objectIds,
 			bool recycling)
 		{
 			if (table is ReadOnlyTable roTable)
@@ -865,7 +846,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 			else
 			{
-				foreach (int oid in objectIds)
+				foreach (long oid in objectIds)
 				{
 					yield return table.GetRow(oid);
 				}
@@ -881,49 +862,17 @@ namespace ProSuite.Commons.AO.Geodatabase
 		/// <returns></returns>
 		public static IEnumerable<IFeature> GetFeatures(
 			[NotNull] IFeatureClass featureClass,
-			[NotNull] IEnumerable<int> objectIds,
+			[NotNull] IEnumerable<long> objectIds,
 			bool recycling)
 		{
-			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
-			Assert.ArgumentNotNull(objectIds, nameof(objectIds));
-
-			// NOTE: this does apparently not work for queryname-based feature classes
-			// -> no features found for valid object ids
-			// it seems to be related to the field list (other methods also return empty
-			// if the full field list defined in the queryDef is queried. Reducing the 
-			// field list (e.g. to only the shape and OID fields) causes the result to be ok.
-
-			IGeoDatabaseBridge bridge = GetGeodatabaseBridge();
-
-			int[] oidArray = CollectionUtils.ToArray(objectIds);
-
-			if (oidArray.Length <= 0)
-			{
-				yield break;
-			}
-
-			IFeatureCursor cursor =
-				bridge.GetFeatures(featureClass, ref oidArray, recycling);
-
-			try
-			{
-				for (IFeature feature = cursor.NextFeature();
-				     feature != null;
-				     feature = cursor.NextFeature())
-				{
-					yield return feature;
-				}
-			}
-			finally
-			{
-				ComUtils.ReleaseComObject(cursor);
-			}
+			// Redirect to more generic method. For legacy implementation see GdbQueryUtils10
+			return GetFeaturesInList(featureClass, featureClass.OIDFieldName, objectIds, recycling);
 		}
 
 		[NotNull]
 		public static IEnumerable<IObject> GetObjectsByIds(
 			[NotNull] IObjectClass objectClass,
-			[NotNull] IEnumerable<int> objectIDs,
+			[NotNull] IEnumerable<long> objectIDs,
 			bool recycle)
 		{
 			Assert.ArgumentNotNull(objectClass, nameof(objectClass));
@@ -948,107 +897,14 @@ namespace ProSuite.Commons.AO.Geodatabase
 		/// edit operation that deleted the features.</remarks>
 		public static IEnumerable<IRow> GetRowsByObjectIds(
 			[NotNull] ITable table,
-			[NotNull] IEnumerable<int> objectIds,
+			[NotNull] IEnumerable<long> objectIds,
 			bool recycling)
 		{
 			Assert.ArgumentNotNull(table, nameof(table));
 			Assert.ArgumentNotNull(objectIds, nameof(objectIds));
 
-			int[] oidArray = CollectionUtils.ToArray(objectIds);
-
-			if (oidArray.Length <= 0)
-			{
-				yield break;
-			}
-
-			ICursor cursor;
-			try
-			{
-				cursor = table.GetRows(oidArray, recycling);
-			}
-			catch (COMException comException)
-			{
-				_msg.Debug("Error in ITable.GetRows", comException);
-
-				if (comException.ErrorCode == (int) fdoError.FDO_E_SE_LOG_NOEXIST &&
-				    oidArray.Length > 100)
-				{
-					// yield in catch block is not allowed:
-					cursor = null;
-				}
-				else
-				{
-					throw;
-				}
-			}
-
-			if (cursor != null)
-			{
-				try
-				{
-					for (IRow row = cursor.NextRow();
-					     row != null;
-					     row = cursor.NextRow())
-					{
-						yield return row;
-					}
-				}
-				finally
-				{
-					ComUtils.ReleaseComObject(cursor);
-				}
-			}
-			else
-			{
-				_msg.Debug("Trying again using batches of 100 object IDs...");
-
-				const int maxRowCount = 100;
-
-				foreach (IRow row in GetRowsByObjectIdsBatched(
-					         table, oidArray, recycling, maxRowCount))
-				{
-					yield return row;
-				}
-			}
-		}
-
-		/// <summary>
-		/// Returns the rows from ITable.GetRows method called in batches with the specified maximum number of rows.
-		/// </summary>
-		/// <param name="table"></param>
-		/// <param name="objectIds"></param>
-		/// <param name="recycling"></param>
-		/// <param name="maxRowCount"></param>
-		/// <returns></returns>
-		private static IEnumerable<IRow> GetRowsByObjectIdsBatched(
-			[NotNull] ITable table,
-			[NotNull] IEnumerable<int> objectIds,
-			bool recycling, int maxRowCount)
-		{
-			foreach (IList<int> oidBatch in CollectionUtils.Split(objectIds, maxRowCount))
-			{
-				int[] oidArray = CollectionUtils.ToArray(oidBatch);
-
-				if (oidArray.Length <= 0)
-				{
-					continue;
-				}
-
-				ICursor cursor = table.GetRows(oidArray, recycling);
-				try
-				{
-					for (IRow row = cursor.NextRow();
-					     row != null;
-					     row = cursor.NextRow())
-					{
-						yield return row;
-					}
-				}
-				finally
-				{
-					ComUtils.ReleaseComObject(cursor);
-				}
-			}
+			// Redirect to more generic method. For legacy implementation see GdbQueryUtils10
+			return GetRowsInList<IRow>(table, table.OIDFieldName, objectIds, recycling);
 		}
 
 		/// <summary>
@@ -1574,8 +1430,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 		}
 
-		public static int Count([NotNull] IReadOnlyTable table,
-		                        [CanBeNull] string whereClause = null)
+		public static long Count([NotNull] IReadOnlyTable table,
+		                         [CanBeNull] string whereClause = null)
 		{
 			Assert.ArgumentNotNull(table, nameof(table));
 
@@ -1588,8 +1444,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 			return table.RowCount(filter);
 		}
 
-		public static int Count([NotNull] IObjectClass objectClass,
-		                        [CanBeNull] string whereClause = null)
+		public static long Count([NotNull] IObjectClass objectClass,
+		                         [CanBeNull] string whereClause = null)
 		{
 			Assert.ArgumentNotNull(objectClass, nameof(objectClass));
 
@@ -1602,8 +1458,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 			return Count(objectClass, filter);
 		}
 
-		public static int Count([NotNull] IObjectClass objectClass,
-		                        [NotNull] IQueryFilter filter)
+		public static long Count([NotNull] IObjectClass objectClass,
+		                         [NotNull] IQueryFilter filter)
 		{
 			if (objectClass is IFeatureClass featureClass)
 			{
@@ -1615,8 +1471,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 			return table.RowCount(filter);
 		}
 
-		public static int Count([NotNull] IFeatureClass featureClass,
-		                        [CanBeNull] IGeometry searchGeometry)
+		public static long Count([NotNull] IFeatureClass featureClass,
+		                         [CanBeNull] IGeometry searchGeometry)
 		{
 			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
 
@@ -1650,7 +1506,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 				watch = _msg.DebugStartTiming();
 			}
 
-			int rowCount = 0;
+			long rowCount = 0;
 
 			if (table is IFeatureClass featureClass)
 			{

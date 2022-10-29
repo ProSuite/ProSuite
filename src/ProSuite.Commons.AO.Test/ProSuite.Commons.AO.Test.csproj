@@ -12,6 +12,8 @@
     <VSArcGISProduct Condition=" '$(VSArcGISProduct)' == ''">ArcGIS</VSArcGISProduct>
     <ArcGISAssemblyPath Condition=" '$(ArcGISAssemblyPath)' == '' ">C:\Program Files (x86)\ArcGIS\DeveloperKit10.8\DotNet</ArcGISAssemblyPath>
 
+    <ArcGISServerVersion Condition=" '$(VSArcGISVersion)' == '11.0'">Server11</ArcGISServerVersion>
+
     <NoWarn>1591</NoWarn>
 
     <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' Or '$(TargetFrameworkVersion)' == 'v4.8' ">net48</TargetFrameworkVersion>
@@ -22,13 +24,13 @@
 
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugType>full</DebugType>
-    <DefineConstants>DEBUG;TRACE;$(VSArcGISProduct)</DefineConstants>
+    <DefineConstants>DEBUG;TRACE;$(VSArcGISProduct);$(ArcGISServerVersion)</DefineConstants>
     <PlatformTarget Condition=" '$(VSArcGISProduct)' == 'ArcGIS' ">x86</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>false</Optimize>
-    <DefineConstants>TRACE;$(VSArcGISProduct)</DefineConstants>
+    <DefineConstants>TRACE;$(VSArcGISProduct);$(ArcGISServerVersion)</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="TestData\**" />

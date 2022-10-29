@@ -343,9 +343,9 @@ namespace ProSuite.Commons.AO.Geodatabase
 				if (ReconcileRedefinedVersion &&
 				    ex.ErrorCode == (int) fdoError.FDO_E_VERSION_REDEFINED)
 				{
-					if (_workspaceEdit is IVersion2 version)
+					if (_workspaceEdit is IVersion version)
 					{
-						if (! ((IVersionEdit2) version).Reconcile(version.VersionName))
+						if (! ((IVersionEdit) version).Reconcile(version.VersionName))
 						{
 							_msg.DebugFormat(
 								"Reconciled edit session successfully without conflicts. Saving again.");

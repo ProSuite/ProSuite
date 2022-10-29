@@ -298,7 +298,9 @@ namespace ProSuite.Commons.AO.Geodatabase
 		}
 
 		[CanBeNull]
-		private static T? ReadRowValue<T>([NotNull] object value, int fieldIndex, Func<int?> getOid,
+		private static T? ReadRowValue<T>([NotNull] object value,
+		                                  int fieldIndex,
+		                                  Func<long?> getOid,
 		                                  Func<string> getTableName)
 			where T : struct
 		{
@@ -337,7 +339,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 			catch (Exception ex)
 			{
-				int? rowOid = getOid();
+				long? rowOid = getOid();
 
 				_msg.ErrorFormat(
 					"ReadRowValue: Error casting value {0} of type {1} into type {2} for row <oid> {3} at field index {4} in {5}: {6}",
@@ -514,7 +516,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		/// <param name="selectionSet">The selection set.</param>
 		/// <returns></returns>
 		[NotNull]
-		public static IEnumerable<int> GetObjectIds([NotNull] ISelectionSet selectionSet)
+		public static IEnumerable<long> GetObjectIds([NotNull] ISelectionSet selectionSet)
 		{
 			Assert.ArgumentNotNull(selectionSet, nameof(selectionSet));
 
@@ -524,7 +526,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			{
 				ids.Reset();
 
-				int currentOid;
+				long currentOid;
 				while ((currentOid = ids.Next()) >= 0)
 				{
 					yield return currentOid;
@@ -537,7 +539,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		}
 
 		[NotNull]
-		public static IEnumerable<int> GetObjectIds<T>([NotNull] IEnumerable<T> rows)
+		public static IEnumerable<long> GetObjectIds<T>([NotNull] IEnumerable<T> rows)
 			where T : IRow
 		{
 			Assert.ArgumentNotNull(rows, nameof(rows));

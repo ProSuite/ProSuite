@@ -19,7 +19,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		#region Constructors
 
-		public GdbFeature(int oid, [NotNull] GdbFeatureClass featureClass,
+		public GdbFeature(long oid, [NotNull] GdbFeatureClass featureClass,
 		                  [CanBeNull] IValueList valueList = null)
 			: base(oid, featureClass, valueList)
 		{
@@ -30,6 +30,12 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		#endregion
 
 		#region IFeature implementation
+
+#if Server11
+		long IFeature.OID => OID;
+#else
+		int IFeature.OID => (int)OID;
+#endif
 
 		public override IGeometry ShapeCopy => Shape != null ? GeometryFactory.Clone(Shape) : null;
 		ITable IFeature.Table => Table;

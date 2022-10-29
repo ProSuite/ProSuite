@@ -52,6 +52,14 @@ namespace ProSuite.Commons.AO.Geodatabase
 		public string Name => DatasetUtils.GetName(BaseTable);
 		public IFields Fields => BaseTable.Fields;
 
+#if Server11
+		public IReadOnlyRow GetRow(long oid) => CreateRow(BaseTable.GetRow(oid));
+#else
+		public IReadOnlyRow GetRow(long oid) => CreateRow(BaseTable.GetRow((int) oid));
+#endif
+
+		public long RowCount(IQueryFilter filter) => BaseTable.RowCount(filter);
+
 		public int FindField(string name) => BaseTable.FindField(name);
 
 		public bool HasOID => AlternateOidFieldName != null || BaseTable.HasOID;
@@ -67,8 +75,6 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			return CreateRow(row);
 		}
-
-		public int RowCount(IQueryFilter filter) => BaseTable.RowCount(filter);
 
 		public bool Equals(IReadOnlyTable otherTable)
 		{
@@ -177,11 +183,11 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		#endregion
 
-		public int GetRowOid(IRow row)
+		public long GetRowOid(IRow row)
 		{
 			if (AlternateOidFieldName != null)
 			{
-				return (int) row.Value[OidFieldIndex];
+				return (long) row.Value[OidFieldIndex];
 			}
 
 			return row.OID;

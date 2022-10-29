@@ -1225,7 +1225,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 		{
 			Assert.ArgumentNotNull(workspace, nameof(workspace));
 
-			var version = workspace as IVersion2;
+			var version = workspace as IVersion;
+
 			if (version == null)
 			{
 				return false;
@@ -1236,7 +1237,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 				return false;
 			}
 
-			if (! version.IsRedefined)
+			if (! IsVersionRedefined(version))
 			{
 				return false;
 			}
@@ -1245,6 +1246,28 @@ namespace ProSuite.Commons.AO.Geodatabase
 			                version.VersionName);
 			version.RefreshVersion();
 			return true;
+		}
+
+		public static bool IsVersionRedefined([NotNull] IVersion version)
+		{
+#if Server11
+			var version2 = version;
+#else
+			var version2 = (IVersion2) version;
+#endif
+			return version2.IsRedefined;
+		}
+
+		public static bool IsVersionRedefined(IFeatureWorkspace workspace)
+		{
+			var version = workspace as IVersion;
+
+			if (version == null)
+			{
+				return false;
+			}
+
+			return IsVersionRedefined(version);
 		}
 
 		[NotNull]
@@ -1258,7 +1281,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			TryRefreshVersion(workspace);
 
-			var parentVersion = (IVersion2) workspace;
+			var parentVersion = (IVersion) workspace;
 			IVersion newVersion = parentVersion.CreateVersion(versionName);
 
 			newVersion.Access = access;
@@ -1309,7 +1332,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			try
 			{
-				var versionedWorkspace = workspace as IVersionedWorkspace2;
+				var versionedWorkspace = workspace as IVersionedWorkspace;
 
 				IVersion version = versionedWorkspace?.FindVersion(name);
 
@@ -1356,7 +1379,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			try
 			{
-				var versionedWorkspace = workspace as IVersionedWorkspace2;
+				var versionedWorkspace = workspace as IVersionedWorkspace;
 
 				IVersion version = versionedWorkspace?.FindVersion(name);
 
@@ -1386,7 +1409,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		public static void DeleteAllVersions([NotNull] IWorkspace workspace)
 		{
-			var versionedWorkspace = (IVersionedWorkspace2) workspace;
+			var versionedWorkspace = (IVersionedWorkspace) workspace;
 			IVersion defaultVersion = versionedWorkspace.DefaultVersion;
 
 			DeleteVersionTree(versionedWorkspace, defaultVersion.VersionInfo);
@@ -1450,32 +1473,45 @@ namespace ProSuite.Commons.AO.Geodatabase
 			Assert.False(((IWorkspaceEdit2) editWorkspace).IsInEditOperation,
 			             "The editWorkspace is in an edit operation.");
 
-			var editVersion = (IVersionEdit4) editWorkspace;
+			var editVersion = (IVersion) editWorkspace;
 			var reconcileVersion = (IVersion) reconcileWorkspace;
 
 			_msg.DebugFormat("Is edit version re-defined: {0}",
-			                 ((IVersion2) editVersion).IsRedefined);
+			                 IsVersionRedefined(editWorkspace));
 			_msg.DebugFormat("Is reconcile version re-defined: {0}",
-			                 ((IVersion2) reconcileVersion).IsRedefined);
+			                 IsVersionRedefined(reconcileVersion));
 
+			return Reconcile(editVersion, reconcileVersion, forPosting, childVersionWins,
+			                 columnLevelConflictDetection);
+		}
+
+		private static IEnumConflictClass Reconcile(IVersion editVersion, IVersion reconcileVersion,
+		                                            bool forPosting, bool childVersionWins,
+		                                            bool columnLevelConflictDetection)
+		{
 			_msg.DebugFormat(
 				"Calling IVersionEdit4.Reconcile4() on {0} with target {1}, acquireLock: {2}, childWins: {3}, columnLevelDetection: {4}",
-				((IVersion2) editVersion).VersionName,
+				editVersion.VersionName,
 				reconcileVersion.VersionInfo.VersionName,
 				forPosting, childVersionWins, columnLevelConflictDetection);
 
 			_msg.DebugFormat("Reconciling user is: {0}",
 			                 GetConnectedUser((IWorkspace) editVersion));
 
+#if Server11
+			var versionEdit = (IVersionEdit) editVersion;
+#else
+			var versionEdit = (IVersionEdit4) editVersion;
+#endif
 			bool hasConflicts =
-				editVersion.Reconcile4(reconcileVersion.VersionInfo.VersionName,
+				versionEdit.Reconcile4(reconcileVersion.VersionInfo.VersionName,
 				                       forPosting, false, childVersionWins,
 				                       columnLevelConflictDetection);
 
 			_msg.DebugFormat("Reconcile4 completed. HasConflicts: {0}", hasConflicts);
 
 			return hasConflicts
-				       ? editVersion.ConflictClasses
+				       ? versionEdit.ConflictClasses
 				       : null;
 		}
 
@@ -1490,7 +1526,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			Assert.ArgumentNotNull(workspaceToPost, nameof(workspaceToPost));
 			Assert.ArgumentNotNull(destinationWorkspace, nameof(destinationWorkspace));
 
-			var versionToPost = (IVersionEdit4) workspaceToPost;
+			var versionToPost = (IVersionEdit) workspaceToPost;
 			var destinationVersion = (IVersion) destinationWorkspace;
 
 			PostVersion(versionToPost, destinationVersion);
@@ -1523,9 +1559,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 				if (e.ErrorCode == (int) fdoError.FDO_E_VERSION_REDEFINED)
 				{
-					var destinationVersion2 = (IVersion2) destinationVersion;
-
-					if (destinationVersion2.IsRedefined)
+					if (IsVersionRedefined(destinationVersion))
 					{
 						_msg.Debug(
 							"Target version is redefined. Another reconcile is needed first.");
@@ -2065,7 +2099,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			Assert.ArgumentNotNull(workspace, nameof(workspace));
 			Assert.ArgumentNotNullOrEmpty(versionName, nameof(versionName));
 
-			var versionedWorkspace = (IVersionedWorkspace3) workspace;
+			var versionedWorkspace = (IVersionedWorkspace) workspace;
 
 			return Assert.NotNull(versionedWorkspace.FindVersion(versionName),
 			                      "version not found: {0}", versionName);
@@ -2157,7 +2191,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		{
 			Assert.ArgumentNotNull(editWorkspace, nameof(editWorkspace));
 
-			var editVersion = (IVersionEdit4) editWorkspace;
+			var editVersion = (IVersionEdit) editWorkspace;
 			var reconcileVersion = (IFeatureWorkspace) editVersion.ReconcileVersion;
 
 			Assert.NotNull(reconcileVersion,
@@ -2178,7 +2212,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		{
 			Assert.ArgumentNotNull(editWorkspace, nameof(editWorkspace));
 
-			var editVersion = (IVersionEdit4) editWorkspace;
+			var editVersion = (IVersionEdit) editWorkspace;
 			var preReconcileVersion =
 				(IFeatureWorkspace) editVersion.PreReconcileVersion;
 
@@ -2201,7 +2235,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		{
 			Assert.ArgumentNotNull(editWorkspace, nameof(editWorkspace));
 
-			var editVersion = (IVersionEdit4) editWorkspace;
+			var editVersion = (IVersionEdit) editWorkspace;
 			return (IFeatureWorkspace) editVersion.CommonAncestorVersion;
 		}
 
@@ -2271,7 +2305,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			Assert.ArgumentNotNullOrEmpty(qualifiedVersionName,
 			                              nameof(qualifiedVersionName));
 
-			var versionedWorkspace = workspace as IVersionedWorkspace2;
+			var versionedWorkspace = workspace as IVersionedWorkspace;
 
 			if (versionedWorkspace == null)
 			{
@@ -3044,7 +3078,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 		}
 
-		private static bool DeleteVersionTree([NotNull] IVersionedWorkspace2 workspace,
+		private static bool DeleteVersionTree([NotNull] IVersionedWorkspace workspace,
 		                                      [NotNull] IVersionInfo versionInfo)
 		{
 			Assert.ArgumentNotNull(workspace, nameof(workspace));

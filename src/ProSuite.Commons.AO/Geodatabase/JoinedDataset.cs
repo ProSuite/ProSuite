@@ -32,8 +32,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 		private readonly string
 			_joinStrategy = Environment.GetEnvironmentVariable("PROSUITE_MEMORY_JOIN_STRATEGY");
 
-		private readonly Dictionary<IReadOnlyTable, int> _tableRowStatistics =
-			new Dictionary<IReadOnlyTable, int>(3);
+		private readonly Dictionary<IReadOnlyTable, long> _tableRowStatistics =
+			new Dictionary<IReadOnlyTable, long>(3);
 
 		private string GeometryClassKeyField { get; set; }
 		private string OtherClassKeyField { get; set; }
@@ -143,7 +143,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		public override IEnvelope Extent => (GeometryEndClass as IReadOnlyFeatureClass)?.Extent;
 
-		public override VirtualRow GetRow(int id)
+		public override VirtualRow GetRow(long id)
 		{
 			EnsureKeyFieldNames();
 			// This is ok if there is 1 left row with the provided id. For 1:many several results exist.
@@ -183,7 +183,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			return GetRowManyToMany(id, m2nAssociation);
 		}
 
-		public override int GetRowCount(IQueryFilter filter)
+		public override long GetRowCount(IQueryFilter filter)
 		{
 			if (filter != null && ! string.IsNullOrEmpty(filter.WhereClause))
 			{
@@ -735,7 +735,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 			return geoKeysByOtherKey;
 		}
 
-		private VirtualRow GetRowManyToMany(int id, ManyToManyAssociationDescription m2nAssociation)
+		private VirtualRow GetRowManyToMany(
+			long id, ManyToManyAssociationDescription m2nAssociation)
 		{
 			GetAssociationTableKeyFields(m2nAssociation, out string bridgeTableGeoKeyField,
 			                             out string bridgeTableOtherKeyField);
@@ -821,7 +822,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 			else
 			{
-				int ftsCount = GetTableRowCount(bridgeTable);
+				long ftsCount = GetTableRowCount(bridgeTable);
 
 				clientSideKeyFiltering = (double) keys.Count / ftsCount > 0.025;
 			}
@@ -913,9 +914,9 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 		}
 
-		private int GetTableRowCount(IReadOnlyTable table)
+		private long GetTableRowCount(IReadOnlyTable table)
 		{
-			if (! _tableRowStatistics.TryGetValue(table, out int rowCount))
+			if (! _tableRowStatistics.TryGetValue(table, out long rowCount))
 			{
 				Stopwatch watch = _msg.DebugStartTiming();
 

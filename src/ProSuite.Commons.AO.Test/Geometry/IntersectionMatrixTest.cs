@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.AO.Licensing;
 
 namespace ProSuite.Commons.AO.Test.Geometry
 {

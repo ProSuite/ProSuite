@@ -5,6 +5,7 @@ using ESRI.ArcGIS.DataSourcesRaster;
 using ESRI.ArcGIS.GeoDatabaseExtensions;
 #endif
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -3577,7 +3578,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		/// <param name="table">The table.</param>
 		/// <param name="oids">The oids.</param>
 		public static void DeleteRows([NotNull] ITable table,
-		                              [NotNull] IEnumerable<int> oids)
+		                              [NotNull] IEnumerable oids)
 		{
 			Assert.ArgumentNotNull(table, nameof(table));
 			Assert.ArgumentNotNull(oids, nameof(oids));

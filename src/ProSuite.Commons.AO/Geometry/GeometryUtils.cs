@@ -9473,10 +9473,7 @@ namespace ProSuite.Commons.AO.Geometry
 				if (_geometryBridge == null)
 				{
 					// Otherwise the cast could fail in unit tests:
-					_geometryBridge =
-						(IGeometryBridge)
-						ComUtils.CreateObject(_geometryEnvironmentProgID);
-					//_geometryBridge = new GeometryEnvironmentClass();
+					_geometryBridge = ComUtils.Create<GeometryEnvironmentClass, IGeometryBridge>();
 				}
 
 				return Assert.NotNull(_geometryBridge);

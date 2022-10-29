@@ -209,16 +209,22 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		public virtual VirtualRow CreateRow() =>
 			throw new NotImplementedException("Implement in derived class");
 
+#if Server11
+
+		IRow ITable.GetRow(long OID) => GetRow(OID);
+
+		public IFeature GetFeature(long OID) => (IFeature) GetRow(OID);
+#else
 		IRow ITable.GetRow(int OID) => GetRow(OID);
+		public IFeature GetFeature(int OID) => (IFeature)GetRow(OID);
+#endif
 
-		public IFeature GetFeature(int OID) => (IFeature) GetRow(OID);
+		IReadOnlyRow IReadOnlyTable.GetRow(long OID) => GetReadOnlyRow(OID);
 
-		public virtual IRow GetRow(int OID) =>
+		public virtual IRow GetRow(long OID) =>
 			throw new NotImplementedException("Implement in derived class");
 
-		IReadOnlyRow IReadOnlyTable.GetRow(int OID) => GetReadOnlyRow(OID);
-
-		public virtual IReadOnlyRow GetReadOnlyRow(int OID) =>
+		public virtual IReadOnlyRow GetReadOnlyRow(long OID) =>
 			throw new NotImplementedException("Implement in derived class");
 
 		ICursor ITable.GetRows(object oids, bool Recycling) => GetRows(oids, Recycling);
@@ -256,7 +262,11 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		public virtual void DeleteSearchedRows(IQueryFilter QueryFilter) =>
 			throw new NotImplementedException("Implement in derived class");
 
-		int ITable.RowCount(IQueryFilter QueryFilter) => RowCount(QueryFilter);
+#if Server11
+		long ITable.RowCount(IQueryFilter QueryFilter) => RowCount(QueryFilter);
+#else
+		int ITable.RowCount(IQueryFilter QueryFilter) => (int)RowCount(QueryFilter);
+#endif
 
 		public bool Equals(IReadOnlyTable otherTable)
 		{
@@ -279,9 +289,13 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			return false;
 		}
 
-		public int FeatureCount(IQueryFilter QueryFilter) => RowCount(QueryFilter);
+#if Server11
+		public long FeatureCount(IQueryFilter QueryFilter) => RowCount(QueryFilter);
+#else
+		public int FeatureCount(IQueryFilter QueryFilter) => (int)RowCount(QueryFilter);
+#endif
 
-		public virtual int RowCount(IQueryFilter QueryFilter) =>
+		public virtual long RowCount(IQueryFilter QueryFilter) =>
 			throw new NotImplementedException("Implement in derived class");
 
 		ICursor ITable.Search(IQueryFilter QueryFilter, bool Recycling) =>

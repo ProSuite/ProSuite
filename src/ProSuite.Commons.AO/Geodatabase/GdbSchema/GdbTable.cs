@@ -105,7 +105,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		/// <param name="oid"></param>
 		/// <param name="valueList"></param>
 		/// <returns></returns>
-		public virtual GdbRow CreateObject(int oid,
+		public virtual GdbRow CreateObject(long oid,
 		                                   [CanBeNull] IValueList valueList = null)
 		{
 			return new GdbRow(oid, this, valueList);
@@ -254,7 +254,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			return CreateObject(GetNextOid());
 		}
 
-		public override IRow GetRow(int OID)
+		public override IRow GetRow(long OID)
 		{
 			if (BackingDataset == null)
 			{
@@ -264,7 +264,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			return BackingDataset.GetRow(OID);
 		}
 
-		public override IReadOnlyRow GetReadOnlyRow(int id)
+		public override IReadOnlyRow GetReadOnlyRow(long id)
 		{
 			if (BackingDataset == null)
 			{
@@ -279,7 +279,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			return CreateRow();
 		}
 
-		public override int RowCount(IQueryFilter queryFilter)
+		public override long RowCount(IQueryFilter queryFilter)
 		{
 			if (BackingDataset == null)
 			{
