@@ -9,6 +9,7 @@ using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Geometry.Serialization;
+using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.AO.Test.TestSupport;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.IO;
@@ -286,6 +287,18 @@ namespace ProSuite.Commons.AO.Test
 
 			string localTempDir = Path.Combine(Path.GetTempPath(), tempDirName);
 			return localTempDir;
+		}
+
+		private static readonly ArcGISLicenses _lic = new ArcGISLicenses();
+
+		public static void InitializeLicense()
+		{
+			_lic.Checkout();
+		}
+
+		public static void ReleaseLicense()
+		{
+			_lic.Release();
 		}
 	}
 }

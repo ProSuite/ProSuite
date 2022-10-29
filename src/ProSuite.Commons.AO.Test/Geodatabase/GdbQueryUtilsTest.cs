@@ -9,7 +9,6 @@ using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.Logging;
 using Assert = ProSuite.Commons.Essentials.Assertions.Assert;
 
@@ -18,8 +17,6 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 	[TestFixture]
 	public class GdbQueryUtilsTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
-
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		[OneTimeSetUp]
@@ -27,13 +24,13 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		{
 			TestUtils.ConfigureUnittestLogging();
 
-			_lic.Checkout();
+			TestUtils.InitializeLicense();
 		}
 
 		[OneTimeTearDown]
 		public void TeardownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		private static Dictionary<int, IRow> GetFirstNRows(ITable table, int count)

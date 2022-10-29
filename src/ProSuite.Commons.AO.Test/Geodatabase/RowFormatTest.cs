@@ -2,7 +2,6 @@ using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
-using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.AO.Test.TestSupport;
 
 namespace ProSuite.Commons.AO.Test.Geodatabase
@@ -10,18 +9,16 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 	[TestFixture]
 	public class RowFormatTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
-
 		[OneTimeSetUp]
-		public void TestFixtureSetUp()
+		public void SetupFixture()
 		{
-			_lic.Checkout();
+			TestUtils.InitializeLicense();
 		}
 
 		[OneTimeTearDown]
-		public void TestFixtureTearDown()
+		public void TeardownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		[Test]

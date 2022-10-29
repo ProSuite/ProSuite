@@ -7,7 +7,6 @@ using System;
 using ESRI.ArcGIS.Geodatabase;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
-using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.AO.Surface.Raster;
 using ProSuite.Commons.Logging;
 
@@ -16,8 +15,6 @@ namespace ProSuite.Commons.AO.Test.Surface
 	[TestFixture]
 	public class SimpleRasterSurfaceTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
-
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		[OneTimeSetUp]
@@ -27,13 +24,13 @@ namespace ProSuite.Commons.AO.Test.Surface
 
 			_msg.IsVerboseDebugEnabled = true;
 
-			_lic.Checkout(EsriProduct.ArcEditor);
+			TestUtils.InitializeLicense();
 		}
 
 		[OneTimeTearDown]
 		public void TeardownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		[Test]
