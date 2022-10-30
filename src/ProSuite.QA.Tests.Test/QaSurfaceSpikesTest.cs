@@ -6,7 +6,6 @@ using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.AO.Licensing;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core;
 using ProSuite.DomainModel.Core.DataModel;
@@ -14,24 +13,23 @@ using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Container;
 using ProSuite.QA.Tests.Test.TestData;
 using ProSuite.QA.Tests.Test.TestRunners;
+using TestUtils = ProSuite.Commons.AO.Test.TestUtils;
 
 namespace ProSuite.QA.Tests.Test
 {
 	[TestFixture]
 	public class QaSurfaceSpikesTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
-
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout(EsriProduct.ArcEditor, EsriExtension.ThreeDAnalyst);
+			TestUtils.InitializeLicense(true);
 		}
 
 		[OneTimeTearDown]
 		public void TearDownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		//[Test]
@@ -141,7 +139,7 @@ namespace ProSuite.QA.Tests.Test
 			var ts2 = new TerrainSourceDataset(breaklns, TinSurfaceType.HardLine);
 
 			var simpleTerrainDataset = new ModelSimpleTerrainDataset(
-				                           "TestSimpleTerrainDs", new[] {ts1, ts2})
+				                           "TestSimpleTerrainDs", new[] { ts1, ts2 })
 			                           {
 				                           Abbreviation = "DTM",
 				                           PointDensity = 7.8125
@@ -171,7 +169,7 @@ namespace ProSuite.QA.Tests.Test
 				fact.CreateTests(new SimpleDatasetOpener(model.MasterDatabaseWorkspaceContext));
 			Assert.AreEqual(1, tests.Count);
 
-			var runner = new QaContainerTestRunner(10000, tests[0]) {KeepGeometry = true};
+			var runner = new QaContainerTestRunner(10000, tests[0]) { KeepGeometry = true };
 
 			const double xMin = 2700000;
 			const double yMin = 1255000;

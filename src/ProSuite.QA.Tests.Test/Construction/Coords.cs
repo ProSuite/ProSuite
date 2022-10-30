@@ -6,7 +6,7 @@ namespace ProSuite.QA.Tests.Test.Construction
 	{
 		public void Add(double x, double y)
 		{
-			Add(new[] {x, y});
+			Add(new[] { x, y });
 		}
 	}
 }

@@ -1,32 +1,30 @@
 using System;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container;
-using ProSuite.QA.Tests.Test.TestRunners;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.AO.Test.TestSupport;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.QA.Container;
+using ProSuite.QA.Tests.Test.TestRunners;
+using TestUtils = ProSuite.Commons.AO.Test.TestUtils;
 
 namespace ProSuite.QA.Tests.Test
 {
 	[TestFixture]
 	public class QaInteriorRingsTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
-
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout();
+			TestUtils.InitializeLicense();
 		}
 
 		[OneTimeTearDown]
 		public void TeardownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		[Test]
@@ -256,8 +254,8 @@ namespace ProSuite.QA.Tests.Test
 			IFeature feature = CreateTestFeature();
 
 			var test = new QaInteriorRings(
-				           ReadOnlyTableFactory.Create( (IFeatureClass) feature.Class),
-			                               maximumInteriorRingCount)
+				           ReadOnlyTableFactory.Create((IFeatureClass) feature.Class),
+				           maximumInteriorRingCount)
 			           {
 				           IgnoreInnerRingsLargerThan = ignoreInnerRingsLargerThan,
 				           ReportIndividualRings = reportIndividualRings,

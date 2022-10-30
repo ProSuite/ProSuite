@@ -4,30 +4,28 @@ using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.AO.Licensing;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.Test;
 using ProSuite.QA.Tests.Test.Construction;
 using ProSuite.QA.Tests.Test.TestRunners;
 using ProSuite.QA.Tests.Transformers;
+using TestUtils = ProSuite.Commons.AO.Test.TestUtils;
 
 namespace ProSuite.QA.Tests.Test.Transformer
 {
 	[TestFixture]
 	public class TrTableJoinInMemoryTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
-
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout();
+			TestUtils.InitializeLicense();
 		}
 
 		[OneTimeTearDown]
 		public void TearDownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		[Test]
@@ -39,11 +37,11 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			IFeatureClass lineFc =
 				CreateFeatureClass(
 					ws, "lineFc", esriGeometryType.esriGeometryPolyline,
-					new[] {FieldUtils.CreateIntegerField("Nr_Line")});
+					new[] { FieldUtils.CreateIntegerField("Nr_Line") });
 			IFeatureClass polyFc =
 				CreateFeatureClass(
 					ws, "polyFc", esriGeometryType.esriGeometryPolygon,
-					new[] {FieldUtils.CreateIntegerField("Nr_Poly")});
+					new[] { FieldUtils.CreateIntegerField("Nr_Poly") });
 			{
 				IFeature f = lineFc.CreateFeature();
 				f.Value[1] = 12;
@@ -81,7 +79,8 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			{
 				var intersectsSelf =
 					new QaIntersectsSelf((IReadOnlyFeatureClass) tr.GetTransformed());
-				var runner = new QaContainerTestRunner(1000, intersectsSelf) {KeepGeometry = true};
+				var runner = new QaContainerTestRunner(1000, intersectsSelf)
+				             { KeepGeometry = true };
 				runner.Execute();
 				Assert.AreEqual(1, runner.Errors.Count);
 
@@ -89,7 +88,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				QaError error = runner.Errors[0];
 
 				// Check involved rows. They must be from a 'real' feature class, not form a transformed feature class.
-				List<string> realTableNames = new List<string> {"lineFc", "polyFc"};
+				List<string> realTableNames = new List<string> { "lineFc", "polyFc" };
 				CheckInvolvedRows(error.InvolvedRows, 4, realTableNames);
 			}
 			{
@@ -103,7 +102,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				QaError error = runner.Errors[0];
 
 				// Check involved rows. They must be from a 'real' feature class, not form a transformed feature class.
-				List<string> realTableNames = new List<string> {"lineFc", "polyFc"};
+				List<string> realTableNames = new List<string> { "lineFc", "polyFc" };
 				CheckInvolvedRows(error.InvolvedRows, 2, realTableNames);
 			}
 		}
@@ -117,11 +116,11 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			IFeatureClass lineFc =
 				CreateFeatureClass(
 					ws, "lineFc", esriGeometryType.esriGeometryPolyline,
-					new[] {FieldUtils.CreateIntegerField("Nr_Line")});
+					new[] { FieldUtils.CreateIntegerField("Nr_Line") });
 			IFeatureClass polyFc =
 				CreateFeatureClass(
 					ws, "polyFc", esriGeometryType.esriGeometryPolygon,
-					new[] {FieldUtils.CreateIntegerField("Nr_Poly")});
+					new[] { FieldUtils.CreateIntegerField("Nr_Poly") });
 
 			IFeatureClass bridgeTable =
 				CreateFeatureClass(
@@ -190,7 +189,8 @@ namespace ProSuite.QA.Tests.Test.Transformer
 					new QaIntersectsSelf((IReadOnlyFeatureClass) tr.GetTransformed());
 				//intersectsSelf.SetConstraint(0, "polyFc.Nr_Poly < 10");
 
-				var runner = new QaContainerTestRunner(1000, intersectsSelf) {KeepGeometry = true};
+				var runner = new QaContainerTestRunner(1000, intersectsSelf)
+				             { KeepGeometry = true };
 				runner.Execute();
 				Assert.AreEqual(1, runner.Errors.Count);
 
@@ -198,7 +198,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				QaError error = runner.Errors[0];
 
 				// Check involved rows. They must be from a 'real' feature class, not form a transformed feature class.
-				List<string> realTableNames = new List<string> {"lineFc", "polyFc"};
+				List<string> realTableNames = new List<string> { "lineFc", "polyFc" };
 				CheckInvolvedRows(error.InvolvedRows, 4, realTableNames);
 			}
 			{
@@ -212,7 +212,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				QaError error = runner.Errors[0];
 
 				// Check involved rows. They must be from a 'real' feature class, not form a transformed feature class.
-				List<string> realTableNames = new List<string> {"lineFc", "polyFc"};
+				List<string> realTableNames = new List<string> { "lineFc", "polyFc" };
 				CheckInvolvedRows(error.InvolvedRows, 2, realTableNames);
 			}
 			{
@@ -247,11 +247,11 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			IFeatureClass lineFc =
 				CreateFeatureClass(
 					ws, "lineFc", esriGeometryType.esriGeometryPolyline,
-					new[] {FieldUtils.CreateIntegerField("Nr_Line")});
+					new[] { FieldUtils.CreateIntegerField("Nr_Line") });
 			IFeatureClass polyFc =
 				CreateFeatureClass(
 					ws, "polyFc", esriGeometryType.esriGeometryPolygon,
-					new[] {FieldUtils.CreateIntegerField("Nr_Poly")});
+					new[] { FieldUtils.CreateIntegerField("Nr_Poly") });
 			{
 				IFeature f = lineFc.CreateFeature();
 				f.Value[1] = 12;
@@ -282,11 +282,11 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			TrGeometryToPoints trPoly2Pt =
 				new TrGeometryToPoints(
 					ReadOnlyTableFactory.Create(polyFc), GeometryComponent.Vertices)
-				{TransformerName = "polgon2Points"};
+				{ TransformerName = "polgon2Points" };
 			TrGeometryToPoints trLine2Pt =
 				new TrGeometryToPoints(
 					ReadOnlyTableFactory.Create(lineFc), GeometryComponent.Vertices)
-				{TransformerName = "line2Points"};
+				{ TransformerName = "line2Points" };
 
 			TrTableJoinInMemory tr = new TrTableJoinInMemory(
 				trPoly2Pt.GetTransformed(),
@@ -300,7 +300,8 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			{
 				var intersectsSelf =
 					new QaIntersectsSelf((IReadOnlyFeatureClass) tr.GetTransformed());
-				var runner = new QaContainerTestRunner(1000, intersectsSelf) {KeepGeometry = true};
+				var runner = new QaContainerTestRunner(1000, intersectsSelf)
+				             { KeepGeometry = true };
 				runner.Execute();
 				Assert.AreEqual(1, runner.Errors.Count);
 
@@ -308,7 +309,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				QaError error = runner.Errors[0];
 
 				// Check involved rows. They must be from a 'real' feature class, not form a transformed feature class.
-				List<string> realTableNames = new List<string> {"lineFc", "polyFc"};
+				List<string> realTableNames = new List<string> { "lineFc", "polyFc" };
 				CheckInvolvedRows(error.InvolvedRows, 4, realTableNames);
 			}
 			{
@@ -322,7 +323,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				QaError error = runner.Errors[0];
 
 				// Check involved rows. They must be from a 'real' feature class, not form a transformed feature class.
-				List<string> realTableNames = new List<string> {"lineFc", "polyFc"};
+				List<string> realTableNames = new List<string> { "lineFc", "polyFc" };
 				CheckInvolvedRows(error.InvolvedRows, 2, realTableNames);
 			}
 		}

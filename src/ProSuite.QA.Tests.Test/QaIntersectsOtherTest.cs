@@ -2,33 +2,31 @@ using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container.Test;
-using ProSuite.QA.Tests.Test.Construction;
-using ProSuite.QA.Tests.Test.TestRunners;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.AO.Licensing;
 using ProSuite.QA.Container;
+using ProSuite.QA.Container.Test;
 using ProSuite.QA.Tests.IssueFilters;
+using ProSuite.QA.Tests.Test.Construction;
+using ProSuite.QA.Tests.Test.TestRunners;
+using TestUtils = ProSuite.Commons.AO.Test.TestUtils;
 
 namespace ProSuite.QA.Tests.Test
 {
 	[TestFixture]
 	public class QaIntersectsOtherTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
-
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout();
+			TestUtils.InitializeLicense();
 		}
 
 		[OneTimeTearDown]
 		public void TearDownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		[Test]
@@ -139,7 +137,7 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanHaveUuidConstraint()
 		{
-//			IFeatureWorkspace ws = TestWorkspaceUtils.CreateTestFgdbWorkspace("IntersectSelf");
+			//			IFeatureWorkspace ws = TestWorkspaceUtils.CreateTestFgdbWorkspace("IntersectSelf");
 			IFeatureWorkspace ws = TestWorkspaceUtils.CreateInMemoryWorkspace("IntersectSelf");
 			IFeatureClass fg = DatasetUtils.CreateSimpleFeatureClass(
 				ws, "Fliessgewaesser", null,
@@ -160,7 +158,6 @@ namespace ProSuite.QA.Tests.Test
 			                                .LineTo(0, 10, 400)
 			                                .Curve, $"{nameUuid:B}");
 
-
 			var test = new QaInteriorIntersectsSelf(
 				new[] { ReadOnlyTableFactory.Create(fg) },
 				constraint:
@@ -171,7 +168,8 @@ namespace ProSuite.QA.Tests.Test
 			runner.Execute();
 		}
 
-		private IFeature Create(IFeatureClass fc, int objekart, IGeometry geom, params object[] values)
+		private IFeature Create(IFeatureClass fc, int objekart, IGeometry geom,
+		                        params object[] values)
 		{
 			IFeature f1 = fc.CreateFeature();
 			f1.set_Value(1, objekart);

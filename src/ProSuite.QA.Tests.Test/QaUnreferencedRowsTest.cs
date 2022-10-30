@@ -2,7 +2,7 @@ using System;
 using ESRI.ArcGIS.Geodatabase;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
-using ProSuite.Commons.AO.Licensing;
+using ProSuite.Commons.AO.Test;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container.Test;
 using ProSuite.QA.Tests.Test.TestRunners;
@@ -12,13 +12,12 @@ namespace ProSuite.QA.Tests.Test
 	[TestFixture]
 	public class QaUnreferencedRowsTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
 		private IFeatureWorkspace _testWs;
 
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout(EsriProduct.ArcEditor);
+			TestUtils.InitializeLicense();
 
 			_testWs = TestWorkspaceUtils.CreateTestFgdbWorkspace("TestUnreferencedRows");
 		}
@@ -26,7 +25,7 @@ namespace ProSuite.QA.Tests.Test
 		[OneTimeTearDown]
 		public void TeardownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		[Test]

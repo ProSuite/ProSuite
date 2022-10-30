@@ -2,22 +2,21 @@ using System.Collections.Generic;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using NUnit.Framework;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.Test;
 using ProSuite.QA.Tests.Test.Construction;
 using ProSuite.QA.Tests.Test.TestRunners;
-using NUnit.Framework;
-using ProSuite.Commons.AO.Geodatabase;
-using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.AO.Licensing;
-using ProSuite.Commons.Essentials.CodeAnnotations;
+using TestUtils = ProSuite.Commons.AO.Test.TestUtils;
 
 namespace ProSuite.QA.Tests.Test
 {
 	[TestFixture]
 	public class QaDuplicateGeometrySelfTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
 		private IFeatureWorkspace _testWs;
 		private const double _xyTolerance = 0.001;
 		private const double _xyResolution = 0.0001;
@@ -25,7 +24,7 @@ namespace ProSuite.QA.Tests.Test
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout();
+			TestUtils.InitializeLicense();
 
 			_testWs = TestWorkspaceUtils.CreateTestFgdbWorkspace("QaDuplicateGeometrySelfTest");
 		}
@@ -33,7 +32,7 @@ namespace ProSuite.QA.Tests.Test
 		[OneTimeTearDown]
 		public void TeardownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		[Test]
@@ -166,7 +165,8 @@ namespace ProSuite.QA.Tests.Test
 			AddFeature(featureClass, shape3);
 			AddFeature(featureClass, shape3);
 
-			var test = new QaDuplicateGeometrySelf(ReadOnlyTableFactory.Create(featureClass), null, true);
+			var test =
+				new QaDuplicateGeometrySelf(ReadOnlyTableFactory.Create(featureClass), null, true);
 
 			var testRunner = new QaContainerTestRunner(50, test);
 			testRunner.Execute();

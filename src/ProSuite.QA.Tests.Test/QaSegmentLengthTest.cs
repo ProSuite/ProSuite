@@ -2,27 +2,26 @@ using System.Globalization;
 using System.Threading;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using NUnit.Framework;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geometry;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.Test;
 using ProSuite.QA.Tests.Test.Construction;
-using NUnit.Framework;
-using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.AO.Licensing;
-using ProSuite.Commons.AO.Geodatabase;
+using TestUtils = ProSuite.Commons.AO.Test.TestUtils;
 
 namespace ProSuite.QA.Tests.Test
 {
 	[TestFixture]
 	public class QaSegmentLengthTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
 		private IFeatureWorkspace _testWs;
 		private int _errorCount;
 
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout();
+			TestUtils.InitializeLicense();
 
 			_testWs = TestWorkspaceUtils.CreateTestFgdbWorkspace("TestMinSegmentLength");
 		}
@@ -30,7 +29,7 @@ namespace ProSuite.QA.Tests.Test
 		[OneTimeTearDown]
 		public void TeardownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		[Test]
@@ -66,7 +65,8 @@ namespace ProSuite.QA.Tests.Test
 					row.Store();
 				}
 
-				var test = new QaSegmentLength(ReadOnlyTableFactory.Create(featureClass), 0.5, false);
+				var test =
+					new QaSegmentLength(ReadOnlyTableFactory.Create(featureClass), 0.5, false);
 				test.QaError += Test_QaFormatError;
 				_errorCount = 0;
 				test.Execute();

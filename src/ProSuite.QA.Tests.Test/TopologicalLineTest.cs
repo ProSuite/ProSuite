@@ -2,34 +2,32 @@ using System;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container.PolygonGrower;
-using ProSuite.QA.Tests.Test.Construction;
 using NUnit.Framework;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.AO.Licensing;
+using ProSuite.Commons.AO.Test;
 using ProSuite.Commons.AO.Test.TestSupport;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Container.PolygonGrower;
+using ProSuite.QA.Tests.Test.Construction;
 
 namespace ProSuite.QA.Tests.Test
 {
 	[TestFixture]
 	public class TopologicalLineTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
-
 		private const int _segmentPerformanceCount = 300000;
 
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout();
+			TestUtils.InitializeLicense();
 		}
 
 		[OneTimeTearDown]
 		public void TeardownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		[Test]
@@ -237,13 +235,13 @@ namespace ProSuite.QA.Tests.Test
 			                                            .LineTo(15, 5)
 			                                            .Curve;
 			Assert.AreEqual(2, TopologicalLineUtils.CalculateOrientation(polyline, resol,
-			                                                             out yMax));
+				                out yMax));
 
 			polyline = (IPolyline) CurveConstruction.StartLine(15, 5)
 			                                        .LineTo(10, 0)
 			                                        .Curve;
 			Assert.AreEqual(-2, TopologicalLineUtils.CalculateOrientation(polyline, resol,
-			                                                              out yMax));
+				                out yMax));
 
 			polyline = (IPolyline) CurveConstruction.StartLine(10, 0)
 			                                        .LineTo(15, 5)
@@ -269,7 +267,7 @@ namespace ProSuite.QA.Tests.Test
 			                                            .BezierTo(12, 2, 12, 4, 10, 6)
 			                                            .Curve;
 			Assert.AreEqual(-1, TopologicalLineUtils.CalculateOrientation(polyline, resol,
-			                                                              out yMax));
+				                out yMax));
 		}
 
 		[Test]
@@ -474,7 +472,8 @@ namespace ProSuite.QA.Tests.Test
 			IFeature feature = featureClassMock.CreateFeature(polyline);
 
 			const int tableIndex = 0;
-			return new TopologicalLine(new TableIndexRow(ReadOnlyRow.Create(feature), tableIndex), -1);
+			return new TopologicalLine(new TableIndexRow(ReadOnlyRow.Create(feature), tableIndex),
+			                           -1);
 		}
 
 		private static ISpatialReference CreateSpatialReference()

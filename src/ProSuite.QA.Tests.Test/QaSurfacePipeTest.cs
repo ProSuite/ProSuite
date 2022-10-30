@@ -1,15 +1,9 @@
-#if Server
-using ESRI.ArcGIS.DatasourcesRaster;
-#else
-using ESRI.ArcGIS.DataSourcesRaster;
-#endif
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.AO.Surface.Raster;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core;
@@ -20,13 +14,19 @@ using ProSuite.QA.Container.Test;
 using ProSuite.QA.Tests.Test.Construction;
 using ProSuite.QA.Tests.Test.TestData;
 using ProSuite.QA.Tests.Test.TestRunners;
+using TestUtils = ProSuite.Commons.AO.Test.TestUtils;
+#if Server
+using ESRI.ArcGIS.DatasourcesRaster;
+
+#else
+using ESRI.ArcGIS.DataSourcesRaster;
+#endif
 
 namespace ProSuite.QA.Tests.Test
 {
 	[TestFixture]
 	public class QaSurfacePipeTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
 		private IFeatureWorkspace _testFgdbWs;
 
 		private const string _vectorDsName = "TOPGIS_TLM.TLM_DTM_BRUCHKANTE";
@@ -35,7 +35,7 @@ namespace ProSuite.QA.Tests.Test
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout(EsriProduct.ArcEditor, EsriExtension.ThreeDAnalyst);
+			TestUtils.InitializeLicense(true);
 		}
 
 		private IFeatureWorkspace TestFgdbWs
@@ -45,7 +45,7 @@ namespace ProSuite.QA.Tests.Test
 		[OneTimeTearDown]
 		public void TearDownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		/*
@@ -154,7 +154,7 @@ namespace ProSuite.QA.Tests.Test
 				fact.CreateTests(new SimpleDatasetOpener(modelAlti.MasterDatabaseWorkspaceContext));
 			Assert.AreEqual(1, tests.Count);
 
-			var runner = new QaContainerTestRunner(10000, tests[0]) {KeepGeometry = true};
+			var runner = new QaContainerTestRunner(10000, tests[0]) { KeepGeometry = true };
 
 			const double xMin = 2751000;
 			const double yMin = 1238000;
@@ -188,7 +188,7 @@ namespace ProSuite.QA.Tests.Test
 				fact.CreateTests(new SimpleDatasetOpener(modelAlti.MasterDatabaseWorkspaceContext));
 			Assert.AreEqual(1, tests.Count);
 
-			var runner = new QaContainerTestRunner(10000, tests[0]) {KeepGeometry = true};
+			var runner = new QaContainerTestRunner(10000, tests[0]) { KeepGeometry = true };
 
 			const double xMin = 2751000;
 			const double yMin = 1238000;

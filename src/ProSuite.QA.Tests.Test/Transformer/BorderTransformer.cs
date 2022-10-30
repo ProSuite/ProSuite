@@ -1,11 +1,11 @@
+using System;
+using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Test.TestSupport;
 using ProSuite.QA.Container;
-using System;
-using System.Collections.Generic;
 
 namespace ProSuite.QA.Tests.Test.Transformer
 {

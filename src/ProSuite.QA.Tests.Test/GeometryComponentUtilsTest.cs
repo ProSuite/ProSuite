@@ -2,25 +2,23 @@ using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.AO.Licensing;
+using ProSuite.Commons.AO.Test;
 
 namespace ProSuite.QA.Tests.Test
 {
 	[TestFixture]
 	public class GeometryComponentUtilsTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
-
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout();
+			TestUtils.InitializeLicense();
 		}
 
 		[OneTimeTearDown]
 		public void TeardownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		[Test]
@@ -29,8 +27,8 @@ namespace ProSuite.QA.Tests.Test
 			var polyLine3 = GeometryFactory.CreatePolyline(
 				new[]
 				{
-					new WKSPointZ {X = 100, Y = 1000, Z = 10},
-					new WKSPointZ {X = 200, Y = 2000, Z = 20}
+					new WKSPointZ { X = 100, Y = 1000, Z = 10 },
+					new WKSPointZ { X = 200, Y = 2000, Z = 20 }
 				}, null);
 
 			var points =
@@ -46,9 +44,9 @@ namespace ProSuite.QA.Tests.Test
 			var polyLine3 = GeometryFactory.CreatePolyline(
 				new[]
 				{
-					new WKSPointZ {X = 100, Y = 1000, Z = 10},
-					new WKSPointZ {X = 200, Y = 2000, Z = 20},
-					new WKSPointZ {X = 300, Y = 3000, Z = 30}
+					new WKSPointZ { X = 100, Y = 1000, Z = 10 },
+					new WKSPointZ { X = 200, Y = 2000, Z = 20 },
+					new WKSPointZ { X = 300, Y = 3000, Z = 30 }
 				}, null);
 
 			var points =
@@ -105,7 +103,7 @@ namespace ProSuite.QA.Tests.Test
 		                                IGeometry geometry)
 		{
 			var component = GeometryComponentUtils.GetGeometryComponent(geometry,
-			                                                            geometryComponent);
+				geometryComponent);
 
 			Assert.NotNull(component);
 			Assert.IsTrue(component.IsEmpty);

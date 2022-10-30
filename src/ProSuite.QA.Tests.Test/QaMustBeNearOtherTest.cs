@@ -5,7 +5,6 @@ using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core;
@@ -16,20 +15,20 @@ using ProSuite.QA.Container.Test;
 using ProSuite.QA.TestFactories;
 using ProSuite.QA.Tests.Test.Construction;
 using ProSuite.QA.Tests.Test.TestRunners;
+using TestUtils = ProSuite.Commons.AO.Test.TestUtils;
 
 namespace ProSuite.QA.Tests.Test
 {
 	[TestFixture]
 	public class QaMustBeNearOtherTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
 		private IFeatureWorkspace _testWs;
 		private IFeatureWorkspace _relTestWs;
 
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout();
+			TestUtils.InitializeLicense();
 
 			_testWs = TestWorkspaceUtils.CreateInMemoryWorkspace("QaMustBeNearOtherTest");
 		}
@@ -47,7 +46,7 @@ namespace ProSuite.QA.Tests.Test
 		[OneTimeTearDown]
 		public void TearDownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		[Test]
@@ -255,13 +254,13 @@ namespace ProSuite.QA.Tests.Test
 			var condition = new QualityCondition("cndNear", tstDesc);
 			InstanceConfigurationUtils.AddParameterValue(condition, "relationTables", mds1);
 			InstanceConfigurationUtils.AddParameterValue(condition, "relationTables", mdsRel,
-			                                                 $"{relTableName}.{IdField} = 12"); // --> only f11 get's checked
+			                                             $"{relTableName}.{IdField} = 12"); // --> only f11 get's checked
 			InstanceConfigurationUtils.AddParameterValue(condition, "relation", relName);
 			InstanceConfigurationUtils.AddParameterValue(condition, "join", JoinType.InnerJoin);
 			InstanceConfigurationUtils.AddParameterValue(condition, "nearClasses", mds2);
 			InstanceConfigurationUtils.AddParameterValue(condition, "maximumDistance", 5);
 			InstanceConfigurationUtils.AddParameterValue(condition, "relevantRelationCondition",
-			                                                 string.Empty);
+			                                             string.Empty);
 
 			var fact = new QaRelMustBeNearOther();
 			fact.Condition = condition;

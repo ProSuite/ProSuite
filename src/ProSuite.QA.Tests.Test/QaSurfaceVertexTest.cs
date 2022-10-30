@@ -5,8 +5,8 @@ using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.AO.Surface;
+using ProSuite.Commons.AO.Test;
 using ProSuite.QA.Container.Test;
 using ProSuite.QA.Tests.Test.Construction;
 using ProSuite.QA.Tests.Test.TestData;
@@ -17,13 +17,12 @@ namespace ProSuite.QA.Tests.Test
 	[TestFixture]
 	public class QaSurfaceVertexTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
 		private IFeatureWorkspace _testFgdbWs;
 
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout(EsriProduct.ArcEditor, EsriExtension.ThreeDAnalyst);
+			TestUtils.InitializeLicense(true);
 		}
 
 		private IFeatureWorkspace TestFgdbWs
@@ -33,7 +32,7 @@ namespace ProSuite.QA.Tests.Test
 		[OneTimeTearDown]
 		public void TearDownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		[Test]
@@ -88,8 +87,8 @@ namespace ProSuite.QA.Tests.Test
 
 			var test = new QaSurfaceVertex(
 				ReadOnlyTableFactory.Create(fc), terrain, 5,
-				                            ZOffsetConstraint.AboveLimit);
-			var runner = new QaContainerTestRunner(10000, test) {KeepGeometry = true};
+				ZOffsetConstraint.AboveLimit);
+			var runner = new QaContainerTestRunner(10000, test) { KeepGeometry = true };
 
 			IEnvelope box = row.Shape.Envelope;
 			box.Expand(1.1, 1.1, true);

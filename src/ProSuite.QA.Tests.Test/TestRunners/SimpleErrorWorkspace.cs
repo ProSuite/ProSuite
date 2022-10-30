@@ -1,10 +1,10 @@
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.QA.Container;
 
 namespace ProSuite.QA.Tests.Test.TestRunners
 {
@@ -15,7 +15,7 @@ namespace ProSuite.QA.Tests.Test.TestRunners
 			private readonly IFeatureWorkspace _ws;
 			private readonly string _name;
 			private readonly esriGeometryType _geometryType;
-			private ESRI.ArcGIS.Geodatabase.ITable _table;
+			private ITable _table;
 
 			private QaError _currentError;
 
@@ -33,10 +33,10 @@ namespace ProSuite.QA.Tests.Test.TestRunners
 			{
 				((IWorkspaceEdit) _ws).StartEditing(false);
 				_currentError = qaError;
-				ESRI.ArcGIS.Geodatabase.IRow row = Table.CreateRow();
+				IRow row = Table.CreateRow();
 				if (qaError.Geometry != null)
 				{
-					((ESRI.ArcGIS.Geodatabase.IFeature) row).Shape = qaError.Geometry;
+					((IFeature) row).Shape = qaError.Geometry;
 				}
 
 				row.set_Value(1, qaError.Description);
@@ -44,7 +44,7 @@ namespace ProSuite.QA.Tests.Test.TestRunners
 				((IWorkspaceEdit) _ws).StopEditing(true);
 			}
 
-			private ESRI.ArcGIS.Geodatabase.ITable Table
+			private ITable Table
 			{
 				get
 				{
@@ -65,7 +65,7 @@ namespace ProSuite.QA.Tests.Test.TestRunners
 								                "Shape", _geometryType, sr, 1000, true, false));
 
 							_table =
-								(ESRI.ArcGIS.Geodatabase.ITable) DatasetUtils.CreateSimpleFeatureClass(
+								(ITable) DatasetUtils.CreateSimpleFeatureClass(
 									_ws, _name, fields, null);
 						}
 						else

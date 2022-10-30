@@ -2,31 +2,30 @@ using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using NUnit.Framework;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.Geometry;
 using ProSuite.QA.Container.Test;
 using ProSuite.QA.Tests.Test.Construction;
 using ProSuite.QA.Tests.Test.TestData;
 using ProSuite.QA.Tests.Test.TestRunners;
-using NUnit.Framework;
-using ProSuite.Commons.AO.Geodatabase;
-using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.AO.Licensing;
-using ProSuite.Commons.Essentials.CodeAnnotations;
+using TestUtils = ProSuite.Commons.AO.Test.TestUtils;
 
 namespace ProSuite.QA.Tests.Test
 {
 	[TestFixture]
 	public class MultipatchUtilsTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
 		private IMultiPatch _largeData;
 		private IFeatureWorkspace _testWs;
 
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout();
+			TestUtils.InitializeLicense();
 
 			_largeData = GetMultiPatch(50000);
 
@@ -36,7 +35,7 @@ namespace ProSuite.QA.Tests.Test
 		[OneTimeTearDown]
 		public void TearDownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		[Test]
@@ -292,7 +291,8 @@ namespace ProSuite.QA.Tests.Test
 				            //			            		new QaSegmentLength(gebaeude, 0.1),
 				            //			            		new QaSliverPolygon(gebaeude, 50),
 				            //			            		new QaCoplanarRings(gebaeude, 0, false),
-				            new QaMpFootprintHoles(ReadOnlyTableFactory.Create(gebaeude), InnerRingHandling.IgnoreInnerRings)
+				            new QaMpFootprintHoles(ReadOnlyTableFactory.Create(gebaeude),
+				                                   InnerRingHandling.IgnoreInnerRings)
 			            };
 			var runner = new QaContainerTestRunner(10000, tests);
 			runner.LogErrors = false;
