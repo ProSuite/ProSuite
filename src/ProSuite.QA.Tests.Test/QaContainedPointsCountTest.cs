@@ -1,27 +1,26 @@
 using System;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container.Test;
-using ProSuite.QA.Tests.Test.Construction;
-using ProSuite.QA.Tests.Test.TestRunners;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.AO.Licensing;
+using ProSuite.Commons.AO.Test;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.QA.Container.Test;
+using ProSuite.QA.Tests.Test.Construction;
+using ProSuite.QA.Tests.Test.TestRunners;
 
 namespace ProSuite.QA.Tests.Test
 {
 	[TestFixture]
 	public class QaContainedPointsCountTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
 		private IFeatureWorkspace _testWs;
 
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout();
+			TestUtils.InitializeLicense();
 
 			_testWs = TestWorkspaceUtils.CreateTestFgdbWorkspace("QaContainedPointsCountTest");
 		}
@@ -29,7 +28,7 @@ namespace ProSuite.QA.Tests.Test
 		[OneTimeTearDown]
 		public void TeardownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		[Test]
@@ -223,7 +222,7 @@ namespace ProSuite.QA.Tests.Test
 			var test = new QaContainedPointsCount(
 				           ReadOnlyTableFactory.Create(polylineFeatureClass),
 				           ReadOnlyTableFactory.Create(pointFeatureClass), 1,
-				                                       string.Empty)
+				           string.Empty)
 			           {
 				           PolylineUsage = PolylineUsage.AsIs
 			           };
@@ -234,7 +233,7 @@ namespace ProSuite.QA.Tests.Test
 			test = new QaContainedPointsCount(
 				       ReadOnlyTableFactory.Create(polylineFeatureClass),
 				       ReadOnlyTableFactory.Create(pointFeatureClass), 1,
-				                                   string.Empty)
+				       string.Empty)
 			       {
 				       PolylineUsage = PolylineUsage.AsPolygonIfClosedElseReportIssue
 			       };
@@ -245,7 +244,7 @@ namespace ProSuite.QA.Tests.Test
 			test = new QaContainedPointsCount(
 				       ReadOnlyTableFactory.Create(polylineFeatureClass),
 				       ReadOnlyTableFactory.Create(pointFeatureClass), 1,
-				                                   string.Empty)
+				       string.Empty)
 			       {
 				       PolylineUsage = PolylineUsage.AsPolygonIfClosedElseIgnore
 			       };
@@ -256,7 +255,7 @@ namespace ProSuite.QA.Tests.Test
 			test = new QaContainedPointsCount(
 				       ReadOnlyTableFactory.Create(polylineFeatureClass),
 				       ReadOnlyTableFactory.Create(pointFeatureClass), 1,
-				                                   string.Empty)
+				       string.Empty)
 			       {
 				       PolylineUsage = PolylineUsage.AsPolygonIfClosedElseAsPolyline
 			       };
@@ -295,7 +294,7 @@ namespace ProSuite.QA.Tests.Test
 		                            int expectedErrorCount
 		)
 		{
-			var tileSizes = new[] {22.2, 50.0, 100.0, 150.0, 200.0, 250.0};
+			var tileSizes = new[] { 22.2, 50.0, 100.0, 150.0, 200.0, 250.0 };
 
 			foreach (double tileSize in tileSizes)
 			{
@@ -382,8 +381,8 @@ namespace ProSuite.QA.Tests.Test
 				                       sref, 1000, false, false));
 
 			polygonFeatureClass = DatasetUtils.CreateSimpleFeatureClass(ws, polygonsName,
-			                                                            polygonFields,
-			                                                            null);
+				polygonFields,
+				null);
 
 			IFieldsEdit pointFields = new FieldsClass();
 			pointFields.AddField(FieldUtils.CreateOIDField());
@@ -392,8 +391,8 @@ namespace ProSuite.QA.Tests.Test
 				                     sref, 1000, false, false));
 
 			pointFeatureClass = DatasetUtils.CreateSimpleFeatureClass(ws, pointsName,
-			                                                          pointFields,
-			                                                          null);
+				pointFields,
+				null);
 
 			// make sure the table is known by the workspace
 			((IWorkspaceEdit) ws).StartEditing(false);

@@ -1,7 +1,7 @@
 using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.AO.Licensing;
+using ProSuite.Commons.AO.Test;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.QA.Tests.Test
@@ -9,7 +9,6 @@ namespace ProSuite.QA.Tests.Test
 	[TestFixture]
 	public class LineIntersectionUtilsTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
 		private IPoint _pointTemplate1;
 		private IPoint _pointTemplate2;
 		private const double _tolerance = 0.01234567;
@@ -18,13 +17,13 @@ namespace ProSuite.QA.Tests.Test
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout();
+			TestUtils.InitializeLicense();
 		}
 
 		[OneTimeTearDown]
 		public void TeardownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		[SetUp]

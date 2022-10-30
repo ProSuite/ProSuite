@@ -1,7 +1,6 @@
 using ESRI.ArcGIS.Geodatabase;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
-using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
 using ProSuite.QA.Tests.Transformers;
@@ -12,18 +11,16 @@ namespace ProSuite.QA.Tests.Test.Transformer
 	[TestFixture]
 	public class TrMakeTableTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
-
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout();
+			TestUtils.InitializeLicense();
 		}
 
 		[OneTimeTearDown]
 		public void TearDownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		[Test]

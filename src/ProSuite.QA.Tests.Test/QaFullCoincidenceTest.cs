@@ -3,6 +3,10 @@ using System.Collections.Generic;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using NUnit.Framework;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.Geometry;
 using ProSuite.QA.Container.Test;
@@ -11,24 +15,19 @@ using ProSuite.QA.Tests.Coincidence;
 using ProSuite.QA.Tests.Test.Construction;
 using ProSuite.QA.Tests.Test.TestData;
 using ProSuite.QA.Tests.Test.TestRunners;
-using NUnit.Framework;
-using ProSuite.Commons.AO.Geodatabase;
-using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.AO.Licensing;
-using ProSuite.Commons.Essentials.CodeAnnotations;
+using TestUtils = ProSuite.Commons.AO.Test.TestUtils;
 
 namespace ProSuite.QA.Tests.Test
 {
 	[TestFixture]
 	public class QaFullCoincidenceTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
 		private IFeatureWorkspace _testWs;
 
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout();
+			TestUtils.InitializeLicense();
 
 			_testWs = TestWorkspaceUtils.CreateInMemoryWorkspace("TestFullCoincidence");
 		}
@@ -36,7 +35,7 @@ namespace ProSuite.QA.Tests.Test
 		[OneTimeTearDown]
 		public void TeardownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		[Test]
@@ -222,7 +221,8 @@ namespace ProSuite.QA.Tests.Test
 				}
 			}
 
-			var test = new QaFullCoincidence(ReadOnlyTableFactory.Create(fc), ReadOnlyTableFactory.Create(coincidence), 2, false);
+			var test = new QaFullCoincidence(ReadOnlyTableFactory.Create(fc),
+			                                 ReadOnlyTableFactory.Create(coincidence), 2, false);
 
 			var testRunner = new QaTestRunner(test);
 			testRunner.Execute();
@@ -302,7 +302,8 @@ namespace ProSuite.QA.Tests.Test
 				}
 			}
 
-			var test = new QaFullCoincidence(ReadOnlyTableFactory.Create(fc), ReadOnlyTableFactory.Create(coincidence), 2, false);
+			var test = new QaFullCoincidence(ReadOnlyTableFactory.Create(fc),
+			                                 ReadOnlyTableFactory.Create(coincidence), 2, false);
 			var testRunner = new QaTestRunner(test);
 			testRunner.KeepGeometry = true;
 			testRunner.Execute();
@@ -396,8 +397,10 @@ namespace ProSuite.QA.Tests.Test
 				}
 			}
 
-			var test1 = new QaFullCoincidence(ReadOnlyTableFactory.Create(fc), ReadOnlyTableFactory.Create( near1), 0.1, false);
-			var test2 = new QaFullCoincidence(ReadOnlyTableFactory.Create(fc), ReadOnlyTableFactory.Create(near2), 2, false);
+			var test1 = new QaFullCoincidence(ReadOnlyTableFactory.Create(fc),
+			                                  ReadOnlyTableFactory.Create(near1), 0.1, false);
+			var test2 = new QaFullCoincidence(ReadOnlyTableFactory.Create(fc),
+			                                  ReadOnlyTableFactory.Create(near2), 2, false);
 
 			var testRunner = new QaTestRunner(test1);
 			testRunner.Execute();
@@ -427,7 +430,8 @@ namespace ProSuite.QA.Tests.Test
 			IFeatureClass fc =
 				((IFeatureWorkspace) dtmWs).OpenFeatureClass("TOPGIS_TLM.TLM_BODENBEDECKUNG");
 
-			var test = new QaFullCoincidence(ReadOnlyTableFactory.Create(fc),  ReadOnlyTableFactory.Create(fc), 0.1, false);
+			var test = new QaFullCoincidence(ReadOnlyTableFactory.Create(fc),
+			                                 ReadOnlyTableFactory.Create(fc), 0.1, false);
 			test.SetConstraint(0, "Objektart = 12");
 			test.SetConstraint(1, "Objektart = 12");
 			//test.SetConstraint(0, "ObjectId = 1438259");
@@ -451,8 +455,10 @@ namespace ProSuite.QA.Tests.Test
 			IFeatureClass fcSee_copy = _testWs.OpenFeatureClass("see1_copy");
 			IFeatureClass fcUfer = _testWs.OpenFeatureClass("gew3");
 
-			var test = new QaFullCoincidence(ReadOnlyTableFactory.Create(fcUfer), ReadOnlyTableFactory.Create(fcSee), 0.1, false);
-			var test1 = new QaFullCoincidence(ReadOnlyTableFactory.Create(fcUfer), ReadOnlyTableFactory.Create(fcSee_copy), 2, false);
+			var test = new QaFullCoincidence(ReadOnlyTableFactory.Create(fcUfer),
+			                                 ReadOnlyTableFactory.Create(fcSee), 0.1, false);
+			var test1 = new QaFullCoincidence(ReadOnlyTableFactory.Create(fcUfer),
+			                                  ReadOnlyTableFactory.Create(fcSee_copy), 2, false);
 
 			var runner = new QaContainerTestRunner(10000, test, test1);
 			IEnvelope box = new EnvelopeClass();
@@ -477,7 +483,8 @@ namespace ProSuite.QA.Tests.Test
 			IFeatureClass fc = _testWs.OpenFeatureClass("wf_def");
 			IFeatureClass reference = _testWs.OpenFeatureClass("va_wflinie");
 
-			var test = new QaFullCoincidence(ReadOnlyTableFactory.Create(fc), ReadOnlyTableFactory.Create(reference), 0.1, false);
+			var test = new QaFullCoincidence(ReadOnlyTableFactory.Create(fc),
+			                                 ReadOnlyTableFactory.Create(reference), 0.1, false);
 
 			var runner = new QaContainerTestRunner(10000, test);
 			IEnvelope box = new EnvelopeClass();
@@ -562,7 +569,8 @@ namespace ProSuite.QA.Tests.Test
 				}
 			}
 
-			var test = new QaFullCoincidence(ReadOnlyTableFactory.Create(fc), ReadOnlyTableFactory.Create(coincidence), 2, false);
+			var test = new QaFullCoincidence(ReadOnlyTableFactory.Create(fc),
+			                                 ReadOnlyTableFactory.Create(coincidence), 2, false);
 			var testRunner = new QaTestRunner(test);
 			testRunner.Execute();
 			Assert.AreEqual(0, testRunner.Errors.Count);
@@ -630,7 +638,8 @@ namespace ProSuite.QA.Tests.Test
 				}
 			}
 
-			var test = new QaFullCoincidence(ReadOnlyTableFactory.Create(fc), ReadOnlyTableFactory.Create(coincidence), 2, false);
+			var test = new QaFullCoincidence(ReadOnlyTableFactory.Create(fc),
+			                                 ReadOnlyTableFactory.Create(coincidence), 2, false);
 			var testRunner = new QaTestRunner(test);
 			testRunner.Execute();
 			Assert.AreEqual(1, testRunner.Errors.Count);
@@ -692,17 +701,27 @@ namespace ProSuite.QA.Tests.Test
 			}
 
 			// test without ignore conditions --> fully covered
-			var test = new QaFullCoincidence(ReadOnlyTableFactory.Create(fc1), new[] {ReadOnlyTableFactory.Create(fc2), ReadOnlyTableFactory.Create(fc3)}, 1, false);
+			var test = new QaFullCoincidence(ReadOnlyTableFactory.Create(fc1),
+			                                 new[]
+			                                 {
+				                                 ReadOnlyTableFactory.Create(fc2),
+				                                 ReadOnlyTableFactory.Create(fc3)
+			                                 }, 1, false);
 			var testRunner = new QaTestRunner(test);
 			testRunner.Execute();
 			Assert.AreEqual(0, testRunner.Errors.Count);
 
 			// Same test with ignore conditions --> part not covered
-			test = new QaFullCoincidence(ReadOnlyTableFactory.Create(fc1), new[] {ReadOnlyTableFactory.Create(fc2), ReadOnlyTableFactory.Create(fc3)}, 1, false);
+			test = new QaFullCoincidence(ReadOnlyTableFactory.Create(fc1),
+			                             new[]
+			                             {
+				                             ReadOnlyTableFactory.Create(fc2),
+				                             ReadOnlyTableFactory.Create(fc3)
+			                             }, 1, false);
 			bool success;
 			try
 			{
-				test.IgnoreNeighborConditions = new[] {"too", "many", "conditions"};
+				test.IgnoreNeighborConditions = new[] { "too", "many", "conditions" };
 				success = true;
 			}
 			catch
@@ -768,7 +787,8 @@ namespace ProSuite.QA.Tests.Test
 				// Make temporary circular arc based on tree points
 			}
 
-			var test = new QaFullCoincidence(ReadOnlyTableFactory.Create(fc), ReadOnlyTableFactory.Create(coincidence), 1, false);
+			var test = new QaFullCoincidence(ReadOnlyTableFactory.Create(fc),
+			                                 ReadOnlyTableFactory.Create(coincidence), 1, false);
 			var testRunner = new QaTestRunner(test);
 			testRunner.Execute();
 			Assert.AreEqual(2, testRunner.Errors.Count);
@@ -794,12 +814,14 @@ namespace ProSuite.QA.Tests.Test
 			IFeatureClass fcWater = testWs.OpenFeatureClass("stagnant_water01");
 			IFeatureClass fcCover = testWs.OpenFeatureClass("landcover01");
 
-			var test = new QaFullCoincidence(ReadOnlyTableFactory.Create(fcCover), ReadOnlyTableFactory.Create(fcWater), 1, false);
+			var test = new QaFullCoincidence(ReadOnlyTableFactory.Create(fcCover),
+			                                 ReadOnlyTableFactory.Create(fcWater), 1, false);
 			var cnt = new QaContainerTestRunner(10000, test);
 			int errorCount = cnt.Execute();
 			Assert.IsTrue(errorCount > 0);
 
-			test = new QaFullCoincidence(ReadOnlyTableFactory.Create(fcCover), ReadOnlyTableFactory.Create(fcWater), 2, false);
+			test = new QaFullCoincidence(ReadOnlyTableFactory.Create(fcCover),
+			                             ReadOnlyTableFactory.Create(fcWater), 2, false);
 			cnt = new QaContainerTestRunner(10000, test);
 			errorCount = cnt.Execute();
 			Assert.AreEqual(0, errorCount);
@@ -807,12 +829,14 @@ namespace ProSuite.QA.Tests.Test
 			fcWater = testWs.OpenFeatureClass("stagnant_water02");
 			fcCover = testWs.OpenFeatureClass("landcover02");
 
-			test = new QaFullCoincidence(ReadOnlyTableFactory.Create(fcWater), ReadOnlyTableFactory.Create(fcCover), 0, false);
+			test = new QaFullCoincidence(ReadOnlyTableFactory.Create(fcWater),
+			                             ReadOnlyTableFactory.Create(fcCover), 0, false);
 			cnt = new QaContainerTestRunner(10000, test);
 			errorCount = cnt.Execute();
 			Assert.AreEqual(0, errorCount);
 
-			test = new QaFullCoincidence(ReadOnlyTableFactory.Create(fcWater), ReadOnlyTableFactory.Create(fcCover), 2, false);
+			test = new QaFullCoincidence(ReadOnlyTableFactory.Create(fcWater),
+			                             ReadOnlyTableFactory.Create(fcCover), 2, false);
 			cnt = new QaContainerTestRunner(10000, test);
 			errorCount = cnt.Execute();
 			Assert.AreEqual(0, errorCount);
@@ -820,12 +844,14 @@ namespace ProSuite.QA.Tests.Test
 			fcWater = testWs.OpenFeatureClass("stagnant_water03");
 			fcCover = testWs.OpenFeatureClass("landcover03");
 
-			test = new QaFullCoincidence(ReadOnlyTableFactory.Create(fcWater), ReadOnlyTableFactory.Create(fcCover), 1, false);
+			test = new QaFullCoincidence(ReadOnlyTableFactory.Create(fcWater),
+			                             ReadOnlyTableFactory.Create(fcCover), 1, false);
 			cnt = new QaContainerTestRunner(10000, test);
 			errorCount = cnt.Execute();
 			Assert.IsTrue(errorCount > 0);
 
-			test = new QaFullCoincidence(ReadOnlyTableFactory.Create(fcWater),  ReadOnlyTableFactory.Create(fcCover), 2, false);
+			test = new QaFullCoincidence(ReadOnlyTableFactory.Create(fcWater),
+			                             ReadOnlyTableFactory.Create(fcCover), 2, false);
 			cnt = new QaContainerTestRunner(10000, test);
 			errorCount = cnt.Execute();
 			Assert.AreEqual(0, errorCount);
@@ -920,7 +946,7 @@ namespace ProSuite.QA.Tests.Test
 
 			var test = new QaFullCoincidence(
 				ReadOnlyTableFactory.Create(testedClass),
-				new List<IReadOnlyFeatureClass> {ReadOnlyTableFactory.Create(referenceClass)}, 3);
+				new List<IReadOnlyFeatureClass> { ReadOnlyTableFactory.Create(referenceClass) }, 3);
 
 			var runner = new QaContainerTestRunner(200, test);
 			runner.Execute(verificationEnvelope);
@@ -1036,7 +1062,7 @@ namespace ProSuite.QA.Tests.Test
 				                1000));
 
 			IFeatureClass fc = DatasetUtils.CreateSimpleFeatureClass(featureWorkspace, "Lines",
-			                                                         fields);
+				fields);
 
 			AddFeature(fc, CurveConstruction.StartLine(0, 0).LineTo(1, 1).Curve);
 			AddFeature(fc, CurveConstruction.StartLine(2, 50).LineTo(53, 48).Curve);
@@ -1145,7 +1171,7 @@ namespace ProSuite.QA.Tests.Test
 		private class QaPolycurveCoincidenceTest : QaPolycurveCoincidenceBase
 		{
 			public QaPolycurveCoincidenceTest([NotNull] IReadOnlyFeatureClass fc)
-				: base(new[] {fc}, 0, new ConstantFeatureDistanceProvider(0), false) { }
+				: base(new[] { fc }, 0, new ConstantFeatureDistanceProvider(0), false) { }
 
 			protected override bool IsDirected => false;
 
@@ -1183,8 +1209,8 @@ namespace ProSuite.QA.Tests.Test
 				}
 
 				IList<Subcurve> missing = Subcurve.GetMissingSubcurves(feature,
-				                                                       geometry, parts,
-				                                                       null);
+					geometry, parts,
+					null);
 				Assert.AreEqual(missing.Count, 2);
 				{
 					double l = missing[0].GetLength();
@@ -1216,8 +1242,8 @@ namespace ProSuite.QA.Tests.Test
 				}
 
 				IList<Subcurve> missing = Subcurve.GetMissingSubcurves(feature,
-				                                                       geometry, parts,
-				                                                       null);
+					geometry, parts,
+					null);
 				Assert.AreEqual(3, missing.Count);
 			}
 
@@ -1241,8 +1267,8 @@ namespace ProSuite.QA.Tests.Test
 				}
 
 				IList<Subcurve> missing = Subcurve.GetMissingSubcurves(feature,
-				                                                       geometry, parts,
-				                                                       null);
+					geometry, parts,
+					null);
 				Assert.AreEqual(2, missing.Count);
 			}
 
@@ -1269,8 +1295,8 @@ namespace ProSuite.QA.Tests.Test
 				}
 
 				IList<Subcurve> missing = Subcurve.GetMissingSubcurves(feature,
-				                                                       geometry, parts,
-				                                                       null);
+					geometry, parts,
+					null);
 				Assert.AreEqual(missing.Count, 2);
 				{
 					double l = missing[0].GetLength();
@@ -1307,8 +1333,8 @@ namespace ProSuite.QA.Tests.Test
 				}
 
 				IList<Subcurve> missing = Subcurve.GetMissingSubcurves(feature,
-				                                                       geometry, parts,
-				                                                       null);
+					geometry, parts,
+					null);
 				Assert.AreEqual(1, missing.Count);
 			}
 
@@ -1337,8 +1363,8 @@ namespace ProSuite.QA.Tests.Test
 				}
 
 				IList<Subcurve> missing = Subcurve.GetMissingSubcurves(feature,
-				                                                       geometry, parts,
-				                                                       null);
+					geometry, parts,
+					null);
 				Assert.AreEqual(2, missing.Count);
 			}
 

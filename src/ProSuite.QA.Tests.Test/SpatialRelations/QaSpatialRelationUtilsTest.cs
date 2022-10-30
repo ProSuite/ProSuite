@@ -1,32 +1,31 @@
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container.TestSupport;
-using ProSuite.QA.Tests.SpatialRelations;
 using NUnit.Framework;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.AO.Licensing;
+using ProSuite.Commons.AO.Test;
 using ProSuite.Commons.AO.Test.TestSupport;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Container.TestSupport;
+using ProSuite.QA.Tests.SpatialRelations;
 
 namespace ProSuite.QA.Tests.Test.SpatialRelations
 {
 	[TestFixture]
 	public class QaSpatialRelationUtilsTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
 		private ISpatialReference _spatialReference;
 
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout();
+			TestUtils.InitializeLicense();
 		}
 
 		[OneTimeTearDown]
 		public void TearDownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		[SetUp]

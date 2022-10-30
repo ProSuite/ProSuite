@@ -1,29 +1,27 @@
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using NUnit.Framework;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Test;
+using ProSuite.Commons.AO.Test.TestSupport;
 using ProSuite.QA.Tests.Test.Construction;
 using ProSuite.QA.Tests.Test.TestRunners;
-using NUnit.Framework;
-using ProSuite.Commons.AO.Licensing;
-using ProSuite.Commons.AO.Test.TestSupport;
-using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests.Test
 {
 	[TestFixture]
 	public class QaCurveTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
-
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout();
+			TestUtils.InitializeLicense();
 		}
 
 		[OneTimeTearDown]
 		public void TearDownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		[Test]
@@ -49,7 +47,7 @@ namespace ProSuite.QA.Tests.Test
 			Assert.AreEqual(1, runner.Errors.Count);
 
 			// Group by curve type
-			test = new QaCurve(ReadOnlyTableFactory.Create(fc)) {GroupIssuesBySegmentType = true};
+			test = new QaCurve(ReadOnlyTableFactory.Create(fc)) { GroupIssuesBySegmentType = true };
 
 			runner = new QaTestRunner(test);
 			runner.Execute(f);

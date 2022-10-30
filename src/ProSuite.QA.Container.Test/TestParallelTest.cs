@@ -12,7 +12,6 @@ using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.AO.Licensing;
 using ProSuite.DomainServices.AO.QA;
 using ProSuite.QA.Tests;
 
@@ -21,18 +20,16 @@ namespace ProSuite.QA.Container.Test
 	[TestFixture]
 	public class TestParallelTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
-
 		[OneTimeSetUp]
 		public void TestFixtureSetUp()
 		{
-			_lic.Checkout();
+			Commons.AO.Test.TestUtils.InitializeLicense();
 		}
 
 		[OneTimeTearDown]
 		public void TestFixtureTearDown()
 		{
-			_lic.Release();
+			Commons.AO.Test.TestUtils.ReleaseLicense();
 		}
 
 		[Test]
@@ -51,7 +48,7 @@ namespace ProSuite.QA.Container.Test
 						continue;
 					}
 
-					if (!typeof(ITest).IsAssignableFrom(type))
+					if (! typeof(ITest).IsAssignableFrom(type))
 					{
 						continue;
 					}
@@ -101,20 +98,20 @@ namespace ProSuite.QA.Container.Test
 					f.Store();
 
 					TileParam t = new TileParam
-					{
-						Box = new WKSEnvelope
-						{
-							XMin = x - dx / 2,
-							XMax = x + dx / 2,
-							YMin = y - dx / 2,
-							YMax = y + dx / 2
-						}
-					};
+					              {
+						              Box = new WKSEnvelope
+						                    {
+							                    XMin = x - dx / 2,
+							                    XMax = x + dx / 2,
+							                    YMin = y - dx / 2,
+							                    YMax = y + dx / 2
+						                    }
+					              };
 				}
 			}
 
 			_tileRaster = tileRaster;
-			string wsPath = WorkspaceUtils.TryGetCatalogPath((IWorkspace)workspace);
+			string wsPath = WorkspaceUtils.TryGetCatalogPath((IWorkspace) workspace);
 			Assert.NotNull(wsPath);
 
 			RunParallel(
@@ -147,7 +144,7 @@ namespace ProSuite.QA.Container.Test
 			IPolyline p = new PolylineClass();
 			foreach (var tile in tileRaster.Tiles)
 			{
-				((IPointCollection)p).AddPoint(
+				((IPointCollection) p).AddPoint(
 					new PointClass { X = tile.Box.XMin + dx / 2, Y = tile.Box.YMin + dx / 2 });
 			}
 
@@ -156,7 +153,7 @@ namespace ProSuite.QA.Container.Test
 			f.Store();
 
 			_tileRaster = tileRaster;
-			string wsPath = WorkspaceUtils.TryGetCatalogPath((IWorkspace)workspace);
+			string wsPath = WorkspaceUtils.TryGetCatalogPath((IWorkspace) workspace);
 			Assert.NotNull(wsPath);
 
 			_cachedErrors.Clear();
@@ -198,17 +195,16 @@ namespace ProSuite.QA.Container.Test
 					FieldUtils.CreateField(_waitFieldName, esriFieldType.esriFieldTypeInteger)
 				});
 
-
 			double dx = 10000;
 			TileRaster tileRaster = TileRaster.Create(2600000, 1200000, 5, 5, dx);
 
 			IPolyline line = new PolylineClass();
-			Random r = new Random((int)DateTime.Now.Ticks);
+			Random r = new Random((int) DateTime.Now.Ticks);
 			foreach (var tile in tileRaster.Tiles)
 			{
 				IPoint p = new PointClass
-				{ X = tile.Box.XMin + dx / 2, Y = tile.Box.YMin + dx / 2 };
-				((IPointCollection)line).AddPoint(p);
+				           { X = tile.Box.XMin + dx / 2, Y = tile.Box.YMin + dx / 2 };
+				((IPointCollection) line).AddPoint(p);
 
 				IFeature pf = pointFc.CreateFeature();
 				pf.Value[pf.Fields.FindField(_waitFieldName)] = r.Next(300);
@@ -221,7 +217,7 @@ namespace ProSuite.QA.Container.Test
 			lf.Store();
 
 			_tileRaster = tileRaster;
-			string wsPath = WorkspaceUtils.TryGetCatalogPath((IWorkspace)workspace);
+			string wsPath = WorkspaceUtils.TryGetCatalogPath((IWorkspace) workspace);
 			Assert.NotNull(wsPath);
 
 			_cachedErrors.Clear();
@@ -258,9 +254,9 @@ namespace ProSuite.QA.Container.Test
 		}
 
 		private void RunParallel(TileRaster tileRaster, double dx,
-								 Func<List<ContainerTest>> getTests,
-								 bool runWithMaxTasks = true, bool runTilesParallel = true,
-								 bool completedTileHandling = false)
+		                         Func<List<ContainerTest>> getTests,
+		                         bool runWithMaxTasks = true, bool runTilesParallel = true,
+		                         bool completedTileHandling = false)
 		{
 			_tileRaster = tileRaster;
 
@@ -368,7 +364,8 @@ namespace ProSuite.QA.Container.Test
 		}
 
 		private void DropHandledCashedErrors(TileRaster tileRaster,
-			HashSet<TileParam> completedTiles, TileParam completedTile)
+		                                     HashSet<TileParam> completedTiles,
+		                                     TileParam completedTile)
 		{
 			List<QaSer> cashedErrors = null;
 			AccessErrors(() => cashedErrors = new List<QaSer>(_cachedErrors));
@@ -398,24 +395,23 @@ namespace ProSuite.QA.Container.Test
 			}
 		}
 
-
 		private bool IsHandled(QaSer error, TileRaster tileRaster, bool[,] completed)
 		{
 			WKSEnvelope minBox = tileRaster.Tile(0, 0).Box;
 			double dx = minBox.XMax - minBox.XMin;
-			int xMin = Math.Max((int)((error.InvolvedExtent.XMin - minBox.XMin) / dx), 0);
-			int yMin = Math.Max((int)((error.InvolvedExtent.YMin - minBox.YMin) / dx), 0);
+			int xMin = Math.Max((int) ((error.InvolvedExtent.XMin - minBox.XMin) / dx), 0);
+			int yMin = Math.Max((int) ((error.InvolvedExtent.YMin - minBox.YMin) / dx), 0);
 
-			int xMax = Math.Min((int)((error.InvolvedExtent.XMax - minBox.XMin) / dx),
-								tileRaster.Nx - 1);
-			int yMax = Math.Max((int)((error.InvolvedExtent.YMax - minBox.YMin) / dx),
-								tileRaster.Ny - 1);
+			int xMax = Math.Min((int) ((error.InvolvedExtent.XMax - minBox.XMin) / dx),
+			                    tileRaster.Nx - 1);
+			int yMax = Math.Max((int) ((error.InvolvedExtent.YMax - minBox.YMin) / dx),
+			                    tileRaster.Ny - 1);
 
 			for (int ix = xMin; ix <= xMax; ix++)
 			{
 				for (int iy = yMin; iy <= yMax; iy++)
 				{
-					if (!completed[ix, iy])
+					if (! completed[ix, iy])
 					{
 						return false;
 					}
@@ -449,7 +445,7 @@ namespace ProSuite.QA.Container.Test
 					return;
 				}
 
-				ContainerTest test = (ContainerTest)e.QaError.Test;
+				ContainerTest test = (ContainerTest) e.QaError.Test;
 				string serGeom = SerializeGeometry(e.QaError.Geometry);
 				e.QaError.Geometry.Envelope.QueryWKSCoords(out WKSEnvelope errorExtent);
 				IEnvelope involvedEnv = null;
@@ -479,12 +475,12 @@ namespace ProSuite.QA.Container.Test
 				}
 
 				QaSer qaSer = new QaSer
-				{
-					TestIndex = testDict[test],
-					Error = serGeom,
-					ErrorExtent = errorExtent,
-					InvolvedExtent = involvedExtent
-				};
+				              {
+					              TestIndex = testDict[test],
+					              Error = serGeom,
+					              ErrorExtent = errorExtent,
+					              InvolvedExtent = involvedExtent
+				              };
 				AddError(qaSer, tp);
 			};
 			container.Execute(GeometryFactory.CreateEnvelope(tp.Box));
@@ -517,7 +513,7 @@ namespace ProSuite.QA.Container.Test
 
 			IJSONSerializer jsonSerializer = new JSONSerializerGdbClass();
 			jsonSerializer.InitSerializer(jsonWriter, propertySet);
-			((IExternalSerializerGdb)jsonSerializer).WriteGeometry(null, geometry);
+			((IExternalSerializerGdb) jsonSerializer).WriteGeometry(null, geometry);
 
 			string json = Encoding.UTF8.GetString(jsonWriter.GetStringBuffer());
 			return json;
@@ -539,7 +535,7 @@ namespace ProSuite.QA.Container.Test
 				fields.Add(iField);
 			}
 
-			((IExternalSerializerGdb)jsonSerializer).WriteRow(
+			((IExternalSerializerGdb) jsonSerializer).WriteRow(
 				null, feature, feature.Fields, fields.ToArray(), opts);
 			string json = Encoding.UTF8.GetString(jsonWriter.GetStringBuffer());
 			return json;
@@ -628,7 +624,7 @@ namespace ProSuite.QA.Container.Test
 				if (x == y) return true;
 				if (x == null || y == null) return false;
 				return x.TestIndex == y.TestIndex &&
-					   x.Error == y.Error;
+				       x.Error == y.Error;
 			}
 
 			public int GetHashCode(QaSer obj)
@@ -661,15 +657,15 @@ namespace ProSuite.QA.Container.Test
 						double x = x0 + ix * dx;
 						double y = y0 + iy * dx;
 						TileParam t = new TileParam
-						{
-							Box = new WKSEnvelope
-							{
-								XMin = x,
-								XMax = x + dx,
-								YMin = y,
-								YMax = y + dx
-							}
-						};
+						              {
+							              Box = new WKSEnvelope
+							                    {
+								                    XMin = x,
+								                    XMax = x + dx,
+								                    YMin = y,
+								                    YMax = y + dx
+							                    }
+						              };
 						r._tiles[ix, iy] = t;
 					}
 				}
@@ -677,15 +673,14 @@ namespace ProSuite.QA.Container.Test
 				return r;
 			}
 
-			private TileRaster()
-			{
+			private TileRaster() { }
 
-			}
 			private TileParam[,] _tiles;
 			public int Nx { get; private set; }
 			public int Ny { get; private set; }
 
 			public TileParam Tile(int ix, int iy) => _tiles[ix, iy];
+
 			public IEnumerable<TileParam> Tiles
 			{
 				get
@@ -702,16 +697,16 @@ namespace ProSuite.QA.Container.Test
 				}
 			}
 		}
+
 		private class TileParam
 		{
-
 			public WKSEnvelope Box { get; set; }
 			public int State { get; set; }
 		}
 
 		private static IFeatureClass CreateFeatureClass(
 			IFeatureWorkspace workspace, string name, esriGeometryType type,
-			int spatialReferenceId = (int)esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95,
+			int spatialReferenceId = (int) esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95,
 			IEnumerable<IField> customFields = null)
 		{
 			ISpatialReference sr = SpatialReferenceUtils.CreateSpatialReference(
@@ -763,7 +758,7 @@ namespace ProSuite.QA.Container.Test
 
 			protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 			{
-				if (!(row is IReadOnlyFeature f))
+				if (! (row is IReadOnlyFeature f))
 				{
 					return 0;
 				}

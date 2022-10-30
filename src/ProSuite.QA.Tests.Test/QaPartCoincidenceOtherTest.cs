@@ -1,33 +1,32 @@
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using NUnit.Framework;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.AO.Test;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container.Test;
 using ProSuite.QA.Tests.Test.Construction;
 using ProSuite.QA.Tests.Test.TestData;
 using ProSuite.QA.Tests.Test.TestRunners;
-using NUnit.Framework;
-using ProSuite.Commons.AO.Geodatabase;
-using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.AO.Licensing;
-using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.QA.Tests.Test
 {
 	[TestFixture]
 	public class QaPartCoincidenceOtherTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
 		private IFeatureWorkspace _testWs;
 
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout();
+			TestUtils.InitializeLicense();
 		}
 
 		[OneTimeTearDown]
 		public void TeardownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		[NotNull]
@@ -48,8 +47,8 @@ namespace ProSuite.QA.Tests.Test
 
 			var test = new QaPartCoincidenceOther(
 				ReadOnlyTableFactory.Create(avr_lie), ReadOnlyTableFactory.Create(avr_gem),
-				                            0.02, 1, 0.1,
-				                            false, 5000, 0);
+				0.02, 1, 0.1,
+				false, 5000, 0);
 			test.SetConstraint(0, "ObjectId=2988");
 			test.SetConstraint(1, "ObjectId=3");
 			var runner = new QaContainerTestRunner(10000, test);
@@ -124,8 +123,8 @@ namespace ProSuite.QA.Tests.Test
 
 			var test = new QaPartCoincidenceOther(
 				ReadOnlyTableFactory.Create(featureClass), ReadOnlyTableFactory.Create(reference),
-				                            0.02, 0.05, 0.1,
-				                            false, 5000, 0);
+				0.02, 0.05, 0.1,
+				false, 5000, 0);
 			var runner = new QaTestRunner(test);
 			runner.Execute(row1);
 			Assert.AreEqual(3, runner.Errors.Count);
@@ -161,7 +160,8 @@ namespace ProSuite.QA.Tests.Test
 				GeometryFactory.CreateEnvelope(0, 0, 500, 500);
 
 			var test = new QaPartCoincidenceOther(
-				ReadOnlyTableFactory.Create(testedClass), ReadOnlyTableFactory.Create(referenceClass), 3, 50);
+				ReadOnlyTableFactory.Create(testedClass),
+				ReadOnlyTableFactory.Create(referenceClass), 3, 50);
 
 			var runner = new QaContainerTestRunner(200, test);
 			runner.Execute(verificationEnvelope);
@@ -198,7 +198,8 @@ namespace ProSuite.QA.Tests.Test
 				GeometryFactory.CreateEnvelope(0, 0, 500, 500);
 
 			var test = new QaPartCoincidenceOther(
-				ReadOnlyTableFactory.Create(testedClass), ReadOnlyTableFactory.Create(referenceClass), 3, 50);
+				ReadOnlyTableFactory.Create(testedClass),
+				ReadOnlyTableFactory.Create(referenceClass), 3, 50);
 
 			var runner = new QaContainerTestRunner(200, test);
 			runner.Execute(verificationEnvelope);
@@ -235,7 +236,8 @@ namespace ProSuite.QA.Tests.Test
 				GeometryFactory.CreateEnvelope(0, 0, 500, 500);
 
 			var test = new QaPartCoincidenceOther(
-				ReadOnlyTableFactory.Create(testedClass), ReadOnlyTableFactory.Create(referenceClass), 3, 50);
+				ReadOnlyTableFactory.Create(testedClass),
+				ReadOnlyTableFactory.Create(referenceClass), 3, 50);
 
 			var runner = new QaContainerTestRunner(200, test);
 			runner.Execute(verificationEnvelope);

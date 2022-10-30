@@ -6,31 +6,29 @@ using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.AO.Licensing;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.Test;
 using ProSuite.QA.Tests.IssueFilters;
 using ProSuite.QA.Tests.Test.Construction;
 using ProSuite.QA.Tests.Test.TestRunners;
 using ProSuite.QA.Tests.Transformers;
+using TestUtils = ProSuite.Commons.AO.Test.TestUtils;
 
 namespace ProSuite.QA.Tests.Test.Transformer
 {
 	[TestFixture]
 	public class TrIntersectTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
-
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout();
+			TestUtils.InitializeLicense();
 		}
 
 		[OneTimeTearDown]
 		public void TearDownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		[Test]
@@ -83,7 +81,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 
 			IFeatureClass pointFc =
 				CreateFeatureClass(ws, "pointFc", esriGeometryType.esriGeometryPoint,
-				                   new[] {FieldUtils.CreateIntegerField("IntVal")});
+				                   new[] { FieldUtils.CreateIntegerField("IntVal") });
 			IFeatureClass polyFc =
 				CreateFeatureClass(ws, "polyFc", esriGeometryType.esriGeometryPolygon);
 
@@ -129,7 +127,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 
 			IFeatureClass pointFc =
 				CreateFeatureClass(ws, "pointFc", esriGeometryType.esriGeometryMultipoint,
-				                   new[] {FieldUtils.CreateIntegerField("IntVal")});
+				                   new[] { FieldUtils.CreateIntegerField("IntVal") });
 			IFeatureClass polyFc =
 				CreateFeatureClass(ws, "polyFc", esriGeometryType.esriGeometryPolygon);
 
@@ -170,7 +168,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 
 			IFeatureClass pFc =
 				CreateFeatureClass(ws, "pointFc", esriGeometryType.esriGeometryPolygon,
-				                   new[] {FieldUtils.CreateIntegerField("IntVal")});
+				                   new[] { FieldUtils.CreateIntegerField("IntVal") });
 			IFeatureClass polyFc =
 				CreateFeatureClass(ws, "polyFc", esriGeometryType.esriGeometryPolygon);
 
@@ -211,7 +209,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 
 			IFeatureClass polyFc =
 				CreateFeatureClass(ws, "polyFc", esriGeometryType.esriGeometryPolygon,
-				                   new[] {FieldUtils.CreateIntegerField("IntVal")});
+				                   new[] { FieldUtils.CreateIntegerField("IntVal") });
 
 			{
 				IFeature f = polyFc.CreateFeature();
@@ -251,11 +249,11 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			IFeatureClass lineFc =
 				CreateFeatureClass(
 					ws, "lineFc", esriGeometryType.esriGeometryPolyline,
-					new[] {FieldUtils.CreateIntegerField("Nr")});
+					new[] { FieldUtils.CreateIntegerField("Nr") });
 			IFeatureClass polyFc =
 				CreateFeatureClass(
 					ws, "polyFc", esriGeometryType.esriGeometryPolygon,
-					new[] {FieldUtils.CreateIntegerField("Nr")});
+					new[] { FieldUtils.CreateIntegerField("Nr") });
 			{
 				IFeature f = lineFc.CreateFeature();
 				f.Value[1] = 12;
@@ -301,7 +299,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				ft.SetIssueFilters(
 					"filter",
 					new List<IIssueFilter>
-					{new IfInvolvedRows("Nr = 12 OR polyFc_Nr = 6") {Name = "filter"}});
+					{ new IfInvolvedRows("Nr = 12 OR polyFc_Nr = 6") { Name = "filter" } });
 				var runner = new QaContainerTestRunner(1000, test);
 				runner.Execute();
 				Assert.AreEqual(1, runner.Errors.Count);

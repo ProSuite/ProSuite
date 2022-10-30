@@ -4,27 +4,26 @@ using System.Linq;
 using System.Threading;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using NUnit.Framework;
+using ProSuite.Commons;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Geom;
+using ProSuite.Commons.Text;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.Geometry;
 using ProSuite.QA.Container.Test;
 using ProSuite.QA.Tests.Coincidence;
 using ProSuite.QA.Tests.Test.Construction;
 using ProSuite.QA.Tests.Test.TestRunners;
-using NUnit.Framework;
-using ProSuite.Commons;
-using ProSuite.Commons.AO.Geodatabase;
-using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.AO.Licensing;
-using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Geom;
-using ProSuite.Commons.Text;
+using TestUtils = ProSuite.Commons.AO.Test.TestUtils;
 
 namespace ProSuite.QA.Tests.Test
 {
 	[TestFixture]
 	public class QaTopoNotNearTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
 		private IFeatureWorkspace _testWs;
 		private ISpatialReference _spatialReference;
 		private const string _stateIdFieldName = "STATE";
@@ -36,7 +35,8 @@ namespace ProSuite.QA.Tests.Test
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout(EsriProduct.ArcView);
+			TestUtils.InitializeLicense();
+
 			_spatialReference = CreateLV95();
 			_testWs = TestWorkspaceUtils.CreateInMemoryWorkspace(
 				"QaTopoNotNearTest");
@@ -45,7 +45,7 @@ namespace ProSuite.QA.Tests.Test
 		[OneTimeTearDown]
 		public void TeardownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		[Test]

@@ -5,7 +5,7 @@ using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.AO.Licensing;
+using ProSuite.Commons.AO.Test;
 using ProSuite.QA.Container.Test;
 using ProSuite.QA.Tests.Test.Construction;
 using ProSuite.QA.Tests.Test.TestRunners;
@@ -16,18 +16,16 @@ namespace ProSuite.QA.Tests.Test.Transformer
 	[TestFixture]
 	public class TrDissolveTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
-
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout(EsriProduct.ArcEditor);
+			TestUtils.InitializeLicense();
 		}
 
 		[OneTimeTearDown]
 		public void TearDownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		[Test]
@@ -68,7 +66,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 
 			TrDissolve dissolve =
 				new TrDissolve(ReadOnlyTableFactory.Create(fc))
-				{Search = 1, NeighborSearchOption = TrDissolve.SearchOption.All};
+				{ Search = 1, NeighborSearchOption = TrDissolve.SearchOption.All };
 			QaMinLength test = new QaMinLength(dissolve.GetTransformed(), 100);
 
 			{
@@ -124,7 +122,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 
 			TrDissolve dissolve =
 				new TrDissolve(ReadOnlyTableFactory.Create(fc))
-				{Search = 1, NeighborSearchOption = TrDissolve.SearchOption.Tile};
+				{ Search = 1, NeighborSearchOption = TrDissolve.SearchOption.Tile };
 
 			// Ensure unique OID:
 			List<long> objectIDs = dissolve
@@ -188,7 +186,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 
 			TrDissolve dissolve =
 				new TrDissolve(ReadOnlyTableFactory.Create(fc))
-				{Search = 1, NeighborSearchOption = TrDissolve.SearchOption.All};
+				{ Search = 1, NeighborSearchOption = TrDissolve.SearchOption.All };
 
 			// Ensure unique OID:
 			List<long> objectIDs = dissolve
@@ -442,12 +440,12 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				new TrDissolve((IReadOnlyFeatureClass) joined.GetTransformed())
 				{
 					Search = 1,
-					Attributes = new List<string> {"Min(RouteTbl.RouteFk) AS MinRouteFk"},
-					GroupBy = new List<string> {"RouteTbl.RouteNr"}
+					Attributes = new List<string> { "Min(RouteTbl.RouteFk) AS MinRouteFk" },
+					GroupBy = new List<string> { "RouteTbl.RouteNr" }
 				};
 			TrLineToPolygon lineToPolygon =
 				new TrLineToPolygon(dissolve.GetTransformed())
-				{Attributes = new[] {"RouteTbl.RouteNr"}};
+				{ Attributes = new[] { "RouteTbl.RouteNr" } };
 
 			{
 				QaMinArea test = new QaMinArea(lineToPolygon.GetTransformed(), 1000);

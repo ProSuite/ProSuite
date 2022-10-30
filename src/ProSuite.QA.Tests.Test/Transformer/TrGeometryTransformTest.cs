@@ -7,31 +7,29 @@ using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.AO.Licensing;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.Test;
 using ProSuite.QA.Container.TestContainer;
 using ProSuite.QA.Tests.Test.Construction;
 using ProSuite.QA.Tests.Test.TestRunners;
 using ProSuite.QA.Tests.Transformers;
+using TestUtils = ProSuite.Commons.AO.Test.TestUtils;
 
 namespace ProSuite.QA.Tests.Test.Transformer
 {
 	[TestFixture]
 	public class TrGeometryTransformTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
-
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout();
+			TestUtils.InitializeLicense();
 		}
 
 		[OneTimeTearDown]
 		public void TearDownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		[Test]
@@ -77,7 +75,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 					ReadOnlyTableFactory.Create(lineFc), GeometryComponent.Vertices);
 
 				// This should be optional and if null, all attributes should be used.
-				tr.Attributes = new List<string> {"TEXT_FIELD", "NUMBER_FIELD"};
+				tr.Attributes = new List<string> { "TEXT_FIELD", "NUMBER_FIELD" };
 
 				TransformedFeatureClass transformedFeatureClass = tr.GetTransformed();
 
@@ -151,7 +149,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			{
 				// Explicitly set the list of attributes:
 				TrFootprint tr = new TrFootprint(ReadOnlyTableFactory.Create(multipatchFc));
-				tr.Attributes = new List<string> {"TEXT_FIELD"};
+				tr.Attributes = new List<string> { "TEXT_FIELD" };
 
 				TransformedFeatureClass transformedFeatureClass = tr.GetTransformed();
 
@@ -320,7 +318,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 
 			IFeatureClass polyFc =
 				CreateFeatureClass(ws, "lineFc", esriGeometryType.esriGeometryPolygon,
-				                   new[] {FieldUtils.CreateIntegerField("IntField")});
+				                   new[] { FieldUtils.CreateIntegerField("IntField") });
 
 			{
 				IFeature f = polyFc.CreateFeature();
