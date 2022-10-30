@@ -29,7 +29,7 @@ namespace ProSuite.QA.Container
 
 		public string SubFields { get; }
 
-		public int MinimumOID { get; set; }
+		public long MinimumOID { get; set; }
 
 		public bool AttributeFirst { get; set; } = true;
 

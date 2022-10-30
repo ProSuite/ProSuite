@@ -4,7 +4,7 @@ namespace ProSuite.QA.Tests.Transformers
 {
 	public interface IRowsCache
 	{
-		bool Remove(int oid);
+		bool Remove(long oid);
 
 		void Add(IReadOnlyRow row);
 	}

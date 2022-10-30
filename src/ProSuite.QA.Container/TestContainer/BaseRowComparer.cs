@@ -67,10 +67,10 @@ namespace ProSuite.QA.Container.TestContainer
 				return obj.UniqueId.Id;
 			}
 
-			int oid = obj.OID;
+			long oid = obj.OID;
 			Assert.True(oid >= 0, "negative OID, but no assigned UniqueId");
 
-			return oid;
+			return oid.GetHashCode();
 		}
 	}
 }

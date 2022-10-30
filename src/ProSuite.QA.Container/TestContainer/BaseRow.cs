@@ -28,7 +28,7 @@ namespace ProSuite.QA.Container.TestContainer
 		[CanBeNull]
 		public IReadOnlyTable Table { get; }
 
-		public int OID { get; }
+		public long OID { get; }
 
 		[NotNull]
 		public IList<int> OidList => _oidList ?? (_oidList = GetOidList());

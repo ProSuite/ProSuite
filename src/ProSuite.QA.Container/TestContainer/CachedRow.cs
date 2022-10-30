@@ -149,7 +149,7 @@ namespace ProSuite.QA.Container.TestContainer
 
 			public bool HasOID => _feature.HasOID;
 
-			public int OID => _feature.OID;
+			public long OID => _feature.OID;
 
 			public IReadOnlyTable Table => _table ?? (_table = _feature.Table);
 

@@ -32,11 +32,11 @@ namespace ProSuite.QA.Tests
 
 		private readonly int _totalClassesCount; // total # of feature classes
 
-		[NotNull] private readonly IDictionary<int, Dictionary<int, UnCoveredFeature>>
-			_uncoveredFeatures = new Dictionary<int, Dictionary<int, UnCoveredFeature>>();
+		[NotNull] private readonly IDictionary<int, Dictionary<long, UnCoveredFeature>>
+			_uncoveredFeatures = new Dictionary<int, Dictionary<long, UnCoveredFeature>>();
 
-		[NotNull] private readonly IDictionary<int, SimpleSet<int>>
-			_featuresKnownCovered = new Dictionary<int, SimpleSet<int>>();
+		[NotNull] private readonly IDictionary<int, SimpleSet<long>>
+			_featuresKnownCovered = new Dictionary<int, SimpleSet<long>>();
 
 		[NotNull] private readonly IDictionary<int, string>
 			_affectedComponentsByClassIndex = new Dictionary<int, string>();
@@ -929,13 +929,13 @@ namespace ProSuite.QA.Tests
 			var errorCount = 0;
 
 			foreach (
-				KeyValuePair<int, Dictionary<int, UnCoveredFeature>> pair in
+				KeyValuePair<int, Dictionary<long, UnCoveredFeature>> pair in
 				_uncoveredFeatures)
 			{
 				int tableIndex = pair.Key;
-				Dictionary<int, UnCoveredFeature> unCoveredFeaturesByOID = pair.Value;
+				Dictionary<long, UnCoveredFeature> unCoveredFeaturesByOID = pair.Value;
 
-				var oidsToRemove = new List<int>();
+				var oidsToRemove = new List<long>();
 				foreach (UnCoveredFeature unCoveredFeature in unCoveredFeaturesByOID.Values)
 				{
 					if (unCoveredFeature.IsFullyChecked(tileEnvelope, testRunEnvelope))
@@ -967,7 +967,7 @@ namespace ProSuite.QA.Tests
 					unCoveredFeaturesByOID.Remove(oid);
 				}
 
-				SimpleSet<int> featuresKnownCovered;
+				SimpleSet<long> featuresKnownCovered;
 				if (_featuresKnownCovered.TryGetValue(tableIndex,
 				                                      out featuresKnownCovered))
 				{
@@ -1094,18 +1094,18 @@ namespace ProSuite.QA.Tests
 		/// <param name="feature">The feature.</param>
 		private void FlagFeatureAsCovered(int tableIndex, [NotNull] IReadOnlyFeature feature)
 		{
-			Dictionary<int, UnCoveredFeature> unCoveredGeometriesByOID;
+			Dictionary<long, UnCoveredFeature> unCoveredGeometriesByOID;
 			if (_uncoveredFeatures.TryGetValue(tableIndex,
 			                                   out unCoveredGeometriesByOID))
 			{
 				unCoveredGeometriesByOID.Remove(feature.OID);
 			}
 
-			SimpleSet<int> featuresKnownCovered;
+			SimpleSet<long> featuresKnownCovered;
 			if (! _featuresKnownCovered.TryGetValue(tableIndex,
 			                                        out featuresKnownCovered))
 			{
-				featuresKnownCovered = new SimpleSet<int>();
+				featuresKnownCovered = new SimpleSet<long>();
 				_featuresKnownCovered.Add(tableIndex, featuresKnownCovered);
 			}
 
@@ -1114,7 +1114,7 @@ namespace ProSuite.QA.Tests
 
 		private bool IsFeatureKnownCovered(int tableIndex, [NotNull] IReadOnlyFeature feature)
 		{
-			SimpleSet<int> featuresKnownCovered;
+			SimpleSet<long> featuresKnownCovered;
 			return
 				_featuresKnownCovered.TryGetValue(tableIndex, out featuresKnownCovered) &&
 				featuresKnownCovered.Contains(feature.OID);
@@ -1129,12 +1129,12 @@ namespace ProSuite.QA.Tests
 			Assert.ArgumentNotNull(geometry, nameof(geometry));
 			Assert.ArgumentCondition(! geometry.IsEmpty, "geometry is emtpy");
 
-			Dictionary<int, UnCoveredFeature> unCoveredFeaturesByOID;
+			Dictionary<long, UnCoveredFeature> unCoveredFeaturesByOID;
 			if (
 				! _uncoveredFeatures.TryGetValue(tableIndex,
 				                                 out unCoveredFeaturesByOID))
 			{
-				unCoveredFeaturesByOID = new Dictionary<int, UnCoveredFeature>();
+				unCoveredFeaturesByOID = new Dictionary<long, UnCoveredFeature>();
 				_uncoveredFeatures.Add(tableIndex, unCoveredFeaturesByOID);
 			}
 
@@ -1163,7 +1163,7 @@ namespace ProSuite.QA.Tests
 		{
 			Assert.ArgumentNotNull(feature, nameof(feature));
 
-			Dictionary<int, UnCoveredFeature> unCoveredGeometriesByOID;
+			Dictionary<long, UnCoveredFeature> unCoveredGeometriesByOID;
 			if (_uncoveredFeatures.TryGetValue(tableIndex,
 			                                   out unCoveredGeometriesByOID))
 			{
@@ -1834,7 +1834,7 @@ namespace ProSuite.QA.Tests
 
 			public int TableIndex { get; }
 
-			public int OID { get; }
+			public long OID { get; }
 
 			// TODO don't keep the feature around, get it back when needed (only during error reporting)
 			[NotNull]
@@ -1882,8 +1882,8 @@ namespace ProSuite.QA.Tests
 
 		private class CoveringGeometryCache
 		{
-			private readonly Dictionary<int, Entry> _entries =
-				new Dictionary<int, Entry>();
+			private readonly Dictionary<long, Entry> _entries =
+				new Dictionary<long, Entry>();
 
 			private readonly int _maximumPointCount;
 			private int _pointCount;
@@ -1894,7 +1894,7 @@ namespace ProSuite.QA.Tests
 				_maximumPointCount = maximumPointCount;
 			}
 
-			public bool TryGet(int objectId, [CanBeNull] out IGeometry geometry)
+			public bool TryGet(long objectId, [CanBeNull] out IGeometry geometry)
 			{
 				Entry entry;
 				bool found = _entries.TryGetValue(objectId, out entry);
@@ -1905,7 +1905,7 @@ namespace ProSuite.QA.Tests
 				return found;
 			}
 
-			public void Put(int objectId, IGeometry geometry)
+			public void Put(long objectId, IGeometry geometry)
 			{
 				if (_entries.ContainsKey(objectId))
 				{
@@ -1937,16 +1937,16 @@ namespace ProSuite.QA.Tests
 			}
 
 			[NotNull]
-			private IEnumerable<int> GetSmallestEntries(int equalToOrExceedingPointCount)
+			private IEnumerable<long> GetSmallestEntries(int equalToOrExceedingPointCount)
 			{
-				var result = new List<int>();
+				var result = new List<long>();
 
-				IEnumerable<KeyValuePair<int, Entry>> sorted = GetEntriesSortedOnPointCount();
+				IEnumerable<KeyValuePair<long, Entry>> sorted = GetEntriesSortedOnPointCount();
 
 				var pointCount = 0;
-				foreach (KeyValuePair<int, Entry> pair in sorted)
+				foreach (KeyValuePair<long, Entry> pair in sorted)
 				{
-					int oid = pair.Key;
+					long oid = pair.Key;
 					Entry entry = pair.Value;
 
 					pointCount = pointCount + entry.PointCount;
@@ -1962,9 +1962,9 @@ namespace ProSuite.QA.Tests
 				return result;
 			}
 
-			private IEnumerable<KeyValuePair<int, Entry>> GetEntriesSortedOnPointCount()
+			private IEnumerable<KeyValuePair<long, Entry>> GetEntriesSortedOnPointCount()
 			{
-				var result = new List<KeyValuePair<int, Entry>>(_entries);
+				var result = new List<KeyValuePair<long, Entry>>(_entries);
 
 				result.Sort((p1, p2) => p1.Value.PointCount.CompareTo(p2.Value.PointCount));
 
@@ -1973,12 +1973,12 @@ namespace ProSuite.QA.Tests
 
 			public void Evict([NotNull] Func<Entry, bool> isEntryEvictable)
 			{
-				List<KeyValuePair<int, Entry>> deletable =
+				List<KeyValuePair<long, Entry>> deletable =
 					GetEntriesToDelete(isEntryEvictable).ToList();
 
-				foreach (KeyValuePair<int, Entry> pair in deletable)
+				foreach (KeyValuePair<long, Entry> pair in deletable)
 				{
-					int oid = pair.Key;
+					long oid = pair.Key;
 					Entry entry = pair.Value;
 
 					_entries.Remove(oid);
@@ -1993,16 +1993,16 @@ namespace ProSuite.QA.Tests
 			}
 
 			[NotNull]
-			private IEnumerable<KeyValuePair<int, Entry>> GetEntriesToDelete(
+			private IEnumerable<KeyValuePair<long, Entry>> GetEntriesToDelete(
 				[NotNull] Func<Entry, bool> isEntryEvictable)
 			{
-				foreach (KeyValuePair<int, Entry> pair in _entries)
+				foreach (KeyValuePair<long, Entry> pair in _entries)
 				{
 					Entry entry = pair.Value;
 
 					if (! entry.HasGeometry || isEntryEvictable(entry))
 					{
-						yield return new KeyValuePair<int, Entry>(pair.Key, entry);
+						yield return new KeyValuePair<long, Entry>(pair.Key, entry);
 					}
 				}
 			}

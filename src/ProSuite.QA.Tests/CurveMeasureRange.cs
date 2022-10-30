@@ -13,7 +13,7 @@ namespace ProSuite.QA.Tests
 		/// <param name="mMin">The m min.</param>
 		/// <param name="mMax">The m max.</param>
 		/// <param name="partIndex">Index of the part.</param>
-		public CurveMeasureRange(int objectId, int tableIndex,
+		public CurveMeasureRange(long objectId, int tableIndex,
 		                         double mMin, double mMax,
 		                         int partIndex = -1)
 		{
@@ -24,7 +24,7 @@ namespace ProSuite.QA.Tests
 			PartIndex = partIndex;
 		}
 
-		public int ObjectId { get; }
+		public long ObjectId { get; }
 
 		public int TableIndex { get; }
 

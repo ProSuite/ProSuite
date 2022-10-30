@@ -31,7 +31,7 @@ namespace ProSuite.QA.Container
 				return 0;
 			}
 
-			int oidDifference = row0.OID - row1.OID;
+			int oidDifference = row0.OID.CompareTo(row1.OID);
 			if (oidDifference != 0)
 			{
 				return oidDifference;
@@ -74,10 +74,10 @@ namespace ProSuite.QA.Container
 				Assert.AreEqual(relatedRow0.TableName, relatedRow1.TableName,
 				                "Involved Rows not sorted");
 
-				int relOidDifference = relatedRow0.OID - relatedRow1.OID;
-				if (relOidDifference != 0)
+				int relatedRowCompare = relatedRow0.OID.CompareTo(relatedRow1.OID);
+				if (relatedRowCompare != 0)
 				{
-					return relOidDifference;
+					return relatedRowCompare;
 				}
 			}
 

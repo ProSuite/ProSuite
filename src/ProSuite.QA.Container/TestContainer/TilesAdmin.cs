@@ -41,7 +41,7 @@ namespace ProSuite.QA.Container.TestContainer
 		public IEnumerable<IReadOnlyRow> Search(IReadOnlyTable table, ISpatialFilter queryFilter,
 		                                        QueryFilterHelper filterHelper)
 		{
-			HashSet<int> handledOids = new HashSet<int>();
+			HashSet<long> handledOids = new HashSet<long>();
 			foreach (var tile in GetTiles(queryFilter.Geometry))
 			{
 				TileCache tileCache = tile.Item1;

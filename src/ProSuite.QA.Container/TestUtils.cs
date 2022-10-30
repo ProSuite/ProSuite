@@ -1147,10 +1147,10 @@ namespace ProSuite.QA.Container
 				if (row0 == null) return -1;
 				if (row1 == null) return 1;
 
-				int diff = row0.OID - row1.OID;
+				int rowCompare = row0.OID.CompareTo(row1.OID);
 
-				return diff != 0
-					       ? diff
+				return rowCompare != 0
+					       ? rowCompare
 					       : CompareTableNames(row0.TableName, row1.TableName);
 			}
 

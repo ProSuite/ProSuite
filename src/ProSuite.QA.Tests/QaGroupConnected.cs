@@ -1802,7 +1802,7 @@ namespace ProSuite.QA.Tests
 		{
 			int TableIndex { get; }
 
-			int RowIndex { get; }
+			long RowIndex { get; }
 
 			int PartIndex { get; }
 		}
@@ -1849,7 +1849,7 @@ namespace ProSuite.QA.Tests
 
 			public int GetHashCode(ITableIndexRowPart obj)
 			{
-				return obj.RowIndex;
+				return obj.RowIndex.GetHashCode();
 			}
 		}
 
@@ -1857,7 +1857,7 @@ namespace ProSuite.QA.Tests
 		{
 			public int TableIndex { get; }
 
-			public int RowIndex
+			public long RowIndex
 			{
 				get
 				{
@@ -1945,7 +1945,7 @@ namespace ProSuite.QA.Tests
 
 			public bool ToConnected { get; set; }
 
-			int ITableIndexRow.RowOID => RowIndex;
+			long ITableIndexRow.RowOID => RowIndex;
 
 			int ITableIndexRow.TableIndex => TableIndex;
 
@@ -2047,7 +2047,7 @@ namespace ProSuite.QA.Tests
 				: this(source.TableIndex, source.RowIndex, source.PartIndex,
 				       source.IsBackward, source.InvolvedRows) { }
 
-			protected GroupEnd(int tableIndex, int rowIndex, int partIndex,
+			protected GroupEnd(int tableIndex, long rowIndex, int partIndex,
 			                   bool isBackward,
 			                   [NotNull] IList<InvolvedRow> involvedRows)
 			{
@@ -2060,7 +2060,7 @@ namespace ProSuite.QA.Tests
 
 			public int TableIndex { get; }
 
-			public int RowIndex { get; }
+			public long RowIndex { get; }
 
 			public int PartIndex { get; }
 
@@ -2072,7 +2072,7 @@ namespace ProSuite.QA.Tests
 
 		private class InvolvedGroupEnd : GroupEnd
 		{
-			public InvolvedGroupEnd(int tableIndex, int rowIndex, int partIndex,
+			public InvolvedGroupEnd(int tableIndex, long rowIndex, int partIndex,
 			                        bool isBackward,
 			                        [NotNull] IList<InvolvedRow> involvedRows,
 			                        [NotNull] IPoint endPoint,
@@ -2089,7 +2089,7 @@ namespace ProSuite.QA.Tests
 			[NotNull]
 			public IPoint AnyPoint { get; }
 
-			public int FirstOID => InvolvedRows.FirstOrDefault()?.OID ?? -1;
+			public long FirstOID => InvolvedRows.FirstOrDefault()?.OID ?? -1;
 
 			public override string ToString()
 			{

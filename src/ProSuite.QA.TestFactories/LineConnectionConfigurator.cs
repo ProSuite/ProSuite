@@ -1551,7 +1551,7 @@ namespace ProSuite.QA.TestFactories
 		private class RuleCount : IComparable<RuleCount>
 		{
 			private readonly List<string> _rules;
-			private int _count = -1;
+			private long _count = -1;
 
 			public RuleCount([NotNull] List<string> rules)
 			{
@@ -1573,7 +1573,7 @@ namespace ProSuite.QA.TestFactories
 					throw new InvalidOperationException("Count not initialized (use Count(...))");
 				}
 
-				return other._count - _count;
+				return other._count.CompareTo(_count);
 			}
 
 			#endregion
@@ -1581,7 +1581,7 @@ namespace ProSuite.QA.TestFactories
 			public void Count([NotNull] Dictionary<string, VectorDataset> lineDatasets,
 			                  [NotNull] Dictionary<string, VectorDataset> nodeDatasets)
 			{
-				int n = 0;
+				long n = 0;
 				int i = 0;
 
 				foreach (KeyValuePair<string, VectorDataset> pair in lineDatasets)
@@ -1603,11 +1603,11 @@ namespace ProSuite.QA.TestFactories
 				_count = n;
 			}
 
-			private static int RowCount([NotNull] ITable table, [NotNull] string rule)
+			private static long RowCount([NotNull] ITable table, [NotNull] string rule)
 			{
 				IQueryFilter filter = new QueryFilterClass();
 				bool boolValue;
-				int n;
+				long n;
 
 				if (bool.TryParse(rule, out boolValue))
 				{

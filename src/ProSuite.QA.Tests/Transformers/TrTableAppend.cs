@@ -142,9 +142,9 @@ namespace ProSuite.QA.Tests.Transformers
 			public override bool HasOID => _hasOid;
 			public override string OIDFieldName => "AppendedOID";
 
-			public override int RowCount(IQueryFilter QueryFilter)
+			public override long RowCount(IQueryFilter QueryFilter)
 			{
-				int nRows = InvolvedTables.Sum(involved => involved.RowCount(QueryFilter));
+				long nRows = InvolvedTables.Sum(involved => involved.RowCount(QueryFilter));
 				return nRows;
 			}
 
@@ -239,7 +239,7 @@ namespace ProSuite.QA.Tests.Transformers
 			public int SourceTableIndex { get; set; } // needed for recycling
 			public IReadOnlyRow SourceRow { get; set; } // needed for recycling
 
-			public override int OID =>
+			public override long OID =>
 				TableT.InvolvedTables.Count * SourceRow.OID + SourceTableIndex;
 
 			public override object get_Value(int index)
