@@ -441,7 +441,7 @@ namespace ProSuite.QA.Tests.Test
 		{
 			ITable relTable = CanDetect1toNNonUnique(_fgdbWorkspace);
 
-			int rowCount = relTable.RowCount(null);
+			long rowCount = relTable.RowCount(null);
 			var firstUniqueFieldName = "Relate1NNonUnique1.Unique";
 
 			// TableSort verification

@@ -263,7 +263,7 @@ namespace ProSuite.QA.Tests.External
 
 			foreach (InvolvedObjectsMsg involvedTableMsg in involvedObjectsMsg)
 			{
-				foreach (int objectId in involvedTableMsg.ObjectIds)
+				foreach (long objectId in involvedTableMsg.ObjectIds)
 				{
 					result.Add(new InvolvedRow(involvedTableMsg.Dataset.Name, objectId));
 				}
