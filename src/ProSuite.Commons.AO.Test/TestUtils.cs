@@ -291,8 +291,23 @@ namespace ProSuite.Commons.AO.Test
 
 		private static readonly ArcGISLicenses _lic = new ArcGISLicenses();
 
-		public static void InitializeLicense()
+		public static void InitializeLicense(bool checkout3dAnalyst = false)
 		{
+			if (checkout3dAnalyst)
+			{
+				if (EnvironmentUtils.Is64BitProcess)
+				{
+					// Server
+					_lic.Checkout();
+				}
+				else
+				{
+					_lic.Checkout(EsriProduct.ArcEditor, EsriExtension.ThreeDAnalyst);
+				}
+
+				return;
+			}
+
 			_lic.Checkout();
 		}
 
