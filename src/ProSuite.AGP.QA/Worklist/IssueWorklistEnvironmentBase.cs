@@ -42,8 +42,9 @@ namespace ProSuite.AGP.QA.WorkList
 			}
 
 			using (Geodatabase geodatabase =
-				new Geodatabase(new FileGeodatabaseConnectionPath(new Uri(_path, UriKind.Absolute)))
-			)
+			       new Geodatabase(
+				       new FileGeodatabaseConnectionPath(new Uri(_path, UriKind.Absolute)))
+			      )
 			{
 				if (geodatabase.GetDomains()
 				               .Any(domain => string.Equals(_domainName, domain.GetName())))
@@ -111,8 +112,8 @@ namespace ProSuite.AGP.QA.WorkList
 
 			// todo daro: ensure layers are not already in map
 			using (Geodatabase geodatabase =
-				new Geodatabase(
-					new FileGeodatabaseConnectionPath(new Uri(_path, UriKind.Absolute))))
+			       new Geodatabase(
+				       new FileGeodatabaseConnectionPath(new Uri(_path, UriKind.Absolute))))
 			{
 				IEnumerable<string> featureClassNames =
 					geodatabase.GetDefinitions<FeatureClassDefinition>()

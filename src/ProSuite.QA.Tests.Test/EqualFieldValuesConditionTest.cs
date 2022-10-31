@@ -4,20 +4,19 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using ESRI.ArcGIS.Geodatabase;
-using ProSuite.QA.Container.Test;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
-using ProSuite.Commons.AO.Licensing;
+using ProSuite.Commons.AO.Test;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Text;
+using ProSuite.QA.Container.Test;
 
 namespace ProSuite.QA.Tests.Test
 {
 	[TestFixture]
 	public class EqualFieldValuesConditionTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
 		private IFeatureWorkspace _featureWorkspace;
 
 		private const string _textFieldName = "FLD_TEXT";
@@ -28,7 +27,7 @@ namespace ProSuite.QA.Tests.Test
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout();
+			TestUtils.InitializeLicense();
 
 			_featureWorkspace = TestWorkspaceUtils.CreateInMemoryWorkspace(
 				"EqualFieldValuesConditionTest");
@@ -37,7 +36,7 @@ namespace ProSuite.QA.Tests.Test
 		[OneTimeTearDown]
 		public void TeardownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		[Test]
@@ -89,7 +88,7 @@ namespace ProSuite.QA.Tests.Test
 
 			foreach (UnequalField unequalField in condition.GetNonEqualFields(
 				         ReadOnlyRow.Create(row1), tableIndex1,
-				ReadOnlyRow.Create(row2), tableIndex2))
+				         ReadOnlyRow.Create(row2), tableIndex2))
 			{
 				if (sb == null)
 				{
@@ -344,7 +343,7 @@ namespace ProSuite.QA.Tests.Test
 		public void CanDetectUnknownFieldWithOptions()
 		{
 			const string fields = "A,B,C";
-			var options = new[] {"X:ignore=[ ]"};
+			var options = new[] { "X:ignore=[ ]" };
 
 			Assert.Catch<InvalidConfigurationException>(() => Parse(fields, options));
 		}
@@ -353,7 +352,7 @@ namespace ProSuite.QA.Tests.Test
 		public void CanDetectInvalidOptionsFormat()
 		{
 			const string fields = "A,B,C";
-			var options = new[] {":"};
+			var options = new[] { ":" };
 
 			Assert.Catch<InvalidConfigurationException>(() => Parse(fields, options));
 		}
@@ -362,7 +361,7 @@ namespace ProSuite.QA.Tests.Test
 		public void CanDetectInvalidOptionsFormat2()
 		{
 			const string fields = "A,B,C";
-			var options = new[] {"A:"};
+			var options = new[] { "A:" };
 
 			Assert.Catch<InvalidConfigurationException>(() => Parse(fields, options));
 		}
@@ -371,7 +370,7 @@ namespace ProSuite.QA.Tests.Test
 		public void CanDetectInvalidOptionsFormat3()
 		{
 			const string fields = "A,B,C";
-			var options = new[] {"A:ignore"};
+			var options = new[] { "A:ignore" };
 
 			Assert.Catch<InvalidConfigurationException>(() => Parse(fields, options));
 		}
@@ -380,7 +379,7 @@ namespace ProSuite.QA.Tests.Test
 		public void CanDetectInvalidRegularExpression()
 		{
 			const string fields = "A,B,C";
-			var options = new[] {"A:ignore=["};
+			var options = new[] { "A:ignore=[" };
 
 			Assert.Catch<InvalidConfigurationException>(() => Parse(fields, options));
 		}
@@ -538,11 +537,14 @@ namespace ProSuite.QA.Tests.Test
 			Assert.AreEqual("FLD_DOUBLE", fieldInfos[1].FieldName);
 			Assert.AreEqual("FLD_DATE", fieldInfos[2].FieldName);
 
-			Assert.True(fieldInfos[0].AreValuesEqual(ReadOnlyRow.Create(row1), 0, "x y", ReadOnlyRow.Create(row2), 1, "xy ", false));
+			Assert.True(fieldInfos[0].AreValuesEqual(ReadOnlyRow.Create(row1), 0, "x y",
+			                                         ReadOnlyRow.Create(row2), 1, "xy ", false));
 			Assert.False(fieldInfos[1]
-				             .AreValuesEqual(ReadOnlyRow.Create(row1), 0, 0.0001, ReadOnlyRow.Create(row2), 1, 0.0002, false));
+				             .AreValuesEqual(ReadOnlyRow.Create(row1), 0, 0.0001,
+				                             ReadOnlyRow.Create(row2), 1, 0.0002, false));
 			Assert.False(fieldInfos[2].AreValuesEqual(
-				             ReadOnlyRow.Create(row1), 0, null, ReadOnlyRow.Create(row2), 1, DateTime.Now, false));
+				             ReadOnlyRow.Create(row1), 0, null, ReadOnlyRow.Create(row2), 1,
+				             DateTime.Now, false));
 		}
 
 		[Test]

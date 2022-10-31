@@ -623,7 +623,8 @@ namespace ProSuite.AGP.Editing.OneClick
 		private void ProcessSelection([NotNull] MapView activeMapView,
 		                              [CanBeNull] CancelableProgressor progressor = null)
 		{
-			Dictionary<MapMember, List<long>> selectionByLayer = activeMapView.Map.GetSelection();
+			Dictionary<MapMember, List<long>> selectionByLayer =
+				SelectionUtils.GetSelection(activeMapView.Map);
 
 			var notifications = new NotificationCollection();
 			List<Feature> applicableSelection =
@@ -728,7 +729,8 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected bool CanUseSelection([NotNull] MapView activeMapView)
 		{
-			Dictionary<MapMember, List<long>> selectionByLayer = activeMapView.Map.GetSelection();
+			Dictionary<MapMember, List<long>> selectionByLayer =
+				SelectionUtils.GetSelection(activeMapView.Map);
 
 			return CanUseSelection(selectionByLayer);
 		}
@@ -780,7 +782,8 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected IEnumerable<Feature> GetApplicableSelectedFeatures(MapView activeView)
 		{
-			Dictionary<MapMember, List<long>> selectionByLayer = activeView.Map.GetSelection();
+			Dictionary<MapMember, List<long>> selectionByLayer =
+				SelectionUtils.GetSelection(activeView.Map);
 
 			return GetApplicableSelectedFeatures(selectionByLayer);
 		}

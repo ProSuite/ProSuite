@@ -76,7 +76,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			var result = await QueuedTask.Run(() =>
 			{
-				var selection = ActiveMapView.Map.GetSelection();
+				var selection = SelectionUtils.GetSelection(ActiveMapView.Map);
 
 				return SelectAndProcessDerivedGeometry(selection, sketchGeometry, progressor);
 			});

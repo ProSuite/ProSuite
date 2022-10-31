@@ -1,22 +1,21 @@
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using NUnit.Framework;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.Test;
 using ProSuite.QA.Container.TestContainer;
 using ProSuite.QA.Tests.Test.Construction;
 using ProSuite.QA.Tests.Test.TestRunners;
-using NUnit.Framework;
-using ProSuite.Commons.AO.Geodatabase;
-using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.AO.Licensing;
-using ProSuite.Commons.Essentials.CodeAnnotations;
+using TestUtils = ProSuite.Commons.AO.Test.TestUtils;
 
 namespace ProSuite.QA.Tests.Test
 {
 	[TestFixture]
 	public class QaFlowLogicTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
 		private IFeatureWorkspace _testWs;
 		private const double _xyTolerance = 0.001;
 
@@ -26,7 +25,7 @@ namespace ProSuite.QA.Tests.Test
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout();
+			TestUtils.InitializeLicense();
 
 			_testWs = TestWorkspaceUtils.CreateTestFgdbWorkspace("TestFlowLogic");
 		}
@@ -34,7 +33,7 @@ namespace ProSuite.QA.Tests.Test
 		[OneTimeTearDown]
 		public void TeardownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		[Test]
@@ -93,7 +92,8 @@ namespace ProSuite.QA.Tests.Test
 				lastPoint = ((IPolyline) row.Shape).ToPoint;
 			}
 
-			var test = new QaFlowLogic(new[] { ReadOnlyTableFactory.Create(featureClass)}, new[] {"FlowDir > 6"});
+			var test = new QaFlowLogic(new[] { ReadOnlyTableFactory.Create(featureClass) },
+			                           new[] { "FlowDir > 6" });
 			test.QaError += Test_QaError;
 			_errorCount = 0;
 			test.Execute();
@@ -187,8 +187,8 @@ namespace ProSuite.QA.Tests.Test
 
 			{
 				var test = new QaFlowLogic(
-					new[] { ReadOnlyTableFactory.Create(fc1), ReadOnlyTableFactory.Create(fc2)},
-					new[] {"FlowDir > 6", "FlowDir < 6"}
+					new[] { ReadOnlyTableFactory.Create(fc1), ReadOnlyTableFactory.Create(fc2) },
+					new[] { "FlowDir > 6", "FlowDir < 6" }
 					// no feature fc1 will be inverted, feature of fc2 will be inverted
 				);
 				test.QaError += Test_QaError;
@@ -207,8 +207,8 @@ namespace ProSuite.QA.Tests.Test
 
 			{
 				var test = new QaFlowLogic(
-					new[] { ReadOnlyTableFactory.Create(fc1), ReadOnlyTableFactory.Create(fc2)},
-					new[] {"FlowDir > 6"}
+					new[] { ReadOnlyTableFactory.Create(fc1), ReadOnlyTableFactory.Create(fc2) },
+					new[] { "FlowDir > 6" }
 					// no feature will be inverted
 				);
 				test.QaError += Test_QaError;
@@ -239,7 +239,7 @@ namespace ProSuite.QA.Tests.Test
 				                1000));
 
 			IFeatureClass linesFc = DatasetUtils.CreateSimpleFeatureClass(workspace, "Flow",
-			                                                              fields);
+				fields);
 
 			AddFeature(
 				linesFc,

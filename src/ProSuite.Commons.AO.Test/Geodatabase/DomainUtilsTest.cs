@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
-using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.Logging;
 
 namespace ProSuite.Commons.AO.Test.Geodatabase
@@ -10,7 +9,6 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 	[TestFixture]
 	public class DomainUtilsTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
 		private string _simpleGdbPath;
 
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
@@ -21,14 +19,14 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			// TestEnvironment.ConfigureLogging();
 			_msg.IsVerboseDebugEnabled = true;
 
-			_lic.Checkout();
+			TestUtils.InitializeLicense();
 			_simpleGdbPath = TestData.GetGdb1Path();
 		}
 
 		[OneTimeTearDown]
 		public void TeardownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		[Test]

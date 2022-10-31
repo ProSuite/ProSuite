@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
@@ -13,67 +15,70 @@ using ProSuite.QA.Container;
 using ProSuite.QA.Container.Test;
 using ProSuite.QA.Tests.Test.Construction;
 using ProSuite.QA.Tests.Test.TestRunners;
-using System.Collections.Generic;
-using ProSuite.Commons.AO.Licensing;
-using System;
 using ProSuite.QA.Tests.Transformers.Filters;
+using TestUtils = ProSuite.Commons.AO.Test.TestUtils;
 
 namespace ProSuite.QA.Tests.Test.Transformer
 {
 	public class XmlConfigTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
-
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout(EsriProduct.ArcEditor);
+			TestUtils.InitializeLicense();
 		}
 
 		[OneTimeTearDown]
 		public void TearDownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		[Test]
 		public void CanRunFromXmlWithIssueFilters()
 		{
 			// Init
-			IFeatureWorkspace ws = TestWorkspaceUtils.CreateTestFgdbWorkspace("CustomExFactoryTest");
+			IFeatureWorkspace ws =
+				TestWorkspaceUtils.CreateTestFgdbWorkspace("CustomExFactoryTest");
 
 			ISpatialReference sref = SpatialReferenceUtils.CreateSpatialReference(
-				(int)esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95, true);
+				(int) esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95, true);
 
 			IFeatureClass areaFc = DatasetUtils.CreateSimpleFeatureClass(
 				ws, "areaFc", null, FieldUtils.CreateOIDField(),
-				FieldUtils.CreateShapeField("SHAPE", esriGeometryType.esriGeometryPolygon, sref, 1000));
+				FieldUtils.CreateShapeField("SHAPE", esriGeometryType.esriGeometryPolygon, sref,
+				                            1000));
 			IFeatureClass bbFc = DatasetUtils.CreateSimpleFeatureClass(
 				ws, "bbFc", null, FieldUtils.CreateOIDField(),
-				FieldUtils.CreateShapeField("SHAPE", esriGeometryType.esriGeometryPolygon, sref, 1000));
+				FieldUtils.CreateShapeField("SHAPE", esriGeometryType.esriGeometryPolygon, sref,
+				                            1000));
 
 			IFeatureClass ignoreFc = DatasetUtils.CreateSimpleFeatureClass(
 				ws, "ignoreFc", null, FieldUtils.CreateOIDField(),
-				FieldUtils.CreateShapeField("SHAPE", esriGeometryType.esriGeometryPolygon, sref, 1000));
+				FieldUtils.CreateShapeField("SHAPE", esriGeometryType.esriGeometryPolygon, sref,
+				                            1000));
 
 			{
 				IFeature b = areaFc.CreateFeature();
-				b.Shape = CurveConstruction.StartPoly(10, 10).LineTo(10, 20).LineTo(20, 20).LineTo(20, 10)
-										   .LineTo(10, 10).ClosePolygon();
+				b.Shape = CurveConstruction
+				          .StartPoly(10, 10).LineTo(10, 20).LineTo(20, 20).LineTo(20, 10)
+				          .LineTo(10, 10).ClosePolygon();
 				b.Store();
 			}
 			{
 				// not within
 				IFeature b = bbFc.CreateFeature();
-				b.Shape = CurveConstruction.StartPoly(9, 9).LineTo(10, 20).LineTo(20, 20).LineTo(20, 10)
-										   .LineTo(9, 9).ClosePolygon();
+				b.Shape = CurveConstruction
+				          .StartPoly(9, 9).LineTo(10, 20).LineTo(20, 20).LineTo(20, 10)
+				          .LineTo(9, 9).ClosePolygon();
 				b.Store();
 			}
 			{
 				// within
 				IFeature b = bbFc.CreateFeature();
-				b.Shape = CurveConstruction.StartPoly(11, 11).LineTo(10, 20).LineTo(20, 20).LineTo(20, 10)
-										   .LineTo(11, 11).ClosePolygon();
+				b.Shape = CurveConstruction
+				          .StartPoly(11, 11).LineTo(10, 20).LineTo(20, 20).LineTo(20, 10)
+				          .LineTo(11, 11).ClosePolygon();
 				b.Store();
 			}
 
@@ -109,7 +114,8 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				new XmlIssueFilterDescriptor { Name = "ig", IssueFilterClass = xmlCdIgnore };
 
 			XmlQualityCondition xmlQc =
-				new XmlQualityCondition { Name = "qc", TestDescriptorName = xmlTdContainsOther.Name };
+				new XmlQualityCondition
+				{ Name = "qc", TestDescriptorName = xmlTdContainsOther.Name };
 			xmlQc.ParameterValues.Add(
 				new XmlDatasetTestParameterValue
 				{ TestParameterName = "contains", Value = "areaFc", WorkspaceId = xmlWs.ID });
@@ -125,11 +131,11 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				{ TestParameterName = "areaFc", Value = "ignoreFc", WorkspaceId = xmlWs.ID });
 
 			xmlQc.IssueFilterExpression = new XmlFilterExpression
-			{ Expression = $"{xmlIssueFilter.Name}" };
+			                              { Expression = $"{xmlIssueFilter.Name}" };
 
 			var xmlSpec = new XmlQualitySpecification { TileSize = 10000, Name = "spec" };
 			xmlSpec.Elements.Add(new XmlQualitySpecificationElement
-			{ QualityConditionName = xmlQc.Name });
+			                     { QualityConditionName = xmlQc.Name });
 
 			var xmlDocument = new XmlDataQualityDocument();
 
@@ -145,19 +151,20 @@ namespace ProSuite.QA.Tests.Test.Transformer
 
 			var modelFactory =
 				new VerifiedModelFactory(new MasterDatabaseWorkspaceContextFactory(),
-										 new SimpleVerifiedDatasetHarvester());
+				                         new SimpleVerifiedDatasetHarvester());
 
 			var specFct = new XmlBasedQualitySpecificationFactory(
 				modelFactory, new SimpleDatasetOpener(model.MasterDatabaseWorkspaceContext));
 
 			var dataSource = new DataSource(xmlWs)
-			{
-				WorkspaceAsText = WorkspaceUtils.GetConnectionString((IWorkspace)ws)
-			};
+			                 {
+				                 WorkspaceAsText =
+					                 WorkspaceUtils.GetConnectionString((IWorkspace) ws)
+			                 };
 
 			QualitySpecification qs =
 				specFct.CreateQualitySpecification(xmlDocument, xmlSpec.Name,
-												   new[] { dataSource });
+				                                   new[] { dataSource });
 
 			Assert.AreEqual(1, qs.Elements.Count);
 			QualityCondition qc = qs.Elements[0].QualityCondition;
@@ -170,7 +177,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				new SimpleDatasetOpener(model.MasterDatabaseWorkspaceContext));
 
 			Assert.AreEqual(1, tests.Count);
-			Assert.AreEqual(1, ((QaContainsOther)tests[0]).IssueFilters?.Count);
+			Assert.AreEqual(1, ((QaContainsOther) tests[0]).IssueFilters?.Count);
 		}
 
 		[Test]
@@ -181,37 +188,43 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				TestWorkspaceUtils.CreateTestFgdbWorkspace("CustomExFactoryTest_PreProcs");
 
 			ISpatialReference sref = SpatialReferenceUtils.CreateSpatialReference(
-				(int)esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95, true);
+				(int) esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95, true);
 
 			IFeatureClass areaFc = DatasetUtils.CreateSimpleFeatureClass(
 				ws, "areaFc", null, FieldUtils.CreateOIDField(),
-				FieldUtils.CreateShapeField("SHAPE", esriGeometryType.esriGeometryPolygon, sref, 1000));
+				FieldUtils.CreateShapeField("SHAPE", esriGeometryType.esriGeometryPolygon, sref,
+				                            1000));
 			IFeatureClass bbFc = DatasetUtils.CreateSimpleFeatureClass(
 				ws, "bbFc", null, FieldUtils.CreateOIDField(),
-				FieldUtils.CreateShapeField("SHAPE", esriGeometryType.esriGeometryPolygon, sref, 1000));
+				FieldUtils.CreateShapeField("SHAPE", esriGeometryType.esriGeometryPolygon, sref,
+				                            1000));
 
 			IFeatureClass ignoreFc = DatasetUtils.CreateSimpleFeatureClass(
 				ws, "ignoreFc", null, FieldUtils.CreateOIDField(),
-				FieldUtils.CreateShapeField("SHAPE", esriGeometryType.esriGeometryPolygon, sref, 1000));
+				FieldUtils.CreateShapeField("SHAPE", esriGeometryType.esriGeometryPolygon, sref,
+				                            1000));
 
 			{
 				IFeature b = areaFc.CreateFeature();
-				b.Shape = CurveConstruction.StartPoly(10, 10).LineTo(10, 20).LineTo(20, 20).LineTo(20, 10)
-										   .LineTo(10, 10).ClosePolygon();
+				b.Shape = CurveConstruction
+				          .StartPoly(10, 10).LineTo(10, 20).LineTo(20, 20).LineTo(20, 10)
+				          .LineTo(10, 10).ClosePolygon();
 				b.Store();
 			}
 			{
 				// not within
 				IFeature b = bbFc.CreateFeature();
-				b.Shape = CurveConstruction.StartPoly(9, 9).LineTo(10, 20).LineTo(20, 20).LineTo(20, 10)
-										   .LineTo(9, 9).ClosePolygon();
+				b.Shape = CurveConstruction
+				          .StartPoly(9, 9).LineTo(10, 20).LineTo(20, 20).LineTo(20, 10)
+				          .LineTo(9, 9).ClosePolygon();
 				b.Store();
 			}
 			{
 				// within
 				IFeature b = bbFc.CreateFeature();
-				b.Shape = CurveConstruction.StartPoly(11, 11).LineTo(10, 20).LineTo(20, 20).LineTo(20, 10)
-										   .LineTo(11, 11).ClosePolygon();
+				b.Shape = CurveConstruction
+				          .StartPoly(11, 11).LineTo(10, 20).LineTo(20, 20).LineTo(20, 10)
+				          .LineTo(11, 11).ClosePolygon();
 				b.Store();
 			}
 
@@ -237,19 +250,27 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				new XmlTransformerDescriptor { Name = "ig", TransformerClass = xmlCdIgnore };
 
 			XmlTransformerConfiguration xmlRowFilter =
-				new XmlTransformerConfiguration { Name = "filterTransformed", TransformerDescriptorName = xmlRdIgnore.Name };
+				new XmlTransformerConfiguration
+				{ Name = "filterTransformed", TransformerDescriptorName = xmlRdIgnore.Name };
 			xmlRowFilter.ParameterValues.Add(
 				new XmlDatasetTestParameterValue
-				{ TestParameterName = "featureClassToFilter", Value = "areaFc", WorkspaceId = xmlWs.ID });
+				{
+					TestParameterName = "featureClassToFilter", Value = "areaFc",
+					WorkspaceId = xmlWs.ID
+				});
 			xmlRowFilter.ParameterValues.Add(
 				new XmlDatasetTestParameterValue
 				{ TestParameterName = "intersecting", Value = "ignoreFc", WorkspaceId = xmlWs.ID });
 
 			XmlQualityCondition xmlQc =
-				new XmlQualityCondition { Name = "qc", TestDescriptorName = xmlTdContainsOther.Name };
+				new XmlQualityCondition
+				{ Name = "qc", TestDescriptorName = xmlTdContainsOther.Name };
 			xmlQc.ParameterValues.Add(
 				new XmlDatasetTestParameterValue
-				{ TestParameterName = "contains", TransformerName = "filterTransformed", WorkspaceId = xmlWs.ID });
+				{
+					TestParameterName = "contains", TransformerName = "filterTransformed",
+					WorkspaceId = xmlWs.ID
+				});
 			xmlQc.ParameterValues.Add(
 				new XmlDatasetTestParameterValue
 				{
@@ -260,7 +281,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 
 			var xmlSpec = new XmlQualitySpecification { TileSize = 10000, Name = "spec" };
 			xmlSpec.Elements.Add(new XmlQualitySpecificationElement
-			{ QualityConditionName = xmlQc.Name });
+			                     { QualityConditionName = xmlQc.Name });
 
 			var xmlDocument = new XmlDataQualityDocument();
 
@@ -275,23 +296,24 @@ namespace ProSuite.QA.Tests.Test.Transformer
 
 			var modelFactory =
 				new VerifiedModelFactory(new MasterDatabaseWorkspaceContextFactory(),
-										 new SimpleVerifiedDatasetHarvester());
+				                         new SimpleVerifiedDatasetHarvester());
 
 			var specFct = new XmlBasedQualitySpecificationFactory(
 				modelFactory, new SimpleDatasetOpener(model.MasterDatabaseWorkspaceContext));
 
 			var dataSource = new DataSource(xmlWs)
-			{
-				WorkspaceAsText = WorkspaceUtils.GetConnectionString((IWorkspace)ws)
-			};
+			                 {
+				                 WorkspaceAsText =
+					                 WorkspaceUtils.GetConnectionString((IWorkspace) ws)
+			                 };
 
 			QualitySpecification qs =
 				specFct.CreateQualitySpecification(xmlDocument, xmlSpec.Name,
-												   new[] { dataSource });
+				                                   new[] { dataSource });
 
 			Assert.AreEqual(1, qs.Elements.Count);
 			QualityCondition qc = qs.Elements[0].QualityCondition;
-			var filterTransformer = (DatasetTestParameterValue)qc.ParameterValues[0];
+			var filterTransformer = (DatasetTestParameterValue) qc.ParameterValues[0];
 			Assert.IsNotNull(filterTransformer.ValueSource);
 			Assert.AreEqual(2, filterTransformer.ValueSource.ParameterValues.Count);
 
@@ -312,33 +334,38 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				TestWorkspaceUtils.CreateTestFgdbWorkspace("CustomExFactoryTest_TableTransformer");
 
 			ISpatialReference sref = SpatialReferenceUtils.CreateSpatialReference(
-				(int)esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95, true);
+				(int) esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95, true);
 
 			IFeatureClass borderFc = DatasetUtils.CreateSimpleFeatureClass(
 				ws, "borderFc", null, FieldUtils.CreateOIDField(),
-				FieldUtils.CreateShapeField("SHAPE", esriGeometryType.esriGeometryPolyline, sref, 1000));
+				FieldUtils.CreateShapeField("SHAPE", esriGeometryType.esriGeometryPolyline, sref,
+				                            1000));
 			IFeatureClass bbFc = DatasetUtils.CreateSimpleFeatureClass(
 				ws, "bbFc", null, FieldUtils.CreateOIDField(),
-				FieldUtils.CreateShapeField("SHAPE", esriGeometryType.esriGeometryPolygon, sref, 1000));
+				FieldUtils.CreateShapeField("SHAPE", esriGeometryType.esriGeometryPolygon, sref,
+				                            1000));
 
 			{
 				IFeature b = borderFc.CreateFeature();
-				b.Shape = CurveConstruction.StartLine(10, 10).LineTo(10, 20).LineTo(20, 20).LineTo(20, 10)
-										   .LineTo(10, 10).Curve;
+				b.Shape = CurveConstruction
+				          .StartLine(10, 10).LineTo(10, 20).LineTo(20, 20).LineTo(20, 10)
+				          .LineTo(10, 10).Curve;
 				b.Store();
 			}
 			{
 				// not within
 				IFeature b = bbFc.CreateFeature();
-				b.Shape = CurveConstruction.StartPoly(9, 9).LineTo(10, 20).LineTo(20, 20).LineTo(20, 10)
-										   .LineTo(9, 9).ClosePolygon();
+				b.Shape = CurveConstruction
+				          .StartPoly(9, 9).LineTo(10, 20).LineTo(20, 20).LineTo(20, 10)
+				          .LineTo(9, 9).ClosePolygon();
 				b.Store();
 			}
 			{
 				// within
 				IFeature b = bbFc.CreateFeature();
-				b.Shape = CurveConstruction.StartPoly(11, 11).LineTo(10, 20).LineTo(20, 20).LineTo(20, 10)
-										   .LineTo(11, 11).ClosePolygon();
+				b.Shape = CurveConstruction
+				          .StartPoly(11, 11).LineTo(10, 20).LineTo(20, 20).LineTo(20, 10)
+				          .LineTo(11, 11).ClosePolygon();
 				b.Store();
 			}
 
@@ -379,7 +406,8 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				{ TestParameterName = "borderFc", Value = "borderFc", WorkspaceId = xmlWs.ID });
 
 			XmlQualityCondition xmlQc =
-				new XmlQualityCondition { Name = "qc", TestDescriptorName = xmlTdContainsOther.Name };
+				new XmlQualityCondition
+				{ Name = "qc", TestDescriptorName = xmlTdContainsOther.Name };
 			xmlQc.ParameterValues.Add(
 				new XmlDatasetTestParameterValue
 				{ TestParameterName = "contains", TransformerName = xmlTrans.Name });
@@ -389,7 +417,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 
 			var xmlSpec = new XmlQualitySpecification { TileSize = 10000, Name = "spec" };
 			xmlSpec.Elements.Add(new XmlQualitySpecificationElement
-			{ QualityConditionName = xmlQc.Name });
+			                     { QualityConditionName = xmlQc.Name });
 
 			var xmlDocument = new XmlDataQualityDocument();
 
@@ -404,19 +432,20 @@ namespace ProSuite.QA.Tests.Test.Transformer
 
 			var modelFactory =
 				new VerifiedModelFactory(new MasterDatabaseWorkspaceContextFactory(),
-										 new SimpleVerifiedDatasetHarvester());
+				                         new SimpleVerifiedDatasetHarvester());
 
 			var specFct = new XmlBasedQualitySpecificationFactory(
 				modelFactory, new SimpleDatasetOpener(model.MasterDatabaseWorkspaceContext));
 
 			var dataSource = new DataSource(xmlWs)
-			{
-				WorkspaceAsText = WorkspaceUtils.GetConnectionString((IWorkspace)ws)
-			};
+			                 {
+				                 WorkspaceAsText =
+					                 WorkspaceUtils.GetConnectionString((IWorkspace) ws)
+			                 };
 
 			QualitySpecification qs =
 				specFct.CreateQualitySpecification(xmlDocument, xmlSpec.Name,
-												   new[] { dataSource });
+				                                   new[] { dataSource });
 
 			Assert.AreEqual(1, qs.Elements.Count);
 			QualityCondition qc = qs.Elements[0].QualityCondition;
@@ -429,7 +458,8 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				new SimpleDatasetOpener(model.MasterDatabaseWorkspaceContext));
 
 			Assert.AreEqual(1, tests.Count);
-			Assert.IsTrue(((QaContainsOther)tests[0]).InvolvedTables[0] is BorderTransformer.PolyFc);
+			Assert.IsTrue(
+				((QaContainsOther) tests[0]).InvolvedTables[0] is BorderTransformer.PolyFc);
 		}
 
 		[Test]
@@ -440,17 +470,19 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				TestWorkspaceUtils.CreateTestFgdbWorkspace("CustomExFactoryTest_TableJoin");
 
 			ISpatialReference sref = SpatialReferenceUtils.CreateSpatialReference(
-				(int)esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95, true);
+				(int) esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95, true);
 
 			IFeatureClass lineFc = DatasetUtils.CreateSimpleFeatureClass(
-				ws, "lineFc", null, FieldUtils.CreateOIDField(), FieldUtils.CreateIntegerField("fkRoute"),
-				FieldUtils.CreateShapeField("SHAPE", esriGeometryType.esriGeometryPolyline, sref, 1000));
+				ws, "lineFc", null, FieldUtils.CreateOIDField(),
+				FieldUtils.CreateIntegerField("fkRoute"),
+				FieldUtils.CreateShapeField("SHAPE", esriGeometryType.esriGeometryPolyline, sref,
+				                            1000));
 			ITable tblRoute = DatasetUtils.CreateTable(
 				ws, "routeTbl", FieldUtils.CreateOIDField(),
 				FieldUtils.CreateIntegerField("id"), FieldUtils.CreateTextField("name", 20));
 			string relName = "relRouteLine";
-			TestWorkspaceUtils.CreateSimple1NRelationship(ws, relName, tblRoute, (ITable)lineFc,
-														  "id", "fkRoute");
+			TestWorkspaceUtils.CreateSimple1NRelationship(ws, relName, tblRoute, (ITable) lineFc,
+			                                              "id", "fkRoute");
 
 			{
 				IFeature b = lineFc.CreateFeature();
@@ -531,10 +563,12 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				new XmlTransformerConfiguration
 				{ Name = "et", TransformerDescriptorName = xmlTdEqual.Name };
 			eqTrans.ParameterValues.Add(
-				new XmlScalarTestParameterValue { TestParameterName = "value", Value = "routeTbl.name" }
+				new XmlScalarTestParameterValue
+				{ TestParameterName = "value", Value = "routeTbl.name" }
 			);
 			XmlTransformerConfiguration xmlTrans =
-				new XmlTransformerConfiguration { Name = "bo", TransformerDescriptorName = xmlTdJoin.Name };
+				new XmlTransformerConfiguration
+				{ Name = "bo", TransformerDescriptorName = xmlTdJoin.Name };
 			xmlTrans.ParameterValues.Add(
 				new XmlDatasetTestParameterValue
 				{ TestParameterName = "t0", Value = "lineFc", WorkspaceId = xmlWs.ID });
@@ -562,7 +596,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 
 			var xmlSpec = new XmlQualitySpecification { TileSize = 10000, Name = "spec" };
 			xmlSpec.Elements.Add(new XmlQualitySpecificationElement
-			{ QualityConditionName = xmlQc.Name });
+			                     { QualityConditionName = xmlQc.Name });
 
 			var xmlDocument = new XmlDataQualityDocument();
 
@@ -579,19 +613,20 @@ namespace ProSuite.QA.Tests.Test.Transformer
 
 			var modelFactory =
 				new VerifiedModelFactory(new MasterDatabaseWorkspaceContextFactory(),
-										 new SimpleVerifiedDatasetHarvester());
+				                         new SimpleVerifiedDatasetHarvester());
 
 			var specFct = new XmlBasedQualitySpecificationFactory(
 				modelFactory, new SimpleDatasetOpener(model.MasterDatabaseWorkspaceContext));
 
 			var dataSource = new DataSource(xmlWs)
-			{
-				WorkspaceAsText = WorkspaceUtils.GetConnectionString((IWorkspace)ws)
-			};
+			                 {
+				                 WorkspaceAsText =
+					                 WorkspaceUtils.GetConnectionString((IWorkspace) ws)
+			                 };
 
 			QualitySpecification qs =
 				specFct.CreateQualitySpecification(xmlDocument, xmlSpec.Name,
-												   new[] { dataSource });
+				                                   new[] { dataSource });
 
 			Assert.AreEqual(1, qs.Elements.Count);
 			QualityCondition qc = qs.Elements[0].QualityCondition;
@@ -611,7 +646,6 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			Assert.AreEqual(1, runner.Errors.Count);
 		}
 
-
 		private class IgnoreProcessArea : RowFilter
 		{
 			private IList<ISpatialFilter> _spatialFilters;
@@ -630,7 +664,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 
 			public override bool VerifyExecute(IReadOnlyRow row)
 			{
-				if (!(row is IFeature f))
+				if (! (row is IFeature f))
 				{
 					return true;
 				}
@@ -644,7 +678,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				filter.Geometry = ignoreGeom;
 				foreach (var searched in Search(table, filter, helper))
 				{
-					if (!((IRelationalOperator)ignoreGeom).Disjoint(((IFeature)searched).Shape))
+					if (! ((IRelationalOperator) ignoreGeom).Disjoint(((IFeature) searched).Shape))
 					{
 						return false;
 					}
@@ -681,15 +715,16 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			{
 				if (_joined == null)
 				{
-					if (!(_t0 is ReadOnlyTable r0))
+					if (! (_t0 is ReadOnlyTable r0))
 						throw new InvalidOperationException($"Invalid t0 {_t0.Name}");
-					if (!(_t1 is ReadOnlyTable r1))
+					if (! (_t1 is ReadOnlyTable r1))
 						throw new InvalidOperationException($"Invalid t1 {_t1.Name}");
 					IRelationshipClass relClass =
-						((IFeatureWorkspace)_t0.Workspace).OpenRelationshipClass(_relationName);
+						((IFeatureWorkspace) _t0.Workspace).OpenRelationshipClass(_relationName);
 					ITable joined =
 						RelationshipClassUtils.GetQueryTable(
-							relClass, new[] { r0.BaseTable, r1.BaseTable }, _joinType, whereClause: null);
+							relClass, new[] { r0.BaseTable, r1.BaseTable }, _joinType,
+							whereClause: null);
 					_joined = ReadOnlyTableFactory.Create(joined);
 				}
 
@@ -728,8 +763,8 @@ namespace ProSuite.QA.Tests.Test.Transformer
 
 			void IInvolvesTables.SetConstraint(int tableIndex, string condition) { }
 
-			void IInvolvesTables.SetSqlCaseSensitivity(int tableIndex, bool useCaseSensitiveQaSql) { }
+			void IInvolvesTables.
+				SetSqlCaseSensitivity(int tableIndex, bool useCaseSensitiveQaSql) { }
 		}
-
 	}
 }

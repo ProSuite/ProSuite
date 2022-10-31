@@ -154,7 +154,7 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public override string ToString()
 		{
-			lock(_registryLock)
+			lock (_registryLock)
 			{
 				return $"{_map.Count}";
 			}

@@ -3,7 +3,6 @@ using System.Diagnostics;
 using ESRI.ArcGIS.Geodatabase;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
-using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 
@@ -12,7 +11,6 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 	[TestFixture]
 	public class WorkspaceUtilsTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
 		private string _nonDefaultRepositoryName;
 		private string _dbName;
 
@@ -25,7 +23,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 			_msg.IsVerboseDebugEnabled = true;
 
-			_lic.Checkout();
+			TestUtils.InitializeLicense();
 
 			_nonDefaultRepositoryName = "TOPGIS_DDX";
 			_dbName = TestUtils.OracleDbNameSde;
@@ -34,7 +32,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		[OneTimeTearDown]
 		public void TeardownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		[Test]

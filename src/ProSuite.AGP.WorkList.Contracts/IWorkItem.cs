@@ -15,8 +15,10 @@ namespace ProSuite.AGP.WorkList.Contracts
 		GdbRowIdentity Proxy { get; }
 		WorkItemStatus Status { get; set; }
 		Envelope Extent { get; }
+
 		[CanBeNull]
 		string Description { get; }
+
 		GeometryType? GeometryType { get; }
 		bool HasGeometry { get; set; }
 

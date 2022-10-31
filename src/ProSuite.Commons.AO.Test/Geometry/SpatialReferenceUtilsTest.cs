@@ -5,7 +5,6 @@ using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AO.Test.Geometry
@@ -13,8 +12,6 @@ namespace ProSuite.Commons.AO.Test.Geometry
 	[TestFixture]
 	public class SpatialReferenceUtilsTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
-
 		private ISpatialReference _wgs84;
 		private ISpatialReference _lv03lhn95_xytol_01_ztol_01;
 		private ISpatialReference _lv95_xytol_01_ztol_01;
@@ -33,7 +30,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout();
+			TestUtils.InitializeLicense();
 
 			CreateSpatialReferences();
 		}
@@ -41,7 +38,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 		[OneTimeTearDown]
 		public void TeardownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		#endregion

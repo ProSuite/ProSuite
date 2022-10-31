@@ -3,10 +3,8 @@ using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
-using ProSuite.Commons.AO;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core;
@@ -19,20 +17,20 @@ using ProSuite.QA.TestFactories;
 using ProSuite.QA.Tests.Test.Construction;
 using ProSuite.QA.Tests.Test.TestData;
 using ProSuite.QA.Tests.Test.TestRunners;
+using TestUtils = ProSuite.Commons.AO.Test.TestUtils;
 
 namespace ProSuite.QA.Tests.Test
 {
 	[TestFixture]
 	public class QaGroupConnectedTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
 		private IFeatureWorkspace _pgdbWorkspace;
 		private IFeatureWorkspace _fgdbWorkspace;
 
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout();
+			TestUtils.InitializeLicense();
 
 			const string databaseName = "QaGroupConnectedTest";
 			_pgdbWorkspace = TestWorkspaceUtils.CreateTestAccessWorkspace(databaseName);
@@ -42,7 +40,7 @@ namespace ProSuite.QA.Tests.Test
 		[OneTimeTearDown]
 		public void TeardownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		private static void TestGroupConnected(IFeatureWorkspace ws)
@@ -87,7 +85,8 @@ namespace ProSuite.QA.Tests.Test
 
 			((IWorkspaceEdit) ws).StopEditing(true);
 
-			var test = new QaGroupConnected(ReadOnlyTableFactory.Create(fc), new List<string> {"Group"},
+			var test = new QaGroupConnected(ReadOnlyTableFactory.Create(fc),
+			                                new List<string> { "Group" },
 			                                QaGroupConnected.ShapeAllowed.All);
 
 			TestRunnerUtils.RunTests(test, 0, 1000);
@@ -118,7 +117,7 @@ namespace ProSuite.QA.Tests.Test
 				                 true), 1000));
 
 			IFeatureClass fc = DatasetUtils.CreateSimpleFeatureClass(ws, "TestCircularErrors",
-			                                                         fields);
+				fields);
 
 			((IWorkspaceEdit) ws).StartEditing(false);
 			((IWorkspaceEdit) ws).StopEditing(true);
@@ -173,12 +172,13 @@ namespace ProSuite.QA.Tests.Test
 
 			((IWorkspaceEdit) ws).StopEditing(true);
 
-			var test = new QaGroupConnected(new[] { ReadOnlyTableFactory.Create(fc) }, new List<string> {"Group"}, null,
+			var test = new QaGroupConnected(new[] { ReadOnlyTableFactory.Create(fc) },
+			                                new List<string> { "Group" }, null,
 			                                QaGroupConnected.ShapeAllowed.InsideBranches,
 			                                QaGroupConnected.GroupErrorReporting.CombineParts,
 			                                50);
 
-			var runner = new QaContainerTestRunner(10000, test) {KeepGeometry = true};
+			var runner = new QaContainerTestRunner(10000, test) { KeepGeometry = true };
 
 			runner.Execute();
 			Assert.AreEqual(2, runner.Errors.Count);
@@ -197,7 +197,7 @@ namespace ProSuite.QA.Tests.Test
 				                 true), 1000));
 
 			IFeatureClass fc = DatasetUtils.CreateSimpleFeatureClass(ws, "TestMultiPartErrors",
-			                                                         fields);
+				fields);
 
 			((IWorkspaceEdit) ws).StartEditing(false);
 			((IWorkspaceEdit) ws).StopEditing(true);
@@ -234,12 +234,13 @@ namespace ProSuite.QA.Tests.Test
 
 			((IWorkspaceEdit) ws).StopEditing(true);
 
-			var test = new QaGroupConnected(new[] { ReadOnlyTableFactory.Create(fc) }, new List<string> {"Group"}, null,
+			var test = new QaGroupConnected(new[] { ReadOnlyTableFactory.Create(fc) },
+			                                new List<string> { "Group" }, null,
 			                                QaGroupConnected.ShapeAllowed.All,
 			                                QaGroupConnected.GroupErrorReporting.CombineParts,
 			                                7);
 
-			var runner = new QaContainerTestRunner(10000, test) {KeepGeometry = true};
+			var runner = new QaContainerTestRunner(10000, test) { KeepGeometry = true };
 
 			runner.Execute();
 		}
@@ -294,12 +295,13 @@ namespace ProSuite.QA.Tests.Test
 
 			((IWorkspaceEdit) ws).StopEditing(true);
 
-			var test = new QaGroupConnected(new[] { ReadOnlyTableFactory.Create(fc) }, new List<string> {"Group"}, null,
+			var test = new QaGroupConnected(new[] { ReadOnlyTableFactory.Create(fc) },
+			                                new List<string> { "Group" }, null,
 			                                QaGroupConnected.ShapeAllowed.All,
 			                                QaGroupConnected.GroupErrorReporting.CombineParts,
 			                                7);
 
-			var runner = new QaContainerTestRunner(10000, test) {KeepGeometry = true};
+			var runner = new QaContainerTestRunner(10000, test) { KeepGeometry = true };
 
 			IEnvelope box0 = GeometryFactory.CreateEnvelope(150, 150, 195, 195);
 			IEnvelope box1 = GeometryFactory.CreateEnvelope(0, 0, 195, 195);
@@ -331,8 +333,8 @@ namespace ProSuite.QA.Tests.Test
 				                 true), 1000));
 
 			IFeatureClass fc = DatasetUtils.CreateSimpleFeatureClass(ws,
-			                                                         "TestCircularMultiPartErrors",
-			                                                         fields);
+				"TestCircularMultiPartErrors",
+				fields);
 
 			((IWorkspaceEdit) ws).StartEditing(false);
 			((IWorkspaceEdit) ws).StopEditing(true);
@@ -377,12 +379,13 @@ namespace ProSuite.QA.Tests.Test
 
 			((IWorkspaceEdit) ws).StopEditing(true);
 
-			var test = new QaGroupConnected(new[] { ReadOnlyTableFactory.Create(fc) }, new List<string> {"Group"}, null,
+			var test = new QaGroupConnected(new[] { ReadOnlyTableFactory.Create(fc) },
+			                                new List<string> { "Group" }, null,
 			                                QaGroupConnected.ShapeAllowed.All,
 			                                QaGroupConnected.GroupErrorReporting.CombineParts,
 			                                50);
 
-			var runner = new QaContainerTestRunner(10000, test) {KeepGeometry = true};
+			var runner = new QaContainerTestRunner(10000, test) { KeepGeometry = true };
 
 			runner.Execute();
 		}
@@ -400,8 +403,8 @@ namespace ProSuite.QA.Tests.Test
 				                  true), 1000));
 
 			IFeatureClass fc1 = DatasetUtils.CreateSimpleFeatureClass(ws,
-			                                                          "TestMultiFeatureClass1",
-			                                                          fields1);
+				"TestMultiFeatureClass1",
+				fields1);
 
 			IFieldsEdit fields2 = new FieldsClass();
 			fields2.AddField(FieldUtils.CreateOIDField());
@@ -415,8 +418,8 @@ namespace ProSuite.QA.Tests.Test
 				                 ((int) esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95,
 				                  true), 1000));
 			IFeatureClass fc2 = DatasetUtils.CreateSimpleFeatureClass(ws,
-			                                                          "TestMultiFeatureClass2",
-			                                                          fields2);
+				"TestMultiFeatureClass2",
+				fields2);
 			((IWorkspaceEdit) ws).StartEditing(false);
 			((IWorkspaceEdit) ws).StopEditing(true);
 
@@ -537,7 +540,7 @@ namespace ProSuite.QA.Tests.Test
 				                  true), 1000));
 
 			IFeatureClass fc1 = DatasetUtils.CreateSimpleFeatureClass(ws, "ValueGroups1",
-			                                                          fields1);
+				fields1);
 
 			IFieldsEdit fields2 = new FieldsClass();
 			fields2.AddField(FieldUtils.CreateOIDField());
@@ -551,7 +554,7 @@ namespace ProSuite.QA.Tests.Test
 				                 ((int) esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95,
 				                  true), 1000));
 			IFeatureClass fc2 = DatasetUtils.CreateSimpleFeatureClass(ws, "ValueGroups2",
-			                                                          fields2);
+				fields2);
 
 			((IWorkspaceEdit) ws).StartEditing(false);
 			((IWorkspaceEdit) ws).StopEditing(true);
@@ -1130,7 +1133,8 @@ namespace ProSuite.QA.Tests.Test
 			                                QaGroupConnected.ShapeAllowed.All);
 
 			test.AddRelatedTables(
-				ReadOnlyTableFactory.Create(relTab), new[] { ReadOnlyTableFactory.Create(fc), ReadOnlyTableFactory.Create(groupTable) });
+				ReadOnlyTableFactory.Create(relTab),
+				new[] { ReadOnlyTableFactory.Create(fc), ReadOnlyTableFactory.Create(groupTable) });
 
 			TestRunnerUtils.RunTests(test, 1, 1000);
 
@@ -1199,7 +1203,7 @@ namespace ProSuite.QA.Tests.Test
 
 			relTableName = relTableName ?? "Rel_" + ds1.Name;
 			ITable relTable = TestWorkspaceUtils.CreateSimpleTable(testWs, relTableName,
-			                                                       tblFields);
+				tblFields);
 			var dsRel = (IDataset) relTable;
 
 			string relName = "relName" + Environment.TickCount;
@@ -1224,7 +1228,7 @@ namespace ProSuite.QA.Tests.Test
 			InstanceConfigurationUtils.AddParameterValue(
 				condition, "groupBy", string.Format("{0}.{1}", dsRel.Name, _groupField));
 			InstanceConfigurationUtils.AddParameterValue(condition, "allowedShape",
-			                                                 QaGroupConnected.ShapeAllowed.All);
+			                                             QaGroupConnected.ShapeAllowed.All);
 
 			var fact = new QaRelGroupConnected();
 			fact.Condition = condition;
@@ -1328,7 +1332,8 @@ namespace ProSuite.QA.Tests.Test
 			                                                     JoinType.InnerJoin);
 
 			var test = new QaGroupConnected(
-				ReadOnlyTableFactory.Create((IFeatureClass) joinedTable), new[] {"TOPGIS_TLM.TLM_GEWAESSER_LAUF.GWL_NR"},
+				ReadOnlyTableFactory.Create((IFeatureClass) joinedTable),
+				new[] { "TOPGIS_TLM.TLM_GEWAESSER_LAUF.GWL_NR" },
 				QaGroupConnected.ShapeAllowed.None);
 			test.AddRelatedTables(ReadOnlyTableFactory.Create(joinedTable), tables);
 
@@ -1355,7 +1360,7 @@ namespace ProSuite.QA.Tests.Test
 				                 true), 1000));
 
 			IFeatureClass fc = DatasetUtils.CreateSimpleFeatureClass(ws, "TestCircularErrors",
-			                                                         fields);
+				fields);
 
 			((IWorkspaceEdit) ws).StartEditing(false);
 			((IWorkspaceEdit) ws).StopEditing(true);
@@ -1430,10 +1435,10 @@ namespace ProSuite.QA.Tests.Test
 
 			((IWorkspaceEdit) ws).StopEditing(true);
 
-			var test = new QaGroupConnected(ReadOnlyTableFactory.Create(fc), new[] {"Group"},
+			var test = new QaGroupConnected(ReadOnlyTableFactory.Create(fc), new[] { "Group" },
 			                                QaGroupConnected.ShapeAllowed.None);
 
-			var runner = new QaContainerTestRunner(10000, test) {KeepGeometry = true};
+			var runner = new QaContainerTestRunner(10000, test) { KeepGeometry = true };
 
 			IEnvelope extent = GeometryFactory.CreateEnvelope(150, 150, 350, 350);
 
@@ -1443,45 +1448,45 @@ namespace ProSuite.QA.Tests.Test
 			Console.WriteLine(@"------------------------------------------------");
 			runner.Execute(extent);
 
-			test = new QaGroupConnected(ReadOnlyTableFactory.Create(fc), new[] {"Group"},
+			test = new QaGroupConnected(ReadOnlyTableFactory.Create(fc), new[] { "Group" },
 			                            QaGroupConnected.ShapeAllowed.Cycles);
-			runner = new QaContainerTestRunner(10000, test) {KeepGeometry = true};
+			runner = new QaContainerTestRunner(10000, test) { KeepGeometry = true };
 			Console.WriteLine($@"Shape:{QaGroupConnected.ShapeAllowed.Cycles}");
 			Console.WriteLine(@"------------------------------------------------");
 			runner.Execute();
 			Console.WriteLine(@"------------------------------------------------");
 			runner.Execute(extent);
 
-			test = new QaGroupConnected(ReadOnlyTableFactory.Create( fc), new[] {"Group"},
+			test = new QaGroupConnected(ReadOnlyTableFactory.Create(fc), new[] { "Group" },
 			                            QaGroupConnected.ShapeAllowed.Branches);
-			runner = new QaContainerTestRunner(10000, test) {KeepGeometry = true};
+			runner = new QaContainerTestRunner(10000, test) { KeepGeometry = true };
 			Console.WriteLine($@"Shape:{QaGroupConnected.ShapeAllowed.Branches}");
 			Console.WriteLine(@"------------------------------------------------");
 			runner.Execute();
 			Console.WriteLine(@"------------------------------------------------");
 			runner.Execute(extent);
 
-			test = new QaGroupConnected(ReadOnlyTableFactory.Create(fc), new[] {"Group"},
+			test = new QaGroupConnected(ReadOnlyTableFactory.Create(fc), new[] { "Group" },
 			                            QaGroupConnected.ShapeAllowed.InsideBranches);
-			runner = new QaContainerTestRunner(10000, test) {KeepGeometry = true};
+			runner = new QaContainerTestRunner(10000, test) { KeepGeometry = true };
 			Console.WriteLine($@"Shape:{QaGroupConnected.ShapeAllowed.InsideBranches}");
 			Console.WriteLine(@"------------------------------------------------");
 			runner.Execute();
 			Console.WriteLine(@"------------------------------------------------");
 			runner.Execute(extent);
 
-			test = new QaGroupConnected(ReadOnlyTableFactory.Create(fc), new[] {"Group"},
+			test = new QaGroupConnected(ReadOnlyTableFactory.Create(fc), new[] { "Group" },
 			                            QaGroupConnected.ShapeAllowed.CyclesAndBranches);
-			runner = new QaContainerTestRunner(10000, test) {KeepGeometry = true};
+			runner = new QaContainerTestRunner(10000, test) { KeepGeometry = true };
 			Console.WriteLine($@"Shape:{QaGroupConnected.ShapeAllowed.CyclesAndBranches}");
 			Console.WriteLine(@"------------------------------------------------");
 			runner.Execute();
 			Console.WriteLine(@"------------------------------------------------");
 			runner.Execute(extent);
 
-			test = new QaGroupConnected(ReadOnlyTableFactory.Create(fc), new[] {"Group"},
+			test = new QaGroupConnected(ReadOnlyTableFactory.Create(fc), new[] { "Group" },
 			                            QaGroupConnected.ShapeAllowed.All);
-			runner = new QaContainerTestRunner(10000, test) {KeepGeometry = true};
+			runner = new QaContainerTestRunner(10000, test) { KeepGeometry = true };
 			Console.WriteLine($@"Shape:{QaGroupConnected.ShapeAllowed.All}");
 			Console.WriteLine(@"------------------------------------------------");
 			runner.Execute();
@@ -1497,11 +1502,15 @@ namespace ProSuite.QA.Tests.Test
 			IFeatureClass ax44004L = DatasetUtils.OpenFeatureClass(ws, "AX_44004_L");
 			IFeatureClass ax57003L = DatasetUtils.OpenFeatureClass(ws, "AX_57003_L");
 			var test = new QaGroupConnected(
-				new[] { ReadOnlyTableFactory.Create(ax44004L), ReadOnlyTableFactory.Create(ax57003L) },
-			                                new[] {"GWK"}, "#",
-			                                QaGroupConnected.ShapeAllowed.All,
-			                                QaGroupConnected.GroupErrorReporting.CombineParts,
-			                                100);
+				new[]
+				{
+					ReadOnlyTableFactory.Create(ax44004L),
+					ReadOnlyTableFactory.Create(ax57003L)
+				},
+				new[] { "GWK" }, "#",
+				QaGroupConnected.ShapeAllowed.All,
+				QaGroupConnected.GroupErrorReporting.CombineParts,
+				100);
 			test.SetConstraint(0, "GWK IS NOT NULL AND GWK <> 'zzzz'");
 			test.SetConstraint(1, "GWK IS NOT NULL AND GWK <> 'zzzz'");
 
@@ -1516,10 +1525,10 @@ namespace ProSuite.QA.Tests.Test
 			IWorkspace ws = TestDataUtils.OpenFileGdb(@"Bkg\ERM_Samples.gdb");
 			IFeatureClass roadL = DatasetUtils.OpenFeatureClass(ws, "RoadL");
 			var test = new QaGroupConnected(
-				new[] { ReadOnlyTableFactory.Create(roadL) }, new[] {"RTE"}, "#",
-			                                QaGroupConnected.ShapeAllowed.All,
-			                                QaGroupConnected.GroupErrorReporting.CombineParts,
-			                                0.01);
+				new[] { ReadOnlyTableFactory.Create(roadL) }, new[] { "RTE" }, "#",
+				QaGroupConnected.ShapeAllowed.All,
+				QaGroupConnected.GroupErrorReporting.CombineParts,
+				0.01);
 			test.SetConstraint(0, "RTE IS NOT NULL AND RTE NOT IN ('UNK','N_A')");
 
 			var runner = new QaContainerTestRunner(1, test);
@@ -1534,10 +1543,10 @@ namespace ProSuite.QA.Tests.Test
 			IWorkspace ws = TestDataUtils.OpenFileGdb(@"Bkg\ERM_Samples.gdb");
 			IFeatureClass roadL = DatasetUtils.OpenFeatureClass(ws, "RoadL");
 			var test = new QaGroupConnected(
-				new[] { ReadOnlyTableFactory.Create(roadL) }, new[] {"RTE"}, "#",
-			                                QaGroupConnected.ShapeAllowed.None,
-			                                QaGroupConnected.GroupErrorReporting.CombineParts,
-			                                100);
+				new[] { ReadOnlyTableFactory.Create(roadL) }, new[] { "RTE" }, "#",
+				QaGroupConnected.ShapeAllowed.None,
+				QaGroupConnected.GroupErrorReporting.CombineParts,
+				100);
 			test.SetConstraint(0, "RTE IS NOT NULL AND RTE NOT IN ('UNK','N_A')");
 
 			var runner = new QaContainerTestRunner(10000, test);
@@ -1599,7 +1608,8 @@ namespace ProSuite.QA.Tests.Test
 
 			((IWorkspaceEdit) ws).StopEditing(true);
 
-			var test = new QaGroupConnected(ReadOnlyTableFactory.Create(fc), new List<string> {"Group"},
+			var test = new QaGroupConnected(ReadOnlyTableFactory.Create(fc),
+			                                new List<string> { "Group" },
 			                                QaGroupConnected.ShapeAllowed.All);
 
 			var runner = new QaContainerTestRunner(10000, test);
@@ -1659,20 +1669,21 @@ namespace ProSuite.QA.Tests.Test
 
 			((IWorkspaceEdit) ws).StopEditing(true);
 
-			var test = new QaGroupConnected(new[] { ReadOnlyTableFactory.Create(fc) }, new List<string> {"Group"}, null,
+			var test = new QaGroupConnected(new[] { ReadOnlyTableFactory.Create(fc) },
+			                                new List<string> { "Group" }, null,
 			                                QaGroupConnected.ShapeAllowed.None,
 			                                QaGroupConnected.GroupErrorReporting.ShortestGaps,
 			                                0.1);
 
 			test.CompleteGroupsOutsideTestArea = true;
 
-			var runner = new QaContainerTestRunner(10000, test) {KeepGeometry = true};
+			var runner = new QaContainerTestRunner(10000, test) { KeepGeometry = true };
 			runner.TestContainer.ProgressChanged += testContainer_ProgressChanged;
 
 			Assert.AreEqual(1, runner.Execute());
 			IGeometry errGeom1 = runner.ErrorGeometries[0];
 
-			runner = new QaContainerTestRunner(100, test) {KeepGeometry = true};
+			runner = new QaContainerTestRunner(100, test) { KeepGeometry = true };
 			runner.TestContainer.ProgressChanged += testContainer_ProgressChanged;
 
 			Assert.AreEqual(1, runner.Execute());
@@ -1746,7 +1757,8 @@ namespace ProSuite.QA.Tests.Test
 
 			((IWorkspaceEdit) ws).StopEditing(true);
 
-			var test = new QaGroupConnected(ReadOnlyTableFactory.Create(fc), new List<string> {"Group"},
+			var test = new QaGroupConnected(ReadOnlyTableFactory.Create(fc),
+			                                new List<string> { "Group" },
 			                                QaGroupConnected.ShapeAllowed.All);
 
 			test.UseMultiParts = false;
@@ -1823,7 +1835,8 @@ namespace ProSuite.QA.Tests.Test
 
 			((IWorkspaceEdit) ws).StopEditing(true);
 
-			var test = new QaGroupConnected(ReadOnlyTableFactory.Create(fc), new List<string> {"Group"},
+			var test = new QaGroupConnected(ReadOnlyTableFactory.Create(fc),
+			                                new List<string> { "Group" },
 			                                QaGroupConnected.ShapeAllowed.All);
 
 			var runner = new QaContainerTestRunner(10000, test);
@@ -1884,7 +1897,8 @@ namespace ProSuite.QA.Tests.Test
 
 			((IWorkspaceEdit) ws).StopEditing(true);
 
-			var test = new QaGroupConnected(new[] { ReadOnlyTableFactory.Create(fc) }, new List<string> {"Group"}, null,
+			var test = new QaGroupConnected(new[] { ReadOnlyTableFactory.Create(fc) },
+			                                new List<string> { "Group" }, null,
 			                                QaGroupConnected.ShapeAllowed.All,
 			                                QaGroupConnected.GroupErrorReporting.CombineParts,
 			                                0.1);
@@ -1950,7 +1964,8 @@ namespace ProSuite.QA.Tests.Test
 
 			((IWorkspaceEdit) ws).StopEditing(true);
 
-			var test = new QaGroupConnected(ReadOnlyTableFactory.Create(fc), new List<string> {"GroupFld"},
+			var test = new QaGroupConnected(ReadOnlyTableFactory.Create(fc),
+			                                new List<string> { "GroupFld" },
 			                                QaGroupConnected.ShapeAllowed.All);
 
 			var runner = new QaContainerTestRunner(10000, test);
@@ -2007,45 +2022,45 @@ namespace ProSuite.QA.Tests.Test
 			CreateRow(relTable, 10, "Fluss");
 			CreateRow(relTable, 11, "Fluss");
 
-			CreateFeature(fc, 10, new Coords {{0, 0}, {500, 500}});
-			CreateFeature(fc, 10, new Coords {{0, 0}, {251, 251}, {500, 500}});
-			CreateFeature(fc, 10, new Coords {{0, 0}, {249, 249}, {500, 500}});
-			CreateFeature(fc, 10, new Coords {{0, 0}, {1900, 500}});
+			CreateFeature(fc, 10, new Coords { { 0, 0 }, { 500, 500 } });
+			CreateFeature(fc, 10, new Coords { { 0, 0 }, { 251, 251 }, { 500, 500 } });
+			CreateFeature(fc, 10, new Coords { { 0, 0 }, { 249, 249 }, { 500, 500 } });
+			CreateFeature(fc, 10, new Coords { { 0, 0 }, { 1900, 500 } });
 			//CreateFeature(fc, 11, new Coords { { 500, 500 }, { 1900, 1900 } });
-			CreateFeature(fc, 11, new Coords {{1900, 1900}, {1990, 1990}});
+			CreateFeature(fc, 11, new Coords { { 1900, 1900 }, { 1990, 1990 } });
 
 			//CreateFeature(fc, 11, new Coords { { 500, 500 }, { 801, 800 } });
 			//CreateFeature(fc, 11, new Coords { { 801, 800 }, { 1201, 1200 } });
-			CreateFeature(fc, 11, new Coords {{1201, 1200}, {1900, 1900}});
-			CreateFeature(fc, 11, new Coords {{801, 800}, {1000, 1000}});
-			CreateFeature(fc, 11, new Coords {{1000, 1000}, {1201, 1200}});
+			CreateFeature(fc, 11, new Coords { { 1201, 1200 }, { 1900, 1900 } });
+			CreateFeature(fc, 11, new Coords { { 801, 800 }, { 1000, 1000 } });
+			CreateFeature(fc, 11, new Coords { { 1000, 1000 }, { 1201, 1200 } });
 
 			//CreateFeature(fc, 11, new Coords { { 500, 500 }, { 1900, 500 } });
-			CreateFeature(fc, 11, new Coords {{500, 500}, {800, 501}});
+			CreateFeature(fc, 11, new Coords { { 500, 500 }, { 800, 501 } });
 			//CreateFeature(fc, 11, new Coords { { 800, 501 }, { 1200, 501 } });
-			CreateFeature(fc, 11, new Coords {{1200, 501}, {1900, 500}});
-			CreateFeature(fc, 11, new Coords {{800, 501}, {1000, 500}});
-			CreateFeature(fc, 11, new Coords {{1000, 500}, {1200, 501}});
+			CreateFeature(fc, 11, new Coords { { 1200, 501 }, { 1900, 500 } });
+			CreateFeature(fc, 11, new Coords { { 800, 501 }, { 1000, 500 } });
+			CreateFeature(fc, 11, new Coords { { 1000, 500 }, { 1200, 501 } });
 
 			//CreateFeature(fc, 11, new Coords { { 1900, 500 }, { 1900, 1900 } });
-			CreateFeature(fc, 11, new Coords {{1900, 500}, {1901, 800}});
+			CreateFeature(fc, 11, new Coords { { 1900, 500 }, { 1901, 800 } });
 			//CreateFeature(fc, 11, new Coords { { 1901, 800 }, { 1901, 1200 } });
-			CreateFeature(fc, 11, new Coords {{1901, 1200}, {1900, 1900}});
-			CreateFeature(fc, 11, new Coords {{1901, 800}, {1900, 1000}});
-			CreateFeature(fc, 11, new Coords {{1900, 1000}, {1901, 1200}});
+			CreateFeature(fc, 11, new Coords { { 1901, 1200 }, { 1900, 1900 } });
+			CreateFeature(fc, 11, new Coords { { 1901, 800 }, { 1900, 1000 } });
+			CreateFeature(fc, 11, new Coords { { 1900, 1000 }, { 1901, 1200 } });
 
 			//CreateFeature(fc, 11, new Coords { { 500, 500 }, { 500, 1900 } });
 			//CreateFeature(fc, 11, new Coords { { 500, 500 }, { 501, 800 } });
 			//CreateFeature(fc, 11, new Coords { { 501, 800 }, { 501, 1200 } });
-			CreateFeature(fc, 11, new Coords {{501, 1200}, {500, 1900}});
-			CreateFeature(fc, 11, new Coords {{501, 800}, {500, 1000}});
-			CreateFeature(fc, 11, new Coords {{500, 1000}, {501, 1200}});
+			CreateFeature(fc, 11, new Coords { { 501, 1200 }, { 500, 1900 } });
+			CreateFeature(fc, 11, new Coords { { 501, 800 }, { 500, 1000 } });
+			CreateFeature(fc, 11, new Coords { { 500, 1000 }, { 501, 1200 } });
 
 			//CreateFeature(fc, 11, new Coords { { 500, 1900 }, { 1900, 1900 } });
-			CreateFeature(fc, 11, new Coords {{500, 1900}, {800, 1901}});
+			CreateFeature(fc, 11, new Coords { { 500, 1900 }, { 800, 1901 } });
 			//CreateFeature(fc, 11, new Coords { { 800, 1901 }, { 1200, 1901 } });
-			CreateFeature(fc, 11, new Coords {{1200, 1901}, {1900, 1900}});
-			CreateFeature(fc, 11, new Coords {{800, 1901}, {1000, 1900}});
+			CreateFeature(fc, 11, new Coords { { 1200, 1901 }, { 1900, 1900 } });
+			CreateFeature(fc, 11, new Coords { { 800, 1901 }, { 1000, 1900 } });
 			//CreateFeature(fc, 11, new Coords { { 1000, 1900 }, { 1200, 1901 } });
 
 			((IWorkspaceEdit) testWs).StopEditing(true);
@@ -2164,21 +2179,22 @@ namespace ProSuite.QA.Tests.Test
 
 			((IWorkspaceEdit) ws).StopEditing(true);
 
-			var test = new QaGroupConnected(new[] { ReadOnlyTableFactory.Create(fc) }, new List<string> {"Group"}, null,
+			var test = new QaGroupConnected(new[] { ReadOnlyTableFactory.Create(fc) },
+			                                new List<string> { "Group" }, null,
 			                                QaGroupConnected.ShapeAllowed.All,
 			                                QaGroupConnected.GroupErrorReporting.CombineParts,
 			                                0.1)
 			           {
 				           ReportIndividualGaps = true
 			           };
-			var runner = new QaContainerTestRunner(10000, test) {KeepGeometry = true};
+			var runner = new QaContainerTestRunner(10000, test) { KeepGeometry = true };
 
 			runner.Execute();
 			Assert.AreEqual(5, runner.Errors.Count);
 			// 2 short gaps (points) now reported only once
 
 			test.ReportIndividualGaps = false;
-			runner = new QaContainerTestRunner(10000, test) {KeepGeometry = true};
+			runner = new QaContainerTestRunner(10000, test) { KeepGeometry = true };
 
 			runner.Execute();
 			Assert.AreEqual(2, runner.Errors.Count);
@@ -2222,17 +2238,18 @@ namespace ProSuite.QA.Tests.Test
 
 			((IWorkspaceEdit) ws).StopEditing(true);
 
-			var test = new QaGroupConnected(new[] { ReadOnlyTableFactory.Create(fc) }, new List<string> {"Group"}, null,
+			var test = new QaGroupConnected(new[] { ReadOnlyTableFactory.Create(fc) },
+			                                new List<string> { "Group" }, null,
 			                                QaGroupConnected.ShapeAllowed.All,
 			                                QaGroupConnected.GroupErrorReporting.ShortestGaps,
 			                                0.1);
-			var runner = new QaContainerTestRunner(10000, test) {KeepGeometry = true};
+			var runner = new QaContainerTestRunner(10000, test) { KeepGeometry = true };
 
 			runner.Execute();
 			Assert.AreEqual(1, runner.Errors.Count);
 
 			test.IgnoreGapsLongerThan = 0.5;
-			runner = new QaContainerTestRunner(10000, test) {KeepGeometry = true};
+			runner = new QaContainerTestRunner(10000, test) { KeepGeometry = true };
 
 			runner.Execute();
 			Assert.AreEqual(0, runner.Errors.Count);
@@ -2305,21 +2322,22 @@ namespace ProSuite.QA.Tests.Test
 
 			((IWorkspaceEdit) ws).StopEditing(true);
 
-			var test = new QaGroupConnected(new[] { ReadOnlyTableFactory.Create(fc) }, new List<string> {"Group"}, null,
+			var test = new QaGroupConnected(new[] { ReadOnlyTableFactory.Create(fc) },
+			                                new List<string> { "Group" }, null,
 			                                QaGroupConnected.ShapeAllowed.All,
 			                                QaGroupConnected.GroupErrorReporting.ShortestGaps,
 			                                0.1)
 			           {
 				           ReportIndividualGaps = true
 			           };
-			var runner = new QaContainerTestRunner(10000, test) {KeepGeometry = true};
+			var runner = new QaContainerTestRunner(10000, test) { KeepGeometry = true };
 
 			runner.Execute();
 			Assert.AreEqual(5, runner.Errors.Count);
 			// 2 short gaps (points) now reported only once
 
 			test.ReportIndividualGaps = false;
-			runner = new QaContainerTestRunner(10000, test) {KeepGeometry = true};
+			runner = new QaContainerTestRunner(10000, test) { KeepGeometry = true };
 
 			runner.Execute();
 			Assert.AreEqual(2, runner.Errors.Count);
@@ -2332,8 +2350,11 @@ namespace ProSuite.QA.Tests.Test
 			IWorkspace ws = TestDataUtils.OpenTopgisTlm();
 
 			var tables = new List<IReadOnlyTable>();
-			tables.Add(ReadOnlyTableFactory.Create(DatasetUtils.OpenTable(ws, "TOPGIS_TLM.TLM_STRASSE")));
-			tables.Add(ReadOnlyTableFactory.Create(DatasetUtils.OpenTable(ws, "TOPGIS_TLM.TLM_STRASSENROUTE")));
+			tables.Add(
+				ReadOnlyTableFactory.Create(DatasetUtils.OpenTable(ws, "TOPGIS_TLM.TLM_STRASSE")));
+			tables.Add(
+				ReadOnlyTableFactory.Create(
+					DatasetUtils.OpenTable(ws, "TOPGIS_TLM.TLM_STRASSENROUTE")));
 			IRelationshipClass rel =
 				DatasetUtils.OpenRelationshipClass((IFeatureWorkspace) ws,
 				                                   "TOPGIS_TLM.TLM_STRASSENROUTE_STRASSE");
@@ -2343,7 +2364,7 @@ namespace ProSuite.QA.Tests.Test
 
 			var test =
 				new QaGroupConnected(ReadOnlyTableFactory.Create((IFeatureClass) queryTable),
-				                     new[] {"TOPGIS_TLM.TLM_STRASSENROUTE.UUID"},
+				                     new[] { "TOPGIS_TLM.TLM_STRASSENROUTE.UUID" },
 				                     QaGroupConnected.ShapeAllowed.Cycles);
 			test.AddRelatedTables(ReadOnlyTableFactory.Create(queryTable), tables);
 
@@ -2393,7 +2414,8 @@ namespace ProSuite.QA.Tests.Test
 			                                                     JoinType.InnerJoin);
 
 			var test = new QaGroupConnected(
-				ReadOnlyTableFactory.Create((IFeatureClass) joinedTable), new[] {"TOPGIS_TLM.TLM_GEWAESSER_LAUF.GWL_NR"},
+				ReadOnlyTableFactory.Create((IFeatureClass) joinedTable),
+				new[] { "TOPGIS_TLM.TLM_GEWAESSER_LAUF.GWL_NR" },
 				QaGroupConnected.ShapeAllowed.None);
 			test.AddRelatedTables(ReadOnlyTableFactory.Create(joinedTable), tables);
 			test.CompleteGroupsOutsideTestArea = true;
@@ -2425,7 +2447,8 @@ namespace ProSuite.QA.Tests.Test
 			                                                     JoinType.InnerJoin);
 
 			var test = new QaGroupConnected(
-				ReadOnlyTableFactory.Create((IFeatureClass) joinedTable), new[] {"TOPGIS_TLM.TLM_GEWAESSER_LAUF.GWL_NR"},
+				ReadOnlyTableFactory.Create((IFeatureClass) joinedTable),
+				new[] { "TOPGIS_TLM.TLM_GEWAESSER_LAUF.GWL_NR" },
 				QaGroupConnected.ShapeAllowed.None);
 			test.AddRelatedTables(ReadOnlyTableFactory.Create(joinedTable), tables);
 			test.CompleteGroupsOutsideTestArea = true;
@@ -2462,7 +2485,8 @@ namespace ProSuite.QA.Tests.Test
 			                                                     JoinType.InnerJoin);
 
 			var test = new QaGroupConnected(
-				ReadOnlyTableFactory.Create((IFeatureClass) joinedTable), new[] {"TLM_GEWAESSER_LAUF.GWL_NR"},
+				ReadOnlyTableFactory.Create((IFeatureClass) joinedTable),
+				new[] { "TLM_GEWAESSER_LAUF.GWL_NR" },
 				QaGroupConnected.ShapeAllowed.None);
 			test.AddRelatedTables(ReadOnlyTableFactory.Create(joinedTable), tables);
 			test.CompleteGroupsOutsideTestArea = true;

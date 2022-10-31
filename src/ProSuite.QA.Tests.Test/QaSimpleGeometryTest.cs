@@ -2,32 +2,30 @@ using System;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Tests.Test.TestRunners;
 using NUnit.Framework;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.AO.Licensing;
+using ProSuite.Commons.AO.Test;
 using ProSuite.Commons.AO.Test.TestSupport;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Tests.Test.TestData;
-using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Tests.Test.TestRunners;
 
 namespace ProSuite.QA.Tests.Test
 {
 	[TestFixture]
 	public class QaSimpleGeometryTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
-
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout();
+			TestUtils.InitializeLicense();
 		}
 
 		[OneTimeTearDown]
 		public void TeardownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		[Test]
@@ -59,7 +57,7 @@ namespace ProSuite.QA.Tests.Test
 			Assert.AreEqual(0, runner.Errors.Count);
 
 			test = new QaSimpleGeometry(ReadOnlyTableFactory.Create(fc), false);
-			runner = new QaTestRunner(test) {KeepGeometry = true};
+			runner = new QaTestRunner(test) { KeepGeometry = true };
 
 			runner.Execute(f);
 			Assert.AreEqual(1, runner.Errors.Count);
@@ -83,8 +81,9 @@ namespace ProSuite.QA.Tests.Test
 			IFeature f = fc.CreateFeature(nonZAwarePolyline);
 
 			const double toleranceFactor = 1.0;
-			var test = new QaSimpleGeometry(ReadOnlyTableFactory.Create(fc), false, toleranceFactor);
-			var runner = new QaTestRunner(test) {KeepGeometry = true};
+			var test =
+				new QaSimpleGeometry(ReadOnlyTableFactory.Create(fc), false, toleranceFactor);
+			var runner = new QaTestRunner(test) { KeepGeometry = true };
 
 			runner.Execute(f);
 
@@ -118,7 +117,7 @@ namespace ProSuite.QA.Tests.Test
 			IFeature f = fc.CreateFeature(sourcePolygon);
 
 			var test = new QaSimpleGeometry(ReadOnlyTableFactory.Create(fc), false);
-			var runner = new QaTestRunner(test) {KeepGeometry = true};
+			var runner = new QaTestRunner(test) { KeepGeometry = true };
 
 			runner.Execute(f);
 			Assert.AreEqual(1, runner.Errors.Count);
@@ -157,7 +156,7 @@ namespace ProSuite.QA.Tests.Test
 			IFeature f = fc.CreateFeature(polyline);
 
 			var test = new QaSimpleGeometry(ReadOnlyTableFactory.Create(fc), false);
-			var runner = new QaTestRunner(test) {KeepGeometry = true};
+			var runner = new QaTestRunner(test) { KeepGeometry = true };
 
 			runner.Execute(f);
 			Assert.AreEqual(1, runner.Errors.Count);
@@ -230,7 +229,7 @@ namespace ProSuite.QA.Tests.Test
 			Console.WriteLine(@"Original domain: {0} {1} {2} {3}", xmin, ymin, xmax, ymax);
 
 			ISpatialReference reduced = GetReducedToleranceSpatialReference(spatialReference,
-			                                                                toleranceFactor);
+				toleranceFactor);
 
 			var reducedTolerance = (ISpatialReferenceTolerance) reduced;
 			var reducedResolution = (ISpatialReferenceResolution) reduced;

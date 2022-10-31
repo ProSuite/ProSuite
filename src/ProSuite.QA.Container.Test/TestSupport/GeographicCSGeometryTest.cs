@@ -4,7 +4,6 @@ using System.Diagnostics;
 using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.QA.Container.Test.TestSupport
@@ -12,8 +11,6 @@ namespace ProSuite.QA.Container.Test.TestSupport
 	[TestFixture]
 	public class GeographicCSGeometryTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
-
 		private ISpatialReference _wgs84;
 		private ISpatialReference _lv95;
 
@@ -31,13 +28,13 @@ namespace ProSuite.QA.Container.Test.TestSupport
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout();
+			Commons.AO.Test.TestUtils.InitializeLicense();
 		}
 
 		[OneTimeTearDown]
 		public void TearDownFixture()
 		{
-			_lic.Release();
+			Commons.AO.Test.TestUtils.ReleaseLicense();
 		}
 
 		[Test]

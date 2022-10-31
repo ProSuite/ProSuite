@@ -10,7 +10,8 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 namespace ProSuite.AGP.WorkList
 {
 	[UsedImplicitly]
-	public class WorkListChangedEvent : RegisteredPresentationEvent<object, WorkListChangedEventArgs>
+	public class
+		WorkListChangedEvent : RegisteredPresentationEvent<object, WorkListChangedEventArgs>
 	{
 		private readonly HashSet<SubscriptionToken> _tokens = new HashSet<SubscriptionToken>();
 

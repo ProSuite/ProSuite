@@ -75,7 +75,6 @@ namespace ProSuite.AGP.WorkList.Domain
 					_msg.Debug($"Field {attribute} is not registered");
 				}
 
-
 				if (fieldName != null && index > 0)
 				{
 					_fieldIndexByAttribute.Add(attribute, index);
@@ -109,7 +108,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			return value == null ? default : (T) value;
 		}
 
-		public AttributeReader AddValue(Dictionary<string, object> attributes, 
+		public AttributeReader AddValue(Dictionary<string, object> attributes,
 		                                object value,
 		                                Attributes attribute)
 		{
@@ -121,17 +120,17 @@ namespace ProSuite.AGP.WorkList.Domain
 			Assert.True(_fieldIndexByAttribute.ContainsKey(attribute),
 			            $"No field index for attribute {fieldName}");
 
-			Assert.True(_fieldNameByIssueAttribute.ContainsKey(attribute), 
+			Assert.True(_fieldNameByIssueAttribute.ContainsKey(attribute),
 			            $"No field name for attribute {fieldName}");
 
 			string upperCaseFieldName = fieldName.ToUpper();
 
-			Assert.True(_fieldIndexByName.ContainsKey(upperCaseFieldName), 
+			Assert.True(_fieldIndexByName.ContainsKey(upperCaseFieldName),
 			            $"No field index for field name {upperCaseFieldName}");
 
 			Assert.False(attributes.ContainsKey(upperCaseFieldName),
 			             $"Field {upperCaseFieldName} already added to attributes dictionary");
-			
+
 			attributes.Add(upperCaseFieldName, value);
 
 			return this;

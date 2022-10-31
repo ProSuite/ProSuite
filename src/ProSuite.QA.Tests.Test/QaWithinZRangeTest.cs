@@ -2,20 +2,19 @@ using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using NUnit.Framework;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.AO.Test;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container.Test;
 using ProSuite.QA.Tests.Test.TestRunners;
-using NUnit.Framework;
-using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.AO.Licensing;
-using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests.Test
 {
 	[TestFixture]
 	public class QaWithinZRangeTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
 		private IFeatureWorkspace _testWs;
 
 		private int _featureClassNumber;
@@ -23,7 +22,7 @@ namespace ProSuite.QA.Tests.Test
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout();
+			TestUtils.InitializeLicense();
 
 			_testWs = TestWorkspaceUtils.CreateTestFgdbWorkspace("TestZRange");
 		}
@@ -31,7 +30,7 @@ namespace ProSuite.QA.Tests.Test
 		[OneTimeTearDown]
 		public void TeardownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		[Test]
@@ -153,7 +152,7 @@ namespace ProSuite.QA.Tests.Test
 			IPolyline segment = GeometryFactory.CreatePolyline(2000000, 1000000, 200,
 			                                                   2001000, 1001000, 400);
 			IPolyline errorSegment1 = GeometryFactory.CreatePolyline(2000500, 1000500, 300,
-			                                                         2001000, 1001000, 400);
+				2001000, 1001000, 400);
 			expectedErrorGeometries.Add(errorSegment1);
 			TestPolycurve(segment, expectedErrorGeometries, 100, 300);
 		}
@@ -166,7 +165,7 @@ namespace ProSuite.QA.Tests.Test
 			IPolyline segment = GeometryFactory.CreatePolyline(2000000, 1000000, 400,
 			                                                   2001000, 1001000, 275);
 			IPolyline errorSegment1 = GeometryFactory.CreatePolyline(2000000, 1000000, 400,
-			                                                         2000800, 1000800, 300);
+				2000800, 1000800, 300);
 			expectedErrorGeometries.Add(errorSegment1);
 			TestPolycurve(segment, expectedErrorGeometries, 100, 300);
 		}
@@ -211,7 +210,7 @@ namespace ProSuite.QA.Tests.Test
 			IPolyline segment = GeometryFactory.CreatePolyline(2000000, 1000000, 200,
 			                                                   2000200, 1001000, 75);
 			IPolyline errorSegment1 = GeometryFactory.CreatePolyline(2000160, 1000800, 100,
-			                                                         2000200, 1001000, 75);
+				2000200, 1001000, 75);
 			expectedErrorGeometries.Add(errorSegment1);
 			TestPolycurve(segment, expectedErrorGeometries, 100, 300);
 		}
@@ -234,9 +233,9 @@ namespace ProSuite.QA.Tests.Test
 			IPolyline segment = GeometryFactory.CreatePolyline(2000000, 1000000, 0,
 			                                                   2000000, 1001000, 400);
 			IPolyline errorSegment1 = GeometryFactory.CreatePolyline(2000000, 1000000, 0,
-			                                                         2000000, 1000250, 100);
+				2000000, 1000250, 100);
 			IPolyline errorSegment2 = GeometryFactory.CreatePolyline(2000000, 1000750, 300,
-			                                                         2000000, 1001000, 400);
+				2000000, 1001000, 400);
 			expectedErrorGeometries.Add(errorSegment1);
 			expectedErrorGeometries.Add(errorSegment2);
 			TestPolycurve(segment, expectedErrorGeometries, 100, 300);
@@ -250,9 +249,9 @@ namespace ProSuite.QA.Tests.Test
 			IPolyline segment = GeometryFactory.CreatePolyline(2000000, 1000000, 400,
 			                                                   2000000, 1001000, 0);
 			IPolyline errorSegment1 = GeometryFactory.CreatePolyline(2000000, 1000000, 400,
-			                                                         2000000, 1000250, 300);
+				2000000, 1000250, 300);
 			IPolyline errorSegment2 = GeometryFactory.CreatePolyline(2000000, 1000750, 100,
-			                                                         2000000, 1001000, 0);
+				2000000, 1001000, 0);
 			expectedErrorGeometries.Add(errorSegment1);
 			expectedErrorGeometries.Add(errorSegment2);
 			TestPolycurve(segment, expectedErrorGeometries, 100, 300);
@@ -263,9 +262,10 @@ namespace ProSuite.QA.Tests.Test
 		                                        double maxZValue,
 		                                        int expectedErrorCount)
 		{
-			var test = new QaWithinZRange(ReadOnlyTableFactory.Create(featureClass), minZValue, maxZValue);
+			var test = new QaWithinZRange(ReadOnlyTableFactory.Create(featureClass), minZValue,
+			                              maxZValue);
 
-			var runner = new QaTestRunner(test) {KeepGeometry = true};
+			var runner = new QaTestRunner(test) { KeepGeometry = true };
 			runner.Execute();
 			Assert.AreEqual(expectedErrorCount, runner.Errors.Count);
 

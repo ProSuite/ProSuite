@@ -1,25 +1,24 @@
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container.Test;
-using ProSuite.QA.Tests.Test.Construction;
-using ProSuite.QA.Tests.Test.TestRunners;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.AO.Licensing;
+using ProSuite.Commons.AO.Test;
+using ProSuite.QA.Container.Test;
+using ProSuite.QA.Tests.Test.Construction;
+using ProSuite.QA.Tests.Test.TestRunners;
 
 namespace ProSuite.QA.Tests.Test
 {
 	[TestFixture]
 	public class QaPointOnLineTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
 		private IFeatureWorkspace _testWs;
 
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout();
+			TestUtils.InitializeLicense();
 
 			_testWs = TestWorkspaceUtils.CreateTestFgdbWorkspace("QaPointOnLineTest");
 		}
@@ -27,7 +26,7 @@ namespace ProSuite.QA.Tests.Test
 		[OneTimeTearDown]
 		public void TeardownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		[Test]
@@ -88,7 +87,9 @@ namespace ProSuite.QA.Tests.Test
 			fLine2.Store();
 
 			var test = new QaPointOnLine(
-				ReadOnlyTableFactory.Create(fcPoints), new[] { ReadOnlyTableFactory.Create(fcLines)}, 1);
+				ReadOnlyTableFactory.Create(fcPoints),
+				new[] { ReadOnlyTableFactory.Create(fcLines) },
+				1);
 
 			using (var r = new QaTestRunner(test)) // no tiling no problem
 			{

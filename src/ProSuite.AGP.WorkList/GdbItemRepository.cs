@@ -19,7 +19,7 @@ namespace ProSuite.AGP.WorkList
 	public abstract class GdbItemRepository : IWorkItemRepository
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
-		
+
 		private int _lastUsedOid;
 
 		protected GdbItemRepository(Dictionary<Geodatabase, List<Table>> tablesByGeodatabase,
@@ -62,7 +62,7 @@ namespace ProSuite.AGP.WorkList
 		                                       bool recycle = true)
 		{
 			foreach (ISourceClass sourceClass in GeodatabaseBySourceClasses.Keys.Where(
-				source => source.Uses(tableId)))
+				         source => source.Uses(tableId)))
 			{
 				int count = 0;
 
@@ -198,7 +198,7 @@ namespace ProSuite.AGP.WorkList
 
 			// Todo daro: check recycle
 			foreach (Feature feature in GdbQueryUtils.GetRows<Feature>(
-				table, filter, recycle))
+				         table, filter, recycle))
 			{
 				yield return feature;
 			}

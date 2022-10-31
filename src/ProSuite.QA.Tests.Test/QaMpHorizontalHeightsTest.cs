@@ -1,29 +1,27 @@
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using NUnit.Framework;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Test;
+using ProSuite.Commons.AO.Test.TestSupport;
 using ProSuite.QA.Tests.Test.Construction;
 using ProSuite.QA.Tests.Test.TestRunners;
-using NUnit.Framework;
-using ProSuite.Commons.AO.Licensing;
-using ProSuite.Commons.AO.Test.TestSupport;
-using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests.Test
 {
 	[TestFixture]
 	public class QaMpHorizontalHeightsTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
-
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout();
+			TestUtils.InitializeLicense();
 		}
 
 		[OneTimeTearDown]
 		public void TearDownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		[Test]
@@ -57,7 +55,7 @@ namespace ProSuite.QA.Tests.Test
 
 			var construction = new MultiPatchConstruction();
 			construction.StartRing(0, 0, 0).Add(0, 10, 0).Add(0, 10, zNotChecked).Add(0, 0,
-			                                                                          zNotChecked);
+				zNotChecked);
 
 			IFeature row1 = featureClassMock.CreateFeature(construction.MultiPatch);
 
@@ -70,7 +68,7 @@ namespace ProSuite.QA.Tests.Test
 			const double zChecked = nearHeight - 0.001;
 			construction = new MultiPatchConstruction();
 			construction.StartRing(0, 0, 0).Add(0, 10, 0).Add(0, 10, zChecked).Add(0, 0,
-			                                                                       zChecked);
+				zChecked);
 
 			row1 = featureClassMock.CreateFeature(construction.MultiPatch);
 
@@ -94,7 +92,7 @@ namespace ProSuite.QA.Tests.Test
 
 			var construction = new MultiPatchConstruction();
 			construction.StartRing(0, 0, 0).Add(0, 10, 0).Add(0, 10, zReported).Add(0, 0,
-			                                                                        zReported);
+				zReported);
 
 			IFeature row1 = featureClassMock.CreateFeature(construction.MultiPatch);
 
@@ -107,7 +105,7 @@ namespace ProSuite.QA.Tests.Test
 			const double zNotReported = tolerance;
 			construction = new MultiPatchConstruction();
 			construction.StartRing(0, 0, 0).Add(0, 10, 0).Add(0, 10, zNotReported).Add(0, 0,
-			                                                                           zNotReported);
+				zNotReported);
 
 			row1 = featureClassMock.CreateFeature(construction.MultiPatch);
 

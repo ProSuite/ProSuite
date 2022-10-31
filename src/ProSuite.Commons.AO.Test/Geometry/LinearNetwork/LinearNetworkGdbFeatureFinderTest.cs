@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
@@ -7,7 +7,6 @@ using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Geometry.LinearNetwork;
-using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.IO;
 using Path = System.IO.Path;
 
@@ -16,23 +15,18 @@ namespace ProSuite.Commons.AO.Test.Geometry.LinearNetwork
 	[TestFixture]
 	public class LinearNetworkGdbFeatureFinderTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
-
 		#region Setup/Teardown
-
-		[SetUp]
-		public void SetUp() { }
 
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout();
+			TestUtils.InitializeLicense();
 		}
 
 		[OneTimeTearDown]
 		public void TeardownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		#endregion

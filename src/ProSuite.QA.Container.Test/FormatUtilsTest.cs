@@ -1,8 +1,7 @@
-﻿using System;
+using System;
 using System.Globalization;
 using System.Threading;
 using NUnit.Framework;
-using ProSuite.Commons.AO.Licensing;
 using ProSuite.QA.Container.TestSupport;
 
 namespace ProSuite.QA.Container.Test
@@ -10,18 +9,16 @@ namespace ProSuite.QA.Container.Test
 	[TestFixture]
 	public class FormatUtilsTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
-
 		[OneTimeSetUp]
 		public void TestFixtureSetUp()
 		{
-			_lic.Checkout();
+			Commons.AO.Test.TestUtils.InitializeLicense();
 		}
 
 		[OneTimeTearDown]
 		public void TestFixtureTearDown()
 		{
-			_lic.Release();
+			Commons.AO.Test.TestUtils.ReleaseLicense();
 		}
 
 		[Test]

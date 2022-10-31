@@ -6,7 +6,6 @@ using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
 using ProSuite.DomainModel.AO.QA;
@@ -18,13 +17,13 @@ using ProSuite.QA.Container.Test;
 using ProSuite.QA.TestFactories;
 using ProSuite.QA.Tests.Test.Construction;
 using ProSuite.QA.Tests.Test.TestRunners;
+using TestUtils = ProSuite.Commons.AO.Test.TestUtils;
 
 namespace ProSuite.QA.Tests.Test
 {
 	[TestFixture]
 	public class QaRegularExpressionTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
 		private IFeatureWorkspace _testWs;
 		private IFeatureWorkspace _relTestWs;
 
@@ -44,7 +43,7 @@ namespace ProSuite.QA.Tests.Test
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout(EsriProduct.ArcEditor);
+			TestUtils.InitializeLicense();
 
 			_spatialReference = CreateLV95();
 			_testWs = TestWorkspaceUtils.CreateInMemoryWorkspace(
@@ -54,7 +53,7 @@ namespace ProSuite.QA.Tests.Test
 		[OneTimeTearDown]
 		public void TeardownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		[Test]
@@ -210,7 +209,7 @@ namespace ProSuite.QA.Tests.Test
 					condition, "join", JoinType.InnerJoin);
 				InstanceConfigurationUtils.AddParameterValue(condition, "pattern", "A");
 				InstanceConfigurationUtils.AddParameterValue(condition, "fieldNames",
-				                                                 $"{tableName}.{_textFieldName}");
+				                                             $"{tableName}.{_textFieldName}");
 				InstanceConfigurationUtils.AddParameterValue(condition, "MatchIsError", false);
 				//condition.AddParameterValue("PatternDescription", "Hallo");
 

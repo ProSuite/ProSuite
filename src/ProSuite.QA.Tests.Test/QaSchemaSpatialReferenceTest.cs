@@ -1,20 +1,19 @@
 using ESRI.ArcGIS.Geodatabase;
-using ProSuite.QA.Container.Test;
 using NUnit.Framework;
-using ProSuite.Commons.AO.Licensing;
+using ProSuite.Commons.AO.Test;
+using ProSuite.QA.Container.Test;
 
 namespace ProSuite.QA.Tests.Test
 {
 	[TestFixture]
 	public class QaSchemaSpatialReferenceTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
 		private IFeatureWorkspace _workspace;
 
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout();
+			TestUtils.InitializeLicense();
 
 			_workspace = TestWorkspaceUtils.CreateTestFgdbWorkspace(GetType().Name);
 		}
@@ -22,7 +21,7 @@ namespace ProSuite.QA.Tests.Test
 		[OneTimeTearDown]
 		public void TeardownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		// TODO

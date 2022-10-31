@@ -11,7 +11,7 @@ namespace ProSuite.QA.Tests.Test.TestRunners
 	{
 		public QaContainerTestRunner(double tileSize, params ITest[] tests)
 		{
-			TestContainer = new TestContainer {TileSize = tileSize};
+			TestContainer = new TestContainer { TileSize = tileSize };
 			foreach (ITest test in tests)
 			{
 				TestContainer.AddTest(test);

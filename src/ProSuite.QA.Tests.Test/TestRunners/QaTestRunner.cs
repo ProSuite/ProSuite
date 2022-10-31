@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.AO.Geodatabase;
-using ESRI.ArcGIS.Geodatabase;
+using ProSuite.QA.Container;
 
 namespace ProSuite.QA.Tests.Test.TestRunners
 {
@@ -45,7 +45,7 @@ namespace ProSuite.QA.Tests.Test.TestRunners
 
 		public int Execute([NotNull] IEnumerable<IRow> selection)
 		{
-			return _test.Execute(selection.Select(x=> ReadOnlyRow.Create(x)));
+			return _test.Execute(selection.Select(x => ReadOnlyRow.Create(x)));
 		}
 
 		public int Execute([NotNull] IRow row)

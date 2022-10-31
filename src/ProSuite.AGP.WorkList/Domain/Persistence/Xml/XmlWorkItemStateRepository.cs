@@ -110,7 +110,7 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 			ICollection<XmlWorkListWorkspace> list)
 		{
 			foreach (KeyValuePair<GdbWorkspaceIdentity, SimpleSet<GdbTableIdentity>> pair in
-				tablesByWorkspace)
+			         tablesByWorkspace)
 			{
 				GdbWorkspaceIdentity workspace = pair.Key;
 				SimpleSet<GdbTableIdentity> tables = pair.Value;

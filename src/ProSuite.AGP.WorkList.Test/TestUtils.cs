@@ -86,7 +86,8 @@ namespace ProSuite.AGP.WorkList.Test
 		public static void UpdateDescription(string path, string featureClassName, int oid)
 		{
 			using (var geodatabase =
-				new Geodatabase(new FileGeodatabaseConnectionPath(new Uri(path, UriKind.Absolute))))
+			       new Geodatabase(
+				       new FileGeodatabaseConnectionPath(new Uri(path, UriKind.Absolute))))
 			{
 				using (var table = geodatabase.OpenDataset<Table>(featureClassName))
 				{
@@ -101,7 +102,8 @@ namespace ProSuite.AGP.WorkList.Test
 		                                         Geometry newGeometry, int oid)
 		{
 			using (var geodatabase =
-				new Geodatabase(new FileGeodatabaseConnectionPath(new Uri(path, UriKind.Absolute))))
+			       new Geodatabase(
+				       new FileGeodatabaseConnectionPath(new Uri(path, UriKind.Absolute))))
 			{
 				using (var featureClass = geodatabase.OpenDataset<FeatureClass>(featureClassName))
 				{

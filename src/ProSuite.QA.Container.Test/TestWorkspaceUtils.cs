@@ -86,18 +86,18 @@ namespace ProSuite.QA.Container.Test
 
 			IWorkspaceName wsName = WorkspaceUtils.CreateShapefileWorkspace(dir, gdbName);
 
-			return (IFeatureWorkspace)((IName)wsName).Open();
+			return (IFeatureWorkspace) ((IName) wsName).Open();
 		}
 
 		[NotNull]
-		public static ESRI.ArcGIS.Geodatabase.ITable CreateSimpleTable(
+		public static ITable CreateSimpleTable(
 			[NotNull] IFeatureWorkspace workspace,
 			[NotNull] string tableName,
 			[NotNull] IFields fields,
 			[CanBeNull] string configKeyWord = null)
 		{
 			// create the feature class
-			ESRI.ArcGIS.Geodatabase.ITable table = workspace.CreateTable(
+			ITable table = workspace.CreateTable(
 				tableName, fields, null, null, configKeyWord);
 
 			var classSchemaEdit = (IClassSchemaEdit) table;
@@ -121,8 +121,8 @@ namespace ProSuite.QA.Container.Test
 		public static IRelationshipClass CreateSimple1NRelationship(
 			[NotNull] IFeatureWorkspace workspace,
 			[NotNull] string name,
-			[NotNull] ESRI.ArcGIS.Geodatabase.ITable tableOrig,
-			[NotNull] ESRI.ArcGIS.Geodatabase.ITable tableRel,
+			[NotNull] ITable tableOrig,
+			[NotNull] ITable tableRel,
 			[NotNull] string orig,
 			[NotNull] string dest)
 		{
@@ -144,8 +144,8 @@ namespace ProSuite.QA.Container.Test
 		public static IRelationshipClass CreateSimpleMNRelationship(
 			[NotNull] IFeatureWorkspace workspace,
 			[NotNull] string name,
-			[NotNull] ESRI.ArcGIS.Geodatabase.ITable tableOrig,
-			[NotNull] ESRI.ArcGIS.Geodatabase.ITable tableRel,
+			[NotNull] ITable tableOrig,
+			[NotNull] ITable tableRel,
 			[NotNull] string orig,
 			[NotNull] string dest)
 		{
@@ -164,7 +164,7 @@ namespace ProSuite.QA.Container.Test
 		}
 
 		[NotNull]
-		public static ESRI.ArcGIS.Geodatabase.IFeatureClass CreateSimpleFeatureClass(
+		public static IFeatureClass CreateSimpleFeatureClass(
 			[NotNull] IFeatureWorkspace workspace,
 			[NotNull] string name,
 			[CanBeNull] IFieldsEdit fieldsWithoutShapeField,
@@ -197,7 +197,7 @@ namespace ProSuite.QA.Container.Test
 			fieldsWithoutShapeField.AddField(
 				FieldUtils.CreateShapeField("Shape", geometryType, spatialReference, 1000, hasZ));
 
-			ESRI.ArcGIS.Geodatabase.IFeatureClass featureClass =
+			IFeatureClass featureClass =
 				DatasetUtils.CreateSimpleFeatureClass(
 					workspace, name, fieldsWithoutShapeField);
 
