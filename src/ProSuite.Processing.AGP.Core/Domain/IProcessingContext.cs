@@ -28,6 +28,12 @@ namespace ProSuite.Processing.AGP.Core.Domain
 
 		void SetSystemFields(Row row, Table table);
 
+		/// <summary>Notify the system that the given row has changed</summary>
+		void Invalidate(Row row);
+
+		/// <summary>Notify the system that the given relationship has changed</summary>
+		void Invalidate(Relationship relationship);
+
 		/// <remarks>Honors <see cref="SelectionType"/></remarks>
 		IEnumerable<Feature> GetInputFeatures(
 			ProcessingDataset dataset, Geometry extent = null, bool recycling = false);
