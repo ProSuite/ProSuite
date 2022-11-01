@@ -207,7 +207,9 @@ namespace ProSuite.Processing
 				_settings.Add(new Setting(name, value, position.LineNumber));
 
 				SkipBlank(text, position);
-				if (! ScanEndline(text, position))
+				if (position.Index < text.Length && text[position.Index] == '#')
+					SkipLine(text, position); // eol comment
+				else if (! ScanEndline(text, position))
 					throw SyntaxError(position, "Expect end of line");
 
 				SkipWhite(text, position);
