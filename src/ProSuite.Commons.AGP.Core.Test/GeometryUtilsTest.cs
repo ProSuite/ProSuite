@@ -19,6 +19,23 @@ namespace ProSuite.Commons.AGP.Test
 		}
 
 		[Test]
+		public void CheckLineSegmentAngle()
+		{
+			// About LineSegment.Angle property:
+			// Documentation: angle in radians, ccw from positive x axis.
+			// Empirical: angle is in range -pi..pi (not 0..2pi).
+
+			var start = MapPointBuilder.CreateMapPoint(0, 0);
+			var end = MapPointBuilder.CreateMapPoint(5, -5);
+			var builder = new LineBuilder(start, end);
+			var line = builder.ToSegment();
+
+			const double delta = 0.000001;
+			var angle = line.Angle;
+			Assert.AreEqual(-Math.PI / 4, angle, delta);
+		}
+
+		[Test]
 		public void CanPolygonBoundaryNull()
 		{
 			Assert.Null(GeometryUtils.Boundary(null));

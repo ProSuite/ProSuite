@@ -18,6 +18,22 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			return geometry?.PointCount ?? 0;
 		}
 
+		public static MapPoint GetStartPoint(Multipart polyline)
+		{
+			var points = polyline?.Points;
+			if (points is null) return null;
+			int count = points.Count;
+			return count > 0 ? points[0] : null;
+		}
+
+		public static MapPoint GetEndPoint(Multipart curve)
+		{
+			var points = curve?.Points;
+			if (points is null) return null;
+			int count = points.Count;
+			return count > 0 ? points[count - 1] : null;
+		}
+
 		public static Envelope Union(Envelope a, Envelope b)
 		{
 			if (a == null) return b;
