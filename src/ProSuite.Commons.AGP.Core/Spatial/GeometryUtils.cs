@@ -62,7 +62,7 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 		}
 
 		public static Geometry Intersection(
-			Geometry a, Geometry b)
+			[CanBeNull] Geometry a, [CanBeNull] Geometry b)
 		{
 			if (a == null) return b;
 			if (b == null) return a;

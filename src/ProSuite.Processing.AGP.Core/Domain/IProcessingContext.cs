@@ -29,15 +29,15 @@ namespace ProSuite.Processing.AGP.Core.Domain
 		void SetSystemFields(Row row, Table table);
 
 		/// <remarks>Honors <see cref="SelectionType"/></remarks>
-		IEnumerable<Feature> GetInputFeatures(ProcessingDataset dataset, Geometry extent = null,
-		                                      bool recycling = false);
+		IEnumerable<Feature> GetInputFeatures(
+			ProcessingDataset dataset, Geometry extent = null, bool recycling = false);
 
 		/// <remarks>Honors <see cref="SelectionType"/></remarks>
 		int CountInputFeatures(ProcessingDataset dataset, Geometry extent = null);
 
 		/// <remarks>Ignores selection type, applies only given filter criteria</remarks>
-		IEnumerable<Feature> GetOtherFeatures(ProcessingDataset dataset,
-		                                 Geometry extent = null, bool recycling = false);
+		IEnumerable<Feature> GetOtherFeatures(
+			ProcessingDataset dataset, Geometry extent = null, bool recycling = false);
 
 		/// <remarks>Ignores selection type, applies only given filter criteria</remarks>
 		int CountOtherFeatures(ProcessingDataset dataset, Geometry extent = null);
