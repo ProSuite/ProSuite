@@ -3,27 +3,26 @@ using System.Data;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container.Test;
-using ProSuite.QA.Tests.Test.TestRunners;
 using NUnit.Framework;
 using ProSuite.Commons.AO;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.AO.Licensing;
+using ProSuite.Commons.AO.Test;
+using ProSuite.QA.Container.Test;
+using ProSuite.QA.Tests.Test.TestRunners;
 
 namespace ProSuite.QA.Tests.Test
 {
 	[TestFixture]
 	public class QaGroupConstraintsTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
 		private IFeatureWorkspace _testWs;
 		private IFeatureWorkspace _fgdbWs;
 
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout();
+			TestUtils.InitializeLicense();
 
 			_testWs = TestWorkspaceUtils.CreateTestAccessWorkspace("QaGroupConstraintsTest");
 			_fgdbWs =
@@ -33,7 +32,7 @@ namespace ProSuite.QA.Tests.Test
 		[OneTimeTearDown]
 		public void TeardownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		[Test]
@@ -219,7 +218,7 @@ namespace ProSuite.QA.Tests.Test
 			}
 
 			{
-				IQueryFilter filter = new QueryFilterClass {WhereClause = "ObjectId < 3"};
+				IQueryFilter filter = new QueryFilterClass { WhereClause = "ObjectId < 3" };
 				ISelectionSet set = fc.Select(
 					filter, esriSelectionType.esriSelectionTypeIDSet,
 					esriSelectionOption.esriSelectionOptionNormal, null);
@@ -230,12 +229,12 @@ namespace ProSuite.QA.Tests.Test
 				}
 
 				var containerRunner = new QaContainerTestRunner(100, test);
-				containerRunner.Execute(new[] {set});
+				containerRunner.Execute(new[] { set });
 				Assert.AreEqual(1, containerRunner.Errors.Count);
 			}
 
 			{
-				IQueryFilter filter = new QueryFilterClass {WhereClause = "ObjectId > 3"};
+				IQueryFilter filter = new QueryFilterClass { WhereClause = "ObjectId > 3" };
 				ISelectionSet set = fc.Select(
 					filter, esriSelectionType.esriSelectionTypeIDSet,
 					esriSelectionOption.esriSelectionOptionNormal, null);
@@ -246,7 +245,7 @@ namespace ProSuite.QA.Tests.Test
 				}
 
 				var containerRunner = new QaContainerTestRunner(100, test);
-				containerRunner.Execute(new[] {set});
+				containerRunner.Execute(new[] { set });
 				Assert.AreEqual(0, containerRunner.Errors.Count);
 			}
 		}

@@ -1,9 +1,9 @@
 using System;
 using System.Diagnostics;
 using System.Globalization;
-using ProSuite.QA.Tests.KeySets;
 using NUnit.Framework;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.QA.Tests.KeySets;
 using Tuple = ProSuite.QA.Tests.KeySets.Tuple;
 
 namespace ProSuite.QA.Tests.Test.KeySets

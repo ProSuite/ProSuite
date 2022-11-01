@@ -1,10 +1,9 @@
-
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.AO.Licensing;
+using ProSuite.Commons.AO.Test;
 using ProSuite.QA.Container.Test;
 using ProSuite.QA.Tests.Test.Construction;
 using ProSuite.QA.Tests.Test.TestRunners;
@@ -14,18 +13,16 @@ namespace ProSuite.QA.Tests.Test
 	[TestFixture]
 	public class QaInteriorIntersectsSelfTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
-
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout();
+			TestUtils.InitializeLicense();
 		}
 
 		[OneTimeTearDown]
 		public void TeardownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		[Test]
@@ -34,7 +31,7 @@ namespace ProSuite.QA.Tests.Test
 			IFeatureWorkspace ws = TestWorkspaceUtils.CreateInMemoryWorkspace("intersect");
 
 			ISpatialReference sref = SpatialReferenceUtils.CreateSpatialReference(
-				(int)esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95, true);
+				(int) esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95, true);
 			SpatialReferenceUtils.SetXYDomain(sref, -10000, -10000, 10000, 10000,
 			                                  0.0001, 0.001);
 
@@ -45,7 +42,6 @@ namespace ProSuite.QA.Tests.Test
 
 			IFeatureClass fc =
 				DatasetUtils.CreateSimpleFeatureClass(ws, "TestNoGaps", fields);
-
 
 			{
 				IFeature row = fc.CreateFeature();
@@ -72,5 +68,4 @@ namespace ProSuite.QA.Tests.Test
 			runner.Execute();
 		}
 	}
-
 }

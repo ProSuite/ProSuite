@@ -5,14 +5,14 @@ using System.Net;
 using System.Threading;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container.Test;
-using ProSuite.QA.Tests.Test.TestRunners;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.AO.Licensing;
+using ProSuite.Commons.AO.Test;
 using ProSuite.Commons.AO.Test.TestSupport;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.QA.Container.Test;
+using ProSuite.QA.Tests.Test.TestRunners;
 using Path = System.IO.Path;
 
 namespace ProSuite.QA.Tests.Test
@@ -20,7 +20,6 @@ namespace ProSuite.QA.Tests.Test
 	[TestFixture]
 	public class QaValidUrlsTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
 		private int _webRequestCounts;
 		private IFeatureWorkspace _testWs;
 		private int _sleepMilliseconds;
@@ -42,7 +41,7 @@ namespace ProSuite.QA.Tests.Test
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout();
+			TestUtils.InitializeLicense();
 
 			_testWs = TestWorkspaceUtils.CreateInMemoryWorkspace("QaValidUrlsTest");
 		}
@@ -50,7 +49,7 @@ namespace ProSuite.QA.Tests.Test
 		[OneTimeTearDown]
 		public void TearDownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		[Test]

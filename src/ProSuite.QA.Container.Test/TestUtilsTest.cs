@@ -1,27 +1,24 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.AO.Licensing;
 
 namespace ProSuite.QA.Container.Test
 {
 	[TestFixture]
 	public class TestUtilsTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
-
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout();
+			Commons.AO.Test.TestUtils.InitializeLicense();
 		}
 
 		[OneTimeTearDown]
 		public void TearDownFixture()
 		{
-			_lic.Release();
+			Commons.AO.Test.TestUtils.ReleaseLicense();
 		}
 
 		[Test]
@@ -41,7 +38,7 @@ namespace ProSuite.QA.Container.Test
 			SpatialReferenceUtils.SetXYDomain(sref3, 0, 0, 1000, 1000, maxRes * 10,
 			                                  0.001);
 
-			var spatialReferences = new List<ISpatialReference> {sref1, sref2, sref3};
+			var spatialReferences = new List<ISpatialReference> { sref1, sref2, sref3 };
 
 			ISpatialReference uniqueSpatialReference =
 				TestUtils.GetUniqueSpatialReference(
@@ -71,7 +68,7 @@ namespace ProSuite.QA.Container.Test
 			                                  0.001);
 			SpatialReferenceUtils.SetXYDomain(sref3, 0, 0, 1000, 1000, maxRes, 0.0001);
 
-			var spatialReferences = new List<ISpatialReference> {sref1, sref2, sref3};
+			var spatialReferences = new List<ISpatialReference> { sref1, sref2, sref3 };
 
 			ISpatialReference uniqueSpatialReference =
 				TestUtils.GetUniqueSpatialReference(
@@ -98,7 +95,7 @@ namespace ProSuite.QA.Container.Test
 			SpatialReferenceUtils.SetXYDomain(sref2, 0, 0, 1000, 1000, 0.00001, 0.0001);
 			SpatialReferenceUtils.SetXYDomain(sref3, 0, 0, 1000, 1000, 0.0001, 0.001);
 
-			var spatialReferences = new List<ISpatialReference> {sref1, sref2, sref3};
+			var spatialReferences = new List<ISpatialReference> { sref1, sref2, sref3 };
 
 			string exception = null;
 			try
@@ -129,7 +126,7 @@ namespace ProSuite.QA.Container.Test
 			SpatialReferenceUtils.SetXYDomain(sref2, 0, 0, 1000, 1000, 0.00001, 0.0001);
 			SpatialReferenceUtils.SetXYDomain(sref3, 0, 0, 1000, 1000, 0.0001, 0.001);
 
-			var spatialReferences = new List<ISpatialReference> {sref1, sref2, sref3};
+			var spatialReferences = new List<ISpatialReference> { sref1, sref2, sref3 };
 
 			string exception = null;
 			try

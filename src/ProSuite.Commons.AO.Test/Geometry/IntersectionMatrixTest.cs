@@ -10,13 +10,12 @@ namespace ProSuite.Commons.AO.Test.Geometry
 	[TestFixture]
 	public class IntersectionMatrixTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
 		private ISpatialReference _spatialReference;
 
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout();
+			TestUtils.InitializeLicense();
 
 			_spatialReference =
 				SpatialReferenceUtils.CreateSpatialReference(
@@ -33,7 +32,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 		[OneTimeTearDown]
 		public void TeardownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		[Test]

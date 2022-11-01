@@ -4,7 +4,6 @@ using System.Globalization;
 using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.QA.Container.Test
@@ -12,18 +11,16 @@ namespace ProSuite.QA.Container.Test
 	[TestFixture]
 	public class GeometryConstraintTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
-
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout();
+			Commons.AO.Test.TestUtils.InitializeLicense();
 		}
 
 		[OneTimeTearDown]
 		public void TearDownFixture()
 		{
-			_lic.Release();
+			Commons.AO.Test.TestUtils.ReleaseLicense();
 		}
 
 		[Test]
@@ -31,7 +28,7 @@ namespace ProSuite.QA.Container.Test
 		{
 			IPolygon polygon =
 				GeometryFactory.CreatePolygon(GeometryFactory.CreateEnvelope(0, 0, 10, 10,
-				                                                             100, 100));
+					                              100, 100));
 
 			IMultiPatch multiPatch = GeometryFactory.CreateMultiPatch(polygon, 10);
 			multiPatch.SpatialReference = CreateSpatialReference();

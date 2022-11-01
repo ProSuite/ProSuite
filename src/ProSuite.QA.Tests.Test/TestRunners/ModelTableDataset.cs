@@ -1,4 +1,3 @@
-
 using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.QA.Tests.Test.TestRunners

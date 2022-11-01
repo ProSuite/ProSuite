@@ -6,7 +6,6 @@ using NUnit.Framework;
 using ProSuite.Commons;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.AO.Test.TestSupport;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.Test;
@@ -19,27 +18,16 @@ namespace ProSuite.QA.Tests.Test
 	[TestFixture]
 	public class QaNonEmptyGeometryTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
-
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			if (EnvironmentUtils.Is64BitProcess)
-			{
-				// Server
-				_lic.Checkout();
-			}
-			else
-			{
-				// Creating FeataureClasses requires standard
-				_lic.Checkout(EsriProduct.ArcEditor);
-			}
+			TestUtils.InitializeLicense(EnvironmentUtils.Is64BitProcess);
 		}
 
 		[OneTimeTearDown]
 		public void TearDownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		[Test]
@@ -128,7 +116,8 @@ namespace ProSuite.QA.Tests.Test
 			feature.Store();
 
 			const bool dontFilterPolycurvesByZeroLength = true;
-			var test = new QaNonEmptyGeometry(ReadOnlyTableFactory.Create(fc), dontFilterPolycurvesByZeroLength);
+			var test = new QaNonEmptyGeometry(ReadOnlyTableFactory.Create(fc),
+			                                  dontFilterPolycurvesByZeroLength);
 
 			var runner = new QaTestRunner(test);
 			runner.Execute(feature);
@@ -171,10 +160,10 @@ namespace ProSuite.QA.Tests.Test
 			IMultiPatch normalGeometry = GeometryFactory.CreateMultiPatch(
 				GeometryFactory.CreateRing(new[]
 				                           {
-					                           new WKSPointZ {X = 2600000, Y = 1200000, Z = 400},
-					                           new WKSPointZ {X = 2600000, Y = 1200100, Z = 400},
-					                           new WKSPointZ {X = 2600100, Y = 1200000, Z = 400},
-					                           new WKSPointZ {X = 2600000, Y = 1200000, Z = 400},
+					                           new WKSPointZ { X = 2600000, Y = 1200000, Z = 400 },
+					                           new WKSPointZ { X = 2600000, Y = 1200100, Z = 400 },
+					                           new WKSPointZ { X = 2600100, Y = 1200000, Z = 400 },
+					                           new WKSPointZ { X = 2600000, Y = 1200000, Z = 400 },
 				                           }));
 
 			GeometryUtils.MakeZAware(normalGeometry);
@@ -193,10 +182,10 @@ namespace ProSuite.QA.Tests.Test
 			//IWorkspace workspace = ProSuite.Commons.AO.Test.TestUtils.OpenSDEWorkspaceOracle();
 
 			IPolyline normalGeometry = GeometryFactory.CreatePolyline(
-				GeometryFactory.CreatePath(new PointClass {X = 2600000, Y = 1200000, Z = 400},
-				                           new PointClass {X = 2600000, Y = 1200100, Z = 400},
-				                           new PointClass {X = 2600100, Y = 1200000, Z = 400},
-				                           new PointClass {X = 2600000, Y = 1200000, Z = 400}));
+				GeometryFactory.CreatePath(new PointClass { X = 2600000, Y = 1200000, Z = 400 },
+				                           new PointClass { X = 2600000, Y = 1200100, Z = 400 },
+				                           new PointClass { X = 2600100, Y = 1200000, Z = 400 },
+				                           new PointClass { X = 2600000, Y = 1200000, Z = 400 }));
 
 			GeometryUtils.MakeZAware(normalGeometry);
 

@@ -6,7 +6,7 @@ using NUnit.Framework;
 using ProSuite.Commons.AO;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.AO.Licensing;
+using ProSuite.Commons.AO.Test;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container.Test;
 using ProSuite.QA.Tests.Test.TestData;
@@ -17,14 +17,13 @@ namespace ProSuite.QA.Tests.Test
 	[TestFixture]
 	public class QaUniqueTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
 		private IFeatureWorkspace _pgdbWorkspace;
 		private IFeatureWorkspace _fgdbWorkspace;
 
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout(EsriProduct.ArcEditor);
+			TestUtils.InitializeLicense();
 
 			const string databaseName = "TestUnique";
 
@@ -35,7 +34,7 @@ namespace ProSuite.QA.Tests.Test
 		[OneTimeTearDown]
 		public void TeardownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		[Test]
@@ -99,7 +98,7 @@ namespace ProSuite.QA.Tests.Test
 
 			IEnvelope testEnvelope = GeometryFactory.CreateEnvelope(0, 0, 200, 200, sref);
 
-			foreach (bool forceInMemoryTableSort in new[] {false, true})
+			foreach (bool forceInMemoryTableSort in new[] { false, true })
 			{
 				var test = new QaUnique(ReadOnlyTableFactory.Create(featureClass), "Unique")
 				           {
@@ -171,7 +170,7 @@ namespace ProSuite.QA.Tests.Test
 
 			IEnvelope testEnvelope = GeometryFactory.CreateEnvelope(0, 0, 200, 200, sref);
 
-			foreach (bool forceInMemoryTableSort in new[] {true, false})
+			foreach (bool forceInMemoryTableSort in new[] { true, false })
 			{
 				var test = new QaUnique(
 					           ReadOnlyTableFactory.Create(featureClass), "Unique", maxRows: 200)
@@ -263,12 +262,15 @@ namespace ProSuite.QA.Tests.Test
 				emptyFeature.Store();
 			}
 
-			foreach (bool forceInMemoryTableSort in new[] {true, false})
+			foreach (bool forceInMemoryTableSort in new[] { true, false })
 			{
 				var test = new QaUnique(
-					           new[] { ReadOnlyTableFactory.Create(featureClass1),
-						                 ReadOnlyTableFactory.Create( featureClass2)},
-				                        new[] {"Unique", "Unique"})
+					           new[]
+					           {
+						           ReadOnlyTableFactory.Create(featureClass1),
+						           ReadOnlyTableFactory.Create(featureClass2)
+					           },
+					           new[] { "Unique", "Unique" })
 				           {
 					           ForceInMemoryTableSorting = forceInMemoryTableSort
 				           };
@@ -316,7 +318,7 @@ namespace ProSuite.QA.Tests.Test
 				emptyFeature.Store();
 			}
 
-			foreach (bool forceInMemoryTableSort in new[] {true, false})
+			foreach (bool forceInMemoryTableSort in new[] { true, false })
 			{
 				var test = new QaUnique(ReadOnlyTableFactory.Create(featureClass1), "UniqueValue")
 				           {
@@ -364,7 +366,7 @@ namespace ProSuite.QA.Tests.Test
 			validRow.set_Value(1, 12);
 			validRow.Store();
 
-			foreach (bool forceInMemoryTableSort in new[] {true, false})
+			foreach (bool forceInMemoryTableSort in new[] { true, false })
 			{
 				// init Test
 				var test = new QaUnique(ReadOnlyTableFactory.Create(table), "Unique")
@@ -379,17 +381,17 @@ namespace ProSuite.QA.Tests.Test
 
 				// Run valid row
 				runner = new QaTestRunner(test);
-				runner.Execute(new[] {validRow});
+				runner.Execute(new[] { validRow });
 				AssertUtils.NoError(runner);
 
 				// Run error row
 				runner = new QaTestRunner(test);
-				runner.Execute(new[] {errorRow});
+				runner.Execute(new[] { errorRow });
 				Assert.AreEqual(3, runner.Errors.Count); // '5' exists in 3 rows
 
 				// Run combined
 				runner = new QaTestRunner(test);
-				runner.Execute(new[] {validRow, errorRow});
+				runner.Execute(new[] { validRow, errorRow });
 				Assert.AreEqual(3, runner.Errors.Count);
 			}
 		}
@@ -565,7 +567,8 @@ namespace ProSuite.QA.Tests.Test
 			//IWorkspace ws = TestDataUtils.OpenTopgisTlm();
 			//ITable table = ((IFeatureWorkspace) ws).OpenTable("TOPGIS_TLM.TLM_STRASSE");
 			var test = new QaUnique(
-				new[] { ReadOnlyTableFactory.Create(table), ReadOnlyTableFactory.Create(table2)}, new[] {"UUID", "UUID2"});
+				new[] { ReadOnlyTableFactory.Create(table), ReadOnlyTableFactory.Create(table2) },
+				new[] { "UUID", "UUID2" });
 
 			var runner = new QaTestRunner(test);
 			runner.Execute();
@@ -586,8 +589,8 @@ namespace ProSuite.QA.Tests.Test
 
 			//var test = new QaUnique(new[] { table, table2 }, new[] { "OBJECTID,UUID", "OID_COPY,UUID" });
 			var test = new QaUnique(
-				new[] { ReadOnlyTableFactory.Create(table2), ReadOnlyTableFactory.Create(table)},
-			                        new[] {"Uuid,Oid_COPY", "UUID,OBJECTID"});
+				new[] { ReadOnlyTableFactory.Create(table2), ReadOnlyTableFactory.Create(table) },
+				new[] { "Uuid,Oid_COPY", "UUID,OBJECTID" });
 			test.SetConstraint(0, "OBJECTID < 1052400");
 			test.SetConstraint(1, "OBJECTID < 1052400");
 
@@ -611,7 +614,8 @@ namespace ProSuite.QA.Tests.Test
 
 			//var test = new QaUnique(new[] { table, table2 }, new[] { "OBJECTID,UUID", "OID_COPY,UUID" });
 			var test = new QaUnique(
-				new[] { ReadOnlyTableFactory.Create(table), ReadOnlyTableFactory.Create(table2)}, new[] {"Uuid"});
+				new[] { ReadOnlyTableFactory.Create(table), ReadOnlyTableFactory.Create(table2) },
+				new[] { "Uuid" });
 
 			var runner = new QaTestRunner(test);
 			runner.Execute();
@@ -647,7 +651,8 @@ namespace ProSuite.QA.Tests.Test
 			//IWorkspace ws = TestDataUtils.OpenTopgisTlm();
 			//ITable table = ((IFeatureWorkspace) ws).OpenTable("TOPGIS_TLM.TLM_STRASSE");
 			var test = new QaUnique(
-				new[] { ReadOnlyTableFactory.Create(table), ReadOnlyTableFactory.Create(table2)}, new[] {"UUID", "UUID2"});
+				new[] { ReadOnlyTableFactory.Create(table), ReadOnlyTableFactory.Create(table2) },
+				new[] { "UUID", "UUID2" });
 
 			var runner = new QaTestRunner(test);
 			runner.Execute();
@@ -684,7 +689,8 @@ namespace ProSuite.QA.Tests.Test
 			//IWorkspace ws = TestDataUtils.OpenTopgisTlm();
 			//ITable table = ((IFeatureWorkspace) ws).OpenTable("TOPGIS_TLM.TLM_STRASSE");
 			var test = new QaUnique(
-				new[] { ReadOnlyTableFactory.Create(table), ReadOnlyTableFactory.Create(table2)}, new[] {"UUID", "UUID2"});
+				new[] { ReadOnlyTableFactory.Create(table), ReadOnlyTableFactory.Create(table2) },
+				new[] { "UUID", "UUID2" });
 
 			var runner = new QaTestRunner(test);
 			runner.Execute();
@@ -745,10 +751,11 @@ namespace ProSuite.QA.Tests.Test
 
 			ITable relTab = TableJoinUtils.CreateQueryTable(rel, JoinType.InnerJoin);
 
-			foreach (bool forceInMemoryTableSort in new[] {true, false})
+			foreach (bool forceInMemoryTableSort in new[] { true, false })
 			{
 				var test = new QaUnique(
-					           ReadOnlyTableFactory.Create(relTab), "RelateUnique1." + uniqueFieldName)
+					           ReadOnlyTableFactory.Create(relTab),
+					           "RelateUnique1." + uniqueFieldName)
 				           {
 					           ForceInMemoryTableSorting = forceInMemoryTableSort
 				           };
@@ -804,10 +811,11 @@ namespace ProSuite.QA.Tests.Test
 
 			ITable relTab = TableJoinUtils.CreateQueryTable(rel, JoinType.InnerJoin);
 
-			foreach (bool forceInMemoryTableSort in new[] {true, false})
+			foreach (bool forceInMemoryTableSort in new[] { true, false })
 			{
 				var test = new QaUnique(
-					           ReadOnlyTableFactory.Create(relTab), "Relate1NUnique1." + uniqueFieldName)
+					           ReadOnlyTableFactory.Create(relTab),
+					           "Relate1NUnique1." + uniqueFieldName)
 				           {
 					           ForceInMemoryTableSorting = forceInMemoryTableSort
 				           };
@@ -875,7 +883,7 @@ namespace ProSuite.QA.Tests.Test
 
 			ITable relTab = TableJoinUtils.CreateQueryTable(rel, JoinType.InnerJoin);
 
-			foreach (bool forceInMemoryTableSort in new[] {true, false})
+			foreach (bool forceInMemoryTableSort in new[] { true, false })
 			{
 				var test = new QaUnique(
 					           ReadOnlyTableFactory.Create(relTab), "Relate1NNonUnique1.Unique")
@@ -884,7 +892,11 @@ namespace ProSuite.QA.Tests.Test
 				           };
 
 				test.SetRelatedTables(
-					new[] { ReadOnlyTableFactory.Create(tableOrig), ReadOnlyTableFactory.Create(tableRel)});
+					new[]
+					{
+						ReadOnlyTableFactory.Create(tableOrig),
+						ReadOnlyTableFactory.Create(tableRel)
+					});
 
 				var runner = new QaTestRunner(test);
 				runner.Execute();
@@ -972,16 +984,21 @@ namespace ProSuite.QA.Tests.Test
 
 			ITable relTab = TableJoinUtils.CreateQueryTable(relClass, JoinType.InnerJoin);
 
-			foreach (bool forceInMemoryTableSort in new[] {true, false})
+			foreach (bool forceInMemoryTableSort in new[] { true, false })
 			{
 				var test = new QaUnique(
-					           ReadOnlyTableFactory.Create(relTab), origTableName + "." + uniqueFieldName)
+					           ReadOnlyTableFactory.Create(relTab),
+					           origTableName + "." + uniqueFieldName)
 				           {
 					           ForceInMemoryTableSorting = forceInMemoryTableSort
 				           };
 
 				test.SetRelatedTables(
-					new[] { ReadOnlyTableFactory.Create(originTable), ReadOnlyTableFactory.Create(destinationTable)});
+					new[]
+					{
+						ReadOnlyTableFactory.Create(originTable),
+						ReadOnlyTableFactory.Create(destinationTable)
+					});
 
 				var runner = new QaTestRunner(test);
 				runner.Execute();

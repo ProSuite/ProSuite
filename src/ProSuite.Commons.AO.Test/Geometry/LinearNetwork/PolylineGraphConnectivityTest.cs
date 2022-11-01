@@ -4,7 +4,6 @@ using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Geometry.LinearNetwork.ShortestPath;
-using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.AO.Test.TestSupport;
 
 namespace ProSuite.Commons.AO.Test.Geometry.LinearNetwork
@@ -12,23 +11,18 @@ namespace ProSuite.Commons.AO.Test.Geometry.LinearNetwork
 	[TestFixture]
 	public class PolylineGraphConnectivityTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
-
 		#region Setup/Teardown
-
-		[SetUp]
-		public void SetUp() { }
 
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout();
+			TestUtils.InitializeLicense();
 		}
 
 		[OneTimeTearDown]
 		public void TeardownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		#endregion

@@ -29,7 +29,7 @@ namespace ProSuite.QA.Tests.Test
 			string offset = string.Format(formatProvider, "{0}", value);
 
 			OffsetSpecification offsetSpecification = OffsetSpecification.Parse(offset,
-			                                                                    formatProvider);
+				formatProvider);
 
 			Assert.IsNotNull(offsetSpecification);
 
@@ -47,7 +47,7 @@ namespace ProSuite.QA.Tests.Test
 			string offset = string.Format(formatProvider, "-{0}", value);
 
 			OffsetSpecification offsetSpecification = OffsetSpecification.Parse(offset,
-			                                                                    formatProvider);
+				formatProvider);
 
 			Assert.IsNotNull(offsetSpecification);
 
@@ -65,7 +65,7 @@ namespace ProSuite.QA.Tests.Test
 			string offset = string.Format(formatProvider, "{0}%", value);
 
 			OffsetSpecification offsetSpecification = OffsetSpecification.Parse(offset,
-			                                                                    formatProvider);
+				formatProvider);
 
 			Assert.IsNotNull(offsetSpecification);
 
@@ -83,7 +83,7 @@ namespace ProSuite.QA.Tests.Test
 			string offset = string.Format(formatProvider, "-{0}%", value);
 
 			OffsetSpecification offsetSpecification = OffsetSpecification.Parse(offset,
-			                                                                    formatProvider);
+				formatProvider);
 
 			Assert.IsNotNull(offsetSpecification);
 
@@ -101,7 +101,7 @@ namespace ProSuite.QA.Tests.Test
 			string offset = string.Format(formatProvider, " -  {0} %  ", value);
 
 			OffsetSpecification offsetSpecification = OffsetSpecification.Parse(offset,
-			                                                                    formatProvider);
+				formatProvider);
 
 			Assert.IsNotNull(offsetSpecification);
 

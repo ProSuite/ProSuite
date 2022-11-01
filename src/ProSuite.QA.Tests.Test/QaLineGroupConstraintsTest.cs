@@ -9,7 +9,6 @@ using NUnit.Framework;
 using ProSuite.Commons.AO;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
 using ProSuite.DomainModel.AO.QA;
@@ -24,13 +23,13 @@ using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.TestFactories;
 using ProSuite.QA.Tests.Test.Construction;
 using ProSuite.QA.Tests.Test.TestRunners;
+using TestUtils = ProSuite.Commons.AO.Test.TestUtils;
 
 namespace ProSuite.QA.Tests.Test
 {
 	[TestFixture]
 	public class QaLineGroupConstraintsTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
 		private IFeatureWorkspace _testWs;
 		private IFeatureWorkspace _relTestWs;
 		private ISpatialReference _spatialReference;
@@ -57,7 +56,7 @@ namespace ProSuite.QA.Tests.Test
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout();
+			TestUtils.InitializeLicense();
 
 			_spatialReference = CreateLV95();
 			_testWs = TestWorkspaceUtils.CreateInMemoryWorkspace(
@@ -67,7 +66,7 @@ namespace ProSuite.QA.Tests.Test
 		[OneTimeTearDown]
 		public void TeardownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		[Test]
@@ -619,7 +618,7 @@ namespace ProSuite.QA.Tests.Test
 				fields.AddField(FieldUtils.CreateTextField(_textFieldName, 200));
 
 				ITable grpTable = TestWorkspaceUtils.CreateSimpleTable(_testWs, "Rel_" + ds1.Name,
-				                                                       fields, null);
+					fields, null);
 
 				var dsRel = (IDataset) grpTable;
 
@@ -651,8 +650,8 @@ namespace ProSuite.QA.Tests.Test
 
 				string groupBy = string.Format("{0}.{1}", dsRel.Name, _textFieldName);
 				var test = new QaLineGroupConstraints(
-					new[] { ReadOnlyTableFactory.Create(queryFeatureClass)}, 2, 6, 2,
-				                                      new[] {groupBy});
+					new[] { ReadOnlyTableFactory.Create(queryFeatureClass) }, 2, 6, 2,
+					new[] { groupBy });
 
 				AssertErrors(1, Run(test, 1000));
 			}
@@ -682,7 +681,7 @@ namespace ProSuite.QA.Tests.Test
 				fields.AddField(FieldUtils.CreateTextField(_textFieldName, 200));
 
 				ITable relTable = TestWorkspaceUtils.CreateSimpleTable(_testWs, "Rel_" + ds1.Name,
-				                                                       fields);
+					fields);
 
 				var dsRel = (IDataset) relTable;
 
@@ -760,7 +759,7 @@ namespace ProSuite.QA.Tests.Test
 				fields.AddField(FieldUtils.CreateTextField(_textFieldName, 200));
 
 				ITable relTable = TestWorkspaceUtils.CreateSimpleTable(_testWs, "Rel_" + ds1.Name,
-				                                                       fields, null);
+					fields, null);
 
 				var dsRel = (IDataset) relTable;
 
@@ -1174,7 +1173,7 @@ namespace ProSuite.QA.Tests.Test
 				condition, "groupBy",
 				string.Format("{0}", "TOPGIS_TLM.TLM_STRASSENROUTE.OBJECTID"));
 			InstanceConfigurationUtils.AddParameterValue(condition, "GroupCondition",
-			                                                 "TOPGIS_TLM.TLM_STRASSENROUTE.OBJECTID IS NOT NULL");
+			                                             "TOPGIS_TLM.TLM_STRASSENROUTE.OBJECTID IS NOT NULL");
 			InstanceConfigurationUtils.AddParameterValue(condition, "MinGapToOtherGroup", 10);
 
 			var fact = new QaRelLineGroupConstraints();
@@ -1184,7 +1183,7 @@ namespace ProSuite.QA.Tests.Test
 				fact.CreateTests(new SimpleDatasetOpener(model.MasterDatabaseWorkspaceContext));
 			Assert.AreEqual(1, tests.Count);
 
-			var testContainer = new TestContainer {TileSize = 10000};
+			var testContainer = new TestContainer { TileSize = 10000 };
 			testContainer.AddTest(tests[0]);
 
 			IFieldsEdit fields = new FieldsClass();
@@ -1443,7 +1442,7 @@ namespace ProSuite.QA.Tests.Test
 			InstanceConfigurationUtils.AddParameterValue(
 				condition, "groupBy", string.Format("{0}", "TOPGIS_TLM.TLM_WANDERWEG.OBJEKTART"));
 			InstanceConfigurationUtils.AddParameterValue(condition, "GroupCondition",
-			                                                 "TOPGIS_TLM.TLM_WANDERWEG.OBJEKTART IS NOT NULL");
+			                                             "TOPGIS_TLM.TLM_WANDERWEG.OBJEKTART IS NOT NULL");
 			InstanceConfigurationUtils.AddParameterValue(condition, "MinGapToOtherGroup", 10);
 
 			var fact = new QaRelLineGroupConstraints();
@@ -1453,7 +1452,7 @@ namespace ProSuite.QA.Tests.Test
 				fact.CreateTests(new SimpleDatasetOpener(model.MasterDatabaseWorkspaceContext));
 			Assert.AreEqual(1, tests.Count);
 
-			var testContainer = new TestContainer {TileSize = 20000};
+			var testContainer = new TestContainer { TileSize = 20000 };
 			testContainer.AddTest(tests[0]);
 
 			IFieldsEdit fields = new FieldsClass();
@@ -1534,7 +1533,7 @@ namespace ProSuite.QA.Tests.Test
 				fact.CreateTests(new SimpleDatasetOpener(model.MasterDatabaseWorkspaceContext));
 			Assert.AreEqual(1, tests.Count);
 
-			var testContainer = new TestContainer {TileSize = 10000};
+			var testContainer = new TestContainer { TileSize = 10000 };
 			testContainer.AddTest(tests[0]);
 
 			IFieldsEdit fields = new FieldsClass();

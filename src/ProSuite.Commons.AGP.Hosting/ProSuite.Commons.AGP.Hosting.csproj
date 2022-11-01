@@ -40,4 +40,17 @@
   <ItemGroup>
     <None Include="README.md" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj" />
+    <ProjectReference Include="..\ProSuite.Commons.Logging\ProSuite.Commons.Logging.csproj" />
+  </ItemGroup>
+
+
+  <!-- License files: -->
+  <ItemGroup>
+    <Content Include="..\..\lib\licenses\Esri.CommunitySamples.license.txt">
+      <Link>Licenses\Esri.CommunitySamples.license.txt</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
 </Project>

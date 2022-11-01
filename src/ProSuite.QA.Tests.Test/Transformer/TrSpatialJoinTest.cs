@@ -5,31 +5,29 @@ using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.AO.Licensing;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.Test;
 using ProSuite.QA.Tests.IssueFilters;
 using ProSuite.QA.Tests.Test.Construction;
 using ProSuite.QA.Tests.Test.TestRunners;
 using ProSuite.QA.Tests.Transformers;
+using TestUtils = ProSuite.Commons.AO.Test.TestUtils;
 
 namespace ProSuite.QA.Tests.Test.Transformer
 {
 	[TestFixture]
 	public class TrSpatialJoinTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
-
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout();
+			TestUtils.InitializeLicense();
 		}
 
 		[OneTimeTearDown]
 		public void TearDownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		[Test]
@@ -70,7 +68,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				                   ReadOnlyTableFactory.Create(lineFc))
 			                   {
 				                   Grouped = true,
-				                   T1Attributes = new[] {"COUNT(OBJECTID) AS LineCount"}
+				                   T1Attributes = new[] { "COUNT(OBJECTID) AS LineCount" }
 			                   };
 
 			TransformedFeatureClass transformedClass = tr.GetTransformed();
@@ -162,7 +160,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				     ReadOnlyTableFactory.Create(polyFc))
 			     {
 				     Grouped = true,
-				     T1Attributes = new[] {"COUNT(OBJECTID) AS PolyCount"},
+				     T1Attributes = new[] { "COUNT(OBJECTID) AS PolyCount" },
 				     OuterJoin = true
 			     };
 
@@ -199,11 +197,11 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			IFeatureClass lineFc =
 				CreateFeatureClass(
 					ws, "lineFc", esriGeometryType.esriGeometryPolyline,
-					new[] {FieldUtils.CreateIntegerField("Nr")});
+					new[] { FieldUtils.CreateIntegerField("Nr") });
 			IFeatureClass polyFc =
 				CreateFeatureClass(
 					ws, "polyFc", esriGeometryType.esriGeometryPolygon,
-					new[] {FieldUtils.CreateIntegerField("Nr")});
+					new[] { FieldUtils.CreateIntegerField("Nr") });
 			{
 				IFeature f = lineFc.CreateFeature();
 				f.Value[1] = 12;
@@ -234,7 +232,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			TrSpatialJoin tr = new TrSpatialJoin(
 				                   ReadOnlyTableFactory.Create(polyFc),
 				                   ReadOnlyTableFactory.Create(lineFc))
-			                   {Grouped = false};
+			                   { Grouped = false };
 
 			tr.T0Attributes = new List<string>
 			                  {
@@ -273,7 +271,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				ft.SetIssueFilters(
 					"filter",
 					new List<IIssueFilter>
-					{new IfInvolvedRows("liNR + Nr = 20") {Name = "filter"}});
+					{ new IfInvolvedRows("liNR + Nr = 20") { Name = "filter" } });
 				var runner = new QaContainerTestRunner(1000, test);
 				runner.Execute();
 				Assert.AreEqual(2, runner.Errors.Count);
@@ -288,11 +286,11 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			IFeatureClass lineFc =
 				CreateFeatureClass(
 					ws, "lineFc", esriGeometryType.esriGeometryPolyline,
-					new[] {FieldUtils.CreateIntegerField("Nr")});
+					new[] { FieldUtils.CreateIntegerField("Nr") });
 			IFeatureClass polyFc =
 				CreateFeatureClass(
 					ws, "polyFc", esriGeometryType.esriGeometryPolygon,
-					new[] {FieldUtils.CreateIntegerField("Nr")});
+					new[] { FieldUtils.CreateIntegerField("Nr") });
 			{
 				IFeature f = lineFc.CreateFeature();
 				f.Value[1] = 12;
@@ -323,7 +321,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			TrSpatialJoin tr = new TrSpatialJoin(
 				                   ReadOnlyTableFactory.Create(polyFc),
 				                   ReadOnlyTableFactory.Create(lineFc))
-			                   {Grouped = false};
+			                   { Grouped = false };
 
 			// NOTE: Cross-Field Calculations are only supported on t1 and only for
 			//       pre-existing fields!
@@ -350,7 +348,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				ft.SetIssueFilters(
 					"filter",
 					new List<IIssueFilter>
-					{new IfInvolvedRows("lineFc_NR + polyFc_Nr = 20") {Name = "filter"}});
+					{ new IfInvolvedRows("lineFc_NR + polyFc_Nr = 20") { Name = "filter" } });
 				var runner = new QaContainerTestRunner(1000, test);
 				runner.Execute();
 				Assert.AreEqual(2, runner.Errors.Count);

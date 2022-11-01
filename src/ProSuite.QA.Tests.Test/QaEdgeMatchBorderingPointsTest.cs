@@ -3,21 +3,20 @@ using System.Collections.Generic;
 using System.Threading;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container;
-using ProSuite.QA.Container.Test;
-using ProSuite.QA.Tests.Test.TestRunners;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.QA.Container;
+using ProSuite.QA.Container.Test;
+using ProSuite.QA.Tests.Test.TestRunners;
+using TestUtils = ProSuite.Commons.AO.Test.TestUtils;
 
 namespace ProSuite.QA.Tests.Test
 {
 	[TestFixture]
 	public class QaEdgeMatchBorderingPointsTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
 		private IFeatureWorkspace _featureWorkspace;
 		private ISpatialReference _spatialReference;
 		private const string _issueCodePrefix = "BorderingPoints.";
@@ -29,7 +28,7 @@ namespace ProSuite.QA.Tests.Test
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout();
+			TestUtils.InitializeLicense();
 
 			_spatialReference = CreateLV95();
 			_featureWorkspace = TestWorkspaceUtils.CreateInMemoryWorkspace(
@@ -39,7 +38,7 @@ namespace ProSuite.QA.Tests.Test
 		[OneTimeTearDown]
 		public void TeardownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		[Test]
@@ -61,9 +60,11 @@ namespace ProSuite.QA.Tests.Test
 			AddPointFeature(fcPoint2, 5, 0, stateId: "B");
 
 			var test = new QaEdgeMatchBorderingPoints(
-				           ReadOnlyTableFactory.Create(fcPoint1), ReadOnlyTableFactory.Create(fcBorder1),
-				           ReadOnlyTableFactory.Create(fcPoint2), ReadOnlyTableFactory.Create(fcBorder2),
-				                                       searchDistance: 0.5)
+				           ReadOnlyTableFactory.Create(fcPoint1),
+				           ReadOnlyTableFactory.Create(fcBorder1),
+				           ReadOnlyTableFactory.Create(fcPoint2),
+				           ReadOnlyTableFactory.Create(fcBorder2),
+				           searchDistance: 0.5)
 			           {
 				           PointClass1BorderMatchCondition = "POINT.STATE = BORDER.STATE",
 				           PointClass2BorderMatchCondition = "POINT.STATE = BORDER.STATE",
@@ -93,9 +94,11 @@ namespace ProSuite.QA.Tests.Test
 			AddPointFeature(fcPoint2, 5, 0, "B", "X#Y", 10.002, dateValue);
 
 			var test = new QaEdgeMatchBorderingPoints(
-				           ReadOnlyTableFactory.Create(fcPoint1), ReadOnlyTableFactory.Create(fcBorder1),
-				           ReadOnlyTableFactory.Create(fcPoint2), ReadOnlyTableFactory.Create(fcBorder2),
-				                                       searchDistance: 0.5)
+				           ReadOnlyTableFactory.Create(fcPoint1),
+				           ReadOnlyTableFactory.Create(fcBorder1),
+				           ReadOnlyTableFactory.Create(fcPoint2),
+				           ReadOnlyTableFactory.Create(fcBorder2),
+				           searchDistance: 0.5)
 			           {
 				           PointClass1BorderMatchCondition = "POINT.STATE = BORDER.STATE",
 				           PointClass2BorderMatchCondition = "POINT.STATE = BORDER.STATE",
@@ -129,9 +132,11 @@ namespace ProSuite.QA.Tests.Test
 			using (AssertUtils.UseInvariantCulture())
 			{
 				var test = new QaEdgeMatchBorderingPoints(
-					           ReadOnlyTableFactory.Create(fcPoint1), ReadOnlyTableFactory.Create(fcBorder1),
-					           ReadOnlyTableFactory.Create(fcPoint2), ReadOnlyTableFactory.Create(fcBorder2),
-					                                       searchDistance: 0.5)
+					           ReadOnlyTableFactory.Create(fcPoint1),
+					           ReadOnlyTableFactory.Create(fcBorder1),
+					           ReadOnlyTableFactory.Create(fcPoint2),
+					           ReadOnlyTableFactory.Create(fcBorder2),
+					           searchDistance: 0.5)
 				           {
 					           PointClass1BorderMatchCondition = "POINT.STATE = BORDER.STATE",
 					           PointClass2BorderMatchCondition = "POINT.STATE = BORDER.STATE",
@@ -170,9 +175,11 @@ namespace ProSuite.QA.Tests.Test
 			AddPointFeature(fcPoint1, 5, 0, stateId: "A");
 
 			var test = new QaEdgeMatchBorderingPoints(
-				           ReadOnlyTableFactory.Create(fcPoint1), ReadOnlyTableFactory.Create(fcBorder1),
-				           ReadOnlyTableFactory.Create(fcPoint2), ReadOnlyTableFactory.Create(fcBorder2),
-				                                       searchDistance: 0.5)
+				           ReadOnlyTableFactory.Create(fcPoint1),
+				           ReadOnlyTableFactory.Create(fcBorder1),
+				           ReadOnlyTableFactory.Create(fcPoint2),
+				           ReadOnlyTableFactory.Create(fcBorder2),
+				           searchDistance: 0.5)
 			           {
 				           PointClass1BorderMatchCondition = "POINT.STATE = BORDER.STATE",
 				           PointClass2BorderMatchCondition = "POINT.STATE = BORDER.STATE",
@@ -199,9 +206,11 @@ namespace ProSuite.QA.Tests.Test
 			AddPointFeature(fcPoint1, 5, 0, stateId: "A");
 
 			var test = new QaEdgeMatchBorderingPoints(
-				           ReadOnlyTableFactory.Create(fcPoint1), ReadOnlyTableFactory.Create(fcBorder1),
-				           ReadOnlyTableFactory.Create(fcPoint2), ReadOnlyTableFactory.Create(fcBorder2),
-				                                       searchDistance: 0.5)
+				           ReadOnlyTableFactory.Create(fcPoint1),
+				           ReadOnlyTableFactory.Create(fcBorder1),
+				           ReadOnlyTableFactory.Create(fcPoint2),
+				           ReadOnlyTableFactory.Create(fcBorder2),
+				           searchDistance: 0.5)
 			           {
 				           PointClass1BorderMatchCondition = "POINT.STATE = BORDER.STATE",
 				           PointClass2BorderMatchCondition = "POINT.STATE = BORDER.STATE",
@@ -227,9 +236,11 @@ namespace ProSuite.QA.Tests.Test
 			AddPointFeature(fcPoint1, 5, 0, stateId: "B");
 
 			var test = new QaEdgeMatchBorderingPoints(
-				           ReadOnlyTableFactory.Create(fcPoint1), ReadOnlyTableFactory.Create(fcBorder1),
-				           ReadOnlyTableFactory.Create(fcPoint2), ReadOnlyTableFactory.Create(fcBorder2),
-				                                       searchDistance: 0.5)
+				           ReadOnlyTableFactory.Create(fcPoint1),
+				           ReadOnlyTableFactory.Create(fcBorder1),
+				           ReadOnlyTableFactory.Create(fcPoint2),
+				           ReadOnlyTableFactory.Create(fcBorder2),
+				           searchDistance: 0.5)
 			           {
 				           PointClass1BorderMatchCondition = "POINT.STATE = BORDER.STATE",
 				           PointClass2BorderMatchCondition = "POINT.STATE = BORDER.STATE",
@@ -258,9 +269,11 @@ namespace ProSuite.QA.Tests.Test
 			AddPointFeature(fcPoint2, 4.9, 0, stateId: "B");
 
 			var test = new QaEdgeMatchBorderingPoints(
-				           ReadOnlyTableFactory.Create(fcPoint1), ReadOnlyTableFactory.Create(fcBorder1),
-				           ReadOnlyTableFactory.Create(fcPoint2), ReadOnlyTableFactory.Create(fcBorder2),
-				                                       searchDistance: 0.5)
+				           ReadOnlyTableFactory.Create(fcPoint1),
+				           ReadOnlyTableFactory.Create(fcBorder1),
+				           ReadOnlyTableFactory.Create(fcPoint2),
+				           ReadOnlyTableFactory.Create(fcBorder2),
+				           searchDistance: 0.5)
 			           {
 				           PointClass1BorderMatchCondition = "POINT.STATE = BORDER.STATE",
 				           PointClass2BorderMatchCondition = "POINT.STATE = BORDER.STATE",
@@ -289,9 +302,11 @@ namespace ProSuite.QA.Tests.Test
 			AddPointFeature(fcPoint2, 4.9, 0, stateId: "B");
 
 			var test = new QaEdgeMatchBorderingPoints(
-				           ReadOnlyTableFactory.Create(fcPoint1), ReadOnlyTableFactory.Create(fcBorder1),
-				           ReadOnlyTableFactory.Create(fcPoint2), ReadOnlyTableFactory.Create(fcBorder2),
-				                                       searchDistance: 0.5)
+				           ReadOnlyTableFactory.Create(fcPoint1),
+				           ReadOnlyTableFactory.Create(fcBorder1),
+				           ReadOnlyTableFactory.Create(fcPoint2),
+				           ReadOnlyTableFactory.Create(fcBorder2),
+				           searchDistance: 0.5)
 			           {
 				           PointClass1BorderMatchCondition = "POINT.STATE = BORDER.STATE",
 				           PointClass2BorderMatchCondition = "POINT.STATE = BORDER.STATE",
@@ -325,9 +340,11 @@ namespace ProSuite.QA.Tests.Test
 			AddPointFeature(fcPoint2, 4.9, 0, "B", "Y", 100.00000000000001, dateValue2);
 
 			var test = new QaEdgeMatchBorderingPoints(
-				           ReadOnlyTableFactory.Create(fcPoint1), ReadOnlyTableFactory.Create(fcBorder1),
-				           ReadOnlyTableFactory.Create(fcPoint2), ReadOnlyTableFactory.Create(fcBorder2),
-				                                       searchDistance: 0.5)
+				           ReadOnlyTableFactory.Create(fcPoint1),
+				           ReadOnlyTableFactory.Create(fcBorder1),
+				           ReadOnlyTableFactory.Create(fcPoint2),
+				           ReadOnlyTableFactory.Create(fcBorder2),
+				           searchDistance: 0.5)
 			           {
 				           PointClass1BorderMatchCondition = "POINT.STATE = BORDER.STATE",
 				           PointClass2BorderMatchCondition = "POINT.STATE = BORDER.STATE",
@@ -358,9 +375,11 @@ namespace ProSuite.QA.Tests.Test
 			AddPointFeature(fcPoint2, 5, -0.1, stateId: "B");
 
 			var test = new QaEdgeMatchBorderingPoints(
-				           ReadOnlyTableFactory.Create(fcPoint1), ReadOnlyTableFactory.Create(fcBorder1),
-				           ReadOnlyTableFactory.Create(fcPoint2), ReadOnlyTableFactory.Create(fcBorder2),
-				                                       searchDistance: 0.5)
+				           ReadOnlyTableFactory.Create(fcPoint1),
+				           ReadOnlyTableFactory.Create(fcBorder1),
+				           ReadOnlyTableFactory.Create(fcPoint2),
+				           ReadOnlyTableFactory.Create(fcBorder2),
+				           searchDistance: 0.5)
 			           {
 				           PointClass1BorderMatchCondition = "POINT.STATE = BORDER.STATE",
 				           PointClass2BorderMatchCondition = "POINT.STATE = BORDER.STATE",
@@ -390,9 +409,11 @@ namespace ProSuite.QA.Tests.Test
 			AddPointFeature(fcPoint2, 5, -0.3, stateId: "B");
 
 			var test = new QaEdgeMatchBorderingPoints(
-				           ReadOnlyTableFactory.Create(fcPoint1), ReadOnlyTableFactory.Create(fcBorder1),
-				           ReadOnlyTableFactory.Create(fcPoint2), ReadOnlyTableFactory.Create(fcBorder2),
-				                                       searchDistance: 0.5)
+				           ReadOnlyTableFactory.Create(fcPoint1),
+				           ReadOnlyTableFactory.Create(fcBorder1),
+				           ReadOnlyTableFactory.Create(fcPoint2),
+				           ReadOnlyTableFactory.Create(fcBorder2),
+				           searchDistance: 0.5)
 			           {
 				           PointClass1BorderMatchCondition = "POINT.STATE = BORDER.STATE",
 				           PointClass2BorderMatchCondition = "POINT.STATE = BORDER.STATE",
@@ -422,9 +443,11 @@ namespace ProSuite.QA.Tests.Test
 			AddPointFeature(fcPoint2, 5, 0.3, stateId: "B");
 
 			var test = new QaEdgeMatchBorderingPoints(
-				           ReadOnlyTableFactory.Create(fcPoint1), ReadOnlyTableFactory.Create(fcBorder1),
-						   ReadOnlyTableFactory.Create(fcPoint2), ReadOnlyTableFactory.Create(fcBorder2),
-						                               searchDistance: 0.5)
+				           ReadOnlyTableFactory.Create(fcPoint1),
+				           ReadOnlyTableFactory.Create(fcBorder1),
+				           ReadOnlyTableFactory.Create(fcPoint2),
+				           ReadOnlyTableFactory.Create(fcBorder2),
+				           searchDistance: 0.5)
 			           {
 				           PointClass1BorderMatchCondition = "POINT.STATE = BORDER.STATE",
 				           PointClass2BorderMatchCondition = "POINT.STATE = BORDER.STATE",
@@ -455,9 +478,11 @@ namespace ProSuite.QA.Tests.Test
 			AddPointFeature(fcPoint2, 5, 0.1, stateId: "B");
 
 			var test = new QaEdgeMatchBorderingPoints(
-				           ReadOnlyTableFactory.Create(fcPoint1), ReadOnlyTableFactory.Create(fcBorder1),
-				           ReadOnlyTableFactory.Create(fcPoint2), ReadOnlyTableFactory.Create(fcBorder2),
-				                                       searchDistance: 0.5)
+				           ReadOnlyTableFactory.Create(fcPoint1),
+				           ReadOnlyTableFactory.Create(fcBorder1),
+				           ReadOnlyTableFactory.Create(fcPoint2),
+				           ReadOnlyTableFactory.Create(fcBorder2),
+				           searchDistance: 0.5)
 			           {
 				           PointClass1BorderMatchCondition = "POINT.STATE = BORDER.STATE",
 				           PointClass2BorderMatchCondition = "POINT.STATE = BORDER.STATE",
@@ -487,9 +512,11 @@ namespace ProSuite.QA.Tests.Test
 			AddPointFeature(fcPoint2, 4.4, 0, stateId: "B");
 
 			var test = new QaEdgeMatchBorderingPoints(
-				           ReadOnlyTableFactory.Create(fcPoint1), ReadOnlyTableFactory.Create(fcBorder1),
-				           ReadOnlyTableFactory.Create(fcPoint2), ReadOnlyTableFactory.Create(fcBorder2),
-				                                       searchDistance: 0.5)
+				           ReadOnlyTableFactory.Create(fcPoint1),
+				           ReadOnlyTableFactory.Create(fcBorder1),
+				           ReadOnlyTableFactory.Create(fcPoint2),
+				           ReadOnlyTableFactory.Create(fcBorder2),
+				           searchDistance: 0.5)
 			           {
 				           PointClass1BorderMatchCondition = "POINT.STATE = BORDER.STATE",
 				           PointClass2BorderMatchCondition = "POINT.STATE = BORDER.STATE",
@@ -520,9 +547,11 @@ namespace ProSuite.QA.Tests.Test
 			AddPointFeature(fcPoint2, 4.8, 0, stateId: "B", textFieldValue: "X");
 
 			var test = new QaEdgeMatchBorderingPoints(
-				           ReadOnlyTableFactory.Create(fcPoint1), ReadOnlyTableFactory.Create(fcBorder1),
-				           ReadOnlyTableFactory.Create(fcPoint2), ReadOnlyTableFactory.Create(fcBorder2),
-				                                       searchDistance: 0.5)
+				           ReadOnlyTableFactory.Create(fcPoint1),
+				           ReadOnlyTableFactory.Create(fcBorder1),
+				           ReadOnlyTableFactory.Create(fcPoint2),
+				           ReadOnlyTableFactory.Create(fcBorder2),
+				           searchDistance: 0.5)
 			           {
 				           PointClass1BorderMatchCondition = "POINT.STATE = BORDER.STATE",
 				           PointClass2BorderMatchCondition = "POINT.STATE = BORDER.STATE",

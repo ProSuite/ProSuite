@@ -1,11 +1,10 @@
 using System;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Tests.Test.TestRunners;
 using NUnit.Framework;
-using ProSuite.Commons.AO.Licensing;
-using ProSuite.Commons.AO.Test.TestSupport;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Test;
+using ProSuite.Commons.AO.Test.TestSupport;
+using ProSuite.QA.Tests.Test.TestRunners;
 
 namespace ProSuite.QA.Tests.Test
 {
@@ -14,18 +13,16 @@ namespace ProSuite.QA.Tests.Test
 	{
 		private const esriGeometryType _gt = esriGeometryType.esriGeometryPolygon;
 
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
-
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout();
+			TestUtils.InitializeLicense();
 		}
 
 		[OneTimeTearDown]
 		public void TearDownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		[Test]

@@ -15,7 +15,6 @@ using NUnit.Framework;
 using OSGeo.GDAL;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.Essentials.System;
 using ProSuite.Commons.Logging;
 
@@ -24,7 +23,6 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 	[TestFixture]
 	public class DatasetUtilsTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
 		private string _simpleGdbPath;
 
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
@@ -36,14 +34,14 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 			_msg.IsVerboseDebugEnabled = true;
 
-			_lic.Checkout();
+			TestUtils.InitializeLicense();
 			_simpleGdbPath = TestData.GetGdb1Path();
 		}
 
 		[OneTimeTearDown]
 		public void TeardownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		[Test]
