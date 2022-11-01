@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Processing.Utils;
 
 namespace ProSuite.Processing
 {
@@ -16,6 +17,7 @@ namespace ProSuite.Processing
 		{
 			Name = name ?? string.Empty;
 			Description = description ?? string.Empty;
+			Comparison = StringComparison.OrdinalIgnoreCase;
 
 			_settings = new List<Setting>();
 		}
@@ -26,10 +28,22 @@ namespace ProSuite.Processing
 		/// <param name="name">Optional name for this config</param>
 		/// <param name="text">Config text to be parsed</param>
 		/// <param name="description">Optional description for this config</param>
-		public static CartoProcessConfig FromText(string name, string text, string description = null)
+		public static CartoProcessConfig FromText(string text, string name = null, string description = null)
 		{
 			var config = new CartoProcessConfig(name, description);
+
 			config.LoadString(text);
+
+			if (name is null)
+			{
+				config.Name = config.GetString(nameof(Name), null);
+			}
+
+			if (description is null)
+			{
+				config.Description = config.GetString(nameof(Description), null);
+			}
+
 			return config;
 		}
 
@@ -41,9 +55,11 @@ namespace ProSuite.Processing
 			throw new NotImplementedException();
 		}
 
-		public string Name { get; }
+		public string Name { get; private set; }
 
-		public string Description { get; }
+		public string Description { get; private set; }
+
+		public StringComparison Comparison { get; }
 
 		public int Count => _settings.Count;
 
@@ -51,7 +67,7 @@ namespace ProSuite.Processing
 		{
 			foreach (var setting in _settings)
 			{
-				if (string.Equals(setting.Name, parameterName, StringComparison.Ordinal))
+				if (string.Equals(setting.Name, parameterName, Comparison))
 				{
 					yield return setting.Value;
 				}
@@ -64,7 +80,7 @@ namespace ProSuite.Processing
 
 			foreach (var setting in _settings)
 			{
-				if (string.Equals(setting.Name, parameterName, StringComparison.Ordinal))
+				if (string.Equals(setting.Name, parameterName, Comparison))
 				{
 					yield return ConvertValue<T>(converter, setting.Value, parameterName);
 				}
@@ -180,6 +196,7 @@ namespace ProSuite.Processing
 			if (text == null) return;
 
 			var position = new Position();
+			var sb = new StringBuilder();
 
 			SkipWhite(text, position);
 
@@ -201,16 +218,10 @@ namespace ProSuite.Processing
 					throw SyntaxError(position, "Expect '=' operator");
 				SkipBlank(text, position);
 
-				string value = ScanValue(text, position);
+				string value = ScanValue(text, position, sb);
 				if (value == null)
 					throw SyntaxError(position, "Expect a value");
 				_settings.Add(new Setting(name, value, position.LineNumber));
-
-				SkipBlank(text, position);
-				if (position.Index < text.Length && text[position.Index] == '#')
-					SkipLine(text, position); // eol comment
-				else if (! ScanEndline(text, position))
-					throw SyntaxError(position, "Expect end of line");
 
 				SkipWhite(text, position);
 			}
@@ -238,24 +249,79 @@ namespace ProSuite.Processing
 			return text.Substring(anchor, position.Index - anchor);
 		}
 
-		private static string ScanValue(string text, Position position)
+		private static string ScanValue(string text, Position position, StringBuilder sb)
 		{
+			sb.Clear();
+
 			if (position.Index >= text.Length)
 			{
 				return null; // at end of text
 			}
 
-			// TODO Allow multiple strings per value/line? I.e., scan sequence of strings and chars until # or eol?
-
-			switch (text[position.Index])
+			while (position.Index < text.Length)
 			{
-				case '\'':
-					return ScanSqlString(text, position);
-				case '"':
-					return ScanString(text, position);
+				char cc = text[position.Index];
+				if (cc == '\'')
+				{
+					ScanSqlString(text, position, sb); // NB: SQL '' string <> Shell '' string
+				}
+				else if (cc == '"')
+				{
+					ScanString(text, position, sb);
+				}
+				else if (cc == '#')
+				{
+					SkipLine(text, position);
+					break;
+				}
+				else if (cc == '\r' || cc == '\n')
+				{
+					ScanEndline(text, position);
+					break;
+				}
+				else if (cc == ' ' || cc == '\t' || cc == '\v')
+				{
+					SkipBlank(text, position);
+					sb.Append(' ');
+				}
+				else
+				{
+					sb.Append(cc);
+					position.Advance(text);
+				}
 			}
 
-			return ScanToDelim(text, position, '#');
+			return sb.TrimEnd().ToString(); //return ScanToDelim(text, position, '#');
+		}
+
+		private static void ScanSqlString(string text, Position position, StringBuilder sb)
+		{
+			Assert.True(position.Index < text.Length, "Bug");
+
+			char quote = text[position.Index];
+			int anchor = position.Index;
+			position.Advance(text); // skip opening apostrophe
+
+			while (position.Index < text.Length)
+			{
+				char cc = text[position.Index];
+				position.Advance(text);
+
+				if (cc == quote)
+				{
+					if (position.Index < text.Length && text[position.Index] == quote)
+					{
+						position.Advance(text); // skip 2nd apostrophe
+					}
+					else
+					{
+						sb.Append(text.Substring(anchor, position.Index - anchor));
+						return;
+					}
+				}
+			}
+
+			throw SyntaxError(position, "Unterminated string starting at position {0}", anchor);
 		}
 
 		private static string ScanSqlString(string text, Position position)
@@ -287,6 +353,42 @@ namespace ProSuite.Processing
 				else
 				{
 					sb.Append(cc);
+				}
+			}
+
+			throw SyntaxError(position, "Unterminated string starting at position {0}", anchor);
+		}
+
+		private static void ScanString(string text, Position position, StringBuilder sb)
+		{
+			Assert.True(position.Index < text.Length, "Bug");
+
+			char quote = text[position.Index];
+			int anchor = position.Index;
+			position.Advance(text); // skip opening quote
+
+			while (position.Index < text.Length)
+			{
+				char cc = text[position.Index];
+				position.Advance(text);
+
+				if (cc == quote)
+				{
+					sb.Append(text.Substring(anchor, position.Index - anchor));
+					return;
+				}
+
+				if (cc == '\\')
+				{
+					if (position.Index >= text.Length)
+					{
+						break;
+					}
+
+					position.Advance(text);
+
+					// here just accept any escaped character
+					// typically allowed: " ' \ / b f n r t v u####
 				}
 			}
 
