@@ -12,6 +12,7 @@ using ProSuite.Commons;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Com;
+using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -564,7 +565,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			qaService.DistributedTestRunner = distributedTestRunner;
 
-			QualityVerification verification = qaService.Verify(backgroundVerificationInputs, trackCancel);
+			QualityVerification verification =
+				qaService.Verify(backgroundVerificationInputs, trackCancel);
 
 			return verification;
 		}
@@ -638,7 +640,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 					qualitySpecification = SetupQualitySpecification(xmlSpecification);
 
-					HashSet<int> excludedQcIds = new HashSet<int>(request.Specification.ExcludedConditionIds);
+					HashSet<int> excludedQcIds =
+						new HashSet<int>(request.Specification.ExcludedConditionIds);
 					if (excludedQcIds.Count > 0)
 					{
 						foreach (QualitySpecificationElement element in qualitySpecification
@@ -705,7 +708,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			{
 				if (element.QualityCondition.Id < 0)
 				{
-					Commons.DomainModels.IEntityTest qc = element.QualityCondition;
+					IEntityTest qc = element.QualityCondition;
 					qc.SetId(nextQcId);
 				}
 
@@ -873,7 +876,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			IServerStreamWriter<DataVerificationResponse> responseStream)
 		{
 			void Write(VerificationResponse r) =>
-				responseStream.WriteAsync(new DataVerificationResponse {Response = r});
+				responseStream.WriteAsync(new DataVerificationResponse { Response = r });
 
 			SendFatalException(exception, Write);
 		}

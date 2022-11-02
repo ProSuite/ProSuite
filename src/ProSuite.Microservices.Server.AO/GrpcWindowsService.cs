@@ -45,7 +45,7 @@ namespace ProSuite.Microservices.Server.AO
 				return;
 			}
 
-			_timer = new Timer(_interval) {AutoReset = true};
+			_timer = new Timer(_interval) { AutoReset = true };
 
 			_timer.Elapsed += _timer_Elapsed;
 			_timer.Start();

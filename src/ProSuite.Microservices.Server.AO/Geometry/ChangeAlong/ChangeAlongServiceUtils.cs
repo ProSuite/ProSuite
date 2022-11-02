@@ -378,7 +378,7 @@ namespace ProSuite.Microservices.Server.AO.Geometry.ChangeAlong
 			}
 
 			List<IEnvelope> allowedExtents =
-				visibleExtent == null ? null : new List<IEnvelope> {visibleExtent};
+				visibleExtent == null ? null : new List<IEnvelope> { visibleExtent };
 
 			bool useMinimalTolerance = MathUtils.AreEqual(0, request.CalculationRequest.Tolerance);
 

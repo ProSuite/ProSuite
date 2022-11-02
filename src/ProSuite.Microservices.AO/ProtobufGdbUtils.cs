@@ -135,12 +135,12 @@ namespace ProSuite.Microservices.AO
 							case esriFieldType.esriFieldTypeGUID:
 								byte[] asBytes = new Guid((string) valueObject).ToByteArray();
 								attributeValue.UuidValue =
-									new UUID {Value = ByteString.CopyFrom(asBytes)};
+									new UUID { Value = ByteString.CopyFrom(asBytes) };
 								break;
 							case esriFieldType.esriFieldTypeGlobalID:
 								asBytes = new Guid((string) valueObject).ToByteArray();
 								attributeValue.UuidValue =
-									new UUID {Value = ByteString.CopyFrom(asBytes)};
+									new UUID { Value = ByteString.CopyFrom(asBytes) };
 								break;
 							case esriFieldType.esriFieldTypeXML:
 								// Not supported, ignore

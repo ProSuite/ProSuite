@@ -371,8 +371,8 @@ namespace ProSuite.Microservices.Client
 				if (runningProcesses.Length > 0)
 				{
 					_msg.DebugFormat(
-						"Background microservice {0} is already running (but not " +
-						"serving). It will be killed.", exeName);
+						"Background microservice {0} is already running (but not serving). " +
+						"It will be killed.", exeName);
 
 					foreach (Process process in runningProcesses)
 					{
