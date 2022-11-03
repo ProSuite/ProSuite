@@ -52,7 +52,7 @@ namespace ProSuite.QA.Tests.Transformers
 		[DocTr(nameof(DocTrStrings.TrMultipolygonToPolygon_TransformedParts))]
 		public PolygonPart TransformedParts { get; set; }
 
-		protected override IEnumerable<GdbFeature> Transform(IGeometry source)
+		protected override IEnumerable<GdbFeature> Transform(IGeometry source, int? sourceOid)
 		{
 			IPolygon4 poly = (IPolygon4) source;
 
