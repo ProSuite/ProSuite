@@ -673,7 +673,7 @@ namespace ProSuite.Commons.Geom
 				yield break;
 			}
 
-			if (GeomRelationUtils.IsContained(this, searchGeometry, tolerance))
+			if (GeomRelationUtils.AreBoundsContained(this, searchGeometry, tolerance))
 			{
 				foreach (int partIdx in Enumerable.Range(0, PartCount))
 				{

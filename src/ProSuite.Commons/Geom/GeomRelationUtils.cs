@@ -131,15 +131,16 @@ namespace ProSuite.Commons.Geom
 		}
 
 		/// <summary>
-		/// Determines whether <paramref name="geometry1"/> is contained in <paramref cref="geometry2"/>.
+		/// Determines whether the bounding envelope of <paramref name="geometry1"/> is contained
+		/// in the bounding envelope of <paramref cref="geometry2"/>.
 		/// </summary>
 		/// <param name="geometry1">The test geometry.</param>
 		/// <param name="geometry2">The containing geometry.</param>
 		/// <param name="tolerance"></param>
 		/// <returns></returns>
-		public static bool IsContained([NotNull] IBoundedXY geometry1,
-		                               [NotNull] IBoundedXY geometry2,
-		                               double tolerance)
+		public static bool AreBoundsContained([NotNull] IBoundedXY geometry1,
+		                                      [NotNull] IBoundedXY geometry2,
+		                                      double tolerance)
 		{
 			return IsContained(
 				geometry1.XMin, geometry1.YMin, geometry1.XMax, geometry1.YMax,
@@ -464,7 +465,7 @@ namespace ProSuite.Commons.Geom
 				GetNonIntersectingTargetPoint(targetSegments, intersectionPoints);
 
 			IEnumerable<Pnt3D> checkPoints = nonIntersectingTargetPnt != null
-				                                 ? new[] {nonIntersectingTargetPnt}
+				                                 ? new[] { nonIntersectingTargetPnt }
 				                                 : targetSegments.GetPoints();
 
 			return checkPoints.All(p => PolycurveContainsXY(closedPolycurve, p, tolerance));

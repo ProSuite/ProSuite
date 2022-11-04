@@ -570,6 +570,88 @@ namespace ProSuite.Commons.Geom
 			return result;
 		}
 
+		/// <summary>
+		/// Determines whether the specified area geometries can be dissolved, i.e. the union
+		/// results in changed rings or removed rings compared to the input geometries.
+		/// </summary>
+		/// <param name="multiLinestring1"></param>
+		/// <param name="multiLinestring2"></param>
+		/// <param name="tolerance"></param>
+		/// <param name="intersectionPoints"></param>
+		/// <returns></returns>
+		public static bool CanDissolveAreasXY(MultiLinestring multiLinestring1,
+		                                      MultiLinestring multiLinestring2,
+		                                      double tolerance,
+		                                      out IList<IntersectionPoint3D> intersectionPoints)
+		{
+			if (GeomRelationUtils.AreBoundsDisjoint(
+				    multiLinestring1, multiLinestring2, tolerance))
+			{
+				intersectionPoints = null;
+				return false;
+			}
+
+			intersectionPoints = GetIntersectionPoints(
+				(ISegmentList) multiLinestring1, multiLinestring2, tolerance);
+
+			foreach (IntersectionPoint3D intersectionPoint in intersectionPoints)
+			{
+				if (intersectionPoint.Type != IntersectionPointType.TouchingInPoint)
+				{
+					return true;
+				}
+			}
+
+			var subcurveNavigator =
+				new SubcurveNavigator(multiLinestring1, multiLinestring2, tolerance)
+				{
+					IntersectionPoints = intersectionPoints
+				};
+
+			var ringOperator = new RingOperator(subcurveNavigator);
+
+			MultiLinestring resultUnion;
+			try
+			{
+				resultUnion = ringOperator.UnionXY();
+			}
+			catch (Exception e)
+			{
+				IList<string> loggedGeometries =
+					LogGeometries(nameof(GetUnionAreasXY), multiLinestring1, multiLinestring2);
+
+				_msg.Debug("Error calculating XY-union areas with " +
+				           $"tolerance {tolerance}.", e);
+				throw new GeomException("Error calculating XY-union areas with " +
+				                        $"tolerance {tolerance}.", e)
+				      {
+					      ErrorGeometries = loggedGeometries
+				      };
+			}
+
+			// TODO: Just check for containing parts?
+			return resultUnion.PartCount != multiLinestring1.PartCount + multiLinestring2.PartCount;
+		}
+
+		public static EnvelopeXY UnionEnvelopesXY(IEnumerable<IBoundedXY> geometries)
+		{
+			EnvelopeXY result = null;
+
+			foreach (IBoundedXY boundedXy in geometries)
+			{
+				if (result == null)
+				{
+					result = new EnvelopeXY(boundedXy);
+				}
+				else
+				{
+					result.EnlargeToInclude(boundedXy);
+				}
+			}
+
+			return result;
+		}
+
 		public static MultiLinestring GetUnionAreasXY(
 			[NotNull] MultiLinestring sourceRings,
 			[NotNull] Polyhedron targetPolyhedron,
@@ -622,64 +704,21 @@ namespace ProSuite.Commons.Geom
 			[NotNull] IList<MultiLinestring> multiPolygons,
 			double tolerance)
 		{
-			// 1. Create a spatially indexed list of all geometries. Often there are no actual intersections!
+			// 1. Create a spatially indexed list of all geometries and group on the polygon
+			//    level using just the envelope entersections. Often there are no actual
+			//    intersections and the geometries are well dispersed.
 			//    This strategy can make a gigantic difference (TOP-5595)
-			SpatialHashSearcher<MultiLinestring> polygonIndex =
-				SpatialHashSearcher<MultiLinestring>.CreateSpatialSearcher(
-					multiPolygons, p => p);
-
-			var disjointPolys = new HashSet<MultiLinestring>();
-			List<HashSet<MultiLinestring>> connectedGroups = new List<HashSet<MultiLinestring>>();
-
-			foreach (MultiLinestring polygon in multiPolygons)
-			{
-				int intersectedCount = 0;
-				foreach (MultiLinestring otherPoly in polygonIndex.Search(polygon, tolerance))
-				{
-					// ReSharper disable once PossibleUnintendedReferenceComparison
-					if (otherPoly == polygon)
-					{
-						continue;
-					}
-
-					if (disjointPolys.Contains(otherPoly))
-					{
-						// Already checked and found disjoint
-						continue;
-					}
-
-					if (! GeomRelationUtils.AreBoundsDisjoint(polygon, otherPoly, tolerance))
-					{
-						intersectedCount++;
-						AddToGroups(connectedGroups, polygon, otherPoly);
-					}
-				}
-
-				if (intersectedCount == 0)
-				{
-					disjointPolys.Add(polygon);
-				}
-			}
+			IList<ICollection<MultiLinestring>> connectedGroups =
+				GroupPolygons(multiPolygons,
+				              (m1, m2) => ! GeomRelationUtils.AreBoundsDisjoint(m1, m2, tolerance),
+				              tolerance);
 
 			// 2. Union the geometries in the connected groups 
-			List<MultiLinestring> intersectingUnions =
+			List<MultiLinestring> unions =
 				new List<MultiLinestring>(connectedGroups.Count);
 
-			Assert.AreEqual(multiPolygons.Count,
-			                disjointPolys.Count + connectedGroups.Sum(g => g.Count),
-			                "Lost items");
-
-			foreach (HashSet<MultiLinestring> group in connectedGroups)
+			foreach (ICollection<MultiLinestring> group in connectedGroups)
 			{
-				MultiLinestring allInputs = new MultiPolycurve(group);
-
-				//IList<IntersectionPoint3D> selfIntersectionPoints =
-				//	GetSelfIntersections(allInputs, tolerance);
-
-				// Very experimental:
-				//MultiLinestring union = GetSymmetricUnion(allInputs, group, selfIntersectionPoints, tolerance);
-				//intersectingUnions.Add(union);
-
 				// Classic one-by-one:
 				MultiLinestring groupResult = null;
 				foreach (MultiLinestring poly in group)
@@ -694,25 +733,77 @@ namespace ProSuite.Commons.Geom
 					}
 				}
 
-				intersectingUnions.Add(groupResult);
+				unions.Add(groupResult);
 			}
 
 			// 3. Build the result
-			IEnumerable<MultiLinestring> all = disjointPolys.Concat(intersectingUnions);
-
-			MultiLinestring result = new MultiPolycurve(all);
+			MultiLinestring result = new MultiPolycurve(unions);
 
 			return result;
 		}
 
-		private static void AddToGroups(List<HashSet<MultiLinestring>> connectedGroups,
-		                                MultiLinestring polygon,
-		                                MultiLinestring otherPoly)
+		public static IList<ICollection<T>> GroupPolygons<T>(
+			[NotNull] IList<T> multiPolygons,
+			Func<T, T, bool> groupingCriterion,
+			double tolerance) where T : MultiLinestring
+		{
+			SpatialHashSearcher<T> polygonIndex =
+				SpatialHashSearcher<T>.CreateSpatialSearcher(
+					multiPolygons, p => p);
+
+			var disjointPolys = new HashSet<T>();
+			List<HashSet<T>> connectedGroups = new List<HashSet<T>>();
+
+			foreach (T polygon in multiPolygons)
+			{
+				int intersectedCount = 0;
+				foreach (T otherPoly in polygonIndex.Search(polygon, tolerance))
+				{
+					// ReSharper disable once PossibleUnintendedReferenceComparison
+					if (otherPoly == polygon)
+					{
+						continue;
+					}
+
+					if (disjointPolys.Contains(otherPoly))
+					{
+						// Already checked and found disjoint
+						continue;
+					}
+
+					if (groupingCriterion(polygon, otherPoly))
+					{
+						intersectedCount++;
+						AddToGroups(connectedGroups, polygon, otherPoly);
+					}
+				}
+
+				if (intersectedCount == 0)
+				{
+					disjointPolys.Add(polygon);
+				}
+			}
+
+			Assert.AreEqual(multiPolygons.Count,
+			                disjointPolys.Count + connectedGroups.Sum(g => g.Count),
+			                "Lost items");
+
+			var result = new List<ICollection<T>>(connectedGroups);
+
+			// Add the disjoint items as single-item list
+			result.AddRange(disjointPolys.Select(p => new List<T> { p }));
+
+			return result;
+		}
+
+		private static void AddToGroups<T>(IList<HashSet<T>> connectedGroups,
+		                                   T polygon,
+		                                   T otherPoly)
 		{
 			HashSet<int> addedTo = new HashSet<int>();
 			for (var i = 0; i < connectedGroups.Count; i++)
 			{
-				HashSet<MultiLinestring> group = connectedGroups[i];
+				HashSet<T> group = connectedGroups[i];
 
 				if (group.Contains(polygon))
 				{
@@ -729,7 +820,7 @@ namespace ProSuite.Commons.Geom
 			if (addedTo.Count == 0)
 			{
 				// Both polys are new
-				var newGroup = new HashSet<MultiLinestring>();
+				var newGroup = new HashSet<T>();
 				newGroup.Add(polygon);
 				newGroup.Add(otherPoly);
 				connectedGroups.Add(newGroup);
@@ -738,10 +829,10 @@ namespace ProSuite.Commons.Geom
 			if (addedTo.Count > 1)
 			{
 				// Merge groups:
-				var newGroup = new HashSet<MultiLinestring>();
+				var newGroup = new HashSet<T>();
 				foreach (int groupIdx in addedTo)
 				{
-					foreach (MultiLinestring poly in connectedGroups[groupIdx])
+					foreach (T poly in connectedGroups[groupIdx])
 					{
 						newGroup.Add(poly);
 					}
@@ -1545,7 +1636,7 @@ namespace ProSuite.Commons.Geom
 				return null;
 			}
 
-			Linestring cutStraight = new Linestring(new[] {planePlaneIntersectionInBox});
+			Linestring cutStraight = new Linestring(new[] { planePlaneIntersectionInBox });
 
 			var cutLines1 =
 				GetRingIntersectionLinesPlanar(cutStraight, ringGroup1, tolerance,
@@ -1799,7 +1890,7 @@ namespace ProSuite.Commons.Geom
 							// add the path, re-initialize
 							resultPaths.Add(new Linestring(nextResultPath));
 
-							nextResultPath = new List<Line3D> {intersectionLine};
+							nextResultPath = new List<Line3D> { intersectionLine };
 						}
 					}
 				}
@@ -2164,7 +2255,7 @@ namespace ProSuite.Commons.Geom
 		                                        IList<double> vertexDistances,
 		                                        ICollection<IntersectionPath3D> resultList)
 		{
-			var intersectionPoints = new List<IntersectionPoint3D> {fromPoint, toPoint};
+			var intersectionPoints = new List<IntersectionPoint3D> { fromPoint, toPoint };
 
 			AddIntersectionPath(intersectionPoints, vertexDistances, resultList);
 		}
@@ -3747,7 +3838,7 @@ namespace ProSuite.Commons.Geom
 					}
 
 					result.Add(new Linestring(nextResultPath));
-					nextResultPath = new List<Line3D> {segment};
+					nextResultPath = new List<Line3D> { segment };
 					reversed = false;
 				}
 			}
@@ -4219,7 +4310,7 @@ namespace ProSuite.Commons.Geom
 			var finishedGroups = new List<List<T>>();
 			var activeGroups = new List<List<T>>();
 
-			var currentGroup = new List<T> {items[0]};
+			var currentGroup = new List<T> { items[0] };
 			activeGroups.Add(currentGroup);
 
 			// line sweeping while maintaining groups within the xy tolerance band:
@@ -4255,7 +4346,7 @@ namespace ProSuite.Commons.Geom
 
 				if (! assigned)
 				{
-					var newGroup = new List<T> {items[i]};
+					var newGroup = new List<T> { items[i] };
 					activeGroups.Add(newGroup);
 				}
 			}
@@ -4638,7 +4729,7 @@ namespace ProSuite.Commons.Geom
 			}
 
 			// Segment cannot be directly appended
-			toLinestrings.Add(new List<Line3D> {segment});
+			toLinestrings.Add(new List<Line3D> { segment });
 		}
 
 		private static double? TryGetSplitFactor(int segmentIndex, double alongSegmentFactor)
@@ -4675,7 +4766,7 @@ namespace ProSuite.Commons.Geom
 				if (previous == null ||
 				    ! previous.EqualsXY(point, tolerance))
 				{
-					currentCluster = new List<Pnt3D> {point};
+					currentCluster = new List<Pnt3D> { point };
 					xyClusters.Add(currentCluster);
 				}
 				else
@@ -4749,7 +4840,7 @@ namespace ProSuite.Commons.Geom
 
 			if (singleResult != null)
 			{
-				return new List<RingGroup> {singleResult};
+				return new List<RingGroup> { singleResult };
 			}
 
 			var result = new List<RingGroup>();
@@ -5161,7 +5252,7 @@ namespace ProSuite.Commons.Geom
 			GeomUtils.ToWkbFile(source, sourcePath);
 			GeomUtils.ToWkbFile(target, targetPath);
 
-			var resultPaths = new List<string> {sourcePath, targetPath};
+			var resultPaths = new List<string> { sourcePath, targetPath };
 
 			_msg.DebugFormat("Geometries have been logged to {0}", resultDirectory);
 
