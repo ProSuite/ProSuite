@@ -12,7 +12,6 @@ using ProSuite.Commons.AO.Geometry.Serialization;
 using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.AO.Test.TestSupport;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.IO;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Testing;
 using ProSuite.Commons.Text;
@@ -196,9 +195,7 @@ namespace ProSuite.Commons.AO.Test
 
 		public static string GetGeometryTestDataPath(string fileName)
 		{
-			var locator = TestDataLocator.Create("ProSuite", @"TestData\Geometry");
-
-			return locator.GetPath(fileName);
+			return TestDataPreparer.FromDirectory(@"TestData\Geometry").GetPath(fileName);
 		}
 
 		public static IGeometry ReadGeometryFromXml(string filePath)
@@ -225,55 +222,6 @@ namespace ProSuite.Commons.AO.Test
 			IGeometry geometry = wkbReader.ReadGeometry(new MemoryStream(bytes));
 
 			return geometry;
-		}
-
-		public static void TryDeleteDirectory(string testFile)
-		{
-			string tempDir = Path.GetDirectoryName(testFile);
-
-			Assert.NotNull(tempDir);
-
-			try
-			{
-				FileSystemUtils.DeleteDirectory(tempDir, true);
-			}
-			catch (Exception e)
-			{
-				Console.WriteLine(e.Message);
-			}
-		}
-
-		public static string PrepareTestFileInTemp(string tempDirName, string originalFilePath)
-		{
-			TryDeleteTempDir(tempDirName);
-
-			return CopyFileToTemp(originalFilePath, tempDirName);
-		}
-
-		private static void TryDeleteTempDir(string tempDirName)
-		{
-			string testDir = GetTempDirPath(tempDirName);
-
-			if (Directory.Exists(testDir))
-			{
-				FileSystemUtils.DeleteDirectory(testDir, true, true);
-			}
-		}
-
-		private static string CopyFileToTemp(string filePath,
-		                                     string tempDirName = null)
-		{
-			string localTempDir = GetTempDirPath(tempDirName);
-
-			Directory.CreateDirectory(localTempDir);
-
-			string fileName = Path.GetFileName(filePath);
-
-			string newFilePath = Path.Combine(localTempDir, fileName);
-
-			File.Copy(filePath, newFilePath);
-
-			return newFilePath;
 		}
 
 		public static string GetTempDirPath([CanBeNull] string tempDirName)
