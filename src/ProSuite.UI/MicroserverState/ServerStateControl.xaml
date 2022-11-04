@@ -4,11 +4,12 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:local="clr-namespace:ProSuite.UI.MicroserverState"
-             xmlns:wpf="clr-namespace:ProSuite.Commons.UI.WPF;assembly=ProSuite.Commons.UI"
              d:DataContext="{d:DesignInstance Type=local:ServerStateViewModel, IsDesignTimeCreatable=True}"
              mc:Ignorable="d"
              d:DesignHeight="250" d:DesignWidth="480">
-
+    <UserControl.Resources>
+        <local:ServerStateToColorConverter x:Key="ServerStateToColorConverter" />
+    </UserControl.Resources>
     <DockPanel LastChildFill="False" Width="Auto" Height="Auto" HorizontalAlignment="Stretch">
 
         <ListView DockPanel.Dock="Top" HorizontalAlignment="Stretch"
@@ -41,7 +42,9 @@
                                 <Label Content="{Binding Text}" HorizontalAlignment="Stretch"
                                        HorizontalContentAlignment="Stretch" Margin="2,5,4,0"
                                        VerticalAlignment="Top" Height="Auto"
-                                       Background="{Binding ServerStateColor}" />
+                                       Background="{Binding ServiceState,
+                                       Converter={StaticResourceExtension ServerStateToColorConverter}, 
+                                       Mode=OneWay}"/>
                             </DataTemplate>
                         </GridViewColumn.CellTemplate>
                     </GridViewColumn>
