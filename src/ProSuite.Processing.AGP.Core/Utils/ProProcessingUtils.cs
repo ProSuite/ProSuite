@@ -6,7 +6,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Processing.AGP.Core.Utils
 {
-	public static class ProcessingUtils
+	public static class ProProcessingUtils
 	{
 		/// <summary>
 		/// Create a string from the given object. Format:
