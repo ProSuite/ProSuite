@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
+using System.Xml;
+using System.Xml.Linq;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Processing.Utils;
@@ -22,37 +25,34 @@ namespace ProSuite.Processing
 			_settings = new List<Setting>();
 		}
 
-		/// <summary>
-		/// Parse config from given simple text format: name = value {; name = value}
-		/// </summary>
-		/// <param name="name">Optional name for this config</param>
-		/// <param name="text">Config text to be parsed</param>
-		/// <param name="description">Optional description for this config</param>
-		public static CartoProcessConfig FromText(string text, string name = null, string description = null)
+		public static CartoProcessConfig Parse(string text)
 		{
-			var config = new CartoProcessConfig(name, description);
+			// 1. try parse as XML
+			// 2. assume new plain text format
 
-			config.LoadString(text);
+			if (text is null) return null;
 
-			if (name is null)
+			try
 			{
-				config.Name = config.GetString(nameof(Name), null);
-			}
+				var element = XElement.Parse(text);
 
-			if (description is null)
+				if (element.Name == "Process")
+				{
+					return FromProcess(element);
+				}
+
+				if (element.Name == "ProcessGroup")
+				{
+					return FromProcessGroup(element);
+				}
+
+				throw new CartoConfigException(
+					$"Invalid element: {element.Name} (expect Process or ProcessGroup)");
+			}
+			catch (XmlException)
 			{
-				config.Description = config.GetString(nameof(Description), null);
+				return FromText(text);
 			}
-
-			return config;
-		}
-
-		/// <summary>
-		/// Parse config from given XML (part of our old .cp.xml format)
-		/// </summary>
-		public static CartoProcessConfig FromXmlFile(object todo)
-		{
-			throw new NotImplementedException();
 		}
 
 		public string Name { get; private set; }
@@ -139,36 +139,6 @@ namespace ProSuite.Processing
 			return values[0]?.Trim();
 		}
 
-		//public T GetOptionalValue<T>(string parameterName)
-		//{
-		//	var values = GetValues<T>(parameterName).ToArray();
-		//	if (values.Length < 1)
-		//		return default;
-		//	if (values.Length > 1)
-		//		throw ConfigError("Parameter {0} is defined more than once", parameterName);
-		//	return values[0];
-		//}
-
-		//public T GetOptionalValue<T>(string parameterName, T defaultValue)
-		//{
-		//	var values = GetValues<T>(parameterName).ToArray();
-		//	if (values.Length < 1)
-		//		return defaultValue;
-		//	if (values.Length > 1)
-		//		throw ConfigError("Parameter {0} is defined more than once", parameterName);
-		//	return values[0];
-		//}
-
-		//public T GetRequiredValue<T>(string parameterName)
-		//{
-		//	var values = GetValues<T>(parameterName).ToArray();
-		//	if (values.Length < 1)
-		//		throw ConfigError("Required parameter {0} is missing", parameterName);
-		//	if (values.Length > 1)
-		//		throw ConfigError("Parameter {0} is defined more than once", parameterName);
-		//	return values[0];
-		//}
-
 		private static T ConvertValue<T>(TypeConverter converter, string value, string name)
 		{
 			if (string.IsNullOrWhiteSpace(value))
@@ -187,7 +157,112 @@ namespace ProSuite.Processing
 			}
 		}
 
-		#region Config Parser
+		[StringFormatMethod("format")]
+		private static Exception ConfigError(string format, params object[] args)
+		{
+			return new CartoConfigException(string.Format(format, args));
+		}
+
+		#region XML Element Parsing
+
+		/// <summary>
+		/// Parse config from given Process element of old .cp.xml
+		/// </summary>
+		private static CartoProcessConfig FromProcess(XElement process)
+		{
+			if (process is null) return null;
+
+			var processName = (string) process.Attribute("name");
+			var description = (string) process.Element("Description") ??
+			                  (string) process.Attribute("description");
+
+			var config = new CartoProcessConfig(processName, description);
+			var parameters = process.Element("Parameters")?.Elements("Parameter");
+			var nameRegex = new Regex(@"^[_a-z][_a-z0-9]*$", RegexOptions.IgnoreCase);
+			var multiRegex = new Regex(@"\d+$"); // eager: matches "123" in "foo123" (not only "23" or "3")
+
+			foreach (var e in parameters ?? Enumerable.Empty<XElement>())
+			{
+				var name = (string) e.Attribute("name");
+				var value = (string) e.Attribute("value");
+
+				if (string.IsNullOrEmpty(name)) continue;
+
+				if (! nameRegex.IsMatch(name))
+				{
+					throw new CartoConfigException(
+						$"Invalid parameter name: {name} (must match /{nameRegex}/)");
+				}
+
+				var match = multiRegex.Match(name);
+				if (match.Success && match.Index > 0)
+				{
+					// old config did not allow multi-valued parameters; instead we had Foo1, Foo2, etc.
+					// translate to new config, which allows repeated parameters; use plural name by convention
+					var stem = name.Substring(0, match.Index); // strip trailing digits
+					name = stem.EndsWith("s") ? stem : string.Concat(stem, "s");
+				}
+
+				config._settings.Add(new Setting(name, value, e.GetLineNumber()));
+			}
+
+			return config;
+		}
+
+		/// <summary>
+		/// Parse config from given ProcessGroup element of old .cp.xml
+		/// </summary>
+		private static CartoProcessConfig FromProcessGroup(XElement processGroup)
+		{
+			if (processGroup is null) return null;
+
+			var processName = (string) processGroup.Attribute("name");
+			var description = (string) processGroup.Element("Description") ??
+			                  (string) processGroup.Attribute("description");
+
+			var config = new CartoProcessConfig(processName, description);
+			var processes = processGroup.Element("Processes")?.Elements("Process");
+
+			foreach (var e in processes ?? Enumerable.Empty<XElement>())
+			{
+				const string name = "Process";
+				var value = (string) e.Attribute("name");
+				if (string.IsNullOrEmpty(value)) continue;
+
+				config._settings.Add(new Setting(name, value, e.GetLineNumber()));
+			}
+
+			return config;
+		}
+
+		#endregion
+
+		#region Config Text Parsing
+
+		/// <summary>
+		/// Parse config from given simple text format: name = value {; name = value}
+		/// </summary>
+		/// <param name="name">Optional name for this config</param>
+		/// <param name="text">Config text to be parsed</param>
+		/// <param name="description">Optional description for this config</param>
+		private static CartoProcessConfig FromText(string text, string name = null, string description = null)
+		{
+			var config = new CartoProcessConfig(name, description);
+
+			config.LoadString(text);
+
+			if (config.Name is null)
+			{
+				config.Name = config.GetString(nameof(config.Name), null);
+			}
+
+			if (config.Description is null)
+			{
+				config.Description = config.GetString(nameof(config.Description), null);
+			}
+
+			return config;
+		}
 
 		private void LoadString(string text)
 		{
@@ -535,12 +610,6 @@ namespace ProSuite.Processing
 		}
 
 		#endregion
-
-		[StringFormatMethod("format")]
-		private static Exception ConfigError(string format, params object[] args)
-		{
-			return new CartoConfigException(string.Format(format, args));
-		}
 
 		private readonly struct Setting
 		{
