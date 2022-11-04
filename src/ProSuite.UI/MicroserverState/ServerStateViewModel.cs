@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Windows.Media;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Microservices.Client;
@@ -22,14 +21,14 @@ namespace ProSuite.UI.MicroserverState
 			                 {
 				                 Text = "Healthy",
 				                 PingLatency = 23,
-				                 ServerStateColor = new SolidColorBrush(Colors.ForestGreen)
+				                 ServiceState = ServiceState.Serving
 			                 });
 
 			ServerStates.Add(new ServerState(
 				                 new QualityVerificationServiceClient("CRASSUS", 5152))
 			                 {
 				                 Text = "Unavailable",
-				                 ServerStateColor = new SolidColorBrush(Colors.Red)
+				                 ServiceState = ServiceState.Starting
 			                 });
 		}
 
