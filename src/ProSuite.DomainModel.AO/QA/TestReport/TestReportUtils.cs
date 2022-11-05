@@ -6,6 +6,7 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Reflection;
 using ProSuite.DomainModel.Core.QA;
+using ProSuite.QA.Core.Reports;
 
 namespace ProSuite.DomainModel.AO.QA.TestReport
 {
