@@ -97,11 +97,21 @@ namespace ProSuite.QA.Core.Reports
 					foreach (IncludedInstanceConstructor constructor in includedTestClass
 						         .InstanceConstructors)
 					{
+						if (HasUnsupportedParameters(constructor))
+						{
+							continue;
+						}
+
 						AppendTestClassMethod(includedTestClass, constructor, sb);
 					}
 				}
 				else if (includedTest is IncludedTestFactory includedTestFactory)
 				{
+					if (HasUnsupportedParameters(includedTest))
+					{
+						continue;
+					}
+
 					AppendTestFactoryMethod(includedTestFactory, sb);
 				}
 			}
@@ -296,6 +306,11 @@ namespace ProSuite.QA.Core.Reports
 			string pythonType = TranslateToPythonType(testParameter);
 
 			stringBuilder.AppendFormat(": {0}", pythonType);
+		}
+
+		protected virtual bool HasUnsupportedParameters(IncludedInstanceBase includedTest)
+		{
+			return false;
 		}
 
 		protected abstract object GetDefaultParameterValue(Type parameterType);
