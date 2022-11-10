@@ -674,7 +674,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			[NotNull] XmlQualitySpecificationMsg xmlSpecification)
 		{
 			var dataSources = new List<DataSource>();
-			if (dataSources.Count > 0)
+			if (xmlSpecification.DataSourceReplacements.Count > 0)
 			{
 				foreach (string replacement in xmlSpecification.DataSourceReplacements)
 				{
