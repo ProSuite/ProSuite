@@ -231,11 +231,20 @@ namespace ProSuite.Commons.Testing
 					{
 						Extract(sourcePath, targetDir, overwrite);
 
-						string file = Directory.GetFiles(targetDir, "*").FirstOrDefault();
-						string directory =
-							Directory.GetDirectories(targetDir, "*").FirstOrDefault();
+						string[] files = Directory.GetFiles(targetDir, "*");
+						string file = files.FirstOrDefault();
 
-						if (file != null)
+						string[] directories = Directory.GetDirectories(targetDir, "*");
+						string directory = directories.FirstOrDefault();
+
+						int itemCount = files.Length + directories.Length;
+
+						if (fileName == null && itemCount > 1)
+						{
+							// No file provided -> return the extracted directory, unless it contains only a single item
+							result = targetDir;
+						}
+						else if (file != null)
 						{
 							result = file;
 						}
