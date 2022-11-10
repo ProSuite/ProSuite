@@ -18,8 +18,8 @@ namespace ProSuite.Processing
 
 		public CartoProcessConfig(string name, string description = null)
 		{
-			Name = name ?? string.Empty;
-			Description = description ?? string.Empty;
+			Name = name; // can be null
+			Description = description; // can be null
 			Comparison = StringComparison.OrdinalIgnoreCase;
 
 			_settings = new List<Setting>();
