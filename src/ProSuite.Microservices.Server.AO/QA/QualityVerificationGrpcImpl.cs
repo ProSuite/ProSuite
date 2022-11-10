@@ -691,11 +691,14 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 					dataSources.Add(dataSource);
 				}
+
+				_msg.DebugFormat("Using {0} provided data source replacements.", dataSources.Count);
 			}
 			else
 			{
 				dataSources.AddRange(
 					QualitySpecificationUtils.GetDataSources(xmlSpecification.Xml));
+				_msg.DebugFormat("Using {0} data sources from XML.", dataSources.Count);
 			}
 
 			QualitySpecification qualitySpecification =
