@@ -299,13 +299,21 @@ namespace ProSuite.Microservices.Server.AO
 				_msg.IsVerboseDebugEnabled = true;
 			}
 
-			Assembly exeAssembly = Assert.NotNull(Assembly.GetEntryAssembly());
+			Assembly exeAssembly = Assembly.GetEntryAssembly();
+
+			Assembly executingAssembly = Assert.NotNull(Assembly.GetExecutingAssembly());
+
+			if (exeAssembly == null)
+			{
+				// e.g. unit tests
+				exeAssembly = executingAssembly;
+			}
 
 			string bitness = Environment.Is64BitProcess ? "64 bit" : "32 bit";
 
 			_msg.InfoFormat("Logging configured for {0} ({1}) version {2}",
 			                exeAssembly.Location, bitness,
-			                exeAssembly.GetName().Version);
+			                executingAssembly.GetName().Version);
 
 			if (_msg.IsVerboseDebugEnabled)
 			{
