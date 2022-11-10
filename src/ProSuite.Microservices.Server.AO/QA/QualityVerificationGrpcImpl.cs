@@ -427,6 +427,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			BackgroundVerificationService qaService = null;
 			VerificationProgressStreamer<VerificationResponse> responseStreamer =
 				new VerificationProgressStreamer<VerificationResponse>(responseStream);
+			responseStreamer.CreateResponseAction = responseStreamer.CreateVerificationResponse;
 
 			List<GdbObjRefMsg> deletableAllowedErrorRefs = new List<GdbObjRefMsg>();
 			QualityVerification verification = null;
@@ -558,7 +559,6 @@ namespace ProSuite.Microservices.Server.AO.QA
 				_verificationInputsFactoryMethod(request);
 
 			responseStreamer.BackgroundVerificationInputs = backgroundVerificationInputs;
-			responseStreamer.CreateResponseAction = responseStreamer.CreateVerificationResponse;
 
 			qaService = CreateVerificationService(
 				backgroundVerificationInputs, responseStreamer, trackCancel);
