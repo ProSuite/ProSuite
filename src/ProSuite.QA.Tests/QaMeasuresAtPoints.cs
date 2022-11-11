@@ -393,7 +393,7 @@ namespace ProSuite.QA.Tests
 
 			foreach (IReadOnlyRow row in Search(neighborClass,
 			                                    _filter[neighborTableIndex],
-			                                    _helper[neighborTableIndex], point))
+			                                    _helper[neighborTableIndex]))
 			{
 				var neighborFeature = (IReadOnlyFeature) row;
 

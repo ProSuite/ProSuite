@@ -186,8 +186,7 @@ namespace ProSuite.QA.Container.TestContainer
 		[CanBeNull]
 		public IList<IReadOnlyRow> Search([NotNull] IReadOnlyTable table,
 		                                  [NotNull] IQueryFilter queryFilter,
-		                                  [NotNull] QueryFilterHelper filterHelper,
-		                                  [CanBeNull] IGeometry cacheGeometry)
+		                                  [NotNull] QueryFilterHelper filterHelper)
 		{
 			var spatialFilter = (ISpatialFilter) queryFilter;
 			IGeometry filterGeometry = spatialFilter.Geometry;
@@ -195,7 +194,6 @@ namespace ProSuite.QA.Container.TestContainer
 			IList<IReadOnlyRow> result = new List<IReadOnlyRow>();
 
 			// TODO explain network queries
-			bool repeatCachedRows = filterHelper.RepeatCachedRows ?? filterHelper.ForNetwork;
 
 			// filterHelper.PointSearchOnlyWithinTile
 			if (filterHelper.ForNetwork)
@@ -227,36 +225,6 @@ namespace ProSuite.QA.Container.TestContainer
 				return result;
 			}
 
-			var cacheGeometryOverlapsLeftTile = false;
-			var cacheGeometryOverlapsBottomTile = false;
-
-			if (! repeatCachedRows)
-			{
-				if (cacheGeometry != null)
-				{
-					cacheGeometry.QueryEnvelope(_envelopeTemplate);
-				}
-				else
-				{
-					filterGeometry.QueryEnvelope(_envelopeTemplate);
-				}
-
-				_envelopeTemplate.QueryCoords(out double xmin, out double ymin, out _, out _);
-
-				cacheGeometryOverlapsLeftTile = xmin < CurrentTileBox?.Min.X &&
-				                                xmin > _testRunBox.Min.X;
-
-				// https://issuetracker02.eggits.net/browse/COM-85
-				// observed (CtLu): 
-				// - filter geometry ymin = 220532.967
-				// - filter geometry ymax = 220557.78500
-				// - tile ymin            = 220557.78534
-				// --> filter geometry is completely outside of tile boundaries!!!
-				// --> causes incorrect error in QaContainsOther
-				cacheGeometryOverlapsBottomTile = ymin < CurrentTileBox?.Min.Y &&
-				                                  ymin > _testRunBox.Min.Y;
-			}
-
 			IGeometryEngine engine = _container.GeometryEngine;
 
 			engine.SetSourceGeometry(filterGeometry);
@@ -274,27 +242,6 @@ namespace ProSuite.QA.Container.TestContainer
 			foreach (BoxTree<CachedRow>.TileEntry entry in searchList)
 			{
 				CachedRow cachedRow = Assert.NotNull(entry.Value, "cachedRow");
-
-				// This causes problems for QaIsCoveredByOther. However 
-				// IsCoveredByOther is not a network test, but still requires cached features
-				// to be returned repeatedly
-				if (cacheGeometryOverlapsLeftTile && ! cachedRow.IsFirstOccurrenceX)
-				{
-					// only if *not for network*:
-					// the filter geometry overlaps the left border of the tile, but 
-					// not the left border of the test run box AND the cached row
-					// was already returned previously --> skip it
-					continue;
-				}
-
-				if (cacheGeometryOverlapsBottomTile && ! cachedRow.IsFirstOccurrenceY)
-				{
-					// only if *not for network*:
-					// the filter geometry overlaps the bottom border of the tile, but 
-					// not the bottom border of the test run box AND the cached row
-					// was already returned previously --> skip it
-					continue;
-				}
 
 				if (ignoredRows != null && ignoredRows.Contains(entry.Value))
 				{

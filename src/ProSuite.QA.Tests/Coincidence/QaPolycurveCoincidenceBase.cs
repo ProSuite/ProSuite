@@ -189,7 +189,7 @@ namespace ProSuite.QA.Tests.Coincidence
 				ISpatialFilter filter = filters[involvedTableIndex];
 				filter.Geometry = box0;
 
-				foreach (IReadOnlyRow neighborRow in Search(fcNeighbor, filter, helper, geom0))
+				foreach (IReadOnlyRow neighborRow in Search(fcNeighbor, filter, helper))
 				{
 					double maxNear = rowsDistance.GetAddedDistance(neighborRow,
 						involvedTableIndex);

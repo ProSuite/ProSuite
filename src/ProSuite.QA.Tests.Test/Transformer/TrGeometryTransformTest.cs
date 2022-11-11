@@ -516,8 +516,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 
 		public IEnumerable<IReadOnlyRow> Search(IReadOnlyTable table,
 		                                        IQueryFilter queryFilter,
-		                                        QueryFilterHelper filterHelper,
-		                                        IGeometry cacheGeometry = null)
+		                                        QueryFilterHelper filterHelper)
 		{
 			return table.EnumRows(queryFilter, false);
 		}
