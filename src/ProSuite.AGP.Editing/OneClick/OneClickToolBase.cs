@@ -332,10 +332,20 @@ namespace ProSuite.AGP.Editing.OneClick
 				QueuedTaskUtils.Run(
 					delegate
 					{
-						// Used to clear derived geometries etc.
-						bool result = OnMapSelectionChangedCore(args);
+						try
+						{
+							// Used to clear derived geometries etc.
+							bool result = OnMapSelectionChangedCore(args);
 
-						return result;
+							return result;
+						}
+						catch (Exception e)
+						{
+							// NOTE: If the exception of this event is not caught here, the application crashes!
+							HandleError($"Error while processing selection change: {e.Message}", e,
+							            true);
+							return false;
+						}
 					});
 			}
 			catch (Exception e)
@@ -360,6 +370,18 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 		}
 
+		/// <summary>
+		/// The task to be run on edit complete.
+		/// NOTE: This task is run after every edit operation, including undo or delete with DEL key!
+		/// In that case there seems to be no catch block observing the potential exception thrown
+		/// inside the task execution, which leads to a crash of the application due to the finalizer
+		/// thread throwing:
+		/// A Task's exception(s) were not observed either by Waiting on the Task or accessing its
+		/// Exception property. As a result, the unobserved exception was rethrown by the finalizer thread.
+		/// Therefore any exception must be caught inside the Task execution!
+		/// </summary>
+		/// <param name="args"></param>
+		/// <returns></returns>
 		protected virtual Task OnEditCompletedCore(EditCompletedEventArgs args)
 		{
 			return Task.FromResult(true);

@@ -110,16 +110,25 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 			if (requiresRecalculate)
 			{
-				QueuedTask.Run(
+				return QueuedTask.Run(
 					() =>
 					{
-						var selectedFeatures =
-							GetApplicableSelectedFeatures(ActiveMapView).ToList();
+						try
+						{
+							var selectedFeatures =
+								GetApplicableSelectedFeatures(ActiveMapView).ToList();
 
-						RefreshExistingChangeAlongCurves(selectedFeatures,
-						                                 GetCancelableProgressor());
+							RefreshExistingChangeAlongCurves(selectedFeatures,
+							                                 GetCancelableProgressor());
 
-						return true;
+							return true;
+						}
+						catch (Exception e)
+						{
+							// Do not re-throw or the application could crash (e.g. in undo)
+							_msg.Error($"Error calculating reshape curves: {e.Message}", e);
+							return false;
+						}
 					});
 			}
 
@@ -333,7 +342,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 					return false;
 				}
 
-				targetFeatures = new[] {picked.Feature};
+				targetFeatures = new[] { picked.Feature };
 			}
 			else
 			{
