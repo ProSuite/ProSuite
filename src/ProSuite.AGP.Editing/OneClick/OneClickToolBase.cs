@@ -676,14 +676,13 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected void HandleError(string message, Exception e, bool noMessageBox = false)
 		{
-			_msg.Error(message, e);
-
 			if (noMessageBox)
 			{
+				_msg.Error(message, e);
 				return;
 			}
 
-			ErrorHandler.HandleError(message, null, _msg, "Error");
+			ErrorHandler.HandleError(message, e, _msg, "Error");
 		}
 
 		protected void SetCursor([CanBeNull] Cursor cursor)

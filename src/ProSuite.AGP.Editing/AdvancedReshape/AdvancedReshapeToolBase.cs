@@ -167,7 +167,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			}
 			catch (Exception e)
 			{
-				_msg.Warn("Error generating preview", e);
+				_msg.Warn($"Error generating preview: {e.Message}", e);
 				return false;
 			}
 			finally
