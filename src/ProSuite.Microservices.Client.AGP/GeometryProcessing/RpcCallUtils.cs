@@ -1,4 +1,6 @@
 using System;
+using System.Linq;
+using System.Text;
 using System.Threading;
 using Grpc.Core;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -35,6 +37,21 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 			{
 				_msg.Debug("Exception received from server", rpcException);
 
+				const string exceptionBinKey = "exception-bin";
+
+				if (rpcException.Trailers.Any(t => t.Key.Equals(exceptionBinKey)))
+				{
+					byte[] bytes = rpcException.Trailers.GetValueBytes(exceptionBinKey);
+
+					if (bytes != null)
+					{
+						string serverException = Encoding.UTF8.GetString(bytes);
+						_msg.DebugFormat("Server call stack: {0}", serverException);
+					}
+				}
+
+				string message = rpcException.Status.Detail;
+
 				if (rpcException.StatusCode == StatusCode.Cancelled)
 				{
 					Log("Operation cancelled", noWarn);
@@ -47,7 +64,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 					return default;
 				}
 
-				throw;
+				throw new Exception(message, rpcException);
 			}
 
 			return result;
