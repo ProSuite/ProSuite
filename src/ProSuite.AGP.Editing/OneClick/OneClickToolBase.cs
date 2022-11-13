@@ -770,6 +770,8 @@ namespace ProSuite.AGP.Editing.OneClick
 			var filteredCount = 0;
 			var selectionCount = 0;
 
+			SpatialReference mapSpatialReference = MapView.Active.Map.SpatialReference;
+
 			foreach (KeyValuePair<MapMember, List<long>> oidsByLayer in selectionByLayer)
 			{
 				if (! CanSelectFromLayer(oidsByLayer.Key as Layer, notifications))
@@ -779,7 +781,7 @@ namespace ProSuite.AGP.Editing.OneClick
 				}
 
 				foreach (Feature feature in MapUtils.GetFeatures(
-					         oidsByLayer.Key, oidsByLayer.Value))
+					         oidsByLayer.Key, oidsByLayer.Value, false, mapSpatialReference))
 				{
 					yield return feature;
 					selectionCount++;

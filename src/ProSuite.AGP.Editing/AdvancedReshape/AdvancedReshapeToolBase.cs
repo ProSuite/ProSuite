@@ -193,7 +193,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 					if (_updateFeedbackTask != null)
 					{
-						// Still working on the previous update (large poylgons!)
+						// Still working on the previous update (large polygons!)
 						return;
 					}
 
@@ -299,7 +299,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 						result.ResultFeatures
 						      .Where(r => GdbPersistenceUtils.CanChange(
 							             r, editableClassHandles, RowChangeType.Update))
-						      .ToDictionary(r => r.Feature, r => r.NewGeometry);
+						      .ToDictionary(r => r.OriginalFeature, r => r.NewGeometry);
 
 					success = await SaveAsync(resultFeatures);
 
@@ -428,7 +428,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 			foreach (var resultFeature in reshapeResult.ResultFeatures)
 			{
-				var feature = resultFeature.Feature;
+				var feature = resultFeature.OriginalFeature;
 
 				result.Add(feature, resultFeature.NewGeometry);
 

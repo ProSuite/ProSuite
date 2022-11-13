@@ -28,7 +28,7 @@ namespace ProSuite.Commons.AGP.Gdb
 		                    [NotNull] string description,
 		                    [NotNull] Dataset dataset)
 		{
-			return Execute(action, description, new[] {dataset});
+			return Execute(action, description, new[] { dataset });
 		}
 
 		public bool Execute([NotNull] Action<EditOperation.IEditContext> action,
@@ -44,7 +44,7 @@ namespace ProSuite.Commons.AGP.Gdb
 		                                     [NotNull] string description,
 		                                     [NotNull] Dataset dataset)
 		{
-			return await ExecuteAsync(action, description, new[] {dataset});
+			return await ExecuteAsync(action, description, new[] { dataset });
 		}
 
 		public async Task<bool> ExecuteAsync([NotNull] Action<EditOperation.IEditContext> action,
@@ -126,6 +126,14 @@ namespace ProSuite.Commons.AGP.Gdb
 				{
 					// NOTE: No exception should be thrown here otherwise the process will crash
 					_msg.Debug("Error in edit operation", e);
+
+					// The Exception is internal, therefore we cannot use typeof
+					if (e.GetType().Name == "AbortEditException")
+					{
+						// Or probably if it's the wrong SR?
+						_msg.Debug("The edit operation was aborted. This could happen for " +
+						           "example if the coordinates are out of bounds.");
+					}
 
 					_exception = e;
 

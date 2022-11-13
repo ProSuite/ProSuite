@@ -21,6 +21,7 @@ using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Framework;
+using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Exceptions;
@@ -538,6 +539,12 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 				return;
 			}
 
+			SpatialReference mapSr = MapView.Active.Map.SpatialReference;
+
+			// After undo/redo the shape's spatial reference could have been changed.
+			ChangeAlongCurves.TargetFeatures =
+				ReRead(ChangeAlongCurves.TargetFeatures, mapSr).ToList();
+
 			ChangeAlongCurves newState =
 				RefreshChangeAlongCurves(selectedFeatures, ChangeAlongCurves.TargetFeatures,
 				                         progressor);
@@ -585,7 +592,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 				updatedFeatures
 					.Where(f => IsStoreRequired(
 						       f, editableClassHandles, RowChangeType.Update))
-					.ToDictionary(r => r.Feature, r => r.NewGeometry);
+					.ToDictionary(r => r.OriginalFeature, r => r.NewGeometry);
 
 			// Inserts (in case of cut), grouped by original feature:
 			var inserts = updatedFeatures
@@ -612,7 +619,39 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 			ToolUtils.SelectNewFeatures(newFeatures, MapView.Active);
 
+			SpatialReference outputSpatialReference = MapView.Active.Map.SpatialReference;
+
+			if (ChangeAlongCurves.TargetFeatures != null)
+			{
+				ChangeAlongCurves.TargetFeatures =
+					ReRead(ChangeAlongCurves.TargetFeatures, outputSpatialReference).ToList();
+			}
+
 			return success;
+		}
+
+		private static IEnumerable<Feature> ReRead([NotNull] IList<Feature> features,
+		                                           [CanBeNull]
+		                                           SpatialReference outputSpatialReference)
+		{
+			var groupedByClass = features.GroupBy(f => f.GetTable().GetID());
+
+			foreach (IGrouping<long, Feature> grouping in groupedByClass)
+			{
+				FeatureClass featureClass = grouping.FirstOrDefault()?.GetTable();
+
+				if (featureClass == null)
+				{
+					continue;
+				}
+
+				foreach (Feature feature in GdbQueryUtils.GetFeatures(
+					         featureClass, grouping.Select(f => f.GetObjectID()),
+					         outputSpatialReference, false))
+				{
+					yield return feature;
+				}
+			}
 		}
 
 		private static bool IsStoreRequired([NotNull] ResultFeature resultFeature,
@@ -624,7 +663,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 				return false;
 			}
 
-			Feature feature = resultFeature.Feature;
+			Feature feature = resultFeature.OriginalFeature;
 
 			Geometry originalGeometry = feature.GetShape();
 
@@ -646,7 +685,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		{
 			foreach (ResultFeature resultFeature in updatedFeatures)
 			{
-				if (savedUpdates.ContainsKey(resultFeature.Feature) &&
+				if (savedUpdates.ContainsKey(resultFeature.OriginalFeature) &&
 				    resultFeature.Messages.Count == 1)
 				{
 					_msg.Info(resultFeature.Messages[0]);

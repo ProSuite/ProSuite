@@ -158,19 +158,12 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong
 
 			List<ResultObjectMsg> responseResultFeatures = response.ResultFeatures.ToList();
 
-			var resultFeatures = new List<ResultFeature>();
+			SpatialReference resultSpatialReference =
+				sourceFeatures.FirstOrDefault()?.GetShape().SpatialReference;
 
-			foreach (ResultObjectMsg resultObjectMsg in responseResultFeatures)
-			{
-				GdbObjectMsg updateMsg = Assert.NotNull(resultObjectMsg.Update);
-
-				var updateObjRef =
-					new GdbObjectReference(updateMsg.ClassHandle, updateMsg.ObjectId);
-
-				Feature originalFeature = featuresByObjRef[updateObjRef];
-
-				resultFeatures.Add(new ResultFeature(originalFeature, resultObjectMsg));
-			}
+			var resultFeatures = new List<ResultFeature>(
+				FeatureDtoConversionUtils.FromUpdateMsgs(responseResultFeatures, featuresByObjRef,
+				                                         resultSpatialReference));
 
 			newChangeAlongCurves = PopulateReshapeAlongCurves(
 				targetFeatures, response.NewReshapeLines,
@@ -199,53 +192,18 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong
 
 			List<ResultObjectMsg> responseResultFeatures = response.ResultFeatures.ToList();
 
-			var resultFeatures = new List<ResultFeature>();
+			SpatialReference resultSpatialReference =
+				sourceFeatures.FirstOrDefault()?.GetShape().SpatialReference;
 
-			foreach (ResultObjectMsg resultObjectMsg in responseResultFeatures)
-			{
-				GdbObjectReference originalFeatureRef =
-					GetOriginalGdbObjectReference(resultObjectMsg);
-
-				Feature originalFeature = featuresByObjRef[originalFeatureRef];
-
-				ResultFeature resultFeature = new ResultFeature(
-					originalFeature, resultObjectMsg);
-
-				resultFeatures.Add(resultFeature);
-			}
+			var resultFeatures = new List<ResultFeature>(
+				FeatureDtoConversionUtils.FromUpdateMsgs(responseResultFeatures, featuresByObjRef,
+				                                         resultSpatialReference));
 
 			newChangeAlongCurves = PopulateReshapeAlongCurves(
 				targetFeatures, response.NewCutLines,
 				(ReshapeAlongCurveUsability) response.CutLinesUsability);
 
 			return resultFeatures;
-		}
-
-		private static GdbObjectReference GetOriginalGdbObjectReference(
-			[NotNull] ResultObjectMsg resultObjectMsg)
-		{
-			Assert.ArgumentNotNull(nameof(resultObjectMsg));
-
-			long classHandle, objectId;
-
-			if (resultObjectMsg.FeatureCase == ResultObjectMsg.FeatureOneofCase.Insert)
-			{
-				InsertedObjectMsg insert = Assert.NotNull(resultObjectMsg.Insert);
-
-				GdbObjRefMsg originalObjRefMsg = insert.OriginalReference;
-
-				classHandle = originalObjRefMsg.ClassHandle;
-				objectId = originalObjRefMsg.ObjectId;
-			}
-			else
-			{
-				GdbObjectMsg updateMsg = Assert.NotNull(resultObjectMsg.Update);
-
-				classHandle = updateMsg.ClassHandle;
-				objectId = updateMsg.ObjectId;
-			}
-
-			return new GdbObjectReference(classHandle, objectId);
 		}
 
 		private static Dictionary<GdbObjectReference, Feature> CreateFeatureDictionary(
@@ -324,9 +282,13 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong
 			ReshapeAlongCurveUsability cutSubcurveUsability)
 		{
 			IList<CutSubcurve> resultSubcurves = new List<CutSubcurve>();
+
+			SpatialReference sr = targetFeatures.Select(f => f.GetShape().SpatialReference)
+			                                    .FirstOrDefault();
+
 			foreach (var reshapeLineMsg in reshapeLineMsgs)
 			{
-				CutSubcurve cutSubcurve = FromReshapeLineMsg(reshapeLineMsg);
+				CutSubcurve cutSubcurve = FromReshapeLineMsg(reshapeLineMsg, sr);
 
 				Assert.NotNull(cutSubcurve);
 
@@ -348,17 +310,23 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong
 			       };
 		}
 
-		private static CutSubcurve FromReshapeLineMsg(ReshapeLineMsg reshapeLineMsg)
+		private static CutSubcurve FromReshapeLineMsg(ReshapeLineMsg reshapeLineMsg,
+		                                              SpatialReference spatialReference)
 		{
-			var path = (Polyline) ProtobufConversionUtils.FromShapeMsg(reshapeLineMsg.Path);
+			var path =
+				(Polyline) ProtobufConversionUtils.FromShapeMsg(
+					reshapeLineMsg.Path, spatialReference);
 
 			var targetSegmentAtFrom =
-				(Polyline) ProtobufConversionUtils.FromShapeMsg(reshapeLineMsg.TargetSegmentAtFrom);
+				(Polyline) ProtobufConversionUtils.FromShapeMsg(
+					reshapeLineMsg.TargetSegmentAtFrom, spatialReference);
 			var targetSegmentAtTo =
-				(Polyline) ProtobufConversionUtils.FromShapeMsg(reshapeLineMsg.TargetSegmentAtTo);
+				(Polyline) ProtobufConversionUtils.FromShapeMsg(
+					reshapeLineMsg.TargetSegmentAtTo, spatialReference);
 
 			var extraInsertPoints =
-				ProtobufConversionUtils.FromShapeMsg(reshapeLineMsg.ExtraTargetInsertPoints);
+				ProtobufConversionUtils.FromShapeMsg(reshapeLineMsg.ExtraTargetInsertPoints,
+				                                     spatialReference);
 
 			var result = new CutSubcurve(Assert.NotNull(path),
 			                             reshapeLineMsg.CanReshape, reshapeLineMsg.IsCandidate,
