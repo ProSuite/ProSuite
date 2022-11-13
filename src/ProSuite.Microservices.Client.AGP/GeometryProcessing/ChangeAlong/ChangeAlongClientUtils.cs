@@ -102,6 +102,9 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong
 			                                request.SourceFeatures, request.TargetFeatures,
 			                                request.ClassDefinitions);
 
+			request.Tolerance = selectedFeatures.FirstOrDefault()?.GetShape().SpatialReference
+			                                    .XYTolerance ?? 0;
+
 			// TODO: The other options
 
 			return request;
