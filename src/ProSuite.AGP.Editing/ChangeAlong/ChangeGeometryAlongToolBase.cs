@@ -54,6 +54,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		protected Cursor TargetSelectionCursor { get; set; }
 		protected Cursor TargetSelectionCursorShift { get; set; }
 
+		protected bool DisplayTargetLines { get; set; }
 		protected Cursor PolygonSketchCursor { get; set; }
 
 		protected abstract string EditOperationDescription { get; }
@@ -82,7 +83,10 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 		protected override void OnToolActivatingCore()
 		{
-			_feedback = new ChangeAlongFeedback();
+			_feedback = new ChangeAlongFeedback()
+			            {
+				            ShowTargetLines = DisplayTargetLines
+			            };
 		}
 
 		protected override void OnToolDeactivateCore(bool hasMapViewChanged)
@@ -248,7 +252,9 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 		private bool HasReshapeCurves()
 		{
-			return ChangeAlongCurves != null && ChangeAlongCurves.HasSelectableCurves;
+			// Test for target features because in cut along the curves are not provided until
+			// there is a cut (but the targets get symbolized).
+			return ChangeAlongCurves != null && ChangeAlongCurves.TargetFeatures?.Count > 0;
 		}
 
 		protected bool IsInSubcurveSelectionPhase()
