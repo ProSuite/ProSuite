@@ -14,6 +14,10 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AGP.Carto
 {
+	/// <summary>
+	/// Provides functionality to find features in the map. The features' shapes are returned in the
+	/// map spatial reference.
+	/// </summary>
 	public class FeatureFinder
 	{
 		private readonly MapView _mapView;
@@ -63,6 +67,8 @@ namespace ProSuite.Commons.AGP.Carto
 			Predicate<Feature> featurePredicate,
 			CancelableProgressor cancelableProgressor)
 		{
+			SpatialReference outputSpatialReference = _mapView.Map.SpatialReference;
+
 			foreach (FeatureLayer featureLayer in featureLayers)
 			{
 				if (cancelableProgressor != null
@@ -91,18 +97,20 @@ namespace ProSuite.Commons.AGP.Carto
 					if (objectIds.Count > 0)
 					{
 						yield return new FeatureClassSelection(
-							featureClass, objectIds, featureLayer);
+							featureClass, objectIds, featureLayer, outputSpatialReference);
 					}
 				}
 				else
 				{
+					filter.OutputSpatialReference = outputSpatialReference;
+
 					List<Feature> features =
 						LayerUtils.SearchRows(featureLayer, filter, featurePredicate).ToList();
 
 					if (features.Count > 0)
 					{
-						yield return
-							new FeatureClassSelection(featureClass, features, featureLayer);
+						yield return new FeatureClassSelection(featureClass, features, featureLayer,
+						                                       outputSpatialReference);
 					}
 				}
 			}
@@ -141,6 +149,8 @@ namespace ProSuite.Commons.AGP.Carto
 			IEnumerable<IGrouping<IntPtr, FeatureLayer>> layersGroupedByClass =
 				featureLayers.GroupBy(fl => fl.GetFeatureClass().Handle);
 
+			SpatialReference outputSpatialReference = _mapView.Map.SpatialReference;
+
 			foreach (var layersInClass in layersGroupedByClass)
 			{
 				// One query per distinct definition query, then make OIDs distinct
@@ -164,6 +174,8 @@ namespace ProSuite.Commons.AGP.Carto
 						GdbQueryUtils.CreateSpatialFilter(searchGeometry, SpatialRelationship);
 					filter.WhereClause = layers.Key;
 
+					filter.OutputSpatialReference = outputSpatialReference;
+
 					IEnumerable<Feature> foundFeatures = GdbQueryUtils
 					                                     .GetFeatures(featureClass, filter, false)
 					                                     .Where(f => featurePredicate == null ||
@@ -175,7 +187,7 @@ namespace ProSuite.Commons.AGP.Carto
 				{
 					yield return new FeatureClassSelection(
 						featureClass, features.DistinctBy(f => f.GetObjectID()).ToList(),
-						featureLayer);
+						featureLayer, outputSpatialReference);
 				}
 			}
 		}
@@ -206,7 +218,9 @@ namespace ProSuite.Commons.AGP.Carto
 				FeatureSelectionType != TargetFeatureSelection.Undefined,
 				"Unsupported target selection type");
 
-			SelectedFeatures = MapUtils.GetFeatures(intersectingSelectedFeatures).ToList();
+			SpatialReference spatialReference = _mapView.Map.SpatialReference;
+			SelectedFeatures = MapUtils.GetFeatures(intersectingSelectedFeatures, spatialReference)
+			                           .ToList();
 
 			var searchGeometry = GetSearchGeometry(SelectedFeatures, extent);
 

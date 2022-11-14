@@ -251,10 +251,20 @@ namespace ProSuite.Microservices.Client.AGP
 			return result;
 		}
 
+		/// <summary>
+		/// Converts the specified features to proto messages and adds them to the provided lists.
+		/// </summary>
+		/// <param name="features"></param>
+		/// <param name="resultGdbObjects"></param>
+		/// <param name="resultGdbClasses"></param>
+		/// <param name="keepFeatureClassSpatialRef">Whether the spatial reference of the feature
+		/// classes should be kept in the message. If false, the spatial reference of the shapes'
+		/// will be used also on the feature class.</param>
 		public static void ToGdbObjectMsgList(
 			[NotNull] IEnumerable<Feature> features,
 			[NotNull] ICollection<GdbObjectMsg> resultGdbObjects,
-			[NotNull] ICollection<ObjectClassMsg> resultGdbClasses)
+			[NotNull] ICollection<ObjectClassMsg> resultGdbClasses,
+			bool keepFeatureClassSpatialRef = false)
 		{
 			Stopwatch watch = null;
 
@@ -282,15 +292,21 @@ namespace ProSuite.Microservices.Client.AGP
 
 				if (! classesByClassId.ContainsKey(uniqueClassId))
 				{
-					resultGdbClasses.Add(ToObjectClassMsg(featureClass, uniqueClassId));
+					// Assumption: All features' shapes have the same (map) spatial reference
+					// -> Make the remote feature class carry the map SR and each individual feature
+					// only keeps the WkId. Do not use the actual feature class' SR to avoid
+					// to-and-from transformations!
+					SpatialReference spatialRef = shape.SpatialReference;
+					resultGdbClasses.Add(ToObjectClassMsg(featureClass, uniqueClassId, spatialRef));
 
 					classesByClassId.Add(uniqueClassId, featureClass);
 
 					SpatialReference featureClassSpatialRef =
 						featureClass.GetDefinition().GetSpatialReference();
 
-					if (! SpatialReference.AreEqual(
-						    featureClassSpatialRef, shape.SpatialReference, false, true))
+					if (keepFeatureClassSpatialRef &&
+					    ! SpatialReference.AreEqual(featureClassSpatialRef, spatialRef, false,
+					                                true))
 					{
 						omitDetailedShapeSpatialRef = false;
 					}
@@ -343,7 +359,7 @@ namespace ProSuite.Microservices.Client.AGP
 			esriGeometryType geometryType = TranslateAGPShapeType(objectClass);
 
 			string name = objectClass.GetName();
-			string aliasName = objectClass.GetDefinition().GetAliasName();
+			string aliasName = DatasetUtils.GetAliasName(objectClass);
 
 			if (spatialRef == null && objectClass is FeatureClass fc)
 			{

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using ArcGIS.Core.CIM;
@@ -26,7 +25,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 {
 	public abstract class RemoveOverlapsToolBase : TwoPhaseEditToolBase
 	{
-		private static readonly IMsg _msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private Overlaps _overlaps;
 		private RemoveOverlapsFeedback _feedback;
@@ -123,7 +122,8 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 				return false;
 			}
 
-			IEnumerable<Feature> selectedFeatures = MapUtils.GetFeatures(selection);
+			IEnumerable<Feature> selectedFeatures = MapUtils.GetFeatures(
+				selection, MapView.Active.Map.SpatialReference);
 
 			RemoveOverlapsResult result =
 				MicroserviceClient.RemoveOverlaps(

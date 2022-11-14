@@ -11,5 +11,13 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.AdvancedReshape
 		public int OpenJawIntersectionCount { get; set; }
 
 		public string FailureMessage { get; set; }
+
+		public void Add(IEnumerable<ResultFeature> resultFeatures)
+		{
+			foreach (ResultFeature resultFeature in resultFeatures)
+			{
+				ResultFeatures.Add(resultFeature);
+			}
+		}
 	}
 }

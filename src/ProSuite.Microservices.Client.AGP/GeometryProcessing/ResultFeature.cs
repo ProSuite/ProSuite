@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Microservices.Definitions.Shared;
 
@@ -12,19 +13,26 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 		[NotNull] private readonly ResultObjectMsg _resultFeatureMsg;
 
 		[NotNull]
-		public Feature Feature { get; }
+		public Feature OriginalFeature { get; }
 
-		private Geometry _updatedGeometry;
+		private Geometry _newGeometry;
 		private long _newObjectId;
 
-		public ResultFeature([NotNull] Feature feature,
+		public ResultFeature([NotNull] Feature originalFeature,
 		                     [NotNull] ResultObjectMsg resultFeatureMsg)
 		{
 			_resultFeatureMsg = resultFeatureMsg;
-			Feature = feature;
+			OriginalFeature = originalFeature;
 			ChangeType = ToChangeType(_resultFeatureMsg.FeatureCase);
 			HasWarningMessage = _resultFeatureMsg.HasWarning;
 		}
+
+		/// <summary>
+		/// The known spatial reference of the result feature msg provided in the constructor.
+		/// It will be used when creating the new geometry. It must be set if the calculation
+		/// (map) SR is different from the feature class' spatial reference.
+		/// </summary>
+		public SpatialReference KnownResultSpatialReference { get; set; }
 
 		public RowChangeType ChangeType { get; }
 
@@ -35,7 +43,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 		{
 			get
 			{
-				if (_updatedGeometry == null)
+				if (_newGeometry == null)
 				{
 					GdbObjectMsg gdbObjectMsg;
 
@@ -52,15 +60,58 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 						throw new InvalidOperationException("Cannot get new geometry of delete");
 					}
 
-					SpatialReference knownSr = Feature.GetShape().SpatialReference;
+					SpatialReference expectedSr =
+						KnownResultSpatialReference ?? OriginalFeature.GetShape().SpatialReference;
 
-					_updatedGeometry =
-						ProtobufConversionUtils.FromShapeMsg(gdbObjectMsg.Shape,
-						                                     knownSr);
+					Assert.True(
+						IsExpectedSpatialRef(expectedSr, gdbObjectMsg.Shape.SpatialReference),
+						"Unexpected spatial reference in result feature: {0}. Expected: {1}",
+						gdbObjectMsg.Shape.SpatialReference, expectedSr.Name);
+
+					_newGeometry =
+						ProtobufConversionUtils.FromShapeMsg(gdbObjectMsg.Shape, expectedSr);
 				}
 
-				return _updatedGeometry;
+				return _newGeometry;
 			}
+		}
+
+		private static bool IsExpectedSpatialRef([CanBeNull] SpatialReference expected,
+		                                         SpatialReferenceMsg spatialReferenceMsg)
+		{
+			if (expected == null)
+			{
+				// No expectations:
+				return true;
+			}
+
+			if (spatialReferenceMsg.FormatCase ==
+			    SpatialReferenceMsg.FormatOneofCase.SpatialReferenceWkid)
+			{
+				return expected.Wkid == spatialReferenceMsg.SpatialReferenceWkid;
+			}
+
+			if (spatialReferenceMsg.FormatCase ==
+			    SpatialReferenceMsg.FormatOneofCase.SpatialReferenceEsriXml)
+			{
+				string xml = spatialReferenceMsg.SpatialReferenceEsriXml;
+
+				SpatialReference actual =
+					SpatialReferenceBuilder.FromXml(Assert.NotNullOrEmpty(xml));
+
+				return expected.Wkid == actual.Wkid;
+			}
+
+			if (spatialReferenceMsg.FormatCase ==
+			    SpatialReferenceMsg.FormatOneofCase.SpatialReferenceWkt)
+			{
+				SpatialReference actual = SpatialReferenceBuilder.CreateSpatialReference(
+					Assert.NotNullOrEmpty(spatialReferenceMsg.SpatialReferenceWkt));
+
+				return expected.Wkid == actual.Wkid;
+			}
+
+			return true;
 		}
 
 		public IList<string> Messages => _resultFeatureMsg.Notifications;

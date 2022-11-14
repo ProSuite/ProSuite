@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Threading.Tasks;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
@@ -20,7 +19,7 @@ namespace ProSuite.AGP.Editing.Erase
 {
 	public abstract class EraseToolBase : ConstructionToolBase
 	{
-		private static readonly IMsg _msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		protected EraseToolBase()
 		{
@@ -107,7 +106,7 @@ namespace ProSuite.AGP.Editing.Erase
 			return taskSave.Result;
 		}
 
-		private static IDictionary<Feature, Geometry> CalculateResultFeatures(
+		private IDictionary<Feature, Geometry> CalculateResultFeatures(
 			MapView activeView, Polygon sketchPolygon)
 		{
 			SelectionSet selectedFeatures = activeView.Map.GetSelection();
@@ -123,7 +122,9 @@ namespace ProSuite.AGP.Editing.Erase
 		{
 			var result = new Dictionary<Feature, Geometry>();
 
-			foreach (var feature in MapUtils.GetFeatures(selection))
+			SpatialReference spatialReference = MapView.Active.Map.SpatialReference;
+
+			foreach (var feature in MapUtils.GetFeatures(selection, spatialReference))
 			{
 				Geometry featureGeometry = feature.GetShape();
 				featureGeometry = GeometryEngine.Instance.SimplifyAsFeature(featureGeometry, true);

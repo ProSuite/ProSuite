@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Editing;
 using ProSuite.Commons.AGP.Core.Geodatabase;
+using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -16,7 +16,7 @@ namespace ProSuite.AGP.Editing
 {
 	public static class GdbPersistenceUtils
 	{
-		private static readonly IMsg _msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		public static async Task<bool> SaveInOperationAsync(
 			[NotNull] string description,
@@ -84,7 +84,10 @@ namespace ProSuite.AGP.Editing
 
 			if (copies != null && copies.Count > 0)
 			{
-				InsertTx(editContext, copies);
+				foreach (Feature feature in InsertTx(editContext, copies))
+				{
+					_msg.DebugFormat("Stored {0}", GdbObjectUtils.ToString(feature));
+				}
 			}
 
 			return true;
@@ -98,11 +101,14 @@ namespace ProSuite.AGP.Editing
 
 			RowBuffer rowBuffer = DuplicateRow(originalFeature);
 
-			SetShape(rowBuffer, newGeometry, featureClass);
+			Geometry projected = GeometryUtils.EnsureSpatialReference(
+				newGeometry, featureClass.GetSpatialReference());
+
+			SetShape(rowBuffer, projected, featureClass);
 
 			Feature newFeature = featureClass.CreateRow(rowBuffer);
 
-			StoreShape(newFeature, newGeometry, editContext);
+			StoreShape(newFeature, projected, editContext);
 
 			return newFeature;
 		}
@@ -148,7 +154,7 @@ namespace ProSuite.AGP.Editing
 		{
 			foreach (ResultFeature insert in insertResults)
 			{
-				Feature originalFeatue = insert.Feature;
+				Feature originalFeatue = insert.OriginalFeature;
 
 				Feature newFeature = InsertTx(editContext, originalFeatue, insert.NewGeometry);
 
@@ -167,7 +173,7 @@ namespace ProSuite.AGP.Editing
 				return false;
 			}
 
-			Feature feature = resultFeature.Feature;
+			Feature feature = resultFeature.OriginalFeature;
 
 			bool result = CanChange(feature, editableClassHandles, out string warning);
 
@@ -275,8 +281,22 @@ namespace ProSuite.AGP.Editing
 				throw new Exception("One or more updates geometries have become empty.");
 			}
 
-			feature.SetShape(geometry);
-			feature.Store();
+			try
+			{
+				// NOTE: Even if the geometry is not projected before setting the shape,
+				// the result is the same. After feature.SetShape() the (new) instance of
+				// feature.GetShape() is in the feature class' spatial reference.
+				Geometry projected = GeometryUtils.EnsureSpatialReference(
+					geometry, feature.GetTable().GetSpatialReference());
+
+				feature.SetShape(projected);
+				feature.Store();
+			}
+			catch (Exception)
+			{
+				_msg.VerboseDebug(() => $"Error persisting shape {geometry.ToXml()}");
+				throw;
+			}
 
 			editContext.Invalidate(feature);
 		}

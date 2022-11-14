@@ -82,7 +82,7 @@ namespace ProSuite.Commons.AGP.Carto
 
 				if (! result.ContainsKey(geodatabase))
 				{
-					result.Add(geodatabase, new SimpleSet<Table> {table});
+					result.Add(geodatabase, new SimpleSet<Table> { table });
 				}
 				else
 				{
@@ -94,13 +94,15 @@ namespace ProSuite.Commons.AGP.Carto
 		}
 
 		public static IEnumerable<Feature> GetFeatures(
-			[NotNull] SelectionSet selectionSet)
+			[NotNull] SelectionSet selectionSet,
+			[CanBeNull] SpatialReference outputSpatialReference)
 		{
-			return GetFeatures(selectionSet.ToDictionary());
+			return GetFeatures(selectionSet.ToDictionary(), outputSpatialReference);
 		}
 
 		public static IEnumerable<Feature> GetFeatures(
-			[NotNull] Dictionary<MapMember, List<long>> oidsByMapMembers)
+			[NotNull] Dictionary<MapMember, List<long>> oidsByMapMembers,
+			[CanBeNull] SpatialReference outputSpatialReference)
 		{
 			foreach (var oidsByMapMember in oidsByMapMembers)
 			{
@@ -108,7 +110,8 @@ namespace ProSuite.Commons.AGP.Carto
 
 				if (featureLayer == null) continue;
 
-				foreach (Feature feature in GetFeatures(featureLayer, oidsByMapMember.Value))
+				foreach (Feature feature in GetFeatures(featureLayer, oidsByMapMember.Value,
+				                                        false, outputSpatialReference))
 				{
 					yield return feature;
 				}
@@ -116,31 +119,10 @@ namespace ProSuite.Commons.AGP.Carto
 		}
 
 		public static IEnumerable<Feature> GetFeatures(
-			[NotNull] IEnumerable<KeyValuePair<BasicFeatureLayer, List<long>>> oidsByMapMembers)
-		{
-			foreach (var selectionByLayer in oidsByMapMembers)
-			{
-				foreach (var feature in GetFeatures(selectionByLayer))
-				{
-					yield return feature;
-				}
-			}
-		}
-
-		public static IEnumerable<Feature> GetFeatures(
-			KeyValuePair<BasicFeatureLayer, List<long>> layerOids)
-		{
-			BasicFeatureLayer layer = layerOids.Key;
-
-			foreach (var feature in GetFeatures(layer, layerOids.Value))
-			{
-				yield return feature;
-			}
-		}
-
-		public static IEnumerable<Feature> GetFeatures([NotNull] MapMember mapMember,
-		                                               [NotNull] List<long> oidList,
-		                                               bool recycling = false)
+			[NotNull] MapMember mapMember,
+			[NotNull] List<long> oidList,
+			bool recycling = false,
+			[CanBeNull] SpatialReference outputSpatialReference = null)
 		{
 			var basicFeatureLayer = mapMember as BasicFeatureLayer;
 
@@ -149,15 +131,18 @@ namespace ProSuite.Commons.AGP.Carto
 				yield break;
 			}
 
-			foreach (Feature feature in GetFeatures(basicFeatureLayer, oidList, recycling))
+			foreach (Feature feature in GetFeatures(basicFeatureLayer, oidList, recycling,
+			                                        outputSpatialReference))
 			{
 				yield return feature;
 			}
 		}
 
-		private static IEnumerable<Feature> GetFeatures([CanBeNull] BasicFeatureLayer layer,
-		                                                [NotNull] List<long> oids,
-		                                                bool recycling = false)
+		private static IEnumerable<Feature> GetFeatures(
+			[CanBeNull] BasicFeatureLayer layer,
+			[NotNull] List<long> oids,
+			bool recycling = false,
+			[CanBeNull] SpatialReference outputSpatialReference = null)
 		{
 			if (layer == null)
 			{
@@ -173,7 +158,8 @@ namespace ProSuite.Commons.AGP.Carto
 					             $"{featureClass.GetDefinition().GetObjectIDField()} IN ({StringUtils.Concatenate(oids, ", ")})"
 			             };
 
-			filter.OutputSpatialReference = layer.GetSpatialReference();
+			// NOTE: The spatial reference of the layer is the same as the feature class rather than the map.
+			filter.OutputSpatialReference = outputSpatialReference ?? layer.GetSpatialReference();
 
 			foreach (var feature in GdbQueryUtils.GetFeatures(featureClass, filter, recycling))
 			{

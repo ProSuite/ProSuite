@@ -11,7 +11,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 	{
 		private int _shapeFieldIndex = -1;
 
-		public GdbFeatureClass(int objectClassId,
+		public GdbFeatureClass(int? objectClassId,
 		                       [NotNull] string name,
 		                       esriGeometryType shapeType,
 		                       [CanBeNull] string aliasName = null,

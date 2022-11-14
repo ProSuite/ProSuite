@@ -19,7 +19,7 @@ namespace ProSuite.QA.Tests.Transformers
 		where T : TransformedBackingData
 	{
 		protected TransformedTableBase(
-			int objectClassId,
+			int? objectClassId,
 			[NotNull] string name,
 			[NotNull] Func<GdbTable, T> createBackingDataset,
 			[CanBeNull] IWorkspace workspace = null)
@@ -51,7 +51,7 @@ namespace ProSuite.QA.Tests.Transformers
 		where T : TransformedBackingData
 	{
 		protected TransformedFeatureClassBase(
-			int objectClassId,
+			int? objectClassId,
 			[NotNull] string name,
 			esriGeometryType shapeType,
 			[NotNull] Func<GdbTable, T> createBackingDataset,
