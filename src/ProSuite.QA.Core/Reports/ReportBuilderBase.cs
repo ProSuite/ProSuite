@@ -75,14 +75,14 @@ namespace ProSuite.QA.Core.Reports
 
 		public abstract void WriteReport();
 
-		private void Include(Type transformerType, int constructorIndex,
+		private void Include(Type instanceDescriptorType, int constructorIndex,
 		                     IDictionary<Type, IncludedInstanceClass> result)
 		{
 			var isNewInstance = false;
 			IncludedInstanceClass classToInclude;
-			if (! result.TryGetValue(transformerType, out classToInclude))
+			if (! result.TryGetValue(instanceDescriptorType, out classToInclude))
 			{
-				classToInclude = new IncludedInstanceClass(transformerType);
+				classToInclude = new IncludedInstanceClass(instanceDescriptorType);
 
 				if (! IncludeObsolete && classToInclude.Obsolete)
 				{
@@ -120,7 +120,7 @@ namespace ProSuite.QA.Core.Reports
 
 			if (isNewInstance)
 			{
-				result.Add(transformerType, classToInclude);
+				result.Add(instanceDescriptorType, classToInclude);
 			}
 		}
 

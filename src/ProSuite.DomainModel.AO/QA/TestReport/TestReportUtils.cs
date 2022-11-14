@@ -89,25 +89,6 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			builder.WriteReport();
 		}
 
-		public static void WritePythonTransformerClass([NotNull] IList<Assembly> assemblies,
-		                                               [NotNull] TextWriter writer)
-		{
-			Assert.ArgumentNotNull(assemblies, nameof(assemblies));
-
-			var builder = new PythonClassBuilder(writer);
-
-			builder.AddHeaderItem("ProSuite Version",
-			                      ReflectionUtils.GetAssemblyVersionString(
-				                      Assembly.GetExecutingAssembly()));
-
-			builder.IncludeObsolete = false;
-			builder.IncludeAssemblyInfo = true;
-
-			IncludeTransformerClasses(builder, assemblies);
-
-			builder.WriteTransformerClassFile();
-		}
-
 		public static void WritePythonTestClasses([NotNull] IList<Assembly> assemblies,
 		                                          [NotNull] TextWriter writer)
 		{

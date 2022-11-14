@@ -10,13 +10,13 @@ namespace ProSuite.QA.Core.Reports
 {
 	public abstract class PythonClassBuilderBase : ReportBuilderBase
 	{
-		private readonly TextWriter _textWriter;
+		protected TextWriter TextWriter { get; }
 
 		protected PythonClassBuilderBase([NotNull] TextWriter textWriter)
 		{
 			Assert.ArgumentNotNull(textWriter, nameof(textWriter));
 
-			_textWriter = textWriter;
+			TextWriter = textWriter;
 		}
 
 		public override void AddHeaderItem(string name, string value) { }
@@ -39,36 +39,16 @@ namespace ProSuite.QA.Core.Reports
 
 			WriteHeader(sb);
 
-			CreatePythonClass(includedTests, sb);
+			WriteImports(sb);
 
-			_textWriter.Write(sb.ToString());
+			CreatePythonConditionFactoryClass(includedTests, sb);
+
+			TextWriter.Write(sb.ToString());
 		}
 
-		public void WriteTransformerClassFile()
-		{
-			List<IncludedInstanceBase> includedTransformers =
-				GetSortedTransformerClasses().Cast<IncludedInstanceBase>().ToList();
+		protected virtual void WriteHeader(StringBuilder sb) { }
 
-			if (includedTransformers.Count <= 0)
-			{
-				return;
-			}
-
-			var sb = new StringBuilder();
-
-			WriteTransformerHeader(sb);
-
-			CreatePythonTransformerClass(includedTransformers, sb);
-
-			_textWriter.Write(sb.ToString());
-		}
-
-		private static void WriteTransformerHeader(StringBuilder sb)
-		{
-			// add import statements
-		}
-
-		private static void WriteHeader(StringBuilder sb)
+		private static void WriteImports(StringBuilder sb)
 		{
 			sb.AppendLine("from datetime import datetime");
 			sb.AppendLine("from typing import List");
@@ -77,11 +57,11 @@ namespace ProSuite.QA.Core.Reports
 			sb.AppendLine("from prosuite.dataset import Dataset");
 
 			sb.AppendLine();
-			sb.AppendLine();
 		}
 
-		private void CreatePythonClass(IEnumerable<IncludedInstanceBase> includedTests,
-		                               StringBuilder sb)
+		private void CreatePythonConditionFactoryClass(
+			[NotNull] IEnumerable<IncludedInstanceBase> includedTests,
+			[NotNull] StringBuilder sb)
 		{
 			sb.AppendLine("class ConditionFactory:");
 
@@ -89,7 +69,7 @@ namespace ProSuite.QA.Core.Reports
 			{
 				if (includedTest is IncludedInstanceClass includedTestClass)
 				{
-					if (includedTestClass.InstanceConstructors.Count <= 0)
+					if (includedTestClass.InstanceConstructors.Count == 0)
 					{
 						continue;
 					}
@@ -102,7 +82,7 @@ namespace ProSuite.QA.Core.Reports
 							continue;
 						}
 
-						AppendTestClassMethod(includedTestClass, constructor, sb);
+						AppendClassMethod("Condition", includedTestClass, constructor, sb);
 					}
 				}
 				else if (includedTest is IncludedTestFactory includedTestFactory)
@@ -117,87 +97,46 @@ namespace ProSuite.QA.Core.Reports
 			}
 		}
 
-		private void CreatePythonTransformerClass(
-			IEnumerable<IncludedInstanceBase> includedTransformers,
-			StringBuilder sb)
-		{
-			sb.AppendLine("class Transformer:");
-
-			foreach (IncludedInstanceBase includedTest in includedTransformers)
-			{
-				if (includedTest is IncludedInstanceClass includedTransformer)
-				{
-					if (includedTransformer.InstanceConstructors.Count <= 0)
-					{
-						continue;
-					}
-
-					foreach (IncludedInstanceConstructor constructor in includedTransformer
-						         .InstanceConstructors)
-					{
-						AppendTransformerClassMethod(includedTransformer, constructor, sb);
-					}
-				}
-			}
-		}
-
-		private void AppendTransformerClassMethod(
-			IncludedInstanceBase includedTransformerClass,
-			IncludedInstanceConstructor constructor,
-			StringBuilder sb)
-		{
-			IInstanceInfo testFactory = constructor.InstanceInfo;
-
-			string methodName =
-				$"{ToUnderscoreCase(includedTransformerClass.InstanceType.Name)}_{constructor.ConstructorIndex}";
-
-			string methodSignature = GetConstructorSignature(testFactory);
-			string conditionConstructorSignature =
-				$"\"{includedTransformerClass.InstanceType.Name}({constructor.ConstructorIndex})\"";
-
-			AppendTransformerMethod(methodName, methodSignature, testFactory,
-			                        conditionConstructorSignature,
-			                        sb);
-		}
-
-		private void AppendTestClassMethod(IncludedInstanceBase includedTestClass,
-		                                   IncludedInstanceConstructor constructor,
-		                                   StringBuilder sb)
+		protected void AppendClassMethod(string resultClassName,
+		                                 IncludedInstanceBase includedInstance,
+		                                 IncludedInstanceConstructor constructor, StringBuilder sb)
 		{
 			IInstanceInfo factory = constructor.InstanceInfo;
 
 			string methodName =
-				$"{ToUnderscoreCase(includedTestClass.InstanceType.Name)}_{constructor.ConstructorIndex}";
+				$"{ToUnderscoreCase(includedInstance.InstanceType.Name)}_{constructor.ConstructorIndex}";
 
 			string methodSignature = GetConstructorSignature(factory);
 			string conditionConstructorSignature =
-				$"\"{includedTestClass.InstanceType.Name}({constructor.ConstructorIndex})\"";
+				$"\"{includedInstance.InstanceType.Name}({constructor.ConstructorIndex})\"";
 
-			AppendMethod(methodName, methodSignature, factory, conditionConstructorSignature,
-			             sb);
+			AppendMethod(methodName, resultClassName, methodSignature, factory,
+			             conditionConstructorSignature, sb);
 		}
 
-		private static void AppendTransformerMethod(string methodName, string methodSignature,
-		                                            IInstanceInfo factory,
-		                                            string conditionConstructorSignature,
-		                                            StringBuilder sb)
+		private static void AppendConditionMethod(string methodName, string methodSignature,
+		                                          IInstanceInfo factory,
+		                                          string conditionConstructorSignature,
+		                                          StringBuilder sb)
 		{
-			sb.AppendLine();
-			sb.AppendLine($"    @classmethod");
-			sb.AppendLine($"    def {methodName}({methodSignature}):");
-			sb.AppendLine($"        pass");
+			var resultClassName = "Condition";
+
+			AppendMethod(methodName, resultClassName, methodSignature, factory,
+			             conditionConstructorSignature, sb);
 		}
 
-		private static void AppendMethod(string methodName, string methodSignature,
+		private static void AppendMethod(string methodName, string resultClassName,
+		                                 string methodSignature,
 		                                 IInstanceInfo factory,
-		                                 string conditionConstructorSignature, StringBuilder sb)
+		                                 string conditionConstructorSignature,
+		                                 StringBuilder sb)
 		{
 			sb.AppendLine();
 			sb.AppendLine($"    @classmethod");
-			sb.AppendLine($"    def {methodName}({methodSignature}) -> Condition:");
+			sb.AppendLine($"    def {methodName}({methodSignature}) -> {resultClassName}:");
 			sb.AppendLine($"        \"\"\"");
 			sb.AppendLine($"        {factory.TestDescription ?? string.Empty}        \"\"\"");
-			sb.AppendLine($"        result = Condition({conditionConstructorSignature})");
+			sb.AppendLine($"        result = {resultClassName}({conditionConstructorSignature})");
 
 			foreach (TestParameter testParameter in factory.Parameters)
 			{
@@ -237,8 +176,9 @@ namespace ProSuite.QA.Core.Reports
 			string methodSignature = GetConstructorSignature(factory);
 			string conditionConstructorSignature = $"\"{includedTestFactory.InstanceType.Name}\"";
 
-			AppendMethod(methodName, methodSignature, factory, conditionConstructorSignature,
-			             sb);
+			AppendConditionMethod(methodName, methodSignature, factory,
+			                      conditionConstructorSignature,
+			                      sb);
 		}
 
 		private static string ToUnderscoreCase(string str)
