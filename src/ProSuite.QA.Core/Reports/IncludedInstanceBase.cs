@@ -5,7 +5,7 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Core.IssueCodes;
 
-namespace ProSuite.DomainModel.AO.QA.TestReport
+namespace ProSuite.QA.Core.Reports
 {
 	public abstract class IncludedInstanceBase : IComparable<IncludedInstanceBase>
 	{

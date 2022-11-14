@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
@@ -89,18 +90,13 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.AdvancedReshape
 				return result;
 			}
 
-			foreach (ResultObjectMsg resultFeatureMsg in reshapeResultMsg.ResultFeatures)
-			{
-				GdbObjectReference objRef = new GdbObjectReference(
-					resultFeatureMsg.Update.ClassHandle,
-					resultFeatureMsg.Update.ObjectId);
+			// Create the result features with their new geometries:
+			SpatialReference resultSpatialReference =
+				selectedFeatures.FirstOrDefault()?.GetShape().SpatialReference;
 
-				Feature inputFeature = allInputFeatures[objRef];
-
-				var reshapeResultFeature = new ResultFeature(inputFeature, resultFeatureMsg);
-
-				result.ResultFeatures.Add(reshapeResultFeature);
-			}
+			result.Add(FeatureDtoConversionUtils.FromUpdateMsgs(
+				           reshapeResultMsg.ResultFeatures, allInputFeatures,
+				           resultSpatialReference));
 
 			return result;
 		}
@@ -160,18 +156,14 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.AdvancedReshape
 				return result;
 			}
 
-			foreach (ResultObjectMsg resultFeatureMsg in reshapeResultMsg.ResultFeatures)
-			{
-				GdbObjectReference objRef = new GdbObjectReference(
-					resultFeatureMsg.Update.ClassHandle,
-					resultFeatureMsg.Update.ObjectId);
+			// TODO: Consider separate converter / builder class or at least a record
+			//       holding the necessary things such as spatial reference or class-id etc.
+			SpatialReference resultSpatialReference =
+				allInputFeatures.Values.FirstOrDefault()?.GetShape().SpatialReference;
 
-				Feature inputFeature = allInputFeatures[objRef];
-
-				var reshapeResultFeature = new ResultFeature(inputFeature, resultFeatureMsg);
-
-				result.ResultFeatures.Add(reshapeResultFeature);
-			}
+			result.Add(FeatureDtoConversionUtils.FromUpdateMsgs(
+				           reshapeResultMsg.ResultFeatures, allInputFeatures,
+				           resultSpatialReference));
 
 			return result;
 		}

@@ -21,7 +21,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 			var baseRowField = JoinedSchema.Fields.Field[baseRowsFieldIdxResult];
 
-			_baseRowRowTable = new GdbTable(-1, "BASE_ROW_TBL");
+			_baseRowRowTable = new GdbTable(null, "BASE_ROW_TBL");
 			_baseRowIndex = _baseRowRowTable.AddFieldT(baseRowField);
 
 			_indexLookup = new Dictionary<int, int>(1);

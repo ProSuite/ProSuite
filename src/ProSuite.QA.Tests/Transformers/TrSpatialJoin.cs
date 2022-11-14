@@ -132,7 +132,7 @@ namespace ProSuite.QA.Tests.Transformers
 			public TransformedFc(IReadOnlyFeatureClass t0, IReadOnlyFeatureClass t1,
 			                     TrSpatialJoin parent,
 			                     string name = null)
-				: base(-1, ! string.IsNullOrWhiteSpace(name) ? name : "intersectResult",
+				: base(null, ! string.IsNullOrWhiteSpace(name) ? name : "intersectResult",
 				       t0.ShapeType,
 				       createBackingDataset: (t) =>
 					       new TrSpatialJoinDataset((TransformedFc) t, t0, t1),

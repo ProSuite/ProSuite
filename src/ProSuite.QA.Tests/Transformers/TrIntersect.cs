@@ -41,7 +41,7 @@ namespace ProSuite.QA.Tests.Transformers
 			public TransformedFc(IReadOnlyFeatureClass intersected,
 			                     IReadOnlyFeatureClass intersecting,
 			                     string name = null)
-				: base(-1, ! string.IsNullOrWhiteSpace(name) ? name : "intersectResult",
+				: base(null, ! string.IsNullOrWhiteSpace(name) ? name : "intersectResult",
 				       intersected.ShapeType,
 				       createBackingDataset: (t) =>
 					       new TransformedDataset((TransformedFc) t, intersected, intersecting),

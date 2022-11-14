@@ -18,12 +18,12 @@ namespace ProSuite.Commons.IO
 			_specialFolderNames =
 				new Dictionary<string, Environment.SpecialFolder>
 				{
-					{"APPDATA", Environment.SpecialFolder.ApplicationData},
-					{"LOCALAPPDATA", Environment.SpecialFolder.LocalApplicationData},
-					{"PROGRAMDATA", Environment.SpecialFolder.CommonApplicationData}
+					{ "APPDATA", Environment.SpecialFolder.ApplicationData },
+					{ "LOCALAPPDATA", Environment.SpecialFolder.LocalApplicationData },
+					{ "PROGRAMDATA", Environment.SpecialFolder.CommonApplicationData }
 				};
 
-		private static readonly string[] _variableFormats = {@"${{{0}}}", "%{0}%"};
+		private static readonly string[] _variableFormats = { @"${{{0}}}", "%{0}%" };
 		private static char[] _invalidPathChars;
 		private static char[] _invalidFileNameChars;
 
@@ -109,12 +109,13 @@ namespace ProSuite.Commons.IO
 			return null;
 		}
 
-		public static IEnumerable<string> EnumerateFiles([NotNull] string directory,
-		                                                 [NotNull] string searchString)
+		public static IEnumerable<string> EnumerateFiles(
+			[NotNull] string directory,
+			[NotNull] string searchString,
+			SearchOption searchOption = SearchOption.TopDirectoryOnly)
 		{
 			// NOTE: DirectoryInfo.EnumerateFiles is not available in .NET 3.5
-			// TODO: Conditional compilation
-			foreach (string fileName in Directory.GetFiles(directory, searchString))
+			foreach (string fileName in Directory.GetFiles(directory, searchString, searchOption))
 			{
 				yield return fileName;
 			}

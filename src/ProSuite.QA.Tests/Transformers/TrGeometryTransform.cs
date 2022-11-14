@@ -110,7 +110,7 @@ namespace ProSuite.QA.Tests.Transformers
 		{
 			public TransformedFc(IReadOnlyFeatureClass fc, esriGeometryType derivedShapeType,
 			                     IGeometryTransformer transformer, string name)
-				: base(-1, ! string.IsNullOrWhiteSpace(name) ? name : "derivedGeometry",
+				: base(null, ! string.IsNullOrWhiteSpace(name) ? name : "derivedGeometry",
 				       derivedShapeType,
 				       createBackingDataset: (t) => new TransformedDataset((TransformedFc) t, fc),
 				       workspace: new GdbWorkspace(new TransformerWorkspace()))

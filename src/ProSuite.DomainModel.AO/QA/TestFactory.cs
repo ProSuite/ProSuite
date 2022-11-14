@@ -14,7 +14,13 @@ using ProSuite.QA.Core;
 
 namespace ProSuite.DomainModel.AO.QA
 {
-	public abstract class TestFactory : InstanceFactory
+	/// <summary>
+	/// Marker interface to identify test factories in reports.
+	/// </summary>
+	[PublicAPI]
+	public interface ITestFactory : IInstanceInfo { }
+
+	public abstract class TestFactory : InstanceFactory, ITestFactory
 	{
 		#region Constructors
 
@@ -201,7 +207,7 @@ namespace ProSuite.DomainModel.AO.QA
 		protected virtual IList<ITest> CreateTestInstances([NotNull] object[] args)
 		{
 			ITest test = CreateTestInstance(args);
-			return new[] {test};
+			return new[] { test };
 		}
 
 		private void AddIssueFilters([NotNull] IList<ITest> tests, IOpenDataset datasetContext)
