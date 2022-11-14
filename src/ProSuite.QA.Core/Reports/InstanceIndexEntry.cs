@@ -2,7 +2,7 @@ using System.Xml;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
-namespace ProSuite.DomainModel.AO.QA.TestReport
+namespace ProSuite.QA.Core.Reports
 {
 	internal class InstanceIndexEntry : IndexEntry
 	{

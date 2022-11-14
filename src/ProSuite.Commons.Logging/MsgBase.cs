@@ -1,21 +1,19 @@
 using System;
 using System.Diagnostics;
 using System.Text;
-using log4net;
-using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Essentials.System;
 
 namespace ProSuite.Commons.Logging
 {
 	/// <summary>
-	/// Base class for assembly-specific Msg classes, which point to 
-	/// the correct resource files for the assembly.
+	/// Base class that encapsulates logging functionality and provides a base implementation
+	/// which is independent from a specific logging framework.
 	/// </summary>
 	public abstract class MsgBase : IMsg
 	{
-		private const string _breakReplacing = "\n";
-		private const string _breakTag = "<br>";
+		protected static string BreakReplacing { get; } = "\n";
+		protected static string BreakTag { get; } = "<br>";
 
 		private const string _indentPadding = "  ";
 		private const int _maxIndentLevel = 10;
@@ -23,7 +21,6 @@ namespace ProSuite.Commons.Logging
 		private static int _indentLevel;
 		private static bool _isVerboseDebugEnabled;
 		private static bool _reportMemoryConsumptionOnError;
-		private readonly ILog _log;
 
 		#region Constructors
 
@@ -43,67 +40,6 @@ namespace ProSuite.Commons.Logging
 			}
 
 			_indentFormats = indentFormats;
-		}
-
-		///// <summary>
-		///// Initializes a new instance of the <see cref="MsgBase"/> class.
-		///// </summary>
-		///// <param name="type">The type.</param>
-		///// <param name="rm">The resource manager(s)</param>
-		///// <remarks>The specified resource managers will be searched for a 
-		///// supplied resource name in the given order.</remarks>
-		//protected MsgBase(Type type, params ResourceManager[] rm) :
-		//    this(LogManager.GetLogger(type), rm) {}
-
-		/// <summary>
-		/// Initializes a new instance of the <see cref="MsgBase"/> class.
-		/// </summary>
-		/// <param name="type">The type.</param>
-		protected MsgBase([CanBeNull] Type type)
-			: this(Log4NetUtils.GetLogger(type ?? typeof(MsgBase))) { }
-
-		///// <summary>
-		///// Initializes a new instance of the <see cref="MsgBase"/> class.
-		///// </summary>
-		///// <param name="log">The log4net log</param>
-		///// <param name="rm">The resource manager(s)</param>
-		///// <remarks>The specified resource managers will be searched for a 
-		///// supplied resource name in the given order.<para/>
-		///// NOTE: constructor provided for unit testing (for injecting a mock log object). 
-		///// The log is passed as object to avoid log4net dependency in the constructor 
-		///// (which would force that dependency on all MsgBase users).
-		///// </remarks>
-		//protected MsgBase(object log, params ResourceManager[] rm)
-		//{
-		//    if (! (log is ILog))
-		//    {
-		//        throw new ArgumentException(
-		//            "log4net.ILog implementation expected", "log");
-		//    }
-
-		//    _log = (ILog) log;
-		//    // _resourceManagers = rm;
-		//}
-
-		/// <summary>
-		/// Initializes a new instance of the <see cref="MsgBase"/> class.
-		/// </summary>
-		/// <param name="log">The log4net log</param>
-		/// <remarks> constructor provided for unit testing (for injecting a mock log object). 
-		/// The log is passed as object to avoid log4net dependency in the constructor 
-		/// (which would force that dependency on all MsgBase users).
-		/// </remarks>
-		protected MsgBase([NotNull] object log)
-		{
-			Assert.ArgumentNotNull(log, nameof(log));
-
-			if (! (log is ILog iLog))
-			{
-				throw new ArgumentException(
-					"log4net.ILog implementation expected", nameof(log));
-			}
-
-			_log = iLog;
 		}
 
 		#endregion
@@ -154,46 +90,26 @@ namespace ProSuite.Commons.Logging
 
 		public int MaximumIndentationLevel => _maxIndentLevel;
 
-		[StringFormatMethod("format")]
-		public void VerboseDebugFormat(string format, params object[] args)
+		public abstract bool IsDebugEnabled { get; }
+
+		public abstract bool IsInfoEnabled { get; }
+
+		public abstract bool IsWarnEnabled { get; }
+
+		public abstract bool IsErrorEnabled { get; }
+
+		public abstract bool IsFatalEnabled { get; }
+
+		public bool IsVerboseDebugEnabled
 		{
-			if (IsVerboseDebugEnabled)
-			{
-				DebugCore(Format(format, args));
-			}
+			get => _isVerboseDebugEnabled && IsDebugEnabled;
+			set => _isVerboseDebugEnabled = value;
 		}
 
-		[StringFormatMethod("format")]
-		public void DebugFormat(string format, params object[] args)
+		public bool ReportMemoryConsumptionOnError
 		{
-			if (_log.IsDebugEnabled)
-			{
-				DebugCore(Format(format, args));
-			}
-		}
-
-		[StringFormatMethod("format")]
-		public void InfoFormat(string format, params object[] args)
-		{
-			InfoCore(Format(format, args));
-		}
-
-		[StringFormatMethod("format")]
-		public void WarnFormat(string format, params object[] args)
-		{
-			WarnCore(Format(format, args));
-		}
-
-		[StringFormatMethod("format")]
-		public void ErrorFormat(string format, params object[] args)
-		{
-			ErrorCore(Format(format, args));
-		}
-
-		[StringFormatMethod("format")]
-		public void FatalFormat(string format, params object[] args)
-		{
-			FatalCore(Format(format, args));
+			get => _reportMemoryConsumptionOnError;
+			set => _reportMemoryConsumptionOnError = value;
 		}
 
 		public void VerboseDebug(object message)
@@ -214,7 +130,7 @@ namespace ProSuite.Commons.Logging
 
 		public void Debug(object message)
 		{
-			if (_log.IsDebugEnabled)
+			if (IsDebugEnabled)
 			{
 				DebugCore(Format(message));
 			}
@@ -238,7 +154,7 @@ namespace ProSuite.Commons.Logging
 
 		public void Debug(object message, Exception exception)
 		{
-			if (_log.IsDebugEnabled)
+			if (IsDebugEnabled)
 			{
 				DebugCore(Format(message), exception);
 			}
@@ -297,6 +213,18 @@ namespace ProSuite.Commons.Logging
 			FatalCore(Format(message, _reportMemoryConsumptionOnError), exception);
 		}
 
+		public abstract void VerboseDebugFormat(string format, params object[] args);
+
+		public abstract void DebugFormat(string format, params object[] args);
+
+		public abstract void InfoFormat(string format, params object[] args);
+
+		public abstract void WarnFormat(string format, params object[] args);
+
+		public abstract void ErrorFormat(string format, params object[] args);
+
+		public abstract void FatalFormat(string format, params object[] args);
+
 		public Stopwatch DebugStartTiming()
 		{
 			return DebugStartTiming(null);
@@ -306,7 +234,7 @@ namespace ProSuite.Commons.Logging
 		public Stopwatch DebugStartTiming(string format,
 		                                  params object[] args)
 		{
-			if (! _log.IsDebugEnabled)
+			if (! IsDebugEnabled)
 			{
 				return null;
 			}
@@ -325,7 +253,7 @@ namespace ProSuite.Commons.Logging
 		public void DebugStopTiming(Stopwatch stopwatch, string format,
 		                            params object[] args)
 		{
-			if (stopwatch == null || ! _log.IsDebugEnabled)
+			if (stopwatch == null || ! IsDebugEnabled)
 			{
 				return;
 			}
@@ -357,34 +285,12 @@ namespace ProSuite.Commons.Logging
 			}
 		}
 
-		public bool IsDebugEnabled => _log.IsDebugEnabled;
-
-		public bool IsVerboseDebugEnabled
-		{
-			get => _isVerboseDebugEnabled && IsDebugEnabled;
-			set => _isVerboseDebugEnabled = value;
-		}
-
-		public bool ReportMemoryConsumptionOnError
-		{
-			get => _reportMemoryConsumptionOnError;
-			set => _reportMemoryConsumptionOnError = value;
-		}
-
-		public bool IsInfoEnabled => _log.IsInfoEnabled;
-
-		public bool IsWarnEnabled => _log.IsWarnEnabled;
-
-		public bool IsErrorEnabled => _log.IsErrorEnabled;
-
-		public bool IsFatalEnabled => _log.IsFatalEnabled;
-
 		#endregion
 
 		public static string ReplaceBreakTags(string message)
 		{
-			return message.Contains(_breakTag)
-				       ? message.Replace(_breakTag, _breakReplacing)
+			return message.Contains(BreakTag)
+				       ? message.Replace(BreakTag, BreakReplacing)
 				       : message;
 		}
 
@@ -392,72 +298,44 @@ namespace ProSuite.Commons.Logging
 
 		private static string IndentationFormat => _indentFormats[_indentLevel];
 
-		protected virtual void DebugCore(string message)
-		{
-			_log.Debug(message);
-		}
+		protected abstract void DebugCore(string message);
 
-		protected virtual void InfoCore(string message)
-		{
-			_log.Info(message);
-		}
+		protected abstract void InfoCore(string message);
 
-		protected virtual void WarnCore(string message)
-		{
-			_log.Warn(message);
-		}
+		protected abstract void WarnCore(string message);
 
-		protected virtual void ErrorCore(string message)
-		{
-			_log.Error(message);
-		}
+		protected abstract void ErrorCore(string message);
 
-		protected virtual void FatalCore(string message)
-		{
-			_log.Fatal(message);
-		}
+		protected abstract void FatalCore(string message);
 
-		protected virtual void DebugCore(string message, Exception exception)
-		{
-			_log.Debug(message, exception);
-		}
+		protected abstract void DebugCore(string message, Exception exception);
 
-		protected virtual void InfoCore(string message, Exception exception)
-		{
-			_log.Info(message, exception);
-		}
+		protected abstract void InfoCore(string message, Exception exception);
 
-		protected virtual void WarnCore(string message, Exception exception)
-		{
-			_log.Warn(message, exception);
-		}
+		protected abstract void WarnCore(string message, Exception exception);
 
-		protected virtual void ErrorCore(string message, Exception exception)
-		{
-			_log.Error(message, exception);
-		}
+		protected abstract void ErrorCore(string message, Exception exception);
 
-		protected virtual void FatalCore(string message, Exception exception)
-		{
-			_log.Fatal(message, exception);
-		}
+		protected abstract void FatalCore(string message, Exception exception);
+
+		protected abstract string RenderObject(object obj);
 
 		protected string GetIndented(object message)
 		{
 			return string.Format(IndentationFormat, message);
 		}
 
-		private string Format(object message, bool appendMemoryConsumption)
+		protected string Format(object message, bool appendMemoryConsumption)
 		{
 			return GetIndented(PrepareMessage(message, appendMemoryConsumption));
 		}
 
-		private string Format(object message)
+		protected string Format(object message)
 		{
 			return GetIndented(PrepareMessage(message));
 		}
 
-		private string Format(string format, object[] args)
+		protected string Format(string format, object[] args)
 		{
 			return GetIndented(TryFormat((string) PrepareMessage(format), args));
 		}
@@ -474,12 +352,8 @@ namespace ProSuite.Commons.Logging
 				virtualBytes / mb, privateBytes / mb, workingSet / mb);
 		}
 
-		private object PrepareMessage(object message)
-		{
-			return PrepareMessage(message, false);
-		}
-
-		private object PrepareMessage(object message, bool appendMemoryConsumption)
+		private object PrepareMessage(object message,
+		                              bool appendMemoryConsumption = false)
 		{
 			if (! (message is string messageString))
 			{
@@ -487,17 +361,12 @@ namespace ProSuite.Commons.Logging
 				                          appendMemoryConsumption);
 			}
 
-			if (messageString.Contains(_breakTag))
+			if (messageString.Contains(BreakTag))
 			{
-				messageString = messageString.Replace(_breakTag, _breakReplacing);
+				messageString = messageString.Replace(BreakTag, BreakReplacing);
 			}
 
 			return GetAppendedMessage(messageString, appendMemoryConsumption);
-		}
-
-		private string RenderObject(object obj)
-		{
-			return _log.Logger.Repository.RendererMap.FindAndRender(obj);
 		}
 
 		private static object GetAppendedMessage(string message,

@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
-namespace ProSuite.DomainModel.AO.QA.TestReport
+namespace ProSuite.QA.Core.Reports
 {
 	public abstract class ReportBuilderBase : IReportBuilder
 	{

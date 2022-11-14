@@ -7,6 +7,7 @@ using ProSuite.Commons.Xml;
 using ProSuite.DomainModel.AO.QA.Xml;
 using ProSuite.DomainModel.Core;
 using ProSuite.DomainModel.Core.QA;
+using ProSuite.QA.Core.Reports;
 
 namespace ProSuite.DomainModel.AO.QA.TestReport
 {

@@ -28,7 +28,7 @@ namespace ProSuite.Commons.Logging.Test
 			Assert.Less(watch.ElapsedMilliseconds, (double) 100, "too slow");
 		}
 
-		private class Msg : MsgBase
+		private class Msg : Log4NetMsgBase
 		{
 			public Msg(ILog log) : base(log) { }
 		}
@@ -65,7 +65,7 @@ namespace ProSuite.Commons.Logging.Test
 		public void AssertVerboseLoggingIsDirtCheapIfDisabled()
 		{
 			var realLog = LogManager.GetLogger(GetType());
-			var msg = new Msg(realLog) {IsVerboseDebugEnabled = false};
+			var msg = new Msg(realLog) { IsVerboseDebugEnabled = false };
 
 			const int count = 1000000;
 			var watch = new Stopwatch();

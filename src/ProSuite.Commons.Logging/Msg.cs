@@ -5,7 +5,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.Logging
 {
-	public sealed class Msg : MsgBase
+	public sealed class Msg : Log4NetMsgBase
 	{
 		public Msg([CanBeNull] Type type) : base(type) { }
 
@@ -14,10 +14,10 @@ namespace ProSuite.Commons.Logging
 		/// </summary>
 		[NotNull]
 		[MethodImpl(MethodImplOptions.NoInlining)]
-		public static Msg ForCurrentClass()
+		public static IMsg ForCurrentClass()
 		{
 			var type = GetCallerType();
-			return new Msg(type);
+			return CreateLoggerMsgAction(type);
 		}
 
 		[MethodImpl(MethodImplOptions.NoInlining)]
@@ -34,5 +34,7 @@ namespace ProSuite.Commons.Logging
 				return null;
 			}
 		}
+
+		public static Func<Type, IMsg> CreateLoggerMsgAction { get; set; } = type => new Msg(type);
 	}
 }
