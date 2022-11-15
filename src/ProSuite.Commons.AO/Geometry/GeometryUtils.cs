@@ -8410,8 +8410,8 @@ namespace ProSuite.Commons.AO.Geometry
 
 				// Test if this ever happens:
 				Assert.NotNull(curve3D,
-				               "Linear geometry does not implement ICurve3D: {0}",
-				               ToString(curve));
+				               (FormattableString)
+				               $"Linear geometry does not implement ICurve3D: {ToString(curve)}");
 
 				return curve3D.Length3D;
 			}

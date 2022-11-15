@@ -10,6 +10,7 @@ using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
+using ProSuite.QA.Container;
 
 namespace ProSuite.DomainServices.AO.QA
 {
@@ -112,6 +113,126 @@ namespace ProSuite.DomainServices.AO.QA
 			}
 
 			return result;
+		}
+
+		public static IList<ITest> GetTestsAndDictionaries(
+			[NotNull] QualitySpecification qualitySpecification,
+			[NotNull] IOpenDataset datasetOpener,
+			[NotNull] out QualityVerification qualityVerification,
+			[NotNull] out IList<QualityCondition> qualityConditions,
+			[NotNull] out VerificationElements verificationDictionaries,
+			[CanBeNull] Action<string, int, int> reportPreProcessing)
+		{
+			Assert.ArgumentNotNull(qualitySpecification, nameof(qualitySpecification));
+
+			reportPreProcessing?.Invoke("Loading tests...", 0, 0);
+
+			var testList = new List<ITest>();
+
+			HashSet<QualityCondition> orderedQualityConditions =
+				new HashSet<QualityCondition>(
+					QualitySpecificationUtils.GetOrderedQualityConditions(
+						qualitySpecification, datasetOpener));
+
+			Dictionary<QualityConditionVerification, QualitySpecificationElement>
+				elementsByConditionVerification;
+
+			qualityVerification = GetQualityVerification(
+				qualitySpecification, orderedQualityConditions,
+				out elementsByConditionVerification);
+
+			qualityConditions = new List<QualityCondition>();
+			var testsByCondition = new Dictionary<QualityCondition, IList<ITest>>();
+			var testVerifications = new Dictionary<ITest, TestVerification>();
+
+			int index = 0;
+			int count = orderedQualityConditions.Count;
+			foreach (QualityCondition condition in orderedQualityConditions)
+			{
+				reportPreProcessing?.Invoke("Loading tests...", index++, count);
+
+				TestFactory factory =
+					Assert.NotNull(TestFactoryUtils.CreateTestFactory(condition),
+					               $"Cannot create test factory for condition {condition.Name}");
+
+				// This test can only be performed here because the DataType must be initialized:
+				// It should probably be deleted once no IMosaicLayer, ITerrain is used any more
+				if (QualitySpecificationUtils.HasUnsupportedDatasetParameterValues(
+					    condition, datasetOpener, out string message))
+				{
+					_msg.WarnFormat(
+						"Condition '{0}' has unsupported parameter value(s) and is ignored: {1}",
+						condition.Name, message);
+					continue;
+				}
+
+				IList<ITest> tests = factory.CreateTests(datasetOpener);
+				if (tests.Count == 0)
+				{
+					continue;
+				}
+
+				QualityConditionVerification conditionVerification =
+					qualityVerification.GetConditionVerification(condition);
+				Assert.NotNull(conditionVerification,
+				               "Verification not found for quality condition");
+
+				var testIndex = 0;
+				foreach (ITest test in tests)
+				{
+					testList.Add(test);
+					testVerifications.Add(test,
+					                      new TestVerification(conditionVerification, testIndex));
+					testIndex++;
+				}
+
+				qualityConditions.Add(condition);
+				testsByCondition.Add(condition, tests);
+			}
+
+			verificationDictionaries =
+				new VerificationElements(testVerifications, testsByCondition,
+				                         elementsByConditionVerification);
+
+			return testList;
+		}
+
+		private static QualityVerification GetQualityVerification(
+			[NotNull] QualitySpecification qualitySpecification,
+			[NotNull] HashSet<QualityCondition> conditionsToVerify,
+			[NotNull] out Dictionary<QualityConditionVerification, QualitySpecificationElement>
+				elementsByConditionVerification)
+		{
+			var result = new QualityVerification(qualitySpecification, conditionsToVerify);
+
+			Dictionary<QualityCondition, QualityConditionVerification> verificationsByCondition
+				= GetConditionVerificationsByCondition(result);
+
+			elementsByConditionVerification = new Dictionary
+				<QualityConditionVerification, QualitySpecificationElement>(
+					result.ConditionVerifications.Count);
+
+			foreach (QualitySpecificationElement element in qualitySpecification.Elements)
+			{
+				QualityConditionVerification verification;
+				if (verificationsByCondition.TryGetValue(element.QualityCondition,
+				                                         out verification))
+				{
+					elementsByConditionVerification.Add(verification, element);
+				}
+			}
+
+			return result;
+		}
+
+		[NotNull]
+		private static Dictionary<QualityCondition, QualityConditionVerification>
+			GetConditionVerificationsByCondition(
+				[NotNull] QualityVerification qualityVerification)
+		{
+			return qualityVerification.ConditionVerifications
+			                          .Where(v => v.QualityCondition != null)
+			                          .ToDictionary(v => v.QualityCondition);
 		}
 
 		[NotNull]

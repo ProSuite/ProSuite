@@ -81,24 +81,6 @@
 	.rz-switch.rz-switch-checked .rz-switch-circle {
 		background: #367736;
 	}
-    
-	.rz-textbox {
-		width: 100%;
-		height: auto;
-		max-height: 1.8rem;
-		margin: 0;
-		border-radius: unset;
-		border: none;
-		box-shadow: none;
-	}
-
-    .rz-dropdown {
-		height: 1.8rem;
-		padding-top: 0;
-	    margin: 0.25rem 0 0 0;
-	    border-radius: unset;
-	    box-shadow: none;
-    }
 
 	.rz-spinner {
 		/*margin: 0.25rem 0 0.25rem 0;*/
@@ -121,7 +103,44 @@
 
     .ui-image {
 	    padding: 0 0 10px 0;
-    }
+	}
+
+	.rz-dropdown {
+		height: auto;
+		max-height: 1.8rem;
+		padding-top: 0;
+		margin: 0.25rem 0 0 0;
+		border-radius: unset;
+		box-shadow: none;
+	}
+
+	.rz-textbox {
+		width: 100%;
+		height: auto;
+		max-height: 1.8rem;
+		margin: 0;
+		border-radius: unset;
+		border: none;
+		box-shadow: none;
+	}
+
+	.clear {
+		right: 1.6875rem;
+		top: 0;
+		height: 100%;
+		display: flex;
+		align-items: center;
+		font-size: 1.1875rem;
+		opacity: 0.4;
+	}
+
+	.clear:before {
+		content: "close";
+	}
+
+	.clear:hover {
+		opacity: 1;
+	}
 
 </style>
 
@@ -148,11 +167,11 @@
 						
 	                    if (vm is {IsDatasetType: true })
 	                    {
-		                    <DatasetTestParameterValueDataGridBlazor ViewModel="vm"/>
+										<DatasetTestParameterValueDataGridBlazor ViewModel="vm"/>
 	                    }
 	                    else if (vm != null)
 	                    {
-                            <ScalarTestParameterValueDataGridBlazor ViewModel="vm"/>
+										<ScalarTestParameterValueDataGridBlazor ViewModel="vm"/>
 	                    }
                     }
 	            </Template>
@@ -170,7 +189,7 @@
                             }
                         </Template>
                     </RadzenDataGridColumn>
-                    <RadzenDataGridColumn TItem="ViewModelBase" Property="Value" Title="Value" Width="300px">
+                    <RadzenDataGridColumn TItem="ViewModelBase" Property="Value" Title="Value" Width="500px">
                         <Template Context="viewModel">
                             <DynamicComponent Type="viewModel.ComponentType" Parameters="viewModel.ComponentParameters"/>
                         </Template>
@@ -200,6 +219,5 @@
                     </RadzenDataGridColumn>
                 </Columns>
             </RadzenDataGrid>
-        
     </div>
 </div>

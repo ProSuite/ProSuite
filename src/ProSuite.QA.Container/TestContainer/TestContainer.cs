@@ -558,16 +558,7 @@ namespace ProSuite.QA.Container.TestContainer
 		[CanBeNull]
 		public ISpatialReference GetSpatialReference()
 		{
-			var spatialReferences = new List<ISpatialReference>();
-
-			foreach (ITest test in _tests)
-			{
-				spatialReferences.AddRange(TestUtils.GetSpatialReferences(test));
-			}
-
-			return TestUtils.GetUniqueSpatialReference(
-				spatialReferences,
-				requireEqualVerticalCoordinateSystems: false);
+			return TestUtils.GetUniqueSpatialReference(_tests);
 		}
 
 		private void Execute([NotNull] ICollection<ITest> nonContainerTests)

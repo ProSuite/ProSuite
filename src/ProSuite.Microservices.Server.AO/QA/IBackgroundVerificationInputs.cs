@@ -52,9 +52,6 @@ namespace ProSuite.Microservices.Server.AO.QA
 		/// </summary>
 		ICollection<IObject> VerifiedObjects { get; }
 
-		[CanBeNull]
-		QualityVerificationGrpc.QualityVerificationGrpcClient WorkerClient { get; }
-
 		/// <summary>
 		/// Allows loading all required entities inside a transaction.
 		/// </summary>
@@ -76,7 +73,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 		/// <returns></returns>
 		QualityErrorRepositoryBase CreateQualityErrorRepository(
 			[NotNull] IVerificationContext verificationContext,
-			[NotNull] Dictionary<QualityCondition, IList<ITest>> qualityConditionTests,
+			[NotNull] IDictionary<QualityCondition, IList<ITest>> qualityConditionTests,
 			[NotNull] IQualityConditionObjectDatasetResolver datasetResolver);
 
 		/// <summary>

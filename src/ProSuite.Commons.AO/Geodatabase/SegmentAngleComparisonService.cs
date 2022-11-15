@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
@@ -86,7 +85,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			double maximumSegmentAngleDifferenceRadians,
 			double maximumRoundingEffectRatio)
 		{
-			ISpatialReference spatialReference = ((IGeoDataset) featureClass).SpatialReference;
+			ISpatialReference spatialReference = featureClass.SpatialReference;
 
 			var spatialReferenceResolution = spatialReference as ISpatialReferenceResolution;
 			if (spatialReferenceResolution == null)

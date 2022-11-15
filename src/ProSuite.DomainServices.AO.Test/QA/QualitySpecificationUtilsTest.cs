@@ -76,7 +76,7 @@ namespace ProSuite.DomainServices.AO.Test.QA
 			IssueFilterConfiguration issueFilter = new IssueFilterConfiguration("testFilter",
 				new IssueFilterDescriptor(
 					"filterDesc",
-					new ClassDescriptor("ProSuite.QA.Tests.IssueFilters.IfIntersects",
+					new ClassDescriptor("ProSuite.QA.Tests.IssueFilters.IfIntersecting",
 					                    "ProSuite.QA.Tests"), 0));
 
 			InstanceConfigurationUtils.AddParameterValue(issueFilter, "featureClass", ds1);
