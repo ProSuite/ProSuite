@@ -1,4 +1,6 @@
 using System;
+using System.Linq;
+using System.Text;
 using System.Threading;
 using Grpc.Core;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -9,6 +11,12 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 	public static class RpcCallUtils
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
+		/// <summary>
+		/// Deadline to be used by geometry calls. It is important to use a dead-line otherwise
+		/// blocking server calls can make Pro hang forever.
+		/// </summary>
+		public static int GeometryDefaultDeadline { get; set; } = GetToolDefaultDeadline();
 
 		public static T Try<T>(
 			[NotNull] Func<CallOptions, T> func,
@@ -35,6 +43,21 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 			{
 				_msg.Debug("Exception received from server", rpcException);
 
+				const string exceptionBinKey = "exception-bin";
+
+				if (rpcException.Trailers.Any(t => t.Key.Equals(exceptionBinKey)))
+				{
+					byte[] bytes = rpcException.Trailers.GetValueBytes(exceptionBinKey);
+
+					if (bytes != null)
+					{
+						string serverException = Encoding.UTF8.GetString(bytes);
+						_msg.DebugFormat("Server call stack: {0}", serverException);
+					}
+				}
+
+				string message = rpcException.Status.Detail;
+
 				if (rpcException.StatusCode == StatusCode.Cancelled)
 				{
 					Log("Operation cancelled", noWarn);
@@ -47,7 +70,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 					return default;
 				}
 
-				throw;
+				throw new Exception(message, rpcException);
 			}
 
 			return result;
@@ -63,6 +86,21 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 			{
 				_msg.Warn(message);
 			}
+		}
+
+		private static int GetToolDefaultDeadline()
+		{
+			string envVarValue =
+				Environment.GetEnvironmentVariable("PROSUITE_TOOLS_RPC_DEADLINE_MS");
+
+			if (! string.IsNullOrEmpty(envVarValue) &&
+			    int.TryParse(envVarValue, out int deadlineMilliseconds))
+			{
+				return deadlineMilliseconds;
+			}
+
+			// Default;
+			return 5000;
 		}
 	}
 }

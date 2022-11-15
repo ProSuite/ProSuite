@@ -263,7 +263,7 @@ namespace ProSuite.QA.Tests.Transformers
 			if (geometryEndClass is IReadOnlyFeatureClass featureClass)
 			{
 				result = new TransformedFeatureClass<JoinedBackingDataset>(
-					         -1, name, featureClass.ShapeType, datasetFactoryFunc, workspace)
+					         null, name, featureClass.ShapeType, datasetFactoryFunc, workspace)
 				         {
 					         NoCaching = false
 				         };
@@ -271,7 +271,7 @@ namespace ProSuite.QA.Tests.Transformers
 			else
 			{
 				result = new TransformedTable<JoinedBackingDataset>(
-					-1, name, datasetFactoryFunc, workspace);
+					null, name, datasetFactoryFunc, workspace);
 			}
 
 			return result;

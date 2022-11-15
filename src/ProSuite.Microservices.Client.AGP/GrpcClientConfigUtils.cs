@@ -68,13 +68,15 @@ namespace ProSuite.Microservices.Client.AGP
 		private static ClientChannelConfig FallbackToDefaultChannel(
 			[NotNull] string serviceName, int fallbackPort)
 		{
+			const string fallbackHost = "localhost";
+
 			_msg.DebugFormat(
-				"{0} microservice client configuration not found, using default settings...",
-				serviceName);
+				"{0} microservice client configuration not found, using default settings {1}:{2}",
+				serviceName, fallbackHost, fallbackPort);
 
 			var clientChannelConfig = new ClientChannelConfig
 			                          {
-				                          HostName = "localhost",
+				                          HostName = fallbackHost,
 				                          Port = fallbackPort
 			                          };
 

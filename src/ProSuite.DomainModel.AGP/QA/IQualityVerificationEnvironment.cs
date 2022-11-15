@@ -45,6 +45,7 @@ namespace ProSuite.DomainModel.AGP.QA
 		/// <summary>
 		/// Display name of the backend, such as 'localhost'
 		/// </summary>
+		[CanBeNull]
 		string BackendDisplayName { get; }
 
 		Task<ServiceCallStatus> VerifyPerimeter(

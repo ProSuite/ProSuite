@@ -60,7 +60,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 		{
 			GdbTable sourceTable = CreateSampleTable();
 
-			GdbTable targetTable = new GdbTable(-1, "OUTPUT_TABLE");
+			GdbTable targetTable = new GdbTable(null, "OUTPUT_TABLE");
 
 			TransformedTableFields tableFields = new TransformedTableFields(sourceTable);
 
@@ -83,7 +83,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			GdbTable sourceTable1 = CreateSampleTable("TAB1");
 			GdbTable sourceTable2 = CreateSampleTable("TAB2");
 
-			GdbTable targetTable = new GdbTable(-1, "OUTPUT_TABLE");
+			GdbTable targetTable = new GdbTable(null, "OUTPUT_TABLE");
 
 			TransformedTableFields tableFields1 = new TransformedTableFields(sourceTable1);
 			TransformedTableFields tableFields2 = new TransformedTableFields(sourceTable2);
@@ -139,7 +139,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			//				SpatialReferenceUtils.CreateSpatialReference(WellKnownHorizontalCS.LV95));
 
 			GdbFeatureClass targetTable =
-				new GdbFeatureClass(-1, "OUTPUT_TABLE", esriGeometryType.esriGeometryPoint);
+				new GdbFeatureClass(null, "OUTPUT_TABLE", esriGeometryType.esriGeometryPoint);
 
 			TransformedTableFields tableFields = new TransformedTableFields(sourceTable);
 
@@ -173,7 +173,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 
 		private static GdbTable CreateSampleTable(string tableName = "TABLE_NAME")
 		{
-			GdbTable table = new GdbTable(-1, tableName, "TableName");
+			GdbTable table = new GdbTable(null, tableName, "TableName");
 			table.AddFieldT(FieldUtils.CreateOIDField());
 			table.AddFieldT(
 				FieldUtils.CreateIntegerField("OBJEKTART"));

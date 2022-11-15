@@ -33,10 +33,12 @@ namespace ProSuite.Commons.AGP.Carto
 		/// <param name="featureClass"></param>
 		/// <param name="features"></param>
 		/// <param name="featureLayer"></param>
+		/// <param name="outputSpatialReference"></param>
 		public FeatureClassSelection([NotNull] FeatureClass featureClass,
 		                             [NotNull] List<Feature> features,
-		                             [CanBeNull] BasicFeatureLayer featureLayer)
-			: this(featureClass, featureLayer)
+		                             [CanBeNull] BasicFeatureLayer featureLayer,
+		                             [CanBeNull] SpatialReference outputSpatialReference)
+			: this(featureClass, featureLayer, outputSpatialReference)
 		{
 			_features = features;
 		}
@@ -48,22 +50,25 @@ namespace ProSuite.Commons.AGP.Carto
 		/// <param name="featureClass"></param>
 		/// <param name="objectIds"></param>
 		/// <param name="featureLayer"></param>
+		/// <param name="outputSpatialReference"></param>
 		public FeatureClassSelection([NotNull] FeatureClass featureClass,
 		                             [NotNull] List<long> objectIds,
-		                             [CanBeNull] BasicFeatureLayer featureLayer)
-			: this(featureClass, featureLayer)
+		                             [CanBeNull] BasicFeatureLayer featureLayer,
+		                             [CanBeNull] SpatialReference outputSpatialReference)
+			: this(featureClass, featureLayer, outputSpatialReference)
 		{
 			_objectIds = objectIds;
 		}
 
 		private FeatureClassSelection([NotNull] FeatureClass featureClass,
-		                              [CanBeNull] BasicFeatureLayer featureLayer)
+		                              [CanBeNull] BasicFeatureLayer featureLayer,
+		                              [CanBeNull] SpatialReference outputSpatialReference)
 		{
 			FeatureClass = featureClass;
 			FeatureLayer = featureLayer;
 
 			_shapeType = GetShapeType();
-			_outputSpatialReference = FeatureLayer?.GetSpatialReference();
+			_outputSpatialReference = outputSpatialReference;
 		}
 
 		/// <summary>

@@ -609,6 +609,9 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 				result.Union(targetFeature.Extent);
 			}
 
+			double xyTolerance = GeometryUtils.GetXyTolerance(result);
+			result.Expand(xyTolerance, xyTolerance, false);
+
 			return result;
 		}
 

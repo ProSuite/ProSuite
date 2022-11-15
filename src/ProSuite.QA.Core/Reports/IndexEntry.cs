@@ -1,7 +1,7 @@
-﻿using System.Xml;
+using System.Xml;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
-namespace ProSuite.DomainModel.AO.QA.TestReport
+namespace ProSuite.QA.Core.Reports
 {
 	internal abstract class IndexEntry
 	{

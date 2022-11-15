@@ -3,12 +3,15 @@ using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
 
 namespace ProSuite.Commons.AGP.Core.Geodatabase
 {
 	public static class DatasetUtils
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		[NotNull]
 		public static string GetTableDisplayName([NotNull] Table table)
 		{
@@ -53,8 +56,10 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 					       ? aliasName
 					       : definition.GetName();
 			}
-			catch (NotImplementedException)
+			catch (NotSupportedException e)
 			{
+				// Shapefiles throw a NotSupportedException
+				_msg.Debug("Unable to get alias. Using name", e);
 				return definition.GetName();
 			}
 		}

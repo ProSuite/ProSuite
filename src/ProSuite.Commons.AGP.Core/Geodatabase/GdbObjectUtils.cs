@@ -5,11 +5,14 @@ using System.Linq;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 
 namespace ProSuite.Commons.AGP.Core.Geodatabase
 {
 	public static class GdbObjectUtils
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		[NotNull]
 		public static string ToString([NotNull] Row row)
 		{
@@ -47,7 +50,16 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 		{
 			var classDefinition = row.GetTable().GetDefinition();
 
-			string subtypeField = classDefinition.GetSubtypeField();
+			string subtypeField = null;
+			try
+			{
+				subtypeField = classDefinition.GetSubtypeField();
+			}
+			catch (NotSupportedException notSupportedException)
+			{
+				// Shapefiles throw a NotSupportedException
+				_msg.Debug("Subtypes not supported", notSupportedException);
+			}
 
 			string subtypeName = null;
 			if (! string.IsNullOrEmpty(subtypeField))
