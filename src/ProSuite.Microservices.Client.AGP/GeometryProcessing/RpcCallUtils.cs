@@ -12,6 +12,12 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
+		/// <summary>
+		/// Deadline to be used by geometry calls. It is important to use a dead-line otherwise
+		/// blocking server calls can make Pro hang forever.
+		/// </summary>
+		public static int GeometryDefaultDeadline { get; set; } = GetToolDefaultDeadline();
+
 		public static T Try<T>(
 			[NotNull] Func<CallOptions, T> func,
 			CancellationToken cancellationToken,
@@ -80,6 +86,21 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 			{
 				_msg.Warn(message);
 			}
+		}
+
+		private static int GetToolDefaultDeadline()
+		{
+			string envVarValue =
+				Environment.GetEnvironmentVariable("PROSUITE_TOOLS_RPC_DEADLINE_MS");
+
+			if (! string.IsNullOrEmpty(envVarValue) &&
+			    int.TryParse(envVarValue, out int deadlineMilliseconds))
+			{
+				return deadlineMilliseconds;
+			}
+
+			// Default;
+			return 5000;
 		}
 	}
 }

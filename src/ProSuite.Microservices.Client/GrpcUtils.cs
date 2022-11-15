@@ -120,6 +120,7 @@ namespace ProSuite.Microservices.Client
 
 			try
 			{
+				// TODO: Timeout!
 				HealthCheckResponse healthResponse =
 					healthClient.Check(new HealthCheckRequest()
 					                   {Service = serviceName});
