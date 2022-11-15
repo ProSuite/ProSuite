@@ -33,11 +33,11 @@ namespace ProSuite.Commons.AGP.Hosting
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		const string esriSoftwareKeyPath = @"SOFTWARE\ESRI";
-		const string _arcProRegistryKeyName = "ArcGISPro";
-		const string _arcServerRegistryKeyNamePrefix = "Server";
+		private const string _esriSoftwareKeyPath = @"SOFTWARE\ESRI";
+		private const string _arcProRegistryKeyName = "ArcGISPro";
+		private const string _arcServerRegistryKeyNamePrefix = "Server";
 
-		private static string _arcgisProAssemlyPath;
+		private static string _arcGisProAssemblyPath;
 
 		public static bool IsProInstalled(out Version version)
 		{
@@ -109,7 +109,7 @@ namespace ProSuite.Commons.AGP.Hosting
 			// Alternative: Use Environment Variable AGSSERVER
 			serverRegistryKey = null;
 
-			RegistryKey esriKey = GetRegistryKey(esriSoftwareKeyPath);
+			RegistryKey esriKey = GetRegistryKey(_esriSoftwareKeyPath);
 
 			if (esriKey == null)
 			{
@@ -160,7 +160,7 @@ namespace ProSuite.Commons.AGP.Hosting
 		public static void SetupProAssemblyResolver(string installDir)
 		{
 			//Resolve ArcGIS Pro assemblies.
-			_arcgisProAssemlyPath = installDir;
+			_arcGisProAssemblyPath = installDir;
 
 			AppDomain currentDomain = AppDomain.CurrentDomain;
 			currentDomain.AssemblyResolve += ResolveProAssemblyPath;
@@ -174,9 +174,9 @@ namespace ProSuite.Commons.AGP.Hosting
 		/// <returns>programmatically loaded assembly in the pro /bin path</returns>
 		private static Assembly ResolveProAssemblyPath(object sender, ResolveEventArgs args)
 		{
-			Assert.NotNullOrEmpty(_arcgisProAssemlyPath, "Pro Assembly install dir not set");
+			Assert.NotNullOrEmpty(_arcGisProAssemblyPath, "Pro Assembly install dir not set");
 
-			string assemblyPath = Path.Combine(_arcgisProAssemlyPath, "bin",
+			string assemblyPath = Path.Combine(_arcGisProAssemblyPath, "bin",
 			                                   new AssemblyName(args.Name).Name + ".dll");
 
 			if (! File.Exists(assemblyPath))
@@ -191,7 +191,7 @@ namespace ProSuite.Commons.AGP.Hosting
 		[CanBeNull]
 		private static RegistryKey GetProductRegKey([NotNull] string regKeyName)
 		{
-			string arcGISProRegPath = $@"{esriSoftwareKeyPath}\{regKeyName}";
+			string arcGISProRegPath = $@"{_esriSoftwareKeyPath}\{regKeyName}";
 
 			RegistryKey esriKey = GetRegistryKey(arcGISProRegPath);
 
