@@ -163,6 +163,40 @@ namespace ProSuite.Processing
 			return new CartoConfigException(string.Format(format, args));
 		}
 
+		#region Formatting
+
+		public override string ToString()
+		{
+			var sb = new StringBuilder();
+
+			sb.Append("Name = ");
+			sb.Append(Name ?? string.Empty);
+			sb.AppendLine();
+
+			sb.Append("Description = ");
+			sb.Append(Description ?? string.Empty);
+			sb.AppendLine();
+
+			sb.AppendLine();
+
+			foreach (var setting in _settings)
+			{
+				if (string.IsNullOrWhiteSpace(setting.Name)) continue;
+				if (string.Equals(setting.Name, nameof(Name), Comparison)) continue;
+				if (string.Equals(setting.Name, nameof(Description), Comparison)) continue;
+
+				sb.Append(setting.Name ?? "NN");
+				sb.Append(" = ");
+				sb.Append(setting.Value ?? string.Empty);
+				sb.AppendLine();
+			}
+
+			sb.AppendLine();
+			return sb.ToString();
+		}
+
+		#endregion
+
 		#region XML Element Parsing
 
 		/// <summary>
@@ -611,6 +645,8 @@ namespace ProSuite.Processing
 
 		#endregion
 
+		#region Nested types
+
 		private readonly struct Setting
 		{
 			public string Name { get; }
@@ -671,5 +707,7 @@ namespace ProSuite.Processing
 				}
 			}
 		}
+
+		#endregion
 	}
 }
