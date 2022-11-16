@@ -5,7 +5,6 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
-using System.Windows.Media;
 using System.Windows.Threading;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -20,8 +19,7 @@ namespace ProSuite.UI.MicroserverState
 
 		private const int _initialCheckIntervalSeconds = 5;
 		private readonly DispatcherTimer _timer = new DispatcherTimer();
-
-		private SolidColorBrush _serverStateBackColor;
+		private DateTime _lastRestart = DateTime.MinValue;
 
 		public event PropertyChangedEventHandler PropertyChanged;
 
@@ -38,6 +36,7 @@ namespace ProSuite.UI.MicroserverState
 		private RelayCommand<ServerState> _showReportCommand;
 		private int _workerServiceCount;
 		private bool _evaluating;
+		private ServiceState _serviceState;
 
 		public ServerState([NotNull] MicroserviceClientBase serviceClient)
 		{
@@ -73,6 +72,20 @@ namespace ProSuite.UI.MicroserverState
 
 				IsServing = await _serviceClient.CanAcceptCallsAsync();
 
+				if (IsServing)
+				{
+					ServiceState = ServiceState.Serving;
+				}
+				else
+				{
+					if (ServiceState != ServiceState.Starting ||
+					    _lastRestart + TimeSpan.FromSeconds(12) <= DateTime.Now)
+					{
+						// If still starting: It's been long enough a wait. Set it back to NotServing
+						ServiceState = ServiceState.NotServing;
+					}
+				}
+
 				WorkerServiceCount =
 					IsServing ? await _serviceClient.GetWorkerServiceCountAsync() : 0;
 
@@ -82,13 +95,10 @@ namespace ProSuite.UI.MicroserverState
 				string protocol = _serviceClient.UseTls ? "https" : "http";
 				FullAddress = $"{protocol}://{_serviceClient.HostName}:{_serviceClient.Port}";
 
-				ServerStateColor = IsServing
-					                   ? new SolidColorBrush(Colors.ForestGreen)
-					                   : new SolidColorBrush(Colors.Red);
-
 				CanRestart = ! IsServing && (_isLocalHost || _serviceClient.CanFailOver);
 
-				Text = IsServing ? $"Healthy ({watch.ElapsedMilliseconds}ms)" : "Unavailable";
+				Text = IsServing ? $"Healthy ({watch.ElapsedMilliseconds}ms)" :
+				       ServiceState == ServiceState.Starting ? "Starting..." : "Unavailable";
 
 				return IsServing;
 			}
@@ -171,17 +181,10 @@ namespace ProSuite.UI.MicroserverState
 				{
 					_canRestart = value;
 					OnPropertyChanged();
-
-					//if (_canRestart != value)
-					//{
-					//	_canRestart = value;
-					//	OnPropertyChanged();
-					//	_showReportCommand?.RaiseCanExecuteChanged(true);
-					//}
 				}
 				catch (Exception e)
 				{
-					_msg.Debug("Error gettign CanRestart state", e);
+					_msg.Debug("Error getting CanRestart state", e);
 				}
 			}
 		}
@@ -194,7 +197,8 @@ namespace ProSuite.UI.MicroserverState
 		{
 			try
 			{
-				ServerStateColor = new SolidColorBrush(Colors.Orange);
+				ServiceState = ServiceState.Starting;
+				_lastRestart = DateTime.Now;
 				Text = "Starting...";
 
 				bool started = _serviceClient.TryRestart();
@@ -211,16 +215,6 @@ namespace ProSuite.UI.MicroserverState
 			}
 		}
 
-		public SolidColorBrush ServerStateColor
-		{
-			get => _serverStateBackColor;
-			set
-			{
-				_serverStateBackColor = value;
-				OnPropertyChanged();
-			}
-		}
-
 		public bool IsConnected
 		{
 			get => _isConnected;
@@ -233,6 +227,16 @@ namespace ProSuite.UI.MicroserverState
 			set
 			{
 				_isServing = value;
+				OnPropertyChanged();
+			}
+		}
+
+		public ServiceState ServiceState
+		{
+			get => _serviceState;
+			set
+			{
+				_serviceState = value;
 				OnPropertyChanged();
 			}
 		}

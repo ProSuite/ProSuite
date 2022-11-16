@@ -427,6 +427,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			BackgroundVerificationService qaService = null;
 			VerificationProgressStreamer<VerificationResponse> responseStreamer =
 				new VerificationProgressStreamer<VerificationResponse>(responseStream);
+			responseStreamer.CreateResponseAction = responseStreamer.CreateVerificationResponse;
 
 			List<GdbObjRefMsg> deletableAllowedErrorRefs = new List<GdbObjRefMsg>();
 			QualityVerification verification = null;
@@ -558,7 +559,6 @@ namespace ProSuite.Microservices.Server.AO.QA
 				_verificationInputsFactoryMethod(request);
 
 			responseStreamer.BackgroundVerificationInputs = backgroundVerificationInputs;
-			responseStreamer.CreateResponseAction = responseStreamer.CreateVerificationResponse;
 
 			qaService = CreateVerificationService(
 				backgroundVerificationInputs, responseStreamer, trackCancel);
@@ -674,7 +674,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			[NotNull] XmlQualitySpecificationMsg xmlSpecification)
 		{
 			var dataSources = new List<DataSource>();
-			if (dataSources.Count > 0)
+			if (xmlSpecification.DataSourceReplacements.Count > 0)
 			{
 				foreach (string replacement in xmlSpecification.DataSourceReplacements)
 				{
@@ -691,11 +691,14 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 					dataSources.Add(dataSource);
 				}
+
+				_msg.DebugFormat("Using {0} provided data source replacements.", dataSources.Count);
 			}
 			else
 			{
 				dataSources.AddRange(
 					QualitySpecificationUtils.GetDataSources(xmlSpecification.Xml));
+				_msg.DebugFormat("Using {0} data sources from XML.", dataSources.Count);
 			}
 
 			QualitySpecification qualitySpecification =

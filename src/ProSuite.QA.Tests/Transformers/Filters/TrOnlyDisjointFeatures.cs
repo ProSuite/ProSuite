@@ -8,15 +8,15 @@ namespace ProSuite.QA.Tests.Transformers.Filters
 {
 	[UsedImplicitly]
 	[FilterTransformer]
-	public class TrOnlyContainedFeatures : TrSpatiallyFiltered
+	public class TrOnlyDisjointFeatures : TrSpatiallyFiltered
 	{
-		[DocTr(nameof(DocTrStrings.TrOnlyContainedFeatures_0))]
-		public TrOnlyContainedFeatures(
-			[NotNull] [DocTr(nameof(DocTrStrings.TrOnlyContainedFeatures_featureClassToFilter))]
+		[DocTr(nameof(DocTrStrings.TrOnlyDisjointFeatures_0))]
+		public TrOnlyDisjointFeatures(
+			[NotNull] [DocTr(nameof(DocTrStrings.TrOnlyDisjointFeatures_featureClassToFilter))]
 			IReadOnlyFeatureClass featureClassToFilter,
-			[NotNull] [DocTr(nameof(DocTrStrings.TrOnlyContainedFeatures_containing))]
-			IReadOnlyFeatureClass containing)
-			: base(featureClassToFilter, containing) { }
+			[NotNull] [DocTr(nameof(DocTrStrings.TrOnlyDisjointFeatures_disjoint))]
+			IReadOnlyFeatureClass disjoint)
+			: base(featureClassToFilter, disjoint) { }
 
 		#region Overrides of TrSpatiallyFiltered
 
@@ -26,15 +26,16 @@ namespace ProSuite.QA.Tests.Transformers.Filters
 			return new SpatiallyFilteredBackingDataset(resultClass, _featureClassToFilter,
 			                                           _filtering)
 			       {
-				       PassCriterion = IsContained
+				       PassCriterion = IsDisjoint,
+				       DisjointIsPass = true
 			       };
 		}
 
-		private static bool IsContained(IReadOnlyFeature feature, IReadOnlyFeature containing)
+		private static bool IsDisjoint(IReadOnlyFeature feature, IReadOnlyFeature disjoint)
 		{
-			IRelationalOperator containingShape = (IRelationalOperator) containing.Shape;
+			IRelationalOperator disjointShape = (IRelationalOperator) disjoint.Shape;
 
-			return containingShape.Contains(feature.Shape);
+			return disjointShape.Disjoint(feature.Shape);
 		}
 
 		#endregion

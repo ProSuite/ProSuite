@@ -356,4 +356,13 @@ See T1Attributes</value>
   <data name="TrTableJoin_t1" xml:space="preserve">
     <value>table to join with 'leftTable'</value>
   </data>
+  <data name="TrOnlyDisjointFeatures_0" xml:space="preserve">
+    <value>Creates a filtered feature class containing only the features that are disjoint from features from 'disjoint'. Features that intersect any feature from 'disjoint' are filtered out. The resulting feature class has the same properties and attributes as 'featureClassToFilter'.</value>
+  </data>
+  <data name="TrOnlyDisjointFeatures_disjoint" xml:space="preserve">
+    <value>The features used to check if they are disjoint from the features to be filtered.</value>
+  </data>
+  <data name="TrOnlyDisjointFeatures_featureClassToFilter" xml:space="preserve">
+    <value>The feature class to be filtered.</value>
+  </data>
 </root>

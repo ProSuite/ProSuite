@@ -219,7 +219,7 @@ namespace ProSuite.Microservices.Server.AO.Geometry.AdvancedReshape
 
 			_msg.WarnFormat(noReshapeMessage);
 
-			return new AdvancedReshapeResponse() {WarningMessage = noReshapeMessage};
+			return new AdvancedReshapeResponse() { WarningMessage = noReshapeMessage };
 		}
 
 		private static void PackReshapeResponseFeatures(

@@ -170,11 +170,25 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			         exportNotes);
 		}
 
-		public static void ExportXmlDocument<T>([NotNull] T document, [NotNull] string xmlFilePath)
+		public static void ExportXmlDocument<T>(
+			[NotNull] T document, [NotNull] string xmlFilePath)
 			where T : XmlDataQualityDocument
 		{
 			Assert.ArgumentNotNull(document, nameof(document));
 			Assert.ArgumentNotNullOrEmpty(xmlFilePath, nameof(xmlFilePath));
+
+			using (XmlWriter xmlWriter = XmlWriter.Create(xmlFilePath, XmlUtils.GetWriterSettings()))
+			{
+				ExportXmlDocument(document, xmlWriter);
+			}
+		}
+
+
+		public static void ExportXmlDocument<T>([NotNull] T document, [NotNull] XmlWriter xmlWriter)
+			where T : XmlDataQualityDocument
+		{
+			Assert.ArgumentNotNull(document, nameof(document));
+			Assert.ArgumentNotNull(xmlWriter, nameof(xmlWriter));
 
 			// Sort entries
 			SortQualitySpecifications(document.QualitySpecifications);
@@ -191,7 +205,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 
 			SortCategories(document.Categories);
 
-			XmlUtils.Serialize(document, xmlFilePath);
+			XmlUtils.Serialize(document, xmlWriter);
 		}
 
 		private static void SortQualitySpecifications(

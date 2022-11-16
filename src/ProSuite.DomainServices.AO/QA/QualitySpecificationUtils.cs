@@ -62,7 +62,7 @@ namespace ProSuite.DomainServices.AO.QA
 				foreach (XmlWorkspace xmlWorkspace in document.Workspaces)
 				{
 					if (! string.IsNullOrWhiteSpace(xmlWorkspace.CatalogPath) ||
-					    string.IsNullOrWhiteSpace(xmlWorkspace.ConnectionString))
+					    ! string.IsNullOrWhiteSpace(xmlWorkspace.ConnectionString))
 					{
 						DataSource ds = new DataSource(xmlWorkspace);
 						dataSources.Add(ds);
