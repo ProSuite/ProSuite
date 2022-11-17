@@ -16,13 +16,14 @@ namespace ProSuite.Microservices.Client.AGP
 		[NotNull]
 		public static async Task<GeometryProcessingClient> StartGeometryProcessingClient(
 			[CanBeNull] string executablePath,
-			[CanBeNull] string configFilePath)
+			[CanBeNull] string configFilePath,
+			int fallbackPort = 5153)
 		{
 			ClientChannelConfig clientChannelConfig;
 
 			if (string.IsNullOrEmpty(configFilePath))
 			{
-				clientChannelConfig = FallbackToDefaultChannel("Geometry processing", 5153);
+				clientChannelConfig = FallbackToDefaultChannel("Geometry processing", fallbackPort);
 			}
 			else
 			{
@@ -42,13 +43,14 @@ namespace ProSuite.Microservices.Client.AGP
 		[NotNull]
 		public static async Task<QualityVerificationServiceClient> StartQaServiceClient(
 			[CanBeNull] string executablePath,
-			[CanBeNull] string configFilePath)
+			[CanBeNull] string configFilePath,
+			int fallbackPort = 5151)
 		{
 			ClientChannelConfig clientChannelConfig;
 
 			if (string.IsNullOrEmpty(configFilePath))
 			{
-				clientChannelConfig = FallbackToDefaultChannel("QA", 5151);
+				clientChannelConfig = FallbackToDefaultChannel("QA", fallbackPort);
 			}
 			else
 			{
