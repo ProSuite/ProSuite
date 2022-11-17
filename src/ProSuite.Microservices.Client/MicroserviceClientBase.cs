@@ -87,6 +87,8 @@ namespace ProSuite.Microservices.Client
 
 		public bool CanFailOver => _allChannelConfigs?.Count > 1;
 
+		public bool ProcessStarted => _startedProcess != null && ! _startedProcess.HasExited;
+
 		public void Disconnect()
 		{
 			Channel?.ShutdownAsync();
