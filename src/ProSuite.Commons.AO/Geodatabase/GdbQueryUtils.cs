@@ -43,7 +43,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			Assert.ArgumentNotNull(objectClass, nameof(objectClass));
 			Assert.ArgumentNotNull(relClass, nameof(relClass));
 
-			var relClasses = new List<IRelationshipClass>(1) {relClass};
+			var relClasses = new List<IRelationshipClass>(1) { relClass };
 
 			return GetRowProxys(objectClass,
 			                    intersectedGeometry, whereClause,
@@ -1768,6 +1768,11 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			try
 			{
+				if (_msg.IsVerboseDebugEnabled)
+				{
+					LogQueryParameters(table, recycling, filter);
+				}
+
 				return table.Search(filter, recycling);
 			}
 			catch (Exception e)
