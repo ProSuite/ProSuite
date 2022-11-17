@@ -22,9 +22,6 @@ namespace ProSuite.DomainModel.Core.Processing
 
 		void ReportInfo([NotNull] string text);
 
-		[StringFormatMethod("format")]
-		void ReportInfo([NotNull] string format, params object[] args);
-
 		void ReportWarning([NotNull] string text, Exception exception = null);
 
 		void ReportError([NotNull] string text, Exception exception = null);
