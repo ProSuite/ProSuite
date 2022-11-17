@@ -102,7 +102,7 @@ namespace ProSuite.Microservices.Client
 			}
 			catch (Exception e)
 			{
-				_msg.Debug($"Error killing the started microserver process {_startedProcess}", e);
+				_msg.Debug($"Error killing the started service process {_startedProcess}", e);
 			}
 		}
 
