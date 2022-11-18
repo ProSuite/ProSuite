@@ -5,7 +5,6 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
-using System.Windows.Media;
 using System.Windows.Threading;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -20,8 +19,7 @@ namespace ProSuite.UI.MicroserverState
 
 		private const int _initialCheckIntervalSeconds = 5;
 		private readonly DispatcherTimer _timer = new DispatcherTimer();
-
-		private SolidColorBrush _serverStateBackColor;
+		private DateTime _lastRestart = DateTime.MinValue;
 
 		public event PropertyChangedEventHandler PropertyChanged;
 
@@ -37,6 +35,8 @@ namespace ProSuite.UI.MicroserverState
 		private readonly bool _isLocalHost;
 		private RelayCommand<ServerState> _showReportCommand;
 		private int _workerServiceCount;
+		private bool _evaluating;
+		private ServiceState _serviceState;
 
 		public ServerState([NotNull] MicroserviceClientBase serviceClient)
 		{
@@ -50,33 +50,67 @@ namespace ProSuite.UI.MicroserverState
 			string protocol = _serviceClient.UseTls ? "https" : "http";
 			FullAddress = $"{protocol}://{_serviceClient.HostName}:{_serviceClient.Port}";
 
+			// Ensure max text size to avoid scrollbars appearing on status change:
+			Text = "Evaluating Status";
+
 			_timer.Interval = TimeSpan.FromSeconds(_initialCheckIntervalSeconds);
-			_timer.Tick += CheckHealth;
+			_timer.Tick += (sender, args) => CheckHealth(sender, args);
 		}
 
-		public async Task<bool> Evaluate()
+		public async Task<bool?> Evaluate()
 		{
-			Stopwatch watch = Stopwatch.StartNew();
+			if (_evaluating)
+			{
+				return null;
+			}
 
-			IsServing = await _serviceClient.CanAcceptCallsAsync();
+			try
+			{
+				_evaluating = true;
 
-			WorkerServiceCount = IsServing ? await _serviceClient.GetWorkerServiceCountAsync() : 0;
+				Stopwatch watch = Stopwatch.StartNew();
 
-			watch.Stop();
+				IsServing = await _serviceClient.CanAcceptCallsAsync();
 
-			// The address can always change due to some fail-over:
-			string protocol = _serviceClient.UseTls ? "https" : "http";
-			FullAddress = $"{protocol}://{_serviceClient.HostName}:{_serviceClient.Port}";
+				if (IsServing)
+				{
+					ServiceState = ServiceState.Serving;
+				}
+				else
+				{
+					if (ServiceState != ServiceState.Starting ||
+					    _lastRestart + TimeSpan.FromSeconds(12) <= DateTime.Now)
+					{
+						// If still starting: It's been long enough a wait. Set it back to NotServing
+						ServiceState = ServiceState.NotServing;
+					}
+				}
 
-			ServerStateColor = IsServing
-				                   ? new SolidColorBrush(Colors.ForestGreen)
-				                   : new SolidColorBrush(Colors.Red);
+				WorkerServiceCount =
+					IsServing ? await _serviceClient.GetWorkerServiceCountAsync() : 0;
 
-			CanRestart = ! IsServing && (_isLocalHost || _serviceClient.CanFailOver);
+				watch.Stop();
 
-			Text = IsServing ? $"Healthy ({watch.ElapsedMilliseconds}ms)" : "Unavailable";
+				// The address can always change due to some fail-over:
+				string protocol = _serviceClient.UseTls ? "https" : "http";
+				FullAddress = $"{protocol}://{_serviceClient.HostName}:{_serviceClient.Port}";
 
-			return IsServing;
+				CanRestart = ! IsServing && (_isLocalHost || _serviceClient.CanFailOver);
+
+				Text = IsServing ? $"Healthy ({watch.ElapsedMilliseconds}ms)" :
+				       ServiceState == ServiceState.Starting ? "Starting..." : "Unavailable";
+
+				return IsServing;
+			}
+			catch (Exception e)
+			{
+				_msg.Debug($"Error evaluating service {_serviceClient.ServiceDisplayName}", e);
+				return null;
+			}
+			finally
+			{
+				_evaluating = false;
+			}
 		}
 
 		public void StartAutoEvaluation()
@@ -89,7 +123,7 @@ namespace ProSuite.UI.MicroserverState
 			_timer.Stop();
 		}
 
-		private async void CheckHealth(object sender, EventArgs e)
+		private async Task CheckHealth(object sender, EventArgs e)
 		{
 			await Evaluate();
 		}
@@ -120,6 +154,7 @@ namespace ProSuite.UI.MicroserverState
 			}
 		}
 
+		// ReSharper disable once UnusedMember.Global because it is used in XAML!
 		public ICommand RestartCommand
 		{
 			get
@@ -136,27 +171,47 @@ namespace ProSuite.UI.MicroserverState
 			}
 		}
 
+		// ReSharper disable once UnusedMember.Global because it is used in XAML!
+		public bool CanRestart
+		{
+			get => _canRestart;
+			set
+			{
+				try
+				{
+					_canRestart = value;
+					OnPropertyChanged();
+				}
+				catch (Exception e)
+				{
+					_msg.Debug("Error getting CanRestart state", e);
+				}
+			}
+		}
+
+		// ReSharper disable once UnusedMember.Global because it is used in XAML!
+		public Visibility RestartButtonVisibility =>
+			_isLocalHost ? Visibility.Visible : Visibility.Hidden;
+
 		private void Restart()
 		{
 			try
 			{
+				ServiceState = ServiceState.Starting;
+				_lastRestart = DateTime.Now;
+				Text = "Starting...";
+
 				bool started = _serviceClient.TryRestart();
+
+				// Reset the timer to wait at least the full 5 seconds:
+				_timer.Stop();
+				_timer.Start();
 
 				_showReportCommand?.RaiseCanExecuteChanged(started);
 			}
 			catch (Exception e)
 			{
 				_msg.Debug("Error starting microservice process", e);
-			}
-		}
-
-		public SolidColorBrush ServerStateColor
-		{
-			get => _serverStateBackColor;
-			set
-			{
-				_serverStateBackColor = value;
-				OnPropertyChanged();
 			}
 		}
 
@@ -172,6 +227,16 @@ namespace ProSuite.UI.MicroserverState
 			set
 			{
 				_isServing = value;
+				OnPropertyChanged();
+			}
+		}
+
+		public ServiceState ServiceState
+		{
+			get => _serviceState;
+			set
+			{
+				_serviceState = value;
 				OnPropertyChanged();
 			}
 		}
@@ -201,32 +266,5 @@ namespace ProSuite.UI.MicroserverState
 				OnPropertyChanged();
 			}
 		}
-
-		public bool CanRestart
-		{
-			get => _canRestart;
-			set
-			{
-				try
-				{
-					_canRestart = value;
-					OnPropertyChanged();
-
-					//if (_canRestart != value)
-					//{
-					//	_canRestart = value;
-					//	OnPropertyChanged();
-					//	_showReportCommand?.RaiseCanExecuteChanged(true);
-					//}
-				}
-				catch (Exception e)
-				{
-					_msg.Debug("Error gettign CanRestart state", e);
-				}
-			}
-		}
-
-		public Visibility RestartButtonVisibility =>
-			_isLocalHost ? Visibility.Visible : Visibility.Hidden;
 	}
 }

@@ -58,7 +58,7 @@ namespace ProSuite.Commons.IoC
 				return (T) component;
 			}
 
-			throw new InvalidConfigurationException(
+			throw new ComponentNotFoundException(
 				$"IoCContainer does not contain component or factory for {typeof(T)}");
 		}
 

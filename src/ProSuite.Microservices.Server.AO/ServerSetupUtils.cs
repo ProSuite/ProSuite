@@ -250,8 +250,10 @@ namespace ProSuite.Microservices.Server.AO
 			return result;
 		}
 
-		public static void ConfigureLogging(string[] commandLineArgs,
-		                                    [NotNull] string logConfigFileName)
+		public static void ConfigureLogging(
+			string[] commandLineArgs,
+			[NotNull] string logConfigFileName,
+			[CanBeNull] ConfigurationDirectorySearcher configDirSearcher = null)
 		{
 			bool verboseArg = commandLineArgs.Any(
 				a => a != null &&
@@ -263,12 +265,14 @@ namespace ProSuite.Microservices.Server.AO
 			int port = -1;
 			parsedArgs.WithParsed(a => port = a.Port);
 
-			ConfigureLogging(verboseArg, logConfigFileName, port);
+			ConfigureLogging(verboseArg, logConfigFileName, configDirSearcher, port);
 		}
 
-		public static void ConfigureLogging(bool verboseRequired,
-		                                    [NotNull] string logConfigFileName,
-		                                    int port = -1)
+		public static void ConfigureLogging(
+			bool verboseRequired,
+			[NotNull] string logConfigFileName,
+			[CanBeNull] ConfigurationDirectorySearcher configDirSearcher = null,
+			int port = -1)
 		{
 			int processId = Process.GetCurrentProcess().Id;
 
@@ -277,6 +281,7 @@ namespace ProSuite.Microservices.Server.AO
 			LoggingConfigurator.SetGlobalProperty("LogFileSuffix", suffix);
 
 			LoggingConfigurator.Configure(logConfigFileName,
+			                              configDirSearcher?.GetSearchPaths() ??
 			                              GetLogConfigPaths(),
 			                              useDefaultConfiguration: true);
 
@@ -294,13 +299,21 @@ namespace ProSuite.Microservices.Server.AO
 				_msg.IsVerboseDebugEnabled = true;
 			}
 
-			Assembly exeAssembly = Assert.NotNull(Assembly.GetEntryAssembly());
+			Assembly exeAssembly = Assembly.GetEntryAssembly();
+
+			Assembly executingAssembly = Assert.NotNull(Assembly.GetExecutingAssembly());
+
+			if (exeAssembly == null)
+			{
+				// e.g. unit tests
+				exeAssembly = executingAssembly;
+			}
 
 			string bitness = Environment.Is64BitProcess ? "64 bit" : "32 bit";
 
 			_msg.InfoFormat("Logging configured for {0} ({1}) version {2}",
 			                exeAssembly.Location, bitness,
-			                exeAssembly.GetName().Version);
+			                executingAssembly.GetName().Version);
 
 			if (_msg.IsVerboseDebugEnabled)
 			{

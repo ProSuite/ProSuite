@@ -133,6 +133,8 @@ namespace ProSuite.Commons.Orm.NHibernate
 
 		public bool Configured => _sessionFactory != null;
 
+		public Version KnownSchemaVersion { get; set; }
+
 		/// <summary>
 		/// An idea for a pattern that could be used e.g. by a domain transaction manager.
 		/// </summary>

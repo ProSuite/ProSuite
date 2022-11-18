@@ -8,17 +8,17 @@ namespace ProSuite.QA.Tests.Transformers.Filters
 	public abstract class TrSpatiallyFiltered : TableTransformer<FilteredFeatureClass>
 	{
 		[NotNull] protected readonly IReadOnlyFeatureClass _featureClassToFilter;
-		[NotNull] protected readonly IReadOnlyFeatureClass _intersecting;
+		[NotNull] protected readonly IReadOnlyFeatureClass _filtering;
 
 		private FilteredFeatureClass _resultingClass;
 
 		protected TrSpatiallyFiltered(
 			[NotNull] IReadOnlyFeatureClass featureClassToFilter,
-			[NotNull] IReadOnlyFeatureClass intersecting)
-			: base(new[] {featureClassToFilter, intersecting})
+			[NotNull] IReadOnlyFeatureClass filtering)
+			: base(new[] { featureClassToFilter, filtering })
 		{
 			_featureClassToFilter = featureClassToFilter;
-			_intersecting = intersecting;
+			_filtering = filtering;
 		}
 
 		protected override FilteredFeatureClass GetTransformedCore(string name)

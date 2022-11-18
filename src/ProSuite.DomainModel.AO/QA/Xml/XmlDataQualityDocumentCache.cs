@@ -178,7 +178,9 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 
 			DatasetSettings datasetSettings =
 				new DatasetSettings(getDatasetsByName, ignoreForUnknownDatasets);
-			CompleteConfiguration(result, xmlCondition, datasetSettings);
+
+			// The result could be set to null, if there are missing datasets.
+			result = CompleteConfiguration(result, xmlCondition, datasetSettings);
 			unknownDatasetParameters = datasetSettings.UnknownDatasetParameters;
 
 			return result;
@@ -288,6 +290,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 				}
 			}
 
+			// TODO: Handle missing datasets in transformersf and issue filters!
 			if (datasetSettings.UnknownDatasetParameters.Count > 0)
 			{
 				Assert.True(datasetSettings.IgnoreUnknownDatasets,

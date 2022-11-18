@@ -6,6 +6,7 @@ using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
@@ -15,20 +16,31 @@ namespace ProSuite.DomainServices.AO.QA
 {
 	public class TestAssembler
 	{
-		[NotNull] private readonly IVerificationContext _verificationContext;
-		[NotNull] private readonly IQualityConditionObjectDatasetResolver _datasetResolver;
 		[NotNull] private readonly Func<ITest, QualityCondition> _getQualityCondition;
-		[CanBeNull] private readonly Predicate<VectorDataset> _isRelevantVectorDataset;
 
-		public TestAssembler(
-			[NotNull] IVerificationContext verificationContext,
+		[CanBeNull] private IWorkspaceContextLookup _workspaceContextLookup;
+		[CanBeNull] private IQualityConditionObjectDatasetResolver _datasetResolver;
+		[CanBeNull] private Predicate<VectorDataset> _isRelevantVectorDataset;
+
+		public TestAssembler([NotNull] Func<ITest, QualityCondition> getQualityCondition)
+		{
+			_getQualityCondition = getQualityCondition;
+		}
+
+		/// <summary>
+		/// Prepares the test assembler to detect and separately report tests for tables with
+		/// related geometry-table in the AssembleTests method.
+		/// </summary>
+		/// <param name="workspaceContextLookup"></param>
+		/// <param name="datasetResolver"></param>
+		/// <param name="isRelevantVectorDataset"></param>
+		public void DetectTestsWithRelatedGeometry(
+			[NotNull] IWorkspaceContextLookup workspaceContextLookup,
 			[NotNull] IQualityConditionObjectDatasetResolver datasetResolver,
-			[NotNull] Func<ITest, QualityCondition> getQualityCondition,
 			[CanBeNull] Predicate<VectorDataset> isRelevantVectorDataset)
 		{
-			_verificationContext = verificationContext;
+			_workspaceContextLookup = workspaceContextLookup;
 			_datasetResolver = datasetResolver;
-			_getQualityCondition = getQualityCondition;
 			_isRelevantVectorDataset = isRelevantVectorDataset;
 		}
 
@@ -291,7 +303,7 @@ namespace ProSuite.DomainServices.AO.QA
 
 		private IList<TestsWithRelatedGeometry> FindTestsWithRelatedGeometry(
 			[NotNull] ICollection<ITest> tests,
-			[NotNull] IQualityConditionObjectDatasetResolver datasetResolver,
+			[CanBeNull] IQualityConditionObjectDatasetResolver datasetResolver,
 			[NotNull] out IList<ITest> testsWithoutGeometry)
 		{
 			Assert.ArgumentNotNull(tests, nameof(tests));
@@ -332,8 +344,13 @@ namespace ProSuite.DomainServices.AO.QA
 		[CanBeNull]
 		private TestsWithRelatedGeometry CreateTestsWithRelatedGeometry(
 			[NotNull] IReadOnlyTable table, [NotNull] IList<ITest> tests,
-			[NotNull] IQualityConditionObjectDatasetResolver datasetResolver)
+			[CanBeNull] IQualityConditionObjectDatasetResolver datasetResolver)
 		{
+			if (datasetResolver == null)
+			{
+				return null;
+			}
+
 			ITest testWithTable = tests[0];
 			IObjectDataset objectDataset = GetInvolvedObjectDataset(
 				table, testWithTable, datasetResolver);
@@ -376,11 +393,15 @@ namespace ProSuite.DomainServices.AO.QA
 			Assert.ArgumentNotNull(objectDataset, nameof(objectDataset));
 			Assert.ArgumentNotNull(testWithTable, nameof(testWithTable));
 
-			IEnumerable<IList<IRelationshipClass>> relClassChains =
-				ReferenceGeometryUtils.GetRelationshipClassChainsToVerifiedFeatureClasses(
-					objectDataset, _verificationContext,
-					_isRelevantVectorDataset, out hasAnyAssociationsToFeatureClasses);
-			return relClassChains;
+			if (_workspaceContextLookup != null)
+			{
+				return ReferenceGeometryUtils.GetRelationshipClassChainsToVerifiedFeatureClasses(
+					objectDataset, _workspaceContextLookup, _isRelevantVectorDataset,
+					out hasAnyAssociationsToFeatureClasses);
+			}
+
+			hasAnyAssociationsToFeatureClasses = false;
+			return new List<IList<IRelationshipClass>>();
 		}
 	}
 }

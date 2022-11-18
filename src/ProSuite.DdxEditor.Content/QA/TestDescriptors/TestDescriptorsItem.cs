@@ -14,6 +14,7 @@ using ProSuite.DdxEditor.Framework.Items;
 using ProSuite.DomainModel.AO.QA.TestReport;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.Repositories;
+using ProSuite.QA.Core.Reports;
 
 namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 {

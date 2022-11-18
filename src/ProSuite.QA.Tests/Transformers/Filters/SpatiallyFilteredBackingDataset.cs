@@ -12,19 +12,24 @@ namespace ProSuite.QA.Tests.Transformers.Filters
 {
 	public class SpatiallyFilteredBackingDataset : FilteredBackingDataset
 	{
-		private readonly IReadOnlyFeatureClass _intersecting;
+		private readonly IReadOnlyFeatureClass _filtering;
 
 		public SpatiallyFilteredBackingDataset(
 			[NotNull] FilteredFeatureClass resultFeatureClass,
 			[NotNull] IReadOnlyFeatureClass featureClassToFilter,
-			[NotNull] IReadOnlyFeatureClass intersecting)
+			[NotNull] IReadOnlyFeatureClass filtering)
 			: base(resultFeatureClass, featureClassToFilter,
-			       new List<IReadOnlyTable> {featureClassToFilter, intersecting})
+			       new List<IReadOnlyTable> { featureClassToFilter, filtering })
 		{
-			_intersecting = intersecting;
+			_filtering = filtering;
 		}
 
 		public ISpatialFilter IntersectingFeatureFilter { get; set; }
+
+		/// <summary>
+		/// Whether a feature that is disjoint to any filtering feature passes the filter.
+		/// </summary>
+		public bool DisjointIsPass { get; set; }
 
 		public Func<IReadOnlyFeature, IReadOnlyFeature, bool> PassCriterion { get; set; }
 
@@ -62,13 +67,22 @@ namespace ProSuite.QA.Tests.Transformers.Filters
 			QueryFilterHelper queryFilterHelper = QueryHelpers[1];
 
 			foreach (var testRow in DataSearchContainer.Search(
-				         _intersecting, spatialFilter, queryFilterHelper))
+				         _filtering, spatialFilter, queryFilterHelper))
 			{
-				IReadOnlyFeature intersectingFeature = ((IReadOnlyFeature) testRow);
+				IReadOnlyFeature intersectingFeature = (IReadOnlyFeature) testRow;
 
-				if (((IRelationalOperator) testGeometry).Disjoint(intersectingFeature.Shape))
+				bool isDisjoint =
+					((IRelationalOperator) testGeometry).Disjoint(intersectingFeature.Shape);
+
+				if (isDisjoint)
 				{
 					continue;
+				}
+
+				if (DisjointIsPass)
+				{
+					// Not disjoint -> filtered
+					return false;
 				}
 
 				if (PassCriterion == null)
@@ -76,10 +90,16 @@ namespace ProSuite.QA.Tests.Transformers.Filters
 					return true;
 				}
 
-				return PassCriterion.Invoke(resultFeature, intersectingFeature);
+				bool passesFilter = PassCriterion.Invoke(resultFeature, intersectingFeature);
+
+				// if Disjoint is pass we have to check every feature
+				if (! DisjointIsPass)
+				{
+					return passesFilter;
+				}
 			}
 
-			return false;
+			return DisjointIsPass;
 		}
 	}
 }

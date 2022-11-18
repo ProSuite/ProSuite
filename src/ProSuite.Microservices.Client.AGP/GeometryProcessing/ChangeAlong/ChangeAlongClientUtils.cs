@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -6,7 +5,6 @@ using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Logging;
 using ProSuite.Microservices.Definitions.Geometry;
 using ProSuite.Microservices.Definitions.Shared;
 
@@ -14,8 +12,6 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong
 {
 	public static class ChangeAlongClientUtils
 	{
-		private static readonly IMsg _msg = Msg.ForCurrentClass();
-
 		#region Calculate subcurves
 
 		[NotNull]
@@ -74,9 +70,11 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong
 		{
 			var request = CreateCalculateReshapeLinesRequest(selectedFeatures, targetFeatures);
 
-			return TryRpc(
-				request,
-				r => rpcClient.CalculateReshapeLines(r, null, null, cancellationToken));
+			int deadline = RpcCallUtils.GeometryDefaultDeadline * selectedFeatures.Count;
+
+			return RpcCallUtils.Try(
+				options => rpcClient.CalculateReshapeLines(request, options),
+				cancellationToken, deadline);
 		}
 
 		private static CalculateCutLinesResponse CalculateCutCurvesRpc(
@@ -87,9 +85,11 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong
 		{
 			var request = CreateCalculateCutLinesRequest(selectedFeatures, targetFeatures);
 
-			return TryRpc(
-				request,
-				r => rpcClient.CalculateCutLines(r, null, null, cancellationToken));
+			int deadline = RpcCallUtils.GeometryDefaultDeadline * selectedFeatures.Count;
+
+			return RpcCallUtils.Try(
+				options => rpcClient.CalculateCutLines(request, options),
+				cancellationToken, deadline);
 		}
 
 		private static CalculateReshapeLinesRequest CreateCalculateReshapeLinesRequest(
@@ -369,25 +369,5 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong
 		}
 
 		#endregion
-
-		private static TResponse TryRpc<TResponse, TRequest>(
-			[NotNull] TRequest request,
-			Func<TRequest, TResponse> func)
-		{
-			TResponse response;
-
-			try
-			{
-				response = func(request);
-			}
-			catch (Exception e)
-			{
-				_msg.Debug($"Error calling remote procedure: {e.Message} ", e);
-
-				throw;
-			}
-
-			return response;
-		}
 	}
 }

@@ -56,11 +56,10 @@ namespace ProSuite.QA.Tests.Test.TestData
 		}
 
 		[NotNull]
-		public static TestDataLocator GetTestDataLocator()
+		public static ITestDataDirectory GetTestDataLocator()
 		{
-			var locator = TestDataLocator.Create("ProSuite");
-
-			return locator;
+			return TestDataPreparer.FromDirectory();
+			
 		}
 	}
 }

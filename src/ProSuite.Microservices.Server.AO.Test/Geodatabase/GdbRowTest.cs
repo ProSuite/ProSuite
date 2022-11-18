@@ -64,6 +64,7 @@ namespace ProSuite.Microservices.Server.AO.Test.Geodatabase
 			Assert.AreEqual(realFeatureClass.Fields.FieldCount,
 			                virtualFeatureClass.Fields.FieldCount);
 
+			GdbFeatureClass wrappedFeatureClass = new GdbFeatureClass(realFeatureClass);
 			int featureCount = 0;
 			foreach (var feature in GdbQueryUtils.GetFeatures(realFeatureClass, true))
 			{
@@ -73,7 +74,7 @@ namespace ProSuite.Microservices.Server.AO.Test.Geodatabase
 
 				GdbRow gdbRow =
 					ProtobufConversionUtils.FromGdbObjectMsg(
-						gdbObjectMsg, (GdbTable) realFeatureClass);
+						gdbObjectMsg, wrappedFeatureClass);
 
 				for (int i = 0; i < feature.Fields.FieldCount; i++)
 				{

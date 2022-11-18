@@ -316,7 +316,7 @@ namespace ProSuite.QA.Container.TestContainer
 				return null;
 			}
 
-			if (filterHelper.FullGeometrySearch)
+			if ((queryFilter is ITileFilter tf && tf.TileExtent != null) || filterHelper.FullGeometrySearch)
 			{
 				if (queryFilter is ISpatialFilter sf)
 				{
@@ -1013,6 +1013,7 @@ namespace ProSuite.QA.Container.TestContainer
 			TileCache preloadedCache = _tilesAdmin?.PrepareNextTile(tile);
 
 			int cachedTableIndex = 0;
+			tileCache.LoadingTileBox = tile.Box;
 			foreach (IReadOnlyTable cachedTable in _cachedSet.Keys)
 			{
 				using (_container.UseProgressWatch(

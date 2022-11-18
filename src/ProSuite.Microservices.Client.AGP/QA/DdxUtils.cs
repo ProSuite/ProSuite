@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
@@ -12,6 +13,7 @@ using ProSuite.DomainModel.AGP.DataModel;
 using ProSuite.DomainModel.AGP.QA;
 using ProSuite.DomainModel.AGP.Workflow;
 using ProSuite.DomainModel.Core.QA;
+using ProSuite.Microservices.Client.AGP.GeometryProcessing;
 using ProSuite.Microservices.Definitions.QA;
 using ProSuite.Microservices.Definitions.Shared;
 
@@ -20,6 +22,8 @@ namespace ProSuite.Microservices.Client.AGP.QA
 	public static class DdxUtils
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
+		private const int _timeoutMilliseconds = 60000;
 
 		public static async Task<List<ProjectWorkspace>> GetProjectWorkspaceCandidates(
 			[NotNull] ICollection<Table> tables,
@@ -62,10 +66,17 @@ namespace ProSuite.Microservices.Client.AGP.QA
 
 			request.DatasetIds.AddRange(datasetIds);
 
-			DateTime timeout = GetTimeout();
-
 			GetSpecificationsResponse response =
-				await ddxClient.GetQualitySpecificationsAsync(request, null, timeout);
+				await RpcCallUtils.TryAsync(async callOptions =>
+					                            await ddxClient.GetQualitySpecificationsAsync(
+						                            request, callOptions), CancellationToken.None,
+				                            _timeoutMilliseconds);
+
+			if (response == null)
+			{
+				// Cancelled or timed out:
+				return new List<IQualitySpecificationReference>(0);
+			}
 
 			var result = new List<IQualitySpecificationReference>();
 
@@ -121,10 +132,17 @@ namespace ProSuite.Microservices.Client.AGP.QA
 			Dictionary<long, SpatialReference> spatialReferencesByWkId,
 			QualityVerificationDdxGrpc.QualityVerificationDdxGrpcClient ddxClient)
 		{
-			DateTime timeout = GetTimeout();
-
 			GetProjectWorkspacesResponse response =
-				await ddxClient.GetProjectWorkspacesAsync(request, null, timeout);
+				await RpcCallUtils.TryAsync(async callOptions =>
+					                            await ddxClient.GetProjectWorkspacesAsync(
+						                            request, callOptions), CancellationToken.None,
+				                            _timeoutMilliseconds);
+
+			if (response == null)
+			{
+				// Cancelled or timed out:
+				return new List<ProjectWorkspace>(0);
+			}
 
 			var candidates = new List<ProjectWorkspace>();
 
@@ -224,14 +242,6 @@ namespace ProSuite.Microservices.Client.AGP.QA
 					spatialReferencesByWkId.Add(sr.Wkid, sr);
 				}
 			}
-		}
-
-		private static DateTime GetTimeout()
-		{
-			// Better late than never (if the service has just been started, all the workspaces need to be opened...)
-			DateTime timeout = DateTime.Now.AddSeconds(60).ToUniversalTime();
-
-			return timeout;
 		}
 	}
 }

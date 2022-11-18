@@ -31,7 +31,6 @@ using ProSuite.DomainServices.AO.QA.Standalone.XmlBased.Options;
 using ProSuite.DomainServices.AO.QA.VerificationReports;
 using ProSuite.DomainServices.AO.QA.VerificationReports.Xml;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestContainer;
 using Path = System.IO.Path;
 
 namespace ProSuite.DomainServices.AO.QA
@@ -149,7 +148,7 @@ namespace ProSuite.DomainServices.AO.QA
 		[NotNull]
 		protected abstract QualityErrorRepositoryBase CreateQualityErrorRepository(
 			[NotNull] IVerificationContext verificationContext,
-			[NotNull] Dictionary<QualityCondition, IList<ITest>> qualityConditionTests,
+			[NotNull] IDictionary<QualityCondition, IList<ITest>> qualityConditionTests,
 			[NotNull] IQualityConditionObjectDatasetResolver datasetResolver);
 
 		[NotNull]
@@ -386,11 +385,7 @@ namespace ProSuite.DomainServices.AO.QA
 		#region Preparing/managing tests
 
 		private IList<QualityCondition> _qualityConditions;
-		private Dictionary<ITest, TestVerification> _testVerifications;
-		private Dictionary<QualityCondition, IList<ITest>> _testsByCondition;
-
-		private Dictionary<QualityConditionVerification, QualitySpecificationElement>
-			_elementsByConditionVerification;
+		private VerificationElements _verificationElements;
 
 		// ReSharper disable once VirtualMemberNeverOverridden.Global
 		protected virtual IList<ITest> GetTests(
@@ -408,144 +403,17 @@ namespace ProSuite.DomainServices.AO.QA
 		{
 			Assert.ArgumentNotNull(qualitySpecification, nameof(qualitySpecification));
 
-			_qualityConditions = new List<QualityCondition>();
-			_testsByCondition = new Dictionary<QualityCondition, IList<ITest>>();
-			_testVerifications = new Dictionary<ITest, TestVerification>();
-
-			ReportPreProcessing("Loading tests...");
-
-			var testList = new List<ITest>();
-
 			IOpenDataset datasetOpener = CreateDatasetOpener(_verificationContext);
 
-			HashSet<QualityCondition> orderedQualityConditions =
-				new HashSet<QualityCondition>(
-					QualitySpecificationUtils.GetOrderedQualityConditions(
-						qualitySpecification, datasetOpener));
-
-			qualityVerification = GetQualityVerification(
-				qualitySpecification, orderedQualityConditions,
-				out _elementsByConditionVerification);
-
-			int index = 0;
-			int count = orderedQualityConditions.Count;
-			foreach (QualityCondition condition in orderedQualityConditions)
-			{
-				ReportPreProcessing("Loading tests...", index++, count);
-
-				TestFactory factory =
-					Assert.NotNull(TestFactoryUtils.CreateTestFactory(condition),
-					               $"Cannot create test factory for condition {condition.Name}");
-
-				// This test can only be performed here because the DataType must be initialized:
-				// It should probably be deleted once no IMosaicLayer, ITerrain is used any more
-				if (QualitySpecificationUtils.HasUnsupportedDatasetParameterValues(
-					    condition, datasetOpener, out string message))
-				{
-					_msg.WarnFormat(
-						"Condition '{0}' has unsupported parameter value(s) and is ignored: {1}",
-						condition.Name, message);
-					continue;
-				}
-
-				IList<ITest> tests = factory.CreateTests(datasetOpener);
-				if (tests.Count == 0)
-				{
-					continue;
-				}
-
-				QualityConditionVerification conditionVerification =
-					qualityVerification.GetConditionVerification(condition);
-				Assert.NotNull(conditionVerification,
-				               "Verification not found for quality condition");
-
-				var testIndex = 0;
-				foreach (ITest test in tests)
-				{
-					testList.Add(test);
-					_testVerifications.Add(test,
-					                       new TestVerification(conditionVerification, testIndex));
-					testIndex++;
-				}
-
-				_qualityConditions.Add(condition);
-				_testsByCondition.Add(condition, tests);
-			}
+			IList<ITest> testList = QualityVerificationUtils.GetTestsAndDictionaries(
+				qualitySpecification, datasetOpener, out qualityVerification,
+				out _qualityConditions, out _verificationElements, ReportPreProcessing);
 
 			return testList;
 		}
 
 		protected abstract IOpenDataset CreateDatasetOpener(
 			[NotNull] IVerificationContext verificationContext);
-
-		[NotNull]
-		private static QualityVerification GetQualityVerification(
-			[NotNull] QualitySpecification qualitySpecification,
-			[NotNull] HashSet<QualityCondition> conditionsToVerify,
-			[NotNull] out Dictionary<QualityConditionVerification, QualitySpecificationElement>
-				elementsByConditionVerification)
-		{
-			var result = new QualityVerification(qualitySpecification, conditionsToVerify);
-
-			Dictionary<QualityCondition, QualityConditionVerification> verificationsByCondition
-				= GetConditionVerificationsByCondition(result);
-
-			elementsByConditionVerification = new Dictionary
-				<QualityConditionVerification, QualitySpecificationElement>(
-					result.ConditionVerifications.Count);
-
-			foreach (QualitySpecificationElement element in qualitySpecification.Elements)
-			{
-				QualityConditionVerification verification;
-				if (verificationsByCondition.TryGetValue(element.QualityCondition,
-				                                         out verification))
-				{
-					elementsByConditionVerification.Add(verification, element);
-				}
-			}
-
-			return result;
-		}
-
-		[NotNull]
-		private static Dictionary<QualityCondition, QualityConditionVerification>
-			GetConditionVerificationsByCondition(
-				[NotNull] QualityVerification qualityVerification)
-		{
-			return qualityVerification.ConditionVerifications
-			                          .Where(v => v.QualityCondition != null)
-			                          .ToDictionary(v => v.QualityCondition);
-		}
-
-		[NotNull]
-		private TestVerification GetTestVerification([NotNull] ITest test)
-		{
-			TestVerification result;
-			if (! _testVerifications.TryGetValue(test, out result))
-			{
-				throw new ArgumentException(
-					string.Format("No quality condition found for test instance of type {0}",
-					              test.GetType()), nameof(test));
-			}
-
-			return result;
-		}
-
-		[NotNull]
-		private QualityConditionVerification GetQualityConditionVerification(
-			[NotNull] ITest test)
-		{
-			TestVerification testVerification = GetTestVerification(test);
-
-			return testVerification.QualityConditionVerification;
-		}
-
-		[NotNull]
-		protected QualityCondition GetQualityCondition([NotNull] ITest test)
-		{
-			return Assert.NotNull(GetQualityConditionVerification(test).QualityCondition,
-			                      "no quality condition for test");
-		}
 
 		#endregion
 
@@ -620,7 +488,7 @@ namespace ProSuite.DomainServices.AO.QA
 
 			_verificationContextIssueRepository =
 				CreateQualityErrorRepository(_verificationContext,
-				                             _testsByCondition,
+				                             _verificationElements.TestsByCondition,
 				                             _datasetResolver);
 
 			_verificationContextIssueRepository.Perimeter = _testPerimeter;
@@ -632,9 +500,13 @@ namespace ProSuite.DomainServices.AO.QA
 
 			ITestRunner testRunner = CreateTestRunner(qualityVerification);
 
-			testRunner.TestAssembler = new TestAssembler(
-				VerificationContext, _datasetResolver, GetQualityCondition,
-				IsRelevantVectorDataset);
+			var testAssembler =
+				new TestAssembler(t => _verificationElements.GetQualityCondition(t));
+
+			testAssembler.DetectTestsWithRelatedGeometry(VerificationContext, _datasetResolver,
+			                                             IsRelevantVectorDataset);
+
+			testRunner.TestAssembler = testAssembler;
 			testRunner.QualityVerification = qualityVerification;
 
 			if (UpdateErrorsInVerifiedModelContext)
@@ -811,7 +683,7 @@ namespace ProSuite.DomainServices.AO.QA
 			         qualityVerification.ConditionVerifications)
 			{
 				_verificationReportBuilder.AddVerifiedQualityCondition(
-					_elementsByConditionVerification[conditionVerification]);
+					_verificationElements.GetSpecificationElement(conditionVerification));
 			}
 
 			testRunner.QaError += container_QaError;
@@ -988,7 +860,7 @@ namespace ProSuite.DomainServices.AO.QA
 			[NotNull] QualityVerification qualityVerification)
 		{
 			SingleThreadedTestRunner testRunner =
-				new SingleThreadedTestRunner(_testVerifications, _testsByCondition, TileSize)
+				new SingleThreadedTestRunner(_verificationElements, TileSize)
 				{
 					AllowEditing = AllowEditing,
 					FilterTableRowsUsingRelatedGeometry = FilterTableRowsUsingRelatedGeometry,
@@ -1049,39 +921,6 @@ namespace ProSuite.DomainServices.AO.QA
 			FileSystemUtils.WriteTextFile(output, reportFilePath);
 
 			_msg.InfoFormat("Html report written to {0}", reportFilePath);
-		}
-
-		[Obsolete]
-		private void AddTests([NotNull] IEnumerable<ITest> tests,
-		                      [NotNull] TestContainer container,
-		                      [CanBeNull] AreaOfInterest areaOfInterest,
-		                      bool filterTableRowsUsingRelatedGeometry,
-		                      [NotNull] out List<ITest> testsToVerifyByRelatedGeometry)
-		{
-			Assert.ArgumentNotNull(tests, nameof(tests));
-			Assert.ArgumentNotNull(container, nameof(container));
-
-			testsToVerifyByRelatedGeometry = new List<ITest>();
-
-			foreach (ITest test in tests)
-			{
-				// only if none of the involved datasets is a feature class or a terrain
-				bool filterByRelatedGeometry =
-					filterTableRowsUsingRelatedGeometry &&
-					areaOfInterest != null &&
-					! GetQualityCondition(test).NeverFilterTableRowsUsingRelatedGeometry &&
-					! TestUtils.UsesSpatialDataset(test);
-
-				if (filterByRelatedGeometry)
-				{
-					// only if none of the involved datasets is a feature class or a terrain
-					testsToVerifyByRelatedGeometry.Add(test);
-				}
-				else
-				{
-					container.AddTest(test);
-				}
-			}
 		}
 
 		private CancellationTokenSource _cancellationTokenSource;
@@ -1245,14 +1084,14 @@ namespace ProSuite.DomainServices.AO.QA
 			}
 
 			QualitySpecificationElement qSpecElement =
-				_elementsByConditionVerification[conditionVerification];
+				_verificationElements.GetSpecificationElement(conditionVerification);
 
 			QualityCondition condition = qSpecElement.QualityCondition;
 
 			// This would look a lot more elegant when using Issue and its involved table
 			const int involvedObjectsMaxLength = 2000;
 			string involvedObjectsString = ErrorObjectUtils.GetInvolvedObjectsString(
-				condition, qaError, _testsByCondition[condition],
+				condition, qaError, _verificationElements.GetTests(condition),
 				involvedObjectsMaxLength, _datasetResolver);
 
 			IssueFound.Invoke(
@@ -1296,33 +1135,10 @@ namespace ProSuite.DomainServices.AO.QA
 		{
 			Assert.ArgumentNotNull(qaError, nameof(qaError));
 
-			// Moved to single threaded test runner:
-			//if (_msg.IsVerboseDebugEnabled)
-			//{
-			//	_msg.DebugFormat("Issue found: {0}", qaError);
-			//}
-
-			//ITest test = qaError.Test;
-			//QualityConditionVerification conditionVerification =
-			//	GetQualityConditionVerification(test);
-			//QualityCondition qualityCondition = conditionVerification.QualityCondition;
-			//Assert.NotNull(qualityCondition, "no quality condition for verification");
-
-			//StopInfo stopInfo = null;
-			//if (conditionVerification.StopOnError)
-			//{
-			//	stopInfo = new StopInfo(qualityCondition, qaError.Description);
-
-			//	foreach (InvolvedRow involvedRow in qaError.InvolvedRows)
-			//	{
-			//		_rowsWithStopConditions.Add(involvedRow.TableName,
-			//		                            involvedRow.OID, stopInfo);
-			//	}
-			//}
-
 			ITest test = qaError.Test;
 			QualityConditionVerification conditionVerification =
-				GetQualityConditionVerification(test);
+				_verificationElements.GetQualityConditionVerification(test);
+
 			QualityCondition qualityCondition = conditionVerification.QualityCondition;
 			Assert.NotNull(qualityCondition, "no quality condition for verification");
 
@@ -1343,20 +1159,6 @@ namespace ProSuite.DomainServices.AO.QA
 				_msg.Warn($"Error checking error for relevance: {qaError}", e);
 				throw;
 			}
-
-			// Moved to single threaded test runner:
-			//if (! conditionVerification.AllowErrors)
-			//{
-			//	conditionVerification.Fulfilled = false;
-
-			//	if (stopInfo != null)
-			//	{
-			//		// it's a stop condition, and it is a 'hard' condition, and the error is 
-			//		// relevant --> consider the stop situation as sufficiently reported 
-			//		// (no reporting in case of stopped tests required)
-			//		stopInfo.Reported = true;
-			//	}
-			//}
 
 			// Once the error filter is applied inside the test runner, this can be 
 			// moved to the test runner too:
@@ -1399,8 +1201,8 @@ namespace ProSuite.DomainServices.AO.QA
 
 			if (_externalIssueRepository != null || _verificationReportBuilder != null)
 			{
-				var issue = new Issue(_elementsByConditionVerification[conditionVerification],
-				                      qaError);
+				var issue = new Issue(
+					_verificationElements.GetSpecificationElement(conditionVerification), qaError);
 
 				_externalIssueRepository?.AddIssue(issue, qaError.Geometry);
 				_verificationReportBuilder?.AddIssue(issue, qaError.Geometry);

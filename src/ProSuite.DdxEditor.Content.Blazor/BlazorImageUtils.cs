@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom.EsriShape;
@@ -22,8 +23,13 @@ internal static class BlazorImageUtils
 	private const string _keyRasterDataset = "rasterdataset";
 	private const string _keyUnknown = "unknown";
 	private const string _keyTransform = "transform";
-	private const string _keyRowFilter = "rowfilter";
 	private const string _keyIssueFilter = "issuefilter";
+
+	private static readonly Dictionary<string, string> _fileNameByKey = new()
+		{
+			{ _keyUnknown, "DatasetTypeUnkown.png" },
+			{ _keyTable, "DatasetTypeTable.png" }
+		};
 
 	public static string GetImageSource(GeometryType geometryType)
 	{
@@ -91,7 +97,14 @@ internal static class BlazorImageUtils
 	private static string GetImageSource(string key)
 	{
 		// todo daro!
-		return string.Empty;
+		if (_fileNameByKey.TryGetValue(key, out string file))
+		{
+			return GetImage(file);
+		}
+		else
+		{
+			return GetImage(_fileNameByKey[_keyUnknown]);
+		}
 	}
 
 	private static string GetImageSource(ProSuiteGeometryType geometryType)

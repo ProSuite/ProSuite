@@ -216,10 +216,14 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			[NotNull] IPolyline optimizedPolyline,
 			[CanBeNull] IGeometry snapTarget)
 		{
+			if (intersectionPnts.Count == 0)
+			{
+				return new List<CrackPoint>(0);
+			}
+
 			if (IntersectionUtils.UseCustomIntersect &&
 			    ! GeometryUtils.HasNonLinearSegments(originalGeometry) &&
-			    (snapTarget == null || ! GeometryUtils.HasNonLinearSegments(snapTarget)) &&
-			    ! GeometryUtils.IsMAware(originalGeometry))
+			    (snapTarget == null || ! GeometryUtils.HasNonLinearSegments(snapTarget)))
 			{
 				ISegmentList originalSegments =
 					originalGeometry is IPolycurve originalPolycurve
@@ -227,10 +231,10 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 							originalPolycurve)
 						: GeometryConversionUtils.CreatePolyhedron((IMultiPatch) originalGeometry);
 
-				IPointList snapTargetSegments = ToPointList(snapTarget);
+				IPointList snapTargetPoints = ToPointList(snapTarget);
 
 				return DetermineCrackPoints3d(intersectionPnts, originalSegments, originalGeometry,
-				                              optimizedPolyline, snapTargetSegments);
+				                              optimizedPolyline, snapTargetPoints);
 			}
 
 			IPointCollection intersectionPoints = GeometryConversionUtils.CreatePointCollection(
@@ -2033,24 +2037,29 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 		}
 
 		[CanBeNull]
-		private static IPointList ToPointList([CanBeNull] IGeometry pointCollection)
+		private static IPointList ToPointList([CanBeNull] IGeometry geometry)
 		{
-			if (pointCollection == null)
+			if (geometry == null)
 			{
 				return null;
 			}
 
-			if (pointCollection is IPolycurve polycurve)
+			if (geometry is IPolycurve polycurve)
 			{
 				return GeometryConversionUtils.CreateMultiPolycurve(polycurve);
 			}
 
-			if (pointCollection is IMultiPatch multipatch)
+			if (geometry is IMultiPatch multipatch)
 			{
 				return GeometryConversionUtils.CreatePolyhedron(multipatch);
 			}
 
-			return GeometryConversionUtils.CreateMultipoint((IMultipoint) pointCollection);
+			if (geometry is IPoint point)
+			{
+				return GeometryConversionUtils.CreateMultipoint(point);
+			}
+
+			return GeometryConversionUtils.CreateMultipoint((IMultipoint) geometry);
 		}
 
 		private static List<IntersectionWithTargetPoint> CreateIntersectionsWithTargetPoint(

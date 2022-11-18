@@ -3,15 +3,15 @@
 </style>
 
 @*<span @ref="_element" onmouseover="@(() => OnMouseOver(_element))">*@
-<span @ref="_element">
-
-	@ChildContent
-
+<div class="row" @ref="_element">
+	<div class="col">
+		@ChildContent
+	</div>
 	@if (! string.IsNullOrEmpty(ImagePath))
 	{
-		<img src="@ImagePath" alt="error" style="padding: 0 2px 1px"/>
-		<span class="error-message">
+		<div class="col-auto" style="width: 150px">
+			<img src="@ImagePath" alt="error" style="padding: 0 2px 1px"/>
 			@ErrorMessage
-		</span>
+		</div>
 	}
-</span>
+</div>

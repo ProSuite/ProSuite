@@ -1,3 +1,4 @@
+using System;
 using NHibernate;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -39,5 +40,11 @@ namespace ProSuite.Commons.Orm.NHibernate
 		/// Whether this instance is configured with a valid session factory.
 		/// </summary>
 		bool Configured { get; }
+
+		/// <summary>
+		/// The schema version of the database, if it is known. This should 
+		/// be replaced by a db query performed directly in the NH-Service.
+		/// </summary>
+		Version KnownSchemaVersion { get; set; }
 	}
 }

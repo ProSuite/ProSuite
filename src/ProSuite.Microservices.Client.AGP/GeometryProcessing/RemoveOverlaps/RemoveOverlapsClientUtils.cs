@@ -67,12 +67,12 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.RemoveOverlaps
 			CalculateOverlapsRequest request =
 				CreateCalculateOverlapsRequest(selectedFeatures, overlappingFeatures);
 
-			int maxTimePerFeature = 4000;
+			int deadline = RpcCallUtils.GeometryDefaultDeadline * selectedFeatures.Count;
 
 			CalculateOverlapsResponse response =
 				RpcCallUtils.Try(
 					o => rpcClient.CalculateOverlaps(request, o),
-					cancellationToken, maxTimePerFeature * selectedFeatures.Count);
+					cancellationToken, deadline);
 
 			return response;
 		}
@@ -110,8 +110,12 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.RemoveOverlaps
 				selectedFeatures, overlapsToRemove, overlappingFeatures,
 				out updateFeatures);
 
+			int deadline = RpcCallUtils.GeometryDefaultDeadline * request.SourceFeatures.Count;
+
 			RemoveOverlapsResponse response =
-				rpcClient.RemoveOverlaps(request, null, null, cancellationToken);
+				RpcCallUtils.Try(
+					o => rpcClient.RemoveOverlaps(request, o),
+					cancellationToken, deadline);
 
 			return GetRemoveOverlapsResult(response, updateFeatures);
 		}
