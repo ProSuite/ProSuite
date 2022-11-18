@@ -36,6 +36,8 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 			_verificationContext = verificationContext;
 		}
 
+		public bool HasAnyIssueDatasets => GetIssueWriters().Any();
+
 		[NotNull]
 		private IFieldIndexCache FieldIndexCache
 		{
