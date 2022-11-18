@@ -114,7 +114,7 @@ namespace ProSuite.QA.Tests.Transformers
 		                              IHasSearchDistance
 		{
 			public TransformedFc(IReadOnlyFeatureClass dissolve, string name = null)
-				: base(-1, ! string.IsNullOrEmpty(name) ? name : "dissolveResult",
+				: base(null, ! string.IsNullOrEmpty(name) ? name : "dissolveResult",
 				       dissolve.ShapeType,
 				       createBackingDataset: (t) =>
 					       new TransformedDataset((TransformedFc) t, dissolve),

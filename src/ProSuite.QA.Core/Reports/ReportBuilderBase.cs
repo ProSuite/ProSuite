@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
-namespace ProSuite.DomainModel.AO.QA.TestReport
+namespace ProSuite.QA.Core.Reports
 {
 	public abstract class ReportBuilderBase : IReportBuilder
 	{
@@ -75,14 +75,14 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 
 		public abstract void WriteReport();
 
-		private void Include(Type transformerType, int constructorIndex,
+		private void Include(Type instanceDescriptorType, int constructorIndex,
 		                     IDictionary<Type, IncludedInstanceClass> result)
 		{
 			var isNewInstance = false;
 			IncludedInstanceClass classToInclude;
-			if (! result.TryGetValue(transformerType, out classToInclude))
+			if (! result.TryGetValue(instanceDescriptorType, out classToInclude))
 			{
-				classToInclude = new IncludedInstanceClass(transformerType);
+				classToInclude = new IncludedInstanceClass(instanceDescriptorType);
 
 				if (! IncludeObsolete && classToInclude.Obsolete)
 				{
@@ -120,7 +120,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 
 			if (isNewInstance)
 			{
-				result.Add(transformerType, classToInclude);
+				result.Add(instanceDescriptorType, classToInclude);
 			}
 		}
 

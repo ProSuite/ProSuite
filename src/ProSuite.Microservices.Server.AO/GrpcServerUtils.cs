@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using ESRI.ArcGIS.esriSystem;
@@ -256,21 +257,17 @@ namespace ProSuite.Microservices.Server.AO
 		{
 			// This is to avoid a generic exception with little meaning
 
-			// Determine if it is a good idea to use metadata trailers:
+			// NOTE: the metadata must be transported as binary otherwise the status
+			// code will be 'cancelled' and nothing is sent (due to illegal characters).
 
-			//serverCallContext.ResponseTrailers.Add("ERROR", exception.Message);
+			byte[] exceptionBytes = Encoding.UTF8.GetBytes(exception.ToString());
 
-			//// This causes a different statuts code / message(probably too long / or illegal characters!)
-			//serverCallContext.ResponseTrailers.Add("EXCEPTION",
-			//                                       exception.ToString());
+			const string exceptionBinKey = "exception-bin";
 
-			// TODO: Add exception type, error code, etc.
-
-			// TODO: Check if this is still the case:
-			// For synchronous calls, there is no result object to extract the trailers from. Simply use the exception
+			Metadata metadata = new Metadata { { exceptionBinKey, exceptionBytes } };
 
 			var rpcException =
-				new RpcException(new Status(StatusCode.Unavailable, exception.ToString()),
+				new RpcException(new Status(StatusCode.Aborted, exception.Message), metadata,
 				                 exception.Message);
 
 			_msg.Debug("Re-throwing exception as RPC Exception", exception);
