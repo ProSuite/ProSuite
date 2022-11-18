@@ -791,9 +791,13 @@ namespace ProSuite.QA.Tests.Transformers
 						b.QueryWKSCoords(out WKSEnvelope box);
 						localBuilder.BuildNet(box, box, 0);
 
+						bool anyAdded = false;
+						List<DirectedRow> pairDirectedRows = null;
 						foreach (List<DirectedRow> directedRows in localBuilder
 							         .ConnectedLinesList)
 						{
+							if (directedRows.Count > 1)
+								pairDirectedRows = pairDirectedRows ?? directedRows;
 							if (directedRows.FirstOrDefault(x => ! _handledRows.Contains(x)) ==
 							    null)
 							{
@@ -802,6 +806,13 @@ namespace ProSuite.QA.Tests.Transformers
 
 							Add(directedRows, (IRelationalOperator) queryGeom);
 							directedRows.ForEach(x => _handledRows.Add(x));
+
+							anyAdded = true;
+						}
+
+						if (! anyAdded && pairDirectedRows != null)
+						{
+							Add(pairDirectedRows, (IRelationalOperator)queryGeom);
 						}
 					}
 				}
