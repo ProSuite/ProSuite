@@ -87,6 +87,11 @@ namespace ProSuite.Processing
 			}
 		}
 
+		/// <summary>
+		/// Get the value of the given <paramref name="parameterName"/>
+		/// converted to type <typeparamref name="T"/>, or the given
+		/// <paramref name="defaultValue"/> if no such parameter in config.
+		/// </summary>
 		public T GetValue<T>(string parameterName, T defaultValue)
 		{
 			var values = GetValues(parameterName).ToArray();
@@ -101,6 +106,11 @@ namespace ProSuite.Processing
 			return ConvertValue<T>(converter, value, parameterName);
 		}
 
+		/// <summary>
+		/// Get the value of the given <paramref name="parameterName"/>
+		/// converted to type <typeparamref name="T"/>, or throw an
+		/// exception if no such parameter in config.
+		/// </summary>
 		public T GetValue<T>(string parameterName)
 		{
 			var values = GetValues(parameterName).ToArray();
@@ -137,6 +147,15 @@ namespace ProSuite.Processing
 			if (values.Length > 1)
 				throw ConfigError("Parameter {0} is defined more than once", parameterName);
 			return values[0]?.Trim();
+		}
+
+		/// <summary>
+		/// All parameter values of the given <paramref name="parameterName"/>
+		/// joined into one string; may be empty if no such parameter exists.
+		/// </summary>
+		public string GetJoined(string parameterName, string separator)
+		{
+			return string.Join(separator ?? string.Empty, GetValues(parameterName));
 		}
 
 		private static T ConvertValue<T>(TypeConverter converter, string value, string name)
