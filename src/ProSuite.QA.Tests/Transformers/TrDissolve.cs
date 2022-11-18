@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Permissions;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
@@ -855,10 +856,19 @@ namespace ProSuite.QA.Tests.Transformers
 
 							if (connected0 == null && connected1 == null)
 							{
-								List<DirectedRow> connected =
-									new List<DirectedRow> { groupedRows[0], groupedRows[1] };
-								_dissolvedDict.Add(groupedRows[0], connected);
-								_dissolvedDict.Add(groupedRows[1], connected);
+								if (!_dissolvedDict.Comparer.Equals(groupedRows[0], groupedRows[1]))
+								{
+									List<DirectedRow> connected =
+										new List<DirectedRow> { groupedRows[0], groupedRows[1] };
+									_dissolvedDict.Add(groupedRows[0], connected);
+									_dissolvedDict.Add(groupedRows[1], connected);
+								}
+								else
+								{
+									List<DirectedRow> connected =
+										new List<DirectedRow> { groupedRows[0] };
+									_dissolvedDict.Add(groupedRows[0], connected);
+								}
 							}
 							else if (connected0 == null)
 							{
