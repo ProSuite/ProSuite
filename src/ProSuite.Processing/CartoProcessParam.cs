@@ -7,17 +7,19 @@ namespace ProSuite.Processing
 		public string Name { get; }
 		public Type Type { get; }
 		public bool Required { get; }
-		public string Description { get; }
+		public bool Multivalued { get; }
 		public string Group { get; }
+		public string Description { get; }
 
-		public CartoProcessParam(
-			string name, Type type, bool required = true, string description = null, string group = null)
+		public CartoProcessParam(string name, Type type, bool required, bool multivalued,
+		                         string group = null, string description = null)
 		{
 			Name = name ?? throw new ArgumentNullException(nameof(name));
 			Type = type ?? throw new ArgumentNullException(nameof(type));
 			Required = required;
-			Description = description ?? string.Empty;
+			Multivalued = multivalued;
 			Group = group?.Trim() ?? string.Empty;
+			Description = description ?? string.Empty;
 		}
 	}
 }
