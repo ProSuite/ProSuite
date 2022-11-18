@@ -642,10 +642,11 @@ namespace ProSuite.DomainServices.AO.QA
 				{
 					ReportPreProcessing("Creating external issue file geodatabase");
 
+					ISpatialReference issueSpatialReference = GetSpatialReferenceForIssueDatasets();
+
 					_externalIssueRepository = ExternalIssueRepositoryUtils.GetIssueRepository(
 						Assert.NotNull(Parameters.IssueFgdbPath),
-						_verificationContextIssueRepository.IssueDatasets.SpatialReference,
-						IssueRepositoryType.FileGdb);
+						issueSpatialReference, IssueRepositoryType.FileGdb);
 
 					_statisticsBuilder = new IssueStatisticsBuilder();
 
@@ -846,6 +847,23 @@ namespace ProSuite.DomainServices.AO.QA
 			}
 		}
 
+		private ISpatialReference GetSpatialReferenceForIssueDatasets()
+		{
+			QualityErrorRepositoryDatasets errorRepoDatasets =
+				_verificationContextIssueRepository.IssueDatasets;
+
+			if (errorRepoDatasets.HasAnyIssueDatasets)
+			{
+				return errorRepoDatasets.SpatialReference;
+			}
+
+			// Take from the model (as in the standalone/XML service)
+			ISpatialReference spatialReference =
+				_verificationContext.SpatialReferenceDescriptor.SpatialReference;
+
+			return spatialReference;
+		}
+
 		protected abstract void Compress(IEnumerable<string> compressibleDatasetPaths);
 
 		protected abstract bool WriteIssueMapDocument(
@@ -900,9 +918,9 @@ namespace ProSuite.DomainServices.AO.QA
 			                                      verificationReportFileName,
 			                                      issueFgdbPath,
 			                                      StringUtils.IsNotEmpty(mxdDocumentPath)
-				                                      ? new[] {mxdDocumentPath}
+				                                      ? new[] { mxdDocumentPath }
 				                                      : null,
-			                                      new[] {htmlReportFileName},
+			                                      new[] { htmlReportFileName },
 			                                      null,
 			                                      reportDefinition);
 
