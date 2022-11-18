@@ -35,7 +35,9 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		[Test]
 		public void ReproTestIncorrectFgdbLeftJoin()
 		{
-			string dbPath = TestData.GetGdbTableJointUtilsPath();
+			string dbPath = TestDataPreparer.ExtractZip("TableJoinUtilsTest.gdb.zip")
+			                                .Overwrite()
+			                                .GetPath();
 
 			IFeatureWorkspace workspace = WorkspaceUtils.OpenFileGdbFeatureWorkspace(dbPath);
 			IFeatureClass baseFeatureClass = workspace.OpenFeatureClass("Streets");

@@ -33,13 +33,11 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 		[CanBeNull] string modelName,
 		[CanBeNull] string filterExpression,
 		bool usedAsReferenceData,
-		[NotNull] Either<Dataset, TransformerConfiguration> datasetSource,
+		[CanBeNull] Either<Dataset, TransformerConfiguration> datasetSource,
 		[NotNull] IInstanceConfigurationViewModel observer,
 		bool required) :
 		base(parameter, value, observer, required, "Dataset not set")
 	{
-		Assert.ArgumentNotNull(datasetSource, nameof(datasetSource));
-
 		// todo daro rename
 		_viewModel = observer;
 
@@ -182,6 +180,11 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 		return false;
 	}
 
+	protected override void ResetValueCore()
+	{
+		DatasetSource = null;
+	}
+
 	[NotNull]
 	public static DatasetTestParameterValueViewModel CreateInstance(
 		[NotNull] TestParameter parameter,
@@ -191,17 +194,23 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 		Assert.ArgumentNotNull(parameter, nameof(parameter));
 		Assert.ArgumentNotNull(observer, nameof(observer));
 
-		Either<Dataset, TransformerConfiguration> source =
-			datasetValue?.ValueSource != null
-				? new Either<Dataset, TransformerConfiguration>(datasetValue.ValueSource)
-				: new Either<Dataset, TransformerConfiguration>(datasetValue?.DatasetValue);
-		
-		object value = source.Match(d => d?.Name, t => t?.Name);
+		Either<Dataset, TransformerConfiguration> source = null;
+
+		if (datasetValue?.ValueSource != null)
+		{
+			source = new Either<Dataset, TransformerConfiguration>(datasetValue.ValueSource);
+		}
+		else if (datasetValue?.DatasetValue != null)
+		{
+			source = new Either<Dataset, TransformerConfiguration>(datasetValue.DatasetValue);
+		}
+
+		object value = source?.Match(d => d?.Name, t => t?.Name);
 
 		string modelName =
-			source.Match(d => d?.Model?.Name, InstanceConfigurationUtils.GetDatasetModelName);
+			source?.Match(d => d?.Model?.Name, InstanceConfigurationUtils.GetDatasetModelName);
 
-		string imageSource = source.Match(BlazorImageUtils.GetImageSource, BlazorImageUtils.GetImageSource);
+		string imageSource = source?.Match(BlazorImageUtils.GetImageSource, BlazorImageUtils.GetImageSource);
 
 		string filterExpression = null;
 		var usedAsReferenceData = false;

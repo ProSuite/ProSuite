@@ -41,7 +41,7 @@ namespace ProSuite.QA.Tests.Transformers
 					                       esriFieldType.esriFieldTypeInteger)));
 		}
 
-		protected override IEnumerable<GdbFeature> Transform(IGeometry source)
+		protected override IEnumerable<GdbFeature> Transform(IGeometry source, int? sourceOid)
 		{
 			IGeometry geom = GeometryComponentUtils.GetGeometryComponent(source, _component);
 			if (geom is IPoint pnt)

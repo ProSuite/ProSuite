@@ -1,11 +1,14 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using Grpc.Core;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.Callbacks;
+using ProSuite.Commons.Com;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -25,6 +28,10 @@ namespace ProSuite.Microservices.Server.AO.QA
 		: QualityVerificationDdxGrpc.QualityVerificationDdxGrpcBase where TModel : ProductionModel
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
+		// Technically probably not necessary because no proper AO-objects are used.
+		// But rather be safe than sorry (and experiencing locks and hangs).
+		private readonly StaTaskScheduler _staThreadScheduler = new StaTaskScheduler(5);
 
 		/// <summary>
 		/// The overall service process health. If it has been set, it will be marked as not serving
@@ -65,11 +72,23 @@ namespace ProSuite.Microservices.Server.AO.QA
 			{
 				await StartRequestAsync(context.Peer, request);
 
+				Stopwatch watch = _msg.DebugStartTiming();
+
+				Func<ITrackCancel, GetProjectWorkspacesResponse> func =
+					trackCancel => GetProjectWorkspacesCore(request);
+
 				using (_msg.IncrementIndentation("Getting project workspaces for {0}",
 				                                 context.Peer))
 				{
-					response = GetProjectWorkspacesCore(request);
+					response =
+						await GrpcServerUtils.ExecuteServiceCall(
+							func, context, _staThreadScheduler, true) ??
+						new GetProjectWorkspacesResponse();
 				}
+
+				_msg.DebugStopTiming(
+					watch, "Gotten project workspaces for peer {0} ({1} object class(es))",
+					context.Peer, request.ObjectClasses.Count);
 
 				_msg.InfoFormat("Returning {0} project workspaces",
 				                response.ProjectWorkspaces.Count);
@@ -99,11 +118,23 @@ namespace ProSuite.Microservices.Server.AO.QA
 			{
 				await StartRequestAsync(context.Peer, request);
 
+				Stopwatch watch = _msg.DebugStartTiming();
+
+				Func<ITrackCancel, GetSpecificationsResponse> func =
+					trackCancel => GetQualitySpecificationsCore(request);
+
 				using (_msg.IncrementIndentation("Getting quality specifications for {0}",
 				                                 context.Peer))
 				{
-					response = GetQualitySpecificationsCore(request);
+					response =
+						await GrpcServerUtils.ExecuteServiceCall(
+							func, context, _staThreadScheduler, true) ??
+						new GetSpecificationsResponse();
 				}
+
+				_msg.DebugStopTiming(
+					watch, "Gotten quality specifications for peer {0} ({1} dataset(s))",
+					context.Peer, request.DatasetIds);
 
 				_msg.InfoFormat("Returning {0} quality specifications",
 				                response.QualitySpecifications.Count);
@@ -135,7 +166,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			foreach (GdbWorkspace gdbWorkspace in gdbWorkspaces)
 			{
-				objectClasses.AddRange(gdbWorkspace.GetDatasets().Cast<IObjectClass>());
+				objectClasses.AddRange(gdbWorkspace.GetDatasets());
 			}
 
 			IVerificationDataDictionary<TModel> verificationDataDictionary =

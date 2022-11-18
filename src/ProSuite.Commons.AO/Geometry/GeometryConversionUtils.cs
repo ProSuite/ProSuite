@@ -291,6 +291,17 @@ namespace ProSuite.Commons.AO.Geometry
 			return result;
 		}
 
+		[NotNull]
+		public static Multipoint<IPnt> CreateMultipoint([NotNull] IPoint point)
+		{
+			bool zAware = GeometryUtils.IsZAware(point);
+
+			Multipoint<IPnt> result =
+				new Multipoint<IPnt>(new List<IPnt> {CreatePnt(point, zAware)});
+
+			return result;
+		}
+
 		public static IPnt CreatePnt(IPoint p, bool pnt3D)
 		{
 			return pnt3D ? (IPnt) new Pnt3D(p.X, p.Y, p.Z) : new Pnt2D(p.X, p.Y);

@@ -82,10 +82,15 @@
     <PackageReference Include="Grpc" Version="2.44.0" />
     <PackageReference Include="Grpc.HealthCheck" Version="2.44.0" />
 
-    <!--NOTE: System.Runtime.CompilerServices.Unsafe" Version="6.0.0 is here just to force a redirect and avoid 
+    <!--NOTE: 
+		If we're using Unsafe v6 the health check from ArcMap fails. This re-direct would probably need
+		to be done everywhere where Protobuf etc. is referenced.
+		Original:
+		System.Runtime.CompilerServices.Unsafe" Version="6.0.0 is here just to force a redirect and avoid 
         System.IO.FileLoadException: Could not load file or assembly 'System.Runtime.CompilerServices.Unsafe,...
         This is probably not needed for x64 and certainly not for .net6 -->
-    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.0" />
+    <!--
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.0" />-->
   </ItemGroup>
 
   <!-- Windows service implementation: -->

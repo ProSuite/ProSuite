@@ -384,8 +384,20 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		public virtual esriGeometryType ShapeType => GeometryDef.GeometryType;
 
-		public virtual IGeometryDef GeometryDef =>
-			Fields.Field[FindField(ShapeFieldName)].GeometryDef;
+		public virtual IGeometryDef GeometryDef
+		{
+			get
+			{
+				int shapeFieldIndex = FindField(ShapeFieldName);
+
+				if (shapeFieldIndex < 0)
+				{
+					return null;
+				}
+
+				return Fields.Field[shapeFieldIndex].GeometryDef;
+			}
+		}
 
 		public virtual string ShapeFieldName => "Shape";
 		public virtual IField AreaField => Fields.Field[FindField("Area")];
@@ -397,7 +409,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		public virtual ISpatialReference SpatialReference
 		{
-			get => _sr ?? GeometryDef.SpatialReference;
+			get => _sr ?? GeometryDef?.SpatialReference;
 			set => _sr = value;
 		}
 

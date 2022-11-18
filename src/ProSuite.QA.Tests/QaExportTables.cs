@@ -18,7 +18,8 @@ namespace ProSuite.QA.Tests
 	public class QaExportTables : ContainerTest
 	{
 		private const int _tileIdFieldKey = -2;
-		[NotNull] private readonly string _fileGdbPath;
+		[NotNull] private readonly string _fileGdbPathOrTemplate;
+		[NotNull] private string _usedFileGdbPath;
 
 		private IList<ITable> _exportTables;
 		private IList<Dictionary<int, int>> _fieldMappings;
@@ -29,7 +30,7 @@ namespace ProSuite.QA.Tests
 			[NotNull] IList<IReadOnlyTable> tables,
 			[NotNull] string fileGdbPath) : base(tables)
 		{
-			_fileGdbPath = fileGdbPath;
+			_fileGdbPathOrTemplate = fileGdbPath;
 		}
 
 		[TestParameter]
@@ -47,11 +48,23 @@ namespace ProSuite.QA.Tests
 				_tileFc = null;
 
 				{
-					string fileGdbPath = _fileGdbPath;
+					string fileGdbPath = _fileGdbPathOrTemplate;
 					if (! Path.GetExtension(fileGdbPath)
 					          .Equals(".gdb", StringComparison.CurrentCultureIgnoreCase))
 					{
 						fileGdbPath += ".gdb";
+					}
+
+					if (fileGdbPath.IndexOf("*") >= 0)
+					{
+						string template = fileGdbPath;
+						int i = 0;
+						fileGdbPath = template.Replace("*", $"{i}");
+						while (File.Exists(fileGdbPath) || Directory.Exists(fileGdbPath))
+						{
+							i++;
+							fileGdbPath = template.Replace("*", $"{i}");
+						}
 					}
 
 					if (File.Exists(fileGdbPath))
@@ -63,11 +76,12 @@ namespace ProSuite.QA.Tests
 					{
 						Directory.Delete(fileGdbPath, recursive: true);
 					}
+					_usedFileGdbPath = fileGdbPath;
 				}
 
 				IWorkspaceName wsName = WorkspaceUtils.CreateFileGdbWorkspace(
-					Assert.NotNull(Path.GetDirectoryName(_fileGdbPath)),
-					Path.GetFileName(_fileGdbPath));
+					Assert.NotNull(Path.GetDirectoryName(_usedFileGdbPath)),
+					Path.GetFileName(_usedFileGdbPath));
 				var ws = (IFeatureWorkspace) ((IName) wsName).Open();
 
 				_exportTables = new List<ITable>();

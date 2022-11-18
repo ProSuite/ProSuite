@@ -14,8 +14,14 @@ namespace ProSuite.QA.Tests.Transformers
 	[GeometryTransformer]
 	public class TrLineToPolygon : TrGeometryTransform
 	{
-		private const PolylineUsage _defaultPolylineUsage =
-			PolylineUsage.AsPolygonIfClosedElseIgnore;
+		public enum PolylineConversion
+		{
+			AsIs,
+			AsPolygonIfClosedElseIgnore
+		}
+
+		private const PolylineConversion _defaultPolylineUsage =
+			PolylineConversion.AsPolygonIfClosedElseIgnore;
 
 		[DocTr(nameof(DocTrStrings.TrLineToPolygon_0))]
 		public TrLineToPolygon(
@@ -28,18 +34,25 @@ namespace ProSuite.QA.Tests.Transformers
 
 		[TestParameter(_defaultPolylineUsage)]
 		[DocTr(nameof(DocTrStrings.TrLineToPolygon_PolylineUsage))]
-		public PolylineUsage PolylineUsage { get; set; }
+		public PolylineConversion PolylineUsage { get; set; }
 
-		protected override IEnumerable<GdbFeature> Transform(IGeometry source)
+		protected override IEnumerable<GdbFeature> Transform(IGeometry source, int? sourceOid)
 		{
 			IPolyline line = (IPolyline) source;
-			if (PolylineUsage == PolylineUsage.AsPolygonIfClosedElseIgnore && ! line.IsClosed)
+			if (PolylineUsage == PolylineConversion.AsPolygonIfClosedElseIgnore && ! line.IsClosed)
 			{
 				yield break;
 			}
 
 			GdbFeature feature = CreateFeature();
-			feature.Shape = GeometryFactory.CreatePolygon(line);
+			IPolygon polygon = GeometryFactory.CreatePolygon(line);
+			ITopologicalOperator op = (ITopologicalOperator) polygon;
+			if (! op.IsSimple)
+			{
+				op.Simplify();
+			}
+
+			feature.Shape = polygon;
 			yield return feature;
 		}
 	}

@@ -423,6 +423,33 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Creates a filtered feature class containing only the features that are disjoint from features from &apos;disjoint&apos;. Features that intersect any feature from &apos;disjoint&apos; are filtered out. The resulting feature class has the same properties and attributes as &apos;featureClassToFilter&apos;..
+        /// </summary>
+        public static string TrOnlyDisjointFeatures_0 {
+            get {
+                return ResourceManager.GetString("TrOnlyDisjointFeatures_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The features used to check if they are disjoint from the features to be filtered..
+        /// </summary>
+        public static string TrOnlyDisjointFeatures_disjoint {
+            get {
+                return ResourceManager.GetString("TrOnlyDisjointFeatures_disjoint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The feature class to be filtered..
+        /// </summary>
+        public static string TrOnlyDisjointFeatures_featureClassToFilter {
+            get {
+                return ResourceManager.GetString("TrOnlyDisjointFeatures_featureClassToFilter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Creates a filtered feature class containing only the features that intersect features from &apos;intersecting&apos;.  The resulting feature class has the same properties and attributes as &apos;featureClassToFilter&apos;..
         /// </summary>
         public static string TrOnlyIntersectingFeatures_0 {

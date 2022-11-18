@@ -1,22 +1,16 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Text;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
-using ProSuite.Commons.Text;
 using ProSuite.Commons.Xml;
 using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.QA;
-using ProSuite.DomainModel.AO.QA.Xml;
-using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainServices.AO.QA.Exceptions;
 using ProSuite.DomainServices.AO.QA.IssuePersistence;
@@ -24,9 +18,7 @@ using ProSuite.DomainServices.AO.QA.Issues;
 using ProSuite.DomainServices.AO.QA.Standalone.XmlBased.Options;
 using ProSuite.DomainServices.AO.QA.VerificationReports;
 using ProSuite.DomainServices.AO.QA.VerificationReports.Xml;
-using ProSuite.DomainServices.AO.QA.VerifiedDataModel;
 using Path = System.IO.Path;
-using XmlTestDescriptor = ProSuite.DomainModel.AO.QA.Xml.XmlTestDescriptor;
 
 namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 {
@@ -46,6 +38,11 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 		[CanBeNull] private readonly string _htmlReportTemplatePath;
 		[CanBeNull] private readonly string _qualitySpecificationTemplatePath;
 
+		private string _issueRepositoryDir;
+		private string _issueRepositoryName;
+		private string _xmlVerificationReportPath;
+		private string _htmlReportDir;
+
 		public XmlBasedVerificationService(
 			[CanBeNull] string htmlReportTemplatePath = null,
 			[CanBeNull] string qualitySpecificationTemplatePath = null)
@@ -54,54 +51,49 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			_qualitySpecificationTemplatePath = qualitySpecificationTemplatePath;
 		}
 
+		public ITestRunner DistributedTestRunner { get; set; }
+
+		public IssueRepositoryType IssueRepositoryType { get; set; } = IssueRepositoryType.FileGdb;
+
 		public event EventHandler<IssueFoundEventArgs> IssueFound;
 
-		public QualitySpecification SetupQualitySpecification(
-			[NotNull] string dataQualityXml,
-			[NotNull] string specificationName,
-			[NotNull] IList<DataSource> dataSourceReplacements,
-			bool ignoreConditionsForUnknownDatasets = true)
+		public void SetupOutputPaths(string outputDirectory)
 		{
-			IList<XmlQualitySpecification> qualitySpecifications;
-			XmlDataQualityDocument document;
+			Directory.CreateDirectory(outputDirectory);
 
-			using (Stream baseStream = new MemoryStream(Encoding.UTF8.GetBytes(dataQualityXml)))
-			using (StreamReader xmlReader = new StreamReader(baseStream))
-			{
-				document = XmlDataQualityUtils.ReadXmlDocument(xmlReader,
-				                                               out qualitySpecifications);
-			}
+			_issueRepositoryDir = outputDirectory;
 
-			_msg.DebugFormat("Available specifications: {0}",
-			                 StringUtils.Concatenate(qualitySpecifications.Select(s => s.Name),
-			                                         ", "));
+			// These options might return somehow in the future.
+			XmlVerificationOptions verificationOptions = null;
+			_issueRepositoryName =
+				VerificationOptionUtils.GetIssueWorkspaceName(verificationOptions);
 
-			return SetupQualitySpecification(document, specificationName, dataSourceReplacements,
-			                                 ignoreConditionsForUnknownDatasets);
+			string verificationReportFileName =
+				VerificationOptionUtils.GetXmlReportFileName(verificationOptions);
+			_xmlVerificationReportPath = Path.Combine(outputDirectory, verificationReportFileName);
+
+			_htmlReportDir = outputDirectory;
 		}
 
-		public QualitySpecification SetupQualitySpecification(
-			[NotNull] string specificationName,
-			IList<XmlTestDescriptor> supportedDescriptors,
-			[NotNull] IList<SpecificationElement> specificationElements,
-			[NotNull] IEnumerable<DataSource> dataSources,
-			bool ignoreConditionsForUnknownDatasets)
+		public void SetupOutputPaths(string issueRepositoryPath,
+		                             string xmlVerificationReportPath,
+		                             string htmlReportPath)
 		{
-			XmlBasedQualitySpecificationFactory factory = CreateSpecificationFactory();
+			_issueRepositoryDir = Path.GetDirectoryName(issueRepositoryPath);
+			_issueRepositoryName = Path.GetFileNameWithoutExtension(issueRepositoryPath);
 
-			QualitySpecification result = factory.CreateQualitySpecification(
-				specificationName, supportedDescriptors, specificationElements, dataSources,
-				ignoreConditionsForUnknownDatasets);
+			_xmlVerificationReportPath = xmlVerificationReportPath;
 
-			result.Name = specificationName;
-
-			return result;
+			// NOTE: Currently the file names are hard-coded
+			_htmlReportDir = Path.GetDirectoryName(htmlReportPath);
 		}
+
+		private string XmlVerificationReportFileName =>
+			Path.GetFileName(_xmlVerificationReportPath);
 
 		public void ExecuteVerification(
 			[NotNull] QualitySpecification specification,
 			[CanBeNull] AreaOfInterest areaOfInterest,
-			[CanBeNull] string optionsXml,
 			double tileSize,
 			[NotNull] string outputDirectoryPath,
 			IssueRepositoryType issueRepositoryType = IssueRepositoryType.FileGdb,
@@ -109,13 +101,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 		{
 			Assert.NotNullOrEmpty(outputDirectoryPath, "Output directory path is null or empty.");
 
-			XmlVerificationOptions verificationOptions =
-				StringUtils.IsNotEmpty(optionsXml)
-					? VerificationOptionUtils.ReadOptionsXml(optionsXml)
-					: null;
-
-			string issueWorkspaceName =
-				VerificationOptionUtils.GetIssueWorkspaceName(verificationOptions);
+			string issueWorkspaceName = "issues";
 
 			if (ExternalIssueRepositoryUtils.IssueRepositoryExists(
 				    outputDirectoryPath, issueWorkspaceName, issueRepositoryType))
@@ -125,18 +111,14 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 				return;
 			}
 
-			var properties = new List<KeyValuePair<string, string>>();
-
-			Directory.CreateDirectory(outputDirectoryPath);
+			IssueRepositoryType = issueRepositoryType;
+			SetupOutputPaths(outputDirectoryPath);
 
 			try
 			{
-				bool fulfilled = Verify(specification, tileSize, outputDirectoryPath,
-				                        issueRepositoryType, properties,
-				                        verificationOptions,
-				                        areaOfInterest,
-				                        cancelTracker,
-				                        out int _, out int _, out int _, out int _, out int _);
+				bool fulfilled = ExecuteVerification(specification,
+				                                     areaOfInterest,
+				                                     tileSize, cancelTracker);
 			}
 			catch (Exception)
 			{
@@ -145,89 +127,11 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			}
 		}
 
-		[MethodImpl(MethodImplOptions.NoInlining)]
-		private bool Verify([NotNull] XmlDataQualityDocument document,
-		                    [NotNull] string specificationName,
-		                    [NotNull] IEnumerable<DataSource> dataSources,
-		                    double tileSize,
-		                    [NotNull] string directoryPath,
-		                    IssueRepositoryType issureRepositoryType,
-		                    [NotNull] IEnumerable<KeyValuePair<string, string>> properties,
-		                    [CanBeNull] XmlVerificationOptions verificationOptions,
-		                    [CanBeNull] AreaOfInterest areaOfInterest,
-		                    [CanBeNull] ITrackCancel trackCancel,
-		                    bool ignoreConditionsForUnknownDatasets,
-		                    out int errorCount,
-		                    out int warningCount,
-		                    out int exceptionCount,
-		                    out int unusedExceptionObjectCount,
-		                    out int rowCountWithStopConditions)
-		{
-			try
-			{
-				QualitySpecification qualitySpecification =
-					SetupQualitySpecification(document, specificationName, dataSources,
-					                          ignoreConditionsForUnknownDatasets);
-
-				return Verify(qualitySpecification, tileSize, directoryPath,
-				              issureRepositoryType, properties, verificationOptions,
-				              areaOfInterest, trackCancel,
-				              out errorCount,
-				              out warningCount,
-				              out exceptionCount,
-				              out unusedExceptionObjectCount,
-				              out rowCountWithStopConditions);
-			}
-			finally
-			{
-				GC.Collect();
-			}
-		}
-
-		private static QualitySpecification SetupQualitySpecification(
-			[NotNull] XmlDataQualityDocument document,
-			[NotNull] string specificationName,
-			[NotNull] IEnumerable<DataSource> dataSources,
-			bool ignoreConditionsForUnknownDatasets)
-		{
-			QualitySpecification qualitySpecification;
-			using (_msg.IncrementIndentation("Setting up quality specification"))
-			{
-				XmlBasedQualitySpecificationFactory factory = CreateSpecificationFactory();
-
-				qualitySpecification = factory.CreateQualitySpecification(
-					document, specificationName, dataSources,
-					ignoreConditionsForUnknownDatasets);
-			}
-
-			return qualitySpecification;
-		}
-
-		private static XmlBasedQualitySpecificationFactory CreateSpecificationFactory()
-		{
-			var modelFactory = new VerifiedModelFactory(
-				new MasterDatabaseWorkspaceContextFactory(), new SimpleVerifiedDatasetHarvester());
-
-			var datasetOpener = new SimpleDatasetOpener(new MasterDatabaseDatasetContext());
-
-			var factory =
-				new XmlBasedQualitySpecificationFactory(modelFactory, datasetOpener);
-			return factory;
-		}
-
-		private bool Verify([NotNull] QualitySpecification qualitySpecification,
-		                    double tileSize,
-		                    [NotNull] string directory,
-		                    IssueRepositoryType issueRepositoryType,
-		                    [NotNull] IEnumerable<KeyValuePair<string, string>> properties,
-		                    [CanBeNull] XmlVerificationOptions verificationOptions,
-		                    [CanBeNull] AreaOfInterest areaOfInterest,
-		                    [CanBeNull] ITrackCancel trackCancel,
-		                    out int errorCount,
-		                    out int warningCount,
-		                    out int exceptionCount,
-		                    out int unusedExceptionObjectCount,
-		                    out int rowCountWithStopConditions)
+		public bool ExecuteVerification(
+			[NotNull] QualitySpecification qualitySpecification,
+			[CanBeNull] AreaOfInterest areaOfInterest,
+			double tileSize,
+			[CanBeNull] ITrackCancel trackCancel)
 		{
 			Model primaryModel = StandaloneVerificationUtils.GetPrimaryModel(qualitySpecification);
 			Assert.NotNull(primaryModel, "no primary model found for quality specification");
@@ -253,11 +157,6 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 				new QualityConditionObjectDatasetResolver(
 					new MasterDatabaseWorkspaceContextLookup());
 
-			string issueWorkspaceName =
-				VerificationOptionUtils.GetIssueWorkspaceName(verificationOptions);
-			string verificationReportFileName =
-				VerificationOptionUtils.GetXmlReportFileName(verificationOptions);
-
 			ISpatialReference spatialReference =
 				primaryModel.SpatialReferenceDescriptor?.SpatialReference;
 
@@ -268,26 +167,20 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			List<string> specificationReportFilePaths;
 			string gdbPath = null;
 
-			Func<IObjectDataset, string> getKeyField =
-				StandaloneVerificationUtils.GetKeyFieldLookupFunction(verificationOptions);
-
-			ExceptionObjectRepository exceptionObjectRepository =
-				StandaloneVerificationUtils.PrepareExceptionRepository(
-					qualitySpecification, datasetContext, datasetResolver, areaOfInterest,
-					verificationOptions);
+			service.DistributedTestRunner = DistributedTestRunner;
 
 			using (IIssueRepository issueRepository =
 			       ExternalIssueRepositoryUtils.GetIssueRepository(
-				       directory, issueWorkspaceName, spatialReference, issueRepositoryType,
+				       _issueRepositoryDir, _issueRepositoryName, spatialReference,
+				       IssueRepositoryType,
 				       addExceptionFields: true))
 			{
 				fulfilled = service.Verify(qualitySpecification, datasetContext, datasetResolver,
-				                           issueRepository, exceptionObjectRepository, tileSize,
-				                           getKeyField,
+				                           issueRepository, tileSize,
 				                           areaOfInterest, trackCancel,
-				                           out errorCount,
-				                           out warningCount,
-				                           out rowCountWithStopConditions);
+				                           out int _,
+				                           out int _,
+				                           out int _);
 
 				if (issueRepository != null)
 				{
@@ -303,14 +196,15 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 
 				using (_msg.IncrementIndentation("Documenting verification results..."))
 				{
+					var properties = new List<KeyValuePair<string, string>>();
+
 					XmlVerificationReport verificationReport = GetVerificationReport(
 						xmlReportBuilder, qualitySpecification, properties);
 
-					string verificationReportPath = Path.Combine(directory,
-					                                             verificationReportFileName);
-					XmlUtils.Serialize(verificationReport, verificationReportPath);
+					XmlUtils.Serialize(verificationReport, _xmlVerificationReportPath);
 
-					_msg.InfoFormat("Verification report written to {0}", verificationReportPath);
+					_msg.InfoFormat("Verification report written to {0}",
+					                _xmlVerificationReportPath);
 
 					IssueStatistics issueStatistics = statisticsBuilder.IssueStatistics;
 
@@ -338,14 +232,15 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 						}
 					}
 
+					XmlVerificationOptions verificationOptions = null;
 					specificationReportFilePaths =
 						StandaloneVerificationUtils.WriteQualitySpecificationReport(
-							qualitySpecification, directory, _qualitySpecificationTemplatePath,
+							qualitySpecification, _htmlReportDir, _qualitySpecificationTemplatePath,
 							verificationOptions);
 
 					htmlReportFilePaths = StandaloneVerificationUtils.WriteHtmlReports(
-						qualitySpecification, directory, issueStatistics, verificationReport,
-						verificationReportFileName, _htmlReportTemplatePath, verificationOptions,
+						qualitySpecification, _htmlReportDir, issueStatistics, verificationReport,
+						XmlVerificationReportFileName, _htmlReportTemplatePath, verificationOptions,
 						issueGdbWritten ? gdbPath : null,
 						null, specificationReportFilePaths);
 				}
@@ -380,16 +275,9 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 				}
 			}
 
-			if (exceptionObjectRepository != null)
+			if (service.ExceptionObjectRepository != null)
 			{
-				IExceptionStatistics stats = exceptionObjectRepository.ExceptionStatistics;
-				exceptionCount = stats.ExceptionCount;
-				unusedExceptionObjectCount = stats.UnusedExceptionObjectCount;
-			}
-			else
-			{
-				exceptionCount = 0;
-				unusedExceptionObjectCount = 0;
+				IExceptionStatistics stats = service.ExceptionObjectRepository.ExceptionStatistics;
 			}
 
 			return fulfilled;
@@ -425,13 +313,6 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			[NotNull] IEnumerable<KeyValuePair<string, string>> properties)
 		{
 			return xmlReportBuilder.CreateReport(qualitySpecification.Name, properties);
-		}
-
-		private static IWorkspaceContext CreateSimpleWorkspaceContext(
-			[NotNull] Model model,
-			[NotNull] IFeatureWorkspace workspace)
-		{
-			return new MasterDatabaseWorkspaceContext(workspace, model);
 		}
 	}
 }

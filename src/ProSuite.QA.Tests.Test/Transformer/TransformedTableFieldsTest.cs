@@ -45,6 +45,14 @@ namespace ProSuite.QA.Tests.Test.Transformer
 
 			Assert.IsTrue(tableFields.ValidateFieldNames(fields, true, out string message));
 			Assert.IsFalse(tableFields.ValidateFieldNames(fields, false, out message));
+
+			// add previously calculated field
+			fields.Add("MIN(obj_art) AS min_obj_art");
+			Assert.IsTrue(tableFields.ValidateFieldNames(fields, true, out message));
+
+			// add field with same alias
+			fields.Add("OBJEKART AS obj_art");
+			Assert.IsFalse(tableFields.ValidateFieldNames(fields, true, out message));
 		}
 
 		[Test]

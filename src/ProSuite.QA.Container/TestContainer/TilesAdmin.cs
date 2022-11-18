@@ -1,8 +1,11 @@
 using System;
 using System.Collections.Generic;
+using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
 
@@ -28,6 +31,25 @@ namespace ProSuite.QA.Container.TestContainer
 		private void EnsureLoaded([NotNull] TileCache tileCache, [NotNull] Tile tile,
 		                          [NotNull] IReadOnlyTable table)
 		{
+			// Check if tileCache is of current tile and current tile is loading
+			if (tileCache.LoadingTileBox != null &&
+			    _boxComparer.Equals(tileCache.LoadingTileBox, tileCache.CurrentTileBox) == false)
+			{
+				Assert.AreEqual(_tileCache, tileCache, "_tileCache instance expected");
+				// the table must be already loaded
+				IEnvelope loadedTableExtent = tileCache.GetLoadedExtent(table);
+				Assert.NotNull(loadedTableExtent, $"Table {table.Name} in current tile not loaded");
+
+				loadedTableExtent.QueryWKSCoords(out WKSEnvelope w);
+				Box l = tileCache.LoadingTileBox;
+				Assert.True(w.XMin <= l.Min.X && w.YMin <= l.Min.Y &&
+				            w.XMax >= l.Max.X && w.YMax >= l.Max.Y,
+				            "Extent mismatch");
+				
+				
+				return;
+			}
+
 			if (tileCache.GetLoadedExtent(table) != null)
 			{
 				return;
@@ -71,6 +93,10 @@ namespace ProSuite.QA.Container.TestContainer
 				if (! _caches.TryGetValue(tile.Box, out TileCache cache))
 				{
 					if (_boxComparer.Equals(_tileCache.CurrentTileBox, tile.Box))
+					{
+						cache = _tileCache;
+					}
+					else if (_boxComparer.Equals(_tileCache.LoadingTileBox, tile.Box))
 					{
 						cache = _tileCache;
 					}

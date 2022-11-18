@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml;
@@ -153,12 +154,20 @@ namespace ProSuite.Commons.Xml
 			Assert.ArgumentNotNullOrEmpty(xmlFilePath, nameof(xmlFilePath));
 			Assert.ArgumentNotNull(obj, nameof(obj));
 
-			var serializer = new XmlSerializer(typeof(T));
-
 			using (XmlWriter xmlWriter = XmlWriter.Create(xmlFilePath, GetWriterSettings()))
 			{
-				serializer.Serialize(xmlWriter, obj);
+				Serialize(obj, xmlWriter);
 			}
+		}
+
+		public static void Serialize<T>([NotNull] T obj, XmlWriter xmlWriter)
+		{
+			Assert.ArgumentNotNull(xmlWriter, nameof(xmlWriter));
+			Assert.ArgumentNotNull(obj, nameof(obj));
+
+			var serializer = new XmlSerializer(typeof(T));
+
+			serializer.Serialize(xmlWriter, obj);
 		}
 
 		/// <summary>
@@ -254,7 +263,7 @@ namespace ProSuite.Commons.Xml
 			return sb.ToString();
 		}
 
-		private static XmlWriterSettings GetWriterSettings()
+		public static XmlWriterSettings GetWriterSettings()
 		{
 			return new XmlWriterSettings
 			       {

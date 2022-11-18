@@ -453,6 +453,13 @@ namespace ProSuite.DomainModel.Core.QA
 				NeverFilterTableRowsUsingRelatedGeometry;
 			target._neverStoreRelatedGeometryForTableRowIssues =
 				NeverStoreRelatedGeometryForTableRowIssues;
+
+			target._issueFilterExpression = IssueFilterExpression;
+
+			foreach (var issueFilter in IssueFilterConfigurations)
+			{
+				target.AddIssueFilterConfiguration(issueFilter);
+			}
 		}
 
 		protected override IEnumerable<Dataset> EnumReferencedDatasetParameterValues()

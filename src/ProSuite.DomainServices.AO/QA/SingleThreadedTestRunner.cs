@@ -27,8 +27,7 @@ namespace ProSuite.DomainServices.AO.QA
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		private readonly Dictionary<ITest, TestVerification> _testVerifications;
-		private readonly Dictionary<QualityCondition, IList<ITest>> _testsByCondition;
+		private readonly VerificationElements _verificationElements;
 
 		private readonly double _tileSize;
 
@@ -39,12 +38,10 @@ namespace ProSuite.DomainServices.AO.QA
 		private IReadOnlyRow _currentRow;
 
 		public SingleThreadedTestRunner(
-			Dictionary<ITest, TestVerification> testVerifications,
-			Dictionary<QualityCondition, IList<ITest>> testsByCondition,
+			[NotNull] VerificationElements verificationElements,
 			double tileSize)
 		{
-			_testVerifications = testVerifications;
-			_testsByCondition = testsByCondition;
+			_verificationElements = verificationElements;
 			_tileSize = tileSize;
 		}
 
@@ -252,7 +249,7 @@ namespace ProSuite.DomainServices.AO.QA
 					geometry = feature.ShapeCopy;
 				}
 
-				QualityCondition qualityCondition = GetQualityCondition(test);
+				QualityCondition qualityCondition = _verificationElements.GetQualityCondition(test);
 				string description = string.Format("Error testing quality condition '{0}': {1}",
 				                                   qualityCondition.Name, e.Message);
 
@@ -320,7 +317,8 @@ namespace ProSuite.DomainServices.AO.QA
 			}
 			catch (TestContainerException e)
 			{
-				QualityCondition qualityCondition = GetQualityCondition(e.Test);
+				QualityCondition qualityCondition =
+					_verificationElements.GetQualityCondition(e.Test);
 
 				string description = string.Format("Error testing {0}: {1}",
 				                                   qualityCondition.Name,
@@ -404,7 +402,7 @@ namespace ProSuite.DomainServices.AO.QA
 			StopInfo stopInfo = RowsWithStopConditions.GetStopInfo(e.Row);
 
 			var test = (ITest) sender;
-			TestVerification testVerification = GetTestVerification(test);
+			TestVerification testVerification = _verificationElements.GetTestVerification(test);
 
 			if (stopInfo != null)
 			{
@@ -460,7 +458,8 @@ namespace ProSuite.DomainServices.AO.QA
 						if (args.CurrentStep == Step.ITestProcessing)
 						{
 							var test = (ITest) args.Tag;
-							QualityCondition qualityCondition = GetQualityCondition(test);
+							QualityCondition qualityCondition =
+								_verificationElements.GetQualityCondition(test);
 							args = new ProgressArgs(args.CurrentStep, args.Current, args.Total,
 							                        qualityCondition);
 						}
@@ -473,7 +472,8 @@ namespace ProSuite.DomainServices.AO.QA
 						if (args.CurrentStep == Step.TileCompleting)
 						{
 							var test = (ITest) args.Tag;
-							QualityCondition qualityCondition = GetQualityCondition(test);
+							QualityCondition qualityCondition =
+								_verificationElements.GetQualityCondition(test);
 							args = new ProgressArgs(args.CurrentStep, args.Current, args.Total,
 							                        qualityCondition);
 						}
@@ -536,7 +536,7 @@ namespace ProSuite.DomainServices.AO.QA
 			// https://issuetracker02.eggits.net/browse/COM-248
 			IGeometry errorGeom = TestUtils.GetShapeCopy(row);
 
-			IList<ITest> stoppedTests = _testsByCondition[stoppedCondition];
+			IList<ITest> stoppedTests = _verificationElements.TestsByCondition[stoppedCondition];
 
 			string description =
 				TestExecutionUtils.GetStopInfoErrorDescription(stopInfo);
@@ -589,7 +589,7 @@ namespace ProSuite.DomainServices.AO.QA
 
 			ITest test = qaError.Test;
 			QualityConditionVerification conditionVerification =
-				GetQualityConditionVerification(test);
+				_verificationElements.GetQualityConditionVerification(test);
 			QualityCondition qualityCondition = conditionVerification.QualityCondition;
 			Assert.NotNull(qualityCondition, "no quality condition for verification");
 
@@ -644,7 +644,7 @@ namespace ProSuite.DomainServices.AO.QA
 			qualityVerification.RowsWithStopConditions = RowsWithStopConditions.Count;
 
 			TestExecutionUtils.AssignExecutionTimes(
-				qualityVerification, _testVerifications, VerificationTimeStats,
+				qualityVerification, _verificationElements.TestVerifications, VerificationTimeStats,
 				Assert.NotNull(DatasetLookup));
 		}
 
@@ -657,35 +657,6 @@ namespace ProSuite.DomainServices.AO.QA
 
 			qualityVerification.Operator = EnvironmentUtils.UserDisplayName;
 			qualityVerification.StartDate = DateTime.Now;
-		}
-
-		[NotNull]
-		private TestVerification GetTestVerification([NotNull] ITest test)
-		{
-			if (! _testVerifications.TryGetValue(test, out TestVerification result))
-			{
-				throw new ArgumentException(
-					$@"No quality condition found for test instance of type {test.GetType()}",
-					nameof(test));
-			}
-
-			return result;
-		}
-
-		[NotNull]
-		private QualityConditionVerification GetQualityConditionVerification(
-			[NotNull] ITest test)
-		{
-			TestVerification testVerification = GetTestVerification(test);
-
-			return testVerification.QualityConditionVerification;
-		}
-
-		[NotNull]
-		private QualityCondition GetQualityCondition([NotNull] ITest test)
-		{
-			return Assert.NotNull(GetQualityConditionVerification(test).QualityCondition,
-			                      "no quality condition for test");
 		}
 	}
 }

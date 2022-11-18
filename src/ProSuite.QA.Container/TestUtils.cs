@@ -348,6 +348,20 @@ namespace ProSuite.QA.Container
 		}
 
 		[CanBeNull]
+		public static ISpatialReference GetUniqueSpatialReference(IEnumerable<ITest> tests)
+		{
+			var spatialReferences = new List<ISpatialReference>();
+
+			foreach (ITest test in tests)
+			{
+				spatialReferences.AddRange(GetSpatialReferences(test));
+			}
+
+			return GetUniqueSpatialReference(
+				spatialReferences, requireEqualVerticalCoordinateSystems: false);
+		}
+
+		[CanBeNull]
 		public static ISpatialReference GetUniqueSpatialReference(
 			[NotNull] IEnumerable<ISpatialReference> spatialReferences,
 			bool requireEqualVerticalCoordinateSystems)

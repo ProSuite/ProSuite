@@ -31,7 +31,7 @@ namespace ProSuite.QA.Tests.Transformers
 					                       esriFieldType.esriFieldTypeInteger)));
 		}
 
-		protected override IEnumerable<GdbFeature> Transform(IGeometry source)
+		protected override IEnumerable<GdbFeature> Transform(IGeometry source, int? sourceOid)
 		{
 			IGeometry transform = source;
 			if (source is IPolygon poly)
