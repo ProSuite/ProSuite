@@ -1,8 +1,10 @@
 using System;
+using System.Linq;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Processing.Utils;
 
 namespace ProSuite.Processing.AGP.Core.Utils
 {
@@ -97,6 +99,7 @@ namespace ProSuite.Processing.AGP.Core.Utils
 		/// <c>null</c> the <paramref name="shape"/> is considered within.
 		/// </summary>
 		// TODO Shouldn't this be on IProcessingContext?
+		// TODO Why Contains(perimeter, shape) instead of Intersects(perimeter, shape)?
 		public static bool WithinPerimeter(Geometry shape, [CanBeNull] Geometry perimeter)
 		{
 			if (shape == null)
@@ -110,6 +113,41 @@ namespace ProSuite.Processing.AGP.Core.Utils
 			}
 
 			return GeometryEngine.Instance.Contains(perimeter, shape);
+		}
+
+		/// <summary>
+		/// Find the subtype, if any, of the given row values and for the
+		/// given table (or feature class) definition; return null if no subtype.
+		/// </summary>
+		[CanBeNull]
+		public static Subtype FindSubtype([NotNull] TableDefinition definition, [NotNull] IRowValues values)
+		{
+			if (definition is null)
+				throw new ArgumentNullException(nameof(definition));
+			if (values is null)
+				throw new ArgumentNullException(nameof(values));
+
+			string subtypeFieldName = definition.GetSubtypeField();
+			if (string.IsNullOrEmpty(subtypeFieldName))
+			{
+				return null;
+			}
+
+			object value = values.GetValue(subtypeFieldName);
+			var subtypes = definition.GetSubtypes();
+
+			if (value is int code)
+			{
+				return subtypes?.FirstOrDefault(s => s.GetCode() == code);
+			}
+
+			if (value is string name)
+			{
+				return subtypes?.FirstOrDefault(s => string.Equals(s.GetName(), name)); // TODO ignore case?
+			}
+
+			// First subtype is default subtype (empirical)
+			return subtypes?.FirstOrDefault();
 		}
 	}
 }

@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Geometry;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AGP.Core.Spatial
@@ -13,45 +15,130 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			return new Coordinate2D(point.X + dx, point.Y + dy);
 		}
 
-		public static int GetPointCount(Geometry geometry)
+		public static int GetPointCount([CanBeNull] Geometry geometry)
 		{
 			return geometry?.PointCount ?? 0;
 		}
 
-		public static MapPoint GetStartPoint(Multipart polyline)
+		public static int GetPartCount([CanBeNull] Geometry geometry)
 		{
-			var points = polyline?.Points;
+			if (geometry is null) return 0;
+			if (geometry is Multipart multipart) return multipart.PartCount;
+			if (geometry is Multipatch multipatch) return multipatch.PartCount;
+			// Note on Multipoint: conceptually PartCount=PointCount, but technically PartCount=1 (here we want technical view)
+			return 1;
+		}
+
+		public static MapPoint GetStartPoint([CanBeNull] Multipart multipart)
+		{
+			var points = multipart?.Points;
 			if (points is null) return null;
 			int count = points.Count;
 			return count > 0 ? points[0] : null;
 		}
 
-		public static MapPoint GetEndPoint(Multipart curve)
+		public static MapPoint GetEndPoint([CanBeNull] Multipart multipart)
 		{
-			var points = curve?.Points;
+			var points = multipart?.Points;
 			if (points is null) return null;
 			int count = points.Count;
 			return count > 0 ? points[count - 1] : null;
 		}
 
-		public static Envelope Union(Envelope a, Envelope b)
+		public static MapPoint GetLabelPoint([CanBeNull] Geometry geometry)
+		{
+			// Note: GeometryEngine's LabelPoint is only implemented for Polygon and Envelope
+
+			if (geometry is null) return null;
+
+			if (geometry is MapPoint point)
+			{
+				return point;
+			}
+
+			if (geometry is Polyline polyline)
+			{
+				return Engine.QueryPoint(polyline, SegmentExtension.NoExtension,
+				                         0.5, AsRatioOrLength.AsRatio);
+			}
+
+			return Engine.LabelPoint(geometry);
+		}
+
+		public static MapPoint GetLowerLeft([CanBeNull] Envelope envelope)
+		{
+			// AO had .LowerLeft and similar properties on IEnvelope
+
+			if (envelope is null) return null;
+
+			double x = envelope.XMin;
+			double y = envelope.YMin;
+
+			bool hasZ = envelope.HasZ;
+			double z = hasZ ? envelope.ZMin : 0.0;
+
+			bool hasM = envelope.HasM;
+			double m = hasM ? envelope.MMin : double.NaN;
+
+			bool hasId = envelope.HasID;
+			int id = hasId ? envelope.IDMin : 0;
+
+			var sref = envelope.SpatialReference;
+
+			return MapPointBuilderEx.CreateMapPoint(x, y, hasZ, z, hasM, m, hasId, id, sref);
+		}
+
+		public static double GetArea([CanBeNull] Geometry geometry)
+		{
+			if (geometry is Polygon polygon) return polygon.Area;
+			if (geometry is Envelope envelope) return envelope.Area;
+			return 0.0;
+		}
+
+		public static double GetLength([CanBeNull] Geometry geometry)
+		{
+			if (geometry is Multipart multipart) return multipart.Length;
+			if (geometry is Envelope envelope) return envelope.Length;
+			return 0.0;
+		}
+
+		public static AttributeFlags GetAttributeFlags(this Geometry geometry)
+		{
+			var flags = AttributeFlags.NoAttributes;
+
+			if (geometry != null)
+			{
+				if (geometry.HasZ)
+					flags |= AttributeFlags.HasZ;
+				if (geometry.HasM)
+					flags |= AttributeFlags.HasM;
+				if (geometry.HasID)
+					flags |= AttributeFlags.HasID;
+			}
+
+			return flags;
+		}
+
+		public static Envelope Union([CanBeNull] Envelope a, [CanBeNull] Envelope b)
 		{
 			if (a == null) return b;
 			if (b == null) return a;
 			return a.Union(b);
 		}
 
-		public static Geometry Union(
-			IEnumerable<Geometry> geometries)
+		public static Geometry Union(IEnumerable<Geometry> geometries)
 		{
-			return Engine.Union(geometries);
+			return geometries?.Any() ?? false ? Engine.Union(geometries) : null;
 		}
 
 		public static Polyline Boundary(Polygon polygon)
 		{
 			if (polygon == null) return null;
 
-			return (Polyline) Engine.Boundary(polygon);
+			var boundary = Engine.Boundary(polygon);
+			if (boundary is Polyline polyline)
+				return polyline;
+			throw new AssertionException("Result of Boundary(polygon) is not a Polyline");
 		}
 
 		public static Polygon Intersection(Envelope extent, Polygon perimeter)
@@ -67,6 +154,22 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			if (a == null) return b;
 			if (b == null) return a;
 			return Engine.Intersection(a, b);
+		}
+
+		public static T Difference<T>(T minuend, Geometry subtrahend) where T : Geometry
+		{
+			Geometry difference = Engine.Difference(minuend, subtrahend);
+			if (difference is T result) return result;
+			string typeName = typeof(T).Name;
+			throw new AssertionException($"Result of Difference({typeName}, Geometry) is not {typeName}");
+		}
+
+		public static Polygon Buffer(Geometry geometry, double distance)
+		{
+			if (geometry is null) return null;
+			var buffer = Engine.Buffer(geometry, distance);
+			if (buffer is Polygon polygon) return polygon;
+			throw new AssertionException("Result of Buffer() is not a Polygon");
 		}
 
 		public static T Generalize<T>(T geometry, double maxDeviation,
@@ -97,6 +200,81 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			return (T) Engine.SimplifyAsFeature(geometry, forceSimplify);
 		}
 
+		/// <remarks>
+		/// Time is O(N**2) where N is the number of rings; any better ideas around?
+		/// </remarks>
+		public static ICollection<Polygon> ConnectedComponents(Polygon polygon)
+		{
+			if (polygon is null || polygon.IsEmpty)
+			{
+				return Array.Empty<Polygon>();
+			}
+
+			if (polygon.ExteriorRingCount <= 1)
+			{
+				return new[] { polygon };
+			}
+
+			var flags = polygon.GetAttributeFlags();
+			var sref = polygon.SpatialReference;
+
+			var exteriors = new List<Polygon>();
+			var interiors = new List<Polygon>();
+
+			int partCount = polygon.Parts.Count;
+			for (int i = 0; i < partCount; i++)
+			{
+				var segments = polygon.Parts[i];
+				var part = PolygonBuilderEx.CreatePolygon(segments, flags, sref);
+
+				if (part.Area > 0)
+				{
+					exteriors.Add(part);
+				}
+				else if (part.Area < 0)
+				{
+					interiors.Add(part);
+				}
+				// else: skip degenerate part
+			}
+
+			Assert.AreEqual(polygon.ExteriorRingCount, exteriors.Count,
+			                $"polygon.ExteriorRingCount = {polygon.ExteriorRingCount}, but " +
+			                $"I found {exteriors.Count} exterior rings using the area method");
+
+			var nested = new List<Polygon>();
+
+			for (var i = 0; i < exteriors.Count; i++)
+			{
+				nested.Clear();
+				nested.Add(exteriors[i]);
+
+				foreach (var interior in interiors)
+				{
+					if (Contains(exteriors[i], interior))
+					{
+						nested.Add(interior);
+					}
+				}
+
+				if (nested.Count > 1)
+				{
+					exteriors[i] = PolygonBuilderEx.CreatePolygon(nested, flags, sref);
+				}
+			}
+
+			return exteriors;
+		}
+
+		/// <summary>
+		/// Return a copy of the input geometry with index structures
+		/// added that may accelerate the relational operations.
+		/// </summary>
+		public static T Accelerate<T>(T geometry) where T : Geometry
+		{
+			return (T) Engine.AccelerateForRelationalOperations(geometry);
+		}
+
 		public static bool Contains(Geometry containing,
 		                            Geometry contained,
 		                            bool suppressIndexing = false)
@@ -104,11 +282,11 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			if (containing == null) return false;
 			if (contained == null) return true;
 
-			if (! suppressIndexing)
-			{
-				Engine.AccelerateForRelationalOperations(containing);
-				Engine.AccelerateForRelationalOperations(containing);
-			}
+			//if (! suppressIndexing)
+			//{
+			//	Engine.AccelerateForRelationalOperations(containing);
+			//	Engine.AccelerateForRelationalOperations(containing);
+			//}
 
 			return Engine.Contains(containing, contained);
 		}
@@ -183,6 +361,15 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 		public static bool HasCurves(this Geometry geometry)
 		{
 			return geometry is Multipart multipart && multipart.HasCurves;
+		}
+
+		public static bool Intersects(Envelope a, Envelope b)
+		{
+			if (a is null || b is null) return false;
+
+			// There's a quick'n'simple way for envelopes:
+			return a.XMin <= b.XMax && b.XMin <= a.XMax &&
+			       a.YMin <= b.YMax && b.YMin <= a.YMax;
 		}
 
 		public static IGeometryEngine Engine

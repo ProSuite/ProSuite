@@ -21,10 +21,16 @@ namespace ProSuite.Processing.AGP.Core.Domain
 		public ProcessingDataset(ProcessDatasetName datasetName, FeatureClass featureClass,
 		                         IProcessingSelection processingSelection = null,
 		                         IProcessingSymbology processingSymbology = null)
+			: this(datasetName.DatasetName, featureClass, datasetName.WhereClause,
+				processingSelection, processingSymbology) { }
+
+		private ProcessingDataset(string datasetName, FeatureClass featureClass, string whereClause,
+		                          IProcessingSelection processingSelection = null,
+		                          IProcessingSymbology processingSymbology = null)
 		{
-			DatasetName = datasetName.DatasetName;
-			WhereClause = datasetName.WhereClause;
+			DatasetName = datasetName ?? throw new ArgumentNullException(nameof(datasetName));
 			FeatureClass = featureClass ?? throw new ArgumentNullException(nameof(featureClass));
+			WhereClause = whereClause; // can be null
 			Selection = processingSelection ?? new NoProcessingSelection();
 			Symbology = processingSymbology ?? new NoProcessingSymbology();
 
@@ -51,6 +57,19 @@ namespace ProSuite.Processing.AGP.Core.Domain
 			}
 
 			return result;
+		}
+
+		public ProcessingDataset Restrict(string whereClause)
+		{
+			if (string.IsNullOrWhiteSpace(whereClause)) return this;
+
+			if (! string.IsNullOrEmpty(WhereClause))
+			{
+				whereClause = string.Concat("(", WhereClause, ") AND (", whereClause, ")");
+			}
+
+			return new ProcessingDataset(DatasetName, FeatureClass, whereClause,
+			                             Selection, Symbology);
 		}
 
 		public override string ToString()

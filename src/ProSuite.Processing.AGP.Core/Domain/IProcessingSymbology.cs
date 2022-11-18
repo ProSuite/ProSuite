@@ -1,4 +1,5 @@
 using ArcGIS.Core.Geometry;
+using ProSuite.Processing.AGP.Core.Utils;
 
 namespace ProSuite.Processing.AGP.Core.Domain
 {
@@ -6,6 +7,8 @@ namespace ProSuite.Processing.AGP.Core.Domain
 	{
 		// Abstraction over ArcObjects and ArcGIS Pro symbology -- if possible...
 		Geometry QueryDrawingOutline(long oid, OutlineType outlineType);
+
+		Geometry QueryDrawingOutline(PseudoFeature feature, OutlineType outlineType);
 	}
 
 	public enum OutlineType
