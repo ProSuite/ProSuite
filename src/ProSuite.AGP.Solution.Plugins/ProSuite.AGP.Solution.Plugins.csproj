@@ -31,7 +31,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <AddInContent Include="Config.xml" />
+    <Content Include="Config.xml"/>
   </ItemGroup>
 
   <ItemGroup>
