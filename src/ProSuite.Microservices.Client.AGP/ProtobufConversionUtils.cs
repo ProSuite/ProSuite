@@ -5,6 +5,7 @@ using System.IO;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Core.Internal.Geometry;
 using Google.Protobuf;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.Spatial;
@@ -511,19 +512,19 @@ namespace ProSuite.Microservices.Client.AGP
 					result = MapPointBuilderEx.FromEsriShape(byteArray, spatialReference);
 					break;
 				case ProSuiteGeometryType.Polyline:
-					result = MapPointBuilderEx.FromEsriShape(byteArray, spatialReference);
+					result = PolylineBuilderEx.FromEsriShape(byteArray, spatialReference);
 					break;
 				case ProSuiteGeometryType.Polygon:
-					result = MapPointBuilderEx.FromEsriShape(byteArray, spatialReference);
+					result = PolygonBuilderEx.FromEsriShape(byteArray, spatialReference);
 					break;
 				case ProSuiteGeometryType.Multipoint:
-					result = MapPointBuilderEx.FromEsriShape(byteArray, spatialReference);
+					result = MultipointBuilderEx.FromEsriShape(byteArray, spatialReference);
 					break;
 				case ProSuiteGeometryType.MultiPatch:
-					result = MapPointBuilderEx.FromEsriShape(byteArray, spatialReference);
+					result = MultipatchBuilderEx.FromEsriShape(byteArray, spatialReference);
 					break;
 				case ProSuiteGeometryType.Bag:
-					result = MapPointBuilderEx.FromEsriShape(
+					result = GeometryBagBuilder.FromEsriShape(
 						byteArray, spatialReference); // experimental
 					break;
 
