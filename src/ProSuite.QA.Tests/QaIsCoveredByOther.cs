@@ -1583,9 +1583,8 @@ namespace ProSuite.QA.Tests
 			private readonly QueryFilterHelper[] _queryFilterHelpers;
 
 			private readonly
-				Func<IReadOnlyTable, IQueryFilter, QueryFilterHelper, IGeometry,
-					IEnumerable<IReadOnlyRow>>
-				_searchFunction;
+				Func<IReadOnlyTable, IQueryFilter, QueryFilterHelper,
+					IEnumerable<IReadOnlyRow>> _searchFunction;
 
 			private readonly Func<int, double> _getTolerance;
 
@@ -1609,9 +1608,8 @@ namespace ProSuite.QA.Tests
 				[NotNull] ISpatialFilter[] queryFilters,
 				[NotNull] QueryFilterHelper[] queryFilterHelpers,
 				[NotNull]
-				Func<IReadOnlyTable, IQueryFilter, QueryFilterHelper, IGeometry,
-						IEnumerable<IReadOnlyRow>>
-					searchFunction,
+				Func<IReadOnlyTable, IQueryFilter, QueryFilterHelper,
+						IEnumerable<IReadOnlyRow>> searchFunction,
 				[NotNull] Func<int, double> getTolerance,
 				double tileEnvelopeXMin,
 				double tileEnvelopeYMin,
@@ -1679,7 +1677,7 @@ namespace ProSuite.QA.Tests
 				foreach (IReadOnlyRow row in
 				         _searchFunction(coveringFeatureClass,
 				                         _queryFilters[coveringClassIndex],
-				                         filterHelper, null))
+				                         filterHelper))
 				{
 					var feature = (IReadOnlyFeature) row;
 
@@ -1720,7 +1718,7 @@ namespace ProSuite.QA.Tests
 				foreach (IReadOnlyRow row in
 				         _searchFunction(coveringFeatureClass,
 				                         _queryFilters[coveringClassIndex],
-				                         filterHelper, null))
+				                         filterHelper))
 				{
 					yield return (IReadOnlyFeature) row;
 				}

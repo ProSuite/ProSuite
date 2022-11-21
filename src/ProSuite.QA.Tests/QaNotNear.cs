@@ -195,7 +195,7 @@ namespace ProSuite.QA.Tests
 			IFeatureRowsDistance rowsDistance =
 				NearDistanceProvider.GetRowsDistance(feature, tableIndex);
 
-			foreach (IReadOnlyRow neighborRow in Search(_reference, filter, _helper, geom0))
+			foreach (IReadOnlyRow neighborRow in Search(_reference, filter, _helper))
 			{
 				var neighborFeature = (IReadOnlyFeature) neighborRow;
 
