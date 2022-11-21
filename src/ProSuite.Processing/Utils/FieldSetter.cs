@@ -37,6 +37,8 @@ namespace ProSuite.Processing.Utils
 			_text = null;
 		}
 
+		public StandardEnvironment Environment => _environment;
+
 		/// <summary>
 		/// Create a <see cref="FieldSetter"/> instance.
 		/// </summary>

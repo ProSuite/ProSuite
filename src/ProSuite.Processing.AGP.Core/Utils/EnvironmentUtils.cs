@@ -1,11 +1,12 @@
 using System;
 using System.Globalization;
 using ArcGIS.Core.CIM;
+using ArcGIS.Core.Geometry;
 using ProSuite.Commons.AGP.Core.Carto;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Processing.Domain;
 using ProSuite.Processing.Evaluation;
 using Polygon = ArcGIS.Core.Geometry.Polygon;
-using Polyline = ArcGIS.Core.Geometry.Polyline;
 
 namespace ProSuite.Processing.AGP.Core.Utils
 {
@@ -49,70 +50,91 @@ namespace ProSuite.Processing.AGP.Core.Utils
 		}
 
 		public static StandardEnvironment RegisterConversionFunctions(
-			[NotNull] this StandardEnvironment env/*,
-			[CanBeNull] IMapContext mapContext*/)
+			[NotNull] this StandardEnvironment env,
+			[CanBeNull] IMapContext mapContext)
 		{
-			//var instance = new ConversionFunctions {MapContext = mapContext};
+			var instance = new ConversionFunctions {MapContext = mapContext};
 
 			env.Register<object, object>("mm2pt", mm2pt);
 			env.Register<object, object>("pt2mm", pt2mm);
-			//env.Register<object, object>("mm2mu", instance.mm2mu, instance);
-			//env.Register<object, object>("mu2mm", instance.mu2mm, instance);
-			//env.Register<object, object>("pt2mu", instance.pt2mu, instance);
-			//env.Register<object, object>("mu2pt", instance.mu2pt, instance);
+			env.Register<object, object>("mm2mu", instance.mm2mu, instance);
+			env.Register<object, object>("mu2mm", instance.mu2mm, instance);
+			env.Register<object, object>("pt2mu", instance.pt2mu, instance);
+			env.Register<object, object>("mu2pt", instance.mu2pt, instance);
 
 			return env;
+		}
+
+		public static StandardEnvironment RegisterAllFunctions(
+			this StandardEnvironment environment, IMapContext mapContext)
+		{
+			if (environment != null)
+			{
+				environment.RegisterConversionFunctions(mapContext);
+				environment.RegisterColorFunctions();
+				environment.RegisterGeometryFunctions();
+			}
+
+			return environment;
 		}
 
 		#region Conversion functions
 
 		private class ConversionFunctions
 		{
-			//public IMapContext MapContext { get; set; }
+			public IMapContext MapContext { get; set; }
 
-			//public object mm2mu(object value)
-			//{
-			//	if (value == null)
-			//		return null;
-			//	if (MapContext == null)
-			//		throw NoMapContext("mm2mu");
-			//	if (IsNumeric(value))
-			//		return ProcessingUtils.MillimetersToMapUnits(ToDouble(value), MapContext);
-			//	throw InvalidArgumentType("mm2mu", value);
-			//}
+			public object mm2mu(object value)
+			{
+				if (value == null)
+					return null;
+				if (MapContext == null)
+					throw NoMapContext("mm2mu");
+				if (IsNumeric(value))
+					return MapContext.PointsToMapUnits(
+						ToDouble(ToDouble(value) * Constants.PointsPerMillimeter));
+				throw InvalidArgumentType("mm2mu", value);
+			}
 
-			//public object mu2mm(object value)
-			//{
-			//	if (value == null)
-			//		return null;
-			//	if (MapContext == null)
-			//		throw NoMapContext("mu2mm");
-			//	if (IsNumeric(value))
-			//		return ProcessingUtils.MapUnitsToMillimeters(ToDouble(value), MapContext);
-			//	throw InvalidArgumentType("mu2mm", value);
-			//}
+			public object mu2mm(object value)
+			{
+				if (value == null)
+					return null;
+				if (MapContext == null)
+					throw NoMapContext("mu2mm");
+				if (IsNumeric(value))
+					return MapContext.MapUnitsToPoints(ToDouble(value)) /
+					       Constants.PointsPerMillimeter;
+				throw InvalidArgumentType("mu2mm", value);
+			}
 
-			//public object pt2mu(object value)
-			//{
-			//	if (value == null)
-			//		return null;
-			//	if (MapContext == null)
-			//		throw NoMapContext("pt2mu");
-			//	if (IsNumeric(value))
-			//		return ProcessingUtils.PointsToMapUnits(ToDouble(value), MapContext);
-			//	throw InvalidArgumentType("pt2mu", value);
-			//}
+			public object pt2mu(object value)
+			{
+				if (value == null)
+					return null;
+				if (MapContext == null)
+					throw NoMapContext("pt2mu");
+				if (IsNumeric(value))
+					return MapContext.PointsToMapUnits(ToDouble(value));
+				throw InvalidArgumentType("pt2mu", value);
+			}
 
-			//public object mu2pt(object value)
-			//{
-			//	if (value == null)
-			//		return null;
-			//	if (MapContext == null)
-			//		throw NoMapContext("mu2pt");
-			//	if (IsNumeric(value))
-			//		return ProcessingUtils.MapUnitsToPoints(ToDouble(value), MapContext);
-			//	throw InvalidArgumentType("mu2pt", value);
-			//}
+			public object mu2pt(object value)
+			{
+				if (value == null)
+					return null;
+				if (MapContext == null)
+					throw NoMapContext("mu2pt");
+				if (IsNumeric(value))
+					return MapContext.MapUnitsToPoints(ToDouble(value));
+				throw InvalidArgumentType("mu2pt", value);
+			}
+
+			private static Exception NoMapContext(string functionName)
+			{
+				return new InvalidOperationException(
+					$"{functionName}: missing map context");
+			}
 		}
 
 		private static object mm2pt(object value)
@@ -144,7 +166,7 @@ namespace ProSuite.Processing.AGP.Core.Utils
 
 		private static object Length(object value)
 		{
-			return value is Polyline polyline ? polyline.Length : 0.0;
+			return value is Multipart multipart ? multipart.Length : 0.0;
 		}
 
 		#endregion

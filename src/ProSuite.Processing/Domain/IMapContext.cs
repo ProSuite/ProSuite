@@ -8,5 +8,9 @@ namespace ProSuite.Processing.Domain
 		double ReferenceScale { get; }
 
 		int SRID { get; }
+
+		double PointsToMapUnits(double distance);
+
+		double MapUnitsToPoints(double distance);
 	}
 }
