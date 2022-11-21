@@ -418,7 +418,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 		/// Creates a spatial filter from the provided parameters. The search geometry can be high- or low-level
 		/// and it will be ensured that its extent is not below the resolution.
 		/// </summary>
-		/// <param name="featureClass"></param>
+		/// <param name="featureClass">The feature class used for extra validation. It is required
+		/// if a non-null output spatial reference is specified.</param>
 		/// <param name="searchGeometry"></param>
 		/// <param name="spatialRel"></param>
 		/// <param name="filterOwnsGeometry"></param>
@@ -427,58 +428,67 @@ namespace ProSuite.Commons.AO.Geodatabase
 		/// <returns></returns>
 		[NotNull]
 		public static IQueryFilter CreateSpatialFilter(
-			[NotNull] IFeatureClass featureClass,
+			[CanBeNull] IFeatureClass featureClass,
 			[NotNull] IGeometry searchGeometry,
 			esriSpatialRelEnum spatialRel,
 			bool filterOwnsGeometry,
 			[CanBeNull] ISpatialReference outputSpatialReference,
 			esriSearchOrder searchOrder = esriSearchOrder.esriSearchOrderSpatial)
 		{
-			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
 			Assert.ArgumentNotNull(searchGeometry, nameof(searchGeometry));
+			Assert.ArgumentCondition((outputSpatialReference != null) == (featureClass != null),
+			                         "If the output spatial reference is specified, the feature class is required.");
 
 			ISpatialFilter spatialFilter = new SpatialFilterClass();
 
-			// make sure the geometry remains non-empty even after simplify:
-			double xyResolution = GeometryUtils.GetXyResolution(featureClass);
+			// Extra validation if feature class was provided:
+			IGeometry validGeometry = searchGeometry;
 
-			IGeometry validGeometry;
-			string message;
-			if (! IsValidFilterGeometry(searchGeometry, xyResolution, out validGeometry,
-			                            out message))
+			if (featureClass != null)
 			{
-				_msg.DebugFormat("Filter geometry is not valid: {0}. Geometry: {1}",
-				                 message, GeometryUtils.ToString(searchGeometry));
+				// make sure the geometry remains non-empty even after simplify:
+				double xyResolution = GeometryUtils.GetXyResolution(featureClass);
 
-				if (validGeometry != null)
+				if (! IsValidFilterGeometry(searchGeometry, xyResolution, out validGeometry,
+				                            out string message))
 				{
-					_msg.DebugFormat(
-						"A valid filter geometry could be derived. Using the valid geometry: {0}",
-						GeometryUtils.ToString(validGeometry));
+					_msg.DebugFormat("Filter geometry is not valid: {0}. Geometry: {1}",
+					                 message, GeometryUtils.ToString(searchGeometry));
+
+					if (validGeometry != null)
+					{
+						_msg.DebugFormat(
+							"A valid filter geometry could be derived. Using the valid geometry: {0}",
+							GeometryUtils.ToString(validGeometry));
+					}
+					else
+					{
+						_msg.DebugFormat("Invalid spatial filter geometry provided: {0}",
+						                 GeometryUtils.ToString(searchGeometry));
+						throw new InvalidOperationException(
+							$"Invalid geometry for spatial filter: {message}");
+					}
+				}
+
+				if (validGeometry != searchGeometry)
+				{
+					filterOwnsGeometry = true;
 				}
 				else
 				{
-					_msg.DebugFormat("Invalid spatial filter geometry provided: {0}",
-					                 GeometryUtils.ToString(searchGeometry));
-					throw new InvalidOperationException(
-						$"Invalid geometry for spatial filter: {message}");
+					validGeometry = searchGeometry;
 				}
 			}
 
-			if (validGeometry != searchGeometry)
-			{
-				filterOwnsGeometry = true;
-			}
-			else
-			{
-				validGeometry = searchGeometry;
-			}
-
-			spatialFilter.GeometryField = featureClass.ShapeFieldName;
 			spatialFilter.set_GeometryEx(validGeometry, filterOwnsGeometry);
 			spatialFilter.SpatialRel = spatialRel;
-			spatialFilter.set_OutputSpatialReference(featureClass.ShapeFieldName,
-			                                         outputSpatialReference);
+
+			if (featureClass != null)
+			{
+				spatialFilter.GeometryField = featureClass.ShapeFieldName;
+				spatialFilter.set_OutputSpatialReference(featureClass.ShapeFieldName,
+				                                         outputSpatialReference);
+			}
 
 			// be on the safe side and specify spatial explicitly (from 9.3.1 spatial seems to be the default)
 			spatialFilter.SearchOrder = searchOrder;

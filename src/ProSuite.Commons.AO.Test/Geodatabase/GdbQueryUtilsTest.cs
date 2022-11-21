@@ -817,19 +817,35 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			Console.WriteLine($"Found {count} features");
 			Assert.True(count > 200, $"To few features found: {count}");
 
+			//
 			// Crash with self-implemented interfaces:
 			SpatialFilterEx filterEx = new SpatialFilterEx((ISpatialFilter) filter);
 
 			count = 0;
-			foreach (var feature in GdbQueryUtils.GetFeatures(featureClass, filterEx, false))
+			// System.AccessViolationException : Attempted to read or write protected memory.This is
+			// often an indication that other memory is corrupt.
+			// at ProSuite.Commons.AO.Geodatabase.GdbQueryUtils.OpenCursor(IFeatureClass featureClass, Boolean recycling, IQueryFilter filter) in C:\git\Dira.ProSuiteSolution\ProSuite\src\ProSuite.Commons.AO\Geodatabase\GdbQueryUtils.cs:line 1752
+			//foreach (var feature in GdbQueryUtils.GetFeatures(featureClass, filterEx, false))
+			//{
+			//	count++;
+			//	Console.WriteLine(feature.OID);
+			//}
+
+			//
+			// Alternative: No decorator, but simplified interface producing the implementation when needed
+
+			IFeatureClassFilter fcFilter = new AoFeatureClassFilter(searchEnvelope);
+
+			var nativeFilterImpl = (IQueryFilter) fcFilter.ToNativeFilterImpl();
+
+			foreach (var feature in
+			         GdbQueryUtils.GetFeatures(featureClass, nativeFilterImpl, false))
 			{
 				count++;
 				Console.WriteLine(feature.OID);
 			}
 
-			// System.AccessViolationException : Attempted to read or write protected memory.This is
-			// often an indication that other memory is corrupt.
-			// at ProSuite.Commons.AO.Geodatabase.GdbQueryUtils.OpenCursor(IFeatureClass featureClass, Boolean recycling, IQueryFilter filter) in C:\git\Dira.ProSuiteSolution\ProSuite\src\ProSuite.Commons.AO\Geodatabase\GdbQueryUtils.cs:line 1752
+			Assert.True(count > 200, $"To few features found: {count}");
 		}
 	}
 }

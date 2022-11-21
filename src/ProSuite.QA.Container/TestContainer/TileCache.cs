@@ -513,7 +513,7 @@ namespace ProSuite.QA.Container.TestContainer
 
 			if (allBox != null)
 			{
-				rowBoxTree.InitSize(new IGmtry[] {allBox});
+				rowBoxTree.InitSize(new IGmtry[] { allBox });
 			}
 
 			foreach (CachedRow cachedRow in cachedRows)
@@ -566,18 +566,19 @@ namespace ProSuite.QA.Container.TestContainer
 					? string.Empty
 					: GetFilterOldLargeRows(cachedRows.Values, context.TileSize, ref allBox);
 
-			SpatialFilterEx loadSpatialFilter =
+			IFeatureClassFilter loadSpatialFilter =
 				GetLoadSpatialFilter(table, tile.SpatialFilter, context, notInExpression);
-			IEnvelope loadExtent = GeometryFactory.Clone((IEnvelope) loadSpatialFilter.Geometry);
+
+			IEnvelope loadExtent =
+				GeometryFactory.Clone((IEnvelope) loadSpatialFilter.FilterGeometry);
 
 			AddRowsToCache(cachedRows, table, loadSpatialFilter, context, ref allBox);
-			loadSpatialFilter.COMReleaseBaseFilter();
 
 			CreateBoxTree(table, cachedRows.Values, allBox, loadExtent);
 		}
 
 		[NotNull]
-		private SpatialFilterEx GetLoadSpatialFilter(
+		private IFeatureClassFilter GetLoadSpatialFilter(
 			[NotNull] IReadOnlyTable table,
 			[NotNull] ISpatialFilter tileSpatialFilter,
 			[NotNull] ITileEnumContext context,
@@ -586,38 +587,38 @@ namespace ProSuite.QA.Container.TestContainer
 			Assert.ArgumentNotNull(table, nameof(table));
 			Assert.ArgumentNotNull(tileSpatialFilter, nameof(tileSpatialFilter));
 
-			var baseFilter = (ISpatialFilter) ((IClone) tileSpatialFilter).Clone();
-
-			baseFilter.WhereClause = _container.FilterExpressionsUseDbSyntax
+			string whereClause = _container.FilterExpressionsUseDbSyntax
 				                     ? context.GetCommonFilterExpression(table)
 				                     : string.Empty;
 
 			if (! string.IsNullOrWhiteSpace(notInExpression))
 			{
-				baseFilter.WhereClause = string.IsNullOrEmpty(baseFilter.WhereClause)
-					                     ? notInExpression
-					                     : baseFilter.WhereClause + " AND " + notInExpression;
+				whereClause = string.IsNullOrEmpty(whereClause)
+					              ? notInExpression
+					              : whereClause + " AND " + notInExpression;
 			}
+
+			IEnvelope filterGeometry = (IEnvelope) ((IClone) tileSpatialFilter.Geometry).Clone();
 
 			double searchTolerance = context.OverlappingFeatures.GetSearchTolerance(table);
 			if (searchTolerance > 0)
 			{
-				var loadEnvelope = (IEnvelope) ((IClone) tileSpatialFilter.Geometry).Clone();
-
-				loadEnvelope.Expand(searchTolerance, searchTolerance, false);
-
-				const bool filterOwnsGeometry = true;
-				baseFilter.set_GeometryEx(loadEnvelope, filterOwnsGeometry);
+				filterGeometry.Expand(searchTolerance, searchTolerance, false);
 			}
 
-			var result = new SpatialFilterEx(baseFilter);
-			result.TileExtent = tileSpatialFilter.Geometry.Envelope;
+			var result = new AoFeatureClassFilter(filterGeometry, tileSpatialFilter.SpatialRel)
+			             {
+				             SubFields = tileSpatialFilter.SubFields,
+				             WhereClause = whereClause,
+				             TileExtent = tileSpatialFilter.Geometry.Envelope
+			             };
+
 			return result;
 		}
 
 		private void AddRowsToCache([NotNull] IDictionary<BaseRow, CachedRow> cachedRows,
 		                            [NotNull] IReadOnlyTable table,
-		                            [NotNull] ISpatialFilter filter,
+		                            [NotNull] ITableFilter filter,
 		                            [NotNull] ITileEnumContext context,
 		                            [CanBeNull] ref IBox allBox)
 		{
@@ -632,13 +633,17 @@ namespace ProSuite.QA.Container.TestContainer
 				}
 			}
 
+			ISpatialFilter queryFilter = null;
+
 			UniqueIdProvider uniqueIdProvider = context.GetUniqueIdProvider(table);
 			// get data from database
 			try
 			{
+				queryFilter = (ISpatialFilter) filter.ToNativeFilterImpl();
+
 				(table as ITransformedTable)?.SetKnownTransformedRows(
 					cachedRows.Values.Select(x => x.Feature as VirtualRow));
-				foreach (IReadOnlyRow row in GetRows(table, filter))
+				foreach (IReadOnlyRow row in GetRows(table, queryFilter))
 				{
 					var feature = (IReadOnlyFeature) row;
 					IGeometry shape = feature.Shape;
@@ -685,6 +690,11 @@ namespace ProSuite.QA.Container.TestContainer
 			finally
 			{
 				(table as ITransformedTable)?.SetKnownTransformedRows(null);
+
+				if (queryFilter != null)
+				{
+					Marshal.ReleaseComObject(queryFilter);
+				}
 			}
 
 			foreach (CachedRow cachedRow in rowsWithoutCachedFeature)
