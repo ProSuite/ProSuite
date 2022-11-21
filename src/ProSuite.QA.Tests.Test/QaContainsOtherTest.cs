@@ -1,24 +1,20 @@
 using ESRI.ArcGIS.Geodatabase;
+using NUnit.Framework;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Test;
 using ProSuite.QA.Container.Test;
 using ProSuite.QA.Tests.Test.TestData;
 using ProSuite.QA.Tests.Test.TestRunners;
-using NUnit.Framework;
-using ProSuite.Commons.AO.Licensing;
-using ProSuite.QA.Container;
-using System.Collections.Generic;
-using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests.Test
 {
 	[TestFixture]
 	public class QaContainsOtherTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
-
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout();
+			TestUtils.InitializeLicense();
 
 			TestWorkspaceUtils.CreateTestFgdbWorkspace("QaContainesOtherTest");
 		}
@@ -26,7 +22,7 @@ namespace ProSuite.QA.Tests.Test
 		[OneTimeTearDown]
 		public void TeardownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		[Test]
@@ -38,12 +34,12 @@ namespace ProSuite.QA.Tests.Test
 
 			IWorkspace coverWs = TestDataUtils.OpenPgdb("validfields.mdb");
 			IFeatureClass covers =
-				((IFeatureWorkspace)coverWs).OpenFeatureClass("Kanton_Luzern_Buffer_00010m");
+				((IFeatureWorkspace) coverWs).OpenFeatureClass("Kanton_Luzern_Buffer_00010m");
 
 			IWorkspace withinWs =
 				TestDataUtils.OpenPgdb("20111201_Produkte_SDE_zALL_bereinigt.mdb");
 			IFeatureClass within =
-				((IFeatureWorkspace)withinWs).OpenFeatureClass("GEO_00100420001");
+				((IFeatureWorkspace) withinWs).OpenFeatureClass("GEO_00100420001");
 
 			var test = new QaContainsOther(ReadOnlyTableFactory.Create(covers),
 			                               ReadOnlyTableFactory.Create(within));

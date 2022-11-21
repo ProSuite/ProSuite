@@ -577,7 +577,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 				qualityConditionGroups
 					.Where(x => x.ExecType == QualityConditionExecType.NonContainer)
 					.ToList();
-			Assert.True(nonContainerGroups.Count < 1,
+			Assert.True(nonContainerGroups.Count <= 1,
 			            $"Expected <= 1 non container group, got {nonContainerGroups.Count}");
 
 			List<SubVerification> subVerifications = new List<SubVerification>(maxParallel);
@@ -609,7 +609,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 							subVerifications.Add(
 								CreateVerification(
 									originalRequest, specification,
-									new[] {qc}));
+									new[] { qc }));
 						}
 					}
 					else
@@ -624,7 +624,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 				unhandledQualityConditions
 					.Where(x => x.ExecType == QualityConditionExecType.TileParallel)
 					.ToList();
-			Assert.True(parallelGroups.Count < 1,
+			Assert.True(parallelGroups.Count <= 1,
 			            $"Expected <= 1 tile parallel group, got {parallelGroups.Count}");
 
 			foreach (QualityConditionGroup parallelGroup in parallelGroups)

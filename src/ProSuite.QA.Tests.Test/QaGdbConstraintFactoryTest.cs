@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
-using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core;
@@ -11,19 +10,19 @@ using ProSuite.QA.Container;
 using ProSuite.QA.Container.Test;
 using ProSuite.QA.TestFactories;
 using ProSuite.QA.Tests.Test.TestRunners;
+using TestUtils = ProSuite.Commons.AO.Test.TestUtils;
 
 namespace ProSuite.QA.Tests.Test
 {
 	[TestFixture]
 	public class QaGdbConstraintFactoryTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
 		private IFeatureWorkspace _testWs;
 
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout();
+			TestUtils.InitializeLicense();
 
 			_testWs = TestWorkspaceUtils.CreateTestFgdbWorkspace(
 				"QaGdbConstraintFactoryTest");
@@ -32,7 +31,7 @@ namespace ProSuite.QA.Tests.Test
 		[OneTimeTearDown]
 		public void TeardownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		[Test]
@@ -71,7 +70,7 @@ namespace ProSuite.QA.Tests.Test
 				condition, "AllowNullValuesForCodedValueDomains", false);
 
 			{
-				var factory = new QaGdbConstraintFactory {Condition = condition};
+				var factory = new QaGdbConstraintFactory { Condition = condition };
 
 				IList<ITest> tests =
 					factory.CreateTests(
@@ -100,7 +99,7 @@ namespace ProSuite.QA.Tests.Test
 				InstanceConfigurationUtils.AddParameterValue(
 					condWithFields, "Fields", "CvField");
 
-				var factory = new QaGdbConstraintFactory {Condition = condWithFields};
+				var factory = new QaGdbConstraintFactory { Condition = condWithFields };
 
 				IList<ITest> tests =
 					factory.CreateTests(
@@ -118,7 +117,7 @@ namespace ProSuite.QA.Tests.Test
 				InstanceConfigurationUtils.AddParameterValue(
 					condWithFields, "Fields", "RangeField");
 
-				var factory = new QaGdbConstraintFactory {Condition = condWithFields};
+				var factory = new QaGdbConstraintFactory { Condition = condWithFields };
 
 				IList<ITest> tests =
 					factory.CreateTests(
@@ -166,7 +165,7 @@ namespace ProSuite.QA.Tests.Test
 			InstanceConfigurationUtils.AddParameterValue(
 				condition, "AllowNullValuesForRangeDomains", false);
 
-			var factory = new QaGdbConstraintFactory {Condition = condition};
+			var factory = new QaGdbConstraintFactory { Condition = condition };
 
 			IList<ITest> tests =
 				factory.CreateTests(new SimpleDatasetOpener(model.MasterDatabaseWorkspaceContext));
@@ -221,7 +220,7 @@ namespace ProSuite.QA.Tests.Test
 
 			InstanceConfigurationUtils.AddParameterValue(condition, "table", tableDataset);
 
-			var factory = new QaGdbConstraintFactory {Condition = condition};
+			var factory = new QaGdbConstraintFactory { Condition = condition };
 
 			IList<ITest> tests =
 				factory.CreateTests(new SimpleDatasetOpener(model.MasterDatabaseWorkspaceContext));
@@ -269,7 +268,7 @@ namespace ProSuite.QA.Tests.Test
 			((IFieldEdit) rangeField).Domain_2 = (IDomain) rangeDomain;
 
 			List<IField> fields = new List<IField>
-			                      {FieldUtils.CreateOIDField(), cvField, rangeField};
+			                      { FieldUtils.CreateOIDField(), cvField, rangeField };
 			if (specialFields != null)
 			{
 				fields.AddRange(specialFields);

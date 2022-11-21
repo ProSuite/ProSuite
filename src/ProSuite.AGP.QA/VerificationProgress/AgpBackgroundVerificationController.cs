@@ -153,7 +153,8 @@ namespace ProSuite.AGP.QA.VerificationProgress
 
 		public async Task OpenWorkList(IQualityVerificationResult verificationResult)
 		{
-			await ViewUtils.TryAsync(_proSuiteFacade.OpenIssueWorkListAsync(verificationResult.IssuesGdbPath), _msg);
+			await ViewUtils.TryAsync(
+				_proSuiteFacade.OpenIssueWorkListAsync(verificationResult.IssuesGdbPath), _msg);
 		}
 
 		public bool CanOpenWorkList(ServiceCallStatus? currentProgressStep,

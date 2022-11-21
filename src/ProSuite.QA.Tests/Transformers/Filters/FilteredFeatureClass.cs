@@ -11,7 +11,7 @@ namespace ProSuite.QA.Tests.Transformers.Filters
 			IReadOnlyFeatureClass featureClassToFilter,
 			[NotNull] string name,
 			[NotNull] Func<GdbTable, FilteredBackingDataset> createBackingDataset)
-			: base(-1, name, featureClassToFilter.ShapeType, createBackingDataset,
+			: base(null, name, featureClassToFilter.ShapeType, createBackingDataset,
 			       featureClassToFilter.Workspace)
 		{
 			FeatureClassToFilter = featureClassToFilter;

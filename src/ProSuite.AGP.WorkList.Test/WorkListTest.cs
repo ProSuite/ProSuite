@@ -42,7 +42,10 @@ namespace ProSuite.AGP.WorkList.Test
 
 			var tablesByGeodatabase = new Dictionary<Geodatabase, List<Table>>
 			                          {
-				                          {_geodatabase, new List<Table> {_issuePoints, _issueLines}}
+				                          {
+					                          _geodatabase,
+					                          new List<Table> {_issuePoints, _issueLines}
+				                          }
 			                          };
 
 			IRepository stateRepository =
@@ -103,7 +106,7 @@ namespace ProSuite.AGP.WorkList.Test
 				new ItemRepositoryMock(new List<IWorkItem> {item1, item2, item3, item4});
 
 			IWorkList wl = new MemoryQueryWorkList(repository, "work list");
-			
+
 			wl.GoNext();
 			Assert.AreEqual(item2, wl.Current);
 			Assert.True(wl.Current?.Visited);
@@ -115,7 +118,7 @@ namespace ProSuite.AGP.WorkList.Test
 			wl.GoNext();
 			Assert.AreEqual(item4, wl.Current);
 			Assert.True(wl.Current?.Visited);
-			
+
 			Assert.False(wl.CanGoNext());
 			Assert.AreEqual(item4, wl.Current);
 		}
@@ -306,7 +309,8 @@ namespace ProSuite.AGP.WorkList.Test
 
 				InsertFeature(_issuePointsName, _poly1);
 
-				var inserts = new Dictionary<Table, List<long>> {{_issuePoints, new List<long> {2}}};
+				var inserts = new Dictionary<Table, List<long>>
+				              {{_issuePoints, new List<long> {2}}};
 				var deletes = new Dictionary<Table, List<long>>();
 				var updates = new Dictionary<Table, List<long>>();
 
@@ -344,7 +348,10 @@ namespace ProSuite.AGP.WorkList.Test
 				var inserts = new Dictionary<Table, List<long>>();
 				var deletes = new Dictionary<Table, List<long>>();
 				var updates = new Dictionary<Table, List<long>>
-				              {{_issuePoints, new List<long> {1}}, {_issueLines, new List<long> {1}}};
+				              {
+					              {_issuePoints, new List<long> {1}},
+					              {_issueLines, new List<long> {1}}
+				              };
 
 				((IRowCache) workList).ProcessChanges(inserts, deletes, updates);
 

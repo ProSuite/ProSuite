@@ -67,6 +67,7 @@ namespace ProSuite.QA.Container.TestContainer
 			var clone = (TileCache) MemberwiseClone();
 			clone._rowBoxTrees = new ConcurrentDictionary<IReadOnlyTable, RowBoxTree>();
 			clone._loadedExtents = new ConcurrentDictionary<IReadOnlyTable, IEnvelope>();
+			clone.LoadingTileBox = null;
 			return clone;
 		}
 
@@ -77,6 +78,7 @@ namespace ProSuite.QA.Container.TestContainer
 
 		public TestRow CurrentTestRow { get; set; }
 		public Box CurrentTileBox { get; private set; }
+		internal Box LoadingTileBox { get; set; }
 
 		public IEnvelope GetLoadedExtent(IReadOnlyTable table)
 		{
@@ -564,18 +566,18 @@ namespace ProSuite.QA.Container.TestContainer
 					? string.Empty
 					: GetFilterOldLargeRows(cachedRows.Values, context.TileSize, ref allBox);
 
-			ISpatialFilter loadSpatialFilter =
+			SpatialFilterEx loadSpatialFilter =
 				GetLoadSpatialFilter(table, tile.SpatialFilter, context, notInExpression);
 			IEnvelope loadExtent = GeometryFactory.Clone((IEnvelope) loadSpatialFilter.Geometry);
 
 			AddRowsToCache(cachedRows, table, loadSpatialFilter, context, ref allBox);
-			Marshal.ReleaseComObject(loadSpatialFilter);
+			loadSpatialFilter.COMReleaseBaseFilter();
 
 			CreateBoxTree(table, cachedRows.Values, allBox, loadExtent);
 		}
 
 		[NotNull]
-		private ISpatialFilter GetLoadSpatialFilter(
+		private SpatialFilterEx GetLoadSpatialFilter(
 			[NotNull] IReadOnlyTable table,
 			[NotNull] ISpatialFilter tileSpatialFilter,
 			[NotNull] ITileEnumContext context,
@@ -584,17 +586,17 @@ namespace ProSuite.QA.Container.TestContainer
 			Assert.ArgumentNotNull(table, nameof(table));
 			Assert.ArgumentNotNull(tileSpatialFilter, nameof(tileSpatialFilter));
 
-			var result = (ISpatialFilter) ((IClone) tileSpatialFilter).Clone();
+			var baseFilter = (ISpatialFilter) ((IClone) tileSpatialFilter).Clone();
 
-			result.WhereClause = _container.FilterExpressionsUseDbSyntax
+			baseFilter.WhereClause = _container.FilterExpressionsUseDbSyntax
 				                     ? context.GetCommonFilterExpression(table)
 				                     : string.Empty;
 
 			if (! string.IsNullOrWhiteSpace(notInExpression))
 			{
-				result.WhereClause = string.IsNullOrEmpty(result.WhereClause)
+				baseFilter.WhereClause = string.IsNullOrEmpty(baseFilter.WhereClause)
 					                     ? notInExpression
-					                     : result.WhereClause + " AND " + notInExpression;
+					                     : baseFilter.WhereClause + " AND " + notInExpression;
 			}
 
 			double searchTolerance = context.OverlappingFeatures.GetSearchTolerance(table);
@@ -605,9 +607,11 @@ namespace ProSuite.QA.Container.TestContainer
 				loadEnvelope.Expand(searchTolerance, searchTolerance, false);
 
 				const bool filterOwnsGeometry = true;
-				result.set_GeometryEx(loadEnvelope, filterOwnsGeometry);
+				baseFilter.set_GeometryEx(loadEnvelope, filterOwnsGeometry);
 			}
 
+			var result = new SpatialFilterEx(baseFilter);
+			result.TileExtent = tileSpatialFilter.Geometry.Envelope;
 			return result;
 		}
 

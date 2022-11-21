@@ -18,7 +18,7 @@ namespace ProSuite.QA.Tests.Transformers
 		where T : TransformedBackingData
 	{
 		public TransformedFeatureClass(
-			int objectClassId,
+			int? objectClassId,
 			[NotNull] string name,
 			esriGeometryType shapeType,
 			[NotNull] Func<GdbTable, T> createBackingDataset,
@@ -37,7 +37,7 @@ namespace ProSuite.QA.Tests.Transformers
 	public class TransformedFeatureClass : GdbFeatureClass, IRowsCache
 	{
 		public TransformedFeatureClass(
-			int objectClassId,
+			int? objectClassId,
 			[NotNull] string name,
 			esriGeometryType shapeType,
 			[CanBeNull] string aliasName = null,

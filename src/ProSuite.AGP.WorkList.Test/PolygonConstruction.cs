@@ -22,12 +22,12 @@ namespace ProSuite.AGP.WorkList.Test
 
 		public static MapPoint CreateMapPoint(double x, double y)
 		{
-			return MapPointBuilder.CreateMapPoint(x, y, _sref);
+			return MapPointBuilderEx.CreateMapPoint(x, y, _sref);
 		}
 
 		public static MapPoint CreateMapPoint(double x, double y, double z)
 		{
-			return MapPointBuilder.CreateMapPoint(x, y, z, _sref);
+			return MapPointBuilderEx.CreateMapPoint(x, y, z, _sref);
 		}
 
 		public PolygonConstruction LineTo(double x, double y, double z = double.NaN)

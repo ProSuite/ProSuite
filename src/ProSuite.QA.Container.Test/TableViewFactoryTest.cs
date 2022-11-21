@@ -2,7 +2,6 @@ using ESRI.ArcGIS.Geodatabase;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
-using ProSuite.Commons.AO.Licensing;
 using ProSuite.QA.Container.TestSupport;
 
 namespace ProSuite.QA.Container.Test
@@ -13,7 +12,8 @@ namespace ProSuite.QA.Container.Test
 		[Test]
 		public void CheckExpressions()
 		{
-			new ArcGISLicenses().Checkout();
+			Commons.AO.Test.TestUtils.InitializeLicense();
+
 			GdbTable t = new GdbTable(1, "t");
 			t.AddField(FieldUtils.CreateField("a", esriFieldType.esriFieldTypeInteger));
 			t.AddField(FieldUtils.CreateField("b", esriFieldType.esriFieldTypeInteger));

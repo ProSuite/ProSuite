@@ -12,6 +12,7 @@ using ProSuite.Commons;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Com;
+using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -101,6 +102,16 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 		public IList<XmlTestDescriptor> SupportedTestDescriptors { get; set; }
 
+		/// <summary>
+		/// The client end point used for parallel processing.
+		/// </summary>
+		[CanBeNull]
+		public QualityVerificationGrpc.QualityVerificationGrpcClient DistributedProcessingClient
+		{
+			get;
+			set;
+		}
+
 		public override async Task VerifyQuality(
 			VerificationRequest request,
 			IServerStreamWriter<VerificationResponse> responseStream,
@@ -115,7 +126,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 				ServiceCallStatus result =
 					await GrpcServerUtils.ExecuteServiceCall(
-						func, context, _staThreadScheduler);
+						func, context, _staThreadScheduler, true);
 
 				_msg.InfoFormat("Verification {0}", result);
 			}
@@ -167,7 +178,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 				ServiceCallStatus result =
 					await GrpcServerUtils.ExecuteServiceCall(
-						func, context, _staThreadScheduler);
+						func, context, _staThreadScheduler, true);
 
 				_msg.InfoFormat("Verification {0}", result);
 			}
@@ -203,6 +214,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 				responseStreamer.CreateResponseAction = responseStreamer.CreateStandaloneResponse;
 
+				// Attach to logging infrastructure
 				Action<LoggingEvent> action =
 					SendStandaloneProgressAction(responseStreamer, ServiceCallStatus.Running);
 
@@ -214,7 +226,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 							VerifyStandaloneXmlCore(request, responseStreamer, trackCancel);
 
 					result = await GrpcServerUtils.ExecuteServiceCall(
-						         func, context, _staThreadScheduler);
+						         func, context, _staThreadScheduler, true);
 
 					// final message:
 					responseStreamer.WriteProgressAndIssues(
@@ -268,7 +280,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			CurrentLoad?.EndRequest();
 		}
 
-		public async Task<bool> EnsureLicenseAsync()
+		private async Task<bool> EnsureLicenseAsync()
 		{
 			if (LicenseAction == null)
 			{
@@ -415,35 +427,44 @@ namespace ProSuite.Microservices.Server.AO.QA
 			BackgroundVerificationService qaService = null;
 			VerificationProgressStreamer<VerificationResponse> responseStreamer =
 				new VerificationProgressStreamer<VerificationResponse>(responseStream);
+			responseStreamer.CreateResponseAction = responseStreamer.CreateVerificationResponse;
 
 			List<GdbObjRefMsg> deletableAllowedErrorRefs = new List<GdbObjRefMsg>();
 			QualityVerification verification = null;
-			var issueCollection = new ConcurrentBag<IssueMsg>();
+
 			string cancellationMessage = null;
+
 			try
 			{
-				// TODO: Separate long-lived objects, such as datasetLookup, domainTransactions (add to this class) from
-				// short-term objects (request) -> add to background verification inputs
-				IBackgroundVerificationInputs backgroundVerificationInputs =
-					_verificationInputsFactoryMethod(request);
+				DistributedTestRunner distributedTestRunner = null;
 
-				responseStreamer.BackgroundVerificationInputs = backgroundVerificationInputs;
-				responseStreamer.CreateResponseAction = responseStreamer.CreateVerificationResponse;
+				bool useStandaloneService =
+					IsStandAloneVerification(request, out QualitySpecification specification);
 
-				qaService = CreateVerificationService(
-					backgroundVerificationInputs, responseStreamer, trackCancel);
-
-				int maxParallelRequested = request.MaxParallelProcessing;
-
-				if (backgroundVerificationInputs.WorkerClient != null &&
-				    maxParallelRequested > 1)
+				var issueCollection = new ConcurrentBag<IssueMsg>();
+				if (DistributedProcessingClient != null && request.MaxParallelProcessing > 1)
 				{
 					// allow directly adding issues found by client processes:
-					qaService.DistributedTestRunner = new DistributedTestRunner(
-						backgroundVerificationInputs.WorkerClient, request, issueCollection);
+					distributedTestRunner =
+						new DistributedTestRunner(
+							DistributedProcessingClient, request, issueCollection)
+						{
+							QualitySpecification = specification
+						};
 				}
 
-				verification = qaService.Verify(backgroundVerificationInputs, trackCancel);
+				// Stand-alone: Currently Xml or specification list (WorkContextMsg is null)
+				if (useStandaloneService)
+				{
+					// TODO: Same final response
+					return VerifyStandaloneXmlCore(specification, request.Parameters,
+					                               distributedTestRunner,
+					                               responseStreamer, trackCancel);
+				}
+
+				// DDX:
+				verification = VerifyDdxQualityCore(request, distributedTestRunner,
+				                                    responseStreamer, trackCancel, out qaService);
 
 				deletableAllowedErrorRefs.AddRange(
 					GetDeletableAllowedErrorRefs(request.Parameters, qaService));
@@ -461,7 +482,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			}
 
 			ServiceCallStatus result = responseStreamer.SendFinalResponse(verification,
-				cancellationMessage ?? qaService.CancellationMessage, deletableAllowedErrorRefs,
+				cancellationMessage ?? qaService?.CancellationMessage, deletableAllowedErrorRefs,
 				qaService?.VerifiedPerimeter);
 
 			return result;
@@ -472,25 +493,14 @@ namespace ProSuite.Microservices.Server.AO.QA
 			VerificationProgressStreamer<StandaloneVerificationResponse> responseStreamer,
 			ITrackCancel trackCancel)
 		{
-			// Machine login
-			SetupUserNameProvider(Environment.UserName);
-
+			SetupUserNameProvider(request.UserName);
 			try
 			{
 				VerificationParametersMsg parameters = request.Parameters;
 
-				IGeometry perimeter =
-					ProtobufGeometryUtils.FromShapeMsg(parameters.Perimeter);
-
-				var aoi = perimeter == null ? null : new AreaOfInterest(perimeter);
-
-				_msg.DebugFormat("Provided perimeter: {0}", GeometryUtils.ToString(perimeter));
-
-				XmlBasedVerificationService qaService = new XmlBasedVerificationService(
-					HtmlReportTemplatePath, QualitySpecificationTemplatePath);
-
-				qaService.IssueFound +=
-					(sender, args) => responseStreamer.AddPendingIssue(args);
+				// Currently no parallel processing for VerifyStandaloneXml() call. Use
+				// VerifyQuality() with XML instead.
+				DistributedTestRunner distributedTestRunner = null;
 
 				QualitySpecification qualitySpecification;
 
@@ -500,8 +510,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 					{
 						XmlQualitySpecificationMsg xmlSpecification = request.XmlSpecification;
 
-						qualitySpecification =
-							SetupQualitySpecification(xmlSpecification, qaService);
+						qualitySpecification = SetupQualitySpecification(xmlSpecification);
 						break;
 					}
 					case StandaloneVerificationRequest.SpecificationOneofCase
@@ -510,21 +519,15 @@ namespace ProSuite.Microservices.Server.AO.QA
 						ConditionListSpecificationMsg conditionListSpec =
 							request.ConditionListSpecification;
 
-						qualitySpecification =
-							SetupQualitySpecification(conditionListSpec, qaService);
+						qualitySpecification = SetupQualitySpecification(conditionListSpec);
 						break;
 					}
 					default: throw new ArgumentOutOfRangeException();
 				}
 
-				Model primaryModel =
-					StandaloneVerificationUtils.GetPrimaryModel(qualitySpecification);
-				responseStreamer.KnownIssueSpatialReference =
-					primaryModel?.SpatialReferenceDescriptor.SpatialReference;
-
-				qaService.ExecuteVerification(
-					qualitySpecification, aoi, null, parameters.TileSize,
-					request.OutputDirectory, IssueRepositoryType.FileGdb, trackCancel);
+				return VerifyStandaloneXmlCore(qualitySpecification, parameters,
+				                               distributedTestRunner, responseStreamer,
+				                               trackCancel);
 			}
 			catch (Exception e)
 			{
@@ -541,43 +544,185 @@ namespace ProSuite.Microservices.Server.AO.QA
 			}
 
 			// TODO: Final result message (error, warning count, row count with stop conditions, fulfilled)
+		}
+
+		private QualityVerification VerifyDdxQualityCore(
+			VerificationRequest request,
+			DistributedTestRunner distributedTestRunner,
+			VerificationProgressStreamer<VerificationResponse> responseStreamer,
+			ITrackCancel trackCancel,
+			out BackgroundVerificationService qaService)
+		{
+			// TODO: Separate long-lived objects, such as datasetLookup, domainTransactions (add to this class) from
+			// short-term objects (request) -> add to background verification inputs
+			IBackgroundVerificationInputs backgroundVerificationInputs =
+				_verificationInputsFactoryMethod(request);
+
+			responseStreamer.BackgroundVerificationInputs = backgroundVerificationInputs;
+
+			qaService = CreateVerificationService(
+				backgroundVerificationInputs, responseStreamer, trackCancel);
+
+			qaService.DistributedTestRunner = distributedTestRunner;
+
+			QualityVerification verification =
+				qaService.Verify(backgroundVerificationInputs, trackCancel);
+
+			return verification;
+		}
+
+		private ServiceCallStatus VerifyStandaloneXmlCore<T>(
+			[NotNull] QualitySpecification qualitySpecification,
+			[NotNull] VerificationParametersMsg parameters,
+			[CanBeNull] DistributedTestRunner distributedTestrunner,
+			[NotNull] VerificationProgressStreamer<T> responseStreamer,
+			ITrackCancel trackCancel) where T : class
+		{
+			IGeometry perimeter =
+				ProtobufGeometryUtils.FromShapeMsg(parameters.Perimeter);
+
+			var aoi = perimeter == null ? null : new AreaOfInterest(perimeter);
+
+			_msg.DebugFormat("Provided perimeter: {0}", GeometryUtils.ToString(perimeter));
+
+			XmlBasedVerificationService xmlService = new XmlBasedVerificationService(
+				HtmlReportTemplatePath, QualitySpecificationTemplatePath);
+
+			// TODO: Determine if the report paths are including the files or just the dirs (probably better: dirs)
+			xmlService.SetupOutputPaths(parameters.IssueFileGdbPath,
+			                            parameters.VerificationReportPath,
+			                            parameters.HtmlReportPath);
+
+			xmlService.IssueFound +=
+				(sender, args) => responseStreamer.AddPendingIssue(args);
+
+			xmlService.DistributedTestRunner = distributedTestrunner;
+
+			Model primaryModel =
+				StandaloneVerificationUtils.GetPrimaryModel(qualitySpecification);
+			responseStreamer.KnownIssueSpatialReference =
+				primaryModel?.SpatialReferenceDescriptor.SpatialReference;
+
+			IssueRepositoryType issueRepositoryType = IssueRepositoryType.FileGdb;
+
+			if (ExternalIssueRepositoryUtils.IssueRepositoryExists(
+				    parameters.IssueFileGdbPath, IssueRepositoryType.FileGdb))
+			{
+				_msg.WarnFormat("The {0} workspace '{1}' already exists",
+				                issueRepositoryType, parameters.IssueFileGdbPath);
+
+				// TODO: Failed? More info is required (Warning messages..)
+				return ServiceCallStatus.Finished;
+			}
+
+			xmlService.ExecuteVerification(qualitySpecification, aoi, parameters.TileSize,
+			                               trackCancel);
+
+			// TODO: Final result message (error, warning count, row count with stop conditions, fulfilled)
 
 			return trackCancel.Continue()
 				       ? ServiceCallStatus.Finished
 				       : ServiceCallStatus.Cancelled;
 		}
 
-		private static QualitySpecification SetupQualitySpecification(
-			XmlQualitySpecificationMsg xmlSpecification, XmlBasedVerificationService qaService)
+		private bool IsStandAloneVerification([NotNull] VerificationRequest request,
+		                                      out QualitySpecification qualitySpecification)
 		{
-			QualitySpecification qualitySpecification;
-			var dataSources = new List<DataSource>();
-			foreach (string replacement in xmlSpecification.DataSourceReplacements)
+			QualitySpecificationMsg specificationMsg = request.Specification;
+
+			qualitySpecification = null;
+
+			switch (specificationMsg.SpecificationCase)
 			{
-				List<string> replacementStrings =
-					StringUtils.SplitAndTrim(replacement, '|');
-				Assert.AreEqual(2, replacementStrings.Count,
-				                "Data source workspace is not of the format \"workspace_id | catalog_path\"");
+				case QualitySpecificationMsg.SpecificationOneofCase.XmlSpecification:
+				{
+					XmlQualitySpecificationMsg xmlSpecification = specificationMsg.XmlSpecification;
 
-				var dataSource =
-					new DataSource(replacementStrings[0], replacementStrings[0])
+					qualitySpecification = SetupQualitySpecification(xmlSpecification);
+
+					HashSet<int> excludedQcIds =
+						new HashSet<int>(request.Specification.ExcludedConditionIds);
+					if (excludedQcIds.Count > 0)
 					{
-						WorkspaceAsText = replacementStrings[1]
-					};
+						foreach (QualitySpecificationElement element in qualitySpecification
+							         .Elements)
+						{
+							if (excludedQcIds.Contains(element.QualityCondition.Id))
+							{
+								element.Enabled = false;
+							}
+						}
+					}
 
-				dataSources.Add(dataSource);
+					return true;
+				}
+				case QualitySpecificationMsg.SpecificationOneofCase.ConditionListSpecification:
+				{
+					ConditionListSpecificationMsg conditionListSpec =
+						specificationMsg.ConditionListSpecification;
+
+					qualitySpecification = SetupQualitySpecification(conditionListSpec);
+
+					return true;
+				}
+
+				default: return false;
+			}
+		}
+
+		private static QualitySpecification SetupQualitySpecification(
+			[NotNull] XmlQualitySpecificationMsg xmlSpecification)
+		{
+			var dataSources = new List<DataSource>();
+			if (xmlSpecification.DataSourceReplacements.Count > 0)
+			{
+				foreach (string replacement in xmlSpecification.DataSourceReplacements)
+				{
+					List<string> replacementStrings =
+						StringUtils.SplitAndTrim(replacement, '|');
+					Assert.AreEqual(2, replacementStrings.Count,
+					                "Data source workspace is not of the format \"workspace_id | catalog_path\"");
+
+					var dataSource =
+						new DataSource(replacementStrings[0], replacementStrings[0])
+						{
+							WorkspaceAsText = replacementStrings[1]
+						};
+
+					dataSources.Add(dataSource);
+				}
+
+				_msg.DebugFormat("Using {0} provided data source replacements.", dataSources.Count);
+			}
+			else
+			{
+				dataSources.AddRange(
+					QualitySpecificationUtils.GetDataSources(xmlSpecification.Xml));
+				_msg.DebugFormat("Using {0} data sources from XML.", dataSources.Count);
 			}
 
-			qualitySpecification =
-				qaService.SetupQualitySpecification(
-					xmlSpecification.Xml, xmlSpecification.SelectedSpecificationName,
-					dataSources);
+			QualitySpecification qualitySpecification =
+				QualitySpecificationUtils.CreateQualitySpecification(
+					xmlSpecification.Xml, xmlSpecification.SelectedSpecificationName, dataSources);
+
+			// ensure Xml- QualityConditionIds
+			int nextQcId = 0;
+			foreach (QualitySpecificationElement element in qualitySpecification.Elements)
+			{
+				if (element.QualityCondition.Id < 0)
+				{
+					IEntityTest qc = element.QualityCondition;
+					qc.SetId(nextQcId);
+				}
+
+				nextQcId++;
+			}
+
 			return qualitySpecification;
 		}
 
 		private QualitySpecification SetupQualitySpecification(
-			ConditionListSpecificationMsg conditionsSpecificationMsg,
-			XmlBasedVerificationService qaService)
+			[NotNull] ConditionListSpecificationMsg conditionsSpecificationMsg)
 		{
 			if (SupportedTestDescriptors == null || SupportedTestDescriptors.Count == 0)
 			{
@@ -622,9 +767,10 @@ namespace ProSuite.Microservices.Server.AO.QA
 				//}
 			}
 
-			QualitySpecification qualitySpecification = qaService.SetupQualitySpecification(
-				conditionsSpecificationMsg.Name, SupportedTestDescriptors, specificationElements,
-				dataSources, false);
+			QualitySpecification qualitySpecification =
+				QualitySpecificationUtils.CreateQualitySpecification(
+					conditionsSpecificationMsg.Name, SupportedTestDescriptors,
+					specificationElements, dataSources, false);
 
 			return qualitySpecification;
 		}
@@ -656,9 +802,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			VerificationProgressStreamer<T> responseStreamer, ITrackCancel trackCancel)
 			where T : class
 		{
-			var qaService = new BackgroundVerificationService(
-				                backgroundVerificationInputs.DomainTransactions,
-				                backgroundVerificationInputs.DatasetLookup)
+			var qaService = new BackgroundVerificationService(backgroundVerificationInputs)
 			                {
 				                CustomErrorFilter = backgroundVerificationInputs.CustomErrorFilter
 			                };
@@ -735,7 +879,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			IServerStreamWriter<DataVerificationResponse> responseStream)
 		{
 			void Write(VerificationResponse r) =>
-				responseStream.WriteAsync(new DataVerificationResponse {Response = r});
+				responseStream.WriteAsync(new DataVerificationResponse { Response = r });
 
 			SendFatalException(exception, Write);
 		}

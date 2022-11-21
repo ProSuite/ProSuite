@@ -10,7 +10,8 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 		public XmlWorkItemState() { }
 
 		[UsedImplicitly]
-		public XmlWorkItemState(long oid, bool visited, WorkItemStatus status, XmlGdbRowIdentity row)
+		public XmlWorkItemState(long oid, bool visited, WorkItemStatus status,
+		                        XmlGdbRowIdentity row)
 		{
 			OID = oid;
 			Visited = visited;

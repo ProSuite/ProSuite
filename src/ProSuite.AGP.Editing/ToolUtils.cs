@@ -97,10 +97,11 @@ namespace ProSuite.AGP.Editing
 		public static void SelectNewFeatures(List<Feature> newFeatures,
 		                                     MapView mapView)
 		{
-			List<BasicFeatureLayer> layersWithSelection = mapView.Map.GetSelection().Keys
-			                                                     .Where(l => l is BasicFeatureLayer)
-			                                                     .Cast<BasicFeatureLayer>()
-			                                                     .ToList();
+			List<BasicFeatureLayer> layersWithSelection = SelectionUtils.GetSelection(mapView.Map)
+				.Keys
+				.Where(l => l is BasicFeatureLayer)
+				.Cast<BasicFeatureLayer>()
+				.ToList();
 
 			SelectionUtils.SelectFeatures(newFeatures, layersWithSelection);
 		}
@@ -111,7 +112,7 @@ namespace ProSuite.AGP.Editing
 				new Coordinate2D(sketchGeometry.Extent.XMin, sketchGeometry.Extent.YMin);
 
 			MapPoint sketchPoint =
-				MapPointBuilder.CreateMapPoint(clickCoord, sketchGeometry.SpatialReference);
+				MapPointBuilderEx.CreateMapPoint(clickCoord, sketchGeometry.SpatialReference);
 
 			return sketchPoint;
 		}

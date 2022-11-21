@@ -124,7 +124,7 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 					// Set Z/M awareness
 					feature = featureClass.CreateRow(rowBuffer);
 
-					var mapPointBuilder = new MapPointBuilder(point);
+					var mapPointBuilder = new MapPointBuilderEx(point);
 
 					mapPointBuilder.HasZ = featureClass.GetDefinition().HasZ();
 					mapPointBuilder.HasM = featureClass.GetDefinition().HasM();

@@ -5,30 +5,24 @@ using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.AO.Licensing;
 
 namespace ProSuite.Commons.AO.Test.Geometry
 {
 	[TestFixture]
 	public class GeometryComparisonTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
-
 		#region Setup/Teardown
-
-		[SetUp]
-		public void SetUp() { }
 
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout();
+			TestUtils.InitializeLicense();
 		}
 
 		[OneTimeTearDown]
 		public void TeardownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		#endregion

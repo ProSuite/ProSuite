@@ -1,3 +1,4 @@
+using System;
 using NHibernate;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -19,6 +20,12 @@ namespace ProSuite.Commons.Orm.NHibernate
 			Assert.NotNull(SessionManager, "No session provider");
 
 			return SessionManager.CreateDisposableSession();
+		}
+
+		[CanBeNull]
+		protected Version GetDatabaseSchemaVersion()
+		{
+			return SessionManager.KnownSchemaVersion;
 		}
 
 		protected static void AssertInTransaction(ISession session)

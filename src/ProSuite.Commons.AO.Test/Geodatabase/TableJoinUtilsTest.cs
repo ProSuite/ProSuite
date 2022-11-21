@@ -10,7 +10,6 @@ using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Testing;
 using ProSuite.Commons.Text;
@@ -21,24 +20,24 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 	[Category(TestCategory.Sde)]
 	public class TableJoinUtilsTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
-
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout();
+			TestUtils.InitializeLicense();
 		}
 
 		[OneTimeTearDown]
 		public void TeardownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		[Test]
 		public void ReproTestIncorrectFgdbLeftJoin()
 		{
-			string dbPath = TestData.GetGdbTableJointUtilsPath();
+			string dbPath = TestDataPreparer.ExtractZip("TableJoinUtilsTest.gdb.zip")
+			                                .Overwrite()
+			                                .GetPath();
 
 			IFeatureWorkspace workspace = WorkspaceUtils.OpenFileGdbFeatureWorkspace(dbPath);
 			IFeatureClass baseFeatureClass = workspace.OpenFeatureClass("Streets");

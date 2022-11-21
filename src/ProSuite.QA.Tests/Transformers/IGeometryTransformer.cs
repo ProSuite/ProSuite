@@ -6,6 +6,6 @@ namespace ProSuite.QA.Tests.Transformers
 {
 	public interface IGeometryTransformer
 	{
-		IEnumerable<GdbFeature> Transform(IGeometry source);
+		IEnumerable<GdbFeature> Transform(IGeometry source, int? sourceOid);
 	}
 }

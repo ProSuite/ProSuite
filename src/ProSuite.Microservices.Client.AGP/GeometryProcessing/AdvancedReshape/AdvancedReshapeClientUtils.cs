@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
@@ -18,7 +19,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.AdvancedReshape
 			[NotNull] Polyline reshapeLine,
 			bool useNonDefaultReshapeSide)
 		{
-			var request = new OpenJawReshapeLineReplacementRequest()
+			var request = new OpenJawReshapeLineReplacementRequest
 			              {
 				              UseNonDefaultReshapeSide = useNonDefaultReshapeSide
 			              };
@@ -37,8 +38,13 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.AdvancedReshape
 						return geometryToReshape.SpatialReference;
 					});
 
+			// Extra-short deadline because it's only for the preview
+			const int deadlineMilliseconds = 800;
+
 			// Not in a queued task (but it is still called multiple times because...)
-			ShapeMsg pointMsg = rpcClient.GetOpenJawReshapeLineReplaceEndPoint(request);
+			ShapeMsg pointMsg = RpcCallUtils.Try(
+				o => rpcClient.GetOpenJawReshapeLineReplaceEndPoint(request, o),
+				CancellationToken.None, deadlineMilliseconds);
 
 			return await QueuedTaskUtils.Run(
 				       () => (MapPoint) ProtobufConversionUtils.FromShapeMsg(pointMsg, sr));
@@ -64,9 +70,12 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.AdvancedReshape
 
 			request.AllowOpenJawReshape = true;
 
-			// TODO: If the server is overwhelmed by requests, the calls block (and cannot even be cancelled)
-			//       Add a task scheduler mode that throws if no free thread is available immediately
-			const int deadline = 2000;
+			// TODO: If the server blocks for any reason, e.g. because
+			// - it is overwhelmed by requests
+			// - it hang in native code (DPS-#4)
+			// the calls block (and cannot even be cancelled)
+			// -> It is vital to use a request deadline to avoid hanging the entire application
+			int deadline = 2000 * selectedFeatures.Count;
 
 			AdvancedReshapeResponse reshapeResultMsg = RpcCallUtils.Try(
 				o => rpcClient.AdvancedReshape(request, o),
@@ -89,18 +98,13 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.AdvancedReshape
 				return result;
 			}
 
-			foreach (ResultObjectMsg resultFeatureMsg in reshapeResultMsg.ResultFeatures)
-			{
-				GdbObjectReference objRef = new GdbObjectReference(
-					resultFeatureMsg.Update.ClassHandle,
-					resultFeatureMsg.Update.ObjectId);
+			// Create the result features with their new geometries:
+			SpatialReference resultSpatialReference =
+				selectedFeatures.FirstOrDefault()?.GetShape().SpatialReference;
 
-				Feature inputFeature = allInputFeatures[objRef];
-
-				var reshapeResultFeature = new ResultFeature(inputFeature, resultFeatureMsg);
-
-				result.ResultFeatures.Add(reshapeResultFeature);
-			}
+			result.Add(FeatureDtoConversionUtils.FromUpdateMsgs(
+				           reshapeResultMsg.ResultFeatures, allInputFeatures,
+				           resultSpatialReference));
 
 			return result;
 		}
@@ -137,11 +141,11 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.AdvancedReshape
 		{
 			request.AllowOpenJawReshape = true;
 
-			const int deadlinePerFeature = 5000;
+			int deadline = RpcCallUtils.GeometryDefaultDeadline * request.Features.Count;
 
 			AdvancedReshapeResponse reshapeResultMsg = RpcCallUtils.Try(
 				o => rpcClient.AdvancedReshape(request, o),
-				cancellationToken, deadlinePerFeature * request.Features.Count);
+				cancellationToken, deadline);
 
 			if (reshapeResultMsg == null)
 			{
@@ -160,18 +164,14 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.AdvancedReshape
 				return result;
 			}
 
-			foreach (ResultObjectMsg resultFeatureMsg in reshapeResultMsg.ResultFeatures)
-			{
-				GdbObjectReference objRef = new GdbObjectReference(
-					resultFeatureMsg.Update.ClassHandle,
-					resultFeatureMsg.Update.ObjectId);
+			// TODO: Consider separate converter / builder class or at least a record
+			//       holding the necessary things such as spatial reference or class-id etc.
+			SpatialReference resultSpatialReference =
+				allInputFeatures.Values.FirstOrDefault()?.GetShape().SpatialReference;
 
-				Feature inputFeature = allInputFeatures[objRef];
-
-				var reshapeResultFeature = new ResultFeature(inputFeature, resultFeatureMsg);
-
-				result.ResultFeatures.Add(reshapeResultFeature);
-			}
+			result.Add(FeatureDtoConversionUtils.FromUpdateMsgs(
+				           reshapeResultMsg.ResultFeatures, allInputFeatures,
+				           resultSpatialReference));
 
 			return result;
 		}

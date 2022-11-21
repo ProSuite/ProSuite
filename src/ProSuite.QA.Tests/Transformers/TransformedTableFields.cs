@@ -145,7 +145,19 @@ namespace ProSuite.QA.Tests.Transformers
 			Assert.NotNull(userAttributes, nameof(userAttributes));
 
 			const bool allowExpressions = true;
-			if (! ValidateFieldNames(userAttributes, allowExpressions, out string message))
+			IList<string> allAttributes;
+			if (calculatedFields == null)
+			{
+				allAttributes = userAttributes;
+			}
+			else
+			{
+				List<string> comb = new List<string>(calculatedFields);
+				comb.AddRange(userAttributes);
+				allAttributes = comb;
+			}
+
+			if (! ValidateFieldNames(allAttributes, allowExpressions, out string message))
 			{
 				throw new InvalidOperationException(
 					$"Error adding fields to {toOutputClass.Name}: {message}");
@@ -309,7 +321,7 @@ namespace ProSuite.QA.Tests.Transformers
 		{
 			message = null;
 
-			HashSet<string> resultFieldNames = new HashSet<string>();
+			HashSet<string> resultFieldNames = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
 
 			foreach (string userAttribute in userAttributes)
 			{
@@ -322,12 +334,10 @@ namespace ProSuite.QA.Tests.Transformers
 					return false;
 				}
 
-				resultFieldNames.Add(resultField);
-
 				if (IsExpression(sourceField, out List<string> expressionTokens))
 				{
 					if (! ValidateExpression(allowExpressions, expressionTokens, sourceField,
-					                         out message))
+					                         resultFieldNames, out message))
 					{
 						return false;
 					}
@@ -339,6 +349,7 @@ namespace ProSuite.QA.Tests.Transformers
 						return false;
 					}
 				}
+				resultFieldNames.Add(resultField);
 			}
 
 			return true;
@@ -408,6 +419,7 @@ namespace ProSuite.QA.Tests.Transformers
 		private bool ValidateExpression(bool allowExpressions,
 		                                [NotNull] List<string> expressionTokens,
 		                                string inputField,
+										[NotNull] HashSet<string> previousFields,
 		                                out string message)
 		{
 			if (! allowExpressions)
@@ -420,7 +432,8 @@ namespace ProSuite.QA.Tests.Transformers
 			bool any = false;
 			foreach (string candidate in expressionTokens)
 			{
-				if (ValidateField(SourceTable, candidate, out message))
+				if (ValidateField(SourceTable, candidate, out message)
+				    || previousFields.Contains(candidate))
 				{
 					any = true;
 				}

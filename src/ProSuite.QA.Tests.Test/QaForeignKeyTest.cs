@@ -4,25 +4,24 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using ESRI.ArcGIS.Geodatabase;
-using ProSuite.QA.Container.Test;
-using ProSuite.QA.Tests.Test.TestRunners;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
-using ProSuite.Commons.AO.Licensing;
+using ProSuite.Commons.AO.Test;
 using ProSuite.Commons.Diagnostics;
+using ProSuite.QA.Container.Test;
+using ProSuite.QA.Tests.Test.TestRunners;
 
 namespace ProSuite.QA.Tests.Test
 {
 	[TestFixture]
 	public class QaForeignKeyTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
 		private IFeatureWorkspace _workspace;
 
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout();
+			TestUtils.InitializeLicense();
 
 			_workspace = TestWorkspaceUtils.CreateTestFgdbWorkspace("QaForeignKeyTest");
 		}
@@ -30,7 +29,7 @@ namespace ProSuite.QA.Tests.Test
 		[OneTimeTearDown]
 		public void TeardownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		[Test]
@@ -52,17 +51,17 @@ namespace ProSuite.QA.Tests.Test
 				FieldUtils.CreateTextField(fkey, 10));
 
 			GdbObjectUtils.CreateRow(referencedTable,
-			                         new Dictionary<string, object> {{key, 1000}}).Store();
+			                         new Dictionary<string, object> { { key, 1000 } }).Store();
 			GdbObjectUtils.CreateRow(referencedTable,
-			                         new Dictionary<string, object> {{key, 2000}}).Store();
+			                         new Dictionary<string, object> { { key, 2000 } }).Store();
 
 			GdbObjectUtils.CreateRow(referencingTable,
-			                         new Dictionary<string, object> {{fkey, "1000"}}).Store();
+			                         new Dictionary<string, object> { { fkey, "1000" } }).Store();
 			GdbObjectUtils.CreateRow(referencingTable,
-			                         new Dictionary<string, object> {{fkey, "2000"}}).Store();
+			                         new Dictionary<string, object> { { fkey, "2000" } }).Store();
 			// dangling reference:
 			GdbObjectUtils.CreateRow(referencingTable,
-			                         new Dictionary<string, object> {{fkey, "3000"}}).Store();
+			                         new Dictionary<string, object> { { fkey, "3000" } }).Store();
 
 			var runner = new QaTestRunner(
 				new QaForeignKey(ReadOnlyTableFactory.Create(referencingTable), fkey,
@@ -98,34 +97,34 @@ namespace ProSuite.QA.Tests.Test
 			GdbObjectUtils.CreateRow(referencedTable,
 			                         new Dictionary<string, object>
 			                         {
-				                         {key1, 1000},
-				                         {key2, "AAA"}
+				                         { key1, 1000 },
+				                         { key2, "AAA" }
 			                         }).Store();
 			GdbObjectUtils.CreateRow(referencedTable,
 			                         new Dictionary<string, object>
 			                         {
-				                         {key1, 2000},
-				                         {key2, "BBB"}
+				                         { key1, 2000 },
+				                         { key2, "BBB" }
 			                         }).Store();
 
 			GdbObjectUtils.CreateRow(referencingTable,
 			                         new Dictionary<string, object>
 			                         {
-				                         {fkey1, "1000"},
-				                         {fkey2, "AAA"}
+				                         { fkey1, "1000" },
+				                         { fkey2, "AAA" }
 			                         }).Store();
 			GdbObjectUtils.CreateRow(referencingTable,
 			                         new Dictionary<string, object>
 			                         {
-				                         {fkey1, "2000"},
-				                         {fkey2, "BBB"}
+				                         { fkey1, "2000" },
+				                         { fkey2, "BBB" }
 			                         }).Store();
 			// dangling reference:
 			GdbObjectUtils.CreateRow(referencingTable,
 			                         new Dictionary<string, object>
 			                         {
-				                         {fkey1, "3000"},
-				                         {fkey2, "XXX"}
+				                         { fkey1, "3000" },
+				                         { fkey2, "XXX" }
 			                         }).Store();
 
 			var runner = new QaTestRunner(
@@ -164,35 +163,35 @@ namespace ProSuite.QA.Tests.Test
 			GdbObjectUtils.CreateRow(referencedTable,
 			                         new Dictionary<string, object>
 			                         {
-				                         {key1, 1000},
-				                         {key2, "AAA"}
+				                         { key1, 1000 },
+				                         { key2, "AAA" }
 			                         }).Store();
 			GdbObjectUtils.CreateRow(referencedTable,
 			                         new Dictionary<string, object>
 			                         {
-				                         {key1, 2000},
-				                         {key2, null}
+				                         { key1, 2000 },
+				                         { key2, null }
 			                         }).Store();
 
 			GdbObjectUtils.CreateRow(referencingTable,
 			                         new Dictionary<string, object>
 			                         {
-				                         {fkey1, "1000"},
-				                         {fkey2, "AAA"}
+				                         { fkey1, "1000" },
+				                         { fkey2, "AAA" }
 			                         }).Store();
 			// valid reference with null key
 			GdbObjectUtils.CreateRow(referencingTable,
 			                         new Dictionary<string, object>
 			                         {
-				                         {fkey1, "2000"},
-				                         {fkey2, null}
+				                         { fkey1, "2000" },
+				                         { fkey2, null }
 			                         }).Store();
 			// dangling reference:
 			GdbObjectUtils.CreateRow(referencingTable,
 			                         new Dictionary<string, object>
 			                         {
-				                         {fkey1, "3000"},
-				                         {fkey2, null}
+				                         { fkey1, "3000" },
+				                         { fkey2, null }
 			                         }).Store();
 
 			var runner = new QaTestRunner(

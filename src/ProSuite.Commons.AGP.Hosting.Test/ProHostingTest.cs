@@ -24,7 +24,7 @@ namespace ProSuite.Commons.AGP.Hosting.Test
 		public void CanUseCoreDirectly()
 		{
 			SpatialReference ch1903 = SpatialReferenceBuilder.CreateSpatialReference(21781);
-			MapPoint point = MapPointBuilder.CreateMapPoint(600000, 200000, ch1903);
+			MapPoint point = MapPointBuilderEx.CreateMapPoint(600000, 200000, ch1903);
 
 			Assert.AreEqual(600000.0, point.X);
 			Assert.AreEqual(200000.0, point.Y);

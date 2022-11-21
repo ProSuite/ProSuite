@@ -4,7 +4,6 @@ using System.Diagnostics;
 using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.Diagnostics;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -13,18 +12,16 @@ namespace ProSuite.Commons.AO.Test.Geometry
 	[TestFixture]
 	public class GeometryFactoryTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
-
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout();
+			TestUtils.InitializeLicense();
 		}
 
 		[OneTimeTearDown]
 		public void TeardownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		[Test]

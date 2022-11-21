@@ -1,23 +1,22 @@
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using NUnit.Framework;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geometry;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.Test;
 using ProSuite.QA.Container.TestContainer;
 using ProSuite.QA.Tests.Network;
 using ProSuite.QA.Tests.Test.Construction;
 using ProSuite.QA.Tests.Test.TestRunners;
-using NUnit.Framework;
-using ProSuite.Commons.AO.Geodatabase;
-using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.AO.Licensing;
+using TestUtils = ProSuite.Commons.AO.Test.TestUtils;
 
 namespace ProSuite.QA.Tests.Test
 {
 	[TestFixture]
 	public class QaConnectionsTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
 		private IFeatureWorkspace _testWs;
 		private int _errorCount;
 		private IGeometry _lastErrorGeom;
@@ -25,7 +24,7 @@ namespace ProSuite.QA.Tests.Test
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout();
+			TestUtils.InitializeLicense();
 
 			_testWs = TestWorkspaceUtils.CreateTestFgdbWorkspace("QaConnectionsTest");
 		}
@@ -33,7 +32,7 @@ namespace ProSuite.QA.Tests.Test
 		[OneTimeTearDown]
 		public void TeardownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		[Test]
@@ -56,7 +55,7 @@ namespace ProSuite.QA.Tests.Test
 			IFeatureClass fc =
 				DatasetUtils.CreateSimpleFeatureClass(ws, "TestConnections", fields,
 				                                      null);
-			IList<IReadOnlyTable> tbls = new[] { ReadOnlyTableFactory.Create(fc)};
+			IList<IReadOnlyTable> tbls = new[] { ReadOnlyTableFactory.Create(fc) };
 
 			// make sure the table is known by the workspace
 			((IWorkspaceEdit) ws).StartEditing(false);
@@ -79,10 +78,10 @@ namespace ProSuite.QA.Tests.Test
 
 			IList<QaConnectionRule> rules = new[]
 			                                {
-				                                new QaConnectionRule(tbls, new[] {"LineTyp = 1"}),
-				                                new QaConnectionRule(tbls, new[] {"LineTyp = 2"})
+				                                new QaConnectionRule(tbls, new[] { "LineTyp = 1" }),
+				                                new QaConnectionRule(tbls, new[] { "LineTyp = 2" })
 			                                };
-			var test = new QaConnections(new[] { ReadOnlyTableFactory.Create(fc)}, rules, 0);
+			var test = new QaConnections(new[] { ReadOnlyTableFactory.Create(fc) }, rules, 0);
 			test.QaError += Test_QaError;
 			_errorCount = 0;
 			test.Execute();
@@ -114,7 +113,7 @@ namespace ProSuite.QA.Tests.Test
 			IFeatureClass fc =
 				DatasetUtils.CreateSimpleFeatureClass(ws, "TestConnections", fields,
 				                                      null);
-			IList<IReadOnlyTable> tbls = new[] { ReadOnlyTableFactory.Create(fc)};
+			IList<IReadOnlyTable> tbls = new[] { ReadOnlyTableFactory.Create(fc) };
 
 			{
 				IFeature row = fc.CreateFeature();
@@ -133,8 +132,8 @@ namespace ProSuite.QA.Tests.Test
 
 			IList<QaConnectionRule> rules = new List<QaConnectionRule>
 			                                {
-				                                new QaConnectionRule(tbls, new[] {"LineTyp = 1"}),
-				                                new QaConnectionRule(tbls, new[] {"LineTyp = 2"})
+				                                new QaConnectionRule(tbls, new[] { "LineTyp = 1" }),
+				                                new QaConnectionRule(tbls, new[] { "LineTyp = 2" })
 			                                };
 			var test = new QaConnections(new[] { ReadOnlyTableFactory.Create(fc) }, rules, 0);
 
@@ -167,7 +166,7 @@ namespace ProSuite.QA.Tests.Test
 			IFeatureClass fc =
 				DatasetUtils.CreateSimpleFeatureClass(ws, "TestWithTolerance", fields,
 				                                      null);
-			IList<IReadOnlyTable> tbls = new[] { ReadOnlyTableFactory.Create(fc)};
+			IList<IReadOnlyTable> tbls = new[] { ReadOnlyTableFactory.Create(fc) };
 
 			// make sure the table is known by the workspace
 			((IWorkspaceEdit) ws).StartEditing(false);
@@ -190,8 +189,8 @@ namespace ProSuite.QA.Tests.Test
 
 			IList<QaConnectionRule> rules = new[]
 			                                {
-				                                new QaConnectionRule(tbls, new[] {"LineTyp = 1"}),
-				                                new QaConnectionRule(tbls, new[] {"LineTyp = 2"})
+				                                new QaConnectionRule(tbls, new[] { "LineTyp = 1" }),
+				                                new QaConnectionRule(tbls, new[] { "LineTyp = 2" })
 			                                };
 			var test = new QaConnections(new[] { ReadOnlyTableFactory.Create(fc) }, rules, 0.2);
 			test.QaError += Test_QaError;

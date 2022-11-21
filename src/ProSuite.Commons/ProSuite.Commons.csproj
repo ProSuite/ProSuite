@@ -10,7 +10,7 @@
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <OutputPath>$(OutputDirectory)\$(Configuration)\</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    
+
     <ProSuiteEncryptorFactoryDir Condition=" '$(ProSuiteEncryptorFactoryDir)' == '' ">Cryptography</ProSuiteEncryptorFactoryDir>
 
     <NoWarn>1591</NoWarn>

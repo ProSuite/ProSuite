@@ -1,20 +1,95 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.Text;
+using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.QA;
+using ProSuite.DomainModel.AO.QA.Xml;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.Repositories;
+using ProSuite.DomainServices.AO.QA.Standalone.XmlBased;
+using ProSuite.DomainServices.AO.QA.VerifiedDataModel;
 
 namespace ProSuite.DomainServices.AO.QA
 {
 	public static class QualitySpecificationUtils
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
+		public static QualitySpecification CreateQualitySpecification(
+			[NotNull] string dataQualityXml,
+			[NotNull] string specificationName,
+			[NotNull] IList<DataSource> dataSourceReplacements,
+			bool ignoreConditionsForUnknownDatasets = true)
+		{
+			IList<XmlQualitySpecification> qualitySpecifications;
+			XmlDataQualityDocument document;
+
+			using (Stream baseStream = new MemoryStream(Encoding.UTF8.GetBytes(dataQualityXml)))
+			using (StreamReader xmlReader = new StreamReader(baseStream))
+			{
+				document = XmlDataQualityUtils.ReadXmlDocument(xmlReader,
+				                                               out qualitySpecifications);
+			}
+
+			_msg.DebugFormat("Available specifications: {0}",
+			                 StringUtils.Concatenate(qualitySpecifications.Select(s => s.Name),
+			                                         ", "));
+
+			return CreateQualitySpecification(document, specificationName, dataSourceReplacements,
+			                                  ignoreConditionsForUnknownDatasets);
+		}
+
+		[NotNull]
+		public static List<DataSource> GetDataSources([NotNull] string dataQualityXml)
+		{
+			XmlDataQualityDocument document;
+			using (Stream baseStream = new MemoryStream(Encoding.UTF8.GetBytes(dataQualityXml)))
+			using (StreamReader xmlReader = new StreamReader(baseStream))
+			{
+				document = XmlDataQualityUtils.ReadXmlDocument(xmlReader,out _);
+			}
+
+			List<DataSource> dataSources = new List<DataSource>();
+			if (document.Workspaces != null)
+			{
+				foreach (XmlWorkspace xmlWorkspace in document.Workspaces)
+				{
+					if (! string.IsNullOrWhiteSpace(xmlWorkspace.CatalogPath) ||
+					    ! string.IsNullOrWhiteSpace(xmlWorkspace.ConnectionString))
+					{
+						DataSource ds = new DataSource(xmlWorkspace);
+						dataSources.Add(ds);
+					}
+				}
+			}
+
+			return dataSources;
+		}
+
+		public static QualitySpecification CreateQualitySpecification(
+			[NotNull] string specificationName,
+			IList<XmlTestDescriptor> supportedDescriptors,
+			[NotNull] IList<SpecificationElement> specificationElements,
+			[NotNull] IEnumerable<DataSource> dataSources,
+			bool ignoreConditionsForUnknownDatasets)
+		{
+			XmlBasedQualitySpecificationFactory factory = CreateSpecificationFactory();
+
+			QualitySpecification result = factory.CreateQualitySpecification(
+				specificationName, supportedDescriptors, specificationElements, dataSources,
+				ignoreConditionsForUnknownDatasets);
+
+			result.Name = specificationName;
+
+			return result;
+		}
 
 		/// <summary>
 		/// Initializes all persistent entities that are part of the specified quality
@@ -367,6 +442,37 @@ namespace ProSuite.DomainServices.AO.QA
 			}
 
 			_msg.Warn(sb.ToString());
+		}
+
+		private static QualitySpecification CreateQualitySpecification(
+			[NotNull] XmlDataQualityDocument document,
+			[NotNull] string specificationName,
+			[NotNull] IEnumerable<DataSource> dataSources,
+			bool ignoreConditionsForUnknownDatasets)
+		{
+			QualitySpecification qualitySpecification;
+			using (_msg.IncrementIndentation("Setting up quality specification"))
+			{
+				XmlBasedQualitySpecificationFactory factory = CreateSpecificationFactory();
+
+				qualitySpecification = factory.CreateQualitySpecification(
+					document, specificationName, dataSources,
+					ignoreConditionsForUnknownDatasets);
+			}
+
+			return qualitySpecification;
+		}
+
+		private static XmlBasedQualitySpecificationFactory CreateSpecificationFactory()
+		{
+			var modelFactory = new VerifiedModelFactory(
+				new MasterDatabaseWorkspaceContextFactory(), new SimpleVerifiedDatasetHarvester());
+
+			var datasetOpener = new SimpleDatasetOpener(new MasterDatabaseDatasetContext());
+
+			var factory =
+				new XmlBasedQualitySpecificationFactory(modelFactory, datasetOpener);
+			return factory;
 		}
 	}
 }

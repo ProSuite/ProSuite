@@ -167,7 +167,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			}
 			catch (Exception e)
 			{
-				_msg.Warn("Error generating preview", e);
+				_msg.Warn($"Error generating preview: {e.Message}", e);
 				return false;
 			}
 			finally
@@ -193,7 +193,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 					if (_updateFeedbackTask != null)
 					{
-						// Still working on the previous update (large poylgons!)
+						// Still working on the previous update (large polygons!)
 						return;
 					}
 
@@ -299,7 +299,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 						result.ResultFeatures
 						      .Where(r => GdbPersistenceUtils.CanChange(
 							             r, editableClassHandles, RowChangeType.Update))
-						      .ToDictionary(r => r.Feature, r => r.NewGeometry);
+						      .ToDictionary(r => r.OriginalFeature, r => r.NewGeometry);
 
 					success = await SaveAsync(resultFeatures);
 
@@ -381,7 +381,8 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			[NotNull] ICollection<Feature> selectedFeatures,
 			[CanBeNull] CancelableProgressor cancellabelProgressor)
 		{
-			Dictionary<MapMember, List<long>> selection = ActiveMapView.Map.GetSelection();
+			Dictionary<MapMember, List<long>> selection =
+				SelectionUtils.GetSelection(ActiveMapView.Map);
 
 			if (! selection.Keys.Any(mm => mm is FeatureLayer fl &&
 			                               fl.ShapeType == esriGeometryType.esriGeometryPolyline))
@@ -427,7 +428,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 			foreach (var resultFeature in reshapeResult.ResultFeatures)
 			{
-				var feature = resultFeature.Feature;
+				var feature = resultFeature.OriginalFeature;
 
 				result.Add(feature, resultFeature.NewGeometry);
 

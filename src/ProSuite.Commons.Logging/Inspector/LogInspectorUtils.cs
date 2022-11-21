@@ -11,7 +11,8 @@ namespace ProSuite.Commons.Logging.Inspector
 		public static LogInspectorEntry ConvertEvent([NotNull] LoggingEvent loggingEvent)
 		{
 			var level = ConvertLevel(loggingEvent.Level);
-			var message = loggingEvent.RenderedMessage ?? Convert.ToString(loggingEvent.MessageObject);
+			var message = loggingEvent.RenderedMessage ??
+			              Convert.ToString(loggingEvent.MessageObject);
 
 			var context = LoggingContext.GetLoggingContext(loggingEvent);
 
@@ -49,7 +50,8 @@ namespace ProSuite.Commons.Logging.Inspector
 			}
 		}
 
-		public static IEnumerable<string> FormatFieldValues(LogInspectorEntry item, ILoggingContextFormat format = null)
+		public static IEnumerable<string> FormatFieldValues(LogInspectorEntry item,
+		                                                    ILoggingContextFormat format = null)
 		{
 			if (item == null) yield break;
 

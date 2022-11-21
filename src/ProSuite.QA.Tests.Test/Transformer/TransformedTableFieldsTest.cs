@@ -6,27 +6,25 @@ using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.AO.Licensing;
 using ProSuite.QA.Container;
 using ProSuite.QA.Tests.Transformers;
+using TestUtils = ProSuite.Commons.AO.Test.TestUtils;
 
 namespace ProSuite.QA.Tests.Test.Transformer
 {
 	[TestFixture]
 	public class TransformedTableFieldsTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
-
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout(EsriProduct.ArcEditor);
+			TestUtils.InitializeLicense();
 		}
 
 		[OneTimeTearDown]
 		public void TearDownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		[Test]
@@ -47,6 +45,14 @@ namespace ProSuite.QA.Tests.Test.Transformer
 
 			Assert.IsTrue(tableFields.ValidateFieldNames(fields, true, out string message));
 			Assert.IsFalse(tableFields.ValidateFieldNames(fields, false, out message));
+
+			// add previously calculated field
+			fields.Add("MIN(obj_art) AS min_obj_art");
+			Assert.IsTrue(tableFields.ValidateFieldNames(fields, true, out message));
+
+			// add field with same alias
+			fields.Add("OBJEKART AS obj_art");
+			Assert.IsFalse(tableFields.ValidateFieldNames(fields, true, out message));
 		}
 
 		[Test]
@@ -54,7 +60,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 		{
 			GdbTable sourceTable = CreateSampleTable();
 
-			GdbTable targetTable = new GdbTable(-1, "OUTPUT_TABLE");
+			GdbTable targetTable = new GdbTable(null, "OUTPUT_TABLE");
 
 			TransformedTableFields tableFields = new TransformedTableFields(sourceTable);
 
@@ -77,7 +83,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			GdbTable sourceTable1 = CreateSampleTable("TAB1");
 			GdbTable sourceTable2 = CreateSampleTable("TAB2");
 
-			GdbTable targetTable = new GdbTable(-1, "OUTPUT_TABLE");
+			GdbTable targetTable = new GdbTable(null, "OUTPUT_TABLE");
 
 			TransformedTableFields tableFields1 = new TransformedTableFields(sourceTable1);
 			TransformedTableFields tableFields2 = new TransformedTableFields(sourceTable2);
@@ -133,7 +139,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			//				SpatialReferenceUtils.CreateSpatialReference(WellKnownHorizontalCS.LV95));
 
 			GdbFeatureClass targetTable =
-				new GdbFeatureClass(-1, "OUTPUT_TABLE", esriGeometryType.esriGeometryPoint);
+				new GdbFeatureClass(null, "OUTPUT_TABLE", esriGeometryType.esriGeometryPoint);
 
 			TransformedTableFields tableFields = new TransformedTableFields(sourceTable);
 
@@ -167,7 +173,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 
 		private static GdbTable CreateSampleTable(string tableName = "TABLE_NAME")
 		{
-			GdbTable table = new GdbTable(-1, tableName, "TableName");
+			GdbTable table = new GdbTable(null, tableName, "TableName");
 			table.AddFieldT(FieldUtils.CreateOIDField());
 			table.AddFieldT(
 				FieldUtils.CreateIntegerField("OBJEKTART"));

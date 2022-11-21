@@ -15,17 +15,20 @@ namespace ProSuite.UI.MicroserverState
 
 		public ServerStateViewModel()
 		{
+			// For the designer:
 			ServerStates.Add(new ServerState(
 				                 new QualityVerificationServiceClient("Localhost"))
 			                 {
-				                 Text = "bla bla",
-				                 PingLatency = 23
+				                 Text = "Healthy",
+				                 PingLatency = 23,
+				                 ServiceState = ServiceState.Serving
 			                 });
 
 			ServerStates.Add(new ServerState(
 				                 new QualityVerificationServiceClient("CRASSUS", 5152))
 			                 {
-				                 Text = "Unavailable"
+				                 Text = "Unavailable",
+				                 ServiceState = ServiceState.Starting
 			                 });
 		}
 
@@ -76,9 +79,9 @@ namespace ProSuite.UI.MicroserverState
 				bool result = true;
 				foreach (ServerState serverState in ServerStates)
 				{
-					bool serviceRunning = await serverState.Evaluate();
+					bool? serviceRunning = await serverState.Evaluate();
 
-					result &= serviceRunning;
+					result &= serviceRunning == true;
 				}
 
 				LastEvaluation = DateTime.Now;

@@ -3,7 +3,6 @@ using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.DataModel.Harvesting;
@@ -15,24 +14,23 @@ using ProSuite.QA.Container;
 using ProSuite.QA.Container.Test;
 using ProSuite.QA.TestFactories;
 using ProSuite.QA.Tests.Test.TestRunners;
+using TestUtils = ProSuite.Commons.AO.Test.TestUtils;
 
 namespace ProSuite.QA.Tests.Test
 {
 	[TestFixture]
 	public class QaRelConstraintTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
-
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout(EsriProduct.ArcEditor);
+			TestUtils.InitializeLicense();
 		}
 
 		[OneTimeTearDown]
 		public void TeardownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		[Test]
@@ -106,9 +104,9 @@ namespace ProSuite.QA.Tests.Test
 			InstanceConfigurationUtils.AddParameterValue(condition, "relation", "rc");
 			InstanceConfigurationUtils.AddParameterValue(condition, "join", JoinType.InnerJoin);
 			InstanceConfigurationUtils.AddParameterValue(condition, "constraint",
-			                                                 "(fc.OBJECTID = 1 AND table.OBJECTID = 1) AND (table.TEXT = 'table')");
+			                                             "(fc.OBJECTID = 1 AND table.OBJECTID = 1) AND (table.TEXT = 'table')");
 
-			var factory = new QaRelConstraint {Condition = condition};
+			var factory = new QaRelConstraint { Condition = condition };
 			ITest test = factory.CreateTests(new SimpleDatasetOpener(childWorkspaceContext))[0];
 
 			var runner = new QaContainerTestRunner(1000, test);

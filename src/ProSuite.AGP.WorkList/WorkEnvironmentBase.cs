@@ -128,7 +128,7 @@ namespace ProSuite.AGP.WorkList
 			try
 			{
 				datastore = WorkListUtils.GetPluginDatastore(new Uri(path, UriKind.Absolute));
-				
+
 				table = datastore.OpenTable(worklist.Name);
 				Assert.NotNull(table);
 

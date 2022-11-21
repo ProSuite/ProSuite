@@ -9,7 +9,6 @@ using Grpc.Core;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.AO.Test;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Progress;
@@ -30,15 +29,13 @@ namespace ProSuite.QA.Tests.Test
 	[TestFixture]
 	public class QaExternalServiceTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
-
 		const string Localhost = "localhost";
 		const int Port = 5181;
 
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout();
+			TestUtils.InitializeLicense();
 
 			// Start the server:
 			StartServer(Localhost, Port);
@@ -47,7 +44,7 @@ namespace ProSuite.QA.Tests.Test
 		[OneTimeTearDown]
 		public void TeardownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		[Test]
@@ -69,10 +66,10 @@ namespace ProSuite.QA.Tests.Test
 			string connectionUrl = $"http://{Localhost}:{Port}";
 
 			List<IReadOnlyTable> tables = new[]
-			                      {
-				                      ReadOnlyTableFactory.Create(fcBahn),
-				                      ReadOnlyTableFactory.Create(fcStr)
-			                      }.Cast<IReadOnlyTable>().ToList();
+			                              {
+				                              ReadOnlyTableFactory.Create(fcBahn),
+				                              ReadOnlyTableFactory.Create(fcStr)
+			                              }.Cast<IReadOnlyTable>().ToList();
 
 			var test = new QaExternalService(tables, connectionUrl, string.Empty);
 
@@ -278,7 +275,7 @@ namespace ProSuite.QA.Tests.Test
 				IQueryFilter filter1 = GetQueryFilter(aoi, featureClasses, filterExpressions, 1);
 
 				foreach (var feature1 in GdbQueryUtils.GetFeatures(featureClasses[1], filter1, true)
-				)
+				        )
 				{
 					if (trackCancel != null && ! trackCancel.Continue())
 					{

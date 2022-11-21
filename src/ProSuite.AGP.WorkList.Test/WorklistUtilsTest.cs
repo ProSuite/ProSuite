@@ -35,7 +35,7 @@ namespace ProSuite.AGP.WorkList.Test
 		public void Can_create_worklist_with_SDE_workspace_from_definition_file()
 		{
 			XmlWorkListDefinition definition = XmlWorkItemStateRepository.Import(_path);
-			
+
 			string displayName = WorkListUtils.GetName(_path);
 
 			IWorkList worklist = WorkListUtils.Create(definition, displayName);

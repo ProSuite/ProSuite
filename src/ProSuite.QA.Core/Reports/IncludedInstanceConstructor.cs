@@ -1,8 +1,7 @@
 using System;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.QA.Core;
 
-namespace ProSuite.DomainModel.AO.QA.TestReport
+namespace ProSuite.QA.Core.Reports
 {
 	public class IncludedInstanceConstructor : IncludedInstance,
 	                                           IComparable<IncludedInstanceConstructor>

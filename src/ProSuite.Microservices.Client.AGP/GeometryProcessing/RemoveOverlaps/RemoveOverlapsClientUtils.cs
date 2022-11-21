@@ -3,7 +3,6 @@ using System.Linq;
 using System.Threading;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
-using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -35,9 +34,9 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.RemoveOverlaps
 
 			var result = new Overlaps();
 
-			// TODO: Ensure unique spatial reference equals the map spatial reference!
+			// Get the spatial reference from a shape (== map spatial reference) rather than a feature class.
 			SpatialReference spatialReference = selectedFeatures
-			                                    .Select(DatasetUtils.GetSpatialReference)
+			                                    .Select(f => f.GetShape().SpatialReference)
 			                                    .FirstOrDefault();
 
 			foreach (OverlapMsg overlapMsg in response.Overlaps)
@@ -68,12 +67,12 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.RemoveOverlaps
 			CalculateOverlapsRequest request =
 				CreateCalculateOverlapsRequest(selectedFeatures, overlappingFeatures);
 
-			int maxTimePerFeature = 4000;
+			int deadline = RpcCallUtils.GeometryDefaultDeadline * selectedFeatures.Count;
 
 			CalculateOverlapsResponse response =
 				RpcCallUtils.Try(
 					o => rpcClient.CalculateOverlaps(request, o),
-					cancellationToken, maxTimePerFeature * selectedFeatures.Count);
+					cancellationToken, deadline);
 
 			return response;
 		}
@@ -111,8 +110,12 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.RemoveOverlaps
 				selectedFeatures, overlapsToRemove, overlappingFeatures,
 				out updateFeatures);
 
+			int deadline = RpcCallUtils.GeometryDefaultDeadline * request.SourceFeatures.Count;
+
 			RemoveOverlapsResponse response =
-				rpcClient.RemoveOverlaps(request, null, null, cancellationToken);
+				RpcCallUtils.Try(
+					o => rpcClient.RemoveOverlaps(request, o),
+					cancellationToken, deadline);
 
 			return GetRemoveOverlapsResult(response, updateFeatures);
 		}
@@ -146,8 +149,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.RemoveOverlaps
 
 					// It's important to assign the full spatial reference from the original to avoid
 					// losing the VCS:
-					SpatialReference sr =
-						DatasetUtils.GetSpatialReference(originalFeature.GetTable());
+					SpatialReference sr = originalFeature.GetShape().SpatialReference;
 
 					result.TargetFeaturesToUpdate.Add(
 						originalFeature, ProtobufConversionUtils.FromShapeMsg(targetMsg.Shape, sr));
@@ -174,8 +176,8 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.RemoveOverlaps
 				Feature originalFeature = GetOriginalFeature(featureRef, updateFeatures);
 
 				// It's important to assign the full spatial reference from the original to avoid
-				// losing the VCS:
-				SpatialReference sr = DatasetUtils.GetSpatialReference(originalFeature.GetTable());
+				// losing the VCS. Get it from the shape, because all calculations are in Map SR!
+				SpatialReference sr = originalFeature.GetShape().SpatialReference;
 
 				Geometry updatedGeometry =
 					ProtobufConversionUtils.FromShapeMsg(resultByFeature.UpdatedGeometry, sr);

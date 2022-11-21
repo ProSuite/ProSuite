@@ -155,6 +155,18 @@ namespace ProSuite.Commons.AO.Geometry.ExtractParts
 		{
 			IGeometry result = GeometryFactory.CreateEmptyGeometry(resultGeometyType);
 
+			// Avoid using an un-aware container geometry. Otherwise the added parts lose their awareness
+			// and Z/M-values as well.
+			if (FirstGeometry is IZAware zAware)
+			{
+				((IZAware) result).ZAware = zAware.ZAware;
+			}
+
+			if (FirstGeometry is IMAware mAware)
+			{
+				((IMAware) result).MAware = mAware.MAware;
+			}
+
 			AddGeometries(LowLevelGeometries, result);
 
 			return result;

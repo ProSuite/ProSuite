@@ -3,31 +3,29 @@ using System.Collections.Generic;
 using System.Linq;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container.Geometry;
-using ProSuite.QA.Tests.Test.Construction;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.AO.Licensing;
+using ProSuite.Commons.AO.Test;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
+using ProSuite.QA.Container.Geometry;
+using ProSuite.QA.Tests.Test.Construction;
 
 namespace ProSuite.QA.Tests.Test
 {
 	[TestFixture]
 	public class QaGeometryUtilsTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
-
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout();
+			TestUtils.InitializeLicense();
 		}
 
 		[OneTimeTearDown]
 		public void TearDownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		[Test]
@@ -37,10 +35,10 @@ namespace ProSuite.QA.Tests.Test
 			var wksPointZs =
 				new List<WKSPointZ>
 				{
-					new WKSPointZ {X = 2722584.8725, Y = 1252311.12875, Z = 618.42624999999},
-					new WKSPointZ {X = 2722584.8725, Y = 1252309.3725, Z = 619.654999999984},
-					new WKSPointZ {X = 2722584.8725, Y = 1252304.75375, Z = 616.388749999984},
-					new WKSPointZ {X = 2722584.8725, Y = 1252311.12875, Z = 618.42624999999}
+					new WKSPointZ { X = 2722584.8725, Y = 1252311.12875, Z = 618.42624999999 },
+					new WKSPointZ { X = 2722584.8725, Y = 1252309.3725, Z = 619.654999999984 },
+					new WKSPointZ { X = 2722584.8725, Y = 1252304.75375, Z = 616.388749999984 },
+					new WKSPointZ { X = 2722584.8725, Y = 1252311.12875, Z = 618.42624999999 }
 				};
 
 			List<Pnt> points =
@@ -65,16 +63,16 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanCalculateSmallTris()
 		{
-			var p0 = new WKSPointZ {X = 679845.1814, Y = 253110.2683, Z = 447.21000000000004};
-			var p1 = new WKSPointZ {X = 679845.468, Y = 253110.3961, Z = 447.21000000000004};
-			var p2 = new WKSPointZ {X = 679845.4679, Y = 253110.3961, Z = 447.21000000000004};
+			var p0 = new WKSPointZ { X = 679845.1814, Y = 253110.2683, Z = 447.21000000000004 };
+			var p1 = new WKSPointZ { X = 679845.468, Y = 253110.3961, Z = 447.21000000000004 };
+			var p2 = new WKSPointZ { X = 679845.4679, Y = 253110.3961, Z = 447.21000000000004 };
 
-			var q2 = new WKSPointZ {X = 679845.46795, Y = 253110.3961, Z = 447.21000000000004};
+			var q2 = new WKSPointZ { X = 679845.46795, Y = 253110.3961, Z = 447.21000000000004 };
 
-			foreach (double f in new[] {0.001, 0.03, 0.5, 1, 7, 15, 76, 1000})
+			foreach (double f in new[] { 0.001, 0.03, 0.5, 1, 7, 15, 76, 1000 })
 			{
-				ValidateTri(Scale(new List<WKSPointZ> {p0, p1, p2, p0}, f), true);
-				ValidateTri(Scale(new List<WKSPointZ> {p0, p1, q2, p0}, f), false);
+				ValidateTri(Scale(new List<WKSPointZ> { p0, p1, p2, p0 }, f), true);
+				ValidateTri(Scale(new List<WKSPointZ> { p0, p1, q2, p0 }, f), false);
 			}
 		}
 
@@ -103,7 +101,7 @@ namespace ProSuite.QA.Tests.Test
 
 		private WKSPointZ Scale(WKSPointZ p, double f)
 		{
-			return new WKSPointZ {X = f * p.X, Y = f * p.Y, Z = f * p.Z};
+			return new WKSPointZ { X = f * p.X, Y = f * p.Y, Z = f * p.Z };
 		}
 
 		[Test]
@@ -112,11 +110,11 @@ namespace ProSuite.QA.Tests.Test
 			var wksPointZs =
 				new List<WKSPointZ>
 				{
-					new WKSPointZ {X = 0, Y = 0, Z = 0},
-					new WKSPointZ {X = 0, Y = 10, Z = 0},
-					new WKSPointZ {X = 0, Y = 10, Z = 10},
-					new WKSPointZ {X = 0, Y = 0, Z = 10},
-					new WKSPointZ {X = 0, Y = 0, Z = 0}
+					new WKSPointZ { X = 0, Y = 0, Z = 0 },
+					new WKSPointZ { X = 0, Y = 10, Z = 0 },
+					new WKSPointZ { X = 0, Y = 10, Z = 10 },
+					new WKSPointZ { X = 0, Y = 0, Z = 10 },
+					new WKSPointZ { X = 0, Y = 0, Z = 0 }
 				};
 
 			List<Pnt> points =
@@ -143,11 +141,11 @@ namespace ProSuite.QA.Tests.Test
 			var wksPointZs =
 				new List<WKSPointZ>
 				{
-					new WKSPointZ {X = 0, Y = 0, Z = 0},
-					new WKSPointZ {X = 10, Y = 0, Z = 0},
-					new WKSPointZ {X = 10, Y = 0, Z = 10},
-					new WKSPointZ {X = 0, Y = 0, Z = 10},
-					new WKSPointZ {X = 0, Y = 0, Z = 0}
+					new WKSPointZ { X = 0, Y = 0, Z = 0 },
+					new WKSPointZ { X = 10, Y = 0, Z = 0 },
+					new WKSPointZ { X = 10, Y = 0, Z = 10 },
+					new WKSPointZ { X = 0, Y = 0, Z = 10 },
+					new WKSPointZ { X = 0, Y = 0, Z = 0 }
 				};
 
 			List<Pnt> points =
@@ -174,11 +172,11 @@ namespace ProSuite.QA.Tests.Test
 			var wksPointZs =
 				new List<WKSPointZ>
 				{
-					new WKSPointZ {X = 0, Y = 0, Z = 0},
-					new WKSPointZ {X = 10, Y = 10, Z = 0},
-					new WKSPointZ {X = 10, Y = 10, Z = 10},
-					new WKSPointZ {X = 0, Y = 0, Z = 10},
-					new WKSPointZ {X = 0, Y = 0, Z = 0}
+					new WKSPointZ { X = 0, Y = 0, Z = 0 },
+					new WKSPointZ { X = 10, Y = 10, Z = 0 },
+					new WKSPointZ { X = 10, Y = 10, Z = 10 },
+					new WKSPointZ { X = 0, Y = 0, Z = 10 },
+					new WKSPointZ { X = 0, Y = 0, Z = 0 }
 				};
 
 			List<Pnt> points =
@@ -206,11 +204,11 @@ namespace ProSuite.QA.Tests.Test
 			var wksPointZs =
 				new List<WKSPointZ>
 				{
-					new WKSPointZ {X = 0, Y = 0, Z = 0},
-					new WKSPointZ {X = 10, Y = 0, Z = 0},
-					new WKSPointZ {X = 10, Y = 10, Z = 0},
-					new WKSPointZ {X = 0, Y = 10, Z = 0},
-					new WKSPointZ {X = 0, Y = 0, Z = 0}
+					new WKSPointZ { X = 0, Y = 0, Z = 0 },
+					new WKSPointZ { X = 10, Y = 0, Z = 0 },
+					new WKSPointZ { X = 10, Y = 10, Z = 0 },
+					new WKSPointZ { X = 0, Y = 10, Z = 0 },
+					new WKSPointZ { X = 0, Y = 0, Z = 0 }
 				};
 
 			List<Pnt> points =

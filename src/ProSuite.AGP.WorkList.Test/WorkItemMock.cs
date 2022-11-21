@@ -14,7 +14,8 @@ namespace ProSuite.AGP.WorkList.Test
 			new GdbRowIdentity(id, 42, "Homer Simpson",
 			                   new GdbWorkspaceIdentity(
 				                   new FileGeodatabaseConnectionPath(
-					                   new Uri(@"C:\temp\foo.gdb", UriKind.Absolute)), @"C:\temp\foo.gdb")))
+					                   new Uri(@"C:\temp\foo.gdb", UriKind.Absolute)),
+				                   @"C:\temp\foo.gdb")))
 		{
 			Status = WorkItemStatus.Todo;
 		}

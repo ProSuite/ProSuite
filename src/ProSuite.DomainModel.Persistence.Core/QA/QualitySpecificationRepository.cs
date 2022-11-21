@@ -60,9 +60,16 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 
 				Expression<Func<bool>> noRefData = () => ! paramValueAlias.UsedAsReferenceData;
 
-				var transformerIds =
-					DatasetParameterFetchingUtils.GetAllTransformerIdsForDatasets(
-						session, datasetIds, excludeReferenceData: true).ToArray();
+				var ddxVersionTransformers = new Version(0, 2);
+
+				int[] transformerIds = { };
+				if (GetDatabaseSchemaVersion() >= ddxVersionTransformers)
+				{
+					// Either not defined (let's try anyway) or properly supported by the DDX schema:
+					transformerIds =
+						DatasetParameterFetchingUtils.GetAllTransformerIdsForDatasets(
+							session, datasetIds, excludeReferenceData: true).ToArray();
+				}
 
 				_msg.DebugStopTiming(watch, "Extracted {0} transformers depending on {1} datasets",
 				                     transformerIds.Length, datasetIds.Count);

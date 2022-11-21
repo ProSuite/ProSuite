@@ -63,7 +63,7 @@ namespace ProSuite.Microservices.Server.AO.QualityTestService
 				                 : ServiceCallStatus.Cancelled;
 
 			// Any remaining issues (TrySend might fail):
-			var lastResponse = new ExecuteTestResponse {ServiceCallStatus = (int) callStatus};
+			var lastResponse = new ExecuteTestResponse { ServiceCallStatus = (int) callStatus };
 
 			TrySendIssues(responseStream, lastResponse, issueCollection, true);
 

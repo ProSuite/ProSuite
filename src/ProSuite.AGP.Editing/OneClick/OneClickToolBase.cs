@@ -332,10 +332,20 @@ namespace ProSuite.AGP.Editing.OneClick
 				QueuedTaskUtils.Run(
 					delegate
 					{
-						// Used to clear derived geometries etc.
-						bool result = OnMapSelectionChangedCore(args);
+						try
+						{
+							// Used to clear derived geometries etc.
+							bool result = OnMapSelectionChangedCore(args);
 
-						return result;
+							return result;
+						}
+						catch (Exception e)
+						{
+							// NOTE: If the exception of this event is not caught here, the application crashes!
+							HandleError($"Error while processing selection change: {e.Message}", e,
+							            true);
+							return false;
+						}
 					});
 			}
 			catch (Exception e)
@@ -360,6 +370,18 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 		}
 
+		/// <summary>
+		/// The task to be run on edit complete.
+		/// NOTE: This task is run after every edit operation, including undo or delete with DEL key!
+		/// In that case there seems to be no catch block observing the potential exception thrown
+		/// inside the task execution, which leads to a crash of the application due to the finalizer
+		/// thread throwing:
+		/// A Task's exception(s) were not observed either by Waiting on the Task or accessing its
+		/// Exception property. As a result, the unobserved exception was rethrown by the finalizer thread.
+		/// Therefore any exception must be caught inside the Task execution!
+		/// </summary>
+		/// <param name="args"></param>
+		/// <returns></returns>
 		protected virtual Task OnEditCompletedCore(EditCompletedEventArgs args)
 		{
 			return Task.FromResult(true);
@@ -623,7 +645,8 @@ namespace ProSuite.AGP.Editing.OneClick
 		private void ProcessSelection([NotNull] MapView activeMapView,
 		                              [CanBeNull] CancelableProgressor progressor = null)
 		{
-			Dictionary<MapMember, List<long>> selectionByLayer = activeMapView.Map.GetSelection();
+			Dictionary<MapMember, List<long>> selectionByLayer =
+				SelectionUtils.GetSelection(activeMapView.Map);
 
 			var notifications = new NotificationCollection();
 			List<Feature> applicableSelection =
@@ -653,14 +676,13 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected void HandleError(string message, Exception e, bool noMessageBox = false)
 		{
-			_msg.Error(message, e);
-
 			if (noMessageBox)
 			{
+				_msg.Error(message, e);
 				return;
 			}
 
-			ErrorHandler.HandleError(message, null, _msg, "Error");
+			ErrorHandler.HandleError(message, e, _msg, "Error");
 		}
 
 		protected void SetCursor([CanBeNull] Cursor cursor)
@@ -728,7 +750,8 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected bool CanUseSelection([NotNull] MapView activeMapView)
 		{
-			Dictionary<MapMember, List<long>> selectionByLayer = activeMapView.Map.GetSelection();
+			Dictionary<MapMember, List<long>> selectionByLayer =
+				SelectionUtils.GetSelection(activeMapView.Map);
 
 			return CanUseSelection(selectionByLayer);
 		}
@@ -747,6 +770,8 @@ namespace ProSuite.AGP.Editing.OneClick
 			var filteredCount = 0;
 			var selectionCount = 0;
 
+			SpatialReference mapSpatialReference = MapView.Active.Map.SpatialReference;
+
 			foreach (KeyValuePair<MapMember, List<long>> oidsByLayer in selectionByLayer)
 			{
 				if (! CanSelectFromLayer(oidsByLayer.Key as Layer, notifications))
@@ -756,7 +781,7 @@ namespace ProSuite.AGP.Editing.OneClick
 				}
 
 				foreach (Feature feature in MapUtils.GetFeatures(
-					         oidsByLayer.Key, oidsByLayer.Value))
+					         oidsByLayer.Key, oidsByLayer.Value, false, mapSpatialReference))
 				{
 					yield return feature;
 					selectionCount++;
@@ -780,7 +805,8 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected IEnumerable<Feature> GetApplicableSelectedFeatures(MapView activeView)
 		{
-			Dictionary<MapMember, List<long>> selectionByLayer = activeView.Map.GetSelection();
+			Dictionary<MapMember, List<long>> selectionByLayer =
+				SelectionUtils.GetSelection(activeView.Map);
 
 			return GetApplicableSelectedFeatures(selectionByLayer);
 		}

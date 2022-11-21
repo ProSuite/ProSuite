@@ -7,31 +7,29 @@ using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.AO.Licensing;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.Test;
 using ProSuite.QA.Container.TestContainer;
 using ProSuite.QA.Tests.Test.Construction;
 using ProSuite.QA.Tests.Test.TestRunners;
 using ProSuite.QA.Tests.Transformers;
+using TestUtils = ProSuite.Commons.AO.Test.TestUtils;
 
 namespace ProSuite.QA.Tests.Test.Transformer
 {
 	[TestFixture]
 	public class TrGeometryTransformTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
-
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout();
+			TestUtils.InitializeLicense();
 		}
 
 		[OneTimeTearDown]
 		public void TearDownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		[Test]
@@ -77,7 +75,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 					ReadOnlyTableFactory.Create(lineFc), GeometryComponent.Vertices);
 
 				// This should be optional and if null, all attributes should be used.
-				tr.Attributes = new List<string> {"TEXT_FIELD", "NUMBER_FIELD"};
+				tr.Attributes = new List<string> { "TEXT_FIELD", "NUMBER_FIELD" };
 
 				TransformedFeatureClass transformedFeatureClass = tr.GetTransformed();
 
@@ -151,7 +149,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			{
 				// Explicitly set the list of attributes:
 				TrFootprint tr = new TrFootprint(ReadOnlyTableFactory.Create(multipatchFc));
-				tr.Attributes = new List<string> {"TEXT_FIELD"};
+				tr.Attributes = new List<string> { "TEXT_FIELD" };
 
 				TransformedFeatureClass transformedFeatureClass = tr.GetTransformed();
 
@@ -172,6 +170,73 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				int intFieldIndex = transformedFeatureClass.FindField("NUMBER_FIELD");
 				Assert.True(intFieldIndex >= 0);
 			}
+		}
+
+		[Test]
+		public void CanTransformToFootprintAtTileBoundary()
+		{
+			IFeatureWorkspace ws =
+				TestWorkspaceUtils.CreateInMemoryWorkspace("TrFootprintAtBoundary");
+
+			IFeatureClass multipatchFc =
+				CreateFeatureClass(ws, "multipatchFc", esriGeometryType.esriGeometryMultiPatch,
+				                   new List<IField>
+				                   {
+					                   FieldUtils.CreateTextField("TEXT_FIELD", 100, "Some Text"),
+					                   FieldUtils.CreateIntegerField("NUMBER_FIELD", "Some Number")
+				                   });
+
+			IFeature f = multipatchFc.CreateFeature();
+
+			var construction = new MultiPatchConstruction();
+			construction.StartRing(2600005, 1200004, 1)
+			            .Add(2600005, 1200008, 2)
+			            .Add(2600008, 1200008, 1)
+			            .Add(2600008, 1200004, 1);
+
+			IGeometry multipatchGeometry = construction.MultiPatch;
+			GeometryUtils.MakeZAware(multipatchGeometry);
+			multipatchGeometry.SpatialReference = DatasetUtils.GetSpatialReference(f);
+
+			multipatchGeometry.SnapToSpatialReference();
+
+			f.Shape = multipatchGeometry;
+			f.Store();
+
+			// Explicitly set the list of attributes:
+			TrFootprint tr = new TrFootprint(ReadOnlyTableFactory.Create(multipatchFc));
+
+			IEnvelope envelope =
+				GeometryFactory.CreateEnvelope(2600000, 1200000, 2600010, 1200010);
+
+			string fgdbName = $@"TrTransformToFootprintTileBoundary_{DateTime.Now:yyyyMMdd_HHmmss}";
+			string fileGdbFullPath = $@"C:\Temp\UnitTestData\{fgdbName}.gdb";
+
+			TransformedFeatureClass transformedClass = tr.GetTransformed();
+
+			var test = new QaExportTables(new List<IReadOnlyTable>
+			                              {
+				                              transformedClass
+			                              }, fileGdbFullPath)
+			           {
+				           ExportTileIds = true,
+				           ExportTiles = true
+			           };
+
+			var runner = new QaContainerTestRunner(5, test);
+			runner.Execute(envelope);
+			Assert.AreEqual(0, runner.Errors.Count);
+
+			IFeatureWorkspace outputWorkspace =
+				WorkspaceUtils.OpenFeatureWorkspace(fileGdbFullPath);
+
+			IFeatureClass outputClass =
+				DatasetUtils.OpenFeatureClass(outputWorkspace, transformedClass.Name);
+
+			int featureCount = outputClass.FeatureCount(null);
+
+			// Expected: 1 per tile
+			Assert.AreEqual(4, featureCount);
 		}
 
 		[Test]
@@ -320,7 +385,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 
 			IFeatureClass polyFc =
 				CreateFeatureClass(ws, "lineFc", esriGeometryType.esriGeometryPolygon,
-				                   new[] {FieldUtils.CreateIntegerField("IntField")});
+				                   new[] { FieldUtils.CreateIntegerField("IntField") });
 
 			{
 				IFeature f = polyFc.CreateFeature();

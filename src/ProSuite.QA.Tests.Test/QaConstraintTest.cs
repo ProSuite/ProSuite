@@ -3,34 +3,32 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container;
-using ProSuite.QA.Tests.Constraints;
-using ProSuite.QA.Tests.Test.TestRunners;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.AO.Test.TestSupport;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.QA.Container;
 using ProSuite.QA.Container.Test;
+using ProSuite.QA.Tests.Constraints;
+using ProSuite.QA.Tests.Test.TestRunners;
+using TestUtils = ProSuite.Commons.AO.Test.TestUtils;
 
 namespace ProSuite.QA.Tests.Test
 {
 	[TestFixture]
 	public class QaConstraintTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
-
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout();
+			TestUtils.InitializeLicense();
 		}
 
 		[OneTimeTearDown]
 		public void TeardownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		[Test]
@@ -47,7 +45,8 @@ namespace ProSuite.QA.Tests.Test
 
 			string constraint = string.Format("{0} = '{1}'", textFieldName, value.ToUpper());
 
-			var caseSensitiveTest = new QaConstraint(ReadOnlyTableFactory.Create(objectClass), constraint);
+			var caseSensitiveTest =
+				new QaConstraint(ReadOnlyTableFactory.Create(objectClass), constraint);
 			caseSensitiveTest.SetSqlCaseSensitivity(0, true);
 
 			var caseSensitiveRunner = new QaTestRunner(caseSensitiveTest);
@@ -59,7 +58,8 @@ namespace ProSuite.QA.Tests.Test
 				caseSensitiveRunner.Errors[0].ToString());
 			caseSensitiveRunner.ClearErrors();
 
-			var caseInsensitiveTest = new QaConstraint(ReadOnlyTableFactory.Create(objectClass), constraint);
+			var caseInsensitiveTest =
+				new QaConstraint(ReadOnlyTableFactory.Create(objectClass), constraint);
 
 			var caseInsensitiveRunner = new QaTestRunner(caseInsensitiveTest);
 
@@ -92,7 +92,7 @@ namespace ProSuite.QA.Tests.Test
 			// differing case, but ignored based on hint:
 			Assert.AreEqual(0, caseSensitiveRunner.Execute(rowLowerCase));
 
-			var caseInsensitiveTest = new QaConstraint(ReadOnlyTableFactory.Create( objectClass),
+			var caseInsensitiveTest = new QaConstraint(ReadOnlyTableFactory.Create(objectClass),
 			                                           constraint +
 			                                           ExpressionUtils.CaseSensitivityHint);
 
@@ -124,7 +124,7 @@ namespace ProSuite.QA.Tests.Test
 			IObject row = CreateRow(objectClass, 1, textFieldIndex, value.ToUpper());
 
 			double referencePerformance = GetReferencePerformance(textFieldName, value, row,
-			                                                      count);
+				count);
 
 			var constraintNodes = new List<ConstraintNode>
 			                      {
@@ -132,7 +132,8 @@ namespace ProSuite.QA.Tests.Test
 				                      new ConstraintNode(mustBeEqualIgnoreCase)
 			                      };
 
-			var caseSensitiveTest = new QaConstraint(ReadOnlyTableFactory.Create(objectClass), constraintNodes);
+			var caseSensitiveTest =
+				new QaConstraint(ReadOnlyTableFactory.Create(objectClass), constraintNodes);
 			caseSensitiveTest.SetSqlCaseSensitivity(0, true);
 
 			var caseSensitiveRunner = new QaTestRunner(caseSensitiveTest);
@@ -184,9 +185,10 @@ namespace ProSuite.QA.Tests.Test
 			IObject row5 = CreateRow(objectClass, 5, textFieldIndex, value.ToUpper());
 			// incorrect case
 
-			var constraintNodes = new List<ConstraintNode> {selection1, selection2};
+			var constraintNodes = new List<ConstraintNode> { selection1, selection2 };
 
-			var caseSensitiveTest = new QaConstraint(ReadOnlyTableFactory.Create(objectClass), constraintNodes);
+			var caseSensitiveTest =
+				new QaConstraint(ReadOnlyTableFactory.Create(objectClass), constraintNodes);
 			caseSensitiveTest.SetSqlCaseSensitivity(0, true);
 
 			var caseSensitiveRunner = new QaTestRunner(caseSensitiveTest);
@@ -211,7 +213,8 @@ namespace ProSuite.QA.Tests.Test
 				caseSensitiveRunner.Errors[0].ToString());
 			caseSensitiveRunner.ClearErrors();
 
-			var caseInsensitiveTest = new QaConstraint(ReadOnlyTableFactory.Create(objectClass), constraintNodes);
+			var caseInsensitiveTest =
+				new QaConstraint(ReadOnlyTableFactory.Create(objectClass), constraintNodes);
 
 			var caseInsensitiveRunner = new QaTestRunner(caseInsensitiveTest);
 
@@ -258,9 +261,10 @@ namespace ProSuite.QA.Tests.Test
 			IObject row5 = CreateRow(objectClass, 5, textFieldIndex, value.ToUpper());
 			// incorrect case
 
-			var constraintNodes = new List<ConstraintNode> {selection1, selection2};
+			var constraintNodes = new List<ConstraintNode> { selection1, selection2 };
 
-			var caseSensitiveTest = new QaConstraint(ReadOnlyTableFactory.Create(objectClass), constraintNodes);
+			var caseSensitiveTest =
+				new QaConstraint(ReadOnlyTableFactory.Create(objectClass), constraintNodes);
 			caseSensitiveTest.SetSqlCaseSensitivity(0, true);
 
 			var caseSensitiveRunner = new QaTestRunner(caseSensitiveTest);
@@ -286,7 +290,8 @@ namespace ProSuite.QA.Tests.Test
 				caseSensitiveRunner.Errors[0].ToString());
 			caseSensitiveRunner.ClearErrors();
 
-			var caseInsensitiveTest = new QaConstraint(ReadOnlyTableFactory.Create( objectClass), constraintNodes);
+			var caseInsensitiveTest =
+				new QaConstraint(ReadOnlyTableFactory.Create(objectClass), constraintNodes);
 			selection2.Nodes.Add(new ConstraintNode(caseSensitiveOverride));
 			var caseInsensitiveRunner = new QaTestRunner(caseInsensitiveTest);
 
@@ -311,7 +316,9 @@ namespace ProSuite.QA.Tests.Test
 		public void CanHaveGuidConstraints()
 		{
 			const string uuidField = "UUID";
-			IFeatureWorkspace ws = TestWorkspaceUtils.CreateInMemoryWorkspace("m"); //.CreateTestFgdbWorkspace("QaConstraint");//
+			IFeatureWorkspace
+				ws = TestWorkspaceUtils
+					.CreateInMemoryWorkspace("m"); //.CreateTestFgdbWorkspace("QaConstraint");//
 			IFeatureClass fc =
 				DatasetUtils.CreateSimpleFeatureClass(
 					ws, "FcConstraing", null,
@@ -350,14 +357,15 @@ namespace ProSuite.QA.Tests.Test
 			runner.Execute(GeometryFactory.CreateEnvelope(2600000, 1200000, 2601000, 1201000));
 			Assert.AreEqual(1, runner.Errors.Count);
 
-			test = new QaConstraint(ReadOnlyTableFactory.Create(fc), $"UUID IN ('{Guid.NewGuid():B}')");
+			test = new QaConstraint(ReadOnlyTableFactory.Create(fc),
+			                        $"UUID IN ('{Guid.NewGuid():B}')");
 			constraint = "OBJECTID NOT IN (2)";
 			test.SetConstraint(0, constraint);
 			runner = new QaContainerTestRunner(10000, test);
 			runner.Execute(GeometryFactory.CreateEnvelope(2600000, 1200000, 2601000, 1201000));
 			Assert.AreEqual(1, runner.Errors.Count);
-
 		}
+
 		private static double GetReferencePerformance([NotNull] string textFieldName,
 		                                              [NotNull] string value,
 		                                              [NotNull] IObject row,
@@ -372,7 +380,8 @@ namespace ProSuite.QA.Tests.Test
 				                      new ConstraintNode(mustBeUpper)
 			                      };
 
-			var caseSensitiveTest = new QaConstraint(ReadOnlyTableFactory.Create((ITable) row.Class), constraintNodes);
+			var caseSensitiveTest =
+				new QaConstraint(ReadOnlyTableFactory.Create((ITable) row.Class), constraintNodes);
 			caseSensitiveTest.SetSqlCaseSensitivity(0, true);
 
 			var caseSensitiveRunner = new QaTestRunner(caseSensitiveTest);

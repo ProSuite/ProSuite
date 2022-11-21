@@ -4,7 +4,6 @@ using System.Diagnostics;
 using ESRI.ArcGIS.Geodatabase;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
-using ProSuite.Commons.AO.Licensing;
 using Assert = ProSuite.Commons.Essentials.Assertions.Assert;
 
 namespace ProSuite.Commons.AO.Test.Geodatabase
@@ -13,18 +12,16 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 	[Ignore("TODO: Create FGDB first with table that has random guid and random text")]
 	public class TableSortUtilsTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
-
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout();
+			TestUtils.InitializeLicense();
 		}
 
 		[OneTimeTearDown]
 		public void TeardownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		[Test]

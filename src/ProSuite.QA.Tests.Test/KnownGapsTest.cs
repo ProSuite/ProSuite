@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.AO.Licensing;
+using ProSuite.Commons.AO.Test;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
 
@@ -12,8 +12,6 @@ namespace ProSuite.QA.Tests.Test
 	[TestFixture]
 	public class KnownGapsTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
-
 		private IEnvelope _tile11;
 		private IEnvelope _tile12;
 		private IEnvelope _tile21;
@@ -41,13 +39,13 @@ namespace ProSuite.QA.Tests.Test
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout();
+			TestUtils.InitializeLicense();
 		}
 
 		[OneTimeTearDown]
 		public void TeardownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		[Test]
@@ -154,7 +152,7 @@ namespace ProSuite.QA.Tests.Test
 			var knownGaps = new KnownGaps(maxArea, _tolerance, allBox);
 
 			// < limit, cross t11 and t12
-			var gapPolygons = new[] {CreatePoly(49, 10, 51, 11)};
+			var gapPolygons = new[] { CreatePoly(49, 10, 51, 11) };
 
 			IList<IPolygon> gaps11 = GetGaps(knownGaps, _tile11, gapPolygons);
 			IList<IPolygon> gaps12 = GetGaps(knownGaps, _tile12, gapPolygons);
@@ -178,7 +176,7 @@ namespace ProSuite.QA.Tests.Test
 			var knownGaps = new KnownGaps(maxArea, _tolerance, allBox);
 
 			// < limit, xmax at right boundary of t11
-			var gapPolygons = new[] {CreatePoly(49, 10, 50, 11)};
+			var gapPolygons = new[] { CreatePoly(49, 10, 50, 11) };
 
 			IList<IPolygon> gaps11 = GetGaps(knownGaps, _tile11, gapPolygons);
 			IList<IPolygon> gaps12 = GetGaps(knownGaps, _tile12, gapPolygons);
@@ -202,7 +200,7 @@ namespace ProSuite.QA.Tests.Test
 			var knownGaps = new KnownGaps(maxArea, _tolerance, allBox);
 
 			// < limit, xmin at left boundary of t12
-			var gapPolygons = new[] {CreatePoly(50, 10, 51, 11)};
+			var gapPolygons = new[] { CreatePoly(50, 10, 51, 11) };
 
 			IList<IPolygon> gaps11 = GetGaps(knownGaps, _tile11, gapPolygons);
 			IList<IPolygon> gaps12 = GetGaps(knownGaps, _tile12, gapPolygons);
@@ -226,7 +224,7 @@ namespace ProSuite.QA.Tests.Test
 			var knownGaps = new KnownGaps(maxArea, _tolerance, allBox);
 
 			// < limit, in UR corner of t11
-			var gapPolygons = new[] {CreatePoly(49, 49, 50, 50)};
+			var gapPolygons = new[] { CreatePoly(49, 49, 50, 50) };
 
 			IList<IPolygon> gaps11 = GetGaps(knownGaps, _tile11, gapPolygons);
 			IList<IPolygon> gaps12 = GetGaps(knownGaps, _tile12, gapPolygons);
@@ -250,7 +248,7 @@ namespace ProSuite.QA.Tests.Test
 			var knownGaps = new KnownGaps(maxArea, _tolerance, allBox);
 
 			// tile intersections are all smaller than limit, but the entire gap is larger
-			var gapPolygons = new[] {CreatePoly(45, 45, 55, 55.1)};
+			var gapPolygons = new[] { CreatePoly(45, 45, 55, 55.1) };
 
 			IList<IPolygon> gaps11 = GetGaps(knownGaps, _tile11, gapPolygons);
 			IList<IPolygon> gaps12 = GetGaps(knownGaps, _tile12, gapPolygons);
@@ -274,7 +272,7 @@ namespace ProSuite.QA.Tests.Test
 			var knownGaps = new KnownGaps(maxArea, _tolerance, allBox);
 
 			// t11 intersection is larger than limit, all others are smaller
-			var gapPolygons = new[] {CreatePoly(20, 20, 50.1, 50.1)};
+			var gapPolygons = new[] { CreatePoly(20, 20, 50.1, 50.1) };
 
 			IList<IPolygon> gaps11 = GetGaps(knownGaps, _tile11, gapPolygons);
 			IList<IPolygon> gaps12 = GetGaps(knownGaps, _tile12, gapPolygons);
@@ -298,7 +296,7 @@ namespace ProSuite.QA.Tests.Test
 			var knownGaps = new KnownGaps(maxArea, _tolerance, allBox);
 
 			// t22 intersection is larger than limit, t12 is smaller than limit
-			var gapPolygons = new[] {CreatePoly(60, 49, 70, 90)};
+			var gapPolygons = new[] { CreatePoly(60, 49, 70, 90) };
 
 			IList<IPolygon> gaps11 = GetGaps(knownGaps, _tile11, gapPolygons);
 			IList<IPolygon> gaps12 = GetGaps(knownGaps, _tile12, gapPolygons);

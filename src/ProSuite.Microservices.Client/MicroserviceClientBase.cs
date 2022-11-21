@@ -87,6 +87,8 @@ namespace ProSuite.Microservices.Client
 
 		public bool CanFailOver => _allChannelConfigs?.Count > 1;
 
+		public bool ProcessStarted => _startedProcess != null && ! _startedProcess.HasExited;
+
 		public void Disconnect()
 		{
 			Channel?.ShutdownAsync();
@@ -100,7 +102,7 @@ namespace ProSuite.Microservices.Client
 			}
 			catch (Exception e)
 			{
-				_msg.Debug($"Error killing the started microserver process {_startedProcess}", e);
+				_msg.Debug($"Error killing the started service process {_startedProcess}", e);
 			}
 		}
 
@@ -153,14 +155,6 @@ namespace ProSuite.Microservices.Client
 
 		public bool TryRestart()
 		{
-			// First try fail-over in case we have the option:
-			bool canAcceptCalls = CanAcceptCalls(true);
-
-			if (canAcceptCalls)
-			{
-				return true;
-			}
-
 			if (_executable == null)
 			{
 				return false;
@@ -182,9 +176,7 @@ namespace ProSuite.Microservices.Client
 
 			bool result = GrpcUtils.IsServing(healthClient, serviceName, out StatusCode statusCode);
 
-			_msg.DebugFormat("Service {0} is serving at {1}: {2}. Status: {3}. Channel state: {4}",
-			                 serviceName, Channel?.ResolvedTarget, result, statusCode,
-			                 Channel?.State);
+			LogHealthStatus(statusCode);
 
 			if (! result && allowFailOver)
 			{
@@ -205,8 +197,7 @@ namespace ProSuite.Microservices.Client
 
 			StatusCode statusCode = await GrpcUtils.IsServingAsync(healthClient, serviceName);
 
-			_msg.DebugFormat("Health status for service {0} at {1}: {2}. Channel state: {3}",
-			                 serviceName, Channel?.ResolvedTarget, statusCode, Channel?.State);
+			LogHealthStatus(statusCode);
 
 			if (statusCode != StatusCode.OK && allowFailOver)
 			{
@@ -382,8 +373,8 @@ namespace ProSuite.Microservices.Client
 				if (runningProcesses.Length > 0)
 				{
 					_msg.DebugFormat(
-						"Background microservice {0} is already running (but not " +
-						"serving). It will be killed.", exeName);
+						"Background microservice {0} is already running (but not serving). " +
+						"It will be killed.", exeName);
 
 					foreach (Process process in runningProcesses)
 					{
@@ -508,6 +499,26 @@ namespace ProSuite.Microservices.Client
 			healthClient = _healthClient;
 
 			return true;
+		}
+
+		private void LogHealthStatus(StatusCode statusCode)
+		{
+			// In shutdown state, the ReslovedTarget property throws for certain:
+			string address = "<none>";
+			if (Channel?.State != ChannelState.Shutdown)
+			{
+				try
+				{
+					address = Channel?.ResolvedTarget;
+				}
+				catch (Exception e)
+				{
+					_msg.Debug($"Error resolving target address for {ChannelServiceName}", e);
+				}
+			}
+
+			_msg.DebugFormat("Health status for service {0} at {1}: {2}. Channel state: {3}",
+			                 ChannelServiceName, address, statusCode, Channel?.State);
 		}
 
 		private static int GetFreeTcpPort()

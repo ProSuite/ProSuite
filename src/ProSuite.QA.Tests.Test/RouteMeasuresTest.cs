@@ -13,7 +13,7 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanGetOverlapFor2Features()
 		{
-			var ranges = new RouteMeasures(new[] {0.001}, new[] {0.001});
+			var ranges = new RouteMeasures(new[] { 0.001 }, new[] { 0.001 });
 
 			ranges.Add(_routeId, new CurveMeasureRange(1, 0, 0, 100));
 			ranges.Add(_routeId, new CurveMeasureRange(2, 0, 90, 200));
@@ -36,7 +36,7 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanGetOverlapFor2FeaturesContainer()
 		{
-			var ranges = new RouteMeasures(new[] {0.001}, new[] {0.001});
+			var ranges = new RouteMeasures(new[] { 0.001 }, new[] { 0.001 });
 
 			ranges.Add(_routeId, new CurveMeasureRange(1, 0, 50, 60));
 			ranges.Add(_routeId, new CurveMeasureRange(2, 0, 0, 100));
@@ -59,7 +59,7 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanGetOverlapFor3Features()
 		{
-			var ranges = new RouteMeasures(new[] {0.001}, new[] {0.001});
+			var ranges = new RouteMeasures(new[] { 0.001 }, new[] { 0.001 });
 
 			ranges.Add(_routeId, new CurveMeasureRange(1, 0, 0, 100));
 			ranges.Add(_routeId, new CurveMeasureRange(2, 0, 0, 100));
@@ -83,7 +83,7 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanIgnoreDisjointRanges()
 		{
-			var ranges = new RouteMeasures(new[] {0.001}, new[] {0.001});
+			var ranges = new RouteMeasures(new[] { 0.001 }, new[] { 0.001 });
 
 			ranges.Add(_routeId, new CurveMeasureRange(1, 0, 0, 100));
 			ranges.Add(_routeId, new CurveMeasureRange(2, 0, 200, 300));
@@ -96,7 +96,7 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanGetOverlapForContinuousRangesAtDisjointEndpoints()
 		{
-			var ranges = new RouteMeasures(new[] {0.001}, new[] {0.001});
+			var ranges = new RouteMeasures(new[] { 0.001 }, new[] { 0.001 });
 
 			var range1 = new CurveMeasureRange(1, 0, 0, 100.00001)
 			             {
@@ -119,7 +119,7 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanIgnoreContinuousRangesAtConnectedEndpoints()
 		{
-			var ranges = new RouteMeasures(new[] {0.001}, new[] {0.001});
+			var ranges = new RouteMeasures(new[] { 0.001 }, new[] { 0.001 });
 
 			var range1 = new CurveMeasureRange(1, 0, 0, 100.00001)
 			             {

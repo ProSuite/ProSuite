@@ -5,7 +5,7 @@ using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.AO.Licensing;
+using ProSuite.Commons.AO.Test;
 using ProSuite.Commons.AO.Test.TestSupport;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
@@ -15,13 +15,12 @@ namespace ProSuite.QA.Tests.Test
 {
 	public class ZDifferenceStrategyIntersectionPointsTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
 		private ISpatialReference _spatialReference;
 
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout();
+			TestUtils.InitializeLicense();
 
 			_spatialReference = SpatialReferenceUtils.CreateSpatialReference(
 				WellKnownHorizontalCS.LV95);
@@ -30,7 +29,7 @@ namespace ProSuite.QA.Tests.Test
 		[OneTimeTearDown]
 		public void TeardownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		[Test]

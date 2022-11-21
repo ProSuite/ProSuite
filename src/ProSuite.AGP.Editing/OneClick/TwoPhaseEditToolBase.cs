@@ -1,6 +1,6 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using ArcGIS.Core.Data;
@@ -18,7 +18,7 @@ namespace ProSuite.AGP.Editing.OneClick
 {
 	public abstract class TwoPhaseEditToolBase : OneClickToolBase
 	{
-		private static readonly IMsg _msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		protected TwoPhaseEditToolBase()
 		{
@@ -47,15 +47,24 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			if (requiresRecalculate)
 			{
-				QueuedTask.Run(
+				return QueuedTask.Run(
 					() =>
 					{
-						var selectedFeatures =
-							GetApplicableSelectedFeatures(ActiveMapView).ToList();
+						try
+						{
+							var selectedFeatures =
+								GetApplicableSelectedFeatures(ActiveMapView).ToList();
 
-						CalculateDerivedGeometries(selectedFeatures, GetCancelableProgressor());
+							CalculateDerivedGeometries(selectedFeatures, GetCancelableProgressor());
 
-						return true;
+							return true;
+						}
+						catch (Exception e)
+						{
+							// Do not re-throw or the application could crash (e.g. in undo)
+							_msg.Error($"Error calculating reshape curves: {e.Message}", e);
+							return false;
+						}
 					});
 			}
 
@@ -76,7 +85,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			var result = await QueuedTask.Run(() =>
 			{
-				var selection = ActiveMapView.Map.GetSelection();
+				var selection = SelectionUtils.GetSelection(ActiveMapView.Map);
 
 				return SelectAndProcessDerivedGeometry(selection, sketchGeometry, progressor);
 			});

@@ -13,7 +13,6 @@ using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Geometry.Serialization;
-using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.AO.Test.TestSupport;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Com;
@@ -50,20 +49,19 @@ namespace ProSuite.Commons.AO.Test.Geometry
 
 		#endregion
 
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
 		private ISpatialReference _spatialReference;
 		private readonly string _newLine = Environment.NewLine;
 
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout(EsriExtension.ThreeDAnalyst);
+			TestUtils.InitializeLicense();
 		}
 
 		[OneTimeTearDown]
 		public void TeardownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		[Test]

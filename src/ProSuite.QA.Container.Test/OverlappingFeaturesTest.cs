@@ -2,7 +2,6 @@ using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
-using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.AO.Test.TestSupport;
 using ProSuite.Commons.Geom;
 using ProSuite.QA.Container.TestContainer;
@@ -13,18 +12,16 @@ namespace ProSuite.QA.Container.Test
 	[TestFixture]
 	public class OverlappingFeaturesTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
-
 		[OneTimeSetUp]
 		public void TestFixtureSetUp()
 		{
-			_lic.Checkout();
+			Commons.AO.Test.TestUtils.InitializeLicense();
 		}
 
 		[OneTimeTearDown]
 		public void TestFixtureTearDown()
 		{
-			_lic.Release();
+			Commons.AO.Test.TestUtils.ReleaseLicense();
 		}
 
 		[Test]
@@ -33,8 +30,9 @@ namespace ProSuite.QA.Container.Test
 			var overlaps = new OverlappingFeatures();
 
 			var fc = new FeatureClassMock(1, "", esriGeometryType.esriGeometryPolyline);
-			ReadOnlyFeatureClass roFc = ReadOnlyTableFactory.Create((ESRI.ArcGIS.Geodatabase.IFeatureClass)fc);
-			var feature = new ReadOnlyFeature(roFc, fc.CreateFeature(new Pt(0, 0), new Pt(9.95, 9.95)));
+			ReadOnlyFeatureClass roFc = ReadOnlyTableFactory.Create((IFeatureClass) fc);
+			var feature =
+				new ReadOnlyFeature(roFc, fc.CreateFeature(new Pt(0, 0), new Pt(9.95, 9.95)));
 			var cachedRow = new CachedRow(feature);
 
 			overlaps.RegisterTestedFeature(cachedRow, null);
@@ -46,11 +44,15 @@ namespace ProSuite.QA.Container.Test
 			var overlaps = new OverlappingFeatures();
 
 			var fc = new FeatureClassMock(1, "", esriGeometryType.esriGeometryPolyline);
-			ReadOnlyFeatureClass roFc = ReadOnlyTableFactory.Create((ESRI.ArcGIS.Geodatabase.IFeatureClass)fc);
-			var f1 = new ReadOnlyFeature(roFc, fc.CreateFeature(new Pt(100, 0), new Pt(109.95, 9.95)));
-			var f2 = new ReadOnlyFeature(roFc, fc.CreateFeature(new Pt(100, 0), new Pt(109.8, 9.8)));
-			var fx = new ReadOnlyFeature(roFc, fc.CreateFeature(new Pt(100, 0), new Pt(109.95, 9.8)));
-			var fy = new ReadOnlyFeature(roFc, fc.CreateFeature(new Pt(100, 0), new Pt(109.8, 9.95)));
+			ReadOnlyFeatureClass roFc = ReadOnlyTableFactory.Create((IFeatureClass) fc);
+			var f1 = new ReadOnlyFeature(
+				roFc, fc.CreateFeature(new Pt(100, 0), new Pt(109.95, 9.95)));
+			var f2 = new ReadOnlyFeature(
+				roFc, fc.CreateFeature(new Pt(100, 0), new Pt(109.8, 9.8)));
+			var fx = new ReadOnlyFeature(
+				roFc, fc.CreateFeature(new Pt(100, 0), new Pt(109.95, 9.8)));
+			var fy = new ReadOnlyFeature(
+				roFc, fc.CreateFeature(new Pt(100, 0), new Pt(109.8, 9.95)));
 			var c1 = new CachedRow(f1);
 
 			var test = new VerifyingContainerTest(roFc);
@@ -65,7 +67,7 @@ namespace ProSuite.QA.Container.Test
 			overlaps.RegisterTestedFeature(new CachedRow(f2), new ContainerTest[] { test });
 			Assert.IsTrue(overlaps.WasAlreadyTested(f2, test));
 			overlaps.RegisterTestedFeature(new CachedRow(f2),
-										   new ContainerTest[] { test, t2 });
+			                               new ContainerTest[] { test, t2 });
 			Assert.IsTrue(overlaps.WasAlreadyTested(f2, test));
 			Assert.IsTrue(overlaps.WasAlreadyTested(f2, t2));
 			Assert.IsFalse(overlaps.WasAlreadyTested(f2, t3));
@@ -112,11 +114,15 @@ namespace ProSuite.QA.Container.Test
 			var overlaps = new OverlappingFeatures();
 
 			var fc = new FeatureClassMock(1, "", esriGeometryType.esriGeometryPolyline);
-			ReadOnlyFeatureClass roFc = ReadOnlyTableFactory.Create((ESRI.ArcGIS.Geodatabase.IFeatureClass)fc);
-			var f1 = new ReadOnlyFeature(roFc, fc.CreateFeature(new Pt(100, 0), new Pt(109.95, 9.95)));
-			var f2 = new ReadOnlyFeature(roFc, fc.CreateFeature(new Pt(100, 0), new Pt(109.8, 9.8)));
-			var fx = new ReadOnlyFeature(roFc, fc.CreateFeature(new Pt(100, 0), new Pt(109.95, 9.8)));
-			var fy = new ReadOnlyFeature(roFc, fc.CreateFeature(new Pt(100, 0), new Pt(109.8, 9.95)));
+			ReadOnlyFeatureClass roFc = ReadOnlyTableFactory.Create((IFeatureClass) fc);
+			var f1 = new ReadOnlyFeature(
+				roFc, fc.CreateFeature(new Pt(100, 0), new Pt(109.95, 9.95)));
+			var f2 = new ReadOnlyFeature(
+				roFc, fc.CreateFeature(new Pt(100, 0), new Pt(109.8, 9.8)));
+			var fx = new ReadOnlyFeature(
+				roFc, fc.CreateFeature(new Pt(100, 0), new Pt(109.95, 9.8)));
+			var fy = new ReadOnlyFeature(
+				roFc, fc.CreateFeature(new Pt(100, 0), new Pt(109.8, 9.95)));
 			var c1 = new CachedRow(f1);
 			var test = new VerifyingContainerTest(roFc);
 			var t2 = new VerifyingContainerTest(roFc);
@@ -130,7 +136,7 @@ namespace ProSuite.QA.Container.Test
 			overlaps.RegisterTestedFeature(GetSimpleRow(f2), new ContainerTest[] { test });
 			Assert.IsTrue(overlaps.WasAlreadyTested(f2, test));
 			overlaps.RegisterTestedFeature(GetSimpleRow(f2),
-										   new ContainerTest[] { test, t2 });
+			                               new ContainerTest[] { test, t2 });
 			Assert.IsTrue(overlaps.WasAlreadyTested(f2, test));
 			Assert.IsTrue(overlaps.WasAlreadyTested(f2, t2));
 			Assert.IsFalse(overlaps.WasAlreadyTested(f2, t3));

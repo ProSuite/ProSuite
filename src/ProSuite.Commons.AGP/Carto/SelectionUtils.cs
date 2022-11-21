@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ArcGIS.Core.Data;
+using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
+using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
@@ -38,7 +40,7 @@ namespace ProSuite.Commons.AGP.Carto
 		public static void SelectFeature(FeatureLayer featureLayer,
 		                                 SelectionCombinationMethod selectionMethod, long objectId)
 		{
-			SelectFeatures(featureLayer, selectionMethod, new[] {objectId});
+			SelectFeatures(featureLayer, selectionMethod, new[] { objectId });
 		}
 
 		/// <summary>
@@ -91,7 +93,9 @@ namespace ProSuite.Commons.AGP.Carto
 		{
 			Dictionary<MapMember, List<long>> selection = activeView.Map.GetSelection();
 
-			foreach (Feature feature1 in MapUtils.GetFeatures(selection))
+			SpatialReference spatialReference = activeView.Map.SpatialReference;
+
+			foreach (Feature feature1 in MapUtils.GetFeatures(selection, spatialReference))
 			{
 				yield return feature1;
 			}
@@ -113,6 +117,17 @@ namespace ProSuite.Commons.AGP.Carto
 					yield return (Feature) cursor.Current;
 				}
 			}
+		}
+
+		public static Dictionary<MapMember, List<long>> GetSelection(Map map)
+		{
+			return map.GetSelection();
+		}
+
+		public static Dictionary<MapMember, List<long>> GetSelection(
+			MapSelectionChangedEventArgs selectionChangedArgs)
+		{
+			return selectionChangedArgs.Selection;
 		}
 	}
 }

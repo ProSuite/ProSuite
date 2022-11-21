@@ -35,9 +35,9 @@ namespace ProSuite.Commons.Logging
 		[NotNull]
 		IDisposable IncrementIndentation([CanBeNull] string infoMessage);
 
-		[StringFormatMethod("infoFormat")]
 		[NotNull]
-		IDisposable IncrementIndentation(string infoFormat, params object[] args);
+		IDisposable IncrementIndentation([StructuredMessageTemplate] string infoFormat,
+		                                 params object[] args);
 
 		/// <summary>
 		/// Decrements the indentation level.
@@ -61,14 +61,16 @@ namespace ProSuite.Commons.Logging
 		/// <value>The maximum indentation level.</value>
 		int MaximumIndentationLevel { get; }
 
-		[Obsolete("Use VerboseDebug with Func<string> or Debug in conjunction with IsVerboseDebugEnabled")]
-		[StringFormatMethod("format")]
-		void VerboseDebugFormat(string format, params object[] args);
+		[Obsolete(
+			"Use VerboseDebug with Func<string> or Debug in conjunction with IsVerboseDebugEnabled")]
+		void VerboseDebugFormat([StructuredMessageTemplate] string format, params object[] args);
 
-		[Obsolete("Use VerboseDebug with Func<string> or Debug in conjunction with IsVerboseDebugEnabled")]
+		[Obsolete(
+			"Use VerboseDebug with Func<string> or Debug in conjunction with IsVerboseDebugEnabled")]
 		void VerboseDebug(object message);
 
-		[Obsolete("Use VerboseDebug with Func<string> or Debug in conjunction with IsVerboseDebugEnabled")]
+		[Obsolete(
+			"Use VerboseDebug with Func<string> or Debug in conjunction with IsVerboseDebugEnabled")]
 		void VerboseDebug(object message, Exception exception);
 
 		void VerboseDebug(Func<string> message);
@@ -85,8 +87,7 @@ namespace ProSuite.Commons.Logging
 		/// format string and the behavior of the formatting.<para/>
 		/// This method does not take an Exception object to include in the log event.
 		/// To pass an Exception use one of the <see cref="Debug(object)"/> methods instead.</remarks>
-		[StringFormatMethod("format")]
-		void DebugFormat(string format, params object[] args);
+		void DebugFormat([StructuredMessageTemplate] string format, params object[] args);
 
 		/// <summary>
 		/// Log a message object with the Debug level.
@@ -116,8 +117,7 @@ namespace ProSuite.Commons.Logging
 
 		void DebugMemory(object message);
 
-		[StringFormatMethod("format")]
-		void DebugMemory(string format, params object[] args);
+		void DebugMemory([StructuredMessageTemplate] string format, params object[] args);
 
 		/// <summary>
 		/// Logs a formatted message string with the Info level.
@@ -129,8 +129,7 @@ namespace ProSuite.Commons.Logging
 		/// format string and the behavior of the formatting.<para/>
 		/// This method does not take an Exception object to include in the log event.
 		/// To pass an Exception use one of the <see cref="Info(object)"/> methods instead.</remarks>
-		[StringFormatMethod("format")]
-		void InfoFormat(string format, params object[] args);
+		void InfoFormat([StructuredMessageTemplate] string format, params object[] args);
 
 		/// <summary>
 		/// Log a message object with the Info level.
@@ -168,8 +167,7 @@ namespace ProSuite.Commons.Logging
 		/// format string and the behavior of the formatting.<para/>
 		/// This method does not take an Exception object to include in the log event.
 		/// To pass an Exception use one of the <see cref="Warn(object)"/> methods instead.</remarks>
-		[StringFormatMethod("format")]
-		void WarnFormat(string format, params object[] args);
+		void WarnFormat([StructuredMessageTemplate] string format, params object[] args);
 
 		/// <summary>
 		/// Log a message object with the Warn level.
@@ -207,8 +205,7 @@ namespace ProSuite.Commons.Logging
 		/// format string and the behavior of the formatting.<para/>
 		/// This method does not take an Exception object to include in the log event.
 		/// To pass an Exception use one of the <see cref="Error(object)"/> methods instead.</remarks>
-		[StringFormatMethod("format")]
-		void ErrorFormat(string format, params object[] args);
+		void ErrorFormat([StructuredMessageTemplate] string format, params object[] args);
 
 		/// <summary>
 		/// Log a message object with the Error level.
@@ -246,8 +243,7 @@ namespace ProSuite.Commons.Logging
 		/// format string and the behavior of the formatting.<para/>
 		/// This method does not take an Exception object to include in the log event.
 		/// To pass an Exception use one of the <see cref="Fatal(object)"/> methods instead.</remarks>
-		[StringFormatMethod("format")]
-		void FatalFormat(string format, params object[] args);
+		void FatalFormat([StructuredMessageTemplate] string format, params object[] args);
 
 		/// <summary>
 		/// Log a message object with the Fatal level.
@@ -289,9 +285,9 @@ namespace ProSuite.Commons.Logging
 		/// <param name="format">A String containing zero or more format items.</param>
 		/// <param name="args">An Object array containing zero or more objects to format</param>
 		/// <returns>Started <see cref="Stopwatch"/>.</returns>
-		[StringFormatMethod("format")]
 		[CanBeNull]
-		Stopwatch DebugStartTiming([CanBeNull] string format, params object[] args);
+		Stopwatch DebugStartTiming([StructuredMessageTemplate] [CanBeNull] string format,
+		                           params object[] args);
 
 		/// <summary>
 		/// Log a message object with the Debug level, appending a string that reports
@@ -301,9 +297,9 @@ namespace ProSuite.Commons.Logging
 		/// <param name="format">A String containing zero or more format items.</param>
 		/// <param name="args">An Object array containing zero or more objects to format</param>
 		/// <remarks>The <see cref="Stopwatch"/> is stopped before reporting the elapsed time.</remarks>
-		[StringFormatMethod("format")]
 		void DebugStopTiming([CanBeNull] Stopwatch stopwatch,
-		                     [CanBeNull] string format,
+		                     [StructuredMessageTemplate] [CanBeNull]
+		                     string format,
 		                     params object[] args);
 
 		/// <summary>

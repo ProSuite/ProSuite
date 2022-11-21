@@ -57,7 +57,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 			foreach (ResultFeature resultFeature in resultFeatures)
 			{
-				var sourcePoly = resultFeature.Feature.GetShape() as Polygon;
+				var sourcePoly = resultFeature.OriginalFeature.GetShape() as Polygon;
 
 				if (sourcePoly == null || sourcePoly.IsEmpty)
 				{

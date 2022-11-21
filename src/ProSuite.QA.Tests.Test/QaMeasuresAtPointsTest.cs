@@ -3,29 +3,27 @@ using System.Data;
 using System.Diagnostics;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container;
-using ProSuite.QA.Container.Test;
-using ProSuite.QA.Tests.Test.Construction;
-using ProSuite.QA.Tests.Test.TestData;
-using ProSuite.QA.Tests.Test.TestRunners;
 using NUnit.Framework;
 using ProSuite.Commons.AO;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.AO.Licensing;
+using ProSuite.Commons.AO.Test;
+using ProSuite.QA.Container.Test;
+using ProSuite.QA.Tests.Test.Construction;
+using ProSuite.QA.Tests.Test.TestData;
+using ProSuite.QA.Tests.Test.TestRunners;
 
 namespace ProSuite.QA.Tests.Test
 {
 	[TestFixture]
 	public class QaMeasuresAtPointsTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
 		private IFeatureWorkspace _testWs;
 
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout();
+			TestUtils.InitializeLicense();
 
 			_testWs = TestWorkspaceUtils.CreateTestFgdbWorkspace("QaMeasuresAtPointsTest");
 		}
@@ -33,7 +31,7 @@ namespace ProSuite.QA.Tests.Test
 		[OneTimeTearDown]
 		public void TeardownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		[Test]
@@ -186,8 +184,9 @@ namespace ProSuite.QA.Tests.Test
 			fLine2.Store();
 
 			var test = new QaMeasuresAtPoints(
-				ReadOnlyTableFactory.Create(fcPoints), null, new[] { ReadOnlyTableFactory.Create(fcLines)}, 0.01, 0.01,
-				                            LineMSource.Nearest, false);
+				ReadOnlyTableFactory.Create(fcPoints), null,
+				new[] { ReadOnlyTableFactory.Create(fcLines) }, 0.01, 0.01,
+				LineMSource.Nearest, false);
 
 			using (var r = new QaTestRunner(test))
 			{
@@ -248,44 +247,49 @@ namespace ProSuite.QA.Tests.Test
 			fLine1.Store();
 
 			var test = new QaMeasuresAtPoints(
-				ReadOnlyTableFactory.Create(fcPoints), "DoubleField", new[] { ReadOnlyTableFactory.Create(fcLines)}, 0.01,
-				                            0.01, LineMSource.Nearest, false);
+				ReadOnlyTableFactory.Create(fcPoints), "DoubleField",
+				new[] { ReadOnlyTableFactory.Create(fcLines) }, 0.01,
+				0.01, LineMSource.Nearest, false);
 			var container = new QaContainerTestRunner(10000, test);
 			container.Execute();
 			Assert.AreEqual(0, container.Errors.Count);
 
 			test = new QaMeasuresAtPoints(
-				ReadOnlyTableFactory.Create(fcPoints), "IntField", new[] { ReadOnlyTableFactory.Create(fcLines)}, 0.01, 0.01,
-				                            LineMSource.Nearest, false);
+				ReadOnlyTableFactory.Create(fcPoints), "IntField",
+				new[] { ReadOnlyTableFactory.Create(fcLines) }, 0.01, 0.01,
+				LineMSource.Nearest, false);
 			container = new QaContainerTestRunner(10000, test);
 			container.Execute();
 			Assert.AreEqual(0, container.Errors.Count);
 
 			test = new QaMeasuresAtPoints(
-				ReadOnlyTableFactory.Create(fcPoints), "StringField", new[] { ReadOnlyTableFactory.Create(fcLines)}, 0.01,
-				                            0.01, LineMSource.Nearest, false);
+				ReadOnlyTableFactory.Create(fcPoints), "StringField",
+				new[] { ReadOnlyTableFactory.Create(fcLines) }, 0.01,
+				0.01, LineMSource.Nearest, false);
 			container = new QaContainerTestRunner(10000, test);
 			container.Execute();
 			Assert.AreEqual(0, container.Errors.Count);
 
 			test = new QaMeasuresAtPoints(
-				ReadOnlyTableFactory.Create(fcPoints), "1.00001", new[] { ReadOnlyTableFactory.Create(fcLines)}, 0.01, 0.01,
-				                            LineMSource.Nearest, false);
+				ReadOnlyTableFactory.Create(fcPoints), "1.00001",
+				new[] { ReadOnlyTableFactory.Create(fcLines) }, 0.01, 0.01,
+				LineMSource.Nearest, false);
 			container = new QaContainerTestRunner(10000, test);
 			container.Execute();
 			Assert.AreEqual(0, container.Errors.Count);
 
 			test = new QaMeasuresAtPoints(
-				ReadOnlyTableFactory.Create(fcPoints), "1", new[] { ReadOnlyTableFactory.Create(fcLines)}, 0.01, 0.01,
-				                            LineMSource.Nearest, false);
+				ReadOnlyTableFactory.Create(fcPoints), "1",
+				new[] { ReadOnlyTableFactory.Create(fcLines) }, 0.01, 0.01,
+				LineMSource.Nearest, false);
 			container = new QaContainerTestRunner(10000, test);
 			container.Execute();
 			Assert.AreEqual(0, container.Errors.Count);
 
 			test = new QaMeasuresAtPoints(
 				ReadOnlyTableFactory.Create(fcPoints), "DoubleField + IntField - 1",
-				                            new[] { ReadOnlyTableFactory.Create(fcLines)}, 0.01, 0.01, LineMSource.Nearest,
-				                            false);
+				new[] { ReadOnlyTableFactory.Create(fcLines) }, 0.01, 0.01, LineMSource.Nearest,
+				false);
 			container = new QaContainerTestRunner(10000, test);
 			container.Execute();
 			Assert.AreEqual(0, container.Errors.Count);
@@ -340,36 +344,41 @@ namespace ProSuite.QA.Tests.Test
 			fLine1.Store();
 
 			var test = new QaMeasuresAtPoints(
-				ReadOnlyTableFactory.Create(fcPoints), null, new[] { ReadOnlyTableFactory.Create(fcLines)}, 0.01, 0.01,
-				                            LineMSource.Nearest, false);
+				ReadOnlyTableFactory.Create(fcPoints), null,
+				new[] { ReadOnlyTableFactory.Create(fcLines) }, 0.01, 0.01,
+				LineMSource.Nearest, false);
 			var container = new QaContainerTestRunner(10000, test);
 			container.Execute();
 			Assert.AreEqual(1, container.Errors.Count);
 
 			test = new QaMeasuresAtPoints(
-				ReadOnlyTableFactory.Create(fcPoints), "DoubleField", new[] { ReadOnlyTableFactory.Create(fcLines)}, 0.01,
-				                            0.01, LineMSource.Nearest, false);
+				ReadOnlyTableFactory.Create(fcPoints), "DoubleField",
+				new[] { ReadOnlyTableFactory.Create(fcLines) }, 0.01,
+				0.01, LineMSource.Nearest, false);
 			container = new QaContainerTestRunner(10000, test);
 			container.Execute();
 			Assert.AreEqual(1, container.Errors.Count);
 
 			test = new QaMeasuresAtPoints(
-				ReadOnlyTableFactory.Create(fcPoints), "IntField", new[] { ReadOnlyTableFactory.Create(fcLines)}, 0.01, 0.01,
-				                            LineMSource.Nearest, false);
+				ReadOnlyTableFactory.Create(fcPoints), "IntField",
+				new[] { ReadOnlyTableFactory.Create(fcLines) }, 0.01, 0.01,
+				LineMSource.Nearest, false);
 			container = new QaContainerTestRunner(10000, test);
 			container.Execute();
 			Assert.AreEqual(1, container.Errors.Count);
 
 			test = new QaMeasuresAtPoints(
-				ReadOnlyTableFactory.Create(fcPoints), "EmptyField", new[] { ReadOnlyTableFactory.Create(fcLines)}, 0.01, 0.01,
-				                            LineMSource.Nearest, false);
+				ReadOnlyTableFactory.Create(fcPoints), "EmptyField",
+				new[] { ReadOnlyTableFactory.Create(fcLines) }, 0.01, 0.01,
+				LineMSource.Nearest, false);
 			container = new QaContainerTestRunner(10000, test);
 			container.Execute();
 			Assert.AreEqual(1, container.Errors.Count);
 
 			test = new QaMeasuresAtPoints(
-				ReadOnlyTableFactory.Create(fcPoints), "0.5 * EmptyField", new[] { ReadOnlyTableFactory.Create(fcLines)}, 0.01,
-				                              0.01, LineMSource.Nearest, false);
+				ReadOnlyTableFactory.Create(fcPoints), "0.5 * EmptyField",
+				new[] { ReadOnlyTableFactory.Create(fcLines) }, 0.01,
+				0.01, LineMSource.Nearest, false);
 			container = new QaContainerTestRunner(10000, test);
 			container.Execute();
 			Assert.AreEqual(1, container.Errors.Count);
@@ -417,45 +426,51 @@ namespace ProSuite.QA.Tests.Test
 			fLine1.Store();
 
 			var test = new QaMeasuresAtPoints(
-				ReadOnlyTableFactory.Create(fcPoints), null, new[] { ReadOnlyTableFactory.Create(fcLines)}, 1, 0.01,
-				                            LineMSource.Nearest, false);
+				ReadOnlyTableFactory.Create(fcPoints), null,
+				new[] { ReadOnlyTableFactory.Create(fcLines) }, 1, 0.01,
+				LineMSource.Nearest, false);
 			var container = new QaContainerTestRunner(10000, test);
 			container.Execute();
 			Assert.AreEqual(1, container.Errors.Count); // neareast --> error
 
 			test = new QaMeasuresAtPoints(
-				ReadOnlyTableFactory.Create(fcPoints), null, new[] { ReadOnlyTableFactory.Create(fcLines)}, 1, 0.01,
-				                            LineMSource.VertexPreferred, false);
+				ReadOnlyTableFactory.Create(fcPoints), null,
+				new[] { ReadOnlyTableFactory.Create(fcLines) }, 1, 0.01,
+				LineMSource.VertexPreferred, false);
 			container = new QaContainerTestRunner(10000, test);
 			container.Execute();
 			Assert.AreEqual(0, container.Errors.Count); // Vertex near point1 --> vertex --> OK
 
 			test = new QaMeasuresAtPoints(
-				ReadOnlyTableFactory.Create(fcPoints), null, new[] { ReadOnlyTableFactory.Create(fcLines)}, 1, 0.01,
-				                            LineMSource.VertexRequired, false);
+				ReadOnlyTableFactory.Create(fcPoints), null,
+				new[] { ReadOnlyTableFactory.Create(fcLines) }, 1, 0.01,
+				LineMSource.VertexRequired, false);
 			container = new QaContainerTestRunner(10000, test);
 			container.Execute();
 			Assert.AreEqual(0, container.Errors.Count); // Vertex near point1 --> vertex --> OK
 
 			test = new QaMeasuresAtPoints(
-				ReadOnlyTableFactory.Create(fcPoints), null, new[] { ReadOnlyTableFactory.Create(fcLines)}, 0.12, 0.01,
-				                            LineMSource.VertexPreferred, false);
+				ReadOnlyTableFactory.Create(fcPoints), null,
+				new[] { ReadOnlyTableFactory.Create(fcLines) }, 0.12, 0.01,
+				LineMSource.VertexPreferred, false);
 			container = new QaContainerTestRunner(10000, test);
 			container.Execute();
 			Assert.AreEqual(1, container.Errors.Count);
 			// No Vertex near point1 --> neareast --> error 
 
 			test = new QaMeasuresAtPoints(
-				ReadOnlyTableFactory.Create(fcPoints), null, new[] { ReadOnlyTableFactory.Create(fcLines)}, 0.12, 0.01,
-				                            LineMSource.VertexRequired, false);
+				ReadOnlyTableFactory.Create(fcPoints), null,
+				new[] { ReadOnlyTableFactory.Create(fcLines) }, 0.12, 0.01,
+				LineMSource.VertexRequired, false);
 			container = new QaContainerTestRunner(10000, test);
 			container.Execute();
 			Assert.AreEqual(1, container.Errors.Count);
 			// No Vertex near point1 --> required --> error 
 
 			test = new QaMeasuresAtPoints(
-				ReadOnlyTableFactory.Create(fcPoints), null, new[] { ReadOnlyTableFactory.Create(fcLines)}, 0.05, 0.01,
-				                            LineMSource.Nearest, true);
+				ReadOnlyTableFactory.Create(fcPoints), null,
+				new[] { ReadOnlyTableFactory.Create(fcLines) }, 0.05, 0.01,
+				LineMSource.Nearest, true);
 			container = new QaContainerTestRunner(10000, test);
 			container.Execute();
 			Assert.AreEqual(1, container.Errors.Count);
@@ -507,8 +522,9 @@ namespace ProSuite.QA.Tests.Test
 			try
 			{
 				var test = new QaMeasuresAtPoints(
-					ReadOnlyTableFactory.Create(fcPoints), null, new[] { ReadOnlyTableFactory.Create(fcLines)}, 0.01, 0.01,
-					                            LineMSource.Nearest, false);
+					ReadOnlyTableFactory.Create(fcPoints), null,
+					new[] { ReadOnlyTableFactory.Create(fcLines) }, 0.01, 0.01,
+					LineMSource.Nearest, false);
 				Assert.IsNotNull(test);
 			}
 			catch (ArgumentException)
@@ -522,8 +538,9 @@ namespace ProSuite.QA.Tests.Test
 			try
 			{
 				var test = new QaMeasuresAtPoints(
-					ReadOnlyTableFactory.Create(fcPoints), null, new[] { ReadOnlyTableFactory.Create(fcLinesM)}, 0.01, 0.01,
-					                            LineMSource.Nearest, false);
+					ReadOnlyTableFactory.Create(fcPoints), null,
+					new[] { ReadOnlyTableFactory.Create(fcLinesM) }, 0.01, 0.01,
+					LineMSource.Nearest, false);
 				Assert.IsNotNull(test);
 			}
 			catch (ArgumentException)

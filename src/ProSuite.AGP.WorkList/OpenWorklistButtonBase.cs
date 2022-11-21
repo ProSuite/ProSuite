@@ -18,7 +18,7 @@ namespace ProSuite.AGP.WorkList
 			ViewUtils.Try(() =>
 			{
 				path = GetWorklistPathCore();
-				
+
 				// has to be outside QueuedTask because of OpenItemDialog
 				// AND outside of Task.Run because OptenItemDialog has to be
 				// in UI thread.

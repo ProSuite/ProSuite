@@ -43,5 +43,4 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			return false;
 		}
 	}
-
 }

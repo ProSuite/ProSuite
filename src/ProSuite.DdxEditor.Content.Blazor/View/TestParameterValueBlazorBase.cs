@@ -51,4 +51,9 @@ public abstract class TestParameterValueBlazorBase<T> : ComponentBase, IDisposab
 	{
 		return (T) ViewModel.Value;
 	}
+
+	protected void OnClickResetValue()
+	{
+		ViewModel.ResetValue();
+	}
 }

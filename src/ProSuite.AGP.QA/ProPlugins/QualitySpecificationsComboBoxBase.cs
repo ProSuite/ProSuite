@@ -42,7 +42,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 			}
 
 			foreach (var qaSpec in verificationEnvironment.QualitySpecifications.Select(
-				s => s.Name))
+				         s => s.Name))
 			{
 				Add(new ComboBoxItem(qaSpec));
 			}

@@ -2,5 +2,15 @@
 @inherits TestParameterValueBlazorBase<string>
 
 <Validation ErrorMessage="@ErrorMessage">
-	<RadzenTextBox @bind-Value="StringValue" oninput="@(OnInput)"/>
+	<div class="row">
+		<div class="col w-100" style="border: unset">
+			<RadzenTextBox @bind-Value="StringValue" oninput="@(OnInput)"/>
+		</div>
+		<div class="col-auto" style="padding-left: unset">
+			@if (! string.IsNullOrEmpty(StringValue))
+			{
+				<div class="clear rzi-times rzi" onclick="@OnClickResetValue"></div>
+			}
+		</div>
+	</div>
 </Validation>

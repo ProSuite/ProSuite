@@ -1,7 +1,6 @@
 using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.AO.Surface;
 
 namespace ProSuite.Commons.AO.Test.Surface
@@ -9,18 +8,16 @@ namespace ProSuite.Commons.AO.Test.Surface
 	[TestFixture]
 	public class RectangularTilingUtilsTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
-
 		[OneTimeSetUp]
-		public void Setup()
+		public void SetupFixture()
 		{
-			_lic.Checkout();
+			TestUtils.InitializeLicense();
 		}
 
 		[OneTimeTearDown]
-		public void TearDown()
+		public void TeardownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		[Test]

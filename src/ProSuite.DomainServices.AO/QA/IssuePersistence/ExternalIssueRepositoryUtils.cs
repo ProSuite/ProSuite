@@ -23,6 +23,12 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 		{
 			string fullPath = Path.Combine(directoryFullPath, gdbName);
 
+			return IssueRepositoryExists(fullPath, issueRepositoryType);
+		}
+
+		public static bool IssueRepositoryExists([NotNull] string fullPath,
+		                                         IssueRepositoryType issueRepositoryType)
+		{
 			switch (issueRepositoryType)
 			{
 				case IssueRepositoryType.None:

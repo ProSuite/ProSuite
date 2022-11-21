@@ -2,12 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container;
-using ProSuite.QA.Tests.Test.TestRunners;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.QA.Container;
 using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Tests.Test.TestRunners;
 
 namespace ProSuite.QA.Tests.Test.SpatialRelations
 {
@@ -21,8 +21,6 @@ namespace ProSuite.QA.Tests.Test.SpatialRelations
 		{
 			Errors.Clear();
 		}
-
-
 
 		public int Report(string description, InvolvedRows involved,
 		                  IGeometry errorGeometry,
@@ -43,7 +41,7 @@ namespace ProSuite.QA.Tests.Test.SpatialRelations
 
 		[NotNull]
 		private static List<QaError> CreateErrors([NotNull] string description,
-												  [NotNull] InvolvedRows involved,
+		                                          [NotNull] InvolvedRows involved,
 		                                          [CanBeNull] IGeometry errorGeometry,
 		                                          [CanBeNull] IssueCode issueCode,
 		                                          [CanBeNull] string affectedComponent,

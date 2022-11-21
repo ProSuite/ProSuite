@@ -19,10 +19,17 @@ namespace ProSuite.QA.Tests.Transformers
 			IReadOnlyFeatureClass multipatchClass)
 			: base(multipatchClass, esriGeometryType.esriGeometryPolygon) { }
 
-		protected override IEnumerable<GdbFeature> Transform(IGeometry source)
+		protected override IEnumerable<GdbFeature> Transform(IGeometry source,
+		                                                     int? sourceOid)
 		{
 			IMultiPatch patch = (IMultiPatch) source;
-			GdbFeature feature = CreateFeature();
+
+			TransformedFeatureClass transformedClass = GetTransformed();
+
+			GdbFeature feature = sourceOid == null
+				                     ? CreateFeature()
+				                     : (GdbFeature) transformedClass.CreateObject(sourceOid.Value);
+
 			feature.Shape = CreateFootprintUtils.GetFootprint(patch);
 			yield return feature;
 		}

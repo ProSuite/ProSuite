@@ -1,5 +1,5 @@
-using log4net.Core;
 using System;
+using log4net.Core;
 
 namespace ProSuite.Commons.Logging
 {
@@ -24,9 +24,9 @@ namespace ProSuite.Commons.Logging
 			ExceptionMessage = logEvent.ExceptionObject?.StackTrace ?? string.Empty;
 		}
 
-		public LogType Type { get;}
-		public DateTime Time { get;}
-		public string Message { get;}
+		public LogType Type { get; }
+		public DateTime Time { get; }
+		public string Message { get; }
 		public string Source { get; }
 		public string ExceptionMessage { get; }
 	}

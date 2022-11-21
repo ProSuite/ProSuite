@@ -530,12 +530,12 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			if (geometryEndClass is IReadOnlyFeatureClass featureClass)
 			{
-				result = new GdbFeatureClass(-1, name, featureClass.ShapeType, null,
+				result = new GdbFeatureClass(null, name, featureClass.ShapeType, null,
 				                             datasetFactoryFunc, workspace);
 			}
 			else
 			{
-				result = new GdbTable(-1, name, null, datasetFactoryFunc, workspace);
+				result = new GdbTable(null, name, null, datasetFactoryFunc, workspace);
 			}
 
 			AddFields(geometryEndClass, result, false);

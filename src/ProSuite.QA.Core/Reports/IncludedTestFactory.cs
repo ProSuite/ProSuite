@@ -3,10 +3,9 @@ using System.Collections.Generic;
 using System.Reflection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.QA.Core;
 using ProSuite.QA.Core.IssueCodes;
 
-namespace ProSuite.DomainModel.AO.QA.TestReport
+namespace ProSuite.QA.Core.Reports
 {
 	public class IncludedTestFactory : IncludedInstance, IComparable<IncludedTestFactory>
 	{
@@ -27,11 +26,11 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			return testFactoryType.Name;
 		}
 
-		private static TestFactory GetTestFactory(Type testFactoryType)
+		private static IInstanceInfo GetTestFactory(Type testFactoryType)
 		{
 			ConstructorInfo ctor = testFactoryType.GetConstructors()[0];
 
-			return (TestFactory) ctor.Invoke(new object[] { });
+			return (IInstanceInfo) ctor.Invoke(new object[] { });
 		}
 
 		#region Overrides of IncludedInstanceBase

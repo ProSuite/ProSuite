@@ -4,7 +4,6 @@ using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.QA.Container.Test
@@ -12,13 +11,12 @@ namespace ProSuite.QA.Container.Test
 	[TestFixture]
 	public class TestContainerTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
 		private IFeatureWorkspace _testWs;
 
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout();
+			Commons.AO.Test.TestUtils.InitializeLicense();
 
 			_testWs = TestWorkspaceUtils.CreateTestWorkspace("TestContainerTest");
 		}
@@ -26,17 +24,17 @@ namespace ProSuite.QA.Container.Test
 		[OneTimeTearDown]
 		public void TearDownFixture()
 		{
-			_lic.Release();
+			Commons.AO.Test.TestUtils.ReleaseLicense();
 		}
 
 		[Test]
 		public void CanExecuteContainerOneDiagonalLine()
 		{
-			ESRI.ArcGIS.Geodatabase.IFeatureClass featureClass =
+			IFeatureClass featureClass =
 				CreatePolylineFeatureClass("CanExecuteContainerOneDiagonalLine", 0.01);
 
 			// Create error Feature
-			ESRI.ArcGIS.Geodatabase.IFeature row = featureClass.CreateFeature();
+			IFeature row = featureClass.CreateFeature();
 			const double x = 2600000;
 			const double y = 1200000;
 			row.Shape = GeometryFactory.CreateLine(
@@ -54,7 +52,7 @@ namespace ProSuite.QA.Container.Test
 			           };
 			test.SetSearchDistance(10);
 
-			var container = new TestContainer.TestContainer {TileSize = 600};
+			var container = new TestContainer.TestContainer { TileSize = 600 };
 			container.AddTest(test);
 
 			container.Execute();
@@ -66,19 +64,19 @@ namespace ProSuite.QA.Container.Test
 		[Test]
 		public void CanExecuteContainerTwoVerticalLines()
 		{
-			ESRI.ArcGIS.Geodatabase.IFeatureClass featureClass =
+			IFeatureClass featureClass =
 				CreatePolylineFeatureClass("CanExecuteContainerTwoVerticalLines", 0.01);
 
 			// Create error Feature
 			const double x = 2600000;
 			const double y = 1200000;
-			ESRI.ArcGIS.Geodatabase.IFeature row1 = featureClass.CreateFeature();
+			IFeature row1 = featureClass.CreateFeature();
 			row1.Shape = GeometryFactory.CreateLine(
 				GeometryFactory.CreatePoint(x, y),
 				GeometryFactory.CreatePoint(x, y + 800));
 			row1.Store();
 
-			ESRI.ArcGIS.Geodatabase.IFeature row2 = featureClass.CreateFeature();
+			IFeature row2 = featureClass.CreateFeature();
 			row2.Shape = GeometryFactory.CreateLine(
 				GeometryFactory.CreatePoint(x + 1000, y),
 				GeometryFactory.CreatePoint(x + 1000, y + 800));
@@ -94,7 +92,7 @@ namespace ProSuite.QA.Container.Test
 			           };
 			test.SetSearchDistance(10);
 
-			var container = new TestContainer.TestContainer {TileSize = 600};
+			var container = new TestContainer.TestContainer { TileSize = 600 };
 			container.AddTest(test);
 
 			container.Execute();
@@ -106,26 +104,26 @@ namespace ProSuite.QA.Container.Test
 		[Test]
 		public void CanExecuteContainerLineNearTileBoundary()
 		{
-			ESRI.ArcGIS.Geodatabase.IFeatureClass featureClass =
+			IFeatureClass featureClass =
 				CreatePolylineFeatureClass("CanExecuteContainerLineNearTileBoundary", 0.01);
 
 			// Create error Feature
 			const double x = 2600000;
 			const double y = 1200000;
-			ESRI.ArcGIS.Geodatabase.IFeature row1 = featureClass.CreateFeature();
+			IFeature row1 = featureClass.CreateFeature();
 			row1.Shape = GeometryFactory.CreateLine(
 				GeometryFactory.CreatePoint(x, y),
 				GeometryFactory.CreatePoint(x, y + 800));
 			row1.Store();
 
-			ESRI.ArcGIS.Geodatabase.IFeature row2 = featureClass.CreateFeature();
+			IFeature row2 = featureClass.CreateFeature();
 			row2.Shape = GeometryFactory.CreateLine(
 				GeometryFactory.CreatePoint(x + 1000, y),
 				GeometryFactory.CreatePoint(x + 1000, y + 800));
 			row2.Store();
 
 			// row3 is within tile[0,0], but within the search tolerance from tile[0,1]
-			ESRI.ArcGIS.Geodatabase.IFeature row3 = featureClass.CreateFeature();
+			IFeature row3 = featureClass.CreateFeature();
 			row3.Shape = GeometryFactory.CreateLine(
 				GeometryFactory.CreatePoint(x + 300, y),
 				GeometryFactory.CreatePoint(x + 300, y + 599.000));
@@ -142,7 +140,7 @@ namespace ProSuite.QA.Container.Test
 			           };
 			test.SetSearchDistance(2);
 
-			var container = new TestContainer.TestContainer {TileSize = 600};
+			var container = new TestContainer.TestContainer { TileSize = 600 };
 			container.AddTest(test);
 			container.MaxCachedPointCount = 1; // disable caching
 			container.Execute();
@@ -156,7 +154,7 @@ namespace ProSuite.QA.Container.Test
 		[Test]
 		public void CanExecuteContainePointFeatures()
 		{
-			ESRI.ArcGIS.Geodatabase.IFeatureClass featureClass =
+			IFeatureClass featureClass =
 				CreatePointFeatureClass("CanExecuteContainePointFeatures", 0.01);
 
 			// Create error Feature
@@ -179,7 +177,7 @@ namespace ProSuite.QA.Container.Test
 			           };
 			test.SetSearchDistance(0.5);
 
-			var container = new TestContainer.TestContainer {TileSize = 600};
+			var container = new TestContainer.TestContainer { TileSize = 600 };
 			container.AddTest(test);
 			container.Execute();
 
@@ -190,28 +188,28 @@ namespace ProSuite.QA.Container.Test
 		[Test]
 		public void CanHandleCachedPointCount()
 		{
-			ESRI.ArcGIS.Geodatabase.IFeatureClass featureClass = CreatePolylineFeatureClass(
+			IFeatureClass featureClass = CreatePolylineFeatureClass(
 				"CanHandleCachedPointCount", 0.01);
 
 			const double x = 2600000;
 			const double y = 1200000;
 			// Create features
 
-			ESRI.ArcGIS.Geodatabase.IFeature in4Tiles = featureClass.CreateFeature();
+			IFeature in4Tiles = featureClass.CreateFeature();
 			in4Tiles.Shape =
 				GeometryFactory.CreateLine(
 					GeometryFactory.CreatePoint(x, y),
 					GeometryFactory.CreatePoint(x + 1000, y + 800));
 			in4Tiles.Store();
 
-			ESRI.ArcGIS.Geodatabase.IFeature inTiles_00_01 = featureClass.CreateFeature();
+			IFeature inTiles_00_01 = featureClass.CreateFeature();
 			inTiles_00_01.Shape =
 				GeometryFactory.CreateLine(
 					GeometryFactory.CreatePoint(x + 100, y + 100),
 					GeometryFactory.CreatePoint(x + 800, y + 200));
 			inTiles_00_01.Store();
 
-			ESRI.ArcGIS.Geodatabase.IFeature inTiles_00_10 = featureClass.CreateFeature();
+			IFeature inTiles_00_10 = featureClass.CreateFeature();
 			inTiles_00_10.Shape =
 				GeometryFactory.CreateLine(
 					GeometryFactory.CreatePoint(x + 100, y + 100),
@@ -224,7 +222,7 @@ namespace ProSuite.QA.Container.Test
 					GeometryFactory.CreatePoint(x + 300, y + 800));
 			inTiles_00_10.Store();
 
-			ESRI.ArcGIS.Geodatabase.IFeature inTiles_01_11 = featureClass.CreateFeature();
+			IFeature inTiles_01_11 = featureClass.CreateFeature();
 			inTiles_01_11.Shape =
 				GeometryFactory.CreateLine(
 					GeometryFactory.CreatePoint(x + 800, y + 100),
@@ -250,7 +248,7 @@ namespace ProSuite.QA.Container.Test
 
 			helper.Reset();
 			helper.Container = container1;
-			helper.ExpectedCacheCount = new[] {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
+			helper.ExpectedCacheCount = new[] { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
 			container1.AddTest(test);
 			container1.Execute(GeometryFactory.CreateEnvelope(x, y, x + 1500, y + 1500));
 
@@ -263,7 +261,7 @@ namespace ProSuite.QA.Container.Test
 
 			helper.Reset();
 			helper.Container = container2;
-			helper.ExpectedCacheCount = new[] {0, 0, 8, 13, 3, 0, 3, 3, 0, 0};
+			helper.ExpectedCacheCount = new[] { 0, 0, 8, 13, 3, 0, 3, 3, 0, 0 };
 			container2.AddTest(test);
 			container2.Execute(GeometryFactory.CreateEnvelope(x, y, x + 1500, y + 1500));
 
@@ -276,7 +274,7 @@ namespace ProSuite.QA.Container.Test
 
 			helper.Reset();
 			helper.Container = container3;
-			helper.ExpectedCacheCount = new[] {0, 0, 8, 5, 3, 0, 3, 3, 0, 0};
+			helper.ExpectedCacheCount = new[] { 0, 0, 8, 5, 3, 0, 3, 3, 0, 0 };
 			// in the 5. tile, feature 'inTiles_01_11' with 3 points is used and hence not part of the cache 
 			container3.AddTest(test);
 			container3.Execute(GeometryFactory.CreateEnvelope(x, y, x + 1500, y + 1500));
@@ -290,7 +288,7 @@ namespace ProSuite.QA.Container.Test
 
 			helper.Reset();
 			helper.Container = container4;
-			helper.ExpectedCacheCount = new[] {0, 0, 0, 2, 0, 0, 3, 3, 0, 0};
+			helper.ExpectedCacheCount = new[] { 0, 0, 0, 2, 0, 0, 3, 3, 0, 0 };
 			// in the 3. tile, feature 'inTiles_01_11' with 3 points gets unloaded because of cache limitation 
 			// in the 5. tile, feature 'inTiles_01_11' gets loaded again, so that in the 6. and 7. tile it is cached 
 			container4.AddTest(test);
@@ -304,7 +302,7 @@ namespace ProSuite.QA.Container.Test
 
 			helper.Reset();
 			helper.Container = container5;
-			helper.ExpectedCacheCount = new[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+			helper.ExpectedCacheCount = new[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 			container5.AddTest(test);
 			container5.Execute(GeometryFactory.CreateEnvelope(x, y, x + 1500, y + 1500));
 		}
@@ -312,7 +310,7 @@ namespace ProSuite.QA.Container.Test
 		[Test]
 		public void CanIndexManyCoincidentPointsTest()
 		{
-			ESRI.ArcGIS.Geodatabase.IFeatureClass featureClass =
+			IFeatureClass featureClass =
 				CreatePointFeatureClass("CanIndexManyCoincidentPointsTest", 0.001);
 
 			AddPointFeature(featureClass, 2637000, 1193000);
@@ -334,7 +332,7 @@ namespace ProSuite.QA.Container.Test
 		}
 
 		[NotNull]
-		private ESRI.ArcGIS.Geodatabase.IFeatureClass CreatePolylineFeatureClass([NotNull] string name,
+		private IFeatureClass CreatePolylineFeatureClass([NotNull] string name,
 		                                                 double tolerance)
 		{
 			return TestWorkspaceUtils.CreateSimpleFeatureClass(
@@ -345,7 +343,7 @@ namespace ProSuite.QA.Container.Test
 		}
 
 		[NotNull]
-		private ESRI.ArcGIS.Geodatabase.IFeatureClass CreatePointFeatureClass([NotNull] string name,
+		private IFeatureClass CreatePointFeatureClass([NotNull] string name,
 		                                              double tolerance)
 		{
 			return TestWorkspaceUtils.CreateSimpleFeatureClass(
@@ -354,11 +352,11 @@ namespace ProSuite.QA.Container.Test
 				esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95, tolerance);
 		}
 
-		private static void AddPointFeature([NotNull] ESRI.ArcGIS.Geodatabase.IFeatureClass featureClass,
+		private static void AddPointFeature([NotNull] IFeatureClass featureClass,
 		                                    double x,
 		                                    double y)
 		{
-			ESRI.ArcGIS.Geodatabase.IFeature feature = featureClass.CreateFeature();
+			IFeature feature = featureClass.CreateFeature();
 			feature.Shape = GeometryFactory.CreatePoint(x, y);
 			feature.Store();
 		}
