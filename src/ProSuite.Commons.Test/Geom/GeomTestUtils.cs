@@ -43,9 +43,7 @@ namespace ProSuite.Commons.Test.Geom
 
 		public static string GetGeometryTestDataPath(string fileName)
 		{
-			var locator = TestDataLocator.Create("ProSuite", @"TestData\Geom");
-
-			return locator.GetPath(fileName);
+			return TestDataPreparer.FromDirectory(@"TestData\Geom").GetPath(fileName);
 		}
 	}
 }
