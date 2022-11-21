@@ -193,7 +193,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			foreach (
 				IRow row in
 				GdbQueryUtils.GetRowProxys(rc.OriginClass, null,
-				                           new[] {rc}))
+				                           new[] { rc }))
 			{
 				NUnit.Framework.Assert.AreEqual(row.Table, rc.OriginClass);
 				NUnit.Framework.Assert.Greater(row.OID, 0);
@@ -213,7 +213,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			foreach (
 				IRow row in
 				GdbQueryUtils.GetRowProxys(rc.OriginClass, null,
-				                           new[] {rc}))
+				                           new[] { rc }))
 			{
 				NUnit.Framework.Assert.AreEqual(row.Table, rc.OriginClass);
 				NUnit.Framework.Assert.Greater(row.OID, 0);
@@ -235,7 +235,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			                                                GeometryFactory.CreatePolygon(
 				                                                2696300, 1264100, 2696400,
 				                                                1264130),
-			                                                new[] {rc}))
+			                                                new[] { rc }))
 			{
 				NUnit.Framework.Assert.AreEqual(row.Table, rc.OriginClass);
 				NUnit.Framework.Assert.Greater(row.OID, 0);
@@ -257,7 +257,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			foreach (IRow row in GdbQueryUtils.GetRows((ITable) rc.OriginClass, false))
 			{
 				var obj = (IObject) row;
-				IList<IObject> features = GdbQueryUtils.GetRelatedObjectList(obj, new[] {rc});
+				IList<IObject> features = GdbQueryUtils.GetRelatedObjectList(obj, new[] { rc });
 				count += features.Count;
 			}
 
@@ -311,7 +311,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 				// ReSharper disable once UnusedVariable
 				IRow row in
 				GdbQueryUtils.GetRowsNotInList(tbl, filter, true, "OBJEKTART",
-				                               new object[] {1, 2, 3}))
+				                               new object[] { 1, 2, 3 }))
 			{
 				nRows++;
 			}
@@ -335,7 +335,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 				// ReSharper disable once UnusedVariable
 				IRow row in
 				GdbQueryUtils.GetRowsNotInList(tbl, filter, true, "OPERATEUR",
-				                               new[] {"STR_Imp"}))
+				                               new[] { "STR_Imp" }))
 			{
 				nRows++;
 			}
@@ -791,6 +791,45 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			where = string.Format("{0} {1} {2}", fieldName, greater,
 			                      GdbSqlUtils.GetFGDBDateLiteral(lowerDateTime));
 			Assert.True(GdbQueryUtils.Count(fc, where) == 1, "Query '{0}' fails.", greater);
+		}
+
+		[Test]
+		public void CanSpatiallyQueryPostgres()
+		{
+			IWorkspace workspace = TestUtils.OpenUserWorkspacePostgres();
+
+			IFeatureClass featureClass =
+				DatasetUtils.OpenFeatureClass(workspace, "data_osm.osm.Gewaesser");
+
+			IEnvelope searchEnvelope =
+				GeometryFactory.CreateEnvelope(32680694.28, 5349173.00, 32700694.28, 5363306.81);
+
+			IQueryFilter filter = GdbQueryUtils.CreateSpatialFilter(
+				featureClass, searchEnvelope);
+
+			int count = 0;
+			foreach (var feature in GdbQueryUtils.GetFeatures(featureClass, filter, false))
+			{
+				count++;
+				Console.WriteLine(feature.OID);
+			}
+
+			Console.WriteLine($"Found {count} features");
+			Assert.True(count > 200, $"To few features found: {count}");
+
+			// Crash with self-implemented interfaces:
+			SpatialFilterEx filterEx = new SpatialFilterEx((ISpatialFilter) filter);
+
+			count = 0;
+			foreach (var feature in GdbQueryUtils.GetFeatures(featureClass, filterEx, false))
+			{
+				count++;
+				Console.WriteLine(feature.OID);
+			}
+
+			// System.AccessViolationException : Attempted to read or write protected memory.This is
+			// often an indication that other memory is corrupt.
+			// at ProSuite.Commons.AO.Geodatabase.GdbQueryUtils.OpenCursor(IFeatureClass featureClass, Boolean recycling, IQueryFilter filter) in C:\git\Dira.ProSuiteSolution\ProSuite\src\ProSuite.Commons.AO\Geodatabase\GdbQueryUtils.cs:line 1752
 		}
 	}
 }
