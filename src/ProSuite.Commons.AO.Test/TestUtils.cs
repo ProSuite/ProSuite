@@ -237,31 +237,41 @@ namespace ProSuite.Commons.AO.Test
 			return localTempDir;
 		}
 
-		private static readonly ArcGISLicenses _lic = new ArcGISLicenses();
+		private static IArcGISLicense _lic;
 
-		public static void InitializeLicense(bool checkout3dAnalyst = false)
+		public static void InitializeLicense(bool includeAnalyst3d = false)
 		{
-			if (checkout3dAnalyst)
+			if (_lic == null)
 			{
-				if (EnvironmentUtils.Is64BitProcess)
-				{
-					// Server
-					_lic.Checkout();
-				}
-				else
-				{
-					_lic.Checkout(EsriProduct.ArcEditor, EsriExtension.ThreeDAnalyst);
-				}
-
-				return;
+				_lic = ActivateLicense();
 			}
 
-			_lic.Checkout();
+			_lic.Initialize(includeAnalyst3d);
 		}
 
 		public static void ReleaseLicense()
 		{
-			_lic.Release();
+			_lic?.Release();
+		}
+
+		private static IArcGISLicense ActivateLicense()
+		{
+			// Allow forcing a different license depending on the machine, such as Advanced:
+			string agLicenseClass = Environment.GetEnvironmentVariable("VSArcGISLicense");
+
+			if (string.IsNullOrEmpty(agLicenseClass))
+			{
+				return new BasicLicense();
+			}
+
+			Type licType = Type.GetType(agLicenseClass);
+
+			if (licType != null)
+			{
+				return (IArcGISLicense) Activator.CreateInstance(licType);
+			}
+
+			throw new FileNotFoundException($"Type {agLicenseClass} could not be loaded.");
 		}
 	}
 }
