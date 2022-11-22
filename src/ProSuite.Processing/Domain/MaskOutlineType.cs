@@ -11,8 +11,8 @@ namespace ProSuite.Processing.Domain
 		SymbolExact, SymbolConvexHull, SymbolBoundingBox, ShapeBuffer
 	}
 
-	// Old FeatureMasks's OutlineMethod: ShapeBuffer, RepresentationBuffer, RepresentationOffset
-	// Old AnnoMasks's OutlineMethod: AnnoExact, AnnoConvexHull, AnnoBox
+	// Old FeatureMasks OutlineMethod: ShapeBuffer, RepresentationBuffer, RepresentationOffset
+	// Old AnnoMasks OutlineMethod: AnnoExact, AnnoConvexHull, AnnoBox
 
 	public class MaskOutlineTypeConverter : TypeConverter
 	{
@@ -35,19 +35,19 @@ namespace ProSuite.Processing.Domain
 				return result;
 			}
 
-			switch (text)
+			switch (text.ToLowerInvariant())
 			{
-				case "Exact":
-				case "AnnoExact":
+				case @"exact":
+				case @"annoexact":
 					return MaskOutlineType.SymbolExact;
-				case "ConvexHull":
-				case "AnnoConvexHull":
+				case @"convexhull":
+				case @"annoconvexhull":
 					return MaskOutlineType.SymbolConvexHull;
-				case "BoundingBox":
-				case "AnnoBox":
+				case @"boundingbox":
+				case @"annobox":
 					return MaskOutlineType.SymbolBoundingBox;
-				case "RepresentationBuffer":
-				case "RepresentationOffset":
+				case @"representationbuffer":
+				case @"representationoffset":
 					return MaskOutlineType.SymbolExact;
 			}
 
@@ -65,6 +65,5 @@ namespace ProSuite.Processing.Domain
 
 			return base.ConvertTo(context, culture, value, destinationType);
 		}
-
 	}
 }

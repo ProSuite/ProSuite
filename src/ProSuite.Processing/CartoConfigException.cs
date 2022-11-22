@@ -3,6 +3,9 @@ using System.Runtime.Serialization;
 
 namespace ProSuite.Processing
 {
+	/// <summary>
+	/// Thrown when an invalid carto process configuration is found.
+	/// </summary>
 	[Serializable]
 	public class CartoConfigException : Exception
 	{

@@ -339,18 +339,10 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			return (T) Engine.AccelerateForRelationalOperations(geometry);
 		}
 
-		public static bool Contains(Geometry containing,
-		                            Geometry contained,
-		                            bool suppressIndexing = false)
+		public static bool Contains(Geometry containing, Geometry contained)
 		{
 			if (containing == null) return false;
 			if (contained == null) return true;
-
-			//if (! suppressIndexing)
-			//{
-			//	Engine.AccelerateForRelationalOperations(containing);
-			//	Engine.AccelerateForRelationalOperations(containing);
-			//}
 
 			return Engine.Contains(containing, contained);
 		}
@@ -363,17 +355,11 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			return distanceAlong;
 		}
 
-		public static bool Disjoint([NotNull] Geometry geometry1,
-		                            [NotNull] Geometry geometry2,
-		                            bool suppressIndexing = false)
+		public static bool Disjoint(Geometry geometry1, Geometry geometry2)
 		{
-			if (! suppressIndexing)
-			{
-				Engine.AccelerateForRelationalOperations(geometry1);
-				Engine.AccelerateForRelationalOperations(geometry2);
-			}
-
-			return GeometryEngine.Instance.Disjoint(geometry1, geometry2);
+			if (geometry1 is null) return true;
+			if (geometry2 is null) return true;
+			return Engine.Disjoint(geometry1, geometry2);
 		}
 
 		/// <summary>

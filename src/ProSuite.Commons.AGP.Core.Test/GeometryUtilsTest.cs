@@ -66,6 +66,19 @@ namespace ProSuite.Commons.AGP.Core.Test
 		}
 
 		[Test]
+		public void CanDisjointEmpty()
+		{
+			var point = MapPointBuilderEx.CreateMapPoint(1.0, 1.0);
+			var empty = PolygonBuilderEx.CreatePolygon();
+
+			Assert.False(point.IsEmpty);
+			Assert.True(empty.IsEmpty);
+
+			Assert.True(GeometryUtils.Disjoint(point, empty));
+			Assert.True(GeometryUtils.Disjoint(empty, point));
+		}
+
+		[Test]
 		public void CanRemoveHoles()
 		{
 			var empty = PolygonBuilderEx.CreatePolygon();

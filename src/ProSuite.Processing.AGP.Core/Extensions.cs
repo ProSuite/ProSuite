@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ArcGIS.Core.Data;
+using ArcGIS.Core.Geometry;
 using ProSuite.Commons.Exceptions;
 using ProSuite.Processing.Evaluation;
 using ProSuite.Processing.Utils;
@@ -157,5 +158,24 @@ namespace ProSuite.Processing.AGP.Core
 		}
 
 		#endregion
+
+		/// <summary>
+		/// Get an array of the point ID values of the given curve.
+		/// Useful for testing; avoid in production code.
+		/// </summary>
+		public static int[] GetPointIDs(this Multipart curve)
+		{
+			if (curve == null)
+				return Array.Empty<int>();
+			int count = curve.PointCount;
+			var points = curve.Points;
+			var ids = new int[count];
+			for (int i = 0; i < count; i++)
+			{
+				ids[i] = points[i].ID;
+			}
+
+			return ids;
+		}
 	}
 }
