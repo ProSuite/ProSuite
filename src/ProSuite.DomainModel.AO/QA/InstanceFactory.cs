@@ -326,7 +326,7 @@ namespace ProSuite.DomainModel.AO.QA
 
 			if (transformerConfiguration != null)
 			{
-				if (! transformerConfiguration.HasCashedValue(datasetContext))
+				if (! transformerConfiguration.HasCachedValue(datasetContext))
 				{
 					IReadOnlyTable transformedTable =
 						CreateTransformedTable(transformerConfiguration, datasetContext);
