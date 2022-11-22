@@ -200,6 +200,70 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			return (T) Engine.SimplifyAsFeature(geometry, forceSimplify);
 		}
 
+		/// <summary>
+		/// Return a polygon that consists of all exterior rings
+		/// of the given <paramref name="polygon"/> that are not
+		/// contained within another exterior ring.
+		/// </summary>
+		public static Polygon RemoveHoles(Polygon polygon)
+		{
+			// Simple cases: empty or just one ring:
+
+			if (polygon is null || polygon.IsEmpty || polygon.PartCount <= 1)
+			{
+				return polygon;
+			}
+
+			// Let result = new List of rings
+			// For each part (i.e., ring):
+			//   - discard if interior (negative area)
+			//   - if exterior (positive area):
+			//      - if contained in any of result: discard
+			//      - if contains any of result: add to result, discard previous result
+			//      - else: add to result list
+
+			var result = new List<Polygon>();
+
+			var flags = polygon.GetAttributeFlags();
+			var sref = polygon.SpatialReference;
+
+			int partCount = polygon.Parts.Count;
+			for (int i = 0; i < partCount; i++)
+			{
+				var segments = polygon.Parts[i];
+				var ring = PolygonBuilderEx.CreatePolygon(segments, flags, sref);
+
+				if (ring.Area > 0) // exterior ring
+				{
+					bool handled = false;
+
+					for (int j = 0; j < result.Count; j++)
+					{
+						if (Contains(result[j], ring))
+						{
+							handled = true;
+							break;
+						}
+
+						if (Contains(ring, result[j]))
+						{
+							result[j] = ring;
+							handled = true;
+							break;
+						}
+					}
+
+					if (! handled)
+					{
+						result.Add(ring);
+					}
+				}
+				// else: discard interior ring or degenerate part
+			}
+
+			return PolygonBuilderEx.CreatePolygon(result, flags, sref);
+		}
+
 		/// <remarks>
 		/// Time is O(N**2) where N is the number of rings; any better ideas around?
 		/// </remarks>

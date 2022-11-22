@@ -66,6 +66,55 @@ namespace ProSuite.Commons.AGP.Core.Test
 		}
 
 		[Test]
+		public void CanRemoveHoles()
+		{
+			var empty = PolygonBuilderEx.CreatePolygon();
+			Assert.True(empty.IsEmpty);
+
+			var r0 = GeometryUtils.RemoveHoles(empty);
+			Assert.NotNull(r0);
+			Assert.True(r0.IsEmpty);
+			Assert.AreEqual(0, r0.PartCount);
+
+			// 5 .....#######...
+			// 4 .###.#...###...
+			// 3 .#.#.#.#.#.#.#.
+			// 2 .###.#...###...
+			// 1 .....#######...
+			// 0 ...............
+			//   012345678901234
+
+			var builder = new PolygonBuilderEx();
+
+			builder.AddPart(MakeCoords(1, 2,  1, 5,  4, 5,  4, 2,  1, 2)); // outer
+			builder.AddPart(MakeCoords(2, 3,  3, 3,  3, 4,  2, 4,  2, 3)); // inner
+
+			builder.AddPart(MakeCoords(5, 1, 5, 6, 12, 6, 12, 1, 5, 1)); // outer
+			builder.AddPart(MakeCoords(6, 2, 9, 2, 9, 5, 6, 5, 6, 2)); // inner
+			builder.AddPart(MakeCoords(7, 3, 7, 4, 8, 4, 8, 3, 7, 3)); // outer in inner
+			builder.AddPart(MakeCoords(10, 3, 11, 3, 11, 4, 10, 4, 10, 3)); // inner
+
+			builder.AddPart(MakeCoords(13, 3,  13, 4,  14, 4,  14, 3,  13, 3)); // outer
+
+			var poly = (Polygon) builder.ToGeometry();
+
+			var r1 = GeometryUtils.RemoveHoles(poly);
+			Assert.NotNull(r1);
+			Assert.False(r1.IsEmpty);
+			Assert.AreEqual(3, r1.PartCount);
+			Assert.AreEqual(15, r1.PointCount);
+			Assert.AreEqual(9 + 35 + 1, r1.Area, 0.001);
+		}
+
+		private static IEnumerable<Coordinate2D> MakeCoords(params double[] coords)
+		{
+			for (int i = 1; i < coords.Length; i += 2)
+			{
+				yield return new Coordinate2D(coords[i - 1], coords[i]);
+			}
+		}
+
+		[Test]
 		public void Can_get_nearest_vertex()
 		{
 			var coords = new List<MapPoint>
