@@ -116,7 +116,7 @@ namespace ProSuite.Processing.Test
 			row.SetValues(DBNull.Value, 11, 3.5, "hi");
 			FieldSetter.Create("a=CONCAT(b+marker.c); b=10+10*RAND(4); c=TRUNC(1.5+b/2); d=null")
 			           .DefineFields(row, "marker")
-			           .SetRandomSeed(1234)
+			           .SetRandom(new Random(1234)) // repeatable randomness
 			           .Execute(row);
 			row.AssertValues("14.5", 20, 7, DBNull.Value);
 
