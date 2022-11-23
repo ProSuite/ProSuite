@@ -1101,6 +1101,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			Assert.ArgumentNotNull(instanceConfiguration, nameof(instanceConfiguration));
 			Assert.ArgumentNotNull(xmlInstanceConfiguration, nameof(xmlInstanceConfiguration));
 
+			instanceConfiguration.Name = xmlInstanceConfiguration.Name;
 			instanceConfiguration.Description = xmlInstanceConfiguration.Description;
 			instanceConfiguration.Notes = xmlInstanceConfiguration.Notes;
 			instanceConfiguration.Url = xmlInstanceConfiguration.Url;
