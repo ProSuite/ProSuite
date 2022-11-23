@@ -10,6 +10,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 		AddItemCommandBase<TestDescriptorItem>
 	{
 		private readonly IApplicationController _applicationController;
+		private string _toolTip;
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="BatchCreateQualityConditionsCommand"/> class.
@@ -26,15 +27,32 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 
 		public override string Text => "Batch Create Quality Conditions...";
 
-		protected override bool EnabledCore => Item.CanBatchCreateQualityConditions();
+		public override string ToolTip => _toolTip;
+
+		protected override bool EnabledCore
+		{
+			get
+			{
+				bool enabled =
+					Item.CanBatchCreateQualityConditions(out string _,
+					                                     out string reason);
+
+				string message =
+					$"Operation not supported for test descriptor {Item.Text}: {reason}";
+
+				_toolTip = enabled
+					           ? Text
+					           : message;
+				return enabled;
+			}
+		}
 
 		protected override void ExecuteCore()
 		{
 			try
 			{
-				DataQualityCategory category;
 				if (! Item.BatchCreateQualityConditions(ApplicationController.Window,
-				                                        out category))
+				                                        out DataQualityCategory category))
 				{
 					return;
 				}
