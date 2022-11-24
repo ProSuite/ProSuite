@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using ArcGIS.Core.Geometry;
 using NUnit.Framework;
@@ -79,6 +80,37 @@ namespace ProSuite.Commons.AGP.Core.Test
 		}
 
 		[Test]
+		public void CanConnectedComponents()
+		{
+			var empty = PolygonBuilderEx.CreatePolygon();
+			Assert.True(empty.IsEmpty);
+
+			var r0 = GeometryUtils.ConnectedComponents(empty);
+			Assert.NotNull(r0);
+			Assert.IsEmpty(r0);
+
+			var square = CreateSquarePolygon(); // one (exterior) ring
+			Assert.AreEqual(1, square.PartCount);
+
+			var r1 = GeometryUtils.ConnectedComponents(square);
+			Assert.NotNull(r1);
+			Assert.AreEqual(1, r1.Count);
+			Assert.AreEqual(1, r1.Single().PartCount);
+
+			var polygon = CreateMultiPolygon();
+			Assert.AreEqual(7, polygon.PartCount);
+
+			var r2 = GeometryUtils.ConnectedComponents(polygon);
+			Assert.NotNull(r2);
+			Assert.AreEqual(4, r2.Count);
+			var l2 = r2.OrderBy(p => p.Area).ToList();
+			Assert.AreEqual(1, l2[0].PartCount);
+			Assert.AreEqual(1, l2[1].PartCount);
+			Assert.AreEqual(2, l2[2].PartCount);
+			Assert.AreEqual(3, l2[3].PartCount);
+		}
+
+		[Test]
 		public void CanRemoveHoles()
 		{
 			var empty = PolygonBuilderEx.CreatePolygon();
@@ -89,13 +121,36 @@ namespace ProSuite.Commons.AGP.Core.Test
 			Assert.True(r0.IsEmpty);
 			Assert.AreEqual(0, r0.PartCount);
 
-			// 5 .....#######...
-			// 4 .###.#...###...
-			// 3 .#.#.#.#.#.#.#.
-			// 2 .###.#...###...
-			// 1 .....#######...
-			// 0 ...............
-			//   012345678901234
+			var poly = CreateMultiPolygon();
+
+			var r1 = GeometryUtils.RemoveHoles(poly);
+			Assert.NotNull(r1);
+			Assert.False(r1.IsEmpty);
+			Assert.AreEqual(3, r1.PartCount);
+			Assert.AreEqual(15, r1.PointCount);
+			Assert.AreEqual(9 + 35 + 1, r1.Area, 0.001);
+		}
+
+		#region Creating test geometries
+
+		private static Polygon CreateSquarePolygon()
+		{
+			var builder = new PolygonBuilderEx();
+
+			builder.AddPart(MakeCoords(0, 0, 0, 1, 1, 1, 1, 0, 0, 0));
+
+			return (Polygon) builder.ToGeometry();
+		}
+
+		private static Polygon CreateMultiPolygon()
+		{
+			// 5 . . . . . # # # # # # # . . .
+			// 4 . # # # . # . . . # # # . . .
+			// 3 . # . # . # . # . # . # . # .
+			// 2 . # # # . # . . . # # # . . .
+			// 1 . . . . . # # # # # # # . . .
+			// 0 . . . . . . . . . . . . . . .
+			//   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4
 
 			var builder = new PolygonBuilderEx();
 
@@ -109,14 +164,7 @@ namespace ProSuite.Commons.AGP.Core.Test
 
 			builder.AddPart(MakeCoords(13, 3,  13, 4,  14, 4,  14, 3,  13, 3)); // outer
 
-			var poly = (Polygon) builder.ToGeometry();
-
-			var r1 = GeometryUtils.RemoveHoles(poly);
-			Assert.NotNull(r1);
-			Assert.False(r1.IsEmpty);
-			Assert.AreEqual(3, r1.PartCount);
-			Assert.AreEqual(15, r1.PointCount);
-			Assert.AreEqual(9 + 35 + 1, r1.Area, 0.001);
+			return (Polygon) builder.ToGeometry();
 		}
 
 		private static IEnumerable<Coordinate2D> MakeCoords(params double[] coords)
@@ -126,6 +174,8 @@ namespace ProSuite.Commons.AGP.Core.Test
 				yield return new Coordinate2D(coords[i - 1], coords[i]);
 			}
 		}
+
+		#endregion
 
 		[Test]
 		public void Can_get_nearest_vertex()

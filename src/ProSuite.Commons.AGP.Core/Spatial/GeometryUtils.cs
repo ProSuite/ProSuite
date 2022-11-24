@@ -203,7 +203,8 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 		/// <summary>
 		/// Return a polygon that consists of all exterior rings
 		/// of the given <paramref name="polygon"/> that are not
-		/// contained within another exterior ring.
+		/// contained within another exterior ring. All interior
+		/// rings (holes) are discarded.
 		/// </summary>
 		public static Polygon RemoveHoles(Polygon polygon)
 		{
@@ -264,6 +265,10 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			return PolygonBuilderEx.CreatePolygon(result, flags, sref);
 		}
 
+		/// <summary>
+		/// Get the connected components, that is, the collection
+		/// of single polygons that make up the given (multi) polygon.
+		/// </summary>
 		/// <remarks>
 		/// Time is O(N**2) where N is the number of rings; any better ideas around?
 		/// </remarks>
@@ -274,16 +279,16 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 				return Array.Empty<Polygon>();
 			}
 
-			if (polygon.ExteriorRingCount <= 1)
-			{
-				return new[] { polygon };
-			}
+			// Algorithm: (1) separate all rings into exterior and interior
+			// rings; (2) for each exterior ring, build a polygon consisting
+			// of this exterior ring and all its holes, i.e., interior rings
+			// contained in this exterior ring.
 
 			var flags = polygon.GetAttributeFlags();
 			var sref = polygon.SpatialReference;
 
-			var exteriors = new List<Polygon>();
-			var interiors = new List<Polygon>();
+			var shells = new List<Polygon>();
+			var holes = new List<Polygon>();
 
 			int partCount = polygon.Parts.Count;
 			for (int i = 0; i < partCount; i++)
@@ -293,41 +298,49 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 
 				if (part.Area > 0)
 				{
-					exteriors.Add(part);
+					shells.Add(part);
 				}
 				else if (part.Area < 0)
 				{
-					interiors.Add(part);
+					holes.Add(part);
 				}
 				// else: skip degenerate part
 			}
 
-			Assert.AreEqual(polygon.ExteriorRingCount, exteriors.Count,
-			                $"polygon.ExteriorRingCount = {polygon.ExteriorRingCount}, but " +
-			                $"I found {exteriors.Count} exterior rings using the area method");
+			// Note: ExteriorRingCount is expensive (the first time called)
+			//Assert.AreEqual(polygon.ExteriorRingCount, shells.Count, "Oops");
 
-			var nested = new List<Polygon>();
+			var parts = new List<Polygon>();
 
-			for (var i = 0; i < exteriors.Count; i++)
+			for (var i = 0; i < shells.Count; i++)
 			{
-				nested.Clear();
-				nested.Add(exteriors[i]);
+				parts.Clear();
+				parts.Add(shells[i]);
 
-				foreach (var interior in interiors)
+				int j = 0;
+				int holeCount = holes.Count;
+				while (j < holeCount)
 				{
-					if (Contains(exteriors[i], interior))
+					if (Contains(shells[i], holes[j]))
 					{
-						nested.Add(interior);
+						parts.Add(holes[j]);
+						holes[j] = holes[--holeCount];
+					}
+					else
+					{
+						j++;
 					}
 				}
 
-				if (nested.Count > 1)
+				if (parts.Count > 1)
 				{
-					exteriors[i] = PolygonBuilderEx.CreatePolygon(nested, flags, sref);
+					holes.RemoveRange(holeCount, holes.Count - holeCount);
+
+					shells[i] = PolygonBuilderEx.CreatePolygon(parts, flags, sref);
 				}
 			}
 
-			return exteriors;
+			return shells;
 		}
 
 		/// <summary>
