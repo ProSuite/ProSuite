@@ -435,6 +435,13 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			       a.YMin <= b.YMax && b.YMin <= a.YMax;
 		}
 
+		public static bool Intersects(Geometry a, Geometry b)
+		{
+			if (a is null || b is null) return false;
+
+			return Engine.Intersects(a, b);
+		}
+
 		public static IGeometryEngine Engine
 		{
 			get => _engine ?? GeometryEngine.Instance;

@@ -94,28 +94,6 @@ namespace ProSuite.Processing.AGP.Core.Utils
 		}
 
 		/// <summary>
-		/// Return true iff <paramref name="shape"/> is within
-		/// <paramref name="perimeter"/>; if <paramref name="perimeter"/> is
-		/// <c>null</c> the <paramref name="shape"/> is considered within.
-		/// </summary>
-		// TODO Shouldn't this be on IProcessingContext?
-		// TODO Why Contains(perimeter, shape) instead of Intersects(perimeter, shape)?
-		public static bool WithinPerimeter(Geometry shape, [CanBeNull] Geometry perimeter)
-		{
-			if (shape == null)
-			{
-				return false;
-			}
-
-			if (perimeter == null)
-			{
-				return true;
-			}
-
-			return GeometryEngine.Instance.Contains(perimeter, shape);
-		}
-
-		/// <summary>
 		/// Find the subtype, if any, of the given row values and for the
 		/// given table (or feature class) definition; return null if no subtype.
 		/// </summary>
