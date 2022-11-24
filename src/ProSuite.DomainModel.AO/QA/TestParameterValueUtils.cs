@@ -4,6 +4,8 @@ using System.Linq;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Notifications;
+using ProSuite.Commons.Text;
+using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Core;
@@ -230,6 +232,75 @@ namespace ProSuite.DomainModel.AO.QA
 				return InstanceConfigurationUtils.AddScalarParameterValue(
 					qualityCondition, parameterName, value);
 			}
+		}
+
+		[CanBeNull]
+		public static Dataset GetDataset(
+			[CanBeNull] string datasetName,
+			[CanBeNull] string workspaceId,
+			[NotNull] TestParameter testParameter,
+			[NotNull] string instanceConfigurationName,
+			[NotNull] IDictionary<string, Model> modelsByWorkspaceId,
+			[NotNull] Func<string, IList<Dataset>> getDatasetsByName,
+			bool ignoreUnknownDataset)
+		{
+			if (string.IsNullOrWhiteSpace(datasetName))
+			{
+				if (testParameter.IsConstructorParameter)
+				{
+					Assert.NotNullOrEmpty(
+						datasetName,
+						"Dataset is not defined for constructor-parameter '{0}' in configuration '{1}'",
+						testParameter.Name, instanceConfigurationName);
+				}
+
+				return null;
+			}
+
+			if (StringUtils.IsNotEmpty(workspaceId))
+			{
+				Assert.True(modelsByWorkspaceId.TryGetValue(workspaceId, out Model model),
+				            "No matching model found for workspace id '{0}'", workspaceId);
+
+				return ModelElementUtils.GetDatasetFromStoredName(datasetName,
+					model, ignoreUnknownDataset);
+			}
+
+			if (StringUtils.IsNullOrEmptyOrBlank(workspaceId))
+			{
+				const string defaultModelId = "";
+
+				Model defaultModel;
+				if (modelsByWorkspaceId.TryGetValue(defaultModelId, out defaultModel))
+				{
+					// there is a default model
+					return ModelElementUtils.GetDatasetFromStoredName(datasetName,
+						defaultModel,
+						ignoreUnknownDataset);
+				}
+			}
+
+			// no workspace id for dataset, and there is no default model
+
+			IList<Dataset> datasets = getDatasetsByName(datasetName);
+
+			Assert.False(datasets.Count > 1,
+			             "More than one dataset found with name '{0}', for parameter '{1}' in configuration '{2}'",
+			             datasetName, testParameter.Name, instanceConfigurationName);
+
+			if (datasets.Count == 0)
+			{
+				if (ignoreUnknownDataset)
+				{
+					return null;
+				}
+
+				Assert.False(datasets.Count == 0,
+				             "Dataset '{0}' for parameter '{1}' in configuration '{2}' not found",
+				             datasetName, testParameter.Name, instanceConfigurationName);
+			}
+
+			return datasets[0];
 		}
 
 		[CanBeNull]

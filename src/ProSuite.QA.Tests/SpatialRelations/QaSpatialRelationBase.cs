@@ -98,8 +98,7 @@ namespace ProSuite.QA.Tests.SpatialRelations
 			var anyFound = false;
 			foreach (IReadOnlyRow relatedRow in Search(relatedTable,
 			                                           relatedFilter,
-			                                           relatedFilterHelper,
-			                                           feature.Shape))
+			                                           relatedFilterHelper))
 			{
 				anyFound = true;
 
@@ -111,8 +110,7 @@ namespace ProSuite.QA.Tests.SpatialRelations
 			{
 				if (IsDisjoint(searchGeometry,
 				               relatedTable, relatedTableIndex,
-				               relatedFilterHelper,
-				               feature.Shape))
+				               relatedFilterHelper))
 				{
 					errorCount += FindErrorsNoRelated(feature);
 				}
@@ -155,15 +153,14 @@ namespace ProSuite.QA.Tests.SpatialRelations
 
 		private bool IsDisjoint([NotNull] IGeometry shape,
 		                        [NotNull] IReadOnlyTable relatedTable, int relatedTableIndex,
-		                        [NotNull] QueryFilterHelper relatedFilterHelper,
-		                        [NotNull] IGeometry cacheShape)
+		                        [NotNull] QueryFilterHelper relatedFilterHelper)
 		{
 			ISpatialFilter intersectsFilter = _spatialFiltersIntersects[relatedTableIndex];
 			intersectsFilter.Geometry = shape;
 
 			foreach (
 				IReadOnlyRow row in
-				Search(relatedTable, intersectsFilter, relatedFilterHelper, cacheShape))
+				Search(relatedTable, intersectsFilter, relatedFilterHelper))
 			{
 				_msg.VerboseDebug(
 					() => $"not disjoint (row found: {GdbObjectUtils.ToString(row)})");

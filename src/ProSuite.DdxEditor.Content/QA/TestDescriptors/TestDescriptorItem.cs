@@ -521,12 +521,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 			return false;
 		}
 
-		public bool CanBatchCreateQualityConditions()
-		{
-			return CanBatchCreateQualityConditions(out string _, out string _);
-		}
-
-		private bool CanBatchCreateQualityConditions(
+		public bool CanBatchCreateQualityConditions(
 			[NotNull] out string datasetParameterName,
 			[NotNull] out string reason)
 		{

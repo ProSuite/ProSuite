@@ -24,22 +24,18 @@ namespace ProSuite.QA.Container
 		[NotNull]
 		protected IEnumerable<IReadOnlyRow> Search([NotNull] IReadOnlyTable table,
 		                                           [NotNull] IQueryFilter queryFilter,
-		                                           [NotNull] QueryFilterHelper filterHelper,
-		                                           [CanBeNull] IGeometry cacheGeometry = null)
+		                                           [NotNull] QueryFilterHelper filterHelper)
 		{
 			Assert.ArgumentNotNull(table, nameof(table));
 			Assert.ArgumentNotNull(queryFilter, nameof(queryFilter));
 			Assert.ArgumentNotNull(filterHelper, nameof(filterHelper));
 
-			if (DataContainer != null)
-			{
-				IEnumerable<IReadOnlyRow> rows = DataContainer.Search(table, queryFilter,
-					filterHelper, cacheGeometry);
+			IEnumerable<IReadOnlyRow> rows = DataContainer?.Search(table, queryFilter,
+				filterHelper);
 
-				if (rows != null)
-				{
-					return rows;
-				}
+			if (rows != null)
+			{
+				return rows;
 			}
 
 			// this could be controlled by a flag on the filterHelper or a parameter

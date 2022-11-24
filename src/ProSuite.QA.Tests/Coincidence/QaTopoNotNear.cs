@@ -573,7 +573,7 @@ namespace ProSuite.QA.Tests.Coincidence
 				QueryFilterHelper helper = _conflictHelpers[conflictTableIndex];
 
 				foreach (IReadOnlyRow neighborRow in
-				         Search(conflictTable, filter, helper, geom0))
+				         Search(conflictTable, filter, helper))
 				{
 					var neighborFeature = (IReadOnlyFeature) neighborRow;
 

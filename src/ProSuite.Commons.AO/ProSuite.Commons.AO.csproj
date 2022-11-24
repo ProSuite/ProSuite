@@ -15,7 +15,6 @@
     <VSArcGISVersion Condition=" '$(VSArcGISVersion)' == '' ">10.8</VSArcGISVersion>
     <VSArcGISProduct Condition=" '$(VSArcGISProduct)' == ''">ArcGIS</VSArcGISProduct>
     <ArcGISAssemblyPath Condition=" '$(ArcGISAssemblyPath)' == '' ">C:\Program Files (x86)\ArcGIS\DeveloperKit10.8\DotNet</ArcGISAssemblyPath>
-    <ProAssemblyPath Condition=" '$(ProAssemblyPath)' == '' ">C:\Program Files\ArcGIS\Pro</ProAssemblyPath>
 
     <NoWarn>1591</NoWarn>
 

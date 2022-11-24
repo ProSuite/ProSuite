@@ -59,6 +59,7 @@
     <Reference Include="System.Net.Http" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\ProSuite.Commons.AO.Licensing\ProSuite.Commons.AO.Licensing.csproj" />
     <ProjectReference Include="..\ProSuite.Commons.AO.Test\ProSuite.Commons.AO.Test.csproj" />
     <ProjectReference Include="..\ProSuite.Commons.AO\ProSuite.Commons.AO.csproj" />
     <ProjectReference Include="..\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj" />

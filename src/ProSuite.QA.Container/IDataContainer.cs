@@ -22,8 +22,7 @@ namespace ProSuite.QA.Container
 
 		IEnumerable<IReadOnlyRow> Search([NotNull] IReadOnlyTable table,
 		                                 [NotNull] IQueryFilter queryFilter,
-		                                 [NotNull] QueryFilterHelper filterHelper,
-		                                 [CanBeNull] IGeometry cacheGeometry = null);
+		                                 [NotNull] QueryFilterHelper filterHelper);
 
 		[CanBeNull]
 		UniqueIdProvider GetUniqueIdProvider([NotNull] IReadOnlyTable table);

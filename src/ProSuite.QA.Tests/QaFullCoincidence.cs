@@ -208,8 +208,7 @@ namespace ProSuite.QA.Tests
 				var neighborTable = (IReadOnlyTable) neighborFeatureClass;
 
 				foreach (IReadOnlyRow neighborRow in
-				         Search(neighborTable, spatialFilter, _helperList[neighborTableIndex],
-				                geom0))
+				         Search(neighborTable, spatialFilter, _helperList[neighborTableIndex]))
 				{
 					if (IgnoreNeighbor(row, neighborRow, neighborTableIndex))
 					{
