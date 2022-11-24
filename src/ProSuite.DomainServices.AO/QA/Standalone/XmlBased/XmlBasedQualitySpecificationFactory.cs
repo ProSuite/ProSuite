@@ -8,7 +8,6 @@ using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Exceptions;
-using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.AO.QA.Xml;
@@ -18,13 +17,8 @@ using ProSuite.DomainServices.AO.QA.VerifiedDataModel;
 
 namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 {
-	public class XmlBasedQualitySpecificationFactory
+	public class XmlBasedQualitySpecificationFactory : QualitySpecificationFactoryBase
 	{
-		private readonly IVerifiedModelFactory _modelFactory;
-		[NotNull] private readonly IOpenDataset _datasetOpener;
-
-		private static readonly IMsg _msg = Msg.ForCurrentClass();
-
 		/// <summary>
 		/// Initializes a new instance of the <see cref="XmlBasedQualitySpecificationFactory"/> class.
 		/// </summary>
@@ -32,29 +26,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 		/// <param name="datasetOpener"></param>
 		public XmlBasedQualitySpecificationFactory(
 			[NotNull] IVerifiedModelFactory modelFactory,
-			[NotNull] IOpenDataset datasetOpener)
-		{
-			Assert.ArgumentNotNull(modelFactory, nameof(modelFactory));
-			Assert.ArgumentNotNull(datasetOpener, nameof(datasetOpener));
-
-			_modelFactory = modelFactory;
-			_datasetOpener = datasetOpener;
-		}
-
-		[NotNull]
-		public QualitySpecification CreateQualitySpecification(
-			[NotNull] XmlDataQualityDocument document,
-			[NotNull] IEnumerable<DataSource> dataSources,
-			bool ignoreConditionsForUnknownDatasets)
-		{
-			KeyValuePair<XmlQualitySpecification, XmlDataQualityCategory> keyValuePair =
-				document.GetAllQualitySpecifications().Single();
-
-			string singleSpecificationName = Assert.NotNullOrEmpty(keyValuePair.Key.Name);
-
-			return CreateQualitySpecification(document, singleSpecificationName, dataSources,
-			                                  ignoreConditionsForUnknownDatasets);
-		}
+			[NotNull] IOpenDataset datasetOpener) : base(modelFactory, datasetOpener) { }
 
 		[NotNull]
 		public QualitySpecification CreateQualitySpecification(
@@ -149,7 +121,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 				GetCategoryMap(document);
 
 			XmlDataQualityDocumentCache documentCache =
-				XmlDataQualityUtils.GetDocumentCache(document, new[] {xmlQualitySpecification});
+				XmlDataQualityUtils.GetDocumentCache(document, new[] { xmlQualitySpecification });
 
 			IList<XmlWorkspace> referencedXmlWorkspaces =
 				XmlDataQualityUtils.GetReferencedWorkspaces(documentCache);
@@ -290,11 +262,11 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 				QualityCondition createdCondition = XmlDataQualityUtils.CreateQualityCondition(
 					xmlCondition, xmlDataDocumentCache, getDatasetsByName, category,
 					ignoreConditionsForUnknownDatasets,
-					out ICollection<XmlDatasetTestParameterValue> unknownDatasetParameters);
+					out ICollection<DatasetTestParameterRecord> unknownDatasetParameters);
 
 				if (createdCondition == null)
 				{
-					HandleNoConditionCreated(xmlCondition, modelsByWorkspaceId,
+					HandleNoConditionCreated(xmlCondition.Name, modelsByWorkspaceId,
 					                         ignoreConditionsForUnknownDatasets,
 					                         unknownDatasetParameters);
 				}
@@ -323,7 +295,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 				XmlQualityCondition xmlCondition = pair.Key;
 				DataQualityCategory conditionCategory = pair.Value;
 
-				ICollection<XmlDatasetTestParameterValue> unknownDatasetParameters;
+				ICollection<DatasetTestParameterRecord> unknownDatasetParameters;
 				QualityCondition qualityCondition =
 					XmlDataQualityUtils.CreateQualityConditionLegacy(
 						xmlCondition,
@@ -336,7 +308,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 
 				if (qualityCondition == null)
 				{
-					HandleNoConditionCreated(xmlCondition, modelsByWorkspaceId,
+					HandleNoConditionCreated(xmlCondition.Name, modelsByWorkspaceId,
 					                         ignoreConditionsForUnknownDatasets,
 					                         unknownDatasetParameters);
 				}
@@ -347,28 +319,6 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			}
 
 			return qualityConditions;
-		}
-
-		private static void HandleNoConditionCreated(XmlQualityCondition xmlCondition,
-		                                             IDictionary<string, Model> modelsByWorkspaceId,
-		                                             bool ignoreConditionsForUnknownDatasets,
-		                                             ICollection<XmlDatasetTestParameterValue>
-			                                             unknownDatasetParameters)
-		{
-			Assert.True(ignoreConditionsForUnknownDatasets,
-			            "ignoreConditionsForUnknownDatasets");
-			Assert.True(unknownDatasetParameters.Count > 0,
-			            "Unexpected number of unknown datasets");
-
-			_msg.WarnFormat(
-				unknownDatasetParameters.Count == 1
-					? "Quality condition '{0}' is ignored because the following dataset is not found: {1}"
-					: "Quality condition '{0}' is ignored because the following datasets are not found: {1}",
-				xmlCondition.Name,
-				XmlDataQualityUtils.ConcatenateUnknownDatasetNames(
-					unknownDatasetParameters,
-					modelsByWorkspaceId,
-					DataSource.AnonymousId));
 		}
 
 		[NotNull]
@@ -542,8 +492,8 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			[CanBeNull] string schemaOwner,
 			[NotNull] IEnumerable<XmlInstanceConfiguration> referencedConditions)
 		{
-			Model result = _modelFactory.CreateModel(workspace, modelName, null,
-			                                         databaseName, schemaOwner);
+			Model result = ModelFactory.CreateModel(workspace, modelName, null,
+			                                        databaseName, schemaOwner);
 
 			ISpatialReference spatialReference = GetMainSpatialReference(
 				result, workspaceId, referencedConditions);
@@ -611,58 +561,10 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			[NotNull] string workspaceId,
 			[NotNull] IEnumerable<XmlInstanceConfiguration> referencedConditions)
 		{
-			var spatialDatasetReferenceCount =
-				new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+			IEnumerable<Dataset> referencedDatasets = XmlDataQualityUtils.GetReferencedDatasets(
+				model, workspaceId, referencedConditions);
 
-			foreach (Dataset dataset in XmlDataQualityUtils.GetReferencedDatasets(
-				         model, workspaceId, referencedConditions))
-			{
-				if (! (dataset is ISpatialDataset))
-				{
-					continue;
-				}
-
-				if (! spatialDatasetReferenceCount.ContainsKey(dataset.Name))
-				{
-					spatialDatasetReferenceCount.Add(dataset.Name, 1);
-				}
-				else
-				{
-					spatialDatasetReferenceCount[dataset.Name]++;
-				}
-			}
-
-			foreach (KeyValuePair<string, int> pair in
-			         spatialDatasetReferenceCount.OrderByDescending(kvp => kvp.Value))
-			{
-				string datasetName = pair.Key;
-
-				Dataset maxDataset = model.GetDatasetByModelName(datasetName);
-
-				if (maxDataset == null)
-				{
-					continue;
-				}
-
-				ISpatialReference spatialReference = GetSpatialReference(maxDataset);
-
-				if (spatialReference != null)
-				{
-					return spatialReference;
-				}
-			}
-
-			return null;
-		}
-
-		[CanBeNull]
-		private ISpatialReference GetSpatialReference([NotNull] Dataset dataset)
-		{
-			Assert.ArgumentNotNull(dataset, nameof(dataset));
-
-			IGeoDataset geoDataset = _datasetOpener.OpenDataset(dataset) as IGeoDataset;
-
-			return geoDataset?.SpatialReference;
+			return GetMainSpatialReference(model, referencedDatasets);
 		}
 	}
 }
