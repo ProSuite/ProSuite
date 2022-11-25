@@ -6,6 +6,7 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Reflection;
 using ProSuite.DomainModel.Core.QA;
+using ProSuite.QA.Core;
 using ProSuite.QA.Core.Reports;
 
 namespace ProSuite.DomainModel.AO.QA.TestReport
@@ -79,7 +80,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			{
 				Type instanceType = Assert.NotNull(descriptor.Class).GetInstanceType();
 
-				foreach (int ctorIndex in InstanceFactoryUtils.GetConstructorIndexes(
+				foreach (int ctorIndex in InstanceUtils.GetConstructorIndexes(
 					         instanceType, false, false))
 				{
 					builder.IncludeTransformer(instanceType, ctorIndex);
@@ -140,7 +141,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 				foreach (Type testType in TestFactoryUtils.GetTestClasses(
 					         assembly, includeObsolete, includeInternallyUsed))
 				{
-					foreach (int ctorIndex in InstanceFactoryUtils.GetConstructorIndexes(
+					foreach (int ctorIndex in InstanceUtils.GetConstructorIndexes(
 						         testType, includeObsolete, includeInternallyUsed))
 					{
 						reportBuilder.IncludeTest(testType, ctorIndex);
@@ -160,7 +161,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 				foreach (Type transformerType in InstanceFactoryUtils.GetTransformerClasses(
 					         assembly, includeObsolete, includeInternallyUsed))
 				{
-					foreach (int ctorIndex in InstanceFactoryUtils.GetConstructorIndexes(
+					foreach (int ctorIndex in InstanceUtils.GetConstructorIndexes(
 						         transformerType, includeObsolete, includeInternallyUsed))
 					{
 						reportBuilder.IncludeTransformer(transformerType, ctorIndex);
@@ -180,7 +181,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 				foreach (Type transformerType in InstanceFactoryUtils.GetIssueFilterClasses(
 					         assembly, includeObsolete, includeInternallyUsed))
 				{
-					foreach (int ctorIndex in InstanceFactoryUtils.GetConstructorIndexes(
+					foreach (int ctorIndex in InstanceUtils.GetConstructorIndexes(
 						         transformerType, includeObsolete, includeInternallyUsed))
 					{
 						reportBuilder.IncludeIssueFilter(transformerType, ctorIndex);
