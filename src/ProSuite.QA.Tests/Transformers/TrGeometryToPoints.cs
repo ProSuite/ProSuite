@@ -4,6 +4,7 @@ using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.QA.Container;
 using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 
@@ -13,10 +14,64 @@ namespace ProSuite.QA.Tests.Transformers
 	[GeometryTransformer]
 	public class TrGeometryToPoints : TrGeometryTransform
 	{
+		private class UniqueIdKey : IUniqueIdKey
+		{
+			bool IUniqueIdKey.IsVirtuell => BaseOid < 0;
+
+			public int BaseOid { get; }
+			public int PartIdx { get; }
+			public int VertexIdx { get; }
+
+			public UniqueIdKey(int baseOid, int partIdx, int vertexIdx)
+			{
+				BaseOid = baseOid;
+				PartIdx = partIdx;
+				VertexIdx = vertexIdx;
+			}
+
+			public GdbFeature BaseFeature { get; set; }
+
+			public IList<InvolvedRow> GetInvolvedRows()
+			{
+				return InvolvedRowUtils.GetInvolvedRows(BaseFeature);
+			}
+
+			public override string ToString() =>
+				$"Oid:{BaseOid}; Part:{PartIdx}; Vertex:{VertexIdx}";
+		}
+
+		private class UniqueIdKeyComparer : IEqualityComparer<UniqueIdKey>
+		{
+			public bool Equals(UniqueIdKey x, UniqueIdKey y)
+			{
+				if (x == y)
+				{
+					return true;
+				}
+
+				if (x == null || y == null)
+				{
+					return false;
+				}
+
+				return x.BaseOid == y.BaseOid &&
+				       x.PartIdx == y.PartIdx &&
+				       x.PartIdx == y.PartIdx;
+			}
+
+			public int GetHashCode(UniqueIdKey obj)
+			{
+				return obj.BaseOid + 29 * (obj.PartIdx + 37 * obj.VertexIdx);
+			}
+		}
+
 		private readonly GeometryComponent _component;
 
 		public const string AttrPartIndex = "PartIndex";
 		public const string AttrVertexIndex = "VertexIndex";
+		private readonly SimpleUniqueIdProvider<UniqueIdKey> _uniqueIdProvider =
+			new SimpleUniqueIdProvider<UniqueIdKey>(new UniqueIdKeyComparer());
+
 		private int? _iAttrPart;
 		private int? _iAttrVertex;
 
@@ -46,7 +101,7 @@ namespace ProSuite.QA.Tests.Transformers
 			IGeometry geom = GeometryComponentUtils.GetGeometryComponent(source, _component);
 			if (geom is IPoint pnt)
 			{
-				GdbFeature feature = CreateFeature();
+				GdbFeature feature = CreateFeature(sourceOid);
 				feature.Shape = pnt;
 				yield return feature;
 			}
@@ -62,7 +117,9 @@ namespace ProSuite.QA.Tests.Transformers
 						break;
 					}
 
-					GdbFeature feature = CreateFeature();
+					UniqueIdKey key = new UniqueIdKey(sourceOid ?? -1, partIndex, vertexIndex);
+					GdbFeature feature = CreateFeature(_uniqueIdProvider.GetUniqueId(key));
+					key.BaseFeature = feature;
 					feature.Shape = p;
 
 					_iAttrPart = _iAttrPart ?? feature.Fields.FindField(AttrPartIndex);

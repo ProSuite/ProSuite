@@ -65,7 +65,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 			public int GetHashCode(UniqueIdKey obj)
 			{
-				return obj.BaseOid + 29 * (obj.InnerRingIdx + 37 * obj.InnerRingIdx);
+				return obj.BaseOid + 29 * (obj.OuterRingIdx + 37 * obj.InnerRingIdx);
 			}
 		}
 
