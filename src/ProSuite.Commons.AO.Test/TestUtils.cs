@@ -105,6 +105,13 @@ namespace ProSuite.Commons.AO.Test
 			return workspace;
 		}
 
+		public static IWorkspace OpenUserWorkspacePostgres()
+		{
+			return WorkspaceUtils.OpenSDEWorkspace(
+				"data_osm", DirectConnectDriver.PostgreSQL, "localhost",
+				"osm", "osm");
+		}
+
 		public static void GetMockFeatures(out IFeature mockLine1Feature,
 		                                   out IFeature mockLine2Feature,
 		                                   out IFeature mockPoly1Feature,

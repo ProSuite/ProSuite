@@ -45,6 +45,47 @@ namespace ProSuite.QA.Core
 			}
 		}
 
+		public static IEnumerable<Tuple<Type, List<int>>> GetConstructorsByType(
+			IEnumerable<Type> types,
+			bool includeObsolete = false,
+			bool includeInternallyUsed = false)
+		{
+			foreach (Type testType in types)
+			{
+				if (! IncludeType(testType))
+				{
+					continue;
+				}
+
+				var constructors = new List<int>();
+				foreach (int ctorIndex in GetConstructorIndexes(
+					         testType, includeObsolete, includeInternallyUsed))
+				{
+					constructors.Add(ctorIndex);
+				}
+
+				yield return new Tuple<Type, List<int>>(testType, constructors);
+			}
+		}
+
+		public static IEnumerable<int> GetConstructorIndexes(Type instanceType,
+		                                                     bool includeObsolete = false,
+		                                                     bool includeInternallyUsed = false)
+		{
+			Assert.ArgumentNotNull(instanceType, nameof(instanceType));
+
+			var constructorIndex = 0;
+			foreach (ConstructorInfo ctorInfo in instanceType.GetConstructors())
+			{
+				if (IncludeConstructor(ctorInfo, includeObsolete, includeInternallyUsed))
+				{
+					yield return constructorIndex;
+				}
+
+				constructorIndex++;
+			}
+		}
+
 		public static T CreateInstance<T>([NotNull] Type type,
 		                                  int constructorId,
 		                                  object[] constructorArgs)
@@ -233,6 +274,55 @@ namespace ProSuite.QA.Core
 		public static string[] GetCategories([NotNull] Type type)
 		{
 			return ReflectionUtils.GetCategories(type);
+		}
+
+		public static bool IsInstanceType([NotNull] Type candidateType, [NotNull] Type instanceType)
+		{
+			Assert.ArgumentNotNull(candidateType, nameof(candidateType));
+			Assert.ArgumentNotNull(instanceType, nameof(instanceType));
+
+			return instanceType.IsAssignableFrom(candidateType) &&
+			       ! candidateType.IsAbstract &&
+			       candidateType.IsPublic;
+		}
+
+		public static bool IncludeType(Type candidateType,
+		                               bool includeObsolete = false,
+		                               bool includeInternallyUsed = false)
+		{
+			if (candidateType.IsAbstract)
+			{
+				return false;
+			}
+
+			if (! candidateType.IsPublic)
+			{
+				return false;
+			}
+
+			if (! includeObsolete && IsObsolete(candidateType))
+			{
+				return false;
+			}
+
+			if (! includeInternallyUsed && IsInternallyUsed(candidateType))
+			{
+				return false;
+			}
+
+			return true;
+		}
+
+		private static bool IncludeConstructor(ConstructorInfo ctorInfo,
+		                                       bool includeObsolete,
+		                                       bool includeInternallyUsed)
+		{
+			if (! includeObsolete && ReflectionUtils.IsObsolete(ctorInfo, out _))
+			{
+				return false;
+			}
+
+			return includeInternallyUsed || ! HasInternallyUsedAttribute(ctorInfo);
 		}
 
 		public static bool IsObsolete([NotNull] Type type)

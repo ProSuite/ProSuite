@@ -7,7 +7,6 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Logging;
-using ProSuite.Commons.Reflection;
 using ProSuite.DomainModel.Core;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Container;
@@ -156,7 +155,7 @@ namespace ProSuite.DomainModel.AO.QA
 
 			foreach (Type candidateType in assembly.GetTypes())
 			{
-				if (! IsInstanceType(candidateType, baseType))
+				if (! InstanceUtils.IsInstanceType(candidateType, baseType))
 				{
 					continue;
 				}
@@ -172,25 +171,6 @@ namespace ProSuite.DomainModel.AO.QA
 				}
 
 				yield return candidateType;
-			}
-		}
-
-		[NotNull]
-		public static IEnumerable<int> GetConstructorIndexes([NotNull] Type instanceType,
-		                                                     bool includeObsolete,
-		                                                     bool includeInternallyUsed)
-		{
-			Assert.ArgumentNotNull(instanceType, nameof(instanceType));
-
-			var constructorIndex = 0;
-			foreach (ConstructorInfo ctorInfo in instanceType.GetConstructors())
-			{
-				if (IncludeConstructor(ctorInfo, includeObsolete, includeInternallyUsed))
-				{
-					yield return constructorIndex;
-				}
-
-				constructorIndex++;
 			}
 		}
 
@@ -232,28 +212,6 @@ namespace ProSuite.DomainModel.AO.QA
 			sb.AppendLine();
 
 			return sb;
-		}
-
-		private static bool IncludeConstructor([NotNull] ConstructorInfo ctorInfo,
-		                                       bool includeObsolete,
-		                                       bool includeInternallyUsed)
-		{
-			if (! includeObsolete && ReflectionUtils.IsObsolete(ctorInfo, out _))
-			{
-				return false;
-			}
-
-			return includeInternallyUsed || ! InstanceUtils.HasInternallyUsedAttribute(ctorInfo);
-		}
-
-		public static bool IsInstanceType([NotNull] Type candidateType, [NotNull] Type instanceType)
-		{
-			Assert.ArgumentNotNull(candidateType, nameof(candidateType));
-			Assert.ArgumentNotNull(instanceType, nameof(instanceType));
-
-			return instanceType.IsAssignableFrom(candidateType) &&
-			       ! candidateType.IsAbstract &&
-			       candidateType.IsPublic;
 		}
 
 		private static IssueFilterFactory CreateIssueFilterFactory(

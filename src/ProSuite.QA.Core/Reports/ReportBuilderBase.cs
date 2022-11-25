@@ -6,18 +6,6 @@ namespace ProSuite.QA.Core.Reports
 {
 	public abstract class ReportBuilderBase : IReportBuilder
 	{
-		private readonly IDictionary<Type, IncludedInstanceClass> _includedTestClasses =
-			new Dictionary<Type, IncludedInstanceClass>();
-
-		private readonly IDictionary<Type, IncludedInstanceClass> _includedTransformerClasses =
-			new Dictionary<Type, IncludedInstanceClass>();
-
-		private readonly IDictionary<Type, IncludedInstanceClass> _includedFilterClasses =
-			new Dictionary<Type, IncludedInstanceClass>();
-
-		private readonly List<IncludedTestFactory> _includedTestFactories =
-			new List<IncludedTestFactory>();
-
 		public bool IncludeAssemblyInfo { get; set; }
 
 		/// <summary>
@@ -28,16 +16,17 @@ namespace ProSuite.QA.Core.Reports
 		/// included; otherwise, <c>false</c>.</value>
 		public bool IncludeObsolete { get; set; }
 
-		protected IDictionary<Type, IncludedInstanceClass> IncludedTestClasses =>
-			_includedTestClasses;
+		protected IDictionary<Type, IncludedInstanceClass> IncludedTestClasses { get; } =
+			new Dictionary<Type, IncludedInstanceClass>();
 
-		protected IDictionary<Type, IncludedInstanceClass> IncludedTransformerClasses =>
-			_includedTransformerClasses;
+		protected IDictionary<Type, IncludedInstanceClass> IncludedTransformerClasses { get; } =
+			new Dictionary<Type, IncludedInstanceClass>();
 
-		protected IDictionary<Type, IncludedInstanceClass> IncludedFilterClasses =>
-			_includedFilterClasses;
+		protected IDictionary<Type, IncludedInstanceClass> IncludedFilterClasses { get; } =
+			new Dictionary<Type, IncludedInstanceClass>();
 
-		protected List<IncludedTestFactory> IncludedTestFactories => _includedTestFactories;
+		protected List<IncludedTestFactory> IncludedTestFactories { get; } =
+			new List<IncludedTestFactory>();
 
 		public void IncludeTestFactory(Type testFactoryType)
 		{
