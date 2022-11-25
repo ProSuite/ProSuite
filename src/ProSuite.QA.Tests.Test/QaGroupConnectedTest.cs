@@ -30,7 +30,7 @@ namespace ProSuite.QA.Tests.Test
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			TestUtils.InitializeLicense();
+			TestUtils.InitializeLicense(activateAdvancedLicense: true);
 
 			const string databaseName = "QaGroupConnectedTest";
 			_pgdbWorkspace = TestWorkspaceUtils.CreateTestAccessWorkspace(databaseName);

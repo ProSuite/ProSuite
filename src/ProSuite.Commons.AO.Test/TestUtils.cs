@@ -239,11 +239,14 @@ namespace ProSuite.Commons.AO.Test
 
 		private static IArcGISLicense _lic;
 
-		public static void InitializeLicense(bool includeAnalyst3d = false)
+		public static void InitializeLicense(bool includeAnalyst3d = false, bool activateAdvancedLicense = false)
 		{
 			if (_lic == null)
 			{
-				_lic = ActivateLicense();
+
+				_lic = activateAdvancedLicense
+					       ? ActivateAdvancedLicense()
+					       : ActivateLicense();
 			}
 
 			_lic.Initialize(includeAnalyst3d);
@@ -269,6 +272,27 @@ namespace ProSuite.Commons.AO.Test
 			if (licType != null)
 			{
 				return (IArcGISLicense) Activator.CreateInstance(licType);
+			}
+
+			throw new FileNotFoundException($"Type {agLicenseClass} could not be loaded.");
+		}
+
+
+		private static IArcGISLicense ActivateAdvancedLicense()
+		{
+			// Allow forcing a different license depending on the machine, such as Advanced:
+			string agLicenseClass = Environment.GetEnvironmentVariable("VSArcGISLicense");
+
+			if (string.IsNullOrEmpty(agLicenseClass))
+			{
+				return new AdvancedLicense();
+			}
+
+			Type licType = Type.GetType(agLicenseClass);
+
+			if (licType != null)
+			{
+				return (IArcGISLicense)Activator.CreateInstance(licType);
 			}
 
 			throw new FileNotFoundException($"Type {agLicenseClass} could not be loaded.");

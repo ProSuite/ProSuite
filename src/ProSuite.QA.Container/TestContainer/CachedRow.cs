@@ -150,6 +150,7 @@ namespace ProSuite.QA.Container.TestContainer
 			public override int OID => _feature.OID;
 
 			public override IReadOnlyTable ReadOnlyTable => _table ?? (_table = _feature.Table);
+			public override IObjectClass Class => (IObjectClass)(_feature.Table as ReadOnlyFeatureClass)?.BaseTable;
 
 			public IReadOnlyFeatureClass FeatureClass => (IReadOnlyFeatureClass) ReadOnlyTable;
 
