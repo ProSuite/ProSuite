@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using Grpc.Core;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -18,6 +19,32 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 		/// </summary>
 		public static int GeometryDefaultDeadline { get; set; } = GetToolDefaultDeadline();
 
+		public static async Task<T> TryAsync<T>(Func<CallOptions, Task<T>> func,
+		                                        CancellationToken cancellationToken,
+		                                        int deadlineMilliseconds = 30000,
+		                                        bool noWarn = false)
+		{
+			if (cancellationToken.IsCancellationRequested)
+			{
+				_msg.Warn("Operation cancelled");
+				return default;
+			}
+
+			CallOptions callOptions = GetCallOptions<T>(cancellationToken, deadlineMilliseconds);
+
+			T result;
+			try
+			{
+				result = await func(callOptions);
+			}
+			catch (RpcException rpcException)
+			{
+				return HandleRpcException<T>(rpcException, noWarn);
+			}
+
+			return result;
+		}
+
 		public static T Try<T>(
 			[NotNull] Func<CallOptions, T> func,
 			CancellationToken cancellationToken,
@@ -30,9 +57,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 				return default;
 			}
 
-			CallOptions callOptions =
-				new CallOptions(null, DateTime.UtcNow.AddMilliseconds(deadlineMilliseconds),
-				                cancellationToken);
+			CallOptions callOptions = GetCallOptions<T>(cancellationToken, deadlineMilliseconds);
 
 			T result;
 			try
@@ -41,39 +66,53 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 			}
 			catch (RpcException rpcException)
 			{
-				_msg.Debug("Exception received from server", rpcException);
-
-				const string exceptionBinKey = "exception-bin";
-
-				if (rpcException.Trailers.Any(t => t.Key.Equals(exceptionBinKey)))
-				{
-					byte[] bytes = rpcException.Trailers.GetValueBytes(exceptionBinKey);
-
-					if (bytes != null)
-					{
-						string serverException = Encoding.UTF8.GetString(bytes);
-						_msg.DebugFormat("Server call stack: {0}", serverException);
-					}
-				}
-
-				string message = rpcException.Status.Detail;
-
-				if (rpcException.StatusCode == StatusCode.Cancelled)
-				{
-					Log("Operation cancelled", noWarn);
-					return default;
-				}
-
-				if (rpcException.StatusCode == StatusCode.DeadlineExceeded)
-				{
-					Log("Operation timed out", noWarn);
-					return default;
-				}
-
-				throw new Exception(message, rpcException);
+				return HandleRpcException<T>(rpcException, noWarn);
 			}
 
 			return result;
+		}
+
+		private static CallOptions GetCallOptions<T>(CancellationToken cancellationToken,
+		                                             int deadlineMilliseconds)
+		{
+			CallOptions callOptions =
+				new CallOptions(null, DateTime.UtcNow.AddMilliseconds(deadlineMilliseconds),
+				                cancellationToken);
+			return callOptions;
+		}
+
+		private static T HandleRpcException<T>(RpcException rpcException, bool noWarn)
+		{
+			_msg.Debug("Exception received from server", rpcException);
+
+			const string exceptionBinKey = "exception-bin";
+
+			if (rpcException.Trailers.Any(t => t.Key.Equals(exceptionBinKey)))
+			{
+				byte[] bytes = rpcException.Trailers.GetValueBytes(exceptionBinKey);
+
+				if (bytes != null)
+				{
+					string serverException = Encoding.UTF8.GetString(bytes);
+					_msg.DebugFormat("Server call stack: {0}", serverException);
+				}
+			}
+
+			string message = rpcException.Status.Detail;
+
+			if (rpcException.StatusCode == StatusCode.Cancelled)
+			{
+				Log("Operation cancelled", noWarn);
+				return default;
+			}
+
+			if (rpcException.StatusCode == StatusCode.DeadlineExceeded)
+			{
+				Log("Operation timed out", noWarn);
+				return default;
+			}
+
+			throw new Exception(message, rpcException);
 		}
 
 		private static void Log(string message, bool noWarn)

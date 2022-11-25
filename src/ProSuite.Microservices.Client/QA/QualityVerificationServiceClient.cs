@@ -25,7 +25,7 @@ namespace ProSuite.Microservices.Client.QA
 
 		public override string ServiceName => nameof(QualityVerificationGrpc);
 
-		public override string ServiceDisplayName => "Quality Verification";
+		public override string ServiceDisplayName => "Quality Verification Service";
 
 		[CanBeNull]
 		public QualityVerificationGrpc.QualityVerificationGrpcClient QaClient

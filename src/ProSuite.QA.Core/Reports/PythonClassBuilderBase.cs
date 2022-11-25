@@ -39,25 +39,16 @@ namespace ProSuite.QA.Core.Reports
 
 			WriteHeader(sb);
 
-			WriteImports(sb);
+			WriteConditionImports(sb);
 
 			CreatePythonConditionFactoryClass(includedTests, sb);
 
 			TextWriter.Write(sb.ToString());
 		}
 
-		protected virtual void WriteHeader(StringBuilder sb) { }
+		public virtual void WriteHeader(StringBuilder sb) { }
 
-		private static void WriteImports(StringBuilder sb)
-		{
-			sb.AppendLine("from datetime import datetime");
-			sb.AppendLine("from typing import List");
-			sb.AppendLine("from prosuite.condition import Condition");
-			sb.AppendLine("from prosuite.parameter import Parameter");
-			sb.AppendLine("from prosuite.dataset import Dataset");
-
-			sb.AppendLine();
-		}
+		protected virtual void WriteConditionImports(StringBuilder sb) { }
 
 		private void CreatePythonConditionFactoryClass(
 			[NotNull] IEnumerable<IncludedInstanceBase> includedTests,

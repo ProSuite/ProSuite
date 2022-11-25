@@ -87,6 +87,8 @@ namespace ProSuite.Microservices.Client
 
 		public bool CanFailOver => _allChannelConfigs?.Count > 1;
 
+		public bool ProcessStarted => _startedProcess != null && ! _startedProcess.HasExited;
+
 		public void Disconnect()
 		{
 			Channel?.ShutdownAsync();
@@ -100,7 +102,7 @@ namespace ProSuite.Microservices.Client
 			}
 			catch (Exception e)
 			{
-				_msg.Debug($"Error killing the started microserver process {_startedProcess}", e);
+				_msg.Debug($"Error killing the started service process {_startedProcess}", e);
 			}
 		}
 

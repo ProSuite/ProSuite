@@ -130,7 +130,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 				ServiceCallStatus result =
 					await GrpcServerUtils.ExecuteServiceCall(
-						func, context, _staThreadScheduler);
+						func, context, _staThreadScheduler, true);
 
 				_msg.InfoFormat("Verification {0}", result);
 			}
@@ -182,7 +182,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 				ServiceCallStatus result =
 					await GrpcServerUtils.ExecuteServiceCall(
-						func, context, _staThreadScheduler);
+						func, context, _staThreadScheduler, true);
 
 				_msg.InfoFormat("Verification {0}", result);
 			}
@@ -230,7 +230,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 							VerifyStandaloneXmlCore(request, responseStreamer, trackCancel);
 
 					result = await GrpcServerUtils.ExecuteServiceCall(
-						         func, context, _staThreadScheduler);
+						         func, context, _staThreadScheduler, true);
 
 					// final message:
 					responseStreamer.WriteProgressAndIssues(

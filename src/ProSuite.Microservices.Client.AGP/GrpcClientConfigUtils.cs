@@ -16,13 +16,14 @@ namespace ProSuite.Microservices.Client.AGP
 		[NotNull]
 		public static async Task<GeometryProcessingClient> StartGeometryProcessingClient(
 			[CanBeNull] string executablePath,
-			[CanBeNull] string configFilePath)
+			[CanBeNull] string configFilePath,
+			int fallbackPort = 5153)
 		{
 			ClientChannelConfig clientChannelConfig;
 
 			if (string.IsNullOrEmpty(configFilePath))
 			{
-				clientChannelConfig = FallbackToDefaultChannel("Geometry processing", 5153);
+				clientChannelConfig = FallbackToDefaultChannel("Geometry Service", fallbackPort);
 			}
 			else
 			{
@@ -42,13 +43,14 @@ namespace ProSuite.Microservices.Client.AGP
 		[NotNull]
 		public static async Task<QualityVerificationServiceClient> StartQaServiceClient(
 			[CanBeNull] string executablePath,
-			[CanBeNull] string configFilePath)
+			[CanBeNull] string configFilePath,
+			int fallbackPort = 5151)
 		{
 			ClientChannelConfig clientChannelConfig;
 
 			if (string.IsNullOrEmpty(configFilePath))
 			{
-				clientChannelConfig = FallbackToDefaultChannel("QA", 5151);
+				clientChannelConfig = FallbackToDefaultChannel("QA", fallbackPort);
 			}
 			else
 			{
@@ -86,7 +88,7 @@ namespace ProSuite.Microservices.Client.AGP
 		private static ClientChannelConfig GetClientChannelConfig([NotNull] string configFilePath)
 		{
 			ClientChannelConfig clientChannelConfig;
-			_msg.DebugFormat("Geometry processing microservice configuration from {0}",
+			_msg.DebugFormat("Geometry microservice configuration from {0}",
 			                 configFilePath);
 
 			try
@@ -101,7 +103,7 @@ namespace ProSuite.Microservices.Client.AGP
 			{
 				_msg.Debug($"Error reading configuration from {configFilePath}.", e);
 				throw new InvalidConfigurationException(
-					$"Error reading geometry processing microservice configuration from {configFilePath}",
+					$"Error reading geometry microservice configuration from {configFilePath}",
 					e);
 			}
 
