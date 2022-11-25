@@ -13,6 +13,6 @@ namespace ProSuite.QA.Container.TestContainer
 
 		string GetCommonFilterExpression(IReadOnlyTable table);
 
-		UniqueIdProvider GetUniqueIdProvider(IReadOnlyTable table);
+		IUniqueIdProvider GetUniqueIdProvider(IReadOnlyTable table);
 	}
 }

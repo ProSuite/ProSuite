@@ -579,12 +579,12 @@ namespace ProSuite.QA.Container.TestContainer
 				}
 			}
 
-			UniqueIdProvider uniqueIdProvider = context.GetUniqueIdProvider(table);
+			IUniqueIdProvider uniqueIdProvider = context.GetUniqueIdProvider(table);
 			// get data from database
 			try
 			{
 				(table as ITransformedTable)?.SetKnownTransformedRows(
-					cachedRows.Values.Select(x => x.Feature as VirtualRow));
+					cachedRows.Values.Select(x => x.Feature as IReadOnlyRow));
 				foreach (IReadOnlyRow row in GetRows(table, filter))
 				{
 					var feature = (IReadOnlyFeature) row;
