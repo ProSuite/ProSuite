@@ -817,10 +817,6 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			Console.WriteLine($"Found {count} features");
 			Assert.True(count > 200, $"To few features found: {count}");
 
-			//
-			// Crash with self-implemented interfaces:
-			SpatialFilterEx filterEx = new SpatialFilterEx((ISpatialFilter) filter);
-
 			count = 0;
 			// System.AccessViolationException : Attempted to read or write protected memory.This is
 			// often an indication that other memory is corrupt.
