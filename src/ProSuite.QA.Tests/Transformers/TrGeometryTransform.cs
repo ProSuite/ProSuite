@@ -83,10 +83,10 @@ namespace ProSuite.QA.Tests.Transformers
 			return GetTransformed().CreateFeature(); // _transformedFc.CreateFeature();
 		}
 
-		IEnumerable<GdbFeature> IGeometryTransformer.Transform(IGeometry source, int? sourceOid)
+		IEnumerable<GdbFeature> IGeometryTransformer.Transform(IGeometry source, long? sourceOid)
 			=> Transform(source, sourceOid);
 
-		protected abstract IEnumerable<GdbFeature> Transform(IGeometry source, int? sourceOid);
+		protected abstract IEnumerable<GdbFeature> Transform(IGeometry source, long? sourceOid);
 
 		bool IContainerTransformer.IsGeneratedFrom(Involved involved, Involved source) =>
 			IsGeneratedFrom(involved, source);

@@ -20,7 +20,7 @@ namespace ProSuite.QA.Tests.Transformers
 			: base(multipatchClass, esriGeometryType.esriGeometryPolygon) { }
 
 		protected override IEnumerable<GdbFeature> Transform(IGeometry source,
-		                                                     int? sourceOid)
+		                                                     long? sourceOid)
 		{
 			IMultiPatch patch = (IMultiPatch) source;
 

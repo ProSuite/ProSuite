@@ -19,7 +19,7 @@ namespace ProSuite.QA.Tests.Transformers
 			IReadOnlyFeatureClass featureClass)
 			: base(featureClass, esriGeometryType.esriGeometryPolyline) { }
 
-		protected override IEnumerable<GdbFeature> Transform(IGeometry source, int? sourceOid)
+		protected override IEnumerable<GdbFeature> Transform(IGeometry source, long? sourceOid)
 		{
 			IPolygon poly = (IPolygon) source;
 			IGeometry transformed = ((ITopologicalOperator) poly).Boundary;
