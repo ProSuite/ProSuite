@@ -126,7 +126,7 @@ namespace ProSuite.QA.Tests
 			filter.Geometry = _box;
 
 			foreach (IReadOnlyRow row in
-			         Search(neighbor, _filter[tableIndex], _helper[tableIndex], point))
+			         Search(neighbor, _filter[tableIndex], _helper[tableIndex]))
 			{
 				var neighborFeature = (IReadOnlyFeature) row;
 				double distance = GetDistance(point, neighborFeature);

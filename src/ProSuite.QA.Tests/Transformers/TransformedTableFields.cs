@@ -321,10 +321,18 @@ namespace ProSuite.QA.Tests.Transformers
 		{
 			message = null;
 
-			HashSet<string> resultFieldNames = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+			HashSet<string> resultFieldNames =
+				new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
 
 			foreach (string userAttribute in userAttributes)
 			{
+				if (string.IsNullOrEmpty(userAttribute))
+				{
+					message =
+						$"Null or empty field name or expression defined for {SourceTable.Name}";
+					return false;
+				}
+
 				string sourceField =
 					ExpressionUtils.GetExpression(userAttribute, out string resultField);
 
@@ -349,6 +357,7 @@ namespace ProSuite.QA.Tests.Transformers
 						return false;
 					}
 				}
+
 				resultFieldNames.Add(resultField);
 			}
 
@@ -419,7 +428,7 @@ namespace ProSuite.QA.Tests.Transformers
 		private bool ValidateExpression(bool allowExpressions,
 		                                [NotNull] List<string> expressionTokens,
 		                                string inputField,
-										[NotNull] HashSet<string> previousFields,
+		                                [NotNull] HashSet<string> previousFields,
 		                                out string message)
 		{
 			if (! allowExpressions)

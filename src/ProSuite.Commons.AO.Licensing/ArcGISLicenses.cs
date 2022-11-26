@@ -74,7 +74,7 @@ namespace ProSuite.Commons.AO.Licensing
 			EsriProductFallback fallback)
 		{
 			var productCodes = new List<esriLicenseProductCode>
-			                   {GetLicenseProductCode(licenseProduct)};
+			                   { GetLicenseProductCode(licenseProduct) };
 
 			if (fallback == EsriProductFallback.TryHigherProduct)
 			{

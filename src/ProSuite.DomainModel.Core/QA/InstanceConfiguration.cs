@@ -56,6 +56,8 @@ namespace ProSuite.DomainModel.Core.QA
 		                                [CanBeNull] string description = "")
 			: this(assignUuid: true)
 		{
+			Assert.ArgumentNotNullOrEmpty(name, nameof(name));
+
 			Name = name;
 			Description = description;
 		}

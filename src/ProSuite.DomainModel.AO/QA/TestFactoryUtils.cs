@@ -136,25 +136,8 @@ namespace ProSuite.DomainModel.AO.QA
 
 			Type testType = typeof(ITest);
 
-			foreach (Type candidateType in assembly.GetTypes())
-			{
-				if (! InstanceFactoryUtils.IsInstanceType(candidateType, testType))
-				{
-					continue;
-				}
-
-				if (! includeObsolete && InstanceUtils.IsObsolete(candidateType))
-				{
-					continue;
-				}
-
-				if (! includeInternallyUsed && InstanceUtils.IsInternallyUsed(candidateType))
-				{
-					continue;
-				}
-
-				yield return candidateType;
-			}
+			return InstanceFactoryUtils.GetClasses(assembly, testType, includeObsolete,
+			                                       includeInternallyUsed);
 		}
 
 		[NotNull]

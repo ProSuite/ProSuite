@@ -39,7 +39,7 @@ namespace ProSuite.DomainModel.Core.QA
 		private object _value;
 		private object _datasetContext;
 
-		public bool HasCashedValue(object datasetContext)
+		public bool HasCachedValue(object datasetContext)
 		{
 			return ReferenceEquals(datasetContext, _datasetContext) && _value != null;
 		}

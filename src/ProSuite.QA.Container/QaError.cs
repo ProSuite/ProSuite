@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
@@ -17,6 +18,7 @@ namespace ProSuite.QA.Container
 	public class QaError
 	{
 		private readonly QaErrorGeometry _errorGeometry;
+		private WKSEnvelope? _involvedExtent;
 
 		#region Constructors
 
@@ -72,8 +74,7 @@ namespace ProSuite.QA.Container
 		public bool AssertionFailed { get; }
 
 		[CanBeNull]
-		[Obsolete]
-		public IEnvelope InvolvedExtent => GetInvolvedExtent(InvolvedRows);
+		public WKSEnvelope? InvolvedExtent => _involvedExtent ?? (_involvedExtent = GetInvolvedExtent(InvolvedRows));
 
 		[CanBeNull]
 		public IList<object> Values { get; }
@@ -118,8 +119,7 @@ namespace ProSuite.QA.Container
 		}
 
 		[CanBeNull]
-		[Obsolete]
-		private static IEnvelope GetInvolvedExtent(
+		private static WKSEnvelope? GetInvolvedExtent(
 			[CanBeNull] IEnumerable<InvolvedRow> involvedRows)
 		{
 			if (involvedRows == null)
@@ -154,12 +154,28 @@ namespace ProSuite.QA.Container
 				}
 			}
 
-			return involvedExtent;
+			if (involvedExtent == null)
+			{
+				return null;
+			}
+			involvedExtent.QueryWKSCoords(out WKSEnvelope wksExtent);
+			return wksExtent;
 		}
 
 		public bool IsProcessed(double xMax, double yMax)
 		{
-			return _errorGeometry.IsProcessed(xMax, yMax);
+			if (! _errorGeometry.IsProcessed(xMax, yMax))
+			{
+				return false;
+			}
+
+			if (InvolvedExtent == null)
+			{
+				return true;
+			}
+
+			return InvolvedExtent.Value.XMax < xMax &&
+			       InvolvedExtent.Value.YMax < yMax;
 		}
 	}
 }

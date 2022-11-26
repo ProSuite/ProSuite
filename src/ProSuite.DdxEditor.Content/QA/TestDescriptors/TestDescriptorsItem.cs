@@ -11,7 +11,6 @@ using ProSuite.DdxEditor.Content.Properties;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Commands;
 using ProSuite.DdxEditor.Framework.Items;
-using ProSuite.DomainModel.AO.QA.TestReport;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.Repositories;
 using ProSuite.QA.Core.Reports;
@@ -33,12 +32,12 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 				Resources.TestDescriptorsOverlay);
 		}
 
-		public TestDescriptorsItem([NotNull] CoreDomainModelItemModelBuilder modelBuider)
+		public TestDescriptorsItem([NotNull] CoreDomainModelItemModelBuilder modelBuilder)
 			: base("Test Descriptors", "Test implementations")
 		{
-			Assert.ArgumentNotNull(modelBuider, nameof(modelBuider));
+			Assert.ArgumentNotNull(modelBuilder, nameof(modelBuilder));
 
-			_modelBuilder = modelBuider;
+			_modelBuilder = modelBuilder;
 		}
 
 		public override Image Image => _image;

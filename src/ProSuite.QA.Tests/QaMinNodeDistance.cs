@@ -346,9 +346,8 @@ namespace ProSuite.QA.Tests
 
 			int errorCount = 0;
 
-			foreach (IReadOnlyRow neighborRow in Search(neighbor,
-			                                            _filter[neighborTableIndex],
-			                                            _helper[neighborTableIndex], point))
+			foreach (IReadOnlyRow neighborRow in Search(
+				         neighbor, _filter[neighborTableIndex], _helper[neighborTableIndex]))
 			{
 				var neighborFeature = (IReadOnlyFeature) neighborRow;
 				bool sameFeature = tableIndex0 == neighborTableIndex &&

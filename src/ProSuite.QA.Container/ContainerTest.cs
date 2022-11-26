@@ -685,13 +685,11 @@ namespace ProSuite.QA.Container
 		/// <param name="table"></param>
 		/// <param name="queryFilter"></param>
 		/// <param name="filterHelper">helper corresponding to filter</param>
-		/// <param name="cacheGeometry">geometry of feature, from which queryFilter.Geometry was derived</param>
 		/// <returns></returns>
 		[NotNull]
 		protected IEnumerable<IReadOnlyRow> Search([NotNull] IReadOnlyTable table,
 		                                           [NotNull] IQueryFilter queryFilter,
-		                                           [NotNull] QueryFilterHelper filterHelper,
-		                                           [CanBeNull] IGeometry cacheGeometry = null)
+		                                           [NotNull] QueryFilterHelper filterHelper)
 		{
 			Assert.ArgumentNotNull(table, nameof(table));
 			Assert.ArgumentNotNull(queryFilter, nameof(queryFilter));
@@ -705,7 +703,7 @@ namespace ProSuite.QA.Container
 			if (DataContainer != null && (table as ITransformedTable)?.NoCaching != true)
 			{
 				IEnumerable<IReadOnlyRow> rows = DataContainer.Search(table, queryFilter,
-					filterHelper, cacheGeometry);
+					filterHelper);
 
 				if (rows != null)
 				{

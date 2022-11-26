@@ -73,10 +73,6 @@ namespace ProSuite.QA.Container.TestContainer
 		[NotNull]
 		public Box Extent => _box ?? (_box = GetExtent());
 
-		public bool IsFirstOccurrenceX { get; set; } = true;
-
-		public bool IsFirstOccurrenceY { get; set; } = true;
-
 		public bool DisjointFromExecuteArea { get; set; }
 
 		[CanBeNull]
