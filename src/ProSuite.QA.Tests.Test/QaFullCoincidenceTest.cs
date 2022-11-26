@@ -1131,9 +1131,8 @@ namespace ProSuite.QA.Tests.Test
 				var feature = (IReadOnlyFeature) row;
 
 				_filter.Geometry = feature.Shape.Envelope;
-				IGeometry cached = null;
 
-				foreach (IReadOnlyRow otherRow in Search(_lineClass, _filter, _helper, cached))
+				foreach (IReadOnlyRow otherRow in Search(_lineClass, _filter, _helper))
 				{
 					var otherFeature = (IReadOnlyFeature) otherRow;
 					if (otherFeature == feature)

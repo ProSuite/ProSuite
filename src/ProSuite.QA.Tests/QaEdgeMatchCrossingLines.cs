@@ -1140,8 +1140,7 @@ namespace ProSuite.QA.Tests
 
 			return Search(InvolvedTables[neighborLineClassIndex],
 			              spatialFilter,
-			              _filterHelpers[neighborLineClassIndex],
-			              borderConnection).Cast<IReadOnlyFeature>();
+			              _filterHelpers[neighborLineClassIndex]).Cast<IReadOnlyFeature>();
 		}
 
 		[NotNull]

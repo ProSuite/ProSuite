@@ -69,8 +69,7 @@ namespace ProSuite.QA.Container.TestContainer
 				TileCache tileCache = tile.Item1;
 				EnsureLoaded(tile.Item1, tile.Item2, table);
 
-				IEnumerable<IReadOnlyRow>
-					rows = tileCache.Search(table, queryFilter, filterHelper, null);
+				IEnumerable<IReadOnlyRow> rows = tileCache.Search(table, queryFilter, filterHelper);
 				if (rows == null)
 				{
 					continue;

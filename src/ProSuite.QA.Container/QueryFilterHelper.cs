@@ -23,7 +23,6 @@ namespace ProSuite.QA.Container
 		public TableView TableView => _tableView;
 
 		public bool ForNetwork { get; set; }
-		public bool? RepeatCachedRows { get; set; }
 
 		public bool FullGeometrySearch { get; set; }
 

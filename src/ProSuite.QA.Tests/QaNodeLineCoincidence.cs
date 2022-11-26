@@ -770,7 +770,7 @@ namespace ProSuite.QA.Tests
 			QueryFilterHelper filterHelper = _helper[nearTableIndex];
 			filterHelper.MinimumOID = -1; // not symmetrical, can't set MinimumOID
 
-			return Search(table, filter, filterHelper, node).Cast<IReadOnlyFeature>();
+			return Search(table, filter, filterHelper).Cast<IReadOnlyFeature>();
 		}
 
 		private double GetDistance([NotNull] IPoint node,

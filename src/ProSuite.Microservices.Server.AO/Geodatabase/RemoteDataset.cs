@@ -107,7 +107,8 @@ namespace ProSuite.Microservices.Server.AO.Geodatabase
 					$"No data provided by the client for data request {response.DataRequest}");
 			}
 
-			return moreData.Data.GdbObjectCount;
+			// TODO: Remove conversion at Server11
+			return Convert.ToInt32(moreData.Data.GdbObjectCount);
 		}
 
 		public override IEnumerable<VirtualRow> Search(IQueryFilter filter, bool recycling)

@@ -186,8 +186,7 @@ namespace ProSuite.QA.Container.TestContainer
 		[CanBeNull]
 		public IList<IReadOnlyRow> Search([NotNull] IReadOnlyTable table,
 		                                  [NotNull] IQueryFilter queryFilter,
-		                                  [NotNull] QueryFilterHelper filterHelper,
-		                                  [CanBeNull] IGeometry cacheGeometry)
+		                                  [NotNull] QueryFilterHelper filterHelper)
 		{
 			var spatialFilter = (ISpatialFilter) queryFilter;
 			IGeometry filterGeometry = spatialFilter.Geometry;
@@ -195,7 +194,6 @@ namespace ProSuite.QA.Container.TestContainer
 			IList<IReadOnlyRow> result = new List<IReadOnlyRow>();
 
 			// TODO explain network queries
-			bool repeatCachedRows = filterHelper.RepeatCachedRows ?? filterHelper.ForNetwork;
 
 			// filterHelper.PointSearchOnlyWithinTile
 			if (filterHelper.ForNetwork)
@@ -227,36 +225,6 @@ namespace ProSuite.QA.Container.TestContainer
 				return result;
 			}
 
-			var cacheGeometryOverlapsLeftTile = false;
-			var cacheGeometryOverlapsBottomTile = false;
-
-			if (! repeatCachedRows)
-			{
-				if (cacheGeometry != null)
-				{
-					cacheGeometry.QueryEnvelope(_envelopeTemplate);
-				}
-				else
-				{
-					filterGeometry.QueryEnvelope(_envelopeTemplate);
-				}
-
-				_envelopeTemplate.QueryCoords(out double xmin, out double ymin, out _, out _);
-
-				cacheGeometryOverlapsLeftTile = xmin < CurrentTileBox?.Min.X &&
-				                                xmin > _testRunBox.Min.X;
-
-				// https://issuetracker02.eggits.net/browse/COM-85
-				// observed (CtLu): 
-				// - filter geometry ymin = 220532.967
-				// - filter geometry ymax = 220557.78500
-				// - tile ymin            = 220557.78534
-				// --> filter geometry is completely outside of tile boundaries!!!
-				// --> causes incorrect error in QaContainsOther
-				cacheGeometryOverlapsBottomTile = ymin < CurrentTileBox?.Min.Y &&
-				                                  ymin > _testRunBox.Min.Y;
-			}
-
 			IGeometryEngine engine = _container.GeometryEngine;
 
 			engine.SetSourceGeometry(filterGeometry);
@@ -274,27 +242,6 @@ namespace ProSuite.QA.Container.TestContainer
 			foreach (BoxTree<CachedRow>.TileEntry entry in searchList)
 			{
 				CachedRow cachedRow = Assert.NotNull(entry.Value, "cachedRow");
-
-				// This causes problems for QaIsCoveredByOther. However 
-				// IsCoveredByOther is not a network test, but still requires cached features
-				// to be returned repeatedly
-				if (cacheGeometryOverlapsLeftTile && ! cachedRow.IsFirstOccurrenceX)
-				{
-					// only if *not for network*:
-					// the filter geometry overlaps the left border of the tile, but 
-					// not the left border of the test run box AND the cached row
-					// was already returned previously --> skip it
-					continue;
-				}
-
-				if (cacheGeometryOverlapsBottomTile && ! cachedRow.IsFirstOccurrenceY)
-				{
-					// only if *not for network*:
-					// the filter geometry overlaps the bottom border of the tile, but 
-					// not the bottom border of the test run box AND the cached row
-					// was already returned previously --> skip it
-					continue;
-				}
 
 				if (ignoredRows != null && ignoredRows.Contains(entry.Value))
 				{
@@ -513,7 +460,7 @@ namespace ProSuite.QA.Container.TestContainer
 
 			if (allBox != null)
 			{
-				rowBoxTree.InitSize(new IGmtry[] {allBox});
+				rowBoxTree.InitSize(new IGmtry[] { allBox });
 			}
 
 			foreach (CachedRow cachedRow in cachedRows)
@@ -566,18 +513,19 @@ namespace ProSuite.QA.Container.TestContainer
 					? string.Empty
 					: GetFilterOldLargeRows(cachedRows.Values, context.TileSize, ref allBox);
 
-			SpatialFilterEx loadSpatialFilter =
+			IFeatureClassFilter loadSpatialFilter =
 				GetLoadSpatialFilter(table, tile.SpatialFilter, context, notInExpression);
-			IEnvelope loadExtent = GeometryFactory.Clone((IEnvelope) loadSpatialFilter.Geometry);
+
+			IEnvelope loadExtent =
+				GeometryFactory.Clone((IEnvelope) loadSpatialFilter.FilterGeometry);
 
 			AddRowsToCache(cachedRows, table, loadSpatialFilter, context, ref allBox);
-			loadSpatialFilter.COMReleaseBaseFilter();
 
 			CreateBoxTree(table, cachedRows.Values, allBox, loadExtent);
 		}
 
 		[NotNull]
-		private SpatialFilterEx GetLoadSpatialFilter(
+		private IFeatureClassFilter GetLoadSpatialFilter(
 			[NotNull] IReadOnlyTable table,
 			[NotNull] ISpatialFilter tileSpatialFilter,
 			[NotNull] ITileEnumContext context,
@@ -586,38 +534,38 @@ namespace ProSuite.QA.Container.TestContainer
 			Assert.ArgumentNotNull(table, nameof(table));
 			Assert.ArgumentNotNull(tileSpatialFilter, nameof(tileSpatialFilter));
 
-			var baseFilter = (ISpatialFilter) ((IClone) tileSpatialFilter).Clone();
-
-			baseFilter.WhereClause = _container.FilterExpressionsUseDbSyntax
+			string whereClause = _container.FilterExpressionsUseDbSyntax
 				                     ? context.GetCommonFilterExpression(table)
 				                     : string.Empty;
 
 			if (! string.IsNullOrWhiteSpace(notInExpression))
 			{
-				baseFilter.WhereClause = string.IsNullOrEmpty(baseFilter.WhereClause)
-					                     ? notInExpression
-					                     : baseFilter.WhereClause + " AND " + notInExpression;
+				whereClause = string.IsNullOrEmpty(whereClause)
+					              ? notInExpression
+					              : whereClause + " AND " + notInExpression;
 			}
+
+			IEnvelope filterGeometry = (IEnvelope) ((IClone) tileSpatialFilter.Geometry).Clone();
 
 			double searchTolerance = context.OverlappingFeatures.GetSearchTolerance(table);
 			if (searchTolerance > 0)
 			{
-				var loadEnvelope = (IEnvelope) ((IClone) tileSpatialFilter.Geometry).Clone();
-
-				loadEnvelope.Expand(searchTolerance, searchTolerance, false);
-
-				const bool filterOwnsGeometry = true;
-				baseFilter.set_GeometryEx(loadEnvelope, filterOwnsGeometry);
+				filterGeometry.Expand(searchTolerance, searchTolerance, false);
 			}
 
-			var result = new SpatialFilterEx(baseFilter);
-			result.TileExtent = tileSpatialFilter.Geometry.Envelope;
+			var result = new AoFeatureClassFilter(filterGeometry, tileSpatialFilter.SpatialRel)
+			             {
+				             SubFields = tileSpatialFilter.SubFields,
+				             WhereClause = whereClause,
+				             TileExtent = tileSpatialFilter.Geometry.Envelope
+			             };
+
 			return result;
 		}
 
 		private void AddRowsToCache([NotNull] IDictionary<BaseRow, CachedRow> cachedRows,
 		                            [NotNull] IReadOnlyTable table,
-		                            [NotNull] ISpatialFilter filter,
+		                            [NotNull] ITableFilter filter,
 		                            [NotNull] ITileEnumContext context,
 		                            [CanBeNull] ref IBox allBox)
 		{
@@ -632,13 +580,17 @@ namespace ProSuite.QA.Container.TestContainer
 				}
 			}
 
+			ISpatialFilter queryFilter = null;
+
 			UniqueIdProvider uniqueIdProvider = context.GetUniqueIdProvider(table);
 			// get data from database
 			try
 			{
+				queryFilter = (ISpatialFilter) filter.ToNativeFilterImpl();
+
 				(table as ITransformedTable)?.SetKnownTransformedRows(
 					cachedRows.Values.Select(x => x.Feature as VirtualRow));
-				foreach (IReadOnlyRow row in GetRows(table, filter))
+				foreach (IReadOnlyRow row in GetRows(table, queryFilter))
 				{
 					var feature = (IReadOnlyFeature) row;
 					IGeometry shape = feature.Shape;
@@ -685,6 +637,11 @@ namespace ProSuite.QA.Container.TestContainer
 			finally
 			{
 				(table as ITransformedTable)?.SetKnownTransformedRows(null);
+
+				if (queryFilter != null)
+				{
+					Marshal.ReleaseComObject(queryFilter);
+				}
 			}
 
 			foreach (CachedRow cachedRow in rowsWithoutCachedFeature)

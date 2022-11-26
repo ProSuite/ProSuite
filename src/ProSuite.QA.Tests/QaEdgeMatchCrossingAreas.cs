@@ -930,12 +930,9 @@ namespace ProSuite.QA.Tests
 			IEnumerable<IReadOnlyFeature> features;
 			try
 			{
-				// do not filter out previously found features, 
-				// because the border features of the neighbor may not have been cached previously
-				filterHelper.ForNetwork = true;
 				features =
-					Search(InvolvedTables[neighborLineClassIndex], spatialFilter, filterHelper,
-					       borderLine.Envelope).Cast<IReadOnlyFeature>();
+					Search(InvolvedTables[neighborLineClassIndex], spatialFilter, filterHelper)
+						.Cast<IReadOnlyFeature>();
 			}
 			finally
 			{

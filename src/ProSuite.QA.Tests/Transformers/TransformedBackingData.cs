@@ -21,13 +21,9 @@ namespace ProSuite.QA.Tests.Transformers
 		{
 			InvolvedTables = involvedTables;
 
-			// This seems to be some kind of optimization if a feature is already cached from a previous tile?
-			// -> Switch off optimization by repeating search for previously cached rows:
-			const bool repeatCachedRows = true;
 
 			_queryHelpers = InvolvedTables
-			                .Select(t => new QueryFilterHelper(t, null, false)
-			                             {RepeatCachedRows = repeatCachedRows})
+			                .Select(t => new QueryFilterHelper(t, null, false))
 			                .ToList();
 		}
 
@@ -47,7 +43,6 @@ namespace ProSuite.QA.Tests.Transformers
 						InvolvedTables[tableIndex], condition,
 						current?.TableView?.CaseSensitive ?? true)
 					{
-						RepeatCachedRows = true,
 						FullGeometrySearch = current?.FullGeometrySearch ?? false
 					};
 			}
@@ -68,7 +63,6 @@ namespace ProSuite.QA.Tests.Transformers
 						InvolvedTables[tableIndex], current?.TableView?.Constraint,
 						useCaseSensitiveQaSql)
 					{
-						RepeatCachedRows = true,
 						FullGeometrySearch = current?.FullGeometrySearch ?? false
 					};
 			}

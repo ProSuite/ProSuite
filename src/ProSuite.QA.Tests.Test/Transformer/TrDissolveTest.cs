@@ -45,6 +45,14 @@ namespace ProSuite.QA.Tests.Test.Transformer
 
 			{
 				IFeature f = fc.CreateFeature();
+				f.Shape = CurveConstruction.StartLine(10, 10).LineTo(50, 80).LineTo(90, 20)
+										   .LineTo(10, 10).Curve;
+				f.Store();
+			}
+
+
+			{
+				IFeature f = fc.CreateFeature();
 				f.Shape = CurveConstruction.StartLine(0, 0).LineTo(70, 70).Curve;
 				f.Store();
 			}
