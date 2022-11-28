@@ -456,8 +456,8 @@ namespace ProSuite.QA.Tests
 				QueryFilterHelper helper = _helper[referenceClassIndex];
 
 				const int pointClassIndex = 0;
-				foreach (IReadOnlyRow referenceRow in Search(referenceClass,
-				                                             filter, helper, point))
+				foreach (IReadOnlyRow referenceRow in Search(
+					         referenceClass, filter, helper))
 				{
 					if (TestUtils.IsSameRow(feature, referenceRow))
 					{

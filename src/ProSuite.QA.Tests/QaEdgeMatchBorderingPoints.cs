@@ -684,8 +684,7 @@ namespace ProSuite.QA.Tests
 
 			return Search(InvolvedTables[neighborPointClassIndex],
 			              spatialFilter,
-			              _filterHelpers[neighborPointClassIndex],
-			              borderConnection);
+			              _filterHelpers[neighborPointClassIndex]);
 		}
 
 		[NotNull]

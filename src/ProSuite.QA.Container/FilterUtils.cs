@@ -15,7 +15,7 @@ namespace ProSuite.QA.Container
 				return new List<string>(0);
 			}
 
-			IList<string> filterNames = null;
+			IList<string> filterNames = new List<string>();
 			foreach (string token in ExpressionUtils.GetExpressionTokens(
 				         filterExpression))
 			{

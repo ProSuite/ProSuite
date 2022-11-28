@@ -474,6 +474,18 @@ namespace ProSuite.Commons.Reflection
 			return full;
 		}
 
+		public static IEnumerable<Type> GetTypes(Assembly fromAssembly,
+		                                         Predicate<Type> predicate = null)
+		{
+			foreach (Type candidateType in fromAssembly.GetTypes())
+			{
+				if (predicate == null || predicate(candidateType))
+				{
+					yield return candidateType;
+				}
+			}
+		}
+
 		public static int GetPublicTypeCount([NotNull] Assembly assembly,
 		                                     out int classCount,
 		                                     out int interfaceCount,
