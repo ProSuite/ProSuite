@@ -226,12 +226,12 @@ namespace ProSuite.Processing.Test.Evaluation
 		[Test]
 		public void CanRandFunction()
 		{
-			var env = new StandardEnvironment();
+			var random = new Random(1234); // repeatable randomness
+			var env = new StandardEnvironment().SetRandom(random);
 
 			const double epsilon = 0.0000000001;
 
 			var frand = GetFunction(env, "RAND");
-			env.RandomSeed = 1234; // repeatable randomness
 
 			Assert.AreEqual(0.39908097935797693, (double)env.Invoke(frand, Args()), epsilon); // RAND/0
 			Assert.AreEqual(8, env.Invoke(frand, Args(10)));
@@ -249,10 +249,10 @@ namespace ProSuite.Processing.Test.Evaluation
 		[Test]
 		public void CanRandPickFunction()
 		{
-			var env = new StandardEnvironment();
+			var random = new Random(1234); // repeatable randomness
+			var env = new StandardEnvironment().SetRandom(random);
 
 			var frandpick = GetFunction(env, "RANDPICK");
-			env.RandomSeed = 1234; // repeatable randomness
 
 			Assert.IsNull(env.Invoke(frandpick, Args()));
 			Assert.AreEqual("one", env.Invoke(frandpick, Args("one")));

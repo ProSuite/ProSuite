@@ -36,6 +36,12 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			return alias;
 		}
 
+		public static string GetName(Table table)
+		{
+			if (table is null) return null;
+			return table.GetDefinition()?.GetName();
+		}
+
 		public static string GetAliasName([NotNull] Table table)
 		{
 			Assert.ArgumentNotNull(table, nameof(table));

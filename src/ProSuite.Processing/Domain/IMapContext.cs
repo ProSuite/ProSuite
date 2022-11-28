@@ -6,5 +6,11 @@ namespace ProSuite.Processing.Domain
 	public interface IMapContext
 	{
 		double ReferenceScale { get; }
+
+		int SRID { get; }
+
+		double PointsToMapUnits(double distance);
+
+		double MapUnitsToPoints(double distance);
 	}
 }

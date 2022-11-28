@@ -288,14 +288,18 @@ namespace ProSuite.Processing.Evaluation
 		/// with the given seed value. A zero or negative value will
 		/// initialize the generator with a "random" (time based) seed.
 		/// </summary>
+		[Obsolete("Use SetRandom() instead")]
 		public int RandomSeed
 		{
-			set
-			{
-				_random = value <= 0
-					          ? new Random()
-					          : new Random(value);
-			}
+			set => _random = value <= 0
+				                 ? new Random()
+				                 : new Random(value);
+		}
+
+		public StandardEnvironment SetRandom(Random random)
+		{
+			_random = random ?? new Random();
+			return this;
 		}
 
 		#region Non-public methods
