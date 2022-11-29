@@ -262,7 +262,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 			const bool includeObsolete = false;
 			const bool includeInternallyUsed = false;
 
-			foreach (int ctorIndex in InstanceFactoryUtils.GetConstructorIndexes(
+			foreach (int ctorIndex in InstanceUtils.GetConstructorIndexes(
 				         testType, includeObsolete, includeInternallyUsed))
 			{
 				var testInfo = new InstanceInfo(testType, ctorIndex);
