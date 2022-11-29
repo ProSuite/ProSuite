@@ -109,8 +109,10 @@ namespace ProSuite.Processing.AGP.Core.Utils
 			{
 				if (length + segment.Length >= distanceAlong)
 				{
+					var segmentExtension = SegmentExtensionType.NoExtension;
+
 					return GeometryEngine.Instance.QueryPoint(
-						segment, SegmentExtension.NoExtension,
+						segment, segmentExtension,
 					    distanceAlong - length, AsRatioOrLength.AsLength);
 				}
 
@@ -148,9 +150,10 @@ namespace ProSuite.Processing.AGP.Core.Utils
 				return false;
 			}
 
+			var segmentExtension = SegmentExtensionType.NoExtension;
 			const double tangentLength = 10.0; // arbitrary finite positive number
 			var line = GeometryEngine.Instance.QueryTangent(
-				segment, SegmentExtension.NoExtension,
+				segment, segmentExtension,
 				distanceAlong - length, AsRatioOrLength.AsLength,
 				tangentLength);
 
@@ -164,9 +167,10 @@ namespace ProSuite.Processing.AGP.Core.Utils
 		{
 			var segment = FindSegment(distanceAlong, out double segmentOffset);
 
+			var segmentExtension = SegmentExtensionType.ExtendTangents;
 			const double tangentLength = 10.0; // arbitrary finite positive number
 			var line = GeometryEngine.Instance.QueryTangent(
-				segment, SegmentExtension.ExtendTangents,
+				segment, segmentExtension,
 				segmentOffset, AsRatioOrLength.AsLength,
 				tangentLength);
 

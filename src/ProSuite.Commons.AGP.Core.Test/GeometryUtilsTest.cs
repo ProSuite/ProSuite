@@ -26,9 +26,9 @@ namespace ProSuite.Commons.AGP.Core.Test
 			// Documentation: angle in radians, ccw from positive x axis.
 			// Empirical: angle is in range -pi..pi (not 0..2pi).
 
-			var start = MapPointBuilder.CreateMapPoint(0, 0);
-			var end = MapPointBuilder.CreateMapPoint(5, -5);
-			var builder = new LineBuilder(start, end);
+			var start = MapPointBuilderEx.CreateMapPoint(0, 0);
+			var end = MapPointBuilderEx.CreateMapPoint(5, -5);
+			var builder = new LineBuilderEx(start, end);
 			var line = builder.ToSegment();
 
 			const double delta = 0.000001;

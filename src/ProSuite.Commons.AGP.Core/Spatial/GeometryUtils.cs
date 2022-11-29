@@ -58,7 +58,9 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 
 			if (geometry is Polyline polyline)
 			{
-				return Engine.QueryPoint(polyline, SegmentExtension.NoExtension,
+				var segmentExtension = SegmentExtensionType.NoExtension;
+
+				return Engine.QueryPoint(polyline, segmentExtension,
 				                         0.5, AsRatioOrLength.AsRatio);
 			}
 
@@ -104,7 +106,7 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 
 		public static AttributeFlags GetAttributeFlags(this Geometry geometry)
 		{
-			var flags = AttributeFlags.NoAttributes;
+			var flags = AttributeFlags.None;
 
 			if (geometry != null)
 			{

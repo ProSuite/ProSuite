@@ -8,7 +8,7 @@ namespace ProSuite.Processing.AGP.Core.Domain
 	{
 		public int SelectionCount => 0;
 
-		public int CountSelection(QueryFilter filter = null)
+		public long CountSelection(QueryFilter filter = null)
 		{
 			return 0;
 		}

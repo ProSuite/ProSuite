@@ -7,7 +7,7 @@ namespace ProSuite.Processing.AGP.Core.Domain
 	{
 		int SelectionCount { get; }
 
-		int CountSelection(QueryFilter filter = null);
+		long CountSelection(QueryFilter filter = null);
 
 		IEnumerable<Feature> SearchSelection(QueryFilter filter = null, bool recycling = false);
 	}
