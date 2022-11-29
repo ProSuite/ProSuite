@@ -3,69 +3,168 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
+using System.Xml;
+using System.Xml.Linq;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Processing.Utils;
 
 namespace ProSuite.Processing
 {
 	public class CartoProcessConfig
 	{
-		private readonly IList<KeyValuePair<string, object>> _settings;
+		private readonly IList<Setting> _settings;
 
 		public CartoProcessConfig(string name, string description = null)
 		{
-			Name = name ?? string.Empty;
-			Description = description ?? string.Empty;
+			Name = name; // can be null
+			Description = description; // can be null
+			Comparison = StringComparison.OrdinalIgnoreCase;
 
-			_settings = new List<KeyValuePair<string, object>>(); // todo keep triples (name, value, lineno) for better error reporting
+			_settings = new List<Setting>();
 		}
 
-		public static CartoProcessConfig FromString(string name, string text, string description = null)
+		public static CartoProcessConfig Parse(string text)
 		{
-			var config = new CartoProcessConfig(name, description);
-			config.LoadString(text);
-			return config;
+			// 1. try parse as XML
+			// 2. assume new plain text format
+
+			if (text is null) return null;
+
+			try
+			{
+				var element = XElement.Parse(text);
+
+				if (element.Name == "Process")
+				{
+					return FromProcess(element);
+				}
+
+				if (element.Name == "ProcessGroup")
+				{
+					return FromProcessGroup(element);
+				}
+
+				throw new CartoConfigException(
+					$"Invalid element: {element.Name} (expect Process or ProcessGroup)");
+			}
+			catch (XmlException)
+			{
+				return FromText(text);
+			}
 		}
 
-		public string Name { get; }
+		public string Name { get; private set; }
 
-		public string Description { get; }
+		public string Description { get; private set; }
+
+		public StringComparison Comparison { get; }
+
+		public int Count => _settings.Count;
+
+		public IEnumerable<string> GetValues(string parameterName)
+		{
+			foreach (var setting in _settings)
+			{
+				if (string.Equals(setting.Name, parameterName, Comparison))
+				{
+					yield return setting.Value;
+				}
+			}
+		}
 
 		public IEnumerable<T> GetValues<T>(string parameterName)
 		{
 			var converter = TypeDescriptor.GetConverter(typeof(T));
 
-			foreach (var pair in _settings)
+			foreach (var setting in _settings)
 			{
-				if (string.Equals(pair.Key, parameterName, StringComparison.Ordinal))
+				if (string.Equals(setting.Name, parameterName, Comparison))
 				{
-					yield return ConvertValue<T>(converter, pair.Value, parameterName);
+					yield return ConvertValue<T>(converter, setting.Value, parameterName);
 				}
 			}
 		}
 
-		public T GetOptionalValue<T>(string parameterName)
+		/// <summary>
+		/// Get the value of the given <paramref name="parameterName"/>
+		/// converted to type <typeparamref name="T"/>, or the given
+		/// <paramref name="defaultValue"/> if no such parameter in config.
+		/// </summary>
+		public T GetValue<T>(string parameterName, T defaultValue)
 		{
-			var values = GetValues<T>(parameterName).ToArray();
+			var values = GetValues(parameterName).ToArray();
 			if (values.Length < 1)
-				return default;
+				return defaultValue;
 			if (values.Length > 1)
 				throw ConfigError("Parameter {0} is defined more than once", parameterName);
-			return values[0];
+			var value = values[0];
+			if (string.IsNullOrWhiteSpace(value))
+				return defaultValue;
+			var converter = TypeDescriptor.GetConverter(typeof(T));
+			return ConvertValue<T>(converter, value, parameterName);
 		}
 
-		public T GetRequiredValue<T>(string parameterName)
+		/// <summary>
+		/// Get the value of the given <paramref name="parameterName"/>
+		/// converted to type <typeparamref name="T"/>, or throw an
+		/// exception if no such parameter in config.
+		/// </summary>
+		public T GetValue<T>(string parameterName)
 		{
-			var values = GetValues<T>(parameterName).ToArray();
+			var values = GetValues(parameterName).ToArray();
 			if (values.Length < 1)
 				throw ConfigError("Required parameter {0} is missing", parameterName);
 			if (values.Length > 1)
 				throw ConfigError("Parameter {0} is defined more than once", parameterName);
-			return values[0];
+			var value = values[0];
+			if (string.IsNullOrWhiteSpace(value))
+				throw ConfigError("Required parameter {0} is missing", parameterName);
+			var converter = TypeDescriptor.GetConverter(typeof(T));
+			return ConvertValue<T>(converter, value, parameterName);
 		}
 
-		private static T ConvertValue<T>(TypeConverter converter, object value, string name)
+		// Difference between GetValue<string>() and GetString() is that
+		// the latter treats an empty value as the empty string, whereas
+		// the former treats an empty value as missing.
+
+		public string GetString(string parameterName, string defaultValue)
 		{
+			var values = GetValues(parameterName).ToArray();
+			if (values.Length < 1)
+				return defaultValue;
+			if (values.Length > 1)
+				throw ConfigError("Parameter {0} is defined more than once", parameterName);
+			return values[0]?.Trim() ?? defaultValue;
+		}
+
+		public string GetString(string parameterName)
+		{
+			var values = GetValues(parameterName).ToArray();
+			if (values.Length < 1)
+				throw ConfigError("Required parameter {0} is missing", parameterName);
+			if (values.Length > 1)
+				throw ConfigError("Parameter {0} is defined more than once", parameterName);
+			return values[0]?.Trim();
+		}
+
+		/// <summary>
+		/// All parameter values of the given <paramref name="parameterName"/>
+		/// joined into one string; may be empty if no such parameter exists.
+		/// </summary>
+		public string GetJoined(string parameterName, string separator)
+		{
+			return string.Join(separator ?? string.Empty, GetValues(parameterName));
+		}
+
+		private static T ConvertValue<T>(TypeConverter converter, string value, string name)
+		{
+			if (string.IsNullOrWhiteSpace(value))
+			{
+				return default;
+			}
+
 			try
 			{
 				return (T) converter.ConvertFrom(value);
@@ -77,18 +176,167 @@ namespace ProSuite.Processing
 			}
 		}
 
-		public void LoadString(string text)
+		[StringFormatMethod("format")]
+		private static Exception ConfigError(string format, params object[] args)
+		{
+			return new CartoConfigException(string.Format(format, args));
+		}
+
+		#region Formatting
+
+		public override string ToString()
+		{
+			var sb = new StringBuilder();
+
+			sb.Append("Name = ");
+			sb.Append(Name ?? string.Empty);
+			sb.AppendLine();
+
+			sb.Append("Description = ");
+			sb.Append(Description ?? string.Empty);
+			sb.AppendLine();
+
+			sb.AppendLine();
+
+			foreach (var setting in _settings)
+			{
+				if (string.IsNullOrWhiteSpace(setting.Name)) continue;
+				if (string.Equals(setting.Name, nameof(Name), Comparison)) continue;
+				if (string.Equals(setting.Name, nameof(Description), Comparison)) continue;
+
+				sb.Append(setting.Name ?? "NN");
+				sb.Append(" = ");
+				sb.Append(setting.Value ?? string.Empty);
+				sb.AppendLine();
+			}
+
+			sb.AppendLine();
+			return sb.ToString();
+		}
+
+		#endregion
+
+		#region XML Element Parsing
+
+		/// <summary>
+		/// Parse config from given Process element of old .cp.xml
+		/// </summary>
+		private static CartoProcessConfig FromProcess(XElement process)
+		{
+			if (process is null) return null;
+
+			var processName = (string) process.Attribute("name");
+			var description = (string) process.Element("Description") ??
+			                  (string) process.Attribute("description");
+
+			var config = new CartoProcessConfig(processName, description);
+			var parameters = process.Element("Parameters")?.Elements("Parameter");
+			var nameRegex = new Regex(@"^[_a-z][_a-z0-9]*$", RegexOptions.IgnoreCase);
+			var multiRegex = new Regex(@"\d+$"); // eager: matches "123" in "foo123" (not only "23" or "3")
+
+			foreach (var e in parameters ?? Enumerable.Empty<XElement>())
+			{
+				var name = (string) e.Attribute("name");
+				var value = (string) e.Attribute("value");
+
+				if (string.IsNullOrEmpty(name)) continue;
+
+				if (! nameRegex.IsMatch(name))
+				{
+					throw new CartoConfigException(
+						$"Invalid parameter name: {name} (must match /{nameRegex}/)");
+				}
+
+				var match = multiRegex.Match(name);
+				if (match.Success && match.Index > 0)
+				{
+					// old config did not allow multi-valued parameters; instead we had Foo1, Foo2, etc.
+					// translate to new config, which allows repeated parameters; use plural name by convention
+					var stem = name.Substring(0, match.Index); // strip trailing digits
+					name = stem.EndsWith("s") ? stem : string.Concat(stem, "s");
+				}
+
+				config._settings.Add(new Setting(name, value, e.GetLineNumber()));
+			}
+
+			return config;
+		}
+
+		/// <summary>
+		/// Parse config from given ProcessGroup element of old .cp.xml
+		/// </summary>
+		private static CartoProcessConfig FromProcessGroup(XElement processGroup)
+		{
+			if (processGroup is null) return null;
+
+			var processName = (string) processGroup.Attribute("name");
+			var description = (string) processGroup.Element("Description") ??
+			                  (string) processGroup.Attribute("description");
+
+			var config = new CartoProcessConfig(processName, description);
+			var processes = processGroup.Element("Processes")?.Elements("Process");
+
+			foreach (var e in processes ?? Enumerable.Empty<XElement>())
+			{
+				const string name = "Process";
+				var value = (string) e.Attribute("name");
+				if (string.IsNullOrEmpty(value)) continue;
+
+				config._settings.Add(new Setting(name, value, e.GetLineNumber()));
+			}
+
+			return config;
+		}
+
+		#endregion
+
+		#region Config Text Parsing
+
+		/// <summary>
+		/// Parse config from given simple text format: name = value {; name = value}
+		/// </summary>
+		/// <param name="name">Optional name for this config</param>
+		/// <param name="text">Config text to be parsed</param>
+		/// <param name="description">Optional description for this config</param>
+		private static CartoProcessConfig FromText(string text, string name = null, string description = null)
+		{
+			var config = new CartoProcessConfig(name, description);
+
+			config.LoadString(text);
+
+			if (config.Name is null)
+			{
+				config.Name = config.GetString(nameof(config.Name), null);
+			}
+
+			if (config.Description is null)
+			{
+				config.Description = config.GetString(nameof(config.Description), null);
+			}
+
+			return config;
+		}
+
+		private void LoadString(string text)
 		{
 			_settings.Clear();
 
 			if (text == null) return;
 
 			var position = new Position();
+			var sb = new StringBuilder();
 
 			SkipWhite(text, position);
 
 			while (position.Index < text.Length)
 			{
+				if (text[position.Index] == '#')
+				{
+					SkipLine(text, position);
+					SkipWhite(text, position);
+					continue;
+				}
+
 				string name = ScanName(text, position);
 				if (string.IsNullOrEmpty(name))
 					throw SyntaxError(position, "Expect parameter name");
@@ -98,42 +346,110 @@ namespace ProSuite.Processing
 					throw SyntaxError(position, "Expect '=' operator");
 				SkipBlank(text, position);
 
-				string value = ScanValue(text, position);
+				string value = ScanValue(text, position, sb);
 				if (value == null)
 					throw SyntaxError(position, "Expect a value");
-				_settings.Add(new KeyValuePair<string, object>(name, value));
+				_settings.Add(new Setting(name, value, position.LineNumber));
 
-				SkipWhite(text, position);
-				SkipOperator(text, position, ';', '\n');
 				SkipWhite(text, position);
 			}
 		}
 
-		private static string ScanValue(string text, Position position)
+		private static string ScanName(string text, Position position)
 		{
 			if (position.Index >= text.Length)
-				return null;
+			{
+				return null; // at end of text
+			}
 
-			char c = text[position.Index];
-			if (c == '\'')
-				return ScanSqlString(text, position);
+			char cc;
+			if ((cc = text[position.Index]) != '_' && !char.IsLetter(cc))
+			{
+				return null; // not a name at text[index...]
+			}
 
-			if (c == '"')
-				return ScanString(text, position);
-
-			return ScanToDelim(text, position, ';', '\n');
-		}
-
-		private static string ScanToDelim(string text, Position position, char d1, char d2)
-		{
-			char c;
 			int anchor = position.Index;
-			while (position.Index < text.Length && (c = text[position.Index]) != d1 && c != d2)
+			while (position.Index < text.Length && ((cc = text[position.Index]) == '_' || char.IsLetterOrDigit(cc)))
 			{
 				position.Advance(text);
 			}
 
-			return text.Substring(anchor, position.Index - anchor).Trim();
+			return text.Substring(anchor, position.Index - anchor);
+		}
+
+		private static string ScanValue(string text, Position position, StringBuilder sb)
+		{
+			sb.Clear();
+
+			if (position.Index >= text.Length)
+			{
+				return null; // at end of text
+			}
+
+			while (position.Index < text.Length)
+			{
+				char cc = text[position.Index];
+				if (cc == '\'')
+				{
+					ScanSqlString(text, position, sb); // NB: SQL '' string <> Shell '' string
+				}
+				else if (cc == '"')
+				{
+					ScanString(text, position, sb);
+				}
+				else if (cc == '#')
+				{
+					SkipLine(text, position);
+					break;
+				}
+				else if (cc == '\r' || cc == '\n')
+				{
+					ScanEndline(text, position);
+					break;
+				}
+				else if (cc == ' ' || cc == '\t' || cc == '\v')
+				{
+					SkipBlank(text, position);
+					sb.Append(' ');
+				}
+				else
+				{
+					sb.Append(cc);
+					position.Advance(text);
+				}
+			}
+
+			return sb.TrimEnd().ToString(); //return ScanToDelim(text, position, '#');
+		}
+
+		private static void ScanSqlString(string text, Position position, StringBuilder sb)
+		{
+			Assert.True(position.Index < text.Length, "Bug");
+
+			char quote = text[position.Index];
+			int anchor = position.Index;
+			position.Advance(text); // skip opening apostrophe
+
+			while (position.Index < text.Length)
+			{
+				char cc = text[position.Index];
+				position.Advance(text);
+
+				if (cc == quote)
+				{
+					if (position.Index < text.Length && text[position.Index] == quote)
+					{
+						position.Advance(text); // skip 2nd apostrophe
+					}
+					else
+					{
+						sb.Append(text.Substring(anchor, position.Index - anchor));
+						return;
+					}
+				}
+			}
+
+			throw SyntaxError(position, "Unterminated string starting at position {0}", anchor);
 		}
 
 		private static string ScanSqlString(string text, Position position)
@@ -165,6 +481,42 @@ namespace ProSuite.Processing
 				else
 				{
 					sb.Append(cc);
+				}
+			}
+
+			throw SyntaxError(position, "Unterminated string starting at position {0}", anchor);
+		}
+
+		private static void ScanString(string text, Position position, StringBuilder sb)
+		{
+			Assert.True(position.Index < text.Length, "Bug");
+
+			char quote = text[position.Index];
+			int anchor = position.Index;
+			position.Advance(text); // skip opening quote
+
+			while (position.Index < text.Length)
+			{
+				char cc = text[position.Index];
+				position.Advance(text);
+
+				if (cc == quote)
+				{
+					sb.Append(text.Substring(anchor, position.Index - anchor));
+					return;
+				}
+
+				if (cc == '\\')
+				{
+					if (position.Index >= text.Length)
+					{
+						break;
+					}
+
+					position.Advance(text);
+
+					// here just accept any escaped character
+					// typically allowed: " ' \ / b f n r t v u####
 				}
 			}
 
@@ -229,7 +581,7 @@ namespace ProSuite.Processing
 							sb.Append('\t');
 							break;
 						case 'u':
-							throw SyntaxError(position, "\\u#### is not yet implemented");
+							throw SyntaxError(position, "\\u#### is not yet implemented"); // TODO implement \uXXXX escapes
 						default:
 							throw SyntaxError(position, "Invalid escape '\\{0}' in string", cc);
 					}
@@ -243,21 +595,16 @@ namespace ProSuite.Processing
 			throw SyntaxError(position, "Unterminated string starting at position {0}", anchor);
 		}
 
-		private static string ScanName(string text, Position position)
+		private static string ScanToDelim(string text, Position position, char delim)
 		{
 			char cc;
-			if (position.Index >= text.Length || (cc = text[position.Index]) != '_' && !char.IsLetter(cc))
-			{
-				return null; // not a name at text[index...]
-			}
-
 			int anchor = position.Index;
-			while (position.Index < text.Length && ((cc = text[position.Index]) == '_' || char.IsLetterOrDigit(cc)))
+			while (position.Index < text.Length && (cc = text[position.Index]) != delim && cc != '\n' && cc != '\r')
 			{
 				position.Advance(text);
 			}
 
-			return text.Substring(anchor, position.Index - anchor);
+			return text.Substring(anchor, position.Index - anchor).Trim();
 		}
 
 		private static char ScanOperator(string text, Position position, char op1, char op2)
@@ -269,12 +616,14 @@ namespace ProSuite.Processing
 			return c;
 		}
 
-		private static void SkipOperator(string text, Position position, char op1, char op2)
+		private static void SkipLine(string text, Position position)
 		{
-			if (position.Index >= text.Length) return;
-			char c = text[position.Index];
-			if (c != op1 && c != op2) return;
-			position.Advance(text);
+			while (position.Index < text.Length)
+			{
+				char cc = text[position.Index];
+				position.Advance(text);
+				if (cc == '\n' || cc == '\r') break;
+			}
 		}
 
 		private static void SkipWhite(string text, Position position)
@@ -297,6 +646,15 @@ namespace ProSuite.Processing
 			}
 		}
 
+		private static bool ScanEndline(string text, Position position)
+		{
+			// expect one of: end-of-text | CR| CR LF | LF
+			if (position.Index >= text.Length) return true;
+			bool found = text[position.Index] == '\n' || text[position.Index] == '\r';
+			if (found) position.Advance(text);
+			return found;
+		}
+
 		[StringFormatMethod("format")]
 		private static FormatException SyntaxError(Position position, string format, params object[] args)
 		{
@@ -304,10 +662,27 @@ namespace ProSuite.Processing
 			                           $" (line {position.LineNumber} position {position.LinePosition}");
 		}
 
-		[StringFormatMethod("format")]
-		private static Exception ConfigError(string format, params object[] args)
+		#endregion
+
+		#region Nested types
+
+		private readonly struct Setting
 		{
-			return new Exception(string.Format(format, args));
+			public string Name { get; }
+			public string Value { get; }
+			public int LineNumber { get; }
+
+			public Setting(string name, string value, int lineNumber)
+			{
+				Name = name ?? throw new ArgumentNullException(nameof(name));
+				Value = value;
+				LineNumber = lineNumber;
+			}
+
+			public override string ToString()
+			{
+				return $"{Name} = {Value} (line {LineNumber})";
+			}
 		}
 
 		private class Position
@@ -325,15 +700,33 @@ namespace ProSuite.Processing
 
 			public void Advance(string text)
 			{
-				if (text[Index] == '\n')
+				if (Index < text.Length)
 				{
-					LinePosition = 0;
-					LineNumber += 1;
-				}
+					// Cope with all end-of-line conventions: CR, CR LF, LF
 
-				LinePosition += 1;
-				Index += 1;
+					if (text[Index] == '\r')
+					{
+						int next = Index + 1;
+						if (next < text.Length && text[next] == '\n')
+						{
+							Index += 1;
+						}
+
+						LinePosition = 0;
+						LineNumber += 1;
+					}
+					else if (text[Index] == '\n')
+					{
+						LinePosition = 0;
+						LineNumber += 1;
+					}
+
+					LinePosition += 1;
+					Index += 1;
+				}
 			}
 		}
+
+		#endregion
 	}
 }

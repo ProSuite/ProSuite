@@ -18,7 +18,6 @@ namespace ProSuite.Processing.Domain
 		public string DatasetName { get; }
 
 		public string WhereClause { get; }
-		// Note: RepClassName no longer needed
 
 		public static ProcessDatasetName Parse(string text)
 		{

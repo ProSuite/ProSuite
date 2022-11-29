@@ -199,12 +199,7 @@ namespace ProSuite.Processing.Evaluation
 			return new EvaluationException(message, inner);
 		}
 
-		/// <summary>
-		/// Seed the random number generator.
-		/// See <see cref="StandardEnvironment.RandomSeed"/> for details.
-		/// </summary>
-		/// <param name="seed">The seed value</param>
-		/// <returns>This instance (for convenience).</returns>
+		[Obsolete]
 		public ImplicitValue SetRandomSeed(int seed)
 		{
 			_environment.RandomSeed = seed;

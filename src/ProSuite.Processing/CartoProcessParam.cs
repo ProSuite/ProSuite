@@ -1,0 +1,25 @@
+using System;
+
+namespace ProSuite.Processing
+{
+	public class CartoProcessParam
+	{
+		public string Name { get; }
+		public Type Type { get; }
+		public bool Required { get; }
+		public bool Multivalued { get; }
+		public string Group { get; }
+		public string Description { get; }
+
+		public CartoProcessParam(string name, Type type, bool required, bool multivalued,
+		                         string group = null, string description = null)
+		{
+			Name = name ?? throw new ArgumentNullException(nameof(name));
+			Type = type ?? throw new ArgumentNullException(nameof(type));
+			Required = required;
+			Multivalued = multivalued;
+			Group = group?.Trim() ?? string.Empty;
+			Description = description ?? string.Empty;
+		}
+	}
+}

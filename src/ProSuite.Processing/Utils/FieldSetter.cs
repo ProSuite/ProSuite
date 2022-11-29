@@ -37,6 +37,8 @@ namespace ProSuite.Processing.Utils
 			_text = null;
 		}
 
+		public StandardEnvironment Environment => _environment;
+
 		/// <summary>
 		/// Create a <see cref="FieldSetter"/> instance.
 		/// </summary>
@@ -73,15 +75,16 @@ namespace ProSuite.Processing.Utils
 			}
 		}
 
-		/// <summary>
-		/// Seed the random number generator.
-		/// See <see cref="StandardEnvironment.RandomSeed"/> for details.
-		/// </summary>
-		/// <param name="seed">The seed value</param>
-		/// <returns>This instance (for convenience).</returns>
+		[Obsolete]
 		public FieldSetter SetRandomSeed(int seed)
 		{
 			_environment.RandomSeed = seed;
+			return this;
+		}
+
+		public FieldSetter SetRandom(Random random)
+		{
+			_environment.SetRandom(random);
 			return this;
 		}
 
