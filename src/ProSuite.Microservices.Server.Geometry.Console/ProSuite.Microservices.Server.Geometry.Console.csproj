@@ -110,6 +110,10 @@
       <Project>{eab868e4-d8fd-4ab4-9eda-a9291e7cfeab}</Project>
       <Name>ProSuite.Application.Configuration</Name>
     </ProjectReference>
+    <ProjectReference Include="..\ProSuite.Commons.AO.Licensing\ProSuite.Commons.AO.Licensing.csproj">
+      <Project>{16259552-83CC-4385-98FF-0D28E2F075F4}</Project>
+      <Name>ProSuite.Commons.AO.Licensing</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ProSuite.Commons.AO\ProSuite.Commons.AO.csproj">
       <Project>{7E4B0861-83ED-4D12-BE27-93C9053C88CA}</Project>
       <Name>ProSuite.Commons.AO</Name>
