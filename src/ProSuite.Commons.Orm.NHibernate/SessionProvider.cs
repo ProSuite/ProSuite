@@ -136,6 +136,15 @@ namespace ProSuite.Commons.Orm.NHibernate
 		public Version KnownSchemaVersion { get; set; }
 
 		/// <summary>
+		/// Legacy setter to provide the known schema version through Castle config.
+		/// </summary>
+		[UsedImplicitly]
+		public string KnownSchemaVersionString
+		{
+			set => KnownSchemaVersion = new Version(value);
+		}
+
+		/// <summary>
 		/// An idea for a pattern that could be used e.g. by a domain transaction manager.
 		/// </summary>
 		/// <param name="proc"></param>

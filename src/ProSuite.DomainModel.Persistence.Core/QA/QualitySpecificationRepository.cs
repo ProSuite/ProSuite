@@ -63,9 +63,12 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 				var ddxVersionTransformers = new Version(0, 2);
 
 				int[] transformerIds = { };
-				if (GetDatabaseSchemaVersion() >= ddxVersionTransformers)
+
+				Version databaseSchemaVersion = GetDatabaseSchemaVersion();
+
+				if (databaseSchemaVersion >= ddxVersionTransformers)
 				{
-					// Either not defined (let's try anyway) or properly supported by the DDX schema:
+					// Only if it is properly supported by the DDX schema:
 					transformerIds =
 						DatasetParameterFetchingUtils.GetAllTransformerIdsForDatasets(
 							session, datasetIds, excludeReferenceData: true).ToArray();
