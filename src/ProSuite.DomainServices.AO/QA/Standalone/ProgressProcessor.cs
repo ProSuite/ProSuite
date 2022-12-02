@@ -38,6 +38,9 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 			_trackCancel = trackCancel;
 		}
 
+		[CanBeNull]
+		public IVerificationProgressStreamer ProgressStreamer { get; set; }
+
 		public void Process([NotNull] VerificationProgressEventArgs progressArgs)
 		{
 			Assert.ArgumentNotNull(progressArgs, nameof(progressArgs));
@@ -63,8 +66,10 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 				case Step.ITestProcessing:
 					if (! _firstNonContainerTestReported)
 					{
-						_msg.Info(
-							"Verifying quality conditions based on non-container tests");
+						const string nonContainerMsg =
+							"Verifying quality conditions based on non-container tests";
+						_msg.Info(nonContainerMsg);
+						ProgressStreamer?.Info(nonContainerMsg);
 						_firstNonContainerTestReported = true;
 					}
 
@@ -75,7 +80,9 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 						qualityCondition = _elementsByTest[test].QualityCondition;
 					}
 
-					_msg.InfoFormat("  {0}", qualityCondition.Name);
+					string condName = $"  {qualityCondition.Name}";
+					_msg.Info(condName);
+					ProgressStreamer?.Info(condName);
 					break;
 
 				case Step.DataLoading:
@@ -91,14 +98,20 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 				case Step.TileProcessing:
 					if (! _firstTileProcessingReported)
 					{
-						_msg.Info(
-							"Verifying quality conditions per cached tiles (container tests)");
+						const string containerMsg =
+							"Verifying quality conditions per cached tiles (container tests)";
+						_msg.Info(containerMsg);
+						ProgressStreamer?.Info(containerMsg);
+
 						_firstTileProcessingReported = true;
 					}
 
-					_msg.InfoFormat("  Processing tile {0} of {1}: {2}",
-					                progressArgs.Current, progressArgs.Total,
-					                GeometryUtils.Format(progressArgs.CurrentBox));
+					string tileProgressMsg =
+						$"  Processing tile {progressArgs.Current} of {progressArgs.Total}: " +
+						$"{GeometryUtils.Format(progressArgs.CurrentBox)}";
+
+					_msg.InfoFormat(tileProgressMsg);
+					ProgressStreamer?.Info(tileProgressMsg);
 					break;
 
 				case Step.TileProcessed:

@@ -115,11 +115,11 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 			}
 			catch (COMException e)
 			{
-				_msg.Warn($"Error creating issue workspace {gdbName} in {directoryFullPath}. " +
-				          "Make sure the executing process has the appropriate privileges and the disk has free space.",
-				          e);
-
-				throw;
+				_msg.Debug($"Error creating issue workspace {gdbName} in {directoryFullPath}.", e);
+				throw new IOException(
+					$"Error creating issue workspace {gdbName} in {directoryFullPath}. " +
+					"Make sure the executing process has the appropriate privileges and the disk has free space.",
+					e);
 			}
 
 			return workspaceName == null

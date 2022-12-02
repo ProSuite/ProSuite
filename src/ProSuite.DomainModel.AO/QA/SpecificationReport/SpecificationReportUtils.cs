@@ -50,7 +50,6 @@ namespace ProSuite.DomainModel.AO.QA.SpecificationReport
 
 			FileSystemUtils.WriteTextFile(output, reportFilePath);
 
-			_msg.InfoFormat("Quality specification report written to {0}", reportFilePath);
 			return reportFilePath;
 		}
 
