@@ -34,21 +34,25 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		/// <summary>
 		///     Initializes a new instance of the <see cref="GdbTable" /> class.
 		/// </summary>
-		/// <param name="objectClassId">The object class id.</param>
+		/// <param name="objectClassId">The object class id. Specify null to have a process-wide
+		/// unique id assigned.</param>
 		/// <param name="name">The name.</param>
 		/// <param name="aliasName">The alias name of the object class.</param>
 		/// <param name="createBackingDataset">The factory method that creates the backing dataset.</param>
 		/// <param name="workspace"></param>
-		public GdbTable(int objectClassId,
+		public GdbTable(int? objectClassId,
 		                [NotNull] string name,
 		                [CanBeNull] string aliasName = null,
 		                [CanBeNull] Func<GdbTable, BackingDataset> createBackingDataset = null,
 		                [CanBeNull] IWorkspace workspace = null)
 			: base(name)
 		{
-			if (objectClassId > 0)
+			// NOTE: Do not use -1 as 'special number' because the client could use negative numbers,
+			// such as Pro class handles as ObjectClassId. We should not restrict the range to positive
+			// numbers only.
+			if (objectClassId != null)
 			{
-				ObjectClassID = objectClassId;
+				ObjectClassID = objectClassId.Value;
 			}
 			else
 			{

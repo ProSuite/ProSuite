@@ -14,7 +14,7 @@ namespace ProSuite.QA.Tests.Transformers
 		where T : TransformedBackingData
 	{
 		public TransformedTable(
-			int objectClassId,
+			int? objectClassId,
 			[NotNull] string name,
 			[NotNull] Func<GdbTable, T> createBackingDataset,
 			[CanBeNull] IWorkspace workspace = null)

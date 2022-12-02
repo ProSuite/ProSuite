@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using ArcGIS.Core.CIM;
+using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.Essentials.Assertions;
@@ -20,6 +21,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		private readonly CIMLineSymbol _noReshapeLineSymbol;
 
 		private readonly List<IDisposable> _overlays = new List<IDisposable>();
+		private readonly CIMLineSymbol _targetLineSymbol;
 		private readonly CIMLineSymbol _reshapeLineSymbol;
 		private readonly CIMPointSymbol _candidateLineEnd;
 		private readonly CIMPointSymbol _preselectedLineEnd;
@@ -48,12 +50,17 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			_filteredReshapeLineSymbol =
 				SymbolFactory.Instance.ConstructLineSymbol(grey, _lineWidth);
 
+			var purple = ColorFactory.Instance.CreateRGBColor(150, 0, 150);
+			_targetLineSymbol = SymbolFactory.Instance.ConstructLineSymbol(purple, _lineWidth - 2);
+
 			_noReshapeLineEnd = CreateMarkerSymbol(red);
 			_reshapeLineEnd = CreateMarkerSymbol(green);
 			_candidateLineEnd = CreateMarkerSymbol(yellow);
 			_preselectedLineEnd = CreateMarkerSymbol(blue);
 			_filteredLineEnd = CreateMarkerSymbol(grey);
 		}
+
+		public bool ShowTargetLines { get; set; }
 
 		public void Update([CanBeNull] ChangeAlongCurves newCurves)
 		{
@@ -62,6 +69,23 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			if (newCurves == null)
 			{
 				return;
+			}
+
+			if (ShowTargetLines && newCurves.TargetFeatures != null)
+			{
+				foreach (Feature targetFeature in newCurves.TargetFeatures)
+				{
+					Geometry targetGeometry = targetFeature.GetShape();
+
+					Polyline polyline = targetGeometry as Polyline;
+
+					if (polyline == null && targetGeometry is Polygon polygon)
+					{
+						polyline = PolylineBuilderEx.CreatePolyline(polygon);
+					}
+
+					AddOverlay(polyline, _targetLineSymbol);
+				}
 			}
 
 			Predicate<CutSubcurve> noReshape = c =>

@@ -45,6 +45,14 @@ namespace ProSuite.QA.Tests.Test.Transformer
 
 			{
 				IFeature f = fc.CreateFeature();
+				f.Shape = CurveConstruction.StartLine(10, 10).LineTo(50, 80).LineTo(90, 20)
+										   .LineTo(10, 10).Curve;
+				f.Store();
+			}
+
+
+			{
+				IFeature f = fc.CreateFeature();
 				f.Shape = CurveConstruction.StartLine(0, 0).LineTo(70, 70).Curve;
 				f.Store();
 			}
@@ -141,7 +149,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				// Each tile sees some different combination of features...
 				var runner = new QaContainerTestRunner(25, test);
 				runner.Execute();
-				Assert.AreEqual(3, runner.Errors.Count);
+				Assert.AreEqual(2, runner.Errors.Count);
 			}
 		}
 
@@ -205,13 +213,11 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				errorShape = runner.ErrorGeometries[0];
 			}
 			{
-				// TODO: Implement proper handling of the SearchOption All in the polygon case
 				var runner = new QaContainerTestRunner(25, test);
 				runner.KeepGeometry = true;
 				runner.Execute();
+				Assert.AreEqual(1, runner.Errors.Count);
 
-				// NOTE: The error is reported once per tile (de-duplication does not happen here)
-				// -> and to work properly, the features would need to be grouped into contiguous groups first...
 				foreach (IGeometry geometry in runner.ErrorGeometries)
 				{
 					Assert.IsTrue(GeometryUtils.AreEqualInXY(errorShape, geometry));

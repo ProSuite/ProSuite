@@ -12,6 +12,7 @@ using ProSuite.Commons;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Com;
+using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -19,12 +20,12 @@ using ProSuite.Commons.Progress;
 using ProSuite.Commons.Text;
 using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.QA;
-using ProSuite.DomainModel.AO.QA.Xml;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainServices.AO.QA;
 using ProSuite.DomainServices.AO.QA.IssuePersistence;
 using ProSuite.DomainServices.AO.QA.Standalone;
 using ProSuite.DomainServices.AO.QA.Standalone.XmlBased;
+using ProSuite.DomainServices.AO.QA.VerifiedDataModel;
 using ProSuite.Microservices.AO;
 using ProSuite.Microservices.Definitions.QA;
 using ProSuite.Microservices.Definitions.Shared;
@@ -99,7 +100,11 @@ namespace ProSuite.Microservices.Server.AO.QA
 		[CanBeNull]
 		public string QualitySpecificationTemplatePath { get; set; }
 
-		public IList<XmlTestDescriptor> SupportedTestDescriptors { get; set; }
+		/// <summary>
+		/// The supported test descriptors for a fine-granular specification based off a condition list.
+		/// </summary>
+		[CanBeNull]
+		public ISupportedInstanceDescriptors SupportedTestDescriptors { get; set; }
 
 		/// <summary>
 		/// The client end point used for parallel processing.
@@ -125,7 +130,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 				ServiceCallStatus result =
 					await GrpcServerUtils.ExecuteServiceCall(
-						func, context, _staThreadScheduler);
+						func, context, _staThreadScheduler, true);
 
 				_msg.InfoFormat("Verification {0}", result);
 			}
@@ -177,7 +182,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 				ServiceCallStatus result =
 					await GrpcServerUtils.ExecuteServiceCall(
-						func, context, _staThreadScheduler);
+						func, context, _staThreadScheduler, true);
 
 				_msg.InfoFormat("Verification {0}", result);
 			}
@@ -225,7 +230,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 							VerifyStandaloneXmlCore(request, responseStreamer, trackCancel);
 
 					result = await GrpcServerUtils.ExecuteServiceCall(
-						         func, context, _staThreadScheduler);
+						         func, context, _staThreadScheduler, true);
 
 					// final message:
 					responseStreamer.WriteProgressAndIssues(
@@ -426,6 +431,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			BackgroundVerificationService qaService = null;
 			VerificationProgressStreamer<VerificationResponse> responseStreamer =
 				new VerificationProgressStreamer<VerificationResponse>(responseStream);
+			responseStreamer.CreateResponseAction = responseStreamer.CreateVerificationResponse;
 
 			List<GdbObjRefMsg> deletableAllowedErrorRefs = new List<GdbObjRefMsg>();
 			QualityVerification verification = null;
@@ -557,14 +563,14 @@ namespace ProSuite.Microservices.Server.AO.QA
 				_verificationInputsFactoryMethod(request);
 
 			responseStreamer.BackgroundVerificationInputs = backgroundVerificationInputs;
-			responseStreamer.CreateResponseAction = responseStreamer.CreateVerificationResponse;
 
 			qaService = CreateVerificationService(
 				backgroundVerificationInputs, responseStreamer, trackCancel);
 
 			qaService.DistributedTestRunner = distributedTestRunner;
 
-			QualityVerification verification = qaService.Verify(backgroundVerificationInputs, trackCancel);
+			QualityVerification verification =
+				qaService.Verify(backgroundVerificationInputs, trackCancel);
 
 			return verification;
 		}
@@ -638,7 +644,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 					qualitySpecification = SetupQualitySpecification(xmlSpecification);
 
-					HashSet<int> excludedQcIds = new HashSet<int>(request.Specification.ExcludedConditionIds);
+					HashSet<int> excludedQcIds =
+						new HashSet<int>(request.Specification.ExcludedConditionIds);
 					if (excludedQcIds.Count > 0)
 					{
 						foreach (QualitySpecificationElement element in qualitySpecification
@@ -671,7 +678,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			[NotNull] XmlQualitySpecificationMsg xmlSpecification)
 		{
 			var dataSources = new List<DataSource>();
-			if (dataSources.Count > 0)
+			if (xmlSpecification.DataSourceReplacements.Count > 0)
 			{
 				foreach (string replacement in xmlSpecification.DataSourceReplacements)
 				{
@@ -688,11 +695,14 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 					dataSources.Add(dataSource);
 				}
+
+				_msg.DebugFormat("Using {0} provided data source replacements.", dataSources.Count);
 			}
 			else
 			{
 				dataSources.AddRange(
 					QualitySpecificationUtils.GetDataSources(xmlSpecification.Xml));
+				_msg.DebugFormat("Using {0} data sources from XML.", dataSources.Count);
 			}
 
 			QualitySpecification qualitySpecification =
@@ -705,7 +715,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			{
 				if (element.QualityCondition.Id < 0)
 				{
-					Commons.DomainModels.IEntityTest qc = element.QualityCondition;
+					IEntityTest qc = element.QualityCondition;
 					qc.SetId(nextQcId);
 				}
 
@@ -721,7 +731,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			if (SupportedTestDescriptors == null || SupportedTestDescriptors.Count == 0)
 			{
 				throw new InvalidOperationException(
-					"No xml test descriptors have been set up.");
+					"No supported instance descriptors have been initialized.");
 			}
 
 			var dataSources = conditionsSpecificationMsg.DataSources.Select(
@@ -732,41 +742,44 @@ namespace ProSuite.Microservices.Server.AO.QA
 			                 dataSources.Count, Environment.NewLine,
 			                 StringUtils.Concatenate(dataSources, Environment.NewLine));
 
-			var specificationElements = new List<SpecificationElement>();
-
-			foreach (QualitySpecificationElementMsg specificationElementMsg in
-			         conditionsSpecificationMsg.Elements)
-			{
-				// Temporary - TODO: Remove de-tour via xml condition
-
-				SpecificationElement specificationElement =
-					ProtobufConversionUtils.CreateXmlConditionElement(specificationElementMsg);
-
-				specificationElements.Add(specificationElement);
-
-				//using (TextReader xmlReader = new StringReader(conditionXml))
-				//{
-				//	XmlQualityCondition condition =
-				//		XmlDataQualityUtils.DeserializeCondition(xmlReader);
-
-				//	var specificationElement =
-				//		new SpecificationElement(condition,
-				//		                         specificationElementMsg.CategoryName)
-				//		{
-				//			AllowErrors = specificationElementMsg.AllowErrors,
-				//			StopOnError = specificationElementMsg.StopOnError
-				//		};
-
-				//	specificationElements.Add(specificationElement);
-				//}
-			}
-
 			QualitySpecification qualitySpecification =
-				QualitySpecificationUtils.CreateQualitySpecification(
-					conditionsSpecificationMsg.Name, SupportedTestDescriptors,
-					specificationElements, dataSources, false);
+				CreateQualitySpecification(conditionsSpecificationMsg, dataSources);
 
 			return qualitySpecification;
+		}
+
+		private QualitySpecification CreateQualitySpecification(
+			ConditionListSpecificationMsg conditionsSpecificationMsg,
+			List<DataSource> dataSources)
+		{
+			if (SupportedTestDescriptors == null || SupportedTestDescriptors.Count == 0)
+			{
+				throw new InvalidOperationException(
+					"No supported instance descriptors have been initialized.");
+			}
+
+			ProtoBasedQualitySpecificationFactory factory =
+				CreateSpecificationFactory(SupportedTestDescriptors);
+
+			QualitySpecification result = factory.CreateQualitySpecification(
+				conditionsSpecificationMsg, dataSources);
+
+			return result;
+		}
+
+		private static ProtoBasedQualitySpecificationFactory CreateSpecificationFactory(
+			ISupportedInstanceDescriptors instanceDescriptors)
+		{
+			var modelFactory = new VerifiedModelFactory(
+				new MasterDatabaseWorkspaceContextFactory(), new SimpleVerifiedDatasetHarvester());
+
+			var datasetOpener = new SimpleDatasetOpener(new MasterDatabaseDatasetContext());
+
+			var factory =
+				new ProtoBasedQualitySpecificationFactory(modelFactory, instanceDescriptors,
+				                                          datasetOpener);
+
+			return factory;
 		}
 
 		private static IEnumerable<GdbObjRefMsg> GetDeletableAllowedErrorRefs(
@@ -873,7 +886,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			IServerStreamWriter<DataVerificationResponse> responseStream)
 		{
 			void Write(VerificationResponse r) =>
-				responseStream.WriteAsync(new DataVerificationResponse {Response = r});
+				responseStream.WriteAsync(new DataVerificationResponse { Response = r });
 
 			SendFatalException(exception, Write);
 		}

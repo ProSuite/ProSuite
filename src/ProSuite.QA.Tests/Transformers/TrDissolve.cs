@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Permissions;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
@@ -9,6 +10,7 @@ using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Geom;
 using ProSuite.Commons.Geom.SpatialIndex;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.Geometry;
@@ -38,7 +40,7 @@ namespace ProSuite.QA.Tests.Transformers
 		public TrDissolve(
 			[NotNull] [DocTr(nameof(DocTrStrings.TrDissolve_featureClass))]
 			IReadOnlyFeatureClass featureClass)
-			: base(new List<IReadOnlyTable> {featureClass})
+			: base(new List<IReadOnlyTable> { featureClass })
 		{
 			_toDissolve = featureClass;
 			NeighborSearchOption = _defaultSearchOption;
@@ -112,13 +114,13 @@ namespace ProSuite.QA.Tests.Transformers
 		                              IHasSearchDistance
 		{
 			public TransformedFc(IReadOnlyFeatureClass dissolve, string name = null)
-				: base(-1, ! string.IsNullOrEmpty(name) ? name : "dissolveResult",
+				: base(null, ! string.IsNullOrEmpty(name) ? name : "dissolveResult",
 				       dissolve.ShapeType,
 				       createBackingDataset: (t) =>
 					       new TransformedDataset((TransformedFc) t, dissolve),
 				       workspace: new GdbWorkspace(new TransformerWorkspace()))
 			{
-				InvolvedTables = new List<IReadOnlyTable> {dissolve};
+				InvolvedTables = new List<IReadOnlyTable> { dissolve };
 			}
 
 			public double SearchDistance { get; set; }
@@ -290,7 +292,7 @@ namespace ProSuite.QA.Tests.Transformers
 					{
 						baseInvolved =
 							baseInvolved ??
-							InvolvedRowUtils.EnumInvolved(new[] {baseFeature}).First();
+							InvolvedRowUtils.EnumInvolved(new[] { baseFeature }).First();
 
 						if ((knownInvolved as InvolvedNested)?.BaseRows
 						                                     .Contains(baseInvolved) == true)
@@ -419,7 +421,9 @@ namespace ProSuite.QA.Tests.Transformers
 				return shapeDict;
 			}
 
-			private VirtualRow CreateResultRow(IGeometry shape, List<IReadOnlyRow> rows)
+			private VirtualRow CreateResultRow(IGeometry shape,
+			                                   IList<IReadOnlyRow> rows,
+			                                   bool generateNewOid = false)
 			{
 				Assert.True(rows.Count > 0, "No rows to dissolve");
 
@@ -427,21 +431,20 @@ namespace ProSuite.QA.Tests.Transformers
 				{
 					joinedValueList.AddList(new PropertySetValueList(), ShapeDict);
 				}
-				{
-					var calculatedValues = TableFields.GetCalculatedValues(rows).ToList();
 
-					// Add the BaseRows:
-					calculatedValues.Add(new CalculatedValue(BaseRowsFieldIndex, rows));
+				var calculatedValues = TableFields.GetCalculatedValues(rows).ToList();
 
-					// Add space for the generated OID
-					calculatedValues.Add(new CalculatedValue(Resulting.OidFieldIndex, null));
+				// Add the BaseRows:
+				calculatedValues.Add(new CalculatedValue(BaseRowsFieldIndex, rows));
 
-					IValueList simpleList =
-						TransformedAttributeUtils.ToSimpleValueList(
-							calculatedValues, out IDictionary<int, int> calculatedCopyMatrix);
+				// Add space for the generated OID
+				calculatedValues.Add(new CalculatedValue(Resulting.OidFieldIndex, null));
 
-					joinedValueList.AddList(simpleList, calculatedCopyMatrix);
-				}
+				IValueList simpleList =
+					TransformedAttributeUtils.ToSimpleValueList(
+						calculatedValues, out IDictionary<int, int> calculatedCopyMatrix);
+
+				joinedValueList.AddList(simpleList, calculatedCopyMatrix);
 
 				// Consider using the one with the smallest OID?
 				IReadOnlyRow mainRow = rows[0];
@@ -450,7 +453,10 @@ namespace ProSuite.QA.Tests.Transformers
 				IValueList rowValues = new ReadOnlyRowBasedValues(mainRow);
 				joinedValueList.AddList(rowValues, TableFields.FieldIndexMapping);
 
-				GdbFeature dissolved = (GdbFeature) Resulting.CreateObject(joinedValueList);
+				var dissolved =
+					generateNewOid
+						? Resulting.CreateObject(joinedValueList)
+						: Resulting.CreateObject(rows.Min(r => r.OID), joinedValueList);
 
 				dissolved.Shape = shape;
 
@@ -461,74 +467,168 @@ namespace ProSuite.QA.Tests.Transformers
 			{
 				bool searchAcrossTiles = Resulting.NeighborSearchOption == SearchOption.All;
 
-				IEnvelope requestedArea = (filter as ISpatialFilter)?.Geometry?.Envelope;
+				foreach (VirtualRow virtualRow in DissolveSearchedAreaFeatures(
+					         filter, searchAcrossTiles))
+				{
+					yield return virtualRow;
+				}
+			}
 
-				// TODO:
-				// Use proper geometry grouping as it is used in CleanMultipatchUtils or some optimized polygon network builder
-				// See also UnionPolygonsGeom in GPFunctionBase for performance considerations!
+			private IEnumerable<VirtualRow> DissolveSearchedAreaFeatures(IQueryFilter filter,
+				bool searchAcrossTiles)
+			{
+				IEnvelope spatialFilterEnvelope = (filter as ISpatialFilter)?.Geometry?.Envelope;
+				EnvelopeXY requestedAreaXy =
+					spatialFilterEnvelope == null
+						? null
+						: GeometryConversionUtils.CreateEnvelopeXY(spatialFilterEnvelope);
+
+				double tolerance = GeometryUtils.GetXyTolerance(_dissolve.SpatialReference);
+
 				foreach (List<IReadOnlyRow> rowsToDissolve in GroupedBaseFeatures(filter, false)
 					         .ToList())
 				{
-					IGeometry fullUnion = GeometryUtils.Union(
-						rowsToDissolve.Select(r => ((IReadOnlyFeature) r).Shape).ToList());
+					var inputFeaturesByOid =
+						rowsToDissolve.ToDictionary(r => (long) r.OID, r => (IReadOnlyFeature) r);
 
-					IEnvelope unionEnvelope = fullUnion.Envelope;
-
-					while (searchAcrossTiles &&
-					       requestedArea != null &&
-					       ! GeometryUtils.Contains(requestedArea, unionEnvelope))
+					var geomList = new List<MultiPolycurve>();
+					foreach (IReadOnlyRow row in rowsToDissolve)
 					{
-						var expanded = UnionExtraRows(rowsToDissolve, fullUnion, filter);
-
-						if (expanded == null)
-						{
-							break;
-						}
-
-						if (((IArea) expanded).Area <= ((IArea) fullUnion).Area)
-						{
-							// No growth
-							break;
-						}
-
-						fullUnion = expanded;
+						MultiPolycurve multiPolycurve = GetMultiPolycurve(row);
+						geomList.Add(multiPolycurve);
 					}
 
-					foreach (IGeometry dissolvedGeometry in GeometryUtils.Explode(fullUnion))
+					// 1. Step: Reduce number of polys per group by assembling union-able group:
+					IList<ICollection<MultiPolycurve>> unionablePolygons =
+						GetUnionablePolygonGroups(geomList, tolerance);
+
+					//  Enlarge groups if necessary with neighboring tile's features:
+					foreach (ICollection<MultiPolycurve> group in unionablePolygons)
 					{
-						yield return CreateResultRow(dissolvedGeometry, rowsToDissolve);
+						bool couldBeExpanded =
+							requestedAreaXy != null &&
+							! GeomRelationUtils.AreBoundsContained(
+								GeomTopoOpUtils.UnionEnvelopesXY(group),
+								requestedAreaXy, tolerance);
+
+						while (searchAcrossTiles && couldBeExpanded)
+						{
+							couldBeExpanded = AddExtraGeometries(inputFeaturesByOid, group, filter,
+							                                     tolerance);
+						}
+
+						MultiLinestring union =
+							GeomTopoOpUtils.GetUnionAreasXY(
+								group.Cast<MultiLinestring>().ToList(), tolerance);
+
+						IPolygon result = GeometryConversionUtils.CreatePolygon(
+							inputFeaturesByOid.First().Value.Shape, union.GetLinestrings());
+
+						// TODO: Check in which situation this is really really needed and where we could
+						// just set the isKnownSimple flag.
+						GeometryUtils.Simplify(result);
+
+						var involvedFeatures = new List<IReadOnlyRow>();
+
+						foreach (MultiPolycurve geom in group)
+						{
+							involvedFeatures.Add(
+								inputFeaturesByOid[Assert.NotNull(geom.Id).Value]);
+						}
+
+						yield return CreateResultRow(
+							result, involvedFeatures, ! searchAcrossTiles);
 					}
 				}
 			}
 
-			private IGeometry UnionExtraRows(List<IReadOnlyRow> originalRows,
-			                                 IGeometry fullUnion, IQueryFilter filter)
+			private static IList<ICollection<MultiPolycurve>> GetUnionablePolygonGroups(
+				IEnumerable<MultiPolycurve> polygons, double tolerance)
 			{
-				IEnvelope unionEnvelope = fullUnion.Envelope;
-				// Quick and dirty! Needs proper filtering by difference with already searched are
-				// and association with the group in case of GroupBy
-				ISpatialFilter clone = (ISpatialFilter) ((IClone) filter).Clone();
+				IList<ICollection<MultiPolycurve>> unionablePolygons =
+					GeomTopoOpUtils.GroupPolygons(
+						polygons.ToList(),
+						(m1, m2) =>
+						{
+							bool canUnion = GeomTopoOpUtils.CanDissolveAreasXY(
+								m1, m2, tolerance,
+								out IList<IntersectionPoint3D> intersectionPoints);
 
+							if (canUnion)
+							{
+								// TODO: Remember intersection points which are the most expensive part to calculate, usually
+							}
+
+							return canUnion;
+						}, tolerance);
+
+				return unionablePolygons;
+			}
+
+			private static MultiPolycurve GetMultiPolycurve(IReadOnlyRow row)
+			{
+				IReadOnlyFeature feature = (IReadOnlyFeature) row;
+				IPolycurve polycurve = (IPolycurve) feature.Shape;
+
+				MultiPolycurve multiPolycurve =
+					GeometryConversionUtils.CreateMultiPolycurve(polycurve);
+
+				multiPolycurve.Id = feature.OID;
+				return multiPolycurve;
+			}
+
+			/// <summary>
+			/// Attempts to find more features in the source table that could be unioned with other
+			/// geometries in the specified lists. The features are searched only outside the current
+			/// search extent of the filter. The results are added to both <see cref="allFeaturesByOid"/>
+			/// and <see cref="groupGeometries"/>.
+			/// </summary>
+			/// <param name="allFeaturesByOid"></param>
+			/// <param name="groupGeometries"></param>
+			/// <param name="filter"></param>
+			/// <param name="tolerance"></param>
+			/// <returns></returns>
+			private bool AddExtraGeometries(
+				[NotNull] IDictionary<long, IReadOnlyFeature> allFeaturesByOid,
+				[NotNull] ICollection<MultiPolycurve> groupGeometries,
+				[NotNull] IQueryFilter filter,
+				double tolerance)
+			{
+				Assert.ArgumentCondition(allFeaturesByOid.Count > 0, "No rows to dissolve");
+				Assert.ArgumentCondition(groupGeometries.Count > 0, "No geometries to dissolve");
+
+				EnvelopeXY groupEnvelopeXY = GeomTopoOpUtils.UnionEnvelopesXY(groupGeometries);
+
+				IReadOnlyFeature anyFeature = allFeaturesByOid.First().Value;
+				ISpatialReference spatialReference = anyFeature.Shape.SpatialReference;
+
+				IEnvelope unionEnvelope =
+					GeometryFactory.CreateEnvelope(groupEnvelopeXY, spatialReference);
+
+				// TODO: Filter using difference and where clause for group by attribute values
+				// and possibly exclude already found features.
+				ISpatialFilter filterClone = (ISpatialFilter) ((IClone) filter).Clone();
+
+				// TODO: Instead of the current tile use the union of the previously searched areas
 				IEnvelope currentTile =
 					GeometryFactory.CreateEnvelope(DataContainer.CurrentTileExtent);
 				currentTile.SpatialReference = unionEnvelope.SpatialReference;
 
-				clone.Geometry =
+				filterClone.Geometry =
 					IntersectionUtils.Difference(GeometryFactory.CreatePolygon(unionEnvelope),
 					                             GeometryFactory.CreatePolygon(currentTile));
 
-				IGeometry extraRowUnion = null;
-
-				// Get extra rows
-				foreach (List<IReadOnlyRow> expandedGroup in GroupedBaseFeatures(clone, false))
+				// Get extra rows - TODO: Limit to current group-by attribute values using where clause
+				foreach (List<IReadOnlyRow> expandedGroup in
+				         GroupedBaseFeatures(filterClone, false))
 				{
 					if (expandedGroup.Count == 0)
 					{
 						continue;
 					}
 
-					// Check if the new group matches the original group (without necessarily relying on OIDs...)
-					var all = new HashSet<IReadOnlyRow>(originalRows.Concat(expandedGroup));
+					var all = new HashSet<IReadOnlyRow>(
+						allFeaturesByOid.Values.Concat(expandedGroup));
 
 					var allGrouped =
 						GdbObjectUtils.GroupRowsByAttributes(all, r => r, Resulting.GroupBy);
@@ -539,15 +639,51 @@ namespace ProSuite.QA.Tests.Transformers
 						continue;
 					}
 
-					extraRowUnion = GeometryUtils.Union(
-						expandedGroup.Select(r => ((IReadOnlyFeature) r).Shape).ToList());
+					// Create lists with the new features/polygons
+					var expandedPolygonList = new List<MultiPolycurve>(groupGeometries);
+					var additionalFeaturesByOid = new Dictionary<long, IReadOnlyFeature>();
+					foreach (IReadOnlyRow extraRow in expandedGroup)
+					{
+						if (! allFeaturesByOid.ContainsKey(extraRow.OID))
+						{
+							additionalFeaturesByOid.Add(extraRow.OID, (IReadOnlyFeature) extraRow);
+							expandedPolygonList.Add(GetMultiPolycurve(extraRow));
+						}
+					}
 
-					// TODO: Remove duplicates, if possible
-					originalRows.Clear();
-					originalRows.AddRange(all);
+					// Determine the new grouping considering the newly gotten features
+					IList<ICollection<MultiPolycurve>> newGroupings =
+						GetUnionablePolygonGroups(
+							expandedPolygonList, tolerance);
+
+					// Now find the (potentially enlarged) original group
+					long anyOriginalOid = Assert.NotNull(groupGeometries.First().Id).Value;
+
+					foreach (ICollection<MultiPolycurve> newGroup in newGroupings)
+					{
+						if (newGroup.Any(g => g.Id == anyOriginalOid))
+						{
+							// This is the potentially enlarged version of the original group
+							bool polygonsHaveBeenAdded = false;
+							foreach (MultiPolycurve multiPolycurve in newGroup)
+							{
+								long oid = Assert.NotNull(multiPolycurve.Id).Value;
+
+								if (! allFeaturesByOid.ContainsKey(oid))
+								{
+									groupGeometries.Add(multiPolycurve);
+									allFeaturesByOid.Add(oid, additionalFeaturesByOid[oid]);
+									polygonsHaveBeenAdded = true;
+								}
+							}
+
+							if (polygonsHaveBeenAdded)
+								return true;
+						}
+					}
 				}
 
-				return extraRowUnion != null ? GeometryUtils.Union(fullUnion, extraRowUnion) : null;
+				return false;
 			}
 
 			private IEnumerable<List<IReadOnlyRow>> GroupedBaseFeatures(IQueryFilter filter,
@@ -631,7 +767,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 						if (baseFeatures.Count == 1)
 						{
-							Add(new List<DirectedRow> {directedRow}, queryEnv: null);
+							Add(new List<DirectedRow> { directedRow }, queryEnv: null);
 							_handledRows.Add(directedRow);
 							continue;
 						}
@@ -640,7 +776,7 @@ namespace ProSuite.QA.Tests.Transformers
 						{
 							if (! _r.Resulting.CreateMultipartFeatures)
 							{
-								Add(new List<DirectedRow> {directedRow}, queryEnv: null);
+								Add(new List<DirectedRow> { directedRow }, queryEnv: null);
 								_handledRows.Add(directedRow);
 								continue;
 							}
@@ -656,9 +792,13 @@ namespace ProSuite.QA.Tests.Transformers
 						b.QueryWKSCoords(out WKSEnvelope box);
 						localBuilder.BuildNet(box, box, 0);
 
+						bool anyAdded = false;
+						List<DirectedRow> pairDirectedRows = null;
 						foreach (List<DirectedRow> directedRows in localBuilder
 							         .ConnectedLinesList)
 						{
+							if (directedRows.Count > 1)
+								pairDirectedRows = pairDirectedRows ?? directedRows;
 							if (directedRows.FirstOrDefault(x => ! _handledRows.Contains(x)) ==
 							    null)
 							{
@@ -667,6 +807,13 @@ namespace ProSuite.QA.Tests.Transformers
 
 							Add(directedRows, (IRelationalOperator) queryGeom);
 							directedRows.ForEach(x => _handledRows.Add(x));
+
+							anyAdded = true;
+						}
+
+						if (! anyAdded && pairDirectedRows != null)
+						{
+							Add(pairDirectedRows, (IRelationalOperator)queryGeom);
 						}
 					}
 				}
@@ -709,10 +856,19 @@ namespace ProSuite.QA.Tests.Transformers
 
 							if (connected0 == null && connected1 == null)
 							{
-								List<DirectedRow> connected =
-									new List<DirectedRow> {groupedRows[0], groupedRows[1]};
-								_dissolvedDict.Add(groupedRows[0], connected);
-								_dissolvedDict.Add(groupedRows[1], connected);
+								if (!_dissolvedDict.Comparer.Equals(groupedRows[0], groupedRows[1]))
+								{
+									List<DirectedRow> connected =
+										new List<DirectedRow> { groupedRows[0], groupedRows[1] };
+									_dissolvedDict.Add(groupedRows[0], connected);
+									_dissolvedDict.Add(groupedRows[1], connected);
+								}
+								else
+								{
+									List<DirectedRow> connected =
+										new List<DirectedRow> { groupedRows[0] };
+									_dissolvedDict.Add(groupedRows[0], connected);
+								}
 							}
 							else if (connected0 == null)
 							{
@@ -749,7 +905,7 @@ namespace ProSuite.QA.Tests.Transformers
 								if (! _dissolvedDict.ContainsKey(connectedRow))
 								{
 									_dissolvedDict.Add(connectedRow,
-									                   new List<DirectedRow> {connectedRow});
+									                   new List<DirectedRow> { connectedRow });
 								}
 							}
 						}

@@ -107,8 +107,7 @@ namespace ProSuite.QA.Tests
 				     relatedTableIndex++)
 				{
 					foreach (IReadOnlyFeature relatedFeature in
-					         GetRelatedFeatures(searchGeometry, relatedTableIndex,
-					                            feature.Shape))
+					         GetRelatedFeatures(searchGeometry, relatedTableIndex))
 					{
 						if (relatedFeature == feature)
 						{
@@ -215,8 +214,7 @@ namespace ProSuite.QA.Tests
 
 		[NotNull]
 		private IEnumerable<IReadOnlyFeature> GetRelatedFeatures([NotNull] IGeometry shape,
-		                                                         int relatedTableIndex,
-		                                                         [NotNull] IGeometry cacheShape)
+		                                                         int relatedTableIndex)
 		{
 			IReadOnlyTable table = InvolvedTables[relatedTableIndex];
 
@@ -225,7 +223,7 @@ namespace ProSuite.QA.Tests
 
 			QueryFilterHelper filterHelper = _helper[relatedTableIndex];
 
-			return Search(table, spatialFilter, filterHelper, cacheShape)
+			return Search(table, spatialFilter, filterHelper)
 				.Cast<IReadOnlyFeature>();
 		}
 

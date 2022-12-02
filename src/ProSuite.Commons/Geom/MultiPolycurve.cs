@@ -32,5 +32,10 @@ namespace ProSuite.Commons.Geom
 
 			return result;
 		}
+
+		/// <summary>
+		/// An optional tag or id to be used to remember a feature id or index in a list.
+		/// </summary>
+		public long? Id { get; set; }
 	}
 }

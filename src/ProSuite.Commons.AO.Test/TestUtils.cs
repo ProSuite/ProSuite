@@ -12,7 +12,6 @@ using ProSuite.Commons.AO.Geometry.Serialization;
 using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.AO.Test.TestSupport;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.IO;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Testing;
 using ProSuite.Commons.Text;
@@ -106,6 +105,13 @@ namespace ProSuite.Commons.AO.Test
 			return workspace;
 		}
 
+		public static IWorkspace OpenUserWorkspacePostgres()
+		{
+			return WorkspaceUtils.OpenSDEWorkspace(
+				"data_osm", DirectConnectDriver.PostgreSQL, "localhost",
+				"osm", "osm");
+		}
+
 		public static void GetMockFeatures(out IFeature mockLine1Feature,
 		                                   out IFeature mockLine2Feature,
 		                                   out IFeature mockPoly1Feature,
@@ -196,9 +202,7 @@ namespace ProSuite.Commons.AO.Test
 
 		public static string GetGeometryTestDataPath(string fileName)
 		{
-			var locator = TestDataLocator.Create("ProSuite", @"TestData\Geometry");
-
-			return locator.GetPath(fileName);
+			return TestDataPreparer.FromDirectory(@"TestData\Geometry").GetPath(fileName);
 		}
 
 		public static IGeometry ReadGeometryFromXml(string filePath)
@@ -227,55 +231,6 @@ namespace ProSuite.Commons.AO.Test
 			return geometry;
 		}
 
-		public static void TryDeleteDirectory(string testFile)
-		{
-			string tempDir = Path.GetDirectoryName(testFile);
-
-			Assert.NotNull(tempDir);
-
-			try
-			{
-				FileSystemUtils.DeleteDirectory(tempDir, true);
-			}
-			catch (Exception e)
-			{
-				Console.WriteLine(e.Message);
-			}
-		}
-
-		public static string PrepareTestFileInTemp(string tempDirName, string originalFilePath)
-		{
-			TryDeleteTempDir(tempDirName);
-
-			return CopyFileToTemp(originalFilePath, tempDirName);
-		}
-
-		private static void TryDeleteTempDir(string tempDirName)
-		{
-			string testDir = GetTempDirPath(tempDirName);
-
-			if (Directory.Exists(testDir))
-			{
-				FileSystemUtils.DeleteDirectory(testDir, true, true);
-			}
-		}
-
-		private static string CopyFileToTemp(string filePath,
-		                                     string tempDirName = null)
-		{
-			string localTempDir = GetTempDirPath(tempDirName);
-
-			Directory.CreateDirectory(localTempDir);
-
-			string fileName = Path.GetFileName(filePath);
-
-			string newFilePath = Path.Combine(localTempDir, fileName);
-
-			File.Copy(filePath, newFilePath);
-
-			return newFilePath;
-		}
-
 		public static string GetTempDirPath([CanBeNull] string tempDirName)
 		{
 			if (tempDirName == null)
@@ -289,31 +244,41 @@ namespace ProSuite.Commons.AO.Test
 			return localTempDir;
 		}
 
-		private static readonly ArcGISLicenses _lic = new ArcGISLicenses();
+		private static IArcGISLicense _lic;
 
-		public static void InitializeLicense(bool checkout3dAnalyst = false)
+		public static void InitializeLicense(bool includeAnalyst3d = false)
 		{
-			if (checkout3dAnalyst)
+			if (_lic == null)
 			{
-				if (EnvironmentUtils.Is64BitProcess)
-				{
-					// Server
-					_lic.Checkout();
-				}
-				else
-				{
-					_lic.Checkout(EsriProduct.ArcEditor, EsriExtension.ThreeDAnalyst);
-				}
-
-				return;
+				_lic = ActivateLicense();
 			}
 
-			_lic.Checkout();
+			_lic.Initialize(includeAnalyst3d);
 		}
 
 		public static void ReleaseLicense()
 		{
-			_lic.Release();
+			_lic?.Release();
+		}
+
+		private static IArcGISLicense ActivateLicense()
+		{
+			// Allow forcing a different license depending on the machine, such as Advanced:
+			string agLicenseClass = Environment.GetEnvironmentVariable("VSArcGISLicense");
+
+			if (string.IsNullOrEmpty(agLicenseClass))
+			{
+				return new BasicLicense();
+			}
+
+			Type licType = Type.GetType(agLicenseClass);
+
+			if (licType != null)
+			{
+				return (IArcGISLicense) Activator.CreateInstance(licType);
+			}
+
+			throw new FileNotFoundException($"Type {agLicenseClass} could not be loaded.");
 		}
 	}
 }

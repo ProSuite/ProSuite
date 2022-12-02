@@ -15,23 +15,6 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 {
 	public class XmlDataQualityDocumentCache
 	{
-		private class DatasetSettings
-		{
-			public DatasetSettings([NotNull] Func<string, IList<Dataset>> getDatasetsByName,
-			                       bool ignoreUnknownDatasets)
-			{
-				GetDatasetsByName = getDatasetsByName;
-				IgnoreUnknownDatasets = ignoreUnknownDatasets;
-				UnknownDatasetParameters = new List<XmlDatasetTestParameterValue>();
-			}
-
-			[NotNull]
-			public Func<string, IList<Dataset>> GetDatasetsByName { get; }
-
-			public bool IgnoreUnknownDatasets { get; }
-			public List<XmlDatasetTestParameterValue> UnknownDatasetParameters { get; }
-		}
-
 		private readonly XmlDataQualityDocument _document;
 
 		private readonly List<KeyValuePair<XmlQualityCondition, XmlDataQualityCategory>>
@@ -159,7 +142,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			[NotNull] XmlQualityCondition xmlCondition,
 			[NotNull] Func<string, IList<Dataset>> getDatasetsByName,
 			bool ignoreForUnknownDatasets,
-			[NotNull] out ICollection<XmlDatasetTestParameterValue> unknownDatasetParameters)
+			[NotNull] out ICollection<DatasetTestParameterRecord> unknownDatasetParameters)
 		{
 			string testDescriptorName = xmlCondition.TestDescriptorName;
 			Assert.True(StringUtils.IsNotEmpty(testDescriptorName),
@@ -178,7 +161,9 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 
 			DatasetSettings datasetSettings =
 				new DatasetSettings(getDatasetsByName, ignoreForUnknownDatasets);
-			CompleteConfiguration(result, xmlCondition, datasetSettings);
+
+			// The result could be set to null, if there are missing datasets.
+			result = CompleteConfiguration(result, xmlCondition, datasetSettings);
 			unknownDatasetParameters = datasetSettings.UnknownDatasetParameters;
 
 			return result;
@@ -269,7 +254,9 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 
 					if (parameterValue == null)
 					{
-						datasetSettings.UnknownDatasetParameters.Add(datasetValue);
+						datasetSettings.UnknownDatasetParameters.Add(
+							new DatasetTestParameterRecord(datasetValue.Value,
+							                               datasetValue.WorkspaceId));
 					}
 				}
 				else if (xmlParamValue is XmlScalarTestParameterValue scalarValue)
@@ -288,6 +275,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 				}
 			}
 
+			// TODO: Handle missing datasets in transformersf and issue filters!
 			if (datasetSettings.UnknownDatasetParameters.Count > 0)
 			{
 				Assert.True(datasetSettings.IgnoreUnknownDatasets,

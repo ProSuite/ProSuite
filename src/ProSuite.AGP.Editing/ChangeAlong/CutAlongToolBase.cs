@@ -22,6 +22,8 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			TargetSelectionCursor = ToolUtils.GetCursor(Resources.CutPolygonAlongToolCursorProcess);
 			TargetSelectionCursorShift =
 				ToolUtils.GetCursor(Resources.CutPolygonAlongToolCursorShift);
+
+			DisplayTargetLines = true;
 		}
 
 		protected override string EditOperationDescription => "Cut along";

@@ -19,7 +19,6 @@ using ProSuite.QA.Container.Geometry;
 
 namespace ProSuite.QA.Container.TestContainer
 {
-	// TODO revise MoveNextCachedRow (IsFirstOccurrence assignment)
 	internal class TestRowEnum : IDataContainer, IDisposable, ITileEnumContext
 	{
 		#region Fields
@@ -267,10 +266,9 @@ namespace ProSuite.QA.Container.TestContainer
 
 		IEnumerable<IReadOnlyRow> IDataContainer.Search(IReadOnlyTable table,
 		                                                IQueryFilter queryFilter,
-		                                                QueryFilterHelper filterHelper,
-		                                                IGeometry cacheGeometry)
+		                                                QueryFilterHelper filterHelper)
 		{
-			return Search(table, queryFilter, filterHelper, cacheGeometry);
+			return Search(table, queryFilter, filterHelper);
 		}
 
 		WKSEnvelope IDataContainer.CurrentTileExtent
@@ -306,8 +304,7 @@ namespace ProSuite.QA.Container.TestContainer
 		[CanBeNull]
 		private IEnumerable<IReadOnlyRow> Search([NotNull] IReadOnlyTable table,
 		                                         [NotNull] IQueryFilter queryFilter,
-		                                         [NotNull] QueryFilterHelper filterHelper,
-		                                         [CanBeNull] IGeometry cacheGeometry)
+		                                         [NotNull] QueryFilterHelper filterHelper)
 		{
 			// if the table was not passed to the container, return null
 			// to trigger a search in the database
@@ -316,7 +313,7 @@ namespace ProSuite.QA.Container.TestContainer
 				return null;
 			}
 
-			if (filterHelper.FullGeometrySearch)
+			if ((queryFilter is ITileFilter tf && tf.TileExtent != null) || filterHelper.FullGeometrySearch)
 			{
 				if (queryFilter is ISpatialFilter sf)
 				{
@@ -330,8 +327,7 @@ namespace ProSuite.QA.Container.TestContainer
 				}
 			}
 
-			return _tileCache.Search(table, queryFilter, filterHelper,
-			                         cacheGeometry);
+			return _tileCache.Search(table, queryFilter, filterHelper);
 		}
 
 		private TilesAdmin _tilesAdmin;
@@ -1013,6 +1009,7 @@ namespace ProSuite.QA.Container.TestContainer
 			TileCache preloadedCache = _tilesAdmin?.PrepareNextTile(tile);
 
 			int cachedTableIndex = 0;
+			tileCache.LoadingTileBox = tile.Box;
 			foreach (IReadOnlyTable cachedTable in _cachedSet.Keys)
 			{
 				using (_container.UseProgressWatch(
@@ -1158,53 +1155,8 @@ namespace ProSuite.QA.Container.TestContainer
 		                             [NotNull] TileCache tileCache,
 		                             [NotNull] ICollection<CachedRow> cachedRows)
 		{
-			UpdateXYOccurance(cachedRows, tile);
-
 			tileCache.IgnoredRowsByTableAndTest[table] =
 				GetIgnoredRows(table, cachedRows, tile.SpatialFilter.Geometry);
-		}
-
-		private void UpdateXYOccurance(IEnumerable<CachedRow> cachedRows, Tile tile)
-		{
-			double tileEpsilon = _tileEnum.TileSize / 1000;
-			bool notFirstTileColumn = tile.Box.Min.X > _tileEnum.TestRunBox.Min.X + tileEpsilon;
-			bool notFirstTileRow = tile.Box.Min.Y > _tileEnum.TestRunBox.Min.Y + tileEpsilon;
-
-			foreach (CachedRow cachedRow in cachedRows)
-			{
-				Box cachedRowExtent = cachedRow.Extent;
-
-				// cachedRow may exist for several tile-rows 
-
-				//  _currentTileBox.Min.X is reset for each tile row 
-				//    -> need to reset IsFirstOccurencyX to true in new tile rows
-				if (notFirstTileColumn)
-				{
-					if (cachedRowExtent.Min.X < tile.Box.Min.X)
-					{
-						// the feature must have been encountered by a tile to the left
-						cachedRow.IsFirstOccurrenceX = false;
-					}
-					else
-					{
-						cachedRow.IsFirstOccurrenceX = true;
-					}
-				}
-				else
-				{
-					cachedRow.IsFirstOccurrenceX = true;
-				}
-
-				//  _currentTileBox.Min.Y is steadily growing -> no need to reset IsFirstOccurencyY to true
-				if (notFirstTileRow)
-				{
-					if (cachedRowExtent.Min.Y < tile.Box.Min.Y)
-					{
-						// the feature must have been encountered by a tile to the bottom
-						cachedRow.IsFirstOccurrenceY = false;
-					}
-				}
-			}
 		}
 
 		/// <summary>

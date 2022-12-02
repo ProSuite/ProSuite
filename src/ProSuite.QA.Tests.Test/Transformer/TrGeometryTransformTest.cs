@@ -173,6 +173,73 @@ namespace ProSuite.QA.Tests.Test.Transformer
 		}
 
 		[Test]
+		public void CanTransformToFootprintAtTileBoundary()
+		{
+			IFeatureWorkspace ws =
+				TestWorkspaceUtils.CreateInMemoryWorkspace("TrFootprintAtBoundary");
+
+			IFeatureClass multipatchFc =
+				CreateFeatureClass(ws, "multipatchFc", esriGeometryType.esriGeometryMultiPatch,
+				                   new List<IField>
+				                   {
+					                   FieldUtils.CreateTextField("TEXT_FIELD", 100, "Some Text"),
+					                   FieldUtils.CreateIntegerField("NUMBER_FIELD", "Some Number")
+				                   });
+
+			IFeature f = multipatchFc.CreateFeature();
+
+			var construction = new MultiPatchConstruction();
+			construction.StartRing(2600005, 1200004, 1)
+			            .Add(2600005, 1200008, 2)
+			            .Add(2600008, 1200008, 1)
+			            .Add(2600008, 1200004, 1);
+
+			IGeometry multipatchGeometry = construction.MultiPatch;
+			GeometryUtils.MakeZAware(multipatchGeometry);
+			multipatchGeometry.SpatialReference = DatasetUtils.GetSpatialReference(f);
+
+			multipatchGeometry.SnapToSpatialReference();
+
+			f.Shape = multipatchGeometry;
+			f.Store();
+
+			// Explicitly set the list of attributes:
+			TrFootprint tr = new TrFootprint(ReadOnlyTableFactory.Create(multipatchFc));
+
+			IEnvelope envelope =
+				GeometryFactory.CreateEnvelope(2600000, 1200000, 2600010, 1200010);
+
+			string fgdbName = $@"TrTransformToFootprintTileBoundary_{DateTime.Now:yyyyMMdd_HHmmss}";
+			string fileGdbFullPath = $@"C:\Temp\UnitTestData\{fgdbName}.gdb";
+
+			TransformedFeatureClass transformedClass = tr.GetTransformed();
+
+			var test = new QaExportTables(new List<IReadOnlyTable>
+			                              {
+				                              transformedClass
+			                              }, fileGdbFullPath)
+			           {
+				           ExportTileIds = true,
+				           ExportTiles = true
+			           };
+
+			var runner = new QaContainerTestRunner(5, test);
+			runner.Execute(envelope);
+			Assert.AreEqual(0, runner.Errors.Count);
+
+			IFeatureWorkspace outputWorkspace =
+				WorkspaceUtils.OpenFeatureWorkspace(fileGdbFullPath);
+
+			IFeatureClass outputClass =
+				DatasetUtils.OpenFeatureClass(outputWorkspace, transformedClass.Name);
+
+			int featureCount = outputClass.FeatureCount(null);
+
+			// Expected: 1 per tile
+			Assert.AreEqual(4, featureCount);
+		}
+
+		[Test]
 		public void GeometryToPoints()
 		{
 			IFeatureWorkspace ws = TestWorkspaceUtils.CreateInMemoryWorkspace("TrGeomToPoints");
@@ -449,8 +516,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 
 		public IEnumerable<IReadOnlyRow> Search(IReadOnlyTable table,
 		                                        IQueryFilter queryFilter,
-		                                        QueryFilterHelper filterHelper,
-		                                        IGeometry cacheGeometry = null)
+		                                        QueryFilterHelper filterHelper)
 		{
 			return table.EnumRows(queryFilter, false);
 		}

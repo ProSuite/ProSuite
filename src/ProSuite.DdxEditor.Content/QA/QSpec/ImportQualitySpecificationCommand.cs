@@ -3,8 +3,8 @@ using System.Windows.Forms;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.UI.Env;
 using ProSuite.DdxEditor.Content.Properties;
+using ProSuite.DdxEditor.Content.QA.InstanceDescriptors;
 using ProSuite.DdxEditor.Content.QA.QCon;
-using ProSuite.DdxEditor.Content.QA.TestDescriptors;
 using ProSuite.DdxEditor.Framework;
 
 namespace ProSuite.DdxEditor.Content.QA.QSpec
@@ -62,7 +62,7 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 
 				ApplicationController.RefreshItem(Item);
 				ApplicationController.RefreshFirstItem<QualityConditionsItem>();
-				ApplicationController.RefreshFirstItem<TestDescriptorsItem>();
+				ApplicationController.RefreshFirstItem<AlgorithmDescriptorsItem>();
 			}
 			finally
 			{

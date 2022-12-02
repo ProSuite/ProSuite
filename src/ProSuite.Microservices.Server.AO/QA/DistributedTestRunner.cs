@@ -609,7 +609,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 							subVerifications.Add(
 								CreateVerification(
 									originalRequest, specification,
-									new[] {qc}));
+									new[] { qc }));
 						}
 					}
 					else

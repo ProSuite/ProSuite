@@ -170,11 +170,25 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			         exportNotes);
 		}
 
-		public static void ExportXmlDocument<T>([NotNull] T document, [NotNull] string xmlFilePath)
+		public static void ExportXmlDocument<T>(
+			[NotNull] T document, [NotNull] string xmlFilePath)
 			where T : XmlDataQualityDocument
 		{
 			Assert.ArgumentNotNull(document, nameof(document));
 			Assert.ArgumentNotNullOrEmpty(xmlFilePath, nameof(xmlFilePath));
+
+			using (XmlWriter xmlWriter =
+			       XmlWriter.Create(xmlFilePath, XmlUtils.GetWriterSettings()))
+			{
+				ExportXmlDocument(document, xmlWriter);
+			}
+		}
+
+		public static void ExportXmlDocument<T>([NotNull] T document, [NotNull] XmlWriter xmlWriter)
+			where T : XmlDataQualityDocument
+		{
+			Assert.ArgumentNotNull(document, nameof(document));
+			Assert.ArgumentNotNull(xmlWriter, nameof(xmlWriter));
 
 			// Sort entries
 			SortQualitySpecifications(document.QualitySpecifications);
@@ -191,7 +205,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 
 			SortCategories(document.Categories);
 
-			XmlUtils.Serialize(document, xmlFilePath);
+			XmlUtils.Serialize(document, xmlWriter);
 		}
 
 		private static void SortQualitySpecifications(
@@ -687,7 +701,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 							continue;
 						}
 
-						CollectWorkspaceIds(workspaceIds, new[] {transformerConfiguration},
+						CollectWorkspaceIds(workspaceIds, new[] { transformerConfiguration },
 						                    documentCache,
 						                    ref hasUndefinedWorkspaceReference);
 					}
@@ -889,7 +903,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			[NotNull] Func<string, IList<Dataset>> getDatasetsByName,
 			[CanBeNull] DataQualityCategory category,
 			bool ignoreForUnknownDatasets,
-			out ICollection<XmlDatasetTestParameterValue> unknownDatasetParameters)
+			out ICollection<DatasetTestParameterRecord> unknownDatasetParameters)
 		{
 			QualityCondition result =
 				documentCache.CreateQualityCondition(xmlQualityCondition, getDatasetsByName,
@@ -914,14 +928,14 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			[NotNull] Func<string, IList<Dataset>> getDatasetsByName,
 			[CanBeNull] DataQualityCategory category,
 			bool ignoreForUnknownDatasets,
-			out ICollection<XmlDatasetTestParameterValue> unknownDatasetParameters)
+			out ICollection<DatasetTestParameterRecord> unknownDatasetParameters)
 		{
 			Assert.ArgumentNotNull(xmlQualityCondition, nameof(xmlQualityCondition));
 			Assert.ArgumentNotNull(testDescriptor, nameof(testDescriptor));
 			Assert.ArgumentNotNull(modelsByWorkspaceId, nameof(modelsByWorkspaceId));
 			Assert.ArgumentNotNull(getDatasetsByName, nameof(getDatasetsByName));
 
-			unknownDatasetParameters = new List<XmlDatasetTestParameterValue>();
+			unknownDatasetParameters = new List<DatasetTestParameterRecord>();
 
 			TestFactory testFactory =
 				Assert.NotNull(TestFactoryUtils.GetTestFactory(testDescriptor));
@@ -962,7 +976,9 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 
 					if (parameterValue == null)
 					{
-						unknownDatasetParameters.Add(datasetValue);
+						unknownDatasetParameters.Add(
+							new DatasetTestParameterRecord(datasetValue.Value,
+							                               datasetValue.WorkspaceId));
 					}
 				}
 				else
@@ -1087,6 +1103,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			Assert.ArgumentNotNull(instanceConfiguration, nameof(instanceConfiguration));
 			Assert.ArgumentNotNull(xmlInstanceConfiguration, nameof(xmlInstanceConfiguration));
 
+			instanceConfiguration.Name = xmlInstanceConfiguration.Name;
 			instanceConfiguration.Description = xmlInstanceConfiguration.Description;
 			instanceConfiguration.Notes = xmlInstanceConfiguration.Notes;
 			instanceConfiguration.Url = xmlInstanceConfiguration.Url;
@@ -1174,67 +1191,11 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			bool ignoreUnknownDataset)
 		{
 			string datasetName = xmlDatasetTestParameterValue.Value;
-			if (string.IsNullOrWhiteSpace(datasetName))
-			{
-				if (testParameter.IsConstructorParameter)
-				{
-					Assert.NotNullOrEmpty(
-						datasetName,
-						"Dataset is not defined for constructor-parameter '{0}' in quality condition '{1}'",
-						testParameter.Name, qualityConditionName);
-				}
-
-				return null;
-			}
-
 			string workspaceId = xmlDatasetTestParameterValue.WorkspaceId;
 
-			if (StringUtils.IsNotEmpty(workspaceId))
-			{
-				Model model;
-				Assert.True(modelsByWorkspaceId.TryGetValue(workspaceId, out model),
-				            "No matching model found for workspace id '{0}'", workspaceId);
-
-				return ModelElementUtils.GetDatasetFromStoredName(datasetName,
-					model,
-					ignoreUnknownDataset);
-			}
-
-			if (StringUtils.IsNullOrEmptyOrBlank(workspaceId))
-			{
-				const string defaultModelId = "";
-
-				Model defaultModel;
-				if (modelsByWorkspaceId.TryGetValue(defaultModelId, out defaultModel))
-				{
-					// there is a default model
-					return ModelElementUtils.GetDatasetFromStoredName(datasetName,
-						defaultModel,
-						ignoreUnknownDataset);
-				}
-			}
-
-			// no workspace id for dataset, and there is no default model
-
-			IList<Dataset> datasets = getDatasetsByName(datasetName);
-
-			Assert.False(datasets.Count > 1,
-			             "More than one dataset found with name '{0}', for parameter '{1}' in quality condition '{2}'",
-			             datasetName, testParameter.Name, qualityConditionName);
-
-			if (datasets.Count == 0)
-			{
-				if (ignoreUnknownDataset)
-				{
-					return null;
-				}
-
-				Assert.False(datasets.Count == 0,
-				             "Dataset '{0}' for parameter '{1}' in quality condition '{2}' not found",
-				             datasetName, testParameter.Name, qualityConditionName);
-			}
-
-			return datasets[0];
+			return TestParameterValueUtils.GetDataset(datasetName, workspaceId, testParameter,
+			                                          qualityConditionName, modelsByWorkspaceId,
+			                                          getDatasetsByName, ignoreUnknownDataset);
 		}
 
 		[NotNull]
@@ -1582,7 +1543,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 
 		[NotNull]
 		public static string ConcatenateUnknownDatasetNames(
-			[NotNull] IEnumerable<XmlDatasetTestParameterValue> unknownDatasetParameters,
+			[NotNull] IEnumerable<DatasetTestParameterRecord> unknownDatasetParameters,
 			[NotNull] IDictionary<string, Model> modelsByWorkspaceId,
 			[NotNull] string anonymousWorkspaceId)
 		{
@@ -1592,7 +1553,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 
 			var sb = new StringBuilder();
 
-			foreach (XmlDatasetTestParameterValue datasetParameter in unknownDatasetParameters)
+			foreach (DatasetTestParameterRecord datasetParameter in unknownDatasetParameters)
 			{
 				if (sb.Length > 0)
 				{
@@ -1603,11 +1564,11 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 				Model model;
 				if (modelsByWorkspaceId.TryGetValue(workspaceId, out model))
 				{
-					sb.AppendFormat("{0} ({1})", datasetParameter.Value, model.Name);
+					sb.AppendFormat("{0} ({1})", datasetParameter.DatasetName, model.Name);
 				}
 				else
 				{
-					sb.Append(datasetParameter.Value);
+					sb.Append(datasetParameter.DatasetName);
 				}
 			}
 
@@ -2623,7 +2584,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 				expression = filters[0].Name;
 			}
 
-			return new XmlFilterExpression {Expression = expression};
+			return new XmlFilterExpression { Expression = expression };
 		}
 
 		[NotNull]

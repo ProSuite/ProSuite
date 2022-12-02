@@ -120,9 +120,10 @@ namespace ProSuite.Microservices.Client
 
 			try
 			{
+				// TODO: Timeout!
 				HealthCheckResponse healthResponse =
 					healthClient.Check(new HealthCheckRequest()
-					                   {Service = serviceName});
+					                   { Service = serviceName });
 
 				statusCode = StatusCode.OK;
 
@@ -159,7 +160,7 @@ namespace ProSuite.Microservices.Client
 			{
 				HealthCheckResponse healthResponse =
 					await healthClient.CheckAsync(new HealthCheckRequest()
-					                              {Service = serviceName});
+					                              { Service = serviceName });
 
 				statusCode =
 					healthResponse.Status == HealthCheckResponse.Types.ServingStatus.Serving

@@ -83,10 +83,10 @@ namespace ProSuite.QA.Tests.Transformers
 			return GetTransformed().CreateFeature(); // _transformedFc.CreateFeature();
 		}
 
-		IEnumerable<GdbFeature> IGeometryTransformer.Transform(IGeometry source)
-			=> Transform(source);
+		IEnumerable<GdbFeature> IGeometryTransformer.Transform(IGeometry source, int? sourceOid)
+			=> Transform(source, sourceOid);
 
-		protected abstract IEnumerable<GdbFeature> Transform(IGeometry source);
+		protected abstract IEnumerable<GdbFeature> Transform(IGeometry source, int? sourceOid);
 
 		bool IContainerTransformer.IsGeneratedFrom(Involved involved, Involved source) =>
 			IsGeneratedFrom(involved, source);
@@ -110,7 +110,7 @@ namespace ProSuite.QA.Tests.Transformers
 		{
 			public TransformedFc(IReadOnlyFeatureClass fc, esriGeometryType derivedShapeType,
 			                     IGeometryTransformer transformer, string name)
-				: base(-1, ! string.IsNullOrWhiteSpace(name) ? name : "derivedGeometry",
+				: base(null, ! string.IsNullOrWhiteSpace(name) ? name : "derivedGeometry",
 				       derivedShapeType,
 				       createBackingDataset: (t) => new TransformedDataset((TransformedFc) t, fc),
 				       workspace: new GdbWorkspace(new TransformerWorkspace()))
@@ -255,7 +255,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 					IGeometry geom = baseFeature.Shape;
 					foreach (GdbFeature featureWithTransformedGeom
-					         in Resulting.Transformer.Transform(geom))
+					         in Resulting.Transformer.Transform(geom, row.OID))
 					{
 						TransformedFeature f = (TransformedFeature) featureWithTransformedGeom;
 
