@@ -162,7 +162,7 @@ namespace ProSuite.Commons.AO.Test.Geometry.Cracking
 			IPointCollection weededPointsWithArcs =
 				CrackUtils.GetWeedPoints(originalPoly, 0.01, false, null, false);
 
-			Assert.AreEqual(194, weededPointsWithArcs.PointCount);
+			Assert.AreEqual(318, weededPointsWithArcs.PointCount);
 
 			IFeature mockFeature = TestUtils.CreateMockFeature(originalPoly, 0.01, 0.001);
 
@@ -179,12 +179,13 @@ namespace ProSuite.Commons.AO.Test.Geometry.Cracking
 			IPolycurve resultGeometry = resultGeometries[mockFeature] as IPolycurve;
 
 			Assert.IsNotNull(resultGeometry);
-			Assert.AreEqual(101, GeometryUtils.GetPointCount(resultGeometry));
+			const int expectedRemaining = 291;
+			Assert.AreEqual(expectedRemaining, GeometryUtils.GetPointCount(resultGeometry));
 			Assert.IsFalse(GeometryUtils.HasNonLinearSegments(resultGeometry));
 
 			MultiPolycurve result = GeometryConversionUtils.CreateMultiPolycurve(resultGeometry);
 
-			Assert.AreEqual(101, result.PointCount);
+			Assert.AreEqual(expectedRemaining, result.PointCount);
 		}
 
 		[Test]
@@ -229,14 +230,15 @@ namespace ProSuite.Commons.AO.Test.Geometry.Cracking
 			IPointCollection weededPointsWithArcs =
 				CrackUtils.GetWeedPoints(originalPolyline, 0.01, false, null, false, lv95);
 
-			Assert.AreEqual(194, weededPointsWithArcs.PointCount);
+			const int expectedWeededPoints = 318;
+			Assert.AreEqual(expectedWeededPoints, weededPointsWithArcs.PointCount);
 
 			originalPolyline.ReverseOrientation();
 
 			IPointCollection weededPointsWithArcsReversed =
 				CrackUtils.GetWeedPoints(originalPolyline, 0.01, false, null, false, lv95);
 
-			Assert.AreEqual(194, weededPointsWithArcsReversed.PointCount);
+			Assert.AreEqual(expectedWeededPoints, weededPointsWithArcsReversed.PointCount);
 
 			Multipoint<IPnt> weedPnts =
 				GeometryConversionUtils.CreateMultipoint((IMultipoint) weededPointsWithArcs);
@@ -265,12 +267,13 @@ namespace ProSuite.Commons.AO.Test.Geometry.Cracking
 			IPolycurve resultGeometry = resultGeometries[mockFeature] as IPolycurve;
 
 			Assert.IsNotNull(resultGeometry);
-			Assert.AreEqual(100, GeometryUtils.GetPointCount(resultGeometry));
+			const int expectedRemaining = 286;
+			Assert.AreEqual(expectedRemaining, GeometryUtils.GetPointCount(resultGeometry));
 			Assert.IsFalse(GeometryUtils.HasNonLinearSegments(resultGeometry));
 
 			MultiPolycurve result = GeometryConversionUtils.CreateMultiPolycurve(resultGeometry);
 
-			Assert.AreEqual(100, result.PointCount);
+			Assert.AreEqual(expectedRemaining, result.PointCount);
 		}
 	}
 }
