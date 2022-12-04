@@ -379,6 +379,56 @@ namespace ProSuite.QA.Tests.Test.Transformer
 		}
 
 		[Test]
+		public void MultipolyToPolyCache()
+		{
+			IFeatureWorkspace ws = TestWorkspaceUtils.CreateInMemoryWorkspace("TrMultipoly");
+
+			IFeatureClass lineFc =
+				CreateFeatureClass(ws, "lineFc", esriGeometryType.esriGeometryPolygon);
+
+			{
+				IFeature f = lineFc.CreateFeature();
+				f.Shape =
+					CurveConstruction
+						.StartPoly(0, 0).LineTo(30, 0).LineTo(30, 30).LineTo(0, 30).LineTo(0, 0)
+						.MoveTo(10, 10).LineTo(10, 20).LineTo(20, 20).LineTo(20, 10).LineTo(10, 10)
+						.MoveTo(22, 22).LineTo(22, 24).LineTo(24, 24).LineTo(24, 22).LineTo(22, 22)
+						.MoveTo(13, 13).LineTo(17, 13).LineTo(17, 17).LineTo(13, 17).LineTo(13, 13)
+						.MoveTo(40, 40).LineTo(50, 40).LineTo(50, 50).LineTo(40, 50).LineTo(40, 40)
+						.ClosePolygon();
+				f.Store();
+			}
+			{
+				IFeature f = lineFc.CreateFeature();
+				f.Shape =
+					CurveConstruction
+						.StartPoly(-10, -10).LineTo(90, -10).LineTo(90, 90).
+						LineTo(-10, 90).LineTo(-10, -10).ClosePolygon();
+				f.Store();
+			}
+
+
+			TrMultipolygonToPolygon tr =
+				new TrMultipolygonToPolygon(ReadOnlyTableFactory.Create(lineFc));
+			tr.SetConstraint(0, "ObjectId = 1");
+			QaOverlapsOther test =
+				new QaOverlapsOther(tr.GetTransformed(), ReadOnlyTableFactory.Create(lineFc));
+			test.SetConstraint(1, "ObjectId = 2");
+			{
+				tr.TransformedParts = TrMultipolygonToPolygon.PolygonPart.AllRings;
+				var runner = new QaContainerTestRunner(1000, test);
+				runner.Execute();
+				Assert.AreEqual(0, runner.Errors.Count);
+			}
+			{
+				tr.TransformedParts = TrMultipolygonToPolygon.PolygonPart.AllRings;
+				var runner = new QaContainerTestRunner(20, test);
+				runner.Execute();
+				Assert.AreEqual(0, runner.Errors.Count);
+			}
+		}
+
+		[Test]
 		public void CanAccessAttributes()
 		{
 			IFeatureWorkspace ws = TestWorkspaceUtils.CreateInMemoryWorkspace("TrAttributes");
@@ -521,7 +571,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			return table.EnumRows(queryFilter, false);
 		}
 
-		public UniqueIdProvider GetUniqueIdProvider(IReadOnlyTable table)
+		public IUniqueIdProvider GetUniqueIdProvider(IReadOnlyTable table)
 		{
 			throw new NotImplementedException();
 		}

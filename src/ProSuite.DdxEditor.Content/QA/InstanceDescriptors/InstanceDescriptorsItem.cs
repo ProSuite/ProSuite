@@ -12,6 +12,7 @@ using ProSuite.DdxEditor.Framework.Items;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.Repositories;
+using ProSuite.QA.Core;
 
 namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 {
@@ -71,8 +72,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 			foreach (Type instanceType in instanceTypes)
 			{
 				foreach (int constructorIndex in
-				         InstanceFactoryUtils.GetConstructorIndexes(instanceType,
-					         includeObsolete, includeInternallyUsed))
+				         InstanceUtils.GetConstructorIndexes(instanceType))
 				{
 					count++;
 					newDescriptors.Add(CreateDescriptor(instanceType, constructorIndex));

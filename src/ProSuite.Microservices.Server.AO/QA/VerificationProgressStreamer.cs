@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using ESRI.ArcGIS.Geometry;
 using Grpc.Core;
+using log4net.Core;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Callbacks;
 using ProSuite.Commons.Essentials.Assertions;
@@ -14,6 +15,7 @@ using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.VerificationProgress;
 using ProSuite.DomainServices.AO.QA.Issues;
+using ProSuite.DomainServices.AO.QA.Standalone;
 using ProSuite.Microservices.AO;
 using ProSuite.Microservices.Definitions.QA;
 using ProSuite.Microservices.Definitions.Shared;
@@ -22,7 +24,7 @@ using ProSuite.QA.Container.TestContainer;
 
 namespace ProSuite.Microservices.Server.AO.QA
 {
-	public class VerificationProgressStreamer<T> where T : class
+	public class VerificationProgressStreamer<T> : IVerificationProgressStreamer where T : class
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -135,6 +137,20 @@ namespace ProSuite.Microservices.Server.AO.QA
 			return response;
 		}
 
+		public void Info(string text)
+		{
+			int messageLevel = Level.Info.Value;
+
+			WriteMessage(text, messageLevel);
+		}
+
+		public void Warning(string text)
+		{
+			int messageLevel = Level.Warn.Value;
+
+			WriteMessage(text, messageLevel);
+		}
+
 		public void WriteProgressAndIssues(
 			VerificationProgressEventArgs progressEvent,
 			ServiceCallStatus callStatus)
@@ -240,6 +256,42 @@ namespace ProSuite.Microservices.Server.AO.QA
 			}
 
 			return finalStatus;
+		}
+
+		private void WriteMessage(string text, int messageLevel)
+		{
+			IList<IssueMsg> issuesToSend = DeQueuePendingIssues();
+
+			_currentProgressMsg.Message = text;
+			_currentProgressMsg.MessageLevel = messageLevel;
+
+			try
+			{
+				T response =
+					CreateResponseAction(ServiceCallStatus.Running, _currentProgressMsg,
+					                     issuesToSend);
+
+				_msg.VerboseDebug(() => $"Sending message with {issuesToSend.Count} " +
+				                        "errors back to client...");
+
+				_responseStream.WriteAsync(response);
+			}
+			catch (InvalidOperationException ex)
+			{
+				// For example: System.InvalidOperationException: Only one write can be pending at a time
+				_msg.VerboseDebug(() => "Error sending progress to the client", ex);
+
+				// The issues would be lost, so put them back into the collection
+				foreach (IssueMsg issue in issuesToSend)
+				{
+					_pendingIssues.Add(issue);
+				}
+			}
+			finally
+			{
+				_currentProgressMsg.MessageLevel = 0;
+				_currentProgressMsg.Message = string.Empty;
+			}
 		}
 
 		private static bool IsPriorityProgress(VerificationProgressEventArgs args,

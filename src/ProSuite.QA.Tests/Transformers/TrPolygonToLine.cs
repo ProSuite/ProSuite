@@ -24,7 +24,7 @@ namespace ProSuite.QA.Tests.Transformers
 			IPolygon poly = (IPolygon) source;
 			IGeometry transformed = ((ITopologicalOperator) poly).Boundary;
 
-			GdbFeature feature = CreateFeature();
+			GdbFeature feature = CreateFeature(sourceOid);
 			feature.Shape = GeometryFactory.Clone(transformed);
 
 			yield return feature;

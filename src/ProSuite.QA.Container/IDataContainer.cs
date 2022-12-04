@@ -25,6 +25,6 @@ namespace ProSuite.QA.Container
 		                                 [NotNull] QueryFilterHelper filterHelper);
 
 		[CanBeNull]
-		UniqueIdProvider GetUniqueIdProvider([NotNull] IReadOnlyTable table);
+		IUniqueIdProvider GetUniqueIdProvider([NotNull] IReadOnlyTable table);
 	}
 }

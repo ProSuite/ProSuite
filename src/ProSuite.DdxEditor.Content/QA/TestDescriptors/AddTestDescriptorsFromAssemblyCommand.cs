@@ -8,6 +8,7 @@ using ProSuite.DdxEditor.Framework.Commands;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core;
 using ProSuite.DomainModel.Core.QA;
+using ProSuite.QA.Core;
 
 namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 {
@@ -65,9 +66,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 					         assembly, includeObsolete, includeInternallyUsed))
 				{
 					foreach (int constructorIndex in
-					         InstanceFactoryUtils.GetConstructorIndexes(testType,
-						         includeObsolete,
-						         includeInternallyUsed))
+					         InstanceUtils.GetConstructorIndexes(testType))
 					{
 						testCount++;
 						newDescriptors.Add(

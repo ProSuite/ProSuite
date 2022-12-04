@@ -57,7 +57,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		bool IRow.HasOID => HasOID;
 		bool IObject.HasOID => HasOID;
-		public virtual bool HasOID => Table.HasOID && OID >= 0;
+		public virtual bool HasOID => ReadOnlyTable.HasOID && OID >= 0;
 
 		int IRow.OID => OID;
 		int IObject.OID => OID;
@@ -67,10 +67,11 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		ITable IRow.Table => Table;
 		ITable IObject.Table => Table;
-		IReadOnlyTable IReadOnlyRow.Table => Table;
+		IReadOnlyTable IReadOnlyRow.Table => ReadOnlyTable;
 
 		public virtual VirtualTable Table =>
 			throw new NotImplementedException("Implement in derived class");
+		public virtual IReadOnlyTable ReadOnlyTable => Table;
 
 		IObjectClass IObject.Class => Class;
 		public virtual IObjectClass Class => (IObjectClass) Table;

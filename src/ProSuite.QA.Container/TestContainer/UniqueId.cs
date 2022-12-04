@@ -5,10 +5,10 @@ namespace ProSuite.QA.Container.TestContainer
 {
 	public class UniqueId
 	{
-		[NotNull] private readonly UniqueIdProvider _uniqueIdProvider;
+		[NotNull] private readonly IUniqueIdProvider<IReadOnlyFeature> _uniqueIdProvider;
 
 		public UniqueId([NotNull] IReadOnlyFeature feature,
-		                [NotNull] UniqueIdProvider uniqueIdProvider)
+		                [NotNull] IUniqueIdProvider<IReadOnlyFeature> uniqueIdProvider)
 		{
 			_uniqueIdProvider = uniqueIdProvider;
 			Id = uniqueIdProvider.GetUniqueId(feature);

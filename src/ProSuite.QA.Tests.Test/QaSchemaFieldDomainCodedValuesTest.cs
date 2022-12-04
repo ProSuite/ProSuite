@@ -33,8 +33,6 @@ namespace ProSuite.QA.Tests.Test
 		[TearDown]
 		public void TearDown()
 		{
-			_workspace = null;
-
 			GC.Collect();
 			GC.WaitForPendingFinalizers();
 			// important, otherwise locks are still there in next test
@@ -43,7 +41,7 @@ namespace ProSuite.QA.Tests.Test
 		[SetUp]
 		public void Setup()
 		{
-			_workspace = TestWorkspaceUtils.CreateTestFgdbWorkspace(GetType().Name);
+			_workspace = _workspace ?? TestWorkspaceUtils.CreateTestFgdbWorkspace(GetType().Name);
 		}
 
 		[Test]
@@ -95,13 +93,13 @@ namespace ProSuite.QA.Tests.Test
 		{
 			IDomain domain1 = DomainUtils.AddDomain(_workspace,
 			                                        DomainUtils.CreateCodedValueDomain(
-				                                        "DOM_FIELD1",
+				                                        "DOM_FIELD1_L",
 				                                        esriFieldType.esriFieldTypeInteger,
 				                                        new CodedValue(1, "Value 1 abc"),
 				                                        new CodedValue(2, "Value 2")));
 			IDomain domain2 = DomainUtils.AddDomain(_workspace,
 			                                        DomainUtils.CreateCodedValueDomain(
-				                                        "DOM_FIELD2",
+				                                        "DOM_FIELD2_L",
 				                                        esriFieldType.esriFieldTypeInteger,
 				                                        new CodedValue(1, "Value 1"),
 				                                        new CodedValue(2, "Value 2 123")));
@@ -141,13 +139,13 @@ namespace ProSuite.QA.Tests.Test
 		{
 			IDomain domain1 = DomainUtils.AddDomain(_workspace,
 			                                        DomainUtils.CreateCodedValueDomain(
-				                                        "DOM_FIELD1",
+				                                        "DOM_FIELD1_M",
 				                                        esriFieldType.esriFieldTypeInteger,
 				                                        new CodedValue(1, " "),
 				                                        new CodedValue(2, "Value 2")));
 			IDomain domain2 = DomainUtils.AddDomain(_workspace,
 			                                        DomainUtils.CreateCodedValueDomain(
-				                                        "DOM_FIELD2",
+				                                        "DOM_FIELD2_M",
 				                                        esriFieldType.esriFieldTypeInteger,
 				                                        new CodedValue(1, "Value 1"),
 				                                        new CodedValue(2, " ")));

@@ -113,7 +113,7 @@ namespace ProSuite.QA.Container
 	// Rename to CacheableTransformedTable?
 	public interface ITransformedTable
 	{
-		void SetKnownTransformedRows([CanBeNull] IEnumerable<VirtualRow> knownRows);
+		void SetKnownTransformedRows([CanBeNull] IEnumerable<IReadOnlyRow> knownRows);
 
 		// TODO: What are the rules and restrictions if a transformer wants to use caching?
 		bool NoCaching { get; }
