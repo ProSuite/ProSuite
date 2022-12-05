@@ -74,7 +74,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 		#region Implementation of ITransformedTable
 
-		public virtual void SetKnownTransformedRows(IEnumerable<VirtualRow> knownRows) { }
+		public virtual void SetKnownTransformedRows(IEnumerable<IReadOnlyRow> knownRows) { }
 
 		public abstract bool NoCaching { get; internal set; }
 

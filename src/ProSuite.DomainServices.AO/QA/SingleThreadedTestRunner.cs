@@ -239,7 +239,7 @@ namespace ProSuite.DomainServices.AO.QA
 			{
 				IList<InvolvedRow> involvedRows =
 					_currentRow != null
-						? (IList<InvolvedRow>) new[] {new InvolvedRow(_currentRow)}
+						? (IList<InvolvedRow>) new[] { new InvolvedRow(_currentRow) }
 						: new List<InvolvedRow>();
 
 				IGeometry geometry = null;
@@ -545,7 +545,7 @@ namespace ProSuite.DomainServices.AO.QA
 			{
 				// TODO add issue code
 				var error = new QaError(stoppedTest, description,
-				                        new[] {new InvolvedRow(row)},
+				                        new[] { new InvolvedRow(row) },
 				                        errorGeom, null, null);
 				bool reported = ProcessQaError(error);
 
@@ -643,9 +643,13 @@ namespace ProSuite.DomainServices.AO.QA
 			qualityVerification.CalculateStatistics();
 			qualityVerification.RowsWithStopConditions = RowsWithStopConditions.Count;
 
-			TestExecutionUtils.AssignExecutionTimes(
-				qualityVerification, _verificationElements.TestVerifications, VerificationTimeStats,
-				Assert.NotNull(DatasetLookup));
+			if (DatasetLookup != null)
+			{
+				// TODO: For standalone service, consider implementing a basic DDX-free ISimpleDatasetLookup
+				TestExecutionUtils.AssignExecutionTimes(
+					qualityVerification, _verificationElements.TestVerifications,
+					VerificationTimeStats, DatasetLookup);
+			}
 		}
 
 		private static void StartVerification([CanBeNull] QualityVerification qualityVerification)

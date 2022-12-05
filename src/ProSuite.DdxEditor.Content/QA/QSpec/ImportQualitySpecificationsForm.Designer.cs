@@ -193,7 +193,7 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 			this.Controls.Add(this._buttonCancel);
 			this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.SizableToolWindow;
 			this.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-			this.MaximumSize = new System.Drawing.Size(11664, 287);
+			this.MaximumSize = new System.Drawing.Size(11664, 337);
 			this.MinimumSize = new System.Drawing.Size(382, 287);
 			this.Name = "ImportQualitySpecificationsForm";
 			this.ShowInTaskbar = false;

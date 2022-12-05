@@ -121,7 +121,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 			bool ITransformedTable.NoCaching => true;
 
-			void ITransformedTable.SetKnownTransformedRows(IEnumerable<VirtualRow> knownRows) { }
+			void ITransformedTable.SetKnownTransformedRows(IEnumerable<IReadOnlyRow> knownRows) { }
 
 			public int BaseRowFieldIndex { get; private set; }
 
@@ -347,7 +347,7 @@ namespace ProSuite.QA.Tests.Transformers
 			}
 
 			public override IGeometry Shape => _sourceFeature.Shape;
-			public IReadOnlyFeatureClass FeatureClass => (IReadOnlyFeatureClass) Table;
+			public IReadOnlyFeatureClass FeatureClass => (IReadOnlyFeatureClass) ReadOnlyTable;
 		}
 
 		public class SimpleWorkspace : VirtualWorkspace

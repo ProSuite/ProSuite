@@ -14,7 +14,6 @@ using ProSuite.Commons.UI.WinForms.Controls;
 using ProSuite.DdxEditor.Content.Properties;
 using ProSuite.DdxEditor.Content.QA.TestDescriptors;
 using ProSuite.DdxEditor.Framework.ItemViews;
-using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Core;
 
@@ -238,11 +237,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 		private static IEnumerable<TestConstructorItem> GetTestConstructorItems(
 			[NotNull] Type testType)
 		{
-			const bool includeObsolete = false;
-			const bool includeInternallyUsed = false;
-
-			foreach (int ctorIndex in InstanceFactoryUtils.GetConstructorIndexes(
-				         testType, includeObsolete, includeInternallyUsed))
+			foreach (int ctorIndex in InstanceUtils.GetConstructorIndexes(testType))
 			{
 				var testInfo = new InstanceInfo(testType, ctorIndex);
 

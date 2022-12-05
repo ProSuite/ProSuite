@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Text;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
@@ -51,9 +52,16 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			_qualitySpecificationTemplatePath = qualitySpecificationTemplatePath;
 		}
 
+		/// <summary>
+		/// The interface that allows streaming progress information during a lengthy operation.
+		/// </summary>
+		public IVerificationProgressStreamer ProgressStreamer { get; set; }
+
 		public ITestRunner DistributedTestRunner { get; set; }
 
 		public IssueRepositoryType IssueRepositoryType { get; set; } = IssueRepositoryType.FileGdb;
+
+		public QualityVerification Verification { get; set; }
 
 		public event EventHandler<IssueFoundEventArgs> IssueFound;
 
@@ -168,6 +176,9 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			string gdbPath = null;
 
 			service.DistributedTestRunner = DistributedTestRunner;
+			service.ProgressStreamer = ProgressStreamer;
+
+			StringBuilder sb = new StringBuilder();
 
 			using (IIssueRepository issueRepository =
 			       ExternalIssueRepositoryUtils.GetIssueRepository(
@@ -182,13 +193,15 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 				                           out int _,
 				                           out int _);
 
+				Verification = service.Verification;
+
 				if (issueRepository != null)
 				{
 					issueGdbWritten = true;
 
 					gdbPath = ((IWorkspace) issueRepository.FeatureWorkspace).PathName;
 
-					_msg.InfoFormat("Issues written to {0}", gdbPath);
+					InfoFormat("Issues written to {0}", sb, gdbPath);
 
 					issueRepository.CreateIndexes(GetForSubProcess(trackCancel),
 					                              ignoreErrors: true);
@@ -203,8 +216,8 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 
 					XmlUtils.Serialize(verificationReport, _xmlVerificationReportPath);
 
-					_msg.InfoFormat("Verification report written to {0}",
-					                _xmlVerificationReportPath);
+					InfoFormat("Verification report written to {0}", sb,
+					           _xmlVerificationReportPath);
 
 					IssueStatistics issueStatistics = statisticsBuilder.IssueStatistics;
 
@@ -251,26 +264,33 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 
 			if (htmlReportFilePaths.Count > 0)
 			{
-				using (_msg.IncrementIndentation(htmlReportFilePaths.Count == 1
-					                                 ? "Html report:"
-					                                 : "Html reports:"))
+				string htmlReports = htmlReportFilePaths.Count == 1
+					                     ? "Html report:"
+					                     : "Html reports:";
+
+				using (_msg.IncrementIndentation(htmlReports))
 				{
+					sb.AppendLine(htmlReports);
+
 					foreach (string path in htmlReportFilePaths)
 					{
-						_msg.Info(path);
+						InfoFormat(path, sb);
 					}
 				}
 			}
 
 			if (specificationReportFilePaths.Count > 0)
 			{
-				using (_msg.IncrementIndentation(specificationReportFilePaths.Count == 1
-					                                 ? "Quality specification report:"
-					                                 : "Quality specification reports:"))
+				string specReports = specificationReportFilePaths.Count == 1
+					                     ? "Quality specification report:"
+					                     : "Quality specification reports:";
+
+				using (_msg.IncrementIndentation(specReports))
 				{
+					sb.AppendLine(specReports);
 					foreach (string path in specificationReportFilePaths)
 					{
-						_msg.Info(path);
+						InfoFormat(path, sb);
 					}
 				}
 			}
@@ -280,7 +300,19 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 				IExceptionStatistics stats = service.ExceptionObjectRepository.ExceptionStatistics;
 			}
 
+			ProgressStreamer?.Info(sb.ToString());
+
 			return fulfilled;
+		}
+
+		private static void InfoFormat([StructuredMessageTemplate] string format,
+		                               [CanBeNull] StringBuilder fullMessage,
+		                               params object[] args)
+		{
+			string message = string.Format(format, args);
+
+			_msg.Info(message);
+			fullMessage?.AppendLine(message);
 		}
 
 		private static XmlVerificationReportBuilder GetReportBuilder()

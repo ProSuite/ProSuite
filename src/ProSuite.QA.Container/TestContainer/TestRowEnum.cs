@@ -36,7 +36,7 @@ namespace ProSuite.QA.Container.TestContainer
 		private readonly TileCache _tileCache;
 		private readonly OverlappingFeatures _overlappingFeatures;
 
-		private readonly IDictionary<IReadOnlyTable, UniqueIdProvider> _uniqueIdProviders;
+		private readonly IDictionary<IReadOnlyTable, IUniqueIdProvider> _uniqueIdProviders;
 		private readonly Dictionary<IReadOnlyTable, string> _commonFilterExpressions;
 
 		private readonly IList<TerrainRowEnumerable> _terrainRowEnumerables;
@@ -137,7 +137,7 @@ namespace ProSuite.QA.Container.TestContainer
 			_tileCache = GetTileCache();
 			_overlappingFeatures = InitOverlappingFeatures();
 
-			_uniqueIdProviders = new ConcurrentDictionary<IReadOnlyTable, UniqueIdProvider>();
+			_uniqueIdProviders = new ConcurrentDictionary<IReadOnlyTable, IUniqueIdProvider>();
 			foreach (IReadOnlyTable cachedTable in _cachedSet.Keys)
 			{
 				_uniqueIdProviders.Add(cachedTable, UniqueIdProviderFactory.Create(cachedTable));
@@ -259,7 +259,7 @@ namespace ProSuite.QA.Container.TestContainer
 
 		#region ISearchable Members
 
-		UniqueIdProvider IDataContainer.GetUniqueIdProvider(IReadOnlyTable table)
+		IUniqueIdProvider IDataContainer.GetUniqueIdProvider(IReadOnlyTable table)
 		{
 			return _uniqueIdProviders[table];
 		}
@@ -1245,9 +1245,9 @@ namespace ProSuite.QA.Container.TestContainer
 			return result;
 		}
 
-		UniqueIdProvider ITileEnumContext.GetUniqueIdProvider([NotNull] IReadOnlyTable table)
+		IUniqueIdProvider ITileEnumContext.GetUniqueIdProvider([NotNull] IReadOnlyTable table)
 		{
-			_uniqueIdProviders.TryGetValue(table, out UniqueIdProvider result);
+			_uniqueIdProviders.TryGetValue(table, out IUniqueIdProvider result);
 			return result;
 		}
 
