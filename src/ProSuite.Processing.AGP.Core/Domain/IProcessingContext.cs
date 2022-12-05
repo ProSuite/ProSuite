@@ -19,7 +19,7 @@ namespace ProSuite.Processing.AGP.Core.Domain
 
 		ProcessingDataset OpenDataset(ProcessDatasetName name);
 
-		RelationshipClass OpenAssociation(string name);
+		RelationshipClass OpenAssociation(string name, Table endpoint);
 
 		[CanBeNull]
 		Polygon GetProcessingPerimeter();
