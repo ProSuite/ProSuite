@@ -156,20 +156,19 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			return Engine.Intersection(a, b);
 		}
 
-		public static T Difference<T>(T minuend, Geometry subtrahend) where T : Geometry
+		public static Geometry Difference(Geometry minuend, Geometry subtrahend)
 		{
 			Geometry difference = Engine.Difference(minuend, subtrahend);
-			if (difference is T result) return result;
-			string typeName = typeof(T).Name;
-			throw new AssertionException($"Result of Difference({typeName}, Geometry) is not {typeName}");
+			// Note: difference may has another geometry type than minuend
+			return difference;
 		}
 
-		public static Polygon Buffer(Geometry geometry, double distance)
+		public static Geometry Buffer(Geometry geometry, double distance)
 		{
 			if (geometry is null) return null;
 			var buffer = Engine.Buffer(geometry, distance);
-			if (buffer is Polygon polygon) return polygon;
-			throw new AssertionException("Result of Buffer() is not a Polygon");
+			// Note: buffer may NOT be a Polygon if distance is almost zero!
+			return buffer;
 		}
 
 		public static T Generalize<T>(T geometry, double maxDeviation,
@@ -178,10 +177,15 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			where T : Geometry
 		{
 			if (maxDeviation < double.Epsilon)
+			{
 				return geometry;
+			}
 
-			return (T) Engine.Generalize(geometry, maxDeviation, removeDegenerateParts,
-			                             preserveCurves);
+			var generalized = Engine.Generalize(geometry, maxDeviation, removeDegenerateParts, preserveCurves);
+			if (generalized is T result) return result;
+			throw new AssertionException(
+				$"Result of Generalize({geometry.GetType().Name}, {maxDeviation}) is " +
+				$"a {generalized.GetType().Name}, not a {geometry.GetType().Name}");
 		}
 
 		public static Polyline Simplify(Polyline polyline, SimplifyType simplifyType,
