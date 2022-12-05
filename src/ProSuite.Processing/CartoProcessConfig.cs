@@ -63,6 +63,12 @@ namespace ProSuite.Processing
 
 		public int Count => _settings.Count;
 
+		public IEnumerable<string> GetAllNames()
+		{
+			// In original order, but with duplicates removed:
+			return _settings.Select(s => s.Name).Distinct();
+		}
+
 		public IEnumerable<string> GetValues(string parameterName)
 		{
 			foreach (var setting in _settings)
