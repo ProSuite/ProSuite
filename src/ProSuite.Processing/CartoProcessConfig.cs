@@ -8,6 +8,7 @@ using System.Xml;
 using System.Xml.Linq;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Text;
 using ProSuite.Processing.Utils;
 
 namespace ProSuite.Processing

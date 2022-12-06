@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Text;
 using NUnit.Framework;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
@@ -236,6 +237,37 @@ namespace ProSuite.Commons.Test.Text
 			Assert.AreEqual(2, subLists.Count);
 			Assert.AreEqual("99,7", subLists[0]);
 			Assert.AreEqual("12,1", subLists[1]);
+		}
+
+		[Test]
+		public void CanReverse()
+		{
+			var sb = new StringBuilder();
+			sb.Append("Hallelujah");
+
+			var o = sb.Reverse(4, 3);
+			Assert.AreEqual("Hallulejah", sb.ToString());
+			Assert.AreSame(sb, o);
+
+			sb.Reverse(sb.Length, 0); // border case
+			Assert.AreEqual("Hallulejah", sb.ToString());
+		}
+
+		[Test]
+		public void CanTrimEnd()
+		{
+			var sb = new StringBuilder("\tfoo \t\n ");
+
+			var o = sb.TrimEnd();
+
+			Assert.AreEqual("\tfoo", sb.ToString());
+			Assert.AreSame(sb, o);
+
+			sb = new StringBuilder("full");
+
+			sb.TrimEnd();
+
+			Assert.AreEqual("full", sb.ToString());
 		}
 
 		[Test]
