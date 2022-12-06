@@ -82,7 +82,7 @@ namespace ProSuite.Processing.Utils
 			}
 			else
 			{
-				sb.Append(scaleDenom);
+				sb.Append("none");
 			}
 
 			return sb;
