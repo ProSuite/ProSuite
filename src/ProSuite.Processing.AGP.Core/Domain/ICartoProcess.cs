@@ -21,6 +21,8 @@ namespace ProSuite.Processing.AGP.Core.Domain
 
 		IEnumerable<ProcessDatasetName> GetDerivedDatasets();
 
+		IEnumerable<ProcessDatasetName> GetAuxiliaryDatasets();
+
 		bool CanExecute(IProcessingContext context);
 
 		void Execute(IProcessingContext context, IProcessingFeedback feedback);
