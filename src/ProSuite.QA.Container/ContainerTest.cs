@@ -135,7 +135,7 @@ namespace ProSuite.QA.Container
 		protected internal bool IgnoreUndirected { get; set; }
 
 		[CanBeNull]
-		protected UniqueIdProvider GetUniqueIdProvider(int tableIndex)
+		protected IUniqueIdProvider GetUniqueIdProvider(int tableIndex)
 		{
 			return DataContainer?.GetUniqueIdProvider(InvolvedTables[tableIndex]);
 		}

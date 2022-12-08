@@ -21,7 +21,7 @@ namespace ProSuite.QA.Tests.Test
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			TestUtils.InitializeLicense(EnvironmentUtils.Is64BitProcess);
+			TestUtils.InitializeLicense(EnvironmentUtils.Is64BitProcess, activateAdvancedLicense:true);
 		}
 
 		[OneTimeTearDown]

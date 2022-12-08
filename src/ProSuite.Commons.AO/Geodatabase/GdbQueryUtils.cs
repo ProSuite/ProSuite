@@ -436,8 +436,12 @@ namespace ProSuite.Commons.AO.Geodatabase
 			esriSearchOrder searchOrder = esriSearchOrder.esriSearchOrderSpatial)
 		{
 			Assert.ArgumentNotNull(searchGeometry, nameof(searchGeometry));
-			Assert.ArgumentCondition((outputSpatialReference != null) == (featureClass != null),
-			                         "If the output spatial reference is specified, the feature class is required.");
+
+			if (outputSpatialReference != null)
+			{
+				Assert.ArgumentCondition(featureClass != null,
+				                         "If the output spatial reference is specified, the feature class is required.");
+			}
 
 			ISpatialFilter spatialFilter = new SpatialFilterClass();
 

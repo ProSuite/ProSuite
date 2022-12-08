@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -18,7 +19,7 @@ namespace ProSuite.QA.Container.TestContainer
 		private int _pointCount = -1;
 
 		public CachedRow([NotNull] IReadOnlyFeature feature,
-		                 [CanBeNull] UniqueIdProvider uniqueIdProvider = null)
+		                 [CanBeNull] IUniqueIdProvider uniqueIdProvider = null)
 			: this(GetFeatureProxy(feature, uniqueIdProvider)) { }
 
 		private CachedRow([NotNull] FeatureProxy feature)
@@ -35,7 +36,7 @@ namespace ProSuite.QA.Container.TestContainer
 		[NotNull]
 		private static FeatureProxy GetFeatureProxy(
 			[NotNull] IReadOnlyFeature feature,
-			[CanBeNull] UniqueIdProvider uniqueIdProvider)
+			[CanBeNull] IUniqueIdProvider uniqueIdProvider)
 		{
 			FeatureProxy result = feature as FeatureProxy;
 			if (result != null)
@@ -43,7 +44,8 @@ namespace ProSuite.QA.Container.TestContainer
 				return result;
 			}
 
-			result = FeatureProxyFactory.Create(feature, uniqueIdProvider);
+			result = FeatureProxyFactory.Create(
+				feature, uniqueIdProvider as IUniqueIdProvider<IReadOnlyFeature>);
 
 			GeometryUtils.AllowIndexing(feature.Shape);
 
@@ -51,7 +53,7 @@ namespace ProSuite.QA.Container.TestContainer
 		}
 
 		public void UpdateFeature([NotNull] IReadOnlyFeature feature,
-		                          [CanBeNull] UniqueIdProvider uniqueIdProvider)
+		                          [CanBeNull] IUniqueIdProvider uniqueIdProvider)
 		{
 			if (_feature == null)
 			{
@@ -106,7 +108,8 @@ namespace ProSuite.QA.Container.TestContainer
 
 		#region Nested type: FeatureProxy
 
-		private abstract class FeatureProxy : IReadOnlyFeature, IRowSubtypes, IFeatureSimplify2,
+		private abstract class FeatureProxy : VirtualRow,
+		                                      IReadOnlyFeature, IRowSubtypes, IFeatureSimplify2,
 		                                      IFeatureProxy, IUniqueIdObject
 		{
 			[NotNull] private readonly IReadOnlyFeature _feature;
@@ -114,7 +117,6 @@ namespace ProSuite.QA.Container.TestContainer
 
 			[CanBeNull] private readonly UniqueId _uniqueId;
 
-			[CanBeNull] private IFields _fields;
 			[CanBeNull] private IReadOnlyTable _table;
 
 			/// <summary>
@@ -145,30 +147,37 @@ namespace ProSuite.QA.Container.TestContainer
 
 			#region IFeature Members
 
-			public IFields Fields => _fields ?? (_fields = _feature.Table.Fields);
+			public override int OID => _feature.OID;
 
-			public bool HasOID => _feature.HasOID;
+			public override IReadOnlyTable ReadOnlyTable => _table ?? (_table = _feature.Table);
 
-			public int OID => _feature.OID;
+			public override IObjectClass Class
+			{
+				get
+				{
+					IObjectClass cls = _feature.Table as IObjectClass;
+					if (cls == null)
+					{
+						cls = (IObjectClass) (_feature.Table as ReadOnlyFeatureClass)?.BaseTable;
+					}
 
-			public IReadOnlyTable Table => _table ?? (_table = _feature.Table);
+					return cls;
+				}
+			} 
 
-			public IReadOnlyFeatureClass FeatureClass => (IReadOnlyFeatureClass) Table;
-			public IObjectClass Class => (IObjectClass) Table;
+			public IReadOnlyFeatureClass FeatureClass => (IReadOnlyFeatureClass) ReadOnlyTable;
 
-			public IGeometry ShapeCopy => _feature.ShapeCopy;
-
-			public IGeometry Shape
+			public override IGeometry Shape
 			{
 				get { return _shape; }
 				set { throw new NotImplementedException(); }
 			}
 
-			public IEnvelope Extent => _feature.Extent;
+			public override void Store() { }
 
-			public esriFeatureType FeatureType => _feature.FeatureType;
+			public override esriFeatureType FeatureType => _feature.FeatureType;
 
-			public object get_Value(int index)
+			public override object get_Value(int index)
 			{
 				return _feature.get_Value(index);
 			}
@@ -197,8 +206,8 @@ namespace ProSuite.QA.Container.TestContainer
 				((IFeatureSimplify2) _feature).SimplifyGeometry(geometry);
 			}
 
-			public bool get_IsSimpleGeometry(IGeometry geometry,
-			                                 out esriNonSimpleReasonEnum reason)
+			bool IFeatureSimplify2.get_IsSimpleGeometry(IGeometry geometry,
+			                                            out esriNonSimpleReasonEnum reason)
 			{
 				return ((IFeatureSimplify2) _feature).get_IsSimpleGeometry(geometry, out reason);
 			}
@@ -249,8 +258,9 @@ namespace ProSuite.QA.Container.TestContainer
 		private static class FeatureProxyFactory
 		{
 			[NotNull]
-			public static FeatureProxy Create([NotNull] IReadOnlyFeature feature,
-			                                  [CanBeNull] UniqueIdProvider uniqueIdProvider)
+			public static FeatureProxy Create(
+				[NotNull] IReadOnlyFeature feature,
+				[CanBeNull] IUniqueIdProvider<IReadOnlyFeature> uniqueIdProvider)
 			{
 				UniqueId uniqueId = uniqueIdProvider != null
 					                    ? new UniqueId(feature, uniqueIdProvider)

@@ -54,6 +54,7 @@ namespace ProSuite.QA.Tests.IssueFilters
 			{
 				CopyFilters(out _spatialFilters, out _filterHelpers);
 				_spatialFilters[0].SpatialRel = esriSpatialRelEnum.esriSpatialRelEnvelopeIntersects;
+				_filterHelpers[0].FullGeometrySearch = true;
 			}
 		}
 	}

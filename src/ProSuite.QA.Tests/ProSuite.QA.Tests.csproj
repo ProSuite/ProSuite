@@ -128,19 +128,4 @@
     <ProjectReference Include="..\..\..\ProSuite\src\ProSuite.QA.Core\ProSuite.QA.Core.csproj" />
     <ProjectReference Include="..\..\..\ProSuite\src\ProSuite.QA.Container\ProSuite.QA.Container.csproj" />
   </ItemGroup>
-
-  <ItemGroup>
-    <None Include="Documentation\de\EsriCH.QA.Tests.QuickReference_de.pdf" />
-    <None Include="Documentation\en\EsriCH.QA.Tests.QuickReference_en.pdf" />
-    <None Include="Documentation\en\SQLSyntax_en.docx" />
-    <None Include="Documentation\en\SQLSyntax_en.pdf" />
-    <None Include="Documentation\Extended\de\QaFlowLogic.docx" />
-    <None Include="Documentation\Extended\de\QaFlowLogic.pdf" />
-    <None Include="Documentation\Extended\de\QaLineConnection.docx" />
-    <None Include="Documentation\Extended\de\QaLineConnection.pdf" />
-    <None Include="Documentation\Extended\de\QaMinNodeDistance.docx" />
-    <None Include="Documentation\Extended\de\QaMinNodeDistance.pdf" />
-    <None Include="Documentation\Extended\de\QaNodeLineCoincidence.docx" />
-    <None Include="Documentation\Extended\de\QaNodeLineCoincidence.pdf" />
-  </ItemGroup>
 </Project>

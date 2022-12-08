@@ -69,6 +69,19 @@ namespace ProSuite.Processing.Test
 		}
 
 		[Test]
+		public void CanGetAllNames()
+		{
+			var config = CartoProcessConfig.Parse("foo=1\nbar=2\nbaz=3\nfoo=duplicate\n");
+
+			Assert.AreEqual(4, config.Count);
+			var names = config.GetAllNames().ToArray();
+			Assert.AreEqual(3, names.Length);
+			Assert.AreEqual("foo", names[0]);
+			Assert.AreEqual("bar", names[1]);
+			Assert.AreEqual("baz", names[2]);
+		}
+
+		[Test]
 		public void CanParseProcessXml()
 		{
 			const string xml = @"<Process name=""Align Buildings"" description=""to nearest road or railroad"">
@@ -115,7 +128,7 @@ namespace ProSuite.Processing.Test
 
 			Assert.NotNull(config);
 			Assert.AreEqual("Create Markers", config.Name);
-			Assert.AreEqual(string.Empty, config.Description);
+			Assert.IsNull(config.Description);
 			Assert.AreEqual(3, config.Count);
 			Assert.AreEqual("FooBarBaz", string.Join("", config.GetValues("Process")));
 		}

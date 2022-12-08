@@ -9,7 +9,7 @@ namespace ProSuite.QA.Container.TestContainer
 	public static class UniqueIdProviderFactory
 	{
 		[CanBeNull]
-		public static UniqueIdProvider Create([NotNull] IReadOnlyTable table)
+		public static IUniqueIdProvider Create([NotNull] IReadOnlyTable table)
 		{
 			var queryName = table.FullName as IQueryName2;
 
@@ -28,7 +28,7 @@ namespace ProSuite.QA.Container.TestContainer
 
 			return baseTablePerOidFieldIndex.Count < 2
 				       ? null
-				       : new UniqueIdProvider(baseTablePerOidFieldIndex);
+				       : new QueryTableUniqueIdProvider(baseTablePerOidFieldIndex);
 		}
 
 		[NotNull]

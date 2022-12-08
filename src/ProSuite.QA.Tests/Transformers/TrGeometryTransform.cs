@@ -78,9 +78,11 @@ namespace ProSuite.QA.Tests.Transformers
 			return new List<int>();
 		}
 
-		protected GdbFeature CreateFeature()
+		protected GdbFeature CreateFeature(int? oid = null)
 		{
-			return GetTransformed().CreateFeature(); // _transformedFc.CreateFeature();
+			TransformedFeatureClass fc = GetTransformed();
+			GdbRow row = oid.HasValue ? fc.CreateObject(oid.Value) : fc.CreateFeature();
+			return (GdbFeature) row; // GetTransformed().CreateFeature();
 		}
 
 		IEnumerable<GdbFeature> IGeometryTransformer.Transform(IGeometry source, int? sourceOid)
@@ -174,12 +176,12 @@ namespace ProSuite.QA.Tests.Transformers
 			bool ITransformedTable.NoCaching => false;
 
 			[CanBeNull]
-			public BoxTree<VirtualRow> KnownRows { get; private set; }
+			public BoxTree<IReadOnlyFeature> KnownRows { get; private set; }
 
-			public void SetKnownTransformedRows(IEnumerable<VirtualRow> knownRows)
+			public void SetKnownTransformedRows(IEnumerable<IReadOnlyRow> knownRows)
 			{
 				KnownRows = BoxTreeUtils.CreateBoxTree(
-					knownRows?.Select(x => x as VirtualRow),
+					knownRows?.Select(x => x as IReadOnlyFeature),
 					getBox: x => x?.Shape != null
 						             ? QaGeometryUtils.CreateBox(x.Shape)
 						             : null);
@@ -238,7 +240,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 			public override IEnumerable<VirtualRow> Search(IQueryFilter filter, bool recycling)
 			{
-				var involvedDict = new Dictionary<VirtualRow, Involved>();
+				var involvedDict = new Dictionary<IReadOnlyFeature, Involved>();
 
 				filter = filter ?? new QueryFilterClass();
 
@@ -276,17 +278,17 @@ namespace ProSuite.QA.Tests.Transformers
 				if ((Resulting.Transformer as IContainerTransformer)?.HandlesContainer == true &&
 				    Resulting.KnownRows != null && filter is ISpatialFilter sp)
 				{
-					foreach (BoxTree<VirtualRow>.TileEntry entry in
+					foreach (BoxTree<IReadOnlyFeature>.TileEntry entry in
 					         Resulting.KnownRows.Search(QaGeometryUtils.CreateBox(sp.Geometry)))
 					{
-						yield return entry.Value;
+						yield return (VirtualRow) entry.Value;
 					}
 				}
 			}
 
 			private bool IsKnown(
 				[NotNull] IReadOnlyFeature baseFeature,
-				[NotNull] Dictionary<VirtualRow, Involved> involvedDict)
+				[NotNull] Dictionary<IReadOnlyFeature, Involved> involvedDict)
 			{
 				if (! (Resulting.Transformer is IContainerTransformer ct))
 				{

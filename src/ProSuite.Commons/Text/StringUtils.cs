@@ -155,6 +155,46 @@ namespace ProSuite.Commons.Text
 				       : string.Empty;
 		}
 
+		public static StringBuilder Reverse(this StringBuilder sb, int start, int length)
+		{
+			if (sb == null) return null;
+
+			if (start < 0)
+				throw new ArgumentOutOfRangeException(nameof(start));
+			if (start > sb.Length)
+				throw new ArgumentOutOfRangeException(nameof(start));
+			if (length < 0)
+				throw new ArgumentOutOfRangeException(nameof(length));
+			if (start + length > sb.Length)
+				throw new ArgumentOutOfRangeException(nameof(length));
+
+			for (int lo = start, hi = start + length - 1; lo < hi; lo++, hi--)
+			{
+				(sb[lo], sb[hi]) = (sb[hi], sb[lo]);
+			}
+
+			return sb;
+		}
+
+		public static StringBuilder TrimEnd(this StringBuilder sb)
+		{
+			if (sb == null) return null;
+
+			int index = sb.Length;
+
+			while (index > 0 && char.IsWhiteSpace(sb[index - 1]))
+			{
+				index -= 1;
+			}
+
+			if (index < sb.Length)
+			{
+				sb.Remove(index, sb.Length - index);
+			}
+
+			return sb;
+		}
+
 		/// <summary>
 		/// Returns a string with proper-case (according to the case rules of the current culture)
 		/// </summary>
@@ -190,7 +230,7 @@ namespace ProSuite.Commons.Text
 		public static List<string> SplitAndTrim([NotNull] string characterSeparatedList,
 		                                        char separator)
 		{
-			char[] chars = {separator};
+			char[] chars = { separator };
 
 			return SplitAndTrim(characterSeparatedList, chars);
 		}
@@ -244,7 +284,7 @@ namespace ProSuite.Commons.Text
 		public static List<long> Split([NotNull] string characterSeparatedList,
 		                               char separator)
 		{
-			char[] chars = {separator};
+			char[] chars = { separator };
 			return Split(characterSeparatedList, chars);
 		}
 
