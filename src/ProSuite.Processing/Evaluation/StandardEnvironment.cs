@@ -156,16 +156,18 @@ namespace ProSuite.Processing.Evaluation
 		/// </summary>
 		/// <param name="name">The name (not null, not empty)</param>
 		/// <param name="value">The value (may be null)</param>
-		public void DefineValue(string name, object value)
+		public StandardEnvironment DefineValue(string name, object value)
 		{
 			Assert.ArgumentNotNullOrEmpty(name, nameof(name));
 			_values[name] = value;
+			return this;
 		}
 
-		public void ForgetValue(string name)
+		public StandardEnvironment ForgetValue(string name)
 		{
 			Assert.ArgumentNotNullOrEmpty(name, nameof(name));
 			_values.Remove(name);
+			return this;
 		}
 
 		/// <summary>
@@ -175,21 +177,24 @@ namespace ProSuite.Processing.Evaluation
 		/// </summary>
 		/// <param name="values">The name/value pairs (required)</param>
 		/// <param name="qualifier">The qualifier (optional)</param>
-		public void DefineFields(INamedValues values, string qualifier = null)
+		public StandardEnvironment DefineFields(INamedValues values, string qualifier = null)
 		{
 			Assert.ArgumentNotNull(values, nameof(values));
 			_rows[qualifier ?? string.Empty] = values;
+			return this;
 		}
 
-		public void ForgetFields(string qualifier)
+		public StandardEnvironment ForgetFields(string qualifier)
 		{
 			_rows.Remove(qualifier ?? string.Empty);
+			return this;
 		}
 
-		public void ForgetAll()
+		public StandardEnvironment ForgetAll()
 		{
 			_values.Clear();
 			_rows.Clear();
+			return this;
 		}
 
 		/// <summary>
