@@ -15,7 +15,7 @@ namespace ProSuite.Processing.AGP.Core.Domain
 
 		bool Validate(CartoProcessConfig config, out string message);
 
-		void Initialize(CartoProcessConfig config);
+		void Initialize(CartoProcessConfig config); // TODO rename Configure()?
 
 		IEnumerable<ProcessDatasetName> GetOriginDatasets();
 
