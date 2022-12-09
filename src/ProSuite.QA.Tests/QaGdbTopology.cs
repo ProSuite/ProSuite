@@ -18,13 +18,10 @@ namespace ProSuite.QA.Tests
 {
 	[UsedImplicitly]
 	[TopologyTest]
-	public class QaGdbTopology : NonContainerTest, IEditing
+	public class QaGdbTopology : NonContainerTest
 	{
 		private readonly Dictionary<int, string> _involvedTables;
 		private readonly ITopology _topology;
-
-		private bool _allowEditing;
-		private bool _isEditing;
 
 		#region issue codes
 
@@ -72,18 +69,6 @@ namespace ProSuite.QA.Tests
 				_involvedTables.Add(featureClass.ObjectClassID, ((IDataset) featureClass).Name);
 			}
 		}
-
-		#region IEditing Members
-
-		public bool AllowEditing
-		{
-			get { return _allowEditing; }
-			set { _allowEditing = value; }
-		}
-
-		public bool IsEditing => _isEditing;
-
-		#endregion
 
 		#region ITest Members
 
@@ -153,32 +138,7 @@ namespace ProSuite.QA.Tests
 				                ? geometry.Envelope
 				                : GetTopologyExtent();
 
-			var errorCount = 0;
-
-			if (_allowEditing)
-			{
-				try
-				{
-					_isEditing = true;
-
-					try
-					{
-						box = TopologyUtils.ValidateTopology(_topology, box);
-					}
-					catch (Exception e)
-					{
-						errorCount += ReportDirtyAreasAsErrors(geometry, e);
-					}
-				}
-				finally
-				{
-					_isEditing = false;
-				}
-			}
-			else
-			{
-				errorCount += ReportDirtyAreasAsErrors(geometry, null);
-			}
+			var errorCount = ReportDirtyAreasAsErrors(geometry, null);
 
 			errorCount += ReportTopologyErrors(box);
 
