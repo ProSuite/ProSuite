@@ -7,6 +7,7 @@ using System.Xml;
 using System.Xml.Linq;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Text;
+using ProSuite.Processing.Evaluation;
 
 namespace ProSuite.Processing.Utils
 {
@@ -33,6 +34,36 @@ namespace ProSuite.Processing.Utils
 		public static int GetLineNumber(this XObject x)
 		{
 			return x is IXmlLineInfo info && info.HasLineInfo() ? info.LineNumber : 0;
+		}
+
+		public static ImplicitValue<T> GetExpression<T>(
+			this CartoProcessConfig config, string parameterName)
+		{
+			var text = config.GetValue<string>(parameterName);
+			return ((ImplicitValue<T>) text).SetName(parameterName);
+		}
+
+		public static ImplicitValue<T> GetExpression<T>(
+			this CartoProcessConfig config, string parameterName, string defaultValue)
+		{
+			var text = config.GetValue(parameterName, defaultValue);
+			return ((ImplicitValue<T>) text)?.SetName(parameterName);
+		}
+
+		public static ImplicitValue<double> GetExpression(
+			this CartoProcessConfig config, string parameterName, double defaultValue)
+		{
+			var text = config.GetValue<string>(parameterName, null);
+			var expr = (ImplicitValue<double>) text ?? ImplicitValue<double>.Literal(defaultValue);
+			return expr.SetName(parameterName);
+		}
+
+		public static ImplicitValue<bool> GetExpression(
+			this CartoProcessConfig config, string parameterName, bool defaultValue)
+		{
+			var text = config.GetValue<string>(parameterName, null);
+			var expr = (ImplicitValue<bool>) text ?? ImplicitValue<bool>.Literal(defaultValue);
+			return expr.SetName(parameterName);
 		}
 
 		public static StringBuilder AppendScale(this StringBuilder sb, double scaleDenom, string sep = null)

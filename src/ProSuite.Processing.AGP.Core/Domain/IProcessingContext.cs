@@ -22,7 +22,7 @@ namespace ProSuite.Processing.AGP.Core.Domain
 		RelationshipClass OpenAssociation(string name, Table endpoint);
 
 		[CanBeNull]
-		Polygon GetProcessingPerimeter();
+		Polygon GetProcessingPerimeter(); // TODO always in Map's SRef (by spec/document)
 
 		bool AllowModification(Feature feature, out string reason);
 

@@ -67,6 +67,19 @@ namespace ProSuite.Processing.AGP.Core.Utils
 			return false;
 		}
 
+		public static T GetBaseTable<T>(T layerTable) where T : Table
+		{
+			if (layerTable == null)
+				return null;
+			if (!layerTable.IsJoinedTable())
+				return layerTable;
+
+			var join = layerTable.GetJoin();
+			var baseTable = join.GetDestinationTable();
+
+			return (T) baseTable;
+		}
+
 		[NotNull]
 		public static QueryFilter CreateFilter(string whereClause, Geometry extent)
 		{

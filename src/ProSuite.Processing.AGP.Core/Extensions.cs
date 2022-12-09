@@ -21,7 +21,7 @@ namespace ProSuite.Processing.AGP.Core
 			return row == null ? null : new RowBufferAdapter(row);
 		}
 
-		#region FieldSetter
+		#region FieldSetter & Co.
 
 		public static FieldSetter ValidateTargetFields(
 			this FieldSetter instance, FeatureClass featureClass, string parameterName)
@@ -41,6 +41,12 @@ namespace ProSuite.Processing.AGP.Core
 			}
 
 			return instance;
+		}
+
+		public static StandardEnvironment DefineFields(
+			this StandardEnvironment env, Row row, string qualifier = null)
+		{
+			return env.DefineFields(row.RowValues(), qualifier);
 		}
 
 		public static FieldSetter DefineFields(
