@@ -79,7 +79,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 				if (x == null || y == null)
 					return false;
 
-				if (x.IssueMsg.Test != y.IssueMsg.Test)
+				if (x.IssueMsg.ConditionId != y.IssueMsg.ConditionId)
 					return false;
 
 				if (TestUtils.CompareSortedInvolvedRows(x.InvolvedRows, y.InvolvedRows,
@@ -245,6 +245,10 @@ namespace ProSuite.Microservices.Server.AO.QA
 			foreach (var subVerification in subVerifications)
 			{
 				VerificationRequest subRequest = subVerification.SubRequest;
+
+				// TODO: Refactor (see also QualityVerificationGrpcImpl line ~ 627
+				subRequest.Parameters.IssueFileGdbPath += "__";
+
 				SubResponse subResponse = subVerification.SubResponse;
 
 				Task<bool> task = Task.Run(
