@@ -622,7 +622,12 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			IssueRepositoryType issueRepositoryType = IssueRepositoryType.FileGdb;
 
-			if (ExternalIssueRepositoryUtils.IssueRepositoryExists(
+			if (parameters.IssueFileGdbPath.EndsWith("__"))
+			{
+				// TODO: refactor , see also DistributedTestRunner lines ~ 250
+				xmlService.IssueRepositoryType = IssueRepositoryType.None;
+			}
+			else if (ExternalIssueRepositoryUtils.IssueRepositoryExists(
 				    parameters.IssueFileGdbPath, IssueRepositoryType.FileGdb))
 			{
 				responseStreamer.Warning(
