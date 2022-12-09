@@ -66,6 +66,30 @@ namespace ProSuite.Processing.Utils
 			return expr.SetName(parameterName);
 		}
 
+		public static FieldSetter GetFieldSetter(
+			this CartoProcessConfig config, string parameterName, string defaultValue)
+		{
+			var text = config.GetJoined(parameterName, "; ");
+			if (string.IsNullOrWhiteSpace(text))
+			{
+				text = defaultValue;
+			}
+
+			return new FieldSetter(text, parameterName);
+		}
+
+		public static FieldSetter GetFieldSetter(
+			this CartoProcessConfig config, string parameterName)
+		{
+			var text = config.GetJoined(parameterName, "; ");
+			if (string.IsNullOrWhiteSpace(text))
+			{
+				throw new CartoConfigException($"Required parameter {parameterName} is missing");
+			}
+
+			return new FieldSetter(text, parameterName);
+		}
+
 		public static StringBuilder AppendScale(this StringBuilder sb, double scaleDenom, string sep = null)
 		{
 			if (sb == null) return null;

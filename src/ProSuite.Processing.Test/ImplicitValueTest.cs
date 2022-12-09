@@ -74,7 +74,7 @@ namespace ProSuite.Processing.Test
 
 			var e1 = (ImplicitValue<string>) "foo"; // as expr, not as string!
 			Assert.AreEqual("foo", e1.Expression);
-			Assert.AreEqual("bar", e1.Evaluate(env.ForgetAll().DefineValue("foo", "bar")));
+			Assert.AreEqual("bar", e1.Evaluate(env.ForgetAll().DefineValue("bar", "foo")));
 
 			var e2 = (ImplicitValue<string>) null;
 			Assert.IsNull(e2);
@@ -159,13 +159,13 @@ namespace ProSuite.Processing.Test
 
 			var e1 = new ImplicitValue<int>("DECODE(foo, 'one', 1, 'two', 2, 99)");
 
-			env.DefineValue("foo", 123);
+			env.DefineValue(123, "foo");
 			Assert.AreEqual(99, e1.Evaluate(env));
 
-			env.DefineValue("foo", "one");
+			env.DefineValue("one", "foo");
 			Assert.AreEqual(1, e1.Evaluate(env));
 
-			env.DefineValue("foo", "two");
+			env.DefineValue("two", "foo");
 			Assert.AreEqual(2, e1.Evaluate(env));
 
 			env.ForgetValue("foo"); // e1 now refers to undefined value
@@ -177,7 +177,7 @@ namespace ProSuite.Processing.Test
 
 			var e2 = new ImplicitValue<string>("CONCAT(foo, bar)");
 			env.ForgetAll().DefineFields(row, "qualifier");
-			env.DefineValue("bar", "stop"); // takes precedence over unqualified field bar
+			env.DefineValue("stop", "bar"); // takes precedence over unqualified field bar
 			Assert.AreEqual("onestop", e2.Evaluate(env));
 		}
 	}
