@@ -175,14 +175,14 @@ namespace ProSuite.Commons.AO.Test.Geometry.Generalize
 			//    - Cutting the geometries at crack points -> generalize identical segment stretches (the shared parts)
 			//    - Make generalize insensitive to point order by standardizing the point order
 
-			GeneralizeUtils.CalculateWeedPoints(featureVertexInfos, 0.1, false, false,
-			                                    null, null);
+			GeneralizeUtils.CalculateWeedPoints(featureVertexInfos, 0.1, false, false, null, null);
 
 			Assert.NotNull((IMultipoint) featureVertexInfos[0].PointsToDelete);
 			Assert.NotNull((IMultipoint) featureVertexInfos[1].PointsToDelete);
 
 			// Weeding both features!
-			Assert.AreEqual(517, featureVertexInfos.Sum(v => v.PointsToDelete?.PointCount));
+			const int expectedPointsToDelete = 757;
+			Assert.AreEqual(expectedPointsToDelete, featureVertexInfos.Sum(v => v.PointsToDelete?.PointCount));
 
 			// Compare the weed points:
 
@@ -221,17 +221,16 @@ namespace ProSuite.Commons.AO.Test.Geometry.Generalize
 			featureVertexInfos = CrackUtils.CreateFeatureVertexInfos(
 				new[] {mockFeature1, mockFeature2}, null, 0.01, 0.1);
 
-			GeneralizeUtils.CalculateProtectionPoints(featureVertexInfos, selectedFeatures,
-			                                          visibleFeatures, true,
-			                                          TargetFeatureSelection.VisibleFeatures,
-			                                          null);
+			GeneralizeUtils.CalculateProtectionPoints(
+				featureVertexInfos, selectedFeatures, visibleFeatures, true,
+				TargetFeatureSelection.VisibleFeatures, null);
 
 			GeneralizeUtils.CalculateWeedPoints(featureVertexInfos, 0.1, false, false,
 			                                    null, null);
 
 			Assert.AreEqual(4, featureVertexInfos.Sum(v => v.CrackPoints?.Count));
 
-			Assert.AreEqual(0, featureVertexInfos.Sum(v => v.PointsToDelete?.PointCount));
+			Assert.AreEqual(500, featureVertexInfos.Sum(v => v.PointsToDelete?.PointCount));
 		}
 
 		[Test]

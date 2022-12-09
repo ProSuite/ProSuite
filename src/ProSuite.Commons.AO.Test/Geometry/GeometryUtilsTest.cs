@@ -55,7 +55,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			TestUtils.InitializeLicense();
+			TestUtils.InitializeLicense(true);
 		}
 
 		[OneTimeTearDown]
