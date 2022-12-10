@@ -15,7 +15,7 @@ namespace ProSuite.Processing.Test.Evaluation
 		{
 			var envRespectCase = new StandardEnvironment(false);
 
-			envRespectCase.DefineValue("foo", "bar");
+			envRespectCase.DefineValue("bar", "foo");
 			Assert.AreEqual("bar", envRespectCase.Lookup("foo", null));
 			Assert.Catch<EvaluationException>(() => envRespectCase.Lookup("FOO", null));
 			Assert.Catch<EvaluationException>(() => envRespectCase.Lookup("foo", "qualifier"));
@@ -30,7 +30,7 @@ namespace ProSuite.Processing.Test.Evaluation
 		{
 			var envIgnoreCase = new StandardEnvironment();
 
-			envIgnoreCase.DefineValue("foo", "bar");
+			envIgnoreCase.DefineValue("bar", "foo");
 			Assert.AreEqual("bar", envIgnoreCase.Lookup("foo", null));
 			Assert.AreEqual("bar", envIgnoreCase.Lookup("FOO", null));
 			var ex1 = Assert.Catch<EvaluationException>(() => envIgnoreCase.Lookup("foo", "qualifier"));
@@ -45,7 +45,7 @@ namespace ProSuite.Processing.Test.Evaluation
 		{
 			var env = new StandardEnvironment(false);
 
-			env.DefineValue("foo", "bar");
+			env.DefineValue("bar", "foo");
 
 			Assert.AreEqual("bar", env.Lookup("foo", null));
 			var ex1 = Assert.Catch<EvaluationException>(() => env.Lookup("foo", "qualifier"));
@@ -95,8 +95,8 @@ namespace ProSuite.Processing.Test.Evaluation
 			Assert.IsInstanceOf<Function>(env.Lookup("CONCAT", null));
 			Assert.AreEqual("row", env.Lookup("CONCAT", qualifier));
 
-			env.DefineValue("FOO", "foo");
-			env.DefineValue("CONCAT", "value");
+			env.DefineValue("foo", "FOO");
+			env.DefineValue("value", "CONCAT");
 
 			Assert.AreEqual("foo", env.Lookup("FOO", null));
 			Assert.AreEqual("value", env.Lookup("CONCAT", null));

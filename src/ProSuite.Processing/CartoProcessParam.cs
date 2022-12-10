@@ -21,5 +21,10 @@ namespace ProSuite.Processing
 			Group = group?.Trim() ?? string.Empty;
 			Description = description ?? string.Empty;
 		}
+
+		public override string ToString()
+		{
+			return $"{Name} (type {Type.Name}";
+		}
 	}
 }
