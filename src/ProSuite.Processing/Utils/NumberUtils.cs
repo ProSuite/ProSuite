@@ -123,25 +123,25 @@ namespace ProSuite.Processing.Utils
 			return ! double.IsNaN(number) && ! double.IsInfinity(number);
 		}
 
-		[NotNull]
+		[CanBeNull]
 		public static int[] ParseIntegerList([CanBeNull] string text, char separator)
 		{
 			if (text == null)
 			{
-				return _emptyIntArray;
+				return null;
 			}
 
 			text = text.Trim();
 			if (text.Length < 1)
 			{
-				return _emptyIntArray;
+				return null;
 			}
 
 			string[] parts = text.Split(separator);
 
 			if (parts.Length < 1)
 			{
-				return _emptyIntArray;
+				return null;
 			}
 
 			var result = new int[parts.Length];
@@ -158,25 +158,25 @@ namespace ProSuite.Processing.Utils
 			return result;
 		}
 
-		[NotNull]
+		[CanBeNull]
 		public static double[] ParseDoubleList([CanBeNull] string text, char separator)
 		{
 			if (text == null)
 			{
-				return _emptyDoubleArray;
+				return null;
 			}
 
 			text = text.Trim();
 			if (text.Length < 1)
 			{
-				return _emptyDoubleArray;
+				return null;
 			}
 
 			string[] parts = text.Split(separator);
 
 			if (parts.Length < 1)
 			{
-				return _emptyDoubleArray;
+				return null;
 			}
 
 			var result = new double[parts.Length];
@@ -192,8 +192,5 @@ namespace ProSuite.Processing.Utils
 
 			return result;
 		}
-
-		private static readonly int[] _emptyIntArray = Array.Empty<int>();
-		private static readonly double[] _emptyDoubleArray = Array.Empty<double>();
 	}
 }

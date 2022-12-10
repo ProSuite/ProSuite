@@ -12,9 +12,8 @@ namespace ProSuite.Processing.Utils
 	/// Assign values to one or more fields in a table row or feature.
 	/// The assignments are specified as a text string of the form
 	/// <code>Field = Expr; Field = Expr; etc.</code>
-	/// where Field is the name of a field in the row or feature,
-	/// and Expr is an expression over the fields in the row/feature
-	/// and in a syntax understood by <see cref="ExpressionEvaluator"/>.
+	/// where Field is the name of a field in the row or feature, and
+	/// Expr is an expression understood by <see cref="ExpressionEvaluator"/>.
 	/// </summary>
 	/// <remarks>
 	/// This class is NOT thread-safe because it keeps mutable state
@@ -23,17 +22,22 @@ namespace ProSuite.Processing.Utils
 	public class FieldSetter
 	{
 		private readonly Assignment[] _assignments;
-		private readonly Stack<object> _stack;
-		private readonly StandardEnvironment _environment;
 		private readonly object[] _values;
 		private string _text;
 
-		private FieldSetter([NotNull] IEnumerable<Assignment> assignments)
+		public string Text => _text ?? (_text = Format());
+		public string Name { get; private set; }
+
+		/// <param name="text">Field assignments; syntax: name = expr { ; name = expr }</param>
+		/// <param name="name">Optional name for this field setter</param>
+		public FieldSetter(string text, string name = null)
 		{
+			var assignments = Parse(text ?? string.Empty);
+
+			Name = name;
+
 			_assignments = assignments.ToArray();
 			_values = new object[_assignments.Length];
-			_stack = new Stack<object>();
-			_environment = new StandardEnvironment();
 			_text = null;
 		}
 
@@ -41,10 +45,21 @@ namespace ProSuite.Processing.Utils
 		/// Create a <see cref="FieldSetter"/> instance.
 		/// </summary>
 		/// <param name="text">The field assignments; syntax: name = expr { ; name = expr }</param>
+		/// <param name="name">Optional name for created field setter</param>
 		/// <returns>A <see cref="FieldSetter"/> instance</returns>
-		public static FieldSetter Create([CanBeNull] string text)
+		public static FieldSetter Create([CanBeNull] string text, string name = null)
 		{
-			return new FieldSetter(Parse(text ?? string.Empty));
+			return new FieldSetter(text, name);
+		}
+
+		/// <summary>
+		/// Attach a name to this field setter (may be useful
+		/// for creating meaningful error messages).
+		/// </summary>
+		public FieldSetter SetName(string name)
+		{
+			Name = name;
+			return this;
 		}
 
 		/// <summary>
@@ -52,7 +67,7 @@ namespace ProSuite.Processing.Utils
 		/// of the target fields in the FieldSetter's assignments
 		/// is not within the given <paramref name="fields"/>.
 		/// </summary>
-		public void ValidateTargetFields([NotNull] IEnumerable<string> fields)
+		public FieldSetter ValidateTargetFields([NotNull] IEnumerable<string> fields)
 		{
 			Assert.ArgumentNotNull(fields, nameof(fields));
 
@@ -71,87 +86,7 @@ namespace ProSuite.Processing.Utils
 				string missingField = noSuchFields.Single();
 				throw new AssertionException($"No such target field: {missingField}");
 			}
-		}
 
-		/// <summary>
-		/// Seed the random number generator.
-		/// See <see cref="StandardEnvironment.RandomSeed"/> for details.
-		/// </summary>
-		/// <param name="seed">The seed value</param>
-		/// <returns>This instance (for convenience).</returns>
-		public FieldSetter SetRandomSeed(int seed)
-		{
-			_environment.RandomSeed = seed;
-			return this;
-		}
-
-		/// <summary>
-		/// Define <paramref name="name"/> to be <paramref name="value"/>
-		/// in the environment where <see cref="Execute">Execute</see>
-		/// performs the assignments. Later definitions overwrite earlier
-		/// definitions of the same name.
-		/// </summary>
-		/// <returns>This instance (for convenience).</returns>
-		public FieldSetter DefineValue(string name, [CanBeNull] object value)
-		{
-			_environment.DefineValue(name, value);
-			return this;
-		}
-
-		public FieldSetter ForgetValue(string name)
-		{
-			_environment.ForgetValue(name);
-			return this;
-		}
-
-		/// <summary>
-		/// Define all the values of the given <paramref name="row"/>
-		/// using the given <paramref name="qualifier"/> in the environment
-		/// where <see cref="Execute">Execute</see> performs the assignments.
-		/// </summary>
-		/// <returns>This instance (for convenience).</returns>
-		public FieldSetter DefineFields([NotNull] IRowValues row,
-		                                [CanBeNull] string qualifier = null)
-		{
-			var namedValues = (INamedValues) row;
-			return DefineFields(namedValues, qualifier);
-		}
-
-		/// <summary>
-		/// Define all the values that are common across all
-		/// given <paramref name="rows"/>. Values that differ
-		/// between the given <paramref name="rows"/> will be
-		/// set to <c>null</c>.
-		/// </summary>
-		/// <seealso cref="DefineFields(IRowValues, string)"/>
-		public FieldSetter DefineFields([NotNull] IEnumerable<IRowValues> rows,
-		                                [CanBeNull] string qualifier = null)
-		{
-			var commonValues = new CommonValues(rows);
-			return DefineFields(commonValues, qualifier);
-		}
-
-		public FieldSetter DefineFields([NotNull] INamedValues values,
-		                                [CanBeNull] string qualifier = null)
-		{
-			_environment.DefineFields(values, qualifier);
-			return this;
-		}
-
-		public FieldSetter ForgetFields(string qualifier)
-		{
-			_environment.ForgetFields(qualifier);
-			return this;
-		}
-
-		/// <summary>
-		/// Forget all definitions that were done on this FieldSetter
-		/// using one of the Define methods.
-		/// </summary>
-		/// <returns>This instance (for convenience).</returns>
-		public FieldSetter ForgetAll()
-		{
-			_environment.ForgetAll();
 			return this;
 		}
 
@@ -159,16 +94,11 @@ namespace ProSuite.Processing.Utils
 		/// Execute this field setter on the given <paramref name="row"/>,
 		/// that is, perform the field value assignments. It is the caller's
 		/// duty to store these changes.
-		/// <para/>
-		/// The values of the given <paramref name="row"/> are not available
-		/// in the evaluation environment unless this row has been passed
-		/// to <see cref="DefineFields(IRowValues, string)"/> before.
 		/// </summary>
 		/// <param name="row">The row on which to operate</param>
-		/// <param name="env">The environment to use (optional, defaults
-		///  to the FieldSetter's internal environment that you can
-		///  manipulate with the various Define methods</param>
-		public void Execute(IRowValues row, IEvaluationEnvironment env = null)
+		/// <param name="env">The environment to use</param>
+		/// <param name="stack">An optional evaluation stack to (re)use</param>
+		public void Execute(IRowValues row, IEvaluationEnvironment env, Stack<object> stack = null)
 		{
 			Assert.ArgumentNotNull(row, nameof(row));
 
@@ -180,7 +110,9 @@ namespace ProSuite.Processing.Utils
 			{
 				var evaluator = _assignments[i].Evaluator;
 
-				_values[i] = evaluator.Evaluate(env ?? _environment, _stack);
+				if (stack == null) stack = new Stack<object>();
+
+				_values[i] = evaluator.Evaluate(env, stack);
 			}
 
 			for (int i = 0; i < count; i++)
@@ -206,25 +138,26 @@ namespace ProSuite.Processing.Utils
 				a => new KeyValuePair<string, ExpressionEvaluator>(a.FieldName, a.Evaluator));
 		}
 
-		public override string ToString()
+		private string Format()
 		{
-			if (_text == null)
-			{
-				var sb = new StringBuilder();
-				foreach (var pair in GetAssignments())
-				{
-					if (sb.Length > 0)
-					{
-						sb.Append("; ");
-					}
+			var sb = new StringBuilder();
 
-					sb.AppendFormat("{0} = {1}", pair.Key, pair.Value.Clause);
+			foreach (var pair in GetAssignments())
+			{
+				if (sb.Length > 0)
+				{
+					sb.Append("; ");
 				}
 
-				_text = sb.ToString();
+				sb.AppendFormat("{0} = {1}", pair.Key, pair.Value.Clause);
 			}
 
-			return _text;
+			return sb.ToString();
+		}
+
+		public override string ToString()
+		{
+			return Text ?? string.Empty;
 		}
 
 		#region Assignments Parser

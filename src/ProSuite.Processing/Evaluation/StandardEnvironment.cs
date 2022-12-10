@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Processing.Utils;
 
 namespace ProSuite.Processing.Evaluation
 {
@@ -154,18 +155,28 @@ namespace ProSuite.Processing.Evaluation
 		/// <paramref name="name"/>. Later definitions replace earlier
 		/// definitions of the same name.
 		/// </summary>
-		/// <param name="name">The name (not null, not empty)</param>
 		/// <param name="value">The value (may be null)</param>
-		public void DefineValue(string name, object value)
+		/// <param name="name">The name (not null, not empty)</param>
+		/// <param name="alias">An optional alias name</param>
+		public StandardEnvironment DefineValue(object value, string name, string alias = null)
 		{
 			Assert.ArgumentNotNullOrEmpty(name, nameof(name));
+
 			_values[name] = value;
+
+			if (!string.IsNullOrEmpty(alias))
+			{
+				_values[alias] = value;
+			}
+
+			return this;
 		}
 
-		public void ForgetValue(string name)
+		public StandardEnvironment ForgetValue(string name)
 		{
 			Assert.ArgumentNotNullOrEmpty(name, nameof(name));
 			_values.Remove(name);
+			return this;
 		}
 
 		/// <summary>
@@ -175,21 +186,31 @@ namespace ProSuite.Processing.Evaluation
 		/// </summary>
 		/// <param name="values">The name/value pairs (required)</param>
 		/// <param name="qualifier">The qualifier (optional)</param>
-		public void DefineFields(INamedValues values, string qualifier = null)
+		public StandardEnvironment DefineFields(INamedValues values, string qualifier = null)
 		{
 			Assert.ArgumentNotNull(values, nameof(values));
 			_rows[qualifier ?? string.Empty] = values;
+			return this;
 		}
 
-		public void ForgetFields(string qualifier)
+		public StandardEnvironment DefineFields(IEnumerable<IRowValues> rows,
+		                                        string qualifier = null)
+		{
+			var commonValues = new CommonValues(rows);
+			return DefineFields(commonValues, qualifier);
+		}
+
+		public StandardEnvironment ForgetFields(string qualifier)
 		{
 			_rows.Remove(qualifier ?? string.Empty);
+			return this;
 		}
 
-		public void ForgetAll()
+		public StandardEnvironment ForgetAll()
 		{
 			_values.Clear();
 			_rows.Clear();
+			return this;
 		}
 
 		/// <summary>
@@ -288,14 +309,18 @@ namespace ProSuite.Processing.Evaluation
 		/// with the given seed value. A zero or negative value will
 		/// initialize the generator with a "random" (time based) seed.
 		/// </summary>
+		[Obsolete("Use SetRandom() instead")]
 		public int RandomSeed
 		{
-			set
-			{
-				_random = value <= 0
-					          ? new Random()
-					          : new Random(value);
-			}
+			set => _random = value <= 0
+				                 ? new Random()
+				                 : new Random(value);
+		}
+
+		public StandardEnvironment SetRandom(Random random)
+		{
+			_random = random ?? new Random();
+			return this;
 		}
 
 		#region Non-public methods

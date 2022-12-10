@@ -15,7 +15,7 @@ namespace ProSuite.Processing.Test.Evaluation
 		{
 			var envRespectCase = new StandardEnvironment(false);
 
-			envRespectCase.DefineValue("foo", "bar");
+			envRespectCase.DefineValue("bar", "foo");
 			Assert.AreEqual("bar", envRespectCase.Lookup("foo", null));
 			Assert.Catch<EvaluationException>(() => envRespectCase.Lookup("FOO", null));
 			Assert.Catch<EvaluationException>(() => envRespectCase.Lookup("foo", "qualifier"));
@@ -30,7 +30,7 @@ namespace ProSuite.Processing.Test.Evaluation
 		{
 			var envIgnoreCase = new StandardEnvironment();
 
-			envIgnoreCase.DefineValue("foo", "bar");
+			envIgnoreCase.DefineValue("bar", "foo");
 			Assert.AreEqual("bar", envIgnoreCase.Lookup("foo", null));
 			Assert.AreEqual("bar", envIgnoreCase.Lookup("FOO", null));
 			var ex1 = Assert.Catch<EvaluationException>(() => envIgnoreCase.Lookup("foo", "qualifier"));
@@ -45,7 +45,7 @@ namespace ProSuite.Processing.Test.Evaluation
 		{
 			var env = new StandardEnvironment(false);
 
-			env.DefineValue("foo", "bar");
+			env.DefineValue("bar", "foo");
 
 			Assert.AreEqual("bar", env.Lookup("foo", null));
 			var ex1 = Assert.Catch<EvaluationException>(() => env.Lookup("foo", "qualifier"));
@@ -95,8 +95,8 @@ namespace ProSuite.Processing.Test.Evaluation
 			Assert.IsInstanceOf<Function>(env.Lookup("CONCAT", null));
 			Assert.AreEqual("row", env.Lookup("CONCAT", qualifier));
 
-			env.DefineValue("FOO", "foo");
-			env.DefineValue("CONCAT", "value");
+			env.DefineValue("foo", "FOO");
+			env.DefineValue("value", "CONCAT");
 
 			Assert.AreEqual("foo", env.Lookup("FOO", null));
 			Assert.AreEqual("value", env.Lookup("CONCAT", null));
@@ -226,12 +226,12 @@ namespace ProSuite.Processing.Test.Evaluation
 		[Test]
 		public void CanRandFunction()
 		{
-			var env = new StandardEnvironment();
+			var random = new Random(1234); // repeatable randomness
+			var env = new StandardEnvironment().SetRandom(random);
 
 			const double epsilon = 0.0000000001;
 
 			var frand = GetFunction(env, "RAND");
-			env.RandomSeed = 1234; // repeatable randomness
 
 			Assert.AreEqual(0.39908097935797693, (double)env.Invoke(frand, Args()), epsilon); // RAND/0
 			Assert.AreEqual(8, env.Invoke(frand, Args(10)));
@@ -249,10 +249,10 @@ namespace ProSuite.Processing.Test.Evaluation
 		[Test]
 		public void CanRandPickFunction()
 		{
-			var env = new StandardEnvironment();
+			var random = new Random(1234); // repeatable randomness
+			var env = new StandardEnvironment().SetRandom(random);
 
 			var frandpick = GetFunction(env, "RANDPICK");
-			env.RandomSeed = 1234; // repeatable randomness
 
 			Assert.IsNull(env.Invoke(frandpick, Args()));
 			Assert.AreEqual("one", env.Invoke(frandpick, Args("one")));

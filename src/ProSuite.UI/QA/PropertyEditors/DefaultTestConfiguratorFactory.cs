@@ -8,7 +8,7 @@ using System.Globalization;
 using System.Reflection;
 using System.Text;
 using Microsoft.CSharp;
-using ProSuite.Commons.AO.Licensing;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -237,7 +237,7 @@ namespace ProSuite.UI.QA.PropertyEditors
 			AddReferencedAssembly<NotNullAttribute>(cp, assemblies);
 
 			// Commons.AO:
-			AddReferencedAssembly<ArcGISLicenses>(cp, assemblies);
+			AddReferencedAssembly<CodedValue>(cp, assemblies);
 
 			// ProSuite.QA.Container:
 			AddReferencedAssembly<ContainerTest>(cp, assemblies);

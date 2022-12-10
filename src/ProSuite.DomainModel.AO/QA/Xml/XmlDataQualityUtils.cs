@@ -2607,8 +2607,11 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 
 				Assert.NotNull(workspace,
 				               "Unable to determine workspace connection string for model {0} " +
-				               "(cannot open model master database workspace)",
-				               model.Name);
+				               "(cannot open model master database workspace {1})",
+				               model.Name,
+				               model.MasterDatabaseNoAccessReason != null
+					               ? $"[{model.MasterDatabaseNoAccessReason}]"
+					               : string.Empty);
 
 				string catalogPath = workspace.Type ==
 				                     esriWorkspaceType.esriRemoteDatabaseWorkspace &&

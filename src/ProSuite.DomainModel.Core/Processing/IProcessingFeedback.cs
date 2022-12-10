@@ -38,12 +38,12 @@ namespace ProSuite.DomainModel.Core.Processing
 		/// <summary>
 		/// Report that processing was stopped by the user.
 		/// </summary>
-		void ReportStopped();
+		void ReportStopped(); // TODO drop?
 
 		/// <summary>
 		/// Report that processing has completed (with or without errors).
 		/// </summary>
-		void ReportCompleted();
+		void ReportCompleted(); // TODO drop?
 
 		/// <summary>
 		/// Return true if the user requests cancelling the process.

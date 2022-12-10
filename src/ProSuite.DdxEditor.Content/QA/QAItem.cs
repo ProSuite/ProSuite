@@ -10,7 +10,6 @@ using ProSuite.DdxEditor.Content.QA.InstanceConfig;
 using ProSuite.DdxEditor.Content.QA.InstanceDescriptors;
 using ProSuite.DdxEditor.Content.QA.QCon;
 using ProSuite.DdxEditor.Content.QA.QSpec;
-using ProSuite.DdxEditor.Content.QA.TestDescriptors;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Commands;
 using ProSuite.DdxEditor.Framework.Items;
@@ -63,7 +62,8 @@ namespace ProSuite.DdxEditor.Content.QA
 
 			yield return RegisterChild(new QualityConditionsItem(_modelBuilder, this));
 
-			yield return RegisterChild(new TestDescriptorsItem(_modelBuilder));
+			yield return RegisterChild(new AlgorithmDescriptorsItem(_modelBuilder));
+			//yield return RegisterChild(new TestDescriptorsItem(_modelBuilder));
 
 			foreach (Item categoryItem in GetCategoryItems())
 			{

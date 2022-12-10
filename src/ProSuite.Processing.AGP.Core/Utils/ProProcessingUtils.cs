@@ -1,12 +1,14 @@
 using System;
+using System.Linq;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Processing.Utils;
 
 namespace ProSuite.Processing.AGP.Core.Utils
 {
-	public static class ProcessingUtils
+	public static class ProProcessingUtils
 	{
 		/// <summary>
 		/// Create a string from the given object. Format:
@@ -65,6 +67,19 @@ namespace ProSuite.Processing.AGP.Core.Utils
 			return false;
 		}
 
+		public static T GetBaseTable<T>(T layerTable) where T : Table
+		{
+			if (layerTable == null)
+				return null;
+			if (!layerTable.IsJoinedTable())
+				return layerTable;
+
+			var join = layerTable.GetJoin();
+			var baseTable = join.GetDestinationTable();
+
+			return (T) baseTable;
+		}
+
 		[NotNull]
 		public static QueryFilter CreateFilter(string whereClause, Geometry extent)
 		{
@@ -92,24 +107,38 @@ namespace ProSuite.Processing.AGP.Core.Utils
 		}
 
 		/// <summary>
-		/// Return true iff <paramref name="shape"/> is within
-		/// <paramref name="perimeter"/>; if <paramref name="perimeter"/> is
-		/// <c>null</c> the <paramref name="shape"/> is considered within.
+		/// Find the subtype, if any, of the given row values and for the
+		/// given table (or feature class) definition; return null if no subtype.
 		/// </summary>
-		// TODO Shouldn't this be on IProcessingContext?
-		public static bool WithinPerimeter(Geometry shape, [CanBeNull] Geometry perimeter)
+		[CanBeNull]
+		public static Subtype FindSubtype([NotNull] TableDefinition definition, [NotNull] IRowValues values)
 		{
-			if (shape == null)
+			if (definition is null)
+				throw new ArgumentNullException(nameof(definition));
+			if (values is null)
+				throw new ArgumentNullException(nameof(values));
+
+			string subtypeFieldName = definition.GetSubtypeField();
+			if (string.IsNullOrEmpty(subtypeFieldName))
 			{
-				return false;
+				return null;
 			}
 
-			if (perimeter == null)
+			object value = values.GetValue(subtypeFieldName);
+			var subtypes = definition.GetSubtypes();
+
+			if (value is int code)
 			{
-				return true;
+				return subtypes?.FirstOrDefault(s => s.GetCode() == code);
 			}
 
-			return GeometryEngine.Instance.Contains(perimeter, shape);
+			if (value is string name)
+			{
+				return subtypes?.FirstOrDefault(s => string.Equals(s.GetName(), name)); // TODO ignore case?
+			}
+
+			// First subtype is default subtype (empirical)
+			return subtypes?.FirstOrDefault();
 		}
 	}
 }

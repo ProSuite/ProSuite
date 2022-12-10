@@ -50,9 +50,14 @@ namespace ProSuite.Microservices.Server.AO
 
 			LoadReportingGrpcImpl loadReporting = new LoadReportingGrpcImpl();
 
+			int maxThreadCount = arguments.MaxParallel < 0
+				                     ? Environment.ProcessorCount - 1
+				                     : arguments.MaxParallel;
+
 			QualityVerificationGrpcImpl verificationServiceImpl =
-				CreateQualityVerificationGrpc(arguments, inputsFactory, loadReporting,
-				                              markUnhealthyOnExceptions ? health : null);
+				CreateQualityVerificationGrpc(inputsFactory, loadReporting,
+				                              markUnhealthyOnExceptions ? health : null,
+				                              maxThreadCount);
 
 			health.SetStatus(verificationServiceImpl.GetType(), true);
 
@@ -76,6 +81,16 @@ namespace ProSuite.Microservices.Server.AO
 				                     ? Environment.ProcessorCount - 1
 				                     : arguments.MaxParallel;
 
+			return CreateQualityVerificationGrpc(inputsFactory, loadReporting, health,
+			                                     maxThreadCount);
+		}
+
+		public static QualityVerificationGrpcImpl CreateQualityVerificationGrpc(
+			[CanBeNull] Func<VerificationRequest, IBackgroundVerificationInputs> inputsFactory,
+			[CanBeNull] LoadReportingGrpcImpl loadReporting,
+			[CanBeNull] IServiceHealth health,
+			int maxThreadCount)
+		{
 			ServiceLoad serviceLoad = null;
 
 			if (loadReporting != null)
@@ -113,7 +128,20 @@ namespace ProSuite.Microservices.Server.AO
 					LoadReportingGrpc.BindService(loadReporting)
 				});
 
-			return StartGrpcServer(services, arguments);
+			Grpc.Core.Server result = StartGrpcServer(services, arguments);
+
+			if (arguments.Port == 0)
+			{
+				// 0 means use any free port
+				ServerPort serverPort = result.Ports.FirstOrDefault();
+
+				if (serverPort != null)
+				{
+					arguments.Port = serverPort.BoundPort;
+				}
+			}
+
+			return result;
 		}
 
 		/// <summary>
