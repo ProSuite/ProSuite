@@ -18,11 +18,11 @@ namespace ProSuite.QA.Tests.Transformers
 		{
 			bool IUniqueIdKey.IsVirtuell => BaseOid < 0;
 
-			public int BaseOid { get; }
+			public long BaseOid { get; }
 			public int PartIdx { get; }
 			public int VertexIdx { get; }
 
-			public UniqueIdKey(int baseOid, int partIdx, int vertexIdx)
+			public UniqueIdKey(long baseOid, int partIdx, int vertexIdx)
 			{
 				BaseOid = baseOid;
 				PartIdx = partIdx;
@@ -61,7 +61,13 @@ namespace ProSuite.QA.Tests.Transformers
 
 			public int GetHashCode(UniqueIdKey obj)
 			{
-				return obj.BaseOid + 29 * (obj.PartIdx + 37 * obj.VertexIdx);
+				unchecked
+				{
+					int hashCode = obj.BaseOid.GetHashCode();
+					hashCode = (hashCode * 397) ^ obj.PartIdx;
+					hashCode = (hashCode * 397) ^ obj.VertexIdx;
+					return hashCode;
+				}
 			}
 		}
 

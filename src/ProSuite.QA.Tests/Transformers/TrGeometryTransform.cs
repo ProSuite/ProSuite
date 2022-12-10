@@ -78,7 +78,7 @@ namespace ProSuite.QA.Tests.Transformers
 			return new List<int>();
 		}
 
-		protected GdbFeature CreateFeature(int? oid = null)
+		protected GdbFeature CreateFeature(long? oid = null)
 		{
 			TransformedFeatureClass fc = GetTransformed();
 			GdbRow row = oid.HasValue ? fc.CreateObject(oid.Value) : fc.CreateFeature();

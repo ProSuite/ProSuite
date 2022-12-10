@@ -8,7 +8,7 @@ namespace ProSuite.QA.Container.TestContainer
 	public abstract class BaseUniqueIdProvider<T> : IUniqueIdProvider
 	{
 		[NotNull] private readonly IDictionary<T, int> _keysToId;
-		[NotNull] private readonly IDictionary<int, T> _idToKeys;
+		[NotNull] private readonly IDictionary<long, T> _idToKeys;
 
 		private int _uniqueIdCount;
 
@@ -21,10 +21,10 @@ namespace ProSuite.QA.Container.TestContainer
 			//_idToKeys = new Dictionary<int, IList<int?>>();
 			_keysToId = LargeDictionaryFactory.CreateDictionary<T, int>(
 				equalityComparer: keyComparer);
-			_idToKeys = LargeDictionaryFactory.CreateDictionary<int, T>();
+			_idToKeys = LargeDictionaryFactory.CreateDictionary<long, T>();
 		}
 
-		protected IDictionary<int, T> IdToKeys => _idToKeys;
+		protected IDictionary<long, T> IdToKeys => _idToKeys;
 		protected int IncrementUniqueIdCount()
 		{
 			_uniqueIdCount++;
@@ -47,9 +47,9 @@ namespace ProSuite.QA.Container.TestContainer
 
 		public abstract IList<int> GetOidFieldIndexes();
 
-		public abstract IList<InvolvedRow> GetInvolvedRows(int uniqueId);
+		public abstract IList<InvolvedRow> GetInvolvedRows(long uniqueId);
 
-		public bool TryGetKey(int uniqueId, out T key)
+		public bool TryGetKey(long uniqueId, out T key)
 		{
 			return _idToKeys.TryGetValue(uniqueId, out key);
 		}

@@ -10,7 +10,7 @@ namespace ProSuite.QA.Tests.Transformers
 		public SimpleUniqueIdProvider(IEqualityComparer<T> keyComparer)
 			: base(keyComparer) { }
 
-		public override IList<InvolvedRow> GetInvolvedRows(int uniqueId)
+		public override IList<InvolvedRow> GetInvolvedRows(long uniqueId)
 		{
 			if (! TryGetKey(uniqueId, out T key)) return new List<InvolvedRow>();
 

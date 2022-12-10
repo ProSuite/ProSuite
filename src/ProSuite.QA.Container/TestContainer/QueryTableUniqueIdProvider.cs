@@ -112,7 +112,7 @@ namespace ProSuite.QA.Container.TestContainer
 			return new ListComparer().Compare(x, y);
 		}
 
-		public override IList<InvolvedRow> GetInvolvedRows(int uniqueId)
+		public override IList<InvolvedRow> GetInvolvedRows(long uniqueId)
 		{
 			List<InvolvedRow> involvedRows = new InvolvedRows();
 			if (!IdToKeys.TryGetValue(uniqueId, out IList<int?> keys))

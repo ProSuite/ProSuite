@@ -508,7 +508,7 @@ namespace ProSuite.QA.Tests
 			bool? cancelledRow = null;
 
 			var result = new List<ConnectedLine>();
-			int? rowKeys = null;
+			long? rowKeys = null;
 
 			foreach (DirectedRow dirRow in GetDirectedRows(new TableIndexRow(row, tableIndex)))
 			{
@@ -1865,7 +1865,7 @@ namespace ProSuite.QA.Tests
 			public IUniqueIdProvider UniqueIdProvider { get; }
 
 			[NotNull]
-			public int Keys { get; }
+			public long Keys { get; }
 
 			public bool Cancelled { get; }
 
@@ -1888,7 +1888,7 @@ namespace ProSuite.QA.Tests
 			}
 
 			public ConnectedLine(int tableIndex,
-			                     int rowKeys,
+			                     long rowKeys,
 			                     int partIndex,
 			                     [CanBeNull] IUniqueIdProvider uniqueIdProvider,
 			                     bool cancelled)

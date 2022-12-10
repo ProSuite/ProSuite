@@ -11,7 +11,7 @@ namespace ProSuite.QA.Container.TestContainer
 	{
 		bool Remove(int id);
 
-		IList<InvolvedRow> GetInvolvedRows(int id);
+		IList<InvolvedRow> GetInvolvedRows(long id);
 
 		IList<int> GetOidFieldIndexes();
 	}

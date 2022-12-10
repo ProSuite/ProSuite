@@ -147,7 +147,7 @@ namespace ProSuite.QA.Container.TestContainer
 
 			#region IFeature Members
 
-			public override int OID => _feature.OID;
+			public override long OID => _feature.OID;
 
 			public override IReadOnlyTable ReadOnlyTable => _table ?? (_table = _feature.Table);
 
