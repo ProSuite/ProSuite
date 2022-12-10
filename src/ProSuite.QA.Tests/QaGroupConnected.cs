@@ -407,7 +407,7 @@ namespace ProSuite.QA.Tests
 			for (var tableIndex = 0; tableIndex < InvolvedTables.Count; tableIndex++)
 			{
 				IReadOnlyTable polylineClass = InvolvedTables[tableIndex];
-				UniqueIdProvider uniqueIdProvider = GetUniqueIdProvider(tableIndex);
+				IUniqueIdProvider uniqueIdProvider = GetUniqueIdProvider(tableIndex);
 
 				#region init handlig of table constraint
 
@@ -467,7 +467,7 @@ namespace ProSuite.QA.Tests
 		[NotNull]
 		private IQueryFilter GetQueryFilter([NotNull] IReadOnlyTable polylineClass,
 		                                    int tableIndex,
-		                                    [CanBeNull] UniqueIdProvider uniqueIdProvider,
+		                                    [CanBeNull] IUniqueIdProvider uniqueIdProvider,
 		                                    bool getAllFields)
 		{
 			IQueryFilter filter = new QueryFilterClass();
@@ -503,19 +503,19 @@ namespace ProSuite.QA.Tests
 		[NotNull]
 		private List<ConnectedLine> GetLineParts(
 			[NotNull] IReadOnlyRow row, int tableIndex,
-			[CanBeNull] UniqueIdProvider uniqueIdProvider)
+			[CanBeNull] IUniqueIdProvider uniqueIdProvider)
 		{
 			bool? cancelledRow = null;
 
 			var result = new List<ConnectedLine>();
-			IList<int?> rowKeys = null;
+			int? rowKeys = null;
 
 			foreach (DirectedRow dirRow in GetDirectedRows(new TableIndexRow(row, tableIndex)))
 			{
-				rowKeys = rowKeys ??
-				          (uniqueIdProvider != null
-					           ? uniqueIdProvider.GetKeys((IReadOnlyFeature) row)
-					           : new[] {(int?) row.OID});
+				rowKeys = rowKeys
+				          ?? (uniqueIdProvider as IUniqueIdProvider<IReadOnlyFeature>)?.GetUniqueId(
+					          (IReadOnlyFeature) row)
+				          ?? row.OID;
 				cancelledRow = cancelledRow ??
 				               RecheckMultiplePartIssues
 					               ? CancelTestingRow(row, recycleUnique: Guid.NewGuid(),
@@ -529,7 +529,7 @@ namespace ProSuite.QA.Tests
 				double toY;
 				dirRow.ToPoint.QueryCoords(out toX, out toY);
 
-				result.Add(new ConnectedLine(tableIndex, rowKeys, dirRow.PartIndex,
+				result.Add(new ConnectedLine(tableIndex, rowKeys.Value, dirRow.PartIndex,
 				                             uniqueIdProvider, cancelledRow.Value)
 				           {
 					           FromX = fromX,
@@ -1857,32 +1857,17 @@ namespace ProSuite.QA.Tests
 		{
 			public int TableIndex { get; }
 
-			public long RowIndex
-			{
-				get
-				{
-					if (_uniqueId == null)
-					{
-						int uniqueId = UniqueIdProvider?.GetUniqueId(Keys) ??
-						               Assert.NotNull(Keys[0]).Value;
-						_uniqueId = uniqueId;
-					}
-
-					return _uniqueId.Value;
-				}
-			}
+			public long RowIndex => Keys;
 
 			public int PartIndex { get; }
 
 			[CanBeNull]
-			public UniqueIdProvider UniqueIdProvider { get; }
+			public IUniqueIdProvider UniqueIdProvider { get; }
 
 			[NotNull]
-			public IList<int?> Keys { get; }
+			public int Keys { get; }
 
 			public bool Cancelled { get; }
-
-			private int? _uniqueId;
 
 			public int CompareTo([NotNull] ConnectedLine other)
 			{
@@ -1895,7 +1880,7 @@ namespace ProSuite.QA.Tests
 				// Do not use RowIndex first, it is not stable
 				if (UniqueIdProvider != null)
 				{
-					d = UniqueIdProvider.Compare(Keys, other.Keys);
+					d = Keys.CompareTo(other.Keys);
 					return d;
 				}
 
@@ -1903,9 +1888,9 @@ namespace ProSuite.QA.Tests
 			}
 
 			public ConnectedLine(int tableIndex,
-			                     [NotNull] IList<int?> rowKeys,
+			                     int rowKeys,
 			                     int partIndex,
-			                     [CanBeNull] UniqueIdProvider uniqueIdProvider,
+			                     [CanBeNull] IUniqueIdProvider uniqueIdProvider,
 			                     bool cancelled)
 			{
 				TableIndex = tableIndex;

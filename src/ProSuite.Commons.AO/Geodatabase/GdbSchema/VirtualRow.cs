@@ -63,7 +63,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		bool IRow.HasOID => HasOID;
 		bool IObject.HasOID => HasOID;
-		public virtual bool HasOID => Table.HasOID && OID >= 0;
+		public virtual bool HasOID => ReadOnlyTable.HasOID && OID >= 0;
 
 #if Server11
 		long IRow.OID => OID;
@@ -78,10 +78,12 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		ITable IRow.Table => Table;
 		ITable IObject.Table => Table;
-		IReadOnlyTable IReadOnlyRow.Table => Table;
+		IReadOnlyTable IReadOnlyRow.Table => ReadOnlyTable;
 
 		public virtual VirtualTable Table =>
 			throw new NotImplementedException("Implement in derived class");
+
+		public virtual IReadOnlyTable ReadOnlyTable => Table;
 
 		IObjectClass IObject.Class => Class;
 		public virtual IObjectClass Class => (IObjectClass) Table;
@@ -93,7 +95,20 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		}
 
 		public virtual IGeometry ShapeCopy => GeometryFactory.Clone(Shape);
-		public virtual IEnvelope Extent => Shape.Envelope;
+
+		public virtual IEnvelope Extent
+		{
+			get
+			{
+				if (Shape != null)
+				{
+					return Shape.Envelope;
+				}
+
+				// To be consistent with AO:
+				return new EnvelopeClass();
+			}
+		}
 
 		public virtual esriFeatureType FeatureType =>
 			throw new NotImplementedException("Implement in derived class");

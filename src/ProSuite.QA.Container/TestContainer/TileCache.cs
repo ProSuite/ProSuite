@@ -8,7 +8,6 @@ using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
-using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -582,14 +581,14 @@ namespace ProSuite.QA.Container.TestContainer
 
 			ISpatialFilter queryFilter = null;
 
-			UniqueIdProvider uniqueIdProvider = context.GetUniqueIdProvider(table);
+			IUniqueIdProvider uniqueIdProvider = context.GetUniqueIdProvider(table);
 			// get data from database
 			try
 			{
 				queryFilter = (ISpatialFilter) filter.ToNativeFilterImpl();
 
 				(table as ITransformedTable)?.SetKnownTransformedRows(
-					cachedRows.Values.Select(x => x.Feature as VirtualRow));
+					cachedRows.Values.Select(x => x.Feature as IReadOnlyRow));
 				foreach (IReadOnlyRow row in GetRows(table, queryFilter))
 				{
 					var feature = (IReadOnlyFeature) row;

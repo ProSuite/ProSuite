@@ -146,7 +146,8 @@ namespace ProSuite.QA.Tests.External
 		{
 			var testDataset = new TestDatasetMsg();
 
-			IObjectClass objectClass = (IObjectClass) table;
+			IObjectClass objectClass =
+				(IObjectClass) (table as ReadOnlyTable)?.BaseTable ?? (IObjectClass) table;
 
 			ObjectClassMsg classMsg = ProtobufGdbUtils.ToObjectClassMsg(objectClass, true);
 			classMsg.WorkspaceHandle = workspaceIndex;

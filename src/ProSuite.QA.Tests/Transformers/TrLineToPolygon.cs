@@ -44,7 +44,7 @@ namespace ProSuite.QA.Tests.Transformers
 				yield break;
 			}
 
-			GdbFeature feature = CreateFeature();
+			GdbFeature feature = CreateFeature(sourceOid);
 			IPolygon polygon = GeometryFactory.CreatePolygon(line);
 			ITopologicalOperator op = (ITopologicalOperator) polygon;
 			if (! op.IsSimple)

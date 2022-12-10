@@ -48,6 +48,11 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 		{
 			yield return RegisterChild(new TestDescriptorsItem(_modelBuilder));
 
+			if (! _modelBuilder.SupportsTransformersAndFilters)
+			{
+				yield break;
+			}
+
 			yield return RegisterChild(new TransformerDescriptorsItem(_modelBuilder));
 			yield return RegisterChild(new IssueFilterDescriptorsItem(_modelBuilder));
 		}
@@ -98,7 +103,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 			string location = assembly.Location;
 			Assert.NotNull(location, "assembly location is null");
 
-			TestReportUtils.WriteTestReport(new[] {assembly}, htmlFileName, overwrite);
+			TestReportUtils.WriteTestReport(new[] { assembly }, htmlFileName, overwrite);
 
 			_msg.InfoFormat(
 				"Report of test, transformer and filter implementations in assembly {0} created: {1}",

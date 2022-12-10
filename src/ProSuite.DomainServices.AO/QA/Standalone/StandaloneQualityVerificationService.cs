@@ -57,6 +57,12 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 		public IExceptionObjectRepository ExceptionObjectRepository { get; set; }
 
 		/// <summary>
+		/// The interface that allows streaming progress information during a lengthy operation.
+		/// </summary>
+		[CanBeNull]
+		public IVerificationProgressStreamer ProgressStreamer { get; set; }
+
+		/// <summary>
 		/// Function for getting the key field name for an object dataset.
 		/// </summary>
 		[CanBeNull]
@@ -78,6 +84,8 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 		public event EventHandler<VerificationProgressEventArgs> Progress;
 
 		public event EventHandler<IssueFoundEventArgs> IssueFound;
+
+		public QualityVerification Verification { get; set; }
 
 		/// <summary>
 		/// Verifies the specified object classes.
@@ -113,7 +121,10 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 
 			IList<ITest> tests =
 				CreateTests(qualitySpecification, datasetContext,
-				            out VerificationElements verificationElements);
+				            out VerificationElements verificationElements,
+				            out QualityVerification verification);
+
+			Verification = verification;
 
 			var qualityConditionCount = 0;
 			foreach (QualitySpecificationElement element in verificationElements.Elements)
@@ -141,10 +152,16 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 			testRunner.TestAssembler =
 				new TestAssembler(t => verificationElements.GetQualityCondition(t));
 
+			testRunner.QualityVerification = verification;
+
 			LogBeginVerification(qualitySpecification, tileSize, areaOfInterest);
 
-			ProgressProcessor progressProcessor = new ProgressProcessor(
-				CancellationTokenSource, verificationElements.ElementsByTest, trackCancel);
+			ProgressProcessor progressProcessor =
+				new ProgressProcessor(
+					CancellationTokenSource, verificationElements.ElementsByTest, trackCancel)
+				{
+					ProgressStreamer = ProgressStreamer
+				};
 
 			IssueProcessor issueProcessor;
 
@@ -295,13 +312,17 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 			}
 		}
 
-		private static void LogBeginVerification(
+		private void LogBeginVerification(
 			[NotNull] QualitySpecification qualitySpecification,
 			double tileSize,
 			[CanBeNull] AreaOfInterest areaOfInterest)
 		{
 			using (_msg.IncrementIndentation("Begin quality verification"))
 			{
+				StringBuilder stringBuilder = new StringBuilder(
+					$"Starting quality verification using quality specification {qualitySpecification.Name}" +
+					$" with verification tile size {tileSize}");
+
 				_msg.InfoFormat("Quality specification: {0}", qualitySpecification.Name);
 				_msg.InfoFormat("Verification tile size: {0}", tileSize);
 
@@ -311,13 +332,15 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 
 					if (testPerimeter.IsEmpty)
 					{
-						_msg.Warn("Test perimeter is empty");
+						const string testPerimeterIsEmpty = "Test perimeter is empty";
+						_msg.Warn(testPerimeterIsEmpty);
+						stringBuilder.Append(testPerimeterIsEmpty);
 					}
 					else
 					{
+						string envelopeMsg;
 						var envelope = testPerimeter as IEnvelope;
 
-						string message;
 						if (envelope == null)
 						{
 							Assert.ArgumentCondition(testPerimeter is IPolygon,
@@ -325,75 +348,111 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 							                         testPerimeter.GeometryType);
 
 							envelope = testPerimeter.Envelope;
-							message = string.Format("Polygon extent: {0} x {1}",
-							                        envelope.Width, envelope.Height);
+							envelopeMsg = $"Polygon extent: {envelope.Width} x {envelope.Height}";
 						}
 						else
 						{
-							message = string.Format("Extent: {0} x {1}",
-							                        envelope.Width, envelope.Height);
+							envelopeMsg = $"Extent: {envelope.Width} x {envelope.Height}";
 						}
 
-						using (_msg.IncrementIndentation(message))
+						using (_msg.IncrementIndentation(envelopeMsg))
 						{
 							_msg.InfoFormat("X-Min: {0}", envelope.XMin);
 							_msg.InfoFormat("Y-Min: {0}", envelope.YMin);
 							_msg.InfoFormat("X-Max: {0}", envelope.XMax);
 							_msg.InfoFormat("Y-Max: {0}", envelope.YMax);
 						}
+
+						if (ProgressStreamer != null)
+						{
+							stringBuilder.AppendLine(envelopeMsg);
+							stringBuilder.AppendLine($"  X-Min: {envelope.XMin}");
+							stringBuilder.AppendLine($"  Y-Min: {envelope.YMin}");
+							stringBuilder.AppendLine($"  X-Max: {envelope.XMax}");
+							stringBuilder.AppendLine($"  Y-Max: {envelope.YMax}");
+						}
 					}
+
+					ProgressStreamer?.Info(stringBuilder.ToString());
 				}
 			}
 		}
 
-		private static void LogResults(
+		private void LogResults(
 			[NotNull] IEnumerable<QualitySpecificationElement> qualitySpecificationElements,
 			[NotNull] IssueProcessor issueProcessor,
 			int qualityConditionCount, int datasetCount,
 			bool fulfilled, bool cancelled,
 			[CanBeNull] IExceptionStatistics exceptionStatistics)
 		{
+			StringBuilder streamMessage = new StringBuilder("Quality verification finished");
+
+			streamMessage.AppendLine($"Number of verified datasets: {datasetCount:N0}.");
+			streamMessage.AppendLine($"Number of verified conditions: {qualityConditionCount}");
+
 			using (_msg.IncrementIndentation("Quality verification finished"))
 			{
-				_msg.InfoFormat("Number of verified datasets: {0:N0}", datasetCount);
+				_msg.Info($"Number of verified datasets: {datasetCount:N0}.");
+
 				using (_msg.IncrementIndentation("Number of verified quality conditions: {0:N0}",
 				                                 qualityConditionCount))
 				{
-					LogVerifiedConditions(qualitySpecificationElements,
-					                      issueProcessor,
-					                      exceptionStatistics);
+					LogVerifiedConditions(qualitySpecificationElements, issueProcessor,
+					                      exceptionStatistics, streamMessage);
 				}
 
-				_msg.InfoFormat("Warning count: {0:N0}", issueProcessor.WarningCount);
-				_msg.InfoFormat("Error count: {0:N0}", issueProcessor.ErrorCount);
+				InfoFormat("Warning count: {0:N0}", streamMessage, issueProcessor.WarningCount);
+				InfoFormat("Error count: {0:N0}", streamMessage, issueProcessor.ErrorCount);
 
 				if (issueProcessor.RowsWithStopConditionsCount > 0)
 				{
-					_msg.WarnFormat("Number of features with stop errors: {0:N0}",
-					                issueProcessor.RowsWithStopConditionsCount);
+					WarnFormat("Number of features with stop errors: {0:N0}",
+					           streamMessage, issueProcessor.RowsWithStopConditionsCount);
 				}
 
 				if (exceptionStatistics != null &&
 				    exceptionStatistics.TablesWithNonUniqueKeys.Count > 0)
 				{
-					_msg.WarnFormat(
+					WarnFormat(
 						"Number of tables with non-unique keys referenced by exception objects: {0}",
-						exceptionStatistics.TablesWithNonUniqueKeys.Count);
+						streamMessage, exceptionStatistics.TablesWithNonUniqueKeys.Count);
 				}
 
 				if (cancelled)
 				{
-					_msg.Warn("The quality verification was cancelled");
+					WarnFormat("The quality verification was cancelled", streamMessage);
 				}
 				else if (fulfilled)
 				{
-					_msg.Info("The quality specification is fulfilled");
+					InfoFormat("The quality specification is fulfilled", streamMessage);
 				}
 				else
 				{
-					_msg.Warn("The quality specification is not fulfilled");
+					WarnFormat("The quality specification is not fulfilled", streamMessage);
 				}
 			}
+
+			ProgressStreamer?.Info(streamMessage.ToString());
+		}
+
+		private static void InfoFormat([StructuredMessageTemplate] string format,
+		                               [CanBeNull] StringBuilder fullMessage,
+		                               params object[] args)
+		{
+			string message = string.Format(format, args);
+
+			_msg.Info(message);
+			fullMessage?.AppendLine(message);
+		}
+
+		private static void WarnFormat([StructuredMessageTemplate] string format,
+		                               [CanBeNull] StringBuilder fullMessage,
+		                               params object[] args)
+		{
+			string message = string.Format(format, args);
+
+			_msg.Warn(message);
+			fullMessage?.AppendLine(message);
 		}
 
 		private static int CompareElements(QualitySpecificationElement e1,
@@ -407,7 +466,8 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 		private static void LogVerifiedConditions(
 			[NotNull] IEnumerable<QualitySpecificationElement> qualitySpecificationElements,
 			[NotNull] IssueProcessor issueProcessor,
-			[CanBeNull] IExceptionStatistics exceptionStatistics)
+			[CanBeNull] IExceptionStatistics exceptionStatistics,
+			[CanBeNull] StringBuilder fullMsg)
 		{
 			List<QualitySpecificationElement> elementsWithNoCategory;
 			Dictionary<DataQualityCategory, List<QualitySpecificationElement>>
@@ -421,24 +481,30 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 
 			foreach (DataQualityCategory category in categories)
 			{
-				using (_msg.IncrementIndentation("Category '{0}':", category.Name))
+				string categoryMsg = $"Category '{category.Name}':";
+				fullMsg?.AppendLine(categoryMsg);
+
+				using (_msg.IncrementIndentation(categoryMsg))
 				{
 					List<QualitySpecificationElement> elementsForCategory =
 						elementsByCategory[category];
 
 					elementsForCategory.Sort(CompareElements);
 
-					LogElements(elementsForCategory, issueProcessor, exceptionStatistics);
+					LogElements(elementsForCategory, issueProcessor, exceptionStatistics, fullMsg);
 				}
 			}
 
 			if (elementsWithNoCategory.Count > 0)
 			{
+				fullMsg?.AppendLine("No category");
+
 				using (_msg.IncrementIndentation("No category:"))
 				{
 					elementsWithNoCategory.Sort(CompareElements);
 
-					LogElements(elementsWithNoCategory, issueProcessor, exceptionStatistics);
+					LogElements(elementsWithNoCategory, issueProcessor, exceptionStatistics,
+					            fullMsg);
 				}
 			}
 		}
@@ -446,7 +512,8 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 		private static void LogElements(
 			[NotNull] IEnumerable<QualitySpecificationElement> qualitySpecificationElements,
 			[NotNull] IssueProcessor issueProcessor,
-			[CanBeNull] IExceptionStatistics exceptionStatistics)
+			[CanBeNull] IExceptionStatistics exceptionStatistics,
+			[CanBeNull] StringBuilder fullMessage)
 		{
 			foreach (QualitySpecificationElement element in qualitySpecificationElements)
 			{
@@ -480,30 +547,37 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 					_msg.Info(sb.ToString());
 				}
 
-				if (exceptionStatistics != null)
-				{
-					IQualityConditionExceptionStatistics conditionStatistics =
-						exceptionStatistics.GetQualityConditionStatistics(qualityCondition);
+				fullMessage?.AppendLine($"  {sb}");
 
-					if (conditionStatistics != null)
+				IQualityConditionExceptionStatistics conditionStatistics =
+					exceptionStatistics?.GetQualityConditionStatistics(qualityCondition);
+
+				if (conditionStatistics == null)
+				{
+					continue;
+				}
+
+				if (conditionStatistics.UnknownTableNames.Count == 0)
+				{
+					continue;
+				}
+
+				using (_msg.IncrementIndentation())
+				{
+					const string ignoreMsg =
+						"Exception objects were ignored for this condition due to unknown table names:";
+
+					_msg.Warn(ignoreMsg);
+					fullMessage?.AppendLine($"    {ignoreMsg}");
+
+					foreach (string tableName in conditionStatistics.UnknownTableNames)
 					{
-						if (conditionStatistics.UnknownTableNames.Count > 0)
-						{
-							using (_msg.IncrementIndentation())
-							{
-								_msg.Warn(
-									"Exception objects were ignored for this condition due to unknown table names:");
-								foreach (string tableName in conditionStatistics.UnknownTableNames)
-								{
-									_msg.WarnFormat(
-										"- {0}: used in {1} exception object(s)",
-										tableName,
-										conditionStatistics
-											.GetExceptionObjectsInvolvingUnknownTableName(
-												tableName).Count);
-								}
-							}
-						}
+						string exceptionMsg =
+							$"- {tableName}: used in " +
+							$"{conditionStatistics.GetExceptionObjectsInvolvingUnknownTableName(tableName).Count} exception object(s)";
+
+						_msg.WarnFormat(exceptionMsg);
+						fullMessage?.AppendLine($"    {exceptionMsg}");
 					}
 				}
 			}
@@ -584,11 +658,10 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 		private IList<ITest> CreateTests(
 			[NotNull] QualitySpecification qualitySpecification,
 			[NotNull] IDatasetContext datasetContext,
-			out VerificationElements verificationElements)
+			out VerificationElements verificationElements,
+			out QualityVerification qualityVerification)
 		{
 			IOpenDataset datasetOpener = _openDatasetFactory(datasetContext);
-
-			QualityVerification qualityVerification;
 
 			IList<ITest> testList = QualityVerificationUtils.GetTestsAndDictionaries(
 				qualitySpecification, datasetOpener,

@@ -2,7 +2,6 @@ using System;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Processing.Domain;
 
 namespace ProSuite.Processing.AGP.Core.Domain
 {
@@ -18,15 +17,9 @@ namespace ProSuite.Processing.AGP.Core.Domain
 		public double XYTolerance { get; }
 		public SpatialReference SpatialReference { get; }
 
-		public ProcessingDataset(ProcessDatasetName datasetName, FeatureClass featureClass,
+		public ProcessingDataset(string datasetName, FeatureClass featureClass, string whereClause,
 		                         IProcessingSelection processingSelection = null,
 		                         IProcessingSymbology processingSymbology = null)
-			: this(datasetName.DatasetName, featureClass, datasetName.WhereClause,
-				processingSelection, processingSymbology) { }
-
-		private ProcessingDataset(string datasetName, FeatureClass featureClass, string whereClause,
-		                          IProcessingSelection processingSelection = null,
-		                          IProcessingSymbology processingSymbology = null)
 		{
 			DatasetName = datasetName ?? throw new ArgumentNullException(nameof(datasetName));
 			FeatureClass = featureClass ?? throw new ArgumentNullException(nameof(featureClass));

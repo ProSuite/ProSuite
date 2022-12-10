@@ -1,129 +1,94 @@
 using System;
 using System.Collections.Generic;
-using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Text;
+using System.Globalization;
+using System.Text;
 using ProSuite.Processing.Utils;
 
 namespace ProSuite.Processing.Evaluation
 {
 	/// <summary>
-	/// A wrapper around <see cref="ExpressionEvaluator"/>.
-	/// Useful to represent parameters that are specified
-	/// as expressions (strings) instead of actual values.
+	/// An expression that can be evaluated to yield
+	/// a value of type <typeparamref name="T"/>.
 	/// </summary>
-	public class ImplicitValue
+	public class ImplicitValue<T> // TODO Consider rename Expression? Or too general term?
 	{
 		private readonly ExpressionEvaluator _evaluator;
-		private readonly Stack<object> _stack;
-		private StandardEnvironment _environment;
 
-		private ImplicitValue(
-			[NotNull] ExpressionEvaluator evaluator, bool isMissing, string name = null)
+		public string Expression { get; }
+		public string Name { get; private set; }
+
+		public ImplicitValue(string expression, string name = null)
+		{
+			Expression = expression.Canonical(); // may be null (i.e., missing)
+			Name = name; // may be null
+
+			// TODO consider: allow [ <Name> = ] <Expression> and if <Name>
+			//      is given, use it for Name (argument name may override)
+			// This way the expression can name itself! (Also update ToString() accordingly)
+
+			_evaluator = Expression == null
+				             ? null
+				             : ExpressionEvaluator.Create(Expression);
+		}
+
+		public static ImplicitValue<double> Literal(double value)
+		{
+			var text = Convert.ToString(value, CultureInfo.InvariantCulture);
+			return new ImplicitValue<double>(text);
+		}
+
+		public static ImplicitValue<bool> Literal(bool value)
+		{
+			var text = Convert.ToString(value, CultureInfo.InvariantCulture);
+			return new ImplicitValue<bool>(text);
+		}
+
+		public static ImplicitValue<string> Literal(string value)
+		{
+			var sb = new StringBuilder();
+			EvaluatorEngine.FormatLiteral(value, sb);
+			return new ImplicitValue<string>(sb.ToString());
+		}
+
+		public static implicit operator ImplicitValue<T>(string expr)
+		{
+			// important: cast null to null, not some "null expr"
+			return string.IsNullOrWhiteSpace(expr) ? null : new ImplicitValue<T>(expr);
+		}
+
+		public static implicit operator string(ImplicitValue<T> expr)
+		{
+			return expr?.Expression;
+		}
+
+		/// <summary>
+		/// Attach a name to this expression (may be useful
+		/// for creating meaningful error messages).
+		/// </summary>
+		public ImplicitValue<T> SetName(string name)
 		{
 			Name = name;
-			IsMissing = isMissing;
-
-			_evaluator = evaluator;
-			_stack = new Stack<object>();
-			_environment = new StandardEnvironment();
+			return this;
 		}
 
-		#region Factory
-
 		/// <summary>
-		/// An implicit value for the given <paramref name="expression"/>.
-		/// If <paramref name="expression"/> is missing (<c>null</c> or empty),
-		/// the implicit value will always evaluate to <c>null</c>.
-		/// The <paramref name="name"/>, if present, serves as a prefix
-		/// in exception messages.
+		/// Evaluate this expression in the given environment.
+		/// The result value will be cast to <typeparamref name="T"/>.
+		/// If the expression is empty/missing or evaluates to null,
+		/// the given <paramref name="defaultValue"/> will be returned.
 		/// </summary>
-		public static ImplicitValue Create(
-			[CanBeNull] string expression, string name = null)
+		public T Evaluate(IEvaluationEnvironment environment, T defaultValue = default, Stack<object> stack = null)
 		{
-			expression = StringUtils.Trim(expression);
-
-			try
+			if (_evaluator == null)
 			{
-				if (string.IsNullOrEmpty(expression))
-				{
-					var evaluator = ExpressionEvaluator.CreateConstant(null);
-					return new ImplicitValue(evaluator, true, name);
-				}
-				else
-				{
-					var evaluator = ExpressionEvaluator.Create(expression);
-					return new ImplicitValue(evaluator, false, name);
-				}
+				return defaultValue;
 			}
-			catch (Exception ex)
+
+			object value = Evaluate(environment, stack);
+
+			if (value is null)
 			{
-				throw Error($"Invalid expression: {ex.Message}", name);
-			}
-        }
-
-		/// <summary>
-		/// An implicit value that always evaluates to the given
-		/// <paramref name="value"/>. The <paramref name="name"/>,
-		/// if present, serves as a prefix in exception messages.
-		/// </summary>
-		/// <remarks>
-		/// Use this when you have an actual value but need an
-		/// <see cref="ImplicitValue"/> instance.
-		/// </remarks>
-		public static ImplicitValue CreateConstant(object value, string name = null)
-		{
-			var evaluator = ExpressionEvaluator.CreateConstant(value);
-			return new ImplicitValue(evaluator, false, name);
-		}
-
-		/// <summary>
-		/// An implicit value that always evaluates to <c>null</c>.
-		/// </summary>
-		public static ImplicitValue Null { get; } = CreateConstant(null, "null");
-
-		#endregion
-
-		/// <summary>
-		/// The name of this implicit value.
-		/// Useful for composing good error messages.
-		/// </summary>
-		public string Name { get; }
-
-		/// <summary>
-		/// Returns true iff the expression was missing
-		/// and therefore always evaluates to <c>null</c>.
-		/// </summary>
-		public bool IsMissing { get; }
-
-		public StandardEnvironment Environment
-		{
-			[NotNull] get { return _environment; }
-			set { _environment = value ?? new StandardEnvironment(); }
-		}
-
-		/// <summary>
-		/// Evaluate the expression in the current environment.
-		/// </summary>
-		/// <returns>The actual value (can be null)</returns>
-		public object Evaluate()
-		{
-			return _evaluator.Evaluate(_environment, _stack);
-		}
-
-		/// <summary>
-		/// Evaluate the expression in the current environment.
-		/// Cast the result to <typeparamref name="T"/> and return it.
-		/// </summary>
-		/// <typeparam name="T">Any value type (like int, double, bool)</typeparam>
-		/// <param name="nullValue">The value to return if expression is null (optional)</param>
-		/// <returns>The actual value (of type <typeparamref name="T"/>)</returns>
-		public T Evaluate<T>(T? nullValue = null) where T : struct
-		{
-			object value = _evaluator.Evaluate(_environment, _stack);
-
-			if (value == null)
-			{
-				return ConvertNull(nullValue);
+				return defaultValue;
 			}
 
 			try
@@ -141,7 +106,7 @@ namespace ProSuite.Processing.Evaluation
 
 					if (result == null)
 					{
-						return ConvertNull(nullValue);
+						return defaultValue;
 					}
 
 					return (T) result;
@@ -156,17 +121,31 @@ namespace ProSuite.Processing.Evaluation
 			}
 		}
 
-		private T ConvertNull<T>(T? nullValue) where T : struct
+		private object Evaluate(IEvaluationEnvironment environment, Stack<object> stack = null)
 		{
-			if (nullValue.HasValue)
+			try
 			{
-				return nullValue.Value;
+				return _evaluator.Evaluate(environment, stack ?? new Stack<object>());
 			}
-
-			throw ConversionError(null, typeof(T), Name);
+			catch (EvaluationException ex)
+			{
+				throw EvaluationError(_evaluator.Clause, Name, ex);
+			}
 		}
 
-		private static EvaluationException ConversionError(object value, Type targetType, string name = null, Exception inner = null)
+		public override string ToString()
+		{
+			return Expression ?? string.Empty;
+		}
+
+		private static EvaluationException EvaluationError(
+			string expr, string name = null, Exception inner = null)
+		{
+			return Error($"Cannot evaluate {expr}", name, inner);
+		}
+
+		private static EvaluationException ConversionError(
+			object value, Type targetType, string name = null, Exception inner = null)
 		{
 			string message;
 
@@ -197,90 +176,6 @@ namespace ProSuite.Processing.Evaluation
 			}
 
 			return new EvaluationException(message, inner);
-		}
-
-		[Obsolete]
-		public ImplicitValue SetRandomSeed(int seed)
-		{
-			_environment.RandomSeed = seed;
-			return this;
-		}
-
-		/// <summary>
-		/// Define <paramref name="name"/> to be <paramref name="value"/>
-		/// in the environment where the expression will be evaluated.
-		/// Later definitions overwrite earlier definitions of the same name.
-		/// </summary>
-		/// <returns>This instance (for convenience).</returns>
-		public ImplicitValue DefineValue(string name, [CanBeNull] object value)
-		{
-			_environment.DefineValue(name, value);
-			return this;
-		}
-
-		public ImplicitValue ForgetValue(string name)
-		{
-			_environment.ForgetValue(name);
-			return this;
-		}
-
-		/// <summary>
-		/// Define all the values of the given <paramref name="row"/>
-		/// using the given <paramref name="qualifier"/> in the environment
-		/// where the expression will be evaluated.
-		/// </summary>
-		/// <returns>This instance (for convenience).</returns>
-		public ImplicitValue DefineFields([NotNull] IRowValues row,
-		                                  [CanBeNull] string qualifier = null)
-		{
-			var namedValues = (INamedValues) row;
-			return DefineFields(namedValues, qualifier);
-		}
-
-		/// <summary>
-		/// Define all the common values of the given <paramref name="rows"/>
-		/// using the given <paramref name="qualifier"/> in the environment
-		/// where the expression will be evaluated. If the value of a field
-		/// is not constant among all the <paramref name="rows"/>, it will
-		/// be undefined in the environment.
-		/// </summary>
-		/// <returns>This instance (for convenience).</returns>
-		public ImplicitValue DefineFields([NotNull] IEnumerable<IRowValues> rows,
-		                                     [CanBeNull] string qualifier = null)
-		{
-			var commonValues = new CommonValues(rows);
-			return DefineFields(commonValues, qualifier);
-		}
-
-		public ImplicitValue DefineFields([NotNull] INamedValues values,
-		                                  [CanBeNull] string qualifier = null)
-		{
-			_environment.DefineFields(values, qualifier);
-			return this;
-		}
-
-		public ImplicitValue ForgetFields(string qualifier)
-		{
-			_environment.ForgetFields(qualifier);
-			return this;
-		}
-
-		/// <summary>
-		/// Forget (undefine) all definitions, that is, undo all
-		/// calls to <see cref="DefineValue">DefineValue</see> and
-		/// <see cref="DefineFields(IRowValues, string)">DefineFields</see>.
-		/// </summary>
-		/// <returns>This instance (for convenience).</returns>
-		public ImplicitValue ForgetAll()
-		{
-			_environment.ForgetAll();
-			return this;
-		}
-
-		public override string ToString()
-		{
-			string clause = _evaluator.Clause ?? "<missing>";
-			return string.IsNullOrEmpty(Name) ? clause : $"{Name} = {clause}";
 		}
 	}
 }

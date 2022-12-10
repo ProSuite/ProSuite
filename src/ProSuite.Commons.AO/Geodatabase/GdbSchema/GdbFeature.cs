@@ -39,7 +39,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		public override IGeometry ShapeCopy => Shape != null ? GeometryFactory.Clone(Shape) : null;
 		ITable IFeature.Table => Table;
-		IReadOnlyFeatureClass IReadOnlyFeature.FeatureClass => (IReadOnlyFeatureClass) Table;
+		IReadOnlyFeatureClass IReadOnlyFeature.FeatureClass => (IReadOnlyFeatureClass) ReadOnlyTable;
 
 		public override IGeometry Shape
 		{

@@ -33,13 +33,6 @@ namespace ProSuite.QA.Tests.Test
 		[TearDown]
 		public void TearDown()
 		{
-			if (_workspace == null)
-			{
-				return;
-			}
-
-			_workspace = null;
-
 			GC.Collect();
 			GC.WaitForPendingFinalizers();
 			// important, otherwise locks are still there in next test
@@ -110,12 +103,12 @@ namespace ProSuite.QA.Tests.Test
 		public void TooLong()
 		{
 			IDomain domain1 = DomainUtils.AddDomain(TestWorkspace,
-			                                        CreateCVDomain("PRE_FIELD1_ABC"));
+			                                        CreateCVDomain("PRE_FIELD1_ABL"));
 			IDomain domain2 = DomainUtils.AddDomain(TestWorkspace,
-			                                        CreateRangeDomain("PRE_FIELD2"));
+			                                        CreateRangeDomain("PRE_FIELD4"));
 
 			IField field1 = FieldUtils.CreateField("FIELD1", esriFieldType.esriFieldTypeInteger);
-			IField field2 = FieldUtils.CreateField("FIELD2", esriFieldType.esriFieldTypeInteger);
+			IField field2 = FieldUtils.CreateField("FIELD4", esriFieldType.esriFieldTypeInteger);
 			IField field3 = FieldUtils.CreateTextField("FIELD3", 20);
 
 			((IFieldEdit) field1).Domain_2 = domain1;
@@ -173,7 +166,7 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void DoesNotContainFieldName()
 		{
-			IDomain domain1 = DomainUtils.AddDomain(TestWorkspace, CreateCVDomain("PRE_Field1"));
+			IDomain domain1 = DomainUtils.AddDomain(TestWorkspace, CreateCVDomain("PRE_Field1_D"));
 			IDomain domain2 = DomainUtils.AddDomain(TestWorkspace,
 			                                        CreateRangeDomain("PRE_FIELD2"));
 

@@ -28,7 +28,7 @@ namespace ProSuite.QA.Tests.Test
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			TestUtils.InitializeLicense();
+			TestUtils.InitializeLicense(activateAdvancedLicense:true);
 
 			_testWs = TestWorkspaceUtils.CreateInMemoryWorkspace("QaMustBeNearOtherTest");
 		}

@@ -1,6 +1,7 @@
 using System;
 using ArcGIS.Core.Geometry;
 using ProSuite.Processing.AGP.Core.Utils;
+using ProSuite.Processing.Domain;
 
 namespace ProSuite.Processing.AGP.Core.Domain
 {
@@ -11,7 +12,7 @@ namespace ProSuite.Processing.AGP.Core.Domain
 			throw new NotImplementedException();
 		}
 
-		public Geometry QueryDrawingOutline(PseudoFeature feature, OutlineType outlineType)
+		public Geometry QueryDrawingOutline(PseudoFeature feature, OutlineType outlineType, IMapContext mapContext)
 		{
 			throw new NotImplementedException();
 		}

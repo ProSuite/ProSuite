@@ -5,7 +5,7 @@ using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.AO.Test;
+using ProSuite.Commons.AO.Licensing;
 using ProSuite.QA.Container.Test;
 using ProSuite.QA.Tests.Test.Construction;
 using ProSuite.QA.Tests.Test.TestRunners;
@@ -16,16 +16,18 @@ namespace ProSuite.QA.Tests.Test.Transformer
 	[TestFixture]
 	public class TrDissolveTest
 	{
+		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
+
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			TestUtils.InitializeLicense();
+			_lic.Checkout(EsriProduct.ArcEditor);
 		}
 
 		[OneTimeTearDown]
 		public void TearDownFixture()
 		{
-			TestUtils.ReleaseLicense();
+			_lic.Release();
 		}
 
 		[Test]

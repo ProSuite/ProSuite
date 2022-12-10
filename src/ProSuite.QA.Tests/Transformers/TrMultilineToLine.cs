@@ -5,6 +5,7 @@ using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.QA.Container;
 using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 
@@ -14,8 +15,60 @@ namespace ProSuite.QA.Tests.Transformers
 	[GeometryTransformer]
 	public class TrMultilineToLine : TrGeometryTransform
 	{
+		private class UniqueIdKey : IUniqueIdKey
+		{
+			bool IUniqueIdKey.IsVirtuell => BaseOid < 0;
+
+			public int BaseOid { get; }
+			public int PartIdx { get; }
+
+			public UniqueIdKey(int baseOid, int partIdx)
+			{
+				BaseOid = baseOid;
+				PartIdx = partIdx;
+			}
+
+			public GdbFeature BaseFeature { get; set; }
+
+			public IList<InvolvedRow> GetInvolvedRows()
+			{
+				return InvolvedRowUtils.GetInvolvedRows(BaseFeature);
+			}
+
+			public override string ToString() =>
+				$"Oid:{BaseOid}; Part:{PartIdx};";
+		}
+
+		private class UniqueIdKeyComparer : IEqualityComparer<UniqueIdKey>
+		{
+			public bool Equals(UniqueIdKey x, UniqueIdKey y)
+			{
+				if (x == y)
+				{
+					return true;
+				}
+
+				if (x == null || y == null)
+				{
+					return false;
+				}
+
+				return x.BaseOid == y.BaseOid &&
+				       x.PartIdx == y.PartIdx;
+			}
+
+			public int GetHashCode(UniqueIdKey obj)
+			{
+				return obj.BaseOid + 29 * obj.PartIdx;
+			}
+		}
+
+
 		public const string AttrPartIndex = "PartIndex";
 		private int? _iAttrPart;
+		private readonly SimpleUniqueIdProvider<UniqueIdKey> _uniqueIdProvider =
+			new SimpleUniqueIdProvider<UniqueIdKey>(new UniqueIdKeyComparer());
+
 
 		[DocTr(nameof(DocTrStrings.TrMultilineToLine_0))]
 		public TrMultilineToLine(
@@ -45,7 +98,8 @@ namespace ProSuite.QA.Tests.Transformers
 				IGeometry singleLine = GeometryFactory.Clone(geom.Geometry[i]);
 				IPolyline line = GeometryFactory.CreatePolyline(singleLine);
 
-				GdbFeature feature = CreateFeature();
+				UniqueIdKey key = new UniqueIdKey(sourceOid ?? -1, i);
+				GdbFeature feature = CreateFeature(_uniqueIdProvider.GetUniqueId(key));
 				feature.Shape = line;
 
 				_iAttrPart = _iAttrPart ?? feature.Fields.FindField(AttrPartIndex);

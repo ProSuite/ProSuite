@@ -29,6 +29,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		private string _oidFieldName;
 
+		// TODO: switch to long in RO-table, use separate range (start at Int64.MinValue?)
 		private static int _nextObjectClassId;
 
 		/// <summary>
@@ -50,6 +51,9 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			// NOTE: Do not use -1 as 'special number' because the client could use negative numbers,
 			// such as Pro class handles as ObjectClassId. We should not restrict the range to positive
 			// numbers only.
+			// Additionally, the doc states:
+			// Those feature classes and tables that are in the database, but not registered with
+			// the geodatabase will always have an object class ID of -1.
 			if (objectClassId != null)
 			{
 				ObjectClassID = objectClassId.Value;

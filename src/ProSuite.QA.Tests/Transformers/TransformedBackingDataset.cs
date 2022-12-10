@@ -65,15 +65,15 @@ namespace ProSuite.QA.Tests.Transformers
 
 		protected IEnumerable<Involved> EnumKnownInvolveds(
 			[NotNull] IReadOnlyFeature baseFeature,
-			[CanBeNull] BoxTree<VirtualRow> knownRows,
-			[NotNull] Dictionary<VirtualRow, Involved> involvedDict)
+			[CanBeNull] BoxTree<IReadOnlyFeature> knownRows,
+			[NotNull] Dictionary<IReadOnlyFeature, Involved> involvedDict)
 		{
 			if (knownRows == null)
 			{
 				yield break;
 			}
 
-			foreach (BoxTree<VirtualRow>.TileEntry entry in
+			foreach (BoxTree<IReadOnlyFeature>.TileEntry entry in
 			         knownRows.Search(QaGeometryUtils.CreateBox(baseFeature.Extent)))
 			{
 				if (! involvedDict.TryGetValue(entry.Value, out Involved knownInvolved))

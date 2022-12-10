@@ -145,6 +145,15 @@ namespace ProSuite.Microservices.Server.AO.Test
 			// Typical output on a reasonable laptop:
 			//Dehydration: 45ms
 			//Rehydration: 20ms
+
+			// x86, ArcGIS 10.8, Ryzen 9 5900HS:
+			//Dehydration: 30ms
+			//Rehydration: 22ms
+
+			//
+			// x64, ArcGIS 10.9.1, Ryzen 9 5900HS:
+			//Dehydration: 24ms
+			//Rehydration: 6ms
 		}
 
 		[Test]
@@ -277,8 +286,8 @@ namespace ProSuite.Microservices.Server.AO.Test
 			foreach (IFeature original in features)
 			{
 				IFeature rehydratedFeature = rehydrated.Single(
-					f => GdbObjectUtils.IsSameObject(original, f,
-					                                 ObjectClassEquality.SameTableSameVersion));
+					f => original.OID == f.OID &&
+					     original.Class.ObjectClassID == f.Class.ObjectClassID);
 
 				Assert.AreEqual(original.Class.ObjectClassID,
 				                rehydratedFeature.Class.ObjectClassID);
@@ -287,6 +296,20 @@ namespace ProSuite.Microservices.Server.AO.Test
 				                DatasetUtils.GetName(rehydratedFeature.Class));
 
 				AssertSameFeature(original, rehydratedFeature);
+
+				// NOTE: For consistent dictionary usage, we need to stick to AO-equality
+				// and GetHashCode implementation (reference-equals only). For actual equality
+				// of different instances we need a different concept:
+				// - TableIdentity?
+				// - Implement IEquatable.Equals<T> (which is a bit of an abuse tbh)
+				// - Separate interface(s): ITableEquality(RO...)
+				// - The client code remains in charge to determine what's equal
+				bool sameObject = GdbObjectUtils.IsSameObject(
+					original, rehydratedFeature, ObjectClassEquality.SameTableSameVersion);
+
+				// Counter-intuitive, but equality so far means reference equality for ITable
+				// implementations
+				Assert.IsFalse(sameObject);
 			}
 		}
 
@@ -319,10 +342,9 @@ namespace ProSuite.Microservices.Server.AO.Test
 
 			if (feature.Shape != null)
 			{
-				Assert.IsTrue(SpatialReferenceUtils.AreEqual(feature.Shape.SpatialReference,
-				                                             rehydrated.Shape.SpatialReference,
-				                                             true,
-				                                             true));
+				Assert.IsTrue(SpatialReferenceUtils.AreEqual(
+					              feature.Shape.SpatialReference, rehydrated.Shape.SpatialReference,
+					              true, true));
 			}
 		}
 	}

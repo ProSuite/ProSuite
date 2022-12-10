@@ -157,8 +157,8 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 
 				if (! File.Exists(reportDefinition.TemplatePath))
 				{
-					_msg.WarnFormat("Template file does not exist: {0}",
-					                reportDefinition.TemplatePath);
+					WarnFileNotExists(reportDefinition.TemplatePath);
+
 					continue;
 				}
 
@@ -167,12 +167,11 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 				HtmlQualitySpecification model =
 					SpecificationReportUtils.CreateHtmlQualitySpecification(qualitySpecification,
 						reportDefinition);
-				SpecificationReportUtils.RenderHtmlQualitySpecification(
-					model,
-					reportDefinition.TemplatePath,
-					filePath);
 
-				reportFilePaths.Add(filePath);
+				string reportFilePath = SpecificationReportUtils.RenderHtmlQualitySpecification(
+					model, reportDefinition.TemplatePath, filePath);
+
+				reportFilePaths.Add(reportFilePath);
 			}
 
 			return reportFilePaths;
@@ -188,7 +187,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 
 			XmlDataQualityDocumentCache documentCache =
 				XmlDataQualityUtils.GetDocumentCache(
-					document, new[] {xmlQualitySpecification});
+					document, new[] { xmlQualitySpecification });
 
 			bool hasUndefinedWorkspaceReference;
 			IList<XmlWorkspace> xmlWorkspaces = XmlDataQualityUtils.GetReferencedWorkspaces(
@@ -251,8 +250,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 					                                            defaultTemplateDirectory);
 				if (! File.Exists(reportDefinition.TemplatePath))
 				{
-					_msg.WarnFormat("Template file does not exist: {0}",
-					                reportOptions.TemplatePath);
+					WarnFileNotExists(reportOptions.TemplatePath);
 					continue;
 				}
 
@@ -265,20 +263,23 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 
 			foreach (HtmlReportDefinition reportDefinition in reportDefinitions)
 			{
-				WriteHtmlReport(qualitySpecification, directory,
-				                reportDefinition,
-				                issueStatistics, verificationReport,
-				                verificationReportFileName,
-				                issueGdbPath,
-				                issueMapFilePaths,
-				                filePaths,
-				                qualitySpecificationReportFilePaths);
+				string reportFilePath =
+					WriteHtmlReport(qualitySpecification, directory,
+					                reportDefinition,
+					                issueStatistics, verificationReport,
+					                verificationReportFileName,
+					                issueGdbPath,
+					                issueMapFilePaths,
+					                filePaths,
+					                qualitySpecificationReportFilePaths);
+
+				_msg.InfoFormat("Html report written to {0}", reportFilePath);
 			}
 
 			return filePaths;
 		}
 
-		private static void WriteHtmlReport(
+		private static string WriteHtmlReport(
 			[NotNull] QualitySpecification qualitySpecification,
 			[NotNull] string directory,
 			[NotNull] HtmlReportDefinition reportDefinition,
@@ -323,7 +324,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 			_msg.DebugFormat("Writing html report to {0}", reportFilePath);
 			FileSystemUtils.WriteTextFile(output, reportFilePath);
 
-			_msg.InfoFormat("Html report written to {0}", reportFilePath);
+			return reportFilePath;
 		}
 
 		[NotNull]
@@ -348,6 +349,13 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 
 				candidateName = $"[{candidateName}]";
 			}
+		}
+
+		private static void WarnFileNotExists(string filePath)
+		{
+			string warning = $"Template file does not exist: {filePath}";
+
+			_msg.WarnFormat(warning);
 		}
 	}
 }

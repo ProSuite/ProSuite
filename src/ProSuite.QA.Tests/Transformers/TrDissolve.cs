@@ -155,9 +155,9 @@ namespace ProSuite.QA.Tests.Transformers
 			private TransformedDataset BackingDs => (TransformedDataset) BackingDataset;
 
 			[CanBeNull]
-			public BoxTree<VirtualRow> KnownRows { get; private set; }
+			public BoxTree<IReadOnlyFeature> KnownRows { get; private set; }
 
-			public void SetKnownTransformedRows(IEnumerable<VirtualRow> knownRows)
+			public void SetKnownTransformedRows(IEnumerable<IReadOnlyRow> knownRows)
 			{
 				if (NeighborSearchOption != SearchOption.All)
 				{
@@ -165,7 +165,7 @@ namespace ProSuite.QA.Tests.Transformers
 				}
 
 				KnownRows = BoxTreeUtils.CreateBoxTree(
-					knownRows?.Select(x => x as VirtualRow),
+					knownRows?.Select(x => x as IReadOnlyFeature),
 					getBox: x => x?.Shape != null
 						             ? QaGeometryUtils.CreateBox(x.Shape)
 						             : null);
@@ -270,7 +270,7 @@ namespace ProSuite.QA.Tests.Transformers
 				}
 			}
 
-			private IEnumerable<VirtualRow> DissolveSearchedLineFeatures(
+			private IEnumerable<IReadOnlyFeature> DissolveSearchedLineFeatures(
 				IQueryFilter filter, bool recycling)
 			{
 				// TODO: implement GroupBy
@@ -279,8 +279,8 @@ namespace ProSuite.QA.Tests.Transformers
 				IRelationalOperator queryEnv =
 					(IRelationalOperator) (filter as ISpatialFilter)?.Geometry.Envelope;
 				IEnvelope fullBox = null;
-				Dictionary<VirtualRow, Involved> involvedDict =
-					new Dictionary<VirtualRow, Involved>();
+				Dictionary<IReadOnlyFeature, Involved> involvedDict =
+					new Dictionary<IReadOnlyFeature, Involved>();
 				foreach (var baseRow in GetBaseFeatures(filter, recycling))
 				{
 					IReadOnlyFeature baseFeature = (IReadOnlyFeature) baseRow;
@@ -336,7 +336,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 				if (Resulting.KnownRows != null && filter is ISpatialFilter sp)
 				{
-					foreach (BoxTree<VirtualRow>.TileEntry entry in
+					foreach (BoxTree<IReadOnlyFeature>.TileEntry entry in
 					         Resulting.KnownRows.Search(QaGeometryUtils.CreateBox(sp.Geometry)))
 					{
 						yield return entry.Value;
@@ -389,7 +389,7 @@ namespace ProSuite.QA.Tests.Transformers
 				}
 			}
 
-			private VirtualRow CreateResultRow(List<IReadOnlyRow> rows)
+			private IReadOnlyFeature CreateResultRow(List<IReadOnlyRow> rows)
 			{
 				IGeometry shape;
 				if (rows.Count == 1)
@@ -421,9 +421,9 @@ namespace ProSuite.QA.Tests.Transformers
 				return shapeDict;
 			}
 
-			private VirtualRow CreateResultRow(IGeometry shape,
-			                                   IList<IReadOnlyRow> rows,
-			                                   bool generateNewOid = false)
+			private IReadOnlyFeature CreateResultRow(IGeometry shape,
+			                                         IList<IReadOnlyRow> rows,
+			                                         bool generateNewOid = false)
 			{
 				Assert.True(rows.Count > 0, "No rows to dissolve");
 
@@ -460,7 +460,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 				dissolved.Shape = shape;
 
-				return dissolved;
+				return (IReadOnlyFeature)dissolved;
 			}
 
 			private IEnumerable<VirtualRow> DissolveSearchedAreaFeatures(IQueryFilter filter)
@@ -474,7 +474,7 @@ namespace ProSuite.QA.Tests.Transformers
 				}
 			}
 
-			private IEnumerable<VirtualRow> DissolveSearchedAreaFeatures(IQueryFilter filter,
+			private IEnumerable<IReadOnlyFeature> DissolveSearchedAreaFeatures(IQueryFilter filter,
 				bool searchAcrossTiles)
 			{
 				IEnvelope spatialFilterEnvelope = (filter as ISpatialFilter)?.Geometry?.Envelope;

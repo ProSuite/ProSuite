@@ -38,6 +38,9 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 			_trackCancel = trackCancel;
 		}
 
+		[CanBeNull]
+		public IVerificationProgressStreamer ProgressStreamer { get; set; }
+
 		public void Process([NotNull] VerificationProgressEventArgs progressArgs)
 		{
 			Assert.ArgumentNotNull(progressArgs, nameof(progressArgs));
@@ -63,8 +66,10 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 				case Step.ITestProcessing:
 					if (! _firstNonContainerTestReported)
 					{
-						_msg.Info(
-							"Verifying quality conditions based on non-container tests");
+						const string nonContainerMsg =
+							"Verifying quality conditions based on non-container tests";
+						_msg.Info(nonContainerMsg);
+						ProgressStreamer?.Info(nonContainerMsg);
 						_firstNonContainerTestReported = true;
 					}
 
@@ -75,7 +80,9 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 						qualityCondition = _elementsByTest[test].QualityCondition;
 					}
 
-					_msg.InfoFormat("  {0}", qualityCondition.Name);
+					string condName = $"  {qualityCondition.Name}";
+					_msg.Info(condName);
+					ProgressStreamer?.Info(condName);
 					break;
 
 				case Step.DataLoading:
@@ -91,83 +98,20 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 				case Step.TileProcessing:
 					if (! _firstTileProcessingReported)
 					{
-						_msg.Info(
-							"Verifying quality conditions per cached tiles (container tests)");
+						const string containerMsg =
+							"Verifying quality conditions per cached tiles (container tests)";
+						_msg.Info(containerMsg);
+						ProgressStreamer?.Info(containerMsg);
+
 						_firstTileProcessingReported = true;
 					}
 
-					_msg.InfoFormat("  Processing tile {0} of {1}: {2}",
-					                progressArgs.Current, progressArgs.Total,
-					                GeometryUtils.Format(progressArgs.CurrentBox));
-					break;
+					string tileProgressMsg =
+						$"  Processing tile {progressArgs.Current} of {progressArgs.Total}: " +
+						$"{GeometryUtils.Format(progressArgs.CurrentBox)}";
 
-				case Step.TileProcessed:
-					if (progressArgs.Current > 0)
-					{
-						_msg.Debug("  Tile processed");
-					}
-
-					break;
-			}
-		}
-
-		public void Process([NotNull] ProgressArgs progressArgs)
-		{
-			Assert.ArgumentNotNull(progressArgs, nameof(progressArgs));
-
-			// check for cancelled
-			switch (progressArgs.CurrentStep)
-			{
-				// case Step.TestRowCreated:  // once for each row to be tested
-				case Step.ITestProcessing:
-				case Step.TileProcessing:
-					if (CheckCancelled(_trackCancel, _cancellationTokenSource))
-					{
-						Cancelled = true;
-						return;
-					}
-
-					break;
-			}
-
-			// log messages
-			switch (progressArgs.CurrentStep)
-			{
-				case Step.ITestProcessing:
-					if (! _firstNonContainerTestReported)
-					{
-						_msg.Info(
-							"Verifying quality conditions based on non-container tests");
-						_firstNonContainerTestReported = true;
-					}
-
-					var test = (ITest) progressArgs.Tag;
-					QualityCondition qualityCondition =
-						_elementsByTest[test].QualityCondition;
-					_msg.InfoFormat("  {0}", qualityCondition.Name);
-					break;
-
-				case Step.DataLoading:
-					string tableName = (progressArgs.Tag as IReadOnlyTable)?.Name;
-					_msg.DebugFormat("    Loading data{0}...",
-					                 tableName == null ? string.Empty : $" ({tableName})");
-					break;
-
-				case Step.DataLoaded:
-					_msg.Debug("    Data loaded");
-					break;
-
-				case Step.TileProcessing:
-					if (! _firstTileProcessingReported)
-					{
-						_msg.Info(
-							"Verifying quality conditions per cached tiles (container tests)");
-						_firstTileProcessingReported = true;
-					}
-
-					_msg.InfoFormat("  Processing tile {0} of {1}: {2}",
-					                progressArgs.Current, progressArgs.Total,
-					                GeometryUtils.Format(progressArgs.CurrentEnvelope));
+					_msg.InfoFormat(tileProgressMsg);
+					ProgressStreamer?.Info(tileProgressMsg);
 					break;
 
 				case Step.TileProcessed:

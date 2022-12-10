@@ -33,8 +33,6 @@ namespace ProSuite.QA.Tests.Test
 		[TearDown]
 		public void TearDown()
 		{
-			_workspace = null;
-
 			GC.Collect();
 			GC.WaitForPendingFinalizers();
 			// important, otherwise locks are still there in next test
@@ -43,7 +41,7 @@ namespace ProSuite.QA.Tests.Test
 		[SetUp]
 		public void Setup()
 		{
-			_workspace = TestWorkspaceUtils.CreateTestFgdbWorkspace(GetType().Name);
+			_workspace = _workspace ?? TestWorkspaceUtils.CreateTestFgdbWorkspace(GetType().Name);
 		}
 
 		[Test]
@@ -94,14 +92,14 @@ namespace ProSuite.QA.Tests.Test
 		{
 			IDomain domain1 = DomainUtils.AddDomain(_workspace,
 			                                        DomainUtils.CreateCodedValueDomain(
-				                                        "DOM_FIELD1",
+				                                        "DOM_FIELD1_L",
 				                                        esriFieldType.esriFieldTypeInteger,
 				                                        "Description of DOM_FIELD1_toolong",
 				                                        new CodedValue(1, "Value 1"),
 				                                        new CodedValue(2, "Value 2")));
 			IDomain domain2 = DomainUtils.AddDomain(_workspace,
 			                                        DomainUtils.CreateCodedValueDomain(
-				                                        "DOM_FIELD2",
+				                                        "DOM_FIELD2_L",
 				                                        esriFieldType.esriFieldTypeInteger,
 				                                        "Description of DOM_FIELD2",
 				                                        new CodedValue(1, "Value 1"),
@@ -135,14 +133,14 @@ namespace ProSuite.QA.Tests.Test
 		{
 			IDomain domain1 = DomainUtils.AddDomain(_workspace,
 			                                        DomainUtils.CreateCodedValueDomain(
-				                                        "DOM_FIELD1",
+				                                        "DOM_FIELD1_D",
 				                                        esriFieldType.esriFieldTypeInteger,
 				                                        "Description of DOM_FIELD1",
 				                                        new CodedValue(1, "Value 1"),
 				                                        new CodedValue(2, "Value 2")));
 			IDomain domain2 = DomainUtils.AddDomain(_workspace,
 			                                        DomainUtils.CreateCodedValueDomain(
-				                                        "DOM_FIELD2",
+				                                        "DOM_FIELD2_D",
 				                                        esriFieldType.esriFieldTypeInteger,
 				                                        "Description of DOM_FIELD2",
 				                                        new CodedValue(1, "Value 1"),
@@ -150,7 +148,7 @@ namespace ProSuite.QA.Tests.Test
 
 			// domain (not used in table) with duplicate name
 			DomainUtils.AddDomain(_workspace,
-			                      DomainUtils.CreateCodedValueDomain("DOM_FIELD3",
+			                      DomainUtils.CreateCodedValueDomain("DOM_FIELD3_D",
 				                      esriFieldType
 					                      .esriFieldTypeInteger,
 				                      "Description of DOM_FIELD2",
@@ -193,14 +191,14 @@ namespace ProSuite.QA.Tests.Test
 		{
 			IDomain domain1 = DomainUtils.AddDomain(_workspace,
 			                                        DomainUtils.CreateCodedValueDomain(
-				                                        "DOM_FIELD1",
+				                                        "DOM_FIELD1_O",
 				                                        esriFieldType.esriFieldTypeInteger,
 				                                        "Description of DOM_FIELD1",
 				                                        new CodedValue(1, "Value 1"),
 				                                        new CodedValue(2, "Value 2")));
 			IDomain domain2 = DomainUtils.AddDomain(_workspace,
 			                                        DomainUtils.CreateCodedValueDomain(
-				                                        "DOM_FIELD2",
+				                                        "DOM_FIELD2_O",
 				                                        esriFieldType.esriFieldTypeInteger,
 				                                        "Description of DOM_FIELD2",
 				                                        new CodedValue(1, "Value 1"),
@@ -208,7 +206,7 @@ namespace ProSuite.QA.Tests.Test
 
 			// domain (not used in table) with duplicate name - this should not be reported since duplicates are searched in target (?)
 			DomainUtils.AddDomain(_workspace,
-			                      DomainUtils.CreateCodedValueDomain("DOM_FIELD3",
+			                      DomainUtils.CreateCodedValueDomain("DOM_FIELD3_O",
 				                      esriFieldType
 					                      .esriFieldTypeInteger,
 				                      "Description of DOM_FIELD2",

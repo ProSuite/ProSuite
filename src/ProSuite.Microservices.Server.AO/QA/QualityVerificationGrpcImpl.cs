@@ -457,21 +457,23 @@ namespace ProSuite.Microservices.Server.AO.QA
 						};
 				}
 
-				// Stand-alone: Currently Xml or specification list (WorkContextMsg is null)
 				if (useStandaloneService)
 				{
-					// TODO: Same final response
-					return VerifyStandaloneXmlCore(specification, request.Parameters,
-					                               distributedTestRunner,
-					                               responseStreamer, trackCancel);
+					// Stand-alone: Xml or specification list (WorkContextMsg is null!)
+					verification = VerifyStandaloneXmlCore(
+						specification, request.Parameters,
+						distributedTestRunner, responseStreamer, trackCancel, true);
 				}
+				else
+				{
+					// DDX:
+					verification = VerifyDdxQualityCore(request, distributedTestRunner,
+					                                    responseStreamer, trackCancel,
+					                                    out qaService);
 
-				// DDX:
-				verification = VerifyDdxQualityCore(request, distributedTestRunner,
-				                                    responseStreamer, trackCancel, out qaService);
-
-				deletableAllowedErrorRefs.AddRange(
-					GetDeletableAllowedErrorRefs(request.Parameters, qaService));
+					deletableAllowedErrorRefs.AddRange(
+						GetDeletableAllowedErrorRefs(request.Parameters, qaService));
+				}
 			}
 			catch (Exception e)
 			{
@@ -529,9 +531,12 @@ namespace ProSuite.Microservices.Server.AO.QA
 					default: throw new ArgumentOutOfRangeException();
 				}
 
-				return VerifyStandaloneXmlCore(qualitySpecification, parameters,
-				                               distributedTestRunner, responseStreamer,
-				                               trackCancel);
+				VerifyStandaloneXmlCore(qualitySpecification, parameters,
+				                        distributedTestRunner, responseStreamer,
+				                        trackCancel, false);
+				return trackCancel.Continue()
+					       ? ServiceCallStatus.Finished
+					       : ServiceCallStatus.Cancelled;
 			}
 			catch (Exception e)
 			{
@@ -575,13 +580,16 @@ namespace ProSuite.Microservices.Server.AO.QA
 			return verification;
 		}
 
-		private ServiceCallStatus VerifyStandaloneXmlCore<T>(
+		private QualityVerification VerifyStandaloneXmlCore<T>(
 			[NotNull] QualitySpecification qualitySpecification,
 			[NotNull] VerificationParametersMsg parameters,
 			[CanBeNull] DistributedTestRunner distributedTestrunner,
 			[NotNull] VerificationProgressStreamer<T> responseStreamer,
-			ITrackCancel trackCancel) where T : class
+			ITrackCancel trackCancel,
+			bool logToResponseStreamer) where T : class
 		{
+			// TODO: Remove parameter logToResponseStreamer once StandaloneXml service is removed
+
 			IGeometry perimeter =
 				ProtobufGeometryUtils.FromShapeMsg(parameters.Perimeter);
 
@@ -602,6 +610,11 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			xmlService.DistributedTestRunner = distributedTestrunner;
 
+			if (logToResponseStreamer)
+			{
+				xmlService.ProgressStreamer = responseStreamer;
+			}
+
 			Model primaryModel =
 				StandaloneVerificationUtils.GetPrimaryModel(qualitySpecification);
 			responseStreamer.KnownIssueSpatialReference =
@@ -612,21 +625,16 @@ namespace ProSuite.Microservices.Server.AO.QA
 			if (ExternalIssueRepositoryUtils.IssueRepositoryExists(
 				    parameters.IssueFileGdbPath, IssueRepositoryType.FileGdb))
 			{
-				_msg.WarnFormat("The {0} workspace '{1}' already exists",
-				                issueRepositoryType, parameters.IssueFileGdbPath);
+				responseStreamer.Warning(
+					$"The {issueRepositoryType} workspace '{parameters.IssueFileGdbPath}' already exists");
 
-				// TODO: Failed? More info is required (Warning messages..)
-				return ServiceCallStatus.Finished;
+				return null;
 			}
 
 			xmlService.ExecuteVerification(qualitySpecification, aoi, parameters.TileSize,
 			                               trackCancel);
 
-			// TODO: Final result message (error, warning count, row count with stop conditions, fulfilled)
-
-			return trackCancel.Continue()
-				       ? ServiceCallStatus.Finished
-				       : ServiceCallStatus.Cancelled;
+			return xmlService.Verification;
 		}
 
 		private bool IsStandAloneVerification([NotNull] VerificationRequest request,

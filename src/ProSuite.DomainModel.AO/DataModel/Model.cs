@@ -57,6 +57,8 @@ namespace ProSuite.DomainModel.AO.DataModel
 		// private IWorkspaceProxy _workspaceProxy;
 		private bool? _isMasterDatabaseAccessible;
 
+		private string _lastMasterDatabaseAccessError;
+
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		#endregion
@@ -227,6 +229,19 @@ namespace ProSuite.DomainModel.AO.DataModel
 				}
 
 				return _isMasterDatabaseAccessible.Value;
+			}
+		}
+
+		public string MasterDatabaseNoAccessReason
+		{
+			get
+			{
+				if (UserConnectionProvider == null)
+				{
+					return "No user connection provider defined for model";
+				}
+
+				return _lastMasterDatabaseAccessError;
 			}
 		}
 
@@ -1404,6 +1419,9 @@ namespace ProSuite.DomainModel.AO.DataModel
 			{
 				_msg.DebugFormat("Error opening master database for model {0}: {1}",
 				                 Name, e.Message);
+
+				_lastMasterDatabaseAccessError = e.Message;
+
 				return false;
 			}
 		}
