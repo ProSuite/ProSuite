@@ -622,13 +622,12 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			IssueRepositoryType issueRepositoryType = IssueRepositoryType.FileGdb;
 
-			if (parameters.IssueFileGdbPath.EndsWith("__"))
+			if (string.IsNullOrEmpty(parameters.IssueFileGdbPath))
 			{
-				// TODO: refactor , see also DistributedTestRunner lines ~ 250
 				xmlService.IssueRepositoryType = IssueRepositoryType.None;
 			}
 			else if (ExternalIssueRepositoryUtils.IssueRepositoryExists(
-				    parameters.IssueFileGdbPath, IssueRepositoryType.FileGdb))
+				         parameters.IssueFileGdbPath, IssueRepositoryType.FileGdb))
 			{
 				responseStreamer.Warning(
 					$"The {issueRepositoryType} workspace '{parameters.IssueFileGdbPath}' already exists");

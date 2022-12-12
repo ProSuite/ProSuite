@@ -87,8 +87,11 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 		                             string xmlVerificationReportPath,
 		                             string htmlReportPath)
 		{
-			_issueRepositoryDir = Path.GetDirectoryName(issueRepositoryPath);
-			_issueRepositoryName = Path.GetFileNameWithoutExtension(issueRepositoryPath);
+			if (! string.IsNullOrEmpty(issueRepositoryPath))
+			{
+				_issueRepositoryDir = Path.GetDirectoryName(issueRepositoryPath);
+				_issueRepositoryName = Path.GetFileNameWithoutExtension(issueRepositoryPath);
+			}
 
 			_xmlVerificationReportPath = xmlVerificationReportPath;
 

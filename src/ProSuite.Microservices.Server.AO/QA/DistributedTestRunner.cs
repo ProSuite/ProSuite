@@ -246,9 +246,6 @@ namespace ProSuite.Microservices.Server.AO.QA
 			{
 				VerificationRequest subRequest = subVerification.SubRequest;
 
-				// TODO: Refactor (see also QualityVerificationGrpcImpl line ~ 627
-				subRequest.Parameters.IssueFileGdbPath += "__";
-
 				SubResponse subResponse = subVerification.SubResponse;
 
 				Task<bool> task = Task.Run(
@@ -697,23 +694,40 @@ namespace ProSuite.Microservices.Server.AO.QA
 			[NotNull] QualitySpecification specification,
 			[NotNull] IEnumerable<QualityCondition> qualityConditions)
 		{
-			var subRequest = new VerificationRequest(originalRequest);
-
-			subRequest.MaxParallelProcessing = 1;
-
 			var requestedConditionIds = new HashSet<int>(qualityConditions.Select(c => c.Id));
 
+			var excludedConditionIds = new List<int>();
 			foreach (QualitySpecificationElement element in specification.Elements)
 			{
 				QualityCondition condition = element.QualityCondition;
 
 				if (! requestedConditionIds.Contains(condition.Id))
 				{
-					subRequest.Specification.ExcludedConditionIds.Add(condition.Id);
+					excludedConditionIds.Add(condition.Id);
 				}
 			}
 
+			VerificationRequest subRequest =
+				CreateSubRequest(originalRequest, excludedConditionIds);
+
 			return new SubVerification(subRequest);
+		}
+
+		private static VerificationRequest CreateSubRequest(
+			[NotNull] VerificationRequest originalRequest,
+			[NotNull] IEnumerable<int> excludedConditionIds)
+		{
+			var subRequest = new VerificationRequest(originalRequest)
+			                 {
+				                 MaxParallelProcessing = 1
+			                 };
+
+			// Sub-requests must not write the issue GDB:
+			subRequest.Parameters.IssueFileGdbPath = string.Empty;
+
+			subRequest.Specification.ExcludedConditionIds.AddRange(excludedConditionIds);
+
+			return subRequest;
 		}
 
 		private IList<SubVerification> CreateTileParallelSubverifications(
@@ -780,10 +794,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 					filter = clone;
 				}
 
-				var subRequest = new VerificationRequest(originalRequest);
+				var subRequest = CreateSubRequest(originalRequest, excludedConditionIds);
 				subRequest.Parameters.Perimeter = ProtobufGeometryUtils.ToShapeMsg(filter);
-				subRequest.MaxParallelProcessing = 1;
-				subRequest.Specification.ExcludedConditionIds.AddRange(excludedConditionIds);
 
 				SubVerification subVerification = new SubVerification(subRequest);
 				subVerification.TileEnvelope = tileBox;
