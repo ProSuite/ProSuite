@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -445,13 +444,10 @@ namespace ProSuite.Microservices.Server.AO.QA
 				bool useStandaloneService =
 					IsStandAloneVerification(request, out QualitySpecification specification);
 
-				var issueCollection = new ConcurrentBag<IssueMsg>();
 				if (DistributedProcessingClient != null && request.MaxParallelProcessing > 1)
 				{
-					// allow directly adding issues found by client processes:
 					distributedTestRunner =
-						new DistributedTestRunner(
-							DistributedProcessingClient, request, issueCollection)
+						new DistributedTestRunner(DistributedProcessingClient, request)
 						{
 							QualitySpecification = specification
 						};
