@@ -89,6 +89,30 @@ namespace ProSuite.Processing.Utils
 
 			return new FieldSetter(text, parameterName);
 		}
+		
+		public static StringBuilder AppendSRef(this StringBuilder sb, string name, int wkid = 0)
+		{
+			if (name != null && wkid > 0)
+			{
+				sb.AppendFormat("{0} SRID {1}", name, wkid);
+				return sb;
+			}
+
+			if (name != null)
+			{
+				sb.Append(name);
+				return sb;
+			}
+
+			if (wkid > 0)
+			{
+				sb.AppendFormat("SRID {0}", wkid);
+				return sb;
+			}
+
+			sb.Append("no sref");
+			return sb;
+		}
 
 		public static StringBuilder AppendScale(this StringBuilder sb, double scaleDenom, string sep = null)
 		{

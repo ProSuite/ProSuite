@@ -4,12 +4,30 @@ using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Processing.AGP.Core.Domain;
 using ProSuite.Processing.Utils;
 
 namespace ProSuite.Processing.AGP.Core.Utils
 {
 	public static class ProProcessingUtils
 	{
+		[NotNull]
+		public static ICartoProcess CreateCartoProcess(Type type, CartoProcessRepo repo = null)
+		{
+			if (type == null || ! typeof(ICartoProcess).IsAssignableFrom(type))
+			{
+				throw new CartoConfigException($"Type {type?.Name ?? "(null)"} is not a carto process type");
+			}
+
+			if (repo != null && type.GetConstructor(new[] { typeof(CartoProcessRepo) }) != null)
+			{
+				return (ICartoProcess) Activator.CreateInstance(type, repo);
+			}
+
+			// by default, use the parameterless constructor:
+			return (ICartoProcess) Activator.CreateInstance(type);
+		}
+
 		/// <summary>
 		/// Create a string from the given object. Format:
 		/// &quot;OID=123 Class=AliasNameOrDatasetName&quot;
