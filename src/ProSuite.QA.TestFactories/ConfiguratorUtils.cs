@@ -18,13 +18,9 @@ namespace ProSuite.QA.TestFactories
 			Assert.ArgumentNotNull(objectDataset, nameof(objectDataset));
 
 			IWorkspaceContext masterDbContext =
-				ModelElementUtils.GetMasterDatabaseWorkspaceContext(objectDataset);
+				ModelElementUtils.GetAccessibleMasterDatabaseWorkspaceContext(objectDataset);
 
-			Assert.NotNull(masterDbContext,
-			               "The model master database for dataset {0} is not accessible",
-			               objectDataset.Name);
-
-			IObjectClass result = masterDbContext.OpenObjectClass(objectDataset);
+			IObjectClass result = Assert.NotNull(masterDbContext).OpenObjectClass(objectDataset);
 
 			Assert.NotNull(result, "Object class {0} not found in master database",
 			               objectDataset.Name);

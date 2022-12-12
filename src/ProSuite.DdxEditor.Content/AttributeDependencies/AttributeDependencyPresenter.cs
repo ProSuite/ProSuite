@@ -306,11 +306,9 @@ namespace ProSuite.DdxEditor.Content.AttributeDependencies
 			Assert.NotNull(dataset.Model, "Model not defined for attribute dependency");
 
 			IWorkspaceContext workspaceContext =
-				ModelElementUtils.GetMasterDatabaseWorkspaceContext(dataset);
+				ModelElementUtils.GetAccessibleMasterDatabaseWorkspaceContext(dataset);
 
-			Assert.NotNull(workspaceContext, "The model master database is not accessible");
-
-			return Assert.NotNull(workspaceContext.OpenTable(dataset),
+			return Assert.NotNull(Assert.NotNull(workspaceContext).OpenTable(dataset),
 			                      "Dataset not found in model");
 		}
 
