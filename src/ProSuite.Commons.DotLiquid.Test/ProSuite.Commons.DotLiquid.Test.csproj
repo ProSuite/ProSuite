@@ -2,7 +2,13 @@
   <PropertyGroup>
     <ProjectGuid>{391D98C4-0FF9-4ED0-9186-C6000BB472AC}</ProjectGuid>
 
+    <OutputDirectory Condition=" '$(OutputDirectory)' == '' ">..\..\bin</OutputDirectory>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <OutputPath>$(OutputDirectory)\$(Configuration)\</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+
     <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' Or '$(TargetFrameworkVersion)' == 'v4.8' ">net48</TargetFrameworkVersion>
+
     <TargetFramework>$(TargetFrameworkVersion)</TargetFramework>
 
   </PropertyGroup>
