@@ -4,7 +4,6 @@ using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.AO.Test;
 using ProSuite.Microservices.AO;
 using ProSuite.Microservices.Definitions.Shared;
@@ -14,18 +13,10 @@ namespace ProSuite.Microservices.Server.AO.Test.Geodatabase
 	[TestFixture]
 	public class GdbRowTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
-
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout();
-		}
-
-		[OneTimeTearDown]
-		public void TeardownFixture()
-		{
-			_lic.Release();
+			TestUtils.InitializeLicense();
 		}
 
 		[Test]
@@ -41,7 +32,7 @@ namespace ProSuite.Microservices.Server.AO.Test.Geodatabase
 
 			GdbTableContainer gdbTableContainer =
 				ProtobufConversionUtils.CreateGdbTableContainer(
-					new[] {objectClassMsg}, null, out GdbWorkspace _);
+					new[] { objectClassMsg }, null, out GdbWorkspace _);
 
 			var virtualFeatureClass = (IFeatureClass) gdbTableContainer.OpenTable(tlmStrasse);
 

@@ -10,7 +10,6 @@ using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Geometry.Serialization;
-using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.AO.Test;
 using ProSuite.DomainServices.AO.QA.Standalone.XmlBased;
 using ProSuite.Microservices.AO;
@@ -22,18 +21,10 @@ namespace ProSuite.Microservices.Server.AO.Test
 	[TestFixture]
 	public class ProtobufConversionUtilsTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
-
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout();
-		}
-
-		[OneTimeTearDown]
-		public void TeardownFixture()
-		{
-			_lic.Release();
+			TestUtils.InitializeLicense();
 		}
 
 		[Test]
