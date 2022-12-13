@@ -369,7 +369,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			const string fieldName = "OBJEKTART";
 
 			IFeatureWorkspace workspace =
-				WorkspaceUtils.OpenPgdbFeatureWorkspace(_simpleGdbPath);
+				WorkspaceUtils.OpenFileGdbFeatureWorkspace(_simpleGdbPath);
 			IFeatureClass featureClass = DatasetUtils.OpenFeatureClass(workspace,
 				featureClassName);
 

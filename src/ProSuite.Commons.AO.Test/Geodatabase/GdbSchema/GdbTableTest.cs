@@ -124,6 +124,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase.GdbSchema
 		}
 
 		[Test]
+		[Category(TestCategory.Sde)]
 		public void CanCreateGdbFeatureClassWithBackingDataset()
 		{
 			IWorkspace ws = TestUtils.OpenUserWorkspaceOracle();
@@ -187,6 +188,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase.GdbSchema
 		}
 
 		[Test]
+		[Category(TestCategory.Sde)]
 		public void CanCreateGdbFeatureClassWrappingRealFeatureClass()
 		{
 			IWorkspace ws = TestUtils.OpenUserWorkspaceOracle();

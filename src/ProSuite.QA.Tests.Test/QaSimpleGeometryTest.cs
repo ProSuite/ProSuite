@@ -8,7 +8,7 @@ using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Test;
 using ProSuite.Commons.AO.Test.TestSupport;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.QA.Tests.Test.TestData;
+using ProSuite.Commons.Testing;
 using ProSuite.QA.Tests.Test.TestRunners;
 
 namespace ProSuite.QA.Tests.Test
@@ -68,8 +68,8 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void Gen2847_NonZawarePolylineWithInteriorLoops()
 		{
-			var locator = TestDataUtils.GetTestDataLocator();
-			string path = locator.GetPath("DKM25_HOEHENKURVE_OID_2178.xml");
+			string path = TestDataPreparer.FromDirectory()
+			                              .GetPath("DKM25_HOEHENKURVE_OID_2178.xml");
 
 			var nonZAwarePolyline = (IPolyline) GeometryUtils.FromXmlFile(path);
 

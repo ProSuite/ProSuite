@@ -3,7 +3,6 @@ using ESRI.ArcGIS.Geodatabase;
 using NUnit.Framework;
 using ProSuite.Commons;
 using ProSuite.Commons.AO.Geodatabase;
-using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.AO.Test;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Testing;
@@ -14,18 +13,16 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 	[TestFixture]
 	public class DataSourceTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
-
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout();
+			TestUtils.InitializeLicense();
 		}
 
 		[OneTimeTearDown]
 		public void TeardownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		[Test]
@@ -61,7 +58,7 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 			IWorkspace workspace;
 			try
 			{
-				workspace = WorkspaceUtils.OpenPgdbWorkspace(catalogPath);
+				workspace = WorkspaceUtils.OpenFileGdbWorkspace(catalogPath);
 			}
 			catch (Exception)
 			{
@@ -93,7 +90,7 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 			IWorkspace workspace;
 			try
 			{
-				workspace = WorkspaceUtils.OpenPgdbWorkspace(catalogPath);
+				workspace = WorkspaceUtils.OpenFileGdbWorkspace(catalogPath);
 			}
 			catch (Exception)
 			{
@@ -118,6 +115,7 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 		}
 
 		[Test]
+		[Category(TestCategory.Sde)]
 		public void CanOpenFromConnectionStringSDE()
 		{
 			IWorkspace workspace = TestUtils.OpenUserWorkspaceOracle();
@@ -134,9 +132,7 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 		[NotNull]
 		private static string GetWorkspaceCatalogPath()
 		{
-			var locator = TestDataLocator.Create("ProSuite", @"QA\TestData");
-
-			return locator.GetPath("QATestData.mdb");
+			return TestDataPreparer.ExtractZip("QATestData.gdb.zip", @"QA\TestData").GetPath();
 		}
 	}
 }

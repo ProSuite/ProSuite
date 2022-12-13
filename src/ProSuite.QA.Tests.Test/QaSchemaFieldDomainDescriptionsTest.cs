@@ -5,9 +5,9 @@ using ESRI.ArcGIS.Geodatabase;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Testing;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.Test;
-using ProSuite.QA.Tests.Test.TestData;
 using ProSuite.QA.Tests.Test.TestRunners;
 using TestUtils = ProSuite.Commons.AO.Test.TestUtils;
 
@@ -62,7 +62,7 @@ namespace ProSuite.QA.Tests.Test
 				                                        new CodedValue(1, "Value 1"),
 				                                        new CodedValue(2, "Value 2")));
 
-			IField field1 = FieldUtils.CreateField("FIELD1", esriFieldType.esriFieldTypeInteger);
+			IField field1 = FieldUtils.CreateField("FIELD1", esriFieldType.esriFieldTypeSmallInteger);
 			IField field2 = FieldUtils.CreateField("FIELD2", esriFieldType.esriFieldTypeInteger);
 			IField field3 = FieldUtils.CreateTextField("FIELD3", 20);
 
@@ -369,10 +369,10 @@ namespace ProSuite.QA.Tests.Test
 		                                        int maximumLength,
 		                                        bool noDuplicateDescriptions)
 		{
-			var locator = TestDataUtils.GetTestDataLocator();
-			string path = locator.GetPath("QaSchemaTests.mdb");
+			string path = TestDataPreparer.ExtractZip("QaSchemaTests.gdb.zip")
+			                              .GetPath();
 
-			IFeatureWorkspace workspace = WorkspaceUtils.OpenPgdbFeatureWorkspace(path);
+			IFeatureWorkspace workspace = WorkspaceUtils.OpenFileGdbFeatureWorkspace(path);
 
 			ITable table = workspace.OpenTable(tableName);
 			var test = new QaSchemaFieldDomainDescriptions(

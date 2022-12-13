@@ -20,6 +20,7 @@ namespace ProSuite.Microservices.Server.AO.Test.Geodatabase
 		}
 
 		[Test]
+		[Category(TestCategory.Sde)]
 		public void CanCreateGdbRowFromRealData()
 		{
 			IWorkspace ws = TestUtils.OpenUserWorkspaceOracle();

@@ -6,6 +6,7 @@ using NUnit.Framework;
 using ProSuite.Commons;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.AO.Test;
 using ProSuite.Commons.AO.Test.TestSupport;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.Test;
@@ -152,6 +153,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(TestCategory.Sde)]
 		public void CanTestEmptyGeometrySdeMultipatch()
 		{
 			IWorkspace workspace = TestUtils.OpenUserWorkspaceOracle();
@@ -176,6 +178,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(TestCategory.Sde)]
 		public void CanTestEmptyGeometrySdePolyline()
 		{
 			IWorkspace workspace = TestUtils.OpenUserWorkspaceOracle();
@@ -197,6 +200,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(TestCategory.Sde)]
 		public void CanTestEmptyGeometrySdePoint()
 		{
 			IWorkspace workspace = TestUtils.OpenUserWorkspaceOracle();

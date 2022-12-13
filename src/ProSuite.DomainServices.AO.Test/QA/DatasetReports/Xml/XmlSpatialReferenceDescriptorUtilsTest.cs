@@ -2,7 +2,7 @@ using System;
 using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.AO.Licensing;
+using ProSuite.Commons.AO.Test;
 using ProSuite.Commons.Xml;
 using ProSuite.DomainServices.AO.QA.DatasetReports.Xml;
 
@@ -11,18 +11,16 @@ namespace ProSuite.DomainServices.AO.Test.QA.DatasetReports.Xml
 	[TestFixture]
 	public class XmlSpatialReferenceDescriptorUtilsTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
-
 		[OneTimeSetUp]
-		public void TestFixtureSetUp()
+		public void SetupFixture()
 		{
-			_lic.Checkout(EsriProduct.ArcEditor);
+			TestUtils.InitializeLicense();
 		}
 
 		[OneTimeTearDown]
-		public void TestFixtureTearDown()
+		public void TeardownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		[Test]

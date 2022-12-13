@@ -34,7 +34,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		public void TestGetCodedValueDomain()
 		{
 			IFeatureWorkspace workspace =
-				WorkspaceUtils.OpenPgdbFeatureWorkspace(_simpleGdbPath);
+				WorkspaceUtils.OpenFileGdbFeatureWorkspace(_simpleGdbPath);
 			IDomain domain = DomainUtils.GetDomain(workspace, "TestCodedValueDomain");
 
 			Assert.IsNotNull(domain);
@@ -45,7 +45,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		[Category(TestCategory.Fast)]
 		public void TestGetCodedValues()
 		{
-			IWorkspace workspace = WorkspaceUtils.OpenPgdbWorkspace(_simpleGdbPath);
+			IWorkspace workspace = WorkspaceUtils.OpenFileGdbWorkspace(_simpleGdbPath);
 			SortedDictionary<int, string> list = DomainUtils.GetCodedValueMap<int>(
 				workspace, "TestCodedValueDomain");
 
@@ -69,7 +69,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 			Assert.True(DomainUtils.IsOwnedByConnectedUser(domain, workspace));
 
-			workspace = WorkspaceUtils.OpenPgdbWorkspace(_simpleGdbPath);
+			workspace = WorkspaceUtils.OpenFileGdbWorkspace(_simpleGdbPath);
 			domain.Owner = string.Empty; // or null
 
 			Assert.True(DomainUtils.IsOwnedByConnectedUser(domain, workspace));

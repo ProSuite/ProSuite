@@ -1,7 +1,6 @@
 using System;
 using ESRI.ArcGIS.Geodatabase;
 using NUnit.Framework;
-using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.AO.Test;
 using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.Core.DataModel;
@@ -12,23 +11,22 @@ namespace ProSuite.DomainServices.AO.Test.QA.VerifiedDataModel
 	[TestFixture]
 	public class VerifiedModelFactoryTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
-
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
 			TestUtils.ConfigureUnittestLogging();
 
-			_lic.Checkout();
+			TestUtils.InitializeLicense();
 		}
 
 		[OneTimeTearDown]
 		public void TeardownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		[Test]
+		[Category(TestCategory.Sde)]
 		public void CanHarvestSimpleModel()
 		{
 			IWorkspace workspace = TestUtils.OpenUserWorkspaceOracle();

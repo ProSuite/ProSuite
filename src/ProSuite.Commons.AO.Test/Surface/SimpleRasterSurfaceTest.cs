@@ -34,6 +34,7 @@ namespace ProSuite.Commons.AO.Test.Surface
 		}
 
 		[Test]
+		[Category(TestCategory.Sde)]
 		public void CanGetZFromSimpleRasterMosaic()
 		{
 			IWorkspace workspace = TestUtils.OpenUserWorkspaceOracle();

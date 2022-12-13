@@ -5,9 +5,9 @@ using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Test;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Testing;
 using ProSuite.QA.Container.Test;
 using ProSuite.QA.Tests.Test.Construction;
-using ProSuite.QA.Tests.Test.TestData;
 using ProSuite.QA.Tests.Test.TestRunners;
 
 namespace ProSuite.QA.Tests.Test
@@ -32,8 +32,7 @@ namespace ProSuite.QA.Tests.Test
 		{
 			const string featureClassName = "TLM_STEHENDES_GEWAESSER";
 
-			var locator = TestDataUtils.GetTestDataLocator();
-			string path = locator.GetPath("QaBorderSense.gdb");
+			string path = TestDataPreparer.FromDirectory().GetPath("QaBorderSense.gdb");
 
 			IFeatureWorkspace workspace = WorkspaceUtils.OpenFileGdbFeatureWorkspace(path);
 

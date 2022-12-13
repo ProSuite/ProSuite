@@ -6,6 +6,7 @@ using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.AO.Test;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core;
 using ProSuite.DomainModel.Core.DataModel;
@@ -95,6 +96,7 @@ namespace ProSuite.QA.Tests.Test
 		//}
 
 		[Test]
+		[Category(TestCategory.Sde)]
 		public void CanRunFromCondition()
 		{
 			XmlSimpleTerrainDataset tds =
