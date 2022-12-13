@@ -179,7 +179,8 @@ namespace ProSuite.AGP.Solution
 			{
 				string executablePath;
 				using (_msg.IncrementIndentation(
-					"Searching for tool microservice deployment ({0})...", _microserverToolExeName))
+					       "Searching for tool microservice deployment ({0})...",
+					       _microserverToolExeName))
 				{
 					executablePath =
 						ConfigurationUtils.GetProSuiteExecutablePath(_microserverToolExeName);
@@ -215,8 +216,8 @@ namespace ProSuite.AGP.Solution
 			{
 				string executablePath;
 				using (_msg.IncrementIndentation(
-					"Searching for QA microservice deployment ({0})...",
-					_microserverQaExeName))
+					       "Searching for QA microservice deployment ({0})...",
+					       _microserverQaExeName))
 				{
 					executablePath =
 						ConfigurationUtils.GetProSuiteExecutablePath(_microserverQaExeName);

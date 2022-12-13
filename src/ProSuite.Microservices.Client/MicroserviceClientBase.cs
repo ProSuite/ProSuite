@@ -23,7 +23,7 @@ namespace ProSuite.Microservices.Client
 		private Health.HealthClient _healthClient;
 		private Process _startedProcess;
 
-		[CanBeNull] private readonly IList<ClientChannelConfig> _allChannelConfigs;
+		[CanBeNull] private readonly IList<IClientChannelConfig> _allChannelConfigs;
 
 		private string _executable;
 		private string _executableArguments;
@@ -49,11 +49,11 @@ namespace ProSuite.Microservices.Client
 			}
 		}
 
-		protected MicroserviceClientBase([NotNull] ClientChannelConfig channelConfig)
+		protected MicroserviceClientBase([NotNull] IClientChannelConfig channelConfig)
 			: this(channelConfig.HostName, channelConfig.Port, channelConfig.UseTls,
 			       channelConfig.ClientCertificate) { }
 
-		protected MicroserviceClientBase([NotNull] IList<ClientChannelConfig> channelConfigs)
+		protected MicroserviceClientBase([NotNull] IList<IClientChannelConfig> channelConfigs)
 			: this(channelConfigs[0])
 		{
 			if (channelConfigs.Count > 1)
@@ -286,7 +286,7 @@ namespace ProSuite.Microservices.Client
 			string currentHost = HostName;
 			int currentPort = Port;
 
-			foreach (ClientChannelConfig otherChannel in _allChannelConfigs)
+			foreach (IClientChannelConfig otherChannel in _allChannelConfigs)
 			{
 				if (otherChannel.HostName == currentHost &&
 				    otherChannel.Port == currentPort)
