@@ -20,7 +20,7 @@ namespace ProSuite.Microservices.Client.AGP
 		private ChangeAlongGrpc.ChangeAlongGrpcClient ChangeAlongClient { get; set; }
 		private ReshapeGrpc.ReshapeGrpcClient ReshapeClient { get; set; }
 
-		public GeometryProcessingClient([NotNull] ClientChannelConfig channelConfig) : base(
+		public GeometryProcessingClient([NotNull] IClientChannelConfig channelConfig) : base(
 			channelConfig) { }
 
 		public override string ServiceName =>
