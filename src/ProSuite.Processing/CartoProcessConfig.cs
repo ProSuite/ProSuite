@@ -285,7 +285,7 @@ namespace ProSuite.Processing
 
 			foreach (var e in processes ?? Enumerable.Empty<XElement>())
 			{
-				const string name = "Process";
+				const string name = "Processes";
 				var value = (string) e.Attribute("name");
 				if (string.IsNullOrEmpty(value)) continue;
 

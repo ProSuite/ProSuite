@@ -141,13 +141,13 @@ namespace ProSuite.Processing.Test.Evaluation
 			// When ignoring case, "fAlSe" will be recognized as the built-in value false:
 
 			var envIgnoreCase = new StandardEnvironment();
-			envIgnoreCase.DefineValue(name, "TheEnv");
+			envIgnoreCase.DefineValue("TheEnv", name);
 			Assert.AreEqual(false, Dump(ExpressionEvaluator.Create("fAlSe")).Evaluate(envIgnoreCase));
 
 			// When respecting case, "fAlSe" is just a name to be looked up in the environment:
 
 			var envRespectCase = new StandardEnvironment(false);
-			envRespectCase.DefineValue(name, "TheEnv");
+			envRespectCase.DefineValue("TheEnv", name);
 			Assert.AreEqual("TheEnv", Dump(ExpressionEvaluator.Create("fAlSe", false)).Evaluate(envRespectCase));
 		}
 
@@ -166,7 +166,7 @@ namespace ProSuite.Processing.Test.Evaluation
 			Assert.AreEqual(true, Evaluate("not not 5"));
 
 			var env = new StandardEnvironment();
-			env.DefineValue("foo", 42.0);
+			env.DefineValue(42.0, "foo");
 
 			Assert.AreEqual(42.0, Evaluate("foo", env));
 			Assert.AreEqual(false, Evaluate("not foo", env));
@@ -213,7 +213,7 @@ namespace ProSuite.Processing.Test.Evaluation
 			Assert.AreEqual(36, Evaluate("(12-3)*4"));
 
 			var env = new StandardEnvironment();
-			env.DefineValue("LB", 0.46);
+			env.DefineValue(0.46, "LB");
 
 			Assert.IsTrue(Math.Abs((double) Evaluate("LB/2", env)) - 0.23 < double.Epsilon);
 			Assert.IsTrue(Math.Abs((double) Evaluate("0.5*LB", env)) - 0.23 < double.Epsilon);
@@ -408,8 +408,8 @@ namespace ProSuite.Processing.Test.Evaluation
 			Assert.AreEqual(null, Evaluate("null ? 'T' : 'F'"));
 
 			var env = new StandardEnvironment();
-			env.DefineValue("xyzzy", "Magic");
-			env.DefineValue("d", 5);
+			env.DefineValue("Magic", "xyzzy");
+			env.DefineValue(5, "d");
 
 			Assert.AreEqual(5, Evaluate("xyzzy ? length(xyzzy) : -1", env));
 			Assert.AreEqual("Fri", Evaluate("d=0 ? 'Sun' : d=1 ? 'Mon' : d=2 ? 'Tue' : d=3 ? 'Wed' : d=4 ? 'Thu' : d=5 ? 'Fri' : d=6 ? 'Sat' : null", env));
@@ -427,7 +427,7 @@ namespace ProSuite.Processing.Test.Evaluation
 
 			// ?? binds tighter than ?:
 			var env = new StandardEnvironment();
-			env.DefineValue("nothing", null);
+			env.DefineValue(null, "nothing");
 			Assert.AreEqual("alt", Evaluate("nothing ?? false ? null ?? 'consequent' : 'alt' ?? 'alternative'", env));
 		}
 

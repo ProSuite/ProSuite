@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Processing.Utils;
 
 namespace ProSuite.Processing.Evaluation
 {
@@ -154,12 +155,20 @@ namespace ProSuite.Processing.Evaluation
 		/// <paramref name="name"/>. Later definitions replace earlier
 		/// definitions of the same name.
 		/// </summary>
-		/// <param name="name">The name (not null, not empty)</param>
 		/// <param name="value">The value (may be null)</param>
-		public StandardEnvironment DefineValue(string name, object value)
+		/// <param name="name">The name (not null, not empty)</param>
+		/// <param name="alias">An optional alias name</param>
+		public StandardEnvironment DefineValue(object value, string name, string alias = null)
 		{
 			Assert.ArgumentNotNullOrEmpty(name, nameof(name));
+
 			_values[name] = value;
+
+			if (!string.IsNullOrEmpty(alias))
+			{
+				_values[alias] = value;
+			}
+
 			return this;
 		}
 
@@ -182,6 +191,13 @@ namespace ProSuite.Processing.Evaluation
 			Assert.ArgumentNotNull(values, nameof(values));
 			_rows[qualifier ?? string.Empty] = values;
 			return this;
+		}
+
+		public StandardEnvironment DefineFields(IEnumerable<IRowValues> rows,
+		                                        string qualifier = null)
+		{
+			var commonValues = new CommonValues(rows);
+			return DefineFields(commonValues, qualifier);
 		}
 
 		public StandardEnvironment ForgetFields(string qualifier)

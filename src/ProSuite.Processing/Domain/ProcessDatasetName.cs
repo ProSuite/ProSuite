@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 
 namespace ProSuite.Processing.Domain
 {
@@ -44,6 +46,20 @@ namespace ProSuite.Processing.Domain
 			if (string.IsNullOrEmpty(WhereClause))
 				return DatasetName;
 			return string.Format("{0}; {1}", DatasetName, WhereClause);
+		}
+
+		public static IEnumerable<ProcessDatasetName> Merge(
+			IEnumerable<ProcessDatasetName> datasets)
+		{
+			return datasets.GroupBy(d => d.DatasetName, d => d, StringComparer.OrdinalIgnoreCase)
+			               .Select(g => new ProcessDatasetName(g.Key, Or(g.Select(d => d.WhereClause))))
+			               .ToList();
+		}
+
+		private static string Or(IEnumerable<string> whereClauses)
+		{
+			if (whereClauses.Any(string.IsNullOrWhiteSpace)) return null;
+			return string.Join(" OR ", whereClauses.Select(wc => $"({wc})"));
 		}
 	}
 }

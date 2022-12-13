@@ -128,7 +128,20 @@ namespace ProSuite.Microservices.Server.AO
 					LoadReportingGrpc.BindService(loadReporting)
 				});
 
-			return StartGrpcServer(services, arguments);
+			Grpc.Core.Server result = StartGrpcServer(services, arguments);
+
+			if (arguments.Port == 0)
+			{
+				// 0 means use any free port
+				ServerPort serverPort = result.Ports.FirstOrDefault();
+
+				if (serverPort != null)
+				{
+					arguments.Port = serverPort.BoundPort;
+				}
+			}
+
+			return result;
 		}
 
 		/// <summary>

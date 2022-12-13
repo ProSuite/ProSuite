@@ -2,6 +2,11 @@
   <PropertyGroup>
     <ProjectGuid>{3B3BAD4E-0699-4BE5-8EA2-26DFC9241F3D}</ProjectGuid>
 
+    <OutputDirectory Condition=" '$(OutputDirectory)' == '' ">..\..\bin</OutputDirectory>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <OutputPath>$(OutputDirectory)\$(Configuration)\</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+
     <!-- Consider using net48 or 6 after dependencies are migrated to netstandard2.0s: -->
     <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' ">net48</TargetFrameworkVersion>
     <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == 'v4.8' ">net48</TargetFrameworkVersion>

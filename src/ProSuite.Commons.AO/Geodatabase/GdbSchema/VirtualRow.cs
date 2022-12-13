@@ -71,6 +71,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		public virtual VirtualTable Table =>
 			throw new NotImplementedException("Implement in derived class");
+
 		public virtual IReadOnlyTable ReadOnlyTable => Table;
 
 		IObjectClass IObject.Class => Class;
@@ -83,7 +84,20 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		}
 
 		public virtual IGeometry ShapeCopy => GeometryFactory.Clone(Shape);
-		public virtual IEnvelope Extent => Shape.Envelope;
+
+		public virtual IEnvelope Extent
+		{
+			get
+			{
+				if (Shape != null)
+				{
+					return Shape.Envelope;
+				}
+
+				// To be consistent with AO:
+				return new EnvelopeClass();
+			}
+		}
 
 		public virtual esriFeatureType FeatureType =>
 			throw new NotImplementedException("Implement in derived class");

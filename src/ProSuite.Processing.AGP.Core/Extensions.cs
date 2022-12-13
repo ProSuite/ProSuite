@@ -32,51 +32,45 @@ namespace ProSuite.Processing.AGP.Core
 			try
 			{
 				var fieldNames = featureClass.GetDefinition().GetFields().Select(f => f.Name);
-				instance.ValidateTargetFields(fieldNames);
+				return instance.ValidateTargetFields(fieldNames);
 			}
 			catch (Exception ex)
 			{
 				throw new InvalidConfigurationException(
 					$"Parameter {parameterName} is invalid: {ex.Message}");
 			}
-
-			return instance;
 		}
 
 		public static StandardEnvironment DefineFields(
 			this StandardEnvironment env, Row row, string qualifier = null)
 		{
+			if (env == null)
+				throw new ArgumentNullException(nameof(env));
 			return env.DefineFields(row.RowValues(), qualifier);
 		}
 
-		public static FieldSetter DefineFields(
-			this FieldSetter instance, Row row, string qualifier = null)
+		public static StandardEnvironment DefineFields(
+			this StandardEnvironment env, RowBuffer row, string qualifier = null)
 		{
-			if (instance == null) return null;
-			return instance.DefineFields(row.RowValues(), qualifier);
-		}
-
-		public static FieldSetter DefineFields(
-			this FieldSetter instance, RowBuffer row, string qualifier = null)
-		{
-			if (instance == null) return null;
-			return instance.DefineFields(row.RowValues(), qualifier);
+			if (env == null)
+				throw new ArgumentNullException(nameof(env));
+			return env.DefineFields(row.RowValues(), qualifier);
 		}
 
 		public static void Execute(
-			this FieldSetter instance, Row row, IEvaluationEnvironment env = null)
+			this FieldSetter instance, Row row, IEvaluationEnvironment env, Stack<object> stack = null)
 		{
 			if (instance == null)
 				throw new ArgumentNullException(nameof(instance));
-			instance.Execute(row.RowValues(), env);
+			instance.Execute(row.RowValues(), env, stack);
 		}
 
 		public static void Execute(
-			this FieldSetter instance, RowBuffer row, IEvaluationEnvironment env = null)
+			this FieldSetter instance, RowBuffer row, IEvaluationEnvironment env, Stack<object> stack = null)
 		{
 			if (instance == null)
 				throw new ArgumentNullException(nameof(instance));
-			instance.Execute(row.RowValues(), env);
+			instance.Execute(row.RowValues(), env, stack);
 		}
 
 		#endregion
