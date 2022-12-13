@@ -43,6 +43,12 @@ namespace ProSuite.Processing.Evaluation
 			return new ImplicitValue<bool>(text);
 		}
 
+		public static ImplicitValue<int> Literal(int value)
+		{
+			var text = Convert.ToString(value, CultureInfo.InvariantCulture);
+			return new ImplicitValue<int>(text);
+		}
+
 		public static ImplicitValue<string> Literal(string value)
 		{
 			var sb = new StringBuilder();
