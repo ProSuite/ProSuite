@@ -20,8 +20,11 @@ namespace ProSuite.Microservices.Client.AGP
 		private ChangeAlongGrpc.ChangeAlongGrpcClient ChangeAlongClient { get; set; }
 		private ReshapeGrpc.ReshapeGrpcClient ReshapeClient { get; set; }
 
-		public GeometryProcessingClient([NotNull] IClientChannelConfig channelConfig) : base(
-			channelConfig) { }
+		public GeometryProcessingClient([NotNull] IClientChannelConfig channelConfig)
+			: base(channelConfig) { }
+
+		public GeometryProcessingClient([NotNull] IList<IClientChannelConfig> channelConfigs)
+			: base(channelConfigs) { }
 
 		public override string ServiceName =>
 			RemoveOverlapsClient?.GetType().DeclaringType?.Name ?? "<no service name>";
