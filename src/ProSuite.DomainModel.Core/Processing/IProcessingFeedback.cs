@@ -20,6 +20,10 @@ namespace ProSuite.DomainModel.Core.Processing
 		/// </summary>
 		FeatureProxy CurrentFeature { get; set; }
 
+		bool HadErrors { get; }
+
+		bool HadWarnings { get; }
+
 		void ReportInfo([NotNull] string text);
 
 		void ReportWarning([NotNull] string text, Exception exception = null);
