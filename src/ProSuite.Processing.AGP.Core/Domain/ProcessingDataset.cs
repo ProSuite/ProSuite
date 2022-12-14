@@ -14,6 +14,7 @@ namespace ProSuite.Processing.AGP.Core.Domain
 		[NotNull] public IProcessingSymbology Symbology { get; }
 		public GeometryType ShapeType { get; }
 		public string ShapeFieldName { get; }
+		public int ShapeFieldIndex { get; }
 		public double XYTolerance { get; }
 		public SpatialReference SpatialReference { get; }
 
@@ -30,6 +31,7 @@ namespace ProSuite.Processing.AGP.Core.Domain
 			var definition = FeatureClass.GetDefinition(); // bombs on joined FC
 			ShapeType = definition.GetShapeType(); // MCT
 			ShapeFieldName = definition.GetShapeField(); // MCT
+			ShapeFieldIndex = definition.FindField(ShapeFieldName); // MCT
 			SpatialReference = definition.GetSpatialReference(); // MCT
 			XYTolerance = SpatialReference.XYTolerance;
 		}

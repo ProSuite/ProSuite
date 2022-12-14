@@ -24,6 +24,8 @@ namespace ProSuite.Processing.AGP.Core.Domain
 		[CanBeNull]
 		Polygon GetProcessingPerimeter(); // TODO always in Map's SRef (by spec/document)
 
+		T ToMapSRef<T>(T geometry) where T : Geometry;
+
 		bool AllowModification(Feature feature, out string reason);
 
 		void SetSystemFields(Row row, Table table);

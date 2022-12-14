@@ -66,6 +66,14 @@ namespace ProSuite.Processing.Utils
 			return expr.SetName(parameterName);
 		}
 
+		public static ImplicitValue<int> GetExpression(
+			this CartoProcessConfig config, string parameterName, int defaultValue)
+		{
+			var text = config.GetValue<string>(parameterName, null);
+			var expr = (ImplicitValue<int>) text ?? ImplicitValue<int>.Literal(defaultValue);
+			return expr.SetName(parameterName);
+		}
+
 		public static FieldSetter GetFieldSetter(
 			this CartoProcessConfig config, string parameterName, string defaultValue)
 		{
@@ -88,6 +96,30 @@ namespace ProSuite.Processing.Utils
 			}
 
 			return new FieldSetter(text, parameterName);
+		}
+		
+		public static StringBuilder AppendSRef(this StringBuilder sb, string name, int wkid = 0)
+		{
+			if (name != null && wkid > 0)
+			{
+				sb.AppendFormat("{0} SRID {1}", name, wkid);
+				return sb;
+			}
+
+			if (name != null)
+			{
+				sb.Append(name);
+				return sb;
+			}
+
+			if (wkid > 0)
+			{
+				sb.AppendFormat("SRID {0}", wkid);
+				return sb;
+			}
+
+			sb.Append("no sref");
+			return sb;
 		}
 
 		public static StringBuilder AppendScale(this StringBuilder sb, double scaleDenom, string sep = null)

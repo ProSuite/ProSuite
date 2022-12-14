@@ -108,12 +108,14 @@
     <Compile Include="..\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="ClientChannelConfigs.cs" />
     <Compile Include="Constants.cs" />
     <Compile Include="Diagnostics\SaveXmlGeometryButton.cs" />
     <Compile Include="Editing\AdvancedReshapeTool.cs" />
     <Compile Include="Editing\CutAlongTool.cs" />
     <Compile Include="Editing\ReshapeAlongTool.cs" />
     <Compile Include="Editing\RemoveOverlapsTool.cs" />
+    <Compile Include="GrpcClientConfigUtils.cs" />
     <Compile Include="LoggerUI\LogMessageActionEvent.cs" />
     <Compile Include="LoggerUI\LogMessageDetailsDialog.xaml.cs">
       <DependentUpon>LogMessageDetailsDialog.xaml</DependentUpon>

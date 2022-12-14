@@ -11,9 +11,7 @@ namespace ProSuite.Processing.AGP.Core.Domain
 
 		string Description { get; }
 
-		IEnumerable<CartoProcessParam> Parameters { get; }
-
-		bool Validate(CartoProcessConfig config, out string message);
+		IEnumerable<CartoProcessParam> Parameters { get; } // TODO drop in favor of ParameterAttribute?
 
 		void Initialize(CartoProcessConfig config); // TODO rename Configure()?
 
@@ -26,5 +24,10 @@ namespace ProSuite.Processing.AGP.Core.Domain
 		bool CanExecute(IProcessingContext context);
 
 		void Execute(IProcessingContext context, IProcessingFeedback feedback);
+	}
+
+	public interface IGroupCartoProcess : ICartoProcess
+	{
+		// Just for tagging, no additional members
 	}
 }
