@@ -4,7 +4,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 namespace ProSuite.Microservices.Client
 {
 	[UsedImplicitly]
-	public class ClientChannelConfig
+	public class ClientChannelConfig : IClientChannelConfig
 	{
 		/// <summary>
 		/// Parses a connection url of the form http://localhost:5151 or

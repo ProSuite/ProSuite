@@ -33,6 +33,7 @@
 
   <ItemGroup>
     <Compile Include="..\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
+    <Compile Include="DummyCartoProcess.cs" />
   </ItemGroup>
 
   <ItemGroup>

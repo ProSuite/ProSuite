@@ -1,7 +1,8 @@
 using System.Collections.Generic;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Microservices.Client;
 
-namespace ProSuite.Microservices.Client
+namespace ProSuite.AGP.Solution
 {
 	[UsedImplicitly]
 	public class ClientChannelConfigs

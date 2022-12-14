@@ -5,9 +5,11 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Xml;
+using ProSuite.Microservices.Client;
+using ProSuite.Microservices.Client.AGP;
 using ProSuite.Microservices.Client.QA;
 
-namespace ProSuite.Microservices.Client.AGP
+namespace ProSuite.AGP.Solution
 {
 	public static class GrpcClientConfigUtils
 	{

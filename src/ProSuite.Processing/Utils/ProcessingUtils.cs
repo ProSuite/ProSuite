@@ -66,6 +66,14 @@ namespace ProSuite.Processing.Utils
 			return expr.SetName(parameterName);
 		}
 
+		public static ImplicitValue<int> GetExpression(
+			this CartoProcessConfig config, string parameterName, int defaultValue)
+		{
+			var text = config.GetValue<string>(parameterName, null);
+			var expr = (ImplicitValue<int>) text ?? ImplicitValue<int>.Literal(defaultValue);
+			return expr.SetName(parameterName);
+		}
+
 		public static FieldSetter GetFieldSetter(
 			this CartoProcessConfig config, string parameterName, string defaultValue)
 		{

@@ -423,7 +423,7 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 		{
 			if (spatialReference is null)
 			{
-				return geometry; // TODO or set geometry's SRef to null?
+				return geometry;
 			}
 
 			if (SpatialReference.AreEqual(geometry.SpatialReference, spatialReference))

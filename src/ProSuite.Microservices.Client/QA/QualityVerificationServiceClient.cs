@@ -11,10 +11,11 @@ namespace ProSuite.Microservices.Client.QA
 		private QualityVerificationGrpc.QualityVerificationGrpcClient _staticQaClient;
 		private QualityVerificationDdxGrpc.QualityVerificationDdxGrpcClient _staticDdxClient;
 
-		public QualityVerificationServiceClient([NotNull] ClientChannelConfig channelConfig)
+		public QualityVerificationServiceClient([NotNull] IClientChannelConfig channelConfig)
 			: base(channelConfig) { }
 
-		public QualityVerificationServiceClient([NotNull] IList<ClientChannelConfig> channelConfigs)
+		public QualityVerificationServiceClient(
+			[NotNull] IList<IClientChannelConfig> channelConfigs)
 			: base(channelConfigs) { }
 
 		public QualityVerificationServiceClient([NotNull] string host,
