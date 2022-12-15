@@ -202,6 +202,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 		[Test]
 		[Category(TestCategory.Fast)]
+		[Category(TestCategory.Sde)]
 		public void CanGetProxiesNonSpatial1()
 		{
 			IFeatureWorkspace ws = OpenTestWorkspace();
