@@ -85,17 +85,27 @@ namespace ProSuite.Processing.AGP.Core.Utils
 			return false;
 		}
 
-		public static T GetBaseTable<T>(T layerTable) where T : Table
+		public static T GetBaseTable<T>(T table) where T : Table
 		{
-			if (layerTable == null)
+			if (table == null)
 				return null;
-			if (!layerTable.IsJoinedTable())
-				return layerTable;
 
-			var join = layerTable.GetJoin();
-			var baseTable = join.GetDestinationTable();
+			while (table.IsJoinedTable())
+			{
+				var join = table.GetJoin();
+				var destination = join.GetDestinationTable();
+				table = (T) destination;
+			}
 
-			return (T) baseTable;
+			return table;
+
+			//if (!layerTable.IsJoinedTable())
+			//	return layerTable;
+
+			//var join = layerTable.GetJoin();
+			//var baseTable = join.GetDestinationTable();
+
+			//return (T) baseTable;
 		}
 
 		[NotNull]
