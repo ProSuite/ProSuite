@@ -7,6 +7,7 @@ using System.Xml;
 using System.Xml.Linq;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Text;
+using ProSuite.Processing.Domain;
 using ProSuite.Processing.Evaluation;
 
 namespace ProSuite.Processing.Utils
@@ -29,6 +30,56 @@ namespace ProSuite.Processing.Utils
 			return assembly.GetTypes()
 			               .Where(t => t != baseType && baseType.IsAssignableFrom(t))
 			               .ToList();
+		}
+
+		public static IList<ParameterInfo> GetParameters(Type processType)
+		{
+			// TODO check if processType is a valid CP type
+
+			if (processType == null) return Array.Empty<ParameterInfo>();
+
+			return processType.GetProperties(BindingFlags.Instance | BindingFlags.Public)
+			                  .Where(IsProcessParameter)
+			                  .Select(GetParameterInfo)
+			                  .OrderBy(info => info.Order)
+			                  .ToList();
+		}
+
+		private static ParameterInfo GetParameterInfo(PropertyInfo property)
+		{
+			if (property == null)
+				throw new ArgumentNullException(nameof(property));
+
+			var attr = property.GetCustomAttributes<ParameterAttribute>()
+			                   .FirstOrDefault();
+
+			var name = property.Name;
+			var type = property.PropertyType;
+			var required = attr?.Required ?? false;
+			var multivalued = attr?.Multivalued ?? false;
+			var order = attr?.Order ?? 0;
+
+			var className = property.DeclaringType?.Name ?? "?";
+			var docKey = $"{className}_{property.Name}";
+
+			if (type.IsArray && type.HasElementType)
+			{
+				type = type.GetElementType() ?? type;
+				multivalued = true;
+			}
+
+			return new ParameterInfo(name, type, required, multivalued,
+			                             attr?.Group, order, docKey);
+		}
+
+		private static bool IsProcessParameter(PropertyInfo property)
+		{
+			if (property == null) return false;
+			// Carto Process parameters are public get/set properties
+			// with the Parameter attribute:
+			// TODO How to check for public? Caller's task...
+			return property.CanRead && property.CanWrite &&
+			       property.IsDefined(typeof(ParameterAttribute), false);
 		}
 
 		public static int GetLineNumber(this XObject x)
