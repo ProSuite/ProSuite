@@ -44,7 +44,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			public List<InvolvedRow> InvolvedRows =>
 				_involvedRows ??
-				(_involvedRows = GetSortedInvolvedRows(IssueMsg.LegacyInvolvedRows));
+				//				(_involvedRows = GetSortedInvolvedRows(IssueMsg.LegacyInvolvedRows));
+				(_involvedRows = GetSortedInvolvedRows(IssueMsg.InvolvedTables));
 
 			private List<InvolvedRow> _involvedRows;
 
@@ -53,9 +54,24 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			private QaError _qaError;
 
-			private List<InvolvedRow> GetSortedInvolvedRows(string legayInvolvedRows)
+			private List<InvolvedRow> GetSortedInvolvedRows(IList<InvolvedTableMsg> involvedTables)
 			{
-				InvolvedRows involvedRows = RowParser.Parse(legayInvolvedRows);
+				InvolvedRows involvedRows = new InvolvedRows();
+				foreach (InvolvedTableMsg involvedTable in involvedTables)
+				{
+					foreach (long oid in involvedTable.ObjectIds)
+					{
+						involvedRows.Add(
+							new InvolvedRow(involvedTable.TableName, Convert.ToInt32(oid)));
+					}
+				}
+				TestUtils.SortInvolvedRows(involvedRows);
+				return involvedRows;
+			}
+
+			private List<InvolvedRow> GetSortedInvolvedRows(string legacyInvolvedRows)
+			{
+				InvolvedRows involvedRows = RowParser.Parse(legacyInvolvedRows);
 				TestUtils.SortInvolvedRows(involvedRows);
 				return involvedRows;
 			}
@@ -106,7 +122,6 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 		private class SubVerification
 		{
-			private IDictionary<IssueKey, IssueMsg> _knownIssues;
 
 			public SubVerification(VerificationRequest subRequest)
 			{
@@ -118,11 +133,6 @@ namespace ProSuite.Microservices.Server.AO.QA
 			public SubResponse SubResponse { get; }
 			public IEnvelope TileEnvelope { get; set; }
 			public QualityConditionGroup QualityConditionGroup { get; set; }
-
-			public IDictionary<IssueKey, IssueMsg> KnownIssues =>
-				_knownIssues ??
-				(_knownIssues =
-					 new ConcurrentDictionary<IssueKey, IssueMsg>(new IssueKeyComparer()));
 
 			private Dictionary<int, QualityCondition> _idConditions;
 
@@ -338,6 +348,12 @@ namespace ProSuite.Microservices.Server.AO.QA
 			ProcessTileCompletion(subVerification);
 		}
 
+		private IDictionary<IssueKey, IssueMsg> _knownIssues;
+		private IDictionary<IssueKey, IssueMsg> KnownIssues =>
+			_knownIssues ??
+			(_knownIssues =
+				 new ConcurrentDictionary<IssueKey, IssueMsg>(new IssueKeyComparer()));
+
 		private bool DrainIssues([CanBeNull] SubVerification fromSubVerification,
 		                         int max = int.MaxValue)
 		{
@@ -368,9 +384,9 @@ namespace ProSuite.Microservices.Server.AO.QA
 				{
 					ITest test = verification.GetFirstTest(issueMsg.ConditionId);
 					IssueKey key = new IssueKey(issueMsg, test);
-					if (! verification.KnownIssues.ContainsKey(key))
+					if (! KnownIssues.ContainsKey(key))
 					{
-						verification.KnownIssues.Add(key, issueMsg);
+						KnownIssues.Add(key, issueMsg);
 					}
 					else
 					{
@@ -429,7 +445,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 				return;
 			}
 
-			IDictionary<IssueKey, IssueMsg> knownIssues = forSubVerification.KnownIssues;
+			IDictionary<IssueKey, IssueMsg> knownIssues = KnownIssues;
 			List<IssueKey> fullyProcessed = new List<IssueKey>();
 			foreach (var issue in knownIssues.Keys)
 			{
@@ -758,8 +774,10 @@ namespace ProSuite.Microservices.Server.AO.QA
 				                 MaxParallelProcessing = 1
 			                 };
 
-			// Sub-requests must not write the issue GDB:
+			// Sub-requests must not write the issue GDB and reports:
 			subRequest.Parameters.IssueFileGdbPath = string.Empty;
+			subRequest.Parameters.VerificationReportPath = string.Empty;
+			subRequest.Parameters.HtmlReportPath = string.Empty;
 
 			subRequest.Specification.ExcludedConditionIds.AddRange(excludedConditionIds);
 
