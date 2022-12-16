@@ -464,11 +464,11 @@ namespace ProSuite.QA.Tests.Test
 		{
 			const bool hasZ = false;
 			const bool hasM = false;
-			var featureClassMock = new FeatureClassMock(1, "test_polylines",
+			var featureClassMock = new FeatureClassMock("test_polylines",
 			                                            esriGeometryType.esriGeometryPolyline,
+			                                            1,
 			                                            esriFeatureType.esriFTSimple,
-			                                            polyline.SpatialReference,
-			                                            hasZ, hasM);
+			                                            polyline.SpatialReference, hasZ, hasM);
 			IFeature feature = featureClassMock.CreateFeature(polyline);
 
 			const int tableIndex = 0;

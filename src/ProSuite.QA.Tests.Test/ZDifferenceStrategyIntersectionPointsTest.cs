@@ -199,9 +199,11 @@ namespace ProSuite.QA.Tests.Test
 			g2 = GeometryUtils.ConstantZ(g2, z2);
 
 			var polygonClass = new FeatureClassMock(
-				1, "polygon", esriGeometryType.esriGeometryPolygon,
+				"polygon", esriGeometryType.esriGeometryPolygon,
+				1,
 				esriFeatureType.esriFTSimple,
-				SpatialReferenceUtils.CreateSpatialReference(WellKnownHorizontalCS.LV95));
+				SpatialReferenceUtils.CreateSpatialReference(
+					WellKnownHorizontalCS.LV95));
 
 			var feature = polygonClass.CreateFeature(g2);
 
@@ -239,7 +241,8 @@ namespace ProSuite.QA.Tests.Test
 				                 .ClosePolygon();
 
 			var polygonClass = new FeatureClassMock(
-				1, "polygon", esriGeometryType.esriGeometryPolygon,
+				"polygon", esriGeometryType.esriGeometryPolygon,
+				1,
 				esriFeatureType.esriFTSimple,
 				SpatialReferenceUtils.CreateSpatialReference(WellKnownHorizontalCS.LV95));
 

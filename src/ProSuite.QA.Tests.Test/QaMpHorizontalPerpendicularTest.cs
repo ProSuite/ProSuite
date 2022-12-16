@@ -29,8 +29,8 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanTestMultiPatches()
 		{
-			var featureClassMock = new FeatureClassMock(1, "mock",
-			                                            esriGeometryType.esriGeometryMultiPatch);
+			var featureClassMock = new FeatureClassMock("mock",
+			                                            esriGeometryType.esriGeometryMultiPatch, 1);
 			// make sure the table is known by the workspace
 
 			var construction = new MultiPatchConstruction();
@@ -51,8 +51,8 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void VerifyAzimuthsInToleranceNotReported()
 		{
-			var featureClassMock = new FeatureClassMock(1, "mock",
-			                                            esriGeometryType.esriGeometryMultiPatch);
+			var featureClassMock = new FeatureClassMock("mock",
+			                                            esriGeometryType.esriGeometryMultiPatch, 1);
 			// make sure the table is known by the workspace
 
 			const double azimuthToleranceDeg = 0.5;
@@ -93,8 +93,8 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void VerifyAnglesLargerNearAngleNotChecked()
 		{
-			var featureClassMock = new FeatureClassMock(1, "mock",
-			                                            esriGeometryType.esriGeometryMultiPatch);
+			var featureClassMock = new FeatureClassMock("mock",
+			                                            esriGeometryType.esriGeometryMultiPatch, 1);
 			// make sure the table is known by the workspace
 
 			const double nearAngle = 5;
@@ -133,8 +133,8 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void VerifySegmentsGroupContinuously()
 		{
-			var featureClassMock = new FeatureClassMock(1, "mock",
-			                                            esriGeometryType.esriGeometryMultiPatch);
+			var featureClassMock = new FeatureClassMock("mock",
+			                                            esriGeometryType.esriGeometryMultiPatch, 1);
 
 			const double nearAngle = 5;
 
@@ -158,8 +158,8 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void VerifyNotHorizontalLinesIgnored()
 		{
-			var featureClassMock = new FeatureClassMock(1, "mock",
-			                                            esriGeometryType.esriGeometryMultiPatch);
+			var featureClassMock = new FeatureClassMock("mock",
+			                                            esriGeometryType.esriGeometryMultiPatch, 1);
 			// make sure the table is known by the workspace
 
 			const double horizontalToleranceDeg = 1;
@@ -201,8 +201,8 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void VerifyNotConnectedIgnored()
 		{
-			var featureClassMock = new FeatureClassMock(1, "mock",
-			                                            esriGeometryType.esriGeometryMultiPatch);
+			var featureClassMock = new FeatureClassMock("mock",
+			                                            esriGeometryType.esriGeometryMultiPatch, 1);
 			// make sure the table is known by the workspace
 
 			const double connected = 0.1;

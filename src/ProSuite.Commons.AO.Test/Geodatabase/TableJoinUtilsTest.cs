@@ -1699,7 +1699,6 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 				(IFeatureWorkspace) TestUtils.OpenUserWorkspaceOracle();
 
 			return WorkspaceUtils.OpenFeatureWorkspaceVersion(defaultVersion, versionName);
-			return defaultVersion;
 		}
 
 		private static int GetRowCount([NotNull] IQueryDef queryDef)

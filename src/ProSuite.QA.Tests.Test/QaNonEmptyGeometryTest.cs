@@ -34,8 +34,8 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanTestNonEmptyGeometry_Polyline()
 		{
-			IFeatureClass fc = new FeatureClassMock(1, "LineFc",
-			                                        esriGeometryType.esriGeometryPolyline);
+			IFeatureClass fc = new FeatureClassMock("LineFc",
+			                                        esriGeometryType.esriGeometryPolyline, 1);
 
 			IFeature feature = fc.CreateFeature();
 
@@ -52,8 +52,8 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanTestNonEmptyGeometry_Point()
 		{
-			IFeatureClass fc = new FeatureClassMock(1, "PointFc",
-			                                        esriGeometryType.esriGeometryPoint);
+			IFeatureClass fc = new FeatureClassMock("PointFc",
+			                                        esriGeometryType.esriGeometryPoint, 1);
 
 			IFeature feature = fc.CreateFeature();
 
@@ -70,8 +70,8 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanTestNullGeometry()
 		{
-			IFeatureClass fc = new FeatureClassMock(1, "LineFc",
-			                                        esriGeometryType.esriGeometryPolyline);
+			IFeatureClass fc = new FeatureClassMock("LineFc",
+			                                        esriGeometryType.esriGeometryPolyline, 1);
 
 			IFeature feature = fc.CreateFeature();
 
@@ -89,8 +89,8 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanTestEmptyGeometry()
 		{
-			IFeatureClass fc = new FeatureClassMock(1, "LineFc",
-			                                        esriGeometryType.esriGeometryPolyline);
+			IFeatureClass fc = new FeatureClassMock("LineFc",
+			                                        esriGeometryType.esriGeometryPolyline, 1);
 
 			IFeature feature = fc.CreateFeature();
 
@@ -108,8 +108,8 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanTestNullGeometry_DontFilterPolycurvesByZeroLength()
 		{
-			IFeatureClass fc = new FeatureClassMock(1, "LineFc",
-			                                        esriGeometryType.esriGeometryPolyline);
+			IFeatureClass fc = new FeatureClassMock("LineFc",
+			                                        esriGeometryType.esriGeometryPolyline, 1);
 
 			IFeature feature = fc.CreateFeature();
 
