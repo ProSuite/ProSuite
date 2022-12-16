@@ -929,14 +929,26 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
-		public void TestValidFileGdb()
+		public void TestBezierGeometry()
 		{
-			string path = TestDataPreparer.FromDirectory()
-			                              .GetPath("QaPartCoincidendeCurveTest.gdb");
+			IFeatureWorkspace ws = TestWorkspaceUtils.CreateTestFgdbWorkspace("TestValidFileGdb");
+			IFeatureClass featureClass = TestWorkspaceUtils.CreateSimpleFeatureClass(
+				ws, "polygons", null, esriGeometryType.esriGeometryPolyline,
+				esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95);
 
-			var ws = (IFeatureWorkspace) WorkspaceUtils.OpenFileGdbWorkspace(path);
-
-			IFeatureClass featureClass = ws.OpenFeatureClass("polygons");
+			{
+				IFeature f = featureClass.CreateFeature();
+				f.Shape = CurveConstruction.StartLine(2478000, 1137000)
+				                           .BezierTo(2478500, 1137000, 2479000, 1137500, 2479000,
+				                                     1138000).Curve;
+				f.Store();
+			}
+			{
+				IFeature f = featureClass.CreateFeature();
+				f.Shape = CurveConstruction.StartLine(2478000, 1137015).LineTo(2479000, 1137015)
+				                           .Curve;
+				f.Store();
+			}
 
 			IEnvelope testArea = GeometryFactory.CreateEnvelope(2477000, 1136000, 2482000,
 			                                                    1141000);
