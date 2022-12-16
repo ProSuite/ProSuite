@@ -11,8 +11,6 @@ namespace ProSuite.Processing.AGP.Core.Domain
 
 		string Description { get; }
 
-		IEnumerable<CartoProcessParam> Parameters { get; } // TODO drop in favor of ParameterAttribute?
-
 		void Initialize(CartoProcessConfig config); // TODO rename Configure()?
 
 		IEnumerable<ProcessDatasetName> GetOriginDatasets();
