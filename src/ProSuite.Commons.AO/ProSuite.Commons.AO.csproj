@@ -93,6 +93,7 @@
   <ItemGroup>
     <Content Include="..\..\lib\licenses\C5.license.txt">
       <Link>Licenses\C5.license.txt</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
 </Project>
