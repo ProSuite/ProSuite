@@ -14,11 +14,6 @@ namespace ProSuite.Processing.AGP.Core
 		public string Name { get; private set; }
 		public string Description { get; private set; }
 
-		public IEnumerable<CartoProcessParam> Parameters
-		{
-			get { yield break; }
-		}
-
 		public void Initialize(CartoProcessConfig config)
 		{
 			Name = config.Name ?? nameof(DummyCartoProcess);
