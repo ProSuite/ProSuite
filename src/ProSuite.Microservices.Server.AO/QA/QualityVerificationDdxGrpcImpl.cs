@@ -170,7 +170,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 			}
 
 			IVerificationDataDictionary<TModel> verificationDataDictionary =
-				Assert.NotNull(VerificationDdx);
+				Assert.NotNull(VerificationDdx,
+				               "Data Dictionary access has not been configured or failed.");
 
 			var projectWorkspaces =
 				verificationDataDictionary.GetProjectWorkspaceCandidates(objectClasses);
@@ -276,7 +277,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 			var response = new GetSpecificationsResponse();
 
 			IVerificationDataDictionary<TModel> verificationDataDictionary =
-				Assert.NotNull(VerificationDdx);
+				Assert.NotNull(VerificationDdx,
+				               "Data Dictionary access has not been configured or failed.");
 
 			IList<QualitySpecification> foundSpecifications =
 				verificationDataDictionary.GetQualitySpecifications(
