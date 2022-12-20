@@ -6,6 +6,7 @@ using System.Linq;
 using System.Windows.Forms;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 using ProSuite.Commons.Misc;
 using ProSuite.Commons.Text;
 using ProSuite.Commons.UI.Persistence.WinForms;
@@ -20,6 +21,8 @@ namespace ProSuite.Commons.UI.Finder
 	public partial class FinderForm<T> : Form, IFinderView<T>,
 	                                     IFormStateAware<FinderFormState> where T : class
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		[CanBeNull] private readonly IList<T> _list;
 
 		[NotNull] private readonly FormStateManager<FinderFormState> _formStateManager;
@@ -135,7 +138,7 @@ namespace ProSuite.Commons.UI.Finder
 			ToolStripItemCollection toolStripItems = _dataGridViewFindToolStrip.Items;
 
 			toolStripItems.Add(new ToolStripSeparator());
-			toolStripItems.Add(new ToolStripLabel {Text = @"Query:"});
+			toolStripItems.Add(new ToolStripLabel { Text = @"Query:" });
 			toolStripItems.Add(_toolStripStretchComboBoxFinderQueries);
 
 			_toolStripStretchComboBoxFinderQueries.SelectedIndex =
@@ -478,118 +481,113 @@ namespace ProSuite.Commons.UI.Finder
 
 		private void FinderForm_Load(object sender, EventArgs e)
 		{
-			_latch.RunInsideLatch(
-				delegate
+			ViewUtils.Try(
+				() =>
 				{
-					bool presorted = _gridHandler.BindTo(
-						new SortableBindingList<T>(_list ?? GetSelectedQueryResult()),
-						sortStateOverride: _restoredState?.DataGridViewSortState,
-						defaultSortState: GetDefaultSortState(_dataGridView));
+					_latch.RunInsideLatch(
+						delegate
+						{
+							bool presorted = _gridHandler.BindTo(
+								new SortableBindingList<T>(_list ?? GetSelectedQueryResult()),
+								sortStateOverride: _restoredState?.DataGridViewSortState,
+								defaultSortState: GetDefaultSortState(_dataGridView));
 
-					ApplyState(_restoredState, _restoredContextSpecificSettings,
-					           skipSorting: presorted);
-				});
+							ApplyState(_restoredState, _restoredContextSpecificSettings,
+							           skipSorting: presorted);
+						});
 
-			_dataGridView.ResumeLayout(true);
+					_dataGridView.ResumeLayout(true);
 
-			Observer.ViewLoaded();
+					Observer.ViewLoaded();
 
-			_dataGridViewFindToolStrip.ActivateFindField(this, selectAllText: true);
+					_dataGridViewFindToolStrip.ActivateFindField(this, selectAllText: true);
 
-			// start listening to selection changes in the list of finder queries (if defined)
-			if (_toolStripStretchComboBoxFinderQueries != null)
-			{
-				_toolStripStretchComboBoxFinderQueries.SelectedIndexChanged +=
-					_toolStripStretchComboBoxFinderQueries_SelectedIndexChanged;
-			}
+					// start listening to selection changes in the list of finder queries (if defined)
+					if (_toolStripStretchComboBoxFinderQueries != null)
+					{
+						_toolStripStretchComboBoxFinderQueries.SelectedIndexChanged +=
+							_toolStripStretchComboBoxFinderQueries_SelectedIndexChanged;
+					}
+				}, _msg);
 		}
 
 		private void FinderForm_FormClosed(object sender, FormClosedEventArgs e)
 		{
-			_formStateManager.SaveState();
+			ViewUtils.Try(
+				() =>
+				{
+					_formStateManager.SaveState();
 
-			SaveContextSpecificSettings();
+					SaveContextSpecificSettings();
+				}, _msg);
 		}
 
 		private void _toolStripStretchComboBoxFinderQueries_SelectedIndexChanged(
 			object sender, EventArgs e)
 		{
-			using (new WaitCursor())
-			{
-				_latch.RunInsideLatch(
-					delegate
+			ViewUtils.Try(
+				() =>
+				{
+					using (new WaitCursor())
 					{
-						BoundDataGridSelectionState<T> selection =
-							_gridHandler.GetSelectionState();
-						ColumnSortState sortState =
-							DataGridViewUtils.GetSortState(_dataGridView);
-
-						var list = new SortableBindingList<T>(GetSelectedQueryResult(),
-						                                      raiseListChangedEventAfterSort:
-						                                      false);
-
-						bool presorted = DataGridViewUtils.TrySortBindingList<T>(
-							list, _dataGridView, sortState);
-
-						_gridHandler.BindTo(list);
-
-						if (! presorted)
-						{
-							DataGridViewUtils.TryApplySortState(_dataGridView, sortState);
-						}
-
-						_gridHandler.RestoreSelection(selection);
-					});
-
-				_dataGridViewFindToolStrip.ActivateFindField(this, selectAllText: true);
-
-				Observer.SelectionChanged();
-			}
+						HandleSelectedIndexChanged();
+					}
+				}, _msg);
 		}
 
 		private void _buttonOK_Click(object sender, EventArgs e)
 		{
-			Observer.OKClicked();
+			ViewUtils.Try(
+				() => { Observer.OKClicked(); }, _msg);
 		}
 
 		private void _buttonCancel_Click(object sender, EventArgs e)
 		{
-			Observer.CancelClicked();
+			ViewUtils.Try(
+				() => { Observer.CancelClicked(); }, _msg);
 		}
 
 		private void _gridHandler_SelectionChanged(object sender, EventArgs e)
 		{
-			if (_latch.IsLatched)
-			{
-				return;
-			}
-
-			// unselect any rows that the user selected, but which should
-			// not be selectable
-			_latch.RunInsideLatch(
-				delegate
+			ViewUtils.Try(
+				() =>
 				{
-					foreach (var row in _dataGridView.SelectedRows
-					                                 .Cast<DataGridViewRow>()
-					                                 .Where(r => ! IsSelectable(r.Index)))
+					if (_latch.IsLatched)
 					{
-						row.Selected = false;
+						return;
 					}
-				});
 
-			Observer.SelectionChanged();
+					// unselect any rows that the user selected, but which should
+					// not be selectable
+					_latch.RunInsideLatch(
+						delegate
+						{
+							foreach (var row in _dataGridView.SelectedRows
+							                                 .Cast<DataGridViewRow>()
+							                                 .Where(r => ! IsSelectable(r.Index)))
+							{
+								row.Selected = false;
+							}
+						});
+
+					Observer.SelectionChanged();
+				}, _msg);
 		}
 
 		private void _dataGridView_CellDoubleClick(object sender,
 		                                           DataGridViewCellEventArgs e)
 		{
-			if (e.RowIndex < 0)
-			{
-				// ignore double-click on column headers
-				return;
-			}
+			ViewUtils.Try(
+				() =>
+				{
+					if (e.RowIndex < 0)
+					{
+						// ignore double-click on column headers
+						return;
+					}
 
-			Observer.ListDoubleClicked();
+					Observer.ListDoubleClicked();
+				}, _msg);
 		}
 
 		private void _dataGridView_CellFormatting(object sender,
@@ -604,16 +602,53 @@ namespace ProSuite.Commons.UI.Finder
 		private void _toolStripButtonSelectFindResultRows_Click(
 			object sender, EventArgs e)
 		{
-			_findController.SelectAllRows();
+			ViewUtils.Try(
+				() => { _findController.SelectAllRows(); }, _msg);
 		}
 
 		private void _findController_FindResultChanged(object sender, EventArgs e)
 		{
-			if (_toolStripButtonSelectFindResultRows != null)
-			{
-				_toolStripButtonSelectFindResultRows.Enabled =
-					_findController.FindResultCount > 0;
-			}
+			ViewUtils.Try(
+				() =>
+				{
+					if (_toolStripButtonSelectFindResultRows != null)
+					{
+						_toolStripButtonSelectFindResultRows.Enabled =
+							_findController.FindResultCount > 0;
+					}
+				}, _msg);
+		}
+
+		private void HandleSelectedIndexChanged()
+		{
+			_latch.RunInsideLatch(
+				delegate
+				{
+					BoundDataGridSelectionState<T> selection =
+						_gridHandler.GetSelectionState();
+					ColumnSortState sortState =
+						DataGridViewUtils.GetSortState(_dataGridView);
+
+					var list = new SortableBindingList<T>(GetSelectedQueryResult(),
+					                                      raiseListChangedEventAfterSort:
+					                                      false);
+
+					bool presorted = DataGridViewUtils.TrySortBindingList<T>(
+						list, _dataGridView, sortState);
+
+					_gridHandler.BindTo(list);
+
+					if (! presorted)
+					{
+						DataGridViewUtils.TryApplySortState(_dataGridView, sortState);
+					}
+
+					_gridHandler.RestoreSelection(selection);
+				});
+
+			_dataGridViewFindToolStrip.ActivateFindField(this, selectAllText: true);
+
+			Observer.SelectionChanged();
 		}
 
 		#endregion
