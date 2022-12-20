@@ -32,6 +32,11 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 		public IList<TransformerConfiguration> GetTransformerConfigurations(
 			IList<int> excludedIds = null)
 		{
+			if (! AreTransformersAndFiltersSupported())
+			{
+				return new List<TransformerConfiguration>();
+			}
+
 			using (ISession session = OpenSession(true))
 			{
 				var query = session.QueryOver<TransformerConfiguration>();
@@ -48,6 +53,11 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 
 		public IList<IssueFilterConfiguration> GetIssueFilterConfigurations()
 		{
+			if (! AreTransformersAndFiltersSupported())
+			{
+				return new List<IssueFilterConfiguration>();
+			}
+
 			using (ISession session = OpenSession(true))
 			{
 				return session.CreateCriteria(typeof(IssueFilterConfiguration))
@@ -294,6 +304,15 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 
 				return parametersQuery.List<ReferenceCount>();
 			}
+		}
+
+		private bool AreTransformersAndFiltersSupported()
+		{
+			Version databaseSchemaVersion = GetDatabaseSchemaVersion();
+			var ddxVersionTransformers = new Version(0, 2);
+
+			return databaseSchemaVersion != null &&
+			       databaseSchemaVersion >= ddxVersionTransformers;
 		}
 
 		#endregion
