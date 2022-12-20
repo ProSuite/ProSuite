@@ -795,6 +795,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		}
 
 		[Test]
+		[Category(TestCategory.Sde)]
 		public void CanSpatiallyQueryPostgres()
 		{
 			IWorkspace workspace = TestUtils.OpenUserWorkspacePostgres();
