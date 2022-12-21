@@ -20,6 +20,7 @@ using ProSuite.Microservices.AO;
 using ProSuite.Microservices.Definitions.QA;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.TestContainer;
+using ProSuite.QA.Core.IssueCodes;
 
 namespace ProSuite.Microservices.Server.AO.QA
 {
@@ -43,7 +44,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			public List<InvolvedRow> InvolvedRows =>
 				_involvedRows ??
-				(_involvedRows = GetSortedInvolvedRows(IssueMsg.LegacyInvolvedRows));
+				//				(_involvedRows = GetSortedInvolvedRows(IssueMsg.LegacyInvolvedRows));
+				(_involvedRows = GetSortedInvolvedRows(IssueMsg.InvolvedTables));
 
 			private List<InvolvedRow> _involvedRows;
 
@@ -52,9 +54,24 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			private QaError _qaError;
 
-			private List<InvolvedRow> GetSortedInvolvedRows(string legayInvolvedRows)
+			private List<InvolvedRow> GetSortedInvolvedRows(IList<InvolvedTableMsg> involvedTables)
 			{
-				InvolvedRows involvedRows = RowParser.Parse(legayInvolvedRows);
+				InvolvedRows involvedRows = new InvolvedRows();
+				foreach (InvolvedTableMsg involvedTable in involvedTables)
+				{
+					foreach (long oid in involvedTable.ObjectIds)
+					{
+						involvedRows.Add(
+							new InvolvedRow(involvedTable.TableName, Convert.ToInt32(oid)));
+					}
+				}
+				TestUtils.SortInvolvedRows(involvedRows);
+				return involvedRows;
+			}
+
+			private List<InvolvedRow> GetSortedInvolvedRows(string legacyInvolvedRows)
+			{
+				InvolvedRows involvedRows = RowParser.Parse(legacyInvolvedRows);
 				TestUtils.SortInvolvedRows(involvedRows);
 				return involvedRows;
 			}
@@ -79,7 +96,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 				if (x == null || y == null)
 					return false;
 
-				if (x.IssueMsg.Test != y.IssueMsg.Test)
+				if (x.IssueMsg.ConditionId != y.IssueMsg.ConditionId)
 					return false;
 
 				if (TestUtils.CompareSortedInvolvedRows(x.InvolvedRows, y.InvolvedRows,
@@ -105,7 +122,6 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 		private class SubVerification
 		{
-			private IDictionary<IssueKey, IssueMsg> _knownIssues;
 
 			public SubVerification(VerificationRequest subRequest)
 			{
@@ -117,11 +133,6 @@ namespace ProSuite.Microservices.Server.AO.QA
 			public SubResponse SubResponse { get; }
 			public IEnvelope TileEnvelope { get; set; }
 			public QualityConditionGroup QualityConditionGroup { get; set; }
-
-			public IDictionary<IssueKey, IssueMsg> KnownIssues =>
-				_knownIssues ??
-				(_knownIssues =
-					 new ConcurrentDictionary<IssueKey, IssueMsg>(new IssueKeyComparer()));
 
 			private Dictionary<int, QualityCondition> _idConditions;
 
@@ -140,10 +151,17 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			public ITest GetFirstTest(int conditionId)
 			{
-				_idConditions = _idConditions ?? GetIdConditions();
-				QualityCondition qc = _idConditions[conditionId];
+				QualityCondition qc = GetQualityCondition(conditionId);
+
 				ITest test = QualityConditionGroup.QualityConditions[qc].First();
 				return test;
+			}
+
+			public QualityCondition GetQualityCondition(int conditionId)
+			{
+				_idConditions = _idConditions ?? GetIdConditions();
+
+				return _idConditions[conditionId];
 			}
 
 			public bool IsFullyProcessed(IssueKey issue)
@@ -169,7 +187,6 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 		private readonly QualityVerificationGrpc.QualityVerificationGrpcClient _qaClient;
 		private readonly VerificationRequest _originalRequest;
-		private readonly ConcurrentBag<IssueMsg> _issueCollection;
 
 		private readonly IDictionary<Task<bool>, SubVerification> _tasks =
 			new ConcurrentDictionary<Task<bool>, SubVerification>();
@@ -182,8 +199,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 		public DistributedTestRunner(
 			[NotNull] QualityVerificationGrpc.QualityVerificationGrpcClient qaClient,
-			[NotNull] VerificationRequest originalRequest,
-			[CanBeNull] ConcurrentBag<IssueMsg> issueCollection)
+			[NotNull] VerificationRequest originalRequest)
 		{
 			Assert.NotNull(qaClient, nameof(qaClient));
 			Assert.NotNull(originalRequest, nameof(originalRequest));
@@ -192,7 +208,6 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			_qaClient = qaClient;
 			_originalRequest = originalRequest;
-			_issueCollection = issueCollection;
 		}
 
 		public QualitySpecification QualitySpecification { get; set; }
@@ -245,6 +260,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			foreach (var subVerification in subVerifications)
 			{
 				VerificationRequest subRequest = subVerification.SubRequest;
+
 				SubResponse subResponse = subVerification.SubResponse;
 
 				Task<bool> task = Task.Run(
@@ -332,6 +348,12 @@ namespace ProSuite.Microservices.Server.AO.QA
 			ProcessTileCompletion(subVerification);
 		}
 
+		private IDictionary<IssueKey, IssueMsg> _knownIssues;
+		private IDictionary<IssueKey, IssueMsg> KnownIssues =>
+			_knownIssues ??
+			(_knownIssues =
+				 new ConcurrentDictionary<IssueKey, IssueMsg>(new IssueKeyComparer()));
+
 		private bool DrainIssues([CanBeNull] SubVerification fromSubVerification,
 		                         int max = int.MaxValue)
 		{
@@ -362,9 +384,9 @@ namespace ProSuite.Microservices.Server.AO.QA
 				{
 					ITest test = verification.GetFirstTest(issueMsg.ConditionId);
 					IssueKey key = new IssueKey(issueMsg, test);
-					if (! verification.KnownIssues.ContainsKey(key))
+					if (! KnownIssues.ContainsKey(key))
 					{
-						verification.KnownIssues.Add(key, issueMsg);
+						KnownIssues.Add(key, issueMsg);
 					}
 					else
 					{
@@ -374,14 +396,45 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 				if (add)
 				{
-					// This is the global issue collection that will be sent on progress:
-					_issueCollection.Add(issueMsg);
+					QaError error = ReCreateQaError(issueMsg, verification);
+
+					QualityCondition qualityCondition =
+						verification.GetQualityCondition(issueMsg.ConditionId);
+
+					ProcessQaError(error, qualityCondition);
 				}
 
 				drained = true;
 			}
 
 			return drained;
+		}
+
+		private static QaError ReCreateQaError(IssueMsg issueMsg, SubVerification verification)
+		{
+			ITest test = verification.GetFirstTest(issueMsg.ConditionId);
+
+			List<InvolvedRow> involvedRows = new List<InvolvedRow>();
+			foreach (InvolvedTableMsg involvedTable in issueMsg.InvolvedTables)
+			{
+				foreach (long objectId in involvedTable.ObjectIds)
+				{
+					// TODO: Remove int conversion after Server11 merge
+					var involvedRow =
+						new InvolvedRow(involvedTable.TableName, Convert.ToInt32(objectId));
+
+					involvedRows.Add(involvedRow);
+				}
+			}
+
+			IssueCode issueCode =
+				new IssueCode(issueMsg.IssueCodeId, issueMsg.IssueCodeDescription);
+
+			var error = new QaError(test, issueMsg.Description,
+			                        involvedRows,
+			                        ProtobufGeometryUtils.FromShapeMsg(issueMsg.IssueGeometry),
+			                        issueCode, issueMsg.AffectedComponent);
+			return error;
 		}
 
 		private void ProcessTileCompletion(SubVerification forSubVerification)
@@ -392,7 +445,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 				return;
 			}
 
-			IDictionary<IssueKey, IssueMsg> knownIssues = forSubVerification.KnownIssues;
+			IDictionary<IssueKey, IssueMsg> knownIssues = KnownIssues;
 			List<IssueKey> fullyProcessed = new List<IssueKey>();
 			foreach (var issue in knownIssues.Keys)
 			{
@@ -693,23 +746,42 @@ namespace ProSuite.Microservices.Server.AO.QA
 			[NotNull] QualitySpecification specification,
 			[NotNull] IEnumerable<QualityCondition> qualityConditions)
 		{
-			var subRequest = new VerificationRequest(originalRequest);
-
-			subRequest.MaxParallelProcessing = 1;
-
 			var requestedConditionIds = new HashSet<int>(qualityConditions.Select(c => c.Id));
 
+			var excludedConditionIds = new List<int>();
 			foreach (QualitySpecificationElement element in specification.Elements)
 			{
 				QualityCondition condition = element.QualityCondition;
 
 				if (! requestedConditionIds.Contains(condition.Id))
 				{
-					subRequest.Specification.ExcludedConditionIds.Add(condition.Id);
+					excludedConditionIds.Add(condition.Id);
 				}
 			}
 
+			VerificationRequest subRequest =
+				CreateSubRequest(originalRequest, excludedConditionIds);
+
 			return new SubVerification(subRequest);
+		}
+
+		private static VerificationRequest CreateSubRequest(
+			[NotNull] VerificationRequest originalRequest,
+			[NotNull] IEnumerable<int> excludedConditionIds)
+		{
+			var subRequest = new VerificationRequest(originalRequest)
+			                 {
+				                 MaxParallelProcessing = 1
+			                 };
+
+			// Sub-requests must not write the issue GDB and reports:
+			subRequest.Parameters.IssueFileGdbPath = string.Empty;
+			subRequest.Parameters.VerificationReportPath = string.Empty;
+			subRequest.Parameters.HtmlReportPath = string.Empty;
+
+			subRequest.Specification.ExcludedConditionIds.AddRange(excludedConditionIds);
+
+			return subRequest;
 		}
 
 		private IList<SubVerification> CreateTileParallelSubverifications(
@@ -776,10 +848,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 					filter = clone;
 				}
 
-				var subRequest = new VerificationRequest(originalRequest);
+				var subRequest = CreateSubRequest(originalRequest, excludedConditionIds);
 				subRequest.Parameters.Perimeter = ProtobufGeometryUtils.ToShapeMsg(filter);
-				subRequest.MaxParallelProcessing = 1;
-				subRequest.Specification.ExcludedConditionIds.AddRange(excludedConditionIds);
 
 				SubVerification subVerification = new SubVerification(subRequest);
 				subVerification.TileEnvelope = tileBox;
@@ -900,6 +970,55 @@ namespace ProSuite.Microservices.Server.AO.QA
 				(VerificationProgressStep) progressMsg.ProgressStep,
 				progressMsg.OverallProgressCurrentStep,
 				progressMsg.OverallProgressTotalSteps);
+		}
+
+		private bool ProcessQaError([NotNull] QaError qaError,
+		                            QualityCondition qualityCondition)
+		{
+			// Consider common base class with SingleThreaded runner, or better a separate
+			// IssueProcessor class/hierarchy that could also encapsulate the logic of the
+			// QualityVerificationServiceBase
+			Assert.ArgumentNotNull(qaError, nameof(qaError));
+
+			if (_msg.IsVerboseDebugEnabled)
+			{
+				_msg.VerboseDebug(() => $"Issue drained from sub-verification queue: {qaError}");
+			}
+
+			var eventArgs = new QaErrorEventArgs(qaError);
+			QaError?.Invoke(this, eventArgs);
+
+			if (eventArgs.Cancel)
+			{
+				return false;
+			}
+
+			Assert.NotNull(qualityCondition, "no quality condition for verification");
+
+			StopInfo stopInfo = null;
+			if (qualityCondition.StopOnError)
+			{
+				stopInfo = new StopInfo(qualityCondition, qaError.Description);
+
+				foreach (InvolvedRow involvedRow in qaError.InvolvedRows)
+				{
+					RowsWithStopConditions.Add(involvedRow.TableName,
+					                           involvedRow.OID, stopInfo);
+				}
+			}
+
+			if (! qualityCondition.AllowErrors)
+			{
+				if (stopInfo != null)
+				{
+					// it's a stop condition, and it is a 'hard' condition, and the error is 
+					// relevant --> consider the stop situation as sufficiently reported 
+					// (no reporting in case of stopped tests required)
+					stopInfo.Reported = true;
+				}
+			}
+
+			return true;
 		}
 	}
 }

@@ -155,6 +155,14 @@ namespace ProSuite.DomainModel.AO.DataModel
 			return terrainSources;
 		}
 
+		/// <summary>
+		/// Gets the master database's workspace context of the specified model element, or null,
+		/// if it is not accessible.
+		/// </summary>
+		/// <param name="modelElement"></param>
+		/// <param name="allowAlways">Whether it the context shall be used even if the model is
+		/// configured as 'Schema only'.</param>
+		/// <returns></returns>
 		[CanBeNull]
 		public static IWorkspaceContext GetMasterDatabaseWorkspaceContext(
 			[NotNull] IModelElement modelElement, bool allowAlways = false)
@@ -174,6 +182,43 @@ namespace ProSuite.DomainModel.AO.DataModel
 			}
 
 			return model.MasterDatabaseWorkspaceContext;
+		}
+
+		/// <summary>
+		/// Gets the master database's workspace context of the specified model element, or null,
+		/// if it is not accessible.
+		/// </summary>
+		/// <param name="modelElement"></param>
+		/// <param name="allowAlways">Whether it the context shall be used even if the model is
+		/// configured as 'Schema only'.</param>
+		/// <returns></returns>
+		/// <exception cref="InvalidOperationException"></exception>
+		[NotNull]
+		public static IWorkspaceContext GetAccessibleMasterDatabaseWorkspaceContext(
+			[NotNull] IModelElement modelElement, bool allowAlways = false)
+		{
+			Assert.ArgumentNotNull(modelElement, nameof(modelElement));
+
+			if (! (modelElement.Model is Model model))
+			{
+				throw new InvalidOperationException($"{modelElement.Name} has no model");
+			}
+
+			if (! allowAlways && model.UseDefaultDatabaseOnlyForSchema)
+			{
+				throw new InvalidOperationException(
+					$"The model {model.Name} is configured as 'Schema only' and no data access has been allowed.");
+			}
+
+			if (! model.TryGetMasterDatabaseWorkspaceContext(out IWorkspaceContext result,
+			                                                 out string noAccessReason))
+			{
+				throw new InvalidOperationException(
+					$"The master database of the model {model.Name} referenced by {modelElement.Name} " +
+					$"is not accessible: {noAccessReason}");
+			}
+
+			return result;
 		}
 
 		public static bool UseCaseSensitiveSql([NotNull] IReadOnlyTable table,

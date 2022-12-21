@@ -163,15 +163,12 @@ namespace ProSuite.QA.Tests.Test
 				((int) esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95, defaultXyDomain);
 			((ISpatialReferenceResolution) spatialReference).XYResolution[true] = 0.0001;
 			((ISpatialReferenceTolerance) spatialReference).XYTolerance = 0.001;
-
-			const bool hasZ = true;
-			const bool hasM = false;
-			return new FeatureClassMock(1, "mock",
+			
+			return new FeatureClassMock("mock",
 			                            esriGeometryType.esriGeometryMultiPatch,
+			                            1,
 			                            esriFeatureType.esriFTSimple,
-			                            spatialReference,
-			                            hasZ,
-			                            hasM);
+			                            spatialReference);
 		}
 	}
 }

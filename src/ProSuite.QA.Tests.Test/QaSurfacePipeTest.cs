@@ -5,6 +5,7 @@ using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Surface.Raster;
+using ProSuite.Commons.AO.Test;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core;
 using ProSuite.DomainModel.Core.DataModel;
@@ -80,6 +81,7 @@ namespace ProSuite.QA.Tests.Test
  */
 
 		[Test]
+		[Category(TestCategory.Sde)]
 		public void Qa3dPipeSynthMosaicLayerTest()
 		{
 			IFeatureWorkspace ws =
@@ -130,6 +132,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(TestCategory.Sde)]
 		public void CanRunMosaicDefinitionFromCondition()
 		{
 			IWorkspace dtmWs = TestDataUtils.OpenTopgisAlti();
@@ -163,6 +166,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(TestCategory.Sde)]
 		public void CanRunMosaicDatasetFromCondition()
 		{
 			IWorkspace dtmWs = TestDataUtils.OpenTopgisAlti();

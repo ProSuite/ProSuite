@@ -20,45 +20,54 @@ namespace ProSuite.Commons.AO.Test.TestSupport
 
 		#region Constructors
 
-		public FeatureClassMock(int objectClassId, string name,
-		                        esriGeometryType shapeType)
-			: this(objectClassId, name, name, shapeType) { }
+		//public FeatureClassMock(string name,
+		//                        esriGeometryType shapeType,
+		//                        int? objectClassId = null)
+		//	: this(name, name, shapeType, objectClassId) { }
 
-		public FeatureClassMock(int objectClassId, string name, string aliasName,
-		                        esriGeometryType shapeType)
-			: this(objectClassId, name, aliasName, shapeType,
-			       esriFeatureType.esriFTSimple,
-			       CreateDefaultSpatialReference()) { }
+		//public FeatureClassMock(string name,
+		//						string aliasName,
+		//						esriGeometryType shapeType,
+		//						int? objectClassId = null)
+		//	: this(name, aliasName, shapeType,
+		//		   objectClassId,
+		//		   esriFeatureType.esriFTSimple,
+		//		   CreateDefaultSpatialReference())
+		//{ }
 
-		public FeatureClassMock(int objectClassId, string name,
+		public FeatureClassMock(string name,
 		                        esriGeometryType shapeType,
-		                        esriFeatureType featureType =
-			                        esriFeatureType.esriFTSimple)
-			: this(objectClassId, name, name, shapeType, featureType) { }
+		                        int? objectClassId = null,
+		                        esriFeatureType featureType = esriFeatureType.esriFTSimple)
+			: this(name, name, shapeType, objectClassId, featureType) { }
 
-		public FeatureClassMock(int objectClassId, string name, string aliasName,
+		public FeatureClassMock(string name,
+		                        string aliasName,
 		                        esriGeometryType shapeType,
-		                        esriFeatureType featureType =
-			                        esriFeatureType.esriFTSimple)
-			: this(objectClassId, name, aliasName, shapeType, featureType,
-			       CreateDefaultSpatialReference()) { }
+		                        int? objectClassId = null,
+		                        esriFeatureType featureType = esriFeatureType.esriFTSimple)
+			: this(name, aliasName, shapeType, objectClassId,
+			       featureType, CreateDefaultSpatialReference()) { }
 
-		public FeatureClassMock(int objectClassId, string name,
+		public FeatureClassMock(string name,
 		                        esriGeometryType shapeType,
+		                        int? objectClassId,
 		                        esriFeatureType featureType,
 		                        [NotNull] ISpatialReference spatialReference,
 		                        bool hasZ = true,
 		                        bool hasM = false)
-			: this(objectClassId, name, name, shapeType, featureType, spatialReference,
-			       hasZ, hasM) { }
+			: this(name, name, shapeType, objectClassId, featureType,
+			       spatialReference, hasZ, hasM) { }
 
-		public FeatureClassMock(int objectClassId, string name, string aliasName,
+		public FeatureClassMock(string name,
+		                        string aliasName,
 		                        esriGeometryType shapeType,
+		                        int? objectClassId,
 		                        esriFeatureType featureType,
 		                        [NotNull] ISpatialReference spatialReference,
 		                        bool hasZ = true,
 		                        bool hasM = false)
-			: base(objectClassId, name, aliasName)
+			: base(name, aliasName, objectClassId)
 		{
 			Assert.ArgumentNotNull(spatialReference, nameof(spatialReference));
 

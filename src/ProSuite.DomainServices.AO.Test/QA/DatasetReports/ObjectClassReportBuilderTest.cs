@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
-using ProSuite.Commons.AO.Licensing;
+using ProSuite.Commons.AO.Test;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Testing;
 using ProSuite.DomainServices.AO.QA.DatasetReports;
@@ -14,24 +14,22 @@ namespace ProSuite.DomainServices.AO.Test.QA.DatasetReports
 	[TestFixture]
 	public class ObjectClassReportBuilderTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
-
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout(EsriProduct.ArcEditor);
+			TestUtils.InitializeLicense();
 		}
 
 		[OneTimeTearDown]
 		public void TeardownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		[Test]
 		public void CanGetFeatureClassReport()
 		{
-			IFeatureClass table = OpenTestFeatureClass("datasetreporting.mdb",
+			IFeatureClass table = OpenTestFeatureClass("datasetreporting.gdb.zip",
 			                                           "fclass_subtypes");
 
 			var builder = new ObjectClassReportBuilder();
@@ -157,13 +155,9 @@ namespace ProSuite.DomainServices.AO.Test.QA.DatasetReports
 		private static ITable OpenTestTable([NotNull] string dbName,
 		                                    [NotNull] string tableName)
 		{
-			//var locator = new TestDataLocator(@"..\..\ProSuite\src");
+			string path = TestDataPreparer.ExtractZip(dbName, @"QA\TestData").GetPath();
 
-			var locator = TestDataLocator.Create("ProSuite", @"QA\TestData");
-
-			string path = locator.GetPath(dbName);
-
-			IFeatureWorkspace workspace = WorkspaceUtils.OpenPgdbFeatureWorkspace(path);
+			IFeatureWorkspace workspace = WorkspaceUtils.OpenFileGdbFeatureWorkspace(path);
 
 			return workspace.OpenTable(tableName);
 		}

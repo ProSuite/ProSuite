@@ -6,7 +6,6 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using NUnit.Framework;
 using ProSuite.Commons;
-using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.AO.Test;
 using ProSuite.Commons.Testing;
 using ProSuite.DomainModel.AO.DataModel;
@@ -21,21 +20,20 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 	[TestFixture]
 	public class XmlBasedQualitySpecificationFactoryTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
 		private XmlWorkspace _xmlWorkspace;
 		private XmlTestDescriptor _xmlTestDescriptorSimple;
 		private XmlTestDescriptor _xmlTestDescriptorMinArea;
-
+		
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout();
+			TestUtils.InitializeLicense();
 		}
 
 		[OneTimeTearDown]
 		public void TeardownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		[SetUp]
@@ -146,8 +144,8 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 		[Test]
 		public void CanCreateQualitySpecificationIgnoringUnknownDatasets()
 		{
-			var locator = TestDataLocator.Create("ProSuite", @"QA\TestData");
-			string catalogPath = locator.GetPath("QATestData.mdb");
+			string catalogPath = TestDataPreparer.ExtractZip("QATestData.gdb.zip", @"QA\TestData")
+			                                     .GetPath();
 
 			var xmlQCon = new XmlQualityCondition
 			              {
@@ -306,8 +304,8 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 
 		private void CanCreateQualitySpecificationCore()
 		{
-			var locator = TestDataLocator.Create("ProSuite", @"QA\TestData");
-			string catalogPath = locator.GetPath("QATestData.mdb");
+			string catalogPath = TestDataPreparer.ExtractZip("QATestData.gdb.zip", @"QA\TestData")
+			                                     .GetPath();
 
 			var xmlCategory = new XmlDataQualityCategory {Name = "Category A"};
 			var xmlSubCategory = new XmlDataQualityCategory {Name = "Category A.1"};

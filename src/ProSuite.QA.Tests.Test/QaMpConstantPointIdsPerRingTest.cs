@@ -28,7 +28,7 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanTestMultiPatches()
 		{
-			var fc = new FeatureClassMock(1, "mock", esriGeometryType.esriGeometryMultiPatch);
+			var fc = new FeatureClassMock("mock", esriGeometryType.esriGeometryMultiPatch, 1);
 
 			var construction = new MultiPatchConstruction();
 
@@ -61,7 +61,7 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void VerifyErrorTypes()
 		{
-			var fc = new FeatureClassMock(1, "mock", esriGeometryType.esriGeometryMultiPatch);
+			var fc = new FeatureClassMock("mock", esriGeometryType.esriGeometryMultiPatch, 1);
 
 			var construction = new MultiPatchConstruction();
 

@@ -61,6 +61,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase.GdbSchema
 		}
 
 		[Test]
+		[Category(TestCategory.Sde)]
 		public void CanCompareWithSdeWorkspaceDefault()
 		{
 			var realWorkspace = TestUtils.OpenSDEWorkspaceOracle();
@@ -79,6 +80,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase.GdbSchema
 		}
 
 		[Test]
+		[Category(TestCategory.Sde)]
 		public void CanCompareWithSdeWorkspaceNonDefault()
 		{
 			IWorkspace defaultVersion = TestUtils.OpenSDEWorkspaceOracle();

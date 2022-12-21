@@ -125,20 +125,20 @@ namespace ProSuite.Commons.AO.Test
 			var poly2 = (IPolygon) ReadGeometryFromXml(GetGeometryTestDataPath(_poly2));
 
 			var mockPolyFeatureClass =
-				new FeatureClassMock(1, "TestPolyClass",
+				new FeatureClassMock("TestPolyClass",
 				                     esriGeometryType.esriGeometryPolygon,
-				                     esriFeatureType.esriFTSimple, poly1.SpatialReference,
-				                     GeometryUtils.IsZAware(poly1));
+				                     1, esriFeatureType.esriFTSimple,
+				                     poly1.SpatialReference, GeometryUtils.IsZAware(poly1));
 
 			mockPoly1Feature = mockPolyFeatureClass.CreateFeature(poly1);
 
 			mockPoly2Feature = mockPolyFeatureClass.CreateFeature(poly2);
 
 			var mockLineFeatureClass =
-				new FeatureClassMock(2, "TestLineClass",
+				new FeatureClassMock("TestLineClass",
 				                     esriGeometryType.esriGeometryPolyline,
-				                     esriFeatureType.esriFTSimple, line1.SpatialReference,
-				                     GeometryUtils.IsZAware(line1));
+				                     2, esriFeatureType.esriFTSimple,
+				                     line1.SpatialReference, GeometryUtils.IsZAware(line1));
 
 			mockLine1Feature = mockLineFeatureClass.CreateFeature(line1);
 
@@ -190,10 +190,10 @@ namespace ProSuite.Commons.AO.Test
 				true, featureClassResolution);
 
 			var mockFeatureClass =
-				new FeatureClassMock(_lastClassId++, "MockFeatureClass", geometry.GeometryType,
+				new FeatureClassMock("MockFeatureClass", geometry.GeometryType,
+				                     _lastClassId++,
 				                     esriFeatureType.esriFTSimple,
-				                     (ISpatialReference) spatialRef,
-				                     GeometryUtils.IsZAware(geometry));
+				                     (ISpatialReference) spatialRef, GeometryUtils.IsZAware(geometry));
 
 			IFeature mockFeature = mockFeatureClass.CreateFeature(geometry);
 

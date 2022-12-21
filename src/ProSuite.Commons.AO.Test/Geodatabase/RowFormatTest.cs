@@ -28,7 +28,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			const string aliasName = "Test FeatureClass";
 
 			var featureClassMock = new FeatureClassMock(
-				1, name, aliasName, esriGeometryType.esriGeometryPolyline);
+				name, aliasName, esriGeometryType.esriGeometryPolyline, 1);
 
 			featureClassMock.AddField("NAME", esriFieldType.esriFieldTypeString);
 			featureClassMock.AddField("PLZ", esriFieldType.esriFieldTypeInteger);
@@ -54,7 +54,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			const string aliasName = "Test FeatureClass";
 
 			var featureClassMock = new FeatureClassMock(
-				1, name, aliasName, esriGeometryType.esriGeometryPolyline);
+				name, aliasName, esriGeometryType.esriGeometryPolyline, 1);
 
 			featureClassMock.AddField("NAME", esriFieldType.esriFieldTypeString);
 			featureClassMock.AddField("PLZ", esriFieldType.esriFieldTypeInteger);

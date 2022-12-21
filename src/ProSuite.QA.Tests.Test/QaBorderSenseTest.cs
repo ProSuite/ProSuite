@@ -5,9 +5,9 @@ using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Test;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Testing;
 using ProSuite.QA.Container.Test;
 using ProSuite.QA.Tests.Test.Construction;
-using ProSuite.QA.Tests.Test.TestData;
 using ProSuite.QA.Tests.Test.TestRunners;
 
 namespace ProSuite.QA.Tests.Test
@@ -30,24 +30,48 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanHandleZeroLengthEndSegments()
 		{
-			const string featureClassName = "TLM_STEHENDES_GEWAESSER";
+			IFeatureWorkspace ws = TestWorkspaceUtils.CreateTestFgdbWorkspace("CanHandleZeroLengthEndSegments");
+			IFeatureClass featureClass = TestWorkspaceUtils.CreateSimpleFeatureClass(
+				ws, "polylines", null, esriGeometryType.esriGeometryPolyline,
+				esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95);
 
-			var locator = TestDataUtils.GetTestDataLocator();
-			string path = locator.GetPath("QaBorderSense.gdb");
+			{
+				IFeature f = featureClass.CreateFeature();
+				f.Shape = CurveConstruction.StartLine(10, 10).LineTo(5,15).Curve;
+				f.Store();
+			}
+			{
+				IFeature f = featureClass.CreateFeature();
+				f.Shape = CurveConstruction.StartLine(5, 15).LineTo(20, 10).Curve; 
+				f.Store();
+			}
+			{
+				IFeature f = featureClass.CreateFeature();
+				f.Shape = CurveConstruction.StartLine(20, 10).LineTo(15, 15).Curve;
+				f.Store();
+			}
+			{
+				IFeature f = featureClass.CreateFeature();
+				f.Shape = CurveConstruction.StartLine(15, 15).LineTo(10, 10).Curve;
+				f.Store();
+			}
 
-			IFeatureWorkspace workspace = WorkspaceUtils.OpenFileGdbFeatureWorkspace(path);
+			{
+				IFeature f = featureClass.CreateFeature();
+				f.Shape = CurveConstruction.StartLine(6, 15).LineTo(6, 15).Curve; // ZeroLength
+				f.Store();
+			}
 
-			IFeatureClass featureClass = workspace.OpenFeatureClass(featureClassName);
 
 			// expect counter-clockwise: 0 errors
 			var runnerCounterClockwise = new QaContainerTestRunner(
 				1000, new QaBorderSense(ReadOnlyTableFactory.Create(featureClass), false));
-			Assert.AreEqual(0, runnerCounterClockwise.Execute());
+			Assert.AreEqual(1, runnerCounterClockwise.Execute());
 
 			// expect clockwise: 1 error
 			var runnerClockwise = new QaContainerTestRunner(
 				1000, new QaBorderSense(ReadOnlyTableFactory.Create(featureClass), true));
-			Assert.AreEqual(1, runnerClockwise.Execute());
+			Assert.AreEqual(2, runnerClockwise.Execute());
 		}
 
 		[Test]

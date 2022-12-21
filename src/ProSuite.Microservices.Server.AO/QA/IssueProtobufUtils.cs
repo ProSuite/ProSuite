@@ -126,6 +126,11 @@ namespace ProSuite.Microservices.Server.AO.QA
 				var involvedTableMsg = new InvolvedTableMsg();
 				involvedTableMsg.TableName = involvedTable.TableName;
 
+				foreach (RowReference rowRef in involvedTable.RowReferences)
+				{
+					involvedTableMsg.ObjectIds.Add(rowRef.OID);
+				}
+
 				yield return involvedTableMsg;
 			}
 		}

@@ -36,6 +36,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(TestCategory.Sde)]
 		public void TestSurfacePolygonVertex()
 		{
 			TestSurfacePolygonVertex(TestFgdbWs);

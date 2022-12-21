@@ -160,8 +160,8 @@ namespace ProSuite.QA.Tests.Test.SpatialRelations
 		private FeatureClassMock CreateFeatureClassMock(
 			esriGeometryType geometryType)
 		{
-			return new FeatureClassMock(1, "fc", geometryType,
-			                            esriFeatureType.esriFTSimple, _spatialReference);
+			return new FeatureClassMock("fc", geometryType,
+			                            1, esriFeatureType.esriFTSimple, _spatialReference);
 		}
 
 		[NotNull]

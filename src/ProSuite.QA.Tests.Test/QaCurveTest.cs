@@ -27,8 +27,8 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void ValidateCustomParameters()
 		{
-			IFeatureClass fc = new FeatureClassMock(1, "LineFc",
-			                                        esriGeometryType.esriGeometryPolyline);
+			IFeatureClass fc = new FeatureClassMock("LineFc",
+			                                        esriGeometryType.esriGeometryPolyline, 1);
 
 			IFeature f = fc.CreateFeature();
 

@@ -1,4 +1,6 @@
+using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.Geom
@@ -108,29 +110,87 @@ namespace ProSuite.Commons.Geom
 
 		public override string ToString()
 		{
-			return Format(this);
+			// For debugging: Use invariant, without thousand-separator, same as double.ToString()
+
+			return FormatBounds(this, null);
+		}
+
+		public string ToString([CanBeNull] CultureInfo cultureInfo,
+		                       int? decimalDigits = null)
+		{
+			if (decimalDigits == null)
+			{
+				decimalDigits = EstimateSignificantDigits(this);
+			}
+
+			if (cultureInfo == null)
+			{
+				// Manually emulating the default double.ToString() with no thousand-separators and . as decimal point
+				return FormatBounds(this, null, decimalDigits);
+			}
+			else
+			{
+				cultureInfo = (CultureInfo) cultureInfo.Clone();
+			}
+
+			// Apply the significant digits to a clone of the culture info
+			cultureInfo.NumberFormat.NumberDecimalDigits = decimalDigits.Value;
+
+			IFormatProvider formatProvider = cultureInfo.NumberFormat;
+
+			// For debugging: Typically called using invariant culture, use default significant digits:
+			return FormatBounds(this, formatProvider, decimalDigits);
 		}
 
 		[NotNull]
-		public string Format([CanBeNull] EnvelopeXY envelope,
-		                     int? significantDigits = null)
+		private static string FormatBounds([CanBeNull] IBoundedXY envelope,
+		                                   [CanBeNull] IFormatProvider formatProvider,
+		                                   int? significantDigits = null)
 		{
 			if (envelope == null)
 			{
 				return "<null>";
 			}
 
-			return $"XMin: {Format(envelope.XMin, significantDigits)} " +
-			       $"YMin: {Format(envelope.YMin, significantDigits)} " +
-			       $"XMax: {Format(envelope.XMax, significantDigits)} " +
-			       $"YMax: {Format(envelope.YMax, significantDigits)}";
+			return $"XMin: {Format(formatProvider, envelope.XMin, significantDigits)} " +
+			       $"YMin: {Format(formatProvider, envelope.YMin, significantDigits)} " +
+			       $"XMax: {Format(formatProvider, envelope.XMax, significantDigits)} " +
+			       $"YMax: {Format(formatProvider, envelope.YMax, significantDigits)}";
 		}
 
-		private static string Format(double coordinate, int? significantDigits)
+		private static string Format([CanBeNull] IFormatProvider formatProvider,
+		                             double coordinate,
+		                             int? significantDigits)
 		{
-			string format = significantDigits == null ? "{0}" : $"{{0:N{significantDigits.Value}}}";
+			string numberFormat;
+			if (formatProvider != null)
+			{
+				numberFormat = significantDigits == null
+					               ? ":N"
+					               : $":N{significantDigits.Value}";
+			}
+			else
+			{
+				numberFormat = significantDigits == null
+					               ? string.Empty
+					               : $":F{significantDigits.Value}";
+			}
 
-			return string.Format(format, coordinate);
+			string format = significantDigits == null ? "{0}" : $"{{0{numberFormat}}}";
+
+			return string.Format(formatProvider, format, coordinate);
+		}
+
+		private static int EstimateSignificantDigits(IBoundedXY envelopeXY)
+		{
+			if (envelopeXY.XMin > -180 && envelopeXY.XMax < 180 &&
+			    envelopeXY.YMin > -90 && envelopeXY.YMax < 90)
+			{
+				// Most likely geographic coordinates
+				return 7;
+			}
+
+			return 3;
 		}
 	}
 }

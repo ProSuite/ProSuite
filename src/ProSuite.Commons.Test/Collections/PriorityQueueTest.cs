@@ -467,6 +467,7 @@ namespace ProSuite.Commons.Test.Collections
 		}
 
 		[Test]
+		[Category(TestCategory.Performance)]
 		public void PerformanceTest()
 		{
 			const int capacity = 100 * 1000;

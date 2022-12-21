@@ -33,9 +33,9 @@ namespace ProSuite.QA.Tests.Test
 				WellKnownHorizontalCS.LV95);
 
 			var featureClassMock = new FeatureClassMock(
-				1, "mock",
+				"mock",
 				esriGeometryType.esriGeometryMultiPatch,
-				esriFeatureType.esriFTSimple, sref);
+				1, esriFeatureType.esriFTSimple, sref);
 
 			var construction = new MultiPatchConstruction();
 
@@ -71,8 +71,8 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanTestIgnoreInnerRings()
 		{
-			var featureClassMock = new FeatureClassMock(1, "mock",
-			                                            esriGeometryType.esriGeometryMultiPatch);
+			var featureClassMock = new FeatureClassMock("mock",
+			                                            esriGeometryType.esriGeometryMultiPatch, 1);
 
 			var construction = new MultiPatchConstruction();
 
@@ -122,8 +122,8 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanTestIgnoreHorizotalInnerRings()
 		{
-			var featureClassMock = new FeatureClassMock(1, "mock",
-			                                            esriGeometryType.esriGeometryMultiPatch);
+			var featureClassMock = new FeatureClassMock("mock",
+			                                            esriGeometryType.esriGeometryMultiPatch, 1);
 
 			var construction = new MultiPatchConstruction();
 
@@ -165,8 +165,8 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanTestIgnoreNearlyHorizotalInnerRings()
 		{
-			var featureClassMock = new FeatureClassMock(1, "mock",
-			                                            esriGeometryType.esriGeometryMultiPatch);
+			var featureClassMock = new FeatureClassMock("mock",
+			                                            esriGeometryType.esriGeometryMultiPatch, 1);
 
 			var construction = new MultiPatchConstruction();
 
@@ -212,8 +212,8 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanTestVerticalMultiPatches()
 		{
-			var featureClassMock = new FeatureClassMock(1, "mock",
-			                                            esriGeometryType.esriGeometryMultiPatch);
+			var featureClassMock = new FeatureClassMock("mock",
+			                                            esriGeometryType.esriGeometryMultiPatch, 1);
 
 			var construction = new MultiPatchConstruction();
 

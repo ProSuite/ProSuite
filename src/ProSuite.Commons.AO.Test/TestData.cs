@@ -7,8 +7,8 @@ namespace ProSuite.Commons.AO.Test
 	public static class TestData
 	{
 		private const string _filegdb93Name = "filegdb93.gdb";
-		private const string _gdb1Name = "gdb1.mdb";
-		private const string _gdb2Name = "gdb2.mdb";
+		private const string _gdb1Name = "gdb1.gdb.zip";
+		private const string _mdb1Name = "gdb1.mdb";
 		private const string _filegdb_tableJoinUtils = "TableJoinUtilsTest.gdb.zip";
 		private const string _cartoMapImplTestMapName = "CartoMapImplTest.mxd";
 		private const string _bigForestPolygonFileName = "BigForestPolygon.xml";
@@ -53,15 +53,12 @@ namespace ProSuite.Commons.AO.Test
 
 		public static string GetGdb1Path()
 		{
-			var locator = new TestDataLocator();
-			return locator.GetPath(_gdb1Name);
+			return TestDataPreparer.ExtractZip(_gdb1Name).GetPath();
 		}
 
-		public static string GetGdb2Path()
+		public static string GetMdb1Path()
 		{
-			return TestDataPreparer.FromDirectory().GetPath(_gdb2Name);
-			var locator = new TestDataLocator();
-			return locator.GetPath(_gdb2Name);
+			return TestDataPreparer.FromDirectory().GetPath(_mdb1Name);
 		}
 
 		public static string GetGdbTableJointUtilsPath()

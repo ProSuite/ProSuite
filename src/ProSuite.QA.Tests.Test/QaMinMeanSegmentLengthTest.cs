@@ -27,8 +27,8 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanTestPolylineSimple()
 		{
-			var featureClassMock = new FeatureClassMock(1, "mock",
-			                                            esriGeometryType.esriGeometryPolyline);
+			var featureClassMock = new FeatureClassMock("mock",
+			                                            esriGeometryType.esriGeometryPolyline, 1);
 
 			CurveConstruction construction = CurveConstruction.StartLine(0, 0)
 			                                                  .LineTo(1, 0)
@@ -51,8 +51,8 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanTestPolylinePerPart()
 		{
-			var featureClassMock = new FeatureClassMock(1, "mock",
-			                                            esriGeometryType.esriGeometryPolyline);
+			var featureClassMock = new FeatureClassMock("mock",
+			                                            esriGeometryType.esriGeometryPolyline, 1);
 
 			CurveConstruction construction = CurveConstruction.StartLine(0, 0)
 			                                                  .LineTo(1, 0)
@@ -96,8 +96,8 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanTestMultiPatchesSimple()
 		{
-			var featureClassMock = new FeatureClassMock(1, "mock",
-			                                            esriGeometryType.esriGeometryMultiPatch);
+			var featureClassMock = new FeatureClassMock("mock",
+			                                            esriGeometryType.esriGeometryMultiPatch, 1);
 
 			var construction = new MultiPatchConstruction();
 
@@ -124,8 +124,8 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanTestMultiPatchesPerPart()
 		{
-			var featureClassMock = new FeatureClassMock(1, "mock",
-			                                            esriGeometryType.esriGeometryMultiPatch);
+			var featureClassMock = new FeatureClassMock("mock",
+			                                            esriGeometryType.esriGeometryMultiPatch, 1);
 
 			var construction = new MultiPatchConstruction();
 

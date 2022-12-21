@@ -284,10 +284,10 @@ namespace ProSuite.QA.Tests.Test
 			ISpatialReference sref = SpatialReferenceUtils.CreateSpatialReference
 				((int) esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95, true);
 
-			var featureClass = new FeatureClassMock(1, "polygons",
+			var featureClass = new FeatureClassMock("polygons",
 			                                        esriGeometryType.esriGeometryPolygon,
-			                                        esriFeatureType.esriFTSimple,
-			                                        sref, false, false);
+			                                        null,
+			                                        esriFeatureType.esriFTSimple, sref, false);
 
 			IFeature feature = featureClass.CreateFeature(
 				CreatePolygon(sref,

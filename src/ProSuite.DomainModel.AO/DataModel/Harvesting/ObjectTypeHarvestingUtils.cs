@@ -19,11 +19,11 @@ namespace ProSuite.DomainModel.AO.DataModel.Harvesting
 		public static void HarvestObjectTypes([NotNull] ObjectDataset objectDataset)
 		{
 			IWorkspaceContext workspaceContext =
-				ModelElementUtils.GetMasterDatabaseWorkspaceContext(objectDataset);
+				ModelElementUtils.GetAccessibleMasterDatabaseWorkspaceContext(objectDataset);
 
-			Assert.NotNull(workspaceContext, "The master database is not accessible");
+			IObjectClass objectClass =
+				Assert.NotNull(workspaceContext).OpenObjectClass(objectDataset);
 
-			IObjectClass objectClass = workspaceContext.OpenObjectClass(objectDataset);
 			Assert.NotNull(objectClass, "Unable to open object class {0}", objectDataset.Name);
 
 			HarvestObjectTypes(objectDataset, objectClass);

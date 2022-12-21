@@ -10,6 +10,7 @@ namespace ProSuite.DdxEditor.Content.Blazor;
 
 internal static class BlazorImageUtils
 {
+	// todo private!?
 	public const string _keyDeleted = "deleted";
 	private const string _keyGeometryNetwork = "network";
 	private const string _keyMultiPatch = "multipatch";
@@ -27,7 +28,7 @@ internal static class BlazorImageUtils
 
 	private static readonly Dictionary<string, string> _fileNameByKey = new()
 		{
-			{ _keyUnknown, "DatasetTypeUnkown.png" },
+			{ _keyUnknown, "DatasetTypeUnknown.png" },
 			{ _keyTable, "DatasetTypeTable.png" }
 		};
 
