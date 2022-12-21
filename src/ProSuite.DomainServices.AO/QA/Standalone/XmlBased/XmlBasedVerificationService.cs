@@ -89,16 +89,53 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 		{
 			if (! string.IsNullOrEmpty(issueRepositoryPath))
 			{
-				_issueRepositoryDir = Path.GetDirectoryName(issueRepositoryPath);
-				_issueRepositoryName = Path.GetFileNameWithoutExtension(issueRepositoryPath);
+				try
+				{
+					_issueRepositoryDir = Path.GetDirectoryName(issueRepositoryPath);
+					_issueRepositoryName = Path.GetFileNameWithoutExtension(issueRepositoryPath);
+				}
+				catch (ArgumentException argumentException)
+				{
+					// Include more details in the error message to be more useful to the client
+					// Typically: ArgumentException: The path is not of a legal form.
+					throw new ArgumentException(
+						$"Issue Repository path {issueRepositoryPath}: {argumentException.Message}",
+						argumentException);
+				}
+			}
+			else
+			{
+				_msg.Info(
+					"No issue repository path was provided and no issue workspace will be written.");
 			}
 
 			_xmlVerificationReportPath = xmlVerificationReportPath;
 
+			if (string.IsNullOrEmpty(_xmlVerificationReportPath))
+			{
+				_msg.Info(
+					"No XML verification report path was provided and no xml report will be written.");
+			}
+
 			// NOTE: Currently the file names are hard-coded
 			if (! string.IsNullOrEmpty(htmlReportPath))
 			{
-				_htmlReportDir = Path.GetDirectoryName(htmlReportPath);
+				try
+				{
+					_htmlReportDir = Path.GetDirectoryName(htmlReportPath);
+				}
+				catch (ArgumentException argumentException)
+				{
+					// Include more details in the error message to be more useful to the client
+					// Typically: ArgumentException: The path is not of a legal form.
+					throw new ArgumentException(
+						$"HTML Report path {htmlReportPath}: {argumentException.Message}",
+						argumentException);
+				}
+			}
+			else
+			{
+				_msg.Info("No HTML report path was provided and no HTML will be written.");
 			}
 		}
 
