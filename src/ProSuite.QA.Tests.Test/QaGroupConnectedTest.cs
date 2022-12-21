@@ -5,6 +5,7 @@ using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.AO.Test;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core;
@@ -24,17 +25,16 @@ namespace ProSuite.QA.Tests.Test
 	[TestFixture]
 	public class QaGroupConnectedTest
 	{
-		private IFeatureWorkspace _pgdbWorkspace;
 		private IFeatureWorkspace _fgdbWorkspace;
+
+		private const string DatabaseName = "QaGroupConnectedTest";
 
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
 			TestUtils.InitializeLicense(activateAdvancedLicense: true);
 
-			const string databaseName = "QaGroupConnectedTest";
-			_pgdbWorkspace = TestWorkspaceUtils.CreateTestAccessWorkspace(databaseName);
-			_fgdbWorkspace = TestWorkspaceUtils.CreateTestFgdbWorkspace(databaseName);
+			_fgdbWorkspace = TestWorkspaceUtils.CreateTestFgdbWorkspace(DatabaseName);
 		}
 
 		[OneTimeTearDown]
@@ -1270,9 +1270,13 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(TestCategory.x86)]
 		public void CanDetectConnectedGroups_1toN_1_PersonalGdb()
 		{
-			CanDetectConnectedGroups_1toN_1(_pgdbWorkspace);
+			IFeatureWorkspace pgdbWorkspace =
+				TestWorkspaceUtils.CreateTestAccessWorkspace(DatabaseName);
+
+			CanDetectConnectedGroups_1toN_1(pgdbWorkspace);
 		}
 
 		[Test]
@@ -1282,9 +1286,13 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(TestCategory.x86)]
 		public void CanDetectConnectedGroups_1toN_2_PersonalGdb()
 		{
-			CanDetectConnectedGroups_1toN_2(_pgdbWorkspace);
+			IFeatureWorkspace pgdbWorkspace =
+				TestWorkspaceUtils.CreateTestAccessWorkspace(DatabaseName);
+
+			CanDetectConnectedGroups_1toN_2(pgdbWorkspace);
 		}
 
 		[Test]
@@ -1294,9 +1302,13 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(TestCategory.x86)]
 		public void CanDetectConnectedGroups_1toN_3_PersonalGdb()
 		{
-			CanDetectConnectedGroups_1toN_3(_pgdbWorkspace);
+			IFeatureWorkspace pgdbWorkspace =
+				TestWorkspaceUtils.CreateTestAccessWorkspace(DatabaseName);
+
+			CanDetectConnectedGroups_1toN_3(pgdbWorkspace);
 		}
 
 		[Test]
@@ -1306,9 +1318,13 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(TestCategory.x86)]
 		public void CanDetectDisjointGroup_1toN_PersonalGdb()
 		{
-			CanDetectDisjointGroup_1toN(_pgdbWorkspace);
+			IFeatureWorkspace pgdbWorkspace =
+				TestWorkspaceUtils.CreateTestAccessWorkspace(DatabaseName);
+
+			CanDetectDisjointGroup_1toN(pgdbWorkspace);
 		}
 
 		[Test]
@@ -1556,13 +1572,13 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void TestCircularErrors()
 		{
-			TestCircularErrors(_pgdbWorkspace);
+			TestCircularErrors(_fgdbWorkspace);
 		}
 
 		[Test]
 		public void TestCircularMultiPartErrors()
 		{
-			TestCircularMultiPartErrors(_pgdbWorkspace);
+			TestCircularMultiPartErrors(_fgdbWorkspace);
 		}
 
 		[Test]
@@ -1695,25 +1711,25 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void TestGroupConnected()
 		{
-			TestGroupConnected(_pgdbWorkspace);
+			TestGroupConnected(_fgdbWorkspace);
 		}
 
 		[Test]
 		public void TestMultiFeatureClassDiffAttributeNames()
 		{
-			TestMultiFeatureClassDiffAttributeNames(_pgdbWorkspace);
+			TestMultiFeatureClassDiffAttributeNames(_fgdbWorkspace);
 		}
 
 		[Test]
 		public void TestMultiFeatureClassSameAttributeNames()
 		{
-			TestMultiFeatureClassSameAttributeNames(_pgdbWorkspace);
+			TestMultiFeatureClassSameAttributeNames(_fgdbWorkspace);
 		}
 
 		[Test]
 		public void TestMultiFeatureClassValueGroups()
 		{
-			TestMultiFeatureClassValueGroups(_pgdbWorkspace);
+			TestMultiFeatureClassValueGroups(_fgdbWorkspace);
 		}
 
 		[Test]
@@ -1855,7 +1871,7 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void TestMultiPartErrorsTestextent()
 		{
-			TestMultiPartErrorsTestextent(_pgdbWorkspace);
+			TestMultiPartErrorsTestextent(_fgdbWorkspace);
 		}
 
 		[Test]
@@ -2007,7 +2023,7 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void TestRelatedBug()
 		{
-			IFeatureWorkspace testWs = _pgdbWorkspace;
+			IFeatureWorkspace testWs = _fgdbWorkspace;
 
 			const string fcName = "TestRelatedBugFc";
 			const string relTableName = "TestRelatedBugTbl";
@@ -2081,7 +2097,7 @@ namespace ProSuite.QA.Tests.Test
 		[Ignore("TODO reason")]
 		public void TestRelatedFactory()
 		{
-			IFeatureWorkspace testWs = _pgdbWorkspace;
+			IFeatureWorkspace testWs = TestWorkspaceUtils.CreateTestAccessWorkspace(DatabaseName);
 
 			QaRelGroupConnected fact =
 				CreateRelGroupConnectedFactory(testWs, "TestRelatedFactoryFc",

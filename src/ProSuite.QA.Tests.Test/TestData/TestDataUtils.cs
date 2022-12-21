@@ -1,8 +1,9 @@
 using System.IO;
 using ESRI.ArcGIS.Geodatabase;
+using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Test;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Testing;
 
 namespace ProSuite.QA.Tests.Test.TestData
 {
@@ -13,6 +14,9 @@ namespace ProSuite.QA.Tests.Test.TestData
 		public static readonly string LocalDataPath = @"\\CROFTON\c$\data\unitTests";
 
 		[NotNull]
+		public static string TopgisTlmPath => GetFullPath(_topgisTlmPath);
+
+		[NotNull]
 		public static IWorkspace OpenFileGdb(string testDataPath)
 		{
 			string fullPath = GetFullPath(testDataPath);
@@ -21,17 +25,12 @@ namespace ProSuite.QA.Tests.Test.TestData
 		}
 
 		[NotNull]
+		[Category(TestCategory.x86)]
 		public static IWorkspace OpenPgdb(string testDataPath)
 		{
 			string fullPath = GetFullPath(testDataPath);
 			IWorkspace ws = WorkspaceUtils.OpenPgdbWorkspace(fullPath);
 			return ws;
-		}
-
-		[NotNull]
-		public static string TopgisTlmPath
-		{
-			get { return GetFullPath(_topgisTlmPath); }
 		}
 
 		[NotNull]
@@ -53,13 +52,6 @@ namespace ProSuite.QA.Tests.Test.TestData
 		{
 			string fullPath = Path.Combine(LocalDataPath, testDataPath);
 			return fullPath;
-		}
-
-		[NotNull]
-		public static ITestDataDirectory GetTestDataLocator()
-		{
-			return TestDataPreparer.FromDirectory();
-			
 		}
 	}
 }

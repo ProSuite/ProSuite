@@ -46,7 +46,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			private readonly QueryFilterHelper _filterHelper;
 
 			public PolyFc(IReadOnlyFeatureClass borderFc)
-				: base(-1, borderFc.Name + "_poly", esriGeometryType.esriGeometryPolygon)
+				: base(borderFc.Name + "_poly", esriGeometryType.esriGeometryPolygon, -1)
 			{
 				_borderFc = borderFc;
 				InvolvedTables = new List<IReadOnlyTable> { _borderFc };

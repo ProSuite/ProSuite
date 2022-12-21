@@ -46,7 +46,7 @@ namespace ProSuite.Commons.AO.Test.Geometry.LinearNetwork
 			IEnvelope aoi = GeometryFactory.CreateEnvelope(2600000, 1200000, 2600100, 1200100, sr);
 
 			FeatureClassMock edgeClass =
-				new FeatureClassMock(1, "ROADS", esriGeometryType.esriGeometryPolyline);
+				new FeatureClassMock("ROADS", esriGeometryType.esriGeometryPolyline, 1);
 
 			PolylineGraphConnectivity connectivity = new PolylineGraphConnectivity(sr, aoi);
 
@@ -141,7 +141,7 @@ namespace ProSuite.Commons.AO.Test.Geometry.LinearNetwork
 			IEnvelope aoi = GeometryFactory.CreateEnvelope(2600000, 1200000, 2600100, 1200100, sr);
 
 			FeatureClassMock edgeClass =
-				new FeatureClassMock(1, "ROADS", esriGeometryType.esriGeometryPolyline);
+				new FeatureClassMock("ROADS", esriGeometryType.esriGeometryPolyline, 1);
 
 			PolylineGraphConnectivity connectivity = new PolylineGraphConnectivity(sr, aoi);
 
@@ -204,7 +204,7 @@ namespace ProSuite.Commons.AO.Test.Geometry.LinearNetwork
 			IEnvelope aoi = GeometryFactory.CreateEnvelope(2600000, 1200000, 2600100, 1200100, sr);
 
 			FeatureClassMock edgeClass =
-				new FeatureClassMock(1, "ROADS", esriGeometryType.esriGeometryPolyline);
+				new FeatureClassMock("ROADS", esriGeometryType.esriGeometryPolyline, 1);
 
 			PolylineGraphConnectivity connectivity = new PolylineGraphConnectivity(sr, aoi);
 

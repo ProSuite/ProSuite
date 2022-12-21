@@ -28,7 +28,7 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanDetectTooManyRows()
 		{
-			var verified = new FeatureClassMock(1, "v", _gt) { RowCountResult = 2001 };
+			var verified = new FeatureClassMock("v", _gt) { RowCountResult = 2001 };
 
 			var test = new QaRowCount(ReadOnlyTableFactory.Create(verified), 1000, 2000);
 
@@ -41,7 +41,7 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanDetectTooFewRows()
 		{
-			var verified = new FeatureClassMock(1, "v", _gt) { RowCountResult = 999 };
+			var verified = new FeatureClassMock("v", _gt) { RowCountResult = 999 };
 
 			var test = new QaRowCount(ReadOnlyTableFactory.Create(verified), 1000, 2000);
 
@@ -54,9 +54,9 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanDetectTooManyRowsWithReferenceTables()
 		{
-			var verified = new FeatureClassMock(1, "v", _gt) { RowCountResult = 1001 };
-			var r1 = new FeatureClassMock(2, "r1", _gt) { RowCountResult = 400 };
-			var r2 = new FeatureClassMock(3, "r2", _gt) { RowCountResult = 600 };
+			var verified = new FeatureClassMock("v", _gt) { RowCountResult = 1001 };
+			var r1 = new FeatureClassMock("r1", _gt) { RowCountResult = 400 };
+			var r2 = new FeatureClassMock("r2", _gt) { RowCountResult = 600 };
 
 			var test = new QaRowCount(
 				ReadOnlyTableFactory.Create(verified),
@@ -75,9 +75,9 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanDetectTooFewRowsWithReferenceTables()
 		{
-			var verified = new FeatureClassMock(1, "v", _gt) { RowCountResult = 999 };
-			var r1 = new FeatureClassMock(2, "r1", _gt) { RowCountResult = 400 };
-			var r2 = new FeatureClassMock(3, "r2", _gt) { RowCountResult = 600 };
+			var verified = new FeatureClassMock("v", _gt) { RowCountResult = 999 };
+			var r1 = new FeatureClassMock("r1", _gt) { RowCountResult = 400 };
+			var r2 = new FeatureClassMock("r2", _gt) { RowCountResult = 600 };
 
 			var test = new QaRowCount(
 				ReadOnlyTableFactory.Create(verified),
@@ -93,8 +93,8 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanDetectTooFewRowsWithPercentOffset()
 		{
-			var verified = new FeatureClassMock(1, "v", _gt) { RowCountResult = 899 };
-			var r = new FeatureClassMock(2, "r1", _gt) { RowCountResult = 1000 };
+			var verified = new FeatureClassMock("v", _gt) { RowCountResult = 899 };
+			var r = new FeatureClassMock("r1", _gt) { RowCountResult = 1000 };
 
 			var test = new QaRowCount(
 				ReadOnlyTableFactory.Create(verified), new[] { ReadOnlyTableFactory.Create(r) },
@@ -109,8 +109,8 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanDetectTooManyRowsWithPercentOffset()
 		{
-			var verified = new FeatureClassMock(1, "v", _gt) { RowCountResult = 1101 };
-			var r = new FeatureClassMock(2, "r1", _gt) { RowCountResult = 1000 };
+			var verified = new FeatureClassMock("v", _gt) { RowCountResult = 1101 };
+			var r = new FeatureClassMock("r1", _gt) { RowCountResult = 1000 };
 
 			var test = new QaRowCount(
 				ReadOnlyTableFactory.Create(verified),
@@ -125,8 +125,8 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanDetectTooFewRowsWithOffset()
 		{
-			var verified = new FeatureClassMock(1, "v", _gt) { RowCountResult = 899 };
-			var r = new FeatureClassMock(2, "r1", _gt) { RowCountResult = 1000 };
+			var verified = new FeatureClassMock("v", _gt) { RowCountResult = 899 };
+			var r = new FeatureClassMock("r1", _gt) { RowCountResult = 1000 };
 
 			var test = new QaRowCount(
 				ReadOnlyTableFactory.Create(verified), new[] { ReadOnlyTableFactory.Create(r) },
@@ -141,8 +141,8 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanDetectTooManyRowsWithOffset()
 		{
-			var verified = new FeatureClassMock(1, "v", _gt) { RowCountResult = 1101 };
-			var r = new FeatureClassMock(2, "r1", _gt) { RowCountResult = 1000 };
+			var verified = new FeatureClassMock("v", _gt) { RowCountResult = 1101 };
+			var r = new FeatureClassMock("r1", _gt) { RowCountResult = 1000 };
 
 			var test = new QaRowCount(
 				ReadOnlyTableFactory.Create(verified), new[] { ReadOnlyTableFactory.Create(r) },
@@ -157,8 +157,8 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanAllowRowCountAtMinimumValueWithReferenceTable()
 		{
-			var verified = new FeatureClassMock(1, "v", _gt) { RowCountResult = 900 };
-			var r = new FeatureClassMock(2, "r1", _gt) { RowCountResult = 1000 };
+			var verified = new FeatureClassMock("v", _gt) { RowCountResult = 900 };
+			var r = new FeatureClassMock("r1", _gt) { RowCountResult = 1000 };
 
 			var test = new QaRowCount(
 				ReadOnlyTableFactory.Create(verified), new[] { ReadOnlyTableFactory.Create(r) },
@@ -173,8 +173,8 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanAllowRowCountAtMaximumValueWithReferenceTable()
 		{
-			var verified = new FeatureClassMock(1, "v", _gt) { RowCountResult = 1100 };
-			var r = new FeatureClassMock(2, "r1", _gt) { RowCountResult = 1000 };
+			var verified = new FeatureClassMock("v", _gt) { RowCountResult = 1100 };
+			var r = new FeatureClassMock("r1", _gt) { RowCountResult = 1000 };
 
 			var test = new QaRowCount(
 				ReadOnlyTableFactory.Create(verified), new[] { ReadOnlyTableFactory.Create(r) },
@@ -189,8 +189,8 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanAllowUndefinedMaximumOffset()
 		{
-			var verified = new FeatureClassMock(1, "v", _gt) { RowCountResult = 2000 };
-			var r = new FeatureClassMock(2, "r", _gt) { RowCountResult = 1000 };
+			var verified = new FeatureClassMock("v", _gt) { RowCountResult = 2000 };
+			var r = new FeatureClassMock("r", _gt) { RowCountResult = 1000 };
 
 			var test = new QaRowCount(
 				ReadOnlyTableFactory.Create(verified), new[] { ReadOnlyTableFactory.Create(r) },
@@ -205,8 +205,8 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanAllowUndefinedMinimumOffset()
 		{
-			var verified = new FeatureClassMock(1, "v", _gt) { RowCountResult = 500 };
-			var r = new FeatureClassMock(2, "r", _gt) { RowCountResult = 1000 };
+			var verified = new FeatureClassMock("v", _gt) { RowCountResult = 500 };
+			var r = new FeatureClassMock("r", _gt) { RowCountResult = 1000 };
 
 			var test = new QaRowCount(
 				ReadOnlyTableFactory.Create(verified), new[] { ReadOnlyTableFactory.Create(r) }, "",
@@ -224,8 +224,8 @@ namespace ProSuite.QA.Tests.Test
 			Assert.Throws<ArgumentException>(
 				delegate
 				{
-					var verified = new FeatureClassMock(1, "v", _gt) { RowCountResult = 500 };
-					var r = new FeatureClassMock(2, "r", _gt) { RowCountResult = 1000 };
+					var verified = new FeatureClassMock("v", _gt) { RowCountResult = 500 };
+					var r = new FeatureClassMock("r", _gt) { RowCountResult = 1000 };
 
 					new QaRowCount(
 						ReadOnlyTableFactory.Create(verified),

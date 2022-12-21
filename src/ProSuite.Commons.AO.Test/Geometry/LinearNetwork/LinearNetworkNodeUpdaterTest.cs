@@ -45,9 +45,9 @@ namespace ProSuite.Commons.AO.Test.Geometry.LinearNetwork
 			var lineClass = (FeatureClassMock) line1Feature.Class;
 			ISpatialReference sr = DatasetUtils.GetSpatialReference(lineClass);
 			Assert.NotNull(sr);
-			var pointClass = new FeatureClassMock(2345, "Junctions",
+			var pointClass = new FeatureClassMock("Junctions",
 			                                      esriGeometryType.esriGeometryPoint,
-			                                      esriFeatureType.esriFTSimple, sr);
+			                                      2345, esriFeatureType.esriFTSimple, sr);
 
 			var line2Geometry =
 				TestUtils.ReadGeometryFromXml(
@@ -137,9 +137,9 @@ namespace ProSuite.Commons.AO.Test.Geometry.LinearNetwork
 			var lineClass = (FeatureClassMock) line1Feature.Class;
 			ISpatialReference sr = DatasetUtils.GetSpatialReference(lineClass);
 			Assert.NotNull(sr);
-			var pointClass = new FeatureClassMock(2345, "Junctions",
+			var pointClass = new FeatureClassMock("Junctions",
 			                                      esriGeometryType.esriGeometryPoint,
-			                                      esriFeatureType.esriFTSimple, sr);
+			                                      2345, esriFeatureType.esriFTSimple, sr);
 
 			var line2Geometry = TestUtils.ReadGeometryFromXml(
 				TestUtils.GetGeometryTestDataPath("line2.xml"));
@@ -214,9 +214,9 @@ namespace ProSuite.Commons.AO.Test.Geometry.LinearNetwork
 			var lineClass = (FeatureClassMock) line1Feature.Class;
 			ISpatialReference sr = DatasetUtils.GetSpatialReference(lineClass);
 			Assert.NotNull(sr);
-			var pointClass = new FeatureClassMock(2345, "Junctions",
+			var pointClass = new FeatureClassMock("Junctions",
 			                                      esriGeometryType.esriGeometryPoint,
-			                                      esriFeatureType.esriFTSimple, sr);
+			                                      2345, esriFeatureType.esriFTSimple, sr);
 
 			var line2Geometry =
 				TestUtils.ReadGeometryFromXml(

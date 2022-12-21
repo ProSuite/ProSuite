@@ -29,8 +29,8 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanTestPolylineFeature()
 		{
-			IFeatureClass fc = new FeatureClassMock(1, "LineFc",
-			                                        esriGeometryType.esriGeometryPolyline);
+			IFeatureClass fc = new FeatureClassMock("LineFc",
+			                                        esriGeometryType.esriGeometryPolyline, 1);
 
 			IFeature feature = fc.CreateFeature();
 
@@ -54,8 +54,8 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanTestPolylineFeaturePath()
 		{
-			IFeatureClass fc = new FeatureClassMock(1, "LineFc",
-			                                        esriGeometryType.esriGeometryPolyline);
+			IFeatureClass fc = new FeatureClassMock("LineFc",
+			                                        esriGeometryType.esriGeometryPolyline, 1);
 
 			IFeature feature = fc.CreateFeature();
 

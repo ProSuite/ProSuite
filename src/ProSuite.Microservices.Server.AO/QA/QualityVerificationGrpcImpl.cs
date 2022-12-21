@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -445,13 +444,10 @@ namespace ProSuite.Microservices.Server.AO.QA
 				bool useStandaloneService =
 					IsStandAloneVerification(request, out QualitySpecification specification);
 
-				var issueCollection = new ConcurrentBag<IssueMsg>();
 				if (DistributedProcessingClient != null && request.MaxParallelProcessing > 1)
 				{
-					// allow directly adding issues found by client processes:
 					distributedTestRunner =
-						new DistributedTestRunner(
-							DistributedProcessingClient, request, issueCollection)
+						new DistributedTestRunner(DistributedProcessingClient, request)
 						{
 							QualitySpecification = specification
 						};
@@ -622,8 +618,12 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			IssueRepositoryType issueRepositoryType = IssueRepositoryType.FileGdb;
 
-			if (ExternalIssueRepositoryUtils.IssueRepositoryExists(
-				    parameters.IssueFileGdbPath, IssueRepositoryType.FileGdb))
+			if (string.IsNullOrEmpty(parameters.IssueFileGdbPath))
+			{
+				xmlService.IssueRepositoryType = IssueRepositoryType.None;
+			}
+			else if (ExternalIssueRepositoryUtils.IssueRepositoryExists(
+				         parameters.IssueFileGdbPath, IssueRepositoryType.FileGdb))
 			{
 				responseStreamer.Warning(
 					$"The {issueRepositoryType} workspace '{parameters.IssueFileGdbPath}' already exists");

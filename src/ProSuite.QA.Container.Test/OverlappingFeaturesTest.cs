@@ -29,7 +29,7 @@ namespace ProSuite.QA.Container.Test
 		{
 			var overlaps = new OverlappingFeatures();
 
-			var fc = new FeatureClassMock(1, "", esriGeometryType.esriGeometryPolyline);
+			var fc = new FeatureClassMock("", esriGeometryType.esriGeometryPolyline, 1);
 			ReadOnlyFeatureClass roFc = ReadOnlyTableFactory.Create((IFeatureClass) fc);
 			var feature =
 				new ReadOnlyFeature(roFc, fc.CreateFeature(new Pt(0, 0), new Pt(9.95, 9.95)));
@@ -43,7 +43,7 @@ namespace ProSuite.QA.Container.Test
 		{
 			var overlaps = new OverlappingFeatures();
 
-			var fc = new FeatureClassMock(1, "", esriGeometryType.esriGeometryPolyline);
+			var fc = new FeatureClassMock("", esriGeometryType.esriGeometryPolyline, 1);
 			ReadOnlyFeatureClass roFc = ReadOnlyTableFactory.Create((IFeatureClass) fc);
 			var f1 = new ReadOnlyFeature(
 				roFc, fc.CreateFeature(new Pt(100, 0), new Pt(109.95, 9.95)));
@@ -113,7 +113,7 @@ namespace ProSuite.QA.Container.Test
 		{
 			var overlaps = new OverlappingFeatures();
 
-			var fc = new FeatureClassMock(1, "", esriGeometryType.esriGeometryPolyline);
+			var fc = new FeatureClassMock("", esriGeometryType.esriGeometryPolyline, 1);
 			ReadOnlyFeatureClass roFc = ReadOnlyTableFactory.Create((IFeatureClass) fc);
 			var f1 = new ReadOnlyFeature(
 				roFc, fc.CreateFeature(new Pt(100, 0), new Pt(109.95, 9.95)));

@@ -16,17 +16,13 @@ namespace ProSuite.QA.Tests.Test
 	[TestFixture]
 	public class QaGroupConstraintsTest
 	{
-		private IFeatureWorkspace _testWs;
-		private IFeatureWorkspace _fgdbWs;
-
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
 			TestUtils.InitializeLicense(activateAdvancedLicense: true);
 
-			_testWs = TestWorkspaceUtils.CreateTestAccessWorkspace("QaGroupConstraintsTest");
 			_fgdbWs =
-				TestWorkspaceUtils.CreateTestFgdbWorkspace("QaGroupConstraintsTest");
+				TestWorkspaceUtils.CreateTestFgdbWorkspace(DatabaseName);
 		}
 
 		[OneTimeTearDown]
@@ -34,6 +30,9 @@ namespace ProSuite.QA.Tests.Test
 		{
 			TestUtils.ReleaseLicense();
 		}
+
+		private const string DatabaseName = "QaGroupConstraintsTest";
+		private IFeatureWorkspace _fgdbWs;
 
 		[Test]
 		public void TernaryLogicTest()
@@ -54,8 +53,14 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void TestGroupContraints()
 		{
-			TestGroupContraints(_testWs);
 			TestGroupContraints(_fgdbWs);
+		}
+
+		[Test]
+		[Category(TestCategory.x86)]
+		public void TestGroupContraints_Pgdb()
+		{
+			TestGroupContraints(TestWorkspaceUtils.CreateTestAccessWorkspace(DatabaseName));
 		}
 
 		private static void TestGroupContraints(IFeatureWorkspace ws)
@@ -106,8 +111,14 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void TestGeomGroupConstraints()
 		{
-			TestGeomGroupConstraints(_testWs);
 			TestGeomGroupConstraints(_fgdbWs);
+		}
+
+		[Test]
+		[Category(TestCategory.x86)]
+		public void TestGeomGroupConstraints_Pgdb()
+		{
+			TestGeomGroupConstraints(TestWorkspaceUtils.CreateTestAccessWorkspace(DatabaseName));
 		}
 
 		private static void TestGeomGroupConstraints(IFeatureWorkspace ws)
@@ -119,12 +130,11 @@ namespace ProSuite.QA.Tests.Test
 				                "Shape", esriGeometryType.esriGeometryPoint,
 				                SpatialReferenceUtils.CreateSpatialReference
 				                ((int) esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95,
-				                 true), 1000, false, false));
+				                 true), 1000));
 
 			IFeatureClass fc =
 				DatasetUtils.CreateSimpleFeatureClass(ws, "TestGeomGroupContraints",
-				                                      fields,
-				                                      null);
+				                                      fields);
 			// make sure the table is known by the workspace
 			((IWorkspaceEdit) ws).StartEditing(false);
 			((IWorkspaceEdit) ws).StopEditing(true);
@@ -253,8 +263,14 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void TestWorkspaceKeywords()
 		{
-			TestWorkspaceKeywords(_testWs);
 			TestWorkspaceKeywords(_fgdbWs);
+		}
+
+		[Test]
+		[Category(TestCategory.x86)]
+		public void TestWorkspaceKeywords_Pgdb()
+		{
+			TestWorkspaceKeywords(TestWorkspaceUtils.CreateTestAccessWorkspace(DatabaseName));
 		}
 
 		private static void TestWorkspaceKeywords(IFeatureWorkspace ws)
@@ -275,8 +291,14 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void TestRelGroupContraints()
 		{
-			TestRelGroupContraints(_testWs);
 			TestRelGroupContraints(_fgdbWs);
+		}
+
+		[Test]
+		[Category(TestCategory.x86)]
+		public void TestRelGroupContraints_Pgdb()
+		{
+			TestRelGroupContraints(TestWorkspaceUtils.CreateTestAccessWorkspace(DatabaseName));
 		}
 
 		private static void TestRelGroupContraints(IFeatureWorkspace ws)
@@ -300,21 +322,21 @@ namespace ProSuite.QA.Tests.Test
 			((IWorkspaceEdit) ws).StartEditing(false);
 			((IWorkspaceEdit) ws).StopEditing(true);
 
-			for (int i = 0; i < 20; i++)
+			for (var i = 0; i < 20; i++)
 			{
 				IRow row = tableData.CreateRow();
 				row.set_Value(1, 1);
 				row.Store();
 			}
 
-			for (int i = 0; i < 40; i++)
+			for (var i = 0; i < 40; i++)
 			{
 				IRow row = tableData.CreateRow();
 				row.set_Value(1, 2);
 				row.Store();
 			}
 
-			for (int i = 0; i < 30; i++)
+			for (var i = 0; i < 30; i++)
 			{
 				IRow row = tableData.CreateRow();
 				row.set_Value(1, 3);
@@ -334,7 +356,7 @@ namespace ProSuite.QA.Tests.Test
 			row3.Store();
 
 			const bool limitToTestedRows = false;
-			ITable relTab = TableJoinUtils.CreateQueryTable(rel, JoinType.InnerJoin);
+			ITable relTab = TableJoinUtils.CreateQueryTable(rel);
 
 			var test = new QaGroupConstraints(ReadOnlyTableFactory.Create(relTab),
 			                                  "IIF(LEN(TblRel1.Kostenstelle) >=6, SUBSTRING(TblRel1.Kostenstelle, 1, 6), '')",
@@ -380,7 +402,7 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void TestValueInUniqueTable()
 		{
-			TestValueInUniqueTable(_testWs);
+			TestValueInUniqueTable(_fgdbWs);
 		}
 
 		private static void TestValueInUniqueTable(IFeatureWorkspace ws)
@@ -407,7 +429,7 @@ namespace ProSuite.QA.Tests.Test
 			row1.set_Value(1, 3);
 			row1.Store();
 
-			for (int i = 0; i < 5; i++)
+			for (var i = 0; i < 5; i++)
 			{
 				IRow r = table1.CreateRow();
 				r.set_Value(1, 8);

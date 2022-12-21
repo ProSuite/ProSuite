@@ -41,7 +41,7 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void TestEqualCoordinatesDoubleFields()
 		{
-			var featureClass = new FeatureClassMock(1, "Fc", esriGeometryType.esriGeometryPoint);
+			var featureClass = new FeatureClassMock("Fc", esriGeometryType.esriGeometryPoint);
 
 			featureClass.AddField(FieldUtils.CreateDoubleField(_fieldNameX));
 			featureClass.AddField(FieldUtils.CreateDoubleField(_fieldNameY));
@@ -72,7 +72,7 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void TestNonEqualXCoordinateDoubleField()
 		{
-			var featureClass = new FeatureClassMock(1, "Fc", esriGeometryType.esriGeometryPoint);
+			var featureClass = new FeatureClassMock("Fc", esriGeometryType.esriGeometryPoint);
 
 			featureClass.AddField(FieldUtils.CreateDoubleField(_fieldNameX));
 
@@ -105,7 +105,7 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void TestNonEqualYCoordinateDoubleField()
 		{
-			var featureClass = new FeatureClassMock(1, "Fc", esriGeometryType.esriGeometryPoint);
+			var featureClass = new FeatureClassMock("Fc", esriGeometryType.esriGeometryPoint);
 
 			featureClass.AddField(FieldUtils.CreateDoubleField(_fieldNameY));
 
@@ -138,7 +138,7 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void TestNonEqualZCoordinateDoubleField()
 		{
-			var featureClass = new FeatureClassMock(1, "Fc", esriGeometryType.esriGeometryPoint);
+			var featureClass = new FeatureClassMock("Fc", esriGeometryType.esriGeometryPoint);
 
 			featureClass.AddField(FieldUtils.CreateDoubleField(_fieldNameZ));
 
@@ -170,7 +170,7 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void TestEqualCoordinatesTextFields()
 		{
-			var featureClass = new FeatureClassMock(1, "Fc", esriGeometryType.esriGeometryPoint);
+			var featureClass = new FeatureClassMock("Fc", esriGeometryType.esriGeometryPoint);
 
 			featureClass.AddField(FieldUtils.CreateTextField(_fieldNameX, 50));
 			featureClass.AddField(FieldUtils.CreateTextField(_fieldNameY, 50));
@@ -202,7 +202,7 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void TestNonEqualCoordinatesTextFieldsEqualY()
 		{
-			var featureClass = new FeatureClassMock(1, "Fc", esriGeometryType.esriGeometryPoint);
+			var featureClass = new FeatureClassMock("Fc", esriGeometryType.esriGeometryPoint);
 
 			featureClass.AddField(FieldUtils.CreateTextField(_fieldNameX, 50));
 			featureClass.AddField(FieldUtils.CreateTextField(_fieldNameY, 50));
@@ -248,7 +248,7 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void TestNonEqualCoordinatesTextFieldsBothXYAboveTolerance()
 		{
-			var featureClass = new FeatureClassMock(1, "Fc", esriGeometryType.esriGeometryPoint);
+			var featureClass = new FeatureClassMock("Fc", esriGeometryType.esriGeometryPoint);
 
 			featureClass.AddField(FieldUtils.CreateTextField(_fieldNameX, 50));
 			featureClass.AddField(FieldUtils.CreateTextField(_fieldNameY, 50));
@@ -280,7 +280,7 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void TestNonEqualCoordinatesTextFieldsBothXYJustBelowTolerance()
 		{
-			var featureClass = new FeatureClassMock(1, "Fc", esriGeometryType.esriGeometryPoint);
+			var featureClass = new FeatureClassMock("Fc", esriGeometryType.esriGeometryPoint);
 
 			featureClass.AddField(FieldUtils.CreateTextField(_fieldNameX, 50));
 			featureClass.AddField(FieldUtils.CreateTextField(_fieldNameY, 50));
@@ -312,7 +312,7 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void TestInvalidTextFieldValues()
 		{
-			var featureClass = new FeatureClassMock(1, "Fc", esriGeometryType.esriGeometryPoint);
+			var featureClass = new FeatureClassMock("Fc", esriGeometryType.esriGeometryPoint);
 
 			featureClass.AddField(FieldUtils.CreateTextField(_fieldNameX, 50));
 			featureClass.AddField(FieldUtils.CreateTextField(_fieldNameY, 50));
@@ -355,7 +355,7 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void TestCoordinatesForUndefinedShape()
 		{
-			var featureClass = new FeatureClassMock(1, "Fc", esriGeometryType.esriGeometryPoint);
+			var featureClass = new FeatureClassMock("Fc", esriGeometryType.esriGeometryPoint);
 
 			featureClass.AddField(FieldUtils.CreateDoubleField(_fieldNameX));
 			featureClass.AddField(FieldUtils.CreateDoubleField(_fieldNameY));
@@ -400,7 +400,7 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void TestMissingXYCoordinatesForDefinedShape()
 		{
-			var featureClass = new FeatureClassMock(1, "Fc", esriGeometryType.esriGeometryPoint);
+			var featureClass = new FeatureClassMock("Fc", esriGeometryType.esriGeometryPoint);
 
 			featureClass.AddField(FieldUtils.CreateDoubleField(_fieldNameX));
 			featureClass.AddField(FieldUtils.CreateDoubleField(_fieldNameY));
@@ -447,7 +447,7 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void TestMissingZCoordinateForDefinedShape()
 		{
-			var featureClass = new FeatureClassMock(1, "Fc", esriGeometryType.esriGeometryPoint);
+			var featureClass = new FeatureClassMock("Fc", esriGeometryType.esriGeometryPoint);
 
 			featureClass.AddField(FieldUtils.CreateDoubleField(_fieldNameX));
 			featureClass.AddField(FieldUtils.CreateDoubleField(_fieldNameY));
@@ -491,7 +491,7 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void TestAllowedCoordinatesForUndefinedShape()
 		{
-			var featureClass = new FeatureClassMock(1, "Fc", esriGeometryType.esriGeometryPoint);
+			var featureClass = new FeatureClassMock("Fc", esriGeometryType.esriGeometryPoint);
 
 			featureClass.AddField(FieldUtils.CreateDoubleField(_fieldNameX));
 			featureClass.AddField(FieldUtils.CreateDoubleField(_fieldNameY));

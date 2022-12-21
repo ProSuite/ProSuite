@@ -27,8 +27,8 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanTestMultiPatches()
 		{
-			var featureClassMock = new FeatureClassMock(1, "mock",
-			                                            esriGeometryType.esriGeometryMultiPatch);
+			var featureClassMock = new FeatureClassMock("mock",
+			                                            esriGeometryType.esriGeometryMultiPatch, 1);
 
 			var construction = new MultiPatchConstruction();
 
@@ -46,8 +46,8 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void VerifyHeightDiffsLargerNearHeightNotChecked()
 		{
-			var featureClassMock = new FeatureClassMock(1, "mock",
-			                                            esriGeometryType.esriGeometryMultiPatch);
+			var featureClassMock = new FeatureClassMock("mock",
+			                                            esriGeometryType.esriGeometryMultiPatch, 1);
 			// make sure the table is known by the workspace
 
 			const double nearHeight = 5;
@@ -82,8 +82,8 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void VerifyHeightDiffsSmallerToleranceNotReported()
 		{
-			var featureClassMock = new FeatureClassMock(1, "mock",
-			                                            esriGeometryType.esriGeometryMultiPatch);
+			var featureClassMock = new FeatureClassMock("mock",
+			                                            esriGeometryType.esriGeometryMultiPatch, 1);
 			// make sure the table is known by the workspace
 
 			const double nearHeight = 5;

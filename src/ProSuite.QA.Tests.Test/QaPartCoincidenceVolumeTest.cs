@@ -4,8 +4,8 @@ using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Testing;
 using ProSuite.QA.Container;
-using ProSuite.QA.Tests.Test.TestData;
 using ProSuite.QA.Tests.Test.TestRunners;
 using TestUtils = ProSuite.Commons.AO.Test.TestUtils;
 
@@ -89,10 +89,10 @@ namespace ProSuite.QA.Tests.Test
 		[NotNull]
 		private static IList<QaError> Execute(double tileSize)
 		{
-			var locator = TestDataUtils.GetTestDataLocator();
-			string path = locator.GetPath("QaPartCoincidenceVolumeTest.mdb");
+			string path = TestDataPreparer.ExtractZip("QaPartCoincidenceVolumeTest.gdb.zip")
+			                              .GetPath();
 
-			IFeatureWorkspace ws = WorkspaceUtils.OpenPgdbFeatureWorkspace(path);
+			IFeatureWorkspace ws = WorkspaceUtils.OpenFileGdbFeatureWorkspace(path);
 
 			IFeatureClass featureClass = ws.OpenFeatureClass("BigPolygons");
 

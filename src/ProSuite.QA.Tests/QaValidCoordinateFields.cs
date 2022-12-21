@@ -88,7 +88,7 @@ namespace ProSuite.QA.Tests
 			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
 			Assert.ArgumentCondition(
 				featureClass.ShapeType == esriGeometryType.esriGeometryPoint,
-				"Only point feature classes are supported");
+				$"{featureClass.ShapeType}, only point feature classes are supported");
 
 			if (xCoordinateFieldName != null &&
 			    StringUtils.IsNotEmpty(xCoordinateFieldName))

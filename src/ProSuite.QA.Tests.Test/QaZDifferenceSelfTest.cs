@@ -33,11 +33,12 @@ namespace ProSuite.QA.Tests.Test
 				WellKnownHorizontalCS.LV95);
 
 			var multiPatchClass = new FeatureClassMock(
-				1, "multipatch", esriGeometryType.esriGeometryMultiPatch,
-				esriFeatureType.esriFTSimple, sref);
+				"multipatch",
+				esriGeometryType.esriGeometryMultiPatch,
+				1, esriFeatureType.esriFTSimple, sref);
 			var polygonClass = new FeatureClassMock(
-				1, "polygon", esriGeometryType.esriGeometryPolygon,
-				esriFeatureType.esriFTSimple, sref);
+				"polygon", esriGeometryType.esriGeometryPolygon,
+				1, esriFeatureType.esriFTSimple, sref);
 
 			var multiPatch = new MultiPatchConstruction();
 
@@ -75,9 +76,9 @@ namespace ProSuite.QA.Tests.Test
 		public void CanTestNaNZs()
 		{
 			var multiPatchClass = new FeatureClassMock(
-				1, "multipatch", esriGeometryType.esriGeometryMultiPatch);
+				"multipatch", esriGeometryType.esriGeometryMultiPatch, 1);
 			var polygonClass = new FeatureClassMock(
-				1, "polygon", esriGeometryType.esriGeometryPolygon);
+				"polygon", esriGeometryType.esriGeometryPolygon, 1);
 
 			var multiPatch = new MultiPatchConstruction();
 
@@ -115,8 +116,7 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanTestLines()
 		{
-			var lineClass = new FeatureClassMock(
-				1, "line", esriGeometryType.esriGeometryPolyline);
+			var lineClass = new FeatureClassMock("line", esriGeometryType.esriGeometryPolyline, 1);
 
 			CurveConstruction line1 =
 				CurveConstruction.StartLine(0, 0, 10)
@@ -146,8 +146,7 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanTestLineIntersections()
 		{
-			var lineClass = new FeatureClassMock(
-				1, "line", esriGeometryType.esriGeometryPolyline);
+			var lineClass = new FeatureClassMock("line", esriGeometryType.esriGeometryPolyline, 1);
 
 			CurveConstruction line1 =
 				CurveConstruction.StartLine(0, 0, 10)
@@ -177,8 +176,7 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanTestLinesMaximumDifference()
 		{
-			var lineClass = new FeatureClassMock(
-				1, "line", esriGeometryType.esriGeometryPolyline);
+			var lineClass = new FeatureClassMock("line", esriGeometryType.esriGeometryPolyline, 1);
 
 			CurveConstruction line1 =
 				CurveConstruction.StartLine(0, 0, 10)
@@ -211,15 +209,13 @@ namespace ProSuite.QA.Tests.Test
 			ISpatialReference sref = SpatialReferenceUtils.CreateSpatialReference(
 				WellKnownHorizontalCS.LV95);
 
-			var multiPatchClass = new FeatureClassMock(
-				1, "multipatch", esriGeometryType.esriGeometryMultiPatch,
-				esriFeatureType.esriFTSimple, sref);
+			var multiPatchClass = new FeatureClassMock("multipatch", esriGeometryType.esriGeometryMultiPatch,
+			                                           1, esriFeatureType.esriFTSimple, sref);
 			multiPatchClass.AddField("Level", esriFieldType.esriFieldTypeInteger);
 			int levelIndex = multiPatchClass.FindField("Level");
 
-			var polygonClass = new FeatureClassMock(
-				1, "polygon", esriGeometryType.esriGeometryPolygon,
-				esriFeatureType.esriFTSimple, sref);
+			var polygonClass = new FeatureClassMock("polygon", esriGeometryType.esriGeometryPolygon,
+			                                        1, esriFeatureType.esriFTSimple, sref);
 			polygonClass.AddField("Level", esriFieldType.esriFieldTypeInteger);
 
 			var multiPatchConstruction = new MultiPatchConstruction();

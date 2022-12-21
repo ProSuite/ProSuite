@@ -8,7 +8,7 @@ using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Test;
 using ProSuite.Commons.AO.Test.TestSupport;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.QA.Tests.Test.TestData;
+using ProSuite.Commons.Testing;
 using ProSuite.QA.Tests.Test.TestRunners;
 
 namespace ProSuite.QA.Tests.Test
@@ -35,10 +35,10 @@ namespace ProSuite.QA.Tests.Test
 			ISpatialReference lv95 =
 				SpatialReferenceUtils.CreateSpatialReference(WellKnownHorizontalCS.LV95);
 
-			var fc = new FeatureClassMock(1, "Fc",
+			var fc = new FeatureClassMock("Fc",
 			                              esriGeometryType.esriGeometryPolyline,
-			                              esriFeatureType.esriFTSimple,
-			                              lv95);
+			                              1,
+			                              esriFeatureType.esriFTSimple, lv95);
 
 			IPolyline sourcePolyline = GeometryFactory.CreatePolyline(
 				lv95,
@@ -68,15 +68,16 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void Gen2847_NonZawarePolylineWithInteriorLoops()
 		{
-			var locator = TestDataUtils.GetTestDataLocator();
-			string path = locator.GetPath("DKM25_HOEHENKURVE_OID_2178.xml");
+			string path = TestDataPreparer.FromDirectory()
+			                              .GetPath("DKM25_HOEHENKURVE_OID_2178.xml");
 
 			var nonZAwarePolyline = (IPolyline) GeometryUtils.FromXmlFile(path);
 
-			var fc = new FeatureClassMock(1, "Contours", esriGeometryType.esriGeometryPolyline,
+			var fc = new FeatureClassMock("Contours", esriGeometryType.esriGeometryPolyline,
+			                              1,
 			                              esriFeatureType.esriFTSimple,
-			                              nonZAwarePolyline.SpatialReference,
-			                              hasZ: false, hasM: false);
+			                              nonZAwarePolyline.SpatialReference, hasZ: false,
+			                              hasM: false);
 
 			IFeature f = fc.CreateFeature(nonZAwarePolyline);
 
@@ -98,10 +99,10 @@ namespace ProSuite.QA.Tests.Test
 			ISpatialReference lv95 =
 				SpatialReferenceUtils.CreateSpatialReference(WellKnownHorizontalCS.LV95);
 
-			var fc = new FeatureClassMock(1, "Fc",
+			var fc = new FeatureClassMock("Fc",
 			                              esriGeometryType.esriGeometryPolygon,
-			                              esriFeatureType.esriFTSimple,
-			                              lv95);
+			                              1,
+			                              esriFeatureType.esriFTSimple, lv95);
 
 			IPolyline polyline = GeometryFactory.CreatePolyline(
 				lv95,
@@ -139,10 +140,10 @@ namespace ProSuite.QA.Tests.Test
 			ISpatialReference lv95 =
 				SpatialReferenceUtils.CreateSpatialReference(WellKnownHorizontalCS.LV95);
 
-			var fc = new FeatureClassMock(1, "Fc",
+			var fc = new FeatureClassMock("Fc",
 			                              esriGeometryType.esriGeometryPolyline,
-			                              esriFeatureType.esriFTSimple,
-			                              lv95);
+			                              1,
+			                              esriFeatureType.esriFTSimple, lv95);
 
 			IPolyline polyline = GeometryFactory.CreatePolyline(
 				lv95,

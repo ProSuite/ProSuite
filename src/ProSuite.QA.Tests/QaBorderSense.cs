@@ -178,7 +178,7 @@ namespace ProSuite.QA.Tests
 			if (clockwise == 0)
 			{
 				IPolyline border = polygonLineList.GetBorder();
-				if (_checkArea?.Disjoint(border.FromPoint) != true)
+				if (border.IsEmpty || _checkArea?.Disjoint(border.FromPoint) != true)
 				{
 					const string description = "Empty polygon created";
 

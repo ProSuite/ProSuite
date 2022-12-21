@@ -87,13 +87,19 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 		                             string xmlVerificationReportPath,
 		                             string htmlReportPath)
 		{
-			_issueRepositoryDir = Path.GetDirectoryName(issueRepositoryPath);
-			_issueRepositoryName = Path.GetFileNameWithoutExtension(issueRepositoryPath);
+			if (! string.IsNullOrEmpty(issueRepositoryPath))
+			{
+				_issueRepositoryDir = Path.GetDirectoryName(issueRepositoryPath);
+				_issueRepositoryName = Path.GetFileNameWithoutExtension(issueRepositoryPath);
+			}
 
 			_xmlVerificationReportPath = xmlVerificationReportPath;
 
 			// NOTE: Currently the file names are hard-coded
-			_htmlReportDir = Path.GetDirectoryName(htmlReportPath);
+			if (! string.IsNullOrEmpty(htmlReportPath))
+			{
+				_htmlReportDir = Path.GetDirectoryName(htmlReportPath);
+			}
 		}
 
 		private string XmlVerificationReportFileName =>
@@ -214,10 +220,12 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 					XmlVerificationReport verificationReport = GetVerificationReport(
 						xmlReportBuilder, qualitySpecification, properties);
 
-					XmlUtils.Serialize(verificationReport, _xmlVerificationReportPath);
-
-					InfoFormat("Verification report written to {0}", sb,
-					           _xmlVerificationReportPath);
+					if (! string.IsNullOrWhiteSpace(_xmlVerificationReportPath))
+					{
+						XmlUtils.Serialize(verificationReport, _xmlVerificationReportPath);
+						InfoFormat("Verification report written to {0}", sb,
+						           _xmlVerificationReportPath);
+					}
 
 					IssueStatistics issueStatistics = statisticsBuilder.IssueStatistics;
 

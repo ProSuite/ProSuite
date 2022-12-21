@@ -28,7 +28,7 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanTestMultiPatch()
 		{
-			var fc = new FeatureClassMock(1, "Fc", esriGeometryType.esriGeometryMultiPatch);
+			var fc = new FeatureClassMock("Fc", esriGeometryType.esriGeometryMultiPatch);
 
 			var construction = new MultiPatchConstruction();
 			construction.StartRing(5, 4, 1)
@@ -58,7 +58,7 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanTestMultiPatch1()
 		{
-			var fc = new FeatureClassMock(1, "Fc", esriGeometryType.esriGeometryMultiPatch);
+			var fc = new FeatureClassMock("Fc", esriGeometryType.esriGeometryMultiPatch);
 
 			var construction = new MultiPatchConstruction();
 			construction.StartRing(2579203.89625, 1079769.675, 2485.86625000001)
@@ -75,7 +75,7 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanTestPolygon()
 		{
-			var fc = new FeatureClassMock(1, "Fc", esriGeometryType.esriGeometryPolygon);
+			var fc = new FeatureClassMock("Fc", esriGeometryType.esriGeometryPolygon);
 
 			CurveConstruction construction = CurveConstruction.StartPoly(5, 4, 1)
 			                                                  .LineTo(5, 8, 1)
@@ -105,7 +105,7 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void VerifyErrorInToleranceNotReported()
 		{
-			var fc = new FeatureClassMock(1, "Fc", esriGeometryType.esriGeometryMultiPatch);
+			var fc = new FeatureClassMock("Fc", esriGeometryType.esriGeometryMultiPatch);
 
 			var construction = new MultiPatchConstruction();
 			construction.StartRing(5, 4, 1)
@@ -128,7 +128,7 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void VerifyErrorInSrResolutionNotReported()
 		{
-			var fc = new FeatureClassMock(1, "Fc", esriGeometryType.esriGeometryMultiPatch);
+			var fc = new FeatureClassMock("Fc", esriGeometryType.esriGeometryMultiPatch);
 			var geodataset = (IGeoDataset) fc;
 			var srt = (ISpatialReferenceResolution) geodataset.SpatialReference;
 			double xySrResolution = srt.XYResolution[false];
@@ -190,7 +190,7 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void VerticalPlaneIssue()
 		{
-			var fc = new FeatureClassMock(1, "Fc", esriGeometryType.esriGeometryMultiPatch);
+			var fc = new FeatureClassMock("Fc", esriGeometryType.esriGeometryMultiPatch);
 
 			var construction = new MultiPatchConstruction();
 			construction.StartRing(2646275.33625, 1249624.19375, 379.188750000001)
