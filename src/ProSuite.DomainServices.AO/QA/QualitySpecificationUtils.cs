@@ -47,7 +47,7 @@ namespace ProSuite.DomainServices.AO.QA
 		}
 
 		[NotNull]
-		public static List<DataSource> GetDataSources([NotNull] string dataQualityXml)
+		public static IList<DataSource> GetDataSources([NotNull] string dataQualityXml)
 		{
 			XmlDataQualityDocument document;
 			using (Stream baseStream = new MemoryStream(Encoding.UTF8.GetBytes(dataQualityXml)))
@@ -71,24 +71,6 @@ namespace ProSuite.DomainServices.AO.QA
 			}
 
 			return dataSources;
-		}
-
-		public static QualitySpecification CreateQualitySpecification(
-			[NotNull] string specificationName,
-			IList<XmlTestDescriptor> supportedDescriptors,
-			[NotNull] IList<SpecificationElement> specificationElements,
-			[NotNull] IEnumerable<DataSource> dataSources,
-			bool ignoreConditionsForUnknownDatasets)
-		{
-			XmlBasedQualitySpecificationFactory factory = CreateSpecificationFactory();
-
-			QualitySpecification result = factory.CreateQualitySpecification(
-				specificationName, supportedDescriptors, specificationElements, dataSources,
-				ignoreConditionsForUnknownDatasets);
-
-			result.Name = specificationName;
-
-			return result;
 		}
 
 		/// <summary>

@@ -604,7 +604,7 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 			return GetReferencedWorkspaces(
 				documentCache.QualityConditions,
 				documentCache,
-				out bool hasUndefinedWorkspaceReference);
+				out bool _);
 		}
 
 		[NotNull]
@@ -755,25 +755,6 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 			                           qualityConditionsByName,
 			                           category,
 			                           ignoreMissingConditions);
-
-			return result;
-		}
-
-		[NotNull]
-		public static QualitySpecification CreateQualitySpecification(
-			string name,
-			[NotNull] IDictionary<string, QualityCondition> qualityConditionsByName,
-			[NotNull] IEnumerable<QualitySpecificationElement> specificationElements)
-		{
-			Assert.ArgumentNotNull(qualityConditionsByName, nameof(qualityConditionsByName));
-
-			var result = new QualitySpecification(name);
-
-			foreach (QualitySpecificationElement element in specificationElements)
-			{
-				result.AddElement(element.QualityCondition, element.StopOnError,
-				                  element.AllowErrors);
-			}
 
 			return result;
 		}
@@ -1074,14 +1055,6 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 			ImportMetadata(instanceConfiguration, xmlInstanceConfiguration);
 
 			instanceConfiguration.Category = category;
-		}
-
-		[NotNull]
-		private static TestParameterValue CreateScalarTestParameterValue(
-			[NotNull] TestParameter testParameter,
-			[NotNull] XmlScalarTestParameterValue xmlScalarTestParameterValue)
-		{
-			return new ScalarTestParameterValue(testParameter, xmlScalarTestParameterValue.Value);
 		}
 
 		[CanBeNull]
@@ -2197,7 +2170,7 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 		}
 
 		[NotNull]
-		public static XmlTransformerDescriptor CreateXmlTransformerDescriptor(
+		private static XmlTransformerDescriptor CreateXmlTransformerDescriptor(
 			[NotNull] TransformerDescriptor transformerDescriptor, bool exportMetadata)
 		{
 			Assert.ArgumentNotNull(transformerDescriptor, nameof(transformerDescriptor));
@@ -2442,7 +2415,7 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 				if (! workspaceIdsByModel.TryGetValue(dataset.Model, out workspaceId))
 				{
 					throw new ArgumentException(
-						string.Format("model not found in dictionary: {0}", dataset.Model),
+						$@"Model not found in dictionary: {dataset.Model}",
 						nameof(workspaceIdsByModel));
 				}
 			}
@@ -2486,8 +2459,8 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 			return new XmlFilterExpression { Expression = expression };
 		}
 
-		public static void ExportMetadata([NotNull] IEntityMetadata entity,
-		                                  [NotNull] IXmlEntityMetadata xml)
+		private static void ExportMetadata([NotNull] IEntityMetadata entity,
+		                                   [NotNull] IXmlEntityMetadata xml)
 		{
 			Assert.ArgumentNotNull(entity, nameof(entity));
 			Assert.ArgumentNotNull(xml, nameof(xml));

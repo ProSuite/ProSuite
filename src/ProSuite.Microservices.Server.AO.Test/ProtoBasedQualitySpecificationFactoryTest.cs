@@ -1,3 +1,4 @@
+using System.IO;
 using NSubstitute;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Test;
@@ -18,6 +19,7 @@ namespace ProSuite.Microservices.Server.AO.Test
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
+			TestUtils.ConfigureUnittestLogging();
 			TestUtils.InitializeLicense();
 		}
 
@@ -51,7 +53,30 @@ namespace ProSuite.Microservices.Server.AO.Test
 			Assert.AreEqual(featureClassName, fclassValue.DatasetValue.Name);
 		}
 
-		public static QualitySpecification CreateConditionBasedQualitySpecification(
+		[Test]
+		public void CanExecuteConditionBasedSpecification()
+		{
+			const string specificationName = "TestSpec";
+			const string condition1Name = "Str_Simple";
+			string gdbPath = TestData.GetGdb1Path();
+			const string featureClassName = "lines";
+
+			QualitySpecification qualitySpecification =
+				CreateConditionBasedQualitySpecification(
+					condition1Name, featureClassName, specificationName, gdbPath);
+
+			XmlBasedVerificationService service = new XmlBasedVerificationService();
+
+			string tempDirPath = TestUtils.GetTempDirPath(null);
+
+			service.ExecuteVerification(qualitySpecification, null, 1000,
+			                            tempDirPath);
+
+			Assert.IsTrue(Directory.Exists(Path.Combine(tempDirPath, "issues.gdb")));
+			Assert.IsTrue(File.Exists(Path.Combine(tempDirPath, "verification.xml")));
+		}
+
+		private static QualitySpecification CreateConditionBasedQualitySpecification(
 			string condition1Name, string featureClassName,
 			string specificationName, string gdbPath)
 		{

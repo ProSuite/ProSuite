@@ -10,7 +10,6 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Exceptions;
 using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.QA;
-using ProSuite.DomainModel.AO.QA.Xml;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.Xml;
@@ -46,31 +45,6 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 				                                      qualitySpecificationName,
 				                                      dataSources,
 				                                      ignoreConditionsForUnknownDatasets);
-			}
-			finally
-			{
-				Thread.CurrentThread.CurrentCulture = origCulture;
-			}
-		}
-
-		[NotNull]
-		public QualitySpecification CreateQualitySpecification(
-			[NotNull] string name,
-			[NotNull] IList<XmlTestDescriptor> xmlDescriptors,
-			[NotNull] IList<SpecificationElement> specificationElements,
-			[NotNull] IEnumerable<DataSource> dataSources,
-			bool ignoreConditionsForUnknownDatasets = false)
-		{
-			CultureInfo origCulture = Thread.CurrentThread.CurrentCulture;
-			try
-			{
-				Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
-
-				return CreateQualitySpecificationCore(
-					name, xmlDescriptors,
-					specificationElements,
-					dataSources,
-					ignoreConditionsForUnknownDatasets);
 			}
 			finally
 			{
@@ -152,95 +126,6 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 				ignoreConditionsForUnknownDatasets);
 		}
 
-		/// <summary>
-		/// Creates a simple specification from the provided xml test descriptors and specification
-		/// elements. Currently no special features (row filters, issue filters, transformers) are
-		/// supported.
-		/// </summary>
-		/// <param name="name"></param>
-		/// <param name="xmlDescriptors"></param>
-		/// <param name="specificationElements"></param>
-		/// <param name="dataSources"></param>
-		/// <param name="ignoreConditionsForUnknownDatasets"></param>
-		/// <returns></returns>
-		private QualitySpecification CreateQualitySpecificationCore(
-			[NotNull] string name,
-			[NotNull] IList<XmlTestDescriptor> xmlDescriptors,
-			[NotNull] IList<SpecificationElement> specificationElements,
-			[NotNull] IEnumerable<DataSource> dataSources,
-			bool ignoreConditionsForUnknownDatasets)
-		{
-			Assert.ArgumentNotNull(xmlDescriptors, nameof(xmlDescriptors));
-			Assert.ArgumentNotNull(specificationElements, nameof(specificationElements));
-			Assert.ArgumentNotNull(dataSources, nameof(dataSources));
-			Assert.ArgumentCondition(xmlDescriptors.Any(),
-			                         "At least one xml test descriptor must be provided");
-
-			IList<XmlQualityCondition> xmlConditions =
-				specificationElements.Select(x => x.XmlCondition).ToList();
-
-			XmlDataQualityUtils.AssertUniqueInstanceDescriptorNames(
-				xmlDescriptors, "test descriptor");
-			XmlDataQualityUtils.AssertUniqueInstanceConfigurationNames(
-				xmlConditions, "quality condition");
-
-			IDictionary<string, DdxModel> modelsByWorkspaceId = GetModelsByWorkspaceId(
-				dataSources, xmlConditions);
-
-			IDictionary<string, XmlTestDescriptor> xmlTestDescriptorsByName =
-				xmlDescriptors.ToDictionary(descriptor => descriptor.Name,
-				                            StringComparer.OrdinalIgnoreCase);
-
-			IDictionary<string, TestDescriptor> testDescriptorsByName =
-				GetReferencedTestDescriptorsByName(xmlConditions, xmlTestDescriptorsByName);
-
-			// TODO: GetReferencedRowFiltersByName, GetReferencedTransformers, etc.
-
-			List<KeyValuePair<XmlQualityCondition, DataQualityCategory>> conditionsWithCategory =
-				GetConditionsWithCategory(specificationElements);
-
-			Dictionary<string, QualityCondition> qualityConditions =
-				CreateQualityConditions(conditionsWithCategory,
-				                        testDescriptorsByName,
-				                        modelsByWorkspaceId,
-				                        ignoreConditionsForUnknownDatasets);
-
-			IEnumerable<QualitySpecificationElement> qualitySpecificationElements =
-				GetQualitySpecificationElements(specificationElements, qualityConditions);
-
-			return XmlDataQualityUtils.CreateQualitySpecification(
-				name, qualityConditions, qualitySpecificationElements);
-		}
-
-		private static Dictionary<string, QualityCondition> CreateQualityConditions(
-			[NotNull] IList<KeyValuePair<XmlQualityCondition, XmlDataQualityCategory>>
-				referencedXmlConditionPairs,
-			[NotNull] IDictionary<string, TestDescriptor> testDescriptorsByName,
-			IDictionary<XmlDataQualityCategory, DataQualityCategory> categoryMap,
-			IDictionary<string, DdxModel> modelsByWorkspaceId,
-			bool ignoreConditionsForUnknownDatasets)
-		{
-			var conditionsWithCategory =
-				new List<KeyValuePair<XmlQualityCondition, DataQualityCategory>>();
-
-			foreach (var kvp in referencedXmlConditionPairs)
-			{
-				XmlQualityCondition xmlQualityCondition = kvp.Key;
-				XmlDataQualityCategory xmlCategory = kvp.Value;
-
-				DataQualityCategory category = xmlCategory != null
-					                               ? categoryMap[xmlCategory]
-					                               : null;
-
-				conditionsWithCategory.Add(
-					new KeyValuePair<XmlQualityCondition, DataQualityCategory>(
-						xmlQualityCondition, category));
-			}
-
-			return CreateQualityConditions(conditionsWithCategory, testDescriptorsByName,
-			                               modelsByWorkspaceId, ignoreConditionsForUnknownDatasets);
-		}
-
 		private static Dictionary<string, QualityCondition> CreateQualityConditions(
 			XmlDataQualityDocumentCache xmlDataDocumentCache,
 			IDictionary<XmlDataQualityCategory, DataQualityCategory> categoryMap,
@@ -283,48 +168,6 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			return qualityConditions;
 		}
 
-		private static Dictionary<string, QualityCondition> CreateQualityConditions(
-			[NotNull] IList<KeyValuePair<XmlQualityCondition, DataQualityCategory>> conditions,
-			[NotNull] IDictionary<string, TestDescriptor> testDescriptorsByName,
-			IDictionary<string, DdxModel> modelsByWorkspaceId,
-			bool ignoreConditionsForUnknownDatasets)
-		{
-			var qualityConditions = new Dictionary<string, QualityCondition>(
-				StringComparer.OrdinalIgnoreCase);
-
-			Func<string, IList<Dataset>> getDatasetsByName = name => new List<Dataset>();
-
-			foreach (KeyValuePair<XmlQualityCondition, DataQualityCategory> pair in conditions)
-			{
-				XmlQualityCondition xmlCondition = pair.Key;
-				DataQualityCategory conditionCategory = pair.Value;
-
-				ICollection<DatasetTestParameterRecord> unknownDatasetParameters;
-				QualityCondition qualityCondition =
-					XmlQaUtils.CreateQualityConditionLegacy(
-						xmlCondition,
-						testDescriptorsByName[xmlCondition.TestDescriptorName],
-						modelsByWorkspaceId,
-						getDatasetsByName,
-						conditionCategory,
-						ignoreConditionsForUnknownDatasets,
-						out unknownDatasetParameters);
-
-				if (qualityCondition == null)
-				{
-					HandleNoConditionCreated(xmlCondition.Name, modelsByWorkspaceId,
-					                         ignoreConditionsForUnknownDatasets,
-					                         unknownDatasetParameters);
-				}
-				else
-				{
-					qualityConditions.Add(qualityCondition.Name, qualityCondition);
-				}
-			}
-
-			return qualityConditions;
-		}
-
 		[NotNull]
 		private static IDictionary<XmlDataQualityCategory, DataQualityCategory>
 			GetCategoryMap([NotNull] XmlDataQualityDocument document)
@@ -352,23 +195,6 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			return result;
 		}
 
-		[NotNull]
-		private static IDictionary<string, DataQualityCategory> GetCategoryMap(
-			[NotNull] IEnumerable<string> categoryNames)
-		{
-			var result = new Dictionary<string, DataQualityCategory>();
-
-			foreach (string categoryName in categoryNames)
-			{
-				if (! result.ContainsKey(categoryName))
-				{
-					result.Add(categoryName, new DataQualityCategory(categoryName));
-				}
-			}
-
-			return result;
-		}
-
 		private static void AddSubCategories(
 			[NotNull] IEnumerable<XmlDataQualityCategory> xmlCategories,
 			[NotNull] DataQualityCategory parentCategory,
@@ -386,38 +212,6 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 					AddSubCategories(xmlCategory.SubCategories, category, result);
 				}
 			}
-		}
-
-		private static IDictionary<string, TestDescriptor> GetReferencedTestDescriptorsByName(
-			[NotNull] IEnumerable<XmlQualityCondition> referencedConditions,
-			[NotNull] IDictionary<string, XmlTestDescriptor> xmlTestDescriptorsByName)
-		{
-			var result = new Dictionary<string, TestDescriptor>(
-				StringComparer.OrdinalIgnoreCase);
-
-			foreach (XmlQualityCondition condition in referencedConditions)
-			{
-				string testDescriptorName = condition.TestDescriptorName;
-				if (testDescriptorName == null || result.ContainsKey(testDescriptorName))
-				{
-					continue;
-				}
-
-				XmlTestDescriptor xmlTestDescriptor;
-				if (! xmlTestDescriptorsByName.TryGetValue(testDescriptorName,
-				                                           out xmlTestDescriptor))
-				{
-					throw new InvalidConfigurationException(
-						string.Format(
-							"Test descriptor {0}, referenced in quality condition {1}, not found",
-							testDescriptorName, condition.Name));
-				}
-
-				result.Add(testDescriptorName,
-				           XmlDataQualityUtils.CreateTestDescriptor(xmlTestDescriptor));
-			}
-
-			return result;
 		}
 
 		private IDictionary<string, DdxModel> GetModelsByWorkspaceId(
@@ -467,27 +261,6 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 		}
 
 		[NotNull]
-		private IDictionary<string, DdxModel> GetModelsByWorkspaceId(
-			[NotNull] IEnumerable<DataSource> allDataSources,
-			[NotNull] IList<XmlQualityCondition> referencedConditions)
-		{
-			var result = new Dictionary<string, DdxModel>(StringComparer.OrdinalIgnoreCase);
-
-			foreach (DataSource dataSource in allDataSources)
-			{
-				result.Add(dataSource.ID,
-				           CreateModel(dataSource.OpenWorkspace(),
-				                       dataSource.DisplayName,
-				                       dataSource.ID,
-				                       dataSource.DatabaseName,
-				                       dataSource.SchemaOwner,
-				                       referencedConditions));
-			}
-
-			return result;
-		}
-
-		[NotNull]
 		private Model CreateModel(
 			[NotNull] IWorkspace workspace,
 			[NotNull] string modelName,
@@ -509,54 +282,6 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			}
 
 			return result;
-		}
-
-		private static List<KeyValuePair<XmlQualityCondition, DataQualityCategory>>
-			GetConditionsWithCategory(
-				[NotNull] IList<SpecificationElement> specificationElements)
-		{
-			var categoryMap = GetCategoryMap(
-				specificationElements.Select(e => e.CategoryName));
-
-			var conditionsWithCategory =
-				new List<KeyValuePair<XmlQualityCondition, DataQualityCategory>>();
-
-			foreach (var element in specificationElements)
-			{
-				string category = element.CategoryName;
-
-				DataQualityCategory dataQualityCategory =
-					category == null ? null : categoryMap[category];
-
-				conditionsWithCategory.Add(
-					new KeyValuePair<XmlQualityCondition, DataQualityCategory>(
-						element.XmlCondition, dataQualityCategory));
-			}
-
-			return conditionsWithCategory;
-		}
-
-		private static IList<QualitySpecificationElement> GetQualitySpecificationElements(
-			[NotNull] IEnumerable<SpecificationElement> specificationElements,
-			[NotNull] IReadOnlyDictionary<string, QualityCondition> qualityConditions)
-		{
-			var qualitySpecificationElements = new List<QualitySpecificationElement>();
-
-			foreach (SpecificationElement element in specificationElements)
-			{
-				string conditionName = Assert.NotNullOrEmpty(
-					element.XmlCondition.Name, "Empty or null condition name.");
-
-				QualityCondition qualityCondition = qualityConditions[conditionName];
-
-				QualitySpecificationElement qualitySpecificationElement =
-					new QualitySpecificationElement(qualityCondition, element.StopOnError,
-					                                element.AllowErrors);
-
-				qualitySpecificationElements.Add(qualitySpecificationElement);
-			}
-
-			return qualitySpecificationElements;
 		}
 
 		[CanBeNull]
