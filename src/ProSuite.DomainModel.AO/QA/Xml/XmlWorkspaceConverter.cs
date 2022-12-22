@@ -25,18 +25,19 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		                                       bool exportWorkspaceConnections,
 		                                       bool exportConnectionFilePaths)
 		{
-			Model model = ddxModel as Model;
-			Assert.NotNull(model, "The specified model is not of type Model.");
 			var result = new XmlWorkspace
 			             {
-				             ID = XmlUtils.EscapeInvalidCharacters(model.Name),
-				             ModelName = XmlUtils.EscapeInvalidCharacters(model.Name),
-				             Database = model.DefaultDatabaseName,
-				             SchemaOwner = model.DefaultDatabaseSchemaOwner
+				             ID = XmlUtils.EscapeInvalidCharacters(ddxModel.Name),
+				             ModelName = XmlUtils.EscapeInvalidCharacters(ddxModel.Name),
+				             Database = ddxModel.DefaultDatabaseName,
+				             SchemaOwner = ddxModel.DefaultDatabaseSchemaOwner
 			             };
 
 			if (exportWorkspaceConnections)
 			{
+				Model model = ddxModel as Model;
+				Assert.NotNull(model, "The specified model is not of type Model.");
+
 				IWorkspace workspace = model.GetMasterDatabaseWorkspace();
 
 				Assert.NotNull(workspace,
