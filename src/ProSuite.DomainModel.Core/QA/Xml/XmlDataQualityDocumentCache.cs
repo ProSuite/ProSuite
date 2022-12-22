@@ -72,8 +72,10 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 		[CanBeNull]
 		public IDictionary<string, DdxModel> ReferencedModels { get; set; }
 
+		[CanBeNull]
 		public IIssueFilterExpressionParser IssueFilterExpressionParser { get; set; }
 
+		[CanBeNull]
 		public ITestParameterDatasetValidator ParameterDatasetValidator { get; set; }
 
 		public XmlDataQualityDocumentCache(XmlDataQualityDocument document,
@@ -293,15 +295,8 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 			[NotNull] DatasetSettings datasetSettings)
 		{
 			string issueFilterExpression = xmlCondition.IssueFilterExpression?.Expression;
-			if (string.IsNullOrWhiteSpace(issueFilterExpression))
-			{
-				return;
-			}
 
-			IList<string> issueFilterNames =
-				Assert.NotNull(IssueFilterExpressionParser).GetFilterNames(issueFilterExpression);
-
-			foreach (string issueFilterName in issueFilterNames)
+			foreach (string issueFilterName in GetIssueFilterNames(issueFilterExpression))
 			{
 				if (! TryGetIssueFilter(
 					    issueFilterName.Trim(),
@@ -364,11 +359,9 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 
 			if (config is XmlQualityCondition xmlCondition)
 			{
-				IList<string> filterNames =
-					Assert.NotNull(IssueFilterExpressionParser).GetFilterNames(
-						xmlCondition.IssueFilterExpression?.Expression);
+				string issueFilterExpression = xmlCondition.IssueFilterExpression?.Expression;
 
-				foreach (string filterName in filterNames)
+				foreach (string filterName in GetIssueFilterNames(issueFilterExpression))
 				{
 					if (! IssueFilters.TryGetValue(filterName,
 					                               out XmlIssueFilterConfiguration filter))
@@ -446,6 +439,20 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 			}
 
 			return descriptor;
+		}
+
+		public IList<string> GetIssueFilterNames([CanBeNull] string issueFilterExpression)
+		{
+			if (string.IsNullOrWhiteSpace(issueFilterExpression))
+			{
+				return new List<string>();
+			}
+
+			var result = Assert.NotNull(IssueFilterExpressionParser,
+			                            "Filter Expression Parser not initialized")
+			                   .GetFilterNames(issueFilterExpression);
+
+			return result;
 		}
 	}
 }

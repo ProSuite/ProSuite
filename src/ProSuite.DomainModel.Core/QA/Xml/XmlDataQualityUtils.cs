@@ -679,7 +679,7 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 				if (xmlInstanceConfig is XmlQualityCondition xmlCondition)
 				{
 					IList<string> issueFilterNames =
-						documentCache.IssueFilterExpressionParser.GetFilterNames(
+						documentCache.GetIssueFilterNames(
 							xmlCondition.IssueFilterExpression?.Expression);
 
 					// Handle issue filters
@@ -1091,7 +1091,7 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 			[NotNull] string qualityConditionName,
 			[NotNull] IDictionary<string, DdxModel> modelsByWorkspaceId,
 			[NotNull] Func<string, IList<Dataset>> getDatasetsByName,
-			ITestParameterDatasetValidator parameterDatasetValidator,
+			[CanBeNull] ITestParameterDatasetValidator parameterDatasetValidator,
 			bool ignoreForUnknownDatasets)
 		{
 			Dataset dataset = GetDataset(xmlDatasetTestParameterValue,
@@ -1117,7 +1117,8 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 				return null;
 			}
 
-			if (! parameterDatasetValidator.IsValidForParameter(
+			if (parameterDatasetValidator != null &&
+			    ! parameterDatasetValidator.IsValidForParameter(
 				    dataset, testParameter, out string message))
 			{
 				throw new InvalidOperationException(message);
