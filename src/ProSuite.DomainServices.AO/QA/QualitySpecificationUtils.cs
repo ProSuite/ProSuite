@@ -9,10 +9,10 @@ using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
 using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.QA;
-using ProSuite.DomainModel.AO.QA.Xml;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.Repositories;
+using ProSuite.DomainModel.Core.QA.Xml;
 using ProSuite.DomainServices.AO.QA.Standalone.XmlBased;
 using ProSuite.DomainServices.AO.QA.VerifiedDataModel;
 
@@ -53,7 +53,7 @@ namespace ProSuite.DomainServices.AO.QA
 			using (Stream baseStream = new MemoryStream(Encoding.UTF8.GetBytes(dataQualityXml)))
 			using (StreamReader xmlReader = new StreamReader(baseStream))
 			{
-				document = XmlDataQualityUtils.ReadXmlDocument(xmlReader,out _);
+				document = XmlDataQualityUtils.ReadXmlDocument(xmlReader, out _);
 			}
 
 			List<DataSource> dataSources = new List<DataSource>();

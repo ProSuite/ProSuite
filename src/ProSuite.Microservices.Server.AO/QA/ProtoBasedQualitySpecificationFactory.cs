@@ -12,9 +12,9 @@ using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
 using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.QA;
-using ProSuite.DomainModel.AO.QA.Xml;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
+using ProSuite.DomainModel.Core.QA.Xml;
 using ProSuite.DomainServices.AO.QA.Standalone;
 using ProSuite.DomainServices.AO.QA.Standalone.XmlBased;
 using ProSuite.DomainServices.AO.QA.VerifiedDataModel;
@@ -44,7 +44,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			_instanceDescriptors = instanceDescriptors;
 		}
 
-		private IDictionary<string, Model> ModelsByWorkspaceId { get; set; }
+		private IDictionary<string, DdxModel> ModelsByWorkspaceId { get; set; }
 
 		[NotNull]
 		public QualitySpecification CreateQualitySpecification(
@@ -408,7 +408,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 		                           [NotNull] TestParameter testParameter,
 		                           [NotNull] DatasetSettings datasetSettings)
 		{
-			Dataset dataset = TestParameterValueUtils.GetDataset(
+			Dataset dataset = DdxModelElementUtils.GetDataset(
 				parameterMsg.Value, parameterMsg.WorkspaceId,
 				testParameter, createdConfiguration.Name, ModelsByWorkspaceId,
 				datasetSettings.GetDatasetsByName, datasetSettings.IgnoreUnknownDatasets);
@@ -437,11 +437,11 @@ namespace ProSuite.Microservices.Server.AO.QA
 		#endregion
 
 		[NotNull]
-		private IDictionary<string, Model> GetModelsByWorkspaceId(
+		private IDictionary<string, DdxModel> GetModelsByWorkspaceId(
 			[NotNull] IEnumerable<DataSource> allDataSources,
 			[NotNull] IList<QualityConditionMsg> referencedConditions)
 		{
-			var result = new Dictionary<string, Model>(StringComparer.OrdinalIgnoreCase);
+			var result = new Dictionary<string, DdxModel>(StringComparer.OrdinalIgnoreCase);
 
 			foreach (DataSource dataSource in allDataSources)
 			{

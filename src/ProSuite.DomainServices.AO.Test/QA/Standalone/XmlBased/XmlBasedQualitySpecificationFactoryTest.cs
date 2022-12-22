@@ -10,8 +10,8 @@ using ProSuite.Commons.AO.Test;
 using ProSuite.Commons.Testing;
 using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.QA;
-using ProSuite.DomainModel.AO.QA.Xml;
 using ProSuite.DomainModel.Core.QA;
+using ProSuite.DomainModel.Core.QA.Xml;
 using ProSuite.DomainServices.AO.QA.Standalone.XmlBased;
 using ProSuite.DomainServices.AO.QA.VerifiedDataModel;
 
@@ -23,7 +23,7 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 		private XmlWorkspace _xmlWorkspace;
 		private XmlTestDescriptor _xmlTestDescriptorSimple;
 		private XmlTestDescriptor _xmlTestDescriptorMinArea;
-		
+
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
@@ -160,7 +160,7 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 				                            WorkspaceId = _xmlWorkspace.ID
 			                            });
 
-			var xmlQSpec = new XmlQualitySpecification {Name = "qspec"};
+			var xmlQSpec = new XmlQualitySpecification { Name = "qspec" };
 			xmlQSpec.Elements.Add(new XmlQualitySpecificationElement
 			                      {
 				                      QualityConditionName = xmlQCon.Name
@@ -192,7 +192,7 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 			{
 				qualitySpecification =
 					factory.CreateQualitySpecification(xmlDocument, xmlQSpec.Name,
-					                                   new[] {dataSource},
+					                                   new[] { dataSource },
 					                                   ignoreConditionsForUnknownDatasets);
 			}
 			catch (Exception)
@@ -214,7 +214,7 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 		[Test]
 		public void CanCreateEmptyQualitySpecification()
 		{
-			var xmlQualitySpecification = new XmlQualitySpecification {Name = "Empty"};
+			var xmlQualitySpecification = new XmlQualitySpecification { Name = "Empty" };
 
 			var xmlDocument = new XmlDataQualityDocument();
 			xmlDocument.AddQualitySpecification(xmlQualitySpecification);
@@ -261,9 +261,9 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 						new DataSource[]
 						{
 							new DataSource("TLM_QualityAssurance", "TLM_QualityAssurance")
-							{WorkspaceAsText = ws},
+							{ WorkspaceAsText = ws },
 							new DataSource("PRODAS", "PRODAS")
-							{WorkspaceAsText = ws}
+							{ WorkspaceAsText = ws }
 						},
 						ignoreConditionsForUnknownDatasets: true);
 
@@ -307,10 +307,10 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 			string catalogPath = TestDataPreparer.ExtractZip("QATestData.gdb.zip", @"QA\TestData")
 			                                     .GetPath();
 
-			var xmlCategory = new XmlDataQualityCategory {Name = "Category A"};
-			var xmlSubCategory = new XmlDataQualityCategory {Name = "Category A.1"};
-			var xmlSubSubCategory = new XmlDataQualityCategory {Name = "Category A.1.1"};
-			var xmlSubSubCategory2 = new XmlDataQualityCategory {Name = "Category A.1.2"};
+			var xmlCategory = new XmlDataQualityCategory { Name = "Category A" };
+			var xmlSubCategory = new XmlDataQualityCategory { Name = "Category A.1" };
+			var xmlSubSubCategory = new XmlDataQualityCategory { Name = "Category A.1.1" };
+			var xmlSubSubCategory2 = new XmlDataQualityCategory { Name = "Category A.1.2" };
 
 			xmlCategory.AddSubCategory(xmlSubCategory);
 			xmlSubCategory.AddSubCategory(xmlSubSubCategory);
@@ -334,7 +334,7 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 				                            Value = "12.34"
 			                            });
 
-			var xmlQSpec = new XmlQualitySpecification {Name = "qspec"};
+			var xmlQSpec = new XmlQualitySpecification { Name = "qspec" };
 			xmlQSpec.Elements.Add(new XmlQualitySpecificationElement
 			                      {
 				                      QualityConditionName = xmlQCon.Name
@@ -365,7 +365,7 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 
 			QualitySpecification qualitySpecification =
 				factory.CreateQualitySpecification(xmlDocument, xmlQSpec.Name,
-				                                   new[] {dataSource});
+				                                   new[] { dataSource });
 
 			Assert.NotNull(qualitySpecification.Category);
 			Assert.AreEqual(xmlQSpec.Name, qualitySpecification.Name);
@@ -439,7 +439,7 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 						},
 				};
 
-			var xmlDescriptors = new List<XmlTestDescriptor> {xmlTest1, xmlTest2};
+			var xmlDescriptors = new List<XmlTestDescriptor> { xmlTest1, xmlTest2 };
 
 			const string workspaceId = "TestID";
 

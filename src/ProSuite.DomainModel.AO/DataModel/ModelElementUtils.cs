@@ -290,79 +290,6 @@ namespace ProSuite.DomainModel.AO.DataModel
 			                                              modelElementName);
 		}
 
-		[CanBeNull]
-		public static Dataset GetDatasetFromStoredName([NotNull] string storedDatasetName,
-		                                               [NotNull] Model model,
-		                                               bool ignoreUnknownDataset)
-		{
-			Assert.ArgumentNotNullOrEmpty(storedDatasetName, nameof(storedDatasetName));
-			Assert.ArgumentNotNull(model, nameof(model));
-
-			string searchName = GetModelElementNameFromStoredName(storedDatasetName, model);
-
-			Dataset dataset = model.GetDatasetByModelName(searchName);
-
-			if (dataset != null)
-			{
-				return dataset;
-			}
-
-			string unqualifiedName;
-			if (ModelElementNameUtils.TryUnqualifyName(storedDatasetName, out unqualifiedName))
-			{
-				dataset = model.GetDatasetByModelName(unqualifiedName);
-				if (dataset != null)
-				{
-					return dataset;
-				}
-			}
-
-			if (ignoreUnknownDataset)
-			{
-				return null;
-			}
-
-			throw new ArgumentException(
-				$"No dataset with name '{storedDatasetName}' exists in model '{model.Name}'");
-		}
-
-		[CanBeNull]
-		public static Association GetAssociationFromStoredName(
-			[NotNull] string storedAssociationName,
-			[NotNull] Model model,
-			bool ignoreUnknownAssociation)
-		{
-			Assert.ArgumentNotNullOrEmpty(storedAssociationName, nameof(storedAssociationName));
-			Assert.ArgumentNotNull(model, nameof(model));
-
-			string searchName = GetModelElementNameFromStoredName(storedAssociationName, model);
-
-			Association association = model.GetAssociationByModelName(searchName);
-
-			if (association != null)
-			{
-				return association;
-			}
-
-			string unqualifiedName;
-			if (ModelElementNameUtils.TryUnqualifyName(storedAssociationName, out unqualifiedName))
-			{
-				association = model.GetAssociationByModelName(unqualifiedName);
-				if (association != null)
-				{
-					return association;
-				}
-			}
-
-			if (ignoreUnknownAssociation)
-			{
-				return null;
-			}
-
-			throw new ArgumentException(
-				$"No association with name '{storedAssociationName}' exists in model '{model.Name}'");
-		}
-
 		[NotNull]
 		public static IObjectClass OpenObjectClass([NotNull] IFeatureWorkspace workspace,
 		                                           [NotNull] string gdbDatasetName,
@@ -533,39 +460,6 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 			return DatasetUtils.GetUniqueIntegerField(table) ??
 			       DatasetUtils.GetUniqueIntegerField(table, requireUniqueIndex: false);
-		}
-
-		[NotNull]
-		private static string GetModelElementNameFromStoredName(
-			[NotNull] string modelElementName,
-			[NotNull] Model model)
-		{
-			if (! ModelElementNameUtils.IsQualifiedName(modelElementName) &&
-			    model.ElementNamesAreQualified)
-			{
-				IWorkspace workspace = model.GetMasterDatabaseWorkspace();
-
-				if (workspace == null)
-				{
-					return modelElementName;
-				}
-
-				return DatasetUtils.QualifyTableName(workspace,
-				                                     model.DefaultDatabaseName,
-				                                     model.DefaultDatabaseSchemaOwner,
-				                                     modelElementName);
-			}
-
-			if (! model.ElementNamesAreQualified)
-			{
-				string unqualifiedName;
-				if (ModelElementNameUtils.TryUnqualifyName(modelElementName, out unqualifiedName))
-				{
-					return unqualifiedName;
-				}
-			}
-
-			return modelElementName;
 		}
 	}
 }

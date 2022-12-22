@@ -13,7 +13,9 @@ using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.AO.QA.Xml;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
+using ProSuite.DomainModel.Core.QA.Xml;
 using ProSuite.DomainServices.AO.QA.VerifiedDataModel;
+using ProSuite.QA.Container;
 
 namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 {
@@ -121,12 +123,14 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 				GetCategoryMap(document);
 
 			XmlDataQualityDocumentCache documentCache =
-				XmlDataQualityUtils.GetDocumentCache(document, new[] { xmlQualitySpecification });
+				XmlDataQualityUtils.GetDocumentCache(document, new[] { xmlQualitySpecification },
+				                                     new TestParameterDatasetValidator(),
+				                                     new IssueFilterExpressionParser());
 
 			IList<XmlWorkspace> referencedXmlWorkspaces =
 				XmlDataQualityUtils.GetReferencedWorkspaces(documentCache);
 
-			IDictionary<string, Model> modelsByWorkspaceId = GetModelsByWorkspaceId(
+			IDictionary<string, DdxModel> modelsByWorkspaceId = GetModelsByWorkspaceId(
 				referencedXmlWorkspaces, dataSources,
 				documentCache.EnumReferencedConfigurationInstances().ToList());
 
@@ -180,7 +184,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			XmlDataQualityUtils.AssertUniqueInstanceConfigurationNames(
 				xmlConditions, "quality condition");
 
-			IDictionary<string, Model> modelsByWorkspaceId = GetModelsByWorkspaceId(
+			IDictionary<string, DdxModel> modelsByWorkspaceId = GetModelsByWorkspaceId(
 				dataSources, xmlConditions);
 
 			IDictionary<string, XmlTestDescriptor> xmlTestDescriptorsByName =
@@ -213,7 +217,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 				referencedXmlConditionPairs,
 			[NotNull] IDictionary<string, TestDescriptor> testDescriptorsByName,
 			IDictionary<XmlDataQualityCategory, DataQualityCategory> categoryMap,
-			IDictionary<string, Model> modelsByWorkspaceId,
+			IDictionary<string, DdxModel> modelsByWorkspaceId,
 			bool ignoreConditionsForUnknownDatasets)
 		{
 			var conditionsWithCategory =
@@ -240,7 +244,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 		private static Dictionary<string, QualityCondition> CreateQualityConditions(
 			XmlDataQualityDocumentCache xmlDataDocumentCache,
 			IDictionary<XmlDataQualityCategory, DataQualityCategory> categoryMap,
-			IDictionary<string, Model> modelsByWorkspaceId,
+			IDictionary<string, DdxModel> modelsByWorkspaceId,
 			bool ignoreConditionsForUnknownDatasets)
 		{
 			var qualityConditions = new Dictionary<string, QualityCondition>(
@@ -282,7 +286,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 		private static Dictionary<string, QualityCondition> CreateQualityConditions(
 			[NotNull] IList<KeyValuePair<XmlQualityCondition, DataQualityCategory>> conditions,
 			[NotNull] IDictionary<string, TestDescriptor> testDescriptorsByName,
-			IDictionary<string, Model> modelsByWorkspaceId,
+			IDictionary<string, DdxModel> modelsByWorkspaceId,
 			bool ignoreConditionsForUnknownDatasets)
 		{
 			var qualityConditions = new Dictionary<string, QualityCondition>(
@@ -297,7 +301,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 
 				ICollection<DatasetTestParameterRecord> unknownDatasetParameters;
 				QualityCondition qualityCondition =
-					XmlDataQualityUtils.CreateQualityConditionLegacy(
+					XmlQaUtils.CreateQualityConditionLegacy(
 						xmlCondition,
 						testDescriptorsByName[xmlCondition.TestDescriptorName],
 						modelsByWorkspaceId,
@@ -416,7 +420,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			return result;
 		}
 
-		private IDictionary<string, Model> GetModelsByWorkspaceId(
+		private IDictionary<string, DdxModel> GetModelsByWorkspaceId(
 			[NotNull] IEnumerable<XmlWorkspace> xmlWorkspaces,
 			[NotNull] IEnumerable<DataSource> dataSources,
 			[NotNull] IList<XmlInstanceConfiguration> referencedConditions)
@@ -425,7 +429,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 				dataSources.ToDictionary(dataSource => dataSource.ID,
 				                         StringComparer.OrdinalIgnoreCase);
 
-			var result = new Dictionary<string, Model>(StringComparer.OrdinalIgnoreCase);
+			var result = new Dictionary<string, DdxModel>(StringComparer.OrdinalIgnoreCase);
 
 			foreach (XmlWorkspace xmlWorkspace in xmlWorkspaces)
 			{
@@ -463,11 +467,11 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 		}
 
 		[NotNull]
-		private IDictionary<string, Model> GetModelsByWorkspaceId(
+		private IDictionary<string, DdxModel> GetModelsByWorkspaceId(
 			[NotNull] IEnumerable<DataSource> allDataSources,
 			[NotNull] IList<XmlQualityCondition> referencedConditions)
 		{
-			var result = new Dictionary<string, Model>(StringComparer.OrdinalIgnoreCase);
+			var result = new Dictionary<string, DdxModel>(StringComparer.OrdinalIgnoreCase);
 
 			foreach (DataSource dataSource in allDataSources)
 			{
