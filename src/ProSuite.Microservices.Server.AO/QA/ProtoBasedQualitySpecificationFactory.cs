@@ -394,7 +394,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 		                           [NotNull] TestParameter testParameter,
 		                           [NotNull] DatasetSettings datasetSettings)
 		{
-			Dataset dataset = DdxModelElementUtils.GetDataset(
+			Dataset dataset = XmlDataQualityUtils.GetDataset(
 				parameterMsg.Value, parameterMsg.WorkspaceId,
 				testParameter, createdConfiguration.Name, ModelsByWorkspaceId,
 				datasetSettings.GetDatasetsByName, datasetSettings.IgnoreUnknownDatasets);

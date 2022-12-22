@@ -1129,9 +1129,76 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 			string datasetName = xmlDatasetTestParameterValue.Value;
 			string workspaceId = xmlDatasetTestParameterValue.WorkspaceId;
 
-			return DdxModelElementUtils.GetDataset(datasetName, workspaceId, testParameter,
-			                                       qualityConditionName, modelsByWorkspaceId,
-			                                       getDatasetsByName, ignoreUnknownDataset);
+			return GetDataset(datasetName, workspaceId, testParameter,
+			                  qualityConditionName, modelsByWorkspaceId,
+			                  getDatasetsByName, ignoreUnknownDataset);
+		}
+
+		[CanBeNull]
+		public static Dataset GetDataset(
+			[CanBeNull] string datasetName,
+			[CanBeNull] string workspaceId,
+			[NotNull] TestParameter testParameter,
+			[NotNull] string instanceConfigurationName,
+			[NotNull] IDictionary<string, DdxModel> modelsByWorkspaceId,
+			[NotNull] Func<string, IList<Dataset>> getDatasetsByName,
+			bool ignoreUnknownDataset)
+		{
+			if (string.IsNullOrWhiteSpace(datasetName))
+			{
+				if (testParameter.IsConstructorParameter)
+				{
+					Assert.NotNullOrEmpty(
+						datasetName,
+						"Dataset is not defined for constructor-parameter '{0}' in configuration '{1}'",
+						testParameter.Name, instanceConfigurationName);
+				}
+
+				return null;
+			}
+
+			if (StringUtils.IsNotEmpty(workspaceId))
+			{
+				Assert.True(modelsByWorkspaceId.TryGetValue(workspaceId, out DdxModel model),
+				            "No matching model found for workspace id '{0}'", workspaceId);
+
+				return DdxModelElementUtils.GetDatasetFromStoredName(
+					datasetName, model, ignoreUnknownDataset);
+			}
+
+			if (StringUtils.IsNullOrEmptyOrBlank(workspaceId))
+			{
+				const string defaultModelId = "";
+
+				if (modelsByWorkspaceId.TryGetValue(defaultModelId, out DdxModel defaultModel))
+				{
+					// there is a default model
+					return DdxModelElementUtils.GetDatasetFromStoredName(
+						datasetName, defaultModel, ignoreUnknownDataset);
+				}
+			}
+
+			// no workspace id for dataset, and there is no default model
+
+			IList<Dataset> datasets = getDatasetsByName(datasetName);
+
+			Assert.False(datasets.Count > 1,
+			             "More than one dataset found with name '{0}', for parameter '{1}' in configuration '{2}'",
+			             datasetName, testParameter.Name, instanceConfigurationName);
+
+			if (datasets.Count == 0)
+			{
+				if (ignoreUnknownDataset)
+				{
+					return null;
+				}
+
+				Assert.False(datasets.Count == 0,
+				             "Dataset '{0}' for parameter '{1}' in configuration '{2}' not found",
+				             datasetName, testParameter.Name, instanceConfigurationName);
+			}
+
+			return datasets[0];
 		}
 
 		[NotNull]
