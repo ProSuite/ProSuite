@@ -28,6 +28,7 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 
 		[CanBeNull]
 		[XmlElement(Order = 8)]
+		[DefaultValue(null)]
 		public XmlFilterExpression IssueFilterExpression { get; set; }
 	}
 }
