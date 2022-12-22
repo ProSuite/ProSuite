@@ -89,16 +89,20 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			// TODO: TileSize, Url, Notes?
 
+			_msg.DebugFormat("Created specification from protos with {0} conditions.",
+			                 result.Elements.Count);
+
 			return result;
 		}
 
-		[NotNull]
 		private static void AddElements(
 			QualitySpecification toQualitySpecification,
 			[NotNull] IDictionary<string, QualityCondition> qualityConditionsByName,
 			[NotNull] IEnumerable<QualitySpecificationElementMsg> specificationElementMsgs)
 		{
 			Assert.ArgumentNotNull(qualityConditionsByName, nameof(qualityConditionsByName));
+
+			var categoriesByName = new Dictionary<string, DataQualityCategory>();
 
 			foreach (QualitySpecificationElementMsg element in specificationElementMsgs)
 			{
@@ -107,41 +111,23 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 				QualityCondition qualityCondition = qualityConditionsByName[conditionName];
 
+				if (! string.IsNullOrEmpty(element.CategoryName))
+				{
+					string categoryName = element.CategoryName;
+
+					if (! categoriesByName.TryGetValue(categoryName,
+					                                   out DataQualityCategory category))
+					{
+						category = new DataQualityCategory(categoryName);
+						categoriesByName.Add(categoryName, category);
+					}
+
+					qualityCondition.Category = category;
+				}
+
 				toQualitySpecification.AddElement(qualityCondition, element.StopOnError,
 				                                  element.AllowErrors);
 			}
-		}
-
-		private static IDictionary<string, TestDescriptor> GetReferencedTestDescriptorsByName(
-			[NotNull] IEnumerable<QualityConditionMsg> referencedConditions,
-			[NotNull] IDictionary<string, XmlTestDescriptor> xmlTestDescriptorsByName)
-		{
-			var result = new Dictionary<string, TestDescriptor>(
-				StringComparer.OrdinalIgnoreCase);
-
-			foreach (QualityConditionMsg condition in referencedConditions)
-			{
-				string testDescriptorName = condition.TestDescriptorName;
-				if (testDescriptorName == null || result.ContainsKey(testDescriptorName))
-				{
-					continue;
-				}
-
-				XmlTestDescriptor xmlTestDescriptor;
-				if (! xmlTestDescriptorsByName.TryGetValue(testDescriptorName,
-				                                           out xmlTestDescriptor))
-				{
-					throw new InvalidConfigurationException(
-						string.Format(
-							"Test descriptor {0}, referenced in quality condition {1}, not found",
-							testDescriptorName, condition.Name));
-				}
-
-				result.Add(testDescriptorName,
-				           XmlDataQualityUtils.CreateTestDescriptor(xmlTestDescriptor));
-			}
-
-			return result;
 		}
 
 		private Dictionary<string, QualityCondition> CreateQualityConditions(
