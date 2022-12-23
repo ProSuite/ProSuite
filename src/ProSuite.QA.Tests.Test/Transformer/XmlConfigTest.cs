@@ -463,6 +463,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanRunFromXmlWithTableJoin()
 		{
 			// Init

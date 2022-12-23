@@ -527,6 +527,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CalculateIntersectionPointsPerformance()
 		{
 			var polyWithHole =
@@ -966,6 +967,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanGetMultipatchIntersectionPointsXY()
 		{
 			// {FE286920-3D4C-4CB3-AC22-51056B97A23F} from TLM:

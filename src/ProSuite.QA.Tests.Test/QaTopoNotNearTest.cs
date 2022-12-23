@@ -329,6 +329,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void TestNotReportedLineCapWithAura()
 		{
 			IFeatureClass fc1;
@@ -371,6 +372,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void TestNotReportedNearCoincidentLineCap()
 		{
 			IFeatureClass fc1;
@@ -486,6 +488,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void TestLineCaps()
 		{
 			IFeatureClass fc1;
@@ -525,6 +528,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void TestLineCaps1()
 		{
 			IFeatureClass fc1;
@@ -551,6 +555,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void TestLineCaps2()
 		{
 			IFeatureClass fc1;
@@ -579,6 +584,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void TestLineCapsShortSegment()
 		{
 			IFeatureClass fc1;
@@ -603,6 +609,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void TestLineCapsAngledEnds()
 		{
 			IFeatureClass fc1;
@@ -888,6 +895,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void TestCircular3()
 		{
 			IFeatureClass fc1;
@@ -913,6 +921,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void TestAuraConnected()
 		{
 			IFeatureClass fc1;
@@ -1014,6 +1023,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void TestWithAuraMultiparts()
 		{
 			IFeatureClass fc1;
@@ -1633,6 +1643,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void TestReference()
 		{
 			IFeatureClass fc1;

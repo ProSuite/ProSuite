@@ -25,6 +25,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanTestPolylineSimple()
 		{
 			var featureClassMock = new FeatureClassMock("mock",
@@ -49,6 +50,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanTestPolylinePerPart()
 		{
 			var featureClassMock = new FeatureClassMock("mock",
