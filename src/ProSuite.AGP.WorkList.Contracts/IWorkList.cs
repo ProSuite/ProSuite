@@ -30,6 +30,8 @@ namespace ProSuite.AGP.WorkList.Contracts
 		int CurrentIndex { get; set; }
 		IWorkItemRepository Repository { get; }
 
+		event EventHandler<WorkListChangedEventArgs> WorkListChanged;
+
 		/// <summary>Yield all work items subject to list settings and the given filter.</summary>
 		/// <param name="filter">optional QueryFilter or SpatialQueryFilter</param>
 		/// <param name="ignoreListSettings">if true, ignore Visibility and AreaOfInterest</param>
