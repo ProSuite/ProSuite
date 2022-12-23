@@ -156,7 +156,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			{
 				IReadOnlyRow leftRow = GeometryEndClass.GetRow(id);
 
-				return GetJoinedRows(new List<IReadOnlyRow> {leftRow}).FirstOrDefault();
+				return GetJoinedRows(new List<IReadOnlyRow> { leftRow }).FirstOrDefault();
 			}
 
 			if (ObjectIdSource == JoinSourceTable.Right)
@@ -165,7 +165,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 				string otherKeyValue = GetNonNullKeyValue(rightRow, OtherClassKeyFieldIndex);
 
-				var otherKeyList = new List<string> {otherKeyValue};
+				var otherKeyList = new List<string> { otherKeyValue };
 				IList<IReadOnlyRow> resultGeoFeatures = FetchRowsByKey(
 						GeometryEndClass, otherKeyList, GeometryClassKeyField, false)
 					.ToList();
@@ -600,7 +600,17 @@ namespace ProSuite.Commons.AO.Geodatabase
 						$"No key value in {GdbObjectUtils.ToString(row)}");
 				}
 
-				otherRows.Add(otherRowKey, row);
+				try
+				{
+					otherRows.Add(otherRowKey, row);
+				}
+				catch (ArgumentException e)
+				{
+					throw new ArgumentException(
+						$"The the key value {otherRowKey} in row {GdbObjectUtils.ToString(row)} is not unique. " +
+						$"The row {GdbObjectUtils.ToString(otherRows[otherRowKey])} has the same value",
+						e);
+				}
 			}
 
 			return otherRows;
@@ -758,7 +768,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			// The primary key of the geo table:
 			string bridgeGeoKeyValue = GetNonNullKeyValue(associationRow, bridgeTableGeoKeyIdx);
 
-			var geoKeyList = new List<string> {bridgeGeoKeyValue};
+			var geoKeyList = new List<string> { bridgeGeoKeyValue };
 
 			IList<IReadOnlyRow> geoFeatures = FetchRowsByKey(
 					GeometryEndClass, geoKeyList, GeometryClassKeyField, false)
@@ -766,7 +776,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			Assert.AreEqual(1, geoFeatures.Count, "Unexpected number of left table features");
 
-			var otherKeyList = new List<string> {bridgeOtherKeyValue};
+			var otherKeyList = new List<string> { bridgeOtherKeyValue };
 
 			IList<IReadOnlyRow> otherFeatures = FetchRowsByKey(
 					OtherEndClass, otherKeyList, OtherClassKeyField, false)
