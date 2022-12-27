@@ -41,6 +41,7 @@ namespace ProSuite.QA.Tests.Test.KeySets
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanGetHashCode1()
 		{
 			var tuple = new Tuple(int.MaxValue, double.MaxValue, new string('A', 1000));
@@ -49,6 +50,7 @@ namespace ProSuite.QA.Tests.Test.KeySets
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanGetHashCode2()
 		{
 			var tuple = new Tuple(int.MinValue, double.MinValue, string.Empty);

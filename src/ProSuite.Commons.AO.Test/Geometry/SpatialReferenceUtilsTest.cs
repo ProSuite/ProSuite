@@ -44,6 +44,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 		#endregion
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanGetDifferences()
 		{
 			// vcs difference
@@ -104,6 +105,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanCompareDomainOnlyDifferences()
 		{
 			Assert.IsTrue(SpatialReferenceUtils.AreEqual(
@@ -132,6 +134,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanCompareDomainOffsetDifferences()
 		{
 			Assert.IsTrue(SpatialReferenceUtils.AreEqual(

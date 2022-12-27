@@ -134,6 +134,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanConvertDateTimeToString()
 		{
 			DateTime sourceValue = DateTime.Now;
