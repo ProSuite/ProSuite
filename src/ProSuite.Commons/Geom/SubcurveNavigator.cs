@@ -1119,7 +1119,7 @@ namespace ProSuite.Commons.Geom
 			foreach (int unCutTargetIdx in GetUnusedIndexes(
 				         Target.PartCount, IntersectedTargetPartIndexes))
 			{
-				// No inbound/outbound, but possibly touching or linear intersections
+				// No inbound/outbound, but possibly touching or with linear intersections
 				Linestring targetRing = Target.GetPart(unCutTargetIdx);
 
 				if (false == GeomRelationUtils.AreaContainsXY(
