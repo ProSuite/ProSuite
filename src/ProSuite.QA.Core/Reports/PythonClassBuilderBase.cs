@@ -54,7 +54,7 @@ namespace ProSuite.QA.Core.Reports
 			[NotNull] IEnumerable<IncludedInstanceBase> includedTests,
 			[NotNull] StringBuilder sb)
 		{
-			sb.AppendLine("class ConditionFactory:");
+			sb.AppendLine("class Conditions:");
 
 			foreach (IncludedInstanceBase includedTest in includedTests)
 			{
