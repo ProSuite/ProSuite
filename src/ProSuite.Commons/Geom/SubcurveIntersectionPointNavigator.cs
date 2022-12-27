@@ -1297,6 +1297,27 @@ namespace ProSuite.Commons.Geom
 					yield return intersectionPoint3D;
 				}
 			}
+
+			if (! AllowBoundaryLoops)
+			{
+				// Filter the single touching points of a ring when union-ing,
+				// including boundary loops
+				foreach (IGrouping<int, IntersectionPoint3D> groupedTouchPoints in
+				         IntersectionsAlongSource.GroupBy(i => i.SourcePartIndex))
+				{
+					if (groupedTouchPoints.Count() == 1)
+					{
+						IntersectionPoint3D intersectionPoint = groupedTouchPoints.Single();
+
+						if (intersectionPoint.Type == IntersectionPointType.TouchingInPoint)
+						{
+							yield return intersectionPoint;
+						}
+					}
+				}
+
+				// TODO: Consider the same for outer boundary loops?
+			}
 		}
 
 		private IEnumerable<IntersectionPoint3D> EvaluateLinearBreak(

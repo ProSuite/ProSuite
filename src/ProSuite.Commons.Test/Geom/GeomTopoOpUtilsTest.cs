@@ -4245,6 +4245,36 @@ namespace ProSuite.Commons.Test.Geom
 			Assert.AreEqual(expectedArea, result.GetArea2D(), 0.0001);
 		}
 
+		[Test]
+		public void CanUnionTouchingRingsConnectedByLinearIntersectionWithTarget()
+		{
+			MultiPolycurve source = (MultiPolycurve) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath("rings_touching_in_point_source.wkb"),
+				out WkbGeometryType wkbType);
+
+			Assert.AreEqual(WkbGeometryType.MultiPolygon, wkbType);
+
+			RingGroup target = (RingGroup) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath("rings_touching_in_point_target.wkb"),
+				out wkbType);
+
+			Assert.AreEqual(WkbGeometryType.Polygon, wkbType);
+
+			MultiLinestring result = GeomTopoOpUtils.GetUnionAreasXY(source, target, 0.01);
+
+			// Currently a touching island is preferred to the boundary loop:
+			Assert.AreEqual(2, result.PartCount);
+
+			// Minus the remaining area of the intersected island
+			double expectedArea = source.GetArea2D() + target.GetArea2D();
+
+			Assert.AreEqual(expectedArea, result.GetArea2D(), 0.0001);
+
+			// vice-versa
+			result = GeomTopoOpUtils.GetUnionAreasXY(target, source, 0.01);
+			Assert.AreEqual(2, result.PartCount);
+			Assert.AreEqual(expectedArea, result.GetArea2D(), 0.0001);
+		}
 
 		[Test]
 		public void CanUnionTouchingRingsConnectedByTarget()
