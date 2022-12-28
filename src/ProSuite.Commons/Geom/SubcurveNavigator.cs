@@ -754,23 +754,44 @@ namespace ProSuite.Commons.Geom
 			}
 		}
 
-		private IEnumerable<Tuple<IntersectionPoint3D, IntersectionPoint3D>>
+		/// <summary>
+		/// Determines the target's boundary loops that have an intersection with a source part that,
+		/// has not yet been processed. The result can be used to determine e.g. equal rings that have
+		/// not yet been detected/processed.
+		/// </summary>
+		/// <returns></returns>
+		private IEnumerable<Tuple<IntersectionPoint3D, Linestring>>
 			GetUnprocessedTargetBoundaryLoops()
 		{
 			const bool forward = true;
 
-			foreach ((IntersectionPoint3D start, IntersectionPoint3D end) in
-			         IntersectionPointNavigator.TargetBoundaryLoopIntersections)
+			// In some cases the boundary loops are duplicated!
+			List<Linestring> yieldedLoops = new List<Linestring>();
+			foreach (BoundaryLoop boundaryLoop in GetTargetBoundaryLoops())
 			{
-				if (IntersectionPointNavigator.IsNextTargetIntersection(start, end, forward))
+				if (IntersectionPointNavigator.IsNextTargetIntersection(
+					    boundaryLoop.Start, boundaryLoop.End, forward))
 				{
-					yield return new Tuple<IntersectionPoint3D, IntersectionPoint3D>(start, end);
+					Linestring loop = boundaryLoop.Loop1;
+					if (! yieldedLoops.Contains(loop))
+					{
+						yieldedLoops.Add(loop);
+						yield return new Tuple<IntersectionPoint3D, Linestring>(
+							boundaryLoop.Start, loop);
+					}
 				}
 
 				// And check the other loop too:
-				if (IntersectionPointNavigator.IsNextTargetIntersection(end, start, forward))
+				if (IntersectionPointNavigator.IsNextTargetIntersection(
+					    boundaryLoop.End, boundaryLoop.Start, forward))
 				{
-					yield return new Tuple<IntersectionPoint3D, IntersectionPoint3D>(end, start);
+					Linestring loop = boundaryLoop.Loop2;
+					if (! yieldedLoops.Contains(loop))
+					{
+						yieldedLoops.Add(loop);
+						yield return new Tuple<IntersectionPoint3D, Linestring>(
+							boundaryLoop.End, loop);
+					}
 				}
 			}
 		}
@@ -944,21 +965,30 @@ namespace ProSuite.Commons.Geom
 				                      equalOrientationCongruentRings, outsideOtherPolygonRings);
 			}
 
-			foreach ((IntersectionPoint3D start, IntersectionPoint3D end) in
+			foreach ((IntersectionPoint3D startIntersection, Linestring targetLoop) in
 			         GetUnprocessedTargetBoundaryLoops())
 			{
-				const bool forward = true;
-
-				Linestring sourceRing = Source.GetPart(start.SourcePartIndex);
-				Linestring targetPart = Target.GetPart(start.TargetPartIndex);
-				Linestring targetRing = GetTargetSubcurve(targetPart, start, end, forward);
+				int sourcePartIndex = startIntersection.SourcePartIndex;
+				int targetPartIndex = startIntersection.TargetPartIndex;
+				Linestring sourceRing = Source.GetPart(sourcePartIndex);
 
 				bool? isContainedXY = GeomRelationUtils.IsContainedXY(
-					sourceRing, targetRing, Tolerance);
+					sourceRing, targetLoop, Tolerance);
 
-				DetermineRingRelation(sourceRing, targetRing, isContainedXY,
-				                      start.SourcePartIndex, start.TargetPartIndex,
+				DetermineRingRelation(sourceRing, targetLoop, isContainedXY,
+				                      sourcePartIndex, targetPartIndex,
 				                      equalOrientationCongruentRings, outsideOtherPolygonRings);
+
+				if (false == GeomRelationUtils.AreaContainsXY(
+					    sourceRing, targetLoop, Tolerance))
+				{
+					outsideOtherPolygonRings.Add(targetLoop);
+				}
+				else
+				{
+					IntersectedTargetPartIndexes.Add(targetPartIndex);
+					IntersectedSourcePartIndexes.Add(sourcePartIndex);
+				}
 			}
 
 			var unCutSourceIndexes = GetUnusedIndexes(
@@ -974,6 +1004,7 @@ namespace ProSuite.Commons.Geom
 					unCutSourcePartIdx);
 
 				Linestring sourceRing = Source.GetPart(unCutSourcePartIdx);
+
 				int targetIndex = -1;
 				Linestring targetRing = null;
 
@@ -1103,44 +1134,6 @@ namespace ProSuite.Commons.Geom
 				if (true == GeomRelationUtils.AreaContainsXY(
 					    Source, Target, Tolerance,
 					    IntersectionPointNavigator.IntersectionsAlongTarget, unCutTargetIdx))
-				{
-					yield return targetRing;
-				}
-			}
-		}
-
-		/// <summary>
-		/// Returns the target rings that are on the outside of any source ring, i.e. not equal to
-		/// a source ring but not necessarily disjoint.
-		/// </summary>
-		/// <returns></returns>
-		public IEnumerable<Linestring> GetUnprocessedTargetRingsOutsideSource()
-		{
-			foreach (int unCutTargetIdx in GetUnusedIndexes(
-				         Target.PartCount, IntersectedTargetPartIndexes))
-			{
-				// No inbound/outbound, but possibly touching or with linear intersections
-				Linestring targetRing = Target.GetPart(unCutTargetIdx);
-
-				if (false == GeomRelationUtils.AreaContainsXY(
-					    Source, Target, Tolerance,
-					    IntersectionPointNavigator.IntersectionsAlongTarget, unCutTargetIdx))
-				{
-					yield return targetRing;
-				}
-			}
-
-			foreach ((IntersectionPoint3D start, IntersectionPoint3D end) in
-			         GetUnprocessedTargetBoundaryLoops())
-			{
-				const bool forward = true;
-
-				Linestring sourceRing = Source.GetPart(start.SourcePartIndex);
-				Linestring targetPart = Target.GetPart(start.TargetPartIndex);
-				Linestring targetRing = GetTargetSubcurve(targetPart, start, end, forward);
-
-				if (false == GeomRelationUtils.AreaContainsXY(
-					    sourceRing, targetRing, Tolerance))
 				{
 					yield return targetRing;
 				}
@@ -1335,9 +1328,6 @@ namespace ProSuite.Commons.Geom
 					Linestring targetPart =
 						IntersectionPointNavigator.Target.GetPart(
 							currentIntersection.TargetPartIndex);
-
-					int? forwardTargetSegmentIdx =
-						currentIntersection.GetNonIntersectingTargetSegmentIndex(targetPart, true);
 
 					double halfWay = 0.5;
 

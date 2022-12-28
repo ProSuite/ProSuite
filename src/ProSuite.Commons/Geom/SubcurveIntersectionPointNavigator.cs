@@ -363,7 +363,7 @@ namespace ProSuite.Commons.Geom
 			return nextIntersection;
 		}
 
-		public IntersectionPoint3D GetNextIntersectionSimplifiedSkipping(
+		private IntersectionPoint3D GetNextIntersectionSimplifiedSkipping(
 			[NotNull] IntersectionPoint3D previousIntersection,
 			bool continueOnSource, bool continueForward)
 		{
@@ -397,6 +397,63 @@ namespace ProSuite.Commons.Geom
 			} while (IntersectionsNotUsedForNavigation.Contains(nextIntersection));
 
 			return nextIntersection;
+		}
+
+		private bool IsNextIntersection(
+			[NotNull] IntersectionPoint3D intersection,
+			[NotNull] IntersectionPoint3D previousIntersection,
+			bool continueOnSource, bool continueForward,
+			Predicate<IntersectionPoint3D> skip)
+		{
+			int sourcePartIdx = intersection.SourcePartIndex;
+
+			IntersectionPoint3D nextIntersection;
+
+			int circuitBreaker = 0;
+			bool skipped;
+			do
+			{
+				if (circuitBreaker++ > 10000)
+				{
+					throw new StackOverflowException(
+						"Breaking the circuit of skipping intersections. " +
+						"The input is probably not simple.");
+				}
+
+				nextIntersection =
+					continueOnSource
+						? GetNextIntersectionAlongSource(previousIntersection)
+						: GetNextIntersectionAlongTarget(
+							previousIntersection, continueForward);
+
+				if (nextIntersection == null)
+				{
+					return false;
+				}
+
+				previousIntersection = nextIntersection;
+
+				skipped = skip(nextIntersection);
+
+				if (! skipped)
+				{
+					// Check the intersection
+					if (nextIntersection == intersection)
+					{
+						return true;
+					}
+
+					if (nextIntersection.SourcePartIndex != sourcePartIdx)
+					{
+						// We're following the wrong ring
+						return false;
+					}
+				}
+
+				// Skip everything except those that were really visited
+			} while (skipped || ! VisitedIntersections.Contains(nextIntersection));
+
+			return false;
 		}
 
 		public bool CanConnectToSourcePartAlongTargetForward(
@@ -499,6 +556,7 @@ namespace ProSuite.Commons.Geom
 		public bool IsNextSourceIntersection([NotNull] IntersectionPoint3D thisIntersection,
 		                                     [NotNull] IntersectionPoint3D nextCandidate)
 		{
+			// TODO: Use IsNextIntersection() and unify with IsNextTargetIntersection!
 			IntersectionPoint3D realNext =
 				GetNextIntersectionSimplifiedSkipping(thisIntersection, true, true);
 
@@ -509,10 +567,10 @@ namespace ProSuite.Commons.Geom
 		                                     [NotNull] IntersectionPoint3D nextCandidate,
 		                                     bool forward)
 		{
-			IntersectionPoint3D realNext =
-				GetNextIntersectionSimplifiedSkipping(thisIntersection, false, forward);
-
-			return Assert.NotNull(realNext).Equals(nextCandidate);
+			return IsNextIntersection(
+				nextCandidate, thisIntersection, continueOnSource: false, forward,
+				i => i.SourcePartIndex != thisIntersection.SourcePartIndex &&
+				     i.Point.Equals(thisIntersection.Point));
 		}
 
 		private IntersectionPoint3D GetNextIntersectionAlongSource(

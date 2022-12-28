@@ -107,10 +107,7 @@ namespace ProSuite.Commons.Geom
 
 			_subcurveNavigator.DetermineExtraSourceRingRelations(
 				out IList<Linestring> equalRings,
-				out IList<Linestring> sourceRingsOnTargetOutside);
-
-			var ringsOutsideOtherPoly = sourceRingsOnTargetOutside.Union(
-				_subcurveNavigator.GetUnprocessedTargetRingsOutsideSource()).ToList();
+				out IList<Linestring> ringsOutsideOtherPoly);
 
 			// The non-intersecting outer rings...
 			var unprocessedOuterRings =
@@ -504,7 +501,7 @@ namespace ProSuite.Commons.Geom
 						unprocessedOuterRings.Remove(containing);
 
 						// Add at the beginning to boost performance, assuming a few (or one) large rings contains everything
-						result.Insert(0, new RingGroup(containing, new[] {processedResultRing}));
+						result.Insert(0, new RingGroup(containing, new[] { processedResultRing }));
 
 						// remove from the list, the remaining inner rings will be assigned afterwards;
 						processedResultRings.Remove(processedResultRing);

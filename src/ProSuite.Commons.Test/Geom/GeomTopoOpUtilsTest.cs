@@ -4220,6 +4220,301 @@ namespace ProSuite.Commons.Test.Geom
 		}
 
 		[Test]
+		public void CanUnionWithMultipleOuterRingsMergedByTargetTouchingInPoint()
+		{
+			// The target intersects sourceRing1
+			var sourceRing1 = new List<Pnt3D>
+			                  {
+				                  new Pnt3D(0, 0, 0),
+				                  new Pnt3D(0, 100, 0),
+				                  new Pnt3D(100, 100, 0),
+				                  new Pnt3D(100, 0, 0)
+			                  };
+
+			// Now add another outer ring to the source that is contained by the target and touches
+			// target in a point
+			var sourceRing2 = new List<Pnt3D>
+			                  {
+				                  new Pnt3D(150, 20, 0),
+				                  new Pnt3D(150, 50, 0),
+				                  new Pnt3D(175, 50, 0),
+				                  new Pnt3D(175, 20, 0)
+			                  };
+
+			for (var i = 0; i < 4; i++)
+			{
+				MultiPolycurve source =
+					new MultiPolycurve(new[] { GeomTestUtils.CreateRing(sourceRing1) });
+				Linestring ring2 =
+					GeomTestUtils.CreateRing(GeomTestUtils.GetRotatedRing(sourceRing2, i));
+				source.AddLinestring(ring2);
+
+				for (var t = 0; t < 5; t++)
+				{
+					var targetRingPoints = new List<Pnt3D>
+					                       {
+						                       new Pnt3D(100, 100, 0),
+						                       new Pnt3D(175, 50, 0),
+						                       new Pnt3D(200, 0, 0),
+						                       new Pnt3D(100, 0, 0)
+					                       };
+
+					var target =
+						new RingGroup(
+							new Linestring(GeomTestUtils.GetRotatedRing(targetRingPoints, t)));
+
+					double tolerance = 0.001;
+					MultiLinestring union =
+						UnionAreasXY(source, target, tolerance);
+
+					Assert.AreEqual(1, union.PartCount);
+
+					double expectedArea = source.GetArea2D() + target.GetArea2D() -
+					                      source.GetLinestring(1).GetArea2D();
+					Assert.AreEqual(expectedArea, union.GetArea2D());
+
+					// Intersection of result with target/source:
+					MultiLinestring intersection =
+						GeomTopoOpUtils.GetIntersectionAreasXY(union, target, tolerance);
+
+					Assert.AreEqual(1, intersection.PartCount);
+					Assert.AreEqual(target.GetArea2D(), intersection.GetArea2D(), tolerance);
+
+					// Difference, to compare
+					MultiLinestring difference =
+						GeomTopoOpUtils.GetDifferenceAreasXY(union, target, tolerance);
+					Assert.AreEqual(1, difference.PartCount);
+					Assert.AreEqual(source.GetLinestring(0).GetArea2D(), difference.GetArea2D(),
+					                tolerance);
+				}
+			}
+		}
+
+		[Test]
+		public void CanUnionTouchingOuterRingsWithBoundaryLoopTargetEqualToRing2()
+		{
+			// The target intersects sourceRing1
+			var sourceRing1 = new List<Pnt3D>
+			                  {
+				                  new Pnt3D(0, 0, 0),
+				                  new Pnt3D(0, 100, 0),
+				                  new Pnt3D(100, 100, 0),
+				                  new Pnt3D(100, 0, 0)
+			                  };
+
+			// Now add another outer ring to the source that is contained by the target boundary loop
+			// and touches sourceRing1 in a point
+			var sourceRing2 = new List<Pnt3D>
+			                  {
+				                  new Pnt3D(150, 20, 0),
+				                  new Pnt3D(100, 50, 0),
+				                  new Pnt3D(150, 70, 0),
+				                  new Pnt3D(175, 50, 0)
+			                  };
+
+			for (var i = 0; i < 4; i++)
+			{
+				MultiPolycurve source =
+					new MultiPolycurve(new[] { GeomTestUtils.CreateRing(sourceRing1) });
+				Linestring ring2 =
+					GeomTestUtils.CreateRing(GeomTestUtils.GetRotatedRing(sourceRing2, i));
+				source.AddLinestring(ring2);
+
+				for (var t = 0; t < 5; t++)
+				{
+					// The target is a boundary loop that encompasses ring2:
+					var targetRingPoints = new List<Pnt3D>
+					                       {
+						                       new Pnt3D(100, 100, 0),
+						                       new Pnt3D(200, 100, 0),
+						                       new Pnt3D(200, 0, 0),
+						                       new Pnt3D(100, 0, 0),
+						                       new Pnt3D(100, 50, 0),
+						                       new Pnt3D(150, 20, 0),
+						                       new Pnt3D(175, 50, 0),
+						                       new Pnt3D(150, 70, 0),
+						                       new Pnt3D(100, 50, 0),
+						                       new Pnt3D(100, 100, 0)
+					                       };
+
+					var target =
+						new RingGroup(
+							new Linestring(GeomTestUtils.GetRotatedRing(targetRingPoints, t)));
+
+					double tolerance = 0.001;
+					MultiLinestring union = UnionAreasXY(source, target, tolerance);
+
+					Assert.AreEqual(1, union.PartCount);
+
+					double expectedArea = source.GetLinestring(0).GetArea2D() * 2;
+					Assert.AreEqual(expectedArea, union.GetArea2D());
+
+
+					// Intersection of result with target/source:
+					MultiLinestring intersection =
+						GeomTopoOpUtils.GetIntersectionAreasXY(union, target, tolerance);
+
+					Assert.AreEqual(1, intersection.PartCount);
+					Assert.AreEqual(target.GetArea2D(), intersection.GetArea2D(), tolerance);
+
+					// Difference, to compare
+					MultiLinestring difference =
+						GeomTopoOpUtils.GetDifferenceAreasXY(union, target, tolerance);
+					Assert.AreEqual(1, difference.PartCount);
+					Assert.AreEqual(source.GetArea2D(), difference.GetArea2D(), tolerance);
+				}
+			}
+		}
+
+		[Test]
+		public void CanUnionTouchingOuterRingsWithBoundaryLoopTargetContainedByRing2()
+		{
+			// The specialty here is that the source ring 2 is slightly larger than the inner
+			// loop of the boundary loop and therefore nothing should remain as island.
+			var sourceRing1 = new List<Pnt3D>
+			                  {
+				                  new Pnt3D(0, 0, 0),
+				                  new Pnt3D(0, 100, 0),
+				                  new Pnt3D(100, 100, 0),
+				                  new Pnt3D(100, 0, 0)
+			                  };
+
+			// Now add another outer ring to the source that is contained by the target boundary
+			// loop and touches sourceRing1 in a point
+			var sourceRing2 = new List<Pnt3D>
+			                  {
+				                  new Pnt3D(150, 20, 0),
+				                  new Pnt3D(100, 50, 0),
+				                  new Pnt3D(150, 70, 0),
+				                  new Pnt3D(175, 50, 0)
+			                  };
+
+			for (var i = 0; i < 4; i++)
+			{
+				MultiPolycurve source =
+					new MultiPolycurve(new[] { GeomTestUtils.CreateRing(sourceRing1) });
+				Linestring ring2 =
+					GeomTestUtils.CreateRing(GeomTestUtils.GetRotatedRing(sourceRing2, i));
+				source.AddLinestring(ring2);
+
+				for (var t = 0; t < 5; t++)
+				{
+					// The target is a boundary loop that encompasses ring2:
+					var targetRingPoints = new List<Pnt3D>
+					                       {
+						                       new Pnt3D(100, 100, 0),
+						                       new Pnt3D(200, 100, 0),
+						                       new Pnt3D(200, 0, 0),
+						                       new Pnt3D(100, 0, 0),
+						                       new Pnt3D(100, 50, 0),
+						                       new Pnt3D(150, 20, 0),
+						                       //new Pnt3D(175, 50, 0), // Different from source -> contained
+						                       new Pnt3D(150, 70, 0),
+						                       new Pnt3D(100, 50, 0),
+						                       new Pnt3D(100, 100, 0)
+					                       };
+
+					var target =
+						new RingGroup(
+							new Linestring(GeomTestUtils.GetRotatedRing(targetRingPoints, t)));
+
+					double tolerance = 0.001;
+					MultiLinestring union =
+						UnionAreasXY(source, target, tolerance);
+
+					Assert.AreEqual(1, union.PartCount);
+
+					double expectedArea = source.GetLinestring(0).GetArea2D() * 2;
+					Assert.AreEqual(expectedArea, union.GetArea2D());
+
+					// Intersection of result with target/source:
+					MultiLinestring intersection =
+						GeomTopoOpUtils.GetIntersectionAreasXY(union, target, tolerance);
+
+					Assert.AreEqual(1, intersection.PartCount);
+					Assert.AreEqual(target.GetArea2D(), intersection.GetArea2D(), tolerance);
+
+					// Difference, to compare
+					MultiLinestring difference =
+						GeomTopoOpUtils.GetDifferenceAreasXY(union, target, tolerance);
+					Assert.AreEqual(1, difference.PartCount);
+					Assert.AreEqual(union.GetArea2D() - intersection.GetArea2D(),
+					                difference.GetArea2D(), tolerance);
+				}
+			}
+		}
+
+		[Test]
+		public void CanUnionWithTouchingOuterRingsMergedByTargetToBoundaryLoop()
+		{
+			// The target intersects sourceRing1 and touches sourceRing2 in a point
+			var sourceRing1 = new List<Pnt3D>
+			                  {
+				                  new Pnt3D(0, 0, 0),
+				                  new Pnt3D(0, 100, 0),
+				                  new Pnt3D(100, 100, 0),
+				                  new Pnt3D(100, 0, 0)
+			                  };
+
+			// Now add another outer ring to the source that intersects the target
+			var sourceRing2 = new List<Pnt3D>
+			                  {
+				                  new Pnt3D(0, 0, 0),
+				                  new Pnt3D(50, -50, 0),
+				                  new Pnt3D(50, -80, 0),
+				                  new Pnt3D(-50, -80, 0),
+				                  new Pnt3D(-50, 0, 0)
+			                  };
+
+			for (var i = 0; i < 4; i++)
+			{
+				MultiPolycurve source =
+					new MultiPolycurve(new[] { GeomTestUtils.CreateRing(sourceRing1) });
+				Linestring ring2 =
+					GeomTestUtils.CreateRing(GeomTestUtils.GetRotatedRing(sourceRing2, i));
+				source.AddLinestring(ring2);
+
+				for (var t = 0; t < 5; t++)
+				{
+					// The target touches the island including the touching point (from the inside) in a line:
+					var targetRingPoints = new List<Pnt3D>
+					                       {
+						                       new Pnt3D(50, -60, 0),
+						                       new Pnt3D(50, 0, 0),
+						                       new Pnt3D(100, 0, 0),
+						                       new Pnt3D(100, -60, 0)
+					                       };
+
+					var target =
+						new RingGroup(
+							new Linestring(GeomTestUtils.GetRotatedRing(targetRingPoints, t)));
+
+					double tolerance = 0.001;
+					MultiLinestring union =
+						UnionAreasXY(source, target, tolerance);
+
+					Assert.AreEqual(1, union.PartCount);
+
+					double expectedArea = source.GetArea2D() + target.GetArea2D();
+					Assert.AreEqual(expectedArea, union.GetArea2D());
+
+					// Intersection of result with target/source:
+					MultiLinestring intersection =
+						GeomTopoOpUtils.GetIntersectionAreasXY(union, target, tolerance);
+
+					Assert.AreEqual(1, intersection.PartCount);
+					Assert.AreEqual(target.GetArea2D(), intersection.GetArea2D(), tolerance);
+
+					// Difference, to compare
+					MultiLinestring difference =
+						GeomTopoOpUtils.GetDifferenceAreasXY(union, target, tolerance);
+					Assert.AreEqual(2, difference.PartCount);
+					Assert.AreEqual(source.GetArea2D(), difference.GetArea2D(), tolerance);
+				}
+			}
+		}
+
+		[Test]
 		public void CanUnionWithMultipleRingsTouchingInPointAndLine()
 		{
 			MultiPolycurve source = (MultiPolycurve) GeomUtils.FromWkbFile(
