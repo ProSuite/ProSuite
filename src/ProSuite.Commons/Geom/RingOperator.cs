@@ -105,7 +105,7 @@ namespace ProSuite.Commons.Geom
 			IList<Linestring> processedRingsResult =
 				_subcurveNavigator.FollowSubcurvesTurningLeft();
 
-			_subcurveNavigator.DetermineExtraSourceRingRelations(
+			_subcurveNavigator.DetermineExtraRingRelations(
 				out IList<Linestring> equalRings,
 				out IList<Linestring> ringsOutsideOtherPoly);
 

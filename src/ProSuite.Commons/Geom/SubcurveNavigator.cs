@@ -763,14 +763,12 @@ namespace ProSuite.Commons.Geom
 		private IEnumerable<Tuple<IntersectionPoint3D, Linestring>>
 			GetUnprocessedTargetBoundaryLoops()
 		{
-			const bool forward = true;
-
 			// In some cases the boundary loops are duplicated!
 			List<Linestring> yieldedLoops = new List<Linestring>();
 			foreach (BoundaryLoop boundaryLoop in GetTargetBoundaryLoops())
 			{
 				if (IntersectionPointNavigator.IsNextTargetIntersection(
-					    boundaryLoop.Start, boundaryLoop.End, forward))
+					    boundaryLoop.Start, boundaryLoop.End))
 				{
 					Linestring loop = boundaryLoop.Loop1;
 					if (! yieldedLoops.Contains(loop))
@@ -783,7 +781,7 @@ namespace ProSuite.Commons.Geom
 
 				// And check the other loop too:
 				if (IntersectionPointNavigator.IsNextTargetIntersection(
-					    boundaryLoop.End, boundaryLoop.Start, forward))
+					    boundaryLoop.End, boundaryLoop.Start))
 				{
 					Linestring loop = boundaryLoop.Loop2;
 					if (! yieldedLoops.Contains(loop))
@@ -938,7 +936,13 @@ namespace ProSuite.Commons.Geom
 			return RingRingRelation.IsNotContained;
 		}
 
-		public void DetermineExtraSourceRingRelations(
+		/// <summary>
+		/// Identifies source rings that are equal to other rings in the target.
+		/// Identifies source rings that are not contained by the target and vice-versa.
+		/// </summary>
+		/// <param name="equalOrientationCongruentRings"></param>
+		/// <param name="outsideOtherPolygonRings"></param>
+		public void DetermineExtraRingRelations(
 			out IList<Linestring> equalOrientationCongruentRings,
 			out IList<Linestring> outsideOtherPolygonRings)
 		{
@@ -1065,7 +1069,7 @@ namespace ProSuite.Commons.Geom
 				equalOrientationCongruentRings.Add(sourceRing);
 			}
 			else if (CheckRingRelation(sourceRing, targetRing, sourceIsKnownContainedXY,
-			                           false, false, false, true))
+			                           false, false, false, isNotContained: true))
 			{
 				outsideOtherPolygonRings.Add(sourceRing);
 
