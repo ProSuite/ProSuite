@@ -28,7 +28,18 @@ namespace ProSuite.AGP.QA.WorkList
 
 		protected IssueWorkListEnvironmentBase([CanBeNull] string path)
 		{
-			_path = path;
+			if (path != null && path.EndsWith(".iwl", StringComparison.InvariantCultureIgnoreCase))
+			{
+				// It's the definition file
+				string gdbPath = WorkListUtils.GetIssueGeodatabasePath(path);
+
+				_path = gdbPath ?? throw new ArgumentException(
+					        $"The issue work list {path} references a geodatabase that does not exist.");
+			}
+			else
+			{
+				_path = path;
+			}
 		}
 
 		public override string FileSuffix => ".iwl";
