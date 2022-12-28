@@ -142,10 +142,34 @@ namespace ProSuite.Commons.Geom
 
 			if (unprocessedParts.Count > 0)
 			{
-				results.Add(unprocessedParts);
+				results.Add(FilterUnprocessedRings(unprocessedParts, resultRingGroups));
 			}
 
 			return new MultiPolycurve(results);
+		}
+
+		private MultiLinestring FilterUnprocessedRings(MultiLinestring unprocessed,
+		                                               IList<RingGroup> resultRingGroups)
+		{
+			if (! _subcurveNavigator.HasBoundaryLoops())
+			{
+				return unprocessed;
+			}
+
+			// extra check necessary, the unprocessed parts could be inside a processed part
+			var remaining = new List<Linestring>();
+			foreach (var unprocessedRing in unprocessed.GetLinestrings())
+			{
+				if (resultRingGroups.All(r => GeomRelationUtils.AreaContainsXY(
+					                              r, unprocessedRing,
+					                              _subcurveNavigator.Tolerance) == false))
+				{
+					// Not contained by any result ring: keep it
+					remaining.Add(unprocessedRing);
+				}
+			}
+
+			return new MultiPolycurve(remaining);
 		}
 
 		/// <summary>

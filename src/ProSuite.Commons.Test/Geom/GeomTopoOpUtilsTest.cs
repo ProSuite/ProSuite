@@ -4349,6 +4349,10 @@ namespace ProSuite.Commons.Test.Geom
 					double expectedArea = source.GetLinestring(0).GetArea2D() * 2;
 					Assert.AreEqual(expectedArea, union.GetArea2D());
 
+					// Flip arguments:
+					union = UnionAreasXY(target, source, tolerance);
+					Assert.AreEqual(1, union.PartCount);
+					Assert.AreEqual(expectedArea, union.GetArea2D());
 
 					// Intersection of result with target/source:
 					MultiLinestring intersection =
