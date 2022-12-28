@@ -1330,29 +1330,47 @@ namespace ProSuite.Commons.Geom
 			[NotNull] ISegmentList target,
 			bool includeSourceRingStartEnd)
 		{
+			var linearIntersectionBreakEvaluator = new LinearIntersectionBreakEvaluator(true);
+
 			if (includeSourceRingStartEnd)
 			{
 				// The 'standard' linear intersection breaks at ring start/end:
 				foreach (LinearIntersectionPseudoBreak linearBreak in
-				         GeomTopoOpUtils.GetLinearIntersectionBreaksAtRingStart(
-					         source, target, intersectionsAlongSource, true, Tolerance))
+				         linearIntersectionBreakEvaluator.GetLinearIntersectionBreaksAtRingStart(
+					         source, target, intersectionsAlongSource, Tolerance))
 				{
-					foreach (IntersectionPoint3D intersectionPoint3D in EvaluateLinearBreak(
-						         linearBreak))
-					{
-						yield return intersectionPoint3D;
-					}
+					yield return linearBreak.PreviousEnd;
+					yield return linearBreak.Restart;
 				}
 			}
 
 			// Other linear intersection breaks that are not real (from a 2D perspective)
-			foreach (var linearBreak in GeomTopoOpUtils.GetLinearIntersectionPseudoBreaks(
-				         intersectionsAlongSource, source, target, true, Tolerance))
+			foreach (var linearBreak in linearIntersectionBreakEvaluator
+				         .GetLinearIntersectionPseudoBreaks(
+					         intersectionsAlongSource, source, target))
 			{
-				foreach (IntersectionPoint3D intersectionPoint3D in
-				         EvaluateLinearBreak(linearBreak))
+				yield return linearBreak.PreviousEnd;
+				yield return linearBreak.Restart;
+			}
+
+			// Side effect: identify all boundary loop intersections
+			// Add the otherwise missed source boundary loops
+			foreach (LinearIntersectionPseudoBreak boundaryLoop in
+			         linearIntersectionBreakEvaluator
+				         .GetAllBoundaryLoops(source, target, Tolerance))
+			{
+				if (boundaryLoop.IsSourceBoundaryLoop)
 				{
-					yield return intersectionPoint3D;
+					SourceBoundaryLoopIntersections.Add(
+						new Tuple<IntersectionPoint3D, IntersectionPoint3D>(
+							boundaryLoop.Restart, boundaryLoop.PreviousEnd));
+				}
+
+				if (boundaryLoop.IsTargetBoundaryLoop)
+				{
+					TargetBoundaryLoopIntersections.Add(
+						new Tuple<IntersectionPoint3D, IntersectionPoint3D>(
+							boundaryLoop.Restart, boundaryLoop.PreviousEnd));
 				}
 			}
 

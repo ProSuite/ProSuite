@@ -3027,7 +3027,10 @@ namespace ProSuite.Commons.Geom
 			[NotNull] ISegmentList targetSegments,
 			[NotNull] ICollection<IntersectionPoint3D> intersectionPoints)
 		{
-			foreach (var linearBreaks in GetLinearIntersectionBreaksAtRingStart(
+			var linearIntersectionBreakEvaluator = new LinearIntersectionBreakEvaluator();
+
+			foreach (var linearBreaks in
+			         linearIntersectionBreakEvaluator.GetLinearIntersectionBreaksAtRingStart(
 				         sourceSegments, targetSegments, intersectionPoints))
 			{
 				yield return linearBreaks.PreviousEnd;
@@ -3035,176 +3038,12 @@ namespace ProSuite.Commons.Geom
 			}
 
 			foreach (var linearBreaks in
-			         GetLinearIntersectionPseudoBreaks(intersectionPoints, sourceSegments,
-			                                           targetSegments))
+			         linearIntersectionBreakEvaluator.GetLinearIntersectionPseudoBreaks(
+				         intersectionPoints, sourceSegments, targetSegments))
 			{
 				yield return linearBreaks.PreviousEnd;
 				yield return linearBreaks.Restart;
 			}
-		}
-
-		/// <summary>
-		/// Returns the intersection points at the ring start/end points which exist only because
-		/// of the ring start/end point. When the intersection points are calculated these
-		/// interceptions of linear intersection stretch through the ring's null points can
-		/// optionally be included and excluded dynamically for some operations.
-		/// </summary>
-		/// <param name="sourceSegments"></param>
-		/// <param name="targetSegments"></param>
-		/// <param name="intersectionPoints"></param>
-		/// <param name="includeBoundaryLoops"></param>
-		/// <param name="tolerance"></param>
-		/// <returns></returns>
-		internal static IEnumerable<LinearIntersectionPseudoBreak>
-			GetLinearIntersectionBreaksAtRingStart(
-				ISegmentList sourceSegments,
-				ISegmentList targetSegments,
-				ICollection<IntersectionPoint3D> intersectionPoints,
-				bool includeBoundaryLoops = false,
-				double tolerance = double.NaN)
-		{
-			if (intersectionPoints.Count == 0)
-			{
-				yield break;
-			}
-
-			if (! sourceSegments.IsClosed && ! targetSegments.IsClosed)
-			{
-				yield break;
-			}
-
-			foreach (IGrouping<int, IntersectionPoint3D> intersectionsByPart in
-			         intersectionPoints.GroupBy(p => p.SourcePartIndex))
-			{
-				var orderedIntersections =
-					intersectionsByPart.OrderBy(i => i.VirtualSourceVertex).ToList();
-
-				if (orderedIntersections.Count < 2)
-				{
-					continue;
-				}
-
-				// Target end/start break:
-				foreach (LinearIntersectionPseudoBreak pseudoBreak in
-				         GetLinearIntersectionPseudoBreaks(
-					         sourceSegments, targetSegments, orderedIntersections, true,
-					         includeBoundaryLoops, tolerance))
-				{
-					yield return pseudoBreak;
-				}
-
-				// Now check the source-end to source-start break
-				IntersectionPoint3D ringEnd = orderedIntersections.Last();
-				IntersectionPoint3D ringStart = orderedIntersections[0];
-
-				if (IsLinearIntersectionPseudoBreak(
-					    ringEnd, ringStart, sourceSegments, targetSegments,
-					    tolerance,
-					    out LinearIntersectionPseudoBreak ringNullPointBreak))
-				{
-					yield return ringNullPointBreak;
-				}
-				else if (includeBoundaryLoops && ringNullPointBreak?.IsBoundaryLoop == true)
-				{
-					yield return ringNullPointBreak;
-				}
-			}
-		}
-
-		/// <summary>
-		/// Returns linear intersections end/start points that are within a linear intersection
-		/// stretch and do not start or end the linear intersection from a 2D perspective.
-		/// </summary>
-		/// <param name="intersectionPoints"></param>
-		/// <param name="source"></param>
-		/// <param name="target"></param>
-		/// <param name="includeBoundaryLoops"></param>
-		/// <returns></returns>
-		internal static IEnumerable<LinearIntersectionPseudoBreak>
-			GetLinearIntersectionPseudoBreaks(
-				[NotNull] IEnumerable<IntersectionPoint3D> intersectionPoints,
-				[NotNull] ISegmentList source,
-				[NotNull] ISegmentList target,
-				bool includeBoundaryLoops = false,
-				double tolerance = double.NaN)
-		{
-			var orderedIntersections =
-				intersectionPoints.OrderBy(i => i.SourcePartIndex)
-				                  .ThenBy(i => i.VirtualSourceVertex).ToList();
-
-			foreach (LinearIntersectionPseudoBreak pseudoBreak in
-			         GetLinearIntersectionPseudoBreaks(source, target, orderedIntersections,
-			                                           false, includeBoundaryLoops))
-			{
-				yield return pseudoBreak;
-			}
-		}
-
-		private static IEnumerable<LinearIntersectionPseudoBreak> GetLinearIntersectionPseudoBreaks(
-			[NotNull] ISegmentList source,
-			[NotNull] ISegmentList target,
-			[NotNull] IEnumerable<IntersectionPoint3D> orderedIntersections,
-			bool onlyOnTargetNullPoint = false,
-			bool includeBoundaryLoops = false,
-			double tolerance = double.NaN)
-		{
-			IntersectionPoint3D previous = null;
-			foreach (IntersectionPoint3D current in orderedIntersections)
-			{
-				if (! onlyOnTargetNullPoint ||
-				    SegmentIntersectionUtils.IsTargetRingNullPoint(
-					    current.SegmentIntersection, previous?.SegmentIntersection,
-					    target))
-				{
-					if (IsLinearIntersectionPseudoBreak(
-						    previous, current, source, target, tolerance,
-						    out LinearIntersectionPseudoBreak pseudoBreak))
-					{
-						yield return pseudoBreak;
-					}
-					else if (includeBoundaryLoops && pseudoBreak?.IsBoundaryLoop == true)
-					{
-						yield return pseudoBreak;
-					}
-				}
-
-				previous = current;
-			}
-		}
-
-		private static bool IsLinearIntersectionPseudoBreak(
-			IntersectionPoint3D previousIntersection,
-			IntersectionPoint3D currentIntersection,
-			ISegmentList source,
-			ISegmentList target,
-			double tolerance,
-			out LinearIntersectionPseudoBreak pseudoBreak)
-		{
-			pseudoBreak = null;
-
-			if (previousIntersection == null ||
-			    previousIntersection.Type != IntersectionPointType.LinearIntersectionEnd ||
-			    currentIntersection.Type != IntersectionPointType.LinearIntersectionStart)
-			{
-				return false;
-			}
-
-			bool adjacent = SegmentIntersectionUtils.AreIntersectionsAdjacent(
-				previousIntersection, currentIntersection,
-				source, target, out bool isSourceBoundaryLoop, out bool isTargetBoundaryLoop,
-				tolerance);
-
-			if (adjacent || isSourceBoundaryLoop || isTargetBoundaryLoop)
-			{
-				pseudoBreak =
-					new LinearIntersectionPseudoBreak(previousIntersection, currentIntersection)
-					{
-						IsSourceBoundaryLoop = isSourceBoundaryLoop,
-						IsTargetBoundaryLoop = isTargetBoundaryLoop
-					};
-			}
-
-			return adjacent;
 		}
 
 		private static void FilterLinearIntersectionBreaksAtRingStart(
@@ -3212,7 +3051,10 @@ namespace ProSuite.Commons.Geom
 			ISegmentList targetSegments,
 			IList<IntersectionPoint3D> intersectionPoints)
 		{
-			foreach (var pseudoBreak in GetLinearIntersectionBreaksAtRingStart(
+			var linearIntersectionBreakEvaluator = new LinearIntersectionBreakEvaluator();
+
+			foreach (var pseudoBreak in
+			         linearIntersectionBreakEvaluator.GetLinearIntersectionBreaksAtRingStart(
 				         sourceSegments, targetSegments, intersectionPoints))
 			{
 				intersectionPoints.Remove(pseudoBreak.PreviousEnd);
