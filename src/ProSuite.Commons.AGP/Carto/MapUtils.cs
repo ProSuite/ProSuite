@@ -10,7 +10,7 @@ using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Collections;
-using ProSuite.Commons.Essentials.Assertions; 
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
 
@@ -197,21 +197,22 @@ namespace ProSuite.Commons.AGP.Carto
 			[CanBeNull] MapView mapView = null,
 			bool includeInvalid = false) where T : BasicFeatureLayer
 		{
-			foreach (T basicFeatureLayer in GetLayers(layerPredicate, mapView))
+			Predicate<T> combinedPredicate;
+
+			if (includeInvalid)
 			{
-				if (! includeInvalid)
-				{
-					if (basicFeatureLayer.GetTable() == null)
-					{
-						continue;
-					}
+				combinedPredicate = layerPredicate;
+			}
+			else
+			{
+				// Check for layer validity first because in most cases the specified layerPredicate
+				// uses the FeatureClass name etc. which results in null-pointers if evaluated first.
+				combinedPredicate = l =>
+					LayerUtils.IsLayerValid(l) && (layerPredicate == null || layerPredicate(l));
+			}
 
-					if (! LayerUtils.IsLayerValid(basicFeatureLayer))
-					{
-						continue;
-					}
-				}
-
+			foreach (T basicFeatureLayer in GetLayers(combinedPredicate, mapView))
+			{
 				yield return basicFeatureLayer;
 			}
 		}
