@@ -199,6 +199,31 @@ namespace ProSuite.Commons.AGP.Carto
 			}
 		}
 
+		public static IEnumerable<T> GetFeatureLayers<T>(
+			[CanBeNull] Predicate<T> layerPredicate,
+			[CanBeNull] MapView mapView = null,
+			bool includeInvalid = false) where T : BasicFeatureLayer
+		{
+			Predicate<T> combinedPredicate;
+
+			if (includeInvalid)
+			{
+				combinedPredicate = layerPredicate;
+			}
+			else
+			{
+				// Check for layer validity first because in most cases the specified layerPredicate
+				// uses the FeatureClass name etc. which results in null-pointers if evaluated first.
+				combinedPredicate = l =>
+					LayerUtils.IsLayerValid(l) && (layerPredicate == null || layerPredicate(l));
+			}
+
+			foreach (T basicFeatureLayer in GetLayers(combinedPredicate, mapView))
+			{
+				yield return basicFeatureLayer;
+			}
+		}
+
 		public static IEnumerable<StandaloneTable> GetStandaloneTables(
 			[CanBeNull] Predicate<StandaloneTable> tablePredicate)
 		{

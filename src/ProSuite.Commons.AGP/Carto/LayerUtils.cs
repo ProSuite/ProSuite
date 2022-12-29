@@ -179,5 +179,21 @@ namespace ProSuite.Commons.AGP.Carto
 			cimDefinition.Selectable = selectable;
 			layer.SetDefinition(cimDefinition);
 		}
+
+		public static bool IsLayerValid([CanBeNull] BasicFeatureLayer featureLayer)
+		{
+			// ReSharper disable once UseNullPropagation
+			if (featureLayer == null)
+			{
+				return false;
+			}
+
+			if (featureLayer.GetTable() == null)
+			{
+				return false;
+			}
+
+			return true;
+		}
 	}
 }

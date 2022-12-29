@@ -32,14 +32,14 @@ namespace ProSuite.AGP.Editing.Selection
 
 		protected override async Task OnToolActivateAsync(bool hasMapViewChanged)
 		{
-			SetCheckState("DiraProSuiteTools_Selection_SelectionToolButton", true);
+			SetCheckState("ProSuiteTools_Selection_SelectionToolButton", true);
 
 			await base.OnToolActivateAsync(hasMapViewChanged);
 		}
 
 		protected override async Task OnToolDeactivateAsync(bool hasMapViewChanged)
 		{
-			SetCheckState("DiraProSuiteTools_Selection_SelectionToolButton", false);
+			SetCheckState("ProSuiteTools_Selection_SelectionToolButton", false);
 
 			await base.OnToolDeactivateAsync(hasMapViewChanged);
 		}
@@ -107,7 +107,6 @@ namespace ProSuite.AGP.Editing.Selection
 				"Select one or more features by clicking or dragging a box. Options: " +
 				"<br>-Press and hold SHIFT to add or remove features from the existing selection." +
 				"<br>-Press CTRL and drag a box to show a list of selectable feature classes." +
-				"<br>-Press CTRL and click on overlapping features to select a single feature." +
 				"<br>-Press ALT and click to select all features at the click point.");
 		}
 

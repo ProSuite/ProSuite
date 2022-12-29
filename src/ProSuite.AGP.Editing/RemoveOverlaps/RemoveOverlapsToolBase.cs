@@ -122,8 +122,10 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 				return false;
 			}
 
+			MapView activeMapView = MapView.Active;
+
 			IEnumerable<Feature> selectedFeatures = MapUtils.GetFeatures(
-				selection, MapView.Active.Map.SpatialReference);
+				selection, activeMapView.Map.SpatialReference);
 
 			RemoveOverlapsResult result =
 				MicroserviceClient.RemoveOverlaps(
@@ -133,9 +135,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			var updates = new Dictionary<Feature, Geometry>();
 			var inserts = new Dictionary<Feature, IList<Geometry>>();
 
-			HashSet<long> editableClassHandles =
-				MapUtils.GetLayers<BasicFeatureLayer>(bfl => bfl.IsEditable)
-				        .Select(l => l.GetTable().Handle.ToInt64()).ToHashSet();
+			HashSet<long> editableClassHandles = ToolUtils.GetEditableClassHandles(activeMapView);
 
 			foreach (OverlapResultGeometries resultPerFeature in result.ResultsByFeature)
 			{
@@ -197,9 +197,9 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 				},
 				"Remove overlaps", datasets);
 
-			ToolUtils.SelectNewFeatures(newFeatures, MapView.Active);
+			ToolUtils.SelectNewFeatures(newFeatures, activeMapView);
 
-			var currentSelection = GetApplicableSelectedFeatures(MapView.Active).ToList();
+			var currentSelection = GetApplicableSelectedFeatures(activeMapView).ToList();
 
 			CalculateDerivedGeometries(currentSelection, progressor);
 

@@ -41,7 +41,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 			//get selected issue objects from issue layers
 			List<Row> issueObjects = new List<Row>();
 
-			var layers = MapUtils.GetLayers<FeatureLayer>(
+			IEnumerable<FeatureLayer> layers = MapUtils.GetFeatureLayers<FeatureLayer>(
 				fl => IssueGdbSchema.IssueFeatureClassNames.Contains(
 					fl.GetFeatureClass().GetName()));
 
@@ -97,7 +97,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 			foreach (KeyValuePair<string, List<long>> keyValuePair in involvedRows)
 			{
 				FeatureLayer layer =
-					MapUtils.GetLayers<FeatureLayer>(
+					MapUtils.GetFeatureLayers<FeatureLayer>(
 						lyr => string.Equals(
 							lyr.GetFeatureClass().GetName(),
 							keyValuePair.Key,
@@ -106,7 +106,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 				if (layer != null)
 				{
 					await QueuedTask.Run(() => layer.Select(
-						                     new QueryFilter {ObjectIDs = keyValuePair.Value},
+						                     new QueryFilter { ObjectIDs = keyValuePair.Value },
 						                     SelectionCombinationMethod.Add));
 					continue;
 				}
@@ -121,7 +121,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 				if (table != null)
 				{
 					await QueuedTask.Run(() => table.Select(
-						                     new QueryFilter {ObjectIDs = keyValuePair.Value},
+						                     new QueryFilter { ObjectIDs = keyValuePair.Value },
 						                     SelectionCombinationMethod.Add));
 					continue;
 				}

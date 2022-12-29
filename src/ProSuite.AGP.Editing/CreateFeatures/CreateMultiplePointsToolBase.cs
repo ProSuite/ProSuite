@@ -13,6 +13,8 @@ using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.Commons.AGP.Framework;
+using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using Attribute = ArcGIS.Desktop.Editing.Attributes.Attribute;
 
@@ -31,7 +33,7 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 			// This does not work unless loadOnClick="false" in the daml.xml:
 			// And the tags are not recognized either...
 			Tooltip =
-				"Create a new multipoint or several new point features at once in the current feature template." +
+				"Create several point or multipoint features at once for the current feature template." +
 				Environment.NewLine +
 				"ESC: Delete sketch points" + Environment.NewLine +
 				"F2:  Finish sketch";
@@ -42,15 +44,23 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 				Tooltip += string.Concat(Shortcuts.Select(shortCut => shortCut.DisplayString));
 			}
 
-			DisabledTooltip = "Select a point or multipoint feature class";
+			DisabledTooltip =
+				"Select a point or multipoint feature template in the Create Features pane";
 		}
 
 		protected override void OnCurrentTemplateUpdated()
 		{
-			Enabled = CurrentTemplate != null &&
-			          CurrentTargetLayer(CurrentTemplate).ShapeType ==
-			          esriGeometryType.esriGeometryPoint;
+			UpdateEnabled();
 		}
+
+		#region Overrides of PlugIn
+
+		protected override void OnUpdate()
+		{
+			UpdateEnabled();
+		}
+
+		#endregion
 
 		protected override SketchGeometryType GetSketchGeometryType()
 		{
@@ -77,24 +87,25 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 			return featureLayer.GetFeatureClass();
 		}
 
-		private static FeatureLayer CurrentTargetLayer(EditingTemplate editTemplate)
+		[CanBeNull]
+		private static FeatureLayer CurrentTargetLayer([CanBeNull] EditingTemplate editTemplate)
 		{
 			if (editTemplate == null)
 			{
 				return null;
 			}
 
-			var featureLayer = (FeatureLayer) editTemplate.Layer;
+			var featureLayer = editTemplate.Layer as FeatureLayer;
 
 			return featureLayer;
 		}
 
-		private static List<long> CreatePointsFeatures(EditOperation.IEditContext editContext,
-		                                               FeatureClass featureClass,
-		                                               IEnumerable<Attribute> attributes,
-		                                               Multipoint multipoint,
-		                                               CancelableProgressor cancelableProgressor =
-			                                               null)
+		private static List<long> CreatePointsFeatures(
+			[NotNull] EditOperation.IEditContext editContext,
+			[NotNull] FeatureClass featureClass,
+			[NotNull] IEnumerable<Attribute> attributes,
+			[NotNull] Multipoint multipoint,
+			[CanBeNull] CancelableProgressor cancelableProgressor = null)
 		{
 			var result = new List<long>();
 
@@ -105,6 +116,15 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 			{
 				// Set the attributes
 				rowBuffer = featureClass.CreateRowBuffer();
+
+				FeatureClassDefinition classDefinition = featureClass.GetDefinition();
+				GeometryType geometryType = classDefinition.GetShapeType();
+				bool classHasZ = classDefinition.HasZ();
+				bool classHasM = classDefinition.HasM();
+
+				Assert.True(geometryType == GeometryType.Point ||
+				            geometryType == GeometryType.Multipoint,
+				            "Invalid target feature class.");
 
 				foreach (Attribute attribute in attributes)
 				{
@@ -125,12 +145,17 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 					// Set Z/M awareness
 					feature = featureClass.CreateRow(rowBuffer);
 
-					var mapPointBuilder = new MapPointBuilderEx(point);
+					Geometry resultGeometry;
+					if (geometryType == GeometryType.Point)
+					{
+						resultGeometry = CreatePoint(point, classHasZ, classHasM);
+					}
+					else
+					{
+						resultGeometry = CreateSingleMultipoint(point, classHasZ, classHasM);
+					}
 
-					mapPointBuilder.HasZ = featureClass.GetDefinition().HasZ();
-					mapPointBuilder.HasM = featureClass.GetDefinition().HasM();
-
-					feature.SetShape(mapPointBuilder.ToGeometry());
+					feature.SetShape(resultGeometry);
 
 					feature.Store();
 
@@ -142,20 +167,44 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 
 				// Do some other processing with the row.
 			}
-			catch (GeodatabaseException exObj)
-			{
-				Console.WriteLine(exObj);
-			}
 			finally
 			{
-				if (rowBuffer != null)
-					rowBuffer.Dispose();
-
-				if (feature != null)
-					feature.Dispose();
+				rowBuffer?.Dispose();
+				feature?.Dispose();
 			}
 
 			return result;
+		}
+
+		private static Geometry CreateSingleMultipoint(MapPoint point, bool zAware, bool mAware)
+		{
+			var mapPointBuilder = new MultipointBuilderEx(point);
+
+			mapPointBuilder.HasZ = zAware;
+			mapPointBuilder.HasM = mAware;
+
+			Geometry resultGeometry = mapPointBuilder.ToGeometry();
+
+			return resultGeometry;
+		}
+
+		private static Geometry CreatePoint(MapPoint point, bool zAware, bool mAware)
+		{
+			var mapPointBuilder = new MapPointBuilderEx(point);
+
+			mapPointBuilder.HasZ = zAware;
+			mapPointBuilder.HasM = mAware;
+
+			Geometry resultGeometry = mapPointBuilder.ToGeometry();
+			return resultGeometry;
+		}
+
+		private void UpdateEnabled()
+		{
+			esriGeometryType? geometryType = CurrentTargetLayer(CurrentTemplate)?.ShapeType;
+
+			Enabled = geometryType == esriGeometryType.esriGeometryPoint ||
+			          geometryType == esriGeometryType.esriGeometryMultipoint;
 		}
 
 		#region Overrides of OneClickToolBase
@@ -182,9 +231,15 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 						throw new Exception("No valid template selected");
 					}
 
-					IEnumerable<Dataset> datasets = new List<Dataset> {currentTargetClass};
+					IEnumerable<Dataset> datasets = new List<Dataset> { currentTargetClass };
 
 					var multipoint = (Multipoint) sketchGeometry;
+
+					if (multipoint?.IsEmpty != false)
+					{
+						_msg.Warn("Sketch is null or empty. No feature was created.");
+						return false;
+					}
 
 					return await GdbPersistenceUtils.ExecuteInTransactionAsync(
 						       editContext =>
