@@ -214,8 +214,8 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			var issueGdbWritten = false;
 			bool fulfilled;
 
-			List<string> htmlReportFilePaths;
-			List<string> specificationReportFilePaths;
+			List<string> htmlReportFilePaths = null;
+			List<string> specificationReportFilePaths = null;
 			string gdbPath = null;
 
 			service.DistributedTestRunner = DistributedTestRunner;
@@ -290,24 +290,30 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 						}
 					}
 
-					XmlVerificationOptions verificationOptions = null;
-					specificationReportFilePaths =
-						StandaloneVerificationUtils.WriteQualitySpecificationReport(
-							qualitySpecification, _htmlReportDir, _qualitySpecificationTemplatePath,
-							verificationOptions);
+					if (! string.IsNullOrWhiteSpace(_htmlReportDir))
+					{
+						XmlVerificationOptions verificationOptions = null;
+						specificationReportFilePaths =
+							StandaloneVerificationUtils.WriteQualitySpecificationReport(
+								qualitySpecification, _htmlReportDir,
+								_qualitySpecificationTemplatePath,
+								verificationOptions);
 
-					htmlReportFilePaths = StandaloneVerificationUtils.WriteHtmlReports(
-						qualitySpecification, _htmlReportDir, issueStatistics, verificationReport,
-						XmlVerificationReportFileName, _htmlReportTemplatePath, verificationOptions,
-						issueGdbWritten ? gdbPath : null,
-						null, specificationReportFilePaths);
+						htmlReportFilePaths = StandaloneVerificationUtils.WriteHtmlReports(
+							qualitySpecification, _htmlReportDir, issueStatistics,
+							verificationReport,
+							XmlVerificationReportFileName, _htmlReportTemplatePath,
+							verificationOptions,
+							issueGdbWritten ? gdbPath : null,
+							null, specificationReportFilePaths);
+					}
 				}
 			}
 
 			GC.Collect();
 			GC.WaitForPendingFinalizers();
 
-			if (htmlReportFilePaths.Count > 0)
+			if (htmlReportFilePaths?.Count > 0)
 			{
 				string htmlReports = htmlReportFilePaths.Count == 1
 					                     ? "Html report:"
@@ -324,7 +330,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 				}
 			}
 
-			if (specificationReportFilePaths.Count > 0)
+			if (specificationReportFilePaths?.Count > 0)
 			{
 				string specReports = specificationReportFilePaths.Count == 1
 					                     ? "Quality specification report:"
