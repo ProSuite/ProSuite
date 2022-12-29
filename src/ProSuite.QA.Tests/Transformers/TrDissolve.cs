@@ -176,13 +176,13 @@ namespace ProSuite.QA.Tests.Transformers
 		{
 			bool IUniqueIdKey.IsVirtuell => BaseOid < 0;
 
-			public int BaseOid { get; }
-			public IReadOnlyList<int> BaseOids => _baseOids;
-			private readonly List<int> _baseOids;
+			public long BaseOid { get; }
+			public IReadOnlyList<long> BaseOids => _baseOids;
+			private readonly List<long> _baseOids;
 
-			public UniqueIdKey(IEnumerable<int> baseOids)
+			public UniqueIdKey(IEnumerable<long> baseOids)
 			{
-				_baseOids = new List<int>(baseOids);
+				_baseOids = new List<long>(baseOids);
 				Assert.True(_baseOids.Count > 0, "empty List");
 				_baseOids.Sort();
 				BaseOid = _baseOids[0];
@@ -233,7 +233,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 			public int GetHashCode(UniqueIdKey obj)
 			{
-				return obj.BaseOid + 29 * obj.BaseOids.Count;
+				return obj.BaseOid.GetHashCode() + 397 * obj.BaseOids.Count;
 			}
 		}
 
