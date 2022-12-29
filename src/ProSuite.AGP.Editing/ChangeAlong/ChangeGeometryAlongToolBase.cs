@@ -567,13 +567,13 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			CancellationToken cancellationToken =
 				progressor?.CancellationToken ?? new CancellationTokenSource().Token;
 
-			ChangeAlongCurves newChangeAlongCurves;
+			MapView activeMap = MapView.Active;
 
 			IList<Feature> targetFeatures = Assert.NotNull(ChangeAlongCurves.TargetFeatures);
 
 			List<ResultFeature> updatedFeatures = ChangeFeaturesAlong(
 				selectedFeatures, targetFeatures, cutSubcurves, cancellationToken,
-				out newChangeAlongCurves);
+				out ChangeAlongCurves newChangeAlongCurves);
 
 			if (updatedFeatures.Count > 0)
 			{
@@ -589,9 +589,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 				return false;
 			}
 
-			HashSet<long> editableClassHandles =
-				MapUtils.GetLayers<BasicFeatureLayer>(bfl => bfl.IsEditable)
-				        .Select(l => l.GetTable().Handle.ToInt64()).ToHashSet();
+			HashSet<long> editableClassHandles = ToolUtils.GetEditableClassHandles(activeMap);
 
 			// Updates:
 			Dictionary<Feature, Geometry> resultFeatures =
@@ -623,9 +621,9 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 			LogReshapeResults(updatedFeatures, resultFeatures);
 
-			ToolUtils.SelectNewFeatures(newFeatures, MapView.Active);
+			ToolUtils.SelectNewFeatures(newFeatures, activeMap);
 
-			SpatialReference outputSpatialReference = MapView.Active.Map.SpatialReference;
+			SpatialReference outputSpatialReference = activeMap.Map.SpatialReference;
 
 			if (ChangeAlongCurves.TargetFeatures != null)
 			{
