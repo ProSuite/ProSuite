@@ -55,7 +55,8 @@ namespace ProSuite.Commons.AGP.Carto
 		{
 			Predicate<FeatureLayer> predicate = fl => IsLayerApplicable(fl, layerPredicate);
 
-			IEnumerable<FeatureLayer> featureLayers = MapUtils.GetLayers(predicate, _mapView);
+			IEnumerable<FeatureLayer>
+				featureLayers = MapUtils.GetFeatureLayers(predicate, _mapView);
 
 			return FindFeaturesByLayer(featureLayers, searchGeometry, featurePredicate,
 			                           cancelableProgressor);
@@ -124,7 +125,8 @@ namespace ProSuite.Commons.AGP.Carto
 		{
 			Predicate<FeatureLayer> predicate = fl => IsLayerApplicable(fl, layerPredicate);
 
-			IEnumerable<FeatureLayer> featureLayers = MapUtils.GetLayers(predicate, _mapView);
+			IEnumerable<FeatureLayer>
+				featureLayers = MapUtils.GetFeatureLayers(predicate, _mapView);
 
 			return FindFeaturesByFeatureClass(featureLayers, searchGeometry, featurePredicate,
 			                                  cancelableProgressor);

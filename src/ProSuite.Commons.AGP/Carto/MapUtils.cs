@@ -10,7 +10,7 @@ using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Collections;
-using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.Assertions; 
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
 
@@ -189,6 +189,30 @@ namespace ProSuite.Commons.AGP.Carto
 				{
 					yield return matchingTypeLayer;
 				}
+			}
+		}
+
+		public static IEnumerable<T> GetFeatureLayers<T>(
+			[CanBeNull] Predicate<T> layerPredicate,
+			[CanBeNull] MapView mapView = null,
+			bool includeInvalid = false) where T : BasicFeatureLayer
+		{
+			foreach (T basicFeatureLayer in GetLayers(layerPredicate, mapView))
+			{
+				if (! includeInvalid)
+				{
+					if (basicFeatureLayer.GetTable() == null)
+					{
+						continue;
+					}
+
+					if (! LayerUtils.IsLayerValid(basicFeatureLayer))
+					{
+						continue;
+					}
+				}
+
+				yield return basicFeatureLayer;
 			}
 		}
 
