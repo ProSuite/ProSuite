@@ -8,6 +8,9 @@ using ArcGIS.Desktop.Editing.Events;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.WorkList.Contracts;
+using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.WorkList
 {
@@ -16,11 +19,15 @@ namespace ProSuite.AGP.WorkList
 	// todo daro: is this the right namespace for this type?
 	public class EditEventsRowCacheSynchronizer : IDisposable
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		private readonly IRowCache _rowCache;
 		private SubscriptionToken _eventToken;
 
-		public EditEventsRowCacheSynchronizer(IRowCache rowCache)
+		public EditEventsRowCacheSynchronizer([NotNull] IRowCache rowCache)
 		{
+			Assert.ArgumentNotNull(rowCache, nameof(rowCache));
+
 			_rowCache = rowCache;
 			WireEvents();
 		}
@@ -32,30 +39,46 @@ namespace ProSuite.AGP.WorkList
 
 		private async Task OnEditCompleted(EditCompletedEventArgs args)
 		{
-			switch (args.CompletedType)
-			{
-				case EditCompletedType.Save:
-					break;
-				case EditCompletedType.Discard:
-					await QueuedTask.Run(() => { _rowCache.Invalidate(); });
-					break;
-				case EditCompletedType.Operation:
-					ProcessChanges(args);
-					break;
-				case EditCompletedType.Undo:
-				case EditCompletedType.Redo:
-					await QueuedTask.Run(() => { ProcessChanges(args); });
-					break;
-				case EditCompletedType.Reconcile:
-					break;
-				case EditCompletedType.Post:
-					break;
-				default:
-					throw new ArgumentOutOfRangeException();
-			}
+			_msg.VerboseDebug(() => nameof(OnEditCompleted));
 
-			// todo: revise
-			await Task.FromResult(0);
+			try
+			{
+				switch (args.CompletedType)
+				{
+					case EditCompletedType.Save:
+						break;
+					case EditCompletedType.Discard:
+						await QueuedTask.Run(() => { _rowCache.Invalidate(); });
+						break;
+					case EditCompletedType.Operation:
+						ProcessChanges(args);
+						break;
+					case EditCompletedType.Undo:
+					case EditCompletedType.Redo:
+						await QueuedTask.Run(() => { ProcessChanges(args); });
+						break;
+					case EditCompletedType.Reconcile:
+						break;
+					case EditCompletedType.Post:
+						break;
+
+					// TODO: This compiles not in 2.x:
+					//case EditCompletedType.Unknown:
+					//	break;
+					default:
+						throw new ArgumentOutOfRangeException(
+							nameof(EditCompletedType),
+							args.CompletedType,
+							$"Unexpected EditCompletedType: {args.CompletedType}");
+				}
+			}
+			catch (Exception ex)
+			{
+				_msg.Error($"Error {nameof(OnEditCompleted)}: {ex.Message}", ex);
+
+				// todo: revise
+				await Task.FromResult(0);
+			}
 		}
 
 		private void ProcessChanges(EditCompletedEventArgs args)

@@ -324,6 +324,34 @@ namespace ProSuite.DomainModel.AO.DataModel
 			}
 		}
 
+		public bool TryGetMasterDatabaseWorkspaceContext(out IWorkspaceContext result,
+		                                                 out string noAccessReason)
+		{
+			result = MasterDatabaseWorkspaceContext;
+
+			if (result == null)
+			{
+				noAccessReason = MasterDatabaseNoAccessReason;
+				return false;
+			}
+
+			noAccessReason = null;
+			return true;
+		}
+
+		[NotNull]
+		public IWorkspaceContext AssertMasterDatabaseWorkspaceContextAccessible()
+		{
+			if (! TryGetMasterDatabaseWorkspaceContext(out IWorkspaceContext workspaceContext,
+			                                           out string noAccessReason))
+			{
+				throw new AssertionException(
+					$"The master database of model {Name} is not accessible: {noAccessReason}");
+			}
+
+			return workspaceContext;
+		}
+
 		#region Harvesting
 
 		[NotNull]
@@ -351,8 +379,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 			Assert.ArgumentNotNull(datasetListBuilderFactory,
 			                       nameof(datasetListBuilderFactory));
 
-			IWorkspaceContext workspaceContext = MasterDatabaseWorkspaceContext;
-			Assert.NotNull(workspaceContext, "The master database is not accessible");
+			AssertMasterDatabaseWorkspaceContextAccessible();
 
 			DatasetFilter datasetFilter = HarvestingUtils.CreateDatasetFilter(
 				_datasetInclusionCriteria, _datasetExclusionCriteria);
@@ -412,8 +439,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 		{
 			Assert.ArgumentNotNull(datasetListBuilder, nameof(datasetListBuilder));
 
-			IWorkspaceContext workspaceContext = MasterDatabaseWorkspaceContext;
-			Assert.NotNull(workspaceContext, "The master database is not accessible");
+			IWorkspaceContext workspaceContext = AssertMasterDatabaseWorkspaceContextAccessible();
 
 			return Harvest(workspaceContext, datasetListBuilder, attributeConfigurator,
 			               geometryTypeConfigurator);
@@ -473,8 +499,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 		public void HarvestAssociations()
 		{
-			IWorkspaceContext workspaceContext = MasterDatabaseWorkspaceContext;
-			Assert.NotNull(workspaceContext, "The master database is not accessible");
+			IWorkspaceContext workspaceContext = AssertMasterDatabaseWorkspaceContextAccessible();
 
 			HarvestAssociations(workspaceContext, DefaultDatabaseName,
 			                    DefaultDatabaseSchemaOwner,

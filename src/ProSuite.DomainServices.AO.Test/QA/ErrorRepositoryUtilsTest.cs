@@ -2,7 +2,7 @@ using System;
 using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.AO.Licensing;
+using ProSuite.Commons.AO.Test;
 using ProSuite.DomainServices.AO.QA.IssuePersistence;
 
 namespace ProSuite.DomainServices.AO.Test.QA
@@ -10,8 +10,6 @@ namespace ProSuite.DomainServices.AO.Test.QA
 	[TestFixture]
 	public class ErrorRepositoryUtilsTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
-
 		private readonly esriGeometryType[] _storedGeometryTypes =
 		{
 			esriGeometryType.esriGeometryMultipoint,
@@ -23,13 +21,13 @@ namespace ProSuite.DomainServices.AO.Test.QA
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout();
+			TestUtils.InitializeLicense();
 		}
 
 		[OneTimeTearDown]
 		public void TeardownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		[Test]

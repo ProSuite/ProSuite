@@ -36,6 +36,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		}
 
 		[Test]
+		[Category(TestCategory.x86)]
 		public void CanOpenOleDbWorkspaceAccess()
 		{
 			string mdbPath = TestData.GetNonGdbAccessDatabase();
@@ -173,10 +174,11 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		}
 
 		[Test]
+		[Category(TestCategory.x86)]
 		public void LearningTestSQLSyntaxPGDB()
 		{
 			IWorkspace workspace =
-				WorkspaceUtils.OpenPgdbWorkspace(TestData.GetGdb1Path());
+				WorkspaceUtils.OpenPgdbWorkspace(TestData.GetMdb1Path());
 
 			LogSqlSyntax(workspace);
 		}
@@ -241,10 +243,11 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		}
 
 		[Test]
+		[Category(TestCategory.x86)]
 		public void LearningTestWorkspacePropertiesPGDB()
 		{
 			IWorkspace workspace =
-				WorkspaceUtils.OpenPgdbWorkspace(TestData.GetGdb1Path());
+				WorkspaceUtils.OpenPgdbWorkspace(TestData.GetMdb1Path());
 
 			LogWorkspaceProperties(workspace);
 

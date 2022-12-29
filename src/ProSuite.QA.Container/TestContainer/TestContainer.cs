@@ -304,37 +304,19 @@ namespace ProSuite.QA.Container.TestContainer
 
 				foreach (ITest test in _tests)
 				{
-					var editingTest = test as IEditing;
-					var origAllowEditing = false;
-					if (editingTest != null)
+					foreach (IReadOnlyTable table in test.InvolvedTables)
 					{
-						origAllowEditing = editingTest.AllowEditing;
-						editingTest.AllowEditing = _allowEditing;
-					}
-
-					try
-					{
-						foreach (IReadOnlyTable table in test.InvolvedTables)
+						foreach (ISelectionSet selectionSet in selectionsList)
 						{
-							foreach (ISelectionSet selectionSet in selectionsList)
+							if (ReadOnlyTableFactory.Create(selectionSet.Target) != table)
 							{
-								if (ReadOnlyTableFactory.Create(selectionSet.Target) != table)
-								{
-									continue;
-								}
-
-								errorCount +=
-									test.Execute(
-										ReadOnlyTableFactory.EnumRows(
-											new EnumCursor(selectionSet, null, recycle: false)));
+								continue;
 							}
-						}
-					}
-					finally
-					{
-						if (editingTest != null)
-						{
-							editingTest.AllowEditing = origAllowEditing;
+
+							errorCount +=
+								test.Execute(
+									ReadOnlyTableFactory.EnumRows(
+										new EnumCursor(selectionSet, null, recycle: false)));
 						}
 					}
 

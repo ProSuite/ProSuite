@@ -1,6 +1,7 @@
 using ESRI.ArcGIS.Geodatabase;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Test;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
 using ProSuite.QA.Tests.Transformers;
@@ -24,6 +25,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 		}
 
 		[Test]
+		[Category(TestCategory.Sde)]
 		public void CanOpenAssociationTable()
 		{
 			IFeatureWorkspace workspace = OpenTestWorkspaceSde();
@@ -52,6 +54,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 		}
 
 		[Test]
+		[Category(TestCategory.Sde)]
 		public void CanOpenQueryClass()
 		{
 			IFeatureWorkspace workspace = OpenTestWorkspaceSde();
@@ -80,6 +83,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 		}
 
 		[NotNull]
+		[Category(TestCategory.Sde)]
 		private static IFeatureWorkspace OpenTestWorkspaceSde()
 		{
 			string versionName = "TG_SERVICE.RC_TLM_2022-6-30";

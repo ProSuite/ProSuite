@@ -74,8 +74,14 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 			double gridSize3 = 0d,
 			bool addExceptionFields = false)
 		{
+			if (string.IsNullOrEmpty(directoryFullPath))
+			{
+				return null;
+			}
+
 			IFeatureWorkspace workspace =
 				CreateDatabase(directoryFullPath, gdbName, issueRepositoryType);
+
 			if (workspace == null)
 			{
 				return null;

@@ -9,6 +9,8 @@ namespace ProSuite.Commons.AO.Test.TestSupport
 	public class ObjectClassMock : IObjectClass, ITable, IDataset, ISubtypes, IDatasetEdit,
 	                               IReadOnlyTable
 	{
+		private static int _nextObjectClassId;
+
 		private readonly FieldsMock _fieldsMock = new FieldsMock();
 		private const string _oidFieldName = "OBJECTID";
 		private const bool _hasOID = true;
@@ -17,17 +19,17 @@ namespace ProSuite.Commons.AO.Test.TestSupport
 		private IWorkspace _workspaceMock;
 
 		public ObjectClassMock(int objectClassId, string name)
-			: this(objectClassId, name, name) { }
+			: this(name, name, objectClassId) { }
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="ObjectClassMock"/> class.
 		/// </summary>
-		/// <param name="objectClassId">The object class id.</param>
 		/// <param name="name">The name.</param>
 		/// <param name="aliasName">The alias name of the object class.</param>
-		public ObjectClassMock(int objectClassId, string name, string aliasName)
+		/// <param name="objectClassId">The object class id.</param>
+		public ObjectClassMock(string name, string aliasName, int? objectClassId)
 		{
-			ObjectClassID = objectClassId;
+			ObjectClassID = objectClassId ?? _nextObjectClassId++;
 			_name = name;
 			AliasName = aliasName;
 

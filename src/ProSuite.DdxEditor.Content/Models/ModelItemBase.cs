@@ -213,8 +213,8 @@ namespace ProSuite.DdxEditor.Content.Models
 
 						E model = Assert.NotNull(GetEntity());
 
-						IWorkspaceContext workspaceContext = model.MasterDatabaseWorkspaceContext;
-						Assert.NotNull("The model master database is not accessible");
+						IWorkspaceContext workspaceContext =
+							model.AssertMasterDatabaseWorkspaceContextAccessible();
 
 						foreach (Dataset dataset in model.GetDatasets())
 						{

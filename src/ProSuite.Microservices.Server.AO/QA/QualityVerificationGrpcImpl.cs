@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -115,6 +114,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 			get;
 			set;
 		}
+
+		public bool KeepServingOnErrorDefaultValue { get; set; }
 
 		public override async Task VerifyQuality(
 			VerificationRequest request,
@@ -445,13 +446,10 @@ namespace ProSuite.Microservices.Server.AO.QA
 				bool useStandaloneService =
 					IsStandAloneVerification(request, out QualitySpecification specification);
 
-				var issueCollection = new ConcurrentBag<IssueMsg>();
 				if (DistributedProcessingClient != null && request.MaxParallelProcessing > 1)
 				{
-					// allow directly adding issues found by client processes:
 					distributedTestRunner =
-						new DistributedTestRunner(
-							DistributedProcessingClient, request, issueCollection)
+						new DistributedTestRunner(DistributedProcessingClient, request)
 						{
 							QualitySpecification = specification
 						};
@@ -544,7 +542,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 				_msg.Error($"Error verifying quality: {e.Message}", e);
 
 				if (! EnvironmentUtils.GetBooleanEnvironmentVariableValue(
-					    "PROSUITE_QA_SERVER_KEEP_SERVING_ON_ERROR"))
+					    "PROSUITE_QA_SERVER_KEEP_SERVING_ON_ERROR", KeepServingOnErrorDefaultValue))
 				{
 					SetUnhealthy();
 				}
@@ -622,8 +620,12 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			IssueRepositoryType issueRepositoryType = IssueRepositoryType.FileGdb;
 
-			if (ExternalIssueRepositoryUtils.IssueRepositoryExists(
-				    parameters.IssueFileGdbPath, IssueRepositoryType.FileGdb))
+			if (string.IsNullOrEmpty(parameters.IssueFileGdbPath))
+			{
+				xmlService.IssueRepositoryType = IssueRepositoryType.None;
+			}
+			else if (ExternalIssueRepositoryUtils.IssueRepositoryExists(
+				         parameters.IssueFileGdbPath, IssueRepositoryType.FileGdb))
 			{
 				responseStreamer.Warning(
 					$"The {issueRepositoryType} workspace '{parameters.IssueFileGdbPath}' already exists");

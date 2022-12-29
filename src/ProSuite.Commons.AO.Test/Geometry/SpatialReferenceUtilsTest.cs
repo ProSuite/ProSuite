@@ -405,6 +405,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 		}
 
 		[Test]
+		[Category(TestCategory.Sde)]
 		public void CanExportToXml()
 		{
 			IWorkspace workspace = TestUtils.OpenUserWorkspaceOracle();

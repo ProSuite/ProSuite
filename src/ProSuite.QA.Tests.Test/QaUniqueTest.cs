@@ -17,18 +17,12 @@ namespace ProSuite.QA.Tests.Test
 	[TestFixture]
 	public class QaUniqueTest
 	{
-		private IFeatureWorkspace _pgdbWorkspace;
-		private IFeatureWorkspace _fgdbWorkspace;
-
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
 			TestUtils.InitializeLicense(activateAdvancedLicense: true);
 
-			const string databaseName = "TestUnique";
-
-			_pgdbWorkspace = TestWorkspaceUtils.CreateTestAccessWorkspace(databaseName);
-			_fgdbWorkspace = TestWorkspaceUtils.CreateTestFgdbWorkspace(databaseName);
+			_fgdbWorkspace = TestWorkspaceUtils.CreateTestFgdbWorkspace(DatabaseName);
 		}
 
 		[OneTimeTearDown]
@@ -37,6 +31,10 @@ namespace ProSuite.QA.Tests.Test
 			TestUtils.ReleaseLicense();
 		}
 
+		private IFeatureWorkspace _fgdbWorkspace;
+
+		private const string DatabaseName = "TestUnique";
+
 		[Test]
 		public void TestUniqueIntegers()
 		{
@@ -44,7 +42,7 @@ namespace ProSuite.QA.Tests.Test
 			fields.AddField(FieldUtils.CreateOIDField());
 			fields.AddField(FieldUtils.CreateField("Unique",
 			                                       esriFieldType.esriFieldTypeInteger));
-			ITable table = TestWorkspaceUtils.CreateSimpleTable(_pgdbWorkspace, "Unique1",
+			ITable table = TestWorkspaceUtils.CreateSimpleTable(_fgdbWorkspace, "Unique1",
 			                                                    fields);
 
 			for (var i = 0; i < 10; i++)
@@ -84,7 +82,7 @@ namespace ProSuite.QA.Tests.Test
 					"Shape", esriGeometryType.esriGeometryPoint,
 					sref, 1000));
 
-			IFeatureClass featureClass = DatasetUtils.CreateSimpleFeatureClass(_pgdbWorkspace,
+			IFeatureClass featureClass = DatasetUtils.CreateSimpleFeatureClass(_fgdbWorkspace,
 				"TestUniqueStrings",
 				fields);
 
@@ -121,9 +119,17 @@ namespace ProSuite.QA.Tests.Test
 			Console.WriteLine(@"FileGdb");
 			TestStringsWithNulls(_fgdbWorkspace);
 			Console.WriteLine(@"-----------------");
+		}
+
+		[Test]
+		[Category(TestCategory.x86)]
+		public void TestStringsWithNulls_Pgdb()
+		{
+			IFeatureWorkspace pgdbWorkspace =
+				TestWorkspaceUtils.CreateTestAccessWorkspace(DatabaseName);
 
 			Console.WriteLine(@"Personal Gdb");
-			TestStringsWithNulls(_pgdbWorkspace);
+			TestStringsWithNulls(pgdbWorkspace);
 			Console.WriteLine(@"-----------------");
 		}
 
@@ -173,7 +179,7 @@ namespace ProSuite.QA.Tests.Test
 			foreach (bool forceInMemoryTableSort in new[] { true, false })
 			{
 				var test = new QaUnique(
-					           ReadOnlyTableFactory.Create(featureClass), "Unique", maxRows: 200)
+					           ReadOnlyTableFactory.Create(featureClass), "Unique", 200)
 				           {
 					           ForceInMemoryTableSorting = forceInMemoryTableSort
 				           };
@@ -223,10 +229,10 @@ namespace ProSuite.QA.Tests.Test
 					"Shape", esriGeometryType.esriGeometryPoint,
 					sref, 1000));
 
-			IFeatureClass featureClass1 = DatasetUtils.CreateSimpleFeatureClass(_pgdbWorkspace,
+			IFeatureClass featureClass1 = DatasetUtils.CreateSimpleFeatureClass(_fgdbWorkspace,
 				"TestUniqueStringsMulti1",
 				fields);
-			IFeatureClass featureClass2 = DatasetUtils.CreateSimpleFeatureClass(_pgdbWorkspace,
+			IFeatureClass featureClass2 = DatasetUtils.CreateSimpleFeatureClass(_fgdbWorkspace,
 				"TestUniqueStringsMulti2",
 				fields);
 
@@ -338,7 +344,7 @@ namespace ProSuite.QA.Tests.Test
 			fields.AddField(FieldUtils.CreateOIDField());
 			fields.AddField(FieldUtils.CreateField("Unique",
 			                                       esriFieldType.esriFieldTypeInteger));
-			ITable table = TestWorkspaceUtils.CreateSimpleTable(_pgdbWorkspace, "NonUnique",
+			ITable table = TestWorkspaceUtils.CreateSimpleTable(_fgdbWorkspace, "NonUnique",
 			                                                    fields);
 
 			for (var i = 0; i < 10; i++)
@@ -403,15 +409,23 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(TestCategory.x86)]
 		public void CanDetectNtoMUnique_PersonalGdb()
 		{
-			CanDetectNtoMUnique(_pgdbWorkspace);
+			IFeatureWorkspace pgdbWorkspace =
+				TestWorkspaceUtils.CreateTestAccessWorkspace(DatabaseName);
+
+			CanDetectNtoMUnique(pgdbWorkspace);
 		}
 
 		[Test]
+		[Category(TestCategory.x86)]
 		public void CanDetectNtoMNonUnique_PersonalGdb()
 		{
-			CanDetectNtoMNonUnique(_pgdbWorkspace);
+			IFeatureWorkspace pgdbWorkspace =
+				TestWorkspaceUtils.CreateTestAccessWorkspace(DatabaseName);
+
+			CanDetectNtoMNonUnique(pgdbWorkspace);
 		}
 
 		[Test]
@@ -421,9 +435,13 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(TestCategory.x86)]
 		public void CanDetect1toNUnique_PersonalGdb()
 		{
-			CanDetect1ToNUnique(_pgdbWorkspace);
+			IFeatureWorkspace pgdbWorkspace =
+				TestWorkspaceUtils.CreateTestAccessWorkspace(DatabaseName);
+
+			CanDetect1ToNUnique(pgdbWorkspace);
 		}
 
 		[Test]
@@ -433,9 +451,13 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(TestCategory.x86)]
 		public void CanDetect1toNNonUnique_PersonalGdb()
 		{
-			CanDetect1toNNonUnique(_pgdbWorkspace);
+			IFeatureWorkspace pgdbWorkspace =
+				TestWorkspaceUtils.CreateTestAccessWorkspace(DatabaseName);
+
+			CanDetect1toNNonUnique(pgdbWorkspace);
 		}
 
 		[Test]
@@ -447,7 +469,7 @@ namespace ProSuite.QA.Tests.Test
 			var firstUniqueFieldName = "Relate1NNonUnique1.Unique";
 
 			// TableSort verification
-			int sortCount = 0;
+			var sortCount = 0;
 			ITableSort tableSort = TableSortUtils.CreateTableSort(relTable,
 				firstUniqueFieldName);
 
@@ -473,16 +495,16 @@ namespace ProSuite.QA.Tests.Test
 				              sortCount); // bug in TableSort for joined FGDB-Tables, since 10.4
 			}
 
-			int orderByCount = 0;
+			var orderByCount = 0;
 			// Order By verification
 			int fieldIndex = relTable.FindField(firstUniqueFieldName);
 			IQueryFilter filter = new QueryFilterClass();
 			((IQueryFilterDefinition) filter).PostfixClause =
 				$"ORDER BY {firstUniqueFieldName}";
-			int pre = int.MinValue;
+			var pre = int.MinValue;
 			foreach (IRow row in new EnumCursor(relTable, filter, false))
 			{
-				int id = (int) row.Value[fieldIndex];
+				var id = (int) row.Value[fieldIndex];
 				Assert.IsTrue(pre <= id);
 				pre = id;
 
@@ -510,7 +532,7 @@ namespace ProSuite.QA.Tests.Test
 			ITable table = TestWorkspaceUtils.CreateSimpleTable(_fgdbWorkspace, "CanCheckGuids",
 			                                                    fields);
 
-			Guid latest = Guid.NewGuid();
+			var latest = Guid.NewGuid();
 			IRow row;
 			for (var i = 0; i < 10; i++)
 			{
@@ -549,7 +571,7 @@ namespace ProSuite.QA.Tests.Test
 			ITable table2 = TestWorkspaceUtils.CreateSimpleTable(_fgdbWorkspace,
 			                                                     "CanCheckGuids2", fields);
 
-			Guid latest = Guid.NewGuid();
+			var latest = Guid.NewGuid();
 			IRow row;
 			for (var i = 0; i < 10; i++)
 			{
@@ -660,18 +682,22 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(TestCategory.x86)]
 		public void CanCheckIntsMultiPgdbTable()
 		{
+			IFeatureWorkspace pgdbWorkspace =
+				TestWorkspaceUtils.CreateTestAccessWorkspace(DatabaseName);
+
 			IFieldsEdit fields = new FieldsClass();
 			fields.AddField(FieldUtils.CreateOIDField());
 			fields.AddField(FieldUtils.CreateField("UUID",
 			                                       esriFieldType.esriFieldTypeInteger));
-			ITable table = TestWorkspaceUtils.CreateSimpleTable(_pgdbWorkspace,
+			ITable table = TestWorkspaceUtils.CreateSimpleTable(pgdbWorkspace,
 			                                                    "CanCheckGuids1", fields);
 
 			fields.AddField(FieldUtils.CreateField("UUID2",
 			                                       esriFieldType.esriFieldTypeInteger));
-			ITable table2 = TestWorkspaceUtils.CreateSimpleTable(_pgdbWorkspace,
+			ITable table2 = TestWorkspaceUtils.CreateSimpleTable(pgdbWorkspace,
 			                                                     "CanCheckGuids2", fields);
 
 			IRow row;
@@ -709,8 +735,7 @@ namespace ProSuite.QA.Tests.Test
 				fields.AddField(FieldUtils.CreateField(uniqueFieldName,
 				                                       esriFieldType.esriFieldTypeInteger));
 				ITable table = TestWorkspaceUtils.CreateSimpleTable(workspace, "RelateUnique1",
-					fields,
-					null);
+					fields);
 				tableOrig = table;
 			}
 			ITable tableRel;
@@ -720,8 +745,7 @@ namespace ProSuite.QA.Tests.Test
 				fields.AddField(FieldUtils.CreateField(foreignKeyFieldName,
 				                                       esriFieldType.esriFieldTypeInteger));
 				ITable table = TestWorkspaceUtils.CreateSimpleTable(workspace, "RelateUnique2",
-					fields,
-					null);
+					fields);
 				tableRel = table;
 			}
 			IRelationshipClass rel = TestWorkspaceUtils.CreateSimpleMNRelationship(
@@ -749,7 +773,7 @@ namespace ProSuite.QA.Tests.Test
 				((IWorkspaceEdit) workspace).StopEditing(true);
 			}
 
-			ITable relTab = TableJoinUtils.CreateQueryTable(rel, JoinType.InnerJoin);
+			ITable relTab = TableJoinUtils.CreateQueryTable(rel);
 
 			foreach (bool forceInMemoryTableSort in new[] { true, false })
 			{
@@ -809,7 +833,7 @@ namespace ProSuite.QA.Tests.Test
 				                                              "rel1NUnique", tableOrig,
 				                                              tableRel, uniqueFieldName, "Ref");
 
-			ITable relTab = TableJoinUtils.CreateQueryTable(rel, JoinType.InnerJoin);
+			ITable relTab = TableJoinUtils.CreateQueryTable(rel);
 
 			foreach (bool forceInMemoryTableSort in new[] { true, false })
 			{
@@ -881,7 +905,7 @@ namespace ProSuite.QA.Tests.Test
 			IRelationshipClass rel = TestWorkspaceUtils.CreateSimple1NRelationship(
 				workspace, "rel1NNonUnique", tableOrig, tableRel, "Unique", "Ref");
 
-			ITable relTab = TableJoinUtils.CreateQueryTable(rel, JoinType.InnerJoin);
+			ITable relTab = TableJoinUtils.CreateQueryTable(rel);
 
 			foreach (bool forceInMemoryTableSort in new[] { true, false })
 			{
@@ -982,7 +1006,7 @@ namespace ProSuite.QA.Tests.Test
 				((IWorkspaceEdit) ws).StopEditing(true);
 			}
 
-			ITable relTab = TableJoinUtils.CreateQueryTable(relClass, JoinType.InnerJoin);
+			ITable relTab = TableJoinUtils.CreateQueryTable(relClass);
 
 			foreach (bool forceInMemoryTableSort in new[] { true, false })
 			{

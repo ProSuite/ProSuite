@@ -21,7 +21,7 @@ namespace ProSuite.QA.Container
 
 		//private static int _garbageCollectionRequestCount;
 
-		private static readonly char[] _tokenSeparators = {' ', ',', ';'};
+		private static readonly char[] _tokenSeparators = { ' ', ',', ';' };
 
 		public static int CompareQaErrors([NotNull] QaError error0,
 		                                  [NotNull] QaError error1,
@@ -906,12 +906,6 @@ namespace ProSuite.QA.Container
 
 			foreach (ITest test in tests)
 			{
-				// set tests up for write access
-				if (test is IEditing editingTest)
-				{
-					editingTest.AllowEditing = allowEditing;
-				}
-
 				var cached = false;
 
 				if (test is ContainerTest containerTest)

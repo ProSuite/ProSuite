@@ -20,7 +20,7 @@ namespace ProSuite.Microservices.Server.AO.Test
 			health.SetStatus(serviceName, true);
 
 			Task<HealthCheckResponse> response = healthImpl.Check(
-				new HealthCheckRequest() {Service = serviceName},
+				new HealthCheckRequest() { Service = serviceName },
 				null);
 
 			Assert.IsFalse(health.IsAnyServiceUnhealthy());
@@ -32,7 +32,7 @@ namespace ProSuite.Microservices.Server.AO.Test
 			health.SetStatus(typeof(RemoveOverlapsGrpcImpl), false);
 
 			response = healthImpl.Check(
-				new HealthCheckRequest() {Service = serviceName},
+				new HealthCheckRequest() { Service = serviceName },
 				null);
 
 			Assert.AreEqual(HealthCheckResponse.Types.ServingStatus.NotServing,

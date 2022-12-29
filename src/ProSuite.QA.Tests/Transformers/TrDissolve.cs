@@ -172,8 +172,77 @@ namespace ProSuite.QA.Tests.Transformers
 			}
 		}
 
+		private class UniqueIdKey : IUniqueIdKey
+		{
+			bool IUniqueIdKey.IsVirtuell => BaseOid < 0;
+
+			public int BaseOid { get; }
+			public IReadOnlyList<int> BaseOids => _baseOids;
+			private readonly List<int> _baseOids;
+
+			public UniqueIdKey(IEnumerable<int> baseOids)
+			{
+				_baseOids = new List<int>(baseOids);
+				Assert.True(_baseOids.Count > 0, "empty List");
+				_baseOids.Sort();
+				BaseOid = _baseOids[0];
+			}
+
+			public IReadOnlyRow BaseFeature { get; set; }
+
+			public IList<InvolvedRow> GetInvolvedRows()
+			{
+				return InvolvedRowUtils.GetInvolvedRows(BaseFeature);
+			}
+		}
+
+		private class UniqueIdKeyComparer : IEqualityComparer<UniqueIdKey>
+		{
+			public bool Equals(UniqueIdKey x, UniqueIdKey y)
+			{
+				if (x == y)
+				{
+					return true;
+				}
+
+				if (x == null || y == null)
+				{
+					return false;
+				}
+
+				if (x.BaseOid != y.BaseOid)
+				{
+					return false;
+				}
+
+				if (x.BaseOids.Count != y.BaseOids.Count)
+				{
+					return false;
+				}
+
+				for (int i = 1; i < x.BaseOids.Count; i++)
+				{
+					if (x.BaseOids[i] != y.BaseOids[i])
+					{
+						return false;
+					}
+				}
+
+				return true;
+			}
+
+			public int GetHashCode(UniqueIdKey obj)
+			{
+				return obj.BaseOid + 29 * obj.BaseOids.Count;
+			}
+		}
+
+
 		private class TransformedDataset : TransformedBackingDataset<TransformedFc>
 		{
+			private readonly SimpleUniqueIdProvider<UniqueIdKey> _uniqueIdProvider =
+				new SimpleUniqueIdProvider<UniqueIdKey>(new UniqueIdKeyComparer());
+
 			private static readonly TableIndexRowComparer
 				_rowComparer = new TableIndexRowComparer();
 
@@ -422,8 +491,7 @@ namespace ProSuite.QA.Tests.Transformers
 			}
 
 			private IReadOnlyFeature CreateResultRow(IGeometry shape,
-			                                         IList<IReadOnlyRow> rows,
-			                                         bool generateNewOid = false)
+			                                         IList<IReadOnlyRow> rows)
 			{
 				Assert.True(rows.Count > 0, "No rows to dissolve");
 
@@ -453,12 +521,12 @@ namespace ProSuite.QA.Tests.Transformers
 				IValueList rowValues = new ReadOnlyRowBasedValues(mainRow);
 				joinedValueList.AddList(rowValues, TableFields.FieldIndexMapping);
 
-				var dissolved =
-					generateNewOid
-						? Resulting.CreateObject(joinedValueList)
-						: Resulting.CreateObject(rows.Min(r => r.OID), joinedValueList);
+				UniqueIdKey key = new UniqueIdKey(rows.Select(r => r.OID));
+				int oid = _uniqueIdProvider.GetUniqueId(key);
+				var dissolved = Resulting.CreateObject(oid, joinedValueList);
 
 				dissolved.Shape = shape;
+				key.BaseFeature = dissolved;
 
 				return (IReadOnlyFeature)dissolved;
 			}
@@ -536,8 +604,7 @@ namespace ProSuite.QA.Tests.Transformers
 								inputFeaturesByOid[Assert.NotNull(geom.Id).Value]);
 						}
 
-						yield return CreateResultRow(
-							result, involvedFeatures, ! searchAcrossTiles);
+						yield return CreateResultRow(result, involvedFeatures);
 					}
 				}
 			}

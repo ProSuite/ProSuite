@@ -59,6 +59,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(TestCategory.Sde)]
 		public void MultiPointPerformanceTest()
 		{
 			IWorkspace ws = TestDataUtils.OpenTopgisTlm();

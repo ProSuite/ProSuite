@@ -30,7 +30,7 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanFindNonVerticalPlane()
 		{
-			var fc = new FeatureClassMock(1, "Fc", esriGeometryType.esriGeometryMultiPatch);
+			var fc = new FeatureClassMock("Fc", esriGeometryType.esriGeometryMultiPatch, 1);
 
 			var construction = new MultiPatchConstruction();
 			construction.StartRing(5, 4, 0).Add(5, 8, 0).Add(5.01, 4, 10);
@@ -45,7 +45,7 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void VerifySlopedPlaneNotChecked()
 		{
-			var fc = new FeatureClassMock(1, "Fc", esriGeometryType.esriGeometryMultiPatch);
+			var fc = new FeatureClassMock("Fc", esriGeometryType.esriGeometryMultiPatch, 1);
 
 			const double slopeAngleDeg = 85;
 			const double height = 10;
@@ -76,7 +76,7 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void VerifyVerticalPlaneNotReported()
 		{
-			var fc = new FeatureClassMock(1, "Fc", esriGeometryType.esriGeometryMultiPatch);
+			var fc = new FeatureClassMock("Fc", esriGeometryType.esriGeometryMultiPatch, 1);
 
 			const double toleranceAngleDeg = 0.5;
 			const double height = 10;
@@ -116,7 +116,7 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void VerifyResolutionProblemsNotReported()
 		{
-			var fc = new FeatureClassMock(1, "Fc", esriGeometryType.esriGeometryMultiPatch);
+			var fc = new FeatureClassMock("Fc", esriGeometryType.esriGeometryMultiPatch, 1);
 			double xyTolerance = GeometryUtils.GetXyTolerance((IFeatureClass) fc);
 
 			const double slopeAngleDeg = 85;

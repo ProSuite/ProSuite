@@ -30,8 +30,8 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanTestMultiPatches()
 		{
-			var featureClassMock = new FeatureClassMock(1, "mock",
-			                                            esriGeometryType.esriGeometryMultiPatch);
+			var featureClassMock = new FeatureClassMock("mock",
+			                                            esriGeometryType.esriGeometryMultiPatch, 1);
 
 			var construction = new MultiPatchConstruction();
 
@@ -56,8 +56,8 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanTestPolylines()
 		{
-			var featureClassMock = new FeatureClassMock(1, "mock",
-			                                            esriGeometryType.esriGeometryPolyline);
+			var featureClassMock = new FeatureClassMock("mock",
+			                                            esriGeometryType.esriGeometryPolyline, 1);
 
 			CurveConstruction construction = CurveConstruction
 			                                 .StartLine(5, 4, 10).LineTo(-5, 4, 10.1)
@@ -81,8 +81,8 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanTestPolygons()
 		{
-			var featureClassMock = new FeatureClassMock(1, "mock",
-			                                            esriGeometryType.esriGeometryPolygon);
+			var featureClassMock = new FeatureClassMock("mock",
+			                                            esriGeometryType.esriGeometryPolygon, 1);
 
 			CurveConstruction construction = CurveConstruction
 			                                 .StartPoly(5, 4, 10).LineTo(-5, 4, 10.1)
@@ -106,8 +106,8 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void VerifyErrorInToleranceNotReported()
 		{
-			var featureClassMock = new FeatureClassMock(1, "mock",
-			                                            esriGeometryType.esriGeometryMultiPatch);
+			var featureClassMock = new FeatureClassMock("mock",
+			                                            esriGeometryType.esriGeometryMultiPatch, 1);
 
 			const double toleranceAngle = 0.5;
 			const double dy = 10;
@@ -148,8 +148,8 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void VerifyStepSegmentsNotTested()
 		{
-			var featureClassMock = new FeatureClassMock(1, "mock",
-			                                            esriGeometryType.esriGeometryMultiPatch);
+			var featureClassMock = new FeatureClassMock("mock",
+			                                            esriGeometryType.esriGeometryMultiPatch, 1);
 
 			const double limitAngle = 5;
 			const double dy = 10;
@@ -190,8 +190,8 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void VerifyErrorTypes()
 		{
-			var featureClassMock = new FeatureClassMock(1, "mock",
-			                                            esriGeometryType.esriGeometryMultiPatch);
+			var featureClassMock = new FeatureClassMock("mock",
+			                                            esriGeometryType.esriGeometryMultiPatch, 1);
 
 			var construction = new MultiPatchConstruction();
 

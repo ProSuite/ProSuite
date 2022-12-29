@@ -158,5 +158,18 @@ namespace ProSuite.AGP.Editing
 
 			return true;
 		}
+
+		public static HashSet<long> GetEditableClassHandles([NotNull] MapView mapView)
+		{
+			IEnumerable<BasicFeatureLayer> basicFeatureLayers =
+				MapUtils.GetFeatureLayers<BasicFeatureLayer>(
+					bfl => bfl?.IsEditable == true, mapView);
+
+			HashSet<long> editableClassHandles = basicFeatureLayers
+			                                     .Select(l => l.GetTable().Handle.ToInt64())
+			                                     .ToHashSet();
+
+			return editableClassHandles;
+		}
 	}
 }

@@ -12,13 +12,13 @@ namespace ProSuite.Commons.AO.Geodatabase
 	public static class FieldUtils
 	{
 		[NotNull]
-		public static IFields CreateFields(params IField[] fields)
+		public static IFieldsEdit CreateFields(params IField[] fields)
 		{
 			return CreateFields((IEnumerable<IField>) fields);
 		}
 
 		[NotNull]
-		public static IFields CreateFields([NotNull] IEnumerable<IField> fields)
+		public static IFieldsEdit CreateFields([NotNull] IEnumerable<IField> fields)
 		{
 			Assert.ArgumentNotNull(fields, nameof(fields));
 

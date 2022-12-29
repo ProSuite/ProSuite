@@ -10,7 +10,7 @@ using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Geometry.ChangeAlong;
 using ProSuite.Commons.AO.Geometry.ZAssignment;
-using ProSuite.Commons.AO.Licensing;
+using ProSuite.Commons.AO.Test;
 using ProSuite.Commons.Geom;
 using ProSuite.Microservices.AO;
 using ProSuite.Microservices.Definitions.Geometry;
@@ -22,18 +22,10 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 	[TestFixture]
 	public class ChangeAlongServiceUtilsTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
-
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout();
-		}
-
-		[OneTimeTearDown]
-		public void TeardownFixture()
-		{
-			_lic.Release();
+			TestUtils.InitializeLicense();
 		}
 
 		[Test]
@@ -202,7 +194,7 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 
 			bool pointInserted = ReshapeUtils.EnsurePointsExistInTarget(
 				targetFeature.Shape,
-				new[] {targetAlmostIntersectPoint}, 0.001);
+				new[] { targetAlmostIntersectPoint }, 0.001);
 
 			Assert.IsTrue(pointInserted);
 			Assert.AreEqual(6, GeometryUtils.GetPointCount(targetFeature.Shape));
@@ -687,7 +679,7 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 			GeometryUtils.MakeZAware(sourceFeature.Shape);
 			GeometryUtils.MakeZAware(targetFeature.Shape);
 
-			var normal = new Vector(new[] {0.5, 0.5, 2});
+			var normal = new Vector(new[] { 0.5, 0.5, 2 });
 			Pnt3D planePoint = new Pnt3D(2600000, 1200000, 600);
 
 			Plane3D sourcePlane = new Plane3D(normal, planePoint);

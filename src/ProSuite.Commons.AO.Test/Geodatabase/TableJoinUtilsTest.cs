@@ -17,7 +17,6 @@ using ProSuite.Commons.Text;
 namespace ProSuite.Commons.AO.Test.Geodatabase
 {
 	[TestFixture]
-	[Category(TestCategory.Sde)]
 	public class TableJoinUtilsTest
 	{
 		[OneTimeSetUp]
@@ -128,6 +127,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		}
 
 		[Test]
+		[Category(TestCategory.Sde)]
 		public void ReproTestJoinCrash()
 		{
 			IFeatureWorkspace workspace = OpenTestWorkspace();
@@ -217,6 +217,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		}
 
 		[Test]
+		[Category(TestCategory.Sde)]
 		public void CanQueryFeaturesInnerJoinedToNameParts()
 		{
 			IFeatureWorkspace workspace = OpenTestWorkspace();
@@ -274,6 +275,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		}
 
 		[Test]
+		[Category(TestCategory.Sde)]
 		public void ReproTestShapeIntegrityErrorSDE()
 		{
 			// to reproduce TOP-4851: 
@@ -466,6 +468,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		}
 
 		[Test]
+		[Category(TestCategory.Sde)]
 		public void CanCreateQueryTableNTo1LeftJoin()
 		{
 			const string relClassName = "TOPGIS_TLM.TLM_STRASSE_NAME";
@@ -500,6 +503,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		}
 
 		[Test]
+		[Category(TestCategory.Sde)]
 		public void CanCreateQueryTableNTo1InnerJoin()
 		{
 			const string relClassName = "TOPGIS_TLM.TLM_STRASSE_STRASSE_AVS";
@@ -587,6 +591,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		}
 
 		[Test]
+		[Category(TestCategory.Sde)]
 		public void CanCreateQueryTableNTo1RightJoin()
 		{
 			const string relClassName = "TOPGIS_TLM.TLM_STRASSE_NAME";
@@ -639,6 +644,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		}
 
 		[Test]
+		[Category(TestCategory.Sde)]
 		public void CanCreateQueryTable1To1LeftJoin()
 		{
 			const string relClassName = "TOPGIS_TLM.TLM_WANDERWEG_STRASSE";
@@ -686,6 +692,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		}
 
 		[Test]
+		[Category(TestCategory.Sde)]
 		public void CanCreateQueryTable1To1InnerJoin()
 		{
 			const string relClassName = "TOPGIS_TLM.TLM_WANDERWEG_STRASSE";
@@ -729,6 +736,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		}
 
 		[Test]
+		[Category(TestCategory.Sde)]
 		public void CanCreateQueryTable1To1InnerJoinBetweenFeatureClasses()
 		{
 			// On both sides there is a feature class (requires filtering of shape/area fields)
@@ -792,6 +800,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		}
 
 		[Test]
+		[Category(TestCategory.Sde)]
 		public void CanCreateQueryTable1To1RightJoin()
 		{
 			const string relClassName = "TOPGIS_TLM.TLM_WANDERWEG_STRASSE";
@@ -827,6 +836,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		}
 
 		[Test]
+		[Category(TestCategory.Sde)]
 		public void CanCreateQueryTableNToMLeftJoin()
 		{
 			const string relClassName = "TOPGIS_TLM.TLM_STRASSENROUTE_STRASSE";
@@ -865,6 +875,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		}
 
 		[Test]
+		[Category(TestCategory.Sde)]
 		public void CanCreateQueryTableNToMRightJoin()
 		{
 			const string relClassName = "TOPGIS_TLM.TLM_STRASSENROUTE_STRASSE";
@@ -910,6 +921,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		}
 
 		[Test]
+		[Category(TestCategory.Sde)]
 		public void CanCreateQueryTableNToMInnerJoin()
 		{
 			const string relClassName = "TOPGIS_TLM.TLM_STRASSENROUTE_STRASSE";
@@ -967,6 +979,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		}
 
 		[Test]
+		[Category(TestCategory.Sde)]
 		public void CanCreateQueryDef1to1LeftJoin()
 		{
 			const string relClassName = "TOPGIS_TLM.TLM_WANDERWEG_STRASSE";
@@ -991,6 +1004,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		}
 
 		[Test]
+		[Category(TestCategory.Sde)]
 		public void CanCreateQueryDef1to1RightJoin()
 		{
 			const string relClassName = "TOPGIS_TLM.TLM_WANDERWEG_STRASSE";
@@ -1015,6 +1029,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		}
 
 		[Test]
+		[Category(TestCategory.Sde)]
 		public void CanCreateQueryDef1to1InnerJoin()
 		{
 			const string relClassName = "TOPGIS_TLM.TLM_WANDERWEG_STRASSE";
@@ -1039,6 +1054,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		}
 
 		[Test]
+		[Category(TestCategory.Sde)]
 		public void CanEvaluateOidOnlyQueryDef1To1()
 		{
 			const string relClassName = "TOPGIS_TLM.TLM_WANDERWEG_STRASSE";
@@ -1140,6 +1156,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		}
 
 		[Test]
+		[Category(TestCategory.Sde)]
 		public void CanEvaluateOIdOnlyQueryDef1ToM()
 		{
 			const string relClassName = "TOPGIS_TLM.TLM_STRASSE_NAME";
@@ -1170,6 +1187,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		}
 
 		[Test]
+		[Category(TestCategory.Sde)]
 		public void CanEvaluateQueryDef1ToM()
 		{
 			const string relClassName = "TOPGIS_TLM.TLM_STRASSE_NAME";
@@ -1222,6 +1240,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		}
 
 		[Test]
+		[Category(TestCategory.Sde)]
 		public void CanCreateQueryFeatureClass()
 		{
 			IFeatureWorkspace ws = OpenTestWorkspace();
@@ -1256,6 +1275,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		}
 
 		[Test]
+		[Category(TestCategory.x86)]
 		public void CanLeftJoin_NtoM_Pgdb()
 		{
 			var locator = new TestDataLocator();
@@ -1272,6 +1292,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		}
 
 		[Test]
+		[Category(TestCategory.x86)]
 		public void CanRightJoin_NtoM_Pgdb()
 		{
 			var locator = new TestDataLocator();
@@ -1298,6 +1319,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		}
 
 		[Test]
+		[Category(TestCategory.x86)]
 		public void CanInnerJoin_NtoM_Pgdb()
 		{
 			var locator = new TestDataLocator();
@@ -1318,6 +1340,8 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			CanRightJoin_1toM(ws);
 		}
 
+		[Test]
+		[Category(TestCategory.x86)]
 		public void CanRightJoin_1toM_Pgdb()
 		{
 			var locator = new TestDataLocator();
@@ -1349,6 +1373,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		}
 
 		[Test]
+		[Category(TestCategory.x86)]
 		public void CanInnerJoin_1toM_Pgdb()
 		{
 			var locator = new TestDataLocator();
@@ -1360,6 +1385,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		}
 
 		[Test]
+		[Category(TestCategory.x86)]
 		public void CanLeftOuterJoin_1toM_Pgdb()
 		{
 			var locator = new TestDataLocator();
@@ -1396,6 +1422,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		}
 
 		[Test]
+		[Category(TestCategory.x86)]
 		public void CanInnerJoin_1to1_Pgdb()
 		{
 			var locator = new TestDataLocator();
@@ -1407,6 +1434,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		}
 
 		[Test]
+		[Category(TestCategory.x86)]
 		public void CanRightOuterJoin_1to1_Pgdb()
 		{
 			var locator = new TestDataLocator();
@@ -1671,7 +1699,6 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 				(IFeatureWorkspace) TestUtils.OpenUserWorkspaceOracle();
 
 			return WorkspaceUtils.OpenFeatureWorkspaceVersion(defaultVersion, versionName);
-			return defaultVersion;
 		}
 
 		private static long GetRowCount([NotNull] IQueryDef queryDef)

@@ -624,8 +624,8 @@ namespace ProSuite.Commons.AO.Test.Geometry.LinearNetwork
 		private static LinearNetworkDef CreateSimpleNetworkDef(out FeatureClassMock edgeClass,
 		                                                       out FeatureClassMock junctionClass)
 		{
-			edgeClass = new FeatureClassMock(1, "STRASSE", esriGeometryType.esriGeometryPolyline);
-			junctionClass = new FeatureClassMock(2, "KNOTEN", esriGeometryType.esriGeometryPoint);
+			edgeClass = new FeatureClassMock("STRASSE", esriGeometryType.esriGeometryPolyline, 1);
+			junctionClass = new FeatureClassMock("KNOTEN", esriGeometryType.esriGeometryPoint, 2);
 
 			LinearNetworkClassDef edgeClassDef = new LinearNetworkClassDef(edgeClass);
 			LinearNetworkClassDef junctionClassDef = new LinearNetworkClassDef(junctionClass);

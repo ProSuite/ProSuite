@@ -128,7 +128,15 @@ public class InstanceConfigurationViewModel<T> : NotifyPropertyChangedBase,
 			return rowsByParameter;
 		}
 
-		InstanceFactory factory = InstanceFactoryUtils.CreateFactory(instanceConfiguration);
+		InstanceFactory factory = null;
+		try
+		{
+			factory = InstanceFactoryUtils.CreateFactory(instanceConfiguration);
+		}
+		catch (Exception e)
+		{
+			_msg.Debug($"Error loading factory for {instanceConfiguration}.", e);
+		}
 
 		if (factory == null)
 		{

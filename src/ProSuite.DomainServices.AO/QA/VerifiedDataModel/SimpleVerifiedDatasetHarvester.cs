@@ -12,7 +12,8 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 			bool isSupportedType =
 				datasetName.Type == esriDatasetType.esriDTFeatureClass ||
 				datasetName.Type == esriDatasetType.esriDTTable ||
-				datasetName.Type == esriDatasetType.esriDTMosaicDataset;
+				datasetName.Type == esriDatasetType.esriDTMosaicDataset ||
+				datasetName.Type == esriDatasetType.esriDTTopology;
 
 			if (isSupportedType)
 			{

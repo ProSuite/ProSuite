@@ -87,13 +87,56 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 		                             string xmlVerificationReportPath,
 		                             string htmlReportPath)
 		{
-			_issueRepositoryDir = Path.GetDirectoryName(issueRepositoryPath);
-			_issueRepositoryName = Path.GetFileNameWithoutExtension(issueRepositoryPath);
+			if (! string.IsNullOrEmpty(issueRepositoryPath))
+			{
+				try
+				{
+					_issueRepositoryDir = Path.GetDirectoryName(issueRepositoryPath);
+					_issueRepositoryName = Path.GetFileNameWithoutExtension(issueRepositoryPath);
+				}
+				catch (ArgumentException argumentException)
+				{
+					// Include more details in the error message to be more useful to the client
+					// Typically: ArgumentException: The path is not of a legal form.
+					throw new ArgumentException(
+						$"Issue Repository path {issueRepositoryPath}: {argumentException.Message}",
+						argumentException);
+				}
+			}
+			else
+			{
+				_msg.Info(
+					"No issue repository path was provided and no issue workspace will be written.");
+			}
 
 			_xmlVerificationReportPath = xmlVerificationReportPath;
 
+			if (string.IsNullOrEmpty(_xmlVerificationReportPath))
+			{
+				_msg.Info(
+					"No XML verification report path was provided and no xml report will be written.");
+			}
+
 			// NOTE: Currently the file names are hard-coded
-			_htmlReportDir = Path.GetDirectoryName(htmlReportPath);
+			if (! string.IsNullOrEmpty(htmlReportPath))
+			{
+				try
+				{
+					_htmlReportDir = Path.GetDirectoryName(htmlReportPath);
+				}
+				catch (ArgumentException argumentException)
+				{
+					// Include more details in the error message to be more useful to the client
+					// Typically: ArgumentException: The path is not of a legal form.
+					throw new ArgumentException(
+						$"HTML Report path {htmlReportPath}: {argumentException.Message}",
+						argumentException);
+				}
+			}
+			else
+			{
+				_msg.Info("No HTML report path was provided and no HTML will be written.");
+			}
 		}
 
 		private string XmlVerificationReportFileName =>
@@ -171,8 +214,8 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			var issueGdbWritten = false;
 			bool fulfilled;
 
-			List<string> htmlReportFilePaths;
-			List<string> specificationReportFilePaths;
+			List<string> htmlReportFilePaths = null;
+			List<string> specificationReportFilePaths = null;
 			string gdbPath = null;
 
 			service.DistributedTestRunner = DistributedTestRunner;
@@ -214,10 +257,12 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 					XmlVerificationReport verificationReport = GetVerificationReport(
 						xmlReportBuilder, qualitySpecification, properties);
 
-					XmlUtils.Serialize(verificationReport, _xmlVerificationReportPath);
-
-					InfoFormat("Verification report written to {0}", sb,
-					           _xmlVerificationReportPath);
+					if (! string.IsNullOrWhiteSpace(_xmlVerificationReportPath))
+					{
+						XmlUtils.Serialize(verificationReport, _xmlVerificationReportPath);
+						InfoFormat("Verification report written to {0}", sb,
+						           _xmlVerificationReportPath);
+					}
 
 					IssueStatistics issueStatistics = statisticsBuilder.IssueStatistics;
 
@@ -245,24 +290,30 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 						}
 					}
 
-					XmlVerificationOptions verificationOptions = null;
-					specificationReportFilePaths =
-						StandaloneVerificationUtils.WriteQualitySpecificationReport(
-							qualitySpecification, _htmlReportDir, _qualitySpecificationTemplatePath,
-							verificationOptions);
+					if (! string.IsNullOrWhiteSpace(_htmlReportDir))
+					{
+						XmlVerificationOptions verificationOptions = null;
+						specificationReportFilePaths =
+							StandaloneVerificationUtils.WriteQualitySpecificationReport(
+								qualitySpecification, _htmlReportDir,
+								_qualitySpecificationTemplatePath,
+								verificationOptions);
 
-					htmlReportFilePaths = StandaloneVerificationUtils.WriteHtmlReports(
-						qualitySpecification, _htmlReportDir, issueStatistics, verificationReport,
-						XmlVerificationReportFileName, _htmlReportTemplatePath, verificationOptions,
-						issueGdbWritten ? gdbPath : null,
-						null, specificationReportFilePaths);
+						htmlReportFilePaths = StandaloneVerificationUtils.WriteHtmlReports(
+							qualitySpecification, _htmlReportDir, issueStatistics,
+							verificationReport,
+							XmlVerificationReportFileName, _htmlReportTemplatePath,
+							verificationOptions,
+							issueGdbWritten ? gdbPath : null,
+							null, specificationReportFilePaths);
+					}
 				}
 			}
 
 			GC.Collect();
 			GC.WaitForPendingFinalizers();
 
-			if (htmlReportFilePaths.Count > 0)
+			if (htmlReportFilePaths?.Count > 0)
 			{
 				string htmlReports = htmlReportFilePaths.Count == 1
 					                     ? "Html report:"
@@ -279,7 +330,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 				}
 			}
 
-			if (specificationReportFilePaths.Count > 0)
+			if (specificationReportFilePaths?.Count > 0)
 			{
 				string specReports = specificationReportFilePaths.Count == 1
 					                     ? "Quality specification report:"

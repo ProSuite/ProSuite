@@ -1,7 +1,6 @@
 using System;
 using ESRI.ArcGIS.Geodatabase;
 using NUnit.Framework;
-using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.AO.Test;
 using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.Core.DataModel;
@@ -12,23 +11,22 @@ namespace ProSuite.DomainServices.AO.Test.QA.VerifiedDataModel
 	[TestFixture]
 	public class VerifiedModelFactoryTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
-
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
 			TestUtils.ConfigureUnittestLogging();
 
-			_lic.Checkout();
+			TestUtils.InitializeLicense();
 		}
 
 		[OneTimeTearDown]
 		public void TeardownFixture()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		[Test]
+		[Category(TestCategory.Sde)]
 		public void CanHarvestSimpleModel()
 		{
 			IWorkspace workspace = TestUtils.OpenUserWorkspaceOracle();
@@ -46,14 +44,17 @@ namespace ProSuite.DomainServices.AO.Test.QA.VerifiedDataModel
 
 			int tableCount = model.GetDatasets<TableDataset>().Count;
 			int vectorCount = model.GetDatasets<VectorDataset>().Count;
+			int topologyCount = model.GetDatasets<TopologyDataset>().Count;
 			int simpleRasterMosaicCount = model.GetDatasets<RasterMosaicDataset>().Count;
 
 			Assert.Greater(tableCount, 0);
 			Assert.Greater(vectorCount, 0);
+			Assert.Greater(topologyCount, 0);
 			Assert.Greater(simpleRasterMosaicCount, 0);
 
 			Console.WriteLine("Vector datasets: {0}", vectorCount);
 			Console.WriteLine("Table datasets: {0}", tableCount);
+			Console.WriteLine("Table datasets: {0}", topologyCount);
 			Console.WriteLine("Simple raster mosaic datasets: {0}", simpleRasterMosaicCount);
 
 			foreach (var objectDataset in model.GetDatasets<ObjectDataset>())

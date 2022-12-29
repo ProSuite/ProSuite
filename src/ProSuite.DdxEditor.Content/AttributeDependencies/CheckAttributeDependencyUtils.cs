@@ -164,16 +164,12 @@ namespace ProSuite.DdxEditor.Content.AttributeDependencies
 			try
 			{
 				IWorkspaceContext workspaceContext =
-					ModelElementUtils.GetMasterDatabaseWorkspaceContext(
+					ModelElementUtils.GetAccessibleMasterDatabaseWorkspaceContext(
 						attributeDependency.Dataset);
 
-				if (workspaceContext == null)
-				{
-					throw new Exception("Model master database is not accessible.");
-				}
-
 				IObjectClass objectClass =
-					workspaceContext.OpenObjectClass(attributeDependency.Dataset);
+					Assert.NotNull(workspaceContext).OpenObjectClass(attributeDependency.Dataset);
+
 				if (objectClass == null)
 				{
 					throw new Exception("ObjectClass could not be opened.");
