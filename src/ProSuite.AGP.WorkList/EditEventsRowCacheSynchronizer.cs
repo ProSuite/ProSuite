@@ -61,8 +61,10 @@ namespace ProSuite.AGP.WorkList
 						break;
 					case EditCompletedType.Post:
 						break;
-					case EditCompletedType.Unknown:
-						break;
+
+					// TODO: This compiles not in 2.x:
+					//case EditCompletedType.Unknown:
+					//	break;
 					default:
 						throw new ArgumentOutOfRangeException(
 							nameof(EditCompletedType),
