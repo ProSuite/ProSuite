@@ -115,6 +115,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 			set;
 		}
 
+		public bool KeepServingOnErrorDefaultValue { get; set; }
+
 		public override async Task VerifyQuality(
 			VerificationRequest request,
 			IServerStreamWriter<VerificationResponse> responseStream,
@@ -540,7 +542,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 				_msg.Error($"Error verifying quality: {e.Message}", e);
 
 				if (! EnvironmentUtils.GetBooleanEnvironmentVariableValue(
-					    "PROSUITE_QA_SERVER_KEEP_SERVING_ON_ERROR"))
+					    "PROSUITE_QA_SERVER_KEEP_SERVING_ON_ERROR", KeepServingOnErrorDefaultValue))
 				{
 					SetUnhealthy();
 				}
