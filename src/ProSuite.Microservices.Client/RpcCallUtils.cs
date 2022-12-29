@@ -7,7 +7,7 @@ using Grpc.Core;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 
-namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
+namespace ProSuite.Microservices.Client
 {
 	public static class RpcCallUtils
 	{
