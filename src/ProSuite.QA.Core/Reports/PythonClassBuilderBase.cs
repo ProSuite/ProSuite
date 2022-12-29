@@ -122,11 +122,17 @@ namespace ProSuite.QA.Core.Reports
 		                                 string conditionConstructorSignature,
 		                                 StringBuilder sb)
 		{
+			string description = factory.TestDescription ?? string.Empty;
+			description  = description.Replace(Environment.NewLine, $"{Environment.NewLine}        ")
+			                          .Replace("/", @"\/");
+
 			sb.AppendLine();
 			sb.AppendLine($"    @classmethod");
 			sb.AppendLine($"    def {methodName}({methodSignature}) -> {resultClassName}:");
 			sb.AppendLine($"        \"\"\"");
-			sb.AppendLine($"        {factory.TestDescription ?? string.Empty}        \"\"\"");
+			sb.AppendLine($"        {description}");
+			sb.AppendLine($"        \"\"\"");
+			sb.AppendLine($"        ");
 			sb.AppendLine($"        result = {resultClassName}({conditionConstructorSignature})");
 
 			foreach (TestParameter testParameter in factory.Parameters)
