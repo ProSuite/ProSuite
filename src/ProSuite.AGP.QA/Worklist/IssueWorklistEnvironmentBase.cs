@@ -109,6 +109,7 @@ namespace ProSuite.AGP.QA.WorkList
 					LayerFactory.Instance.CreateFeatureLayer(fc, layerContainer);
 
 				featureLayer.SetExpanded(false);
+				featureLayer.SetVisibility(false);
 
 				return featureLayer;
 			});
