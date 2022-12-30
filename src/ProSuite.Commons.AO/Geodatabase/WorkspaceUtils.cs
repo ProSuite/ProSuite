@@ -843,32 +843,44 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			// NOTE: Avoid using GPUtils.OpenWorkspaceFromCatalogPath because in case of an
 			//       SDE workspace, the process hangs at the end: https://community.esri.com/thread/75664
-
-			if (catalogPath.EndsWith(".sde",
-			                         StringComparison.InvariantCultureIgnoreCase))
+			try
 			{
-				return OpenSDEWorkspace(catalogPath);
-			}
+				if (catalogPath.EndsWith(".sde",
+				                         StringComparison.InvariantCultureIgnoreCase))
+				{
+					return OpenSDEWorkspace(catalogPath);
+				}
 
-			if (catalogPath.EndsWith(".gdb",
-			                         StringComparison.InvariantCultureIgnoreCase))
+				if (catalogPath.EndsWith(".gdb",
+				                         StringComparison.InvariantCultureIgnoreCase))
+				{
+					return OpenFileGdbWorkspace(catalogPath);
+				}
+
+				if (catalogPath.EndsWith(".mdb",
+				                         StringComparison.InvariantCultureIgnoreCase))
+				{
+					return OpenPgdbWorkspace(catalogPath);
+				}
+
+				if (Directory.Exists(catalogPath))
+				{
+					return (IWorkspace) OpenShapefileWorkspace(catalogPath);
+				}
+
+				throw new ArgumentOutOfRangeException(nameof(catalogPath),
+				                                      $"Could not detect workspace type of {catalogPath}.");
+			}
+			catch (COMException comException)
 			{
-				return OpenFileGdbWorkspace(catalogPath);
-			}
+				if (comException.ErrorCode == (int) fdoError.FDO_E_LICENSE_NOT_INITIALIZED)
+				{
+					throw new InvalidOperationException("ArcGIS License not initialized.",
+					                                    comException);
+				}
 
-			if (catalogPath.EndsWith(".mdb",
-			                         StringComparison.InvariantCultureIgnoreCase))
-			{
-				return OpenPgdbWorkspace(catalogPath);
+				throw;
 			}
-
-			if (Directory.Exists(catalogPath))
-			{
-				return (IWorkspace) OpenShapefileWorkspace(catalogPath);
-			}
-
-			throw new ArgumentOutOfRangeException(nameof(catalogPath),
-			                                      $"Could not detect workspace type of {catalogPath}.");
 		}
 
 		public static IFeatureWorkspace OpenFeatureWorkspace([NotNull] string catalogPath)
