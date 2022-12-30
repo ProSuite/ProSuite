@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Internal.CIM;
 using ArcGIS.Desktop.Mapping;
@@ -110,6 +111,17 @@ namespace ProSuite.AGP.QA.WorkList
 
 				featureLayer.SetExpanded(false);
 				featureLayer.SetVisibility(false);
+
+				// TODO: Support lyrx files as symbol layers.
+				// So far, just make the symbols red:
+				CIMSimpleRenderer renderer = featureLayer.GetRenderer() as CIMSimpleRenderer;
+
+				if (renderer != null)
+				{
+					CIMSymbolReference symbol = renderer.Symbol;
+					symbol.Symbol.SetColor(new CIMRGBColor() { R = 250 });
+					featureLayer.SetRenderer(renderer);
+				}
 
 				return featureLayer;
 			});
