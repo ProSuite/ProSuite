@@ -309,10 +309,9 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 		private bool AreTransformersAndFiltersSupported()
 		{
 			Version databaseSchemaVersion = GetDatabaseSchemaVersion();
-			var ddxVersionTransformers = new Version(0, 2);
-
+			
 			return databaseSchemaVersion != null &&
-			       databaseSchemaVersion >= ddxVersionTransformers;
+			       databaseSchemaVersion >= DdxSchemaVersion.FiltersAndTransformers;
 		}
 
 		#endregion

@@ -60,13 +60,11 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 
 				Expression<Func<bool>> noRefData = () => ! paramValueAlias.UsedAsReferenceData;
 
-				var ddxVersionTransformers = new Version(0, 2);
+				bool areTransformersSupported = AreTransformersSupported();
 
 				int[] transformerIds = { };
 
-				Version databaseSchemaVersion = GetDatabaseSchemaVersion();
-
-				if (databaseSchemaVersion >= ddxVersionTransformers)
+				if (areTransformersSupported)
 				{
 					// Only if it is properly supported by the DDX schema:
 					transformerIds =
@@ -226,6 +224,14 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 
 			return criteria.Add(filterCriterion)
 			               .List<QualitySpecification>();
+		}
+
+		private bool AreTransformersSupported()
+		{
+			Version databaseSchemaVersion = GetDatabaseSchemaVersion();
+
+			return databaseSchemaVersion != null &&
+			       databaseSchemaVersion >= DdxSchemaVersion.FiltersAndTransformers;
 		}
 
 		#endregion
