@@ -43,7 +43,6 @@ namespace ProSuite.Commons.Orm.NHibernate
 			"NHibernate.Caches.SysCache.SysCacheProvider, NHibernate.Caches.SysCache";
 
 		public bool DatabaseSupportsSequence =>
-			// NOTE: Currently SQLite is just used for unit testing.
 			// TODO: Also check if the sequence exists. 
 			! Dialect.Equals("NHibernate.Dialect.SQLiteDialect",
 			                 StringComparison.InvariantCultureIgnoreCase);
@@ -59,6 +58,9 @@ namespace ProSuite.Commons.Orm.NHibernate
 			Dictionary<string, string> props = GetDefaultNHibConfiguration();
 
 			AddCustomConfigurationProperties(props);
+
+			// Allow for schema-version specific mapping:
+			DetermineDdxVersion(props);
 
 			Configuration cfg = new Configuration().SetProperties(props);
 
@@ -85,6 +87,16 @@ namespace ProSuite.Commons.Orm.NHibernate
 		protected abstract void AddCustomConfigurationProperties(Dictionary<string, string> props);
 
 		protected virtual void AddCustomConfiguration(Configuration cfg) { }
+
+		/// <summary>
+		/// Allows implementors to determine the DDX version and initialize nh-mapping infrastructure.
+		/// </summary>
+		/// <param name="props"></param>
+		/// <returns></returns>
+		protected virtual Version DetermineDdxVersion(Dictionary<string, string> props)
+		{
+			return null;
+		}
 
 		private Dictionary<string, string> GetDefaultNHibConfiguration()
 		{
