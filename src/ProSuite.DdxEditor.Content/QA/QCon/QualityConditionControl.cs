@@ -441,6 +441,11 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 
 		#endregion
 
+		public void HideIssueFilterTab()
+		{
+			_tabControlDetails.TabPages.Remove(_tabPageIssueFilters);
+		}
+
 		private void BindTo(
 			[NotNull] IList<QualitySpecificationReferenceTableRow> tableRows)
 		{
