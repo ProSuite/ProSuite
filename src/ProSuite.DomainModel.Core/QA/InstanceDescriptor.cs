@@ -21,7 +21,7 @@ namespace ProSuite.DomainModel.Core.QA
 		[UsedImplicitly] private string _description;
 
 		[UsedImplicitly] private ClassDescriptor _class;
-		[UsedImplicitly] private int _constructorId;
+		[UsedImplicitly] private int _constructorId = -1;
 
 		#region Constructors
 
@@ -115,10 +115,11 @@ namespace ProSuite.DomainModel.Core.QA
 				_class = value;
 				if (value == null)
 				{
-					_constructorId = 0;
+					_constructorId = -1;
 				}
-				else
+				else if (_constructorId < 0)
 				{
+					// Only set the constructor if it has not already been assigned (e.g. by persistence)
 					try
 					{
 						_constructorId = GetDefaultConstructorId(_class);
@@ -126,7 +127,6 @@ namespace ProSuite.DomainModel.Core.QA
 					catch (Exception e)
 					{
 						_msg.WarnFormat("Error determining default constructor id: {0}", e.Message);
-						_constructorId = 0;
 					}
 
 					OnSetClass();
