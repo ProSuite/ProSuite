@@ -18,6 +18,7 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 		public List<XmlQualitySpecification> QualitySpecifications { get; set; }
 
 		[XmlArrayItem(ElementName = "QualityCondition")]
+		[CanBeNull]
 		public List<XmlQualityCondition> QualityConditions { get; set; }
 
 		[XmlArrayItem(ElementName = "Transformer")]
@@ -51,24 +52,14 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 		public void AddWorkspace([NotNull] XmlWorkspace xmlWorkspace)
 		{
 			Assert.ArgumentNotNull(xmlWorkspace, nameof(xmlWorkspace));
-
-			if (Workspaces == null)
-			{
-				Workspaces = new List<XmlWorkspace>();
-			}
-
+			Workspaces = Workspaces ?? new List<XmlWorkspace>();
 			Workspaces.Add(xmlWorkspace);
 		}
 
 		public void AddCategory([NotNull] XmlDataQualityCategory xmlCategory)
 		{
 			Assert.ArgumentNotNull(xmlCategory, nameof(xmlCategory));
-
-			if (Categories == null)
-			{
-				Categories = new List<XmlDataQualityCategory>();
-			}
-
+			Categories = Categories ?? new List<XmlDataQualityCategory>();
 			Categories.Add(xmlCategory);
 		}
 
@@ -76,12 +67,7 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 			[NotNull] XmlQualitySpecification xmlQualitySpecification)
 		{
 			Assert.ArgumentNotNull(xmlQualitySpecification, nameof(xmlQualitySpecification));
-
-			if (QualitySpecifications == null)
-			{
-				QualitySpecifications = new List<XmlQualitySpecification>();
-			}
-
+			QualitySpecifications = QualitySpecifications ?? new List<XmlQualitySpecification>();
 			QualitySpecifications.Add(xmlQualitySpecification);
 		}
 
