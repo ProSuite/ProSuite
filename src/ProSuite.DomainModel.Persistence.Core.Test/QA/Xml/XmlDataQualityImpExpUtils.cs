@@ -33,13 +33,20 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.QA.Xml
 
 			if (lineDataset != null)
 			{
-				q1.AddParameterValue(
-					new DatasetTestParameterValue(instanceInfo.GetParameter("featureClass"),
-					                              lineDataset));
+				var datasetTestParameterValue = new DatasetTestParameterValue(
+					instanceInfo.GetParameter("featureClass"), lineDataset);
+
+				// Set DataType to null to simulate the parameter coming from persistence:
+				datasetTestParameterValue.DataType = null;
+				q1.AddParameterValue(datasetTestParameterValue);
 			}
 
-			q1.AddParameterValue(
-				new ScalarTestParameterValue(instanceInfo.GetParameter("limit"), "2"));
+			var scalarTestParameterValue =
+				new ScalarTestParameterValue(instanceInfo.GetParameter("limit"), "2");
+			// Set DataType to null to simulate the parameter coming from persistence:
+			scalarTestParameterValue.DataType = null;
+
+			q1.AddParameterValue(scalarTestParameterValue);
 
 			var q2 = new QualityCondition("cond2", t1);
 			var q3 = new QualityCondition("cond3", t2);

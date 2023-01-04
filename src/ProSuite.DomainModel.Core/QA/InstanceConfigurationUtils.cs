@@ -120,17 +120,10 @@ namespace ProSuite.DomainModel.Core.QA
 			[NotNull] IInstanceInfo instanceInfo,
 			[NotNull] InstanceConfiguration instanceConfiguration)
 		{
-			InitializeParameterValues(instanceInfo, instanceConfiguration.ParameterValues);
-		}
-
-		public static void InitializeParameterValues(
-			[NotNull] IInstanceInfo instanceInfo,
-			[NotNull] IEnumerable<TestParameterValue> parameterValues)
-		{
 			Dictionary<string, TestParameter> parametersByName =
 				instanceInfo.Parameters.ToDictionary(testParameter => testParameter.Name);
 
-			foreach (TestParameterValue parameterValue in parameterValues)
+			foreach (TestParameterValue parameterValue in instanceConfiguration.ParameterValues)
 			{
 				if (parametersByName.TryGetValue(parameterValue.TestParameterName,
 				                                 out TestParameter testParameter))
@@ -140,8 +133,8 @@ namespace ProSuite.DomainModel.Core.QA
 				else
 				{
 					_msg.WarnFormat(
-						"Test parameter value {0}: No parameter found in {1}. The constructor Id might be incorrect.",
-						parameterValue.TestParameterName, instanceInfo);
+						"{0} / Test parameter value {1}: No parameter found in {2}. The constructor Id might be incorrect.",
+						instanceConfiguration, parameterValue.TestParameterName, instanceInfo);
 				}
 			}
 		}

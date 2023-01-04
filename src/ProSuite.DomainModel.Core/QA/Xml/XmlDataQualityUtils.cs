@@ -1900,9 +1900,7 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 						continue;
 					}
 
-					Assert.NotNull(
-						InstanceDescriptorUtils.GetInstanceInfo(qualityCondition.TestDescriptor),
-						$"Cannot create test factory for condition {qualityCondition.Name}");
+					InitializeParameterValues(qualityCondition);
 
 					uniqueConditions.Add(qualityCondition);
 				}
@@ -1928,10 +1926,7 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 				{
 					if (allIssueFilters.Add(issueFilter))
 					{
-						Assert.NotNull(
-							InstanceDescriptorUtils.GetInstanceInfo(
-								issueFilter.IssueFilterDescriptor),
-							$"Cannot create factory for issue filter {issueFilter.Name}");
+						InitializeParameterValues(issueFilter);
 					}
 
 					CollectTransformers(issueFilter, allTransformers);
@@ -1953,15 +1948,25 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 				{
 					if (allTransformers.Add(transformer))
 					{
-						Assert.NotNull(
-							InstanceDescriptorUtils.GetInstanceInfo(
-								transformer.TransformerDescriptor),
-							$"Cannot create factory for transformer {transformer.Name}");
+						InitializeParameterValues(transformer);
 					}
 
 					CollectTransformers(transformer, allTransformers);
 				}
 			}
+		}
+
+		private static void InitializeParameterValues(
+			[NotNull] InstanceConfiguration instanceConfiguration)
+		{
+			InstanceDescriptor descriptor = instanceConfiguration.InstanceDescriptor;
+
+			IInstanceInfo instanceInfo = Assert.NotNull(
+				InstanceDescriptorUtils.GetInstanceInfo(descriptor),
+				$"Cannot create factory for {descriptor}");
+
+			InstanceConfigurationUtils.InitializeParameterValues(
+				instanceInfo, instanceConfiguration);
 		}
 
 		[NotNull]
