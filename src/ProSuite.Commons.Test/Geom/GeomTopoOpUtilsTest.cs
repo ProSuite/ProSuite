@@ -4383,8 +4383,8 @@ namespace ProSuite.Commons.Test.Geom
 				                  new Pnt3D(100, 0, 0)
 			                  };
 
-			// Now add another outer ring to the source that is contained by the target boundary
-			// loop and touches sourceRing1 in a point
+			// Now add another outer ring to the source, that contains the target boundary
+			// loop (interior part) and touches sourceRing1 in a point
 			var sourceRing2 = new List<Pnt3D>
 			                  {
 				                  new Pnt3D(150, 20, 0),
@@ -4429,6 +4429,11 @@ namespace ProSuite.Commons.Test.Geom
 					Assert.AreEqual(1, union.PartCount);
 
 					double expectedArea = source.GetLinestring(0).GetArea2D() * 2;
+					Assert.AreEqual(expectedArea, union.GetArea2D());
+
+					// Flip arguments:
+					union = UnionAreasXY(target, source, tolerance);
+					Assert.AreEqual(1, union.PartCount);
 					Assert.AreEqual(expectedArea, union.GetArea2D());
 
 					// Intersection of result with target/source:
