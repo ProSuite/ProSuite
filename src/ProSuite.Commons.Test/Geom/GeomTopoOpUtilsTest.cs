@@ -4604,6 +4604,34 @@ namespace ProSuite.Commons.Test.Geom
 		}
 
 		[Test]
+		public void CanUnionTouchingRingsOneRingContainedByTargetBoundaryLoop()
+		{
+			MultiPolycurve source = (MultiPolycurve) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath(
+					"touching_rings_one_ring_in_loop_source.wkb"),
+				out WkbGeometryType wkbType);
+
+			Assert.AreEqual(WkbGeometryType.MultiPolygon, wkbType);
+
+			RingGroup target = (RingGroup) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath(
+					"touching_rings_one_ring_in_loop_target.wkb"),
+				out wkbType);
+
+			Assert.AreEqual(WkbGeometryType.Polygon, wkbType);
+
+			MultiLinestring result = GeomTopoOpUtils.GetUnionAreasXY(source, target, 0.01);
+
+			// Now it is a single ring without boundary loop:
+			Assert.AreEqual(1, result.PartCount);
+
+			// Minus the remaining area of the intersected island
+			double expectedArea = source.GetArea2D() + target.GetArea2D();
+
+			Assert.AreEqual(expectedArea, result.GetArea2D(), 0.001);
+		}
+
+		[Test]
 		public void CanIntersectXYSimpleRings()
 		{
 			var ring1 = new List<Pnt3D>

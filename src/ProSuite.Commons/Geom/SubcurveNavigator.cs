@@ -163,6 +163,10 @@ namespace ProSuite.Commons.Geom
 							_intersectionPoints.Add(intersectionPoint);
 						}
 					}
+
+					_intersectionPoints = GeomTopoOpUtils.GetIntersectionPoints(
+						Source, Target, Tolerance,
+						includeLinearIntersectionIntermediateRingStartEndPoints);
 				}
 
 				return _intersectionPoints;
@@ -1612,15 +1616,10 @@ namespace ProSuite.Commons.Geom
 			GetAlongTargetDirectionChanges(initialSourcePartForRingResult, intersection, entryLine,
 			                               out targetForwardDirection, out targetBackwardDirection);
 
-			if (! IntersectionPointNavigator.HasMultipleTargetIntersections(intersection))
-			{
-				return;
-			}
-
 			// Allow jumping between intersection points at the same location. This is necessary
 			// for target rings touching another target ring or target boundary loops.
 			foreach (IntersectionPoint3D otherTargetIntersection in
-			         IntersectionPointNavigator.GetOtherTargetIntersections(intersection))
+			         IntersectionPointNavigator.GetOtherTargetIntersections(intersection, true))
 			{
 				double? otherTargetForwardDirection;
 				double? otherTargetBackwardDirection;

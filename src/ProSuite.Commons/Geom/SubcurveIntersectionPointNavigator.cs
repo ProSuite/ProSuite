@@ -362,7 +362,6 @@ namespace ProSuite.Commons.Geom
 
 			return nextIntersection;
 		}
-		
 
 		private bool IsNextIntersection(
 			[NotNull] IntersectionPoint3D intersection,
@@ -607,7 +606,8 @@ namespace ProSuite.Commons.Geom
 		}
 
 		public IEnumerable<IntersectionPoint3D> GetOtherTargetIntersections(
-			[NotNull] IntersectionPoint3D atIntersection)
+			[NotNull] IntersectionPoint3D atIntersection,
+			bool allowSourcePartJump = false)
 		{
 			if (_multipleTargetIntersections == null)
 			{
@@ -624,6 +624,29 @@ namespace ProSuite.Commons.Geom
 				if (other.ReferencesSameSourceVertex(atIntersection, Source))
 				{
 					yield return other;
+				}
+			}
+
+			if (! allowSourcePartJump ||
+			    _multipleSourceIntersections == null ||
+			    ! _multipleSourceIntersections.Contains(atIntersection))
+			{
+				yield break;
+			}
+
+			// The source also has multiple intersections at the same place (e.g. touching rings):
+			// Get another other source intersection to find same target index intersection from there
+			foreach (IntersectionPoint3D other in GetOtherSourceIntersections(atIntersection))
+			{
+				if (other == atIntersection)
+				{
+					// Prevent stack overflow
+					continue;
+				}
+
+				foreach (IntersectionPoint3D otherPartTarget in GetOtherTargetIntersections(other))
+				{
+					yield return otherPartTarget;
 				}
 			}
 		}
@@ -1422,7 +1445,7 @@ namespace ProSuite.Commons.Geom
 				// TODO: Consider the same for outer boundary loops?
 			}
 		}
-		
+
 		/// <summary>
 		/// Finds intersections at the same location which reference the same
 		/// target location. These could be just a break in a linear intersection
