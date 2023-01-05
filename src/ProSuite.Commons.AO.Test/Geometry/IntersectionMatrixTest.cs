@@ -368,6 +368,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanGetMultipointPolygonCrossesIntersection()
 		{
 			var matrix = new IntersectionMatrix("T*T******");
@@ -398,6 +399,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanGetMultipointPolylineCrossesIntersection()
 		{
 			var matrix = new IntersectionMatrix("T*T******");

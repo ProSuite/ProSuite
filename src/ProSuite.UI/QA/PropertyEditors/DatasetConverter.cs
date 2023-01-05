@@ -1,6 +1,6 @@
 using System;
 using System.ComponentModel;
-using ProSuite.DomainModel.AO.QA;
+using ProSuite.DomainModel.Core.QA;
 
 namespace ProSuite.UI.QA.PropertyEditors
 {

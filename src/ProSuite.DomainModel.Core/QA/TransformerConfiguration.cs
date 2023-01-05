@@ -68,6 +68,11 @@ namespace ProSuite.DomainModel.Core.QA
 
 		#endregion
 
+		public override string ToString()
+		{
+			return $"Transformer Configuration '{Name}'";
+		}
+
 		private void CopyProperties([NotNull] TransformerConfiguration target)
 		{
 			Assert.ArgumentNotNull(target, nameof(target));

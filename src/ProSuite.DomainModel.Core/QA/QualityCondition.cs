@@ -489,5 +489,10 @@ namespace ProSuite.DomainModel.Core.QA
 		void IPersistenceAware.OnDelete() { }
 
 		#endregion
+
+		public override string ToString()
+		{
+			return $"Quality Condition '{Name}'";
+		}
 	}
 }

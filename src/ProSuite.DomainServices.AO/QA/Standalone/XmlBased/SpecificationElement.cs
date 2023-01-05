@@ -1,5 +1,5 @@
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.DomainModel.AO.QA.Xml;
+using ProSuite.DomainModel.Core.QA.Xml;
 
 namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 {

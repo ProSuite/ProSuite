@@ -112,9 +112,13 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 		{
 			InstanceConfigurationItem item = CreateNewItemCore(ModelBuilder);
 
-			AddChild(item);
+			InstanceConfiguration instanceConfiguration = item.GetEntity();
+			if (instanceConfiguration != null && _container.Category != null)
+			{
+				instanceConfiguration.Category = _container.Category;
+			}
 
-			item.NotifyChanged();
+			AddConfigurationItem(item);
 		}
 
 		protected abstract InstanceConfigurationItem CreateNewItemCore(
@@ -123,14 +127,6 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 		void IInstanceConfigurationContainerItem.CreateCopy(QualityConditionItem item)
 		{
 			throw new NotImplementedException();
-
-			//QualityCondition copy = _modelBuilder.ReadOnlyTransaction(
-			//	() => Assert.NotNull(item.GetEntity()).CreateCopy());
-
-			//copy.Name = string.Format("Copy of {0}", copy.Name);
-
-			//AddConfigurationItem(new QualityConditionItem(_modelBuilder, copy, this,
-			//                                                 _modelBuilder.QualityConditions));
 		}
 
 		void IInstanceConfigurationContainerItem.CreateCopy(InstanceConfigurationItem item)

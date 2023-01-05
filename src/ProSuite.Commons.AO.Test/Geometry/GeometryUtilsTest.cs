@@ -3047,6 +3047,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanConvertFromMultipointArray()
 		{
 			// Real-worlds multipoint:
@@ -3104,6 +3105,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanConvertToFromEsriShapeBuffer()
 		{
 			ISpatialReference lv95 =

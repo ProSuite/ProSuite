@@ -12,14 +12,15 @@ using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.AO.QA.SpecificationReport;
-using ProSuite.DomainModel.AO.QA.Xml;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
+using ProSuite.DomainModel.Core.QA.Xml;
 using ProSuite.DomainServices.AO.QA.Exceptions;
 using ProSuite.DomainServices.AO.QA.Issues;
 using ProSuite.DomainServices.AO.QA.Standalone.XmlBased;
 using ProSuite.DomainServices.AO.QA.Standalone.XmlBased.Options;
 using ProSuite.DomainServices.AO.QA.VerificationReports.Xml;
+using ProSuite.QA.Container;
 using HtmlTexts = ProSuite.DomainServices.AO.QA.HtmlReports.HtmlTexts;
 
 namespace ProSuite.DomainServices.AO.QA.Standalone
@@ -187,7 +188,8 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 
 			XmlDataQualityDocumentCache documentCache =
 				XmlDataQualityUtils.GetDocumentCache(
-					document, new[] { xmlQualitySpecification });
+					document, new[] { xmlQualitySpecification },
+					new TestParameterDatasetValidator(), new IssueFilterExpressionParser());
 
 			bool hasUndefinedWorkspaceReference;
 			IList<XmlWorkspace> xmlWorkspaces = XmlDataQualityUtils.GetReferencedWorkspaces(

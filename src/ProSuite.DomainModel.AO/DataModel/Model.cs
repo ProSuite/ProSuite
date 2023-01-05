@@ -601,6 +601,21 @@ namespace ProSuite.DomainModel.AO.DataModel
 			return Name ?? "<no name>";
 		}
 
+		public override string QualifyModelElementName(string modelElementName)
+		{
+			IWorkspace workspace = GetMasterDatabaseWorkspace();
+
+			if (workspace == null)
+			{
+				return modelElementName;
+			}
+
+			return DatasetUtils.QualifyTableName(workspace,
+			                                     DefaultDatabaseName,
+			                                     DefaultDatabaseSchemaOwner,
+			                                     modelElementName);
+		}
+
 		#region Schema Cache Control
 
 		[PublicAPI]

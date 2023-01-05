@@ -58,6 +58,7 @@
   <ItemGroup>
     <ProjectReference Include="..\ProSuite.Commons.AO\ProSuite.Commons.AO.csproj" />
     <ProjectReference Include="..\ProSuite.Commons.AO.Licensing\ProSuite.Commons.AO.Licensing.csproj" />
+    <ProjectReference Include="..\ProSuite.Commons.Test\ProSuite.Commons.Test.csproj" />
   </ItemGroup>
 
   <ItemGroup>

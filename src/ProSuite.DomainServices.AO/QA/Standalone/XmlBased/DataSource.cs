@@ -6,7 +6,7 @@ using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
-using ProSuite.DomainModel.AO.QA.Xml;
+using ProSuite.DomainModel.Core.QA.Xml;
 
 namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 {
@@ -207,8 +207,8 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 				return false;
 			}
 
-			var propertySeparators = new[] {';'};
-			var nameValueSeparators = new[] {'='};
+			var propertySeparators = new[] { ';' };
+			var nameValueSeparators = new[] { '=' };
 
 			if (text.IndexOfAny(nameValueSeparators) < 0)
 			{

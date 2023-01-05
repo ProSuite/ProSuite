@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -33,28 +32,11 @@ namespace ProSuite.DomainModel.AO.QA
 			{
 				factory.Condition = instanceConfiguration;
 
-				InstanceFactoryUtils.InitializeParameterValues(
-					factory, instanceConfiguration.ParameterValues);
+				InstanceConfigurationUtils.InitializeParameterValues(
+					factory, instanceConfiguration);
 			}
 
 			return factory;
-		}
-
-		private static void InitializeParameterValues([NotNull] TestFactory factory)
-		{
-			var parametersByName =
-				factory.Parameters.ToDictionary(testParameter => testParameter.Name);
-			var parameterValues = factory.Condition?.ParameterValues ??
-			                      Enumerable.Empty<TestParameterValue>();
-
-			foreach (TestParameterValue parameterValue in parameterValues)
-			{
-				if (parametersByName.TryGetValue(parameterValue.TestParameterName,
-				                                 out TestParameter testParameter))
-				{
-					parameterValue.DataType = testParameter.Type;
-				}
-			}
 		}
 
 		/// <summary>

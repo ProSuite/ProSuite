@@ -116,6 +116,29 @@ namespace ProSuite.DomainModel.Core.QA
 			return instanceConfiguration.AddParameterValue(parameterValue);
 		}
 
+		public static void InitializeParameterValues(
+			[NotNull] IInstanceInfo instanceInfo,
+			[NotNull] InstanceConfiguration instanceConfiguration)
+		{
+			Dictionary<string, TestParameter> parametersByName =
+				instanceInfo.Parameters.ToDictionary(testParameter => testParameter.Name);
+
+			foreach (TestParameterValue parameterValue in instanceConfiguration.ParameterValues)
+			{
+				if (parametersByName.TryGetValue(parameterValue.TestParameterName,
+				                                 out TestParameter testParameter))
+				{
+					parameterValue.DataType = testParameter.Type;
+				}
+				else
+				{
+					_msg.WarnFormat(
+						"{0} / Test parameter value {1}: No parameter found in {2}. The constructor Id might be incorrect.",
+						instanceConfiguration, parameterValue.TestParameterName, instanceInfo);
+				}
+			}
+		}
+
 		/// <summary>
 		/// All persistent entities that are part of the specified quality conditions are loaded
 		/// and initialized. The entities are quality conditions, their issue filters, transformers

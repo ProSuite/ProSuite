@@ -8,8 +8,9 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.QA;
-using ProSuite.DomainModel.AO.QA.Xml;
 using ProSuite.DomainModel.Core.DataModel;
+using ProSuite.DomainModel.Core.QA;
+using ProSuite.DomainModel.Core.QA.Xml;
 using ProSuite.DomainServices.AO.QA.Standalone.XmlBased;
 using ProSuite.DomainServices.AO.QA.VerifiedDataModel;
 
@@ -40,7 +41,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 
 		protected static void HandleNoConditionCreated(
 			[CanBeNull] string conditionName,
-			[NotNull] IDictionary<string, Model> modelsByWorkspaceId,
+			[NotNull] IDictionary<string, DdxModel> modelsByWorkspaceId,
 			bool ignoreConditionsForUnknownDatasets,
 			[NotNull] ICollection<DatasetTestParameterRecord> unknownDatasetParameters)
 		{

@@ -1,3 +1,7 @@
+using System;
+using System.Diagnostics;
+using System.Runtime.ExceptionServices;
+using System.Security;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
@@ -6,6 +10,7 @@ using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Test;
 using ProSuite.Commons.AO.Test.TestSupport;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Testing;
 using ProSuite.QA.Tests.Test.Construction;
 using ProSuite.QA.Tests.Test.TestRunners;
 
@@ -17,6 +22,7 @@ namespace ProSuite.QA.Tests.Test
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
+			TestUtils.ConfigureUnittestLogging();
 			TestUtils.InitializeLicense();
 		}
 
@@ -153,6 +159,37 @@ namespace ProSuite.QA.Tests.Test
 			AssertUtils.NoError(runner);
 		}
 
+		[Test]
+		[HandleProcessCorruptedStateExceptions]
+		[SecurityCritical]
+		public void CanCheckRealWorldBuildingsTop5643()
+		{
+			string path = TestDataPreparer.ExtractZip("GebZueriberg.gdb.zip").GetPath();
+
+			IFeatureWorkspace featureWorkspace = WorkspaceUtils.OpenFileGdbFeatureWorkspace(path);
+			IFeatureClass buildings =
+				DatasetUtils.OpenFeatureClass(featureWorkspace, "TLM_GEBAEUDE");
+
+			var test = new QaMpSinglePartFootprint(
+				ReadOnlyTableFactory.Create(buildings));
+			var runner = new QaTestRunner(test);
+
+			Stopwatch watch = Stopwatch.StartNew();
+
+			int errorCount = 0;
+			try
+			{
+				errorCount = runner.Execute();
+			}
+			finally
+			{
+				watch.Stop();
+				Console.WriteLine("Finished successfully in {0}s", watch.Elapsed.TotalSeconds);
+			}
+
+			Assert.AreEqual(2, errorCount);
+		}
+
 		// TODO tests for behavior below tolerance/resolution
 
 		[NotNull]
@@ -163,7 +200,7 @@ namespace ProSuite.QA.Tests.Test
 				((int) esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95, defaultXyDomain);
 			((ISpatialReferenceResolution) spatialReference).XYResolution[true] = 0.0001;
 			((ISpatialReferenceTolerance) spatialReference).XYTolerance = 0.001;
-			
+
 			return new FeatureClassMock("mock",
 			                            esriGeometryType.esriGeometryMultiPatch,
 			                            1,

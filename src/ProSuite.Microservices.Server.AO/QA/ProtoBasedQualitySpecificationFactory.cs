@@ -12,9 +12,9 @@ using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
 using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.QA;
-using ProSuite.DomainModel.AO.QA.Xml;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
+using ProSuite.DomainModel.Core.QA.Xml;
 using ProSuite.DomainServices.AO.QA.Standalone;
 using ProSuite.DomainServices.AO.QA.Standalone.XmlBased;
 using ProSuite.DomainServices.AO.QA.VerifiedDataModel;
@@ -44,7 +44,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			_instanceDescriptors = instanceDescriptors;
 		}
 
-		private IDictionary<string, Model> ModelsByWorkspaceId { get; set; }
+		private IDictionary<string, DdxModel> ModelsByWorkspaceId { get; set; }
 
 		[NotNull]
 		public QualitySpecification CreateQualitySpecification(
@@ -89,16 +89,20 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			// TODO: TileSize, Url, Notes?
 
+			_msg.DebugFormat("Created specification from protos with {0} conditions.",
+			                 result.Elements.Count);
+
 			return result;
 		}
 
-		[NotNull]
 		private static void AddElements(
 			QualitySpecification toQualitySpecification,
 			[NotNull] IDictionary<string, QualityCondition> qualityConditionsByName,
 			[NotNull] IEnumerable<QualitySpecificationElementMsg> specificationElementMsgs)
 		{
 			Assert.ArgumentNotNull(qualityConditionsByName, nameof(qualityConditionsByName));
+
+			var categoriesByName = new Dictionary<string, DataQualityCategory>();
 
 			foreach (QualitySpecificationElementMsg element in specificationElementMsgs)
 			{
@@ -107,41 +111,23 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 				QualityCondition qualityCondition = qualityConditionsByName[conditionName];
 
+				if (! string.IsNullOrEmpty(element.CategoryName))
+				{
+					string categoryName = element.CategoryName;
+
+					if (! categoriesByName.TryGetValue(categoryName,
+					                                   out DataQualityCategory category))
+					{
+						category = new DataQualityCategory(categoryName);
+						categoriesByName.Add(categoryName, category);
+					}
+
+					qualityCondition.Category = category;
+				}
+
 				toQualitySpecification.AddElement(qualityCondition, element.StopOnError,
 				                                  element.AllowErrors);
 			}
-		}
-
-		private static IDictionary<string, TestDescriptor> GetReferencedTestDescriptorsByName(
-			[NotNull] IEnumerable<QualityConditionMsg> referencedConditions,
-			[NotNull] IDictionary<string, XmlTestDescriptor> xmlTestDescriptorsByName)
-		{
-			var result = new Dictionary<string, TestDescriptor>(
-				StringComparer.OrdinalIgnoreCase);
-
-			foreach (QualityConditionMsg condition in referencedConditions)
-			{
-				string testDescriptorName = condition.TestDescriptorName;
-				if (testDescriptorName == null || result.ContainsKey(testDescriptorName))
-				{
-					continue;
-				}
-
-				XmlTestDescriptor xmlTestDescriptor;
-				if (! xmlTestDescriptorsByName.TryGetValue(testDescriptorName,
-				                                           out xmlTestDescriptor))
-				{
-					throw new InvalidConfigurationException(
-						string.Format(
-							"Test descriptor {0}, referenced in quality condition {1}, not found",
-							testDescriptorName, condition.Name));
-				}
-
-				result.Add(testDescriptorName,
-				           XmlDataQualityUtils.CreateTestDescriptor(xmlTestDescriptor));
-			}
-
-			return result;
 		}
 
 		private Dictionary<string, QualityCondition> CreateQualityConditions(
@@ -408,7 +394,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 		                           [NotNull] TestParameter testParameter,
 		                           [NotNull] DatasetSettings datasetSettings)
 		{
-			Dataset dataset = TestParameterValueUtils.GetDataset(
+			Dataset dataset = XmlDataQualityUtils.GetDataset(
 				parameterMsg.Value, parameterMsg.WorkspaceId,
 				testParameter, createdConfiguration.Name, ModelsByWorkspaceId,
 				datasetSettings.GetDatasetsByName, datasetSettings.IgnoreUnknownDatasets);
@@ -437,11 +423,11 @@ namespace ProSuite.Microservices.Server.AO.QA
 		#endregion
 
 		[NotNull]
-		private IDictionary<string, Model> GetModelsByWorkspaceId(
+		private IDictionary<string, DdxModel> GetModelsByWorkspaceId(
 			[NotNull] IEnumerable<DataSource> allDataSources,
 			[NotNull] IList<QualityConditionMsg> referencedConditions)
 		{
-			var result = new Dictionary<string, Model>(StringComparer.OrdinalIgnoreCase);
+			var result = new Dictionary<string, DdxModel>(StringComparer.OrdinalIgnoreCase);
 
 			foreach (DataSource dataSource in allDataSources)
 			{

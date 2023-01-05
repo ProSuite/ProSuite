@@ -142,13 +142,6 @@ namespace ProSuite.DomainModel.Core.QA
 
 		public abstract InstanceConfiguration CreateConfiguration();
 
-		public override string ToString()
-		{
-			return string.IsNullOrEmpty(Name)
-				       ? "<Unknown>"
-				       : Name;
-		}
-
 		#region Equality members
 
 		public virtual bool Equals(InstanceDescriptor other)

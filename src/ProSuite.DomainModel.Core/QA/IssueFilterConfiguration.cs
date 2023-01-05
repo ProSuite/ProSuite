@@ -52,6 +52,11 @@ namespace ProSuite.DomainModel.Core.QA
 
 		#endregion
 
+		public override string ToString()
+		{
+			return $"Issue Filter Configuration '{Name}'";
+		}
+
 		private void CopyProperties(IssueFilterConfiguration target)
 		{
 			Assert.ArgumentNotNull(target, nameof(target));

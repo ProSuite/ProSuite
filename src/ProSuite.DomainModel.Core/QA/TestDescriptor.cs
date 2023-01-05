@@ -176,9 +176,7 @@ namespace ProSuite.DomainModel.Core.QA
 
 		public override string ToString()
 		{
-			return string.IsNullOrEmpty(Name)
-				       ? "<Unknown>"
-				       : Name;
+			return $"Test Descriptor '{Name}'";
 		}
 
 		#region Equality members

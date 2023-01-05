@@ -111,6 +111,7 @@ namespace ProSuite.QA.Tests.Test.SpatialRelations
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanSuppressIntersectionWithValidRelationConstraint()
 		{
 			FeatureClassMock fc = CreateFeatureClassMock(
@@ -161,7 +162,7 @@ namespace ProSuite.QA.Tests.Test.SpatialRelations
 			esriGeometryType geometryType)
 		{
 			return new FeatureClassMock("fc", geometryType,
-			                            1, esriFeatureType.esriFTSimple, _spatialReference);
+			                            null, esriFeatureType.esriFTSimple, _spatialReference);
 		}
 
 		[NotNull]

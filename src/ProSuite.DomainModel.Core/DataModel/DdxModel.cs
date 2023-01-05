@@ -573,6 +573,8 @@ namespace ProSuite.DomainModel.Core.DataModel
 			ReattachStateCore(unitOfWork);
 		}
 
+		public abstract string QualifyModelElementName(string modelElementName);
+
 		protected virtual void ReattachStateCore([NotNull] IUnitOfWork unitOfWork) { }
 
 		protected void InvalidateDatasetIndex()
