@@ -17,15 +17,15 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 		[CanBeNull]
 		public List<XmlQualitySpecification> QualitySpecifications { get; set; }
 
-		[XmlArrayItem(ElementName = "QualityCondition")]
+		[XmlArrayItem("QualityCondition")]
 		[CanBeNull]
 		public List<XmlQualityCondition> QualityConditions { get; set; }
 
-		[XmlArrayItem(ElementName = "Transformer")]
+		[XmlArrayItem("Transformer")]
 		[CanBeNull]
 		public List<XmlTransformerConfiguration> Transformers { get; set; }
 
-		[XmlArrayItem(ElementName = "IssueFilter")]
+		[XmlArrayItem("IssueFilter")]
 		[CanBeNull]
 		public List<XmlIssueFilterConfiguration> IssueFilters { get; set; }
 
@@ -78,18 +78,18 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 			QualityConditions.Add(xmlQualityCondition);
 		}
 
-		public void AddIssueFilter([NotNull] XmlIssueFilterConfiguration xmlIssueFilter)
-		{
-			Assert.ArgumentNotNull(xmlIssueFilter, nameof(xmlIssueFilter));
-			IssueFilters = IssueFilters ?? new List<XmlIssueFilterConfiguration>();
-			IssueFilters.Add(xmlIssueFilter);
-		}
-
 		public void AddTransformer([NotNull] XmlTransformerConfiguration xmlTransformer)
 		{
 			Assert.ArgumentNotNull(xmlTransformer, nameof(xmlTransformer));
 			Transformers = Transformers ?? new List<XmlTransformerConfiguration>();
 			Transformers.Add(xmlTransformer);
+		}
+
+		public void AddIssueFilter([NotNull] XmlIssueFilterConfiguration xmlIssueFilter)
+		{
+			Assert.ArgumentNotNull(xmlIssueFilter, nameof(xmlIssueFilter));
+			IssueFilters = IssueFilters ?? new List<XmlIssueFilterConfiguration>();
+			IssueFilters.Add(xmlIssueFilter);
 		}
 
 		public void AddTestDescriptor([NotNull] XmlTestDescriptor xmlTestDescriptor)
@@ -99,20 +99,20 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 			TestDescriptors.Add(xmlTestDescriptor);
 		}
 
-		public void AddIssueFilterDescriptor(
-			[NotNull] XmlIssueFilterDescriptor xmlIssueFilterDescriptor)
-		{
-			Assert.ArgumentNotNull(xmlIssueFilterDescriptor, nameof(xmlIssueFilterDescriptor));
-			IssueFilterDescriptors = IssueFilterDescriptors ?? new List<XmlIssueFilterDescriptor>();
-			IssueFilterDescriptors.Add(xmlIssueFilterDescriptor);
-		}
-
 		public void AddTransformerDescriptor(
 			[NotNull] XmlTransformerDescriptor xmlTransformerDescriptor)
 		{
 			Assert.ArgumentNotNull(xmlTransformerDescriptor, nameof(xmlTransformerDescriptor));
 			TransformerDescriptors = TransformerDescriptors ?? new List<XmlTransformerDescriptor>();
 			TransformerDescriptors.Add(xmlTransformerDescriptor);
+		}
+
+		public void AddIssueFilterDescriptor(
+			[NotNull] XmlIssueFilterDescriptor xmlIssueFilterDescriptor)
+		{
+			Assert.ArgumentNotNull(xmlIssueFilterDescriptor, nameof(xmlIssueFilterDescriptor));
+			IssueFilterDescriptors = IssueFilterDescriptors ?? new List<XmlIssueFilterDescriptor>();
+			IssueFilterDescriptors.Add(xmlIssueFilterDescriptor);
 		}
 
 		[NotNull]

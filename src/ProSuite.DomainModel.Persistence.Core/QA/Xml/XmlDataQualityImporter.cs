@@ -160,18 +160,6 @@ namespace ProSuite.DomainModel.Persistence.Core.QA.Xml
 
 		#endregion
 
-		private void Reattach(
-			[NotNull] IEnumerable<QualitySpecification> qualitySpecifications)
-		{
-			foreach (QualitySpecification specification in qualitySpecifications)
-			{
-				if (specification.IsPersistent)
-				{
-					UnitOfWork.Reattach(specification);
-				}
-			}
-		}
-
 		[NotNull]
 		private IList<QualitySpecification> ImportTx(
 			[NotNull] string xmlFilePath,

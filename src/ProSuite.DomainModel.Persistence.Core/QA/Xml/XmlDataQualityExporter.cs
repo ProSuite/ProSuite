@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -49,7 +48,26 @@ namespace ProSuite.DomainModel.Persistence.Core.QA.Xml
 
 		#region IXmlDataQualityExporter Members
 
-		public bool ExportWorkspaceConnections { get; set; } = true;
+		public void Export(QualitySpecification qualitySpecification,
+		                   string xmlFilePath,
+		                   bool exportMetadata,
+		                   bool? exportWorkspaceConnections,
+		                   bool exportConnectionFilePaths,
+		                   bool exportAllDescriptors,
+		                   bool exportAllCategories,
+		                   bool exportNotes)
+		{
+			Assert.ArgumentNotNull(qualitySpecification, nameof(qualitySpecification));
+			Assert.ArgumentNotNullOrEmpty(xmlFilePath, nameof(xmlFilePath));
+
+			Export(new[] { qualitySpecification }, xmlFilePath,
+			       exportMetadata,
+			       exportWorkspaceConnections,
+			       exportConnectionFilePaths,
+			       exportAllDescriptors,
+			       exportAllCategories,
+			       exportNotes);
+		}
 
 		public void Export(IEnumerable<QualitySpecification> qualitySpecifications,
 		                   string xmlFilePath,
@@ -80,12 +98,12 @@ namespace ProSuite.DomainModel.Persistence.Core.QA.Xml
 						IList<InstanceDescriptor> descriptors =
 							exportAllDescriptors
 								? InstanceDescriptors.GetAll()
-								: Array.Empty<InstanceDescriptor>();
+								: null;
 
-						IEnumerable<DataQualityCategory> categories =
+						IList<DataQualityCategory> categories =
 							exportAllCategories && Categories != null
 								? Categories.GetAll()
-								: GetReferencedCategories(collection);
+								: null;
 
 						CreateXmlDataQualityDocument(
 							collection,
@@ -108,12 +126,18 @@ namespace ProSuite.DomainModel.Persistence.Core.QA.Xml
 			}
 		}
 
+		public bool ExportWorkspaceConnections { get; set; } = true;
+
+		#endregion
+
+		#region Non-public members
+
 		private void CreateXmlDataQualityDocument<T>(
 			[NotNull] ICollection<QualitySpecification> qualitySpecifications,
-			[NotNull] IList<InstanceDescriptor> descriptors,
-			[NotNull] IEnumerable<DataQualityCategory> categories,
+			[CanBeNull] IList<InstanceDescriptor> descriptors,
+			[CanBeNull] IList<DataQualityCategory> categories,
 			bool exportMetadata,
-			bool exportConnections,
+			bool exportWorkspaceConnections,
 			bool exportConnectionFilePaths,
 			bool exportAllDescriptors,
 			bool exportAllCategories,
@@ -122,14 +146,13 @@ namespace ProSuite.DomainModel.Persistence.Core.QA.Xml
 			where T : XmlDataQualityDocument, new()
 		{
 			Assert.ArgumentNotNull(qualitySpecifications, nameof(qualitySpecifications));
-			Assert.ArgumentNotNull(descriptors, nameof(descriptors));
 
 			result = new T();
 
 			IDictionary<DdxModel, string> workspaceIdsByModel =
 				AddWorkspaces(qualitySpecifications,
 				              result,
-				              exportConnections,
+				              exportWorkspaceConnections,
 				              exportConnectionFilePaths);
 
 			XmlDataQualityUtils.Populate(result,
@@ -138,8 +161,6 @@ namespace ProSuite.DomainModel.Persistence.Core.QA.Xml
 			                             descriptors,
 			                             categories,
 			                             exportMetadata,
-			                             exportConnections,
-			                             exportConnectionFilePaths,
 			                             exportAllDescriptors,
 			                             exportAllCategories,
 			                             exportNotes);
@@ -156,10 +177,9 @@ namespace ProSuite.DomainModel.Persistence.Core.QA.Xml
 
 			foreach (QualitySpecification qualitySpecification in qualitySpecifications)
 			{
-				foreach (QualitySpecificationElement element in qualitySpecification.Elements)
+				foreach (QualityCondition qualityCondition in qualitySpecification.Elements.Select(
+					         element => element.QualityCondition))
 				{
-					QualityCondition qualityCondition = element.QualityCondition;
-
 					foreach (Dataset dataset in qualityCondition.GetDatasetParameterValues(
 						         true, true))
 					{
@@ -182,7 +202,7 @@ namespace ProSuite.DomainModel.Persistence.Core.QA.Xml
 			return result;
 		}
 
-		public static void ExportXmlDocument<T>(
+		private static void ExportXmlDocument<T>(
 			[NotNull] T document, [NotNull] string xmlFilePath)
 			where T : XmlDataQualityDocument
 		{
@@ -193,82 +213,6 @@ namespace ProSuite.DomainModel.Persistence.Core.QA.Xml
 			       XmlWriter.Create(xmlFilePath, XmlUtils.GetWriterSettings()))
 			{
 				XmlDataQualityUtils.ExportXmlDocument(document, xmlWriter);
-			}
-		}
-
-		[NotNull]
-		private static IEnumerable<DataQualityCategory> GetReferencedCategories(
-			[NotNull] IEnumerable<QualitySpecification> qualitySpecifications)
-		{
-			Assert.ArgumentNotNull(qualitySpecifications, nameof(qualitySpecifications));
-
-			var result = new HashSet<DataQualityCategory>();
-
-			foreach (QualitySpecification qualitySpecification in qualitySpecifications)
-			{
-				AddCategory(qualitySpecification.Category, result);
-
-				foreach (QualitySpecificationElement element in qualitySpecification.Elements)
-				{
-					QualityCondition condition = element.QualityCondition;
-
-					if (condition != null)
-					{
-						AddCategory(condition.Category, result);
-					}
-				}
-			}
-
-			return result;
-		}
-
-		private static void AddCategory([CanBeNull] DataQualityCategory category,
-		                                [NotNull] HashSet<DataQualityCategory> set)
-		{
-			if (category == null)
-			{
-				return;
-			}
-
-			set.Add(category);
-
-			AddCategory(category.ParentCategory, set);
-		}
-
-		public void Export(QualitySpecification qualitySpecification,
-		                   string xmlFilePath,
-		                   bool exportMetadata,
-		                   bool? exportWorkspaceConnections,
-		                   bool exportConnectionFilePaths,
-		                   bool exportAllDescriptors,
-		                   bool exportAllCategories,
-		                   bool exportNotes)
-		{
-			Assert.ArgumentNotNull(qualitySpecification, nameof(qualitySpecification));
-			Assert.ArgumentNotNullOrEmpty(xmlFilePath, nameof(xmlFilePath));
-
-			Export(new[] { qualitySpecification }, xmlFilePath,
-			       exportMetadata,
-			       exportWorkspaceConnections,
-			       exportConnectionFilePaths,
-			       exportAllDescriptors,
-			       exportAllCategories,
-			       exportNotes);
-		}
-
-		#endregion
-
-		#region Non-public members
-
-		private void Reattach(
-			[NotNull] IEnumerable<QualitySpecification> qualitySpecifications)
-		{
-			foreach (QualitySpecification qualitySpecification in qualitySpecifications)
-			{
-				if (qualitySpecification.IsPersistent)
-				{
-					UnitOfWork.Reattach(qualitySpecification);
-				}
 			}
 		}
 
