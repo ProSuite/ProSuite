@@ -1,7 +1,9 @@
+using System.Collections.Generic;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.Core.DataModel.Repositories;
+using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.Repositories;
 using ProSuite.DomainModel.Core.QA.Xml;
 
@@ -54,5 +56,16 @@ namespace ProSuite.DomainModel.Persistence.Core.QA.Xml
 
 		[NotNull]
 		protected IUnitOfWork UnitOfWork { get; }
+
+		protected void Reattach([NotNull] IEnumerable<QualitySpecification> qualitySpecifications)
+		{
+			foreach (QualitySpecification qualitySpecification in qualitySpecifications)
+			{
+				if (qualitySpecification.IsPersistent)
+				{
+					UnitOfWork.Reattach(qualitySpecification);
+				}
+			}
+		}
 	}
 }

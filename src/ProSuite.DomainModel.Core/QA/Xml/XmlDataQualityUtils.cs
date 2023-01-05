@@ -140,63 +140,7 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 			Assert.ArgumentNotNull(document, nameof(document));
 			Assert.ArgumentNotNull(xmlWriter, nameof(xmlWriter));
 
-			// Sort entries
-			SortQualitySpecifications(document.QualitySpecifications);
-			SortQualityConditions(document.QualityConditions);
-
-			StringComparison o = StringComparison.Ordinal;
-
-			document.Transformers?.Sort((x, y) => string.Compare(x.Name, y.Name, o));
-			document.IssueFilters?.Sort((x, y) => string.Compare(x.Name, y.Name, o));
-
-			document.TestDescriptors?.Sort((x, y) => string.Compare(x.Name, y.Name, o));
-			document.TransformerDescriptors?.Sort((x, y) => string.Compare(x.Name, y.Name, o));
-			document.IssueFilterDescriptors?.Sort((x, y) => string.Compare(x.Name, y.Name, o));
-
-			SortCategories(document.Categories);
-
 			XmlUtils.Serialize(document, xmlWriter);
-		}
-
-		private static void SortQualitySpecifications(
-			[CanBeNull] List<XmlQualitySpecification> specifications)
-		{
-			if (specifications == null)
-			{
-				return;
-			}
-
-			StringComparison o = StringComparison.Ordinal;
-			specifications.Sort((x, y) => string.Compare(x.Name, y.Name, o));
-			foreach (XmlQualitySpecification spec in specifications)
-			{
-				spec.Elements.Sort(
-					(x, y) => string.Compare(
-						x.QualityConditionName, y.QualityConditionName, o));
-			}
-		}
-
-		private static void SortQualityConditions(
-			[CanBeNull] List<XmlQualityCondition> qualityConditions)
-		{
-			qualityConditions?.Sort(
-				(x, y) => string.Compare(x.Name, y.Name, StringComparison.Ordinal));
-		}
-
-		private static void SortCategories([CanBeNull] List<XmlDataQualityCategory> categories)
-		{
-			if (categories == null)
-			{
-				return;
-			}
-
-			foreach (XmlDataQualityCategory category in categories)
-			{
-				SortQualitySpecifications(category.QualitySpecifications);
-				SortQualityConditions(category.QualityConditions);
-
-				SortCategories(category.SubCategories);
-			}
 		}
 
 		public static void AssertUniqueWorkspaceIds(
@@ -1729,60 +1673,45 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 		/// <param name="descriptors"></param>
 		/// <param name="categories"></param>
 		/// <param name="exportMetadata"></param>
-		/// <param name="exportWorkspaceConnections"></param>
-		/// <param name="exportConnectionFilePaths"></param>
 		/// <param name="exportAllDescriptors"></param>
 		/// <param name="exportAllCategories"></param>
 		/// <param name="exportNotes"></param>
 		public static void Populate(
 			[NotNull] XmlDataQualityDocument document,
-			IDictionary<DdxModel, string> workspaceIdsByModel,
+			[NotNull] IDictionary<DdxModel, string> workspaceIdsByModel,
 			[NotNull] IList<QualitySpecification> qualitySpecifications,
-			[NotNull] IList<InstanceDescriptor> descriptors,
-			[NotNull] IEnumerable<DataQualityCategory> categories,
+			[CanBeNull] IList<InstanceDescriptor> descriptors,
+			[CanBeNull] IList<DataQualityCategory> categories,
 			bool exportMetadata,
-			bool exportWorkspaceConnections,
-			bool exportConnectionFilePaths,
 			bool exportAllDescriptors,
 			bool exportAllCategories,
 			bool exportNotes)
 		{
 			Assert.ArgumentNotNull(document, nameof(document));
+			Assert.ArgumentNotNull(workspaceIdsByModel, nameof(workspaceIdsByModel));
 			Assert.ArgumentNotNull(qualitySpecifications, nameof(qualitySpecifications));
-			Assert.ArgumentNotNull(descriptors, nameof(descriptors));
-			Assert.ArgumentNotNull(categories, nameof(categories));
 
-			//IDictionary<DdxModel, string> workspaceIdsByModel =
-			//	AddWorkspaces(qualitySpecifications,
-			//	              document,
-			//	              exportWorkspaceConnections,
-			//	              exportConnectionFilePaths);
+			GetReferencedConfigurations(qualitySpecifications,
+			                            out IReadOnlyList<QualityCondition> qualityConditions,
+			                            out IReadOnlyList<TransformerConfiguration> transformers,
+			                            out IReadOnlyList<IssueFilterConfiguration> issueFilters);
 
-			IReadOnlyList<QualityCondition> qualityConditions =
-				GetQualityConditions(qualitySpecifications);
-
-			// TODO: add any test descriptors that are referenced in the quality specifications but were not passed in
-			// TODO: allow the test descriptors collection to be empty (or even null?)
-
-			GetConfigurations(qualityConditions,
-			                  out IReadOnlyList<TransformerConfiguration> transformerConfigurations,
-			                  out IReadOnlyList<IssueFilterConfiguration>
-				                      issueFilterConfigurations);
+			// TODO: add any descriptors that are referenced in the quality specifications but were not passed in
 
 			IReadOnlyList<TestDescriptor> testDescriptors =
-				exportAllDescriptors
+				exportAllDescriptors && descriptors != null
 					? descriptors.OfType<TestDescriptor>().ToList()
 					: GetTestDescriptors(qualityConditions);
 
 			IReadOnlyList<TransformerDescriptor> transformerDescriptors =
-				exportAllDescriptors
+				exportAllDescriptors && descriptors != null
 					? descriptors.OfType<TransformerDescriptor>().ToList()
-					: GetTransformerDescriptors(transformerConfigurations);
+					: GetTransformerDescriptors(transformers);
 
 			IReadOnlyList<IssueFilterDescriptor> issueFilterDescriptors =
-				exportAllDescriptors
+				exportAllDescriptors && descriptors != null
 					? descriptors.OfType<IssueFilterDescriptor>().ToList()
-					: GetIssueFilterDescriptors(issueFilterConfigurations);
+					: GetIssueFilterDescriptors(issueFilters);
 
 			foreach (var testDescriptor in GetSortedDescriptors(testDescriptors))
 			{
@@ -1802,65 +1731,64 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 					CreateXmlIssueFilterDescriptor(issueFilterDescriptor, exportMetadata));
 			}
 
-			AddCategories(document, categories,
-			              c => qualityConditions.Where(qc => Equals(qc.Category, c))
-			                                    .ToList(),
-			              c => qualitySpecifications.Where(qs => Equals(qs.Category, c))
-			                                        .ToList(),
+			IEnumerable<DataQualityCategory> cats =
+				exportAllCategories && categories != null
+					? categories
+					: GetReferencedCategories(qualityConditions.Cast<InstanceConfiguration>()
+					                                           .Concat(transformers)
+					                                           .Concat(issueFilters));
+
+			AddCategories(document, cats,
+			              c => qualityConditions.Cast<InstanceConfiguration>()
+			                                    .Concat(transformers)
+			                                    .Concat(issueFilters)
+			                                    .Where(inst => Equals(inst.Category, c)),
+			              c => qualitySpecifications.Where(qs => Equals(qs.Category, c)),
 			              workspaceIdsByModel,
 			              exportMetadata,
 			              exportAllCategories,
 			              exportNotes);
 
-			// export root level quality conditions
-			foreach (QualityCondition qualityCondition in qualityConditions)
+			// export root level (= without category) 
+			foreach (QualityCondition condition in GetSortedConfigurations(
+				         qualityConditions.Where(inst => inst.Category == null)))
 			{
-				if (qualityCondition.Category == null)
-				{
-					document.AddQualityCondition(
-						CreateXmlQualityCondition(qualityCondition,
-						                          workspaceIdsByModel,
-						                          exportMetadata,
-						                          exportNotes));
-				}
+				document.AddQualityCondition(
+					CreateXmlQualityCondition(condition, workspaceIdsByModel,
+					                          exportMetadata, exportNotes));
 			}
 
-			foreach (TransformerConfiguration transformer in
-			         GetSortedConfigurations(transformerConfigurations))
+			foreach (TransformerConfiguration transformer in GetSortedConfigurations(
+				         transformers.Where(inst => inst.Category == null)))
 			{
 				document.AddTransformer(
 					CreateXmlTransformerConfiguration(transformer, workspaceIdsByModel,
-					                                  exportMetadata,
-					                                  exportNotes));
+					                                  exportMetadata, exportNotes));
 			}
 
-			foreach (IssueFilterConfiguration issueFilter in
-			         GetSortedConfigurations(issueFilterConfigurations))
+			foreach (IssueFilterConfiguration issueFilter in GetSortedConfigurations(
+				         issueFilters.Where(inst => inst.Category == null)))
 			{
 				document.AddIssueFilter(
 					CreateXmlIssueFilterConfiguration(issueFilter, workspaceIdsByModel,
-					                                  exportMetadata,
-					                                  exportNotes));
+					                                  exportMetadata, exportNotes));
 			}
 
-			// export root level quality specifications
-			foreach (QualitySpecification qualitySpecification in qualitySpecifications)
+			foreach (QualitySpecification qualitySpecification in GetSortedQualitySpecifications(
+				         qualitySpecifications.Where(qs => qs.Category == null)))
 			{
-				if (qualitySpecification.Category == null)
-				{
-					document.AddQualitySpecification(
-						CreateXmlQualitySpecification(qualitySpecification,
-						                              exportMetadata,
-						                              exportNotes));
-				}
+				document.AddQualitySpecification(
+					CreateXmlQualitySpecification(qualitySpecification,
+					                              exportMetadata, exportNotes));
 			}
 		}
 
 		private static void AddCategories(
 			[NotNull] XmlDataQualityDocument document,
 			[NotNull] IEnumerable<DataQualityCategory> categories,
-			[NotNull] Func<DataQualityCategory, IList<QualityCondition>> getQualityConditions,
-			[NotNull] Func<DataQualityCategory, IList<QualitySpecification>>
+			[NotNull] Func<DataQualityCategory, IEnumerable<InstanceConfiguration>>
+				getInstanceConfigurations,
+			[NotNull] Func<DataQualityCategory, IEnumerable<QualitySpecification>>
 				getQualitySpecifications,
 			[NotNull] IDictionary<DdxModel, string> workspaceIdsByModel,
 			bool exportMetadata,
@@ -1870,11 +1798,11 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 			Assert.ArgumentNotNull(document, nameof(document));
 			Assert.ArgumentNotNull(categories, nameof(categories));
 
-			foreach (DataQualityCategory category in GetSorted(
+			foreach (DataQualityCategory category in GetSortedCategories(
 				         categories.Where(c => c.ParentCategory == null)))
 			{
 				document.AddCategory(CreateXmlDataQualityCategory(category,
-					                     getQualityConditions,
+					                     getInstanceConfigurations,
 					                     getQualitySpecifications,
 					                     workspaceIdsByModel,
 					                     exportMetadata,
@@ -1884,17 +1812,43 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 		}
 
 		[NotNull]
-		private static IReadOnlyList<QualityCondition> GetQualityConditions(
-			[NotNull] IEnumerable<QualitySpecification> qualitySpecifications)
+		private static IEnumerable<DataQualityCategory> GetReferencedCategories(
+			[NotNull] IEnumerable<InstanceConfiguration> instanceConfigurations)
+		{
+			var categories = new HashSet<DataQualityCategory>();
+			foreach (InstanceConfiguration instanceConfiguration in instanceConfigurations)
+			{
+				CollectCategories(instanceConfiguration.Category, categories);
+			}
+
+			return categories;
+		}
+
+		private static void CollectCategories([CanBeNull] DataQualityCategory category,
+		                                      [NotNull] HashSet<DataQualityCategory> set)
+		{
+			if (category == null)
+			{
+				return;
+			}
+
+			set.Add(category);
+
+			CollectCategories(category.ParentCategory, set);
+		}
+
+		private static void GetReferencedConfigurations(
+			[NotNull] IEnumerable<QualitySpecification> qualitySpecifications,
+			out IReadOnlyList<QualityCondition> qualityConditions,
+			out IReadOnlyList<TransformerConfiguration> transformerConfigurations,
+			out IReadOnlyList<IssueFilterConfiguration> issueFilterConfigurations)
 		{
 			var uniqueConditions = new HashSet<QualityCondition>();
-
 			foreach (QualitySpecification qualitySpecification in qualitySpecifications)
 			{
-				foreach (QualitySpecificationElement element in qualitySpecification.Elements)
+				foreach (QualityCondition qualityCondition in qualitySpecification.Elements.Select(
+					         element => element.QualityCondition))
 				{
-					QualityCondition qualityCondition = element.QualityCondition;
-
 					if (uniqueConditions.Contains(qualityCondition))
 					{
 						continue;
@@ -1906,20 +1860,9 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 				}
 			}
 
-			return uniqueConditions.ToList();
-		}
-
-		private static void GetConfigurations(
-			[NotNull] IEnumerable<QualityCondition> qualityConditions,
-			out IReadOnlyList<TransformerConfiguration> transformerConfigurations,
-			out IReadOnlyList<IssueFilterConfiguration> issueFilterConfigurations)
-		{
-			HashSet<TransformerConfiguration>
-				allTransformers = new HashSet<TransformerConfiguration>();
-
-			HashSet<IssueFilterConfiguration>
-				allIssueFilters = new HashSet<IssueFilterConfiguration>();
-			foreach (QualityCondition qualityCondition in qualityConditions)
+			var allTransformers = new HashSet<TransformerConfiguration>();
+			var allIssueFilters = new HashSet<IssueFilterConfiguration>();
+			foreach (QualityCondition qualityCondition in uniqueConditions)
 			{
 				CollectTransformers(qualityCondition, allTransformers);
 				foreach (var issueFilter in qualityCondition.IssueFilterConfigurations)
@@ -1933,6 +1876,7 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 				}
 			}
 
+			qualityConditions = uniqueConditions.ToList();
 			transformerConfigurations = allTransformers.ToList();
 			issueFilterConfigurations = allIssueFilters.ToList();
 		}
@@ -1974,24 +1918,19 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 			[NotNull] IEnumerable<QualityCondition> qualityConditions)
 		{
 			var descriptors = new HashSet<TestDescriptor>();
-
 			foreach (QualityCondition qualityCondition in qualityConditions)
 			{
-				TestDescriptor testDescriptor = qualityCondition.TestDescriptor;
-
-				if (testDescriptor != null)
-				{
-					descriptors.Add(testDescriptor);
-				}
+				descriptors.Add(qualityCondition.TestDescriptor);
 			}
 
 			return descriptors.ToList();
 		}
 
+		[NotNull]
 		private static IReadOnlyList<TransformerDescriptor> GetTransformerDescriptors(
 			[NotNull] IEnumerable<TransformerConfiguration> transformers)
 		{
-			HashSet<TransformerDescriptor> descriptors = new HashSet<TransformerDescriptor>();
+			var descriptors = new HashSet<TransformerDescriptor>();
 			foreach (TransformerConfiguration configuration in transformers)
 			{
 				descriptors.Add(configuration.TransformerDescriptor);
@@ -2000,10 +1939,11 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 			return descriptors.ToList();
 		}
 
+		[NotNull]
 		private static IReadOnlyList<IssueFilterDescriptor> GetIssueFilterDescriptors(
 			[NotNull] IEnumerable<IssueFilterConfiguration> issueFilters)
 		{
-			HashSet<IssueFilterDescriptor> descriptors = new HashSet<IssueFilterDescriptor>();
+			var descriptors = new HashSet<IssueFilterDescriptor>();
 			foreach (IssueFilterConfiguration configuration in issueFilters)
 			{
 				descriptors.Add(configuration.IssueFilterDescriptor);
@@ -2013,18 +1953,24 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 		}
 
 		[NotNull]
-		private static IEnumerable<QualitySpecification> GetSorted(
+		private static IEnumerable<QualitySpecification> GetSortedQualitySpecifications(
 			[NotNull] IEnumerable<QualitySpecification> qualitySpecifications)
 		{
-			return qualitySpecifications.OrderBy(
-				qs => string.Format("{0}#{1}", qs.ListOrder, qs.Name));
+			return qualitySpecifications.OrderBy(qs => $"{qs.ListOrder}#{qs.Name}");
 		}
 
 		[NotNull]
-		private static IEnumerable<DataQualityCategory> GetSorted(
+		private static IEnumerable<QualitySpecificationElement> GetSortedElements(
+			[NotNull] IEnumerable<QualitySpecificationElement> qualitySpecificationElements)
+		{
+			return qualitySpecificationElements.OrderBy(e => e.QualityCondition.Name);
+		}
+
+		[NotNull]
+		private static IEnumerable<DataQualityCategory> GetSortedCategories(
 			[NotNull] IEnumerable<DataQualityCategory> categories)
 		{
-			return categories.OrderBy(c => string.Format("{0}#{1}", c.ListOrder, c.Name));
+			return categories.OrderBy(c => $"{c.ListOrder}#{c.Name}");
 		}
 
 		[NotNull]
@@ -2052,8 +1998,9 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 		[NotNull]
 		private static XmlDataQualityCategory CreateXmlDataQualityCategory(
 			[NotNull] DataQualityCategory category,
-			[NotNull] Func<DataQualityCategory, IList<QualityCondition>> getQualityConditions,
-			[NotNull] Func<DataQualityCategory, IList<QualitySpecification>>
+			[NotNull] Func<DataQualityCategory, IEnumerable<InstanceConfiguration>>
+				getInstanceConfigurations,
+			[NotNull] Func<DataQualityCategory, IEnumerable<QualitySpecification>>
 				getQualitySpecifications,
 			[NotNull] IDictionary<DdxModel, string> workspaceIdsByModel,
 			bool exportMetadata,
@@ -2081,19 +2028,17 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 				ExportMetadata(category, result);
 			}
 
-			foreach (DataQualityCategory subCategory in GetSorted(category.SubCategories))
+			foreach (DataQualityCategory subCategory in GetSortedCategories(category.SubCategories))
 			{
 				XmlDataQualityCategory xmlSubCategory = CreateXmlDataQualityCategory(subCategory,
-					getQualityConditions,
+					getInstanceConfigurations,
 					getQualitySpecifications,
 					workspaceIdsByModel,
 					exportMetadata,
 					exportAllCategories,
 					exportNotes);
 
-				if (! exportAllCategories &&
-				    ! xmlSubCategory.ContainsQualityConditions &&
-				    ! xmlSubCategory.ContainsQualitySpecifications)
+				if (! exportAllCategories && ! xmlSubCategory.IsNotEmpty)
 				{
 					continue;
 				}
@@ -2102,20 +2047,35 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 			}
 
 			foreach (QualityCondition condition in GetSortedConfigurations(
-				         getQualityConditions(category)))
+				         getInstanceConfigurations(category).OfType<QualityCondition>()))
 			{
-				result.AddQualityCondition(CreateXmlQualityCondition(condition,
-					                           workspaceIdsByModel,
-					                           exportMetadata,
-					                           exportNotes));
+				result.AddQualityCondition(
+					CreateXmlQualityCondition(condition, workspaceIdsByModel,
+					                          exportMetadata, exportNotes));
 			}
 
-			foreach (QualitySpecification specification in GetSorted(
+			foreach (TransformerConfiguration transformer in GetSortedConfigurations(
+				         getInstanceConfigurations(category).OfType<TransformerConfiguration>()))
+			{
+				result.AddTransformer(
+					CreateXmlTransformerConfiguration(transformer, workspaceIdsByModel,
+					                                  exportMetadata, exportNotes));
+			}
+
+			foreach (IssueFilterConfiguration issueFilter in GetSortedConfigurations(
+				         getInstanceConfigurations(category).OfType<IssueFilterConfiguration>()))
+			{
+				result.AddIssueFilter(
+					CreateXmlIssueFilterConfiguration(issueFilter, workspaceIdsByModel,
+					                                  exportMetadata, exportNotes));
+			}
+
+			foreach (QualitySpecification qualitySpecification in GetSortedQualitySpecifications(
 				         getQualitySpecifications(category)))
 			{
-				result.AddQualitySpecification(CreateXmlQualitySpecification(specification,
-					                               exportMetadata,
-					                               exportNotes));
+				result.AddQualitySpecification(
+					CreateXmlQualitySpecification(qualitySpecification,
+					                              exportMetadata, exportNotes));
 			}
 
 			return result;
@@ -2124,8 +2084,7 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 		[NotNull]
 		private static XmlQualitySpecification CreateXmlQualitySpecification(
 			[NotNull] QualitySpecification qualitySpecification,
-			bool exportMetadata,
-			bool exportNotes)
+			bool exportMetadata, bool exportNotes)
 		{
 			Assert.ArgumentNotNull(qualitySpecification, nameof(qualitySpecification));
 
@@ -2150,7 +2109,8 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 				result.Notes = Escape(qualitySpecification.Notes);
 			}
 
-			foreach (QualitySpecificationElement element in qualitySpecification.Elements)
+			foreach (QualitySpecificationElement element in
+			         GetSortedElements(qualitySpecification.Elements))
 			{
 				result.Elements.Add(CreateXmlQualitySpecificationElement(element));
 			}
@@ -2217,24 +2177,17 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 			Assert.ArgumentNotNull(testDescriptor, nameof(testDescriptor));
 
 			var xmlDescriptor =
-				new XmlTestDescriptor
-				{
-					Name = Escape(testDescriptor.Name),
-					Description = Escape(testDescriptor.Description),
-					StopOnError = testDescriptor.StopOnError,
-					AllowErrors = testDescriptor.AllowErrors,
-					TestClass = CreateXmlClassDescriptor(testDescriptor.TestClass,
-					                                     testDescriptor.TestConstructorId),
-					TestFactoryDescriptor = CreateXmlClassDescriptor(
-						testDescriptor.TestFactoryDescriptor),
-					TestConfigurator = CreateXmlClassDescriptor(
-						testDescriptor.TestConfigurator)
-				};
+				CreateXmlInstanceDescriptor<XmlTestDescriptor>(
+					testDescriptor, exportMetadata);
 
-			if (exportMetadata)
-			{
-				ExportMetadata(testDescriptor, xmlDescriptor);
-			}
+			xmlDescriptor.StopOnError = testDescriptor.StopOnError;
+			xmlDescriptor.AllowErrors = testDescriptor.AllowErrors;
+			xmlDescriptor.TestClass = CreateXmlClassDescriptor(testDescriptor.TestClass,
+			                                                   testDescriptor.TestConstructorId);
+			xmlDescriptor.TestFactoryDescriptor = CreateXmlClassDescriptor(
+				testDescriptor.TestFactoryDescriptor);
+			xmlDescriptor.TestConfigurator = CreateXmlClassDescriptor(
+				testDescriptor.TestConfigurator);
 
 			xmlDescriptor.SetExecutionPriority(testDescriptor.ExecutionPriority);
 
@@ -2248,43 +2201,48 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 			Assert.ArgumentNotNull(transformerDescriptor, nameof(transformerDescriptor));
 
 			var xmlDescriptor =
-				new XmlTransformerDescriptor
-				{
-					Name = Escape(transformerDescriptor.Name),
-					Description = Escape(transformerDescriptor.Description),
-					TransformerClass = CreateXmlClassDescriptor(
-						transformerDescriptor.Class, transformerDescriptor.ConstructorId),
-				};
+				CreateXmlInstanceDescriptor<XmlTransformerDescriptor>(
+					transformerDescriptor, exportMetadata);
 
-			if (exportMetadata)
-			{
-				ExportMetadata(transformerDescriptor, xmlDescriptor);
-			}
+			xmlDescriptor.TransformerClass = CreateXmlClassDescriptor(
+				transformerDescriptor.Class, transformerDescriptor.ConstructorId);
 
 			return xmlDescriptor;
 		}
 
 		[NotNull]
-		public static XmlIssueFilterDescriptor CreateXmlIssueFilterDescriptor(
+		private static XmlIssueFilterDescriptor CreateXmlIssueFilterDescriptor(
 			[NotNull] IssueFilterDescriptor issueFilterDescriptor, bool exportMetadata)
 		{
 			Assert.ArgumentNotNull(issueFilterDescriptor, nameof(issueFilterDescriptor));
 
 			var xmlDescriptor =
-				new XmlIssueFilterDescriptor
-				{
-					Name = Escape(issueFilterDescriptor.Name),
-					Description = Escape(issueFilterDescriptor.Description),
-					IssueFilterClass = CreateXmlClassDescriptor(
-						issueFilterDescriptor.Class, issueFilterDescriptor.ConstructorId),
-				};
+				CreateXmlInstanceDescriptor<XmlIssueFilterDescriptor>(
+					issueFilterDescriptor, exportMetadata);
+
+			xmlDescriptor.IssueFilterClass = CreateXmlClassDescriptor(
+				issueFilterDescriptor.Class, issueFilterDescriptor.ConstructorId);
+
+			return xmlDescriptor;
+		}
+
+		[NotNull]
+		private static T CreateXmlInstanceDescriptor<T>(
+			[NotNull] InstanceDescriptor descriptor, bool exportMetadata)
+			where T : XmlInstanceDescriptor, new()
+		{
+			T result = new T
+			           {
+				           Name = Escape(descriptor.Name),
+				           Description = Escape(descriptor.Description)
+			           };
 
 			if (exportMetadata)
 			{
-				ExportMetadata(issueFilterDescriptor, xmlDescriptor);
+				ExportMetadata(descriptor, result);
 			}
 
-			return xmlDescriptor;
+			return result;
 		}
 
 		[NotNull]
@@ -2296,45 +2254,24 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 			Assert.ArgumentNotNull(qualityCondition, nameof(qualityCondition));
 			Assert.ArgumentNotNull(workspaceIdsByModel, nameof(workspaceIdsByModel));
 
-			var xmlCondition =
-				new XmlQualityCondition
-				{
-					Name = Escape(qualityCondition.Name),
-					Uuid = qualityCondition.Uuid,
-					VersionUuid = qualityCondition.VersionUuid,
-					Url = Escape(qualityCondition.Url),
-					TestDescriptorName = Escape(qualityCondition.TestDescriptor.Name),
-					Description = Escape(qualityCondition.Description),
-					AllowErrors = EOverride(qualityCondition.AllowErrorsOverride),
-					StopOnError = EOverride(qualityCondition.StopOnErrorOverride),
-					NeverFilterTableRowsUsingRelatedGeometry =
-						qualityCondition.NeverFilterTableRowsUsingRelatedGeometry,
-					NeverStoreRelatedGeometryForTableRowIssues =
-						qualityCondition.NeverStoreRelatedGeometryForTableRowIssues,
+			var xmlConfiguration =
+				CreateXmlInstanceConfiguration<XmlQualityCondition>(
+					qualityCondition, workspaceIdsByModel, exportMetadata, exportNotes);
 
-					IssueFilterExpression = CreateXmlFilterExpression(
-						qualityCondition.IssueFilterExpression,
-						qualityCondition.IssueFilterConfigurations)
-				};
+			xmlConfiguration.VersionUuid = qualityCondition.VersionUuid;
+			xmlConfiguration.TestDescriptorName = Escape(qualityCondition.TestDescriptor.Name);
+			xmlConfiguration.AllowErrors = EOverride(qualityCondition.AllowErrorsOverride);
+			xmlConfiguration.StopOnError = EOverride(qualityCondition.StopOnErrorOverride);
+			xmlConfiguration.NeverFilterTableRowsUsingRelatedGeometry =
+				qualityCondition.NeverFilterTableRowsUsingRelatedGeometry;
+			xmlConfiguration.NeverStoreRelatedGeometryForTableRowIssues =
+				qualityCondition.NeverStoreRelatedGeometryForTableRowIssues;
 
-			if (exportMetadata)
-			{
-				ExportMetadata(qualityCondition, xmlCondition);
-			}
+			xmlConfiguration.IssueFilterExpression = CreateXmlFilterExpression(
+				qualityCondition.IssueFilterExpression,
+				qualityCondition.IssueFilterConfigurations);
 
-			if (exportNotes)
-			{
-				xmlCondition.Notes = Escape(qualityCondition.Notes);
-			}
-
-			foreach (TestParameterValue parameterValue in qualityCondition.ParameterValues)
-			{
-				xmlCondition.ParameterValues.Add(
-					CreateXmlTestParameterValue(parameterValue, qualityCondition,
-					                            workspaceIdsByModel));
-			}
-
-			return xmlCondition;
+			return xmlConfiguration;
 		}
 
 		[NotNull]
@@ -2346,35 +2283,15 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 			Assert.ArgumentNotNull(transformer, nameof(transformer));
 			Assert.ArgumentNotNull(workspaceIdsByModel, nameof(workspaceIdsByModel));
 
-			var xmlTransformer =
-				new XmlTransformerConfiguration
-				{
-					Name = Escape(transformer.Name),
-					Uuid = transformer.Uuid,
-					// TODO: VersionUuid = transformer.VersionUuid,
-					Url = Escape(transformer.Url),
-					TransformerDescriptorName = Escape(transformer.TransformerDescriptor.Name),
-					Description = Escape(transformer.Description),
-				};
+			var xmlConfiguration =
+				CreateXmlInstanceConfiguration<XmlTransformerConfiguration>(
+					transformer, workspaceIdsByModel, exportMetadata, exportNotes);
 
-			if (exportMetadata)
-			{
-				ExportMetadata(transformer, xmlTransformer);
-			}
+			// TODO: VersionUuid = transformer.VersionUuid,
+			xmlConfiguration.TransformerDescriptorName =
+				Escape(transformer.TransformerDescriptor.Name);
 
-			if (exportNotes)
-			{
-				xmlTransformer.Notes = Escape(transformer.Notes);
-			}
-
-			foreach (TestParameterValue parameterValue in transformer.ParameterValues)
-			{
-				xmlTransformer.ParameterValues.Add(
-					CreateXmlTestParameterValue(parameterValue, transformer,
-					                            workspaceIdsByModel));
-			}
-
-			return xmlTransformer;
+			return xmlConfiguration;
 		}
 
 		[NotNull]
@@ -2386,35 +2303,51 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 			Assert.ArgumentNotNull(issueFilter, nameof(issueFilter));
 			Assert.ArgumentNotNull(workspaceIdsByModel, nameof(workspaceIdsByModel));
 
-			var xmlIssueFilter =
-				new XmlIssueFilterConfiguration
-				{
-					Name = Escape(issueFilter.Name),
-					Uuid = issueFilter.Uuid,
-					// TODO: VersionUuid = issueFilter.VersionUuid,
-					Url = Escape(issueFilter.Url),
-					IssueFilterDescriptorName = Escape(issueFilter.IssueFilterDescriptor.Name),
-					Description = Escape(issueFilter.Description),
-				};
+			var xmlConfiguration =
+				CreateXmlInstanceConfiguration<XmlIssueFilterConfiguration>(
+					issueFilter, workspaceIdsByModel, exportMetadata, exportNotes);
+
+			// TODO: VersionUuid = issueFilter.VersionUuid,
+			xmlConfiguration.IssueFilterDescriptorName =
+				Escape(issueFilter.IssueFilterDescriptor.Name);
+
+			return xmlConfiguration;
+		}
+
+		[NotNull]
+		private static T CreateXmlInstanceConfiguration<T>(
+			[NotNull] InstanceConfiguration instanceConfiguration,
+			[NotNull] IDictionary<DdxModel, string> workspaceIdsByModel,
+			bool exportMetadata, bool exportNotes)
+			where T : XmlInstanceConfiguration, new()
+		{
+			T result = new T
+			           {
+				           Name = Escape(instanceConfiguration.Name),
+				           Uuid = instanceConfiguration.Uuid,
+				           // TODO: VersionUuid = instanceConfiguration.VersionUuid,
+				           Url = Escape(instanceConfiguration.Url),
+				           Description = Escape(instanceConfiguration.Description),
+			           };
 
 			if (exportMetadata)
 			{
-				ExportMetadata(issueFilter, xmlIssueFilter);
+				ExportMetadata(instanceConfiguration, result);
 			}
 
 			if (exportNotes)
 			{
-				xmlIssueFilter.Notes = Escape(issueFilter.Notes);
+				result.Notes = Escape(instanceConfiguration.Notes);
 			}
 
-			foreach (TestParameterValue parameterValue in issueFilter.ParameterValues)
+			foreach (TestParameterValue parameterValue in instanceConfiguration.ParameterValues)
 			{
-				xmlIssueFilter.ParameterValues.Add(
-					CreateXmlTestParameterValue(parameterValue, issueFilter,
+				result.ParameterValues.Add(
+					CreateXmlTestParameterValue(parameterValue, instanceConfiguration,
 					                            workspaceIdsByModel));
 			}
 
-			return xmlIssueFilter;
+			return result;
 		}
 
 		[NotNull]
@@ -2444,11 +2377,11 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 						$"Parameter has an unhandled type {parameterValue.GetType()}");
 				}
 			}
-			catch (Exception exception)
+			catch (Exception ex)
 			{
 				throw new InvalidConfigurationException(
-					$"Parameter {parameterValue.TestParameterName} in quality condition {instanceConfiguration.Name} is invalid: {exception.Message}",
-					exception);
+					$"Parameter {parameterValue.TestParameterName} in {instanceConfiguration.Name} is invalid: {ex.Message}",
+					ex);
 			}
 
 			if (parameterValue.ValueSource != null)

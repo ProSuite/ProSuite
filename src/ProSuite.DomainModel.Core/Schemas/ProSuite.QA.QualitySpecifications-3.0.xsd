@@ -129,6 +129,8 @@
 			<xs:element minOccurs="0" maxOccurs="1" name="SubCategories" type="tns:ArrayOfXmlDataQualityCategory" />
 			<xs:element minOccurs="0" maxOccurs="1" name="QualitySpecifications" type="tns:ArrayOfXmlQualitySpecification" />
 			<xs:element minOccurs="0" maxOccurs="1" name="QualityConditions" type="tns:ArrayOfXmlQualityCondition" />
+			<xs:element minOccurs="0" maxOccurs="1" name="Transformers" type="tns:ArrayOfXmlTransformer" />
+			<xs:element minOccurs="0" maxOccurs="1" name="IssueFilters" type="tns:ArrayOfXmlIssueFilter" />
 		</xs:sequence>
 		<xs:attribute name="name" type="xs:string" />
 		<xs:attribute name="abbreviation" type="xs:string" />

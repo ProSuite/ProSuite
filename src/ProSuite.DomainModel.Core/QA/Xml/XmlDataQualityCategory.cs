@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Xml.Serialization;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.DomainModel.Core.QA.Xml
@@ -8,19 +9,15 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 	public class XmlDataQualityCategory : IXmlEntityMetadata
 	{
 		[CanBeNull] private string _description;
-
-		public XmlDataQualityCategory()
-		{
-			CanContainQualityConditions = true;
-			CanContainQualitySpecifications = true;
-			CanContainSubCategories = true;
-		}
+		private const bool _defaultCanContainQualityConditions = true;
+		private const bool _defaultCanContainQualitySpecifications = true;
+		private const bool _defaultCanContainSubCategories = true;
 
 		[XmlAttribute("name")]
 		public string Name { get; set; }
 
-		[XmlAttribute("abbreviation")]
 		[CanBeNull]
+		[XmlAttribute("abbreviation")]
 		public string Abbreviation { get; set; }
 
 		[CanBeNull]
@@ -31,22 +28,23 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 		[DefaultValue(0)]
 		public int ListOrder { get; set; }
 
-		[XmlAttribute("defaultModelName")]
 		[CanBeNull]
+		[XmlAttribute("defaultModelName")]
 		public string DefaultModelName { get; set; }
 
 		[XmlAttribute("canContainQualityConditions")]
-		[DefaultValue(true)]
+		[DefaultValue(_defaultCanContainQualityConditions)]
 		public bool CanContainQualityConditions { get; set; }
 
 		[XmlAttribute("canContainQualitySpecifications")]
-		[DefaultValue(true)]
+		[DefaultValue(_defaultCanContainQualitySpecifications)]
 		public bool CanContainQualitySpecifications { get; set; }
 
 		[XmlAttribute("canContainSubCategories")]
-		[DefaultValue(true)]
+		[DefaultValue(_defaultCanContainSubCategories)]
 		public bool CanContainSubCategories { get; set; }
 
+		[CanBeNull]
 		[XmlElement("Description")]
 		[DefaultValue(null)]
 		public string Description
@@ -57,20 +55,30 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 			set => _description = value;
 		}
 
+		[CanBeNull]
 		[XmlArray("SubCategories")]
 		[XmlArrayItem("Category")]
-		[CanBeNull]
 		public List<XmlDataQualityCategory> SubCategories { get; set; }
 
+		[CanBeNull]
 		[XmlArray("QualitySpecifications")]
 		[XmlArrayItem("QualitySpecification")]
-		[CanBeNull]
 		public List<XmlQualitySpecification> QualitySpecifications { get; set; }
 
+		[CanBeNull]
 		[XmlArray("QualityConditions")]
 		[XmlArrayItem("QualityCondition")]
-		[CanBeNull]
 		public List<XmlQualityCondition> QualityConditions { get; set; }
+
+		[CanBeNull]
+		[XmlArray("Transformers")]
+		[XmlArrayItem("Transformer")]
+		public List<XmlTransformerConfiguration> Transformers { get; set; }
+
+		[CanBeNull]
+		[XmlArray("IssueFilters")]
+		[XmlArrayItem("IssueFilter")]
+		public List<XmlIssueFilterConfiguration> IssueFilters { get; set; }
 
 		[XmlAttribute("createdDate")]
 		public string CreatedDate { get; set; }
@@ -85,83 +93,79 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 		public string LastChangedByUser { get; set; }
 
 		[XmlIgnore]
-		public bool ContainsQualityConditions
+		public bool IsNotEmpty
 		{
 			get
 			{
-				if (QualityConditions != null && QualityConditions.Count > 0)
+				if (QualitySpecifications != null && QualitySpecifications.Count > 0 ||
+				    QualityConditions != null && QualityConditions.Count > 0 ||
+				    Transformers != null && Transformers.Count > 0 ||
+				    IssueFilters != null && IssueFilters.Count > 0)
 				{
 					return true;
 				}
 
-				if (SubCategories != null)
-				{
-					foreach (XmlDataQualityCategory subCategory in SubCategories)
-					{
-						if (subCategory.ContainsQualityConditions)
-						{
-							return true;
-						}
-					}
-				}
-
-				return false;
+				return SubCategories != null && SubCategoriesAreNotEmpty(SubCategories);
 			}
 		}
 
-		[XmlIgnore]
-		public bool ContainsQualitySpecifications
+		private static bool SubCategoriesAreNotEmpty(
+			[NotNull] IEnumerable<XmlDataQualityCategory> categories)
 		{
-			get
+			foreach (XmlDataQualityCategory category in categories)
 			{
-				if (QualitySpecifications != null && QualitySpecifications.Count > 0)
+				if (category.QualitySpecifications != null &&
+				    category.QualitySpecifications.Count > 0 ||
+				    category.QualityConditions != null && category.QualityConditions.Count > 0 ||
+				    category.Transformers != null && category.Transformers.Count > 0 ||
+				    category.IssueFilters != null && category.IssueFilters.Count > 0)
 				{
 					return true;
 				}
 
-				if (SubCategories != null)
+				if (category.SubCategories != null)
 				{
-					foreach (XmlDataQualityCategory subCategory in SubCategories)
-					{
-						if (subCategory.ContainsQualitySpecifications)
-						{
-							return true;
-						}
-					}
+					return SubCategoriesAreNotEmpty(category.SubCategories);
 				}
-
-				return false;
 			}
-		}
 
+			return false;
+		}
+		
 		public void AddSubCategory([NotNull] XmlDataQualityCategory xmlSubCategory)
 		{
-			if (SubCategories == null)
-			{
-				SubCategories = new List<XmlDataQualityCategory>();
-			}
-
+			Assert.ArgumentNotNull(xmlSubCategory, nameof(xmlSubCategory));
+			SubCategories = SubCategories ?? new List<XmlDataQualityCategory>();
 			SubCategories.Add(xmlSubCategory);
 		}
 
-		public void AddQualitySpecification(XmlQualitySpecification xmlQualitySpecification)
+		public void AddQualitySpecification(
+			[NotNull] XmlQualitySpecification xmlQualitySpecification)
 		{
-			if (QualitySpecifications == null)
-			{
-				QualitySpecifications = new List<XmlQualitySpecification>();
-			}
-
+			Assert.ArgumentNotNull(xmlQualitySpecification, nameof(xmlQualitySpecification));
+			QualitySpecifications = QualitySpecifications ?? new List<XmlQualitySpecification>();
 			QualitySpecifications.Add(xmlQualitySpecification);
 		}
 
-		public void AddQualityCondition(XmlQualityCondition xmlQualityCondition)
+		public void AddQualityCondition([NotNull] XmlQualityCondition xmlQualityCondition)
 		{
-			if (QualityConditions == null)
-			{
-				QualityConditions = new List<XmlQualityCondition>();
-			}
-
+			Assert.ArgumentNotNull(xmlQualityCondition, nameof(xmlQualityCondition));
+			QualityConditions = QualityConditions ?? new List<XmlQualityCondition>();
 			QualityConditions.Add(xmlQualityCondition);
+		}
+
+		public void AddTransformer([NotNull] XmlTransformerConfiguration xmlTransformer)
+		{
+			Assert.ArgumentNotNull(xmlTransformer, nameof(xmlTransformer));
+			Transformers = Transformers ?? new List<XmlTransformerConfiguration>();
+			Transformers.Add(xmlTransformer);
+		}
+
+		public void AddIssueFilter([NotNull] XmlIssueFilterConfiguration xmlIssueFilter)
+		{
+			Assert.ArgumentNotNull(xmlIssueFilter, nameof(xmlIssueFilter));
+			IssueFilters = IssueFilters ?? new List<XmlIssueFilterConfiguration>();
+			IssueFilters.Add(xmlIssueFilter);
 		}
 	}
 }
