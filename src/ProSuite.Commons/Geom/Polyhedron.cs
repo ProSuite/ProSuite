@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Linq;
-using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.Geom
@@ -35,7 +34,7 @@ namespace ProSuite.Commons.Geom
 			if (RingGroups.Count == 0)
 			{
 				var newGroup = new RingGroup(linestring);
-				RingGroups = new List<RingGroup> {newGroup};
+				RingGroups = new List<RingGroup> { newGroup };
 			}
 			else
 			{
@@ -91,8 +90,11 @@ namespace ProSuite.Commons.Geom
 			return found;
 		}
 
-		public MultiLinestring GetXYFootprint(double tolerance)
+		public MultiLinestring GetXYFootprint(double tolerance,
+		                                      out List<Linestring> verticalRings)
 		{
+			verticalRings = new List<Linestring>();
+
 			if (RingGroups.Count == 0)
 			{
 				return MultiPolycurve.CreateEmpty();
@@ -101,31 +103,58 @@ namespace ProSuite.Commons.Geom
 			if (RingGroups.Count == 1)
 			{
 				RingGroup ringGroup = RingGroups[0];
-
 				return AsProperlyOriented(ringGroup);
 			}
 
-			MultiLinestring firstGroup = null;
-			var otherRings = new List<Linestring>();
+			var ringGroupsToUnionize = new List<RingGroup>();
+
 			foreach (RingGroup ringGroup in RingGroups)
 			{
-				if (firstGroup == null)
+				MultiLinestring orientedGroup = AsProperlyOriented(ringGroup);
+
+				if (orientedGroup.IsEmpty)
 				{
-					firstGroup = AsProperlyOriented(ringGroup);
+					verticalRings.AddRange(ringGroup.GetLinestrings());
+					continue;
+				}
+
+				// Remove vertical rings and parts of rings
+				Linestring exteriorRing = ((RingGroup) orientedGroup).ExteriorRing;
+
+				List<Linestring> spaghetti = new List<Linestring>();
+				if (GeomTopoOpUtils.TryDeleteLinearSelfIntersectionsXY(
+					    exteriorRing, tolerance, spaghetti))
+				{
+					// TODO: Deal with interior rings in case the outer ring is not simple
+
+					if (spaghetti.Count == 0)
+					{
+						verticalRings.Add(exteriorRing);
+					}
+					else
+					{
+						foreach (Linestring spaghetto in spaghetti)
+						{
+							if (spaghetto.IsClosed && spaghetto.ClockwiseOriented == true &&
+							    ! spaghetto.IsVerticalRing(tolerance))
+							{
+								ringGroupsToUnionize.Add(new RingGroup(spaghetto));
+							}
+							else
+							{
+								verticalRings.Add(spaghetto);
+							}
+						}
+					}
 				}
 				else
 				{
-					otherRings.AddRange(AsProperlyOriented(ringGroup).GetLinestrings());
+					ringGroupsToUnionize.Add(ringGroup);
 				}
 			}
 
-			var allRings = new MultiPolycurve(otherRings);
-
-			// TODO: First delete duplicate lines to avoid error (Intersections seen twice) in union:
-			//GeomTopoOpUtils.TryDeleteLinearSelfIntersectionsXY(allRings, tolerance, out spaghetti);
 			MultiLinestring result =
-				GeomTopoOpUtils.GetUnionAreasXY(Assert.NotNull(firstGroup), allRings,
-				                                tolerance);
+				GeomTopoOpUtils.GetUnionAreasXY(ringGroupsToUnionize, tolerance);
 
 			return result;
 		}
