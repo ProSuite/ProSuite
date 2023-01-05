@@ -86,11 +86,11 @@ namespace ProSuite.Commons.Geom
 			var unassignedInnerRings = new MultiPolycurve(new List<Linestring>(0));
 			AssignInteriorRings(leftRings, resultPolys, unassignedInnerRings,
 			                    _subcurveNavigator.Tolerance,
-			                    _subcurveNavigator.InteriorRingsCouldContainEachOther);
+			                    _subcurveNavigator.RingsCouldContainEachOther);
 
 			AssignInteriorRings(containedTargetRings, resultPolys, unassignedInnerRings,
 			                    _subcurveNavigator.Tolerance,
-			                    _subcurveNavigator.InteriorRingsCouldContainEachOther);
+			                    _subcurveNavigator.RingsCouldContainEachOther);
 
 			List<MultiLinestring> results = new List<MultiLinestring>(resultPolys);
 
@@ -151,7 +151,8 @@ namespace ProSuite.Commons.Geom
 		private MultiLinestring FilterUnprocessedRings(MultiLinestring unprocessed,
 		                                               IList<RingGroup> resultRingGroups)
 		{
-			if (! _subcurveNavigator.HasBoundaryLoops())
+			if (! _subcurveNavigator.HasBoundaryLoops() &&
+			    ! _subcurveNavigator.RingsCouldContainEachOther)
 			{
 				return unprocessed;
 			}

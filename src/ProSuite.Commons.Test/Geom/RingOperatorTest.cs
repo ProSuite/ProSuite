@@ -684,6 +684,80 @@ namespace ProSuite.Commons.Test.Geom
 		}
 
 		[Test]
+		public void TouchingRingsInPointsFilled()
+		{
+			// The source has multiple parts that touch in a point
+			// The target fills the 'island', i.e. the boundary loop part that is not part of the polygon.
+			var ring1 = new List<Pnt3D>
+			            {
+				            new Pnt3D(0, 0, 9),
+				            new Pnt3D(0, 100, 9),
+				            new Pnt3D(50, 100, 0),
+				            new Pnt3D(20, 60, 0),
+				            new Pnt3D(20, 40, 0),
+				            new Pnt3D(50, 0, 0),
+			            };
+
+			var ring2 = new List<Pnt3D>
+			            {
+				            new Pnt3D(50, 0, 0),
+				            new Pnt3D(50, 100, 0),
+				            new Pnt3D(100, 100, 0),
+				            new Pnt3D(100, 0, 0)
+			            };
+
+			const double tolerance = 0.01;
+
+			WithRotatedRingGroup(ring1, poly1 =>
+			{
+				poly1.AddLinestring(GeomTestUtils.CreateRing(ring2));
+
+				// The target fills the gap completely:
+				var targetRingPoints = new List<Pnt3D>
+				                       {
+					                       new Pnt3D(50, 0, 9),
+					                       new Pnt3D(20, 40, 0),
+					                       new Pnt3D(20, 60, 0),
+					                       new Pnt3D(50, 100, 9)
+				                       };
+
+				WithRotatedRingGroup(targetRingPoints, target =>
+				{
+					RingOperator ringOperator = new RingOperator(poly1, target, tolerance);
+					MultiLinestring intersection = ringOperator.IntersectXY();
+					Assert.IsTrue(intersection.IsEmpty);
+
+					// Compare with difference:
+					MultiLinestring difference = ringOperator.DifferenceXY();
+					Assert.AreEqual(2, difference.PartCount);
+					Assert.AreEqual(poly1.GetArea2D(), difference.GetArea2D());
+
+					// Union:
+					ringOperator = new RingOperator(poly1, target, tolerance);
+					MultiLinestring union = ringOperator.UnionXY();
+					Assert.AreEqual(1, union.PartCount);
+					Assert.AreEqual(poly1.GetArea2D() + target.GetArea2D(), union.GetArea2D());
+
+					// Vice versa to check symmetry:
+					intersection =
+						GeomTopoOpUtils.GetIntersectionAreasXY(target, poly1, tolerance);
+					Assert.IsTrue(intersection.IsEmpty);
+
+					difference = GeomTopoOpUtils.GetDifferenceAreasXY(target, poly1, tolerance);
+					Assert.AreEqual(1, difference.PartCount);
+					Assert.AreEqual(target.GetArea2D(), difference.GetArea2D());
+
+					// TODO: This results in non-simple touching rings.
+					// Either fix with simplification or call Union for each target ring
+					//union =
+					//	GeomTopoOpUtils.GetUnionAreasXY(target, poly1, tolerance);
+					//Assert.AreEqual(1, union.PartCount);
+					//Assert.AreEqual(poly1.GetArea2D() + target.GetArea2D(), union.GetArea2D());
+				});
+			});
+		}
+
+		[Test]
 		public void CutWithCutLineEndingWithShortSegment()
 		{
 			var ring1 = new List<Pnt3D>

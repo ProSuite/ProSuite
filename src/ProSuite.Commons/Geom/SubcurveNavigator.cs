@@ -195,7 +195,7 @@ namespace ProSuite.Commons.Geom
 			}
 		}
 
-		public bool InteriorRingsCouldContainEachOther { get; private set; }
+		public bool RingsCouldContainEachOther { get; private set; }
 
 		/// <summary>
 		/// Cut operations use both the left and the right side rings of the target. However, 
@@ -258,7 +258,7 @@ namespace ProSuite.Commons.Geom
 
 			// Reset state:
 			_congruentRings.Clear();
-			InteriorRingsCouldContainEachOther = false;
+			RingsCouldContainEachOther = false;
 
 			while (startIntersections.Count > 0)
 			{
@@ -1953,7 +1953,7 @@ namespace ProSuite.Commons.Geom
 
 			if (distinctSourcePartCount > 1)
 			{
-				InteriorRingsCouldContainEachOther = true;
+				RingsCouldContainEachOther = true;
 				return true;
 			}
 
