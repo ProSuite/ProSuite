@@ -12,6 +12,7 @@ using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Exceptions;
+using ProSuite.Commons.Geom;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Notifications;
 
@@ -266,6 +267,58 @@ namespace ProSuite.Commons.AO.Geometry.CreateFootprint
 			IPolygon footprint = GeometryFactory.CreatePolygon(multiPatch);
 
 			return footprint;
+		}
+
+		[CanBeNull]
+		public static IPolygon TryGetGeomFootprint([NotNull] IMultiPatch multiPatch,
+		                                           double xyTolerance,
+		                                           [CanBeNull] out IPolyline verticalRings)
+		{
+			Assert.ArgumentNotNull(multiPatch, nameof(multiPatch));
+
+			verticalRings = null;
+
+			try
+			{
+				IPolygon footprintPoly =
+					GetFootprintGeom(multiPatch, xyTolerance, out verticalRings);
+
+				return footprintPoly;
+			}
+			catch (Exception e)
+			{
+				_msg.Warn(
+					$"Error calculating footprint for {GeometryUtils.ToString(multiPatch)}. " +
+					"Using AO-fallback.", e);
+
+				return null;
+			}
+		}
+
+		private static IPolygon GetFootprintGeom([NotNull] IMultiPatch multiPatch,
+		                                         double xyTolerance,
+		                                         out IPolyline tooSmallRings)
+		{
+			tooSmallRings = null;
+			Polyhedron polyhedron =
+				GeometryConversionUtils.CreatePolyhedron(multiPatch, false, true);
+
+			MultiLinestring footprint =
+				polyhedron.GetXYFootprint(xyTolerance, out List<Linestring> verticalRings);
+
+			IPolygon footprintPoly =
+				GeometryConversionUtils.CreatePolygon(multiPatch, footprint.GetLinestrings());
+
+			if (verticalRings != null)
+			{
+				tooSmallRings =
+					GeometryConversionUtils.CreatePolyline(verticalRings,
+					                                       multiPatch.SpatialReference);
+			}
+
+			GeometryUtils.Simplify(footprintPoly);
+
+			return footprintPoly;
 		}
 
 		[NotNull]

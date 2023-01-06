@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
+using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Geometry.CreateFootprint;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Core.TestCategories;
@@ -30,7 +31,20 @@ namespace ProSuite.QA.Tests.Transformers
 				                     ? CreateFeature()
 				                     : (GdbFeature) transformedClass.CreateObject(sourceOid.Value);
 
-			feature.Shape = CreateFootprintUtils.GetFootprint(patch);
+			IPolygon result = null;
+			if (IntersectionUtils.UseCustomIntersect)
+			{
+				double xyTolerance = GeometryUtils.GetXyTolerance(patch);
+				result = CreateFootprintUtils.TryGetGeomFootprint(patch, xyTolerance, out _);
+			}
+
+			if (result == null)
+			{
+				result = CreateFootprintUtils.GetFootprint(patch);
+			}
+
+			feature.Shape = result;
+
 			yield return feature;
 		}
 	}
