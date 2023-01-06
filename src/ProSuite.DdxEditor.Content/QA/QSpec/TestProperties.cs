@@ -1,7 +1,6 @@
 using System;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Core;
 
@@ -18,10 +17,11 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 
 			try
 			{
-				TestFactory testFactory = TestFactoryUtils.GetTestFactory(testDescriptor);
+				IInstanceInfo instanceInfo =
+					InstanceDescriptorUtils.GetInstanceInfo(testDescriptor);
 
-				Signature = InstanceUtils.GetTestSignature(testFactory);
-				Description = testFactory.TestDescription ?? string.Empty;
+				Signature = InstanceUtils.GetTestSignature(instanceInfo);
+				Description = instanceInfo.TestDescription ?? string.Empty;
 			}
 			catch (TypeLoadException e)
 			{
