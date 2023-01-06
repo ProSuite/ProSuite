@@ -4,7 +4,6 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DdxEditor.Content.Properties;
 using ProSuite.DdxEditor.Content.QA.InstanceDescriptors;
-using ProSuite.DdxEditor.Content.QA.QSpec;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Commands;
 using ProSuite.DdxEditor.Framework.Items;
@@ -26,7 +25,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 		}
 
 		public TransformerConfigurationsItem([NotNull] CoreDomainModelItemModelBuilder modelBuilder,
-		                                     [NotNull] IQualityConditionContainer container)
+		                                     [NotNull] IInstanceConfigurationContainer container)
 			: base(modelBuilder, "Transformer Configurations",
 			       "Configured dataset transformers using one or more input datasets",
 			       container) { }
@@ -54,8 +53,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 		}
 
 		protected override IEnumerable<InstanceConfigurationDatasetTableRow>
-			GetConfigDatasetTableRows(
-				DataQualityCategory category)
+			GetConfigDatasetTableRows(DataQualityCategory category)
 		{
 			return InstanceConfigTableRows
 				.GetInstanceConfigurationDatasetTableRows<TransformerConfiguration>(
@@ -97,13 +95,13 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			DataQualityCategory category)
 		{
 			IList<TransformerConfiguration> result = null;
-			bool includeForDelted = ModelBuilder.IncludeQualityConditionsBasedOnDeletedDatasets;
+			bool includeForDeleted = ModelBuilder.IncludeQualityConditionsBasedOnDeletedDatasets;
 
 			ModelBuilder.ReadOnlyTransaction(
 				delegate
 				{
 					result = ModelBuilder.InstanceConfigurations.Get<TransformerConfiguration>(
-						category, includeForDelted);
+						category, includeForDeleted);
 				});
 
 			return result;

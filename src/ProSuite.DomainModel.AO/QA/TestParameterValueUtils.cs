@@ -262,7 +262,7 @@ namespace ProSuite.DomainModel.AO.QA
 				Assert.True(modelsByWorkspaceId.TryGetValue(workspaceId, out Model model),
 				            "No matching model found for workspace id '{0}'", workspaceId);
 
-				return ModelElementUtils.GetDatasetFromStoredName(datasetName,
+				return DdxModelElementUtils.GetDatasetFromStoredName(datasetName,
 					model, ignoreUnknownDataset);
 			}
 
@@ -274,7 +274,7 @@ namespace ProSuite.DomainModel.AO.QA
 				if (modelsByWorkspaceId.TryGetValue(defaultModelId, out defaultModel))
 				{
 					// there is a default model
-					return ModelElementUtils.GetDatasetFromStoredName(datasetName,
+					return DdxModelElementUtils.GetDatasetFromStoredName(datasetName,
 						defaultModel,
 						ignoreUnknownDataset);
 				}

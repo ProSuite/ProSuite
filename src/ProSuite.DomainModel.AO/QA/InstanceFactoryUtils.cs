@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using System.Text;
 using ProSuite.Commons.Essentials.Assertions;
@@ -65,7 +64,8 @@ namespace ProSuite.DomainModel.AO.QA
 
 			if (factory != null)
 			{
-				InitializeParameterValues(factory, issueFilterConfig.ParameterValues);
+				InstanceConfigurationUtils.InitializeParameterValues(
+					factory, issueFilterConfig);
 			}
 
 			return factory;
@@ -92,33 +92,11 @@ namespace ProSuite.DomainModel.AO.QA
 
 			if (factory != null)
 			{
-				InitializeParameterValues(factory, transformerConfiguration.ParameterValues);
+				InstanceConfigurationUtils.InitializeParameterValues(
+					factory, transformerConfiguration);
 			}
 
 			return factory;
-		}
-
-		public static void InitializeParameterValues(
-			[NotNull] InstanceFactory factory,
-			[NotNull] IEnumerable<TestParameterValue> parameterValues)
-		{
-			Dictionary<string, TestParameter> parametersByName =
-				factory.Parameters.ToDictionary(testParameter => testParameter.Name);
-
-			foreach (TestParameterValue parameterValue in parameterValues)
-			{
-				if (parametersByName.TryGetValue(parameterValue.TestParameterName,
-				                                 out TestParameter testParameter))
-				{
-					parameterValue.DataType = testParameter.Type;
-				}
-				else
-				{
-					_msg.WarnFormat(
-						"Test parameter value {0}: No parameter found in {1}. The constructor Id might be incorrect.",
-						parameterValue.TestParameterName, factory);
-				}
-			}
 		}
 
 		[NotNull]

@@ -1,5 +1,6 @@
 using ProSuite.Commons.UI.WinForms.Controls;
 using ProSuite.DomainModel.AO.QA;
+using ProSuite.DomainModel.Core.QA;
 using ProSuite.UI.QA.Controls;
 
 namespace ProSuite.DdxEditor.Content.QA.QCon

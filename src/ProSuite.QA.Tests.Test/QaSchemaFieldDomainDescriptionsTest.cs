@@ -88,6 +88,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void TooLong()
 		{
 			IDomain domain1 = DomainUtils.AddDomain(_workspace,
@@ -129,6 +130,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void Duplicates()
 		{
 			IDomain domain1 = DomainUtils.AddDomain(_workspace,

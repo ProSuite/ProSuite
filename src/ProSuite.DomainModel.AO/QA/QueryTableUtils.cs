@@ -59,7 +59,7 @@ namespace ProSuite.DomainModel.AO.QA
 		{
 			// TODO REFACTORMODEL: what if the association is not in the primary dataset context (e.g. work unit), but from another model?
 
-			Association association = ModelElementUtils.GetAssociationFromStoredName(
+			Association association = DdxModelElementUtils.GetAssociationFromStoredName(
 				associationName, model, ignoreUnknownAssociation: true);
 
 			if (association == null && ! model.UseDefaultDatabaseOnlyForSchema)

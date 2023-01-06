@@ -4,7 +4,6 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DdxEditor.Content.Properties;
 using ProSuite.DdxEditor.Content.QA.InstanceDescriptors;
-using ProSuite.DdxEditor.Content.QA.QSpec;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Commands;
 using ProSuite.DdxEditor.Framework.Items;
@@ -26,7 +25,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 		}
 
 		public IssueFilterConfigurationsItem([NotNull] CoreDomainModelItemModelBuilder modelBuilder,
-		                                     [NotNull] IQualityConditionContainer container)
+		                                     [NotNull] IInstanceConfigurationContainer container)
 			: base(modelBuilder, "Issue Filter Configurations",
 			       "Configured filter algorithms to filter the issues resulting from a verified quality condition",
 			       container) { }
@@ -95,13 +94,13 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			DataQualityCategory category)
 		{
 			IList<IssueFilterConfiguration> result = null;
-			bool includeForDelted = ModelBuilder.IncludeQualityConditionsBasedOnDeletedDatasets;
+			bool includeForDeleted = ModelBuilder.IncludeQualityConditionsBasedOnDeletedDatasets;
 
 			ModelBuilder.ReadOnlyTransaction(
 				delegate
 				{
 					result = ModelBuilder.InstanceConfigurations.Get<IssueFilterConfiguration>(
-						category, includeForDelted);
+						category, includeForDeleted);
 				});
 
 			return result;

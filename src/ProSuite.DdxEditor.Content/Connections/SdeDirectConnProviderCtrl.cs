@@ -58,22 +58,7 @@ namespace ProSuite.DdxEditor.Content.Connections
 					       new DatabaseTypeItem
 					       {
 						       Value = DatabaseType.Oracle11,
-						       DisplayName = "Oracle 11 or 12"
-					       },
-					       new DatabaseTypeItem
-					       {
-						       Value = DatabaseType.Oracle10,
-						       DisplayName = "Oracle 10"
-					       },
-					       new DatabaseTypeItem
-					       {
-						       Value = DatabaseType.Oracle9,
-						       DisplayName = "Oracle 9"
-					       },
-					       new DatabaseTypeItem
-					       {
-						       Value = DatabaseType.Oracle,
-						       DisplayName = "Oracle 8 and older"
+						       DisplayName = "Oracle"
 					       }
 				       }, noSort: true)
 			       {

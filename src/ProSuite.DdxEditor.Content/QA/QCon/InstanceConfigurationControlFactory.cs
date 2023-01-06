@@ -33,6 +33,11 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 
 			control = new QualityConditionControl(tableStateQSpec, tableStateIssueFilter,
 			                                      blazorControl);
+
+			if (item.HideIssueFilters)
+			{
+				control.HideIssueFilterTab();
+			}
 #else
 			control =
 				new QualityConditionControl(tableStateQSpec, tableStateIssueFilter,

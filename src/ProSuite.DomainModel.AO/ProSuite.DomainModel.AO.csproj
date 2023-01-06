@@ -62,11 +62,6 @@
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
     </Compile>
-    <Compile Update="Schemas\Schema.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Schema.resx</DependentUpon>
-    </Compile>
   </ItemGroup>
 
   <ItemGroup>
@@ -82,14 +77,6 @@
 
   <ItemGroup>
     <None Include="QA\SpecificationReport\QualitySpecificationReport.cd" />
-    <Content Include="Schemas\ProSuite.QA.QualitySpecifications-3.0.xsd">
-      <SubType>Designer</SubType>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Schemas\ProSuite.QA.QualitySpecifications-2.0.xsd">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <SubType>Designer</SubType>
-    </Content>
   </ItemGroup>
 
   <ItemGroup>
@@ -97,11 +84,6 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>LocalizableStrings.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Update="Schemas\Schema.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <SubType>Designer</SubType>
-      <LastGenOutput>Schema.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
 </Project>

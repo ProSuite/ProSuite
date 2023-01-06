@@ -9,10 +9,10 @@ using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
 using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.QA;
-using ProSuite.DomainModel.AO.QA.Xml;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.Repositories;
+using ProSuite.DomainModel.Core.QA.Xml;
 using ProSuite.DomainServices.AO.QA.Standalone.XmlBased;
 using ProSuite.DomainServices.AO.QA.VerifiedDataModel;
 
@@ -47,13 +47,13 @@ namespace ProSuite.DomainServices.AO.QA
 		}
 
 		[NotNull]
-		public static List<DataSource> GetDataSources([NotNull] string dataQualityXml)
+		public static IList<DataSource> GetDataSources([NotNull] string dataQualityXml)
 		{
 			XmlDataQualityDocument document;
 			using (Stream baseStream = new MemoryStream(Encoding.UTF8.GetBytes(dataQualityXml)))
 			using (StreamReader xmlReader = new StreamReader(baseStream))
 			{
-				document = XmlDataQualityUtils.ReadXmlDocument(xmlReader,out _);
+				document = XmlDataQualityUtils.ReadXmlDocument(xmlReader, out _);
 			}
 
 			List<DataSource> dataSources = new List<DataSource>();
@@ -71,24 +71,6 @@ namespace ProSuite.DomainServices.AO.QA
 			}
 
 			return dataSources;
-		}
-
-		public static QualitySpecification CreateQualitySpecification(
-			[NotNull] string specificationName,
-			IList<XmlTestDescriptor> supportedDescriptors,
-			[NotNull] IList<SpecificationElement> specificationElements,
-			[NotNull] IEnumerable<DataSource> dataSources,
-			bool ignoreConditionsForUnknownDatasets)
-		{
-			XmlBasedQualitySpecificationFactory factory = CreateSpecificationFactory();
-
-			QualitySpecification result = factory.CreateQualitySpecification(
-				specificationName, supportedDescriptors, specificationElements, dataSources,
-				ignoreConditionsForUnknownDatasets);
-
-			result.Name = specificationName;
-
-			return result;
 		}
 
 		/// <summary>

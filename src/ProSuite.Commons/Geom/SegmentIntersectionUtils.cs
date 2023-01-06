@@ -420,8 +420,10 @@ namespace ProSuite.Commons.Geom
 				previous.LinearIntersectionInOppositeDirection =
 					current.LinearIntersectionInOppositeDirection;
 			}
-			else if (! MathUtils.AreEqual(previous.VirtualTargetVertex,
-			                              current.VirtualTargetVertex))
+
+			if (startIsZeroLength && endIsZeroLength &&
+			    ! MathUtils.AreEqual(previous.VirtualTargetVertex,
+			                         current.VirtualTargetVertex))
 			{
 				// Both intersections have zero length segments. Fall back, if possible:
 				bool oppositeDirection = previous.VirtualTargetVertex > current.VirtualTargetVertex;

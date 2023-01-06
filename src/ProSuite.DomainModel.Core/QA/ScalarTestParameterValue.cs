@@ -47,19 +47,17 @@ namespace ProSuite.DomainModel.Core.QA
 		public ScalarTestParameterValue([NotNull] TestParameter testParameter, object value)
 			: base(testParameter)
 		{
-			var stringValue = value as string;
-
 			// StringValue must be set based on the CURRENT culture, not the persisted culture
 			// Incorrect with german culture: StringValue = stringValue ?? GetStringValue(value);
 
-			if (stringValue == null)
+			if (value is string stringValue)
 			{
-				SetValue(value);
+				// format using current culture
+				StringValue = stringValue;
 			}
 			else
 			{
-				// format using current culture
-				SetStringValue(stringValue, CultureInfo.CurrentCulture);
+				SetValue(value);
 			}
 		}
 
@@ -94,6 +92,9 @@ namespace ProSuite.DomainModel.Core.QA
 			set { SetStringValue(value, CultureInfo.CurrentCulture); }
 		}
 
+		/// <summary>
+		/// Note: public for unit tests
+		/// </summary>
 		public string PersistedStringValue
 		{
 			get { return _stringValue; }
@@ -144,7 +145,7 @@ namespace ProSuite.DomainModel.Core.QA
 		}
 
 		/// <summary>
-		/// Attempts to get a displayable string for the current culture. If the the data type is
+		/// Attempts to get a displayable string for the current culture. If the data type is
 		/// not specified and the DataType property is not initialized and the data type cannot be
 		/// inferred from the persisted string value, the <see cref="PersistedStringValue"/> is
 		/// returned. 
@@ -184,6 +185,9 @@ namespace ProSuite.DomainModel.Core.QA
 			return GetFormattedStringValue(culture, dataType, allowResultCaching);
 		}
 
+		/// <summary>
+		/// Note: public for unit tests
+		/// </summary>
 		public void SetStringValue([CanBeNull] string value,
 		                           [CanBeNull] CultureInfo cultureInfo = null)
 		{
@@ -192,7 +196,7 @@ namespace ProSuite.DomainModel.Core.QA
 				cultureInfo = CultureInfo.CurrentCulture;
 			}
 
-			if (Equals(_formattedStringValue, value) &&
+			if (Equals(value, _formattedStringValue) &&
 			    Equals(cultureInfo, _formattedStringValueCulture))
 			{
 				return;
@@ -206,8 +210,7 @@ namespace ProSuite.DomainModel.Core.QA
 
 			object castValue;
 			if (! ConversionUtils.TryParseTo(DataType, value,
-			                                 _formattedStringValueCulture,
-			                                 out castValue))
+			                                 _formattedStringValueCulture, out castValue))
 			{
 				throw new ArgumentException(
 					$"Invalid parameter value for {TestParameterName}: {value}");
@@ -254,8 +257,8 @@ namespace ProSuite.DomainModel.Core.QA
 			return string.Format(_persistedCulture, _format, value);
 		}
 
-		private string GetFormattedStringValue(CultureInfo culture,
-		                                       Type dataType,
+		private string GetFormattedStringValue([NotNull] CultureInfo culture,
+		                                       [NotNull] Type dataType,
 		                                       bool allowResultCaching)
 		{
 			if (! allowResultCaching)
@@ -276,33 +279,32 @@ namespace ProSuite.DomainModel.Core.QA
 			return _formattedStringValue;
 		}
 
-		private bool TryDetermineTypeFromPersistedValue(out Type type)
+		[ContractAnnotation("=>true, type:notnull; =>false, type:canbenull")]
+		private bool TryDetermineTypeFromPersistedValue([CanBeNull] out Type type)
 		{
 			type = null;
+
 			if (string.IsNullOrEmpty(PersistedStringValue))
 			{
 				return false;
 			}
 
+			var culture = _persistedCulture;
+
 			if (bool.TryParse(PersistedStringValue, out bool _))
 			{
 				type = typeof(bool);
 			}
-
-			var culture = _persistedCulture;
-
-			if (int.TryParse(PersistedStringValue, NumberStyles.Any, culture, out int _))
+			else if (int.TryParse(PersistedStringValue, NumberStyles.Any, culture, out int _))
 			{
 				type = typeof(int);
 			}
-
-			if (double.TryParse(PersistedStringValue, NumberStyles.Any, culture, out double _))
+			else if (double.TryParse(PersistedStringValue, NumberStyles.Any, culture, out double _))
 			{
 				type = typeof(double);
 			}
-
-			if (DateTime.TryParse(PersistedStringValue, culture,
-			                      DateTimeStyles.None, out DateTime _))
+			else if (DateTime.TryParse(PersistedStringValue, culture,
+			                           DateTimeStyles.None, out DateTime _))
 			{
 				type = typeof(DateTime);
 			}

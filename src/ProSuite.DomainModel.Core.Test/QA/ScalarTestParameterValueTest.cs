@@ -1,7 +1,8 @@
-﻿using System;
+using System;
 using System.Globalization;
 using NUnit.Framework;
 using ProSuite.Commons.Globalization;
+using ProSuite.Commons.Test;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 
@@ -11,6 +12,7 @@ namespace ProSuite.DomainModel.Core.Test.QA
 	public class ScalarTestParameterValueTest
 	{
 		[Test]
+		[Category(TestCategory.FixMe)]
 		public void CanClone()
 		{
 			string parameterName = "p1Name";

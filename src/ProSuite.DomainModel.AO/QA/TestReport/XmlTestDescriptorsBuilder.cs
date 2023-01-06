@@ -4,9 +4,9 @@ using System.IO;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Xml;
-using ProSuite.DomainModel.AO.QA.Xml;
 using ProSuite.DomainModel.Core;
 using ProSuite.DomainModel.Core.QA;
+using ProSuite.DomainModel.Core.QA.Xml;
 using ProSuite.QA.Core.Reports;
 
 namespace ProSuite.DomainModel.AO.QA.TestReport

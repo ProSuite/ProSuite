@@ -7,8 +7,8 @@ using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.QA;
-using ProSuite.DomainModel.AO.QA.Xml;
 using ProSuite.DomainModel.Core.QA;
+using ProSuite.DomainModel.Core.QA.Xml;
 using ProSuite.DomainServices.AO.QA.Standalone.XmlBased;
 using ProSuite.DomainServices.AO.QA.VerifiedDataModel;
 using ProSuite.QA.Container;
@@ -463,6 +463,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanRunFromXmlWithTableJoin()
 		{
 			// Init

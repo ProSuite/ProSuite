@@ -22,5 +22,10 @@ namespace ProSuite.Commons.Orm.NHibernate
 		/// various DDX environments.
 		/// </summary>
 		string DdxEnvironmentName { get; }
+
+		bool IsSQLite { get; }
+		bool IsPostgreSQL { get; }
+		bool IsSqlServer { get; }
+		bool IsOracle { get; }
 	}
 }

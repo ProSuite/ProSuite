@@ -11,6 +11,7 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.Text;
 
 namespace ProSuite.Commons.AO.Geodatabase
 {
@@ -156,7 +157,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			{
 				IReadOnlyRow leftRow = GeometryEndClass.GetRow(id);
 
-				return GetJoinedRows(new List<IReadOnlyRow> {leftRow}).FirstOrDefault();
+				return GetJoinedRows(new List<IReadOnlyRow> { leftRow }).FirstOrDefault();
 			}
 
 			if (ObjectIdSource == JoinSourceTable.Right)
@@ -165,7 +166,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 				string otherKeyValue = GetNonNullKeyValue(rightRow, OtherClassKeyFieldIndex);
 
-				var otherKeyList = new List<string> {otherKeyValue};
+				var otherKeyList = new List<string> { otherKeyValue };
 				IList<IReadOnlyRow> resultGeoFeatures = FetchRowsByKey(
 						GeometryEndClass, otherKeyList, GeometryClassKeyField, false)
 					.ToList();
@@ -600,7 +601,17 @@ namespace ProSuite.Commons.AO.Geodatabase
 						$"No key value in {GdbObjectUtils.ToString(row)}");
 				}
 
-				otherRows.Add(otherRowKey, row);
+				try
+				{
+					otherRows.Add(otherRowKey, row);
+				}
+				catch (ArgumentException e)
+				{
+					throw new ArgumentException(
+						$"The the key value {otherRowKey} in row {GdbObjectUtils.ToString(row)} is not unique. " +
+						$"The row {GdbObjectUtils.ToString(otherRows[otherRowKey])} has the same value",
+						e);
+				}
 			}
 
 			return otherRows;
@@ -656,10 +667,16 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 
 			// Get the non-feature-rows:
-			foreach (KeyValuePair<string, IReadOnlyRow> keyValuePair in GetOtherRowsByKey(
-				         fClassKeys))
+			foreach (IReadOnlyRow row in GdbQueryUtils.GetRowsInList(
+				         OtherEndClass, OtherClassKeyField, fClassKeys, false))
 			{
-				string otherRowKey = keyValuePair.Key;
+				string otherRowKey = GetKeyValue(row, OtherClassKeyFieldIndex);
+
+				if (otherRowKey == null)
+				{
+					throw new InvalidDataException(
+						$"No key value in {GdbObjectUtils.ToString(row)}");
+				}
 
 				if (! result.TryGetValue(otherRowKey, out IList<IReadOnlyRow> otherRowList))
 				{
@@ -667,8 +684,21 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 					result.Add(otherRowKey, otherRowList);
 				}
+				else
+				{
+					_msg.VerboseDebug(
+						() =>
+							$"The the key value {otherRowKey} in row {GdbObjectUtils.ToString(row)} is not " +
+							$"unique. The rows {StringUtils.Concatenate(otherRowList, GdbObjectUtils.ToString, ", ")} " +
+							"have the same value.");
 
-				otherRowList.Add(keyValuePair.Value);
+					// TODO: Set property that declares the OID field not unique and use virtual composite key.
+					_msg.WarnFormat(
+						"{0}: Multiple right-table-rows reference the same left-table-row. The OID will be non-unique!",
+						_joinedSchema.Name);
+				}
+
+				otherRowList.Add(row);
 			}
 
 			return result;
@@ -758,7 +788,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			// The primary key of the geo table:
 			string bridgeGeoKeyValue = GetNonNullKeyValue(associationRow, bridgeTableGeoKeyIdx);
 
-			var geoKeyList = new List<string> {bridgeGeoKeyValue};
+			var geoKeyList = new List<string> { bridgeGeoKeyValue };
 
 			IList<IReadOnlyRow> geoFeatures = FetchRowsByKey(
 					GeometryEndClass, geoKeyList, GeometryClassKeyField, false)
@@ -766,7 +796,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			Assert.AreEqual(1, geoFeatures.Count, "Unexpected number of left table features");
 
-			var otherKeyList = new List<string> {bridgeOtherKeyValue};
+			var otherKeyList = new List<string> { bridgeOtherKeyValue };
 
 			IList<IReadOnlyRow> otherFeatures = FetchRowsByKey(
 					OtherEndClass, otherKeyList, OtherClassKeyField, false)

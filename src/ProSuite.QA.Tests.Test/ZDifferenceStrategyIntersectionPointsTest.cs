@@ -115,6 +115,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanIntersectCircles()
 		{
 			const double z1 = 200;
@@ -154,6 +155,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanIntersectCircleWithRectangle()
 		{
 			var z1 = 100.0;

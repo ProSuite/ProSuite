@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using NHibernate.Cfg;
+using NHibernate.Dialect;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.Orm.NHibernate
@@ -12,6 +13,8 @@ namespace ProSuite.Commons.Orm.NHibernate
 	public abstract class NHConfigurationBuilder : INHConfigurationBuilder
 	{
 		private readonly IMappingConfigurator _mappingConfigurator;
+
+		private global::NHibernate.Dialect.Dialect _dialect;
 
 		protected NHConfigurationBuilder(
 			string defaultSchema,
@@ -43,10 +46,16 @@ namespace ProSuite.Commons.Orm.NHibernate
 			"NHibernate.Caches.SysCache.SysCacheProvider, NHibernate.Caches.SysCache";
 
 		public bool DatabaseSupportsSequence =>
-			// NOTE: Currently SQLite is just used for unit testing.
 			// TODO: Also check if the sequence exists. 
-			! Dialect.Equals("NHibernate.Dialect.SQLiteDialect",
-			                 StringComparison.InvariantCultureIgnoreCase);
+			! IsSQLite;
+
+		public bool IsSQLite => _dialect is SQLiteDialect;
+
+		public bool IsPostgreSQL => Dialect.Contains("PosgreSQL");
+
+		public bool IsSqlServer => Dialect.Contains("MsSql");
+
+		public bool IsOracle => Dialect.Contains("Oracle");
 
 		public string DdxEnvironmentName { get; protected set; }
 
@@ -59,6 +68,11 @@ namespace ProSuite.Commons.Orm.NHibernate
 			Dictionary<string, string> props = GetDefaultNHibConfiguration();
 
 			AddCustomConfigurationProperties(props);
+
+			// Allow for schema-version specific mapping:
+			DetermineDdxVersion(props);
+
+			_dialect = global::NHibernate.Dialect.Dialect.GetDialect(props);
 
 			Configuration cfg = new Configuration().SetProperties(props);
 
@@ -85,6 +99,16 @@ namespace ProSuite.Commons.Orm.NHibernate
 		protected abstract void AddCustomConfigurationProperties(Dictionary<string, string> props);
 
 		protected virtual void AddCustomConfiguration(Configuration cfg) { }
+
+		/// <summary>
+		/// Allows implementors to determine the DDX version and initialize nh-mapping infrastructure.
+		/// </summary>
+		/// <param name="props"></param>
+		/// <returns></returns>
+		protected virtual Version DetermineDdxVersion(Dictionary<string, string> props)
+		{
+			return null;
+		}
 
 		private Dictionary<string, string> GetDefaultNHibConfiguration()
 		{

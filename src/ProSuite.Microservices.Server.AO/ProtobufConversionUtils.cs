@@ -12,7 +12,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Gdb;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
-using ProSuite.DomainModel.AO.QA.Xml;
+using ProSuite.DomainModel.Core.QA.Xml;
 using ProSuite.DomainServices.AO.QA.Standalone.XmlBased;
 using ProSuite.Microservices.AO;
 using ProSuite.Microservices.Definitions.QA;
