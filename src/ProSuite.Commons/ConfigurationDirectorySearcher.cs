@@ -155,6 +155,9 @@ namespace ProSuite.Commons
 				sb.AppendLine();
 			}
 
+			sb.AppendLine();
+			sb.AppendLine(@"See examples in the installation directory under config\examples");
+
 			return new FileNotFoundException(sb.ToString());
 		}
 
