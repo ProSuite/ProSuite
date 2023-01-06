@@ -223,7 +223,7 @@ namespace ProSuite.Commons.AO.Geometry.CreateFootprint
 			Assert.False(multiPatch.IsEmpty,
 			             "The source geometry is empty. Unable to calculate footprint.");
 
-			IPolygon footprint = GetFootprint(multiPatch);
+			IPolygon footprint = GetFootprintAO(multiPatch);
 
 			IPolygon result = Math.Abs(bufferDistance) < double.Epsilon
 				                  ? footprint
@@ -256,7 +256,35 @@ namespace ProSuite.Commons.AO.Geometry.CreateFootprint
 			return result;
 		}
 
-		public static IPolygon GetFootprint([NotNull] IMultiPatch multiPatch)
+		public static IPolygon GetFootprint([NotNull] IMultiPatch multipatch)
+		{
+			IPolygon result = null;
+			if (IntersectionUtils.UseCustomIntersect)
+			{
+				result = TryGetGeomFootprint(multipatch, out _);
+			}
+
+			if (result == null)
+			{
+				result = GetFootprintAO(multipatch);
+			}
+
+			return result;
+		}
+
+		private static double GetXyTolerance(IGeometry geometry)
+		{
+			double xyTolerance = GeometryUtils.GetXyTolerance(geometry);
+
+			// Prevent bogus tolerance (everything smaller the resolution) that
+			// increases probability of 'Intersection seen twice error'
+			// But take 2 * the resolution to be consistent with AO
+			double minimumTolerance = 2 * GeometryUtils.GetXyResolution(geometry);
+
+			return Math.Max(xyTolerance, minimumTolerance);
+		}
+
+		public static IPolygon GetFootprintAO([NotNull] IMultiPatch multiPatch)
 		{
 			Assert.ArgumentNotNull(multiPatch, nameof(multiPatch));
 
@@ -271,13 +299,13 @@ namespace ProSuite.Commons.AO.Geometry.CreateFootprint
 
 		[CanBeNull]
 		public static IPolygon TryGetGeomFootprint([NotNull] IMultiPatch multiPatch,
-		                                           double xyTolerance,
 		                                           [CanBeNull] out IPolyline verticalRings)
 		{
 			Assert.ArgumentNotNull(multiPatch, nameof(multiPatch));
 
-			verticalRings = null;
+			double xyTolerance = GetXyTolerance(multiPatch);
 
+			verticalRings = null;
 			try
 			{
 				IPolygon footprintPoly =
@@ -303,13 +331,47 @@ namespace ProSuite.Commons.AO.Geometry.CreateFootprint
 			Polyhedron polyhedron =
 				GeometryConversionUtils.CreatePolyhedron(multiPatch, false, true);
 
-			MultiLinestring footprint =
-				polyhedron.GetXYFootprint(xyTolerance, out List<Linestring> verticalRings);
+			MultiLinestring footprint = null;
+			List<Linestring> verticalRings = null;
+			try
+			{
+				footprint = polyhedron.GetXYFootprint(xyTolerance, out verticalRings);
+			}
+			catch (Exception)
+			{
+				//// TODO: This is slow and only works in 50% because it is not enough
+				//// (specifically, snap intersection points too but most likely a full cracking
+				//// would probably be appropriate.
+				//// Same as AO:
+				//double enlargedTolerance = 2 * Math.Sqrt(2) * xyTolerance;
+				//IList<KeyValuePair<IPnt, List<Pnt3D>>> clusters =
+				//	GeomTopoOpUtils.Cluster(polyhedron.GetPoints().ToList(), p => p,
+				//	                        enlargedTolerance);
+
+				//var actualClusters = clusters
+				//                     .Where(
+				//	                     c => c.Value.Any(p => ! p.EqualsXY(c.Key, double.Epsilon)))
+				//                     .ToList();
+
+				//foreach (KeyValuePair<IPnt, List<Pnt3D>> cluster in actualClusters)
+				//{
+				//	foreach (Pnt3D pnt3D in cluster.Value)
+				//	{
+				//		pnt3D.X = cluster.Key.X;
+				//		pnt3D.Y = cluster.Key.Y;
+				//	}
+				//}
+
+				//// try again:
+				//footprint = polyhedron.GetXYFootprint(xyTolerance, out verticalRings);
+
+				throw;
+			}
 
 			IPolygon footprintPoly =
 				GeometryConversionUtils.CreatePolygon(multiPatch, footprint.GetLinestrings());
 
-			if (verticalRings != null)
+			if (verticalRings != null && verticalRings.Count > 0)
 			{
 				tooSmallRings =
 					GeometryConversionUtils.CreatePolyline(verticalRings,

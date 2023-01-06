@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
-using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Geometry.CreateFootprint;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Core.TestCategories;
@@ -23,7 +22,7 @@ namespace ProSuite.QA.Tests.Transformers
 		protected override IEnumerable<GdbFeature> Transform(IGeometry source,
 		                                                     int? sourceOid)
 		{
-			IMultiPatch patch = (IMultiPatch) source;
+			IMultiPatch multipatch = (IMultiPatch) source;
 
 			TransformedFeatureClass transformedClass = GetTransformed();
 
@@ -31,17 +30,7 @@ namespace ProSuite.QA.Tests.Transformers
 				                     ? CreateFeature()
 				                     : (GdbFeature) transformedClass.CreateObject(sourceOid.Value);
 
-			IPolygon result = null;
-			if (IntersectionUtils.UseCustomIntersect)
-			{
-				double xyTolerance = GeometryUtils.GetXyTolerance(patch);
-				result = CreateFootprintUtils.TryGetGeomFootprint(patch, xyTolerance, out _);
-			}
-
-			if (result == null)
-			{
-				result = CreateFootprintUtils.GetFootprint(patch);
-			}
+			IPolygon result = CreateFootprintUtils.GetFootprint(multipatch);
 
 			feature.Shape = result;
 
