@@ -67,9 +67,8 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 		void IInstanceConfigurationObserver.OnInstanceDescriptorChanged()
 		{
 			InstanceConfiguration instanceConfig = Assert.NotNull(_item.GetEntity());
-			InstanceFactory instanceFactory = InstanceFactoryUtils.CreateFactory(instanceConfig);
-
-			if (TestParameterValueUtils.SyncParameterValues(instanceConfig, instanceFactory))
+			
+			if (TestParameterValueUtils.SyncParameterValues(instanceConfig))
 			{
 				InitParameterData(instanceConfig);
 			}
@@ -133,11 +132,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 
 			try
 			{
-				InstanceConfiguration instanceConfig = Assert.NotNull(_item.GetEntity());
-				InstanceFactory instanceFactory =
-					InstanceFactoryUtils.CreateFactory(instanceConfig);
-
-				TestParameterValueUtils.SyncParameterValues(instanceConfig, instanceFactory);
+				TestParameterValueUtils.SyncParameterValues(instanceConfiguration);
 			}
 			catch (Exception e)
 			{
@@ -260,9 +255,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 
 			_view.SetParameterDescriptions(testParams);
 
-			InstanceDescriptor instanceDescriptor = _item.GetInstanceDescriptor();
-
-			_view.InstanceDescriptorLinkEnabled = instanceDescriptor != null;
+			_view.InstanceDescriptorLinkEnabled = instanceConfig.InstanceDescriptor != null;
 		}
 	}
 }

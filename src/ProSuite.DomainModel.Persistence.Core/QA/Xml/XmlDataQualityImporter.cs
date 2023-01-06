@@ -266,13 +266,6 @@ namespace ProSuite.DomainModel.Persistence.Core.QA.Xml
 				                     availableCategories,
 				                     ignoreConditionsForUnknownDatasets);
 
-			//IDictionary<string, QualityCondition> availableConditionsByName =
-			//	ImportQualityConditions(documentCache.QualityConditionsWithCategories,
-			//	                        descriptorsByName,
-			//	                        modelsByWorkspaceId,
-			//	                        availableCategories,
-			//	                        ignoreConditionsForUnknownDatasets);
-
 			IDictionary<string, QualityCondition> availableConditionsByName =
 				new Dictionary<string, QualityCondition>();
 			foreach (KeyValuePair<string, InstanceConfiguration> pair in
@@ -874,7 +867,6 @@ namespace ProSuite.DomainModel.Persistence.Core.QA.Xml
 					configsByName.Add(xmlInstanceConfiguration.Name, config);
 				}
 
-				// TODO clear only when necessary!? e.g. using AreParameterValuesEqual
 				config.ClearParameterValues();
 
 				IInstanceInfo instanceInfo = null;
@@ -950,7 +942,6 @@ namespace ProSuite.DomainModel.Persistence.Core.QA.Xml
 						if (parameterValue == null)
 						{
 							// TODO handle the ignoreConditionsForUnknownDatasets bool
-
 							//datasetSettings.UnknownDatasetParameters.Add(datasetValue);
 						}
 					}
@@ -1023,132 +1014,6 @@ namespace ProSuite.DomainModel.Persistence.Core.QA.Xml
 			}
 
 			return result;
-		}
-
-		#endregion
-
-		#region <QualityCondition>
-
-		[NotNull]
-		private IDictionary<string, QualityCondition> ImportQualityConditions(
-			[NotNull] IEnumerable<KeyValuePair<XmlQualityCondition, XmlDataQualityCategory>>
-				conditionsWithCategory,
-			[NotNull] IDictionary<string, InstanceDescriptor> descriptorsByName,
-			[NotNull] IDictionary<string, DdxModel> modelsByWorkspaceId,
-			[NotNull] IDictionary<XmlDataQualityCategory, DataQualityCategory> availableCategories,
-			bool ignoreConditionsForUnknownDatasets)
-		{
-			Assert.ArgumentNotNull(descriptorsByName, nameof(descriptorsByName));
-
-			IList<QualityCondition> qualityConditions =
-				InstanceConfigurations.GetInstanceConfigurations<QualityCondition>();
-
-			IDictionary<string, QualityCondition> conditionsByName =
-				GetExistingConfigurationsByEscapedName(qualityConditions);
-			IDictionary<string, QualityCondition> conditionsByUuid =
-				qualityConditions.ToDictionary(qcon => qcon.Uuid, StringComparer.OrdinalIgnoreCase);
-
-			foreach (
-				KeyValuePair<XmlQualityCondition, XmlDataQualityCategory> pair in
-				conditionsWithCategory)
-			{
-				XmlQualityCondition xmlQualityCondition = pair.Key;
-				XmlDataQualityCategory xmlCategory = pair.Value;
-
-				string testDescriptorName = xmlQualityCondition.TestDescriptorName;
-				Assert.True(StringUtils.IsNotEmpty(testDescriptorName), "test descriptor name");
-
-				// NOTE: The previously persisted TestDescriptor must be referenced to avoid TransientObjectException
-				// ("object references an unsaved transient instance")
-				if (! descriptorsByName.TryGetValue(testDescriptorName.Trim(),
-				                                    out InstanceDescriptor instanceDescriptor))
-				{
-					Assert.Fail(
-						"Test descriptor '{0}' referenced in quality condition '{1}' does not exist",
-						testDescriptorName, xmlQualityCondition.Name);
-				}
-
-				var testDescriptor = instanceDescriptor as TestDescriptor;
-				if (testDescriptor == null)
-				{
-					Assert.Fail(
-						"Descriptor '{0}' referenced in quality condition '{1}' is not a Test descriptor",
-						testDescriptorName, xmlQualityCondition.Name);
-				}
-
-				DataQualityCategory category = xmlCategory == null
-					                               ? null
-					                               : availableCategories[xmlCategory];
-
-				QualityCondition imported = TryCreateQualityCondition(
-					xmlQualityCondition, testDescriptor, category,
-					modelsByWorkspaceId, ignoreConditionsForUnknownDatasets);
-
-				if (imported == null)
-				{
-					continue;
-				}
-
-				// make sure that all quality conditions exist
-				QualityCondition existing = GetMatchingConfiguration(xmlQualityCondition,
-					conditionsByName, conditionsByUuid);
-
-				if (existing != null)
-				{
-					_msg.InfoFormat("Updating existing quality condition '{0}'", existing.Name);
-					XmlDataQualityUtils.TransferProperties(imported, existing);
-
-					QualityCondition existingForName;
-					if (conditionsByName.TryGetValue(imported.Name, out existingForName))
-					{
-						// There exists an existing condition for the new name 
-
-						// Fail if it is not the same instance as the matching existing condition
-						// (this can be the case when the match is made by the Uuid, and the xml condition 
-						// has the same name as an existing condition with a different Uuid)
-						Assert.True(ReferenceEquals(existingForName, existing),
-						            "Quality condition name '{0}' for UUID {1} in the xml document is equal " +
-						            "to the name of an existing quality condition with a different UUID ({2}). " +
-						            "Unable to import document (duplicate quality condition names would result)",
-						            imported.Name, existing.Uuid, existingForName.Uuid);
-					}
-					else
-					{
-						// there exists no existing condition with the name from the xml document
-						conditionsByName.Add(imported.Name, existing);
-					}
-				}
-				else
-				{
-					_msg.InfoFormat("Adding new quality condition '{0}'", imported.Name);
-					InstanceConfigurations.Save(imported);
-
-					conditionsByName.Add(imported.Name, imported);
-				}
-			}
-
-			return conditionsByName;
-		}
-
-		/// <summary>
-		/// Creates a new quality condition that references the specified, persistent
-		/// testDescriptor.
-		/// </summary>
-		/// <param name="xmlQualityCondition">The XML definition of the condition</param>
-		/// <param name="testDescriptor">The previously saved descriptor.</param>
-		/// <param name="category"></param>
-		/// <param name="modelsByWorkspaceId"></param>
-		/// <param name="ignoreConditionsForUnknownDatasets"></param>
-		/// <returns></returns>
-		[CanBeNull]
-		private QualityCondition TryCreateQualityCondition(
-			[NotNull] XmlQualityCondition xmlQualityCondition,
-			[NotNull] TestDescriptor testDescriptor,
-			[CanBeNull] DataQualityCategory category,
-			[NotNull] IDictionary<string, DdxModel> modelsByWorkspaceId,
-			bool ignoreConditionsForUnknownDatasets)
-		{
-			throw new NotImplementedException();
 		}
 
 		[NotNull]

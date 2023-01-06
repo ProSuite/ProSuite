@@ -77,23 +77,6 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 			}
 		}
 
-		[NotNull]
-		public static XmlQualityCondition DeserializeCondition([NotNull] TextReader xml)
-		{
-			Assert.ArgumentNotNull(xml, nameof(xml));
-
-			string schema = Schema.ProSuite_QA_QualitySpecifications_2_0;
-
-			try
-			{
-				return XmlUtils.Deserialize<XmlQualityCondition>(xml, schema);
-			}
-			catch (Exception e)
-			{
-				throw new XmlDeserializationException($"Error deserializing xml: {e.Message}", e);
-			}
-		}
-
 		private static string GetSchema(StreamReader xml, out QaSpecVersion version)
 		{
 			string schema = null;
@@ -755,28 +738,6 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 			}
 		}
 
-		[NotNull]
-		public static QualityCondition PrepareInstanceConfiguration(
-			[NotNull] XmlQualityCondition xmlQualityCondition,
-			[NotNull] IDictionary<string, TestDescriptor> testDescriptorsByName)
-		{
-			string testDescriptorName = xmlQualityCondition.TestDescriptorName;
-			Assert.True(StringUtils.IsNotEmpty(testDescriptorName), "test descriptor name");
-
-			TestDescriptor testDescriptor;
-			if (! testDescriptorsByName.TryGetValue(testDescriptorName.Trim(),
-			                                        out testDescriptor))
-			{
-				Assert.Fail(
-					"Test descriptor '{0}' referenced in quality condition '{1}' does not exist", // TODO '... quality condition ...' correct?
-					testDescriptorName, xmlQualityCondition.Name);
-			}
-
-			var result = new QualityCondition(xmlQualityCondition.Name, testDescriptor);
-
-			return result;
-		}
-
 		[CanBeNull]
 		public static QualityCondition CreateQualityCondition(
 			[NotNull] XmlQualityCondition xmlQualityCondition,
@@ -800,97 +761,6 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 
 			return result;
 		}
-
-		//[CanBeNull]
-		//public static QualityCondition CreateQualityConditionLegacy(
-		//	[NotNull] XmlQualityCondition xmlQualityCondition,
-		//	[NotNull] TestDescriptor testDescriptor,
-		//	[NotNull] IDictionary<string, Model> modelsByWorkspaceId,
-		//	[NotNull] Func<string, IList<Dataset>> getDatasetsByName,
-		//	[CanBeNull] DataQualityCategory category,
-		//	bool ignoreForUnknownDatasets,
-		//	out ICollection<DatasetTestParameterRecord> unknownDatasetParameters)
-		//{
-		//	Assert.ArgumentNotNull(xmlQualityCondition, nameof(xmlQualityCondition));
-		//	Assert.ArgumentNotNull(testDescriptor, nameof(testDescriptor));
-		//	Assert.ArgumentNotNull(modelsByWorkspaceId, nameof(modelsByWorkspaceId));
-		//	Assert.ArgumentNotNull(getDatasetsByName, nameof(getDatasetsByName));
-
-		//	unknownDatasetParameters = new List<DatasetTestParameterRecord>();
-
-		//	TestFactory testFactory =
-		//		Assert.NotNull(TestFactoryUtils.GetTestFactory(testDescriptor));
-
-		//	Dictionary<string, TestParameter> testParametersByName =
-		//		testFactory.Parameters.ToDictionary(
-		//			parameter => parameter.Name,
-		//			StringComparer.OrdinalIgnoreCase);
-
-		//	var result = new QualityCondition(xmlQualityCondition.Name, testDescriptor);
-
-		//	UpdateQualityCondition(result, xmlQualityCondition, category);
-
-		//	foreach (XmlTestParameterValue xmlTestParameterValue in
-		//	         xmlQualityCondition.EnumParameterValues(ignoreEmptyValues: true))
-		//	{
-		//		TestParameter testParameter;
-		//		if (! testParametersByName.TryGetValue(xmlTestParameterValue.TestParameterName,
-		//		                                       out testParameter))
-		//		{
-		//			throw new InvalidConfigurationException(
-		//				string.Format(
-		//					"The name '{0}' as a test parameter in quality condition '{1}' " +
-		//					"does not match test descriptor.",
-		//					xmlTestParameterValue.TestParameterName,
-		//					xmlQualityCondition.Name));
-		//		}
-
-		//		TestParameterValue parameterValue;
-
-		//		var datasetValue = xmlTestParameterValue as XmlDatasetTestParameterValue;
-		//		if (datasetValue != null)
-		//		{
-		//			parameterValue = CreateDatasetTestParameterValue(
-		//				testParameter, datasetValue,
-		//				Assert.NotNullOrEmpty(xmlQualityCondition.Name),
-		//				modelsByWorkspaceId, getDatasetsByName, ignoreForUnknownDatasets);
-
-		//			if (parameterValue == null)
-		//			{
-		//				unknownDatasetParameters.Add(
-		//					new DatasetTestParameterRecord(datasetValue.Value,
-		//					                               datasetValue.WorkspaceId));
-		//			}
-		//		}
-		//		else
-		//		{
-		//			var scalarValue = xmlTestParameterValue as XmlScalarTestParameterValue;
-		//			if (scalarValue != null)
-		//			{
-		//				parameterValue = CreateScalarTestParameterValue(testParameter, scalarValue);
-		//			}
-		//			else
-		//			{
-		//				throw new InvalidProgramException("Unhandled TestParameterValue " +
-		//				                                  xmlTestParameterValue.TestParameterName);
-		//			}
-		//		}
-
-		//		if (parameterValue != null)
-		//		{
-		//			result.AddParameterValue(parameterValue);
-		//		}
-		//	}
-
-		//	if (unknownDatasetParameters.Count > 0)
-		//	{
-		//		Assert.True(ignoreForUnknownDatasets, "ignoreForUnknownDatasets");
-
-		//		return null;
-		//	}
-
-		//	return result;
-		//}
 
 		public static void UpdateQualityCondition([NotNull] QualityCondition qualityCondition,
 		                                          [NotNull] XmlQualityCondition xmlCondition,
@@ -1238,41 +1108,6 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 			{
 				parentCategory.AddSubCategory(category);
 			}
-		}
-
-		public static void TransferProperties([NotNull] QualityCondition from,
-		                                      [NotNull] QualityCondition to)
-		{
-			Assert.ArgumentNotNull(from, nameof(from));
-			Assert.ArgumentNotNull(to, nameof(to));
-
-			to.Name = from.Name;
-			to.TestDescriptor = from.TestDescriptor;
-
-			to.AllowErrorsOverride = from.AllowErrorsOverride;
-			to.StopOnErrorOverride = from.StopOnErrorOverride;
-
-			to.NeverFilterTableRowsUsingRelatedGeometry =
-				from.NeverFilterTableRowsUsingRelatedGeometry;
-			to.NeverStoreRelatedGeometryForTableRowIssues =
-				from.NeverStoreRelatedGeometryForTableRowIssues;
-
-			to.Category = from.Category;
-
-			if (! AreParameterValuesEqual(to.ParameterValues, from.ParameterValues))
-			{
-				to.ClearParameterValues();
-				foreach (TestParameterValue value in from.ParameterValues)
-				{
-					to.AddParameterValue(value);
-				}
-			}
-
-			// TODO consider adding option to not overwrite if description in xml is empty
-			to.Description = from.Description;
-			to.Url = from.Url;
-
-			TransferMetadata(from, to);
 		}
 
 		[NotNull]
@@ -1626,41 +1461,6 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 			}
 
 			return result;
-		}
-
-		private static bool AreParameterValuesEqual(
-			[CanBeNull] IList<TestParameterValue> list1,
-			[CanBeNull] IList<TestParameterValue> list2)
-		{
-			if ((list1 == null) != (list2 == null))
-			{
-				return false;
-			}
-
-			if (list1 == null)
-			{
-				Assert.Null(list2, "list1 is null but list2 isn't");
-				return true;
-			}
-
-			int list1Count = list1.Count;
-			if (list1Count != list2.Count)
-			{
-				return false;
-			}
-
-			for (var i = 0; i < list1Count; i++)
-			{
-				TestParameterValue value1 = list1[i];
-				TestParameterValue value2 = list2[i];
-
-				if (value1.Equals(value2) == false)
-				{
-					return false;
-				}
-			}
-
-			return true;
 		}
 
 		/// <summary>
