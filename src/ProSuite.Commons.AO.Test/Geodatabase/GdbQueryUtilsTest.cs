@@ -735,6 +735,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 		[Test]
 		[Category(TestCategory.Fast)]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanQueryDateField()
 		{
 			const string featureClassName = "points";

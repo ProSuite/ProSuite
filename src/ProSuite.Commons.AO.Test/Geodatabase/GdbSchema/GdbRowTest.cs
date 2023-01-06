@@ -64,6 +64,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase.GdbSchema
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.Performance)]
 		public void CreateFeaturePerformance()
 		{
 			// NOTE regarding PropertySetValueList:
@@ -113,6 +114,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase.GdbSchema
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.Performance)]
 		public void CreateFeatureAndGetShapePerformance()
 		{
 			// This unit test shows that getting the object from the property set is
@@ -170,6 +172,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase.GdbSchema
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.Performance)]
 		public void CanRecycleRow()
 		{
 			GdbFeatureClass schema = CreateSchema();

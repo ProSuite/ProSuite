@@ -1,8 +1,10 @@
 using System.Collections.Generic;
+using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.Test;
@@ -97,6 +99,201 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				var runner = new QaContainerTestRunner(1000, test);
 				runner.Execute();
 				Assert.AreEqual(1, runner.Errors.Count);
+
+				// Check involved rows:
+				QaError error = runner.Errors[0];
+
+				// Check involved rows. They must be from a 'real' feature class, not form a transformed feature class.
+				List<string> realTableNames = new List<string> { "lineFc", "polyFc" };
+				CheckInvolvedRows(error.InvolvedRows, 2, realTableNames);
+			}
+		}
+
+		[Test]
+		public void CanInnerJoinManyToOne()
+		{
+			IFeatureWorkspace ws =
+				TestWorkspaceUtils.CreateInMemoryWorkspace("TrTableJoinInMemory");
+
+			// lineFc ist the right table, containing the unique key
+			IFeatureClass lineFc =
+				CreateFeatureClass(
+					ws, "lineFc", esriGeometryType.esriGeometryPolyline,
+					new[] { FieldUtils.CreateIntegerField("Nr_Line") });
+			IFeatureClass polyFc =
+				CreateFeatureClass(
+					ws, "polyFc", esriGeometryType.esriGeometryPolygon,
+					new[] { FieldUtils.CreateIntegerField("Nr_Poly") });
+			{
+				IFeature f = lineFc.CreateFeature();
+				f.Value[1] = 12;
+				f.Shape = CurveConstruction.StartLine(0, 0).LineTo(69.5, 69.5).Curve;
+				f.Store();
+			}
+			{
+				IFeature f = lineFc.CreateFeature();
+				f.Value[1] = 14;
+				f.Shape = CurveConstruction.StartLine(60, 40).LineTo(60, 80).Curve;
+				f.Store();
+			}
+
+			// polyFc is the left table, containing several keys with value 12
+			{
+				IFeature f = polyFc.CreateFeature();
+				f.Value[1] = 12;
+				f.Shape = CurveConstruction.StartPoly(0, 0).LineTo(20, 50).LineTo(40, 50)
+				                           .LineTo(40, 0).ClosePolygon();
+				f.Store();
+			}
+			{
+				// Same foreign key again but completely different geometry
+				IFeature f = polyFc.CreateFeature();
+				f.Value[1] = 12;
+				f.Shape = CurveConstruction.StartPoly(100, 1).LineTo(120, 51).LineTo(140, 51)
+				                           .LineTo(140, 1).ClosePolygon();
+				f.Store();
+			}
+			{
+				IFeature f = polyFc.CreateFeature();
+				f.Value[1] = 14;
+				f.Shape = CurveConstruction.StartPoly(0, 0).LineTo(50, 70).LineTo(70, 70)
+				                           .LineTo(70, 50).ClosePolygon();
+				f.Store();
+			}
+
+			TrTableJoinInMemory tr = new TrTableJoinInMemory(
+				ReadOnlyTableFactory.Create(polyFc),
+				ReadOnlyTableFactory.Create(lineFc),
+				"Nr_Poly", "Nr_Line", JoinType.InnerJoin);
+
+			// The name is used as the table name and thus necessary
+			((ITableTransformer) tr).TransformerName = "test_join";
+
+			{
+				var intersectsSelf =
+					new QaIntersectsSelf((IReadOnlyFeatureClass) tr.GetTransformed());
+				var runner = new QaContainerTestRunner(1000, intersectsSelf)
+				             { KeepGeometry = true };
+				runner.Execute();
+				Assert.AreEqual(1, runner.Errors.Count);
+
+				// Check involved rows:
+				QaError error = runner.Errors[0];
+
+				// Check involved rows. They must be from a 'real' feature class, not form a transformed feature class.
+				List<string> realTableNames = new List<string> { "lineFc", "polyFc" };
+				CheckInvolvedRows(error.InvolvedRows, 4, realTableNames);
+			}
+			{
+				QaConstraint test = new QaConstraint(tr.GetTransformed(), "Nr_Poly > 12");
+				IFilterEditTest ft = test;
+				var runner = new QaContainerTestRunner(1000, test);
+				runner.Execute();
+				Assert.AreEqual(2, runner.Errors.Count);
+
+				// Check involved rows:
+				QaError error = runner.Errors[0];
+
+				// Check involved rows. They must be from a 'real' feature class, not form a transformed feature class.
+				List<string> realTableNames = new List<string> { "lineFc", "polyFc" };
+				CheckInvolvedRows(error.InvolvedRows, 2, realTableNames);
+			}
+
+			IReadOnlyFeatureClass transformed =
+				(IReadOnlyFeatureClass) ((ITableTransformer) tr).GetTransformed();
+
+			int rowCount = transformed.EnumRows(null, false).Count();
+			Assert.AreEqual(3, rowCount);
+
+			int distinctCount =
+				transformed.EnumRows(null, true).Select(r => r.OID).Distinct().Count();
+			Assert.AreEqual(3, distinctCount);
+		}
+
+		[Test]
+		public void CanInnerJoinOneToMany()
+		{
+			IFeatureWorkspace ws =
+				TestWorkspaceUtils.CreateInMemoryWorkspace("TrTableJoinInMemory");
+
+			// lineFc is the right table, containing several keys with value 12
+			IFeatureClass lineFc =
+				CreateFeatureClass(
+					ws, "lineFc", esriGeometryType.esriGeometryPolyline,
+					new[] { FieldUtils.CreateIntegerField("Nr_Line") });
+			IFeatureClass polyFc =
+				CreateFeatureClass(
+					ws, "polyFc", esriGeometryType.esriGeometryPolygon,
+					new[] { FieldUtils.CreateIntegerField("Nr_Poly") });
+			{
+				IFeature f = lineFc.CreateFeature();
+				f.Value[1] = 12;
+				f.Shape = CurveConstruction.StartLine(0, 0).LineTo(69.5, 69.5).Curve;
+				f.Store();
+			}
+			{
+				// Same line again, completely different geometry
+				IFeature f = lineFc.CreateFeature();
+				f.Value[1] = 12;
+				f.Shape = CurveConstruction.StartLine(100, 1).LineTo(169.5, 79.5).Curve;
+				f.Store();
+			}
+			{
+				IFeature f = lineFc.CreateFeature();
+				f.Value[1] = 14;
+				f.Shape = CurveConstruction.StartLine(60, 40).LineTo(60, 80).Curve;
+				f.Store();
+			}
+
+			// polyFc is the left table, containing the unique key (which will be expanded)
+			{
+				IFeature f = polyFc.CreateFeature();
+				f.Value[1] = 12;
+				f.Shape = CurveConstruction.StartPoly(0, 0).LineTo(20, 50).LineTo(40, 50)
+				                           .LineTo(40, 0).ClosePolygon();
+				f.Store();
+			}
+			{
+				IFeature f = polyFc.CreateFeature();
+				f.Value[1] = 14;
+				f.Shape = CurveConstruction.StartPoly(0, 0).LineTo(50, 70).LineTo(70, 70)
+				                           .LineTo(70, 50).ClosePolygon();
+				f.Store();
+			}
+
+			TrTableJoinInMemory tr = new TrTableJoinInMemory(
+				ReadOnlyTableFactory.Create(polyFc),
+				ReadOnlyTableFactory.Create(lineFc),
+				"Nr_Poly", "Nr_Line", JoinType.InnerJoin);
+
+			GdbTable joinedTable = tr.GetTransformed();
+			List<IReadOnlyRow> joinedRows = joinedTable.EnumReadOnlyRows(null, false).ToList();
+			Assert.AreEqual(3, joinedRows.Count);
+			//Assert.AreEqual(3, joinedRows.Distinct().Count());
+
+			// The name is used as the table name and thus necessary
+			((ITableTransformer) tr).TransformerName = "test_join";
+			{
+				var intersectsSelf =
+					new QaIntersectsSelf((IReadOnlyFeatureClass) tr.GetTransformed());
+				var runner = new QaContainerTestRunner(1000, intersectsSelf)
+				             { KeepGeometry = true };
+				runner.Execute();
+				Assert.AreEqual(1, runner.Errors.Count);
+
+				// Check involved rows:
+				QaError error = runner.Errors[0];
+
+				// Check involved rows. They must be from a 'real' feature class, not form a transformed feature class.
+				List<string> realTableNames = new List<string> { "lineFc", "polyFc" };
+				CheckInvolvedRows(error.InvolvedRows, 4, realTableNames);
+			}
+			{
+				QaConstraint test = new QaConstraint(tr.GetTransformed(), "Nr_Poly > 12");
+				IFilterEditTest ft = test;
+				var runner = new QaContainerTestRunner(1000, test);
+				runner.Execute();
+				Assert.AreEqual(2, runner.Errors.Count);
 
 				// Check involved rows:
 				QaError error = runner.Errors[0];

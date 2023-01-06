@@ -479,7 +479,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 				cancellationMessage = $"Server error: {e.Message}";
 
 				if (! EnvironmentUtils.GetBooleanEnvironmentVariableValue(
-					    "PROSUITE_QA_SERVER_KEEP_SERVING_ON_ERROR"))
+					    "PROSUITE_QA_SERVER_KEEP_SERVING_ON_ERROR", KeepServingOnErrorDefaultValue))
 				{
 					SetUnhealthy();
 				}

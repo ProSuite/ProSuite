@@ -4058,20 +4058,22 @@ namespace ProSuite.Commons.AO.Geodatabase
 		[NotNull]
 		private static UID GetAnnotationFeatureUID()
 		{
-			return new UIDClass {Value = "{3FF1675E-4FFB-4D9B-9438-767CE04DE34A}"};
+			return new UIDClass { Value = "{3FF1675E-4FFB-4D9B-9438-767CE04DE34A}" };
 			//return new UIDClass {Value = "esriCarto.AnnotationFeature"};
 		}
 
 		[NotNull]
 		private static UID GetFeatureUID()
 		{
-			return new UIDClass {Value = "esriGeoDatabase.Feature"};
+			return new UIDClass { Value = "{52353152-891A-11D0-BEC6-00805F7C4268}" };
+			//return new UIDClass {Value = "esriGeoDatabase.Feature"};
 		}
 
 		[NotNull]
 		private static UID GetObjectUID()
 		{
-			return new UIDClass {Value = "esriGeoDatabase.Object"};
+			return new UIDClass { Value = "{7A566981-C114-11D2-8A28-006097AFF44E}" };
+			//return new UIDClass {Value = "esriGeoDatabase.Object"};
 		}
 
 		[CanBeNull]

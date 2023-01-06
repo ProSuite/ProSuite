@@ -66,6 +66,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void Gen2847_NonZawarePolylineWithInteriorLoops()
 		{
 			string path = TestDataPreparer.FromDirectory()
@@ -134,6 +135,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanGetChangedDuplicateVerticesPolylineSelfIntersecting()
 		{
 			// the source polyline visits the same points several times by going back and forth

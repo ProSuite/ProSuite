@@ -210,12 +210,12 @@ namespace ProSuite.QA.Tests.Test
 				WellKnownHorizontalCS.LV95);
 
 			var multiPatchClass = new FeatureClassMock("multipatch", esriGeometryType.esriGeometryMultiPatch,
-			                                           1, esriFeatureType.esriFTSimple, sref);
+			                                           null, esriFeatureType.esriFTSimple, sref);
 			multiPatchClass.AddField("Level", esriFieldType.esriFieldTypeInteger);
 			int levelIndex = multiPatchClass.FindField("Level");
 
 			var polygonClass = new FeatureClassMock("polygon", esriGeometryType.esriGeometryPolygon,
-			                                        1, esriFeatureType.esriFTSimple, sref);
+			                                        null, esriFeatureType.esriFTSimple, sref);
 			polygonClass.AddField("Level", esriFieldType.esriFieldTypeInteger);
 
 			var multiPatchConstruction = new MultiPatchConstruction();

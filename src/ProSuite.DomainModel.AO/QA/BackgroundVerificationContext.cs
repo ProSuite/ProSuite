@@ -222,7 +222,7 @@ namespace ProSuite.DomainModel.AO.QA
 				return queryTableContext.GetRelationshipClassName(associationName, model);
 			}
 
-			Association association = ModelElementUtils.GetAssociationFromStoredName(
+			Association association = DdxModelElementUtils.GetAssociationFromStoredName(
 				associationName, model, ignoreUnknownAssociation: true);
 
 			if (association == null)

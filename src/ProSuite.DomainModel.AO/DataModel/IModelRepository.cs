@@ -1,9 +1,10 @@
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.DomainModel.Core.DataModel.Repositories;
 
 namespace ProSuite.DomainModel.AO.DataModel
 {
-	public interface IModelRepository : IRepository<Model>
+	public interface IModelRepository : IDdxModelRepository, IRepository<Model>
 	{
 		/// <summary>
 		/// Gets the model having the specified name.

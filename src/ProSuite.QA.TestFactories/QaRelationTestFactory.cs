@@ -82,7 +82,7 @@ namespace ProSuite.QA.TestFactories
 			Model model =
 				GetUniqueModel(Assert.NotNull(Condition, "No quality condition assigned"));
 
-			Association association = ModelElementUtils.GetAssociationFromStoredName(
+			Association association = DdxModelElementUtils.GetAssociationFromStoredName(
 				associationName, model, ignoreUnknownAssociation: true);
 
 			if (association == null)

@@ -70,9 +70,16 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			_containerItem = containerItem;
 
 			UpdateImage(qualityCondition);
+
+			if (! modelBuilder.SupportsTransformersAndFilters)
+			{
+				HideIssueFilters = true;
+			}
 		}
 
 		#endregion
+
+		public bool HideIssueFilters { get; set; }
 
 		public override Image Image => _image;
 

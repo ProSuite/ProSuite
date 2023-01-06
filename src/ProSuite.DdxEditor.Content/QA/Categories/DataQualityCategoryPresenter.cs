@@ -23,13 +23,12 @@ namespace ProSuite.DdxEditor.Content.QA.Categories
 			view.Observer = this;
 			view.FindDefaultModelDelegate = () => findModel(
 				view,
-				new ColumnDescriptor("Name"),
-				new ColumnDescriptor("Description"),
-				new ColumnDescriptor("UserConnectionProvider",
+				new ColumnDescriptor(nameof(Model.Name)),
+				new ColumnDescriptor(nameof(Model.Description)),
+				new ColumnDescriptor(nameof(Model.UserConnectionProvider),
 				                     "Master Database Connection Provider"),
-				new ColumnDescriptor(
-					"SpatialReferenceDescriptor",
-					"Spatial Reference"));
+				new ColumnDescriptor(nameof(Model.SpatialReferenceDescriptor),
+				                     "Spatial Reference"));
 		}
 	}
 }

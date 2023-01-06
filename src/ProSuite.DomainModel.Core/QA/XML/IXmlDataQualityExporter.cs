@@ -5,7 +5,7 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 {
 	public interface IXmlDataQualityExporter
 	{
-		void Export([NotNull] IEnumerable<QualitySpecification> qualitySpecifications,
+		void Export([NotNull] QualitySpecification qualitySpecification,
 		            [NotNull] string xmlFilePath,
 		            bool exportMetadata,
 		            bool? exportWorkspaceConnections,
@@ -14,7 +14,7 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 		            bool exportAllCategories,
 		            bool exportNotes);
 
-		void Export([NotNull] QualitySpecification specification,
+		void Export([NotNull] IEnumerable<QualitySpecification> qualitySpecifications,
 		            [NotNull] string xmlFilePath,
 		            bool exportMetadata,
 		            bool? exportWorkspaceConnections,

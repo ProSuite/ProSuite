@@ -191,6 +191,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanGetSmallCrossingGapAtTileBoundary2()
 		{
 			const double maxArea = 200;

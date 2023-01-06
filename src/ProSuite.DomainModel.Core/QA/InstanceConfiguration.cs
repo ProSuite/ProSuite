@@ -248,11 +248,6 @@ namespace ProSuite.DomainModel.Core.QA
 			}
 		}
 
-		public override string ToString()
-		{
-			return Name;
-		}
-
 		public abstract InstanceConfiguration CreateCopy();
 
 		[NotNull]

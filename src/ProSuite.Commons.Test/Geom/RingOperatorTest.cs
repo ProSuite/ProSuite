@@ -207,6 +207,169 @@ namespace ProSuite.Commons.Test.Geom
 		}
 
 		[Test]
+		public void EqualWithBothInnerRings()
+		{
+			// The outer rings are equal, each with an inner ring that do not intersect each other.
+			// The result should be a poly equal to the outer rings for union.
+			var outerRing = new List<Pnt3D>
+			                {
+				                new Pnt3D(0, 0, 0),
+				                new Pnt3D(0, 100, 0),
+				                new Pnt3D(100, 100, 0),
+				                new Pnt3D(100, 0, 0)
+			                };
+
+			var inner1Points = new List<Pnt3D>
+			                   {
+				                   new Pnt3D(25, 50, 0),
+				                   new Pnt3D(50, 50, 0),
+				                   new Pnt3D(50, 75, 0),
+				                   new Pnt3D(25, 75, 0)
+			                   };
+
+			var inner2Points = new List<Pnt3D>
+			                   {
+				                   new Pnt3D(50, 50, 0),
+				                   new Pnt3D(60, 50, 0),
+				                   new Pnt3D(60, 75, 0),
+				                   new Pnt3D(50, 75, 0)
+			                   };
+
+			Linestring inner1Ring = GeomTestUtils.CreateRing(inner1Points);
+			Linestring inner2Ring = GeomTestUtils.CreateRing(inner2Points);
+
+			RingGroup poly1 =
+				new RingGroup(GeomTestUtils.CreateRing(outerRing), new[] { inner1Ring });
+			RingGroup poly2 =
+				new RingGroup(GeomTestUtils.CreateRing(outerRing), new[] { inner2Ring });
+
+			double tolerance = 0.001;
+			var ringOperator = new RingOperator(poly1, poly2, tolerance);
+			MultiLinestring union = ringOperator.UnionXY();
+
+			// All islands are removed
+			Assert.AreEqual(1, union.PartCount);
+
+			double expectedArea = poly1.GetLinestring(0).GetArea2D();
+			Assert.AreEqual(expectedArea, union.GetArea2D());
+		}
+
+		[Test]
+		public void EqualWithTouchingInnerRings()
+		{
+			// In touching inner rings, there is no start point for ring navigation
+			var outerRing = new List<Pnt3D>
+			                {
+				                new Pnt3D(0, 0, 0),
+				                new Pnt3D(0, 100, 0),
+				                new Pnt3D(100, 100, 0),
+				                new Pnt3D(100, 0, 0)
+			                };
+
+			var inner1Points = new List<Pnt3D>
+			                   {
+				                   new Pnt3D(25, 50, 0),
+				                   new Pnt3D(50, 50, 0),
+				                   new Pnt3D(50, 75, 0),
+				                   new Pnt3D(25, 75, 0)
+			                   };
+
+			var inner2PointsTouchingFromOutside = new List<Pnt3D>
+			                                      {
+				                                      new Pnt3D(50, 50, 0),
+				                                      new Pnt3D(60, 50, 0),
+				                                      new Pnt3D(60, 75, 0),
+				                                      new Pnt3D(50, 75, 0)
+			                                      };
+
+			Linestring inner1Ring = GeomTestUtils.CreateRing(inner1Points);
+			Linestring inner2RingTouchingFromOutside =
+				GeomTestUtils.CreateRing(inner2PointsTouchingFromOutside);
+
+			RingGroup poly1 =
+				new RingGroup(GeomTestUtils.CreateRing(outerRing), new[] { inner1Ring });
+			RingGroup poly2 =
+				new RingGroup(GeomTestUtils.CreateRing(outerRing),
+				              new[] { inner2RingTouchingFromOutside });
+
+			const double tolerance = 0.001;
+			var ringOperator = new RingOperator(poly1, poly2, tolerance);
+			MultiLinestring union = ringOperator.UnionXY();
+
+			// All islands are removed
+			Assert.AreEqual(1, union.PartCount);
+
+			double expectedArea = poly1.GetLinestring(0).GetArea2D();
+
+			Assert.AreEqual(expectedArea, union.GetArea2D());
+
+			// Now the second poly's island is contained
+			var inner2PointsInsideOtherIsland = new List<Pnt3D>
+			                                    {
+				                                    new Pnt3D(30, 60, 0),
+				                                    new Pnt3D(40, 60, 0),
+				                                    new Pnt3D(40, 70, 0),
+				                                    new Pnt3D(30, 70, 0)
+			                                    };
+			Linestring inner2RingInsideOtherIsland =
+				GeomTestUtils.CreateRing(inner2PointsInsideOtherIsland);
+			poly2 = new RingGroup(GeomTestUtils.CreateRing(outerRing),
+			                      new[] { inner2RingInsideOtherIsland });
+
+			ringOperator = new RingOperator(poly1, poly2, tolerance);
+			union = ringOperator.UnionXY();
+
+			// The smaller island remains
+			Assert.AreEqual(2, union.PartCount);
+			expectedArea = poly1.GetLinestring(0).GetArea2D() +
+			               inner2RingInsideOtherIsland.GetArea2D();
+
+			// and vice-versa
+			ringOperator = new RingOperator(poly2, poly1, tolerance);
+			union = ringOperator.UnionXY();
+
+			// The smaller island remains
+			Assert.AreEqual(2, union.PartCount);
+			expectedArea = poly1.GetLinestring(0).GetArea2D() +
+			               inner2RingInsideOtherIsland.GetArea2D();
+
+			Assert.AreEqual(expectedArea, union.GetArea2D());
+
+			// Now the second poly's island is still contained but touching from the inside
+			inner2PointsInsideOtherIsland = new List<Pnt3D>
+			                                {
+				                                new Pnt3D(30, 50, 0),
+				                                new Pnt3D(40, 50, 0),
+				                                new Pnt3D(40, 70, 0),
+				                                new Pnt3D(30, 70, 0)
+			                                };
+			inner2RingInsideOtherIsland =
+				GeomTestUtils.CreateRing(inner2PointsInsideOtherIsland);
+			poly2 = new RingGroup(GeomTestUtils.CreateRing(outerRing),
+			                      new[] { inner2RingInsideOtherIsland });
+
+			ringOperator = new RingOperator(poly1, poly2, tolerance);
+			union = ringOperator.UnionXY();
+
+			// The smaller island remains
+			Assert.AreEqual(2, union.PartCount);
+
+			expectedArea = poly1.GetLinestring(0).GetArea2D() +
+			               inner2RingInsideOtherIsland.GetArea2D();
+
+			Assert.AreEqual(expectedArea, union.GetArea2D());
+
+			// and vice versa:
+			ringOperator = new RingOperator(poly2, poly1, tolerance);
+			union = ringOperator.UnionXY();
+
+			// The smaller island remains
+			Assert.AreEqual(2, union.PartCount);
+
+			Assert.AreEqual(expectedArea, union.GetArea2D());
+		}
+
+		[Test]
 		public void TargetWithIslandFillsIsland()
 		{
 			var ring1 = new List<Pnt3D>
@@ -521,6 +684,80 @@ namespace ProSuite.Commons.Test.Geom
 		}
 
 		[Test]
+		public void TouchingRingsInPointsFilled()
+		{
+			// The source has multiple parts that touch in a point
+			// The target fills the 'island', i.e. the boundary loop part that is not part of the polygon.
+			var ring1 = new List<Pnt3D>
+			            {
+				            new Pnt3D(0, 0, 9),
+				            new Pnt3D(0, 100, 9),
+				            new Pnt3D(50, 100, 0),
+				            new Pnt3D(20, 60, 0),
+				            new Pnt3D(20, 40, 0),
+				            new Pnt3D(50, 0, 0),
+			            };
+
+			var ring2 = new List<Pnt3D>
+			            {
+				            new Pnt3D(50, 0, 0),
+				            new Pnt3D(50, 100, 0),
+				            new Pnt3D(100, 100, 0),
+				            new Pnt3D(100, 0, 0)
+			            };
+
+			const double tolerance = 0.01;
+
+			WithRotatedRingGroup(ring1, poly1 =>
+			{
+				poly1.AddLinestring(GeomTestUtils.CreateRing(ring2));
+
+				// The target fills the gap completely:
+				var targetRingPoints = new List<Pnt3D>
+				                       {
+					                       new Pnt3D(50, 0, 9),
+					                       new Pnt3D(20, 40, 0),
+					                       new Pnt3D(20, 60, 0),
+					                       new Pnt3D(50, 100, 9)
+				                       };
+
+				WithRotatedRingGroup(targetRingPoints, target =>
+				{
+					RingOperator ringOperator = new RingOperator(poly1, target, tolerance);
+					MultiLinestring intersection = ringOperator.IntersectXY();
+					Assert.IsTrue(intersection.IsEmpty);
+
+					// Compare with difference:
+					MultiLinestring difference = ringOperator.DifferenceXY();
+					Assert.AreEqual(2, difference.PartCount);
+					Assert.AreEqual(poly1.GetArea2D(), difference.GetArea2D());
+
+					// Union:
+					ringOperator = new RingOperator(poly1, target, tolerance);
+					MultiLinestring union = ringOperator.UnionXY();
+					Assert.AreEqual(1, union.PartCount);
+					Assert.AreEqual(poly1.GetArea2D() + target.GetArea2D(), union.GetArea2D());
+
+					// Vice versa to check symmetry:
+					intersection =
+						GeomTopoOpUtils.GetIntersectionAreasXY(target, poly1, tolerance);
+					Assert.IsTrue(intersection.IsEmpty);
+
+					difference = GeomTopoOpUtils.GetDifferenceAreasXY(target, poly1, tolerance);
+					Assert.AreEqual(1, difference.PartCount);
+					Assert.AreEqual(target.GetArea2D(), difference.GetArea2D());
+
+					// TODO: This results in non-simple touching rings.
+					// Either fix with simplification or call Union for each target ring
+					//union =
+					//	GeomTopoOpUtils.GetUnionAreasXY(target, poly1, tolerance);
+					//Assert.AreEqual(1, union.PartCount);
+					//Assert.AreEqual(poly1.GetArea2D() + target.GetArea2D(), union.GetArea2D());
+				});
+			});
+		}
+
+		[Test]
 		public void CutWithCutLineEndingWithShortSegment()
 		{
 			var ring1 = new List<Pnt3D>
@@ -652,7 +889,7 @@ namespace ProSuite.Commons.Test.Geom
 
 			Linestring sourceSpikeRing = GeomTestUtils.CreateRing(sourceSpike);
 
-			MultiPolycurve source = new MultiPolycurve(new[] {sourceSpikeRing});
+			MultiPolycurve source = new MultiPolycurve(new[] { sourceSpikeRing });
 
 			Linestring targetOuterRing = GeomTestUtils.CreateRing(targetRing);
 			RingGroup target = new RingGroup(targetOuterRing);

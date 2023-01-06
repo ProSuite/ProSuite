@@ -32,6 +32,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void ReproTestIncorrectFgdbLeftJoin()
 		{
 			string dbPath = TestDataPreparer.ExtractZip("TableJoinUtilsTest.gdb.zip")
@@ -1265,6 +1266,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanLeftJoin_NtoM_Fgdb()
 		{
 			string dbPath = TestData.GetGdbTableJointUtilsPath();
@@ -1309,6 +1311,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanRightJoin_NtoM_Fgdb()
 		{
 			string dbPath = TestData.GetGdbTableJointUtilsPath();

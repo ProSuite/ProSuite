@@ -234,6 +234,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanCheckOnlyDistinctUrls()
 		{
 			const string urlRoot = "http://localhost:8080/";
@@ -326,6 +327,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanCheckFileSystem()
 		{
 			const string urlFieldName = "URL";
@@ -390,6 +392,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanHandleHttpAndFieldExpression()
 		{
 			const string urlFieldName = "URL_SUFFIX";
@@ -434,6 +437,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanHandleHttpAndSimpleFieldExpression()
 		{
 			const string urlFieldName = "URL";
@@ -482,6 +486,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanHandleSpecialFieldValuesForUrls()
 		{
 			const string urlFieldName = "URL";

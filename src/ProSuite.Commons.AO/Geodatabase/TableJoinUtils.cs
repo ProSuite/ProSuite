@@ -46,7 +46,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			string queryTableName = null)
 
 		{
-			return CreateQueryTable(new[] {relationshipClass}, joinType,
+			return CreateQueryTable(new[] { relationshipClass }, joinType,
 			                        includeOnlyOIDFields, excludeShapeField,
 			                        whereClause, queryTableName);
 		}
@@ -117,7 +117,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		{
 			Assert.ArgumentNotNull(relationshipClass, nameof(relationshipClass));
 
-			var relationshipClassList = new List<IRelationshipClass> {relationshipClass};
+			var relationshipClassList = new List<IRelationshipClass> { relationshipClass };
 			return CreateReadOnlyQueryTable(relationshipClassList, joinType,
 			                                includeOnlyOIDFields, excludeShapeField,
 			                                whereClause, queryTableName);
@@ -171,7 +171,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		{
 			Assert.ArgumentNotNull(relClass, nameof(relClass));
 
-			return CreateQueryDef(new List<IRelationshipClass> {relClass},
+			return CreateQueryDef(new List<IRelationshipClass> { relClass },
 			                      joinType, includeOnlyOIDFields, excludeShapeField,
 			                      out string _, out esriGeometryType _, out string _);
 		}
@@ -297,7 +297,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			[NotNull] IRelationshipClass relationshipClass,
 			JoinType joinType)
 		{
-			return CanCreateQueryFeatureClass(new[] {relationshipClass}, joinType);
+			return CanCreateQueryFeatureClass(new[] { relationshipClass }, joinType);
 		}
 
 		public static bool CanCreateQueryFeatureClass(
@@ -432,7 +432,12 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			if (associationDescription is ForeignKeyAssociationDescription fkAssociation)
 			{
-				// The referencing table contains the foreign key and hence can only point to one
+				// The current assumption is that the left table contains the foreign key
+				// and has therefore a unique OID. However, this logic is not enforced!
+				// -> Consider using some IUniqueIdProvider implementation and keep
+				// using the left table's OID by default.
+
+				// The left/referencing table contains the foreign key and hence can only point to one
 				// referenced row and hence exists at most once in the result -> OID
 				result = fkAssociation.ReferencingTable;
 
@@ -620,7 +625,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			result.WhereClause = joinDefinition.GetJoinCondition();
 
 			result.SubFields = GetSubFieldsString(
-				new List<IRelationshipClass> {relClass},
+				new List<IRelationshipClass> { relClass },
 				baseFeatureClass);
 
 			return result;
@@ -760,7 +765,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		{
 			Assert.ArgumentNotNullOrEmpty(concatenatedTokens, nameof(concatenatedTokens));
 
-			var separators = new[] {' ', ',', ';'};
+			var separators = new[] { ' ', ',', ';' };
 			return concatenatedTokens.Split(separators, StringSplitOptions.RemoveEmptyEntries);
 		}
 

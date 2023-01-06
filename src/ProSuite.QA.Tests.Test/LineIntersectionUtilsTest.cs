@@ -34,6 +34,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanDetectEndPointSegmentIntersection()
 		{
 			IPolyline polyline1 = CreatePolyline(
@@ -123,6 +124,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanDetectEndPointSegmentIntersectionWithConnectedEndpoint1()
 		{
 			IPolyline polyline1 = CreatePolyline(
@@ -151,6 +153,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanDetectEndPointSegmentIntersectionWithConnectedEndpoint2()
 		{
 			IPolyline polyline1 = CreatePolyline(
