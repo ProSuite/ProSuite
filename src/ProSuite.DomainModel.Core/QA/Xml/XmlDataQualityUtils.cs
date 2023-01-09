@@ -195,22 +195,23 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 			Assert.ArgumentNotNull(document, nameof(document));
 
 			AssertUniqueInstanceConfigurationUuids(
-				document.GetAllQualityConditions().Select(p => p.Key),
-				"quality condition");
+				document.GetAllQualityConditions().Select(p => p.Key), "quality condition");
 		}
 
 		public static void AssertUniqueTransformerUuids(
 			[NotNull] XmlDataQualityDocument document)
 		{
 			Assert.ArgumentNotNull(document, nameof(document));
-			AssertUniqueInstanceConfigurationUuids(document.Transformers, "transformer");
+			AssertUniqueInstanceConfigurationUuids(
+				document.GetAllTransformers().Select(p => p.Key), "transformer");
 		}
 
 		public static void AssertUniqueIssueFilterUuids(
 			[NotNull] XmlDataQualityDocument document)
 		{
 			Assert.ArgumentNotNull(document, nameof(document));
-			AssertUniqueInstanceConfigurationUuids(document.IssueFilters, "issue filter");
+			AssertUniqueInstanceConfigurationUuids(
+				document.GetAllIssueFilters().Select(p => p.Key), "issue filter");
 		}
 
 		public static void AssertUniqueInstanceConfigurationUuids<T>(
@@ -336,25 +337,24 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 			[NotNull] XmlDataQualityDocument document)
 		{
 			Assert.ArgumentNotNull(document, nameof(document));
-
-			IEnumerable<XmlQualityCondition> xmlQualityConditions =
-				document.GetAllQualityConditions().Select(p => p.Key);
-
-			AssertUniqueInstanceConfigurationNames(xmlQualityConditions, "quality condition");
+			AssertUniqueInstanceConfigurationNames(
+				document.GetAllQualityConditions().Select(p => p.Key), "quality condition");
 		}
 
 		public static void AssertUniqueTransformerNames(
 			[NotNull] XmlDataQualityDocument document)
 		{
 			Assert.ArgumentNotNull(document, nameof(document));
-			AssertUniqueInstanceConfigurationNames(document.Transformers, "transformer");
+			AssertUniqueInstanceConfigurationNames(
+				document.GetAllTransformers().Select(p => p.Key), "transformer");
 		}
 
 		public static void AssertUniqueIssueFilterNames(
 			[NotNull] XmlDataQualityDocument document)
 		{
 			Assert.ArgumentNotNull(document, nameof(document));
-			AssertUniqueInstanceConfigurationNames(document.IssueFilters, "issue filter");
+			AssertUniqueInstanceConfigurationNames(
+				document.GetAllIssueFilters().Select(p => p.Key), "issue filter");
 		}
 
 		public static void AssertUniqueInstanceConfigurationNames<T>(
@@ -529,7 +529,7 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 			[NotNull] XmlDataQualityDocumentCache documentCache)
 		{
 			return GetReferencedWorkspaces(
-				documentCache.QualityConditions,
+				documentCache.QualityConditionsWithCategories.Select(x => x.Key),
 				documentCache,
 				out bool _);
 		}

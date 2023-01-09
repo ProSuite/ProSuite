@@ -736,7 +736,7 @@ namespace ProSuite.DomainModel.Persistence.Core.QA.Xml
 			[NotNull] XmlDataQualityDocumentCache documentCache,
 			[NotNull] IDictionary<string, InstanceDescriptor> descriptorsByName,
 			[NotNull] IDictionary<string, DdxModel> modelsByWorkspaceId,
-			[NotNull] IDictionary<XmlDataQualityCategory, DataQualityCategory> availableCategories,
+			[NotNull] IDictionary<XmlDataQualityCategory, DataQualityCategory> categories,
 			bool ignoreConditionsForUnknownDatasets)
 		{
 			IList<InstanceConfiguration> configurations = InstanceConfigurations.GetAll();
@@ -801,9 +801,9 @@ namespace ProSuite.DomainModel.Persistence.Core.QA.Xml
 				InstanceConfiguration config = GetMatchingConfiguration(
 					xmlInstanceConfiguration, configsByName, configsByUuid);
 
-				// TODO handle category for all instance types
-				DataQualityCategory category = null;
-
+				DataQualityCategory category = GetCategory(
+					xmlInstanceConfiguration, documentCache, categories);
+				
 				if (xmlInstanceConfiguration is XmlTransformerConfiguration xmlTransformer)
 				{
 					XmlDataQualityUtils.UpdateTransformerConfiguration(
@@ -817,17 +817,6 @@ namespace ProSuite.DomainModel.Persistence.Core.QA.Xml
 				else if (xmlInstanceConfiguration is XmlQualityCondition xmlCondition)
 				{
 					QualityCondition qualityCondition = (QualityCondition) config;
-
-					foreach (var pair in documentCache.QualityConditionsWithCategories)
-					{
-						if (pair.Key.Equals(xmlCondition))
-						{
-							XmlDataQualityCategory xmlCategory = pair.Value;
-							category = xmlCategory == null
-								           ? null
-								           : availableCategories[xmlCategory];
-						}
-					}
 
 					XmlDataQualityUtils.UpdateQualityCondition(
 						qualityCondition, xmlCondition, category);
@@ -1011,6 +1000,51 @@ namespace ProSuite.DomainModel.Persistence.Core.QA.Xml
 			if (result == null)
 			{
 				Assert.Fail("Descriptor '{0}' is not of type {1}", name, typeof(T).Name);
+			}
+
+			return result;
+		}
+
+		[CanBeNull]
+		private static DataQualityCategory GetCategory(
+			[NotNull] XmlInstanceConfiguration xmlInstanceConfiguration,
+			[NotNull] XmlDataQualityDocumentCache documentCache,
+			IDictionary<XmlDataQualityCategory, DataQualityCategory> categories)
+		{
+			DataQualityCategory result = null;
+
+			if (xmlInstanceConfiguration is XmlTransformerConfiguration)
+			{
+				foreach (var pair in documentCache.TransformersWithCategories)
+				{
+					if (pair.Key.Equals(xmlInstanceConfiguration))
+					{
+						XmlDataQualityCategory xmlCategory = pair.Value;
+						result = xmlCategory == null ? null : categories[xmlCategory];
+					}
+				}
+			}
+			else if (xmlInstanceConfiguration is XmlIssueFilterConfiguration)
+			{
+				foreach (var pair in documentCache.IssueFiltersWithCategories)
+				{
+					if (pair.Key.Equals(xmlInstanceConfiguration))
+					{
+						XmlDataQualityCategory xmlCategory = pair.Value;
+						result = xmlCategory == null ? null : categories[xmlCategory];
+					}
+				}
+			}
+			else if (xmlInstanceConfiguration is XmlQualityCondition)
+			{
+				foreach (var pair in documentCache.QualityConditionsWithCategories)
+				{
+					if (pair.Key.Equals(xmlInstanceConfiguration))
+					{
+						XmlDataQualityCategory xmlCategory = pair.Value;
+						result = xmlCategory == null ? null : categories[xmlCategory];
+					}
+				}
 			}
 
 			return result;
