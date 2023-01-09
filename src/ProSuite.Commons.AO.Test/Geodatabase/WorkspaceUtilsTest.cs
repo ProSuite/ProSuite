@@ -415,6 +415,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 		[Test]
 		[Category(TestCategory.Sde)]
+		[Ignore("requires Oracle wallet for testserver")]
 		public void CanOpenNonDefaultSDEWorkspaceOSA()
 		{
 			IWorkspace workspace =
@@ -428,6 +429,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 		[Test]
 		[Category(TestCategory.Sde)]
+		[Ignore("requires Oracle wallet for testserver")]
 		public void CanOpenNonDefaultSDEWorkspaceOSAWithVersionName()
 		{
 			const string versionName = "TOPGIS_DDX.DEFAULT";
