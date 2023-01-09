@@ -129,6 +129,8 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 		[Test]
 		[Category(TestCategory.Sde)]
+		[Category(Commons.Test.TestCategory.FixMe)]
+		[Ignore("requires version non-existing TG_SERVICE.RC_TLM_2022-6-30")]
 		public void ReproTestJoinCrash()
 		{
 			IFeatureWorkspace workspace = OpenTestWorkspace();
@@ -219,6 +221,8 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 		[Test]
 		[Category(TestCategory.Sde)]
+		[Category(Commons.Test.TestCategory.FixMe)]
+		[Ignore("requires version non-existing TG_SERVICE.RC_TLM_2022-6-30")]
 		public void CanQueryFeaturesInnerJoinedToNameParts()
 		{
 			IFeatureWorkspace workspace = OpenTestWorkspace();
@@ -277,6 +281,8 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 		[Test]
 		[Category(TestCategory.Sde)]
+		[Category(Commons.Test.TestCategory.FixMe)]
+		[Ignore("requires version non-existing TG_SERVICE.RC_TLM_2022-6-30")]
 		public void ReproTestShapeIntegrityErrorSDE()
 		{
 			// to reproduce TOP-4851: 
@@ -470,6 +476,8 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 		[Test]
 		[Category(TestCategory.Sde)]
+		[Category(Commons.Test.TestCategory.FixMe)]
+		[Ignore("requires version non-existing TG_SERVICE.RC_TLM_2022-6-30")]
 		public void CanCreateQueryTableNTo1LeftJoin()
 		{
 			const string relClassName = "TOPGIS_TLM.TLM_STRASSE_NAME";
@@ -505,6 +513,8 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 		[Test]
 		[Category(TestCategory.Sde)]
+		[Category(Commons.Test.TestCategory.FixMe)]
+		[Ignore("requires version non-existing TG_SERVICE.RC_TLM_2022-6-30")]
 		public void CanCreateQueryTableNTo1InnerJoin()
 		{
 			const string relClassName = "TOPGIS_TLM.TLM_STRASSE_STRASSE_AVS";
@@ -593,6 +603,8 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 		[Test]
 		[Category(TestCategory.Sde)]
+		[Category(Commons.Test.TestCategory.FixMe)]
+		[Ignore("requires version non-existing TG_SERVICE.RC_TLM_2022-6-30")]
 		public void CanCreateQueryTableNTo1RightJoin()
 		{
 			const string relClassName = "TOPGIS_TLM.TLM_STRASSE_NAME";
@@ -646,6 +658,8 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 		[Test]
 		[Category(TestCategory.Sde)]
+		[Category(Commons.Test.TestCategory.FixMe)]
+		[Ignore("requires version non-existing TG_SERVICE.RC_TLM_2022-6-30")]
 		public void CanCreateQueryTable1To1LeftJoin()
 		{
 			const string relClassName = "TOPGIS_TLM.TLM_WANDERWEG_STRASSE";
@@ -694,6 +708,8 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 		[Test]
 		[Category(TestCategory.Sde)]
+		[Category(Commons.Test.TestCategory.FixMe)]
+		[Ignore("requires version non-existing TG_SERVICE.RC_TLM_2022-6-30")]
 		public void CanCreateQueryTable1To1InnerJoin()
 		{
 			const string relClassName = "TOPGIS_TLM.TLM_WANDERWEG_STRASSE";
@@ -738,6 +754,8 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 		[Test]
 		[Category(TestCategory.Sde)]
+		[Category(Commons.Test.TestCategory.FixMe)]
+		[Ignore("requires version non-existing TG_SERVICE.RC_TLM_2022-6-30")]
 		public void CanCreateQueryTable1To1InnerJoinBetweenFeatureClasses()
 		{
 			// On both sides there is a feature class (requires filtering of shape/area fields)
@@ -802,6 +820,8 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 		[Test]
 		[Category(TestCategory.Sde)]
+		[Category(Commons.Test.TestCategory.FixMe)]
+		[Ignore("requires version non-existing TG_SERVICE.RC_TLM_2022-6-30")]
 		public void CanCreateQueryTable1To1RightJoin()
 		{
 			const string relClassName = "TOPGIS_TLM.TLM_WANDERWEG_STRASSE";
@@ -838,6 +858,8 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 		[Test]
 		[Category(TestCategory.Sde)]
+		[Category(Commons.Test.TestCategory.FixMe)]
+		[Ignore("requires version non-existing TG_SERVICE.RC_TLM_2022-6-30")]
 		public void CanCreateQueryTableNToMLeftJoin()
 		{
 			const string relClassName = "TOPGIS_TLM.TLM_STRASSENROUTE_STRASSE";
@@ -877,6 +899,8 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 		[Test]
 		[Category(TestCategory.Sde)]
+		[Category(Commons.Test.TestCategory.FixMe)]
+		[Ignore("requires version non-existing TG_SERVICE.RC_TLM_2022-6-30")]
 		public void CanCreateQueryTableNToMRightJoin()
 		{
 			const string relClassName = "TOPGIS_TLM.TLM_STRASSENROUTE_STRASSE";
@@ -923,6 +947,8 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 		[Test]
 		[Category(TestCategory.Sde)]
+		[Category(Commons.Test.TestCategory.FixMe)]
+		[Ignore("requires version non-existing TG_SERVICE.RC_TLM_2022-6-30")]
 		public void CanCreateQueryTableNToMInnerJoin()
 		{
 			const string relClassName = "TOPGIS_TLM.TLM_STRASSENROUTE_STRASSE";
@@ -981,6 +1007,8 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 		[Test]
 		[Category(TestCategory.Sde)]
+		[Category(Commons.Test.TestCategory.FixMe)]
+		[Ignore("requires version non-existing TG_SERVICE.RC_TLM_2022-6-30")]
 		public void CanCreateQueryDef1to1LeftJoin()
 		{
 			const string relClassName = "TOPGIS_TLM.TLM_WANDERWEG_STRASSE";
@@ -1006,6 +1034,8 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 		[Test]
 		[Category(TestCategory.Sde)]
+		[Category(Commons.Test.TestCategory.FixMe)]
+		[Ignore("requires version non-existing TG_SERVICE.RC_TLM_2022-6-30")]
 		public void CanCreateQueryDef1to1RightJoin()
 		{
 			const string relClassName = "TOPGIS_TLM.TLM_WANDERWEG_STRASSE";
@@ -1031,6 +1061,8 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 		[Test]
 		[Category(TestCategory.Sde)]
+		[Category(Commons.Test.TestCategory.FixMe)]
+		[Ignore("requires version non-existing TG_SERVICE.RC_TLM_2022-6-30")]
 		public void CanCreateQueryDef1to1InnerJoin()
 		{
 			const string relClassName = "TOPGIS_TLM.TLM_WANDERWEG_STRASSE";
@@ -1056,6 +1088,8 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 		[Test]
 		[Category(TestCategory.Sde)]
+		[Category(Commons.Test.TestCategory.FixMe)]
+		[Ignore("requires version non-existing TG_SERVICE.RC_TLM_2022-6-30")]
 		public void CanEvaluateOidOnlyQueryDef1To1()
 		{
 			const string relClassName = "TOPGIS_TLM.TLM_WANDERWEG_STRASSE";
@@ -1158,6 +1192,8 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 		[Test]
 		[Category(TestCategory.Sde)]
+		[Category(Commons.Test.TestCategory.FixMe)]
+		[Ignore("requires version non-existing TG_SERVICE.RC_TLM_2022-6-30")]
 		public void CanEvaluateOIdOnlyQueryDef1ToM()
 		{
 			const string relClassName = "TOPGIS_TLM.TLM_STRASSE_NAME";
@@ -1189,6 +1225,8 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 		[Test]
 		[Category(TestCategory.Sde)]
+		[Category(Commons.Test.TestCategory.FixMe)]
+		[Ignore("requires version non-existing TG_SERVICE.RC_TLM_2022-6-30")]
 		public void CanEvaluateQueryDef1ToM()
 		{
 			const string relClassName = "TOPGIS_TLM.TLM_STRASSE_NAME";
@@ -1242,6 +1280,8 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 		[Test]
 		[Category(TestCategory.Sde)]
+		[Category(Commons.Test.TestCategory.FixMe)]
+		[Ignore("requires version non-existing TG_SERVICE.RC_TLM_2022-6-30")]
 		public void CanCreateQueryFeatureClass()
 		{
 			IFeatureWorkspace ws = OpenTestWorkspace();

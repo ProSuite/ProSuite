@@ -116,6 +116,7 @@ namespace ProSuite.QA.Tests.Test
 
 		[Test]
 		[Category(TestCategory.Sde)]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void TestSdeWorkspace()
 		{
 			var workspace = TestUtils.OpenUserWorkspaceOracle();

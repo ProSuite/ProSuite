@@ -1237,9 +1237,8 @@ namespace ProSuite.QA.Tests.Test
 		public void TestFindDiffs()
 		{
 			var ws = (IFeatureWorkspace) WorkspaceUtils.OpenSDEWorkspace(
-				DirectConnectDriver.Oracle11g,
-				//				"TOPGIST", "RSC.DV_TLM_2011-3-31_1072-1_Aktualisierung");
-				"TOPGIST", "SDE.DEFAULT");
+				DirectConnectDriver.Oracle11g, "TOPGIST",
+				"sde", "sde", "SDE.DEFAULT");
 
 			//IQueryDef queryDef = ws.CreateQueryDef();
 			//queryDef.SubFields =
