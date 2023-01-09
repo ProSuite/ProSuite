@@ -28,7 +28,6 @@ using ProSuite.DdxEditor.Framework.Dependencies;
 using ProSuite.DdxEditor.Framework.Items;
 using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.Geodatabase;
-using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.AttributeDependencies;
 using ProSuite.DomainModel.Core.AttributeDependencies.Repositories;
 using ProSuite.DomainModel.Core.AttributeDependencies.Xml;
