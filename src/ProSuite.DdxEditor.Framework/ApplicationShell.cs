@@ -42,7 +42,7 @@ namespace ProSuite.DdxEditor.Framework
 			return Create(logWindowControl, title, modelBuilder, unitOfWork,
 			              helpProvider == null
 				              ? null
-				              : new[] {helpProvider},
+				              : new[] { helpProvider },
 			              optionsManager);
 		}
 
@@ -54,12 +54,14 @@ namespace ProSuite.DdxEditor.Framework
 			[CanBeNull] IEnumerable<IHelpProvider> helpProviders = null,
 			[CanBeNull] IOptionsManager optionsManager = null,
 			[CanBeNull] IEnumerable<IItemLocator> itemLocators = null,
-			[CanBeNull] IEnumerable<ISearchProvider> searchProviders = null)
+			[CanBeNull] IEnumerable<ISearchProvider> searchProviders = null,
+			IConfigurationManager configurationsManager = null)
 		{
 			Assert.ArgumentNotNull(logWindowControl, nameof(logWindowControl));
 			Assert.ArgumentNotNullOrEmpty(title, nameof(title));
 			Assert.ArgumentNotNull(modelBuilder, nameof(modelBuilder));
 			Assert.ArgumentNotNull(unitOfWork, nameof(unitOfWork));
+			Assert.ArgumentNotNull(configurationsManager, nameof(configurationsManager));
 
 			var navigationControl = new NavigationControl(itemLocators);
 			var contentControl = new ContentControl();
@@ -67,14 +69,15 @@ namespace ProSuite.DdxEditor.Framework
 			var shell = new ApplicationShell(navigationControl,
 			                                 contentControl,
 			                                 logWindowControl)
-			            {Text = title};
+			            { Text = title };
 
 			var applicationController =
 				new ApplicationController(shell, unitOfWork,
 				                          new MessageBoxImpl(),
 				                          helpProviders,
 				                          optionsManager,
-				                          searchProviders);
+				                          searchProviders,
+				                          configurationsManager);
 
 			IMenuManager menuManager = new MenuManager(applicationController);
 			navigationControl.MenuManager = menuManager;
@@ -174,6 +177,12 @@ namespace ProSuite.DdxEditor.Framework
 		{
 			get { return _toolStripMenuItemOptions.Visible; }
 			set { _toolStripMenuItemOptions.Visible = value; }
+		}
+
+		bool IApplicationShell.ShowConfigurationVisible
+		{
+			get { return _toolStripMenuItemConfiguration.Visible; }
+			set { _toolStripMenuItemConfiguration.Visible = value; }
 		}
 
 		bool IApplicationShell.GoToItem(Item item)
@@ -444,6 +453,11 @@ namespace ProSuite.DdxEditor.Framework
 			{
 				_observer.GoForward();
 			}
+		}
+
+		private void _toolStripMenuItemConfiguration_Click(object sender, EventArgs e)
+		{
+			_observer.ShowConfiguration();
 		}
 
 		private void _toolStripMenuItemOptions_Click(object sender, EventArgs e)

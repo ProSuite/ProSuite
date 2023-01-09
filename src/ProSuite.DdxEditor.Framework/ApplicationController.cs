@@ -26,6 +26,7 @@ namespace ProSuite.DdxEditor.Framework
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		[CanBeNull] private readonly IOptionsManager _optionsManager;
+		[CanBeNull] private readonly IConfigurationManager _configurationManager;
 		[NotNull] private readonly ItemHistory _history = new ItemHistory();
 		[NotNull] private readonly IMessageBox _messageBox;
 		[NotNull] private readonly IUnitOfWork _unitOfWork;
@@ -44,13 +45,15 @@ namespace ProSuite.DdxEditor.Framework
 		/// <param name="helpProviders">The help providers.</param>
 		/// <param name="optionsManager">The options manager.</param>
 		/// <param name="searchProviders">The search providers.</param>
+		/// <param name="configurationManager"></param>
 		public ApplicationController(
 			[NotNull] IApplicationShell view,
 			[NotNull] IUnitOfWork unitOfWork,
 			[NotNull] IMessageBox messageBox,
 			[CanBeNull] IEnumerable<IHelpProvider> helpProviders = null,
 			[CanBeNull] IOptionsManager optionsManager = null,
-			[CanBeNull] IEnumerable<ISearchProvider> searchProviders = null)
+			[CanBeNull] IEnumerable<ISearchProvider> searchProviders = null,
+			[CanBeNull] IConfigurationManager configurationManager = null)
 		{
 			Assert.ArgumentNotNull(view, nameof(view));
 			Assert.ArgumentNotNull(unitOfWork, nameof(unitOfWork));
@@ -73,6 +76,8 @@ namespace ProSuite.DdxEditor.Framework
 			_optionsManager = optionsManager;
 
 			optionsManager?.RestoreOptions();
+
+			_configurationManager = configurationManager;
 
 			_view.Observer = this;
 
@@ -457,6 +462,13 @@ namespace ProSuite.DdxEditor.Framework
 			Item item = _history.GoForward();
 
 			_view.GoToItem(item);
+		}
+
+		public void ShowConfiguration()
+		{
+			IConfigurationManager configManager = Assert.NotNull(_configurationManager);
+
+			configManager.ShowConfigurationsDialog();
 		}
 
 		void IApplicationShellObserver.ShowOptions()
@@ -863,6 +875,7 @@ namespace ProSuite.DdxEditor.Framework
 			_view.GoBackEnabled = _history.CanGoBack;
 			_view.GoForwardEnabled = _history.CanGoForward;
 			_view.ShowOptionsVisible = _optionsManager != null;
+			_view.ShowConfigurationVisible = _configurationManager != null;
 
 			_view.UpdateCommandButtonAppearance();
 		}

@@ -25,6 +25,8 @@ namespace ProSuite.DdxEditor.Framework
 
 		bool ShowOptionsVisible { get; set; }
 
+		bool ShowConfigurationVisible { get; set; }
+
 		/// <summary>
 		/// Loads the specified item into the content pane
 		/// </summary>
