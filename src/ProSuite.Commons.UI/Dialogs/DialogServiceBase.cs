@@ -423,9 +423,9 @@ namespace ProSuite.Commons.UI.Dialogs
 			}
 		}
 
-		private DialogResult Show([CanBeNull] IWin32Window owner,
-		                          [NotNull] string message,
-		                          [NotNull] string title,
+		public DialogResult Show(IWin32Window owner,
+		                          string message,
+		                          string title,
 		                          MessageBoxButtons buttons,
 		                          MessageBoxIcon icon,
 		                          MessageBoxDefaultButton defaultButton)
