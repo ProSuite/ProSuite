@@ -526,29 +526,17 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 
 		[NotNull]
 		public static IList<XmlWorkspace> GetReferencedWorkspaces(
-			[NotNull] XmlDataQualityDocumentCache documentCache)
-		{
-			return GetReferencedWorkspaces(
-				documentCache.QualityConditionsWithCategories.Select(x => x.Key),
-				documentCache,
-				out bool _);
-		}
-
-		[NotNull]
-		public static IList<XmlWorkspace> GetReferencedWorkspaces<T>(
-			[NotNull] IEnumerable<T> instanceConfigurations,
 			[NotNull] XmlDataQualityDocumentCache documentCache,
 			out bool hasUndefinedWorkspaceReference)
-			where T : XmlInstanceConfiguration
 		{
 			Assert.ArgumentNotNull(documentCache, nameof(documentCache));
 
 			var referencedWorkspaceIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
 			hasUndefinedWorkspaceReference = false;
-
-			CollectWorkspaceIds(referencedWorkspaceIds, instanceConfigurations, documentCache,
-			                    ref hasUndefinedWorkspaceReference);
+			CollectWorkspaceIds(referencedWorkspaceIds,
+			                    documentCache.QualityConditionsWithCategories.Select(x => x.Key),
+			                    documentCache, ref hasUndefinedWorkspaceReference);
 
 			return documentCache.Workspaces?.Where(
 				       workspace => referencedWorkspaceIds.Contains(workspace.ID)).ToList()
