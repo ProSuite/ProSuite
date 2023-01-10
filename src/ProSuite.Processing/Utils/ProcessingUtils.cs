@@ -6,6 +6,7 @@ using System.Text;
 using System.Xml;
 using System.Xml.Linq;
 using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
 using ProSuite.Processing.Domain;
 using ProSuite.Processing.Evaluation;
@@ -18,18 +19,24 @@ namespace ProSuite.Processing.Utils
 	/// </summary>
 	public static class ProcessingUtils
 	{
-		public static IList<Type> GetDerivedTypes<T>()
-		{
-			var assembly = Assembly.GetAssembly(typeof(T));
-			return GetDerivedTypes<T>(assembly);
-		}
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		public static IList<Type> GetDerivedTypes<T>(Assembly assembly)
+		public static IList<Type> GetExportedDerivedTypes<T>(Assembly assembly)
 		{
 			var baseType = typeof(T);
-			return assembly.GetTypes()
-			               .Where(t => t != baseType && baseType.IsAssignableFrom(t))
-			               .ToList();
+
+			try
+			{
+				return assembly.GetExportedTypes()
+				               .Where(t => t != baseType && baseType.IsAssignableFrom(t))
+				               .ToList();
+			}
+			catch (Exception ex)
+			{
+				_msg.Error($"{nameof(GetExportedDerivedTypes)}: {ex.Message}", ex);
+
+				return Array.Empty<Type>();
+			}
 		}
 
 		public static IList<ParameterInfo> GetParameters(Type processType)
