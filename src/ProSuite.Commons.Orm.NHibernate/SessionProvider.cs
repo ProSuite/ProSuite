@@ -6,6 +6,7 @@ using NHibernate.Cfg;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using Environment = System.Environment;
 
 namespace ProSuite.Commons.Orm.NHibernate
 {
@@ -26,7 +27,7 @@ namespace ProSuite.Commons.Orm.NHibernate
 		// -> if the factory has been added before, use it, otherwise add the factory to the dictionary.
 		// -> All repositories should have lifestyle transient
 
-		private readonly string _sessionFactoryErrorMessage = "Session factory is null";
+		public string SessionFactoryErrorMessage { get; } = "Session factory is null";
 
 		// The session is NOT thread safe
 		private ThreadLocal<ISession> _currentSession;
@@ -51,15 +52,18 @@ namespace ProSuite.Commons.Orm.NHibernate
 				// Do not throw - in some applications the DDX is optional (such as field admin).
 				_msg.Debug("Failed to create NHibernate session factory.", e);
 
-				_sessionFactoryErrorMessage += ! string.IsNullOrEmpty(e.Message)
-					                               ? $": {e.Message}"
-					                               : ": Unknown error";
+				SessionFactoryErrorMessage =
+					$"Error creating Data Dictionary database connection: {Environment.NewLine}";
+
+				SessionFactoryErrorMessage += ! string.IsNullOrEmpty(e.Message)
+					                              ? $"{e.Message}"
+					                              : "Unknown error";
 			}
 		}
 
 		public ISession OpenSession(bool withoutTransaction)
 		{
-			Assert.NotNull(_sessionFactory, _sessionFactoryErrorMessage);
+			Assert.NotNull(_sessionFactory, SessionFactoryErrorMessage);
 
 			if (CurrentSession != null && CurrentSession.IsOpen)
 			{
