@@ -1966,7 +1966,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 			var paths = (IGeometryCollection) polyline;
 			double[] angles =
 				GeometryUtils.GetLinearizedSegmentAngles((IPath) paths.get_Geometry(0),
-				                                         new[] {2}, ignoredAngleValue);
+				                                         new[] { 2 }, ignoredAngleValue);
 
 			foreach (double radians in angles)
 			{
@@ -1998,7 +1998,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 			var paths = (IGeometryCollection) polyline;
 			double[] angles =
 				GeometryUtils.GetLinearizedSegmentAngles((IPath) paths.get_Geometry(0),
-				                                         new[] {1, 2}, ignoredAngleValue);
+				                                         new[] { 1, 2 }, ignoredAngleValue);
 
 			foreach (double radians in angles)
 			{
@@ -2030,7 +2030,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 			var paths = (IGeometryCollection) polyline;
 			double[] angles =
 				GeometryUtils.GetLinearizedSegmentAngles((IPath) paths.get_Geometry(0),
-				                                         new[] {0}, ignoredAngleValue);
+				                                         new[] { 0 }, ignoredAngleValue);
 
 			foreach (double radians in angles)
 			{
@@ -2063,7 +2063,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 			var paths = (IGeometryCollection) polyline;
 			double[] angles =
 				GeometryUtils.GetLinearizedSegmentAngles((IPath) paths.get_Geometry(0),
-				                                         new[] {0, 3}, ignoredAngleValue);
+				                                         new[] { 0, 3 }, ignoredAngleValue);
 
 			foreach (double radians in angles)
 			{
@@ -2468,7 +2468,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 			Assert.IsFalse(GeometryUtils.HasUndefinedZValues(polyline));
 
 			var splitPoint = (IPointCollection) GeometryFactory.CreateMultipoint(
-				new List<IPoint> {GeometryFactory.CreatePoint(1002.5, 1001, double.NaN)});
+				new List<IPoint> { GeometryFactory.CreatePoint(1002.5, 1001, double.NaN) });
 
 			GeometryUtils.CrackPolycurve(polyline, splitPoint, false, false, null);
 
@@ -3047,12 +3047,17 @@ namespace ProSuite.Commons.AO.Test.Geometry
 		}
 
 		[Test]
-		[Category(Commons.Test.TestCategory.FixMe)]
-		public void CanConvertFromMultipointArray()
+		public void CanConvertFromPolylineEsriShapeBytes()
 		{
-			// Real-worlds multipoint:
-			var bytes = Encoding.Default.GetBytes(
-				"\n\0\0\0]\u0002J)7ˆDA){Wd1)3AˆëQØ8ˆDAÐMb°4)3A\u0001\0\0\0\u0002\0\0\0\0\0\0\0ˆëQØ8ˆDAÐMb°4)3A]\u0002J)7ˆDA){Wd1)3AÊ¶\"iNð~@\05^ºIô~@\05^ºIô~@Ê¶\"iNð~@");
+			// Real-worlds polyline (use base64 for platform independence):
+			const string base64 =
+				"CgAAAF0CSik3iERBKXtXZDEpM0GI61HYOIhEQdBNYrA0KTNBAQAAAAIAAAAAAAAAiOtR2DiIREHQTWKwNCkzQV0CSik3iERBKXtXZDEpM0HKtiJpTvB+QAA1XrpJ9H5AADVeukn0fkDKtiJpTvB+QA==";
+
+			byte[] bytes = Convert.FromBase64String(base64);
+
+			IGeometry restored = GeometryUtils.FromEsriShapeBuffer(bytes);
+			byte[] reDehydrated = GeometryUtils.ToEsriShapeBuffer(restored);
+			Assert.AreEqual(bytes, reDehydrated);
 
 			CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
 
@@ -3085,9 +3090,17 @@ namespace ProSuite.Commons.AO.Test.Geometry
 				tasks[i] = task;
 			}
 
-			Assert.Throws<AggregateException>(() => Task.WaitAll(tasks));
+			// No errors in x64!
+			if (EnvironmentUtils.Is64BitProcess)
+			{
+				Task.WaitAll(tasks);
+			}
+			else
+			{
+				Assert.Throws<AggregateException>(() => Task.WaitAll(tasks));
+			}
 
-			// Works on STA:
+			// Always Works on STA:
 			var staScheduler = new StaTaskScheduler(count);
 
 			for (int i = 0; i < count; i++)
