@@ -6,5 +6,6 @@ namespace ProSuite.Commons.AO.Test
 		public const string Fast = "Fast";
 		public const string Slow = "Slow";
 		public const string x86 = "x86";
+		public const string Repro = "Repro";
 	}
 }
