@@ -148,5 +148,22 @@ namespace ProSuite.Commons.UI.Dialogs
 		                      [NotNull] string headerMessage,
 		                      [NotNull] IList<string> listLines,
 		                      [CanBeNull] string footerMessage);
+
+		/// <summary>
+		/// Shows a fully configurable message box.
+		/// </summary>
+		/// <param name="owner"></param>
+		/// <param name="message"></param>
+		/// <param name="title"></param>
+		/// <param name="buttons"></param>
+		/// <param name="icon"></param>
+		/// <param name="defaultButton"></param>
+		/// <returns></returns>
+		public DialogResult Show([CanBeNull] IWin32Window owner,
+		                         [NotNull] string message,
+		                         [NotNull] string title,
+		                         MessageBoxButtons buttons,
+		                         MessageBoxIcon icon,
+		                         MessageBoxDefaultButton defaultButton);
 	}
 }

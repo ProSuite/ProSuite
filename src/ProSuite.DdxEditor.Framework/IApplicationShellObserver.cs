@@ -23,6 +23,8 @@ namespace ProSuite.DdxEditor.Framework
 
 		void GoForward();
 
+		void ShowConfiguration();
+
 		void ShowOptions();
 
 		void ShowAbout();

@@ -46,5 +46,7 @@ namespace ProSuite.Commons.Orm.NHibernate
 		/// be replaced by a db query performed directly in the NH-Service.
 		/// </summary>
 		Version KnownSchemaVersion { get; set; }
+
+		string SessionFactoryErrorMessage { get; }
 	}
 }
