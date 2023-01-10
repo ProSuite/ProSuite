@@ -9,8 +9,7 @@ namespace ProSuite.Commons.Orm.NHibernate
 	[UsedImplicitly]
 	public class EncryptedDriverConnectionProvider : DriverConnectionProvider
 	{
-		private const string _connectionStringKey =
-			"hibernate.connection.connection_string";
+		private const string _connectionStringKey = "connection.connection_string";
 
 		public override void Configure(IDictionary<string, string> settings)
 		{
