@@ -285,10 +285,42 @@ namespace ProSuite.Commons.AO.Geometry
 			bool zAware = GeometryUtils.IsZAware(multipoint);
 
 			Multipoint<IPnt> result = new Multipoint<IPnt>(
-				GeometryUtils.GetPoints(multipoint).Select(p => CreatePnt(p, zAware)),
+				GetPoints(multipoint, zAware),
 				GeometryUtils.GetPointCount(multipoint));
 
 			return result;
+		}
+
+		[NotNull]
+		public static Multipoint<IPnt> CreateMultipoint([NotNull] params IMultipoint[] multipoints)
+		{
+			if (multipoints.Length == 0)
+			{
+				return Multipoint<IPnt>.CreateEmpty();
+			}
+
+			bool zAware = false;
+			Multipoint<IPnt> result = null;
+			foreach (IMultipoint aoMultipoint in multipoints)
+			{
+				if (result == null)
+				{
+					zAware = GeometryUtils.IsZAware(aoMultipoint);
+					result = new Multipoint<IPnt>(GetPoints(aoMultipoint, zAware));
+				}
+				else
+				{
+					result.AddPoints(GetPoints(aoMultipoint, zAware));
+				}
+			}
+
+			return Assert.NotNull(result);
+		}
+
+		private static IEnumerable<IPnt> GetPoints(IGeometry aoPointCollection,
+		                                           bool pnt3D)
+		{
+			return GeometryUtils.GetPoints(aoPointCollection).Select(p => CreatePnt(p, pnt3D));
 		}
 
 		[NotNull]
@@ -297,7 +329,7 @@ namespace ProSuite.Commons.AO.Geometry
 			bool zAware = GeometryUtils.IsZAware(point);
 
 			Multipoint<IPnt> result =
-				new Multipoint<IPnt>(new List<IPnt> {CreatePnt(point, zAware)});
+				new Multipoint<IPnt>(new List<IPnt> { CreatePnt(point, zAware) });
 
 			return result;
 		}
