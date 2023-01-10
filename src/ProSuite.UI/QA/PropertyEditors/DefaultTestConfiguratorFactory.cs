@@ -227,6 +227,9 @@ namespace ProSuite.UI.QA.PropertyEditors
 			// ProSuite.DomainModel:
 			AddReferencedAssembly<ITestConfigurator>(cp, assemblies);
 
+			// ProSuite.DomainModel.AO:
+			AddReferencedAssembly<TestFactory>(cp, assemblies);
+
 			// ProSuite.DomainModel.Core:
 			AddReferencedAssembly<DatasetTestParameterValue>(cp, assemblies);
 
