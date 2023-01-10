@@ -3118,7 +3118,6 @@ namespace ProSuite.Commons.AO.Test.Geometry
 		}
 
 		[Test]
-		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanConvertToFromEsriShapeBuffer()
 		{
 			ISpatialReference lv95 =
@@ -3182,10 +3181,23 @@ namespace ProSuite.Commons.AO.Test.Geometry
 			AssertExactEsriShapeBufferConversion(polygon);
 
 			// Multipatches return with empty geometry (10.6.1)!
+			// In x64 the operation results in an exception.
 			IMultiPatch multipatch = GeometryFactory.CreateMultiPatch(polygon);
 
 			byte[] bytes = GeometryUtils.ToEsriShapeBuffer(multipatch);
-			IGeometry restoredGeometry = GeometryUtils.FromEsriShapeBuffer(bytes);
+
+			IGeometry restoredGeometry = new MultiPatchClass();
+			try
+			{
+				restoredGeometry = GeometryUtils.FromEsriShapeBuffer(bytes);
+			}
+			catch (Exception e)
+			{
+				// In 32 bit: silent failure. In 64 bit: Value does not fall within the expected range 
+				Assert.IsTrue(EnvironmentUtils.Is64BitProcess);
+				Console.WriteLine(e);
+			}
+
 			Assert.IsTrue(restoredGeometry.IsEmpty);
 		}
 
