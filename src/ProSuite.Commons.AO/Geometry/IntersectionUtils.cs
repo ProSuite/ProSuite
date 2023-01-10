@@ -337,7 +337,7 @@ namespace ProSuite.Commons.AO.Geometry
 			if (! assumeIntersecting && GeometryUtils.Disjoint(geometry1, geometry2))
 			{
 				return new MultipointClass
-				       {SpatialReference = geometry1.SpatialReference};
+				       { SpatialReference = geometry1.SpatialReference };
 			}
 
 			var highLevelGeometry1 =
@@ -394,7 +394,7 @@ namespace ProSuite.Commons.AO.Geometry
 					highLevelGeometry1, highLevelGeometry2,
 					esriGeometryDimension.esriGeometry0Dimension);
 
-				return GeometryFactory.CreateMultipoint(new List<IPoint> {point});
+				return GeometryFactory.CreateMultipoint(new List<IPoint> { point });
 			}
 
 			// Multipoint argument -> needs work-around
@@ -467,7 +467,7 @@ namespace ProSuite.Commons.AO.Geometry
 				if (intersection.IsEmpty)
 				{
 					return new MultipointClass
-					       {SpatialReference = geometry1.SpatialReference};
+					       { SpatialReference = geometry1.SpatialReference };
 				}
 
 				var polyline = (IPolyline) intersection;
@@ -532,7 +532,7 @@ namespace ProSuite.Commons.AO.Geometry
 			if (! assumeIntersecting && GeometryUtils.Disjoint(polycurve1, polycurve2))
 			{
 				return new MultipointClass
-				       {SpatialReference = polycurve1.SpatialReference};
+				       { SpatialReference = polycurve1.SpatialReference };
 			}
 
 			if (UseCustomIntersect &&
@@ -778,7 +778,7 @@ namespace ProSuite.Commons.AO.Geometry
 		{
 			if (! assumeIntersecting && GeometryUtils.Disjoint(polycurve1, polycurve2))
 			{
-				return new PolylineClass {SpatialReference = polycurve1.SpatialReference};
+				return new PolylineClass { SpatialReference = polycurve1.SpatialReference };
 			}
 
 			if (UseCustomIntersect &&
@@ -1377,6 +1377,26 @@ namespace ProSuite.Commons.AO.Geometry
 				                                 boundaryIntersectionsOnly);
 
 			return intersections?.Count > 0 ? intersections : null;
+		}
+
+		public static IMultipoint GetUnionPoints(
+			IMultipoint multipoint1,
+			IMultipoint multipoint2,
+			double tolerance,
+			bool in3d = false)
+		{
+			Multipoint<IPnt> multipoint =
+				GeometryConversionUtils.CreateMultipoint(multipoint1, multipoint2);
+
+			double zTolerance = in3d ? tolerance : double.NaN;
+			IList<KeyValuePair<IPnt, List<IPnt>>> clusters =
+				GeomTopoOpUtils.Cluster(multipoint.GetPoints().ToList(), p => p, tolerance,
+				                        zTolerance);
+
+			IMultipoint result = (IMultipoint) GeometryConversionUtils.CreatePointCollection(
+				multipoint1, clusters.Select(c => c.Key));
+
+			return result;
 		}
 
 		[NotNull]

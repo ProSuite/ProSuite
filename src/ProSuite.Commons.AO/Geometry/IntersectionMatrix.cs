@@ -177,11 +177,17 @@ namespace ProSuite.Commons.AO.Geometry
 			// group by geometry type
 			var geometriesByType = new Dictionary<esriGeometryType, List<IGeometry>>();
 
+			double tolerance = 0;
 			foreach (IGeometry geometry in geometries)
 			{
 				if (geometry.IsEmpty)
 				{
 					continue;
+				}
+
+				if (geometry.SpatialReference != null)
+				{
+					tolerance = GeometryUtils.GetXyTolerance(geometry);
 				}
 
 				esriGeometryType geometryType = geometry.GeometryType;
@@ -206,11 +212,10 @@ namespace ProSuite.Commons.AO.Geometry
 
 				GeometryUtils.AllowIndexing(unionTarget);
 
-				var unionedTopoOp = (ITopologicalOperator) unionTarget;
-
 				for (var i = 1; i < geometryList.Count; i++)
 				{
-					unionTarget = unionedTopoOp.Union(geometryList[i]);
+					IGeometry secondGeometry = geometryList[i];
+					unionTarget = UnionGeometries(unionTarget, secondGeometry, tolerance);
 
 					Simplify(unionTarget);
 					GeometryUtils.AllowIndexing(unionTarget);
@@ -244,6 +249,40 @@ namespace ProSuite.Commons.AO.Geometry
 
 			// return non-empty parts
 			return unionedList.Where(geometry => ! geometry.IsEmpty).ToList();
+		}
+
+		private static IGeometry UnionGeometries([NotNull] IGeometry firstGeometry,
+		                                         [NotNull] IGeometry secondGeometry,
+		                                         double tolerance)
+		{
+			if (firstGeometry.GeometryType == esriGeometryType.esriGeometryMultipoint &&
+			    secondGeometry.GeometryType == esriGeometryType.esriGeometryMultipoint)
+			{
+				// In x64 ITopologicalOperator union of multipoint results in COMException ('not simple')
+				// Use Geom clustering instead:
+				return IntersectionUtils.GetUnionPoints((IMultipoint) firstGeometry,
+				                                        (IMultipoint) secondGeometry, tolerance);
+			}
+
+			IGeometry result = null;
+			ITopologicalOperator topologicalOperator = (ITopologicalOperator) firstGeometry;
+			try
+			{
+				result = topologicalOperator.Union(secondGeometry);
+			}
+			catch (COMException e)
+			{
+				const int geometryErrorNotSimple = -2147220968;
+				if (e.ErrorCode == geometryErrorNotSimple)
+				{
+					GeometryUtils.Simplify(firstGeometry);
+					GeometryUtils.Simplify(secondGeometry);
+
+					return topologicalOperator.Union(secondGeometry);
+				}
+			}
+
+			return result;
 		}
 
 		private static void Simplify([NotNull] IGeometry geometry)

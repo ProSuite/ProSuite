@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.AO.Licensing;
 
 namespace ProSuite.Commons.AO.Test.Geometry
 {
@@ -368,7 +367,6 @@ namespace ProSuite.Commons.AO.Test.Geometry
 		}
 
 		[Test]
-		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanGetMultipointPolygonCrossesIntersection()
 		{
 			var matrix = new IntersectionMatrix("T*T******");
@@ -399,7 +397,6 @@ namespace ProSuite.Commons.AO.Test.Geometry
 		}
 
 		[Test]
-		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanGetMultipointPolylineCrossesIntersection()
 		{
 			var matrix = new IntersectionMatrix("T*T******");

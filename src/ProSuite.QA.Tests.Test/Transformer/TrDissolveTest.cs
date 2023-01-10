@@ -17,8 +17,6 @@ namespace ProSuite.QA.Tests.Test.Transformer
 	[TestFixture]
 	public class TrDissolveTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
-
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{

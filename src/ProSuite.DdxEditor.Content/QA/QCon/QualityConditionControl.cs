@@ -15,7 +15,6 @@ using ProSuite.Commons.UI.WinForms.Controls;
 using ProSuite.DdxEditor.Content.QA.InstanceConfig;
 using ProSuite.DdxEditor.Content.QA.TestDescriptors;
 using ProSuite.DdxEditor.Framework.ItemViews;
-using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Core;
 using ProSuite.UI.QA;
@@ -489,10 +488,10 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 
 			try
 			{
-				TestFactory testFactory = TestFactoryUtils.GetTestFactory(testDescriptor);
-				return string.Format("{0} ( {1} )",
-				                     testDescriptor.Name,
-				                     InstanceUtils.GetTestSignature(testFactory));
+				IInstanceInfo instanceInfo =
+					InstanceDescriptorUtils.GetInstanceInfo(testDescriptor);
+
+				return $"{testDescriptor.Name} ( {InstanceUtils.GetTestSignature(instanceInfo)} )";
 			}
 			catch (Exception e)
 			{
@@ -765,7 +764,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 		private void _instanceParameterConfigControl_DocumentationLinkClicked(
 			object sender, EventArgs e)
 		{
-			Observer.DescriptorDocumentationLinkClicked();
+			Observer?.DescriptorDocumentationLinkClicked();
 		}
 	}
 }

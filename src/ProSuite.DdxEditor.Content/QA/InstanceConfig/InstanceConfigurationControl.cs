@@ -10,7 +10,6 @@ using ProSuite.Commons.UI.ScreenBinding;
 using ProSuite.Commons.UI.ScreenBinding.Elements;
 using ProSuite.Commons.UI.WinForms.Controls;
 using ProSuite.DdxEditor.Framework.ItemViews;
-using ProSuite.DomainModel.Core;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Core;
 using ProSuite.UI.QA;
@@ -236,16 +235,8 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 
 			try
 			{
-				ClassDescriptor instanceClass = descriptor.Class;
-
-				if (instanceClass == null)
-				{
-					return $"{descriptor}";
-				}
-
-				var instanceInfo = new InstanceInfo(instanceClass.AssemblyName,
-				                                    instanceClass.TypeName,
-				                                    descriptor.ConstructorId);
+				IInstanceInfo instanceInfo =
+					InstanceDescriptorUtils.GetInstanceInfo(descriptor);
 
 				return $"{descriptor.Name} ( {InstanceUtils.GetTestSignature(instanceInfo)} )";
 			}
@@ -344,7 +335,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 
 		private void _linkDocumentation_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
 		{
-			Observer.DescriptorDocumentationLinkClicked();
+			Observer?.DescriptorDocumentationLinkClicked();
 		}
 	}
 }

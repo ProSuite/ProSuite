@@ -36,15 +36,17 @@ namespace ProSuite.QA.Tests.Test.TestData
 		[NotNull]
 		public static IWorkspace OpenTopgisTlm()
 		{
-			return WorkspaceUtils.OpenSDEWorkspace(DirectConnectDriver.Oracle11g, "TOPGIST",
-			                                       "SDE.DEFAULT");
+			return WorkspaceUtils.OpenSDEWorkspace(
+				DirectConnectDriver.Oracle11g, "TOPGIST",
+				"sde", "sde", "SDE.DEFAULT");
 		}
 
 		[NotNull]
 		public static IWorkspace OpenTopgisAlti()
 		{
-			return WorkspaceUtils.OpenSDEWorkspace(DirectConnectDriver.Oracle11g, "ALTIT",
-			                                       "SDE.DEFAULT");
+			return WorkspaceUtils.OpenSDEWorkspace(
+				DirectConnectDriver.Oracle11g, "ALTIT",
+				"sde", "sde", "SDE.DEFAULT");
 		}
 
 		[NotNull]

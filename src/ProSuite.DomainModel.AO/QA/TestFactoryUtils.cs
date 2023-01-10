@@ -16,6 +16,7 @@ namespace ProSuite.DomainModel.AO.QA
 		/// </summary>
 		/// <returns>TestFactory or null.</returns>
 		[CanBeNull]
+		//TODO: change to QualityCondition
 		public static TestFactory CreateTestFactory(
 			[NotNull] InstanceConfiguration instanceConfiguration)
 		{
@@ -30,7 +31,10 @@ namespace ProSuite.DomainModel.AO.QA
 
 			if (factory != null)
 			{
-				factory.Condition = instanceConfiguration;
+				if (instanceConfiguration is QualityCondition qualityCondition)
+				{
+					factory.Condition = qualityCondition;
+				}
 
 				InstanceConfigurationUtils.InitializeParameterValues(
 					factory, instanceConfiguration);
@@ -45,6 +49,8 @@ namespace ProSuite.DomainModel.AO.QA
 		/// <param name="descriptor"></param>
 		/// <returns>TestFactory or null if neither the test class nor the test factory descriptor are defined.</returns>
 		[CanBeNull]
+		//TODO: make private
+		//TODO: change to TestDescriptor
 		public static TestFactory GetTestFactory([NotNull] InstanceDescriptor descriptor)
 		{
 			Assert.ArgumentNotNull(descriptor, nameof(descriptor));

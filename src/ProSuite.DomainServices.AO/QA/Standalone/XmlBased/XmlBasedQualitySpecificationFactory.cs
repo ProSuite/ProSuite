@@ -102,7 +102,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 				                                     new IssueFilterExpressionParser());
 
 			IList<XmlWorkspace> referencedXmlWorkspaces =
-				XmlDataQualityUtils.GetReferencedWorkspaces(documentCache);
+				XmlDataQualityUtils.GetReferencedWorkspaces(documentCache, out bool _);
 
 			IDictionary<string, DdxModel> modelsByWorkspaceId = GetModelsByWorkspaceId(
 				referencedXmlWorkspaces, dataSources,

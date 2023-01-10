@@ -7,7 +7,6 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
 using ProSuite.Commons.UI.WinForms.Controls;
 using ProSuite.DdxEditor.Framework.TableRows;
-using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Core;
 using ProSuite.UI.QA.ResourceLookup;
@@ -38,18 +37,19 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 			_entity = entity;
 			_referencingQualityConditionCount = referencingQualityConditionCount;
 
-			_image = TestTypeImageLookup.GetImage(_entity);
-			_image.Tag = TestTypeImageLookup.GetDefaultSortIndex(_entity);
+			_image = TestTypeImageLookup.GetImage(entity);
+			_image.Tag = TestTypeImageLookup.GetDefaultSortIndex(entity);
 
 			try
 			{
-				TestFactory testFactory = TestFactoryUtils.GetTestFactory(_entity);
+				IInstanceInfo instanceInfo =
+					InstanceDescriptorUtils.GetInstanceInfo(entity);
 
-				_testDescription = testFactory.TestDescription ?? string.Empty;
+				_testDescription = instanceInfo.TestDescription ?? string.Empty;
 
-				_categories = StringUtils.ConcatenateSorted(testFactory.TestCategories, ", ");
+				_categories = StringUtils.ConcatenateSorted(instanceInfo.TestCategories, ", ");
 
-				_parameters = InstanceUtils.GetTestSignature(testFactory);
+				_parameters = InstanceUtils.GetTestSignature(instanceInfo);
 			}
 			catch (TypeLoadException e)
 			{
