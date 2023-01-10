@@ -47,6 +47,8 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			{
 				try
 				{
+					// TODO: The performance overhead of increaseRcwRefCount: true is very large,
+					// but only in x64!
 					object shapeProperty = ValueSet.GetValue(_shapeFieldIndex, true);
 
 					if (shapeProperty == DBNull.Value)

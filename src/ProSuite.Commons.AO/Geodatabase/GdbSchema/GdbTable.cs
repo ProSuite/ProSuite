@@ -134,7 +134,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		#endregion
 
-		public int OidFieldIndex { get; private set; }
+		public int OidFieldIndex { get; private set; } = -1;
 
 		public void SetOIDFieldName(string fieldName)
 		{
