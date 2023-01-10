@@ -193,7 +193,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			return row.OID;
 		}
 
-		private int OidFieldIndex
+		internal int OidFieldIndex
 		{
 			get
 			{
