@@ -65,9 +65,9 @@ namespace ProSuite.DomainModel.AO.QA
 
 		[NotNull]
 		public IIssueFilter Create([NotNull] IOpenDataset datasetContext,
-		                           [NotNull] IssueFilterConfiguration issueFilterConfiguration)
+		                           [NotNull] IssueFilterConfiguration IssueFilterConfiguration)
 		{
-			return Create(issueFilterConfiguration, datasetContext, Parameters,
+			return Create(IssueFilterConfiguration, datasetContext, Parameters,
 			              CreateInstance<IIssueFilter>);
 		}
 

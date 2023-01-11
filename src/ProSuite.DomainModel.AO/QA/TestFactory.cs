@@ -38,7 +38,7 @@ namespace ProSuite.DomainModel.AO.QA
 		#endregion
 
 		[CanBeNull]
-		public QualityCondition Condition { get; set; }
+		public InstanceConfiguration Condition { get; set; }
 
 		[NotNull]
 		public override string[] TestCategories => InstanceUtils.GetCategories(GetType());
@@ -65,6 +65,18 @@ namespace ProSuite.DomainModel.AO.QA
 			[NotNull] IEnumerable<TestParameterValue> parameterValues)
 		{
 			return null;
+		}
+
+		//public bool CheckTypes(out string error)
+		//{
+		//    error = "Not implemented";
+		//    return false;
+		//}
+
+		[Obsolete]
+		public virtual bool Validate(out string error)
+		{
+			throw new NotImplementedException();
 		}
 
 		protected static T ValidateType<T>(object objParam,
@@ -200,7 +212,7 @@ namespace ProSuite.DomainModel.AO.QA
 
 		private void AddIssueFilters([NotNull] IList<ITest> tests, IOpenDataset datasetContext)
 		{
-			if (Condition == null)
+			if (! (Condition is QualityCondition c))
 			{
 				return;
 			}
@@ -211,25 +223,19 @@ namespace ProSuite.DomainModel.AO.QA
 
 				IList<IIssueFilter> filters = new List<IIssueFilter>();
 
-				foreach (var issueFilterConfiguration in Condition.IssueFilterConfigurations)
+				foreach (var issueFilterConfiguration in c.IssueFilterConfigurations)
 				{
 					DefaultTestFactory factory = (DefaultTestFactory)
 						TestFactoryUtils.CreateTestFactory(issueFilterConfiguration);
 					Assert.NotNull(factory);
 					IIssueFilter filter = factory.CreateInstance<IIssueFilter>(datasetContext);
-
-					//TODO: should be something like this:
-					//var factory = InstanceFactoryUtils.CreateIssueFilterFactory(issueFilterConfiguration);
-					//Assert.NotNull(factory);
-					//IIssueFilter filter = factory.Create(datasetContext, issueFilterConfiguration);
-
 					filter.Name = issueFilterConfiguration.Name;
 					filters.Add(filter);
 				}
 
 				if (filters.Count > 0)
 				{
-					filterTest.SetIssueFilters(Condition.IssueFilterExpression, filters);
+					filterTest.SetIssueFilters(c.IssueFilterExpression, filters);
 				}
 			}
 		}
@@ -319,13 +325,14 @@ namespace ProSuite.DomainModel.AO.QA
 			}
 			catch (Exception e)
 			{
-				if (Condition == null)
+				InstanceConfiguration condition = Condition;
+				if (condition == null)
 				{
 					throw new AssertionException(
 						"Unable to create test for undefined condition", e);
 				}
 
-				StringBuilder sb = InstanceFactoryUtils.GetErrorMessageWithDetails(Condition, e);
+				StringBuilder sb = InstanceFactoryUtils.GetErrorMessageWithDetails(condition, e);
 
 				throw new InvalidOperationException(sb.ToString(), e);
 			}

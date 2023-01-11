@@ -18,10 +18,10 @@ namespace ProSuite.DomainModel.AO.QA
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		/// <summary>
-		/// Gets the instance factory, sets the instance configuration and initializes its 
+		/// Gets the transformer factory, sets the transformer configuration and initializes its 
 		/// parameter values.
 		/// </summary>
-		/// <returns>InstanceFactory or null.</returns>
+		/// <returns>TransformerFactory or null.</returns>
 		[CanBeNull]
 		public static InstanceFactory CreateFactory(
 			[NotNull] InstanceConfiguration instanceConfiguration)
@@ -51,17 +51,9 @@ namespace ProSuite.DomainModel.AO.QA
 			throw new NotImplementedException();
 		}
 
-		/// <summary>
-		/// Gets the issue filter factory, sets the issue filter configuration and initializes its 
-		/// parameter values.
-		/// </summary>
-		/// <returns>IssueFilterFactory or null.</returns>
-		[CanBeNull]
-		public static IssueFilterFactory CreateIssueFilterFactory(
+		private static IssueFilterFactory CreateIssueFilterFactory(
 			[NotNull] IssueFilterConfiguration issueFilterConfig)
 		{
-			Assert.ArgumentNotNull(issueFilterConfig, nameof(issueFilterConfig));
-
 			if (issueFilterConfig.InstanceDescriptor == null)
 			{
 				return null;
@@ -246,6 +238,11 @@ namespace ProSuite.DomainModel.AO.QA
 			}
 			else if (result.Length > 2 &&
 			         result.StartsWith("if", StringComparison.CurrentCultureIgnoreCase))
+			{
+				result = result.Substring(2);
+			}
+			else if (result.Length > 2 &&
+			         result.StartsWith("rf", StringComparison.InvariantCultureIgnoreCase))
 			{
 				result = result.Substring(2);
 			}
