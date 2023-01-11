@@ -26,6 +26,8 @@ namespace ProSuite.QA.Tests.Test.Transformer
 
 		[Test]
 		[Category(TestCategory.Sde)]
+		[Category(Commons.Test.TestCategory.FixMe)]
+		[Ignore("requires version non-existing TG_SERVICE.RC_TLM_2022-6-30")]
 		public void CanOpenAssociationTable()
 		{
 			IFeatureWorkspace workspace = OpenTestWorkspaceSde();
@@ -54,6 +56,8 @@ namespace ProSuite.QA.Tests.Test.Transformer
 
 		[Test]
 		[Category(TestCategory.Sde)]
+		[Category(Commons.Test.TestCategory.FixMe)]
+		[Ignore("requires version non-existing TG_SERVICE.RC_TLM_2022-6-30")]
 		public void CanOpenQueryClass()
 		{
 			IFeatureWorkspace workspace = OpenTestWorkspaceSde();

@@ -154,6 +154,7 @@ namespace ProSuite.QA.Tests.Test
 
 		[Test]
 		[Category(TestCategory.Sde)]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanTestEmptyGeometrySdeMultipatch()
 		{
 			IWorkspace workspace = TestUtils.OpenUserWorkspaceOracle();

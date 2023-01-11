@@ -55,6 +55,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 		[Test]
 		[Category(TestCategory.Sde)]
+		[Ignore("requires PROSUITE_DDX in sql express")]
 		public void TestIsOwnedByConnectedUser()
 		{
 			IWorkspace workspace = WorkspaceUtils.OpenSDEWorkspace(

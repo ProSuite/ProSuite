@@ -4,6 +4,7 @@ using System.Linq;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.AO.Geometry.CreateFootprint;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
@@ -135,8 +136,19 @@ namespace ProSuite.QA.Tests
 		private int CheckMultiPatch([NotNull] IReadOnlyFeature feature,
 		                            [NotNull] IMultiPatch multiPatch)
 		{
-			IPolyline tooSmallRings;
-			IPolygon footprint = GetFootprint(multiPatch, _xyTolerance, out tooSmallRings);
+			IPolyline tooSmallRings = null;
+
+			IPolygon footprint = null;
+			if (IntersectionUtils.UseCustomIntersect)
+			{
+				footprint =
+					CreateFootprintUtils.TryGetGeomFootprint(multiPatch, out tooSmallRings);
+			}
+
+			if (footprint == null)
+			{
+				footprint = GetFootprint(multiPatch, _xyTolerance, out tooSmallRings);
+			}
 
 			var errorCount = 0;
 
@@ -251,7 +263,7 @@ namespace ProSuite.QA.Tests
 					continue;
 				}
 
-				IPolyline polyline = CreatePolyline(new[] {ring}, spatialReference);
+				IPolyline polyline = CreatePolyline(new[] { ring }, spatialReference);
 
 				if (polyline == null)
 				{

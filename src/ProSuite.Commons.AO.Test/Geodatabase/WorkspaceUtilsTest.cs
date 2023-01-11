@@ -95,6 +95,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 		[Test]
 		[Category(TestCategory.Sde)]
+		[Ignore("requires PROSUITE_DDX in sql express")]
 		public void CanGetWorkspaceDisplayTextForSqlExpress()
 		{
 			IWorkspace workspace =
@@ -126,6 +127,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 		[Test]
 		[Category(TestCategory.Sde)]
+		[Ignore("requires PROSUITE_DDX in sql express")]
 		public void LearningTestDatabasePropertiesSqlExpress()
 		{
 			IWorkspace workspace =
@@ -145,6 +147,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 		[Test]
 		[Category(TestCategory.Sde)]
+		[Ignore("requires PROSUITE_DDX in sql express")]
 		public void LearningTestSQLSyntaxSDESqlServer()
 		{
 			IWorkspace workspace =
@@ -207,10 +210,9 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 		[Test]
 		[Category(TestCategory.Sde)]
-		[Ignore("requires Oracle wallet for testserver")]
 		public void LearningTestWorkspacePropertiesSDEOracle()
 		{
-			IWorkspace workspace = TestUtils.OpenOsaWorkspaceOracle();
+			IWorkspace workspace = TestUtils.OpenSDEWorkspaceOracle();
 
 			LogWorkspaceProperties(workspace);
 
@@ -413,6 +415,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 		[Test]
 		[Category(TestCategory.Sde)]
+		[Ignore("requires Oracle wallet for testserver")]
 		public void CanOpenNonDefaultSDEWorkspaceOSA()
 		{
 			IWorkspace workspace =
@@ -426,6 +429,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 		[Test]
 		[Category(TestCategory.Sde)]
+		[Ignore("requires Oracle wallet for testserver")]
 		public void CanOpenNonDefaultSDEWorkspaceOSAWithVersionName()
 		{
 			const string versionName = "TOPGIS_DDX.DEFAULT";

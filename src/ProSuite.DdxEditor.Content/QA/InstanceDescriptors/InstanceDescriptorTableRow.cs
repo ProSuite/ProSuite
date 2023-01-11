@@ -16,7 +16,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 	public class InstanceDescriptorTableRow : IEntityRow, IEntityRow<InstanceDescriptor>
 	{
 		private readonly InstanceDescriptor _entity;
-		private readonly int _referencingQualityConditionCount;
+		private readonly int _referencingInstanceConfigurationCount;
 		private readonly string _algorithmDescription;
 		private readonly Image _image;
 		private readonly string _parameters;
@@ -27,25 +27,23 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 		/// Initializes a new instance of the <see cref="InstanceDescriptorTableRow"/> class.
 		/// </summary>
 		/// <param name="entity">The instance descriptor.</param>
-		/// <param name="referencingQualityConditionCount">The number of conditions that reference this
+		/// <param name="referencingInstanceConfigurationCount">The number of configurations that reference this
 		/// instance descriptor.</param>
 		public InstanceDescriptorTableRow([NotNull] InstanceDescriptor entity,
-		                                  int referencingQualityConditionCount)
+		                                  int referencingInstanceConfigurationCount)
 		{
 			Assert.ArgumentNotNull(entity, nameof(entity));
 
 			_entity = entity;
-			_referencingQualityConditionCount = referencingQualityConditionCount;
+			_referencingInstanceConfigurationCount = referencingInstanceConfigurationCount;
 
-			_image = TestTypeImageLookup.GetImage(_entity);
-			_image.Tag = TestTypeImageLookup.GetDefaultSortIndex(_entity);
+			_image = TestTypeImageLookup.GetImage(entity);
+			_image.Tag = TestTypeImageLookup.GetDefaultSortIndex(entity);
 
 			try
 			{
-				Assert.NotNull(_entity.Class, "Class not initialized");
-				var instanceInfo = new InstanceInfo(_entity.Class.AssemblyName,
-				                                    _entity.Class.TypeName,
-				                                    _entity.ConstructorId);
+				IInstanceInfo instanceInfo =
+					InstanceDescriptorUtils.GetInstanceInfo(entity);
 
 				_algorithmDescription = instanceInfo.TestDescription ?? string.Empty;
 
@@ -83,7 +81,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 		[DisplayName("Usage Count")]
 		[ColumnConfiguration(Width = 70)]
 		[UsedImplicitly]
-		public int ReferencingQualityConditionCount => _referencingQualityConditionCount;
+		public int ReferencingInstanceConfigurationCount => _referencingInstanceConfigurationCount;
 
 		[UsedImplicitly]
 		[ColumnConfiguration(Width = 300)]

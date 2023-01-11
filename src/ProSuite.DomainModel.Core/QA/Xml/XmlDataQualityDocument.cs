@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Serialization;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -142,16 +143,18 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 				}
 			}
 
-			if (Categories != null)
+			if (Categories == null)
 			{
-				foreach (XmlDataQualityCategory category in Categories)
+				yield break;
+			}
+
+			foreach (XmlDataQualityCategory category in Categories)
+			{
+				foreach (
+					KeyValuePair<XmlQualitySpecification, XmlDataQualityCategory> pair in
+					GetQualitySpecifications(category))
 				{
-					foreach (
-						KeyValuePair<XmlQualitySpecification, XmlDataQualityCategory> pair in
-						GetQualitySpecifications(category))
-					{
-						yield return pair;
-					}
+					yield return pair;
 				}
 			}
 		}
@@ -169,16 +172,77 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 				}
 			}
 
-			if (Categories != null)
+			if (Categories == null)
 			{
-				foreach (XmlDataQualityCategory category in Categories)
+				yield break;
+			}
+
+			foreach (XmlDataQualityCategory category in Categories)
+			{
+				foreach (
+					KeyValuePair<XmlQualityCondition, XmlDataQualityCategory> pair in
+					GetInstanceConfigurations<XmlQualityCondition>(category))
 				{
-					foreach (
-						KeyValuePair<XmlQualityCondition, XmlDataQualityCategory> pair in
-						GetQualityConditions(category))
-					{
-						yield return pair;
-					}
+					yield return pair;
+				}
+			}
+		}
+
+		[NotNull]
+		public IEnumerable<KeyValuePair<XmlTransformerConfiguration, XmlDataQualityCategory>>
+			GetAllTransformers()
+		{
+			if (Transformers != null)
+			{
+				foreach (XmlTransformerConfiguration tr in Transformers)
+				{
+					yield return
+						new KeyValuePair<XmlTransformerConfiguration, XmlDataQualityCategory>(
+							tr, null);
+				}
+			}
+
+			if (Categories == null)
+			{
+				yield break;
+			}
+
+			foreach (XmlDataQualityCategory category in Categories)
+			{
+				foreach (
+					KeyValuePair<XmlTransformerConfiguration, XmlDataQualityCategory> pair in
+					GetInstanceConfigurations<XmlTransformerConfiguration>(category))
+				{
+					yield return pair;
+				}
+			}
+		}
+
+		[NotNull]
+		public IEnumerable<KeyValuePair<XmlIssueFilterConfiguration, XmlDataQualityCategory>>
+			GetAllIssueFilters()
+		{
+			if (IssueFilters != null)
+			{
+				foreach (XmlIssueFilterConfiguration iF in IssueFilters)
+				{
+					yield return new KeyValuePair<XmlIssueFilterConfiguration,
+						XmlDataQualityCategory>(iF, null);
+				}
+			}
+
+			if (Categories == null)
+			{
+				yield break;
+			}
+
+			foreach (XmlDataQualityCategory category in Categories)
+			{
+				foreach (
+					KeyValuePair<XmlIssueFilterConfiguration, XmlDataQualityCategory> pair in
+					GetInstanceConfigurations<XmlIssueFilterConfiguration>(category))
+				{
+					yield return pair;
 				}
 			}
 		}
@@ -234,8 +298,7 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 
 		[NotNull]
 		private IEnumerable<KeyValuePair<XmlQualitySpecification, XmlDataQualityCategory>>
-			GetQualitySpecifications(
-				[NotNull] XmlDataQualityCategory category)
+			GetQualitySpecifications([NotNull] XmlDataQualityCategory category)
 		{
 			if (category.QualitySpecifications != null)
 			{
@@ -246,44 +309,43 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 				}
 			}
 
-			if (category.SubCategories != null)
+			if (category.SubCategories == null)
 			{
-				foreach (XmlDataQualityCategory subCategory in category.SubCategories)
+				yield break;
+			}
+
+			foreach (XmlDataQualityCategory subCategory in category.SubCategories)
+			{
+				foreach (
+					KeyValuePair<XmlQualitySpecification, XmlDataQualityCategory> pair in
+					GetQualitySpecifications(subCategory))
 				{
-					foreach (
-						KeyValuePair<XmlQualitySpecification, XmlDataQualityCategory> pair in
-						GetQualitySpecifications(subCategory))
-					{
-						yield return pair;
-					}
+					yield return pair;
 				}
 			}
 		}
 
 		[NotNull]
-		private IEnumerable<KeyValuePair<XmlQualityCondition, XmlDataQualityCategory>>
-			GetQualityConditions(
-				[NotNull] XmlDataQualityCategory category)
+		private IEnumerable<KeyValuePair<T, XmlDataQualityCategory>>
+			GetInstanceConfigurations<T>([NotNull] XmlDataQualityCategory category)
+			where T : XmlInstanceConfiguration
 		{
-			if (category.QualityConditions != null)
+			foreach (T config in category.GetInstanceConfigurations().OfType<T>())
 			{
-				foreach (XmlQualityCondition qc in category.QualityConditions)
-				{
-					yield return new KeyValuePair<XmlQualityCondition, XmlDataQualityCategory>(
-						qc, category);
-				}
+				yield return new KeyValuePair<T, XmlDataQualityCategory>(config, category);
 			}
 
-			if (category.SubCategories != null)
+			if (category.SubCategories == null)
 			{
-				foreach (XmlDataQualityCategory subCategory in category.SubCategories)
+				yield break;
+			}
+
+			foreach (XmlDataQualityCategory subCategory in category.SubCategories)
+			{
+				foreach (KeyValuePair<T, XmlDataQualityCategory> pair in
+				         GetInstanceConfigurations<T>(subCategory))
 				{
-					foreach (
-						KeyValuePair<XmlQualityCondition, XmlDataQualityCategory> pair in
-						GetQualityConditions(subCategory))
-					{
-						yield return pair;
-					}
+					yield return pair;
 				}
 			}
 		}

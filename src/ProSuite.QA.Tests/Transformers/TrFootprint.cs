@@ -22,7 +22,7 @@ namespace ProSuite.QA.Tests.Transformers
 		protected override IEnumerable<GdbFeature> Transform(IGeometry source,
 		                                                     int? sourceOid)
 		{
-			IMultiPatch patch = (IMultiPatch) source;
+			IMultiPatch multipatch = (IMultiPatch) source;
 
 			TransformedFeatureClass transformedClass = GetTransformed();
 
@@ -30,7 +30,10 @@ namespace ProSuite.QA.Tests.Transformers
 				                     ? CreateFeature()
 				                     : (GdbFeature) transformedClass.CreateObject(sourceOid.Value);
 
-			feature.Shape = CreateFootprintUtils.GetFootprint(patch);
+			IPolygon result = CreateFootprintUtils.GetFootprint(multipatch);
+
+			feature.Shape = result;
+
 			yield return feature;
 		}
 	}

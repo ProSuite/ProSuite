@@ -273,7 +273,9 @@ namespace ProSuite.Commons.AO.Test
 
 			if (string.IsNullOrEmpty(agLicenseClass))
 			{
-				return new BasicLicense();
+				return EnvironmentUtils.Is64BitProcess
+					       ? (IArcGISLicense) new ServerLicense()
+					       : new BasicLicense();
 			}
 
 			Type licType = Type.GetType(agLicenseClass);

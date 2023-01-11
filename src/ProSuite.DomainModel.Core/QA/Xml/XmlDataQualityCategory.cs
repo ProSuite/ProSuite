@@ -131,7 +131,35 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 
 			return false;
 		}
-		
+
+		[NotNull]
+		public IEnumerable<XmlInstanceConfiguration> GetInstanceConfigurations()
+		{
+			if (QualityConditions != null)
+			{
+				foreach (var instanceConfig in QualityConditions)
+				{
+					yield return instanceConfig;
+				}
+			}
+
+			if (Transformers != null)
+			{
+				foreach (var instanceConfig in Transformers)
+				{
+					yield return instanceConfig;
+				}
+			}
+
+			if (IssueFilters != null)
+			{
+				foreach (var instanceConfig in IssueFilters)
+				{
+					yield return instanceConfig;
+				}
+			}
+		}
+
 		public void AddSubCategory([NotNull] XmlDataQualityCategory xmlSubCategory)
 		{
 			Assert.ArgumentNotNull(xmlSubCategory, nameof(xmlSubCategory));
