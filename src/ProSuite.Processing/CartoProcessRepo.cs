@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Xml;
 using System.Xml.Linq;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -28,9 +29,17 @@ namespace ProSuite.Processing
 		public void LoadFile(string xmlFilePath, IReadOnlyList<Type> knownTypes)
 		{
 			var doc = XDocument.Load(xmlFilePath, LoadOptions.SetLineInfo);
-			var root = doc.Root ?? new XElement("GdbProcesses");
+			var root = doc.Root ?? new XElement("CartoProcesses");
 
-			Reload(root, knownTypes);
+			try
+			{
+				Reload(root, knownTypes);
+			}
+			catch (FormatException ex)
+			{
+				throw new CartoConfigException(
+					$"Invalid carto process configuration file {xmlFilePath}: {ex.Message}");
+			}
 		}
 
 		private void Reload(XElement root, IReadOnlyList<Type> knownTypes)
@@ -62,8 +71,12 @@ namespace ProSuite.Processing
 			IReadOnlyList<XElement> declaredTypes, IReadOnlyList<Type> knownTypes)
 		{
 			var name = Canonical((string) processElement.Attribute("name"));
+
 			var typeElement = processElement.Element("TypeReference");
-			var type = ResolveType(typeElement, declaredTypes, knownTypes);
+			var typeAlias = (string) typeElement?.Attribute("name") ??
+			                throw new FormatException(AppendLineInfo("Process has no type reference", processElement));
+
+			var type = ResolveType(typeAlias, declaredTypes, knownTypes);
 			var configText = processElement.ToString();
 			var description = Canonical((string) processElement.Attribute("description"));
 
@@ -75,21 +88,40 @@ namespace ProSuite.Processing
 			IReadOnlyList<XElement> declaredTypes, IReadOnlyList<Type> knownTypes)
 		{
 			var name = Canonical((string) groupElement.Attribute("name"));
-			var typeElement = groupElement.Element("AssociatedGroupProcessTypeReference");
-			var type = ResolveType(typeElement, declaredTypes, knownTypes);
+
+			var typeElement = groupElement.Element("AssociatedGroupProcessTypeReference") ??
+			                  groupElement.Element("GroupProcessTypeReference") ??
+			                  groupElement.Element("TypeReference");
+			var typeAlias = (string) typeElement?.Attribute("name") ??
+			                throw new FormatException(AppendLineInfo("Process has no type reference", groupElement));
+
+			var type = ResolveType(typeAlias, declaredTypes, knownTypes);
 			var configText = groupElement.ToString();
 			var description = Canonical((string) groupElement.Attribute("description"));
 
 			return new CartoProcessDefinition(seqNo, name, type, configText, description);
 		}
 
-		[NotNull]
-		private static CartoProcessType ResolveType(XElement typeReference, IReadOnlyList<XElement> declaredTypes, IReadOnlyList<Type> knownTypes)
+		private static string AppendLineInfo(string message, XObject xml, bool includePosition = false)
 		{
-			// 1. look up typeReference in declaredTypes to find the actual typeName
-			// 2. look up typeName in knownTypes to find the actual Type
+			if (xml is IXmlLineInfo info && info.HasLineInfo())
+			{
+				return includePosition
+					       ? $"{message} (line {info.LineNumber} position {info.LinePosition})"
+					       : $"{message} (line {info.LineNumber})";
+			}
 
-			var typeAlias = (string) typeReference?.Attribute("name");
+			return message;
+		}
+
+		[NotNull]
+		private static CartoProcessType ResolveType(string typeAlias, IReadOnlyList<XElement> declaredTypes, IReadOnlyList<Type> knownTypes)
+		{
+			if (typeAlias is null)
+				throw new ArgumentNullException(nameof(typeAlias));
+
+			// 1. look up typeAlias in declaredTypes to find the actual typeName
+			// 2. look up typeName in knownTypes to find the actual Type
 
 			var declaredType = declaredTypes.FirstOrDefault(e => MatchOrdinal(e, typeAlias)) ??
 			                   declaredTypes.FirstOrDefault(e => MatchIgnoreCase(e, typeAlias));
