@@ -1,13 +1,7 @@
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using ESRI.ArcGIS.Geodatabase;
-using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
-using ProSuite.DomainModel.AO.DataModel;
-using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.Xml;
@@ -21,22 +15,17 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		protected IVerifiedModelFactory ModelFactory { get; }
-		[NotNull] private readonly IOpenDataset _datasetOpener;
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="XmlBasedQualitySpecificationFactory"/> class.
 		/// </summary>
 		/// <param name="modelFactory">The model builder.</param>
-		/// <param name="datasetOpener"></param>
 		protected QualitySpecificationFactoryBase(
-			[NotNull] IVerifiedModelFactory modelFactory,
-			[NotNull] IOpenDataset datasetOpener)
+			[NotNull] IVerifiedModelFactory modelFactory)
 		{
 			Assert.ArgumentNotNull(modelFactory, nameof(modelFactory));
-			Assert.ArgumentNotNull(datasetOpener, nameof(datasetOpener));
 
 			ModelFactory = modelFactory;
-			_datasetOpener = datasetOpener;
 		}
 
 		protected static void HandleNoConditionCreated(
@@ -59,62 +48,6 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 					unknownDatasetParameters,
 					modelsByWorkspaceId,
 					DataSource.AnonymousId));
-		}
-
-		protected ISpatialReference GetMainSpatialReference(
-			Model model, IEnumerable<Dataset> referencedDatasets)
-		{
-			var spatialDatasetReferenceCount =
-				new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-
-			foreach (Dataset dataset in referencedDatasets)
-			{
-				if (! (dataset is ISpatialDataset))
-				{
-					continue;
-				}
-
-				if (! spatialDatasetReferenceCount.ContainsKey(dataset.Name))
-				{
-					spatialDatasetReferenceCount.Add(dataset.Name, 1);
-				}
-				else
-				{
-					spatialDatasetReferenceCount[dataset.Name]++;
-				}
-			}
-
-			foreach (KeyValuePair<string, int> pair in
-			         spatialDatasetReferenceCount.OrderByDescending(kvp => kvp.Value))
-			{
-				string datasetName = pair.Key;
-
-				Dataset maxDataset = model.GetDatasetByModelName(datasetName);
-
-				if (maxDataset == null)
-				{
-					continue;
-				}
-
-				ISpatialReference spatialReference = GetSpatialReference(maxDataset);
-
-				if (spatialReference != null)
-				{
-					return spatialReference;
-				}
-			}
-
-			return null;
-		}
-
-		[CanBeNull]
-		private ISpatialReference GetSpatialReference([NotNull] Dataset dataset)
-		{
-			Assert.ArgumentNotNull(dataset, nameof(dataset));
-
-			IGeoDataset geoDataset = _datasetOpener.OpenDataset(dataset) as IGeoDataset;
-
-			return geoDataset?.SpatialReference;
 		}
 	}
 }

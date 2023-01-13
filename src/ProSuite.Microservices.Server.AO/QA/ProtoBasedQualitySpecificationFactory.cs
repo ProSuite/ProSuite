@@ -4,7 +4,6 @@ using System.Globalization;
 using System.Linq;
 using System.Threading;
 using ESRI.ArcGIS.Geodatabase;
-using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Exceptions;
@@ -35,11 +34,9 @@ namespace ProSuite.Microservices.Server.AO.QA
 		/// </summary>
 		/// <param name="modelFactory">The model factory</param>
 		/// <param name="instanceDescriptors">All supported instance configurations</param>
-		/// <param name="datasetOpener"></param>
 		public ProtoBasedQualitySpecificationFactory(
 			[NotNull] IVerifiedModelFactory modelFactory,
-			ISupportedInstanceDescriptors instanceDescriptors,
-			[NotNull] IOpenDataset datasetOpener) : base(modelFactory, datasetOpener)
+			[NotNull] ISupportedInstanceDescriptors instanceDescriptors) : base(modelFactory)
 		{
 			_instanceDescriptors = instanceDescriptors;
 		}
@@ -452,31 +449,16 @@ namespace ProSuite.Microservices.Server.AO.QA
 			[CanBeNull] string schemaOwner,
 			[NotNull] IEnumerable<QualityConditionMsg> referencedConditions)
 		{
-			Model result = ModelFactory.CreateModel(workspace, modelName, null,
+			Model result = ModelFactory.CreateModel(workspace, modelName,
 			                                        databaseName, schemaOwner);
 
-			ISpatialReference spatialReference = GetMainSpatialReference(
+			IEnumerable<Dataset> referencedDatasets = GetReferencedDatasets(
 				result, workspaceId, referencedConditions);
 
-			if (spatialReference != null)
-			{
-				result.SpatialReferenceDescriptor =
-					new SpatialReferenceDescriptor(spatialReference);
-			}
+			ModelFactory.AssignMostFrequentlyUsedSpatialReference(
+				result, referencedDatasets);
 
 			return result;
-		}
-
-		[CanBeNull]
-		private ISpatialReference GetMainSpatialReference(
-			[NotNull] Model model,
-			[NotNull] string workspaceId,
-			[NotNull] IEnumerable<QualityConditionMsg> referencedConditions)
-		{
-			IEnumerable<Dataset> referencedDatasets = GetReferencedDatasets(
-				model, workspaceId, referencedConditions);
-
-			return GetMainSpatialReference(model, referencedDatasets);
 		}
 
 		[NotNull]

@@ -40,7 +40,7 @@ namespace ProSuite.DomainServices.AO.Test.QA.VerifiedDataModel
 			modelFactory.HarvestAttributes = true;
 			modelFactory.HarvestObjectTypes = true;
 
-			Model model = modelFactory.CreateModel(workspace, "TestTLM", null, null, "TOPGIS_TLM");
+			Model model = modelFactory.CreateModel(workspace, "TestTLM", null, "TOPGIS_TLM");
 
 			int tableCount = model.GetDatasets<TableDataset>().Count;
 			int vectorCount = model.GetDatasets<VectorDataset>().Count;

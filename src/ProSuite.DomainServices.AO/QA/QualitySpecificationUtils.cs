@@ -450,10 +450,8 @@ namespace ProSuite.DomainServices.AO.QA
 			var modelFactory = new VerifiedModelFactory(
 				new MasterDatabaseWorkspaceContextFactory(), new SimpleVerifiedDatasetHarvester());
 
-			var datasetOpener = new SimpleDatasetOpener(new MasterDatabaseDatasetContext());
-
 			var factory =
-				new XmlBasedQualitySpecificationFactory(modelFactory, datasetOpener);
+				new XmlBasedQualitySpecificationFactory(modelFactory);
 			return factory;
 		}
 	}

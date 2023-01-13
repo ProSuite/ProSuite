@@ -786,8 +786,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			var datasetOpener = new SimpleDatasetOpener(new MasterDatabaseDatasetContext());
 
 			var factory =
-				new ProtoBasedQualitySpecificationFactory(modelFactory, instanceDescriptors,
-				                                          datasetOpener);
+				new ProtoBasedQualitySpecificationFactory(modelFactory, instanceDescriptors);
 
 			return factory;
 		}

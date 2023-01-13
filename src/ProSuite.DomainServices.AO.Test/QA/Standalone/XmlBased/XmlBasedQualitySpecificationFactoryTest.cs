@@ -9,7 +9,6 @@ using ProSuite.Commons;
 using ProSuite.Commons.AO.Test;
 using ProSuite.Commons.Testing;
 using ProSuite.DomainModel.AO.DataModel;
-using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.Xml;
 using ProSuite.DomainServices.AO.QA.Standalone.XmlBased;
@@ -179,7 +178,7 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 				                         new SimpleVerifiedDatasetHarvester());
 
 			var factory = new XmlBasedQualitySpecificationFactory(
-				modelFactory, new SimpleDatasetOpener(new MasterDatabaseDatasetContext()));
+				modelFactory);
 
 			var dataSource = new DataSource(_xmlWorkspace)
 			                 {
@@ -225,7 +224,7 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 				                         new SimpleVerifiedDatasetHarvester());
 
 			var factory = new XmlBasedQualitySpecificationFactory(
-				modelFactory, new SimpleDatasetOpener(new MasterDatabaseDatasetContext()));
+				modelFactory);
 
 			QualitySpecification qualitySpecification =
 				factory.CreateQualitySpecification(xmlDocument, xmlQualitySpecification.Name,
@@ -251,8 +250,7 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 
 				var factory =
 					new XmlBasedQualitySpecificationFactory(
-						modelFactory,
-						new SimpleDatasetOpener(new MasterDatabaseDatasetContext()));
+						modelFactory);
 
 				string ws = @"c:\temp\user@topgist.sde";
 				foreach (XmlQualitySpecification spec in qualitySpecifications)
@@ -327,7 +325,7 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 				                         new SimpleVerifiedDatasetHarvester());
 
 			var factory = new XmlBasedQualitySpecificationFactory(
-				modelFactory, new SimpleDatasetOpener(new MasterDatabaseDatasetContext()));
+				modelFactory);
 
 			var dataSource = new DataSource(_xmlWorkspace)
 			                 {
