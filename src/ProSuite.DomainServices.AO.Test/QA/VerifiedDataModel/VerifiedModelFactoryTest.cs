@@ -14,7 +14,7 @@ namespace ProSuite.DomainServices.AO.Test.QA.VerifiedDataModel
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			TestUtils.ConfigureUnittestLogging();
+			TestUtils.ConfigureUnitTestLogging();
 
 			TestUtils.InitializeLicense();
 		}
