@@ -34,15 +34,18 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 
 		[XmlAttribute("canContainQualityConditions")]
 		[DefaultValue(_defaultCanContainQualityConditions)]
-		public bool CanContainQualityConditions { get; set; }
+		public bool CanContainQualityConditions { get; set; } =
+			_defaultCanContainQualityConditions;
 
 		[XmlAttribute("canContainQualitySpecifications")]
 		[DefaultValue(_defaultCanContainQualitySpecifications)]
-		public bool CanContainQualitySpecifications { get; set; }
+		public bool CanContainQualitySpecifications { get; set; } =
+			_defaultCanContainQualitySpecifications;
 
 		[XmlAttribute("canContainSubCategories")]
 		[DefaultValue(_defaultCanContainSubCategories)]
-		public bool CanContainSubCategories { get; set; }
+		public bool CanContainSubCategories { get; set; } =
+			_defaultCanContainSubCategories;
 
 		[CanBeNull]
 		[XmlElement("Description")]
