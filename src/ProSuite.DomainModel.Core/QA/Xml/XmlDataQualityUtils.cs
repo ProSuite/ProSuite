@@ -465,7 +465,7 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 		public static XmlQualitySpecification FindXmlQualitySpecification(
 			[NotNull] XmlDataQualityDocument document,
 			[NotNull] string qualitySpecificationName,
-			out XmlDataQualityCategory category)
+			[CanBeNull] out XmlDataQualityCategory category)
 		{
 			Assert.ArgumentNotNull(document, nameof(document));
 
@@ -493,7 +493,7 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 			[NotNull] IEnumerable<KeyValuePair<XmlQualitySpecification, XmlDataQualityCategory>>
 				qualitySpecifications,
 			[NotNull] string qualitySpecificationName,
-			out XmlDataQualityCategory category)
+			[CanBeNull] out XmlDataQualityCategory category)
 		{
 			Assert.ArgumentNotNull(qualitySpecifications, nameof(qualitySpecifications));
 			Assert.ArgumentNotNullOrEmpty(qualitySpecificationName,

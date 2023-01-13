@@ -22,7 +22,7 @@ namespace ProSuite.QA.Tests.Test
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			TestUtils.ConfigureUnittestLogging();
+			TestUtils.ConfigureUnitTestLogging();
 			TestUtils.InitializeLicense();
 		}
 

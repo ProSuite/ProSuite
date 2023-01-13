@@ -26,15 +26,17 @@ namespace ProSuite.Commons.AO.Test
 		private const string _poly1 = "poly1.xml";
 		private const string _poly2 = "poly2.xml";
 
-		private const string _loggingConfigurationFile = "UnitTest_log4net.config";
+		private const string _defaultLoggingConfigurationFile = "prosuite.logging.test.xml";
 
 		private static int _lastClassId;
 
 		public static string OracleDbNameSde => "PROSUITE_TEST_SERVER";
 		public static string OracleDbNameDdx => "PROSUITE_TEST_DDX";
 
-		public static void ConfigureUnittestLogging()
+		public static void ConfigureUnitTestLogging(string loggingConfigurationFile = null)
 		{
+			string log4NetConfig = loggingConfigurationFile ?? _defaultLoggingConfigurationFile;
+
 			List<string> logDirs = new List<string>();
 
 			string currentDir = Environment.CurrentDirectory;
@@ -58,10 +60,10 @@ namespace ProSuite.Commons.AO.Test
 				}
 			}
 
-			if (! LoggingConfigurator.Configure(_loggingConfigurationFile, logDirs))
+			if (! LoggingConfigurator.Configure(log4NetConfig, logDirs))
 			{
 				Console.WriteLine("Logging configurator failed.");
-				Console.WriteLine("logging configuration file: " + _loggingConfigurationFile);
+				Console.WriteLine("logging configuration file: " + log4NetConfig);
 				Console.WriteLine("Search directories: " + StringUtils.Concatenate(logDirs, ", "));
 			}
 			else
