@@ -65,6 +65,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 							new InvolvedRow(involvedTable.TableName, Convert.ToInt32(oid)));
 					}
 				}
+
 				TestUtils.SortInvolvedRows(involvedRows);
 				return involvedRows;
 			}
@@ -122,17 +123,18 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 		private class SubVerification
 		{
-
-			public SubVerification(VerificationRequest subRequest)
+			public SubVerification([NotNull] VerificationRequest subRequest,
+			                       [NotNull] QualityConditionGroup qualityConditionGroup)
 			{
 				SubRequest = subRequest;
 				SubResponse = new SubResponse();
+				QualityConditionGroup = qualityConditionGroup;
 			}
 
 			public VerificationRequest SubRequest { get; }
 			public SubResponse SubResponse { get; }
 			public IEnvelope TileEnvelope { get; set; }
-			public QualityConditionGroup QualityConditionGroup { get; set; }
+			public QualityConditionGroup QualityConditionGroup { get; }
 
 			private Dictionary<int, QualityCondition> _idConditions;
 
@@ -283,7 +285,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 				{
 					ProcessFinalResult(task, completed);
 
-					_msg.InfoFormat("Remaining work unit verifications: {0}", _tasks.Count);
+					_msg.InfoFormat("Remaining verification tasks: {0}", _tasks.Count);
 				}
 				else
 				{
@@ -349,6 +351,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 		}
 
 		private IDictionary<IssueKey, IssueMsg> _knownIssues;
+
 		private IDictionary<IssueKey, IssueMsg> KnownIssues =>
 			_knownIssues ??
 			(_knownIssues =
@@ -428,7 +431,9 @@ namespace ProSuite.Microservices.Server.AO.QA
 			}
 
 			IssueCode issueCode =
-				new IssueCode(issueMsg.IssueCodeId, issueMsg.IssueCodeDescription);
+				! string.IsNullOrWhiteSpace(issueMsg.IssueCodeId)
+					? new IssueCode(issueMsg.IssueCodeId, issueMsg.IssueCodeDescription)
+					: null;
 
 			var error = new QaError(test, issueMsg.Description,
 			                        involvedRows,
@@ -618,7 +623,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 				       {
 					       CreateVerification(
 						       originalRequest, specification,
-						       qualityConditionGroups[0].QualityConditions.Keys)
+						       qualityConditionGroups[0])
 				       };
 			}
 
@@ -650,20 +655,24 @@ namespace ProSuite.Microservices.Server.AO.QA
 						subVerifications.Add(
 							CreateVerification(
 								originalRequest, specification,
-								nonContainerGroup.QualityConditions.Keys));
+								nonContainerGroup));
+						_msg.Info($"Built 1 subverification for {nonContainerGroup.QualityConditions.Count} non-container quality conditions");
 					}
 					else if (NonContainerHandling ==
 					         NonContainerHandlingEnum
 						         .OneSubverificationPerQualityCondition)
 					{
-						foreach (QualityCondition qc in
-						         nonContainerGroup.QualityConditions.Keys)
+						foreach (var pair in
+						         nonContainerGroup.QualityConditions)
 						{
+							QualityConditionGroup grp =
+								new QualityConditionGroup(nonContainerGroup.ExecType);
+							grp.QualityConditions.Add(pair.Key, pair.Value);
 							subVerifications.Add(
 								CreateVerification(
-									originalRequest, specification,
-									new[] { qc }));
+									originalRequest, specification, grp));
 						}
+						_msg.Info($"Built {nonContainerGroup.QualityConditions} subverifications for non-container quality conditions (1 per quality condition)");
 					}
 					else
 					{
@@ -706,23 +715,25 @@ namespace ProSuite.Microservices.Server.AO.QA
 						originalRequest, specification, parallelGroup, nMaxTileParallel);
 
 				subVerifications.AddRange(tileParallelVerifications);
+				_msg.Info($"Build {tileParallelVerifications.Count} tile parallel subverifications for {parallelGroup.QualityConditions.Count} quality conditions");
 				unhandledQualityConditions.Remove(parallelGroup);
 			}
 
 			// Remaining
 			int nVerifications = Math.Max(maxParallel / 2, maxParallel - subVerifications.Count);
-			List<List<QualityCondition>> qcsPerSubverification = new List<List<QualityCondition>>();
+			List<QualityConditionGroup> qcsPerSubverification = new List<QualityConditionGroup>();
 			int iVerification = 0;
 			foreach (QualityConditionGroup conditionGroup in unhandledQualityConditions)
 			{
-				foreach (QualityCondition qc in conditionGroup.QualityConditions.Keys)
+				foreach (var pair in conditionGroup.QualityConditions)
 				{
 					while (qcsPerSubverification.Count <= iVerification)
 					{
-						qcsPerSubverification.Add(new List<QualityCondition>());
+						qcsPerSubverification.Add(new QualityConditionGroup(QualityConditionExecType.Mixed));
 					}
 
-					qcsPerSubverification[iVerification].Add(qc);
+					qcsPerSubverification[iVerification].QualityConditions
+					                                    .Add(pair.Key, pair.Value);
 					iVerification++;
 					if (iVerification >= nVerifications)
 					{
@@ -731,12 +742,13 @@ namespace ProSuite.Microservices.Server.AO.QA
 				}
 			}
 
-			foreach (IList<QualityCondition> qualityConditions in qcsPerSubverification)
+			foreach (var qualityConditionGroup in qcsPerSubverification)
 			{
 				subVerifications.Add(
 					CreateVerification(
-						originalRequest, specification, qualityConditions));
+						originalRequest, specification, qualityConditionGroup));
 			}
+			_msg.Info($"Built {qcsPerSubverification.Count} subverifications for {qcsPerSubverification.Sum(x=>x.QualityConditions.Count)} non-tile-parallel container quality conditions");
 
 			return subVerifications;
 		}
@@ -744,9 +756,10 @@ namespace ProSuite.Microservices.Server.AO.QA
 		private static SubVerification CreateVerification(
 			[NotNull] VerificationRequest originalRequest,
 			[NotNull] QualitySpecification specification,
-			[NotNull] IEnumerable<QualityCondition> qualityConditions)
+			[NotNull] QualityConditionGroup qualityConditionGroup)
 		{
-			var requestedConditionIds = new HashSet<int>(qualityConditions.Select(c => c.Id));
+			var requestedConditionIds =
+				new HashSet<int>(qualityConditionGroup.QualityConditions.Keys.Select(c => c.Id));
 
 			var excludedConditionIds = new List<int>();
 			foreach (QualitySpecificationElement element in specification.Elements)
@@ -762,7 +775,9 @@ namespace ProSuite.Microservices.Server.AO.QA
 			VerificationRequest subRequest =
 				CreateSubRequest(originalRequest, excludedConditionIds);
 
-			return new SubVerification(subRequest);
+			SubVerification subVerification =
+				new SubVerification(subRequest, qualityConditionGroup);
+			return subVerification;
 		}
 
 		private static VerificationRequest CreateSubRequest(
@@ -851,9 +866,9 @@ namespace ProSuite.Microservices.Server.AO.QA
 				var subRequest = CreateSubRequest(originalRequest, excludedConditionIds);
 				subRequest.Parameters.Perimeter = ProtobufGeometryUtils.ToShapeMsg(filter);
 
-				SubVerification subVerification = new SubVerification(subRequest);
+				SubVerification subVerification =
+					new SubVerification(subRequest, qualityConditionGroup);
 				subVerification.TileEnvelope = tileBox;
-				subVerification.QualityConditionGroup = qualityConditionGroup;
 				subVerifications.Add(subVerification);
 			}
 
