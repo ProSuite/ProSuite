@@ -23,7 +23,7 @@ using ProSuite.QA.Core;
 
 namespace ProSuite.Microservices.Server.AO.QA
 {
-	public class ProtoBasedQualitySpecificationFactory : QualitySpecificationFactoryBase
+	public class ProtoBasedQualitySpecificationFactory
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -36,10 +36,28 @@ namespace ProSuite.Microservices.Server.AO.QA
 		/// <param name="instanceDescriptors">All supported instance configurations</param>
 		public ProtoBasedQualitySpecificationFactory(
 			[NotNull] IVerifiedModelFactory modelFactory,
-			[NotNull] ISupportedInstanceDescriptors instanceDescriptors) : base(modelFactory)
+			[NotNull] ISupportedInstanceDescriptors instanceDescriptors)
 		{
+			ModelFactory = modelFactory;
+
 			_instanceDescriptors = instanceDescriptors;
 		}
+
+		/// <summary>
+		/// QualitySpecification factory that uses a fine-grained proto buf message as input.
+		/// </summary>
+		/// <param name="modelsByWorkspaceId">The known models by workspace Id</param>
+		/// <param name="instanceDescriptors">All supported instance configurations</param>
+		public ProtoBasedQualitySpecificationFactory(
+			[NotNull] IDictionary<string, DdxModel> modelsByWorkspaceId,
+			[NotNull] ISupportedInstanceDescriptors instanceDescriptors)
+		{
+			ModelsByWorkspaceId = modelsByWorkspaceId;
+
+			_instanceDescriptors = instanceDescriptors;
+		}
+
+		private IVerifiedModelFactory ModelFactory { get; }
 
 		private IDictionary<string, DdxModel> ModelsByWorkspaceId { get; set; }
 
@@ -69,8 +87,11 @@ namespace ProSuite.Microservices.Server.AO.QA
 			List<QualityConditionMsg> qualityConditionMsgs =
 				conditionListSpecificationMsg.Elements.Select(e => e.Condition).ToList();
 
-			// Prepare models:
-			ModelsByWorkspaceId = GetModelsByWorkspaceId(dataSources, qualityConditionMsgs);
+			// Prepare models (if stand-alone, the models must be harvested):
+			if (ModelsByWorkspaceId == null)
+			{
+				ModelsByWorkspaceId = GetModelsByWorkspaceId(dataSources, qualityConditionMsgs);
+			}
 
 			const bool ignoreConditionsForUnknownDatasets = true;
 			Dictionary<string, QualityCondition> qualityConditions =
@@ -84,7 +105,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			AddElements(result, qualityConditions,
 			            conditionListSpecificationMsg.Elements);
 
-			// TODO: TileSize, Url, Notes?
+			// TODO: TileSize, Url, Notes? They are not used by the verification.
 
 			_msg.DebugFormat("Created specification from protos with {0} conditions.",
 			                 result.Elements.Count);
@@ -150,9 +171,9 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 				if (qualityCondition == null)
 				{
-					HandleNoConditionCreated(conditionMsg.Name, ModelsByWorkspaceId,
-					                         ignoreConditionsForUnknownDatasets,
-					                         datasetSettings.UnknownDatasetParameters);
+					StandaloneVerificationUtils.HandleNoConditionCreated(
+						conditionMsg.Name, ModelsByWorkspaceId, ignoreConditionsForUnknownDatasets,
+						datasetSettings.UnknownDatasetParameters);
 				}
 				else
 				{
@@ -203,6 +224,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 			[NotNull] QualityConditionMsg conditionMsg,
 			[NotNull] DatasetSettings datasetSettings)
 		{
+			// TODO: Check for consistent behaviour compared to DDX based specification
+			// -> No Issue filter expression: All specified filters are concatenated using OR (?)
 			string issueFilterExpression = conditionMsg.IssueFilterExpression;
 
 			if (string.IsNullOrWhiteSpace(issueFilterExpression))
@@ -441,7 +464,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 		}
 
 		[NotNull]
-		private Model CreateModel(
+		private DdxModel CreateModel(
 			[NotNull] IWorkspace workspace,
 			[NotNull] string modelName,
 			[NotNull] string workspaceId,

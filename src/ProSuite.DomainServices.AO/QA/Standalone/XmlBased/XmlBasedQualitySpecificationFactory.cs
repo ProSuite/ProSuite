@@ -17,14 +17,21 @@ using ProSuite.QA.Container;
 
 namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 {
-	public class XmlBasedQualitySpecificationFactory : QualitySpecificationFactoryBase
+	public class XmlBasedQualitySpecificationFactory
 	{
 		/// <summary>
 		/// Initializes a new instance of the <see cref="XmlBasedQualitySpecificationFactory"/> class.
 		/// </summary>
 		/// <param name="modelFactory">The model builder.</param>
 		public XmlBasedQualitySpecificationFactory(
-			[NotNull] IVerifiedModelFactory modelFactory) : base(modelFactory) { }
+			[NotNull] IVerifiedModelFactory modelFactory)
+		{
+			Assert.ArgumentNotNull(modelFactory, nameof(modelFactory));
+
+			ModelFactory = modelFactory;
+		}
+
+		private IVerifiedModelFactory ModelFactory { get; }
 
 		[NotNull]
 		public QualitySpecification CreateQualitySpecification(
@@ -152,9 +159,9 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 
 				if (createdCondition == null)
 				{
-					HandleNoConditionCreated(xmlCondition.Name, modelsByWorkspaceId,
-					                         ignoreConditionsForUnknownDatasets,
-					                         unknownDatasetParameters);
+					StandaloneVerificationUtils.HandleNoConditionCreated(
+						xmlCondition.Name, modelsByWorkspaceId, ignoreConditionsForUnknownDatasets,
+						unknownDatasetParameters);
 				}
 				else
 				{
@@ -258,7 +265,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 		}
 
 		[NotNull]
-		private Model CreateModel(
+		private DdxModel CreateModel(
 			[NotNull] IWorkspace workspace,
 			[NotNull] string modelName,
 			[NotNull] string workspaceId,
