@@ -51,7 +51,7 @@ namespace ProSuite.DomainModel.AO.QA
 			throw new NotImplementedException();
 		}
 
-		private static IssueFilterFactory CreateIssueFilterFactory(
+		public static IssueFilterFactory CreateIssueFilterFactory(
 			[NotNull] IssueFilterConfiguration issueFilterConfig)
 		{
 			if (issueFilterConfig.InstanceDescriptor == null)

@@ -38,7 +38,7 @@ namespace ProSuite.DomainModel.AO.QA
 		#endregion
 
 		[CanBeNull]
-		public InstanceConfiguration Condition { get; set; }
+		public QualityCondition Condition { get; set; }
 
 		[NotNull]
 		public override string[] TestCategories => InstanceUtils.GetCategories(GetType());
@@ -225,10 +225,9 @@ namespace ProSuite.DomainModel.AO.QA
 
 				foreach (var issueFilterConfiguration in c.IssueFilterConfigurations)
 				{
-					DefaultTestFactory factory = (DefaultTestFactory)
-						TestFactoryUtils.CreateTestFactory(issueFilterConfiguration);
-					Assert.NotNull(factory);
-					IIssueFilter filter = factory.CreateInstance<IIssueFilter>(datasetContext);
+					IssueFilterFactory factory =
+						InstanceFactoryUtils.CreateIssueFilterFactory(issueFilterConfiguration);
+					IIssueFilter filter = factory.Create(datasetContext, issueFilterConfiguration);
 					filter.Name = issueFilterConfiguration.Name;
 					filters.Add(filter);
 				}

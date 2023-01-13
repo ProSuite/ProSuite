@@ -17,23 +17,23 @@ namespace ProSuite.DomainModel.AO.QA
 		/// <returns>TestFactory or null.</returns>
 		[CanBeNull]
 		public static TestFactory CreateTestFactory(
-			[NotNull] InstanceConfiguration instanceConfiguration)
+			[NotNull] QualityCondition qualityCondition)
 		{
-			Assert.ArgumentNotNull(instanceConfiguration, nameof(instanceConfiguration));
+			Assert.ArgumentNotNull(qualityCondition, nameof(qualityCondition));
 
-			if (instanceConfiguration.InstanceDescriptor == null)
+			if (qualityCondition.InstanceDescriptor == null)
 			{
 				return null;
 			}
 
-			TestFactory factory = GetTestFactory(instanceConfiguration.InstanceDescriptor);
+			TestFactory factory = GetTestFactory(qualityCondition.InstanceDescriptor);
 
 			if (factory != null)
 			{
-				factory.Condition = instanceConfiguration;
+				factory.Condition = qualityCondition;
 
 				InstanceConfigurationUtils.InitializeParameterValues(
-					factory, instanceConfiguration);
+					factory, qualityCondition);
 			}
 
 			return factory;
