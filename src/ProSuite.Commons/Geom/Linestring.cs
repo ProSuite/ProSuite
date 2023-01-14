@@ -1144,6 +1144,7 @@ namespace ProSuite.Commons.Geom
 		/// <param name="toSegment"></param>
 		/// <param name="toSegmentRatio"></param>
 		/// <param name="clonePoints"></param>
+		/// <param name="preferFullRingToZeroLength"></param>
 		/// <returns></returns>
 		public Linestring GetSubcurve(int fromSegment, double fromSegmentRatio,
 		                              int toSegment, double toSegmentRatio,
