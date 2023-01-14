@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.DomainModel.Core;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Container;
 using ProSuite.QA.Core;
@@ -16,17 +17,16 @@ namespace ProSuite.DomainModel.AO.QA
 		/// </summary>
 		/// <returns>TestFactory or null.</returns>
 		[CanBeNull]
-		public static TestFactory CreateTestFactory(
-			[NotNull] QualityCondition qualityCondition)
+		public static TestFactory CreateTestFactory([NotNull] QualityCondition qualityCondition)
 		{
 			Assert.ArgumentNotNull(qualityCondition, nameof(qualityCondition));
 
-			if (qualityCondition.InstanceDescriptor == null)
+			if (qualityCondition.TestDescriptor == null)
 			{
 				return null;
 			}
 
-			TestFactory factory = GetTestFactory(qualityCondition.InstanceDescriptor);
+			TestFactory factory = GetTestFactory(qualityCondition.TestDescriptor);
 
 			if (factory != null)
 			{
@@ -45,23 +45,23 @@ namespace ProSuite.DomainModel.AO.QA
 		/// <param name="descriptor"></param>
 		/// <returns>TestFactory or null if neither the test class nor the test factory descriptor are defined.</returns>
 		[CanBeNull]
-		public static TestFactory GetTestFactory([NotNull] InstanceDescriptor descriptor)
+		//TODO Make private, use e.g. InstanceDescriptorUtils.GetInstanceInfo
+		public static TestFactory GetTestFactory([NotNull] TestDescriptor descriptor)
 		{
 			Assert.ArgumentNotNull(descriptor, nameof(descriptor));
 
-			if (descriptor.Class != null)
+			ClassDescriptor classDescriptor = descriptor.Class;
+
+			if (classDescriptor != null)
 			{
-				return new DefaultTestFactory(descriptor.Class.AssemblyName,
-				                              descriptor.Class.TypeName,
+				return new DefaultTestFactory(classDescriptor.AssemblyName,
+				                              classDescriptor.TypeName,
 				                              descriptor.ConstructorId);
 			}
 
-			if (descriptor is TestDescriptor testDescriptor)
+			if (descriptor.TestFactoryDescriptor != null)
 			{
-				if (testDescriptor.TestFactoryDescriptor != null)
-				{
-					return testDescriptor.TestFactoryDescriptor.CreateInstance<TestFactory>();
-				}
+				return descriptor.TestFactoryDescriptor.CreateInstance<TestFactory>();
 			}
 
 			return null;
