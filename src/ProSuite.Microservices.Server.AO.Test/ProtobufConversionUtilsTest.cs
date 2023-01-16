@@ -87,6 +87,7 @@ namespace ProSuite.Microservices.Server.AO.Test
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.Performance)]
 		public void CanConvertPolygonToFromShapeMsgFastEnough()
 		{
 			string xmlFile = TestData.GetHugeLockergesteinPolygonPath();
