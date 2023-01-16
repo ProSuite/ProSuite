@@ -1,11 +1,8 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Notifications;
-using ProSuite.Commons.Text;
-using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Core;
@@ -23,31 +20,20 @@ namespace ProSuite.DomainModel.AO.QA
 		{
 			Assert.ArgumentNotNull(instanceConfiguration, nameof(instanceConfiguration));
 
-			if (instanceConfiguration.InstanceDescriptor == null)
+			InstanceDescriptor descriptor = instanceConfiguration.InstanceDescriptor;
+
+			if (descriptor == null)
 			{
 				return false;
 			}
 
-			IInstanceInfo factory =
-				TestFactoryUtils.GetTestFactory(instanceConfiguration.InstanceDescriptor);
+			IInstanceInfo instanceInfo = InstanceDescriptorUtils.GetInstanceInfo(descriptor);
 
-			if (factory == null)
-			{
-				return false;
-			}
-
-			return SyncParameterValues(instanceConfiguration, factory);
-		}
-
-		public static bool SyncParameterValues(
-			[NotNull] InstanceConfiguration instanceConfiguration,
-			[CanBeNull] IInstanceInfo instanceInfo)
-		{
 			if (instanceInfo == null)
 			{
 				return false;
 			}
-
+			
 			var validValuesByParameter =
 				new Dictionary<TestParameter, IList<TestParameterValue>>();
 			var parametersByName = new Dictionary<string, TestParameter>();
@@ -162,44 +148,17 @@ namespace ProSuite.DomainModel.AO.QA
 
 			return newParameters || invalidValues.Count > 0;
 		}
-
-		[NotNull]
-		public static TestParameterValue CreateEmptyParameterValue(
-			[NotNull] TestParameter testParameter)
-		{
-			Assert.ArgumentNotNull(testParameter, nameof(testParameter));
-
-			if (TestParameterTypeUtils.IsDatasetType(testParameter.Type))
-			{
-				return new DatasetTestParameterValue(testParameter);
-			}
-
-			if (testParameter.Type == typeof(double) ||
-			    testParameter.Type == typeof(int) ||
-			    testParameter.Type == typeof(bool) ||
-			    testParameter.Type == typeof(string) ||
-			    testParameter.Type == typeof(DateTime) ||
-			    testParameter.Type.IsEnum)
-			{
-				return new ScalarTestParameterValue(testParameter,
-				                                    $"{testParameter.DefaultValue ?? GetDefault(testParameter.Type)}");
-			}
-
-			return new ScalarTestParameterValue(testParameter,
-			                                    $"{testParameter.DefaultValue ?? GetDefault(testParameter.Type)}");
-			//throw new ArgumentException("Unhandled type " + _type);
-		}
-
+		
 		[NotNull]
 		public static TestParameterValue AddParameterValue(
-			[NotNull] InstanceConfiguration qualityCondition,
+			[NotNull] InstanceConfiguration instanceConfiguration,
 			[NotNull] string parameterName,
 			[CanBeNull] Dataset value,
 			string filterExpression = null,
 			bool usedAsReferenceData = false)
 		{
 			TestParameterValue result = InstanceConfigurationUtils.AddParameterValue(
-				qualityCondition, parameterName, value, filterExpression, usedAsReferenceData);
+				instanceConfiguration, parameterName, value, filterExpression, usedAsReferenceData);
 
 			TestParameterTypeUtils.AssertValidDataset(Assert.NotNull(result.DataType), value);
 
@@ -208,127 +167,29 @@ namespace ProSuite.DomainModel.AO.QA
 
 		[CanBeNull]
 		public static TestParameterValue AddParameterValue(
-			[NotNull] QualityCondition qualityCondition,
+			[NotNull] InstanceConfiguration instanceConfiguration,
 			[NotNull] string parameterName,
 			[CanBeNull] string value)
 		{
 			return InstanceConfigurationUtils.AddScalarParameterValue(
-				qualityCondition, parameterName, value);
+				instanceConfiguration, parameterName, value);
 		}
 
 		[CanBeNull]
 		public static TestParameterValue AddParameterValue(
-			[NotNull] InstanceConfiguration qualityCondition,
+			[NotNull] InstanceConfiguration instanceConfiguration,
 			[NotNull] string parameterName,
 			object value)
 		{
-			var dataset = value as Dataset;
-			if (dataset != null)
+			if (value is Dataset dataset)
 			{
-				return AddParameterValue(qualityCondition, parameterName, dataset);
+				return AddParameterValue(instanceConfiguration, parameterName, dataset);
 			}
-			else
-			{
-				return InstanceConfigurationUtils.AddScalarParameterValue(
-					qualityCondition, parameterName, value);
-			}
+
+			return InstanceConfigurationUtils.AddScalarParameterValue(
+				instanceConfiguration, parameterName, value);
 		}
-
-		[CanBeNull]
-		public static Dataset GetDataset(
-			[CanBeNull] string datasetName,
-			[CanBeNull] string workspaceId,
-			[NotNull] TestParameter testParameter,
-			[NotNull] string instanceConfigurationName,
-			[NotNull] IDictionary<string, Model> modelsByWorkspaceId,
-			[NotNull] Func<string, IList<Dataset>> getDatasetsByName,
-			bool ignoreUnknownDataset)
-		{
-			if (string.IsNullOrWhiteSpace(datasetName))
-			{
-				if (testParameter.IsConstructorParameter)
-				{
-					Assert.NotNullOrEmpty(
-						datasetName,
-						"Dataset is not defined for constructor-parameter '{0}' in configuration '{1}'",
-						testParameter.Name, instanceConfigurationName);
-				}
-
-				return null;
-			}
-
-			if (StringUtils.IsNotEmpty(workspaceId))
-			{
-				Assert.True(modelsByWorkspaceId.TryGetValue(workspaceId, out Model model),
-				            "No matching model found for workspace id '{0}'", workspaceId);
-
-				return DdxModelElementUtils.GetDatasetFromStoredName(datasetName,
-					model, ignoreUnknownDataset);
-			}
-
-			if (StringUtils.IsNullOrEmptyOrBlank(workspaceId))
-			{
-				const string defaultModelId = "";
-
-				Model defaultModel;
-				if (modelsByWorkspaceId.TryGetValue(defaultModelId, out defaultModel))
-				{
-					// there is a default model
-					return DdxModelElementUtils.GetDatasetFromStoredName(datasetName,
-						defaultModel,
-						ignoreUnknownDataset);
-				}
-			}
-
-			// no workspace id for dataset, and there is no default model
-
-			IList<Dataset> datasets = getDatasetsByName(datasetName);
-
-			Assert.False(datasets.Count > 1,
-			             "More than one dataset found with name '{0}', for parameter '{1}' in configuration '{2}'",
-			             datasetName, testParameter.Name, instanceConfigurationName);
-
-			if (datasets.Count == 0)
-			{
-				if (ignoreUnknownDataset)
-				{
-					return null;
-				}
-
-				Assert.False(datasets.Count == 0,
-				             "Dataset '{0}' for parameter '{1}' in configuration '{2}' not found",
-				             datasetName, testParameter.Name, instanceConfigurationName);
-			}
-
-			return datasets[0];
-		}
-
-		[CanBeNull]
-		private static object GetDefault([NotNull] Type type)
-		{
-			if (! type.IsValueType)
-			{
-				return null;
-			}
-
-			object defaultValue = Activator.CreateInstance(type);
-
-			if (type.IsEnum)
-			{
-				// Ensure valid value for enums: if default value (0) is not in list, return the first enum item value
-				if (! Enum.IsDefined(type, defaultValue))
-				{
-					string[] values = Enum.GetNames(type);
-					if (values.Length > 0)
-					{
-						return values[0];
-					}
-				}
-			}
-
-			return defaultValue;
-		}
-
+		
 		public static bool CheckCircularReferencesInGraph(
 			[NotNull] InstanceConfiguration testable,
 			[CanBeNull] out string testParameterName,
@@ -363,11 +224,10 @@ namespace ProSuite.DomainModel.AO.QA
 			return false;
 		}
 
-		public static bool CheckCircularReferencesInGraph([NotNull] InstanceConfiguration testable,
-		                                                  [CanBeNull] InstanceConfiguration
-			                                                  instanceConfiguration,
-		                                                  [NotNull]
-		                                                  NotificationCollection configurationNames)
+		public static bool CheckCircularReferencesInGraph(
+			[NotNull] InstanceConfiguration testable,
+			[CanBeNull] InstanceConfiguration instanceConfiguration,
+			[NotNull] NotificationCollection configurationNames)
 		{
 			Assert.ArgumentNotNull(testable, nameof(testable));
 			Assert.ArgumentNotNull(configurationNames, nameof(configurationNames));

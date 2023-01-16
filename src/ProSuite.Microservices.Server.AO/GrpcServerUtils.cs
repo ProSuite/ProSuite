@@ -71,7 +71,7 @@ namespace ProSuite.Microservices.Server.AO
 		{
 			if (string.IsNullOrEmpty(certificate))
 			{
-				_msg.InfoFormat("Certificate was not provided. Using insecure credentials.");
+				_msg.InfoFormat("Certificate to be used for transport security (SSL/TLS) was not provided. Using insecure credentials.");
 
 				return ServerCredentials.Insecure;
 			}

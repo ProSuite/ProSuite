@@ -14,60 +14,63 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 	{
 		private readonly XmlDataQualityDocument _document;
 
-		private readonly List<KeyValuePair<XmlQualityCondition, XmlDataQualityCategory>>
-			_qualityConditions;
-
-		private Dictionary<string, XmlIssueFilterConfiguration> _issueFilters;
-		private Dictionary<string, XmlTransformerConfiguration> _transformers;
+		private Dictionary<string, XmlTransformerConfiguration> _transformersByName;
+		private Dictionary<string, XmlIssueFilterConfiguration> _issueFiltersByName;
 
 		private Dictionary<string, XmlTestDescriptor> _testDescriptors;
-		private Dictionary<string, XmlIssueFilterDescriptor> _issueFilterDescriptors;
 		private Dictionary<string, XmlTransformerDescriptor> _transformerDescriptors;
-
-		[CanBeNull] private Dictionary<XmlIssueFilterConfiguration, IssueFilterConfiguration>
-			_issueFilterInstances;
+		private Dictionary<string, XmlIssueFilterDescriptor> _issueFilterDescriptors;
 
 		[CanBeNull] private Dictionary<XmlTransformerConfiguration, TransformerConfiguration>
 			_transformerInstances;
 
+		[CanBeNull] private Dictionary<XmlIssueFilterConfiguration, IssueFilterConfiguration>
+			_issueFilterInstances;
+
 		[CanBeNull] private Dictionary<XmlTestDescriptor, TestDescriptor> _testDescriptorInstances;
 
 		[NotNull]
-		private Dictionary<string, XmlIssueFilterConfiguration> IssueFilters => _issueFilters ??
-			(_issueFilters = _document.IssueFilters?.ToDictionary(x => x.Name) ??
-			                 new Dictionary<string, XmlIssueFilterConfiguration>());
+		private Dictionary<string, XmlTransformerConfiguration> TransformersByName =>
+			_transformersByName ??
+			(_transformersByName =
+				 TransformersWithCategories.Select(x => x.Key).ToDictionary(x => x.Name));
 
 		[NotNull]
-		private Dictionary<string, XmlTransformerConfiguration> Transformers => _transformers ??
-			(_transformers = _document.Transformers?.ToDictionary(x => x.Name) ??
-			                 new Dictionary<string, XmlTransformerConfiguration>());
+		private Dictionary<string, XmlIssueFilterConfiguration> IssueFiltersByName =>
+			_issueFiltersByName ??
+			(_issueFiltersByName =
+				 IssueFiltersWithCategories.Select(x => x.Key).ToDictionary(x => x.Name));
 
 		[NotNull]
-		private Dictionary<string, XmlTestDescriptor> TestDescriptors => _testDescriptors ??
+		private Dictionary<string, XmlTestDescriptor> TestDescriptorsByName =>
+			_testDescriptors ??
 			(_testDescriptors = _document.TestDescriptors?.ToDictionary(x => x.Name) ??
 			                    new Dictionary<string, XmlTestDescriptor>());
 
 		[NotNull]
-		private Dictionary<string, XmlIssueFilterDescriptor> IssueFilterDescriptors =>
-			_issueFilterDescriptors ??
-			(_issueFilterDescriptors =
-				 _document.IssueFilterDescriptors?.ToDictionary(x => x.Name) ??
-				 new Dictionary<string, XmlIssueFilterDescriptor>());
-
-		[NotNull]
-		private Dictionary<string, XmlTransformerDescriptor> TransformerDescriptors =>
+		private Dictionary<string, XmlTransformerDescriptor> TransformerDescriptorsByName =>
 			_transformerDescriptors ??
 			(_transformerDescriptors =
 				 _document.TransformerDescriptors?.ToDictionary(x => x.Name) ??
 				 new Dictionary<string, XmlTransformerDescriptor>());
 
-		public List<XmlWorkspace> Workspaces => _document.Workspaces;
-
-		public IEnumerable<XmlQualityCondition> QualityConditions =>
-			_qualityConditions.Select(x => x.Key);
+		[NotNull]
+		private Dictionary<string, XmlIssueFilterDescriptor> IssueFilterDescriptorsByName =>
+			_issueFilterDescriptors ??
+			(_issueFilterDescriptors =
+				 _document.IssueFilterDescriptors?.ToDictionary(x => x.Name) ??
+				 new Dictionary<string, XmlIssueFilterDescriptor>());
 
 		public IReadOnlyList<KeyValuePair<XmlQualityCondition, XmlDataQualityCategory>>
-			QualityConditionsWithCategories => _qualityConditions;
+			QualityConditionsWithCategories { get; }
+
+		public IReadOnlyList<KeyValuePair<XmlTransformerConfiguration, XmlDataQualityCategory>>
+			TransformersWithCategories { get; }
+
+		public IReadOnlyList<KeyValuePair<XmlIssueFilterConfiguration, XmlDataQualityCategory>>
+			IssueFiltersWithCategories { get; }
+
+		public List<XmlWorkspace> Workspaces => _document.Workspaces;
 
 		[CanBeNull]
 		public IDictionary<string, DdxModel> ReferencedModels { get; set; }
@@ -83,60 +86,84 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 			                                   XmlDataQualityCategory>> qualityConditions)
 		{
 			_document = document;
-			_qualityConditions =
+
+			QualityConditionsWithCategories =
 				new List<KeyValuePair<XmlQualityCondition, XmlDataQualityCategory>>(
 					qualityConditions);
+
+			TransformersWithCategories =
+				new List<KeyValuePair<XmlTransformerConfiguration, XmlDataQualityCategory>>(
+					_document.GetAllTransformers());
+
+			IssueFiltersWithCategories =
+				new List<KeyValuePair<XmlIssueFilterConfiguration, XmlDataQualityCategory>>(
+					_document.GetAllIssueFilters());
 		}
 
 		public bool TryGetIssueFilter(string name,
 		                              out XmlIssueFilterConfiguration issueFilterConfiguration)
 		{
-			return IssueFilters.TryGetValue(name, out issueFilterConfiguration);
+			return IssueFiltersByName.TryGetValue(name, out issueFilterConfiguration);
 		}
 
 		public bool TryGetTransformer(string name,
 		                              out XmlTransformerConfiguration transformerConfiguration)
 		{
-			return Transformers.TryGetValue(name, out transformerConfiguration);
-		}
-
-		private IssueFilterConfiguration GetIssueFilterConfiguration(
-			[NotNull] XmlIssueFilterConfiguration xmlIssueFilter, DatasetSettings datasetSettings)
-		{
-			_issueFilterInstances =
-				_issueFilterInstances
-				?? new Dictionary<XmlIssueFilterConfiguration, IssueFilterConfiguration>();
-
-			if (! _issueFilterInstances.TryGetValue(xmlIssueFilter,
-			                                        out IssueFilterConfiguration issueFilter))
-			{
-				if (! IssueFilterDescriptors.TryGetValue(
-					    Assert.NotNull(xmlIssueFilter.IssueFilterDescriptorName),
-					    out XmlIssueFilterDescriptor xmlDesc))
-				{
-					Assert.Fail(
-						$"IssueFilter descriptor not found for {xmlIssueFilter.IssueFilterDescriptorName}");
-				}
-
-				issueFilter = new IssueFilterConfiguration(
-					xmlIssueFilter.Name,
-					XmlDataQualityUtils.CreateIssueFilterDescriptor(xmlDesc));
-				CompleteConfiguration(issueFilter, xmlIssueFilter, datasetSettings);
-
-				Assert.NotNull(_issueFilterInstances).Add(xmlIssueFilter, issueFilter);
-			}
-
-			return issueFilter;
+			return TransformersByName.TryGetValue(name, out transformerConfiguration);
 		}
 
 		public IEnumerable<XmlInstanceConfiguration> EnumReferencedConfigurationInstances()
 		{
-			foreach (XmlQualityCondition xmlCondition in _qualityConditions.Select(x => x.Key))
+			foreach (XmlQualityCondition xmlCondition in QualityConditionsWithCategories.Select(
+				         x => x.Key))
 			{
 				foreach (XmlInstanceConfiguration config in EnumReferencedConfigurationInstances(
 					         xmlCondition))
 				{
 					yield return config;
+				}
+			}
+		}
+
+		public IEnumerable<XmlInstanceConfiguration> EnumReferencedConfigurationInstances(
+			XmlInstanceConfiguration config)
+		{
+			yield return config;
+
+			if (config is XmlQualityCondition xmlCondition)
+			{
+				string issueFilterExpression = xmlCondition.IssueFilterExpression?.Expression;
+
+				foreach (string filterName in GetIssueFilterNames(issueFilterExpression))
+				{
+					if (! IssueFiltersByName.TryGetValue(filterName,
+					                                     out XmlIssueFilterConfiguration filter))
+					{
+						Assert.Fail($"missing issue filter {filterName}");
+					}
+
+					foreach (var referenced in EnumReferencedConfigurationInstances(filter))
+					{
+						yield return referenced;
+					}
+				}
+			}
+
+			foreach (XmlTestParameterValue parameterValue in config.ParameterValues)
+			{
+				if (! string.IsNullOrWhiteSpace(parameterValue.TransformerName))
+				{
+					if (! TransformersByName.TryGetValue(parameterValue.TransformerName,
+					                                     out XmlTransformerConfiguration
+						                                         transformer))
+					{
+						Assert.Fail($"missing transformer {parameterValue.TransformerName}");
+					}
+
+					foreach (var referenced in EnumReferencedConfigurationInstances(transformer))
+					{
+						yield return referenced;
+					}
 				}
 			}
 		}
@@ -151,8 +178,8 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 			Assert.True(StringUtils.IsNotEmpty(testDescriptorName),
 			            $"Test descriptor name is missing in condition: {xmlCondition}");
 
-			if (! TestDescriptors.TryGetValue(testDescriptorName.Trim(),
-			                                  out XmlTestDescriptor xmlTestDescriptor))
+			if (! TestDescriptorsByName.TryGetValue(testDescriptorName.Trim(),
+			                                        out XmlTestDescriptor xmlTestDescriptor))
 			{
 				Assert.Fail(
 					"Test descriptor '{0}' referenced in quality condition '{1}' does not exist", // TODO '... quality condition ...' correct?
@@ -313,6 +340,35 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 			qualityCondition.IssueFilterExpression = issueFilterExpression;
 		}
 
+		private IssueFilterConfiguration GetIssueFilterConfiguration(
+			[NotNull] XmlIssueFilterConfiguration xmlIssueFilter, DatasetSettings datasetSettings)
+		{
+			_issueFilterInstances =
+				_issueFilterInstances
+				?? new Dictionary<XmlIssueFilterConfiguration, IssueFilterConfiguration>();
+
+			if (! _issueFilterInstances.TryGetValue(xmlIssueFilter,
+			                                        out IssueFilterConfiguration issueFilter))
+			{
+				if (! IssueFilterDescriptorsByName.TryGetValue(
+					    Assert.NotNull(xmlIssueFilter.IssueFilterDescriptorName),
+					    out XmlIssueFilterDescriptor xmlDesc))
+				{
+					Assert.Fail(
+						$"IssueFilter descriptor not found for {xmlIssueFilter.IssueFilterDescriptorName}");
+				}
+
+				issueFilter = new IssueFilterConfiguration(
+					xmlIssueFilter.Name,
+					XmlDataQualityUtils.CreateIssueFilterDescriptor(xmlDesc));
+				CompleteConfiguration(issueFilter, xmlIssueFilter, datasetSettings);
+
+				Assert.NotNull(_issueFilterInstances).Add(xmlIssueFilter, issueFilter);
+			}
+
+			return issueFilter;
+		}
+
 		[NotNull]
 		private static TestParameterValue CreateScalarTestParameterValue(
 			[NotNull] TestParameter testParameter,
@@ -352,48 +408,6 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 			return paramValue;
 		}
 
-		public IEnumerable<XmlInstanceConfiguration> EnumReferencedConfigurationInstances(
-			XmlInstanceConfiguration config)
-		{
-			yield return config;
-
-			if (config is XmlQualityCondition xmlCondition)
-			{
-				string issueFilterExpression = xmlCondition.IssueFilterExpression?.Expression;
-
-				foreach (string filterName in GetIssueFilterNames(issueFilterExpression))
-				{
-					if (! IssueFilters.TryGetValue(filterName,
-					                               out XmlIssueFilterConfiguration filter))
-					{
-						Assert.Fail($"missing issue filter {filterName}");
-					}
-
-					foreach (var referenced in EnumReferencedConfigurationInstances(filter))
-					{
-						yield return referenced;
-					}
-				}
-			}
-
-			foreach (XmlTestParameterValue parameterValue in config.ParameterValues)
-			{
-				if (! string.IsNullOrWhiteSpace(parameterValue.TransformerName))
-				{
-					if (! Transformers.TryGetValue(parameterValue.TransformerName,
-					                               out XmlTransformerConfiguration transformer))
-					{
-						Assert.Fail($"missing transformer {parameterValue.TransformerName}");
-					}
-
-					foreach (var referenced in EnumReferencedConfigurationInstances(transformer))
-					{
-						yield return referenced;
-					}
-				}
-			}
-		}
-
 		private TransformerConfiguration GetTransformerConfiguration(
 			[NotNull] XmlTransformerConfiguration xmlTransformer,
 			[NotNull] DatasetSettings datasetSettings)
@@ -405,7 +419,7 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 			if (! _transformerInstances.TryGetValue(xmlTransformer,
 			                                        out TransformerConfiguration transformer))
 			{
-				if (! TransformerDescriptors.TryGetValue(
+				if (! TransformerDescriptorsByName.TryGetValue(
 					    Assert.NotNull(xmlTransformer.TransformerDescriptorName),
 					    out XmlTransformerDescriptor xmlDesc))
 				{

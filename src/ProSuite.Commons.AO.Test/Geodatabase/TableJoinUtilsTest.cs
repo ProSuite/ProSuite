@@ -32,7 +32,6 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		}
 
 		[Test]
-		[Category(Commons.Test.TestCategory.FixMe)]
 		public void ReproTestIncorrectFgdbLeftJoin()
 		{
 			string dbPath = TestDataPreparer.ExtractZip("TableJoinUtilsTest.gdb.zip")
@@ -129,6 +128,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 		[Test]
 		[Category(TestCategory.Sde)]
+		[Category(TestCategory.Repro)]
 		public void ReproTestJoinCrash()
 		{
 			IFeatureWorkspace workspace = OpenTestWorkspace();
@@ -277,6 +277,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 		[Test]
 		[Category(TestCategory.Sde)]
+		[Category(TestCategory.Repro)]
 		public void ReproTestShapeIntegrityErrorSDE()
 		{
 			// to reproduce TOP-4851: 
@@ -1696,7 +1697,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		[NotNull]
 		private static IFeatureWorkspace OpenTestWorkspace()
 		{
-			string versionName = "TG_SERVICE.RC_TLM_2022-6-30";
+			string versionName = "SDE.DEFAULT"; //"TG_SERVICE.RC_TLM_2022-6-30";
 
 			IFeatureWorkspace defaultVersion =
 				(IFeatureWorkspace) TestUtils.OpenUserWorkspaceOracle();

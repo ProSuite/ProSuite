@@ -56,6 +56,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		[Test]
 		[Category(TestCategory.Slow)]
 		[Category(TestCategory.Sde)]
+		[Category(Commons.Test.TestCategory.Performance)]
 		public void CanGetExistingFeaturesFastEnough()
 		{
 			IFeatureWorkspace ws = OpenTestWorkspace();
@@ -87,6 +88,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		[Test]
 		[Category(TestCategory.Fast)]
 		[Category(TestCategory.Sde)]
+		[Category(Commons.Test.TestCategory.Performance)]
 		public void CanGetExistingRowsFastEnough()
 		{
 			IFeatureWorkspace ws = OpenTestWorkspace();
@@ -140,6 +142,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		[Test]
 		[Category(TestCategory.Fast)]
 		[Category(TestCategory.Sde)]
+		[Category(Commons.Test.TestCategory.Performance)]
 		public void CanGetNullForNonExistingFeatureFastEnough()
 		{
 			IFeatureWorkspace ws = OpenTestWorkspace();
@@ -436,6 +439,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 		[Test]
 		[Category(TestCategory.Sde)]
+		[Ignore("learning test")]
 		public void Learning_CanFindFeaturesWithNonZSimpleSearchGeometry()
 		{
 			// 10.2.1: Test fails (correct) with COM Exception on OpenCursor
@@ -797,6 +801,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 		[Test]
 		[Category(TestCategory.Sde)]
+		[Ignore("requires data_osm in local postgres")]
 		public void CanSpatiallyQueryPostgres()
 		{
 			IWorkspace workspace = TestUtils.OpenUserWorkspacePostgres();

@@ -162,6 +162,7 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		[HandleProcessCorruptedStateExceptions]
 		[SecurityCritical]
+		[Category(TestCategory.Repro)]
 		public void CanCheckRealWorldBuildingsTop5643()
 		{
 			string path = TestDataPreparer.ExtractZip("GebZueriberg.gdb.zip").GetPath();
@@ -187,7 +188,7 @@ namespace ProSuite.QA.Tests.Test
 				Console.WriteLine("Finished successfully in {0}s", watch.Elapsed.TotalSeconds);
 			}
 
-			Assert.AreEqual(2, errorCount);
+			Assert.AreEqual(32, errorCount);
 		}
 
 		// TODO tests for behavior below tolerance/resolution

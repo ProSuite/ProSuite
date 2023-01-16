@@ -193,7 +193,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 
 			bool hasUndefinedWorkspaceReference;
 			IList<XmlWorkspace> xmlWorkspaces = XmlDataQualityUtils.GetReferencedWorkspaces(
-				documentCache.QualityConditions, documentCache, out hasUndefinedWorkspaceReference);
+				documentCache, out hasUndefinedWorkspaceReference);
 
 			var result = new List<DataSource>();
 			if (hasUndefinedWorkspaceReference)

@@ -82,36 +82,30 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 		}
 
 		[CanBeNull]
-		public InstanceDescriptor GetInstanceDescriptor()
-		{
-			return Assert.NotNull(GetEntity()).InstanceDescriptor;
-		}
-
-		[CanBeNull]
 		public string GetInstanceDescription()
 		{
 			InstanceConfiguration instanceConfiguration = Assert.NotNull(GetEntity());
-			var factory = CreateInstanceFactory(instanceConfiguration);
+			var instanceInfo = CreateInstanceInfo(instanceConfiguration);
 
-			return factory?.TestDescription;
+			return instanceInfo?.TestDescription;
 		}
 
 		[CanBeNull]
 		public IList<TestParameter> GetParameterDescription()
 		{
 			InstanceConfiguration instanceConfiguration = Assert.NotNull(GetEntity());
-			InstanceFactory factory = CreateInstanceFactory(instanceConfiguration);
+			var instanceInfo = CreateInstanceInfo(instanceConfiguration);
 
-			if (factory == null)
+			if (instanceInfo == null)
 			{
 				return null;
 			}
 
-			IList<TestParameter> paramList = factory.Parameters;
+			IList<TestParameter> paramList = instanceInfo.Parameters;
 
 			foreach (TestParameter param in paramList)
 			{
-				param.Description = factory.GetParameterDescription(param.Name);
+				param.Description = instanceInfo.GetParameterDescription(param.Name);
 			}
 
 			return paramList;
@@ -315,14 +309,14 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			[NotNull] InstanceConfiguration entity,
 			[NotNull] TestParameterValue parameterValue)
 		{
-			InstanceFactory factory = CreateInstanceFactory(entity);
+			IInstanceInfo instanceInfo = CreateInstanceInfo(entity);
 
-			if (factory == null)
+			if (instanceInfo == null)
 			{
 				return false;
 			}
 
-			foreach (TestParameter testParameter in factory.Parameters)
+			foreach (TestParameter testParameter in instanceInfo.Parameters)
 			{
 				if (testParameter.Name == parameterValue.TestParameterName)
 				{
@@ -334,11 +328,12 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			return false;
 		}
 
-		private static InstanceFactory CreateInstanceFactory(InstanceConfiguration entity)
+		private static IInstanceInfo CreateInstanceInfo([NotNull] InstanceConfiguration entity)
 		{
-			InstanceFactory factory = InstanceFactoryUtils.CreateFactory(entity);
+			IInstanceInfo instanceInfo =
+				InstanceDescriptorUtils.GetInstanceInfo(entity.InstanceDescriptor);
 
-			return factory;
+			return instanceInfo;
 		}
 
 		public void ExecuteWebHelpCommand()

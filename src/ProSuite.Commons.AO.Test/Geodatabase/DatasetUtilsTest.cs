@@ -198,6 +198,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 		[Test]
 		[Category(TestCategory.Sde)]
+		[Ignore("Needs GDAL")]
 		public void CanOpenRasterFileFromMosaicDatasetUsingSpatialQueryGdal_Learning()
 		{
 			// TODO: Correct GDAL native reference. Work-around: copy the x64 directory to the output dir
