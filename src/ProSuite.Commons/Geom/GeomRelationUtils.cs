@@ -132,7 +132,7 @@ namespace ProSuite.Commons.Geom
 
 		/// <summary>
 		/// Determines whether the bounding envelope of <paramref name="geometry1"/> is contained
-		/// in the bounding envelope of <paramref cref="geometry2"/>.
+		/// in the bounding envelope of <paramref name="geometry2"/>.
 		/// </summary>
 		/// <param name="geometry1">The test geometry.</param>
 		/// <param name="geometry2">The containing geometry.</param>
