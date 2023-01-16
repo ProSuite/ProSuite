@@ -18,10 +18,10 @@ namespace ProSuite.DomainModel.AO.QA
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		/// <summary>
-		/// Gets the transformer factory, sets the transformer configuration and initializes its 
+		/// Gets the instance factory, sets the instance configuration and initializes its 
 		/// parameter values.
 		/// </summary>
-		/// <returns>TransformerFactory or null.</returns>
+		/// <returns>InstanceFactory or null.</returns>
 		[CanBeNull]
 		public static InstanceFactory CreateFactory(
 			[NotNull] InstanceConfiguration instanceConfiguration)
@@ -51,9 +51,17 @@ namespace ProSuite.DomainModel.AO.QA
 			throw new NotImplementedException();
 		}
 
+		/// <summary>
+		/// Gets the issue filter factory, sets the issue filter configuration and initializes its 
+		/// parameter values.
+		/// </summary>
+		/// <returns>IssueFilterFactory or null.</returns>
+		[CanBeNull]
 		public static IssueFilterFactory CreateIssueFilterFactory(
 			[NotNull] IssueFilterConfiguration issueFilterConfig)
 		{
+			Assert.ArgumentNotNull(issueFilterConfig, nameof(issueFilterConfig));
+
 			if (issueFilterConfig.InstanceDescriptor == null)
 			{
 				return null;
@@ -192,31 +200,37 @@ namespace ProSuite.DomainModel.AO.QA
 			return sb;
 		}
 
+		[CanBeNull]
 		private static IssueFilterFactory CreateIssueFilterFactory(
-			[NotNull] IssueFilterDescriptor filterDescriptor)
+			[NotNull] IssueFilterDescriptor descriptor)
 		{
-			ClassDescriptor classDescriptor = filterDescriptor.Class;
+			Assert.ArgumentNotNull(descriptor, nameof(descriptor));
+
+			ClassDescriptor classDescriptor = descriptor.Class;
 
 			return classDescriptor != null
 				       ? new IssueFilterFactory(classDescriptor.AssemblyName,
 				                                classDescriptor.TypeName,
-				                                filterDescriptor.ConstructorId)
+				                                descriptor.ConstructorId)
 				       : null;
 		}
 
+		[CanBeNull]
 		private static TransformerFactory CreateTransformerFactory(
-			[NotNull] TransformerDescriptor transformerDescriptor)
+			[NotNull] TransformerDescriptor descriptor)
 		{
-			ClassDescriptor classDescriptor = transformerDescriptor.Class;
+			Assert.ArgumentNotNull(descriptor, nameof(descriptor));
+
+			ClassDescriptor classDescriptor = descriptor.Class;
 
 			return classDescriptor != null
 				       ? new TransformerFactory(classDescriptor.AssemblyName,
 				                                classDescriptor.TypeName,
-				                                transformerDescriptor.ConstructorId)
+				                                descriptor.ConstructorId)
 				       : null;
 		}
 
-		public static string GetDefaultDescriptorName(Type instanceType,
+		public static string GetDefaultDescriptorName([NotNull] Type instanceType,
 		                                              int constructorIndex)
 		{
 			Assert.ArgumentNotNull(instanceType, nameof(instanceType));
@@ -237,16 +251,11 @@ namespace ProSuite.DomainModel.AO.QA
 				result = result.Substring(2);
 			}
 			else if (result.Length > 2 &&
-			         result.StartsWith("if", StringComparison.CurrentCultureIgnoreCase))
+			         result.StartsWith("if", StringComparison.InvariantCultureIgnoreCase))
 			{
 				result = result.Substring(2);
 			}
-			else if (result.Length > 2 &&
-			         result.StartsWith("rf", StringComparison.InvariantCultureIgnoreCase))
-			{
-				result = result.Substring(2);
-			}
-
+			
 			return result;
 		}
 	}

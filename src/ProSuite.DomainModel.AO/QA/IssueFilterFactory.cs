@@ -8,9 +8,6 @@ using ProSuite.QA.Core;
 
 namespace ProSuite.DomainModel.AO.QA
 {
-	/// <summary>
-	/// Factory for IIssueFilter instances.
-	/// </summary>
 	public class IssueFilterFactory : InstanceFactory
 	{
 		[UsedImplicitly] [NotNull] private Type _filterType;
@@ -65,9 +62,9 @@ namespace ProSuite.DomainModel.AO.QA
 
 		[NotNull]
 		public IIssueFilter Create([NotNull] IOpenDataset datasetContext,
-		                           [NotNull] IssueFilterConfiguration IssueFilterConfiguration)
+		                           [NotNull] IssueFilterConfiguration issueFilterConfiguration)
 		{
-			return Create(IssueFilterConfiguration, datasetContext, Parameters,
+			return Create(issueFilterConfiguration, datasetContext, Parameters,
 			              CreateInstance<IIssueFilter>);
 		}
 

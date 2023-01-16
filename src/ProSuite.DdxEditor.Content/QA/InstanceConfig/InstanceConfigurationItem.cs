@@ -85,7 +85,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 		public string GetInstanceDescription()
 		{
 			InstanceConfiguration instanceConfiguration = Assert.NotNull(GetEntity());
-			var instanceInfo = CreateInstanceInfo(instanceConfiguration);
+			var instanceInfo = GetInstanceInfo(instanceConfiguration);
 
 			return instanceInfo?.TestDescription;
 		}
@@ -94,7 +94,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 		public IList<TestParameter> GetParameterDescription()
 		{
 			InstanceConfiguration instanceConfiguration = Assert.NotNull(GetEntity());
-			var instanceInfo = CreateInstanceInfo(instanceConfiguration);
+			var instanceInfo = GetInstanceInfo(instanceConfiguration);
 
 			if (instanceInfo == null)
 			{
@@ -309,7 +309,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			[NotNull] InstanceConfiguration entity,
 			[NotNull] TestParameterValue parameterValue)
 		{
-			IInstanceInfo instanceInfo = CreateInstanceInfo(entity);
+			IInstanceInfo instanceInfo = GetInstanceInfo(entity);
 
 			if (instanceInfo == null)
 			{
@@ -328,10 +328,17 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			return false;
 		}
 
-		private static IInstanceInfo CreateInstanceInfo([NotNull] InstanceConfiguration entity)
+		[CanBeNull]
+		private static IInstanceInfo GetInstanceInfo([NotNull] InstanceConfiguration entity)
 		{
-			IInstanceInfo instanceInfo =
-				InstanceDescriptorUtils.GetInstanceInfo(entity.InstanceDescriptor);
+			InstanceDescriptor descriptor = entity.InstanceDescriptor;
+
+			if (descriptor == null)
+			{
+				return null;
+			}
+
+			IInstanceInfo instanceInfo = InstanceDescriptorUtils.GetInstanceInfo(descriptor);
 
 			return instanceInfo;
 		}

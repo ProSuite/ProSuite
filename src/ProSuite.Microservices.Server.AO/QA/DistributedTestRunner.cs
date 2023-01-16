@@ -261,18 +261,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			foreach (var subVerification in subVerifications)
 			{
-				VerificationRequest subRequest = subVerification.SubRequest;
-
-				SubResponse subResponse = subVerification.SubResponse;
-
-				Task<bool> task = Task.Run(
-					async () =>
-						await VerifyAsync(_qaClient, subRequest, subResponse,
-						                  CancellationTokenSource),
-					CancellationTokenSource.Token);
-
-				// Process the messages even though the foreground thread is blocking/busy processing results
-				task.ConfigureAwait(false);
+				Task<bool> task = IniTask(subVerification);
 				_tasks.Add(task, subVerification);
 
 				Thread.Sleep(50);
@@ -284,6 +273,13 @@ namespace ProSuite.Microservices.Server.AO.QA
 				                        out SubVerification completed))
 				{
 					ProcessFinalResult(task, completed);
+
+					if (task.Status == TaskStatus.Faulted)
+					{
+						_msg.Warn($"Task {task.Id} failed, trying rerun");
+						Task<bool> newTask = IniTask(completed);
+						_tasks.Add(newTask, completed);
+					}
 
 					_msg.InfoFormat("Remaining verification tasks: {0}", _tasks.Count);
 				}
@@ -322,6 +318,22 @@ namespace ProSuite.Microservices.Server.AO.QA
 			EndVerification(QualityVerification);
 		}
 
+		private Task<bool> IniTask(SubVerification subVerification)
+		{
+			VerificationRequest subRequest = subVerification.SubRequest;
+
+			SubResponse subResponse = subVerification.SubResponse;
+
+			Task<bool> task = Task.Run(
+				async () =>
+					await VerifyAsync(_qaClient, subRequest, subResponse,
+					                  CancellationTokenSource),
+				CancellationTokenSource.Token);
+
+			// Process the messages even though the foreground thread is blocking/busy processing results
+			task.ConfigureAwait(false);
+			return task;
+		}
 		private void ProcessFinalResult(Task<bool> task, SubVerification subVerification)
 		{
 			SubResponse subResponse = subVerification.SubResponse;
@@ -715,7 +727,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 						originalRequest, specification, parallelGroup, nMaxTileParallel);
 
 				subVerifications.AddRange(tileParallelVerifications);
-				_msg.Info($"Build {tileParallelVerifications.Count} tile parallel subverifications for {parallelGroup.QualityConditions.Count} quality conditions");
+				_msg.Info($"Built {tileParallelVerifications.Count} tile parallel subverifications for {parallelGroup.QualityConditions.Count} quality conditions");
 				unhandledQualityConditions.Remove(parallelGroup);
 			}
 

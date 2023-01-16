@@ -226,33 +226,34 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 		}
 
 		[CanBeNull]
-		private TestFactory GetTestFactory()
+		private IInstanceInfo GetInstanceInfo()
 		{
-			return TestFactoryUtils.GetTestFactory(Assert.NotNull(GetEntity()));
+			return InstanceDescriptorUtils.GetInstanceInfo(Assert.NotNull(GetEntity()));
 		}
 
 		[NotNull]
 		public IList<TestParameter> GetTestParameters([CanBeNull] out string description,
 		                                              [NotNull] out string[] categories)
 		{
-			TestFactory factory = GetTestFactory();
-			if (factory == null)
+			IInstanceInfo instanceInfo = GetInstanceInfo();
+
+			if (instanceInfo == null)
 			{
 				description = string.Empty;
 				categories = Array.Empty<string>();
 				return new List<TestParameter>();
 			}
 
-			description = factory.TestDescription;
-			categories = factory.TestCategories;
+			description = instanceInfo.TestDescription;
+			categories = instanceInfo.TestCategories;
 
-			IList<TestParameter> testParameters = factory.Parameters;
+			IList<TestParameter> testParameters = instanceInfo.Parameters;
 
 			foreach (TestParameter testParameter in testParameters)
 			{
 				// TODO revise handling of parameter descriptions
 				testParameter.Description =
-					factory.GetParameterDescription(testParameter.Name);
+					instanceInfo.GetParameterDescription(testParameter.Name);
 			}
 
 			return testParameters;
@@ -385,8 +386,8 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 						}
 					}
 
-					TestFactory factory = GetTestFactory();
-					TestParameter testParameter = factory?.GetParameter(parameterName);
+					IInstanceInfo instanceInfo = GetInstanceInfo();
+					TestParameter testParameter = instanceInfo?.GetParameter(parameterName);
 
 					IList<Dataset> datasets = model?.GetDatasets() ?? repository.GetAll();
 
@@ -541,8 +542,9 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 				_modelBuilder.ReadOnlyTransaction(
 					delegate
 					{
-						TestFactory factory = GetTestFactory();
-						var parameters = factory?.Parameters ?? Enumerable.Empty<TestParameter>();
+						IInstanceInfo instanceInfo = Assert.NotNull(GetInstanceInfo());
+
+						var parameters = instanceInfo.Parameters ?? Enumerable.Empty<TestParameter>();
 
 						foreach (TestParameter parameter in parameters)
 						{
@@ -720,7 +722,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 			[CanBeNull] out DataQualityCategory targetCategory)
 		{
 			IList<TestParameter> testParameters = _modelBuilder.ReadOnlyTransaction(
-				() => GetTestFactory().Parameters);
+				() => Assert.NotNull(GetInstanceInfo()).Parameters);
 
 			IList<QualityConditionParameters> result;
 			using (var form = new CreateQualityConditionsForm())

@@ -67,26 +67,13 @@ namespace ProSuite.DomainModel.AO.QA
 			return null;
 		}
 
-		//public bool CheckTypes(out string error)
-		//{
-		//    error = "Not implemented";
-		//    return false;
-		//}
-
-		[Obsolete]
-		public virtual bool Validate(out string error)
-		{
-			throw new NotImplementedException();
-		}
-
 		protected static T ValidateType<T>(object objParam,
 		                                   [CanBeNull] string typeDesc = null)
 		{
 			if (objParam == null)
 			{
 				throw new ArgumentException(
-					string.Format("expected {0}, got <null>",
-					              typeDesc ?? typeof(T).Name));
+					string.Format("expected {0}, got <null>", typeDesc ?? typeof(T).Name));
 			}
 
 			if (! (objParam is T))
@@ -210,9 +197,10 @@ namespace ProSuite.DomainModel.AO.QA
 			return new[] { test };
 		}
 
-		private void AddIssueFilters([NotNull] IList<ITest> tests, IOpenDataset datasetContext)
+		private void AddIssueFilters([NotNull] IList<ITest> tests,
+		                             [NotNull] IOpenDataset datasetContext)
 		{
-			if (! (Condition is QualityCondition c))
+			if (Condition == null)
 			{
 				return;
 			}
@@ -223,19 +211,47 @@ namespace ProSuite.DomainModel.AO.QA
 
 				IList<IIssueFilter> filters = new List<IIssueFilter>();
 
-				foreach (var issueFilterConfiguration in c.IssueFilterConfigurations)
+				foreach (var issueFilterConfiguration in Condition.IssueFilterConfigurations)
 				{
-					IssueFilterFactory factory =
-						InstanceFactoryUtils.CreateIssueFilterFactory(issueFilterConfiguration);
-					IIssueFilter filter = factory.Create(datasetContext, issueFilterConfiguration);
-					filter.Name = issueFilterConfiguration.Name;
+					IIssueFilter filter =
+						CreateIssueFilter(issueFilterConfiguration, datasetContext);
+
 					filters.Add(filter);
 				}
 
 				if (filters.Count > 0)
 				{
-					filterTest.SetIssueFilters(c.IssueFilterExpression, filters);
+					filterTest.SetIssueFilters(Condition.IssueFilterExpression, filters);
 				}
+			}
+		}
+
+		private static IIssueFilter CreateIssueFilter(
+			[NotNull] IssueFilterConfiguration issueFilterConfiguration,
+			[NotNull] IOpenDataset datasetContext)
+		{
+			try
+			{
+				IssueFilterFactory factory =
+					InstanceFactoryUtils.CreateIssueFilterFactory(issueFilterConfiguration);
+
+				if (factory == null)
+				{
+					throw new ArgumentException(
+						$"Unable to create IssueFilterFactory for {issueFilterConfiguration}");
+				}
+
+				IIssueFilter filter = factory.Create(datasetContext, issueFilterConfiguration);
+				filter.Name = issueFilterConfiguration.Name;
+
+				return filter;
+			}
+			catch (Exception e)
+			{
+				StringBuilder sb =
+					InstanceFactoryUtils.GetErrorMessageWithDetails(issueFilterConfiguration, e);
+
+				throw new InvalidOperationException(sb.ToString(), e);
 			}
 		}
 
@@ -324,14 +340,13 @@ namespace ProSuite.DomainModel.AO.QA
 			}
 			catch (Exception e)
 			{
-				InstanceConfiguration condition = Condition;
-				if (condition == null)
+				if (Condition == null)
 				{
 					throw new AssertionException(
 						"Unable to create test for undefined condition", e);
 				}
 
-				StringBuilder sb = InstanceFactoryUtils.GetErrorMessageWithDetails(condition, e);
+				StringBuilder sb = InstanceFactoryUtils.GetErrorMessageWithDetails(Condition, e);
 
 				throw new InvalidOperationException(sb.ToString(), e);
 			}
