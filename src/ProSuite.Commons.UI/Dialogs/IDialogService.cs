@@ -159,11 +159,11 @@ namespace ProSuite.Commons.UI.Dialogs
 		/// <param name="icon"></param>
 		/// <param name="defaultButton"></param>
 		/// <returns></returns>
-		public DialogResult Show([CanBeNull] IWin32Window owner,
-		                         [NotNull] string message,
-		                         [NotNull] string title,
-		                         MessageBoxButtons buttons,
-		                         MessageBoxIcon icon,
-		                         MessageBoxDefaultButton defaultButton);
+		DialogResult Show([CanBeNull] IWin32Window owner,
+		                  [NotNull] string message,
+		                  [NotNull] string title,
+		                  MessageBoxButtons buttons,
+		                  MessageBoxIcon icon,
+		                  MessageBoxDefaultButton defaultButton);
 	}
 }

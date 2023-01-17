@@ -18,7 +18,7 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 
 		[XmlAttribute("executionPriority")]
 		[DefaultValue(_nullExecutionPriority)]
-		public int ExecutionPriority { get; set; }
+		public int ExecutionPriority { get; set; } = _nullExecutionPriority;
 
 		[XmlAttribute("stopOnError")]
 		[DefaultValue(false)]

@@ -5,6 +5,7 @@ using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.Test;
 using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.QA;
@@ -154,7 +155,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				                         new SimpleVerifiedDatasetHarvester());
 
 			var specFct = new XmlBasedQualitySpecificationFactory(
-				modelFactory, new SimpleDatasetOpener(model.MasterDatabaseWorkspaceContext));
+				modelFactory);
 
 			var dataSource = new DataSource(xmlWs)
 			                 {
@@ -299,7 +300,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				                         new SimpleVerifiedDatasetHarvester());
 
 			var specFct = new XmlBasedQualitySpecificationFactory(
-				modelFactory, new SimpleDatasetOpener(model.MasterDatabaseWorkspaceContext));
+				modelFactory);
 
 			var dataSource = new DataSource(xmlWs)
 			                 {
@@ -435,7 +436,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				                         new SimpleVerifiedDatasetHarvester());
 
 			var specFct = new XmlBasedQualitySpecificationFactory(
-				modelFactory, new SimpleDatasetOpener(model.MasterDatabaseWorkspaceContext));
+				modelFactory);
 
 			var dataSource = new DataSource(xmlWs)
 			                 {
@@ -463,7 +464,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 		}
 
 		[Test]
-		[Category(Commons.Test.TestCategory.FixMe)]
+		[Category(TestCategory.FixMe)]
 		public void CanRunFromXmlWithTableJoin()
 		{
 			// Init
@@ -617,7 +618,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				                         new SimpleVerifiedDatasetHarvester());
 
 			var specFct = new XmlBasedQualitySpecificationFactory(
-				modelFactory, new SimpleDatasetOpener(model.MasterDatabaseWorkspaceContext));
+				modelFactory);
 
 			var dataSource = new DataSource(xmlWs)
 			                 {

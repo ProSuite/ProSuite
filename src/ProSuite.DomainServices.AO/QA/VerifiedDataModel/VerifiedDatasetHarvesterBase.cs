@@ -61,13 +61,16 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 		{
 			IFeatureClassName fcName = (IFeatureClassName) datasetName;
 
+			GeometryTypeShape geometryType = null;
+
+			if (fcName != null)
+			{
+				geometryType = GetGeometryType(DatasetUtils.GetShapeType(fcName));
+			}
+
 			var verifiedVectorDataset = new VerifiedVectorDataset(datasetName.Name)
 			                            {
-				                            GeometryType = fcName == null
-					                                           ? null
-					                                           : GetGeometryType(
-						                                           DatasetUtils
-							                                           .GetShapeType(fcName))
+				                            GeometryType = geometryType
 			                            };
 
 			return verifiedVectorDataset;

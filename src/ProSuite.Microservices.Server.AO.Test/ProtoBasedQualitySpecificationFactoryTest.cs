@@ -3,7 +3,6 @@ using NSubstitute;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Test;
 using ProSuite.DomainModel.AO.DataModel;
-using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainServices.AO.QA.Standalone.XmlBased;
@@ -19,7 +18,7 @@ namespace ProSuite.Microservices.Server.AO.Test
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			TestUtils.ConfigureUnittestLogging();
+			TestUtils.ConfigureUnitTestLogging();
 			TestUtils.InitializeLicense();
 		}
 
@@ -183,8 +182,7 @@ namespace ProSuite.Microservices.Server.AO.Test
 				                         new SimpleVerifiedDatasetHarvester());
 
 			var factory = new ProtoBasedQualitySpecificationFactory(
-				modelFactory, instanceDescriptors,
-				new SimpleDatasetOpener(new MasterDatabaseDatasetContext()));
+				modelFactory, instanceDescriptors);
 
 			QualitySpecification qualitySpecification =
 				factory.CreateQualitySpecification(conditionListSpecificationMsg,

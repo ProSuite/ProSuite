@@ -55,13 +55,12 @@ namespace ProSuite.DdxEditor.Framework
 			[CanBeNull] IOptionsManager optionsManager = null,
 			[CanBeNull] IEnumerable<IItemLocator> itemLocators = null,
 			[CanBeNull] IEnumerable<ISearchProvider> searchProviders = null,
-			IConfigurationManager configurationsManager = null)
+			[CanBeNull] IConfigurationManager configurationsManager = null)
 		{
 			Assert.ArgumentNotNull(logWindowControl, nameof(logWindowControl));
 			Assert.ArgumentNotNullOrEmpty(title, nameof(title));
 			Assert.ArgumentNotNull(modelBuilder, nameof(modelBuilder));
 			Assert.ArgumentNotNull(unitOfWork, nameof(unitOfWork));
-			Assert.ArgumentNotNull(configurationsManager, nameof(configurationsManager));
 
 			var navigationControl = new NavigationControl(itemLocators);
 			var contentControl = new ContentControl();
