@@ -17,7 +17,7 @@ namespace ProSuite.QA.Container.TestContainer
 			throw new InvalidOperationException("Box was transferred with Constructor");
 		}
 
-		protected override IList<int> GetOidList()
+		protected override IList<long> GetOidList()
 		{
 			throw new NotImplementedException("Box was transferred with Constructor");
 		}
