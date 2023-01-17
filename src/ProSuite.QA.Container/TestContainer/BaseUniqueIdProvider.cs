@@ -7,11 +7,10 @@ namespace ProSuite.QA.Container.TestContainer
 {
 	public abstract class BaseUniqueIdProvider<T> : IUniqueIdProvider
 	{
-		[NotNull] private readonly IDictionary<T, int> _keysToId;
+		[NotNull] private readonly IDictionary<T, long> _keysToId;
 		[NotNull] private readonly IDictionary<long, T> _idToKeys;
 
-		private int _uniqueIdCount;
-
+		private long _uniqueIdCount;
 
 		protected BaseUniqueIdProvider([NotNull] IEqualityComparer<T> keyComparer)
 		{
@@ -19,21 +18,22 @@ namespace ProSuite.QA.Container.TestContainer
 
 			//_keysToId = new Dictionary<IList<int?>, int>(new ListComparer());
 			//_idToKeys = new Dictionary<int, IList<int?>>();
-			_keysToId = LargeDictionaryFactory.CreateDictionary<T, int>(
+			_keysToId = LargeDictionaryFactory.CreateDictionary<T, long>(
 				equalityComparer: keyComparer);
 			_idToKeys = LargeDictionaryFactory.CreateDictionary<long, T>();
 		}
 
 		protected IDictionary<long, T> IdToKeys => _idToKeys;
-		protected int IncrementUniqueIdCount()
+
+		protected long IncrementUniqueIdCount()
 		{
 			_uniqueIdCount++;
 			return _uniqueIdCount;
 		}
 
-		public virtual int GetUniqueId([NotNull] T keys)
+		public virtual long GetUniqueId([NotNull] T keys)
 		{
-			int uniqueId;
+			long uniqueId;
 			if (! _keysToId.TryGetValue(keys, out uniqueId))
 			{
 				uniqueId = ++_uniqueIdCount;
@@ -54,7 +54,7 @@ namespace ProSuite.QA.Container.TestContainer
 			return _idToKeys.TryGetValue(uniqueId, out key);
 		}
 
-		public bool Remove(int uniqueId)
+		public bool Remove(long uniqueId)
 		{
 			T key;
 

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AO.Geodatabase
@@ -186,7 +187,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		public long GetRowOid(IRow row)
 		{
 			return AlternateOidFieldName != null
-				       ? GdbObjectUtils.ReadRowOidValue(row, OidFieldIndex)
+				       ? Assert.NotNull(GdbObjectUtils.ReadRowOidValue(row, OidFieldIndex)).Value
 				       : row.OID;
 		}
 

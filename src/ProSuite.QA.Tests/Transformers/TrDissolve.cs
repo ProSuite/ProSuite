@@ -522,7 +522,7 @@ namespace ProSuite.QA.Tests.Transformers
 				joinedValueList.AddList(rowValues, TableFields.FieldIndexMapping);
 
 				UniqueIdKey key = new UniqueIdKey(rows.Select(r => r.OID));
-				int oid = _uniqueIdProvider.GetUniqueId(key);
+				long oid = _uniqueIdProvider.GetUniqueId(key);
 				var dissolved = Resulting.CreateObject(oid, joinedValueList);
 
 				dissolved.Shape = shape;

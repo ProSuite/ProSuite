@@ -396,14 +396,22 @@ namespace ProSuite.Commons.AO.Geodatabase
 		/// <param name="row"></param>
 		/// <param name="fieldIndex"></param>
 		/// <returns></returns>
-		public static long ReadRowOidValue(IRow row, int fieldIndex)
+		public static long? ReadRowOidValue(IRow row, int fieldIndex)
 		{
+			object value = row.Value[fieldIndex];
+
+			if (value == DBNull.Value)
+			{
+				return null;
+			}
+
 #if Server11
-				return row.Value[fieldIndex];
+			// long is expected:
+			return (long) value;
 #else
 			// First unbox (int) object to int, then cast to long (implicit).
-			// Directly from object (Int32) to long fails.
-			return (int) row.Value[fieldIndex];
+			// Directly casting from object (Int32) to long fails!
+			return (int) value;
 #endif
 		}
 
@@ -413,13 +421,20 @@ namespace ProSuite.Commons.AO.Geodatabase
 		/// <param name="row"></param>
 		/// <param name="fieldIndex"></param>
 		/// <returns></returns>
-		public static long ReadRowOidValue(IReadOnlyRow row, int fieldIndex)
+		public static long? ReadRowOidValue(IReadOnlyRow row, int fieldIndex)
 		{
-#if Server11
-				return row.Value[fieldIndex];
-#else
-			// It is an int by convention in AO10 but ReadOnly supplies long
 			object value = row.get_Value(fieldIndex);
+
+			if (value == DBNull.Value)
+			{
+				return null;
+			}
+#if Server11
+			// long is expected:
+			return (long) value;
+#else
+			// It is an int by convention in AO10 but ReadOnly can supply long object,
+			// depending on the implementation:
 
 			// First unbox (int) object to int, then cast to long (implicit).
 			// Directly from object (Int32) to long fails.
@@ -428,7 +443,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 				return intValue;
 			}
 
-			// Depending on the implementation, it could already be a long
+			// Depending on the implementation, it could already be a long (or DBNull)
 			return (long) value;
 #endif
 		}

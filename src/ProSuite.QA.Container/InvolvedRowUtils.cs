@@ -84,7 +84,8 @@ namespace ProSuite.QA.Container
 					int oidFieldIdx = row.Table.FindField(oidField);
 					if (oidFieldIdx >= 0)
 					{
-						long oid = GdbObjectUtils.ReadRowOidValue(row, oidFieldIdx);
+						long oid = Assert.NotNull(GdbObjectUtils.ReadRowOidValue(row, oidFieldIdx))
+						                 .Value;
 						involveds.Add(new InvolvedRow(t, oid));
 					}
 				}

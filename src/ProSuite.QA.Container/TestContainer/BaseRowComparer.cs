@@ -62,9 +62,11 @@ namespace ProSuite.QA.Container.TestContainer
 
 		public int GetHashCode(BaseRow obj)
 		{
-			if (obj.UniqueId?.Id != null)
+			long? uniqueIdId = obj.UniqueId?.Id;
+
+			if (uniqueIdId != null)
 			{
-				return obj.UniqueId.Id;
+				return uniqueIdId.Value.GetHashCode();
 			}
 
 			long oid = obj.OID;

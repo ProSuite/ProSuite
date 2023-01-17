@@ -1,17 +1,16 @@
 using System.Collections.Generic;
 using ProSuite.Commons.AO.Geodatabase;
-using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.QA.Container.TestContainer
 {
-	public class QueryTableUniqueIdProvider : BaseUniqueIdProvider<IList<int?>>,
+	public class QueryTableUniqueIdProvider : BaseUniqueIdProvider<IList<long?>>,
 	                                          IUniqueIdProvider<IReadOnlyFeature>
 	{
-		private class ListComparer : IEqualityComparer<IList<int?>>, IComparer<IList<int?>>
+		private class ListComparer : IEqualityComparer<IList<long?>>, IComparer<IList<long?>>
 		{
-			public int Compare(IList<int?> x, IList<int?> y)
+			public int Compare(IList<long?> x, IList<long?> y)
 			{
 				if (x == y)
 				{
@@ -37,7 +36,7 @@ namespace ProSuite.QA.Container.TestContainer
 
 				for (var i = 0; i < count; i++)
 				{
-					d = (x[i] ?? int.MinValue).CompareTo(y[i] ?? int.MinValue);
+					d = (x[i] ?? long.MinValue).CompareTo(y[i] ?? long.MinValue);
 					if (d != 0)
 					{
 						return d;
@@ -47,18 +46,18 @@ namespace ProSuite.QA.Container.TestContainer
 				return 0;
 			}
 
-			public bool Equals(IList<int?> x, IList<int?> y)
+			public bool Equals(IList<long?> x, IList<long?> y)
 			{
 				return Compare(x, y) == 0;
 			}
 
-			public int GetHashCode(IList<int?> values)
+			public int GetHashCode(IList<long?> values)
 			{
 				unchecked
 				{
 					var hash = 19;
 
-					foreach (int? value in values)
+					foreach (long? value in values)
 					{
 						hash = hash * 31 + value.GetHashCode();
 					}
@@ -74,7 +73,7 @@ namespace ProSuite.QA.Container.TestContainer
 
 		public QueryTableUniqueIdProvider(
 			[NotNull] IDictionary<int, IReadOnlyTable> baseTablePerOidFieldIndex)
-			:base(new ListComparer())
+			: base(new ListComparer())
 		{
 			Assert.ArgumentNotNull(baseTablePerOidFieldIndex, nameof(baseTablePerOidFieldIndex));
 
@@ -86,28 +85,28 @@ namespace ProSuite.QA.Container.TestContainer
 			return new List<int>(_baseTablePerOidFieldIndex.Keys);
 		}
 
-		public IList<int?> GetKeys(IReadOnlyFeature feature)
+		private IList<long?> GetKeys(IReadOnlyRow row)
 		{
-			var keys = new List<int?>(5); // _keysToId.Count);
+			var keys = new List<long?>(5); // _keysToId.Count);
 
 			foreach (int fieldIndex in _baseTablePerOidFieldIndex.Keys)
 			{
-				object oidValue = feature.get_Value(fieldIndex);
+				long? oid = GdbObjectUtils.ReadRowOidValue(row, fieldIndex);
 
-				keys.Add(oidValue as int?);
+				keys.Add(oid);
 			}
 
 			return keys;
 		}
 
-		public int GetUniqueId([NotNull] IReadOnlyFeature feature)
+		public long GetUniqueId([NotNull] IReadOnlyFeature feature)
 		{
-			IList<int?> keys = GetKeys(feature);
-			int uniqueId = GetUniqueId(keys);
+			IList<long?> keys = GetKeys(feature);
+			long uniqueId = GetUniqueId(keys);
 			return uniqueId;
 		}
 
-		public int Compare(IList<int?> x, IList<int?> y)
+		public int Compare(IList<long?> x, IList<long?> y)
 		{
 			return new ListComparer().Compare(x, y);
 		}
@@ -115,7 +114,7 @@ namespace ProSuite.QA.Container.TestContainer
 		public override IList<InvolvedRow> GetInvolvedRows(long uniqueId)
 		{
 			List<InvolvedRow> involvedRows = new InvolvedRows();
-			if (!IdToKeys.TryGetValue(uniqueId, out IList<int?> keys))
+			if (! IdToKeys.TryGetValue(uniqueId, out IList<long?> keys))
 			{
 				return involvedRows;
 			}
@@ -123,7 +122,7 @@ namespace ProSuite.QA.Container.TestContainer
 			var iKey = 0;
 			foreach (var baseTable in _baseTablePerOidFieldIndex.Values)
 			{
-				int? key = keys[iKey];
+				long? key = keys[iKey];
 				iKey++;
 
 				if (key == null)

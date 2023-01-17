@@ -22,11 +22,11 @@ namespace ProSuite.QA.Tests.Transformers
 			return new List<int>();
 		}
 
-		public override int GetUniqueId(T key)
+		public override long GetUniqueId(T key)
 		{
 			if (key.IsVirtuell)
 			{
-				int uniqueId = IncrementUniqueIdCount();
+				long uniqueId = IncrementUniqueIdCount();
 				return uniqueId;
 			}
 
