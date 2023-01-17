@@ -1,11 +1,9 @@
 using System.Collections.Generic;
 using System.Drawing;
-using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Essentials.System;
 using ProSuite.Commons.Logging;
 using ProSuite.DdxEditor.Content.Properties;
 using ProSuite.DdxEditor.Framework;
@@ -13,7 +11,6 @@ using ProSuite.DdxEditor.Framework.Commands;
 using ProSuite.DdxEditor.Framework.Items;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.Repositories;
-using ProSuite.QA.Core.Reports;
 
 namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 {
@@ -62,7 +59,6 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 			commands.Add(new AddTestDescriptorCommand(this, applicationController));
 			commands.Add(new AddTestDescriptorsFromAssemblyCommand(this, applicationController));
 
-			commands.Add(new CreateReportForTestDescriptorsCommand(this, applicationController));
 			commands.Add(new DeleteAllChildItemsCommand(this, applicationController));
 		}
 
@@ -108,59 +104,6 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 
 				yield return new TestDescriptorTableRow(testDescriptor, refCount);
 			}
-		}
-
-		public void CreateTestReport([NotNull] string htmlFileName, bool overwrite)
-		{
-			Assert.ArgumentNotNullOrEmpty(htmlFileName, nameof(htmlFileName));
-
-			if (overwrite && File.Exists(htmlFileName))
-			{
-				File.Delete(htmlFileName);
-			}
-
-			using (TextWriter writer = new StreamWriter(htmlFileName))
-			{
-				var reportBuilder = new HtmlReportBuilder(writer, "Registered Tests")
-				                    {
-					                    IncludeObsolete = false,
-					                    IncludeAssemblyInfo = true
-				                    };
-
-				_modelBuilder.ReadOnlyTransaction(
-					delegate
-					{
-						IList<TestDescriptor> testDescriptors =
-							_modelBuilder.TestDescriptors.GetAll();
-
-						foreach (TestDescriptor descriptor in testDescriptors)
-						{
-							if (descriptor.TestClass != null)
-							{
-								reportBuilder.IncludeTest(descriptor.TestClass.GetInstanceType(),
-								                          descriptor.TestConstructorId);
-							}
-							else if (descriptor.TestFactoryDescriptor != null)
-							{
-								reportBuilder.IncludeTestFactory(
-									descriptor.TestFactoryDescriptor.GetInstanceType());
-							}
-							else
-							{
-								_msg.WarnFormat(
-									"Neither test class nor factory defined for descriptor {0}",
-									descriptor.Name);
-							}
-						}
-
-						reportBuilder.WriteReport();
-					});
-			}
-
-			_msg.InfoFormat("Report of registered tests created: {0}", htmlFileName);
-
-			_msg.Info("Opening report...");
-			ProcessUtils.StartProcess(htmlFileName);
 		}
 
 		public void TryAddTestDescriptors(
