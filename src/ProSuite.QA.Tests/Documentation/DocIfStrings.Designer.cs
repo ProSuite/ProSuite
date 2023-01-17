@@ -98,7 +98,7 @@ namespace ProSuite.QA.Tests.Documentation {
         
         /// <summary>
         ///   Looks up a localized string similar to List of tables, to which a involved row must belong to to be checked.
-        ///If not specifed, all involved rows are check for the constraint.
+        ///If not specified, all involved rows are check for the constraint.
         /// </summary>
         public static string IfInvolvedRows_Tables {
             get {
