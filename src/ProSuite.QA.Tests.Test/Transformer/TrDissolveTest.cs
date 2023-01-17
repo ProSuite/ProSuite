@@ -20,7 +20,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			TestUtils.InitializeLicense();
+			TestUtils.InitializeLicense(activateAdvancedLicense:true);
 		}
 
 		[OneTimeTearDown]

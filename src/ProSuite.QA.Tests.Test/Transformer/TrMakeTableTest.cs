@@ -96,7 +96,6 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				(IFeatureWorkspace) TestUtils.OpenUserWorkspaceOracle();
 
 			return WorkspaceUtils.OpenFeatureWorkspaceVersion(defaultVersion, versionName);
-			return defaultVersion;
 		}
 	}
 }

@@ -85,7 +85,8 @@ namespace ProSuite.QA.Container
 
 		void IFilterEditTest.SetIssueFilters(string expression, IList<IIssueFilter> issueFilters)
 		{
-			_issueFilters = _issueFilters ?? new List<IIssueFilter>();
+			_issueFiltersView = null;
+			_issueFilters = new List<IIssueFilter>();
 			_issueFilters.AddRange(issueFilters);
 
 			IssueFiltersExpression = expression;
