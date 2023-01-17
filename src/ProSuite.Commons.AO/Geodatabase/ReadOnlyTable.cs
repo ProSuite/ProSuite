@@ -185,12 +185,9 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		public long GetRowOid(IRow row)
 		{
-			if (AlternateOidFieldName != null)
-			{
-				return (long) row.Value[OidFieldIndex];
-			}
-
-			return row.OID;
+			return AlternateOidFieldName != null
+				       ? GdbObjectUtils.ReadRowOidValue(row, OidFieldIndex)
+				       : row.OID;
 		}
 
 		internal int OidFieldIndex

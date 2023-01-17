@@ -390,6 +390,49 @@ namespace ProSuite.Commons.AO.Geodatabase
 			return Convert.ToString(value);
 		}
 
+		/// <summary>
+		/// Reads the long OID using a known index rather than directly from the property.
+		/// </summary>
+		/// <param name="row"></param>
+		/// <param name="fieldIndex"></param>
+		/// <returns></returns>
+		public static long ReadRowOidValue(IRow row, int fieldIndex)
+		{
+#if Server11
+				return row.Value[fieldIndex];
+#else
+			// First unbox (int) object to int, then cast to long (implicit).
+			// Directly from object (Int32) to long fails.
+			return (int) row.Value[fieldIndex];
+#endif
+		}
+
+		/// <summary>
+		/// Reads the long OID using a known index rather than directly from the property.
+		/// </summary>
+		/// <param name="row"></param>
+		/// <param name="fieldIndex"></param>
+		/// <returns></returns>
+		public static long ReadRowOidValue(IReadOnlyRow row, int fieldIndex)
+		{
+#if Server11
+				return row.Value[fieldIndex];
+#else
+			// It is an int by convention in AO10 but ReadOnly supplies long
+			object value = row.get_Value(fieldIndex);
+
+			// First unbox (int) object to int, then cast to long (implicit).
+			// Directly from object (Int32) to long fails.
+			if (value is int intValue)
+			{
+				return intValue;
+			}
+
+			// Depending on the implementation, it could already be a long
+			return (long) value;
+#endif
+		}
+
 		public static bool TryReadBlobValue([NotNull] IRow row,
 		                                    int fieldIdx,
 		                                    [NotNull] ref IPersistStream intoObject)
@@ -418,7 +461,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			object bytes;
 			origBlobStream.ExportToVariant(out bytes);
 			copyBlobStream.ImportFromVariant(bytes);
-			IObjectStream objectStream = new ObjectStreamClass {Stream = copyBlobStream};
+			IObjectStream objectStream = new ObjectStreamClass { Stream = copyBlobStream };
 
 			try
 			{
