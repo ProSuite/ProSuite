@@ -73,8 +73,7 @@ namespace ProSuite.DomainModel.AO.QA
 			if (objParam == null)
 			{
 				throw new ArgumentException(
-					string.Format("expected {0}, got <null>",
-					              typeDesc ?? typeof(T).Name));
+					string.Format("expected {0}, got <null>", typeDesc ?? typeof(T).Name));
 			}
 
 			if (! (objParam is T))
@@ -198,7 +197,8 @@ namespace ProSuite.DomainModel.AO.QA
 			return new[] { test };
 		}
 
-		private void AddIssueFilters([NotNull] IList<ITest> tests, IOpenDataset datasetContext)
+		private void AddIssueFilters([NotNull] IList<ITest> tests,
+		                             [NotNull] IOpenDataset datasetContext)
 		{
 			if (Condition == null)
 			{
@@ -213,17 +213,9 @@ namespace ProSuite.DomainModel.AO.QA
 
 				foreach (var issueFilterConfiguration in Condition.IssueFilterConfigurations)
 				{
-					DefaultTestFactory factory = (DefaultTestFactory)
-						TestFactoryUtils.CreateTestFactory(issueFilterConfiguration);
-					Assert.NotNull(factory);
-					IIssueFilter filter = factory.CreateInstance<IIssueFilter>(datasetContext);
+					IIssueFilter filter =
+						CreateIssueFilter(issueFilterConfiguration, datasetContext);
 
-					//TODO: should be something like this:
-					//var factory = InstanceFactoryUtils.CreateIssueFilterFactory(issueFilterConfiguration);
-					//Assert.NotNull(factory);
-					//IIssueFilter filter = factory.Create(datasetContext, issueFilterConfiguration);
-
-					filter.Name = issueFilterConfiguration.Name;
 					filters.Add(filter);
 				}
 
@@ -231,6 +223,35 @@ namespace ProSuite.DomainModel.AO.QA
 				{
 					filterTest.SetIssueFilters(Condition.IssueFilterExpression, filters);
 				}
+			}
+		}
+
+		private static IIssueFilter CreateIssueFilter(
+			[NotNull] IssueFilterConfiguration issueFilterConfiguration,
+			[NotNull] IOpenDataset datasetContext)
+		{
+			try
+			{
+				IssueFilterFactory factory =
+					InstanceFactoryUtils.CreateIssueFilterFactory(issueFilterConfiguration);
+
+				if (factory == null)
+				{
+					throw new ArgumentException(
+						$"Unable to create IssueFilterFactory for {issueFilterConfiguration}");
+				}
+
+				IIssueFilter filter = factory.Create(datasetContext, issueFilterConfiguration);
+				filter.Name = issueFilterConfiguration.Name;
+
+				return filter;
+			}
+			catch (Exception e)
+			{
+				StringBuilder sb =
+					InstanceFactoryUtils.GetErrorMessageWithDetails(issueFilterConfiguration, e);
+
+				throw new InvalidOperationException(sb.ToString(), e);
 			}
 		}
 

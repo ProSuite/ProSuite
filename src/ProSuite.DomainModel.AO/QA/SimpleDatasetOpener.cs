@@ -10,6 +10,7 @@ using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Surface;
 using ProSuite.Commons.AO.Surface.Raster;
 using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.Core.DataModel;
@@ -22,7 +23,7 @@ namespace ProSuite.DomainModel.AO.QA
 
 		private readonly IDatasetContext _datasetContext;
 
-		public SimpleDatasetOpener(IDatasetContext datasetContext)
+		public SimpleDatasetOpener([NotNull] IDatasetContext datasetContext)
 		{
 			_datasetContext = datasetContext;
 		}
