@@ -200,31 +200,37 @@ namespace ProSuite.DomainModel.AO.QA
 			return sb;
 		}
 
+		[CanBeNull]
 		private static IssueFilterFactory CreateIssueFilterFactory(
-			[NotNull] IssueFilterDescriptor filterDescriptor)
+			[NotNull] IssueFilterDescriptor descriptor)
 		{
-			ClassDescriptor classDescriptor = filterDescriptor.Class;
+			Assert.ArgumentNotNull(descriptor, nameof(descriptor));
+
+			ClassDescriptor classDescriptor = descriptor.Class;
 
 			return classDescriptor != null
 				       ? new IssueFilterFactory(classDescriptor.AssemblyName,
 				                                classDescriptor.TypeName,
-				                                filterDescriptor.ConstructorId)
+				                                descriptor.ConstructorId)
 				       : null;
 		}
 
+		[CanBeNull]
 		private static TransformerFactory CreateTransformerFactory(
-			[NotNull] TransformerDescriptor transformerDescriptor)
+			[NotNull] TransformerDescriptor descriptor)
 		{
-			ClassDescriptor classDescriptor = transformerDescriptor.Class;
+			Assert.ArgumentNotNull(descriptor, nameof(descriptor));
+
+			ClassDescriptor classDescriptor = descriptor.Class;
 
 			return classDescriptor != null
 				       ? new TransformerFactory(classDescriptor.AssemblyName,
 				                                classDescriptor.TypeName,
-				                                transformerDescriptor.ConstructorId)
+				                                descriptor.ConstructorId)
 				       : null;
 		}
 
-		public static string GetDefaultDescriptorName(Type instanceType,
+		public static string GetDefaultDescriptorName([NotNull] Type instanceType,
 		                                              int constructorIndex)
 		{
 			Assert.ArgumentNotNull(instanceType, nameof(instanceType));
@@ -245,11 +251,11 @@ namespace ProSuite.DomainModel.AO.QA
 				result = result.Substring(2);
 			}
 			else if (result.Length > 2 &&
-			         result.StartsWith("if", StringComparison.CurrentCultureIgnoreCase))
+			         result.StartsWith("if", StringComparison.InvariantCultureIgnoreCase))
 			{
 				result = result.Substring(2);
 			}
-
+			
 			return result;
 		}
 	}

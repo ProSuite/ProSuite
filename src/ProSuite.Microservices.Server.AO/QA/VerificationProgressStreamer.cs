@@ -542,13 +542,13 @@ namespace ProSuite.Microservices.Server.AO.QA
 			IssueMsg issueProto;
 			if (BackgroundVerificationInputs != null)
 			{
-				issueProto = IssueProtobufUtils.CreateIssueProto(
+				issueProto = ProtobufQaUtils.CreateIssueProto(
 					issueFoundEventArgs,
 					Assert.NotNull(BackgroundVerificationInputs.VerificationContext));
 			}
 			else
 			{
-				issueProto = IssueProtobufUtils.CreateIssueProto(
+				issueProto = ProtobufQaUtils.CreateIssueProto(
 					issueFoundEventArgs,
 					Assert.NotNull(KnownIssueSpatialReference,
 					               "Either background verification inputs or known spatial refereance must be specified"),

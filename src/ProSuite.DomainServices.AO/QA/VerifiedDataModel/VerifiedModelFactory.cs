@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
@@ -7,6 +8,8 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.AO.DataModel;
+using ProSuite.DomainModel.AO.QA;
+using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 {
@@ -44,7 +47,6 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 
 		public Model CreateModel(IWorkspace workspace,
 		                         string name,
-		                         ISpatialReference spatialReference,
 		                         string databaseName,
 		                         string schemaOwner)
 		{
@@ -57,12 +59,6 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 					? new VerifiedModel(name, workspace, _workspaceContextFactory, databaseName,
 					                    schemaOwner)
 					: new VerifiedModel(name, workspace, _workspaceContextFactory);
-
-			if (spatialReference != null)
-			{
-				model.SpatialReferenceDescriptor =
-					new SpatialReferenceDescriptor(spatialReference);
-			}
 
 			var featureWorkspace = (IFeatureWorkspace) workspace;
 
@@ -89,6 +85,82 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 			_msg.InfoFormat("{0} dataset(s) read", model.Datasets.Count);
 
 			return model;
+		}
+
+		public void AssignMostFrequentlyUsedSpatialReference(
+			Model model,
+			IEnumerable<Dataset> usedDatasets)
+		{
+			ISpatialReference spatialReference = GetMainSpatialReference(
+				model, usedDatasets);
+
+			if (spatialReference != null)
+			{
+				model.SpatialReferenceDescriptor =
+					new SpatialReferenceDescriptor(spatialReference);
+			}
+		}
+
+		private static ISpatialReference GetMainSpatialReference(
+			Model model, IEnumerable<Dataset> referencedDatasets)
+		{
+			var spatialDatasetReferenceCount =
+				new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+
+			foreach (Dataset dataset in referencedDatasets)
+			{
+				if (! (dataset is ISpatialDataset))
+				{
+					continue;
+				}
+
+				if (! spatialDatasetReferenceCount.ContainsKey(dataset.Name))
+				{
+					spatialDatasetReferenceCount.Add(dataset.Name, 1);
+				}
+				else
+				{
+					spatialDatasetReferenceCount[dataset.Name]++;
+				}
+			}
+
+			foreach (KeyValuePair<string, int> pair in
+			         spatialDatasetReferenceCount.OrderByDescending(kvp => kvp.Value))
+			{
+				string datasetName = pair.Key;
+
+				Dataset maxDataset = model.GetDatasetByModelName(datasetName);
+
+				if (maxDataset == null)
+				{
+					continue;
+				}
+
+				// Using a simple dataset opener is good enough. There are no models with just terrains and geometric networks.
+				IWorkspaceContext datasetContext =
+					Assert.NotNull(model.MasterDatabaseWorkspaceContext);
+				IOpenDataset datasetOpener = new SimpleDatasetOpener(datasetContext);
+
+				ISpatialReference spatialReference = GetSpatialReference(maxDataset, datasetOpener);
+
+				if (spatialReference != null)
+				{
+					return spatialReference;
+				}
+			}
+
+			return null;
+		}
+
+		[CanBeNull]
+		private static ISpatialReference GetSpatialReference([NotNull] Dataset dataset,
+		                                                     [NotNull] IOpenDataset datasetOpener)
+		{
+			Assert.ArgumentNotNull(dataset, nameof(dataset));
+
+			IGeoDataset geoDataset = datasetOpener.OpenDataset(dataset) as IGeoDataset;
+
+			return geoDataset?.SpatialReference;
 		}
 
 		private void HarvestDataset([NotNull] IDatasetName datasetName,

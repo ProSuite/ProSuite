@@ -4,10 +4,13 @@ using System.Linq;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.Callbacks;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
+using ProSuite.Commons.Text;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainServices.AO.QA.IssuePersistence;
 using ProSuite.DomainServices.AO.QA.Issues;
+using ProSuite.DomainServices.AO.QA.Standalone.XmlBased;
 using ProSuite.Microservices.AO;
 using ProSuite.Microservices.Definitions.QA;
 using ProSuite.Microservices.Definitions.Shared;
@@ -15,8 +18,24 @@ using ProSuite.QA.Core.IssueCodes;
 
 namespace ProSuite.Microservices.Server.AO.QA
 {
-	public static class IssueProtobufUtils
+	public static class ProtobufQaUtils
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
+		public static List<DataSource> GetDataSources(
+			[NotNull] IEnumerable<DataSourceMsg> dataSourceMsgs)
+		{
+			var dataSources = dataSourceMsgs.Select(
+				dsMsg => new DataSource(dsMsg.ModelName, dsMsg.Id, dsMsg.CatalogPath,
+				                        dsMsg.Database, dsMsg.SchemaOwner)).ToList();
+
+			_msg.DebugFormat("{0} data sources provided:{1} {2}",
+			                 dataSources.Count, Environment.NewLine,
+			                 StringUtils.Concatenate(dataSources, Environment.NewLine));
+
+			return dataSources;
+		}
+
 		public static IssueMsg CreateIssueProto(
 			[NotNull] IssueFoundEventArgs args,
 			[NotNull] IVerificationContext verificationContext)

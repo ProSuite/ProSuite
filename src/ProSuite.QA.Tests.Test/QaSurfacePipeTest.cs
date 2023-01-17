@@ -82,6 +82,7 @@ namespace ProSuite.QA.Tests.Test
 
 		[Test]
 		[Category(TestCategory.Sde)]
+		[Category(Commons.Test.TestCategory.NoContainer)]
 		public void Qa3dPipeSynthMosaicLayerTest()
 		{
 			IFeatureWorkspace ws =
