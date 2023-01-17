@@ -103,7 +103,6 @@ namespace ProSuite.Commons.AO.Test.Geometry
 		}
 
 		[Test]
-		[Category(Commons.Test.TestCategory.Performance)]
 		public void CanGetChangedVerticesInLargeGeometry()
 		{
 			const int manyPointsPerPart = 123456;
@@ -630,7 +629,6 @@ namespace ProSuite.Commons.AO.Test.Geometry
 		}
 
 		[Test]
-		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanGetOneDuplicateMultipointPoints()
 		{
 			const double xyTolerance = 0.1;
@@ -676,7 +674,6 @@ namespace ProSuite.Commons.AO.Test.Geometry
 		}
 
 		[Test]
-		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanGetTwoDuplicateMultipointPoints()
 		{
 			const double xyTolerance = 0.1;
@@ -730,7 +727,6 @@ namespace ProSuite.Commons.AO.Test.Geometry
 		}
 
 		[Test]
-		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanGetTwoDuplicateMultipointPointsInSequence()
 		{
 			const double xyTolerance = 0.1;
@@ -784,7 +780,6 @@ namespace ProSuite.Commons.AO.Test.Geometry
 		}
 
 		[Test]
-		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanGetDuplicatedMultipointPoint()
 		{
 			const double xyTolerance = 0.1;
@@ -826,7 +821,6 @@ namespace ProSuite.Commons.AO.Test.Geometry
 		}
 
 		[Test]
-		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanGetTriplicatedMultipointPoint()
 		{
 			const double xyTolerance = 0.1;
@@ -877,7 +871,6 @@ namespace ProSuite.Commons.AO.Test.Geometry
 		}
 
 		[Test]
-		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanGetTriplicatedMultipointPointInSequence()
 		{
 			const double xyTolerance = 0.1;

@@ -22,7 +22,7 @@ namespace ProSuite.QA.Tests.Test
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			TestUtils.ConfigureUnittestLogging();
+			TestUtils.ConfigureUnitTestLogging();
 			TestUtils.InitializeLicense();
 		}
 
@@ -188,7 +188,11 @@ namespace ProSuite.QA.Tests.Test
 				Console.WriteLine("Finished successfully in {0}s", watch.Elapsed.TotalSeconds);
 			}
 
-			Assert.AreEqual(32, errorCount);
+			// 2 features contain duplicate interior rings, one of which has
+			// positive orientation. AO-multipatch footprint does not report
+			// an island in these cases.
+			int expected = IntersectionUtils.UseCustomIntersect ? 32 : 30;
+			Assert.AreEqual(expected, errorCount);
 		}
 
 		// TODO tests for behavior below tolerance/resolution

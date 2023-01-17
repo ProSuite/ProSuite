@@ -4,7 +4,6 @@ using System.Globalization;
 using System.Linq;
 using System.Threading;
 using ESRI.ArcGIS.Geodatabase;
-using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Exceptions;
@@ -18,16 +17,21 @@ using ProSuite.QA.Container;
 
 namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 {
-	public class XmlBasedQualitySpecificationFactory : QualitySpecificationFactoryBase
+	public class XmlBasedQualitySpecificationFactory
 	{
 		/// <summary>
 		/// Initializes a new instance of the <see cref="XmlBasedQualitySpecificationFactory"/> class.
 		/// </summary>
 		/// <param name="modelFactory">The model builder.</param>
-		/// <param name="datasetOpener"></param>
 		public XmlBasedQualitySpecificationFactory(
-			[NotNull] IVerifiedModelFactory modelFactory,
-			[NotNull] IOpenDataset datasetOpener) : base(modelFactory, datasetOpener) { }
+			[NotNull] IVerifiedModelFactory modelFactory)
+		{
+			Assert.ArgumentNotNull(modelFactory, nameof(modelFactory));
+
+			ModelFactory = modelFactory;
+		}
+
+		private IVerifiedModelFactory ModelFactory { get; }
 
 		[NotNull]
 		public QualitySpecification CreateQualitySpecification(
@@ -155,9 +159,9 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 
 				if (createdCondition == null)
 				{
-					HandleNoConditionCreated(xmlCondition.Name, modelsByWorkspaceId,
-					                         ignoreConditionsForUnknownDatasets,
-					                         unknownDatasetParameters);
+					StandaloneVerificationUtils.HandleNoConditionCreated(
+						xmlCondition.Name, modelsByWorkspaceId, ignoreConditionsForUnknownDatasets,
+						unknownDatasetParameters);
 				}
 				else
 				{
@@ -261,7 +265,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 		}
 
 		[NotNull]
-		private Model CreateModel(
+		private DdxModel CreateModel(
 			[NotNull] IWorkspace workspace,
 			[NotNull] string modelName,
 			[NotNull] string workspaceId,
@@ -269,31 +273,15 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			[CanBeNull] string schemaOwner,
 			[NotNull] IEnumerable<XmlInstanceConfiguration> referencedConditions)
 		{
-			Model result = ModelFactory.CreateModel(workspace, modelName, null,
+			Model result = ModelFactory.CreateModel(workspace, modelName,
 			                                        databaseName, schemaOwner);
 
-			ISpatialReference spatialReference = GetMainSpatialReference(
+			IEnumerable<Dataset> referencedDatasets = XmlDataQualityUtils.GetReferencedDatasets(
 				result, workspaceId, referencedConditions);
 
-			if (spatialReference != null)
-			{
-				result.SpatialReferenceDescriptor =
-					new SpatialReferenceDescriptor(spatialReference);
-			}
+			ModelFactory.AssignMostFrequentlyUsedSpatialReference(result, referencedDatasets);
 
 			return result;
-		}
-
-		[CanBeNull]
-		private ISpatialReference GetMainSpatialReference(
-			[NotNull] Model model,
-			[NotNull] string workspaceId,
-			[NotNull] IEnumerable<XmlInstanceConfiguration> referencedConditions)
-		{
-			IEnumerable<Dataset> referencedDatasets = XmlDataQualityUtils.GetReferencedDatasets(
-				model, workspaceId, referencedConditions);
-
-			return GetMainSpatialReference(model, referencedDatasets);
 		}
 	}
 }

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using ESRI.ArcGIS.esriSystem;
@@ -744,13 +743,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 					"No supported instance descriptors have been initialized.");
 			}
 
-			var dataSources = conditionsSpecificationMsg.DataSources.Select(
-				dsMsg => new DataSource(dsMsg.ModelName, dsMsg.Id, dsMsg.CatalogPath,
-				                        dsMsg.Database, dsMsg.SchemaOwner)).ToList();
-
-			_msg.DebugFormat("{0} data sources provided:{1} {2}",
-			                 dataSources.Count, Environment.NewLine,
-			                 StringUtils.Concatenate(dataSources, Environment.NewLine));
+			List<DataSource> dataSources =
+				ProtobufQaUtils.GetDataSources(conditionsSpecificationMsg.DataSources);
 
 			QualitySpecification qualitySpecification =
 				CreateQualitySpecification(conditionsSpecificationMsg, dataSources);
@@ -786,8 +780,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			var datasetOpener = new SimpleDatasetOpener(new MasterDatabaseDatasetContext());
 
 			var factory =
-				new ProtoBasedQualitySpecificationFactory(modelFactory, instanceDescriptors,
-				                                          datasetOpener);
+				new ProtoBasedQualitySpecificationFactory(modelFactory, instanceDescriptors);
 
 			return factory;
 		}

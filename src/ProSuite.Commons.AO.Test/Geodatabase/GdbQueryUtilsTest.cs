@@ -22,7 +22,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			TestUtils.ConfigureUnittestLogging();
+			TestUtils.ConfigureUnitTestLogging();
 
 			TestUtils.InitializeLicense();
 		}
