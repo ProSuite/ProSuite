@@ -8,7 +8,7 @@ namespace ProSuite.DomainServices.AO.QA.VerificationReports.Xml
 	{
 		[XmlAttribute("id")]
 		[UsedImplicitly]
-		public int Id { get; set; }
+		public long Id { get; set; }
 
 		[XmlAttribute("shapeType")]
 		[UsedImplicitly]

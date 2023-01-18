@@ -1774,7 +1774,7 @@ namespace ProSuite.QA.Tests
 				return new SimpleTableIndexRow(row.TableIndex, row.RowOID);
 			}
 
-			public SimpleTableIndexRow(int tableIndex, int rowOid)
+			public SimpleTableIndexRow(int tableIndex, long rowOid)
 			{
 				TableIndex = tableIndex;
 				RowOID = rowOid;
@@ -1789,7 +1789,7 @@ namespace ProSuite.QA.Tests
 
 			public IReadOnlyRow CachedRow => null;
 
-			public int RowOID { get; }
+			public long RowOID { get; }
 		}
 
 		private class SimpleTopoLine : ITopologicalLine

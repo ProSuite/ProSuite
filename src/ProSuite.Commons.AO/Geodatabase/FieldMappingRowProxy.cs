@@ -19,7 +19,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		public FieldMappingRowProxy([NotNull] IRow baseRow,
 		                            [NotNull] IDictionary<int, int> fieldMapping,
 		                            [NotNull] ITable table,
-		                            int oid)
+		                            long oid)
 			: base(table, oid)
 		{
 			Assert.ArgumentNotNull(baseRow, nameof(baseRow));

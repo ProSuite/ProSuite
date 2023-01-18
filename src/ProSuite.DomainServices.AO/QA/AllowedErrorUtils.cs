@@ -28,7 +28,7 @@ namespace ProSuite.DomainServices.AO.QA
 		{
 			Assert.ArgumentNotNull(allowedErrors, nameof(allowedErrors));
 
-			IEnumerable<KeyValuePair<ITable, IList<int>>> allowedObjectIDsByErrorTable =
+			IEnumerable<KeyValuePair<ITable, IList<long>>> allowedObjectIDsByErrorTable =
 				GetObjectIDsByAllowedErrorTable(allowedErrors);
 
 			DeleteAllowedErrors(allowedObjectIDsByErrorTable);
@@ -38,18 +38,18 @@ namespace ProSuite.DomainServices.AO.QA
 			[NotNull] IEnumerable<GdbObjectReference> allowedErrorObjRefs,
 			[NotNull] IEnumerable<ITable> allowedErrorTables)
 		{
-			IEnumerable<KeyValuePair<ITable, IList<int>>> allowedObjectIDsByErrorTable =
+			IEnumerable<KeyValuePair<ITable, IList<long>>> allowedObjectIDsByErrorTable =
 				GetObjectIDsByAllowedErrorTable(allowedErrorObjRefs, allowedErrorTables);
 
 			DeleteAllowedErrors(allowedObjectIDsByErrorTable);
 		}
 
 		public static void DeleteAllowedErrors(
-			[NotNull] IEnumerable<KeyValuePair<ITable, IList<int>>> allowedObjectIDsByErrorTable)
+			[NotNull] IEnumerable<KeyValuePair<ITable, IList<long>>> allowedObjectIDsByErrorTable)
 		{
-			foreach (KeyValuePair<ITable, IList<int>> pair in allowedObjectIDsByErrorTable)
+			foreach (KeyValuePair<ITable, IList<long>> pair in allowedObjectIDsByErrorTable)
 			{
-				IList<int> oids = pair.Value;
+				IList<long> oids = pair.Value;
 
 				if (oids.Count == 0)
 				{
@@ -93,9 +93,9 @@ namespace ProSuite.DomainServices.AO.QA
 			ICollection<AllowedError> allowedErrorsCollection =
 				CollectionUtils.GetCollection(allowedErrors);
 
-			IDictionary<string, IDictionary<int, List<AllowedError>>>
+			IDictionary<string, IDictionary<long, List<AllowedError>>>
 				errorsByMissingTableNameAndInvolvedObjectID;
-			IEnumerable<KeyValuePair<IObjectDataset, IDictionary<int, List<AllowedError>>>>
+			IEnumerable<KeyValuePair<IObjectDataset, IDictionary<long, List<AllowedError>>>>
 				errorsByObjectDatasetAndInvolvedObjectID =
 					GetAllowedErrorsByObjectDatasetAndInvolvedObjectID(
 						allowedErrorsCollection,
@@ -107,7 +107,7 @@ namespace ProSuite.DomainServices.AO.QA
 				                tableName);
 			}
 
-			foreach (KeyValuePair<IObjectDataset, IDictionary<int, List<AllowedError>>> pair
+			foreach (KeyValuePair<IObjectDataset, IDictionary<long, List<AllowedError>>> pair
 			         in errorsByObjectDatasetAndInvolvedObjectID)
 			{
 				InvalidateAllowedErrorsByInvolvedObjectState(
@@ -308,10 +308,10 @@ namespace ProSuite.DomainServices.AO.QA
 		private static void InvalidateAllowedErrorsByInvolvedObjectState(
 			[NotNull] IObjectDataset involvedObjectDataset,
 			[NotNull] IDatasetContext datasetContext,
-			[NotNull] IDictionary<int, List<AllowedError>> allowedErrorsByInvolvedObjectID,
+			[NotNull] IDictionary<long, List<AllowedError>> allowedErrorsByInvolvedObjectID,
 			bool invalidateIfAnyInvolvedObjectChanged)
 		{
-			ICollection<int> existingInvolvedObjectIds;
+			ICollection<long> existingInvolvedObjectIds;
 			try
 			{
 				existingInvolvedObjectIds = GetExistingInvolvedObjectIds(
@@ -329,10 +329,10 @@ namespace ProSuite.DomainServices.AO.QA
 
 			// invalidate the allowed errors if any of the involved objects no longer exists
 			foreach (
-				KeyValuePair<int, List<AllowedError>> involvedObjectId in
+				KeyValuePair<long, List<AllowedError>> involvedObjectId in
 				allowedErrorsByInvolvedObjectID)
 			{
-				int objectId = involvedObjectId.Key;
+				long objectId = involvedObjectId.Key;
 
 				if (objectId <= 0)
 				{
@@ -407,13 +407,13 @@ namespace ProSuite.DomainServices.AO.QA
 		}
 
 		[NotNull]
-		private static ICollection<int> GetExistingInvolvedObjectIds(
+		private static ICollection<long> GetExistingInvolvedObjectIds(
 			[NotNull] IObjectDataset involvedObjectDataset,
 			[NotNull] IDatasetContext datasetContext,
-			[NotNull] IDictionary<int, List<AllowedError>> allowedErrorsByInvolvedObjectID,
+			[NotNull] IDictionary<long, List<AllowedError>> allowedErrorsByInvolvedObjectID,
 			bool invalidateIfAnyInvolvedObjectChanged)
 		{
-			var result = new SimpleSet<int>(allowedErrorsByInvolvedObjectID.Count);
+			var result = new SimpleSet<long>(allowedErrorsByInvolvedObjectID.Count);
 
 			IQueryFilter queryFilter;
 			int dateOfChangeFieldIndex;
@@ -430,7 +430,7 @@ namespace ProSuite.DomainServices.AO.QA
 				         recycle, queryFilter))
 			{
 				// these are all involved rows in all the allowed errors. 
-				int oid = involvedRow.OID;
+				long oid = involvedRow.OID;
 
 				result.TryAdd(oid);
 
@@ -510,20 +510,20 @@ namespace ProSuite.DomainServices.AO.QA
 		}
 
 		[NotNull]
-		private static IEnumerable<KeyValuePair<ITable, IList<int>>>
+		private static IEnumerable<KeyValuePair<ITable, IList<long>>>
 			GetObjectIDsByAllowedErrorTable(
 				[NotNull] IEnumerable<AllowedError> allowedErrors)
 		{
 			Assert.ArgumentNotNull(allowedErrors, nameof(allowedErrors));
 
-			var result = new Dictionary<ITable, IList<int>>();
+			var result = new Dictionary<ITable, IList<long>>();
 
 			foreach (AllowedError allowedError in allowedErrors)
 			{
-				IList<int> oids;
+				IList<long> oids;
 				if (! result.TryGetValue(allowedError.Table, out oids))
 				{
-					oids = new List<int>();
+					oids = new List<long>();
 					result.Add(allowedError.Table, oids);
 				}
 
@@ -534,7 +534,7 @@ namespace ProSuite.DomainServices.AO.QA
 		}
 
 		[NotNull]
-		private static IEnumerable<KeyValuePair<ITable, IList<int>>>
+		private static IEnumerable<KeyValuePair<ITable, IList<long>>>
 			GetObjectIDsByAllowedErrorTable(
 				[NotNull] IEnumerable<GdbObjectReference> allowedErrorObjRefs,
 				[NotNull] IEnumerable<ITable> allowedErrorTables)
@@ -542,7 +542,7 @@ namespace ProSuite.DomainServices.AO.QA
 			Assert.ArgumentNotNull(allowedErrorObjRefs, nameof(allowedErrorObjRefs));
 			Assert.ArgumentNotNull(allowedErrorTables, nameof(allowedErrorTables));
 
-			var result = new Dictionary<ITable, IList<int>>();
+			var result = new Dictionary<ITable, IList<long>>();
 
 			var allowedErrorObjRefCollection = CollectionUtils.GetCollection(allowedErrorObjRefs);
 
@@ -550,7 +550,7 @@ namespace ProSuite.DomainServices.AO.QA
 			{
 				int objectClassID = ((IObjectClass) allowedErrorTable).ObjectClassID;
 
-				List<int> idsForTable =
+				List<long> idsForTable =
 					(from gdbObjectReference in allowedErrorObjRefCollection
 					 where gdbObjectReference.ClassId == objectClassID
 					 select gdbObjectReference.ObjectId).ToList();
@@ -563,19 +563,19 @@ namespace ProSuite.DomainServices.AO.QA
 
 		[NotNull]
 		private static
-			IEnumerable<KeyValuePair<IObjectDataset, IDictionary<int, List<AllowedError>>>>
+			IEnumerable<KeyValuePair<IObjectDataset, IDictionary<long, List<AllowedError>>>>
 			GetAllowedErrorsByObjectDatasetAndInvolvedObjectID(
 				[NotNull] IEnumerable<AllowedError> allowedErrors,
-				[NotNull] out IDictionary<string, IDictionary<int, List<AllowedError>>>
+				[NotNull] out IDictionary<string, IDictionary<long, List<AllowedError>>>
 					allowedErrorsByMissingTableNameAndInvolvedObjectID)
 		{
 			Stopwatch stopWatch = _msg.DebugStartTiming();
 
 			var result =
-				new Dictionary<IObjectDataset, IDictionary<int, List<AllowedError>>>();
+				new Dictionary<IObjectDataset, IDictionary<long, List<AllowedError>>>();
 
 			allowedErrorsByMissingTableNameAndInvolvedObjectID =
-				new Dictionary<string, IDictionary<int, List<AllowedError>>>(
+				new Dictionary<string, IDictionary<long, List<AllowedError>>>(
 					StringComparer.OrdinalIgnoreCase);
 
 			// TODO for allowed errors with no involved objects (e.g. NoGaps), there seems to be one involvedRow with an OID=0
@@ -588,8 +588,8 @@ namespace ProSuite.DomainServices.AO.QA
 				count++;
 
 				AddResolvedInvolvedObjects(allowedError, result);
-				AddUnesolvedInvolvedObjects(allowedError,
-				                            allowedErrorsByMissingTableNameAndInvolvedObjectID);
+				AddUnresolvedInvolvedObjects(allowedError,
+				                             allowedErrorsByMissingTableNameAndInvolvedObjectID);
 			}
 
 			_msg.DebugStopTiming(stopWatch,
@@ -599,23 +599,23 @@ namespace ProSuite.DomainServices.AO.QA
 			return result;
 		}
 
-		private static void AddUnesolvedInvolvedObjects(
+		private static void AddUnresolvedInvolvedObjects(
 			[NotNull] AllowedError allowedError,
-			[NotNull] IDictionary<string, IDictionary<int, List<AllowedError>>>
+			[NotNull] IDictionary<string, IDictionary<long, List<AllowedError>>>
 				allowedErrorsByUnresolvedTableNameAndObjectId)
 		{
 			foreach (
-				KeyValuePair<string, ICollection<int>> pair in
+				KeyValuePair<string, ICollection<long>> pair in
 				allowedError.InvolvedRowsByUnresolvedTableName)
 			{
 				string tableName = pair.Key;
-				ICollection<int> oids = pair.Value;
+				ICollection<long> oids = pair.Value;
 
-				IDictionary<int, List<AllowedError>> errorsByInvolvedOID;
+				IDictionary<long, List<AllowedError>> errorsByInvolvedOID;
 				if (! allowedErrorsByUnresolvedTableNameAndObjectId.TryGetValue(
 					    tableName, out errorsByInvolvedOID))
 				{
-					errorsByInvolvedOID = new Dictionary<int, List<AllowedError>>();
+					errorsByInvolvedOID = new Dictionary<long, List<AllowedError>>();
 					allowedErrorsByUnresolvedTableNameAndObjectId.Add(tableName,
 						errorsByInvolvedOID);
 				}
@@ -636,20 +636,20 @@ namespace ProSuite.DomainServices.AO.QA
 
 		private static void AddResolvedInvolvedObjects(
 			[NotNull] AllowedError allowedError,
-			[NotNull] IDictionary<IObjectDataset, IDictionary<int, List<AllowedError>>>
+			[NotNull] IDictionary<IObjectDataset, IDictionary<long, List<AllowedError>>>
 				allowedErrorsByDatasetAndObjectId)
 		{
 			foreach (InvolvedDatasetRow involvedDatasetRow in allowedError.InvolvedDatasetRows)
 			{
 				IObjectDataset objectDataset = involvedDatasetRow.Dataset;
-				int oid = involvedDatasetRow.ObjectId;
+				long oid = involvedDatasetRow.ObjectId;
 
-				IDictionary<int, List<AllowedError>> errorsByInvolvedOID;
+				IDictionary<long, List<AllowedError>> errorsByInvolvedOID;
 				if (! allowedErrorsByDatasetAndObjectId.TryGetValue(
 					    objectDataset,
 					    out errorsByInvolvedOID))
 				{
-					errorsByInvolvedOID = new Dictionary<int, List<AllowedError>>();
+					errorsByInvolvedOID = new Dictionary<long, List<AllowedError>>();
 					allowedErrorsByDatasetAndObjectId.Add(objectDataset,
 					                                      errorsByInvolvedOID);
 				}

@@ -206,15 +206,16 @@ namespace ProSuite.Commons.AO.Test.TestSupport
 			return CreateObject(GetNextOID());
 		}
 
-		IReadOnlyRow IReadOnlyTable.GetRow(int oid)
-		{
-			throw new NotImplementedException();
-		}
+#if Server11
+		IRow ITable.GetRow(long OID) => throw new NotImplementedException();
 
-		IRow ITable.GetRow(int OID)
-		{
-			throw new NotImplementedException();
-		}
+		public IFeature GetFeature(long OID) => throw new NotImplementedException();
+#else
+		IRow ITable.GetRow(int OID) => throw new NotImplementedException();
+		public IFeature GetFeature(int OID) => throw new NotImplementedException();
+#endif
+
+		IReadOnlyRow IReadOnlyTable.GetRow(long OID) => throw new NotImplementedException();
 
 		ICursor ITable.GetRows(object oids, bool Recycling)
 		{
@@ -236,9 +237,13 @@ namespace ProSuite.Commons.AO.Test.TestSupport
 			throw new NotImplementedException();
 		}
 
-		int IReadOnlyTable.RowCount(IQueryFilter filter) => RowCount(filter);
+		long IReadOnlyTable.RowCount(IQueryFilter filter) => RowCount(filter);
 
+#if Server11
+		long ITable.RowCount(IQueryFilter QueryFilter) => RowCount(QueryFilter);
+#else
 		int ITable.RowCount(IQueryFilter QueryFilter) => RowCount(QueryFilter);
+#endif
 
 		private int RowCount(IQueryFilter QueryFilter)
 		{

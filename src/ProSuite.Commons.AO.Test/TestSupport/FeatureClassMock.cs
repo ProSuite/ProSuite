@@ -123,10 +123,11 @@ namespace ProSuite.Commons.AO.Test.TestSupport
 			return CreateFeature();
 		}
 
-		public IFeature GetFeature(int ID)
-		{
-			throw new NotImplementedException();
-		}
+#if Server11
+		IFeature IFeatureClass.GetFeature(long OID) => throw new NotImplementedException();
+#else
+		IFeature IFeatureClass.GetFeature(int OID) => throw new NotImplementedException();
+#endif
 
 		public IFeatureCursor GetFeatures(object fids, bool Recycling)
 		{
@@ -138,10 +139,12 @@ namespace ProSuite.Commons.AO.Test.TestSupport
 			throw new NotImplementedException();
 		}
 
-		public int FeatureCount(IQueryFilter QueryFilter)
-		{
+#if Server11
+		long IFeatureClass.FeatureCount(IQueryFilter QueryFilter) =>
 			throw new NotImplementedException();
-		}
+#else
+		int IFeatureClass.FeatureCount(IQueryFilter QueryFilter) => throw new NotImplementedException();
+#endif
 
 		IFeatureCursor IFeatureClass.Search(IQueryFilter filter, bool Recycling) =>
 			(IFeatureCursor) Search(filter, Recycling);

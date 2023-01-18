@@ -24,7 +24,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		/// </summary>
 		/// <param name="classId">The object class id.</param>
 		/// <param name="objectId">The object id (OID field value).</param>
-		public GdbObjectReference(int classId, int objectId)
+		public GdbObjectReference(int classId, long objectId)
 		{
 			ClassId = classId;
 			ObjectId = objectId;
@@ -42,7 +42,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		/// Gets the object id of the referenced object.
 		/// </summary>
 		/// <value>The object id.</value>
-		public int ObjectId { get; }
+		public long ObjectId { get; }
 
 		/// <summary>
 		/// Gets the referenced object, from a workspace.
@@ -124,7 +124,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		public override int GetHashCode()
 		{
-			return ClassId + 29 * ObjectId;
+			return ClassId + 29 * ObjectId.GetHashCode();
 		}
 
 		///<summary>

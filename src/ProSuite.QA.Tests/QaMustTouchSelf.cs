@@ -166,7 +166,7 @@ namespace ProSuite.QA.Tests
 			}
 
 			var featureClass = (IReadOnlyFeatureClass) InvolvedTables[tableIndex];
-			List<int> oids = errorFeatures.Select(feature => feature.OID).ToList();
+			List<long> oids = errorFeatures.Select(feature => feature.OID).ToList();
 
 			// TODO extract base class (QaRequiredSpatialRelationSelf)
 			// TODO use issue code NoTouchingFeature_WithFulfilledConstraint

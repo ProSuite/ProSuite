@@ -92,7 +92,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased.Options
 					continue;
 				}
 
-				var fieldInfo = (IFieldInfo3) tableFields.FieldInfo[fieldIndex];
+				var fieldInfo = (IFieldInfo) tableFields.FieldInfo[fieldIndex];
 
 				Configure(fieldInfo, pair.Value);
 			}
@@ -108,13 +108,13 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased.Options
 					continue;
 				}
 
-				var fieldInfo = (IFieldInfo3) tableFields.FieldInfo[fieldIndex];
+				var fieldInfo = (IFieldInfo) tableFields.FieldInfo[fieldIndex];
 
 				Configure(fieldInfo, pair.Value);
 			}
 		}
 
-		private static void Configure([NotNull] IFieldInfo3 fieldInfo,
+		private static void Configure([NotNull] IFieldInfo fieldInfo,
 		                              [NotNull] XmlFieldOptions fieldOptions)
 		{
 			if (StringUtils.IsNotEmpty(fieldOptions.AliasName))
@@ -127,14 +127,20 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased.Options
 				fieldInfo.Visible = fieldOptions.Visible == TrueFalseDefault.@true;
 			}
 
+#if Server11
+			IFieldInfo fieldInfoExt = fieldInfo;
+#else
+			IFieldInfo3 fieldInfoExt = (IFieldInfo3) fieldInfo;
+#endif
+
 			if (fieldOptions.Highlight != TrueFalseDefault.@default)
 			{
-				fieldInfo.Highlight = fieldOptions.Highlight == TrueFalseDefault.@true;
+				fieldInfoExt.Highlight = fieldOptions.Highlight == TrueFalseDefault.@true;
 			}
 
 			if (fieldOptions.ReadOnly != TrueFalseDefault.@default)
 			{
-				fieldInfo.Readonly = fieldOptions.ReadOnly == TrueFalseDefault.@true;
+				fieldInfoExt.Readonly = fieldOptions.ReadOnly == TrueFalseDefault.@true;
 			}
 		}
 	}

@@ -19,10 +19,10 @@ namespace ProSuite.QA.Tests.Transformers
 		{
 			bool IUniqueIdKey.IsVirtuell => BaseOid < 0;
 
-			public int BaseOid { get; }
+			public long BaseOid { get; }
 			public int PartIdx { get; }
 
-			public UniqueIdKey(int baseOid, int partIdx)
+			public UniqueIdKey(long baseOid, int partIdx)
 			{
 				BaseOid = baseOid;
 				PartIdx = partIdx;
@@ -59,7 +59,10 @@ namespace ProSuite.QA.Tests.Transformers
 
 			public int GetHashCode(UniqueIdKey obj)
 			{
-				return obj.BaseOid + 29 * obj.PartIdx;
+				unchecked
+				{
+					return (obj.BaseOid.GetHashCode() * 397) ^ obj.PartIdx;
+				}
 			}
 		}
 
@@ -84,7 +87,7 @@ namespace ProSuite.QA.Tests.Transformers
 					                       esriFieldType.esriFieldTypeInteger)));
 		}
 
-		protected override IEnumerable<GdbFeature> Transform(IGeometry source, int? sourceOid)
+		protected override IEnumerable<GdbFeature> Transform(IGeometry source, long? sourceOid)
 		{
 			IGeometry transform = source;
 			if (source is IPolygon poly)

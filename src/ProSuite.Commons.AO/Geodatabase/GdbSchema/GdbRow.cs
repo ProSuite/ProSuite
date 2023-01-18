@@ -27,7 +27,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		/// <param name="gdbTable">The table which determines the row's schema.</param>
 		/// <param name="valueList">The optional value list implementation that shall be used to
 		/// store and retrieve the row values.</param>
-		public GdbRow(int oid, [NotNull] GdbTable gdbTable,
+		public GdbRow(long oid, [NotNull] GdbTable gdbTable,
 		              [CanBeNull] IValueList valueList = null)
 		{
 			_oid = oid;
@@ -90,7 +90,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		{
 			unchecked
 			{
-				return (OID * 397) ^ _gdbTable.GetHashCode();
+				return (OID.GetHashCode() * 397) ^ _gdbTable.GetHashCode();
 			}
 		}
 
@@ -110,11 +110,11 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			DeleteCalled = true;
 		}
 
-		private int _oid;
+		private long _oid;
 
-		public override int OID => _oid < 0
-			                           ? throw new InvalidOperationException("Row has no OID")
-			                           : _oid;
+		public override long OID => _oid < 0
+			                            ? throw new InvalidOperationException("Row has no OID")
+			                            : _oid;
 
 		public override VirtualTable Table => _gdbTable;
 		//		public GdbTable Table => _gdbTable;

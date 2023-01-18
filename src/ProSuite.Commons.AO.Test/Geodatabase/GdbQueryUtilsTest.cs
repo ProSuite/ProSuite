@@ -33,9 +33,9 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			TestUtils.ReleaseLicense();
 		}
 
-		private static Dictionary<int, IRow> GetFirstNRows(ITable table, int count)
+		private static Dictionary<long, IRow> GetFirstNRows(ITable table, int count)
 		{
-			var dic = new Dictionary<int, IRow>(count);
+			var dic = new Dictionary<long, IRow>(count);
 			foreach (IRow row in GdbQueryUtils.GetRows(table, false))
 			{
 				dic.Add(row.OID, row);
@@ -63,7 +63,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			IFeatureClass fc = ws.OpenFeatureClass("TOPGIS_TLM.TLM_STRASSE");
 
 			const int count = 100;
-			IDictionary<int, IRow> rows = GetFirstNRows((ITable) fc, count);
+			IDictionary<long, IRow> rows = GetFirstNRows((ITable) fc, count);
 
 			var watch = new Stopwatch();
 			watch.Start();
@@ -95,7 +95,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			ITable fc = ws.OpenTable("TOPGIS_TLM.TLM_WANDERWEG");
 
 			const int max = 100;
-			IDictionary<int, IRow> rows = GetFirstNRows(fc, max);
+			IDictionary<long, IRow> rows = GetFirstNRows(fc, max);
 
 			var watch = new Stopwatch();
 			watch.Start();
@@ -278,9 +278,9 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 			// fill list
 			const int max = 2000;
-			Dictionary<int, IRow> dic = GetFirstNRows((ITable) fc, max);
+			Dictionary<long, IRow> dic = GetFirstNRows((ITable) fc, max);
 
-			var selList = new List<int>(max);
+			var selList = new List<long>(max);
 			foreach (IRow row in GdbQueryUtils.GetRowsInList((ITable) fc, fc.OIDFieldName,
 			                                                 dic.Keys, false, null))
 			{
@@ -292,7 +292,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 			Assert.AreEqual(dic.Count, selList.Count, "List counts differ");
 
-			var oidList = new List<int>(dic.Keys);
+			var oidList = new List<long>(dic.Keys);
 			oidList.Sort();
 			selList.Sort();
 			for (var i = 0; i < oidList.Count; i++)
@@ -321,7 +321,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			}
 
 			filter.WhereClause = "OBJEKTART not in (1, 2, 3)";
-			int n = tbl.RowCount(filter);
+			long n = tbl.RowCount(filter);
 			Assert.AreEqual(n, nRows, "");
 		}
 
@@ -345,7 +345,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			}
 
 			filter.WhereClause = "OPERATEUR not in ('STR_Imp')";
-			int n = tbl.RowCount(filter);
+			long n = tbl.RowCount(filter);
 			Assert.AreEqual(n, nRows, "");
 		}
 
@@ -372,7 +372,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			}
 
 			filter.WhereClause = "UUID not in ('{8C5517C9-B19F-4CC1-A6A1-D3DD317BCDD1}')";
-			int n = tbl.RowCount(filter);
+			long n = tbl.RowCount(filter);
 			Assert.AreEqual(n, nRows, "");
 		}
 

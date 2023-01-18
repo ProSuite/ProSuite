@@ -23,7 +23,7 @@ namespace ProSuite.QA.Container.PolygonGrower
 
 		IReadOnlyRow ITableIndexRow.CachedRow => Row;
 
-		public int RowOID
+		public long RowOID
 		{
 			get
 			{

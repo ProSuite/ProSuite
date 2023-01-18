@@ -275,7 +275,7 @@ namespace ProSuite.DomainServices.AO.QA
 			Assert.ArgumentNotNull(objectDataset, nameof(objectDataset));
 			Assert.ArgumentNotNull(testWithTable, nameof(testWithTable));
 
-			HashSet<int> oids = ReferenceGeometryUtils.GetOidsByRelatedGeometry(
+			HashSet<long> oids = ReferenceGeometryUtils.GetOidsByRelatedGeometry(
 				table, relClassChains, Assert.NotNull(_testPerimeter), testWithTable);
 
 			// Add oids of selected rows

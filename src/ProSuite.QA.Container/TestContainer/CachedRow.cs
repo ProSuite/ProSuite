@@ -83,9 +83,9 @@ namespace ProSuite.QA.Container.TestContainer
 			return extent;
 		}
 
-		protected override IList<int> GetOidList()
+		protected override IList<long> GetOidList()
 		{
-			IList<int> oidList = GetOidList(_feature);
+			IList<long> oidList = GetOidList(_feature);
 			return oidList;
 		}
 
@@ -147,7 +147,7 @@ namespace ProSuite.QA.Container.TestContainer
 
 			#region IFeature Members
 
-			public override int OID => _feature.OID;
+			public override long OID => _feature.OID;
 
 			public override IReadOnlyTable ReadOnlyTable => _table ?? (_table = _feature.Table);
 
@@ -163,7 +163,7 @@ namespace ProSuite.QA.Container.TestContainer
 
 					return cls;
 				}
-			} 
+			}
 
 			public IReadOnlyFeatureClass FeatureClass => (IReadOnlyFeatureClass) ReadOnlyTable;
 

@@ -28,7 +28,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 		private static void GetFeaturesInLoop(
 			int count,
-			[NotNull] Func<IFeatureClass, int, IFeature> getFeatureMethod)
+			[NotNull] Func<IFeatureClass, long, IFeature> getFeatureMethod)
 		{
 			IFeatureWorkspace featureWorkspace =
 				(IFeatureWorkspace) TestUtils.OpenSDEWorkspaceOracle();
@@ -36,7 +36,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			IFeatureClass featureClass =
 				featureWorkspace.OpenFeatureClass("TOPGIS_TLM.TLM_DTM_MASSENPUNKTE");
 
-			IList<int> oids = GetFeatureIDs(featureClass, count);
+			IList<long> oids = GetFeatureIDs(featureClass, count);
 
 			var watch = new Stopwatch();
 			var memoryUsage = new MemoryUsageInfo();
@@ -48,7 +48,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 				(IWorkspace) featureWorkspace,
 				delegate
 				{
-					foreach (int oid in oids)
+					foreach (long oid in oids)
 					{
 						IFeature feature = getFeatureMethod(featureClass, oid);
 
@@ -65,9 +65,9 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		}
 
 		private static IFeature GetFeatureUsingGetFeatures(
-			[NotNull] IFeatureClass featureClass, int oid)
+			[NotNull] IFeatureClass featureClass, long oid)
 		{
-			var singleOidList = new List<int> {oid};
+			var singleOidList = new List<long> {oid};
 
 			IList<IFeature> features = new List<IFeature>(
 				GdbQueryUtils.GetFeatures(featureClass, singleOidList, false));
@@ -76,10 +76,10 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		}
 
 		[NotNull]
-		private static IList<int> GetFeatureIDs([NotNull] IFeatureClass featureClass,
-		                                        int count)
+		private static IList<long> GetFeatureIDs([NotNull] IFeatureClass featureClass,
+		                                         int count)
 		{
-			var result = new List<int>();
+			var result = new List<long>();
 			int current = 0;
 
 			IQueryFilter filter = new QueryFilterClass();
@@ -104,7 +104,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		[Category(TestCategory.Sde)]
 		public void ProfileGetFeature()
 		{
-			GetFeaturesInLoop(300, (featureClass, oid) => featureClass.GetFeature(oid));
+			GetFeaturesInLoop(300, GdbQueryUtils.GetFeature);
 		}
 
 		[Test]
