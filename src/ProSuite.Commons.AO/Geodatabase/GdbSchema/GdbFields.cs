@@ -56,5 +56,12 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 			return added;
 		}
+
+#if Server11
+		void IFields.FindFieldIgnoreQualification(ISQLSyntax sqlSyntax, string Name, out int Index)
+		{
+			throw new NotImplementedException();
+		}
+#endif
 	}
 }

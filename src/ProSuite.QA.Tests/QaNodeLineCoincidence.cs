@@ -43,7 +43,7 @@ namespace ProSuite.QA.Tests
 		private IEnvelope _tileEnvelope;
 
 		// oids of processed multi-part polylines (they must not be processed once per intersected tile)
-		private HashSet<int> _processedMultipartPolylines;
+		private HashSet<long> _processedMultipartPolylines;
 
 		private const double _defaultCoincidenceTolerance = -1;
 
@@ -283,7 +283,7 @@ namespace ProSuite.QA.Tests
 			[NotNull] IGeometryCollection pathCollection,
 			double searchDistance)
 		{
-			int oid = feature.OID;
+			long oid = feature.OID;
 
 			if (_processedMultipartPolylines != null &&
 			    _processedMultipartPolylines.Contains(oid))
@@ -293,7 +293,7 @@ namespace ProSuite.QA.Tests
 
 			if (_processedMultipartPolylines == null)
 			{
-				_processedMultipartPolylines = new HashSet<int>();
+				_processedMultipartPolylines = new HashSet<long>();
 			}
 
 			_processedMultipartPolylines.Add(oid);

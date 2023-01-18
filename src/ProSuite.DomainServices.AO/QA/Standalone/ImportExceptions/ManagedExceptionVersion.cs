@@ -11,7 +11,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.ImportExceptions
 		[NotNull] private readonly IDictionary<IssueAttribute, object> _editableAttributes =
 			new Dictionary<IssueAttribute, object>();
 
-		public ManagedExceptionVersion(int objectId, Guid lineageUuid, Guid versionUuid,
+		public ManagedExceptionVersion(long objectId, Guid lineageUuid, Guid versionUuid,
 		                               string versionImportOrigin,
 		                               string importOrigin,
 		                               DateTime? versionBeginDate,
@@ -38,7 +38,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.ImportExceptions
 			}
 		}
 
-		public int ObjectID { get; }
+		public long ObjectID { get; }
 
 		public Guid LineageUuid { get; }
 

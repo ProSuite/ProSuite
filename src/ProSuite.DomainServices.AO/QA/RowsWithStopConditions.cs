@@ -11,7 +11,7 @@ namespace ProSuite.DomainServices.AO.QA
 			= new Dictionary<RowReference, StopInfo>();
 
 		public void Add([NotNull] string tableName,
-		                int objectID,
+		                long objectID,
 		                [NotNull] StopInfo stopInfo)
 		{
 			var rowReference = new RowReference(tableName, objectID);
@@ -66,10 +66,10 @@ namespace ProSuite.DomainServices.AO.QA
 		{
 			private readonly string _tableName;
 
-			private readonly int _oid;
+			private readonly long _oid;
 			// might be another key, in this case use string with keyValue.ToString() 
 
-			public RowReference([NotNull] string tableName, int oid)
+			public RowReference([NotNull] string tableName, long oid)
 			{
 				_tableName = tableName;
 				_oid = oid;
@@ -78,7 +78,7 @@ namespace ProSuite.DomainServices.AO.QA
 			[NotNull]
 			public string TableName => _tableName;
 
-			public int OID => _oid;
+			public long OID => _oid;
 
 			public bool Equals(RowReference other)
 			{
@@ -120,7 +120,7 @@ namespace ProSuite.DomainServices.AO.QA
 			{
 				unchecked
 				{
-					return (_tableName.GetHashCode() * 397) ^ _oid;
+					return (_tableName.GetHashCode() * 397) ^ _oid.GetHashCode();
 				}
 			}
 		}

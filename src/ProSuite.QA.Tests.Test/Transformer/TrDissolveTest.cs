@@ -134,9 +134,9 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				{ Search = 1, NeighborSearchOption = TrDissolve.SearchOption.Tile };
 
 			// Ensure unique OID:
-			List<int> objectIDs = dissolve
-			                      .GetTransformed().EnumReadOnlyRows(new QueryFilterClass(), false)
-			                      .Select(f => f.OID).ToList();
+			List<long> objectIDs = dissolve
+			                       .GetTransformed().EnumReadOnlyRows(new QueryFilterClass(), false)
+			                       .Select(f => f.OID).ToList();
 
 			Assert.AreEqual(objectIDs.Count, objectIDs.Distinct().Count());
 
@@ -198,9 +198,9 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				{ Search = 1, NeighborSearchOption = TrDissolve.SearchOption.All };
 
 			// Ensure unique OID:
-			List<int> objectIDs = dissolve
-			                      .GetTransformed().EnumReadOnlyRows(new QueryFilterClass(), false)
-			                      .Select(f => f.OID).ToList();
+			List<long> objectIDs = dissolve
+			                       .GetTransformed().EnumReadOnlyRows(new QueryFilterClass(), false)
+			                       .Select(f => f.OID).ToList();
 
 			Assert.AreEqual(objectIDs.Count, objectIDs.Distinct().Count());
 

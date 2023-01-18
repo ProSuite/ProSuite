@@ -353,7 +353,7 @@ namespace ProSuite.QA.Tests
 				yield break;
 			}
 
-			int oid = feature.OID;
+			long oid = feature.OID;
 
 			foreach (CurveMeasureRange range in GetMeasureRanges(polyline, oid, tableIndex))
 			{
@@ -364,7 +364,7 @@ namespace ProSuite.QA.Tests
 		[NotNull]
 		public static IEnumerable<CurveMeasureRange> GetMeasureRanges(
 			[NotNull] IPolyline polyline,
-			int oid,
+			long oid,
 			int tableIndex)
 		{
 			Assert.ArgumentNotNull(polyline, nameof(polyline));
@@ -438,14 +438,14 @@ namespace ProSuite.QA.Tests
 
 		[CanBeNull]
 		private static CurveMeasureRange GetMeasureRange(
-			[NotNull] IPolyline polyline, int oid, int tableIndex)
+			[NotNull] IPolyline polyline, long oid, int tableIndex)
 		{
 			return GetMeasureRange(polyline, oid, tableIndex, -1);
 		}
 
 		[CanBeNull]
 		private static CurveMeasureRange GetMeasureRange(
-			[NotNull] IPolyline polyline, int oid, int tableIndex, int partIndex)
+			[NotNull] IPolyline polyline, long oid, int tableIndex, int partIndex)
 		{
 			Assert.ArgumentNotNull(polyline, nameof(polyline));
 
@@ -465,7 +465,7 @@ namespace ProSuite.QA.Tests
 		[NotNull]
 		private static CurveMeasureRange CreateMeasureRange([NotNull] IPolyline polyline,
 		                                                    double mMin, double mMax,
-		                                                    int oid, int tableIndex,
+		                                                    long oid, int tableIndex,
 		                                                    int partIndex)
 		{
 			Assert.ArgumentNotNull(polyline, nameof(polyline));

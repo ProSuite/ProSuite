@@ -173,6 +173,14 @@ namespace ProSuite.Commons.AO.Test.TestSupport
 			throw new NotImplementedException();
 		}
 
+#if Server11
+		public IDataset OpenExtensionDataset(esriDatasetType extensionDatasetType,
+		                                     string extensionDatasetName)
+		{
+			throw new NotImplementedException();
+		}
+#endif
+
 		public ITable OpenTable(string Name)
 		{
 			return (ITable) _datasets[Name];

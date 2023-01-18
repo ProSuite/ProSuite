@@ -210,7 +210,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			watch.Stop();
 			watch.Start();
 
-			int rowCount = ((ITable) featureClass).RowCount(queryFilter);
+			long rowCount = ((ITable) featureClass).RowCount(queryFilter);
 
 			watch.Stop();
 
@@ -479,13 +479,13 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			IRelationshipClass rc = ws.OpenRelationshipClass(relClassName);
 
 			// origin = name, destination = strasse
-			int originRowCount = ((ITable) rc.OriginClass).RowCount(null);
-			int destinationRowCount = ((ITable) rc.DestinationClass).RowCount(null);
+			long originRowCount = ((ITable) rc.OriginClass).RowCount(null);
+			long destinationRowCount = ((ITable) rc.DestinationClass).RowCount(null);
 
 			Assert.IsFalse(TableJoinUtils.CanCreateQueryFeatureClass(rc, JoinType.LeftJoin));
 			ITable table = TableJoinUtils.CreateQueryTable(rc, JoinType.LeftJoin);
 
-			int rowCount = GetRowCount(table);
+			long rowCount = GetRowCount(table);
 			Console.WriteLine(@"origin: {0} dest: {1} query: {2}",
 			                  originRowCount, destinationRowCount, rowCount);
 
@@ -514,13 +514,13 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			IRelationshipClass rc = ws.OpenRelationshipClass(relClassName);
 
 			// origin = name, destination = strasse
-			int nOrig = ((ITable) rc.OriginClass).RowCount(null);
-			int nDest = ((ITable) rc.DestinationClass).RowCount(null);
+			long nOrig = ((ITable) rc.OriginClass).RowCount(null);
+			long nDest = ((ITable) rc.DestinationClass).RowCount(null);
 
 			Assert.IsTrue(TableJoinUtils.CanCreateQueryFeatureClass(rc, JoinType.InnerJoin));
 			ITable featureClass = TableJoinUtils.CreateQueryTable(rc, JoinType.InnerJoin);
 
-			int featureCount = GetRowCount(featureClass);
+			long featureCount = GetRowCount(featureClass);
 			Console.WriteLine(@"origin: {0} dest: {1} query: {2}",
 			                  nOrig, nDest, featureCount);
 
@@ -562,10 +562,10 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 		private static void CheckOIDs(ITable table, bool allowDuplicates = false)
 		{
-			HashSet<int> oids = new HashSet<int>();
+			var oids = new HashSet<long>();
 
 			int duplicates = 0;
-			int lastOid = -1;
+			long lastOid = -1;
 			foreach (IRow row in GdbQueryUtils.GetRows(table, true))
 			{
 				lastOid = row.OID;
@@ -586,7 +586,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			if (! allowDuplicates && lastOid > 0)
 			{
 				// Extra check
-				int checkId = table.GetRow(lastOid).OID;
+				long checkId = table.GetRow((int) lastOid).OID;
 
 				Assert.AreEqual(lastOid, checkId);
 			}
@@ -602,8 +602,8 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			IRelationshipClass rc = ws.OpenRelationshipClass(relClassName);
 
 			// origin = name, destination = strasse
-			int originRowCount = ((ITable) rc.OriginClass).RowCount(null);
-			int destinationRowCount = ((ITable) rc.DestinationClass).RowCount(null);
+			long originRowCount = ((ITable) rc.OriginClass).RowCount(null);
+			long destinationRowCount = ((ITable) rc.DestinationClass).RowCount(null);
 
 			Assert.IsTrue(TableJoinUtils.CanCreateQueryFeatureClass(rc, JoinType.RightJoin));
 			ITable featureClass = TableJoinUtils.CreateQueryTable(rc, JoinType.RightJoin);
@@ -612,7 +612,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			const string rightSideOidField = "TOPGIS_TLM.TLM_STRASSEN_NAME.OBJECTID";
 			Assert.AreEqual(rightSideOidField, featureClass.OIDFieldName);
 
-			int featureCount = GetRowCount(featureClass);
+			long featureCount = GetRowCount(featureClass);
 			Console.WriteLine(@"origin: {0} dest: {1} query: {2}",
 			                  originRowCount, destinationRowCount, featureCount);
 
@@ -655,13 +655,13 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			IRelationshipClass rc = ws.OpenRelationshipClass(relClassName);
 
 			// origin = Strasse, destination = wanderweg
-			int originRowCount = ((ITable) rc.OriginClass).RowCount(null);
-			int destinationRowCount = ((ITable) rc.DestinationClass).RowCount(null);
+			long originRowCount = ((ITable) rc.OriginClass).RowCount(null);
+			long destinationRowCount = ((ITable) rc.DestinationClass).RowCount(null);
 
 			Assert.IsTrue(TableJoinUtils.CanCreateQueryFeatureClass(rc, JoinType.LeftJoin));
 			ITable featureClass = TableJoinUtils.CreateQueryTable(rc, JoinType.LeftJoin);
 
-			int featureCount = GetRowCount(featureClass);
+			long featureCount = GetRowCount(featureClass);
 			Console.WriteLine(@"origin: {0} dest: {1} query: {2}",
 			                  originRowCount, destinationRowCount, featureCount);
 
@@ -703,13 +703,13 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			IRelationshipClass rc = ws.OpenRelationshipClass(relClassName);
 
 			// origin = Strasse, destination = wanderweg
-			int originRowCount = ((ITable) rc.OriginClass).RowCount(null);
-			int destinationRowCount = ((ITable) rc.DestinationClass).RowCount(null);
+			long originRowCount = ((ITable) rc.OriginClass).RowCount(null);
+			long destinationRowCount = ((ITable) rc.DestinationClass).RowCount(null);
 
 			Assert.IsTrue(TableJoinUtils.CanCreateQueryFeatureClass(rc, JoinType.InnerJoin));
 			ITable featureClass = TableJoinUtils.CreateQueryTable(rc, JoinType.InnerJoin);
 
-			int featureCount = GetRowCount(featureClass);
+			long featureCount = GetRowCount(featureClass);
 			Console.WriteLine(@"origin: {0} dest: {1} query: {2}",
 			                  originRowCount, destinationRowCount, featureCount);
 
@@ -749,13 +749,13 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			IRelationshipClass rc = ws.OpenRelationshipClass(relClassName);
 
 			// origin = Grundriss, destination = Gebaeude
-			int originRowCount = ((ITable) rc.OriginClass).RowCount(null);
-			int destinationRowCount = ((ITable) rc.DestinationClass).RowCount(null);
+			long originRowCount = ((ITable) rc.OriginClass).RowCount(null);
+			long destinationRowCount = ((ITable) rc.DestinationClass).RowCount(null);
 
 			Assert.IsTrue(TableJoinUtils.CanCreateQueryFeatureClass(rc, JoinType.InnerJoin));
 			ITable featureClass = TableJoinUtils.CreateQueryTable(rc, JoinType.InnerJoin);
 
-			int featureCount = GetRowCount(featureClass);
+			long featureCount = GetRowCount(featureClass);
 			Console.WriteLine(@"origin: {0} dest: {1} query: {2}",
 			                  originRowCount, destinationRowCount, featureCount);
 
@@ -811,13 +811,13 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			IRelationshipClass rc = ws.OpenRelationshipClass(relClassName);
 
 			// origin = wanderweg, destination = strasse
-			int originRowCount = ((ITable) rc.OriginClass).RowCount(null);
-			int destinationRowCount = ((ITable) rc.DestinationClass).RowCount(null);
+			long originRowCount = ((ITable) rc.OriginClass).RowCount(null);
+			long destinationRowCount = ((ITable) rc.DestinationClass).RowCount(null);
 
 			Assert.IsFalse(TableJoinUtils.CanCreateQueryFeatureClass(rc, JoinType.RightJoin));
 			ITable table = TableJoinUtils.CreateQueryTable(rc, JoinType.RightJoin);
 
-			int rowCount = GetRowCount(table);
+			long rowCount = GetRowCount(table);
 			Console.WriteLine(@"origin: {0} dest: {1} query: {2}",
 			                  originRowCount, destinationRowCount, rowCount);
 
@@ -848,13 +848,13 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			Assert.AreEqual(rc.Cardinality, esriRelCardinality.esriRelCardinalityManyToMany);
 
 			// origin = strassenroute, destination = strasse
-			int originRowCount = ((ITable) rc.OriginClass).RowCount(null);
-			int destinationRowCount = ((ITable) rc.DestinationClass).RowCount(null);
+			long originRowCount = ((ITable) rc.OriginClass).RowCount(null);
+			long destinationRowCount = ((ITable) rc.DestinationClass).RowCount(null);
 
 			Assert.IsFalse(TableJoinUtils.CanCreateQueryFeatureClass(rc, JoinType.LeftJoin));
 			ITable table = TableJoinUtils.CreateQueryTable(rc, JoinType.LeftJoin);
 
-			int rowCount = GetRowCount(table);
+			long rowCount = GetRowCount(table);
 			Console.WriteLine(@"origin: {0} dest: {1} query: {2}",
 			                  originRowCount, destinationRowCount, rowCount);
 
@@ -887,13 +887,13 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			Assert.AreEqual(rc.Cardinality, esriRelCardinality.esriRelCardinalityManyToMany);
 
 			// origin = wanderroute, destination = strasse
-			int originRowCount = ((ITable) rc.OriginClass).RowCount(null);
-			int destinationRowCount = ((ITable) rc.DestinationClass).RowCount(null);
+			long originRowCount = ((ITable) rc.OriginClass).RowCount(null);
+			long destinationRowCount = ((ITable) rc.DestinationClass).RowCount(null);
 
 			Assert.IsTrue(TableJoinUtils.CanCreateQueryFeatureClass(rc, JoinType.RightJoin));
 			ITable featureClass = TableJoinUtils.CreateQueryTable(rc, JoinType.RightJoin);
 
-			int featureCount = GetRowCount(featureClass);
+			long featureCount = GetRowCount(featureClass);
 			Console.WriteLine(@"origin: {0} dest: {1} query: {2}",
 			                  originRowCount, destinationRowCount, featureCount);
 
@@ -933,12 +933,12 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			Assert.AreEqual(rc.Cardinality, esriRelCardinality.esriRelCardinalityManyToMany);
 
 			// origin = wanderroute, destination = strasse
-			int nOrig = ((ITable) rc.OriginClass).RowCount(null);
-			int nDest = ((ITable) rc.DestinationClass).RowCount(null);
+			long nOrig = ((ITable) rc.OriginClass).RowCount(null);
+			long nDest = ((ITable) rc.DestinationClass).RowCount(null);
 
 			ITable featureClass = TableJoinUtils.CreateQueryTable(rc, JoinType.InnerJoin);
 
-			int featureCount = GetRowCount(featureClass);
+			long featureCount = GetRowCount(featureClass);
 			Console.WriteLine(@"origin: {0} dest: {1} query: {2}",
 			                  nOrig, nDest, featureCount);
 
@@ -1066,7 +1066,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 			Assert.AreEqual(rc.Cardinality, esriRelCardinality.esriRelCardinalityOneToOne);
 
-			int originRowCount = ((ITable) rc.OriginClass).RowCount(null);
+			long originRowCount = ((ITable) rc.OriginClass).RowCount(null);
 
 			const bool includeOnlyOIDFields = true;
 			const bool excludeShapeField = true;
@@ -1078,7 +1078,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			LogQueryDef(leftJoinQueryDef1);
 
 			// BUG: the first Evaluate() call returns an incorrect row count!!
-			int leftJoinRowCount1 = GetRowCount(leftJoinQueryDef1);
+			long leftJoinRowCount1 = GetRowCount(leftJoinQueryDef1);
 			Console.WriteLine(@"left join row count 1: {0}", leftJoinRowCount1);
 
 			IQueryDef leftJoinQueryDef2 = TableJoinUtils.CreateQueryDef(rc, JoinType.LeftJoin,
@@ -1088,7 +1088,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 			// NOTE: the first Evaluate() call on the second, equally defined instance returns the correct row count
 			// NOTE: but only after the first Evaluate() on the first instance.
-			int leftJoinRowCount2 = GetRowCount(leftJoinQueryDef2);
+			long leftJoinRowCount2 = GetRowCount(leftJoinQueryDef2);
 			Console.WriteLine(@"left join row count 2: {0}", leftJoinRowCount2);
 
 			Assert.AreEqual(originRowCount, leftJoinRowCount2, "unexpected left join row count");
@@ -1099,8 +1099,8 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 				excludeShapeField);
 			LogQueryDef(rightJoinQuery);
 
-			int destinationRowCount = ((ITable) rc.DestinationClass).RowCount(null);
-			int rightJoinRowCount = GetRowCount(rightJoinQuery);
+			long destinationRowCount = ((ITable) rc.DestinationClass).RowCount(null);
+			long rightJoinRowCount = GetRowCount(rightJoinQuery);
 
 			Assert.AreEqual(destinationRowCount, rightJoinRowCount,
 			                "unexpected right join row count");
@@ -1121,14 +1121,14 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 			Assert.AreEqual(rc.Cardinality, esriRelCardinality.esriRelCardinalityOneToOne);
 
-			int strasseRowCount = ((ITable) rc.OriginClass).RowCount(null);
+			long strasseRowCount = ((ITable) rc.OriginClass).RowCount(null);
 
 			// left join
 			IQueryDef leftJoinQueryDef1 = TableJoinUtils.CreateQueryDef(rc, JoinType.LeftJoin);
 			LogQueryDef(leftJoinQueryDef1);
 
 			// BUG: the first Evaluate() call returns an incorrect row count!!
-			int leftJoinRowCount1 = GetRowCount(leftJoinQueryDef1);
+			long leftJoinRowCount1 = GetRowCount(leftJoinQueryDef1);
 			Console.WriteLine(@"left join row count 1: {0}", leftJoinRowCount1);
 
 			IQueryDef leftJoinQueryDef2 = TableJoinUtils.CreateQueryDef(rc, JoinType.LeftJoin);
@@ -1136,7 +1136,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 			// NOTE: the first Evaluate() call on the second, equally defined instance returns the correct row count
 			// NOTE: but only after the first Evaluate() on the first instance.
-			int leftJoinRowCount2 = GetRowCount(leftJoinQueryDef2);
+			long leftJoinRowCount2 = GetRowCount(leftJoinQueryDef2);
 			Console.WriteLine(@"left join row count 2: {0}", leftJoinRowCount2);
 
 			Assert.AreEqual(strasseRowCount, leftJoinRowCount2,
@@ -1146,8 +1146,8 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			IQueryDef rightJoinQuery = TableJoinUtils.CreateQueryDef(rc, JoinType.RightJoin);
 			LogQueryDef(rightJoinQuery);
 
-			int wanderwegRowCount = ((ITable) rc.DestinationClass).RowCount(null);
-			int rightJoinRowCount = GetRowCount(rightJoinQuery);
+			long wanderwegRowCount = ((ITable) rc.DestinationClass).RowCount(null);
+			long rightJoinRowCount = GetRowCount(rightJoinQuery);
 
 			Assert.AreEqual(wanderwegRowCount, rightJoinRowCount,
 			                "unexpected right join row count");
@@ -1167,8 +1167,8 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			IRelationshipClass rc = ws.OpenRelationshipClass(relClassName);
 			Assert.AreEqual(rc.Cardinality, esriRelCardinality.esriRelCardinalityOneToMany);
 
-			int nOrig = ((ITable) rc.OriginClass).RowCount(null);
-			int nDest = ((ITable) rc.DestinationClass).RowCount(null);
+			long nOrig = ((ITable) rc.OriginClass).RowCount(null);
+			long nDest = ((ITable) rc.DestinationClass).RowCount(null);
 
 			const bool includeOnlyOIDFields = true;
 			const bool excludeShapeField = true;
@@ -1176,7 +1176,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			IQueryDef def = TableJoinUtils.CreateQueryDef(rc, JoinType.LeftJoin,
 			                                              includeOnlyOIDFields,
 			                                              excludeShapeField);
-			int nRows = GetRowCount(def);
+			long nRows = GetRowCount(def);
 			Assert.IsTrue(nRows >= nOrig);
 
 			def = TableJoinUtils.CreateQueryDef(rc, JoinType.RightJoin, includeOnlyOIDFields,
@@ -1198,11 +1198,11 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			IRelationshipClass rc = ws.OpenRelationshipClass(relClassName);
 			Assert.AreEqual(rc.Cardinality, esriRelCardinality.esriRelCardinalityOneToMany);
 
-			int nOrig = ((ITable) rc.OriginClass).RowCount(null);
-			int nDest = ((ITable) rc.DestinationClass).RowCount(null);
+			long nOrig = ((ITable) rc.OriginClass).RowCount(null);
+			long nDest = ((ITable) rc.DestinationClass).RowCount(null);
 
 			IQueryDef def = TableJoinUtils.CreateQueryDef(rc, JoinType.LeftJoin);
-			int nRows = GetRowCount(def);
+			long nRows = GetRowCount(def);
 			Assert.IsTrue(nRows >= nOrig);
 
 			def = TableJoinUtils.CreateQueryDef(rc, JoinType.RightJoin);
@@ -1223,19 +1223,19 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			IRelationshipClass rc = ws.OpenRelationshipClass(relClassName);
 			Assert.AreEqual(rc.Cardinality, esriRelCardinality.esriRelCardinalityManyToMany);
 
-			int wanderRouteRowCount = ((ITable) rc.OriginClass).RowCount(null);
-			int strasseRowCount = ((ITable) rc.DestinationClass).RowCount(null);
+			long wanderRouteRowCount = ((ITable) rc.OriginClass).RowCount(null);
+			long strasseRowCount = ((ITable) rc.DestinationClass).RowCount(null);
 
 			Console.WriteLine(@"origin row count (wanderroute): {0}", wanderRouteRowCount);
 			Console.WriteLine(@"destination row count (strasse): {0}", strasseRowCount);
 
 			IQueryDef leftJoinQueryDef = TableJoinUtils.CreateQueryDef(rc, JoinType.LeftJoin);
-			int leftJoinRowCount = GetRowCount(leftJoinQueryDef);
+			long leftJoinRowCount = GetRowCount(leftJoinQueryDef);
 			Console.WriteLine(@"Left join row count: {0}", leftJoinRowCount);
 			Assert.IsTrue(leftJoinRowCount >= wanderRouteRowCount);
 
 			IQueryDef rightJoinQueryDef = TableJoinUtils.CreateQueryDef(rc, JoinType.RightJoin);
-			int rightJoinRowCount = GetRowCount(rightJoinQueryDef);
+			long rightJoinRowCount = GetRowCount(rightJoinQueryDef);
 
 			Console.WriteLine(@"Right join row count: {0}", rightJoinRowCount);
 			Assert.IsTrue(rightJoinRowCount >= strasseRowCount);
@@ -1252,7 +1252,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 				"TOPGIS_TLM.TLM_STRASSE,TOPGIS_TLM.TLM_WANDERWEG",
 				"TOPGIS_TLM.TLM_STRASSE.UUID = TOPGIS_TLM.TLM_WANDERWEG.TLM_STRASSE_UUID", "*");
 
-			int rowCount = featureClass.FeatureCount(null);
+			long rowCount = featureClass.FeatureCount(null);
 			Console.WriteLine(@"feature count: {0}", rowCount);
 		}
 
@@ -1456,13 +1456,13 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		{
 			IRelationshipClass rc = ws.OpenRelationshipClass("rel_streets_routes");
 
-			int originRowCount = ((ITable) rc.OriginClass).RowCount(null);
-			int destinationRowCount = ((ITable) rc.DestinationClass).RowCount(null);
+			long originRowCount = ((ITable) rc.OriginClass).RowCount(null);
+			long destinationRowCount = ((ITable) rc.DestinationClass).RowCount(null);
 
 			Assert.IsFalse(TableJoinUtils.CanCreateQueryFeatureClass(rc, JoinType.RightJoin));
 			ITable queryTable = TableJoinUtils.CreateQueryTable(rc, JoinType.RightJoin);
 
-			int featureCount = GetRowCount(queryTable);
+			long featureCount = GetRowCount(queryTable);
 			Console.WriteLine(@"origin: {0} dest: {1} query: {2}",
 			                  originRowCount, destinationRowCount, featureCount);
 
@@ -1482,14 +1482,14 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		{
 			IRelationshipClass rc = ws.OpenRelationshipClass("rel_streets_routes");
 
-			int originRowCount = ((ITable) rc.OriginClass).RowCount(null);
-			int destinationRowCount = ((ITable) rc.DestinationClass).RowCount(null);
+			long originRowCount = ((ITable) rc.OriginClass).RowCount(null);
+			long destinationRowCount = ((ITable) rc.DestinationClass).RowCount(null);
 
 			Assert.IsTrue(TableJoinUtils.CanCreateQueryFeatureClass(rc, JoinType.LeftJoin));
 			ITable queryTable = TableJoinUtils.CreateQueryTable(rc, JoinType.LeftJoin);
 			Assert.AreEqual("Rel_Streets_Routes.RID", queryTable.OIDFieldName);
 
-			int featureCount = GetRowCount(queryTable);
+			long featureCount = GetRowCount(queryTable);
 
 			Console.WriteLine(@"origin: {0} dest: {1} query: {2}",
 			                  originRowCount, destinationRowCount, featureCount);
@@ -1505,13 +1505,13 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		{
 			IRelationshipClass rc = ws.OpenRelationshipClass("rel_streets_routes");
 
-			int originRowCount = ((ITable) rc.OriginClass).RowCount(null);
-			int destinationRowCount = ((ITable) rc.DestinationClass).RowCount(null);
+			long originRowCount = ((ITable) rc.OriginClass).RowCount(null);
+			long destinationRowCount = ((ITable) rc.DestinationClass).RowCount(null);
 
 			Assert.IsTrue(TableJoinUtils.CanCreateQueryFeatureClass(rc, JoinType.InnerJoin));
 			ITable queryTable = TableJoinUtils.CreateQueryTable(rc, JoinType.InnerJoin);
 
-			int featureCount = GetRowCount(queryTable);
+			long featureCount = GetRowCount(queryTable);
 			Console.WriteLine(@"origin: {0} dest: {1} query: {2}",
 			                  originRowCount, destinationRowCount, featureCount);
 
@@ -1525,13 +1525,13 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		{
 			IRelationshipClass rc = ws.OpenRelationshipClass("rel_1t_1p");
 
-			int originRowCount = ((ITable) rc.OriginClass).RowCount(null);
-			int destinationRowCount = ((ITable) rc.DestinationClass).RowCount(null);
+			long originRowCount = ((ITable) rc.OriginClass).RowCount(null);
+			long destinationRowCount = ((ITable) rc.DestinationClass).RowCount(null);
 
 			Assert.IsTrue(TableJoinUtils.CanCreateQueryFeatureClass(rc, JoinType.InnerJoin));
 			ITable queryTable = TableJoinUtils.CreateQueryTable(rc, JoinType.InnerJoin);
 
-			int featureCount = GetRowCount(queryTable);
+			long featureCount = GetRowCount(queryTable);
 			Console.WriteLine(@"origin: {0} dest: {1} query: {2}",
 			                  originRowCount, destinationRowCount, featureCount);
 
@@ -1543,13 +1543,13 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		{
 			IRelationshipClass rc = ws.OpenRelationshipClass("rel_1t_1p");
 
-			int originRowCount = ((ITable) rc.OriginClass).RowCount(null);
-			int destinationRowCount = ((ITable) rc.DestinationClass).RowCount(null);
+			long originRowCount = ((ITable) rc.OriginClass).RowCount(null);
+			long destinationRowCount = ((ITable) rc.DestinationClass).RowCount(null);
 
 			Assert.IsTrue(TableJoinUtils.CanCreateQueryFeatureClass(rc, JoinType.RightJoin));
 			ITable queryTable = TableJoinUtils.CreateQueryTable(rc, JoinType.RightJoin);
 
-			int featureCount = GetRowCount(queryTable);
+			long featureCount = GetRowCount(queryTable);
 			Console.WriteLine(@"origin: {0} dest: {1} query: {2}",
 			                  originRowCount, destinationRowCount, featureCount);
 
@@ -1560,13 +1560,13 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		{
 			IRelationshipClass rc = ws.OpenRelationshipClass("rel_1p_mt");
 
-			int originRowCount = ((ITable) rc.OriginClass).RowCount(null);
-			int destinationRowCount = ((ITable) rc.DestinationClass).RowCount(null);
+			long originRowCount = ((ITable) rc.OriginClass).RowCount(null);
+			long destinationRowCount = ((ITable) rc.DestinationClass).RowCount(null);
 
 			Assert.IsTrue(TableJoinUtils.CanCreateQueryFeatureClass(rc, JoinType.InnerJoin));
 			ITable queryTable = TableJoinUtils.CreateQueryTable(rc, JoinType.InnerJoin);
 
-			int featureCount = GetRowCount(queryTable);
+			long featureCount = GetRowCount(queryTable);
 			Console.WriteLine(@"origin: {0} dest: {1} query: {2}",
 			                  originRowCount, destinationRowCount, featureCount);
 
@@ -1578,13 +1578,13 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		{
 			IRelationshipClass rc = ws.OpenRelationshipClass("rel_1p_mt");
 
-			int originRowCount = ((ITable) rc.OriginClass).RowCount(null);
-			int destinationRowCount = ((ITable) rc.DestinationClass).RowCount(null);
+			long originRowCount = ((ITable) rc.OriginClass).RowCount(null);
+			long destinationRowCount = ((ITable) rc.DestinationClass).RowCount(null);
 
 			Assert.IsFalse(TableJoinUtils.CanCreateQueryFeatureClass(rc, JoinType.RightJoin));
 			ITable queryTable = TableJoinUtils.CreateQueryTable(rc, JoinType.RightJoin);
 
-			int featureCount = GetRowCount(queryTable);
+			long featureCount = GetRowCount(queryTable);
 			Console.WriteLine(@"origin: {0} dest: {1} query: {2}",
 			                  originRowCount, destinationRowCount, featureCount);
 
@@ -1596,13 +1596,13 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		{
 			IRelationshipClass rc = ws.OpenRelationshipClass("rel_1p_mt");
 
-			int originRowCount = ((ITable) rc.OriginClass).RowCount(null);
-			int destinationRowCount = ((ITable) rc.DestinationClass).RowCount(null);
+			long originRowCount = ((ITable) rc.OriginClass).RowCount(null);
+			long destinationRowCount = ((ITable) rc.DestinationClass).RowCount(null);
 
 			Assert.IsTrue(TableJoinUtils.CanCreateQueryFeatureClass(rc, JoinType.LeftJoin));
 			ITable queryTable = TableJoinUtils.CreateQueryTable(rc, JoinType.LeftJoin);
 
-			int featureCount = GetRowCount(queryTable);
+			long featureCount = GetRowCount(queryTable);
 			Console.WriteLine(@"origin: {0} dest: {1} query: {2}",
 			                  originRowCount, destinationRowCount, featureCount);
 
@@ -1705,7 +1705,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			return WorkspaceUtils.OpenFeatureWorkspaceVersion(defaultVersion, versionName);
 		}
 
-		private static int GetRowCount([NotNull] IQueryDef queryDef)
+		private static long GetRowCount([NotNull] IQueryDef queryDef)
 		{
 			ICursor cursor = ((IQueryDef2) queryDef).Evaluate2(true);
 
@@ -1729,7 +1729,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			}
 		}
 
-		private static int GetRowCount([NotNull] ITable table)
+		private static long GetRowCount([NotNull] ITable table)
 		{
 			return table.RowCount(null);
 

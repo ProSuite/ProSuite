@@ -78,17 +78,17 @@ namespace ProSuite.QA.Tests.Transformers
 			return new List<int>();
 		}
 
-		protected GdbFeature CreateFeature(int? oid = null)
+		protected GdbFeature CreateFeature(long? oid = null)
 		{
 			TransformedFeatureClass fc = GetTransformed();
 			GdbRow row = oid.HasValue ? fc.CreateObject(oid.Value) : fc.CreateFeature();
 			return (GdbFeature) row; // GetTransformed().CreateFeature();
 		}
 
-		IEnumerable<GdbFeature> IGeometryTransformer.Transform(IGeometry source, int? sourceOid)
+		IEnumerable<GdbFeature> IGeometryTransformer.Transform(IGeometry source, long? sourceOid)
 			=> Transform(source, sourceOid);
 
-		protected abstract IEnumerable<GdbFeature> Transform(IGeometry source, int? sourceOid);
+		protected abstract IEnumerable<GdbFeature> Transform(IGeometry source, long? sourceOid);
 
 		bool IContainerTransformer.IsGeneratedFrom(Involved involved, Involved source) =>
 			IsGeneratedFrom(involved, source);
@@ -138,7 +138,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 			public IGeometryTransformer Transformer { get; }
 
-			public override GdbRow CreateObject(int oid,
+			public override GdbRow CreateObject(long oid,
 			                                    IValueList valueList = null)
 			{
 				var joinedValueList = new MultiListValues();
@@ -192,7 +192,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 		private class TransformedFeature : GdbFeature
 		{
-			public TransformedFeature(int oid, TransformedFc featureClass,
+			public TransformedFeature(long oid, TransformedFc featureClass,
 			                          MultiListValues valueList)
 				: base(oid, featureClass, valueList) { }
 
@@ -221,12 +221,12 @@ namespace ProSuite.QA.Tests.Transformers
 
 			public override IEnvelope Extent => _t0.Extent;
 
-			public override VirtualRow GetUncachedRow(int id)
+			public override VirtualRow GetUncachedRow(long id)
 			{
 				throw new NotImplementedException();
 			}
 
-			public override int GetRowCount(IQueryFilter queryFilter)
+			public override long GetRowCount(IQueryFilter queryFilter)
 			{
 				// TODO
 				return _t0.RowCount(queryFilter);

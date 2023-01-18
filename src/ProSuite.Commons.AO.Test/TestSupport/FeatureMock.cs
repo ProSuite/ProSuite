@@ -18,6 +18,9 @@ namespace ProSuite.Commons.AO.Test.TestSupport
 		#region Constructors
 
 		internal FeatureMock(int oid, [NotNull] FeatureClassMock featureClassMock)
+			: this((long) oid, featureClassMock) { }
+
+		internal FeatureMock(long oid, [NotNull] FeatureClassMock featureClassMock)
 			: base(oid, featureClassMock)
 		{
 			_featureClassMock = featureClassMock;

@@ -462,7 +462,7 @@ namespace ProSuite.QA.Tests.Coincidence
 			public IEnumerable<IGeometry> GetGeometry()
 			{
 				int tableIndex = -1;
-				int oid = -1;
+				long oid = -1;
 				IIndexedSegments baseSegments = null;
 				int partIndex = -1;
 				var minIndex = 0;

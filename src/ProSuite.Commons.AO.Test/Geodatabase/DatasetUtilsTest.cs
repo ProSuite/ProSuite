@@ -86,8 +86,8 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			Assert.NotNull(cursor.NextFeature());
 			Marshal.ReleaseComObject(cursor);
 
-			int countInBox = GdbQueryUtils.Count(fclass, filter.Geometry);
-			int countAll = GdbQueryUtils.Count(fclass);
+			long countInBox = GdbQueryUtils.Count(fclass, filter.Geometry);
+			long countAll = GdbQueryUtils.Count(fclass);
 
 			Assert.AreEqual(78, countInBox);
 			Assert.AreEqual(260, countAll);

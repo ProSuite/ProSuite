@@ -72,8 +72,8 @@ namespace ProSuite.Commons.AO.Geometry.Cut
 		public IList<ToolEditOperationObserver> EditOperationObservers { get; set; } =
 			new List<ToolEditOperationObserver>(0);
 
-		public IList<KeyValuePair<int, string>> FailedCutOperations { get; } =
-			new List<KeyValuePair<int, string>>(0);
+		public IList<KeyValuePair<long, string>> FailedCutOperations { get; } =
+			new List<KeyValuePair<long, string>>(0);
 
 		/// <summary>
 		/// The resulting cut geometries per original feature. Available once Cut has been called.
@@ -152,7 +152,7 @@ namespace ProSuite.Commons.AO.Geometry.Cut
 					_msg.Warn($"Feature {feature.OID}: {e.Message}", e);
 
 					FailedCutOperations.Add(
-						new KeyValuePair<int, string>(feature.OID, e.Message));
+						new KeyValuePair<long, string>(feature.OID, e.Message));
 				}
 			}
 
@@ -181,7 +181,7 @@ namespace ProSuite.Commons.AO.Geometry.Cut
 					}
 
 					FailedCutOperations.Add(
-						new KeyValuePair<int, string>(feature.OID, e.Message));
+						new KeyValuePair<long, string>(feature.OID, e.Message));
 				}
 			}
 		}

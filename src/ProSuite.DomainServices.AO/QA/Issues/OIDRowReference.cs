@@ -4,14 +4,14 @@ namespace ProSuite.DomainServices.AO.QA.Issues
 {
 	public class OIDRowReference : RowReference, IEquatable<OIDRowReference>
 	{
-		private readonly int _oid;
+		private readonly long _oid;
 
-		public OIDRowReference(int oid)
+		public OIDRowReference(long oid)
 		{
 			_oid = oid;
 		}
 
-		public override int OID => _oid;
+		public override long OID => _oid;
 
 		public override bool UsesOID => true;
 
@@ -59,7 +59,7 @@ namespace ProSuite.DomainServices.AO.QA.Issues
 
 		public override int GetHashCode()
 		{
-			return _oid;
+			return _oid.GetHashCode();
 		}
 	}
 }

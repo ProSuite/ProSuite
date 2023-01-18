@@ -52,7 +52,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		/// Gets the object id of the referenced object.
 		/// </summary>
 		/// <value>The object id.</value>
-		public int ObjectId { get; }
+		public long ObjectId { get; }
 
 		/// <summary>
 		/// Gets the referenced object, from a workspace.
@@ -152,7 +152,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		public override int GetHashCode()
 		{
-			return RelationshipClassId + 29 * ObjectId;
+			return RelationshipClassId + 29 * ObjectId.GetHashCode();
 		}
 
 		public override string ToString()
