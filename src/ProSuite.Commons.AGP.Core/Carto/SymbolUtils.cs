@@ -488,12 +488,12 @@ namespace ProSuite.Commons.AGP.Core.Carto
 		}
 
 		public static CIMSymbolReference AddMapping(
-			this CIMSymbolReference reference, Guid label, string property, string expression)
+			this CIMSymbolReference reference, string label, string property, string expression)
 		{
 			if (reference == null)
 				throw new ArgumentNullException(nameof(reference));
 
-			var primitive = FindPrimitive<CIMObject>(reference.Symbol, label);
+			var primitive = FindPrimitiveByName<CIMObject>(reference.Symbol, label);
 
 			if (primitive == null)
 			{
@@ -506,76 +506,70 @@ namespace ProSuite.Commons.AGP.Core.Carto
 				throw new InvalidOperationException($"Primitive has no property '{property}'");
 			}
 
-			var mapping = CreateMapping(label, property, expression);
+			var mapping = new CIMPrimitiveOverride
+			              {
+				              PrimitiveName = label,
+				              PropertyName = property,
+				              Expression = expression
+			              };
 
 			reference.PrimitiveOverrides = AddOne(reference.PrimitiveOverrides, mapping);
 
 			return reference;
 		}
 
-		private static CIMPrimitiveOverride CreateMapping(
-			Guid label, string property, string expression)
-		{
-			return new CIMPrimitiveOverride
-			       {
-				       PrimitiveName = FormatGuid(label),
-				       PropertyName = property,
-				       Expression = expression
-			       };
-		}
-
-		public static T LabelLayer<T>(this T primitive, out Guid label) where T : CIMSymbolLayer
+		public static T LabelLayer<T>(this T primitive, out string label) where T : CIMSymbolLayer
 		{
 			if (primitive == null)
 				throw new ArgumentNullException(nameof(primitive));
 
-			label = Guid.NewGuid();
-			primitive.PrimitiveName = FormatGuid(label);
+			label = CreateUniqueLabel();
+			primitive.PrimitiveName = label;
 
 			return primitive;
 		}
 
-		public static T LabelEffect<T>(this T primitive, out Guid label)
+		public static T LabelEffect<T>(this T primitive, out string label)
 			where T : CIMGeometricEffect
 		{
 			if (primitive == null)
 				throw new ArgumentNullException(nameof(primitive));
 
-			label = Guid.NewGuid();
-			primitive.PrimitiveName = FormatGuid(label);
+			label = CreateUniqueLabel();
+			primitive.PrimitiveName = label;
 
 			return primitive;
 		}
 
-		public static T LabelPlacement<T>(this T primitive, out Guid label)
+		public static T LabelPlacement<T>(this T primitive, out string label)
 			where T : CIMMarkerPlacement
 		{
 			if (primitive == null)
 				throw new ArgumentNullException(nameof(primitive));
 
-			label = Guid.NewGuid();
-			primitive.PrimitiveName = FormatGuid(label);
+			label = CreateUniqueLabel();
+			primitive.PrimitiveName = label;
 
 			return primitive;
 		}
 
-		public static T LabelGraphic<T>(this T primitive, out Guid label) where T : CIMMarkerGraphic
+		public static T LabelGraphic<T>(this T primitive, out string label) where T : CIMMarkerGraphic
 		{
 			if (primitive == null)
 				throw new ArgumentNullException(nameof(primitive));
 
-			label = Guid.NewGuid();
-			primitive.PrimitiveName = FormatGuid(label);
+			label = CreateUniqueLabel();
+			primitive.PrimitiveName = label;
 
 			return primitive;
 		}
 
-		public static T FindPrimitive<T>(CIMSymbol symbol, Guid label) where T : CIMObject
+		public static T FindPrimitiveByName<T>(CIMSymbol symbol, string label) where T : CIMObject
 		{
 			// TextSymbol has no PrimitiveName; all other symbols derive from MultiLayerSymbol
 			if (! (symbol is CIMMultiLayerSymbol multiLayerSymbol)) return null;
 
-			string primitiveName = FormatGuid(label);
+			string primitiveName = label;
 
 			if (multiLayerSymbol.Effects != null)
 			{
@@ -654,7 +648,7 @@ namespace ProSuite.Commons.AGP.Core.Carto
 		/// <typeparam name="T">Typically one of CIMGeometricEffect or CIMSymbolLayer
 		/// or CIMMarkerPlacement or a subtype of these.</typeparam>
 		/// <returns>The primitive found, or <c>null</c> if not found</returns>
-		public static T FindPrimitive<T>(CIMSymbol symbol, string spec) where T : CIMObject
+		public static T FindPrimitiveByPath<T>(CIMSymbol symbol, string spec) where T : CIMObject
 		{
 			if (string.IsNullOrEmpty(spec)) return null;
 			if (! (symbol is CIMMultiLayerSymbol multiLayerSymbol)) return null;
@@ -737,22 +731,17 @@ namespace ProSuite.Commons.AGP.Core.Carto
 			return new ArgumentException(message);
 		}
 
-		// Empirical: Pro uses GUIDs for primitive names in the
-		// default lower-case-dashes-no-braces format.
-
-		public static string FormatGuid(Guid guid)
-		{
-			return guid.ToString();
-		}
-
-		public static string FormatGuid(string guid)
-		{
-			return Guid.Parse(guid).ToString();
-		}
-
 		#endregion
 
 		#region Private utils
+
+		private static string CreateUniqueLabel()
+		{
+			// Empirical: Pro uses GUIDs for primitive names in
+			// the default lower-case-dashes-no-braces format.
+
+			return Guid.NewGuid().ToString();
+		}
 
 		private static bool TryParseIndex(string text, out int index)
 		{
