@@ -102,6 +102,7 @@
     <ProjectReference Include="..\ProSuite.DomainModel.Core\ProSuite.DomainModel.Core.csproj" />
     <ProjectReference Include="..\ProSuite.DomainServices.AO\ProSuite.DomainServices.AO.csproj" />
     <ProjectReference Include="..\ProSuite.Microservices.AO\ProSuite.Microservices.AO.csproj" />
+    <ProjectReference Include="..\ProSuite.Microservices.Client\ProSuite.Microservices.Client.csproj" />
     <ProjectReference Include="..\ProSuite.QA.Container\ProSuite.QA.Container.csproj" />
   </ItemGroup>
 
