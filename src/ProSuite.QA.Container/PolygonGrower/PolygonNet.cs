@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Threading;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
 using ProSuite.Commons.Geom.SpatialIndex;
@@ -166,7 +167,7 @@ namespace ProSuite.QA.Container.PolygonGrower
 			var tree = new PolygonNet<T>.Tree(comparer);
 
 			// Add each line once to box tree
-			tree.InitSize(new IGmtry[] {QaGeometryUtils.CreateBox(box)});
+			tree.InitSize(new IGmtry[] { QaGeometryUtils.CreateBox(box) });
 			foreach (LineList<T> ring in outerRingList)
 			{
 				foreach (T row in ring.DirectedRows)
@@ -282,7 +283,10 @@ namespace ProSuite.QA.Container.PolygonGrower
 
 				QueryBox.Value.PutCoords(searchX, searchY, xMax, searchY);
 
-				var segList = (Ao.ISegmentCollection) currentLine.Path;
+				// NOTE: IndexedEnumSegments throws NotImplementedException on low-level geometries!
+				var segList =
+					(Ao.ISegmentCollection) GeometryUtils.GetHighLevelGeometry(currentLine.Path);
+
 				Ao.IEnumSegment enumSegments = segList.IndexedEnumSegments[QueryBox.Value];
 
 				Ao.ISegment segment;
