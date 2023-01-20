@@ -51,10 +51,7 @@ public static class MarkerPlacements
 		double perpendicularOffset = options.PerpendicularOffset;
 		var extremity = options.Extremity;
 
-		// Beware!
-		// The extremity flags tell where to NOT place a marker!
-		// (This is to match ArcGIS, where Both is the default.)
-		// Therefore, if JustBegin is NOT set, draw marker at begin!
+		// TODO options.OffsetAlongLine
 
 		if (options.PlacePerPart)
 		{
@@ -192,7 +189,7 @@ public static class MarkerPlacements
 			// assume tangent has unit length!
 			ox *= offset;
 			oy *= offset;
-			// rotate 90 degrees TODO which direction?
+			// rotate 90 degrees ccw
 			(ox, oy) = (-oy, ox);
 			// and add to the main translation
 			dx += ox;
