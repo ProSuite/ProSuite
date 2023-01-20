@@ -11,8 +11,10 @@ using ProSuite.Commons.AO.Surface.Raster;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.Core.DataModel;
+using ProSuite.DomainModel.Core.DataModel.LegacyTypes;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Core;
+using RasterDataset = ProSuite.DomainModel.Core.DataModel.RasterDataset;
 
 namespace ProSuite.DomainModel.AO.QA
 {
@@ -158,19 +160,19 @@ namespace ProSuite.DomainModel.AO.QA
 					return dataset is TableDataset;
 
 				case TestParameterType.TopologyDataset:
-					return dataset.GeometryType is GeometryTypeTopology;
+					return dataset is TopologyDataset;
 
 				case TestParameterType.TerrainDataset:
-					return dataset.GeometryType is GeometryTypeTerrain;
+					return dataset is ISimpleTerrainDataset;
 
 				case TestParameterType.GeometricNetworkDataset:
-					return dataset.GeometryType is GeometryTypeGeometricNetwork;
+					return dataset is IGeometricNetworkDataset;
 
 				case TestParameterType.RasterMosaicDataset:
-					return dataset.GeometryType is GeometryTypeRasterMosaic;
+					return dataset is IRasterMosaicDataset;
 
 				case TestParameterType.RasterDataset:
-					return dataset.GeometryType is GeometryTypeRasterDataset;
+					return dataset is RasterDataset;
 
 				default:
 					throw new ArgumentException(
