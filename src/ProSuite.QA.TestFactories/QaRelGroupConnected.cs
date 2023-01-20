@@ -1,8 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.AO.QA;
+using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Container;
 using ProSuite.QA.Core;
 using ProSuite.QA.Core.IssueCodes;
@@ -121,8 +124,12 @@ namespace ProSuite.QA.TestFactories
 			objects[2] = objParams[4];
 			objects[3] = tables;
 
+			IDictionary<string, string> replacements = GetTableNameReplacements(
+				Assert.NotNull(Condition).ParameterValues.OfType<DatasetTestParameterValue>(),
+				datasetContext);
+
 			bool useCaseSensitiveQaSql;
-			string tableConstraint = CombineTableParameters(tableParameters,
+			string tableConstraint = CombineTableParameters(tableParameters, replacements,
 			                                                out useCaseSensitiveQaSql);
 
 			tableParameters = new List<TableConstraint>
