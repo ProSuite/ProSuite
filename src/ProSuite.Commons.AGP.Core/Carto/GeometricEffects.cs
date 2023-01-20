@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Geometry;
-using Geometry = ArcGIS.Core.Geometry.Geometry;
 
 namespace ProSuite.Commons.AGP.Core.Carto;
 
@@ -19,29 +19,38 @@ public static class GeometricEffects
 		Geometry shape, double beginCut, double endCut, bool invert = false, double middleCut = 0.0)
 	{
 		if (shape is null) return null;
+		if (shape.IsEmpty) return shape;
+		if (shape is not Polyline polyline) return shape;
 
-		if (shape is Multipart polycurve)
+		if (!(beginCut > 0)) beginCut = 0;
+		if (!(endCut > 0)) endCut = 0;
+		if (!(middleCut > 0)) middleCut = 0;
+
+		// Do the cut for each part of the (potentially) multipart shape!
+
+		var builder = Configure(new PolylineBuilderEx(), shape);
+
+		foreach (var line in GetPartLines(polyline))
 		{
-			if (!(beginCut > 0)) beginCut = 0;
-			if (!(endCut > 0)) endCut = 0;
-			if (!(middleCut > 0)) middleCut = 0;
-
-			var length = polycurve.Length;
+			var length = line.Length;
 
 			if (beginCut + endCut + middleCut >= length)
 			{
-				return invert ? shape : null;
+				if (invert)
+				{
+					builder.AddParts(line.Parts);
+				}
+				continue;
 			}
-
-			var builder = Configure(new PolylineBuilderEx(), shape);
 
 			if (invert)
 			{
-				// keep cuttings, drop rest
+				// keep cuttings, drop rest: ===---===---===
+
 				if (beginCut > 0)
 				{
 					var sub = GeometryEngine.Instance.GetSubCurve(
-						polycurve, 0, beginCut, AsRatioOrLength.AsLength);
+						line, 0, beginCut, AsRatioOrLength.AsLength);
 					builder.AddParts(sub.Parts);
 				}
 
@@ -50,7 +59,7 @@ public static class GeometricEffects
 					var start = length / 2 - middleCut / 2;
 					var end = length / 2 + middleCut / 2;
 					var sub = GeometryEngine.Instance.GetSubCurve(
-						polycurve, start, end, AsRatioOrLength.AsLength);
+						line, start, end, AsRatioOrLength.AsLength);
 					builder.AddParts(sub.Parts);
 				}
 
@@ -58,37 +67,37 @@ public static class GeometricEffects
 				{
 					var start = length - endCut;
 					var sub = GeometryEngine.Instance.GetSubCurve(
-						polycurve, start, length, AsRatioOrLength.AsLength);
+						line, start, length, AsRatioOrLength.AsLength);
 					builder.AddParts(sub.Parts);
 				}
 			}
 			else
 			{
+				// drop cuttings, keep rest: ---===---===---
+				// (one piece if no middle cut: ---=========---)
+
 				if (middleCut > 0)
 				{
 					var sub1 = GeometryEngine.Instance.GetSubCurve(
-						polycurve, beginCut, length / 2 - middleCut / 2,
+						line, beginCut, length / 2 - middleCut / 2,
 						AsRatioOrLength.AsLength);
 					builder.AddParts(sub1.Parts);
 
 					var sub2 = GeometryEngine.Instance.GetSubCurve(
-						polycurve, length / 2 + middleCut / 2, length - endCut,
+						line, length / 2 + middleCut / 2, length - endCut,
 						AsRatioOrLength.AsLength);
 					builder.AddParts(sub2.Parts);
 				}
 				else
 				{
 					var sub = GeometryEngine.Instance.GetSubCurve(
-						polycurve, beginCut, length - endCut, AsRatioOrLength.AsLength);
+						line, beginCut, length - endCut, AsRatioOrLength.AsLength);
 					builder.AddParts(sub.Parts);
 				}
 			}
-
-			return builder.ToGeometry();
 		}
 
-		// no effect on other geometry types
-		return shape;
+		return builder.ToGeometry();
 	}
 
 	public enum DashEndings
@@ -114,7 +123,7 @@ public static class GeometricEffects
 		// treat each original part separately!
 		// see CreateLineMarkers for hints on fitting stuff along a line
 
-		throw new NotImplementedException();
+		throw new NotImplementedException("Hard work but coming soon");
 	}
 
 	public static Geometry Offset(
@@ -186,12 +195,21 @@ public static class GeometricEffects
 		return shape;
 	}
 
+	#region Private utilities
+
 	private static IEnumerable<Segment> Range(ReadOnlySegmentCollection segments, int start, int count)
 	{
 		for (int i = 0; i < count; i++)
 		{
 			yield return segments[start + i];
 		}
+	}
+
+	private static IEnumerable<Polyline> GetPartLines(Polyline polyline)
+	{
+		if (polyline is null) return Enumerable.Empty<Polyline>();
+		var parts = GeometryEngine.Instance.MultipartToSinglePart(polyline);
+		return parts.OfType<Polyline>();
 	}
 
 	private static T Configure<T>(T builder, Geometry template)
@@ -207,4 +225,6 @@ public static class GeometricEffects
 
 		return builder;
 	}
+
+	#endregion
 }
