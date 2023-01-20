@@ -28,7 +28,6 @@ public static class MarkerPlacements
 		public double PerpendicularOffset { get; set; } // in CIM just "Offset"
 	}
 
-	[Flags]
 	public enum Extremity
 	{
 		Both = 0, JustBegin = 1, JustEnd = 2, None = 3
@@ -50,6 +49,7 @@ public static class MarkerPlacements
 
 		bool angleToLine = options.AngleToLine;
 		double perpendicularOffset = options.PerpendicularOffset;
+		var extremity = options.Extremity;
 
 		// Beware!
 		// The extremity flags tell where to NOT place a marker!
@@ -60,7 +60,7 @@ public static class MarkerPlacements
 		{
 			foreach (var part in polyline.Parts)
 			{
-				if ((options.Extremity & Extremity.JustBegin) == 0)
+				if (extremity is Extremity.JustBegin or Extremity.Both)
 				{
 					var segment = part.FirstOrDefault();
 					var tangent = GetTangent(segment, 0);
@@ -71,7 +71,7 @@ public static class MarkerPlacements
 					}
 				}
 
-				if ((options.Extremity & Extremity.JustEnd) == 0)
+				if (extremity is Extremity.JustEnd or Extremity.Both)
 				{
 					var segment = part.LastOrDefault();
 					var tangent = GetTangent(segment, 1);
@@ -85,7 +85,7 @@ public static class MarkerPlacements
 		}
 		else
 		{
-			if ((options.Extremity & Extremity.JustBegin) == 0)
+			if (extremity is Extremity.JustBegin or Extremity.Both)
 			{
 				var firstPart = polyline.Parts.FirstOrDefault();
 				var segment = firstPart?.FirstOrDefault();
@@ -97,7 +97,7 @@ public static class MarkerPlacements
 				}
 			}
 
-			if ((options.Extremity & Extremity.JustEnd) == 0)
+			if (extremity is Extremity.JustEnd or Extremity.Both)
 			{
 				var lastPart = polyline.Parts.LastOrDefault();
 				var segment = lastPart?.LastOrDefault();
