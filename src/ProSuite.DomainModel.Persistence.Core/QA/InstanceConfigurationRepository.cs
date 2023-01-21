@@ -107,6 +107,27 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 			}
 		}
 
+		public IList<T> Get<T>(IEnumerable<DataQualityCategory> categories)
+			where T : InstanceConfiguration
+		{
+			using (ISession session = OpenSession(true))
+			{
+				int[] categoryIds = categories.Select(c => c.Id).ToArray();
+
+				T instanceConfig = null;
+				DataQualityCategory categoryAlias = null;
+
+				var query =
+					session.QueryOver(() => instanceConfig)
+					       .JoinAlias(() => instanceConfig.Category,
+					                  () => categoryAlias)
+					       .WhereRestrictionOn(
+						       () => categoryAlias.Id).IsIn(categoryIds);
+
+				return query.List();
+			}
+		}
+
 		public InstanceConfiguration Get(string name,
 		                                 Type targetType)
 		{
@@ -309,7 +330,7 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 		private bool AreTransformersAndFiltersSupported()
 		{
 			Version databaseSchemaVersion = GetDatabaseSchemaVersion();
-			
+
 			return databaseSchemaVersion != null &&
 			       databaseSchemaVersion >= DdxSchemaVersion.FiltersAndTransformers;
 		}
