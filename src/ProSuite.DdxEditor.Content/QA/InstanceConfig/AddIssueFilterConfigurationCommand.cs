@@ -11,7 +11,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 		private readonly IInstanceConfigurationContainerItem _containerItem;
 
 		/// <summary>
-		/// Initializes a new instance of the <see cref="AddTransformerConfigurationCommand"/> class.
+		/// Initializes a new instance of the <see cref="AddIssueFilterConfigurationCommand"/> class.
 		/// </summary>
 		/// <param name="item">The parent item.</param>
 		/// <param name="applicationController">The application controller.</param>
