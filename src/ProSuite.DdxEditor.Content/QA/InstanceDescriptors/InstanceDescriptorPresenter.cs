@@ -80,6 +80,9 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 		public void InstanceConfigurationDoubleClicked(
 			ReferencingInstanceConfigurationTableRow referencingConfigurationTableRow)
 		{
+			Assert.ArgumentNotNull(referencingConfigurationTableRow,
+			                       nameof(referencingConfigurationTableRow));
+
 			_itemNavigation.GoToItem(referencingConfigurationTableRow.InstanceConfiguration);
 		}
 

@@ -23,7 +23,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 		void BindToInstanceConfigurations(
 			[NotNull] IList<ReferencingInstanceConfigurationTableRow> tableRows);
 
-		IList<ReferencingInstanceConfigurationTableRow> GetSelectedQualityConditionTableRows();
+		IList<ReferencingInstanceConfigurationTableRow> GetSelectedInstanceConfigurationTableRows();
 
 		void SaveState();
 	}
