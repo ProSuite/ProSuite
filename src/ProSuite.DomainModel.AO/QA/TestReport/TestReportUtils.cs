@@ -4,6 +4,7 @@ using System.IO;
 using System.Reflection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Notifications;
 using ProSuite.Commons.Reflection;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Core;
@@ -53,6 +54,56 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			builder.WriteReport();
 		}
 
+		public static void WriteDescriptorsReport(
+			[NotNull] IList<InstanceDescriptor> descriptors,
+			[NotNull] string htmlFileName,
+			bool overwrite,
+			[CanBeNull] NotificationCollection notifications = null)
+		{
+			Assert.ArgumentNotNull(descriptors, nameof(descriptors));
+			Assert.ArgumentNotNullOrEmpty(htmlFileName, nameof(htmlFileName));
+
+			if (overwrite && File.Exists(htmlFileName))
+			{
+				File.Delete(htmlFileName);
+			}
+
+			using (TextWriter writer = new StreamWriter(htmlFileName))
+			{
+				WriteDescriptorsReport(descriptors, writer, notifications);
+			}
+		}
+
+		public static void WriteDescriptorsReport(
+			[NotNull] IList<InstanceDescriptor> descriptors,
+			TextWriter writer,
+			[CanBeNull] NotificationCollection notifications = null)
+		{
+			Assert.ArgumentNotNull(descriptors, nameof(descriptors));
+
+			var builder =
+				new HtmlReportBuilder(
+					writer, "Registered test, transformer and filter implementations");
+
+			builder.IncludeObsolete = false;
+			builder.IncludeAssemblyInfo = true;
+
+			foreach (InstanceDescriptor descriptor in descriptors)
+			{
+				try
+				{
+					IncludeInstanceDescriptor(builder, descriptor);
+				}
+				catch (Exception ex)
+				{
+					NotificationUtils.Add(notifications,
+					                      $"Unable to include {descriptor}: {ex.Message}");
+				}
+			}
+
+			builder.WriteReport();
+		}
+
 		public static void WriteDescriptorDoc([NotNull] InstanceDescriptor descriptor,
 		                                      [NotNull] TextWriter writer)
 		{
@@ -70,22 +121,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			builder.IncludeObsolete = false;
 			builder.IncludeAssemblyInfo = true;
 
-			if (descriptor is TestDescriptor testDescriptor &&
-			    testDescriptor.TestFactoryDescriptor != null)
-			{
-				builder.IncludeTestFactory(
-					testDescriptor.TestFactoryDescriptor.GetInstanceType());
-			}
-			else
-			{
-				Type instanceType = Assert.NotNull(descriptor.Class).GetInstanceType();
-
-				foreach (int ctorIndex in InstanceUtils.GetConstructorIndexes(
-					         instanceType, false, false))
-				{
-					builder.IncludeTransformer(instanceType, ctorIndex);
-				}
-			}
+			IncludeInstanceDescriptor(builder, descriptor);
 
 			builder.WriteReport();
 		}
@@ -128,6 +164,47 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			IncludeTestFactories(builder, assemblies);
 
 			builder.WriteReport();
+		}
+
+		public static void IncludeInstanceDescriptor([NotNull] IReportBuilder reportBuilder,
+		                                             [NotNull] InstanceDescriptor descriptor)
+		{
+			if (descriptor is TransformerDescriptor)
+			{
+				reportBuilder.IncludeTransformer(
+					Assert.NotNull(descriptor.Class).GetInstanceType(),
+					descriptor.ConstructorId);
+			}
+			else if (descriptor is IssueFilterDescriptor)
+			{
+				reportBuilder.IncludeIssueFilter(
+					Assert.NotNull(descriptor.Class).GetInstanceType(),
+					descriptor.ConstructorId);
+			}
+			else if (descriptor is TestDescriptor testDescriptor)
+			{
+				if (testDescriptor.TestClass != null)
+				{
+					reportBuilder.IncludeTest(
+						testDescriptor.TestClass.GetInstanceType(),
+						testDescriptor.TestConstructorId);
+				}
+				else if (testDescriptor.TestFactoryDescriptor != null)
+				{
+					reportBuilder.IncludeTestFactory(
+						testDescriptor.TestFactoryDescriptor.GetInstanceType());
+				}
+				else
+				{
+					throw new InvalidOperationException(
+						$"Neither test class nor factory defined for {testDescriptor}");
+				}
+			}
+			else
+			{
+				throw new InvalidOperationException(
+					$"Unknown descriptor type {descriptor.GetType()}");
+			}
 		}
 
 		private static void IncludeTestClasses([NotNull] IReportBuilder reportBuilder,

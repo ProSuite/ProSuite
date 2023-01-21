@@ -5,6 +5,7 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Essentials.System;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.Notifications;
 using ProSuite.Commons.UI.WinForms;
 using ProSuite.DdxEditor.Content.Properties;
 using ProSuite.DdxEditor.Content.QA.TestDescriptors;
@@ -12,6 +13,7 @@ using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Commands;
 using ProSuite.DdxEditor.Framework.Items;
 using ProSuite.DomainModel.AO.QA.TestReport;
+using ProSuite.DomainModel.Core.QA;
 
 namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 {
@@ -68,6 +70,8 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 			                                                  _modelBuilder
 				                                                  .DefaultTestDescriptorsXmlFile));
 			commands.Add(new CreateReportForAssemblyTestsCommand(this, applicationController));
+			commands.Add(new CreateReportForInstanceDescriptorsCommand(
+				             this, applicationController));
 		}
 
 		#endregion
@@ -108,6 +112,43 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 			_msg.InfoFormat(
 				"Report of test, transformer and filter implementations in assembly {0} created: {1}",
 				assembly.Location, htmlFileName);
+
+			_msg.Info("Opening report...");
+			ProcessUtils.StartProcess(htmlFileName);
+		}
+
+		public void CreateReportForInstanceDescriptors([NotNull] string htmlFileName,
+		                                               bool overwrite)
+		{
+			Assert.ArgumentNotNullOrEmpty(htmlFileName, nameof(htmlFileName));
+
+			var notifications = new NotificationCollection();
+
+			_modelBuilder.ReadOnlyTransaction(
+				delegate
+				{
+					IList<InstanceDescriptor> descriptors =
+						_modelBuilder.InstanceDescriptors.GetAll();
+
+					TestReportUtils.WriteDescriptorsReport(descriptors, htmlFileName, overwrite,
+					                                       notifications);
+				});
+
+			_msg.InfoFormat(
+				"Report of registered test, transformer and filter implementations created: {0}",
+				htmlFileName);
+
+			if (notifications.Count > 0)
+			{
+				_msg.Warn("Invalid implementations omitted:");
+				using (_msg.IncrementIndentation())
+				{
+					foreach (INotification notification in notifications)
+					{
+						_msg.WarnFormat("- {0}", notification.Message);
+					}
+				}
+			}
 
 			_msg.Info("Opening report...");
 			ProcessUtils.StartProcess(htmlFileName);

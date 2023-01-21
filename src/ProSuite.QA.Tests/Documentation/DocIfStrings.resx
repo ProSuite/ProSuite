@@ -137,6 +137,6 @@
   </data>
   <data name="IfInvolvedRows_Tables" xml:space="preserve">
     <value>List of tables, to which a involved row must belong to to be checked.
-If not specifed, all involved rows are check for the constraint</value>
+If not specified, all involved rows are check for the constraint</value>
   </data>
 </root>

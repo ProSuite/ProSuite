@@ -25,6 +25,7 @@ using ProSuite.DomainServices.AO.QA.Standalone;
 using ProSuite.DomainServices.AO.QA.Standalone.XmlBased;
 using ProSuite.DomainServices.AO.QA.VerifiedDataModel;
 using ProSuite.Microservices.AO;
+using ProSuite.Microservices.Client.QA;
 using ProSuite.Microservices.Definitions.QA;
 using ProSuite.Microservices.Definitions.Shared;
 using Quaestor.LoadReporting;
@@ -108,11 +109,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 		/// The client end point used for parallel processing.
 		/// </summary>
 		[CanBeNull]
-		public QualityVerificationGrpc.QualityVerificationGrpcClient DistributedProcessingClient
-		{
-			get;
-			set;
-		}
+		public IList<IQualityVerificationClient> DistributedProcessingClients { get; set; }
 
 		public bool KeepServingOnErrorDefaultValue { get; set; }
 
@@ -445,10 +442,10 @@ namespace ProSuite.Microservices.Server.AO.QA
 				bool useStandaloneService =
 					IsStandAloneVerification(request, out QualitySpecification specification);
 
-				if (DistributedProcessingClient != null && request.MaxParallelProcessing > 1)
+				if (DistributedProcessingClients != null && request.MaxParallelProcessing > 1)
 				{
 					distributedTestRunner =
-						new DistributedTestRunner(DistributedProcessingClient, request)
+						new DistributedTestRunner(DistributedProcessingClients, request)
 						{
 							QualitySpecification = specification
 						};
