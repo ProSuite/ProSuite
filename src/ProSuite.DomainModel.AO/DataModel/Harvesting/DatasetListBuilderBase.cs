@@ -192,14 +192,14 @@ namespace ProSuite.DomainModel.AO.DataModel.Harvesting
 		protected abstract TableDataset CreateTableDataset([NotNull] IDatasetName datasetName,
 		                                                   [NotNull] string name);
 
-		[NotNull]
+		[CanBeNull]
 		protected abstract TopologyDataset CreateTopologyDataset([NotNull] string name);
 
-		[NotNull]
+		[CanBeNull]
 		protected abstract RasterMosaicDataset CreateRasterMosaicDataset(
 			[NotNull] string name);
 
-		[NotNull]
+		[CanBeNull]
 		protected abstract RasterDataset CreateRasterDataset([NotNull] string name);
 
 		private bool IgnoreNameFilters([NotNull] IDatasetName datasetName)
@@ -432,6 +432,11 @@ namespace ProSuite.DomainModel.AO.DataModel.Harvesting
 
 			TopologyDataset dataset = CreateTopologyDataset(GetModelElementName(datasetName));
 
+			if (dataset == null)
+			{
+				return null;
+			}
+
 			dataset.GeometryType = geometryType;
 
 			return dataset;
@@ -456,6 +461,11 @@ namespace ProSuite.DomainModel.AO.DataModel.Harvesting
 			RasterMosaicDataset dataset =
 				CreateRasterMosaicDataset(GetModelElementName(datasetName));
 
+			if (dataset == null)
+			{
+				return null;
+			}
+
 			dataset.GeometryType = geometryType;
 
 			return dataset;
@@ -477,6 +487,11 @@ namespace ProSuite.DomainModel.AO.DataModel.Harvesting
 			}
 
 			RasterDataset dataset = CreateRasterDataset(GetModelElementName(datasetName));
+
+			if (dataset == null)
+			{
+				return null;
+			}
 
 			dataset.GeometryType = geometryType;
 
