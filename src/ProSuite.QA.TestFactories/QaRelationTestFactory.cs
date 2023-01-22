@@ -8,6 +8,7 @@ using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
+using ProSuite.QA.Container;
 
 namespace ProSuite.QA.TestFactories
 {
@@ -16,6 +17,7 @@ namespace ProSuite.QA.TestFactories
 		[NotNull]
 		protected static string CombineTableParameters(
 			[NotNull] IEnumerable<TableConstraint> tableConstraints,
+			[NotNull] IDictionary<string, string> tableNameReplacements,
 			out bool useCaseSensitiveQaSql)
 		{
 			Assert.ArgumentNotNull(tableConstraints, nameof(tableConstraints));
@@ -44,17 +46,63 @@ namespace ProSuite.QA.TestFactories
 				return string.Empty;
 			}
 
+			string untranslatedExpression;
 			if (nonEmptyExpressions.Count == 1)
 			{
-				return nonEmptyExpressions[0];
+				untranslatedExpression = nonEmptyExpressions[0];
+			}
+			else
+			{
+				// enclose expressions in parentheses to maintain expected precedence
+				// (e.g. when OR is used in individual expressions)
+				untranslatedExpression = StringUtils.Concatenate(nonEmptyExpressions,
+				                               expression => $"({expression})",
+				                               " AND ");
 			}
 
-			// enclose expressions in parentheses to maintain expected precedence
-			// (e.g. when OR is used in individual expressions)
-			return StringUtils.Concatenate(nonEmptyExpressions,
-			                               expression => $"({expression})",
-			                               " AND ");
+			string translatedExpression =
+				tableNameReplacements.Count == 0
+					? untranslatedExpression
+					: ExpressionUtils.ReplaceTableNames(untranslatedExpression,
+					                                    tableNameReplacements);
+			return translatedExpression;
 		}
+
+		[NotNull]
+		protected static IDictionary<string, string> GetTableNameReplacements(
+			[NotNull] IEnumerable<DatasetTestParameterValue> datasetParameterValues,
+			[NotNull] IOpenDataset datasetContext)
+		{
+			var replacements = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+			foreach (DatasetTestParameterValue datasetParameterValue in datasetParameterValues)
+			{
+				Dataset dataset = datasetParameterValue.DatasetValue;
+				if (dataset == null)
+				{
+					continue;
+				}
+
+				IReadOnlyTable table =
+					datasetContext.OpenDataset(
+						dataset, Assert.NotNull(datasetParameterValue.DataType)) as IReadOnlyTable;
+
+				if (table == null)
+				{
+					continue;
+				}
+
+				string tableName = table.Name;
+
+				if (!string.Equals(dataset.Name, tableName))
+				{
+					replacements.Add(dataset.Name, tableName);
+				}
+			}
+
+			return replacements;
+		}
+
 
 		protected IReadOnlyTable CreateQueryTable([NotNull] IOpenDataset datasetOpener,
 		                                          [NotNull] string associationName,

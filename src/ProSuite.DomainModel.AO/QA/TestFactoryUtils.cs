@@ -21,12 +21,14 @@ namespace ProSuite.DomainModel.AO.QA
 		{
 			Assert.ArgumentNotNull(qualityCondition, nameof(qualityCondition));
 
-			if (qualityCondition.TestDescriptor == null)
+			TestDescriptor descriptor = qualityCondition.TestDescriptor;
+
+			if (descriptor == null)
 			{
 				return null;
 			}
-
-			TestFactory factory = GetTestFactory(qualityCondition.TestDescriptor);
+			
+			TestFactory factory = GetTestFactory(descriptor);
 
 			if (factory != null)
 			{
@@ -45,8 +47,7 @@ namespace ProSuite.DomainModel.AO.QA
 		/// <param name="descriptor"></param>
 		/// <returns>TestFactory or null if neither the test class nor the test factory descriptor are defined.</returns>
 		[CanBeNull]
-		//TODO Make private, use e.g. InstanceDescriptorUtils.GetInstanceInfo
-		public static TestFactory GetTestFactory([NotNull] TestDescriptor descriptor)
+		private static TestFactory GetTestFactory([NotNull] TestDescriptor descriptor)
 		{
 			Assert.ArgumentNotNull(descriptor, nameof(descriptor));
 

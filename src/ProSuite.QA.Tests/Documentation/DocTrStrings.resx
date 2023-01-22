@@ -121,7 +121,7 @@
     <value>Transforms line feature class 'featureClass' by dissolving connected features</value>
   </data>
   <data name="TrDissolve_Attributes" xml:space="preserve">
-    <value>Attributes to be transfered to transformed feature class. Must be used with alias and group expression, i.e. 'MAX(LAUF_NR) AS MAX_LAUF_NR'.
+    <value>Attributes to be transferred to transformed feature class. Must be used with alias and group expression, i.e. 'MAX(LAUF_NR) AS MAX_LAUF_NR'.
 In the resulting feature class, only attributes defined in 'Attributes' or 'GroupBy' can be used.</value>
   </data>
   <data name="TrDissolve_Constraint" xml:space="preserve">
@@ -145,7 +145,7 @@ In the resulting feature class, only attributes defined in 'Attributes' or 'Grou
 - All: if features start/end outside tile, load additional connected features (recursively)</value>
   </data>
   <data name="TrDissolve_SearchDistance" xml:space="preserve">
-    <value>Additonal distance to cache 'featureClass' features per tile</value>
+    <value>Additional distance to cache 'featureClass' features per tile</value>
   </data>
   <data name="TrFootprint_0" xml:space="preserve">
     <value>Transforms multipatches to polygons by taking their footprints</value>
@@ -160,7 +160,7 @@ In the resulting feature class, only attributes defined in 'Attributes' or 'Grou
     <value>GeometryComponent to extract</value>
   </data>
   <data name="TrGeometryToPoints_featureClass" xml:space="preserve">
-    <value>multipoint, line, polygon or multpatch class to transform</value>
+    <value>multipoint, line, polygon or multipatch class to transform</value>
   </data>
   <data name="TrGeometryTransform_Attributes" xml:space="preserve">
     <value>Attributes that are copied from source featureclass to resulting featureclass</value>
@@ -296,7 +296,7 @@ If false: ignore features from t0 that have no spatial relation to any feature o
     <value>Feature class that provides the shape for the new features</value>
   </data>
   <data name="TrSpatialJoin_T0Attributes" xml:space="preserve">
-    <value>Attributes of 't0' that are transfered to transformed feature class. Can be used with alias, i.e. 'TOPGIS_TLM.TLM_GEWAESSER_LAUF.LAUF_NR AS T1_LAUF_NR'.
+    <value>Attributes of 't0' that are transferred to transformed feature class. Can be used with alias, i.e. 'TLM.TLM_GEWAESSER_LAUF.LAUF_NR AS T1_LAUF_NR'.
 In the resulting feature class, only attributes defined in T0Attributes or T1Attributes can be used. </value>
   </data>
   <data name="TrSpatialJoin_t1" xml:space="preserve">
@@ -305,7 +305,7 @@ In the resulting feature class, only attributes defined in T0Attributes or T1Att
   <data name="TrSpatialJoin_T1Attributes" xml:space="preserve">
     <value>See T0Attributes.
 If 'Grouped'=true, the attributes must be defined by Group-Expressions like COUNT(),MIN(),MAX()... 
-Remark: Group expressions can only containt a single field expression. If a more complex expression is needed, use the parameter T1CalcAttributes.
+Remark: Group expressions can only contain a single field expression. If a more complex expression is needed, use the parameter T1CalcAttributes.
 Example: Count the number of joined features with a specific objecttype 'x' would be: 
 T1CalcAttributes: "IIF(objecttype='x',1,0) AS X_VALUE"
 T1Attributes: "SUM(X_VALUE) AS X_COUNT"</value>

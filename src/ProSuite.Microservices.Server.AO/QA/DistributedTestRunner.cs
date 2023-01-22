@@ -17,6 +17,7 @@ using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.VerificationProgress;
 using ProSuite.DomainServices.AO.QA;
 using ProSuite.Microservices.AO;
+using ProSuite.Microservices.Client.QA;
 using ProSuite.Microservices.Definitions.QA;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.TestContainer;
@@ -126,6 +127,9 @@ namespace ProSuite.Microservices.Server.AO.QA
 			public SubVerification([NotNull] VerificationRequest subRequest,
 			                       [NotNull] QualityConditionGroup qualityConditionGroup)
 			{
+				Assert.ArgumentNotNull(subRequest, nameof(subRequest));
+				Assert.ArgumentNotNull(qualityConditionGroup, nameof(qualityConditionGroup));
+
 				SubRequest = subRequest;
 				SubResponse = new SubResponse();
 				QualityConditionGroup = qualityConditionGroup;
@@ -187,11 +191,20 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		private readonly QualityVerificationGrpc.QualityVerificationGrpcClient _qaClient;
+		private readonly IList<IQualityVerificationClient> _workersClients;
+
 		private readonly VerificationRequest _originalRequest;
 
 		private readonly IDictionary<Task<bool>, SubVerification> _tasks =
 			new ConcurrentDictionary<Task<bool>, SubVerification>();
+
+		private readonly IDictionary<SubVerification, IQualityVerificationClient> _subveriClientsDict =
+			new ConcurrentDictionary<SubVerification, IQualityVerificationClient>();
+
+		private readonly HashSet<IQualityVerificationClient> _workingClients =
+			new HashSet<IQualityVerificationClient>();
+		private readonly HashSet<IQualityVerificationClient> _failedClients =
+			new HashSet<IQualityVerificationClient>();
 
 		public TileParallelHandlingEnum TileParallelHandling { get; set; } =
 			TileParallelHandlingEnum.HalfOfMaxParallel;
@@ -200,15 +213,15 @@ namespace ProSuite.Microservices.Server.AO.QA
 			NonContainerHandlingEnum.OneSubverificationForAll;
 
 		public DistributedTestRunner(
-			[NotNull] QualityVerificationGrpc.QualityVerificationGrpcClient qaClient,
+			[NotNull] IList<IQualityVerificationClient> workersClients,
 			[NotNull] VerificationRequest originalRequest)
 		{
-			Assert.NotNull(qaClient, nameof(qaClient));
+			Assert.NotNull(workersClients, nameof(workersClients));
 			Assert.NotNull(originalRequest, nameof(originalRequest));
 			Assert.ArgumentCondition(originalRequest.MaxParallelProcessing > 1,
 			                         "maxParallelDesired must be greater 1");
 
-			_qaClient = qaClient;
+			_workersClients = workersClients;
 			_originalRequest = originalRequest;
 		}
 
@@ -257,28 +270,41 @@ namespace ProSuite.Microservices.Server.AO.QA
 				_originalRequest, QualitySpecification,
 				qcGroups,
 				_originalRequest.MaxParallelProcessing);
+
 			// TODO: Create a structure to check which tileParallel verifications are completed
 
-			foreach (var subVerification in subVerifications)
-			{
-				Task<bool> task = IniTask(subVerification);
-				_tasks.Add(task, subVerification);
+			// TODO: Consider a BlockingCollection or some other way to limit through-put
+			//       or even the consumer/producer pattern?
 
-				Thread.Sleep(50);
-			}
+			Stack<SubVerification> unhandledSubverifications =
+				new Stack<SubVerification>(subVerifications.Reverse());
+			StartSubverifications(unhandledSubverifications);
 
-			while (_tasks.Count > 0)
+			while (_tasks.Count > 0 || unhandledSubverifications.Count > 0)
 			{
 				if (TryTakeCompletedRun(_tasks, out Task<bool> task,
 				                        out SubVerification completed))
 				{
+					IQualityVerificationClient finishedClient = _subveriClientsDict[completed];
+					_workingClients.Remove(finishedClient);
+
 					ProcessFinalResult(task, completed);
 
 					if (task.Status == TaskStatus.Faulted)
 					{
 						_msg.Warn($"Task {task.Id} failed, trying rerun");
-						Task<bool> newTask = IniTask(completed);
-						_tasks.Add(newTask, completed);
+
+						SubVerification retry =
+							new SubVerification(completed.SubRequest,
+							                    completed.QualityConditionGroup);
+						unhandledSubverifications.Push(retry);
+					}
+
+					StartSubverifications(unhandledSubverifications);
+					if (_tasks.Count == 0)
+					{
+						EndVerification(QualityVerification);
+						return;
 					}
 
 					_msg.InfoFormat("Remaining verification tasks: {0}", _tasks.Count);
@@ -318,22 +344,84 @@ namespace ProSuite.Microservices.Server.AO.QA
 			EndVerification(QualityVerification);
 		}
 
-		private Task<bool> IniTask(SubVerification subVerification)
+		private void StartSubverifications(Stack<SubVerification> subVerifications)
+		{
+			while (true)
+			{
+				if (subVerifications.Count == 0)
+				{
+					return;
+				}
+
+				IQualityVerificationClient client = GetWorkerClient();
+				if (client == null)
+				{
+					return;
+				}
+
+				SubVerification next = subVerifications.Pop();
+				Task<bool> newTask = IniTask(next, client);
+				_tasks.Add(newTask, next);
+			}
+		}
+
+		private IQualityVerificationClient GetWorkerClient()
+		{
+			if (_workersClients.Count == 1)
+			{
+				return _workersClients[0];
+			}
+
+			if (_workersClients.Count <= _workingClients.Count)
+			{
+				return null;
+			}
+
+			foreach (IQualityVerificationClient client in _workersClients)
+			{
+				if (! _workingClients.Contains(client)
+				    && ! _failedClients.Contains(client))
+				{
+					if (client.CanAcceptCalls(allowFailOver: false))
+					{
+						return client;
+					}
+
+					_failedClients.Add(client);
+				}
+			}
+
+			return null;
+		}
+
+		private Task<bool> IniTask([NotNull] SubVerification subVerification,
+		                           [NotNull] IQualityVerificationClient verificationClient)
 		{
 			VerificationRequest subRequest = subVerification.SubRequest;
 
 			SubResponse subResponse = subVerification.SubResponse;
 
+			// Check if there is a free client (and allow failing over if necessary):
+			if (! verificationClient.CanAcceptCalls(true))
+			{
+				// TODO: Do something else? Use a different worker?
+				return Task.FromResult(false);
+			}
+
+			_subveriClientsDict.Add(subVerification, verificationClient);
+			_workingClients.Add(verificationClient);
+
 			Task<bool> task = Task.Run(
 				async () =>
-					await VerifyAsync(_qaClient, subRequest, subResponse,
-					                  CancellationTokenSource),
+					await VerifyAsync(Assert.NotNull(verificationClient.QaGrpcClient), subRequest,
+					                  subResponse, CancellationTokenSource),
 				CancellationTokenSource.Token);
 
 			// Process the messages even though the foreground thread is blocking/busy processing results
 			task.ConfigureAwait(false);
 			return task;
 		}
+
 		private void ProcessFinalResult(Task<bool> task, SubVerification subVerification)
 		{
 			SubResponse subResponse = subVerification.SubResponse;
@@ -668,7 +756,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 							CreateVerification(
 								originalRequest, specification,
 								nonContainerGroup));
-						_msg.Info($"Built 1 subverification for {nonContainerGroup.QualityConditions.Count} non-container quality conditions");
+						_msg.Info(
+							$"Built 1 subverification for {nonContainerGroup.QualityConditions.Count} non-container quality conditions");
 					}
 					else if (NonContainerHandling ==
 					         NonContainerHandlingEnum
@@ -684,7 +773,9 @@ namespace ProSuite.Microservices.Server.AO.QA
 								CreateVerification(
 									originalRequest, specification, grp));
 						}
-						_msg.Info($"Built {nonContainerGroup.QualityConditions} subverifications for non-container quality conditions (1 per quality condition)");
+
+						_msg.Info(
+							$"Built {nonContainerGroup.QualityConditions} subverifications for non-container quality conditions (1 per quality condition)");
 					}
 					else
 					{
@@ -727,7 +818,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 						originalRequest, specification, parallelGroup, nMaxTileParallel);
 
 				subVerifications.AddRange(tileParallelVerifications);
-				_msg.Info($"Built {tileParallelVerifications.Count} tile parallel subverifications for {parallelGroup.QualityConditions.Count} quality conditions");
+				_msg.Info(
+					$"Built {tileParallelVerifications.Count} tile parallel subverifications for {parallelGroup.QualityConditions.Count} quality conditions");
 				unhandledQualityConditions.Remove(parallelGroup);
 			}
 
@@ -741,7 +833,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 				{
 					while (qcsPerSubverification.Count <= iVerification)
 					{
-						qcsPerSubverification.Add(new QualityConditionGroup(QualityConditionExecType.Mixed));
+						qcsPerSubverification.Add(
+							new QualityConditionGroup(QualityConditionExecType.Mixed));
 					}
 
 					qcsPerSubverification[iVerification].QualityConditions
@@ -760,7 +853,9 @@ namespace ProSuite.Microservices.Server.AO.QA
 					CreateVerification(
 						originalRequest, specification, qualityConditionGroup));
 			}
-			_msg.Info($"Built {qcsPerSubverification.Count} subverifications for {qcsPerSubverification.Sum(x=>x.QualityConditions.Count)} non-tile-parallel container quality conditions");
+
+			_msg.Info(
+				$"Built {qcsPerSubverification.Count} subverifications for {qcsPerSubverification.Sum(x => x.QualityConditions.Count)} non-tile-parallel container quality conditions");
 
 			return subVerifications;
 		}

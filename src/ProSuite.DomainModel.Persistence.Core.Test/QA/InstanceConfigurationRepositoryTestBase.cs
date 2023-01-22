@@ -241,13 +241,90 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.QA
 				{
 					AssertUnitOfWorkHasNoChanges();
 
-					List<QualityCondition> qCondIds = new List<QualityCondition> {cond0, cond1};
+					List<QualityCondition> qCondIds = new List<QualityCondition> { cond0, cond1 };
 					foundDatasets = Repository.GetAllReferencedDatasets(qCondIds).ToList();
 				});
 
 			Assert.AreEqual(2, foundDatasets.Count);
 			Assert.IsTrue(foundDatasets.Contains(ds0));
 			Assert.IsTrue(foundDatasets.Contains(ds1));
+		}
+
+		[Test]
+		public void CanGetByCategory()
+		{
+			var category1 = new DataQualityCategory("cat1", "c1", "Category number 1");
+			var category2 = new DataQualityCategory("cat2", "c2", "Category number 2");
+
+			var t1 = new TransformerDescriptor(
+				"trans1", new ClassDescriptor("factTypeName", "factAssemblyName"), 0);
+
+			var tc1 = new TransformerConfiguration("transConfig1", t1, "bla bla1");
+			tc1.Category = category1;
+
+			var t2 = new TransformerDescriptor(
+				"trans2", new ClassDescriptor("factTypeName", "factAssemblyName__"),
+				0, "desc");
+
+			var tc2 = new TransformerConfiguration("transConfig2", t2, "bla bla2");
+			tc2.Category = category2;
+
+			var tc2b = new TransformerConfiguration("transConfig2b", t2, "bla bla2");
+
+			const int testConstructorId = 1;
+			var i1 = new IssueFilterDescriptor(
+				"ifilt1", new ClassDescriptor("issueFilTypeName", "factAssemblyName"),
+				testConstructorId);
+
+			var ic1 = new IssueFilterConfiguration("issueFilterConfig1", i1);
+			ic1.Category = category2;
+
+			CreateSchema(category1, category2, t1, t2, i1, tc1, tc2, tc2b, ic1);
+
+			UnitOfWork.NewTransaction(
+				delegate
+				{
+					AssertUnitOfWorkHasNoChanges();
+
+					IList<TransformerConfiguration> transformersInCat1 =
+						Repository.Get<TransformerConfiguration>(category1);
+
+					Assert.AreEqual(1, transformersInCat1.Count);
+					Assert.AreEqual(tc1, transformersInCat1[0]);
+
+					// Using category list:
+					IList<TransformerConfiguration> transformersInCategories =
+						Repository.Get<TransformerConfiguration>(new[] { category1 });
+					Assert.AreEqual(1, transformersInCategories.Count);
+					Assert.AreEqual(tc1, transformersInCategories[0]);
+
+					// Get both types in category2:
+					IList<InstanceConfiguration> instanceConfigsInCat2 =
+						Repository.Get<InstanceConfiguration>(category2);
+					Assert.AreEqual(2, instanceConfigsInCat2.Count);
+					Assert.AreEqual(
+						tc2, instanceConfigsInCat2.First(i => i is TransformerConfiguration));
+					Assert.AreEqual(
+						ic1, instanceConfigsInCat2.First(i => i is IssueFilterConfiguration));
+
+					// Get both types using list
+					instanceConfigsInCat2 =
+						Repository.Get<InstanceConfiguration>(new[] { category2 });
+					Assert.AreEqual(2, instanceConfigsInCat2.Count);
+					Assert.AreEqual(
+						tc2, instanceConfigsInCat2.First(i => i is TransformerConfiguration));
+					Assert.AreEqual(
+						ic1, instanceConfigsInCat2.First(i => i is IssueFilterConfiguration));
+
+					// Get all in list of 2
+					IList<InstanceConfiguration> instanceConfigsInAnyCat =
+						Repository.Get<InstanceConfiguration>(new[] { category1, category2 });
+					Assert.AreEqual(3, instanceConfigsInAnyCat.Count);
+
+					Assert.IsTrue(instanceConfigsInAnyCat.Contains(tc1));
+					Assert.IsTrue(instanceConfigsInAnyCat.Contains(tc2));
+					Assert.IsTrue(instanceConfigsInAnyCat.Contains(ic1));
+				});
 		}
 	}
 }
