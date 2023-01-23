@@ -153,4 +153,10 @@
   <data name="ReshapeAlongTool_LogUsingCurrentSelection" xml:space="preserve">
     <value>Select the target line or polygon features to align with. &lt;br&gt;-Hit [ESC] to select a different feature.</value>
   </data>
+  <data name="EraseTool_LogEnteringSketchMode" xml:space="preserve">
+	  <value>Sketch a hole or any polygon to be erased from the selection.&lt;br&gt;Press [ESC] to reselect the polygon(s).</value>
+  </data>
+  <data name="EraseTool_LogPromptForSelection" xml:space="preserve">
+	  <value>Select one or more features.&lt;br&gt;- Press and hold SHIFT to add or remove features from the existing selection.&lt;br&gt;- Press and hold P to draw a polygon that completely contains the features to be selected. Finish the polygon with double-click.</value>
+  </data>
 </root>
