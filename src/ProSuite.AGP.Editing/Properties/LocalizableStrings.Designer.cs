@@ -19,7 +19,7 @@ namespace ProSuite.AGP.Editing.Properties {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class LocalizableStrings {
@@ -105,6 +105,24 @@ namespace ProSuite.AGP.Editing.Properties {
         internal static string CutPolygonAlongTool_LogUsingCurrentSelection {
             get {
                 return ResourceManager.GetString("CutPolygonAlongTool_LogUsingCurrentSelection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Sketch a hole or any polygon to be erased from the selection.&lt;br&gt;Press [ESC] to reselect the polygon(s)..
+        /// </summary>
+        internal static string EraseTool_LogEnteringSketchMode {
+            get {
+                return ResourceManager.GetString("EraseTool_LogEnteringSketchMode", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select one or more features.&lt;br&gt;- Press and hold SHIFT to add or remove features from the existing selection.&lt;br&gt;- Press and hold P to draw a polygon that completely contains the features to be selected. Finish the polygon with double-click..
+        /// </summary>
+        internal static string EraseTool_LogPromptForSelection {
+            get {
+                return ResourceManager.GetString("EraseTool_LogPromptForSelection", resourceCulture);
             }
         }
         
