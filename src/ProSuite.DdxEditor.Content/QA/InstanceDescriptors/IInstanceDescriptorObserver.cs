@@ -1,3 +1,4 @@
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DdxEditor.Framework.ItemViews;
 
 namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
@@ -7,6 +8,6 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 		void NotifyFactoryChanged();
 
 		void InstanceConfigurationDoubleClicked(
-			ReferencingInstanceConfigurationTableRow referencingQualityConditionTableRow);
+			[NotNull] ReferencingInstanceConfigurationTableRow referencingConfigurationTableRow);
 	}
 }

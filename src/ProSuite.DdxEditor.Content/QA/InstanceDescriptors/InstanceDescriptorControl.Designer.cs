@@ -54,11 +54,10 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 			this._panelImplementationTop = new System.Windows.Forms.Panel();
 			this._tabPageQualityConditions = new System.Windows.Forms.TabPage();
 			this._dataGridViewQualityConditions = new ProSuite.Commons.UI.WinForms.Controls.DoubleBufferedDataGridView();
-			this._columnQualityConditionImage = new System.Windows.Forms.DataGridViewImageColumn();
+			this._columnImage = new System.Windows.Forms.DataGridViewImageColumn();
 			this._columnName = new System.Windows.Forms.DataGridViewTextBoxColumn();
-			this._columnIssueType = new System.Windows.Forms.DataGridViewComboBoxColumn();
-			this._columnStopOnError = new System.Windows.Forms.DataGridViewComboBoxColumn();
-			this._columnQualityConditionDescription = new System.Windows.Forms.DataGridViewTextBoxColumn();
+			this._columnCategory = new System.Windows.Forms.DataGridViewTextBoxColumn();
+			this._columnDescription = new System.Windows.Forms.DataGridViewTextBoxColumn();
 			this._dataGridViewFindToolStrip = new ProSuite.Commons.UI.WinForms.Controls.DataGridViewFindToolStrip();
 			this._toolStripElements = new ProSuite.Commons.UI.WinForms.Controls.ToolStripEx();
 			this.toolStripLabel1 = new System.Windows.Forms.ToolStripLabel();
@@ -373,11 +372,10 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 			this._dataGridViewQualityConditions.AllowUserToResizeRows = false;
 			this._dataGridViewQualityConditions.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
 			this._dataGridViewQualityConditions.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
-            this._columnQualityConditionImage,
+            this._columnImage,
             this._columnName,
-            this._columnIssueType,
-            this._columnStopOnError,
-            this._columnQualityConditionDescription});
+            this._columnCategory,
+            this._columnDescription});
 			this._dataGridViewQualityConditions.Dock = System.Windows.Forms.DockStyle.Fill;
 			this._dataGridViewQualityConditions.EditMode = System.Windows.Forms.DataGridViewEditMode.EditOnEnter;
 			this._dataGridViewQualityConditions.Location = new System.Drawing.Point(6, 61);
@@ -392,13 +390,13 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 			this._dataGridViewQualityConditions.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this._dataGridViewQualityConditions_CellEndEdit);
 			this._dataGridViewQualityConditions.CellValueChanged += new System.Windows.Forms.DataGridViewCellEventHandler(this._dataGridViewQualityConditions_CellValueChanged);
 			// 
-			// _columnQualityConditionImage
+			// _columnImage
 			// 
-			this._columnQualityConditionImage.DataPropertyName = "Image";
-			this._columnQualityConditionImage.HeaderText = "";
-			this._columnQualityConditionImage.MinimumWidth = 20;
-			this._columnQualityConditionImage.Name = "_columnQualityConditionImage";
-			this._columnQualityConditionImage.Width = 20;
+			this._columnImage.DataPropertyName = "Image";
+			this._columnImage.HeaderText = "";
+			this._columnImage.MinimumWidth = 20;
+			this._columnImage.Name = "_columnImage";
+			this._columnImage.Width = 20;
 			// 
 			// _columnName
 			// 
@@ -410,35 +408,23 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 			this._columnName.ReadOnly = true;
 			this._columnName.Width = 200;
 			// 
-			// _columnIssueType
+			// _columnCategory
 			// 
-			this._columnIssueType.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-			this._columnIssueType.DataPropertyName = "AllowErrorsOverride";
-			this._columnIssueType.DisplayStyleForCurrentCellOnly = true;
-			this._columnIssueType.HeaderText = "Issue Type";
-			this._columnIssueType.MinimumWidth = 80;
-			this._columnIssueType.Name = "_columnIssueType";
-			this._columnIssueType.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
-			this._columnIssueType.Width = 80;
+			this._columnCategory.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+			this._columnCategory.DataPropertyName = "Category";
+			this._columnCategory.HeaderText = "Category";
+			this._columnCategory.MinimumWidth = 80;
+			this._columnCategory.Name = "_columnCategory";
+			this._columnName.ReadOnly = true;
+			this._columnCategory.Width = 80;
 			// 
-			// _columnStopOnError
+			// _columnDescription
 			// 
-			this._columnStopOnError.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-			this._columnStopOnError.DataPropertyName = "StopOnErrorOverride";
-			this._columnStopOnError.DisplayStyleForCurrentCellOnly = true;
-			this._columnStopOnError.HeaderText = "Stop On Error";
-			this._columnStopOnError.MinimumWidth = 80;
-			this._columnStopOnError.Name = "_columnStopOnError";
-			this._columnStopOnError.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
-			this._columnStopOnError.Width = 95;
-			// 
-			// _columnQualityConditionDescription
-			// 
-			this._columnQualityConditionDescription.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-			this._columnQualityConditionDescription.DataPropertyName = "Description";
-			this._columnQualityConditionDescription.HeaderText = "Description";
-			this._columnQualityConditionDescription.MinimumWidth = 8;
-			this._columnQualityConditionDescription.Name = "_columnQualityConditionDescription";
+			this._columnDescription.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+			this._columnDescription.DataPropertyName = "Description";
+			this._columnDescription.HeaderText = "Description";
+			this._columnDescription.MinimumWidth = 8;
+			this._columnDescription.Name = "_columnDescription";
 			// 
 			// _dataGridViewFindToolStrip
 			// 
@@ -556,11 +542,10 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 		private SplitContainerEx _splitContainerDescription;
 		private System.Windows.Forms.TextBox _textBoxCategories;
 		private System.Windows.Forms.Label _labelTestCategories;
-		private System.Windows.Forms.DataGridViewImageColumn _columnQualityConditionImage;
+		private System.Windows.Forms.DataGridViewImageColumn _columnImage;
 		private System.Windows.Forms.DataGridViewTextBoxColumn _columnName;
-		private System.Windows.Forms.DataGridViewComboBoxColumn _columnIssueType;
-		private System.Windows.Forms.DataGridViewComboBoxColumn _columnStopOnError;
-		private System.Windows.Forms.DataGridViewTextBoxColumn _columnQualityConditionDescription;
+		private System.Windows.Forms.DataGridViewTextBoxColumn _columnCategory;
+		private System.Windows.Forms.DataGridViewTextBoxColumn _columnDescription;
 		private System.Windows.Forms.Panel _panelImplementationTop;
 		private System.Windows.Forms.Panel _panelTop;
 	}

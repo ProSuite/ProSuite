@@ -17,7 +17,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 		private static readonly Image _image;
 
 		/// <summary>
-		/// Initializes the <see cref="CopyQualityConditionCommand"/> class.
+		/// Initializes the <see cref="ShowInstanceWebHelpCommand{T}"/> class.
 		/// </summary>
 		static ShowInstanceWebHelpCommand()
 		{
