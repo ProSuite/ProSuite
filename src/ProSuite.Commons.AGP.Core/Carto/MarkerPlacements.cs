@@ -50,32 +50,26 @@ public static class MarkerPlacements
 		bool angleToLine = options.AngleToLine;
 		double perpendicularOffset = options.PerpendicularOffset;
 		var extremity = options.Extremity;
-
-		// TODO options.OffsetAlongLine
+		double offsetAlong = options.OffsetAlongLine;
 
 		if (options.PlacePerPart)
 		{
-			foreach (var part in polyline.Parts)
+			var parts = GetPartLines(polyline);
+			foreach (var line in parts)
 			{
 				if (extremity is Extremity.JustBegin or Extremity.Both)
 				{
-					var segment = part.FirstOrDefault();
-					var tangent = GetTangent(segment, 0);
-
-					if (tangent != null)
+					if (GetExtremityAtBegin(line, offsetAlong, out var position, out var tangent))
 					{
-						yield return Place(marker, tangent, angleToLine, perpendicularOffset);
+						yield return Placed(marker, position, tangent, angleToLine, perpendicularOffset);
 					}
 				}
 
 				if (extremity is Extremity.JustEnd or Extremity.Both)
 				{
-					var segment = part.LastOrDefault();
-					var tangent = GetTangent(segment, 1);
-
-					if (tangent != null)
+					if (GetExtremityAtEnd(line, offsetAlong, out var position, out var tangent))
 					{
-						yield return Place(marker, tangent, angleToLine, perpendicularOffset);
+						yield return Placed(marker, position, tangent, angleToLine, perpendicularOffset);
 					}
 				}
 			}
@@ -84,25 +78,17 @@ public static class MarkerPlacements
 		{
 			if (extremity is Extremity.JustBegin or Extremity.Both)
 			{
-				var firstPart = polyline.Parts.FirstOrDefault();
-				var segment = firstPart?.FirstOrDefault();
-				var tangent = GetTangent(segment, 0);
-
-				if (tangent != null)
+				if (GetExtremityAtBegin(polyline, offsetAlong, out var position, out var tangent))
 				{
-					yield return Place(marker, tangent, angleToLine, perpendicularOffset);
+					yield return Placed(marker, position, tangent, angleToLine, perpendicularOffset);
 				}
 			}
 
 			if (extremity is Extremity.JustEnd or Extremity.Both)
 			{
-				var lastPart = polyline.Parts.LastOrDefault();
-				var segment = lastPart?.LastOrDefault();
-				var tangent = GetTangent(segment, 1);
-
-				if (tangent != null)
+				if (GetExtremityAtEnd(polyline, offsetAlong, out var position, out var tangent))
 				{
-					yield return Place(marker, tangent, angleToLine, perpendicularOffset);
+					yield return Placed(marker, position, tangent, angleToLine, perpendicularOffset);
 				}
 			}
 		}
@@ -133,8 +119,9 @@ public static class MarkerPlacements
 			if (segmentCount < 1) continue;
 
 			var segment = part[0];
-			var tangent = GetTangent(segment, 0);
 			var point = segment.StartPoint;
+			var position = point.ToPair();
+			var tangent = GetTangent(segment, 0);
 
 			bool isEndPoint = j == 0 || options.PlacePerPart;
 			bool isControlPoint = point.HasID && point.ID > 0;
@@ -142,14 +129,15 @@ public static class MarkerPlacements
 			if (options.PlaceOnEndPoints && isEndPoint ||
 			    options.PlaceOnControlPoints && isControlPoint)
 			{
-				yield return Place(marker, tangent, angleToLine, perpendicularOffset);
+				yield return Placed(marker, position, tangent, angleToLine, perpendicularOffset);
 			}
 
 			for (int i = 0; i < segmentCount-1; i++)
 			{
 				segment = part[i];
-				tangent = GetTangent(segment, 1);
 				point = segment.EndPoint;
+				position = point.ToPair();
+				tangent = GetTangent(segment, 1);
 
 				bool lastInPart = i == segmentCount - 1;
 				isEndPoint = lastInPart && (j == partCount - 1 || options.PlacePerPart);
@@ -160,43 +148,10 @@ public static class MarkerPlacements
 				    isControlPoint && options.PlaceOnControlPoints ||
 				    isRegularVertex && options.PlaceOnRegularVertices)
 				{
-					yield return Place(marker, tangent, angleToLine, perpendicularOffset);
+					yield return Placed(marker, position, tangent, angleToLine, perpendicularOffset);
 				}
 			}
 		}
-	}
-
-	public static T Place<T>(T marker, LineSegment tangent, bool angleToLine, double offset)
-		where T : Geometry
-	{
-		// if angleToLine: rotate marker by tangent.Angle (around origin)
-		// move marker to tangent.StartPoint
-		// if perpOfs <> 0: move by tangent rotated 90° scaled perpOfs
-
-		if (angleToLine)
-		{
-			marker = Rotated(marker, tangent.Angle);
-		}
-
-		var startPoint = tangent.StartCoordinate;
-		double dx = startPoint.X, dy = startPoint.Y;
-
-		if (offset < 0 || offset > 0)
-		{
-			var endPoint = tangent.EndCoordinate;
-			double ox = endPoint.X - startPoint.X;
-			double oy = endPoint.Y - startPoint.Y;
-			// assume tangent has unit length!
-			ox *= offset;
-			oy *= offset;
-			// rotate 90 degrees ccw
-			(ox, oy) = (-oy, ox);
-			// and add to the main translation
-			dx += ox;
-			dy += oy;
-		}
-
-		return Translated(marker, dx, dy);
 	}
 
 	public class PolygonCenterOptions : FillOptions
@@ -241,13 +196,73 @@ public static class MarkerPlacements
 		return GeometryEngine.Instance.Centroid(polygon);
 	}
 
-	private static LineSegment GetTangent(Segment segment, double t)
+	private static Pair GetTangent(Segment segment, double t)
 	{
-		if (segment is null) return null;
+		if (segment is null) throw new ArgumentNullException(nameof(segment));
 		if (t < 0) t = 0; else if (t > 1) t = 1; // clamp
-		return GeometryEngine.Instance.QueryTangent(
+		var line = GeometryEngine.Instance.QueryTangent(
 			segment, SegmentExtensionType.NoExtension,
 			t, AsRatioOrLength.AsRatio, 1.0);
+		var position = line.StartPoint.ToPair();
+		return line.EndPoint.ToPair() - position;
+	}
+
+	private static bool GetExtremityAtEnd(Polyline curve, double offsetAlong, out Pair position, out Pair tangent)
+	{
+		position = tangent = Pair.Null;
+		if (curve is null) return false;
+		if (curve.IsEmpty) return false;
+
+		// positive offsetAlong is *in* from end of curve
+		var dist = curve.Length - offsetAlong;
+		if (dist < 0) return false; // but not off the other end
+
+		const double tangentLength = 1.0; // unit length!
+		var polyline = GeometryEngine.Instance.QueryTangent(
+			curve, SegmentExtensionType.ExtendTangents,
+			dist, AsRatioOrLength.AsLength, tangentLength);
+
+		var pointCount = polyline.Points.Count;
+		if (pointCount < 2) return false; // most illogical
+		var startPoint = polyline.Points[0].ToPair();
+		var endPoint = polyline.Points[pointCount - 1].ToPair();
+
+		position = startPoint;
+		tangent = endPoint - startPoint;
+		return true;
+	}
+
+	private static bool GetExtremityAtBegin(Polyline curve, double offsetAlong, out Pair position, out Pair tangent)
+	{
+		position = tangent = Pair.Null;
+		if (curve is null) return false;
+		if (curve.IsEmpty) return false;
+
+		// positive offsetAlong is *in* from end of curve
+		var dist = 0 + offsetAlong;
+		if (dist < 0) return false; // but not off the other end
+
+		const double tangentLength = 1.0; // unit length!
+		var polyline = GeometryEngine.Instance.QueryTangent(
+			curve, SegmentExtensionType.ExtendTangents,
+			dist, AsRatioOrLength.AsLength, tangentLength);
+
+		var pointCount = polyline.Points.Count;
+		if (pointCount < 2) return false; // most illogical
+		var startPoint = polyline.Points[0].ToPair();
+		var endPoint = polyline.Points[pointCount - 1].ToPair();
+
+		// for extremity placement, rotate start point's tangent by 180°:
+		position = startPoint;
+		tangent = (endPoint - startPoint).Rotated(180);
+		return true;
+	}
+
+	private static IEnumerable<Polyline> GetPartLines(Polyline polyline)
+	{
+		if (polyline is null) return Enumerable.Empty<Polyline>();
+		var parts = GeometryEngine.Instance.MultipartToSinglePart(polyline);
+		return parts.OfType<Polyline>();
 	}
 
 	private static T Rotated<T>(T shape, double angle, MapPoint pivot = null) where T : Geometry
@@ -261,6 +276,29 @@ public static class MarkerPlacements
 	{
 		if (shape is null) return null;
 		return (T) GeometryEngine.Instance.Move(shape, dx, dy);
+	}
+
+	private static T Placed<T>(
+		T marker, Pair position, Pair tangent, bool angleToLine, double offset) where T : Geometry
+	{
+		// if angleToLine: rotate marker by tangent.Angle (around origin)
+		// move marker to tangent.StartPoint
+		// if perpOfs <> 0: move by tangent rotated 90° scaled perpOfs
+
+		if (angleToLine)
+		{
+			var angleRadians = Math.Atan2(tangent.Y, tangent.X);
+			marker = Rotated(marker, angleRadians);
+		}
+
+		if (offset < 0 || offset > 0)
+		{
+			// assume tangent has unit length!
+			var vector = tangent.Rotated(90) * offset;
+			position += vector;
+		}
+
+		return Translated(marker, position.X, position.Y);
 	}
 
 	#endregion
