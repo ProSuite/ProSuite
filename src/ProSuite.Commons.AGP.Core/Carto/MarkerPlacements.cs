@@ -54,20 +54,24 @@ public static class MarkerPlacements
 
 		if (options.PlacePerPart)
 		{
-			var parts = GetPartLines(polyline);
-			foreach (var line in parts)
+			foreach (var line in GetPartLines(polyline))
 			{
 				if (extremity is Extremity.JustBegin or Extremity.Both)
 				{
-					if (GetExtremityAtBegin(line, offsetAlong, out var position, out var tangent))
+					if (offsetAlong <= line.Length && // not off other end
+					    GetPointAndTangent(line, offsetAlong, out var position, out var tangent))
 					{
-						yield return Placed(marker, position, tangent, angleToLine, perpendicularOffset);
+						tangent *= -1; // flip tangent at begin of line
+						// Negate begin perpendicular offset to match ArcGIS Pro behaviour
+						yield return Placed(marker, position, tangent, angleToLine, -perpendicularOffset);
 					}
 				}
 
 				if (extremity is Extremity.JustEnd or Extremity.Both)
 				{
-					if (GetExtremityAtEnd(line, offsetAlong, out var position, out var tangent))
+					double distance = line.Length - offsetAlong;
+					if (distance >= 0 && // not off other end
+					    GetPointAndTangent(line, distance, out var position, out var tangent))
 					{
 						yield return Placed(marker, position, tangent, angleToLine, perpendicularOffset);
 					}
@@ -78,15 +82,20 @@ public static class MarkerPlacements
 		{
 			if (extremity is Extremity.JustBegin or Extremity.Both)
 			{
-				if (GetExtremityAtBegin(polyline, offsetAlong, out var position, out var tangent))
+				if (offsetAlong <= polyline.Length && // not off other end
+				    GetPointAndTangent(polyline, offsetAlong, out var position, out var tangent))
 				{
-					yield return Placed(marker, position, tangent, angleToLine, perpendicularOffset);
+					tangent *= -1; // flip tangent at begin of line
+					// Negate begin perpendicular offset to match ArcGIS Pro behaviour
+					yield return Placed(marker, position, tangent, angleToLine, -perpendicularOffset);
 				}
 			}
 
 			if (extremity is Extremity.JustEnd or Extremity.Both)
 			{
-				if (GetExtremityAtEnd(polyline, offsetAlong, out var position, out var tangent))
+				double distance = polyline.Length - offsetAlong;
+				if (distance >= 0 && // not off other end
+				    GetPointAndTangent(polyline, distance, out var position, out var tangent))
 				{
 					yield return Placed(marker, position, tangent, angleToLine, perpendicularOffset);
 				}
@@ -207,20 +216,17 @@ public static class MarkerPlacements
 		return line.EndPoint.ToPair() - position;
 	}
 
-	private static bool GetExtremityAtEnd(Polyline curve, double offsetAlong, out Pair position, out Pair tangent)
+	private static bool GetPointAndTangent(Polyline curve, double distanceAlong,
+	                                       out Pair position, out Pair tangent)
 	{
 		position = tangent = Pair.Null;
 		if (curve is null) return false;
 		if (curve.IsEmpty) return false;
 
-		// positive offsetAlong is *in* from end of curve
-		var dist = curve.Length - offsetAlong;
-		if (dist < 0) return false; // but not off the other end
-
 		const double tangentLength = 1.0; // unit length!
 		var polyline = GeometryEngine.Instance.QueryTangent(
 			curve, SegmentExtensionType.ExtendTangents,
-			dist, AsRatioOrLength.AsLength, tangentLength);
+			distanceAlong, AsRatioOrLength.AsLength, tangentLength);
 
 		var pointCount = polyline.Points.Count;
 		if (pointCount < 2) return false; // most illogical
@@ -229,32 +235,6 @@ public static class MarkerPlacements
 
 		position = startPoint;
 		tangent = endPoint - startPoint;
-		return true;
-	}
-
-	private static bool GetExtremityAtBegin(Polyline curve, double offsetAlong, out Pair position, out Pair tangent)
-	{
-		position = tangent = Pair.Null;
-		if (curve is null) return false;
-		if (curve.IsEmpty) return false;
-
-		// positive offsetAlong is *in* from end of curve
-		var dist = 0 + offsetAlong;
-		if (dist < 0) return false; // but not off the other end
-
-		const double tangentLength = 1.0; // unit length!
-		var polyline = GeometryEngine.Instance.QueryTangent(
-			curve, SegmentExtensionType.ExtendTangents,
-			dist, AsRatioOrLength.AsLength, tangentLength);
-
-		var pointCount = polyline.Points.Count;
-		if (pointCount < 2) return false; // most illogical
-		var startPoint = polyline.Points[0].ToPair();
-		var endPoint = polyline.Points[pointCount - 1].ToPair();
-
-		// for extremity placement, rotate start point's tangent by 180°:
-		position = startPoint;
-		tangent = (endPoint - startPoint).Rotated(180);
 		return true;
 	}
 
