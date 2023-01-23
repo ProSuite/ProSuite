@@ -112,35 +112,21 @@
     <value>2.0</value>
   </resheader>
   <resheader name="reader">
-    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <resheader name="writer">
-    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <data name="_errorProvider.TrayLocation" type="System.Drawing.Point, System.Drawing">
+  <metadata name="_errorProvider.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
-  </data>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="$this.TrayHeight" type="System.Int32, mscorlib">
-    <value>149</value>
-  </data>
-  <data name="_columnImage.UserAddedColumn" type="System.Boolean, mscorlib">
+  </metadata>
+  <metadata name="_columnDatasetName.UserAddedColumn" type="System.Boolean, mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
-  </data>
-  <data name="_columnName.UserAddedColumn" type="System.Boolean, mscorlib">
+  </metadata>
+  <metadata name="_columnStatus.UserAddedColumn" type="System.Boolean, mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
-  </data>
-  <data name="_columnCategory.UserAddedColumn" type="System.Boolean, mscorlib">
+  </metadata>
+  <metadata name="_columnFeatureDataset.UserAddedColumn" type="System.Boolean, mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
-  </data>
-  <data name="_columnDescription.UserAddedColumn" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="_dataGridViewFindToolStrip.TrayLocation" type="System.Drawing.Point, System.Drawing">
-    <value>315, 54</value>
-  </data>
-  <data name="_toolStripElements.TrayLocation" type="System.Drawing.Point, System.Drawing">
-    <value>162, 54</value>
-  </data>
+  </metadata>
 </root>
