@@ -4,6 +4,8 @@ using System.Linq;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Geometry;
 
+// ReSharper disable PropertyCanBeMadeInitOnly.Global
+
 namespace ProSuite.Commons.AGP.Core.Carto;
 
 /// <summary>
@@ -202,14 +204,16 @@ public static class MarkerPlacements
 			{
 				var partPoly = PolygonBuilderEx.CreatePolygon(part);
 				MapPoint center = GetCenter(partPoly, options);
-				double dx = center.X, dy = center.Y;
+				double dx = center.X + options.OffsetX;
+				double dy = center.Y + options.OffsetY;
 				yield return Translated(marker, dx, dy);
 			}
 		}
 		else
 		{
 			MapPoint center = GetCenter(polygon, options);
-			double dx = center.X, dy = center.Y;
+			double dx = center.X + options.OffsetX;
+			double dy = center.Y + options.OffsetY;
 			yield return Translated(marker, dx, dy);
 		}
 	}
