@@ -64,7 +64,7 @@ namespace ProSuite.AGP.Editing.Properties {
         ///   Looks up a localized string similar to Sketch the reshape line to change the selection.
         ///- Press R to restore the sketch from the previous reshape operation.
         ///- Press S to toggle the non-default reshape side of the geometry.
-        ///- Press ESC to select different features..
+        ///- Press [ESC] to select different features..
         /// </summary>
         internal static string AdvancedReshapeTool_LogEnteringSketchMode {
             get {
@@ -172,11 +172,20 @@ namespace ProSuite.AGP.Editing.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Select the target line or polygon features to align with. &lt;br&gt;-Hit [ESC] to select a different feature..
+        ///   Looks up a localized string similar to Select the target line or polygon features to align with. &lt;br&gt;-Press [ESC] to select a different feature..
         /// </summary>
         internal static string ReshapeAlongTool_LogUsingCurrentSelection {
             get {
                 return ResourceManager.GetString("ReshapeAlongTool_LogUsingCurrentSelection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select one or more features by clicking or dragging a box. Options: &lt;br&gt;-Press and hold SHIFT to add or remove features from the existing selection.&lt;br&gt;-Press CTRL and drag a box to show a list of selectable feature classes.&lt;br&gt;-Press ALT and click to select all features at the click point..
+        /// </summary>
+        internal static string SelectionTool_LogPromptForSelection {
+            get {
+                return ResourceManager.GetString("SelectionTool_LogPromptForSelection", resourceCulture);
             }
         }
     }
