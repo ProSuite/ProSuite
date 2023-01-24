@@ -482,7 +482,7 @@ namespace ProSuite.DdxEditor.Content
 			return new List<DependingItem>();
 		}
 
-		public virtual IEnumerable<DependingItem> CreateDependingItems(
+		public virtual IEnumerable<DependingItem> GetDependingItems(
 			IEnumerable<InstanceConfiguration> dependentConfigurations)
 		{
 			return new List<DependingItem>();
