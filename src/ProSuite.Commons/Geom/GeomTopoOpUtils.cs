@@ -697,7 +697,7 @@ namespace ProSuite.Commons.Geom
 				}
 			}
 
-			return result;
+			return result ?? MultiPolycurve.CreateEmpty();
 		}
 
 		public static MultiLinestring GetUnionAreasXY(
