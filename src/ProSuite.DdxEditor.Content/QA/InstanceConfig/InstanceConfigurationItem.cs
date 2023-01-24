@@ -78,7 +78,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 
 			IEnumerable<InstanceConfiguration> dependent = GetReferencingConfigurations(rootEntity);
 
-			return ModelBuilder.CreateDependingItems(dependent).ToList();
+			return ModelBuilder.GetDependingItems(dependent).ToList();
 		}
 
 		[CanBeNull]
