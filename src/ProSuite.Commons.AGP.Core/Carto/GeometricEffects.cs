@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Geometry;
+using ProSuite.Commons.AGP.Core.Spatial;
+using ProSuite.Commons.Essentials.Assertions;
 
 namespace ProSuite.Commons.AGP.Core.Carto;
 
@@ -15,6 +17,55 @@ namespace ProSuite.Commons.AGP.Core.Carto;
 /// </summary>
 public static class GeometricEffects
 {
+	public static Geometry AddControlPoints(
+		Geometry shape, double maxAngleDegrees, int idValue = 1)
+	{
+		if (shape is null) return null;
+		if (shape.IsEmpty) return shape;
+		if (shape is not Multipart polycurve) return shape;
+
+		// get angle to 0..180 range:
+		maxAngleDegrees %= 360.0;
+		if (maxAngleDegrees < 0)
+			maxAngleDegrees *= -1;
+		if (maxAngleDegrees > 180.0)
+			maxAngleDegrees = 360.0 - maxAngleDegrees;
+
+		MultipartBuilderEx builder = polycurve switch
+		{
+			Polyline polyline => new PolylineBuilderEx(polyline),
+			Polygon polygon => new PolygonBuilderEx(polygon),
+			_ => throw new AssertionException("multipart is neither polyline nor polygon")
+		};
+
+		builder.HasID = true; // make builder aware of ID values
+
+		// Those builders cannot set points, just segments!
+		// Update both: inbound.EndPoint, outbound.StartPoint!
+
+		int partCount = polycurve.Parts.Count;
+		for (int k = 0; k < partCount; k++)
+		{
+			var part = polycurve.Parts[k];
+
+			int segmentCount = part.Count;
+			if (segmentCount < 1) continue;
+
+			for (int i = 0; i <= segmentCount; i++)
+			{
+				if (GetAngle(polycurve, k, i, out var angleDegrees))
+				{
+					if (angleDegrees <= maxAngleDegrees)
+					{
+						builder.SetPointID(k, i, idValue);
+					}
+				}
+			}
+		}
+
+		return builder.ToGeometry();
+	}
+
 	public static Geometry Cut(
 		Geometry shape, double beginCut, double endCut, bool invert = false, double middleCut = 0.0)
 	{
@@ -210,6 +261,47 @@ public static class GeometricEffects
 		if (polyline is null) return Enumerable.Empty<Polyline>();
 		var parts = GeometryEngine.Instance.MultipartToSinglePart(polyline);
 		return parts.OfType<Polyline>();
+	}
+
+	private static bool GetAngle(Multipart polycurve, int partIndex,
+	                             int pointIndex, out double angleDegrees)
+	{
+		angleDegrees = double.NaN;
+		var part = polycurve.Parts[partIndex];
+		int segmentCount = part.Count;
+		int pre, post;
+
+		if (polycurve is Polygon)
+		{
+			post = pointIndex % segmentCount;
+			if (post < 0) post += segmentCount;
+			// now 0 <= j < segmentCount
+			pre = post > 0 ? post - 1 : segmentCount - 1;
+		}
+		else
+		{
+			post = pointIndex;
+			if (post >= segmentCount) return false;
+			pre = post - 1;
+			if (pre < 0) return false;
+		}
+
+		var inbound = GetTangent(part[pre], 1) * -1; // flip
+		var outbound = GetTangent(part[post], 0);
+		var cosAlpha = Pair.Dot(inbound, outbound); // assuming unit vectors!
+		angleDegrees = Math.Acos(cosAlpha) * 180.0 / Math.PI;
+		return true;
+	}
+
+	private static Pair GetTangent(Segment segment, double t)
+	{
+		if (segment is null) throw new ArgumentNullException(nameof(segment));
+		if (t < 0) t = 0; else if (t > 1) t = 1; // clamp
+		var line = GeometryEngine.Instance.QueryTangent(
+			segment, SegmentExtensionType.NoExtension,
+			t, AsRatioOrLength.AsRatio, 1.0);
+		var position = line.StartPoint.ToPair();
+		return line.EndPoint.ToPair() - position;
 	}
 
 	private static T Configure<T>(T builder, Geometry template)
