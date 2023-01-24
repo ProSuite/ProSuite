@@ -6,7 +6,7 @@ namespace ProSuite.QA.Container.PolygonGrower
 {
 	public interface ITableIndexRow
 	{
-		int RowOID { get; }
+		long RowOID { get; }
 
 		int TableIndex { get; }
 

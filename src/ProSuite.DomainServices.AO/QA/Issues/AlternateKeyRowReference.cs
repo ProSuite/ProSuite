@@ -16,7 +16,7 @@ namespace ProSuite.DomainServices.AO.QA.Issues
 			_key = key;
 		}
 
-		public override int OID => -1;
+		public override long OID => -1;
 
 		public override bool UsesOID => false;
 

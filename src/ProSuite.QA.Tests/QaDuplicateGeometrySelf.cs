@@ -25,10 +25,10 @@ namespace ProSuite.QA.Tests
 		private readonly string _shapeFieldName;
 		private readonly string _validRelationConstraintSql;
 
-		private readonly Dictionary<int, HashSet<int>> _duplicatesPerOid =
-			new Dictionary<int, HashSet<int>>();
+		private readonly Dictionary<long, HashSet<long>> _duplicatesPerOid =
+			new Dictionary<long, HashSet<long>>();
 
-		private readonly List<HashSet<int>> _duplicateSets = new List<HashSet<int>>();
+		private readonly List<HashSet<long>> _duplicateSets = new List<HashSet<long>>();
 
 		// TODO option to ignore Z and M (only compare xy of vertices)
 		// TODO option to disregard point ordering (test for congruence only)
@@ -119,8 +119,8 @@ namespace ProSuite.QA.Tests
 				                                               _validRelationConstraint);
 			}
 
-			int oid1 = row1.OID;
-			int oid2 = row2.OID;
+			long oid1 = row1.OID;
+			long oid2 = row2.OID;
 
 			if (! IsKnownDuplicate(oid1, oid2))
 			{
@@ -145,7 +145,7 @@ namespace ProSuite.QA.Tests
 				       : Codes[Code.GeometriesEqualInXY_ConstraintNotFulfilled];
 		}
 
-		private bool IsKnownDuplicate(int oid1, int oid2)
+		private bool IsKnownDuplicate(long oid1, long oid2)
 		{
 			if (_validRelationConstraintSql != null)
 			{
@@ -153,22 +153,22 @@ namespace ProSuite.QA.Tests
 				return false;
 			}
 
-			HashSet<int> row1Duplicates;
+			HashSet<long> row1Duplicates;
 			if (_duplicatesPerOid.TryGetValue(oid1, out row1Duplicates) &&
 			    row1Duplicates.Contains(oid2))
 			{
 				return true;
 			}
 
-			HashSet<int> row2Duplicates;
+			HashSet<long> row2Duplicates;
 			return _duplicatesPerOid.TryGetValue(oid2, out row2Duplicates) &&
 			       row2Duplicates.Contains(oid1);
 		}
 
-		private void AddDuplicate(int oid1, int oid2)
+		private void AddDuplicate(long oid1, long oid2)
 		{
-			HashSet<int> row1Duplicates;
-			HashSet<int> row2Duplicates;
+			HashSet<long> row1Duplicates;
+			HashSet<long> row2Duplicates;
 
 			if (! _duplicatesPerOid.TryGetValue(oid1, out row1Duplicates))
 			{
@@ -185,7 +185,7 @@ namespace ProSuite.QA.Tests
 				{
 					// no duplicate set yet for neither row
 					// -> create new set, assign the set to row1 and row2
-					var duplicates = new HashSet<int> {oid1, oid2};
+					var duplicates = new HashSet<long> {oid1, oid2};
 					_duplicateSets.Add(duplicates);
 
 					_duplicatesPerOid.Add(oid1, duplicates);
@@ -217,10 +217,10 @@ namespace ProSuite.QA.Tests
 			}
 		}
 
-		private void MergeSets([NotNull] HashSet<int> targetSet,
-		                       [NotNull] HashSet<int> setToMerge)
+		private void MergeSets([NotNull] HashSet<long> targetSet,
+		                       [NotNull] HashSet<long> setToMerge)
 		{
-			foreach (int oid in setToMerge)
+			foreach (long oid in setToMerge)
 			{
 				_duplicatesPerOid[oid] = targetSet;
 				targetSet.Add(oid);
@@ -243,7 +243,7 @@ namespace ProSuite.QA.Tests
 
 			int errorCount = 0;
 
-			Dictionary<int, HashSet<int>> duplicatesByFirstOid =
+			Dictionary<long, HashSet<long>> duplicatesByFirstOid =
 				GetDuplicatesByFirstOid(_duplicateSets);
 
 			string tableName = _featureClass.Name;
@@ -252,7 +252,7 @@ namespace ProSuite.QA.Tests
 				         _featureClass, duplicatesByFirstOid.Keys, recycle))
 			{
 				IReadOnlyFeature feature = (IReadOnlyFeature) r;
-				HashSet<int> duplicates = duplicatesByFirstOid[feature.OID];
+				HashSet<long> duplicates = duplicatesByFirstOid[feature.OID];
 
 				string errorDescription = _validRelationConstraintSql == null
 					                          ? "Geometries are equal"
@@ -267,17 +267,17 @@ namespace ProSuite.QA.Tests
 		}
 
 		[NotNull]
-		private static Dictionary<int, HashSet<int>> GetDuplicatesByFirstOid(
-			[NotNull] IEnumerable<HashSet<int>> duplicateSets)
+		private static Dictionary<long, HashSet<long>> GetDuplicatesByFirstOid(
+			[NotNull] IEnumerable<HashSet<long>> duplicateSets)
 		{
-			var result = new Dictionary<int, HashSet<int>>();
+			var result = new Dictionary<long, HashSet<long>>();
 
-			foreach (HashSet<int> duplicateSet in duplicateSets)
+			foreach (HashSet<long> duplicateSet in duplicateSets)
 			{
 				Assert.True(duplicateSet.Count >= 2, "Invalid set size: {0}", duplicateSet.Count);
 
-				var list = new List<int>(duplicateSet);
-				int firstOid = list[0];
+				var list = new List<long>(duplicateSet);
+				long firstOid = list[0];
 
 				result.Add(firstOid, duplicateSet);
 			}
@@ -288,7 +288,7 @@ namespace ProSuite.QA.Tests
 		[NotNull]
 		private static InvolvedRows GetInvolvedRows(
 			[NotNull] string tableName,
-			[NotNull] IEnumerable<int> oids)
+			[NotNull] IEnumerable<long> oids)
 		{
 			InvolvedRows result = new InvolvedRows();
 			result.AddRange(oids.Select(oid => new InvolvedRow(tableName, oid)));

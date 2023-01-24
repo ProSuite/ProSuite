@@ -134,6 +134,12 @@ namespace ProSuite.DdxEditor.Content
 		public virtual bool SupportsTransformersAndFilters =>
 			Environment.Version >= new Version(6, 0);
 
+		public virtual ICollection<string> AlgorithmAssemblyNames => new List<string>
+			{
+				"ProSuite.QA.Tests.dll",
+				"ProSuite.QA.TestFactories.dll"
+			};
+
 		public abstract IEnumerable<Item> GetChildren([NotNull] ModelsItemBase modelItem);
 
 		public abstract IEnumerable<Item> GetChildren<E>([NotNull] ModelItemBase<E> modelItem)
@@ -436,7 +442,7 @@ namespace ProSuite.DdxEditor.Content
 			List<DataQualityCategory> subCategories = DataQualityCategoryUtils.GetCategoriesTx(
 				this, c => c.IsSubCategoryOf(category));
 
-			var allCategories = new List<DataQualityCategory>(subCategories) {category};
+			var allCategories = new List<DataQualityCategory>(subCategories) { category };
 
 			result.AddRange(
 				QualitySpecifications.Get(allCategories)
@@ -482,7 +488,7 @@ namespace ProSuite.DdxEditor.Content
 			return new List<DependingItem>();
 		}
 
-		public virtual IEnumerable<DependingItem> CreateDependingItems(
+		public virtual IEnumerable<DependingItem> GetDependingItems(
 			IEnumerable<InstanceConfiguration> dependentConfigurations)
 		{
 			return new List<DependingItem>();

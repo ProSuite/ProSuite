@@ -176,13 +176,13 @@ namespace ProSuite.QA.Tests.Transformers
 		{
 			bool IUniqueIdKey.IsVirtuell => BaseOid < 0;
 
-			public int BaseOid { get; }
-			public IReadOnlyList<int> BaseOids => _baseOids;
-			private readonly List<int> _baseOids;
+			public long BaseOid { get; }
+			public IReadOnlyList<long> BaseOids => _baseOids;
+			private readonly List<long> _baseOids;
 
-			public UniqueIdKey(IEnumerable<int> baseOids)
+			public UniqueIdKey(IEnumerable<long> baseOids)
 			{
-				_baseOids = new List<int>(baseOids);
+				_baseOids = new List<long>(baseOids);
 				Assert.True(_baseOids.Count > 0, "empty List");
 				_baseOids.Sort();
 				BaseOid = _baseOids[0];
@@ -233,7 +233,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 			public int GetHashCode(UniqueIdKey obj)
 			{
-				return obj.BaseOid + 29 * obj.BaseOids.Count;
+				return obj.BaseOid.GetHashCode() + 397 * obj.BaseOids.Count;
 			}
 		}
 
@@ -265,12 +265,12 @@ namespace ProSuite.QA.Tests.Transformers
 
 			public override IEnvelope Extent => _dissolve.Extent;
 
-			public override VirtualRow GetUncachedRow(int id)
+			public override VirtualRow GetUncachedRow(long id)
 			{
 				throw new NotImplementedException();
 			}
 
-			public override int GetRowCount(IQueryFilter queryFilter)
+			public override long GetRowCount(IQueryFilter queryFilter)
 			{
 				return Search(queryFilter, true).Count();
 				// TODO: Consider new Method GetRowCountEstimate()? Or add progress token to Search()?
@@ -522,7 +522,7 @@ namespace ProSuite.QA.Tests.Transformers
 				joinedValueList.AddList(rowValues, TableFields.FieldIndexMapping);
 
 				UniqueIdKey key = new UniqueIdKey(rows.Select(r => r.OID));
-				int oid = _uniqueIdProvider.GetUniqueId(key);
+				long oid = _uniqueIdProvider.GetUniqueId(key);
 				var dissolved = Resulting.CreateObject(oid, joinedValueList);
 
 				dissolved.Shape = shape;

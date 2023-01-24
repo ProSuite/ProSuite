@@ -636,7 +636,7 @@ namespace ProSuite.QA.Tests
 			var connectionsOnSameSide = new List<IReadOnlyFeature>();
 			var table = feature.Table;
 
-			int oid = feature.OID;
+			long oid = feature.OID;
 
 			foreach (int classIndex in sameSideLineClassIndexes)
 			{
@@ -1510,14 +1510,14 @@ namespace ProSuite.QA.Tests
 		private class FeaturePointPair : IEquatable<FeaturePointPair>
 		{
 			private readonly int _tableIndex1;
-			private readonly int _oid1;
+			private readonly long _oid1;
 			private readonly bool _isStartPoint1;
 			private readonly int _tableIndex2;
-			private readonly int _oid2;
+			private readonly long _oid2;
 			private readonly bool _isStartPoint2;
 
-			public FeaturePointPair(int tableIndex1, int oid1, bool isStartPoint1,
-			                        int tableIndex2, int oid2, bool isStartPoint2)
+			public FeaturePointPair(int tableIndex1, long oid1, bool isStartPoint1,
+			                        int tableIndex2, long oid2, bool isStartPoint2)
 			{
 				_tableIndex1 = tableIndex1;
 				_oid1 = oid1;
@@ -1570,10 +1570,10 @@ namespace ProSuite.QA.Tests
 				unchecked
 				{
 					int hashCode = _tableIndex1;
-					hashCode = (hashCode * 397) ^ _oid1;
+					hashCode = (hashCode * 397) ^ _oid1.GetHashCode();
 					hashCode = (hashCode * 397) ^ (_isStartPoint1 ? 0 : 1);
 					hashCode = (hashCode * 397) ^ _tableIndex2;
-					hashCode = (hashCode * 397) ^ _oid2;
+					hashCode = (hashCode * 397) ^ _oid2.GetHashCode();
 					hashCode = (hashCode * 397) ^ (_isStartPoint2 ? 0 : 1);
 					return hashCode;
 				}

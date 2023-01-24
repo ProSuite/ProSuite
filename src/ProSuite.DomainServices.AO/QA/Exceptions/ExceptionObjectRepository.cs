@@ -391,8 +391,7 @@ namespace ProSuite.DomainServices.AO.QA.Exceptions
 			{
 				var alternateKeyRowReference = (AlternateKeyRowReference) rowReference;
 
-				int oid;
-				if (lookup.TryLookupObjectId(alternateKeyRowReference.Key, out oid))
+				if (lookup.TryLookupObjectId(alternateKeyRowReference.Key, out long oid))
 				{
 					result.Add(new OIDRowReference(oid));
 				}
@@ -724,8 +723,8 @@ namespace ProSuite.DomainServices.AO.QA.Exceptions
 
 		private class TableObjectIdLookup
 		{
-			[NotNull] private readonly Dictionary<object, int> _oidMap =
-				new Dictionary<object, int>();
+			[NotNull] private readonly Dictionary<object, long> _oidMap =
+				new Dictionary<object, long>();
 
 			[NotNull] private readonly HashSet<object> _keysRequiringLookup =
 				new HashSet<object>();
@@ -759,7 +758,7 @@ namespace ProSuite.DomainServices.AO.QA.Exceptions
 
 			public int KeyCount => _keysRequiringLookup.Count;
 
-			public bool TryLookupObjectId([NotNull] object key, out int oid)
+			public bool TryLookupObjectId([NotNull] object key, out long oid)
 			{
 				if (_keysRequiringLookup.Count > 0)
 				{
@@ -773,7 +772,7 @@ namespace ProSuite.DomainServices.AO.QA.Exceptions
 
 			private void LookupObjectIds()
 			{
-				foreach (KeyValuePair<object, int> pair in LookupObjectIds(_keysRequiringLookup))
+				foreach (KeyValuePair<object, long> pair in LookupObjectIds(_keysRequiringLookup))
 				{
 					if (_oidMap.ContainsKey(pair.Key))
 					{
@@ -787,7 +786,7 @@ namespace ProSuite.DomainServices.AO.QA.Exceptions
 			}
 
 			[NotNull]
-			private IEnumerable<KeyValuePair<object, int>> LookupObjectIds(
+			private IEnumerable<KeyValuePair<object, long>> LookupObjectIds(
 				[NotNull] IEnumerable<object> keys)
 			{
 				string oidFieldName = _table.OIDFieldName;
@@ -800,7 +799,7 @@ namespace ProSuite.DomainServices.AO.QA.Exceptions
 				foreach (IRow row in GdbQueryUtils.GetRowsInList(
 					         _table, _keyFieldName, keys, recycle, queryFilter))
 				{
-					yield return new KeyValuePair<object, int>(row.Value[_keyFieldIndex], row.OID);
+					yield return new KeyValuePair<object, long>(row.Value[_keyFieldIndex], row.OID);
 				}
 			}
 		}

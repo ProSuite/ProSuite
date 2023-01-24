@@ -4,13 +4,13 @@ namespace ProSuite.QA.Tests
 {
 	public class TestRowReference : IEquatable<TestRowReference>
 	{
-		public TestRowReference(int objectId, int tableIndex)
+		public TestRowReference(long objectId, int tableIndex)
 		{
 			ObjectId = objectId;
 			TableIndex = tableIndex;
 		}
 
-		public int ObjectId { get; private set; }
+		public long ObjectId { get; private set; }
 
 		public int TableIndex { get; private set; }
 
@@ -58,7 +58,7 @@ namespace ProSuite.QA.Tests
 		{
 			unchecked
 			{
-				return (ObjectId * 397) ^ TableIndex;
+				return (ObjectId.GetHashCode() * 397) ^ TableIndex;
 			}
 		}
 	}

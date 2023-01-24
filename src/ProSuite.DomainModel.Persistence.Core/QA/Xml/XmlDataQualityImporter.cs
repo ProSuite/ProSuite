@@ -420,14 +420,14 @@ namespace ProSuite.DomainModel.Persistence.Core.QA.Xml
 			AssertSameNameImpliesSameDefinition(existingDescriptors, documentDescriptors);
 
 			IDictionary<InstanceDefinition, InstanceDescriptor> existingDescriptorsByDefinition =
-				existingDescriptors.ToDictionary(descriptor => new InstanceDefinition(descriptor));
+				existingDescriptors.ToDictionary(InstanceDefinition.CreateFrom);
 
 			var result =
 				new Dictionary<string, InstanceDescriptor>(StringComparer.OrdinalIgnoreCase);
 
 			foreach (InstanceDescriptor documentDescriptor in documentDescriptors)
 			{
-				var instanceDefinition = new InstanceDefinition(documentDescriptor);
+				var instanceDefinition = InstanceDefinition.CreateFrom(documentDescriptor);
 
 				if (existingDescriptorsByDefinition.TryGetValue(
 					    instanceDefinition, out InstanceDescriptor existingDescriptor))
@@ -502,8 +502,8 @@ namespace ProSuite.DomainModel.Persistence.Core.QA.Xml
 					continue;
 				}
 
-				var documentDefinition = new InstanceDefinition(descriptor);
-				var existingDefinition = new InstanceDefinition(existingDescriptor);
+				var documentDefinition = InstanceDefinition.CreateFrom(descriptor);
+				var existingDefinition = InstanceDefinition.CreateFrom(existingDescriptor);
 
 				if (! Equals(documentDefinition, existingDefinition))
 				{
@@ -562,7 +562,7 @@ namespace ProSuite.DomainModel.Persistence.Core.QA.Xml
 
 			foreach (InstanceDescriptor descriptor in descriptors)
 			{
-				var instanceDefinition = new InstanceDefinition(descriptor);
+				var instanceDefinition = InstanceDefinition.CreateFrom(descriptor);
 
 				if (map.TryGetValue(instanceDefinition, out InstanceDescriptor existing))
 				{
@@ -803,7 +803,7 @@ namespace ProSuite.DomainModel.Persistence.Core.QA.Xml
 
 				DataQualityCategory category = GetCategory(
 					xmlInstanceConfiguration, documentCache, categories);
-				
+
 				if (xmlInstanceConfiguration is XmlTransformerConfiguration xmlTransformer)
 				{
 					XmlDataQualityUtils.UpdateTransformerConfiguration(

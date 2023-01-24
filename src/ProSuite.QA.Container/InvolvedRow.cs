@@ -27,7 +27,7 @@ namespace ProSuite.QA.Container
 		/// </summary>
 		/// <param name="tableName">Name of the table.</param>
 		/// <param name="oid">The oid.</param>
-		public InvolvedRow([NotNull] string tableName, int oid = _oidForEntireTable)
+		public InvolvedRow([NotNull] string tableName, long oid = _oidForEntireTable)
 		{
 			Assert.ArgumentNotNullOrEmpty(tableName, nameof(tableName));
 
@@ -53,7 +53,7 @@ namespace ProSuite.QA.Container
 
 		public bool RepresentsEntireTable => OID == _oidForEntireTable;
 
-		public int OID { get; }
+		public long OID { get; }
 
 		[NotNull]
 		public string TableName { get; }
@@ -68,7 +68,7 @@ namespace ProSuite.QA.Container
 		public int CompareTo(InvolvedRow other)
 		{
 			return OID != other.OID
-				       ? Comparer<int>.Default.Compare(OID, other.OID)
+				       ? Comparer<long>.Default.Compare(OID, other.OID)
 				       : Comparer<string>.Default.Compare(TableName, other.TableName);
 		}
 
@@ -117,7 +117,7 @@ namespace ProSuite.QA.Container
 		{
 			unchecked
 			{
-				return (OID * 397) ^ TableName.GetHashCode();
+				return (OID.GetHashCode() * 397) ^ TableName.GetHashCode();
 			}
 		}
 

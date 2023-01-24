@@ -2,7 +2,7 @@ namespace ProSuite.DomainServices.AO.QA.Issues
 {
 	public abstract class RowReference
 	{
-		public abstract int OID { get; }
+		public abstract long OID { get; }
 
 		public abstract bool UsesOID { get; }
 

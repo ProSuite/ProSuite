@@ -18,7 +18,7 @@ namespace ProSuite.DomainServices.AO.QA
 		private readonly DateTime _dateOfCreation;
 		private readonly IQualityConditionObjectDatasetResolver _datasetResolver;
 		private readonly bool _usesGdbDatasetNames;
-		private readonly int _oid;
+		private readonly long _oid;
 		private readonly string _errorDescription;
 		private readonly IList<InvolvedRow> _involvedRows;
 		[NotNull] private readonly QaErrorGeometry _errorGeometry;
@@ -26,9 +26,9 @@ namespace ProSuite.DomainServices.AO.QA
 		private readonly ITable _table;
 		private List<InvolvedDatasetRow> _involvedDatasetRows;
 
-		private readonly IDictionary<string, ICollection<int>>
+		private readonly IDictionary<string, ICollection<long>>
 			_involvedRowsByUnresolvedTableName =
-				new Dictionary<string, ICollection<int>>();
+				new Dictionary<string, ICollection<long>>();
 
 		// mutable properties:
 		private bool _invalidated;
@@ -41,7 +41,7 @@ namespace ProSuite.DomainServices.AO.QA
 		                    [NotNull] string errorDescription,
 		                    [NotNull] IList<InvolvedRow> involvedRows,
 		                    [NotNull] ITable table,
-		                    int objectId,
+		                    long objectId,
 		                    DateTime dateOfCreation,
 		                    [NotNull] IQualityConditionObjectDatasetResolver datasetResolver)
 		{
@@ -95,7 +95,7 @@ namespace ProSuite.DomainServices.AO.QA
 
 		public ITable Table => _table;
 
-		public int ObjectId => _oid;
+		public long ObjectId => _oid;
 
 		[NotNull]
 		public QualityCondition QualityCondition => _qualityCondition;
@@ -130,7 +130,7 @@ namespace ProSuite.DomainServices.AO.QA
 		}
 
 		[NotNull]
-		public IDictionary<string, ICollection<int>> InvolvedRowsByUnresolvedTableName
+		public IDictionary<string, ICollection<long>> InvolvedRowsByUnresolvedTableName
 		{
 			get
 			{
@@ -156,9 +156,9 @@ namespace ProSuite.DomainServices.AO.QA
 			foreach (InvolvedRow involvedRow in _involvedRows)
 			{
 				string tableName = involvedRow.TableName;
-				int oid = involvedRow.OID;
+				long oid = involvedRow.OID;
 
-				ICollection<int> unresolvedRows;
+				ICollection<long> unresolvedRows;
 				if (_involvedRowsByUnresolvedTableName.TryGetValue(tableName, out unresolvedRows))
 				{
 					if (! unresolvedRows.Contains(oid))
@@ -174,7 +174,7 @@ namespace ProSuite.DomainServices.AO.QA
 				if (dataset == null)
 				{
 					// TODO logging
-					_involvedRowsByUnresolvedTableName.Add(tableName, new List<int> {oid});
+					_involvedRowsByUnresolvedTableName.Add(tableName, new List<long> {oid});
 					continue;
 				}
 
