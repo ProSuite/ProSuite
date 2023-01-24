@@ -27,11 +27,11 @@ namespace ProSuite.Commons.AO.Geodatabase
 		bool HasOID { get; }
 		string OIDFieldName { get; }
 
-		IReadOnlyRow GetRow(int oid);
+		IReadOnlyRow GetRow(long oid);
 
 		IEnumerable<IReadOnlyRow> EnumRows(IQueryFilter filter, bool recycle);
 
-		int RowCount(IQueryFilter filter);
+		long RowCount(IQueryFilter filter);
 
 		bool Equals(IReadOnlyTable otherTable);
 	}
@@ -53,7 +53,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 	public interface IReadOnlyRow
 	{
 		bool HasOID { get; }
-		int OID { get; }
+
+		long OID { get; }
 
 		object get_Value(int Index);
 

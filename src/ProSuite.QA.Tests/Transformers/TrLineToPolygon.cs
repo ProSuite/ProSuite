@@ -36,7 +36,7 @@ namespace ProSuite.QA.Tests.Transformers
 		[DocTr(nameof(DocTrStrings.TrLineToPolygon_PolylineUsage))]
 		public PolylineConversion PolylineUsage { get; set; }
 
-		protected override IEnumerable<GdbFeature> Transform(IGeometry source, int? sourceOid)
+		protected override IEnumerable<GdbFeature> Transform(IGeometry source, long? sourceOid)
 		{
 			IPolyline line = (IPolyline) source;
 			if (PolylineUsage == PolylineConversion.AsPolygonIfClosedElseIgnore && ! line.IsClosed)

@@ -14,7 +14,7 @@ namespace ProSuite.QA.Container.TestContainer
 			Id = uniqueIdProvider.GetUniqueId(feature);
 		}
 
-		public int Id { get; }
+		public long Id { get; }
 
 		public void Drop()
 		{

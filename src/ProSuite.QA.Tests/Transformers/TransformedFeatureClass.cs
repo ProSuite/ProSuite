@@ -52,7 +52,7 @@ namespace ProSuite.QA.Tests.Transformers
 			               $"{nameof(BackingDataset)} not set").AddToCache(baseRow);
 		}
 
-		bool IRowsCache.Remove(int oid)
+		bool IRowsCache.Remove(long oid)
 		{
 			return Assert.NotNull((TransformedBackingDataset) BackingDataset,
 			                      $"{nameof(BackingDataset)} not set").RemoveFromCache(oid);

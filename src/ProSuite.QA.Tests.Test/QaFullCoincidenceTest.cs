@@ -878,7 +878,7 @@ namespace ProSuite.QA.Tests.Test
 			{
 				foreach (InvolvedRow row in error.InvolvedRows)
 				{
-					IFeature f = eo.GetFeature(row.OID);
+					IFeature f = GdbQueryUtils.GetFeature(eo, row.OID);
 					var artzhid = (int) f.get_Value(fieldIndex);
 					Assert.AreEqual(9, artzhid);
 				}

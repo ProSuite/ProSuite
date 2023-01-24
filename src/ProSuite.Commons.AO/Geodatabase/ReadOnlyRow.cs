@@ -31,9 +31,24 @@ namespace ProSuite.Commons.AO.Geodatabase
 		public IRow BaseRow => Row;
 		protected IRow Row { get; }
 		public bool HasOID => Table.AlternateOidFieldName != null || Row.HasOID;
-		public int OID => Table.GetRowOid(Row);
+		public long OID => Table.GetRowOid(Row);
 
-		public object get_Value(int field) => Row.Value[field];
+		public object get_Value(int field)
+		{
+			object result = Row.Value[field];
+
+#if !Server11
+			// NOTE: IReadOnly has long OIDs, IRow has int OID in 10.x
+			// Ensure correct return type because comparisons as object
+			// are Int32.Equals(Int64) which results in false where
+			// the OIDs were actually equal.
+			if (result is int intValue && field == Table.OidFieldIndex)
+			{
+				result = (long) intValue;
+			}
+#endif
+			return result;
+		}
 
 		IReadOnlyTable IReadOnlyRow.Table => Table;
 		public ReadOnlyTable Table { get; }

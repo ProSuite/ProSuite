@@ -6,13 +6,13 @@ namespace ProSuite.QA.Tests
 {
 	public class PendingFeature
 	{
-		private readonly int _oid;
+		private readonly long _oid;
 		private readonly double _xMin;
 		private readonly double _yMin;
 		private readonly double _xMax;
 		private readonly double _yMax;
 
-		public PendingFeature(int oid, double xMin, double yMin, double xMax, double yMax)
+		public PendingFeature(long oid, double xMin, double yMin, double xMax, double yMax)
 		{
 			_oid = oid;
 			_xMin = xMin;
@@ -21,7 +21,7 @@ namespace ProSuite.QA.Tests
 			_yMax = yMax;
 		}
 
-		public int OID => _oid;
+		public long OID => _oid;
 
 		public bool IsFullyChecked([NotNull] IEnvelope tileEnvelope,
 		                           [CanBeNull] IEnvelope testRunEnvelope)

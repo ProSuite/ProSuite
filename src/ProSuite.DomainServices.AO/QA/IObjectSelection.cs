@@ -16,6 +16,6 @@ namespace ProSuite.DomainServices.AO.QA
 		              out bool unknownTable);
 
 		[NotNull]
-		IEnumerable<int> GetSelectedOIDs([NotNull] IObjectDataset dataset);
+		IEnumerable<long> GetSelectedOIDs([NotNull] IObjectDataset dataset);
 	}
 }

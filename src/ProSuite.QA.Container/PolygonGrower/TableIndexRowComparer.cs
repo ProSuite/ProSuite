@@ -38,13 +38,7 @@ namespace ProSuite.QA.Container.PolygonGrower
 			// NOTE in case of joined rows, the RowOID may not be the expected field. 
 			// NOTE even apart from that bug, there are cases where the joined OID cannot be unique
 			// TODO use the unique id
-			int oidDifference = row0.RowOID - row1.RowOID;
-			if (oidDifference != 0)
-			{
-				return oidDifference;
-			}
-
-			return 0;
+			return row0.RowOID.CompareTo(row1.RowOID);
 		}
 
 		#endregion
@@ -56,7 +50,7 @@ namespace ProSuite.QA.Container.PolygonGrower
 
 		public int GetHashCode(ITableIndexRow obj)
 		{
-			return obj.RowOID ^ 29 * obj.TableIndex;
+			return obj.RowOID.GetHashCode() ^ 29 * obj.TableIndex;
 		}
 	}
 }

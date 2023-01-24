@@ -7,7 +7,7 @@ namespace ProSuite.Commons.AO.Geometry
 	{
 		public IPolyline Polyline { get; set; }
 
-		public int? ObjectId { get; set; }
+		public long? ObjectId { get; set; }
 
 		public bool? SuccessfulCut { get; set; }
 
@@ -19,7 +19,7 @@ namespace ProSuite.Commons.AO.Geometry
 			RingPlaneTopology = ringPlaneTopology;
 		}
 
-		public CutPolyline(int objectId)
+		public CutPolyline(long objectId)
 		{
 			ObjectId = objectId;
 		}

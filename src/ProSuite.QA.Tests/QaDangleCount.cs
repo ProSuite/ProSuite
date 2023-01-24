@@ -26,8 +26,8 @@ namespace ProSuite.QA.Tests
 	{
 		[NotNull] private readonly IList<IReadOnlyFeatureClass> _polylineClasses;
 
-		[NotNull] private readonly IDictionary<int, IDictionary<int, FeatureDangleCount>>
-			_dangleCounts = new Dictionary<int, IDictionary<int, FeatureDangleCount>>();
+		[NotNull] private readonly IDictionary<int, IDictionary<long, FeatureDangleCount>>
+			_dangleCounts = new Dictionary<int, IDictionary<long, FeatureDangleCount>>();
 
 		[NotNull] private readonly IEnvelope _envelopeTemplate = new EnvelopeClass();
 		[NotNull] private readonly List<string> _dangleCountExpressionsSql;
@@ -169,18 +169,18 @@ namespace ProSuite.QA.Tests
 			}
 
 			foreach (
-				KeyValuePair<int, IDictionary<int, FeatureDangleCount>> tablePair in
+				KeyValuePair<int, IDictionary<long, FeatureDangleCount>> tablePair in
 				_dangleCounts)
 			{
 				int tableIndex = tablePair.Key;
 
-				var oidsToRemove = new List<int>();
-				IDictionary<int, FeatureDangleCount> dangleCountPerOid = tablePair.Value;
+				var oidsToRemove = new List<long>();
+				IDictionary<long, FeatureDangleCount> dangleCountPerOid = tablePair.Value;
 
-				foreach (KeyValuePair<int, FeatureDangleCount> featurePair in
+				foreach (KeyValuePair<long, FeatureDangleCount> featurePair in
 				         dangleCountPerOid)
 				{
-					int oid = featurePair.Key;
+					long oid = featurePair.Key;
 					FeatureDangleCount dangleCount = featurePair.Value;
 
 					// TODO revise for tolerance
@@ -296,16 +296,16 @@ namespace ProSuite.QA.Tests
 		{
 			int tableIndex = tableIndexRow.TableIndex;
 
-			IDictionary<int, FeatureDangleCount> dangleCountPerFeature;
+			IDictionary<long, FeatureDangleCount> dangleCountPerFeature;
 			if (! _dangleCounts.TryGetValue(tableIndex, out dangleCountPerFeature))
 			{
-				dangleCountPerFeature = new Dictionary<int, FeatureDangleCount>();
+				dangleCountPerFeature = new Dictionary<long, FeatureDangleCount>();
 
 				_dangleCounts.Add(tableIndex, dangleCountPerFeature);
 			}
 
 			var feature = (IReadOnlyFeature) tableIndexRow.Row;
-			int oid = feature.OID;
+			long oid = feature.OID;
 
 			FeatureDangleCount dangleCount;
 			if (! dangleCountPerFeature.TryGetValue(oid, out dangleCount))

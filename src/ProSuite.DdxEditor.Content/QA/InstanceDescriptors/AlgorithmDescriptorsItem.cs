@@ -66,6 +66,10 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 		{
 			base.CollectCommands(commands, applicationController);
 
+			commands.Add(new AddAllAlgorithmDescriptorsCommand(this, applicationController,
+			                                                   _modelBuilder
+				                                                   .AlgorithmAssemblyNames));
+
 			commands.Add(new ImportInstanceDescriptorsCommand(this, applicationController,
 			                                                  _modelBuilder
 				                                                  .DefaultTestDescriptorsXmlFile));

@@ -25,14 +25,18 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		public override IEnvelope Extent =>
 			_backingTable is IGeoDataset geoDataset ? geoDataset.Extent : null;
 
-		public override VirtualRow GetRow(int id)
+		public override VirtualRow GetRow(long id)
 		{
+#if Server11
 			var row = _backingTable.GetRow(id);
+#else
+			var row = _backingTable.GetRow((int) id);
+#endif
 
 			return CreateRow(row);
 		}
 
-		public override int GetRowCount(IQueryFilter queryFilter)
+		public override long GetRowCount(IQueryFilter queryFilter)
 		{
 			return _backingTable.RowCount(queryFilter);
 		}
@@ -49,7 +53,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		{
 			var rowValueList = new RowBasedValues(baseRow, _oidFieldIndex);
 
-			int oid = baseRow.HasOID ? baseRow.OID : -1;
+			long oid = baseRow.HasOID ? baseRow.OID : -1;
 
 			return _gdbTable.CreateObject(oid, rowValueList);
 		}

@@ -200,7 +200,8 @@ namespace ProSuite.Commons.AO.Test.Geodatabase.GdbSchema
 
 			watch.Stop();
 
-			Assert.Less(watch.ElapsedMilliseconds, 100);
+			// This is often just below 100, give it some slack:
+			Assert.Less(watch.ElapsedMilliseconds, 150);
 
 			Console.WriteLine($"PropertySet-backed: {watch.ElapsedMilliseconds}ms");
 

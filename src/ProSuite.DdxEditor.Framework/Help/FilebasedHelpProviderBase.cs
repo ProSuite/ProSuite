@@ -33,11 +33,13 @@ namespace ProSuite.DdxEditor.Framework.Help
 			Assert.ArgumentNotNull(owner, nameof(owner));
 			Assert.True(CanShowHelp, "Unable to show help file: {0}", FilePath);
 
+			// NOTE: In .net 6 UseShellExecute defaults to false, which results in Win32Exception
 			var startInfo = new ProcessStartInfo
 			                {
 				                FileName = Assert.NotNull(FilePath),
 				                ErrorDialogParentHandle = owner.Handle,
-				                ErrorDialog = true
+				                ErrorDialog = true,
+				                UseShellExecute = true
 			                };
 
 			Process.Start(startInfo);

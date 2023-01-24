@@ -14,8 +14,8 @@ namespace ProSuite.DomainServices.AO.QA
 {
 	public class ObjectSelection : IObjectSelection
 	{
-		[NotNull] private readonly Dictionary<IObjectDataset, HashSet<int>> _objectsByDataset =
-			new Dictionary<IObjectDataset, HashSet<int>>();
+		[NotNull] private readonly Dictionary<IObjectDataset, HashSet<long>> _objectsByDataset =
+			new Dictionary<IObjectDataset, HashSet<long>>();
 
 		[NotNull] private readonly IQualityConditionObjectDatasetResolver _datasetResolver;
 
@@ -50,10 +50,10 @@ namespace ProSuite.DomainServices.AO.QA
 				Assert.NotNull(dataset, "Unable to resolve dataset for object class {0}",
 				               DatasetUtils.GetName(objectClass));
 
-				HashSet<int> objectIds;
+				HashSet<long> objectIds;
 				if (! _objectsByDataset.TryGetValue(dataset, out objectIds))
 				{
-					objectIds = new HashSet<int>();
+					objectIds = new HashSet<long>();
 					_objectsByDataset.Add(dataset, objectIds);
 				}
 
@@ -61,14 +61,14 @@ namespace ProSuite.DomainServices.AO.QA
 			}
 		}
 
-		public IEnumerable<int> GetSelectedOIDs(IObjectDataset dataset)
+		public IEnumerable<long> GetSelectedOIDs(IObjectDataset dataset)
 		{
 			Assert.ArgumentNotNull(dataset, nameof(dataset));
 
-			HashSet<int> objectIds;
+			HashSet<long> objectIds;
 			return _objectsByDataset.TryGetValue(dataset, out objectIds)
 				       ? objectIds
-				       : (IEnumerable<int>) new int[] { };
+				       : (IEnumerable<long>) new long[] { };
 		}
 
 		public bool Contains(InvolvedRow involvedRow, QualityCondition qualityCondition)
@@ -96,7 +96,7 @@ namespace ProSuite.DomainServices.AO.QA
 			}
 
 			unknownTable = false;
-			HashSet<int> objectIds;
+			HashSet<long> objectIds;
 			return _objectsByDataset.TryGetValue(dataset, out objectIds) &&
 			       objectIds.Contains(involvedRow.OID);
 		}

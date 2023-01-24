@@ -43,10 +43,10 @@ namespace ProSuite.QA.Container.TestContainer
 		private readonly RastersRowEnumerable _rastersRowEnumerable;
 
 		// ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
-		private readonly Dictionary<IReadOnlyTable, int> _totalRowCountPerTable;
+		private readonly Dictionary<IReadOnlyTable, long> _totalRowCountPerTable;
 		// might be used later
 
-		private readonly Dictionary<IReadOnlyTable, int> _loadedRowCountPerTable;
+		private readonly Dictionary<IReadOnlyTable, long> _loadedRowCountPerTable;
 
 		private readonly TestSorter _testSorter;
 		private readonly TileEnum _tileEnum;
@@ -149,8 +149,8 @@ namespace ProSuite.QA.Container.TestContainer
 			{
 				int tableCount = _testSorter.TestsPerTable.Count;
 
-				_totalRowCountPerTable = new Dictionary<IReadOnlyTable, int>(tableCount);
-				_loadedRowCountPerTable = new Dictionary<IReadOnlyTable, int>(tableCount);
+				_totalRowCountPerTable = new Dictionary<IReadOnlyTable, long>(tableCount);
+				_loadedRowCountPerTable = new Dictionary<IReadOnlyTable, long>(tableCount);
 
 				CalculateRowCounts(
 					_testSorter.TestsPerTable.Keys,
@@ -362,8 +362,8 @@ namespace ProSuite.QA.Container.TestContainer
 
 		private void CalculateRowCounts(
 			IEnumerable<IReadOnlyTable> tables,
-			[NotNull] IDictionary<IReadOnlyTable, int> totalRowCountPerTable,
-			[NotNull] IDictionary<IReadOnlyTable, int> loadedRowCountPerTable)
+			[NotNull] IDictionary<IReadOnlyTable, long> totalRowCountPerTable,
+			[NotNull] IDictionary<IReadOnlyTable, long> loadedRowCountPerTable)
 		{
 			IQueryFilter filter = new QueryFilterClass();
 
@@ -373,7 +373,7 @@ namespace ProSuite.QA.Container.TestContainer
 					                     ? _commonFilterExpressions[table]
 					                     : string.Empty;
 
-				int count;
+				long count;
 				try
 				{
 					count = table.RowCount(filter);
@@ -392,7 +392,7 @@ namespace ProSuite.QA.Container.TestContainer
 		/// Iterate cached rows that are at least partly within the current tile
 		/// </summary>
 		private IEnumerable<TestRow> EnumCachedRows(Tile tile, TileCache tileCache,
-		                                            int tileRowIndex, int tileRowCount)
+		                                            long tileRowIndex, long tileRowCount)
 		{
 			foreach (var pair in _cachedSet)
 			{
@@ -436,16 +436,16 @@ namespace ProSuite.QA.Container.TestContainer
 						new TestRow(new RowReference(cachedRow.Feature, recycled: false),
 						            entry.Box, applicableTests);
 
-					_container.OnProgressChanged(Step.TestRowCreated, tileRowIndex,
-					                             tileRowCount, cachedTestRow);
+					_container.OnProgressChanged(Step.TestRowCreated, (int) tileRowIndex,
+					                             (int) tileRowCount, cachedTestRow);
 
 					yield return cachedTestRow;
 				}
 			}
 		}
 
-		private IEnumerable<TestRow> EnumNonCachedRows(Tile tile, int tileRowIndex,
-		                                               int tileRowCount)
+		private IEnumerable<TestRow> EnumNonCachedRows(Tile tile, long tileRowIndex,
+		                                               long tileRowCount)
 		{
 			foreach (TableFields tableFields in _nonCachedTables)
 			{
@@ -484,8 +484,8 @@ namespace ProSuite.QA.Container.TestContainer
 						TestRow nonCachedTestRow = new TestRow(
 							new RowReference(row, recycled: true), null,
 							applicableTests);
-						_container.OnProgressChanged(Step.TestRowCreated, tileRowIndex,
-						                             tileRowCount,
+						_container.OnProgressChanged(Step.TestRowCreated, (int) tileRowIndex,
+						                             (int) tileRowCount,
 						                             nonCachedTestRow);
 
 						yield return nonCachedTestRow;
@@ -554,7 +554,7 @@ namespace ProSuite.QA.Container.TestContainer
 			return true;
 		}
 
-		private IEnumerable<TestRow> EnumRasterRows(Tile tile, int tileRowIndex, int tileRowCount)
+		private IEnumerable<TestRow> EnumRasterRows(Tile tile, long tileRowIndex, long tileRowCount)
 		{
 			if (_rastersRowEnumerable == null)
 			{
@@ -570,8 +570,8 @@ namespace ProSuite.QA.Container.TestContainer
 
 				// _container.OnProgressChanged(string.Format("Loaded TIN Part {0} of {1} for current Tile", _cachedRowIndex, nTiles));
 
-				_container.OnProgressChanged(Step.TestRowCreated, tileRowIndex, tileRowCount,
-				                             rasterTestRow);
+				_container.OnProgressChanged(Step.TestRowCreated, (int) tileRowIndex,
+				                             (int) tileRowCount, rasterTestRow);
 
 				yield return rasterTestRow;
 
@@ -579,7 +579,7 @@ namespace ProSuite.QA.Container.TestContainer
 			}
 		}
 
-		private IEnumerable<TestRow> EnumTinRows(Tile tile, int tileRowIndex, int tileRowCount)
+		private IEnumerable<TestRow> EnumTinRows(Tile tile, long tileRowIndex, long tileRowCount)
 		{
 			foreach (TerrainRowEnumerable terrainRowEnumerable in _terrainRowEnumerables)
 			{
@@ -591,8 +591,8 @@ namespace ProSuite.QA.Container.TestContainer
 					TestRow terrainTestRow = new TestRow(
 						terrainRow, QaGeometryUtils.CreateBox(terrainRow.Extent), tests);
 
-					_container.OnProgressChanged(Step.TestRowCreated, tileRowIndex, tileRowCount,
-					                             terrainTestRow);
+					_container.OnProgressChanged(Step.TestRowCreated, (int) tileRowIndex,
+					                             (int) tileRowCount, terrainTestRow);
 
 					yield return terrainTestRow;
 
@@ -653,10 +653,10 @@ namespace ProSuite.QA.Container.TestContainer
 		/// </summary>
 		/// <param name="tileSpatialFilter">The tile spatial filter.</param>
 		/// <returns></returns>
-		private int GetTileNonCachedTablesRowCount(
+		private long GetTileNonCachedTablesRowCount(
 			[NotNull] ISpatialFilter tileSpatialFilter)
 		{
-			var result = 0;
+			long result = 0;
 
 			foreach (TableFields tableFields in _nonCachedTables)
 			{
@@ -1085,16 +1085,16 @@ namespace ProSuite.QA.Container.TestContainer
 
 		private IEnumerable<TestRow> EnumRows(Tile tile, TileCache tileCache)
 		{
-			int cachedRowCount = tileCache.GetTablesRowCount();
-			int nonCachedRowCount = GetTileNonCachedTablesRowCount(tile.SpatialFilter);
+			long cachedRowCount = tileCache.GetTablesRowCount();
+			long nonCachedRowCount = GetTileNonCachedTablesRowCount(tile.SpatialFilter);
 			int rasterRowCount = GetTileRasterRowCount(tile);
 
-			int tileRowCount = cachedRowCount;
+			long tileRowCount = cachedRowCount;
 			tileRowCount += nonCachedRowCount;
 			tileRowCount += rasterRowCount;
 			tileRowCount += GetTileTerrainRowCount(tile);
 
-			int preRowCount = 0;
+			long preRowCount = 0;
 			foreach (var cachedRow in EnumCachedRows(tile, tileCache, preRowCount, tileRowCount))
 			{
 				yield return cachedRow;

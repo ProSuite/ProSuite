@@ -31,6 +31,13 @@ namespace ProSuite.Commons.AO.Test.TestSupport
 					name, StringComparison.OrdinalIgnoreCase));
 		}
 
+#if Server11
+		public void FindFieldIgnoreQualification(ISQLSyntax sqlSyntax, string Name, out int Index)
+		{
+			throw new NotImplementedException();
+		}
+#endif
+
 		public int FieldCount => _fields.Count;
 
 		public IField get_Field(int index)
