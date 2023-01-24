@@ -15,6 +15,10 @@ namespace ProSuite.Commons.AGP.Core.Carto;
 /// </summary>
 public static class MarkerPlacements
 {
+	// TODO Just an idea: marker placements modify a transformation matrix that will be applied later;
+	// signature sth like: IEnumerable<Matrix> MyPlacement(Matrix matrix, Geometry reference, MP parameters)
+	// the input matrix already represents AnchorPoint, Rotation, Offset, ScaleX (and maybe Size)
+
 	public class Options
 	{
 		public bool PlacePerPart { get; set; }
@@ -135,30 +139,44 @@ public static class MarkerPlacements
 			bool isEndPoint = j == 0 || options.PlacePerPart;
 			bool isControlPoint = point.HasID && point.ID > 0;
 
-			if (options.PlaceOnEndPoints && isEndPoint ||
-			    options.PlaceOnControlPoints && isControlPoint)
+			if (isEndPoint && options.PlaceOnEndPoints ||
+			    isControlPoint && options.PlaceOnControlPoints)
 			{
 				yield return Placed(marker, position, tangent, angleToLine, perpendicularOffset);
 			}
 
-			for (int i = 0; i < segmentCount-1; i++)
+			for (int i = 0; i < segmentCount - 1; i++)
 			{
 				segment = part[i];
 				point = segment.EndPoint;
 				position = point.ToPair();
-				tangent = GetTangent(segment, 1);
+				var pre = GetTangent(segment, 1);
+				var post = GetTangent(part[i + 1], 0);
+				// average direction from segments before and after:
+				tangent = (pre + post).Normalized(); // unit length!
 
-				bool lastInPart = i == segmentCount - 1;
-				isEndPoint = lastInPart && (j == partCount - 1 || options.PlacePerPart);
 				isControlPoint = point.HasID && point.ID > 0;
-				bool isRegularVertex = ! isEndPoint && ! isControlPoint;
+				bool isRegularVertex = ! isControlPoint;
 
-				if (isEndPoint && options.PlaceOnEndPoints ||
-				    isControlPoint && options.PlaceOnControlPoints ||
+				if (isControlPoint && options.PlaceOnControlPoints ||
 				    isRegularVertex && options.PlaceOnRegularVertices)
 				{
 					yield return Placed(marker, position, tangent, angleToLine, perpendicularOffset);
 				}
+			}
+
+			segment = part[segmentCount - 1];
+			point = segment.EndPoint;
+			position = point.ToPair();
+			tangent = GetTangent(segment, 1);
+
+			isEndPoint = j == partCount - 1 || options.PlacePerPart;
+			isControlPoint = point.HasID && point.ID > 0;
+
+			if (isEndPoint && options.PlaceOnEndPoints ||
+			    isControlPoint && options.PlaceOnControlPoints)
+			{
+				yield return Placed(marker, position, tangent, angleToLine, perpendicularOffset);
 			}
 		}
 	}
@@ -245,11 +263,11 @@ public static class MarkerPlacements
 		return parts.OfType<Polyline>();
 	}
 
-	private static T Rotated<T>(T shape, double angle, MapPoint pivot = null) where T : Geometry
+	private static T Rotated<T>(T shape, double angleRadians, MapPoint pivot = null) where T : Geometry
 	{
 		if (shape is null) return null;
 		if (pivot is null) pivot = MapPointBuilderEx.CreateMapPoint(0, 0);
-		return (T) GeometryEngine.Instance.Rotate(shape, pivot, angle);
+		return (T) GeometryEngine.Instance.Rotate(shape, pivot, angleRadians);
 	}
 
 	private static T Translated<T>(T shape, double dx, double dy) where T : Geometry

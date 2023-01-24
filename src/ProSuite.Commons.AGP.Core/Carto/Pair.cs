@@ -36,9 +36,16 @@ namespace ProSuite.Commons.AGP.Core.Carto
 		//	return MapPointBuilderEx.CreateMapPoint(X, Y, sref);
 		//}
 
-		public double Length => Math.Sqrt(LengthSquared);
+		public double Length => Math.Sqrt(X * X + Y * Y);
 
-		public double LengthSquared => X * X + Y * Y;
+		public double AngleDegrees => Math.Atan2(Y, X) * 180.0 / Math.PI;
+
+		public Pair Normalized()
+		{
+			var ls = X * X + Y * Y;
+			var invNorm = 1.0 / ls;
+			return new Pair(X * invNorm, Y * invNorm);
+		}
 
 		public Pair Translated(double dx, double dy) // TODO rename Shifted? (shorter, MF/MP)
 		{
