@@ -55,6 +55,12 @@ namespace ProSuite.Commons.AO.Geodatabase
 		public long ObjectId { get; }
 
 		/// <summary>
+		/// Safe way of getting the legacy OID for the 10.x platform. This method must not be used in 11.x
+		/// </summary>
+		/// <returns></returns>
+		public int ObjectId10 => Convert.ToInt32(ObjectId);
+
+		/// <summary>
 		/// Gets the referenced object, from a workspace.
 		/// </summary>
 		/// <param name="workspace">The workspace.</param>
