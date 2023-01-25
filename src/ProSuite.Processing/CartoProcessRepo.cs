@@ -22,7 +22,17 @@ namespace ProSuite.Processing
 			_list = new ReadOnlyList<CartoProcessDefinition>(_definitions);
 		}
 
+		public int ProcessCount => _list.Count;
+
 		public IReadOnlyList<CartoProcessDefinition> ProcessDefinitions => _list;
+
+		public void Clear()
+		{
+			lock (_syncLock)
+			{
+				_definitions.Clear();
+			}
+		}
 
 		// TODO Consider overloads to load repo from DDX, from .aprx, from ...
 
