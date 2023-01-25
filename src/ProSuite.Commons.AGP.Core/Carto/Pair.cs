@@ -27,8 +27,7 @@ namespace ProSuite.Commons.AGP.Core.Carto
 
 		public Pair Normalized()
 		{
-			var ls = X * X + Y * Y;
-			var invNorm = 1.0 / ls;
+			var invNorm = 1.0 / Length;
 			return new Pair(X * invNorm, Y * invNorm);
 		}
 
