@@ -24,7 +24,6 @@ using ProSuite.DdxEditor.Framework.ItemViews;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
-using ProSuite.DomainModel.Core.QA.Repositories;
 using ProSuite.QA.Core;
 using ProSuite.UI.QA;
 using ProSuite.UI.QA.BoundTableRows;
@@ -100,9 +99,9 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 		public string GetTestDescription()
 		{
 			QualityCondition qualityCondition = Assert.NotNull(GetEntity());
-			TestFactory factory = GetTestFactory(qualityCondition.TestDescriptor);
+			var instanceInfo = GetInstanceInfo(qualityCondition);
 
-			return factory?.TestDescription;
+			return instanceInfo?.TestDescription;
 		}
 
 		[CanBeNull]
@@ -125,7 +124,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 
 			if (result == null)
 			{
-				TestFactory factory = GetTestFactory(testDescriptor);
+				TestFactory factory = TestFactoryUtils.CreateTestFactory(qualityCondition);
 
 				if (factory == null)
 				{
@@ -133,7 +132,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 				}
 
 				result = DefaultTestConfiguratorFactory.Create(
-					factory, testDescriptor.TestAssemblyName, false);
+					factory, testDescriptor.TestAssemblyName, readOnly: false);
 			}
 
 			result.DatasetProvider = _modelBuilder.GetTestParameterDatasetProvider();
@@ -146,18 +145,18 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 		public IList<TestParameter> GetParameterDescription()
 		{
 			QualityCondition qualityCondition = Assert.NotNull(GetEntity());
-			TestFactory factory = GetTestFactory(qualityCondition.TestDescriptor);
+			var instanceInfo = GetInstanceInfo(qualityCondition);
 
-			if (factory == null)
+			if (instanceInfo == null)
 			{
 				return null;
 			}
 
-			IList<TestParameter> paramList = factory.Parameters;
+			IList<TestParameter> paramList = instanceInfo.Parameters;
 
 			foreach (TestParameter param in paramList)
 			{
-				param.Description = factory.GetParameterDescription(param.Name);
+				param.Description = instanceInfo.GetParameterDescription(param.Name);
 			}
 
 			return paramList;
@@ -219,8 +218,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			QualityCondition qualityCondition = Assert.NotNull(GetEntity());
 
 			IList<QualitySpecification> qualitySpecifications =
-				_modelBuilder.Resolve<IQualitySpecificationRepository>().Get(
-					qualityCondition);
+				_modelBuilder.QualitySpecifications.Get(qualityCondition);
 
 			foreach (QualitySpecification specification in qualitySpecifications)
 			{
@@ -242,6 +240,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			[NotNull] IWin32Window owner)
 		{
 			Assert.ArgumentNotNull(qualityCondition, nameof(qualityCondition));
+			Assert.ArgumentNotNull(owner, nameof(owner));
 
 			DdxModel model = DataQualityCategoryUtils.GetDefaultModel(
 				qualityCondition.Category);
@@ -277,15 +276,16 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 
 		[CanBeNull]
 		public IList<InstanceConfigurationInCategoryTableRow> GetIssueFiltersToAdd(
-			[NotNull] QualityCondition qualityCondition, IWin32Window owner)
+			[NotNull] QualityCondition qualityCondition,
+			[NotNull] IWin32Window owner)
 		{
 			Assert.ArgumentNotNull(qualityCondition, nameof(qualityCondition));
+			Assert.ArgumentNotNull(owner, nameof(owner));
 
 			DdxModel model = DataQualityCategoryUtils.GetDefaultModel(
 				qualityCondition.Category);
 
-			var queries =
-				new List<FinderQuery<InstanceConfigurationInCategoryTableRow>>();
+			var queries = new List<FinderQuery<InstanceConfigurationInCategoryTableRow>>();
 
 			if (model != null)
 			{
@@ -364,8 +364,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 				_image.Tag = TestTypeImageLookup.GetDefaultSortIndex(qualityCondition);
 
 				_imageKey = string.Format("{0}#{1}", base.ImageKey,
-				                          TestTypeImageLookup.GetImageKey(
-					                          qualityCondition));
+				                          TestTypeImageLookup.GetImageKey(qualityCondition));
 			}
 		}
 
@@ -450,11 +449,18 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 		}
 
 		[CanBeNull]
-		private static TestFactory GetTestFactory([CanBeNull] TestDescriptor testDescriptor)
+		private static IInstanceInfo GetInstanceInfo([NotNull] InstanceConfiguration entity)
 		{
-			return testDescriptor == null
-				       ? null
-				       : TestFactoryUtils.GetTestFactory(testDescriptor);
+			InstanceDescriptor descriptor = entity.InstanceDescriptor;
+
+			if (descriptor == null)
+			{
+				return null;
+			}
+
+			IInstanceInfo instanceInfo = InstanceDescriptorUtils.GetInstanceInfo(descriptor);
+
+			return instanceInfo;
 		}
 
 		protected override string GetText(QualityCondition entity)
@@ -559,14 +565,14 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			[NotNull] QualityCondition entity,
 			[NotNull] TestParameterValue parameterValue)
 		{
-			TestFactory factory = TestFactoryUtils.CreateTestFactory(entity);
+			IInstanceInfo instanceInfo = GetInstanceInfo(entity);
 
-			if (factory == null)
+			if (instanceInfo == null)
 			{
 				return false;
 			}
 
-			foreach (TestParameter testParameter in factory.Parameters)
+			foreach (TestParameter testParameter in instanceInfo.Parameters)
 			{
 				if (testParameter.Name == parameterValue.TestParameterName)
 				{

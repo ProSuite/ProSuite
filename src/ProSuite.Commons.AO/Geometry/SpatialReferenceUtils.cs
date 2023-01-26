@@ -1375,6 +1375,13 @@ namespace ProSuite.Commons.AO.Geometry
 			return ((ISpatialReferenceTolerance) spatialReference).XYTolerance;
 		}
 
+		public static double GetZTolerance([NotNull] ISpatialReference spatialReference)
+		{
+			Assert.ArgumentNotNull(spatialReference, nameof(spatialReference));
+
+			return ((ISpatialReferenceTolerance) spatialReference).ZTolerance;
+		}
+
 		#region Non-public methods
 
 		[NotNull]

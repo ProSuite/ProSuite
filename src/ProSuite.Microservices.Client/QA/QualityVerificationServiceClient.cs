@@ -6,7 +6,8 @@ using ProSuite.Microservices.Definitions.QA;
 
 namespace ProSuite.Microservices.Client.QA
 {
-	public class QualityVerificationServiceClient : MicroserviceClientBase
+	public class QualityVerificationServiceClient : MicroserviceClientBase,
+	                                                IQualityVerificationClient
 	{
 		private QualityVerificationGrpc.QualityVerificationGrpcClient _staticQaClient;
 		private QualityVerificationDdxGrpc.QualityVerificationDdxGrpcClient _staticDdxClient;
@@ -29,7 +30,7 @@ namespace ProSuite.Microservices.Client.QA
 		public override string ServiceDisplayName => "Quality Verification Service";
 
 		[CanBeNull]
-		public QualityVerificationGrpc.QualityVerificationGrpcClient QaClient
+		public QualityVerificationGrpc.QualityVerificationGrpcClient QaGrpcClient
 		{
 			get
 			{
