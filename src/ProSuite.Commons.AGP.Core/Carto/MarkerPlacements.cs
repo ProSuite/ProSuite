@@ -218,6 +218,15 @@ public static class MarkerPlacements
 		}
 	}
 
+	public static IEnumerable<T> OnPoint<T>(T marker, MapPoint point) where T : Geometry
+	{
+		if (marker is null) yield break;
+		if (point is null) yield break;
+		if (point.IsEmpty) yield break;
+
+		yield return Translated(marker, point.X, point.Y);
+	}
+
 	#region Private utilities
 
 	private static MapPoint GetCenter(Polygon polygon, PolygonCenterOptions options)
