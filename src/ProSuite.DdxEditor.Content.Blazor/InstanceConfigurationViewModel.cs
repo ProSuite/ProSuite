@@ -58,12 +58,17 @@ public class InstanceConfigurationViewModel<T> : NotifyPropertyChangedBase,
 		_item.NotifyChanged();
 	}
 
+	// todo rename to instanceConfiguration
 	public void BindTo([NotNull] InstanceConfiguration qualityCondition)
 	{
 		Assert.ArgumentNotNull(qualityCondition, nameof(qualityCondition));
 
 		Values = new List<ViewModelBase>(GetTopLevelRows(CreateRows(qualityCondition)));
 
+		// Update the entity now, e.g.: a new entity with required collection parameter is added,
+		// the collection is not yet in InstanceConfiguration.ParameterValues. After UpdateEntity
+		// it is, the collection parameter is initialized.
+		UpdateEntity(Assert.NotNull(_item.GetEntity()), Assert.NotNull(Values));
 
 		// call stack:
 		// IInstanceConfigurationViewModel.BindTo()
@@ -100,7 +105,8 @@ public class InstanceConfigurationViewModel<T> : NotifyPropertyChangedBase,
 
 			if (parameter.ArrayDimension == 1)
 			{
-				yield return new TestParameterValueCollectionViewModel(parameter, rows, this);
+				yield return new TestParameterValueCollectionViewModel(
+					parameter, rows, this, parameter.IsConstructorParameter);
 			}
 			else if (parameter.ArrayDimension == 0)
 			{
@@ -149,6 +155,8 @@ public class InstanceConfigurationViewModel<T> : NotifyPropertyChangedBase,
 			rowsByParameter.Add(param, new List<ViewModelBase>());
 			parametersByName.Add(param.Name, param);
 		}
+		
+		var initializedParameters = new List<TestParameter>();
 
 		foreach (TestParameterValue paramValue in instanceConfiguration.ParameterValues)
 		{
@@ -158,6 +166,8 @@ public class InstanceConfigurationViewModel<T> : NotifyPropertyChangedBase,
 			{
 				continue;
 			}
+
+			initializedParameters.Add(param);
 
 			if (paramValue is DatasetTestParameterValue datasetValue)
 			{
@@ -176,6 +186,29 @@ public class InstanceConfigurationViewModel<T> : NotifyPropertyChangedBase,
 			{
 				throw new ArgumentOutOfRangeException(nameof(paramValue),
 				                                      $@"Unkown {nameof(TestParameterValue)} type");
+			}
+		}
+
+		foreach (TestParameter param in factory.Parameters)
+		{
+			if (initializedParameters.Contains(param))
+			{
+				continue;
+			}
+
+			if (param.IsConstructorParameter)
+			{
+				if (TestParameterTypeUtils.IsDatasetType(param.Type))
+				{
+					rowsByParameter[param]
+						.Add(DatasetTestParameterValueViewModel.CreateInstance(param, null, this));
+				}
+				else
+				{
+					rowsByParameter[param]
+						.Add(new ScalarTestParameterValueViewModel(
+							     param, null, this, param.IsConstructorParameter));
+				}
 			}
 		}
 

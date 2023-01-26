@@ -14,8 +14,9 @@ public class TestParameterValueCollectionViewModel : ViewModelBase, IDataGridVie
 {
 	public TestParameterValueCollectionViewModel([NotNull] TestParameter parameter,
 	                                             [NotNull] IList<ViewModelBase> values,
-	                                             IInstanceConfigurationViewModel observer) : base(
-		parameter, values, observer)
+	                                             IInstanceConfigurationViewModel observer,
+	                                             bool required) : base(
+		parameter, values, observer, required)
 	{
 		Assert.ArgumentNotNull(values, nameof(values));
 
