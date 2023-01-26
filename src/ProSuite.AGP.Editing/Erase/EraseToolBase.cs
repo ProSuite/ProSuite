@@ -37,8 +37,7 @@ namespace ProSuite.AGP.Editing.Erase
 
 		protected override void LogEnteringSketchMode()
 		{
-			_msg.Info(
-				"Sketch a hole or any polygon to be erased from the selection.<br>Press [ESC] to reselect the polygon(s).");
+			_msg.Info(LocalizableStrings.EraseTool_LogEnteringSketchMode);
 		}
 
 		protected override void LogPromptForSelection()
@@ -47,8 +46,7 @@ namespace ProSuite.AGP.Editing.Erase
 			//		  ? "- To re-use the existing selection, press Enter"
 			//		  : string.Empty;
 
-			_msg.InfoFormat(
-				"Select one or more polygon features.<br>- Press and hold SHIFT to add or remove features from the existing selection.<br>- Press and hold P to draw a polygon that completely contains the features to be selected. Finish the polygon with double-click.");
+			_msg.InfoFormat(LocalizableStrings.EraseTool_LogPromptForSelection);
 		}
 
 		protected override bool CanUseSelection(Dictionary<MapMember, List<long>> selection)

@@ -55,7 +55,7 @@ namespace ProSuite.AGP.QA
 				await CreateVerificationRequest(specification, perimeter, projectWorkspace,
 				                                resultsPath);
 
-			return await QAUtils.Verify(Assert.NotNull(_client.QaClient), request, progress);
+			return await QAUtils.Verify(Assert.NotNull(_client.QaGrpcClient), request, progress);
 		}
 
 		public override async Task<ServiceCallStatus> VerifySelection(
@@ -75,7 +75,7 @@ namespace ProSuite.AGP.QA
 				await CreateVerificationRequest(specification, perimeter, projectWorkspace,
 				                                resultsPath, objectsToVerify);
 
-			return await QAUtils.Verify(Assert.NotNull(_client.QaClient), request, progress);
+			return await QAUtils.Verify(Assert.NotNull(_client.QaGrpcClient), request, progress);
 		}
 
 		private async Task<VerificationRequest> CreateVerificationRequest(

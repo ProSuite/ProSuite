@@ -240,7 +240,7 @@ If the involved features correspond to no rule, they are reported.
 One rule consists out of one expression for each featureClass.
 Each expression is either null or has a selection expression.
 Additionally, a expression can have variable declarations separated by ";". 
-Optionally, one expression of a rule can have count condition (separeted by ";"), where the declared variables can be checked. 
+Optionally, one expression of a rule can have count condition (separated by ";"), where the declared variables can be checked. 
 
 A selection expression is a constraint on the corresponding featureclass (Example: "ObjektArt IN (x,y)"). If any feature connected at a point does not fulfill the selection expression for the corresponding featureclass, the corresponding rule is considered invalid and the next rules are checked for validity.
 
@@ -275,7 +275,7 @@ If the involved features correspond to no rule, they are reported.
 One rule consists out of one expression for 'featureClass'.
 Each expression has a selection expression.
 Additionally, a expression can have variable declarations separated by ";". 
-Optionally, one expression of a rule can have count condition (separeted by ";"), where the declared variables can be checked. 
+Optionally, one expression of a rule can have count condition (separated by ";"), where the declared variables can be checked. 
 
 A selection expression is a constraint on the corresponding featureclass (Example: "ObjektArt IN (x,y)"). If any feature connected at a point does not fulfill the selection expression for the corresponding featureclass, the corresponding rule is considered invalid and the next rules are checked for validity.
 
@@ -482,7 +482,7 @@ Remark: IAttributeRule.Validate() is used to check the rows.</value>
     <value>Finds all errors in 'topology' defined in a geodatabase
 
 Remark: ITopology.Validate() is used if the test is run while editing.
-Otherwise, the dirty areas are reporteded as errors.
+Otherwise, the dirty areas are reported as errors.
 The reported errors are copies of the errorFeatures of the topology's errorFeatureContainer</value>
   </data>
   <data name="QaGdbTopology_topology" xml:space="preserve">
@@ -952,24 +952,24 @@ Remark: The feature classes in 'featureClasses' must have the same spatial refer
 Remark: The feature classes in 'featureClasses' must have the same spatial reference.</value>
   </data>
   <data name="QaMinNodeDistance_4" xml:space="preserve">
-    <value>Finds all pair of (From/To-) points of 'featureClass' closer than 'near' and find all coincidend pairs with z-coordinate difference larger than 'maxZDifference'</value>
+    <value>Finds all pair of (From/To-) points of 'featureClass' closer than 'near' and find all coincident pairs with z-coordinate difference larger than 'maxZDifference'</value>
   </data>
   <data name="QaMinNodeDistance_5" xml:space="preserve">
-    <value>Finds all pair of (From/To-) points of 'featureClasses' closer than 'near' and find all coincidend pairs with z-coordinate difference larger than 'maxZDifference'
+    <value>Finds all pair of (From/To-) points of 'featureClasses' closer than 'near' and find all coincident pairs with z-coordinate difference larger than 'maxZDifference'
 
 Remark: The feature classes in 'featureClasses' must have the same spatial reference.</value>
   </data>
   <data name="QaMinNodeDistance_6" xml:space="preserve">
-    <value>Finds all pair of (From/To-) points of 'featureClass' closer than 'near' and find all coincidend pairs with z-coordinate difference larger than 'maxZDifference'. Pairs closer than 'tolerance' are considered coincident</value>
+    <value>Finds all pair of (From/To-) points of 'featureClass' closer than 'near' and find all coincident pairs with z-coordinate difference larger than 'maxZDifference'. Pairs closer than 'tolerance' are considered coincident</value>
   </data>
   <data name="QaMinNodeDistance_7" xml:space="preserve">
-    <value>Finds all pair of (From/To-) points of 'featureClasses' closer than 'near' and find all coincidend pairs with z-coordinate difference larger than 'maxZDifference'. Pairs closer than 'tolerance' are considered coincident</value>
+    <value>Finds all pair of (From/To-) points of 'featureClasses' closer than 'near' and find all coincident pairs with z-coordinate difference larger than 'maxZDifference'. Pairs closer than 'tolerance' are considered coincident</value>
   </data>
   <data name="QaMinNodeDistance_9" xml:space="preserve">
-    <value>Finds all pair of (From/To-) points of 'featureClass' closer than 'near' and find all coincidend pairs with z-coordinate difference larger than 'maxZDifference'. Pairs closer than 'tolerance' are considered coincident. No error is reported for point pairs that fulfill a defined constraint.</value>
+    <value>Finds all pair of (From/To-) points of 'featureClass' closer than 'near' and find all coincident pairs with z-coordinate difference larger than 'maxZDifference'. Pairs closer than 'tolerance' are considered coincident. No error is reported for point pairs that fulfill a defined constraint.</value>
   </data>
   <data name="QaMinNodeDistance_10" xml:space="preserve">
-    <value>Finds all pair of (From/To-) points of 'featureClasses' closer than 'near' and find all coincidend pairs with z-coordinate difference larger than 'maxZDifference'. Pairs closer than 'tolerance' are considered coincident. No error is reported for point pairs that fulfill a defined constraint.</value>
+    <value>Finds all pair of (From/To-) points of 'featureClasses' closer than 'near' and find all coincident pairs with z-coordinate difference larger than 'maxZDifference'. Pairs closer than 'tolerance' are considered coincident. No error is reported for point pairs that fulfill a defined constraint.</value>
   </data>
   <data name="QaMinNodeDistance_11" xml:space="preserve">
     <value>Finds all pair of (From/To-) points of 'featureClass' closer than 'near'. Pairs closer than 'tolerance' are considered coincident. No error is reported for point pairs that fulfill a defined constraint.</value>
@@ -1090,7 +1090,7 @@ Performs the tests defined in 'errorType'.
 Remark: The feature classes in 'pointClass' and 'polylineClass' must have the same spatial reference.</value>
   </data>
   <data name="QaOrphanNode_errorType" xml:space="preserve">
-    <value>report only orpaned points, only line end points without points or both.</value>
+    <value>report only orphaned points, only line end points without points or both.</value>
   </data>
   <data name="QaOrphanNode_pointClass" xml:space="preserve">
     <value>point feature class</value>
@@ -1407,10 +1407,10 @@ Comparison of regular expression flavors:
 Remark: The feature classes in 'polylineClasses' must have the same spatial reference.</value>
   </data>
   <data name="QaFlowLogic_flipExpressions" xml:space="preserve">
-    <value>Expressions for determing the directions of the polylines.
+    <value>Expressions for determining the directions of the polylines.
 The expressions are evaluated on the features attributes and must return a boolean value. If the expression returns true, the flipped geometry of the features shape is used for testing, otherwise the actual shape.
 
-If 'flipExressions' are null: directions are as the features shapes
+If 'flipExpressions' are null: directions are as the features shapes
 
 If there is exactly 1 'flipExpressions', the expression is applied to all 'polylineClasses'. Otherwise, there must be exactly one expression per polylineClass, in corresponding order.</value>
   </data>
@@ -1787,7 +1787,7 @@ Example: G1.Level &lt;&gt; G2.Level</value>
     <value>Indicates if alias names need to be unique for all fields within the table.</value>
   </data>
   <data name="QaSchemaFieldAliases_allowCustomSystemFieldAlias" xml:space="preserve">
-    <value>Indicates if non-default alias names for system fields are allowed. If 'false', alias names for system fields need to be equal to the field name, and the maximum length and charachter case is not tested.</value>
+    <value>Indicates if non-default alias names for system fields are allowed. If 'false', alias names for system fields need to be equal to the field name, and the maximum length and character case is not tested.</value>
   </data>
   <data name="QaSchemaReservedFieldNames_0" xml:space="preserve">
     <value>Finds fields that have a reserved field name, based on a list of reserved names.</value>
@@ -1927,7 +1927,7 @@ Comparison of regular expression flavors:
     <value>The constraint for uniqueness of the coded value names:
 - None: no uniqueness check is applied.
 - UniqueExactCase: names must be unique with their exact case (i.e. names differing only in case are allowed)
-- UniqueAnyCase: names must be unique with any case (i.e. names differeing only in case are not allowed)</value>
+- UniqueAnyCase: names must be unique with any case (i.e. names differing only in case are not allowed)</value>
   </data>
   <data name="QaSchemaFieldDomainCodedValues_minimumValueCount" xml:space="preserve">
     <value>The minimum number of values in the coded value domain.</value>
@@ -2024,8 +2024,8 @@ If 'maxArea' &lt;= 0: the 'maxArea' is not considered.</value>
     <value>List of polygon classes that should have no gaps</value>
   </data>
   <data name="QaNoGaps_sliverLimit" xml:space="preserve">
-    <value>If 'sliverlimit' &gt; 0: Only gaps where the ratio between the square of the perimeter and the area is larger than 'sliverLimit' will be reported.
-If 'sliverlimit' &lt;= 0: the sliverLimit is not considered.</value>
+    <value>If 'sliverLimit' &gt; 0: Only gaps where the ratio between the square of the perimeter and the area is larger than 'sliverLimit' will be reported.
+If 'sliverLimit' &lt;= 0: the sliverLimit is not considered.</value>
   </data>
   <data name="QaLineConnectionFieldValues_0" xml:space="preserve">
     <value>Checks constraints for the distinct values of fields from connected line and point features at a location.</value>
@@ -2480,7 +2480,7 @@ http://msdn.microsoft.com/en-us/library/system.data.datacolumn.expression.aspx</
     <value>defines the point of a line which measure will be compared:
 -Nearest: the nearest segment point or vertex is taken
 -VertexPreferred: if a vertex lies within 'searchDistance' of the point, this vertex, otherwise the nearest segment point
--VertexRequired: a vertex must lie within the 'searchdistance' of a point from 'pointClass' closer than 'searchdistance' to the line, and this vertex is compared</value>
+-VertexRequired: a vertex must lie within the 'searchDistance' of a point from 'pointClass' closer than 'searchDistance' to the line, and this vertex is compared</value>
   </data>
   <data name="QaMeasuresAtPoints_mTolerance" xml:space="preserve">
     <value>maximum allow difference of the point measure value and the corresponding line measure value </value>
@@ -2690,7 +2690,7 @@ The features are aliased using "G1" and "G2".</value>
     <value>Segments with azimuths closer than 'nearAngle' [degree] are checked</value>
   </data>
   <data name="QaMpHorizontalAzimuths_perRing" xml:space="preserve">
-    <value>if true: check each ring seperatly; otherwise: check all horizontal segments of the multipatch feature</value>
+    <value>if true: check each ring separately; otherwise: check all horizontal segments of the multipatch feature</value>
   </data>
   <data name="QaMpVerticalFaces_0" xml:space="preserve">
     <value>Finds patches in a multipatch that are almost vertical </value>
@@ -2851,12 +2851,12 @@ The number of geometry components in the list must be either 0 (in which case 'E
     <value>The maximum uncovered percentage that is still allowed. The specified value must be equal to or larger than 0, and smaller than 100. A value of 0 indicates that the features (or geometry components) must be fully covered. A value of 25 indicates that each feature (or geometry component) must be covered at least by 75 %.</value>
   </data>
   <data name="QaMpFootprintHoles_0" xml:space="preserve">
-    <value>Find mutlitpatch features where footprints have inner rings</value>
+    <value>Find multipatch features where footprints have inner rings</value>
   </data>
   <data name="QaMpFootprintHoles_innerRingHandling" xml:space="preserve">
     <value>None: check the footprint of the original multipatch
 IgnoreInnerRings:check the footprint of the multipatch without inner rings
-IgnoreHorizontalInnerRings: check the footpring of the multipatch without the inner rings of horizontal outer rings</value>
+IgnoreHorizontalInnerRings: check the footprint of the multipatch without the inner rings of horizontal outer rings</value>
   </data>
   <data name="QaMpFootprintHoles_multiPatchClass" xml:space="preserve">
     <value>Multipatch feature class</value>
@@ -2870,7 +2870,7 @@ IgnoreHorizontalInnerRings: check the footpring of the multipatch without the in
   <data name="QaGroupConnected_errorReporting" xml:space="preserve">
     <value>The method for reporting errors.
 
-- ReferToFirstPart: the end points of the first encountered group, plus any point of another group with the same identifer are reported. This method is available for backwards compatibility. Use CombineGroups or ShortestGaps.
+- ReferToFirstPart: the end points of the first encountered group, plus any point of another group with the same identifier are reported. This method is available for backwards compatibility. Use CombineGroups or ShortestGaps.
 If 'CompleteGroupsOutsideTestArea' = true, ReferToFirstPart is replaced with ShortestGaps.
 
 - ShortestGaps: each disjoint line group is connected with the nearest line group for the same group identifier, even if the endpoint of the other line group is already connected to another disjoint line group.
@@ -2969,7 +2969,7 @@ The feature to be tested is aliased using "G1". The nearby ("other") feature is 
     <value>Finds multipatches where the overhang footprint is less than 'limit' or the ring count of the footprint and the overhang footprint differ.</value>
   </data>
   <data name="QaMpOverhang_expression" xml:space="preserve">
-    <value>expression for determing the overhang. Examples: 
+    <value>expression for determining the overhang. Examples: 
 "3.0"; "overhangField"; "2.1 * numericField + 5"</value>
   </data>
   <data name="QaMpOverhang_limit" xml:space="preserve">
@@ -3183,7 +3183,7 @@ If more than one condition is specified, the number of conditions must be equal 
   </data>
   <data name="QaGroupConnected_ReportIndividualGaps" xml:space="preserve">
     <value>If true: Creates the geometric union of all gaps found according to 'errorReporting'. 
-If false: Report each found gap separatly.
+If false: Report each found gap separately.
 
 Default = false.
 Remark: Has no effect for ErrorReporting.ReferToFirstPart</value>
@@ -3230,7 +3230,7 @@ Note: has no effect for ErrorReporting.ReferToFirstPart</value>
     <value>Multipatch feature class</value>
   </data>
   <data name="QaMpFootprintRelation_overhangExpression" xml:space="preserve">
-    <value>expression for determing the overhang. Examples: 
+    <value>expression for determining the overhang. Examples: 
 "3.0"; "overhangField"; "2.1 * numericField + 5"</value>
   </data>
   <data name="QaMpVertexNotNearFace_0" xml:space="preserve">
@@ -3270,7 +3270,7 @@ Note: has no effect for ErrorReporting.ReferToFirstPart</value>
     <value>Only faces with slopes &gt; 'MinimumSlopeDegrees' are tested against vertices</value>
   </data>
   <data name="QaMpVertexNotNearFace_PlaneCoincidence" xml:space="preserve">
-    <value>Vertices with a z-Difference &lt; 'PlaneConicidence' are considered as conincident with the face and are not reported as errors</value>
+    <value>Vertices with a z-Difference &lt; 'PlaneCoincidence' are considered as coincident with the face and are not reported as errors</value>
   </data>
   <data name="QaValidCoordinateFields_0" xml:space="preserve">
     <value>Finds features with attributes for XY and/or Z coordinate values whose values differ significantly from the coordinates of the feature. </value>
@@ -3350,7 +3350,7 @@ Examples:
 "100" (maximum value =reference row count +100)
 "-100" (maximum value =reference row count - 100)
 "10%" (maximum value = reference row count + 10% of reference row count)
-"-10%" (maximum value =reference row count - 10% of refrence row count)
+"-10%" (maximum value =reference row count - 10% of reference row count)
 "0" (maximum value =reference row count)
 undefined: no maximum value specified.
 
@@ -3363,7 +3363,7 @@ Examples:
 "100" (minimum value =reference row count +100)
 "-100" (minimum value =reference row count - 100)
 "10%" (minimum value = reference row count + 10% of reference row count)
-"-10%" (minimum value =reference row count - 10% of refrence row count)
+"-10%" (minimum value =reference row count - 10% of reference row count)
 "0" (minimum value =reference row count)
 undefined: no minimum value specified.
 
@@ -3452,7 +3452,7 @@ default = false.</value>
   </data>
   <data name="QaPointNotNear_GeometryComponents" xml:space="preserve">
     <value>If set, defines which component (entire, border, vertices, end points, start point, end point, centroid, label point, interior vertices) of the reference geometry is checked. If not set, the entire geometry is tested.
-If 'GeometryComponents' contains one entry, this component is applied to all reference feature classes. If 'GeometryComponents' containes more than one entry, it must contain exactly the number of feature classes in 'referenceClasses'.</value>
+If 'GeometryComponents' contains one entry, this component is applied to all reference feature classes. If 'GeometryComponents' contains more than one entry, it must contain exactly the number of feature classes in 'referenceClasses'.</value>
   </data>
   <data name="QaPointNotNear_limit" xml:space="preserve">
     <value>minimum allowed distance</value>
@@ -3470,7 +3470,7 @@ If 'GeometryComponents' contains one entry, this component is applied to all ref
     <value>If set, defines constraints between a feature of 'pointClass' and a feature of a reference feature class. If this constraint is fulfilled, the distance between the features is not checked against 'limit' and no error is reported.
 The involved features are aliased using "G1" and G2".
 Example: G1.Level &lt;&gt; G2.Level.
-If 'ValidRelationConstraints' contains one entry, this constraint is applied to all reference feature classes. If 'ValidRelationConstraints' containes more than one entry, it must contain exactly the number of feature classes in 'referenceClasses'.</value>
+If 'ValidRelationConstraints' contains one entry, this constraint is applied to all reference feature classes. If 'ValidRelationConstraints' contains more than one entry, it must contain exactly the number of feature classes in 'referenceClasses'.</value>
   </data>
   <data name="QaPointNotNear_MinimumErrorLineLength" xml:space="preserve">
     <value>The minimum length for errors to be reported as connection line between the point and the nearest location on the neighbor feature. For larger values of 'limit', these lines can be used to indicate the corresponding locations that are too close. However, very short lines can be hard to spot, therefore this parameter specifies a lower limit for the length of connection lines, below which the locations are reported as points. 
@@ -4198,7 +4198,7 @@ If 'MinDangleLengthAtForkContinued' &gt; 0, this value is only checked, when the
   <data name="QaLineGroupConstraints_MinGapToSameGroupTypeAtFork" xml:space="preserve">
     <value>Minimum allowed gap to a group of the same group type, when the gap starts at a fork.
 
-If 'MinGapToSameGroupAtForkCovered' &gt; 0, this value is only used for gaps, that are not completly covered by other groups.</value>
+If 'MinGapToSameGroupAtForkCovered' &gt; 0, this value is only used for gaps, that are not completely covered by other groups.</value>
   </data>
   <data name="QaLineGroupConstraints_MinGapToSameGroupTypeAtForkCovered" xml:space="preserve">
     <value>Minimum allowed gap to a group of the same group type, when the gap starts at a fork and is fully covered by other groups</value>
@@ -4734,7 +4734,7 @@ Upper feature is aliased as "U", lower feature as "L"
 Example: U.ZDiff + L.ZDiff</value>
   </data>
   <data name="QaNotNear_JunctionCoincidenceTolerance" xml:space="preserve">
-    <value>If set, the tolerance that 2 junction points are considered equal. If not set: tolerance of featureclass.</value>
+    <value>If set, the tolerance that 2 junction points are considered equal. If not set: tolerance of 'featureClass'.</value>
   </data>
   <data name="QaPartCoincidenceSelf_7" xml:space="preserve">
     <value>Find line sections longer than a specified minimum length in 'featureClasses', where 2 non-coincident lines lie nearer than 'near', but are not coincident. The minimum length can be defined separately for line pairs that are connected ('connectedMinLengthExpressions') or disjoint ('disjointMinLengthExpressions'). A coincidence tolerance can be specified to indicate a maximum allowed offset between the lines at which they are still considered to be coincident.
@@ -4763,7 +4763,7 @@ Remark: All feature classes in 'featureClasses' must have the same spatial refer
     <value>Finds features where the Z difference to another feature is not between 'minimumZDifference' and 'maximumZDifference'</value>
   </data>
   <data name="QaZDifferenceSelf_3" xml:space="preserve">
-    <value>Finds features where the Z difference to another feature within a list of feature classesis not between 'minimumZDifference' and 'maximumZDifference'</value>
+    <value>Finds features where the Z difference to another feature within a list of feature classes is not between 'minimumZDifference' and 'maximumZDifference'</value>
   </data>
   <data name="QaZDifferenceSelf_maximumZDifference" xml:space="preserve">
     <value>maximum allowed Z-Difference. Remark: If 'MaximumZDifferenceExpression' is set, this value is not used.</value>

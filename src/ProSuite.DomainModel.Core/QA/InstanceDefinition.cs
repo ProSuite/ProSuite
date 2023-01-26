@@ -13,11 +13,22 @@ namespace ProSuite.DomainModel.Core.QA
 		private readonly string _testFactoryTypeName;
 		private readonly string _typeName;
 
+		public static InstanceDefinition CreateFrom(InstanceDescriptor instanceDescriptor)
+		{
+			if (instanceDescriptor is TestDescriptor testDescriptor)
+			{
+				// Special handling in case of test factory!
+				return new InstanceDefinition(testDescriptor);
+			}
+
+			return new InstanceDefinition(instanceDescriptor);
+		}
+
 		/// <summary>
 		/// Initializes a new instance of the <see cref="InstanceDefinition" /> class.
 		/// </summary>
 		/// <param name="testDescriptor">The test descriptor for which the definition should be created.</param>
-		public InstanceDefinition([NotNull] TestDescriptor testDescriptor)
+		private InstanceDefinition([NotNull] TestDescriptor testDescriptor)
 		{
 			Assert.ArgumentNotNull(testDescriptor, nameof(testDescriptor));
 
@@ -40,7 +51,7 @@ namespace ProSuite.DomainModel.Core.QA
 		/// Initializes a new instance of the <see cref="InstanceDefinition" /> class.
 		/// </summary>
 		/// <param name="instanceDescriptor">The instance descriptor for which the definition should be created.</param>
-		public InstanceDefinition([NotNull] InstanceDescriptor instanceDescriptor)
+		private InstanceDefinition([NotNull] InstanceDescriptor instanceDescriptor)
 		{
 			Assert.ArgumentNotNull(instanceDescriptor, nameof(instanceDescriptor));
 

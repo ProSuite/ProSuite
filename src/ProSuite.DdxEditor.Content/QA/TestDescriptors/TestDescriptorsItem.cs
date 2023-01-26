@@ -1,19 +1,22 @@
+using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Windows.Forms;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Essentials.System;
 using ProSuite.Commons.Logging;
 using ProSuite.DdxEditor.Content.Properties;
+using ProSuite.DdxEditor.Content.QA.InstanceDescriptors;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Commands;
 using ProSuite.DdxEditor.Framework.Items;
+using ProSuite.DomainModel.AO.QA;
+using ProSuite.DomainModel.Core;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.Repositories;
-using ProSuite.QA.Core.Reports;
+using ProSuite.QA.Core;
 
 namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 {
@@ -62,7 +65,6 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 			commands.Add(new AddTestDescriptorCommand(this, applicationController));
 			commands.Add(new AddTestDescriptorsFromAssemblyCommand(this, applicationController));
 
-			commands.Add(new CreateReportForTestDescriptorsCommand(this, applicationController));
 			commands.Add(new DeleteAllChildItemsCommand(this, applicationController));
 		}
 
@@ -79,6 +81,67 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 			item.NotifyChanged();
 
 			return item;
+		}
+
+		public void AddTestDescriptors(string dllFilePath,
+		                               IApplicationController applicationController)
+		{
+			using (_msg.IncrementIndentation(
+				       "Adding test descriptors from assembly {0}", dllFilePath))
+			{
+				Assembly assembly = Assembly.LoadFile(dllFilePath);
+
+				var newDescriptors = new List<TestDescriptor>();
+
+				const bool includeObsolete = false;
+				const bool includeInternallyUsed = false;
+
+				const bool stopOnError = false;
+				const bool allowErrors = true;
+
+				// TODO allow specifying naming convention
+				// TODO optionally use alternate display name 
+				// TODO allow selection of types/constructors
+				// TODO optionally change properties of existing descriptors with same definition
+				var testCount = 0;
+
+				foreach (Type testType in TestFactoryUtils.GetTestClasses(
+					         assembly, includeObsolete, includeInternallyUsed))
+				{
+					foreach (int constructorIndex in
+					         InstanceUtils.GetConstructorIndexes(testType))
+					{
+						testCount++;
+						newDescriptors.Add(
+							new TestDescriptor(
+								TestFactoryUtils.GetDefaultTestDescriptorName(
+									testType, constructorIndex),
+								new ClassDescriptor(testType),
+								constructorIndex,
+								stopOnError, allowErrors));
+					}
+				}
+
+				var testFactoryCount = 0;
+
+				foreach (Type testFactoryType in TestFactoryUtils.GetTestFactoryClasses(
+					         assembly, includeObsolete, includeInternallyUsed))
+				{
+					testFactoryCount++;
+					newDescriptors.Add(
+						new TestDescriptor(
+							TestFactoryUtils.GetDefaultTestDescriptorName(testFactoryType),
+							new ClassDescriptor(testFactoryType),
+							stopOnError, allowErrors));
+				}
+
+				_msg.InfoFormat("The assembly contains {0} tests and {1} test factories",
+				                testCount, testFactoryCount);
+
+				applicationController.GoToItem(this);
+
+				TryAddTestDescriptors(newDescriptors);
+			}
 		}
 
 		protected override Control CreateControlCore(IItemNavigation itemNavigation)
@@ -110,60 +173,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 			}
 		}
 
-		public void CreateTestReport([NotNull] string htmlFileName, bool overwrite)
-		{
-			Assert.ArgumentNotNullOrEmpty(htmlFileName, nameof(htmlFileName));
-
-			if (overwrite && File.Exists(htmlFileName))
-			{
-				File.Delete(htmlFileName);
-			}
-
-			using (TextWriter writer = new StreamWriter(htmlFileName))
-			{
-				var reportBuilder = new HtmlReportBuilder(writer, "Registered Tests")
-				                    {
-					                    IncludeObsolete = false,
-					                    IncludeAssemblyInfo = true
-				                    };
-
-				_modelBuilder.ReadOnlyTransaction(
-					delegate
-					{
-						IList<TestDescriptor> testDescriptors =
-							_modelBuilder.TestDescriptors.GetAll();
-
-						foreach (TestDescriptor descriptor in testDescriptors)
-						{
-							if (descriptor.TestClass != null)
-							{
-								reportBuilder.IncludeTest(descriptor.TestClass.GetInstanceType(),
-								                          descriptor.TestConstructorId);
-							}
-							else if (descriptor.TestFactoryDescriptor != null)
-							{
-								reportBuilder.IncludeTestFactory(
-									descriptor.TestFactoryDescriptor.GetInstanceType());
-							}
-							else
-							{
-								_msg.WarnFormat(
-									"Neither test class nor factory defined for descriptor {0}",
-									descriptor.Name);
-							}
-						}
-
-						reportBuilder.WriteReport();
-					});
-			}
-
-			_msg.InfoFormat("Report of registered tests created: {0}", htmlFileName);
-
-			_msg.Info("Opening report...");
-			ProcessUtils.StartProcess(htmlFileName);
-		}
-
-		public void TryAddTestDescriptors(
+		private void TryAddTestDescriptors(
 			[NotNull] IEnumerable<TestDescriptor> testDescriptors)
 		{
 			Assert.ArgumentNotNull(testDescriptors, nameof(testDescriptors));
@@ -174,39 +184,8 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 			_modelBuilder.NewTransaction(
 				delegate
 				{
-					Dictionary<string, InstanceDefinition> definitions =
-						repository.GetAll()
-						          .Select(descriptor => new InstanceDefinition(descriptor))
-						          .ToDictionary(definition => definition.Name);
-
-					foreach (TestDescriptor testDescriptor in testDescriptors)
-					{
-						var definition = new InstanceDefinition(testDescriptor);
-
-						// Note daro: hack for TOP-5464
-						// In DDX schema there is an unique constraint on NAME
-						// and
-						// FCTRY_TYPENAME, FCTRY_ASSEMBLYNAME, TEST_TYPENAME, TEST_ASSEMBLYNAME, TEST_CTROID
-
-						// 1st check: name
-						if (definitions.ContainsKey(definition.Name))
-						{
-							_msg.InfoFormat(
-								"A test descriptor with the same definition as '{0}' is already registered",
-								testDescriptor.Name);
-						}
-						// 2nd check: equality with rest of object
-						else if (! definitions.ContainsValue(definition))
-						{
-							_msg.DebugFormat("Registering new test descriptor {0}", testDescriptor);
-
-							definitions.Add(definition.Name, definition);
-
-							repository.Save(testDescriptor);
-
-							addedCount++;
-						}
-					}
+					addedCount = InstanceDescriptorItemUtils.TryAddInstanceDescriptorsTx(
+						testDescriptors, repository);
 				});
 
 			_msg.InfoFormat("{0} test descriptor(s) added", addedCount);
