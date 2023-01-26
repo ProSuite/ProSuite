@@ -23,7 +23,6 @@ public class InstanceConfigurationViewModel<T> : NotifyPropertyChangedBase,
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 	[NotNull] private readonly EntityItem<T, T> _item;
-	private int _version;
 
 	public InstanceConfigurationViewModel([NotNull] EntityItem<T, T> item,
 	                                      [NotNull] ITestParameterDatasetProvider datasetProvider,
@@ -54,10 +53,6 @@ public class InstanceConfigurationViewModel<T> : NotifyPropertyChangedBase,
 	[NotNull]
 	public IItemNavigation ItemNavigation { get; }
 
-	public bool IsPersistent => GetEntity().IsPersistent;
-
-	public bool Discard { get; set; }
-
 	public void NotifyChanged(bool dirty)
 	{
 		_item.NotifyChanged();
@@ -67,22 +62,25 @@ public class InstanceConfigurationViewModel<T> : NotifyPropertyChangedBase,
 	{
 		Assert.ArgumentNotNull(qualityCondition, nameof(qualityCondition));
 
-		try
-		{
-			Values = new List<ViewModelBase>(GetTopLevelRows(CreateRows(qualityCondition)));
+		Values = new List<ViewModelBase>(GetTopLevelRows(CreateRows(qualityCondition)));
 
-			Discard = qualityCondition.Version == _version;
 
-			OnPropertyChanged(nameof(Values));
-		}
-		finally
-		{
-			_version = qualityCondition.Version;
-			Discard = false;
-		}
+		// call stack:
+		// IInstanceConfigurationViewModel.BindTo()
+		// QualityConditionTableViewBlazor.ViewModel.set
+		// QualityConditionTableViewBlazor.OnPropertyChanged(object sender, PropertyChangedEventArgs e)
+		OnPropertyChanged(nameof(Values));
 	}
 
-	public void Dispose() { }
+	public void Dispose()
+	{
+		Assert.NotNull(Values);
+
+		foreach (ViewModelBase vm in Values)
+		{
+			vm.Dispose();
+		}
+	}
 
 	void IInstanceConfigurationViewModel.OnRowPropertyChanged(
 		object sender, PropertyChangedEventArgs e)

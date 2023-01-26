@@ -57,12 +57,13 @@ public abstract class ViewModelBase : Observable
 
 	public void ResetValue()
 	{
-		Value = null;
-
 		ResetValueCore();
 	}
 
-	protected virtual void ResetValueCore() { }
+	protected virtual void ResetValueCore()
+	{
+		Value = null;
+	}
 
 	protected override bool ValidateCore()
 	{
