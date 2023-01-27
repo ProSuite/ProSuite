@@ -20,8 +20,8 @@
   <ItemGroup>
     <Reference Include="ArcGIS.Core">
       <HintPath>$(ProAssemblyPath)\bin\ArcGIS.Core.dll</HintPath>
-      <Private>True</Private>
       <SpecificVersion>False</SpecificVersion>
+      <Private>True</Private>
     </Reference>
     <PackageReference Include="NUnit" Version="3.13.3" />
   </ItemGroup>
