@@ -22,9 +22,8 @@ public abstract class ViewModelBase : Observable
 		observer, customErrorMessage, required)
 	{
 		Assert.ArgumentNotNull(parameter, nameof(parameter));
-
-		IsConstructorParameter = parameter.IsConstructorParameter;
-		ParameterName = IsConstructorParameter ? parameter.Name : $"[{parameter.Name}]";
+		
+		ParameterName = Required ? parameter.Name : $"[{parameter.Name}]";
 		Parameter = parameter;
 		DataType = parameter.Type;
 
@@ -52,9 +51,7 @@ public abstract class ViewModelBase : Observable
 
 	[NotNull]
 	protected Type DataType { get; }
-
-	public bool IsConstructorParameter { get; }
-
+	
 	public void ResetValue()
 	{
 		ResetValueCore();
@@ -72,6 +69,20 @@ public abstract class ViewModelBase : Observable
 
 	public override string ToString()
 	{
-		return $"name: {ParameterName}, type: {DataType} ({GetType()})";
+		string value;
+		if (Value is ICollection<ViewModelBase> collection)
+		{
+			value = StringUtils.Concatenate(collection.Select(vm => vm.Value), ", ");
+		}
+		else if (Value == null)
+		{
+			value = "<null>";
+		}
+		else
+		{
+			value = $"{Value}";
+		}
+
+		return $"{GetType().Name}: {value} ({ParameterName}, {DataType.Name})";
 	}
 }

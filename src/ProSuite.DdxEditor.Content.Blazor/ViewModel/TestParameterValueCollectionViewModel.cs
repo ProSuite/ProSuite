@@ -142,6 +142,8 @@ public class TestParameterValueCollectionViewModel : ViewModelBase, IDataGridVie
 			newSelectedRow = Values[rowsCount - 2];
 		}
 
+		_msg.VerboseDebug(() => $"remove {row}");
+
 		Assert.True(Values.Remove(row), $"cannot remove {row}");
 		
 		OnPropertyChanged(nameof(Values));
@@ -191,6 +193,8 @@ public class TestParameterValueCollectionViewModel : ViewModelBase, IDataGridVie
 
 		int i = index is > -1 ? index.Value : Values.Count;
 
+		_msg.VerboseDebug(()=> $"insert {row}");
+
 		InsertCore(row, i);
 
 		OnPropertyChanged(nameof(Values));
@@ -214,5 +218,10 @@ public class TestParameterValueCollectionViewModel : ViewModelBase, IDataGridVie
 		{
 			Values.Add(row);
 		}
+	}
+
+	public override string ToString()
+	{
+		return $"{GetType().Name}: {DisplayName} ({ParameterName}, {DataType.Name})";
 	}
 }

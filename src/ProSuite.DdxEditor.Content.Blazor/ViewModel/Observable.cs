@@ -3,11 +3,14 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 
 namespace ProSuite.DdxEditor.Content.Blazor.ViewModel;
 
 public abstract class Observable : IDisposable, INotifyPropertyChanged
 {
+	private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 	[CanBeNull] private readonly string _customErrorMessage;
 	[NotNull] private readonly string _defaultErrorMessage = "Value not set";
 	private readonly bool _required;
@@ -91,6 +94,8 @@ public abstract class Observable : IDisposable, INotifyPropertyChanged
 		Validate();
 
 		NotifyDirty();
+
+		_msg.VerboseDebug(() => $"OnRowPropertyChanged: {propertyName}, {this}");
 
 		PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 	}

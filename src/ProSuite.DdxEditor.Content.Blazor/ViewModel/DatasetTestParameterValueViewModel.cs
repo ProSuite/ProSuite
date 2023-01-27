@@ -263,4 +263,11 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 
 		return qualified ? $"{name} [{ModelName}]" : name;
 	}
+
+	public override string ToString()
+	{
+		string value = DisplayValue == null ? "<null>" : $"{DisplayValue}";
+
+		return $"{GetType().Name}: {value} ({ParameterName}, {DataType.Name})";
+	}
 }

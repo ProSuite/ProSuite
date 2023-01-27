@@ -221,11 +221,16 @@ public class InstanceConfigurationViewModel<T> : NotifyPropertyChangedBase,
 		Assert.ArgumentNotNull(instanceConfiguration, nameof(instanceConfiguration));
 		Assert.ArgumentNotNull(values, nameof(values));
 
-		instanceConfiguration.ClearParameterValues();
-
-		foreach (ViewModelBase row in values)
+		using (_msg.IncrementIndentation())
 		{
-			AddTestParameterValue(instanceConfiguration, row);
+			_msg.VerboseDebug(() => $"update entity: {instanceConfiguration}");
+
+			instanceConfiguration.ClearParameterValues();
+
+			foreach (ViewModelBase row in values)
+			{
+				AddTestParameterValue(instanceConfiguration, row);
+			}
 		}
 	}
 
@@ -237,6 +242,8 @@ public class InstanceConfigurationViewModel<T> : NotifyPropertyChangedBase,
 
 		TestParameter testParameter = row.Parameter;
 		object value = row.Value;
+		
+		_msg.VerboseDebug(() => $"add {row}");
 
 		if (row is DatasetTestParameterValueViewModel datasetParamVM)
 		{
