@@ -208,7 +208,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 		public TileParallelHandlingEnum TileParallelHandling { get; set; } =
 			TileParallelHandlingEnum.HalfOfMaxParallel;
-
+		
 		public NonContainerHandlingEnum NonContainerHandling { get; set; } =
 			NonContainerHandlingEnum.OneSubverificationForAll;
 
@@ -288,7 +288,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 					IQualityVerificationClient finishedClient = _subveriClientsDict[completed];
 					_workingClients.Remove(finishedClient);
 
-					ProcessFinalResult(task, completed);
+					ProcessFinalResult(task, completed, cancelWhenFaulted: false);
 
 					if (task.Status == TaskStatus.Faulted)
 					{
@@ -296,7 +296,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 						SubVerification retry =
 							new SubVerification(completed.SubRequest,
-							                    completed.QualityConditionGroup);
+												completed.QualityConditionGroup);
 						unhandledSubverifications.Push(retry);
 					}
 
@@ -422,15 +422,20 @@ namespace ProSuite.Microservices.Server.AO.QA
 			return task;
 		}
 
-		private void ProcessFinalResult(Task<bool> task, SubVerification subVerification)
+		private void ProcessFinalResult(
+			Task<bool> task, SubVerification subVerification,
+			bool cancelWhenFaulted)
 		{
 			SubResponse subResponse = subVerification.SubResponse;
 			if (task.IsFaulted)
 			{
 				_msg.WarnFormat("Sub-verification has faulted: {0}", subResponse);
 
-				CancellationTokenSource.Cancel();
-				CancellationMessage = task.Exception?.InnerException?.Message;
+				if (cancelWhenFaulted)
+				{
+					CancellationTokenSource.Cancel();
+					CancellationMessage = task.Exception?.InnerException?.Message;
+				}
 			}
 
 			if (! string.IsNullOrEmpty(subResponse.CancellationMessage))
@@ -483,7 +488,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 				bool add = true;
 
-				if (verification.TileEnvelope != null)
+				// TODO: improve logic to remove issues from KnownIssues (handle it when subVerification finishes)
 				{
 					ITest test = verification.GetFirstTest(issueMsg.ConditionId);
 					IssueKey key = new IssueKey(issueMsg, test);
