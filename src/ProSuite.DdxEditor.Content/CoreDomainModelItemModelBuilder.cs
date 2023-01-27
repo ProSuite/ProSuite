@@ -290,18 +290,6 @@ namespace ProSuite.DdxEditor.Content
 						                            .ToList();
 					}
 
-					if (category.CanContainOnlyQualityConditions)
-					{
-						return QualityConditions.Get(category,
-						                             IncludeQualityConditionsBasedOnDeletedDatasets)
-						                        .OrderBy(q => q.Name)
-						                        .Select(qc => new QualityConditionItem(this, qc,
-							                                item,
-							                                QualityConditions))
-						                        .Cast<Item>()
-						                        .ToList();
-					}
-
 					var result = new List<Item>();
 
 					if (category.CanContainQualitySpecifications)
