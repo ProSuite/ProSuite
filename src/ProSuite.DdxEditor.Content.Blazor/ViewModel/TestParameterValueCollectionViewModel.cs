@@ -35,6 +35,19 @@ public class TestParameterValueCollectionViewModel : ViewModelBase, IDataGridVie
 
 	public IList<ViewModelBase> Values => (IList<ViewModelBase>) Value;
 
+	protected override bool ValidateCore()
+	{
+		// only 2 rows and one is a dummy
+		if (Values.Count == 2 && Required)
+		{
+			Assert.True(Values.Any(row => row is DummyTestParameterValueViewModel),
+			            "unexpected row type: no dummy in collection");
+			return false;
+		}
+
+		return base.ValidateCore();
+	}
+
 	[NotNull]
 	private string GetDisplayName(IEnumerable<ViewModelBase> values)
 	{
