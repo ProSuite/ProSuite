@@ -274,6 +274,11 @@ namespace ProSuite.QA.Container.TestSupport
 				{
 					columnInfos.Add(columnInfo);
 					addedFields.Add(token);
+					if (! token.Equals(columnInfo.ColumnName, StringComparison.OrdinalIgnoreCase))
+					{
+						aliasDict = aliasDict ?? new Dictionary<string, string>();
+						aliasDict.Add(columnInfo.ColumnName, token);
+					}
 				}
 			}
 

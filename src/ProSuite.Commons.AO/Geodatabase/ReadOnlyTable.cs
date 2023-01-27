@@ -7,23 +7,6 @@ namespace ProSuite.Commons.AO.Geodatabase
 {
 	public class ReadOnlyTable : IReadOnlyTable, ISubtypes
 	{
-		public static IEnumerable<IReadOnlyRow> EnumRows(IEnumerable<IRow> rows)
-		{
-			ITable current = null;
-			ReadOnlyTable table = null;
-			foreach (var row in rows)
-			{
-				ITable t = row.Table;
-				if (t != current)
-				{
-					table = CreateReadOnlyTable(row.Table);
-					current = t;
-				}
-
-				yield return table.CreateRow(row);
-			}
-		}
-
 		protected static ReadOnlyTable CreateReadOnlyTable(ITable table)
 		{
 			return new ReadOnlyTable(table);
@@ -52,7 +35,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		public string Name => DatasetUtils.GetName(BaseTable);
 		public IFields Fields => BaseTable.Fields;
 
-		public int FindField(string name) => BaseTable.FindField(name);
+		public virtual int FindField(string name) => BaseTable.FindField(name);
 
 		public bool HasOID => AlternateOidFieldName != null || BaseTable.HasOID;
 
