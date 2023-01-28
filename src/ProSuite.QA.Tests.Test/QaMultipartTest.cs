@@ -34,10 +34,7 @@ namespace ProSuite.QA.Tests.Test
 
 			QaTestRunner testRunner = RunTestOnFeature(feature);
 
-			QaError error;
-			AssertUtils.OneError(testRunner, "Multipart.MultipleExteriorRings", out error);
-			Assert.True(error.InvolvedRows.Count == 1);
-			// message from previous releases, must be maintained for these parameters
+			QaError error = AssertUtils.OneError(testRunner, "Multipart.MultipleExteriorRings");
 			Assert.AreEqual("Polygon has 2 exterior rings, allowed is 1", error.Description);
 		}
 
@@ -48,10 +45,7 @@ namespace ProSuite.QA.Tests.Test
 
 			QaTestRunner testRunner = RunTestOnFeature(feature, singleRing: true);
 
-			QaError error;
-			AssertUtils.OneError(testRunner, "Multipart.MultipleParts", out error);
-			Assert.True(error.InvolvedRows.Count == 1);
-			// message from previous releases, must be maintained for these parameters
+			QaError error = AssertUtils.OneError(testRunner, "Multipart.MultipleParts");
 			Assert.AreEqual("Geometry has 4 parts, allowed is 1", error.Description);
 		}
 
