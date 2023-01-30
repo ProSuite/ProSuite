@@ -261,8 +261,7 @@ namespace ProSuite.QA.Tests.Test
 			var runner = new QaContainerTestRunner(10000, test) { KeepGeometry = true };
 			runner.Execute(verificationEnvelope);
 
-			QaError error;
-			AssertUtils.OneError(runner, "CoveredByOther.NotCoveredByAnyFeature", out error);
+			QaError error = AssertUtils.OneError(runner, "CoveredByOther.NotCoveredByAnyFeature");
 			Assert.NotNull(error.Geometry);
 			var point = (IPoint) error.Geometry;
 			Assert.AreEqual(205, point.X, 0.001);
@@ -368,8 +367,7 @@ namespace ProSuite.QA.Tests.Test
 			var runner = new QaContainerTestRunner(10000, test) { KeepGeometry = true };
 			runner.Execute(verificationEnvelope);
 
-			QaError error;
-			AssertUtils.OneError(runner, "CoveredByOther.NotFullyCovered", out error);
+			QaError error = AssertUtils.OneError(runner, "CoveredByOther.NotFullyCovered");
 
 			Assert.NotNull(error.Geometry);
 			Assert.AreEqual(1000, ((IArea) error.Geometry).Area, 0.001);
@@ -440,8 +438,7 @@ namespace ProSuite.QA.Tests.Test
 			var runner = new QaContainerTestRunner(10000, test) { KeepGeometry = true };
 			runner.Execute(verificationEnvelope);
 
-			QaError error;
-			AssertUtils.OneError(runner, "CoveredByOther.NotFullyCovered", out error);
+			QaError error = AssertUtils.OneError(runner, "CoveredByOther.NotFullyCovered");
 
 			Assert.NotNull(error.Geometry);
 			Assert.AreEqual(10, ((ICurve) error.Geometry).Length, 0.001);
@@ -568,8 +565,7 @@ namespace ProSuite.QA.Tests.Test
 			var runner = new QaContainerTestRunner(10000, test) { KeepGeometry = true };
 			runner.Execute(verificationEnvelope);
 
-			QaError error;
-			AssertUtils.OneError(runner, "CoveredByOther.NotFullyCovered", out error);
+			QaError error = AssertUtils.OneError(runner, "CoveredByOther.NotFullyCovered");
 
 			Assert.NotNull(error.Geometry);
 			Assert.AreEqual(1000, ((IArea) error.Geometry).Area, 0.001);
@@ -1350,8 +1346,7 @@ namespace ProSuite.QA.Tests.Test
 			var runner = new QaContainerTestRunner(10000, test);
 			runner.Execute();
 
-			QaError error;
-			AssertUtils.OneError(runner, "CoveredByOther.NotCoveredByAnyFeature", out error);
+			QaError error = AssertUtils.OneError(runner, "CoveredByOther.NotCoveredByAnyFeature");
 
 			Assert.AreEqual(1, error.InvolvedRows.Count);
 			Assert.AreEqual(nearlyClosedLine1.OID, error.InvolvedRows[0].OID);
@@ -1388,10 +1383,8 @@ namespace ProSuite.QA.Tests.Test
 			IEnvelope testExtent = GeometryFactory.CreateEnvelope(50, 50, 150, 150);
 			runner.Execute(testExtent);
 
-			QaError error;
-			AssertUtils.OneError(runner,
-			                     "CoveredByOther.NotCoveredByAnyFeature.PartlyOutsideVerifiedExtent",
-			                     out error);
+			QaError error = AssertUtils.OneError(runner,
+			                     "CoveredByOther.NotCoveredByAnyFeature.PartlyOutsideVerifiedExtent");
 
 			Assert.AreEqual(1, runner.ErrorGeometries.Count);
 			Assert.AreEqual(1, GeometryUtils.GetPartCount(runner.ErrorGeometries[0]));
@@ -1433,10 +1426,8 @@ namespace ProSuite.QA.Tests.Test
 			IEnvelope testExtent = GeometryFactory.CreateEnvelope(50, 50, 150, 150);
 			runner.Execute(testExtent);
 
-			QaError error;
-			AssertUtils.OneError(runner,
-			                     "CoveredByOther.NotCoveredByAnyFeature.PartlyOutsideVerifiedExtent",
-			                     out error);
+			QaError error = AssertUtils.OneError(runner,
+			                     "CoveredByOther.NotCoveredByAnyFeature.PartlyOutsideVerifiedExtent");
 
 			Assert.AreEqual(1, runner.ErrorGeometries.Count);
 			Assert.AreEqual(1, GeometryUtils.GetPartCount(runner.ErrorGeometries[0]));

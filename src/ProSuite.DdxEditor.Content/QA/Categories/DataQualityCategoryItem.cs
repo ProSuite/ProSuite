@@ -21,7 +21,6 @@ using ProSuite.DdxEditor.Framework.ItemViews;
 using ProSuite.DdxEditor.Framework.TableRows;
 using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.Core.QA;
-using ProSuite.UI.QA.BoundTableRows;
 
 namespace ProSuite.DdxEditor.Content.QA.Categories
 {
@@ -65,11 +64,6 @@ namespace ProSuite.DdxEditor.Content.QA.Categories
 
 		public override Image SelectedImage => _selectedImage;
 
-		protected override string GetDescription(DataQualityCategory entity)
-		{
-			return entity.Description;
-		}
-
 		/// <summary>
 		/// Indicates that the form for editing the category properties should be loaded 
 		/// the next time the item is activated.
@@ -93,14 +87,6 @@ namespace ProSuite.DdxEditor.Content.QA.Categories
 			}
 
 			IsBeingEdited = false;
-
-			if (category.CanContainOnlyQualityConditions)
-			{
-				return _modelBuilder.ListQualityConditionsWithDataset
-					       ? (Control)
-					       CreateTableControl(GetQualityConditionDatasetTableRows, itemNavigation)
-					       : CreateTableControl(GetQualityConditionTableRows, itemNavigation);
-			}
 
 			if (category.CanContainOnlyQualitySpecifications)
 			{
@@ -210,11 +196,6 @@ namespace ProSuite.DdxEditor.Content.QA.Categories
 				commands.Add(new AddQualitySpecificationCommand(this, applicationController, this));
 			}
 
-			if (category.CanContainOnlyQualityConditions)
-			{
-				commands.Add(new AddQualityConditionCommand(this, applicationController, this));
-			}
-
 			if (category.CanContainQualitySpecifications || category.CanContainSubCategories)
 			{
 				commands.Add(new ExportQualitySpecificationsCommand(this, applicationController,
@@ -319,23 +300,6 @@ namespace ProSuite.DdxEditor.Content.QA.Categories
 		void IQualitySpecificationContainerItem.AddNewQualitySpecificationItem()
 		{
 			AddQualitySpecificationItem(CreateQualitySpecificationItem(this));
-		}
-
-		public IEnumerable<QualityConditionDatasetTableRow>
-			GetQualityConditionDatasetTableRows()
-		{
-			DataQualityCategory category = Assert.NotNull(GetEntity());
-
-			return QualityConditionContainerUtils.GetQualityConditionDatasetTableRows(
-				_modelBuilder, category);
-		}
-
-		public IEnumerable<InstanceConfigurationInCategoryTableRow> GetQualityConditionTableRows()
-		{
-			DataQualityCategory category = Assert.NotNull(GetEntity());
-
-			return QualityConditionContainerUtils.GetQualityConditionTableRows(
-				_modelBuilder, category);
 		}
 
 		public QualityConditionItem CreateQualityConditionItem(
