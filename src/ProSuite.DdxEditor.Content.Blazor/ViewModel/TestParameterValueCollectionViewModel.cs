@@ -1,17 +1,19 @@
-using System;
 using System.Collections.Generic;
+using System.Linq;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
 using ProSuite.DdxEditor.Content.Blazor.View;
 using ProSuite.DomainModel.AO.QA;
-using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Core;
 
 namespace ProSuite.DdxEditor.Content.Blazor.ViewModel;
 
 public class TestParameterValueCollectionViewModel : ViewModelBase, IDataGridViewModel
 {
+	private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 	public TestParameterValueCollectionViewModel([NotNull] TestParameter parameter,
 	                                             [NotNull] IList<ViewModelBase> values,
 	                                             IInstanceConfigurationViewModel observer,
@@ -58,19 +60,19 @@ public class TestParameterValueCollectionViewModel : ViewModelBase, IDataGridVie
 	{
 		foreach (ViewModelBase v in values)
 		{
+			if (v is DummyTestParameterValueViewModel)
+			{
+				continue;
+			}
+
 			if (v.Value == null)
 			{
 				yield return TestParameterTypeUtils.GetDefault(DataType)?.ToString();
 			}
 
-			else if (v is DummyTestParameterValueViewModel)
+			if (DataType.IsEnum)
 			{
-				continue;
-			}
-
-			else if (DataType.IsEnum)
-			{
-				yield return Enum.GetName(DataType, v.Value);
+				yield return TestParameterTypeUtils.GetDefault(DataType)?.ToString();
 			}
 
 			else if (IsDatasetType)
@@ -87,31 +89,9 @@ public class TestParameterValueCollectionViewModel : ViewModelBase, IDataGridVie
 	[NotNull]
 	public ViewModelBase InsertDefaultRow()
 	{
-		int? position = Values.Count - 1;
-
-		TestParameterValue emptyTestParameterValue =
-			TestParameterTypeUtils.GetEmptyParameterValue(Parameter);
-
-		ViewModelBase row;
-
-		if (TestParameterTypeUtils.IsDatasetType(DataType))
-		{
-			var testParameterValue = emptyTestParameterValue as DatasetTestParameterValue;
-			Assert.NotNull(testParameterValue);
-
-			row = DatasetTestParameterValueViewModel.CreateInstance(
-				Parameter, testParameterValue, Observer);
-			Insert(row, position);
-		}
-		else
-		{
-			var testParameterValue = emptyTestParameterValue as ScalarTestParameterValue;
-			Assert.NotNull(testParameterValue);
-
-			row = new ScalarTestParameterValueViewModel(Parameter, testParameterValue.GetValue(),
-			                                            Observer, Parameter.IsConstructorParameter);
-			Insert(row, position);
-		}
+		ViewModelBase row = ViewModelFactory.CreateEmptyTestParameterViewModel(Parameter, Observer);
+		
+		Insert(row, Values.Count - 1);
 
 		return row;
 	}
@@ -202,7 +182,7 @@ public class TestParameterValueCollectionViewModel : ViewModelBase, IDataGridVie
 
 	private void InsertDummyRow()
 	{
-		ViewModelBase row = new DummyTestParameterValueViewModel(Parameter, Observer);
+		ViewModelBase row = new DummyTestParameterValueViewModel(Parameter, Observer, Required);
 		int index = Values.Count;
 
 		InsertCore(row, index);

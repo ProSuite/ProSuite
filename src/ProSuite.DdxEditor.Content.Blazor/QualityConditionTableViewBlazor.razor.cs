@@ -28,6 +28,11 @@ public partial class QualityConditionTableViewBlazor : DataGridBlazorBase
 		}
 	}
 
+	protected override void DisposeCore()
+	{
+		_viewModel.PropertyChanged -= OnPropertyChanged;
+	}
+
 	private void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
 	{
 		DataGrid.Reload();

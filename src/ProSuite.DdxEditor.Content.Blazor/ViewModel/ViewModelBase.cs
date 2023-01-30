@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Text;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.QA.Core;
 
@@ -22,7 +24,7 @@ public abstract class ViewModelBase : Observable
 		observer, customErrorMessage, required)
 	{
 		Assert.ArgumentNotNull(parameter, nameof(parameter));
-		
+
 		ParameterName = Required ? parameter.Name : $"[{parameter.Name}]";
 		Parameter = parameter;
 		DataType = parameter.Type;
@@ -51,15 +53,10 @@ public abstract class ViewModelBase : Observable
 
 	[NotNull]
 	protected Type DataType { get; }
-	
+
 	public void ResetValue()
 	{
 		ResetValueCore();
-	}
-
-	protected virtual void ResetValueCore()
-	{
-		Value = null;
 	}
 
 	protected override bool ValidateCore()
@@ -84,5 +81,10 @@ public abstract class ViewModelBase : Observable
 		}
 
 		return $"{GetType().Name}: {value} ({ParameterName}, {DataType.Name})";
+	}
+
+	protected virtual void ResetValueCore()
+	{
+		Value = null;
 	}
 }

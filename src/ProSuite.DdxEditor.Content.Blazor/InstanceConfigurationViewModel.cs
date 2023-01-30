@@ -1,18 +1,22 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Windows.Forms;
 using ProSuite.Commons;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Misc;
+using ProSuite.Commons.UI.Finder;
 using ProSuite.DdxEditor.Content.Blazor.ViewModel;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Items;
+using ProSuite.DdxEditor.Framework.ItemViews;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Core;
+using ProSuite.UI.QA.BoundTableRows;
 
 namespace ProSuite.DdxEditor.Content.Blazor;
 
@@ -38,8 +42,15 @@ public class InstanceConfigurationViewModel<T> : NotifyPropertyChangedBase,
 		ItemNavigation = itemNavigation;
 	}
 
+	public void Dispose()
+	{
+		DisposeCore(this);
+	}
+
 	[CanBeNull]
 	public IList<ViewModelBase> Values { get; private set; }
+
+	#region IInstanceConfigurationViewModel
 
 	[NotNull]
 	public InstanceConfiguration GetEntity()
@@ -53,17 +64,16 @@ public class InstanceConfigurationViewModel<T> : NotifyPropertyChangedBase,
 	[NotNull]
 	public IItemNavigation ItemNavigation { get; }
 
-	public void NotifyChanged(bool dirty)
+	void IViewObserver.NotifyChanged(bool dirty)
 	{
 		_item.NotifyChanged();
 	}
 
-	// todo rename to instanceConfiguration
-	public void BindTo([NotNull] InstanceConfiguration qualityCondition)
+	void IInstanceConfigurationViewModel.BindTo([NotNull] InstanceConfiguration instanceConfiguration)
 	{
-		Assert.ArgumentNotNull(qualityCondition, nameof(qualityCondition));
+		Assert.ArgumentNotNull(instanceConfiguration, nameof(instanceConfiguration));
 
-		Values = new List<ViewModelBase>(GetTopLevelRows(CreateRows(qualityCondition)));
+		Values = new List<ViewModelBase>(GetTopLevelRows(CreateRows(instanceConfiguration)));
 
 		// Update the entity now, e.g.: a new entity with required collection parameter is added,
 		// the collection is not yet in InstanceConfiguration.ParameterValues. After UpdateEntity
@@ -77,20 +87,51 @@ public class InstanceConfigurationViewModel<T> : NotifyPropertyChangedBase,
 		OnPropertyChanged(nameof(Values));
 	}
 
-	public void Dispose()
+	void IInstanceConfigurationViewModel.OnRowPropertyChanged(
+		object sender, PropertyChangedEventArgs e)
+	{
+		UpdateEntity(Assert.NotNull(_item.GetEntity()), Assert.NotNull(Values));
+	}
+
+	[CanBeNull]
+	DatasetFinderItem IInstanceConfigurationViewModel.FindDatasetClicked([NotNull] TestParameter parameter)
+	{
+		TestParameterType parameterType = TestParameterTypeUtils.GetParameterType(parameter.Type);
+
+		using FinderForm<DatasetFinderItem> form = GetDatasetFinderForm(parameterType);
+
+		DialogResult result = form.ShowDialog();
+
+		if (result != DialogResult.OK)
+		{
+			//return value;
+		}
+
+		IList<DatasetFinderItem> selection = form.Selection;
+
+		if (selection is not { Count: 1 })
+		{
+			return null;
+		}
+
+		return selection[0];
+	}
+
+	#endregion
+
+	private void DisposeCore(
+		[NotNull] IInstanceConfigurationViewModel instanceConfigurationViewModel)
 	{
 		Assert.NotNull(Values);
 
 		foreach (ViewModelBase vm in Values)
 		{
+			_msg.VerboseDebug(() => $"OnRowPropertyChanged unregister: {this}");
+
+			vm.PropertyChanged -= instanceConfigurationViewModel.OnRowPropertyChanged;
+
 			vm.Dispose();
 		}
-	}
-
-	void IInstanceConfigurationViewModel.OnRowPropertyChanged(
-		object sender, PropertyChangedEventArgs e)
-	{
-		UpdateEntity(Assert.NotNull(_item.GetEntity()), Assert.NotNull(Values));
 	}
 
 	private IEnumerable<ViewModelBase> GetTopLevelRows(
@@ -105,8 +146,7 @@ public class InstanceConfigurationViewModel<T> : NotifyPropertyChangedBase,
 
 			if (parameter.ArrayDimension == 1)
 			{
-				yield return new TestParameterValueCollectionViewModel(
-					parameter, rows, this, parameter.IsConstructorParameter);
+				yield return ViewModelFactory.CreateCollectionViewModel(parameter, rows, this);
 			}
 			else if (parameter.ArrayDimension == 0)
 			{
@@ -169,24 +209,8 @@ public class InstanceConfigurationViewModel<T> : NotifyPropertyChangedBase,
 
 			initializedParameters.Add(param);
 
-			if (paramValue is DatasetTestParameterValue datasetValue)
-			{
-				rowsByParameter[param]
-					.Add(DatasetTestParameterValueViewModel.CreateInstance(
-						     param, datasetValue, this));
-			}
-			else if (paramValue is ScalarTestParameterValue scalarValue)
-			{
-				rowsByParameter[param]
-					.Add(new ScalarTestParameterValueViewModel(
-						     param, scalarValue.GetValue(), this,
-						     param.IsConstructorParameter));
-			}
-			else
-			{
-				throw new ArgumentOutOfRangeException(nameof(paramValue),
-				                                      $@"Unkown {nameof(TestParameterValue)} type");
-			}
+			rowsByParameter[param]
+				.Add(ViewModelFactory.CreateTestParameterViewModel(param, paramValue, this));
 		}
 
 		foreach (TestParameter param in factory.Parameters)
@@ -198,17 +222,8 @@ public class InstanceConfigurationViewModel<T> : NotifyPropertyChangedBase,
 
 			if (param.IsConstructorParameter)
 			{
-				if (TestParameterTypeUtils.IsDatasetType(param.Type))
-				{
-					rowsByParameter[param]
-						.Add(DatasetTestParameterValueViewModel.CreateInstance(param, null, this));
-				}
-				else
-				{
-					rowsByParameter[param]
-						.Add(new ScalarTestParameterValueViewModel(
-							     param, null, this, param.IsConstructorParameter));
-				}
+				rowsByParameter[param]
+					.Add(ViewModelFactory.CreateEmptyTestParameterViewModel(param, this));
 			}
 		}
 
@@ -299,5 +314,25 @@ public class InstanceConfigurationViewModel<T> : NotifyPropertyChangedBase,
 		       {
 			       ValueSource = transformerConfiguration
 		       };
+	}
+
+	private FinderForm<DatasetFinderItem> GetDatasetFinderForm(
+		TestParameterType datasetParameterType)
+	{
+		var finder = new Finder<DatasetFinderItem>();
+
+		InstanceConfiguration instanceConfiguration = GetEntity();
+
+		DataQualityCategory category = instanceConfiguration.Category;
+
+		if (instanceConfiguration is TransformerConfiguration transformer)
+		{
+			// Do not allow circular references!
+			DatasetProvider.Exclude(transformer);
+		}
+
+		return FinderUtils.GetDatasetFinder(category, DatasetProvider,
+		                                    datasetParameterType,
+		                                    finder);
 	}
 }
