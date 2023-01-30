@@ -52,7 +52,7 @@ public abstract class ViewModelBase : Observable
 	public TestParameter Parameter { get; }
 
 	[NotNull]
-	protected Type DataType { get; }
+	public Type DataType { get; }
 
 	public void ResetValue()
 	{

@@ -22,15 +22,11 @@ public class TestParameterValueCollectionViewModel : ViewModelBase, IDataGridVie
 	{
 		Assert.ArgumentNotNull(values, nameof(values));
 
-		IsDatasetType = TestParameterTypeUtils.IsDatasetType(DataType);
-
 		ComponentType = typeof(TestParameterValueCollectionBlazor);
 		ComponentParameters.Add("ViewModel", this);
 
 		InsertDummyRow();
 	}
-
-	public bool IsDatasetType { get; }
 
 	[NotNull]
 	public string DisplayName => GetDisplayName(Values);
@@ -68,14 +64,14 @@ public class TestParameterValueCollectionViewModel : ViewModelBase, IDataGridVie
 			if (v.Value == null)
 			{
 				yield return TestParameterTypeUtils.GetDefault(DataType)?.ToString();
+				yield break;
 			}
 
 			if (DataType.IsEnum)
 			{
 				yield return TestParameterTypeUtils.GetDefault(DataType)?.ToString();
 			}
-
-			else if (IsDatasetType)
+			else if (TestParameterTypeUtils.IsDatasetType(DataType))
 			{
 				yield return ((DatasetTestParameterValueViewModel) v).GetDisplayName(false);
 			}

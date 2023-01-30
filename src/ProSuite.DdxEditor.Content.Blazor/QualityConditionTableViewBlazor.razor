@@ -1,5 +1,7 @@
+@using System.ComponentModel.DataAnnotations
 @using ProSuite.DdxEditor.Content.Blazor.View
 @using ProSuite.DdxEditor.Content.Blazor.ViewModel
+@using ProSuite.DomainModel.AO.QA
 @using Radzen
 @using Radzen.Blazor
 
@@ -164,8 +166,8 @@
 	            <Template Context="viewModel">
                     @{
 	                    var vm = viewModel as TestParameterValueCollectionViewModel;
-						
-	                    if (vm is {IsDatasetType: true })
+
+					if (vm != null && TestParameterTypeUtils.IsDatasetType(vm.DataType))
 	                    {
 		                    <DatasetTestParameterValueDataGridBlazor ViewModel="vm"/>
 	                    }
