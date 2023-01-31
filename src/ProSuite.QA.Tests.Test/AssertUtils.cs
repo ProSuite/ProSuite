@@ -15,17 +15,18 @@ namespace ProSuite.QA.Tests.Test
 	{
 		[NotNull]
 		public static QaError OneError([NotNull] QaTestRunnerBase runner,
-		                               [NotNull] string issueCodeId,
+		                               [NotNull] string expectedIssueCodeId,
 		                               int expectedInvolvedRowsCount = 1)
 		{
-			Assert.AreEqual(1, runner.Errors.Count);
+			Assert.AreEqual(1, runner.Errors.Count, "Expected one error");
 
 			QaError error = runner.Errors[0];
-			Assert.AreEqual(error.InvolvedRows.Count, expectedInvolvedRowsCount);
+			Assert.AreEqual(expectedInvolvedRowsCount, error.InvolvedRows.Count,
+			                "Expected {0} involved row(s)", expectedInvolvedRowsCount);
 
 			IssueCode issueCode = error.IssueCode;
 			Assert.IsNotNull(issueCode);
-			Assert.AreEqual(issueCodeId, issueCode.ID);
+			Assert.AreEqual(expectedIssueCodeId, issueCode.ID);
 
 			return error;
 		}

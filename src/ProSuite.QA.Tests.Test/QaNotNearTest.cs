@@ -5,7 +5,6 @@ using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Test;
-using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container.Test;
 using ProSuite.QA.Tests.Test.Construction;
 using ProSuite.QA.Tests.Test.TestRunners;
@@ -21,6 +20,8 @@ namespace ProSuite.QA.Tests.Test
 		public void SetupFixture()
 		{
 			TestUtils.InitializeLicense();
+
+			_testWs = TestWorkspaceUtils.CreateInMemoryWorkspace("QaNotNearTest");
 		}
 
 		[OneTimeTearDown]
@@ -28,21 +29,11 @@ namespace ProSuite.QA.Tests.Test
 		{
 			TestUtils.ReleaseLicense();
 		}
-
-		[NotNull]
-		private IFeatureWorkspace TestWorkspace
-		{
-			get
-			{
-				return _testWs ??
-				       (_testWs = TestWorkspaceUtils.CreateInMemoryWorkspace("QaNotNearTest"));
-			}
-		}
-
+		
 		[Test]
 		public void VerifyErrorHasZ()
 		{
-			VerifyErrorHasZ(TestWorkspace);
+			VerifyErrorHasZ(_testWs);
 		}
 
 		private static void VerifyErrorHasZ(IFeatureWorkspace ws)
@@ -56,8 +47,7 @@ namespace ProSuite.QA.Tests.Test
 				                 true), 1000, true, false));
 
 			IFeatureClass featureClass =
-				DatasetUtils.CreateSimpleFeatureClass(ws, "VerifyErrorHasZ", fields,
-				                                      null);
+				DatasetUtils.CreateSimpleFeatureClass(ws, "VerifyErrorHasZ", fields);
 
 			// make sure the table is known by the workspace
 			((IWorkspaceEdit) ws).StartEditing(false);
@@ -100,7 +90,7 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void VerifyPolyErrorHasZ()
 		{
-			VerifyPolyErrorHasZ(TestWorkspace);
+			VerifyPolyErrorHasZ(_testWs);
 		}
 
 		private static void VerifyPolyErrorHasZ(IFeatureWorkspace ws)
@@ -114,8 +104,7 @@ namespace ProSuite.QA.Tests.Test
 				                 true), 1000, true, false));
 
 			IFeatureClass featureClass =
-				DatasetUtils.CreateSimpleFeatureClass(ws, "VerifyPolyErrorHasZ", fields,
-				                                      null);
+				DatasetUtils.CreateSimpleFeatureClass(ws, "VerifyPolyErrorHasZ", fields);
 
 			// make sure the table is known by the workspace
 			((IWorkspaceEdit) ws).StartEditing(false);
@@ -163,7 +152,7 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void TestConditionCoincidence()
 		{
-			TestConditionCoincidence(TestWorkspace);
+			TestConditionCoincidence(_testWs);
 		}
 
 		private static void TestConditionCoincidence(IFeatureWorkspace ws)
@@ -179,13 +168,9 @@ namespace ProSuite.QA.Tests.Test
 				                 true), 1000, false, false));
 
 			IFeatureClass fc1 =
-				DatasetUtils.CreateSimpleFeatureClass(ws, "TestConditionCoincidence1",
-				                                      fields,
-				                                      null);
+				DatasetUtils.CreateSimpleFeatureClass(ws, "TestConditionCoincidence1", fields);
 			IFeatureClass fc2 =
-				DatasetUtils.CreateSimpleFeatureClass(ws, "TestConditionCoincidence2",
-				                                      fields,
-				                                      null);
+				DatasetUtils.CreateSimpleFeatureClass(ws, "TestConditionCoincidence2", fields);
 
 			((IWorkspaceEdit) ws).StartEditing(false);
 			((IWorkspaceEdit) ws).StopEditing(true);
@@ -206,18 +191,19 @@ namespace ProSuite.QA.Tests.Test
 			// test without ignore conditions --> line is near
 			var test = new QaNotNear(
 				ReadOnlyTableFactory.Create(fc1), ReadOnlyTableFactory.Create(fc2), 1, 10);
-			var testRunner = new QaTestRunner(test);
-			testRunner.Execute();
-			Assert.AreEqual(1, testRunner.Errors.Count);
+
+			var runner = new QaTestRunner(test);
+			runner.Execute();
+			AssertUtils.OneError(runner, "NearCoincidence.NearlyCoincidentSection.BetweenFeatures", 2);
 
 			// Same test with ignore conditions --> nothing near
 			test = new QaNotNear(
 				ReadOnlyTableFactory.Create(fc1), ReadOnlyTableFactory.Create(fc2), 1, 10);
 			test.IgnoreNeighborCondition = "G1.LandID = G2.LandID";
 
-			testRunner = new QaTestRunner(test);
-			testRunner.Execute();
-			Assert.AreEqual(0, testRunner.Errors.Count);
+			runner = new QaTestRunner(test);
+			runner.Execute();
+			AssertUtils.NoError(runner);
 		}
 	}
 }

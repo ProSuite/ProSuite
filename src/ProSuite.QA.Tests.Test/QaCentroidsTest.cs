@@ -55,7 +55,8 @@ namespace ProSuite.QA.Tests.Test
 			var runner = new QaContainerTestRunner(
 				1000, new QaCentroids(ReadOnlyTableFactory.Create(linesFc),
 				                      ReadOnlyTableFactory.Create(pointsFc)));
-			Assert.AreEqual(1, runner.Execute());
+			runner.Execute();
+			AssertUtils.OneError(runner, "Centroids.NoCentroid", 3);
 		}
 
 		[Test]
