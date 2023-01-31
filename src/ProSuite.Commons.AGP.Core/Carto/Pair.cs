@@ -21,24 +21,15 @@ namespace ProSuite.Commons.AGP.Core.Carto
 
 		public static Pair Null => new(0, 0);
 
-		//public static Pair FromXY(double x, double y)
-		//{
-		//	return new Pair(x, y);
-		//}
+		public double Length => Math.Sqrt(X * X + Y * Y);
 
-		//public static Pair FromPoint(MapPoint point)
-		//{
-		//	return new Pair(point.X, point.Y);
-		//}
+		public double AngleDegrees => Math.Atan2(Y, X) * 180.0 / Math.PI;
 
-		//public MapPoint ToPoint(SpatialReference sref = null)
-		//{
-		//	return MapPointBuilderEx.CreateMapPoint(X, Y, sref);
-		//}
-
-		public double Length => Math.Sqrt(LengthSquared);
-
-		public double LengthSquared => X * X + Y * Y;
+		public Pair Normalized()
+		{
+			var invNorm = 1.0 / Length;
+			return new Pair(X * invNorm, Y * invNorm);
+		}
 
 		public Pair Translated(double dx, double dy) // TODO rename Shifted? (shorter, MF/MP)
 		{
@@ -47,7 +38,7 @@ namespace ProSuite.Commons.AGP.Core.Carto
 
 		public Pair Rotated(double angleDegrees)
 		{
-			// TODO optimise the simple cases 90/180/270/360?
+			// (optimise 90/180/270/360 rotations? caller's duty?)
 			double rad = angleDegrees * Math.PI / 180.0;
 			double cos = Math.Cos(rad);
 			double sin = Math.Sin(rad);
@@ -61,6 +52,11 @@ namespace ProSuite.Commons.AGP.Core.Carto
 			return Translated(-pivot.X, -pivot.Y)
 				.Rotated(angleDegrees)
 				.Translated(pivot.X, pivot.Y);
+		}
+
+		public static double Dot(Pair a, Pair b)
+		{
+			return a.X * b.X + a.Y * b.Y;
 		}
 
 		public static Pair Lerp(double t, Pair a, Pair b)

@@ -9,6 +9,8 @@ namespace ProSuite.Processing.Domain
 
 		int SRID { get; }
 
+		// TODO ColorModel: RGB, CMYK, WithSpotColors?
+
 		double PointsToMapUnits(double distance);
 
 		double MapUnitsToPoints(double distance);

@@ -38,6 +38,21 @@ namespace ProSuite.Processing.AGP.Core.Utils
 			_values = new object[fields.Count];
 		}
 
+		public static PseudoFeature FromFeature(Feature feature)
+		{
+			using var fc = feature.GetTable();
+			using var defn = fc.GetDefinition();
+			var pf = FromDefinition(defn);
+			var fields = defn.GetFields();
+			int count = fields.Count;
+			for (int i = 0; i < count; i++)
+			{
+				pf[i] = feature[i];
+			}
+			pf.Shape = feature.GetShape();
+			return pf;
+		}
+
 		public static PseudoFeature FromDefinition(FeatureClassDefinition definition)
 		{
 			var shapeField = definition.GetShapeField();
