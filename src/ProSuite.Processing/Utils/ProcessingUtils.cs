@@ -89,6 +89,55 @@ namespace ProSuite.Processing.Utils
 			       property.IsDefined(typeof(ParameterAttribute), false);
 		}
 
+		public static string GetFriendlyName(Type type)
+		{
+			if (type is null) return "null";
+			if (type == typeof(bool)) return "Boolean";
+			if (type == typeof(int)) return "Integer";
+			if (type == typeof(double)) return "Number";
+			if (type == typeof(string)) return "String";
+			if (type == typeof(ProcessDatasetName)) return "LayerName [; WhereClause]";
+			if (type == typeof(FieldSetter)) return "Field=Value assignments";
+
+			Type[] typeArgs;
+			if (type.IsGenericType &&
+			    type.GetGenericTypeDefinition() == typeof(ImplicitValue<>) &&
+			    (typeArgs = type.GetGenericArguments()).Length == 1)
+			{
+				if (typeArgs[0] == typeof(object))
+				{
+					return "Expression";
+				}
+
+				var inner = GetFriendlyName(typeArgs[0]);
+				return $"{inner} Expression";
+			}
+
+			if (type.IsEnum)
+			{
+				// return "Foo|Bar|Baz"
+				const char sep = '|';
+				const int maxLength = 120;
+				var names = type.GetEnumNames();
+				var sb = new StringBuilder();
+				foreach (var name in names)
+				{
+					if (sb.Length + name.Length > maxLength)
+					{
+						if (sb.Length > 0) sb.Append(sep);
+						sb.Append("...");
+						break;
+					}
+					if (sb.Length > 0) sb.Append(sep);
+					sb.Append(name);
+				}
+				return sb.ToString();
+			}
+
+			// all other types use their technical name:
+			return type.Name;
+		}
+
 		public static int GetLineNumber(this XObject x)
 		{
 			return x is IXmlLineInfo info && info.HasLineInfo() ? info.LineNumber : 0;
