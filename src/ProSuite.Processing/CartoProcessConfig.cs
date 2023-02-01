@@ -26,7 +26,7 @@ namespace ProSuite.Processing
 			_settings = new List<Setting>();
 		}
 
-		public static CartoProcessConfig Parse(string text)
+		public static CartoProcessConfig Parse(string text, bool lenient = false)
 		{
 			// 1. try parse as XML
 			// 2. assume new plain text format
@@ -52,7 +52,7 @@ namespace ProSuite.Processing
 			}
 			catch (XmlException)
 			{
-				return FromText(text);
+				return FromText(text, lenient);
 			}
 		}
 
@@ -302,14 +302,13 @@ namespace ProSuite.Processing
 		/// <summary>
 		/// Parse config from given simple text format: name = value {; name = value}
 		/// </summary>
-		/// <param name="name">Optional name for this config</param>
 		/// <param name="text">Config text to be parsed</param>
-		/// <param name="description">Optional description for this config</param>
-		private static CartoProcessConfig FromText(string text, string name = null, string description = null)
+		/// <param name="lenient">Iff true, ignore syntax errors parse as much as possible</param>
+		private static CartoProcessConfig FromText(string text, bool lenient = false)
 		{
-			var config = new CartoProcessConfig(name, description);
+			var config = new CartoProcessConfig(null);
 
-			config.LoadString(text);
+			config.LoadString(text, lenient);
 
 			if (config.Name is null)
 			{
@@ -324,7 +323,7 @@ namespace ProSuite.Processing
 			return config;
 		}
 
-		private void LoadString(string text)
+		private void LoadString(string text, bool lenient = false)
 		{
 			_settings.Clear();
 
@@ -344,21 +343,32 @@ namespace ProSuite.Processing
 					continue;
 				}
 
-				string name = ScanName(text, position);
-				if (string.IsNullOrEmpty(name))
-					throw SyntaxError(position, "Expect parameter name");
+				try
+				{
+					string name = ScanName(text, position);
+					if (string.IsNullOrEmpty(name))
+						throw SyntaxError(position, "Expect parameter name");
 
-				SkipBlank(text, position);
-				if (ScanOperator(text, position, ':', '=') == (char) 0)
-					throw SyntaxError(position, "Expect '=' operator");
-				SkipBlank(text, position);
+					SkipBlank(text, position);
+					if (ScanOperator(text, position, ':', '=') == (char) 0)
+						throw SyntaxError(position, "Expect '=' operator");
+					SkipBlank(text, position);
 
-				string value = ScanValue(text, position, sb);
-				if (value == null)
-					throw SyntaxError(position, "Expect a value");
-				_settings.Add(new Setting(name, value, position.LineNumber));
+					string value = ScanValue(text, position, sb);
+					if (value == null)
+						throw SyntaxError(position, "Expect a value");
+					_settings.Add(new Setting(name, value, position.LineNumber));
 
-				SkipWhite(text, position);
+					SkipWhite(text, position);
+				}
+				catch (FormatException)
+				{
+					if (! lenient) throw;
+
+					// Skip faulty line and go on:
+					SkipLine(text, position);
+					SkipWhite(text, position);
+				}
 			}
 		}
 
