@@ -45,8 +45,8 @@ public static class MarkerPlacements
 		public double OffsetAlongLine { get; set; }
 	}
 
-	public static IEnumerable<Geometry> AtExtremities(
-		Geometry marker, Geometry reference, AtExtremitiesOptions options)
+	public static IEnumerable<T> AtExtremities<T>(
+		T marker, Geometry reference, AtExtremitiesOptions options) where T : Geometry
 	{
 		if (marker is null) yield break;
 		if (reference is not Polyline polyline) yield break;
@@ -116,8 +116,8 @@ public static class MarkerPlacements
 		public bool PlaceOnEndPoints { get; set; }
 	}
 
-	public static IEnumerable<Geometry> OnVertices(
-		Geometry marker, Geometry reference, OnVerticesOptions options)
+	public static IEnumerable<T> OnVertices<T>(
+		T marker, Geometry reference, OnVerticesOptions options) where T : Geometry
 	{
 		if (marker is null) yield break;
 		if (reference is not Multipart polycurve) yield break;
