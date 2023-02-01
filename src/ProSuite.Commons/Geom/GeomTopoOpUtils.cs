@@ -697,7 +697,7 @@ namespace ProSuite.Commons.Geom
 				}
 			}
 
-			return result;
+			return result ?? MultiPolycurve.CreateEmpty();
 		}
 
 		public static MultiLinestring GetUnionAreasXY(
@@ -4450,8 +4450,25 @@ namespace ProSuite.Commons.Geom
 			List<Pnt3D> newPoints = new List<Pnt3D>();
 
 			IDictionary<double, CrackPoint> splitPointBySplitLocation =
-				crackPoints.Where(cp => cp.SegmentSplitFactor != null)
-				           .ToDictionary(cp => cp.SegmentSplitFactor.Value);
+				new Dictionary<double, CrackPoint>();
+
+			// In case of duplicate points, there are several equal segment split factors!
+			foreach (CrackPoint crackPoint in crackPoints)
+			{
+				double? splitFactor = crackPoint.SegmentSplitFactor;
+
+				if (splitFactor == null)
+				{
+					continue;
+				}
+
+				if (splitPointBySplitLocation.ContainsKey(splitFactor.Value))
+				{
+					continue;
+				}
+
+				splitPointBySplitLocation.Add(splitFactor.Value, crackPoint);
+			}
 
 			List<double> orderedSplitLocationsAlong =
 				splitPointBySplitLocation.Keys.OrderBy(l => l).ToList();

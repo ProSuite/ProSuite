@@ -19,7 +19,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		#region Constructors
 
-		public GdbFeature(int oid, [NotNull] GdbFeatureClass featureClass,
+		public GdbFeature(long oid, [NotNull] GdbFeatureClass featureClass,
 		                  [CanBeNull] IValueList valueList = null)
 			: base(oid, featureClass, valueList)
 		{
@@ -31,6 +31,12 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		#region IFeature implementation
 
+#if Server11
+		long IFeature.OID => OID;
+#else
+		int IFeature.OID => (int)OID;
+#endif
+
 		public override IGeometry ShapeCopy => Shape != null ? GeometryFactory.Clone(Shape) : null;
 		ITable IFeature.Table => Table;
 		IReadOnlyFeatureClass IReadOnlyFeature.FeatureClass => (IReadOnlyFeatureClass) ReadOnlyTable;
@@ -41,6 +47,8 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			{
 				try
 				{
+					// TODO: The performance overhead of increaseRcwRefCount: true is very large,
+					// but only in x64!
 					object shapeProperty = ValueSet.GetValue(_shapeFieldIndex, true);
 
 					if (shapeProperty == DBNull.Value)

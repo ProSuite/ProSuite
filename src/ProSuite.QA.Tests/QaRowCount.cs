@@ -124,25 +124,25 @@ namespace ProSuite.QA.Tests
 		{
 			const int verifiedTableIndex = 0;
 
-			int rowCount = GetRowCount(_table, verifiedTableIndex, geometry);
+			long rowCount = GetRowCount(_table, verifiedTableIndex, geometry);
 
 			if (_referenceTables == null)
 			{
 				return ReportErrors(rowCount, _minimumRowCount, _maximumRowCount);
 			}
 
-			int referenceRowCount = GetReferenceRowCount(geometry);
+			long referenceRowCount = GetReferenceRowCount(geometry);
 
 			return ReportErrors(rowCount, referenceRowCount,
 			                    _minimumValueOffset,
 			                    _maximumValueOffset);
 		}
 
-		private int GetReferenceRowCount([CanBeNull] IGeometry geometry)
+		private long GetReferenceRowCount([CanBeNull] IGeometry geometry)
 		{
 			Assert.NotNull(_referenceTables, "_referenceTables");
 
-			var result = 0;
+			long result = 0;
 
 			var referenceTableIndex = 1;
 			foreach (IReadOnlyTable referenceTable in _referenceTables)
@@ -155,9 +155,9 @@ namespace ProSuite.QA.Tests
 			return result;
 		}
 
-		private int GetRowCount([NotNull] IReadOnlyTable table,
-		                        int tableIndex,
-		                        [CanBeNull] IGeometry geometry)
+		private long GetRowCount([NotNull] IReadOnlyTable table,
+		                         int tableIndex,
+		                         [CanBeNull] IGeometry geometry)
 		{
 			var featureClass = table as IReadOnlyFeatureClass;
 
@@ -170,7 +170,7 @@ namespace ProSuite.QA.Tests
 			return table.RowCount(filter);
 		}
 
-		private int ReportErrors(int rowCount, int minimumRowCount, int maximumRowCount)
+		private int ReportErrors(long rowCount, int minimumRowCount, int maximumRowCount)
 		{
 			if (rowCount < minimumRowCount)
 			{
@@ -193,8 +193,8 @@ namespace ProSuite.QA.Tests
 			return NoError;
 		}
 
-		private int ReportErrors(int rowCount,
-		                         int referenceRowCount,
+		private int ReportErrors(long rowCount,
+		                         long referenceRowCount,
 		                         [CanBeNull] OffsetSpecification minimumValueOffset,
 		                         [CanBeNull] OffsetSpecification maximumValueOffset)
 		{

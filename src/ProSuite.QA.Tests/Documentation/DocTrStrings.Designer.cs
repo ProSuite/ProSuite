@@ -110,7 +110,7 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Attributes to be transfered to transformed feature class. Must be used with alias and group expression, i.e. &apos;MAX(LAUF_NR) AS MAX_LAUF_NR&apos;.
+        ///   Looks up a localized string similar to Attributes to be transferred to transformed feature class. Must be used with alias and group expression, i.e. &apos;MAX(LAUF_NR) AS MAX_LAUF_NR&apos;.
         ///In the resulting feature class, only attributes defined in &apos;Attributes&apos; or &apos;GroupBy&apos; can be used..
         /// </summary>
         public static string TrDissolve_Attributes {
@@ -170,7 +170,7 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Additonal distance to cache &apos;featureClass&apos; features per tile.
+        ///   Looks up a localized string similar to Additional distance to cache &apos;featureClass&apos; features per tile.
         /// </summary>
         public static string TrDissolve_SearchDistance {
             get {
@@ -215,7 +215,7 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to multipoint, line, polygon or multpatch class to transform.
+        ///   Looks up a localized string similar to multipoint, line, polygon or multipatch class to transform.
         /// </summary>
         public static string TrGeometryToPoints_featureClass {
             get {
@@ -558,7 +558,7 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Attributes of &apos;t0&apos; that are transfered to transformed feature class. Can be used with alias, i.e. &apos;TOPGIS_TLM.TLM_GEWAESSER_LAUF.LAUF_NR AS T1_LAUF_NR&apos;.
+        ///   Looks up a localized string similar to Attributes of &apos;t0&apos; that are transferred to transformed feature class. Can be used with alias, i.e. &apos;TLM.TLM_GEWAESSER_LAUF.LAUF_NR AS T1_LAUF_NR&apos;.
         ///In the resulting feature class, only attributes defined in T0Attributes or T1Attributes can be used. .
         /// </summary>
         public static string TrSpatialJoin_T0Attributes {
@@ -579,7 +579,7 @@ namespace ProSuite.QA.Tests.Documentation {
         /// <summary>
         ///   Looks up a localized string similar to See T0Attributes.
         ///If &apos;Grouped&apos;=true, the attributes must be defined by Group-Expressions like COUNT(),MIN(),MAX()... 
-        ///Remark: Group expressions can only containt a single field expression. If a more complex expression is needed, use the parameter T1CalcAttributes.
+        ///Remark: Group expressions can only contain a single field expression. If a more complex expression is needed, use the parameter T1CalcAttributes.
         ///Example: Count the number of joined features with a specific objecttype &apos;x&apos; would be: 
         ///T1CalcAttributes: &quot;IIF(objecttype=&apos;x&apos;,1,0) AS X_VALUE&quot;
         ///T1Attributes: &quot;SUM(X_VALUE) AS X_COUNT&quot;.

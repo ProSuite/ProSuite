@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <ProjectGuid>{1AD58439-D8F3-49B8-95F6-3FCD561398A6}</ProjectGuid>
 
@@ -29,6 +29,7 @@
     <DebugType>pdbonly</DebugType>
     <DefineConstants>TRACE;$(VSArcGISProduct)</DefineConstants>
   </PropertyGroup>
+
   <ItemGroup>
     <Reference Include="ESRI.ArcGIS.DataSourcesGDB, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
       <HintPath>$(ArcGISAssemblyPath)\$(VSArcGISVersion)\ESRI.$(VSArcGISProduct).DataSourcesGDB.dll</HintPath>
@@ -54,10 +55,8 @@
       <HintPath>$(ArcGISAssemblyPath)\$(VSArcGISVersion)\ESRI.$(VSArcGISProduct).System.dll</HintPath>
       <SpecificVersion>False</SpecificVersion>
     </Reference>
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Net.Http" />
   </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\ProSuite.Commons.AO.Licensing\ProSuite.Commons.AO.Licensing.csproj" />
     <ProjectReference Include="..\ProSuite.Commons.AO.Test\ProSuite.Commons.AO.Test.csproj" />
@@ -70,14 +69,11 @@
     <ProjectReference Include="..\ProSuite.QA.Container\ProSuite.QA.Container.csproj" />
     <ProjectReference Include="..\ProSuite.QA.Tests\ProSuite.QA.Tests.csproj" />
   </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.4.0" />
     <PackageReference Include="NSubstitute" Version="4.4.0" />
     <PackageReference Include="NUnit" Version="3.13.3" />
     <PackageReference Include="NUnit3TestAdapter" Version="4.3.1" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="QA\TestData\datasetreporting.mdb" />
-    <None Include="QA\TestData\QATestData.mdb" />
   </ItemGroup>
 </Project>

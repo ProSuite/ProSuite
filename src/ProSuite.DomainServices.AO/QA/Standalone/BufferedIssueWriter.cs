@@ -328,8 +328,8 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 
 		private class TableKeyLookup
 		{
-			private readonly HashSet<int> _oidsRequiringLookup = new HashSet<int>();
-			private readonly Dictionary<int, object> _keyMap = new Dictionary<int, object>();
+			private readonly HashSet<long> _oidsRequiringLookup = new HashSet<long>();
+			private readonly Dictionary<long, object> _keyMap = new Dictionary<long, object>();
 			private readonly ITable _table;
 			private readonly int _keyFieldIndex;
 
@@ -349,7 +349,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 			[NotNull]
 			public string KeyFieldName { get; }
 
-			public void AddObjectId(int oid)
+			public void AddObjectId(long oid)
 			{
 				_oidsRequiringLookup.Add(oid);
 			}
@@ -373,7 +373,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 
 				if (_oidsRequiringLookup.Count > 0)
 				{
-					foreach (KeyValuePair<int, object> pair in LookupKeys(_oidsRequiringLookup))
+					foreach (KeyValuePair<long, object> pair in LookupKeys(_oidsRequiringLookup))
 					{
 						object value = Assert.NotNull(pair.Value,
 						                              "key is <null> for oid={0}, table={1}",
@@ -389,8 +389,8 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 			}
 
 			[NotNull]
-			private IEnumerable<KeyValuePair<int, object>> LookupKeys(
-				[NotNull] IEnumerable<int> oids)
+			private IEnumerable<KeyValuePair<long, object>> LookupKeys(
+				[NotNull] IEnumerable<long> oids)
 			{
 				string oidFieldName = _table.OIDFieldName;
 
@@ -401,7 +401,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 				foreach (IRow row in GdbQueryUtils.GetRowsInList(
 					         _table, oidFieldName, oids, recycle, queryFilter))
 				{
-					yield return new KeyValuePair<int, object>(row.OID, row.Value[_keyFieldIndex]);
+					yield return new KeyValuePair<long, object>(row.OID, row.Value[_keyFieldIndex]);
 				}
 			}
 		}

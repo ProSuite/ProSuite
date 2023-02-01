@@ -169,7 +169,8 @@ namespace ProSuite.Commons.Geom
 			{
 				return MultiPolycurve.CreateEmpty();
 			}
-			else
+
+			if (clockwiseOriented == false)
 			{
 				resultRingGroup.ReverseOrientation();
 			}

@@ -107,9 +107,12 @@ namespace ProSuite.QA.TestFactories
 			                                                     datasetContext,
 			                                                     _parameterNameApplyFilterInDatabase);
 
-			bool useCaseSensitiveQaSql;
-			string tableConstraint = CombineTableParameters(tableParameters,
-			                                                out useCaseSensitiveQaSql);
+			IDictionary<string, string> replacements = GetTableNameReplacements(
+				Assert.NotNull(Condition).ParameterValues.OfType<DatasetTestParameterValue>(),
+				datasetContext);
+
+			string tableConstraint = CombineTableParameters(tableParameters, replacements,
+			                                                out bool useCaseSensitiveQaSql);
 
 			string whereClause = applyFilterInDatabase ? tableConstraint : null;
 
@@ -118,11 +121,15 @@ namespace ProSuite.QA.TestFactories
 			                                             whereClause,
 			                                             out string relationshipClassName);
 
+
+			if (!string.Equals(associationName, relationshipClassName,
+			                   StringComparison.OrdinalIgnoreCase))
+			{
+				replacements.Add(associationName, relationshipClassName);
+			}
+
 			IList<string> translatedConstraints = TranslateConstraints(
-				constraints,
-				associationName, relationshipClassName,
-				Assert.NotNull(Condition).ParameterValues.OfType<DatasetTestParameterValue>(),
-				datasetContext);
+				constraints, replacements);
 
 			// assign objects[]
 			IList<ConstraintNode> nodes =
@@ -166,15 +173,8 @@ namespace ProSuite.QA.TestFactories
 
 		[NotNull]
 		private static IList<string> TranslateConstraints(
-			[NotNull] IEnumerable<string> constraints,
-			[NotNull] string associationName,
-			[NotNull] string relationshipClassName,
-			[NotNull] IEnumerable<DatasetTestParameterValue> datasetParameterValues,
-			[NotNull] IOpenDataset datasetContext)
+			[NotNull] IEnumerable<string> constraints, IDictionary<string, string> replacements)
 		{
-			IDictionary<string, string> replacements = GetTableNameReplacements(
-				datasetParameterValues, datasetContext, associationName, relationshipClassName);
-
 			if (replacements.Count == 0)
 			{
 				return constraints.ToList();
@@ -183,49 +183,6 @@ namespace ProSuite.QA.TestFactories
 			return constraints.Select(sql => ExpressionUtils.ReplaceTableNames(sql,
 				                          replacements))
 			                  .ToList();
-		}
-
-		[NotNull]
-		private static IDictionary<string, string> GetTableNameReplacements(
-			[NotNull] IEnumerable<DatasetTestParameterValue> datasetParameterValues,
-			[NotNull] IOpenDataset datasetContext,
-			[NotNull] string associationName,
-			[NotNull] string relationshipClassName)
-		{
-			var replacements = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-
-			if (! string.Equals(associationName, relationshipClassName,
-			                    StringComparison.OrdinalIgnoreCase))
-			{
-				replacements.Add(associationName, relationshipClassName);
-			}
-
-			foreach (DatasetTestParameterValue datasetParameterValue in datasetParameterValues)
-			{
-				Dataset dataset = datasetParameterValue.DatasetValue;
-				if (dataset == null)
-				{
-					continue;
-				}
-
-				IReadOnlyTable table =
-					datasetContext.OpenDataset(
-						dataset, Assert.NotNull(datasetParameterValue.DataType)) as IReadOnlyTable;
-
-				if (table == null)
-				{
-					continue;
-				}
-
-				string tableName = table.Name;
-
-				if (! string.Equals(dataset.Name, tableName))
-				{
-					replacements.Add(dataset.Name, tableName);
-				}
-			}
-
-			return replacements;
 		}
 
 		protected override ITest CreateTestInstance(object[] args)

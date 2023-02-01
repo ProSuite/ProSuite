@@ -233,7 +233,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			IFeatureClass outputClass =
 				DatasetUtils.OpenFeatureClass(outputWorkspace, transformedClass.Name);
 
-			int featureCount = outputClass.FeatureCount(null);
+			long featureCount = outputClass.FeatureCount(null);
 
 			// Expected: 1 per tile
 			Assert.AreEqual(4, featureCount);

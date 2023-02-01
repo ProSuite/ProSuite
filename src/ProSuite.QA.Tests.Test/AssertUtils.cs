@@ -13,24 +13,25 @@ namespace ProSuite.QA.Tests.Test
 {
 	public static class AssertUtils
 	{
-		public static void OneError([NotNull] QaTestRunnerBase runner,
-		                            [NotNull] string issueCodeId)
+		[NotNull]
+		public static QaError OneError([NotNull] QaTestRunnerBase runner,
+		                               [NotNull] string expectedIssueCodeId,
+		                               int expectedInvolvedRowsCount = 1)
 		{
-			OneError(runner, issueCodeId, out QaError _);
-		}
+			Assert.AreEqual(1, runner.Errors.Count, "Expected one error");
 
-		public static void OneError([NotNull] QaTestRunnerBase runner,
-		                            [NotNull] string issueCodeId,
-		                            [NotNull] out QaError error)
-		{
-			Assert.AreEqual(1, runner.Errors.Count);
-			error = runner.Errors[0];
+			QaError error = runner.Errors[0];
+			Assert.AreEqual(expectedInvolvedRowsCount, error.InvolvedRows.Count,
+			                "Expected {0} involved row(s)", expectedInvolvedRowsCount);
+
 			IssueCode issueCode = error.IssueCode;
 			Assert.IsNotNull(issueCode);
-			Assert.AreEqual(issueCodeId, issueCode.ID);
+			Assert.AreEqual(expectedIssueCodeId, issueCode.ID);
+
+			return error;
 		}
 
-		public static void NoError(QaTestRunnerBase runner)
+		public static void NoError([NotNull] QaTestRunnerBase runner)
 		{
 			Assert.AreEqual(0, runner.Errors.Count);
 		}

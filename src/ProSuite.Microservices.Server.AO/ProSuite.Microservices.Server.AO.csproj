@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <ProjectGuid>{F997B55F-C442-4224-A573-AE39F72BEB4A}</ProjectGuid>
     <SignAssembly>true</SignAssembly>
@@ -68,7 +68,7 @@
       <HintPath>..\..\lib\Quaestor\Quaestor.LoadReporting.dll</HintPath>
       <SpecificVersion>False</SpecificVersion>
     </Reference>
-    <Reference Include="System.ServiceProcess" />
+
   </ItemGroup>
 
   <ItemGroup>
@@ -93,6 +93,14 @@
     <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.0" />-->
   </ItemGroup>
 
+  <!-- Windows service implementation: -->
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net48' ">
+    <Reference Include="System.ServiceProcess" />
+  </ItemGroup>
+  <ItemGroup Condition=" '$(TargetFramework)' != 'net48' ">
+    <PackageReference Include="System.ServiceProcess.ServiceController" Version="6.0.0" />
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\..\..\ProSuite\src\ProSuite.Commons.AO\ProSuite.Commons.AO.csproj" />
     <ProjectReference Include="..\..\..\ProSuite\src\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj" />
@@ -102,6 +110,7 @@
     <ProjectReference Include="..\ProSuite.DomainModel.Core\ProSuite.DomainModel.Core.csproj" />
     <ProjectReference Include="..\ProSuite.DomainServices.AO\ProSuite.DomainServices.AO.csproj" />
     <ProjectReference Include="..\ProSuite.Microservices.AO\ProSuite.Microservices.AO.csproj" />
+    <ProjectReference Include="..\ProSuite.Microservices.Client\ProSuite.Microservices.Client.csproj" />
     <ProjectReference Include="..\ProSuite.QA.Container\ProSuite.QA.Container.csproj" />
   </ItemGroup>
 

@@ -2188,12 +2188,12 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Expressions for determing the directions of the polylines.
+        ///   Looks up a localized string similar to Expressions for determining the directions of the polylines.
         ///The expressions are evaluated on the features attributes and must return a boolean value. If the expression returns true, the flipped geometry of the features shape is used for testing, otherwise the actual shape.
         ///
-        ///If &apos;flipExressions&apos; are null: directions are as the features shapes
+        ///If &apos;flipExpressions&apos; are null: directions are as the features shapes
         ///
-        ///If there is exactly 1 &apos;flipExpressions&apos;, the expression is applied to all &apos;polylineClasses&apos;. Otherwise, there must be exactly one expression per polylineClass, in c [rest of string was truncated]&quot;;.
+        ///If there is exactly 1 &apos;flipExpressions&apos;, the expression is applied to all &apos;polylineClasses&apos;. Otherwise, there must be exactly one expression per polylineClass, i [rest of string was truncated]&quot;;.
         /// </summary>
         public static string QaFlowLogic_flipExpressions {
             get {
@@ -2521,7 +2521,7 @@ namespace ProSuite.QA.Tests.Documentation {
         ///   Looks up a localized string similar to Finds all errors in &apos;topology&apos; defined in a geodatabase
         ///
         ///Remark: ITopology.Validate() is used if the test is run while editing.
-        ///Otherwise, the dirty areas are reporteded as errors.
+        ///Otherwise, the dirty areas are reported as errors.
         ///The reported errors are copies of the errorFeatures of the topology&apos;s errorFeatureContainer.
         /// </summary>
         public static string QaGdbTopology_0 {
@@ -2747,10 +2747,10 @@ namespace ProSuite.QA.Tests.Documentation {
         /// <summary>
         ///   Looks up a localized string similar to The method for reporting errors.
         ///
-        ///- ReferToFirstPart: the end points of the first encountered group, plus any point of another group with the same identifer are reported. This method is available for backwards compatibility. Use CombineGroups or ShortestGaps.
+        ///- ReferToFirstPart: the end points of the first encountered group, plus any point of another group with the same identifier are reported. This method is available for backwards compatibility. Use CombineGroups or ShortestGaps.
         ///If &apos;CompleteGroupsOutsideTestArea&apos; = true, ReferToFirstPart is replaced with ShortestGaps.
         ///
-        ///- ShortestGaps: each disjoint line group is connected with the nearest line group for the same group identifier, even if the endpoint of the other line gro [rest of string was truncated]&quot;;.
+        ///- ShortestGaps: each disjoint line group is connected with the nearest line group for the same group identifier, even if the endpoint of the other line gr [rest of string was truncated]&quot;;.
         /// </summary>
         public static string QaGroupConnected_errorReporting {
             get {
@@ -2818,7 +2818,7 @@ namespace ProSuite.QA.Tests.Documentation {
         
         /// <summary>
         ///   Looks up a localized string similar to If true: Creates the geometric union of all gaps found according to &apos;errorReporting&apos;. 
-        ///If false: Report each found gap separatly.
+        ///If false: Report each found gap separately.
         ///
         ///Default = false.
         ///Remark: Has no effect for ErrorReporting.ReferToFirstPart.
@@ -4212,7 +4212,7 @@ namespace ProSuite.QA.Tests.Documentation {
         /// <summary>
         ///   Looks up a localized string similar to Minimum allowed gap to a group of the same group type, when the gap starts at a fork.
         ///
-        ///If &apos;MinGapToSameGroupAtForkCovered&apos; &gt; 0, this value is only used for gaps, that are not completly covered by other groups..
+        ///If &apos;MinGapToSameGroupAtForkCovered&apos; &gt; 0, this value is only used for gaps, that are not completely covered by other groups..
         /// </summary>
         public static string QaLineGroupConstraints_MinGapToSameGroupTypeAtFork {
             get {
@@ -4821,7 +4821,7 @@ namespace ProSuite.QA.Tests.Documentation {
         ///   Looks up a localized string similar to defines the point of a line which measure will be compared:
         ///-Nearest: the nearest segment point or vertex is taken
         ///-VertexPreferred: if a vertex lies within &apos;searchDistance&apos; of the point, this vertex, otherwise the nearest segment point
-        ///-VertexRequired: a vertex must lie within the &apos;searchdistance&apos; of a point from &apos;pointClass&apos; closer than &apos;searchdistance&apos; to the line, and this vertex is compared.
+        ///-VertexRequired: a vertex must lie within the &apos;searchDistance&apos; of a point from &apos;pointClass&apos; closer than &apos;searchDistance&apos; to the line, and this vertex is compared.
         /// </summary>
         public static string QaMeasuresAtPoints_lineMSource {
             get {
@@ -5151,7 +5151,7 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Finds all pair of (From/To-) points of &apos;featureClasses&apos; closer than &apos;near&apos; and find all coincidend pairs with z-coordinate difference larger than &apos;maxZDifference&apos;. Pairs closer than &apos;tolerance&apos; are considered coincident. No error is reported for point pairs that fulfill a defined constraint..
+        ///   Looks up a localized string similar to Finds all pair of (From/To-) points of &apos;featureClasses&apos; closer than &apos;near&apos; and find all coincident pairs with z-coordinate difference larger than &apos;maxZDifference&apos;. Pairs closer than &apos;tolerance&apos; are considered coincident. No error is reported for point pairs that fulfill a defined constraint..
         /// </summary>
         public static string QaMinNodeDistance_10 {
             get {
@@ -5200,7 +5200,7 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Finds all pair of (From/To-) points of &apos;featureClass&apos; closer than &apos;near&apos; and find all coincidend pairs with z-coordinate difference larger than &apos;maxZDifference&apos;.
+        ///   Looks up a localized string similar to Finds all pair of (From/To-) points of &apos;featureClass&apos; closer than &apos;near&apos; and find all coincident pairs with z-coordinate difference larger than &apos;maxZDifference&apos;.
         /// </summary>
         public static string QaMinNodeDistance_4 {
             get {
@@ -5209,7 +5209,7 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Finds all pair of (From/To-) points of &apos;featureClasses&apos; closer than &apos;near&apos; and find all coincidend pairs with z-coordinate difference larger than &apos;maxZDifference&apos;
+        ///   Looks up a localized string similar to Finds all pair of (From/To-) points of &apos;featureClasses&apos; closer than &apos;near&apos; and find all coincident pairs with z-coordinate difference larger than &apos;maxZDifference&apos;
         ///
         ///Remark: The feature classes in &apos;featureClasses&apos; must have the same spatial reference..
         /// </summary>
@@ -5220,7 +5220,7 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Finds all pair of (From/To-) points of &apos;featureClass&apos; closer than &apos;near&apos; and find all coincidend pairs with z-coordinate difference larger than &apos;maxZDifference&apos;. Pairs closer than &apos;tolerance&apos; are considered coincident.
+        ///   Looks up a localized string similar to Finds all pair of (From/To-) points of &apos;featureClass&apos; closer than &apos;near&apos; and find all coincident pairs with z-coordinate difference larger than &apos;maxZDifference&apos;. Pairs closer than &apos;tolerance&apos; are considered coincident.
         /// </summary>
         public static string QaMinNodeDistance_6 {
             get {
@@ -5229,7 +5229,7 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Finds all pair of (From/To-) points of &apos;featureClasses&apos; closer than &apos;near&apos; and find all coincidend pairs with z-coordinate difference larger than &apos;maxZDifference&apos;. Pairs closer than &apos;tolerance&apos; are considered coincident.
+        ///   Looks up a localized string similar to Finds all pair of (From/To-) points of &apos;featureClasses&apos; closer than &apos;near&apos; and find all coincident pairs with z-coordinate difference larger than &apos;maxZDifference&apos;. Pairs closer than &apos;tolerance&apos; are considered coincident.
         /// </summary>
         public static string QaMinNodeDistance_7 {
             get {
@@ -5238,7 +5238,7 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Finds all pair of (From/To-) points of &apos;featureClass&apos; closer than &apos;near&apos; and find all coincidend pairs with z-coordinate difference larger than &apos;maxZDifference&apos;. Pairs closer than &apos;tolerance&apos; are considered coincident. No error is reported for point pairs that fulfill a defined constraint..
+        ///   Looks up a localized string similar to Finds all pair of (From/To-) points of &apos;featureClass&apos; closer than &apos;near&apos; and find all coincident pairs with z-coordinate difference larger than &apos;maxZDifference&apos;. Pairs closer than &apos;tolerance&apos; are considered coincident. No error is reported for point pairs that fulfill a defined constraint..
         /// </summary>
         public static string QaMinNodeDistance_9 {
             get {
@@ -5552,7 +5552,7 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Find mutlitpatch features where footprints have inner rings.
+        ///   Looks up a localized string similar to Find multipatch features where footprints have inner rings.
         /// </summary>
         public static string QaMpFootprintHoles_0 {
             get {
@@ -5572,7 +5572,7 @@ namespace ProSuite.QA.Tests.Documentation {
         /// <summary>
         ///   Looks up a localized string similar to None: check the footprint of the original multipatch
         ///IgnoreInnerRings:check the footprint of the multipatch without inner rings
-        ///IgnoreHorizontalInnerRings: check the footpring of the multipatch without the inner rings of horizontal outer rings.
+        ///IgnoreHorizontalInnerRings: check the footprint of the multipatch without the inner rings of horizontal outer rings.
         /// </summary>
         public static string QaMpFootprintHoles_innerRingHandling {
             get {
@@ -5665,7 +5665,7 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to expression for determing the overhang. Examples: 
+        ///   Looks up a localized string similar to expression for determining the overhang. Examples: 
         ///&quot;3.0&quot;; &quot;overhangField&quot;; &quot;2.1 * numericField + 5&quot;.
         /// </summary>
         public static string QaMpFootprintRelation_overhangExpression {
@@ -5729,7 +5729,7 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to if true: check each ring seperatly; otherwise: check all horizontal segments of the multipatch feature.
+        ///   Looks up a localized string similar to if true: check each ring separately; otherwise: check all horizontal segments of the multipatch feature.
         /// </summary>
         public static string QaMpHorizontalAzimuths_perRing {
             get {
@@ -5882,7 +5882,7 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to expression for determing the overhang. Examples: 
+        ///   Looks up a localized string similar to expression for determining the overhang. Examples: 
         ///&quot;3.0&quot;; &quot;overhangField&quot;; &quot;2.1 * numericField + 5&quot;.
         /// </summary>
         public static string QaMpOverhang_expression {
@@ -6018,7 +6018,7 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Vertices with a z-Difference &lt; &apos;PlaneConicidence&apos; are considered as conincident with the face and are not reported as errors.
+        ///   Looks up a localized string similar to Vertices with a z-Difference &lt; &apos;PlaneCoincidence&apos; are considered as coincident with the face and are not reported as errors.
         /// </summary>
         public static string QaMpVertexNotNearFace_PlaneCoincidence {
             get {
@@ -6892,8 +6892,8 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to If &apos;sliverlimit&apos; &gt; 0: Only gaps where the ratio between the square of the perimeter and the area is larger than &apos;sliverLimit&apos; will be reported.
-        ///If &apos;sliverlimit&apos; &lt;= 0: the sliverLimit is not considered..
+        ///   Looks up a localized string similar to If &apos;sliverLimit&apos; &gt; 0: Only gaps where the ratio between the square of the perimeter and the area is larger than &apos;sliverLimit&apos; will be reported.
+        ///If &apos;sliverLimit&apos; &lt;= 0: the sliverLimit is not considered..
         /// </summary>
         public static string QaNoGaps_sliverLimit {
             get {
@@ -6989,7 +6989,7 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to If set, the tolerance that 2 junction points are considered equal. If not set: tolerance of featureclass..
+        ///   Looks up a localized string similar to If set, the tolerance that 2 junction points are considered equal. If not set: tolerance of &apos;featureClass&apos;..
         /// </summary>
         public static string QaNotNear_JunctionCoincidenceTolerance {
             get {
@@ -7098,7 +7098,7 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to report only orpaned points, only line end points without points or both..
+        ///   Looks up a localized string similar to report only orphaned points, only line end points without points or both..
         /// </summary>
         public static string QaOrphanNode_errorType {
             get {
@@ -7525,7 +7525,7 @@ namespace ProSuite.QA.Tests.Documentation {
         
         /// <summary>
         ///   Looks up a localized string similar to If set, defines which component (entire, border, vertices, end points, start point, end point, centroid, label point, interior vertices) of the reference geometry is checked. If not set, the entire geometry is tested.
-        ///If &apos;GeometryComponents&apos; contains one entry, this component is applied to all reference feature classes. If &apos;GeometryComponents&apos; containes more than one entry, it must contain exactly the number of feature classes in &apos;referenceClasses&apos;..
+        ///If &apos;GeometryComponents&apos; contains one entry, this component is applied to all reference feature classes. If &apos;GeometryComponents&apos; contains more than one entry, it must contain exactly the number of feature classes in &apos;referenceClasses&apos;..
         /// </summary>
         public static string QaPointNotNear_GeometryComponents {
             get {
@@ -7632,7 +7632,7 @@ namespace ProSuite.QA.Tests.Documentation {
         ///   Looks up a localized string similar to If set, defines constraints between a feature of &apos;pointClass&apos; and a feature of a reference feature class. If this constraint is fulfilled, the distance between the features is not checked against &apos;limit&apos; and no error is reported.
         ///The involved features are aliased using &quot;G1&quot; and G2&quot;.
         ///Example: G1.Level &lt;&gt; G2.Level.
-        ///If &apos;ValidRelationConstraints&apos; contains one entry, this constraint is applied to all reference feature classes. If &apos;ValidRelationConstraints&apos; containes more than one entry, it must contain exactl [rest of string was truncated]&quot;;.
+        ///If &apos;ValidRelationConstraints&apos; contains one entry, this constraint is applied to all reference feature classes. If &apos;ValidRelationConstraints&apos; contains more than one entry, it must contain exactly [rest of string was truncated]&quot;;.
         /// </summary>
         public static string QaPointNotNear_ValidRelationConstraints {
             get {
@@ -8291,8 +8291,8 @@ namespace ProSuite.QA.Tests.Documentation {
         ///&quot;100&quot; (maximum value =reference row count +100)
         ///&quot;-100&quot; (maximum value =reference row count - 100)
         ///&quot;10%&quot; (maximum value = reference row count + 10% of reference row count)
-        ///&quot;-10%&quot; (maximum value =reference row count - 10% of refrence row count)
-        ///&quot;0&quot; [rest of string was truncated]&quot;;.
+        ///&quot;-10%&quot; (maximum value =reference row count - 10% of reference row count)
+        ///&quot;0 [rest of string was truncated]&quot;;.
         /// </summary>
         public static string QaRowCount_maximumValueOffset {
             get {
@@ -8316,8 +8316,8 @@ namespace ProSuite.QA.Tests.Documentation {
         ///&quot;100&quot; (minimum value =reference row count +100)
         ///&quot;-100&quot; (minimum value =reference row count - 100)
         ///&quot;10%&quot; (minimum value = reference row count + 10% of reference row count)
-        ///&quot;-10%&quot; (minimum value =reference row count - 10% of refrence row count)
-        ///&quot;0&quot; [rest of string was truncated]&quot;;.
+        ///&quot;-10%&quot; (minimum value =reference row count - 10% of reference row count)
+        ///&quot;0 [rest of string was truncated]&quot;;.
         /// </summary>
         public static string QaRowCount_minimumValueOffset {
             get {
@@ -8353,7 +8353,7 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Indicates if non-default alias names for system fields are allowed. If &apos;false&apos;, alias names for system fields need to be equal to the field name, and the maximum length and charachter case is not tested..
+        ///   Looks up a localized string similar to Indicates if non-default alias names for system fields are allowed. If &apos;false&apos;, alias names for system fields need to be equal to the field name, and the maximum length and character case is not tested..
         /// </summary>
         public static string QaSchemaFieldAliases_allowCustomSystemFieldAlias {
             get {
@@ -8468,7 +8468,7 @@ namespace ProSuite.QA.Tests.Documentation {
         ///   Looks up a localized string similar to The constraint for uniqueness of the coded value names:
         ///- None: no uniqueness check is applied.
         ///- UniqueExactCase: names must be unique with their exact case (i.e. names differing only in case are allowed)
-        ///- UniqueAnyCase: names must be unique with any case (i.e. names differeing only in case are not allowed).
+        ///- UniqueAnyCase: names must be unique with any case (i.e. names differing only in case are not allowed).
         /// </summary>
         public static string QaSchemaFieldDomainCodedValues_uniqueNamesConstraint {
             get {
@@ -10852,7 +10852,7 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Finds features where the Z difference to another feature within a list of feature classesis not between &apos;minimumZDifference&apos; and &apos;maximumZDifference&apos;.
+        ///   Looks up a localized string similar to Finds features where the Z difference to another feature within a list of feature classes is not between &apos;minimumZDifference&apos; and &apos;maximumZDifference&apos;.
         /// </summary>
         public static string QaZDifferenceSelf_3 {
             get {

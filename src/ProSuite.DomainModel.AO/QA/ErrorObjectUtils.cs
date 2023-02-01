@@ -222,11 +222,11 @@ namespace ProSuite.DomainModel.AO.QA
 				yield break;
 			}
 
-			foreach (KeyValuePair<string, IList<int>> pair in
+			foreach (KeyValuePair<string, IList<long>> pair in
 			         GetInvolvedObjectIDsByTableName(involved))
 			{
 				string tableName = pair.Key;
-				IList<int> objectIDs = pair.Value;
+				IList<long> objectIDs = pair.Value;
 
 				IObjectDataset dataset =
 					datasetResolver.GetDatasetByInvolvedRowTableName(tableName, qualityCondition);
@@ -274,13 +274,13 @@ namespace ProSuite.DomainModel.AO.QA
 		}
 
 		[NotNull]
-		private static IEnumerable<KeyValuePair<string, IList<int>>>
+		private static IEnumerable<KeyValuePair<string, IList<long>>>
 			GetInvolvedObjectIDsByTableName(
 				[NotNull] IEnumerable<InvolvedRow> involvedRows)
 		{
 			Assert.ArgumentNotNull(involvedRows, nameof(involvedRows));
 
-			var result = new Dictionary<string, IList<int>>(
+			var result = new Dictionary<string, IList<long>>(
 				StringComparer.InvariantCultureIgnoreCase);
 
 			foreach (InvolvedRow involvedRow in involvedRows)
@@ -290,10 +290,10 @@ namespace ProSuite.DomainModel.AO.QA
 					continue;
 				}
 
-				IList<int> list;
+				IList<long> list;
 				if (! result.TryGetValue(involvedRow.TableName, out list))
 				{
-					list = new List<int>();
+					list = new List<long>();
 					result.Add(involvedRow.TableName, list);
 				}
 
@@ -350,7 +350,7 @@ namespace ProSuite.DomainModel.AO.QA
 		[CanBeNull]
 		private static IEnumerable<IRow> TryGetRows(
 			[NotNull] ITable table,
-			[NotNull] ICollection<int> objectIDs)
+			[NotNull] ICollection<long> objectIDs)
 		{
 			if (objectIDs.Count == 0)
 			{

@@ -10,12 +10,12 @@ namespace ProSuite.QA.Tests
 {
 	public abstract class CrossTileFeatureState<T> where T : PendingFeature
 	{
-		private readonly IDictionary<int, HashSet<int>> _featuresKnownOK =
-			new Dictionary<int, HashSet<int>>();
+		private readonly IDictionary<int, HashSet<long>> _featuresKnownOK =
+			new Dictionary<int, HashSet<long>>();
 
-		private readonly IDictionary<int, IDictionary<int, T>>
+		private readonly IDictionary<int, IDictionary<long, T>>
 			_suspiciousFeaturesByTableIndex =
-				new Dictionary<int, IDictionary<int, T>>();
+				new Dictionary<int, IDictionary<long, T>>();
 
 		private readonly IDictionary<int, IRowsCache>
 			_rowsCacheByTableIndex = new Dictionary<int, IRowsCache>();
@@ -24,7 +24,7 @@ namespace ProSuite.QA.Tests
 
 		public void FlagFeatureAsOK(int tableIndex, [NotNull] IReadOnlyFeature feature)
 		{
-			IDictionary<int, T> pendingFeatures;
+			IDictionary<long, T> pendingFeatures;
 			if (_suspiciousFeaturesByTableIndex.TryGetValue(tableIndex, out pendingFeatures))
 			{
 				if (pendingFeatures.Remove(feature.OID))
@@ -33,19 +33,19 @@ namespace ProSuite.QA.Tests
 				}
 			}
 
-			HashSet<int> oids;
+			HashSet<long> oids;
 			if (! _featuresKnownOK.TryGetValue(tableIndex, out oids))
 			{
-				oids = new HashSet<int>();
+				oids = new HashSet<long>();
 				_featuresKnownOK.Add(tableIndex, oids);
 			}
 
 			oids.Add(feature.OID);
 		}
 
-		public bool IsFeatureKnownOK(int tableIndex, int oid)
+		public bool IsFeatureKnownOK(int tableIndex, long oid)
 		{
-			HashSet<int> oids;
+			HashSet<long> oids;
 			return _featuresKnownOK.TryGetValue(tableIndex, out oids) &&
 			       oids.Contains(oid);
 		}
@@ -56,15 +56,15 @@ namespace ProSuite.QA.Tests
 		{
 			Assert.ArgumentNotNull(feature, nameof(feature));
 
-			IDictionary<int, T> pendingFeatures;
+			IDictionary<long, T> pendingFeatures;
 			if (! _suspiciousFeaturesByTableIndex.TryGetValue(tableIndex, out pendingFeatures))
 			{
-				pendingFeatures = new Dictionary<int, T>();
+				pendingFeatures = new Dictionary<long, T>();
 				_suspiciousFeaturesByTableIndex.Add(tableIndex, pendingFeatures);
 				_rowsCacheByTableIndex[tableIndex] = feature.Table as IRowsCache;
 			}
 
-			int oid = feature.OID;
+			long oid = feature.OID;
 			if (! pendingFeatures.TryGetValue(oid, out pendingFeature))
 			{
 				pendingFeature = GetPendingFeature(feature);
@@ -84,14 +84,14 @@ namespace ProSuite.QA.Tests
 		{
 			int errorCount = 0;
 			foreach (
-				KeyValuePair<int, IDictionary<int, T>> pair in
+				KeyValuePair<int, IDictionary<long, T>> pair in
 				_suspiciousFeaturesByTableIndex)
 			{
 				int tableIndex = pair.Key;
-				IDictionary<int, T> suspiciousFeatures = pair.Value;
+				IDictionary<long, T> suspiciousFeatures = pair.Value;
 				_rowsCacheByTableIndex.TryGetValue(tableIndex, out IRowsCache rowsCache);
 
-				var oidsToRemove = new List<int>();
+				var oidsToRemove = new List<long>();
 				var errorFeatures = new List<T>();
 
 				foreach (T suspiciousFeature in suspiciousFeatures.Values)
@@ -121,9 +121,9 @@ namespace ProSuite.QA.Tests
 		}
 
 		private void PurgeFeaturesKnownOK(int tableIndex,
-		                                  [NotNull] IEnumerable<int> oidsToRemove)
+		                                  [NotNull] IEnumerable<long> oidsToRemove)
 		{
-			HashSet<int> oids;
+			HashSet<long> oids;
 			if (! _featuresKnownOK.TryGetValue(tableIndex, out oids))
 			{
 				return;

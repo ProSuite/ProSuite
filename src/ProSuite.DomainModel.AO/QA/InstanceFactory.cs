@@ -30,6 +30,7 @@ namespace ProSuite.DomainModel.AO.QA
 		                      [NotNull] IList<TestParameter> testParameters,
 		                      Func<object[], T> createFromArgs) where T : IInvolvesTables
 		{
+			Assert.ArgumentNotNull(instanceConfiguration, nameof(instanceConfiguration));
 			Assert.ArgumentNotNull(datasetContext, nameof(datasetContext));
 			Assert.ArgumentNotNull(testParameters, nameof(testParameters));
 
@@ -78,12 +79,6 @@ namespace ProSuite.DomainModel.AO.QA
 			}
 			catch (Exception e)
 			{
-				if (instanceConfiguration == null)
-				{
-					throw new AssertionException(
-						$"Unable to create test for undefined {typeof(T)}", e);
-				}
-
 				StringBuilder sb =
 					InstanceFactoryUtils.GetErrorMessageWithDetails(instanceConfiguration, e);
 				throw new InvalidOperationException(sb.ToString(), e);
@@ -174,6 +169,7 @@ namespace ProSuite.DomainModel.AO.QA
 			[CanBeNull] IList<TableConstraint> tableConstraints)
 		{
 			Assert.ArgumentNotNull(test, nameof(test));
+
 			if (! (tableConstraints?.Count > 0))
 			{
 				return;
@@ -379,15 +375,17 @@ namespace ProSuite.DomainModel.AO.QA
 		{
 			try
 			{
-				if (! (InstanceFactoryUtils.CreateTransformerFactory(transformerConfiguration)
-					       is TransformerFactory transformerFactory))
+				TransformerFactory factory =
+					InstanceFactoryUtils.CreateTransformerFactory(transformerConfiguration);
+
+				if (factory == null)
 				{
 					throw new ArgumentException(
 						$"Unable to create TransformerFactory for {transformerConfiguration}");
 				}
 
 				ITableTransformer tableTransformer =
-					transformerFactory.Create(datasetContext, transformerConfiguration);
+					factory.Create(datasetContext, transformerConfiguration);
 
 				return (IReadOnlyTable) tableTransformer.GetTransformed();
 			}

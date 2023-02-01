@@ -25,7 +25,7 @@ namespace ProSuite.QA.Container.PolygonGrower
 
 		public int GetHashCode(IDirectedRow row)
 		{
-			return 37 * row.Row.RowOID + row.TopoLine.PartIndex;
+			return 37 * row.Row.RowOID.GetHashCode() + row.TopoLine.PartIndex;
 		}
 
 		public int Compare(IDirectedRow x, IDirectedRow y)

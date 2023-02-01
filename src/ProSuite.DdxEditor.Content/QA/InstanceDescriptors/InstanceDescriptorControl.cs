@@ -135,13 +135,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 				_toolStripButtonSelectFindResultRows_Click;
 
 			_dataGridViewFindToolStrip.Items.Add(_toolStripButtonSelectFindResultRows);
-
-			// configure the nullable boolean columns in the quality conditions grid
-			NullableBooleanItems.UseFor(_columnStopOnError);
-			NullableBooleanItems.UseFor(_columnIssueType,
-			                            trueText: "Warning",
-			                            falseText: "Error");
-
+			
 			TabControlUtils.SelectTabPage(_tabControl, _lastSelectedTab);
 		}
 
@@ -172,7 +166,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 		}
 
 		IList<ReferencingInstanceConfigurationTableRow> IInstanceDescriptorView.
-			GetSelectedQualityConditionTableRows()
+			GetSelectedInstanceConfigurationTableRows()
 		{
 			return _qConGridHandler.GetSelectedRows();
 		}
@@ -308,10 +302,10 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 			// probably not needed (TOP-2717 no longer reproduces), but does no harm...
 
 			if (_dataGridViewQualityConditions.Columns.Contains(
-				    _columnQualityConditionImage))
+				    _columnImage))
 			{
 				_dataGridViewQualityConditions.InvalidateColumn(
-					_columnQualityConditionImage.Index);
+					_columnImage.Index);
 			}
 
 			// by signaling a change the item image is updated

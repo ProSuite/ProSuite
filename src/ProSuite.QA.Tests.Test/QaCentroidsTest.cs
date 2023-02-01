@@ -55,7 +55,38 @@ namespace ProSuite.QA.Tests.Test
 			var runner = new QaContainerTestRunner(
 				1000, new QaCentroids(ReadOnlyTableFactory.Create(linesFc),
 				                      ReadOnlyTableFactory.Create(pointsFc)));
-			Assert.AreEqual(1, runner.Execute());
+			runner.Execute();
+			AssertUtils.OneError(runner, "Centroids.NoCentroid", 3);
+		}
+
+		[Test]
+		public void MultipartWithSeveralCentroidsTest()
+		{
+			IFeatureWorkspace workspace =
+				TestWorkspaceUtils.CreateInMemoryWorkspace("MultipartWithSeveralCentroids");
+
+			IFeatureClass linesFc = CreateFeatureClass(workspace, "Border",
+			                                           esriGeometryType.esriGeometryPolyline);
+			IFeatureClass pointsFc = CreateFeatureClass(workspace, "Centr",
+			                                            esriGeometryType.esriGeometryPoint);
+
+			AddFeature(
+				linesFc,
+				CurveConstruction.StartLine(0, 0).LineTo(4, 0).MoveTo(6, 0).LineTo(6, 10).Curve);
+			AddFeature(linesFc, CurveConstruction.StartLine(4, 10).LineTo(6, 10).Curve);
+			AddFeature(
+				linesFc,
+				CurveConstruction.StartLine(4, 0).LineTo(6, 0).MoveTo(4, 10).LineTo(0, 0).Curve);
+
+			AddFeature(pointsFc, GeometryFactory.CreatePoint(5, 2));
+			AddFeature(pointsFc, GeometryFactory.CreatePoint(6, 3));
+			AddFeature(pointsFc, GeometryFactory.CreatePoint(5, 4));
+
+			// expect counter-clockwise: 0 errors
+			var runner = new QaContainerTestRunner(
+				1000, new QaCentroids(ReadOnlyTableFactory.Create(linesFc),
+				                      ReadOnlyTableFactory.Create(pointsFc)));
+			Assert.AreEqual(2, runner.Execute());
 		}
 
 		[Test]

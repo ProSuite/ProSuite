@@ -12,7 +12,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		/// <param name="values">The values.</param>
 		/// <param name="table">The table.</param>
 		/// <param name="oid">The oid.</param>
-		public ValueRowProxy(object[] values, ITable table, int oid)
+		public ValueRowProxy(object[] values, ITable table, long oid)
 			: base(table, oid)
 		{
 			_values = values;

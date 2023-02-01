@@ -246,8 +246,8 @@ namespace ProSuite.QA.Tests
 		{
 			Assert.ArgumentNotNull(errorRows);
 
-			var oids = new List<int>(errorRows.Count);
-			var errorsByOid = new Dictionary<int, ErrorInfo>(errorRows.Count);
+			var oids = new List<long>(errorRows.Count);
+			var errorsByOid = new Dictionary<long, ErrorInfo>(errorRows.Count);
 
 			foreach (RowErrorInfo errorRow in errorRows)
 			{
@@ -278,16 +278,16 @@ namespace ProSuite.QA.Tests
 			[NotNull] IDictionary<string, ErrorInfo> knownUrlStatus)
 		{
 			var urls = new HashSet<string>();
-			var urlRows = new Dictionary<string, List<int>>();
+			var urlRows = new Dictionary<string, List<long>>();
 
 			foreach (RowUrl rowUrl in rowUrls)
 			{
 				urls.Add(rowUrl.Url);
 
-				List<int> oids;
+				List<long> oids;
 				if (! urlRows.TryGetValue(rowUrl.Url, out oids))
 				{
-					oids = new List<int>();
+					oids = new List<long>();
 					urlRows.Add(rowUrl.Url, oids);
 				}
 
@@ -307,9 +307,9 @@ namespace ProSuite.QA.Tests
 			{
 				knownUrlStatus[urlError.Url] = urlError.ErrorInfo;
 
-				List<int> oids = urlRows[urlError.Url];
+				List<long> oids = urlRows[urlError.Url];
 
-				foreach (int oid in oids)
+				foreach (long oid in oids)
 				{
 					result.Add(new RowErrorInfo(new RowUrl(urlError.Url, oid), urlError.ErrorInfo));
 				}
@@ -645,7 +645,7 @@ namespace ProSuite.QA.Tests
 
 		private class RowUrl
 		{
-			public RowUrl([NotNull] string url, int oid)
+			public RowUrl([NotNull] string url, long oid)
 			{
 				Url = url;
 				Oid = oid;
@@ -654,7 +654,7 @@ namespace ProSuite.QA.Tests
 			[NotNull]
 			public string Url { get; }
 
-			public int Oid { get; }
+			public long Oid { get; }
 		}
 
 		private class RowErrorInfo

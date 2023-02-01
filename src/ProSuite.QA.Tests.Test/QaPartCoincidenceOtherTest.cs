@@ -21,6 +21,8 @@ namespace ProSuite.QA.Tests.Test
 		public void SetupFixture()
 		{
 			TestUtils.InitializeLicense();
+
+			_testWs = TestWorkspaceUtils.CreateInMemoryWorkspace("QaPartCoincidenceOtherTest");
 		}
 
 		[OneTimeTearDown]
@@ -28,13 +30,6 @@ namespace ProSuite.QA.Tests.Test
 		{
 			TestUtils.ReleaseLicense();
 		}
-
-		[NotNull]
-		private IFeatureWorkspace TestWorkspace =>
-			_testWs ??
-			(_testWs =
-				 TestWorkspaceUtils.CreateInMemoryWorkspace("QaPartCoincidenceOtherTest")
-			);
 
 		[Test]
 		[Ignore("Uses local Data")]
@@ -59,7 +54,7 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void TestMultiPartError()
 		{
-			TestMultiPartErrorCore(TestWorkspace);
+			TestMultiPartErrorCore(_testWs);
 		}
 
 		private static void TestMultiPartErrorCore(IFeatureWorkspace ws)
@@ -167,7 +162,7 @@ namespace ProSuite.QA.Tests.Test
 			runner.Execute(verificationEnvelope);
 
 			AssertUtils.OneError(runner,
-			                     "NearCoincidence.NearlyCoincidentSection.BetweenFeatures");
+			                     "NearCoincidence.NearlyCoincidentSection.BetweenFeatures", 2);
 		}
 
 		[Test]
@@ -205,7 +200,7 @@ namespace ProSuite.QA.Tests.Test
 			runner.Execute(verificationEnvelope);
 
 			AssertUtils.OneError(runner,
-			                     "NearCoincidence.NearlyCoincidentSection.BetweenFeatures");
+			                     "NearCoincidence.NearlyCoincidentSection.BetweenFeatures", 2);
 		}
 
 		[Test]
@@ -243,13 +238,13 @@ namespace ProSuite.QA.Tests.Test
 			runner.Execute(verificationEnvelope);
 
 			AssertUtils.OneError(runner,
-			                     "NearCoincidence.NearlyCoincidentSection.BetweenFeatures");
+			                     "NearCoincidence.NearlyCoincidentSection.BetweenFeatures", 2);
 		}
 
 		[Test]
 		public void TestConditionCoincidence()
 		{
-			TestConditionCoincidence(TestWorkspace);
+			TestConditionCoincidence(_testWs);
 		}
 
 		private static void TestConditionCoincidence(IFeatureWorkspace ws)
@@ -326,7 +321,7 @@ namespace ProSuite.QA.Tests.Test
 					type,
 					sref, 1000, zAware, mAware));
 
-			return DatasetUtils.CreateSimpleFeatureClass(TestWorkspace, name, fields);
+			return DatasetUtils.CreateSimpleFeatureClass(_testWs, name, fields);
 		}
 	}
 }

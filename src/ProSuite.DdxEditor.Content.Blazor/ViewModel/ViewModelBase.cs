@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Text;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.QA.Core;
 
@@ -23,8 +25,7 @@ public abstract class ViewModelBase : Observable
 	{
 		Assert.ArgumentNotNull(parameter, nameof(parameter));
 
-		IsConstructorParameter = parameter.IsConstructorParameter;
-		ParameterName = IsConstructorParameter ? parameter.Name : $"[{parameter.Name}]";
+		ParameterName = Required ? parameter.Name : $"[{parameter.Name}]";
 		Parameter = parameter;
 		DataType = parameter.Type;
 
@@ -51,18 +52,12 @@ public abstract class ViewModelBase : Observable
 	public TestParameter Parameter { get; }
 
 	[NotNull]
-	protected Type DataType { get; }
-
-	public bool IsConstructorParameter { get; }
+	public Type DataType { get; }
 
 	public void ResetValue()
 	{
-		Value = null;
-
 		ResetValueCore();
 	}
-
-	protected virtual void ResetValueCore() { }
 
 	protected override bool ValidateCore()
 	{
@@ -71,6 +66,25 @@ public abstract class ViewModelBase : Observable
 
 	public override string ToString()
 	{
-		return $"name: {ParameterName}, type: {DataType} ({GetType()})";
+		string value;
+		if (Value is ICollection<ViewModelBase> collection)
+		{
+			value = StringUtils.Concatenate(collection.Select(vm => vm.Value), ", ");
+		}
+		else if (Value == null)
+		{
+			value = "<null>";
+		}
+		else
+		{
+			value = $"{Value}";
+		}
+
+		return $"{GetType().Name}: {value} ({ParameterName}, {DataType.Name})";
+	}
+
+	protected virtual void ResetValueCore()
+	{
+		Value = null;
 	}
 }

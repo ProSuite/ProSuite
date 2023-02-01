@@ -412,7 +412,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 				// identity map to make sure only unique related row instances are returned 
 				// (same row instance for a given row oid)
-				var relatedIdMap = new Dictionary<int, IRow>();
+				var relatedIdMap = new Dictionary<long, IRow>();
 
 				while (sourceRow != null)
 				{
@@ -860,9 +860,9 @@ namespace ProSuite.Commons.AO.Geodatabase
 		/// <returns></returns>
 		[NotNull]
 		private static IRow GetUniqueRow([NotNull] IRow row,
-		                                 [NotNull] IDictionary<int, IRow> identityMap)
+		                                 [NotNull] IDictionary<long, IRow> identityMap)
 		{
-			int oid = row.OID;
+			long oid = (long) row.OID;
 
 			IRow existingRow;
 			if (identityMap.TryGetValue(oid, out existingRow))

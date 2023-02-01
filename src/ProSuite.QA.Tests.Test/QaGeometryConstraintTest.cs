@@ -45,9 +45,8 @@ namespace ProSuite.QA.Tests.Test
 			var runner = new QaTestRunner(test);
 			runner.Execute(feature);
 
-			QaError error;
-			AssertUtils.OneError(runner, "GeometryConstraint.ConstraintNotFulfilled.ForShape",
-			                     out error);
+			QaError error =
+				AssertUtils.OneError(runner, "GeometryConstraint.ConstraintNotFulfilled.ForShape");
 			Assert.True(GeometryUtils.AreEqual(feature.Shape, error.Geometry));
 		}
 
@@ -75,10 +74,9 @@ namespace ProSuite.QA.Tests.Test
 			var runner = new QaTestRunner(test);
 			runner.Execute(feature);
 
-			QaError error;
-			AssertUtils.OneError(runner,
-			                     "GeometryConstraint.ConstraintNotFulfilled.ForShapePart",
-			                     out error);
+			QaError error =
+				AssertUtils.OneError(
+					runner, "GeometryConstraint.ConstraintNotFulfilled.ForShapePart");
 
 			Assert.True(GeometryUtils.AreEqual(incorrectPath,
 			                                   GeometryFactory.CreatePolyline(error.Geometry)));

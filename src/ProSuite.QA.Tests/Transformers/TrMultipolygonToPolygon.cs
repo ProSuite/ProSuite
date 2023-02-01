@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
@@ -7,7 +6,6 @@ using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestContainer;
 using ProSuite.QA.Core;
 using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
@@ -22,11 +20,11 @@ namespace ProSuite.QA.Tests.Transformers
 		{
 			bool IUniqueIdKey.IsVirtuell => BaseOid < 0;
 
-			public int BaseOid { get; }
+			public long BaseOid { get; }
 			public int OuterRingIdx { get; }
 			public int InnerRingIdx { get; }
 
-			public UniqueIdKey(int baseOid, int outerRingId, int innerRingId)
+			public UniqueIdKey(long baseOid, int outerRingId, int innerRingId)
 			{
 				BaseOid = baseOid;
 				OuterRingIdx = outerRingId;
@@ -65,7 +63,13 @@ namespace ProSuite.QA.Tests.Transformers
 
 			public int GetHashCode(UniqueIdKey obj)
 			{
-				return obj.BaseOid + 29 * (obj.OuterRingIdx + 37 * obj.InnerRingIdx);
+				unchecked
+				{
+					int hashCode = obj.BaseOid.GetHashCode();
+					hashCode = (hashCode * 397) ^ obj.OuterRingIdx;
+					hashCode = (hashCode * 397) ^ obj.InnerRingIdx;
+					return hashCode;
+				}
 			}
 		}
 
@@ -111,7 +115,7 @@ namespace ProSuite.QA.Tests.Transformers
 		[DocTr(nameof(DocTrStrings.TrMultipolygonToPolygon_TransformedParts))]
 		public PolygonPart TransformedParts { get; set; }
 
-		protected override IEnumerable<GdbFeature> Transform(IGeometry source, int? sourceOid)
+		protected override IEnumerable<GdbFeature> Transform(IGeometry source, long? sourceOid)
 		{
 			IPolygon4 poly = (IPolygon4) source;
 

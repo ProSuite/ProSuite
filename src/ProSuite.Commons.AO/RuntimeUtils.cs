@@ -1,11 +1,13 @@
 using System;
-using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Reflection;
+#if !Server11
+using System.Linq;
+#endif
 
 namespace ProSuite.Commons.AO
 {
@@ -91,6 +93,7 @@ namespace ProSuite.Commons.AO
 			}
 		}
 
+#if !Server11
 		[CanBeNull]
 		public static string GetInstalledDesktopVersion()
 		{
@@ -111,6 +114,7 @@ namespace ProSuite.Commons.AO
 			return RuntimeManager.InstalledRuntimes.FirstOrDefault(
 				runtimeInfo => runtimeInfo.Product == productCode);
 		}
+#endif
 
 		/// <summary>
 		/// Tries to the get the version from the ESRI.ArcGIS.Version assembly.
@@ -121,7 +125,7 @@ namespace ProSuite.Commons.AO
 		private static bool TryGetVersionFromVersionAssembly(
 			[CanBeNull] out string version)
 		{
-			Assembly esriVersionAssembly = typeof(RuntimeManager).Assembly;
+			Assembly esriVersionAssembly = typeof(LicenseLevel).Assembly;
 
 			string fullVersion =
 				ReflectionUtils.GetAssemblyVersionString(esriVersionAssembly);
@@ -142,33 +146,34 @@ namespace ProSuite.Commons.AO
 		{
 			try
 			{
+#if !Server11
 				// the following code fails
 				// - in the 64bit background environment (see COM-221): DllNotFound
 				// - in specific cross-thread situations: InvalidComObject
 				RuntimeInfo runtime = RuntimeManager.ActiveRuntime;
 
-				if (runtime == null)
+				if (runtime != null)
 				{
-					// not bound yet?
+					version = runtime.Version;
+					return true;
+				}
+#endif
+				// not bound yet?
 
-					// There seems to be another scenario where this is null (observed
-					// for background gp on a particular setup, which also includes server).
+				// There seems to be another scenario where this is null (observed
+				// for background gp on a particular setup, which also includes server).
 
-					_msg.Debug(
-						"RuntimeInfo not available. Trying to get version from assembly");
+				_msg.Debug(
+					"RuntimeInfo not available. Trying to get version from assembly");
 
-					if (TryGetVersionFromVersionAssembly(out version))
-					{
-						return true;
-					}
-
-					_msg.DebugFormat("Unable to get ArcGIS version from assembly");
-					version = null;
-					return false;
+				if (TryGetVersionFromVersionAssembly(out version))
+				{
+					return true;
 				}
 
-				version = runtime.Version;
-				return true;
+				_msg.DebugFormat("Unable to get ArcGIS version from assembly");
+				version = null;
+				return false;
 			}
 			catch (DllNotFoundException e)
 			{

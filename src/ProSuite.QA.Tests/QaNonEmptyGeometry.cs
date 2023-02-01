@@ -138,7 +138,7 @@ namespace ProSuite.QA.Tests
 			const bool recycling = true;
 			IQueryFilter filter = CreateFilter(featureClass, GetConstraint(0));
 
-			int previousOid = -1;
+			long previousOid = -1;
 			bool tryFallbackImplementation = false;
 
 			// New with 12.5 (probably 10.8.1 x64 too?) for multipatch features:

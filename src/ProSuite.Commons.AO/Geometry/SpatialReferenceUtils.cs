@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using ESRI.ArcGIS.esriSystem;
@@ -1374,6 +1375,13 @@ namespace ProSuite.Commons.AO.Geometry
 			return ((ISpatialReferenceTolerance) spatialReference).XYTolerance;
 		}
 
+		public static double GetZTolerance([NotNull] ISpatialReference spatialReference)
+		{
+			Assert.ArgumentNotNull(spatialReference, nameof(spatialReference));
+
+			return ((ISpatialReferenceTolerance) spatialReference).ZTolerance;
+		}
+
 		#region Non-public methods
 
 		[NotNull]
@@ -1449,6 +1457,13 @@ namespace ProSuite.Commons.AO.Geometry
 		{
 			// the hard way, workaround for singleton interop issue
 
+			// NOTE: Getting the type from the ProgID fails starting from 11.0
+			//       Therefore get the type directly:
+			Assembly geometryAssembly = typeof(ISpatialReferenceFactory3).Assembly;
+			Type srFactoryType =
+				geometryAssembly.GetType("ESRI.ArcGIS.Geometry.SpatialReferenceEnvironmentClass");
+
+			return ComUtils.Create<SpatialReferenceEnvironmentClass, ISpatialReferenceFactory3>();
 			return ComUtils.CreateObject<ISpatialReferenceFactory3>(
 				"esriGeometry.SpatialReferenceEnvironment");
 		}

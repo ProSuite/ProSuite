@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using System.Windows.Forms;
 using ProSuite.Commons.Essentials.Assertions;
@@ -41,6 +40,8 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 		public void AddInstanceDescriptors(string dllFilePath,
 		                                   IApplicationController applicationController)
 		{
+			// NOTE: This method could profit from a re-unification with TestDescriptorsItem
+
 			using (_msg.IncrementIndentation(
 				       "Adding {0}s from assembly {1}", DescriptorTypeDisplayName, dllFilePath))
 			{
@@ -83,7 +84,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 
 			applicationController.GoToItem(this);
 
-			TryAddInstanceDescriptors(newDescriptors);
+			TryAddInstanceDescriptors(newDescriptors, ModelBuilder.InstanceDescriptors);
 		}
 
 		protected abstract string DescriptorTypeDisplayName { get; }
@@ -130,51 +131,19 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 		[NotNull]
 		protected abstract IEnumerable<InstanceDescriptorTableRow> GetTableRows();
 
-		protected void TryAddInstanceDescriptors(
-			[NotNull] IEnumerable<InstanceDescriptor> descriptors)
+		private void TryAddInstanceDescriptors(
+			[NotNull] IEnumerable<InstanceDescriptor> descriptors,
+			IInstanceDescriptorRepository repository)
 		{
 			Assert.ArgumentNotNull(descriptors, nameof(descriptors));
-
-			IInstanceDescriptorRepository repository = ModelBuilder.InstanceDescriptors;
 
 			var addedCount = 0;
 			ModelBuilder.NewTransaction(
 				delegate
 				{
-					Dictionary<string, InstanceDefinition> definitions =
-						repository.GetAll()
-						          .Select(descriptor => new InstanceDefinition(descriptor))
-						          .ToDictionary(definition => definition.Name);
-
-					foreach (InstanceDescriptor descriptor in descriptors)
-					{
-						var definition = new InstanceDefinition(descriptor);
-
-						// Note daro: hack for TOP-5464
-						// In DDX schema there is an unique constraint on NAME
-						// and
-						// FCTRY_TYPENAME, FCTRY_ASSEMBLYNAME, TEST_TYPENAME, TEST_ASSEMBLYNAME, TEST_CTROID
-
-						// 1st check: name
-						if (definitions.ContainsKey(definition.Name))
-						{
-							_msg.InfoFormat(
-								"{0} with the same definition as '{1}' is already registered",
-								descriptor.TypeDisplayName, descriptor.Name);
-						}
-						// 2nd check: equality with rest of object
-						else if (! definitions.ContainsValue(definition))
-						{
-							_msg.DebugFormat("Registering new {0} {1}", descriptor.TypeDisplayName,
-							                 descriptor);
-
-							definitions.Add(definition.Name, definition);
-
-							repository.Save(descriptor);
-
-							addedCount++;
-						}
-					}
+					addedCount =
+						InstanceDescriptorItemUtils.TryAddInstanceDescriptorsTx(
+							descriptors, repository);
 				});
 
 			_msg.InfoFormat("{0} {1}s added", addedCount, DescriptorTypeDisplayName);

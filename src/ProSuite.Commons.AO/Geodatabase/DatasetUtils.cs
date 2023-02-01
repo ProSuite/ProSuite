@@ -5,6 +5,7 @@ using ESRI.ArcGIS.DataSourcesRaster;
 using ESRI.ArcGIS.GeoDatabaseExtensions;
 #endif
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -1673,7 +1674,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		                              bool unique,
 		                              [CanBeNull] string prefix)
 		{
-			return AddIndex(table, new[] {fieldName}, unique, prefix);
+			return AddIndex(table, new[] { fieldName }, unique, prefix);
 		}
 
 		[NotNull]
@@ -1682,7 +1683,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		                              [NotNull] string fieldName2, bool unique,
 		                              [CanBeNull] string prefix)
 		{
-			return AddIndex(table, new[] {fieldName1, fieldName2}, unique, prefix);
+			return AddIndex(table, new[] { fieldName1, fieldName2 }, unique, prefix);
 		}
 
 		[NotNull]
@@ -2921,6 +2922,11 @@ namespace ProSuite.Commons.AO.Geodatabase
 			return null;
 		}
 
+		public static IDatasetName GetFeatureDatasetName([NotNull] ITable table)
+		{
+			return GetFeatureDatasetName((IDataset) table);
+		}
+
 		[CanBeNull]
 		public static IDatasetName GetFeatureDatasetName([NotNull] IDataset dataset)
 		{
@@ -3577,7 +3583,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		/// <param name="table">The table.</param>
 		/// <param name="oids">The oids.</param>
 		public static void DeleteRows([NotNull] ITable table,
-		                              [NotNull] IEnumerable<int> oids)
+		                              [NotNull] IEnumerable oids)
 		{
 			Assert.ArgumentNotNull(table, nameof(table));
 			Assert.ArgumentNotNull(oids, nameof(oids));
@@ -3675,7 +3681,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 				return candidates[0];
 			}
 
-			foreach (string preferredName in new[] {"OBJECTID", "OID", "FID", "ID"})
+			foreach (string preferredName in new[] { "OBJECTID", "OID", "FID", "ID" })
 			{
 				IField preferredField =
 					candidates.FirstOrDefault(field => field.Name == preferredName);
@@ -4050,7 +4056,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			return new UIDClass { Value = "{F245DFEB-851B-4981-9860-4BACC8C0A688}" };
 			//return new UIDClass { Value = "esriCarto.AnnotationFeatureClassExtension" };
 #else
-			return new UIDClass {Value = "{24429589-D711-11D2-9F41-00C04F6BC6A5}"};
+			return new UIDClass { Value = "{24429589-D711-11D2-9F41-00C04F6BC6A5}" };
 #endif
 		}
 
@@ -4153,7 +4159,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			string whereClause = string.Format("{0} IN ({1})", table.OIDFieldName, oidString);
 
-			IQueryFilter filter = new QueryFilterClass {WhereClause = whereClause};
+			IQueryFilter filter = new QueryFilterClass { WhereClause = whereClause };
 
 			Stopwatch watch = _msg.DebugStartTiming(
 				"Deleting rows from {0} using where clause {1}",

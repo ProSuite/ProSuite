@@ -1,0 +1,39 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<log4net>
+
+  <!-- appenders -->
+  <appender name="DebugFileAppender" type="log4net.Appender.RollingFileAppender">
+
+    <threshold value="DEBUG" />
+    <file value="C:\ProSuite\Logs\prosuite.unittest.debug.log" />
+
+    <datePattern value="'.'yyyy-MM-dd" />
+    <appendToFile value="true" />
+    <maxSizeRollBackups value="10" />
+    <maximumFileSize value="1000000" />
+    <rollingStyle value="Size" />
+    <staticLogFileName value="true" />
+
+    <layout type="log4net.Layout.PatternLayout">
+      <conversionPattern value="%d{dd.MM HH:mm:ss.fff} [%thread] %-5p %-30c{1} : %m%n" />
+    </layout>
+  </appender>
+
+  <appender name="ConsoleAppender" type="log4net.Appender.ConsoleAppender">
+    <threshold value="INFO" />
+    <layout type="log4net.Layout.PatternLayout">
+      <conversionPattern value="%d{HH:mm:ss.fff} [%thread] %-5p %-20c{1} : %m%n" />
+    </layout>
+  </appender>
+
+  <!-- loggers -->
+
+  <root>
+    <level value="DEBUG" />
+
+    <appender-ref ref="ConsoleAppender" />
+    <appender-ref ref="DebugFileAppender" />
+  </root>
+
+</log4net>

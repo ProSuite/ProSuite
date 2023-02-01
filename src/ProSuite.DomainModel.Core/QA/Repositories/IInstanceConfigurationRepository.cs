@@ -22,6 +22,9 @@ namespace ProSuite.DomainModel.Core.QA.Repositories
 			bool includeQualityConditionsBasedOnDeletedDatasets = true)
 			where T : InstanceConfiguration;
 
+		IList<T> Get<T>([NotNull] IEnumerable<DataQualityCategory> categories)
+			where T : InstanceConfiguration;
+
 		InstanceConfiguration Get(string name, Type type);
 
 		IDictionary<T, IList<DatasetTestParameterValue>> GetWithDatasetParameterValues<T>(

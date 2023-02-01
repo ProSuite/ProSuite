@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -16,10 +16,10 @@ namespace ProSuite.Commons.AO.Geodatabase.SchemaInfo
 			Name = DatasetUtils.GetName(objectClass);
 			SubtypeField = GetSubtypeFieldText(objectClass);
 
-			var versionedObject3 = objectClass as IVersionedObject3;
+			var versionedObject = objectClass as IVersionedObject;
 
-			RegisteredAsVersioned = versionedObject3 != null &&
-			                        versionedObject3.IsRegisteredAsVersioned;
+			RegisteredAsVersioned = versionedObject != null &&
+			                        versionedObject.IsRegisteredAsVersioned;
 		}
 
 		[Category(PropertyCategories.General)]

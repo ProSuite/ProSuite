@@ -950,11 +950,11 @@ namespace ProSuite.QA.Tests
 		private class RowPair : IEquatable<RowPair>
 		{
 			private readonly int _tableIndex1;
-			private readonly int _oid1;
+			private readonly long _oid1;
 			private readonly int _tableIndex2;
-			private readonly int _oid2;
+			private readonly long _oid2;
 
-			public RowPair(int tableIndex1, int oid1, int tableIndex2, int oid2)
+			public RowPair(int tableIndex1, long oid1, int tableIndex2, long oid2)
 			{
 				_tableIndex1 = tableIndex1;
 				_oid1 = oid1;
@@ -1003,9 +1003,9 @@ namespace ProSuite.QA.Tests
 				unchecked
 				{
 					int hashCode = _tableIndex1;
-					hashCode = (hashCode * 397) ^ _oid1;
+					hashCode = (hashCode * 397) ^ _oid1.GetHashCode();
 					hashCode = (hashCode * 397) ^ _tableIndex2;
-					hashCode = (hashCode * 397) ^ _oid2;
+					hashCode = (hashCode * 397) ^ _oid2.GetHashCode();
 					return hashCode;
 				}
 			}
