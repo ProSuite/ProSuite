@@ -52,6 +52,15 @@ namespace ProSuite.Processing.Utils
 			                  .ToList();
 		}
 
+		public static ParameterInfo GetParameter(Type processType, string parameterName)
+		{
+			var list = GetParameters(processType);
+			return list.FirstOrDefault(
+				       p => string.Equals(p.Name, parameterName, StringComparison.Ordinal)) ??
+			       list.FirstOrDefault(
+				       p => string.Equals(p.Name, parameterName, StringComparison.OrdinalIgnoreCase));
+		}
+
 		private static ParameterInfo GetParameterInfo(PropertyInfo property)
 		{
 			if (property == null)
@@ -76,7 +85,7 @@ namespace ProSuite.Processing.Utils
 			}
 
 			return new ParameterInfo(name, type, required, multivalued,
-			                             attr?.Group, order, docKey);
+			                         attr?.Group, order, docKey);
 		}
 
 		private static bool IsProcessParameter(PropertyInfo property)

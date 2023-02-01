@@ -372,6 +372,47 @@ namespace ProSuite.Processing
 			}
 		}
 
+		/// <summary>Sloppy line parse, may be used for "intellisense"</summary>
+		/// <returns>index relative to start of line</returns>
+		public static int ParseLine(string text, int textIndex, out string line,
+		                             out int nameStart, out int nameLength, out int valueStart)
+		{
+			line = GetLineAtIndex(text, textIndex, out int lineIndex);
+
+			nameLength = 0;
+			valueStart = -1;
+
+			var position = new Position();
+			SkipWhite(line, position);
+			nameStart = position.Index;
+
+			var name = ScanName(line, position);
+			if (name is null) return lineIndex;
+			nameLength = name.Length; // or: position.Index - nameStart
+
+			SkipBlank(line, position);
+			var op = ScanOperator(line, position, ':', '=');
+			if (op == (char) 0) return lineIndex;
+			SkipBlank(line, position);
+
+			valueStart = position.Index;
+			return lineIndex;
+		}
+
+		private static string GetLineAtIndex(string text, int textIndex, out int lineIndex)
+		{
+			lineIndex = 0;
+			if (textIndex > text.Length) textIndex = text.Length;
+			else if (textIndex < 0) textIndex = 0;
+			int i = textIndex;
+			while (i > 0 && text[i - 1] != '\n' && text[i - 1] != '\r') i--;
+			lineIndex = textIndex - i;
+			int j = textIndex;
+			while (j < text.Length && text[j] != '\n' && text[j] != '\r') j++;
+			return text.Substring(i, j - i);
+		}
+
+
 		private static string ScanName(string text, Position position)
 		{
 			if (position.Index >= text.Length)
