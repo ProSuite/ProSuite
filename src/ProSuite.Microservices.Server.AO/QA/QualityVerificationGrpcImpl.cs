@@ -460,11 +460,11 @@ namespace ProSuite.Microservices.Server.AO.QA
 						if (System.IO.File.Exists(serviceConfigPath))
 						{
 							XmlSerializer ser =
-								new XmlSerializer(typeof(XmlServiceConfiguration));
+								new XmlSerializer(typeof(ParallelConfiguration));
 							using (var r = new System.IO.StreamReader(serviceConfigPath))
 							{
-								var config = (XmlServiceConfiguration)ser.Deserialize(r);
-								distributedTestRunner.ServiceConfiguration = config;
+								var config = (ParallelConfiguration)ser.Deserialize(r);
+								distributedTestRunner.ParallelConfiguration = config;
 							}
 						}
 					}

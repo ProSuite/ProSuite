@@ -205,12 +205,12 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			_workersClients = workersClients;
 			_originalRequest = originalRequest;
-			ServiceConfiguration = new XmlServiceConfiguration();
+			ParallelConfiguration = new ParallelConfiguration();
 		}
 
 		public QualitySpecification QualitySpecification { get; set; }
 		[NotNull]
-		public XmlServiceConfiguration ServiceConfiguration { get; set; }
+		public ParallelConfiguration ParallelConfiguration { get; set; }
 
 		public TestAssembler TestAssembler { get; set; }
 
@@ -772,7 +772,11 @@ namespace ProSuite.Microservices.Server.AO.QA
 			}
 
 			// Remaining
-			int nVerifications = Math.Max(maxParallel / 2, maxParallel - subVerifications.Count);
+			int nVerifications =
+				ParallelConfiguration.MaxFullAreaTasks <= 0
+					? Math.Max(maxParallel / 2, maxParallel - subVerifications.Count)
+					: ParallelConfiguration.MaxFullAreaTasks;
+
 			List<QualityConditionGroup> qcsPerSubverification = new List<QualityConditionGroup>();
 			int iVerification = 0;
 			foreach (QualityConditionGroup conditionGroup in unhandledQualityConditions)
@@ -816,9 +820,9 @@ namespace ProSuite.Microservices.Server.AO.QA
 				return new List<QualityConditionGroup>();
 			}
 
-			int maxTasks = ServiceConfiguration.MaxNonContainerTasks == 0
+			int maxTasks = ParallelConfiguration.MaxNonContainerTasks == 0
 				               ? nonContainerGroup.QualityConditions.Count
-				               : ServiceConfiguration.MaxNonContainerTasks;
+				               : ParallelConfiguration.MaxNonContainerTasks;
 
 			List<QualityConditionGroup> grps = new List<QualityConditionGroup>();
 			int iTask = 0;
@@ -922,15 +926,15 @@ namespace ProSuite.Microservices.Server.AO.QA
 				ProtobufGeometryUtils.FromShapeMsg(originalRequest.Parameters.Perimeter);
 			IEnvelope executeEnvelope = perimeter?.Envelope;
 
-			double splitSize = ServiceConfiguration.MinimumSplitAreaExtent <= 0
+			double splitSize = ParallelConfiguration.MinimumSplitAreaExtent <= 0
 				                   ? originalRequest.Parameters.TileSize
-				                   : ServiceConfiguration.MinimumSplitAreaExtent;
+				                   : ParallelConfiguration.MinimumSplitAreaExtent;
 
 			TileEnum tileEnum = new TileEnum(tests, executeEnvelope,
 			                                 splitSize,
 			                                 executeEnvelope?.SpatialReference);
 
-			int maxSplits = ServiceConfiguration.MaxSplitAreaTasks;
+			int maxSplits = ParallelConfiguration.MaxSplitAreaTasks;
 			IEnumerable<IEnvelope> tileBoxEnum;
 			if (maxSplits <= 0 || maxSplits >= tileEnum.GetTotalTileCount())
 			{

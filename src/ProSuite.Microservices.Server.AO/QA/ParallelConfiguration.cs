@@ -2,7 +2,7 @@ using System.Xml.Serialization;
 
 namespace ProSuite.Microservices.Server.AO.QA
 {
-	public class XmlServiceConfiguration
+	public class ParallelConfiguration
 	{
 		/// <summary>
 		/// Maximum number of tasks handling non container tests
