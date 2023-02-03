@@ -21,14 +21,14 @@ public static class MarkerPlacements
 	// signature sth like: IEnumerable<Matrix> MyPlacement(Matrix matrix, Geometry reference, MP parameters)
 	// the input matrix already represents AnchorPoint, Rotation, Offset, ScaleX (and maybe Size)
 
-	public class Options
+	public abstract class Options
 	{
 		public bool PlacePerPart { get; set; }
 	}
 
-	public class FillOptions : Options { }
+	public abstract class FillOptions : Options { }
 
-	public class StrokeOptions : Options
+	public abstract class StrokeOptions : Options
 	{
 		public bool AngleToLine { get; set; }
 		public double PerpendicularOffset { get; set; } // in CIM just "Offset"
@@ -183,6 +183,90 @@ public static class MarkerPlacements
 		}
 	}
 
+	public enum OnLinePosition
+	{
+		Middle, Start, End, SegmentMidpoints
+	}
+
+	public class OnLineOptions : StrokeOptions
+	{
+		public OnLinePosition RelativeTo { get; set; }
+		public double StartPointOffset { get; set; }
+	}
+
+	public static IEnumerable<T> OnLine<T>(
+		T marker, Geometry reference, OnLineOptions options) where T : Geometry
+	{
+		if (marker is null) yield break;
+		if (reference is not Polyline polyline) yield break;
+		if (options is null) throw new ArgumentNullException(nameof(options));
+
+		bool angleToLine = options.AngleToLine;
+		double perpOffset = options.PerpendicularOffset;
+
+		// positive is *in* from Start/End and along line from Middle
+		double offsetAlong = options.StartPointOffset;
+
+		if (options.RelativeTo == OnLinePosition.SegmentMidpoints)
+		{
+			foreach (var segment in polyline.Parts.SelectMany(part => part))
+			{
+				var distanceAlong = segment.Length / 2 + offsetAlong;
+
+				if (GetPointAndTangent(segment, distanceAlong, out var position, out var tangent))
+				{
+					yield return Placed(marker, position, tangent, angleToLine, perpOffset);
+				}
+			}
+		}
+		else
+		{
+			if (options.PlacePerPart)
+			{
+				foreach (var partLine in GetPartLines(polyline))
+				{
+					var distanceAlong = GetOnLineDistance(options.RelativeTo, partLine.Length, offsetAlong);
+
+					if (GetPointAndTangent(partLine, distanceAlong,
+					                       out Pair position, out Pair tangent))
+					{
+						yield return Placed(marker, position, tangent, angleToLine, perpOffset);
+					}
+				}
+			}
+			else
+			{
+				var distanceAlong = GetOnLineDistance(options.RelativeTo, polyline.Length, offsetAlong);
+
+				if (GetPointAndTangent(polyline, distanceAlong,
+				                       out Pair position, out Pair tangent))
+				{
+					yield return Placed(marker, position, tangent, angleToLine, perpOffset);
+				}
+			}
+		}
+	}
+
+	public enum EndingsType
+	{
+		Unconstrained, Marker, HalfStep, FullStep, Custom
+	}
+
+	public class AlongLineOptions : StrokeOptions
+	{
+		public double[] Pattern { get; set; }
+		public EndingsType Endings { get; set; }
+		public double OffsetAlongLine { get; set; } // only for Unconstrained and Custom
+		public double CustomEndingOffset { get; set; } // only for Custom
+	}
+
+	public static IEnumerable<T> AlongLine<T>(
+		T marker, Geometry reference, AlongLineOptions options)
+	{
+		throw new NotImplementedException(
+			$"Marker placement {nameof(AlongLine)} not yet implemented");
+	}
+
 	public class PolygonCenterOptions : FillOptions
 	{
 		public bool UseBoundingBox { get; set; }
@@ -218,6 +302,26 @@ public static class MarkerPlacements
 		}
 	}
 
+	public enum AroundPolygonPosition
+	{
+		Top, Bottom, Left, Right, TopLeft, TopRight, BottomLeft, BottomRight
+	}
+
+	public class AroundPolygonOptions : FillOptions
+	{
+		public AroundPolygonPosition Position { get; set; }
+		public double Offset { get; set; }
+	}
+
+	public static IEnumerable<T> AroundPolygon<T>(
+		T marker, Geometry reference, AroundPolygonOptions options) where T : Geometry
+	{
+		// Hmm, seems to relate to the convex hull, but details unsure
+		// Offset seems to be in dirs 0 45 90 135 180 etc. depending on Position (negative is inward)
+		throw new NotImplementedException(
+			$"Marker placement {nameof(AroundPolygon)} is not yet implemented");
+	}
+
 	public static IEnumerable<T> OnPoint<T>(T marker, MapPoint point) where T : Geometry
 	{
 		if (marker is null) yield break;
@@ -236,15 +340,35 @@ public static class MarkerPlacements
 		return GeometryEngine.Instance.Centroid(polygon);
 	}
 
-	private static Pair GetTangent(Segment segment, double t)
+	private static Pair GetTangent(Segment segment, double t) // TODO t vs len
 	{
 		if (segment is null) throw new ArgumentNullException(nameof(segment));
 		if (t < 0) t = 0; else if (t > 1) t = 1; // clamp
+
+		const double tangentLength = 1.0; // unit length!
 		var line = GeometryEngine.Instance.QueryTangent(
 			segment, SegmentExtensionType.NoExtension,
-			t, AsRatioOrLength.AsRatio, 1.0);
+			t, AsRatioOrLength.AsRatio, tangentLength);
+
 		var position = line.StartPoint.ToPair();
 		return line.EndPoint.ToPair() - position;
+	}
+
+	private static bool GetPointAndTangent(Segment segment, double distanceAlong,
+	                                       out Pair position, out Pair tangent)
+	{
+		position = tangent = Pair.Null;
+		if (segment is null) return false;
+		if (!(segment.Length > 0)) return false;
+
+		const double tangentLength = 1.0; // unit length!
+		var line = GeometryEngine.Instance.QueryTangent(
+			segment, SegmentExtensionType.ExtendTangents,
+			distanceAlong, AsRatioOrLength.AsLength, tangentLength);
+
+		position = line.StartPoint.ToPair();
+		tangent = line.EndPoint.ToPair() - position;
+		return true;
 	}
 
 	private static bool GetPointAndTangent(Polyline curve, double distanceAlong,
@@ -274,6 +398,18 @@ public static class MarkerPlacements
 		if (polyline is null) return Enumerable.Empty<Polyline>();
 		var parts = GeometryEngine.Instance.MultipartToSinglePart(polyline);
 		return parts.OfType<Polyline>();
+	}
+
+	private static double GetOnLineDistance(OnLinePosition position,
+	                                        double lineLength, double offsetAlong)
+	{
+		return position switch
+		{
+			OnLinePosition.Start => offsetAlong, // positive is in from Start
+			OnLinePosition.Middle => lineLength / 2 + offsetAlong, // pos is along line
+			OnLinePosition.End => lineLength - offsetAlong, // pos is in from End
+			_ => throw new ArgumentOutOfRangeException(nameof(position))
+		};
 	}
 
 	private static T Rotated<T>(T shape, double angleRadians, MapPoint pivot = null) where T : Geometry
