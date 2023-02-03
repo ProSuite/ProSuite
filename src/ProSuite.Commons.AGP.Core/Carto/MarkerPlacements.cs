@@ -152,7 +152,7 @@ public static class MarkerPlacements
 				segment = part[i];
 				point = segment.EndPoint;
 				position = point.ToPair();
-				var pre = GetTangent(segment, 1);
+				var pre = GetTangent(segment, segment.Length);
 				var post = GetTangent(part[i + 1], 0);
 				// average direction from segments before and after:
 				tangent = (pre + post).Normalized(); // unit length!
@@ -170,7 +170,7 @@ public static class MarkerPlacements
 			segment = part[segmentCount - 1];
 			point = segment.EndPoint;
 			position = point.ToPair();
-			tangent = GetTangent(segment, 1);
+			tangent = GetTangent(segment, segment.Length);
 
 			isEndPoint = j == partCount - 1 || options.PlacePerPart;
 			isControlPoint = point.HasID && point.ID > 0;
@@ -340,15 +340,16 @@ public static class MarkerPlacements
 		return GeometryEngine.Instance.Centroid(polygon);
 	}
 
-	private static Pair GetTangent(Segment segment, double t) // TODO t vs len
+	private static Pair GetTangent(Segment segment, double distanceAlong)
 	{
 		if (segment is null) throw new ArgumentNullException(nameof(segment));
-		if (t < 0) t = 0; else if (t > 1) t = 1; // clamp
+		if (distanceAlong > segment.Length) distanceAlong = segment.Length;
+		else if(distanceAlong < 0) distanceAlong = 0; // clamp
 
 		const double tangentLength = 1.0; // unit length!
 		var line = GeometryEngine.Instance.QueryTangent(
 			segment, SegmentExtensionType.NoExtension,
-			t, AsRatioOrLength.AsRatio, tangentLength);
+			distanceAlong, AsRatioOrLength.AsLength, tangentLength);
 
 		var position = line.StartPoint.ToPair();
 		return line.EndPoint.ToPair() - position;
