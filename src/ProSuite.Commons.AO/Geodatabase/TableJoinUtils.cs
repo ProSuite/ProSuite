@@ -160,7 +160,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 				relationshipClasses, joinType, name, includeOnlyOIDFields, excludeShapeField,
 				whereClause, out string primaryKeyField);
 
-			return ReadOnlyTableFactory.Create(queryTable, primaryKeyField);
+			return ReadOnlyTableFactory.Create(queryTable, primaryKeyField, createJoinedTable: true);
 		}
 
 		[NotNull]

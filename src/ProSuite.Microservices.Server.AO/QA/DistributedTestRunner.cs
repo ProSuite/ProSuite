@@ -177,18 +177,6 @@ namespace ProSuite.Microservices.Server.AO.QA
 			}
 		}
 
-		public enum TileParallelHandlingEnum
-		{
-			HalfOfMaxParallel,
-			OnePerTile
-		}
-
-		public enum NonContainerHandlingEnum
-		{
-			OneSubverificationForAll,
-			OneSubverificationPerQualityCondition
-		}
-
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private readonly IList<IQualityVerificationClient> _workersClients;
@@ -206,12 +194,6 @@ namespace ProSuite.Microservices.Server.AO.QA
 		private readonly HashSet<IQualityVerificationClient> _failedClients =
 			new HashSet<IQualityVerificationClient>();
 
-		public TileParallelHandlingEnum TileParallelHandling { get; set; } =
-			TileParallelHandlingEnum.HalfOfMaxParallel;
-
-		public NonContainerHandlingEnum NonContainerHandling { get; set; } =
-			NonContainerHandlingEnum.OneSubverificationForAll;
-
 		public DistributedTestRunner(
 			[NotNull] IList<IQualityVerificationClient> workersClients,
 			[NotNull] VerificationRequest originalRequest)
@@ -223,9 +205,12 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			_workersClients = workersClients;
 			_originalRequest = originalRequest;
+			ServiceConfiguration = new XmlServiceConfiguration();
 		}
 
 		public QualitySpecification QualitySpecification { get; set; }
+		[NotNull]
+		public XmlServiceConfiguration ServiceConfiguration { get; set; }
 
 		public TestAssembler TestAssembler { get; set; }
 
@@ -288,7 +273,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 					IQualityVerificationClient finishedClient = _subveriClientsDict[completed];
 					_workingClients.Remove(finishedClient);
 
-					ProcessFinalResult(task, completed);
+					ProcessFinalResult(task, completed, cancelWhenFaulted: false);
 
 					if (task.Status == TaskStatus.Faulted)
 					{
@@ -296,7 +281,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 						SubVerification retry =
 							new SubVerification(completed.SubRequest,
-							                    completed.QualityConditionGroup);
+												completed.QualityConditionGroup);
 						unhandledSubverifications.Push(retry);
 					}
 
@@ -422,15 +407,20 @@ namespace ProSuite.Microservices.Server.AO.QA
 			return task;
 		}
 
-		private void ProcessFinalResult(Task<bool> task, SubVerification subVerification)
+		private void ProcessFinalResult(
+			Task<bool> task, SubVerification subVerification,
+			bool cancelWhenFaulted)
 		{
 			SubResponse subResponse = subVerification.SubResponse;
 			if (task.IsFaulted)
 			{
 				_msg.WarnFormat("Sub-verification has faulted: {0}", subResponse);
 
-				CancellationTokenSource.Cancel();
-				CancellationMessage = task.Exception?.InnerException?.Message;
+				if (cancelWhenFaulted)
+				{
+					CancellationTokenSource.Cancel();
+					CancellationMessage = task.Exception?.InnerException?.Message;
+				}
 			}
 
 			if (! string.IsNullOrEmpty(subResponse.CancellationMessage))
@@ -483,7 +473,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 				bool add = true;
 
-				if (verification.TileEnvelope != null)
+				// TODO: improve logic to remove issues from KnownIssues (handle it when subVerification finishes)
 				{
 					ITest test = verification.GetFirstTest(issueMsg.ConditionId);
 					IssueKey key = new IssueKey(issueMsg, test);
@@ -744,43 +734,15 @@ namespace ProSuite.Microservices.Server.AO.QA
 				foreach (QualityConditionGroup nonContainerGroup in nonContainerGroups)
 				{
 					unhandledQualityConditions.Remove(nonContainerGroup);
-					if (nonContainerGroup.QualityConditions.Count <= 0)
-					{
-						continue;
-					}
 
-					if (NonContainerHandling ==
-					    NonContainerHandlingEnum.OneSubverificationForAll)
+					var subs = GetNonContainerSubverifications(nonContainerGroup);
+					foreach (var subVerification in subs)
 					{
 						subVerifications.Add(
-							CreateVerification(
-								originalRequest, specification,
-								nonContainerGroup));
-						_msg.Info(
-							$"Built 1 subverification for {nonContainerGroup.QualityConditions.Count} non-container quality conditions");
+							CreateVerification(originalRequest, specification, subVerification));
 					}
-					else if (NonContainerHandling ==
-					         NonContainerHandlingEnum
-						         .OneSubverificationPerQualityCondition)
-					{
-						foreach (var pair in
-						         nonContainerGroup.QualityConditions)
-						{
-							QualityConditionGroup grp =
-								new QualityConditionGroup(nonContainerGroup.ExecType);
-							grp.QualityConditions.Add(pair.Key, pair.Value);
-							subVerifications.Add(
-								CreateVerification(
-									originalRequest, specification, grp));
-						}
-
-						_msg.Info(
-							$"Built {nonContainerGroup.QualityConditions} subverifications for non-container quality conditions (1 per quality condition)");
-					}
-					else
-					{
-						throw new NotImplementedException($"unhandled {NonContainerHandling}");
-					}
+					_msg.Info(
+						$"Built {subs.Count} subverifications for {nonContainerGroup.QualityConditions.Count} non-container quality conditions");
 				}
 			}
 
@@ -799,23 +761,9 @@ namespace ProSuite.Microservices.Server.AO.QA
 					continue;
 				}
 
-				int nMaxTileParallel;
-				if (TileParallelHandling == TileParallelHandlingEnum.HalfOfMaxParallel)
-				{
-					nMaxTileParallel = (maxParallel - subVerifications.Count) / 2;
-				}
-				else if (TileParallelHandling == TileParallelHandlingEnum.OnePerTile)
-				{
-					nMaxTileParallel = -1;
-				}
-				else
-				{
-					throw new NotImplementedException($"unhandled {TileParallelHandling}");
-				}
-
 				IList<SubVerification> tileParallelVerifications =
 					CreateTileParallelSubverifications(
-						originalRequest, specification, parallelGroup, nMaxTileParallel);
+						originalRequest, specification, parallelGroup);
 
 				subVerifications.AddRange(tileParallelVerifications);
 				_msg.Info(
@@ -858,6 +806,40 @@ namespace ProSuite.Microservices.Server.AO.QA
 				$"Built {qcsPerSubverification.Count} subverifications for {qcsPerSubverification.Sum(x => x.QualityConditions.Count)} non-tile-parallel container quality conditions");
 
 			return subVerifications;
+		}
+
+		[NotNull]
+		private List<QualityConditionGroup> GetNonContainerSubverifications(QualityConditionGroup nonContainerGroup)
+		{
+			if (nonContainerGroup.QualityConditions.Count <= 0)
+			{
+				return new List<QualityConditionGroup>();
+			}
+
+			int maxTasks = ServiceConfiguration.MaxNonContainerTasks == 0
+				               ? nonContainerGroup.QualityConditions.Count
+				               : ServiceConfiguration.MaxNonContainerTasks;
+
+			List<QualityConditionGroup> grps = new List<QualityConditionGroup>();
+			int iTask = 0;
+			foreach (var pair in nonContainerGroup.QualityConditions)
+			{
+				while (grps.Count <= iTask)
+				{
+					grps.Add(new QualityConditionGroup(nonContainerGroup.ExecType));
+				}
+
+				QualityConditionGroup grp = grps[iTask];
+				grp.QualityConditions.Add(pair.Key, pair.Value);
+
+				iTask++;
+				if (iTask >= maxTasks)
+				{
+					iTask = 0;
+				}
+			}
+
+			return grps;
 		}
 
 		private static SubVerification CreateVerification(
@@ -909,8 +891,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 		private IList<SubVerification> CreateTileParallelSubverifications(
 			[NotNull] VerificationRequest originalRequest,
 			[NotNull] QualitySpecification specification,
-			[NotNull] QualityConditionGroup qualityConditionGroup,
-			int maxTiles)
+			[NotNull] QualityConditionGroup qualityConditionGroup)
 		{
 			List<ContainerTest> tests = new List<ContainerTest>();
 			foreach (KeyValuePair<QualityCondition, IList<ITest>> pair in
@@ -940,18 +921,24 @@ namespace ProSuite.Microservices.Server.AO.QA
 			IGeometry perimeter =
 				ProtobufGeometryUtils.FromShapeMsg(originalRequest.Parameters.Perimeter);
 			IEnvelope executeEnvelope = perimeter?.Envelope;
+
+			double splitSize = ServiceConfiguration.MinimumSplitAreaExtent <= 0
+				                   ? originalRequest.Parameters.TileSize
+				                   : ServiceConfiguration.MinimumSplitAreaExtent;
+
 			TileEnum tileEnum = new TileEnum(tests, executeEnvelope,
-			                                 originalRequest.Parameters.TileSize,
+			                                 splitSize,
 			                                 executeEnvelope?.SpatialReference);
 
+			int maxSplits = ServiceConfiguration.MaxSplitAreaTasks;
 			IEnumerable<IEnvelope> tileBoxEnum;
-			if (maxTiles <= 0 || maxTiles >= tileEnum.GetTotalTileCount())
+			if (maxSplits <= 0 || maxSplits >= tileEnum.GetTotalTileCount())
 			{
 				tileBoxEnum = tileEnum.EnumTiles().Select(x => x.FilterEnvelope);
 			}
 			else
 			{
-				tileBoxEnum = EnumTileEnvelopes(tileEnum.GetTestRunEnvelope(), maxTiles);
+				tileBoxEnum = EnumTileEnvelopes(tileEnum.GetTestRunEnvelope(), maxSplits);
 			}
 
 			foreach (IEnvelope tileBox in tileBoxEnum)
