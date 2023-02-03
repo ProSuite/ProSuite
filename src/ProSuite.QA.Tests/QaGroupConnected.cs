@@ -1036,7 +1036,7 @@ namespace ProSuite.QA.Tests
 			{
 				InvolvedRowUtils.AddUniqueInvolvedRows(
 					involvedRows,
-					GetInvolvedRows(row.Row.Row));
+					InvolvedRowUtils.GetInvolvedRows(row.Row.Row));
 			}
 
 			const string description = "Group branches";

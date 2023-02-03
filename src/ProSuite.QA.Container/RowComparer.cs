@@ -43,10 +43,7 @@ namespace ProSuite.QA.Container
 
 			if (table0 == table1)
 			{
-				RelatedTables relTables = _relatedTablesProvider.GetRelatedTables(row0);
-				return relTables == null
-					       ? 0
-					       : CompareRelatedRows(row0, row1, relTables);
+				return CompareRelatedRows(row0, row1);
 			}
 
 			// TODO names might not be unique (if multiple workspaces are involved)
@@ -57,11 +54,10 @@ namespace ProSuite.QA.Container
 		}
 
 		private static int CompareRelatedRows([NotNull] IReadOnlyRow row0,
-		                                      [NotNull] IReadOnlyRow row1,
-		                                      [NotNull] RelatedTables relTables)
+		                                      [NotNull] IReadOnlyRow row1)
 		{
-			IList<InvolvedRow> relatedList0 = relTables.GetInvolvedRows(row0);
-			IList<InvolvedRow> relatedList1 = relTables.GetInvolvedRows(row1);
+			IList<InvolvedRow> relatedList0 = InvolvedRowUtils.GetInvolvedRows(row0);
+			IList<InvolvedRow> relatedList1 = InvolvedRowUtils.GetInvolvedRows(row1);
 
 			int relatedCount = relatedList0.Count;
 			Assert.AreEqual(relatedCount, relatedList1.Count, "Invalid involved rows");
