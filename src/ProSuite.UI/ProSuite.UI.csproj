@@ -110,7 +110,7 @@
 		<Compile Update="DataModel\DatasetCatalogControl.Designer.cs">
 			<DependentUpon>DatasetCatalogControl.cs</DependentUpon>
 		</Compile>
-    <Compile Update="DataModel\ErrorDatasetParametersForm.cs" />
+    <Compile Update="DataModel\IssueDatasetParametersForm.cs" />
 		<Compile Update="Properties\AssociationEndImages.Designer.cs">
 			<DependentUpon>AssociationEndImages.resx</DependentUpon>
 			<AutoGen>True</AutoGen>
