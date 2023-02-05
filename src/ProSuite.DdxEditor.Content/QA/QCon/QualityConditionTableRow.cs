@@ -16,7 +16,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 	                                        IEntityRow, IEntityRow<QualityCondition>
 	{
 		/// <summary>
-		/// Initializes a new instance of the <see cref="QualityConditionWithTestParametersTableRow"/> class.
+		/// Initializes a new instance of the <see cref="QualityConditionTableRow"/> class.
 		/// </summary>
 		/// <param name="entity">The quality condition.</param>
 		/// <param name="qualitySpecificationRefCount"></param>
