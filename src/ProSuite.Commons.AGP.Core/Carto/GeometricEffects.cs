@@ -5,6 +5,10 @@ using ArcGIS.Core.CIM;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.Assertions;
+using Geometry = ArcGIS.Core.Geometry.Geometry;
+using Polygon = ArcGIS.Core.Geometry.Polygon;
+using Polyline = ArcGIS.Core.Geometry.Polyline;
+using Segment = ArcGIS.Core.Geometry.Segment;
 
 namespace ProSuite.Commons.AGP.Core.Carto;
 
@@ -161,8 +165,11 @@ public static class GeometricEffects
 		Custom
 	}
 
-	public static Geometry Dashes(
-		Geometry shape, double[] pattern, DashEndings lineEnding, DashEndings controlPointEnding, double customOffset = 0.0, double offsetAlongLine = 0.0)
+	public static Geometry Dashes(Geometry shape, double[] pattern,
+	                              double offsetAlongLine = 0.0,
+	                              DashEndings lineEnding = DashEndings.Unconstrained,
+	                              DashEndings controlPointEnding = DashEndings.Unconstrained,
+	                              double customEndOffset = 0.0)
 	{
 		if (shape is null) return null;
 		if (pattern is not { Length: > 0 }) return shape;
@@ -170,11 +177,99 @@ public static class GeometricEffects
 
 		// offsetAlongLine: applied only if DashEndings is Unconstrained or Custom
 		// customPatternOffset: applied only if DashEndings ???
+		// if controlPointEnding <> Unconstrained: treat sections between CPs individually
 
 		// treat each original part separately!
 		// see CreateLineMarkers for hints on fitting stuff along a line
 
-		throw new NotImplementedException("Hard work but coming soon");
+		var result = Configure(new PolylineBuilderEx(), polycurve);
+		var auxiliary = Configure(new PolylineBuilderEx(), polycurve);
+
+		if (controlPointEnding != DashEndings.Unconstrained)
+		{
+			foreach (var part in polycurve.Parts)
+			{
+				auxiliary.SetEmpty();
+				auxiliary.AddSegments(part);
+				var section = auxiliary.ToGeometry();
+				DoDashLine(result, section, pattern, lineEnding, lineEnding, offsetAlongLine, customEndOffset);
+			}
+		}
+		else
+		{
+			// treat sections between control points individually
+			foreach (var triple in GetSections(polycurve))
+			{
+				var part = polycurve.Parts[triple.PartIndex];
+				var segs = Range(part, triple.SegmentStart, triple.SegmentCount);
+
+				auxiliary.SetEmpty();
+				auxiliary.AddSegments(segs);
+				var section = auxiliary.ToGeometry();
+
+				var startType = triple.SegmentStart == 0 ? lineEnding : controlPointEnding;
+				var endType = triple.SegmentStart + triple.SegmentCount >= part.Count
+					              ? lineEnding
+					              : controlPointEnding;
+
+				DoDashLine(result, section, pattern, startType, endType, offsetAlongLine, customEndOffset);
+			}
+		}
+
+		return result.ToGeometry();
+	}
+
+	private static void DoDashLine(PolylineBuilderEx result, Polyline line, double[] pattern,
+	                               DashEndings startType, DashEndings endType,
+	                               double offsetAlongLine, double customEndOffset)
+	{
+		// NB. startType and endType is the same unless control points!
+		// pattern is repeated -- if odd len, dash becomes gap and vv every other round...
+
+		// offsetAlongLine: where to start in pattern (i.e., positive shifts pattern left)
+		// customEndOffset: where to end in pattern, *additive* to offsetAlongLine
+
+		// can translate DashEndings of Full/Half Dash/Gap into offsets!?!
+		// 
+
+		double lineLength = line.Length; // fixed
+		double patLength = pattern.Sum(); // can stretch/shrink
+		double s = 1.0;
+
+		if (startType != DashEndings.Unconstrained || endType != DashEndings.Unconstrained)
+		{
+			// L = s * (k * P + startOfs + endOfs)
+			// where L = line.Length and P = patLength and k a positive integer
+			// TODO find least stretch/shrink factor s and adjust offsetAlongLine
+		}
+
+		var pat = pattern.Select(v => v * s).ToArray(); // scale pattern
+
+		var patlen = pat.Sum(); // effective pattern length
+		offsetAlongLine %= patlen;
+
+		bool inside = true;
+		int index = 0;
+		double linePos = offsetAlongLine < 0 ? -patlen - offsetAlongLine : -offsetAlongLine;
+
+		while (linePos < lineLength)
+		{
+			var p = pat[index % pat.Length];
+
+			if (inside && linePos < line.Length && linePos + p > 0)
+			{
+				// inside a dash and not completely off the line
+				var start = Math.Max(0, linePos);
+				var end = Math.Min(linePos + p, line.Length);
+				var dash = GeometryEngine.Instance.GetSubCurve(
+					line, start, end, AsRatioOrLength.AsLength);
+				result.AddParts(dash.Parts); // will always be a single part
+			}
+
+			index += 1;
+			inside = ! inside;
+			linePos += p;
+		}
 	}
 
 	public static Geometry Offset(
@@ -253,6 +348,48 @@ public static class GeometricEffects
 		for (int i = 0; i < count; i++)
 		{
 			yield return segments[start + i];
+		}
+	}
+
+	private readonly struct Section
+	{
+		public readonly int PartIndex;
+		public readonly int SegmentStart;
+		public readonly int SegmentCount;
+
+		public Section(int partIndex, int segmentStart, int segmentCount)
+		{
+			PartIndex = partIndex;
+			SegmentStart = segmentStart;
+			SegmentCount = segmentCount;
+		}
+	}
+
+	private static IEnumerable<Section> GetSections(Multipart polycurve)
+	{
+		int partCount = polycurve.Parts.Count;
+		for (int k = 0; k < partCount; k++)
+		{
+			var part = polycurve.Parts[k];
+			int segmentCount = part.Count;
+			int start = 0, count = 0;
+
+			for (int i = 0; i < segmentCount; i++)
+			{
+				count += 1;
+				var endPoint = part[i].EndPoint;
+				if (endPoint.HasID && endPoint.ID > 0)
+				{
+					yield return new Section(k, start, count);
+					start += count;
+					count = 0;
+				}
+			}
+
+			if (count > 0)
+			{
+				yield return new Section(k, start, count);
+			}
 		}
 	}
 
