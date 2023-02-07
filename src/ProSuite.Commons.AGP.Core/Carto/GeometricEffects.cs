@@ -175,18 +175,18 @@ public static class GeometricEffects
 		if (pattern is not { Length: > 0 }) return shape;
 		if (shape is not Multipart polycurve) return shape;
 
+		// pattern is repeated; if odd, dashes and gaps alternate every other round
 		// offsetAlongLine: applied only if DashEndings is Unconstrained or Custom
-		// customPatternOffset: applied only if DashEndings ???
+		// customPatternOffset: applied only if DashEndings is Custom
 		// if controlPointEnding <> Unconstrained: treat sections between CPs individually
-
 		// treat each original part separately!
-		// see CreateLineMarkers for hints on fitting stuff along a line
 
 		var result = Configure(new PolylineBuilderEx(), polycurve);
 		var auxiliary = Configure(new PolylineBuilderEx(), polycurve);
 
-		if (controlPointEnding != DashEndings.Unconstrained)
+		if (controlPointEnding == DashEndings.Unconstrained)
 		{
+			// control points unconstrained: treat each part
 			foreach (var part in polycurve.Parts)
 			{
 				auxiliary.SetEmpty();
@@ -219,42 +219,69 @@ public static class GeometricEffects
 		return result.ToGeometry();
 	}
 
+	#region Dashing utilities
+
 	private static void DoDashLine(PolylineBuilderEx result, Polyline line, double[] pattern,
 	                               DashEndings startType, DashEndings endType,
 	                               double offsetAlongLine, double customEndOffset)
 	{
 		// NB. startType and endType is the same unless control points!
-		// pattern is repeated -- if odd len, dash becomes gap and vv every other round...
-
 		// offsetAlongLine: where to start in pattern (i.e., positive shifts pattern left)
 		// customEndOffset: where to end in pattern, *additive* to offsetAlongLine
 
-		// can translate DashEndings of Full/Half Dash/Gap into offsets!?!
-		// 
-
-		double lineLength = line.Length; // fixed
-		double patLength = pattern.Sum(); // can stretch/shrink
-		double s = 1.0;
-
 		if (startType != DashEndings.Unconstrained || endType != DashEndings.Unconstrained)
 		{
-			// L = s * (k * P + startOfs + endOfs)
-			// where L = line.Length and P = patLength and k a positive integer
-			// TODO find least stretch/shrink factor s and adjust offsetAlongLine
+			// translate ending types to offsetAlongLine and customEndOffset:
+			offsetAlongLine = GetDashesOffsetAlong(startType, pattern, offsetAlongLine);
+			customEndOffset = GetDashesCustomEndOffset(endType, pattern, customEndOffset);
+
+			double L = line.Length; // > 0
+			double P = pattern.Sum(); // > 0
+			if (pattern.Length % 2 != 0) P *= 2; // need two cycles if odd
+			double A = offsetAlongLine;
+			double E = customEndOffset;
+
+			// L = s * (k*P + E)
+			// where
+			//   L,P,E as above (known)
+			//   k a positive integer
+			//   s >= 0 the stretch/squeeze factor
+
+			A %= P;
+			E %= P;
+			double m = (L + A - E) / P;
+			int q = (int) Math.Truncate(m); // quotient
+			double r = m - q; // remainder
+			int k = r >= 0.5 ? q + 1 : q; // prefer rounding up (prefer squeezing over stretching)
+			if (k == 0 && r >= 0.25)
+			{
+				k = 1; // squeeze pattern at least once
+			}
+			double s = L / (k * P - A + E);
+
+
+			pattern = pattern.Select(v => v * s).ToArray(); // scale pattern
+			offsetAlongLine *= s; // and scale offset accordingly
 		}
 
-		var pat = pattern.Select(v => v * s).ToArray(); // scale pattern
+		DoDashLine(result, line, pattern, offsetAlongLine);
+	}
 
-		var patlen = pat.Sum(); // effective pattern length
-		offsetAlongLine %= patlen;
+	private static void DoDashLine(PolylineBuilderEx result, Polyline line,
+	                               double[] pattern, double offsetAlongLine)
+	{
+		var patlen = pattern.Sum(); // effective pattern length
+		if (pattern.Length % 2 != 0) patlen *= 2;
+		offsetAlongLine %= patlen; // reduce to [0,patlen)
 
 		bool inside = true;
 		int index = 0;
 		double linePos = offsetAlongLine < 0 ? -patlen - offsetAlongLine : -offsetAlongLine;
+		double lineLength = line.Length;
 
 		while (linePos < lineLength)
 		{
-			var p = pat[index % pat.Length];
+			var p = pattern[index % pattern.Length];
 
 			if (inside && linePos < line.Length && linePos + p > 0)
 			{
@@ -271,6 +298,39 @@ public static class GeometricEffects
 			linePos += p;
 		}
 	}
+
+	private static double GetDashesOffsetAlong(DashEndings endings, double[] pattern, double offsetAlongLine)
+	{
+		if (pattern is not { Length: > 0 })
+			throw new ArgumentException("Need at least one element", nameof(pattern));
+
+		return endings switch
+		{
+			DashEndings.Unconstrained => offsetAlongLine,
+			DashEndings.HalfDash => 0.5 * pattern[0],
+			DashEndings.HalfGap => -0.5 * pattern[pattern.Length - 1],
+			DashEndings.FullDash => 0.0,
+			DashEndings.FullGap => -1.0 * pattern[pattern.Length - 1],
+			DashEndings.Custom => offsetAlongLine,
+			_ => throw new ArgumentOutOfRangeException(nameof(endings), endings, null)
+		};
+	}
+
+	private static double GetDashesCustomEndOffset(DashEndings endings, double[] pattern, double customEndOffset)
+	{
+		return endings switch
+		{
+			DashEndings.Unconstrained => customEndOffset,
+			DashEndings.HalfDash => 0.5 * pattern[0],
+			DashEndings.HalfGap => -0.5 * pattern[pattern.Length - 1],
+			DashEndings.FullDash => 1.0 * pattern[0],
+			DashEndings.FullGap => 0.0,
+			DashEndings.Custom => customEndOffset,
+			_ => throw new ArgumentOutOfRangeException(nameof(endings), endings, null)
+		};
+	}
+
+	#endregion
 
 	public static Geometry Offset(
 		Geometry shape, double distance, OffsetType method)
