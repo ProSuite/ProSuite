@@ -8,6 +8,7 @@ using ProSuite.DomainModel.Core.QA;
 using ProSuite.UI.DataModel.ResourceLookup;
 using ProSuite.UI.Properties;
 using ProSuite.UI.QA.ResourceLookup;
+using ProSuite.UI.QA.VerificationResult;
 
 namespace ProSuite.UI.QA.Controls
 {
@@ -47,6 +48,14 @@ namespace ProSuite.UI.QA.Controls
 
 				_datasetImageList.Add(key, clonedImage);
 			}
+
+			_allowImage.Tag = QualityConditionType.Allowed;
+			_continueImage.Tag = QualityConditionType.ContinueOnError;
+			_stopImage.Tag = QualityConditionType.StopOnError;
+
+			_noErrorsImage.Tag = StatusType.NoErrors;
+			_warningImage.Tag = StatusType.Warnings;
+			_errorsImage.Tag = StatusType.Errors;
 		}
 
 		public SpecificationDataset(
@@ -67,10 +76,6 @@ namespace ProSuite.UI.QA.Controls
 		{
 			QualitySpecificationElement = qualitySpecificationElement;
 			_datasetTestParameterValue = datasetTestParameterValue;
-
-			_allowImage.Tag = QualityConditionType.Allowed;
-			_continueImage.Tag = QualityConditionType.ContinueOnError;
-			_stopImage.Tag = QualityConditionType.StopOnError;
 
 			Dataset dataset = datasetTestParameterValue.DatasetValue;
 
