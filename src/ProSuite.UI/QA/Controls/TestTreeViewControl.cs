@@ -16,18 +16,19 @@ namespace ProSuite.UI.QA.Controls
 {
 	public partial class TestTreeViewControl : TreeView
 	{
+		private const string _none = "none";
+
 		private const string _allowErrors = "allowErrors";
 		private const string _continueOnErrors = "continueOnErrors";
-		private const string _emptySel = "emptySel";
+		private const string _stopOnErrors = "stopOnErrors";
+
+		private const string _imageKeyNoIssues = "noErrors";
+		private const string _imageKeyWarning = "warning";
 		private const string _imageKeyError = "error";
 
 		private const string _fullSel = "fullSel";
 		private const string _halfSel = "halfSel";
-		private const string _imageKeyNoIssues = "noErrors";
-
-		private const string _none = "none";
-		private const string _stopOnErrors = "stopOnErrors";
-		private const string _imageKeyWarning = "warning";
+		private const string _emptySel = "emptySel";
 
 		private const string _datasetCategory = "datasetCategory";
 		private const string _datasetCategorySelected = "datasetCategorySelected";
@@ -51,7 +52,7 @@ namespace ProSuite.UI.QA.Controls
 			images.Add(_none, new Bitmap(16, 16));
 
 			images.Add(_allowErrors, TestTypeImages.TestTypeWarning);
-			images.Add(_continueOnErrors, TestTypeImages.TestTypeProhibition);
+			images.Add(_continueOnErrors, TestTypeImages.TestTypeError);
 			images.Add(_stopOnErrors, TestTypeImages.TestTypeStop);
 
 			images.Add(_imageKeyNoIssues, Resources.OK);

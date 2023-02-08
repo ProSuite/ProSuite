@@ -371,10 +371,12 @@
     <Content Include="Properties\QualityVerificationImages\QualityVerificationFulfilledNoIssues.png" />
     <Content Include="Properties\QualityVerificationImages\QualityVerificationFulfilledWarnings.png" />
     <Content Include="Properties\QualityVerificationImages\QualityVerificationNotFulfilled.png" />
-    <Content Include="Properties\TestTypeImages\TestTypeProhibition.png" />
+    <Content Include="Properties\TestTypeImages\IssueFilter.png" />
+    <Content Include="Properties\TestTypeImages\TestTypeError.png" />
     <Content Include="Properties\TestTypeImages\TestTypeStop.png" />
     <Content Include="Properties\TestTypeImages\TestTypeUnknown.png" />
     <Content Include="Properties\TestTypeImages\TestTypeWarning.png" />
+    <Content Include="Properties\TestTypeImages\Transformer.png" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.39" />

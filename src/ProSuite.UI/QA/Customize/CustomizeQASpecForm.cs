@@ -217,12 +217,6 @@ namespace ProSuite.UI.QA.Customize
 
 		#endregion
 
-		//[Obsolete("use overload with testParameterDatasetProvider parameter")]
-		//public void SetSpecification([NotNull] QualitySpecification qualitySpecification)
-		//{
-		//	SetSpecification(qualitySpecification, null);
-		//}
-
 		public void SetSpecification(
 			[NotNull] QualitySpecification qualitySpecification,
 			[CanBeNull] ITestParameterDatasetProvider testParameterDatasetProvider)

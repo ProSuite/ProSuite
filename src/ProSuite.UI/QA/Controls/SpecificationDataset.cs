@@ -17,16 +17,14 @@ namespace ProSuite.UI.QA.Controls
 			(Bitmap) TestTypeImages.TestTypeWarning.Clone();
 
 		private static readonly Image _continueImage =
-			(Bitmap) TestTypeImages.TestTypeProhibition.Clone();
-
-		private static readonly Image _errorsImage = (Bitmap) Resources.Error.Clone();
-		private static readonly Image _noErrorsImage = (Bitmap) Resources.OK.Clone();
+			(Bitmap) TestTypeImages.TestTypeError.Clone();
 
 		private static readonly Image _stopImage =
 			(Bitmap) TestTypeImages.TestTypeStop.Clone();
 
-		private static readonly Image _warningImage =
-			(Bitmap) TestTypeImages.TestTypeWarning.Clone();
+		private static readonly Image _noErrorsImage = (Bitmap) Resources.OK.Clone();
+		private static readonly Image _warningImage = (Bitmap) Resources.Warning.Clone();
+		private static readonly Image _errorsImage = (Bitmap) Resources.Error.Clone();
 
 		private static readonly SortedList<string, Image> _datasetImageList;
 

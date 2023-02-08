@@ -73,9 +73,9 @@ namespace ProSuite.UI.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap TestTypeProhibition {
+        internal static System.Drawing.Bitmap TestTypeError {
             get {
-                object obj = ResourceManager.GetObject("TestTypeProhibition", resourceCulture);
+                object obj = ResourceManager.GetObject("TestTypeError", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

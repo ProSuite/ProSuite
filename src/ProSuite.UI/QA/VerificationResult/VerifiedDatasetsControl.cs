@@ -183,10 +183,7 @@ namespace ProSuite.UI.QA.VerificationResult
 		protected virtual void OnSelectionChanged()
 		{
 			EventHandler handler = SelectionChanged;
-			if (handler != null)
-			{
-				handler(this, EventArgs.Empty);
-			}
+			handler?.Invoke(this, EventArgs.Empty);
 		}
 
 		private static double Draw(int top, int height, int leftMargin,
@@ -308,32 +305,20 @@ namespace ProSuite.UI.QA.VerificationResult
 
 		private class VerifiedDatasetItem
 		{
-			private readonly QualityConditionVerification _conditionVerification;
-			private readonly Image _status;
-			private readonly Image _type;
-			private readonly string _testName;
-			private readonly string _datasetName;
-			private readonly Image _datasetType;
-
 			private static readonly Image _allowImage =
 				(Bitmap) TestTypeImages.TestTypeWarning.Clone();
 
 			private static readonly Image _continueImage =
-				(Bitmap) TestTypeImages.TestTypeProhibition.Clone();
-
-			private static readonly Image _errorsImage = (Bitmap) Resources.Error.Clone();
-			private static readonly Image _noErrorsImage = (Bitmap) Resources.OK.Clone();
+				(Bitmap) TestTypeImages.TestTypeError.Clone();
 
 			private static readonly Image _stopImage =
 				(Bitmap) TestTypeImages.TestTypeStop.Clone();
 
-			private static readonly Image _warningImage =
-				(Bitmap) TestTypeImages.TestTypeWarning.Clone();
+			private static readonly Image _noErrorsImage = (Bitmap) Resources.OK.Clone();
+			private static readonly Image _warningImage = (Bitmap) Resources.Warning.Clone();
+			private static readonly Image _errorsImage = (Bitmap) Resources.Error.Clone();
 
 			private static readonly SortedList<string, Image> _datasetImageList;
-
-			private readonly string _testType;
-			private readonly double _dataLoadTime;
 
 			static VerifiedDatasetItem()
 			{
@@ -365,100 +350,64 @@ namespace ProSuite.UI.QA.VerificationResult
 				[NotNull] IDdxDataset dataset,
 				double loadTime)
 			{
-				_conditionVerification = conditionVerification;
+				ConditionVerification = conditionVerification;
 
 				QualityCondition condition = conditionVerification.DisplayableCondition;
 
-				_type = conditionVerification.AllowErrors
+				Type = conditionVerification.AllowErrors
 					        ? _allowImage
 					        : ! conditionVerification.StopOnError
 						        ? _continueImage
 						        : _stopImage;
 
-				_status = conditionVerification.ErrorCount == 0
+				Status = conditionVerification.ErrorCount == 0
 					          ? _noErrorsImage
 					          : conditionVerification.AllowErrors
 						          ? _warningImage
 						          : _errorsImage;
 
-				_testName = condition.Name;
-				_testType = condition.TestDescriptor.Name;
-				_dataLoadTime = loadTime;
-				_datasetName = dataset.AliasName;
+				TestName = condition.Name;
+				TestType = condition.TestDescriptor.Name;
+				DataLoadTime = loadTime;
+				DatasetName = dataset.AliasName;
 
 				string datasetImageKey = DatasetTypeImageLookup.GetImageKey(dataset);
-				_datasetType = _datasetImageList[datasetImageKey];
+				DatasetType = _datasetImageList[datasetImageKey];
 			}
 
 			[NotNull]
-			public QualityConditionVerification ConditionVerification
-			{
-				get { return _conditionVerification; }
-			}
+			public QualityConditionVerification ConditionVerification { get; }
 
-			public double DataLoadTime
-			{
-				get { return _dataLoadTime; }
-			}
+			public double DataLoadTime { get; }
 
 			[UsedImplicitly]
-			public Image Type
-			{
-				get { return _type; }
-			}
+			public Image Type { get; }
 
 			[UsedImplicitly]
-			public Image Status
-			{
-				get { return _status; }
-			}
+			public Image Status { get; }
 
 			[UsedImplicitly]
-			public string TestName
-			{
-				get { return _testName; }
-			}
+			public string TestName { get; }
 
 			[UsedImplicitly]
-			public string TestType
-			{
-				get { return _testType; }
-			}
+			public string TestType { get; }
 
 			[UsedImplicitly]
-			public string DatasetName
-			{
-				get { return _datasetName; }
-			}
+			public string DatasetName { get; }
 
 			[UsedImplicitly]
-			public Image DatasetType
-			{
-				get { return _datasetType; }
-			}
+			public Image DatasetType { get; }
 
 			[UsedImplicitly]
-			public double ExecuteTime
-			{
-				get { return _conditionVerification.TotalExecuteTime; }
-			}
+			public double ExecuteTime => ConditionVerification.TotalExecuteTime;
 
 			[UsedImplicitly]
-			public double RowExecuteTime
-			{
-				get { return _conditionVerification.RowExecuteTime; }
-			}
+			public double RowExecuteTime => ConditionVerification.RowExecuteTime;
 
 			[UsedImplicitly]
-			public double TileExecuteTime
-			{
-				get { return _conditionVerification.TileExecuteTime; }
-			}
+			public double TileExecuteTime => ConditionVerification.TileExecuteTime;
 
-			public double TotalTime
-			{
-				get { return _conditionVerification.TotalExecuteTime + _dataLoadTime; }
-			}
+			public double TotalTime => ConditionVerification.TotalExecuteTime + DataLoadTime;
 		}
 
 		#endregion

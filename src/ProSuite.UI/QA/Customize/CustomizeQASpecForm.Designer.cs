@@ -444,7 +444,7 @@ namespace ProSuite.UI.QA.Customize
 			// _toolStripButtonErrorConditions
 			// 
 			this._toolStripButtonErrorConditions.CheckOnClick = true;
-			this._toolStripButtonErrorConditions.Image = global::ProSuite.UI.Properties.TestTypeImages.TestTypeProhibition;
+			this._toolStripButtonErrorConditions.Image = global::ProSuite.UI.Properties.TestTypeImages.TestTypeError;
 			this._toolStripButtonErrorConditions.ImageTransparentColor = System.Drawing.Color.Magenta;
 			this._toolStripButtonErrorConditions.Name = "_toolStripButtonErrorConditions";
 			this._toolStripButtonErrorConditions.Size = new System.Drawing.Size(57, 22);

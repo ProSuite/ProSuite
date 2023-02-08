@@ -24,9 +24,10 @@ namespace ProSuite.UI.QA.Customize
 				(Bitmap) TestTypeImages.TestTypeWarning.Clone();
 
 			private static readonly Image _continueImage =
-				(Bitmap) TestTypeImages.TestTypeProhibition.Clone();
+				(Bitmap) TestTypeImages.TestTypeError.Clone();
 
-			private static readonly Image _stopImage = (Bitmap) TestTypeImages.TestTypeStop.Clone();
+			private static readonly Image _stopImage =
+				(Bitmap) TestTypeImages.TestTypeStop.Clone();
 
 			public ElementViewModel([NotNull] QualitySpecificationElement element)
 			{
@@ -170,12 +171,12 @@ namespace ProSuite.UI.QA.Customize
 
 		public ICustomizeQASpezificationView CustomizeView { get; set; }
 
-		public void SetSpecification(QualitySpecification qualitySpezification)
+		public void SetSpecification(QualitySpecification qualitySpecification)
 		{
 			_setting = true;
 			try
 			{
-				_qualitySpecification = qualitySpezification;
+				_qualitySpecification = qualitySpecification;
 
 				List<ElementViewModel> list =
 					_qualitySpecification.Elements
@@ -211,8 +212,7 @@ namespace ProSuite.UI.QA.Customize
 		}
 
 		private void _dataGridViewAllConditions_CellValueChanged(object sender,
-		                                                         DataGridViewCellEventArgs
-			                                                         e)
+		                                                         DataGridViewCellEventArgs e)
 		{
 			if (_setting || e.RowIndex < 0)
 			{
@@ -251,8 +251,7 @@ namespace ProSuite.UI.QA.Customize
 		}
 
 		private void _dataGridViewAllConditions_CellMouseUp(object sender,
-		                                                    DataGridViewCellMouseEventArgs
-			                                                    e)
+		                                                    DataGridViewCellMouseEventArgs e)
 		{
 			_dataGridViewAllConditions.CommitEdit(DataGridViewDataErrorContexts.Commit);
 			_dataGridViewAllConditions.EndEdit();
