@@ -146,9 +146,9 @@ namespace ProSuite.UI.QA.VerificationResult
 
 		private class VerifiedConditionItem
 		{
-			private static readonly Image _statusImageNoIssues = Resources.OK;
-			private static readonly Image _statusImageHasWarnings = Resources.Warning;
-			private static readonly Image _statusImageHasErrors = Resources.Error;
+			private static readonly Image _statusImageNoIssues = VerificationResultImages.OK;
+			private static readonly Image _statusImageHasWarnings = VerificationResultImages.Warning;
+			private static readonly Image _statusImageHasErrors = VerificationResultImages.Error;
 
 			public VerifiedConditionItem(
 				[NotNull] QualityConditionVerification qualityConditionVerification)

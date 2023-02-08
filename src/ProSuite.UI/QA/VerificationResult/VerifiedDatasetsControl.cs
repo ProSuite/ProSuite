@@ -314,9 +314,9 @@ namespace ProSuite.UI.QA.VerificationResult
 			private static readonly Image _stopImage =
 				(Bitmap) TestTypeImages.TestTypeStop.Clone();
 
-			private static readonly Image _noErrorsImage = (Bitmap) Resources.OK.Clone();
-			private static readonly Image _warningImage = (Bitmap) Resources.Warning.Clone();
-			private static readonly Image _errorsImage = (Bitmap) Resources.Error.Clone();
+			private static readonly Image _noIssuesImage = (Bitmap) VerificationResultImages.OK.Clone();
+			private static readonly Image _warningsImage = (Bitmap) VerificationResultImages.Warning.Clone();
+			private static readonly Image _errorsImage = (Bitmap) VerificationResultImages.Error.Clone();
 
 			private static readonly SortedList<string, Image> _datasetImageList;
 
@@ -340,9 +340,9 @@ namespace ProSuite.UI.QA.VerificationResult
 				_continueImage.Tag = QualityConditionType.ContinueOnError;
 				_stopImage.Tag = QualityConditionType.StopOnError;
 
-				_noErrorsImage.Tag = StatusType.NoErrors;
-				_warningImage.Tag = StatusType.Warnings;
-				_errorsImage.Tag = StatusType.Errors;
+				_noIssuesImage.Tag = VerificationResultType.NoIssues;
+				_warningsImage.Tag = VerificationResultType.Warnings;
+				_errorsImage.Tag = VerificationResultType.Errors;
 			}
 
 			public VerifiedDatasetItem(
@@ -361,9 +361,9 @@ namespace ProSuite.UI.QA.VerificationResult
 						        : _stopImage;
 
 				Status = conditionVerification.ErrorCount == 0
-					          ? _noErrorsImage
+					          ? _noIssuesImage
 					          : conditionVerification.AllowErrors
-						          ? _warningImage
+						          ? _warningsImage
 						          : _errorsImage;
 
 				TestName = condition.Name;

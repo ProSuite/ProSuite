@@ -146,6 +146,11 @@
 			<DesignTime>True</DesignTime>
 			<DependentUpon>QualityVerificationImages.resx</DependentUpon>
 		</Compile>
+		<Compile Update="Properties\VerificationResultImages.Designer.cs">
+		  <DependentUpon>VerificationResultImages.resx</DependentUpon>
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		</Compile>
 		<Compile Update="Properties\Resources.Designer.cs">
 			<AutoGen>True</AutoGen>
 			<DesignTime>True</DesignTime>
@@ -261,6 +266,11 @@
       <LastGenOutput>FieldTypeImages.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Update="Properties\VerificationResultImages.resx">
+      <SubType>Designer</SubType>
+      <LastGenOutput>VerificationResultImages.Designer.cs</LastGenOutput>
+      <Generator>ResXFileCodeGenerator</Generator>
+    </EmbeddedResource>
     <EmbeddedResource Update="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
@@ -355,7 +365,6 @@
     <Content Include="Properties\Images\DatasetCategorySelected.png" />
     <Content Include="Properties\Images\Edit.png" />
     <Content Include="Properties\Images\Empty.bmp" />
-    <Content Include="Properties\Images\Error.png" />
     <Content Include="Properties\Images\Exit.png" />
     <Content Include="Properties\Images\UncheckAll.png" />
     <Content Include="Properties\Images\Undo_16x.png" />
@@ -363,8 +372,6 @@
     <Content Include="Properties\Images\Full.bmp" />
     <Content Include="Properties\Images\Half.bmp" />
     <Resource Include="Properties\Images\NavigateErrorsCmd.png" />
-    <Content Include="Properties\Images\OK.png" />
-    <Content Include="Properties\Images\Warning.png" />
     <Resource Include="Properties\Images\ZoomToVerifiedCmd.png" />
     <Content Include="Properties\QualitySpecificationImages\QualitySpecification.png" />
     <Content Include="Properties\QualitySpecificationImages\QualitySpecificationHidden.png" />
@@ -377,6 +384,9 @@
     <Content Include="Properties\TestTypeImages\TestTypeUnknown.png" />
     <Content Include="Properties\TestTypeImages\TestTypeWarning.png" />
     <Content Include="Properties\TestTypeImages\Transformer.png" />
+    <Content Include="Properties\VerificationResultImages\Error.png" />
+    <Content Include="Properties\VerificationResultImages\OK.png" />
+    <Content Include="Properties\VerificationResultImages\Warning.png" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.39" />

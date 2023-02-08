@@ -22,7 +22,7 @@ namespace ProSuite.UI.QA.Controls
 		private const string _continueOnErrors = "continueOnErrors";
 		private const string _stopOnErrors = "stopOnErrors";
 
-		private const string _imageKeyNoIssues = "noErrors";
+		private const string _imageKeyNoIssues = "noIssues";
 		private const string _imageKeyWarning = "warning";
 		private const string _imageKeyError = "error";
 
@@ -55,9 +55,9 @@ namespace ProSuite.UI.QA.Controls
 			images.Add(_continueOnErrors, TestTypeImages.TestTypeError);
 			images.Add(_stopOnErrors, TestTypeImages.TestTypeStop);
 
-			images.Add(_imageKeyNoIssues, Resources.OK);
-			images.Add(_imageKeyWarning, Resources.Warning);
-			images.Add(_imageKeyError, Resources.Error);
+			images.Add(_imageKeyNoIssues, VerificationResultImages.OK);
+			images.Add(_imageKeyWarning, VerificationResultImages.Warning);
+			images.Add(_imageKeyError, VerificationResultImages.Error);
 
 			images.Add(_fullSel, Resources.Full);
 			images.Add(_halfSel, Resources.Half);
