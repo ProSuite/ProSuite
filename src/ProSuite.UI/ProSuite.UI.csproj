@@ -162,6 +162,9 @@
 		<Compile Update="QA\Controls\QualityConditionControl.Designer.cs">
 			<DependentUpon>QualityConditionControl.cs</DependentUpon>
 		</Compile>
+		<Compile Update="QA\Controls\QualityConditionParametersControl.cs">
+		  <SubType>UserControl</SubType>
+		</Compile>
 		<Compile Update="QA\Controls\QualityConditionTableViewControl.cs">
 			<SubType>UserControl</SubType>
 		</Compile>
@@ -173,6 +176,21 @@
 		</Compile>
 		<Compile Update="QA\Controls\TestDescriptorControl.Designer.cs">
 			<DependentUpon>TestDescriptorControl.cs</DependentUpon>
+		</Compile>
+		<Compile Update="QA\Customize\ConditionDatasetsControl.cs">
+		  <SubType>UserControl</SubType>
+		</Compile>
+		<Compile Update="QA\Customize\ConditionListControl.cs">
+		  <SubType>UserControl</SubType>
+		</Compile>
+		<Compile Update="QA\Customize\ConditionsLayerViewControl.cs">
+		  <SubType>UserControl</SubType>
+		</Compile>
+		<Compile Update="QA\Customize\CustomizeQASpecForm.cs">
+		  <SubType>Form</SubType>
+		</Compile>
+		<Compile Update="QA\Customize\TestParameterValuesEditorForm.cs">
+		  <SubType>Form</SubType>
 		</Compile>
 		<Compile Update="QA\VerificationProgress\UpdateIssuesOptionsControl.xaml.cs">
 			<DependentUpon>UpdateIssuesOptionsControl.xaml</DependentUpon>
@@ -257,11 +275,17 @@
       <DependentUpon>QualityConditionControl.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Update="QA\Controls\QualityConditionParametersControl.resx">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Update="QA\Controls\QualityConditionTableViewControl.resx">
       <DependentUpon>QualityConditionTableViewControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Update="QA\Controls\TestDescriptorControl.resx">
       <DependentUpon>TestDescriptorControl.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Update="QA\Customize\CustomizeQASpecForm.resx">
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Update="QA\VerificationResult\QAVerificationForm.resx">
@@ -326,11 +350,15 @@
     <Content Include="Properties\FieldTypeImages\FieldTypeUnknown.png" />
     <Content Include="Properties\FieldTypeImages\FieldTypeUUID.png" />
     <Content Include="Properties\FieldTypeImages\FieldTypeXml.png" />
+    <Content Include="Properties\Images\CheckAll.png" />
     <Content Include="Properties\Images\DatasetCategory.png" />
     <Content Include="Properties\Images\DatasetCategorySelected.png" />
+    <Content Include="Properties\Images\Edit.png" />
     <Content Include="Properties\Images\Empty.bmp" />
     <Content Include="Properties\Images\Error.png" />
     <Content Include="Properties\Images\Exit.png" />
+    <Content Include="Properties\Images\UncheckAll.png" />
+    <Content Include="Properties\Images\Undo_16x.png" />
     <Resource Include="Properties\Images\FlashProgressCmd.png" />
     <Content Include="Properties\Images\Full.bmp" />
     <Content Include="Properties\Images\Half.bmp" />
