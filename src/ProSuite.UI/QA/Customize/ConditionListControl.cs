@@ -31,6 +31,13 @@ namespace ProSuite.UI.QA.Customize
 			private static readonly Image _stopImage =
 				(Bitmap) TestTypeImages.TestTypeStop.Clone();
 
+			static QualitySpecificationElementItem()
+			{
+				_allowImage.Tag = QualityConditionType.Allowed;
+				_continueImage.Tag = QualityConditionType.ContinueOnError;
+				_stopImage.Tag = QualityConditionType.StopOnError;
+			}
+
 			public QualitySpecificationElementItem([NotNull] QualitySpecificationElement element)
 			{
 				Element = element;
