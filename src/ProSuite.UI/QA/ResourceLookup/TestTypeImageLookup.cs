@@ -23,23 +23,18 @@ namespace ProSuite.UI.QA.ResourceLookup
 		private const string _keyProhibition = "prohibition";
 		private const string _keyStop = "stop";
 		private const string _keyUnknown = "unknown";
-		private const string _keyTransform = "transform";
-		private const string _keyRowFilter = "rowfilter";
+		private const string _keyTransformer = "transformer";
 		private const string _keyIssueFilter = "issuefilter";
 
 		#region Constructor
 
-		/// <summary>
-		/// Initializes the <see cref="TestTypeImageLookup"/> class.
-		/// </summary>
 		static TestTypeImageLookup()
 		{
 			_mapKeyToImage.Add(_keyWarning, TestTypeImages.TestTypeWarning);
 			_mapKeyToImage.Add(_keyProhibition, TestTypeImages.TestTypeProhibition);
 			_mapKeyToImage.Add(_keyStop, TestTypeImages.TestTypeStop);
 			_mapKeyToImage.Add(_keyUnknown, TestTypeImages.TestTypeUnknown);
-			_mapKeyToImage.Add(_keyTransform, TestTypeImages.Transform);
-			_mapKeyToImage.Add(_keyRowFilter, TestTypeImages.RowFilter);
+			_mapKeyToImage.Add(_keyTransformer, TestTypeImages.Transformer);
 			_mapKeyToImage.Add(_keyIssueFilter, TestTypeImages.IssueFilter);
 
 			foreach (KeyValuePair<string, Image> pair in _mapKeyToImage)
@@ -52,8 +47,7 @@ namespace ProSuite.UI.QA.ResourceLookup
 			_defaultSort.Add(_keyProhibition, ++i);
 			_defaultSort.Add(_keyStop, ++i);
 			_defaultSort.Add(_keyUnknown, ++i);
-			_defaultSort.Add(_keyTransform, ++i);
-			_defaultSort.Add(_keyRowFilter, ++i);
+			_defaultSort.Add(_keyTransformer, ++i);
 			_defaultSort.Add(_keyIssueFilter, ++i);
 		}
 
@@ -101,7 +95,7 @@ namespace ProSuite.UI.QA.ResourceLookup
 		{
 			if (instanceDescriptor is TransformerDescriptor)
 			{
-				return GetImage(_keyTransform);
+				return GetImage(_keyTransformer);
 			}
 
 			if (instanceDescriptor is IssueFilterDescriptor)
@@ -133,7 +127,7 @@ namespace ProSuite.UI.QA.ResourceLookup
 
 			if (instanceConfiguration is TransformerConfiguration)
 			{
-				return GetImage(_keyTransform);
+				return GetImage(_keyTransformer);
 			}
 
 			if (instanceConfiguration is IssueFilterConfiguration)

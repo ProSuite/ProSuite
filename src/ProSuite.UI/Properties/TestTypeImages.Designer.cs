@@ -73,16 +73,6 @@ namespace ProSuite.UI.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap RowFilter {
-            get {
-                object obj = ResourceManager.GetObject("RowFilter", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         internal static System.Drawing.Bitmap TestTypeProhibition {
             get {
                 object obj = ResourceManager.GetObject("TestTypeProhibition", resourceCulture);
@@ -123,9 +113,9 @@ namespace ProSuite.UI.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap Transform {
+        internal static System.Drawing.Bitmap Transformer {
             get {
-                object obj = ResourceManager.GetObject("Transform", resourceCulture);
+                object obj = ResourceManager.GetObject("Transformer", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
