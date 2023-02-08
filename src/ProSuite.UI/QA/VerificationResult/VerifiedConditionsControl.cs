@@ -7,13 +7,11 @@ using System.Windows.Forms;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Misc;
-using ProSuite.Commons.Reflection;
 using ProSuite.Commons.Text;
 using ProSuite.Commons.UI.ScreenBinding.Lists;
 using ProSuite.Commons.UI.WinForms.Controls;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
-using ProSuite.QA.Core;
 using ProSuite.UI.Properties;
 
 namespace ProSuite.UI.QA.VerificationResult
@@ -211,33 +209,13 @@ namespace ProSuite.UI.QA.VerificationResult
 			[NotNull]
 			private static string GetTestCategories([NotNull] TestDescriptor testDescriptor)
 			{
-				Type testType = GetTestType(testDescriptor);
+				var testInfo = InstanceDescriptorUtils.GetInstanceInfo(testDescriptor);
 
-				return testType == null
+				return testInfo == null
 					       ? string.Empty
-					       : StringUtils.ConcatenateSorted(InstanceUtils.GetCategories(testType),
-					                                       ", ");
+					       : StringUtils.ConcatenateSorted(testInfo.TestCategories, ", ");
 			}
-
-			[CanBeNull]
-			private static Type GetTestType([NotNull] TestDescriptor testDescriptor)
-			{
-				Assert.ArgumentNotNull(testDescriptor, nameof(testDescriptor));
-
-				if (testDescriptor.TestClass != null)
-				{
-					return PrivateAssemblyUtils.LoadType(testDescriptor.TestClass.AssemblyName,
-					                                     testDescriptor.TestClass.TypeName);
-				}
-
-				if (testDescriptor.TestFactoryDescriptor != null)
-				{
-					return testDescriptor.TestFactoryDescriptor.GetInstanceType();
-				}
-
-				return null;
-			}
-
+			
 			[NotNull]
 			private static string GetDatasetNames([NotNull] QualityCondition qualityCondition)
 			{
