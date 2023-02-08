@@ -18,7 +18,9 @@ namespace ProSuite.UI.QA.Customize
 {
 	public partial class ConditionListControl : UserControl, IConditionsView
 	{
-		private class ElementViewModel
+		#region Nested type: QualitySpecificationElementItem
+
+		private class QualitySpecificationElementItem
 		{
 			private static readonly Image _allowImage =
 				(Bitmap) TestTypeImages.TestTypeWarning.Clone();
@@ -29,7 +31,7 @@ namespace ProSuite.UI.QA.Customize
 			private static readonly Image _stopImage =
 				(Bitmap) TestTypeImages.TestTypeStop.Clone();
 
-			public ElementViewModel([NotNull] QualitySpecificationElement element)
+			public QualitySpecificationElementItem([NotNull] QualitySpecificationElement element)
 			{
 				Element = element;
 
@@ -103,12 +105,17 @@ namespace ProSuite.UI.QA.Customize
 			}
 		}
 
-		private class ElementViewmodelComparer : IComparer<ElementViewModel>
+		#endregion
+
+		#region Nested type: QualitySpecificationElementComparer
+
+		private class
+			QualitySpecificationElementComparer : IComparer<QualitySpecificationElementItem>
 		{
 			[NotNull] private readonly SpecificationDatasetComparer _specComparer =
 				new SpecificationDatasetComparer();
 
-			public int Compare(ElementViewModel x, ElementViewModel y)
+			public int Compare(QualitySpecificationElementItem x, QualitySpecificationElementItem y)
 			{
 				if (x == null && y == null)
 				{
@@ -129,6 +136,8 @@ namespace ProSuite.UI.QA.Customize
 				                             new SpecificationDataset(y.Element));
 			}
 		}
+
+		#endregion
 
 		[NotNull] private readonly DataGridViewFindController _findController;
 		private QualitySpecification _qualitySpecification;
@@ -178,14 +187,15 @@ namespace ProSuite.UI.QA.Customize
 			{
 				_qualitySpecification = qualitySpecification;
 
-				List<ElementViewModel> list =
+				List<QualitySpecificationElementItem> list =
 					_qualitySpecification.Elements
-					                     .Select(e => new ElementViewModel(e))
-					                     .OrderBy(e => e, new ElementViewmodelComparer())
+					                     .Select(e => new QualitySpecificationElementItem(e))
+					                     .OrderBy(e => e, new QualitySpecificationElementComparer())
 					                     .ToList();
 
 				DataGridViewUtils.BindTo(_dataGridViewAllConditions,
-				                         new SortableBindingList<ElementViewModel>(list));
+				                         new SortableBindingList<QualitySpecificationElementItem>(
+					                         list));
 
 				_dataGridViewAllConditions.Visible = true;
 			}
@@ -316,7 +326,7 @@ namespace ProSuite.UI.QA.Customize
 		private static QualitySpecificationElement GetQualitySpecificationElement(
 			[NotNull] DataGridViewRow row)
 		{
-			var selected = row.DataBoundItem as ElementViewModel;
+			var selected = row.DataBoundItem as QualitySpecificationElementItem;
 			return selected?.Element;
 		}
 
@@ -359,7 +369,8 @@ namespace ProSuite.UI.QA.Customize
 				return null;
 			}
 
-			var viewmodel = dataGridView.Rows[e.RowIndex].DataBoundItem as ElementViewModel;
+			var viewmodel =
+				dataGridView.Rows[e.RowIndex].DataBoundItem as QualitySpecificationElementItem;
 			return viewmodel?.Element.QualityCondition;
 		}
 	}
