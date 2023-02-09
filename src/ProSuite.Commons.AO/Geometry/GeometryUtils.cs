@@ -8759,6 +8759,9 @@ namespace ProSuite.Commons.AO.Geometry
 			[NotNull] ISegmentCollection segments,
 			double maxDeviation)
 		{
+			Assert.ArgumentNotNull(segments, nameof(segments));
+			Assert.ArgumentCondition(maxDeviation > 0, "Invalid maxDeviation");
+
 			foreach (ISegment segment in GetSegments(segments.EnumSegments))
 			{
 				if (segment.GeometryType == esriGeometryType.esriGeometryLine)
@@ -8773,37 +8776,39 @@ namespace ProSuite.Commons.AO.Geometry
 						continue;
 					}
 
+					// NOTE: If a maxDeviation is supplied to Densify() and the internal
+					// algorithm determines that less segments are required for the given
+					// deviation, the segment count is decreased!
 					ILine[] result;
+					double densifiedLength;
 					if (segment is ICircularArc circularArc)
 					{
 						double radius = circularArc.Radius;
-						double ratio = maxDeviation / radius;
-						double angle = Math.Acos(1 - ratio);
+						densifiedLength = GetDensificationDistance(maxDeviation, radius);
+					}
+					else if (segment is IEllipticArc elliptic)
+					{
+						// Just use the semi-minor axis
+						double semiMajor = 0;
+						double semiMinor = 0;
+						double ratio = 0;
+						elliptic.GetAxes(ref semiMajor, ref semiMinor, ref ratio);
 
-						if (angle == 0)
-						{
-							angle = Math.PI / 96;
-						}
+						Assert.True(semiMinor > 0, "Invalid elliptic arc: semi-minor axes is 0");
 
-						double densifiedLength = radius * angle;
-						int segmentCount = (int) (segment.Length / densifiedLength) + 1;
-						result = new ILine[segmentCount];
-
-						// NOTE: If a maxDeviation is supplied to Densify() and the internal
-						// algorithm determines that less segments are required for the given
-						// deviation, the segment count is decreased!
-						GeometryBridge.Densify(segment, 0, ref segmentCount, ref result);
+						densifiedLength = GetDensificationDistance(maxDeviation, semiMinor);
 					}
 					else
 					{
-						double length = Math.Sqrt(2) * maxDeviation;
-						int segmentCount = (int) (segment.Length / length);
-
-						// The size of the array / segment count seems to be the upper bound
-						result = new ILine[segmentCount];
-						GeometryBridge.Densify(
-							segment, maxDeviation, ref segmentCount, ref result);
+						// TODO: More appropriate approximation for beziers
+						densifiedLength = maxDeviation;
 					}
+
+					int segmentCount = (int) (segment.Length / densifiedLength) + 1;
+
+					result = new ILine[segmentCount];
+
+					GeometryBridge.Densify(segment, 0, ref segmentCount, ref result);
 
 					foreach (ILine line in result)
 					{
@@ -8814,6 +8819,28 @@ namespace ProSuite.Commons.AO.Geometry
 					}
 				}
 			}
+		}
+
+		/// <summary>
+		/// Gets the necessary densification distance of a cirular arc given a maximum
+		/// deviation of the circle.
+		/// </summary>
+		/// <param name="maxDeviation"></param>
+		/// <param name="radius"></param>
+		/// <returns></returns>
+		private static double GetDensificationDistance(double maxDeviation,
+		                                               double radius)
+		{
+			double ratio = maxDeviation / radius;
+			double angle = Math.Acos(1 - ratio);
+
+			if (angle == 0)
+			{
+				angle = Math.PI / 96;
+			}
+
+			double densifiedLength = radius * angle;
+			return densifiedLength;
 		}
 
 		private static bool IsDegeneratedToLine(ISegment nonLinearSegment)
