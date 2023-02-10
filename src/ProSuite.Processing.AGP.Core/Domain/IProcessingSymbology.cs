@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -16,7 +17,8 @@ namespace ProSuite.Processing.AGP.Core.Domain
 		// Get outline of a non-real feature, implemented using our own code
 		// Can be null if a feature does not draw
 		[CanBeNull]
-		Geometry QueryDrawingOutline(PseudoFeature feature, OutlineType outlineType, IMapContext mapContext);
+		Geometry QueryDrawingOutline(PseudoFeature feature, OutlineType outlineType, IMapContext mapContext,
+									 IDictionary<string, object> outlineOptions = null);
 	}
 
 	public enum OutlineType
