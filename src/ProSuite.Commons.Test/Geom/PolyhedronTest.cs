@@ -77,9 +77,35 @@ namespace ProSuite.Commons.Test.Geom
 				           new Pnt3D(100, 0, 0),
 			           };
 
+			// The removal of duplicate segments (verticals) also cleans almost-duplicates
+			const int expectedFootprintVertices = 5;
 			WithRotatedRing(
 				ring, l => AssertCanCreateFootprint(
-					CreatePolyhedron(l), 0.01, 1, 6, 100 * 100));
+					CreatePolyhedron(l), 0.01, 1, expectedFootprintVertices, 100 * 100.0005));
+		}
+
+		[Test]
+		public void CanGetFootprintFromVerticalNeedle()
+		{
+			// 1        ^ z
+			// |        |
+			// 2        |
+			// 3        |
+			// |        |
+			// 0        |
+
+			var ring = new List<Pnt3D>
+			           {
+				           new Pnt3D(0, 0, 0),
+				           new Pnt3D(0, 0, 100),
+				           new Pnt3D(0, 0, 70),
+				           new Pnt3D(0, 0, 60),
+				           new Pnt3D(0, 0, 0),
+			           };
+
+			WithRotatedRing(
+				ring, l => AssertCanCreateFootprint(
+					CreatePolyhedron(l), 0.001, 0, 0, 0));
 		}
 
 		private static Polyhedron CreatePolyhedron(Linestring linestring,
@@ -95,22 +121,28 @@ namespace ProSuite.Commons.Test.Geom
 			return new Polyhedron(new List<RingGroup>(new[] { ringGroup }));
 		}
 
-		private void AssertCanCreateFootprint(Polyhedron polyhedron,
-		                                      double tolerance,
-		                                      int expectedPartCount,
-		                                      int expectedPointCount,
-		                                      double expectedArea)
+		private static void AssertCanCreateFootprint(Polyhedron polyhedron,
+		                                             double tolerance,
+		                                             int expectedPartCount,
+		                                             int expectedPointCount,
+		                                             double expectedArea)
 		{
 			MultiLinestring footprint =
 				polyhedron.GetXYFootprint(tolerance, out List<Linestring> verticalRings);
 
+			Assert.AreEqual(polyhedron.Count, footprint.Count + verticalRings.Count);
 			Assert.NotNull(footprint);
 
 			Assert.True(footprint.GetLinestrings().All(l => l.IsClosed));
-			Assert.True(footprint.GetLinestrings().FirstOrDefault()?.ClockwiseOriented);
+
+			if (! footprint.IsEmpty)
+			{
+				Assert.True(footprint.GetLinestrings().FirstOrDefault()?.ClockwiseOriented);
+			}
+
 			Assert.AreEqual(expectedPartCount, footprint.PartCount);
 			Assert.AreEqual(expectedPointCount, footprint.PointCount);
-			Assert.AreEqual(expectedArea, footprint.GetArea2D());
+			Assert.AreEqual(expectedArea, footprint.GetArea2D(), 0.001);
 		}
 
 		private static void WithRotatedRing(IList<Pnt3D> ring,
