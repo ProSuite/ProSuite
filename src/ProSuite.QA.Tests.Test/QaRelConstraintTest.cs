@@ -134,7 +134,7 @@ namespace ProSuite.QA.Tests.Test
 
 			IRow t = table_child.CreateRow();
 			t.Value[table_child.FindField("TEXT")] = "table"; // same as table name
-			int pk = t.OID;
+			long pk = t.OID;
 			t.Store();
 
 			IFeature f = fc_child.CreateFeature();
