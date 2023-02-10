@@ -271,13 +271,30 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			[NotNull] string workspaceId,
 			[CanBeNull] string databaseName,
 			[CanBeNull] string schemaOwner,
-			[NotNull] IEnumerable<XmlInstanceConfiguration> referencedConditions)
+			[NotNull] IList<XmlInstanceConfiguration> referencedConditions)
 		{
-			Model result = ModelFactory.CreateModel(workspace, modelName,
-			                                        databaseName, schemaOwner);
+			List<string> datasetNames =
+				new List<string>(XmlDataQualityUtils.GetReferencedDatasetNames(
+					                 workspaceId, referencedConditions));
 
-			IEnumerable<Dataset> referencedDatasets = XmlDataQualityUtils.GetReferencedDatasets(
-				result, workspaceId, referencedConditions);
+			Model result;
+
+			if (ModelFactory is VerifiedModelFactory factory)
+			{
+				result = factory.CreateModel(
+					workspace, modelName, databaseName, schemaOwner, datasetNames);
+			}
+			else
+			{
+				result = ModelFactory.CreateModel(workspace, modelName,
+				                                  databaseName, schemaOwner);
+			}
+
+
+
+			IEnumerable<Dataset> referencedDatasets = datasetNames.Select(datasetName =>
+					XmlDataQualityUtils.GetDatasetByParameterValue(result, datasetName))
+				.Where(dataset => dataset != null);
 
 			ModelFactory.AssignMostFrequentlyUsedSpatialReference(result, referencedDatasets);
 

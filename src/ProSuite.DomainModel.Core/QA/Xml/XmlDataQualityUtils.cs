@@ -1361,6 +1361,47 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 			}
 		}
 
+		[NotNull]
+		public static IEnumerable<string> GetReferencedDatasetNames(
+			[NotNull] string workspaceId,
+			[NotNull] IEnumerable<XmlInstanceConfiguration> referencedConditions)
+		{
+			Assert.ArgumentNotNull(referencedConditions, nameof(referencedConditions));
+			Assert.ArgumentNotNullOrEmpty(workspaceId, nameof(workspaceId));
+
+			var datasetNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+			foreach (XmlInstanceConfiguration xmlQualityCondition in referencedConditions)
+			{
+				foreach (XmlTestParameterValue paramterValue in
+				         xmlQualityCondition.EnumParameterValues(ignoreEmptyValues: true))
+				{
+					var datasetParameterValue = paramterValue as XmlDatasetTestParameterValue;
+					if (datasetParameterValue == null)
+					{
+						continue;
+					}
+
+					string datasetWorkspaceId = datasetParameterValue.WorkspaceId ?? string.Empty;
+
+					if (!string.Equals(datasetWorkspaceId, workspaceId,
+					                   StringComparison.OrdinalIgnoreCase))
+					{
+						continue;
+					}
+
+					string datasetName = datasetParameterValue.Value;
+					if (datasetName == null || datasetNames.Contains(datasetName))
+					{
+						continue;
+					}
+
+					datasetNames.Add(datasetName);
+					yield return datasetName;
+				}
+			}
+		}
+
 		private static void ImportMetadata([NotNull] IEntityMetadata entity,
 		                                   [NotNull] IXmlEntityMetadata fromXml)
 		{

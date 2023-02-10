@@ -87,6 +87,58 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 			return model;
 		}
 
+		public Model CreateModel(IWorkspace workspace,
+		                         string name,
+		                         string databaseName,
+		                         string schemaOwner,
+		                         IList<string> usedDatasetNames)
+		{
+			Assert.ArgumentNotNull(workspace, nameof(workspace));
+			Assert.ArgumentNotNullOrEmpty(name, nameof(name));
+
+			// NOTE: The schema owner is ignored by harvesting (it's probably intentional).
+			VerifiedModel model =
+				WorkspaceUtils.UsesQualifiedDatasetNames(workspace)
+					? new VerifiedModel(name, workspace, _workspaceContextFactory, databaseName,
+					                    schemaOwner)
+					: new VerifiedModel(name, workspace, _workspaceContextFactory);
+
+			var featureWorkspace = (IFeatureWorkspace)workspace;
+
+			_datasetHarvester.ResetDatasets();
+
+			using (_msg.IncrementIndentation("Reading datasets for '{0}'", name))
+			{
+				var harvestedNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+				Harvest(featureWorkspace, usedDatasetNames, esriDatasetType.esriDTFeatureClass,
+				        () => new FeatureClassNameClass(), harvestedNames);
+				Harvest(featureWorkspace, usedDatasetNames, esriDatasetType.esriDTTable,
+				        () => new TableNameClass(), harvestedNames);
+				Harvest(featureWorkspace, usedDatasetNames, esriDatasetType.esriDTTopology,
+				        () => new TopologyNameClass(), harvestedNames);
+				Harvest(featureWorkspace, usedDatasetNames, esriDatasetType.esriDTTerrain,
+				        () => new TinNameClass(), harvestedNames); // TODO: verify
+				Harvest(featureWorkspace, usedDatasetNames, esriDatasetType.esriDTGeometricNetwork,
+				        () => new GeometricNetworkNameClass(), harvestedNames);
+				Harvest(featureWorkspace, usedDatasetNames, esriDatasetType.esriDTRasterDataset,
+				        () => new RasterDatasetNameClass(), harvestedNames);
+				Harvest(featureWorkspace, usedDatasetNames, esriDatasetType.esriDTMosaicDataset,
+				        () => new MosaicDatasetNameClass(), harvestedNames);
+
+				_datasetHarvester.AddDatasets(model);
+
+				// Only after the dataset are assigned to the model:
+				_datasetHarvester.HarvestChildren();
+			}
+
+			_msg.InfoFormat("{0} dataset(s) read", model.Datasets.Count);
+
+			return model;
+		}
+
+
+
 		public void AssignMostFrequentlyUsedSpatialReference(
 			Model model,
 			IEnumerable<Dataset> usedDatasets)
@@ -179,6 +231,29 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 
 			_datasetHarvester.UseDataset(datasetName);
 		}
+
+		private void Harvest(
+			[NotNull] IFeatureWorkspace workspace,
+			[NotNull] IList<string> usedDatasetNames,
+			esriDatasetType dtType,
+			[NotNull] Func<IDatasetName> createName,
+			[NotNull] ICollection<string> harvestedNames)
+		{
+			IWorkspace2 ws = (IWorkspace2) workspace;
+			foreach (string name in usedDatasetNames)
+			{
+				if (ws.NameExists[dtType, name])
+				{
+					IWorkspaceName wsName = (IWorkspaceName) ((IDataset) ws).FullName;
+					IDatasetName datasetName = createName();
+					datasetName.WorkspaceName = wsName;
+					datasetName.Name = name;
+
+					HarvestDataset(datasetName, harvestedNames);
+				}
+			}
+		}
+
 
 		private void HarvestFeatureClasses([NotNull] Model model,
 		                                   [NotNull] IFeatureWorkspace workspace,
