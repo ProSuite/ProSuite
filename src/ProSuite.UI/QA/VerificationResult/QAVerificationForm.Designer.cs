@@ -224,7 +224,7 @@ namespace ProSuite.UI.QA.VerificationResult
 			// _toolStripButtonNoIssues
 			// 
 			this._toolStripButtonNoIssues.CheckOnClick = true;
-			this._toolStripButtonNoIssues.Image = global::ProSuite.UI.Properties.Resources.OK;
+			this._toolStripButtonNoIssues.Image = global::ProSuite.UI.Properties.VerificationResultImages.OK;
 			this._toolStripButtonNoIssues.ImageTransparentColor = System.Drawing.Color.Magenta;
 			this._toolStripButtonNoIssues.Name = "_toolStripButtonNoIssues";
 			this._toolStripButtonNoIssues.Size = new System.Drawing.Size(77, 22);
@@ -236,7 +236,7 @@ namespace ProSuite.UI.QA.VerificationResult
 			this._toolStripButtonWarnings.Checked = true;
 			this._toolStripButtonWarnings.CheckOnClick = true;
 			this._toolStripButtonWarnings.CheckState = System.Windows.Forms.CheckState.Checked;
-			this._toolStripButtonWarnings.Image = global::ProSuite.UI.Properties.Resources.Warning;
+			this._toolStripButtonWarnings.Image = global::ProSuite.UI.Properties.VerificationResultImages.Warning;
 			this._toolStripButtonWarnings.ImageTransparentColor = System.Drawing.Color.Magenta;
 			this._toolStripButtonWarnings.Name = "_toolStripButtonWarnings";
 			this._toolStripButtonWarnings.Size = new System.Drawing.Size(77, 22);
@@ -248,7 +248,7 @@ namespace ProSuite.UI.QA.VerificationResult
 			this._toolStripButtonErrors.Checked = true;
 			this._toolStripButtonErrors.CheckOnClick = true;
 			this._toolStripButtonErrors.CheckState = System.Windows.Forms.CheckState.Checked;
-			this._toolStripButtonErrors.Image = global::ProSuite.UI.Properties.Resources.Error;
+			this._toolStripButtonErrors.Image = global::ProSuite.UI.Properties.VerificationResultImages.Error;
 			this._toolStripButtonErrors.ImageTransparentColor = System.Drawing.Color.Magenta;
 			this._toolStripButtonErrors.Name = "_toolStripButtonErrors";
 			this._toolStripButtonErrors.Size = new System.Drawing.Size(57, 22);
