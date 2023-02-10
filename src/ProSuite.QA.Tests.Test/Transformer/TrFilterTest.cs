@@ -171,7 +171,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				             { KeepGeometry = true };
 				runner.Execute(GeometryFactory.CreateEnvelope(400, 0, 600, 100));
 
-				// interesecting polygon is outside test area, but is search everywhere 
+				// interesecting polygon is outside test area, but is searched everywhere 
 				Assert.AreEqual(1, runner.Errors.Count);
 			}
 		}
@@ -319,7 +319,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				{ KeepGeometry = true };
 				runner.Execute(GeometryFactory.CreateEnvelope(400, 0, 600, 100));
 
-				// disjoint polygon is outside test area, but is search everywhere 
+				// disjoint polygon is outside test area, but is searched everywhere 
 				Assert.AreEqual(1, runner.Errors.Count);
 			}
 		}
