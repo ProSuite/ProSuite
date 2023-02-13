@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using CommandLine;
 using Grpc.Core;
 using Grpc.Health.V1;
@@ -341,6 +342,10 @@ namespace ProSuite.Microservices.Server.AO
 			_msg.InfoFormat("Logging configured for {0} ({1}) version {2}",
 			                exeAssembly.Location, bitness,
 			                executingAssembly.GetName().Version);
+
+			string frameworkDescription = RuntimeInformation.FrameworkDescription;
+
+			_msg.DebugFormat("Currently used .NET Runtime: {0}", frameworkDescription);
 
 			if (_msg.IsVerboseDebugEnabled)
 			{

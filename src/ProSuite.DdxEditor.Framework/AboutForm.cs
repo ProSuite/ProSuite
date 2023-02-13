@@ -48,7 +48,7 @@ namespace ProSuite.DdxEditor.Framework
 			sb.AppendFormat("Operating System:    {0}",
 			                Environment.OSVersion.VersionString);
 			sb.AppendLine();
-			sb.AppendFormat(".Net Runtime:        {0}", Environment.Version);
+			sb.AppendFormat(".NET Runtime:        {0}", Environment.Version);
 			sb.AppendLine();
 			sb.AppendLine();
 			sb.AppendFormat("Machine Name:        {0}", Environment.MachineName);
