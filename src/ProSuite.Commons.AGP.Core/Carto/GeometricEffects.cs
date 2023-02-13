@@ -361,46 +361,89 @@ public static class GeometricEffects
 		return shape;
 	}
 
-	public static Geometry Suppress(Geometry shape, bool invert)
+	public static Geometry Suppress(Geometry shape, bool invert = false)
 	{
 		if (shape is null) return null;
 
-		if (shape is Multipart { HasID: true } polycurve)
+		// no effect if not Multipart with  control points
+		if (shape is not Multipart { HasID: true } polycurve) return shape;
+
+		var builder = Configure(new PolylineBuilderEx(), shape);
+
+		// treat each part separately!
+
+		foreach (var segments in polycurve.Parts)
 		{
-			var builder = Configure(new PolylineBuilderEx(), shape);
+			int count = segments.Count;
+			if (count < 1) continue;
+			int k = builder.PartCount; // first result part for current input part
 
-			// treat each part separately!
+			var start = segments[0].StartPoint;
+			bool suppress = start.ID > 0 ? ! invert : invert;
+			int i = 0, i0 = 0;
 
-			foreach (var segments in polycurve.Parts)
+			for (; i < count; i++)
 			{
-				int count = segments.Count;
-				if (count < 1) continue;
-
-				var start = segments[0].StartPoint;
-				bool suppress = start.ID > 0 ? ! invert : invert;
-
-				for (int i = 0, i0 = 0; i < count; i++)
+				var point = segments[i].EndPoint;
+				if (point.ID > 0)
 				{
-					var point = segments[i].EndPoint;
-					if (point.ID > 0)
+					suppress = ! suppress;
+					if (suppress)
 					{
-						suppress = ! suppress;
-						if (suppress)
-						{
-							// emit what we traveled since last state change:
-							const bool startNewPart = true;
-							builder.AddSegments(Range(segments, i0, i-i0+1), startNewPart);
-						}
+						// emit what we traveled since last state change:
+						const bool startNewPart = true;
+						builder.AddSegments(Range(segments, i0, i-i0+1), startNewPart);
+					}
+					else
+					{
+						i0 = i + 1;
 					}
 				}
 			}
 
-			return builder.ToGeometry();
+			if (i > i0 && !suppress)
+			{
+				var segs = Range(segments, i0, i - i0).ToArray();
+
+				// if input is polygon and the last segment ends where the first
+				// starts: prepend those last segments to the first resulting part;
+				// otherwise, just add a new last part
+
+				if (shape is Polygon && ClosesCycle(segs, builder, k))
+				{
+					builder.InsertSegments(k, 0, segs);
+				}
+				else
+				{
+					const bool startNewPart = true;
+					builder.AddSegments(Range(segments, i0, i - i0), startNewPart);
+				}
+			}
 		}
 
-		// no effect if no control points
-		return shape;
+		return builder.ToGeometry();
 	}
+
+	#region Suppress utilities
+
+	private static bool ClosesCycle(IReadOnlyList<Segment> segments,
+	                                PolylineBuilderEx builder, int k)
+	{
+		if (segments is null)
+			throw new ArgumentNullException(nameof(segments));
+		if (builder is null)
+			throw new ArgumentNullException(nameof(builder));
+
+		if (segments.Count <= 0) return false;
+		if (k < 0 || k >= builder.PartCount) return false;
+
+		var lastPoint = segments.Last().EndPoint;
+		var firstPoint = builder.Parts[k][0].StartPoint;
+
+		return GeometryEngine.Instance.Equals(lastPoint, firstPoint);
+	}
+
+	#endregion
 
 	#region Private utilities
 
