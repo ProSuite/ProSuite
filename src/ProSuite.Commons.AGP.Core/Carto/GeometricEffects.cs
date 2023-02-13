@@ -340,7 +340,8 @@ public static class GeometricEffects
 		if (shape is Multipart && (distance > 0 || distance < 0))
 		{
 			const double bevelRatio = 2.0; // TODO
-			return GeometryEngine.Instance.Offset(shape, distance, method, bevelRatio);
+			// NB: invert distance because Offset() method has positive=right convention
+			return GeometryEngine.Instance.Offset(shape, -distance, method, bevelRatio);
 		}
 
 		// no effect on other geometry types or if no distance

@@ -234,6 +234,41 @@ public class GeometricEffectsTest
 		throw new NotImplementedException();
 	}
 
+	[Test]
+	public void CanOffset()
+	{
+		// null geometry
+		Assert.IsNull(GeometricEffects.Offset(null, 5, OffsetType.Round));
+
+		// neither polyline nor polygon: remains unchanged
+		var pt = AssertType<MapPoint>(GeometricEffects.Offset(Pt(10, 20), 5, OffsetType.Round));
+		Assert.AreEqual(10.0, pt.X, 0.0000001);
+		Assert.AreEqual(20.0, pt.Y, 0.0000001);
+
+		// Very rough tests only: finer tests would just test the Pro SDK's Offset() method
+		// Caution: for Offset() method positive distance is RIGHT, BUT for geom effect it is LEFT
+
+		// Polyline
+
+		var line = PolylineBuilderEx.CreatePolyline(
+			new[] { Pt(0, 0), Pt(10, 0), Pt(10, 10), Pt(20, 0) });
+
+		var ofs1 = AssertType<Polyline>(GeometricEffects.Offset(line, 2.0, OffsetType.Miter));
+		Assert.Greater(ofs1.Length, line.Length); // positive is left
+
+		var ofs2 = AssertType<Polyline>(GeometricEffects.Offset(line, -2.0, OffsetType.Miter));
+		Assert.Less(ofs2.Length, line.Length); // negative is right
+
+		// Polygon
+
+		var polygon = PolygonBuilderEx.CreatePolygon(Env(10, 10, 20, 20));
+
+		var ofs3 = AssertType<Polygon>(GeometricEffects.Offset(polygon, 2.0, OffsetType.Miter));
+		Assert.AreEqual(56.0, ofs3.Length, 0.00001); // positive is left (out)
+
+		var ofs4 = AssertType<Polygon>(GeometricEffects.Offset(polygon, -2.0, OffsetType.Miter));
+		Assert.AreEqual(24.0, ofs4.Length, 0.00001); // negative is right (in)
+	}
 	#region Test utilities
 
 	private static Polyline Dashes(
@@ -321,6 +356,11 @@ public class GeometricEffectsTest
 	private static MapPoint Pt(double x, double y)
 	{
 		return MapPointBuilderEx.CreateMapPoint(x, y);
+	}
+
+	private static Envelope Env(double xMin, double yMin, double xMax, double yMax)
+	{
+		return EnvelopeBuilderEx.CreateEnvelope(xMin, yMin, xMax, yMax);
 	}
 
 	#endregion
