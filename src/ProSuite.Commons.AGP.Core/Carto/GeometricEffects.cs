@@ -545,10 +545,10 @@ public static class GeometricEffects
 		return line.EndPoint.ToPair() - position;
 	}
 
-	private static T Configure<T>(T builder, Geometry template)
+	private static T Configure<T>(this T builder, Geometry template)
 		where T : GeometryBuilderEx
 	{
-		if (builder is null) throw new ArgumentNullException(nameof(builder));
+		if (builder is null) return null;
 		if (template is null) return builder;
 
 		builder.SpatialReference = template.SpatialReference;

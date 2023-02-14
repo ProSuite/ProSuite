@@ -290,5 +290,32 @@ namespace ProSuite.Processing.Utils
 
 			return sb;
 		}
+
+		/// <summary>
+		/// Get the subtype code that would be assigned by the given field setter.
+		/// Return -1 if the subtype field would remain unassigned.
+		/// Pass the same environment that will be used for the real assignment;
+		/// of no environment is passed, the null environment is used internally.
+		/// </summary>
+		public static int GetSubtypeCode(FieldSetter attributes, string subtypeFieldName,
+		                                 IEvaluationEnvironment env = null, Stack<object> stack = null)
+		{
+			object value = attributes?.GetFieldValue(subtypeFieldName, env, stack);
+			if (value is null) return -1;
+
+			try
+			{
+				return Convert.ToInt32(value);
+			}
+			catch
+			{
+				return -1;
+			}
+
+			// Usually, the subtype assigned with FieldSetter is
+			// given as a literal value, so we could just parse:
+			//return int.TryParse(assignment.Value.Clause, out int code) ? code : -1;
+			// But only a full evaluation is guaranteed to always yield the proper result.
+		}
 	}
 }

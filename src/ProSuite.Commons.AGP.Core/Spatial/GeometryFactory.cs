@@ -13,6 +13,19 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			return (T) prototype.Clone();
 		}
 
+		public static T Configure<T>(this T builder, Geometry template) where T : GeometryBuilderEx
+		{
+			if (builder is null) return null;
+			if (template is null) return builder;
+
+			builder.HasZ = template.HasZ;
+			builder.HasM = template.HasM;
+			builder.HasID = template.HasID;
+			builder.SpatialReference = template.SpatialReference;
+
+			return builder;
+		}
+
 		public static MapPoint CreatePoint(double x, double y, SpatialReference sref = null)
 		{
 			return MapPointBuilderEx.CreateMapPoint(x, y, sref);
@@ -25,6 +38,13 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			var p0 = new Coordinate2D(x0, y0);
 			var p1 = new Coordinate2D(x1, y1);
 			return EnvelopeBuilderEx.CreateEnvelope(p0, p1, sref);
+		}
+
+		public static Envelope CreateEmptyEnvelope(Geometry template = null)
+		{
+			var builder = Configure(new EnvelopeBuilderEx(), template);
+
+			return builder.ToGeometry();
 		}
 
 		public static Polygon CreatePolygon(Envelope envelope, SpatialReference sref = null)
