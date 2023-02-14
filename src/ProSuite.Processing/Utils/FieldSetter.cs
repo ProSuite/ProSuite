@@ -138,6 +138,33 @@ namespace ProSuite.Processing.Utils
 				a => new KeyValuePair<string, ExpressionEvaluator>(a.FieldName, a.Evaluator));
 		}
 
+		/// <summary>
+		/// The value that <see cref="Execute"/> would assign to
+		/// the field named <paramref name="fieldName"/>, if given
+		/// the same environment for evaluation.
+		/// </summary>
+		public object GetFieldValue(
+			string fieldName,
+			IEvaluationEnvironment env = null, Stack<object> stack = null)
+		{
+			if (string.IsNullOrEmpty(fieldName)) return null;
+
+			var assignment = _assignments.LastOrDefault(
+				a => string.Equals(a.FieldName, fieldName, StringComparison.OrdinalIgnoreCase));
+
+			if (assignment.Evaluator is null) return null;
+
+			try
+			{
+				var evaluator = assignment.Evaluator;
+				return evaluator.Evaluate(env, stack);
+			}
+			catch
+			{
+				return null;
+			}
+		}
+
 		private string Format()
 		{
 			var sb = new StringBuilder();

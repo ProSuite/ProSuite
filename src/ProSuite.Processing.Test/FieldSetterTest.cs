@@ -233,6 +233,22 @@ namespace ProSuite.Processing.Test
 			Assert.Catch<EvaluationException>(() => fs1.Execute(row, env)); // no such field
 		}
 
+		[Test]
+		public void CanGetFieldValue()
+		{
+			var env = new NullEnvironment();
+			var fs = new FieldSetter("a=12; b=9+8-5;");
+
+			var a = fs.GetFieldValue("a", env);
+			Assert.AreEqual(12.0, a);
+
+			var b = fs.GetFieldValue("b", env);
+			Assert.AreEqual(12.0, b);
+
+			var c = fs.GetFieldValue("unassigned", env);
+			Assert.IsNull(c);
+		}
+
 		#region Test utilities
 
 		private static string ToString(IEnumerable<KeyValuePair<string, ExpressionEvaluator>> assignments)
