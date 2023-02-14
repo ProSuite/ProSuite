@@ -24,7 +24,7 @@ namespace ProSuite.Processing.AGP.Core.Utils
 				return (ICartoProcess) Activator.CreateInstance(type, repo);
 			}
 
-			// by default, use the parameterless constructor:
+			// by default, use the parameter-less constructor:
 			return (ICartoProcess) Activator.CreateInstance(type);
 		}
 

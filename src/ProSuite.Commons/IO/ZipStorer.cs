@@ -172,7 +172,7 @@ namespace ProSuite.Commons.IO
 		public bool UseUtf8 { get; set; }
 
 		/// <summary>
-		/// Force deflate algotithm even if it inflates the stored file. Off by default.
+		/// Force deflate algorithm even if it inflates the stored file. Off by default.
 		/// </summary>
 		public bool ForceDeflating { get; set; }
 
@@ -834,7 +834,7 @@ namespace ProSuite.Commons.IO
 		private static string DecodeGeneralComment(byte[] bytes, int start, ushort length)
 		{
 			// How is the general file comment encoded?
-			// Cannot find anything in the sepc, so I'll just try CP 437
+			// Cannot find anything in the spec, so I'll just try CP 437
 
 			try
 			{

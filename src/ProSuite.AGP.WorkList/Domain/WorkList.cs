@@ -277,7 +277,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			// start after the current item
 			int startIndex = CurrentIndex + 1;
 
-			// first, try to go to an unvisted item
+			// first, try to go to an unvisited item
 			bool found = TryGoNearest(contextPerimeters, reference,
 			                          VisitedSearchOption.ExcludeVisited,
 			                          startIndex);
@@ -591,7 +591,7 @@ namespace ProSuite.AGP.WorkList.Domain
 				return null;
 			}
 
-			// todo daro: old implentation
+			// todo daro: old implementation
 			// acceleration?
 			//GeometryUtils.AllowIndexing(searchReference);
 
@@ -605,21 +605,21 @@ namespace ProSuite.AGP.WorkList.Domain
 			{
 				// for polygons and envelopes it does not make much sense to search from the 
 				// boundary; search from centroid instead. This also prevents
-				// the extreme response times (minues) of ReturnDistance() from
+				// the extreme response times (minutes) of ReturnDistance() from
 				// very large polygons
-				// todo daro: old implentation
+				// todo daro: old implementation
 				//referenceProximity = (IProximityOperator)((IArea)searchReference).Centroid;
 
 				referenceGeometry = GeometryEngine.Instance.Centroid(searchReference);
 			}
 			else
 			{
-				// todo daro: old implentation
+				// todo daro: old implementation
 				//referenceProximity = (IProximityOperator)searchReference;
 				referenceGeometry = searchReference;
 			}
 
-			// todo daro: old implentation
+			// todo daro: old implementation
 			//var referenceRelation = (IRelationalOperator)searchReference;
 
 			double minDistance = double.MaxValue;
@@ -637,7 +637,7 @@ namespace ProSuite.AGP.WorkList.Domain
 				{
 					if (item.HasGeometry)
 					{
-						// todo daro: old implentation
+						// todo daro: old implementation
 						//workItem.QueryExtent(otherExtent);
 						Envelope otherExtent = item.Extent;
 
@@ -665,7 +665,7 @@ namespace ProSuite.AGP.WorkList.Domain
 									GeometryEngine.Instance.Distance(projected, otherExtent.Center);
 							}
 
-							// todo daro: old implentation
+							// todo daro: old implementation
 							//if (referenceRelation.Disjoint(otherExtent))
 							//{
 							//	distance = referenceProximity.ReturnDistance(otherExtent);

@@ -268,7 +268,7 @@ namespace ProSuite.Processing.Test.Evaluation
 			var ex7 = Assert.Catch<EvaluationException>(() => Evaluate("'oops'(3)", env));
 			Console.WriteLine(@"Expected exception: {0}", ex7.Message);
 
-			// Exception in invocate target's code is wrapped in a EvaluationException:
+			// Exception in invoked target's code is wrapped in a EvaluationException:
 			var ex8 = Assert.Catch<EvaluationException>(() => Evaluate("bomb()", env));
 			Console.WriteLine(@"Expected exception: {0}", ex8.Message);
 			Assert.NotNull(ex8.InnerException, "ex.InnerException is null");

@@ -76,7 +76,7 @@ namespace ProSuite.Commons.Collections
 				                                     LargeDictionaryFactory.MaxDictionarySize)
 				                : 1;
 
-			// split the circle into 'nodeCount' dictionaries spread equaly apart
+			// split the circle into 'nodeCount' dictionaries spread equally apart
 
 			// optimisation for small dictionaries: just create the single node at the minimum point
 			// on the circle

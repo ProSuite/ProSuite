@@ -48,7 +48,7 @@ namespace ProSuite.Processing.Utils
 			}
 			else
 			{
-				// lonley gap: insert
+				// lonely gap: insert
 				_gaps.Insert(index, gap); // O(N)
 			}
 		}

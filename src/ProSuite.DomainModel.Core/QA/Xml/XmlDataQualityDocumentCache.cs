@@ -304,7 +304,7 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 				}
 			}
 
-			// TODO: Handle missing datasets in transformersf and issue filters!
+			// TODO: Handle missing datasets in transformers and issue filters!
 			if (datasetSettings.UnknownDatasetParameters.Count > 0)
 			{
 				Assert.True(datasetSettings.IgnoreUnknownDatasets,

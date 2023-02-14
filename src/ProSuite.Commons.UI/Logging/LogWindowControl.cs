@@ -60,7 +60,7 @@ namespace ProSuite.Commons.UI.Logging
 		#region ILogWindow Members
 
 		/// <summary>
-		/// Adds a new logginEvent to the log datagrid
+		/// Adds a new loggingEvent to the log datagrid
 		/// The method is thread safe...
 		/// </summary>
 		/// <param name="loggingEvent">New log event to add</param>

@@ -149,7 +149,7 @@ namespace ProSuite.Commons.AGP.Carto
 				yield break;
 			}
 
-			// TODO: Use layer search (there might habe been an issue with recycling?!)
+			// TODO: Use layer search (there might have been an issue with recycling?!)
 			var featureClass = layer.GetTable();
 
 			var filter = new QueryFilter

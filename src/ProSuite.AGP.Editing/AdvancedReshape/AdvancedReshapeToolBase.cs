@@ -145,7 +145,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 			if (_updateFeedbackTask != null)
 			{
-				// Still working on the previous update (large poylgons!)
+				// Still working on the previous update (large polygons!)
 				// -> Consider using latch (but ensure that the overlay must probably be scheduled properly)
 				return false;
 			}
@@ -160,7 +160,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 				{
 					// TODO: Exclude finish sketch by double clicking -> should not calculate preview
 					//       E.g. wait for SystemInformation.DoubleClickTime for the second click
-					//       and only start if it has not ocvurred
+					//       and only start if it has not occurred
 					_updateFeedbackTask = UpdateFeedbackAsync(nonDefaultSide);
 					updated = await _updateFeedbackTask;
 				}
@@ -277,7 +277,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 					var potentiallyAffectedFeatures =
 						GetAdjacentFeatures(selection, cancelableProgressor);
 
-					// This timout should be enough even in extreme circumstances:
+					// This timeout should be enough even in extreme circumstances:
 					int timeout = selection.Count * 10000;
 					_cancellationTokenSource = new CancellationTokenSource(timeout);
 
@@ -569,7 +569,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 					GetAreaOrLength(updatedGeometry) -
 					GetAreaOrLength(feature.GetShape());
 
-				// TODO: Get actual linear unit and convert (s. AdvancedReshaper)
+				// TODO: Get actual linear unit and convert (s. AdvancedReshape)
 				Unit mapUnits = ActiveMapView.Map.SpatialReference.Unit;
 
 				bool is2D = updatedGeometry.Dimension == 2;

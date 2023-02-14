@@ -20,7 +20,7 @@ namespace ProSuite.AGP.WorkList
 				path = GetWorklistPathCore();
 
 				// has to be outside QueuedTask because of OpenItemDialog
-				// AND outside of Task.Run because OptenItemDialog has to be
+				// AND outside of Task.Run because OpenItemDialog has to be
 				// in UI thread.
 				environment = CreateEnvironment(path);
 			}, _msg);

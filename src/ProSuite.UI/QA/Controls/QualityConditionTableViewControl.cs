@@ -145,7 +145,7 @@ namespace ProSuite.UI.QA.Controls
 				return baseClonedObject;
 			}
 
-			// Example call in an Iclonable object
+			// Example call in an ICloneable object
 			public override object Clone()
 			{
 				object clone = CloneFields(this, base.Clone());

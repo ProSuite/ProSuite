@@ -38,7 +38,7 @@ namespace ProSuite.Commons.Collections
 		}
 
 		/// <summary>
-		/// Splits the specified items into an enumeration of lists of a specified maxiumum list size.
+		/// Splits the specified items into an enumeration of lists of a specified maximum list size.
 		/// </summary>
 		/// <typeparam name="T"></typeparam>
 		/// <param name="items">The items.</param>

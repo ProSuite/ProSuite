@@ -74,7 +74,7 @@ namespace ProSuite.Commons.DomainModels
 		/// <param name="entities">The entities that need to be reattached to 
 		/// the session for the transaction to succeed. The entities are expected
 		/// not to have been modified outside the session (those changes would not 
-		/// be flushed as part of the transaction). To attach modified entites for 
+		/// be flushed as part of the transaction). To attach modified entities for 
 		/// update, use <see cref="ReattachForUpdate"></see> within the procedure.</param>
 		void UseTransaction([NotNull] Action procedure, params Entity[] entities);
 
@@ -100,7 +100,7 @@ namespace ProSuite.Commons.DomainModels
 		/// <param name="entities">The entities that need to be reattached to 
 		/// the session for the transaction to succeed. The entities are expected
 		/// not to have been modified outside the session (those changes would not 
-		/// be flushed as part of the transaction). To attach modified entites for 
+		/// be flushed as part of the transaction). To attach modified entities for 
 		/// update, use <see cref="ReattachForUpdate"></see> within the procedure.</param>
 		void NewTransaction([NotNull] Action procedure, params Entity[] entities);
 

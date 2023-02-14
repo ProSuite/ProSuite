@@ -49,7 +49,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		protected bool RequiresSelection { get; set; } = true;
 
 		/// <summary>
-		/// Whether the required selection can only contain editable fetures.
+		/// Whether the required selection can only contain editable features.
 		/// </summary>
 		protected bool SelectOnlyEditFeatures { get; set; } = true;
 
@@ -550,7 +550,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			Point pickerWindowLocation,
 			SelectionCombinationMethod selectionMethod)
 		{
-			//CTRL was pressed: picker shows FC's to select from
+			//CTRL was pressed: picker shows FCs to select from
 			if (GetSelectionSketchMode() == SelectionMode.UserSelect)
 			{
 				var picked =

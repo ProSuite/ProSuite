@@ -510,7 +510,7 @@ namespace ProSuite.Commons.Text
 		/// </summary>
 		/// <param name="list">The list of elements placed into the strings</param>
 		/// <param name="separator">The separator for each list element</param>
-		/// <param name="maxElements">Maxiaml count of list elements used
+		/// <param name="maxElements">Maximal count of list elements used
 		/// for a concatenated string.</param>
 		/// <returns>List of strings of the given list elements</returns>
 		/// <example>
@@ -538,7 +538,7 @@ namespace ProSuite.Commons.Text
 		/// <param name="toString">The optional function to format the values in the list. 
 		/// If defined this function must accept null values.</param>
 		/// <param name="separator">The separator for each list element</param>
-		/// <param name="maxElements">Maxiaml count of list elements used
+		/// <param name="maxElements">Maximal count of list elements used
 		/// for a concatenated string.</param>
 		/// <returns>
 		/// List of strings of the given list elements

@@ -11,10 +11,10 @@ namespace ProSuite.QA.Core.IssueCodes
 		/// <summary>
 		/// Initializes a new instance of the <see cref="AggregatedTestIssueCodes"/> class.
 		/// </summary>
-		/// <param name="testIssueCodeses">The test issue codeses.</param>
-		public AggregatedTestIssueCodes(params TestIssueCodes[] testIssueCodeses)
+		/// <param name="testIssueCodes">The test issue codes.</param>
+		public AggregatedTestIssueCodes(params TestIssueCodes[] testIssueCodes)
 		{
-			_testIssueCodeses = new List<TestIssueCodes>(testIssueCodeses);
+			_testIssueCodeses = new List<TestIssueCodes>(testIssueCodes);
 			_issueCodes = GetAllIssueCodes(_testIssueCodeses);
 		}
 

@@ -80,9 +80,9 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 		{
 			// Approximate a full circle with Bezier curves. (We could use
 			// EllipticArc segments, of course, but in the context of markers,
-			// Béziers are more appropriate.) It is customary to use four cubic
-			// Bézier curves, one for each quadrant. The control points must be
-			// on tangential lines to ensure continuity, their distance from
+			// Bezier curves are more appropriate.) It is customary to use four
+			// cubic Bezier curves, one for each quadrant. The control points must
+			// be on tangential lines to ensure continuity, their distance from
 			// the axes is chosen for minimal deviation from a true circle.
 			// See: https://spencermortensen.com/articles/bezier-circle/
 

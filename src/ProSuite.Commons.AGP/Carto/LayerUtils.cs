@@ -155,7 +155,7 @@ namespace ProSuite.Commons.AGP.Carto
 		/// </summary>
 		/// <param name="layer"></param>
 		/// <remarks>
-		/// Altough a layer data source is broken BasicFeatureLayer.SelectionCount
+		/// Although a layer data source is broken BasicFeatureLayer.SelectionCount
 		/// can return a valid result.
 		/// </remarks>
 		public static IEnumerable<long> GetSelectionOids([NotNull] this BasicFeatureLayer layer)

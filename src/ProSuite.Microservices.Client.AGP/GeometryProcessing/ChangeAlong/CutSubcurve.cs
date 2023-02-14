@@ -100,7 +100,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong
 
 		/// <summary>
 		///     Link to the source feature this subcurve applies to. This can be used in the case where multiple
-		///     sources are treated individually to identify for which feature a specific reshape curve is appliccable.
+		///     sources are treated individually to identify for which feature a specific reshape curve is applicable.
 		/// </summary>
 		[CanBeNull]
 		public GdbObjectReference? Source { get; set; }

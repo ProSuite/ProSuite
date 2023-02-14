@@ -288,7 +288,7 @@ namespace ProSuite.Microservices.Client.AGP
 
 				// NOTE: The following calls are expensive:
 				// - Geometry.GetShape() (internally, the feature's spatial creation seems costly)
-				// - FeatureClassDefintion.GetSpatialReference()
+				// - FeatureClassDefinition.GetSpatialReference()
 				// In case of a large feature count, they should be avoided on a per-feature basis:
 
 				if (! classesByClassId.ContainsKey(uniqueClassId))

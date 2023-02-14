@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
@@ -295,7 +295,7 @@ namespace ProSuite.Commons.Test.Geom
 
 			Assert.True(plane1.IsParallel(plane2));
 
-			// opposite directon normal:
+			// opposite direction normal:
 			Assert.False(plane1.Equals(plane2));
 
 			Assert.True(plane1.IsCoincident(plane2));

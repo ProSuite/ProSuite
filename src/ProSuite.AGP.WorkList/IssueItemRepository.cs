@@ -133,7 +133,7 @@ namespace ProSuite.AGP.WorkList
 		{
 			// todo daro: use AttributeReader?
 			// todo daro: really needed here? Only geometry is updated but
-			//			  the work itmes's state remains the same.
+			//			  the work item's state remains the same.
 			item.Status = ((DatabaseSourceClass) sourceClass).GetStatus(row);
 		}
 

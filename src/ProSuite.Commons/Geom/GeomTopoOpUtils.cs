@@ -1307,7 +1307,7 @@ namespace ProSuite.Commons.Geom
 			Assert.ArgumentCondition(box1.Dimension == box2.Dimension,
 			                         "Box dimensions are not equal");
 
-			// Consider separate and explicit 2D/3D imlementations...
+			// Consider separate and explicit 2D/3D implementations...
 			var min = new Vector(box1.Dimension);
 			var max = new Vector(box1.Dimension);
 			for (var i = 0; i < box1.Dimension; i++)
@@ -1333,7 +1333,7 @@ namespace ProSuite.Commons.Geom
 			Assert.ArgumentCondition(box1.Dimension == box2.Dimension,
 			                         "Box dimensions are not equal");
 
-			// Consider separate and explicit 2D/3D imlementations...
+			// Consider separate and explicit 2D/3D implementations...
 			var min = new Vector(box1.Dimension);
 			var max = new Vector(box1.Dimension);
 			for (var i = 0; i < box1.Dimension; i++)
@@ -1938,8 +1938,8 @@ namespace ProSuite.Commons.Geom
 
 			if (vertexDistances.TrueForAll(d => Math.Abs(d) < tolerance))
 			{
-				// The planes are coincident and hence the intersection that respectes the tolerance is a polygon.
-				// These cases could probabyl be better supported.
+				// The planes are coincident and hence the intersection that respects the tolerance is a polygon.
+				// These cases could probably be better supported.
 				return new List<IntersectionPath3D>
 				       {
 					       new IntersectionPath3D(new Linestring(ringPoints),
@@ -1995,7 +1995,7 @@ namespace ProSuite.Commons.Geom
 				{
 					if (vertexDistances[previousIndex] * vertexDistances[nextIndex] > 0)
 					{
-						// Exclude if the adjacent segements are both on the same side (the ring just visits the intersection plane at 1 vertex)
+						// Exclude if the adjacent segments are both on the same side (the ring just visits the intersection plane at 1 vertex)
 						continue;
 					}
 

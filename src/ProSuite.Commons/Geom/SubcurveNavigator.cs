@@ -1387,7 +1387,7 @@ namespace ProSuite.Commons.Geom
 			{
 				if (currentIntersection.LinearIntersectionInOppositeDirection == false)
 				{
-					// same directon, target forward
+					// same direction, target forward
 					return true;
 				}
 			}

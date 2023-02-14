@@ -431,7 +431,7 @@ public static class MarkerPlacements
 	{
 		// if angleToLine: rotate marker by tangent.Angle (around origin)
 		// move marker to tangent.StartPoint
-		// if perpOfs <> 0: move by tangent rotated 90° scaled perpOfs
+		// if (perpendicular) offset <> 0: move by tangent rotated 90° scaled offset
 
 		if (angleToLine)
 		{

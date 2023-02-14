@@ -2992,7 +2992,7 @@ namespace ProSuite.Commons.Test.Geom
 		[Test]
 		public void CanGetIntersectionPointTouchingVertexExactlyWithinTolerance()
 		{
-			// The distance between the start points is exactly 1cm, but numerically it is slighly higher
+			// The distance between the start points is exactly 1cm, but numerically it is slightly higher
 			// The current idea is that the caller should provide a slightly increased tolerance if the points
 			// exactly within the actual tolerance should yield an intersection
 
@@ -4987,7 +4987,7 @@ namespace ProSuite.Commons.Test.Geom
 				Assert.AreEqual(1, result.PartCount);
 				Assert.AreEqual(60 * 60, result.GetArea2D(), 0.001);
 
-				// Diffeerence, to compare
+				// Difference, to compare
 				result = GeomTopoOpUtils.GetDifferenceAreasXY(poly1, poly2, tolerance);
 				Assert.IsFalse(result.IsEmpty);
 				Assert.AreEqual(1, result.PartCount);
@@ -5012,7 +5012,7 @@ namespace ProSuite.Commons.Test.Geom
 				Assert.AreEqual(1, result.PartCount);
 				Assert.AreEqual(60 * 60, result.GetArea2D(), 0.001);
 
-				// Diffeerence, to compare
+				// Difference, to compare
 				result = GeomTopoOpUtils.GetDifferenceAreasXY(poly1, poly2, tolerance);
 				Assert.IsFalse(result.IsEmpty);
 				Assert.AreEqual(1, result.PartCount);

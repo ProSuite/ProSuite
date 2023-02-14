@@ -88,7 +88,7 @@ namespace ProSuite.Commons.Test.Geom
 
 			double calculated = GeomUtils.GetAngle3DInRad(a, b, a);
 
-			// Problem: How should the client code know the applicable epsilon whithout knowledge of the internal algorithm?
+			// Problem: How should the client code know the applicable epsilon without knowledge of the internal algorithm?
 			double epsilon = MathUtils.GetDoubleSignificanceEpsilon(a.X * b.X, a.Y * b.Y);
 			Assert.AreEqual(0, calculated, epsilon);
 		}
