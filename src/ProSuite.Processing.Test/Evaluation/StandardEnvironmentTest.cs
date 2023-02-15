@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Linq;
 using System.Threading;
 using NUnit.Framework;
+using ProSuite.Commons.Collections;
 using ProSuite.Processing.Evaluation;
 
 namespace ProSuite.Processing.Test.Evaluation

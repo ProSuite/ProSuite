@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using ProSuite.Processing.Evaluation;
+using ProSuite.Commons.Collections;
 
 namespace ProSuite.Processing.Utils
 {

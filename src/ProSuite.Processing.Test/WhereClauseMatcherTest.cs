@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using NUnit.Framework;
-using ProSuite.Processing.Evaluation;
+using ProSuite.Commons.Collections;
 using ProSuite.Processing.Utils;
 
 namespace ProSuite.Processing.Test
