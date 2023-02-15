@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons.AGP.Core.Carto;
+using ProSuite.Commons.AGP.Core.Spatial;
 
 namespace ProSuite.Commons.AGP.Core.Test;
 
@@ -47,8 +48,106 @@ public class MarkerPlacementsTest
 	[Test]
 	public void CanPolygonCenter()
 	{
-		// PlacePerPart
-		throw new NotImplementedException();
+		const double delta = 0.000001;
+		var options = new MarkerPlacements.PolygonCenterOptions();
+
+		// ArcGIS setting | ForceInside | UseBoundingBox
+		// ---------------+-------------+---------------
+		// On polygon     | True        | False
+		// Center of mass | False       | False
+		// Bbox center    | (any)       | True
+		//
+		// Test each setting, once per polygon, once per part, on this polygon:
+		//
+		// 30 ############
+		// 25 ####
+		// 30 ####  ######
+		//    ####  ######
+		// 10 ####
+		//  5 ############
+		//  0    10 15   30
+
+		var builder = new PolygonBuilderEx();
+		builder.AddPart(new[]
+		                {
+			                Pt(0, 0), Pt(0, 30), Pt(30, 30), Pt(30, 25), Pt(10, 25),
+			                Pt(10, 5), Pt(30, 5), Pt(30, 0), Pt(0, 0)
+		                });
+		builder.AddPart(new[] { Pt(15, 10), Pt(15, 20), Pt(30, 20), Pt(30, 10) });
+		var polygon = builder.ToGeometry();
+
+		var marker = Pt(0, 0);
+
+		// On polygon:
+
+		options.ForceInsidePolygon = true;
+		options.UseBoundingBox = false;
+		options.PlacePerPart = false;
+		var placed = MarkerPlacements.PolygonCenter(marker, polygon, options).ToArray();
+		Assert.AreEqual(1, placed.Length);
+		// empirical: Pro's "On polygon" placement method uses the LabelPoint operation:
+		var lp = GetLabelPoint(polygon);
+		Assert.AreEqual(lp.X, placed.Single().X, delta);
+		Assert.AreEqual(lp.Y, placed.Single().Y, delta);
+
+		options.ForceInsidePolygon = true;
+		options.UseBoundingBox = false;
+		options.PlacePerPart = true;
+		placed = MarkerPlacements.PolygonCenter(marker, polygon, options)
+		                         .OrderBy(p => p.X).ToArray();
+		Assert.AreEqual(2, placed.Length);
+		var lps = GeometryUtils.ConnectedComponents(polygon)
+		                       .Select(GetLabelPoint)
+		                       .OrderBy(p => p.X).ToArray();
+		Assert.AreEqual(lps[0].X, placed[0].X, delta);
+		Assert.AreEqual(lps[0].Y, placed[0].Y, delta);
+		Assert.AreEqual(lps[1].X, placed[1].X, delta);
+		Assert.AreEqual(lps[1].Y, placed[1].Y, delta);
+
+		// Center of mass:
+
+		options.ForceInsidePolygon = false;
+		options.UseBoundingBox = false;
+		options.PlacePerPart = false;
+		placed = MarkerPlacements.PolygonCenter(marker, polygon, options).ToArray();
+		Assert.AreEqual(1, placed.Length);
+		var ct = GetCentroid(polygon);
+		Assert.AreEqual(ct.X, placed.Single().X, delta);
+		Assert.AreEqual(ct.Y, placed.Single().Y, delta);
+
+		options.ForceInsidePolygon = false;
+		options.UseBoundingBox = false;
+		options.PlacePerPart = true;
+		placed = MarkerPlacements.PolygonCenter(marker, polygon, options).ToArray();
+		Assert.AreEqual(2, placed.Length);
+		var cts = GeometryUtils.ConnectedComponents(polygon)
+		                       .Select(GetCentroid)
+		                       .OrderBy(p => p.X).ToArray();
+		Assert.AreEqual(cts[0].X, placed[0].X, delta);
+		Assert.AreEqual(cts[0].Y, placed[0].Y, delta);
+		Assert.AreEqual(cts[1].X, placed[1].X, delta);
+		Assert.AreEqual(cts[1].Y, placed[1].Y, delta);
+
+		// Bounding box center
+
+		options.ForceInsidePolygon = false;
+		options.UseBoundingBox = true;
+		options.PlacePerPart = false;
+		placed = MarkerPlacements.PolygonCenter(marker, polygon, options).ToArray();
+		Assert.AreEqual(1, placed.Length);
+		Assert.AreEqual(15.0, placed.Single().X, delta);
+		Assert.AreEqual(15.0, placed.Single().Y, delta);
+
+		options.ForceInsidePolygon = false;
+		options.UseBoundingBox = true;
+		options.PlacePerPart = true;
+		placed = MarkerPlacements.PolygonCenter(marker, polygon, options)
+		                         .OrderBy(p => p.X).ToArray();
+		Assert.AreEqual(2, placed.Length);
+		Assert.AreEqual(15.0, placed[0].X, delta);
+		Assert.AreEqual(15.0, placed[0].Y, delta);
+		Assert.AreEqual(22.5, placed[1].X, delta);
+		Assert.AreEqual(15.0, placed[1].Y, delta);
 	}
 
 	[Test]
@@ -80,6 +179,20 @@ public class MarkerPlacementsTest
 	private static MapPoint Pt(double x, double y)
 	{
 		return MapPointBuilderEx.CreateMapPoint(x, y);
+	}
+
+	private static MapPoint GetLabelPoint(Polygon polygon)
+	{
+		if (polygon is null)
+			throw new ArgumentNullException(nameof(polygon));
+		return GeometryEngine.Instance.LabelPoint(polygon);
+	}
+
+	private static MapPoint GetCentroid(Geometry geometry)
+	{
+		if (geometry is null)
+			throw new ArgumentNullException(nameof(geometry));
+		return GeometryEngine.Instance.Centroid(geometry);
 	}
 
 	#endregion
