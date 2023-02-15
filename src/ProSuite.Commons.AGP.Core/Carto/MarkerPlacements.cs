@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Geometry;
+using ProSuite.Commons.Geom;
 
 // ReSharper disable PropertyCanBeMadeInitOnly.Global
 

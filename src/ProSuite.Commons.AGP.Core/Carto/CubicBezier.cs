@@ -1,3 +1,5 @@
+using ProSuite.Commons.Geom;
+
 namespace ProSuite.Commons.AGP.Core.Carto;
 
 public static class CubicBezier

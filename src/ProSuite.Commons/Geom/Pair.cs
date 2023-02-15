@@ -1,14 +1,13 @@
 using System;
-using System.Diagnostics;
 
-namespace ProSuite.Commons.AGP.Core.Carto
+namespace ProSuite.Commons.Geom
 {
 	/// <summary>
-	/// A lightweight X,Y pair that can function as a
-	/// point or vector, with a few common operations.
+	/// A lightweight X,Y pair that can be used as a 2D point
+	/// or vector, with a few common operations and operators.
+	/// Angles in degrees (due to our Carto Processing origin).
 	/// </summary>
-	[DebuggerDisplay("X={X}, Y={Y}")]
-	public readonly struct Pair // TODO move to ProSuite.Commons/Geom
+	public readonly struct Pair
 	{
 		public readonly double X;
 		public readonly double Y;
@@ -19,9 +18,9 @@ namespace ProSuite.Commons.AGP.Core.Carto
 			Y = y;
 		}
 
-		public static Pair Null => new(0, 0);
+		public static Pair Null => new Pair(0, 0);
 
-		public double Length => Math.Sqrt(X * X + Y * Y);
+		public double Length => Math.Sqrt(X * X + Y * Y); // cf https://en.wikipedia.org/wiki/Pythagorean_addition#Implementation
 
 		public double AngleDegrees => Math.Atan2(Y, X) * 180.0 / Math.PI;
 
@@ -31,14 +30,14 @@ namespace ProSuite.Commons.AGP.Core.Carto
 			return new Pair(X * invNorm, Y * invNorm);
 		}
 
-		public Pair Translated(double dx, double dy) // TODO rename Shifted? (shorter, MF/MP)
+		public Pair Shifted(double dx, double dy)
 		{
 			return new Pair(X + dx, Y + dy);
 		}
 
 		public Pair Rotated(double angleDegrees)
 		{
-			// (optimise 90/180/270/360 rotations? caller's duty?)
+			// optimise 90/180/270/360 rotations? caller's duty?
 			double rad = angleDegrees * Math.PI / 180.0;
 			double cos = Math.Cos(rad);
 			double sin = Math.Sin(rad);
@@ -49,9 +48,9 @@ namespace ProSuite.Commons.AGP.Core.Carto
 
 		public Pair Rotated(double angleDegrees, Pair pivot)
 		{
-			return Translated(-pivot.X, -pivot.Y)
+			return Shifted(-pivot.X, -pivot.Y)
 				.Rotated(angleDegrees)
-				.Translated(pivot.X, pivot.Y);
+				.Shifted(pivot.X, pivot.Y);
 		}
 
 		public static double Dot(Pair a, Pair b)

@@ -5,10 +5,7 @@ using ArcGIS.Core.CIM;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.Assertions;
-using Geometry = ArcGIS.Core.Geometry.Geometry;
-using Polygon = ArcGIS.Core.Geometry.Polygon;
-using Polyline = ArcGIS.Core.Geometry.Polyline;
-using Segment = ArcGIS.Core.Geometry.Segment;
+using ProSuite.Commons.Geom;
 
 namespace ProSuite.Commons.AGP.Core.Carto;
 
@@ -83,7 +80,7 @@ public static class GeometricEffects
 
 		// Do the cut for each part of the (potentially) multipart shape!
 
-		var builder = Configure(new PolylineBuilderEx(), shape);
+		var builder = new PolylineBuilderEx().Configure(shape);
 
 		foreach (var line in GetPartLines(polyline))
 		{
@@ -181,8 +178,8 @@ public static class GeometricEffects
 		// if controlPointEnding <> Unconstrained: treat sections between CPs individually
 		// treat each original part separately!
 
-		var result = Configure(new PolylineBuilderEx(), polycurve);
-		var auxiliary = Configure(new PolylineBuilderEx(), polycurve);
+		var result = new PolylineBuilderEx().Configure(polycurve);
+		var auxiliary = new PolylineBuilderEx().Configure(polycurve);
 
 		if (controlPointEnding == DashEndings.Unconstrained)
 		{
@@ -368,7 +365,7 @@ public static class GeometricEffects
 		// no effect if not Multipart with  control points
 		if (shape is not Multipart { HasID: true } polycurve) return shape;
 
-		var builder = Configure(new PolylineBuilderEx(), shape);
+		var builder = new PolylineBuilderEx().Configure(shape);
 
 		// treat each part separately!
 
@@ -543,20 +540,6 @@ public static class GeometricEffects
 			t, AsRatioOrLength.AsRatio, 1.0);
 		var position = line.StartPoint.ToPair();
 		return line.EndPoint.ToPair() - position;
-	}
-
-	private static T Configure<T>(this T builder, Geometry template)
-		where T : GeometryBuilderEx
-	{
-		if (builder is null) return null;
-		if (template is null) return builder;
-
-		builder.SpatialReference = template.SpatialReference;
-		builder.HasZ = template.HasZ;
-		builder.HasM = template.HasM;
-		builder.HasID = template.HasID;
-
-		return builder;
 	}
 
 	#endregion

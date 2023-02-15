@@ -1,5 +1,6 @@
 using ArcGIS.Core.Geometry;
 using System;
+using ProSuite.Commons.Geom;
 
 namespace ProSuite.Commons.AGP.Core.Carto;
 
