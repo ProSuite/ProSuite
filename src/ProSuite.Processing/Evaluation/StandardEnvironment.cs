@@ -5,7 +5,6 @@ using System.Text.RegularExpressions;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Processing.Utils;
 
 namespace ProSuite.Processing.Evaluation
 {

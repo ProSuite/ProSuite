@@ -5,7 +5,6 @@ using System.Xml;
 using System.Xml.Linq;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Processing.Domain;
 using ProSuite.Processing.Utils;
 
 namespace ProSuite.Processing

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
-using ProSuite.Processing.Utils;
 
 namespace ProSuite.Processing.AGP.Core.Utils
 {
@@ -40,10 +39,10 @@ namespace ProSuite.Processing.AGP.Core.Utils
 
 		public static PseudoFeature FromFeature(Feature feature)
 		{
-			using var fc = feature.GetTable();
-			using var defn = fc.GetDefinition();
-			var pf = FromDefinition(defn);
-			var fields = defn.GetFields();
+			using var featureClass = feature.GetTable();
+			using var definition = featureClass.GetDefinition();
+			var pf = FromDefinition(definition);
+			var fields = definition.GetFields();
 			int count = fields.Count;
 			for (int i = 0; i < count; i++)
 			{

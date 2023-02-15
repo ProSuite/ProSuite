@@ -5,7 +5,6 @@ using ArcGIS.Core.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Processing.AGP.Core.Domain;
-using ProSuite.Processing.Utils;
 
 namespace ProSuite.Processing.AGP.Core.Utils
 {
@@ -19,13 +18,29 @@ namespace ProSuite.Processing.AGP.Core.Utils
 				throw new CartoConfigException($"Type {type?.Name ?? "(null)"} is not a carto process type");
 			}
 
+			object instance;
 			if (repo != null && type.GetConstructor(new[] { typeof(CartoProcessRepo) }) != null)
 			{
-				return (ICartoProcess) Activator.CreateInstance(type, repo);
+				instance = Activator.CreateInstance(type, repo);
+			}
+			else
+			{
+				// by default, use the parameter-less constructor:
+				instance = Activator.CreateInstance(type);
 			}
 
-			// by default, use the parameter-less constructor:
-			return (ICartoProcess) Activator.CreateInstance(type);
+			if (instance is null)
+			{
+				throw new AssertionException($"Activator returned null for type {type.Name}");
+			}
+
+			if (instance is not ICartoProcess process)
+			{
+				throw new AssertionException(
+					$"Activator returned a {instance.GetType().Name} instance for type {type.Name}");
+			}
+
+			return process;
 		}
 
 		/// <summary>

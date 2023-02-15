@@ -21,9 +21,4 @@ public static class Extensions
 	{
 		return new Coordinate2D(pair.X, pair.Y);
 	}
-
-	public static double RoundToSignificantDigits(this double value, int digits)
-	{
-		return MathUtils.RoundToSignificantDigits(value, digits);
-	}
 }
