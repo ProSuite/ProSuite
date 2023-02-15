@@ -2,9 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons.AGP.Core.Spatial;
+using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AGP.Core.Carto
@@ -55,6 +57,8 @@ namespace ProSuite.Commons.AGP.Core.Carto
 		}
 
 		#endregion
+
+		#region Creation
 
 		public static CIMPointSymbol CreatePointSymbol(
 			CIMColor color, double size = -1, MarkerStyle style = MarkerStyle.Circle)
@@ -172,6 +176,8 @@ namespace ProSuite.Commons.AGP.Core.Carto
 
 			return new CIMPolygonSymbol {SymbolLayers = symbolLayers.ToArray()};
 		}
+
+		#endregion
 
 		#region Symbol Layers
 
@@ -730,6 +736,278 @@ namespace ProSuite.Commons.AGP.Core.Carto
 			                 "where N and M are non-negative integers";
 			return new ArgumentException(message);
 		}
+
+		#endregion
+
+		#region Retrieval
+
+		public static CIMSymbol GetSymbol(CIMRenderer renderer, INamedValues feature = null, double scaleDenom = 0)
+		{
+			if (renderer is null)
+				throw new ArgumentNullException(nameof(renderer));
+
+			if (renderer is CIMSimpleRenderer simpleRenderer)
+			{
+				return GetSymbol(simpleRenderer, feature, scaleDenom);
+			}
+
+			if (renderer is CIMUniqueValueRenderer uvRenderer)
+			{
+				return GetSymbol(uvRenderer, feature, scaleDenom);
+			}
+
+			throw new NotSupportedException(
+				$"{renderer.GetType().Name} is not supported, sorry");
+		}
+
+		private static CIMSymbol GetSymbol(CIMSimpleRenderer renderer, INamedValues feature, double scaleDenom)
+		{
+			// CIMSimpleRenderer:
+			// - .Symbol: CIMSymbolReference
+			// - .AlternateSymbols: [CIMSymbolReference]
+			// - .VisualVariables: [] // Color, Rotation, Size, ...
+
+			var symref = GetSymbolReference(renderer.Symbol, renderer.AlternateSymbols, scaleDenom);
+
+			return MaterializeSymbol(symref, feature, scaleDenom, renderer.VisualVariables);
+		}
+
+		private static CIMSymbol GetSymbol(CIMUniqueValueRenderer renderer, INamedValues feature, double scaleDenom)
+		{
+			// CIMUniqueValueRenderer:
+			// - .Fields: string[]
+			// - .ValueExpressionInfo: {Expression,ReturnType,Title,Name}
+			// - .Groups: [{Heading, Classes}]
+			// - .VisualVariables
+			// - .DefaultSymbol: CIMSymbolReference
+			// Either 1..3 fields (.Fields) -or- 1 Arcade expression (.ValueExpressionInfo)
+
+			CIMSymbolReference primary = renderer.DefaultSymbol;
+			CIMSymbolReference[] alternates = null;
+
+			if (feature != null)
+			{
+				var clazz = FindClass(renderer, feature);
+				if (clazz != null)
+				{
+					primary = clazz.Symbol;
+					alternates = clazz.AlternateSymbols;
+				}
+			}
+
+			var symref = GetSymbolReference(primary, alternates, scaleDenom);
+
+			return MaterializeSymbol(symref, feature, scaleDenom, renderer.VisualVariables);
+		}
+
+		private static CIMUniqueValueClass FindClass(CIMUniqueValueRenderer renderer, INamedValues feature)
+		{
+			if (renderer.ValueExpressionInfo?.Expression != null)
+			{
+				throw new NotImplementedException(
+					"Renderer uses ValueExpressionInfo (Arcade), which is not yet implemented");
+			}
+
+			var fields = renderer.Fields;
+			if (fields is { Length: > 0 })
+			{
+				var featureValues = new string[fields.Length];
+				var invariant = CultureInfo.InvariantCulture;
+				for (int i = 0; i < fields.Length; i++)
+				{
+					string fieldName = fields[i];
+					object value = feature.GetValue(fieldName);
+					featureValues[i] = Convert.ToString(value, invariant);
+				}
+
+				foreach (var group in renderer.Groups)
+				{
+					foreach (var clazz in group.Classes)
+					{
+						foreach (var combo in clazz.Values)
+						{
+							var classValues = combo.FieldValues;
+							if (EqualValues(featureValues, classValues))
+							{
+								return clazz;
+							}
+						}
+					}
+				}
+			}
+
+			return null;
+		}
+
+		private static bool EqualValues(string[] givenValues, string[] candidates)
+		{
+			// Both arrays are expected to have the same length,
+			// but here we want no errors, so be defensive:
+			int count = Math.Min(givenValues.Length, candidates.Length);
+			if (count < 1) return false;
+
+			for (int i = 0; i < count; i++)
+			{
+				if (!string.Equals(givenValues[i], candidates[i]))
+				{
+					return false;
+				}
+			}
+
+			return true;
+		}
+
+		private static CIMSymbolReference GetSymbolReference(
+			CIMSymbolReference primary, [CanBeNull] CIMSymbolReference[] alternates, double scaleDenom)
+		{
+			if (!(scaleDenom > 0))
+			{
+				return primary;
+			}
+
+			if (alternates == null || alternates.Length < 1)
+			{
+				return primary;
+			}
+
+			// Scale range representation and inclusion of boundaries:
+			// - only denominator is stored; 0 means undefined
+			// - MaxScale is max scale = least denominator
+			// - MinScale is min scale = greatest denominator
+			// - MaxScale is exclusive, MinScale is inclusive (empirical)
+			// For example, a scale range 1:5000 to 1:10'000 has MinScale=10000 and MaxScale=5000
+			// and the corresponding symbol is used for a map scale denom in (5000,10000]
+
+			double minScale = primary.MinScale > 0 ? primary.MinScale : double.MaxValue;
+			double maxScale = primary.MaxScale > 0 ? primary.MaxScale : 0.0;
+
+			if (maxScale < scaleDenom && scaleDenom <= minScale)
+			{
+				return primary;
+			}
+
+			foreach (var alternate in alternates)
+			{
+				minScale = alternate.MinScale > 0 ? alternate.MinScale : double.MaxValue;
+				maxScale = alternate.MaxScale > 0 ? alternate.MaxScale : 0.0;
+
+				if (maxScale < scaleDenom && scaleDenom <= minScale)
+				{
+					return alternate;
+				}
+			}
+
+			return primary; // default if no alternate symbol matches
+		}
+
+		private static CIMSymbol MaterializeSymbol(
+			CIMSymbolReference symref, INamedValues feature, double scaleDenom,
+			CIMVisualVariable[] visualVariables = null)
+		{
+			// CIMSymbolReference:
+			// - Symbol: CIMSymbol
+			// - MinScale, MaxScale: double
+			// - PrimitiveOverrides: [{PrimitiveName, PropertyName, Expression}]
+			// - ScaleDependentSizeVariation: [{Scale, Size}]
+
+			// Make a clone, because we may modify it!
+			var symbol = (CIMSymbol) CIMObject.Clone(symref.Symbol);
+
+			if (feature != null && symref.PrimitiveOverrides is { Length: > 0 })
+			{
+				foreach (var mapping in symref.PrimitiveOverrides)
+				{
+					// - evaluate mapping.Expression (or Arcade: mapping.ValueExpressionInfo) against given feature
+					// - find primitive by mapping.PrimitiveName (see SymbolUtils on how to traverse a CIMSymbol)
+					// - replace primitive's mapping.PropertyName by expression value
+
+					try
+					{
+						ApplyOverride(symbol, mapping, feature);
+					}
+					catch (Exception ex)
+					{
+						var expr = mapping.ValueExpressionInfo?.Expression ??
+								   mapping.Expression ?? "(n/a)";
+						throw new Exception(
+							$"Cannot apply primitive override (primitive {mapping.PrimitiveName}, " +
+							$"property {mapping.PropertyName}, value {expr}): {ex.Message}");
+					}
+				}
+			}
+
+			if (scaleDenom > 0 && symref.ScaleDependentSizeVariation is { Length: > 0 })
+			{
+				// apply scale dependent size (Size of points, Width of lines, Outline width of polygons)
+				throw new NotImplementedException(
+					"Symbol has ScaleDependentSizeVariation, which is not yet implemented");
+			}
+
+			if (feature != null && visualVariables is { Length: > 0 })
+			{
+				// apply visual variables
+				throw new NotImplementedException(
+					"Renderer has VisualVariables, which are not yet implemented");
+			}
+
+			return symbol;
+		}
+
+		private static void ApplyOverride(CIMSymbol symbol,
+										  CIMPrimitiveOverride mapping, INamedValues feature)
+		{
+			var primitive = FindPrimitiveByName<CIMObject>(symbol, mapping.PrimitiveName);
+			if (primitive is null)
+			{
+				throw new Exception($"Graphic primitive '{mapping.PrimitiveName}' not found in symbol");
+			}
+
+			var property = primitive.GetType().GetProperty(mapping.PropertyName);
+			if (property is null)
+			{
+				throw new Exception(
+					$"Property '{mapping.PropertyName}' not found on {primitive.GetType().Name}");
+			}
+
+			object value = Evaluate(mapping.Expression, mapping.ValueExpressionInfo, feature);
+			if (value != null)
+			{
+				property.SetValue(primitive, value);
+			}
+			// else: use symbol's default value
+		}
+
+		private static object Evaluate(
+			string expression, CIMExpressionInfo arcade, INamedValues feature)
+		{
+			if (feature is null)
+			{
+				return null; // no feature means no override value
+			}
+
+			if (!string.IsNullOrWhiteSpace(expression))
+			{
+				var match = _fieldExpressionRegex.Match(expression);
+				if (match.Success)
+				{
+					string fieldName = match.Result("$1");
+					return feature.GetValue(fieldName);
+				}
+
+				return feature.GetValue(expression);
+			}
+
+			if (arcade is { Expression.Length: > 0 })
+			{
+				// TODO handle the simple case: $feature.FIELDNAME
+
+				throw new NotImplementedException("Arcade expression evaluation is not yet implemented");
+			}
+
+			return null;
+		}
+
+		private static readonly Regex _fieldExpressionRegex = new(@"^\s*\[\s*([ _\w]+)\s*\]\s*$");
 
 		#endregion
 
