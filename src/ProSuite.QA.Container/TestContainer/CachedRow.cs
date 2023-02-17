@@ -5,6 +5,7 @@ using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
@@ -79,7 +80,7 @@ namespace ProSuite.QA.Container.TestContainer
 
 		protected override Box GetExtent()
 		{
-			Box extent = QaGeometryUtils.CreateBox(_feature.Shape);
+			Box extent = Commons.AO.Geometry.Proxy.QaGeometryUtils.CreateBox(_feature.Shape);
 			return extent;
 		}
 
@@ -219,11 +220,11 @@ namespace ProSuite.QA.Container.TestContainer
 
 		private class MultiPatchFeatureProxy : FeatureProxy, IIndexedMultiPatchFeature
 		{
-			private IndexedMultiPatch _indexedMultiPatch;
+			private IIndexedMultiPatch _indexedMultiPatch;
 
 			public MultiPatchFeatureProxy([NotNull] IReadOnlyFeature feature,
-			                              [NotNull] IMultiPatch shape,
-			                              [CanBeNull] UniqueId uniqueIdProvider)
+										  [NotNull] IMultiPatch shape,
+										  [CanBeNull] UniqueId uniqueIdProvider)
 				: base(feature, shape, uniqueIdProvider) { }
 
 			bool IIndexedSegmentsFeature.AreIndexedSegmentsLoaded => true;
@@ -232,13 +233,13 @@ namespace ProSuite.QA.Container.TestContainer
 
 			public IIndexedMultiPatch IndexedMultiPatch
 				=> _indexedMultiPatch ??
-				   (_indexedMultiPatch = new IndexedMultiPatch((IMultiPatch) Shape));
+				   (_indexedMultiPatch = new IndexedMultiPatch((IMultiPatch)Shape));
 		}
 
 		private class AnyFeatureProxy : FeatureProxy
 		{
 			public AnyFeatureProxy([NotNull] IReadOnlyFeature feature, IGeometry shape,
-			                       [CanBeNull] UniqueId uniqueId)
+								   [CanBeNull] UniqueId uniqueId)
 				: base(feature, shape, uniqueId) { }
 		}
 
@@ -247,14 +248,14 @@ namespace ProSuite.QA.Container.TestContainer
 			private IndexedPolycurve _indexedPolycurve;
 
 			public PolycurveFeatureProxy(IReadOnlyFeature feature, IPolycurve shape,
-			                             [CanBeNull] UniqueId uniqueId)
+										 [CanBeNull] UniqueId uniqueId)
 				: base(feature, shape, uniqueId) { }
 
 			bool IIndexedSegmentsFeature.AreIndexedSegmentsLoaded => _indexedPolycurve == null;
 
 			IIndexedSegments IIndexedSegmentsFeature.IndexedSegments
 				=> _indexedPolycurve ??
-				   (_indexedPolycurve = new IndexedPolycurve((IPointCollection4) Shape));
+				   (_indexedPolycurve = new IndexedPolycurve((IPointCollection4)Shape));
 		}
 
 		private static class FeatureProxyFactory
@@ -265,8 +266,8 @@ namespace ProSuite.QA.Container.TestContainer
 				[CanBeNull] IUniqueIdProvider<IReadOnlyFeature> uniqueIdProvider)
 			{
 				UniqueId uniqueId = uniqueIdProvider != null
-					                    ? new UniqueId(feature, uniqueIdProvider)
-					                    : null;
+										? new UniqueId(feature, uniqueIdProvider)
+										: null;
 
 				esriGeometryType geometryType = feature.Shape.GeometryType;
 
@@ -275,14 +276,14 @@ namespace ProSuite.QA.Container.TestContainer
 				switch (geometryType)
 				{
 					case esriGeometryType.esriGeometryMultiPatch:
-						result = new MultiPatchFeatureProxy(feature, (IMultiPatch) feature.Shape,
-						                                    uniqueId);
+						result = new MultiPatchFeatureProxy(feature, (IMultiPatch)feature.Shape,
+															uniqueId);
 						break;
 
 					case esriGeometryType.esriGeometryPolygon:
 					case esriGeometryType.esriGeometryPolyline:
-						result = new PolycurveFeatureProxy(feature, (IPolycurve) feature.Shape,
-						                                   uniqueId);
+						result = new PolycurveFeatureProxy(feature, (IPolycurve)feature.Shape,
+														   uniqueId);
 						break;
 
 					default:

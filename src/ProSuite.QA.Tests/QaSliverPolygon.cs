@@ -4,12 +4,13 @@ using System.Runtime.InteropServices;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.Geometry;
-using ProSuite.QA.Container.TestContainer;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
@@ -399,7 +400,7 @@ namespace ProSuite.QA.Tests
 
 			public override IGeometry GetErrorGeometry()
 			{
-				return SegmentUtils.CreateMultiPatch(Assert.NotNull(_latestPartSegments));
+				return SegmentUtils_.CreateMultiPatch(Assert.NotNull(_latestPartSegments));
 			}
 		}
 

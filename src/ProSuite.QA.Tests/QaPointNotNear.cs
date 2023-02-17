@@ -5,6 +5,7 @@ using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -1034,7 +1035,7 @@ namespace ProSuite.QA.Tests
 		                                out bool? onRightSide)
 		{
 			double? offset;
-			fraction = SegmentUtils.GetClosestPointFraction(
+			fraction = SegmentUtils_.GetClosestPointFraction(
 				segmentProxy, pnt, out offset, out onRightSide, as3D: false);
 
 			double distance2;

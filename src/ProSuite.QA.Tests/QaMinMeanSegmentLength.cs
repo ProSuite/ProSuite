@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.Geometry;
-using ProSuite.QA.Container.TestContainer;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
@@ -405,7 +406,7 @@ namespace ProSuite.QA.Tests
 						partSegments.Add(_indexedSegments.GetSegment(partIndex, iSegment));
 					}
 
-					SegmentUtils.CreateGeometry(geometryCollection, partSegments);
+					SegmentUtils_.CreateGeometry(geometryCollection, partSegments);
 					geometry = (IGeometry) geometryCollection;
 				}
 

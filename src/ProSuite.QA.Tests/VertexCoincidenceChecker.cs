@@ -4,13 +4,14 @@ using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.Geometry;
-using ProSuite.QA.Container.TestContainer;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.QA.Tests.PointEnumerators;
@@ -944,7 +945,7 @@ namespace ProSuite.QA.Tests
 					if (! _fraction.HasValue)
 					{
 						_fraction =
-							SegmentUtils.GetClosestPointFraction(_segmentProxy, Point, As3D);
+							SegmentUtils_.GetClosestPointFraction(_segmentProxy, Point, As3D);
 					}
 
 					return _fraction.Value;

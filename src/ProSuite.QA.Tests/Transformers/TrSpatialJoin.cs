@@ -344,7 +344,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 				rowValues.AddList(simpleList, extraCopyMatrix);
 
-				return new GdbFeature(toJoin.OID, ResultFeatureClass, rowValues);
+				return GdbFeature.Create(toJoin.OID, ResultFeatureClass, rowValues);
 			}
 
 			private IEnumerable<CalculatedValue> GetCalculatedValues(

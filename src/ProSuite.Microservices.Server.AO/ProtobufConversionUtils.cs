@@ -386,10 +386,8 @@ namespace ProSuite.Microservices.Server.AO
 			IGeometry shape =
 				ProtobufGeometryUtils.FromShapeMsg(gdbObjectMsg.Shape, classSpatialRef);
 
-			var result = new GdbFeature((int) gdbObjectMsg.ObjectId, featureClass)
-			             {
-				             Shape = shape
-			             };
+			var result = GdbFeature.Create((int) gdbObjectMsg.ObjectId, featureClass);
+			result.Shape = shape;
 
 			return result;
 		}

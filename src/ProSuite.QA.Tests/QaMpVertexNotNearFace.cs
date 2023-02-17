@@ -7,6 +7,7 @@ using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
@@ -396,7 +397,7 @@ namespace ProSuite.QA.Tests
 				if (EdgeCoincidence > 0)
 				{
 					double fraction =
-						SegmentUtils.GetClosestPointFraction(segment, point, as3D);
+						SegmentUtils_.GetClosestPointFraction(segment, point, as3D);
 					if (fraction >= 0 && fraction <= 1)
 					{
 						IPnt edgePoint = segment.GetPointAt(fraction, as3D);
@@ -481,7 +482,7 @@ namespace ProSuite.QA.Tests
 
 			private IPolygon Footprint => _footPrint ??
 			                              (_footPrint =
-				                               SegmentUtils.CreatePolygon(
+				                               SegmentUtils_.CreatePolygon(
 					                               SegmentsPlane.Segments));
 
 			private Box FootprintBox
@@ -620,7 +621,7 @@ namespace ProSuite.QA.Tests
 				}
 
 				IMultiPatch errorGeometry =
-					SegmentUtils.CreateMultiPatch(SegmentsPlane.Segments);
+					SegmentUtils_.CreateMultiPatch(SegmentsPlane.Segments);
 				return _parent.ReportNonCoplanarFace(segmentsCount, maxOffset,
 				                                     errorGeometry, involvedFeature);
 			}
@@ -656,7 +657,7 @@ namespace ProSuite.QA.Tests
 				if (! Plane.IsDefined)
 				{
 					IMultiPatch errorGeometry =
-						SegmentUtils.CreateMultiPatch(SegmentsPlane.Segments);
+						SegmentUtils_.CreateMultiPatch(SegmentsPlane.Segments);
 					return _parent.ReportCollinearSegments(errorGeometry, feature);
 				}
 

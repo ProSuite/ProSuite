@@ -5,6 +5,7 @@ using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
 using ProSuite.QA.Container;
@@ -550,11 +551,11 @@ namespace ProSuite.QA.Tests.Coincidence
 			Pnt p = Pnt.Create(near);
 
 			IList<double[]> limits;
-			bool cut = SegmentUtils.CutCurveCircle(neighbor, p, searchDistanceSquared, is3D,
+			bool cut = SegmentUtils_.CutCurveCircle(neighbor, p, searchDistanceSquared, is3D,
 			                                       out limits);
 			if (cut == false || limits.Count == 0)
 			{
-				min = SegmentUtils.GetClosestPointFraction(neighbor, p, is3D);
+				min = SegmentUtils_.GetClosestPointFraction(neighbor, p, is3D);
 				max = min;
 			}
 			else

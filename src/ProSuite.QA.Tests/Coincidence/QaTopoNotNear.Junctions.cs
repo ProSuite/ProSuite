@@ -2,10 +2,10 @@ using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.Geometry;
 using Pnt = ProSuite.Commons.Geom.Pnt;
 
 namespace ProSuite.QA.Tests.Coincidence

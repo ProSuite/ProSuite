@@ -3,12 +3,14 @@ using System.Collections.Generic;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
 
 namespace ProSuite.QA.Container.Geometry
 {
-	public static class SegmentUtils
+	[Obsolete("move to ProSuite.Commons.Ao rename")]
+	public static class SegmentUtils_
 	{
 		[ThreadStatic] private static IPoint _helpPoint;
 
@@ -64,7 +66,7 @@ namespace ProSuite.QA.Container.Geometry
 				Pnt l0 = p0e - p0s;
 				offset = null;
 				onRightSide = null;
-				return GetAlongFraction(nearPoint - p0s, l0);
+				return SegmentUtils.GetAlongFraction(nearPoint - p0s, l0);
 			}
 
 			const bool forceCreation = true;
@@ -88,17 +90,6 @@ namespace ProSuite.QA.Container.Geometry
 			return fraction;
 		}
 
-		internal static double GetAlongFraction([NotNull] Pnt nearPoint,
-		                                        [NotNull] Pnt segmentLine)
-		{
-			return nearPoint * segmentLine / segmentLine.OrigDist2();
-		}
-
-		internal static double GetOffset([NotNull] Pnt nearPoint, [NotNull] Pnt segmentLine)
-		{
-			double segmentLength = Math.Sqrt(segmentLine.OrigDist2());
-			return nearPoint.VectorProduct(segmentLine) / segmentLength;
-		}
 
 		private static bool CutCurveCircle([NotNull] SegmentProxy segmentProxy,
 		                                   [NotNull] IPnt circleCenter,
@@ -181,32 +172,6 @@ namespace ProSuite.QA.Container.Geometry
 			return result;
 		}
 
-		/// <summary>
-		/// Lösung der Quadratischen Gleichung: a * x^2 + b * x + c = 0
-		/// r1, r2 = (-b -+ ((b^2 - 4ac)^0.5))/2a<br/>
-		/// </summary>
-		public static bool SolveSqr(double a, double b, double c,
-		                            out double x0, out double x1)
-		{
-			// Lösung der quadratischen Gleichung:
-			//r1, r2 = (-b -+ ((b^2 - 4ac)^0.5))/2a
-
-			double dDet = b * b - 4.0 * a * c;
-
-			if (dDet >= 0)
-			{
-				dDet = Math.Sqrt(dDet);
-				x0 = (-b - dDet) / (2.0 * a);
-				x1 = (-b + dDet) / (2.0 * a);
-
-				return true;
-			}
-
-			x0 = dDet;
-			x1 = 0;
-			return false;
-		}
-
 		internal static bool CutLineCircle([NotNull] Pnt p0,
 		                                   [NotNull] Pnt l0,
 		                                   [NotNull] Pnt center,
@@ -222,7 +187,7 @@ namespace ProSuite.QA.Container.Geometry
 
 			if (a > 0)
 			{
-				if (SolveSqr(a, b, c, out tMin, out tMax))
+				if (SegmentUtils.SolveSqr(a, b, c, out tMin, out tMax))
 				{
 					if (tMin > tMax)
 					{

@@ -8,6 +8,7 @@ using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
@@ -390,7 +391,7 @@ namespace ProSuite.QA.Tests.Coincidence
 				{
 					SegmentProxy neighbor = segments.GetSegment(partIndex, nbIndex0);
 					IList<double[]> limits;
-					SegmentUtils.CutCurveCircle(neighbor, start, searchDistanceSquared, as3D,
+					SegmentUtils_.CutCurveCircle(neighbor, start, searchDistanceSquared, as3D,
 					                            out limits);
 
 					double limit1 = 0;
@@ -435,7 +436,7 @@ namespace ProSuite.QA.Tests.Coincidence
 
 				SegmentProxy neighbor = segments.GetSegment(partIndex, nbIndex0);
 				IList<double[]> limits;
-				SegmentUtils.CutCurveCircle(neighbor, end, searchDistanceSquared, as3D,
+				SegmentUtils_.CutCurveCircle(neighbor, end, searchDistanceSquared, as3D,
 				                            out limits);
 
 				double limit0 = 1;

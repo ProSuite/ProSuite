@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
 using ProSuite.QA.Container;
@@ -191,8 +192,8 @@ namespace ProSuite.QA.Tests
 			[NotNull] IEnumerable<SegmentProxy> segments)
 		{
 			return geometryType == esriGeometryType.esriGeometryMultiPatch
-				       ? (IGeometry) SegmentUtils.CreateMultiPatch(segments)
-				       : SegmentUtils.CreatePolygon(segments);
+				       ? (IGeometry) SegmentUtils_.CreateMultiPatch(segments)
+				       : SegmentUtils_.CreatePolygon(segments);
 		}
 
 		[NotNull]

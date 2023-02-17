@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
@@ -54,8 +55,8 @@ namespace ProSuite.QA.Tests.PointEnumerators
 		                                     esriGeometryType geometryType)
 		{
 			return geometryType == esriGeometryType.esriGeometryMultiPatch
-				       ? (IGeometry) SegmentUtils.CreateMultiPatch(segments)
-				       : SegmentUtils.CreatePolygon(segments);
+				       ? (IGeometry) SegmentUtils_.CreateMultiPatch(segments)
+				       : SegmentUtils_.CreatePolygon(segments);
 		}
 	}
 }

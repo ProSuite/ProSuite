@@ -1,8 +1,8 @@
 using System;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.QA.Container.TestContainer;
 
 namespace ProSuite.QA.Tests.PointEnumerators
 {
