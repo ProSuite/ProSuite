@@ -1,6 +1,9 @@
 using System;
+using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
+using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Test;
 using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.Core.DataModel;
@@ -47,6 +50,8 @@ namespace ProSuite.DomainServices.AO.Test.QA.VerifiedDataModel
 			int topologyCount = model.GetDatasets<TopologyDataset>().Count;
 			int simpleRasterMosaicCount = model.GetDatasets<RasterMosaicDataset>().Count;
 
+			var srmDss = model.GetDatasets<RasterMosaicDataset>();
+
 			Assert.Greater(tableCount, 0);
 			Assert.Greater(vectorCount, 0);
 			Assert.Greater(topologyCount, 0);
@@ -62,5 +67,88 @@ namespace ProSuite.DomainServices.AO.Test.QA.VerifiedDataModel
 				Assert.IsTrue(objectDataset.Attributes.Count > 0);
 			}
 		}
+
+		[Test]
+		[Category(TestCategory.Sde)]
+		public void CanHarvestUsedSimpleModel()
+		{
+			IWorkspace userWorkspace = TestUtils.OpenUserWorkspaceOracle();
+			IList<string> qualifiedUsedDatasetNames =
+				new[]
+				{
+					"TOPGIS_TLM.TLM_STRASSE",
+					"TOPGIS_TLM.TLM_STRASSEN_NAME",
+					"TOPGIS_TLM.TLM_STRASSEN_TOPO",
+					"TOPGIS_TLM.TLM_DTM_MOSAIC"
+				};
+			IList<string> unqualifiedUsedDatasetNames =
+				new[]
+				{
+					"TLM_STRASSE",
+					"TLM_STRASSEN_NAME",
+					"TLM_STRASSEN_TOPO",
+					"TLM_DTM_MOSAIC"
+				};
+
+			{
+				Model model = CanHarvestUsedSimpleModel(userWorkspace, qualifiedUsedDatasetNames);
+				Assert.AreEqual(1, model.GetDatasets<TopologyDataset>().Count);
+				Assert.AreEqual(1, model.GetDatasets<RasterMosaicDataset>().Count);
+			}
+
+			{
+				Model model = CanHarvestUsedSimpleModel(userWorkspace, unqualifiedUsedDatasetNames);
+				Assert.AreEqual(1, model.GetDatasets<TopologyDataset>().Count);
+				Assert.AreEqual(1, model.GetDatasets<RasterMosaicDataset>().Count);
+			}
+
+			IFeatureWorkspace fdgbWorkspace =
+				TestWorkspaceUtils.CreateTestFgdbWorkspace("HarvestUsedDatasets");
+
+			TestWorkspaceUtils.CreateSimpleFeatureClass(
+				fdgbWorkspace, "TLM_STRASSE", FieldUtils.CreateFields(FieldUtils.CreateOIDField()),
+				esriGeometryType.esriGeometryLine, esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95);
+			TestWorkspaceUtils.CreateSimpleTable(
+				fdgbWorkspace, "TLM_STRASSEN_NAME",
+				FieldUtils.CreateFields(FieldUtils.CreateOIDField()));
+
+			{
+				var ws = (IWorkspace)fdgbWorkspace;
+				CanHarvestUsedSimpleModel(ws, qualifiedUsedDatasetNames);
+			}
+			{
+				var ws = (IWorkspace)fdgbWorkspace;
+				CanHarvestUsedSimpleModel(ws, unqualifiedUsedDatasetNames);
+			}
+		}
+
+		private Model CanHarvestUsedSimpleModel(IWorkspace workspace, IList<string> usedDatasetNames)
+		{
+			VerifiedModelFactory modelFactory =
+				new VerifiedModelFactory(new MasterDatabaseWorkspaceContextFactory(),
+				                         new SimpleVerifiedDatasetHarvester());
+
+			modelFactory.HarvestAttributes = true;
+			modelFactory.HarvestObjectTypes = true;
+
+
+			Model model = modelFactory.CreateModel(workspace, "TestTLM", null, "TOPGIS_TLM",
+			                                       usedDatasetNames: usedDatasetNames);
+
+			int tableCount = model.GetDatasets<TableDataset>().Count;
+			int vectorCount = model.GetDatasets<VectorDataset>().Count;
+
+			Assert.AreEqual(tableCount, 1);
+			Assert.AreEqual(vectorCount, 1);
+
+			foreach (var objectDataset in model.GetDatasets<ObjectDataset>())
+			{
+				Assert.IsTrue(objectDataset.Attributes.Count > 0);
+			}
+			return model;
+		}
+
+
+
 	}
 }

@@ -48,7 +48,21 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 		public Model CreateModel(IWorkspace workspace,
 		                         string name,
 		                         string databaseName,
-		                         string schemaOwner)
+		                         string schemaOwner,
+		                         IList<string> usedDatasetNames = null)
+		{
+			if (usedDatasetNames != null)
+			{
+				return CreateNeededModel(workspace, name, databaseName, schemaOwner,
+				                         usedDatasetNames);
+			}
+
+			return CreateFullModel(workspace, name, databaseName, schemaOwner);
+		}
+
+		private Model CreateFullModel(
+			IWorkspace workspace, string name, string databaseName, string schemaOwner)
+
 		{
 			Assert.ArgumentNotNull(workspace, nameof(workspace));
 			Assert.ArgumentNotNullOrEmpty(name, nameof(name));
@@ -87,44 +101,54 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 			return model;
 		}
 
-		public Model CreateModel(IWorkspace workspace,
-		                         string name,
-		                         string databaseName,
-		                         string schemaOwner,
-		                         IList<string> usedDatasetNames)
+		private Model CreateNeededModel(IWorkspace workspace,
+		                                string name,
+		                                string databaseName,
+		                                string schemaOwner,
+		                                [NotNull] IList<string> usedDatasetNames)
 		{
 			Assert.ArgumentNotNull(workspace, nameof(workspace));
 			Assert.ArgumentNotNullOrEmpty(name, nameof(name));
+			Assert.ArgumentNotNull(usedDatasetNames, nameof(usedDatasetNames));
 
 			// NOTE: The schema owner is ignored by harvesting (it's probably intentional).
-			VerifiedModel model =
-				WorkspaceUtils.UsesQualifiedDatasetNames(workspace)
-					? new VerifiedModel(name, workspace, _workspaceContextFactory, databaseName,
-					                    schemaOwner)
-					: new VerifiedModel(name, workspace, _workspaceContextFactory);
-
-			var featureWorkspace = (IFeatureWorkspace)workspace;
+			bool useQualitfiedDatasetNames = WorkspaceUtils.UsesQualifiedDatasetNames(workspace);
+			VerifiedModel model = useQualitfiedDatasetNames
+				                      ? new VerifiedModel(name, workspace, _workspaceContextFactory,
+				                                          databaseName,
+				                                          schemaOwner)
+				                      : new VerifiedModel(name, workspace,
+				                                          _workspaceContextFactory);
 
 			_datasetHarvester.ResetDatasets();
 
 			using (_msg.IncrementIndentation("Reading datasets for '{0}'", name))
 			{
+				var ws = (IFeatureWorkspace) workspace;
+				IList<string> names = usedDatasetNames;
+				string schema = model.DefaultDatabaseSchemaOwner;
+				bool qn = useQualitfiedDatasetNames;
+
 				var harvestedNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-				Harvest(featureWorkspace, usedDatasetNames, esriDatasetType.esriDTFeatureClass,
-				        () => new FeatureClassNameClass(), harvestedNames);
-				Harvest(featureWorkspace, usedDatasetNames, esriDatasetType.esriDTTable,
-				        () => new TableNameClass(), harvestedNames);
-				Harvest(featureWorkspace, usedDatasetNames, esriDatasetType.esriDTTopology,
-				        () => new TopologyNameClass(), harvestedNames);
-				Harvest(featureWorkspace, usedDatasetNames, esriDatasetType.esriDTTerrain,
-				        () => new TinNameClass(), harvestedNames); // TODO: verify
-				Harvest(featureWorkspace, usedDatasetNames, esriDatasetType.esriDTGeometricNetwork,
-				        () => new GeometricNetworkNameClass(), harvestedNames);
-				Harvest(featureWorkspace, usedDatasetNames, esriDatasetType.esriDTRasterDataset,
-				        () => new RasterDatasetNameClass(), harvestedNames);
-				Harvest(featureWorkspace, usedDatasetNames, esriDatasetType.esriDTMosaicDataset,
-				        () => new MosaicDatasetNameClass(), harvestedNames);
+				Harvest(ws, names, esriDatasetType.esriDTFeatureClass,
+				        () => new FeatureClassNameClass(),
+				        qn, schema, harvestedNames);
+				Harvest(ws, names, esriDatasetType.esriDTTable, () => new TableNameClass(),
+				        qn, schema, harvestedNames);
+				Harvest(ws, names, esriDatasetType.esriDTTopology, () => new TopologyNameClass(),
+				        qn, schema, harvestedNames);
+				Harvest(ws, names, esriDatasetType.esriDTTerrain, () => new TinNameClass(),
+				        qn, schema, harvestedNames); // TODO: verify
+				Harvest(ws, names, esriDatasetType.esriDTGeometricNetwork,
+				        () => new GeometricNetworkNameClass(),
+				        qn, schema, harvestedNames);
+				Harvest(ws, names, esriDatasetType.esriDTRasterDataset,
+				        () => new RasterDatasetNameClass(),
+				        qn, schema, harvestedNames);
+				Harvest(ws, names, esriDatasetType.esriDTMosaicDataset,
+				        () => new MosaicDatasetNameClass(),
+				        qn, schema, harvestedNames);
 
 				_datasetHarvester.AddDatasets(model);
 
@@ -136,8 +160,6 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 
 			return model;
 		}
-
-
 
 		public void AssignMostFrequentlyUsedSpatialReference(
 			Model model,
@@ -237,11 +259,31 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 			[NotNull] IList<string> usedDatasetNames,
 			esriDatasetType dtType,
 			[NotNull] Func<IDatasetName> createName,
+			bool useQualifiedNames,
+			[CanBeNull] string defaultSchema, 
 			[NotNull] ICollection<string> harvestedNames)
 		{
 			IWorkspace2 ws = (IWorkspace2) workspace;
-			foreach (string name in usedDatasetNames)
+			foreach (string usedName in usedDatasetNames)
 			{
+				string name;
+				if (useQualifiedNames)
+				{
+					if (usedName.IndexOf('.') < 0)
+					{
+						name = $"{defaultSchema}.{usedName}";
+					}
+					else
+					{
+						name = usedName;
+					}
+				}
+				else
+				{
+					int idx = usedName.LastIndexOf('.');
+					name = usedName.Substring(idx + 1);
+				}
+
 				if (ws.NameExists[dtType, name])
 				{
 					IWorkspaceName wsName = (IWorkspaceName) ((IDataset) ws).FullName;
@@ -253,7 +295,6 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 				}
 			}
 		}
-
 
 		private void HarvestFeatureClasses([NotNull] Model model,
 		                                   [NotNull] IFeatureWorkspace workspace,

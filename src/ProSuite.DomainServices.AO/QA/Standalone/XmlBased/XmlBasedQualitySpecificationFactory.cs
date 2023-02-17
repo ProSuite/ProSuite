@@ -277,19 +277,8 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 				new List<string>(XmlDataQualityUtils.GetReferencedDatasetNames(
 					                 workspaceId, referencedConditions));
 
-			Model result;
-
-			if (ModelFactory is VerifiedModelFactory factory)
-			{
-				result = factory.CreateModel(
-					workspace, modelName, databaseName, schemaOwner, datasetNames);
-			}
-			else
-			{
-				result = ModelFactory.CreateModel(workspace, modelName,
-				                                  databaseName, schemaOwner);
-			}
-
+			Model result = ModelFactory.CreateModel(
+				workspace, modelName, databaseName, schemaOwner, datasetNames);
 
 
 			IEnumerable<Dataset> referencedDatasets = datasetNames.Select(datasetName =>
