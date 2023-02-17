@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
@@ -49,8 +51,6 @@ namespace ProSuite.DomainServices.AO.Test.QA.VerifiedDataModel
 			int vectorCount = model.GetDatasets<VectorDataset>().Count;
 			int topologyCount = model.GetDatasets<TopologyDataset>().Count;
 			int simpleRasterMosaicCount = model.GetDatasets<RasterMosaicDataset>().Count;
-
-			var srmDss = model.GetDatasets<RasterMosaicDataset>();
 
 			Assert.Greater(tableCount, 0);
 			Assert.Greater(vectorCount, 0);
@@ -120,6 +120,43 @@ namespace ProSuite.DomainServices.AO.Test.QA.VerifiedDataModel
 				var ws = (IWorkspace)fdgbWorkspace;
 				CanHarvestUsedSimpleModel(ws, unqualifiedUsedDatasetNames);
 			}
+		}
+
+		[Test]
+		[Category(TestCategory.Sde)]
+		public void ComparePerformance()
+		{
+			IWorkspace workspace = TestUtils.OpenUserWorkspaceOracle();
+
+			VerifiedModelFactory modelFactory =
+				new VerifiedModelFactory(new MasterDatabaseWorkspaceContextFactory(),
+				                         new SimpleVerifiedDatasetHarvester());
+
+			// NOTE: Harvesting the attributes is sometimes just as fast as with the (cached)
+			modelFactory.HarvestAttributes = false;
+			modelFactory.HarvestObjectTypes = false;
+
+			var w = Stopwatch.StartNew();
+			Model model = modelFactory.CreateModel(workspace, "TestTLM", null, "TOPGIS_TLM");
+			w.Stop();
+
+			List<string> datasetNames = new List<string>();
+
+			datasetNames.AddRange(model.GetDatasets<TableDataset>().Select(x => x.Name));
+			datasetNames.AddRange(model.GetDatasets<VectorDataset>().Select(x => x.Name));
+			datasetNames.AddRange(model.GetDatasets<TopologyDataset>().Select(x => x.Name));
+			datasetNames.AddRange(model.GetDatasets<RasterMosaicDataset>().Select(x => x.Name));
+
+			Console.WriteLine($"Full Model Creation: {w.ElapsedMilliseconds / 1000.0:N3} ms");
+
+			w.Restart();
+			Model usedModel = modelFactory.CreateModel(
+				workspace, "TestTLM", null, "TOPGIS_TLM",
+				usedDatasetNames: datasetNames);
+			w.Stop();
+			Console.WriteLine($"Used Model Creation: {w.ElapsedMilliseconds / 1000.0:N3} ms");
+			Assert.NotNull(usedModel);
+
 		}
 
 		private Model CanHarvestUsedSimpleModel(IWorkspace workspace, IList<string> usedDatasetNames)
