@@ -8,7 +8,7 @@ using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using Path = System.IO.Path;
 
-namespace ProSuite.QA.Container.Test
+namespace ProSuite.Commons.AO.Test
 {
 	public static class TestWorkspaceUtils
 	{
@@ -25,7 +25,7 @@ namespace ProSuite.QA.Container.Test
 			}
 
 			IWorkspaceName wsName = WorkspaceUtils.CreateFileGdbWorkspace(dir, mdbName);
-			return (IFeatureWorkspace) ((IName) wsName).Open();
+			return (IFeatureWorkspace)((IName)wsName).Open();
 		}
 
 		[NotNull]
@@ -43,7 +43,7 @@ namespace ProSuite.QA.Container.Test
 
 			IWorkspaceName wsName = WorkspaceUtils.CreateFileGdbWorkspace(dir, gdbName);
 
-			return (IFeatureWorkspace) ((IName) wsName).Open();
+			return (IFeatureWorkspace)((IName)wsName).Open();
 		}
 
 		[NotNull]
@@ -68,7 +68,7 @@ namespace ProSuite.QA.Container.Test
 		{
 			IWorkspaceName wsName = WorkspaceUtils.CreateInMemoryWorkspace(name);
 
-			return (IFeatureWorkspace) ((IName) wsName).Open();
+			return (IFeatureWorkspace)((IName)wsName).Open();
 		}
 
 		[NotNull]
@@ -86,7 +86,7 @@ namespace ProSuite.QA.Container.Test
 
 			IWorkspaceName wsName = WorkspaceUtils.CreateShapefileWorkspace(dir, gdbName);
 
-			return (IFeatureWorkspace) ((IName) wsName).Open();
+			return (IFeatureWorkspace)((IName)wsName).Open();
 		}
 
 		[NotNull]
@@ -100,7 +100,7 @@ namespace ProSuite.QA.Container.Test
 			ITable table = workspace.CreateTable(
 				tableName, fields, null, null, configKeyWord);
 
-			var classSchemaEdit = (IClassSchemaEdit) table;
+			var classSchemaEdit = (IClassSchemaEdit)table;
 			try
 			{
 				classSchemaEdit.RegisterAsObjectClass(table.OIDFieldName, configKeyWord);
@@ -111,8 +111,8 @@ namespace ProSuite.QA.Container.Test
 			}
 
 			// make sure the table is known by the workspace
-			((IWorkspaceEdit) workspace).StartEditing(false);
-			((IWorkspaceEdit) workspace).StopEditing(true);
+			((IWorkspaceEdit)workspace).StartEditing(false);
+			((IWorkspaceEdit)workspace).StopEditing(true);
 
 			return table;
 		}
@@ -129,14 +129,14 @@ namespace ProSuite.QA.Container.Test
 			IRelationshipClass rel =
 				workspace.CreateRelationshipClass(
 					name,
-					(IObjectClass) tableOrig, (IObjectClass) tableRel,
+					(IObjectClass)tableOrig, (IObjectClass)tableRel,
 					"forLabel", "backLabel",
 					esriRelCardinality.esriRelCardinalityOneToMany,
 					esriRelNotification.esriRelNotificationNone, false, false, null,
 					orig, dest, dest, orig);
 			// make sure the table is known by the workspace
-			((IWorkspaceEdit) workspace).StartEditing(false);
-			((IWorkspaceEdit) workspace).StopEditing(true);
+			((IWorkspaceEdit)workspace).StartEditing(false);
+			((IWorkspaceEdit)workspace).StopEditing(true);
 			return rel;
 		}
 
@@ -152,14 +152,14 @@ namespace ProSuite.QA.Container.Test
 			IRelationshipClass rel =
 				workspace.CreateRelationshipClass(
 					name,
-					(IObjectClass) tableOrig, (IObjectClass) tableRel,
+					(IObjectClass)tableOrig, (IObjectClass)tableRel,
 					"forLabel", "backLabel",
 					esriRelCardinality.esriRelCardinalityManyToMany,
 					esriRelNotification.esriRelNotificationBoth, false, false, null,
 					"ObjectId", "ObjectID", orig, dest);
 			// make sure the table is known by the workspace
-			((IWorkspaceEdit) workspace).StartEditing(false);
-			((IWorkspaceEdit) workspace).StopEditing(true);
+			((IWorkspaceEdit)workspace).StartEditing(false);
+			((IWorkspaceEdit)workspace).StopEditing(true);
 			return rel;
 		}
 
@@ -181,17 +181,17 @@ namespace ProSuite.QA.Container.Test
 
 			ISpatialReference spatialReference = SpatialReferenceUtils
 				.CreateSpatialReference
-					((int) projType, true);
+					((int)projType, true);
 			if (xyTolerance > 0)
 			{
-				((ISpatialReferenceTolerance) spatialReference).XYTolerance =
+				((ISpatialReferenceTolerance)spatialReference).XYTolerance =
 					xyTolerance;
 			}
 
 			if (hasZ)
 			{
 				SpatialReferenceUtils.SetZDomain(spatialReference, -10000, 10000,
-				                                 0.0001, 0.001);
+												 0.0001, 0.001);
 			}
 
 			fieldsWithoutShapeField.AddField(
@@ -202,8 +202,8 @@ namespace ProSuite.QA.Container.Test
 					workspace, name, fieldsWithoutShapeField);
 
 			// make sure the table is known by the workspace
-			((IWorkspaceEdit) workspace).StartEditing(false);
-			((IWorkspaceEdit) workspace).StopEditing(true);
+			((IWorkspaceEdit)workspace).StartEditing(false);
+			((IWorkspaceEdit)workspace).StopEditing(true);
 
 			return featureClass;
 		}

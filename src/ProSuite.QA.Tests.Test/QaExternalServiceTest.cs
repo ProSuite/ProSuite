@@ -18,7 +18,6 @@ using ProSuite.Microservices.Definitions.Shared;
 using ProSuite.Microservices.Server.AO;
 using ProSuite.Microservices.Server.AO.QualityTestService;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.Test;
 using ProSuite.QA.Tests.External;
 using ProSuite.QA.Tests.Test.Construction;
 using ProSuite.QA.Tests.Test.TestRunners;

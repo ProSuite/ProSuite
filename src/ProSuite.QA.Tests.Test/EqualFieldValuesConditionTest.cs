@@ -10,7 +10,6 @@ using ProSuite.Commons.AO.Test;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Text;
-using ProSuite.QA.Container.Test;
 
 namespace ProSuite.QA.Tests.Test
 {
