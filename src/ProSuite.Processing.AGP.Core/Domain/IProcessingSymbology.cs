@@ -5,24 +5,37 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Processing.AGP.Core.Utils;
 using ProSuite.Processing.Domain;
 
-namespace ProSuite.Processing.AGP.Core.Domain
+namespace ProSuite.Processing.AGP.Core.Domain;
+
+public interface IProcessingSymbology
 {
-	public interface IProcessingSymbology
-	{
-		// Abstraction over ArcObjects and ArcGIS Pro symbology -- if possible...
-		// Can be null if a feature does not draw
-		[CanBeNull]
-		Geometry QueryDrawingOutline(Feature feature, OutlineType outlineType, IMapContext mapContext);
+	/// <summary>
+	/// Get the exact drawing outline of the given real feature.
+	/// The result can be null if drawing is extinguished by
+	/// overrides, effects, and/or placements.
+	/// </summary>
+	[CanBeNull]
+	Geometry GetDrawingOutline(Feature feature);
 
-		// Get outline of a non-real feature, implemented using our own code
-		// Can be null if a feature does not draw
-		[CanBeNull]
-		Geometry QueryDrawingOutline(PseudoFeature feature, OutlineType outlineType, IMapContext mapContext,
-									 IDictionary<string, object> outlineOptions = null);
-	}
+	/// <summary>
+	/// Equivalent to GetDrawingOutline()?.Extent but may be faster.
+	/// </summary>
+	[CanBeNull]
+	Envelope GetDrawingBounds(Feature feature);
 
-	public enum OutlineType
-	{
-		Exact, BoundingBox
-	}
+	/// <summary>
+	/// Get the exact drawing outline of the given pseudo feature
+	/// (geometry and named values for overrides). The result can
+	/// be null if drawing is extinguished by overrides, effects,
+	/// and/or placements.
+	/// </summary>
+	[CanBeNull]
+	Geometry GetDrawingOutline(PseudoFeature feature, IMapContext mapContext,
+	                           IDictionary<string, object> outlineOptions = null);
+
+	/// <summary>
+	/// Equivalent to GetDrawingOutline()?.Extent but may be faster
+	/// </summary>
+	[CanBeNull]
+	Envelope GetDrawingBounds(PseudoFeature feature, IMapContext mapContext);
 }

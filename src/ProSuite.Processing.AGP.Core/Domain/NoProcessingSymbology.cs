@@ -9,13 +9,23 @@ namespace ProSuite.Processing.AGP.Core.Domain
 {
 	public class NoProcessingSymbology : IProcessingSymbology
 	{
-		public Geometry QueryDrawingOutline(Feature feature, OutlineType outlineType, IMapContext mapContext)
+		public Geometry GetDrawingOutline(Feature feature)
 		{
 			throw new NotImplementedException();
 		}
 
-		public Geometry QueryDrawingOutline(PseudoFeature feature, OutlineType outlineType, IMapContext mapContext,
-		                                    IDictionary<string, object> outlineOptions)
+		public Envelope GetDrawingBounds(Feature feature)
+		{
+			throw new NotImplementedException();
+		}
+
+		public Geometry GetDrawingOutline(PseudoFeature feature, IMapContext mapContext,
+		                                  IDictionary<string, object> outlineOptions)
+		{
+			throw new NotImplementedException();
+		}
+
+		public Envelope GetDrawingBounds(PseudoFeature feature, IMapContext mapContext)
 		{
 			throw new NotImplementedException();
 		}
