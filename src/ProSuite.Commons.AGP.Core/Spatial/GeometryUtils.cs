@@ -168,9 +168,22 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 		public static Geometry Buffer(Geometry geometry, double distance)
 		{
 			if (geometry is null) return null;
+			if (geometry is Envelope extent)
+			{
+				// Note: GeometryEngine's Buffer() does not support Envelope
+				return extent.Expand(distance, distance, false);
+			}
 			var buffer = Engine.Buffer(geometry, distance);
 			// Note: buffer may NOT be a Polygon if distance is almost zero!
 			return buffer;
+		}
+
+		public static Geometry ConvexHull(Geometry geometry)
+		{
+			if (geometry is null) return null;
+			if (geometry.IsEmpty) return geometry;
+			if (geometry is Envelope) return geometry;
+			return Engine.ConvexHull(geometry);
 		}
 
 		public static T Generalize<T>(T geometry, double maxDeviation,
@@ -178,6 +191,11 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 		                              bool preserveCurves = false)
 			where T : Geometry
 		{
+			if (geometry is null) return null;
+			if (geometry is MapPoint) return geometry;
+			if (geometry is Multipoint) return geometry;
+			if (geometry is Envelope) return geometry;
+
 			if (maxDeviation < double.Epsilon)
 			{
 				return geometry;
