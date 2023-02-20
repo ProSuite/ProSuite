@@ -146,8 +146,6 @@ namespace ProSuite.QA.TestFactories
 			var test = new QaGroupConnected((IReadOnlyFeatureClass) args[0],
 			                                (IList<string>) args[1],
 			                                (QaGroupConnected.ShapeAllowed) args[2]);
-
-			test.AddRelatedTables((IReadOnlyTable) args[0], (IList<IReadOnlyTable>) args[3]);
 			return test;
 		}
 	}

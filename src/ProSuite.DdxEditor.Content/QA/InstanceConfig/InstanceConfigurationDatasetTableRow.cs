@@ -12,7 +12,7 @@ using ProSuite.DomainModel.Core.QA;
 using ProSuite.UI.DataModel.ResourceLookup;
 using ProSuite.UI.QA.ResourceLookup;
 
-namespace ProSuite.UI.QA.BoundTableRows
+namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 {
 	public class InstanceConfigurationDatasetTableRow : IEntityRow
 	{

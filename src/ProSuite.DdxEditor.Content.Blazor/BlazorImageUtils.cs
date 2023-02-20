@@ -23,7 +23,7 @@ internal static class BlazorImageUtils
 	private const string _keyMosaicDataset = "mosaicdataset";
 	private const string _keyRasterDataset = "rasterdataset";
 	private const string _keyUnknown = "unknown";
-	private const string _keyTransform = "transform";
+	private const string _keyTransformer = "transformer";
 	private const string _keyIssueFilter = "issuefilter";
 
 	private static readonly Dictionary<string, string> _fileNameByKey = new()
@@ -89,7 +89,7 @@ internal static class BlazorImageUtils
 	{
 		return configuration switch
 		{
-			TransformerConfiguration => $"{GetImage(_keyTransform)}.png",
+			TransformerConfiguration => $"{GetImage(_keyTransformer)}.png",
 			IssueFilterConfiguration => $"{GetImage(_keyIssueFilter)}.png",
 			_ => throw new NotImplementedException()
 		};

@@ -192,7 +192,6 @@ namespace ProSuite.QA.TestFactories
 			                                   (IEnumerable<string>) args[2],
 			                                   (bool) args[3],
 			                                   (string) args[4]);
-			test.AddRelatedTables((IReadOnlyTable) args[0], (IList<IReadOnlyTable>) args[5]);
 			return test;
 		}
 	}

@@ -100,12 +100,6 @@ namespace ProSuite.Commons.Geom
 				return MultiPolycurve.CreateEmpty();
 			}
 
-			if (RingGroups.Count == 1)
-			{
-				RingGroup ringGroup = RingGroups[0];
-				return AsProperlyOriented(ringGroup);
-			}
-
 			var ringGroupsToUnionize = new List<RingGroup>();
 
 			foreach (RingGroup ringGroup in RingGroups)
@@ -169,7 +163,8 @@ namespace ProSuite.Commons.Geom
 			{
 				return MultiPolycurve.CreateEmpty();
 			}
-			else
+
+			if (clockwiseOriented == false)
 			{
 				resultRingGroup.ReverseOrientation();
 			}

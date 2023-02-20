@@ -23,7 +23,7 @@ using ProSuite.Commons.AO.Geometry;
 
 namespace ProSuite.UI.DataModel
 {
-	public partial class ErrorDatasetParametersForm : Form
+	public partial class IssueDatasetParametersForm : Form
 	{
 		private readonly IList<string> _configurationKeywords;
 		private readonly Parameters _parameters;
@@ -35,7 +35,7 @@ namespace ProSuite.UI.DataModel
 #if ArcGIS || Server
 
 		// TODO: Consider moving to ProSuite.UI.AO
-		public static ErrorDatasetParametersForm Create(
+		public static IssueDatasetParametersForm Create(
 			IWorkspace workspace,
 			ISpatialReference spatialReference,
 			ICollection<string> missingTableNames,
@@ -67,7 +67,7 @@ namespace ProSuite.UI.DataModel
 				                           DatasetUtils.GetFeatureDatasetName(t)?.Name))
 			                   .ToList();
 
-			var form = new ErrorDatasetParametersForm(
+			var form = new IssueDatasetParametersForm(
 				configKeywords,
 				supportsPrivileges,
 				spatialReferenceInfo,
@@ -82,14 +82,14 @@ namespace ProSuite.UI.DataModel
 		#region Constructors
 
 		/// <summary>
-		/// Initializes a new instance of the <see cref="ErrorDatasetParametersForm"/> class.
+		/// Initializes a new instance of the <see cref="IssueDatasetParametersForm"/> class.
 		/// </summary>
 		/// <param name="supportsPrivileges"></param>
 		/// <param name="spatialReference">The spatial reference.</param>
 		/// <param name="missingTableNames">The missing table names.</param>
 		/// <param name="existingTables">The existing tables.</param>
 		/// <param name="configKeywords"></param>
-		public ErrorDatasetParametersForm([NotNull] IList<string> configKeywords,
+		public IssueDatasetParametersForm([NotNull] IList<string> configKeywords,
 		                                  bool supportsPrivileges,
 		                                  [NotNull] SpatialReferenceInfo spatialReference,
 		                                  // ReSharper disable once ParameterTypeCanBeEnumerable.Local
@@ -289,7 +289,7 @@ namespace ProSuite.UI.DataModel
 
 		#region Event handlers
 
-		private void ErrorDatasetParametersForm_Load(object sender, EventArgs e)
+		private void IssueDatasetParametersForm_Load(object sender, EventArgs e)
 		{
 			_comboBoxConfigurationKeyword.BeginUpdate();
 

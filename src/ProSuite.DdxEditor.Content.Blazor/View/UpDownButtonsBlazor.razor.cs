@@ -109,6 +109,16 @@ public partial class UpDownButtonsBlazor
 			return true;
 		}
 
+		Assert.NotNull(rows);
+
+		// only 2 rows and one is a dummy
+		if (rows.Count == 2 && Selected.Required)
+		{
+			Assert.True(rows.Any(row => row is DummyTestParameterValueViewModel),
+			            "unexpected row type: no dummy in collection");
+			return true;
+		}
+
 		return false;
 	}
 }

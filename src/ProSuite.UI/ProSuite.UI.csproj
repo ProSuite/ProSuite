@@ -89,11 +89,10 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj" />
-    <ProjectReference Include="..\ProSuite.DdxEditor.Framework\ProSuite.DdxEditor.Framework.csproj" />
-    <ProjectReference Include="..\ProSuite.DomainModel.Core\ProSuite.DomainModel.Core.csproj" />
     <ProjectReference Include="..\ProSuite.Commons.Logging\ProSuite.Commons.Logging.csproj" />
     <ProjectReference Include="..\ProSuite.Commons.UI\ProSuite.Commons.UI.csproj" />
     <ProjectReference Include="..\ProSuite.Commons\ProSuite.Commons.csproj" />
+    <ProjectReference Include="..\ProSuite.DomainModel.Core\ProSuite.DomainModel.Core.csproj" />
     <ProjectReference Include="..\ProSuite.Microservices.Client\ProSuite.Microservices.Client.csproj" />
     <ProjectReference Include="..\ProSuite.QA.Core\ProSuite.QA.Core.csproj" />
   </ItemGroup>
@@ -111,7 +110,7 @@
 		<Compile Update="DataModel\DatasetCatalogControl.Designer.cs">
 			<DependentUpon>DatasetCatalogControl.cs</DependentUpon>
 		</Compile>
-    <Compile Update="DataModel\ErrorDatasetParametersForm.cs" />
+    <Compile Update="DataModel\IssueDatasetParametersForm.cs" />
 		<Compile Update="Properties\AssociationEndImages.Designer.cs">
 			<DependentUpon>AssociationEndImages.resx</DependentUpon>
 			<AutoGen>True</AutoGen>
@@ -147,6 +146,11 @@
 			<DesignTime>True</DesignTime>
 			<DependentUpon>QualityVerificationImages.resx</DependentUpon>
 		</Compile>
+		<Compile Update="Properties\VerificationResultImages.Designer.cs">
+		  <DependentUpon>VerificationResultImages.resx</DependentUpon>
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		</Compile>
 		<Compile Update="Properties\Resources.Designer.cs">
 			<AutoGen>True</AutoGen>
 			<DesignTime>True</DesignTime>
@@ -163,6 +167,9 @@
 		<Compile Update="QA\Controls\QualityConditionControl.Designer.cs">
 			<DependentUpon>QualityConditionControl.cs</DependentUpon>
 		</Compile>
+		<Compile Update="QA\Controls\QualityConditionParametersControl.cs">
+		  <SubType>UserControl</SubType>
+		</Compile>
 		<Compile Update="QA\Controls\QualityConditionTableViewControl.cs">
 			<SubType>UserControl</SubType>
 		</Compile>
@@ -174,6 +181,21 @@
 		</Compile>
 		<Compile Update="QA\Controls\TestDescriptorControl.Designer.cs">
 			<DependentUpon>TestDescriptorControl.cs</DependentUpon>
+		</Compile>
+		<Compile Update="QA\Customize\ConditionDatasetsControl.cs">
+		  <SubType>UserControl</SubType>
+		</Compile>
+		<Compile Update="QA\Customize\ConditionListControl.cs">
+		  <SubType>UserControl</SubType>
+		</Compile>
+		<Compile Update="QA\Customize\ConditionsLayerViewControl.cs">
+		  <SubType>UserControl</SubType>
+		</Compile>
+		<Compile Update="QA\Customize\CustomizeQASpecForm.cs">
+		  <SubType>Form</SubType>
+		</Compile>
+		<Compile Update="QA\Customize\TestParameterValuesEditorForm.cs">
+		  <SubType>Form</SubType>
 		</Compile>
 		<Compile Update="QA\VerificationProgress\UpdateIssuesOptionsControl.xaml.cs">
 			<DependentUpon>UpdateIssuesOptionsControl.xaml</DependentUpon>
@@ -244,6 +266,11 @@
       <LastGenOutput>FieldTypeImages.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Update="Properties\VerificationResultImages.resx">
+      <SubType>Designer</SubType>
+      <LastGenOutput>VerificationResultImages.Designer.cs</LastGenOutput>
+      <Generator>ResXFileCodeGenerator</Generator>
+    </EmbeddedResource>
     <EmbeddedResource Update="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
@@ -258,11 +285,17 @@
       <DependentUpon>QualityConditionControl.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Update="QA\Controls\QualityConditionParametersControl.resx">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Update="QA\Controls\QualityConditionTableViewControl.resx">
       <DependentUpon>QualityConditionTableViewControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Update="QA\Controls\TestDescriptorControl.resx">
       <DependentUpon>TestDescriptorControl.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Update="QA\Customize\CustomizeQASpecForm.resx">
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Update="QA\VerificationResult\QAVerificationForm.resx">
@@ -327,27 +360,33 @@
     <Content Include="Properties\FieldTypeImages\FieldTypeUnknown.png" />
     <Content Include="Properties\FieldTypeImages\FieldTypeUUID.png" />
     <Content Include="Properties\FieldTypeImages\FieldTypeXml.png" />
+    <Content Include="Properties\Images\CheckAll.png" />
     <Content Include="Properties\Images\DatasetCategory.png" />
     <Content Include="Properties\Images\DatasetCategorySelected.png" />
+    <Content Include="Properties\Images\Edit.png" />
     <Content Include="Properties\Images\Empty.bmp" />
-    <Content Include="Properties\Images\Error.png" />
     <Content Include="Properties\Images\Exit.png" />
+    <Content Include="Properties\Images\UncheckAll.png" />
+    <Content Include="Properties\Images\Undo_16x.png" />
     <Resource Include="Properties\Images\FlashProgressCmd.png" />
     <Content Include="Properties\Images\Full.bmp" />
     <Content Include="Properties\Images\Half.bmp" />
     <Resource Include="Properties\Images\NavigateErrorsCmd.png" />
-    <Content Include="Properties\Images\OK.png" />
-    <Content Include="Properties\Images\QualitySpecification.png" />
-    <Content Include="Properties\Images\QualitySpecificationHidden.png" />
-    <Content Include="Properties\Images\QualityVerificationFulfilledNoIssues.png" />
-    <Content Include="Properties\Images\QualityVerificationFulfilledWarnings.png" />
-    <Content Include="Properties\Images\QualityVerificationNotFulfilled.png" />
-    <Content Include="Properties\Images\Warning.png" />
     <Resource Include="Properties\Images\ZoomToVerifiedCmd.png" />
-    <Content Include="Properties\TestTypeImages\TestTypeProhibition.png" />
+    <Content Include="Properties\QualitySpecificationImages\QualitySpecification.png" />
+    <Content Include="Properties\QualitySpecificationImages\QualitySpecificationHidden.png" />
+    <Content Include="Properties\QualityVerificationImages\QualityVerificationFulfilledNoIssues.png" />
+    <Content Include="Properties\QualityVerificationImages\QualityVerificationFulfilledWarnings.png" />
+    <Content Include="Properties\QualityVerificationImages\QualityVerificationNotFulfilled.png" />
+    <Content Include="Properties\TestTypeImages\IssueFilter.png" />
+    <Content Include="Properties\TestTypeImages\TestTypeError.png" />
     <Content Include="Properties\TestTypeImages\TestTypeStop.png" />
     <Content Include="Properties\TestTypeImages\TestTypeUnknown.png" />
     <Content Include="Properties\TestTypeImages\TestTypeWarning.png" />
+    <Content Include="Properties\TestTypeImages\Transformer.png" />
+    <Content Include="Properties\VerificationResultImages\Error.png" />
+    <Content Include="Properties\VerificationResultImages\OK.png" />
+    <Content Include="Properties\VerificationResultImages\Warning.png" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.39" />

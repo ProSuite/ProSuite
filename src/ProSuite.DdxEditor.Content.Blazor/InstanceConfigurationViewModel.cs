@@ -1,18 +1,22 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Windows.Forms;
 using ProSuite.Commons;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Misc;
+using ProSuite.Commons.UI.Finder;
 using ProSuite.DdxEditor.Content.Blazor.ViewModel;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Items;
+using ProSuite.DdxEditor.Framework.ItemViews;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Core;
+using ProSuite.UI.QA.BoundTableRows;
 
 namespace ProSuite.DdxEditor.Content.Blazor;
 
@@ -23,7 +27,6 @@ public class InstanceConfigurationViewModel<T> : NotifyPropertyChangedBase,
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 	[NotNull] private readonly EntityItem<T, T> _item;
-	private int _version;
 
 	public InstanceConfigurationViewModel([NotNull] EntityItem<T, T> item,
 	                                      [NotNull] ITestParameterDatasetProvider datasetProvider,
@@ -39,10 +42,16 @@ public class InstanceConfigurationViewModel<T> : NotifyPropertyChangedBase,
 		ItemNavigation = itemNavigation;
 	}
 
+	public void Dispose()
+	{
+		DisposeCore(this);
+	}
+
 	[CanBeNull]
 	public IList<ViewModelBase> Values { get; private set; }
 
-	[NotNull]
+	#region IInstanceConfigurationViewModel
+
 	public InstanceConfiguration GetEntity()
 	{
 		return Assert.NotNull(_item.GetEntity());
@@ -51,43 +60,77 @@ public class InstanceConfigurationViewModel<T> : NotifyPropertyChangedBase,
 	[NotNull]
 	public ITestParameterDatasetProvider DatasetProvider { get; }
 
-	[NotNull]
 	public IItemNavigation ItemNavigation { get; }
 
-	public bool IsPersistent => GetEntity().IsPersistent;
-
-	public bool Discard { get; set; }
-
-	public void NotifyChanged(bool dirty)
+	void IViewObserver.NotifyChanged(bool dirty)
 	{
 		_item.NotifyChanged();
 	}
 
-	public void BindTo([NotNull] InstanceConfiguration qualityCondition)
+	void IInstanceConfigurationViewModel.BindTo(InstanceConfiguration instanceConfiguration)
 	{
-		Assert.ArgumentNotNull(qualityCondition, nameof(qualityCondition));
+		Assert.ArgumentNotNull(instanceConfiguration, nameof(instanceConfiguration));
 
-		try
-		{
-			Values = new List<ViewModelBase>(GetTopLevelRows(CreateRows(qualityCondition)));
+		Values = new List<ViewModelBase>(GetTopLevelRows(CreateRows(instanceConfiguration)));
 
-			Discard = qualityCondition.Version == _version;
+		// Update the entity now, e.g.: a new entity with required collection parameter is added,
+		// the collection is not yet in InstanceConfiguration.ParameterValues. After UpdateEntity
+		// it is, the collection parameter is initialized.
+		UpdateEntity(Assert.NotNull(_item.GetEntity()), Assert.NotNull(Values));
 
-			OnPropertyChanged(nameof(Values));
-		}
-		finally
-		{
-			_version = qualityCondition.Version;
-			Discard = false;
-		}
+		// call stack:
+		// IInstanceConfigurationViewModel.BindTo()
+		// QualityConditionTableViewBlazor.ViewModel.set
+		// QualityConditionTableViewBlazor.OnPropertyChanged(object sender, PropertyChangedEventArgs e)
+		OnPropertyChanged(nameof(Values));
 	}
-
-	public void Dispose() { }
 
 	void IInstanceConfigurationViewModel.OnRowPropertyChanged(
 		object sender, PropertyChangedEventArgs e)
 	{
 		UpdateEntity(Assert.NotNull(_item.GetEntity()), Assert.NotNull(Values));
+	}
+
+	DatasetFinderItem IInstanceConfigurationViewModel.FindDatasetClicked(TestParameter parameter)
+	{
+		Assert.ArgumentNotNull(parameter, nameof(parameter));
+
+		TestParameterType parameterType = TestParameterTypeUtils.GetParameterType(parameter.Type);
+
+		using FinderForm<DatasetFinderItem> form = GetDatasetFinderForm(parameterType);
+
+		DialogResult result = form.ShowDialog();
+
+		if (result != DialogResult.OK)
+		{
+			//return value;
+		}
+
+		IList<DatasetFinderItem> selection = form.Selection;
+
+		if (selection is not { Count: 1 })
+		{
+			return null;
+		}
+
+		return selection[0];
+	}
+
+	#endregion
+
+	private void DisposeCore(
+		[NotNull] IInstanceConfigurationViewModel instanceConfigurationViewModel)
+	{
+		Assert.NotNull(Values);
+
+		foreach (ViewModelBase vm in Values)
+		{
+			_msg.VerboseDebug(() => $"OnRowPropertyChanged unregister: {this}");
+
+			vm.PropertyChanged -= instanceConfigurationViewModel.OnRowPropertyChanged;
+
+			vm.Dispose();
+		}
 	}
 
 	private IEnumerable<ViewModelBase> GetTopLevelRows(
@@ -102,7 +145,7 @@ public class InstanceConfigurationViewModel<T> : NotifyPropertyChangedBase,
 
 			if (parameter.ArrayDimension == 1)
 			{
-				yield return new TestParameterValueCollectionViewModel(parameter, rows, this);
+				yield return ViewModelFactory.CreateCollectionViewModel(parameter, rows, this);
 			}
 			else if (parameter.ArrayDimension == 0)
 			{
@@ -151,6 +194,8 @@ public class InstanceConfigurationViewModel<T> : NotifyPropertyChangedBase,
 			rowsByParameter.Add(param, new List<ViewModelBase>());
 			parametersByName.Add(param.Name, param);
 		}
+		
+		var initializedParameters = new List<TestParameter>();
 
 		foreach (TestParameterValue paramValue in instanceConfiguration.ParameterValues)
 		{
@@ -161,23 +206,23 @@ public class InstanceConfigurationViewModel<T> : NotifyPropertyChangedBase,
 				continue;
 			}
 
-			if (paramValue is DatasetTestParameterValue datasetValue)
+			initializedParameters.Add(param);
+
+			rowsByParameter[param]
+				.Add(ViewModelFactory.CreateTestParameterViewModel(param, paramValue, this));
+		}
+
+		foreach (TestParameter param in factory.Parameters)
+		{
+			if (initializedParameters.Contains(param))
+			{
+				continue;
+			}
+
+			if (param.IsConstructorParameter)
 			{
 				rowsByParameter[param]
-					.Add(DatasetTestParameterValueViewModel.CreateInstance(
-						     param, datasetValue, this));
-			}
-			else if (paramValue is ScalarTestParameterValue scalarValue)
-			{
-				rowsByParameter[param]
-					.Add(new ScalarTestParameterValueViewModel(
-						     param, scalarValue.GetValue(), this,
-						     param.IsConstructorParameter));
-			}
-			else
-			{
-				throw new ArgumentOutOfRangeException(nameof(paramValue),
-				                                      $@"Unkown {nameof(TestParameterValue)} type");
+					.Add(ViewModelFactory.CreateEmptyTestParameterViewModel(param, this));
 			}
 		}
 
@@ -190,11 +235,16 @@ public class InstanceConfigurationViewModel<T> : NotifyPropertyChangedBase,
 		Assert.ArgumentNotNull(instanceConfiguration, nameof(instanceConfiguration));
 		Assert.ArgumentNotNull(values, nameof(values));
 
-		instanceConfiguration.ClearParameterValues();
-
-		foreach (ViewModelBase row in values)
+		using (_msg.IncrementIndentation())
 		{
-			AddTestParameterValue(instanceConfiguration, row);
+			_msg.VerboseDebug(() => $"update entity: {instanceConfiguration}");
+
+			instanceConfiguration.ClearParameterValues();
+
+			foreach (ViewModelBase row in values)
+			{
+				AddTestParameterValue(instanceConfiguration, row);
+			}
 		}
 	}
 
@@ -206,6 +256,8 @@ public class InstanceConfigurationViewModel<T> : NotifyPropertyChangedBase,
 
 		TestParameter testParameter = row.Parameter;
 		object value = row.Value;
+		
+		_msg.VerboseDebug(() => $"add {row}");
 
 		if (row is DatasetTestParameterValueViewModel datasetParamVM)
 		{
@@ -261,5 +313,25 @@ public class InstanceConfigurationViewModel<T> : NotifyPropertyChangedBase,
 		       {
 			       ValueSource = transformerConfiguration
 		       };
+	}
+
+	private FinderForm<DatasetFinderItem> GetDatasetFinderForm(
+		TestParameterType datasetParameterType)
+	{
+		var finder = new Finder<DatasetFinderItem>();
+
+		InstanceConfiguration instanceConfiguration = GetEntity();
+
+		DataQualityCategory category = instanceConfiguration.Category;
+
+		if (instanceConfiguration is TransformerConfiguration transformer)
+		{
+			// Do not allow circular references!
+			DatasetProvider.Exclude(transformer);
+		}
+
+		return FinderUtils.GetDatasetFinder(category, DatasetProvider,
+		                                    datasetParameterType,
+		                                    finder);
 	}
 }

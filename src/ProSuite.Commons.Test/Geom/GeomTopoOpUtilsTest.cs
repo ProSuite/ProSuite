@@ -3561,6 +3561,56 @@ namespace ProSuite.Commons.Test.Geom
 				                l, tolerance, 1, 7, 10000, 1));
 		}
 
+
+		[Test]
+		public void CanDeleteLinearSelfIntersectionVerticalRing()
+		{
+			//   1/5---2---------3---4
+
+			var ring = new List<Pnt3D>
+			           {
+				           new Pnt3D(0, 0, 0),
+				           new Pnt3D(20, 0, 15),
+				           new Pnt3D(60, 0, 15),
+				           new Pnt3D(100, 0, 0),
+				           new Pnt3D(0, 0, 0)
+			           };
+
+			const double tolerance = 2.1;
+
+			WithRotatedRing(ring, l => AssertCanDeleteLinearSelfIntersections(
+				                l, tolerance, 0, 0, 0));
+
+			WithRotatedRing(ring, l => AssertCanDeleteLinearSelfIntersections(
+				                l, tolerance, 0, 0, 0));
+		}
+
+
+		[Test]
+		public void CanDeleteLinearSelfIntersectionVerticalRingWithDuplicateVertex()
+		{
+			//   1/5---2---------3---4
+
+			var ring = new List<Pnt3D>
+			           {
+				           new Pnt3D(0, 0, 0),
+				           new Pnt3D(20, 0, 15),
+				           new Pnt3D(20, 0, 15),
+						   new Pnt3D(60, 0, 15),
+				           new Pnt3D(100, 0, 0),
+				           new Pnt3D(0, 0, 0)
+			           };
+
+			const double tolerance = 2.1;
+
+			WithRotatedRing(ring, l => AssertCanDeleteLinearSelfIntersections(
+				                l, tolerance, 0, 0, 0));
+
+			WithRotatedRing(ring, l => AssertCanDeleteLinearSelfIntersections(
+				                l, tolerance, 0, 0, 0));
+		}
+
+
 		[Test]
 		public void CanPlanarizeLinearSelfIntersections()
 		{

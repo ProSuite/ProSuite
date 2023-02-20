@@ -21,8 +21,7 @@ namespace ProSuite.QA.Tests.Test
 		{
 			TestUtils.InitializeLicense();
 
-			_testWs = TestWorkspaceUtils.CreateInMemoryWorkspace(
-				"QaNodeLineCoincidenceTest");
+			_testWs = TestWorkspaceUtils.CreateInMemoryWorkspace("QaNodeLineCoincidenceTest");
 		}
 
 		[OneTimeTearDown]
@@ -98,7 +97,7 @@ namespace ProSuite.QA.Tests.Test
 			runner.Execute(verificationEnvelope);
 
 			AssertUtils.OneError(runner,
-			                     "NodeLineCoincidence.NodeTooCloseToLine.BetweenFeatures");
+			                     "NodeLineCoincidence.NodeTooCloseToLine.BetweenFeatures", 2);
 		}
 
 		[Test]
@@ -132,7 +131,7 @@ namespace ProSuite.QA.Tests.Test
 			runner.Execute(verificationEnvelope);
 
 			AssertUtils.OneError(runner,
-			                     "NodeLineCoincidence.NodeTooCloseToLine.BetweenFeatures");
+			                     "NodeLineCoincidence.NodeTooCloseToLine.BetweenFeatures", 2);
 		}
 
 		[Test]
@@ -202,7 +201,7 @@ namespace ProSuite.QA.Tests.Test
 			runner.Execute(verificationEnvelope);
 
 			AssertUtils.OneError(runner,
-			                     "NodeLineCoincidence.NodeTooCloseToLine.BetweenFeatures");
+			                     "NodeLineCoincidence.NodeTooCloseToLine.BetweenFeatures", 2);
 		}
 
 		[Test]
@@ -319,7 +318,7 @@ namespace ProSuite.QA.Tests.Test
 			runner.Execute(verificationEnvelope);
 
 			AssertUtils.OneError(runner,
-			                     "NodeLineCoincidence.NodeTooCloseToLine.BetweenFeatures");
+			                     "NodeLineCoincidence.NodeTooCloseToLine.BetweenFeatures", 2);
 		}
 
 		[Test]
@@ -367,7 +366,7 @@ namespace ProSuite.QA.Tests.Test
 			runner.Execute(verificationEnvelope);
 
 			AssertUtils.OneError(runner,
-			                     "NodeLineCoincidence.NodeTooCloseToLine.BetweenFeatures");
+			                     "NodeLineCoincidence.NodeTooCloseToLine.BetweenFeatures", 2);
 		}
 
 		[Test]
@@ -460,7 +459,7 @@ namespace ProSuite.QA.Tests.Test
 			runner.Execute(verificationEnvelope);
 
 			AssertUtils.OneError(runner,
-			                     "NodeLineCoincidence.NodeTooCloseToLine.BetweenFeatures");
+			                     "NodeLineCoincidence.NodeTooCloseToLine.BetweenFeatures", 2);
 		}
 
 		[NotNull]

@@ -1,11 +1,10 @@
-using System;
 using Microsoft.AspNetCore.Components;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DdxEditor.Content.Blazor.ViewModel;
 
 namespace ProSuite.DdxEditor.Content.Blazor.View;
 
-public partial class BooleanValueBlazor : IDisposable
+public partial class BooleanValueBlazor
 {
 	[Parameter]
 	public ScalarTestParameterValueViewModel ViewModel { get; set; }
@@ -21,10 +20,5 @@ public partial class BooleanValueBlazor : IDisposable
 	{
 		get => Value != null && (bool) Value;
 		set => Value = value;
-	}
-
-	public void Dispose()
-	{
-		ViewModel?.Dispose();
 	}
 }

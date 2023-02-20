@@ -28,20 +28,14 @@ public partial class QualityConditionTableViewBlazor : DataGridBlazorBase
 		}
 	}
 
+	protected override void DisposeCore()
+	{
+		_viewModel.PropertyChanged -= OnPropertyChanged;
+	}
+
 	private void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
 	{
-		if (ViewModel.Discard)
-		{
-			DataGrid.Reload();
-		}
-		else if (! ViewModel.IsPersistent)
-		{
-			// When instance descriptor is changed
-			// and
-			// entity is persistent
-			// => refresh the grid
-			DataGrid.Reload();
-		}
+		DataGrid.Reload();
 	}
 	
 	private void OnLoadData(LoadDataArgs args)

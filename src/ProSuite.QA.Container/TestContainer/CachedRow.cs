@@ -136,6 +136,8 @@ namespace ProSuite.QA.Container.TestContainer
 				// TODO cache the extent also? IFeature.Extent always creates copy otherwise
 			}
 
+			public static explicit operator ReadOnlyRow(FeatureProxy featureProxy)
+				=> featureProxy._feature as ReadOnlyRow;
 			public override string ToString()
 			{
 				return $"OID: {_feature.OID}; UniqueID: {_uniqueId}";

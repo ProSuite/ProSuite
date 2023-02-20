@@ -66,7 +66,7 @@ namespace ProSuite.QA.Tests.Test
 
 			runner.Execute(feature);
 
-			Assert.AreEqual(0, runner.Errors.Count);
+			AssertUtils.NoError(runner);
 		}
 
 		[Test]
@@ -95,10 +95,9 @@ namespace ProSuite.QA.Tests.Test
 
 			runner.Execute(feature);
 
-			QaError error;
-			AssertUtils.OneError(runner,
-			                     "ValidCoordinateFields.XYFieldCoordinateValueTooFarFromShape",
-			                     out error);
+			QaError error =
+				AssertUtils.OneError(
+					runner, "ValidCoordinateFields.XYFieldCoordinateValueTooFarFromShape");
 			Assert.AreEqual(_fieldNameX, error.AffectedComponent);
 		}
 
@@ -128,10 +127,9 @@ namespace ProSuite.QA.Tests.Test
 
 			runner.Execute(feature);
 
-			QaError error;
-			AssertUtils.OneError(runner,
-			                     "ValidCoordinateFields.XYFieldCoordinateValueTooFarFromShape",
-			                     out error);
+			QaError error =
+				AssertUtils.OneError(
+					runner, "ValidCoordinateFields.XYFieldCoordinateValueTooFarFromShape");
 			Assert.AreEqual(_fieldNameY, error.AffectedComponent);
 		}
 
@@ -161,10 +159,10 @@ namespace ProSuite.QA.Tests.Test
 
 			runner.Execute(feature);
 
-			QaError error;
-			AssertUtils.OneError(runner,
-			                     "ValidCoordinateFields.ZFieldCoordinateTooFarFromShape",
-			                     out error);
+			QaError error =
+				AssertUtils.OneError(
+					runner, "ValidCoordinateFields.ZFieldCoordinateTooFarFromShape");
+			Assert.AreEqual(_fieldNameZ, error.AffectedComponent);
 		}
 
 		[Test]
@@ -196,7 +194,7 @@ namespace ProSuite.QA.Tests.Test
 
 			runner.Execute(feature);
 
-			Assert.AreEqual(0, runner.Errors.Count);
+			AssertUtils.NoError(runner);
 		}
 
 		[Test]
@@ -521,7 +519,7 @@ namespace ProSuite.QA.Tests.Test
 
 			runner.Execute(feature);
 
-			Assert.AreEqual(0, runner.Errors.Count);
+			AssertUtils.NoError(runner);
 		}
 
 		[NotNull]
@@ -538,17 +536,17 @@ namespace ProSuite.QA.Tests.Test
 
 			if (fieldIndexX >= 0)
 			{
-				feature.set_Value(fieldIndexX, xFieldValue);
+				feature.Value[fieldIndexX] = xFieldValue;
 			}
 
 			if (fieldIndexY >= 0)
 			{
-				feature.set_Value(fieldIndexY, yFieldValue);
+				feature.Value[fieldIndexY] = yFieldValue;
 			}
 
 			if (fieldIndexZ >= 0)
 			{
-				feature.set_Value(fieldIndexZ, zFieldValue);
+				feature.Value[fieldIndexZ] = zFieldValue;
 			}
 
 			feature.Store();

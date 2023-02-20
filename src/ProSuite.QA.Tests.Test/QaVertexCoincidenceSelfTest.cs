@@ -127,7 +127,8 @@ namespace ProSuite.QA.Tests.Test
 			var runner = new QaContainerTestRunner(500, test);
 			runner.Execute(verificationEnvelope);
 
-			Assert.AreEqual(1, runner.Errors.Count);
+			AssertUtils.OneError(runner,
+			                     "VertexCoincidence.ZDifference.CoincidentVertex.DifferentFeature", 2);
 		}
 
 		[Test]
@@ -294,7 +295,7 @@ namespace ProSuite.QA.Tests.Test
 			runner.Execute(verificationEnvelope);
 
 			AssertUtils.OneError(runner,
-			                     "VertexCoincidence.NoVertexOnNearbyEdge.DifferentFeature");
+			                     "VertexCoincidence.NoVertexOnNearbyEdge.DifferentFeature", 2);
 		}
 
 		[Test]
@@ -328,7 +329,7 @@ namespace ProSuite.QA.Tests.Test
 			runner.Execute(verificationEnvelope);
 
 			AssertUtils.OneError(runner,
-			                     "VertexCoincidence.NoVertexOnNearbyEdge.DifferentFeature");
+			                     "VertexCoincidence.NoVertexOnNearbyEdge.DifferentFeature", 2);
 		}
 
 		private IFeatureClass CreateFeatureClass([NotNull] string name,

@@ -2,11 +2,21 @@ using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
+using ProSuite.QA.Core;
+using ProSuite.QA.Tests.Documentation;
 
 namespace ProSuite.QA.Tests.Transformers.Filters
 {
 	public abstract class TrSpatiallyFiltered : TableTransformer<FilteredFeatureClass>
 	{
+		public enum SearchOption
+		{
+			Tile,
+			All
+		}
+
+		private const SearchOption _defaultSearchOption = SearchOption.Tile;
+
 		[NotNull] protected readonly IReadOnlyFeatureClass _featureClassToFilter;
 		[NotNull] protected readonly IReadOnlyFeatureClass _filtering;
 
@@ -19,7 +29,13 @@ namespace ProSuite.QA.Tests.Transformers.Filters
 		{
 			_featureClassToFilter = featureClassToFilter;
 			_filtering = filtering;
+			FilteringSearchOption = _defaultSearchOption;
 		}
+
+		[TestParameter(_defaultSearchOption)]
+		[DocTr(nameof(DocTrStrings.TrSpatiallyFiltered_FilteringSearchOption))]
+		public SearchOption FilteringSearchOption { get; set; }
+
 
 		protected override FilteredFeatureClass GetTransformedCore(string name)
 		{

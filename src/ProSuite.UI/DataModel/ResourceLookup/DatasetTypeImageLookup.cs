@@ -25,7 +25,7 @@ namespace ProSuite.UI.DataModel.ResourceLookup
 		private const string _keyTopology = "topology";
 		private const string _keyMosaicDataset = "mosaicdataset";
 		private const string _keyRasterDataset = "rasterdataset";
-		private const string _keyTransform = "transform";
+		private const string _keyTransformer = "transformer";
 		private const string _keyUnknown = "unknown";
 
 		private static readonly SortedList<string, int> _defaultSort =
@@ -57,7 +57,7 @@ namespace ProSuite.UI.DataModel.ResourceLookup
 			_mapKeyToImage.Add(_keyPolygon, DatasetTypeImages.DatasetTypePolygon);
 			_mapKeyToImage.Add(_keyMosaicDataset, DatasetTypeImages.DatasetTypeMosaicDataset);
 			_mapKeyToImage.Add(_keyRasterDataset, DatasetTypeImages.DatasetTypeRasterDataset);
-			_mapKeyToImage.Add(_keyTransform, TestTypeImages.Transform);
+			_mapKeyToImage.Add(_keyTransformer, TestTypeImages.Transformer);
 
 			foreach (KeyValuePair<string, Image> pair in _mapKeyToImage)
 			{
@@ -77,7 +77,7 @@ namespace ProSuite.UI.DataModel.ResourceLookup
 			_defaultSort.Add(_keyTerrain, ++i);
 			_defaultSort.Add(_keyMosaicDataset, ++i);
 			_defaultSort.Add(_keyRasterDataset, ++i);
-			_defaultSort.Add(_keyTransform, ++i);
+			_defaultSort.Add(_keyTransformer, ++i);
 		}
 
 		#endregion

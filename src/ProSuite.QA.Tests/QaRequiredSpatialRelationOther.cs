@@ -260,7 +260,7 @@ namespace ProSuite.QA.Tests
 			                                         out affectedComponent);
 
 			return ReportError(
-				description, GetInvolvedRows(feature),
+				description, InvolvedRowUtils.GetInvolvedRows(feature),
 				feature.ShapeCopy, issueCode, affectedComponent);
 		}
 
