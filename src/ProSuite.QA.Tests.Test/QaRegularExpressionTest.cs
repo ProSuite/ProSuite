@@ -230,8 +230,9 @@ namespace ProSuite.QA.Tests.Test
 				                errors[0].IssueCode?.ID);
 
 				// TOP-4945: expected involved dataset name: base table name, not joined table name
-				Assert.IsTrue(tableName == involvedRows[0].TableName ||
-				              tableName == involvedRows[1].TableName);
+				StringComparison cmp = StringComparison.InvariantCultureIgnoreCase;
+				Assert.IsTrue(tableName.Equals(involvedRows[0].TableName, cmp) ||
+				              tableName.Equals(involvedRows[1].TableName, cmp));
 			}
 			finally
 			{

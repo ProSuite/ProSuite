@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Xml.Serialization;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geometry;
 using Grpc.Core;
@@ -449,6 +450,24 @@ namespace ProSuite.Microservices.Server.AO.QA
 						{
 							QualitySpecification = specification
 						};
+					// TODO implement differently:
+					string specName = request.Specification.XmlSpecification
+					                         .SelectedSpecificationName;
+					int iSep = specName.IndexOf(';');
+					if (iSep >= 0)
+					{
+						string serviceConfigPath = specName.Substring(iSep + 1);
+						if (System.IO.File.Exists(serviceConfigPath))
+						{
+							XmlSerializer ser =
+								new XmlSerializer(typeof(ParallelConfiguration));
+							using (var r = new System.IO.StreamReader(serviceConfigPath))
+							{
+								var config = (ParallelConfiguration)ser.Deserialize(r);
+								distributedTestRunner.ParallelConfiguration = config;
+							}
+						}
+					}
 				}
 
 				if (useStandaloneService)

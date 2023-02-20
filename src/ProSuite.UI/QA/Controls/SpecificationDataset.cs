@@ -17,16 +17,19 @@ namespace ProSuite.UI.QA.Controls
 			(Bitmap) TestTypeImages.TestTypeWarning.Clone();
 
 		private static readonly Image _continueImage =
-			(Bitmap) TestTypeImages.TestTypeProhibition.Clone();
-
-		private static readonly Image _errorsImage = (Bitmap) Resources.Error.Clone();
-		private static readonly Image _noErrorsImage = (Bitmap) Resources.OK.Clone();
+			(Bitmap) TestTypeImages.TestTypeError.Clone();
 
 		private static readonly Image _stopImage =
 			(Bitmap) TestTypeImages.TestTypeStop.Clone();
 
-		private static readonly Image _warningImage =
-			(Bitmap) TestTypeImages.TestTypeWarning.Clone();
+		private static readonly Image _noIssuesImage =
+			(Bitmap) VerificationResultImages.OK.Clone();
+
+		private static readonly Image _warningsImage =
+			(Bitmap) VerificationResultImages.Warning.Clone();
+
+		private static readonly Image _errorsImage =
+			(Bitmap) VerificationResultImages.Error.Clone();
 
 		private static readonly SortedList<string, Image> _datasetImageList;
 
@@ -49,6 +52,14 @@ namespace ProSuite.UI.QA.Controls
 
 				_datasetImageList.Add(key, clonedImage);
 			}
+
+			_allowImage.Tag = QualityConditionType.Allowed;
+			_continueImage.Tag = QualityConditionType.ContinueOnError;
+			_stopImage.Tag = QualityConditionType.StopOnError;
+
+			_noIssuesImage.Tag = VerificationResultType.NoIssues;
+			_warningsImage.Tag = VerificationResultType.Warnings;
+			_errorsImage.Tag = VerificationResultType.Errors;
 		}
 
 		public SpecificationDataset(
@@ -69,10 +80,6 @@ namespace ProSuite.UI.QA.Controls
 		{
 			QualitySpecificationElement = qualitySpecificationElement;
 			_datasetTestParameterValue = datasetTestParameterValue;
-
-			_allowImage.Tag = QualityConditionType.Allowed;
-			_continueImage.Tag = QualityConditionType.ContinueOnError;
-			_stopImage.Tag = QualityConditionType.StopOnError;
 
 			Dataset dataset = datasetTestParameterValue.DatasetValue;
 
@@ -195,11 +202,11 @@ namespace ProSuite.UI.QA.Controls
 
 				if (QualityConditionVerification.ErrorCount == 0)
 				{
-					return _noErrorsImage;
+					return _noIssuesImage;
 				}
 
 				return QualityConditionVerification.AllowErrors
-					       ? _warningImage
+					       ? _warningsImage
 					       : _errorsImage;
 			}
 		}

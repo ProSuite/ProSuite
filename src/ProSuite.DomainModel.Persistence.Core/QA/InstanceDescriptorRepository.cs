@@ -13,29 +13,12 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 	                                            IInstanceDescriptorRepository
 	{
 		#region Implementation of IInstanceDescriptorRepository
-
-		public IList<TransformerDescriptor> GetTransformerDescriptors()
-		{
-			using (ISession session = OpenSession(true))
-			{
-				return session.CreateCriteria(typeof(TransformerDescriptor))
-				              .List<TransformerDescriptor>();
-			}
-		}
-
-		public IList<IssueFilterDescriptor> GetIssueFilterDescriptors()
-		{
-			using (ISession session = OpenSession(true))
-			{
-				return session.CreateCriteria(typeof(IssueFilterDescriptor))
-				              .List<IssueFilterDescriptor>();
-			}
-		}
-
+		
 		public IList<T> GetInstanceDescriptors<T>() where T : InstanceDescriptor
 		{
 			using (ISession session = OpenSession(true))
 			{
+				//alternatively could use: session.CreateCriteria(typeof(T)).List<T>();
 				return session.QueryOver<T>().List();
 			}
 		}

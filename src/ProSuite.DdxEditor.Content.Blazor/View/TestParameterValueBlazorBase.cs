@@ -38,8 +38,14 @@ public abstract class TestParameterValueBlazorBase<T> : ComponentBase, IDisposab
 
 	public void Dispose()
 	{
+		// Dispose() in any view (blazor) should not dispose its view model.
+		// All view models are centrally stored in InstanceConfigurationViewModel.Values.
+		// Only InstanceConfigurationViewModel.Dispose() should dispose the view models.
+		// InstanceConfigurationViewModel.Dispose() is called when the InstanceConfigurationItem (or QualityConditionItem) changes.
+
+		// TestParameterValueBlazorBase.Dispose() is called whenever a blazor view gets distroyed, e.g. close a nested grid.
+		// Disposing its view model in this situation unregisters the view model from Observer.OnRowPropertyChanged event.
 		EventAggregator.GetEvent<SelectedRowChangedEvent>().Unsubscribe(OnSelectedRowChanged);
-		ViewModel?.Dispose();
 	}
 
 	protected void SetValue([CanBeNull] object value)

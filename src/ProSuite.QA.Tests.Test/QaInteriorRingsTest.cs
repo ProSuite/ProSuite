@@ -32,8 +32,7 @@ namespace ProSuite.QA.Tests.Test
 		{
 			QaTestRunner testRunner = RunTestOnFeature();
 
-			QaError error;
-			AssertUtils.OneError(testRunner, "InteriorRings.UnallowedInteriorRings", out error);
+			QaError error = AssertUtils.OneError(testRunner, "InteriorRings.UnallowedInteriorRings");
 
 			// message from previous releases, must be maintained for these parameters
 			Assert.AreEqual(
@@ -46,8 +45,7 @@ namespace ProSuite.QA.Tests.Test
 		{
 			QaTestRunner testRunner = RunTestOnFeature(maximumInteriorRingCount: 2);
 
-			QaError error;
-			AssertUtils.OneError(testRunner, "InteriorRings.UnallowedInteriorRings", out error);
+			QaError error = AssertUtils.OneError(testRunner, "InteriorRings.UnallowedInteriorRings");
 
 			// message from previous releases, must be maintained for these parameters
 			Assert.AreEqual(
@@ -64,8 +62,7 @@ namespace ProSuite.QA.Tests.Test
 				maximumInteriorRingCount: 2,
 				reportOnlySmallestRingsExceedingMaximumCount: false);
 
-			QaError error;
-			AssertUtils.OneError(testRunner, "InteriorRings.UnallowedInteriorRings", out error);
+			QaError error = AssertUtils.OneError(testRunner, "InteriorRings.UnallowedInteriorRings");
 
 			Assert.AreEqual(
 				"Polygon has 4 interior ring(s), the maximum allowed number of interior rings is 2",
@@ -80,8 +77,7 @@ namespace ProSuite.QA.Tests.Test
 			QaTestRunner testRunner = RunTestOnFeature(maximumInteriorRingCount: 2,
 			                                           ignoreInnerRingsLargerThan: 200);
 
-			QaError error;
-			AssertUtils.OneError(testRunner, "InteriorRings.UnallowedInteriorRings", out error);
+			QaError error = AssertUtils.OneError(testRunner, "InteriorRings.UnallowedInteriorRings");
 
 			Assert.AreEqual(
 				"Polygon has 4 interior ring(s), of which 3 are smaller than the minimum area (200); " +
@@ -99,8 +95,7 @@ namespace ProSuite.QA.Tests.Test
 				ignoreInnerRingsLargerThan: 200,
 				reportOnlySmallestRingsExceedingMaximumCount: false);
 
-			QaError error;
-			AssertUtils.OneError(testRunner, "InteriorRings.UnallowedInteriorRings", out error);
+			QaError error = AssertUtils.OneError(testRunner, "InteriorRings.UnallowedInteriorRings");
 
 			Assert.AreEqual(
 				"Polygon has 4 interior ring(s), of which 3 are smaller than the minimum area (200); " +
@@ -116,8 +111,7 @@ namespace ProSuite.QA.Tests.Test
 			QaTestRunner testRunner = RunTestOnFeature(maximumInteriorRingCount: 0,
 			                                           ignoreInnerRingsLargerThan: 10);
 
-			QaError error;
-			AssertUtils.OneError(testRunner, "InteriorRings.UnallowedInteriorRings", out error);
+			QaError error = AssertUtils.OneError(testRunner, "InteriorRings.UnallowedInteriorRings");
 
 			Assert.AreEqual(
 				"Polygon has 4 interior ring(s), of which 1 is smaller than the minimum area (10)",
@@ -181,13 +175,14 @@ namespace ProSuite.QA.Tests.Test
 			                                           ignoreInnerRingsLargerThan: 200,
 			                                           reportIndividualRings: true);
 
-			Assert.AreEqual(1, testRunner.Errors.Count);
+			QaError error = AssertUtils.OneError(testRunner, "InteriorRings.UnallowedInteriorRings");
+
 			Assert.AreEqual(
 				string.Format(
 					"Polygon has 4 interior ring(s), of which 3 are smaller than the minimum area. " +
 					"Area of this ring is {0:N2} < {1:N2}. The maximum allowed number of smaller interior rings is 2",
 					1, 200),
-				testRunner.Errors[0].Description);
+				error.Description);
 		}
 
 		[Test]
@@ -227,14 +222,14 @@ namespace ProSuite.QA.Tests.Test
 			                                           ignoreInnerRingsLargerThan: 10,
 			                                           reportIndividualRings: true);
 
-			Assert.AreEqual(1, testRunner.Errors.Count);
+			QaError error = AssertUtils.OneError(testRunner, "InteriorRings.UnallowedInteriorRings");
 			Assert.AreEqual(
 				string.Format(
 					"Polygon has 4 interior ring(s), of which 1 is smaller than the minimum area. " +
 					"Area of this ring is {0:N2} < {1:N2}",
 					1, 10),
-				testRunner.Errors[0].Description);
-			AssertErrorPartCount(1, testRunner.Errors[0]);
+				error.Description);
+			AssertErrorPartCount(1, error);
 		}
 
 		private static void AssertErrorPartCount(int errorPartCount, [NotNull] QaError error)

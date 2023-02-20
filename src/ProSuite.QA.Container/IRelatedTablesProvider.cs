@@ -6,7 +6,7 @@ namespace ProSuite.QA.Container
 {
 	public interface IRelatedTablesProvider
 	{
-		[CanBeNull]
-		RelatedTables GetRelatedTables([NotNull] IReadOnlyRow row);
+//		[CanBeNull]
+//		RelatedTables GetRelatedTables([NotNull] IReadOnlyRow row);
 	}
 }

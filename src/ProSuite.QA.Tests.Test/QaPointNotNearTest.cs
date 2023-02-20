@@ -44,8 +44,7 @@ namespace ProSuite.QA.Tests.Test
 				                 true), 1000, true));
 
 			IFeatureClass polyFc = DatasetUtils.CreateSimpleFeatureClass(
-				testWs, "polygonFc",
-				fields);
+				testWs, "polygonFc", fields);
 
 			IFeatureClass pointFc0 = CreatePointClass(testWs, "pointFc0");
 			IFeatureClass pointFc1 = CreatePointClass(testWs, "pointFc1");
@@ -76,42 +75,42 @@ namespace ProSuite.QA.Tests.Test
 				ReadOnlyTableFactory.Create(pointFc0), ReadOnlyTableFactory.Create(polyFc), 1.0);
 			var runner = new QaContainerTestRunner(1000, test1);
 			runner.Execute();
-			Assert.AreEqual(1, runner.Errors.Count);
+			AssertUtils.OneError(runner, "PointNotNear.PointWithin", 2);
 
 			var test2 = new QaPointNotNear(
 				ReadOnlyTableFactory.Create(pointFc0), ReadOnlyTableFactory.Create(polyFc), 1.0);
 			test2.GeometryComponents = new[] { GeometryComponent.Boundary };
 			runner = new QaContainerTestRunner(1000, test2);
 			runner.Execute();
-			Assert.AreEqual(0, runner.Errors.Count);
+			AssertUtils.NoError(runner);
 
 			var test3 = new QaPointNotNear(
 				ReadOnlyTableFactory.Create(pointFc0), ReadOnlyTableFactory.Create(polyFc), 2.0);
 			test3.GeometryComponents = new[] { GeometryComponent.Boundary };
 			runner = new QaContainerTestRunner(1000, test3);
 			runner.Execute();
-			Assert.AreEqual(1, runner.Errors.Count);
+			AssertUtils.OneError(runner, "PointNotNear.PointTooClose", 2);
 
 			var test3_1 = new QaPointNotNear(
 				ReadOnlyTableFactory.Create(pointFc1), ReadOnlyTableFactory.Create(polyFc), 2.0);
 			test3.GeometryComponents = new[] { GeometryComponent.Boundary };
 			runner = new QaContainerTestRunner(1000, test3_1);
 			runner.Execute();
-			Assert.AreEqual(1, runner.Errors.Count);
+			AssertUtils.OneError(runner, "PointNotNear.PointTooClose", 2);
 
 			var test4 = new QaPointNotNear(
 				ReadOnlyTableFactory.Create(pointFc0), ReadOnlyTableFactory.Create(polyFc), 2.0);
 			test4.GeometryComponents = new[] { GeometryComponent.Vertices };
 			runner = new QaContainerTestRunner(1000, test4);
 			runner.Execute();
-			Assert.AreEqual(0, runner.Errors.Count);
+			AssertUtils.NoError(runner);
 
 			var test5 = new QaPointNotNear(
 				ReadOnlyTableFactory.Create(pointFc0), ReadOnlyTableFactory.Create(polyFc), 22.0);
 			test5.GeometryComponents = new[] { GeometryComponent.Vertices };
 			runner = new QaContainerTestRunner(1000, test5);
 			runner.Execute();
-			Assert.AreEqual(1, runner.Errors.Count);
+			AssertUtils.OneError(runner, "PointNotNear.PointTooClose", 2);
 
 			var test6 = new QaPointNotNear(
 				ReadOnlyTableFactory.Create(pointFc0), ReadOnlyTableFactory.Create(polyFc),
@@ -119,14 +118,14 @@ namespace ProSuite.QA.Tests.Test
 			test6.GeometryComponents = new[] { GeometryComponent.Centroid };
 			runner = new QaContainerTestRunner(1000, test6);
 			runner.Execute();
-			Assert.AreEqual(1, runner.Errors.Count);
+			AssertUtils.OneError(runner, "PointNotNear.PointTooClose", 2);
 
 			var test8 = new QaPointNotNear(
 				ReadOnlyTableFactory.Create(pointFc0), ReadOnlyTableFactory.Create(polyFc), 43);
 			test8.GeometryComponents = new[] { GeometryComponent.Centroid };
 			runner = new QaContainerTestRunner(1000, test8);
 			runner.Execute();
-			Assert.AreEqual(0, runner.Errors.Count);
+			AssertUtils.NoError(runner);
 
 			var test7 = new QaPointNotNear(
 				ReadOnlyTableFactory.Create(pointFc0), ReadOnlyTableFactory.Create(polyFc),
@@ -134,14 +133,14 @@ namespace ProSuite.QA.Tests.Test
 			test7.GeometryComponents = new[] { GeometryComponent.LabelPoint };
 			runner = new QaContainerTestRunner(1000, test7);
 			runner.Execute();
-			Assert.AreEqual(1, runner.Errors.Count);
+			AssertUtils.OneError(runner, "PointNotNear.PointTooClose", 2);
 
 			var test9 = new QaPointNotNear(
 				ReadOnlyTableFactory.Create(pointFc0), ReadOnlyTableFactory.Create(polyFc), 43);
 			test9.GeometryComponents = new[] { GeometryComponent.LabelPoint };
 			runner = new QaContainerTestRunner(1000, test9);
 			runner.Execute();
-			Assert.AreEqual(0, runner.Errors.Count);
+			AssertUtils.NoError(runner);
 
 			var test10 = new QaPointNotNear(
 				ReadOnlyTableFactory.Create(pointFc0),
@@ -149,13 +148,13 @@ namespace ProSuite.QA.Tests.Test
 			test10.GeometryComponents = new[] { GeometryComponent.LabelPoint };
 			runner = new QaContainerTestRunner(1000, test10);
 			runner.Execute();
-			Assert.AreEqual(0, runner.Errors.Count);
+			AssertUtils.NoError(runner);
 
 			var test11 = new QaPointNotNear(
 				ReadOnlyTableFactory.Create(pointFc2), ReadOnlyTableFactory.Create(polyFc), 0);
 			runner = new QaContainerTestRunner(1000, test11);
 			runner.Execute();
-			Assert.AreEqual(0, runner.Errors.Count);
+			AssertUtils.NoError(runner);
 		}
 
 		[Test]
@@ -173,8 +172,7 @@ namespace ProSuite.QA.Tests.Test
 				                 true), 1000, true));
 
 			IFeatureClass polyFc = DatasetUtils.CreateSimpleFeatureClass(
-				testWs, "polylineFc",
-				fields);
+				testWs, "polylineFc", fields);
 
 			IFeatureClass pointFc = CreatePointClass(testWs, "pointFc");
 
@@ -194,77 +192,77 @@ namespace ProSuite.QA.Tests.Test
 				ReadOnlyTableFactory.Create(pointFc), ReadOnlyTableFactory.Create(polyFc), 1.0);
 			var runner = new QaContainerTestRunner(1000, test1);
 			runner.Execute();
-			Assert.AreEqual(1, runner.Errors.Count);
+			AssertUtils.OneError(runner, "PointNotNear.PointTooClose", 2);
 
 			var test2 = new QaPointNotNear(
 				ReadOnlyTableFactory.Create(pointFc), ReadOnlyTableFactory.Create(polyFc), 1.0);
 			test2.GeometryComponents = new[] { GeometryComponent.Boundary };
 			runner = new QaContainerTestRunner(1000, test2);
 			runner.Execute();
-			Assert.AreEqual(0, runner.Errors.Count);
+			AssertUtils.NoError(runner);
 
 			var test3 = new QaPointNotNear(
 				ReadOnlyTableFactory.Create(pointFc), ReadOnlyTableFactory.Create(polyFc), 95);
 			test3.GeometryComponents = new[] { GeometryComponent.Boundary };
 			runner = new QaContainerTestRunner(1000, test3);
 			runner.Execute();
-			Assert.AreEqual(1, runner.Errors.Count);
+			AssertUtils.OneError(runner, "PointNotNear.PointTooClose", 2);
 
 			var test4 = new QaPointNotNear(
 				ReadOnlyTableFactory.Create(pointFc), ReadOnlyTableFactory.Create(polyFc), 2.0);
 			test4.GeometryComponents = new[] { GeometryComponent.Vertices };
 			runner = new QaContainerTestRunner(1000, test4);
 			runner.Execute();
-			Assert.AreEqual(0, runner.Errors.Count);
+			AssertUtils.NoError(runner);
 
 			var test5 = new QaPointNotNear(
 				ReadOnlyTableFactory.Create(pointFc), ReadOnlyTableFactory.Create(polyFc), 11.0);
 			test5.GeometryComponents = new[] { GeometryComponent.Vertices };
 			runner = new QaContainerTestRunner(1000, test5);
 			runner.Execute();
-			Assert.AreEqual(1, runner.Errors.Count);
+			AssertUtils.OneError(runner, "PointNotNear.PointTooClose", 2);
 
 			var test6 = new QaPointNotNear(
 				ReadOnlyTableFactory.Create(pointFc), ReadOnlyTableFactory.Create(polyFc), 11.0);
 			test6.GeometryComponents = new[] { GeometryComponent.LineStartPoint };
 			runner = new QaContainerTestRunner(1000, test6);
 			runner.Execute();
-			Assert.AreEqual(0, runner.Errors.Count);
+			AssertUtils.NoError(runner);
 
 			var test7 = new QaPointNotNear(
 				ReadOnlyTableFactory.Create(pointFc), ReadOnlyTableFactory.Create(polyFc), 91.0);
 			test7.GeometryComponents = new[] { GeometryComponent.LineStartPoint };
 			runner = new QaContainerTestRunner(1000, test7);
 			runner.Execute();
-			Assert.AreEqual(1, runner.Errors.Count);
+			AssertUtils.OneError(runner, "PointNotNear.PointTooClose", 2);
 
 			var test8 = new QaPointNotNear(
 				ReadOnlyTableFactory.Create(pointFc), ReadOnlyTableFactory.Create(polyFc), 91.0);
 			test8.GeometryComponents = new[] { GeometryComponent.LineEndPoint };
 			runner = new QaContainerTestRunner(1000, test8);
 			runner.Execute();
-			Assert.AreEqual(0, runner.Errors.Count);
+			AssertUtils.NoError(runner);
 
 			var test9 = new QaPointNotNear(
 				ReadOnlyTableFactory.Create(pointFc), ReadOnlyTableFactory.Create(polyFc), 120.0);
 			test9.GeometryComponents = new[] { GeometryComponent.LineEndPoint };
 			runner = new QaContainerTestRunner(1000, test9);
 			runner.Execute();
-			Assert.AreEqual(1, runner.Errors.Count);
+			AssertUtils.OneError(runner, "PointNotNear.PointTooClose", 2);
 
 			var test10 = new QaPointNotNear(
 				ReadOnlyTableFactory.Create(pointFc), ReadOnlyTableFactory.Create(polyFc), 89.0);
 			test10.GeometryComponents = new[] { GeometryComponent.LineEndPoints };
 			runner = new QaContainerTestRunner(1000, test10);
 			runner.Execute();
-			Assert.AreEqual(0, runner.Errors.Count);
+			AssertUtils.NoError(runner);
 
 			var test11 = new QaPointNotNear(
 				ReadOnlyTableFactory.Create(pointFc), ReadOnlyTableFactory.Create(polyFc), 92.0);
 			test11.GeometryComponents = new[] { GeometryComponent.LineEndPoints };
 			runner = new QaContainerTestRunner(1000, test11);
 			runner.Execute();
-			Assert.AreEqual(1, runner.Errors.Count);
+			AssertUtils.OneError(runner, "PointNotNear.PointTooClose", 2);
 		}
 
 		[Test]
@@ -282,8 +280,7 @@ namespace ProSuite.QA.Tests.Test
 				                 true), 1000, true));
 
 			IFeatureClass polyFc = DatasetUtils.CreateSimpleFeatureClass(
-				testWs, "polygonFc",
-				fields);
+				testWs, "polygonFc", fields);
 
 			IFeatureClass pointFc = CreatePointClass(testWs, "pointFc");
 
@@ -304,35 +301,35 @@ namespace ProSuite.QA.Tests.Test
 				ReadOnlyTableFactory.Create(pointFc), ReadOnlyTableFactory.Create(polyFc), 1.0);
 			var runner = new QaContainerTestRunner(1000, test1);
 			runner.Execute();
-			Assert.AreEqual(1, runner.Errors.Count);
+			AssertUtils.OneError(runner, "PointNotNear.PointWithin", 2);
 
 			var test2 = new QaPointNotNear(
 				ReadOnlyTableFactory.Create(pointFc), ReadOnlyTableFactory.Create(polyFc), 1.0);
 			test2.ValidRelationConstraints = new[] { "G1.ObjectId = 1" };
 			runner = new QaContainerTestRunner(1000, test2);
 			runner.Execute();
-			Assert.AreEqual(0, runner.Errors.Count);
+			AssertUtils.NoError(runner);
 
 			var test3 = new QaPointNotNear(
 				ReadOnlyTableFactory.Create(pointFc), ReadOnlyTableFactory.Create(polyFc), 2.0);
 			test3.ValidRelationConstraints = new[] { "G2.ObjectId = 1" };
 			runner = new QaContainerTestRunner(1000, test3);
 			runner.Execute();
-			Assert.AreEqual(0, runner.Errors.Count);
+			AssertUtils.NoError(runner);
 
 			var test4 = new QaPointNotNear(
 				ReadOnlyTableFactory.Create(pointFc), ReadOnlyTableFactory.Create(polyFc), 2.0);
 			test4.ValidRelationConstraints = new[] { "G1.ObjectId = G2.ObjectId" };
 			runner = new QaContainerTestRunner(1000, test4);
 			runner.Execute();
-			Assert.AreEqual(0, runner.Errors.Count);
+			AssertUtils.NoError(runner);
 
 			var test5 = new QaPointNotNear(
 				ReadOnlyTableFactory.Create(pointFc), ReadOnlyTableFactory.Create(polyFc), 2.0);
 			test5.ValidRelationConstraints = new[] { "G1.ObjectId > G2.ObjectId" };
 			runner = new QaContainerTestRunner(1000, test5);
 			runner.Execute();
-			Assert.AreEqual(1, runner.Errors.Count);
+			AssertUtils.OneError(runner, "PointNotNear.PointWithin.ConstraintNotFulfilled", 2);
 		}
 
 		[Test]
@@ -354,8 +351,7 @@ namespace ProSuite.QA.Tests.Test
 				                 true), 1000, true));
 
 			IFeatureClass polyFc = DatasetUtils.CreateSimpleFeatureClass(
-				testWs, "polylineFc",
-				fields);
+				testWs, "polylineFc", fields);
 
 			IFeatureClass pointFc = CreatePointClass(testWs, "pointFc");
 
@@ -395,7 +391,7 @@ namespace ProSuite.QA.Tests.Test
 				new[] { "minDistance" });
 			runner = new QaContainerTestRunner(1000, test2);
 			runner.Execute();
-			Assert.AreEqual(0, runner.Errors.Count);
+			AssertUtils.NoError(runner);
 
 			var test3 = new QaPointNotNear(
 				ReadOnlyTableFactory.Create(pointFc), new[] { ReadOnlyTableFactory.Create(polyFc) },
@@ -404,7 +400,7 @@ namespace ProSuite.QA.Tests.Test
 				null);
 			runner = new QaContainerTestRunner(1000, test3);
 			runner.Execute();
-			Assert.AreEqual(0, runner.Errors.Count);
+			AssertUtils.NoError(runner);
 
 			var test4 = new QaPointNotNear(
 				ReadOnlyTableFactory.Create(pointFc), new[] { ReadOnlyTableFactory.Create(polyFc) },

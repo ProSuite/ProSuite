@@ -45,30 +45,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Remove="Properties\Images\Add.png" />
-    <None Remove="Properties\Images\CannotRemoveDependency.png" />
-    <None Remove="Properties\Images\DdxEditor.ico" />
-    <None Remove="Properties\Images\DefaultItemImage.png" />
-    <None Remove="Properties\Images\Delete.png" />
-    <None Remove="Properties\Images\DiscardChanges.png" />
-    <None Remove="Properties\Images\Exit.png" />
-    <None Remove="Properties\Images\Find.png" />
-    <None Remove="Properties\Images\GoToLastVisited.png" />
-    <None Remove="Properties\Images\GoToNextVisited.png" />
-    <None Remove="Properties\Images\GoToParent.png" />
-    <None Remove="Properties\Images\GroupItem.png" />
-    <None Remove="Properties\Images\GroupItemSelected.png" />
-    <None Remove="Properties\Images\Options.png" />
-    <None Remove="Properties\Images\Properties.png" />
-    <None Remove="Properties\Images\Reload.png" />
-    <None Remove="Properties\Images\RemoveDependencyByCascadingDeletion.png" />
-    <None Remove="Properties\Images\RemoveDependencyByDeletingAssociation.png" />
-    <None Remove="Properties\Images\Save.png" />
-    <None Remove="Properties\Images\ShowAboutBoxCmd.png" />
-    <None Remove="Properties\Images\ShowOnlineHelpCmd.png" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj" />
     <ProjectReference Include="..\ProSuite.Commons.Logging\ProSuite.Commons.Logging.csproj" />
     <ProjectReference Include="..\ProSuite.Commons.UI\ProSuite.Commons.UI.csproj" />
@@ -78,10 +54,12 @@
     <Compile Include="..\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
     <Content Include="Properties\Images\Add.png" />
     <Content Include="Properties\Images\CannotRemoveDependency.png" />
+    <Resource Include="Properties\Images\ConfigurationEditor.png" />
     <Content Include="Properties\Images\DdxEditor.ico" />
     <Content Include="Properties\Images\DefaultItemImage.png" />
     <Content Include="Properties\Images\Delete.png" />
     <Content Include="Properties\Images\DiscardChanges.png" />
+    <Content Include="Properties\Images\Error.png" />
     <Content Include="Properties\Images\Exit.png" />
     <Content Include="Properties\Images\Find.png" />
     <Content Include="Properties\Images\GoToLastVisited.png" />

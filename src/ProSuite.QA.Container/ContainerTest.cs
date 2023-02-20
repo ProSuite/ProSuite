@@ -22,8 +22,6 @@ namespace ProSuite.QA.Container
 		private IList<ISpatialFilter> _defaultFilters;
 		private IList<QueryFilterHelper> _defaultFilterHelpers;
 
-		private Dictionary<IReadOnlyTable, RelatedTables> _dictRelated;
-
 		private IEnvelope _lastCompleteTileBox;
 		private bool _completeTileInitialized;
 		private double _allMaxY;
@@ -411,44 +409,6 @@ namespace ProSuite.QA.Container
 		}
 
 		#endregion
-
-		public void AddRelatedTables([NotNull] IReadOnlyTable joined,
-		                             [NotNull] IList<IReadOnlyTable> related)
-		{
-			Assert.ArgumentNotNull(joined, nameof(joined));
-			Assert.ArgumentNotNull(related, nameof(related));
-
-			if (_dictRelated == null)
-			{
-				_dictRelated = new Dictionary<IReadOnlyTable, RelatedTables>();
-			}
-
-			RelatedTables relatedTables = RelatedTables.Create(related, joined);
-			_dictRelated.Add(joined, relatedTables);
-		}
-
-		public RelatedTables GetRelatedTables(IReadOnlyRow row)
-		{
-			Assert.ArgumentNotNull(row, nameof(row));
-
-			return _dictRelated?[row.Table];
-		}
-
-		/// <summary>
-		/// Get involved rows related to IRow
-		/// </summary>
-		/// <param name="row"></param>
-		/// <returns></returns>
-		[Obsolete(
-			"use InvolvedRowUtils.GetInvolvedRows(row), TODO: (?) remove class RelatedTables ?, _dictRelated")]
-		protected InvolvedRows GetInvolvedRows([NotNull] IReadOnlyRow row)
-		{
-			RelatedTables related = GetRelatedTables(row);
-
-			InvolvedRows involvedRows = related?.GetInvolvedRows(row) ??
-			                            InvolvedRowUtils.GetInvolvedRows(row);
-			return involvedRows;
-		}
 
 		internal int GetTableIndex([CanBeNull] IReadOnlyTable table, int occurrence)
 		{

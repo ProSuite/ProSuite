@@ -261,9 +261,8 @@ namespace ProSuite.QA.Tests.Network
 		protected IList<InvolvedRow> GetInvolvedRows([NotNull] ITableIndexRow tableIndexRow)
 		{
 			IReadOnlyRow row = tableIndexRow.GetRow(InvolvedTables);
-			RelatedTables related = GetRelatedTables(row);
 
-			return related?.GetInvolvedRows(row) ?? new InvolvedRows {new InvolvedRow(row)};
+			return InvolvedRowUtils.GetInvolvedRows(row);
 		}
 
 		#region nested classes

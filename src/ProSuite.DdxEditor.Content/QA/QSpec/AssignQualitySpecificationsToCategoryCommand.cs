@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.Linq;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.DdxEditor.Content.QA.QCon;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Commands;
 using ProSuite.DdxEditor.Framework.Items;
@@ -17,7 +16,7 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 		[NotNull] private readonly IApplicationController _applicationController;
 
 		/// <summary>
-		/// Initializes a new instance of the <see cref="AssignQualityConditionsToCategoryCommand"/> class.
+		/// Initializes a new instance of the <see cref="AssignQualitySpecificationsToCategoryCommand"/> class.
 		/// </summary>
 		/// <param name="qualityConditionItems">The selected child items.</param>
 		/// <param name="containerItem">The container item</param>

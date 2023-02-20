@@ -365,4 +365,9 @@ See T1Attributes</value>
   <data name="TrOnlyDisjointFeatures_featureClassToFilter" xml:space="preserve">
     <value>The feature class to be filtered.</value>
   </data>
+  <data name="TrSpatiallyFiltered_FilteringSearchOption" xml:space="preserve">
+    <value>(Default = Tile)
+-Tile: search for spatially related features only using the current tile
+- All: search for spatially related features in the entire filtering featureClass </value>
+  </data>
 </root>

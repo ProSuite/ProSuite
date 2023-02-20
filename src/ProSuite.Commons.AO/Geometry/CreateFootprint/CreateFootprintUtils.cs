@@ -316,6 +316,9 @@ namespace ProSuite.Commons.AO.Geometry.CreateFootprint
 			catch (Exception e)
 			{
 				_msg.Warn(
+					$"Error calculating footprint at {GeometryUtils.ToString(multiPatch.Envelope, withoutSpatialReference:true)}. " +
+					"Using AO-fallback.");
+				_msg.Debug(
 					$"Error calculating footprint for {GeometryUtils.ToString(multiPatch)}. " +
 					"Using AO-fallback.", e);
 

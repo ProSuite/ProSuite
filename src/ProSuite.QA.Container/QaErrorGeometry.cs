@@ -27,6 +27,10 @@ namespace ProSuite.QA.Container
 			_hasGeometry = _geometry != null;
 		}
 
+		/// <summary>
+		/// unreduced geometry,
+		/// will throw InvalidOperation when the error is completely processed by the TestContainer and TestContainer.KeepErrorGeometry == false
+		/// </summary>
 		[CanBeNull]
 		public IGeometry Geometry
 		{

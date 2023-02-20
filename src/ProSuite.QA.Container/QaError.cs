@@ -57,6 +57,10 @@ namespace ProSuite.QA.Container
 		[NotNull]
 		public IList<InvolvedRow> InvolvedRows { get; }
 
+		/// <summary>
+		/// unreduced geometry,
+		/// will throw InvalidOperation when the error is completely processed by the TestContainer and TestContainer.KeepErrorGeometry == false
+		/// </summary>
 		[CanBeNull]
 		public IGeometry Geometry => _errorGeometry.Geometry;
 

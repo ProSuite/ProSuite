@@ -290,18 +290,6 @@ namespace ProSuite.DdxEditor.Content
 						                            .ToList();
 					}
 
-					if (category.CanContainOnlyQualityConditions)
-					{
-						return QualityConditions.Get(category,
-						                             IncludeQualityConditionsBasedOnDeletedDatasets)
-						                        .OrderBy(q => q.Name)
-						                        .Select(qc => new QualityConditionItem(this, qc,
-							                                item,
-							                                QualityConditions))
-						                        .Cast<Item>()
-						                        .ToList();
-					}
-
 					var result = new List<Item>();
 
 					if (category.CanContainQualitySpecifications)
@@ -455,6 +443,16 @@ namespace ProSuite.DdxEditor.Content
 				                 .Cast<DependingItem>());
 
 			result.AddRange(
+				InstanceConfigurations.Get<TransformerConfiguration>(allCategories)
+				                 .Select(tr => new RequiredDependingItem(tr, tr.Name))
+				                 .Cast<DependingItem>());
+
+			result.AddRange(
+				InstanceConfigurations.Get<IssueFilterConfiguration>(allCategories)
+				                      .Select(iF=> new RequiredDependingItem(iF, iF.Name))
+				                      .Cast<DependingItem>());
+
+			result.AddRange(
 				subCategories.Select(c => new DataQualityCategoryDependingItem(
 					                     c,
 					                     Assert.NotNull(DataQualityCategories),
@@ -478,7 +476,7 @@ namespace ProSuite.DdxEditor.Content
 			return new List<DependingItem>();
 		}
 
-		public virtual IEnumerable<DependingItem> CreateDependingItems(
+		public virtual IEnumerable<DependingItem> GetDependingItems(
 			IEnumerable<InstanceConfiguration> dependentConfigurations)
 		{
 			return new List<DependingItem>();
