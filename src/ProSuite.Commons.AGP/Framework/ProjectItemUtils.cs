@@ -30,7 +30,8 @@ namespace ProSuite.Commons.AGP.Framework
 
 				// after renaming the item it is missing the extension (although we explicitly
 				// assign a extension to the item), e.g. "worklist"
-				if (string.Equals(item.Name, Path.GetFileNameWithoutExtension(name),
+				if (string.Equals(Path.GetFileNameWithoutExtension(item.Name),
+				                  Path.GetFileNameWithoutExtension(name),
 				                  StringComparison.OrdinalIgnoreCase))
 				{
 					return item;

@@ -33,11 +33,12 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 			// This does not work unless loadOnClick="false" in the daml.xml:
 			// And the tags are not recognized either...
 			Tooltip =
-				"Create several point or multipoint features at once for the current feature template." +
+				"Create several point or multipoint features at once for the current feature template." + Environment.NewLine +
 				Environment.NewLine +
+				"Shortcuts:" + Environment.NewLine +
 				"ESC: Delete sketch points" + Environment.NewLine +
 				"F2:  Finish sketch";
-
+			
 			// how to set up shortcuts?
 			if (Shortcuts != null)
 			{
