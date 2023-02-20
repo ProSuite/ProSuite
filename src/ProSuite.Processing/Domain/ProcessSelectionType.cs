@@ -1,10 +1,8 @@
 using System;
 using System.Text.RegularExpressions;
 
-namespace ProSuite.DomainModel.Core.Processing
+namespace ProSuite.Processing.Domain
 {
-	// Note: use ProSuite.Processing.Domain.ProcessSelectionType
-	// keep code here for ArcMap compatibility only
 	[Flags]
 	public enum ProcessSelectionType
 	{
@@ -21,7 +19,7 @@ namespace ProSuite.DomainModel.Core.Processing
 
 	public static class ProcessSelectionTypeExtensions
 	{
-		private const ProcessSelectionType BaseModeMask = (ProcessSelectionType) 0xFF;
+		private const ProcessSelectionType BaseModeMask = (ProcessSelectionType)0xFF;
 
 		/// <summary>
 		/// Returns true iff the given <paramref name="selectionType"/> is
@@ -45,7 +43,7 @@ namespace ProSuite.DomainModel.Core.Processing
 		public static bool IsWithinEditPerimeter(this ProcessSelectionType selectionType)
 		{
 			return (selectionType & ProcessSelectionType.WithinPerimeter) ==
-			       ProcessSelectionType.WithinPerimeter;
+				   ProcessSelectionType.WithinPerimeter;
 		}
 
 		public static ProcessSelectionType WithinEditPerimeter(
@@ -94,7 +92,7 @@ namespace ProSuite.DomainModel.Core.Processing
 			var baseMode = selectionType & BaseModeMask;
 
 			var baseName = Enum.GetName(typeof(ProcessSelectionType), baseMode) ??
-			               baseMode.ToString();
+						   baseMode.ToString();
 
 			var niceName = Regex.Replace(baseName, @"([0-9\p{Ll}])(\p{Lu})", "$1 $2");
 

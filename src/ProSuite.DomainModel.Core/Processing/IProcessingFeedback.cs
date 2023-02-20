@@ -3,6 +3,8 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.DomainModel.Core.Processing
 {
+	// Note: use ProSuite.Processing.Domain.IProcessingFeedback
+	// keep this code for ArcMap compatibility only
 	public interface IProcessingFeedback
 	{
 		/// <summary>

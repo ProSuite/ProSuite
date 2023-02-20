@@ -1,5 +1,7 @@
 namespace ProSuite.DomainModel.Core.Processing
 {
+	// Note: use ProSuite.Processing.Domain.IProcessingDebug instead
+	// leave this code here for ArcMap compatibility
 	public interface IProcessingDebug
 	{
 		/// <summary>
