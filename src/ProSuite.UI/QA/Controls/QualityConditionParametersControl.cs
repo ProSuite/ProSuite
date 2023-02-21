@@ -5,9 +5,11 @@ using System.Windows.Forms;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Essentials.System;
 using ProSuite.Commons.Logging;
-using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.QA;
+#if ArcGIS || Server
+using ProSuite.DomainModel.AO.QA;
 using ProSuite.UI.QA.PropertyEditors;
+#endif
 
 namespace ProSuite.UI.QA.Controls
 {
@@ -60,6 +62,8 @@ namespace ProSuite.UI.QA.Controls
 				return;
 			}
 
+#if ArcGIS || Server
+
 			TestFactory factory = TestFactoryUtils.CreateTestFactory(condition);
 			if (factory == null)
 			{
@@ -91,6 +95,11 @@ namespace ProSuite.UI.QA.Controls
 			testConfigurator.QualityCondition = condition;
 
 			SetConfigurator(testConfigurator);
+
+#else
+			throw new NotImplementedException(
+				"Legacy property editors with AO dependency not supported in current environment");
+#endif
 		}
 
 		public bool ReadOnly
