@@ -1,7 +1,5 @@
-using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.QA.WorkList;
 using ProSuite.Application.Configuration;
-using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.Solution.WorkLists
@@ -12,11 +10,9 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 		public IssueWorkListEnvironment([CanBeNull] string path) : base(path) { }
 
-		protected override LayerDocument GetLayerDocumentCore()
+		protected override string GetWorkListSymbologyTemplateLayerPath()
 		{
-			string path = ConfigurationUtils.GetConfigFilePath(_templateLayer);
-
-			return LayerUtils.CreateLayerDocument(path);
+			return ConfigurationUtils.GetConfigFilePath(_templateLayer);
 		}
 	}
 }
