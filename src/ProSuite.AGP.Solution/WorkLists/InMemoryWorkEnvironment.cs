@@ -17,7 +17,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 	public class InMemoryWorkEnvironment : WorkEnvironmentBase
 	{
 		private readonly string _templateLayer = "Selection Work List.lyrx";
-		
+
 		public override string FileSuffix => ".swl";
 
 		protected override ILayerContainerEdit GetContainer()
@@ -71,11 +71,9 @@ namespace ProSuite.AGP.Solution.WorkLists
 			return new SelectionItemRepository(tables, selection, stateRepository);
 		}
 
-		protected override LayerDocument GetLayerDocumentCore()
+		protected override string GetWorkListSymbologyTemplateLayerPath()
 		{
-			string path = ConfigurationUtils.GetConfigFilePath(_templateLayer);
-
-			return LayerUtils.CreateLayerDocument(path);
+			return ConfigurationUtils.GetConfigFilePath(_templateLayer);
 		}
 
 		protected override IWorkList CreateWorkListCore(IWorkItemRepository repository,
