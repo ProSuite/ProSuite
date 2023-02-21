@@ -138,9 +138,8 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			if (polygon == null) return null;
 
 			var boundary = Engine.Boundary(polygon);
-			if (boundary is Polyline polyline)
-				return polyline;
-			throw new AssertionException("Result of Boundary(polygon) is not a Polyline");
+			if (boundary is Polyline polyline) return polyline;
+			throw UnexpectedResultFrom("GeometryEngine.Boundary()", typeof(Polyline), boundary);
 		}
 
 		public static Polygon Intersection(Envelope extent, Polygon perimeter)
@@ -186,6 +185,14 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			return Engine.ConvexHull(geometry);
 		}
 
+		public static T Move<T>(T geometry, double dx, double dy) where T : Geometry
+		{
+			if (geometry is null) return null;
+			var moved = Engine.Move(geometry, dx, dy);
+			if (moved is T result) return result;
+			throw UnexpectedResultFrom("GeometryEngine.Move()", typeof(T), moved);
+		}
+
 		public static T Generalize<T>(T geometry, double maxDeviation,
 		                              bool removeDegenerateParts = false,
 		                              bool preserveCurves = false)
@@ -203,9 +210,7 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 
 			var generalized = Engine.Generalize(geometry, maxDeviation, removeDegenerateParts, preserveCurves);
 			if (generalized is T result) return result;
-			throw new AssertionException(
-				$"Result of Generalize({geometry.GetType().Name}, {maxDeviation}) is " +
-				$"a {generalized.GetType().Name}, not a {geometry.GetType().Name}");
+			throw UnexpectedResultFrom("GeometryEngine.Generalize()", typeof(T), generalized);
 		}
 
 		public static Polyline Simplify(Polyline polyline, SimplifyType simplifyType,
@@ -220,8 +225,9 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			where T : Geometry
 		{
 			if (geometry == null) return null;
-
-			return (T) Engine.SimplifyAsFeature(geometry, forceSimplify);
+			var simplified = Engine.SimplifyAsFeature(geometry, forceSimplify);
+			if (simplified is T result) return result;
+			throw UnexpectedResultFrom("GeometryEngine.Simplify()", typeof(T), simplified);
 		}
 
 		/// <summary>
@@ -454,7 +460,7 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 
 		public static bool HasCurves(this Geometry geometry)
 		{
-			return geometry is Multipart multipart && multipart.HasCurves;
+			return geometry is Multipart { HasCurves: true };
 		}
 
 		public static bool Intersects(Envelope a, Envelope b)
@@ -475,7 +481,7 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 
 		public static IGeometryEngine Engine
 		{
-			get => _engine ?? GeometryEngine.Instance;
+			get => _engine ??= GeometryEngine.Instance;
 			set => _engine = value;
 		}
 
@@ -506,6 +512,14 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 				default:
 					throw new ArgumentOutOfRangeException($"Cannot translate {esriGeometryType}");
 			}
+		}
+
+		private static Exception UnexpectedResultFrom(string action, Type expectedType, object actualValue)
+		{
+			return new AssertionException(
+				$"Unexpected result from {action}: " +
+				$"expected type {expectedType.Name}, " +
+				$"actual type {actualValue?.GetType().Name ?? "(null)"}");
 		}
 	}
 }
