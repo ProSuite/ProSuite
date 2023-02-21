@@ -8,6 +8,7 @@ using ArcGIS.Desktop.Editing;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Gdb;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Microservices.Client.AGP.GeometryProcessing;
@@ -25,7 +26,7 @@ namespace ProSuite.AGP.Editing
 		{
 			return await ExecuteInTransactionAsync(
 				       editContext => StoreTx(editContext, updates, copies),
-				       description, GetDatasets(updates?.Keys, copies?.Keys));
+				       description, GetDatasetsNonEmpty(updates?.Keys, copies?.Keys));
 		}
 
 		public static bool SaveInOperation(
@@ -35,7 +36,7 @@ namespace ProSuite.AGP.Editing
 		{
 			return ExecuteInTransaction(
 				editContext => StoreTx(editContext, updates, copies), description,
-				GetDatasets(updates?.Keys, copies?.Keys));
+				GetDatasetsNonEmpty(updates?.Keys, copies?.Keys));
 		}
 
 		public static bool ExecuteInTransaction(
@@ -299,6 +300,22 @@ namespace ProSuite.AGP.Editing
 			}
 
 			editContext.Invalidate(feature);
+		}
+
+		public static IEnumerable<Dataset> GetDatasetsNonEmpty(
+			params IEnumerable<Feature>[] featureLists)
+		{
+			int datasetCount = 0;
+
+			foreach (Dataset dataset in GetDatasets(featureLists))
+			{
+				yield return dataset;
+				datasetCount++;
+			}
+
+			// NOTE: This happens in case of DPS/#19
+			Assert.False(datasetCount == 0,
+			             "No dataset could be retrieved from the feature list(s).");
 		}
 
 		public static IEnumerable<Dataset> GetDatasets(params IEnumerable<Feature>[] featureLists)
