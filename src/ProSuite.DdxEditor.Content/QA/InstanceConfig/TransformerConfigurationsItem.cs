@@ -62,7 +62,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 		protected override IEnumerable<InstanceConfigurationInCategoryTableRow> GetConfigTableRows(
 			DataQualityCategory category)
 		{
-			return InstanceConfigTableRows.GetInstanceConfigs<TransformerConfiguration>(
+			return InstanceConfigTableRows.GetInstanceConfigurationInCategoryTableRows<TransformerConfiguration>(
 				ModelBuilder, category);
 		}
 

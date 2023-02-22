@@ -292,7 +292,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 					new FinderQuery<InstanceConfigurationInCategoryTableRow>(
 						$"Issue filters involving datasets in {model.Name}",
 						$"model{model.Id}",
-						() => InstanceConfigTableRows.GetInstanceConfigs<IssueFilterConfiguration>(
+						() => InstanceConfigTableRows.GetInstanceConfigurationInCategoryTableRows<IssueFilterConfiguration>(
 							_modelBuilder,
 							qualityCondition.Category).ToList()));
 			}
@@ -301,7 +301,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 				new FinderQuery<InstanceConfigurationInCategoryTableRow>(
 					"<All>", "[all]",
 					() => InstanceConfigTableRows
-					      .GetInstanceConfigs<IssueFilterConfiguration>(_modelBuilder, null)
+					      .GetInstanceConfigurationInCategoryTableRows<IssueFilterConfiguration>(_modelBuilder, null)
 					      .ToList()));
 
 			var finder = new Finder<InstanceConfigurationInCategoryTableRow>();
