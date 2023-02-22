@@ -1,5 +1,4 @@
 using System.Drawing;
-using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DdxEditor.Framework.Items;
 using ProSuite.DdxEditor.Framework.Properties;
@@ -16,19 +15,11 @@ namespace ProSuite.DdxEditor.Framework.Commands
 		/// <param name="parentItem">The parent item.</param>
 		/// <param name="applicationController">The application controller.</param>
 		protected AddItemCommandBase([NotNull] T parentItem,
-		                             [NotNull] IApplicationController
-			                             applicationController)
-			: base(parentItem)
-		{
-			Assert.ArgumentNotNull(applicationController, nameof(applicationController));
-
-			ApplicationController = applicationController;
-		}
+		                             [NotNull] IApplicationController applicationController)
+			: base(parentItem, applicationController) { }
 
 		public override Image Image => _image ?? (_image = Resources.Add);
 
 		protected override bool EnabledCore => ! ApplicationController.HasPendingChanges;
-
-		protected IApplicationController ApplicationController { get; }
 	}
 }

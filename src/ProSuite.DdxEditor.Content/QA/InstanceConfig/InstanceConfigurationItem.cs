@@ -223,7 +223,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			if (_containerItem != null)
 			{
 				commands.Add(new CopyInstanceConfigurationCommand(this, applicationController));
-				commands.Add(new AssignInstanceConfigurationToCategoryCommand(new[] {this},
+				commands.Add(new AssignInstanceConfigurationsToCategoryCommand(new[] {this},
 					             _containerItem, applicationController));
 
 				_webHelpCommand = new ShowInstanceWebHelpCommand<InstanceConfigurationItem>(

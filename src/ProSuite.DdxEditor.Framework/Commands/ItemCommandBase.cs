@@ -14,14 +14,21 @@ namespace ProSuite.DdxEditor.Framework.Commands
 		/// Initializes a new instance of the <see cref="ItemCommandBase&lt;T&gt;"/> class.
 		/// </summary>
 		/// <param name="item">The item.</param>
-		protected ItemCommandBase([NotNull] T item)
+		/// <param name="applicationController">The application controller.</param>
+		protected ItemCommandBase([NotNull] T item,
+		                          [NotNull] IApplicationController applicationController)
 		{
 			Assert.ArgumentNotNull(item, nameof(item));
+			Assert.ArgumentNotNull(applicationController, nameof(applicationController));
 
 			Item = item;
+			ApplicationController = applicationController;
 		}
 
 		[NotNull]
 		protected T Item { get; }
+
+		[NotNull]
+		protected IApplicationController ApplicationController { get; }
 	}
 }

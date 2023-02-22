@@ -6,8 +6,6 @@ namespace ProSuite.DdxEditor.Framework.Commands
 {
 	public class DeleteAllChildItemsCommand : ItemCommandBase<Item>
 	{
-		[NotNull] private readonly IApplicationController _applicationController;
-
 		/// <summary>
 		/// Initializes a new instance of the <see cref="DeleteAllChildItemsCommand"/> class.
 		/// </summary>
@@ -16,21 +14,16 @@ namespace ProSuite.DdxEditor.Framework.Commands
 		public DeleteAllChildItemsCommand(
 			[NotNull] Item item,
 			[NotNull] IApplicationController applicationController)
-			: base(item)
-		{
-			Assert.ArgumentNotNull(applicationController, nameof(applicationController));
-
-			_applicationController = applicationController;
-		}
+			: base(item, applicationController) { }
 
 		public override string Text => "Delete All...";
 
 		protected override bool EnabledCore => Item.Children.Count > 0 &&
-		                                       ! _applicationController.HasPendingChanges;
+		                                       ! ApplicationController.HasPendingChanges;
 
 		protected override void ExecuteCore()
 		{
-			_applicationController.DeleteItems(Item.Children);
+			ApplicationController.DeleteItems(Item.Children);
 		}
 	}
 }

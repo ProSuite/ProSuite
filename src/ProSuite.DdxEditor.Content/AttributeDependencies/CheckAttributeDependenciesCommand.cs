@@ -1,4 +1,3 @@
-using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Commands;
@@ -9,12 +8,9 @@ namespace ProSuite.DdxEditor.Content.AttributeDependencies
 		ItemCommandBase<AttributeDependenciesItem>
 	{
 		public CheckAttributeDependenciesCommand(
-			[NotNull] AttributeDependenciesItem attributeDependenciesItem,
+			[NotNull] AttributeDependenciesItem item,
 			[NotNull] IApplicationController applicationController)
-			: base(attributeDependenciesItem)
-		{
-			Assert.ArgumentNotNull(applicationController, nameof(applicationController));
-		}
+			: base(item, applicationController) { }
 
 		#region Overrides of CommandBase
 
