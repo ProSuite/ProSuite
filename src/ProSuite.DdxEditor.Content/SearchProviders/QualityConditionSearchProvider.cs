@@ -7,7 +7,7 @@ using ProSuite.DdxEditor.Framework.Search;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.Repositories;
 
-namespace ProSuite.DdxEditor.Content.QA.QCon
+namespace ProSuite.DdxEditor.Content.SearchProviders
 {
 	public class QualityConditionSearchProvider :
 		SearchProviderBase<InstanceConfiguration, InstanceConfigurationTableRow>
@@ -37,7 +37,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 
 			foreach (QualityCondition qc in qualityConditions.OrderBy(q => q.Name))
 			{
-				if (! qSpecCountMap.TryGetValue(qc.Id, out int refCount))
+				if (!qSpecCountMap.TryGetValue(qc.Id, out int refCount))
 				{
 					refCount = 0;
 				}

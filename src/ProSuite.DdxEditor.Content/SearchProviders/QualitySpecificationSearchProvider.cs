@@ -2,11 +2,12 @@ using System.Collections.Generic;
 using System.Linq;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.DdxEditor.Content.QA.QSpec;
 using ProSuite.DdxEditor.Framework.Search;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.Repositories;
 
-namespace ProSuite.DdxEditor.Content.QA.QSpec
+namespace ProSuite.DdxEditor.Content.SearchProviders
 {
 	public class QualitySpecificationSearchProvider :
 		SearchProviderBase<QualitySpecification, QualitySpecificationTableRow>
@@ -27,8 +28,8 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 			var comparer = new QualitySpecificationListComparer();
 
 			return _repository.GetAll()
-			                  .OrderBy(q => q, comparer)
-			                  .Select(q => new QualitySpecificationTableRow(q));
+							  .OrderBy(q => q, comparer)
+							  .Select(q => new QualitySpecificationTableRow(q));
 		}
 	}
 }

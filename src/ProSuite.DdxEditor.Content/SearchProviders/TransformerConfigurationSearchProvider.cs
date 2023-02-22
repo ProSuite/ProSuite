@@ -1,19 +1,20 @@
 using System.Collections.Generic;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.DdxEditor.Content.QA.InstanceConfig;
 using ProSuite.DdxEditor.Framework.Search;
 using ProSuite.DomainModel.Core.QA;
 
-namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
+namespace ProSuite.DdxEditor.Content.SearchProviders
 {
-	public class IssueFilterConfigurationSearchProvider :
+	public class TransformerConfigurationSearchProvider :
 		SearchProviderBase<InstanceConfiguration, InstanceConfigurationTableRow>
 	{
 		[NotNull] private readonly CoreDomainModelItemModelBuilder _modelBuilder;
 
-		public IssueFilterConfigurationSearchProvider(
+		public TransformerConfigurationSearchProvider(
 			[NotNull] CoreDomainModelItemModelBuilder modelBuilder)
-			: base(modelBuilder, "Find &Issue Filter Configuration...")
+			: base(modelBuilder, "Find &Transformer Configuration...")
 		{
 			Assert.ArgumentNotNull(modelBuilder, nameof(modelBuilder));
 
@@ -22,7 +23,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 
 		protected override IEnumerable<InstanceConfigurationTableRow> GetRowsCore()
 		{
-			return InstanceConfigTableRows.GetInstanceConfigurationTableRows<IssueFilterConfiguration>(
+			return InstanceConfigTableRows.GetInstanceConfigurationTableRows<TransformerConfiguration>(
 				_modelBuilder);
 		}
 	}
