@@ -21,7 +21,7 @@ namespace ProSuite.QA.Tests.Transformers.Filters
 			FilteredFeatureClass resultClass)
 		{
 			return new SpatiallyFilteredBackingDataset(resultClass, _featureClassToFilter,
-			                                           _filtering);
+			                                           _filtering, FilteringSearchOption);
 		}
 	}
 }

@@ -601,6 +601,17 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to (Default = Tile)
+        ///-Tile: search for spatially related features only using the current tile
+        ///- All: search for spatially related features in the entire filtering featureClass .
+        /// </summary>
+        public static string TrSpatiallyFiltered_FilteringSearchOption {
+            get {
+                return ResourceManager.GetString("TrSpatiallyFiltered_FilteringSearchOption", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Transforms table &apos;t0&apos; and table &apos;t1&apos;, which must be related by &apos;relationName&apos;, to a joined table.
         /// </summary>
         public static string TrTableJoin_0 {

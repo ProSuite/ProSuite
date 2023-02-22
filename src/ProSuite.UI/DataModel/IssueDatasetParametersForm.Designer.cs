@@ -1,6 +1,6 @@
-﻿namespace ProSuite.UI.DataModel
+namespace ProSuite.UI.DataModel
 {
-	partial class ErrorDatasetParametersForm
+	partial class IssueDatasetParametersForm
 	{
 		/// <summary>
 		/// Required designer variable.
@@ -497,7 +497,7 @@
 			this._textBoxSpatialReferenceName.TabIndex = 0;
 			this._textBoxSpatialReferenceName.TabStop = false;
 			// 
-			// ErrorDatasetParametersForm
+			// IssueDatasetParametersForm
 			// 
 			this.AcceptButton = this._buttonOK;
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -515,11 +515,11 @@
 			this.MaximizeBox = false;
 			this.MinimizeBox = false;
 			this.MinimumSize = new System.Drawing.Size(500, 671);
-			this.Name = "ErrorDatasetParametersForm";
+			this.Name = "IssueDatasetParametersForm";
 			this.ShowIcon = false;
 			this.ShowInTaskbar = false;
 			this.Text = "Issue Dataset Parameters";
-			this.Load += new System.EventHandler(this.ErrorDatasetParametersForm_Load);
+			this.Load += new System.EventHandler(this.IssueDatasetParametersForm_Load);
 			this._groupBoxSpatialIndex.ResumeLayout(false);
 			this._groupBoxSpatialIndex.PerformLayout();
 			this._panelGridSizeInfo.ResumeLayout(false);

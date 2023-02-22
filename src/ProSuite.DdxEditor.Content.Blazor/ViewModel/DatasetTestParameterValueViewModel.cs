@@ -93,6 +93,11 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 	{
 		DatasetFinderItem selectedItem = Observer.FindDatasetClicked(Parameter);
 
+		if (selectedItem == null)
+		{
+			return;
+		}
+
 		Either<Dataset, TransformerConfiguration> source = selectedItem.Source;
 
 		ModelName = source.Match(d => d?.Model?.Name,

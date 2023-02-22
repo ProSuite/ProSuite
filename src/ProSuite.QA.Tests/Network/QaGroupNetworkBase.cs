@@ -1131,7 +1131,7 @@ namespace ProSuite.QA.Tests.Network
 
 			foreach (IReadOnlyRow row in rows)
 			{
-				foreach (InvolvedRow involvedRow in GetInvolvedRows(row))
+				foreach (InvolvedRow involvedRow in InvolvedRowUtils.GetInvolvedRows(row))
 				{
 					if (set.Add(involvedRow))
 					{

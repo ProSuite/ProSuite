@@ -169,7 +169,7 @@ namespace ProSuite.QA.Tests
 			}
 
 			return ReportError(
-				description, GetInvolvedRows(row),
+				description, InvolvedRowUtils.GetInvolvedRows(row),
 				GetErrorGeometry(row),
 				Codes[Code.ConstraintNotFulfilled],
 				GetSimpleConstraintAffectedComponent());
@@ -257,7 +257,8 @@ namespace ProSuite.QA.Tests
 						// of an un-convertable input type)
 						string description = string.Format(
 							"Error evaluating expression: {0}", e.Message);
-						errorCount += ReportError(description, GetInvolvedRows(row),
+						errorCount += ReportError(description,
+						                          InvolvedRowUtils.GetInvolvedRows(row),
 						                          GetErrorGeometry(row),
 						                          Codes[Code.ErrorEvaluatingExpression],
 						                          constraintNode.AffectedComponent);
@@ -289,7 +290,7 @@ namespace ProSuite.QA.Tests
 					object[] values = {GetFieldValues(row, constraintNode.Helper, parentHelpers)};
 
 					errorCount += ReportError(
-						description, GetInvolvedRows(row),
+						description, InvolvedRowUtils.GetInvolvedRows(row),
 						GetErrorGeometry(row),
 						issueCode, constraintNode.AffectedComponent, values: values);
 				}
@@ -327,7 +328,7 @@ namespace ProSuite.QA.Tests
 		[CanBeNull]
 		private IGeometry GetErrorGeometry([NotNull] IReadOnlyRow row)
 		{
-			return TestUtils.GetShapeCopy(row, GetRelatedTables(row));
+			return TestUtils.GetInvolvedShapeCopy(row);
 		}
 
 		[NotNull]

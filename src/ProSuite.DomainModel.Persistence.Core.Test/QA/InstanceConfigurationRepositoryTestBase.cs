@@ -48,12 +48,12 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.QA
 					AssertUnitOfWorkHasNoChanges();
 
 					IList<IssueFilterConfiguration> foundIssueFilters =
-						Repository.GetIssueFilterConfigurations();
+						Repository.GetInstanceConfigurations<IssueFilterConfiguration>();
 					Assert.AreEqual(1, foundIssueFilters.Count);
 					Assert.AreEqual(foundIssueFilters[0].IssueFilterDescriptor, i1);
 
 					IList<TransformerConfiguration> foundTransformers =
-						Repository.GetTransformerConfigurations();
+						Repository.GetInstanceConfigurations<TransformerConfiguration>();
 					Assert.AreEqual(3, foundTransformers.Count);
 					Assert.False(foundTransformers.Any(t => t.TransformerDescriptor == null));
 
@@ -96,7 +96,7 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.QA
 					AssertUnitOfWorkHasNoChanges();
 
 					IList<TransformerConfiguration> foundTransformers =
-						Repository.GetTransformerConfigurations();
+						Repository.GetInstanceConfigurations<TransformerConfiguration>();
 					Assert.AreEqual(2, foundTransformers.Count);
 					Assert.False(foundTransformers.Any(t => t.TransformerDescriptor == null));
 
@@ -113,7 +113,7 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.QA
 				() =>
 				{
 					IList<TransformerConfiguration> foundAgain =
-						Repository.GetTransformerConfigurations();
+						Repository.GetInstanceConfigurations<TransformerConfiguration>();
 
 					Assert.AreEqual(2, foundAgain.Count);
 
@@ -150,13 +150,13 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.QA
 				delegate
 				{
 					AssertUnitOfWorkHasNoChanges();
-					IList<TransformerConfiguration> foundDescriptors =
-						Repository.GetTransformerConfigurations();
+					IList<TransformerConfiguration> foundTransformers =
+						Repository.GetInstanceConfigurations<TransformerConfiguration>();
 
-					Assert.AreEqual(3, foundDescriptors.Count);
+					Assert.AreEqual(3, foundTransformers.Count);
 
 					TransformerConfiguration foundTrans =
-						foundDescriptors.Single(d => d.Name == "transConfig42");
+						foundTransformers.Single(d => d.Name == "transConfig42");
 					Assert.AreEqual("what's the meaning", foundTrans.Description);
 					Assert.AreEqual(testConstructorId,
 					                foundTrans.TransformerDescriptor.ConstructorId);

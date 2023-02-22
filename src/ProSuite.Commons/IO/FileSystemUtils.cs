@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using ProSuite.Commons.Essentials.Assertions;
@@ -29,7 +30,7 @@ namespace ProSuite.Commons.IO
 
 		[NotNull]
 		public static char[] InvalidPathChars
-			=> _invalidPathChars ?? (_invalidPathChars = Path.GetInvalidPathChars());
+			=> _invalidPathChars ?? (_invalidPathChars = GetWindowsInvalidPathChars());
 
 		[NotNull]
 		public static char[] InvalidFileNameChars
@@ -412,5 +413,23 @@ namespace ProSuite.Commons.IO
 		                                              out ulong lpFreeBytesAvailable,
 		                                              out ulong lpTotalNumberOfBytes,
 		                                              out ulong lpTotalNumberOfFreeBytes);
+
+		private static char[] GetWindowsInvalidPathChars()
+		{
+			var result = Path.GetInvalidPathChars().ToList();
+
+			// https://github.com/dotnet/runtime/issues/63383: A few are missing in .net 6
+			var potentiallyMissingChars = new List<char> { '"', '<', '>' };
+
+			foreach (char potentiallyMissing in potentiallyMissingChars)
+			{
+				if (! result.Contains(potentiallyMissing))
+				{
+					result.Add(potentiallyMissing);
+				}
+			}
+
+			return result.ToArray();
+		}
 	}
 }

@@ -52,7 +52,6 @@ public class InstanceConfigurationViewModel<T> : NotifyPropertyChangedBase,
 
 	#region IInstanceConfigurationViewModel
 
-	[NotNull]
 	public InstanceConfiguration GetEntity()
 	{
 		return Assert.NotNull(_item.GetEntity());
@@ -61,7 +60,6 @@ public class InstanceConfigurationViewModel<T> : NotifyPropertyChangedBase,
 	[NotNull]
 	public ITestParameterDatasetProvider DatasetProvider { get; }
 
-	[NotNull]
 	public IItemNavigation ItemNavigation { get; }
 
 	void IViewObserver.NotifyChanged(bool dirty)
@@ -69,7 +67,7 @@ public class InstanceConfigurationViewModel<T> : NotifyPropertyChangedBase,
 		_item.NotifyChanged();
 	}
 
-	void IInstanceConfigurationViewModel.BindTo([NotNull] InstanceConfiguration instanceConfiguration)
+	void IInstanceConfigurationViewModel.BindTo(InstanceConfiguration instanceConfiguration)
 	{
 		Assert.ArgumentNotNull(instanceConfiguration, nameof(instanceConfiguration));
 
@@ -93,9 +91,10 @@ public class InstanceConfigurationViewModel<T> : NotifyPropertyChangedBase,
 		UpdateEntity(Assert.NotNull(_item.GetEntity()), Assert.NotNull(Values));
 	}
 
-	[CanBeNull]
-	DatasetFinderItem IInstanceConfigurationViewModel.FindDatasetClicked([NotNull] TestParameter parameter)
+	DatasetFinderItem IInstanceConfigurationViewModel.FindDatasetClicked(TestParameter parameter)
 	{
+		Assert.ArgumentNotNull(parameter, nameof(parameter));
+
 		TestParameterType parameterType = TestParameterTypeUtils.GetParameterType(parameter.Type);
 
 		using FinderForm<DatasetFinderItem> form = GetDatasetFinderForm(parameterType);
