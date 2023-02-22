@@ -7,7 +7,7 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.UI.Finder;
 using ProSuite.Commons.UI.WinForms;
-using ProSuite.DdxEditor.Framework.Properties;
+using ProSuite.DdxEditor.Framework.Items;
 using ProSuite.DdxEditor.Framework.TableRows;
 
 namespace ProSuite.DdxEditor.Framework.Search
@@ -20,7 +20,7 @@ namespace ProSuite.DdxEditor.Framework.Search
 
 		protected SearchProviderBase([NotNull] ItemModelBuilderBase itemModelBuilder,
 		                             [NotNull] string text,
-		                             [CanBeNull] Image image = null)
+		                             [CanBeNull] Image overlay = null)
 		{
 			Assert.ArgumentNotNull(itemModelBuilder, nameof(itemModelBuilder));
 			Assert.ArgumentNotNullOrEmpty(text, nameof(text));
@@ -29,7 +29,7 @@ namespace ProSuite.DdxEditor.Framework.Search
 
 			Text = text;
 
-			Image = image ?? Resources.Find;
+			Image = ItemUtils.GetFindImage(overlay);
 		}
 
 		public string Text { get; }

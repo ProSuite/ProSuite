@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.DdxEditor.Content.Properties;
 using ProSuite.DdxEditor.Content.QA.InstanceConfig;
 using ProSuite.DdxEditor.Framework.Search;
 using ProSuite.DomainModel.Core.QA;
@@ -16,7 +17,7 @@ namespace ProSuite.DdxEditor.Content.SearchProviders
 
 		public QualityConditionSearchProvider(
 			[NotNull] CoreDomainModelItemModelBuilder modelBuilder)
-			: base(modelBuilder, "Find &Quality Condition...")
+			: base(modelBuilder, "Find &Quality Condition...", Resources.QualityConditionsOverlay)
 		{
 			Assert.ArgumentNotNull(modelBuilder, nameof(modelBuilder));
 
@@ -37,7 +38,7 @@ namespace ProSuite.DdxEditor.Content.SearchProviders
 
 			foreach (QualityCondition qc in qualityConditions.OrderBy(q => q.Name))
 			{
-				if (!qSpecCountMap.TryGetValue(qc.Id, out int refCount))
+				if (! qSpecCountMap.TryGetValue(qc.Id, out int refCount))
 				{
 					refCount = 0;
 				}

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.DdxEditor.Content.Properties;
 using ProSuite.DdxEditor.Content.QA.InstanceConfig;
 using ProSuite.DdxEditor.Framework.Search;
 using ProSuite.DomainModel.Core.QA;
@@ -14,7 +15,8 @@ namespace ProSuite.DdxEditor.Content.SearchProviders
 
 		public IssueFilterConfigurationSearchProvider(
 			[NotNull] CoreDomainModelItemModelBuilder modelBuilder)
-			: base(modelBuilder, "Find &Issue Filter Configuration...")
+			: base(modelBuilder, "Find &Issue Filter Configuration...",
+			       Resources.IssueFilterOverlay)
 		{
 			Assert.ArgumentNotNull(modelBuilder, nameof(modelBuilder));
 
@@ -23,8 +25,9 @@ namespace ProSuite.DdxEditor.Content.SearchProviders
 
 		protected override IEnumerable<InstanceConfigurationTableRow> GetRowsCore()
 		{
-			return InstanceConfigTableRows.GetInstanceConfigurationTableRows<IssueFilterConfiguration>(
-				_modelBuilder);
+			return InstanceConfigTableRows
+				.GetInstanceConfigurationTableRows<IssueFilterConfiguration>(
+					_modelBuilder);
 		}
 	}
 }

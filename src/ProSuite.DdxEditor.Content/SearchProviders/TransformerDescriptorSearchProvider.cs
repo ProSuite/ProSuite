@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.DdxEditor.Content.Properties;
 using ProSuite.DdxEditor.Content.QA.InstanceDescriptors;
 using ProSuite.DdxEditor.Framework.Search;
 using ProSuite.DomainModel.Core.QA;
@@ -15,7 +16,7 @@ namespace ProSuite.DdxEditor.Content.SearchProviders
 
 		public TransformerDescriptorSearchProvider(
 			[NotNull] CoreDomainModelItemModelBuilder modelBuilder)
-			: base(modelBuilder, "Find &Transformer Descriptor...")
+			: base(modelBuilder, "Find &Transformer Descriptor...", Resources.TransformOverlay)
 		{
 			Assert.ArgumentNotNull(modelBuilder, nameof(modelBuilder));
 

@@ -4,8 +4,8 @@ using System.Windows.Forms;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.DdxEditor.Content.Properties;
 using ProSuite.DdxEditor.Content.QA.QCon;
+using ProSuite.DdxEditor.Framework.Items;
 using ProSuite.DdxEditor.Framework.Search;
 using ProSuite.DomainModel.Core.QA;
 
@@ -23,7 +23,7 @@ namespace ProSuite.DdxEditor.Content.SearchProviders
 			_modelBuilder = modelBuilder;
 
 			Text = "Find Quality Condition by &Name...";
-			Image = Resources.Find;
+			Image = ItemUtils.GetFindImage(overlay: null);
 		}
 
 		public string Text { get; }
@@ -37,8 +37,8 @@ namespace ProSuite.DdxEditor.Content.SearchProviders
 				var result = form.ShowDialog(owner);
 
 				return result == DialogResult.OK
-						   ? form.QualityCondition
-						   : null;
+					       ? form.QualityCondition
+					       : null;
 			}
 		}
 
