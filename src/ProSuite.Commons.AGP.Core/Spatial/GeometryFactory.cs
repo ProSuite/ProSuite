@@ -86,7 +86,7 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			// the axes is chosen for minimal deviation from a true circle.
 			// See: https://spencermortensen.com/articles/bezier-circle/
 
-			const double magic = 0.551915; // for best circle approximation
+			const double magic = 0.551915; // for good circle approximation
 
 			double cx = 0, cy = 0;
 
@@ -96,18 +96,19 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 				cy = center.Y;
 			}
 
+			// Outer rings are clockwise (with Esri):
 			var p0 = new Coordinate2D(radius, 0).Shifted(cx, cy);
-			var p01 = new Coordinate2D(radius, magic * radius).Shifted(cx, cy);
-			var p10 = new Coordinate2D(magic * radius, radius).Shifted(cx, cy);
-			var p1 = new Coordinate2D(0, radius).Shifted(cx, cy);
-			var p12 = new Coordinate2D(-magic * radius, radius).Shifted(cx, cy);
-			var p21 = new Coordinate2D(-radius, magic * radius).Shifted(cx, cy);
+			var p01 = new Coordinate2D(radius, -radius * magic).Shifted(cx, cy);
+			var p10 = new Coordinate2D(radius * magic, -radius).Shifted(cx, cy);
+			var p1 = new Coordinate2D(0, -radius).Shifted(cx, cy);
+			var p12 = new Coordinate2D(-radius * magic, -radius).Shifted(cx, cy);
+			var p21 = new Coordinate2D(-radius, -radius * magic).Shifted(cx, cy);
 			var p2 = new Coordinate2D(-radius, 0).Shifted(cx, cy);
-			var p23 = new Coordinate2D(-radius, -magic * radius).Shifted(cx, cy);
-			var p32 = new Coordinate2D(-magic * radius, -radius).Shifted(cx, cy);
-			var p3 = new Coordinate2D(0, -radius).Shifted(cx, cy);
-			var p30 = new Coordinate2D(magic * radius, -radius).Shifted(cx, cy);
-			var p03 = new Coordinate2D(radius, -magic * radius).Shifted(cx, cy);
+			var p23 = new Coordinate2D(-radius, radius * magic).Shifted(cx, cy);
+			var p32 = new Coordinate2D(-radius * magic, radius).Shifted(cx, cy);
+			var p3 = new Coordinate2D(0, radius).Shifted(cx, cy);
+			var p30 = new Coordinate2D(radius * magic, radius).Shifted(cx, cy);
+			var p03 = new Coordinate2D(radius, radius * magic).Shifted(cx, cy);
 
 			// segments for each quadrant
 			var q1 = CubicBezierBuilderEx.CreateCubicBezierSegment(p0, p01, p10, p1);
