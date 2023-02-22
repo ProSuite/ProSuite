@@ -5,7 +5,7 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Core;
 
-namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
+namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 {
 	internal static class TestParameterGridUtils
 	{
@@ -21,11 +21,11 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 			DataColumn descDataColumn = dataTable.Columns.Add("Description");
 
 			var dataView = new DataView(dataTable)
-			               {
-				               AllowNew = false,
-				               AllowEdit = false,
-				               AllowDelete = false
-			               };
+			{
+				AllowNew = false,
+				AllowEdit = false,
+				AllowDelete = false
+			};
 
 			DataGridViewColumn paramColumn =
 				AddDataGridViewColumn(dataGridView, paramDataColumn, "Parameter");
@@ -57,7 +57,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 		}
 
 		public static void PopulateDataTable([NotNull] DataTable dataTable,
-		                                     [CanBeNull] IEnumerable<TestParameter> testParameters)
+											 [CanBeNull] IEnumerable<TestParameter> testParameters)
 		{
 			Assert.ArgumentNotNull(dataTable, nameof(dataTable));
 
@@ -71,8 +71,8 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 			foreach (TestParameter parameter in testParameters)
 			{
 				dataTable.Rows.Add(InstanceUtils.GetParameterNameString(parameter),
-				                   InstanceUtils.GetParameterTypeString(parameter),
-				                   parameter.Description);
+								   InstanceUtils.GetParameterTypeString(parameter),
+								   parameter.Description);
 			}
 		}
 

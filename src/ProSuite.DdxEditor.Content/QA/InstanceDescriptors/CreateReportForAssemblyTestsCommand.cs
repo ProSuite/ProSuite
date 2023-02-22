@@ -4,14 +4,12 @@ using System.Reflection;
 using System.Windows.Forms;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.DdxEditor.Content.Properties;
-using ProSuite.DdxEditor.Content.QA.TestDescriptors;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Commands;
 
 namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 {
-	internal class CreateReportForAssemblyTestsCommand :
-		ExchangeCommand<AlgorithmDescriptorsItem>
+	internal class CreateReportForAssemblyTestsCommand : ExchangeCommand<AlgorithmDescriptorsItem>
 	{
 		public const string DefaultExtension = "html";
 

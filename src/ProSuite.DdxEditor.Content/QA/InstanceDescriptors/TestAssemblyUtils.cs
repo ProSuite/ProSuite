@@ -1,9 +1,9 @@
-﻿using System.IO;
+using System.IO;
 using System.Reflection;
 using System.Windows.Forms;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
-namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
+namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 {
 	internal static class TestAssemblyUtils
 	{
