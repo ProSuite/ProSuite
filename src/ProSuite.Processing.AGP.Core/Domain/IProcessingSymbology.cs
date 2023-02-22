@@ -1,6 +1,6 @@
-using System.Collections.Generic;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ProSuite.Commons.AGP.Core.Carto;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Processing.AGP.Core.Utils;
 using ProSuite.Processing.Domain;
@@ -31,11 +31,12 @@ public interface IProcessingSymbology
 	/// </summary>
 	[CanBeNull]
 	Geometry GetDrawingOutline(PseudoFeature feature, IMapContext mapContext,
-	                           IDictionary<string, object> outlineOptions = null);
+							   DrawingOutline.Options options = null);
 
 	/// <summary>
 	/// Equivalent to GetDrawingOutline()?.Extent but may be faster
 	/// </summary>
 	[CanBeNull]
-	Envelope GetDrawingBounds(PseudoFeature feature, IMapContext mapContext);
+	Envelope GetDrawingBounds(PseudoFeature feature, IMapContext mapContext,
+	                          DrawingOutline.Options options = null);
 }

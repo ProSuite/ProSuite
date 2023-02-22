@@ -35,7 +35,7 @@ public static class DrawingOutline
 			ScaleFactor = 1.0;
 		}
 
-		public Options(Options options)
+		public Options(double scaleFactor, Options options)
 		{
 			// Copy values:
 			IgnoreErrors = options.IgnoreErrors;
@@ -45,7 +45,7 @@ public static class DrawingOutline
 			FillHoles = options.FillHoles;
 			MaxBufferDeviationPoints = options.MaxBufferDeviationPoints;
 			MaxVerticesInFullCircle = options.MaxVerticesInFullCircle;
-			ScaleFactor = options.ScaleFactor;
+			ScaleFactor = scaleFactor;
 		}
 	}
 
@@ -58,7 +58,7 @@ public static class DrawingOutline
 
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-	public static Options GetDefaultOptions(double scaleFactor)
+	public static Options GetDefaultOptions(double scaleFactor = 1.0)
 	{
 		return new Options { ScaleFactor = scaleFactor };
 	}
@@ -794,9 +794,7 @@ public static class DrawingOutline
 
 	private static Options GetInnerOptions(Options options)
 	{
-		var result = new Options(options);
-		result.ScaleFactor = 1.0; // don't scale embedded symbols
-		return result;
+		return new Options(1.0, options);
 	}
 
 	private static void VerboseDebug(string format, params object[] args)
