@@ -19,8 +19,9 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 
 		static IssueFilterConfigurationsItem()
 		{
-			_image = ItemUtils.GetGroupItemImage(Resources.IssueFilterOverlay);
-			_selectedImage = ItemUtils.GetGroupItemSelectedImage(Resources.IssueFilterOverlay);
+			_image = ItemUtils.GetGroupItemImage(Resources.IssueFilterConfigurationsOverlay);
+			_selectedImage =
+				ItemUtils.GetGroupItemSelectedImage(Resources.IssueFilterConfigurationsOverlay);
 		}
 
 		public IssueFilterConfigurationsItem([NotNull] CoreDomainModelItemModelBuilder modelBuilder,

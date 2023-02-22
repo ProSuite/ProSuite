@@ -16,7 +16,8 @@ namespace ProSuite.DdxEditor.Content.SearchProviders
 
 		public TransformerDescriptorSearchProvider(
 			[NotNull] CoreDomainModelItemModelBuilder modelBuilder)
-			: base(modelBuilder, "Find &Transformer Descriptor...", Resources.TransformOverlay)
+			: base(modelBuilder, "Find &Transformer Descriptor...",
+			       Resources.TransformerDescriptorsOverlay)
 		{
 			Assert.ArgumentNotNull(modelBuilder, nameof(modelBuilder));
 

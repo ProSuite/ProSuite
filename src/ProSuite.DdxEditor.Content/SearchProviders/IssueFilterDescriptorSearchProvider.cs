@@ -16,7 +16,8 @@ namespace ProSuite.DdxEditor.Content.SearchProviders
 
 		public IssueFilterDescriptorSearchProvider(
 			[NotNull] CoreDomainModelItemModelBuilder modelBuilder)
-			: base(modelBuilder, "Find &Issue Filter Descriptor...", Resources.IssueFilterOverlay)
+			: base(modelBuilder, "Find &Issue Filter Descriptor...",
+			       Resources.IssueFilterDescriptorsOverlay)
 		{
 			Assert.ArgumentNotNull(modelBuilder, nameof(modelBuilder));
 
