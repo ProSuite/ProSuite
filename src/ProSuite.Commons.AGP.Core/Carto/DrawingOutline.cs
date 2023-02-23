@@ -140,23 +140,43 @@ public static class DrawingOutline
 		//symbol.ScaleX; // a ratio
 
 		if (symbol.Angle > 0 || symbol.Angle < 0)
-			throw new NotImplementedException(
-				"Point symbol has non-zero Angle, which is not yet implemented");
+		{
+			// empirical: ignored by the renderer, but when changed in the UI,
+			// this angle is propagated to the individual symbol layers; ergo:
+			// we can ignore it here as well
+		}
 
 		if (symbol.Callout != null)
 			throw new NotImplementedException(
 				"Point symbol has a Callout, which is not yet implemented"); // TODO or silently ignore?
 
-		if (symbol.HaloSymbol != null && symbol.HaloSize > 0)
-			throw new NotImplementedException(
-				"Point symbol has non-zero HaloSize, which is not yet implemented"); // TODO or silently ignore?
-		// How does Halo work? --> Buffer symbol by HaloSize and draw this shape with HaloSymbol?
-
 		if (symbol.ScaleX > 1 || symbol.ScaleX < 1)
-			throw new NotImplementedException(
-				"Point symbol has non-unit ScaleX, which is not yet implemented");
+		{
+			// empirical: x-scales symbol layers that have a ScaleX property
+			// themselves, but not others; those per-layer ScaleX properties
+			// seem to be ignored!
 
-		return RenderLayers(shape, symbol.SymbolLayers, options);
+			// As of Pro 3.0 none of those ScaleX properties is exposed
+			// in the UI and so it's probably save to ignore it here.
+		}
+
+		var outline = RenderLayers(shape, symbol.SymbolLayers, options);
+
+		if (symbol.HaloSymbol != null && symbol.HaloSize > 0)
+		{
+			// empirical: halo is a buffered version of the symbol
+			// and drawn behind the symbol with an ordinary polygon
+			// symbol, that is, with all frills...
+
+			double distance = symbol.HaloSize * options.ScaleFactor;
+			var buffer = GeometryUtils.Buffer(outline, distance) as Polygon;
+			if (buffer is null) return outline; // probably distance was negative
+
+			// the halo replaces the symbol, because it always contains the symbol
+			outline = GetOutline(buffer, symbol.HaloSymbol, options);
+		}
+
+		return outline;
 	}
 
 	[CanBeNull]
@@ -188,8 +208,10 @@ public static class DrawingOutline
 			try
 			{
 				var layerOutline = GetLayerOutline(shape, symbolLayer, options);
-				// TODO simplify layerOutline --> fix ring orientation, or the Union below may create empty geoms
-				list.Add(layerOutline);
+				if (layerOutline is null) continue;
+				// The simplify is to fix ring orientation; as here it is
+				// most likely already correct here, don't force the simplify:
+				list.Add(GeometryUtils.Simplify(layerOutline));
 			}
 			catch (Exception ex)
 			{
@@ -198,7 +220,7 @@ public static class DrawingOutline
 			}
 		}
 
-		var outline = GeometryEngine.Instance.Union(list.Where(g => g != null));
+		var outline = GeometryUtils.Union(list);
 		outline = GeometryUtils.Simplify(outline, true);
 		return outline as Polygon;
 	}
@@ -322,8 +344,10 @@ public static class DrawingOutline
 			// NB. Cannot combine ax/ay with dx/dy below, because ax/ay occur before scale+rotate
 			outline = GeometryUtils.Move(outline, -ax, -ay);
 
-			double sx = charMarker.ScaleX * scaleFactor;
-			double sy = 1.0 * scaleFactor;
+			double sx = 1.0; //charMarker.ScaleX; // NB. renderer ignores ScaleX (empirical, Pro 3.0)
+			sx *= scaleFactor;
+			double sy = 1.0;
+			sy *= scaleFactor;
 			double radians = charMarker.Rotation * Math.PI / 180;
 			if (charMarker.RotateClockwise) radians *= -1;
 			double dx = charMarker.OffsetX * scaleFactor;
@@ -376,7 +400,7 @@ public static class DrawingOutline
 				return null; // marker has no graphics
 			var frame = vectorMarker.Frame;
 			bool respectFrame = vectorMarker.RespectFrame; // TODO don't understand
-			bool scaleStrokes = vectorMarker.ScaleSymbolsProportionally; // relative to Size=10pt ???
+//			bool scaleStrokes = vectorMarker.ScaleSymbolsProportionally; // relative to Size=10pt ???
 			if (vectorMarker.ClippingPath?.Path != null)
 				throw new NotImplementedException(
 					$"{nameof(vectorMarker.ClippingPath)} on vector marker is not yet supported");
@@ -386,7 +410,7 @@ public static class DrawingOutline
 			{
 				var innerOptions = GetInnerOptions(options);
 				// simplify graphic's geometry to fix ring orientations
-				var graphicShape = GeometryUtils.Simplify(graphic.Geometry);
+				var graphicShape = GeometryUtils.Simplify(graphic.Geometry, true);
 				var graphicOutline = GetOutline(graphicShape, graphic.Symbol, innerOptions);
 				if (graphicOutline is Polygon polygon)
 				{
@@ -395,10 +419,10 @@ public static class DrawingOutline
 				}
 			}
 
-			var outline = GeometryEngine.Instance.Union(list);
+			var outline = GeometryUtils.Union(list);
 
 			var box = respectFrame ? frame : outline.Extent;
-			outline = GeometryEngine.Instance.Move(outline, -box.Center.X, -box.Center.Y);
+			outline = GeometryUtils.Move(outline, -box.Center.X, -box.Center.Y);
 
 			var anchor = vectorMarker.AnchorPoint;
 			var anchorUnits = vectorMarker.AnchorPointUnits;
@@ -422,8 +446,10 @@ public static class DrawingOutline
 						throw new NotSupportedException($"Unknown {nameof(vectorMarker.AnchorPointUnits)}: {anchorUnits}");
 				}
 
-				outline = GeometryEngine.Instance.Move(outline, -ax, -ay);
+				outline = GeometryUtils.Move(outline, -ax, -ay);
 			}
+
+			// TODO Buggy if NO AnchorPoint set... (review scaling)
 
 			double sx = scaleFactor * vectorMarker.Size / box.Height;
 			double sy = scaleFactor * vectorMarker.Size / box.Height;
@@ -446,9 +472,9 @@ public static class DrawingOutline
 	{
 		var origin = MapPointBuilderEx.CreateMapPoint(0, 0);
 		// Pro SDK badly lacks an affine transformation method!
-		outline = GeometryEngine.Instance.Scale(outline, origin, sx, sy);
-		outline = GeometryEngine.Instance.Rotate(outline, origin, angleRadCcw);
-		outline = GeometryEngine.Instance.Move(outline, dx, dy);
+		outline = GeometryUtils.Scale(outline, origin, sx, sy);
+		outline = GeometryUtils.Rotate(outline, origin, angleRadCcw);
+		outline = GeometryUtils.Move(outline, dx, dy);
 		return outline;
 	}
 
@@ -575,7 +601,7 @@ public static class DrawingOutline
 	{
 		var list = ApplyPlacement(marker, placement, reference, options).ToList();
 		if (list is not { Count: > 0 }) return null; // unplaced or placed away
-		var combined = GeometryEngine.Instance.Union(list);
+		var combined = GeometryUtils.Union(list);
 
 		// If not a polygon, the outline is empty, which we represent with null:
 		if (combined is not Polygon polygon) return null;
@@ -822,31 +848,23 @@ public static class DrawingOutline
 
 	private static LineCapType GetCapType(LineCapStyle capStyle)
 	{
-		switch (capStyle)
+		return capStyle switch
 		{
-			case LineCapStyle.Butt:
-				return LineCapType.Butt;
-			case LineCapStyle.Round:
-				return LineCapType.Round;
-			case LineCapStyle.Square:
-				return LineCapType.Square;
-			default:
-				throw new ArgumentOutOfRangeException(nameof(capStyle), capStyle, null);
-		}
+			LineCapStyle.Butt => LineCapType.Butt,
+			LineCapStyle.Round => LineCapType.Round,
+			LineCapStyle.Square => LineCapType.Square,
+			_ => throw new ArgumentOutOfRangeException(nameof(capStyle), capStyle, null)
+		};
 	}
 
 	private static LineJoinType GetJoinType(LineJoinStyle joinStyle)
 	{
-		switch (joinStyle)
+		return joinStyle switch
 		{
-			case LineJoinStyle.Bevel:
-				return LineJoinType.Bevel;
-			case LineJoinStyle.Round:
-				return LineJoinType.Round;
-			case LineJoinStyle.Miter:
-				return LineJoinType.Miter;
-			default:
-				throw new ArgumentOutOfRangeException(nameof(joinStyle), joinStyle, null);
-		}
+			LineJoinStyle.Bevel => LineJoinType.Bevel,
+			LineJoinStyle.Round => LineJoinType.Round,
+			LineJoinStyle.Miter => LineJoinType.Miter,
+			_ => throw new ArgumentOutOfRangeException(nameof(joinStyle), joinStyle, null)
+		};
 	}
 }

@@ -214,6 +214,26 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			throw UnexpectedResultFrom("GeometryEngine.Move()", typeof(T), moved);
 		}
 
+		public static T Rotate<T>(T geometry, MapPoint origin, double angleRadians) where T : Geometry
+		{
+			if (geometry is null) return null;
+			if (Math.Abs(angleRadians) < double.Epsilon) return geometry;
+			if (origin is null) throw new ArgumentNullException(nameof(origin));
+			var rotated = Engine.Rotate(geometry, origin, angleRadians);
+			if (rotated is T result) return result;
+			throw UnexpectedResultFrom(nameof(Engine.Rotate), typeof(T), rotated);
+		}
+
+		public static T Scale<T>(T geometry, MapPoint origin, double sx, double sy)
+			where T : Geometry
+		{
+			if (geometry is null) return null;
+			if (origin is null) throw new ArgumentNullException(nameof(origin));
+			var scaled = Engine.Scale(geometry, origin, sx, sy);
+			if (scaled is T result) return result;
+			throw UnexpectedResultFrom(nameof(Engine.Scale), typeof(T), scaled);
+		}
+
 		public static T Generalize<T>(T geometry, double maxDeviation,
 		                              bool removeDegenerateParts = false,
 		                              bool preserveCurves = false)
