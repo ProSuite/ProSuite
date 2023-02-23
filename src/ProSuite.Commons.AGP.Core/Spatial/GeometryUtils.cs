@@ -128,9 +128,30 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			return a.Union(b);
 		}
 
-		public static Geometry Union(IEnumerable<Geometry> geometries)
+		public static Geometry Union<T>(ICollection<T> geometries) where T : Geometry
 		{
-			return geometries?.Any() ?? false ? Engine.Union(geometries) : null;
+			if (geometries is null) return null;
+			int count = geometries.Count;
+			if (count < 1) return null;
+
+			if (count == 1)
+			{
+				return geometries.Single();
+			}
+
+			if (count == 2)
+			{
+				using (var enumerator = geometries.GetEnumerator())
+				{
+					enumerator.MoveNext();
+					var one = enumerator.Current;
+					enumerator.MoveNext();
+					var two = enumerator.Current;
+					return Engine.Union(one, two);
+				}
+			}
+
+			return Engine.Union(geometries);
 		}
 
 		public static Polyline Boundary(Polygon polygon)

@@ -278,9 +278,8 @@ namespace ProSuite.AGP.QA.VerificationProgress
 
 			List<Overlay> overlays = new List<Overlay>(2);
 
-			IEnumerable<Polyline> completedPolylines = tiles.Select(e =>
-				GeometryFactory.CreatePolyline(
-					e, _verificationSpatialReference));
+			var completedPolylines = tiles.Select(e =>
+				GeometryFactory.CreatePolyline(e, _verificationSpatialReference)).ToList();
 
 			Geometry completedLineGeometry = GeometryUtils.Union(completedPolylines);
 
