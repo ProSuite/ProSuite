@@ -661,6 +661,12 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			qualitySpecification = null;
 
+			// Specific context such as project, work unit
+			if (request.WorkContext.Type > 0)
+			{
+				return false;
+			}
+
 			switch (specificationMsg.SpecificationCase)
 			{
 				case QualitySpecificationMsg.SpecificationOneofCase.XmlSpecification:
