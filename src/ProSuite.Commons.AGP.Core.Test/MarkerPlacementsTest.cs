@@ -36,7 +36,76 @@ public class MarkerPlacementsTest
 	[Test]
 	public void CanOnLine()
 	{
-		throw new NotImplementedException();
+		const double delta = 0.01;
+		double sin45 = 1.0 / Math.Sqrt(2);
+		double cos45 = 1.0 / Math.Sqrt(2);
+
+		var options = new MarkerPlacements.OnLineOptions();
+
+		var marker = PolylineBuilderEx.CreatePolyline(
+			new[] { Pt(0, 0), Pt(0, 1) });
+
+		var line = PolylineBuilderEx.CreatePolyline(
+			new[] { Pt(0, 0), Pt(2, 2), Pt(6, 2), Pt(8, 0) });
+
+		options.PlacePerPart = true;
+		options.AngleToLine = true;
+		options.PerpendicularOffset = 1.0;
+		options.StartPointOffset = 0.0;
+
+		// at start, angle-to-line, perp offs 1 unit
+		options.RelativeTo = MarkerPlacements.OnLinePosition.Start;
+		var placed = MarkerPlacements.OnLine(marker, line, options).ToArray();
+		Assert.AreEqual(1, placed.Length);
+		Assert.AreEqual(2, placed[0].PointCount);
+		AssertPoint(placed[0].Points[0], -cos45, sin45, delta);
+		AssertPoint(placed[0].Points[1], -cos45*2, sin45*2, delta);
+
+		// at end, angle-to-line, perp offs 1 unit
+		options.RelativeTo = MarkerPlacements.OnLinePosition.End;
+		placed = MarkerPlacements.OnLine(marker, line, options).ToArray();
+		Assert.AreEqual(1, placed.Length);
+		Assert.AreEqual(2, placed[0].PointCount);
+		AssertPoint(placed[0].Points[0], 8.0 + cos45, 0.0 + sin45, delta);
+		AssertPoint(placed[0].Points[1], 8.0 + cos45 * 2, 0.0 + sin45 * 2, delta);
+
+		// at end, angle-to-line, perp offs 1 unit
+		options.RelativeTo = MarkerPlacements.OnLinePosition.Middle;
+		placed = MarkerPlacements.OnLine(marker, line, options).ToArray();
+		Assert.AreEqual(1, placed.Length);
+		Assert.AreEqual(2, placed[0].PointCount);
+		AssertPoint(placed[0].Points[0], 4.0, 2.0 + 1.0, delta);
+		AssertPoint(placed[0].Points[1], 4.0, 2.0 + 2.0, delta);
+
+		// each segment midpoint, angle-to-line, no perp offs
+		options.RelativeTo = MarkerPlacements.OnLinePosition.SegmentMidpoints;
+		options.PerpendicularOffset = 0.0;
+		placed = MarkerPlacements.OnLine(marker, line, options).ToArray();
+		Assert.AreEqual(3, placed.Length);
+		Assert.AreEqual(2, placed[2].PointCount);
+		AssertPoint(placed[0].Points[0], 1.0, 1.0, delta);
+		AssertPoint(placed[1].Points[0], 4.0, 2.0, delta);
+		AssertPoint(placed[2].Points[0], 7.0, 1.0, delta);
+
+		// must work with lines and polygons (using the boundary)
+		var poly = PolygonBuilderEx.CreatePolygon(
+			new[] { Pt(0, 0), Pt(4, 4), Pt(4, 0), Pt(0, 0) });
+
+		options.RelativeTo = MarkerPlacements.OnLinePosition.Middle;
+		options.PerpendicularOffset = 0.0;
+		options.AngleToLine = false;
+		placed = MarkerPlacements.OnLine(marker, poly, options).ToArray();
+		Assert.AreEqual(1, placed.Length);
+		Assert.AreEqual(2, placed[0].PointCount);
+		AssertPoint(placed[0].Points[0], 4.0, 2 * Math.Sqrt(2), delta);
+		AssertPoint(placed[0].Points[1], 4.0, 2 * Math.Sqrt(2) + 1.0, delta);
+	}
+
+	private static void AssertPoint(MapPoint point, double x, double y, double delta)
+	{
+		Assert.NotNull(point);
+		Assert.AreEqual(x, point.X, delta);
+		Assert.AreEqual(y, point.Y, delta);
 	}
 
 	[Test]

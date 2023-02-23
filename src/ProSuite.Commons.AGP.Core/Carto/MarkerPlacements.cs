@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Geometry;
+using ProSuite.Commons.AGP.Core.Spatial;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Geom;
 
 // ReSharper disable PropertyCanBeMadeInitOnly.Global
@@ -199,7 +201,7 @@ public static class MarkerPlacements
 		T marker, Geometry reference, OnLineOptions options) where T : Geometry
 	{
 		if (marker is null) yield break;
-		if (reference is not Polyline polyline) yield break;
+		if (reference is not Multipart polycurve) yield break;
 		if (options is null) throw new ArgumentNullException(nameof(options));
 
 		bool angleToLine = options.AngleToLine;
@@ -210,7 +212,7 @@ public static class MarkerPlacements
 
 		if (options.RelativeTo == OnLinePosition.SegmentMidpoints)
 		{
-			foreach (var segment in polyline.Parts.SelectMany(part => part))
+			foreach (var segment in polycurve.Parts.SelectMany(part => part))
 			{
 				var distanceAlong = segment.Length / 2 + offsetAlong;
 
@@ -224,7 +226,7 @@ public static class MarkerPlacements
 		{
 			if (options.PlacePerPart)
 			{
-				foreach (var partLine in GetPartLines(polyline))
+				foreach (var partLine in GetPartLines(GetPolyline(polycurve)))
 				{
 					var distanceAlong = GetOnLineDistance(options.RelativeTo, partLine.Length, offsetAlong);
 
@@ -237,9 +239,9 @@ public static class MarkerPlacements
 			}
 			else
 			{
-				var distanceAlong = GetOnLineDistance(options.RelativeTo, polyline.Length, offsetAlong);
+				var distanceAlong = GetOnLineDistance(options.RelativeTo, polycurve.Length, offsetAlong);
 
-				if (GetPointAndTangent(polyline, distanceAlong,
+				if (GetPointAndTangent(polycurve, distanceAlong,
 				                       out Pair position, out Pair tangent))
 				{
 					yield return Placed(marker, position, tangent, angleToLine, perpOffset);
@@ -373,7 +375,7 @@ public static class MarkerPlacements
 		return true;
 	}
 
-	private static bool GetPointAndTangent(Polyline curve, double distanceAlong,
+	private static bool GetPointAndTangent(Multipart curve, double distanceAlong,
 	                                       out Pair position, out Pair tangent)
 	{
 		position = tangent = Pair.Null;
@@ -393,6 +395,17 @@ public static class MarkerPlacements
 		position = startPoint;
 		tangent = endPoint - startPoint;
 		return true;
+	}
+
+	private static Polyline GetPolyline(Multipart polycurve)
+	{
+		return polycurve switch
+		{
+			null => null,
+			Polyline polyline => polyline,
+			Polygon polygon => GeometryUtils.Boundary(polygon),
+			_ => throw new AssertionException("Multipart is neither Polyline nor Polygon")
+		};
 	}
 
 	private static IEnumerable<Polyline> GetPartLines(Polyline polyline)
