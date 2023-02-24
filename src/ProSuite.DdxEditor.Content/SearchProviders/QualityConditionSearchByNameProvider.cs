@@ -23,7 +23,7 @@ namespace ProSuite.DdxEditor.Content.SearchProviders
 			_modelBuilder = modelBuilder;
 
 			Text = "Find Quality Condition by &Name...";
-			Image = ItemUtils.GetFindImage(overlay: null);
+			Image = ItemUtils.GetSearchImage(overlay: null);
 		}
 
 		public string Text { get; }
@@ -54,8 +54,7 @@ namespace ProSuite.DdxEditor.Content.SearchProviders
 		{
 			return _modelBuilder.ReadOnlyTransaction(
 				() => _modelBuilder.QualityConditions.GetNames(
-					_modelBuilder
-						.IncludeQualityConditionsBasedOnDeletedDatasets));
+					_modelBuilder.IncludeQualityConditionsBasedOnDeletedDatasets));
 		}
 	}
 }
