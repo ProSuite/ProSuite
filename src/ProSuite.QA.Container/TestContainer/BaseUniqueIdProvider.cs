@@ -1,11 +1,12 @@
 using System.Collections.Generic;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.QA.Container.TestContainer
 {
-	public abstract class BaseUniqueIdProvider<T> : IUniqueIdProvider
+	public abstract class BaseUniqueIdProvider<T> : IUniqueIdProvider, IInvolvedRowsProvider
 	{
 		[NotNull] private readonly IDictionary<T, long> _keysToId;
 		[NotNull] private readonly IDictionary<long, T> _idToKeys;

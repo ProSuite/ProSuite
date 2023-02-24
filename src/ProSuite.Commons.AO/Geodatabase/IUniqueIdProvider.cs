@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace ProSuite.QA.Container.TestContainer
+namespace ProSuite.Commons.AO.Geodatabase
 {
 	public interface IUniqueIdProvider<T> : IUniqueIdProvider
 	{
@@ -10,8 +10,6 @@ namespace ProSuite.QA.Container.TestContainer
 	public interface IUniqueIdProvider
 	{
 		bool Remove(long id);
-
-		IList<InvolvedRow> GetInvolvedRows(long id);
 
 		IList<int> GetOidFieldIndexes();
 	}

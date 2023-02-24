@@ -2,7 +2,7 @@ using ESRI.ArcGIS.Geodatabase;
 
 namespace ProSuite.Commons.AO.Geodatabase
 {
-	public class ReadOnlyRow : IReadOnlyRow
+	public class ReadOnlyRow : IReadOnlyRow, IUniqueIdObject, IUniqueIdObjectEdit
 	{
 		public static ReadOnlyFeature Create(IFeature row)
 		{
@@ -27,6 +27,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 			Table = table;
 			Row = row;
 		}
+
+		public UniqueId UniqueId { get; set; }
 
 		public IRow BaseRow => Row;
 		protected IRow Row { get; }

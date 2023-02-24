@@ -250,11 +250,6 @@ namespace ProSuite.QA.Container.TestContainer
 
 				IReadOnlyFeature targetFeature = cachedRow.Feature;
 
-				if (targetFeature == null)
-				{
-					return null;
-				}
-
 				if (targetFeature.OID < filterHelper.MinimumOID)
 				{
 					continue;
@@ -592,7 +587,7 @@ namespace ProSuite.QA.Container.TestContainer
 
 			ISpatialFilter queryFilter = null;
 
-			IUniqueIdProvider uniqueIdProvider = context.GetUniqueIdProvider(table);
+			IUniqueIdProvider uniqueIdProvider_ = context.GetUniqueIdProvider(table);
 			// get data from database
 			try
 			{
@@ -614,15 +609,15 @@ namespace ProSuite.QA.Container.TestContainer
 						continue;
 					}
 
-					var keyRow = new CachedRow(feature, uniqueIdProvider);
+					var keyRow = new CachedRow(feature, uniqueIdProvider_);
 					CachedRow cachedRow;
 					if (cachedRows.TryGetValue(keyRow, out cachedRow))
 					{
-						cachedRow.UpdateFeature(feature, uniqueIdProvider);
+						cachedRow.UpdateFeature(feature, uniqueIdProvider_);
 					}
 					else
 					{
-						cachedRow = new CachedRow(feature, uniqueIdProvider);
+						cachedRow = new CachedRow(feature, uniqueIdProvider_);
 						// cachedRow must always be added to cachedRows, even if disjoint !
 						// otherwise it may be processed several times
 						cachedRows.Add(keyRow, cachedRow);

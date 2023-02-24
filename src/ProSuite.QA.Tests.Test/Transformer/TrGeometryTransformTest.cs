@@ -590,10 +590,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			return table.EnumRows(queryFilter, false);
 		}
 
-		public IUniqueIdProvider GetUniqueIdProvider(IReadOnlyTable table)
-		{
-			throw new NotImplementedException();
-		}
+		public IUniqueIdProvider GetUniqueIdProvider(IReadOnlyTable table) => null;
 
 		#endregion
 	}

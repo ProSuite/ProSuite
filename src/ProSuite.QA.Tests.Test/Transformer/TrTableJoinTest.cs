@@ -89,6 +89,13 @@ namespace ProSuite.QA.Tests.Test.Transformer
 					f.Shape = GeometryFactory.CreatePoint(2603000 + iRow, 1203000 + iFeature);
 					f.Store();
 				}
+				{
+					IFeature f = pointFc.CreateFeature();
+					f.Value[1] = routenNummer == "A1" ? 2 : 5;
+					f.Value[2] = row.OID;
+					f.Shape = GeometryFactory.CreatePoint(2603000 + iRow, 1203000);
+					f.Store();
+				}
 			}
 
 			string relName = "TLM_STRASSENROUTE_STRASSE";
@@ -108,6 +115,15 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				QaConstraint test =
 					new QaConstraint(joined.GetTransformed(),
 					                 "TOPGIS_TLM.TLM_STRASSE.OBJEKTART = 2");
+
+				var runner = new QaContainerTestRunner(1000, test);
+				runner.Execute(area);
+
+				Assert.IsTrue(runner.Errors.Count > 3);
+			}
+			{ // full qualified field names without table filter
+				QaInteriorIntersectsSelf test =
+					new QaInteriorIntersectsSelf((IReadOnlyFeatureClass)joined.GetTransformed());
 
 				var runner = new QaContainerTestRunner(1000, test);
 				runner.Execute(area);

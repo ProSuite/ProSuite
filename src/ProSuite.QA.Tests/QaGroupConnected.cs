@@ -746,7 +746,7 @@ namespace ProSuite.QA.Tests
 		[NotNull]
 		private IList<InvolvedRow> GetInvolvedRows([NotNull] ConnectedLine line)
 		{
-			return line.UniqueIdProvider?.GetInvolvedRows(line.Keys) ??
+			return (line.UniqueIdProvider as IInvolvedRowsProvider)?.GetInvolvedRows(line.Keys) ??
 			       new List<InvolvedRow>
 			       {
 				       new InvolvedRow(InvolvedTables[line.TableIndex].Name,
