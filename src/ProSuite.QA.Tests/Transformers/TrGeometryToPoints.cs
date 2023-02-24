@@ -111,7 +111,7 @@ namespace ProSuite.QA.Tests.Transformers
 				feature.Shape = pnt;
 				yield return feature;
 			}
-			else if (source is IPointCollection pts)
+			else if (geom is IPointCollection pts)
 			{
 				IEnumVertex vertices = pts.EnumVertices;
 				vertices.Reset();
