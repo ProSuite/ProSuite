@@ -669,7 +669,7 @@ namespace ProSuite.QA.Tests
 		{
 			ISpatialFilter filter = _filters[tableIndex];
 
-			WKSEnvelope envelope = QaGeometryUtils.GetWKSEnvelope(line);
+			WKSEnvelope envelope = ProxyUtils.GetWKSEnvelope(line);
 
 			envelope.XMin -= searchDistance;
 			envelope.XMax += searchDistance;
@@ -1332,7 +1332,7 @@ namespace ProSuite.QA.Tests
 							continue;
 						}
 
-						WKSEnvelope uncoveredBox = QaGeometryUtils.GetWKSEnvelope(uncoveredPart);
+						WKSEnvelope uncoveredBox = ProxyUtils.GetWKSEnvelope(uncoveredPart);
 
 						// TODO revise
 						if (uncoveredBox.XMax < tileWksBox.XMin ||

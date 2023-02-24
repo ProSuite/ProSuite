@@ -20,8 +20,8 @@ namespace ProSuite.QA.Container.Test.TestSupport
 		[NotNull]
 		public static ReadOnlyFeature Create(IFeature feature)
 		{
-			return new ReadOnlyFeature(
-				(ReadOnlyFeatureClass) ReadOnlyTableFactory.Create(feature.Table), feature);
+			return ReadOnlyFeature.Create(
+				ReadOnlyTableFactory.Create((IFeatureClass) feature.Table), feature);
 		}
 
 		public static ReadOnlyRow Create(IRow row)

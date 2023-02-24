@@ -33,7 +33,7 @@ namespace ProSuite.Commons.AO.Geometry
 			_envelope = geometry.Envelope;
 			double tolerance = GeometryUtils.GetXyTolerance(geometry);
 
-			Box extent = QaGeometryUtils.CreateBox(_envelope);
+			Box extent = ProxyUtils.CreateBox(_envelope);
 			Expand(extent, tolerance);
 
 			_boxTree.InitSize(new IGmtry[] { extent });

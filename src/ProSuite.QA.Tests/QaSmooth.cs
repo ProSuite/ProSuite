@@ -185,7 +185,7 @@ namespace ProSuite.QA.Tests
 
 			object missing = Type.Missing;
 
-			PolylineClass result = QaGeometryUtils.CreatePolyline(segment);
+			PolylineClass result = ProxyUtils.CreatePolyline(segment);
 
 			((ISegmentCollection) result).AddSegment(segment, ref missing, ref missing);
 

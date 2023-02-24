@@ -178,7 +178,7 @@ namespace ProSuite.QA.Tests.EdgeMatch
 
 		private static bool IsDone([NotNull] IGeometry geometry, WKSEnvelope tileEnvelope)
 		{
-			WKSEnvelope geometryEnvelope = QaGeometryUtils.GetWKSEnvelope(geometry);
+			WKSEnvelope geometryEnvelope = ProxyUtils.GetWKSEnvelope(geometry);
 
 			return geometryEnvelope.XMax < tileEnvelope.XMax &&
 			       geometryEnvelope.YMax < tileEnvelope.YMax;

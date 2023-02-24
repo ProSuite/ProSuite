@@ -14,6 +14,7 @@ using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
+using SegmentUtils_ = ProSuite.QA.Container.Geometry.SegmentUtils_;
 
 namespace ProSuite.QA.Tests
 {
@@ -130,7 +131,7 @@ namespace ProSuite.QA.Tests
 				else if (row.Shape is IMultiPatch)
 				{
 					IIndexedSegments indexedSegments =
-						QaGeometryUtils.CreateIndexedMultiPatch((IMultiPatch) row.Shape);
+						ProxyUtils.CreateIndexedMultiPatch((IMultiPatch) row.Shape);
 					provider = new IndexedMeanLengthProvider(row.Shape, indexedSegments, _perPart,
 					                                         _is3D);
 				}
@@ -383,11 +384,11 @@ namespace ProSuite.QA.Tests
 					IGeometryCollection geometryCollection;
 					if (_baseGeometry.GeometryType == esriGeometryType.esriGeometryPolygon)
 					{
-						geometryCollection = QaGeometryUtils.CreatePolygon(_baseGeometry);
+						geometryCollection = ProxyUtils.CreatePolygon(_baseGeometry);
 					}
 					else if (_baseGeometry.GeometryType == esriGeometryType.esriGeometryPolyline)
 					{
-						geometryCollection = QaGeometryUtils.CreatePolyline(_baseGeometry);
+						geometryCollection = ProxyUtils.CreatePolyline(_baseGeometry);
 					}
 					else if (_baseGeometry.GeometryType == esriGeometryType.esriGeometryMultiPatch)
 					{

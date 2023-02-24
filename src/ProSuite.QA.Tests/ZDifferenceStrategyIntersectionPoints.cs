@@ -379,7 +379,7 @@ namespace ProSuite.QA.Tests
 		{
 			if (shape.GeometryType == esriGeometryType.esriGeometryMultiPatch)
 			{
-				var segments = QaGeometryUtils.GetSegments((IMultiPatch) shape);
+				var segments = ProxyUtils.GetSegments((IMultiPatch) shape);
 
 				yield return GetLineString(segments);
 			}

@@ -6,6 +6,7 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
 using ProSuite.QA.Container.Geometry;
+using SegmentUtils_ = ProSuite.QA.Container.Geometry.SegmentUtils_;
 
 namespace ProSuite.QA.Tests.PointEnumerators
 {
@@ -39,7 +40,7 @@ namespace ProSuite.QA.Tests.PointEnumerators
 
 		[NotNull]
 		public Plane3D Plane =>
-			_plane ?? (_plane = QaGeometryUtils.CreatePlane3D(Segments));
+			_plane ?? (_plane = ProxyUtils.CreatePlane3D(Segments));
 
 		[NotNull]
 		public IGeometry Geometry =>

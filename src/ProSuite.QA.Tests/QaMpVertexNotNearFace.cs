@@ -21,6 +21,7 @@ using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.QA.Tests.PointEnumerators;
 using IPnt = ProSuite.Commons.Geom.IPnt;
 using Pnt = ProSuite.Commons.Geom.Pnt;
+using SegmentUtils_ = ProSuite.QA.Container.Geometry.SegmentUtils_;
 
 namespace ProSuite.QA.Tests
 {
@@ -487,7 +488,7 @@ namespace ProSuite.QA.Tests
 
 			private Box FootprintBox
 				=> _footPrintBox ??
-				   (_footPrintBox = QaGeometryUtils.CreateBox(Footprint));
+				   (_footPrintBox = ProxyUtils.CreateBox(Footprint));
 
 			public override IBox GetSearchBox()
 			{

@@ -168,14 +168,14 @@ namespace ProSuite.QA.Container.PolygonGrower
 			var tree = new PolygonNet<T>.Tree(comparer);
 
 			// Add each line once to box tree
-			tree.InitSize(new IGmtry[] { QaGeometryUtils.CreateBox(box) });
+			tree.InitSize(new IGmtry[] { ProxyUtils.CreateBox(box) });
 			foreach (LineList<T> ring in outerRingList)
 			{
 				foreach (T row in ring.DirectedRows)
 				{
 					if (row.RightPoly != null && row.RightPoly.IsInnerRing == false)
 					{
-						tree.Add(QaGeometryUtils.CreateBox(row.TopologicalLine.Path),
+						tree.Add(ProxyUtils.CreateBox(row.TopologicalLine.Path),
 						         row.TopologicalLine);
 					}
 					else
@@ -187,7 +187,7 @@ namespace ProSuite.QA.Container.PolygonGrower
 								"Error in software design assumption");
 						}
 
-						tree.Add(QaGeometryUtils.CreateBox(row.TopologicalLine.Path),
+						tree.Add(ProxyUtils.CreateBox(row.TopologicalLine.Path),
 						         row.TopologicalLine);
 					}
 				}
@@ -197,7 +197,7 @@ namespace ProSuite.QA.Container.PolygonGrower
 			{
 				if (row.RightPoly == null || row.LeftPoly == null)
 				{
-					tree.Add(QaGeometryUtils.CreateBox(row.TopologicalLine.Path),
+					tree.Add(ProxyUtils.CreateBox(row.TopologicalLine.Path),
 					         row.TopologicalLine);
 				}
 			}

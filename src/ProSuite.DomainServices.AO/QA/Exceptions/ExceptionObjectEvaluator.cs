@@ -49,7 +49,7 @@ namespace ProSuite.DomainServices.AO.QA.Exceptions
 
 			_aoiBox = areaOfInterest == null || areaOfInterest.IsEmpty
 				          ? null
-				          : QaGeometryUtils.CreateBox(areaOfInterest.Envelope);
+				          : ProxyUtils.CreateBox(areaOfInterest.Envelope);
 
 			foreach (ExceptionObject exceptionObject in exceptionObjects)
 			{

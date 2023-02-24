@@ -12,6 +12,7 @@ using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.QA.Tests.PointEnumerators;
+using SegmentUtils_ = ProSuite.QA.Container.Geometry.SegmentUtils_;
 
 namespace ProSuite.QA.Tests
 {

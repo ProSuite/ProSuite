@@ -16,6 +16,7 @@ using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
+using SegmentUtils_ = ProSuite.QA.Container.Geometry.SegmentUtils_;
 
 namespace ProSuite.QA.Tests
 {
@@ -155,7 +156,7 @@ namespace ProSuite.QA.Tests
 
 			IIndexedMultiPatch indexedMultiPatch =
 				indexedMultiPatchFeature?.IndexedMultiPatch ??
-				QaGeometryUtils.CreateIndexedMultiPatch((IMultiPatch) feature.Shape);
+				ProxyUtils.CreateIndexedMultiPatch((IMultiPatch) feature.Shape);
 
 			return new PartVerticalFaceProvider(indexedMultiPatch);
 		}
@@ -239,7 +240,7 @@ namespace ProSuite.QA.Tests
 					}
 				}
 
-				Plane plane = QaGeometryUtils.CreatePlane(partSegments);
+				Plane plane = ProxyUtils.CreatePlane(partSegments);
 				_latestPartSegments = partSegments;
 
 				return new VerticalFace(plane, zMax - zMin);

@@ -155,7 +155,7 @@ namespace ProSuite.QA.Container.PolygonGrower
 				return FullLine;
 			}
 
-			IPolyline line = QaGeometryUtils.CreatePolyline(Path);
+			IPolyline line = ProxyUtils.CreatePolyline(Path);
 			((ISegmentCollection) line).AddSegmentCollection(
 				(ISegmentCollection) GeometryFactory.Clone(Path));
 			return line;

@@ -29,7 +29,7 @@ namespace ProSuite.Commons.AO.Geometry.Proxy
 			Assert.ArgumentNotNull(segment, nameof(segment));
 
 			InnerSegment = segment;
-			_extent = QaGeometryUtils.CreateBox(segment);
+			_extent = ProxyUtils.CreateBox(segment);
 		}
 
 		public override ISpatialReference SpatialReference => InnerSegment.SpatialReference;
@@ -187,8 +187,8 @@ namespace ProSuite.Commons.AO.Geometry.Proxy
 		private static Pnt CreatePoint([NotNull] IPoint p, bool as3D)
 		{
 			return as3D
-					   ? QaGeometryUtils.CreatePoint3D(p)
-					   : QaGeometryUtils.CreatePoint2D(p);
+					   ? ProxyUtils.CreatePoint3D(p)
+					   : ProxyUtils.CreatePoint2D(p);
 		}
 
 		//[NotNull]

@@ -111,7 +111,7 @@ namespace ProSuite.DomainServices.AO.Test.QA.Exceptions
 		private static ExceptionObject CreateExceptionObject(int id,
 		                                                     [NotNull] IGeometry geometry)
 		{
-			Box box = QaGeometryUtils.CreateBox(geometry);
+			Box box = ProxyUtils.CreateBox(geometry);
 
 			return new ExceptionObject(id, new Guid(), new Guid(),
 			                           box, 0.001,

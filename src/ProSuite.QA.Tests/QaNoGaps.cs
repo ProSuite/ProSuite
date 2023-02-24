@@ -247,7 +247,7 @@ namespace ProSuite.QA.Tests
 				if (_allBox == null)
 				{
 					Assert.NotNull(args.AllBox, "args.AllBox");
-					_allBox = QaGeometryUtils.CreateBox(Assert.NotNull(args.AllBox, "AllBox"));
+					_allBox = ProxyUtils.CreateBox(Assert.NotNull(args.AllBox, "AllBox"));
 				}
 
 				if (_knownGaps == null)

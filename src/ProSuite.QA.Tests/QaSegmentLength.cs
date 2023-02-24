@@ -145,7 +145,7 @@ namespace ProSuite.QA.Tests
 			else if (row.Shape is IMultiPatch)
 			{
 				IIndexedSegments indexedSegments =
-					QaGeometryUtils.CreateIndexedMultiPatch((IMultiPatch) row.Shape);
+					ProxyUtils.CreateIndexedMultiPatch((IMultiPatch) row.Shape);
 				provider = new IndexedSegmentsLengthProvider(indexedSegments, _is3D);
 			}
 			else
@@ -348,7 +348,7 @@ namespace ProSuite.QA.Tests
 			public override IPolyline GetSubpart(int partIndex, int startSegmentIndex,
 			                                     int endSegmentIndex)
 			{
-				return QaGeometryUtils.GetSubpart(_segments, partIndex, startSegmentIndex,
+				return ProxyUtils.GetSubpart(_segments, partIndex, startSegmentIndex,
 				                                  endSegmentIndex);
 			}
 

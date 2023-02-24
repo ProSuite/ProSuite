@@ -274,9 +274,9 @@ namespace ProSuite.QA.Tests
 
 			var wksPoints = new List<WKSPointZ>(partSegmentCount + 1);
 
-			foreach (Pnt point in QaGeometryUtils.GetPoints(segments))
+			foreach (Pnt point in ProxyUtils.GetPoints(segments))
 			{
-				wksPoints.Add(QaGeometryUtils.GetWksPoint(point));
+				wksPoints.Add(ProxyUtils.GetWksPoint(point));
 			}
 
 			return wksPoints.ToArray();

@@ -18,6 +18,7 @@ using ProSuite.QA.Container.PolygonGrower;
 using ProSuite.QA.Container.TestSupport;
 using IPnt = ProSuite.Commons.Geom.IPnt;
 using Pnt = ProSuite.Commons.Geom.Pnt;
+using SegmentUtils_ = ProSuite.QA.Container.Geometry.SegmentUtils_;
 
 namespace ProSuite.QA.Tests.Coincidence
 {
@@ -687,7 +688,7 @@ namespace ProSuite.QA.Tests.Coincidence
 				{
 					IEnvelope testAreaEnv = _feature.Extent;
 					testAreaEnv.Intersect(allBox);
-					testAreaBox = QaGeometryUtils.CreateBox(testAreaEnv);
+					testAreaBox = ProxyUtils.CreateBox(testAreaEnv);
 				}
 
 				FindSelfNeighborhood(_featureGeom, processedSegments, testAreaBox, tolerance,

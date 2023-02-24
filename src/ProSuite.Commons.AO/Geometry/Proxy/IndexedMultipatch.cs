@@ -16,7 +16,7 @@ namespace ProSuite.Commons.AO.Geometry.Proxy
 		{
 			BaseGeometry = baseGeometry;
 			_envelope = baseGeometry.Envelope;
-			_patchProxies = QaGeometryUtils.GetPatchProxies(baseGeometry).ToList();
+			_patchProxies = ProxyUtils.GetPatchProxies(baseGeometry).ToList();
 		}
 
 		public void Dispose() { }

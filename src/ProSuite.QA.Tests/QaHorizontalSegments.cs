@@ -146,7 +146,7 @@ namespace ProSuite.QA.Tests
 			if (multiPatch != null)
 			{
 				return new IndexedSegmentsSlopeAngleProvider(
-					QaGeometryUtils.CreateIndexedMultiPatch(multiPatch));
+					ProxyUtils.CreateIndexedMultiPatch(multiPatch));
 			}
 
 			return new SegmentCollectionSlopeAngleProvider((ISegmentCollection) row.Shape);
@@ -353,7 +353,7 @@ namespace ProSuite.QA.Tests
 			public override IPolyline GetSubpart(int partIndex, int startSegmentIndex,
 			                                     int endSegmentIndex)
 			{
-				return QaGeometryUtils.GetSubpart(_segments, partIndex, startSegmentIndex,
+				return ProxyUtils.GetSubpart(_segments, partIndex, startSegmentIndex,
 				                                  endSegmentIndex);
 			}
 

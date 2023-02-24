@@ -288,7 +288,7 @@ namespace ProSuite.QA.Container.TestContainer
 		{
 			Assert.ArgumentNotNull(searchGeometry, nameof(searchGeometry));
 
-			IBox searchGeometryBox = QaGeometryUtils.CreateBox(searchGeometry,
+			IBox searchGeometryBox = ProxyUtils.CreateBox(searchGeometry,
 			                                                   GetXYTolerance(table));
 
 			BoxTree<CachedRow> boxTree = _rowBoxTrees[table];
@@ -417,7 +417,7 @@ namespace ProSuite.QA.Container.TestContainer
 
 			if (_cachedRow == null)
 			{
-				return QaGeometryUtils.CreateBox(CurrentTestRow.DataReference.Extent);
+				return ProxyUtils.CreateBox(CurrentTestRow.DataReference.Extent);
 			}
 
 			IBox currentBox = _cachedRow.Extent;

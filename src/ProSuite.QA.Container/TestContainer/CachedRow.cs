@@ -80,7 +80,7 @@ namespace ProSuite.QA.Container.TestContainer
 
 		protected override Box GetExtent()
 		{
-			Box extent = Commons.AO.Geometry.Proxy.QaGeometryUtils.CreateBox(_feature.Shape);
+			Box extent = Commons.AO.Geometry.Proxy.ProxyUtils.CreateBox(_feature.Shape);
 			return extent;
 		}
 

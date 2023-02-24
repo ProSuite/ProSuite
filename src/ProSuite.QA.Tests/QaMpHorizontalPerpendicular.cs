@@ -225,7 +225,7 @@ namespace ProSuite.QA.Tests
 		{
 			var indexedFeature = feature as IIndexedMultiPatchFeature;
 			IIndexedMultiPatch multiPatch = indexedFeature?.IndexedMultiPatch ??
-			                                QaGeometryUtils.CreateIndexedMultiPatch(
+			                                ProxyUtils.CreateIndexedMultiPatch(
 				                                (IMultiPatch) feature.Shape);
 
 			if (! _connectedOnly)
@@ -419,10 +419,10 @@ namespace ProSuite.QA.Tests
 					double baseAzimuth = baseSegment.Azimuth;
 
 					WKSPointZ baseStart =
-						QaGeometryUtils.GetWksPoint(baseSegment.Segment.GetStart(true));
+						ProxyUtils.GetWksPoint(baseSegment.Segment.GetStart(true));
 
 					WKSPointZ baseEnd =
-						QaGeometryUtils.GetWksPoint(baseSegment.Segment.GetEnd(true));
+						ProxyUtils.GetWksPoint(baseSegment.Segment.GetEnd(true));
 
 					double exactPerpendicularAzimuth = baseAzimuth + Math.PI / 2;
 					double minSearchAzimuth = exactPerpendicularAzimuth - NearAngleRad;
@@ -445,10 +445,10 @@ namespace ProSuite.QA.Tests
 						}
 
 						WKSPointZ candidateStart =
-							QaGeometryUtils.GetWksPoint(candidate.Segment.GetStart(true));
+							ProxyUtils.GetWksPoint(candidate.Segment.GetStart(true));
 
 						WKSPointZ candidateEnd =
-							QaGeometryUtils.GetWksPoint(candidate.Segment.GetEnd(true));
+							ProxyUtils.GetWksPoint(candidate.Segment.GetEnd(true));
 
 						if (IsConnected(baseStart, candidateStart) ||
 						    IsConnected(baseStart, candidateEnd) ||

@@ -13,6 +13,7 @@ using ProSuite.QA.Container.Geometry;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.QA.Tests.Properties;
+using SegmentUtils_ = ProSuite.QA.Container.Geometry.SegmentUtils_;
 
 namespace ProSuite.QA.Tests.Coincidence
 {

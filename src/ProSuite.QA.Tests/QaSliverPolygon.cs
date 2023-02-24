@@ -17,6 +17,7 @@ using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.QA.Tests.Properties;
 using Pnt = ProSuite.Commons.Geom.Pnt;
+using SegmentUtils_ = ProSuite.QA.Container.Geometry.SegmentUtils_;
 
 namespace ProSuite.QA.Tests
 {
@@ -228,7 +229,7 @@ namespace ProSuite.QA.Tests
 				IIndexedMultiPatch indexedMultiPatch =
 					indexedMultiPatchFeature != null
 						? indexedMultiPatchFeature.IndexedMultiPatch
-						: QaGeometryUtils.CreateIndexedMultiPatch(multiPatch);
+						: ProxyUtils.CreateIndexedMultiPatch(multiPatch);
 
 				return new MultiPatchPartsSliverAreaProvider(indexedMultiPatch);
 			}
@@ -388,10 +389,10 @@ namespace ProSuite.QA.Tests
 					partSegments.Add(_segmentsEnum.Current);
 				}
 
-				List<Pnt> planePoints = QaGeometryUtils.GetPoints(partSegments);
-				Plane plane = QaGeometryUtils.CreatePlane(partSegments);
+				List<Pnt> planePoints = ProxyUtils.GetPoints(partSegments);
+				Plane plane = ProxyUtils.CreatePlane(partSegments);
 
-				QaGeometryUtils.CalculateProjectedArea(plane, planePoints, out area, out perimeter);
+				ProxyUtils.CalculateProjectedArea(plane, planePoints, out area, out perimeter);
 
 				_latestPartSegments = partSegments;
 

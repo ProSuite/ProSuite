@@ -168,7 +168,7 @@ namespace ProSuite.QA.Tests.Transformers
 				KnownRows = BoxTreeUtils.CreateBoxTree(
 					knownRows?.Select(x => x as IReadOnlyFeature),
 					getBox: x => x?.Shape != null
-						             ? QaGeometryUtils.CreateBox(x.Shape)
+						             ? ProxyUtils.CreateBox(x.Shape)
 						             : null);
 			}
 		}
@@ -407,7 +407,7 @@ namespace ProSuite.QA.Tests.Transformers
 				if (Resulting.KnownRows != null && filter is ISpatialFilter sp)
 				{
 					foreach (BoxTree<IReadOnlyFeature>.TileEntry entry in
-					         Resulting.KnownRows.Search(QaGeometryUtils.CreateBox(sp.Geometry)))
+					         Resulting.KnownRows.Search(ProxyUtils.CreateBox(sp.Geometry)))
 					{
 						yield return entry.Value;
 					}

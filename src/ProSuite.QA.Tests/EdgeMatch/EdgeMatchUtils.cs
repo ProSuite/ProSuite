@@ -35,7 +35,7 @@ namespace ProSuite.QA.Tests.EdgeMatch
 		                                 WKSEnvelope tileEnvelope,
 		                                 WKSEnvelope allEnvelope)
 		{
-			WKSEnvelope geometryEnvelope = QaGeometryUtils.GetWKSEnvelope(geometry);
+			WKSEnvelope geometryEnvelope = ProxyUtils.GetWKSEnvelope(geometry);
 
 			return (tileEnvelope.XMax >= allEnvelope.XMax ||
 			        geometryEnvelope.XMax < tileEnvelope.XMax) &&

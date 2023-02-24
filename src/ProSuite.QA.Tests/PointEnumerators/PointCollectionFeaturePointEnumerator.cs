@@ -69,7 +69,7 @@ namespace ProSuite.QA.Tests.PointEnumerators
 		{
 			foreach (WKSPointZ wksPoint in _wksPoints)
 			{
-				yield return QaGeometryUtils.CreatePoint3D(wksPoint);
+				yield return ProxyUtils.CreatePoint3D(wksPoint);
 			}
 		}
 
@@ -77,7 +77,7 @@ namespace ProSuite.QA.Tests.PointEnumerators
 		{
 			foreach (WKSPointZ wksPoint in _wksPoints)
 			{
-				Pnt point = QaGeometryUtils.CreatePoint3D(wksPoint);
+				Pnt point = ProxyUtils.CreatePoint3D(wksPoint);
 				if (searchBox.Contains((IPnt) point))
 				{
 					yield return point;

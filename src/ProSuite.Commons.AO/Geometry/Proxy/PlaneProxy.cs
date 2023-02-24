@@ -68,7 +68,7 @@ namespace ProSuite.Commons.AO.Geometry.Proxy
 			SegmentProxy seg0 = GetSegment(startSegmentIndex);
 			IPnt p = seg0.GetPointAt(startFraction, true);
 
-			points[0] = QaGeometryUtils.GetWksPoint(p);
+			points[0] = ProxyUtils.GetWksPoint(p);
 			for (int i = startSegmentIndex + 1; i <= endSegmentIndex; i++)
 			{
 				points[i - startSegmentIndex] = GetPlanePoint(i);
@@ -78,7 +78,7 @@ namespace ProSuite.Commons.AO.Geometry.Proxy
 			{
 				SegmentProxy seg1 = GetSegment(endSegmentIndex);
 				IPnt end = seg1.GetPointAt(endFraction, true);
-				points[pointCount - 1] = QaGeometryUtils.GetWksPoint(end);
+				points[pointCount - 1] = ProxyUtils.GetWksPoint(end);
 			}
 
 			GeometryUtils.SetWKSPointZs(subpart, points);

@@ -1,7 +1,7 @@
-using ESRI.ArcGIS.Geometry;
-using ProSuite.Commons.Essentials.CodeAnnotations;
 using System;
 using System.Collections.Generic;
+using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AO.Geometry.Proxy
 {
@@ -11,9 +11,9 @@ namespace ProSuite.Commons.AO.Geometry.Proxy
 
 		internal static IPoint HelpPoint => _helpPoint ?? (_helpPoint = new PointClass());
 
-		public static IList<double[]> GetLimits(
-			[NotNull] SegmentProxy segmentProxy,
-			[NotNull] IPolygon buffer)
+		[NotNull]
+		internal static IList<double[]> GetLimits([NotNull] SegmentProxy segmentProxy,
+		                                          [NotNull] IPolygon buffer)
 		{
 			// TODO this method would be extremely expensive when called on WksSegmentProxy instances
 
@@ -54,7 +54,7 @@ namespace ProSuite.Commons.AO.Geometry.Proxy
 				double tMin = Math.Min(t0, t1);
 				double tMax = Math.Max(t0, t1);
 
-				result.Add(new[] { tMin, tMax });
+				result.Add(new[] {tMin, tMax});
 			}
 
 			// Handle spatial tolerance problems for segments near tolerance size!
@@ -63,7 +63,7 @@ namespace ProSuite.Commons.AO.Geometry.Proxy
 				((ITopologicalOperator) segmentLine).Simplify();
 				if (segmentLine.IsEmpty)
 				{
-					result.Add(new[] { 0.0, 1.0 });
+					result.Add(new[] {0.0, 1.0});
 				}
 			}
 

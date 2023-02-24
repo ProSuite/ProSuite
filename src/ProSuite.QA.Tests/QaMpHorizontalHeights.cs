@@ -106,7 +106,7 @@ namespace ProSuite.QA.Tests
 		{
 			var indexedFeature = feature as IIndexedMultiPatchFeature;
 			IIndexedMultiPatch multiPatch = indexedFeature?.IndexedMultiPatch ??
-			                                QaGeometryUtils.CreateIndexedMultiPatch(
+			                                ProxyUtils.CreateIndexedMultiPatch(
 				                                (IMultiPatch) feature.Shape);
 
 			return new MultipatchHeightSegmentPairProvider(_nearHeight, multiPatch);

@@ -341,7 +341,7 @@ namespace ProSuite.QA.Tests
 
 			IIndexedMultiPatch indexedMultiPatch =
 				indexedMultiPatchFeature?.IndexedMultiPatch ??
-				QaGeometryUtils.CreateIndexedMultiPatch(multiPatch);
+				ProxyUtils.CreateIndexedMultiPatch(multiPatch);
 
 			var patches = (IGeometryCollection) multiPatch;
 			int patchCount = patches.GeometryCount;
@@ -612,7 +612,7 @@ namespace ProSuite.QA.Tests
 					enumSegments.Next(out segment, ref partIndex, ref segmentIndex);
 					while (segment != null)
 					{
-						IPolyline segLine = QaGeometryUtils.CreatePolyline(segment);
+						IPolyline segLine = ProxyUtils.CreatePolyline(segment);
 						((ISegmentCollection) segLine).AddSegment(recycling
 								? GeometryFactory.Clone(
 									segment)

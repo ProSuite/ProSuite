@@ -16,7 +16,7 @@ namespace ProSuite.QA.Tests.PointEnumerators
 		{
 			var point = (IPoint) feature.Shape;
 
-			_point = QaGeometryUtils.CreatePoint3D(point);
+			_point = ProxyUtils.CreatePoint3D(point);
 		}
 
 		public override IEnumerable<Pnt> GetPoints()

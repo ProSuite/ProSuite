@@ -286,11 +286,11 @@ namespace ProSuite.QA.Container.Geometry
 				{
 					AddRing(geometryCollection, ringPoints);
 					ringPoints.Clear();
-					ringPoints.Add(QaGeometryUtils.GetWksPoint(segment.GetStart(true)));
+					ringPoints.Add(ProxyUtils.GetWksPoint(segment.GetStart(true)));
 				}
 
 				lastPartIndex = segment.PartIndex;
-				ringPoints.Add(QaGeometryUtils.GetWksPoint(segment.GetEnd(true)));
+				ringPoints.Add(ProxyUtils.GetWksPoint(segment.GetEnd(true)));
 			}
 
 			AddRing(geometryCollection, ringPoints);

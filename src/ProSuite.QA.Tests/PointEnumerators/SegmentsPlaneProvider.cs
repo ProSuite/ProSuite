@@ -60,7 +60,7 @@ namespace ProSuite.QA.Tests.PointEnumerators
 
 			return indexedMultiPatchFeature != null
 				       ? indexedMultiPatchFeature.IndexedMultiPatch
-				       : QaGeometryUtils.CreateIndexedMultiPatch(
+				       : ProxyUtils.CreateIndexedMultiPatch(
 					       (IMultiPatch) feature.Shape);
 		}
 

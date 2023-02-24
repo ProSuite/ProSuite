@@ -30,7 +30,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		private class MultiPatchFeature : GdbFeature, IIndexedMultiPatchFeature
 		{
-			private Geometry.Proxy.IndexedMultiPatch _indexedMultiPatch;
+			private IndexedMultiPatch _indexedMultiPatch;
 
 			public MultiPatchFeature(long oid, GdbFeatureClass featureClass, IValueList valueList)
 				: base(oid, featureClass, valueList) { }
@@ -39,15 +39,41 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 			IIndexedSegments IIndexedSegmentsFeature.IndexedSegments => IndexedMultiPatch;
 
-			public Geometry.Proxy.IIndexedMultiPatch IndexedMultiPatch
+			public IIndexedMultiPatch IndexedMultiPatch
 				=> _indexedMultiPatch ??
-				   (_indexedMultiPatch = new Geometry.Proxy.IndexedMultiPatch((IMultiPatch)Shape));
+				   (_indexedMultiPatch = new IndexedMultiPatch((IMultiPatch)Shape));
 		}
 
 		private class AnyFeature : GdbFeature
 		{
 			public AnyFeature(long oid, GdbFeatureClass featureClass, IValueList valueList)
 				: base(oid, featureClass, valueList) { }
+		}
+
+		public static GdbFeature Create(long oid, [NotNull] GdbFeatureClass featureClass,
+		                                [CanBeNull] IValueList valueList = null)
+		{
+			esriGeometryType geometryType = featureClass.ShapeType;
+
+			GdbFeature result;
+
+			switch (geometryType)
+			{
+				case esriGeometryType.esriGeometryMultiPatch:
+					result = new MultiPatchFeature(oid, featureClass, valueList);
+					break;
+
+				case esriGeometryType.esriGeometryPolygon:
+				case esriGeometryType.esriGeometryPolyline:
+					result = new PolycurveFeature(oid, featureClass, valueList);
+					break;
+
+				default:
+					result = new AnyFeature(oid, featureClass, valueList);
+					break;
+			}
+
+			return result;
 		}
 
 
@@ -58,18 +84,6 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		private IGeometry _originalShape;
 
 		#region Constructors
-
-		public static GdbFeature Create(long oid, [NotNull] GdbFeatureClass featureClass,
-		                                [CanBeNull] IValueList valueList = null)
-		{
-			if (featureClass.ShapeType == esriGeometryType.esriGeometryPolyline
-			    || featureClass.ShapeType == esriGeometryType.esriGeometryPolygon)
-			{
-				return new PolycurveFeature(oid, featureClass, valueList);
-			}
-
-			throw new NotImplementedException();
-		}
 
 		protected GdbFeature(long oid, [NotNull] GdbFeatureClass featureClass,
 		                     [CanBeNull] IValueList valueList = null)

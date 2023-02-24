@@ -22,7 +22,7 @@ namespace ProSuite.QA.Tests.PointEnumerators
 
 			if (envelope != null && ! ((IRelationalOperator) envelope).Contains(Feature.Shape))
 			{
-				_searchBox = QaGeometryUtils.CreateBox(envelope);
+				_searchBox = ProxyUtils.CreateBox(envelope);
 			}
 		}
 

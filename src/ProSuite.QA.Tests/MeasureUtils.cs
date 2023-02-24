@@ -80,7 +80,7 @@ namespace ProSuite.QA.Tests
 		{
 			Assert.ArgumentNotNull(invalidMSegments, nameof(invalidMSegments));
 
-			IPolyline result = QaGeometryUtils.CreatePolyline(invalidMSegments);
+			IPolyline result = ProxyUtils.CreatePolyline(invalidMSegments);
 
 			var segments = (ISegmentCollection) result;
 

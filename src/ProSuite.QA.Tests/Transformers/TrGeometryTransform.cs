@@ -7,12 +7,12 @@ using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema.RowValues;
+using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom.SpatialIndex;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.Geometry;
 using ProSuite.QA.Core;
 using ProSuite.QA.Tests.Documentation;
 
@@ -151,7 +151,7 @@ namespace ProSuite.QA.Tests.Transformers
 					joinedValueList.AddList(new PropertySetValueList(), ShapeDict);
 				}
 				// BaseRowValues are add in Search()
-				return new TransformedFeature(oid, this, joinedValueList);
+				return TransformedFeature.CreateFeature(oid, this, joinedValueList);
 			}
 
 			public IDictionary<int, int> CustomValuesDict { get; set; }
@@ -184,20 +184,83 @@ namespace ProSuite.QA.Tests.Transformers
 				KnownRows = BoxTreeUtils.CreateBoxTree(
 					knownRows?.Select(x => x as IReadOnlyFeature),
 					getBox: x => x?.Shape != null
-						             ? QaGeometryUtils.CreateBox(x.Shape)
+						             ? ProxyUtils.CreateBox(x.Shape)
 						             : null);
 			}
 
 			public TransformedDataset BackingDs => (TransformedDataset) BackingDataset;
 		}
 
-		private class TransformedFeature : GdbFeature
+		private abstract class TransformedFeature : GdbFeature
 		{
-			public TransformedFeature(long oid, TransformedFc featureClass,
-			                          MultiListValues valueList)
+			private class PolycurveFeature : TransformedFeature, IIndexedPolycurveFeature
+			{
+				private IndexedPolycurve _indexedPolycurve;
+
+				public PolycurveFeature(long oid, TransformedFc featureClass, MultiListValues valueList)
+					: base(oid, featureClass, valueList) { }
+
+				bool IIndexedSegmentsFeature.AreIndexedSegmentsLoaded => _indexedPolycurve == null;
+
+				IIndexedSegments IIndexedSegmentsFeature.IndexedSegments
+					=> _indexedPolycurve ??
+					   (_indexedPolycurve = new IndexedPolycurve((IPointCollection4)Shape));
+			}
+
+			private class MultiPatchFeature : TransformedFeature, IIndexedMultiPatchFeature
+			{
+				private IndexedMultiPatch _indexedMultiPatch;
+
+				public MultiPatchFeature(long oid, TransformedFc featureClass, MultiListValues valueList)
+					: base(oid, featureClass, valueList) { }
+
+				bool IIndexedSegmentsFeature.AreIndexedSegmentsLoaded => true;
+
+				IIndexedSegments IIndexedSegmentsFeature.IndexedSegments => IndexedMultiPatch;
+
+				public IIndexedMultiPatch IndexedMultiPatch
+					=> _indexedMultiPatch ??
+					   (_indexedMultiPatch = new IndexedMultiPatch((IMultiPatch)Shape));
+			}
+
+			private class AnyFeature : TransformedFeature
+			{
+				public AnyFeature(long oid, TransformedFc featureClass, MultiListValues valueList)
+					: base(oid, featureClass, valueList) { }
+			}
+
+			public static TransformedFeature CreateFeature(
+				long oid, [NotNull] TransformedFc featureClass,
+				[NotNull] MultiListValues valueList)
+			{
+				esriGeometryType geometryType = featureClass.ShapeType;
+
+				TransformedFeature result;
+
+				switch (geometryType)
+				{
+					case esriGeometryType.esriGeometryMultiPatch:
+						result = new MultiPatchFeature(oid, featureClass, valueList);
+						break;
+
+					case esriGeometryType.esriGeometryPolygon:
+					case esriGeometryType.esriGeometryPolyline:
+						result = new PolycurveFeature(oid, featureClass, valueList);
+						break;
+
+					default:
+						result = new AnyFeature(oid, featureClass, valueList);
+						break;
+				}
+
+				return result;
+			}
+
+			private TransformedFeature(long oid, [NotNull] TransformedFc featureClass,
+			                           [NotNull] MultiListValues valueList)
 				: base(oid, featureClass, valueList) { }
 
-			public new TransformedFc Table => (TransformedFc) base.Table;
+			private new TransformedFc Table => (TransformedFc) base.Table;
 
 			public void SetBaseValues(IReadOnlyRow baseRow)
 			{
@@ -280,7 +343,7 @@ namespace ProSuite.QA.Tests.Transformers
 				    Resulting.KnownRows != null && filter is ISpatialFilter sp)
 				{
 					foreach (BoxTree<IReadOnlyFeature>.TileEntry entry in
-					         Resulting.KnownRows.Search(QaGeometryUtils.CreateBox(sp.Geometry)))
+					         Resulting.KnownRows.Search(ProxyUtils.CreateBox(sp.Geometry)))
 					{
 						yield return (VirtualRow) entry.Value;
 					}

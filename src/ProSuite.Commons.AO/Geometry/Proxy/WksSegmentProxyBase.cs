@@ -74,10 +74,10 @@ namespace ProSuite.Commons.AO.Geometry.Proxy
 		public override WKSEnvelope GetSubCurveBox(double fromRatio, double toRatio)
 		{
 			WKSPointZ from = fromRatio > 0
-								 ? QaGeometryUtils.GetWksPoint(GetPointAt(fromRatio))
+								 ? ProxyUtils.GetWksPoint(GetPointAt(fromRatio))
 								 : FromPoint;
 			WKSPointZ to = toRatio < 1
-							   ? QaGeometryUtils.GetWksPoint(GetPointAt(toRatio))
+							   ? ProxyUtils.GetWksPoint(GetPointAt(toRatio))
 							   : ToPoint;
 			WKSEnvelope box = new WKSEnvelope
 			{

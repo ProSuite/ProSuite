@@ -63,7 +63,7 @@ namespace ProSuite.DomainServices.AO.QA.Exceptions
 				yield break;
 			}
 
-			IBox searchBox = QaGeometryUtils.CreateBox(geometry, _xyTolerance);
+			IBox searchBox = ProxyUtils.CreateBox(geometry, _xyTolerance);
 
 			IBox issueBox = null;
 			IBox clippedIssueBox = null;

@@ -181,7 +181,7 @@ namespace ProSuite.Commons.AO.Geometry.Proxy
 			{
 				segProxy = GetSegment(startSegmentIndex);
 				IPnt p = segProxy.GetPointAt(startFraction, as3D: true);
-				currentWksPoints.Add(QaGeometryUtils.GetWksPoint(p));
+				currentWksPoints.Add(ProxyUtils.GetWksPoint(p));
 			}
 
 			#endregion
@@ -221,7 +221,7 @@ namespace ProSuite.Commons.AO.Geometry.Proxy
 				{
 					segProxy = GetSegment(endSegmentIndex);
 					IPnt p = segProxy.GetPointAt(endFraction, as3D: true);
-					currentWksPoints.Add(QaGeometryUtils.GetWksPoint(p));
+					currentWksPoints.Add(ProxyUtils.GetWksPoint(p));
 					WKSPointZ[] add = currentWksPoints.ToArray();
 					GeometryUtils.AddWKSPointZs(points, add);
 				}
@@ -250,7 +250,7 @@ namespace ProSuite.Commons.AO.Geometry.Proxy
 					segProxy = GetSegment(endSegmentIndex);
 
 					IPnt p = segProxy.GetPointAt(endFraction, as3D: true);
-					currentWksPoints.Add(QaGeometryUtils.GetWksPoint(p));
+					currentWksPoints.Add(ProxyUtils.GetWksPoint(p));
 
 					WKSPointZ[] add = currentWksPoints.ToArray();
 					GeometryUtils.AddWKSPointZs(points, add);
@@ -286,7 +286,7 @@ namespace ProSuite.Commons.AO.Geometry.Proxy
 			SegmentProxy seg0 = GetSegment(startSegmentIndex);
 			IPnt p = seg0.GetPointAt(startFraction, as3D: true);
 
-			points[0] = QaGeometryUtils.GetWksPoint(p);
+			points[0] = ProxyUtils.GetWksPoint(p);
 			for (int i = startSegmentIndex + 1; i <= endSegmentIndex; i++)
 			{
 				points[i - startSegmentIndex] = _points[i];
@@ -296,7 +296,7 @@ namespace ProSuite.Commons.AO.Geometry.Proxy
 			{
 				SegmentProxy seg1 = GetSegment(endSegmentIndex);
 				IPnt end = seg1.GetPointAt(endFraction, as3D: true);
-				points[pointCount - 1] = QaGeometryUtils.GetWksPoint(end);
+				points[pointCount - 1] = ProxyUtils.GetWksPoint(end);
 			}
 
 			GeometryUtils.SetWKSPointZs(subpart, points);

@@ -12,8 +12,7 @@ using ProSuite.Commons.Collections;
 
 namespace ProSuite.Commons.AO.Geometry.Proxy
 {
-	[Obsolete("rename")]
-	public static class QaGeometryUtils
+	public static class ProxyUtils
 	{
 		// always access by property
 		[CanBeNull][ThreadStatic] private static IEnvelope _envelopeTemplate;

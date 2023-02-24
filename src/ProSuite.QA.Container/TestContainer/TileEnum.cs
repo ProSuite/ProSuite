@@ -71,13 +71,13 @@ namespace ProSuite.QA.Container.TestContainer
 		{
 			if (executeEnvelope != null)
 			{
-				return QaGeometryUtils.CreateBox(executeEnvelope);
+				return ProxyUtils.CreateBox(executeEnvelope);
 			}
 
 			IEnvelope tableExtentUnion = TestUtils.GetFullExtent(GetInvolvedGeoDatasets());
 			return tableExtentUnion == null
 				       ? null
-				       : QaGeometryUtils.CreateBox(tableExtentUnion);
+				       : ProxyUtils.CreateBox(tableExtentUnion);
 		}
 
 		private IEnumerable<IReadOnlyGeoDataset> GetInvolvedGeoDatasets()

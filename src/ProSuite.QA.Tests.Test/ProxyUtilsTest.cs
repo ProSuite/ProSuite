@@ -9,13 +9,12 @@ using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.AO.Test;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
-using ProSuite.QA.Container.Geometry;
 using ProSuite.QA.Tests.Test.Construction;
 
 namespace ProSuite.QA.Tests.Test
 {
 	[TestFixture]
-	public class QaGeometryUtilsTest
+	public class ProxyUtilsTest
 	{
 		[OneTimeSetUp]
 		public void SetupFixture()
@@ -43,16 +42,16 @@ namespace ProSuite.QA.Tests.Test
 				};
 
 			List<Pnt> points =
-				wksPointZs.Select(wksPointZ => QaGeometryUtils.CreatePoint3D(wksPointZ)).ToList();
+				wksPointZs.Select(wksPointZ => ProxyUtils.CreatePoint3D(wksPointZ)).ToList();
 
 			var pointsWithoutEndPoint = new List<Pnt>(points);
 			pointsWithoutEndPoint.RemoveAt(points.Count - 1);
 
-			Plane plane = QaGeometryUtils.CreatePlane(pointsWithoutEndPoint);
+			Plane plane = ProxyUtils.CreatePlane(pointsWithoutEndPoint);
 
 			double area;
 			double perimeter;
-			QaGeometryUtils.CalculateProjectedArea(plane, points, out area, out perimeter);
+			ProxyUtils.CalculateProjectedArea(plane, points, out area, out perimeter);
 
 			Console.WriteLine(@"area: {0} perimeter: {1}", area, perimeter);
 
@@ -80,12 +79,12 @@ namespace ProSuite.QA.Tests.Test
 		private void ValidateTri(List<WKSPointZ> wksPointZs, bool isDefined)
 		{
 			List<Pnt> points =
-				wksPointZs.Select(wksPointZ => QaGeometryUtils.CreatePoint3D(wksPointZ)).ToList();
+				wksPointZs.Select(wksPointZ => ProxyUtils.CreatePoint3D(wksPointZ)).ToList();
 
 			var pointsWithoutEndPoint = new List<Pnt>(points);
 			pointsWithoutEndPoint.RemoveAt(points.Count - 1);
 
-			Plane plane = QaGeometryUtils.CreatePlane(pointsWithoutEndPoint);
+			Plane plane = ProxyUtils.CreatePlane(pointsWithoutEndPoint);
 			Assert.True(plane.IsDefined == isDefined);
 		}
 
@@ -119,16 +118,16 @@ namespace ProSuite.QA.Tests.Test
 				};
 
 			List<Pnt> points =
-				wksPointZs.Select(wksPointZ => QaGeometryUtils.CreatePoint3D(wksPointZ)).ToList();
+				wksPointZs.Select(wksPointZ => ProxyUtils.CreatePoint3D(wksPointZ)).ToList();
 
 			var pointsWithoutEndPoint = new List<Pnt>(points);
 			pointsWithoutEndPoint.RemoveAt(points.Count - 1);
 
-			Plane plane = QaGeometryUtils.CreatePlane(pointsWithoutEndPoint);
+			Plane plane = ProxyUtils.CreatePlane(pointsWithoutEndPoint);
 
 			double area;
 			double perimeter;
-			QaGeometryUtils.CalculateProjectedArea(plane, points, out area, out perimeter);
+			ProxyUtils.CalculateProjectedArea(plane, points, out area, out perimeter);
 
 			Console.WriteLine(@"area: {0} perimeter: {1}", area, perimeter);
 
@@ -150,16 +149,16 @@ namespace ProSuite.QA.Tests.Test
 				};
 
 			List<Pnt> points =
-				wksPointZs.Select(wksPointZ => QaGeometryUtils.CreatePoint3D(wksPointZ)).ToList();
+				wksPointZs.Select(wksPointZ => ProxyUtils.CreatePoint3D(wksPointZ)).ToList();
 
 			var pointsWithoutEndPoint = new List<Pnt>(points);
 			pointsWithoutEndPoint.RemoveAt(points.Count - 1);
 
-			Plane plane = QaGeometryUtils.CreatePlane(pointsWithoutEndPoint);
+			Plane plane = ProxyUtils.CreatePlane(pointsWithoutEndPoint);
 
 			double area;
 			double perimeter;
-			QaGeometryUtils.CalculateProjectedArea(plane, points, out area, out perimeter);
+			ProxyUtils.CalculateProjectedArea(plane, points, out area, out perimeter);
 
 			Console.WriteLine(@"area: {0} perimeter: {1}", area, perimeter);
 
@@ -181,16 +180,16 @@ namespace ProSuite.QA.Tests.Test
 				};
 
 			List<Pnt> points =
-				wksPointZs.Select(wksPointZ => QaGeometryUtils.CreatePoint3D(wksPointZ)).ToList();
+				wksPointZs.Select(wksPointZ => ProxyUtils.CreatePoint3D(wksPointZ)).ToList();
 
 			var pointsWithoutEndPoint = new List<Pnt>(points);
 			pointsWithoutEndPoint.RemoveAt(points.Count - 1);
 
-			Plane plane = QaGeometryUtils.CreatePlane(pointsWithoutEndPoint);
+			Plane plane = ProxyUtils.CreatePlane(pointsWithoutEndPoint);
 
 			double area;
 			double perimeter;
-			QaGeometryUtils.CalculateProjectedArea(plane, points, out area, out perimeter);
+			ProxyUtils.CalculateProjectedArea(plane, points, out area, out perimeter);
 
 			Console.WriteLine(@"area: {0} perimeter: {1}", area, perimeter);
 
@@ -213,16 +212,16 @@ namespace ProSuite.QA.Tests.Test
 				};
 
 			List<Pnt> points =
-				wksPointZs.Select(wksPointZ => QaGeometryUtils.CreatePoint3D(wksPointZ)).ToList();
+				wksPointZs.Select(wksPointZ => ProxyUtils.CreatePoint3D(wksPointZ)).ToList();
 
 			var pointsWithoutEndPoint = new List<Pnt>(points);
 			pointsWithoutEndPoint.RemoveAt(points.Count - 1);
 
-			Plane plane = QaGeometryUtils.CreatePlane(pointsWithoutEndPoint);
+			Plane plane = ProxyUtils.CreatePlane(pointsWithoutEndPoint);
 
 			double area;
 			double perimeter;
-			QaGeometryUtils.CalculateProjectedArea(plane, points, out area, out perimeter);
+			ProxyUtils.CalculateProjectedArea(plane, points, out area, out perimeter);
 
 			Console.WriteLine(@"area: {0} perimeter: {1}", area, perimeter);
 
@@ -240,9 +239,9 @@ namespace ProSuite.QA.Tests.Test
 			            .Add(0, 0, 5);
 			IMultiPatch multiPatch = construction.MultiPatch;
 			IIndexedMultiPatch indexedMultiPatch =
-				QaGeometryUtils.CreateIndexedMultiPatch(multiPatch);
+				ProxyUtils.CreateIndexedMultiPatch(multiPatch);
 
-			Plane plane = QaGeometryUtils.CreatePlane(indexedMultiPatch.GetSegments());
+			Plane plane = ProxyUtils.CreatePlane(indexedMultiPatch.GetSegments());
 			WKSPointZ normal = plane.GetNormalVector();
 			Assert.AreEqual(0, normal.Z);
 		}
@@ -257,11 +256,11 @@ namespace ProSuite.QA.Tests.Test
 			            .Add(0, 0, 5);
 			IMultiPatch multiPatch = construction.MultiPatch;
 			IIndexedMultiPatch indexedMultiPatch =
-				QaGeometryUtils.CreateIndexedMultiPatch(multiPatch);
+				ProxyUtils.CreateIndexedMultiPatch(multiPatch);
 
-			IList<Pnt> points = QaGeometryUtils.GetPoints(indexedMultiPatch.GetSegments());
-			Plane plane = QaGeometryUtils.CreatePlane(points);
-			IList<WKSPointZ> projected = QaGeometryUtils.ProjectToPlane(plane, points);
+			IList<Pnt> points = ProxyUtils.GetPoints(indexedMultiPatch.GetSegments());
+			Plane plane = ProxyUtils.CreatePlane(points);
+			IList<WKSPointZ> projected = ProxyUtils.ProjectToPlane(plane, points);
 
 			ValidateForm(indexedMultiPatch, projected);
 		}
