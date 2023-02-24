@@ -20,8 +20,9 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 		static IssueFilterDescriptorsItem()
 		{
 			// Static  initializer:
-			_image = ItemUtils.GetGroupItemImage(Resources.IssueFilterOverlay);
-			_selectedImage = ItemUtils.GetGroupItemSelectedImage(Resources.IssueFilterOverlay);
+			_image = ItemUtils.GetGroupItemImage(Resources.IssueFilterDescriptorsOverlay);
+			_selectedImage =
+				ItemUtils.GetGroupItemSelectedImage(Resources.IssueFilterDescriptorsOverlay);
 		}
 
 		public IssueFilterDescriptorsItem([NotNull] CoreDomainModelItemModelBuilder modelBuilder) :

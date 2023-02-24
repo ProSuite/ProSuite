@@ -20,8 +20,9 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 		static TransformerDescriptorsItem()
 		{
 			// Static  initializer:
-			_image = ItemUtils.GetGroupItemImage(Resources.TransformOverlay);
-			_selectedImage = ItemUtils.GetGroupItemSelectedImage(Resources.TransformOverlay);
+			_image = ItemUtils.GetGroupItemImage(Resources.TransformerDescriptorsOverlay);
+			_selectedImage =
+				ItemUtils.GetGroupItemSelectedImage(Resources.TransformerDescriptorsOverlay);
 		}
 
 		public TransformerDescriptorsItem([NotNull] CoreDomainModelItemModelBuilder modelBuilder) :

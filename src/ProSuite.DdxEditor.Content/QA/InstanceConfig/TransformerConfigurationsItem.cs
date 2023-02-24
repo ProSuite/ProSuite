@@ -19,8 +19,8 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 
 		static TransformerConfigurationsItem()
 		{
-			_image = ItemUtils.GetGroupItemImage(Resources.TransformOverlay);
-			_selectedImage = ItemUtils.GetGroupItemSelectedImage(Resources.TransformOverlay);
+			_image = ItemUtils.GetGroupItemImage(Resources.TransformerConfigurationsOverlay);
+			_selectedImage = ItemUtils.GetGroupItemSelectedImage(Resources.TransformerConfigurationsOverlay);
 		}
 
 		public TransformerConfigurationsItem([NotNull] CoreDomainModelItemModelBuilder modelBuilder,
@@ -62,7 +62,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 		protected override IEnumerable<InstanceConfigurationInCategoryTableRow> GetConfigTableRows(
 			DataQualityCategory category)
 		{
-			return InstanceConfigTableRows.GetInstanceConfigs<TransformerConfiguration>(
+			return InstanceConfigTableRows.GetInstanceConfigurationInCategoryTableRows<TransformerConfiguration>(
 				ModelBuilder, category);
 		}
 

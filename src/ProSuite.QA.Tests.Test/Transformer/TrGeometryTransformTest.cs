@@ -297,6 +297,25 @@ namespace ProSuite.QA.Tests.Test.Transformer
 					              involvedRow.TableName == "refFc");
 				}
 			}
+			{
+				TrGeometryToPoints tr = new TrGeometryToPoints(
+					ReadOnlyTableFactory.Create(lineFc), GeometryComponent.LineEndPoints);
+				QaPointNotNear test = new QaPointNotNear(
+					tr.GetTransformed(), ReadOnlyTableFactory.Create(refFc), 2);
+				var runner = new QaContainerTestRunner(1000, test);
+				runner.Execute();
+				Assert.AreEqual(1, runner.Errors.Count);
+
+				// Check involved rows. They must be from a 'real' feature class, not form a transformed feature class.
+				IList<InvolvedRow> involvedRows = runner.Errors[0].InvolvedRows;
+				Assert.AreEqual(2, involvedRows.Count);
+
+				foreach (InvolvedRow involvedRow in involvedRows)
+				{
+					Assert.IsTrue(involvedRow.TableName == "lineFc" ||
+					              involvedRow.TableName == "refFc");
+				}
+			}
 		}
 
 		[Test]

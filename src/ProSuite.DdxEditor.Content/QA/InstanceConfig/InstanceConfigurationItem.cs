@@ -12,7 +12,6 @@ using ProSuite.Commons.Notifications;
 using ProSuite.Commons.Text;
 using ProSuite.Commons.Validation;
 using ProSuite.DdxEditor.Content.QA.InstanceDescriptors;
-using ProSuite.DdxEditor.Content.QA.QCon;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Commands;
 using ProSuite.DdxEditor.Framework.Dependencies;
@@ -224,7 +223,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			if (_containerItem != null)
 			{
 				commands.Add(new CopyInstanceConfigurationCommand(this, applicationController));
-				commands.Add(new AssignInstanceConfigurationToCategoryCommand(new[] {this},
+				commands.Add(new AssignInstanceConfigurationsToCategoryCommand(new[] {this},
 					             _containerItem, applicationController));
 
 				_webHelpCommand = new ShowInstanceWebHelpCommand<InstanceConfigurationItem>(

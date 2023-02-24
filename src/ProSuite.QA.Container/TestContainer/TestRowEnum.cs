@@ -1021,15 +1021,12 @@ namespace ProSuite.QA.Container.TestContainer
 						continue;
 					}
 
-					ICollection<CachedRow> cachedRows;
+					ICollection<CachedRow> cachedRows = null;
 					if (preloadedCache?.IsLoaded(cachedTable, tile) == true)
 					{
 						cachedRows = preloadedCache.TransferCachedRows(tileCache, cachedTable);
 					}
-					else
-					{
-						cachedRows = LoadCachedTableRows(cachedTable, tile, tileCache);
-					}
+					cachedRows = cachedRows ?? LoadCachedTableRows(cachedTable, tile, tileCache);
 
 					PreprocessCache(cachedTable, tile, tileCache, cachedRows);
 				}

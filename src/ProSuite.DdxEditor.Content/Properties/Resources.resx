@@ -281,10 +281,10 @@
     <value>Images\WellKnownLayerFileItem.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="WellKnownLayerFileOverlay" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Images\wellknownlayerfileoverlay.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+    <value>Images\WellKnownLayerFileOverlay.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="AssignToDataQualityCategory" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>images\assigntodataqualitycategory.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+    <value>Images\AssignToDataQualityCategory.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="ExpressionTester" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>Images\ExpressionTester.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -296,18 +296,21 @@
     <value>Images\DatasetTypeLinearNetworkOverlay.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="DatasetTypeSurface" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>images\datasettypesurface.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+    <value>Images\DatasetTypeSurface.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="DatasetTypeSurfaceOverlay" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>images\datasettypesurfaceoverlay.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+    <value>Images\DatasetTypeSurfaceOverlay.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="TransformOverlay" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Images\TransformOverlay.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="TransformerConfigurationsOverlay" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Images\TransformerConfigurationsOverlay.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="IssueFilterOverlay" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Images\IssueFilterOverlay.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="IssueFilterConfigurationsOverlay" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Images\IssueFilterConfigurationsOverlay.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="RowFilterOverlay" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Images\RowFilterOverlay.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="IssueFilterDescriptorsOverlay" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Images\IssueFilterDescriptorsOverlay.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="TransformerDescriptorsOverlay" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Images\TransformerDescriptorsOverlay.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
 </root>

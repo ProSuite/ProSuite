@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DdxEditor.Framework.Items;
@@ -15,14 +15,21 @@ namespace ProSuite.DdxEditor.Framework.Commands
 		/// Initializes a new instance of the <see cref="ItemsCommandBase&lt;T&gt;"/> class.
 		/// </summary>
 		/// <param name="items">The items.</param>
-		protected ItemsCommandBase([NotNull] ICollection<T> items)
+		/// /// <param name="applicationController">The application controller.</param>
+		protected ItemsCommandBase([NotNull] ICollection<T> items,
+		                           [NotNull] IApplicationController applicationController)
 		{
 			Assert.ArgumentNotNull(items, nameof(items));
+			Assert.ArgumentNotNull(applicationController, nameof(applicationController));
 
 			Items = items;
+			ApplicationController = applicationController;
 		}
 
 		[NotNull]
 		protected ICollection<T> Items { get; }
+
+		[NotNull]
+		protected IApplicationController ApplicationController { get; }
 	}
 }

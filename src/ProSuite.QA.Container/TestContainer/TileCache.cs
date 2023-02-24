@@ -250,6 +250,11 @@ namespace ProSuite.QA.Container.TestContainer
 
 				IReadOnlyFeature targetFeature = cachedRow.Feature;
 
+				if (targetFeature == null)
+				{
+					return null;
+				}
+
 				if (targetFeature.OID < filterHelper.MinimumOID)
 				{
 					continue;
@@ -491,6 +496,11 @@ namespace ProSuite.QA.Container.TestContainer
 
 			foreach (BoxTree<CachedRow>.TileEntry entry in target._rowBoxTrees[table].Search(null))
 			{
+				if (! entry.Value.HasFeatureCached())
+				{
+					// TODO: why can this be
+					return null;
+				}
 				result.Add(entry.Value);
 			}
 
