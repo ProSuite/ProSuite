@@ -63,6 +63,11 @@ namespace ProSuite.Processing.Utils
 
 		public string Clause { get; }
 
+		/// <summary>
+		/// Return true iff the where clause refers to no other
+		/// fields than those listed in <paramref name="fields"/>.
+		/// Optionally, append an error message that lists undefined fields.
+		/// </summary>
 		public bool Validate(IEnumerable<string> fields, StringBuilder messages = null)
 		{
 			var stack = new Stack<object>();
@@ -72,13 +77,6 @@ namespace ProSuite.Processing.Utils
 
 			return values.Validate(messages);
 		}
-
-		//public bool Match([NotNull] IRowValues row)
-		//{
-		//	Assert.ArgumentNotNull(row, nameof(row));
-
-		//	return Match(new NamedValues(row, _valueCache, _indexCache));
-		//}
 
 		public bool Match([NotNull] INamedValues values)
 		{
@@ -1242,7 +1240,7 @@ namespace ProSuite.Processing.Utils
 					{
 						var s = _badNames.Count == 1 ? "" : "s";
 						messages.AppendFormat("Unknown field name{0}: ", s);
-						messages.Append(string.Join(" ", _badNames.OrderBy(n => n)));
+						messages.Append(string.Join(", ", _badNames.OrderBy(n => n)));
 					}
 
 					return false;

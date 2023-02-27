@@ -323,6 +323,20 @@ namespace ProSuite.Processing.Test
 
 		}
 
+		[Test]
+		public void CanValidate()
+		{
+			var matcher = new WhereClauseMatcher("A = 1 AND 2 = B");
+
+			Assert.True(matcher.Validate(new[] { "A", "B", "C" }));
+
+			Assert.False(matcher.Validate(new[] { "C" }));
+
+			Assert.False(matcher.Validate(Array.Empty<string>()));
+
+			Assert.False(matcher.Validate(null));
+		}
+
 		#region Private helpers
 
 		private static string GetDump(WhereClauseMatcher matcher)
