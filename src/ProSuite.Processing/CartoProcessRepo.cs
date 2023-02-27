@@ -21,8 +21,6 @@ namespace ProSuite.Processing
 			_list = new ReadOnlyList<CartoProcessDefinition>(_definitions);
 		}
 
-		public int ProcessCount => _list.Count;
-
 		public IReadOnlyList<CartoProcessDefinition> ProcessDefinitions => _list;
 
 		public void Clear()
@@ -243,6 +241,4 @@ namespace ProSuite.Processing
 				       : $"{AliasName} (resolved as {ResolvedType.Name}";
 		}
 	}
-
-
 }
