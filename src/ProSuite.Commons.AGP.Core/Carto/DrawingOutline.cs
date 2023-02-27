@@ -35,7 +35,7 @@ public static class DrawingOutline
 			ScaleFactor = 1.0;
 		}
 
-		public Options(double scaleFactor, Options options)
+		public Options(Options options, double? scaleFactor = null)
 		{
 			// Copy values:
 			IgnoreErrors = options.IgnoreErrors;
@@ -45,7 +45,7 @@ public static class DrawingOutline
 			FillHoles = options.FillHoles;
 			MaxBufferDeviationPoints = options.MaxBufferDeviationPoints;
 			MaxVerticesInFullCircle = options.MaxVerticesInFullCircle;
-			ScaleFactor = scaleFactor;
+			ScaleFactor = scaleFactor ?? options.ScaleFactor;
 		}
 	}
 
@@ -139,17 +139,6 @@ public static class DrawingOutline
 		//symbol.HaloSymbol; // a PolygonSymbol
 		//symbol.ScaleX; // a ratio
 
-		if (symbol.Angle > 0 || symbol.Angle < 0)
-		{
-			// empirical: ignored by the renderer, but when changed in the UI,
-			// this angle is propagated to the individual symbol layers; ergo:
-			// we can ignore it here as well
-		}
-
-		if (symbol.Callout != null)
-			throw new NotImplementedException(
-				"Point symbol has a Callout, which is not yet implemented"); // TODO or silently ignore?
-
 		if (symbol.ScaleX > 1 || symbol.ScaleX < 1)
 		{
 			// empirical: x-scales symbol layers that have a ScaleX property
@@ -162,6 +151,13 @@ public static class DrawingOutline
 
 		var outline = RenderLayers(shape, symbol.SymbolLayers, options);
 
+		if (symbol.Angle > 0 || symbol.Angle < 0)
+		{
+			// empirical: ignored by the renderer, but when changed in the UI,
+			// this angle is propagated to the individual symbol layers; ergo:
+			// we can ignore it here as well
+		}
+
 		if (symbol.HaloSymbol != null && symbol.HaloSize > 0)
 		{
 			// empirical: halo is a buffered version of the symbol
@@ -172,8 +168,22 @@ public static class DrawingOutline
 			var buffer = GeometryUtils.Buffer(outline, distance) as Polygon;
 			if (buffer is null) return outline; // probably distance was negative
 
-			// the halo replaces the symbol, because it always contains the symbol
-			outline = GetOutline(buffer, symbol.HaloSymbol, options);
+			// - halo outline replaces symbol outline (because it contains it)
+			// - ignore dashing because the Start/EndPoint is arbitrary after
+			//   the Buffer() above, so our dashes would be arbitrary as well
+			//   (and the Pro SDK's GetDrawingOutline also ignore dashing of
+			//   embedded symbols)
+			var innerOptions = new Options(options) { IgnoreDashing = true };
+			outline = GetOutline(buffer, symbol.HaloSymbol, innerOptions);
+		}
+
+		if (symbol.Callout != null)
+		{
+			// not exposed in ordinary symbology ui, but may occur in labels/annos
+			if (!options.IgnoreErrors)
+				throw new NotImplementedException(
+					"Point symbol has a Callout, which is not yet implemented");
+			_msg.Warn("Ignoring point symbol's callout");
 		}
 
 		return outline;
@@ -235,7 +245,7 @@ public static class DrawingOutline
 		// - Fill, subclasses: Solid, Gradient, Hatch, ...
 		// - Stroke, subclasses: Solid, Gradient, Picture, ...
 		// - Marker, subclasses: Vector, Character, Picture, ...
-		// (and a few others)
+		// (and a few others, which we don't support)
 
 		if (layer.Effects is { Length: > 0 })
 		{
@@ -271,200 +281,212 @@ public static class DrawingOutline
 
 		if (layer is CIMCharacterMarker charMarker)
 		{
-			// CIMMarker properties include:
-			// .AnchorPoint: MapPoint
-			// .AnchorPointUnits: SymbolUnits (Relative|Absolute)
-			// .OffsetX, OffsetY, OffsetZ: double (applied after rotation; AnchorPoint applies before rotation)
-			// .RotateClockwise: bool
-			// .Rotation: double (degrees, around AnchorPoint)
-			// .Size: double (marker height; width adjusted proportionally)
-			// .MarkerPlacement: CIMMarkerPlacement (about 12 subtypes)
-
-			// CIMCharacterMarker properties include:
-			// .CharacterIndex: int (Unicode value)
-			// .FontFamilyName: string
-			// .FontStyleName: string
-			// .FontType: FontType (Unspecified,TrueType,PSOpenType,TTOpenType,Type1)
-			// .FontVariationSettings: CIMFontVariation[] (TagName/Value pairs, depends on font, don't understand)
-			// .ScaleX: double (width as a ratio, leaving height unmodified)
-			// .Symbol: CIMPolygonSymbol
-			// .ScaleSymbolsProportionally: bool (iff true, scale outline and fill strokes proportionally to marker size)
-			// .RespectFrame: bool (don't understand)
-
-			int codePoint = charMarker.CharacterIndex;
-			double fontSize = charMarker.Size;
-			string familyName = charMarker.FontFamilyName;
-			string styleName = charMarker.FontStyleName;
-
-			var typeface = GlyphUtils.FindGlyphTypeface(familyName, styleName);
-			if (typeface is null)
-			{
-				VerboseDebug("No font found for family '{0}', style '{1}", familyName, styleName);
-				return null;
-			}
-
-			var glyph = GlyphUtils.GetGlyph(codePoint, typeface, fontSize, out var advance);
-			if (glyph is null)
-			{
-				VerboseDebug($"Code point U+{codePoint:X4} has no glyph in font");
-				return null;
-			}
-
-			Geometry outline = GlyphUtils.ToEsriPolygon(glyph);
-
-			// empirical: use metrics for horizontal, glyph box for vertical
-			var magic1 = glyph.Bounds with { X = 0, Width = advance };
-
-			double ax = magic1.X + magic1.Width / 2;
-			double ay = -magic1.Y - magic1.Height / 2;
-
-			var anchor = charMarker.AnchorPoint;
-			var anchorUnits = charMarker.AnchorPointUnits;
-			if (anchor != null)
-			{
-				// empirical: Pro seems to add a 1pt margin on all sides
-				var magic2 = glyph.Bounds;
-				magic2.Inflate(1, 1);
-
-				switch (anchorUnits)
-				{
-					case SymbolUnits.Relative:
-						ax += anchor.X * magic2.Width;
-						ay += anchor.Y * magic2.Height;
-						break;
-					case SymbolUnits.Absolute:
-						ax += anchor.X;
-						ay += anchor.Y;
-						break;
-					default:
-						throw new ArgumentOutOfRangeException($"Unknown {nameof(SymbolUnits)}: {anchorUnits}");
-				}
-			}
-
-			// NB. Cannot combine ax/ay with dx/dy below, because ax/ay occur before scale+rotate
-			outline = GeometryUtils.Move(outline, -ax, -ay);
-
-			double sx = 1.0; //charMarker.ScaleX; // NB. renderer ignores ScaleX (empirical, Pro 3.0)
-			sx *= scaleFactor;
-			double sy = 1.0;
-			sy *= scaleFactor;
-			double radians = charMarker.Rotation * Math.PI / 180;
-			if (charMarker.RotateClockwise) radians *= -1;
-			double dx = charMarker.OffsetX * scaleFactor;
-			double dy = charMarker.OffsetY * scaleFactor;
-
-			outline = TransformMarker(outline, sx, sy, radians, dx, dy);
-
-			if (charMarker.Symbol is { SymbolLayers: { } })
-			{
-				bool scaleStrokes = charMarker.ScaleSymbolsProportionally; // relative to Size=10pt (?)
-
-				// Effects seem to be ignored for embedded symbols (at least not accessible in UI).
-				// Here: account for outline strokes but ignore markers and effects.
-				// TODO ALTERNATIVELY (and more correctly), recurse GetOutline(outline, charMarker.Symbol)
-				// (as we do with Vector markers)
-				var strokes = charMarker.Symbol.SymbolLayers.OfType<CIMStroke>().ToArray();
-				if (strokes.Any())
-				{
-					var maxStroke = strokes.MaxBy(s => s.Width);
-					if (maxStroke.Width > 0)
-					{
-						var distance = maxStroke.Width * scaleFactor / 2;
-						if (scaleStrokes) distance *= charMarker.Size / 10.0; // empirical
-						var joinType = GetJoinType(maxStroke.JoinStyle);
-						var capType = GetCapType(maxStroke.CapStyle);
-						var miterLimit = maxStroke.MiterLimit * scaleFactor;
-						double maxDeviation = options.MaxBufferDeviationPoints;
-						int maxVerticesInFullCircle = options.MaxVerticesInFullCircle;
-						outline = GeometryEngine.Instance.GraphicBuffer(
-							outline, distance, joinType, capType, miterLimit,
-							maxDeviation, maxVerticesInFullCircle);
-					}
-				}
-			}
-
-			return PlaceMarker(outline, charMarker.MarkerPlacement, shape, options);
+			return GetCharacterMarkerOutline(shape, charMarker, options);
 		}
 
 		if (layer is CIMVectorMarker vectorMarker)
 		{
-			// CIMMarker properties: see above (Anchor, Offset, Rotate, Size, Placement)
-			// CIMVectorMarker properties:
-			// .Frame: Envelope (Core.Geometry, not CIM.Geometry)
-			// .MarkerGraphics: CIMMarkerGraphic[]
-			// .ScaleSymbolsProportionally:
-			// .RespectFrame: bool
-			// .ClippingPath: CIMClippingPath (essentially a Polygon)
-			var graphics = vectorMarker.MarkerGraphics;
-			if (graphics is not { Length: > 0 })
-				return null; // marker has no graphics
-			var frame = vectorMarker.Frame;
-			bool respectFrame = vectorMarker.RespectFrame; // TODO don't understand
-//			bool scaleStrokes = vectorMarker.ScaleSymbolsProportionally; // relative to Size=10pt ???
-			if (vectorMarker.ClippingPath?.Path != null)
-				throw new NotImplementedException(
-					$"{nameof(vectorMarker.ClippingPath)} on vector marker is not yet supported");
-
-			var list = new List<Geometry>();
-			foreach (var graphic in graphics)
-			{
-				var innerOptions = GetInnerOptions(options);
-				// simplify graphic's geometry to fix ring orientations
-				var graphicShape = GeometryUtils.Simplify(graphic.Geometry, true);
-				var graphicOutline = GetOutline(graphicShape, graphic.Symbol, innerOptions);
-				if (graphicOutline is Polygon polygon)
-				{
-					var withSRef = PolygonBuilderEx.CreatePolygon(polygon, shape.SpatialReference);
-					list.Add(withSRef);
-				}
-			}
-
-			var outline = GeometryUtils.Union(list);
-
-			var box = respectFrame ? frame : outline.Extent;
-			outline = GeometryUtils.Move(outline, -box.Center.X, -box.Center.Y);
-
-			var anchor = vectorMarker.AnchorPoint;
-			var anchorUnits = vectorMarker.AnchorPointUnits;
-			if (anchor != null)
-			{
-				double ax = anchor.X;
-				double ay = anchor.Y;
-
-				switch (anchorUnits)
-				{
-					case SymbolUnits.Relative:
-						ax *= box.Height; // sic (empirical)
-						ay *= box.Height;
-						break;
-					case SymbolUnits.Absolute:
-						// will scale back to Size later
-						ax *= box.Height / vectorMarker.Size;
-						ay *= box.Height / vectorMarker.Size;
-						break;
-					default:
-						throw new NotSupportedException($"Unknown {nameof(vectorMarker.AnchorPointUnits)}: {anchorUnits}");
-				}
-
-				outline = GeometryUtils.Move(outline, -ax, -ay);
-			}
-
-			// TODO Buggy if NO AnchorPoint set... (review scaling)
-
-			double sx = scaleFactor * vectorMarker.Size / box.Height;
-			double sy = scaleFactor * vectorMarker.Size / box.Height;
-			double radians = vectorMarker.Rotation * Math.PI / 180;
-			if (vectorMarker.RotateClockwise) radians *= -1;
-			double dx = vectorMarker.OffsetX * scaleFactor;
-			double dy = vectorMarker.OffsetY * scaleFactor;
-
-			outline = TransformMarker(outline, sx, sy, radians, dx, dy);
-
-			return PlaceMarker(outline, vectorMarker.MarkerPlacement, shape, options);
+			return GetVectorMarkerOutline(shape, vectorMarker, options);
 		}
 
 		throw new NotSupportedException(
 			$"Symbol layer of type {layer.GetType().Name} is not supported");
+	}
+
+	private static Polygon GetCharacterMarkerOutline(Geometry shape, CIMCharacterMarker marker, Options options)
+	{
+		// CIMMarker properties include:
+		// .AnchorPoint: MapPoint
+		// .AnchorPointUnits: SymbolUnits (Relative|Absolute)
+		// .OffsetX, OffsetY, OffsetZ: double
+		// .RotateClockwise: bool
+		// .Rotation: double (degrees, around AnchorPoint)
+		// .Size: double (marker height; width adjusted proportionally)
+		// .MarkerPlacement: CIMMarkerPlacement (about 12 subtypes)
+		// Transformation ordering: (1) anchor point, (2) scale, (3) rotate, (4) offset, (5) place
+
+		// CIMCharacterMarker properties include:
+		// .CharacterIndex: int (Unicode value)
+		// .FontFamilyName: string
+		// .FontStyleName: string
+		// .FontType: FontType (Unspecified,TrueType,PSOpenType,TTOpenType,Type1)
+		// .FontVariationSettings: CIMFontVariation[] (TagName/Value pairs, depends on font, don't understand)
+		// .ScaleX: double (width as a ratio, leaving height unmodified)
+		// .Symbol: CIMPolygonSymbol
+		// .ScaleSymbolsProportionally: bool (iff true, scale outline and fill strokes proportionally to marker size)
+		// .RespectFrame: bool (don't understand)
+
+		int codePoint = marker.CharacterIndex;
+		double fontSize = marker.Size;
+		string familyName = marker.FontFamilyName;
+		string styleName = marker.FontStyleName;
+
+		var typeface = GlyphUtils.FindGlyphTypeface(familyName, styleName);
+		if (typeface is null)
+		{
+			VerboseDebug("No font found for family '{0}', style '{1}", familyName, styleName);
+			return null;
+		}
+
+		var glyph = GlyphUtils.GetGlyph(codePoint, typeface, fontSize, out var advance);
+		if (glyph is null)
+		{
+			VerboseDebug($"Code point U+{codePoint:X4} has no glyph in font");
+			return null;
+		}
+
+		Geometry outline = GlyphUtils.ToEsriPolygon(glyph);
+
+		// empirical: use metrics for horizontal, glyph box for vertical
+		var magic1 = glyph.Bounds with { X = 0, Width = advance };
+
+		double ax = magic1.X + magic1.Width / 2;
+		double ay = -magic1.Y - magic1.Height / 2;
+
+		var anchor = marker.AnchorPoint;
+		var anchorUnits = marker.AnchorPointUnits;
+		if (anchor != null)
+		{
+			// empirical: Pro seems to add a 1pt margin on all sides
+			var magic2 = glyph.Bounds;
+			magic2.Inflate(1, 1);
+
+			switch (anchorUnits)
+			{
+				case SymbolUnits.Relative:
+					ax += anchor.X * magic2.Width;
+					ay += anchor.Y * magic2.Height;
+					break;
+				case SymbolUnits.Absolute:
+					ax += anchor.X;
+					ay += anchor.Y;
+					break;
+				default:
+					throw new ArgumentOutOfRangeException(
+						$"Unknown {nameof(SymbolUnits)}: {anchorUnits}");
+			}
+		}
+
+		// NB. Cannot combine ax/ay with dx/dy below, because ax/ay occur before scale+rotate
+		outline = GeometryUtils.Move(outline, -ax, -ay);
+
+		double scaleFactor = options.ScaleFactor;
+		double sx = 1.0; //charMarker.ScaleX; // NB. renderer ignores ScaleX (empirical, Pro 3.0)
+		sx *= scaleFactor;
+		double sy = 1.0;
+		sy *= scaleFactor;
+		double radians = marker.Rotation * Math.PI / 180;
+		if (marker.RotateClockwise) radians *= -1;
+		double dx = marker.OffsetX * scaleFactor;
+		double dy = marker.OffsetY * scaleFactor;
+
+		outline = TransformMarker(outline, sx, sy, radians, dx, dy);
+
+		if (marker.Symbol is { SymbolLayers: { } })
+		{
+			bool scaleStrokes = marker.ScaleSymbolsProportionally; // relative to Size=10pt (?)
+
+			// Effects seem to be ignored for embedded symbols (at least not accessible in UI).
+			// Here: account for outline strokes but ignore markers and effects.
+			// TODO ALTERNATIVELY (and more correctly), recurse GetOutline(outline, charMarker.Symbol)
+			// (as we do with Vector markers)
+			var strokes = marker.Symbol.SymbolLayers.OfType<CIMStroke>().ToArray();
+			if (strokes.Any())
+			{
+				var maxStroke = strokes.MaxBy(s => s.Width);
+				if (maxStroke.Width > 0)
+				{
+					var distance = maxStroke.Width * scaleFactor / 2;
+					if (scaleStrokes) distance *= marker.Size / 10.0; // empirical
+					var joinType = GetJoinType(maxStroke.JoinStyle);
+					var capType = GetCapType(maxStroke.CapStyle);
+					var miterLimit = maxStroke.MiterLimit * scaleFactor;
+					double maxDeviation = options.MaxBufferDeviationPoints;
+					int maxVerticesInFullCircle = options.MaxVerticesInFullCircle;
+					outline = GeometryEngine.Instance.GraphicBuffer(
+						outline, distance, joinType, capType, miterLimit,
+						maxDeviation, maxVerticesInFullCircle);
+				}
+			}
+		}
+
+		return PlaceMarker(outline, marker.MarkerPlacement, shape, options);
+	}
+
+	private static Polygon GetVectorMarkerOutline(Geometry shape, CIMVectorMarker marker, Options options)
+	{
+		// CIMMarker properties: see above (Anchor, Offset, Rotate, Size, Placement)
+		// CIMVectorMarker properties:
+		// .Frame: Envelope (Core.Geometry, not CIM.Geometry)
+		// .MarkerGraphics: CIMMarkerGraphic[] (geometry/symbol pairs)
+		// .ScaleSymbolsProportionally: bool
+		// .RespectFrame: bool
+		// .ClippingPath: CIMClippingPath (essentially a Polygon)
+
+		var graphics = marker.MarkerGraphics;
+		if (graphics is not { Length: > 0 })
+			return null; // marker has no graphics
+		var frame = marker.Frame;
+		bool respectFrame = marker.RespectFrame; // TODO don't understand
+		//bool scaleStrokes = vectorMarker.ScaleSymbolsProportionally; // relative to Size=10pt ???
+		if (marker.ClippingPath?.Path != null)
+			throw new NotImplementedException(
+				$"{nameof(marker.ClippingPath)} on vector marker is not yet supported");
+		var list = new List<Geometry>();
+		foreach (var graphic in graphics)
+		{
+			var innerOptions = new Options(options, 1.0);
+			// simplify graphic's geometry to fix ring orientations
+			var graphicShape = GeometryUtils.Simplify(graphic.Geometry, true);
+			var graphicOutline = GetOutline(graphicShape, graphic.Symbol, innerOptions);
+			if (graphicOutline is Polygon polygon)
+			{
+				var withSRef = PolygonBuilderEx.CreatePolygon(polygon, shape.SpatialReference);
+				list.Add(withSRef);
+			}
+		}
+
+		var outline = GeometryUtils.Union(list);
+
+		var box = respectFrame ? frame : outline.Extent;
+		outline = GeometryUtils.Move(outline, -box.Center.X, -box.Center.Y);
+
+		var anchor = marker.AnchorPoint;
+		var anchorUnits = marker.AnchorPointUnits;
+		if (anchor != null)
+		{
+			double ax = anchor.X;
+			double ay = anchor.Y;
+
+			switch (anchorUnits)
+			{
+				case SymbolUnits.Relative:
+					ax *= box.Width; // slightly off if RespectFrame is false, don't know why
+					ay *= box.Height;
+					break;
+				case SymbolUnits.Absolute:
+					ax *= box.Height / marker.Size; // sic (empirical)
+					ay *= box.Height / marker.Size;
+					break;
+				default:
+					throw new NotSupportedException(
+						$"Unknown {nameof(marker.AnchorPointUnits)}: {anchorUnits}");
+			}
+
+			outline = GeometryUtils.Move(outline, -ax, -ay);
+		}
+
+		double scaleFactor = options.ScaleFactor;
+		double sx = scaleFactor * marker.Size / box.Height;
+		double sy = scaleFactor * marker.Size / box.Height;
+		double radians = marker.Rotation * Math.PI / 180;
+		if (marker.RotateClockwise) radians *= -1;
+		double dx = marker.OffsetX * scaleFactor;
+		double dy = marker.OffsetY * scaleFactor;
+
+		outline = TransformMarker(outline, sx, sy, radians, dx, dy);
+
+		return PlaceMarker(outline, marker.MarkerPlacement, shape, options);
 	}
 
 	private static Geometry TransformMarker(Geometry outline, double sx, double sy,
@@ -817,11 +839,6 @@ public static class DrawingOutline
 	}
 
 	#endregion
-
-	private static Options GetInnerOptions(Options options)
-	{
-		return new Options(1.0, options);
-	}
 
 	private static void VerboseDebug(string format, params object[] args)
 	{
