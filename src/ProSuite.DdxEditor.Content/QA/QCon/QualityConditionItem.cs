@@ -241,17 +241,19 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			Assert.ArgumentNotNull(qualityCondition, nameof(qualityCondition));
 			Assert.ArgumentNotNull(owner, nameof(owner));
 
-			DdxModel model = DataQualityCategoryUtils.GetDefaultModel(
-				qualityCondition.Category);
+			DdxModel model = DataQualityCategoryUtils.GetDefaultModel(qualityCondition.Category);
+
+			IList<QualitySpecification> qualitySpecifications =
+				_modelBuilder.QualitySpecifications.Get(qualityCondition);
 
 			var queries = new List<FinderQuery<QualitySpecificationTableRow>>
 			              {
 				              new FinderQuery<QualitySpecificationTableRow>(
 					              "<All>", "[all]",
 					              () =>
-						              QSpec.TableRows.GetQualitySpecifications(
+						              QSpec.TableRows.GetQualitySpecificationTableRows(
 							              _modelBuilder,
-							              qualityCondition))
+							              qualitySpecifications))
 			              };
 
 			if (model != null)
@@ -259,9 +261,9 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 				queries.Add(new FinderQuery<QualitySpecificationTableRow>(
 					            $"Quality specifications involving datasets in {model.Name}",
 					            $"model{model.Id}",
-					            () => QSpec.TableRows.GetQualitySpecifications(
+					            () => QSpec.TableRows.GetQualitySpecificationTableRows(
 						            _modelBuilder,
-						            qualityCondition,
+						            qualitySpecifications,
 						            model)));
 			}
 
