@@ -27,7 +27,7 @@ namespace ProSuite.DdxEditor.Content.SearchProviders
 		{
 			return InstanceConfigTableRows
 				.GetInstanceConfigurationTableRows<IssueFilterConfiguration>(
-					_modelBuilder);
+					_modelBuilder, null);
 		}
 	}
 }

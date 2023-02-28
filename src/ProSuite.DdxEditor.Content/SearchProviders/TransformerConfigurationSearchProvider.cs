@@ -27,7 +27,7 @@ namespace ProSuite.DdxEditor.Content.SearchProviders
 		{
 			return InstanceConfigTableRows
 				.GetInstanceConfigurationTableRows<TransformerConfiguration>(
-					_modelBuilder);
+					_modelBuilder, null);
 		}
 	}
 }
