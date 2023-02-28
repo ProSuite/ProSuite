@@ -797,7 +797,9 @@ namespace ProSuite.Commons.AO.Geometry.Cut
 		{
 			cutLine = GeometryFactory.Clone(cutLine);
 
-			if (GeometryUtils.IsZAware(cutLine) &&
+			bool cutLineHasZs = GeometryUtils.IsZAware(cutLine);
+
+			if (cutLineHasZs &&
 			    zSource != ChangeAlongZSource.Target)
 			{
 				((IZAware) cutLine).DropZs();
@@ -813,7 +815,7 @@ namespace ProSuite.Commons.AO.Geometry.Cut
 
 			MultiPolycurve cutLinestrings = new MultiPolycurve(
 				GeometryUtils.GetPaths(cutLine).Select(
-					cutPath => GeometryConversionUtils.CreateLinestring(cutPath)));
+					cutPath => GeometryConversionUtils.CreateLinestring(cutPath, ! cutLineHasZs)));
 
 			IList<RingGroup> resultGroups =
 				GeomTopoOpUtils.CutPlanar(ringGroup, cutLinestrings, tolerance);
