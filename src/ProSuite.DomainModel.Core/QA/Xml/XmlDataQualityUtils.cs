@@ -1744,7 +1744,7 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 		private static IEnumerable<QualitySpecification> GetSortedQualitySpecifications(
 			[NotNull] IEnumerable<QualitySpecification> qualitySpecifications)
 		{
-			return qualitySpecifications.OrderBy(qs => $"{qs.ListOrder}#{qs.Name}");
+			return qualitySpecifications.OrderBy(qs => qs.ListOrder).ThenBy(qs => qs.Name);
 		}
 
 		[NotNull]
@@ -1758,7 +1758,7 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 		private static IEnumerable<DataQualityCategory> GetSortedCategories(
 			[NotNull] IEnumerable<DataQualityCategory> categories)
 		{
-			return categories.OrderBy(c => $"{c.ListOrder}#{c.Name}");
+			return categories.OrderBy(c => c.ListOrder).ThenBy(c => c.Name);
 		}
 
 		[NotNull]
