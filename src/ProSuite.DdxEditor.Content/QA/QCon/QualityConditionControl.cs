@@ -469,7 +469,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 				{
 					bool sorted = _issueFilterGridHandler.BindTo(
 						tableRows,
-						defaultSortState: new DataGridViewSortState(_columnName.Name),
+						defaultSortState: new DataGridViewSortState(_dataGridIssueColumnName.Name),
 						sortStateOverride: _tableStateIssueFilter.TableSortState);
 
 					_issueFilterStateManager.ApplyState(_tableStateIssueFilter, sorted);
