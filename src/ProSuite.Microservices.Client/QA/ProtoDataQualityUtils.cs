@@ -21,8 +21,10 @@ namespace ProSuite.Microservices.Client.QA
 
 			IDictionary<string, DdxModel> dataSources = new Dictionary<string, DdxModel>();
 
-			foreach (QualitySpecificationElement element in customSpecification
-			                                                .CustomizedSpecification.Elements)
+			// The parameters must be initialized!
+			InstanceConfigurationUtils.InitializeParameterValues(customSpecification);
+
+			foreach (QualitySpecificationElement element in customSpecification.Elements)
 			{
 				if (! element.Enabled)
 				{
