@@ -230,7 +230,7 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 		{
 			base.CollectCommands(commands, applicationController);
 
-			commands.Add(new CreateCopyOfQualitySpecificationCommand(this,
+			commands.Add(new CopyQualitySpecificationCommand(this,
 				             applicationController));
 			commands.Add(new AssignQualitySpecificationsToCategoryCommand(new[] {this},
 				             _containerItem,

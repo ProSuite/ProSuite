@@ -10,23 +10,22 @@ using ProSuite.DdxEditor.Framework.TableRows;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.UI.QA.ResourceLookup;
 
-namespace ProSuite.DdxEditor.Content.QA.QCon
+namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 {
-	public class QualityConditionTableRow : SelectableTableRow,
-	                                        IEntityRow, IEntityRow<QualityCondition>
+	public class InstanceConfigurationTableRow : SelectableTableRow, IEntityRow,
+	                                             IEntityRow<InstanceConfiguration>
 	{
 		/// <summary>
-		/// Initializes a new instance of the <see cref="QualityConditionTableRow"/> class.
+		/// Initializes a new instance of the <see cref="InstanceConfigurationTableRow"/> class.
 		/// </summary>
-		/// <param name="entity">The quality condition.</param>
-		/// <param name="qualitySpecificationRefCount"></param>
-		public QualityConditionTableRow([NotNull] QualityCondition entity,
-		                                int qualitySpecificationRefCount)
+		/// <param name="entity">The instance configuration.</param>
+		/// <param name="usageCount"></param>
+		public InstanceConfigurationTableRow([NotNull] InstanceConfiguration entity, int usageCount)
 		{
 			Assert.ArgumentNotNull(entity, nameof(entity));
 
-			QualityCondition = entity;
-			QualitySpecificationRefCount = qualitySpecificationRefCount;
+			InstanceConfiguration = entity;
+			UsageCount = usageCount;
 
 			Image = TestTypeImageLookup.GetImage(entity);
 			Image.Tag = TestTypeImageLookup.GetDefaultSortIndex(entity);
@@ -40,7 +39,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 
 		[ColumnConfiguration(Width = 400)]
 		[UsedImplicitly]
-		public string Name => QualityCondition.Name;
+		public string Name => InstanceConfiguration.Name;
 
 		[CanBeNull]
 		[ColumnConfiguration(MinimumWidth = 100,
@@ -51,52 +50,51 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 		[ColumnConfiguration(MinimumWidth = 100,
 		                     AutoSizeColumnMode = DataGridViewAutoSizeColumnMode.Fill)]
 		[UsedImplicitly]
-		public string Description => QualityCondition.Description;
+		public string Description => InstanceConfiguration.Description;
 
 		[DisplayName("Usage Count")]
 		[ColumnConfiguration(Width = 70)]
 		[UsedImplicitly]
-		public int QualitySpecificationRefCount { get; }
+		public int UsageCount { get; }
 
-		[DisplayName("Test")]
-		[ColumnConfiguration(Width = 200)]
+		[DisplayName("Algorithm")]
 		[UsedImplicitly]
-		public string TestDescriptor => QualityCondition.TestDescriptor.Name;
+		public string AlgorithmImplementation => InstanceConfiguration.InstanceDescriptor.Name;
 
 		[DisplayName("Url")]
 		[ColumnConfiguration(Width = 100)]
 		[UsedImplicitly]
-		public string Url => QualityCondition.Url;
+		public string Url => InstanceConfiguration.Url;
 
 		[DisplayName("Created")]
 		[ColumnConfiguration(Width = 100)]
 		[UsedImplicitly]
-		public DateTime? CreatedDate => QualityCondition.CreatedDate;
+		public DateTime? CreatedDate => InstanceConfiguration.CreatedDate;
 
 		[DisplayName("Created By")]
 		[ColumnConfiguration(Width = 80)]
 		[UsedImplicitly]
-		public string CreatedByUser => QualityCondition.CreatedByUser;
+		public string CreatedByUser => InstanceConfiguration.CreatedByUser;
 
 		[DisplayName("Last Changed")]
 		[ColumnConfiguration(Width = 100)]
 		[UsedImplicitly]
-		public DateTime? LastChangedDate => QualityCondition.LastChangedDate;
+		public DateTime? LastChangedDate => InstanceConfiguration.LastChangedDate;
 
 		[DisplayName("Last Changed By")]
 		[ColumnConfiguration(MinimumWidth = 90)]
 		[UsedImplicitly]
-		public string LastChangedByUser => QualityCondition.LastChangedByUser;
+		public string LastChangedByUser => InstanceConfiguration.LastChangedByUser;
 
 		[Browsable(false)]
 		[NotNull]
-		public QualityCondition QualityCondition { get; }
+		public InstanceConfiguration InstanceConfiguration { get; }
 
 		#region IEntityRow Members
 
-		Entity IEntityRow.Entity => QualityCondition;
+		Entity IEntityRow.Entity => InstanceConfiguration;
 
-		QualityCondition IEntityRow<QualityCondition>.Entity => QualityCondition;
+		InstanceConfiguration IEntityRow<InstanceConfiguration>.Entity => InstanceConfiguration;
 
 		#endregion
 	}

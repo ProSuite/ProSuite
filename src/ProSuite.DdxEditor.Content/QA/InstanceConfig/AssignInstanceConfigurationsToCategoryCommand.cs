@@ -11,46 +11,43 @@ using ProSuite.DomainModel.Core.QA;
 
 namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 {
-	public class AssignInstanceConfigurationToCategoryCommand :
+	public class AssignInstanceConfigurationsToCategoryCommand :
 		ItemsCommandBase<InstanceConfigurationItem>
 	{
 		[NotNull] private readonly IInstanceConfigurationContainerItem _containerItem;
-		[NotNull] private readonly IApplicationController _applicationController;
 
 		/// <summary>
-		/// Initializes a new instance of the <see cref="AssignInstanceConfigurationToCategoryCommand"/> class.
+		/// Initializes a new instance of the <see cref="AssignInstanceConfigurationsToCategoryCommand"/> class.
 		/// </summary>
 		/// <param name="instanceConfigItems">The selected child items.</param>
 		/// <param name="containerItem">The container item</param>
 		/// <param name="applicationController">The application controller.</param>
-		public AssignInstanceConfigurationToCategoryCommand(
+		public AssignInstanceConfigurationsToCategoryCommand(
 			[NotNull] ICollection<InstanceConfigurationItem> instanceConfigItems,
 			[NotNull] IInstanceConfigurationContainerItem containerItem,
 			[NotNull] IApplicationController applicationController)
-			: base(instanceConfigItems)
+			: base(instanceConfigItems, applicationController)
 		{
-			Assert.ArgumentNotNull(applicationController, nameof(applicationController));
 			Assert.ArgumentNotNull(containerItem, nameof(containerItem));
 
 			_containerItem = containerItem;
-			_applicationController = applicationController;
 		}
 
 		public override string Text => "Assign to Category...";
 
 		protected override bool EnabledCore =>
-			Items.Count > 0 && ! _applicationController.HasPendingChanges;
+			Items.Count > 0 && ! ApplicationController.HasPendingChanges;
 
 		protected override void ExecuteCore()
 		{
-			if (! _containerItem.AssignToCategory(Items, _applicationController.Window,
+			if (! _containerItem.AssignToCategory(Items, ApplicationController.Window,
 			                                      out DataQualityCategory category))
 			{
 				return;
 			}
 
 			QualityConditionContainerUtils.RefreshAssignmentTarget(
-				category, _applicationController, _containerItem);
+				category, ApplicationController, _containerItem);
 
 			Item gotoItem = Items.FirstOrDefault();
 
@@ -64,19 +61,17 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 				return;
 			}
 
-			if (_applicationController.GoToItem(item))
+			if (ApplicationController.GoToItem(item))
 			{
 				return;
 			}
 
-			var entityItem = item as EntityItem<T, T>;
-
-			if (entityItem != null)
+			if (item is EntityItem<T, T> entityItem)
 			{
 				Entity entity = _containerItem.GetInstanceConfiguration(entityItem);
 				if (entity != null)
 				{
-					_applicationController.GoToItem(entity);
+					ApplicationController.GoToItem(entity);
 				}
 			}
 		}

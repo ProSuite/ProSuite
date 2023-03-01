@@ -13,36 +13,7 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 	internal static class TableRows
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
-
-		[NotNull]
-		public static List<QualitySpecificationTableRow> GetQualitySpecifications(
-			[NotNull] CoreDomainModelItemModelBuilder modelBuilder,
-			[NotNull] QualityCondition qualityCondition,
-			[CanBeNull] DdxModel model = null)
-		{
-			Assert.ArgumentNotNull(modelBuilder, nameof(modelBuilder));
-			Assert.ArgumentNotNull(qualityCondition, nameof(qualityCondition));
-
-			Stopwatch stopWatch = _msg.DebugStartTiming();
-
-			return modelBuilder.ReadOnlyTransaction(
-				() =>
-				{
-					List<QualitySpecificationTableRow> result =
-						GetQualitySpecificationsTx(modelBuilder, model)
-							.Select(qs => new QualitySpecificationTableRow(qs)
-							              {
-								              Selectable = ! qs.Contains(qualityCondition)
-							              })
-							.ToList();
-
-					_msg.DebugStopTiming(stopWatch, "Read {0} quality specification(s)",
-					                     result.Count);
-
-					return result;
-				});
-		}
-
+		
 		[NotNull]
 		public static List<QualitySpecificationTableRow> GetQualitySpecificationTableRows(
 			[NotNull] CoreDomainModelItemModelBuilder modelBuilder,

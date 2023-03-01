@@ -2,11 +2,13 @@ using System.Collections.Generic;
 using System.Linq;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.DdxEditor.Content.Properties;
+using ProSuite.DdxEditor.Content.QA.QSpec;
 using ProSuite.DdxEditor.Framework.Search;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.Repositories;
 
-namespace ProSuite.DdxEditor.Content.QA.QSpec
+namespace ProSuite.DdxEditor.Content.SearchProviders
 {
 	public class QualitySpecificationSearchProvider :
 		SearchProviderBase<QualitySpecification, QualitySpecificationTableRow>
@@ -15,7 +17,7 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 
 		public QualitySpecificationSearchProvider(
 			[NotNull] CoreDomainModelItemModelBuilder modelBuilder)
-			: base(modelBuilder, "Find Quality &Specification...")
+			: base(modelBuilder, "Find Quality &Specification...", Resources.QualitySpecificationsOverlay)
 		{
 			Assert.ArgumentNotNull(modelBuilder, nameof(modelBuilder));
 

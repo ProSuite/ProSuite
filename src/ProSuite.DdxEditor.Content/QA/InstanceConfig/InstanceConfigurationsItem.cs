@@ -83,7 +83,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 
 			if (selectedConditionItems.Count > 0)
 			{
-				commands.Add(new AssignInstanceConfigurationToCategoryCommand(
+				commands.Add(new AssignInstanceConfigurationsToCategoryCommand(
 					             selectedConditionItems, this, applicationController));
 			}
 		}

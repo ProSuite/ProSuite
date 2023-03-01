@@ -1034,6 +1034,12 @@ namespace ProSuite.Commons.AO.Geometry
 				points.AddPoint(point, ref missing, ref missing);
 			}
 
+			if (GeometryUtils.IsZAware(fromPoint) &&
+			    GeometryUtils.IsZAware(secondPoint))
+			{
+				GeometryUtils.MakeZAware(result);
+			}
+
 			return result;
 		}
 
@@ -1082,6 +1088,12 @@ namespace ProSuite.Commons.AO.Geometry
 			foreach (IPoint point in additionalPoints)
 			{
 				points.AddPoint(point, ref missing, ref missing);
+			}
+
+			if (GeometryUtils.IsZAware(fromPoint) &&
+			    GeometryUtils.IsZAware(secondPoint))
+			{
+				GeometryUtils.MakeZAware(result);
 			}
 
 			result.SpatialReference = fromPoint.SpatialReference;
@@ -1568,7 +1580,7 @@ namespace ProSuite.Commons.AO.Geometry
 			Assert.ArgumentCondition(! fromPoint.IsEmpty, "from point is empty");
 			Assert.ArgumentCondition(! toPoint.IsEmpty, "to point is empty");
 
-			var result = new PolylineClass {SpatialReference = fromPoint.SpatialReference};
+			var result = new PolylineClass { SpatialReference = fromPoint.SpatialReference };
 
 			if (GeometryUtils.IsZAware(fromPoint) && GeometryUtils.IsZAware(toPoint))
 			{
@@ -1853,7 +1865,7 @@ namespace ProSuite.Commons.AO.Geometry
 			IPolygon polygon;
 			if (baseGeometry == null)
 			{
-				polygon = new PolygonClass {SpatialReference = spatialReference};
+				polygon = new PolygonClass { SpatialReference = spatialReference };
 
 				// TODO always????
 				((IZAware) polygon).ZAware = true;
@@ -2454,7 +2466,7 @@ namespace ProSuite.Commons.AO.Geometry
 
 			if (envelope.IsEmpty)
 			{
-				return new PolylineClass {SpatialReference = envelope.SpatialReference};
+				return new PolylineClass { SpatialReference = envelope.SpatialReference };
 			}
 
 			var polygon = CreatePolygon(envelope);
@@ -2469,7 +2481,7 @@ namespace ProSuite.Commons.AO.Geometry
 
 			if (polygon.IsEmpty)
 			{
-				return new PolylineClass {SpatialReference = polygon.SpatialReference};
+				return new PolylineClass { SpatialReference = polygon.SpatialReference };
 			}
 
 			return (IPolyline) ((ITopologicalOperator) polygon).Boundary;

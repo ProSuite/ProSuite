@@ -35,6 +35,10 @@ namespace ProSuite.DomainModel.Core.QA
 		private bool _neverFilterTableRowsUsingRelatedGeometry;
 
 		[UsedImplicitly] [Obfuscation(Exclude = true)]
+		private readonly IList<IssueFilterConfiguration> _issueFilterConfigurations =
+			new List<IssueFilterConfiguration>();
+
+		[UsedImplicitly] [Obfuscation(Exclude = true)]
 		private string _issueFilterExpression;
 
 		[UsedImplicitly] [Obfuscation(Exclude = true)]
@@ -183,6 +187,17 @@ namespace ProSuite.DomainModel.Core.QA
 			set { _neverFilterTableRowsUsingRelatedGeometry = value; }
 		}
 
+		[NotNull]
+		public IList<IssueFilterConfiguration> IssueFilterConfigurations =>
+			new ReadOnlyList<IssueFilterConfiguration>(_issueFilterConfigurations);
+
+		[CanBeNull]
+		public string IssueFilterExpression
+		{
+			get => _issueFilterExpression;
+			set => _issueFilterExpression = value;
+		}
+
 		public new int Id
 		{
 			get
@@ -237,9 +252,6 @@ namespace ProSuite.DomainModel.Core.QA
 			return TestParameterStringUtils.FormatParameterValues(ParameterValues, maxLength);
 		}
 
-		private readonly IList<IssueFilterConfiguration> _issueFilterConfigurations =
-			new List<IssueFilterConfiguration>();
-
 		public void AddIssueFilterConfiguration(
 			[NotNull] IssueFilterConfiguration issueFilterConfiguration)
 		{
@@ -255,19 +267,6 @@ namespace ProSuite.DomainModel.Core.QA
 		public void ClearIssueFilterConfigurations()
 		{
 			_issueFilterConfigurations.Clear();
-		}
-
-		[CanBeNull]
-		public string IssueFilterExpression
-		{
-			get => _issueFilterExpression;
-			set => _issueFilterExpression = value;
-		}
-
-		[NotNull]
-		public IList<IssueFilterConfiguration> IssueFilterConfigurations
-		{
-			get => new ReadOnlyList<IssueFilterConfiguration>(_issueFilterConfigurations);
 		}
 
 		[NotNull]

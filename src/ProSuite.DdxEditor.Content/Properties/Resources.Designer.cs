@@ -363,9 +363,19 @@ namespace ProSuite.DdxEditor.Content.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap IssueFilterOverlay {
+        public static System.Drawing.Bitmap IssueFilterConfigurationsOverlay {
             get {
-                object obj = ResourceManager.GetObject("IssueFilterOverlay", resourceCulture);
+                object obj = ResourceManager.GetObject("IssueFilterConfigurationsOverlay", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap IssueFilterDescriptorsOverlay {
+            get {
+                object obj = ResourceManager.GetObject("IssueFilterDescriptorsOverlay", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -583,16 +593,6 @@ namespace ProSuite.DdxEditor.Content.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap RowFilterOverlay {
-            get {
-                object obj = ResourceManager.GetObject("RowFilterOverlay", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap SelectAll {
             get {
                 object obj = ResourceManager.GetObject("SelectAll", resourceCulture);
@@ -673,9 +673,19 @@ namespace ProSuite.DdxEditor.Content.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap TransformOverlay {
+        public static System.Drawing.Bitmap TransformerConfigurationsOverlay {
             get {
-                object obj = ResourceManager.GetObject("TransformOverlay", resourceCulture);
+                object obj = ResourceManager.GetObject("TransformerConfigurationsOverlay", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap TransformerDescriptorsOverlay {
+            get {
+                object obj = ResourceManager.GetObject("TransformerDescriptorsOverlay", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

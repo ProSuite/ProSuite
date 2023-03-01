@@ -85,9 +85,7 @@ namespace ProSuite.QA.Tests.Transformers.Filters
 
 			foreach (IReadOnlyFeatureClass inputClass in inputFilters)
 			{
-				FilteredFeatureClass inputFilteredClass = inputClass as FilteredFeatureClass;
-
-				if (inputFilteredClass == null)
+				if (! (inputClass is FilteredFeatureClass inputFilteredClass))
 				{
 					message =
 						$"The input transformer {inputClass.Name} is not a filter transformer.";
@@ -97,7 +95,7 @@ namespace ProSuite.QA.Tests.Transformers.Filters
 				if (! tableToFilter.Equals(inputFilteredClass.FeatureClassToFilter))
 				{
 					message =
-						$"The input filter {inputClass.Name} is not appliccable to {tableToFilter.Name}. " +
+						$"The input filter {inputClass.Name} is not applicable to {tableToFilter.Name}. " +
 						"It filters a different feature class.";
 					return false;
 				}

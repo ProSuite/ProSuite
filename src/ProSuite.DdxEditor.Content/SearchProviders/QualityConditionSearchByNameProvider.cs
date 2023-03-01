@@ -4,11 +4,12 @@ using System.Windows.Forms;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.DdxEditor.Content.Properties;
+using ProSuite.DdxEditor.Content.QA.QCon;
+using ProSuite.DdxEditor.Framework.Items;
 using ProSuite.DdxEditor.Framework.Search;
 using ProSuite.DomainModel.Core.QA;
 
-namespace ProSuite.DdxEditor.Content.QA.QCon
+namespace ProSuite.DdxEditor.Content.SearchProviders
 {
 	public class QualityConditionSearchByNameProvider : ISearchProvider
 	{
@@ -22,7 +23,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			_modelBuilder = modelBuilder;
 
 			Text = "Find Quality Condition by &Name...";
-			Image = Resources.Find;
+			Image = ItemUtils.GetSearchImage(overlay: null);
 		}
 
 		public string Text { get; }
@@ -53,8 +54,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 		{
 			return _modelBuilder.ReadOnlyTransaction(
 				() => _modelBuilder.QualityConditions.GetNames(
-					_modelBuilder
-						.IncludeQualityConditionsBasedOnDeletedDatasets));
+					_modelBuilder.IncludeQualityConditionsBasedOnDeletedDatasets));
 		}
 	}
 }

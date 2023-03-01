@@ -8,7 +8,6 @@ namespace ProSuite.DdxEditor.Framework.Commands
 {
 	public class GoToParentCommand : ItemCommandBase<Item>, IGenericItemCommand
 	{
-		[NotNull] private readonly IApplicationController _applicationController;
 		[NotNull] private static readonly Image _image;
 
 		/// <summary>
@@ -26,12 +25,7 @@ namespace ProSuite.DdxEditor.Framework.Commands
 		/// <param name="applicationController">The application controller.</param>
 		public GoToParentCommand([NotNull] Item item,
 		                         [NotNull] IApplicationController applicationController)
-			: base(item)
-		{
-			Assert.ArgumentNotNull(applicationController, nameof(applicationController));
-
-			_applicationController = applicationController;
-		}
+			: base(item, applicationController) { }
 
 		public override Image Image => _image;
 
@@ -41,7 +35,7 @@ namespace ProSuite.DdxEditor.Framework.Commands
 
 		protected override void ExecuteCore()
 		{
-			_applicationController.GoToItem(Assert.NotNull(Item.Parent, "parent"));
+			ApplicationController.GoToItem(Assert.NotNull(Item.Parent, "parent"));
 		}
 	}
 }

@@ -61,7 +61,7 @@
     <Content Include="Properties\Images\DiscardChanges.png" />
     <Content Include="Properties\Images\Error.png" />
     <Content Include="Properties\Images\Exit.png" />
-    <Content Include="Properties\Images\Find.png" />
+    <Content Include="Properties\Images\Search.png" />
     <Content Include="Properties\Images\GoToLastVisited.png" />
     <Content Include="Properties\Images\GoToNextVisited.png" />
     <Content Include="Properties\Images\GoToParent.png" />

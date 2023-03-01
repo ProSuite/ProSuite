@@ -12,14 +12,29 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 	internal static class InstanceConfigTableRows
 	{
 		[NotNull]
+		public static IEnumerable<InstanceConfigurationTableRow>
+			GetInstanceConfigurationTableRows<T>(
+				[NotNull] CoreDomainModelItemModelBuilder modelBuilder,
+				[CanBeNull] ICollection<T> nonSelectable)
+			where T : InstanceConfiguration
+		{
+			Assert.ArgumentNotNull(modelBuilder, nameof(modelBuilder));
+
+			return GetInstanceConfigurationTableRows(
+					modelBuilder.InstanceConfigurations,
+					modelBuilder.IncludeQualityConditionsBasedOnDeletedDatasets, nonSelectable)
+				.OrderBy(row => row.Name);
+		}
+
+		[NotNull]
 		public static IEnumerable<InstanceConfigurationInCategoryTableRow>
-			GetInstanceConfigs<T>(
+			GetInstanceConfigurationInCategoryTableRows<T>(
 				[NotNull] CoreDomainModelItemModelBuilder modelBuilder,
 				[CanBeNull] DataQualityCategory category) where T : InstanceConfiguration
 		{
 			Assert.ArgumentNotNull(modelBuilder, nameof(modelBuilder));
 
-			return GetInstanceConfigurationTableRows<T>(
+			return GetInstanceConfigurationInCategoryTableRows<T>(
 					category,
 					modelBuilder.InstanceConfigurations,
 					modelBuilder.IncludeQualityConditionsBasedOnDeletedDatasets)
@@ -38,13 +53,50 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 					category,
 					modelBuilder.InstanceConfigurations,
 					modelBuilder.IncludeQualityConditionsBasedOnDeletedDatasets)
-				.OrderBy(row => string.Format("{0}||{1}",
-				                              row.Name, row.DatasetName));
+				.OrderBy(row => $"{row.Name}||{row.DatasetName}");
+		}
+
+		private static IEnumerable<InstanceConfigurationTableRow>
+			GetInstanceConfigurationTableRows<T>(
+				[NotNull] IInstanceConfigurationRepository repository,
+				bool includeQualityConditionsBasedOnDeletedDatasets,
+				[CanBeNull] ICollection<T> nonSelectable)
+			where T : InstanceConfiguration
+		{
+			IList<T> instanceConfigurations = repository.GetInstanceConfigurations<T>();
+
+			HashSet<int> excludedIds =
+				! includeQualityConditionsBasedOnDeletedDatasets
+					? repository.GetIdsInvolvingDeletedDatasets<IssueFilterConfiguration>()
+					: new HashSet<int>();
+
+			IDictionary<int, int> usageCountMap = null;
+
+			foreach (T instanceConfig in instanceConfigurations.Where(
+				         ic => ! excludedIds.Contains(ic.Id)))
+			{
+				if (usageCountMap == null)
+				{
+					usageCountMap = repository.GetReferenceCounts<T>()
+					                          .ToDictionary(rc => rc.EntityId, rc => rc.UsageCount);
+				}
+
+				if (! usageCountMap.TryGetValue(instanceConfig.Id, out int refCount))
+				{
+					refCount = 0;
+				}
+
+				yield return new InstanceConfigurationTableRow(instanceConfig, refCount)
+				             {
+					             Selectable = nonSelectable == null ||
+					                          ! nonSelectable.Contains(instanceConfig)
+				             };
+			}
 		}
 
 		[NotNull]
 		private static IEnumerable<InstanceConfigurationInCategoryTableRow>
-			GetInstanceConfigurationTableRows<T>(
+			GetInstanceConfigurationInCategoryTableRows<T>(
 				[CanBeNull] DataQualityCategory category,
 				[NotNull] IInstanceConfigurationRepository repository,
 				bool includeQualityConditionsBasedOnDeletedDatasets) where T : InstanceConfiguration
@@ -57,12 +109,10 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 				if (usageCountMap == null)
 				{
 					usageCountMap = repository.GetReferenceCounts<T>()
-					                          .ToDictionary(rc => rc.EntityId,
-					                                        rc => rc.UsageCount);
+					                          .ToDictionary(rc => rc.EntityId, rc => rc.UsageCount);
 				}
 
-				if (! usageCountMap.TryGetValue(instanceConfig.Id,
-				                                out int refCount))
+				if (! usageCountMap.TryGetValue(instanceConfig.Id, out int refCount))
 				{
 					refCount = 0;
 				}
@@ -75,13 +125,13 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 		private static IEnumerable<InstanceConfigurationDatasetTableRow>
 			GetInstanceConfigurationDatasetTableRows<T>(
 				[CanBeNull] DataQualityCategory category,
-				[NotNull] IInstanceConfigurationRepository instanceConfigurations,
+				[NotNull] IInstanceConfigurationRepository repository,
 				bool includeQualityConditionsBasedOnDeletedDatasets) where T : InstanceConfiguration
 		{
 			IDictionary<int, int> usageCountMap = null; // created lazily
 
 			IDictionary<T, IList<DatasetTestParameterValue>> datasetsByQConId =
-				instanceConfigurations.GetWithDatasetParameterValues<T>(category);
+				repository.GetWithDatasetParameterValues<T>(category);
 
 			foreach (KeyValuePair<T, IList<DatasetTestParameterValue>> pair in datasetsByQConId)
 			{
@@ -90,17 +140,13 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 
 				if (usageCountMap == null)
 				{
-					usageCountMap = instanceConfigurations.GetReferenceCounts<T>()
-					                                      .ToDictionary(
-						                                      rc => rc.EntityId,
-						                                      rc => rc.UsageCount);
+					usageCountMap = repository.GetReferenceCounts<T>()
+					                          .ToDictionary(rc => rc.EntityId, rc => rc.UsageCount);
 				}
 
-				int qualitySpecificationRefCount;
-				if (! usageCountMap.TryGetValue(instanceConfig.Id,
-				                                out qualitySpecificationRefCount))
+				if (! usageCountMap.TryGetValue(instanceConfig.Id, out int refCount))
 				{
-					qualitySpecificationRefCount = 0;
+					refCount = 0;
 				}
 
 				var tableRows = new List<InstanceConfigurationDatasetTableRow>();
@@ -126,7 +172,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 
 						tableRows.Add(
 							new InstanceConfigurationDatasetTableRow(
-								instanceConfig, datasetValue, qualitySpecificationRefCount));
+								instanceConfig, datasetValue, refCount));
 					}
 				}
 				catch (TypeLoadException e)
@@ -134,7 +180,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 					tableRows.Add(
 						new InstanceConfigurationDatasetTableRow(instanceConfig,
 						                                         e.Message,
-						                                         qualitySpecificationRefCount));
+						                                         refCount));
 				}
 
 				if (! anyDeletedDatasets)

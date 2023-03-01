@@ -2,11 +2,13 @@ using System.Collections.Generic;
 using System.Linq;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.DdxEditor.Content.Properties;
+using ProSuite.DdxEditor.Content.QA.TestDescriptors;
 using ProSuite.DdxEditor.Framework.Search;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.Repositories;
 
-namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
+namespace ProSuite.DdxEditor.Content.SearchProviders
 {
 	public class TestDescriptorSearchProvider :
 		SearchProviderBase<TestDescriptor, TestDescriptorTableRow>
@@ -15,7 +17,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 
 		public TestDescriptorSearchProvider(
 			[NotNull] CoreDomainModelItemModelBuilder modelBuilder)
-			: base(modelBuilder, "Find &Test Descriptor...")
+			: base(modelBuilder, "Find &Test Descriptor...", Resources.TestDescriptorsOverlay)
 		{
 			Assert.ArgumentNotNull(modelBuilder, nameof(modelBuilder));
 

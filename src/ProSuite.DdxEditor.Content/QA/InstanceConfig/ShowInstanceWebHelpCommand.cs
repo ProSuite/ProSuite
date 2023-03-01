@@ -24,14 +24,10 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			_image = Resources.ShowOnlineHelpCmd;
 		}
 
-		public IApplicationController ApplicationController { get; }
-
 		public ShowInstanceWebHelpCommand([NotNull] T item,
-		                                  IApplicationController applicationController)
-			: base(item)
+		                                  [NotNull] IApplicationController applicationController)
+			: base(item, applicationController)
 		{
-			ApplicationController = applicationController;
-
 			// This could be made more generic to support Html help of other entities.
 			InstanceDescriptor descriptor = GetInstanceDescriptor(Item);
 			if (descriptor is TransformerDescriptor)
