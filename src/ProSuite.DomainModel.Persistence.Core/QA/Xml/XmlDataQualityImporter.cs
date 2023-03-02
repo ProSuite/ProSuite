@@ -49,7 +49,6 @@ namespace ProSuite.DomainModel.Persistence.Core.QA.Xml
 		/// <param name="unitOfWork">The unit of work.</param>
 		/// <param name="workspaceConverter"></param>
 		/// <param name="datasetValidator"></param>
-		/// <param name="issueFilterExpressionParser"></param>
 		public XmlDataQualityImporter(
 			[NotNull] IInstanceConfigurationRepository instanceConfigurations,
 			[NotNull] IInstanceDescriptorRepository instanceDescriptors,
@@ -59,8 +58,7 @@ namespace ProSuite.DomainModel.Persistence.Core.QA.Xml
 			[NotNull] IDdxModelRepository models,
 			[NotNull] IUnitOfWork unitOfWork,
 			[NotNull] IXmlWorkspaceConverter workspaceConverter,
-			[NotNull] ITestParameterDatasetValidator datasetValidator,
-			[NotNull] IIssueFilterExpressionParser issueFilterExpressionParser)
+			[NotNull] ITestParameterDatasetValidator datasetValidator)
 			: base(instanceConfigurations, instanceDescriptors, qualitySpecifications,
 			       categories, datasets, unitOfWork, workspaceConverter)
 		{
@@ -69,13 +67,10 @@ namespace ProSuite.DomainModel.Persistence.Core.QA.Xml
 			Models = models;
 
 			TestParameterDatasetValidator = datasetValidator;
-			IssueFilterExpressionParser = issueFilterExpressionParser;
 		}
 
 		[NotNull]
 		private IDdxModelRepository Models { get; }
-
-		public IIssueFilterExpressionParser IssueFilterExpressionParser { get; set; }
 
 		public ITestParameterDatasetValidator TestParameterDatasetValidator { get; set; }
 
@@ -245,7 +240,7 @@ namespace ProSuite.DomainModel.Persistence.Core.QA.Xml
 			XmlDataQualityDocumentCache documentCache =
 				XmlDataQualityUtils.GetDocumentCache(
 					document, xmlSpecificationsToImport.Select(p => p.Key),
-					TestParameterDatasetValidator, IssueFilterExpressionParser);
+					TestParameterDatasetValidator);
 
 			documentCache.ReferencedModels = modelsByWorkspaceId;
 
@@ -827,8 +822,7 @@ namespace ProSuite.DomainModel.Persistence.Core.QA.Xml
 						             .ToDictionary(c => c.Name, StringComparer.OrdinalIgnoreCase);
 
 					XmlDataQualityUtils.UpdateIssueFilters(
-						qualityCondition, xmlCondition, issueFiltersByName,
-						documentCache.IssueFilterExpressionParser);
+						qualityCondition, xmlCondition, issueFiltersByName);
 				}
 				else
 				{

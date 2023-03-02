@@ -76,9 +76,6 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 		public IDictionary<string, DdxModel> ReferencedModels { get; set; }
 
 		[CanBeNull]
-		public IIssueFilterExpressionParser IssueFilterExpressionParser { get; set; }
-
-		[CanBeNull]
 		public ITestParameterDatasetValidator ParameterDatasetValidator { get; set; }
 
 		public XmlDataQualityDocumentCache(XmlDataQualityDocument document,
@@ -460,20 +457,6 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 			}
 
 			return descriptor;
-		}
-
-		public IList<string> GetIssueFilterNames([CanBeNull] string issueFilterExpression)
-		{
-			if (string.IsNullOrWhiteSpace(issueFilterExpression))
-			{
-				return new List<string>();
-			}
-
-			var result = Assert.NotNull(IssueFilterExpressionParser,
-			                            "Filter Expression Parser not initialized")
-			                   .GetFilterNames(issueFilterExpression);
-
-			return result;
 		}
 	}
 }

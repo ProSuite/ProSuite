@@ -623,8 +623,7 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 		public static XmlDataQualityDocumentCache GetDocumentCache(
 			[NotNull] XmlDataQualityDocument document,
 			[NotNull] IEnumerable<XmlQualitySpecification> xmlQualitySpecifications,
-			ITestParameterDatasetValidator testParameterDatasetValidator,
-			IIssueFilterExpressionParser issueFilterExpressionParser)
+			ITestParameterDatasetValidator testParameterDatasetValidator)
 		{
 			Assert.ArgumentNotNull(document, nameof(document));
 			Assert.ArgumentNotNull(xmlQualitySpecifications, nameof(xmlQualitySpecifications));
@@ -639,8 +638,7 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 
 			return new XmlDataQualityDocumentCache(document, qualityConditions)
 			       {
-				       ParameterDatasetValidator = testParameterDatasetValidator,
-				       IssueFilterExpressionParser = issueFilterExpressionParser
+				       ParameterDatasetValidator = testParameterDatasetValidator
 			       };
 		}
 
@@ -778,8 +776,7 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 		public static void UpdateIssueFilters(
 			[NotNull] QualityCondition qualityCondition,
 			[NotNull] XmlQualityCondition xmlCondition,
-			[NotNull] IDictionary<string, IssueFilterConfiguration> issueFiltersByName,
-			IIssueFilterExpressionParser expressionParser)
+			[NotNull] IDictionary<string, IssueFilterConfiguration> issueFiltersByName)
 		{
 			Assert.ArgumentNotNull(qualityCondition, nameof(qualityCondition));
 			Assert.ArgumentNotNull(xmlCondition, nameof(xmlCondition));

@@ -13,7 +13,6 @@ using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.Xml;
 using ProSuite.DomainServices.AO.QA.VerifiedDataModel;
-using ProSuite.QA.Container;
 
 namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 {
@@ -102,8 +101,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 
 			XmlDataQualityDocumentCache documentCache =
 				XmlDataQualityUtils.GetDocumentCache(document, new[] { xmlQualitySpecification },
-				                                     new TestParameterDatasetValidator(),
-				                                     new IssueFilterExpressionParser());
+				                                     new TestParameterDatasetValidator());
 
 			IList<XmlWorkspace> referencedXmlWorkspaces =
 				XmlDataQualityUtils.GetReferencedWorkspaces(documentCache, out bool _);
