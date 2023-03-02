@@ -462,7 +462,7 @@ namespace ProSuite.Processing
 				}
 				else if (cc == '\r' || cc == '\n')
 				{
-					ScanEndline(text, position);
+					ScanEndOfLine(text, position);
 					break;
 				}
 				else if (cc == ' ' || cc == '\t' || cc == '\v')
@@ -477,7 +477,7 @@ namespace ProSuite.Processing
 				}
 			}
 
-			return sb.TrimEnd().ToString(); //return ScanToDelim(text, position, '#');
+			return sb.TrimEnd().ToString();
 		}
 
 		private static void ScanSqlString(string text, Position position, StringBuilder sb)
@@ -504,41 +504,6 @@ namespace ProSuite.Processing
 						sb.Append(text.Substring(anchor, position.Index - anchor));
 						return;
 					}
-				}
-			}
-
-			throw SyntaxError(position, "Unterminated string starting at position {0}", anchor);
-		}
-
-		private static string ScanSqlString(string text, Position position)
-		{
-			Assert.True(position.Index < text.Length, "Bug");
-
-			var sb = new StringBuilder();
-			char quote = text[position.Index];
-			int anchor = position.Index;
-			position.Advance(text); // skip opening apostrophe
-
-			while (position.Index < text.Length)
-			{
-				char cc = text[position.Index];
-				position.Advance(text);
-
-				if (cc == quote)
-				{
-					if (position.Index < text.Length && text[position.Index] == quote)
-					{
-						sb.Append(quote); // un-escape
-						position.Advance(text); // skip 2nd apostrophe
-					}
-					else
-					{
-						return sb.ToString();
-					}
-				}
-				else
-				{
-					sb.Append(cc);
 				}
 			}
 
@@ -581,90 +546,6 @@ namespace ProSuite.Processing
 			throw SyntaxError(position, "Unterminated string starting at position {0}", anchor);
 		}
 
-		private static string ScanString(string text, Position position)
-		{
-			Assert.True(position.Index < text.Length, "Bug");
-
-			var sb = new StringBuilder();
-			char quote = text[position.Index];
-			int anchor = position.Index;
-			position.Advance(text); // skip opening quote
-
-			while (position.Index < text.Length)
-			{
-				char cc = text[position.Index];
-				position.Advance(text);
-
-				if (cc < ' ')
-				{
-					throw SyntaxError(position, "Control character in string");
-				}
-
-				if (cc == quote)
-				{
-					return sb.ToString();
-				}
-
-				if (cc == '\\')
-				{
-					if (position.Index >= text.Length)
-					{
-						break;
-					}
-
-					cc = text[position.Index];
-					position.Advance(text);
-
-					switch (cc)
-					{
-						case '"':
-						case '\'':
-						case '\\':
-						case '/':
-							sb.Append(cc);
-							break;
-						case 'b':
-							sb.Append('\b');
-							break;
-						case 'f':
-							sb.Append('\f');
-							break;
-						case 'n':
-							sb.Append('\n');
-							break;
-						case 'r':
-							sb.Append('\r');
-							break;
-						case 't':
-							sb.Append('\t');
-							break;
-						case 'u':
-							throw SyntaxError(position, "\\u#### is not yet implemented"); // TODO implement \uXXXX escapes
-						default:
-							throw SyntaxError(position, "Invalid escape '\\{0}' in string", cc);
-					}
-				}
-				else
-				{
-					sb.Append(cc);
-				}
-			}
-
-			throw SyntaxError(position, "Unterminated string starting at position {0}", anchor);
-		}
-
-		private static string ScanToDelim(string text, Position position, char delim)
-		{
-			char cc;
-			int anchor = position.Index;
-			while (position.Index < text.Length && (cc = text[position.Index]) != delim && cc != '\n' && cc != '\r')
-			{
-				position.Advance(text);
-			}
-
-			return text.Substring(anchor, position.Index - anchor).Trim();
-		}
-
 		private static char ScanOperator(string text, Position position, char op1, char op2)
 		{
 			if (position.Index >= text.Length) return (char) 0;
@@ -704,13 +585,12 @@ namespace ProSuite.Processing
 			}
 		}
 
-		private static bool ScanEndline(string text, Position position)
+		private static void ScanEndOfLine(string text, Position position)
 		{
-			// expect one of: end-of-text | CR| CR LF | LF
-			if (position.Index >= text.Length) return true;
+			// expect one of: end-of-text | CR | CR LF | LF
+			if (position.Index >= text.Length) return;
 			bool found = text[position.Index] == '\n' || text[position.Index] == '\r';
 			if (found) position.Advance(text);
-			return found;
 		}
 
 		[StringFormatMethod("format")]
@@ -728,7 +608,7 @@ namespace ProSuite.Processing
 		{
 			public string Name { get; }
 			public string Value { get; }
-			public int LineNumber { get; }
+			private int LineNumber { get; }
 
 			public Setting(string name, string value, int lineNumber)
 			{

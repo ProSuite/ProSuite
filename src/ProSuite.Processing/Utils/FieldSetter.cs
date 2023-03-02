@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Processing.Evaluation;
 
@@ -69,7 +68,8 @@ namespace ProSuite.Processing.Utils
 		/// </summary>
 		public FieldSetter ValidateTargetFields([NotNull] IEnumerable<string> fields)
 		{
-			Assert.ArgumentNotNull(fields, nameof(fields));
+			if (fields is null)
+				throw new ArgumentNullException(nameof(fields));
 
 			var lookup = fields.ToLookup(f => f, StringComparer.OrdinalIgnoreCase);
 			var noSuchFields = _assignments.Where(a => ! lookup.Contains(a.FieldName))
@@ -78,13 +78,13 @@ namespace ProSuite.Processing.Utils
 			if (noSuchFields.Length > 1)
 			{
 				string missingFields = string.Join(", ", noSuchFields);
-				throw new AssertionException($"No such target fields: {missingFields}");
+				throw new CartoConfigException($"No such target fields: {missingFields}");
 			}
 
 			if (noSuchFields.Length == 1)
 			{
 				string missingField = noSuchFields.Single();
-				throw new AssertionException($"No such target field: {missingField}");
+				throw new CartoConfigException($"No such target field: {missingField}");
 			}
 
 			return this;
@@ -100,7 +100,8 @@ namespace ProSuite.Processing.Utils
 		/// <param name="stack">An optional evaluation stack to (re)use</param>
 		public void Execute(IRowValues row, IEvaluationEnvironment env, Stack<object> stack = null)
 		{
-			Assert.ArgumentNotNull(row, nameof(row));
+			if (row is null)
+				throw new ArgumentNullException(nameof(row));
 
 			Array.Clear(_values, 0, _values.Length);
 

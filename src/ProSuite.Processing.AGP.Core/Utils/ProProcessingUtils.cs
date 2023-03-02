@@ -47,9 +47,9 @@ namespace ProSuite.Processing.AGP.Core.Utils
 		/// Create a string from the given object. Format:
 		/// &quot;OID=123 Class=AliasNameOrDatasetName&quot;
 		/// </summary>
-		public static string Format([NotNull] Feature feature)
+		public static string Format(Feature feature)
 		{
-			Assert.ArgumentNotNull(feature, nameof(feature));
+			if (feature is null) return string.Empty;
 
 			var oid = feature.GetObjectID();
 			string className;

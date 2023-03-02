@@ -1,14 +1,13 @@
 using System.Collections.Generic;
 using ArcGIS.Core.Data;
 
-namespace ProSuite.Processing.AGP.Core.Domain
+namespace ProSuite.Processing.AGP.Core.Domain;
+
+public interface IProcessingSelection
 {
-	public interface IProcessingSelection
-	{
-		int SelectionCount { get; }
+	int SelectionCount { get; }
 
-		long CountSelection(QueryFilter filter = null);
+	long CountSelection(QueryFilter filter = null);
 
-		IEnumerable<Feature> SearchSelection(QueryFilter filter = null, bool recycling = false);
-	}
+	IEnumerable<Feature> SearchSelection(QueryFilter filter = null, bool recycling = false);
 }

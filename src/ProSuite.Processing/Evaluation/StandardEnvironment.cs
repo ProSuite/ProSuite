@@ -3,8 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using ProSuite.Commons.Collections;
-using ProSuite.Commons.Essentials.Assertions;
-using ProSuite.Commons.Essentials.CodeAnnotations;
+//using ProSuite.Commons.Essentials.Assertions;
 
 namespace ProSuite.Processing.Evaluation
 {
@@ -80,7 +79,7 @@ namespace ProSuite.Processing.Evaluation
 				}
 			}
 
-			throw LookupError("No such field: {0}.{1}", qualifier, name);
+			throw LookupError($"No such field: {qualifier}.{name}");
 		}
 
 		private object LookupUniqueField(string name)
@@ -97,15 +96,14 @@ namespace ProSuite.Processing.Evaluation
 					}
 					else
 					{
-						throw LookupError("Field name '{0}' is not unique; use a qualified name",
-						                  name);
+						throw LookupError($"Field name '{name}' is not unique; use a qualified name");
 					}
 				}
 			}
 
 			if (uniqueRow == null)
 			{
-				throw LookupError("No such field or function: {0}", name);
+				throw LookupError($"No such field or function: {name}");
 			}
 
 			return uniqueRow.GetValue(name);
@@ -146,7 +144,7 @@ namespace ProSuite.Processing.Evaluation
 				return closure.Invoke(new object[] {args});
 			}
 
-			throw InvocationError("No such function: {0}/{1}", function.Name, arity);
+			throw InvocationError($"No such function: {function.Name}/{arity}");
 		}
 
 		/// <summary>
@@ -160,7 +158,8 @@ namespace ProSuite.Processing.Evaluation
 		/// <param name="alias">An optional alias name</param>
 		public StandardEnvironment DefineValue(object value, string name, string alias = null)
 		{
-			Assert.ArgumentNotNullOrEmpty(name, nameof(name));
+			if (string.IsNullOrEmpty(name))
+				throw new ArgumentNullException(nameof(name));
 
 			_values[name] = value;
 
@@ -174,7 +173,8 @@ namespace ProSuite.Processing.Evaluation
 
 		public StandardEnvironment ForgetValue(string name)
 		{
-			Assert.ArgumentNotNullOrEmpty(name, nameof(name));
+			if (string.IsNullOrEmpty(name))
+				throw new ArgumentNullException(nameof(name));
 			_values.Remove(name);
 			return this;
 		}
@@ -188,8 +188,8 @@ namespace ProSuite.Processing.Evaluation
 		/// <param name="qualifier">The qualifier (optional)</param>
 		public StandardEnvironment DefineFields(INamedValues values, string qualifier = null)
 		{
-			Assert.ArgumentNotNull(values, nameof(values));
-			_rows[qualifier ?? string.Empty] = values;
+			string key = qualifier ?? string.Empty;
+			_rows[key] = values ?? throw new ArgumentNullException(nameof(values));
 			return this;
 		}
 
@@ -237,8 +237,10 @@ namespace ProSuite.Processing.Evaluation
 		/// </remarks>
 		public void Register(string name, MethodInfo methodInfo, object state = null)
 		{
-			Assert.ArgumentNotNullOrEmpty(name, nameof(name));
-			Assert.ArgumentNotNull(methodInfo, nameof(methodInfo));
+			if (string.IsNullOrEmpty(name))
+				throw new ArgumentNullException(nameof(name));
+			if (methodInfo is null)
+				throw new ArgumentNullException(nameof(methodInfo));
 
 			var nameKey = new FunKey(name);
 			int arity = GetArity(methodInfo);
@@ -253,10 +255,12 @@ namespace ProSuite.Processing.Evaluation
 		/// </summary>
 		public void Register<TResult>(string name, Func<TResult> func, object state = null)
 		{
-			Assert.ArgumentNotNull(func, nameof(func));
-			var methodInfo = Assert.NotNull(func.Method, "func.Method is null");
+			if (func is null)
+				throw new ArgumentNullException(nameof(func));
+			if (func.Method is null)
+				throw new InvalidOperationException("func.Method is null");
 
-			Register(name, methodInfo, state);
+			Register(name, func.Method, state);
 		}
 
 		/// <summary>
@@ -264,10 +268,12 @@ namespace ProSuite.Processing.Evaluation
 		/// </summary>
 		public void Register<T, TResult>(string name, Func<T, TResult> func, object state = null)
 		{
-			Assert.ArgumentNotNull(func, nameof(func));
-			var methodInfo = Assert.NotNull(func.Method, "func.Method is null");
+			if (func is null)
+				throw new ArgumentNullException(nameof(func));
+			if (func.Method is null)
+				throw new InvalidOperationException("func.Method is null");
 
-			Register(name, methodInfo, state);
+			Register(name, func.Method, state);
 		}
 
 		/// <summary>
@@ -276,10 +282,12 @@ namespace ProSuite.Processing.Evaluation
 		public void Register<T1, T2, TResult>(string name, Func<T1, T2, TResult> func,
 		                                      object state = null)
 		{
-			Assert.ArgumentNotNull(func, nameof(func));
-			var methodInfo = Assert.NotNull(func.Method, "func.Method is null");
+			if (func is null)
+				throw new ArgumentNullException(nameof(func));
+			if (func.Method is null)
+				throw new InvalidOperationException("func.Method is null");
 
-			Register(name, methodInfo, state);
+			Register(name, func.Method, state);
 		}
 
 		/// <summary>
@@ -288,20 +296,23 @@ namespace ProSuite.Processing.Evaluation
 		public void Register<T1, T2, T3, TResult>(string name, Func<T1, T2, T3, TResult> func,
 		                                          object state = null)
 		{
-			Assert.ArgumentNotNull(func, nameof(func));
-			var methodInfo = Assert.NotNull(func.Method, "func.Method is null");
+			if (func is null)
+				throw new ArgumentNullException(nameof(func));
+			if (func.Method is null)
+				throw new InvalidOperationException("func.Method is null");
 
-			Register(name, methodInfo, state);
+			Register(name, func.Method, state);
 		}
 
-		public void Register<T1, T2, T3, T4, TResult>(string name,
-		                                              Func<T1, T2, T3, T4, TResult> func,
-		                                              object state = null)
+		public void Register<T1, T2, T3, T4, TResult>(
+			string name, Func<T1, T2, T3, T4, TResult> func, object state = null)
 		{
-			Assert.ArgumentNotNull(func, nameof(func));
-			var methodInfo = Assert.NotNull(func.Method, "func.Method is null");
+			if (func is null)
+				throw new ArgumentNullException(nameof(func));
+			if (func.Method is null)
+				throw new InvalidOperationException("func.Method is null");
 
-			Register(name, methodInfo, state);
+			Register(name, func.Method, state);
 		}
 
 		/// <summary>
@@ -325,23 +336,14 @@ namespace ProSuite.Processing.Evaluation
 
 		#region Non-public methods
 
-		[StringFormatMethod("format")]
-		private static EvaluationException LookupError(string format, params object[] args)
+		private static EvaluationException LookupError(string message)
 		{
-			return new EvaluationException(string.Format(format, args));
+			return new EvaluationException(message ?? "bad lookup");
 		}
 
-		[StringFormatMethod("format")]
-		private static EvaluationException InvocationError(string format, params object[] args)
+		private static EvaluationException InvocationError(string message)
 		{
-			return new EvaluationException(string.Format(format, args));
-		}
-
-		protected static string Canonical(string s)
-		{
-			if (s == null) return null;
-			s = s.Trim();
-			return s.Length > 0 ? s : null;
+			return new EvaluationException(message ?? "bad invocation");
 		}
 
 		protected static int GetArity(MethodInfo methodInfo)
@@ -790,13 +792,13 @@ namespace ProSuite.Processing.Evaluation
 
 			public FunKey(string name)
 			{
-				Name = Assert.NotNull(name, "name must not be null");
+				Name = name ?? throw new ArgumentNullException(nameof(name));
 				Arity = null;
 			}
 
 			public FunKey(string name, int arity)
 			{
-				Name = Assert.NotNull(name, "name must not be null");
+				Name = name ?? throw new ArgumentNullException(nameof(name));
 				Arity = arity;
 			}
 
