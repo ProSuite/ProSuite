@@ -899,7 +899,7 @@ namespace ProSuite.DomainModel.Persistence.Core.QA.Xml
 							(TransformerConfiguration) configsByName[xmlParamValue.TransformerName];
 
 						Assert.NotNull(transformerConfig,
-						               "Transformer '{0}' defined in dataset parameter  for '{1}' does not exist",
+						               "Transformer '{0}' defined in dataset parameter for '{1}' does not exist",
 						               xmlParamValue.TransformerName,
 						               xmlInstanceConfiguration.Name);
 

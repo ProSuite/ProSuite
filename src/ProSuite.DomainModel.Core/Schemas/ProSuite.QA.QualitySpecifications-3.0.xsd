@@ -69,7 +69,8 @@
 			<xs:element minOccurs="0" maxOccurs="1" name="Description" type="xs:string" />
 			<xs:element minOccurs="0" maxOccurs="1" name="Notes" type="xs:string" />
 			<xs:element minOccurs="0" maxOccurs="1" name="Parameters" type="tns:ArrayOfChoice1" />
-			<xs:element minOccurs="0" maxOccurs="1" name="IssueFilterExpression" type="tns:XmlFilterExpression" />
+			<xs:element minOccurs="0" maxOccurs="1" name="Filters" type="tns:ArrayOfXmlFilters" />
+			<xs:element minOccurs="0" maxOccurs="1" name="FilterExpression" type="tns:XmlFilterExpression" />
 		</xs:sequence>
 		<xs:attribute name="name" type="xs:string" />
 		<xs:attribute name="testDescriptor" type="xs:string" />
@@ -90,6 +91,14 @@
 			<xs:element minOccurs="1" maxOccurs="1" name="Scalar" nillable="true" type="tns:XmlScalarTestParameterValue" />
 			<xs:element minOccurs="1" maxOccurs="1" name="Dataset" nillable="true" type="tns:XmlDatasetTestParameterValue" />
 		</xs:choice>
+	</xs:complexType>
+	<xs:complexType name="ArrayOfXmlFilters">
+		<xs:sequence>
+			<xs:element minOccurs="0" maxOccurs="unbounded" name="Filter" nillable="true" type="tns:XmlFilter" />
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="XmlFilter">
+		<xs:attribute name="issueFilterName" type="xs:string" />
 	</xs:complexType>
 	<xs:complexType name="XmlFilterExpression">
 		<xs:attribute name="expression" type="xs:string" />
