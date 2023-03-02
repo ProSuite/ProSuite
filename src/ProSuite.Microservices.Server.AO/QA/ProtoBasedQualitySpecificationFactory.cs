@@ -193,6 +193,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			DatasetSettings datasetSettings)
 		{
 			var result = new QualityCondition(conditionMsg.Name, testDescriptor);
+			result.SetCloneId(conditionMsg.ConditionId);
 
 			AddIssueFilters(result, conditionMsg, datasetSettings);
 

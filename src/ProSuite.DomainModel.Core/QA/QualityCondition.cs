@@ -109,6 +109,16 @@ namespace ProSuite.DomainModel.Core.QA
 			_versionUuid = GenerateUuid();
 		}
 
+		/// <summary>
+		/// The clone Id can be set if the instance is a clone of a persistent condition.
+		/// </summary>
+		/// <param name="id"></param>
+		public void SetCloneId(int id)
+		{
+			Assert.True(base.Id < 0, "Persistent entity or already initialized clone.");
+			_cloneId = id;
+		}
+
 		public bool StopOnError
 		{
 			get
