@@ -159,8 +159,9 @@ namespace ProSuite.Microservices.Client
 			try
 			{
 				HealthCheckResponse healthResponse =
-					await healthClient.CheckAsync(new HealthCheckRequest()
-					                              { Service = serviceName });
+					await healthClient
+					      .CheckAsync(new HealthCheckRequest() { Service = serviceName })
+					      .ConfigureAwait(false);
 
 				statusCode =
 					healthResponse.Status == HealthCheckResponse.Types.ServingStatus.Serving
