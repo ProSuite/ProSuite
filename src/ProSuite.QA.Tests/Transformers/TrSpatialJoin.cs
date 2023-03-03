@@ -233,14 +233,14 @@ namespace ProSuite.QA.Tests.Transformers
 							continue;
 						}
 
-						outerJoin = false;
-
 						IGeometry joinedGeom = ((IReadOnlyFeature) joined).Shape;
 						// TODO implement different relations
 						if (op.Disjoint(joinedGeom))
 						{
 							continue;
 						}
+
+						outerJoin = false;
 
 						if (! Grouped)
 						{
