@@ -783,9 +783,8 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 			Assert.ArgumentNotNull(issueFiltersByName, nameof(issueFiltersByName));
 
 			qualityCondition.ClearIssueFilterConfigurations();
-			qualityCondition.IssueFilterExpression = null;
-
-			if (xmlCondition.Filters != null && xmlCondition.Filters.Count > 0)
+			
+			if (xmlCondition.Filters != null)
 			{
 				foreach (string filterName in xmlCondition.Filters.Select(f => f.IssueFilterName))
 				{
@@ -800,9 +799,9 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 						qualityCondition.AddIssueFilterConfiguration(issueFilterConfig);
 					}
 				}
-
-				qualityCondition.IssueFilterExpression = xmlCondition.FilterExpression?.Expression;
 			}
+
+			qualityCondition.IssueFilterExpression = xmlCondition.FilterExpression?.Expression;
 		}
 
 		public static void UpdateTransformerConfiguration(
@@ -2089,14 +2088,11 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 			xmlConfiguration.NeverStoreRelatedGeometryForTableRowIssues =
 				qualityCondition.NeverStoreRelatedGeometryForTableRowIssues;
 
-			if (qualityCondition.IssueFilterConfigurations.Count > 0)
-			{
-				xmlConfiguration.Filters = qualityCondition.IssueFilterConfigurations
-				                                           .OrderBy(f => f.Name).Select(CreateXmlFilter)
-				                                           .ToList();
-				xmlConfiguration.FilterExpression =
-					CreateXmlFilterExpression(qualityCondition.IssueFilterExpression);
-			}
+			xmlConfiguration.Filters = qualityCondition.IssueFilterConfigurations
+			                                           .OrderBy(f => f.Name).Select(CreateXmlFilter)
+			                                           .ToList();
+			xmlConfiguration.FilterExpression =
+				CreateXmlFilterExpression(qualityCondition.IssueFilterExpression);
 
 			return xmlConfiguration;
 		}

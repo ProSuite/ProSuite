@@ -18,7 +18,6 @@ using ProSuite.DomainServices.AO.QA.Standalone;
 using ProSuite.DomainServices.AO.QA.Standalone.XmlBased;
 using ProSuite.DomainServices.AO.QA.VerifiedDataModel;
 using ProSuite.Microservices.Definitions.QA;
-using ProSuite.QA.Container;
 using ProSuite.QA.Core;
 
 namespace ProSuite.Microservices.Server.AO.QA
@@ -244,15 +243,6 @@ namespace ProSuite.Microservices.Server.AO.QA
 			[NotNull] QualityConditionMsg conditionMsg,
 			[NotNull] DatasetSettings datasetSettings)
 		{
-			// TODO: Check for consistent behaviour compared to DDX based specification
-			// -> No Issue filter expression: All specified filters are concatenated using OR (?)
-			string issueFilterExpression = conditionMsg.IssueFilterExpression;
-
-			if (string.IsNullOrWhiteSpace(issueFilterExpression))
-			{
-				return;
-			}
-
 			foreach (InstanceConfigurationMsg issueFilterMsg in conditionMsg.ConditionIssueFilters)
 			{
 				IssueFilterConfiguration issueFilterConfig =
@@ -270,20 +260,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 				}
 			}
 
-			// Validation (move to somewhere else?)
-			IList<string> issueFilterNames = FilterUtils.GetFilterNames(issueFilterExpression);
-
-			foreach (string issueFilterName in issueFilterNames)
-			{
-				string expressionName = issueFilterName.Trim();
-
-				if (! conditionMsg.ConditionIssueFilters.Any(f => f.Name.Equals(expressionName)))
-				{
-					Assert.Fail($"missing issue filter named {expressionName}");
-				}
-			}
-
-			qualityCondition.IssueFilterExpression = issueFilterExpression;
+			qualityCondition.IssueFilterExpression = conditionMsg.IssueFilterExpression;
 		}
 
 		#endregion

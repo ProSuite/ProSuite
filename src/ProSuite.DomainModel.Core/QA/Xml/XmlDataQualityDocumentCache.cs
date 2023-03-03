@@ -322,23 +322,21 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 			[NotNull] XmlQualityCondition xmlCondition,
 			[NotNull] DatasetSettings datasetSettings)
 		{
-			if (xmlCondition.Filters == null)
+			if (xmlCondition.Filters != null)
 			{
-				return;
-			}
-
-			foreach (string filterName in xmlCondition.Filters.Select(f => f.IssueFilterName))
-			{
-				if (! TryGetIssueFilter(
-					    filterName.Trim(),
-					    out XmlIssueFilterConfiguration xmlIssueFilterConfiguration))
+				foreach (string filterName in xmlCondition.Filters.Select(f => f.IssueFilterName))
 				{
-					Assert.Fail($"missing issue filter named {filterName}");
-				}
+					if (! TryGetIssueFilter(
+						    filterName.Trim(),
+						    out XmlIssueFilterConfiguration xmlIssueFilterConfiguration))
+					{
+						Assert.Fail($"missing issue filter named {filterName}");
+					}
 
-				IssueFilterConfiguration issueFilterConfiguration =
-					GetIssueFilterConfiguration(xmlIssueFilterConfiguration, datasetSettings);
-				qualityCondition.AddIssueFilterConfiguration(issueFilterConfiguration);
+					IssueFilterConfiguration issueFilterConfiguration =
+						GetIssueFilterConfiguration(xmlIssueFilterConfiguration, datasetSettings);
+					qualityCondition.AddIssueFilterConfiguration(issueFilterConfiguration);
+				}
 			}
 
 			qualityCondition.IssueFilterExpression = xmlCondition.FilterExpression?.Expression;

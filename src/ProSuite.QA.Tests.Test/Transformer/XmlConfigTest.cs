@@ -131,8 +131,8 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				new XmlDatasetTestParameterValue
 				{ TestParameterName = "areaFc", Value = "ignoreFc", WorkspaceId = xmlWs.ID });
 
-			xmlQc.FilterExpression = new XmlFilterExpression
-			                              { Expression = $"{xmlIssueFilter.Name}" };
+			xmlQc.Filters = new List<XmlFilter>
+			                { new XmlFilter { IssueFilterName = xmlIssueFilter.Name } };
 
 			var xmlSpec = new XmlQualitySpecification { TileSize = 10000, Name = "spec" };
 			xmlSpec.Elements.Add(new XmlQualitySpecificationElement
