@@ -32,9 +32,9 @@ namespace ProSuite.DdxEditor.Framework.Items
 			return result;
 		}
 
-		public static Image GetFindImage([CanBeNull] Image overlay = null)
+		public static Image GetSearchImage([CanBeNull] Image overlay = null)
 		{
-			Bitmap result = Resources.Find;
+			Bitmap result = Resources.Search;
 
 			if (overlay != null)
 			{

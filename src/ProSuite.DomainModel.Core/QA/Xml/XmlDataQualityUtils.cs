@@ -593,28 +593,28 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 
 				if (xmlInstanceConfig is XmlQualityCondition xmlCondition)
 				{
-					IList<string> issueFilterNames =
-						documentCache.GetIssueFilterNames(
-							xmlCondition.IssueFilterExpression?.Expression);
-
 					// Handle issue filters
-					var issueFilterConfigurations = new List<XmlInstanceConfiguration>();
-					foreach (string name in issueFilterNames)
+					if (xmlCondition.Filters != null && xmlCondition.Filters.Count > 0)
 					{
-						if (! documentCache.TryGetIssueFilter(
-							    name, out XmlIssueFilterConfiguration issueFilterConfiguration))
+						var issueFilterConfigurations = new List<XmlInstanceConfiguration>();
+						foreach (string filterName in xmlCondition.Filters.Select(f => f.IssueFilterName))
 						{
-							hasUndefinedWorkspaceReference = true;
-							// TODO: handle missing
-							continue;
+							if (! documentCache.TryGetIssueFilter(
+								    filterName.Trim(),
+								    out XmlIssueFilterConfiguration issueFilterConfiguration))
+							{
+								hasUndefinedWorkspaceReference = true;
+								// TODO: handle missing
+								continue;
+							}
+
+							issueFilterConfigurations.Add(issueFilterConfiguration);
 						}
 
-						issueFilterConfigurations.Add(issueFilterConfiguration);
+						CollectWorkspaceIds(workspaceIds, issueFilterConfigurations,
+						                    documentCache,
+						                    ref hasUndefinedWorkspaceReference);
 					}
-
-					CollectWorkspaceIds(workspaceIds, issueFilterConfigurations,
-					                    documentCache,
-					                    ref hasUndefinedWorkspaceReference);
 				}
 			}
 		}
@@ -623,8 +623,7 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 		public static XmlDataQualityDocumentCache GetDocumentCache(
 			[NotNull] XmlDataQualityDocument document,
 			[NotNull] IEnumerable<XmlQualitySpecification> xmlQualitySpecifications,
-			ITestParameterDatasetValidator testParameterDatasetValidator,
-			IIssueFilterExpressionParser issueFilterExpressionParser)
+			ITestParameterDatasetValidator testParameterDatasetValidator)
 		{
 			Assert.ArgumentNotNull(document, nameof(document));
 			Assert.ArgumentNotNull(xmlQualitySpecifications, nameof(xmlQualitySpecifications));
@@ -639,8 +638,7 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 
 			return new XmlDataQualityDocumentCache(document, qualityConditions)
 			       {
-				       ParameterDatasetValidator = testParameterDatasetValidator,
-				       IssueFilterExpressionParser = issueFilterExpressionParser
+				       ParameterDatasetValidator = testParameterDatasetValidator
 			       };
 		}
 
@@ -778,38 +776,33 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 		public static void UpdateIssueFilters(
 			[NotNull] QualityCondition qualityCondition,
 			[NotNull] XmlQualityCondition xmlCondition,
-			[NotNull] IDictionary<string, IssueFilterConfiguration> issueFiltersByName,
-			IIssueFilterExpressionParser expressionParser)
+			[NotNull] IDictionary<string, IssueFilterConfiguration> issueFiltersByName)
 		{
 			Assert.ArgumentNotNull(qualityCondition, nameof(qualityCondition));
 			Assert.ArgumentNotNull(xmlCondition, nameof(xmlCondition));
 			Assert.ArgumentNotNull(issueFiltersByName, nameof(issueFiltersByName));
 
 			qualityCondition.ClearIssueFilterConfigurations();
+			qualityCondition.IssueFilterExpression = null;
 
-			string issueFilterExpression = xmlCondition.IssueFilterExpression?.Expression;
-			if (! string.IsNullOrWhiteSpace(issueFilterExpression))
+			if (xmlCondition.Filters != null && xmlCondition.Filters.Count > 0)
 			{
-				IList<string> issueFilterNames =
-					expressionParser.GetFilterNames(issueFilterExpression);
-
-				Assert.NotNull(issueFilterNames,
-				               "Unable to get issue filter names from IssueFilterExpression defined for '{0}'",
-				               xmlCondition.Name);
-
-				foreach (string issueFilterName in issueFilterNames)
+				foreach (string filterName in xmlCondition.Filters.Select(f => f.IssueFilterName))
 				{
-					var issueFilterConfig = issueFiltersByName[issueFilterName.Trim()];
+					if (! string.IsNullOrWhiteSpace(filterName))
+					{
+						var issueFilterConfig = issueFiltersByName[filterName.Trim()];
 
-					Assert.NotNull(issueFilterConfig,
-					               "IssueFilter '{0}' defined in IssueFilterExpression for '{1}' does not exist",
-					               issueFilterName.Trim(), xmlCondition.Name);
+						Assert.NotNull(issueFilterConfig,
+						               "IssueFilter '{0}' referenced in quality condition '{1}' does not exist",
+						               filterName.Trim(), xmlCondition.Name);
 
-					qualityCondition.AddIssueFilterConfiguration(issueFilterConfig);
+						qualityCondition.AddIssueFilterConfiguration(issueFilterConfig);
+					}
 				}
-			}
 
-			qualityCondition.IssueFilterExpression = issueFilterExpression;
+				qualityCondition.IssueFilterExpression = xmlCondition.FilterExpression?.Expression;
+			}
 		}
 
 		public static void UpdateTransformerConfiguration(
@@ -1785,7 +1778,7 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 		private static IEnumerable<QualitySpecification> GetSortedQualitySpecifications(
 			[NotNull] IEnumerable<QualitySpecification> qualitySpecifications)
 		{
-			return qualitySpecifications.OrderBy(qs => $"{qs.ListOrder}#{qs.Name}");
+			return qualitySpecifications.OrderBy(qs => qs.ListOrder).ThenBy(qs => qs.Name);
 		}
 
 		[NotNull]
@@ -1799,7 +1792,7 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 		private static IEnumerable<DataQualityCategory> GetSortedCategories(
 			[NotNull] IEnumerable<DataQualityCategory> categories)
 		{
-			return categories.OrderBy(c => $"{c.ListOrder}#{c.Name}");
+			return categories.OrderBy(c => c.ListOrder).ThenBy(c => c.Name);
 		}
 
 		[NotNull]
@@ -2096,9 +2089,14 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 			xmlConfiguration.NeverStoreRelatedGeometryForTableRowIssues =
 				qualityCondition.NeverStoreRelatedGeometryForTableRowIssues;
 
-			xmlConfiguration.IssueFilterExpression = CreateXmlFilterExpression(
-				qualityCondition.IssueFilterExpression,
-				qualityCondition.IssueFilterConfigurations);
+			if (qualityCondition.IssueFilterConfigurations.Count > 0)
+			{
+				xmlConfiguration.Filters = qualityCondition.IssueFilterConfigurations
+				                                           .OrderBy(f => f.Name).Select(CreateXmlFilter)
+				                                           .ToList();
+				xmlConfiguration.FilterExpression =
+					CreateXmlFilterExpression(qualityCondition.IssueFilterExpression);
+			}
 
 			return xmlConfiguration;
 		}
@@ -2269,28 +2267,19 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 			       };
 		}
 
-		[CanBeNull]
-		private static XmlFilterExpression CreateXmlFilterExpression<T>(
-			[CanBeNull] string expression, [NotNull] IList<T> filters)
-			where T : InstanceConfiguration
+		[NotNull]
+		private static XmlFilter CreateXmlFilter(
+			[NotNull] IssueFilterConfiguration filterConfiguration)
 		{
-			if (string.IsNullOrWhiteSpace(expression))
-			{
-				if (filters.Count == 0)
-				{
-					return null;
-				}
+			return new XmlFilter { IssueFilterName = filterConfiguration.Name };
+		}
 
-				if (filters.Count > 1)
-				{
-					throw new InvalidConfigurationException(
-						$"A filter expression must be set for multiple filters {string.Concat(filters.Select(x => "{x},"))}");
-				}
-
-				expression = filters[0].Name;
-			}
-
-			return new XmlFilterExpression { Expression = expression };
+		[CanBeNull]
+		private static XmlFilterExpression CreateXmlFilterExpression([CanBeNull] string expression)
+		{
+			return string.IsNullOrWhiteSpace(expression)
+				       ? null
+				       : new XmlFilterExpression { Expression = expression };
 		}
 
 		private static void ExportMetadata([NotNull] IEntityMetadata entity,

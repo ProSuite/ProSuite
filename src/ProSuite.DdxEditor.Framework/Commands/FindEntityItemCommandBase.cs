@@ -31,7 +31,7 @@ namespace ProSuite.DdxEditor.Framework.Commands
 			Text = text;
 		}
 
-		public sealed override Image Image => Resources.Find;
+		public sealed override Image Image => Resources.Search;
 
 		[NotNull]
 		public override string Text { get; }

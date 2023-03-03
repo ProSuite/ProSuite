@@ -14,14 +14,15 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 		[NotNull]
 		public static IEnumerable<InstanceConfigurationTableRow>
 			GetInstanceConfigurationTableRows<T>(
-				[NotNull] CoreDomainModelItemModelBuilder modelBuilder)
+				[NotNull] CoreDomainModelItemModelBuilder modelBuilder,
+				[CanBeNull] ICollection<T> nonSelectable)
 			where T : InstanceConfiguration
 		{
 			Assert.ArgumentNotNull(modelBuilder, nameof(modelBuilder));
 
-			return GetInstanceConfigurationTableRows<T>(
+			return GetInstanceConfigurationTableRows(
 					modelBuilder.InstanceConfigurations,
-					modelBuilder.IncludeQualityConditionsBasedOnDeletedDatasets)
+					modelBuilder.IncludeQualityConditionsBasedOnDeletedDatasets, nonSelectable)
 				.OrderBy(row => row.Name);
 		}
 
@@ -58,7 +59,8 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 		private static IEnumerable<InstanceConfigurationTableRow>
 			GetInstanceConfigurationTableRows<T>(
 				[NotNull] IInstanceConfigurationRepository repository,
-				bool includeQualityConditionsBasedOnDeletedDatasets)
+				bool includeQualityConditionsBasedOnDeletedDatasets,
+				[CanBeNull] ICollection<T> nonSelectable)
 			where T : InstanceConfiguration
 		{
 			IList<T> instanceConfigurations = repository.GetInstanceConfigurations<T>();
@@ -84,7 +86,11 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 					refCount = 0;
 				}
 
-				yield return new InstanceConfigurationTableRow(instanceConfig, refCount);
+				yield return new InstanceConfigurationTableRow(instanceConfig, refCount)
+				             {
+					             Selectable = nonSelectable == null ||
+					                          ! nonSelectable.Contains(instanceConfig)
+				             };
 			}
 		}
 

@@ -29,7 +29,7 @@ namespace ProSuite.DdxEditor.Framework.Search
 
 			Text = text;
 
-			Image = ItemUtils.GetFindImage(overlay);
+			Image = ItemUtils.GetSearchImage(overlay);
 		}
 
 		public string Text { get; }

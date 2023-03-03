@@ -106,6 +106,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			            conditionListSpecificationMsg.Elements);
 
 			// TODO: TileSize, Url, Notes? They are not used by the verification.
+			// The IsCustom property is not used, SaveVerification is a separate explicitly set parameter)
 
 			_msg.DebugFormat("Created specification from protos with {0} conditions.",
 			                 result.Elements.Count);
@@ -192,6 +193,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			DatasetSettings datasetSettings)
 		{
 			var result = new QualityCondition(conditionMsg.Name, testDescriptor);
+			result.SetCloneId(conditionMsg.ConditionId);
 
 			AddIssueFilters(result, conditionMsg, datasetSettings);
 

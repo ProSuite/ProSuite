@@ -76,9 +76,6 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 		public IDictionary<string, DdxModel> ReferencedModels { get; set; }
 
 		[CanBeNull]
-		public IIssueFilterExpressionParser IssueFilterExpressionParser { get; set; }
-
-		[CanBeNull]
 		public ITestParameterDatasetValidator ParameterDatasetValidator { get; set; }
 
 		public XmlDataQualityDocumentCache(XmlDataQualityDocument document,
@@ -132,19 +129,23 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 
 			if (config is XmlQualityCondition xmlCondition)
 			{
-				string issueFilterExpression = xmlCondition.IssueFilterExpression?.Expression;
-
-				foreach (string filterName in GetIssueFilterNames(issueFilterExpression))
+				if (xmlCondition.Filters != null)
 				{
-					if (! IssueFiltersByName.TryGetValue(filterName,
-					                                     out XmlIssueFilterConfiguration filter))
+					foreach (string filterName in xmlCondition.Filters.Select(
+						         f => f.IssueFilterName))
 					{
-						Assert.Fail($"missing issue filter {filterName}");
-					}
+						if (! TryGetIssueFilter(
+							    filterName.Trim(),
+							    out XmlIssueFilterConfiguration xmlIssueFilterConfiguration))
+						{
+							Assert.Fail($"missing issue filter named {filterName}");
+						}
 
-					foreach (var referenced in EnumReferencedConfigurationInstances(filter))
-					{
-						yield return referenced;
+						foreach (var referenced in EnumReferencedConfigurationInstances(
+							         xmlIssueFilterConfiguration))
+						{
+							yield return referenced;
+						}
 					}
 				}
 			}
@@ -321,15 +322,18 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 			[NotNull] XmlQualityCondition xmlCondition,
 			[NotNull] DatasetSettings datasetSettings)
 		{
-			string issueFilterExpression = xmlCondition.IssueFilterExpression?.Expression;
+			if (xmlCondition.Filters == null)
+			{
+				return;
+			}
 
-			foreach (string issueFilterName in GetIssueFilterNames(issueFilterExpression))
+			foreach (string filterName in xmlCondition.Filters.Select(f => f.IssueFilterName))
 			{
 				if (! TryGetIssueFilter(
-					    issueFilterName.Trim(),
+					    filterName.Trim(),
 					    out XmlIssueFilterConfiguration xmlIssueFilterConfiguration))
 				{
-					Assert.Fail($"missing issue filter named {issueFilterName}");
+					Assert.Fail($"missing issue filter named {filterName}");
 				}
 
 				IssueFilterConfiguration issueFilterConfiguration =
@@ -337,7 +341,7 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 				qualityCondition.AddIssueFilterConfiguration(issueFilterConfiguration);
 			}
 
-			qualityCondition.IssueFilterExpression = issueFilterExpression;
+			qualityCondition.IssueFilterExpression = xmlCondition.FilterExpression?.Expression;
 		}
 
 		private IssueFilterConfiguration GetIssueFilterConfiguration(
@@ -453,20 +457,6 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 			}
 
 			return descriptor;
-		}
-
-		public IList<string> GetIssueFilterNames([CanBeNull] string issueFilterExpression)
-		{
-			if (string.IsNullOrWhiteSpace(issueFilterExpression))
-			{
-				return new List<string>();
-			}
-
-			var result = Assert.NotNull(IssueFilterExpressionParser,
-			                            "Filter Expression Parser not initialized")
-			                   .GetFilterNames(issueFilterExpression);
-
-			return result;
 		}
 	}
 }
