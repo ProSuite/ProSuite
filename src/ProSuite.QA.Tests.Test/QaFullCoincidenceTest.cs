@@ -1175,7 +1175,7 @@ namespace ProSuite.QA.Tests.Test
 
 			protected override bool IsDirected => false;
 
-			public override int Execute(IReadOnlyRow row)
+			protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 			{
 				var feature = (IReadOnlyFeature) row;
 				IIndexedSegments geometry = IndexedSegmentUtils.GetIndexedGeometry(feature, true);
