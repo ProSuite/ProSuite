@@ -721,16 +721,13 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 			IFeatureCursor cursor = null;
 
-			if (RuntimeUtils.Is10_1 || RuntimeUtils.Is10_2 || RuntimeUtils.Is10_3 ||
-			    RuntimeUtils.Is10_4orHigher)
-			{
-				Assert.Throws<NullReferenceException>(
-					() => cursor = fc.Search(spatialFilter, true));
-			}
-			else
-			{
-				cursor = fc.Search(spatialFilter, true);
-			}
+#if Server11
+
+			cursor = fc.Search(spatialFilter, true);
+#else
+			Assert.Throws<NullReferenceException>(
+				() => cursor = fc.Search(spatialFilter, true));
+#endif
 
 			if (cursor != null)
 				Marshal.ReleaseComObject(cursor);

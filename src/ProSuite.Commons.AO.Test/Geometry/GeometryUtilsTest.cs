@@ -913,14 +913,8 @@ namespace ProSuite.Commons.AO.Test.Geometry
 
 			bool simplified = GeometryUtils.TrySimplifyZ(polygon);
 
-			// NOTE: The behaviour changed at 11.0!
-#if Server11
-			Assert.IsFalse(simplified);
-			Assert.IsFalse(((IZAware) polygon).ZSimple);
-#else
 			Assert.IsTrue(simplified);
 			Assert.IsTrue(((IZAware) polygon).ZSimple);
-#endif
 
 			Console.WriteLine(GeometryUtils.ToString(polygon));
 		}
