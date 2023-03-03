@@ -15,6 +15,23 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 {
 	public class VerifiedModelFactory : IVerifiedModelFactory
 	{
+		// FeatureClassNameClass does not exist in AO11 !
+		private class FeatureClassNameProxy : IFeatureClassName, IDatasetName 
+		{
+			esriGeometryType IFeatureClassName.ShapeType { get; set; }
+			IDatasetName IFeatureClassName.FeatureDatasetName { get; set; }
+			esriFeatureType IFeatureClassName.FeatureType { get; set; }
+			string IFeatureClassName.ShapeFieldName { get; set; }
+			string IDatasetName.Name { get; set; }
+
+			esriDatasetType IDatasetName.Type => esriDatasetType.esriDTFeatureClass;
+
+			string IDatasetName.Category { get; set; }
+			IWorkspaceName IDatasetName.WorkspaceName { get; set; }
+
+			IEnumDatasetName IDatasetName.SubsetNames => null;
+		}
+
 		[NotNull] private readonly IMasterDatabaseWorkspaceContextFactory _workspaceContextFactory;
 
 		[NotNull] private readonly VerifiedDatasetHarvesterBase _datasetHarvester;
@@ -132,7 +149,7 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 				var harvestedNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
 				Harvest(ws, names, esriDatasetType.esriDTFeatureClass,
-				        () => new FeatureClassNameClass(),
+				        () => new FeatureClassNameProxy(), // new FeatureClassNameClass(),
 				        qn, schema, harvestedNames);
 				Harvest(ws, names, esriDatasetType.esriDTTable, () => new TableNameClass(),
 				        qn, schema, harvestedNames);
