@@ -4,6 +4,8 @@ using System.Runtime.InteropServices;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase.GdbSchema;
+using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
@@ -144,7 +146,7 @@ namespace ProSuite.QA.Tests
 			if (multiPatch != null)
 			{
 				return new IndexedSegmentsSlopeAngleProvider(
-					QaGeometryUtils.CreateIndexedMultiPatch(multiPatch));
+					ProxyUtils.CreateIndexedMultiPatch(multiPatch));
 			}
 
 			return new SegmentCollectionSlopeAngleProvider((ISegmentCollection) row.Shape);
@@ -351,7 +353,7 @@ namespace ProSuite.QA.Tests
 			public override IPolyline GetSubpart(int partIndex, int startSegmentIndex,
 			                                     int endSegmentIndex)
 			{
-				return QaGeometryUtils.GetSubpart(_segments, partIndex, startSegmentIndex,
+				return ProxyUtils.GetSubpart(_segments, partIndex, startSegmentIndex,
 				                                  endSegmentIndex);
 			}
 

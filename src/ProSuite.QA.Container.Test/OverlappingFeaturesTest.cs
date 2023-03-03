@@ -32,7 +32,7 @@ namespace ProSuite.QA.Container.Test
 			var fc = new FeatureClassMock("", esriGeometryType.esriGeometryPolyline, 1);
 			ReadOnlyFeatureClass roFc = ReadOnlyTableFactory.Create((IFeatureClass) fc);
 			var feature =
-				new ReadOnlyFeature(roFc, fc.CreateFeature(new Pt(0, 0), new Pt(9.95, 9.95)));
+				ReadOnlyFeature.Create(roFc, fc.CreateFeature(new Pt(0, 0), new Pt(9.95, 9.95)));
 			var cachedRow = new CachedRow(feature);
 
 			overlaps.RegisterTestedFeature(cachedRow, null);
@@ -45,13 +45,13 @@ namespace ProSuite.QA.Container.Test
 
 			var fc = new FeatureClassMock("", esriGeometryType.esriGeometryPolyline, 1);
 			ReadOnlyFeatureClass roFc = ReadOnlyTableFactory.Create((IFeatureClass) fc);
-			var f1 = new ReadOnlyFeature(
+			var f1 = ReadOnlyFeature.Create(
 				roFc, fc.CreateFeature(new Pt(100, 0), new Pt(109.95, 9.95)));
-			var f2 = new ReadOnlyFeature(
+			var f2 = ReadOnlyFeature.Create(
 				roFc, fc.CreateFeature(new Pt(100, 0), new Pt(109.8, 9.8)));
-			var fx = new ReadOnlyFeature(
+			var fx = ReadOnlyFeature.Create(
 				roFc, fc.CreateFeature(new Pt(100, 0), new Pt(109.95, 9.8)));
-			var fy = new ReadOnlyFeature(
+			var fy = ReadOnlyFeature.Create(
 				roFc, fc.CreateFeature(new Pt(100, 0), new Pt(109.8, 9.95)));
 			var c1 = new CachedRow(f1);
 
@@ -115,13 +115,13 @@ namespace ProSuite.QA.Container.Test
 
 			var fc = new FeatureClassMock("", esriGeometryType.esriGeometryPolyline, 1);
 			ReadOnlyFeatureClass roFc = ReadOnlyTableFactory.Create((IFeatureClass) fc);
-			var f1 = new ReadOnlyFeature(
+			var f1 = ReadOnlyFeature.Create(
 				roFc, fc.CreateFeature(new Pt(100, 0), new Pt(109.95, 9.95)));
-			var f2 = new ReadOnlyFeature(
+			var f2 = ReadOnlyFeature.Create(
 				roFc, fc.CreateFeature(new Pt(100, 0), new Pt(109.8, 9.8)));
-			var fx = new ReadOnlyFeature(
+			var fx = ReadOnlyFeature.Create(
 				roFc, fc.CreateFeature(new Pt(100, 0), new Pt(109.95, 9.8)));
-			var fy = new ReadOnlyFeature(
+			var fy = ReadOnlyFeature.Create(
 				roFc, fc.CreateFeature(new Pt(100, 0), new Pt(109.8, 9.95)));
 			var c1 = new CachedRow(f1);
 			var test = new VerifyingContainerTest(roFc);

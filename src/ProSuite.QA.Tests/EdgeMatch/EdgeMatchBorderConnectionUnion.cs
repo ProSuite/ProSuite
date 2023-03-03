@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
@@ -177,7 +178,7 @@ namespace ProSuite.QA.Tests.EdgeMatch
 
 		private static bool IsDone([NotNull] IGeometry geometry, WKSEnvelope tileEnvelope)
 		{
-			WKSEnvelope geometryEnvelope = QaGeometryUtils.GetWKSEnvelope(geometry);
+			WKSEnvelope geometryEnvelope = ProxyUtils.GetWKSEnvelope(geometry);
 
 			return geometryEnvelope.XMax < tileEnvelope.XMax &&
 			       geometryEnvelope.YMax < tileEnvelope.YMax;

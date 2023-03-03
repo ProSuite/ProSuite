@@ -47,7 +47,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 		void IRowsCache.Add(IReadOnlyRow row)
 		{
-			VirtualRow baseRow = (VirtualRow) ((row as IFeatureProxy)?.Inner ?? row);
+			VirtualRow baseRow = (VirtualRow) row;
 			Assert.NotNull((TransformedBackingDataset) BackingDataset,
 			               $"{nameof(BackingDataset)} not set").AddToCache(baseRow);
 		}

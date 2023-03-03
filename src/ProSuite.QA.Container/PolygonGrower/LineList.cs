@@ -4,8 +4,8 @@ using System.Threading;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.QA.Container.Geometry;
 
 namespace ProSuite.QA.Container.PolygonGrower
 {
@@ -483,7 +483,7 @@ namespace ProSuite.QA.Container.PolygonGrower
 			if (_directedRows.First != null)
 			{
 				ICurve template = _directedRows.First.Value.GetBaseLine();
-				border = QaGeometryUtils.CreatePolyline(template);
+				border = ProxyUtils.CreatePolyline(template);
 			}
 			else
 			{
@@ -515,7 +515,7 @@ namespace ProSuite.QA.Container.PolygonGrower
 		[NotNull]
 		private IPolygon CombineRings()
 		{
-			IPolygon polygon = QaGeometryUtils.CreatePolygon(
+			IPolygon polygon = ProxyUtils.CreatePolygon(
 				_directedRows.First.Value.GetBaseLine());
 
 			var rings = (IGeometryCollection) polygon;
@@ -544,7 +544,7 @@ namespace ProSuite.QA.Container.PolygonGrower
 		public IPolyline GetPolyline()
 		{
 			IPolyline polyline =
-				QaGeometryUtils.CreatePolyline(_directedRows.First.Value.GetBaseLine());
+				ProxyUtils.CreatePolyline(_directedRows.First.Value.GetBaseLine());
 
 			JoinRows((ISegmentCollection) polyline);
 			((ITopologicalOperator) polyline).Simplify();

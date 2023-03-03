@@ -173,7 +173,7 @@ namespace ProSuite.Microservices.Server.AO.Test
 
 			fClass.SpatialReference = sr;
 
-			GdbFeature featureWithNoShape = new GdbFeature(41, fClass);
+			GdbFeature featureWithNoShape = GdbFeature.Create(41, fClass);
 
 			AssertCanConvertToDtoAndBack(featureWithNoShape);
 
@@ -183,10 +183,8 @@ namespace ProSuite.Microservices.Server.AO.Test
 
 			polygon.SpatialReference = sr;
 
-			GdbFeature featureWithShape = new GdbFeature(42, fClass)
-			                              {
-				                              Shape = polygon
-			                              };
+			GdbFeature featureWithShape = GdbFeature.Create(42, fClass);
+			featureWithShape.Shape = polygon;
 
 			AssertCanConvertToDtoAndBack(featureWithShape);
 		}
@@ -202,7 +200,7 @@ namespace ProSuite.Microservices.Server.AO.Test
 
 			fClass1.SpatialReference = sr;
 
-			GdbFeature featureWithNoShape = new GdbFeature(41, fClass1);
+			GdbFeature featureWithNoShape = GdbFeature.Create(41, fClass1);
 
 			IPolygon polygon = GeometryFactory.CreatePolygon(
 				GeometryFactory.CreatePoint(2600000, 1200000, sr),
@@ -210,17 +208,15 @@ namespace ProSuite.Microservices.Server.AO.Test
 
 			polygon.SpatialReference = sr;
 
-			GdbFeature featureWithShape = new GdbFeature(42, fClass1)
-			                              {
-				                              Shape = polygon
-			                              };
+			GdbFeature featureWithShape = GdbFeature.Create(42, fClass1);
+			featureWithShape.Shape = polygon;
 
 			var fClass2 =
 				new GdbFeatureClass(124, "TestClass2", esriGeometryType.esriGeometryMultipoint);
 
 			fClass2.SpatialReference = sr;
 
-			GdbFeature multipointFeature = new GdbFeature(41, fClass2);
+			GdbFeature multipointFeature = GdbFeature.Create(41, fClass2);
 
 			AssertCanConvertToDtoAndBack(new List<IFeature>
 			                             {

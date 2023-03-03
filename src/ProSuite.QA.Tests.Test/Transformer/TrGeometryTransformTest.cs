@@ -7,8 +7,8 @@ using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.AO.Test;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.Test;
 using ProSuite.QA.Container.TestContainer;
 using ProSuite.QA.Tests.Test.Construction;
 using ProSuite.QA.Tests.Test.TestRunners;
@@ -590,10 +590,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			return table.EnumRows(queryFilter, false);
 		}
 
-		public IUniqueIdProvider GetUniqueIdProvider(IReadOnlyTable table)
-		{
-			throw new NotImplementedException();
-		}
+		public IUniqueIdProvider GetUniqueIdProvider(IReadOnlyTable table) => null;
 
 		#endregion
 	}

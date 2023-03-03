@@ -4,17 +4,19 @@ using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.Geometry;
-using ProSuite.QA.Container.TestContainer;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.QA.Tests.PointEnumerators;
 using ProSuite.QA.Tests.Properties;
+using SegmentUtils_ = ProSuite.QA.Container.Geometry.SegmentUtils_;
 
 namespace ProSuite.QA.Tests
 {
@@ -710,7 +712,7 @@ namespace ProSuite.QA.Tests
 			if (shapeType == esriGeometryType.esriGeometryMultiPatch)
 			{
 				IIndexedMultiPatch indexedMultiPatch =
-					QaGeometryUtils.CreateIndexedMultiPatch((IMultiPatch) shape);
+					ProxyUtils.CreateIndexedMultiPatch((IMultiPatch) shape);
 				return new IndexedSegmentsNearFeatureCoincidence(feature,
 				                                                 indexedMultiPatch);
 			}
@@ -854,7 +856,7 @@ namespace ProSuite.QA.Tests
 			                                   [NotNull] IPoint point)
 				: base(feature)
 			{
-				_point = QaGeometryUtils.CreatePoint3D(point);
+				_point = ProxyUtils.CreatePoint3D(point);
 			}
 
 			public override IEnumerable<Proximity> GetProximities(Pnt point,
@@ -887,7 +889,7 @@ namespace ProSuite.QA.Tests
 			{
 				foreach (WKSPointZ wksPoint in _wksPoints)
 				{
-					Pnt part = QaGeometryUtils.CreatePoint3D(wksPoint);
+					Pnt part = ProxyUtils.CreatePoint3D(wksPoint);
 
 					if (box.Contains((IPnt) part))
 					{
@@ -944,7 +946,7 @@ namespace ProSuite.QA.Tests
 					if (! _fraction.HasValue)
 					{
 						_fraction =
-							SegmentUtils.GetClosestPointFraction(_segmentProxy, Point, As3D);
+							SegmentUtils_.GetClosestPointFraction(_segmentProxy, Point, As3D);
 					}
 
 					return _fraction.Value;

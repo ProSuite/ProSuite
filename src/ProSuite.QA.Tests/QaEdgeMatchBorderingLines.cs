@@ -6,6 +6,7 @@ using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -675,7 +676,7 @@ namespace ProSuite.QA.Tests
 						IPolyline uncoveredPart =
 							GeometryFactory.CreatePolyline(uncoveredParts.Geometry[partIndex]);
 
-						WKSEnvelope uncoveredBox = QaGeometryUtils.GetWKSEnvelope(uncoveredPart);
+						WKSEnvelope uncoveredBox = ProxyUtils.GetWKSEnvelope(uncoveredPart);
 
 						// TODO revise
 						if (uncoveredBox.XMax < tileWksBox.XMin ||

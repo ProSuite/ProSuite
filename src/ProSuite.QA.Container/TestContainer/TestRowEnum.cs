@@ -10,12 +10,12 @@ using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
 using ProSuite.Commons.Geom.SpatialIndex;
 using ProSuite.Commons.Logging;
-using ProSuite.QA.Container.Geometry;
 
 namespace ProSuite.QA.Container.TestContainer
 {
@@ -565,7 +565,7 @@ namespace ProSuite.QA.Container.TestContainer
 			{
 				TestRow rasterTestRow = new TestRow(
 					rasterRow,
-					QaGeometryUtils.CreateBox(rasterRow.Extent),
+					ProxyUtils.CreateBox(rasterRow.Extent),
 					_testSorter.TestsPerRaster[rasterRow.RasterReference]);
 
 				// _container.OnProgressChanged(string.Format("Loaded TIN Part {0} of {1} for current Tile", _cachedRowIndex, nTiles));
@@ -589,7 +589,7 @@ namespace ProSuite.QA.Container.TestContainer
 						_testSorter.TestsPerTerrain[terrainRow.TerrainReference];
 
 					TestRow terrainTestRow = new TestRow(
-						terrainRow, QaGeometryUtils.CreateBox(terrainRow.Extent), tests);
+						terrainRow, ProxyUtils.CreateBox(terrainRow.Extent), tests);
 
 					_container.OnProgressChanged(Step.TestRowCreated, (int) tileRowIndex,
 					                             (int) tileRowCount, terrainTestRow);

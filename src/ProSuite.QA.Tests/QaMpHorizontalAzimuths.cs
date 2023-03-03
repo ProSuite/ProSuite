@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.Geometry;
-using ProSuite.QA.Container.TestContainer;
 using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
@@ -139,7 +140,7 @@ namespace ProSuite.QA.Tests
 		{
 			var indexedFeature = feature as IIndexedMultiPatchFeature;
 			IIndexedMultiPatch multiPatch = indexedFeature?.IndexedMultiPatch ??
-			                                QaGeometryUtils.CreateIndexedMultiPatch(
+			                                ProxyUtils.CreateIndexedMultiPatch(
 				                                (IMultiPatch) feature.Shape);
 
 			if (_perRing)

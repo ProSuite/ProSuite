@@ -1,16 +1,82 @@
 using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 {
 	/// <inheritdoc cref="GdbRow" />
-	public class GdbFeature : GdbRow, IFeature, IFeatureBuffer, IFeatureChanges, IReadOnlyFeature
+	public abstract class GdbFeature : GdbRow, IFeature, IFeatureBuffer, IFeatureChanges, IReadOnlyFeature
 	{
+		private class PolycurveFeature : GdbFeature, IIndexedPolycurveFeature
+		{
+			private IndexedPolycurve _indexedPolycurve;
+
+			public PolycurveFeature(long oid, GdbFeatureClass featureClass, IValueList valueList)
+				: base(oid, featureClass, valueList) { }
+
+			bool IIndexedSegmentsFeature.AreIndexedSegmentsLoaded => _indexedPolycurve == null;
+
+			IIndexedSegments IIndexedSegmentsFeature.IndexedSegments
+				=> _indexedPolycurve ??
+				   (_indexedPolycurve = new IndexedPolycurve((IPointCollection4)Shape));
+		}
+
+		private class MultiPatchFeature : GdbFeature, IIndexedMultiPatchFeature
+		{
+			private IndexedMultiPatch _indexedMultiPatch;
+
+			public MultiPatchFeature(long oid, GdbFeatureClass featureClass, IValueList valueList)
+				: base(oid, featureClass, valueList) { }
+
+			bool IIndexedSegmentsFeature.AreIndexedSegmentsLoaded => true;
+
+			IIndexedSegments IIndexedSegmentsFeature.IndexedSegments => IndexedMultiPatch;
+
+			public IIndexedMultiPatch IndexedMultiPatch
+				=> _indexedMultiPatch ??
+				   (_indexedMultiPatch = new IndexedMultiPatch((IMultiPatch)Shape));
+		}
+
+		private class AnyFeature : GdbFeature
+		{
+			public AnyFeature(long oid, GdbFeatureClass featureClass, IValueList valueList)
+				: base(oid, featureClass, valueList) { }
+		}
+
+		public static GdbFeature Create(long oid, [NotNull] GdbFeatureClass featureClass,
+		                                [CanBeNull] IValueList valueList = null)
+		{
+			esriGeometryType geometryType = featureClass.ShapeType;
+
+			GdbFeature result;
+
+			switch (geometryType)
+			{
+				case esriGeometryType.esriGeometryMultiPatch:
+					result = new MultiPatchFeature(oid, featureClass, valueList);
+					break;
+
+				case esriGeometryType.esriGeometryPolygon:
+				case esriGeometryType.esriGeometryPolyline:
+					result = new PolycurveFeature(oid, featureClass, valueList);
+					break;
+
+				default:
+					result = new AnyFeature(oid, featureClass, valueList);
+					break;
+			}
+
+			return result;
+		}
+
+
 		private readonly int _shapeFieldIndex;
 
 		[NotNull] private readonly IFeatureClass _featureClass;
@@ -19,8 +85,8 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		#region Constructors
 
-		public GdbFeature(long oid, [NotNull] GdbFeatureClass featureClass,
-		                  [CanBeNull] IValueList valueList = null)
+		protected GdbFeature(long oid, [NotNull] GdbFeatureClass featureClass,
+		                     [CanBeNull] IValueList valueList = null)
 			: base(oid, featureClass, valueList)
 		{
 			_featureClass = featureClass;

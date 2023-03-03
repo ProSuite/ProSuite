@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
+using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom.SpatialIndex;
 using ProSuite.QA.Container;
@@ -74,7 +75,7 @@ namespace ProSuite.QA.Tests.Transformers
 			}
 
 			foreach (BoxTree<IReadOnlyFeature>.TileEntry entry in
-			         knownRows.Search(QaGeometryUtils.CreateBox(baseFeature.Extent)))
+			         knownRows.Search(ProxyUtils.CreateBox(baseFeature.Extent)))
 			{
 				if (! involvedDict.TryGetValue(entry.Value, out Involved knownInvolved))
 				{
