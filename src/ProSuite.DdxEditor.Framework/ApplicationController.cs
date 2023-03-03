@@ -686,8 +686,10 @@ namespace ProSuite.DdxEditor.Framework
 						currentItem.EndCommit();
 					});
 			}
-			catch (Exception)
+			catch (Exception e)
 			{
+				_msg.Debug($"{nameof(TrySavePendingChangesCore)} failed", e);
+
 				// Would be nicer: keep the changes in the UI, apply them again to the entity
 				// But: items should anyway check if valid for persistence, 
 				//      ORA constraint violations should not occur
