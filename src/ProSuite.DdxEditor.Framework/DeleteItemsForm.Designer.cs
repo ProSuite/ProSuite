@@ -270,6 +270,7 @@
 			this.Controls.Add(this._pictureBoxImage);
 			this.Controls.Add(this._splitContainer);
 			this.Controls.Add(this._labelHeader);
+			this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.SizableToolWindow;
 			this.Margin = new System.Windows.Forms.Padding(5, 6, 5, 6);
 			this.MaximizeBox = false;
 			this.MinimizeBox = false;
