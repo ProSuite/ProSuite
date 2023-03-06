@@ -248,7 +248,7 @@ namespace ProSuite.Processing
 		/// <summary>
 		/// Parse config from given Process element of old .cp.xml
 		/// </summary>
-		private static CartoProcessConfig FromProcess(XElement process)
+		public static CartoProcessConfig FromProcess(XElement process)
 		{
 			if (process is null) return null;
 
@@ -297,7 +297,7 @@ namespace ProSuite.Processing
 		/// <summary>
 		/// Parse config from given ProcessGroup element of old .cp.xml
 		/// </summary>
-		private static CartoProcessConfig FromProcessGroup(XElement processGroup)
+		public static CartoProcessConfig FromProcessGroup(XElement processGroup)
 		{
 			if (processGroup is null) return null;
 

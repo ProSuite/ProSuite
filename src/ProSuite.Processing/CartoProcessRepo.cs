@@ -75,36 +75,29 @@ namespace ProSuite.Processing
 			XElement processElement,
 			IReadOnlyList<XElement> declaredTypes, IReadOnlyList<Type> knownTypes)
 		{
-			var name = Canonical((string) processElement.Attribute("name"));
 
 			var typeElement = processElement.Element("TypeReference");
 			var typeAlias = (string) typeElement?.Attribute("name") ??
 			                throw new FormatException(AppendLineInfo("Process has no type reference", processElement));
 
 			var type = ResolveType(typeAlias, declaredTypes, knownTypes);
-			var configText = processElement.ToString();
-			var description = Canonical((string) processElement.Attribute("description"));
-
-			return new CartoProcessDefinition(name, type, configText, description);
+			var config = CartoProcessConfig.FromProcess(processElement);
+			return new CartoProcessDefinition(config, type);
 		}
 
 		private static CartoProcessDefinition CreateGroupItem(
 			XElement groupElement,
 			IReadOnlyList<XElement> declaredTypes, IReadOnlyList<Type> knownTypes)
 		{
-			var name = Canonical((string) groupElement.Attribute("name"));
-
 			var typeElement = groupElement.Element("AssociatedGroupProcessTypeReference") ??
 			                  groupElement.Element("GroupProcessTypeReference") ??
 			                  groupElement.Element("TypeReference");
 			var typeAlias = (string) typeElement?.Attribute("name") ??
 			                throw new FormatException(AppendLineInfo("Process has no type reference", groupElement));
 
-			var type = ResolveType(typeAlias, declaredTypes, knownTypes);
-			var configText = groupElement.ToString();
-			var description = Canonical((string) groupElement.Attribute("description"));
-
-			return new CartoProcessDefinition(name, type, configText, description);
+			var resolvedType = ResolveType(typeAlias, declaredTypes, knownTypes);
+			var config = CartoProcessConfig.FromProcessGroup(groupElement);
+			return new CartoProcessDefinition(config, resolvedType);
 		}
 
 		private static string AppendLineInfo(string message, XObject xml, bool includePosition = false)
@@ -119,8 +112,8 @@ namespace ProSuite.Processing
 			return message;
 		}
 
-		[NotNull]
-		private static CartoProcessType ResolveType(string typeAlias, IReadOnlyList<XElement> declaredTypes, IReadOnlyList<Type> knownTypes)
+		[CanBeNull]
+		private static Type ResolveType(string typeAlias, IReadOnlyList<XElement> declaredTypes, IReadOnlyList<Type> knownTypes)
 		{
 			if (typeAlias is null)
 				throw new ArgumentNullException(nameof(typeAlias));
@@ -134,7 +127,7 @@ namespace ProSuite.Processing
 			var cd = declaredType?.Element("ClassDescriptor");
 			if (cd == null)
 			{
-				return new CartoProcessType(typeAlias, null);
+				return null;
 			}
 
 			string typeName = (string) cd.Attribute("type");
@@ -146,14 +139,14 @@ namespace ProSuite.Processing
 
 				if (found != null)
 				{
-					return new CartoProcessType(typeAlias, found);
+					return found;
 				}
 
 				int index = candidate.IndexOf('.', 1);
 				candidate = index < 0 ? string.Empty : candidate.Substring(index);
 			}
 
-			return new CartoProcessType(typeAlias, null);
+			return null;
 		}
 
 		private static string Canonical(string text)
@@ -178,23 +171,21 @@ namespace ProSuite.Processing
 
 	public class CartoProcessDefinition : ITagged
 	{
-		public string Name { get; }
-		public string Description { get; }
-		public string ConfigText { get; }
+		public string Name => Config.Name;
+		public string TypeAlias => Config.TypeAlias;
+		public string Description => Config.Description;
+		public CartoProcessConfig Config { get; }
 
-		private CartoProcessType Type { get; }
-		public string TypeAlias => Type.AliasName;
-		[CanBeNull] public Type ResolvedType => Type.ResolvedType;
+		[CanBeNull] public Type ResolvedType { get; }
 
-		private ICollection<string> _tags;
+		private ICollection<string> _tags; // cache
 		public ICollection<string> Tags => _tags ?? (_tags = GetTags());
 
-		public CartoProcessDefinition(string name, CartoProcessType type, string configText, string description = null)
+		public CartoProcessDefinition(CartoProcessConfig config, Type resolvedType = null)
 		{
-			Name = name ?? "(no name)";
-			Type = type ?? throw new ArgumentNullException(nameof(type));
-			ConfigText = configText;
-			Description = description ?? "(no description)";
+			Config = config ?? throw new ArgumentNullException(nameof(config));
+
+			ResolvedType = resolvedType;
 		}
 
 		private ICollection<string> GetTags()
@@ -210,25 +201,6 @@ namespace ProSuite.Processing
 		public override string ToString()
 		{
 			return $"{Name} (of type {ResolvedType?.Name ?? "(null)"})";
-		}
-	}
-
-	public class CartoProcessType
-	{
-		public string AliasName { get; }
-		[CanBeNull] public Type ResolvedType { get; }
-
-		public CartoProcessType(string aliasName, Type resolvedType)
-		{
-			AliasName = aliasName ?? throw new ArgumentNullException(nameof(aliasName));
-			ResolvedType = resolvedType; // may be null!
-		}
-
-		public override string ToString()
-		{
-			return ResolvedType == null
-				       ? $"{AliasName} (cannot resolve)"
-				       : $"{AliasName} (resolved as {ResolvedType.Name}";
 		}
 	}
 }
