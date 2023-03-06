@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Processing.Domain;
 using ProSuite.Processing.Utils;
 
 namespace ProSuite.Processing
@@ -33,9 +35,17 @@ namespace ProSuite.Processing
 
 		// TODO Consider overloads to load repo from DDX, from .aprx, from ...
 
-		public void LoadFile(string xmlFilePath, IReadOnlyList<Type> knownTypes)
+		public void Load(string xmlFilePath, IReadOnlyList<Type> knownTypes)
 		{
-			var doc = XDocument.Load(xmlFilePath, LoadOptions.SetLineInfo);
+			using (var reader = File.OpenText(xmlFilePath))
+			{
+				Load(reader, knownTypes);
+			}
+		}
+
+		public void Load(TextReader reader, IReadOnlyList<Type> knownTypes)
+		{
+			var doc = XDocument.Load(reader, LoadOptions.SetLineInfo);
 			var root = doc.Root ?? new XElement("CartoProcesses");
 
 			try
@@ -45,8 +55,24 @@ namespace ProSuite.Processing
 			catch (FormatException ex)
 			{
 				throw new CartoConfigException(
-					$"Invalid carto process configuration file {xmlFilePath}: {ex.Message}");
+					$"Invalid carto process configuration file: {ex.Message}");
 			}
+		}
+
+		public void Save(string xmlFilePath)
+		{
+			using (var stream = File.OpenWrite(xmlFilePath))
+			using (var writer = new StreamWriter(stream))
+			{
+				Save(writer);
+			}
+		}
+
+		public void Save(TextWriter writer)
+		{
+			var doc = ToXml();
+
+			doc.Save(writer);
 		}
 
 		private void Reload(XElement root, IReadOnlyList<Type> knownTypes)
@@ -69,6 +95,86 @@ namespace ProSuite.Processing
 				_definitions.Clear();
 				_definitions.AddRange(groups.Concat(processes));
 			}
+		}
+
+		private XDocument ToXml()
+		{
+			lock (_syncLock)
+			{
+				return ToXml(_definitions);
+			}
+		}
+
+		private static XDocument ToXml(IList<CartoProcessDefinition> definitions)
+		{
+			var groupType = typeof(IGroupCartoProcess);
+
+			var groups = definitions
+			             .Where(d => d.ResolvedType != null)
+			             .Where(d => groupType.IsAssignableFrom(d.ResolvedType))
+			             .Select(d => new XElement("ProcessGroup",
+			                                       new XAttribute("name", d.Name ?? string.Empty),
+			                                       MakeAttribute("description", d.Description),
+			                                       new XElement(
+				                                       "GroupProcessTypeReference",
+				                                       new XAttribute("name", d.TypeAlias)),
+			                                       GetProcesses(d.Config)))
+			             .ToList();
+
+			var types = definitions
+			            .Where(d => d.ResolvedType != null)
+			            .Select(d => new XElement("ProcessType",
+			                                      new XAttribute("name", d.TypeAlias),
+			                                      new XElement("ClassDescriptor",
+			                                                   new XAttribute(
+				                                                   "type",
+				                                                   d.ResolvedType.FullName ??
+				                                                   "n/a"))))
+			            .ToList();
+
+			var procs = definitions
+			            .Where(d => d.TypeAlias != null)
+			            .Where(d => ! groupType.IsAssignableFrom(d.ResolvedType))
+			            .Select(d => new XElement(
+				                    "Process",
+				                    new XAttribute("name", d.Name ?? string.Empty),
+									MakeAttribute("description", d.Description),
+				                    new XElement("TypeReference", new XAttribute("name", d.TypeAlias)),
+				                    GetParameters(d.Config)))
+			            .ToList();
+
+			return new XDocument(
+				new XDeclaration("1.0", "utf-8", "yes"),
+				new XElement("CartoProcesses",
+				             new XElement("Groups", groups),
+				             new XElement("Processes", procs),
+				             new XElement("Types", types)));
+		}
+
+		private static XAttribute MakeAttribute(string name, string value = null)
+		{
+			if (name is null)
+				throw new ArgumentNullException(nameof(name));
+			return value is null ? null : new XAttribute(name, value);
+		}
+
+		private static XElement GetProcesses(CartoProcessConfig config)
+		{
+			var processes = config
+			                .Where(p => string.Equals(p.Key, "Processes",
+			                                          StringComparison.OrdinalIgnoreCase))
+			                .Select(p => new XElement("Process", MakeAttribute("name", p.Value)));
+
+			return new XElement("Processes", processes);
+		}
+
+		private static XElement GetParameters(CartoProcessConfig config)
+		{
+			var parameters = config.Select(p => new XElement("Parameter",
+			                                                 new XAttribute("name", p.Key ?? string.Empty),
+			                                                 new XAttribute("value", p.Value ?? string.Empty)));
+
+			return new XElement("Parameters", parameters);
 		}
 
 		private static CartoProcessDefinition CreateProcessItem(
@@ -135,7 +241,7 @@ namespace ProSuite.Processing
 			for (string candidate = typeName; candidate.Length > 0; )
 			{
 				var found = knownTypes.FirstOrDefault(
-					t => t.FullName?.EndsWith(candidate, StringComparison.Ordinal) ?? false);
+					t => t.FullName != null && FullNameEndsWith(t.FullName, candidate));
 
 				if (found != null)
 				{
@@ -143,17 +249,19 @@ namespace ProSuite.Processing
 				}
 
 				int index = candidate.IndexOf('.', 1);
-				candidate = index < 0 ? string.Empty : candidate.Substring(index);
+				if (index < 0) index = candidate.IndexOf('+', 1); // nested class
+				candidate = index < 0 ? string.Empty : candidate.Substring(index + 1);
 			}
 
 			return null;
 		}
 
-		private static string Canonical(string text)
+		private static bool FullNameEndsWith(string fullName, string candidate)
 		{
-			if (text is null) return null;
-			text = text.Trim();
-			return text.Length > 0 ? text : null;
+			if (! fullName.EndsWith(candidate, StringComparison.Ordinal)) return false;
+			if (candidate.Length >= fullName.Length) return true;
+			char c = fullName[fullName.Length - candidate.Length - 1];
+			return c == '.' || c == '+';
 		}
 
 		private static bool MatchOrdinal(XElement declaredType, string aliasName)
