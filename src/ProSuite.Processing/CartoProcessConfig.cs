@@ -16,15 +16,18 @@ namespace ProSuite.Processing
 {
 	public class CartoProcessConfig : IEnumerable<KeyValuePair<string,string>>
 	{
+		private const StringComparison Comparison = StringComparison.OrdinalIgnoreCase;
+
 		private readonly IList<Setting> _settings;
 
-		public CartoProcessConfig(string name, string description = null)
+		private CartoProcessConfig([NotNull] IList<Setting> settings,
+		                           string name, string typeAlias, string description)
 		{
-			Name = name; // can be null
-			Description = description; // can be null
-			Comparison = StringComparison.OrdinalIgnoreCase;
+			_settings = settings ?? throw new ArgumentNullException(nameof(settings));
 
-			_settings = new List<Setting>();
+			Name = name;
+			TypeAlias = typeAlias;
+			Description = description;
 		}
 
 		public static CartoProcessConfig Parse(string text, bool lenient = false)
@@ -59,9 +62,9 @@ namespace ProSuite.Processing
 
 		public string Name { get; private set; }
 
-		public string Description { get; private set; }
+		public string TypeAlias { get; private set; }
 
-		public StringComparison Comparison { get; }
+		public string Description { get; private set; }
 
 		public int Count => _settings.Count;
 
@@ -207,13 +210,17 @@ namespace ProSuite.Processing
 		{
 			var sb = new StringBuilder();
 
-			sb.Append("Name = ");
-			sb.Append(Name ?? string.Empty);
-			sb.AppendLine();
+			sb.Append(nameof(Name)).Append(" = ");
+			sb.Append(Name ?? string.Empty).AppendLine();
 
-			sb.Append("Description = ");
-			sb.Append(Description ?? string.Empty);
-			sb.AppendLine();
+			sb.Append(nameof(TypeAlias)).Append(" = ");
+			sb.Append(TypeAlias ?? string.Empty).AppendLine();
+
+			if (! string.IsNullOrEmpty(Description))
+			{
+				sb.Append(nameof(Description)).Append(" = ");
+				sb.Append(Description).AppendLine();
+			}
 
 			sb.AppendLine();
 
@@ -221,6 +228,7 @@ namespace ProSuite.Processing
 			{
 				if (string.IsNullOrWhiteSpace(setting.Name)) continue;
 				if (string.Equals(setting.Name, nameof(Name), Comparison)) continue;
+				if (string.Equals(setting.Name, nameof(TypeAlias), Comparison)) continue;
 				if (string.Equals(setting.Name, nameof(Description), Comparison)) continue;
 
 				sb.Append(setting.Name ?? "NN");
@@ -248,10 +256,15 @@ namespace ProSuite.Processing
 			var description = (string) process.Element("Description") ??
 			                  (string) process.Attribute("description");
 
-			var config = new CartoProcessConfig(processName, description);
+			var typeElement = process.Element("TypeReference");
+			var typeAlias = (string) typeElement?.Attribute("name");
+
 			var parameters = process.Element("Parameters")?.Elements("Parameter");
+
 			var nameRegex = new Regex(@"^[_a-z][_a-z0-9]*$", RegexOptions.IgnoreCase);
 			var multiRegex = new Regex(@"\d+$"); // eager: matches "123" in "foo123" (not only "23" or "3")
+
+			var settings = new List<Setting>();
 
 			foreach (var e in parameters ?? Enumerable.Empty<XElement>())
 			{
@@ -275,10 +288,10 @@ namespace ProSuite.Processing
 					name = stem.EndsWith("s") ? stem : string.Concat(stem, "s");
 				}
 
-				config._settings.Add(new Setting(name, value, e.GetLineNumber()));
+				settings.Add(new Setting(name, value, e.GetLineNumber()));
 			}
 
-			return config;
+			return new CartoProcessConfig(settings, processName, typeAlias, description);
 		}
 
 		/// <summary>
@@ -292,8 +305,14 @@ namespace ProSuite.Processing
 			var description = (string) processGroup.Element("Description") ??
 			                  (string) processGroup.Attribute("description");
 
-			var config = new CartoProcessConfig(processName, description);
+			var typeElement = processGroup.Element("AssociatedGroupProcessTypeReference") ??
+			                  processGroup.Element("GroupProcessTypeReference") ??
+			                  processGroup.Element("TypeReference");
+			var typeAlias = (string)typeElement?.Attribute("name");
+
 			var processes = processGroup.Element("Processes")?.Elements("Process");
+
+			var settings = new List<Setting>();
 
 			foreach (var e in processes ?? Enumerable.Empty<XElement>())
 			{
@@ -301,10 +320,10 @@ namespace ProSuite.Processing
 				var value = (string) e.Attribute("name");
 				if (string.IsNullOrEmpty(value)) continue;
 
-				config._settings.Add(new Setting(name, value, e.GetLineNumber()));
+				settings.Add(new Setting(name, value, e.GetLineNumber()));
 			}
 
-			return config;
+			return new CartoProcessConfig(settings, processName, typeAlias, description);
 		}
 
 		#endregion
@@ -318,27 +337,29 @@ namespace ProSuite.Processing
 		/// <param name="lenient">Iff true, ignore syntax errors parse as much as possible</param>
 		private static CartoProcessConfig FromText(string text, bool lenient = false)
 		{
-			var config = new CartoProcessConfig(null);
+			var settings = new List<Setting>();
+			LoadPairs(settings, text, lenient);
 
-			config.LoadString(text, lenient);
+			var name = GetString(settings, nameof(Name));
+			var typeAlias = GetString(settings, nameof(TypeAlias));
+			var description = GetString(settings, nameof(Description));
 
-			if (config.Name is null)
-			{
-				config.Name = config.GetString(nameof(config.Name), null);
-			}
-
-			if (config.Description is null)
-			{
-				config.Description = config.GetString(nameof(config.Description), null);
-			}
-
-			return config;
+			return new CartoProcessConfig(settings, name, typeAlias, description);
 		}
 
-		private void LoadString(string text, bool lenient = false)
+		private static string GetString(IEnumerable<Setting> settings, string parameterName)
 		{
-			_settings.Clear();
+			var values = settings.Where(s => string.Equals(s.Name, parameterName, Comparison))
+			                     .Select(s => s.Value).ToArray();
+			if (values.Length < 1)
+				return null;
+			if (values.Length > 1)
+				throw ConfigError("Parameter {0} is defined more than once", parameterName);
+			return values[0]?.Trim();
+		}
 
+		private static void LoadPairs(ICollection<Setting> result, string text, bool lenient = false)
+		{
 			if (text == null) return;
 
 			var position = new Position();
@@ -369,7 +390,7 @@ namespace ProSuite.Processing
 					string value = ScanValue(text, position, sb);
 					if (value == null)
 						throw SyntaxError(position, "Expect a value");
-					_settings.Add(new Setting(name, value, position.LineNumber));
+					result.Add(new Setting(name, value, position.LineNumber));
 
 					SkipWhite(text, position);
 				}
@@ -387,7 +408,7 @@ namespace ProSuite.Processing
 		/// <summary>Sloppy line parse, may be used for "intellisense"</summary>
 		/// <returns>index relative to start of line</returns>
 		public static int ParseLine(string text, int textIndex, out string line,
-		                             out int nameStart, out int nameLength, out int valueStart)
+		                            out int nameStart, out int nameLength, out int valueStart)
 		{
 			line = GetLineAtIndex(text, textIndex, out int lineIndex);
 
@@ -413,7 +434,6 @@ namespace ProSuite.Processing
 
 		private static string GetLineAtIndex(string text, int textIndex, out int lineIndex)
 		{
-			lineIndex = 0;
 			if (textIndex > text.Length) textIndex = text.Length;
 			else if (textIndex < 0) textIndex = 0;
 			int i = textIndex;
