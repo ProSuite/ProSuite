@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -13,7 +14,7 @@ using ProSuite.Processing.Utils;
 
 namespace ProSuite.Processing
 {
-	public class CartoProcessConfig
+	public class CartoProcessConfig : IEnumerable<KeyValuePair<string,string>>
 	{
 		private readonly IList<Setting> _settings;
 
@@ -68,6 +69,17 @@ namespace ProSuite.Processing
 		{
 			// In original order, but with duplicates removed:
 			return _settings.Select(s => s.Name).Distinct();
+		}
+
+		IEnumerator IEnumerable.GetEnumerator()
+		{
+			return GetEnumerator();
+		}
+
+		public IEnumerator<KeyValuePair<string, string>> GetEnumerator()
+		{
+			return _settings.Select(s => new KeyValuePair<string, string>(s.Name, s.Value))
+			                .GetEnumerator();
 		}
 
 		public IEnumerable<string> GetValues(string parameterName)

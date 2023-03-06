@@ -96,6 +96,16 @@ public class CartoProcessConfigTest
 	}
 
 	[Test]
+	public void CanEnumerate()
+	{
+		var config = CartoProcessConfig.Parse("foo=1\nbar=2\nbaz=3\nfoo=duplicate");
+
+		// yield all key/value pairs, including duplicates, in the original order:
+		Assert.AreEqual("foo,bar,baz,foo", string.Join(",", config.Select(p => p.Key)));
+		Assert.AreEqual("1,2,3,duplicate", string.Join(",", config.Select(p => p.Value)));
+	}
+
+	[Test]
 	public void CanParseProcessXml()
 	{
 		const string xml = @"<Process name=""Align Buildings"" description=""to nearest road or railroad"">
