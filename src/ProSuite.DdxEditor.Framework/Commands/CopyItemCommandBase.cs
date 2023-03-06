@@ -5,25 +5,28 @@ using ProSuite.DdxEditor.Framework.Properties;
 
 namespace ProSuite.DdxEditor.Framework.Commands
 {
-	public abstract class AddItemCommandBase<T> : ItemCommandBase<T> where T : Item
+	public abstract class CopyItemCommandBase<T> : ItemCommandBase<T> where T : Item
 	{
 		[CanBeNull] private static readonly Image _image;
 
-		static AddItemCommandBase()
+		static CopyItemCommandBase()
 		{
-			_image = Resources.Add;
+			_image = Resources.Copy;
 		}
 
 		/// <summary>
-		/// Initializes a new instance of the <see cref="AddItemCommandBase&lt;T&gt;"/> class.
+		/// Initializes a new instance of the <see cref="CopyItemCommandBase&lt;T&gt;"/> class.
 		/// </summary>
-		/// <param name="parentItem">The parent item.</param>
+		/// <param name="item">The item.</param>
 		/// <param name="applicationController">The application controller.</param>
-		protected AddItemCommandBase([NotNull] T parentItem,
-		                             [NotNull] IApplicationController applicationController)
-			: base(parentItem, applicationController) { }
+		protected CopyItemCommandBase(
+			[NotNull] T item,
+			[NotNull] IApplicationController applicationController)
+			: base(item, applicationController) { }
 
 		public override Image Image => _image;
+
+		public override string Text => "Create Copy...";
 
 		protected override bool EnabledCore => ! ApplicationController.HasPendingChanges;
 	}

@@ -1,20 +1,11 @@
-using System.Drawing;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.DdxEditor.Content.Properties;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Commands;
 
 namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 {
-	internal class CopyInstanceConfigurationCommand : ItemCommandBase<InstanceConfigurationItem>
+	public class CopyInstanceConfigurationCommand : CopyItemCommandBase<InstanceConfigurationItem>
 	{
-		private static readonly Image _image;
-
-		static CopyInstanceConfigurationCommand()
-		{
-			_image = Resources.Copy;
-		}
-
 		/// <summary>
 		/// Initializes a new instance of the <see cref="CopyInstanceConfigurationCommand"/> class.
 		/// </summary>
@@ -25,12 +16,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			[NotNull] IApplicationController applicationController)
 			: base(item, applicationController) { }
 
-		public override Image Image => _image;
-
-		public override string Text => "Create Copy...";
-
-		protected override bool EnabledCore =>
-			! ApplicationController.HasPendingChanges && Item.CanCreateCopy;
+		protected override bool EnabledCore => base.EnabledCore && Item.CanCreateCopy;
 
 		protected override void ExecuteCore()
 		{

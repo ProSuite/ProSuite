@@ -1,23 +1,11 @@
-using System.Drawing;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.DdxEditor.Content.Properties;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Commands;
 
 namespace ProSuite.DdxEditor.Content.QA.QCon
 {
-	internal class CopyQualityConditionCommand : ItemCommandBase<QualityConditionItem>
+	public class CopyQualityConditionCommand : CopyItemCommandBase<QualityConditionItem>
 	{
-		private static readonly Image _image;
-
-		/// <summary>
-		/// Initializes the <see cref="CopyQualityConditionCommand"/> class.
-		/// </summary>
-		static CopyQualityConditionCommand()
-		{
-			_image = Resources.Copy;
-		}
-
 		/// <summary>
 		/// Initializes a new instance of the <see cref="CopyQualityConditionCommand"/> class.
 		/// </summary>
@@ -27,12 +15,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 		                                   [NotNull] IApplicationController applicationController)
 			: base(item, applicationController) { }
 
-		public override Image Image => _image;
-
-		public override string Text => "Create Copy...";
-
-		protected override bool EnabledCore =>
-			! ApplicationController.HasPendingChanges && Item.CanCreateCopy;
+		protected override bool EnabledCore => base.EnabledCore && Item.CanCreateCopy;
 
 		protected override void ExecuteCore()
 		{
