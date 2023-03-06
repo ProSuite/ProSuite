@@ -56,14 +56,12 @@ namespace ProSuite.Processing
 
 			var declaredTypes = root.Element("Types")?.Elements("ProcessType").ToList();
 
-			int seqNo = 0; // so we could restore original ordering
-
 			var groups = root.Element("Groups")?.Elements("ProcessGroup")
-			                 .Select(e => CreateGroupItem(++seqNo, e, declaredTypes, knownTypes))
+			                 .Select(e => CreateGroupItem(e, declaredTypes, knownTypes))
 			                 .ToArray() ?? Array.Empty<CartoProcessDefinition>();
 
 			var processes = root.Element("Processes")?.Elements("Process")
-			                    .Select(e => CreateProcessItem(++seqNo, e, declaredTypes, knownTypes))
+			                    .Select(e => CreateProcessItem(e, declaredTypes, knownTypes))
 			                    .ToArray() ?? Array.Empty<CartoProcessDefinition>();
 
 			lock (_syncLock)
@@ -74,7 +72,7 @@ namespace ProSuite.Processing
 		}
 
 		private static CartoProcessDefinition CreateProcessItem(
-			int seqNo, XElement processElement,
+			XElement processElement,
 			IReadOnlyList<XElement> declaredTypes, IReadOnlyList<Type> knownTypes)
 		{
 			var name = Canonical((string) processElement.Attribute("name"));
@@ -87,11 +85,11 @@ namespace ProSuite.Processing
 			var configText = processElement.ToString();
 			var description = Canonical((string) processElement.Attribute("description"));
 
-			return new CartoProcessDefinition(seqNo, name, type, configText, description);
+			return new CartoProcessDefinition(name, type, configText, description);
 		}
 
 		private static CartoProcessDefinition CreateGroupItem(
-			int seqNo, XElement groupElement,
+			XElement groupElement,
 			IReadOnlyList<XElement> declaredTypes, IReadOnlyList<Type> knownTypes)
 		{
 			var name = Canonical((string) groupElement.Attribute("name"));
@@ -106,7 +104,7 @@ namespace ProSuite.Processing
 			var configText = groupElement.ToString();
 			var description = Canonical((string) groupElement.Attribute("description"));
 
-			return new CartoProcessDefinition(seqNo, name, type, configText, description);
+			return new CartoProcessDefinition(name, type, configText, description);
 		}
 
 		private static string AppendLineInfo(string message, XObject xml, bool includePosition = false)
@@ -140,7 +138,6 @@ namespace ProSuite.Processing
 			}
 
 			string typeName = (string) cd.Attribute("type");
-			string assemblyName = (string) cd.Attribute("assembly");
 
 			for (string candidate = typeName; candidate.Length > 0; )
 			{
@@ -149,7 +146,7 @@ namespace ProSuite.Processing
 
 				if (found != null)
 				{
-					return new CartoProcessType(typeAlias, found, typeName, assemblyName);
+					return new CartoProcessType(typeAlias, found);
 				}
 
 				int index = candidate.IndexOf('.', 1);
@@ -181,7 +178,6 @@ namespace ProSuite.Processing
 
 	public class CartoProcessDefinition : ITagged
 	{
-		public int SeqNo { get; }
 		public string Name { get; }
 		public string Description { get; }
 		public string ConfigText { get; }
@@ -193,9 +189,8 @@ namespace ProSuite.Processing
 		private ICollection<string> _tags;
 		public ICollection<string> Tags => _tags ?? (_tags = GetTags());
 
-		public CartoProcessDefinition(int seqNo, string name, CartoProcessType type, string configText, string description = null)
+		public CartoProcessDefinition(string name, CartoProcessType type, string configText, string description = null)
 		{
-			SeqNo = seqNo;
 			Name = name ?? "(no name)";
 			Type = type ?? throw new ArgumentNullException(nameof(type));
 			ConfigText = configText;
@@ -222,16 +217,11 @@ namespace ProSuite.Processing
 	{
 		public string AliasName { get; }
 		[CanBeNull] public Type ResolvedType { get; }
-		public string RequestedType { get; }
-		public string RequestedAssembly { get; }
 
-		public CartoProcessType(string aliasName, Type resolvedType,
-		                        string requestedType = null, string requestedAssembly = null)
+		public CartoProcessType(string aliasName, Type resolvedType)
 		{
 			AliasName = aliasName ?? throw new ArgumentNullException(nameof(aliasName));
 			ResolvedType = resolvedType; // may be null!
-			RequestedType = requestedType;
-			RequestedAssembly = requestedAssembly;
 		}
 
 		public override string ToString()
