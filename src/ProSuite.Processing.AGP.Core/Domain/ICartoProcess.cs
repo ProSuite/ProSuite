@@ -22,8 +22,3 @@ public interface ICartoProcess
 
 	void Execute(IProcessingContext context, IProcessingFeedback feedback);
 }
-
-public interface IGroupCartoProcess : ICartoProcess
-{
-	// Just for tagging, no additional members
-}
