@@ -3561,7 +3561,6 @@ namespace ProSuite.Commons.Test.Geom
 				                l, tolerance, 1, 7, 10000, 1));
 		}
 
-
 		[Test]
 		public void CanDeleteLinearSelfIntersectionVerticalRing()
 		{
@@ -3585,7 +3584,6 @@ namespace ProSuite.Commons.Test.Geom
 				                l, tolerance, 0, 0, 0));
 		}
 
-
 		[Test]
 		public void CanDeleteLinearSelfIntersectionVerticalRingWithDuplicateVertex()
 		{
@@ -3596,7 +3594,7 @@ namespace ProSuite.Commons.Test.Geom
 				           new Pnt3D(0, 0, 0),
 				           new Pnt3D(20, 0, 15),
 				           new Pnt3D(20, 0, 15),
-						   new Pnt3D(60, 0, 15),
+				           new Pnt3D(60, 0, 15),
 				           new Pnt3D(100, 0, 0),
 				           new Pnt3D(0, 0, 0)
 			           };
@@ -3609,7 +3607,6 @@ namespace ProSuite.Commons.Test.Geom
 			WithRotatedRing(ring, l => AssertCanDeleteLinearSelfIntersections(
 				                l, tolerance, 0, 0, 0));
 		}
-
 
 		[Test]
 		public void CanPlanarizeLinearSelfIntersections()
@@ -4686,6 +4683,35 @@ namespace ProSuite.Commons.Test.Geom
 			Assert.AreEqual(expectedArea, result.GetArea2D(), 0.001);
 		}
 
+		[Test]
+		public void CanUnionWithSubToleranceVertexToIntersection_Top5660()
+		{
+			RingGroup source = (RingGroup) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath("intersection_cluster_source.wkb"),
+				out WkbGeometryType wkbType);
+
+			Assert.AreEqual(WkbGeometryType.Polygon, wkbType);
+
+			RingGroup target = (RingGroup) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath("intersection_cluster_target.wkb"),
+				out wkbType);
+
+			Assert.AreEqual(WkbGeometryType.Polygon, wkbType);
+
+			double tolerance = 0.01;
+
+			MultiLinestring union = GeomTopoOpUtils.GetUnionAreasXY(source, target, tolerance);
+
+			double expectedAreaUnion = 90.19;
+			Assert.AreEqual(expectedAreaUnion, union.GetArea2D(), 0.01);
+
+			// Probably not very accurate due to intersection-jumping in cluster
+			MultiLinestring difference =
+				GeomTopoOpUtils.GetDifferenceAreasXY(source, target, tolerance);
+
+			double expectedAreaDifference = union.GetArea2D() - target.GetArea2D();
+			Assert.AreEqual(expectedAreaDifference, difference.GetArea2D(), 0.05);
+		}
 		[Test]
 		public void CanIntersectXYSimpleRings()
 		{
