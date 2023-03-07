@@ -37,6 +37,9 @@ public static class DrawingOutline
 
 		public Options(Options options, double? scaleFactor = null)
 		{
+			if (options is null)
+				throw new ArgumentNullException(nameof(options));
+
 			// Copy values:
 			IgnoreErrors = options.IgnoreErrors;
 			IgnoreDashing = options.IgnoreDashing;
