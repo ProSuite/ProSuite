@@ -55,7 +55,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			[NotNull] ReadOnlyFeatureClass owner, [NotNull] IFeature feature)
 		{
 			Assert.AreEqual(owner.BaseTable, feature.Table, "FeatureClasses differ");
-			esriGeometryType geometryType = feature.Shape.GeometryType;
+			esriGeometryType geometryType = owner.ShapeType;
 
 			ReadOnlyFeature result;
 
