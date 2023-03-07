@@ -1553,7 +1553,17 @@ namespace ProSuite.Commons.Geom
 
 					MultiLinestring planarCutlines = PlanarizeLines(cutLines, tolerance);
 
-					result.AddRange(CutPlanar(sourceRing, planarCutlines, tolerance));
+					IList<RingGroup> cutResult = CutPlanar(sourceRing, planarCutlines, tolerance);
+
+					if (cutResult.Count == 0)
+					{
+						// Most likely the cut line scratches along the edge of the source ring
+						result.Add(sourceRing);
+					}
+					else
+					{
+						result.AddRange(cutResult);
+					}
 				}
 			}
 
