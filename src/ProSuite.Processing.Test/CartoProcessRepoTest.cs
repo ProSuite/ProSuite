@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -13,12 +14,15 @@ public class CartoProcessRepoTest
 	[Test]
 	public void CanLoad()
 	{
-		var knownTypes = new[] { typeof(Foo), typeof(Bar), typeof(GroupCP) };
-
-		var xml = GetTestXmlConfig();
-		using var reader = new StringReader(xml);
 		var repo = new CartoProcessRepo();
-		repo.Load(reader, knownTypes);
+
+		var knownTypes = GetKnownTypes();
+		var xml = GetTestXmlConfig();
+
+		using (var reader = new StringReader(xml))
+		{
+			repo.Load(reader, knownTypes);
+		}
 
 		Assert.AreEqual(3, repo.ProcessDefinitions.Count);
 
@@ -44,15 +48,18 @@ public class CartoProcessRepoTest
 	[Test]
 	public void CanSave()
 	{
-		var knownTypes = new[] { typeof(Foo), typeof(Bar), typeof(GroupCP) };
-
-		var xml = GetTestXmlConfig();
-		using var reader = new StringReader(xml);
-
 		var repo = new CartoProcessRepo();
-		repo.Load(reader, knownTypes);
+
+		var knownTypes = GetKnownTypes();
+		var xml1 = GetTestXmlConfig();
+
+		using (var reader = new StringReader(xml1))
+		{
+			repo.Load(reader, knownTypes);
+		}
 
 		var buffer = new StringBuilder();
+
 		using (var writer = new StringWriter(buffer))
 		{
 			repo.Save(writer);
@@ -60,7 +67,7 @@ public class CartoProcessRepoTest
 
 		var xml2 = buffer.ToString();
 
-		var doc1 = XDocument.Parse(xml);
+		var doc1 = XDocument.Parse(xml1);
 		var doc2 = XDocument.Parse(xml2);
 
 		// compare only the Groups and Processes elements
@@ -72,11 +79,98 @@ public class CartoProcessRepoTest
 		Assert.True(XNode.DeepEquals(doc1.Root?.Element("Processes"), doc2.Root?.Element("Processes")));
 	}
 
+	[Test]
+	public void CanUpdateProcess()
+	{
+		var repo = new CartoProcessRepo();
+
+		var knownTypes = GetKnownTypes();
+		var xml = GetTestXmlConfig();
+
+		using (var reader = new StringReader(xml))
+		{
+			repo.Load(reader, knownTypes);
+		}
+
+		// Update existing CP "Test Foo"
+
+		var config = CartoProcessConfig.Parse("Name=Test Foo\nTypeAlias=FooAlias\n" +
+		                                      "A=one\nC=three\nDescription=Updated");
+		var newType = typeof(NewType);
+
+		repo.UpdateProcess(config, newType);
+
+		Assert.AreEqual(3, repo.ProcessDefinitions.Count);
+
+		var gcp = repo.ProcessDefinitions.Single(d => d.Name == "Test Group");
+		Assert.AreEqual(typeof(GroupCP), gcp.ResolvedType);
+
+		var fcp = repo.ProcessDefinitions.Single(d => d.Name == "Test Foo");
+		Assert.AreEqual("Test Foo", fcp.Name);
+		Assert.AreEqual("NewType", fcp.TypeAlias);
+		Assert.AreEqual("Updated", fcp.Description);
+		Assert.AreEqual(typeof(NewType), fcp.ResolvedType);
+		Assert.AreEqual("one", fcp.Config.GetString("A"));
+		Assert.IsNull(fcp.Config.GetString("B", null));
+		Assert.AreEqual("three", fcp.Config.GetString("C"));
+
+		var bcp = repo.ProcessDefinitions.Single(d => d.Name == "Test Bar");
+		Assert.AreEqual(typeof(Bar), bcp.ResolvedType);
+
+		// Insert ("update") non-existing CP "Test New"
+
+		config = CartoProcessConfig.Parse("Name=Test New\nFoo=Bar");
+
+		repo.UpdateProcess(config, typeof(NewType));
+
+		Assert.AreEqual(4, repo.ProcessDefinitions.Count);
+
+		var ncp = repo.ProcessDefinitions.Single(d => d.Name == "Test New");
+		Assert.AreEqual("Test New", ncp.Name);
+		Assert.IsNull(ncp.Description);
+		Assert.AreEqual("NewType", ncp.TypeAlias);
+		Assert.AreEqual(typeof(NewType), ncp.ResolvedType);
+		Assert.AreEqual("Bar", ncp.Config.GetString("Foo"));
+	}
+
+	[Test]
+	public void CanRemoveProcess()
+	{
+		var repo = new CartoProcessRepo();
+
+		var knownTypes = GetKnownTypes();
+		var xml = GetTestXmlConfig();
+
+		using (var reader = new StringReader(xml))
+		{
+			repo.Load(reader, knownTypes);
+		}
+
+		Assert.False(repo.RemoveProcess("NoSuchProcess"));
+		Assert.AreEqual(3, repo.ProcessDefinitions.Count);
+
+		Assert.True(repo.RemoveProcess("Test Foo"));
+		Assert.AreEqual(2, repo.ProcessDefinitions.Count);
+
+		Assert.True(repo.RemoveProcess("Test Bar"));
+		Assert.AreEqual(1, repo.ProcessDefinitions.Count);
+
+		Assert.True(repo.RemoveProcess("Test Group"));
+		Assert.AreEqual(0, repo.ProcessDefinitions.Count);
+	}
+
 	private class Foo { }
 
 	private class Bar { }
 
 	private class GroupCP : IGroupCartoProcess { }
+
+	private class NewType { }
+
+	private static Type[] GetKnownTypes()
+	{
+		return new[] { typeof(Foo), typeof(Bar), typeof(GroupCP) };
+	}
 
 	private static string GetTestXmlConfig()
 	{

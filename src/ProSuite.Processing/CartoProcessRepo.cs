@@ -75,6 +75,68 @@ namespace ProSuite.Processing
 			doc.Save(writer);
 		}
 
+		public void UpdateProcess(CartoProcessConfig config, Type resolvedType = null)
+		{
+			if (config is null)
+				throw new ArgumentNullException(nameof(config));
+
+			var name = config.Name;
+			if (string.IsNullOrEmpty(name))
+				throw new FormatException("Name is missing");
+
+			if (resolvedType != null)
+			{
+				// avoid TypeAlias pointing to old type:
+				config.TypeAlias = resolvedType.Name;
+			}
+
+			lock (_syncLock)
+			{
+				int index = FindIndex(_definitions, name);
+				if (index < 0)
+				{
+					_definitions.Add(new CartoProcessDefinition(config, resolvedType));
+				}
+				else
+				{
+					_definitions[index] = new CartoProcessDefinition(config, resolvedType);
+				}
+			}
+		}
+
+		public bool RemoveProcess(string name)
+		{
+			lock (_syncLock)
+			{
+				int count = _definitions.RemoveAll(
+					d => string.Equals(d.Name, name, StringComparison.OrdinalIgnoreCase));
+				return count > 0;
+			}
+		}
+
+		private static int FindIndex(IList<CartoProcessDefinition> list, string name)
+		{
+			for (int i = 0; i < list.Count; i++)
+			{
+				var d = list[i];
+				if (string.Equals(d.Name, name, StringComparison.Ordinal))
+				{
+					return i;
+				}
+			}
+
+			for (int i = 0; i < list.Count; i++)
+			{
+				var d = list[i];
+				if (string.Equals(d.Name, name, StringComparison.OrdinalIgnoreCase))
+				{
+					return i;
+				}
+			}
+
+			return -1;
+		}
+
 		private void Reload(XElement root, IReadOnlyList<Type> knownTypes)
 		{
 			root = root ?? throw new ArgumentNullException(nameof(root));
@@ -124,12 +186,9 @@ namespace ProSuite.Processing
 			var types = definitions
 			            .Where(d => d.ResolvedType != null)
 			            .Select(d => new XElement("ProcessType",
-			                                      new XAttribute("name", d.TypeAlias),
+			                                      MakeAttribute("name", d.TypeAlias),
 			                                      new XElement("ClassDescriptor",
-			                                                   new XAttribute(
-				                                                   "type",
-				                                                   d.ResolvedType.FullName ??
-				                                                   "n/a"))))
+															   MakeAttribute("type", d.ResolvedType.FullName))))
 			            .ToList();
 
 			var procs = definitions
@@ -139,7 +198,8 @@ namespace ProSuite.Processing
 				                    "Process",
 				                    new XAttribute("name", d.Name ?? string.Empty),
 									MakeAttribute("description", d.Description),
-				                    new XElement("TypeReference", new XAttribute("name", d.TypeAlias)),
+				                    new XElement("TypeReference",
+				                                 MakeAttribute("name", d.TypeAlias)),
 				                    GetParameters(d.Config)))
 			            .ToList();
 
@@ -261,7 +321,7 @@ namespace ProSuite.Processing
 			if (! fullName.EndsWith(candidate, StringComparison.Ordinal)) return false;
 			if (candidate.Length >= fullName.Length) return true;
 			char c = fullName[fullName.Length - candidate.Length - 1];
-			return c == '.' || c == '+';
+			return c == '.' || c == '+'; // plus is for nested class: Name.Space.Outer+Nested
 		}
 
 		private static bool MatchOrdinal(XElement declaredType, string aliasName)

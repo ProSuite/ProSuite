@@ -62,9 +62,9 @@ namespace ProSuite.Processing
 
 		public string Name { get; private set; }
 
-		public string TypeAlias { get; private set; }
+		public string TypeAlias { get; set; }
 
-		public string Description { get; private set; }
+		public string Description { get; set; }
 
 		public int Count => _settings.Count;
 
