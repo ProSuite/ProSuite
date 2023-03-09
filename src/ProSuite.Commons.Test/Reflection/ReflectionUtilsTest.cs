@@ -103,5 +103,29 @@ namespace ProSuite.Commons.Test.Reflection
 			// Null just doesn't make sense here, so expect an arg null exception:
 			Assert.Throws<ArgumentNullException>(() => ReflectionUtils.GetDefaultValue(null));
 		}
+
+		[Test]
+		public void CanGetConstantValue()
+		{
+			var type = typeof(TestClass);
+			Assert.AreEqual(12, type.GetConstantValue("Foo"));
+			Assert.IsNull(type.GetConstantValue("Bar")); // private fields are excluded
+			Assert.AreEqual(4.2, type.GetConstantValue("Baz"));
+			Assert.AreEqual("Hey", type.GetConstantValue("Quux")); // base class is included
+			Assert.IsNull(type.GetConstantValue("NoSuchField"));
+			Assert.IsNull(type.GetConstantValue(null));
+		}
+
+		private class TestClass : TestBase
+		{
+			[UsedImplicitly] public const int Foo = 12;
+			[UsedImplicitly] private const bool Bar = true;
+			[UsedImplicitly] public static double Baz = 4.2;
+		}
+
+		private class TestBase
+		{
+			[UsedImplicitly] public const string Quux = "Hey";
+		}
 	}
 }

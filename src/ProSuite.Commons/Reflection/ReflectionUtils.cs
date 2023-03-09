@@ -204,6 +204,25 @@ namespace ProSuite.Commons.Reflection
 			return null;
 		}
 
+		/// <summary>
+		/// Get the value of the named "constant" (static field).
+		/// Non-public fields and fields from base classes are included.
+		/// </summary>
+		public static object GetConstantValue(this Type type, string constantName)
+		{
+			if (type is null)
+				throw new ArgumentNullException(nameof(type));
+			if (constantName is null)
+				return null;
+
+			const BindingFlags flags = BindingFlags.Static | // constants are "static"
+			                           BindingFlags.FlattenHierarchy | // include base classes
+			                           BindingFlags.Public | BindingFlags.NonPublic;
+
+			var field = type.GetField(constantName, flags);
+			return field?.GetValue(null);
+		}
+
 		[NotNull]
 		public static string GetAssemblyVersionString([NotNull] Assembly assembly)
 		{
