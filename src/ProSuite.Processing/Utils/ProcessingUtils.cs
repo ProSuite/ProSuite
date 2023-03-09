@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
@@ -10,6 +11,7 @@ using System.Xml.Linq;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.Reflection;
 using ProSuite.Commons.Text;
 using ProSuite.Processing.Domain;
 using ProSuite.Processing.Evaluation;
@@ -87,11 +89,27 @@ namespace ProSuite.Processing.Utils
 				multivalued = true;
 			}
 
-			object defaultValue = attr is OptionalParameterAttribute opt ? opt.DefaultValue : null;
+			object defaultValue = GetDefaultValue(property);
 
-			return new ParameterInfo(name, type, required, multivalued,
+			var owner = property.ReflectedType ?? property.DeclaringType;
+
+			return new ParameterInfo(owner, name, type, required, multivalued,
 			                         defaultValue, docKey: docKey,
 			                         group: attr?.Group, order: order);
+		}
+
+		private static object GetDefaultValue(MemberInfo property)
+		{
+			var paramAttr = property.GetCustomAttributes<OptionalParameterAttribute>()
+			                        .FirstOrDefault();
+			if (paramAttr?.DefaultValue != null)
+			{
+				return paramAttr.DefaultValue;
+			}
+
+			var valueAttr = property.GetCustomAttributes<DefaultValueAttribute>()
+			                        .FirstOrDefault();
+			return valueAttr?.Value;
 		}
 
 		private static bool IsProcessParameter(PropertyInfo property)
