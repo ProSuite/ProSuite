@@ -85,5 +85,23 @@ namespace ProSuite.Commons.Test.Reflection
 			Console.WriteLine(@"  - events: {0}", eventCount);
 			Console.WriteLine(@"  - constructors: {0}", constructorCount);
 		}
+
+		[Test]
+		public void CanGetDefaultValue()
+		{
+			Assert.AreEqual(0, typeof(int).GetDefaultValue());
+			Assert.AreEqual(0D, typeof(double).GetDefaultValue());
+			Assert.AreEqual(false, typeof(bool).GetDefaultValue());
+			Assert.AreEqual('\0', typeof(char).GetDefaultValue());
+
+			// Default value of all reference types is null:
+			Assert.IsNull(typeof(string).GetDefaultValue());
+
+			// Default value of nullable types is null (even though nullable is a value type):
+			Assert.IsNull(typeof(int?).GetDefaultValue());
+
+			// Null just doesn't make sense here, so expect an arg null exception:
+			Assert.Throws<ArgumentNullException>(() => ReflectionUtils.GetDefaultValue(null));
+		}
 	}
 }

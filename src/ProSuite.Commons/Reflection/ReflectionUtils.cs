@@ -183,6 +183,27 @@ namespace ProSuite.Commons.Reflection
 			return false;
 		}
 
+		/// <remarks>
+		/// Use default(T) if you know the type T at compile-time!
+		/// </remarks>
+		public static object GetDefaultValue(this Type type)
+		{
+			if (type is null)
+				throw new ArgumentNullException(nameof(type));
+
+			// For all value types V, their default value is new V(), and
+			// this default constructor always exists (created by compiler);
+			// the exception is Nullable<T>, which is a value type, but has
+			// as default value null!
+			if (type.IsValueType && Nullable.GetUnderlyingType(type) == null)
+			{
+				// hopefully this is fast for value types!
+				return Activator.CreateInstance(type);
+			}
+
+			return null;
+		}
+
 		[NotNull]
 		public static string GetAssemblyVersionString([NotNull] Assembly assembly)
 		{
