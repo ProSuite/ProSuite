@@ -87,8 +87,11 @@ namespace ProSuite.Processing.Utils
 				multivalued = true;
 			}
 
+			object defaultValue = attr is OptionalParameterAttribute opt ? opt.DefaultValue : null;
+
 			return new ParameterInfo(name, type, required, multivalued,
-			                         attr?.Group, order, docKey);
+			                         defaultValue, docKey: docKey,
+			                         group: attr?.Group, order: order);
 		}
 
 		private static bool IsProcessParameter(PropertyInfo property)

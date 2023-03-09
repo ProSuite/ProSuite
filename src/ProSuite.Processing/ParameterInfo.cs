@@ -8,17 +8,20 @@ namespace ProSuite.Processing
 		public Type Type { get; }
 		public bool Required { get; }
 		public bool Multivalued { get; }
+		public object DefaultValue { get; }
 		public string Group { get; }
 		public int Order { get; }
 		public string DocKey { get; }
 
 		public ParameterInfo(string name, Type type, bool required, bool multivalued,
-		                     string group = null, int order = 0, string docKey = null)
+		                     object defaultValue = null, string docKey = null,
+		                     string group = null, int order = 0)
 		{
 			Name = name ?? throw new ArgumentNullException(nameof(name));
 			Type = type ?? throw new ArgumentNullException(nameof(type));
 			Required = required;
 			Multivalued = multivalued;
+			DefaultValue = defaultValue;
 			Group = group?.Trim() ?? string.Empty;
 			Order = order;
 			DocKey = docKey;
