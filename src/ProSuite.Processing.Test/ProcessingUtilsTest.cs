@@ -2,6 +2,8 @@ using System;
 using System.Linq;
 using System.Text;
 using NUnit.Framework;
+using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Processing.Domain;
 using ProSuite.Processing.Utils;
 
 namespace ProSuite.Processing.Test;
@@ -114,5 +116,31 @@ public class ProcessingUtilsTest
 		var l2 = ProcessingUtils.ParseIntegerList(" 012 ,-55, 0", sep);
 		Assert.NotNull(l2);
 		Assert.True(l2.SequenceEqual(new[] { 12, -55, 0 }));
+	}
+
+	[Test]
+	public void CanExpandParameterDescription()
+	{
+		const string text = "{DefaultValue}, {PublicConstant}, {PrivateConstant}, {NoSuchField} end";
+
+		var processType = typeof(TestProcess);
+		var parameter = ProcessingUtils.GetParameter(processType, "MyParameter");
+		Assert.NotNull(parameter);
+
+		var result = parameter.ExpandParameterDescription(text);
+
+		Assert.AreEqual("1.25, 12, hi, {NoSuchField} end", result);
+	}
+
+	private class TestProcess
+	{
+		[UsedImplicitly]
+		public const int PublicConstant = 12;
+		[UsedImplicitly]
+		private const string PrivateConstant = "hi";
+
+		[UsedImplicitly]
+		[OptionalParameter(DefaultValue = 1.25)]
+		public double MyParameter { get; set; }
 	}
 }

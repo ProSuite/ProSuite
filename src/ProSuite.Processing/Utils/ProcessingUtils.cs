@@ -6,6 +6,7 @@ using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Linq;
 using ProSuite.Commons.Essentials.Assertions;
@@ -111,6 +112,35 @@ namespace ProSuite.Processing.Utils
 			                        .FirstOrDefault();
 			return valueAttr?.Value;
 		}
+
+		/// <summary>
+		/// Replace "{DefaultValue}" in text with the default value from
+		/// the given parameter info; and replace "{AnyOtherWord}" with
+		/// the value of the constant AnyOtherWord on the carto process.
+		/// In both cases use the standard string representation of the
+		/// value found. If the requested value is not found, leave the
+		/// placeholder as is.
+		/// </summary>
+		public static string ExpandParameterDescription(this ParameterInfo parameter, string text)
+		{
+			if (parameter is null) return text;
+			if (text is null) return null;
+			var processType = parameter.Owner;
+
+			// replace "{DefaultValue}" with default value from param attr
+			// replace "{AnythingElse}" with constant AnythingElse on CP class
+			// if replacement doesn't exist, leave placeholder as is
+
+			return _placeholderRegex.Replace(text, m =>
+			{
+				var key = m.Groups.Count > 1 ? m.Groups[1].Value : null;
+				bool wantDefault = string.Equals(key, "DefaultValue", StringComparison.OrdinalIgnoreCase);
+				var value = wantDefault ? parameter.DefaultValue : processType?.GetConstantValue(key);
+				return value is null ? m.Value : Convert.ToString(value);
+			});
+		}
+
+		private static readonly Regex _placeholderRegex = new Regex(@"\{\s*(\w+)\s*\}");
 
 		private static bool IsProcessParameter(PropertyInfo property)
 		{
