@@ -68,11 +68,11 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 		                         string schemaOwner,
 		                         IList<string> usedDatasetNames = null)
 		{
-			if (usedDatasetNames != null)
-			{
-				return CreateNeededModel(workspace, name, databaseName, schemaOwner,
-				                         usedDatasetNames);
-			}
+			//if (usedDatasetNames != null)
+			//{
+			//	return CreateNeededModel(workspace, name, databaseName, schemaOwner,
+			//	                         usedDatasetNames);
+			//}
 
 			return CreateFullModel(workspace, name, databaseName, schemaOwner);
 		}
@@ -153,8 +153,8 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 				        qn, schema, harvestedNames);
 				Harvest(ws, names, esriDatasetType.esriDTTable, () => new TableNameClass(),
 				        qn, schema, harvestedNames);
-				Harvest(ws, names, esriDatasetType.esriDTTopology, () => new TopologyNameClass(),
-				        qn, schema, harvestedNames);
+				//Harvest(ws, names, esriDatasetType.esriDTTopology, () => new TopologyNameClass(),
+				//        qn, schema, harvestedNames);
 				Harvest(ws, names, esriDatasetType.esriDTTerrain, () => new TinNameClass(),
 				        qn, schema, harvestedNames); // TODO: verify
 				Harvest(ws, names, esriDatasetType.esriDTGeometricNetwork,
