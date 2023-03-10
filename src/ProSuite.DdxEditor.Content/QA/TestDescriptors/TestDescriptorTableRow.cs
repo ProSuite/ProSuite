@@ -45,11 +45,19 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 				IInstanceInfo instanceInfo =
 					InstanceDescriptorUtils.GetInstanceInfo(entity);
 
-				_testDescription = instanceInfo.TestDescription ?? string.Empty;
+				if (instanceInfo == null)
+				{
+					_parameters = "No TestDescriptor";
+					_testDescription = "<INVALID>";
+				}
+				else
+				{
+					_testDescription = instanceInfo.TestDescription ?? string.Empty;
 
-				_categories = StringUtils.ConcatenateSorted(instanceInfo.TestCategories, ", ");
+					_categories = StringUtils.ConcatenateSorted(instanceInfo.TestCategories, ", ");
 
-				_parameters = InstanceUtils.GetTestSignature(instanceInfo);
+					_parameters = InstanceUtils.GetTestSignature(instanceInfo);
+				}
 			}
 			catch (TypeLoadException e)
 			{
