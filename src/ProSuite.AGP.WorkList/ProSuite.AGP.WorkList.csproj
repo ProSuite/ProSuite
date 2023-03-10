@@ -24,6 +24,9 @@
     <Optimize>false</Optimize>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Remove="WorklistChangedEvent.cs" />
+  </ItemGroup>
+  <ItemGroup>
     <Reference Include="ArcGIS.Core">
       <HintPath>$(ProAssemblyPath)\bin\ArcGIS.Core.dll</HintPath>
       <SpecificVersion>False</SpecificVersion>
