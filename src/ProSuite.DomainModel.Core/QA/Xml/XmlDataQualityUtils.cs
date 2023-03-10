@@ -773,37 +773,6 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 			}
 		}
 
-		public static void UpdateIssueFilters(
-			[NotNull] QualityCondition qualityCondition,
-			[NotNull] XmlQualityCondition xmlCondition,
-			[NotNull] IDictionary<string, IssueFilterConfiguration> issueFiltersByName)
-		{
-			Assert.ArgumentNotNull(qualityCondition, nameof(qualityCondition));
-			Assert.ArgumentNotNull(xmlCondition, nameof(xmlCondition));
-			Assert.ArgumentNotNull(issueFiltersByName, nameof(issueFiltersByName));
-
-			qualityCondition.ClearIssueFilterConfigurations();
-			
-			if (xmlCondition.Filters != null)
-			{
-				foreach (string filterName in xmlCondition.Filters.Select(f => f.IssueFilterName))
-				{
-					if (! string.IsNullOrWhiteSpace(filterName))
-					{
-						var issueFilterConfig = issueFiltersByName[filterName.Trim()];
-
-						Assert.NotNull(issueFilterConfig,
-						               "IssueFilter '{0}' referenced in quality condition '{1}' does not exist",
-						               filterName.Trim(), xmlCondition.Name);
-
-						qualityCondition.AddIssueFilterConfiguration(issueFilterConfig);
-					}
-				}
-			}
-
-			qualityCondition.IssueFilterExpression = xmlCondition.FilterExpression?.Expression;
-		}
-
 		public static void UpdateTransformerConfiguration(
 			[NotNull] TransformerConfiguration transformer,
 			[NotNull] XmlTransformerConfiguration xmlTransformer,
@@ -2088,7 +2057,7 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 			xmlConfiguration.NeverStoreRelatedGeometryForTableRowIssues =
 				qualityCondition.NeverStoreRelatedGeometryForTableRowIssues;
 
-			xmlConfiguration.Filters = qualityCondition.IssueFilterConfigurations
+				xmlConfiguration.Filters = qualityCondition.IssueFilterConfigurations
 			                                           .OrderBy(f => f.Name).Select(CreateXmlFilter)
 			                                           .ToList();
 			xmlConfiguration.FilterExpression =
