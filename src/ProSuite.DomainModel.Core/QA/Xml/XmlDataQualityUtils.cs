@@ -2057,9 +2057,12 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 			xmlConfiguration.NeverStoreRelatedGeometryForTableRowIssues =
 				qualityCondition.NeverStoreRelatedGeometryForTableRowIssues;
 
+			if (qualityCondition.IssueFilterConfigurations.Count > 0)
+			{
 				xmlConfiguration.Filters = qualityCondition.IssueFilterConfigurations
-			                                           .OrderBy(f => f.Name).Select(CreateXmlFilter)
-			                                           .ToList();
+				                                           .OrderBy(f => f.Name)
+				                                           .Select(CreateXmlFilter).ToList();
+			}
 			xmlConfiguration.FilterExpression =
 				CreateXmlFilterExpression(qualityCondition.IssueFilterExpression);
 
