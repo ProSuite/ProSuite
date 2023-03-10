@@ -52,6 +52,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 			return result;
 		}
 
+		public override string ToString() => $"{Table.Name}; OID:{OID}";
+
 		IReadOnlyTable IReadOnlyRow.Table => Table;
 		public ReadOnlyTable Table { get; }
 	}

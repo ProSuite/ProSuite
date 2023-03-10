@@ -2095,7 +2095,7 @@ namespace ProSuite.QA.Tests
 					sb.Append($"RowOID:{RowIndex}");
 				}
 
-				return sb.ToString();
+				return $"{sb}; End: [{EndPoint.X:N0}, {EndPoint.Y:N0}]; Any: [{AnyPoint.X:N0}, {AnyPoint.Y:N0}]";
 			}
 		}
 
