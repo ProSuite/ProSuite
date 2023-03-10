@@ -8,7 +8,6 @@ using ProSuite.DdxEditor.Content.QA.TestDescriptors;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Commands;
 using ProSuite.DdxEditor.Framework.Items;
-using ProSuite.DomainModel.Core.QA;
 
 namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 {
@@ -27,7 +26,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 
 		#region Overrides of CommandBase
 
-		public override string Text => "Add All Algorithm Descriptors";
+		public override string Text => "Add all Algorithm Descriptors";
 
 		protected override void ExecuteCore()
 		{
@@ -40,17 +39,23 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 
 				foreach (Item childItem in Item.Children)
 				{
-					if (childItem is InstanceDescriptorsItem<InstanceDescriptor> descriptorItem)
+					switch (childItem)
 					{
-						descriptorItem.AddInstanceDescriptors(dllFilePath, ApplicationController);
-					}
-					else if (childItem is TestDescriptorsItem testDescriptorsItem)
-					{
-						testDescriptorsItem.AddTestDescriptors(dllFilePath, ApplicationController);
-					}
-					else
-					{
-						Assert.CantReach("Unexpected child item in algorithm descriptors");
+						case TestDescriptorsItem testDescriptorsItem:
+							testDescriptorsItem.AddTestDescriptors(
+								dllFilePath, ApplicationController);
+							break;
+						case TransformerDescriptorsItem transformerDescriptorsItem:
+							transformerDescriptorsItem.AddInstanceDescriptors(
+								dllFilePath, ApplicationController);
+							break;
+						case IssueFilterDescriptorsItem filterDescriptorsItem:
+							filterDescriptorsItem.AddInstanceDescriptors(
+								dllFilePath, ApplicationController);
+							break;
+						default:
+							Assert.CantReach("Unexpected child item in algorithm descriptors");
+							break;
 					}
 				}
 			}
