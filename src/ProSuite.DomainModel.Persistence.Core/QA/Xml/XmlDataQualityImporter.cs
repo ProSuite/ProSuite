@@ -739,11 +739,13 @@ namespace ProSuite.DomainModel.Persistence.Core.QA.Xml
 			IDictionary<string, InstanceConfiguration> configsByName =
 				GetExistingConfigurationsByEscapedName(configurations);
 			IDictionary<string, InstanceConfiguration> configsByUuid =
-				configurations.ToDictionary(c => c.Uuid, StringComparer.OrdinalIgnoreCase);
+				GetExistingConfigurationsByUuid(configurations);
 
 			foreach (XmlInstanceConfiguration xmlInstanceConfiguration in documentCache
 				         .EnumReferencedConfigurationInstances())
 			{
+				#region Step 1: Add new instance configurations
+
 				InstanceConfiguration existing = GetMatchingConfiguration(
 					xmlInstanceConfiguration, configsByName, configsByUuid);
 
@@ -788,11 +790,15 @@ namespace ProSuite.DomainModel.Persistence.Core.QA.Xml
 
 					configsByName.Add(imported.Name, imported);
 				}
+
+				#endregion
 			}
 
 			foreach (XmlInstanceConfiguration xmlInstanceConfiguration in documentCache
 				         .EnumReferencedConfigurationInstances())
 			{
+				#region Step 2a: Update (existing and new) instance configurations
+
 				InstanceConfiguration config = GetMatchingConfiguration(
 					xmlInstanceConfiguration, configsByName, configsByUuid);
 
@@ -816,13 +822,34 @@ namespace ProSuite.DomainModel.Persistence.Core.QA.Xml
 					XmlDataQualityUtils.UpdateQualityCondition(
 						qualityCondition, xmlCondition, category);
 
-					IDictionary<string, IssueFilterConfiguration> issueFiltersByName =
-						configsByName.Values
-						             .OfType<IssueFilterConfiguration>()
-						             .ToDictionary(c => c.Name, StringComparer.OrdinalIgnoreCase);
+					qualityCondition.ClearIssueFilterConfigurations();
 
-					XmlDataQualityUtils.UpdateIssueFilters(
-						qualityCondition, xmlCondition, issueFiltersByName);
+					if (xmlCondition.Filters != null)
+					{
+						foreach (string filterName in xmlCondition.Filters.Select(
+							         f => f.IssueFilterName))
+						{
+							if (! documentCache.TryGetIssueFilter(
+								    filterName.Trim(),
+								    out XmlIssueFilterConfiguration xmlFilterConfig))
+							{
+								Assert.Fail($"missing issue filter named {filterName}");
+							}
+
+							var issueFilterConfig =
+								GetMatchingConfiguration(xmlFilterConfig, configsByName,
+								                         configsByUuid) as IssueFilterConfiguration;
+
+							Assert.NotNull(issueFilterConfig,
+							               "IssueFilter '{0}' referenced in quality condition '{1}' does not exist",
+							               filterName.Trim(), xmlCondition.Name);
+
+							qualityCondition.AddIssueFilterConfiguration(issueFilterConfig);
+						}
+					}
+
+					qualityCondition.IssueFilterExpression =
+						xmlCondition.FilterExpression?.Expression;
 				}
 				else
 				{
@@ -850,9 +877,13 @@ namespace ProSuite.DomainModel.Persistence.Core.QA.Xml
 					configsByName.Add(xmlInstanceConfiguration.Name, config);
 				}
 
+				#endregion
+
+				#region Step 2b: Update test parameters
+
 				config.ClearParameterValues();
 
-				IInstanceInfo instanceInfo = null;
+				IInstanceInfo instanceInfo;
 				try
 				{
 					instanceInfo =
@@ -864,6 +895,8 @@ namespace ProSuite.DomainModel.Persistence.Core.QA.Xml
 					_msg.Warn(
 						$"Error loading instance descriptor {config.InstanceDescriptor.Name}. " +
 						"It will be ignored.", e);
+
+					continue;
 				}
 
 				Assert.NotNull(instanceInfo, "Cannot create instance info for {0}", config);
@@ -889,8 +922,17 @@ namespace ProSuite.DomainModel.Persistence.Core.QA.Xml
 
 					if (! string.IsNullOrWhiteSpace(xmlParamValue.TransformerName))
 					{
+						if (! documentCache.TryGetTransformer(
+							    xmlParamValue.TransformerName,
+							    out XmlTransformerConfiguration xmlTransformerConfig))
+						{
+							Assert.Fail(
+								$"missing transformer {xmlParamValue.TransformerName} for parameter value {xmlParamValue}");
+						}
+
 						var transformerConfig =
-							(TransformerConfiguration) configsByName[xmlParamValue.TransformerName];
+							GetMatchingConfiguration(xmlTransformerConfig, configsByName,
+							                         configsByUuid) as TransformerConfiguration;
 
 						Assert.NotNull(transformerConfig,
 						               "Transformer '{0}' defined in dataset parameter for '{1}' does not exist",
@@ -944,6 +986,8 @@ namespace ProSuite.DomainModel.Persistence.Core.QA.Xml
 						config.AddParameterValue(parameterValue);
 					}
 				}
+
+				#endregion
 			}
 
 			WarnForNonUniqueConfigurationsUuid(configsByName);
@@ -964,11 +1008,15 @@ namespace ProSuite.DomainModel.Persistence.Core.QA.Xml
 				if (uuidSet.Contains(instanceConfiguration.Uuid))
 				{
 					var configurations = availableConfigurationsByName.Values
-						.Where(c => c.Uuid == instanceConfiguration.Uuid).ToList();
+						.Where(c => c.Uuid == instanceConfiguration.Uuid &&
+						            c.Id != instanceConfiguration.Id).ToList();
 
-					_msg.Warn(
-						$"Non-unique UUID in instance configurations (the process will fail!): " +
-						$"{StringUtils.Concatenate(configurations, c => $"{c.Name} ({c.Uuid})", ", ")}");
+					if (configurations.Count > 1)
+					{
+						_msg.Warn(
+							"Non-unique UUID in instance configurations (the process will fail!): " +
+							$"{StringUtils.Concatenate(configurations, c => $"{c.Name} ({c.Uuid})", ", ")}");
+					}
 				}
 
 				uuidSet.Add(instanceConfiguration.Uuid);
@@ -1071,6 +1119,15 @@ namespace ProSuite.DomainModel.Persistence.Core.QA.Xml
 			}
 
 			return result;
+		}
+
+		[NotNull]
+		private static IDictionary<string, T>
+			GetExistingConfigurationsByUuid<T>(
+				[NotNull] IEnumerable<T> instanceConfigurations) where T : InstanceConfiguration
+		{
+			return instanceConfigurations.ToDictionary(c => c.Uuid,
+			                                           StringComparer.OrdinalIgnoreCase);
 		}
 
 		[CanBeNull]

@@ -50,7 +50,7 @@ namespace ProSuite.QA.Container.PolygonGrower
 		public override string ToString()
 		{
 			var s = new StringBuilder();
-			s.AppendFormat("OID:{0};", _topologicalLine.Row.RowOID);
+			s.AppendFormat("OID:{0};", _topologicalLine.Row.Row.OID);
 			if (_topologicalLine.PartIndex >= 0)
 			{
 				s.AppendFormat("Part:{0};", PartIndex);
@@ -60,7 +60,7 @@ namespace ProSuite.QA.Container.PolygonGrower
 				s.Append("(all parts);");
 			}
 
-			s.AppendFormat("Reverse:{0}, FromAngle:{1} ", _isBackward, FromAngle);
+			s.Append($"Reverse:{_isBackward}; FromAngle:{FromAngle:N3}; FromPt:[{FromPoint.X:N0},{FromPoint.Y:N0}]");
 			return s.ToString();
 		}
 
