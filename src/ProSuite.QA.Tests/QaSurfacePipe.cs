@@ -6,15 +6,15 @@ using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.AO.Surface;
 using ProSuite.Commons.AO.Surface.Raster;
 using ProSuite.Commons.Com;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.Geometry;
-using ProSuite.QA.Container.TestContainer;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
@@ -341,7 +341,7 @@ namespace ProSuite.QA.Tests
 
 			IIndexedMultiPatch indexedMultiPatch =
 				indexedMultiPatchFeature?.IndexedMultiPatch ??
-				QaGeometryUtils.CreateIndexedMultiPatch(multiPatch);
+				ProxyUtils.CreateIndexedMultiPatch(multiPatch);
 
 			var patches = (IGeometryCollection) multiPatch;
 			int patchCount = patches.GeometryCount;
@@ -612,7 +612,7 @@ namespace ProSuite.QA.Tests
 					enumSegments.Next(out segment, ref partIndex, ref segmentIndex);
 					while (segment != null)
 					{
-						IPolyline segLine = QaGeometryUtils.CreatePolyline(segment);
+						IPolyline segLine = ProxyUtils.CreatePolyline(segment);
 						((ISegmentCollection) segLine).AddSegment(recycling
 								? GeometryFactory.Clone(
 									segment)

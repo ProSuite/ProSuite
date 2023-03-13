@@ -119,7 +119,7 @@ namespace ProSuite.Microservices.Client
 				return false;
 			}
 
-			bool canAcceptCalls = await CanAcceptCallsAsync();
+			bool canAcceptCalls = await CanAcceptCallsAsync().ConfigureAwait(false);
 
 			if (canAcceptCalls)
 			{
@@ -195,7 +195,8 @@ namespace ProSuite.Microservices.Client
 
 			string serviceName = ChannelServiceName;
 
-			StatusCode statusCode = await GrpcUtils.IsServingAsync(healthClient, serviceName);
+			StatusCode statusCode = await GrpcUtils.IsServingAsync(healthClient, serviceName)
+			                                       .ConfigureAwait(false);
 
 			LogHealthStatus(statusCode);
 

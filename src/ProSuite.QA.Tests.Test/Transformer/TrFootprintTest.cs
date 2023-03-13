@@ -20,6 +20,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
+			TestUtils.ConfigureUnitTestLogging();
 			TestUtils.InitializeLicense();
 		}
 
@@ -110,6 +111,52 @@ namespace ProSuite.QA.Tests.Test.Transformer
 
 			// 2 Are different due to AO using orientation instead of ring type
 			Assert.LessOrEqual(differerentResultsCount, 2);
+		}
+
+		[Test]
+		public void CanGetFootprintsRealDataVerticals()
+		{
+			string path = TestDataPreparer.ExtractZip("GebkoerperSmallAreas.gdb.zip").Overwrite()
+			                              .GetPath();
+
+			IFeatureWorkspace featureWorkspace = WorkspaceUtils.OpenFileGdbFeatureWorkspace(path);
+			IFeatureClass buildings =
+				DatasetUtils.OpenFeatureClass(featureWorkspace, "geometry_issue");
+
+			ReadOnlyFeatureClass roBuildings = ReadOnlyTableFactory.Create(buildings);
+
+			TransformedFeatureClass featureClass1 = GetFootprintClass(roBuildings);
+			TransformedFeatureClass featureClass2 = GetFootprintClass(roBuildings);
+
+			string outDir = Path.GetDirectoryName(path);
+			Assert.NotNull(outDir);
+			IWorkspaceName wsName = WorkspaceUtils.CreateFileGdbWorkspace(outDir, "Output.gdb");
+			IFeatureWorkspace ws = WorkspaceUtils.OpenFileGdbFeatureWorkspace(wsName.PathName);
+
+			IFeatureClass outFeatures1 =
+				CreateOutFeatureClass(ws, "geomOut1", roBuildings.SpatialReference);
+
+			IFeatureClass outFeatures2 =
+				CreateOutFeatureClass(ws, "geomOut2", roBuildings.SpatialReference);
+
+			int differerentResultsCount =
+				CompareFootprints(featureClass1, featureClass2, outFeatures1, outFeatures2);
+
+			// Count the empty features in fc1:
+			int emptyCount = 0;
+			foreach (IFeature feature in GdbQueryUtils.GetFeatures(outFeatures1, true))
+			{
+				IGeometry geometry = feature.Shape;
+				if (geometry.IsEmpty)
+				{
+					emptyCount++;
+				}
+			}
+
+			Assert.AreEqual(112, emptyCount);
+
+			// 113 Are different due to AO returning envelope if footprint is no polygon
+			Assert.LessOrEqual(differerentResultsCount, 113);
 		}
 
 		private static IFeatureClass CreateOutFeatureClass(IFeatureWorkspace ws,

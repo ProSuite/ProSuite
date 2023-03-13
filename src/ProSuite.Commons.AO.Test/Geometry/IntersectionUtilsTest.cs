@@ -971,7 +971,6 @@ namespace ProSuite.Commons.AO.Test.Geometry
 		}
 
 		[Test]
-		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanGetMultipatchIntersectionPointsXY()
 		{
 			// {FE286920-3D4C-4CB3-AC22-51056B97A23F} from TLM:
@@ -994,6 +993,8 @@ namespace ProSuite.Commons.AO.Test.Geometry
 				GeometryFactory.CreatePoint(2574923.000, 1196869.000, 500, 0.1, lv95),
 				GeometryFactory.CreatePoint(2574920.000, 1196878.000, 500, 0.3, lv95),
 				GeometryFactory.CreatePoint(2574910.000, 1196870.000, 500, 0.3, lv95));
+
+			GeometryUtils.MakeZAware(cutLine);
 
 			double tolerance = GeometryUtils.GetXyTolerance(multipatch);
 

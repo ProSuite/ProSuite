@@ -415,6 +415,32 @@ return : Point2D : lines cut each other at Point (non parallel)
 		}
 
 		/// <summary>
+		/// Returns the azimuth of the line from p1 to p2
+		/// </summary>
+		/// <param name="p1X"></param>
+		/// <param name="p1Y"></param>
+		/// <param name="p2X"></param>
+		/// <param name="p2Y"></param>
+		/// <returns></returns>
+		public static double GetAzimuth(double p1X, double p1Y,
+		                                double p2X, double p2Y)
+		{
+			double x = p2X - p1X;
+			double y = p2Y - p1Y;
+
+			int sign = x > 0
+				           ? -1
+				           : 1;
+
+			double d2 = x * x + y * y;
+
+			double d = Math.Sqrt(d2);
+
+			return sign *
+			       Math.Acos(d * y / d2);
+		}
+
+		/// <summary>
 		/// Rotate the provided points about the X axis by 90 degrees.
 		/// </summary>
 		/// <param name="points">The points to rotate.</param>

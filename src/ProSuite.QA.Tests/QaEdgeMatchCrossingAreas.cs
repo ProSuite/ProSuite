@@ -6,6 +6,7 @@ using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -668,7 +669,7 @@ namespace ProSuite.QA.Tests
 		{
 			ISpatialFilter filter = _filters[tableIndex];
 
-			WKSEnvelope envelope = QaGeometryUtils.GetWKSEnvelope(line);
+			WKSEnvelope envelope = ProxyUtils.GetWKSEnvelope(line);
 
 			envelope.XMin -= searchDistance;
 			envelope.XMax += searchDistance;
@@ -1331,7 +1332,7 @@ namespace ProSuite.QA.Tests
 							continue;
 						}
 
-						WKSEnvelope uncoveredBox = QaGeometryUtils.GetWKSEnvelope(uncoveredPart);
+						WKSEnvelope uncoveredBox = ProxyUtils.GetWKSEnvelope(uncoveredPart);
 
 						// TODO revise
 						if (uncoveredBox.XMax < tileWksBox.XMin ||

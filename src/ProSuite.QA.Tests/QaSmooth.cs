@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
@@ -184,7 +185,7 @@ namespace ProSuite.QA.Tests
 
 			object missing = Type.Missing;
 
-			PolylineClass result = QaGeometryUtils.CreatePolyline(segment);
+			PolylineClass result = ProxyUtils.CreatePolyline(segment);
 
 			((ISegmentCollection) result).AddSegment(segment, ref missing, ref missing);
 

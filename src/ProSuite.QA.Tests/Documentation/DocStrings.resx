@@ -889,10 +889,10 @@ Remark: The feature classes in 'polylineClasses' must have the same spatial refe
     <value>polyline feature classes</value>
   </data>
   <data name="QaMinArea_0" xml:space="preserve">
-    <value>Finds all polygons in 'polygonClass' with areas smaller than 'limit'</value>
+    <value>Finds all polygons in 'polygonClass' with areas smaller than 'limit'. Features with empty geometries are not tested.</value>
   </data>
   <data name="QaMinArea_1" xml:space="preserve">
-    <value>Finds all parts in 'polygonClass' with areas smaller than 'limit'. Parts are defined by perPart</value>
+    <value>Finds all parts in 'polygonClass' with areas smaller than 'limit'. Parts are defined by perPart. Features with empty geometries are not tested.</value>
   </data>
   <data name="QaMinArea_limit" xml:space="preserve">
     <value>minimum area in (x,y)-units</value>

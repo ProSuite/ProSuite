@@ -4,10 +4,10 @@ using System.Runtime.InteropServices;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
-using ProSuite.QA.Container.Geometry;
 
 namespace ProSuite.QA.Tests
 {
@@ -274,9 +274,9 @@ namespace ProSuite.QA.Tests
 
 			var wksPoints = new List<WKSPointZ>(partSegmentCount + 1);
 
-			foreach (Pnt point in QaGeometryUtils.GetPoints(segments))
+			foreach (Pnt point in ProxyUtils.GetPoints(segments))
 			{
-				wksPoints.Add(QaGeometryUtils.GetWksPoint(point));
+				wksPoints.Add(ProxyUtils.GetWksPoint(point));
 			}
 
 			return wksPoints.ToArray();

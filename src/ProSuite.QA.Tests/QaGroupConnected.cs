@@ -7,6 +7,7 @@ using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
@@ -152,7 +153,7 @@ namespace ProSuite.QA.Tests
 				IPoint start = ThisEnd.EndPoint;
 				IPoint end = OtherEnd.EndPoint;
 
-				IPointCollection line = QaGeometryUtils.CreatePolyline(start);
+				IPointCollection line = ProxyUtils.CreatePolyline(start);
 
 				object missing = Type.Missing;
 				line.AddPoint(start, ref missing, ref missing);
@@ -169,7 +170,7 @@ namespace ProSuite.QA.Tests
 				IPoint start = ThisEnd.EndPoint;
 				IPoint end = OtherEnd.EndPoint;
 
-				IPointCollection result = QaGeometryUtils.CreateMultipoint(start);
+				IPointCollection result = ProxyUtils.CreateMultipoint(start);
 
 				object missing = Type.Missing;
 				result.AddPoint(start, ref missing, ref missing);
@@ -745,7 +746,7 @@ namespace ProSuite.QA.Tests
 		[NotNull]
 		private IList<InvolvedRow> GetInvolvedRows([NotNull] ConnectedLine line)
 		{
-			return line.UniqueIdProvider?.GetInvolvedRows(line.Keys) ??
+			return (line.UniqueIdProvider as IInvolvedRowsProvider)?.GetInvolvedRows(line.Keys) ??
 			       new List<InvolvedRow>
 			       {
 				       new InvolvedRow(InvolvedTables[line.TableIndex].Name,
@@ -1104,7 +1105,7 @@ namespace ProSuite.QA.Tests
 
 				if (endPoints == null)
 				{
-					endPoints = QaGeometryUtils.CreateMultipoint(endPoint);
+					endPoints = ProxyUtils.CreateMultipoint(endPoint);
 				}
 
 				endPoints.AddPoint(GeometryFactory.Clone(endPoint),
@@ -1319,7 +1320,7 @@ namespace ProSuite.QA.Tests
 
 			IPath connection = gap.CreatePath();
 
-			IGeometryCollection lineParts = QaGeometryUtils.CreatePolyline(connection);
+			IGeometryCollection lineParts = ProxyUtils.CreatePolyline(connection);
 
 			lineParts.AddGeometry(connection, ref missing, ref missing);
 
@@ -1342,7 +1343,7 @@ namespace ProSuite.QA.Tests
 				IPath connection = gap.CreatePath();
 				if (result == null)
 				{
-					result = QaGeometryUtils.CreatePolyline(connection);
+					result = ProxyUtils.CreatePolyline(connection);
 				}
 
 				result.AddGeometry(connection, ref missing, ref missing);
@@ -1368,7 +1369,7 @@ namespace ProSuite.QA.Tests
 
 				if (result == null)
 				{
-					result = QaGeometryUtils.CreateMultipoint(point0);
+					result = ProxyUtils.CreateMultipoint(point0);
 					((IGeometry) result).SpatialReference = point0.SpatialReference;
 				}
 
@@ -1736,7 +1737,7 @@ namespace ProSuite.QA.Tests
 			{
 				if (points == null)
 				{
-					points = QaGeometryUtils.CreateMultipoint(row1.ToPoint);
+					points = ProxyUtils.CreateMultipoint(row1.ToPoint);
 				}
 
 				points.AddPoint(row1.ToPoint, ref missing, ref missing);

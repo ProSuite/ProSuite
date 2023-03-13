@@ -16,13 +16,7 @@ namespace ProSuite.Commons.Test.Reflection
 			           "ProSuite.Commons.Logging",
 			           "ProSuite.Commons",
 			           "ProSuite.Commons.AO",
-			           "ProSuite.Commons.UI",
-			           "ProSuite.Commons.Sys",
-			           "ProSuite.Commons.AGD",
-			           "ProSuite.Commons.IoC",
-			           "ProSuite.Commons.Orm.NHibernate",
-			           "ProSuite.ProSuite.AGD.AttributeEditor",
-			           "ProSuite.ProSuite.AGD.WorkLists");
+			           "ProSuite.Commons.Orm.NHibernate");
 		}
 
 		private static void WriteStats(params string[] assemblyNames)

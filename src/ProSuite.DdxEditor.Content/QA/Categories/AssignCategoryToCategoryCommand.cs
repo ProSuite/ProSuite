@@ -11,7 +11,6 @@ namespace ProSuite.DdxEditor.Content.QA.Categories
 		ItemCommandBase<DataQualityCategoryItem>
 	{
 		[NotNull] private readonly IDataQualityCategoryContainerItem _containerItem;
-		[NotNull] private readonly IApplicationController _applicationController;
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="AssignCategoryToCategoryCommand"/> class.
@@ -23,25 +22,23 @@ namespace ProSuite.DdxEditor.Content.QA.Categories
 			[NotNull] DataQualityCategoryItem categoryItem,
 			[NotNull] IDataQualityCategoryContainerItem containerItem,
 			[NotNull] IApplicationController applicationController)
-			: base(categoryItem)
+			: base(categoryItem, applicationController)
 		{
-			Assert.ArgumentNotNull(applicationController, nameof(applicationController));
 			Assert.ArgumentNotNull(containerItem, nameof(containerItem));
 
 			_containerItem = containerItem;
-			_applicationController = applicationController;
 		}
 
 		public override string Text => "Assign to Category...";
 
-		protected override bool EnabledCore => ! _applicationController.HasPendingChanges;
+		protected override bool EnabledCore => ! ApplicationController.HasPendingChanges;
 
 		protected override void ExecuteCore()
 		{
-			Item currentItem = _applicationController.CurrentItem;
+			Item currentItem = ApplicationController.CurrentItem;
 
 			DataQualityCategory category;
-			if (! _containerItem.AssignToCategory(Item, _applicationController.Window,
+			if (! _containerItem.AssignToCategory(Item, ApplicationController.Window,
 			                                      out category))
 			{
 				return;
@@ -56,11 +53,11 @@ namespace ProSuite.DdxEditor.Content.QA.Categories
 		{
 			if (category == null)
 			{
-				_applicationController.RefreshFirstItem<QAItem>();
+				ApplicationController.RefreshFirstItem<QAItem>();
 			}
 			else
 			{
-				_applicationController.RefreshItem(category);
+				ApplicationController.RefreshItem(category);
 			}
 		}
 
@@ -71,18 +68,17 @@ namespace ProSuite.DdxEditor.Content.QA.Categories
 				return;
 			}
 
-			if (_applicationController.GoToItem(currentItem))
+			if (ApplicationController.GoToItem(currentItem))
 			{
 				return;
 			}
 
-			var entityItem = currentItem as DataQualityCategoryItem;
-			if (entityItem != null)
+			if (currentItem is DataQualityCategoryItem entityItem)
 			{
 				DataQualityCategory entity = _containerItem.GetDataQualityCategory(entityItem);
 				if (entity != null)
 				{
-					_applicationController.GoToItem(entity);
+					ApplicationController.GoToItem(entity);
 				}
 			}
 		}

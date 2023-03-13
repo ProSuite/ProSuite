@@ -1617,10 +1617,19 @@ namespace ProSuite.Commons.Geom
 			                               out targetForwardDirection, out targetBackwardDirection);
 
 			// Allow jumping between intersection points at the same location. This is necessary
-			// for target rings touching another target ring or target boundary loops.
+			// for target rings touching another target ring or target boundary loops
+			// or geometries with intersection points within the tolerance (alternatively
+			// both geometries would need to be fully clustered in the 2D plane!)
 			foreach (IntersectionPoint3D otherTargetIntersection in
 			         IntersectionPointNavigator.GetOtherTargetIntersections(intersection, true))
 			{
+				if (IntersectionPointNavigator.VisitedIntersections.Contains(
+					    otherTargetIntersection))
+				{
+					// Never turn back
+					continue;
+				}
+
 				double? otherTargetForwardDirection;
 				double? otherTargetBackwardDirection;
 

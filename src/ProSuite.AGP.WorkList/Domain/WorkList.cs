@@ -1032,15 +1032,9 @@ namespace ProSuite.AGP.WorkList.Domain
 		// https://blog.stephencleary.com/2012/02/async-and-await.html
 		// The primary use case for async void methods is event handlers.
 		private void OnWorkListChanged([CanBeNull] Envelope extent = null,
-		                                     [CanBeNull] List<long> oids = null)
+		                               [CanBeNull] List<long> oids = null)
 		{
-			WorkListChanged?.Invoke(this, new WorkListChangedEventArgs(this, extent, oids));
-
-			// This does not work in Pro 3. And as the viewModel knows the model anyway why not 
-			// expose the event directly?
-			//// todo daro oids to IEnumerable<>?
-			//await WorkListChangedEvent.PublishAsync(
-			//	new WorkListChangedEventArgs(this, extent, oids));
+			WorkListChanged?.Invoke(this, new WorkListChangedEventArgs(extent, oids));
 		}
 
 		public void Invalidate()

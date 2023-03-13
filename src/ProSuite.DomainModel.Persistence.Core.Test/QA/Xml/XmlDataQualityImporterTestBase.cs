@@ -255,7 +255,6 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.QA.Xml
 						modelRepository,
 						UnitOfWork,
 						new BasicXmlWorkspaceConverter(),
-						null,
 						null);
 
 					IList<QualitySpecification> importedSpecifications =

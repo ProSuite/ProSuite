@@ -5,9 +5,9 @@ using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.AO.Test;
 using ProSuite.QA.Container.Test;
+using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Test.Construction;
 using ProSuite.QA.Tests.Test.TestRunners;
 using ProSuite.QA.Tests.Transformers;
@@ -572,6 +572,38 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				runner.Execute();
 				Assert.AreEqual(1, runner.Errors.Count);
 			}
+		}
+
+		[Test]
+		[Category(TestCategory.Sde)]
+		public void Test491()
+		{
+			var workspace = (IFeatureWorkspace)TestData.TestDataUtils.OpenTopgisTlm();
+
+			IReadOnlyFeatureClass fg =
+				ReadOnlyTableFactory.Create(
+					workspace.OpenFeatureClass("TOPGIS_TLM.TLM_FLIESSGEWAESSER"));
+			IReadOnlyFeatureClass bo =
+				ReadOnlyTableFactory.Create(
+					workspace.OpenFeatureClass("TOPGIS_TLM.TLM_BODENBEDECKUNG"));
+
+			TrDissolve trDissolve = new TrDissolve(fg)
+			                        {
+				                        Search = 0,
+				                        NeighborSearchOption = TrDissolve.SearchOption.All,
+				                        CreateMultipartFeatures = true
+			                        };
+			trDissolve.SetConstraint(0, "OBJEKTART = 7");
+
+			TrIntersect trIntersect = new TrIntersect(trDissolve.GetTransformed(), bo);
+			trIntersect.SetConstraint(1, "OBJEKTART = 5");
+
+			QaConstraint qa = new QaConstraint(trIntersect.GetTransformed(), "PartIntersected <= 0.1");
+
+			var runner = new QaContainerTestRunner(10000, qa);
+			runner.TestContainer.MaxCachedPointCount = 5000000;
+			runner.Execute();
+
 		}
 	}
 }

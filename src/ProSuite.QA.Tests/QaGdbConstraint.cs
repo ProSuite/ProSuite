@@ -5,7 +5,6 @@ using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestContainer;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
@@ -87,9 +86,7 @@ namespace ProSuite.QA.Tests
 			int? iSubtype = null;
 			IAttributeRule invalidRule = null;
 
-
-			IReadOnlyRow roRow = (readOnlyRow as IFeatureProxy)?.Inner ?? readOnlyRow;
-			IRow baseRow = Assert.NotNull((ReadOnlyRow)roRow).BaseRow;
+			IRow baseRow = Assert.NotNull((ReadOnlyRow)readOnlyRow).BaseRow;
 			foreach (IAttributeRule rule in _attrRules)
 			{
 				string message = string.Empty;

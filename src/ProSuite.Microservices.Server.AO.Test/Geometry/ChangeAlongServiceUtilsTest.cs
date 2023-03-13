@@ -956,10 +956,8 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 
 			polygon1.SpatialReference = sr;
 
-			sourceFeature = new GdbFeature(42, fClass)
-			                {
-				                Shape = polygon1
-			                };
+			sourceFeature = GdbFeature.Create(42, fClass);
+			sourceFeature.Shape = polygon1;
 
 			IPolygon polygon2 = GeometryFactory.CreatePolygon(
 				GeometryFactory.CreatePoint(2600500, 1200500, sr),
@@ -967,10 +965,8 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 
 			polygon2.SpatialReference = sr;
 
-			targetFeature = new GdbFeature(43, fClass)
-			                {
-				                Shape = polygon2
-			                };
+			targetFeature = GdbFeature.Create(43, fClass);
+			targetFeature.Shape = polygon2;
 		}
 
 		private static void AssertReshapeLineCount(RepeatedField<ReshapeLineMsg> reshapeLines,

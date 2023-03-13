@@ -73,11 +73,6 @@ public class InstanceConfigurationViewModel<T> : NotifyPropertyChangedBase,
 
 		Values = new List<ViewModelBase>(GetTopLevelRows(CreateRows(instanceConfiguration)));
 
-		// Update the entity now, e.g.: a new entity with required collection parameter is added,
-		// the collection is not yet in InstanceConfiguration.ParameterValues. After UpdateEntity
-		// it is, the collection parameter is initialized.
-		UpdateEntity(Assert.NotNull(_item.GetEntity()), Assert.NotNull(Values));
-
 		// call stack:
 		// IInstanceConfigurationViewModel.BindTo()
 		// QualityConditionTableViewBlazor.ViewModel.set

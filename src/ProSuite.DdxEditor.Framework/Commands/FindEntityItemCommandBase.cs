@@ -16,41 +16,38 @@ namespace ProSuite.DdxEditor.Framework.Commands
 		where T : class, IEntityRow
 		where E : Entity
 	{
-		[NotNull] private readonly IApplicationController _applicationController;
 		[NotNull] private readonly ItemModelBuilderBase _modelBuilder;
 
 		protected FindEntityItemCommandBase(
 			[NotNull] Item item,
 			[NotNull] IApplicationController applicationController,
 			[NotNull] ItemModelBuilderBase modelBuilder, [NotNull] string text)
-			: base(item)
+			: base(item, applicationController)
 		{
-			Assert.ArgumentNotNull(applicationController, nameof(applicationController));
 			Assert.ArgumentNotNull(modelBuilder, nameof(modelBuilder));
 			Assert.ArgumentNotNullOrEmpty(text, nameof(text));
 
-			_applicationController = applicationController;
 			_modelBuilder = modelBuilder;
 			Text = text;
 		}
 
-		public sealed override Image Image => Resources.Find;
+		public sealed override Image Image => Resources.Search;
 
 		[NotNull]
 		public override string Text { get; }
 
-		protected override bool EnabledCore => ! _applicationController.HasPendingChanges;
+		protected override bool EnabledCore => ! ApplicationController.HasPendingChanges;
 
 		protected sealed override void ExecuteCore()
 		{
-			E entity = FindEntity(_applicationController.Window);
+			E entity = FindEntity(ApplicationController.Window);
 
 			if (entity == null)
 			{
 				return;
 			}
 
-			_applicationController.GoToItem(entity);
+			ApplicationController.GoToItem(entity);
 		}
 
 		[CanBeNull]

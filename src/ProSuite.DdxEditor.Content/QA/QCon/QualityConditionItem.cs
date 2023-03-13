@@ -241,17 +241,19 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			Assert.ArgumentNotNull(qualityCondition, nameof(qualityCondition));
 			Assert.ArgumentNotNull(owner, nameof(owner));
 
-			DdxModel model = DataQualityCategoryUtils.GetDefaultModel(
-				qualityCondition.Category);
+			DdxModel model = DataQualityCategoryUtils.GetDefaultModel(qualityCondition.Category);
+
+			IList<QualitySpecification> qualitySpecifications =
+				_modelBuilder.QualitySpecifications.Get(qualityCondition);
 
 			var queries = new List<FinderQuery<QualitySpecificationTableRow>>
 			              {
 				              new FinderQuery<QualitySpecificationTableRow>(
 					              "<All>", "[all]",
 					              () =>
-						              QSpec.TableRows.GetQualitySpecifications(
+						              QSpec.TableRows.GetQualitySpecificationTableRows(
 							              _modelBuilder,
-							              qualityCondition))
+							              qualitySpecifications))
 			              };
 
 			if (model != null)
@@ -259,9 +261,9 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 				queries.Add(new FinderQuery<QualitySpecificationTableRow>(
 					            $"Quality specifications involving datasets in {model.Name}",
 					            $"model{model.Id}",
-					            () => QSpec.TableRows.GetQualitySpecifications(
+					            () => QSpec.TableRows.GetQualitySpecificationTableRows(
 						            _modelBuilder,
-						            qualityCondition,
+						            qualitySpecifications,
 						            model)));
 			}
 
@@ -274,37 +276,42 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 		}
 
 		[CanBeNull]
-		public IList<InstanceConfigurationInCategoryTableRow> GetIssueFiltersToAdd(
+		public IList<InstanceConfigurationTableRow> GetIssueFiltersToAdd(
 			[NotNull] QualityCondition qualityCondition,
 			[NotNull] IWin32Window owner)
 		{
 			Assert.ArgumentNotNull(qualityCondition, nameof(qualityCondition));
 			Assert.ArgumentNotNull(owner, nameof(owner));
 
-			DdxModel model = DataQualityCategoryUtils.GetDefaultModel(
-				qualityCondition.Category);
+			DdxModel model = DataQualityCategoryUtils.GetDefaultModel(qualityCondition.Category);
 
-			var queries = new List<FinderQuery<InstanceConfigurationInCategoryTableRow>>();
+			IList<IssueFilterConfiguration> issueFilterConfigurations =
+				qualityCondition.IssueFilterConfigurations;
+
+			var queries = new List<FinderQuery<InstanceConfigurationTableRow>>();
 
 			if (model != null)
 			{
-				queries.Add(
-					new FinderQuery<InstanceConfigurationInCategoryTableRow>(
-						$"Issue filters involving datasets in {model.Name}",
-						$"model{model.Id}",
-						() => InstanceConfigTableRows.GetInstanceConfigs<IssueFilterConfiguration>(
-							_modelBuilder,
-							qualityCondition.Category).ToList()));
+				//TODO
+				//queries.Add(
+				//	new FinderQuery<InstanceConfigurationTableRow>(
+				//		$"Issue filters involving datasets in {model.Name}",
+				//		$"model{model.Id}",
+				//		() => InstanceConfigTableRows
+				//		      .GetInstanceConfigurationTableRows<IssueFilterConfiguration>(
+				//			      _modelBuilder, issueFilterConfigurations, model)
+				//		      .ToList()));
 			}
 
 			queries.Add(
-				new FinderQuery<InstanceConfigurationInCategoryTableRow>(
+				new FinderQuery<InstanceConfigurationTableRow>(
 					"<All>", "[all]",
 					() => InstanceConfigTableRows
-					      .GetInstanceConfigs<IssueFilterConfiguration>(_modelBuilder, null)
+					      .GetInstanceConfigurationTableRows(_modelBuilder, issueFilterConfigurations)
 					      .ToList()));
 
-			var finder = new Finder<InstanceConfigurationInCategoryTableRow>();
+			var finder = new Finder<InstanceConfigurationTableRow>();
+
 			return finder.ShowDialog(
 				owner, queries,
 				filterSettingsContext: FinderContextIds.GetId(qualityCondition.Category),

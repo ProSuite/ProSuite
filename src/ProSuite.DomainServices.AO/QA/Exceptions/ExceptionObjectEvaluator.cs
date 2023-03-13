@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.Geometry;
 
 namespace ProSuite.DomainServices.AO.QA.Exceptions
 {
@@ -49,7 +49,7 @@ namespace ProSuite.DomainServices.AO.QA.Exceptions
 
 			_aoiBox = areaOfInterest == null || areaOfInterest.IsEmpty
 				          ? null
-				          : QaGeometryUtils.CreateBox(areaOfInterest.Envelope);
+				          : ProxyUtils.CreateBox(areaOfInterest.Envelope);
 
 			foreach (ExceptionObject exceptionObject in exceptionObjects)
 			{

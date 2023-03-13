@@ -16,7 +16,6 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 		ItemsCommandBase<QualityConditionItem>
 	{
 		[NotNull] private readonly IInstanceConfigurationContainerItem _containerItem;
-		[NotNull] private readonly IApplicationController _applicationController;
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="AssignQualityConditionsToCategoryCommand"/> class.
@@ -28,31 +27,28 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			[NotNull] ICollection<QualityConditionItem> qualityConditionItems,
 			[NotNull] IInstanceConfigurationContainerItem containerItem,
 			[NotNull] IApplicationController applicationController)
-			: base(qualityConditionItems)
+			: base(qualityConditionItems, applicationController)
 		{
-			Assert.ArgumentNotNull(applicationController, nameof(applicationController));
 			Assert.ArgumentNotNull(containerItem, nameof(containerItem));
 
 			_containerItem = containerItem;
-			_applicationController = applicationController;
 		}
 
 		public override string Text => "Assign to Category...";
 
 		protected override bool EnabledCore =>
-			Items.Count > 0 && ! _applicationController.HasPendingChanges;
+			Items.Count > 0 && ! ApplicationController.HasPendingChanges;
 
 		protected override void ExecuteCore()
 		{
-			DataQualityCategory category;
-			if (! _containerItem.AssignToCategory(Items, _applicationController.Window,
-			                                      out category))
+			if (! _containerItem.AssignToCategory(Items, ApplicationController.Window,
+			                                      out DataQualityCategory category))
 			{
 				return;
 			}
 
 			QualityConditionContainerUtils.RefreshQualityConditionAssignmentTarget(category,
-				_applicationController);
+				ApplicationController);
 
 			Item gotoItem = Items.FirstOrDefault();
 
@@ -66,19 +62,17 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 				return;
 			}
 
-			if (_applicationController.GoToItem(currentItem))
+			if (ApplicationController.GoToItem(currentItem))
 			{
 				return;
 			}
 
-			var entityItem = currentItem as EntityItem<T, T>;
-
-			if (entityItem != null)
+			if (currentItem is EntityItem<T, T> entityItem)
 			{
 				Entity entity = _containerItem.GetInstanceConfiguration(entityItem);
 				if (entity != null)
 				{
-					_applicationController.GoToItem(entity);
+					ApplicationController.GoToItem(entity);
 				}
 			}
 		}

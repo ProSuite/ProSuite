@@ -2,13 +2,13 @@ using ESRI.ArcGIS.Geodatabase;
 
 namespace ProSuite.Commons.AO.Geodatabase
 {
-	public class ReadOnlyRow : IReadOnlyRow
+	public class ReadOnlyRow : IReadOnlyRow, IUniqueIdObject, IUniqueIdObjectEdit
 	{
 		public static ReadOnlyFeature Create(IFeature row)
 		{
 			ReadOnlyTable tbl = ReadOnlyTableFactory.Create(row.Table);
 			ReadOnlyFeatureClass fc = (ReadOnlyFeatureClass) tbl;
-			return new ReadOnlyFeature(fc, row);
+			return ReadOnlyFeature.Create(fc, row);
 		}
 
 		public static ReadOnlyRow Create(IRow row)
@@ -16,7 +16,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			ReadOnlyTable tbl = ReadOnlyTableFactory.Create(row.Table);
 			if (tbl is ReadOnlyFeatureClass fc)
 			{
-				return new ReadOnlyFeature(fc, (IFeature) row);
+				return ReadOnlyFeature.Create(fc, (IFeature) row);
 			}
 
 			return new ReadOnlyRow(tbl, row);
@@ -27,6 +27,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 			Table = table;
 			Row = row;
 		}
+
+		public UniqueId UniqueId { get; set; }
 
 		public IRow BaseRow => Row;
 		protected IRow Row { get; }

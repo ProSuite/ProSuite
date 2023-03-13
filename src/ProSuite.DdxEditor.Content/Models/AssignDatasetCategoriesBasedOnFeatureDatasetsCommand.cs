@@ -1,4 +1,3 @@
-using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Commands;
@@ -10,22 +9,15 @@ namespace ProSuite.DdxEditor.Content.Models
 		ItemCommandBase<ModelItemBase<M>>
 		where M : Model
 	{
-		private readonly IApplicationController _applicationController;
-
 		public AssignDatasetCategoriesBasedOnFeatureDatasetsCommand(
 			[NotNull] ModelItemBase<M> item,
 			[NotNull] IApplicationController applicationController)
-			: base(item)
-		{
-			Assert.ArgumentNotNull(applicationController, nameof(applicationController));
-
-			_applicationController = applicationController;
-		}
+			: base(item, applicationController) { }
 
 		public override string Text => "Assign Dataset Categories From Feature Datasets";
 
 		protected override bool EnabledCore =>
-			! _applicationController.HasPendingChanges &&
+			! ApplicationController.HasPendingChanges &&
 			Item.Children.Count > 0;
 
 		protected override void ExecuteCore()
@@ -36,7 +28,7 @@ namespace ProSuite.DdxEditor.Content.Models
 			}
 			finally
 			{
-				_applicationController.ReloadCurrentItem();
+				ApplicationController.ReloadCurrentItem();
 			}
 		}
 	}

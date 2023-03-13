@@ -60,7 +60,7 @@ namespace ProSuite.QA.Tests.Transformers.Filters
 		{
 			var wrappedAttributeValues = new WrappedRowValues(feature, true);
 
-			return new GdbFeature(feature.OID, ResultFeatureClass, wrappedAttributeValues);
+			return GdbFeature.Create(feature.OID, ResultFeatureClass, wrappedAttributeValues);
 		}
 
 		#region Implementation of INamedFilter

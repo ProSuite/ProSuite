@@ -8,6 +8,7 @@ using NUnit.Framework;
 using ProSuite.Commons.AO;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.AO.Test;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container.TestSupport;
 using Assert = ProSuite.Commons.Essentials.Assertions.Assert;
@@ -19,8 +20,8 @@ namespace ProSuite.QA.Container.Test.TestSupport
 		[NotNull]
 		public static ReadOnlyFeature Create(IFeature feature)
 		{
-			return new ReadOnlyFeature(
-				(ReadOnlyFeatureClass) ReadOnlyTableFactory.Create(feature.Table), feature);
+			return ReadOnlyFeature.Create(
+				ReadOnlyTableFactory.Create((IFeatureClass) feature.Table), feature);
 		}
 
 		public static ReadOnlyRow Create(IRow row)

@@ -1553,7 +1553,17 @@ namespace ProSuite.Commons.Geom
 
 					MultiLinestring planarCutlines = PlanarizeLines(cutLines, tolerance);
 
-					result.AddRange(CutPlanar(sourceRing, planarCutlines, tolerance));
+					IList<RingGroup> cutResult = CutPlanar(sourceRing, planarCutlines, tolerance);
+
+					if (cutResult.Count == 0)
+					{
+						// Most likely the cut line scratches along the edge of the source ring
+						result.Add(sourceRing);
+					}
+					else
+					{
+						result.AddRange(cutResult);
+					}
 				}
 			}
 
@@ -4235,12 +4245,14 @@ namespace ProSuite.Commons.Geom
 			var centerX = points.Average(p => p.X);
 			var centerY = points.Average(p => p.Y);
 
+			bool return3dPoint = false;
 			double centerZ = 0;
 			foreach (IPnt point in points)
 			{
 				if (point is Pnt3D pnt3D)
 				{
 					centerZ += pnt3D.Z;
+					return3dPoint = true;
 				}
 				else
 				{
@@ -4250,9 +4262,9 @@ namespace ProSuite.Commons.Geom
 
 			centerZ /= points.Count;
 
-			return double.IsNaN(centerZ)
-				       ? (IPnt) new Pnt2D(centerX, centerY)
-				       : new Pnt3D(centerX, centerY, centerZ);
+			return return3dPoint
+				       ? (IPnt) new Pnt3D(centerX, centerY, centerZ)
+				       : new Pnt2D(centerX, centerY);
 		}
 
 		#endregion

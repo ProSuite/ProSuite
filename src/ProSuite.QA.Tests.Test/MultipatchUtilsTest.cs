@@ -5,10 +5,10 @@ using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.AO.Geometry.Proxy;
+using ProSuite.Commons.AO.Test;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.Geometry;
-using ProSuite.QA.Container.Test;
 using ProSuite.QA.Tests.Test.Construction;
 using ProSuite.QA.Tests.Test.TestData;
 using ProSuite.QA.Tests.Test.TestRunners;
@@ -109,7 +109,7 @@ namespace ProSuite.QA.Tests.Test
 					(int) esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95);
 
 			IIndexedMultiPatch indexedMultiPatch =
-				QaGeometryUtils.CreateIndexedMultiPatch(multiPatch);
+				ProxyUtils.CreateIndexedMultiPatch(multiPatch);
 
 			List<int> innerPartIndexes =
 				MultiPatchUtils.GetInnerRingPartIndexes(indexedMultiPatch, 0);
@@ -130,7 +130,7 @@ namespace ProSuite.QA.Tests.Test
 					(int) esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95);
 
 			IIndexedMultiPatch indexedMultiPatch =
-				QaGeometryUtils.CreateIndexedMultiPatch(multiPatch);
+				ProxyUtils.CreateIndexedMultiPatch(multiPatch);
 
 			List<int> innerPartIndexes =
 				MultiPatchUtils.GetInnerRingPartIndexes(indexedMultiPatch, 0);
@@ -152,7 +152,7 @@ namespace ProSuite.QA.Tests.Test
 					(int) esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95);
 
 			IIndexedMultiPatch indexedMultiPatch =
-				QaGeometryUtils.CreateIndexedMultiPatch(multiPatch);
+				ProxyUtils.CreateIndexedMultiPatch(multiPatch);
 
 			List<int> innerPartIndexes =
 				MultiPatchUtils.GetInnerRingPartIndexes(indexedMultiPatch, 0);
@@ -173,7 +173,7 @@ namespace ProSuite.QA.Tests.Test
 					(int) esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95);
 
 			IIndexedMultiPatch indexedMultiPatch =
-				QaGeometryUtils.CreateIndexedMultiPatch(multiPatch);
+				ProxyUtils.CreateIndexedMultiPatch(multiPatch);
 
 			List<int> innerPartIndexes =
 				MultiPatchUtils.GetInnerRingPartIndexes(indexedMultiPatch, 0);
@@ -197,7 +197,7 @@ namespace ProSuite.QA.Tests.Test
 					(int) esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95);
 
 			IIndexedMultiPatch indexedMultiPatch =
-				QaGeometryUtils.CreateIndexedMultiPatch(multiPatch);
+				ProxyUtils.CreateIndexedMultiPatch(multiPatch);
 
 			List<int> innerPartIndexes =
 				MultiPatchUtils.GetInnerRingPartIndexes(indexedMultiPatch, 0);

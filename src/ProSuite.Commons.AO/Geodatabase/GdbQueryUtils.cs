@@ -277,7 +277,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 				long oid;
 				try
 				{
-					oid = (long) queryRow.Value[sourceOidField];
+					oid = Assert.NotNull(GdbObjectUtils.ReadRowOidValue(queryRow, sourceOidField))
+					            .Value;
 				}
 				catch
 				{

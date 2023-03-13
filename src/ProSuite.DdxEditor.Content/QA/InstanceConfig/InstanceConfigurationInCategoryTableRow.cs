@@ -17,7 +17,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 		/// <summary>
 		/// Initializes a new instance of the <see cref="InstanceConfigurationInCategoryTableRow"/> class.
 		/// </summary>
-		/// <param name="entity">The quality condition.</param>
+		/// <param name="entity">The instance configuration.</param>
 		/// <param name="usageCount"></param>
 		public InstanceConfigurationInCategoryTableRow([NotNull] InstanceConfiguration entity,
 		                                               int usageCount)
@@ -25,7 +25,6 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			Assert.ArgumentNotNull(entity, nameof(entity));
 
 			InstanceConfiguration = entity;
-			AlgorithmImplementation = entity.InstanceDescriptor.Name;
 			UsageCount = usageCount;
 
 			Image = TestTypeImageLookup.GetImage(entity);
@@ -53,7 +52,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 
 		[DisplayName("Algorithm")]
 		[UsedImplicitly]
-		public string AlgorithmImplementation { get; }
+		public string AlgorithmImplementation => InstanceConfiguration.InstanceDescriptor.Name;
 
 		[DisplayName("Url")]
 		[ColumnConfiguration(Width = 100)]

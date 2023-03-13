@@ -117,6 +117,23 @@ namespace ProSuite.DomainModel.Core.QA
 		}
 
 		public static void InitializeParameterValues(
+			[NotNull] QualitySpecification qualitySpecification)
+		{
+			foreach (QualityCondition condition in
+			         qualitySpecification.Elements.Select(
+				         e => e.QualityCondition))
+			{
+				IInstanceInfo instanceInfo =
+					InstanceDescriptorUtils.GetInstanceInfo(condition.TestDescriptor);
+
+				Assert.NotNull(instanceInfo, "Failed to create instance info for {0}",
+				               condition.TestDescriptor);
+
+				InitializeParameterValues(instanceInfo, condition);
+			}
+		}
+
+		public static void InitializeParameterValues(
 			[NotNull] IInstanceInfo instanceInfo,
 			[NotNull] InstanceConfiguration instanceConfiguration)
 		{

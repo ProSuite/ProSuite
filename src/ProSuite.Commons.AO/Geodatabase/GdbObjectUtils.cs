@@ -407,9 +407,16 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 #if Server11
 			// long is expected:
-			return (long) value;
+			if (value is long longValue)
+			{
+				return longValue;
+			}
+
+			// however, for query tables it is still an Int32!
+			return Convert.ToInt64(value);
 #else
-			// First unbox (int) object to int, then cast to long (implicit).
+			// First unbox: (int)object
+			// to int, then cast to long (int implicitly converts to long).
 			// Directly casting from object (Int32) to long fails!
 			return (int) value;
 #endif
@@ -431,13 +438,20 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 #if Server11
 			// long is expected:
-			return (long) value;
+			if (value is long longValue)
+			{
+				return longValue;
+			}
+
+			// however, for query tables it is still an Int32!
+			return Convert.ToInt64(value);
 #else
 			// It is an int by convention in AO10 but ReadOnly can supply long object,
 			// depending on the implementation:
-
-			// First unbox (int) object to int, then cast to long (implicit).
-			// Directly from object (Int32) to long fails.
+			
+			// First unbox: (int)object
+			// to int, then cast to long (int implicitly converts to long).
+			// Directly casting from object (Int32) to long fails!
 			if (value is int intValue)
 			{
 				return intValue;

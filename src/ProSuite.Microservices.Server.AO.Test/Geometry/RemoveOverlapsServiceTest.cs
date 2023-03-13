@@ -41,10 +41,8 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 
 			polygon1.SpatialReference = sr;
 
-			GdbFeature sourceFeature = new GdbFeature(42, fClass)
-			                           {
-				                           Shape = polygon1
-			                           };
+			GdbFeature sourceFeature = GdbFeature.Create(42, fClass);
+			sourceFeature.Shape = polygon1;
 
 			IPolygon polygon2 = GeometryFactory.CreatePolygon(
 				GeometryFactory.CreatePoint(2600500, 1200500, sr),
@@ -52,10 +50,8 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 
 			polygon2.SpatialReference = sr;
 
-			GdbFeature targetFeature = new GdbFeature(43, fClass)
-			                           {
-				                           Shape = polygon2
-			                           };
+			GdbFeature targetFeature = GdbFeature.Create(43, fClass);
+			targetFeature.Shape = polygon2;
 
 			var sourceFeatureMsg = ProtobufGdbUtils.ToGdbObjectMsg(sourceFeature);
 			var targetFeatureMsg = ProtobufGdbUtils.ToGdbObjectMsg(targetFeature);
@@ -137,10 +133,8 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 
 			polygon1.SpatialReference = sr;
 
-			GdbFeature sourceFeature = new GdbFeature(42, fClass)
-			                           {
-				                           Shape = polygon1
-			                           };
+			GdbFeature sourceFeature = GdbFeature.Create(42, fClass);
+			sourceFeature.Shape = polygon1;
 
 			IPolygon polygon2 = GeometryFactory.CreatePolygon(
 				GeometryFactory.CreatePoint(2600500, 1200500, sr),
@@ -148,10 +142,8 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 
 			polygon2.SpatialReference = sr;
 
-			GdbFeature targetFeature = new GdbFeature(43, fClass)
-			                           {
-				                           Shape = polygon2
-			                           };
+			GdbFeature targetFeature = GdbFeature.Create(43, fClass);
+			targetFeature.Shape = polygon2;
 
 			IPolygon overlap = GeometryFactory.CreatePolygon(
 				GeometryFactory.CreatePoint(2600500, 1200500, sr),

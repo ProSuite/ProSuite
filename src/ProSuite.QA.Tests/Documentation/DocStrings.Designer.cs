@@ -4949,7 +4949,7 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Finds all polygons in &apos;polygonClass&apos; with areas smaller than &apos;limit&apos;.
+        ///   Looks up a localized string similar to Finds all polygons in &apos;polygonClass&apos; with areas smaller than &apos;limit&apos;. Features with empty geometries are not tested..
         /// </summary>
         public static string QaMinArea_0 {
             get {
@@ -4958,7 +4958,7 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Finds all parts in &apos;polygonClass&apos; with areas smaller than &apos;limit&apos;. Parts are defined by perPart.
+        ///   Looks up a localized string similar to Finds all parts in &apos;polygonClass&apos; with areas smaller than &apos;limit&apos;. Parts are defined by perPart. Features with empty geometries are not tested..
         /// </summary>
         public static string QaMinArea_1 {
             get {

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Xml.Serialization;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -27,8 +28,13 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 		public bool NeverStoreRelatedGeometryForTableRowIssues { get; set; }
 
 		[CanBeNull]
-		[XmlElement(Order = 8)]
+		[XmlArray("Filters", Order = 8)]
+		[XmlArrayItem("Filter")]
+		public List<XmlFilter> Filters { get; set; }
+
+		[CanBeNull]
+		[XmlElement(Order = 9)]
 		[DefaultValue(null)]
-		public XmlFilterExpression IssueFilterExpression { get; set; }
+		public XmlFilterExpression FilterExpression { get; set; }
 	}
 }

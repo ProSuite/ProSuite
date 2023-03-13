@@ -1,3 +1,4 @@
+using ProSuite.Commons.AO.Geometry.Proxy;
 using System.Collections.Generic;
 
 namespace ProSuite.QA.Container.Geometry

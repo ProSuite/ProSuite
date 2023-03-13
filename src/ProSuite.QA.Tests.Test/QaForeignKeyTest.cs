@@ -8,7 +8,6 @@ using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Test;
 using ProSuite.Commons.Diagnostics;
-using ProSuite.QA.Container.Test;
 using ProSuite.QA.Tests.Test.TestRunners;
 
 namespace ProSuite.QA.Tests.Test

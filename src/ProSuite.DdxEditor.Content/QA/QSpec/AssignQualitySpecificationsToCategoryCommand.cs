@@ -13,7 +13,6 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 		ItemsCommandBase<QualitySpecificationItem>
 	{
 		[NotNull] private readonly IQualitySpecificationContainerItem _containerItem;
-		[NotNull] private readonly IApplicationController _applicationController;
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="AssignQualitySpecificationsToCategoryCommand"/> class.
@@ -25,28 +24,25 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 			[NotNull] ICollection<QualitySpecificationItem> qualityConditionItems,
 			[NotNull] IQualitySpecificationContainerItem containerItem,
 			[NotNull] IApplicationController applicationController)
-			: base(qualityConditionItems)
+			: base(qualityConditionItems, applicationController)
 		{
-			Assert.ArgumentNotNull(applicationController, nameof(applicationController));
 			Assert.ArgumentNotNull(containerItem, nameof(containerItem));
 
 			_containerItem = containerItem;
-			_applicationController = applicationController;
 		}
 
 		public override string Text => "Assign to Category...";
 
 		protected override bool EnabledCore =>
-			Items.Count > 0 && ! _applicationController.HasPendingChanges;
+			Items.Count > 0 && ! ApplicationController.HasPendingChanges;
 
 		protected override void ExecuteCore()
 		{
-			Item currentItem = _applicationController.CurrentItem;
+			Item currentItem = ApplicationController.CurrentItem;
 
-			DataQualityCategory category;
 			if (! _containerItem.AssignToCategory(Items,
-			                                      _applicationController.Window,
-			                                      out category))
+			                                      ApplicationController.Window,
+			                                      out DataQualityCategory category))
 			{
 				return;
 			}
@@ -63,18 +59,17 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 				return;
 			}
 
-			if (_applicationController.GoToItem(currentItem))
+			if (ApplicationController.GoToItem(currentItem))
 			{
 				return;
 			}
 
-			var entityItem = currentItem as QualitySpecificationItem;
-			if (entityItem != null)
+			if (currentItem is QualitySpecificationItem entityItem)
 			{
 				QualitySpecification entity = _containerItem.GetQualitySpecification(entityItem);
 				if (entity != null)
 				{
-					_applicationController.GoToItem(entity);
+					ApplicationController.GoToItem(entity);
 				}
 			}
 		}
@@ -84,18 +79,18 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 			if (category == null)
 			{
 				RefreshQualitySpecificationsItem(
-					_applicationController.FindFirstItem<QAItem>());
+					ApplicationController.FindFirstItem<QAItem>());
 			}
 			else
 			{
 				if (category.CanContainOnlyQualitySpecifications)
 				{
-					_applicationController.RefreshItem(category);
+					ApplicationController.RefreshItem(category);
 				}
 				else
 				{
 					RefreshQualitySpecificationsItem(
-						_applicationController.FindItem(category));
+						ApplicationController.FindItem(category));
 				}
 			}
 		}
@@ -112,7 +107,7 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 			                                                .FirstOrDefault();
 			if (childItem != null)
 			{
-				_applicationController.RefreshItem(childItem);
+				ApplicationController.RefreshItem(childItem);
 			}
 		}
 	}

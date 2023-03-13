@@ -1,6 +1,5 @@
 using System.Drawing;
 using ProSuite.Commons.DomainModels;
-using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.UI.Dialogs;
 using ProSuite.Commons.UI.Env;
@@ -22,8 +21,6 @@ namespace ProSuite.DdxEditor.Framework.Commands
 			_image = Resources.Properties;
 		}
 
-		private readonly IApplicationController _applicationController;
-
 		/// <summary>
 		/// Initializes a new instance of the <see cref="ShowEntityPropertiesCommand&lt;E, BASE&gt;"/> class.
 		/// </summary>
@@ -32,12 +29,7 @@ namespace ProSuite.DdxEditor.Framework.Commands
 		public ShowEntityPropertiesCommand(
 			[NotNull] EntityItem<E, BASE> item,
 			[NotNull] IApplicationController applicationController)
-			: base(item)
-		{
-			Assert.ArgumentNotNull(applicationController, nameof(applicationController));
-
-			_applicationController = applicationController;
-		}
+			: base(item, applicationController) { }
 
 		#region Overrides of CommandBase
 
@@ -47,18 +39,18 @@ namespace ProSuite.DdxEditor.Framework.Commands
 
 		protected override void ExecuteCore()
 		{
-			E entity = _applicationController.ReadInTransaction(() => Item.GetEntity());
+			E entity = ApplicationController.ReadInTransaction(() => Item.GetEntity());
 
 			if (entity == null)
 			{
-				Dialog.Warning(_applicationController.Window, Text,
+				Dialog.Warning(ApplicationController.Window, Text,
 				               "The entity no longer exists");
 				return;
 			}
 
 			using (var form = new EntityPropertiesForm(entity))
 			{
-				UIEnvironment.ShowDialog(form, _applicationController.Window);
+				UIEnvironment.ShowDialog(form, ApplicationController.Window);
 			}
 		}
 

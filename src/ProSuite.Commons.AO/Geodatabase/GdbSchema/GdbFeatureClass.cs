@@ -71,7 +71,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		public GdbFeature CreateFeature(long oid,
 		                                [CanBeNull] IValueList valueList = null)
 		{
-			return new GdbFeature(oid, this, valueList);
+			return GdbFeature.Create(oid, this, valueList);
 		}
 
 		public override esriDatasetType DatasetType => esriDatasetType.esriDTFeatureClass;
