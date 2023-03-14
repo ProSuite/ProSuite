@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -20,46 +21,25 @@ namespace ProSuite.Processing.Utils
 	/// </remarks>
 	public class FieldSetter
 	{
-		private readonly Assignment[] _assignments;
+		private readonly IList<Assignment> _assignments;
 		private readonly object[] _values;
-		private string _text;
-
-		public string Text => _text ?? (_text = Format());
-		public string Name { get; private set; }
 
 		/// <param name="text">Field assignments; syntax: name = expr { ; name = expr }</param>
 		/// <param name="name">Optional name for this field setter</param>
 		public FieldSetter(string text, string name = null)
 		{
-			var assignments = Parse(text ?? string.Empty);
+			var assignments = Parse(text ?? string.Empty).ToList();
 
+			Text = Format(assignments);
 			Name = name;
 
-			_assignments = assignments.ToArray();
-			_values = new object[_assignments.Length];
-			_text = null;
+			_assignments = new ReadOnlyCollection<Assignment>(assignments);
+			_values = new object[_assignments.Count];
 		}
 
-		/// <summary>
-		/// Create a <see cref="FieldSetter"/> instance.
-		/// </summary>
-		/// <param name="text">The field assignments; syntax: name = expr { ; name = expr }</param>
-		/// <param name="name">Optional name for created field setter</param>
-		/// <returns>A <see cref="FieldSetter"/> instance</returns>
-		public static FieldSetter Create([CanBeNull] string text, string name = null)
-		{
-			return new FieldSetter(text, name);
-		}
-
-		/// <summary>
-		/// Attach a name to this field setter (may be useful
-		/// for creating meaningful error messages).
-		/// </summary>
-		public FieldSetter SetName(string name)
-		{
-			Name = name;
-			return this;
-		}
+		public string Text { get; }
+		public string Name { get; }
+		public IEnumerable<Assignment> Assignments => _assignments;
 
 		/// <summary>
 		/// Throw an exception with a descriptive message if any
@@ -105,7 +85,7 @@ namespace ProSuite.Processing.Utils
 
 			Array.Clear(_values, 0, _values.Length);
 
-			int count = _assignments.Length;
+			int count = _assignments.Count;
 
 			for (int i = 0; i < count; i++)
 			{
@@ -131,12 +111,6 @@ namespace ProSuite.Processing.Utils
 		{
 			// Here we *may* want to cache field index (measure)
 			return row.FindField(fieldName);
-		}
-
-		public IEnumerable<KeyValuePair<string, ExpressionEvaluator>> GetAssignments()
-		{
-			return _assignments.Select(
-				a => new KeyValuePair<string, ExpressionEvaluator>(a.FieldName, a.Evaluator));
 		}
 
 		/// <summary>
@@ -166,18 +140,18 @@ namespace ProSuite.Processing.Utils
 			}
 		}
 
-		private string Format()
+		private static string Format(IEnumerable<Assignment> assignments)
 		{
 			var sb = new StringBuilder();
 
-			foreach (var pair in GetAssignments())
+			foreach (var pair in assignments)
 			{
 				if (sb.Length > 0)
 				{
 					sb.Append("; ");
 				}
 
-				sb.AppendFormat("{0} = {1}", pair.Key, pair.Value.Clause);
+				sb.AppendFormat("{0} = {1}", pair.FieldName, pair.Evaluator.Clause);
 			}
 
 			return sb.ToString();
@@ -185,7 +159,7 @@ namespace ProSuite.Processing.Utils
 
 		public override string ToString()
 		{
-			return Text ?? string.Empty;
+			return string.IsNullOrEmpty(Name) ? Text : string.Concat(Name, ": ", Text);
 		}
 
 		#region Assignments Parser
@@ -196,24 +170,26 @@ namespace ProSuite.Processing.Utils
 
 			SkipWhite(text, ref index);
 
-			if (index >= text.Length)
-			{
-				yield break;
-			}
-
 			while (index < text.Length)
 			{
+				if (text[index] == ';')
+				{
+					index += 1;
+					SkipWhite(text, ref index);
+					continue;
+				}
+
 				string name = ScanName(text, ref index);
 				if (string.IsNullOrEmpty(name))
 				{
-					throw SyntaxError("Expect field name (position {0})", index);
+					throw SyntaxError("Expect field name", index);
 				}
 
 				SkipWhite(text, ref index);
 
 				if (! ScanAssignmentOp(text, ref index))
 				{
-					throw SyntaxError("Expect '=' operator (position {0})", index);
+					throw SyntaxError("Expect '=' operator", index);
 				}
 
 				var evaluator = ExpressionEvaluator.Create(text, index, out int length);
@@ -223,19 +199,21 @@ namespace ProSuite.Processing.Utils
 
 				SkipWhite(text, ref index);
 
-				if (IsChar(text, index, ';'))
+				if (index < text.Length && text[index] != ';')
 				{
-					index += 1;
+					throw SyntaxError("Expect ';' separator", index);
 				}
-
-				SkipWhite(text, ref index);
 			}
 		}
 
-		[StringFormatMethod("format")]
-		private static FormatException SyntaxError(string format, params object[] args)
+		private static FormatException SyntaxError(string message, int position = -1)
 		{
-			return new FormatException(string.Format(format, args));
+			if (position >= 0)
+			{
+				message = $"{message} (position {position})";
+			}
+
+			return new FormatException(message);
 		}
 
 		private static string ScanName(string text, ref int index)
@@ -290,7 +268,7 @@ namespace ProSuite.Processing.Utils
 
 		#region Nested type: Assignment
 
-		private readonly struct Assignment
+		public readonly struct Assignment
 		{
 			public readonly string FieldName;
 			public readonly ExpressionEvaluator Evaluator;
