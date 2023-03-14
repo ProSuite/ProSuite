@@ -408,14 +408,17 @@ namespace ProSuite.Processing
 		/// <summary>Sloppy line parse, may be used for "intellisense"</summary>
 		/// <returns>index relative to start of line</returns>
 		public static int ParseLine(string text, int textIndex, out string line,
-		                            out int nameStart, out int nameLength, out int valueStart)
+		                            out int nameStart, out int nameLength,
+		                            out int separatorIndex, out int valueStart)
 		{
 			line = GetLineAtIndex(text, textIndex, out int lineIndex);
 
 			nameLength = 0;
+			separatorIndex = -1;
 			valueStart = -1;
 
 			var position = new Position();
+
 			SkipWhite(line, position);
 			nameStart = position.Index;
 
@@ -424,11 +427,14 @@ namespace ProSuite.Processing
 			nameLength = name.Length; // or: position.Index - nameStart
 
 			SkipBlank(line, position);
+			var sep = position.Index;
 			var op = ScanOperator(line, position, ':', '=');
 			if (op == (char) 0) return lineIndex;
-			SkipBlank(line, position);
+			separatorIndex = sep;
 
+			SkipBlank(line, position);
 			valueStart = position.Index;
+
 			return lineIndex;
 		}
 
