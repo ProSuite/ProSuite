@@ -99,7 +99,7 @@ namespace ProSuite.Processing.Utils
 			                         group: attr?.Group, order: order);
 		}
 
-		private static object GetDefaultValue(MemberInfo property)
+		private static object GetDefaultValue(PropertyInfo property)
 		{
 			var paramAttr = property.GetCustomAttributes<OptionalParameterAttribute>()
 			                        .FirstOrDefault();
@@ -110,7 +110,20 @@ namespace ProSuite.Processing.Utils
 
 			var valueAttr = property.GetCustomAttributes<DefaultValueAttribute>()
 			                        .FirstOrDefault();
-			return valueAttr?.Value;
+			if (valueAttr?.Value != null)
+			{
+				return valueAttr.Value;
+			}
+
+			var type = property.PropertyType;
+			if (property.PropertyType.IsGenericType &&
+			    property.PropertyType.GetGenericTypeDefinition() == typeof(ImplicitValue<>))
+			{
+				// For ImplicitValue<T>, get default value of T (not null)
+				type = property.PropertyType.GenericTypeArguments.FirstOrDefault();
+			}
+
+			return type.GetDefaultValue();
 		}
 
 		/// <summary>
@@ -208,20 +221,6 @@ namespace ProSuite.Processing.Utils
 
 		#region Config utils
 
-		public static ImplicitValue<T> GetExpression<T>(
-			this CartoProcessConfig config, string parameterName)
-		{
-			var text = config.GetValue<string>(parameterName);
-			return ((ImplicitValue<T>) text).SetName(parameterName);
-		}
-
-		public static ImplicitValue<T> GetExpression<T>(
-			this CartoProcessConfig config, string parameterName, string defaultValue)
-		{
-			var text = config.GetValue(parameterName, defaultValue);
-			return ((ImplicitValue<T>) text)?.SetName(parameterName);
-		}
-
 		public static ImplicitValue<double> GetExpression(
 			this CartoProcessConfig config, string parameterName, double defaultValue)
 		{
@@ -244,30 +243,6 @@ namespace ProSuite.Processing.Utils
 			var text = config.GetValue<string>(parameterName, null);
 			var expr = (ImplicitValue<int>) text ?? ImplicitValue<int>.Literal(defaultValue);
 			return expr.SetName(parameterName);
-		}
-
-		public static FieldSetter GetFieldSetter(
-			this CartoProcessConfig config, string parameterName, string defaultValue)
-		{
-			var text = config.GetJoined(parameterName, "; ");
-			if (string.IsNullOrWhiteSpace(text))
-			{
-				text = defaultValue;
-			}
-
-			return new FieldSetter(text, parameterName);
-		}
-
-		public static FieldSetter GetFieldSetter(
-			this CartoProcessConfig config, string parameterName)
-		{
-			var text = config.GetJoined(parameterName, "; ");
-			if (string.IsNullOrWhiteSpace(text))
-			{
-				throw new CartoConfigException($"Required parameter {parameterName} is missing");
-			}
-
-			return new FieldSetter(text, parameterName);
 		}
 
 		#endregion

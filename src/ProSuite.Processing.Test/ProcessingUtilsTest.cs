@@ -4,6 +4,7 @@ using System.Text;
 using NUnit.Framework;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Processing.Domain;
+using ProSuite.Processing.Evaluation;
 using ProSuite.Processing.Utils;
 
 namespace ProSuite.Processing.Test;
@@ -119,12 +120,45 @@ public class ProcessingUtilsTest
 	}
 
 	[Test]
+	public void CanGetParameter()
+	{
+		var processType = typeof(TestProcess);
+
+		var p0 = ProcessingUtils.GetParameter(processType, "NoSuchParameter");
+		Assert.IsNull(p0);
+
+		var p1 = ProcessingUtils.GetParameter(processType, nameof(TestProcess.Parameter1));
+		Assert.NotNull(p1);
+		Assert.AreEqual(nameof(TestProcess.Parameter1), p1.Name);
+		Assert.AreEqual(typeof(double), p1.Type);
+		Assert.IsFalse(p1.Required);
+		Assert.IsFalse(p1.Multivalued);
+		Assert.AreEqual(1.25, p1.DefaultValue);
+
+		var p2 = ProcessingUtils.GetParameter(processType, nameof(TestProcess.Parameter2));
+		Assert.NotNull(p2);
+		Assert.AreEqual(nameof(TestProcess.Parameter2), p2.Name);
+		Assert.AreEqual(typeof(ImplicitValue<int>), p2.Type);
+		Assert.IsFalse(p2.Required);
+		Assert.IsFalse(p2.Multivalued);
+		Assert.AreEqual(3, p2.DefaultValue);
+
+		var p3 = ProcessingUtils.GetParameter(processType, nameof(TestProcess.Parameter3));
+		Assert.NotNull(p3);
+		Assert.AreEqual(nameof(TestProcess.Parameter3), p3.Name);
+		Assert.AreEqual(typeof(ImplicitValue<double>), p3.Type);
+		Assert.IsTrue(p3.Required);
+		Assert.IsFalse(p3.Multivalued);
+		Assert.AreEqual(0.0, p3.DefaultValue);
+	}
+
+	[Test]
 	public void CanExpandParameterDescription()
 	{
 		const string text = "{DefaultValue}, {PublicConstant}, {PrivateConstant}, {NoSuchField} end";
 
 		var processType = typeof(TestProcess);
-		var parameter = ProcessingUtils.GetParameter(processType, "MyParameter");
+		var parameter = ProcessingUtils.GetParameter(processType, nameof(TestProcess.Parameter1));
 		Assert.NotNull(parameter);
 
 		var result = parameter.ExpandParameterDescription(text);
@@ -139,8 +173,13 @@ public class ProcessingUtilsTest
 		[UsedImplicitly]
 		private const string PrivateConstant = "hi";
 
-		[UsedImplicitly]
 		[OptionalParameter(DefaultValue = 1.25)]
-		public double MyParameter { get; set; }
+		public double Parameter1 { get; set; }
+
+		[OptionalParameter(DefaultValue = 3)]
+		public ImplicitValue<int> Parameter2 { get; set; }
+
+		[RequiredParameter]
+		public ImplicitValue<double> Parameter3 { get; set; }
 	}
 }
