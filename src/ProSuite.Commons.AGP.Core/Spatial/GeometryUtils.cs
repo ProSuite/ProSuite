@@ -526,6 +526,106 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			set => _engine = value;
 		}
 
+		#region Access points of a multipart geometry builder
+
+		public static int GetPointCount(this MultipartBuilderEx builder, int partIndex)
+		{
+			return builder.GetSegmentCount(partIndex) + 1;
+		}
+
+		public static MapPoint GetPoint(this MultipartBuilderEx builder, int partIndex, int pointIndex)
+		{
+			if (builder is null)
+				throw new ArgumentNullException(nameof(builder));
+			if (partIndex < 0 || partIndex >= builder.PartCount)
+				throw new ArgumentOutOfRangeException(nameof(partIndex));
+			var segmentCount = builder.GetSegmentCount(partIndex);
+			if (pointIndex < 0 || pointIndex > segmentCount)
+				throw new ArgumentOutOfRangeException(nameof(pointIndex));
+			bool isEndPoint = pointIndex == segmentCount;
+			var segmentIndex = isEndPoint ? segmentCount - 1 : pointIndex;
+			var segment = builder.GetSegment(partIndex, segmentIndex);
+			return isEndPoint ? segment.EndPoint : segment.StartPoint;
+		}
+
+		public static void SetPoint(
+			this MultipartBuilderEx builder, int partIndex, int pointIndex, MapPoint point)
+		{
+			if (builder is null)
+				throw new ArgumentNullException(nameof(builder));
+			if (partIndex < 0 || partIndex >= builder.PartCount)
+				throw new ArgumentOutOfRangeException(nameof(partIndex));
+			var segmentCount = builder.GetSegmentCount(partIndex);
+			if (pointIndex < 0 || pointIndex > segmentCount)
+				throw new ArgumentOutOfRangeException(nameof(pointIndex));
+
+			// TODO beware of closed rings!
+			Segment pre, post;
+			switch (builder)
+			{
+				case PolylineBuilderEx:
+					// update StartPoint on segment i (if exists)
+					// update EndPoint on segment i-1 (if exists)
+					if (pointIndex < segmentCount)
+					{
+						post = builder.GetSegment(partIndex, pointIndex);
+						post = SetPoints(post, point, null);
+						builder.ReplaceSegment(partIndex, pointIndex, post);
+					}
+					if (pointIndex > 0)
+					{
+						pre = builder.GetSegment(partIndex, pointIndex - 1);
+						pre = SetPoints(pre, null, point);
+						builder.ReplaceSegment(partIndex, pointIndex - 1, pre);
+					}
+					break;
+
+				case PolygonBuilderEx:
+					// update StartPoint of segment i (mod N)
+					// update EndPoint of segment (i-1) (mod N)
+
+					int segmentIndex = pointIndex % segmentCount;
+					post = builder.GetSegment(partIndex, segmentIndex);
+					post = SetPoints(post, point, null);
+					builder.ReplaceSegment(partIndex, segmentIndex, post);
+
+					segmentIndex = pointIndex > 0 ? pointIndex - 1 : segmentCount - 1;
+					pre = builder.GetSegment(partIndex, segmentIndex);
+					pre = SetPoints(pre, null, point);
+					builder.ReplaceSegment(partIndex, segmentIndex, pre);
+					break;
+
+				default:
+					throw new InvalidOperationException(
+						"multipart builder is neither polygon nor polyline builder");
+			}
+		}
+
+		#endregion
+
+		public static T SetPoints<T>(
+			T segment, [CanBeNull] MapPoint startPoint, [CanBeNull] MapPoint endPoint)
+			where T : Segment
+		{
+			if (segment is null)
+				throw new ArgumentNullException(nameof(segment));
+			if (startPoint is null && endPoint is null) return segment;
+
+			var builder = SegmentBuilderEx.ConstructSegmentBuilder(segment);
+
+			if (startPoint is not null)
+			{
+				builder.StartPoint = startPoint;
+			}
+
+			if (endPoint is not null)
+			{
+				builder.EndPoint = endPoint;
+			}
+
+			return (T) builder.ToSegment();
+		}
+
 		private static IGeometryEngine _engine;
 
 		public static GeometryType TranslateEsriGeometryType(esriGeometryType esriGeometryType)
