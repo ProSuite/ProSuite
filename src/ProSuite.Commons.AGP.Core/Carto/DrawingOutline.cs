@@ -77,7 +77,7 @@ public static class DrawingOutline
 	/// where PointsPerMillimeter ≈ 2.83.
 	/// </summary>
 	[CanBeNull]
-	public static Geometry GetOutline(Geometry shape, CIMSymbol symbol, Options options)
+	public static Polygon GetOutline(Geometry shape, CIMSymbol symbol, Options options)
 	{
 		if (shape is null)
 			throw new ArgumentNullException(nameof(shape));
@@ -442,9 +442,9 @@ public static class DrawingOutline
 			// simplify graphic's geometry to fix ring orientations
 			var graphicShape = GeometryUtils.Simplify(graphic.Geometry, true);
 			var graphicOutline = GetOutline(graphicShape, graphic.Symbol, innerOptions);
-			if (graphicOutline is Polygon polygon)
+			if (graphicOutline != null)
 			{
-				var withSRef = PolygonBuilderEx.CreatePolygon(polygon, shape.SpatialReference);
+				var withSRef = PolygonBuilderEx.CreatePolygon(graphicOutline, shape.SpatialReference);
 				list.Add(withSRef);
 			}
 		}

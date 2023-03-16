@@ -15,7 +15,7 @@ public interface IProcessingSymbology
 	/// overrides, effects, and/or placements.
 	/// </summary>
 	[CanBeNull]
-	Geometry GetDrawingOutline(Feature feature);
+	Polygon GetDrawingOutline(Feature feature);
 
 	/// <summary>
 	/// Equivalent to GetDrawingOutline()?.Extent but may be faster.
@@ -30,8 +30,8 @@ public interface IProcessingSymbology
 	/// and/or placements.
 	/// </summary>
 	[CanBeNull]
-	Geometry GetDrawingOutline(PseudoFeature feature, IMapContext mapContext,
-							   DrawingOutline.Options options = null);
+	Polygon GetDrawingOutline(PseudoFeature feature, IMapContext mapContext,
+	                          DrawingOutline.Options options = null);
 
 	/// <summary>
 	/// Equivalent to GetDrawingOutline()?.Extent but may be faster

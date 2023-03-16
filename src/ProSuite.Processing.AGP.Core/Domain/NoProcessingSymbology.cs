@@ -9,7 +9,7 @@ namespace ProSuite.Processing.AGP.Core.Domain;
 
 public class NoProcessingSymbology : IProcessingSymbology
 {
-	public Geometry GetDrawingOutline(Feature feature)
+	public Polygon GetDrawingOutline(Feature feature)
 	{
 		throw new NotImplementedException();
 	}
@@ -19,7 +19,7 @@ public class NoProcessingSymbology : IProcessingSymbology
 		throw new NotImplementedException();
 	}
 
-	public Geometry GetDrawingOutline(PseudoFeature feature, IMapContext mapContext,
+	public Polygon GetDrawingOutline(PseudoFeature feature, IMapContext mapContext,
 	                                  DrawingOutline.Options options = null)
 	{
 		throw new NotImplementedException();
