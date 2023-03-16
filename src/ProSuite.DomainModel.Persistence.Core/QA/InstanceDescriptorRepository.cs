@@ -13,7 +13,7 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 	                                            IInstanceDescriptorRepository
 	{
 		#region Implementation of IInstanceDescriptorRepository
-		
+
 		public IList<T> GetInstanceDescriptors<T>() where T : InstanceDescriptor
 		{
 			using (ISession session = OpenSession(true))
@@ -75,6 +75,16 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 				}
 
 				return result;
+			}
+		}
+
+		public bool SupportsTransformersAndFilters
+		{
+			get
+			{
+				Version version = GetDatabaseSchemaVersion();
+
+				return version >= DdxSchemaVersion.FiltersAndTransformers;
 			}
 		}
 
