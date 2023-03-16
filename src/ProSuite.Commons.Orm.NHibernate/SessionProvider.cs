@@ -58,6 +58,14 @@ namespace ProSuite.Commons.Orm.NHibernate
 				SessionFactoryErrorMessage += ! string.IsNullOrEmpty(e.Message)
 					                              ? $"{e.Message}"
 					                              : "Unknown error";
+
+				// TNS Connect identifier could not be resolved, add extra remark just in case...
+				if (e.Message.Contains("ORA-12154") &&
+				    string.IsNullOrEmpty(Environment.GetEnvironmentVariable("TNS_ADMIN")))
+				{
+					SessionFactoryErrorMessage +=
+						$"{Environment.NewLine}Please ensure the TNS_ADMIN environment variable is defined if the Data Source of the DdxConnection contains the TNS Name";
+				}
 			}
 		}
 
