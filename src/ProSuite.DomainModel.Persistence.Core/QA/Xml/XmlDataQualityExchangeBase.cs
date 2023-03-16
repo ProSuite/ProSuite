@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -66,6 +67,33 @@ namespace ProSuite.DomainModel.Persistence.Core.QA.Xml
 					UnitOfWork.Reattach(qualitySpecification);
 				}
 			}
+		}
+
+		protected IList<InstanceDescriptor> GetAllInstanceDescriptors()
+		{
+			if (! InstanceDescriptors.SupportsTransformersAndFilters)
+			{
+				// Prevent missing table exception:
+				return InstanceDescriptors.GetInstanceDescriptors<TestDescriptor>()
+				                          .Cast<InstanceDescriptor>()
+				                          .ToList();
+			}
+
+			return InstanceDescriptors.GetAll();
+		}
+
+		protected IList<InstanceConfiguration> GetAllInstanceConfigurations()
+		{
+			// If InstanceDescriptors do not support transformers, neither does the InstanceConfiguration repo.
+			if (! InstanceDescriptors.SupportsTransformersAndFilters)
+			{
+				// Prevent missing table exception:
+				return InstanceConfigurations.GetInstanceConfigurations<QualityCondition>()
+				                             .Cast<InstanceConfiguration>()
+				                             .ToList();
+			}
+
+			return InstanceConfigurations.GetAll();
 		}
 	}
 }
