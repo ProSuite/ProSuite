@@ -30,7 +30,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			TestUtils.ConfigureUnitTestLogging();
+			Commons.Test.Testing.TestUtils.ConfigureUnitTestLogging();
 
 			_msg.IsVerboseDebugEnabled = true;
 
