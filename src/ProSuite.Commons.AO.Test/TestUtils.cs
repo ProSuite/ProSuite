@@ -1,7 +1,5 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
@@ -12,9 +10,7 @@ using ProSuite.Commons.AO.Geometry.Serialization;
 using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.AO.Test.TestSupport;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Logging;
 using ProSuite.Commons.Testing;
-using ProSuite.Commons.Text;
 using Path = System.IO.Path;
 
 namespace ProSuite.Commons.AO.Test
@@ -26,51 +22,10 @@ namespace ProSuite.Commons.AO.Test
 		private const string _poly1 = "poly1.xml";
 		private const string _poly2 = "poly2.xml";
 
-		private const string _defaultLoggingConfigurationFile = "prosuite.logging.test.xml";
-
 		private static int _lastClassId;
 
 		public static string OracleDbNameSde => "PROSUITE_TEST_SERVER";
 		public static string OracleDbNameDdx => "PROSUITE_TEST_DDX";
-
-		public static void ConfigureUnitTestLogging(string loggingConfigurationFile = null)
-		{
-			string log4NetConfig = loggingConfigurationFile ?? _defaultLoggingConfigurationFile;
-
-			List<string> logDirs = new List<string>();
-
-			string currentDir = Environment.CurrentDirectory;
-
-			if (Directory.Exists(currentDir))
-			{
-				logDirs.Add(currentDir);
-			}
-
-			string assemblyDir =
-				Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-			Assert.IsNotNull(assemblyDir);
-			if (Directory.Exists(assemblyDir))
-			{
-				logDirs.Add(assemblyDir);
-
-				DirectoryInfo parent = Directory.GetParent(assemblyDir);
-				if (parent?.Exists == true)
-				{
-					logDirs.Add(parent.FullName);
-				}
-			}
-
-			if (! LoggingConfigurator.Configure(log4NetConfig, logDirs))
-			{
-				Console.WriteLine("Logging configurator failed.");
-				Console.WriteLine("logging configuration file: " + log4NetConfig);
-				Console.WriteLine("Search directories: " + StringUtils.Concatenate(logDirs, ", "));
-			}
-			else
-			{
-				Console.WriteLine("Logging configured.");
-			}
-		}
 
 		public static IWorkspace OpenUserWorkspaceOracle([NotNull] string repositoryName = "SDE")
 		{

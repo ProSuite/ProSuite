@@ -37,14 +37,6 @@
     <EmbeddedResource Remove="TestData\**" />
     <None Remove="TestData\**" />
   </ItemGroup>
-  <ItemGroup>
-    <None Remove="prosuite.logging.test.xml" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="prosuite.logging.test.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
 
   <ItemGroup>
     <Reference Include="ESRI.ArcGIS.DataSourcesRaster, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
