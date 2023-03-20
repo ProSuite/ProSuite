@@ -314,10 +314,20 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			try
 			{
-				if (typeof(T) == typeof(int) && value is short)
+				if (typeof(T) == typeof(int))
 				{
-					// Short Integer field type is returned as short, cannot unbox directly to int:
-					return Convert.ToInt32(value) as T?;
+					if (value is short)
+					{
+						// Short Integer field type is returned as short, cannot unbox directly to int:
+						return Convert.ToInt32(value) as T?;
+					}
+
+					if (value is long)
+					{
+						// Typically for long OID type that currently still is known to be an int.
+						// But long object cannot unbox directly to int:
+						return Convert.ToInt32(value) as T?;
+					}
 				}
 
 				if (typeof(T) == typeof(Guid))
@@ -448,7 +458,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 #else
 			// It is an int by convention in AO10 but ReadOnly can supply long object,
 			// depending on the implementation:
-			
+
 			// First unbox: (int)object
 			// to int, then cast to long (int implicitly converts to long).
 			// Directly casting from object (Int32) to long fails!
