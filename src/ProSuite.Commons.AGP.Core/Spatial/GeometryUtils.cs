@@ -123,8 +123,8 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 
 		public static Envelope Union([CanBeNull] Envelope a, [CanBeNull] Envelope b)
 		{
-			if (a == null) return b;
-			if (b == null) return a;
+			if (a is null || a.IsEmpty) return b;
+			if (b is null || b.IsEmpty) return a;
 			return a.Union(b);
 		}
 
@@ -173,8 +173,8 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 		public static Geometry Intersection(
 			[CanBeNull] Geometry a, [CanBeNull] Geometry b)
 		{
-			if (a == null) return b;
-			if (b == null) return a;
+			if (a is null) return null;
+			if (b is null) return null;
 			return Engine.Intersection(a, b);
 		}
 
