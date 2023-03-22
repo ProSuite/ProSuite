@@ -10,7 +10,7 @@ public interface ICurve
 {
 	bool IsEmpty { get; }
 
-	bool IsClosed { get; }
+	bool IsClosed { get; } // TODO rename IsCycle (intent, not accident)
 
 	Envelope Envelope { get; }
 
@@ -28,7 +28,13 @@ public interface ICurve
 
 	bool GetTangent(double distanceAlong, out double dx, out double dy);
 
+	MapPoint QueryPointAndDistance(
+		MapPoint point, out int closestSegmentIndex,
+		out double distanceFromSegment, out double distanceAlongSegment);
+
 	// may add QueryPoint(), QueryPointAndDistance(), GetSubcurve(), Reversed(), etc.
+
+	SpatialReference SpatialReference { get; }
 }
 
 public class Curve : ICurve
@@ -39,16 +45,20 @@ public class Curve : ICurve
 	public double Length { get; }
 	public MapPoint StartPoint { get; }
 	public MapPoint EndPoint { get; }
-	public int SRID { get; }
+	public SpatialReference SpatialReference { get; }
 
 	public IReadOnlyList<Segment> Segments { get; }
 
-	public Curve(IEnumerable<Segment> path)
+	// TODO Check usages and consider passing explicit SRef!
+	public Curve(IEnumerable<Segment> path, SpatialReference sref = null)
 	{
 		Segments = path?.ToArray() ?? Array.Empty<Segment>();
 
-		var sref = Segments.Select(s => s.SpatialReference)
-		                   .FirstOrDefault(s => s != null);
+		if (sref is null)
+		{
+			sref = Segments.Select(s => s.SpatialReference)
+			               .FirstOrDefault(s => s != null);
+		}
 
 		var builder = new EnvelopeBuilderEx(sref);
 
@@ -88,7 +98,7 @@ public class Curve : ICurve
 		}
 
 		Envelope = builder.ToGeometry().Extent;
-		SRID = sref?.Wkid ?? 0;
+		SpatialReference = sref;
 	}
 
 	public MapPoint GetPoint(double distanceAlong)
@@ -178,6 +188,43 @@ public class Curve : ICurve
 		var dy = line.EndCoordinate.Y - line.StartCoordinate.Y;
 
 		return Math.Atan2(dy, dx);
+	}
+
+	public MapPoint QueryPointAndDistance(
+		MapPoint point, out int closestSegmentIndex,
+		out double distanceFromSegment, out double distanceAlongSegment)
+	{
+		// For now: iterate segments, looking for min distance. Better ideas?
+
+		const SegmentExtensionType extension = SegmentExtensionType.NoExtension;
+
+		double minDistanceFrom = double.MaxValue;
+		double distanceAlong = double.NaN;
+		MapPoint closestFoot = null;
+		int segmentIndex = -1;
+
+		int count = Segments.Count;
+		for (int i = 0; i < count; i++)
+		{
+			var segment = Segments[i];
+
+			var foot = GeometryEngine.Instance.QueryPointAndDistance(
+				segment, extension, point, AsRatioOrLength.AsLength,
+				out var distAlong, out var distFrom, out _);
+
+			if (distFrom < minDistanceFrom)
+			{
+				minDistanceFrom = distFrom;
+				distanceAlong = distAlong;
+				closestFoot = foot;
+				segmentIndex = i;
+			}
+		}
+
+		closestSegmentIndex = segmentIndex;
+		distanceFromSegment = minDistanceFrom;
+		distanceAlongSegment = distanceAlong;
+		return closestFoot;
 	}
 
 	private Segment FindSegment(double distanceAlongCurve, out double distanceAlongSegment)

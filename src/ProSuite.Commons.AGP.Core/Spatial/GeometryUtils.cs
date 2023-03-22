@@ -15,6 +15,11 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			return new Coordinate2D(point.X + dx, point.Y + dy);
 		}
 
+		public static double GetXyTolerance(Geometry geometry)
+		{
+			return geometry?.SpatialReference?.XYTolerance ?? double.NaN;
+		}
+
 		public static int GetPointCount([CanBeNull] Geometry geometry)
 		{
 			return geometry?.PointCount ?? 0;
@@ -433,10 +438,10 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 
 		public static double GetDistanceAlongCurve(Multipart curve, MapPoint point)
 		{
-			var segmentExtension = SegmentExtensionType.NoExtension;
+			const SegmentExtensionType extension = SegmentExtensionType.NoExtension;
 
 			Engine.QueryPointAndDistance(
-				curve, segmentExtension, point, AsRatioOrLength.AsLength,
+				curve, extension, point, AsRatioOrLength.AsLength,
 				out double distanceAlong, out _, out _);
 			return distanceAlong;
 		}
