@@ -23,7 +23,6 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
-    <Optimize>false</Optimize>
     <DocumentationFile>$(OutputDirectory)\$(Configuration)\ProSuite.Commons.xml</DocumentationFile>
   </PropertyGroup>
 

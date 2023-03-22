@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <ProjectGuid>{E9137523-483C-44D6-BE53-ADAACEFBBF5F}</ProjectGuid>
 
@@ -29,7 +29,6 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
-    <Optimize>false</Optimize>
     <DefineConstants>TRACE;$(VSArcGISProduct);$(ArcGISServerVersion)</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
