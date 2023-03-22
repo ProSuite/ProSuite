@@ -483,20 +483,18 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			return (Polyline) Engine.Clip(polyline, clipExtent);
 		}
 
-		public static T EnsureSpatialReference<T>(T geometry, SpatialReference spatialReference)
+		public static T EnsureSpatialReference<T>(T geometry, SpatialReference sref)
 			where T : Geometry
 		{
-			if (spatialReference is null)
+			if (geometry is null) return null;
+			if (sref is null) return geometry;
+
+			if (SpatialReference.AreEqual(geometry.SpatialReference, sref))
 			{
 				return geometry;
 			}
 
-			if (SpatialReference.AreEqual(geometry.SpatialReference, spatialReference))
-			{
-				return geometry;
-			}
-
-			return (T) Engine.Project(geometry, spatialReference);
+			return (T) Engine.Project(geometry, sref);
 		}
 
 		public static bool HasCurves(this Geometry geometry)
