@@ -207,10 +207,21 @@ public class ControlPointUtilsTest
 		Assert.AreEqual(3, c5); // 2nd (last) gap was not closed!
 		Assert.AreEqual(7, p5.Points.Count(p => p.ID == 0));
 
+		// It also works for Polyline instances (notice that 2nd pair is not closed):
+		var polyline1 = PolylineBuilderEx.CreatePolyline(
+			new[]
+			{
+				Pt(0, 0), Pt(1, 0, 1), Pt(2, 0), Pt(3, 0, 1), Pt(4, 0), Pt(5, 0, 1), Pt(6, 0)
+			});
+		var p6 = ControlPointUtils.ResetControlPointPairs(polyline1, out int c6);
+		Assert.AreEqual(typeof(Polyline), p6.GetType());
+		Assert.AreEqual(3, c6);
+		Assert.AreEqual(7, p6.Points.Count(p => p.ID == 0));
+
 		// It also works straight on a MultipartBuilderEx instance:
 		var builder = new PolylineBuilderEx(polygon2);
-		var c6 = ControlPointUtils.ResetControlPointPairs(builder);
-		Assert.AreEqual(3, c6);
+		var c7 = ControlPointUtils.ResetControlPointPairs(builder);
+		Assert.AreEqual(3, c7);
 	}
 
 	#region Test utils

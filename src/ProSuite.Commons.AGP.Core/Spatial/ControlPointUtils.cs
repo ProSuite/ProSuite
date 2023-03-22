@@ -191,6 +191,21 @@ public static class ControlPointUtils
 		return builder.ToGeometry();
 	}
 
+	/// <summary>
+	/// See <see cref="ResetControlPointPairs(Polygon,out int,int,Polygon)"/>
+	/// </summary>
+	public static Polyline ResetControlPointPairs(
+		Polyline shape, out int count, int value = -1, Polygon perimeter = null)
+	{
+		count = 0;
+		if (shape is null) return null;
+		if (!shape.HasID) return shape;
+
+		var builder = new PolylineBuilderEx(shape);
+		count = ResetControlPointPairs(builder, value, perimeter);
+		return builder.ToGeometry();
+	}
+
 	public static int ResetControlPointPairs(
 		MultipartBuilderEx builder, int value = -1, Polygon perimeter = null)
 	{
