@@ -185,11 +185,13 @@ namespace ProSuite.Processing
 
 			var types = definitions
 			            .Where(d => d.ResolvedType != null)
-			            .OrderBy(d => d.TypeAlias)
-			            .Select(d => new XElement("ProcessType",
-			                                      MakeAttribute("name", d.TypeAlias),
+			            .GroupBy(d => d.TypeAlias)
+			            .OrderBy(g => g.Key)
+			            .Select(g => new XElement("ProcessType",
+			                                      MakeAttribute("name", g.Key), // i.e., TypeAlias
 			                                      new XElement("ClassDescriptor",
-															   MakeAttribute("type", d.ResolvedType?.FullName))))
+															   MakeAttribute("type", g.First().ResolvedType?.FullName),
+				                                      MakeAttribute("assembly", g.First().ResolvedType?.Assembly.GetName().Name))))
 			            .ToList();
 
 			var procs = definitions
