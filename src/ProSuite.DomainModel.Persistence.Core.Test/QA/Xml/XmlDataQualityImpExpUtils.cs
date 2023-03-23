@@ -25,6 +25,20 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.QA.Xml
 			                              "EsriDE.ProSuite.QA.Tests");
 			var t2 = new TestDescriptor("test2", cd2, 0);
 
+			var transformerDescriptor = new TransformerDescriptor(
+				"TrGeometryToPoints", new ClassDescriptor(
+					"ProSuite.QA.Tests.Transformers.TrGeometryToPoints",
+					"ProSuite.QA.Tests"), 0);
+			var issueFilterDescriptor = new IssueFilterDescriptor(
+				"IfWithin", new ClassDescriptor(
+					"ProSuite.QA.Tests.IssueFilters.IfWithin",
+					"ProSuite.QA.Tests"), 0);
+
+			var transformerConfig =
+				new TransformerConfiguration("transformer1", transformerDescriptor);
+			var issueFilterConfig =
+				new IssueFilterConfiguration("issueFilter1", issueFilterDescriptor);
+
 			var q1 = new QualityCondition("cond1", t1);
 
 			IInstanceInfo instanceInfo =
@@ -49,6 +63,10 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.QA.Xml
 			q1.AddParameterValue(scalarTestParameterValue);
 
 			var q2 = new QualityCondition("cond2", t1);
+			InstanceConfigurationUtils.AddParameterValue(q2, "featureClass", transformerConfig);
+			InstanceConfigurationUtils.AddParameterValue(q2, "limit", "0.5");
+			q2.AddIssueFilterConfiguration(issueFilterConfig);
+
 			var q3 = new QualityCondition("cond3", t2);
 
 			var qualitySpecification = new QualitySpecification("spec1")

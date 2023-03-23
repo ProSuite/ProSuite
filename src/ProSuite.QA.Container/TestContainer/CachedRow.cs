@@ -1,15 +1,10 @@
-using System;
-using System.Collections.Generic;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
-using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Geometry.Proxy;
-using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
-using ProSuite.QA.Container.Geometry;
+using System.Collections.Generic;
 
 namespace ProSuite.QA.Container.TestContainer
 {
@@ -21,13 +16,22 @@ namespace ProSuite.QA.Container.TestContainer
 
 		public CachedRow([NotNull] IReadOnlyFeature feature,
 		                 [CanBeNull] IUniqueIdProvider uniqueIdProvider = null)
-			: this(feature)
+			: this(InitUniqueId(feature, uniqueIdProvider)) { }
+
+		// Remark: UniqueId of Feature must be calculated before .ctor of BaseRow,
+		// because is needed to assign the readonly property BaseRow.UniqueId 
+		// --> do it in this static method
+		private static IReadOnlyFeature InitUniqueId(
+			[NotNull] IReadOnlyFeature feature,
+			[CanBeNull] IUniqueIdProvider uniqueIdProvider)
 		{
 			if (uniqueIdProvider is IUniqueIdProvider<IReadOnlyFeature> up)
 			{
 				UniqueId uniqueId = new UniqueId(feature, up);
-				((IUniqueIdObjectEdit) feature).UniqueId = uniqueId;
+				((IUniqueIdObjectEdit)feature).UniqueId = uniqueId;
 			}
+
+			return feature;
 		}
 
 		private CachedRow([NotNull] IReadOnlyFeature feature)

@@ -29,7 +29,6 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
-    <Optimize>false</Optimize>
     <DefineConstants>TRACE;$(VSArcGISProduct);$(ArcGISServerVersion)</DefineConstants>
     <DocumentationFile>$(OutputDirectory)\$(Configuration)\ProSuite.Commons.AO.xml</DocumentationFile>
   </PropertyGroup>

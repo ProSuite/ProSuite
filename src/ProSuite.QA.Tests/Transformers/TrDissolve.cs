@@ -181,20 +181,23 @@ namespace ProSuite.QA.Tests.Transformers
 			public long BaseOid { get; }
 			public IReadOnlyList<long> BaseOids => _baseOids;
 			private readonly List<long> _baseOids;
+			private readonly IReadOnlyTable _table;
 
-			public UniqueIdKey(IEnumerable<long> baseOids)
+			public UniqueIdKey(IReadOnlyTable table, IEnumerable<long> baseOids)
 			{
 				_baseOids = new List<long>(baseOids);
 				Assert.True(_baseOids.Count > 0, "empty List");
 				_baseOids.Sort();
 				BaseOid = _baseOids[0];
+				_table = table;
 			}
-
-			public IReadOnlyRow BaseFeature { get; set; }
 
 			public IList<InvolvedRow> GetInvolvedRows()
 			{
-				return InvolvedRowUtils.GetInvolvedRows(BaseFeature);
+				List<InvolvedRow> involveds =
+					new List<InvolvedRow>(
+						_baseOids.Select(oid => new InvolvedRow(_table.Name, oid)));
+				return involveds;
 			}
 		}
 
@@ -522,12 +525,13 @@ namespace ProSuite.QA.Tests.Transformers
 				IValueList rowValues = new ReadOnlyRowBasedValues(mainRow);
 				joinedValueList.AddList(rowValues, TableFields.FieldIndexMapping);
 
-				UniqueIdKey key = new UniqueIdKey(rows.Select(r => r.OID));
+				UniqueIdKey key = new UniqueIdKey(mainRow.Table, rows.Select(r => r.OID));
 				long oid = _uniqueIdProvider.GetUniqueId(key);
+
 				var dissolved = Resulting.CreateObject(oid, joinedValueList);
 
 				dissolved.Shape = shape;
-				key.BaseFeature = dissolved;
+				// key.BaseFeature = dissolved;
 
 				return (IReadOnlyFeature) dissolved;
 			}

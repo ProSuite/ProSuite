@@ -820,6 +820,7 @@ namespace ProSuite.QA.Tests.Test
 			IFeature f3 = fc.CreateFeature();
 			f3.set_Value(foreignKeyFieldIndex, row2.OID);
 			f3.Shape = CurveConstruction.StartLine(300, 200)
+			                            .LineTo(401, 100)
 			                            .LineTo(400, 100)
 			                            .Curve;
 			f3.Store();
