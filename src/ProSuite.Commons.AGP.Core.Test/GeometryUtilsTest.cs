@@ -212,12 +212,93 @@ public class GeometryUtilsTest
 		Assert.AreEqual(2.0, extent.YMax, 0.00001);
 	}
 
+	[Test]
+	public void CanEnsureSpatialReference()
+	{
+		var wgs84 = SpatialReferences.WGS84;
+
+		// geometry can be null (and null shall be returned):
+
+		Assert.IsNull(GeometryUtils.EnsureSpatialReference((Geometry) null, null));
+		Assert.IsNull(GeometryUtils.EnsureSpatialReference((Geometry) null, wgs84));
+
+		// make geometry with no spatial reference:
+
+		var polygon = PolygonBuilderEx.CreatePolygon(
+			new[] { Pt(0, 0), Pt(0, 1), Pt(1, 1), Pt(1, 0), Pt(0, 0) });
+		Assert.IsNull(polygon.SpatialReference);
+
+		// geometry has no spatial reference (just set it):
+
+		var g1 = GeometryUtils.EnsureSpatialReference(polygon, null);
+		Assert.IsNull(g1.SpatialReference); // was a no-op
+
+		var g2 = GeometryUtils.EnsureSpatialReference(polygon, wgs84);
+		Assert.AreEqual(wgs84, g2.SpatialReference); // sref was set
+
+		// make geometry with spatial reference:
+
+		var ch03 = SpatialReferenceBuilder.CreateSpatialReference(21781);
+		var ch95 = SpatialReferenceBuilder.CreateSpatialReference(2056);
+		var sref1 = new SpatialReferenceBuilder(ch03) { XYTolerance = 0.0025 }
+			.ToSpatialReference();
+		var sref2 = new SpatialReferenceBuilder(ch03) { XYTolerance = 0.0125 }
+			.ToSpatialReference();
+
+		var polyline = PolylineBuilderEx.CreatePolyline(
+			new[] { Pt(600000, 200000), Pt(600100, 200100), Pt(600200, 200000) }, sref1);
+		Assert.AreEqual(sref1, polyline.SpatialReference);
+
+		// geometry has spatial reference (must project):
+
+		var g3 = GeometryUtils.EnsureSpatialReference(polyline, null);
+		Assert.AreEqual(sref1, g3.SpatialReference); // was a no-op
+
+		var g4 = GeometryUtils.EnsureSpatialReference(polyline, polyline.SpatialReference);
+		Assert.AreEqual(sref1, g4.SpatialReference); // was a no-op (already same sref)
+
+		// TODO These fail in test runner with a NullRefEx from GeometryEngine.Project() -- seems PE not fully available?
+		//
+		//var g5 = GeometryUtils.EnsureSpatialReference(polyline, sref2);
+		//Assert.AreEqual(sref2, g5.SpatialReference); // did "project" (change XY tolerance)
+		//
+		//var g6 = GeometryUtils.EnsureSpatialReference(polyline, ch95);
+		//Assert.AreEqual(ch95, g6.SpatialReference); // did project (CH03 to CH95)
+	}
+
+	[Test]
+	public void CanReplaceSpatialReference()
+	{
+		// Testing the Pro SDK function:
+
+		var wgs84 = SpatialReferences.WGS84;
+		var webMerc = SpatialReferences.WebMercator;
+
+		var p0 = Pt(1.2, 3.4);
+		Assert.IsNull(p0.SpatialReference);
+
+		var p1 = (MapPoint) GeometryBuilderEx.ReplaceSpatialReference(p0, wgs84);
+		Assert.AreEqual(wgs84, p1.SpatialReference);
+		Assert.AreEqual(p0.X, p1.X);
+		Assert.AreEqual(p0.Y, p1.Y);
+
+		var p2 = (MapPoint) GeometryBuilderEx.ReplaceSpatialReference(p1, webMerc);
+		Assert.AreEqual(webMerc, p2.SpatialReference);
+		Assert.AreEqual(p0.X, p2.X);
+		Assert.AreEqual(p0.Y, p2.Y);
+
+		var p3 = (MapPoint) GeometryBuilderEx.ReplaceSpatialReference(p2, null);
+		Assert.IsNull(p3.SpatialReference);
+		Assert.AreEqual(p0.X, p3.X);
+		Assert.AreEqual(p0.Y, p3.Y);
+	}
+
+	#region Creating test geometries
+
 	private static MapPoint Pt(double x, double y)
 	{
 		return MapPointBuilderEx.CreateMapPoint(x, y);
 	}
-
-	#region Creating test geometries
 
 	private static Polygon CreateUnitSquarePolygon()
 	{

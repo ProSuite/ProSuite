@@ -488,11 +488,25 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			return (Polyline) Engine.Clip(polyline, clipExtent);
 		}
 
+		/// <summary>
+		/// Return the given <paramref name="geometry"/> in the given
+		/// spatial reference. If <paramref name="sref"/> is null,
+		/// return <paramref name="geometry"/> as-is. If the given
+		/// <paramref name="geometry"/> has no spatial reference, assume
+		/// it's in the given spatial reference and just set it. Otherwise,
+		/// project <paramref name="geometry"/> (if it has a different
+		/// spatial reference).
+		/// </summary>
 		public static T EnsureSpatialReference<T>(T geometry, SpatialReference sref)
 			where T : Geometry
 		{
 			if (geometry is null) return null;
-			if (sref is null) return geometry;
+			if (sref is null) return geometry; // TODO unsure: set geom's sref to null instead?
+
+			if (geometry.SpatialReference is null)
+			{
+				return (T) GeometryBuilderEx.ReplaceSpatialReference(geometry, sref);
+			}
 
 			if (SpatialReference.AreEqual(geometry.SpatialReference, sref))
 			{
