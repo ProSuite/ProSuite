@@ -272,7 +272,7 @@ namespace ProSuite.Commons.AO.Geometry.Proxy
 		private IPolyline GetLinearSubpart(int startSegmentIndex, double startFraction,
 										   int endSegmentIndex, double endFraction)
 		{
-			IPointCollection4 subpart = new PolylineClass();
+			IPointCollection4 subpart = new PolylineClass() { ZAware = true };
 
 			int add = 2;
 			if (endFraction == 0)

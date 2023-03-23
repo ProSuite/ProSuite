@@ -245,6 +245,12 @@ namespace ProSuite.Microservices.Server.AO.QA
 			}
 			catch (InvalidOperationException ex)
 			{
+				if (finalStatus == ServiceCallStatus.Cancelled)
+				{
+					// Typically: System.InvalidOperationException: Already finished.
+					return finalStatus;
+				}
+
 				// For example: System.InvalidOperationException: Only one write can be pending at a time
 				_msg.Warn(
 					"Error sending progress to the client. Retrying the last response in 1s...",
