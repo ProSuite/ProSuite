@@ -13,7 +13,6 @@ using ProSuite.DomainModel.AGP.DataModel;
 using ProSuite.DomainModel.AGP.QA;
 using ProSuite.DomainModel.AGP.Workflow;
 using ProSuite.DomainModel.Core.QA;
-using ProSuite.Microservices.Client.AGP.GeometryProcessing;
 using ProSuite.Microservices.Definitions.QA;
 using ProSuite.Microservices.Definitions.Shared;
 
@@ -25,7 +24,7 @@ namespace ProSuite.Microservices.Client.AGP.QA
 
 		private const int _timeoutMilliseconds = 60000;
 
-		public static async Task<List<ProjectWorkspace>> GetProjectWorkspaceCandidates(
+		public static async Task<List<ProjectWorkspace>> GetProjectWorkspaceCandidatesAsync(
 			[NotNull] ICollection<Table> tables,
 			[NotNull] QualityVerificationDdxGrpc.QualityVerificationDdxGrpcClient ddxClient)
 		{
@@ -66,6 +65,8 @@ namespace ProSuite.Microservices.Client.AGP.QA
 
 			request.DatasetIds.AddRange(datasetIds);
 
+			_msg.DebugFormat("Getting quality specifications for {0} datasets.", datasetIds.Count);
+
 			GetSpecificationsResponse response =
 				await RpcCallUtils.TryAsync(async callOptions =>
 					                            await ddxClient.GetQualitySpecificationsAsync(
@@ -88,6 +89,9 @@ namespace ProSuite.Microservices.Client.AGP.QA
 
 				result.Add(specification);
 			}
+
+			_msg.DebugFormat("Found {0} quality specifications for {1} datasets.", result.Count,
+			                 datasetIds.Count);
 
 			return result;
 		}
