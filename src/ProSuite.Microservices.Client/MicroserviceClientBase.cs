@@ -236,7 +236,8 @@ namespace ProSuite.Microservices.Client
 		{
 			if (string.IsNullOrEmpty(HostName))
 			{
-				_msg.Debug("Host name is null or empty. No channel opened.");
+				_msg.DebugFormat("{0}: Host name is null or empty. No channel opened.",
+				                 ServiceDisplayName);
 				return;
 			}
 
@@ -267,7 +268,8 @@ namespace ProSuite.Microservices.Client
 
 			Channel = channel;
 
-			_msg.DebugFormat("Created grpc channel to {0} on port {1}", HostName, Port);
+			_msg.DebugFormat("Created grpc channel to {0} on port {1} for {2}", HostName, Port,
+			                 ServiceDisplayName);
 
 			_healthClient = new Health.HealthClient(Channel);
 
@@ -323,10 +325,10 @@ namespace ProSuite.Microservices.Client
 
 		protected abstract void ChannelOpenedCore(Channel channel);
 
-		protected static Channel TryGetChannelFromLoadBalancer(Channel lbChannel,
-		                                                       ChannelCredentials credentials,
-		                                                       string serviceName,
-		                                                       int maxMessageLength)
+		protected Channel TryGetChannelFromLoadBalancer(Channel lbChannel,
+		                                                ChannelCredentials credentials,
+		                                                string serviceName,
+		                                                int maxMessageLength)
 		{
 			ServiceDiscoveryGrpc.ServiceDiscoveryGrpcClient lbClient =
 				new ServiceDiscoveryGrpc.ServiceDiscoveryGrpcClient(lbChannel);
@@ -346,13 +348,15 @@ namespace ProSuite.Microservices.Client
 				                                         serviceLocation.Port, credentials,
 				                                         maxMessageLength);
 
-				_msg.DebugFormat("The load balancer is suggesting {0}", result.ResolvedTarget);
+				_msg.DebugFormat("The load balancer is suggesting {0} for the {1}",
+				                 result.ResolvedTarget, ServiceDisplayName);
 
 				return result;
 			}
 
 			// Assumption: A load balancer is never also serving real requests -> lets not use it at all!
-			_msg.Debug("The load balancer has no service locations available.");
+			_msg.DebugFormat("The load balancer has no service locations available for the {0}.",
+			                 ServiceDisplayName);
 
 			return null;
 		}
@@ -410,7 +414,7 @@ namespace ProSuite.Microservices.Client
 			                 Path.GetFileNameWithoutExtension(executable), arguments);
 		}
 
-		private static bool IsServingLoadBalancerEndpoint(
+		private bool IsServingLoadBalancerEndpoint(
 			[NotNull] Channel channel,
 			[NotNull] ChannelCredentials credentials,
 			string serviceName,
@@ -438,13 +442,15 @@ namespace ProSuite.Microservices.Client
 
 				if (suggestedLocation != null)
 				{
-					_msg.DebugFormat("Using serving load balancer at {0}", channel.ResolvedTarget);
+					_msg.DebugFormat("Using serving load balancer at {0} to connect to {1}",
+					                 channel.ResolvedTarget, ServiceDisplayName);
 					return true;
 				}
 
 				// Assumption: A load balancer is never also serving real requests -> lets not use it at all!
-				_msg.Debug(
-					"The load balancer has no service locations available. It will not be used.");
+				_msg.DebugFormat(
+					"The load balancer has no service locations available for {0}. It will not be used.",
+					ServiceDisplayName);
 
 				return false;
 			}
@@ -522,7 +528,7 @@ namespace ProSuite.Microservices.Client
 			                 ChannelServiceName, address, statusCode, Channel?.State);
 		}
 
-		private static int GetFreeTcpPort()
+		private int GetFreeTcpPort()
 		{
 			TcpListener tcpListener = new TcpListener(IPAddress.Loopback, 0);
 
@@ -532,7 +538,8 @@ namespace ProSuite.Microservices.Client
 
 			tcpListener.Stop();
 
-			_msg.DebugFormat("Using ephemeral port {0}", port);
+			_msg.DebugFormat("Using ephemeral port {0} to connect to {1}", port,
+			                 ServiceDisplayName);
 
 			return port;
 		}
