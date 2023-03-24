@@ -268,16 +268,29 @@ namespace ProSuite.Commons.AO.Geodatabase
 		public bool HasOID => _featureClass.HasOID;
 
 #if Server11
-		public long OID =>
-			_oidFieldIndex < 0
-				? -1 // Weird: IRepRenderer.get_SymbolByFeature reads IFeature.OID, but -1 seems fine
-				: (long) _fieldValues[_oidFieldIndex];
+		public long OID
 #else
-		public int OID =>
-			_oidFieldIndex < 0
-				? -1 // Weird: IRepRenderer.get_SymbolByFeature reads IFeature.OID, but -1 seems fine
-				: (int) _fieldValues[_oidFieldIndex];
+		public int OID
 #endif
+		{
+			get
+			{
+				if (_oidFieldIndex < 0)
+				{
+					// Weird: IRepRenderer.get_SymbolByFeature reads IFeature.OID, but -1 seems fine
+					return -1;
+				}
+
+				// Use convert because it could be either an int or a long
+				object fieldValue = _fieldValues[_oidFieldIndex];
+
+#if Server11
+				return Convert.ToInt64(fieldValue);
+#else
+				return Convert.ToInt32(fieldValue);
+#endif
+			}
+		}
 
 		public ITable Table => (ITable) _featureClass;
 
