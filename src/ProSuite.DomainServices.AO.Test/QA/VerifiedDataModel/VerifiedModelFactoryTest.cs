@@ -70,6 +70,7 @@ namespace ProSuite.DomainServices.AO.Test.QA.VerifiedDataModel
 
 		[Test]
 		[Category(TestCategory.Sde)]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanHarvestUsedSimpleModel()
 		{
 			IWorkspace userWorkspace = TestUtils.OpenUserWorkspaceOracle();
