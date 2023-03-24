@@ -456,9 +456,17 @@ namespace ProSuite.Commons.AO.Geodatabase
 		                                  [CanBeNull] object v2,
 		                                  bool caseSensitive = true)
 		{
-			if (v1 is short && v2 is int)
+			if (v1 is short)
 			{
-				return v2.Equals(Convert.ToInt32(v1));
+				if (v2 is int)
+				{
+					return v2.Equals(Convert.ToInt32(v1));
+				}
+
+				if (v2 is long)
+				{
+					return v2.Equals(Convert.ToInt64(v1));
+				}
 			}
 
 			if (v1 is float f1)
@@ -474,9 +482,17 @@ namespace ProSuite.Commons.AO.Geodatabase
 				}
 			}
 
-			if (v1 is int && v2 is short)
+			if (v1 is int)
 			{
-				return Convert.ToInt32(v2).Equals(v1);
+				if (v2 is short)
+				{
+					return Convert.ToInt32(v2).Equals(v1);
+				}
+
+				if (v2 is long)
+				{
+					return Convert.ToInt64(v1).Equals(v2);
+				}
 			}
 
 			if (v1 is double d1)
@@ -489,6 +505,19 @@ namespace ProSuite.Commons.AO.Geodatabase
 				if (v2 is float f2)
 				{
 					return MathUtils.AreSignificantDigitsEqual(f2, d1);
+				}
+			}
+
+			if (v1 is long)
+			{
+				if (v2 is short)
+				{
+					return Convert.ToInt64(v2).Equals(v1);
+				}
+
+				if (v2 is int)
+				{
+					return Convert.ToInt64(v2).Equals(v1);
 				}
 			}
 
