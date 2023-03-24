@@ -8,6 +8,7 @@ using ProSuite.Commons.AO.Test;
 using ProSuite.QA.Container;
 using ProSuite.QA.Tests.Test.Construction;
 using ProSuite.QA.Tests.Test.TestRunners;
+using ProSuite.QA.Tests.Transformers;
 using ProSuite.QA.Tests.Transformers.Filters;
 using TestUtils = ProSuite.Commons.AO.Test.TestUtils;
 
@@ -600,6 +601,111 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				List<string> realTableNames = new List<string> { "pointFc" };
 				CheckInvolvedRows(error.InvolvedRows, 1, realTableNames);
 			}
+		}
+
+		[Test]
+		public void IssueTOP_5658()
+		{
+			IFeatureWorkspace ws =
+				TestWorkspaceUtils.CreateInMemoryWorkspace("IssueTOP_5658");
+			IFeatureClass sgFc = CreateFeatureClass(
+				ws, "TLM_STEHENDES_GEWAESSER", esriGeometryType.esriGeometryPolyline,
+				new List<IField> { FieldUtils.CreateTextField("TLM_GEWAESSERLAUF_UUID", 36) });
+			IReadOnlyFeatureClass sg = ReadOnlyTableFactory.Create(sgFc);
+
+			IFeatureClass fgFc = CreateFeatureClass(
+				ws, "TLM_FLIESSGEWAESSER", esriGeometryType.esriGeometryPolyline,
+				new List<IField> { });
+			IReadOnlyFeatureClass fg = ReadOnlyTableFactory.Create(fgFc);
+
+			IFeatureClass gkFc = CreateFeatureClass(
+				ws, "TLM_GEWAESSERNETZKNOTEN", esriGeometryType.esriGeometryPoint,
+				new List<IField> { });
+			IReadOnlyFeatureClass gk = ReadOnlyTableFactory.Create(gkFc);
+
+			ITable glTbl =
+				DatasetUtils.CreateTable(
+					ws, "TLM_GEWAESSER_LAUF",
+					FieldUtils.CreateOIDField(), FieldUtils.CreateTextField("UUID", 36)
+				);
+			IReadOnlyTable gl = ReadOnlyTableFactory.Create(glTbl);
+
+			IPoint p0 = GeometryFactory.CreatePoint(2600000, 1200000);
+			IPoint p1 = GeometryFactory.CreatePoint(2601000, 1201000);
+			IPoint p2 = GeometryFactory.CreatePoint(2600000, 1202000);
+			{
+				IRow row = glTbl.CreateRow();
+				row.Value[gl.FindField("UUID")] = "A";
+				row.Store();
+			}
+			{
+				IFeature f = sgFc.CreateFeature();
+				f.Shape = CurveConstruction.StartLine(p0).LineTo(p1)
+				                           .Curve;
+				f.Value[sgFc.FindField("TLM_GEWAESSERLAUF_UUID")] = "A";
+				f.Store();
+			}
+
+			{
+				IFeature f = fgFc.CreateFeature();
+				f.Shape = CurveConstruction.StartLine(p1).LineTo(p2).Curve;
+				f.Store();
+			}
+
+			{
+				IFeature f = gkFc.CreateFeature();
+				f.Shape = p0;
+				f.Store();
+			}
+			{
+				IFeature f = gkFc.CreateFeature();
+				f.Shape = p1;
+				f.Store();
+			}
+			{
+				IFeature f = gkFc.CreateFeature();
+				f.Shape = p2;
+				f.Store();
+			}
+
+			TrTableJoinInMemory trMemJoin =
+				new TrTableJoinInMemory(sg, gl, "TLM_GEWAESSER_LAUF_UUID", "UUID",
+				                        JoinType.InnerJoin)
+				{ TransformerName = "Tr_JoinInMemory_StehendesGewaesser_Gewaesserlauf" };
+			TrOnlyDisjointFeatures trDisjoint =
+				new TrOnlyDisjointFeatures((IReadOnlyFeatureClass) trMemJoin.GetTransformed(), fg)
+				{ TransformerName = "Tr_OnlyDisjoint_STGW_FGW" };
+
+			TrDissolve trDissolveDisjoint =
+				new TrDissolve(trDisjoint.GetTransformed())
+				{
+					NeighborSearchOption = TrDissolve.SearchOption.All,
+					Attributes = new List<string>
+					             { "COUNT(TLM_STEHENDES_GEWAESSER_OBJECTID) AS ANZAHL_LAEUFE" },
+					GroupBy = new List<string> { "GEWISS_NR" },
+
+					TransformerName = "Tr_Dissolve_OnlyDisjoint_STGW_FGW_See_AnzahlLaeufe"
+				};
+			TrSpatialJoin trSpatJoin =
+				new TrSpatialJoin(trDissolveDisjoint.GetTransformed(), gk)
+				{
+					OuterJoin = false,
+					NeighborSearchOption = TrSpatialJoin.SearchOption.All,
+					Grouped = true,
+					T1Attributes = new List<string>
+					               {
+						               "SUM(LOOP_JUNCTION) AS ANZAHL_LOOP_JUNCTIONS",
+						               "SUM(SECONDARY_JUNCTION) AS ANZAHL_SECONDARY_JUNCTIONS"
+					               },
+					T1CalcAttributes = new List<string>()
+					                   {
+						                   "IIF(OBJEKTART=1,1,0) AS LOOP_JUNCTION",
+						                   "IIF(OBJEKTART=2,1,0) AS SECONDARY_JUNCTION"
+					                   },
+
+					TransformerName = "Tr_SpatialJoin_Dissolve_STGW_Gewässernetzknoten"
+				};
+			QaConstraint test = new QaConstraint(trSpatJoin.GetTransformed(), "ANZAHL_LAEUFE = 2 AND ANZAHL_LOOP_JUNCTIONS = 1 AND ANZAHL_SECONDARY_JUNCTIONS = 1");
 		}
 
 		private static IList<QaError> ExecuteQaConstraint(TrOnlyContainedFeatures tr,
