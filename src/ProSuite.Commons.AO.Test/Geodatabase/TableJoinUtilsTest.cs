@@ -609,7 +609,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			ITable featureClass = TableJoinUtils.CreateQueryTable(rc, JoinType.RightJoin);
 
 			// It has the destination table's OIDField (with non-unique values, but guaranteed not null)
-			const string rightSideOidField = "TOPGIS_TLM.TLM_STRASSEN_NAME.OBJECTID";
+			const string rightSideOidField = "TOPGIS_TLM.TLM_STRASSE.OBJECTID";
 			Assert.AreEqual(rightSideOidField, featureClass.OIDFieldName);
 
 			long featureCount = GetRowCount(featureClass);

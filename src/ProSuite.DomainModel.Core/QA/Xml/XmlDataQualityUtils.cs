@@ -709,7 +709,7 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 				{
 					if (ignoreMissingConditions)
 					{
-						return;
+						continue;
 					}
 
 					Assert.Fail(
