@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using NHibernate.Cfg;
 using NHibernate.Dialect;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
+using Environment = System.Environment;
 
 namespace ProSuite.Commons.Orm.NHibernate
 {
@@ -12,6 +14,8 @@ namespace ProSuite.Commons.Orm.NHibernate
 	[UsedImplicitly]
 	public abstract class NHConfigurationBuilder : INHConfigurationBuilder
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		private readonly IMappingConfigurator _mappingConfigurator;
 
 		private global::NHibernate.Dialect.Dialect _dialect;
@@ -29,6 +33,30 @@ namespace ProSuite.Commons.Orm.NHibernate
 			ConnectionString = connectionString;
 			Dialect = dialect;
 			ShowSql = showSql;
+
+			const string envVarSecondLevelCache = "PROSUITE_NH_SECONDLEVEL_CACHE_PROVIDER";
+
+			string alternateCacheProviderClass =
+				Environment.GetEnvironmentVariable(envVarSecondLevelCache);
+
+			if (! string.IsNullOrEmpty(alternateCacheProviderClass))
+			{
+				_msg.DebugFormat(
+					"Alternate second level cache defined in environment variable {0}: {1}",
+					envVarSecondLevelCache, alternateCacheProviderClass);
+
+				if (string.Equals(alternateCacheProviderClass, "NONE",
+				                  StringComparison.InvariantCultureIgnoreCase))
+				{
+					_msg.DebugFormat("Disabling second level cache...");
+					useSecondLevelCache = "false";
+				}
+				else
+				{
+					CacheProviderClass = alternateCacheProviderClass;
+				}
+			}
+
 			UseSecondLevelCache = useSecondLevelCache;
 
 			DdxEnvironmentName = ddxEnvironmentName;
