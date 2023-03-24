@@ -350,7 +350,10 @@ namespace ProSuite.DomainModel.Core.QA
 				foreach (IssueFilterConfiguration issueFilter in
 				         condition.IssueFilterConfigurations)
 				{
-					domainTransactions.Reattach(issueFilter);
+					if (issueFilter.IsPersistent)
+					{
+						domainTransactions.Reattach(issueFilter);
+					}
 
 					ReattachAndAddTransformers(issueFilter.ParameterValues, topLevelTransformers,
 					                           domainTransactions);
@@ -380,7 +383,11 @@ namespace ProSuite.DomainModel.Core.QA
 					continue;
 				}
 
-				domainTransactions.Reattach(transformer);
+				if (transformer.IsPersistent)
+				{
+					domainTransactions.Reattach(transformer);
+				}
+
 				toResultList.Add(transformer);
 			}
 		}
