@@ -104,7 +104,8 @@ namespace ProSuite.Microservices.Client.QA
 
 						parameterMsg.WorkspaceId = wsId;
 					}
-					else
+
+					if (datasetParamValue.ValueSource != null)
 					{
 						TransformerConfiguration transformerConfiguration =
 							Assert.NotNull(datasetParamValue.ValueSource);

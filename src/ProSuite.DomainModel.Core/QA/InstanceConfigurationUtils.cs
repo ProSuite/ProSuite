@@ -123,14 +123,26 @@ namespace ProSuite.DomainModel.Core.QA
 			         qualitySpecification.Elements.Select(
 				         e => e.QualityCondition))
 			{
-				IInstanceInfo instanceInfo =
-					InstanceDescriptorUtils.GetInstanceInfo(condition.TestDescriptor);
+				InitializeParameterValues(condition);
 
-				Assert.NotNull(instanceInfo, "Failed to create instance info for {0}",
-				               condition.TestDescriptor);
-
-				InitializeParameterValues(instanceInfo, condition);
+				foreach (IssueFilterConfiguration filterConfiguration in
+				         condition.IssueFilterConfigurations)
+				{
+					InitializeParameterValues(filterConfiguration);
+				}
 			}
+		}
+
+		public static void InitializeParameterValues(
+			[NotNull] InstanceConfiguration instanceConfiguration)
+		{
+			IInstanceInfo instanceInfo =
+				InstanceDescriptorUtils.GetInstanceInfo(instanceConfiguration.InstanceDescriptor);
+
+			Assert.NotNull(instanceInfo, "Failed to create instance info for {0}",
+			               instanceConfiguration.InstanceDescriptor);
+
+			InitializeParameterValues(instanceInfo, instanceConfiguration);
 		}
 
 		public static void InitializeParameterValues(
@@ -152,6 +164,12 @@ namespace ProSuite.DomainModel.Core.QA
 					_msg.WarnFormat(
 						"{0} / Test parameter value {1}: No parameter found in {2}. The constructor Id might be incorrect.",
 						instanceConfiguration, parameterValue.TestParameterName, instanceInfo);
+				}
+
+				// Recursively include the transformer's parameters
+				if (parameterValue.ValueSource != null)
+				{
+					InitializeParameterValues(parameterValue.ValueSource);
 				}
 			}
 		}
@@ -332,7 +350,10 @@ namespace ProSuite.DomainModel.Core.QA
 				foreach (IssueFilterConfiguration issueFilter in
 				         condition.IssueFilterConfigurations)
 				{
-					domainTransactions.Reattach(issueFilter);
+					if (issueFilter.IsPersistent)
+					{
+						domainTransactions.Reattach(issueFilter);
+					}
 
 					ReattachAndAddTransformers(issueFilter.ParameterValues, topLevelTransformers,
 					                           domainTransactions);
@@ -362,7 +383,11 @@ namespace ProSuite.DomainModel.Core.QA
 					continue;
 				}
 
-				domainTransactions.Reattach(transformer);
+				if (transformer.IsPersistent)
+				{
+					domainTransactions.Reattach(transformer);
+				}
+
 				toResultList.Add(transformer);
 			}
 		}
