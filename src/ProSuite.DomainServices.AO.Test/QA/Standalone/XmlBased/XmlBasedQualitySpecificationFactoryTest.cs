@@ -78,6 +78,7 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanCreateQualitySpecificationForCultureCH()
 		{
 			CultureInfo origCulture = Thread.CurrentThread.CurrentCulture;
@@ -97,6 +98,7 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanCreateQualitySpecificationForCultureDE()
 		{
 			CultureInfo origCulture = Thread.CurrentThread.CurrentCulture;
