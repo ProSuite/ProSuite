@@ -620,13 +620,15 @@ namespace ProSuite.QA.Tests.Test.Transformer
 
 			IFeatureClass gkFc = CreateFeatureClass(
 				ws, "TLM_GEWAESSERNETZKNOTEN", esriGeometryType.esriGeometryPoint,
-				new List<IField> { });
+				new List<IField> { FieldUtils.CreateIntegerField("OBJEKTART") });
 			IReadOnlyFeatureClass gk = ReadOnlyTableFactory.Create(gkFc);
 
 			ITable glTbl =
 				DatasetUtils.CreateTable(
 					ws, "TLM_GEWAESSER_LAUF",
-					FieldUtils.CreateOIDField(), FieldUtils.CreateTextField("UUID", 36)
+					FieldUtils.CreateOIDField(),
+					FieldUtils.CreateTextField("UUID", 36),
+					FieldUtils.CreateTextField("GEWISS_NR", 20)
 				);
 			IReadOnlyTable gl = ReadOnlyTableFactory.Create(glTbl);
 
@@ -636,6 +638,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			{
 				IRow row = glTbl.CreateRow();
 				row.Value[gl.FindField("UUID")] = "A";
+				row.Value[gl.FindField("GEWISS_NR")] = "GWN_A";
 				row.Store();
 			}
 			{
@@ -655,16 +658,19 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			{
 				IFeature f = gkFc.CreateFeature();
 				f.Shape = p0;
+				f.Value[gkFc.FindField("OBJEKTART")] = 1;
 				f.Store();
 			}
 			{
 				IFeature f = gkFc.CreateFeature();
 				f.Shape = p1;
+				f.Value[gkFc.FindField("OBJEKTART")] = 2;
 				f.Store();
 			}
 			{
 				IFeature f = gkFc.CreateFeature();
 				f.Shape = p2;
+				f.Value[gkFc.FindField("OBJEKTART")] = 3;
 				f.Store();
 			}
 
