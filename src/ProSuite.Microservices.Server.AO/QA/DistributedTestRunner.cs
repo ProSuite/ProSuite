@@ -263,7 +263,12 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			Stack<SubVerification> unhandledSubverifications =
 				new Stack<SubVerification>(subVerifications.Reverse());
-			StartSubverifications(unhandledSubverifications);
+			IDictionary<Task, SubVerification> started =
+				StartSubverifications(unhandledSubverifications);
+			if (started.Count <= 0)
+			{
+				throw new InvalidOperationException("Could not start any subverification");
+			}
 
 			while (_tasks.Count > 0 || unhandledSubverifications.Count > 0)
 			{
@@ -329,24 +334,29 @@ namespace ProSuite.Microservices.Server.AO.QA
 			EndVerification(QualityVerification);
 		}
 
-		private void StartSubverifications(Stack<SubVerification> subVerifications)
+		[NotNull]
+		private IDictionary<Task, SubVerification> StartSubverifications(
+			[NotNull] Stack<SubVerification> subVerifications)
 		{
+			IDictionary<Task, SubVerification> startedVerifications =
+				new ConcurrentDictionary<Task, SubVerification>();
 			while (true)
 			{
 				if (subVerifications.Count == 0)
 				{
-					return;
+					return startedVerifications;
 				}
 
 				IQualityVerificationClient client = GetWorkerClient();
 				if (client == null)
 				{
-					return;
+					return startedVerifications;
 				}
 
 				SubVerification next = subVerifications.Pop();
 				Task<bool> newTask = IniTask(next, client);
 				_tasks.Add(newTask, next);
+				startedVerifications.Add(newTask, next);
 			}
 		}
 
@@ -728,7 +738,10 @@ namespace ProSuite.Microservices.Server.AO.QA
 			Assert.True(nonContainerGroups.Count <= 1,
 			            $"Expected <= 1 non container group, got {nonContainerGroups.Count}");
 
-			List<SubVerification> subVerifications = new List<SubVerification>(maxParallel);
+			Dictionary<QualityConditionExecType, IList<SubVerification>> typeSubVerifications =
+				new Dictionary<QualityConditionExecType, IList<SubVerification>>();
+
+			List<SubVerification> nonContainerVerifications = new List<SubVerification>();
 			if (nonContainerGroups.Count > 0)
 			{
 				foreach (QualityConditionGroup nonContainerGroup in nonContainerGroups)
@@ -738,13 +751,14 @@ namespace ProSuite.Microservices.Server.AO.QA
 					var subs = GetNonContainerSubverifications(nonContainerGroup);
 					foreach (var subVerification in subs)
 					{
-						subVerifications.Add(
+						nonContainerVerifications.Add(
 							CreateVerification(originalRequest, specification, subVerification));
 					}
 					_msg.Info(
 						$"Built {subs.Count} subverifications for {nonContainerGroup.QualityConditions.Count} non-container quality conditions");
 				}
 			}
+			typeSubVerifications.Add(QualityConditionExecType.NonContainer, nonContainerVerifications);
 
 			// TileParallel
 			List<QualityConditionGroup> parallelGroups =
@@ -754,6 +768,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			Assert.True(parallelGroups.Count <= 1,
 			            $"Expected <= 1 tile parallel group, got {parallelGroups.Count}");
 
+			IList<SubVerification> tileParallelVerifications = new List<SubVerification>();
 			foreach (QualityConditionGroup parallelGroup in parallelGroups)
 			{
 				if (parallelGroup.QualityConditions.Count <= 0)
@@ -761,20 +776,21 @@ namespace ProSuite.Microservices.Server.AO.QA
 					continue;
 				}
 
-				IList<SubVerification> tileParallelVerifications =
-					CreateTileParallelSubverifications(
+				tileParallelVerifications =
+					CreateSplitAreaSubverifications(
 						originalRequest, specification, parallelGroup);
 
-				subVerifications.AddRange(tileParallelVerifications);
 				_msg.Info(
 					$"Built {tileParallelVerifications.Count} tile parallel subverifications for {parallelGroup.QualityConditions.Count} quality conditions");
 				unhandledQualityConditions.Remove(parallelGroup);
 			}
+			typeSubVerifications.Add(QualityConditionExecType.TileParallel,
+			                         tileParallelVerifications);
 
 			// Remaining
 			int nVerifications =
 				ParallelConfiguration.MaxFullAreaTasks <= 0
-					? Math.Max(maxParallel / 2, maxParallel - subVerifications.Count)
+					? Math.Max(maxParallel / 2, maxParallel - nonContainerVerifications.Count - tileParallelVerifications.Count)
 					: ParallelConfiguration.MaxFullAreaTasks;
 
 			List<QualityConditionGroup> qcsPerSubverification = new List<QualityConditionGroup>();
@@ -799,16 +815,42 @@ namespace ProSuite.Microservices.Server.AO.QA
 				}
 			}
 
+			List<SubVerification> containerVerifications = new List<SubVerification>();
 			foreach (var qualityConditionGroup in qcsPerSubverification)
 			{
-				subVerifications.Add(
+				containerVerifications.Add(
 					CreateVerification(
 						originalRequest, specification, qualityConditionGroup));
 			}
-
+			typeSubVerifications.Add(QualityConditionExecType.Container, containerVerifications);
 			_msg.Info(
 				$"Built {qcsPerSubverification.Count} subverifications for {qcsPerSubverification.Sum(x => x.QualityConditions.Count)} non-tile-parallel container quality conditions");
 
+			// Sorting subverifications corresponding to priorities
+			HashSet<QualityConditionExecType> defaultPriorities =
+				new HashSet<QualityConditionExecType>
+				{
+					QualityConditionExecType.NonContainer, QualityConditionExecType.Container,
+					QualityConditionExecType.TileParallel
+				};
+
+			List<SubVerification> subVerifications = new List<SubVerification>();
+			if (ParallelConfiguration.TypePriority != null)
+			{
+				foreach (QualityConditionExecType execType in ParallelConfiguration.TypePriority)
+				{
+					subVerifications.AddRange(typeSubVerifications[execType]);
+					if (! defaultPriorities.Remove(execType))
+					{
+						throw new InvalidOperationException($"Unexpected type priority {execType}");
+					}
+				}
+			}
+
+			foreach (QualityConditionExecType execType in defaultPriorities)
+			{
+				subVerifications.AddRange(typeSubVerifications[execType]);
+			}
 			return subVerifications;
 		}
 
@@ -892,7 +934,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			return subRequest;
 		}
 
-		private IList<SubVerification> CreateTileParallelSubverifications(
+		private IList<SubVerification> CreateSplitAreaSubverifications(
 			[NotNull] VerificationRequest originalRequest,
 			[NotNull] QualitySpecification specification,
 			[NotNull] QualityConditionGroup qualityConditionGroup)
