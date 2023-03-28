@@ -3,7 +3,6 @@ using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Test;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.QA.Container.Test;
 using ProSuite.QA.Tests.Test.TestRunners;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geometry;
@@ -23,7 +22,7 @@ namespace ProSuite.QA.Tests.Test
 			TestUtils.InitializeLicense();
 
 			_testWs = TestWorkspaceUtils.CreateTestFgdbWorkspace(
-				"QaGdbConstraintFactoryTest");
+				"QaGdbConstraintTest");
 		}
 
 		[OneTimeTearDown]
@@ -126,7 +125,6 @@ namespace ProSuite.QA.Tests.Test
 				Assert.AreEqual(1, runner.Errors.Count);
 			}
 		}
-
 
 		[NotNull]
 		private IList<IField> GetDomainFields(
