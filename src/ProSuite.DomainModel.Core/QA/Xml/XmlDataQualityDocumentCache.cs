@@ -74,6 +74,9 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 		public IDictionary<string, DdxModel> ReferencedModels { get; set; }
 
 		[CanBeNull]
+		public IDictionary<XmlDataQualityCategory, DataQualityCategory> CategoryMap { get; set; }
+
+		[CanBeNull]
 		public ITestParameterDatasetValidator ParameterDatasetValidator { get; set; }
 
 		public XmlDataQualityDocumentCache(XmlDataQualityDocument document,
@@ -93,6 +96,43 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 			IssueFiltersWithCategories =
 				new List<KeyValuePair<XmlIssueFilterConfiguration, XmlDataQualityCategory>>(
 					_document.GetAllIssueFilters());
+		}
+
+		[CanBeNull]
+		public DataQualityCategory GetDataQualityCategoryFor(
+			[NotNull] XmlInstanceConfiguration xmlConfig)
+		{
+			var categories = Assert.NotNull(CategoryMap, $"{nameof(CategoryMap)} not set");
+
+			XmlDataQualityCategory xmlCategory = null;
+
+			if (xmlConfig is XmlTransformerConfiguration)
+			{
+				foreach (var pair in TransformersWithCategories)
+				{
+					if (pair.Key.Equals(xmlConfig)) xmlCategory = pair.Value;
+				}
+			}
+			else if (xmlConfig is XmlIssueFilterConfiguration)
+			{
+				foreach (var pair in IssueFiltersWithCategories)
+				{
+					if (pair.Key.Equals(xmlConfig)) xmlCategory = pair.Value;
+				}
+			}
+			else if (xmlConfig is XmlQualityCondition)
+			{
+				foreach (var pair in QualityConditionsWithCategories)
+				{
+					if (pair.Key.Equals(xmlConfig)) xmlCategory = pair.Value;
+				}
+			}
+			else
+			{
+				throw new InvalidConfigurationException($"Unhandled type {xmlConfig.GetType()}");
+			}
+
+			return xmlCategory == null ? null : categories[xmlCategory];
 		}
 
 		public bool TryGetIssueFilter(string name,
@@ -121,11 +161,11 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 		}
 
 		public IEnumerable<XmlInstanceConfiguration> EnumReferencedConfigurationInstances(
-			XmlInstanceConfiguration config)
+			XmlInstanceConfiguration xmlConfig)
 		{
-			yield return config;
+			yield return xmlConfig;
 
-			if (config is XmlQualityCondition xmlCondition)
+			if (xmlConfig is XmlQualityCondition xmlCondition)
 			{
 				if (xmlCondition.Filters != null)
 				{
@@ -148,7 +188,7 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 				}
 			}
 
-			foreach (XmlTestParameterValue parameterValue in config.ParameterValues)
+			foreach (XmlTestParameterValue parameterValue in xmlConfig.ParameterValues)
 			{
 				if (! string.IsNullOrWhiteSpace(parameterValue.TransformerName))
 				{
@@ -167,6 +207,7 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 			}
 		}
 
+		[CanBeNull]
 		public QualityCondition CreateQualityCondition(
 			[NotNull] XmlQualityCondition xmlCondition,
 			[NotNull] Func<string, IList<Dataset>> getDatasetsByName,
@@ -185,23 +226,26 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 					testDescriptorName, xmlCondition.Name);
 			}
 
-			var result = new QualityCondition(xmlCondition.Name,
-			                                  XmlDataQualityUtils.CreateTestDescriptor(xmlDesc));
+			var condition = new QualityCondition(xmlCondition.Name,
+			                                     XmlDataQualityUtils.CreateTestDescriptor(xmlDesc));
+
+			XmlDataQualityUtils.UpdateQualityCondition(condition, xmlCondition,
+			                                           GetDataQualityCategoryFor(xmlCondition));
 
 			DatasetSettings datasetSettings =
 				new DatasetSettings(getDatasetsByName, ignoreForUnknownDatasets);
 
 			// The result could be set to null, if there are missing datasets.
-			result = CompleteConfiguration(result, xmlCondition, datasetSettings);
+			condition = CompleteConfiguration(condition, xmlCondition, datasetSettings);
 			unknownDatasetParameters = datasetSettings.UnknownDatasetParameters;
 
-			return result;
+			return condition;
 		}
 
 		[CanBeNull]
 		private T CompleteConfiguration<T>(
 			[NotNull] T created,
-			[NotNull] XmlInstanceConfiguration xmlInstanceConfiguration,
+			[NotNull] XmlInstanceConfiguration xmlConfig,
 			[NotNull] DatasetSettings datasetSettings)
 			where T : InstanceConfiguration
 		{
@@ -219,12 +263,10 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 
 			if (created is QualityCondition qualityCondition)
 			{
-				AddIssueFilters(qualityCondition, (XmlQualityCondition) xmlInstanceConfiguration,
-				                datasetSettings);
+				AddIssueFilters(qualityCondition, (XmlQualityCondition) xmlConfig, datasetSettings);
 			}
 
-			foreach (XmlTestParameterValue xmlParamValue in
-			         xmlInstanceConfiguration.ParameterValues)
+			foreach (XmlTestParameterValue xmlParamValue in xmlConfig.ParameterValues)
 			{
 				TestParameter testParameter;
 				if (! testParametersByName.TryGetValue(xmlParamValue.TestParameterName,
@@ -234,8 +276,7 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 						string.Format(
 							"The name '{0}' as a test parameter in quality condition '{1}' " +
 							"defined in import document does not match test descriptor.",
-							xmlParamValue.TestParameterName,
-							xmlInstanceConfiguration.Name));
+							xmlParamValue.TestParameterName, xmlConfig.Name));
 				}
 
 				TestParameterValue parameterValue;
@@ -277,8 +318,7 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 				{
 					parameterValue = CreateDatasetTestParameterValue(
 						testParameter, datasetValue,
-						Assert.NotNullOrEmpty(xmlInstanceConfiguration.Name),
-						datasetSettings);
+						Assert.NotNullOrEmpty(xmlConfig.Name), datasetSettings);
 
 					if (parameterValue == null)
 					{
@@ -303,7 +343,7 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 				}
 			}
 
-			// TODO: Handle missing datasets in transformersf and issue filters!
+			// TODO: Handle missing datasets in transformers and issue filters!
 			if (datasetSettings.UnknownDatasetParameters.Count > 0)
 			{
 				Assert.True(datasetSettings.IgnoreUnknownDatasets,
@@ -361,6 +401,10 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 				issueFilter = new IssueFilterConfiguration(
 					xmlIssueFilter.Name,
 					XmlDataQualityUtils.CreateIssueFilterDescriptor(xmlDesc));
+
+				XmlDataQualityUtils.UpdateIssueFilterConfiguration(
+					issueFilter, xmlIssueFilter, GetDataQualityCategoryFor(xmlIssueFilter));
+
 				CompleteConfiguration(issueFilter, xmlIssueFilter, datasetSettings);
 
 				Assert.NotNull(_issueFilterInstances).Add(xmlIssueFilter, issueFilter);
@@ -394,7 +438,7 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 		}
 
 		[NotNull]
-		private TestParameterValue CreateDatasetTestParameterValue(
+		private static TestParameterValue CreateDatasetTestParameterValue(
 			[NotNull] TestParameter testParameter,
 			[NotNull] XmlDatasetTestParameterValue xmlDatasetTestParameterValue,
 			[CanBeNull] Dataset dataset,
@@ -430,6 +474,9 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 				transformer = new TransformerConfiguration(
 					xmlTransformer.Name,
 					XmlDataQualityUtils.CreateTransformerDescriptor(xmlDesc));
+
+				XmlDataQualityUtils.UpdateTransformerConfiguration(transformer, xmlTransformer,
+					GetDataQualityCategoryFor(xmlTransformer));
 
 				CompleteConfiguration(transformer, xmlTransformer, datasetSettings);
 				Assert.NotNull(_transformerInstances).Add(xmlTransformer, transformer);
