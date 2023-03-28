@@ -27,8 +27,6 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 		[CanBeNull] private Dictionary<XmlIssueFilterConfiguration, IssueFilterConfiguration>
 			_issueFilterInstances;
 
-		[CanBeNull] private Dictionary<XmlTestDescriptor, TestDescriptor> _testDescriptorInstances;
-
 		[NotNull]
 		private Dictionary<string, XmlTransformerConfiguration> TransformersByName =>
 			_transformersByName ??
@@ -180,15 +178,15 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 			            $"Test descriptor name is missing in condition: {xmlCondition}");
 
 			if (! TestDescriptorsByName.TryGetValue(testDescriptorName.Trim(),
-			                                        out XmlTestDescriptor xmlTestDescriptor))
+			                                        out XmlTestDescriptor xmlDesc))
 			{
 				Assert.Fail(
-					"Test descriptor '{0}' referenced in quality condition '{1}' does not exist", // TODO '... quality condition ...' correct?
+					"Test descriptor '{0}' referenced in quality condition '{1}' does not exist",
 					testDescriptorName, xmlCondition.Name);
 			}
 
-			var result =
-				new QualityCondition(xmlCondition.Name, GetTestDescriptor(xmlTestDescriptor));
+			var result = new QualityCondition(xmlCondition.Name,
+			                                  XmlDataQualityUtils.CreateTestDescriptor(xmlDesc));
 
 			DatasetSettings datasetSettings =
 				new DatasetSettings(getDatasetsByName, ignoreForUnknownDatasets);
@@ -432,29 +430,12 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 				transformer = new TransformerConfiguration(
 					xmlTransformer.Name,
 					XmlDataQualityUtils.CreateTransformerDescriptor(xmlDesc));
+
 				CompleteConfiguration(transformer, xmlTransformer, datasetSettings);
 				Assert.NotNull(_transformerInstances).Add(xmlTransformer, transformer);
 			}
 
 			return transformer;
-		}
-
-		public TestDescriptor GetTestDescriptor(
-			[NotNull] XmlTestDescriptor xmlDescriptor)
-		{
-			_testDescriptorInstances =
-				_testDescriptorInstances
-				?? new Dictionary<XmlTestDescriptor, TestDescriptor>();
-
-			if (! _testDescriptorInstances.TryGetValue(xmlDescriptor,
-			                                           out TestDescriptor descriptor))
-			{
-				descriptor =
-					XmlDataQualityUtils.CreateTestDescriptor(xmlDescriptor);
-				_testDescriptorInstances.Add(xmlDescriptor, descriptor);
-			}
-
-			return descriptor;
 		}
 	}
 }

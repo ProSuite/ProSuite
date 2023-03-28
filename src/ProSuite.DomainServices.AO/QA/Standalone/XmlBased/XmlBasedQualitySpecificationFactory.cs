@@ -150,9 +150,8 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 						? categoryMap[xmlCategory]
 						: null;
 
-				QualityCondition createdCondition = XmlDataQualityUtils.CreateQualityCondition(
-					xmlCondition, xmlDataDocumentCache, getDatasetsByName, category,
-					ignoreConditionsForUnknownDatasets,
+				QualityCondition createdCondition = xmlDataDocumentCache.CreateQualityCondition(
+					xmlCondition, getDatasetsByName, ignoreConditionsForUnknownDatasets,
 					out ICollection<DatasetTestParameterRecord> unknownDatasetParameters);
 
 				if (createdCondition == null)
@@ -163,6 +162,9 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 				}
 				else
 				{
+					XmlDataQualityUtils.UpdateQualityCondition(
+						createdCondition, xmlCondition, category);
+
 					qualityConditions.Add(createdCondition.Name, createdCondition);
 				}
 			}
