@@ -107,7 +107,8 @@ def arcade_to_field(mapName, fieldName, useField):
                     if sym.renderer.type == 'UniqueValueRenderer':
                         try:
                             cim = layer.getDefinition('V3')
-                            if cim.renderer and cim.renderer.valueExpressionInfo:
+                            if (cim.renderer and cim.renderer.valueExpressionInfo and
+                                cim.renderer.valueExpressionInfo.expression):
                                 # if field exists, delete it, then add the new field
                                 if hasField(fieldName, layer):
                                     arcpy.DeleteField_management(layer, [fieldName])
