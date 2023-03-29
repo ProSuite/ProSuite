@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
@@ -43,6 +44,31 @@ namespace ProSuite.QA.Tests.Test
 
 			int expected = 113;
 			Assert.AreEqual(expected, errorCount);
+		}
+
+		[Test]
+		public void CanCheckMinAreaVerticalWallsPerPartTop5692()
+		{
+			IFeature mockFeature =
+				TestUtils.CreateMockFeature("MultipatchWithDissolvableRingsAndInteriorWalls.xml");
+			var test = new QaMinArea(
+				ReadOnlyTableFactory.Create((IFeatureClass) mockFeature.Class), 0.5, false);
+
+			var runner = new QaTestRunner(test);
+
+			int errorCount = runner.Execute(new List<IRow> { mockFeature });
+
+			Assert.AreEqual(0, errorCount);
+
+			test = new QaMinArea(
+				ReadOnlyTableFactory.Create((IFeatureClass) mockFeature.Class), 0.5, true);
+
+			runner = new QaTestRunner(test);
+
+			errorCount = runner.Execute(new List<IRow> { mockFeature });
+
+			// Finds the almost-vertical ring:
+			Assert.AreEqual(1, errorCount);
 		}
 
 		[Test]
