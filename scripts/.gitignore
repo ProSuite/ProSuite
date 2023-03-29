@@ -1,0 +1,3 @@
+# ignore auto-generated GP metadata
+# (manually add+commit such metadata if desired)
+*.pyt.xml
