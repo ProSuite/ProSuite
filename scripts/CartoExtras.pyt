@@ -69,7 +69,7 @@ class ArcadeExpressionToField(object):
     def execute(self, parameters, messages):
         """The source code of the tool."""
         arcade_to_field(
-            parameters[0].valueAsText, parameters[1].valueAsText, parameters[2])
+            parameters[0].valueAsText, parameters[1].valueAsText, parameters[2].value)
 
         return
 
