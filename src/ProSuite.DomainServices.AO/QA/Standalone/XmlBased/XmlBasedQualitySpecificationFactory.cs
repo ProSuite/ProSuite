@@ -22,8 +22,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 		/// Initializes a new instance of the <see cref="XmlBasedQualitySpecificationFactory"/> class.
 		/// </summary>
 		/// <param name="modelFactory">The model builder.</param>
-		public XmlBasedQualitySpecificationFactory(
-			[NotNull] IVerifiedModelFactory modelFactory)
+		public XmlBasedQualitySpecificationFactory([NotNull] IVerifiedModelFactory modelFactory)
 		{
 			Assert.ArgumentNotNull(modelFactory, nameof(modelFactory));
 
@@ -32,6 +31,15 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 
 		private IVerifiedModelFactory ModelFactory { get; }
 
+		/// <summary>
+		/// Creates a full specification from the specified xml document with support for
+		/// issue filters and transformers.
+		/// </summary>
+		/// <param name="document"></param>
+		/// <param name="qualitySpecificationName"></param>
+		/// <param name="dataSources"></param>
+		/// <param name="ignoreConditionsForUnknownDatasets"></param>
+		/// <returns></returns>
 		[NotNull]
 		public QualitySpecification CreateQualitySpecification(
 			[NotNull] XmlDataQualityDocument document,
@@ -55,15 +63,6 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			}
 		}
 
-		/// <summary>
-		/// Creates a full specification from the specified xml document with support for row
-		/// filters, issue filters and transformers.
-		/// </summary>
-		/// <param name="document"></param>
-		/// <param name="qualitySpecificationName"></param>
-		/// <param name="dataSources"></param>
-		/// <param name="ignoreConditionsForUnknownDatasets"></param>
-		/// <returns></returns>
 		private QualitySpecification CreateQualitySpecificationCore(
 			[NotNull] XmlDataQualityDocument document,
 			[NotNull] string qualitySpecificationName,
@@ -112,9 +111,10 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 
 			documentCache.ReferencedModels = modelsByWorkspaceId;
 
+			documentCache.CategoryMap = categoryMap;
+
 			Dictionary<string, QualityCondition> qualityConditions =
 				CreateQualityConditions(documentCache,
-				                        categoryMap,
 				                        modelsByWorkspaceId,
 				                        ignoreConditionsForUnknownDatasets);
 
@@ -130,7 +130,6 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 
 		private static Dictionary<string, QualityCondition> CreateQualityConditions(
 			XmlDataQualityDocumentCache xmlDataDocumentCache,
-			IDictionary<XmlDataQualityCategory, DataQualityCategory> categoryMap,
 			IDictionary<string, DdxModel> modelsByWorkspaceId,
 			bool ignoreConditionsForUnknownDatasets)
 		{
@@ -139,20 +138,12 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 
 			Func<string, IList<Dataset>> getDatasetsByName = name => new List<Dataset>();
 
-			foreach (KeyValuePair<XmlQualityCondition, XmlDataQualityCategory> pair in
-			         xmlDataDocumentCache.QualityConditionsWithCategories)
+			foreach (XmlQualityCondition xmlCondition in xmlDataDocumentCache
+			                                             .QualityConditionsWithCategories
+			                                             .Select(x => x.Key))
 			{
-				XmlQualityCondition xmlCondition = pair.Key;
-				XmlDataQualityCategory xmlCategory = pair.Value;
-
-				DataQualityCategory category =
-					xmlCategory != null
-						? categoryMap[xmlCategory]
-						: null;
-
-				QualityCondition createdCondition = XmlDataQualityUtils.CreateQualityCondition(
-					xmlCondition, xmlDataDocumentCache, getDatasetsByName, category,
-					ignoreConditionsForUnknownDatasets,
+				QualityCondition createdCondition = xmlDataDocumentCache.CreateQualityCondition(
+					xmlCondition, getDatasetsByName, ignoreConditionsForUnknownDatasets,
 					out ICollection<DatasetTestParameterRecord> unknownDatasetParameters);
 
 				if (createdCondition == null)
@@ -277,7 +268,6 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 
 			Model result = ModelFactory.CreateModel(
 				workspace, modelName, databaseName, schemaOwner, datasetNames);
-
 
 			IEnumerable<Dataset> referencedDatasets = datasetNames.Select(datasetName =>
 					XmlDataQualityUtils.GetDatasetByParameterValue(result, datasetName))
