@@ -2477,6 +2477,12 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		public static bool IsOleDbWorkspace([NotNull] IWorkspace workspace)
 		{
+			if (! Marshal.IsComObject(workspace))
+			{
+				// Specific implementation
+				return false;
+			}
+
 			const string classId = "{59158055-3171-11D2-AA94-00C04FA37849}";
 
 			return workspace.Type == esriWorkspaceType.esriRemoteDatabaseWorkspace &&
