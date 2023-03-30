@@ -14,6 +14,8 @@ namespace ProSuite.Microservices.Client.QA
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
+		private static int _currentModelId = -100;
+
 		/// <summary>
 		/// Creates a specification message containing the the protobuf based conditions.
 		/// </summary>
@@ -56,7 +58,7 @@ namespace ProSuite.Microservices.Client.QA
 				string categoryName = condition.Category?.Name ?? string.Empty;
 
 				string descriptorName =
-					GetDescriptorName(condition.InstanceDescriptor, supportedInstanceDescriptors);
+					GetDescriptorName(condition.TestDescriptor, supportedInstanceDescriptors);
 
 				var elementMsg = new QualitySpecificationElementMsg
 				                 {
@@ -84,8 +86,8 @@ namespace ProSuite.Microservices.Client.QA
 					         .IssueFilterConfigurations)
 				{
 					conditionMsg.ConditionIssueFilters.Add(
-						CreateInstanceConfigMsg(filterConfiguration, supportedInstanceDescriptors,
-						                        usedModelsById));
+						CreateInstanceConfigMsg<IssueFilterDescriptor>(
+							filterConfiguration, supportedInstanceDescriptors, usedModelsById));
 				}
 
 				elementMsg.Condition = conditionMsg;
@@ -170,16 +172,41 @@ namespace ProSuite.Microservices.Client.QA
 
 						DdxModel model = datasetParamValue.DatasetValue.Model;
 
-						// NOTE: Fake values (negative, but not -1) are allowed. But they must be unique per model!
-						Assert.False(model.Id == -1,
-						             "Invalid model id (not persistent and no CloneId has been set)");
-
-						if (! usedModelsById.ContainsKey(model.Id))
+						int modelId = -1;
+						if (model.Id == -1)
 						{
-							usedModelsById.Add(model.Id, model);
+							// Find by reference
+							foreach (var kvp in usedModelsById)
+							{
+								if (kvp.Value != model)
+								{
+									continue;
+								}
+
+								modelId = kvp.Key;
+								break;
+							}
+
+							if (modelId == -1)
+							{
+								modelId = _currentModelId--;
+							}
+						}
+						else
+						{
+							modelId = model.Id;
 						}
 
-						parameterMsg.WorkspaceId = model.Id.ToString(CultureInfo.InvariantCulture);
+						// NOTE: Fake values (negative, but not -1) are allowed. But they must be unique per model!
+						Assert.False(modelId == -1,
+						             "Invalid model id (not persistent and no CloneId has been set)");
+
+						if (! usedModelsById.ContainsKey(modelId))
+						{
+							usedModelsById.Add(modelId, model);
+						}
+
+						parameterMsg.WorkspaceId = modelId.ToString(CultureInfo.InvariantCulture);
 					}
 
 					if (datasetParamValue.ValueSource != null)
@@ -188,8 +215,9 @@ namespace ProSuite.Microservices.Client.QA
 							Assert.NotNull(datasetParamValue.ValueSource);
 
 						parameterMsg.Transformer =
-							CreateInstanceConfigMsg(transformerConfiguration,
-							                        supportedInstanceDescriptors, usedModelsById);
+							CreateInstanceConfigMsg<TransformerDescriptor>(
+								transformerConfiguration, supportedInstanceDescriptors,
+								usedModelsById);
 					}
 
 					parameterMsg.WhereClause = datasetParamValue.FilterExpression ?? string.Empty;
@@ -204,10 +232,11 @@ namespace ProSuite.Microservices.Client.QA
 			}
 		}
 
-		private static InstanceConfigurationMsg CreateInstanceConfigMsg(
+		private static InstanceConfigurationMsg CreateInstanceConfigMsg<T>(
 			[NotNull] InstanceConfiguration instanceConfiguration,
 			[CanBeNull] ISupportedInstanceDescriptors supportedInstanceDescriptors,
 			[NotNull] IDictionary<int, DdxModel> usedModelsById)
+			where T : InstanceDescriptor
 		{
 			var result = new InstanceConfigurationMsg
 			             {
@@ -218,7 +247,7 @@ namespace ProSuite.Microservices.Client.QA
 			             };
 
 			string descriptorName =
-				GetDescriptorName(instanceConfiguration.InstanceDescriptor,
+				GetDescriptorName((T) instanceConfiguration.InstanceDescriptor,
 				                  supportedInstanceDescriptors);
 
 			result.InstanceDescriptorName = descriptorName;

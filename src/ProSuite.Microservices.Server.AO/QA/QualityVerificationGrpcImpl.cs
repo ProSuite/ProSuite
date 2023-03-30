@@ -104,7 +104,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 		/// The supported test descriptors for a fine-granular specification based off a condition list.
 		/// </summary>
 		[CanBeNull]
-		public ISupportedInstanceDescriptors SupportedTestDescriptors { get; set; }
+		public ISupportedInstanceDescriptors SupportedInstanceDescriptors { get; set; }
 
 		/// <summary>
 		/// The client end point used for parallel processing.
@@ -460,14 +460,16 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 				bool useStandaloneService =
 					IsStandAloneVerification(request, null, out QualitySpecification specification);
-
+				
 				if (DistributedProcessingClients != null && request.MaxParallelProcessing > 1)
 				{
 					distributedTestRunner =
 						new DistributedTestRunner(DistributedProcessingClients, request)
 						{
-							QualitySpecification = specification
+							QualitySpecification = specification,
+							SupportedInstanceDescriptors = SupportedInstanceDescriptors
 						};
+
 					// TODO implement differently:
 					string specName = request.Specification.XmlSpecification?
 						.SelectedSpecificationName;
@@ -779,7 +781,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			[NotNull] ConditionListSpecificationMsg conditionsSpecificationMsg,
 			[CanBeNull] SchemaMsg knownSchemaMsg)
 		{
-			if (SupportedTestDescriptors == null || SupportedTestDescriptors.Count == 0)
+			if (SupportedInstanceDescriptors == null || SupportedInstanceDescriptors.Count == 0)
 			{
 				throw new InvalidOperationException(
 					"No supported instance descriptors have been initialized.");
@@ -799,14 +801,14 @@ namespace ProSuite.Microservices.Server.AO.QA
 			[NotNull] IEnumerable<DataSource> dataSources,
 			[CanBeNull] SchemaMsg knownSchemaMsg)
 		{
-			if (SupportedTestDescriptors == null || SupportedTestDescriptors.Count == 0)
+			if (SupportedInstanceDescriptors == null || SupportedInstanceDescriptors.Count == 0)
 			{
 				throw new InvalidOperationException(
 					"No supported instance descriptors have been initialized.");
 			}
 
 			ProtoBasedQualitySpecificationFactory factory =
-				CreateSpecificationFactory(SupportedTestDescriptors, knownSchemaMsg);
+				CreateSpecificationFactory(SupportedInstanceDescriptors, knownSchemaMsg);
 
 			QualitySpecification result = factory.CreateQualitySpecification(
 				conditionsSpecificationMsg, dataSources);
