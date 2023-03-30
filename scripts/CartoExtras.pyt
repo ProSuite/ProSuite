@@ -29,14 +29,14 @@ class ArcadeExpressionToField(object):
         """Parameter definitions"""
         paramMapName = arcpy.Parameter(
             name='map_name',
-            displayName='Map Name',
+            displayName='Map To Process',
             datatype='Map',
             direction='Input',
             parameterType='Required')
 
         paramFieldName = arcpy.Parameter(
             name='field_name',
-            displayName='Name Of Field To Create',
+            displayName='Field To Calculate',
             datatype='String',
             direction='Input',
             parameterType='Required')
