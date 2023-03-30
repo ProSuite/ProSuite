@@ -51,5 +51,15 @@ namespace ProSuite.DomainModel.Core.QA
 
 			return null;
 		}
+
+		public static string GetCanonicalInstanceDescriptorName(
+			[NotNull] string typeName,
+			int constructorId)
+		{
+			int start = typeName.LastIndexOf('.') + 1;
+			string className = typeName.Substring(start);
+
+			return constructorId < 0 ? className : $"{className}({constructorId})";
+		}
 	}
 }
