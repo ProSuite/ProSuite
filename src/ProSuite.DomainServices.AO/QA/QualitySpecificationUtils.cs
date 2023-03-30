@@ -23,7 +23,7 @@ namespace ProSuite.DomainServices.AO.QA
 	public class DummyTest : ContainerTest
 	{
 		public DummyTest()
-			: base(new List<Commons.AO.Geodatabase.IReadOnlyTable>()) { }
+			: base(new List<IReadOnlyTable>()) { }
 
 		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
@@ -56,16 +56,31 @@ namespace ProSuite.DomainServices.AO.QA
 			                 StringUtils.Concatenate(qualitySpecifications.Select(s => s.Name),
 			                                         ", "));
 
+			// Why is it not enough to set the respective specification.Elements Enabled property to false?
 			if (excludededConditionIds?.Count > 0 &&
-			    qualitySpecifications.FirstOrDefault(s=> s.Name == specificationName)
+			    qualitySpecifications.FirstOrDefault(s => s.Name == specificationName)
 				    is XmlQualitySpecification selectedSpec)
 			{
 				DummifyExcludedConditions(document, selectedSpec,
-				                             excludededConditionIds);
+				                          excludededConditionIds);
 			}
 
 			return CreateQualitySpecification(document, specificationName, dataSourceReplacements,
 			                                  ignoreConditionsForUnknownDatasets);
+		}
+
+		public static void DisableExcludedConditions(QualitySpecification fromSpecification,
+		                                             IEnumerable<int> excludedConditionIds)
+		{
+			HashSet<int> disabledConditionIds = new HashSet<int>(excludedConditionIds);
+
+			foreach (var element in fromSpecification.Elements)
+			{
+				if (disabledConditionIds.Contains(element.QualityCondition.Id))
+				{
+					element.Enabled = false;
+				}
+			}
 		}
 
 		private static void DummifyExcludedConditions(
@@ -100,7 +115,8 @@ namespace ProSuite.DomainServices.AO.QA
 			{
 				foreach (var qc in document.QualityConditions)
 				{
-					if (qc.Name == null || !qcIdDict.TryGetValue(qc.Name, out int idQc) || excludededConditionIds.Contains(idQc))
+					if (qc.Name == null || ! qcIdDict.TryGetValue(qc.Name, out int idQc) ||
+					    excludededConditionIds.Contains(idQc))
 					{
 						qc.ParameterValues.Clear();
 						qc.TestDescriptorName = dummyDescriptorName;

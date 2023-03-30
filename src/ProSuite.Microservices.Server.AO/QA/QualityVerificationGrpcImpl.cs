@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
@@ -11,7 +12,6 @@ using ProSuite.Commons;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Com;
-using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -369,40 +369,56 @@ namespace ProSuite.Microservices.Server.AO.QA
 			VerificationProgressStreamer<DataVerificationResponse> responseStreamer =
 				new VerificationProgressStreamer<DataVerificationResponse>(responseStream);
 
+			responseStreamer.CreateResponseAction =
+				responseStreamer.CreateDataVerificationResponse;
+
 			List<GdbObjRefMsg> deletableAllowedErrorRefs = new List<GdbObjRefMsg>();
 			QualityVerification verification = null;
 			string cancellationMessage = null;
 			try
 			{
-				// TODO: Separate long-lived objects, such as datasetLookup, domainTransactions (add to this class) from
-				// short-term objects (request) -> add to background verification inputs
-				IBackgroundVerificationInputs backgroundVerificationInputs =
-					_verificationInputsFactoryMethod(request);
+				bool useStandaloneService =
+					IsStandAloneVerification(request, initialRequest.Schema,
+					                         out QualitySpecification specification);
 
-				if (initialRequest.Schema != null)
+				DistributedTestRunner distributedTestRunner = null;
+
+				if (useStandaloneService)
 				{
-					backgroundVerificationInputs.SetGdbSchema(
-						ProtobufConversionUtils.CreateSchema(initialRequest.Schema.ClassDefinitions,
-						                                     initialRequest
-							                                     .Schema.RelclassDefinitions,
-						                                     moreDataRequest));
+					// Stand-alone: Xml or specification list (WorkContextMsg is null!)
+					verification = VerifyStandaloneXmlCore(
+						specification, request.Parameters,
+						distributedTestRunner, responseStreamer, trackCancel, true);
 				}
-				else if (moreDataRequest != null)
+				else
 				{
-					backgroundVerificationInputs.SetRemoteDataAccess(moreDataRequest);
+					// TODO: Separate long-lived objects, such as datasetLookup, domainTransactions (add to this class) from
+					// short-term objects (request) -> add to background verification inputs
+					IBackgroundVerificationInputs backgroundVerificationInputs =
+						_verificationInputsFactoryMethod(request);
+
+					if (initialRequest.Schema != null)
+					{
+						backgroundVerificationInputs.SetGdbSchema(
+							ProtobufConversionUtils.CreateSchema(
+								initialRequest.Schema.ClassDefinitions,
+								initialRequest.Schema.RelclassDefinitions, moreDataRequest));
+					}
+					else if (moreDataRequest != null)
+					{
+						backgroundVerificationInputs.SetRemoteDataAccess(moreDataRequest);
+					}
+
+					responseStreamer.BackgroundVerificationInputs = backgroundVerificationInputs;
+
+					qaService = CreateVerificationService(
+						backgroundVerificationInputs, responseStreamer, trackCancel);
+
+					verification = qaService.Verify(backgroundVerificationInputs, trackCancel);
+
+					deletableAllowedErrorRefs.AddRange(
+						GetDeletableAllowedErrorRefs(request.Parameters, qaService));
 				}
-
-				responseStreamer.BackgroundVerificationInputs = backgroundVerificationInputs;
-				responseStreamer.CreateResponseAction =
-					responseStreamer.CreateDataVerificationResponse;
-
-				qaService = CreateVerificationService(
-					backgroundVerificationInputs, responseStreamer, trackCancel);
-
-				verification = qaService.Verify(backgroundVerificationInputs, trackCancel);
-
-				deletableAllowedErrorRefs.AddRange(
-					GetDeletableAllowedErrorRefs(request.Parameters, qaService));
 			}
 			catch (Exception e)
 			{
@@ -412,8 +428,10 @@ namespace ProSuite.Microservices.Server.AO.QA
 				SetUnhealthy();
 			}
 
-			ServiceCallStatus result = responseStreamer.SendFinalResponse(verification,
-				cancellationMessage ?? qaService.CancellationMessage, deletableAllowedErrorRefs,
+			string cancelMessage = cancellationMessage ?? qaService?.CancellationMessage;
+
+			ServiceCallStatus result = responseStreamer.SendFinalResponse(
+				verification, cancelMessage, deletableAllowedErrorRefs,
 				qaService?.VerifiedPerimeter);
 
 			return result;
@@ -441,7 +459,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 				DistributedTestRunner distributedTestRunner = null;
 
 				bool useStandaloneService =
-					IsStandAloneVerification(request, out QualitySpecification specification);
+					IsStandAloneVerification(request, null, out QualitySpecification specification);
 
 				if (DistributedProcessingClients != null && request.MaxParallelProcessing > 1)
 				{
@@ -451,19 +469,19 @@ namespace ProSuite.Microservices.Server.AO.QA
 							QualitySpecification = specification
 						};
 					// TODO implement differently:
-					string specName = request.Specification.XmlSpecification
-					                         .SelectedSpecificationName;
-					int iSep = specName.IndexOf(';');
+					string specName = request.Specification.XmlSpecification?
+						.SelectedSpecificationName;
+					int iSep = specName?.IndexOf(';') ?? -1;
 					if (iSep >= 0)
 					{
 						string serviceConfigPath = specName.Substring(iSep + 1);
-						if (System.IO.File.Exists(serviceConfigPath))
+						if (File.Exists(serviceConfigPath))
 						{
 							XmlSerializer ser =
 								new XmlSerializer(typeof(ParallelConfiguration));
-							using (var r = new System.IO.StreamReader(serviceConfigPath))
+							using (var r = new StreamReader(serviceConfigPath))
 							{
-								var config = (ParallelConfiguration)ser.Deserialize(r);
+								var config = (ParallelConfiguration) ser.Deserialize(r);
 								distributedTestRunner.ParallelConfiguration = config;
 							}
 						}
@@ -538,7 +556,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 						ConditionListSpecificationMsg conditionListSpec =
 							request.ConditionListSpecification;
 
-						qualitySpecification = SetupQualitySpecification(conditionListSpec);
+						qualitySpecification = SetupQualitySpecification(conditionListSpec, null);
 						break;
 					}
 					default: throw new ArgumentOutOfRangeException();
@@ -631,7 +649,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			Model primaryModel =
 				StandaloneVerificationUtils.GetPrimaryModel(qualitySpecification);
 			responseStreamer.KnownIssueSpatialReference =
-				primaryModel?.SpatialReferenceDescriptor.SpatialReference;
+				primaryModel?.SpatialReferenceDescriptor?.SpatialReference;
 
 			IssueRepositoryType issueRepositoryType = IssueRepositoryType.FileGdb;
 
@@ -655,6 +673,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 		}
 
 		private bool IsStandAloneVerification([NotNull] VerificationRequest request,
+		                                      [CanBeNull] SchemaMsg knownSchemaMsg,
 		                                      out QualitySpecification qualitySpecification)
 		{
 			QualitySpecificationMsg specificationMsg = request.Specification;
@@ -662,10 +681,12 @@ namespace ProSuite.Microservices.Server.AO.QA
 			qualitySpecification = null;
 
 			// Specific context such as project, work unit
-			if (request.WorkContext.Type > 0)
+			if (request.WorkContext?.Type > 0)
 			{
 				return false;
 			}
+
+			bool result = false;
 
 			switch (specificationMsg.SpecificationCase)
 			{
@@ -676,34 +697,30 @@ namespace ProSuite.Microservices.Server.AO.QA
 					HashSet<int> excludedQcIds =
 						new HashSet<int>(request.Specification.ExcludedConditionIds);
 
-						qualitySpecification = SetupQualitySpecification(xmlSpecification, excludedQcIds);
+					qualitySpecification =
+						SetupQualitySpecification(xmlSpecification, excludedQcIds);
 
-					if (excludedQcIds.Count > 0)
-					{
-						foreach (QualitySpecificationElement element in qualitySpecification
-							         .Elements)
-						{
-							if (excludedQcIds.Contains(element.QualityCondition.Id))
-							{
-								element.Enabled = false;
-							}
-						}
-					}
-
-					return true;
+					result = true;
 				}
+					break;
 				case QualitySpecificationMsg.SpecificationOneofCase.ConditionListSpecification:
 				{
 					ConditionListSpecificationMsg conditionListSpec =
 						specificationMsg.ConditionListSpecification;
 
-					qualitySpecification = SetupQualitySpecification(conditionListSpec);
+					qualitySpecification =
+						SetupQualitySpecification(conditionListSpec, knownSchemaMsg);
 
-					return true;
+					result = true;
 				}
-
+					break;
 				default: return false;
 			}
+
+			QualitySpecificationUtils.DisableExcludedConditions(
+				qualitySpecification, request.Specification.ExcludedConditionIds);
+
+			return result;
 		}
 
 		private static QualitySpecification SetupQualitySpecification(
@@ -747,10 +764,9 @@ namespace ProSuite.Microservices.Server.AO.QA
 			int nextQcId = 0;
 			foreach (QualitySpecificationElement element in qualitySpecification.Elements)
 			{
-				if (element.QualityCondition.Id < 0)
+				if (element.QualityCondition.Id == -1)
 				{
-					IEntityTest qc = element.QualityCondition;
-					qc.SetId(nextQcId);
+					element.QualityCondition.SetCloneId(nextQcId);
 				}
 
 				nextQcId++;
@@ -760,7 +776,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 		}
 
 		private QualitySpecification SetupQualitySpecification(
-			[NotNull] ConditionListSpecificationMsg conditionsSpecificationMsg)
+			[NotNull] ConditionListSpecificationMsg conditionsSpecificationMsg,
+			[CanBeNull] SchemaMsg knownSchemaMsg)
 		{
 			if (SupportedTestDescriptors == null || SupportedTestDescriptors.Count == 0)
 			{
@@ -772,14 +789,15 @@ namespace ProSuite.Microservices.Server.AO.QA
 				ProtobufQaUtils.GetDataSources(conditionsSpecificationMsg.DataSources);
 
 			QualitySpecification qualitySpecification =
-				CreateQualitySpecification(conditionsSpecificationMsg, dataSources);
+				CreateQualitySpecification(conditionsSpecificationMsg, dataSources, knownSchemaMsg);
 
 			return qualitySpecification;
 		}
 
 		private QualitySpecification CreateQualitySpecification(
-			ConditionListSpecificationMsg conditionsSpecificationMsg,
-			List<DataSource> dataSources)
+			[NotNull] ConditionListSpecificationMsg conditionsSpecificationMsg,
+			[NotNull] IEnumerable<DataSource> dataSources,
+			[CanBeNull] SchemaMsg knownSchemaMsg)
 		{
 			if (SupportedTestDescriptors == null || SupportedTestDescriptors.Count == 0)
 			{
@@ -788,7 +806,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			}
 
 			ProtoBasedQualitySpecificationFactory factory =
-				CreateSpecificationFactory(SupportedTestDescriptors);
+				CreateSpecificationFactory(SupportedTestDescriptors, knownSchemaMsg);
 
 			QualitySpecification result = factory.CreateQualitySpecification(
 				conditionsSpecificationMsg, dataSources);
@@ -797,12 +815,16 @@ namespace ProSuite.Microservices.Server.AO.QA
 		}
 
 		private static ProtoBasedQualitySpecificationFactory CreateSpecificationFactory(
-			ISupportedInstanceDescriptors instanceDescriptors)
+			[NotNull] ISupportedInstanceDescriptors instanceDescriptors,
+			[CanBeNull] SchemaMsg knownSchemaMsg)
 		{
-			var modelFactory = new VerifiedModelFactory(
-				new MasterDatabaseWorkspaceContextFactory(), new SimpleVerifiedDatasetHarvester());
+			var contextFactory = new MasterDatabaseWorkspaceContextFactory();
 
-			var datasetOpener = new SimpleDatasetOpener(new MasterDatabaseDatasetContext());
+			IVerifiedModelFactory modelFactory =
+				knownSchemaMsg == null
+					? (IVerifiedModelFactory) new VerifiedModelFactory(
+						contextFactory, new SimpleVerifiedDatasetHarvester())
+					: new ProtoBasedModelFactory(knownSchemaMsg, contextFactory);
 
 			var factory =
 				new ProtoBasedQualitySpecificationFactory(modelFactory, instanceDescriptors);
