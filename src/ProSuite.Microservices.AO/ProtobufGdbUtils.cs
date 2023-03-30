@@ -5,7 +5,10 @@ using ESRI.ArcGIS.Geometry;
 using Google.Protobuf;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Callbacks;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Geom.EsriShape;
+using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.Microservices.Definitions.Shared;
 
 namespace ProSuite.Microservices.AO
@@ -223,6 +226,76 @@ namespace ProSuite.Microservices.AO
 			return result;
 		}
 
+		public static ObjectClassMsg ToObjectClassMsg([NotNull] Dataset dataset,
+		                                              int modelId,
+		                                              ISpatialReference spatialReference = null,
+		                                              bool includeFields = false,
+		                                              string aliasName = null)
+		{
+			int geometryType;
+
+			switch (dataset)
+			{
+				case IVectorDataset vds:
+				{
+					var shapeGeometryType = Assert.NotNull((GeometryTypeShape) vds.GeometryType);
+					geometryType = (int) shapeGeometryType.ShapeType;
+					break;
+				}
+				case ITableDataset _:
+					geometryType = (int) ProSuiteGeometryType.Null;
+					break;
+				case ITopologyDataset _:
+					geometryType = (int) ProSuiteGeometryType.Topology;
+					break;
+				case RasterDataset _:
+					geometryType = (int) ProSuiteGeometryType.Raster;
+					break;
+				case IRasterMosaicDataset _:
+					geometryType = (int) ProSuiteGeometryType.RasterMosaic;
+					break;
+				case ISimpleTerrainDataset _:
+					geometryType = (int) ProSuiteGeometryType.Terrain;
+					break;
+				default:
+					throw new ArgumentOutOfRangeException(
+						$"Unsupported dataset type: {dataset.Name}");
+			}
+
+			ObjectClassMsg result =
+				new ObjectClassMsg()
+				{
+					Name = dataset.Name,
+					ClassHandle = dataset.Id,
+					SpatialReference = ProtobufGeometryUtils.ToSpatialReferenceMsg(
+						spatialReference,
+						SpatialReferenceMsg.FormatOneofCase.SpatialReferenceEsriXml),
+					GeometryType = geometryType,
+					WorkspaceHandle = modelId
+				};
+
+			if (aliasName == null)
+			{
+				aliasName = dataset.AliasName;
+			}
+
+			CallbackUtils.DoWithNonNull(aliasName, s => result.Alias = s);
+
+			if (includeFields && dataset is IObjectDataset objectDataset)
+			{
+				List<FieldMsg> fieldMessages = new List<FieldMsg>();
+
+				foreach (ObjectAttribute attribute in objectDataset.Attributes)
+				{
+					fieldMessages.Add(ToFieldMsg(attribute));
+				}
+
+				result.Fields.AddRange(fieldMessages);
+			}
+
+			return result;
+		}
+
 		private static FieldMsg ToFieldMsg(IField field)
 		{
 			var result = new FieldMsg
@@ -241,6 +314,16 @@ namespace ProSuite.Microservices.AO
 			{
 				result.DomainName = field.Domain.Name;
 			}
+
+			return result;
+		}
+
+		private static FieldMsg ToFieldMsg(ObjectAttribute field)
+		{
+			var result = new FieldMsg
+			             {
+				             Name = field.Name
+			             };
 
 			return result;
 		}
