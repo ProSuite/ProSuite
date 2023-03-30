@@ -18,6 +18,8 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 {
 	public class XmlBasedQualitySpecificationFactory
 	{
+		private static int _currentModelId = -100;
+
 		/// <summary>
 		/// Initializes a new instance of the <see cref="XmlBasedQualitySpecificationFactory"/> class.
 		/// </summary>
@@ -275,9 +277,12 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 				new List<string>(XmlDataQualityUtils.GetReferencedDatasetNames(
 					                 workspaceId, referencedConditions));
 
-			Model result = ModelFactory.CreateModel(
-				workspace, modelName, databaseName, schemaOwner, datasetNames);
+			// Assign a unique, non-persistent model id in order to associate datasets with the model,
+			// e.g. if the resulting specification is converted to a proto-based specification.
+			int modelId = _currentModelId--;
 
+			Model result = ModelFactory.CreateModel(
+				workspace, modelName, modelId, databaseName, schemaOwner, datasetNames);
 
 			IEnumerable<Dataset> referencedDatasets = datasetNames.Select(datasetName =>
 					XmlDataQualityUtils.GetDatasetByParameterValue(result, datasetName))

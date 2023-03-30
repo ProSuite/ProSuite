@@ -11,6 +11,7 @@ using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
 using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.QA;
+using ProSuite.DomainModel.Core;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.Xml;
@@ -439,10 +440,13 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			foreach (DataSource dataSource in allDataSources)
 			{
+				Assert.True(int.TryParse(dataSource.ID, out int modelId),
+				            $"Invalid datasource id: {dataSource.ID}");
+
 				result.Add(dataSource.ID,
 				           CreateModel(dataSource.OpenWorkspace(),
 				                       dataSource.DisplayName,
-				                       dataSource.ID,
+				                       modelId,
 				                       dataSource.DatabaseName,
 				                       dataSource.SchemaOwner,
 				                       referencedConditions));
@@ -455,18 +459,22 @@ namespace ProSuite.Microservices.Server.AO.QA
 		private DdxModel CreateModel(
 			[NotNull] IWorkspace workspace,
 			[NotNull] string modelName,
-			[NotNull] string workspaceId,
+			int workspaceId,
 			[CanBeNull] string databaseName,
 			[CanBeNull] string schemaOwner,
 			[NotNull] IEnumerable<QualityConditionMsg> referencedConditions)
 		{
-			Model result = ModelFactory.CreateModel(workspace, modelName,
+			Model result = ModelFactory.CreateModel(workspace, modelName, workspaceId,
 			                                        databaseName, schemaOwner);
 
-			IEnumerable<Dataset> referencedDatasets = GetReferencedDatasets(
-				result, workspaceId, referencedConditions);
+			if (result.SpatialReferenceDescriptor == null)
+			{
+				IEnumerable<Dataset> referencedDatasets = GetReferencedDatasets(
+					result, workspaceId.ToString(CultureInfo.InvariantCulture),
+					referencedConditions);
 
-			ModelFactory.AssignMostFrequentlyUsedSpatialReference(result, referencedDatasets);
+				ModelFactory.AssignMostFrequentlyUsedSpatialReference(result, referencedDatasets);
+			}
 
 			return result;
 		}
