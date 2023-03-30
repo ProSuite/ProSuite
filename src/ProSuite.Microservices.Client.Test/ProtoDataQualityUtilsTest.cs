@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using NSubstitute;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.DomainModel.Core;
@@ -53,7 +55,7 @@ namespace ProSuite.Microservices.Client.Test
 
 			ConditionListSpecificationMsg conditionListSpecificationMsg =
 				ProtoDataQualityUtils.CreateConditionListSpecificationMsg(
-					customQualitySpecification);
+					customQualitySpecification, null, out _);
 
 			const string expectedName = "TestSpecification (Clone)";
 			Assert.AreEqual(expectedName, conditionListSpecificationMsg.Name);
@@ -161,7 +163,7 @@ namespace ProSuite.Microservices.Client.Test
 
 			ConditionListSpecificationMsg conditionListSpecificationMsg =
 				ProtoDataQualityUtils.CreateConditionListSpecificationMsg(
-					customQualitySpecification);
+					customQualitySpecification, null, out _);
 
 			const string expectedName = "TestSpecification (Clone)";
 			Assert.AreEqual(expectedName, conditionListSpecificationMsg.Name);
@@ -243,7 +245,7 @@ namespace ProSuite.Microservices.Client.Test
 
 			ConditionListSpecificationMsg conditionListSpecificationMsg =
 				ProtoDataQualityUtils.CreateConditionListSpecificationMsg(
-					customQualitySpecification);
+					customQualitySpecification, null, out _);
 
 			Assert.AreEqual(specName, conditionListSpecificationMsg.Name);
 			QualityConditionMsg conditionMsg =
@@ -285,15 +287,24 @@ namespace ProSuite.Microservices.Client.Test
 		}
 
 		[Test]
-		public void
-			CanCreateConditionListSpecificationMsgWithTransformerUndefinedScalarParametersTop5688()
+		public void CanCreateConditionListSpecificationMsgWithTransformerUndefinedScalarParameters()
 		{
 			// If the specification comes from persistence, the DataType of the parameter values are not set!
 			// They must be initialized (including transformers, filters) before serializing to proto.
+
+			// Additionally test the behaviour with a provided ISupportedInstanceDescriptors
+			// that allows checking the descriptor name already on the client side.
+
+			var instanceDescriptors = Substitute.For<ISupportedInstanceDescriptors>();
+
 			var qualitySpecification =
 				new QualitySpecification("TestSpecification");
 
 			TestDescriptor testDescriptor = CreateConstraintTestDescriptor();
+
+			// Match using current name
+			instanceDescriptors.GetInstanceDescriptor<InstanceDescriptor>(testDescriptor.Name)
+			                   .Returns(testDescriptor);
 
 			const string conditionName = "TestCondition2";
 
@@ -310,6 +321,11 @@ namespace ProSuite.Microservices.Client.Test
 				new ClassDescriptor("ProSuite.QA.Tests.Transformers.TrDissolve",
 				                    "ProSuite.QA.Tests"), 0,
 				"Descriptor of TrDissolve");
+
+			// Match using canonical name (the transformer descriptor's name will be replaced)
+			const string trCanonicalName = "TrDissolve(0)";
+			instanceDescriptors.GetInstanceDescriptor<InstanceDescriptor>(trCanonicalName)
+			                   .Returns(transformerDescriptor);
 
 			var transformerConfig = new TransformerConfiguration(
 				"TestTransformerConfig1", transformerDescriptor, "Transformer desc");
@@ -356,11 +372,14 @@ namespace ProSuite.Microservices.Client.Test
 
 			const string specName = "TestSpecification (Clone)";
 			var customQualitySpecification = qualitySpecification.GetCustomizable();
-			//new CustomQualitySpecification(qualitySpecification, specName);
 
 			ConditionListSpecificationMsg conditionListSpecificationMsg =
 				ProtoDataQualityUtils.CreateConditionListSpecificationMsg(
-					customQualitySpecification);
+					customQualitySpecification, instanceDescriptors,
+					out IDictionary<int, DdxModel> usedModels);
+
+			Assert.AreEqual(1, usedModels.Count);
+			Assert.AreSame(model, usedModels[model.Id]);
 
 			Assert.AreEqual(specName, conditionListSpecificationMsg.Name);
 			QualityConditionMsg conditionMsg =
@@ -375,7 +394,7 @@ namespace ProSuite.Microservices.Client.Test
 			InstanceConfigurationMsg transformerMsg = param0.Transformer;
 			Assert.AreEqual(transformerConfig.Name, transformerMsg.Name);
 			Assert.AreEqual(transformerConfig.Description, transformerMsg.Description);
-			Assert.AreEqual(transformerConfig.TransformerDescriptor.Name,
+			Assert.AreEqual(trCanonicalName,
 			                transformerMsg.InstanceDescriptorName);
 			ParameterMsg transformerMsgParameter0 = transformerMsg.Parameters[0];
 			Assert.AreEqual(dataset.Name, transformerMsgParameter0.Value);
@@ -398,7 +417,10 @@ namespace ProSuite.Microservices.Client.Test
 
 		private class TestModel : DdxModel
 		{
-			public TestModel(string name) : base(name) { }
+			public TestModel(string name) : base(name)
+			{
+				SetCloneId(123);
+			}
 
 			#region Overrides of DdxModel
 
