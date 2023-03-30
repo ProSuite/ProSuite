@@ -68,6 +68,9 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 		                         string schemaOwner,
 		                         IList<string> usedDatasetNames = null)
 		{
+			// TODO: This could be un-commented once 10.9.1 support has been dropped (and TopologyNameClass exists)
+			//       Additionally, the line containing new TopologyNameClass() should be un-commented and the
+			//       unit test re-activated.
 			//if (usedDatasetNames != null)
 			//{
 			//	return CreateNeededModel(workspace, name, databaseName, schemaOwner,
