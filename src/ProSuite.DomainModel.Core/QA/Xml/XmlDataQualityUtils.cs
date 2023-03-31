@@ -723,31 +723,7 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 				qualitySpecification.AddElement(qualityCondition, stopOnError, allowErrors);
 			}
 		}
-
-		[CanBeNull]
-		public static QualityCondition CreateQualityCondition(
-			[NotNull] XmlQualityCondition xmlQualityCondition,
-			[NotNull] XmlDataQualityDocumentCache documentCache,
-			[NotNull] Func<string, IList<Dataset>> getDatasetsByName,
-			[CanBeNull] DataQualityCategory category,
-			bool ignoreForUnknownDatasets,
-			out ICollection<DatasetTestParameterRecord> unknownDatasetParameters)
-		{
-			QualityCondition result =
-				documentCache.CreateQualityCondition(xmlQualityCondition, getDatasetsByName,
-				                                     ignoreForUnknownDatasets,
-				                                     out unknownDatasetParameters);
-
-			if (result == null)
-			{
-				return null;
-			}
-
-			UpdateQualityCondition(result, xmlQualityCondition, category);
-
-			return result;
-		}
-
+		
 		public static void UpdateQualityCondition([NotNull] QualityCondition qualityCondition,
 		                                          [NotNull] XmlQualityCondition xmlCondition,
 		                                          [CanBeNull] DataQualityCategory category)
