@@ -188,7 +188,6 @@ namespace ProSuite.QA.Tests
 			// TOP-5659:
 			// Multipatches use the footprint's area which is not correct for
 			// small or narrow multipatches -> the footprint is the envelope!
-			var geometryCollection = (IGeometryCollection) multipatch;
 
 			int errorCount = 0;
 			double totalArea = 0;
@@ -212,6 +211,8 @@ namespace ProSuite.QA.Tests
 
 					if (perPart)
 					{
+						// TODO: Remove the area of the following interior rings
+						//       or better incorporate logic for 3D-adjacent rings building a 'polyhedron part'
 						errorCount += CheckArea(ringArea, ring, row);
 					}
 					else

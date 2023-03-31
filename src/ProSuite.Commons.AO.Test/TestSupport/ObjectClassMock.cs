@@ -396,8 +396,13 @@ namespace ProSuite.Commons.AO.Test.TestSupport
 
 		protected bool Equals(ObjectClassMock other)
 		{
-			return Equals(_workspaceMock, other._workspaceMock) &&
-			       ObjectClassID == other.ObjectClassID;
+			if (! Equals(_workspaceMock, other._workspaceMock))
+				return false;
+			if (ObjectClassID != other.ObjectClassID)
+				return false;
+			if (_workspaceMock == null && ! ReferenceEquals(this, other))
+				return false;
+			return true;
 		}
 
 		public bool Equals(IObjectClass other)
@@ -407,12 +412,9 @@ namespace ProSuite.Commons.AO.Test.TestSupport
 				return false;
 			}
 
-			ObjectClassMock otherMock = other as ObjectClassMock;
-
-			if (otherMock != null && otherMock._workspaceMock == _workspaceMock)
+			if (other is ObjectClassMock otherMock)
 			{
-				// Allow both workspaces to be null and hence equal!
-				return ObjectClassID == other.ObjectClassID;
+				return Equals(otherMock);
 			}
 
 			return ObjectClassID == other.ObjectClassID &&
