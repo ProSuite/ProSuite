@@ -40,7 +40,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			joinedValueList.AddRow(leftRow, GeometryEndCopyMatrix);
 			joinedValueList.AddRow(otherRow, OtherEndCopyMatrix);
 
-			if (associationRow != null)
+			if (AssociationTable != null)
 			{
 				// At least keep the original RID (ObjectId). Potentially it could also be an attributed m:n
 				joinedValueList.AddRow(associationRow, AssociationTableCopyMatrix);
@@ -69,7 +69,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			GdbRow result = leftRow is IReadOnlyFeature &&
 			                JoinedSchema is GdbFeatureClass gdbFeatureClass
-				                ? GdbFeature.Create(oidSourceRow.OID, gdbFeatureClass, joinedValueList)
+				                ? GdbFeature.Create(oidSourceRow.OID, gdbFeatureClass,
+				                                    joinedValueList)
 				                : new GdbRow(oidSourceRow.OID, JoinedSchema, joinedValueList);
 
 			return result;
