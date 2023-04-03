@@ -460,7 +460,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 				else
 				{
 					if (featureKeyValue == null ||
-					    ! otherRowsByFeatureKey.TryGetValue(featureKeyValue, out otherRowList))
+					    ! otherRowsByFeatureKey.TryGetValue(featureKeyValue, out otherRowList) ||
+					    otherRowList.Count == 0)
 					{
 						// No relationship or no relational integrity
 						yield return CreateJoinedFeature(feature, null);
