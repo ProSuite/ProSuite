@@ -956,7 +956,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 			IFeatureClass inMemoryJoinedClass = TableJoinUtils.CreateJoinedGdbFeatureClass(
 				rc, RelationshipClassUtils.GetFeatureClasses(rc).Single(),
-				"inMemoryJoined");
+					"inMemoryJoined");
 
 			Assert.AreEqual(featureCount, GetRowCount((ITable) inMemoryJoinedClass));
 
@@ -1690,7 +1690,14 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			}
 			finally
 			{
-				Marshal.ReleaseComObject(cursor);
+				if (Marshal.IsComObject(cursor))
+				{
+					Marshal.ReleaseComObject(cursor);
+				}
+				else if (cursor is IDisposable disposable)
+				{
+					disposable.Dispose();
+				}
 			}
 		}
 
