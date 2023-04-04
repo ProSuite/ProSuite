@@ -9,6 +9,7 @@ using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Testing;
@@ -847,8 +848,9 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			IRelationshipClass rc = ws.OpenRelationshipClass(relClassName);
 			Assert.AreEqual(rc.Cardinality, esriRelCardinality.esriRelCardinalityManyToMany);
 
-			// origin = strassenroute, destination = strasse
-			long originRowCount = ((ITable) rc.OriginClass).RowCount(null);
+			// origin (left) = strassenroute, destination = strasse
+			ITable strassenRouteTable = ((ITable) rc.OriginClass);
+			long originRowCount = strassenRouteTable.RowCount(null);
 			long destinationRowCount = ((ITable) rc.DestinationClass).RowCount(null);
 
 			Assert.IsFalse(TableJoinUtils.CanCreateQueryFeatureClass(rc, JoinType.LeftJoin));
@@ -874,6 +876,19 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 			// all route features are expected in result
 			AssertOidsComplete(rc.OriginClass, table);
+
+			// Now check the in-memory join with the 'geometry-end' (i.e. left table) being the strassenroute class.
+			GdbTable inMemoryJoinedClass = TableJoinUtils.CreateJoinedGdbTable(
+				rc, strassenRouteTable, "inMemoryJoined", JoinType.LeftJoin, true);
+
+			AssertOidsComplete((IObjectClass) strassenRouteTable, inMemoryJoinedClass);
+
+			// And also with the strassen feature class on the left:
+			var strassenClass = (IFeatureClass) rc.DestinationClass;
+			GdbFeatureClass m2nFeatureClass = TableJoinUtils.CreateJoinedGdbFeatureClass(
+				rc, strassenClass, "inMemoryJoined", JoinType.LeftJoin, true);
+
+			AssertOidsComplete(strassenClass, m2nFeatureClass);
 		}
 
 		[Test]
@@ -956,7 +971,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 			IFeatureClass inMemoryJoinedClass = TableJoinUtils.CreateJoinedGdbFeatureClass(
 				rc, RelationshipClassUtils.GetFeatureClasses(rc).Single(),
-					"inMemoryJoined");
+				"inMemoryJoined");
 
 			Assert.AreEqual(featureCount, GetRowCount((ITable) inMemoryJoinedClass));
 
