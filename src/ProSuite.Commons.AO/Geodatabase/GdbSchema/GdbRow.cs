@@ -112,6 +112,8 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		private long _oid;
 
+		public override bool HasOID => _gdbTable.HasOID && _oid != -1;
+
 		public override long OID => _oid < 0
 			                            ? throw new InvalidOperationException("Row has no OID")
 			                            : _oid;
