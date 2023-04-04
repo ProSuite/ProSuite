@@ -336,7 +336,7 @@ namespace ProSuite.DomainServices.AO.QA
 					yield return shape;
 				}
 			}
-			else
+			else if (objectDataset != null && obj != null)
 			{
 				foreach (IList<IRelationshipClass> relClassChain
 				         in GetRelationshipClassChainsToVerifiedFeatureClasses(
@@ -461,13 +461,13 @@ namespace ProSuite.DomainServices.AO.QA
 			return false;
 		}
 
-		[NotNull]
+		[CanBeNull]
 		private static IObject GetInvolvedObject(
 			[NotNull] InvolvedRow involvedRow,
 			[NotNull] QualityCondition qualityCondition,
 			[NotNull] IDatasetContext datasetContext,
 			[NotNull] IQualityConditionObjectDatasetResolver datasetResolver,
-			[NotNull] out IObjectDataset objectDataset)
+			[CanBeNull] out IObjectDataset objectDataset)
 		{
 			Assert.ArgumentNotNull(involvedRow, nameof(involvedRow));
 			Assert.ArgumentNotNull(qualityCondition, nameof(qualityCondition));
@@ -475,16 +475,17 @@ namespace ProSuite.DomainServices.AO.QA
 			                         "involved row represents entire table");
 			Assert.ArgumentNotNull(datasetContext, nameof(datasetContext));
 
-			//string gdbTableName = involvedRow.TableName;
-			//objectDataset = Assert.NotNull(
-			//    QualityVerificationUtils.GetInvolvedObjectDataset(gdbTableName,
-			//                                                      qualityCondition,
-			//                                                      datasetResolver),
-			//    "object dataset not found for {0}", involvedRow.TableName);
 			string gdbTableName = involvedRow.TableName;
-			objectDataset = Assert.NotNull(
-				datasetResolver.GetDatasetByGdbTableName(gdbTableName, qualityCondition),
-				"object dataset not found for {0}", involvedRow.TableName);
+
+			objectDataset =
+				datasetResolver.GetDatasetByGdbTableName(gdbTableName, qualityCondition);
+
+			if (objectDataset == null)
+			{
+				// E.g. if the involved row comes from a TrMakeTable transformer using any table outside the model:
+				_msg.VerboseDebug(() => $"object dataset not found for {involvedRow.TableName}");
+				return null;
+			}
 
 			ITable table = datasetContext.OpenTable(objectDataset);
 			// TODO REFACTORMODEL revise null handling
