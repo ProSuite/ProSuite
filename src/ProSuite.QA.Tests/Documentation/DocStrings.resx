@@ -1068,23 +1068,23 @@ Remark: The feature classes in 'featureClass' and 'reference' must have the same
     <value>Note: this parameter is no longer used</value>
   </data>
   <data name="QaOrphanNode_0" xml:space="preserve">
-    <value>Finds all points in 'pointClasses' that are neither from nor to point of any feature in 'polylineClasses'
+    <value>Finds all points in 'pointClasses' that are neither From- nor To-point of any feature in 'polylineClasses' and line end points without any point
 
 Remark: All feature classes in 'pointClasses' and 'polylineClasses' must have the same spatial reference.</value>
   </data>
   <data name="QaOrphanNode_1" xml:space="preserve">
-    <value>Finds all points in 'pointClass' that are neither from nor to point of any feature in 'polylineClass'
+    <value>Finds all points in 'pointClass' that are neither From- nor To-point of any feature in 'polylineClass' and line end points without any point
 
 Remark: The feature classes in 'pointClass' and 'polylineClass' must have the same spatial reference.</value>
   </data>
   <data name="QaOrphanNode_2" xml:space="preserve">
-    <value>Finds all points in 'pointClasses' that are neither from nor to point of any feature in 'polylineClasses'.
+    <value>Finds all points in 'pointClasses' that are neither From- nor To-point of any feature in 'polylineClasses' and/or line end points without any point
 Performs the tests defined in 'errorType'.
 
 Remark: All feature classes in 'pointClasses' and 'polylineClasses' must have the same spatial reference.</value>
   </data>
   <data name="QaOrphanNode_3" xml:space="preserve">
-    <value>Finds all points in 'pointClass' that are neither from nor to point of any feature in 'polylineClass'
+    <value>Finds all points in 'pointClass' that are neither From- nor To-point of any feature in 'polylineClass' and/or line end points without any point
 Performs the tests defined in 'errorType'.
 
 Remark: The feature classes in 'pointClass' and 'polylineClass' must have the same spatial reference.</value>
