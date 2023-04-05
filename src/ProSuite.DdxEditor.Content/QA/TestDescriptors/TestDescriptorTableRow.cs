@@ -59,7 +59,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 					_parameters = InstanceUtils.GetTestSignature(instanceInfo);
 				}
 			}
-			catch (TypeLoadException e)
+			catch (Exception e)
 			{
 				_parameters = string.Format("Error: {0}", e.Message);
 				_testDescription = "<INVALID>";
