@@ -44,9 +44,10 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 		/// <summary>
 		/// Initializes a new instance of the <see cref="InstanceConfigurationControl"/> class.
 		/// </summary>
-		public InstanceConfigurationControl([NotNull] TableState tableState,
-		                                    [NotNull]
-		                                    IInstanceConfigurationTableViewControl tableViewControl)
+		public InstanceConfigurationControl(
+			[NotNull] TableState tableState,
+			[NotNull] IInstanceConfigurationTableViewControl tableViewControl,
+			bool ignoreLastDetailsTab = false)
 		{
 			Assert.ArgumentNotNull(tableState, nameof(tableState));
 			Assert.ArgumentNotNull(tableViewControl, nameof(tableViewControl));
@@ -112,7 +113,10 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 				new BoundDataGridHandler<InstanceConfigurationReferenceTableRow>(
 					_dataGridViewReferences, restoreSelectionAfterUserSort: true);
 
-			TabControlUtils.SelectTabPage(_tabControlDetails, _lastSelectedDetailsTab);
+			if (! ignoreLastDetailsTab)
+			{
+				TabControlUtils.SelectTabPage(_tabControlDetails, _lastSelectedDetailsTab);
+			}
 		}
 
 		#endregion
