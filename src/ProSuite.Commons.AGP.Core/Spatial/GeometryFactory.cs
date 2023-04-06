@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -24,6 +25,26 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			builder.SpatialReference = template.SpatialReference;
 
 			return builder;
+		}
+
+		public static GeometryBuilderEx ToBuilder(this Geometry geometry)
+		{
+			if (geometry is null)
+				throw new ArgumentNullException(nameof(geometry));
+
+			switch (geometry)
+			{
+				case Envelope env: return new EnvelopeBuilderEx(env);
+				case MapPoint point: return new MapPointBuilderEx(point);
+				case Multipoint multipoint: return new MultipointBuilderEx(multipoint);
+				case Polyline polyline: return new PolylineBuilderEx(polyline);
+				case Polygon polygon: return new PolygonBuilderEx(polygon);
+				case Multipatch multipatch: return new MultipatchBuilderEx(multipatch);
+				case GeometryBag bag: return new GeometryBagBuilderEx(bag);
+			}
+
+			throw new NotSupportedException(
+				$"Unknown geometry type: {geometry.GetType().Name}");
 		}
 
 		public static MapPoint CreatePoint(double x, double y, SpatialReference sref = null)
