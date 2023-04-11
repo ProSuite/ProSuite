@@ -15,6 +15,12 @@ namespace ProSuite.Microservices.AO
 {
 	public static class ProtobufGdbUtils
 	{
+		/// <summary>
+		/// The name of the domain property of the FieldMsg that notifies the client that the
+		/// respective field is the subtype field.
+		/// </summary>
+		public const string SubtypeDomainName = "__BaseRows__";
+
 		public static GdbObjRefMsg ToGdbObjRefMsg(IFeature feature)
 		{
 			return new GdbObjRefMsg
@@ -209,6 +215,14 @@ namespace ProSuite.Microservices.AO
 
 			CallbackUtils.DoWithNonNull(aliasName, s => result.Alias = s);
 
+			ISubtypes tableSubtypes = table as ISubtypes;
+
+			int subtypeFieldIdx = -1;
+			if (tableSubtypes != null && tableSubtypes.HasSubtype)
+			{
+				subtypeFieldIdx = tableSubtypes.SubtypeFieldIndex;
+			}
+
 			if (includeFields)
 			{
 				List<FieldMsg> fieldMessages = new List<FieldMsg>();
@@ -221,6 +235,12 @@ namespace ProSuite.Microservices.AO
 				}
 
 				result.Fields.AddRange(fieldMessages);
+			}
+
+			// The subtype field name is needed in QaObjectAttributeConstraint
+			if (subtypeFieldIdx >= 0)
+			{
+				result.Fields[subtypeFieldIdx].DomainName = SubtypeDomainName;
 			}
 
 			return result;

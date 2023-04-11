@@ -289,6 +289,11 @@ namespace ProSuite.Microservices.Server.AO
 					_msg.DebugFormat("Field {0} is duplicate or has been added previously",
 					                 field.Name);
 				}
+
+				if (fieldMsg.DomainName == ProtobufGdbUtils.SubtypeDomainName)
+				{
+					result.SubtypeFieldName = field.Name;
+				}
 			}
 
 			return result;
