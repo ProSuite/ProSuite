@@ -217,7 +217,7 @@ namespace ProSuite.Microservices.AO.QA
 			foreach (IObjectDataset objectDataset in objectDatasets)
 			{
 				foreach (Association association in
-				         objectDataset.AssociationEnds.Select(ae => ae.Association))
+				         objectDataset.GetAssociationEnds().Select(ae => ae.Association))
 				{
 					if (associations.ContainsKey(association.Id))
 					{
