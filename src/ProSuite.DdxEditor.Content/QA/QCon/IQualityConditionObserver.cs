@@ -50,5 +50,8 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 		void NewVersionUuidClicked();
 
 		void DescriptorDocumentationLinkClicked();
+
+		[CanBeNull]
+		string GenerateName();
 	}
 }

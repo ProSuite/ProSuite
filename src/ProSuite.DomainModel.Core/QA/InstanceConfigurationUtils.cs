@@ -337,6 +337,28 @@ namespace ProSuite.DomainModel.Core.QA
 			}
 		}
 
+		public static string GenerateName([NotNull] InstanceConfiguration instanceConfiguration)
+		{
+			string descriptorName = instanceConfiguration.InstanceDescriptor?.Name;
+
+			var datasetParameter =
+				instanceConfiguration.ParameterValues.FirstOrDefault(
+						p => p is DatasetTestParameterValue && p.StringValue != null)
+					as DatasetTestParameterValue;
+
+			string datasetName = datasetParameter?.DatasetValue?.AliasName ??
+			                     datasetParameter?.DatasetValue?.Name ??
+			                     datasetParameter?.ValueSource?.Name;
+
+			if (descriptorName == null || datasetName == null)
+			{
+				return null;
+			}
+
+			// Consider making configurable similar to batch-create
+			return $"{descriptorName}_{datasetName}";
+		}
+
 		private static void ReattachAllTransformersAndFilters(
 			[NotNull] IEnumerable<QualityCondition> conditions,
 			[NotNull] IDomainTransactionManager domainTransactions)
