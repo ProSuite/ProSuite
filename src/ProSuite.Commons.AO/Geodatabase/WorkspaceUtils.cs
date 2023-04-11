@@ -2512,6 +2512,12 @@ namespace ProSuite.Commons.AO.Geodatabase
 			                          StringComparison.OrdinalIgnoreCase);
 		}
 
+		/// <summary>
+		/// Determines whether the specified workspace is an SDE workspace.
+		/// DO NOT USE with custom workspace implementations.
+		/// </summary>
+		/// <param name="workspace"></param>
+		/// <returns></returns>
 		public static bool IsSDEGeodatabase([NotNull] IWorkspace workspace)
 		{
 			Assert.ArgumentNotNull(workspace, nameof(workspace));
