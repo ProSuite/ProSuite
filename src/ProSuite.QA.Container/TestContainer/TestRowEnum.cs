@@ -313,7 +313,8 @@ namespace ProSuite.QA.Container.TestContainer
 				return null;
 			}
 
-			if ((queryFilter is ITileFilter tf && tf.TileExtent != null) || filterHelper.FullGeometrySearch)
+			if ((queryFilter is ITileFilter tf && tf.TileExtent != null) ||
+			    filterHelper.FullGeometrySearch)
 			{
 				if (queryFilter is ISpatialFilter sf)
 				{
@@ -955,9 +956,10 @@ namespace ProSuite.QA.Container.TestContainer
 			{
 				string name = fields.Field[fieldIndex].Name;
 
-				if (
-					string.Compare(name, shapeField, StringComparison.OrdinalIgnoreCase) !=
-					0)
+				// Also exclude the non-persistent __BaseRows__ field which is not officially part of the schema.
+				// So it can be used for a remote join.
+				if (! string.Equals(name, shapeField, StringComparison.OrdinalIgnoreCase) &&
+				    ! string.Equals(name, InvolvedRowUtils.BaseRowField))
 				{
 					sb.AppendFormat("{0},", name);
 				}
@@ -1026,6 +1028,7 @@ namespace ProSuite.QA.Container.TestContainer
 					{
 						cachedRows = preloadedCache.TransferCachedRows(tileCache, cachedTable);
 					}
+
 					cachedRows = cachedRows ?? LoadCachedTableRows(cachedTable, tile, tileCache);
 
 					PreprocessCache(cachedTable, tile, tileCache, cachedRows);
