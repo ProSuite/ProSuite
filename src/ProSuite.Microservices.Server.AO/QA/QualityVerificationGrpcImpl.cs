@@ -145,6 +145,23 @@ namespace ProSuite.Microservices.Server.AO.QA
 			}
 		}
 
+		/// <summary>
+		/// Verifies the data quality with various levels of data being provided:
+		/// - Standalone (request.WorkContext is null) proto-based specification:
+		///   -> If the Schema is delivered by caller (i.e. the data model), harvesting can be omitted
+		///      but the data sources need to have a working catalog path as connection to read the data.
+		///      Data streaming is not (yet) supported.
+		///	     This is useful in distributed scenarios to avoid re-harvesting in each sub-verification.
+		/// - Ddx-based (WorkContext.Type > 0):
+		///   -> If the Schema is delivered by caller (i.e. the actual virtual workspace(s)) it is used
+		///      for data access (using the DataVerificationRequest in a response)
+		///   -> If the Schema is not delivered by caller: The Ddx model is used and the schema/data is
+		///      requested from the client.
+		/// </summary>
+		/// <param name="requestStream"></param>
+		/// <param name="responseStream"></param>
+		/// <param name="context"></param>
+		/// <returns></returns>
 		public override async Task VerifyDataQuality(
 			IAsyncStreamReader<DataVerificationRequest> requestStream,
 			IServerStreamWriter<DataVerificationResponse> responseStream,
@@ -460,7 +477,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 				bool useStandaloneService =
 					IsStandAloneVerification(request, null, out QualitySpecification specification);
-				
+
 				if (DistributedProcessingClients != null && request.MaxParallelProcessing > 1)
 				{
 					distributedTestRunner =
