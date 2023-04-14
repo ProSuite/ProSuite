@@ -288,18 +288,15 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			ObjectClassMsg queryTableMsg = dataResponse.Schema.RelclassDefinitions.First();
 
-			Func<ITable, BackingDataset> createBackingDataset = null;
+			Assert.NotNull(_dataRequestFunc,
+			               "The context is not set up to request query table data.");
 
-			if (_dataRequestFunc != null)
-			{
-				createBackingDataset = (t) =>
-					new RemoteDataset(t, _dataRequestFunc, null, relClassQueryMsg);
-			}
+			BackingDataset CreateBackingDataset(ITable t) =>
+				new RemoteDataset(t, _dataRequestFunc, null, relClassQueryMsg);
 
 			// It is cached on the client side, in case various tests utilize the same definition.
-			// TODO: Test!
-			return ProtobufConversionUtils.FromObjectClassMsg(queryTableMsg, gdbWorkspace,
-			                                                  createBackingDataset);
+			return ProtobufConversionUtils.FromQueryTableMsg(queryTableMsg, gdbWorkspace,
+			                                                 CreateBackingDataset, tables);
 		}
 	}
 }

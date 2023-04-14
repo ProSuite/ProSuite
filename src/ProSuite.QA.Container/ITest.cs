@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
-using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.QA.Container
@@ -117,6 +116,12 @@ namespace ProSuite.QA.Container
 
 		// TODO: What are the rules and restrictions if a transformer wants to use caching?
 		bool NoCaching { get; }
+	}
+
+	// TODO: Merge with ITransformedTable
+	public interface ITransformedTableBasedOnTables
+	{
+		IEnumerable<Involved> GetBaseRowReferences(IReadOnlyRow forTransformedRow);
 	}
 
 	public interface INamedFilter : IInvolvesTables
