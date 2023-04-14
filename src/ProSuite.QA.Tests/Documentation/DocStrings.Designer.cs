@@ -7052,7 +7052,7 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Finds all points in &apos;pointClasses&apos; that are neither from nor to point of any feature in &apos;polylineClasses&apos;
+        ///   Looks up a localized string similar to Finds all points in &apos;pointClasses&apos; that are neither From- nor To-point of any feature in &apos;polylineClasses&apos; and line end points without any point
         ///
         ///Remark: All feature classes in &apos;pointClasses&apos; and &apos;polylineClasses&apos; must have the same spatial reference..
         /// </summary>
@@ -7063,7 +7063,7 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Finds all points in &apos;pointClass&apos; that are neither from nor to point of any feature in &apos;polylineClass&apos;
+        ///   Looks up a localized string similar to Finds all points in &apos;pointClass&apos; that are neither From- nor To-point of any feature in &apos;polylineClass&apos; and line end points without any point
         ///
         ///Remark: The feature classes in &apos;pointClass&apos; and &apos;polylineClass&apos; must have the same spatial reference..
         /// </summary>
@@ -7074,7 +7074,7 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Finds all points in &apos;pointClasses&apos; that are neither from nor to point of any feature in &apos;polylineClasses&apos;.
+        ///   Looks up a localized string similar to Finds all points in &apos;pointClasses&apos; that are neither From- nor To-point of any feature in &apos;polylineClasses&apos; and/or line end points without any point
         ///Performs the tests defined in &apos;errorType&apos;.
         ///
         ///Remark: All feature classes in &apos;pointClasses&apos; and &apos;polylineClasses&apos; must have the same spatial reference..
@@ -7086,7 +7086,7 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Finds all points in &apos;pointClass&apos; that are neither from nor to point of any feature in &apos;polylineClass&apos;
+        ///   Looks up a localized string similar to Finds all points in &apos;pointClass&apos; that are neither From- nor To-point of any feature in &apos;polylineClass&apos; and/or line end points without any point
         ///Performs the tests defined in &apos;errorType&apos;.
         ///
         ///Remark: The feature classes in &apos;pointClass&apos; and &apos;polylineClass&apos; must have the same spatial reference..

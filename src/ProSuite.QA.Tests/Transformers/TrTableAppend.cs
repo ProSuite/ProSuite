@@ -239,6 +239,8 @@ namespace ProSuite.QA.Tests.Transformers
 			public int SourceTableIndex { get; set; } // needed for recycling
 			public IReadOnlyRow SourceRow { get; set; } // needed for recycling
 
+			public override bool HasOID => SourceRow.HasOID;
+
 			public override long OID =>
 				TableT.InvolvedTables.Count * SourceRow.OID + SourceTableIndex;
 
@@ -251,7 +253,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 				if (index == TableT.BaseRowFieldIndex)
 				{
-					return new List<IReadOnlyRow> {SourceRow};
+					return new List<IReadOnlyRow> { SourceRow };
 				}
 
 				int sourceFieldIndex = TableT.GetSourceFieldIndex(SourceTableIndex, index);

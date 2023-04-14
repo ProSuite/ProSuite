@@ -160,7 +160,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 				relationshipClasses, joinType, name, includeOnlyOIDFields, excludeShapeField,
 				whereClause, out string primaryKeyField);
 
-			return ReadOnlyTableFactory.Create(queryTable, primaryKeyField, createJoinedTable: true);
+			return ReadOnlyTableFactory.Create(queryTable, primaryKeyField,
+			                                   createJoinedTable: true);
 		}
 
 		[NotNull]
@@ -354,12 +355,24 @@ namespace ProSuite.Commons.AO.Geodatabase
 			JoinType joinType = JoinType.InnerJoin,
 			bool ensureUniqueIds = false)
 		{
+			return (GdbFeatureClass) CreateJoinedGdbTable(relationshipClass,
+			                                              (ITable) geometryEndClass, name,
+			                                              joinType, ensureUniqueIds);
+		}
+
+		public static GdbTable CreateJoinedGdbTable(
+			[NotNull] IRelationshipClass relationshipClass,
+			[NotNull] ITable leftTable,
+			[NotNull] string name,
+			JoinType joinType = JoinType.InnerJoin,
+			bool ensureUniqueIds = false)
+		{
 			AssociationDescription associationDescription =
 				AssociationDescriptionUtils.CreateAssociationDescription(relationshipClass);
 
-			IReadOnlyTable roGeometryTable = ReadOnlyTableFactory.Create(geometryEndClass);
+			IReadOnlyTable roGeometryTable = ReadOnlyTableFactory.Create(leftTable);
 
-			return (GdbFeatureClass) CreateJoinedGdbFeatureClass(
+			return CreateJoinedGdbTable(
 				associationDescription, roGeometryTable, name, ensureUniqueIds, joinType);
 		}
 
@@ -368,7 +381,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 		/// </summary>
 		/// <param name="associationDescription">The definition of the join</param>
 		/// <param name="geometryTable">The 'left' table which, if it has a geometry field, will
-		/// be used to define the resulting FeatureClass.</param>
+		/// be used to define the resulting FeatureClass. If this table has no geometry field, the
+		/// result will be a GdbTable without geometry field.</param>
 		/// <param name="name">The name of the result class.</param>
 		/// <param name="ensureUniqueIds">Whether some extra performance penalty should be accepted
 		/// in order to guarantee the uniqueness of the OBJECTID field. This is relevant for
@@ -376,7 +390,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		/// <param name="joinType"></param>
 		/// <returns></returns>
 		/// <exception cref="NotImplementedException"></exception>
-		public static GdbTable CreateJoinedGdbFeatureClass(
+		public static GdbTable CreateJoinedGdbTable(
 			[NotNull] AssociationDescription associationDescription,
 			[CanBeNull] IReadOnlyTable geometryTable,
 			[NotNull] string name,
@@ -398,14 +412,18 @@ namespace ProSuite.Commons.AO.Geodatabase
 				                            ? associationDescription.Table2
 				                            : associationDescription.Table1;
 
-			Func<GdbTable, BackingDataset> datasetFactoryFunc = t =>
-				new JoinedDataset(associationDescription, geometryTable, otherTable, t)
-				{
-					JoinType = joinType,
-					IncludeMtoNAssociationRows = ensureUniqueIds
-				};
+			BackingDataset BackingDatasetFactoryFunc(GdbTable joinedSchema)
+			{
+				return new JoinedDataset(
+					       associationDescription, geometryTable, otherTable, joinedSchema)
+				       {
+					       JoinType = joinType,
+					       IncludeMtoNAssociationRows = ensureUniqueIds
+				       };
+			}
 
-			var result = CreateJoinedGdbTable(name, datasetFactoryFunc, geometryTable, otherTable);
+			var result =
+				CreateJoinedGdbTable(name, BackingDatasetFactoryFunc, geometryTable, otherTable);
 
 			// Make sure the ObjectID field is explicitly set (or unset) rather than relying on the
 			// implicit logic in AddField which just makes the last added field of type objectId the
@@ -1511,7 +1529,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 			var sb = new StringBuilder();
 			// for ArcGIS >= 10.8 ? : Primary key field must come before any other OID-Field
 			if (lastFieldBeforeShape != null &&
-			    lastFieldBeforeShape.Equals(primaryKeyField, StringComparison.CurrentCultureIgnoreCase))
+			    lastFieldBeforeShape.Equals(primaryKeyField,
+			                                StringComparison.CurrentCultureIgnoreCase))
 			{
 				AppendField(sb, lastFieldBeforeShape);
 			}
@@ -1530,7 +1549,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			// add primary key field *after* other non-shape fields and *before* shape field (is this still relevand in ArcGIS >= 10.8
 			if (! StringUtils.IsNullOrEmptyOrBlank(lastFieldBeforeShape) &&
-			    ! lastFieldBeforeShape.Equals(primaryKeyField, StringComparison.CurrentCultureIgnoreCase))
+			    ! lastFieldBeforeShape.Equals(primaryKeyField,
+			                                  StringComparison.CurrentCultureIgnoreCase))
 			{
 				AppendField(sb, lastFieldBeforeShape);
 			}

@@ -82,13 +82,16 @@ namespace ProSuite.QA.Container
 					string t = table.Trim();
 					string oidField = $"{t}.OBJECTID";
 					int oidFieldIdx = row.Table.FindField(oidField);
-					if (oidFieldIdx >= 0)
+					if (oidFieldIdx < 0)
 					{
-						long? oid = GdbObjectUtils.ReadRowOidValue(row, oidFieldIdx);
-						if (oid.HasValue)
-						{
-							involveds.Add(new InvolvedRow(t, oid.Value));
-						}
+						continue;
+					}
+
+					long? oidValue = GdbObjectUtils.ReadRowOidValue(row, oidFieldIdx);
+
+					if (oidValue.HasValue)
+					{
+						involveds.Add(new InvolvedRow(t, oidValue.Value));
 					}
 				}
 

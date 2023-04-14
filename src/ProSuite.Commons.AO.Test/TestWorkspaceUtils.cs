@@ -13,24 +13,7 @@ namespace ProSuite.Commons.AO.Test
 	public static class TestWorkspaceUtils
 	{
 		[NotNull]
-		public static IFeatureWorkspace CreateTestWorkspace([NotNull] string mdbName)
-		{
-			string dir = Path.GetTempPath();
-
-			string mdb = Path.Combine(dir, mdbName) + ".gdb";
-
-			if (Directory.Exists(mdb))
-			{
-				Directory.Delete(mdb, true);
-			}
-
-			IWorkspaceName wsName = WorkspaceUtils.CreateFileGdbWorkspace(dir, mdbName);
-			return (IFeatureWorkspace)((IName)wsName).Open();
-		}
-
-		[NotNull]
-		public static IFeatureWorkspace CreateTestFgdbWorkspace(
-			[NotNull] string gdbName)
+		public static IFeatureWorkspace CreateTestFgdbWorkspace([NotNull] string gdbName)
 		{
 			string dir = Path.GetTempPath();
 
