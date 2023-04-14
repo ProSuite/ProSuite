@@ -563,6 +563,9 @@ namespace ProSuite.UI.QA.VerificationProgress
 				StatusText = $"Error: {exception.Message}";
 
 				result = ServiceCallStatus.Failed;
+
+				// Otherwise the CancelOrClose button thinks it is still running and tries to cancel...
+				ProgressTracker.RemoteCallStatus = ServiceCallStatus.Failed;
 			}
 
 			RunningProgressTypeText = $"{result}";
