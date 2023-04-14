@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
@@ -43,28 +44,64 @@ namespace ProSuite.Microservices.Server.AO.QA
 			private readonly ITest _test;
 			private readonly ISpatialReference _issueSpatialReference;
 
+			private IssueMsg _issueMsg;
+
 			public IssueKey([NotNull] IssueMsg issueMsg,
 			                [NotNull] ITest test,
 			                [CanBeNull] ISpatialReference issueSpatialReference)
 			{
-				IssueMsg = issueMsg;
+				_issueMsg = issueMsg;
+				ConditionId = _issueMsg.ConditionId;
+				Description = _issueMsg.Description;
+
 				_test = test;
 				_issueSpatialReference = issueSpatialReference;
 			}
 
-			public IssueMsg IssueMsg { get; }
-
-			public List<InvolvedRow> InvolvedRows =>
-				_involvedRows ??
-				//				(_involvedRows = GetSortedInvolvedRows(IssueMsg.LegacyInvolvedRows));
-				(_involvedRows = GetSortedInvolvedRows(IssueMsg.InvolvedTables));
-
+			public int ConditionId { get; }
+			public string Description { get; }
+			public List<InvolvedRow> InvolvedRows => EnsureInvolvedRows();
 			private List<InvolvedRow> _involvedRows;
+			private List<InvolvedRow> EnsureInvolvedRows()
+			{
+				if (_involvedRows != null)
+				{
+					return _involvedRows;
+				}
 
-			public QaError QaError =>
-				_qaError ?? (_qaError = GetQaError());
+				_involvedRows = GetSortedInvolvedRows(_issueMsg.InvolvedTables);
+				TryClearIssueMsg();
+				return _involvedRows;
+			}
 
+			public QaError QaError => EnsureQaError();
 			private QaError _qaError;
+			private QaError EnsureQaError()
+			{
+				if (_qaError != null)
+				{
+					return _qaError;
+				}
+				_qaError = GetQaError();
+				TryClearIssueMsg();
+				return _qaError;
+			}
+
+			private bool TryClearIssueMsg()
+			{
+				if (_issueMsg == null)
+				{
+					return false;
+				}
+
+				if (_qaError != null && _involvedRows != null)
+				{
+					_issueMsg = null;
+					return true;
+				}
+
+				return false;
+			}
 
 			private List<InvolvedRow> GetSortedInvolvedRows(IList<InvolvedTableMsg> involvedTables)
 			{
@@ -92,8 +129,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 			private QaError GetQaError()
 			{
 				QaError error = new QaError(
-					_test, IssueMsg.Description, InvolvedRows,
-					ProtobufGeometryUtils.FromShapeMsg(IssueMsg.IssueGeometry,
+					_test, _issueMsg.Description, InvolvedRows,
+					ProtobufGeometryUtils.FromShapeMsg(_issueMsg.IssueGeometry,
 					                                   _issueSpatialReference), null, null);
 				error.ReduceGeometry();
 				return error;
@@ -110,7 +147,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 				if (x == null || y == null)
 					return false;
 
-				if (x.IssueMsg.ConditionId != y.IssueMsg.ConditionId)
+				if (x.ConditionId != y.ConditionId)
 					return false;
 
 				if (TestUtils.CompareSortedInvolvedRows(x.InvolvedRows, y.InvolvedRows,
@@ -130,7 +167,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			public int GetHashCode(IssueKey obj)
 			{
-				return obj.IssueMsg.ConditionId ^ 29 * obj.IssueMsg.Description.GetHashCode();
+				return obj.ConditionId ^ 29 * obj.Description.GetHashCode();
 			}
 		}
 
@@ -553,13 +590,13 @@ namespace ProSuite.Microservices.Server.AO.QA
 			ProcessTileCompletion(subVerification);
 		}
 
-		private IDictionary<IssueKey, IssueMsg> _knownIssues;
+		private IDictionary<IssueKey, IssueKey> _knownIssues;
 		private ISpatialReference _issueSpatialReference;
 
-		private IDictionary<IssueKey, IssueMsg> KnownIssues =>
+		private IDictionary<IssueKey, IssueKey> KnownIssues =>
 			_knownIssues ??
 			(_knownIssues =
-				 new ConcurrentDictionary<IssueKey, IssueMsg>(new IssueKeyComparer()));
+				 new ConcurrentDictionary<IssueKey, IssueKey>(new IssueKeyComparer()));
 
 		private bool DrainIssues([CanBeNull] SubVerification fromSubVerification,
 		                         int max = int.MaxValue)
@@ -573,6 +610,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			bool drained = false;
 			int drainedCount = 0;
+			Stopwatch w = Stopwatch.StartNew();
 			while (drainedCount < max &&
 			       verification.SubResponse.Issues.TryTake(out IssueMsg issueMsg))
 			{
@@ -593,7 +631,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 					IssueKey key = new IssueKey(issueMsg, test, IssueSpatialReference);
 					if (! KnownIssues.ContainsKey(key))
 					{
-						KnownIssues.Add(key, issueMsg);
+						KnownIssues.Add(key, key);
 					}
 					else
 					{
@@ -613,6 +651,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 				drained = true;
 			}
+			w.Stop();
 
 			return drained;
 		}
@@ -655,7 +694,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 				return;
 			}
 
-			IDictionary<IssueKey, IssueMsg> knownIssues = KnownIssues;
+			IDictionary<IssueKey, IssueKey> knownIssues = KnownIssues;
 			List<IssueKey> fullyProcessed = new List<IssueKey>();
 			foreach (var issue in knownIssues.Keys)
 			{

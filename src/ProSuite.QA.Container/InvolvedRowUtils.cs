@@ -84,12 +84,16 @@ namespace ProSuite.QA.Container
 					int oidFieldIdx = row.Table.FindField(oidField);
 					if (oidFieldIdx >= 0)
 					{
-						long oid = Assert.NotNull(GdbObjectUtils.ReadRowOidValue(row, oidFieldIdx))
-						                 .Value;
-						involveds.Add(new InvolvedRow(t, oid));
+						long? oid = GdbObjectUtils.ReadRowOidValue(row, oidFieldIdx);
+						if (oid.HasValue)
+						{
+							involveds.Add(new InvolvedRow(t, oid.Value));
+						}
 					}
 				}
 
+				Assert.True(involveds.Count > 0,
+				            $"Only NULL OIDs found for a record of IQueryName {row.Table.Name} with tables {qn.QueryDef.Tables}");
 				return new InvolvedNested(row.Table.Name, involveds);
 			}
 
