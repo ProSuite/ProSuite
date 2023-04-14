@@ -108,6 +108,8 @@ namespace ProSuite.QA.Container
 					}
 				}
 
+				Assert.True(involveds.Count > 0,
+				            $"Only NULL OIDs found for a record of IQueryName {row.Table.Name} with tables {qn.QueryDef.Tables}");
 				return new InvolvedNested(row.Table.Name, involveds);
 			}
 

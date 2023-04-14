@@ -1,4 +1,5 @@
 using System;
+using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -43,6 +44,16 @@ namespace ProSuite.QA.Container
 
 				return _geometry;
 			}
+		}
+
+		public WKSEnvelope? GetEnvelope()
+		{
+			if (! VerifyEnvelope())
+			{
+				return null;
+			}
+
+			return new WKSEnvelope { XMin = _xMin, YMin = _yMin, XMax = _xMax, YMax = _yMax };
 		}
 
 		public int CompareEnvelope(QaErrorGeometry other)
