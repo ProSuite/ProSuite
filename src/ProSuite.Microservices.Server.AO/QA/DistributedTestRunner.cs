@@ -12,8 +12,11 @@ using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Geom;
+using ProSuite.Commons.Geom.SpatialIndex;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Progress;
 using ProSuite.DomainModel.AO.DataModel;
@@ -87,6 +90,12 @@ namespace ProSuite.Microservices.Server.AO.QA
 				return _qaError;
 			}
 
+			public bool EnsureKeyData()
+			{
+				EnsureInvolvedRows();
+				EnsureQaError();
+				return TryClearIssueMsg();
+			}
 			private bool TryClearIssueMsg()
 			{
 				if (_issueMsg == null)
@@ -188,6 +197,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			public SubResponse SubResponse { get; }
 			public IEnvelope TileEnvelope { get; set; }
 			public QualityConditionGroup QualityConditionGroup { get; }
+			public bool Completed { get; set; }
 
 			private Dictionary<int, QualityCondition> _idConditions;
 
@@ -219,10 +229,35 @@ namespace ProSuite.Microservices.Server.AO.QA
 				return _idConditions[conditionId];
 			}
 
-			public bool IsFullyProcessed(IssueKey issue)
+			public bool ContainsCondition(int conditionId)
 			{
+				_idConditions = _idConditions ?? GetIdConditions();
+				return _idConditions.ContainsKey(conditionId);
+			}
+
+			public bool IsFullyProcessed(IssueKey issue, [NotNull]BoxTree<SubVerification> boxTree)
+			{
+
+				_idConditions = _idConditions ?? GetIdConditions();
+				if (!_idConditions.ContainsKey(issue.ConditionId))
+				{
+					return false;
+				}
+				if (!(issue.QaError.InvolvedExtent is WKSEnvelope b))
+				{
+					return false;
+				}
+
+				Box searchBox = new Box(new Pnt2D(b.XMin, b.YMin), new Pnt2D(b.XMax, b.YMax));
+				foreach (BoxTree<SubVerification>.TileEntry entry in boxTree.Search(searchBox))
+				{
+					if (entry.Value.Completed == false)
+					{
+						return false;
+					}
+				}
 				// TODO: Check extent of issue with processed area
-				return false;
+				return true;
 			}
 		}
 
@@ -246,6 +281,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 		private readonly HashSet<IQualityVerificationClient> _failedClients =
 			new HashSet<IQualityVerificationClient>();
+
+		private BoxTree<SubVerification> _subVerificationsTree;
 
 		public DistributedTestRunner(
 			[NotNull] IList<IQualityVerificationClient> workersClients,
@@ -362,6 +399,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 						SubVerification retry =
 							new SubVerification(completed.SubRequest,
 							                    completed.QualityConditionGroup);
+						retry.TileEnvelope = completed.TileEnvelope;
 						unhandledSubverifications.Push(retry);
 					}
 
@@ -587,7 +625,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			DrainIssues(subVerification);
 
-			ProcessTileCompletion(subVerification);
+			ProcessCompletion(subVerification);
 		}
 
 		private IDictionary<IssueKey, IssueKey> _knownIssues;
@@ -631,6 +669,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 					IssueKey key = new IssueKey(issueMsg, test, IssueSpatialReference);
 					if (! KnownIssues.ContainsKey(key))
 					{
+						key.EnsureKeyData();
 						KnownIssues.Add(key, key);
 					}
 					else
@@ -686,21 +725,25 @@ namespace ProSuite.Microservices.Server.AO.QA
 			return error;
 		}
 
-		private void ProcessTileCompletion(SubVerification forSubVerification)
+		private void ProcessCompletion(SubVerification forSubVerification)
 		{
+			forSubVerification.Completed = true;
 			IEnvelope tile = forSubVerification.TileEnvelope;
-			if (tile == null)
-			{
-				return;
-			}
-
 			IDictionary<IssueKey, IssueKey> knownIssues = KnownIssues;
-			List<IssueKey> fullyProcessed = new List<IssueKey>();
-			foreach (var issue in knownIssues.Keys)
+			IList<IssueKey> fullyProcessed;
+			if (tile != null)
 			{
-				if (forSubVerification.IsFullyProcessed(issue))
+				fullyProcessed = ProcessTileCompletion(forSubVerification, tile);
+			}
+			else
+			{
+				fullyProcessed = new List<IssueKey>();
+				foreach (var issue in knownIssues.Keys)
 				{
-					fullyProcessed.Add(issue);
+					if (forSubVerification.ContainsCondition(issue.ConditionId))
+					{
+						fullyProcessed.Add(issue);
+					}
 				}
 			}
 
@@ -708,6 +751,38 @@ namespace ProSuite.Microservices.Server.AO.QA
 			{
 				knownIssues.Remove(issue);
 			}
+		}
+
+		[NotNull]
+		private IList<IssueKey> ProcessTileCompletion([NotNull]SubVerification forSubVerification, [NotNull]IEnvelope tile)
+		{
+			if (_subVerificationsTree == null)
+			{
+				return new List<IssueKey>();
+			}
+
+			Box.BoxComparer cmp = new Box.BoxComparer();
+			Box tileBox = ProxyUtils.CreateBox(tile);
+			foreach (BoxTree<SubVerification>.TileEntry tileEntry
+			         in _subVerificationsTree.Search(tileBox))
+			{
+				if (cmp.Equals(tileEntry.Box, tileBox))
+				{
+					tileEntry.Value.Completed = true;
+				}
+			}
+
+			IDictionary<IssueKey, IssueKey> knownIssues = KnownIssues;
+			List<IssueKey> fullyProcessed = new List<IssueKey>();
+			foreach (var issue in knownIssues.Keys)
+			{
+				if (forSubVerification.IsFullyProcessed(issue, _subVerificationsTree))
+				{
+					fullyProcessed.Add(issue);
+				}
+			}
+
+			return fullyProcessed;
 		}
 
 		private static void StartVerification([CanBeNull] QualityVerification qualityVerification)
@@ -926,6 +1001,11 @@ namespace ProSuite.Microservices.Server.AO.QA
 				tileParallelVerifications =
 					CreateSplitAreaSubverifications(
 						originalRequest, specification, parallelGroup);
+
+				_subVerificationsTree =
+					BoxTreeUtils.CreateBoxTree(
+						tileParallelVerifications,
+						x => ProxyUtils.CreateBox(Assert.NotNull(x.TileEnvelope)), 4);
 
 				_msg.Info(
 					$"Built {tileParallelVerifications.Count} tile parallel subverifications for {parallelGroup.QualityConditions.Count} quality conditions");

@@ -78,7 +78,10 @@ namespace ProSuite.QA.Container
 		public bool AssertionFailed { get; }
 
 		[CanBeNull]
-		public WKSEnvelope? InvolvedExtent => _involvedExtent ?? (_involvedExtent = GetInvolvedExtent(InvolvedRows));
+		public WKSEnvelope? InvolvedExtent =>
+			_involvedExtent ??
+			(_involvedExtent =
+				 GetInvolvedExtent(InvolvedRows) ?? _errorGeometry?.GetEnvelope());
 
 		[CanBeNull]
 		public IList<object> Values { get; }
@@ -132,9 +135,10 @@ namespace ProSuite.QA.Container
 			}
 
 			IEnvelope involvedExtent = null;
-			foreach (IReadOnlyRow testedRow in involvedRows)
+			foreach (InvolvedRow involvedRow in involvedRows)
 			{
-				if (testedRow is IReadOnlyFeature testedFeature)
+				// TODO: implement correct logic. Remark: involved rows know only table / OID
+				if (involvedRow is IReadOnlyFeature testedFeature)
 				{
 					IEnvelope shapeEnvelope = null;
 					try
