@@ -8,6 +8,7 @@ using ProSuite.Commons.Callbacks;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom.EsriShape;
+using ProSuite.Commons.Text;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.Microservices.Definitions.Shared;
 
@@ -64,7 +65,8 @@ namespace ProSuite.Microservices.AO
 
 		public static GdbObjectMsg ToGdbObjectMsg([NotNull] IObject featureOrObject,
 		                                          bool includeSpatialRef = false,
-		                                          bool includeFieldValues = false)
+		                                          bool includeFieldValues = false,
+		                                          string subFields = null)
 		{
 			var result = new GdbObjectMsg();
 
@@ -74,26 +76,39 @@ namespace ProSuite.Microservices.AO
 
 			if (featureOrObject is IFeature feature)
 			{
-				IGeometry featureShape = GdbObjectUtils.GetFeatureShape(feature);
+				// NOTE: Normal fields just return null if they have not been fetched due to sub-field restrictions.
+				//       However, the Shape property E_FAILs.
+				bool canGetShape =
+					subFields == null || subFields == "*" ||
+					StringUtils.Contains(subFields, ((IFeatureClass) feature.Class).ShapeFieldName,
+					                     StringComparison.InvariantCultureIgnoreCase);
 
-				ShapeMsg.FormatOneofCase shapeFormat =
-					featureShape?.GeometryType == esriGeometryType.esriGeometryMultiPatch
-						? ShapeMsg.FormatOneofCase.Wkb
-						: ShapeMsg.FormatOneofCase.EsriShape;
+				if (canGetShape)
+				{
+					IGeometry featureShape = GdbObjectUtils.GetFeatureShape(feature);
 
-				SpatialReferenceMsg.FormatOneofCase spatialRefFormat = includeSpatialRef
-					? SpatialReferenceMsg.FormatOneofCase.SpatialReferenceEsriXml
-					: SpatialReferenceMsg.FormatOneofCase.SpatialReferenceWkid;
+					ShapeMsg.FormatOneofCase shapeFormat =
+						featureShape?.GeometryType == esriGeometryType.esriGeometryMultiPatch
+							? ShapeMsg.FormatOneofCase.Wkb
+							: ShapeMsg.FormatOneofCase.EsriShape;
 
-				result.Shape =
-					ProtobufGeometryUtils.ToShapeMsg(featureShape, shapeFormat, spatialRefFormat);
+					SpatialReferenceMsg.FormatOneofCase spatialRefFormat = includeSpatialRef
+						? SpatialReferenceMsg.FormatOneofCase.SpatialReferenceEsriXml
+						: SpatialReferenceMsg.FormatOneofCase.SpatialReferenceWkid;
+
+					result.Shape =
+						ProtobufGeometryUtils.ToShapeMsg(featureShape, shapeFormat,
+						                                 spatialRefFormat);
+				}
 			}
 
 			if (includeFieldValues)
 			{
-				for (int i = 0; i < featureOrObject.Fields.FieldCount; i++)
+				IFields fields = featureOrObject.Fields;
+
+				for (int i = 0; i < fields.FieldCount; i++)
 				{
-					IField field = featureOrObject.Fields.Field[i];
+					IField field = fields.Field[i];
 
 					object valueObject = featureOrObject.Value[i];
 
@@ -182,7 +197,8 @@ namespace ProSuite.Microservices.AO
 			return ToObjectClassMsg((ITable) objectClass, objectClass.ObjectClassID, includeFields);
 		}
 
-		public static ObjectClassMsg ToObjectClassMsg([NotNull] ITable table, int classHandle,
+		public static ObjectClassMsg ToObjectClassMsg([NotNull] ITable table,
+		                                              int classHandle,
 		                                              bool includeFields = false,
 		                                              string aliasName = null)
 		{
@@ -227,10 +243,11 @@ namespace ProSuite.Microservices.AO
 			{
 				List<FieldMsg> fieldMessages = new List<FieldMsg>();
 
-				for (int i = 0; i < table.Fields.FieldCount; i++)
-				{
-					IField field = table.Fields.Field[i];
+				IFields fields = table.Fields;
 
+				for (int i = 0; i < fields.FieldCount; i++)
+				{
+					IField field = fields.Field[i];
 					fieldMessages.Add(ToFieldMsg(field));
 				}
 
