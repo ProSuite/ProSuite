@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WorkListDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Name>a8ac5bbc_c58e_4469_b3c7_f0c215220d47</Name>
+  <Type>ProSuite.AGP.WorkList.Domain.SelectionWorkList</Type>
+  <Assembly>ProSuite.AGP.WorkList</Assembly>
+  <Workspaces>
+    <Workspace workspaceFactory="FileGDB" connectionString="C:/Users/daro/OneDrive%20-%20Esri%20Deutschland%20+%20Esri%20Schweiz/Documents/ArcGIS/Packages/Vorlage_APRX_AddinMigration_CMI_458a1e/p20/_zrluedit_as_ext_dkpflxxx.gdb">
+      <Tables>
+        <Table tableId="7" name="DKPFLXXX_EDIT_V1_PY2" />
+      </Tables>
+    </Workspace>
+	  <Workspace workspaceFactory="FileGDB" connectionString="C:/foo%20bar.gdb">
+		  <Tables>
+			  <Table tableId="7" name="DKPFLXXX_EDIT_V1_PY2" />
+		  </Tables>
+	  </Workspace>
+    <Workspace workspaceFactory="FileGDB" connectionString="file:///C:/temp/agp_projects/Default.gdb">
+      <Tables>
+        <Table tableId="7" name="DKPFLXXX_EDIT_V1_PY2" />
+      </Tables>
+    </Workspace>
+  </Workspaces>
+  <CurrentItemIndex>0</CurrentItemIndex>
+  <Items>
+    <Item id="1" visited="true" status="Todo" connectionString="C:/Users/daro/OneDrive%20-%20Esri%20Deutschland%20+%20Esri%20Schweiz/Documents/ArcGIS/Packages/Vorlage_APRX_AddinMigration_CMI_458a1e/p20/_zrluedit_as_ext_dkpflxxx.gdb">
+      <Row oid="1510" tableId="125" tableName="DKPFLXXX_EDIT_V1_PT" />
+    </Item>
+    <Item id="2" visited="false" status="Todo" connectionString="file:///C:/temp/agp_projects/Default.gdb">
+      <Row oid="1820" tableId="7" tableName="DKPFLXXX_EDIT_V1_PY2" />
+    </Item>
+  </Items>
+</WorkListDefinition>

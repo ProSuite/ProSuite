@@ -24,7 +24,7 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			TestUtils.ConfigureUnitTestLogging();
+			Commons.Test.Testing.TestUtils.ConfigureUnitTestLogging();
 			TestUtils.InitializeLicense();
 		}
 

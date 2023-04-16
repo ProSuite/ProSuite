@@ -40,14 +40,12 @@
     <ProjectReference Include="..\ProSuite.Commons.AGP.Core\ProSuite.Commons.AGP.Core.csproj" />
     <ProjectReference Include="..\ProSuite.Commons.AGP.Hosting\ProSuite.Commons.AGP.Hosting.csproj" />
     <ProjectReference Include="..\ProSuite.Commons.AGP\ProSuite.Commons.AGP.csproj" />
+    <ProjectReference Include="..\ProSuite.Commons.Test\ProSuite.Commons.Test.csproj" />
     <ProjectReference Include="..\ProSuite.Commons\ProSuite.Commons.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="TestData\IssuePolygons.xml" />
     <Content Include="TestData\ReadMe_test_data_creation.txt" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="TestData\work_list_definition_pointing_to_sde.xml.swl" />
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="IssuePolygonsGdbRepository.cs" />

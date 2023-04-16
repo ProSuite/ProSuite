@@ -399,7 +399,7 @@ namespace ProSuite.DomainModel.Persistence.Core.QA.Xml
 			XmlDataQualityUtils.AssertUniqueInstanceDescriptorNames(document);
 
 			// validate stored descriptors
-			IList<InstanceDescriptor> existingDescriptors = InstanceDescriptors.GetAll();
+			IList<InstanceDescriptor> existingDescriptors = GetAllInstanceDescriptors();
 
 			AssertUniqueDescriptorNames(existingDescriptors, "ddx");
 			AssertUniqueInstanceDefinitions(existingDescriptors, "ddx");
@@ -734,7 +734,7 @@ namespace ProSuite.DomainModel.Persistence.Core.QA.Xml
 			[NotNull] IDictionary<string, DdxModel> modelsByWorkspaceId,
 			bool ignoreConditionsForUnknownDatasets)
 		{
-			IList<InstanceConfiguration> configurations = InstanceConfigurations.GetAll();
+			IList<InstanceConfiguration> configurations = GetAllInstanceConfigurations();
 
 			IDictionary<string, InstanceConfiguration> configsByName =
 				GetExistingConfigurationsByEscapedName(configurations);

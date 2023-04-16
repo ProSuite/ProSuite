@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Web;
 using ArcGIS.Core.Data.PluginDatastore;
 using ProSuite.AGP.WorkList.Contracts;
@@ -26,72 +27,84 @@ namespace ProSuite.AGP.WorkList.Datasource
 
 		public override void Open([NotNull] Uri connectionPath) // "open workspace"
 		{
-			Assert.ArgumentNotNull(connectionPath, nameof(connectionPath));
-
-			_msg.Debug($"Try to open {connectionPath}");
-
-			// Empirical: when opening a project (.aprx) with a saved layer
-			// using our Plugin Datasource, the connectionPath will be
-			// prepended with the project file's directory path and
-			// two times URL encoded (e.g., ' ' => %20 => %2520)!
-
-			var path = connectionPath.IsAbsoluteUri
-				           ? connectionPath.LocalPath
-				           : connectionPath.ToString();
-
-			path = HttpUtility.UrlDecode(path);
-			path = HttpUtility.UrlDecode(path);
-
-			if (! File.Exists(path))
+			Try(() =>
 			{
-				_msg.Debug($"{path} does not exists");
-			}
+				Assert.ArgumentNotNull(connectionPath, nameof(connectionPath));
 
-			string name = WorkListUtils.GetWorklistName(path);
+				_msg.Debug($"Try to open {connectionPath}");
 
-			// the following situation: when work list layer is already in TOC
-			// and its data source (work list definition file) is renamed
-			// Pro still opens the old data source (old file name) which
-			// doesn't exist anymore
-			if (string.IsNullOrEmpty(name))
-			{
-				return;
-			}
+				// Empirical: when opening a project (.aprx) with a saved layer
+				// using our Plugin Datasource, the connectionPath will be
+				// prepended with the project file's directory path and
+				// two times URL encoded (e.g., ' ' => %20 => %2520)!
 
-			_tableNames = new ReadOnlyCollection<string>(
-				new List<string>
+				var path = connectionPath.IsAbsoluteUri
+					           ? connectionPath.LocalPath
+					           : connectionPath.ToString();
+
+				path = HttpUtility.UrlDecode(path);
+				path = HttpUtility.UrlDecode(path);
+
+				if (! File.Exists(path))
 				{
-					FormatTableName(name)
-				});
+					_msg.Debug($"{path} does not exists");
+				}
+
+				string name = WorkListUtils.GetWorklistName(path);
+
+				// the following situation: when work list layer is already in TOC
+				// and its data source (work list definition file) is renamed
+				// Pro still opens the old data source (old file name) which
+				// doesn't exist anymore
+				if (string.IsNullOrEmpty(name))
+				{
+					return;
+				}
+
+				_tableNames = new ReadOnlyCollection<string>(
+					new List<string>
+					{
+						FormatTableName(name)
+					});
+			}, "Error opening work list data source");
 		}
 
 		public override void Close()
 		{
 			_workList = null;
+			_msg.VerboseDebug(() => "WorkListDataSource.Close()");
 		}
 
 		public override PluginTableTemplate OpenTable([NotNull] string name)
 		{
-			Assert.ArgumentNotNull(name, nameof(name));
-
-			// The given name is one of those returned by GetTableNames()
-			_msg.Debug($"Open table '{name}'");
-
-			ParseLayer(name, out string listName);
-
-			_workList = WorkListRegistry.Instance.Get(name);
-
-			if (_workList != null)
+			WorkItemTable result = null;
+			Try(() =>
 			{
-				return new WorkItemTable(_workList, listName);
-			}
+				Assert.ArgumentNotNull(name, nameof(name));
 
-			var message = $"Cannot find data source of work list: {name}";
-			_msg.Error(message);
+				// The given name is one of those returned by GetTableNames()
+				_msg.Debug($"Open table '{name}'");
 
-			// The exception is not going to crash Pro. It results in a broken
-			// data source of the work list layer.
-			throw new ArgumentException(message);
+				ParseTableName(name, out string listName);
+
+				_workList = WorkListRegistry.Instance.Get(name);
+
+				if (_workList != null)
+				{
+					result = new WorkItemTable(_workList, listName);
+				}
+				else
+				{
+					var message = $"Cannot find data source of work list: {name}";
+
+					// The exception is not going to crash Pro. Or is it?
+					// It might depend on the application state.
+					// It results in a broken data source of the work list layer.
+					_msg.Warn(message);
+				}
+			}, $"Error opening work list {name}");
+
+			return result;
 		}
 
 		public override IReadOnlyList<string> GetTableNames()
@@ -111,10 +124,28 @@ namespace ProSuite.AGP.WorkList.Datasource
 			return Assert.NotNull(listName);
 		}
 
-		private static void ParseLayer([NotNull] string tableName, out string listName)
+		private static void ParseTableName([NotNull] string tableName, out string listName)
 		{
 			// for now table name *is* the list name
 			listName = tableName;
+		}
+
+		private static void Try([NotNull] Action action,
+		                        [NotNull] string message,
+		                        [CallerMemberName] string caller = null)
+		{
+			Assert.ArgumentNotNull(action, nameof(action));
+
+			try
+			{
+				_msg.VerboseDebug(() => $"WorkListDataSource.{caller}");
+
+				action();
+			}
+			catch (Exception e)
+			{
+				_msg.Warn(message, e);
+			}
 		}
 	}
 }

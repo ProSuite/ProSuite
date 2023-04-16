@@ -6,10 +6,8 @@ using ProSuite.DomainModel.Core.QA;
 
 namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 {
-	public class BatchCreateQualityConditionsCommand :
-		AddItemCommandBase<TestDescriptorItem>
+	public class BatchCreateQualityConditionsCommand : AddItemCommandBase<TestDescriptorItem>
 	{
-		private readonly IApplicationController _applicationController;
 		private string _toolTip;
 
 		/// <summary>
@@ -20,10 +18,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 		public BatchCreateQualityConditionsCommand(
 			[NotNull] TestDescriptorItem item,
 			[NotNull] IApplicationController applicationController)
-			: base(item, applicationController)
-		{
-			_applicationController = applicationController;
-		}
+			: base(item, applicationController) { }
 
 		public override string Text => "Batch Create Quality Conditions...";
 
@@ -59,19 +54,19 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 
 				if (category == null)
 				{
-					_applicationController.RefreshFirstItem<QualityConditionsItem>();
+					ApplicationController.RefreshFirstItem<QualityConditionsItem>();
 				}
 				else
 				{
-					_applicationController.RefreshItem(category);
+					ApplicationController.RefreshItem(category);
 				}
 
 				// reload test descriptor item to update list of quality conditions
-				_applicationController.ReloadCurrentItem();
+				ApplicationController.ReloadCurrentItem();
 			}
 			catch
 			{
-				_applicationController.ReloadCurrentItem();
+				ApplicationController.ReloadCurrentItem();
 
 				throw;
 			}
