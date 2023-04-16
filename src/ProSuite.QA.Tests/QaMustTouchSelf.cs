@@ -166,7 +166,7 @@ namespace ProSuite.QA.Tests
 			}
 
 			var featureClass = (IReadOnlyFeatureClass) InvolvedTables[tableIndex];
-			List<int> oids = errorFeatures.Select(feature => feature.OID).ToList();
+			List<long> oids = errorFeatures.Select(feature => feature.OID).ToList();
 
 			// TODO extract base class (QaRequiredSpatialRelationSelf)
 			// TODO use issue code NoTouchingFeature_WithFulfilledConstraint
@@ -174,7 +174,7 @@ namespace ProSuite.QA.Tests
 			return GdbQueryUtils.GetRows(featureClass, oids, recycling).Cast<IReadOnlyFeature>()
 			                    .Sum(feature => ReportError(
 				                         "Feature is not touched by another feature",
-				                         GetInvolvedRows(feature),
+				                         InvolvedRowUtils.GetInvolvedRows(feature),
 				                         feature.ShapeCopy,
 				                         Codes[MustTouchIssueCodes.NoTouchingFeature],
 				                         TestUtils.GetShapeFieldName(feature)));

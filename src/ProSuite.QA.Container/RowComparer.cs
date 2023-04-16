@@ -31,7 +31,7 @@ namespace ProSuite.QA.Container
 				return 0;
 			}
 
-			int oidDifference = row0.OID - row1.OID;
+			int oidDifference = row0.OID.CompareTo(row1.OID);
 			if (oidDifference != 0)
 			{
 				return oidDifference;
@@ -43,10 +43,7 @@ namespace ProSuite.QA.Container
 
 			if (table0 == table1)
 			{
-				RelatedTables relTables = _relatedTablesProvider.GetRelatedTables(row0);
-				return relTables == null
-					       ? 0
-					       : CompareRelatedRows(row0, row1, relTables);
+				return CompareRelatedRows(row0, row1);
 			}
 
 			// TODO names might not be unique (if multiple workspaces are involved)
@@ -57,11 +54,10 @@ namespace ProSuite.QA.Container
 		}
 
 		private static int CompareRelatedRows([NotNull] IReadOnlyRow row0,
-		                                      [NotNull] IReadOnlyRow row1,
-		                                      [NotNull] RelatedTables relTables)
+		                                      [NotNull] IReadOnlyRow row1)
 		{
-			IList<InvolvedRow> relatedList0 = relTables.GetInvolvedRows(row0);
-			IList<InvolvedRow> relatedList1 = relTables.GetInvolvedRows(row1);
+			IList<InvolvedRow> relatedList0 = InvolvedRowUtils.GetInvolvedRows(row0);
+			IList<InvolvedRow> relatedList1 = InvolvedRowUtils.GetInvolvedRows(row1);
 
 			int relatedCount = relatedList0.Count;
 			Assert.AreEqual(relatedCount, relatedList1.Count, "Invalid involved rows");
@@ -74,10 +70,10 @@ namespace ProSuite.QA.Container
 				Assert.AreEqual(relatedRow0.TableName, relatedRow1.TableName,
 				                "Involved Rows not sorted");
 
-				int relOidDifference = relatedRow0.OID - relatedRow1.OID;
-				if (relOidDifference != 0)
+				int relatedRowCompare = relatedRow0.OID.CompareTo(relatedRow1.OID);
+				if (relatedRowCompare != 0)
 				{
-					return relOidDifference;
+					return relatedRowCompare;
 				}
 			}
 

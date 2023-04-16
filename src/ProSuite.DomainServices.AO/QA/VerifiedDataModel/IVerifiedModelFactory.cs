@@ -16,12 +16,14 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 		/// <param name="name"></param>
 		/// <param name="databaseName"></param>
 		/// <param name="schemaOwner"></param>
+		/// <param name="usedDatasetNames"></param>
 		/// <returns></returns>
 		[NotNull]
 		Model CreateModel([NotNull] IWorkspace workspace,
 		                  [NotNull] string name,
 		                  [CanBeNull] string databaseName,
-		                  [CanBeNull] string schemaOwner);
+		                  [CanBeNull] string schemaOwner,
+		                  [CanBeNull] IList<string> usedDatasetNames = null);
 
 		/// <summary>
 		/// Assigns the spatial reference of the most frequently used datasets. The specified

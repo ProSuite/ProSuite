@@ -15,11 +15,12 @@ namespace ProSuite.Commons.AO.Geometry
 	{
 		public static IArrayProvider<WKSPointZ> WksPointArrayProvider { get; set; }
 
-		public static List<Pnt3D> GetPntList(IGeometry points)
+		public static List<Pnt3D> GetPntList(IGeometry points,
+		                                     bool excludeZs = false)
 		{
 			var pointCollection = (IPointCollection) points;
 
-			IEnumerable<Pnt3D> pntsEnum = GetPnts3D(points);
+			IEnumerable<Pnt3D> pntsEnum = GetPnts3D(points, 0, null, excludeZs);
 
 			var pntList = new List<Pnt3D>(pointCollection.PointCount);
 			pntList.AddRange(pntsEnum);
@@ -29,9 +30,13 @@ namespace ProSuite.Commons.AO.Geometry
 
 		public static IEnumerable<Pnt3D> GetPnts3D(IGeometry pointCollection,
 		                                           int start = 0,
-		                                           int? count = null)
+		                                           int? count = null,
+		                                           bool excludeZs = false)
 		{
-			bool zAware = GeometryUtils.IsZAware(pointCollection);
+			// NOTE: Z-awareness of a low-level geometry is inconsistent with its high-level
+			// geometry in server 11!
+			// GeometryUtils.IsZAware(pointCollection);
+			bool zAware = ! excludeZs;
 
 			var points = (IPointCollection4) pointCollection;
 
@@ -65,9 +70,10 @@ namespace ProSuite.Commons.AO.Geometry
 			}
 		}
 
-		public static Linestring GetLinestring(IPath path)
+		public static Linestring GetLinestring(IPath path,
+		                                       bool excludeZs = false)
 		{
-			IEnumerable<Pnt3D> path1Pnts3D = GetPnts3D(path);
+			IEnumerable<Pnt3D> path1Pnts3D = GetPnts3D(path, 0, null, excludeZs);
 
 			return new Linestring(path1Pnts3D);
 		}
@@ -257,6 +263,8 @@ namespace ProSuite.Commons.AO.Geometry
 				return result;
 			}
 
+			bool ignoreZs = ! GeometryUtils.IsZAware(polycurve);
+
 			IEnvelope envelope = new EnvelopeClass();
 
 			int totalPoints = GeometryUtils.GetPointCount(polycurve);
@@ -271,7 +279,7 @@ namespace ProSuite.Commons.AO.Geometry
 				}
 
 				int useSpatialIndexThreshold = totalPoints > 300 ? 0 : int.MaxValue;
-				Linestring linestring = CreateLinestring(path, useSpatialIndexThreshold);
+				Linestring linestring = CreateLinestring(path, ignoreZs, useSpatialIndexThreshold);
 
 				result.Add(linestring);
 			}
@@ -414,10 +422,13 @@ namespace ProSuite.Commons.AO.Geometry
 			//       is not faster. Most likely because unpacking the coordinates has to take place anyway.
 			IEnumerable<IPath> paths = GeometryUtils.GetPaths(polycurve);
 
-			return CreateMultiPolycurve(paths, tolerance, aoi);
+			bool ignoreZs = ! GeometryUtils.IsZAware(polycurve);
+
+			return CreateMultiPolycurve(paths, ignoreZs, tolerance, aoi);
 		}
 
 		public static MultiPolycurve CreateMultiPolycurve([NotNull] IEnumerable<IPath> paths,
+		                                                  bool excludeZs = false,
 		                                                  double tolerance = 0,
 		                                                  [CanBeNull] IEnvelope aoi = null)
 		{
@@ -433,7 +444,7 @@ namespace ProSuite.Commons.AO.Geometry
 				// TODO: Consider filtering segments also by AOI
 
 				// linestring without spatial index
-				Linestring linestring = CreateLinestring(path, int.MaxValue);
+				Linestring linestring = CreateLinestring(path, excludeZs, int.MaxValue);
 
 				result.AddLinestring(linestring);
 			}
@@ -445,14 +456,18 @@ namespace ProSuite.Commons.AO.Geometry
 			[NotNull] IPolycurve polycurve,
 			int createSpatialIndexThreshold)
 		{
+			bool ignoreZs = ! GeometryUtils.IsZAware(polycurve);
+
 			return PrepareIntersectingPaths(
 				// ReSharper disable once RedundantEnumerableCastCall
 				GeometryUtils.GetPaths(polycurve).Cast<IGeometry>(),
+				ignoreZs,
 				createSpatialIndexThreshold);
 		}
 
 		public static IList<Linestring> PrepareIntersectingPaths(
 			[NotNull] IEnumerable<IGeometry> paths,
+			bool excludeZs,
 			int createSpatialIndexThreshold)
 		{
 			var result = new List<Linestring>();
@@ -460,7 +475,7 @@ namespace ProSuite.Commons.AO.Geometry
 			foreach (IGeometry path in paths)
 			{
 				Linestring linestring =
-					CreateLinestring(path, createSpatialIndexThreshold);
+					CreateLinestring(path, excludeZs, createSpatialIndexThreshold);
 
 				result.Add(linestring);
 			}
@@ -478,20 +493,24 @@ namespace ProSuite.Commons.AO.Geometry
 			Assert.AreEqual(1, exteriorRings.Count,
 			                "Provided polygon has more than 1 exterior ring");
 
-			return CreateRingGroup(exteriorRings[0], innerRings);
+			bool ignoreZs = ! GeometryUtils.IsZAware(singleExteriorRingPoly);
+
+			return CreateRingGroup(exteriorRings[0], innerRings, ignoreZs);
 		}
 
 		public static RingGroup CreateRingGroup([NotNull] GeometryPart part)
 		{
 			RingGroup result = CreateRingGroup(
 				Assert.NotNull(part.MainOuterRing),
-				part.InnerRings.Cast<IRing>().ToList());
+				part.InnerRings.Cast<IRing>().ToList(),
+				! part.IsZAware);
 
 			return result;
 		}
 
 		public static RingGroup CreateRingGroup([NotNull] IRing exterior,
-		                                        [CanBeNull] IList<IRing> interior)
+		                                        [CanBeNull] IList<IRing> interior,
+		                                        bool excludeZs = false)
 		{
 			Assert.ArgumentNotNull(exterior, nameof(exterior));
 
@@ -501,7 +520,7 @@ namespace ProSuite.Commons.AO.Geometry
 			}
 
 			Linestring exteriorRing =
-				CreateLinestring(Assert.NotNull(exterior));
+				CreateLinestring(Assert.NotNull(exterior), excludeZs);
 
 			Assert.True(exteriorRing.IsClosed, "Expected a closed outer ring");
 
@@ -509,7 +528,7 @@ namespace ProSuite.Commons.AO.Geometry
 			foreach (IRing innerRing in interior)
 			{
 				var interiorLinestring =
-					new Linestring(CreateLinestring(innerRing));
+					new Linestring(CreateLinestring(innerRing, excludeZs));
 
 				Assert.True(exteriorRing.IsClosed, "Expected only closed inner rings");
 
@@ -575,12 +594,13 @@ namespace ProSuite.Commons.AO.Geometry
 		}
 
 		public static Linestring CreateLinestring([NotNull] IGeometry path,
+		                                          bool excludeZs = false,
 		                                          int createSpatialIndexThreshold = 300)
 		{
 			Assert.ArgumentCondition(! GeometryUtils.HasNonLinearSegments(path),
 			                         "Non-linear segments");
 
-			List<Pnt3D> path2Pnts3D = GetPntList(path);
+			List<Pnt3D> path2Pnts3D = GetPntList(path, excludeZs);
 
 			var linestring = new Linestring(path2Pnts3D);
 
@@ -747,7 +767,7 @@ namespace ProSuite.Commons.AO.Geometry
 			}
 			else
 			{
-				yield return GetLinestring(path);
+				yield return GetLinestring(path, ! zAware);
 			}
 		}
 

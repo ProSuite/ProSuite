@@ -63,7 +63,7 @@ namespace ProSuite.DomainServices.AO.QA
 		}
 
 		[NotNull]
-		internal static HashSet<int> GetOidsByRelatedGeometry(
+		internal static HashSet<long> GetOidsByRelatedGeometry(
 			[NotNull] IReadOnlyTable table,
 			[NotNull] IEnumerable<IList<IRelationshipClass>> relClassChains,
 			[NotNull] IGeometry testPerimeter,
@@ -81,7 +81,7 @@ namespace ProSuite.DomainServices.AO.QA
 				_msg.DebugStartTiming("Getting row OIDs by related geometry for {0}",
 				                      tableName);
 
-			var result = new HashSet<int>();
+			var result = new HashSet<long>();
 
 			IObjectClass objectClass = table as IObjectClass;
 
@@ -490,7 +490,8 @@ namespace ProSuite.DomainServices.AO.QA
 			Assert.NotNull(table, "Dataset not found in workspace: {0}", objectDataset.Name);
 
 			// TODO batch!
-			return (IObject) table.GetRow(involvedRow.OID);
+			IObject result = GdbQueryUtils.GetObject((IObjectClass) table, involvedRow.OID);
+			return Assert.NotNull(result);
 		}
 	}
 }

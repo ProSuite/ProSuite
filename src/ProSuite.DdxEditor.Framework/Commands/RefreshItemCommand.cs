@@ -8,7 +8,6 @@ namespace ProSuite.DdxEditor.Framework.Commands
 {
 	public class RefreshItemCommand : ItemCommandBase<Item>, IGenericItemCommand
 	{
-		[NotNull] private readonly IApplicationController _applicationController;
 		private static readonly Image _image;
 
 		/// <summary>
@@ -26,22 +25,20 @@ namespace ProSuite.DdxEditor.Framework.Commands
 		/// <param name="applicationController">The application controller.</param>
 		public RefreshItemCommand([NotNull] Item item,
 		                          [NotNull] IApplicationController applicationController)
-			: base(item)
+			: base(item, applicationController)
 		{
 			Assert.ArgumentNotNull(applicationController, nameof(applicationController));
-
-			_applicationController = applicationController;
 		}
 
 		public override Image Image => _image;
 
 		public override string Text => "Refresh";
 
-		protected override bool EnabledCore => ! _applicationController.HasPendingChanges;
+		protected override bool EnabledCore => ! ApplicationController.HasPendingChanges;
 
 		protected override void ExecuteCore()
 		{
-			_applicationController.RefreshItem(Item);
+			ApplicationController.RefreshItem(Item);
 		}
 	}
 }

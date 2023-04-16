@@ -37,10 +37,8 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 
 			polygon1.SpatialReference = sr;
 
-			GdbFeature sourceFeature = new GdbFeature(42, fClass)
-			                           {
-				                           Shape = polygon1
-			                           };
+			GdbFeature sourceFeature = GdbFeature.Create(42, fClass);
+			sourceFeature.Shape = polygon1;
 
 			IPath reshapePath = GeometryFactory.CreatePath(
 				GeometryFactory.CreatePoint(2600500, 1200000, sr),
@@ -117,16 +115,16 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 				GeometryFactory.CreatePoint(2600500, 1200500, sr),
 				GeometryFactory.CreatePoint(2601000, 1200500, sr));
 
-			GdbFeature sourceFeature =
-				new GdbFeature(42, fClass) { Shape = sourcePolyline };
+			GdbFeature sourceFeature = GdbFeature.Create(42, fClass);
+			sourceFeature.Shape = sourcePolyline;
 
 			IPolyline sourceAdjacentPolyline = CreatePolyline(
 				GeometryFactory.CreatePoint(2601000, 1200500, sr),
 				GeometryFactory.CreatePoint(2601500, 1200500, sr),
 				GeometryFactory.CreatePoint(2601500, 1200000, sr));
 
-			GdbFeature sourceAdjacentFeature =
-				new GdbFeature(43, fClass) { Shape = sourceAdjacentPolyline };
+			GdbFeature sourceAdjacentFeature = GdbFeature.Create(43, fClass);
+			sourceAdjacentFeature.Shape = sourceAdjacentPolyline;
 
 			IPolyline reshapePolyline = CreatePolyline(
 				GeometryFactory.CreatePoint(2600500, 1200500, sr),
@@ -227,10 +225,8 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 
 			IPolyline sourcePolyline = GeometryFactory.CreatePolyline(sourcePath);
 
-			GdbFeature sourceFeature = new GdbFeature(42, fClass)
-			                           {
-				                           Shape = sourcePolyline
-			                           };
+			GdbFeature sourceFeature = GdbFeature.Create(42, fClass);
+			sourceFeature.Shape = sourcePolyline;
 
 			IPath reshapePath = GeometryFactory.CreatePath(
 				GeometryFactory.CreatePoint(2600500, 1200500, sr),

@@ -164,10 +164,6 @@ namespace ProSuite.DomainModel.Core.QA
 			set { _defaultModel = value; }
 		}
 
-		public bool CanContainOnlyQualityConditions => _canContainQualityConditions &&
-		                                               ! _canContainQualitySpecifications &&
-		                                               ! _canContainSubCategories;
-
 		public bool CanContainOnlyQualitySpecifications => _canContainQualitySpecifications &&
 		                                                   ! _canContainQualityConditions &&
 		                                                   ! _canContainSubCategories;

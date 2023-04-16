@@ -53,7 +53,7 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork
 			}
 
 			return _filterHelper.Check(
-				new ReadOnlyFeature(ReadOnlyTableFactory.Create(FeatureClass), feature));
+				ReadOnlyFeature.Create(ReadOnlyTableFactory.Create(FeatureClass), feature));
 		}
 
 		protected bool Equals(LinearNetworkClassDef other)

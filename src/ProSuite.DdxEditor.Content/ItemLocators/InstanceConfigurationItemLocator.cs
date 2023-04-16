@@ -4,17 +4,16 @@ using ProSuite.DomainModel.Core.QA;
 
 namespace ProSuite.DdxEditor.Content.ItemLocators
 {
-	public class InstanceConfigurationItemLocator<T> : CategorizedQualityEntityBase
-		where T : InstanceConfiguration
+	public class InstanceConfigurationItemLocator : CategorizedQualityEntityBase
 	{
 		public override bool CanLocate(Entity entity)
 		{
-			return entity is T;
+			return entity is InstanceConfiguration;
 		}
 
 		protected override DataQualityCategory GetCategory(Entity entity)
 		{
-			var instanceConfig = (T) entity;
+			var instanceConfig = (InstanceConfiguration) entity;
 
 			return instanceConfig.Category;
 		}
@@ -22,15 +21,10 @@ namespace ProSuite.DdxEditor.Content.ItemLocators
 		protected override IItemTreeNode GetContainerNode(DataQualityCategory category,
 		                                                  IItemTreeNode categoryNode)
 		{
-			if (category != null && category.CanContainOnlyQualityConditions)
-			{
-				return categoryNode;
-			}
-
 			// search beneath QualityConditionsItem (or respective item) child node
 			return FindNode(categoryNode,
 			                node =>
-				                node.IsBasedOnEntityType<T>());
+				                node.IsBasedOnEntityType<InstanceConfiguration>());
 		}
 	}
 }

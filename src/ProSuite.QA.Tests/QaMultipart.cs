@@ -75,12 +75,9 @@ namespace ProSuite.QA.Tests
 				return NoError;
 			}
 
-			if (shape.GeometryType == esriGeometryType.esriGeometryPolyline ||
-			    _singleRing)
+			if (shape.GeometryType == esriGeometryType.esriGeometryPolyline || _singleRing)
 			{
-				var geometryCollection = shape as IGeometryCollection;
-
-				if (geometryCollection == null)
+				if (! (shape is IGeometryCollection geometryCollection))
 				{
 					return NoError;
 				}
@@ -91,7 +88,7 @@ namespace ProSuite.QA.Tests
 				{
 					string description = $"Geometry has {partCount} parts, allowed is 1";
 					return ReportError(
-						description, GetInvolvedRows(row), shape,
+						description, InvolvedRowUtils.GetInvolvedRows(row), shape,
 						Codes[Code.MultipleParts], _shapeFieldName);
 				}
 			}

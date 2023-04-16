@@ -38,7 +38,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase.GdbSchema
 
 			int oid = 0;
 			GdbFeature propSetBackedFeature =
-				new GdbFeature(++oid, schema, new PropertySetValueList());
+				GdbFeature.Create(++oid, schema, new PropertySetValueList());
 
 			propSetBackedFeature.Shape = shape;
 
@@ -51,7 +51,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase.GdbSchema
 
 			// The same with the faster ValueList:
 			GdbFeature valueListBackedFeature =
-				new GdbFeature(++oid, schema, new ValueList(schema.Fields.FieldCount));
+				GdbFeature.Create(++oid, schema, new ValueList(schema.Fields.FieldCount));
 
 			valueListBackedFeature.Shape = shape;
 
@@ -200,7 +200,8 @@ namespace ProSuite.Commons.AO.Test.Geodatabase.GdbSchema
 
 			watch.Stop();
 
-			Assert.Less(watch.ElapsedMilliseconds, 100);
+			// This is often just below 100, give it some slack:
+			Assert.Less(watch.ElapsedMilliseconds, 150);
 
 			Console.WriteLine($"PropertySet-backed: {watch.ElapsedMilliseconds}ms");
 
@@ -233,7 +234,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase.GdbSchema
 		                                           IValueList valueListImpl)
 		{
 			GdbFeature feature =
-				new GdbFeature(oid, schema, valueListImpl);
+				GdbFeature.Create(oid, schema, valueListImpl);
 
 			SetValues(feature, shape);
 

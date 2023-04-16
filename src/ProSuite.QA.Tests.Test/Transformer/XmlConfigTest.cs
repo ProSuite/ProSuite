@@ -5,6 +5,7 @@ using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.AO.Test;
 using ProSuite.Commons.Test;
 using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.QA;
@@ -13,7 +14,6 @@ using ProSuite.DomainModel.Core.QA.Xml;
 using ProSuite.DomainServices.AO.QA.Standalone.XmlBased;
 using ProSuite.DomainServices.AO.QA.VerifiedDataModel;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.Test;
 using ProSuite.QA.Tests.Test.Construction;
 using ProSuite.QA.Tests.Test.TestRunners;
 using ProSuite.QA.Tests.Transformers.Filters;
@@ -131,8 +131,8 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				new XmlDatasetTestParameterValue
 				{ TestParameterName = "areaFc", Value = "ignoreFc", WorkspaceId = xmlWs.ID });
 
-			xmlQc.IssueFilterExpression = new XmlFilterExpression
-			                              { Expression = $"{xmlIssueFilter.Name}" };
+			xmlQc.Filters = new List<XmlFilter>
+			                { new XmlFilter { IssueFilterName = xmlIssueFilter.Name } };
 
 			var xmlSpec = new XmlQualitySpecification { TileSize = 10000, Name = "spec" };
 			xmlSpec.Elements.Add(new XmlQualitySpecificationElement
@@ -464,7 +464,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 		}
 
 		[Test]
-		[Category(TestCategory.FixMe)]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanRunFromXmlWithTableJoin()
 		{
 			// Init

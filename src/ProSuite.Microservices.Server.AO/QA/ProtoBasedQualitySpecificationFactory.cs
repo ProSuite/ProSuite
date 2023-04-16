@@ -18,7 +18,6 @@ using ProSuite.DomainServices.AO.QA.Standalone;
 using ProSuite.DomainServices.AO.QA.Standalone.XmlBased;
 using ProSuite.DomainServices.AO.QA.VerifiedDataModel;
 using ProSuite.Microservices.Definitions.QA;
-using ProSuite.QA.Container;
 using ProSuite.QA.Core;
 
 namespace ProSuite.Microservices.Server.AO.QA
@@ -105,7 +104,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 			AddElements(result, qualityConditions,
 			            conditionListSpecificationMsg.Elements);
 
-			// TODO: TileSize, Url, Notes? They are not used by the verification.
+			// TODO: TileSize, Url, Category, Notes? They are not used by the verification.
+			// The IsCustom property is not used, SaveVerification is a separate explicitly set parameter)
 
 			_msg.DebugFormat("Created specification from protos with {0} conditions.",
 			                 result.Elements.Count);
@@ -114,7 +114,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 		}
 
 		private static void AddElements(
-			QualitySpecification toQualitySpecification,
+			[NotNull] QualitySpecification toQualitySpecification,
 			[NotNull] IDictionary<string, QualityCondition> qualityConditionsByName,
 			[NotNull] IEnumerable<QualitySpecificationElementMsg> specificationElementMsgs)
 		{
@@ -148,6 +148,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			}
 		}
 
+		[NotNull]
 		private Dictionary<string, QualityCondition> CreateQualityConditions(
 			[NotNull] IList<QualityConditionMsg> conditionMessages,
 			bool ignoreConditionsForUnknownDatasets)
@@ -159,15 +160,11 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			foreach (QualityConditionMsg conditionMsg in conditionMessages)
 			{
-				TestDescriptor testDescriptor =
-					GetTestDescriptor(conditionMsg);
-
 				DatasetSettings datasetSettings =
 					new DatasetSettings(getDatasetsByName, ignoreConditionsForUnknownDatasets);
 
 				QualityCondition qualityCondition =
-					CreateQualityCondition(conditionMsg, testDescriptor,
-					                       datasetSettings);
+					CreateQualityCondition(conditionMsg, datasetSettings);
 
 				if (qualityCondition == null)
 				{
@@ -186,12 +183,15 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 		#region Instance configurations
 
+		[CanBeNull]
 		private QualityCondition CreateQualityCondition(
 			[NotNull] QualityConditionMsg conditionMsg,
-			[NotNull] TestDescriptor testDescriptor,
-			DatasetSettings datasetSettings)
+			[NotNull] DatasetSettings datasetSettings)
 		{
+			TestDescriptor testDescriptor = GetTestDescriptor(conditionMsg);
+
 			var result = new QualityCondition(conditionMsg.Name, testDescriptor);
+			result.SetCloneId(conditionMsg.ConditionId);
 
 			AddIssueFilters(result, conditionMsg, datasetSettings);
 
@@ -201,16 +201,16 @@ namespace ProSuite.Microservices.Server.AO.QA
 			return result;
 		}
 
+		[CanBeNull]
 		private TransformerConfiguration CreateTransformerConfiguration(
 			[NotNull] InstanceConfigurationMsg transformerConfigurationMsg,
 			[NotNull] DatasetSettings datasetSettings)
 		{
 			TransformerDescriptor transformerDescriptor =
-				GetTransformerDescriptor(transformerConfigurationMsg);
+				GetInstanceDescriptor<TransformerDescriptor>(transformerConfigurationMsg);
 
-			var result =
-				new TransformerConfiguration(transformerConfigurationMsg.Name,
-				                             transformerDescriptor);
+			var result = new TransformerConfiguration(transformerConfigurationMsg.Name,
+			                                          transformerDescriptor);
 
 			// The result will be set to null, if there are missing datasets:
 			result = ConfigureParameters(result, transformerConfigurationMsg.Parameters,
@@ -219,51 +219,13 @@ namespace ProSuite.Microservices.Server.AO.QA
 			return result;
 		}
 
-		private void AddIssueFilters(
-			[NotNull] QualityCondition qualityCondition,
-			[NotNull] QualityConditionMsg conditionMsg,
-			[NotNull] DatasetSettings datasetSettings)
-		{
-			// TODO: Check for consistent behaviour compared to DDX based specification
-			// -> No Issue filter expression: All specified filters are concatenated using OR (?)
-			string issueFilterExpression = conditionMsg.IssueFilterExpression;
-
-			if (string.IsNullOrWhiteSpace(issueFilterExpression))
-			{
-				return;
-			}
-
-			foreach (InstanceConfigurationMsg issueFilterMsg in conditionMsg.ConditionIssueFilters)
-			{
-				IssueFilterConfiguration issueFilterConfiguration =
-					CreateIssueFilterConfiguration(issueFilterMsg, datasetSettings);
-
-				qualityCondition.AddIssueFilterConfiguration(issueFilterConfiguration);
-			}
-
-			// Validation (move to somewhere else?)
-			IList<string> issueFilterNames =
-				FilterUtils.GetFilterNames(issueFilterExpression);
-
-			foreach (string issueFilterName in issueFilterNames)
-			{
-				string expressionName = issueFilterName.Trim();
-
-				if (! conditionMsg.ConditionIssueFilters.Any(f => f.Name.Equals(expressionName)))
-				{
-					Assert.Fail($"missing issue filter named {expressionName}");
-				}
-			}
-
-			qualityCondition.IssueFilterExpression = issueFilterExpression;
-		}
-
+		[CanBeNull]
 		private IssueFilterConfiguration CreateIssueFilterConfiguration(
 			[NotNull] InstanceConfigurationMsg issueFilterConfigurationMsg,
 			[NotNull] DatasetSettings datasetSettings)
 		{
 			IssueFilterDescriptor issueFilterDescriptor =
-				GetIssueFilterDescriptor(issueFilterConfigurationMsg);
+				GetInstanceDescriptor<IssueFilterDescriptor>(issueFilterConfigurationMsg);
 
 			var result =
 				new IssueFilterConfiguration(issueFilterConfigurationMsg.Name,
@@ -274,6 +236,31 @@ namespace ProSuite.Microservices.Server.AO.QA
 			                             datasetSettings);
 
 			return result;
+		}
+
+		private void AddIssueFilters(
+			[NotNull] QualityCondition qualityCondition,
+			[NotNull] QualityConditionMsg conditionMsg,
+			[NotNull] DatasetSettings datasetSettings)
+		{
+			foreach (InstanceConfigurationMsg issueFilterMsg in conditionMsg.ConditionIssueFilters)
+			{
+				IssueFilterConfiguration issueFilterConfig =
+					CreateIssueFilterConfiguration(issueFilterMsg, datasetSettings);
+
+				// TODO: Allow for missing datasets! Add to datasetSettings as below in ConfigureDatasetParameterValue?
+				if (issueFilterConfig == null)
+				{
+					Assert.Fail(
+						$"missing issue filter {issueFilterMsg} for condition {conditionMsg}");
+				}
+				else
+				{
+					qualityCondition.AddIssueFilterConfiguration(issueFilterConfig);
+				}
+			}
+
+			qualityCondition.IssueFilterExpression = conditionMsg.IssueFilterExpression;
 		}
 
 		#endregion
@@ -306,7 +293,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 				{
 					throw new InvalidConfigurationException(
 						$"The name '{parameterMsg.Name}' as a test parameter in '{created.Name}' as defined in the " +
-						"configuration message does not match instance descriptor descriptor.");
+						"configuration message does not match instance descriptor.");
 				}
 
 				TestParameterValue parameterValue =
@@ -337,7 +324,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 				}
 			}
 
-			// TODO: Handle missing datasets in transformersformers and issue filters!
+			// TODO: Handle missing datasets in transformers and issue filters!
 			if (datasetSettings.UnknownDatasetParameters.Count > 0)
 			{
 				Assert.True(datasetSettings.IgnoreUnknownDatasets,
@@ -409,6 +396,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			return datasetValue != null;
 		}
 
+		[CanBeNull]
 		private Dataset GetDataset([NotNull] InstanceConfiguration createdConfiguration,
 		                           [NotNull] ParameterMsg parameterMsg,
 		                           [NotNull] TestParameter testParameter,
@@ -478,15 +466,14 @@ namespace ProSuite.Microservices.Server.AO.QA
 			IEnumerable<Dataset> referencedDatasets = GetReferencedDatasets(
 				result, workspaceId, referencedConditions);
 
-			ModelFactory.AssignMostFrequentlyUsedSpatialReference(
-				result, referencedDatasets);
+			ModelFactory.AssignMostFrequentlyUsedSpatialReference(result, referencedDatasets);
 
 			return result;
 		}
 
 		[NotNull]
 		private static IEnumerable<Dataset> GetReferencedDatasets(
-			[NotNull] Model model,
+			[NotNull] DdxModel model,
 			[NotNull] string workspaceId,
 			[NotNull] IEnumerable<QualityConditionMsg> referencedConditions)
 		{
@@ -533,6 +520,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 		#region Instance descriptors
 
+		[NotNull]
 		private TestDescriptor GetTestDescriptor(
 			[NotNull] QualityConditionMsg conditionMsg)
 		{
@@ -550,30 +538,6 @@ namespace ProSuite.Microservices.Server.AO.QA
 			return testDescriptor;
 		}
 
-		private TransformerDescriptor GetTransformerDescriptor(
-			[NotNull] InstanceConfigurationMsg instanceConfigMsg)
-		{
-			TransformerDescriptor transformerDescriptor =
-				GetInstanceDescriptor<TransformerDescriptor>(instanceConfigMsg);
-
-			return transformerDescriptor;
-		}
-
-		private IssueFilterDescriptor GetIssueFilterDescriptor(
-			[NotNull] InstanceConfigurationMsg instanceConfigMsg)
-		{
-			IssueFilterDescriptor instanceDescriptor =
-				GetInstanceDescriptor<IssueFilterDescriptor>(instanceConfigMsg);
-
-			if (instanceDescriptor is IssueFilterDescriptor issueFilterDescriptor)
-			{
-				return issueFilterDescriptor;
-			}
-
-			throw new AssertionException($"Instance descriptor {instanceDescriptor.Name} is " +
-			                             "null or not of type IssueFilterDescriptor");
-		}
-
 		[NotNull]
 		private T GetInstanceDescriptor<T>(
 			[NotNull] InstanceConfigurationMsg instanceConfigMsg) where T : InstanceDescriptor
@@ -583,7 +547,6 @@ namespace ProSuite.Microservices.Server.AO.QA
 			            $"Instance descriptor name is missing in configuration: {instanceConfigMsg}");
 
 			string trimmedName = instanceDescriptorName.Trim();
-
 			T instanceDescriptor = _instanceDescriptors.GetInstanceDescriptor<T>(trimmedName);
 
 			Assert.NotNull(instanceDescriptor,

@@ -3,16 +3,18 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.Geometry;
-using ProSuite.QA.Container.TestContainer;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
+using SegmentUtils_ = ProSuite.QA.Container.Geometry.SegmentUtils_;
 
 namespace ProSuite.QA.Tests
 {
@@ -129,7 +131,7 @@ namespace ProSuite.QA.Tests
 				else if (row.Shape is IMultiPatch)
 				{
 					IIndexedSegments indexedSegments =
-						QaGeometryUtils.CreateIndexedMultiPatch((IMultiPatch) row.Shape);
+						ProxyUtils.CreateIndexedMultiPatch((IMultiPatch) row.Shape);
 					provider = new IndexedMeanLengthProvider(row.Shape, indexedSegments, _perPart,
 					                                         _is3D);
 				}
@@ -382,11 +384,11 @@ namespace ProSuite.QA.Tests
 					IGeometryCollection geometryCollection;
 					if (_baseGeometry.GeometryType == esriGeometryType.esriGeometryPolygon)
 					{
-						geometryCollection = QaGeometryUtils.CreatePolygon(_baseGeometry);
+						geometryCollection = ProxyUtils.CreatePolygon(_baseGeometry);
 					}
 					else if (_baseGeometry.GeometryType == esriGeometryType.esriGeometryPolyline)
 					{
-						geometryCollection = QaGeometryUtils.CreatePolyline(_baseGeometry);
+						geometryCollection = ProxyUtils.CreatePolyline(_baseGeometry);
 					}
 					else if (_baseGeometry.GeometryType == esriGeometryType.esriGeometryMultiPatch)
 					{
@@ -405,7 +407,7 @@ namespace ProSuite.QA.Tests
 						partSegments.Add(_indexedSegments.GetSegment(partIndex, iSegment));
 					}
 
-					SegmentUtils.CreateGeometry(geometryCollection, partSegments);
+					SegmentUtils_.CreateGeometry(geometryCollection, partSegments);
 					geometry = (IGeometry) geometryCollection;
 				}
 

@@ -8,8 +8,6 @@ using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Test;
 using ProSuite.Commons.AO.Test.TestSupport;
-using ProSuite.QA.Container;
-using ProSuite.QA.Container.Test;
 using ProSuite.QA.Tests.Test.Construction;
 using ProSuite.QA.Tests.Test.TestRunners;
 using TestUtils = ProSuite.Commons.AO.Test.TestUtils;
@@ -82,8 +80,7 @@ namespace ProSuite.QA.Tests.Test
 			var runner = new QaTestRunner(test);
 			runner.Execute(feature);
 
-			QaError error;
-			AssertUtils.OneError(runner, "EmptyGeometry.GeometryNull", out error);
+			AssertUtils.OneError(runner, "EmptyGeometry.GeometryNull");
 		}
 
 		[Test]
@@ -101,8 +98,7 @@ namespace ProSuite.QA.Tests.Test
 			var runner = new QaTestRunner(test);
 			runner.Execute(feature);
 
-			QaError error;
-			AssertUtils.OneError(runner, "EmptyGeometry.GeometryEmpty", out error);
+			AssertUtils.OneError(runner, "EmptyGeometry.GeometryEmpty");
 		}
 
 		[Test]
@@ -123,8 +119,7 @@ namespace ProSuite.QA.Tests.Test
 			var runner = new QaTestRunner(test);
 			runner.Execute(feature);
 
-			QaError error;
-			AssertUtils.OneError(runner, "EmptyGeometry.GeometryNull", out error);
+			AssertUtils.OneError(runner, "EmptyGeometry.GeometryNull");
 		}
 
 		[Test]
@@ -224,8 +219,7 @@ namespace ProSuite.QA.Tests.Test
 			var runner = new QaTestRunner(test);
 			runner.Execute();
 
-			QaError error;
-			AssertUtils.OneError(runner, "EmptyGeometry.GeometryEmpty", out error);
+			AssertUtils.OneError(runner, "EmptyGeometry.GeometryEmpty");
 		}
 
 		private IFeature CreateEmptyGeometryFeature(IFeatureWorkspace ws,

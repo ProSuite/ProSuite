@@ -8,7 +8,6 @@ using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Test;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.QA.Container.Test;
 using ProSuite.QA.Tests.Test.TestData;
 using ProSuite.QA.Tests.Test.TestRunners;
 
@@ -465,7 +464,7 @@ namespace ProSuite.QA.Tests.Test
 		{
 			ITable relTable = CanDetect1toNNonUnique(_fgdbWorkspace);
 
-			int rowCount = relTable.RowCount(null);
+			long rowCount = relTable.RowCount(null);
 			var firstUniqueFieldName = "Relate1NNonUnique1.Unique";
 
 			// TableSort verification

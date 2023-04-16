@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase.GdbSchema;
+using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
@@ -143,7 +145,7 @@ namespace ProSuite.QA.Tests
 			else if (row.Shape is IMultiPatch)
 			{
 				IIndexedSegments indexedSegments =
-					QaGeometryUtils.CreateIndexedMultiPatch((IMultiPatch) row.Shape);
+					ProxyUtils.CreateIndexedMultiPatch((IMultiPatch) row.Shape);
 				provider = new IndexedSegmentsLengthProvider(indexedSegments, _is3D);
 			}
 			else
@@ -346,7 +348,7 @@ namespace ProSuite.QA.Tests
 			public override IPolyline GetSubpart(int partIndex, int startSegmentIndex,
 			                                     int endSegmentIndex)
 			{
-				return QaGeometryUtils.GetSubpart(_segments, partIndex, startSegmentIndex,
+				return ProxyUtils.GetSubpart(_segments, partIndex, startSegmentIndex,
 				                                  endSegmentIndex);
 			}
 

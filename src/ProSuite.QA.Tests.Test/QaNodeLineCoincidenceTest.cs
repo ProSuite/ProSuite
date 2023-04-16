@@ -6,7 +6,6 @@ using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Test;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.QA.Container.Test;
 using ProSuite.QA.Tests.Test.Construction;
 using ProSuite.QA.Tests.Test.TestRunners;
 
@@ -21,8 +20,7 @@ namespace ProSuite.QA.Tests.Test
 		{
 			TestUtils.InitializeLicense();
 
-			_testWs = TestWorkspaceUtils.CreateInMemoryWorkspace(
-				"QaNodeLineCoincidenceTest");
+			_testWs = TestWorkspaceUtils.CreateInMemoryWorkspace("QaNodeLineCoincidenceTest");
 		}
 
 		[OneTimeTearDown]
@@ -98,7 +96,7 @@ namespace ProSuite.QA.Tests.Test
 			runner.Execute(verificationEnvelope);
 
 			AssertUtils.OneError(runner,
-			                     "NodeLineCoincidence.NodeTooCloseToLine.BetweenFeatures");
+			                     "NodeLineCoincidence.NodeTooCloseToLine.BetweenFeatures", 2);
 		}
 
 		[Test]
@@ -132,7 +130,7 @@ namespace ProSuite.QA.Tests.Test
 			runner.Execute(verificationEnvelope);
 
 			AssertUtils.OneError(runner,
-			                     "NodeLineCoincidence.NodeTooCloseToLine.BetweenFeatures");
+			                     "NodeLineCoincidence.NodeTooCloseToLine.BetweenFeatures", 2);
 		}
 
 		[Test]
@@ -202,7 +200,7 @@ namespace ProSuite.QA.Tests.Test
 			runner.Execute(verificationEnvelope);
 
 			AssertUtils.OneError(runner,
-			                     "NodeLineCoincidence.NodeTooCloseToLine.BetweenFeatures");
+			                     "NodeLineCoincidence.NodeTooCloseToLine.BetweenFeatures", 2);
 		}
 
 		[Test]
@@ -319,7 +317,7 @@ namespace ProSuite.QA.Tests.Test
 			runner.Execute(verificationEnvelope);
 
 			AssertUtils.OneError(runner,
-			                     "NodeLineCoincidence.NodeTooCloseToLine.BetweenFeatures");
+			                     "NodeLineCoincidence.NodeTooCloseToLine.BetweenFeatures", 2);
 		}
 
 		[Test]
@@ -367,7 +365,7 @@ namespace ProSuite.QA.Tests.Test
 			runner.Execute(verificationEnvelope);
 
 			AssertUtils.OneError(runner,
-			                     "NodeLineCoincidence.NodeTooCloseToLine.BetweenFeatures");
+			                     "NodeLineCoincidence.NodeTooCloseToLine.BetweenFeatures", 2);
 		}
 
 		[Test]
@@ -460,7 +458,7 @@ namespace ProSuite.QA.Tests.Test
 			runner.Execute(verificationEnvelope);
 
 			AssertUtils.OneError(runner,
-			                     "NodeLineCoincidence.NodeTooCloseToLine.BetweenFeatures");
+			                     "NodeLineCoincidence.NodeTooCloseToLine.BetweenFeatures", 2);
 		}
 
 		[NotNull]

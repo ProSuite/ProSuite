@@ -30,7 +30,7 @@ namespace ProSuite.Commons.Test.Text
 		[Test]
 		public void CanReplaceChars()
 		{
-			string replaced = StringUtils.ReplaceChars("abCdefGh", '-', new[] {'C', 'G'});
+			string replaced = StringUtils.ReplaceChars("abCdefGh", '-', new[] { 'C', 'G' });
 
 			Assert.AreEqual("ab-def-h", replaced);
 		}
@@ -39,7 +39,7 @@ namespace ProSuite.Commons.Test.Text
 		public void CanReplaceCharsNoMatch()
 		{
 			const string input = "abcdef";
-			string replaced = StringUtils.ReplaceChars(input, '-', new[] {'X', 'Y', 'Z'});
+			string replaced = StringUtils.ReplaceChars(input, '-', new[] { 'X', 'Y', 'Z' });
 
 			Assert.AreEqual(input, replaced);
 			Assert.AreSame(input, replaced);
@@ -48,7 +48,7 @@ namespace ProSuite.Commons.Test.Text
 		[Test]
 		public void CanReplaceCharsEmpty()
 		{
-			string replaced = StringUtils.ReplaceChars(string.Empty, '-', new[] {'X', 'Y', 'Z'});
+			string replaced = StringUtils.ReplaceChars(string.Empty, '-', new[] { 'X', 'Y', 'Z' });
 
 			Assert.AreEqual(string.Empty, replaced);
 			Assert.AreSame(string.Empty, replaced);
@@ -118,7 +118,7 @@ namespace ProSuite.Commons.Test.Text
 		public void CanSplitWithMultipleSeparatorsAndEscapeCharacter()
 		{
 			const string input = @"A\|B#C|D\#E|F|G\#H";
-			List<string> tokens = StringUtils.Split(input, new[] {'|', '#'}, '\\').ToList();
+			List<string> tokens = StringUtils.Split(input, new[] { '|', '#' }, '\\').ToList();
 			WriteTokens(tokens);
 
 			Assert.AreEqual(5, tokens.Count);
@@ -145,31 +145,31 @@ namespace ProSuite.Commons.Test.Text
 		public void CanRemoveCharactersAtAll()
 		{
 			Assert.AreEqual(string.Empty,
-			                StringUtils.RemoveCharactersAt("ABC", new[] {0, 1, 2}));
+			                StringUtils.RemoveCharactersAt("ABC", new[] { 0, 1, 2 }));
 		}
 
 		[Test]
 		public void CanRemoveCharactersAtStart()
 		{
-			Assert.AreEqual("BC", StringUtils.RemoveCharactersAt("ABC", new[] {0}));
+			Assert.AreEqual("BC", StringUtils.RemoveCharactersAt("ABC", new[] { 0 }));
 		}
 
 		[Test]
 		public void CanRemoveCharactersAtEnd()
 		{
-			Assert.AreEqual("AB", StringUtils.RemoveCharactersAt("ABC", new[] {2}));
+			Assert.AreEqual("AB", StringUtils.RemoveCharactersAt("ABC", new[] { 2 }));
 		}
 
 		[Test]
 		public void CanRemoveCharactersAtMiddle()
 		{
-			Assert.AreEqual("AC", StringUtils.RemoveCharactersAt("ABC", new[] {1}));
+			Assert.AreEqual("AC", StringUtils.RemoveCharactersAt("ABC", new[] { 1 }));
 		}
 
 		[Test]
 		public void CanRemoveCharactersAtMiddle2()
 		{
-			Assert.AreEqual("AD", StringUtils.RemoveCharactersAt("ABCD", new[] {1, 2}));
+			Assert.AreEqual("AD", StringUtils.RemoveCharactersAt("ABCD", new[] { 1, 2 }));
 		}
 
 		private static void WriteTokens(IEnumerable<string> tokens)
@@ -185,7 +185,7 @@ namespace ProSuite.Commons.Test.Text
 		[Test]
 		public void CanConcatenate()
 		{
-			var list = new List<int> {99, 7, 12};
+			var list = new List<int> { 99, 7, 12 };
 
 			string result = StringUtils.Concatenate(list, ",");
 			Assert.AreEqual("99,7,12", result);
@@ -194,7 +194,7 @@ namespace ProSuite.Commons.Test.Text
 		[Test]
 		public void CanConcatenateSingle()
 		{
-			var list = new List<int> {1};
+			var list = new List<int> { 1 };
 
 			string result = StringUtils.Concatenate(list, ",");
 			Assert.AreEqual("1", result);
@@ -212,7 +212,7 @@ namespace ProSuite.Commons.Test.Text
 		[Test]
 		public void CanConcatenateSorted()
 		{
-			var list = new List<object> {"b", "a", 1, null};
+			var list = new List<object> { "b", "a", 1, null };
 			string result = StringUtils.ConcatenateSorted(list, ",");
 			Assert.AreEqual(",1,a,b", result);
 		}
@@ -220,7 +220,7 @@ namespace ProSuite.Commons.Test.Text
 		[Test]
 		public void CanConcatenateSortedWithComparer()
 		{
-			var list = new List<object> {"b", "a", 1, null};
+			var list = new List<object> { "b", "a", 1, null };
 			string result = StringUtils.ConcatenateSorted(
 				list, ",",
 				(s1, s2) => string.Compare(s1, s2, StringComparison.Ordinal) * -1);
@@ -230,7 +230,7 @@ namespace ProSuite.Commons.Test.Text
 		[Test]
 		public void CanConcatenateWithMaxSize()
 		{
-			var list = new List<int> {99, 7, 12, 1};
+			var list = new List<int> { 99, 7, 12, 1 };
 
 			IList<string> subLists = StringUtils.Concatenate(list, ",", 2);
 
@@ -291,54 +291,61 @@ namespace ProSuite.Commons.Test.Text
 			AssertExpectedFormatResult(10.0,
 			                           new Dictionary<string, string>
 			                           {
-				                           {"de-DE", "10,0"},
-				                           {"en-US", "10.0"},
-				                           {"de-CH", "10.0"},
-				                           {"fr-FR", "10,0"}
+				                           { "de-DE", "10,0" },
+				                           { "en-US", "10.0" },
+				                           { "de-CH", "10.0" },
+				                           { "fr-FR", "10,0" }
 			                           });
 		}
 
 		[Test]
 		public void CanFormatPreservingDecimalPlaces()
 		{
-			AssertExpectedFormatResult(1.1234567891234500000,
+			// NOTE: double has only 15-17 significant digits. In .NET 6 the trailing
+			// 0s are not always 0s but whatever is the 'shortest round-trippable' number.
+			// See https://devblogs.microsoft.com/dotnet/floating-point-parsing-and-formatting-improvements-in-net-core-3-0/
+			// -> In NET 6 the formatted string contains many more digits!
+			AssertExpectedFormatResult(1.1234567891200000,
 			                           new Dictionary<string, string>
 			                           {
-				                           {"de-DE", "1,12345678912345"},
-				                           {"en-US", "1.12345678912345"},
-				                           {"de-CH", "1.12345678912345"},
-				                           {"fr-FR", "1,12345678912345"}
+				                           { "de-DE", "1,12345678912" },
+				                           { "en-US", "1.12345678912" },
+				                           { "de-CH", "1.12345678912" },
+				                           { "fr-FR", "1,12345678912" }
 			                           });
 		}
 
 		[Test]
 		public void CanFormatNonScientific()
 		{
-			AssertExpectedFormatResult(1234567891234500000,
+			// NOTE: double has only 15-17 significant digits. In .NET 6 the trailing
+			// 0s are not always 0s but whatever is the 'shortest round-trippable' number.
+			// See https://devblogs.microsoft.com/dotnet/floating-point-parsing-and-formatting-improvements-in-net-core-3-0/
+			AssertExpectedFormatResult(1234567891200000,
 			                           new Dictionary<string, string>
 			                           {
-				                           {"de-DE", "1234567891234500000"},
-				                           {"en-US", "1234567891234500000"},
-				                           {"de-CH", "1234567891234500000"},
-				                           {"fr-FR", "1234567891234500000"}
+				                           { "de-DE", "1234567891200000" },
+				                           { "en-US", "1234567891200000" },
+				                           { "de-CH", "1234567891200000" },
+				                           { "fr-FR", "1234567891200000" }
 			                           }, true);
 
 			AssertExpectedFormatResult(0,
 			                           new Dictionary<string, string>
 			                           {
-				                           {"de-DE", "0"},
-				                           {"en-US", "0"},
-				                           {"de-CH", "0"},
-				                           {"fr-FR", "0"}
+				                           { "de-DE", "0" },
+				                           { "en-US", "0" },
+				                           { "de-CH", "0" },
+				                           { "fr-FR", "0" }
 			                           }, true);
 
 			AssertExpectedFormatResult(10.0,
 			                           new Dictionary<string, string>
 			                           {
-				                           {"de-DE", "10"},
-				                           {"en-US", "10"},
-				                           {"de-CH", "10"},
-				                           {"fr-FR", "10"}
+				                           { "de-DE", "10" },
+				                           { "en-US", "10" },
+				                           { "de-CH", "10" },
+				                           { "fr-FR", "10" }
 			                           }, true);
 		}
 
@@ -364,8 +371,15 @@ namespace ProSuite.Commons.Test.Text
 						                      input, CultureInfo.GetCultureInfo(culture))
 					                      : StringUtils.FormatPreservingDecimalPlaces(
 						                      input, CultureInfo.GetCultureInfo(culture));
+#if NET6_0_OR_GREATER
+				// Extra digits were added to improve 'round-trippability', i.e. parsing the formatted string
+				// returning to the same number.
+				// See https://devblogs.microsoft.com/dotnet/floating-point-parsing-and-formatting-improvements-in-net-core-3-0/
 
+				Assert.IsTrue(formatResult.StartsWith(expected));
+#else
 				Assert.AreEqual(expected, formatResult);
+#endif
 			}
 		}
 	}

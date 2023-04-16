@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <ProjectGuid>{A227D52C-0536-498F-ACF2-2A5A67C3D9FF}</ProjectGuid>
 
@@ -21,7 +21,6 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
-    <Optimize>false</Optimize>
     <DocumentationFile>$(OutputDirectory)\$(Configuration)\ProSuite.Commons.Logging.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>

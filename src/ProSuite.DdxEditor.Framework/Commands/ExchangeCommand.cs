@@ -1,6 +1,5 @@
 using System.IO;
 using System.Windows.Forms;
-using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DdxEditor.Framework.Items;
 
@@ -22,12 +21,8 @@ namespace ProSuite.DdxEditor.Framework.Commands
 		                          [NotNull] IApplicationController applicationController,
 		                          [NotNull] string defaultExtension,
 		                          [NotNull] string fileFilter)
-			: base(item)
+			: base(item, applicationController)
 		{
-			Assert.ArgumentNotNull(applicationController, nameof(applicationController));
-
-			ApplicationController = applicationController;
-
 			_defaultExtension = defaultExtension;
 			_fileFilter = fileFilter;
 		}
@@ -72,8 +67,5 @@ namespace ProSuite.DdxEditor.Framework.Commands
 			// caller can validate file as needed
 			return fileName;
 		}
-
-		[NotNull]
-		protected IApplicationController ApplicationController { get; }
 	}
 }

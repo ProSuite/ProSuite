@@ -4,18 +4,20 @@ using System.Runtime.InteropServices;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.Geometry;
-using ProSuite.QA.Container.TestContainer;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.QA.Tests.Properties;
 using Pnt = ProSuite.Commons.Geom.Pnt;
+using SegmentUtils_ = ProSuite.QA.Container.Geometry.SegmentUtils_;
 
 namespace ProSuite.QA.Tests
 {
@@ -227,7 +229,7 @@ namespace ProSuite.QA.Tests
 				IIndexedMultiPatch indexedMultiPatch =
 					indexedMultiPatchFeature != null
 						? indexedMultiPatchFeature.IndexedMultiPatch
-						: QaGeometryUtils.CreateIndexedMultiPatch(multiPatch);
+						: ProxyUtils.CreateIndexedMultiPatch(multiPatch);
 
 				return new MultiPatchPartsSliverAreaProvider(indexedMultiPatch);
 			}
@@ -387,10 +389,10 @@ namespace ProSuite.QA.Tests
 					partSegments.Add(_segmentsEnum.Current);
 				}
 
-				List<Pnt> planePoints = QaGeometryUtils.GetPoints(partSegments);
-				Plane plane = QaGeometryUtils.CreatePlane(partSegments);
+				List<Pnt> planePoints = ProxyUtils.GetPoints(partSegments);
+				Plane plane = ProxyUtils.CreatePlane(partSegments);
 
-				QaGeometryUtils.CalculateProjectedArea(plane, planePoints, out area, out perimeter);
+				ProxyUtils.CalculateProjectedArea(plane, planePoints, out area, out perimeter);
 
 				_latestPartSegments = partSegments;
 
@@ -399,7 +401,7 @@ namespace ProSuite.QA.Tests
 
 			public override IGeometry GetErrorGeometry()
 			{
-				return SegmentUtils.CreateMultiPatch(Assert.NotNull(_latestPartSegments));
+				return SegmentUtils_.CreateMultiPatch(Assert.NotNull(_latestPartSegments));
 			}
 		}
 

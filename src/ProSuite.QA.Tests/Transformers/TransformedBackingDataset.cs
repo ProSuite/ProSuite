@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
+using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom.SpatialIndex;
 using ProSuite.QA.Container;
@@ -21,7 +22,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 	public abstract class TransformedBackingDataset : TransformedBackingData
 	{
-		private readonly Dictionary<int, VirtualRow> _rowsCache;
+		private readonly Dictionary<long, VirtualRow> _rowsCache;
 
 		private readonly TransformedFeatureClass _resulting;
 
@@ -35,12 +36,12 @@ namespace ProSuite.QA.Tests.Transformers
 			_rowsCache[row.OID] = row;
 		}
 
-		public bool RemoveFromCache(int oid)
+		public bool RemoveFromCache(long oid)
 		{
 			return _rowsCache.Remove(oid);
 		}
 
-		public sealed override VirtualRow GetRow(int id)
+		public sealed override VirtualRow GetRow(long id)
 		{
 			if (_rowsCache.TryGetValue(id, out VirtualRow row))
 			{
@@ -50,7 +51,7 @@ namespace ProSuite.QA.Tests.Transformers
 			return GetUncachedRow(id);
 		}
 
-		public abstract VirtualRow GetUncachedRow(int id);
+		public abstract VirtualRow GetUncachedRow(long id);
 
 		protected TransformedBackingDataset([NotNull] TransformedFeatureClass gdbTable,
 		                                    IList<IReadOnlyTable> involvedTables)
@@ -60,7 +61,7 @@ namespace ProSuite.QA.Tests.Transformers
 				gdbTable.AddFieldT(FieldUtils.CreateBlobField(InvolvedRowUtils.BaseRowField));
 
 			_resulting = gdbTable;
-			_rowsCache = new Dictionary<int, VirtualRow>();
+			_rowsCache = new Dictionary<long, VirtualRow>();
 		}
 
 		protected IEnumerable<Involved> EnumKnownInvolveds(
@@ -74,7 +75,7 @@ namespace ProSuite.QA.Tests.Transformers
 			}
 
 			foreach (BoxTree<IReadOnlyFeature>.TileEntry entry in
-			         knownRows.Search(QaGeometryUtils.CreateBox(baseFeature.Extent)))
+			         knownRows.Search(ProxyUtils.CreateBox(baseFeature.Extent)))
 			{
 				if (! involvedDict.TryGetValue(entry.Value, out Involved knownInvolved))
 				{

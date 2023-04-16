@@ -78,13 +78,13 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork.Editing
 			[NotNull] IPolyline mergedGeometry,
 			[CanBeNull] ILinearNetworkFeatureFinder linearNetworkFeatureFinder,
 			[CanBeNull] Predicate<IFeature> deleteIntermediateNetworkJunctions,
-			out List<int> deletedJunctionIDs)
+			out List<long> deletedJunctionIDs)
 		{
 			Assert.ArgumentNotNull(survivingFeature, nameof(survivingFeature));
 			Assert.ArgumentNotNull(featuresToDelete, nameof(featuresToDelete));
 			Assert.ArgumentNotNull(mergedGeometry, nameof(mergedGeometry));
 
-			deletedJunctionIDs = new List<int>();
+			deletedJunctionIDs = new List<long>();
 
 			foreach (IFeature featureToDelete in featuresToDelete)
 			{
@@ -204,13 +204,13 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork.Editing
 			target.Z = source.Z;
 		}
 
-		private static IEnumerable<int> DeleteIntermediateJunctions(
+		private static IEnumerable<long> DeleteIntermediateJunctions(
 			[NotNull] IEnumerable<IFeature> junctions,
 			[CanBeNull] Predicate<IFeature> predicate,
 			[NotNull] ILinearNetworkFeatureFinder linearNetworkFeatureFinder,
 			[NotNull] IPolyline mergedLine)
 		{
-			var result = new List<int>();
+			var result = new List<long>();
 
 			foreach (IFeature junction in junctions)
 			{

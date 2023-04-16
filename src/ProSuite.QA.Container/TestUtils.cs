@@ -289,12 +289,58 @@ namespace ProSuite.QA.Container
 		}
 
 		[CanBeNull]
-		public static IGeometry GetShapeCopy([NotNull] IReadOnlyRow row,
-		                                     [CanBeNull] RelatedTables relatedTables)
+		public static IGeometry GetInvolvedShapeCopy([NotNull] IReadOnlyRow row)
 		{
-			return relatedTables == null
-				       ? GetShapeCopy(row)
-				       : relatedTables.GetGeometry(row);
+			IGeometry involvedShape = GetShapeCopy(row);
+			if (involvedShape != null)
+			{
+				return involvedShape;
+			}
+
+			// Try to get shape from an involved row
+			// Similar to InvolvedRowUtils.GetInvolvedRows(row);
+
+			if (row.Table.FullName is IQueryName qn)
+			{
+				foreach (string table in qn.QueryDef.Tables.Split(','))
+				{
+					string t = table.Trim();
+					string oidField = $"{t}.OBJECTID";
+					int oidFieldIdx = row.Table.FindField(oidField);
+					if (oidFieldIdx >= 0)
+					{
+						long oid = Assert.NotNull(GdbObjectUtils.ReadRowOidValue(row, oidFieldIdx))
+						                 .Value;
+
+						if (row.Table.Workspace is IFeatureWorkspace fws
+						    && DatasetUtils.OpenTable(fws, t) is IFeatureClass queryFc)
+						{
+							IFeature involvedFeature = GdbQueryUtils.GetFeature(queryFc, oid);
+							IReadOnlyFeature roFeature = ReadOnlyFeature.Create(involvedFeature);
+							involvedShape = GetInvolvedShapeCopy(roFeature);
+							if (involvedShape != null)
+							{
+								return involvedShape;
+							}
+						}
+					}
+				}
+			}
+
+			int baseRowsField = row.Table.Fields.FindField(InvolvedRowUtils.BaseRowField);
+			if (baseRowsField >= 0 && row.get_Value(baseRowsField) is IList<IReadOnlyRow> baseRows)
+			{
+				foreach (var baseRow in baseRows)
+				{
+					involvedShape = GetInvolvedShapeCopy(baseRow);
+					if (involvedShape != null)
+					{
+						return involvedShape;
+					}
+				}
+			}
+
+			return null;
 		}
 
 		[CanBeNull]
@@ -1127,7 +1173,7 @@ namespace ProSuite.QA.Container
 				string.Format("Unhandled geometry type: {0}", g0Type));
 		}
 
-		#region Nested types
+#region Nested types
 
 		private class GeometryArea<T> where T : IGeometry
 		{
@@ -1147,7 +1193,7 @@ namespace ProSuite.QA.Container
 		{
 			private const char _nameSeparator = '.';
 
-			#region IComparer<InvolvedRow> Members
+#region IComparer<InvolvedRow> Members
 
 			public int Compare(InvolvedRow row0, InvolvedRow row1)
 			{
@@ -1155,14 +1201,14 @@ namespace ProSuite.QA.Container
 				if (row0 == null) return -1;
 				if (row1 == null) return 1;
 
-				int diff = row0.OID - row1.OID;
+				int rowCompare = row0.OID.CompareTo(row1.OID);
 
-				return diff != 0
-					       ? diff
+				return rowCompare != 0
+					       ? rowCompare
 					       : CompareTableNames(row0.TableName, row1.TableName);
 			}
 
-			#endregion
+#endregion
 
 			// TODO this might be useful elsewhere
 			private static int CompareTableNames([NotNull] string tableName0,
@@ -1216,7 +1262,7 @@ namespace ProSuite.QA.Container
 			}
 		}
 
-		#endregion
+#endregion
 
 		[NotNull]
 		public static Type GetColumnType([NotNull] IField field)

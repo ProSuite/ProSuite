@@ -11,6 +11,12 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 	public class VirtualFeature : VirtualRow, IFeature
 	{
 		ITable IFeature.Table => Table;
+
+#if Server11
+		long IFeature.OID => (int) OID;
+#else
+		int IFeature.OID => (int)OID;
+#endif
 	}
 
 	/// <summary>
@@ -59,10 +65,15 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		bool IObject.HasOID => HasOID;
 		public virtual bool HasOID => ReadOnlyTable.HasOID && OID >= 0;
 
-		int IRow.OID => OID;
-		int IObject.OID => OID;
+#if Server11
+		long IRow.OID => OID;
+		long IObject.OID => OID;
+#else
+		int IRow.OID => (int)OID;
+		int IObject.OID => (int)OID;
+#endif
 
-		public virtual int OID =>
+		public virtual long OID =>
 			throw new NotImplementedException("Implement in derived class");
 
 		ITable IRow.Table => Table;

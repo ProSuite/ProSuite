@@ -14,9 +14,9 @@ using ProSuite.Commons.UI.Keyboard;
 
 namespace ProSuite.AGP.Editing.Selection
 {
-	public class SelectionToolBase : OneClickToolBase
+	public abstract class SelectionToolBase : OneClickToolBase
 	{
-		public SelectionToolBase()
+		protected SelectionToolBase()
 		{
 			IsSketchTool = true;
 			SelectionSettings = new SelectionSettings();
@@ -103,11 +103,7 @@ namespace ProSuite.AGP.Editing.Selection
 
 		protected override void LogPromptForSelection()
 		{
-			_msg.InfoFormat(
-				"Select one or more features by clicking or dragging a box. Options: " +
-				"<br>-Press and hold SHIFT to add or remove features from the existing selection." +
-				"<br>-Press CTRL and drag a box to show a list of selectable feature classes." +
-				"<br>-Press ALT and click to select all features at the click point.");
+			_msg.InfoFormat(LocalizableStrings.SelectionTool_LogPromptForSelection);
 		}
 
 		protected override SelectionSettings SelectionSettings { get; set; }

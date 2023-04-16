@@ -10,7 +10,6 @@ using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Logging;
-using Assert = ProSuite.Commons.Essentials.Assertions.Assert;
 
 namespace ProSuite.Commons.AO.Test.Geodatabase
 {
@@ -22,7 +21,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			TestUtils.ConfigureUnitTestLogging();
+			Commons.Test.Testing.TestUtils.ConfigureUnitTestLogging();
 
 			TestUtils.InitializeLicense();
 		}
@@ -33,9 +32,9 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			TestUtils.ReleaseLicense();
 		}
 
-		private static Dictionary<int, IRow> GetFirstNRows(ITable table, int count)
+		private static Dictionary<long, IRow> GetFirstNRows(ITable table, int count)
 		{
-			var dic = new Dictionary<int, IRow>(count);
+			var dic = new Dictionary<long, IRow>(count);
 			foreach (IRow row in GdbQueryUtils.GetRows(table, false))
 			{
 				dic.Add(row.OID, row);
@@ -63,7 +62,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			IFeatureClass fc = ws.OpenFeatureClass("TOPGIS_TLM.TLM_STRASSE");
 
 			const int count = 100;
-			IDictionary<int, IRow> rows = GetFirstNRows((ITable) fc, count);
+			IDictionary<long, IRow> rows = GetFirstNRows((ITable) fc, count);
 
 			var watch = new Stopwatch();
 			watch.Start();
@@ -95,7 +94,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			ITable fc = ws.OpenTable("TOPGIS_TLM.TLM_WANDERWEG");
 
 			const int max = 100;
-			IDictionary<int, IRow> rows = GetFirstNRows(fc, max);
+			IDictionary<long, IRow> rows = GetFirstNRows(fc, max);
 
 			var watch = new Stopwatch();
 			watch.Start();
@@ -190,16 +189,16 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			IFeatureWorkspace ws = OpenTestWorkspace();
 			IRelationshipClass rc =
 				ws.OpenRelationshipClass("TOPGIS_TLM.TLM_STRASSE_NAME");
-			NUnit.Framework.Assert.AreEqual(rc.Cardinality,
-			                                esriRelCardinality.esriRelCardinalityOneToMany);
+			Assert.AreEqual(rc.Cardinality,
+			                esriRelCardinality.esriRelCardinalityOneToMany);
 
 			foreach (
 				IRow row in
 				GdbQueryUtils.GetRowProxys(rc.OriginClass, null,
 				                           new[] { rc }))
 			{
-				NUnit.Framework.Assert.AreEqual(row.Table, rc.OriginClass);
-				NUnit.Framework.Assert.Greater(row.OID, 0);
+				Assert.AreEqual(row.Table, rc.OriginClass);
+				Assert.Greater(row.OID, 0);
 			}
 		}
 
@@ -211,16 +210,16 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			IFeatureWorkspace ws = OpenTestWorkspace();
 			IRelationshipClass rc =
 				ws.OpenRelationshipClass("TOPGIS_TLM.TLM_STRASSEN_NAMENSTEIL_NAME");
-			NUnit.Framework.Assert.AreEqual(rc.Cardinality,
-			                                esriRelCardinality.esriRelCardinalityOneToMany);
+			Assert.AreEqual(rc.Cardinality,
+			                esriRelCardinality.esriRelCardinalityOneToMany);
 
 			foreach (
 				IRow row in
 				GdbQueryUtils.GetRowProxys(rc.OriginClass, null,
 				                           new[] { rc }))
 			{
-				NUnit.Framework.Assert.AreEqual(row.Table, rc.OriginClass);
-				NUnit.Framework.Assert.Greater(row.OID, 0);
+				Assert.AreEqual(row.Table, rc.OriginClass);
+				Assert.Greater(row.OID, 0);
 			}
 		}
 
@@ -232,8 +231,8 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			IFeatureWorkspace ws = OpenTestWorkspace();
 			IRelationshipClass rc =
 				ws.OpenRelationshipClass("TOPGIS_TLM.TLM_STRASSE_NAME");
-			NUnit.Framework.Assert.AreEqual(rc.Cardinality,
-			                                esriRelCardinality.esriRelCardinalityOneToMany);
+			Assert.AreEqual(rc.Cardinality,
+			                esriRelCardinality.esriRelCardinalityOneToMany);
 
 			foreach (IRow row in GdbQueryUtils.GetRowProxys(rc.OriginClass,
 			                                                GeometryFactory.CreatePolygon(
@@ -241,8 +240,8 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 				                                                1264130),
 			                                                new[] { rc }))
 			{
-				NUnit.Framework.Assert.AreEqual(row.Table, rc.OriginClass);
-				NUnit.Framework.Assert.Greater(row.OID, 0);
+				Assert.AreEqual(row.Table, rc.OriginClass);
+				Assert.Greater(row.OID, 0);
 			}
 		}
 
@@ -254,8 +253,8 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			IFeatureWorkspace ws = OpenTestWorkspace();
 			IRelationshipClass rc =
 				ws.OpenRelationshipClass("TOPGIS_TLM.TLM_STRASSE_NAME");
-			NUnit.Framework.Assert.AreEqual(rc.Cardinality,
-			                                esriRelCardinality.esriRelCardinalityOneToMany);
+			Assert.AreEqual(rc.Cardinality,
+			                esriRelCardinality.esriRelCardinalityOneToMany);
 
 			int count = 0;
 			foreach (IRow row in GdbQueryUtils.GetRows((ITable) rc.OriginClass, false))
@@ -265,7 +264,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 				count += features.Count;
 			}
 
-			NUnit.Framework.Assert.Greater(count, 0);
+			Assert.Greater(count, 0);
 		}
 
 		[Test]
@@ -278,9 +277,9 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 			// fill list
 			const int max = 2000;
-			Dictionary<int, IRow> dic = GetFirstNRows((ITable) fc, max);
+			Dictionary<long, IRow> dic = GetFirstNRows((ITable) fc, max);
 
-			var selList = new List<int>(max);
+			var selList = new List<long>(max);
 			foreach (IRow row in GdbQueryUtils.GetRowsInList((ITable) fc, fc.OIDFieldName,
 			                                                 dic.Keys, false, null))
 			{
@@ -292,7 +291,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 			Assert.AreEqual(dic.Count, selList.Count, "List counts differ");
 
-			var oidList = new List<int>(dic.Keys);
+			var oidList = new List<long>(dic.Keys);
 			oidList.Sort();
 			selList.Sort();
 			for (var i = 0; i < oidList.Count; i++)
@@ -321,7 +320,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			}
 
 			filter.WhereClause = "OBJEKTART not in (1, 2, 3)";
-			int n = tbl.RowCount(filter);
+			long n = tbl.RowCount(filter);
 			Assert.AreEqual(n, nRows, "");
 		}
 
@@ -345,7 +344,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			}
 
 			filter.WhereClause = "OPERATEUR not in ('STR_Imp')";
-			int n = tbl.RowCount(filter);
+			long n = tbl.RowCount(filter);
 			Assert.AreEqual(n, nRows, "");
 		}
 
@@ -372,7 +371,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			}
 
 			filter.WhereClause = "UUID not in ('{8C5517C9-B19F-4CC1-A6A1-D3DD317BCDD1}')";
-			int n = tbl.RowCount(filter);
+			long n = tbl.RowCount(filter);
 			Assert.AreEqual(n, nRows, "");
 		}
 
@@ -394,8 +393,8 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 				2600000.0001,
 				1200000.0001);
 
-			ISpatialReference spatialReference =
-				Assert.NotNull(DatasetUtils.GetSpatialReference(fc));
+			ISpatialReference spatialReference = DatasetUtils.GetSpatialReference(fc);
+			Assert.NotNull(spatialReference);
 
 			subResolutionEnv.SpatialReference = spatialReference;
 
@@ -514,11 +513,11 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 				1200000.0001);
 
 			ISpatialReference spatialReference = DatasetUtils.GetSpatialReference(fc);
+			Assert.NotNull(spatialReference);
 
 			subResolutionEnv.SpatialReference = spatialReference;
 
-			double xyResolution =
-				SpatialReferenceUtils.GetXyResolution(Assert.NotNull(spatialReference));
+			double xyResolution = SpatialReferenceUtils.GetXyResolution(spatialReference);
 
 			IGeometry validGeometry;
 			Assert.False(GdbQueryUtils.IsValidFilterGeometry(
@@ -629,6 +628,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			IFeatureClass fc = ws.OpenFeatureClass("TOPGIS_TLM.TLM_STRASSE");
 
 			ISpatialReference spatialReference = DatasetUtils.GetSpatialReference(fc);
+			Assert.NotNull(spatialReference);
 
 			IEnvelope largeEnvelope = GeometryFactory.CreateEnvelope(2600000, 1200000,
 				2601000, 1201000,
@@ -637,8 +637,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			IMultiPatch multiPatch =
 				GeometryFactory.CreateMultiPatch(GeometryFactory.CreatePolygon(largeEnvelope));
 
-			double xyResolution =
-				SpatialReferenceUtils.GetXyResolution(Assert.NotNull(spatialReference));
+			double xyResolution = SpatialReferenceUtils.GetXyResolution(spatialReference);
 
 			// NOTE: Multipatch implements IRelationalOperator since a while!
 			IGeometry validGeometry;
@@ -674,8 +673,8 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 			Assert.False(((IZAware) nonZSimpleEnvelope).ZSimple, "Must be non-Z-simple");
 
-			ISpatialReference spatialReference =
-				Assert.NotNull(DatasetUtils.GetSpatialReference(fc));
+			ISpatialReference spatialReference = DatasetUtils.GetSpatialReference(fc);
+			Assert.NotNull(spatialReference);
 
 			IGeometry validGeometry;
 			Assert.False(GdbQueryUtils.IsValidFilterGeometry(
@@ -710,7 +709,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 			if (RuntimeUtils.Is10_4orHigher)
 			{
-				NUnit.Framework.Assert.Catch<Exception>(
+				Assert.Catch<Exception>(
 					() => GdbQueryUtils.CreateSpatialFilter(fc, emptyPoly));
 			}
 
@@ -722,16 +721,13 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 			IFeatureCursor cursor = null;
 
-			if (RuntimeUtils.Is10_1 || RuntimeUtils.Is10_2 || RuntimeUtils.Is10_3 ||
-			    RuntimeUtils.Is10_4orHigher)
-			{
-				NUnit.Framework.Assert.Throws<NullReferenceException>(
-					() => cursor = fc.Search(spatialFilter, true));
-			}
-			else
-			{
-				cursor = fc.Search(spatialFilter, true);
-			}
+#if Server11
+
+			cursor = fc.Search(spatialFilter, true);
+#else
+			Assert.Throws<NullReferenceException>(
+				() => cursor = fc.Search(spatialFilter, true));
+#endif
 
 			if (cursor != null)
 				Marshal.ReleaseComObject(cursor);

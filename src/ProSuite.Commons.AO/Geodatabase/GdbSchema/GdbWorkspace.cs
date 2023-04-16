@@ -222,6 +222,12 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			throw new NotImplementedException();
 		}
 
+		public IDataset OpenExtensionDataset(esriDatasetType extensionDatasetType,
+		                                     string extensionDatasetName)
+		{
+			throw new NotImplementedException();
+		}
+
 		IFeatureDataset IFeatureWorkspace.OpenFeatureQuery(string queryName, IQueryDef queryDef)
 		{
 			throw new NotImplementedException();

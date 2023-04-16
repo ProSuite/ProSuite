@@ -19,7 +19,6 @@ using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Core;
 using ProSuite.UI.QA;
-using ProSuite.UI.QA.BoundTableRows;
 
 namespace ProSuite.DdxEditor.Content.QA.QCon
 {
@@ -200,7 +199,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 		{
 			QualityCondition qualityCondition = Assert.NotNull(Item.GetEntity());
 
-			IList<InstanceConfigurationInCategoryTableRow> filterTableRows =
+			IList<InstanceConfigurationTableRow> filterTableRows =
 				_item.GetIssueFiltersToAdd(qualityCondition, _view);
 
 			if (filterTableRows == null || filterTableRows.Count == 0)
@@ -211,7 +210,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 
 			bool anyChange = false;
 
-			foreach (InstanceConfigurationInCategoryTableRow filterRow in filterTableRows)
+			foreach (InstanceConfigurationTableRow filterRow in filterTableRows)
 			{
 				IssueFilterConfiguration filterConfig =
 					(IssueFilterConfiguration) filterRow.InstanceConfiguration;

@@ -1,8 +1,11 @@
+using System;
 using System.Threading;
+using ArcGIS.Core.Data;
 using NUnit.Framework;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
 using ProSuite.Commons.AGP.Hosting;
+using ProSuite.Commons.Testing;
 
 namespace ProSuite.AGP.WorkList.Test
 {
@@ -10,15 +13,8 @@ namespace ProSuite.AGP.WorkList.Test
 	[Apartment(ApartmentState.STA)]
 	public class WorklistUtilsTest
 	{
-		private readonly string _path =
-			@"C:\git\ProSuite\src\ProSuite.AGP.WorkList.Test\TestData\work_list_definition_pointing_to_sde.xml.swl";
-
 		[SetUp]
-		public void SetUp()
-		{
-			// http://stackoverflow.com/questions/8245926/the-current-synchronizationcontext-may-not-be-used-as-a-taskscheduler
-			SynchronizationContext.SetSynchronizationContext(new SynchronizationContext());
-		}
+		public void SetUp() { }
 
 		[TearDown]
 		public void TearDown() { }
@@ -26,22 +22,54 @@ namespace ProSuite.AGP.WorkList.Test
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			// Host must be initialized on an STA thread:
-			//Host.Initialize();
+			Commons.Test.Testing.TestUtils.ConfigureUnitTestLogging();
+
 			CoreHostProxy.Initialize();
 		}
 
 		[Test]
 		public void Can_create_worklist_with_SDE_workspace_from_definition_file()
 		{
-			XmlWorkListDefinition definition = XmlWorkItemStateRepository.Import(_path);
+			string path =
+				TestDataPreparer.FromDirectory()
+				                .GetPath("work_list_definition_pointing_to_sde.swl");
 
-			string displayName = WorkListUtils.GetName(_path);
+			XmlWorkListDefinition definition = XmlWorkItemStateRepository.Import(path);
+
+			string displayName = WorkListUtils.GetName(path);
 
 			IWorkList worklist = WorkListUtils.Create(definition, displayName);
 			Assert.NotNull(worklist);
 
-			Assert.AreEqual(2, worklist.Count());
+			Assert.AreEqual(0, worklist.Count());
+		}
+
+		[Test]
+		public void Can_skip_work_item_workspace_because_of_invalid_connectionString()
+		{
+			string path =
+				TestDataPreparer.FromDirectory()
+				                .GetPath("work_list_definition_buggy_connectionString.swl");
+
+			XmlWorkListDefinition definition = XmlWorkItemStateRepository.Import(path);
+
+			IWorkItemRepository repository = WorkListUtils.CreateWorkItemRepository(definition);
+			Assert.NotNull(repository);
+
+			// This tries to load ArcGIS.Desktop.Framework. Why does WorkList needs this?
+			// Try to push work list further up, away from AGP Desktop.
+			//Assert.AreEqual(2, repository.GetCount());
+		}
+
+		[Test, Ignore("Learning test")]
+		public void Can_get_path_from_Fgdb()
+		{
+			string path = @"C:\temp\agp projects\Default.gdb";
+			var gdb = new Geodatabase(
+				new FileGeodatabaseConnectionPath(new Uri(path, UriKind.Absolute)));
+
+			Console.WriteLine(gdb.GetPath());
+			Console.WriteLine(gdb.GetConnectionString());
 		}
 	}
 }

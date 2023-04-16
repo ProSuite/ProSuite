@@ -20,7 +20,7 @@ namespace ProSuite.QA.Container.PolygonGrower
 
 		public int GetHashCode(IDirectedRow row)
 		{
-			return 37 * (2 * row.Row.RowOID + (row.IsBackward ? 1 : 0)) +
+			return 37 * (2 * row.Row.RowOID.GetHashCode() + (row.IsBackward ? 1 : 0)) +
 			       row.TopoLine.PartIndex;
 		}
 

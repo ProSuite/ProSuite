@@ -1,4 +1,4 @@
-﻿namespace ProSuite.DdxEditor.Content.Models
+namespace ProSuite.DdxEditor.Content.Models
 {
 	partial class SpatialReferenceComparisonForm
 	{
@@ -147,6 +147,7 @@
 			this.Controls.Add(this._buttonCopy);
 			this.Controls.Add(this._buttonClose);
 			this.Controls.Add(this._groupBoxFeatureClasses);
+			this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.SizableToolWindow;
 			this.MinimizeBox = false;
 			this.Name = "SpatialReferenceComparisonForm";
 			this.ShowIcon = false;

@@ -51,38 +51,42 @@
     <Reference Include="System.Xaml" />
     <Reference Include="ArcGIS.Desktop.Framework">
       <HintPath>$(ProAssemblyPath)\bin\ArcGIS.Desktop.Framework.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
       <Private>False</Private>
     </Reference>
     <Reference Include="ArcGIS.Core">
       <HintPath>$(ProAssemblyPath)\bin\ArcGIS.Core.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
       <Private>False</Private>
     </Reference>
     <Reference Include="ArcGIS.Desktop.Core">
       <HintPath>$(ProAssemblyPath)\bin\Extensions\Core\ArcGIS.Desktop.Core.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
       <Private>False</Private>
     </Reference>
     <Reference Include="ArcGIS.Desktop.Mapping">
       <HintPath>$(ProAssemblyPath)\bin\Extensions\Mapping\ArcGIS.Desktop.Mapping.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
       <Private>False</Private>
     </Reference>
     <Reference Include="ArcGIS.Desktop.Catalog">
       <HintPath>$(ProAssemblyPath)\bin\Extensions\Catalog\ArcGIS.Desktop.Catalog.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
       <Private>False</Private>
     </Reference>
     <Reference Include="ArcGIS.Desktop.Editing">
       <HintPath>$(ProAssemblyPath)\bin\Extensions\Editing\ArcGIS.Desktop.Editing.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
       <Private>False</Private>
     </Reference>
     <Reference Include="ArcGIS.Desktop.Extensions">
       <HintPath>$(ProAssemblyPath)\bin\Extensions\DesktopExtensions\ArcGIS.Desktop.Extensions.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
       <Private>False</Private>
     </Reference>
     <Reference Include="ArcGIS.Desktop.Resources">
       <HintPath>$(ProAssemblyPath)\bin\ArcGIS.Desktop.Resources.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="ArcGIS.Desktop.Resources">
-      <HintPath>$(ProAssemblyPath)\bin\ArcGIS.Desktop.Resources.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
       <Private>False</Private>
     </Reference>
   </ItemGroup>
@@ -94,9 +98,7 @@
     <AddInContent Include="DarkImages\AddInDesktop32.png" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\SharedAssemblyInfo.cs">
-      <Link>Properties\SharedAssemblyInfo.cs</Link>
-    </Compile>
+    <Compile Include="..\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
     <Compile Include="CartoProcess\AlignMarkers.cs" />
     <Compile Include="CartoProcess\CalculateControlPoints.cs" />
     <Compile Include="CartoProcess\CartoProcess.cs" />

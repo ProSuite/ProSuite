@@ -80,12 +80,13 @@ namespace ProSuite.QA.Tests
 			return false;
 		}
 
-		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow readOnlyRow, int tableIndex)
 		{
 			int errorCount = 0;
 			int? iSubtype = null;
 			IAttributeRule invalidRule = null;
 
+			IRow baseRow = Assert.NotNull((ReadOnlyRow)readOnlyRow).BaseRow;
 			foreach (IAttributeRule rule in _attrRules)
 			{
 				string message = string.Empty;
@@ -100,7 +101,7 @@ namespace ProSuite.QA.Tests
 						{
 							try
 							{
-								iSubtype = ((IRowSubtypes) row).SubtypeCode;
+								iSubtype = ((IRowSubtypes) baseRow).SubtypeCode;
 							}
 							catch (Exception exp)
 							{
@@ -110,14 +111,12 @@ namespace ProSuite.QA.Tests
 						}
 						else if (iSubtype.Value == rule.SubtypeCode)
 						{
-							valid = rule.Validate(Assert.NotNull(row as ReadOnlyRow).BaseRow,
-							                      out message);
+							valid = rule.Validate(baseRow, out message);
 						}
 					}
 					else
 					{
-						valid = rule.Validate(Assert.NotNull(row as ReadOnlyRow).BaseRow,
-						                      out message);
+						valid = rule.Validate(baseRow, out message);
 					}
 				}
 				catch (Exception exp)
@@ -135,8 +134,8 @@ namespace ProSuite.QA.Tests
 				{
 					string description = string.Format("First invalid rule: {0}", message);
 					errorCount += ReportError(
-						description, InvolvedRowUtils.GetInvolvedRows(row),
-						TestUtils.GetShapeCopy(row), issueCode, rule.FieldName);
+						description, InvolvedRowUtils.GetInvolvedRows(readOnlyRow),
+						TestUtils.GetShapeCopy(readOnlyRow), issueCode, rule.FieldName);
 
 					break;
 				}

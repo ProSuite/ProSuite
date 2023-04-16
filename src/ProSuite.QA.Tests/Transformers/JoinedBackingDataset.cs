@@ -128,14 +128,14 @@ namespace ProSuite.QA.Tests.Transformers
 
 		public IReadOnlyTable AssociationTable => _joinDatasetImpl.AssociationTable;
 
-		public override VirtualRow GetRow(int id)
+		public override VirtualRow GetRow(long id)
 		{
 			AssignFiltersAndContainer();
 
 			return _joinDatasetImpl.GetRow(id);
 		}
 
-		public override int GetRowCount(IQueryFilter queryFilter)
+		public override long GetRowCount(IQueryFilter queryFilter)
 		{
 			AssignFiltersAndContainer();
 

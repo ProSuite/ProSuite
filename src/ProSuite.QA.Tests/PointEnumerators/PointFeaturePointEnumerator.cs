@@ -1,9 +1,9 @@
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
-using ProSuite.QA.Container.Geometry;
 
 namespace ProSuite.QA.Tests.PointEnumerators
 {
@@ -16,7 +16,7 @@ namespace ProSuite.QA.Tests.PointEnumerators
 		{
 			var point = (IPoint) feature.Shape;
 
-			_point = QaGeometryUtils.CreatePoint3D(point);
+			_point = ProxyUtils.CreatePoint3D(point);
 		}
 
 		public override IEnumerable<Pnt> GetPoints()

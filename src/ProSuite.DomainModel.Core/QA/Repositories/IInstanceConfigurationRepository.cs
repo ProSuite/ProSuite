@@ -10,11 +10,6 @@ namespace ProSuite.DomainModel.Core.QA.Repositories
 	{
 		IList<T> GetInstanceConfigurations<T>() where T : InstanceConfiguration;
 
-		IList<TransformerConfiguration> GetTransformerConfigurations(
-			[CanBeNull] IList<int> excludedIds = null);
-
-		IList<IssueFilterConfiguration> GetIssueFilterConfigurations();
-
 		HashSet<int> GetIdsInvolvingDeletedDatasets<T>() where T : InstanceConfiguration;
 
 		IList<T> Get<T>(

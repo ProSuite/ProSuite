@@ -32,6 +32,18 @@ namespace ProSuite.DdxEditor.Framework.Items
 			return result;
 		}
 
+		public static Image GetSearchImage([CanBeNull] Image overlay = null)
+		{
+			Bitmap result = Resources.Search;
+
+			if (overlay != null)
+			{
+				AddOverlay(overlay, result);
+			}
+
+			return result;
+		}
+
 		private static void AddOverlay([NotNull] Image overlay, [NotNull] Image image)
 		{
 			Graphics g = Graphics.FromImage(image);

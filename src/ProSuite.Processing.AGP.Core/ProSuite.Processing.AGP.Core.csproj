@@ -35,16 +35,15 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="ArcGIS.Core">
-      <SpecificVersion>False</SpecificVersion>
       <HintPath>$(ProAssemblyPath)\bin\ArcGIS.Core.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
+      <Private>False</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\SharedAssemblyInfo.cs">
-      <Link>Properties\SharedAssemblyInfo.cs</Link>
-    </Compile>
+    <Compile Include="..\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
     <Compile Include="Domain\ICartoProcess.cs" />
     <Compile Include="Domain\IProcessingContext.cs" />
     <Compile Include="Domain\IProcessingSelection.cs" />

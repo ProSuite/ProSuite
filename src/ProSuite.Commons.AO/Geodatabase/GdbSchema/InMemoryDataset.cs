@@ -39,14 +39,14 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			}
 		}
 
-		public override VirtualRow GetRow(int id)
+		public override VirtualRow GetRow(long id)
 		{
 			return AllRows.First(r => r.OID == id);
 
 			// TODO: Throw com exception with error code e.ErrorCode = (int)fdoError.FDO_E_ROW_NOT_FOUND
 		}
 
-		public override int GetRowCount(IQueryFilter filter)
+		public override long GetRowCount(IQueryFilter filter)
 		{
 			return Search(filter, true).Count();
 		}
@@ -103,7 +103,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		{
 			var rowBasedValues = new RowBasedValues(row, _oidFieldIndex);
 
-			int oid = row.HasOID ? row.OID : -1;
+			long oid = row.HasOID ? row.OID : -1;
 
 			return schema.CreateObject(oid, rowBasedValues);
 		}

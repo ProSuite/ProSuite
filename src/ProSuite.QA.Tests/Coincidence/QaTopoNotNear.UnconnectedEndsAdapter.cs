@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
-using ProSuite.QA.Container.Geometry;
 using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Tests.Network;
 

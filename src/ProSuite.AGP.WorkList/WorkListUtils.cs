@@ -17,6 +17,7 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.IO;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.Notifications;
 using ProSuite.Commons.Xml;
 using ProSuite.DomainModel.Core;
 
@@ -60,6 +61,25 @@ namespace ProSuite.AGP.WorkList
 			Assert.ArgumentNotNull(definition, nameof(definition));
 			Assert.ArgumentNotNullOrEmpty(displayName, nameof(displayName));
 
+			try
+			{
+				var descriptor = new ClassDescriptor(definition.TypeName, definition.AssemblyName);
+
+				return descriptor.CreateInstance<IWorkList>(CreateWorkItemRepository(definition),
+				                                            definition.Name, displayName);
+			}
+			catch (Exception e)
+			{
+				_msg.Error("Cannot create work list", e);
+				throw;
+			}
+		}
+
+		public static IWorkItemRepository CreateWorkItemRepository(
+			[NotNull] XmlWorkListDefinition definition)
+		{
+			Assert.ArgumentNotNull(definition, nameof(definition));
+
 			var descriptor = new ClassDescriptor(definition.TypeName, definition.AssemblyName);
 
 			Type type = descriptor.GetInstanceType();
@@ -100,45 +120,52 @@ namespace ProSuite.AGP.WorkList
 				throw new ArgumentException("Unkown work list type");
 			}
 
-			try
-			{
-				return descriptor.CreateInstance<IWorkList>(repository, definition.Name,
-				                                            displayName);
-			}
-			catch (Exception e)
-			{
-				_msg.Error("Cannot create work list", e);
-				throw;
-			}
+			return repository;
 		}
 
+		[NotNull]
 		private static Dictionary<Geodatabase, List<Table>> GetTablesByGeodatabase(
 			ICollection<XmlWorkListWorkspace> workspaces)
 		{
 			var result = new Dictionary<Geodatabase, List<Table>>(workspaces.Count);
 
+			var notifications = new NotificationCollection();
+
 			foreach (XmlWorkListWorkspace workspace in workspaces)
 			{
-				var geodatabase = GetGeodatabase(workspace);
-				Assert.NotNull(geodatabase);
+				var geodatabase = GetGeodatabase(workspace, notifications);
+
+				if (geodatabase == null)
+				{
+					continue;
+				}
 
 				if (result.ContainsKey(geodatabase))
 				{
-					// todo daro
+					_msg.Debug($"Duplicate workspace {workspace.ConnectionString}");
+					continue;
 				}
 
 				List<Table> tables = GetDistinctTables(workspace, geodatabase);
 				result.Add(geodatabase, tables);
 			}
 
+			if (notifications.Count <= 0)
+			{
+				return result;
+			}
+
+			_msg.Info(string.Format(
+				          "Cannot open work item workspaces from connection strings:{0}{1}",
+				          Environment.NewLine, notifications.Concatenate(Environment.NewLine)));
+
 			return result;
 		}
 
 		[CanBeNull]
-		private static Geodatabase GetGeodatabase([NotNull] XmlWorkListWorkspace workspace)
+		private static Geodatabase GetGeodatabase([NotNull] XmlWorkListWorkspace workspace,
+		                                          [NotNull] NotificationCollection notifications)
 		{
-			Assert.ArgumentNotNull(workspace, nameof(workspace));
-
 			// DBCLIENT = oracle
 			// AUTHENTICATION_MODE = DBMS
 			// PROJECT_INSTANCE = sde
@@ -198,9 +225,11 @@ namespace ProSuite.AGP.WorkList
 			}
 			catch (Exception e)
 			{
-				_msg.Debug(
-					$"Cannot open geodatabase from connection string {workspace.ConnectionString}",
-					e);
+				string message = $"Cannot open workspace from connection string {workspace.ConnectionString}";
+
+				_msg.Debug(message, e);
+
+				NotificationUtils.Add(notifications, $"{workspace.ConnectionString}");
 				return null;
 			}
 		}
@@ -236,7 +265,7 @@ namespace ProSuite.AGP.WorkList
 
 				if (! result.ContainsKey(table))
 				{
-					result.Add(table, new List<long> {item.Row.OID});
+					result.Add(table, new List<long> { item.Row.OID });
 				}
 				else
 				{

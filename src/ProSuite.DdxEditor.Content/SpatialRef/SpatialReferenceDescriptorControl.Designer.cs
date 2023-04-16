@@ -109,7 +109,7 @@ namespace ProSuite.DdxEditor.Content.SpatialRef
 			// _toolStripButtonCopy
 			// 
 			this._toolStripButtonCopy.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
-			this._toolStripButtonCopy.Image = global::ProSuite.DdxEditor.Content.Properties.Resources.Copy;
+			this._toolStripButtonCopy.Image = global::ProSuite.DdxEditor.Framework.Properties.Resources.Copy;
 			this._toolStripButtonCopy.ImageScaling = System.Windows.Forms.ToolStripItemImageScaling.None;
 			this._toolStripButtonCopy.Name = "_toolStripButtonCopy";
 			this._toolStripButtonCopy.Size = new System.Drawing.Size(55, 22);

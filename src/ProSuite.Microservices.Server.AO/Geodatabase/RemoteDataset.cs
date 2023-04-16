@@ -52,7 +52,7 @@ namespace ProSuite.Microservices.Server.AO.Geodatabase
 			}
 		}
 
-		public override VirtualRow GetRow(int id)
+		public override VirtualRow GetRow(long id)
 		{
 			Assert.True(_schema.HasOID, "The table {0} has no OID", _schema.Name);
 			Assert.False(string.IsNullOrEmpty(_schema.OIDFieldName),
@@ -87,7 +87,7 @@ namespace ProSuite.Microservices.Server.AO.Geodatabase
 			return null;
 		}
 
-		public override int GetRowCount(IQueryFilter filter)
+		public override long GetRowCount(IQueryFilter filter)
 		{
 			DataRequest dataRequest = CreateDataRequest(filter);
 

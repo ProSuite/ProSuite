@@ -97,7 +97,7 @@ namespace ProSuite.DomainModel.Persistence.Core.QA.Xml
 
 						IList<InstanceDescriptor> descriptors =
 							exportAllDescriptors
-								? InstanceDescriptors.GetAll()
+								? GetAllInstanceDescriptors()
 								: null;
 
 						IList<DataQualityCategory> categories =

@@ -23,7 +23,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		public override ReadOnlyRow CreateRow(IRow row)
 		{
-			return new ReadOnlyFeature(this, (IFeature) row);
+			return ReadOnlyFeature.Create(this, (IFeature) row);
 		}
 	}
 }

@@ -6,6 +6,7 @@ using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.AO.Test;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
 using ProSuite.DomainModel.AO.QA;
@@ -13,7 +14,6 @@ using ProSuite.DomainModel.Core;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.Test;
 using ProSuite.QA.TestFactories;
 using ProSuite.QA.Tests.Test.Construction;
 using ProSuite.QA.Tests.Test.TestRunners;
@@ -230,8 +230,9 @@ namespace ProSuite.QA.Tests.Test
 				                errors[0].IssueCode?.ID);
 
 				// TOP-4945: expected involved dataset name: base table name, not joined table name
-				Assert.IsTrue(tableName == involvedRows[0].TableName ||
-				              tableName == involvedRows[1].TableName);
+				StringComparison cmp = StringComparison.InvariantCultureIgnoreCase;
+				Assert.IsTrue(tableName.Equals(involvedRows[0].TableName, cmp) ||
+				              tableName.Equals(involvedRows[1].TableName, cmp));
 			}
 			finally
 			{

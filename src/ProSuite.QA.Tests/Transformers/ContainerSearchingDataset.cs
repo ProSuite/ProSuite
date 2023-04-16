@@ -33,12 +33,12 @@ namespace ProSuite.QA.Tests.Transformers
 
 		public override IEnvelope Extent => (_sourceTable as IReadOnlyFeatureClass)?.Extent;
 
-		public override VirtualRow GetRow(int id)
+		public override VirtualRow GetRow(long id)
 		{
 			return CreateRow(_sourceTable.GetRow(id));
 		}
 
-		public override int GetRowCount(IQueryFilter queryFilter)
+		public override long GetRowCount(IQueryFilter queryFilter)
 		{
 			return _sourceTable.RowCount(queryFilter);
 		}
@@ -134,7 +134,7 @@ namespace ProSuite.QA.Tests.Transformers
 		{
 			var rowValueList = new ReadOnlyRowBasedValues(baseRow);
 
-			int oid = baseRow.HasOID ? baseRow.OID : -1;
+			long oid = baseRow.HasOID ? baseRow.OID : -1;
 
 			return _gdbTable.CreateObject(oid, rowValueList);
 		}

@@ -9,6 +9,7 @@ using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
@@ -287,7 +288,7 @@ namespace ProSuite.QA.Container.TestContainer
 		{
 			Assert.ArgumentNotNull(searchGeometry, nameof(searchGeometry));
 
-			IBox searchGeometryBox = QaGeometryUtils.CreateBox(searchGeometry,
+			IBox searchGeometryBox = ProxyUtils.CreateBox(searchGeometry,
 			                                                   GetXYTolerance(table));
 
 			BoxTree<CachedRow> boxTree = _rowBoxTrees[table];
@@ -416,7 +417,7 @@ namespace ProSuite.QA.Container.TestContainer
 
 			if (_cachedRow == null)
 			{
-				return QaGeometryUtils.CreateBox(CurrentTestRow.DataReference.Extent);
+				return ProxyUtils.CreateBox(CurrentTestRow.DataReference.Extent);
 			}
 
 			IBox currentBox = _cachedRow.Extent;
@@ -490,6 +491,11 @@ namespace ProSuite.QA.Container.TestContainer
 
 			foreach (BoxTree<CachedRow>.TileEntry entry in target._rowBoxTrees[table].Search(null))
 			{
+				if (! entry.Value.HasFeatureCached())
+				{
+					// TODO: why can this be
+					return null;
+				}
 				result.Add(entry.Value);
 			}
 
@@ -581,7 +587,7 @@ namespace ProSuite.QA.Container.TestContainer
 
 			ISpatialFilter queryFilter = null;
 
-			IUniqueIdProvider uniqueIdProvider = context.GetUniqueIdProvider(table);
+			IUniqueIdProvider uniqueIdProvider_ = context.GetUniqueIdProvider(table);
 			// get data from database
 			try
 			{
@@ -603,15 +609,15 @@ namespace ProSuite.QA.Container.TestContainer
 						continue;
 					}
 
-					var keyRow = new CachedRow(feature, uniqueIdProvider);
+					var keyRow = new CachedRow(feature, uniqueIdProvider_);
 					CachedRow cachedRow;
 					if (cachedRows.TryGetValue(keyRow, out cachedRow))
 					{
-						cachedRow.UpdateFeature(feature, uniqueIdProvider);
+						cachedRow.UpdateFeature(feature, uniqueIdProvider_);
 					}
 					else
 					{
-						cachedRow = new CachedRow(feature, uniqueIdProvider);
+						cachedRow = new CachedRow(feature, uniqueIdProvider_);
 						// cachedRow must always be added to cachedRows, even if disjoint !
 						// otherwise it may be processed several times
 						cachedRows.Add(keyRow, cachedRow);

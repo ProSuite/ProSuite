@@ -134,6 +134,12 @@ namespace ProSuite.DdxEditor.Content
 		public virtual bool SupportsTransformersAndFilters =>
 			Environment.Version >= new Version(6, 0);
 
+		public virtual ICollection<string> AlgorithmAssemblyNames => new List<string>
+			{
+				"ProSuite.QA.Tests.dll",
+				"ProSuite.QA.TestFactories.dll"
+			};
+
 		public abstract IEnumerable<Item> GetChildren([NotNull] ModelsItemBase modelItem);
 
 		public abstract IEnumerable<Item> GetChildren<E>([NotNull] ModelItemBase<E> modelItem)
@@ -284,18 +290,6 @@ namespace ProSuite.DdxEditor.Content
 						                            .ToList();
 					}
 
-					if (category.CanContainOnlyQualityConditions)
-					{
-						return QualityConditions.Get(category,
-						                             IncludeQualityConditionsBasedOnDeletedDatasets)
-						                        .OrderBy(q => q.Name)
-						                        .Select(qc => new QualityConditionItem(this, qc,
-							                                item,
-							                                QualityConditions))
-						                        .Cast<Item>()
-						                        .ToList();
-					}
-
 					var result = new List<Item>();
 
 					if (category.CanContainQualitySpecifications)
@@ -436,7 +430,7 @@ namespace ProSuite.DdxEditor.Content
 			List<DataQualityCategory> subCategories = DataQualityCategoryUtils.GetCategoriesTx(
 				this, c => c.IsSubCategoryOf(category));
 
-			var allCategories = new List<DataQualityCategory>(subCategories) {category};
+			var allCategories = new List<DataQualityCategory>(subCategories) { category };
 
 			result.AddRange(
 				QualitySpecifications.Get(allCategories)
@@ -447,6 +441,16 @@ namespace ProSuite.DdxEditor.Content
 				QualityConditions.Get(allCategories)
 				                 .Select(qc => new RequiredDependingItem(qc, qc.Name))
 				                 .Cast<DependingItem>());
+
+			result.AddRange(
+				InstanceConfigurations.Get<TransformerConfiguration>(allCategories)
+				                 .Select(tr => new RequiredDependingItem(tr, tr.Name))
+				                 .Cast<DependingItem>());
+
+			result.AddRange(
+				InstanceConfigurations.Get<IssueFilterConfiguration>(allCategories)
+				                      .Select(iF=> new RequiredDependingItem(iF, iF.Name))
+				                      .Cast<DependingItem>());
 
 			result.AddRange(
 				subCategories.Select(c => new DataQualityCategoryDependingItem(
@@ -472,7 +476,7 @@ namespace ProSuite.DdxEditor.Content
 			return new List<DependingItem>();
 		}
 
-		public virtual IEnumerable<DependingItem> CreateDependingItems(
+		public virtual IEnumerable<DependingItem> GetDependingItems(
 			IEnumerable<InstanceConfiguration> dependentConfigurations)
 		{
 			return new List<DependingItem>();

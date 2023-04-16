@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
@@ -398,7 +400,7 @@ namespace ProSuite.QA.Tests
 				IIndexedMultiPatch result =
 					indexedMultiPatchFeature != null && _alternateSpatialReference == null
 						? indexedMultiPatchFeature.IndexedMultiPatch
-						: QaGeometryUtils.CreateIndexedMultiPatch(
+						: ProxyUtils.CreateIndexedMultiPatch(
 							GetMultiPatch(multiPatchFeature));
 
 				return result;
@@ -434,7 +436,7 @@ namespace ProSuite.QA.Tests
 								_indexedMultipatch.GetSegment(partIndex, segmentIndex));
 						}
 
-						Plane plane = QaGeometryUtils.CreatePlane(segments);
+						Plane plane = ProxyUtils.CreatePlane(segments);
 
 						if (Math.Abs(plane.GetNormalVector().Z) < double.Epsilon)
 						{
@@ -673,7 +675,7 @@ namespace ProSuite.QA.Tests
 					IMultiPatch adapted =
 						CopyWithConvertedInnerRings(multiPatch, outerRingIndexes);
 
-					return QaGeometryUtils.CreateIndexedMultiPatch(adapted);
+					return ProxyUtils.CreateIndexedMultiPatch(adapted);
 				}
 
 				return GetIndexedMultipatch(_multiPatchFeature);
@@ -740,7 +742,7 @@ namespace ProSuite.QA.Tests
 				{
 					IMultiPatch adapted =
 						CopyWithConvertedInnerRings(multiPatch, outerRingIndexes);
-					return QaGeometryUtils.CreateIndexedMultiPatch(adapted);
+					return ProxyUtils.CreateIndexedMultiPatch(adapted);
 				}
 
 				return GetIndexedMultipatch(_multiPatchFeature);

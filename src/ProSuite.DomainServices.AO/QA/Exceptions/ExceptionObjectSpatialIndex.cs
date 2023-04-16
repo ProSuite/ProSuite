@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
@@ -62,7 +63,7 @@ namespace ProSuite.DomainServices.AO.QA.Exceptions
 				yield break;
 			}
 
-			IBox searchBox = QaGeometryUtils.CreateBox(geometry, _xyTolerance);
+			IBox searchBox = ProxyUtils.CreateBox(geometry, _xyTolerance);
 
 			IBox issueBox = null;
 			IBox clippedIssueBox = null;

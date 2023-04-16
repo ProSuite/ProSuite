@@ -1,7 +1,6 @@
 using ESRI.ArcGIS.Geodatabase;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Test;
-using ProSuite.QA.Container.Test;
 
 namespace ProSuite.QA.Tests.Test
 {

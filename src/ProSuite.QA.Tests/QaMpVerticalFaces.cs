@@ -4,17 +4,19 @@ using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.Geometry;
-using ProSuite.QA.Container.TestContainer;
 using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
+using SegmentUtils_ = ProSuite.QA.Container.Geometry.SegmentUtils_;
 
 namespace ProSuite.QA.Tests
 {
@@ -154,7 +156,7 @@ namespace ProSuite.QA.Tests
 
 			IIndexedMultiPatch indexedMultiPatch =
 				indexedMultiPatchFeature?.IndexedMultiPatch ??
-				QaGeometryUtils.CreateIndexedMultiPatch((IMultiPatch) feature.Shape);
+				ProxyUtils.CreateIndexedMultiPatch((IMultiPatch) feature.Shape);
 
 			return new PartVerticalFaceProvider(indexedMultiPatch);
 		}
@@ -238,7 +240,7 @@ namespace ProSuite.QA.Tests
 					}
 				}
 
-				Plane plane = QaGeometryUtils.CreatePlane(partSegments);
+				Plane plane = ProxyUtils.CreatePlane(partSegments);
 				_latestPartSegments = partSegments;
 
 				return new VerticalFace(plane, zMax - zMin);
@@ -246,7 +248,7 @@ namespace ProSuite.QA.Tests
 
 			public override IGeometry GetErrorGeometry()
 			{
-				return SegmentUtils.CreateMultiPatch(Assert.NotNull(_latestPartSegments));
+				return SegmentUtils_.CreateMultiPatch(Assert.NotNull(_latestPartSegments));
 			}
 		}
 	}

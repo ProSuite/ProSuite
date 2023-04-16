@@ -18,7 +18,7 @@ namespace ProSuite.DomainModel.AO.QA
 		[NotNull] private readonly Action<Action> _transactionFunction;
 		[NotNull] private readonly IDatasetRepository _datasetRepository;
 		[CanBeNull] private readonly IInstanceConfigurationRepository _transformerConfigRepository;
-		private TransformerConfiguration _excludedTransformer;
+		[CanBeNull] private TransformerConfiguration _excludedTransformer;
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="TestParameterDatasetProviderBase"/> class.
@@ -53,12 +53,23 @@ namespace ProSuite.DomainModel.AO.QA
 			IList<TransformerConfiguration> transformers = null;
 			_transactionFunction(() => transformers = GetTransformers(model));
 
-			return transformers.Where(t => IsTransformerApplicable(t, validType, model));
+			return transformers.Where(tr => IsTransformerSelectable(tr) &&
+			                                IsTransformerApplicable(tr, validType, model));
 		}
 
 		public void Exclude(TransformerConfiguration transformer)
 		{
 			_excludedTransformer = transformer;
+		}
+
+		private bool IsTransformerSelectable(TransformerConfiguration transformerConfig)
+		{
+			if (_excludedTransformer == null)
+			{
+				return true;
+			}
+
+			return transformerConfig.Id != _excludedTransformer.Id;
 		}
 
 		private static bool IsTransformerApplicable(TransformerConfiguration transformerConfig,
@@ -98,19 +109,15 @@ namespace ProSuite.DomainModel.AO.QA
 		}
 
 		[NotNull]
-		private IList<TransformerConfiguration> GetTransformers(
-			[CanBeNull] DdxModel model = null)
+		private IList<TransformerConfiguration> GetTransformers([CanBeNull] DdxModel model = null)
 		{
 			if (_transformerConfigRepository == null)
 			{
 				return new List<TransformerConfiguration>(0);
 			}
 
-			List<int> excludedIds = _excludedTransformer != null
-				                        ? new List<int> {_excludedTransformer.Id}
-				                        : null;
-
-			return _transformerConfigRepository.GetTransformerConfigurations(excludedIds);
+			return _transformerConfigRepository
+				.GetInstanceConfigurations<TransformerConfiguration>();
 		}
 
 		private static bool IsApplicable([CanBeNull] GeometryType geometryType,

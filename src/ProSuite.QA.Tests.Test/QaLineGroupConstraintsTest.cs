@@ -17,7 +17,6 @@ using ProSuite.DomainModel.Core;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.Test;
 using ProSuite.QA.Container.TestContainer;
 using ProSuite.QA.Core;
 using ProSuite.QA.Core.IssueCodes;
@@ -1097,7 +1096,7 @@ namespace ProSuite.QA.Tests.Test
 			var joined = (ITable) ((IName) queryName2).Open();
 
 			bool gaga = joined.HasOID;
-			int t = joined.CreateRow().OID;
+			long t = joined.CreateRow().OID;
 			IFeature f = null;
 			t = f.OID;
 
@@ -1352,7 +1351,7 @@ namespace ProSuite.QA.Tests.Test
 					//"TOPGIS_TLM.TLM_STRASSE.OBJECTID,TOPGIS_TLM.TLM_STRASSE.SHAPE";
 					subfields;
 
-				var joinedRows = new Dictionary<int, IList<IRow>>();
+				var joinedRows = new Dictionary<long, IList<IRow>>();
 				foreach (IRow row in new EnumCursor(joined, filter, false))
 				{
 					IList<IRow> rows;
@@ -1367,7 +1366,7 @@ namespace ProSuite.QA.Tests.Test
 
 				filter.SubFields = "*";
 
-				var simpleRows = new Dictionary<int, IList<IRow>>();
+				var simpleRows = new Dictionary<long, IList<IRow>>();
 				foreach (
 					IRow row in new EnumCursor(ws.OpenTable("TOPGIS_TLM.TLM_STRASSE"), filter,
 					                           false)
@@ -1383,9 +1382,9 @@ namespace ProSuite.QA.Tests.Test
 					rows.Add(row);
 				}
 
-				var missingIds = new List<int>();
+				var missingIds = new List<long>();
 
-				foreach (KeyValuePair<int, IList<IRow>> pair in simpleRows)
+				foreach (KeyValuePair<long, IList<IRow>> pair in simpleRows)
 				{
 					if (! joinedRows.ContainsKey(pair.Key))
 					{

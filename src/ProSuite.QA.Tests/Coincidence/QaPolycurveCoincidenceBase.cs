@@ -8,6 +8,7 @@ using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
@@ -17,6 +18,7 @@ using ProSuite.QA.Container.PolygonGrower;
 using ProSuite.QA.Container.TestSupport;
 using IPnt = ProSuite.Commons.Geom.IPnt;
 using Pnt = ProSuite.Commons.Geom.Pnt;
+using SegmentUtils_ = ProSuite.QA.Container.Geometry.SegmentUtils_;
 
 namespace ProSuite.QA.Tests.Coincidence
 {
@@ -390,7 +392,7 @@ namespace ProSuite.QA.Tests.Coincidence
 				{
 					SegmentProxy neighbor = segments.GetSegment(partIndex, nbIndex0);
 					IList<double[]> limits;
-					SegmentUtils.CutCurveCircle(neighbor, start, searchDistanceSquared, as3D,
+					SegmentUtils_.CutCurveCircle(neighbor, start, searchDistanceSquared, as3D,
 					                            out limits);
 
 					double limit1 = 0;
@@ -435,7 +437,7 @@ namespace ProSuite.QA.Tests.Coincidence
 
 				SegmentProxy neighbor = segments.GetSegment(partIndex, nbIndex0);
 				IList<double[]> limits;
-				SegmentUtils.CutCurveCircle(neighbor, end, searchDistanceSquared, as3D,
+				SegmentUtils_.CutCurveCircle(neighbor, end, searchDistanceSquared, as3D,
 				                            out limits);
 
 				double limit0 = 1;
@@ -686,7 +688,7 @@ namespace ProSuite.QA.Tests.Coincidence
 				{
 					IEnvelope testAreaEnv = _feature.Extent;
 					testAreaEnv.Intersect(allBox);
-					testAreaBox = QaGeometryUtils.CreateBox(testAreaEnv);
+					testAreaBox = ProxyUtils.CreateBox(testAreaEnv);
 				}
 
 				FindSelfNeighborhood(_featureGeom, processedSegments, testAreaBox, tolerance,

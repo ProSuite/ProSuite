@@ -1,17 +1,17 @@
 using System.Collections.Generic;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.QA.Container.TestContainer
 {
-	public abstract class BaseUniqueIdProvider<T> : IUniqueIdProvider
+	public abstract class BaseUniqueIdProvider<T> : IUniqueIdProvider, IInvolvedRowsProvider
 	{
-		[NotNull] private readonly IDictionary<T, int> _keysToId;
-		[NotNull] private readonly IDictionary<int, T> _idToKeys;
+		[NotNull] private readonly IDictionary<T, long> _keysToId;
+		[NotNull] private readonly IDictionary<long, T> _idToKeys;
 
-		private int _uniqueIdCount;
-
+		private long _uniqueIdCount;
 
 		protected BaseUniqueIdProvider([NotNull] IEqualityComparer<T> keyComparer)
 		{
@@ -19,21 +19,22 @@ namespace ProSuite.QA.Container.TestContainer
 
 			//_keysToId = new Dictionary<IList<int?>, int>(new ListComparer());
 			//_idToKeys = new Dictionary<int, IList<int?>>();
-			_keysToId = LargeDictionaryFactory.CreateDictionary<T, int>(
+			_keysToId = LargeDictionaryFactory.CreateDictionary<T, long>(
 				equalityComparer: keyComparer);
-			_idToKeys = LargeDictionaryFactory.CreateDictionary<int, T>();
+			_idToKeys = LargeDictionaryFactory.CreateDictionary<long, T>();
 		}
 
-		protected IDictionary<int, T> IdToKeys => _idToKeys;
-		protected int IncrementUniqueIdCount()
+		protected IDictionary<long, T> IdToKeys => _idToKeys;
+
+		protected long IncrementUniqueIdCount()
 		{
 			_uniqueIdCount++;
 			return _uniqueIdCount;
 		}
 
-		public virtual int GetUniqueId([NotNull] T keys)
+		public virtual long GetUniqueId([NotNull] T keys)
 		{
-			int uniqueId;
+			long uniqueId;
 			if (! _keysToId.TryGetValue(keys, out uniqueId))
 			{
 				uniqueId = ++_uniqueIdCount;
@@ -47,14 +48,14 @@ namespace ProSuite.QA.Container.TestContainer
 
 		public abstract IList<int> GetOidFieldIndexes();
 
-		public abstract IList<InvolvedRow> GetInvolvedRows(int uniqueId);
+		public abstract IList<InvolvedRow> GetInvolvedRows(long uniqueId);
 
-		public bool TryGetKey(int uniqueId, out T key)
+		public bool TryGetKey(long uniqueId, out T key)
 		{
 			return _idToKeys.TryGetValue(uniqueId, out key);
 		}
 
-		public bool Remove(int uniqueId)
+		public bool Remove(long uniqueId)
 		{
 			T key;
 

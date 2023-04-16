@@ -19,11 +19,12 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 		private XmlWorkspace _xmlWorkspace;
 		private XmlTestDescriptor _xmlTestDescriptorSimpleGeometry;
 		private XmlTestDescriptor _xmlTestDescriptorMinArea;
+		private XmlTransformerDescriptor _xmlTransformerDescriptor;
 
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			TestUtils.ConfigureUnitTestLogging();
+			Commons.Test.Testing.TestUtils.ConfigureUnitTestLogging();
 			TestUtils.InitializeLicense();
 		}
 
@@ -60,6 +61,19 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 						            AssemblyName = "EsriDE.ProSuite.QA.Tests",
 						            ConstructorId = 1
 					            }
+				};
+
+			_xmlTransformerDescriptor =
+				new XmlTransformerDescriptor
+				{
+					Name = "TrMultipolygonToPolygon(0)",
+					TransformerClass = new XmlClassDescriptor
+					                   {
+						                   TypeName =
+							                   "ProSuite.QA.Tests.Transformers.TrMultipolygonToPolygon",
+						                   AssemblyName = "ProSuite.QA.Tests",
+						                   ConstructorId = 0
+					                   }
 				};
 		}
 
@@ -222,6 +236,18 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 			xmlSubCategory.AddSubCategory(xmlSubSubCategory);
 			xmlSubCategory.AddSubCategory(xmlSubSubCategory2);
 
+			var xmlTrans = new XmlTransformerConfiguration
+			               {
+				               Name = "TrMultipolygonToPolygon",
+				               TransformerDescriptorName = _xmlTransformerDescriptor.Name
+			               };
+			xmlTrans.ParameterValues.Add(new XmlDatasetTestParameterValue
+			                             {
+				                             TestParameterName = "featureClass",
+				                             Value = "polygons",
+				                             WorkspaceId = _xmlWorkspace.ID
+			                             });
+
 			var xmlQCon = new XmlQualityCondition
 			              {
 				              Name = "MinArea",
@@ -231,8 +257,7 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 			xmlQCon.ParameterValues.Add(new XmlDatasetTestParameterValue
 			                            {
 				                            TestParameterName = "polygonClass",
-				                            Value = "polygons",
-				                            WorkspaceId = _xmlWorkspace.ID
+				                            TransformerName = xmlTrans.Name
 			                            });
 			xmlQCon.ParameterValues.Add(new XmlScalarTestParameterValue
 			                            {
@@ -246,14 +271,15 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 
 			xmlSubCategory.AddQualitySpecification(xmlQSpec);
 			xmlSubSubCategory.AddQualityCondition(xmlQCon);
+			xmlSubSubCategory.AddTransformer(xmlTrans);
 
 			var xmlDocument = new XmlDataQualityDocument();
 
+			//add top-level elements to doc (xmlQSpec, etc. are contained in xmlCategory)
 			xmlDocument.AddCategory(xmlCategory);
 			xmlDocument.AddWorkspace(_xmlWorkspace);
-			//xmlDocument.AddQualitySpecification(xmlQSpec);
-			//xmlDocument.AddQualityCondition(xmlQCon);
 			xmlDocument.AddTestDescriptor(_xmlTestDescriptorMinArea);
+			xmlDocument.AddTransformerDescriptor(_xmlTransformerDescriptor);
 
 			var modelFactory =
 				new VerifiedModelFactory(new MasterDatabaseWorkspaceContextFactory(),
@@ -301,13 +327,34 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 
 			Assert.AreEqual(_xmlTestDescriptorMinArea.Name, qualityCondition.TestDescriptor.Name);
 
-			var datasetValue =
-				(DatasetTestParameterValue) qualityCondition.GetParameterValues("polygonClass")[0];
-			Assert.NotNull(datasetValue.DatasetValue);
-
 			var scalarValue =
 				(ScalarTestParameterValue) qualityCondition.GetParameterValues("limit")[0];
 			Assert.AreEqual(12.34, scalarValue.GetValue(typeof(double)));
+
+			var transValue =
+				(DatasetTestParameterValue) qualityCondition.GetParameterValues("polygonClass")[0];
+
+			TransformerConfiguration transformerConfiguration = transValue.ValueSource;
+			Assert.NotNull(transformerConfiguration);
+			Assert.AreEqual(xmlTrans.Name, transformerConfiguration.Name);
+			Assert.NotNull(transformerConfiguration.Category);
+			if (transformerConfiguration.Category != null)
+			{
+				Assert.AreEqual(xmlSubSubCategory.Name, transformerConfiguration.Category.Name);
+				Assert.NotNull(transformerConfiguration.Category.ParentCategory);
+				if (transformerConfiguration.Category.ParentCategory != null)
+				{
+					Assert.AreEqual(xmlSubCategory.Name,
+					                transformerConfiguration.Category.ParentCategory.Name);
+				}
+			}
+
+			var datasetValue =
+				(DatasetTestParameterValue) transformerConfiguration.ParameterValues[0];
+			Assert.NotNull(datasetValue.DatasetValue);
+
+			Assert.AreEqual(_xmlTransformerDescriptor.Name,
+			                transformerConfiguration.TransformerDescriptor.Name);
 		}
 	}
 }

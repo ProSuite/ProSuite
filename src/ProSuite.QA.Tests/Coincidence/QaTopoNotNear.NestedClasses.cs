@@ -6,6 +6,7 @@ using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -462,7 +463,7 @@ namespace ProSuite.QA.Tests.Coincidence
 			public IEnumerable<IGeometry> GetGeometry()
 			{
 				int tableIndex = -1;
-				int oid = -1;
+				long oid = -1;
 				IIndexedSegments baseSegments = null;
 				int partIndex = -1;
 				var minIndex = 0;

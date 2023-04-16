@@ -292,7 +292,7 @@ namespace ProSuite.QA.Tests
 		                             [NotNull] IReadOnlyRow row)
 		{
 			return ReportError(
-				description, GetInvolvedRows(row), TestUtils.GetShapeCopy(row),
+				description, InvolvedRowUtils.GetInvolvedRows(row), TestUtils.GetShapeCopy(row),
 				issueCode, fieldName);
 		}
 
