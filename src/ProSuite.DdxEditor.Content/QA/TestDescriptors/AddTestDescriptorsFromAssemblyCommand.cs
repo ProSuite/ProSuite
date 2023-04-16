@@ -5,11 +5,8 @@ using ProSuite.DdxEditor.Framework.Commands;
 
 namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 {
-	public class AddTestDescriptorsFromAssemblyCommand :
-		AddItemCommandBase<TestDescriptorsItem>
+	public class AddTestDescriptorsFromAssemblyCommand : AddItemCommandBase<TestDescriptorsItem>
 	{
-		private readonly IApplicationController _applicationController;
-
 		/// <summary>
 		/// Initializes a new instance of the <see cref="AddTestDescriptorsFromAssemblyCommand"/> class.
 		/// </summary>
@@ -18,10 +15,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 		public AddTestDescriptorsFromAssemblyCommand(
 			[NotNull] TestDescriptorsItem testDescriptorsItem,
 			[NotNull] IApplicationController applicationController)
-			: base(testDescriptorsItem, applicationController)
-		{
-			_applicationController = applicationController;
-		}
+			: base(testDescriptorsItem, applicationController) { }
 
 		public override string Text => "Add Test Descriptors from Assembly";
 
@@ -34,7 +28,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 				return;
 			}
 
-			Item.AddTestDescriptors(dllFilePath, _applicationController);
+			Item.AddTestDescriptors(dllFilePath, ApplicationController);
 		}
 	}
 }
