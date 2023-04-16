@@ -1,19 +1,19 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Permissions;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
 using ProSuite.Commons.Geom.SpatialIndex;
+using ProSuite.Commons.Logging;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.Geometry;
 using ProSuite.QA.Container.PolygonGrower;
 using ProSuite.QA.Core;
 using ProSuite.QA.Core.TestCategories;
@@ -33,6 +33,8 @@ namespace ProSuite.QA.Tests.Transformers
 		}
 
 		private const SearchOption _defaultSearchOption = SearchOption.Tile;
+
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private readonly IReadOnlyFeatureClass _toDissolve;
 
@@ -167,7 +169,7 @@ namespace ProSuite.QA.Tests.Transformers
 				KnownRows = BoxTreeUtils.CreateBoxTree(
 					knownRows?.Select(x => x as IReadOnlyFeature),
 					getBox: x => x?.Shape != null
-						             ? QaGeometryUtils.CreateBox(x.Shape)
+						             ? ProxyUtils.CreateBox(x.Shape)
 						             : null);
 			}
 		}
@@ -176,23 +178,26 @@ namespace ProSuite.QA.Tests.Transformers
 		{
 			bool IUniqueIdKey.IsVirtuell => BaseOid < 0;
 
-			public int BaseOid { get; }
-			public IReadOnlyList<int> BaseOids => _baseOids;
-			private readonly List<int> _baseOids;
+			public long BaseOid { get; }
+			public IReadOnlyList<long> BaseOids => _baseOids;
+			private readonly List<long> _baseOids;
+			private readonly IReadOnlyTable _table;
 
-			public UniqueIdKey(IEnumerable<int> baseOids)
+			public UniqueIdKey(IReadOnlyTable table, IEnumerable<long> baseOids)
 			{
-				_baseOids = new List<int>(baseOids);
+				_baseOids = new List<long>(baseOids);
 				Assert.True(_baseOids.Count > 0, "empty List");
 				_baseOids.Sort();
 				BaseOid = _baseOids[0];
+				_table = table;
 			}
-
-			public IReadOnlyRow BaseFeature { get; set; }
 
 			public IList<InvolvedRow> GetInvolvedRows()
 			{
-				return InvolvedRowUtils.GetInvolvedRows(BaseFeature);
+				List<InvolvedRow> involveds =
+					new List<InvolvedRow>(
+						_baseOids.Select(oid => new InvolvedRow(_table.Name, oid)));
+				return involveds;
 			}
 		}
 
@@ -233,10 +238,9 @@ namespace ProSuite.QA.Tests.Transformers
 
 			public int GetHashCode(UniqueIdKey obj)
 			{
-				return obj.BaseOid + 29 * obj.BaseOids.Count;
+				return obj.BaseOid.GetHashCode() + 397 * obj.BaseOids.Count;
 			}
 		}
-
 
 		private class TransformedDataset : TransformedBackingDataset<TransformedFc>
 		{
@@ -265,12 +269,12 @@ namespace ProSuite.QA.Tests.Transformers
 
 			public override IEnvelope Extent => _dissolve.Extent;
 
-			public override VirtualRow GetUncachedRow(int id)
+			public override VirtualRow GetUncachedRow(long id)
 			{
 				throw new NotImplementedException();
 			}
 
-			public override int GetRowCount(IQueryFilter queryFilter)
+			public override long GetRowCount(IQueryFilter queryFilter)
 			{
 				return Search(queryFilter, true).Count();
 				// TODO: Consider new Method GetRowCountEstimate()? Or add progress token to Search()?
@@ -406,7 +410,7 @@ namespace ProSuite.QA.Tests.Transformers
 				if (Resulting.KnownRows != null && filter is ISpatialFilter sp)
 				{
 					foreach (BoxTree<IReadOnlyFeature>.TileEntry entry in
-					         Resulting.KnownRows.Search(QaGeometryUtils.CreateBox(sp.Geometry)))
+					         Resulting.KnownRows.Search(ProxyUtils.CreateBox(sp.Geometry)))
 					{
 						yield return entry.Value;
 					}
@@ -521,14 +525,15 @@ namespace ProSuite.QA.Tests.Transformers
 				IValueList rowValues = new ReadOnlyRowBasedValues(mainRow);
 				joinedValueList.AddList(rowValues, TableFields.FieldIndexMapping);
 
-				UniqueIdKey key = new UniqueIdKey(rows.Select(r => r.OID));
-				int oid = _uniqueIdProvider.GetUniqueId(key);
+				UniqueIdKey key = new UniqueIdKey(mainRow.Table, rows.Select(r => r.OID));
+				long oid = _uniqueIdProvider.GetUniqueId(key);
+
 				var dissolved = Resulting.CreateObject(oid, joinedValueList);
 
 				dissolved.Shape = shape;
-				key.BaseFeature = dissolved;
+				// key.BaseFeature = dissolved;
 
-				return (IReadOnlyFeature)dissolved;
+				return (IReadOnlyFeature) dissolved;
 			}
 
 			private IEnumerable<VirtualRow> DissolveSearchedAreaFeatures(IQueryFilter filter)
@@ -585,16 +590,9 @@ namespace ProSuite.QA.Tests.Transformers
 							                                     tolerance);
 						}
 
-						MultiLinestring union =
-							GeomTopoOpUtils.GetUnionAreasXY(
-								group.Cast<MultiLinestring>().ToList(), tolerance);
+						IGeometry templateGeometry = inputFeaturesByOid.First().Value.Shape;
 
-						IPolygon result = GeometryConversionUtils.CreatePolygon(
-							inputFeaturesByOid.First().Value.Shape, union.GetLinestrings());
-
-						// TODO: Check in which situation this is really really needed and where we could
-						// just set the isKnownSimple flag.
-						GeometryUtils.Simplify(result);
+						IPolygon result = Union(group, tolerance, templateGeometry);
 
 						var involvedFeatures = new List<IReadOnlyRow>();
 
@@ -607,6 +605,40 @@ namespace ProSuite.QA.Tests.Transformers
 						yield return CreateResultRow(result, involvedFeatures);
 					}
 				}
+			}
+
+			private static IPolygon Union([NotNull] ICollection<MultiPolycurve> group,
+			                              double tolerance,
+			                              [NotNull] IGeometry templateGeometry)
+			{
+				IPolygon result;
+				try
+				{
+					MultiLinestring union =
+						GeomTopoOpUtils.GetUnionAreasXY(
+							group.Cast<MultiLinestring>().ToList(), tolerance);
+
+					result = GeometryConversionUtils.CreatePolygon(
+						templateGeometry, union.GetLinestrings());
+				}
+				catch (Exception e)
+				{
+					_msg.Warn("Error calculating Geom-Union. Using fall-back", e);
+
+					List<IPolygon> polygons = group
+					                          .Select(
+						                          g => GeometryConversionUtils.CreatePolygon(
+							                          templateGeometry, g.GetLinestrings()))
+					                          .ToList();
+
+					result = (IPolygon) GeometryUtils.Union(polygons);
+				}
+
+				// TODO: Check in which situation this is really really needed and where we could
+				// just set the isKnownSimple flag.
+				GeometryUtils.Simplify(result);
+
+				return result;
 			}
 
 			private static IList<ICollection<MultiPolycurve>> GetUnionablePolygonGroups(
@@ -880,7 +912,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 						if (! anyAdded && pairDirectedRows != null)
 						{
-							Add(pairDirectedRows, (IRelationalOperator)queryGeom);
+							Add(pairDirectedRows, (IRelationalOperator) queryGeom);
 						}
 					}
 				}
@@ -923,7 +955,8 @@ namespace ProSuite.QA.Tests.Transformers
 
 							if (connected0 == null && connected1 == null)
 							{
-								if (!_dissolvedDict.Comparer.Equals(groupedRows[0], groupedRows[1]))
+								if (! _dissolvedDict.Comparer.Equals(
+									    groupedRows[0], groupedRows[1]))
 								{
 									List<DirectedRow> connected =
 										new List<DirectedRow> { groupedRows[0], groupedRows[1] };

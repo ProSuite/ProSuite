@@ -160,7 +160,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 				relationshipClasses, joinType, name, includeOnlyOIDFields, excludeShapeField,
 				whereClause, out string primaryKeyField);
 
-			return ReadOnlyTableFactory.Create(queryTable, primaryKeyField);
+			return ReadOnlyTableFactory.Create(queryTable, primaryKeyField, createJoinedTable: true);
 		}
 
 		[NotNull]
@@ -1509,6 +1509,13 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 
 			var sb = new StringBuilder();
+			// for ArcGIS >= 10.8 ? : Primary key field must come before any other OID-Field
+			if (lastFieldBeforeShape != null &&
+			    lastFieldBeforeShape.Equals(primaryKeyField, StringComparison.CurrentCultureIgnoreCase))
+			{
+				AppendField(sb, lastFieldBeforeShape);
+			}
+
 			foreach (string subfield in subfields)
 			{
 				if (lastFieldBeforeShape != null &&
@@ -1521,8 +1528,9 @@ namespace ProSuite.Commons.AO.Geodatabase
 				AppendField(sb, subfield);
 			}
 
-			// add primary key field *after* other non-shape fields and *before* shape field
-			if (! StringUtils.IsNullOrEmptyOrBlank(lastFieldBeforeShape))
+			// add primary key field *after* other non-shape fields and *before* shape field (is this still relevand in ArcGIS >= 10.8
+			if (! StringUtils.IsNullOrEmptyOrBlank(lastFieldBeforeShape) &&
+			    ! lastFieldBeforeShape.Equals(primaryKeyField, StringComparison.CurrentCultureIgnoreCase))
 			{
 				AppendField(sb, lastFieldBeforeShape);
 			}
@@ -1540,65 +1548,6 @@ namespace ProSuite.Commons.AO.Geodatabase
 			//}
 
 			return sb.ToString();
-		}
-
-		private static string GetSubFieldsString_New(
-			[NotNull] ICollection<IRelationshipClass> relationshipClasses,
-			[CanBeNull] IFeatureClass baseFeatureClass,
-			[CanBeNull] string primaryKeyField,
-			bool includeOnlyOIDFields,
-			[CanBeNull] IObjectClass exclusiveOIDFieldClass,
-			bool includeAllRelationshipTableFields)
-		{
-			var subfieldInfos = new List<JoinedSubfield>();
-
-			// add non-geometry fields
-			foreach (IObjectClass objectClass in
-			         RelationshipClassUtils.GetObjectClasses(relationshipClasses))
-			{
-				bool excludeOIDField = exclusiveOIDFieldClass != null &&
-				                       objectClass != exclusiveOIDFieldClass;
-
-				AddFields(subfieldInfos, objectClass, includeOnlyOIDFields, excludeOIDField);
-			}
-
-			// In inner joins it's important that the RID comes after the OBJECTID of the
-			// non-baseFeatureClass!
-			foreach (IRelationshipClass relationshipClass in relationshipClasses)
-			{
-				if (RelationshipClassUtils.UsesRelationshipTable(relationshipClass))
-				{
-					if (includeAllRelationshipTableFields)
-					{
-						// append all fields
-						AddFields(subfieldInfos, (IObjectClass) relationshipClass, false, false);
-					}
-					else
-					{
-						// append RID field
-						var relTable = (ITable) relationshipClass;
-						string qualifiedFieldName = DatasetUtils.QualifyFieldName(relTable,
-							relTable
-								.OIDFieldName);
-
-						subfieldInfos.Add(new JoinedSubfield(qualifiedFieldName,
-						                                     esriFieldType.esriFieldTypeOID));
-					}
-				}
-			}
-
-			subfieldInfos.Sort(new JoinedSubfieldComparer(baseFeatureClass, primaryKeyField));
-
-			if (baseFeatureClass != null)
-			{
-				subfieldInfos.Add(new JoinedSubfield(
-					                  DatasetUtils.QualifyFieldName(baseFeatureClass,
-						                  baseFeatureClass
-							                  .ShapeFieldName),
-					                  esriFieldType.esriFieldTypeGeometry));
-			}
-
-			return StringUtils.Concatenate(subfieldInfos, f => f.FieldName, ",");
 		}
 
 		[NotNull]

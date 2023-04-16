@@ -179,7 +179,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			}
 
 			IEnumerable<Dataset> datasets =
-				GdbPersistenceUtils.GetDatasets(updates.Keys, inserts.Keys);
+				GdbPersistenceUtils.GetDatasetsNonEmpty(updates.Keys, inserts.Keys);
 
 			var newFeatures = new List<Feature>();
 

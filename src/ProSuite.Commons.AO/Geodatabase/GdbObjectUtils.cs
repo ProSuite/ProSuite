@@ -298,7 +298,9 @@ namespace ProSuite.Commons.AO.Geodatabase
 		}
 
 		[CanBeNull]
-		private static T? ReadRowValue<T>([NotNull] object value, int fieldIndex, Func<int?> getOid,
+		private static T? ReadRowValue<T>([NotNull] object value,
+		                                  int fieldIndex,
+		                                  Func<long?> getOid,
 		                                  Func<string> getTableName)
 			where T : struct
 		{
@@ -312,10 +314,20 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			try
 			{
-				if (typeof(T) == typeof(int) && value is short)
+				if (typeof(T) == typeof(int))
 				{
-					// Short Integer field type is returned as short, cannot unbox directly to int:
-					return Convert.ToInt32(value) as T?;
+					if (value is short)
+					{
+						// Short Integer field type is returned as short, cannot unbox directly to int:
+						return Convert.ToInt32(value) as T?;
+					}
+
+					if (value is long)
+					{
+						// Typically for long OID type that currently still is known to be an int.
+						// But long object cannot unbox directly to int:
+						return Convert.ToInt32(value) as T?;
+					}
 				}
 
 				if (typeof(T) == typeof(Guid))
@@ -337,7 +349,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 			catch (Exception ex)
 			{
-				int? rowOid = getOid();
+				long? rowOid = getOid();
 
 				_msg.ErrorFormat(
 					"ReadRowValue: Error casting value {0} of type {1} into type {2} for row <oid> {3} at field index {4} in {5}: {6}",
@@ -388,6 +400,78 @@ namespace ProSuite.Commons.AO.Geodatabase
 			return Convert.ToString(value);
 		}
 
+		/// <summary>
+		/// Reads the long OID using a known index rather than directly from the property.
+		/// </summary>
+		/// <param name="row"></param>
+		/// <param name="fieldIndex"></param>
+		/// <returns></returns>
+		public static long? ReadRowOidValue(IRow row, int fieldIndex)
+		{
+			object value = row.Value[fieldIndex];
+
+			if (value == DBNull.Value)
+			{
+				return null;
+			}
+
+#if Server11
+			// long is expected:
+			if (value is long longValue)
+			{
+				return longValue;
+			}
+
+			// however, for query tables it is still an Int32!
+			return Convert.ToInt64(value);
+#else
+			// First unbox: (int)object
+			// to int, then cast to long (int implicitly converts to long).
+			// Directly casting from object (Int32) to long fails!
+			return (int) value;
+#endif
+		}
+
+		/// <summary>
+		/// Reads the long OID using a known index rather than directly from the property.
+		/// </summary>
+		/// <param name="row"></param>
+		/// <param name="fieldIndex"></param>
+		/// <returns></returns>
+		public static long? ReadRowOidValue(IReadOnlyRow row, int fieldIndex)
+		{
+			object value = row.get_Value(fieldIndex);
+
+			if (value == DBNull.Value)
+			{
+				return null;
+			}
+#if Server11
+			// long is expected:
+			if (value is long longValue)
+			{
+				return longValue;
+			}
+
+			// however, for query tables it is still an Int32!
+			return Convert.ToInt64(value);
+#else
+			// It is an int by convention in AO10 but ReadOnly can supply long object,
+			// depending on the implementation:
+
+			// First unbox: (int)object
+			// to int, then cast to long (int implicitly converts to long).
+			// Directly casting from object (Int32) to long fails!
+			if (value is int intValue)
+			{
+				return intValue;
+			}
+
+			// Depending on the implementation, it could already be a long (or DBNull)
+			return (long) value;
+#endif
+		}
+
 		public static bool TryReadBlobValue([NotNull] IRow row,
 		                                    int fieldIdx,
 		                                    [NotNull] ref IPersistStream intoObject)
@@ -416,7 +500,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			object bytes;
 			origBlobStream.ExportToVariant(out bytes);
 			copyBlobStream.ImportFromVariant(bytes);
-			IObjectStream objectStream = new ObjectStreamClass {Stream = copyBlobStream};
+			IObjectStream objectStream = new ObjectStreamClass { Stream = copyBlobStream };
 
 			try
 			{
@@ -514,7 +598,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		/// <param name="selectionSet">The selection set.</param>
 		/// <returns></returns>
 		[NotNull]
-		public static IEnumerable<int> GetObjectIds([NotNull] ISelectionSet selectionSet)
+		public static IEnumerable<long> GetObjectIds([NotNull] ISelectionSet selectionSet)
 		{
 			Assert.ArgumentNotNull(selectionSet, nameof(selectionSet));
 
@@ -524,7 +608,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			{
 				ids.Reset();
 
-				int currentOid;
+				long currentOid;
 				while ((currentOid = ids.Next()) >= 0)
 				{
 					yield return currentOid;
@@ -537,7 +621,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		}
 
 		[NotNull]
-		public static IEnumerable<int> GetObjectIds<T>([NotNull] IEnumerable<T> rows)
+		public static IEnumerable<long> GetObjectIds<T>([NotNull] IEnumerable<T> rows)
 			where T : IRow
 		{
 			Assert.ArgumentNotNull(rows, nameof(rows));

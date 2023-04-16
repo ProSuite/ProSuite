@@ -157,7 +157,15 @@ namespace ProSuite.Commons.Geom
 
 				if (leaving.Length2DSquared < double.Epsilon)
 				{
-					leaving = NextSegmentInRing(RightMostBottomIndex, true);
+					Line3D result = NextSegment(RightMostBottomIndex, true, 0);
+
+					if (result == null)
+					{
+						// The ring has only vertical segments
+						return null;
+					}
+
+					leaving = result;
 				}
 
 				Line3D entering = PreviousSegmentInRing(RightMostBottomIndex, true);
@@ -1144,6 +1152,7 @@ namespace ProSuite.Commons.Geom
 		/// <param name="toSegment"></param>
 		/// <param name="toSegmentRatio"></param>
 		/// <param name="clonePoints"></param>
+		/// <param name="preferFullRingToZeroLength"></param>
 		/// <returns></returns>
 		public Linestring GetSubcurve(int fromSegment, double fromSegmentRatio,
 		                              int toSegment, double toSegmentRatio,

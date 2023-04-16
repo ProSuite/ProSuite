@@ -5,6 +5,7 @@ using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -21,6 +22,7 @@ using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
 using IPnt = ProSuite.Commons.Geom.IPnt;
 using Pnt = ProSuite.Commons.Geom.Pnt;
+using SegmentUtils_ = ProSuite.QA.Container.Geometry.SegmentUtils_;
 
 namespace ProSuite.QA.Tests
 {
@@ -956,7 +958,7 @@ namespace ProSuite.QA.Tests
 
 			SegmentProxy nearestSegment = null;
 			var isEndNearest = false;
-			Pnt qaPoint = QaGeometryUtils.CreatePoint3D(point);
+			Pnt qaPoint = ProxyUtils.CreatePoint3D(point);
 
 			IEnumerable<SegmentProxy> segments = EnumSegments(qaPoint, neighbourFeature,
 			                                                  maxNeededDistance);
@@ -1034,7 +1036,7 @@ namespace ProSuite.QA.Tests
 		                                out bool? onRightSide)
 		{
 			double? offset;
-			fraction = SegmentUtils.GetClosestPointFraction(
+			fraction = SegmentUtils_.GetClosestPointFraction(
 				segmentProxy, pnt, out offset, out onRightSide, as3D: false);
 
 			double distance2;

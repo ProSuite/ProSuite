@@ -12,7 +12,6 @@ using ProSuite.DomainModel.Core;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.Test;
 using ProSuite.QA.Container.TestContainer;
 using ProSuite.QA.TestFactories;
 using ProSuite.QA.Tests.Test.Construction;
@@ -821,6 +820,7 @@ namespace ProSuite.QA.Tests.Test
 			IFeature f3 = fc.CreateFeature();
 			f3.set_Value(foreignKeyFieldIndex, row2.OID);
 			f3.Shape = CurveConstruction.StartLine(300, 200)
+			                            .LineTo(401, 100)
 			                            .LineTo(400, 100)
 			                            .Curve;
 			f3.Store();
@@ -1132,10 +1132,6 @@ namespace ProSuite.QA.Tests.Test
 			                                },
 			                                QaGroupConnected.ShapeAllowed.All);
 
-			test.AddRelatedTables(
-				ReadOnlyTableFactory.Create(relTab),
-				new[] { ReadOnlyTableFactory.Create(fc), ReadOnlyTableFactory.Create(groupTable) });
-
 			TestRunnerUtils.RunTests(test, 1, 1000);
 
 			TestRunnerUtils.RunTests(test, 1, 20);
@@ -1351,7 +1347,6 @@ namespace ProSuite.QA.Tests.Test
 				ReadOnlyTableFactory.Create((IFeatureClass) joinedTable),
 				new[] { "TOPGIS_TLM.TLM_GEWAESSER_LAUF.GWL_NR" },
 				QaGroupConnected.ShapeAllowed.None);
-			test.AddRelatedTables(ReadOnlyTableFactory.Create(joinedTable), tables);
 
 			var runner = new QaContainerTestRunner(10000, test);
 			runner.TestContainer.ProgressChanged += testContainer_ProgressChanged;
@@ -2383,7 +2378,6 @@ namespace ProSuite.QA.Tests.Test
 				new QaGroupConnected(ReadOnlyTableFactory.Create((IFeatureClass) queryTable),
 				                     new[] { "TOPGIS_TLM.TLM_STRASSENROUTE.UUID" },
 				                     QaGroupConnected.ShapeAllowed.Cycles);
-			test.AddRelatedTables(ReadOnlyTableFactory.Create(queryTable), tables);
 
 			IQueryFilter filter = new QueryFilterClass();
 			filter.WhereClause = "ObjectID in (2370953,2370947)";
@@ -2434,7 +2428,6 @@ namespace ProSuite.QA.Tests.Test
 				ReadOnlyTableFactory.Create((IFeatureClass) joinedTable),
 				new[] { "TOPGIS_TLM.TLM_GEWAESSER_LAUF.GWL_NR" },
 				QaGroupConnected.ShapeAllowed.None);
-			test.AddRelatedTables(ReadOnlyTableFactory.Create(joinedTable), tables);
 			test.CompleteGroupsOutsideTestArea = true;
 
 			var runner = new QaContainerTestRunner(10000, test);
@@ -2467,7 +2460,6 @@ namespace ProSuite.QA.Tests.Test
 				ReadOnlyTableFactory.Create((IFeatureClass) joinedTable),
 				new[] { "TOPGIS_TLM.TLM_GEWAESSER_LAUF.GWL_NR" },
 				QaGroupConnected.ShapeAllowed.None);
-			test.AddRelatedTables(ReadOnlyTableFactory.Create(joinedTable), tables);
 			test.CompleteGroupsOutsideTestArea = true;
 
 			double tileSize = 10000;
@@ -2505,7 +2497,6 @@ namespace ProSuite.QA.Tests.Test
 				ReadOnlyTableFactory.Create((IFeatureClass) joinedTable),
 				new[] { "TLM_GEWAESSER_LAUF.GWL_NR" },
 				QaGroupConnected.ShapeAllowed.None);
-			test.AddRelatedTables(ReadOnlyTableFactory.Create(joinedTable), tables);
 			test.CompleteGroupsOutsideTestArea = true;
 
 			double tileSize = 10000;

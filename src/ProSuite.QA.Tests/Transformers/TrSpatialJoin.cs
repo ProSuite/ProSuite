@@ -195,12 +195,12 @@ namespace ProSuite.QA.Tests.Transformers
 
 			public override IEnvelope Extent => _t0.Extent;
 
-			public override VirtualRow GetUncachedRow(int id)
+			public override VirtualRow GetUncachedRow(long id)
 			{
 				throw new NotImplementedException();
 			}
 
-			public override int GetRowCount(IQueryFilter queryFilter)
+			public override long GetRowCount(IQueryFilter queryFilter)
 			{
 				// TODO
 				return _t0.RowCount(queryFilter);
@@ -233,14 +233,14 @@ namespace ProSuite.QA.Tests.Transformers
 							continue;
 						}
 
-						outerJoin = false;
-
 						IGeometry joinedGeom = ((IReadOnlyFeature) joined).Shape;
 						// TODO implement different relations
 						if (op.Disjoint(joinedGeom))
 						{
 							continue;
 						}
+
+						outerJoin = false;
 
 						if (! Grouped)
 						{
@@ -344,7 +344,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 				rowValues.AddList(simpleList, extraCopyMatrix);
 
-				return new GdbFeature(toJoin.OID, ResultFeatureClass, rowValues);
+				return GdbFeature.Create(toJoin.OID, ResultFeatureClass, rowValues);
 			}
 
 			private IEnumerable<CalculatedValue> GetCalculatedValues(

@@ -47,9 +47,10 @@ namespace ProSuite.QA.Tests.Test.Transformer
 
 			Assert.AreEqual(associationTable.Name, transformerName);
 
-			int rowCount = associationTable.RowCount(null);
+			long rowCount = associationTable.RowCount(null);
 
-			int checkCount = DatasetUtils.OpenTable(workspace, associationTableName).RowCount(null);
+			long checkCount =
+				DatasetUtils.OpenTable(workspace, associationTableName).RowCount(null);
 
 			Assert.AreEqual(checkCount, rowCount);
 		}
@@ -79,7 +80,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 
 			Assert.AreEqual(transformedTable.Name, transformerName);
 
-			int rowCount = transformedTable.RowCount(null);
+			long rowCount = transformedTable.RowCount(null);
 
 			// VD, VS
 			Assert.AreEqual(2, rowCount);

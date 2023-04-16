@@ -12,7 +12,6 @@ using ProSuite.DdxEditor.Framework.Commands;
 using ProSuite.DdxEditor.Framework.Items;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.Repositories;
-using ProSuite.UI.QA.BoundTableRows;
 
 namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 {
@@ -84,7 +83,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 
 			if (selectedConditionItems.Count > 0)
 			{
-				commands.Add(new AssignInstanceConfigurationToCategoryCommand(
+				commands.Add(new AssignInstanceConfigurationsToCategoryCommand(
 					             selectedConditionItems, this, applicationController));
 			}
 		}

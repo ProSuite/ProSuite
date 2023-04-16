@@ -52,7 +52,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		public static IList<string> DeleteItemsFromMosaic(
 			[NotNull] IMosaicDataset mosaicDataset,
 			[NotNull] IEnvelope extent,
-			[CanBeNull] int? exceptObjectId = null)
+			[CanBeNull] long? exceptObjectId = null)
 		{
 			// TODO: Polygon rather than Extent! Generally use polygon from raster boundary??
 			Assert.ArgumentNotNull(mosaicDataset, nameof(mosaicDataset));
@@ -177,15 +177,15 @@ namespace ProSuite.Commons.AO.Geodatabase
 			//IDictionary<string, object> dict = PropertySetUtils.GetDictionary(resultSet);
 		}
 
-		public static int AddRasterToMosaic(
+		public static long AddRasterToMosaic(
 			[NotNull] IMosaicDataset mosaicDataset,
 			[NotNull] string rasterPath,
 			double minCellSizeFactor, double maxCellSizeFactor,
 			[CanBeNull] IPropertySet auxFieldValues = null)
 		{
-			IList<int> added = AddRastersToMosaic(mosaicDataset, rasterPath,
-			                                      minCellSizeFactor, maxCellSizeFactor,
-			                                      auxFieldValues);
+			IList<long> added = AddRastersToMosaic(mosaicDataset, rasterPath,
+			                                       minCellSizeFactor, maxCellSizeFactor,
+			                                       auxFieldValues);
 
 			Assert.AreEqual(1, added.Count,
 			                "Unexpected number of rasters added to mosaic: {0}. Make sure the raster {1} exists and can be accessed.",
@@ -229,7 +229,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			IEnumerable<IFeature> footprints =
 				GetItemsWithGeometries(footprintClass, spatialFilter, geometries);
 
-			List<int> brokenMosaicItems = GetMosaicItemsWithBrokenPaths(mosaicDataset,
+			List<long> brokenMosaicItems = GetMosaicItemsWithBrokenPaths(mosaicDataset,
 				footprints);
 
 			Marshal.ReleaseComObject(footprintClass);
@@ -274,7 +274,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		}
 
 		[NotNull]
-		public static List<int> GetMosaicItemsWithBrokenPaths(
+		public static List<long> GetMosaicItemsWithBrokenPaths(
 			[NotNull] IMosaicDataset mosaic,
 			[CanBeNull] IQueryFilter filter = null)
 		{
@@ -284,7 +284,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			IEnumerable<IFeature> footprints = GdbQueryUtils.GetFeatures(
 				footprintClass, filter, recycle);
 
-			List<int> oidsWithBrokenPaths =
+			List<long> oidsWithBrokenPaths =
 				GetMosaicItemsWithBrokenPaths(mosaic, footprints);
 
 			Marshal.ReleaseComObject(footprintClass);
@@ -293,14 +293,14 @@ namespace ProSuite.Commons.AO.Geodatabase
 		}
 
 		[NotNull]
-		public static List<int> GetMosaicItemsWithBrokenPaths(
+		public static List<long> GetMosaicItemsWithBrokenPaths(
 			[NotNull] IMosaicDataset mosaic,
 			[NotNull] IEnumerable<IFeature> footprints)
 		{
 			Stopwatch watch = _msg.DebugStartTiming();
 
 			var featureCount = 0;
-			var oidsWithBrokenPaths = new List<int>();
+			var oidsWithBrokenPaths = new List<long>();
 
 			foreach (IFeature feature in footprints)
 			{
@@ -320,11 +320,11 @@ namespace ProSuite.Commons.AO.Geodatabase
 		}
 
 		[NotNull]
-		public static List<int> GetStaleAndInvalidMosaicItems(
+		public static List<long> GetStaleAndInvalidMosaicItems(
 			[NotNull] IMosaicDataset mosaic,
 			[CanBeNull] IQueryFilter filter = null)
 		{
-			var failingItems = new List<int>();
+			var failingItems = new List<long>();
 
 			var result = GetStaleMosaicItems(mosaic, filter, failingItems);
 
@@ -341,14 +341,14 @@ namespace ProSuite.Commons.AO.Geodatabase
 		/// <param name="failingItems"></param>
 		/// <returns></returns>
 		[NotNull]
-		public static List<int> GetStaleMosaicItems(
+		public static List<long> GetStaleMosaicItems(
 			[NotNull] IMosaicDataset mosaic,
 			[CanBeNull] IQueryFilter filter = null,
-			[CanBeNull] List<int> failingItems = null)
+			[CanBeNull] List<long> failingItems = null)
 		{
 			var mosaicOperation = (IMosaicDatasetOperation2) mosaic;
 
-			var oidsWithBrokenPaths = new List<int>();
+			var oidsWithBrokenPaths = new List<long>();
 
 			const bool recycle = true;
 
@@ -396,7 +396,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		/// <param name="auxFieldValues"></param>
 		/// <returns></returns>
 		[NotNull]
-		public static IList<int> AddRastersToMosaic(
+		public static IList<long> AddRastersToMosaic(
 			[NotNull] IMosaicDataset mosaicDataset,
 			[NotNull] string searchPath,
 			double minCellSizeFactor, double maxCellSizeFactor,
@@ -454,7 +454,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			const string fidSetKey = "FIDSet";
 			var rasterIds = (IFIDSet) dict[fidSetKey];
 
-			List<int> addedOIds = ToList(rasterIds);
+			List<long> addedOIds = ToList(rasterIds);
 
 			// Release everything that might prevent the mosaic dataset from a later deletion
 			Marshal.ReleaseComObject(rasterIds);
@@ -910,14 +910,13 @@ namespace ProSuite.Commons.AO.Geodatabase
 			return result;
 		}
 
-		private static List<int> ToList(IFIDSet idSet)
+		private static List<long> ToList(IFIDSet idSet)
 		{
 			idSet.Reset();
-			int oid;
 
-			var addedOIds = new List<int>();
+			var addedOIds = new List<long>();
 
-			idSet.Next(out oid);
+			idSet.Next(out var oid);
 
 			while (oid != -1)
 			{

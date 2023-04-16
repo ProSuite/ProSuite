@@ -20,26 +20,21 @@ namespace ProSuite.UI.QA.ResourceLookup
 			new SortedList<string, int>();
 
 		private const string _keyWarning = "warning";
-		private const string _keyProhibition = "prohibition";
+		private const string _keyError = "error";
 		private const string _keyStop = "stop";
 		private const string _keyUnknown = "unknown";
-		private const string _keyTransform = "transform";
-		private const string _keyRowFilter = "rowfilter";
+		private const string _keyTransformer = "transformer";
 		private const string _keyIssueFilter = "issuefilter";
 
 		#region Constructor
 
-		/// <summary>
-		/// Initializes the <see cref="TestTypeImageLookup"/> class.
-		/// </summary>
 		static TestTypeImageLookup()
 		{
 			_mapKeyToImage.Add(_keyWarning, TestTypeImages.TestTypeWarning);
-			_mapKeyToImage.Add(_keyProhibition, TestTypeImages.TestTypeProhibition);
+			_mapKeyToImage.Add(_keyError, TestTypeImages.TestTypeError);
 			_mapKeyToImage.Add(_keyStop, TestTypeImages.TestTypeStop);
 			_mapKeyToImage.Add(_keyUnknown, TestTypeImages.TestTypeUnknown);
-			_mapKeyToImage.Add(_keyTransform, TestTypeImages.Transform);
-			_mapKeyToImage.Add(_keyRowFilter, TestTypeImages.RowFilter);
+			_mapKeyToImage.Add(_keyTransformer, TestTypeImages.Transformer);
 			_mapKeyToImage.Add(_keyIssueFilter, TestTypeImages.IssueFilter);
 
 			foreach (KeyValuePair<string, Image> pair in _mapKeyToImage)
@@ -49,11 +44,10 @@ namespace ProSuite.UI.QA.ResourceLookup
 
 			int i = 10;
 			_defaultSort.Add(_keyWarning, ++i);
-			_defaultSort.Add(_keyProhibition, ++i);
+			_defaultSort.Add(_keyError, ++i);
 			_defaultSort.Add(_keyStop, ++i);
 			_defaultSort.Add(_keyUnknown, ++i);
-			_defaultSort.Add(_keyTransform, ++i);
-			_defaultSort.Add(_keyRowFilter, ++i);
+			_defaultSort.Add(_keyTransformer, ++i);
 			_defaultSort.Add(_keyIssueFilter, ++i);
 		}
 
@@ -99,9 +93,14 @@ namespace ProSuite.UI.QA.ResourceLookup
 		[CanBeNull]
 		public static Image GetImage([CanBeNull] InstanceDescriptor instanceDescriptor)
 		{
+			if (instanceDescriptor is TestDescriptor testDescriptor)
+			{
+				return GetImage(testDescriptor);
+			}
+
 			if (instanceDescriptor is TransformerDescriptor)
 			{
-				return GetImage(_keyTransform);
+				return GetImage(_keyTransformer);
 			}
 
 			if (instanceDescriptor is IssueFilterDescriptor)
@@ -133,7 +132,7 @@ namespace ProSuite.UI.QA.ResourceLookup
 
 			if (instanceConfiguration is TransformerConfiguration)
 			{
-				return GetImage(_keyTransform);
+				return GetImage(_keyTransformer);
 			}
 
 			if (instanceConfiguration is IssueFilterConfiguration)
@@ -152,6 +151,14 @@ namespace ProSuite.UI.QA.ResourceLookup
 			return element == null
 				       ? null
 				       : GetImage(element.AllowErrors, element.StopOnError);
+		}
+
+		[NotNull]
+		public static Image GetImage([NotNull] string key)
+		{
+			return _mapKeyToImage.TryGetValue(key, out Image image)
+				       ? image
+				       : _mapKeyToImage[_keyUnknown];
 		}
 
 		[CanBeNull]
@@ -185,12 +192,9 @@ namespace ProSuite.UI.QA.ResourceLookup
 		[ContractAnnotation("notnull => notnull")]
 		public static string GetImageKey([CanBeNull] InstanceConfiguration configuration)
 		{
-			if (configuration == null)
-			{
-				return null;
-			}
-
-			return GetImageKey(GetImage(configuration));
+			return configuration == null
+				       ? null
+				       : GetImageKey(GetImage(configuration));
 		}
 
 		[CanBeNull]
@@ -200,15 +204,6 @@ namespace ProSuite.UI.QA.ResourceLookup
 			return element == null
 				       ? null
 				       : GetImageKey(GetImage(element));
-		}
-
-		[NotNull]
-		public static Image GetImage([NotNull] string key)
-		{
-			Image image;
-			return _mapKeyToImage.TryGetValue(key, out image)
-				       ? image
-				       : _mapKeyToImage[_keyUnknown];
 		}
 
 		public static int GetDefaultSortIndex([NotNull] TestDescriptor testDescriptor)
@@ -221,11 +216,6 @@ namespace ProSuite.UI.QA.ResourceLookup
 			return GetDefaultSortIndex(GetImageKey(instanceDescriptor));
 		}
 
-		public static int GetDefaultSortIndex([NotNull] TransformerDescriptor transformerDescriptor)
-		{
-			return GetDefaultSortIndex(GetImageKey(transformerDescriptor));
-		}
-
 		public static int GetDefaultSortIndex([NotNull] QualityCondition qualityCondition)
 		{
 			return GetDefaultSortIndex(GetImageKey(qualityCondition));
@@ -236,8 +226,7 @@ namespace ProSuite.UI.QA.ResourceLookup
 			return GetDefaultSortIndex(GetImageKey(configuration));
 		}
 
-		public static int GetDefaultSortIndex(
-			[CanBeNull] QualitySpecificationElement element)
+		public static int GetDefaultSortIndex([CanBeNull] QualitySpecificationElement element)
 		{
 			return element == null
 				       ? 0
@@ -274,12 +263,15 @@ namespace ProSuite.UI.QA.ResourceLookup
 
 			if (conditionType == QualityConditionType.ContinueOnError)
 			{
-				return GetImage(_keyProhibition);
+				return GetImage(_keyError);
 			}
 
-			return GetImage(conditionType == QualityConditionType.StopOnError
-				                ? _keyStop
-				                : _keyUnknown);
+			if (conditionType == QualityConditionType.StopOnError)
+			{
+				return GetImage(_keyStop);
+			}
+
+			return GetImage(_keyUnknown);
 		}
 
 		[NotNull]
@@ -290,8 +282,7 @@ namespace ProSuite.UI.QA.ResourceLookup
 				return _keyUnknown;
 			}
 
-			string key;
-			return _mapImageToKey.TryGetValue(image, out key)
+			return _mapImageToKey.TryGetValue(image, out string key)
 				       ? key
 				       : _keyUnknown;
 		}

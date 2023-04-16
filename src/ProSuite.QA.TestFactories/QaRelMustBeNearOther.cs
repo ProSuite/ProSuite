@@ -117,7 +117,6 @@ namespace ProSuite.QA.TestFactories
 			                                 (ICollection<IReadOnlyFeatureClass>) args[1],
 			                                 (double) args[2],
 			                                 (string) args[3]);
-			test.AddRelatedTables((IReadOnlyTable) args[0], (IList<IReadOnlyTable>) args[4]);
 			return test;
 		}
 	}

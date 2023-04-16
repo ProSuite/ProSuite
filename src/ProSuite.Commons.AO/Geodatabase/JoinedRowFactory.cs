@@ -69,7 +69,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			GdbRow result = leftRow is IReadOnlyFeature &&
 			                JoinedSchema is GdbFeatureClass gdbFeatureClass
-				                ? new GdbFeature(oidSourceRow.OID, gdbFeatureClass, joinedValueList)
+				                ? GdbFeature.Create(oidSourceRow.OID, gdbFeatureClass, joinedValueList)
 				                : new GdbRow(oidSourceRow.OID, JoinedSchema, joinedValueList);
 
 			return result;

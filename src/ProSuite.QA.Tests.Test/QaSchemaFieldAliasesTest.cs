@@ -3,10 +3,10 @@ using System.Reflection;
 using ESRI.ArcGIS.Geodatabase;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Test;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Testing;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.Test;
 using ProSuite.QA.Tests.Test.TestRunners;
 using TestUtils = ProSuite.Commons.AO.Test.TestUtils;
 

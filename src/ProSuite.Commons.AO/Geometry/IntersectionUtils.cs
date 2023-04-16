@@ -1029,11 +1029,13 @@ namespace ProSuite.Commons.AO.Geometry
 
 			Multipoint<IPnt> resultMultipnt = Multipoint<IPnt>.CreateEmpty();
 
+			bool ignoreZs = ! GeometryUtils.IsZAware(polycurve1);
+
 			// Note: For polygons with many rings it is more efficient to have 1 spatial index
 			//       and process the segment intersections across rings
 			foreach (IPath path1 in GeometryUtils.GetPaths(polycurve1))
 			{
-				Linestring path1Linestring = GeometryConversionUtils.GetLinestring(path1);
+				Linestring path1Linestring = GeometryConversionUtils.GetLinestring(path1, ignoreZs);
 
 				var intersectionPoints =
 					GeomTopoOpUtils.GetIntersectionPoints(
@@ -1096,9 +1098,11 @@ namespace ProSuite.Commons.AO.Geometry
 
 			Multipoint<IPnt> resultMultipnt = Multipoint<IPnt>.CreateEmpty();
 
+			bool ignoreZs = ! GeometryUtils.IsZAware(polycurve1);
+
 			foreach (IPath path1 in GeometryUtils.GetPaths(polycurve1))
 			{
-				Linestring path1Linestring = GeometryConversionUtils.GetLinestring(path1);
+				Linestring path1Linestring = GeometryConversionUtils.GetLinestring(path1, ignoreZs);
 
 				var intersectionPoints =
 					GeomTopoOpUtils.GetIntersectionPoints(
@@ -1172,9 +1176,11 @@ namespace ProSuite.Commons.AO.Geometry
 				GeometryConversionUtils.CreateMultiPolycurve(
 					polycurve2, tolerance, curve1Envelope);
 
+			bool ignoreZs = ! GeometryUtils.IsZAware(polycurve1);
+
 			foreach (IPath path1 in GeometryUtils.GetPaths(polycurve1))
 			{
-				Linestring path1Linestring = GeometryConversionUtils.GetLinestring(path1);
+				Linestring path1Linestring = GeometryConversionUtils.GetLinestring(path1, ignoreZs);
 
 				IList<Linestring> intersectionLines =
 					GeomTopoOpUtils.GetIntersectionLinesXY(path1Linestring, otherLinestrings,
@@ -1215,9 +1221,11 @@ namespace ProSuite.Commons.AO.Geometry
 				GeometryConversionUtils.CreateMultiPolycurve(
 					polycurve2, tolerance, curve1Envelope);
 
+			bool ignoreZs = ! GeometryUtils.IsZAware(polycurve1);
+
 			foreach (IPath path1 in GeometryUtils.GetPaths(polycurve1))
 			{
-				Linestring path1Linestring = GeometryConversionUtils.GetLinestring(path1);
+				Linestring path1Linestring = GeometryConversionUtils.GetLinestring(path1, ignoreZs);
 
 				IList<Linestring> intersectionLines =
 					GeomTopoOpUtils.GetZOnlyDifferences(path1Linestring, otherLinestrings,
@@ -1269,9 +1277,11 @@ namespace ProSuite.Commons.AO.Geometry
 
 			Stopwatch calculationTime = new Stopwatch();
 
+			bool ignoreZs = ! GeometryUtils.IsZAware(polycurve1);
+
 			foreach (IPath path1 in GeometryUtils.GetPaths(polycurve1))
 			{
-				Linestring path1Linestring = GeometryConversionUtils.GetLinestring(path1);
+				Linestring path1Linestring = GeometryConversionUtils.GetLinestring(path1, ignoreZs);
 
 				calculationTime.Start();
 

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
@@ -6,6 +7,7 @@ using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Geom;
 using ProSuite.QA.Container;
 using ProSuite.QA.Core.IssueCodes;
 
@@ -70,6 +72,11 @@ namespace ProSuite.QA.Tests
 			if (polygonArea == null)
 			{
 				return 0;
+			}
+
+			if (shape is IMultiPatch multipatch)
+			{
+				return ExecuteMultipatch(row, multipatch, _perPart);
 			}
 
 			var polygon = shape as IPolygon;
@@ -166,6 +173,66 @@ namespace ProSuite.QA.Tests
 			double absoluteArea = Math.Abs(area);
 
 			return CheckArea(absoluteArea, shape, row);
+		}
+
+		private int ExecuteMultipatch([NotNull] IReadOnlyRow row,
+		                              [NotNull] IMultiPatch multipatch,
+		                              bool perPart)
+		{
+			// TODO: Check what happens with narrow triangles
+			if (! GeometryUtils.IsRingBasedMultipatch(multipatch))
+			{
+				return ExecutePart(row, multipatch);
+			}
+
+			// TOP-5659:
+			// Multipatches use the footprint's area which is not correct for
+			// small or narrow multipatches -> the footprint is the envelope!
+			var geometryCollection = (IGeometryCollection) multipatch;
+
+			int errorCount = 0;
+			double totalArea = 0;
+			foreach (IRing ring in GeometryUtils.GetRings(multipatch))
+			{
+				if (ring == null)
+				{
+					continue;
+				}
+
+				// for multipatches we cannot use IsExterior property - it's just not correct
+				var isBeginningRing = false;
+				bool isExterior = multipatch.GetRingType(ring, ref isBeginningRing) !=
+				                  esriMultiPatchRingType.esriMultiPatchInnerRing;
+
+				List<Pnt3D> pntList = GeometryConversionUtils.GetPntList(ring);
+
+				if (isExterior)
+				{
+					double ringArea = Math.Abs(GeomUtils.GetArea2D(pntList));
+
+					if (perPart)
+					{
+						errorCount += CheckArea(ringArea, ring, row);
+					}
+					else
+					{
+						totalArea += ringArea;
+					}
+				}
+				else
+				{
+					double innerRingArea = Math.Abs(GeomUtils.GetArea2D(pntList));
+
+					totalArea -= innerRingArea;
+				}
+			}
+
+			if (! perPart)
+			{
+				errorCount += CheckArea(totalArea, multipatch, row);
+			}
+
+			return errorCount;
 		}
 	}
 }

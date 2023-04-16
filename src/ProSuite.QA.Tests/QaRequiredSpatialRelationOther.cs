@@ -237,8 +237,8 @@ namespace ProSuite.QA.Tests
 
 			var featureClass = (IReadOnlyFeatureClass) InvolvedTables[tableIndex];
 
-			List<int> oids = errorFeatures.Select(feature => feature.OID).ToList();
-			Dictionary<int, T> errorFeaturesByOid =
+			List<long> oids = errorFeatures.Select(feature => feature.OID).ToList();
+			Dictionary<long, T> errorFeaturesByOid =
 				errorFeatures.ToDictionary(errorFeature => errorFeature.OID);
 
 			const bool recycling = true;
@@ -260,7 +260,7 @@ namespace ProSuite.QA.Tests
 			                                         out affectedComponent);
 
 			return ReportError(
-				description, GetInvolvedRows(feature),
+				description, InvolvedRowUtils.GetInvolvedRows(feature),
 				feature.ShapeCopy, issueCode, affectedComponent);
 		}
 

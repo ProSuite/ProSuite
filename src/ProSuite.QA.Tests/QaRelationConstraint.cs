@@ -22,7 +22,6 @@ namespace ProSuite.QA.Tests
 			IList<IReadOnlyTable> relatedTables)
 			: base(table, constraint)
 		{
-			AddRelatedTables(table, relatedTables);
 		}
 
 		[Doc(nameof(DocStrings.QaRelationConstraint_1))]
@@ -35,7 +34,6 @@ namespace ProSuite.QA.Tests
 			IList<IReadOnlyTable> relatedTables)
 			: base(table, constraints)
 		{
-			AddRelatedTables(table, relatedTables);
 		}
 
 		public override bool IsGeometryUsedTable(int tableIndex)

@@ -7,6 +7,7 @@ using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
@@ -152,7 +153,7 @@ namespace ProSuite.QA.Tests
 				IPoint start = ThisEnd.EndPoint;
 				IPoint end = OtherEnd.EndPoint;
 
-				IPointCollection line = QaGeometryUtils.CreatePolyline(start);
+				IPointCollection line = ProxyUtils.CreatePolyline(start);
 
 				object missing = Type.Missing;
 				line.AddPoint(start, ref missing, ref missing);
@@ -169,7 +170,7 @@ namespace ProSuite.QA.Tests
 				IPoint start = ThisEnd.EndPoint;
 				IPoint end = OtherEnd.EndPoint;
 
-				IPointCollection result = QaGeometryUtils.CreateMultipoint(start);
+				IPointCollection result = ProxyUtils.CreateMultipoint(start);
 
 				object missing = Type.Missing;
 				result.AddPoint(start, ref missing, ref missing);
@@ -508,7 +509,7 @@ namespace ProSuite.QA.Tests
 			bool? cancelledRow = null;
 
 			var result = new List<ConnectedLine>();
-			int? rowKeys = null;
+			long? rowKeys = null;
 
 			foreach (DirectedRow dirRow in GetDirectedRows(new TableIndexRow(row, tableIndex)))
 			{
@@ -745,7 +746,7 @@ namespace ProSuite.QA.Tests
 		[NotNull]
 		private IList<InvolvedRow> GetInvolvedRows([NotNull] ConnectedLine line)
 		{
-			return line.UniqueIdProvider?.GetInvolvedRows(line.Keys) ??
+			return (line.UniqueIdProvider as IInvolvedRowsProvider)?.GetInvolvedRows(line.Keys) ??
 			       new List<InvolvedRow>
 			       {
 				       new InvolvedRow(InvolvedTables[line.TableIndex].Name,
@@ -1036,7 +1037,7 @@ namespace ProSuite.QA.Tests
 			{
 				InvolvedRowUtils.AddUniqueInvolvedRows(
 					involvedRows,
-					GetInvolvedRows(row.Row.Row));
+					InvolvedRowUtils.GetInvolvedRows(row.Row.Row));
 			}
 
 			const string description = "Group branches";
@@ -1104,7 +1105,7 @@ namespace ProSuite.QA.Tests
 
 				if (endPoints == null)
 				{
-					endPoints = QaGeometryUtils.CreateMultipoint(endPoint);
+					endPoints = ProxyUtils.CreateMultipoint(endPoint);
 				}
 
 				endPoints.AddPoint(GeometryFactory.Clone(endPoint),
@@ -1319,7 +1320,7 @@ namespace ProSuite.QA.Tests
 
 			IPath connection = gap.CreatePath();
 
-			IGeometryCollection lineParts = QaGeometryUtils.CreatePolyline(connection);
+			IGeometryCollection lineParts = ProxyUtils.CreatePolyline(connection);
 
 			lineParts.AddGeometry(connection, ref missing, ref missing);
 
@@ -1342,7 +1343,7 @@ namespace ProSuite.QA.Tests
 				IPath connection = gap.CreatePath();
 				if (result == null)
 				{
-					result = QaGeometryUtils.CreatePolyline(connection);
+					result = ProxyUtils.CreatePolyline(connection);
 				}
 
 				result.AddGeometry(connection, ref missing, ref missing);
@@ -1368,7 +1369,7 @@ namespace ProSuite.QA.Tests
 
 				if (result == null)
 				{
-					result = QaGeometryUtils.CreateMultipoint(point0);
+					result = ProxyUtils.CreateMultipoint(point0);
 					((IGeometry) result).SpatialReference = point0.SpatialReference;
 				}
 
@@ -1736,7 +1737,7 @@ namespace ProSuite.QA.Tests
 			{
 				if (points == null)
 				{
-					points = QaGeometryUtils.CreateMultipoint(row1.ToPoint);
+					points = ProxyUtils.CreateMultipoint(row1.ToPoint);
 				}
 
 				points.AddPoint(row1.ToPoint, ref missing, ref missing);
@@ -1802,7 +1803,7 @@ namespace ProSuite.QA.Tests
 		{
 			int TableIndex { get; }
 
-			int RowIndex { get; }
+			long RowIndex { get; }
 
 			int PartIndex { get; }
 		}
@@ -1849,7 +1850,7 @@ namespace ProSuite.QA.Tests
 
 			public int GetHashCode(ITableIndexRowPart obj)
 			{
-				return obj.RowIndex;
+				return obj.RowIndex.GetHashCode();
 			}
 		}
 
@@ -1857,7 +1858,7 @@ namespace ProSuite.QA.Tests
 		{
 			public int TableIndex { get; }
 
-			public int RowIndex => Keys;
+			public long RowIndex => Keys;
 
 			public int PartIndex { get; }
 
@@ -1865,7 +1866,7 @@ namespace ProSuite.QA.Tests
 			public IUniqueIdProvider UniqueIdProvider { get; }
 
 			[NotNull]
-			public int Keys { get; }
+			public long Keys { get; }
 
 			public bool Cancelled { get; }
 
@@ -1888,7 +1889,7 @@ namespace ProSuite.QA.Tests
 			}
 
 			public ConnectedLine(int tableIndex,
-			                     int rowKeys,
+			                     long rowKeys,
 			                     int partIndex,
 			                     [CanBeNull] IUniqueIdProvider uniqueIdProvider,
 			                     bool cancelled)
@@ -1930,7 +1931,7 @@ namespace ProSuite.QA.Tests
 
 			public bool ToConnected { get; set; }
 
-			int ITableIndexRow.RowOID => RowIndex;
+			long ITableIndexRow.RowOID => RowIndex;
 
 			int ITableIndexRow.TableIndex => TableIndex;
 
@@ -2032,7 +2033,7 @@ namespace ProSuite.QA.Tests
 				: this(source.TableIndex, source.RowIndex, source.PartIndex,
 				       source.IsBackward, source.InvolvedRows) { }
 
-			protected GroupEnd(int tableIndex, int rowIndex, int partIndex,
+			protected GroupEnd(int tableIndex, long rowIndex, int partIndex,
 			                   bool isBackward,
 			                   [NotNull] IList<InvolvedRow> involvedRows)
 			{
@@ -2045,7 +2046,7 @@ namespace ProSuite.QA.Tests
 
 			public int TableIndex { get; }
 
-			public int RowIndex { get; }
+			public long RowIndex { get; }
 
 			public int PartIndex { get; }
 
@@ -2057,7 +2058,7 @@ namespace ProSuite.QA.Tests
 
 		private class InvolvedGroupEnd : GroupEnd
 		{
-			public InvolvedGroupEnd(int tableIndex, int rowIndex, int partIndex,
+			public InvolvedGroupEnd(int tableIndex, long rowIndex, int partIndex,
 			                        bool isBackward,
 			                        [NotNull] IList<InvolvedRow> involvedRows,
 			                        [NotNull] IPoint endPoint,
@@ -2074,7 +2075,7 @@ namespace ProSuite.QA.Tests
 			[NotNull]
 			public IPoint AnyPoint { get; }
 
-			public int FirstOID => InvolvedRows.FirstOrDefault()?.OID ?? -1;
+			public long FirstOID => InvolvedRows.FirstOrDefault()?.OID ?? -1;
 
 			public override string ToString()
 			{
@@ -2094,7 +2095,7 @@ namespace ProSuite.QA.Tests
 					sb.Append($"RowOID:{RowIndex}");
 				}
 
-				return sb.ToString();
+				return $"{sb}; End: [{EndPoint.X:N0}, {EndPoint.Y:N0}]; Any: [{AnyPoint.X:N0}, {AnyPoint.Y:N0}]";
 			}
 		}
 

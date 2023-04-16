@@ -34,7 +34,7 @@ namespace ProSuite.QA.Tests.Transformers.Filters
 
 		public override IEnvelope Extent => FeatureClassToFilter.Extent;
 
-		public override VirtualRow GetRow(int id)
+		public override VirtualRow GetRow(long id)
 		{
 			IReadOnlyFeature feature = (IReadOnlyFeature) FeatureClassToFilter.GetRow(id);
 
@@ -47,7 +47,7 @@ namespace ProSuite.QA.Tests.Transformers.Filters
 			return null;
 		}
 
-		public override int GetRowCount(IQueryFilter queryFilter)
+		public override long GetRowCount(IQueryFilter queryFilter)
 		{
 			// TODO: Callers should refrain from getting row count unnecessarily
 			// Currently the container calls row count for each tile for progress reasons
@@ -60,7 +60,7 @@ namespace ProSuite.QA.Tests.Transformers.Filters
 		{
 			var wrappedAttributeValues = new WrappedRowValues(feature, true);
 
-			return new GdbFeature(feature.OID, ResultFeatureClass, wrappedAttributeValues);
+			return GdbFeature.Create(feature.OID, ResultFeatureClass, wrappedAttributeValues);
 		}
 
 		#region Implementation of INamedFilter

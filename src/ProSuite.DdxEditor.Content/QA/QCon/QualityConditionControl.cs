@@ -13,7 +13,7 @@ using ProSuite.Commons.UI.ScreenBinding.Lists;
 using ProSuite.Commons.UI.WinForms;
 using ProSuite.Commons.UI.WinForms.Controls;
 using ProSuite.DdxEditor.Content.QA.InstanceConfig;
-using ProSuite.DdxEditor.Content.QA.TestDescriptors;
+using ProSuite.DdxEditor.Content.QA.InstanceDescriptors;
 using ProSuite.DdxEditor.Framework.ItemViews;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Core;
@@ -469,7 +469,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 				{
 					bool sorted = _issueFilterGridHandler.BindTo(
 						tableRows,
-						defaultSortState: new DataGridViewSortState(_columnName.Name),
+						defaultSortState: new DataGridViewSortState(_dataGridIssueColumnName.Name),
 						sortStateOverride: _tableStateIssueFilter.TableSortState);
 
 					_issueFilterStateManager.ApplyState(_tableStateIssueFilter, sorted);

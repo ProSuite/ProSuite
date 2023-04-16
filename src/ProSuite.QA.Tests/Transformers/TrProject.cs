@@ -22,7 +22,7 @@ namespace ProSuite.QA.Tests.Transformers
 				SpatialReferenceUtils.CreateSpatialReference(targetSpatialReferenceId);
 		}
 
-		protected override IEnumerable<GdbFeature> Transform(IGeometry source, int? sourceOid)
+		protected override IEnumerable<GdbFeature> Transform(IGeometry source, long? sourceOid)
 		{
 			TransformedFeatureClass transformedClass = GetTransformed();
 			GdbFeature feature = sourceOid == null

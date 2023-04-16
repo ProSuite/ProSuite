@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
@@ -73,7 +74,8 @@ namespace ProSuite.QA.Tests.Transformers
 
 		void IInvolvesTables.SetConstraint(int tableIndex, string condition)
 		{
-			// TODO
+			throw new NotImplementedException(
+				"Advice: Apply constraint where at usages of this transformer");
 		}
 
 		void IInvolvesTables.SetSqlCaseSensitivity(int tableIndex, bool useCaseSensitiveQaSql)

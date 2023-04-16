@@ -1,5 +1,4 @@
 using System.Drawing;
-using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DdxEditor.Framework.Items;
 using ProSuite.DdxEditor.Framework.Properties;
@@ -8,7 +7,12 @@ namespace ProSuite.DdxEditor.Framework.Commands
 {
 	public abstract class AddItemCommandBase<T> : ItemCommandBase<T> where T : Item
 	{
-		[CanBeNull] private static Image _image;
+		[CanBeNull] private static readonly Image _image;
+
+		static AddItemCommandBase()
+		{
+			_image = Resources.Add;
+		}
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="AddItemCommandBase&lt;T&gt;"/> class.
@@ -16,19 +20,11 @@ namespace ProSuite.DdxEditor.Framework.Commands
 		/// <param name="parentItem">The parent item.</param>
 		/// <param name="applicationController">The application controller.</param>
 		protected AddItemCommandBase([NotNull] T parentItem,
-		                             [NotNull] IApplicationController
-			                             applicationController)
-			: base(parentItem)
-		{
-			Assert.ArgumentNotNull(applicationController, nameof(applicationController));
+		                             [NotNull] IApplicationController applicationController)
+			: base(parentItem, applicationController) { }
 
-			ApplicationController = applicationController;
-		}
-
-		public override Image Image => _image ?? (_image = Resources.Add);
+		public override Image Image => _image;
 
 		protected override bool EnabledCore => ! ApplicationController.HasPendingChanges;
-
-		protected IApplicationController ApplicationController { get; }
 	}
 }

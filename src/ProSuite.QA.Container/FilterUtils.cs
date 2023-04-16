@@ -12,12 +12,11 @@ namespace ProSuite.QA.Container
 		{
 			if (string.IsNullOrEmpty(filterExpression))
 			{
-				return new List<string>(0);
+				return Array.Empty<string>();
 			}
 
 			IList<string> filterNames = new List<string>();
-			foreach (string token in ExpressionUtils.GetExpressionTokens(
-				         filterExpression))
+			foreach (string token in ExpressionUtils.GetExpressionTokens(filterExpression))
 			{
 				const StringComparison ii = StringComparison.InvariantCultureIgnoreCase;
 				if (token.Equals("AND", ii) || token.Equals("OR") || token.Equals("NOT"))
@@ -25,7 +24,6 @@ namespace ProSuite.QA.Container
 					continue;
 				}
 
-				filterNames = filterNames ?? new List<string>();
 				filterNames.Add(token);
 			}
 

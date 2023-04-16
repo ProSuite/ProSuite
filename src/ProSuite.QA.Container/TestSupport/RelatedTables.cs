@@ -49,56 +49,5 @@ namespace ProSuite.QA.Container.TestSupport
 
 		[NotNull]
 		public IList<RelatedTable> Related => _relTables.AsReadOnly();
-
-		[NotNull]
-		public InvolvedRows GetInvolvedRows([NotNull] IReadOnlyRow row)
-		{
-			InvolvedRows involved = new InvolvedRows();
-			involved.TestedRows.Add(row);
-
-			foreach (RelatedTable relatedTable in _relTables)
-			{
-				object oid = row.get_Value(relatedTable.OidFieldIndex);
-
-				if (oid is int)
-				{
-					involved.Add(new InvolvedRow(relatedTable.TableName, (int) oid));
-				}
-			}
-
-			return involved;
-		}
-
-		[CanBeNull]
-		public IGeometry GetGeometry([NotNull] IReadOnlyRow row)
-		{
-			IGeometry geometry = TestUtils.GetShapeCopy(row);
-			if (geometry != null)
-			{
-				return geometry;
-			}
-
-			foreach (RelatedTable relatedTable in _relTables)
-			{
-				if (relatedTable.IsFeatureClass == false)
-				{
-					continue;
-				}
-
-				object oid = row.get_Value(relatedTable.OidFieldIndex);
-				if (! (oid is int))
-				{
-					continue;
-				}
-
-				geometry = TestUtils.GetShapeCopy(relatedTable.Table.GetRow((int) oid));
-				if (geometry != null)
-				{
-					return geometry;
-				}
-			}
-
-			return null;
-		}
 	}
 }

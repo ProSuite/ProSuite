@@ -912,9 +912,10 @@ namespace ProSuite.Commons.AO.Test.Geometry
 			GeometryUtils.MakeZAware(polygon);
 
 			bool simplified = GeometryUtils.TrySimplifyZ(polygon);
-			Assert.IsTrue(simplified);
 
+			Assert.IsTrue(simplified);
 			Assert.IsTrue(((IZAware) polygon).ZSimple);
+
 			Console.WriteLine(GeometryUtils.ToString(polygon));
 		}
 
@@ -1294,6 +1295,12 @@ namespace ProSuite.Commons.AO.Test.Geometry
 			point2.M = 0.5;
 
 			((IPointCollection) poly).UpdatePoint(2, point2);
+
+			// NOTE: Starting with server 11.0, at least 2 points must have Zs
+			//       in order to get interpolated by SimplifyZs!
+			IPoint point3 = ((IPointCollection) poly).get_Point(3);
+			point3.Z = 800;
+			((IPointCollection) poly).UpdatePoint(3, point3);
 
 			((IZAware) poly).ZAware = false;
 			((IMAware) poly).MAware = false;

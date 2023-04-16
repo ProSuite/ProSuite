@@ -801,7 +801,7 @@ namespace ProSuite.QA.Tests
 								         .NotNull(_relatedTables)
 								         .Related)
 							{
-								int relatedTableOID =
+								long relatedTableOID =
 									oidTuple[relatedTableIndex].ObjectId;
 								relatedTableIndex++;
 
@@ -842,7 +842,7 @@ namespace ProSuite.QA.Tests
 				[NotNull] TestRowReference testRowReference,
 				[NotNull] IList<string> tableNames)
 			{
-				int oid = testRowReference.ObjectId;
+				long oid = testRowReference.ObjectId;
 				int tableIndex = testRowReference.TableIndex;
 
 				string tableName = tableNames[tableIndex];

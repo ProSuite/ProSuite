@@ -41,7 +41,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.ImportExceptions
 					targetFields);
 			}
 
-			var replacedExceptionObjects = new Dictionary<esriGeometryType, HashSet<int>>();
+			var replacedExceptionObjects = new Dictionary<esriGeometryType, HashSet<long>>();
 
 			using (_msg.IncrementIndentation("Importing new exceptions from issue datasets...")
 			      )
@@ -180,7 +180,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.ImportExceptions
 							targetExceptionFactory,
 							editableAttributes);
 
-						var replacedOids = new HashSet<int>();
+						var replacedOids = new HashSet<long>();
 
 						var updatedRowsCount = 0;
 						var rowsWithConflictsCount = 0;
@@ -539,7 +539,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.ImportExceptions
 			[NotNull] ExceptionObjectFactory factory,
 			[NotNull]
 			IDictionary<Guid, QualityConditionExceptions> targetExceptionsByConditionVersion,
-			[NotNull] IDictionary<esriGeometryType, HashSet<int>> replacedExceptionObjects,
+			[NotNull] IDictionary<esriGeometryType, HashSet<long>> replacedExceptionObjects,
 			[NotNull] ExceptionWriter writer,
 			out int matchCount)
 		{
@@ -612,15 +612,15 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.ImportExceptions
 
 		private static void AddToReplacedExceptionObjects(
 			[NotNull] ExceptionObject matchingExceptionObject,
-			[NotNull] IDictionary<esriGeometryType, HashSet<int>> replacedExceptionObjects)
+			[NotNull] IDictionary<esriGeometryType, HashSet<long>> replacedExceptionObjects)
 		{
 			esriGeometryType shapeType = matchingExceptionObject.ShapeType ??
 			                             esriGeometryType.esriGeometryNull;
 
-			HashSet<int> oids;
+			HashSet<long> oids;
 			if (! replacedExceptionObjects.TryGetValue(shapeType, out oids))
 			{
-				oids = new HashSet<int>();
+				oids = new HashSet<long>();
 				replacedExceptionObjects.Add(shapeType, oids);
 			}
 
@@ -730,13 +730,13 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.ImportExceptions
 		private static int ProcessReplacedExceptions(
 			[NotNull] ITable targetTable,
 			[NotNull] IIssueTableFields targetFields,
-			[NotNull] IDictionary<esriGeometryType, HashSet<int>> replacedExceptionObjects,
+			[NotNull] IDictionary<esriGeometryType, HashSet<long>> replacedExceptionObjects,
 			DateTime importDate,
 			out int fixedStatusCount)
 		{
 			esriGeometryType shapeType = GetShapeType(targetTable);
 
-			HashSet<int> replacedOids;
+			HashSet<long> replacedOids;
 			if (! replacedExceptionObjects.TryGetValue(shapeType, out replacedOids))
 			{
 				// no replaced exception objects for this shape type
@@ -753,7 +753,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.ImportExceptions
 			[NotNull] ITable targetTable,
 			[NotNull] IIssueTableFields targetFields,
 			DateTime importDate,
-			[NotNull] ICollection<int> replacedOids,
+			[NotNull] ICollection<long> replacedOids,
 			out int fixedStatusCount)
 		{
 			fixedStatusCount = 0;

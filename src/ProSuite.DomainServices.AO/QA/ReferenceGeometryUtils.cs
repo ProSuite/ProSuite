@@ -18,11 +18,12 @@ namespace ProSuite.DomainServices.AO.QA
 {
 	internal static class ReferenceGeometryUtils
 	{
-		private const string _referencedGeometryInfo = "(referenced geometry stored)";
-
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		internal static string ReferencedGeometryInfo => _referencedGeometryInfo;
+		/// <remarks>
+		/// Do not change this string, it is persisted on <see cref="QaError"/>
+		/// </remarks>
+		internal static string ReferencedGeometryInfo => "; (referenced geometry stored)";
 
 		[CanBeNull]
 		internal static IGeometry CreateReferenceGeometry(
@@ -51,9 +52,7 @@ namespace ProSuite.DomainServices.AO.QA
 			[NotNull] QaError qaError,
 			[NotNull] IGeometry referenceGeometry)
 		{
-			string description = string.Format(
-				"{0}; {1}", qaError.Description,
-				_referencedGeometryInfo);
+			string description = string.Concat(qaError.Description, ReferencedGeometryInfo);
 
 			return new QaError(qaError.Test,
 			                   description,
@@ -64,7 +63,7 @@ namespace ProSuite.DomainServices.AO.QA
 		}
 
 		[NotNull]
-		internal static HashSet<int> GetOidsByRelatedGeometry(
+		internal static HashSet<long> GetOidsByRelatedGeometry(
 			[NotNull] IReadOnlyTable table,
 			[NotNull] IEnumerable<IList<IRelationshipClass>> relClassChains,
 			[NotNull] IGeometry testPerimeter,
@@ -82,7 +81,7 @@ namespace ProSuite.DomainServices.AO.QA
 				_msg.DebugStartTiming("Getting row OIDs by related geometry for {0}",
 				                      tableName);
 
-			var result = new HashSet<int>();
+			var result = new HashSet<long>();
 
 			IObjectClass objectClass = table as IObjectClass;
 
@@ -491,7 +490,8 @@ namespace ProSuite.DomainServices.AO.QA
 			Assert.NotNull(table, "Dataset not found in workspace: {0}", objectDataset.Name);
 
 			// TODO batch!
-			return (IObject) table.GetRow(involvedRow.OID);
+			IObject result = GdbQueryUtils.GetObject((IObjectClass) table, involvedRow.OID);
+			return Assert.NotNull(result);
 		}
 	}
 }

@@ -5,8 +5,8 @@ using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.AO.Test;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.Test;
 using ProSuite.QA.Tests.IssueFilters;
 using ProSuite.QA.Tests.Test.Construction;
 using ProSuite.QA.Tests.Test.TestRunners;
@@ -186,6 +186,71 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				// First feature -> error
 				// Second feature: no error
 				Assert.AreEqual(1, runner.Errors.Count);
+			}
+		}
+
+		[Test]
+		public void CanOuterJoinPointLine()
+		{
+			IFeatureWorkspace ws = TestWorkspaceUtils.CreateInMemoryWorkspace("TrSpatialJoin");
+
+			IFeatureClass pointFc =
+				CreateFeatureClass(ws, "pointFc", esriGeometryType.esriGeometryPoint);
+			IFeatureClass linFc =
+				CreateFeatureClass(ws, "lineFc", esriGeometryType.esriGeometryPolyline);
+
+			{
+				IFeature p = pointFc.CreateFeature();
+				p.Shape = GeometryFactory.CreatePoint(10, 10);
+				p.Store();
+			}
+			{
+				IFeature p = pointFc.CreateFeature();
+				p.Shape = GeometryFactory.CreatePoint(20, 20);
+				p.Store();
+			}
+			{
+				IFeature p = pointFc.CreateFeature();
+				p.Shape = GeometryFactory.CreatePoint(20, 10);
+				p.Store();
+			}
+
+			{
+				IFeature f = linFc.CreateFeature();
+				f.Shape = CurveConstruction.StartLine(10, 10).LineTo(20, 20).Curve;
+				f.Store();
+			}
+
+			TrSpatialJoin tr = new TrSpatialJoin(
+								   ReadOnlyTableFactory.Create(pointFc),
+								   ReadOnlyTableFactory.Create(linFc))
+			{
+				Grouped = false,
+				T1Attributes = new[]
+												  {
+					                                  // If T1Attribute is not not null, only specified attributes are added
+					                                  "OBJECTID as Line_OID",
+													  "COUNT(OBJECTID) AS LineCount"
+												  },
+				OuterJoin = true
+			};
+
+			TransformedFeatureClass transformedClass = tr.GetTransformed();
+			WriteFieldNames(transformedClass);
+
+			{
+				QaConstraint test = new QaConstraint(transformedClass, "LineCount = 1");
+				var runner = new QaContainerTestRunner(1000, test);
+				runner.Execute();
+
+				Assert.AreEqual(1, runner.Errors.Count);
+			}
+			{
+				QaConstraint test = new QaConstraint(transformedClass, "LineCount IS NULL");
+				var runner = new QaContainerTestRunner(1000, test);
+				runner.Execute();
+
+				Assert.AreEqual(2, runner.Errors.Count);
 			}
 		}
 

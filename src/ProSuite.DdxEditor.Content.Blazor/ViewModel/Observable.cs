@@ -1,13 +1,17 @@
 using System;
-using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using ProSuite.Commons;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
+using ProSuite.DdxEditor.Framework.ItemViews;
 
 namespace ProSuite.DdxEditor.Content.Blazor.ViewModel;
 
-public abstract class Observable : IDisposable, INotifyPropertyChanged
+public abstract class Observable : NotifyPropertyChangedBase, IDisposable
 {
+	private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 	[CanBeNull] private readonly string _customErrorMessage;
 	[NotNull] private readonly string _defaultErrorMessage = "Value not set";
 	private readonly bool _required;
@@ -23,9 +27,9 @@ public abstract class Observable : IDisposable, INotifyPropertyChanged
 		_customErrorMessage = customErrorMessage;
 
 		Observer = observer;
-
-		PropertyChanged += Observer.OnRowPropertyChanged;
 	}
+
+	public bool Required => _required;
 
 	[NotNull]
 	protected IInstanceConfigurationViewModel Observer { get; }
@@ -34,14 +38,10 @@ public abstract class Observable : IDisposable, INotifyPropertyChanged
 
 	public void Dispose()
 	{
-		PropertyChanged -= Observer.OnRowPropertyChanged;
-
 		DisposeCore();
 	}
 
 	protected virtual void DisposeCore() { }
-
-	public event PropertyChangedEventHandler PropertyChanged;
 
 	protected bool SetProperty<T>(ref T backingField, T value,
 	                              [CallerMemberName] string propertyName = null)
@@ -82,9 +82,8 @@ public abstract class Observable : IDisposable, INotifyPropertyChanged
 	}
 
 	protected abstract bool ValidateCore();
-
-	[NotifyPropertyChangedInvocator]
-	protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+	
+	protected override void OnPropertyChanged([CallerMemberName] string propertyName = null)
 	{
 		// todo daro should validation prevent from being able to save?
 		// Then do not notify dirty.
@@ -92,7 +91,9 @@ public abstract class Observable : IDisposable, INotifyPropertyChanged
 
 		NotifyDirty();
 
-		PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+		_msg.VerboseDebug(() => $"OnRowPropertyChanged: {propertyName}, {this}");
+
+		base.OnPropertyChanged(propertyName);
 	}
 
 	private void NotifyDirty()

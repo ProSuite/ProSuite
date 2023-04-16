@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <ProjectGuid>{F997B55F-C442-4224-A573-AE39F72BEB4A}</ProjectGuid>
     <SignAssembly>true</SignAssembly>
@@ -68,7 +68,7 @@
       <HintPath>..\..\lib\Quaestor\Quaestor.LoadReporting.dll</HintPath>
       <SpecificVersion>False</SpecificVersion>
     </Reference>
-    <Reference Include="System.ServiceProcess" />
+
   </ItemGroup>
 
   <ItemGroup>
@@ -91,6 +91,14 @@
         This is probably not needed for x64 and certainly not for .net6 -->
     <!--
     <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.0" />-->
+  </ItemGroup>
+
+  <!-- Windows service implementation: -->
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net48' ">
+    <Reference Include="System.ServiceProcess" />
+  </ItemGroup>
+  <ItemGroup Condition=" '$(TargetFramework)' != 'net48' ">
+    <PackageReference Include="System.ServiceProcess.ServiceController" Version="6.0.0" />
   </ItemGroup>
 
   <ItemGroup>

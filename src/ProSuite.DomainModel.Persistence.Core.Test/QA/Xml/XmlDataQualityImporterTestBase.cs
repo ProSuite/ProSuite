@@ -78,6 +78,7 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.QA.Xml
 				                           UnitOfWork,
 				                           new BasicXmlWorkspaceConverter());
 
+			//e.g. "C:\git\Swisstopo.Topgis\bin\Debug\Swisstopo.Topgis.Persistence.Test.QA.Xml.XmlDataQualityImporterTest.CanImport.qa.xml"
 			string xmlFilePath = GetType().FullName + ".CanImport.qa.xml";
 
 			const bool exportMetadata = true;
@@ -109,31 +110,44 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.QA.Xml
 					Assert.AreEqual(qualitySpecification.Elements.Count,
 					                readSpecification.Elements.Count);
 
-					QualityCondition condition = qualitySpecification.Elements
-						.Select(e => e.QualityCondition)
-						.Single(c => c.Name == "cond1");
+					QualityCondition cond1 = qualitySpecification.Elements
+					                                             .Select(e => e.QualityCondition)
+					                                             .Single(c => c.Name == "cond1");
 
-					var readCondition = readSpecification.Elements
-					                                     .Select(e => e.QualityCondition)
-					                                     .Single(c => c.Name == "cond1");
+					var readCond1 = readSpecification.Elements
+					                                 .Select(e => e.QualityCondition)
+					                                 .Single(c => c.Name == "cond1");
 
-					Assert.AreEqual(condition.TestDescriptor, readCondition.TestDescriptor);
-
-					Assert.AreEqual(condition.ParameterValues.Count,
-					                readCondition.ParameterValues.Count);
+					Assert.IsNotNull(readCond1);
+					Assert.AreEqual(cond1.TestDescriptor, readCond1.TestDescriptor);
+					Assert.AreEqual(cond1.ParameterValues.Count,
+					                readCond1.ParameterValues.Count);
 
 					var datasetParamValue =
-						(DatasetTestParameterValue) condition.ParameterValues[0];
+						(DatasetTestParameterValue) cond1.ParameterValues[0];
 					var readDatasetParamValue =
-						(DatasetTestParameterValue) readCondition.ParameterValues[0];
+						(DatasetTestParameterValue) readCond1.ParameterValues[0];
 
 					Assert.AreEqual(datasetParamValue.DatasetValue,
 					                readDatasetParamValue.DatasetValue);
+
+					var readCond2 = readSpecification.Elements
+					                                 .Select(e => e.QualityCondition)
+					                                 .Single(c => c.Name == "cond2");
+
+					Assert.AreEqual(readCond2.IssueFilterConfigurations.Count, 1);
+					Assert.AreEqual(readCond2.IssueFilterConfigurations[0].Name,
+					                "issueFilter1");
+
+					TransformerConfiguration readTransformer =
+						readCond2.ParameterValues[0].ValueSource;
+					Assert.IsNotNull(readTransformer);
+					Assert.AreEqual(readTransformer.Name, "transformer1");
 				});
 		}
 
 		[Test]
-		public void CanReImportSpecificationWithChangedConditionName()
+		public void CanReImportSpecificationWithChangedInstanceConfigurationNames()
 		{
 			// The first part of this test is identical to CanImportSpecification()
 			// to produce existing content in the DDX that can be updated.
@@ -164,6 +178,7 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.QA.Xml
 				                           datasetRepository,
 				                           UnitOfWork, new BasicXmlWorkspaceConverter());
 
+			//e.g. "C:\git\Swisstopo.Topgis\bin\Debug\Swisstopo.Topgis.Persistence.Test.QA.Xml.XmlDataQualityImporterTest.CanImport.qa.xml"
 			string xmlFilePath = GetType().FullName + ".CanImport.qa.xml";
 
 			const bool exportMetadata = true;
@@ -184,12 +199,18 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.QA.Xml
 			         qualitySpecificationRepository, dataQualityCategoryRepository,
 			         datasetRepository, modelRepository, xmlFilePath);
 
-			// NOW: Update the condition name in the XML and re-import
-			// Import with changed condition name (but same UUID)
-			QualityCondition condition = qualitySpecification.Elements
-			                                                 .Select(e => e.QualityCondition)
-			                                                 .Single(c => c.Name == "cond1");
-			condition.Name = "cond1_newName";
+			// NOW: Update some instance configuration names in the XML and re-import
+			// Import with changed name (but same UUID)
+			QualityCondition cond1 = qualitySpecification.Elements
+			                                             .Select(e => e.QualityCondition)
+			                                             .Single(c => c.Name == "cond1");
+			cond1.Name = "cond1_newName";
+
+			QualityCondition cond2 = qualitySpecification.Elements
+			                                             .Select(e => e.QualityCondition)
+			                                             .Single(c => c.Name == "cond2");
+			cond2.IssueFilterConfigurations[0].Name = "issueFilter1_newName";
+			cond2.ParameterValues[0].ValueSource.Name = "transformer1_newName";
 
 			exporter.Export(qualitySpecification, xmlFilePath,
 			                exportMetadata,
@@ -214,22 +235,36 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.QA.Xml
 					Assert.AreEqual(qualitySpecification.Elements.Count,
 					                readSpecification.Elements.Count);
 
-					var readCondition = readSpecification.Elements
-					                                     .Select(e => e.QualityCondition)
-					                                     .Single(c => c.Name == "cond1_newName");
+					var readCond1 = readSpecification.Elements
+					                                 .Select(e => e.QualityCondition)
+					                                 .Single(c => c.Name == "cond1_newName");
 
-					Assert.AreEqual(condition.TestDescriptor, readCondition.TestDescriptor);
-
-					Assert.AreEqual(condition.ParameterValues.Count,
-					                readCondition.ParameterValues.Count);
+					Assert.IsNotNull(readCond1);
+					Assert.AreEqual(cond1.TestDescriptor, readCond1.TestDescriptor);
+					Assert.AreEqual(cond1.ParameterValues.Count,
+					                readCond1.ParameterValues.Count);
 
 					var datasetParamValue =
-						(DatasetTestParameterValue) condition.ParameterValues[0];
+						(DatasetTestParameterValue) cond1.ParameterValues[0];
 					var readDatasetParamValue =
-						(DatasetTestParameterValue) readCondition.ParameterValues[0];
+						(DatasetTestParameterValue) readCond1.ParameterValues[0];
 
 					Assert.AreEqual(datasetParamValue.DatasetValue,
 					                readDatasetParamValue.DatasetValue);
+
+					var readCond2 = readSpecification.Elements
+					                                 .Select(e => e.QualityCondition)
+					                                 .Single(c => c.Name == "cond2");
+
+					Assert.AreEqual(readCond2.IssueFilterConfigurations.Count, 1);
+					Assert.AreEqual(readCond2.IssueFilterConfigurations[0].Name,
+					                "issueFilter1_newName");
+
+					TransformerConfiguration readTransformer =
+						readCond2.ParameterValues[0].ValueSource;
+
+					Assert.IsNotNull(readTransformer);
+					Assert.AreEqual(readTransformer.Name, "transformer1_newName");
 				});
 		}
 
@@ -255,7 +290,6 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.QA.Xml
 						modelRepository,
 						UnitOfWork,
 						new BasicXmlWorkspaceConverter(),
-						null,
 						null);
 
 					IList<QualitySpecification> importedSpecifications =

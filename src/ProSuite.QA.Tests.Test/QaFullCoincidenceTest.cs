@@ -6,10 +6,11 @@ using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.AO.Geometry.Proxy;
+using ProSuite.Commons.AO.Test;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.Geometry;
-using ProSuite.QA.Container.Test;
 using ProSuite.QA.Container.TestContainer;
 using ProSuite.QA.Tests.Coincidence;
 using ProSuite.QA.Tests.Test.Construction;
@@ -878,7 +879,7 @@ namespace ProSuite.QA.Tests.Test
 			{
 				foreach (InvolvedRow row in error.InvolvedRows)
 				{
-					IFeature f = eo.GetFeature(row.OID);
+					IFeature f = GdbQueryUtils.GetFeature(eo, row.OID);
 					var artzhid = (int) f.get_Value(fieldIndex);
 					Assert.AreEqual(9, artzhid);
 				}
@@ -1174,7 +1175,7 @@ namespace ProSuite.QA.Tests.Test
 
 			protected override bool IsDirected => false;
 
-			public override int Execute(IReadOnlyRow row)
+			protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 			{
 				var feature = (IReadOnlyFeature) row;
 				IIndexedSegments geometry = IndexedSegmentUtils.GetIndexedGeometry(feature, true);

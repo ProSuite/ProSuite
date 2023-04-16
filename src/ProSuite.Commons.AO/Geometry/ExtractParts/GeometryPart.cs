@@ -14,13 +14,16 @@ namespace ProSuite.Commons.AO.Geometry.ExtractParts
 	{
 		private double? _size;
 
-		public GeometryPart([NotNull] IGeometry lowLevelGeometry)
+		public GeometryPart([NotNull] IGeometry lowLevelGeometry,
+		                    bool zAware)
 		{
 			Assert.ArgumentNotNull(lowLevelGeometry, nameof(lowLevelGeometry));
 
-			LowLevelGeometries = new List<IGeometry> {lowLevelGeometry};
+			LowLevelGeometries = new List<IGeometry> { lowLevelGeometry };
 
 			InnerRings = new List<IGeometry>();
+
+			IsZAware = zAware;
 		}
 
 		public GeometryPart([NotNull] GeometryPart geometryPart)
@@ -59,6 +62,13 @@ namespace ProSuite.Commons.AO.Geometry.ExtractParts
 				return (double) _size;
 			}
 		}
+
+		/// <summary>
+		/// Whether or not the part has Z-values, i.e. the original geometry was z-aware.
+		/// NOTE: In Server11 the low level parts might not be consistent with their high-level
+		/// geometry.
+		/// </summary>
+		public bool IsZAware { get; set; }
 
 		public Color Color { get; set; }
 
@@ -357,8 +367,10 @@ namespace ProSuite.Commons.AO.Geometry.ExtractParts
 				return GetMultipatchExteriorRingParts(multipatch);
 			}
 
+			bool zAware = GeometryUtils.IsZAware(originalGeometry);
+
 			return GeometryUtils.GetParts((IGeometryCollection) originalGeometry).Select(
-				part => new GeometryPart(part));
+				part => new GeometryPart(part, zAware));
 		}
 
 		/// <summary>
@@ -373,6 +385,8 @@ namespace ProSuite.Commons.AO.Geometry.ExtractParts
 			// all exterior rings, add them to result if not yet added
 			var partsByExteriorRing = new Dictionary<IRing, GeometryPart>();
 
+			bool zAware = GeometryUtils.IsZAware(polygon);
+
 			var geometryCollection = (IGeometryCollection) polygon;
 			for (var i = 0; i < geometryCollection.GeometryCount; i++)
 			{
@@ -380,7 +394,7 @@ namespace ProSuite.Commons.AO.Geometry.ExtractParts
 
 				if (ring.IsExterior)
 				{
-					partsByExteriorRing.Add(ring, new GeometryPart(ring));
+					partsByExteriorRing.Add(ring, new GeometryPart(ring, zAware));
 				}
 				else
 				{
@@ -391,7 +405,7 @@ namespace ProSuite.Commons.AO.Geometry.ExtractParts
 					GeometryPart part;
 					if (! partsByExteriorRing.TryGetValue(exteriorRing, out part))
 					{
-						part = new GeometryPart(exteriorRing);
+						part = new GeometryPart(exteriorRing, zAware);
 						partsByExteriorRing.Add(exteriorRing, part);
 					}
 
@@ -424,7 +438,7 @@ namespace ProSuite.Commons.AO.Geometry.ExtractParts
 
 				if (isExterior)
 				{
-					var newExteriorPart = new GeometryPart(ring)
+					var newExteriorPart = new GeometryPart(ring, true)
 					                      {
 						                      LabelText = Convert.ToString(i)
 					                      };
@@ -440,7 +454,7 @@ namespace ProSuite.Commons.AO.Geometry.ExtractParts
 					GeometryPart part;
 					if (! partsByExteriorRing.TryGetValue(exteriorRing, out part))
 					{
-						part = new GeometryPart(exteriorRing);
+						part = new GeometryPart(exteriorRing, true);
 						partsByExteriorRing.Add(exteriorRing, part);
 					}
 

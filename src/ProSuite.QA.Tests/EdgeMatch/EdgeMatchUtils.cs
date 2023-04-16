@@ -7,10 +7,10 @@ using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
-using ProSuite.QA.Container.Geometry;
 using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Tests.Properties;
 
@@ -35,7 +35,7 @@ namespace ProSuite.QA.Tests.EdgeMatch
 		                                 WKSEnvelope tileEnvelope,
 		                                 WKSEnvelope allEnvelope)
 		{
-			WKSEnvelope geometryEnvelope = QaGeometryUtils.GetWKSEnvelope(geometry);
+			WKSEnvelope geometryEnvelope = ProxyUtils.GetWKSEnvelope(geometry);
 
 			return (tileEnvelope.XMax >= allEnvelope.XMax ||
 			        geometryEnvelope.XMax < tileEnvelope.XMax) &&

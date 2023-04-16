@@ -11,7 +11,6 @@ using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Test;
 using ProSuite.Commons.AO.Test.TestSupport;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.QA.Container.Test;
 using ProSuite.QA.Tests.Test.TestRunners;
 using Path = System.IO.Path;
 

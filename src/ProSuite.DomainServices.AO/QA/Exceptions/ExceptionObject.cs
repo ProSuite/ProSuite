@@ -13,7 +13,7 @@ namespace ProSuite.DomainServices.AO.QA.Exceptions
 		[NotNull] private readonly IList<InvolvedTable> _involvedTables;
 		[CanBeNull] private readonly ManagedProperties _managedProperties;
 
-		public ExceptionObject(int id,
+		public ExceptionObject(long id,
 		                       Guid qualityConditionUuid,
 		                       Guid qualityConditionVersionUuid,
 		                       [CanBeNull] IBox shapeEnvelope,
@@ -71,7 +71,7 @@ namespace ProSuite.DomainServices.AO.QA.Exceptions
 			}
 		}
 
-		public int Id { get; }
+		public long Id { get; }
 
 		public Guid QualityConditionUuid { get; }
 
@@ -161,7 +161,7 @@ namespace ProSuite.DomainServices.AO.QA.Exceptions
 		{
 			unchecked
 			{
-				return (Id * 397) ^ ShapeType?.GetHashCode() ?? 0;
+				return (Id.GetHashCode() * 397) ^ ShapeType?.GetHashCode() ?? 0;
 			}
 		}
 

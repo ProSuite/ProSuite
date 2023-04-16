@@ -1,29 +1,13 @@
 using System.Collections.Generic;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AO.Geodatabase
 {
 	public class ReadOnlyTable : IReadOnlyTable, ISubtypes
 	{
-		public static IEnumerable<IReadOnlyRow> EnumRows(IEnumerable<IRow> rows)
-		{
-			ITable current = null;
-			ReadOnlyTable table = null;
-			foreach (var row in rows)
-			{
-				ITable t = row.Table;
-				if (t != current)
-				{
-					table = CreateReadOnlyTable(row.Table);
-					current = t;
-				}
-
-				yield return table.CreateRow(row);
-			}
-		}
-
 		protected static ReadOnlyTable CreateReadOnlyTable(ITable table)
 		{
 			return new ReadOnlyTable(table);
@@ -52,7 +36,15 @@ namespace ProSuite.Commons.AO.Geodatabase
 		public string Name => DatasetUtils.GetName(BaseTable);
 		public IFields Fields => BaseTable.Fields;
 
-		public int FindField(string name) => BaseTable.FindField(name);
+#if Server11
+		public IReadOnlyRow GetRow(long oid) => CreateRow(BaseTable.GetRow(oid));
+#else
+		public IReadOnlyRow GetRow(long oid) => CreateRow(BaseTable.GetRow((int) oid));
+#endif
+
+		public long RowCount(IQueryFilter filter) => BaseTable.RowCount(filter);
+
+		public virtual int FindField(string name) => BaseTable.FindField(name);
 
 		public bool HasOID => AlternateOidFieldName != null || BaseTable.HasOID;
 
@@ -67,8 +59,6 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			return CreateRow(row);
 		}
-
-		public int RowCount(IQueryFilter filter) => BaseTable.RowCount(filter);
 
 		public bool Equals(IReadOnlyTable otherTable)
 		{
@@ -177,17 +167,14 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		#endregion
 
-		public int GetRowOid(IRow row)
+		public long GetRowOid(IRow row)
 		{
-			if (AlternateOidFieldName != null)
-			{
-				return (int) row.Value[OidFieldIndex];
-			}
-
-			return row.OID;
+			return AlternateOidFieldName != null
+				       ? Assert.NotNull(GdbObjectUtils.ReadRowOidValue(row, OidFieldIndex)).Value
+				       : row.OID;
 		}
 
-		private int OidFieldIndex
+		internal int OidFieldIndex
 		{
 			get
 			{

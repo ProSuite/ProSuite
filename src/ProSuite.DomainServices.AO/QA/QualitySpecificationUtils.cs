@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -15,9 +16,21 @@ using ProSuite.DomainModel.Core.QA.Repositories;
 using ProSuite.DomainModel.Core.QA.Xml;
 using ProSuite.DomainServices.AO.QA.Standalone.XmlBased;
 using ProSuite.DomainServices.AO.QA.VerifiedDataModel;
+using ProSuite.QA.Container;
 
 namespace ProSuite.DomainServices.AO.QA
 {
+	public class DummyTest : ContainerTest
+	{
+		public DummyTest()
+			: base(new List<Commons.AO.Geodatabase.IReadOnlyTable>()) { }
+
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
+		{
+			return 0;
+		}
+	}
+
 	public static class QualitySpecificationUtils
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
@@ -26,7 +39,8 @@ namespace ProSuite.DomainServices.AO.QA
 			[NotNull] string dataQualityXml,
 			[NotNull] string specificationName,
 			[NotNull] IList<DataSource> dataSourceReplacements,
-			bool ignoreConditionsForUnknownDatasets = true)
+			bool ignoreConditionsForUnknownDatasets = true,
+			[CanBeNull] ICollection<int> excludededConditionIds = null)
 		{
 			IList<XmlQualitySpecification> qualitySpecifications;
 			XmlDataQualityDocument document;
@@ -42,8 +56,57 @@ namespace ProSuite.DomainServices.AO.QA
 			                 StringUtils.Concatenate(qualitySpecifications.Select(s => s.Name),
 			                                         ", "));
 
+			if (excludededConditionIds?.Count > 0 &&
+			    qualitySpecifications.FirstOrDefault(s=> s.Name == specificationName)
+				    is XmlQualitySpecification selectedSpec)
+			{
+				DummifyExcludedConditions(document, selectedSpec,
+				                             excludededConditionIds);
+			}
+
 			return CreateQualitySpecification(document, specificationName, dataSourceReplacements,
 			                                  ignoreConditionsForUnknownDatasets);
+		}
+
+		private static void DummifyExcludedConditions(
+			[NotNull] XmlDataQualityDocument document,
+			[NotNull] XmlQualitySpecification qualitySpecification,
+			[NotNull] ICollection<int> excludededConditionIds)
+		{
+			int iQc = 0;
+			Dictionary<string, int> qcIdDict = new Dictionary<string, int>();
+			foreach (var element in qualitySpecification.Elements)
+			{
+				if (! qcIdDict.ContainsKey(element.QualityConditionName))
+				{
+					qcIdDict.Add(element.QualityConditionName, iQc);
+					iQc++;
+				}
+			}
+
+			string dummyDescriptorName = "_dummyTestDescriptor_";
+			while (document.TestDescriptors?.Exists(x => x.Name == dummyDescriptorName) == true)
+			{
+				dummyDescriptorName += "_";
+			}
+
+			document.TestDescriptors?.Add(
+				new XmlTestDescriptor
+				{
+					Name = dummyDescriptorName,
+					TestClass = new XmlClassDescriptor(typeof(DummyTest), 0)
+				});
+			if (document.QualityConditions != null)
+			{
+				foreach (var qc in document.QualityConditions)
+				{
+					if (qc.Name == null || !qcIdDict.TryGetValue(qc.Name, out int idQc) || excludededConditionIds.Contains(idQc))
+					{
+						qc.ParameterValues.Clear();
+						qc.TestDescriptorName = dummyDescriptorName;
+					}
+				}
+			}
 		}
 
 		[NotNull]

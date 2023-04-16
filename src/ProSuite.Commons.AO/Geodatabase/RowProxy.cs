@@ -12,14 +12,14 @@ namespace ProSuite.Commons.AO.Geodatabase
 	public class RowProxy : IRow
 	{
 		[CanBeNull] private IRow _row;
-		private readonly int _oid;
+		private readonly long _oid;
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="RowProxy"/> class.
 		/// </summary>
 		/// <param name="table">The table.</param>
 		/// <param name="oid">The oid.</param>
-		public RowProxy([NotNull] ITable table, int oid)
+		public RowProxy([NotNull] ITable table, long oid)
 		{
 			Assert.ArgumentNotNull(table, nameof(table));
 
@@ -36,7 +36,11 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		public bool HasOID => Table.HasOID;
 
-		public int OID => _oid;
+#if Server11
+		public long OID => _oid;
+#else
+		public int OID => (int) _oid;
+#endif
 
 		public void Store()
 		{
@@ -60,7 +64,18 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		private IRow GetObject()
 		{
-			return _row ?? (_row = Table.GetRow(_oid));
+			return _row ?? (_row = GetRow());
+		}
+
+		private IRow GetRow()
+		{
+#if Server11
+			long oid = _oid;
+#else
+			int oid = (int) _oid;
+#endif
+
+			return Table.GetRow(oid);
 		}
 
 		protected virtual object GetValueCore(int fieldIndex)

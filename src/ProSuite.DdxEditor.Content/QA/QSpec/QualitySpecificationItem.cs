@@ -22,7 +22,6 @@ using ProSuite.DdxEditor.Framework.ItemViews;
 using ProSuite.DomainModel.AO.QA.SpecificationReport;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
-using ProSuite.DomainModel.Core.QA.Repositories;
 using ProSuite.UI.QA;
 using ProSuite.UI.QA.ResourceLookup;
 
@@ -231,7 +230,7 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 		{
 			base.CollectCommands(commands, applicationController);
 
-			commands.Add(new CreateCopyOfQualitySpecificationCommand(this,
+			commands.Add(new CopyQualitySpecificationCommand(this,
 				             applicationController));
 			commands.Add(new AssignQualitySpecificationsToCategoryCommand(new[] {this},
 				             _containerItem,
@@ -284,8 +283,7 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 			}
 
 			// check if another entity with the same name exists
-			QualitySpecification existing =
-				_modelBuilder.Resolve<IQualitySpecificationRepository>().Get(entity.Name);
+			QualitySpecification existing = _modelBuilder.QualitySpecifications.Get(entity.Name);
 
 			if (existing != null && existing.Id != entity.Id)
 			{
@@ -318,7 +316,7 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 
 			DataQualityCategory category;
 			bool assigned = QualityConditionContainerUtils.AssignToCategory(
-				qualityConditions, _modelBuilder,
+				qualityConditions.Cast<InstanceConfiguration>().ToList(), _modelBuilder,
 				owner, out category);
 
 			if (! assigned)

@@ -3,9 +3,9 @@ using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.AO.Test;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.Test;
 using ProSuite.QA.Container.TestContainer;
 using ProSuite.QA.Tests.Test.Construction;
 using ProSuite.QA.Tests.Test.TestData;
@@ -55,7 +55,8 @@ namespace ProSuite.QA.Tests.Test
 			var runner = new QaContainerTestRunner(
 				1000, new QaCentroids(ReadOnlyTableFactory.Create(linesFc),
 				                      ReadOnlyTableFactory.Create(pointsFc)));
-			Assert.AreEqual(1, runner.Execute());
+			runner.Execute();
+			AssertUtils.OneError(runner, "Centroids.NoCentroid", 3);
 		}
 
 		[Test]

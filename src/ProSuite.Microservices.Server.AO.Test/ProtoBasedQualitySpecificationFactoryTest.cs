@@ -18,7 +18,7 @@ namespace ProSuite.Microservices.Server.AO.Test
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			TestUtils.ConfigureUnitTestLogging();
+			Commons.Test.Testing.TestUtils.ConfigureUnitTestLogging();
 			TestUtils.InitializeLicense();
 		}
 
@@ -38,18 +38,29 @@ namespace ProSuite.Microservices.Server.AO.Test
 			Assert.AreEqual(2, qualitySpecification.Elements.Count);
 
 			QualitySpecificationElement element1 = qualitySpecification.Elements[0];
+			QualityCondition condition1 = element1.QualityCondition;
 			Assert.IsTrue(element1.Enabled);
 			Assert.IsTrue(element1.StopOnError);
-			Assert.IsFalse(element1.QualityCondition.AllowErrors);
-			Assert.AreEqual(condition1Name, element1.QualityCondition.Name);
-			Assert.NotNull(element1.QualityCondition.Category);
-			Assert.AreEqual("Geometry", element1.QualityCondition.Category?.Name);
+			Assert.NotNull(condition1);
+			Assert.IsFalse(condition1.AllowErrors);
+			Assert.AreEqual(condition1Name, condition1.Name);
+			Assert.NotNull(condition1.Category);
+			Assert.AreEqual("Geometry", condition1.Category?.Name);
 
-			var fclassValue =
-				element1.QualityCondition.ParameterValues[0] as DatasetTestParameterValue;
+			Assert.AreEqual(1, condition1.ParameterValues.Count);
+			TransformerConfiguration transformer = condition1.ParameterValues[0].ValueSource;
+			Assert.NotNull(transformer);
+			Assert.NotNull(transformer.TransformerDescriptor);
 
+			var fclassValue = transformer.ParameterValues[0] as DatasetTestParameterValue;
 			Assert.NotNull(fclassValue?.DatasetValue);
 			Assert.AreEqual(featureClassName, fclassValue.DatasetValue.Name);
+
+			Assert.AreEqual(1, condition1.IssueFilterConfigurations.Count);
+			IssueFilterConfiguration issueFilter = condition1.IssueFilterConfigurations[0];
+			Assert.NotNull(issueFilter);
+			Assert.NotNull(issueFilter.IssueFilterDescriptor);
+			Assert.AreEqual(1, issueFilter.ParameterValues.Count);
 		}
 
 		[Test]
@@ -68,8 +79,7 @@ namespace ProSuite.Microservices.Server.AO.Test
 
 			string tempDirPath = TestUtils.GetTempDirPath(null);
 
-			service.ExecuteVerification(qualitySpecification, null, 1000,
-			                            tempDirPath);
+			service.ExecuteVerification(qualitySpecification, null, 1000, tempDirPath);
 
 			Assert.IsTrue(Directory.Exists(Path.Combine(tempDirPath, "issues.gdb")));
 			Assert.IsTrue(File.Exists(Path.Combine(tempDirPath, "verification.xml")));
@@ -87,8 +97,7 @@ namespace ProSuite.Microservices.Server.AO.Test
 				simpleGeometryDescriptorName,
 				new ClassDescriptor(
 					"ProSuite.QA.Tests.QaSimpleGeometry",
-					"ProSuite.QA.Tests"),
-				0);
+					"ProSuite.QA.Tests"), 0);
 
 			const string gdbConstraintsDescriptorName = "GdbConstraintFactory";
 			TestDescriptor gdbConstraintsDescriptor = new TestDescriptor(
@@ -102,47 +111,98 @@ namespace ProSuite.Microservices.Server.AO.Test
 			instanceDescriptors.GetTestDescriptor(gdbConstraintsDescriptorName).Returns(
 				gdbConstraintsDescriptor);
 
+			const string transformerDescName = "TrGeometryToPoints";
+			TransformerDescriptor transformerDescriptor = new TransformerDescriptor(
+				transformerDescName,
+				new ClassDescriptor(
+					"ProSuite.QA.Tests.Transformers.TrGeometryToPoints",
+					"ProSuite.QA.Tests"), 0);
+			instanceDescriptors.GetInstanceDescriptor<TransformerDescriptor>(transformerDescName)
+			                   .Returns(transformerDescriptor);
+
+			const string issueFilterDescName = "IfWithin";
+			IssueFilterDescriptor issueFilterDescriptor = new IssueFilterDescriptor(
+				issueFilterDescName,
+				new ClassDescriptor(
+					"ProSuite.QA.Tests.IssueFilters.IfWithin",
+					"ProSuite.QA.Tests"), 0);
+			instanceDescriptors.GetInstanceDescriptor<IssueFilterDescriptor>(issueFilterDescName)
+			                   .Returns(issueFilterDescriptor);
+
 			const string workspaceId = "TestID";
 
-			var condition1 =
-				new QualityConditionMsg
-				{
-					TestDescriptorName = simpleGeometryDescriptorName,
-					Name = condition1Name,
-					Parameters =
-					{
-						{
-							new ParameterMsg
-							{
-								Name = "featureClass",
-								Value = featureClassName,
-								WorkspaceId = workspaceId
-							}
-						}
-					}
-				};
+			//transformers
+			var transformer1 = new InstanceConfigurationMsg
+			                   {
+				                   InstanceDescriptorName = transformerDescName,
+				                   Name = "transformer",
+				                   Parameters =
+				                   {
+					                   new ParameterMsg
+					                   {
+						                   Name = "featureClass",
+						                   Value = featureClassName,
+						                   WorkspaceId = workspaceId
+					                   },
+					                   new ParameterMsg
+					                   {
+						                   Name = "component",
+						                   Value = "2"
+					                   }
+				                   }
+			                   };
 
-			var condition2 =
-				new QualityConditionMsg
-				{
-					TestDescriptorName = gdbConstraintsDescriptorName,
-					Name = "Str_GdbConstraints",
-					Parameters =
-					{
-						new ParameterMsg
-						{
-							Name = "table",
-							Value = featureClassName,
-							WorkspaceId = workspaceId,
-							WhereClause = "[OBJEKTART] IS NOT NULL"
-						},
-						new ParameterMsg
-						{
-							Name = "AllowNullValuesForCodedValueDomains",
-							Value = "True"
-						}
-					}
-				};
+			//issue filters
+			var issueFilter1 = new InstanceConfigurationMsg
+			                   {
+				                   InstanceDescriptorName = issueFilterDescName,
+				                   Name = "issueFilter",
+				                   Parameters =
+				                   {
+					                   new ParameterMsg
+					                   {
+						                   Name = "featureClass",
+						                   Value = featureClassName,
+						                   WorkspaceId = workspaceId
+					                   }
+				                   }
+			                   };
+
+			var condition1 = new QualityConditionMsg
+			                 {
+				                 TestDescriptorName = simpleGeometryDescriptorName,
+				                 Name = condition1Name,
+				                 Parameters =
+				                 {
+					                 new ParameterMsg
+					                 {
+						                 Name = "featureClass",
+						                 Transformer = transformer1
+					                 }
+				                 },
+				                 ConditionIssueFilters = { issueFilter1 }
+			                 };
+
+			var condition2 = new QualityConditionMsg
+			                 {
+				                 TestDescriptorName = gdbConstraintsDescriptorName,
+				                 Name = "Str_GdbConstraints",
+				                 Parameters =
+				                 {
+					                 new ParameterMsg
+					                 {
+						                 Name = "table",
+						                 Value = featureClassName,
+						                 WorkspaceId = workspaceId,
+						                 WhereClause = "[OBJEKTART] IS NOT NULL"
+					                 },
+					                 new ParameterMsg
+					                 {
+						                 Name = "AllowNullValuesForCodedValueDomains",
+						                 Value = "True"
+					                 }
+				                 }
+			                 };
 
 			var conditionListSpecificationMsg = new ConditionListSpecificationMsg
 			                                    {
@@ -163,8 +223,7 @@ namespace ProSuite.Microservices.Server.AO.Test
 
 			var dataSources = new[]
 			                  {
-				                  new DataSource(
-					                  "Test DataSource", workspaceId, gdbPath)
+				                  new DataSource("Test DataSource", workspaceId, gdbPath)
 			                  };
 
 			QualitySpecification qualitySpecification =

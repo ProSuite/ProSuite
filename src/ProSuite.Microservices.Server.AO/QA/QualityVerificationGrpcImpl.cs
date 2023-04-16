@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Xml.Serialization;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geometry;
 using Grpc.Core;
@@ -449,6 +450,24 @@ namespace ProSuite.Microservices.Server.AO.QA
 						{
 							QualitySpecification = specification
 						};
+					// TODO implement differently:
+					string specName = request.Specification.XmlSpecification
+					                         .SelectedSpecificationName;
+					int iSep = specName.IndexOf(';');
+					if (iSep >= 0)
+					{
+						string serviceConfigPath = specName.Substring(iSep + 1);
+						if (System.IO.File.Exists(serviceConfigPath))
+						{
+							XmlSerializer ser =
+								new XmlSerializer(typeof(ParallelConfiguration));
+							using (var r = new System.IO.StreamReader(serviceConfigPath))
+							{
+								var config = (ParallelConfiguration)ser.Deserialize(r);
+								distributedTestRunner.ParallelConfiguration = config;
+							}
+						}
+					}
 				}
 
 				if (useStandaloneService)
@@ -642,16 +661,23 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			qualitySpecification = null;
 
+			// Specific context such as project, work unit
+			if (request.WorkContext.Type > 0)
+			{
+				return false;
+			}
+
 			switch (specificationMsg.SpecificationCase)
 			{
 				case QualitySpecificationMsg.SpecificationOneofCase.XmlSpecification:
 				{
 					XmlQualitySpecificationMsg xmlSpecification = specificationMsg.XmlSpecification;
 
-					qualitySpecification = SetupQualitySpecification(xmlSpecification);
-
 					HashSet<int> excludedQcIds =
 						new HashSet<int>(request.Specification.ExcludedConditionIds);
+
+						qualitySpecification = SetupQualitySpecification(xmlSpecification, excludedQcIds);
+
 					if (excludedQcIds.Count > 0)
 					{
 						foreach (QualitySpecificationElement element in qualitySpecification
@@ -681,7 +707,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 		}
 
 		private static QualitySpecification SetupQualitySpecification(
-			[NotNull] XmlQualitySpecificationMsg xmlSpecification)
+			[NotNull] XmlQualitySpecificationMsg xmlSpecification,
+			[CanBeNull] ICollection<int> excludedConditionIds = null)
 		{
 			var dataSources = new List<DataSource>();
 			if (xmlSpecification.DataSourceReplacements.Count > 0)
@@ -713,7 +740,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			QualitySpecification qualitySpecification =
 				QualitySpecificationUtils.CreateQualitySpecification(
-					xmlSpecification.Xml, xmlSpecification.SelectedSpecificationName, dataSources);
+					xmlSpecification.Xml, xmlSpecification.SelectedSpecificationName, dataSources,
+					excludededConditionIds: excludedConditionIds);
 
 			// ensure Xml- QualityConditionIds
 			int nextQcId = 0;

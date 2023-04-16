@@ -1,11 +1,11 @@
-﻿using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AO.Geometry.Cut
 {
 	public class CutResult
 	{
-		public int? TargetOid { get; }
-		public int? SourceOid { get; }
+		public long? TargetOid { get; }
+		public long? SourceOid { get; }
 		public bool Success { get; }
 		public string Msg { get; }
 		public double? MinSizeAbs { get; }
@@ -13,8 +13,8 @@ namespace ProSuite.Commons.AO.Geometry.Cut
 		public int ResultGeometryCount { get; }
 
 		public CutResult(
-			[CanBeNull] int? targetOid,
-			[CanBeNull] int? sourceOid,
+			[CanBeNull] long? targetOid,
+			[CanBeNull] long? sourceOid,
 			bool success,
 			string msg,
 			int resultGeometryCount = 0,

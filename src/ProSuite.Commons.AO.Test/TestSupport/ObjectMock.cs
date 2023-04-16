@@ -15,11 +15,16 @@ namespace ProSuite.Commons.AO.Test.TestSupport
 		// object again (e.g. by calling FeatureMock.Shape again)
 		protected readonly IPropertySet _valueSet = new PropertySet();
 
+		private readonly long _oid;
+
 		#region Constructors
 
 		internal ObjectMock(int oid, [NotNull] ObjectClassMock objectClassMock)
+			: this((long) oid, objectClassMock) { }
+
+		internal ObjectMock(long oid, [NotNull] ObjectClassMock objectClassMock)
 		{
-			OID = oid;
+			_oid = oid;
 			_objectClassMock = objectClassMock;
 
 			int oidFieldIndex = _objectClassMock.FindField(_objectClassMock.OIDFieldName);
@@ -61,7 +66,12 @@ namespace ProSuite.Commons.AO.Test.TestSupport
 
 		public bool HasOID => _objectClassMock.HasOID;
 
-		public int OID { get; }
+#if Server11
+		public long OID => _oid;
+#else
+		long IReadOnlyRow.OID => _oid;
+		public int OID => (int) _oid;
+#endif
 
 		IReadOnlyTable IReadOnlyRow.Table => _objectClassMock;
 		public ITable Table => _objectClassMock;
@@ -128,7 +138,7 @@ namespace ProSuite.Commons.AO.Test.TestSupport
 		{
 			unchecked
 			{
-				return (OID * 397) ^ _objectClassMock.GetHashCode();
+				return (OID.GetHashCode() * 397) ^ _objectClassMock.GetHashCode();
 			}
 		}
 	}

@@ -75,6 +75,11 @@ namespace ProSuite.DomainModel.AO.QA
 					validValues.Add(TestParameterTypeUtils.GetEmptyParameterValue(testParam));
 					newParameters = true;
 				}
+				else if (values.Count == 0 && testParam.ArrayDimension > 0 && testParam.IsConstructorParameter)
+				{
+					validValues.Add(TestParameterTypeUtils.GetEmptyParameterValue(testParam));
+					newParameters = true;
+				}
 				else
 				{
 					var add = true;

@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
+using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.QA.Container.Geometry;
 
 namespace ProSuite.QA.Tests.Coincidence
 {

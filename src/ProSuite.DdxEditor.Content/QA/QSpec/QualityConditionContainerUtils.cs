@@ -13,7 +13,6 @@ using ProSuite.DdxEditor.Framework.Items;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.Repositories;
-using ProSuite.UI.QA.BoundTableRows;
 
 namespace ProSuite.DdxEditor.Content.QA.QSpec
 {
@@ -56,69 +55,15 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 			[NotNull] IWin32Window owner,
 			[CanBeNull] out DataQualityCategory category)
 		{
-			IList<QualityCondition> qualityConditions = null;
+			IList<InstanceConfiguration> instanceConfigurations = null;
 			modelBuilder.UseTransaction(
 				() =>
 				{
-					qualityConditions = items.Select(i => Assert.NotNull(i.GetEntity()))
-					                         .ToList();
+					instanceConfigurations = items.Select(i => Assert.NotNull(i.GetEntity()))
+					                              .Cast<InstanceConfiguration>().ToList();
 				});
 
-			return AssignToCategory(qualityConditions, modelBuilder, owner, out category);
-		}
-
-		public static bool AssignToCategory(
-			[NotNull] ICollection<QualityCondition> qualityConditions,
-			[NotNull] CoreDomainModelItemModelBuilder modelBuilder,
-			[NotNull] IWin32Window owner,
-			[CanBeNull] out DataQualityCategory category)
-		{
-			Assert.ArgumentNotNull(qualityConditions, nameof(qualityConditions));
-			Assert.ArgumentNotNull(owner, nameof(owner));
-			Assert.ArgumentNotNull(modelBuilder, nameof(modelBuilder));
-
-			IList<DataQualityCategory> categories =
-				DataQualityCategoryUtils.GetCategories(modelBuilder,
-				                                       c => c.CanContainQualityConditions);
-
-			const string title = "Assign to Category";
-			if (categories.Count == 0)
-			{
-				Dialog.InfoFormat(owner, title,
-				                  "There are no categories which can contain quality conditions");
-				category = null;
-				return false;
-			}
-
-			DataQualityCategoryTableRow selectedCategory =
-				DataQualityCategoryUtils.SelectCategory(categories, owner);
-
-			if (selectedCategory == null)
-			{
-				category = null;
-				return false;
-			}
-
-			if (! Dialog.YesNo(owner, title,
-			                   string.Format(
-				                   "Do you want to assign {0} quality condition(s) to {1}?",
-				                   qualityConditions.Count, selectedCategory.QualifiedName)))
-			{
-				category = null;
-				return false;
-			}
-
-			modelBuilder.UseTransaction(
-				delegate
-				{
-					foreach (QualityCondition qualityCondition in qualityConditions)
-					{
-						qualityCondition.Category = selectedCategory.DataQualityCategory;
-					}
-				});
-
-			category = selectedCategory.DataQualityCategory;
-			return true;
+			return AssignToCategory(instanceConfigurations, modelBuilder, owner, out category);
 		}
 
 		public static bool AssignToCategory(
@@ -196,23 +141,10 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 			[CanBeNull] DataQualityCategory category,
 			[NotNull] IItemNavigation itemNavigation)
 		{
-			if (category == null)
-			{
-				RefreshQualityConditionsItem(
-					itemNavigation.FindFirstItem<QAItem>(), itemNavigation);
-			}
-			else
-			{
-				if (category.CanContainOnlyQualityConditions)
-				{
-					itemNavigation.RefreshItem(category);
-				}
-				else
-				{
-					RefreshQualityConditionsItem(
-						itemNavigation.FindItem(category), itemNavigation);
-				}
-			}
+			RefreshQualityConditionsItem(
+				category == null
+					? itemNavigation.FindFirstItem<QAItem>()
+					: itemNavigation.FindItem(category), itemNavigation);
 		}
 
 		public static void RefreshAssignmentTarget(
@@ -220,24 +152,11 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 			[NotNull] IItemNavigation itemNavigation,
 			[NotNull] IInstanceConfigurationContainerItem containerItem)
 		{
-			if (category == null)
-			{
-				RefreshInstanceConfigurationsItem(
-					itemNavigation.FindFirstItem<QAItem>(), itemNavigation,
-					containerItem.GetType());
-			}
-			else
-			{
-				if (category.CanContainOnlyQualityConditions)
-				{
-					itemNavigation.RefreshItem(category);
-				}
-				else
-				{
-					RefreshInstanceConfigurationsItem(
-						itemNavigation.FindItem(category), itemNavigation, containerItem.GetType());
-				}
-			}
+			RefreshInstanceConfigurationsItem(
+				category == null
+					? itemNavigation.FindFirstItem<QAItem>()
+					: itemNavigation.FindItem(category), itemNavigation,
+				containerItem.GetType());
 		}
 
 		[NotNull]

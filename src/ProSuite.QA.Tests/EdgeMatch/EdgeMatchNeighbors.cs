@@ -29,9 +29,9 @@ namespace ProSuite.QA.Tests.EdgeMatch
 
 		public bool ContainsAny([NotNull] TBorderConnection borderConnection)
 		{
-			int featureOID = borderConnection.Feature.OID;
+			long featureOID = borderConnection.Feature.OID;
 			int classIndex = borderConnection.ClassIndex;
-			int borderOID = borderConnection.BorderFeature.OID;
+			long borderOID = borderConnection.BorderFeature.OID;
 			int borderClassIndex = borderConnection.BorderClassIndex;
 
 			foreach (TNeighborConnection neighborConnection in _neighborConnections)

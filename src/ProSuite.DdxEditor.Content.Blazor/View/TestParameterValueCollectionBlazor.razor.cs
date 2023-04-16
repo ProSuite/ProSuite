@@ -7,4 +7,14 @@ public partial class TestParameterValueCollectionBlazor
 {
 	[Parameter]
 	public TestParameterValueCollectionViewModel ViewModel { get; set; }
+
+	protected override bool ShouldRender()
+	{
+		return base.ShouldRender();
+	}
+
+	protected override void OnInitialized()
+	{
+		base.OnInitialized();
+	}
 }

@@ -12,12 +12,11 @@ namespace ProSuite.DdxEditor.Content.Models
 		private readonly CoreDomainModelItemModelBuilder _modelBuilder;
 
 		public CheckSpatialReferencesCommand(
-			[NotNull] ModelItemBase<T> modelItem,
+			[NotNull] ModelItemBase<T> item,
 			[NotNull] IApplicationController applicationController,
 			[NotNull] CoreDomainModelItemModelBuilder modelBuilder)
-			: base(modelItem)
+			: base(item, applicationController)
 		{
-			Assert.ArgumentNotNull(applicationController, nameof(applicationController));
 			Assert.ArgumentNotNull(modelBuilder, nameof(modelBuilder));
 
 			_modelBuilder = modelBuilder;

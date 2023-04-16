@@ -5,7 +5,6 @@ using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Test;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.QA.Container.Test;
 using ProSuite.QA.Tests.Test.Construction;
 using ProSuite.QA.Tests.Test.TestRunners;
 
@@ -127,7 +126,8 @@ namespace ProSuite.QA.Tests.Test
 			var runner = new QaContainerTestRunner(500, test);
 			runner.Execute(verificationEnvelope);
 
-			Assert.AreEqual(1, runner.Errors.Count);
+			AssertUtils.OneError(runner,
+			                     "VertexCoincidence.ZDifference.CoincidentVertex.DifferentFeature", 2);
 		}
 
 		[Test]
@@ -294,7 +294,7 @@ namespace ProSuite.QA.Tests.Test
 			runner.Execute(verificationEnvelope);
 
 			AssertUtils.OneError(runner,
-			                     "VertexCoincidence.NoVertexOnNearbyEdge.DifferentFeature");
+			                     "VertexCoincidence.NoVertexOnNearbyEdge.DifferentFeature", 2);
 		}
 
 		[Test]
@@ -328,7 +328,7 @@ namespace ProSuite.QA.Tests.Test
 			runner.Execute(verificationEnvelope);
 
 			AssertUtils.OneError(runner,
-			                     "VertexCoincidence.NoVertexOnNearbyEdge.DifferentFeature");
+			                     "VertexCoincidence.NoVertexOnNearbyEdge.DifferentFeature", 2);
 		}
 
 		private IFeatureClass CreateFeatureClass([NotNull] string name,

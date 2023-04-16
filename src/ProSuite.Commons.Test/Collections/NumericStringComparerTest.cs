@@ -1,5 +1,6 @@
-﻿using NUnit.Framework;
+using NUnit.Framework;
 using ProSuite.Commons.Collections;
+using System;
 
 namespace ProSuite.Commons.Test.Collections
 {
@@ -9,8 +10,32 @@ namespace ProSuite.Commons.Test.Collections
 		[Test]
 		public void CanCompareStrings()
 		{
-			var comparer = new NumericStringComparer();
+			// NOTE: .net 5 changed the string.Compare behaviour compared to .NET Framework:
+			// The actual numeric distance between the characters is returned.
+			// For backward-compatibility, use StringComparison.CurrentCultureIgnoreCase
+			var currentCulture = new NumericStringComparer(StringComparison.CurrentCultureIgnoreCase);
 
+			AssertBasicStringsNonNumeric(currentCulture);
+
+			Assert.AreEqual(-1, currentCulture.Compare(" ", "a"));
+			Assert.AreEqual(1, currentCulture.Compare("a", " "));
+
+			// Default: Compare ordinal
+			var ordinal = new NumericStringComparer();
+
+			AssertBasicStringsNonNumeric(ordinal);
+
+			int d = ordinal.Compare(" ", "a");
+			// d is -1 in .NET Framework, -33 in .net 6
+			Assert.Less(d, 0);
+
+			d = ordinal.Compare("a", " ");
+			// d is 1 in .NET Framework, 33 in .net 6
+			Assert.Greater(d, 0);
+		}
+
+		private static void AssertBasicStringsNonNumeric(NumericStringComparer comparer)
+		{
 			Assert.AreEqual(0, comparer.Compare(null, null));
 			Assert.AreEqual(0, comparer.Compare(string.Empty, string.Empty));
 			Assert.AreEqual(0, comparer.Compare("", ""));
@@ -21,14 +46,14 @@ namespace ProSuite.Commons.Test.Collections
 			Assert.AreEqual(-1, comparer.Compare(null, "a"));
 			Assert.AreEqual(-1, comparer.Compare(string.Empty, "a"));
 			Assert.AreEqual(-1, comparer.Compare("", "a"));
-			Assert.AreEqual(-1, comparer.Compare(" ", "a"));
+			
 			Assert.AreEqual(-1, comparer.Compare("a", "b"));
 			Assert.AreEqual(-1, comparer.Compare("A", "b"));
 
 			Assert.AreEqual(1, comparer.Compare("a", null));
 			Assert.AreEqual(1, comparer.Compare("a", string.Empty));
 			Assert.AreEqual(1, comparer.Compare("a", ""));
-			Assert.AreEqual(1, comparer.Compare("a", " "));
+			
 			Assert.AreEqual(1, comparer.Compare("b", "a"));
 			Assert.AreEqual(1, comparer.Compare("b", "A"));
 		}

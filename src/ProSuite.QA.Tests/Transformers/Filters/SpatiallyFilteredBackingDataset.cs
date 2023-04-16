@@ -13,15 +13,18 @@ namespace ProSuite.QA.Tests.Transformers.Filters
 	public class SpatiallyFilteredBackingDataset : FilteredBackingDataset
 	{
 		private readonly IReadOnlyFeatureClass _filtering;
+		private readonly TrSpatiallyFiltered.SearchOption _neighborSearchOption;
 
 		public SpatiallyFilteredBackingDataset(
 			[NotNull] FilteredFeatureClass resultFeatureClass,
 			[NotNull] IReadOnlyFeatureClass featureClassToFilter,
-			[NotNull] IReadOnlyFeatureClass filtering)
+			[NotNull] IReadOnlyFeatureClass filtering,
+			TrSpatiallyFiltered.SearchOption neighborSearchOption)
 			: base(resultFeatureClass, featureClassToFilter,
 			       new List<IReadOnlyTable> { featureClassToFilter, filtering })
 		{
 			_filtering = filtering;
+			_neighborSearchOption = neighborSearchOption;
 		}
 
 		public ISpatialFilter IntersectingFeatureFilter { get; set; }
@@ -65,6 +68,8 @@ namespace ProSuite.QA.Tests.Transformers.Filters
 
 			spatialFilter.Geometry = testGeometry;
 			QueryFilterHelper queryFilterHelper = QueryHelpers[1];
+			queryFilterHelper.FullGeometrySearch =
+				_neighborSearchOption == TrSpatiallyFiltered.SearchOption.All;
 
 			foreach (var testRow in DataSearchContainer.Search(
 				         _filtering, spatialFilter, queryFilterHelper))

@@ -62,15 +62,17 @@ namespace ProSuite.QA.Container.TestContainer
 
 		public int GetHashCode(BaseRow obj)
 		{
-			if (obj.UniqueId?.Id != null)
+			long? uniqueIdId = obj.UniqueId?.Id;
+
+			if (uniqueIdId != null)
 			{
-				return obj.UniqueId.Id;
+				return uniqueIdId.Value.GetHashCode();
 			}
 
-			int oid = obj.OID;
+			long oid = obj.OID;
 			Assert.True(oid >= 0, "negative OID, but no assigned UniqueId");
 
-			return oid;
+			return oid.GetHashCode();
 		}
 	}
 }

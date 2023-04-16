@@ -1,4 +1,4 @@
-using ProSuite.QA.Container.Geometry;
+using ProSuite.Commons.AO.Geometry.Proxy;
 
 namespace ProSuite.QA.Tests
 {

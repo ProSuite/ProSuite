@@ -52,7 +52,13 @@ namespace ProSuite.Commons.AO.Geodatabase
 		/// Gets the object id of the referenced object.
 		/// </summary>
 		/// <value>The object id.</value>
-		public int ObjectId { get; }
+		public long ObjectId { get; }
+
+		/// <summary>
+		/// Safe way of getting the legacy OID for the 10.x platform. This method must not be used in 11.x
+		/// </summary>
+		/// <returns></returns>
+		public int ObjectId10 => Convert.ToInt32(ObjectId);
 
 		/// <summary>
 		/// Gets the referenced object, from a workspace.
@@ -152,7 +158,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		public override int GetHashCode()
 		{
-			return RelationshipClassId + 29 * ObjectId;
+			return RelationshipClassId + 29 * ObjectId.GetHashCode();
 		}
 
 		public override string ToString()

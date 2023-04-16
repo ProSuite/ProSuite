@@ -60,7 +60,7 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.QA
 				{
 					AssertUnitOfWorkHasNoChanges();
 					IList<TransformerDescriptor> foundDescriptors =
-						Repository.GetTransformerDescriptors();
+						Repository.GetInstanceDescriptors<TransformerDescriptor>();
 
 					Assert.AreEqual(2, foundDescriptors.Count);
 
@@ -71,7 +71,7 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.QA
 					Assert.AreEqual(t2.Class, foundTrans2.Class);
 
 					IList<IssueFilterDescriptor> foundFilters =
-						Repository.GetIssueFilterDescriptors();
+						Repository.GetInstanceDescriptors<IssueFilterDescriptor>();
 
 					Assert.AreEqual(1, foundFilters.Count);
 					IssueFilterDescriptor issueFilter =

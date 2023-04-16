@@ -64,14 +64,14 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		public new GdbFeature CreateFeature() => (GdbFeature) CreateRow();
 
-		public override GdbRow CreateObject(int oid,
+		public override GdbRow CreateObject(long oid,
 		                                    IValueList valueList = null)
 			=> CreateFeature(oid, valueList);
 
-		public GdbFeature CreateFeature(int oid,
+		public GdbFeature CreateFeature(long oid,
 		                                [CanBeNull] IValueList valueList = null)
 		{
-			return new GdbFeature(oid, this, valueList);
+			return GdbFeature.Create(oid, this, valueList);
 		}
 
 		public override esriDatasetType DatasetType => esriDatasetType.esriDTFeatureClass;

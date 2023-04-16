@@ -294,6 +294,12 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			=> OpenRelationshipQuery(relClass, joinForward, srcQueryFilter, srcSelectionSet,
 			                         targetColumns, doNotPushJoinToDb);
 
+		public IDataset OpenExtensionDataset(esriDatasetType extensionDatasetType,
+		                                     string extensionDatasetName)
+		{
+			throw new NotImplementedException();
+		}
+
 		public virtual ITable OpenRelationshipQuery(
 			IRelationshipClass relClass, bool joinForward,
 			IQueryFilter srcQueryFilter, ISelectionSet srcSelectionSet, string targetColumns,

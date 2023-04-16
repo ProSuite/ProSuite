@@ -12,8 +12,7 @@ namespace ProSuite.Commons.Geom
 
 		private IList<IntersectionPoint3D> _intersectionsAlongTarget;
 
-		private HashSet<IntersectionPoint3D> _multipleSourceIntersections;
-		private HashSet<IntersectionPoint3D> _multipleTargetIntersections;
+		private IntersectionClusters _intersectionClusters;
 
 		private IList<IntersectionPoint3D> _intersectionsInboundTarget;
 		private IList<IntersectionPoint3D> _intersectionsOutboundTarget;
@@ -94,9 +93,9 @@ namespace ProSuite.Commons.Geom
 				{
 					_navigableIntersections = GetNavigableIntersections(AssumeSourceRings);
 
-					GetMultiIntersectionPoints(IntersectionsAlongSource, IntersectionsAlongTarget,
-					                           out _multipleSourceIntersections,
-					                           out _multipleTargetIntersections);
+					_intersectionClusters =
+						GetMultiIntersectionClusters(IntersectionsAlongSource,
+						                             IntersectionsAlongTarget);
 				}
 
 				return _navigableIntersections;
@@ -330,6 +329,13 @@ namespace ProSuite.Commons.Geom
 			IntersectionPoint3D nextIntersection;
 			IntersectionPoint3D subcurveStart = previousIntersection;
 
+			List<IntersectionPoint3D> previousCluster =
+				continueOnSource
+					? _intersectionClusters.GetOtherSourceIntersections(previousIntersection)
+					                       .ToList()
+					: _intersectionClusters.GetOtherTargetIntersections(previousIntersection, true)
+					                       .ToList();
+
 			int circuitBreaker = 0;
 			do
 			{
@@ -355,7 +361,7 @@ namespace ProSuite.Commons.Geom
 
 				// Skip pseudo-breaks to avoid going astray due to minimal angle-differences:
 				// Example: GeomTopoOpUtilsTest.CanGetIntersectionAreaXYWithLinearBoundaryIntersection()
-			} while (SkipIntersection(subcurveStart, nextIntersection));
+			} while (SkipIntersection(subcurveStart, nextIntersection, previousCluster));
 
 			// Boundary loops that turned into interior rings could be detected here, if desired.
 			VisitedIntersections.Add(nextIntersection);
@@ -565,90 +571,21 @@ namespace ProSuite.Commons.Geom
 
 		public bool HasMultipleSourceIntersections([NotNull] IntersectionPoint3D atIntersection)
 		{
-			if (_multipleSourceIntersections == null || _multipleSourceIntersections.Count == 0)
-			{
-				return false;
-			}
-
-			return _multipleSourceIntersections.Contains(atIntersection);
-		}
-
-		public bool HasMultipleTargetIntersections([NotNull] IntersectionPoint3D atIntersection)
-		{
-			if (_multipleTargetIntersections == null || _multipleTargetIntersections.Count == 0)
-			{
-				return false;
-			}
-
-			return _multipleTargetIntersections.Contains(atIntersection);
+			return _intersectionClusters.HasMultipleSourceIntersections(atIntersection);
 		}
 
 		public IEnumerable<IntersectionPoint3D> GetOtherSourceIntersections(
 			[NotNull] IntersectionPoint3D atIntersection)
 		{
-			if (_multipleSourceIntersections == null || _multipleSourceIntersections.Count == 0)
-			{
-				yield break;
-			}
-
-			foreach (IntersectionPoint3D other in _multipleSourceIntersections)
-			{
-				if (other == atIntersection)
-				{
-					continue;
-				}
-
-				if (other.ReferencesSameTargetVertex(atIntersection, Target))
-				{
-					yield return other;
-				}
-			}
+			return _intersectionClusters.GetOtherSourceIntersections(atIntersection);
 		}
 
 		public IEnumerable<IntersectionPoint3D> GetOtherTargetIntersections(
 			[NotNull] IntersectionPoint3D atIntersection,
 			bool allowSourcePartJump = false)
 		{
-			if (_multipleTargetIntersections == null)
-			{
-				yield break;
-			}
-
-			foreach (IntersectionPoint3D other in _multipleTargetIntersections)
-			{
-				if (other == atIntersection)
-				{
-					continue;
-				}
-
-				if (other.ReferencesSameSourceVertex(atIntersection, Source))
-				{
-					yield return other;
-				}
-			}
-
-			if (! allowSourcePartJump ||
-			    _multipleSourceIntersections == null ||
-			    ! _multipleSourceIntersections.Contains(atIntersection))
-			{
-				yield break;
-			}
-
-			// The source also has multiple intersections at the same place (e.g. touching rings):
-			// Get another other source intersection to find same target index intersection from there
-			foreach (IntersectionPoint3D other in GetOtherSourceIntersections(atIntersection))
-			{
-				if (other == atIntersection)
-				{
-					// Prevent stack overflow
-					continue;
-				}
-
-				foreach (IntersectionPoint3D otherPartTarget in GetOtherTargetIntersections(other))
-				{
-					yield return otherPartTarget;
-				}
-			}
+			return _intersectionClusters.GetOtherTargetIntersections(
+				atIntersection, allowSourcePartJump);
 		}
 
 		public bool EqualsStartIntersection([NotNull] IntersectionPoint3D intersection,
@@ -981,7 +918,8 @@ namespace ProSuite.Commons.Geom
 		}
 
 		private bool SkipIntersection([NotNull] IntersectionPoint3D subcurveStartIntersection,
-		                              [NotNull] IntersectionPoint3D nextIntersection)
+		                              [NotNull] IntersectionPoint3D nextIntersection,
+		                              List<IntersectionPoint3D> previousCluster)
 		{
 			// Instead of all of this it would be better to try the Martinez-2009
 			// approach but by intersection-run instead by segment!
@@ -1015,8 +953,14 @@ namespace ProSuite.Commons.Geom
 				return false;
 			}
 
-			if (_multipleSourceIntersections != null &&
-			    _multipleSourceIntersections.Contains(nextIntersection) &&
+			if (ClusterContains(previousCluster, nextIntersection))
+			{
+				// Make sure to leave the intersection cluster containing the previous intersection
+				return true;
+			}
+
+			// TODO: This is not probably redundant thanks to the above if (ClusterContains...
+			if (_intersectionClusters.SourceClusterContains(nextIntersection) &&
 			    HasDuplicateBeenVisited(nextIntersection))
 			{
 				// Skip it
@@ -1063,13 +1007,13 @@ namespace ProSuite.Commons.Geom
 		private IntersectionPoint3D GetNextIntersectionAlongSource(
 			[NotNull] IntersectionPoint3D currentIntersection)
 		{
-			int nextAlongSourceIdx;
 			int currentSourceIdx = IntersectionOrders[currentIntersection].Key;
 			int count = 0;
+			IntersectionPoint3D next;
 
 			do
 			{
-				nextAlongSourceIdx = currentSourceIdx + 1;
+				int nextAlongSourceIdx = currentSourceIdx + 1;
 
 				if (nextAlongSourceIdx == IntersectionsAlongSource.Count)
 				{
@@ -1086,26 +1030,24 @@ namespace ProSuite.Commons.Geom
 				            "Cannot find next intersection in same source part");
 
 				currentSourceIdx = nextAlongSourceIdx;
-			} while (IntersectionsAlongSource[nextAlongSourceIdx].SourcePartIndex !=
-			         currentIntersection.SourcePartIndex);
+				next = IntersectionsAlongSource[nextAlongSourceIdx];
+			} while (next.SourcePartIndex != currentIntersection.SourcePartIndex);
 
-			IntersectionPoint3D result = IntersectionsAlongSource[nextAlongSourceIdx];
-
-			return result;
+			return next;
 		}
 
 		private IntersectionPoint3D GetNextIntersectionAlongTarget(
 			[NotNull] IntersectionPoint3D current, bool continueForward)
 		{
-			int nextAlongTargetIdx;
 			int count = 0;
 
 			int currentTargetIdx = IntersectionOrders[current].Value;
 
+			IntersectionPoint3D next;
 			do
 			{
-				nextAlongTargetIdx = (currentTargetIdx + (continueForward ? 1 : -1)) %
-				                     IntersectionsAlongTarget.Count;
+				int nextAlongTargetIdx = (currentTargetIdx + (continueForward ? 1 : -1)) %
+				                         IntersectionsAlongTarget.Count;
 
 				// TODO: CollectionUtils.GetPreviousInCircularList()
 				if (nextAlongTargetIdx < 0)
@@ -1117,12 +1059,21 @@ namespace ProSuite.Commons.Geom
 				            "Cannot find next intersection in same target part");
 
 				currentTargetIdx = nextAlongTargetIdx;
-			} while (IntersectionsAlongTarget[nextAlongTargetIdx].TargetPartIndex !=
-			         current.TargetPartIndex);
+				next = IntersectionsAlongTarget[nextAlongTargetIdx];
+			} while (next.TargetPartIndex != current.TargetPartIndex);
 
-			var result = IntersectionsAlongTarget[nextAlongTargetIdx];
+			return next;
+		}
 
-			return result;
+		private static bool ClusterContains(List<IntersectionPoint3D> cluster,
+		                                    IntersectionPoint3D next)
+		{
+			if (cluster.Contains(next))
+			{
+				return true;
+			}
+
+			return false;
 		}
 
 		private void CalculateIntersections()
@@ -1168,18 +1119,15 @@ namespace ProSuite.Commons.Geom
 			return intersectionOrders;
 		}
 
-		private void GetMultiIntersectionPoints(IList<IntersectionPoint3D> intersectionsAlongSource,
-		                                        IList<IntersectionPoint3D> intersectionsAlongTarget,
-		                                        out HashSet<IntersectionPoint3D>
-			                                        multipleSourceIntersections,
-		                                        out HashSet<IntersectionPoint3D>
-			                                        multipleTargetIntersections)
+		private IntersectionClusters GetMultiIntersectionClusters(
+			[NotNull] IList<IntersectionPoint3D> intersectionsAlongSource,
+			[NotNull] IList<IntersectionPoint3D> intersectionsAlongTarget)
 		{
-			// TODO: Probably the known boundary loop intersections would be enough?
-			multipleSourceIntersections =
-				DetermineDuplicateSourceIntersections(intersectionsAlongTarget);
-			multipleTargetIntersections =
-				DetermineDuplicateTargetIntersections(intersectionsAlongSource);
+			var result = new IntersectionClusters(Source, Target, Tolerance);
+
+			result.InitializeClusters(intersectionsAlongSource, intersectionsAlongTarget);
+
+			return result;
 		}
 
 		private IList<IntersectionPoint3D> GetNavigableIntersections(bool sourceIsClosedRing)
@@ -1443,100 +1391,6 @@ namespace ProSuite.Commons.Geom
 				}
 
 				// TODO: Consider the same for outer boundary loops?
-			}
-		}
-
-		/// <summary>
-		/// Finds intersections at the same location which reference the same
-		/// target location. These could be just a break in a linear intersection
-		/// or a boundary loop in the source
-		/// </summary>
-		/// <param name="intersectionsAlongTarget"></param>
-		/// <returns></returns>
-		private HashSet<IntersectionPoint3D> DetermineDuplicateSourceIntersections(
-			IList<IntersectionPoint3D> intersectionsAlongTarget)
-		{
-			HashSet<IntersectionPoint3D> result = new HashSet<IntersectionPoint3D>();
-
-			foreach (var intersectionsPerRing in
-			         intersectionsAlongTarget.GroupBy(ip => ip.TargetPartIndex))
-			{
-				WithRingIntersectionPairs(
-					intersectionsPerRing,
-					(p1, p2) =>
-					{
-						if (p1.ReferencesSameTargetVertex(p2, Target, Tolerance))
-						{
-							// Possibly also check if we really can jump from one source part to the other
-							// It can be jumped where the source vertices are exactly on top of each other
-							// or there is a boundary loop? But
-							// NOT: with a very thin spike where both sides intersect
-
-							result.Add(p1);
-							result.Add(p2);
-						}
-					});
-			}
-
-			return result.Count == 0 ? null : result;
-		}
-
-		/// <summary>
-		/// Finds intersections at the same location which reference the same
-		/// target location. These could be just a break in a linear intersection
-		/// or a boundary loop in the source
-		/// </summary>
-		/// <param name="intersectionsAlongSource"></param>
-		/// <returns></returns>
-		private HashSet<IntersectionPoint3D> DetermineDuplicateTargetIntersections(
-			IList<IntersectionPoint3D> intersectionsAlongSource)
-		{
-			HashSet<IntersectionPoint3D> result = new HashSet<IntersectionPoint3D>();
-
-			foreach (var pointsPerRing in
-			         intersectionsAlongSource.GroupBy(ip => ip.SourcePartIndex))
-			{
-				WithRingIntersectionPairs(
-					pointsPerRing,
-					(p1, p2) =>
-					{
-						if (p1.ReferencesSameSourceVertex(p2, Source, Tolerance))
-						{
-							result.Add(p1);
-							result.Add(p2);
-						}
-					});
-			}
-
-			return result.Count == 0 ? null : result;
-		}
-
-		private static void WithRingIntersectionPairs(
-			IEnumerable<IntersectionPoint3D> intersectionsPerRing,
-			Action<IntersectionPoint3D, IntersectionPoint3D> pairAction)
-		{
-			IntersectionPoint3D previous = null;
-			IntersectionPoint3D first = null;
-			foreach (IntersectionPoint3D intersection in intersectionsPerRing)
-			{
-				if (first == null)
-				{
-					first = intersection;
-				}
-
-				if (previous != null)
-				{
-					pairAction(previous, intersection);
-				}
-
-				previous = intersection;
-			}
-
-			if (first != null && ! first.Equals(previous))
-			{
-				// Compare last with first
-
-				pairAction(previous, first);
 			}
 		}
 	}

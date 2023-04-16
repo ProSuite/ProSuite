@@ -11,7 +11,6 @@ namespace ProSuite.DdxEditor.Content.Models
 		where E : Model
 	{
 		[NotNull] private static readonly Image _image;
-		[NotNull] private readonly IApplicationController _applicationController;
 		private string _toolTip;
 
 		static RefreshModelContentCommand()
@@ -27,10 +26,7 @@ namespace ProSuite.DdxEditor.Content.Models
 		public RefreshModelContentCommand(
 			[NotNull] ModelItemBase<E> item,
 			[NotNull] IApplicationController applicationController)
-			: base(item)
-		{
-			_applicationController = applicationController;
-		}
+			: base(item, applicationController) { }
 
 		public override Image Image => _image;
 
@@ -42,10 +38,9 @@ namespace ProSuite.DdxEditor.Content.Models
 		{
 			get
 			{
-				string message;
-				bool enabled = Item.CanRefreshModelContent(out message);
+				bool enabled = Item.CanRefreshModelContent(out string message);
 
-				if (enabled && _applicationController.HasPendingChanges)
+				if (enabled && ApplicationController.HasPendingChanges)
 				{
 					message = "Please save or discard pending changes first";
 					enabled = false;
@@ -60,7 +55,7 @@ namespace ProSuite.DdxEditor.Content.Models
 
 		protected override void ExecuteCore()
 		{
-			_applicationController.GoToItem(Item);
+			ApplicationController.GoToItem(Item);
 
 			try
 			{
@@ -68,7 +63,7 @@ namespace ProSuite.DdxEditor.Content.Models
 			}
 			finally
 			{
-				_applicationController.ReloadCurrentItem();
+				ApplicationController.ReloadCurrentItem();
 			}
 		}
 	}

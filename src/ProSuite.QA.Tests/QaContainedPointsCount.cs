@@ -35,14 +35,14 @@ namespace ProSuite.QA.Tests
 		private QueryFilterHelper[] _helper;
 		private ISpatialFilter[] _queryFilter;
 
-		[NotNull] private readonly IDictionary<int, Dictionary<int, PolygonPoints>>
+		[NotNull] private readonly IDictionary<int, Dictionary<long, PolygonPoints>>
 			_polygonPointsByTableIndex =
-				new Dictionary<int, Dictionary<int, PolygonPoints>>();
+				new Dictionary<int, Dictionary<long, PolygonPoints>>();
 
 		// TODO store xmax/ymax also, to be able to discard polygons that are guaranteed to
 		// not be reported anymore? Or filter out polygons from earlier tiles in CompleteTile()?
-		[NotNull] private readonly Dictionary<int, HashSet<int>> _fullyCheckedPolygonsByTableIndex
-			= new Dictionary<int, HashSet<int>>();
+		[NotNull] private readonly Dictionary<int, HashSet<long>> _fullyCheckedPolygonsByTableIndex
+			= new Dictionary<int, HashSet<long>>();
 
 		#region issue codes
 
@@ -222,12 +222,12 @@ namespace ProSuite.QA.Tests
 			{
 				var polygonPointsToCheck = new List<PolygonPoints>();
 
-				foreach (KeyValuePair<int, Dictionary<int, PolygonPoints>> pair
+				foreach (KeyValuePair<int, Dictionary<long, PolygonPoints>> pair
 				         in _polygonPointsByTableIndex)
 				{
-					Dictionary<int, PolygonPoints> polygonPointsByOid = pair.Value;
+					Dictionary<long, PolygonPoints> polygonPointsByOid = pair.Value;
 
-					var oidsToRemove = new List<int>();
+					var oidsToRemove = new List<long>();
 					foreach (PolygonPoints polygonPoints in polygonPointsByOid.Values)
 					{
 						if (polygonPoints.IsFullyChecked(tileEnvelope, testRunEnvelope))
@@ -357,14 +357,14 @@ namespace ProSuite.QA.Tests
 		[NotNull]
 		private PolygonPoints GetPolygonPoints([NotNull] IReadOnlyFeature feature, int tableIndex)
 		{
-			Dictionary<int, PolygonPoints> polygonPointsByOid;
+			Dictionary<long, PolygonPoints> polygonPointsByOid;
 			if (! _polygonPointsByTableIndex.TryGetValue(tableIndex, out polygonPointsByOid))
 			{
-				polygonPointsByOid = new Dictionary<int, PolygonPoints>();
+				polygonPointsByOid = new Dictionary<long, PolygonPoints>();
 				_polygonPointsByTableIndex.Add(tableIndex, polygonPointsByOid);
 			}
 
-			int oid = feature.OID;
+			long oid = feature.OID;
 
 			PolygonPoints polygonPoints;
 			if (! polygonPointsByOid.TryGetValue(oid, out polygonPoints))
@@ -376,19 +376,19 @@ namespace ProSuite.QA.Tests
 			return polygonPoints;
 		}
 
-		private bool IsPolygonFullyChecked(int oid, int tableIndex)
+		private bool IsPolygonFullyChecked(long oid, int tableIndex)
 		{
-			HashSet<int> oids;
+			HashSet<long> oids;
 			return _fullyCheckedPolygonsByTableIndex.TryGetValue(tableIndex, out oids) &&
 			       oids.Contains(oid);
 		}
 
-		private void SetPolygonFullyChecked(int oid, int tableIndex)
+		private void SetPolygonFullyChecked(long oid, int tableIndex)
 		{
-			HashSet<int> oids;
+			HashSet<long> oids;
 			if (! _fullyCheckedPolygonsByTableIndex.TryGetValue(tableIndex, out oids))
 			{
-				oids = new HashSet<int>();
+				oids = new HashSet<long>();
 				_fullyCheckedPolygonsByTableIndex.Add(tableIndex, oids);
 			}
 
@@ -473,7 +473,7 @@ namespace ProSuite.QA.Tests
 				List<PolygonPointsError> errors = pair.Value;
 
 				var featureClass = (IReadOnlyFeatureClass) InvolvedTables[tableIndex];
-				Dictionary<int, PolygonPointsError> errorsByOid = GetErrorsByOid(errors);
+				Dictionary<long, PolygonPointsError> errorsByOid = GetErrorsByOid(errors);
 
 				const bool recycle = true;
 				foreach (
@@ -512,10 +512,10 @@ namespace ProSuite.QA.Tests
 		}
 
 		[NotNull]
-		private static Dictionary<int, PolygonPointsError> GetErrorsByOid(
+		private static Dictionary<long, PolygonPointsError> GetErrorsByOid(
 			[NotNull] IEnumerable<PolygonPointsError> errors)
 		{
-			var result = new Dictionary<int, PolygonPointsError>();
+			var result = new Dictionary<long, PolygonPointsError>();
 
 			foreach (PolygonPointsError error in errors)
 			{
@@ -605,7 +605,7 @@ namespace ProSuite.QA.Tests
 		/// </summary>
 		private class PolygonPoints
 		{
-			private readonly int _oid;
+			private readonly long _oid;
 			private readonly int _tableIndex;
 			private readonly IEnvelope _extent;
 
@@ -630,7 +630,7 @@ namespace ProSuite.QA.Tests
 
 			public int TableIndex => _tableIndex;
 
-			public int OID => _oid;
+			public long OID => _oid;
 
 			[NotNull]
 			public IEnumerable<PointFeature> PointFeatures => _pointFeatures;
@@ -672,7 +672,7 @@ namespace ProSuite.QA.Tests
 			[NotNull]
 			public IEnumerable<PointFeature> PointFeatures => _polygonPoints.PointFeatures;
 
-			public int OID => _polygonPoints.OID;
+			public long OID => _polygonPoints.OID;
 
 			[NotNull]
 			public string ErrorDescription => _errorDescription;
@@ -682,7 +682,7 @@ namespace ProSuite.QA.Tests
 
 		private class PointFeature : IEquatable<PointFeature>
 		{
-			private readonly int _oid;
+			private readonly long _oid;
 			private readonly int _tableIndex;
 
 			public PointFeature([NotNull] IReadOnlyFeature feature, int tableIndex)
@@ -691,7 +691,7 @@ namespace ProSuite.QA.Tests
 				_tableIndex = tableIndex;
 			}
 
-			public int OID => _oid;
+			public long OID => _oid;
 
 			public int TableIndex => _tableIndex;
 
@@ -739,7 +739,7 @@ namespace ProSuite.QA.Tests
 			{
 				unchecked
 				{
-					return (_oid * 397) ^ _tableIndex;
+					return (_oid.GetHashCode() * 397) ^ _tableIndex;
 				}
 			}
 		}

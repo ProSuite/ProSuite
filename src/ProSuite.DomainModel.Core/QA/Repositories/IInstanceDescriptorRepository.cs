@@ -5,9 +5,7 @@ namespace ProSuite.DomainModel.Core.QA.Repositories
 {
 	public interface IInstanceDescriptorRepository : IRepository<InstanceDescriptor>
 	{
-		IList<TransformerDescriptor> GetTransformerDescriptors();
-
-		IList<IssueFilterDescriptor> GetIssueFilterDescriptors();
+		IList<T> GetInstanceDescriptors<T>() where T : InstanceDescriptor;
 
 		InstanceDescriptor Get(string name);
 
@@ -15,6 +13,6 @@ namespace ProSuite.DomainModel.Core.QA.Repositories
 
 		IDictionary<int, int> GetReferencingConfigurationCount<T>() where T : InstanceConfiguration;
 
-		IList<T> GetInstanceDescriptors<T>() where T : InstanceDescriptor;
+		bool SupportsTransformersAndFilters { get; }
 	}
 }

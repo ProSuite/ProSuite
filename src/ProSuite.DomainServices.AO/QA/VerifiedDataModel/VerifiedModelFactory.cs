@@ -15,6 +15,23 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 {
 	public class VerifiedModelFactory : IVerifiedModelFactory
 	{
+		// FeatureClassNameClass does not exist in AO11 !
+		private class FeatureClassNameProxy : IFeatureClassName, IDatasetName 
+		{
+			esriGeometryType IFeatureClassName.ShapeType { get; set; }
+			IDatasetName IFeatureClassName.FeatureDatasetName { get; set; }
+			esriFeatureType IFeatureClassName.FeatureType { get; set; }
+			string IFeatureClassName.ShapeFieldName { get; set; }
+			string IDatasetName.Name { get; set; }
+
+			esriDatasetType IDatasetName.Type => esriDatasetType.esriDTFeatureClass;
+
+			string IDatasetName.Category { get; set; }
+			IWorkspaceName IDatasetName.WorkspaceName { get; set; }
+
+			IEnumDatasetName IDatasetName.SubsetNames => null;
+		}
+
 		[NotNull] private readonly IMasterDatabaseWorkspaceContextFactory _workspaceContextFactory;
 
 		[NotNull] private readonly VerifiedDatasetHarvesterBase _datasetHarvester;
@@ -48,7 +65,21 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 		public Model CreateModel(IWorkspace workspace,
 		                         string name,
 		                         string databaseName,
-		                         string schemaOwner)
+		                         string schemaOwner,
+		                         IList<string> usedDatasetNames = null)
+		{
+			//if (usedDatasetNames != null)
+			//{
+			//	return CreateNeededModel(workspace, name, databaseName, schemaOwner,
+			//	                         usedDatasetNames);
+			//}
+
+			return CreateFullModel(workspace, name, databaseName, schemaOwner);
+		}
+
+		private Model CreateFullModel(
+			IWorkspace workspace, string name, string databaseName, string schemaOwner)
+
 		{
 			Assert.ArgumentNotNull(workspace, nameof(workspace));
 			Assert.ArgumentNotNullOrEmpty(name, nameof(name));
@@ -75,6 +106,66 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 				HarvestGeometricNetworkDatasets(model, featureWorkspace, harvestedNames);
 				HarvestRasterDatasets(model, featureWorkspace, harvestedNames);
 				HarvestRasterMosaicDatasets(model, featureWorkspace, harvestedNames);
+
+				_datasetHarvester.AddDatasets(model);
+
+				// Only after the dataset are assigned to the model:
+				_datasetHarvester.HarvestChildren();
+			}
+
+			_msg.InfoFormat("{0} dataset(s) read", model.Datasets.Count);
+
+			return model;
+		}
+
+		private Model CreateNeededModel(IWorkspace workspace,
+		                                string name,
+		                                string databaseName,
+		                                string schemaOwner,
+		                                [NotNull] IList<string> usedDatasetNames)
+		{
+			Assert.ArgumentNotNull(workspace, nameof(workspace));
+			Assert.ArgumentNotNullOrEmpty(name, nameof(name));
+			Assert.ArgumentNotNull(usedDatasetNames, nameof(usedDatasetNames));
+
+			// NOTE: The schema owner is ignored by harvesting (it's probably intentional).
+			bool useQualitfiedDatasetNames = WorkspaceUtils.UsesQualifiedDatasetNames(workspace);
+			VerifiedModel model = useQualitfiedDatasetNames
+				                      ? new VerifiedModel(name, workspace, _workspaceContextFactory,
+				                                          databaseName,
+				                                          schemaOwner)
+				                      : new VerifiedModel(name, workspace,
+				                                          _workspaceContextFactory);
+
+			_datasetHarvester.ResetDatasets();
+
+			using (_msg.IncrementIndentation("Reading datasets for '{0}'", name))
+			{
+				var ws = (IFeatureWorkspace) workspace;
+				IList<string> names = usedDatasetNames;
+				string schema = model.DefaultDatabaseSchemaOwner;
+				bool qn = useQualitfiedDatasetNames;
+
+				var harvestedNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+				Harvest(ws, names, esriDatasetType.esriDTFeatureClass,
+				        () => new FeatureClassNameProxy(), // new FeatureClassNameClass(),
+				        qn, schema, harvestedNames);
+				Harvest(ws, names, esriDatasetType.esriDTTable, () => new TableNameClass(),
+				        qn, schema, harvestedNames);
+				//Harvest(ws, names, esriDatasetType.esriDTTopology, () => new TopologyNameClass(),
+				//        qn, schema, harvestedNames);
+				Harvest(ws, names, esriDatasetType.esriDTTerrain, () => new TinNameClass(),
+				        qn, schema, harvestedNames); // TODO: verify
+				Harvest(ws, names, esriDatasetType.esriDTGeometricNetwork,
+				        () => new GeometricNetworkNameClass(),
+				        qn, schema, harvestedNames);
+				Harvest(ws, names, esriDatasetType.esriDTRasterDataset,
+				        () => new RasterDatasetNameClass(),
+				        qn, schema, harvestedNames);
+				Harvest(ws, names, esriDatasetType.esriDTMosaicDataset,
+				        () => new MosaicDatasetNameClass(),
+				        qn, schema, harvestedNames);
 
 				_datasetHarvester.AddDatasets(model);
 
@@ -178,6 +269,48 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 			}
 
 			_datasetHarvester.UseDataset(datasetName);
+		}
+
+		private void Harvest(
+			[NotNull] IFeatureWorkspace workspace,
+			[NotNull] IList<string> usedDatasetNames,
+			esriDatasetType dtType,
+			[NotNull] Func<IDatasetName> createName,
+			bool useQualifiedNames,
+			[CanBeNull] string defaultSchema, 
+			[NotNull] ICollection<string> harvestedNames)
+		{
+			IWorkspace2 ws = (IWorkspace2) workspace;
+			foreach (string usedName in usedDatasetNames)
+			{
+				string name;
+				if (useQualifiedNames)
+				{
+					if (usedName.IndexOf('.') < 0)
+					{
+						name = $"{defaultSchema}.{usedName}";
+					}
+					else
+					{
+						name = usedName;
+					}
+				}
+				else
+				{
+					int idx = usedName.LastIndexOf('.');
+					name = usedName.Substring(idx + 1);
+				}
+
+				if (ws.NameExists[dtType, name])
+				{
+					IWorkspaceName wsName = (IWorkspaceName) ((IDataset) ws).FullName;
+					IDatasetName datasetName = createName();
+					datasetName.WorkspaceName = wsName;
+					datasetName.Name = name;
+
+					HarvestDataset(datasetName, harvestedNames);
+				}
+			}
 		}
 
 		private void HarvestFeatureClasses([NotNull] Model model,

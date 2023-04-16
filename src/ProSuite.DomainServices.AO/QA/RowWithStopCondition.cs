@@ -1,4 +1,4 @@
-﻿using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.Core.QA;
 
@@ -9,7 +9,7 @@ namespace ProSuite.DomainServices.AO.QA
 		private readonly StopInfo _stopInfo;
 
 		public RowWithStopCondition([NotNull] string tableName,
-		                            int oid,
+		                            long oid,
 		                            [NotNull] StopInfo stopInfo)
 		{
 			Assert.ArgumentNotNullOrEmpty(tableName, nameof(tableName));
@@ -21,7 +21,7 @@ namespace ProSuite.DomainServices.AO.QA
 		}
 
 		[UsedImplicitly]
-		public int OID { get; }
+		public long OID { get; }
 
 		[UsedImplicitly]
 		[NotNull]

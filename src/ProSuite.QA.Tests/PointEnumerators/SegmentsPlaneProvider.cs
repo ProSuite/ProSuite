@@ -1,10 +1,11 @@
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase.GdbSchema;
+using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.QA.Container.Geometry;
-using ProSuite.QA.Container.TestContainer;
 
 namespace ProSuite.QA.Tests.PointEnumerators
 {
@@ -59,7 +60,7 @@ namespace ProSuite.QA.Tests.PointEnumerators
 
 			return indexedMultiPatchFeature != null
 				       ? indexedMultiPatchFeature.IndexedMultiPatch
-				       : QaGeometryUtils.CreateIndexedMultiPatch(
+				       : ProxyUtils.CreateIndexedMultiPatch(
 					       (IMultiPatch) feature.Shape);
 		}
 

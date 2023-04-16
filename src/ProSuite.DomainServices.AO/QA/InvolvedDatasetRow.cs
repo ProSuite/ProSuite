@@ -7,7 +7,7 @@ namespace ProSuite.DomainServices.AO.QA
 {
 	public class InvolvedDatasetRow : IComparable, IComparable<InvolvedDatasetRow>
 	{
-		public InvolvedDatasetRow([NotNull] IObjectDataset dataset, int objectId)
+		public InvolvedDatasetRow([NotNull] IObjectDataset dataset, long objectId)
 		{
 			Assert.ArgumentNotNull(dataset, nameof(dataset));
 
@@ -18,15 +18,15 @@ namespace ProSuite.DomainServices.AO.QA
 		[NotNull]
 		public IObjectDataset Dataset { get; }
 
-		public int ObjectId { get; }
+		public long ObjectId { get; }
 
 		public int CompareTo(InvolvedDatasetRow other)
 		{
 			// TODO allow for Guids
-			int oidDifference = ObjectId - other.ObjectId;
-			if (oidDifference != 0)
+			int oidComparison = ObjectId.CompareTo(other.ObjectId);
+			if (oidComparison != 0)
 			{
-				return oidDifference;
+				return oidComparison;
 			}
 
 			return string.Compare(Dataset.Name, other.Dataset.Name, StringComparison.Ordinal);

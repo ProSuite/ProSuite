@@ -1,10 +1,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
 using ProSuite.QA.Container.Geometry;
+using SegmentUtils_ = ProSuite.QA.Container.Geometry.SegmentUtils_;
 
 namespace ProSuite.QA.Tests.PointEnumerators
 {
@@ -38,7 +40,7 @@ namespace ProSuite.QA.Tests.PointEnumerators
 
 		[NotNull]
 		public Plane3D Plane =>
-			_plane ?? (_plane = QaGeometryUtils.CreatePlane3D(Segments));
+			_plane ?? (_plane = ProxyUtils.CreatePlane3D(Segments));
 
 		[NotNull]
 		public IGeometry Geometry =>
@@ -54,8 +56,8 @@ namespace ProSuite.QA.Tests.PointEnumerators
 		                                     esriGeometryType geometryType)
 		{
 			return geometryType == esriGeometryType.esriGeometryMultiPatch
-				       ? (IGeometry) SegmentUtils.CreateMultiPatch(segments)
-				       : SegmentUtils.CreatePolygon(segments);
+				       ? (IGeometry) SegmentUtils_.CreateMultiPatch(segments)
+				       : SegmentUtils_.CreatePolygon(segments);
 		}
 	}
 }

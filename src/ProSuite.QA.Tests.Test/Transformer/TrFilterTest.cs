@@ -4,8 +4,8 @@ using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.AO.Test;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.Test;
 using ProSuite.QA.Tests.Test.Construction;
 using ProSuite.QA.Tests.Test.TestRunners;
 using ProSuite.QA.Tests.Transformers.Filters;
@@ -103,6 +103,80 @@ namespace ProSuite.QA.Tests.Test.Transformer
 		}
 
 		[Test]
+		public void CanGetFilteredLinesWithPolyIntersectingLargeArea()
+		{
+			IFeatureWorkspace ws =
+				TestWorkspaceUtils.CreateInMemoryWorkspace("TrOnlyIntersectingRows");
+
+			IFeatureClass lineFc =
+				CreateFeatureClass(
+					ws, "lineFc", esriGeometryType.esriGeometryPolyline,
+					new[] { FieldUtils.CreateIntegerField("Nr_Line") });
+			IFeatureClass polyFc =
+				CreateFeatureClass(
+					ws, "polyFc", esriGeometryType.esriGeometryPolygon,
+					new[] { FieldUtils.CreateIntegerField("Nr_Poly") });
+
+			{
+				IFeature f = lineFc.CreateFeature();
+				f.Value[1] = 1;
+				f.Shape = CurveConstruction.StartLine(50, 50).LineTo(500, 50).Curve;
+				f.Store();
+			}
+			{
+				IFeature f = lineFc.CreateFeature();
+				f.Value[1] = 2;
+				f.Shape = CurveConstruction.StartLine(50, 40).LineTo(600, 40).Curve;
+				f.Store();
+			}
+			{
+				IFeature f = polyFc.CreateFeature();
+				f.Value[1] = 12;
+				f.Shape = CurveConstruction.StartPoly(0, 0).LineTo(0, 100).LineTo(100, 100)
+				                           .LineTo(100, 0).ClosePolygon();
+				f.Store();
+			}
+
+			var tr = new TrOnlyIntersectingFeatures(ReadOnlyTableFactory.Create(lineFc),
+			                                        ReadOnlyTableFactory.Create(polyFc));
+
+			((ITableTransformer) tr).TransformerName = "filtered_lines";
+			{
+				var test = new QaMinLength(tr.GetTransformed(), 500);
+
+				var runner = new QaContainerTestRunner(1000, test)
+				             { KeepGeometry = true };
+				runner.Execute();
+
+				Assert.AreEqual(1, runner.Errors.Count);
+			}
+			{
+				var test = new QaMinLength(tr.GetTransformed(), 500);
+
+				var runner = new QaContainerTestRunner(1000, test)
+				             { KeepGeometry = true };
+				runner.Execute(GeometryFactory.CreateEnvelope(400, 0, 600, 100));
+
+				// interesecting polygon is outside test area 
+				Assert.AreEqual(0, runner.Errors.Count);
+			}
+
+			var trFullSearch = new TrOnlyIntersectingFeatures(ReadOnlyTableFactory.Create(lineFc),
+			                                                  ReadOnlyTableFactory.Create(polyFc));
+			trFullSearch.FilteringSearchOption = TrSpatiallyFiltered.SearchOption.All;
+			{
+				var test = new QaMinLength(trFullSearch.GetTransformed(), 500);
+
+				var runner = new QaContainerTestRunner(1000, test)
+				             { KeepGeometry = true };
+				runner.Execute(GeometryFactory.CreateEnvelope(400, 0, 600, 100));
+
+				// interesecting polygon is outside test area, but is searched everywhere 
+				Assert.AreEqual(1, runner.Errors.Count);
+			}
+		}
+
+		[Test]
 		public void CanGetFilteredLinesWithPolyDisjoint()
 		{
 			IFeatureWorkspace ws =
@@ -175,6 +249,81 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				CheckInvolvedRows(error.InvolvedRows, 1, realTableNames);
 			}
 		}
+
+		[Test]
+		public void CanGetFilteredLinesWithPolyDisjointLargeArea()
+		{
+			IFeatureWorkspace ws =
+				TestWorkspaceUtils.CreateInMemoryWorkspace("TrOnlyDisjointRows");
+
+			IFeatureClass lineFc =
+				CreateFeatureClass(
+					ws, "lineFc", esriGeometryType.esriGeometryPolyline,
+					new[] { FieldUtils.CreateIntegerField("Nr_Line") });
+			IFeatureClass polyFc =
+				CreateFeatureClass(
+					ws, "polyFc", esriGeometryType.esriGeometryPolygon,
+					new[] { FieldUtils.CreateIntegerField("Nr_Poly") });
+
+			{
+				IFeature f = lineFc.CreateFeature();
+				f.Value[1] = 1;
+				f.Shape = CurveConstruction.StartLine(50, 50).LineTo(500, 50).Curve;
+				f.Store();
+			}
+			{
+				IFeature f = lineFc.CreateFeature();
+				f.Value[1] = 2;
+				f.Shape = CurveConstruction.StartLine(150, 40).LineTo(600, 40).Curve;
+				f.Store();
+			}
+			{
+				IFeature f = polyFc.CreateFeature();
+				f.Value[1] = 12;
+				f.Shape = CurveConstruction.StartPoly(0, 0).LineTo(0, 100).LineTo(100, 100)
+										   .LineTo(100, 0).ClosePolygon();
+				f.Store();
+			}
+
+			var tr = new TrOnlyDisjointFeatures(ReadOnlyTableFactory.Create(lineFc),
+													ReadOnlyTableFactory.Create(polyFc));
+
+			((ITableTransformer)tr).TransformerName = "filtered_lines";
+			{
+				var test = new QaMaxLength(tr.GetTransformed(), 400);
+
+				var runner = new QaContainerTestRunner(1000, test)
+				{ KeepGeometry = true };
+				runner.Execute();
+
+				Assert.AreEqual(1, runner.Errors.Count);
+			}
+			{
+				var test = new QaMaxLength(tr.GetTransformed(), 400);
+
+				var runner = new QaContainerTestRunner(1000, test)
+				{ KeepGeometry = true };
+				runner.Execute(GeometryFactory.CreateEnvelope(400, 0, 600, 100));
+
+				// disjoint polygon is outside test area 
+				Assert.AreEqual(2, runner.Errors.Count);
+			}
+
+			var trFullSearch = new TrOnlyDisjointFeatures(ReadOnlyTableFactory.Create(lineFc),
+			                                              ReadOnlyTableFactory.Create(polyFc));
+			trFullSearch.FilteringSearchOption = TrSpatiallyFiltered.SearchOption.All;
+			{
+				var test = new QaMaxLength(trFullSearch.GetTransformed(), 400);
+
+				var runner = new QaContainerTestRunner(1000, test)
+				{ KeepGeometry = true };
+				runner.Execute(GeometryFactory.CreateEnvelope(400, 0, 600, 100));
+
+				// disjoint polygon is outside test area, but is searched everywhere 
+				Assert.AreEqual(1, runner.Errors.Count);
+			}
+		}
+
 
 		[Test]
 		public void CanGetFilteredLinesWithPolyContained()

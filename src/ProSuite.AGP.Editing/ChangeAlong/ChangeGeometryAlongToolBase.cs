@@ -247,6 +247,10 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 			var task = QueuedTask.Run(() => ! CanUseSelection(ActiveMapView));
 
+			// NOTE: In rare situations this has resulted in a dead-lock / hang of the application.
+			// According to the docs, the only problem with this is blocking the UI thread.
+			// It presumably corresponds to the 'thread pool hack' of Brownfield Async Development.
+			// However, probably an async overload would be useful for async callers!
 			return task.Result;
 		}
 
@@ -617,7 +621,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 					               return true;
 				               },
 				               EditOperationDescription,
-				               GdbPersistenceUtils.GetDatasets(resultFeatures.Keys));
+				               GdbPersistenceUtils.GetDatasetsNonEmpty(resultFeatures.Keys));
 
 			LogReshapeResults(updatedFeatures, resultFeatures);
 

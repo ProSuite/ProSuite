@@ -23,45 +23,17 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 
 		public IList<T> GetInstanceConfigurations<T>() where T : InstanceConfiguration
 		{
+			if ((typeof(T) == typeof(IssueFilterConfiguration) ||
+			     typeof(T) == typeof(TransformerConfiguration)) &&
+			    ! AreTransformersAndFiltersSupported())
+			{
+				return new List<T>();
+			}
+
 			using (ISession session = OpenSession(true))
 			{
+				//alternatively could use: session.CreateCriteria(typeof(T)).List<T>();
 				return session.QueryOver<T>().List();
-			}
-		}
-
-		public IList<TransformerConfiguration> GetTransformerConfigurations(
-			IList<int> excludedIds = null)
-		{
-			if (! AreTransformersAndFiltersSupported())
-			{
-				return new List<TransformerConfiguration>();
-			}
-
-			using (ISession session = OpenSession(true))
-			{
-				var query = session.QueryOver<TransformerConfiguration>();
-
-				if (excludedIds != null)
-				{
-					query.WhereRestrictionOn(tr => tr.Id)
-					     .Not.IsIn(excludedIds.ToArray());
-				}
-
-				return query.List();
-			}
-		}
-
-		public IList<IssueFilterConfiguration> GetIssueFilterConfigurations()
-		{
-			if (! AreTransformersAndFiltersSupported())
-			{
-				return new List<IssueFilterConfiguration>();
-			}
-
-			using (ISession session = OpenSession(true))
-			{
-				return session.CreateCriteria(typeof(IssueFilterConfiguration))
-				              .List<IssueFilterConfiguration>();
 			}
 		}
 
@@ -128,8 +100,7 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 			}
 		}
 
-		public InstanceConfiguration Get(string name,
-		                                 Type targetType)
+		public InstanceConfiguration Get(string name, Type targetType)
 		{
 			using (ISession session = OpenSession(true))
 			{
@@ -173,7 +144,7 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 				return GetTransformerReferenceCounts<T>();
 			}
 
-			throw new NotImplementedException("Unknown instance configuration");
+			throw new NotImplementedException("Unknown instance configuration type");
 		}
 
 		public IList<InstanceConfiguration> GetReferencingConfigurations(
@@ -270,12 +241,7 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 				return all;
 			}
 
-			IList<int> datasetParameterIds =
-				DatasetParameterFetchingUtils.GetDeletedDatasetParameterIds(session);
-
-			HashSet<int> excludedIds =
-				DatasetParameterFetchingUtils.GetInstanceConfigurationIdsForParameterIds<T>(
-					session, datasetParameterIds, _maxInParameterCount);
+			HashSet<int> excludedIds = GetIdsInvolvingDeletedDatasets<T>(session);
 
 			return all.Where(qc => ! excludedIds.Contains(qc.Id))
 			          .ToList();

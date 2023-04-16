@@ -437,6 +437,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors.CreateQualityConditions
 			this.Controls.Add(this.label5);
 			this.Controls.Add(this._buttonOK);
 			this.Controls.Add(this._buttonCancel);
+			this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.SizableToolWindow;
 			this.MinimizeBox = false;
 			this.MinimumSize = new System.Drawing.Size(600, 600);
 			this.Name = "CreateQualityConditionsForm";
