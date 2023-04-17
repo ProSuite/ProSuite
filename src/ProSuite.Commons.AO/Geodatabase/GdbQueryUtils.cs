@@ -1688,7 +1688,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 		}
 
-		private static void LogFilterProperties([NotNull] IQueryFilter filter)
+		public static void LogFilterProperties([NotNull] IQueryFilter filter)
 		{
 			_msg.DebugFormat("Subfields: {0}", filter.SubFields);
 			_msg.DebugFormat("WhereClause: {0}", filter.WhereClause);
