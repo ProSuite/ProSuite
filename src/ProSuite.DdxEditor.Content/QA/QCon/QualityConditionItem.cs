@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
@@ -45,6 +46,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 		[CanBeNull] private string _imageKey;
 
 		private ICommand _webHelpCommand;
+		private bool _newCreated;
 
 		#region Constructors
 
@@ -307,7 +309,8 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 				new FinderQuery<InstanceConfigurationTableRow>(
 					"<All>", "[all]",
 					() => InstanceConfigTableRows
-					      .GetInstanceConfigurationTableRows(_modelBuilder, issueFilterConfigurations)
+					      .GetInstanceConfigurationTableRows(
+						      _modelBuilder, issueFilterConfigurations)
 					      .ToList()));
 
 			var finder = new Finder<InstanceConfigurationTableRow>();
@@ -478,6 +481,23 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			return $"{entity.Name}{suffix}";
 		}
 
+		protected override void OnSavedChanges(EventArgs e)
+		{
+			base.OnSavedChanges(e);
+
+			if (_newCreated)
+			{
+				bool referencedByAnySpec = GetQualitySpecificationReferences().Any();
+
+				if (! referencedByAnySpec)
+				{
+					_msg.Warn("The saved quality condition has not been assigned to any quality " +
+					          "specification. Assign the condition to one or more specifications " +
+					          "on the 'Quality Specifications' tab to make sure this condition can be used.");
+				}
+			}
+		}
+
 		protected override void CollectCommands(List<ICommand> commands,
 		                                        IApplicationController
 			                                        applicationController)
@@ -488,7 +508,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			{
 				commands.Add(
 					new CopyQualityConditionCommand(this, applicationController));
-				commands.Add(new AssignQualityConditionsToCategoryCommand(new[] {this},
+				commands.Add(new AssignQualityConditionsToCategoryCommand(new[] { this },
 					             _containerItem,
 					             applicationController));
 
@@ -565,6 +585,9 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 
 				notification.RegisterMessage($"{testParameterName}", message, Severity.Error);
 			}
+
+			// Remember for OnSavedChanges
+			_newCreated = IsNew;
 		}
 
 		private static bool IsParameterOptional(

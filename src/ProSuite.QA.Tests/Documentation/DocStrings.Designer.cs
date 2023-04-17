@@ -836,7 +836,7 @@ namespace ProSuite.QA.Tests.Documentation {
         
         /// <summary>
         ///   Looks up a localized string similar to Constraint on a pair of crossing features. If the constraint is defined and fulfilled, no error is reported.
-        ///The involved features are aliased using &quot;G1&quot; and G2&quot;.
+        ///The involved features are aliased using &quot;G1&quot; and &quot;G2&quot;.
         ///Example: G1.Level &lt;&gt; G2.Level.
         /// </summary>
         public static string QaCrossesOther_validRelationConstraint {
@@ -901,7 +901,7 @@ namespace ProSuite.QA.Tests.Documentation {
         
         /// <summary>
         ///   Looks up a localized string similar to Constraint on a pair of crossing features. If the constraint is defined and fulfilled, no error is reported.
-        ///The involved features are aliased using &quot;G1&quot; and G2&quot;.
+        ///The involved features are aliased using &quot;G1&quot; and &quot;G2&quot;.
         ///Example: G1.Level &lt;&gt; G2.Level.
         /// </summary>
         public static string QaCrossesSelf_validRelationConstraint {
@@ -1119,7 +1119,7 @@ namespace ProSuite.QA.Tests.Documentation {
         
         /// <summary>
         ///   Looks up a localized string similar to Constraint on features with duplicate geometries. If the constraint is defined and fulfilled, no error is reported.
-        ///The involved features are aliased using &quot;G1&quot; and G2&quot;.
+        ///The involved features are aliased using &quot;G1&quot; and &quot;G2&quot;.
         ///Example: G1.Level &lt;&gt; G2.Level.
         /// </summary>
         public static string QaDuplicateGeometrySelf_validDuplicateConstraint {
@@ -3031,7 +3031,7 @@ namespace ProSuite.QA.Tests.Documentation {
         
         /// <summary>
         ///   Looks up a localized string similar to Constraint on a pair of features that have intersecting interiors. If the constraint is defined and fulfilled, no error is reported.
-        ///The involved features are aliased using &quot;G1&quot; (featureClass) and G2 (relatedClass)&quot;.
+        ///The involved features are aliased using &quot;G1&quot; (featureClass) and &quot;G2&quot; (relatedClass).
         ///Example: G1.Level &lt;&gt; G2.Level.
         /// </summary>
         public static string QaInteriorIntersectsOther_constraint {
@@ -3138,7 +3138,7 @@ namespace ProSuite.QA.Tests.Documentation {
         
         /// <summary>
         ///   Looks up a localized string similar to Constraint on a pair of features that have intersecting interiors. If the constraint is defined and fulfilled, no error is reported.
-        ///The involved features are aliased using &quot;G1&quot; and G2&quot;.
+        ///The involved features are aliased using &quot;G1&quot; and &quot;G2&quot;.
         ///Example: G1.Level &lt;&gt; G2.Level.
         /// </summary>
         public static string QaInteriorIntersectsSelf_constraint {
@@ -3302,7 +3302,7 @@ namespace ProSuite.QA.Tests.Documentation {
         
         /// <summary>
         ///   Looks up a localized string similar to Constraint on features that are involved in the specified spatial relationship. If the constraint is defined and fulfilled, no error is reported.
-        ///The involved features are aliased using &quot;G1&quot; and G2&quot;.
+        ///The involved features are aliased using &quot;G1&quot; and &quot;G2&quot;.
         ///Example: G1.Level &lt;&gt; G2.Level.
         /// </summary>
         public static string QaIntersectionMatrixOther_constraint {
@@ -3434,7 +3434,7 @@ namespace ProSuite.QA.Tests.Documentation {
         
         /// <summary>
         ///   Looks up a localized string similar to Constraint on features that are involved in the specified spatial relationship. If the constraint is defined and fulfilled, no error is reported.
-        ///The involved features are aliased using &quot;G1&quot; and G2&quot;.
+        ///The involved features are aliased using &quot;G1&quot; and &quot;G2&quot;.
         ///Example: G1.Level &lt;&gt; G2.Level.
         /// </summary>
         public static string QaIntersectionMatrixSelf_constraint {
@@ -3603,7 +3603,7 @@ namespace ProSuite.QA.Tests.Documentation {
         
         /// <summary>
         ///   Looks up a localized string similar to Constraint on a pair of intersecting features. If the constraint is defined and fulfilled, no error is reported.
-        ///The involved features are aliased using &quot;G1&quot; and G2&quot;.
+        ///The involved features are aliased using &quot;G1&quot; and &quot;G2&quot;.
         ///Example: G1.Level &lt;&gt; G2.Level.
         /// </summary>
         public static string QaIntersectsOther_validRelationConstraint {
@@ -3705,7 +3705,7 @@ namespace ProSuite.QA.Tests.Documentation {
         
         /// <summary>
         ///   Looks up a localized string similar to Constraint on a pair of intersecting features. If the constraint is defined and fulfilled, no error is reported.
-        ///The involved features are aliased using &quot;G1&quot; and G2&quot;.
+        ///The involved features are aliased using &quot;G1&quot; and &quot;G2&quot;.
         ///Example: G1.Level &lt;&gt; G2.Level.
         /// </summary>
         public static string QaIntersectsSelf_validRelationConstraint {
@@ -4368,7 +4368,7 @@ namespace ProSuite.QA.Tests.Documentation {
         
         /// <summary>
         ///   Looks up a localized string similar to Constraint on a pair of line features that intersect. If the constraint is defined and fulfilled, no error is reported.
-        ///The involved features are aliased using &quot;G1&quot; (featureClass) and G2 (relatedClass)&quot;.
+        ///The involved features are aliased using &quot;G1&quot; (featureClass) and &quot;G2&quot; (relatedClass).
         ///Example: G1.Level &lt;&gt; G2.Level.
         /// </summary>
         public static string QaLineIntersect_validRelationConstraint {
@@ -5304,7 +5304,7 @@ namespace ProSuite.QA.Tests.Documentation {
         
         /// <summary>
         ///   Looks up a localized string similar to Constraint on a pair of features that are invalid according to the tolerance values. If the constraint is defined and fulfilled, no error is reported.
-        ///The involved features are aliased using &quot;G1&quot; and G2&quot;.
+        ///The involved features are aliased using &quot;G1&quot; and &quot;G2&quot;.
         ///Example: G1.Level &lt;&gt; G2.Level.
         /// </summary>
         public static string QaMinNodeDistance_validRelationConstraint {
@@ -6286,7 +6286,7 @@ namespace ProSuite.QA.Tests.Documentation {
         
         /// <summary>
         ///   Looks up a localized string similar to Condition on a pair of spatially related features. The pair only counts as related if the condition is either undefined or fulfilled.
-        ///The feature to be tested is aliased using &quot;G1&quot;. The touched (&quot;other&quot;) feature is aliased using &quot;G2&quot;..
+        ///The feature to be tested is aliased using &quot;G1&quot;. The spatially related (&quot;other&quot;) feature is aliased using &quot;G2&quot;..
         /// </summary>
         public static string QaMustIntersectMatrixOther_relevantRelationCondition {
             get {
@@ -7224,7 +7224,7 @@ namespace ProSuite.QA.Tests.Documentation {
         
         /// <summary>
         ///   Looks up a localized string similar to Constraint on a pair of overlapping features. If the constraint is defined and fulfilled, no error is reported.
-        ///The involved features are aliased using &quot;G1&quot; and G2&quot;.
+        ///The involved features are aliased using &quot;G1&quot; and &quot;G2&quot;.
         ///Example: G1.Level &lt;&gt; G2.Level.
         /// </summary>
         public static string QaOverlapsOther_validRelationConstraint {
@@ -7289,7 +7289,7 @@ namespace ProSuite.QA.Tests.Documentation {
         
         /// <summary>
         ///   Looks up a localized string similar to Constraint on a pair of overlapping features. If the constraint is defined and fulfilled, no error is reported.
-        ///The involved features are aliased using &quot;G1&quot; and G2&quot;.
+        ///The involved features are aliased using &quot;G1&quot; and &quot;G2&quot;.
         ///Example: G1.Level &lt;&gt; G2.Level.
         /// </summary>
         public static string QaOverlapsSelf_validRelationConstraint {
@@ -7630,9 +7630,9 @@ namespace ProSuite.QA.Tests.Documentation {
         
         /// <summary>
         ///   Looks up a localized string similar to If set, defines constraints between a feature of &apos;pointClass&apos; and a feature of a reference feature class. If this constraint is fulfilled, the distance between the features is not checked against &apos;limit&apos; and no error is reported.
-        ///The involved features are aliased using &quot;G1&quot; and G2&quot;.
+        ///The involved features are aliased using &quot;G1&quot; and &quot;G2&quot;.
         ///Example: G1.Level &lt;&gt; G2.Level.
-        ///If &apos;ValidRelationConstraints&apos; contains one entry, this constraint is applied to all reference feature classes. If &apos;ValidRelationConstraints&apos; contains more than one entry, it must contain exactly [rest of string was truncated]&quot;;.
+        ///If &apos;ValidRelationConstraints&apos; contains one entry, this constraint is applied to all reference feature classes. If &apos;ValidRelationConstraints&apos; contains more than one entry, it must contain exactl [rest of string was truncated]&quot;;.
         /// </summary>
         public static string QaPointNotNear_ValidRelationConstraints {
             get {
@@ -9484,7 +9484,7 @@ namespace ProSuite.QA.Tests.Documentation {
         
         /// <summary>
         ///   Looks up a localized string similar to Constraint on a pair of touching features. If the constraint is defined and fulfilled, no error is reported.
-        ///The involved features are aliased using &quot;G1&quot; and G2&quot;.
+        ///The involved features are aliased using &quot;G1&quot; and &quot;G2&quot;.
         ///Example: G1.Level &lt;&gt; G2.Level.
         /// </summary>
         public static string QaTouchesOther_validRelationConstraint {
@@ -9565,7 +9565,7 @@ namespace ProSuite.QA.Tests.Documentation {
         
         /// <summary>
         ///   Looks up a localized string similar to Constraint on a pair of touching features. If the constraint is defined and fulfilled, no error is reported.
-        ///The involved features are aliased using &quot;G1&quot; and G2&quot;.
+        ///The involved features are aliased using &quot;G1&quot; and &quot;G2&quot;.
         ///Example: G1.Level &lt;&gt; G2.Level.
         /// </summary>
         public static string QaTouchesSelf_validRelationConstraint {
