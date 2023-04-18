@@ -4,6 +4,7 @@ using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.QA.Container;
 
@@ -82,7 +83,7 @@ namespace ProSuite.QA.Tests.Transformers
 			if (FilterHelper == null)
 			{
 				// The container requires not-null filter helper
-				// TODO: just create it with null constraint?
+				// TODO: just create it with null constraint? Assert not null?
 				return SearchSourceTable(filter, recycling);
 			}
 
@@ -115,9 +116,21 @@ namespace ProSuite.QA.Tests.Transformers
 			}
 		}
 
-		private IEnumerable<VirtualRow> SearchSourceTable(IQueryFilter filter, bool recycling)
+		private IEnumerable<VirtualRow> SearchSourceTable([CanBeNull] IQueryFilter filter,
+		                                                  bool recycling)
 		{
 			_msg.DebugFormat("Searching {0} rows in database...", _sourceTable.Name);
+
+			string originalSubfields = filter?.SubFields;
+
+			// TOP-5639: Append the sub-fields from the FilterHelper, if not already "*" sub-fields.
+			if (! string.IsNullOrEmpty(originalSubfields) &&
+			    originalSubfields != "*" &&
+			    ! string.IsNullOrEmpty(FilterHelper?.SubFields))
+			{
+				filter.SubFields =
+					GdbQueryUtils.AppendToFieldList(originalSubfields, FilterHelper.SubFields);
+			}
 
 			// TODO: Consider changing interface to IReadOnlyRow and return row directly
 			foreach (IReadOnlyRow readOnlyRow in _sourceTable.EnumRows(filter, recycling))
@@ -127,6 +140,11 @@ namespace ProSuite.QA.Tests.Transformers
 				{
 					yield return CreateRow(readOnlyRow);
 				}
+			}
+
+			if (filter != null)
+			{
+				filter.SubFields = originalSubfields;
 			}
 		}
 
