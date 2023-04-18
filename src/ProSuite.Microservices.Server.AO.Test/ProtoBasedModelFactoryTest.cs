@@ -10,6 +10,7 @@ using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainServices.AO.QA.VerifiedDataModel;
 using ProSuite.Microservices.Definitions.QA;
 using ProSuite.Microservices.Server.AO.QA;
+using TestUtils = ProSuite.Commons.Test.Testing.TestUtils;
 
 namespace ProSuite.Microservices.Server.AO.Test
 {
@@ -20,7 +21,7 @@ namespace ProSuite.Microservices.Server.AO.Test
 		public void SetupFixture()
 		{
 			TestUtils.ConfigureUnitTestLogging();
-			TestUtils.InitializeLicense();
+			Commons.AO.Test.TestUtils.InitializeLicense();
 		}
 
 		// TODO: From Sde, with special datasets (Topology, RasterMosaic)
