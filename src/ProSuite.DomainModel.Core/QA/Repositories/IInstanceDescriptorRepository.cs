@@ -12,5 +12,7 @@ namespace ProSuite.DomainModel.Core.QA.Repositories
 		InstanceDescriptor GetWithSameImplementation(InstanceDescriptor entity);
 
 		IDictionary<int, int> GetReferencingConfigurationCount<T>() where T : InstanceConfiguration;
+
+		bool SupportsTransformersAndFilters { get; }
 	}
 }

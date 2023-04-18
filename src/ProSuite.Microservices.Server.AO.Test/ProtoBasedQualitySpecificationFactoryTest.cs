@@ -18,7 +18,7 @@ namespace ProSuite.Microservices.Server.AO.Test
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			TestUtils.ConfigureUnitTestLogging();
+			Commons.Test.Testing.TestUtils.ConfigureUnitTestLogging();
 			TestUtils.InitializeLicense();
 		}
 
