@@ -60,7 +60,12 @@ namespace ProSuite.QA.Tests.Transformers
 				return SearchSourceTable(filter, recycling);
 			}
 
-			// NOTE: The container does not check that the search geometry is actually covered by the cache
+			// NOTE: The container does not check that the search geometry is actually covered by the cache.
+			//       Extra-tile-loading outside the current tile using TileAdmin can happen for transformers
+			//       that use neighbor search All (filterHelper.FullGeometrySearch). However this is not
+			//       propagated to upstream transformers probably because it would overwhelm the available
+			//       memory for vast searches throughout several tiles.
+			//       This very call could in fact be part of the loading procedure of an extra tile.
 			if (! GeometryUtils.Contains(DataContainer.GetLoadedExtent(_sourceTable),
 			                             spatialFilterGeometry))
 			{
