@@ -308,8 +308,13 @@ namespace ProSuite.Commons.AO.Geodatabase
 			Assert.NotNull(OtherClassKeyField);
 
 			string originalSubfields = filter?.SubFields;
-			if (filter != null)
-				filter.SubFields = GeometryClassKeyField;
+
+			if (filter == null)
+			{
+				filter = new QueryFilter();
+			}
+
+			filter.SubFields = GeometryClassKeyField;
 
 			// TODO: More testing, does not seem to make a difference:
 			//esriSpatialRelEnum originalSpatialRel = esriSpatialRelEnum.esriSpatialRelUndefined;
@@ -328,8 +333,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 				GetOtherRowsByFeatureKey(leftFeatures);
 
 			// Revert the filter change:
-			if (filter != null)
-				filter.SubFields = originalSubfields;
+			filter.SubFields = originalSubfields;
 
 			return otherRows;
 		}
