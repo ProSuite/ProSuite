@@ -1000,8 +1000,11 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 			finally
 			{
-				// Avoid locking the workspace
-				Marshal.ReleaseComObject(workspace);
+				if (workspace != null && Marshal.IsComObject(workspace))
+				{
+					// Avoid locking the workspace
+					Marshal.ReleaseComObject(workspace);
+				}
 			}
 		}
 
