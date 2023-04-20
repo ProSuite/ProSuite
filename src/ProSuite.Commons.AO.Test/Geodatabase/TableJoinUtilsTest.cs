@@ -969,9 +969,10 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			                                               excludeShapeField);
 			Assert.AreEqual(featureCount, GetRowCount(table));
 
+			IFeatureClass geometryEndClass = RelationshipClassUtils.GetFeatureClasses(rc).Single();
+
 			IFeatureClass inMemoryJoinedClass = TableJoinUtils.CreateJoinedGdbFeatureClass(
-				rc, RelationshipClassUtils.GetFeatureClasses(rc).Single(),
-				"inMemoryJoined");
+				rc, geometryEndClass, "inMemoryJoined");
 
 			Assert.AreEqual(featureCount, GetRowCount((ITable) inMemoryJoinedClass));
 
@@ -983,8 +984,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			Console.WriteLine(@"Without unique IDs: {0}ms", watch.ElapsedMilliseconds);
 
 			inMemoryJoinedClass = TableJoinUtils.CreateJoinedGdbFeatureClass(
-				rc, RelationshipClassUtils.GetFeatureClasses(rc).Single(),
-				"inMemoryJoined", JoinType.InnerJoin, true);
+				rc, geometryEndClass, "inMemoryJoined", JoinType.InnerJoin, true);
 
 			Assert.AreEqual(featureCount, GetRowCount((ITable) inMemoryJoinedClass));
 

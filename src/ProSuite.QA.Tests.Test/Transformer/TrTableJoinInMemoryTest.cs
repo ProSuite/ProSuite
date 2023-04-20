@@ -458,7 +458,8 @@ namespace ProSuite.QA.Tests.Test.Transformer
 					new[]
 					{
 						FieldUtils.CreateIntegerField("Nr_Poly"),
-						FieldUtils.CreateTextField("POLY_TYPE", 12)
+						FieldUtils.CreateTextField("POLY_TYPE", 12),
+						FieldUtils.CreateDoubleField("POLY_PRIO")
 					});
 
 			IFeatureClass bridgeTable =
@@ -496,6 +497,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				IFeature f = polyFc.CreateFeature();
 				f.Value[1] = 11;
 				f.Value[2] = "small";
+				f.Value[3] = "3.3";
 				f.Shape = CurveConstruction.StartPoly(0, 0).LineTo(20, 50).LineTo(40, 50)
 				                           .LineTo(40, 0).ClosePolygon();
 				f.Store();
@@ -504,6 +506,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				IFeature f = polyFc.CreateFeature();
 				f.Value[1] = 12;
 				f.Value[2] = "large";
+				f.Value[3] = "4.4";
 				f.Shape = CurveConstruction.StartPoly(0, 0).LineTo(50, 70).LineTo(70, 70)
 				                           .LineTo(70, 50).ClosePolygon();
 				f.Store();
@@ -513,6 +516,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				IFeature f = polyFc.CreateFeature();
 				f.Value[1] = 17;
 				f.Value[2] = "large";
+				f.Value[3] = "5.5";
 				f.Shape = CurveConstruction.StartPoly(0, 0).LineTo(50, 70).LineTo(70, 70)
 				                           .LineTo(70, 50).ClosePolygon();
 				f.Store();
@@ -556,6 +560,41 @@ namespace ProSuite.QA.Tests.Test.Transformer
 
 				Assert.AreEqual(1, count);
 			}
+			tr.SetConstraint(1, "LINE_TYPE <> 'does not exist'");
+			{
+				var memoryJoinedFc = (IReadOnlyFeatureClass) tr.GetTransformed();
+
+				int count = memoryJoinedFc.EnumRows(null, true).Count();
+
+				Assert.AreEqual(1, count);
+			}
+			{
+				// The same with really restricted sub-fields and a non-restrictive where clause
+				// that references non-sub-fields.
+				var memoryJoinedFc = (IReadOnlyFeatureClass) tr.GetTransformed();
+				var filter = GdbQueryUtils.CreateSpatialFilter(
+					(IFeatureClass) memoryJoinedFc,
+					GeometryFactory.CreateEnvelope(0, 0, 1000, 1000,
+					                               memoryJoinedFc.SpatialReference));
+				filter.SubFields = "OBJECTID";
+				filter.WhereClause =
+					"POLY_PRIO < 1000 AND LINE_TYPE in ('lowerleft', 'upperright')";
+
+				int count = memoryJoinedFc.EnumRows(filter, true).Count();
+
+				Assert.AreEqual(1, count);
+			}
+			tr.SetConstraint(1, "LINE_TYPE = 'upperright'");
+			{
+				var memoryJoinedFc = (IReadOnlyFeatureClass) tr.GetTransformed();
+
+				int count = memoryJoinedFc.EnumRows(null, true).Count();
+
+				Assert.AreEqual(0, count);
+			}
+
+			// Test with QA test:
+			tr.SetConstraint(1, null);
 			{
 				var memoryJoinedFc = (IReadOnlyFeatureClass) tr.GetTransformed();
 
