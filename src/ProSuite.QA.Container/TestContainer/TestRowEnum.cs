@@ -956,10 +956,7 @@ namespace ProSuite.QA.Container.TestContainer
 			{
 				string name = fields.Field[fieldIndex].Name;
 
-				// Also exclude the non-persistent __BaseRows__ field which is not officially part of the schema.
-				// So it can be used for a remote join.
-				if (! string.Equals(name, shapeField, StringComparison.OrdinalIgnoreCase) &&
-				    ! string.Equals(name, InvolvedRowUtils.BaseRowField))
+				if (! string.Equals(name, shapeField, StringComparison.OrdinalIgnoreCase))
 				{
 					sb.AppendFormat("{0},", name);
 				}
