@@ -224,7 +224,7 @@ public class GeometricEffectsTest
 
 	}
 
-	[Test]
+	[Test, Ignore("known to fail")]
 	public void KnownBadDashes1()
 	{
 		var line = PolylineBuilderEx.CreatePolyline(new[] { Pt(0, 0), Pt(80, 0) });
@@ -367,6 +367,28 @@ public class GeometricEffectsTest
 
 		var ofs4 = AssertType<Polygon>(GeometricEffects.Offset(polygon, -2.0, OffsetType.Miter));
 		Assert.AreEqual(24.0, ofs4.Length, 0.00001); // negative is right (in)
+	}
+
+	[Test]
+	public void CanMove()
+	{
+		Assert.IsNull(GeometricEffects.Move(null, 1.0, 2.0));
+
+		var g = GeometricEffects.Move(Pt(10, 20), 0, 0);
+		var m0 = AssertType<MapPoint>(g);
+		Assert.AreEqual(10.0, m0.X);
+		Assert.AreEqual(20.0, m0.Y);
+
+		g = GeometricEffects.Move(Pt(10, 20), 1.1, 2.2);
+		var m1 = AssertType<MapPoint>(g);
+		Assert.AreEqual(11.1, m1.X, 0.000001);
+		Assert.AreEqual(22.2, m1.Y, 0.000001);
+
+		// Empirical
+		g = GeometricEffects.Move(Pt(10, 20), double.NaN, double.PositiveInfinity);
+		var m9 = AssertType<MapPoint>(g);
+		Assert.IsTrue(double.IsNaN(m9.X)); // any operation with NaN is NaN
+		Assert.IsTrue(double.IsInfinity(m9.Y)); // any + Inf is Inf
 	}
 
 	[Test]

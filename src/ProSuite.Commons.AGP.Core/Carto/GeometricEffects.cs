@@ -345,6 +345,13 @@ public static class GeometricEffects
 		return shape;
 	}
 
+	public static Geometry Move(Geometry shape, double dx, double dy)
+	{
+		if (shape is null) return null;
+
+		return GeometryEngine.Instance.Move(shape, dx, dy);
+	}
+
 	public static Geometry Reverse(Geometry shape)
 	{
 		if (shape is null) return null;

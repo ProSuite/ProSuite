@@ -563,6 +563,11 @@ public static class DrawingOutline
 				// ignore offset.Option (Fast|Accurate)
 				return GeometricEffects.Offset(shape, distance, method);
 
+			case CIMGeometricEffectMove move:
+				var offsetX = move.OffsetX * scaleFactor;
+				var offsetY = move.OffsetY * scaleFactor;
+				return GeometricEffects.Move(shape, offsetX, offsetY);
+
 			case CIMGeometricEffectReverse reverse:
 				return reverse.Reverse
 					       ? GeometricEffects.Reverse(shape)
