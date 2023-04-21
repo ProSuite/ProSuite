@@ -54,6 +54,7 @@
     </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
+    <Reference Include="System.Xaml" />
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
@@ -67,5 +68,19 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="Gdb\GdbObjectReference.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Remove="LoggerUI\LogMessageDetailsDialog.xaml" />
+    <None Remove="LoggerUI\ProSuiteLogPane.xaml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Page Include="LoggerUI\LogMessageDetailsDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="LoggerUI\ProSuiteLogPane.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
 </Project>
