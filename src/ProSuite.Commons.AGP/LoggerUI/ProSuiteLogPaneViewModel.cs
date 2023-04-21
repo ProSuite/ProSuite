@@ -12,7 +12,7 @@ namespace ProSuite.Commons.AGP.LoggerUI
 	[UsedImplicitly]
 	public abstract class ProSuiteLogPaneViewModel : DockPane, IDisposable
 	{
-		public const string DockPaneID = "ProSuiteTools_Logger_ProSuiteLogPane";
+		public const string Id = "ProSuiteTools_Logger_ProSuiteLogPane";
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private static RelayCommand _openLinkMessage;
@@ -61,7 +61,7 @@ namespace ProSuite.Commons.AGP.LoggerUI
 			LoggingEventsAppender.OnNewLogMessage -= Logger_OnNewLogMessage;
 
 			var pane =
-				(ProSuiteLogPaneViewModel) FrameworkApplication.DockPaneManager.Find(DockPaneID);
+				(ProSuiteLogPaneViewModel) FrameworkApplication.DockPaneManager.Find(Id);
 			if (pane == null)
 			{
 				return;
@@ -118,7 +118,7 @@ namespace ProSuite.Commons.AGP.LoggerUI
 		internal static void ToggleDockWindowVisibility()
 		{
 			var pane =
-				(ProSuiteLogPaneViewModel) FrameworkApplication.DockPaneManager.Find(DockPaneID);
+				(ProSuiteLogPaneViewModel) FrameworkApplication.DockPaneManager.Find(Id);
 			if (pane == null)
 			{
 				return;
