@@ -4,8 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:extensions="clr-namespace:ArcGIS.Desktop.Extensions;assembly=ArcGIS.Desktop.Extensions"
-             xmlns:loggerUi="clr-namespace:Dira.ProSuite.EditTools.LoggerUI"
-             xmlns:loggerUi1="clr-namespace:ProSuite.Commons.AGP.LoggerUI"
+             xmlns:loggerUi="clr-namespace:ProSuite.Commons.AGP.LoggerUI"
              mc:Ignorable="d"
              d:DesignHeight="300" d:DesignWidth="300"
              d:DataContext="{d:DesignInstance Type=loggerUi:ProSuiteLogPaneViewModel}"
@@ -16,8 +15,8 @@
                 <extensions:DesignOnlyResourceDictionary
                     Source="pack://application:,,,/ArcGIS.Desktop.Framework;component\Themes\Default.xaml" />
             </ResourceDictionary.MergedDictionaries>
-            <loggerUi1:LogMessageImageConverter x:Key="LogMessageImageConverter" />
-            <loggerUi1:LogMessageLinkConverter x:Key="LogMessageLinkConverter" />
+			<loggerUi:LogMessageImageConverter x:Key="LogMessageImageConverter" />
+			<loggerUi:LogMessageLinkConverter x:Key="LogMessageLinkConverter" />
         </ResourceDictionary>
     </UserControl.Resources>
     <Grid>
