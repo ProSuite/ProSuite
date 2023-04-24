@@ -9,9 +9,8 @@ using ProSuite.Commons.Logging;
 
 namespace ProSuite.Commons.AGP.LoggerUI
 {
-	// todo daro rename to LogDockPaneViewModelBase
 	[UsedImplicitly]
-	public class ProSuiteLogPaneViewModel : DockPaneViewModelBase, IDisposable
+	public class LogDockPaneViewModelBase : DockPaneViewModelBase, IDisposable
 	{
 		public const string Id = "ProSuiteTools_Logger_ProSuiteLogPane";
 
@@ -25,7 +24,7 @@ namespace ProSuite.Commons.AGP.LoggerUI
 
 		private LoggingEventItem _selectedRow;
 
-		public ProSuiteLogPaneViewModel() : base(new ProSuiteLogPaneView())
+		public LogDockPaneViewModelBase() : base(new ProSuiteLogPaneView())
 		{
 			LogMessageList = new ObservableCollection<LoggingEventItem>();
 			BindingOperations.CollectionRegistering += BindingOperations_CollectionRegistering;
@@ -63,7 +62,7 @@ namespace ProSuite.Commons.AGP.LoggerUI
 			LoggingEventsAppender.OnNewLogMessage -= Logger_OnNewLogMessage;
 
 			var pane =
-				(ProSuiteLogPaneViewModel) FrameworkApplication.DockPaneManager.Find(Id);
+				(LogDockPaneViewModelBase) FrameworkApplication.DockPaneManager.Find(Id);
 			if (pane == null)
 			{
 				return;
@@ -120,7 +119,7 @@ namespace ProSuite.Commons.AGP.LoggerUI
 		internal static void ToggleDockWindowVisibility()
 		{
 			var pane =
-				(ProSuiteLogPaneViewModel) FrameworkApplication.DockPaneManager.Find(Id);
+				(LogDockPaneViewModelBase) FrameworkApplication.DockPaneManager.Find(Id);
 			if (pane == null)
 			{
 				return;
