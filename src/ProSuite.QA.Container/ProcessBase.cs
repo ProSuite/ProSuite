@@ -22,8 +22,16 @@ namespace ProSuite.QA.Container
 			public string Constraint { get; set; }
 			public bool UseCaseSensitiveSQL { get; set; }
 			public bool QueriedOnly { get; set; }
-			public string RowFiltersExpression { get; set; }
-			public IReadOnlyList<IRowFilter> RowFilters { get; set; }
+
+			/// <summary>
+			/// Currently un-used (replaced with combined filter-transformer)
+			/// </summary>
+			internal string RowFiltersExpression { get; set; }
+
+			/// <summary>
+			/// Currently un-used (replaced with filter-transformers)
+			/// </summary>
+			internal IReadOnlyList<IRowFilter> RowFilters { get; set; }
 		}
 
 		[NotNull]
