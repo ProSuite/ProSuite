@@ -3,16 +3,18 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Windows.Data;
 using ArcGIS.Desktop.Framework;
-using ArcGIS.Desktop.Framework.Contracts;
+using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 
 namespace ProSuite.Commons.AGP.LoggerUI
 {
+	// todo daro rename to LogDockPaneViewModelBase
 	[UsedImplicitly]
-	public class ProSuiteLogPaneViewModel : DockPane, IDisposable
+	public class ProSuiteLogPaneViewModel : DockPaneViewModelBase, IDisposable
 	{
-		private const string _dockPaneID = "ProSuiteTools_Logger_ProSuiteLogPane";
+		public const string Id = "ProSuiteTools_Logger_ProSuiteLogPane";
+
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private static RelayCommand _openLinkMessage;
@@ -23,7 +25,7 @@ namespace ProSuite.Commons.AGP.LoggerUI
 
 		private LoggingEventItem _selectedRow;
 
-		public ProSuiteLogPaneViewModel()
+		public ProSuiteLogPaneViewModel() : base(new ProSuiteLogPaneView())
 		{
 			LogMessageList = new ObservableCollection<LoggingEventItem>();
 			BindingOperations.CollectionRegistering += BindingOperations_CollectionRegistering;
@@ -61,7 +63,7 @@ namespace ProSuite.Commons.AGP.LoggerUI
 			LoggingEventsAppender.OnNewLogMessage -= Logger_OnNewLogMessage;
 
 			var pane =
-				(ProSuiteLogPaneViewModel) FrameworkApplication.DockPaneManager.Find(_dockPaneID);
+				(ProSuiteLogPaneViewModel) FrameworkApplication.DockPaneManager.Find(Id);
 			if (pane == null)
 			{
 				return;
@@ -118,7 +120,7 @@ namespace ProSuite.Commons.AGP.LoggerUI
 		internal static void ToggleDockWindowVisibility()
 		{
 			var pane =
-				(ProSuiteLogPaneViewModel) FrameworkApplication.DockPaneManager.Find(_dockPaneID);
+				(ProSuiteLogPaneViewModel) FrameworkApplication.DockPaneManager.Find(Id);
 			if (pane == null)
 			{
 				return;
