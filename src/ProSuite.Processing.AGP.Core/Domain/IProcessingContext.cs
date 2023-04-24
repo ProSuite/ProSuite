@@ -15,6 +15,8 @@ public interface IProcessingContext
 
 	ProcessExecutionType ExecutionType { get; }
 
+	bool WantCustomDrawingOutlineCode { get; } // TODO consider move to separate ProcessingOptions object/interface (which may have other options)
+
 	ProcessingDataset OpenDataset(ProcessDatasetName name);
 
 	RelationshipClass OpenAssociation(string name, Table endpoint);
