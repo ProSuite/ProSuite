@@ -20,6 +20,48 @@ namespace ProSuite.Commons.AGP.Core.Test
 		}
 
 		[Test]
+		public void Can_get_distance_between_geometries()
+		{
+
+		}
+
+		[Test]
+		public void Can_get_nearest_point_to_geometry()
+		{
+			var envelope = GeometryFactory.CreateEnvelope(0, 0, 100, 100);
+			var polygon = GeometryFactory.CreatePolygon(envelope);
+			var mapPoint = MapPointBuilder.CreateMapPoint(50, 50);
+
+			ProximityResult result = GeometryEngine.Instance.NearestPoint(polygon, mapPoint);
+
+			Assert.NotNull(result);
+		}
+
+		[Test]
+		public void Can_get_nearest_point_to_geometry_1()
+		{
+			var envelope = GeometryFactory.CreateEnvelope(0, 0, 100, 100);
+			var polygon = GeometryFactory.CreatePolygon(envelope);
+			var mapPoint = MapPointBuilder.CreateMapPoint(110, 100);
+
+			ProximityResult result = GeometryEngine.Instance.NearestPoint(polygon, mapPoint);
+
+			Assert.NotNull(result);
+		}
+
+		[Test]
+		public void Can_get_nearest_point_to_geometry_2()
+		{
+			var envelope = GeometryFactory.CreateEnvelope(0, 0, 100, 100);
+			var polygon = GeometryFactory.CreatePolygon(envelope);
+			var mapPoint = MapPointBuilder.CreateMapPoint(100, 100);
+
+			ProximityResult result = GeometryEngine.Instance.NearestPoint(polygon, mapPoint);
+
+			Assert.NotNull(result);
+		}
+
+		[Test]
 		public void CheckLineSegmentAngle()
 		{
 			// About LineSegment.Angle property:

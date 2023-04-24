@@ -9,6 +9,7 @@ using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.Text;
 
 namespace ProSuite.Commons.AGP.Carto
 {
@@ -61,16 +62,17 @@ namespace ProSuite.Commons.AGP.Carto
 		}
 
 		private FeatureClassSelection([NotNull] FeatureClass featureClass,
-		                              [CanBeNull] BasicFeatureLayer featureLayer,
+		                              [CanBeNull] BasicFeatureLayer basicFeatureLayer,
 		                              [CanBeNull] SpatialReference outputSpatialReference)
 		{
 			FeatureClass = featureClass;
-			FeatureLayer = featureLayer;
+			BasicFeatureLayer = basicFeatureLayer;
 
 			_shapeType = GetShapeType();
 			_outputSpatialReference = outputSpatialReference;
 		}
 
+		// todo daro drop obvious summaries
 		/// <summary>
 		/// The feature class.
 		/// </summary>
@@ -81,7 +83,7 @@ namespace ProSuite.Commons.AGP.Carto
 		/// The (top-most) layer which references the FeatureClass of the selected features.
 		/// </summary>
 		[CanBeNull]
-		public BasicFeatureLayer FeatureLayer { get; }
+		public BasicFeatureLayer BasicFeatureLayer { get; }
 
 		public int FeatureCount => _objectIds?.Count ?? _features.Count;
 
@@ -134,11 +136,12 @@ namespace ProSuite.Commons.AGP.Carto
 
 		private GeometryType GetShapeType()
 		{
-			return FeatureLayer != null
-				       ? GeometryUtils.TranslateEsriGeometryType(FeatureLayer.ShapeType)
+			return BasicFeatureLayer != null
+				       ? GeometryUtils.TranslateEsriGeometryType(BasicFeatureLayer.ShapeType)
 				       : FeatureClass.GetDefinition().GetShapeType();
 		}
 
+		// todo daro to utils?
 		private static int GetShapeDimension(GeometryType geometryType)
 		{
 			switch (geometryType)
@@ -157,6 +160,20 @@ namespace ProSuite.Commons.AGP.Carto
 					throw new ArgumentOutOfRangeException(nameof(geometryType), geometryType,
 					                                      $"Unexpected geometry type: {geometryType}");
 			}
+		}
+
+		public override string ToString()
+		{
+			_objectIds.Sort();
+
+			string oids = StringUtils.Concatenate(_objectIds, "; ");
+
+			if (BasicFeatureLayer != null)
+			{
+				return $"{BasicFeatureLayer.Name}, {oids}";
+			}
+
+			return $"{FeatureClass.GetDefinition().GetName()}, {oids}";
 		}
 	}
 }

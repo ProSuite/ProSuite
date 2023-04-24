@@ -180,6 +180,22 @@ namespace ProSuite.Commons.AGP.Carto
 			layer.SetDefinition(cimDefinition);
 		}
 
+		// todo daro description
+		public static bool IsVisible(this Layer layer)
+		{
+			if (! layer.IsVisible)
+			{
+				return false;
+			}
+
+			if (layer.Parent is Layer parentLayer)
+			{
+				return IsVisible(parentLayer);
+			}
+
+			return true;
+		}
+
 		public static bool IsLayerValid([CanBeNull] BasicFeatureLayer featureLayer)
 		{
 			// ReSharper disable once UseNullPropagation
@@ -194,6 +210,28 @@ namespace ProSuite.Commons.AGP.Carto
 			}
 
 			return true;
+		}
+
+		[NotNull]
+		public static FeatureClass GetFeatureClass([NotNull] BasicFeatureLayer basicFeatureLayer)
+		{
+			Assert.ArgumentNotNull(basicFeatureLayer, nameof(basicFeatureLayer));
+			Assert.ArgumentCondition(
+				basicFeatureLayer is FeatureLayer || basicFeatureLayer is AnnotationLayer,
+				"AnnotationLayer has it's own GetFeatureClass() method. There is no base method on BasicFeatureLayer.");
+
+			if (basicFeatureLayer is FeatureLayer featureLayer)
+			{
+				return Assert.NotNull(featureLayer.GetFeatureClass());
+			}
+
+			if (basicFeatureLayer is AnnotationLayer annotationLayer)
+			{
+				return Assert.NotNull(annotationLayer.GetFeatureClass());
+			}
+
+			throw new ArgumentException(
+				$"{nameof(basicFeatureLayer)} is not of type FeatureLayer or AnnotationLayer");
 		}
 	}
 }

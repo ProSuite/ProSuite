@@ -28,7 +28,7 @@ namespace ProSuite.AGP.Editing.Selection
 
 			foreach (FeatureClassSelection layerFeatures in featuresPerLayer)
 			{
-				SelectionUtils.SelectFeatures(Assert.NotNull(layerFeatures.FeatureLayer),
+				SelectionUtils.SelectFeatures(Assert.NotNull(layerFeatures.BasicFeatureLayer),
 				                              selectionCombinationMethod, layerFeatures.ObjectIds);
 			}
 		}
@@ -50,12 +50,12 @@ namespace ProSuite.AGP.Editing.Selection
 				SelectionUtils.ClearSelection();
 			}
 
-			SelectionUtils.SelectFeatures(Assert.NotNull(featuresOfLayer.FeatureLayer),
+			SelectionUtils.SelectFeatures(Assert.NotNull(featuresOfLayer.BasicFeatureLayer),
 			                              selectionCombinationMethod,
 			                              featuresOfLayer.ObjectIds);
 		}
 
-		public static void SelectFeature(FeatureLayer featureLayer,
+		public static void SelectFeature(BasicFeatureLayer basicFeatureLayer,
 		                                 SelectionCombinationMethod selectionCombinationMethod,
 		                                 long oid)
 		{
@@ -67,7 +67,7 @@ namespace ProSuite.AGP.Editing.Selection
 				SelectionUtils.ClearSelection();
 			}
 
-			SelectionUtils.SelectFeature(featureLayer, selectionCombinationMethod, oid);
+			SelectionUtils.SelectFeature(basicFeatureLayer, selectionCombinationMethod, oid);
 		}
 	}
 }

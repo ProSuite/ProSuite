@@ -16,7 +16,7 @@ namespace ProSuite.AGP.Editing.Picker
 		public PickableFeatureItem(MapMember mapMember, Feature feature, string text)
 		{
 			_feature = feature;
-			_featureLayer = mapMember as FeatureLayer;
+			_basicFeatureLayer = mapMember as BasicFeatureLayer;
 			Oid = feature.GetObjectID();
 			ItemText = text;
 			QueuedTask.Run(() =>
@@ -26,7 +26,7 @@ namespace ProSuite.AGP.Editing.Picker
 			});
 		}
 
-		private readonly FeatureLayer _featureLayer;
+		private readonly BasicFeatureLayer _basicFeatureLayer;
 		private readonly Feature _feature;
 		private bool _isSelected;
 		private Geometry _geometry;
@@ -70,7 +70,7 @@ namespace ProSuite.AGP.Editing.Picker
 
 		public string ItemText { get; }
 
-		public string LayerName => _featureLayer.Name;
+		public string LayerName => _basicFeatureLayer.Name;
 
 		public Geometry Geometry
 		{
@@ -91,7 +91,7 @@ namespace ProSuite.AGP.Editing.Picker
 			}
 		}
 
-		public FeatureLayer Layer => _featureLayer;
+		public BasicFeatureLayer Layer => _basicFeatureLayer;
 
 		public Feature Feature => _feature;
 
@@ -101,6 +101,11 @@ namespace ProSuite.AGP.Editing.Picker
 			[CallerMemberName] string propertyName = null)
 		{
 			PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+		}
+
+		public override string ToString()
+		{
+			return $"{_basicFeatureLayer.Name} {Oid}";
 		}
 	}
 }

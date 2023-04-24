@@ -1,7 +1,10 @@
 using System.Collections.Generic;
 using System.Linq;
+using ArcGIS.Core.Data;
+using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Carto;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.Editing.Selection
 {
@@ -10,6 +13,7 @@ namespace ProSuite.AGP.Editing.Selection
 		public static IEnumerable<KeyValuePair<BasicFeatureLayer, List<long>>> GetReducedset(
 			Dictionary<BasicFeatureLayer, List<long>> featuresPerLayer)
 		{
+			// todo daro: rename
 			var _sorted = featuresPerLayer.GroupBy(kvp => kvp.Key.ShapeType)
 			                              .OrderBy(group => group.Key,
 			                                       new GeometryTypeComparer());
@@ -51,6 +55,63 @@ namespace ProSuite.AGP.Editing.Selection
 			}
 
 			return false;
+		}
+
+		public static IEnumerable<Feature> ReduceRelativeToSelectionGeometry(
+			IEnumerable<Feature> candidates, [NotNull] Geometry sketchGeometry)
+		{
+			return candidates
+			       .OrderBy(feature => feature, new DistanceToGeometryComparer(sketchGeometry))
+			       .Select(candidate => candidate);
+		}
+
+		//public static IEnumerable<Feature> ReduceRelativeToSelectionGeometry(
+		//	IEnumerable<FeatureClassSelection> candidates, [NotNull] Geometry sketchGeometry)
+		//{
+		//	IOrderedEnumerable<Feature> orderedFeatures =
+		//		candidates.Select(candidate => candidate.GetFeatures())
+		//		          .SelectMany(feature => feature)
+		//		          .OrderBy(feature => feature, new DistanceToGeometryComparer(sketchGeometry));
+
+		//	return orderedFeatures.Select(o => o);
+		//}
+	}
+
+	public class DistanceToGeometryComparer : IComparer<Feature>
+	{
+		private readonly Geometry _sketchGeometry;
+
+		public DistanceToGeometryComparer([NotNull] Geometry sketchGeometry)
+		{
+			_sketchGeometry = sketchGeometry;
+		}
+
+		public int Compare(Feature x, Feature y)
+		{
+			if (x == null)
+			{
+				return -1;
+			}
+
+			if (y == null)
+			{
+				return 1;
+			}
+
+			double xToSketch = GeometryEngine.Instance.Distance(x.GetShape(), _sketchGeometry);
+			double yToSketch = GeometryEngine.Instance.Distance(y.GetShape(), _sketchGeometry);
+
+			if (xToSketch < yToSketch)
+			{
+				return -1;
+			}
+
+			if (xToSketch > yToSketch)
+			{
+				return 1;
+			}
+
+			return 0;
 		}
 	}
 }

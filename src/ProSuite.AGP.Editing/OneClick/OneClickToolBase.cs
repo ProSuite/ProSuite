@@ -481,9 +481,12 @@ namespace ProSuite.AGP.Editing.OneClick
 				return false;
 			}
 
+			// todo daro refactor
+
 			bool result = singlePick
 				              ? await SingleClickSelect(candidatesOfManyLayers,
-				                                        pickerWindowLocation, selectionMethod)
+				                                        pickerWindowLocation, selectionMethod,
+				                                        sketchGeometry)
 				              : await AreaSelect(candidatesOfManyLayers, pickerWindowLocation,
 				                                 selectionMethod);
 
@@ -497,7 +500,8 @@ namespace ProSuite.AGP.Editing.OneClick
 		private static async Task<bool> SingleClickSelect(
 			[NotNull] List<FeatureClassSelection> candidatesOfManyLayers,
 			Point pickerWindowLocation,
-			SelectionCombinationMethod selectionMethod)
+			SelectionCombinationMethod selectionMethod,
+			Geometry sketchGeometry = null)
 		{
 			if (GetSelectionSketchMode() == SelectionMode.Original)
 			{
@@ -519,9 +523,19 @@ namespace ProSuite.AGP.Editing.OneClick
 				// show picker if more than one candidate
 				if (GeometryReducer.ContainsManyFeatures(candidatesOfManyLayers))
 				{
+					// todo daro: to virtual method?
+					//Func<IEnumerable<Feature>, IEnumerable<Feature>> reducer =
+					//	sketchGeometry == null ?
+					//		(Func<IEnumerable<Feature>, IEnumerable<Feature>>) null :
+					//		features => GeometryReducer.ReduceRelativeToSelectionGeometry(features, sketchGeometry);
+
+					//PickableFeatureItem picked =
+					//	await PickerUtils.PickSingleFeatureAsync(
+					//		candidatesOfLayers, pickerWindowLocation, reducer);
+
 					PickableFeatureItem picked =
-						await PickerUtils.PickSingleFeatureAsync(
-							candidatesOfLayers, pickerWindowLocation);
+						await PickerUtils.PickSingleFeatureAsync_trial(
+							candidatesOfLayers, pickerWindowLocation, sketchGeometry);
 
 					if (picked != null)
 					{
@@ -564,7 +578,7 @@ namespace ProSuite.AGP.Editing.OneClick
 						List<FeatureClassSelection> selectionsToApply =
 							picked.BelongingFeatureLayers.Select(
 								      layer => candidatesOfManyLayers.Single(
-									      s => s.FeatureLayer == layer))
+									      s => s.BasicFeatureLayer == layer))
 							      .ToList();
 
 						Selector.SelectLayersFeaturesByOids(selectionsToApply, selectionMethod);
@@ -696,9 +710,9 @@ namespace ProSuite.AGP.Editing.OneClick
 		private bool CanSelectFromLayer([CanBeNull] Layer layer,
 		                                NotificationCollection notifications = null)
 		{
-			var featureLayer = layer as FeatureLayer;
+			var basicFeatureLayer = layer as BasicFeatureLayer;
 
-			if (featureLayer == null)
+			if (basicFeatureLayer == null)
 			{
 				NotificationUtils.Add(notifications, "No feature layer");
 				return false;
@@ -706,40 +720,43 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			string layerName = layer.Name;
 
-			if (! featureLayer.IsVisible)
+			if (! LayerUtils.IsVisible(layer))
 			{
 				NotificationUtils.Add(notifications, $"Layer {layerName} not visible");
 				return false;
 			}
 
-			if (! featureLayer.IsSelectable)
+			if (! basicFeatureLayer.IsSelectable)
 			{
 				NotificationUtils.Add(notifications, $"Layer {layerName} not selectable");
 				return false;
 			}
 
 			if (SelectOnlyEditFeatures &&
-			    ! featureLayer.IsEditable)
+			    ! basicFeatureLayer.IsEditable)
 			{
 				NotificationUtils.Add(notifications, $"Layer {layerName} not editable");
 				return false;
 			}
 
 			if (! CanSelectGeometryType(
-				    GeometryUtils.TranslateEsriGeometryType(featureLayer.ShapeType)))
+				    GeometryUtils.TranslateEsriGeometryType(basicFeatureLayer.ShapeType)))
 			{
 				NotificationUtils.Add(notifications,
-				                      $"Layer {layerName}: Cannot use geometry type {featureLayer.ShapeType}");
+				                      $"Layer {layerName}: Cannot use geometry type {basicFeatureLayer.ShapeType}");
 				return false;
 			}
 
-			if (featureLayer.GetFeatureClass() == null)
+			if (basicFeatureLayer is FeatureLayer featureLayer)
 			{
-				NotificationUtils.Add(notifications, $"Layer {layerName} is invalid");
-				return false;
+				if (featureLayer.GetFeatureClass() == null)
+				{
+					NotificationUtils.Add(notifications, $"Layer {layerName} is invalid");
+					return false;
+				}
 			}
 
-			return CanSelectFromLayerCore(featureLayer);
+			return CanSelectFromLayerCore(basicFeatureLayer);
 		}
 
 		[Obsolete]
@@ -816,7 +833,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			return true;
 		}
 
-		protected virtual bool CanSelectFromLayerCore([NotNull] FeatureLayer featureLayer)
+		protected virtual bool CanSelectFromLayerCore([NotNull] BasicFeatureLayer basicFeatureLayer)
 		{
 			return true;
 		}

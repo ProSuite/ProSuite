@@ -37,10 +37,10 @@ namespace ProSuite.Commons.AGP.Carto
 			}
 		}
 
-		public static void SelectFeature(FeatureLayer featureLayer,
+		public static void SelectFeature(BasicFeatureLayer basicFeatureLayer,
 		                                 SelectionCombinationMethod selectionMethod, long objectId)
 		{
-			SelectFeatures(featureLayer, selectionMethod, new[] { objectId });
+			SelectFeatures(basicFeatureLayer, selectionMethod, new[] { objectId });
 		}
 
 		/// <summary>
@@ -48,10 +48,10 @@ namespace ProSuite.Commons.AGP.Carto
 		/// the selection to avoid selection and immediate de-selection (for selection method XOR)
 		/// because it is called in 2 threads.
 		/// </summary>
-		/// <param name="featureLayer"></param>
+		/// <param name="basicFeatureLayer"></param>
 		/// <param name="combinationMethod"></param>
 		/// <param name="objectIds"></param>
-		public static void SelectFeatures([NotNull] BasicFeatureLayer featureLayer,
+		public static void SelectFeatures([NotNull] BasicFeatureLayer basicFeatureLayer,
 		                                  SelectionCombinationMethod combinationMethod,
 		                                  [NotNull] IReadOnlyList<long> objectIds)
 		{
@@ -60,13 +60,13 @@ namespace ProSuite.Commons.AGP.Carto
 				                  ObjectIDs = objectIds
 			                  };
 
-			using (Selection selection = featureLayer.Select(queryFilter, combinationMethod))
+			using (Selection selection = basicFeatureLayer.Select(queryFilter, combinationMethod))
 			{
 				if (_msg.IsVerboseDebugEnabled)
 				{
 					_msg.Debug(
 						$"Selected OIDs {StringUtils.Concatenate(selection.GetObjectIDs(), ", ")} " +
-						$"from {featureLayer.Name}");
+						$"from {basicFeatureLayer.Name}");
 				}
 			}
 		}

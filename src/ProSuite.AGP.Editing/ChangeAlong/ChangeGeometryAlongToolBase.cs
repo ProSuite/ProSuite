@@ -267,10 +267,15 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			       ! KeyboardUtils.IsModifierPressed(Keys.Shift, true);
 		}
 
-		protected virtual bool CanUseAsTargetLayer(FeatureLayer featureLayer)
+		protected virtual bool CanUseAsTargetLayer(Layer layer)
 		{
-			return featureLayer.ShapeType == esriGeometryType.esriGeometryPolyline ||
-			       featureLayer.ShapeType == esriGeometryType.esriGeometryPolygon;
+			if (layer is FeatureLayer featureLayer)
+			{
+				return featureLayer.ShapeType == esriGeometryType.esriGeometryPolyline ||
+				       featureLayer.ShapeType == esriGeometryType.esriGeometryPolygon;
+			}
+
+			return false;
 		}
 
 		protected virtual bool CanUseAsTargetFeature([NotNull] IList<Feature> selection,
