@@ -24,7 +24,7 @@ namespace ProSuite.Commons.AGP.LoggerUI
 
 		private LoggingEventItem _selectedRow;
 
-		public LogDockPaneViewModelBase() : base(new ProSuiteLogPaneView())
+		public LogDockPaneViewModelBase() : base(new LogDockPane())
 		{
 			LogMessageList = new ObservableCollection<LoggingEventItem>();
 			BindingOperations.CollectionRegistering += BindingOperations_CollectionRegistering;
