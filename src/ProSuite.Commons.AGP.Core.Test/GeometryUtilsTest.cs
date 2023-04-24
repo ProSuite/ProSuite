@@ -26,19 +26,24 @@ namespace ProSuite.Commons.AGP.Core.Test
 		}
 
 		[Test]
-		public void Can_get_nearest_point_to_geometry()
+		public void Can_get_nearest_point_to_geometry__point_inside_geometry()
 		{
 			var envelope = GeometryFactory.CreateEnvelope(0, 0, 100, 100);
 			var polygon = GeometryFactory.CreatePolygon(envelope);
-			var mapPoint = MapPointBuilder.CreateMapPoint(50, 50);
+			var mapPoint = MapPointBuilder.CreateMapPoint(75, 50);
 
 			ProximityResult result = GeometryEngine.Instance.NearestPoint(polygon, mapPoint);
 
 			Assert.NotNull(result);
+			Assert.AreEqual(25, result.Distance);
+			Assert.AreEqual(0, result.PartIndex);
+			Assert.AreEqual(100, result.Point.X);
+			Assert.AreEqual(50, result.Point.Y);
+			Assert.True(result.RightSide);
 		}
 
 		[Test]
-		public void Can_get_nearest_point_to_geometry_1()
+		public void Can_get_nearest_point_to_geometry__point_outside_geometry()
 		{
 			var envelope = GeometryFactory.CreateEnvelope(0, 0, 100, 100);
 			var polygon = GeometryFactory.CreatePolygon(envelope);
@@ -47,18 +52,28 @@ namespace ProSuite.Commons.AGP.Core.Test
 			ProximityResult result = GeometryEngine.Instance.NearestPoint(polygon, mapPoint);
 
 			Assert.NotNull(result);
+			Assert.AreEqual(10, result.Distance);
+			Assert.AreEqual(0, result.PartIndex);
+			Assert.AreEqual(100, result.Point.X);
+			Assert.AreEqual(100, result.Point.Y);
+			Assert.False(result.RightSide);
 		}
 
 		[Test]
-		public void Can_get_nearest_point_to_geometry_2()
+		public void Can_get_nearest_point_to_geometry__point_on_geometry()
 		{
 			var envelope = GeometryFactory.CreateEnvelope(0, 0, 100, 100);
 			var polygon = GeometryFactory.CreatePolygon(envelope);
-			var mapPoint = MapPointBuilder.CreateMapPoint(100, 100);
+			var mapPoint = MapPointBuilder.CreateMapPoint(100, 50);
 
 			ProximityResult result = GeometryEngine.Instance.NearestPoint(polygon, mapPoint);
 
 			Assert.NotNull(result);
+			Assert.AreEqual(0, result.Distance);
+			Assert.AreEqual(0, result.PartIndex);
+			Assert.AreEqual(100, result.Point.X);
+			Assert.AreEqual(50, result.Point.Y);
+			Assert.False(result.RightSide);
 		}
 
 		[Test]

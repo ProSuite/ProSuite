@@ -41,6 +41,15 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 		}
 
 		[NotNull]
+		public static Polyline CreatePolyline([NotNull] MapPoint startPoint,
+		                                      [NotNull] MapPoint endPoint,
+		                                      [CanBeNull] SpatialReference sref = null)
+		{
+			return PolylineBuilderEx.CreatePolyline(new[] { startPoint, endPoint },
+			                                        AttributeFlags.NoAttributes, sref);
+		}
+
+		[NotNull]
 		public static Polygon CreatePolygon([NotNull] EnvelopeXY envelope,
 		                                    [CanBeNull] SpatialReference sref = null)
 		{

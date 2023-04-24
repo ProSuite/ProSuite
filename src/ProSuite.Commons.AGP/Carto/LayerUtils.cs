@@ -162,7 +162,7 @@ namespace ProSuite.Commons.AGP.Carto
 		{
 			Assert.ArgumentNotNull(layer, nameof(layer));
 
-			Selection selection = layer.GetSelection();
+			ArcGIS.Core.Data.Selection selection = layer.GetSelection();
 
 			return selection == null ? Enumerable.Empty<long>() : selection.GetObjectIDs();
 		}

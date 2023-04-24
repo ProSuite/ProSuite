@@ -60,7 +60,7 @@ namespace ProSuite.Commons.AGP.Carto
 				                  ObjectIDs = objectIds
 			                  };
 
-			using (Selection selection = basicFeatureLayer.Select(queryFilter, combinationMethod))
+			using (ArcGIS.Core.Data.Selection selection = basicFeatureLayer.Select(queryFilter, combinationMethod))
 			{
 				if (_msg.IsVerboseDebugEnabled)
 				{
@@ -103,7 +103,7 @@ namespace ProSuite.Commons.AGP.Carto
 
 		public static IEnumerable<Feature> GetSelectedFeatures([CanBeNull] BasicFeatureLayer layer)
 		{
-			Selection selection = layer?.GetSelection();
+			ArcGIS.Core.Data.Selection selection = layer?.GetSelection();
 
 			if (selection == null)
 			{

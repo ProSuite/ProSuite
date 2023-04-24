@@ -1,8 +1,9 @@
 using System;
 using System.Collections.Generic;
+using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
-namespace ProSuite.Commons.AGP.Carto
+namespace ProSuite.Commons.AGP.Selection
 {
 	public class FeatureClassSelectionComparer : IComparer<FeatureClassSelection>
 	{

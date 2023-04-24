@@ -13,6 +13,7 @@ using ProSuite.Commons.Text;
 
 namespace ProSuite.Commons.AGP.Carto
 {
+	// todo daro move to .\Selection?
 	/// <summary>
 	/// Encapsulates a set of selected features that belong to the same FeatureClass and possibly
 	/// to the same layer.
