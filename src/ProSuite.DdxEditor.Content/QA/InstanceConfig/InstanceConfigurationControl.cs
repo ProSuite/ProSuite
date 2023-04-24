@@ -44,9 +44,10 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 		/// <summary>
 		/// Initializes a new instance of the <see cref="InstanceConfigurationControl"/> class.
 		/// </summary>
-		public InstanceConfigurationControl([NotNull] TableState tableState,
-		                                    [NotNull]
-		                                    IInstanceConfigurationTableViewControl tableViewControl)
+		public InstanceConfigurationControl(
+			[NotNull] TableState tableState,
+			[NotNull] IInstanceConfigurationTableViewControl tableViewControl,
+			bool ignoreLastDetailsTab = false)
 		{
 			Assert.ArgumentNotNull(tableState, nameof(tableState));
 			Assert.ArgumentNotNull(tableViewControl, nameof(tableViewControl));
@@ -112,7 +113,10 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 				new BoundDataGridHandler<InstanceConfigurationReferenceTableRow>(
 					_dataGridViewReferences, restoreSelectionAfterUserSort: true);
 
-			TabControlUtils.SelectTabPage(_tabControlDetails, _lastSelectedDetailsTab);
+			if (! ignoreLastDetailsTab)
+			{
+				TabControlUtils.SelectTabPage(_tabControlDetails, _lastSelectedDetailsTab);
+			}
 		}
 
 		#endregion
@@ -238,7 +242,11 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 				IInstanceInfo instanceInfo =
 					InstanceDescriptorUtils.GetInstanceInfo(descriptor);
 
-				return $"{descriptor.Name} ( {InstanceUtils.GetTestSignature(instanceInfo)} )";
+				string signature = instanceInfo == null
+					                   ? "Error: Cannot create descriptor (missing class?)"
+					                   : $"( {InstanceUtils.GetTestSignature(instanceInfo)} )";
+
+				return $"{descriptor.Name} {signature}";
 			}
 			catch (Exception e)
 			{
@@ -336,6 +344,25 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 		private void _linkDocumentation_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
 		{
 			Observer?.DescriptorDocumentationLinkClicked();
+		}
+
+		private void _textBoxName_PreviewKeyDown(object sender, PreviewKeyDownEventArgs e)
+		{
+			bool tabKeyPressed = e.KeyData == Keys.Tab;
+
+			if (tabKeyPressed &&
+			    string.IsNullOrEmpty(_textBoxName.Text))
+			{
+				// Generate a name
+				_textBoxName.Text = Observer?.GenerateName();
+			}
+
+			if (! tabKeyPressed ||
+			    ! string.IsNullOrEmpty(_textBoxName.Text))
+			{
+				// Do not show the tooltip once the user has started typing or the name has bee generated:
+				_toolTip.SetToolTip(_textBoxName, null);
+			}
 		}
 	}
 }

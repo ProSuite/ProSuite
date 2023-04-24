@@ -24,5 +24,8 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 		void OpenUrlClicked();
 
 		void DescriptorDocumentationLinkClicked();
+
+		[CanBeNull]
+		string GenerateName();
 	}
 }

@@ -49,6 +49,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			IList<ITest> result = null;
 			QualityVerification verification = null;
 
+			// TODO: Get rid of this overload and the unnecessary transaction
 			// TODO: Copy from QualityVerificationService
 			// Consider moving to base or provide the (properly initialized) tests together with the
 			// verification in VerifyQuality() or move the condition/test dictionaries and collections
@@ -57,11 +58,11 @@ namespace ProSuite.Microservices.Server.AO.QA
 			_domainTransactions.UseTransaction(
 				delegate
 				{
-					ICollection<Dataset> datasets =
-						QualitySpecificationUtils.InitializeAssociatedEntitiesTx(
-							specification, _domainTransactions);
+					//ICollection<Dataset> datasets =
+					//	QualitySpecificationUtils.InitializeAssociatedEntitiesTx(
+					//		specification, _domainTransactions);
 
-					_backgroundVerificationInputs.InitializeSchema(datasets);
+					//_backgroundVerificationInputs.InitializeSchema(datasets);
 
 					result = GetTestsCore(specification, out verification);
 				});
@@ -145,6 +146,15 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 					qualitySpecification =
 						PrepareQualitySpecificationTx(backgroundVerificationInputs);
+
+					// Initialize the schema/model datasets before loading the selected objects
+					ICollection<Dataset> datasets =
+						QualitySpecificationUtils.InitializeAssociatedEntitiesTx(
+							qualitySpecification, _domainTransactions);
+
+					backgroundVerificationInputs.InitializeSchema(datasets);
+
+					backgroundVerificationInputs.LoadObjectsToVerify(datasets);
 				});
 
 			IVerificationContext verificationContext =
@@ -168,15 +178,15 @@ namespace ProSuite.Microservices.Server.AO.QA
 		private QualityVerification Verify([NotNull] IVerificationContext verificationContext,
 		                                   [NotNull] QualitySpecification qualitySpecification,
 		                                   [NotNull] VerificationServiceParameters parameters,
-		                                   [CanBeNull] ICollection<IObject> objects)
+		                                   [CanBeNull] ICollection<IObject> objectsToVerify)
 		{
 			ISpatialReference spatialReference =
 				verificationContext.SpatialReferenceDescriptor.SpatialReference;
 
-			if (objects != null)
+			if (objectsToVerify != null)
 			{
 				IEnvelope selectionEnvelope = InitSelection(
-					objects, parameters.AreaOfInterest?.Extent, null);
+					objectsToVerify, parameters.AreaOfInterest?.Extent, null);
 
 				if (selectionEnvelope != null)
 				{

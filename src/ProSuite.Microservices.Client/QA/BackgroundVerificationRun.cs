@@ -3,7 +3,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Grpc.Core;
-using ProSuite.Commons.Com;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -83,8 +82,6 @@ namespace ProSuite.Microservices.Client.QA
 			get;
 			set;
 		}
-
-		private StaTaskScheduler StaTaskScheduler { get; set; }
 
 		public async Task<ServiceCallStatus> ExecuteAndProcessMessagesAsync(
 			[NotNull] QualityVerificationGrpc.QualityVerificationGrpcClient rpcClient,
@@ -206,22 +203,13 @@ namespace ProSuite.Microservices.Client.QA
 
 			Assert.NotNull(VerificationDataProvider, "No verification data provider available.");
 
-			Func<bool> getDataFunc = () => SatisfyDataRequest(
-				serverResponseMsg, VerificationDataProvider, dataStream);
-
-			if (StaTaskScheduler == null)
-			{
-				// Only initialize it if it is going to be needed
-				StaTaskScheduler = new StaTaskScheduler(1);
-			}
+			// If this is called in a different STA thread, everything is extremely slow!
 
 			bool result =
-				await Task.Factory.StartNew(
-					() =>
-						TryExecute(getDataFunc, cancellationSource.Token,
-						           "SatisfyDataRequest"),
-					cancellationSource.Token,
-					TaskCreationOptions.LongRunning, StaTaskScheduler);
+				SatisfyDataRequest(serverResponseMsg, VerificationDataProvider, dataStream);
+
+			//// TODO: Alternative for async-supporting platforms:
+			//result = await SatisfyDataQueryAsync(serverResponseMsg.DataRequest, dataStream);
 
 			if (result)
 			{
@@ -264,26 +252,7 @@ namespace ProSuite.Microservices.Client.QA
 			}
 		}
 
-		private static T TryExecute<T>(Func<T> func,
-		                               CancellationToken cancellationToken,
-		                               string methodName)
-		{
-			T response = default;
-
-			try
-			{
-				response = func();
-			}
-			catch (Exception e)
-			{
-				_msg.Error($"Error in {methodName}", e);
-				//trackCancellationToken.Exception = e;
-			}
-
-			return response;
-		}
-
-		private async Task SatisfyDataQueryAsync(
+		private async Task<bool> SatisfyDataQueryAsync(
 			[NotNull] DataRequest dataRequest,
 			[NotNull] IClientStreamWriter<DataVerificationRequest> targetStream)
 		{
@@ -297,6 +266,8 @@ namespace ProSuite.Microservices.Client.QA
 
 				await targetStream.WriteAsync(r);
 			}
+
+			return true;
 		}
 
 		private void HandleProgressMsg(VerificationResponse responseMsg)

@@ -1000,8 +1000,11 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 			finally
 			{
-				// Avoid locking the workspace
-				Marshal.ReleaseComObject(workspace);
+				if (workspace != null && Marshal.IsComObject(workspace))
+				{
+					// Avoid locking the workspace
+					Marshal.ReleaseComObject(workspace);
+				}
 			}
 		}
 
@@ -3592,8 +3595,11 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			var sb = new StringBuilder();
 
-			foreach (int oid in oids)
+			foreach (object oidObj in oids)
 			{
+				// Convert the (potentially boxed int) object:
+				long oid = Convert.ToInt64(oidObj);
+
 				if (sb.Length == 0)
 				{
 					sb.Append(oid);

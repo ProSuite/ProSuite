@@ -247,6 +247,7 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 				                             Value = "polygons",
 				                             WorkspaceId = _xmlWorkspace.ID
 			                             });
+			xmlTrans.Url = "github.com/prosuite";
 
 			var xmlQCon = new XmlQualityCondition
 			              {
@@ -338,6 +339,7 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 			Assert.NotNull(transformerConfiguration);
 			Assert.AreEqual(xmlTrans.Name, transformerConfiguration.Name);
 			Assert.NotNull(transformerConfiguration.Category);
+			Assert.AreEqual(xmlTrans.Url, transformerConfiguration.Url);
 			if (transformerConfiguration.Category != null)
 			{
 				Assert.AreEqual(xmlSubSubCategory.Name, transformerConfiguration.Category.Name);

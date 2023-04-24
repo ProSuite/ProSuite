@@ -5,13 +5,24 @@ using ESRI.ArcGIS.Geometry;
 using Google.Protobuf;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Callbacks;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Geom.EsriShape;
+using ProSuite.Commons.Text;
+using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.Microservices.Definitions.Shared;
 
 namespace ProSuite.Microservices.AO
 {
 	public static class ProtobufGdbUtils
 	{
+		/// <summary>
+		/// The name of the domain property of the FieldMsg that notifies the client that the
+		/// respective field is the subtype field. This could be removed if the proto model is
+		/// extended.
+		/// </summary>
+		public const string SubtypeDomainName = "__SubType__";
+
 		public static GdbObjRefMsg ToGdbObjRefMsg(IFeature feature)
 		{
 			return new GdbObjRefMsg
@@ -55,7 +66,8 @@ namespace ProSuite.Microservices.AO
 
 		public static GdbObjectMsg ToGdbObjectMsg([NotNull] IObject featureOrObject,
 		                                          bool includeSpatialRef = false,
-		                                          bool includeFieldValues = false)
+		                                          bool includeFieldValues = false,
+		                                          string subFields = null)
 		{
 			var result = new GdbObjectMsg();
 
@@ -65,26 +77,39 @@ namespace ProSuite.Microservices.AO
 
 			if (featureOrObject is IFeature feature)
 			{
-				IGeometry featureShape = GdbObjectUtils.GetFeatureShape(feature);
+				// NOTE: Normal fields just return null if they have not been fetched due to sub-field restrictions.
+				//       However, the Shape property E_FAILs.
+				bool canGetShape =
+					subFields == null || subFields == "*" ||
+					StringUtils.Contains(subFields, ((IFeatureClass) feature.Class).ShapeFieldName,
+					                     StringComparison.InvariantCultureIgnoreCase);
 
-				ShapeMsg.FormatOneofCase shapeFormat =
-					featureShape?.GeometryType == esriGeometryType.esriGeometryMultiPatch
-						? ShapeMsg.FormatOneofCase.Wkb
-						: ShapeMsg.FormatOneofCase.EsriShape;
+				if (canGetShape)
+				{
+					IGeometry featureShape = GdbObjectUtils.GetFeatureShape(feature);
 
-				SpatialReferenceMsg.FormatOneofCase spatialRefFormat = includeSpatialRef
-					? SpatialReferenceMsg.FormatOneofCase.SpatialReferenceEsriXml
-					: SpatialReferenceMsg.FormatOneofCase.SpatialReferenceWkid;
+					ShapeMsg.FormatOneofCase shapeFormat =
+						featureShape?.GeometryType == esriGeometryType.esriGeometryMultiPatch
+							? ShapeMsg.FormatOneofCase.Wkb
+							: ShapeMsg.FormatOneofCase.EsriShape;
 
-				result.Shape =
-					ProtobufGeometryUtils.ToShapeMsg(featureShape, shapeFormat, spatialRefFormat);
+					SpatialReferenceMsg.FormatOneofCase spatialRefFormat = includeSpatialRef
+						? SpatialReferenceMsg.FormatOneofCase.SpatialReferenceEsriXml
+						: SpatialReferenceMsg.FormatOneofCase.SpatialReferenceWkid;
+
+					result.Shape =
+						ProtobufGeometryUtils.ToShapeMsg(featureShape, shapeFormat,
+						                                 spatialRefFormat);
+				}
 			}
 
 			if (includeFieldValues)
 			{
-				for (int i = 0; i < featureOrObject.Fields.FieldCount; i++)
+				IFields fields = featureOrObject.Fields;
+
+				for (int i = 0; i < fields.FieldCount; i++)
 				{
-					IField field = featureOrObject.Fields.Field[i];
+					IField field = fields.Field[i];
 
 					object valueObject = featureOrObject.Value[i];
 
@@ -173,7 +198,8 @@ namespace ProSuite.Microservices.AO
 			return ToObjectClassMsg((ITable) objectClass, objectClass.ObjectClassID, includeFields);
 		}
 
-		public static ObjectClassMsg ToObjectClassMsg([NotNull] ITable table, int classHandle,
+		public static ObjectClassMsg ToObjectClassMsg([NotNull] ITable table,
+		                                              int classHandle,
 		                                              bool includeFields = false,
 		                                              string aliasName = null)
 		{
@@ -206,15 +232,100 @@ namespace ProSuite.Microservices.AO
 
 			CallbackUtils.DoWithNonNull(aliasName, s => result.Alias = s);
 
+			ISubtypes tableSubtypes = table as ISubtypes;
+
+			int subtypeFieldIdx = -1;
+			if (tableSubtypes != null && tableSubtypes.HasSubtype)
+			{
+				subtypeFieldIdx = tableSubtypes.SubtypeFieldIndex;
+			}
+
 			if (includeFields)
 			{
 				List<FieldMsg> fieldMessages = new List<FieldMsg>();
 
-				for (int i = 0; i < table.Fields.FieldCount; i++)
-				{
-					IField field = table.Fields.Field[i];
+				IFields fields = table.Fields;
 
+				for (int i = 0; i < fields.FieldCount; i++)
+				{
+					IField field = fields.Field[i];
 					fieldMessages.Add(ToFieldMsg(field));
+				}
+
+				result.Fields.AddRange(fieldMessages);
+			}
+
+			// The subtype field name is needed in QaObjectAttributeConstraint
+			if (subtypeFieldIdx >= 0)
+			{
+				result.Fields[subtypeFieldIdx].DomainName = SubtypeDomainName;
+			}
+
+			return result;
+		}
+
+		public static ObjectClassMsg ToObjectClassMsg([NotNull] Dataset dataset,
+		                                              int modelId,
+		                                              ISpatialReference spatialReference = null,
+		                                              bool includeFields = false,
+		                                              string aliasName = null)
+		{
+			int geometryType;
+
+			switch (dataset)
+			{
+				case IVectorDataset vds:
+				{
+					var shapeGeometryType = Assert.NotNull((GeometryTypeShape) vds.GeometryType);
+					geometryType = (int) shapeGeometryType.ShapeType;
+					break;
+				}
+				case ITableDataset _:
+					geometryType = (int) ProSuiteGeometryType.Null;
+					break;
+				case ITopologyDataset _:
+					geometryType = (int) ProSuiteGeometryType.Topology;
+					break;
+				case RasterDataset _:
+					geometryType = (int) ProSuiteGeometryType.Raster;
+					break;
+				case IRasterMosaicDataset _:
+					geometryType = (int) ProSuiteGeometryType.RasterMosaic;
+					break;
+				case ISimpleTerrainDataset _:
+					geometryType = (int) ProSuiteGeometryType.Terrain;
+					break;
+				default:
+					throw new ArgumentOutOfRangeException(
+						$"Unsupported dataset type: {dataset.Name}");
+			}
+
+			ObjectClassMsg result =
+				new ObjectClassMsg()
+				{
+					Name = dataset.Name,
+					ClassHandle = dataset.Id,
+					SpatialReference = ProtobufGeometryUtils.ToSpatialReferenceMsg(
+						spatialReference,
+						SpatialReferenceMsg.FormatOneofCase.SpatialReferenceEsriXml),
+					GeometryType = geometryType,
+					WorkspaceHandle = modelId
+				};
+
+			if (aliasName == null)
+			{
+				aliasName = dataset.AliasName;
+			}
+
+			CallbackUtils.DoWithNonNull(aliasName, s => result.Alias = s);
+
+			if (includeFields && dataset is IObjectDataset objectDataset)
+			{
+				List<FieldMsg> fieldMessages = new List<FieldMsg>();
+
+				foreach (ObjectAttribute attribute in objectDataset.Attributes)
+				{
+					fieldMessages.Add(ToFieldMsg(attribute));
 				}
 
 				result.Fields.AddRange(fieldMessages);
@@ -241,6 +352,16 @@ namespace ProSuite.Microservices.AO
 			{
 				result.DomainName = field.Domain.Name;
 			}
+
+			return result;
+		}
+
+		private static FieldMsg ToFieldMsg(ObjectAttribute field)
+		{
+			var result = new FieldMsg
+			             {
+				             Name = field.Name
+			             };
 
 			return result;
 		}

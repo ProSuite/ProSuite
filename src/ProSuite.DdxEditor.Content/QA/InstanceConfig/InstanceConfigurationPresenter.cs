@@ -67,7 +67,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 		void IInstanceConfigurationObserver.OnInstanceDescriptorChanged()
 		{
 			InstanceConfiguration instanceConfig = Assert.NotNull(_item.GetEntity());
-			
+
 			if (TestParameterValueUtils.SyncParameterValues(instanceConfig))
 			{
 				InitParameterData(instanceConfig);
@@ -121,6 +121,21 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 		public void DescriptorDocumentationLinkClicked()
 		{
 			_item.ExecuteWebHelpCommand();
+		}
+
+		public string GenerateName()
+		{
+			InstanceConfiguration instanceConfiguration = Assert.NotNull(_item.GetEntity());
+
+			string generatedName = InstanceConfigurationUtils.GenerateName(instanceConfiguration);
+
+			if (generatedName == null)
+			{
+				_msg.Warn("Instance Descriptor or dataset parameter has not yet been configured. " +
+				          "Cannot generate name.");
+			}
+
+			return generatedName;
 		}
 
 		#endregion

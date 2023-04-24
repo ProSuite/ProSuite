@@ -195,7 +195,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 		#region IQueryTableContext members
 
-		public string GetRelationshipClassName(string associationName, Model model)
+		public string GetRelationshipClassName(string associationName, DdxModel model)
 		{
 			GdbWorkspace workspace =
 				_virtualWorkspaces.FirstOrDefault(w => w.WorkspaceHandle == model.Id);
@@ -210,11 +210,11 @@ namespace ProSuite.Microservices.Server.AO.QA
 			return _dataRequestFunc != null || _virtualWorkspaces != null;
 		}
 
-		public ITable OpenQueryTable(string relationshipClassName,
-		                             DdxModel model,
-		                             IList<IReadOnlyTable> tables,
-		                             JoinType joinType,
-		                             string whereClause)
+		public IReadOnlyTable OpenQueryTable(string relationshipClassName,
+		                                     DdxModel model,
+		                                     IList<IReadOnlyTable> tables,
+		                                     JoinType joinType,
+		                                     string whereClause)
 		{
 			if (_dataRequestFunc != null)
 			{
@@ -233,7 +233,9 @@ namespace ProSuite.Microservices.Server.AO.QA
 					throw new InvalidOperationException($"Workspace for model {model} not found");
 				}
 
-				return workspace.OpenQueryTable(relationshipClassName);
+				ITable queryTable = workspace.OpenQueryTable(relationshipClassName);
+
+				return ReadOnlyTableFactory.Create(queryTable);
 			}
 
 			throw new NotImplementedException();
@@ -251,11 +253,11 @@ namespace ProSuite.Microservices.Server.AO.QA
 			return workspace;
 		}
 
-		private ITable GetRemoteQueryTable([NotNull] string relationshipClassName,
-		                                   [NotNull] DdxModel model,
-		                                   [NotNull] IList<IReadOnlyTable> tables,
-		                                   JoinType joinType,
-		                                   [CanBeNull] string whereClause)
+		private IReadOnlyTable GetRemoteQueryTable([NotNull] string relationshipClassName,
+		                                           [NotNull] DdxModel model,
+		                                           [NotNull] IList<IReadOnlyTable> tables,
+		                                           JoinType joinType,
+		                                           [CanBeNull] string whereClause)
 		{
 			var dataRequest = new DataVerificationResponse
 			                  {
@@ -286,18 +288,15 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			ObjectClassMsg queryTableMsg = dataResponse.Schema.RelclassDefinitions.First();
 
-			Func<ITable, BackingDataset> createBackingDataset = null;
+			Assert.NotNull(_dataRequestFunc,
+			               "The context is not set up to request query table data.");
 
-			if (_dataRequestFunc != null)
-			{
-				createBackingDataset = (t) =>
-					new RemoteDataset(t, _dataRequestFunc, null, relClassQueryMsg);
-			}
+			BackingDataset CreateBackingDataset(ITable t) =>
+				new RemoteDataset(t, _dataRequestFunc, null, relClassQueryMsg);
 
 			// It is cached on the client side, in case various tests utilize the same definition.
-			// TODO: Test!
-			return ProtobufConversionUtils.FromObjectClassMsg(queryTableMsg, gdbWorkspace,
-			                                                  createBackingDataset);
+			return ProtobufConversionUtils.FromQueryTableMsg(queryTableMsg, gdbWorkspace,
+			                                                 CreateBackingDataset, tables);
 		}
 	}
 }

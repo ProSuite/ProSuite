@@ -313,7 +313,8 @@ namespace ProSuite.QA.Container.TestContainer
 				return null;
 			}
 
-			if ((queryFilter is ITileFilter tf && tf.TileExtent != null) || filterHelper.FullGeometrySearch)
+			if ((queryFilter is ITileFilter tf && tf.TileExtent != null) ||
+			    filterHelper.FullGeometrySearch)
 			{
 				if (queryFilter is ISpatialFilter sf)
 				{
@@ -955,9 +956,7 @@ namespace ProSuite.QA.Container.TestContainer
 			{
 				string name = fields.Field[fieldIndex].Name;
 
-				if (
-					string.Compare(name, shapeField, StringComparison.OrdinalIgnoreCase) !=
-					0)
+				if (! string.Equals(name, shapeField, StringComparison.OrdinalIgnoreCase))
 				{
 					sb.AppendFormat("{0},", name);
 				}
@@ -1026,6 +1025,7 @@ namespace ProSuite.QA.Container.TestContainer
 					{
 						cachedRows = preloadedCache.TransferCachedRows(tileCache, cachedTable);
 					}
+
 					cachedRows = cachedRows ?? LoadCachedTableRows(cachedTable, tile, tileCache);
 
 					PreprocessCache(cachedTable, tile, tileCache, cachedRows);

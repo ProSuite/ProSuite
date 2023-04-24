@@ -746,6 +746,18 @@ namespace ProSuite.Commons.Text
 				       : $"{result}0";
 		}
 
+		public static bool Contains([CanBeNull] string containing,
+		                            [NotNull] string searchString,
+		                            StringComparison comparisonType)
+		{
+			if (containing == null)
+			{
+				return false;
+			}
+
+			return containing.IndexOf(searchString, comparisonType) >= 0;
+		}
+
 		[NotNull]
 		private static List<string> GetTokens([NotNull] IEnumerable list)
 		{

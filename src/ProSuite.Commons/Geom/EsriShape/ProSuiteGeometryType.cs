@@ -1,7 +1,9 @@
 namespace ProSuite.Commons.Geom.EsriShape
 {
 	/// <summary>
-	/// A geometry type enum that corresponds with the esriGeometryType.
+	/// The type of geometry in the wider sense. A superset of the classic geometry types.
+	/// The enum values corresponds with the esriGeometryType where applicable, i.e. for
+	/// the classic geometry types below 30.
 	/// </summary>
 	public enum ProSuiteGeometryType
 	{
@@ -31,6 +33,12 @@ namespace ProSuite.Commons.Geom.EsriShape
 		TriangleFan = 19,
 		Ray = 20,
 		Sphere = 21,
-		Triangles = 22
+		Triangles = 22,
+
+		// Extended geometry types:
+		Raster = 32,
+		RasterMosaic = 33,
+		Terrain = 34,
+		Topology = 35
 	}
 }

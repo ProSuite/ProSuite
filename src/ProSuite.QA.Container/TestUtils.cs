@@ -309,8 +309,14 @@ namespace ProSuite.QA.Container
 					int oidFieldIdx = row.Table.FindField(oidField);
 					if (oidFieldIdx >= 0)
 					{
-						long oid = Assert.NotNull(GdbObjectUtils.ReadRowOidValue(row, oidFieldIdx))
-						                 .Value;
+						long? oidValue = GdbObjectUtils.ReadRowOidValue(row, oidFieldIdx);
+
+						if (! oidValue.HasValue)
+						{
+							continue;
+						}
+
+						long oid = oidValue.Value;
 
 						if (row.Table.Workspace is IFeatureWorkspace fws
 						    && DatasetUtils.OpenTable(fws, t) is IFeatureClass queryFc)
@@ -1173,7 +1179,7 @@ namespace ProSuite.QA.Container
 				string.Format("Unhandled geometry type: {0}", g0Type));
 		}
 
-#region Nested types
+		#region Nested types
 
 		private class GeometryArea<T> where T : IGeometry
 		{
@@ -1193,7 +1199,7 @@ namespace ProSuite.QA.Container
 		{
 			private const char _nameSeparator = '.';
 
-#region IComparer<InvolvedRow> Members
+			#region IComparer<InvolvedRow> Members
 
 			public int Compare(InvolvedRow row0, InvolvedRow row1)
 			{
@@ -1208,7 +1214,7 @@ namespace ProSuite.QA.Container
 					       : CompareTableNames(row0.TableName, row1.TableName);
 			}
 
-#endregion
+			#endregion
 
 			// TODO this might be useful elsewhere
 			private static int CompareTableNames([NotNull] string tableName0,
@@ -1262,7 +1268,7 @@ namespace ProSuite.QA.Container
 			}
 		}
 
-#endregion
+		#endregion
 
 		[NotNull]
 		public static Type GetColumnType([NotNull] IField field)

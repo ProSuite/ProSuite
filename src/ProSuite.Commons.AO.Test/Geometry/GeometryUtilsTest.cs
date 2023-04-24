@@ -3038,8 +3038,14 @@ namespace ProSuite.Commons.AO.Test.Geometry
 		{
 			// Guard against changes in future versions:
 
-			Assert.AreEqual(Enum.GetNames(typeof(ProSuiteGeometryType)).Length,
-			                Enum.GetNames(typeof(esriGeometryType)).Length);
+			// The ProSuiteGeometryType is a superset, count only the ones below 30:
+			int typeCount = Enum.GetValues(typeof(ProSuiteGeometryType))
+			                    .Cast<ProSuiteGeometryType>()
+			                    .Count(value => (int) value < 30);
+
+			Assert.AreEqual(
+				Enum.GetValues(typeof(esriGeometryType)).Length,
+				typeCount);
 
 			foreach (object value in Enum.GetValues(typeof(esriGeometryType)))
 			{
