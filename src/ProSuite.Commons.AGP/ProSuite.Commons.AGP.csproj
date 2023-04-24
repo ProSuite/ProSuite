@@ -74,4 +74,24 @@
   <ItemGroup>
     <Compile Remove="Gdb\GdbObjectReference.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <None Remove="Images\StatusCriticalError_12x_16x.png" />
+    <None Remove="Images\StatusDebug_12x_16x.png" />
+    <None Remove="Images\StatusInformation_12x_16x.png" />
+    <None Remove="Images\StatusWarning_12x_16x.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\StatusCriticalError_12x_16x.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Images\StatusDebug_12x_16x.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Images\StatusInformation_12x_16x.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Images\StatusWarning_12x_16x.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+  </ItemGroup>
 </Project>
