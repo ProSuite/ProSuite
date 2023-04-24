@@ -23,7 +23,7 @@ namespace ProSuite.AGP.QA
 
 		public bool IncludeHiddenSpecifications { get; set; }
 
-		public string BackendDisplayName => _client.HostName;
+		public string BackendDisplayName => $"{_client.HostName}:{_client.Port}";
 
 		public bool CanGetSpecifications()
 		{
