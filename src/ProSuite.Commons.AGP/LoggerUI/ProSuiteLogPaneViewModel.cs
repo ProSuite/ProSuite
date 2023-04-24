@@ -76,6 +76,8 @@ namespace ProSuite.Commons.AGP.LoggerUI
 
 		private static void OpenLogLinkMessage(object msg)
 		{
+			var message = (LoggingEventItem) msg;
+
 			// TODO inform UI than "Hyperlink" is clicked
 			//_msg.Info($"Hyperlink clicked {message.LinkMessage}");
 		}
@@ -111,6 +113,25 @@ namespace ProSuite.Commons.AGP.LoggerUI
 		private bool IsLogLevelDisabled(LoggingEventItem logItem)
 		{
 			return _disabledLogTypes.Contains(logItem.Type);
+		}
+
+		internal static void ToggleDockWindowVisibility()
+		{
+			var pane =
+				(ProSuiteLogPaneViewModel) FrameworkApplication.DockPaneManager.Find(Id);
+			if (pane == null)
+			{
+				return;
+			}
+
+			if (! pane.IsVisible)
+			{
+				pane.Activate();
+			}
+			else if (pane.IsVisible)
+			{
+				pane.Hide();
+			}
 		}
 
 		protected override void OnShow(bool isVisible)
