@@ -10,6 +10,7 @@ using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -99,7 +100,7 @@ namespace ProSuite.QA.Tests
 			string unique,
 			[Doc(nameof(DocStrings.QaUnique_maxRows))] [DefaultValue(_defaultMaxRows)]
 			int maxRows)
-			: this(new[] {table}, new[] {unique})
+			: this(new[] { table }, new[] { unique })
 		{
 			_maxRows = maxRows;
 		}
@@ -126,7 +127,7 @@ namespace ProSuite.QA.Tests
 			foreach (string unique in uniques)
 			{
 				string[] uniqueFields =
-					unique.ToUpper().Split(new[] {",", ";", " "},
+					unique.ToUpper().Split(new[] { ",", ";", " " },
 					                       StringSplitOptions.RemoveEmptyEntries);
 
 				Assert.ArgumentCondition(uniqueFields.Length > 0,
@@ -231,7 +232,7 @@ namespace ProSuite.QA.Tests
 
 		public override int Execute(IReadOnlyRow row)
 		{
-			return Execute(new[] {row});
+			return Execute(new[] { row });
 		}
 
 		protected override ISpatialReference GetSpatialReference()
@@ -308,6 +309,12 @@ namespace ProSuite.QA.Tests
 		private static bool CanUseTableSort([NotNull] IReadOnlyTable table)
 		{
 			IWorkspace workspace = table.Workspace;
+
+			if (workspace is GdbWorkspace)
+			{
+				return false;
+			}
+
 			if (WorkspaceUtils.IsSDEGeodatabase(workspace))
 			{
 				return true;
@@ -764,7 +771,7 @@ namespace ProSuite.QA.Tests
 			}
 			else
 			{
-				var subfields = new List<string> {table.OIDFieldName};
+				var subfields = new List<string> { table.OIDFieldName };
 				subfields.AddRange(uniqueFields);
 
 				GdbQueryUtils.SetSubFields(result, subfields);

@@ -36,9 +36,13 @@ namespace ProSuite.QA.Tests.Transformers
 		{
 			var involvedRows = new List<IReadOnlyRow>(2)
 			                   {
-				                   leftRow,
-				                   otherRow
+				                   leftRow
 			                   };
+
+			if (otherRow != null)
+			{
+				involvedRows.Add(otherRow);
+			}
 
 			VirtualRow rowContainingBaseRows = _baseRowRowTable.CreateRow();
 

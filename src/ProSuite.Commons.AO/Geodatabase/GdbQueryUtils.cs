@@ -375,7 +375,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			// instead, the first field must be assigned to the SubFields property. The other fields can 
 			// then be added using AddField() (which makes sure that fields are included only once)
 
-			var first = true;
+			bool first = true;
 			foreach (string fieldName in fieldNames)
 			{
 				if (first)
@@ -388,6 +388,26 @@ namespace ProSuite.Commons.AO.Geodatabase
 					queryFilter.AddField(fieldName);
 				}
 			}
+		}
+
+
+		/// <summary>
+		/// Appends the specified field name to <see cref="currentSubFields"/> if there are other fields
+		/// already. In case it is null, empty or "*" the specified field name is returned (as single
+		/// sub-field). The <see cref="fieldName"/> can also be a comma-separated list of fields.
+		/// </summary>
+		/// <param name="currentSubFields"></param>
+		/// <param name="fieldName"></param>
+		/// <returns></returns>
+		public static string AppendToFieldList([CanBeNull] string currentSubFields,
+		                                       [NotNull] string fieldName)
+		{
+			if (string.IsNullOrEmpty(currentSubFields) || currentSubFields == "*")
+			{
+				return fieldName;
+			}
+
+			return $"{currentSubFields}, {fieldName}";
 		}
 
 		[NotNull]
@@ -1688,7 +1708,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 		}
 
-		private static void LogFilterProperties([NotNull] IQueryFilter filter)
+		public static void LogFilterProperties([NotNull] IQueryFilter filter)
 		{
 			_msg.DebugFormat("Subfields: {0}", filter.SubFields);
 			_msg.DebugFormat("WhereClause: {0}", filter.WhereClause);

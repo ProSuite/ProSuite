@@ -315,9 +315,8 @@ namespace ProSuite.DomainServices.AO.QA
 			Assert.ArgumentCondition(origSelection.Count > 0, "no features in selection");
 
 			bool ensureIntersectingPerimeter = perimeter != null;
-			IEnvelope testExtent;
 			_selection = VerificationUtils.GetFilteredObjects(
-				origSelection, perimeter, ensureIntersectingPerimeter, out testExtent);
+				origSelection, perimeter, ensureIntersectingPerimeter, out IEnvelope testExtent);
 
 			if (testExtent == null)
 			{
@@ -475,8 +474,8 @@ namespace ProSuite.DomainServices.AO.QA
 
 			QualitySpecificationUtils.LogSpecification(qualitySpecification);
 
-			QualityVerification qualityVerification;
-			IList<ITest> tests = GetTests(qualitySpecification, out qualityVerification);
+			IList<ITest> tests = GetTests(qualitySpecification,
+			                              out QualityVerification qualityVerification);
 
 			_datasetResolver = new QualityConditionObjectDatasetResolver(_verificationContext);
 

@@ -174,6 +174,23 @@ namespace ProSuite.DomainModel.Core.QA
 			throw new NotImplementedException();
 		}
 
+		public override string GetCanonicalName()
+		{
+			if (TestFactoryDescriptor != null)
+			{
+				return InstanceDescriptorUtils.GetCanonicalInstanceDescriptorName(
+					TestFactoryDescriptor.TypeName, ConstructorId);
+			}
+
+			if (TestClass != null)
+			{
+				return InstanceDescriptorUtils.GetCanonicalInstanceDescriptorName(
+					TestClass.TypeName, ConstructorId);
+			}
+
+			return null;
+		}
+
 		public override string ToString()
 		{
 			return $"Test Descriptor '{Name}'";

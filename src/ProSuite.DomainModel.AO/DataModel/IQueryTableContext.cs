@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.Core.DataModel;
@@ -21,7 +20,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 		/// <param name="associationName"></param>
 		/// <param name="model"></param>
 		/// <returns></returns>
-		string GetRelationshipClassName([NotNull] string associationName, [NotNull] Model model);
+		string GetRelationshipClassName([NotNull] string associationName, [NotNull] DdxModel model);
 
 		/// <summary>
 		/// Whether this specific implementation can open query tables or not.
@@ -39,10 +38,10 @@ namespace ProSuite.DomainModel.AO.DataModel
 		/// <param name="joinType"></param>
 		/// <param name="whereClause"></param>
 		/// <returns></returns>
-		ITable OpenQueryTable([NotNull] string relationshipClassName,
-		                      [NotNull] DdxModel model,
-		                      [NotNull] IList<IReadOnlyTable> tables,
-		                      JoinType joinType,
-		                      [CanBeNull] string whereClause);
+		IReadOnlyTable OpenQueryTable([NotNull] string relationshipClassName,
+		                              [NotNull] DdxModel model,
+		                              [NotNull] IList<IReadOnlyTable> tables,
+		                              JoinType joinType,
+		                              [CanBeNull] string whereClause);
 	}
 }

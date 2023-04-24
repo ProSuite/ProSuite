@@ -11,6 +11,7 @@ using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
 using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.QA;
+using ProSuite.DomainModel.Core;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.Xml;
@@ -25,6 +26,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 	public class ProtoBasedQualitySpecificationFactory
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
+		private static int _currentModelId = -100;
 
 		private readonly ISupportedInstanceDescriptors _instanceDescriptors;
 
@@ -439,10 +442,18 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			foreach (DataSource dataSource in allDataSources)
 			{
+				if (! int.TryParse(dataSource.ID, out int modelId))
+				{
+					// If the the model is harvested using VerifiedModelFactory
+					// it is not important that the modelId matches the dataSource.ID.
+					// Just use a unique, non-persistent model id
+					modelId = _currentModelId--;
+				}
+
 				result.Add(dataSource.ID,
 				           CreateModel(dataSource.OpenWorkspace(),
 				                       dataSource.DisplayName,
-				                       dataSource.ID,
+				                       modelId,
 				                       dataSource.DatabaseName,
 				                       dataSource.SchemaOwner,
 				                       referencedConditions));
@@ -455,18 +466,22 @@ namespace ProSuite.Microservices.Server.AO.QA
 		private DdxModel CreateModel(
 			[NotNull] IWorkspace workspace,
 			[NotNull] string modelName,
-			[NotNull] string workspaceId,
+			int workspaceId,
 			[CanBeNull] string databaseName,
 			[CanBeNull] string schemaOwner,
 			[NotNull] IEnumerable<QualityConditionMsg> referencedConditions)
 		{
-			Model result = ModelFactory.CreateModel(workspace, modelName,
+			Model result = ModelFactory.CreateModel(workspace, modelName, workspaceId,
 			                                        databaseName, schemaOwner);
 
-			IEnumerable<Dataset> referencedDatasets = GetReferencedDatasets(
-				result, workspaceId, referencedConditions);
+			if (result.SpatialReferenceDescriptor == null)
+			{
+				IEnumerable<Dataset> referencedDatasets = GetReferencedDatasets(
+					result, workspaceId.ToString(CultureInfo.InvariantCulture),
+					referencedConditions);
 
-			ModelFactory.AssignMostFrequentlyUsedSpatialReference(result, referencedDatasets);
+				ModelFactory.AssignMostFrequentlyUsedSpatialReference(result, referencedDatasets);
+			}
 
 			return result;
 		}
@@ -524,16 +539,39 @@ namespace ProSuite.Microservices.Server.AO.QA
 		private TestDescriptor GetTestDescriptor(
 			[NotNull] QualityConditionMsg conditionMsg)
 		{
-			string testDescriptorName = conditionMsg.TestDescriptorName;
-			Assert.True(StringUtils.IsNotEmpty(testDescriptorName),
+			string descriptorName = conditionMsg.TestDescriptorName;
+			Assert.True(StringUtils.IsNotEmpty(descriptorName),
 			            $"Test descriptor name is missing in condition: {conditionMsg}");
 
-			string trimmedName = testDescriptorName.Trim();
-			TestDescriptor testDescriptor = _instanceDescriptors.GetTestDescriptor(trimmedName);
+			TestDescriptor testDescriptor = _instanceDescriptors.GetTestDescriptor(descriptorName);
+
+			if (testDescriptor == null &&
+			    InstanceDescriptorUtils.TryExtractClassInfo(descriptorName,
+			                                                out Type type,
+			                                                out int constructorIdx))
+			{
+				// Fallback (if fully qualified type)
+
+				// NOTE: Keep the exact same descriptor name to allow sub-processes to extract
+				//       the type as well.
+				if (constructorIdx < 0)
+				{
+					// Test Factory
+					testDescriptor =
+						new TestDescriptor(descriptorName, new ClassDescriptor(type));
+				}
+				else
+				{
+					testDescriptor =
+						new TestDescriptor(descriptorName, new ClassDescriptor(type),
+						                   constructorIdx);
+				}
+			}
 
 			Assert.NotNull(testDescriptor,
-			               "Test descriptor '{0}' referenced in quality condition '{1}' does not exist",
-			               testDescriptorName, conditionMsg.Name);
+			               "Test descriptor '{0}' referenced in quality condition '{1}' is not " +
+			               "part of the supported descriptors, nor was its name a valid Type.",
+			               descriptorName, conditionMsg.Name);
 
 			return testDescriptor;
 		}

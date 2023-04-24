@@ -142,6 +142,13 @@ namespace ProSuite.DomainModel.Core.QA
 
 		public abstract InstanceConfiguration CreateConfiguration();
 
+		/// <summary>
+		/// Gets the canonical name of the instance descriptor, i.e. className(constructorIndex)
+		/// or factoryClassName for test factories. 
+		/// </summary>
+		/// <returns></returns>
+		public abstract string GetCanonicalName();
+
 		#region Equality members
 
 		public virtual bool Equals(InstanceDescriptor other)

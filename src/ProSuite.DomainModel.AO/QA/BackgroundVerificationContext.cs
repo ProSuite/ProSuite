@@ -65,10 +65,10 @@ namespace ProSuite.DomainModel.AO.QA
 		public void UpdateCanWriteIssues() { }
 
 		public IEnumerable<INotification> CannotWriteIssuesReasons =>
-			new[] {new Notification("Not supported in background service")};
+			new[] { new Notification("Not supported in background service") };
 
 		public IEnumerable<INotification> CannotNavigateIssuesReasons =>
-			new[] {new Notification("Not supported in background service")};
+			new[] { new Notification("Not supported in background service") };
 
 		// the error datasets are still needed (e.g. to load allowed errors)
 
@@ -215,7 +215,7 @@ namespace ProSuite.DomainModel.AO.QA
 
 		#region IQueryTableContext members
 
-		public string GetRelationshipClassName(string associationName, Model model)
+		public string GetRelationshipClassName(string associationName, DdxModel model)
 		{
 			if (InnerModelContext is IQueryTableContext queryTableContext)
 			{
@@ -241,11 +241,11 @@ namespace ProSuite.DomainModel.AO.QA
 			       queryTableContext.CanOpenQueryTables();
 		}
 
-		public ITable OpenQueryTable(string relationshipClassName,
-		                             DdxModel model,
-		                             IList<IReadOnlyTable> tables,
-		                             JoinType joinType,
-		                             string whereClause)
+		public IReadOnlyTable OpenQueryTable(string relationshipClassName,
+		                                     DdxModel model,
+		                                     IList<IReadOnlyTable> tables,
+		                                     JoinType joinType,
+		                                     string whereClause)
 		{
 			if (InnerModelContext is IQueryTableContext queryTableContext &&
 			    queryTableContext.CanOpenQueryTables())

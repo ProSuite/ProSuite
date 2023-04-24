@@ -100,6 +100,12 @@ namespace ProSuite.Microservices.Server.AO.QA
 		void InitializeSchema(ICollection<Dataset> datasets);
 
 		/// <summary>
+		/// Initialize the requested objects to be verified and set the <see cref="VerifiedObjects"/>.
+		/// </summary>
+		/// <param name="datasets"></param>
+		void LoadObjectsToVerify(ICollection<Dataset> datasets);
+
+		/// <summary>
 		/// Set the function to get schema and data from the client.
 		/// </summary>
 		/// <param name="dataRequestFunc"></param>

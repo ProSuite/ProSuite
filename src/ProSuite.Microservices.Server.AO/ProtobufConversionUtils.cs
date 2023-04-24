@@ -18,6 +18,7 @@ using ProSuite.Microservices.AO;
 using ProSuite.Microservices.Definitions.QA;
 using ProSuite.Microservices.Definitions.Shared;
 using ProSuite.Microservices.Server.AO.Geodatabase;
+using ProSuite.Microservices.Server.AO.QA;
 
 namespace ProSuite.Microservices.Server.AO
 {
@@ -258,38 +259,41 @@ namespace ProSuite.Microservices.Server.AO
 				         };
 			}
 
-			if (objectClassMsg.Fields == null || objectClassMsg.Fields.Count <= 0)
+			AddFields(objectClassMsg, result, geometryType);
+
+			return result;
+		}
+
+		public static GdbTable FromQueryTableMsg(
+			[NotNull] ObjectClassMsg objectClassMsg,
+			[NotNull] IWorkspace workspace,
+			[NotNull] Func<ITable, BackingDataset> createBackingDataset,
+			IList<IReadOnlyTable> involvedTables)
+		{
+			esriGeometryType geometryType = (esriGeometryType) objectClassMsg.GeometryType;
+
+			GdbTable result;
+			if (geometryType == esriGeometryType.esriGeometryNull)
 			{
-				return result;
+				result = new RemoteQueryTable(
+					(int) objectClassMsg.ClassHandle, objectClassMsg.Name, objectClassMsg.Alias,
+					createBackingDataset, workspace, involvedTables);
+			}
+			else
+			{
+				result = new RemoteQueryFeatureClass(
+					         (int) objectClassMsg.ClassHandle, objectClassMsg.Name,
+					         (esriGeometryType) objectClassMsg.GeometryType,
+					         objectClassMsg.Alias,
+					         createBackingDataset, workspace, involvedTables)
+				         {
+					         SpatialReference =
+						         ProtobufGeometryUtils.FromSpatialReferenceMsg(
+							         objectClassMsg.SpatialReference)
+				         };
 			}
 
-			foreach (FieldMsg fieldMsg in objectClassMsg.Fields)
-			{
-				IField field = FieldUtils.CreateField(fieldMsg.Name,
-				                                      (esriFieldType) fieldMsg.Type,
-				                                      fieldMsg.AliasName);
-
-				if (field.Type == esriFieldType.esriFieldTypeString)
-				{
-					((IFieldEdit) field).Length_2 = fieldMsg.Length;
-				}
-				else if (field.Type == esriFieldType.esriFieldTypeGeometry)
-				{
-					var sr = ProtobufGeometryUtils.FromSpatialReferenceMsg(
-						objectClassMsg.SpatialReference);
-					field = FieldUtils.CreateShapeField(geometryType, sr, 1000, true, false);
-				}
-
-				if (result.Fields.FindField(field.Name) < 0)
-				{
-					result.AddField(field);
-				}
-				else
-				{
-					_msg.DebugFormat("Field {0} is duplicate or has been added previously",
-					                 field.Name);
-				}
-			}
+			AddFields(objectClassMsg, result, geometryType);
 
 			return result;
 		}
@@ -390,6 +394,49 @@ namespace ProSuite.Microservices.Server.AO
 			result.Shape = shape;
 
 			return result;
+		}
+
+		private static void AddFields([NotNull] ObjectClassMsg objectClassMsg,
+		                              [NotNull] VirtualTable toResultTable,
+		                              esriGeometryType geometryType)
+		{
+			if (objectClassMsg.Fields == null || objectClassMsg.Fields.Count <= 0)
+			{
+				return;
+			}
+
+			foreach (FieldMsg fieldMsg in objectClassMsg.Fields)
+			{
+				IField field = FieldUtils.CreateField(fieldMsg.Name,
+				                                      (esriFieldType) fieldMsg.Type,
+				                                      fieldMsg.AliasName);
+
+				if (field.Type == esriFieldType.esriFieldTypeString)
+				{
+					((IFieldEdit) field).Length_2 = fieldMsg.Length;
+				}
+				else if (field.Type == esriFieldType.esriFieldTypeGeometry)
+				{
+					var sr = ProtobufGeometryUtils.FromSpatialReferenceMsg(
+						objectClassMsg.SpatialReference);
+					field = FieldUtils.CreateShapeField(geometryType, sr, 1000, true, false);
+				}
+
+				if (toResultTable.Fields.FindField(field.Name) < 0)
+				{
+					toResultTable.AddField(field);
+				}
+				else
+				{
+					_msg.DebugFormat("Field {0} is duplicate or has been added previously",
+					                 field.Name);
+				}
+
+				if (fieldMsg.DomainName == ProtobufGdbUtils.SubtypeDomainName)
+				{
+					toResultTable.SubtypeFieldName = field.Name;
+				}
+			}
 		}
 
 		private static void ReadMsgValues(GdbObjectMsg gdbObjectMsg, GdbRow intoResult,

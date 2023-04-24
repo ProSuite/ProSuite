@@ -18,11 +18,12 @@ namespace ProSuite.DomainServices.AO.QA
 {
 	internal static class ReferenceGeometryUtils
 	{
-		private const string _referencedGeometryInfo = "(referenced geometry stored)";
-
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		internal static string ReferencedGeometryInfo => _referencedGeometryInfo;
+		/// <remarks>
+		/// Do not change this string, it is persisted on <see cref="QaError"/>
+		/// </remarks>
+		internal static string ReferencedGeometryInfo => "; (referenced geometry stored)";
 
 		[CanBeNull]
 		internal static IGeometry CreateReferenceGeometry(
@@ -51,9 +52,7 @@ namespace ProSuite.DomainServices.AO.QA
 			[NotNull] QaError qaError,
 			[NotNull] IGeometry referenceGeometry)
 		{
-			string description = string.Format(
-				"{0}; {1}", qaError.Description,
-				_referencedGeometryInfo);
+			string description = string.Concat(qaError.Description, ReferencedGeometryInfo);
 
 			return new QaError(qaError.Test,
 			                   description,
@@ -336,7 +335,7 @@ namespace ProSuite.DomainServices.AO.QA
 					yield return shape;
 				}
 			}
-			else
+			else if (objectDataset != null && obj != null)
 			{
 				foreach (IList<IRelationshipClass> relClassChain
 				         in GetRelationshipClassChainsToVerifiedFeatureClasses(
@@ -461,13 +460,13 @@ namespace ProSuite.DomainServices.AO.QA
 			return false;
 		}
 
-		[NotNull]
+		[CanBeNull]
 		private static IObject GetInvolvedObject(
 			[NotNull] InvolvedRow involvedRow,
 			[NotNull] QualityCondition qualityCondition,
 			[NotNull] IDatasetContext datasetContext,
 			[NotNull] IQualityConditionObjectDatasetResolver datasetResolver,
-			[NotNull] out IObjectDataset objectDataset)
+			[CanBeNull] out IObjectDataset objectDataset)
 		{
 			Assert.ArgumentNotNull(involvedRow, nameof(involvedRow));
 			Assert.ArgumentNotNull(qualityCondition, nameof(qualityCondition));
@@ -475,16 +474,17 @@ namespace ProSuite.DomainServices.AO.QA
 			                         "involved row represents entire table");
 			Assert.ArgumentNotNull(datasetContext, nameof(datasetContext));
 
-			//string gdbTableName = involvedRow.TableName;
-			//objectDataset = Assert.NotNull(
-			//    QualityVerificationUtils.GetInvolvedObjectDataset(gdbTableName,
-			//                                                      qualityCondition,
-			//                                                      datasetResolver),
-			//    "object dataset not found for {0}", involvedRow.TableName);
 			string gdbTableName = involvedRow.TableName;
-			objectDataset = Assert.NotNull(
-				datasetResolver.GetDatasetByGdbTableName(gdbTableName, qualityCondition),
-				"object dataset not found for {0}", involvedRow.TableName);
+
+			objectDataset =
+				datasetResolver.GetDatasetByGdbTableName(gdbTableName, qualityCondition);
+
+			if (objectDataset == null)
+			{
+				// E.g. if the involved row comes from a TrMakeTable transformer using any table outside the model:
+				_msg.VerboseDebug(() => $"object dataset not found for {involvedRow.TableName}");
+				return null;
+			}
 
 			ITable table = datasetContext.OpenTable(objectDataset);
 			// TODO REFACTORMODEL revise null handling

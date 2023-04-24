@@ -4,7 +4,7 @@ using ESRI.ArcGIS.Geodatabase;
 
 namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 {
-	public class CursorImpl : ICursor, IFeatureCursor
+	public class CursorImpl : ICursor, IFeatureCursor, IDisposable
 	{
 		private readonly IEnumerator<IRow> _rowEnumerator;
 
@@ -60,5 +60,14 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		public virtual void Flush() =>
 			throw new NotImplementedException("Implement in derived class");
+
+		#region IDisposable
+
+		public void Dispose()
+		{
+			_rowEnumerator?.Dispose();
+		}
+
+		#endregion
 	}
 }
