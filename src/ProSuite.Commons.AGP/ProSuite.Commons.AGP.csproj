@@ -19,6 +19,7 @@
   <!-- .net 6 Winforms and WPF references: -->
   <PropertyGroup>
     <UseWpf>true</UseWpf>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -73,12 +74,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="Gdb\GdbObjectReference.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Remove="Images\StatusCriticalError_12x_16x.png" />
-    <None Remove="Images\StatusDebug_12x_16x.png" />
-    <None Remove="Images\StatusInformation_12x_16x.png" />
-    <None Remove="Images\StatusWarning_12x_16x.png" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Images\StatusCriticalError_12x_16x.png">
