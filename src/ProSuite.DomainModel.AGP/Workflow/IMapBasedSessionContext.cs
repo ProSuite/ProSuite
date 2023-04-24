@@ -39,5 +39,12 @@ namespace ProSuite.DomainModel.AGP.Workflow
 		/// <param name="reason"></param>
 		/// <returns></returns>
 		bool CanVerifyQuality(out string reason);
+
+		/// <summary>
+		/// Sets the <see cref="ProjectWorkspace"/> and triggers the
+		/// <see cref="ProjectWorkspaceChanged"/> event.
+		/// </summary>
+		/// <param name="newProjectWorkspace"></param>
+		void SetProjectWorkspace([CanBeNull] ProjectWorkspace newProjectWorkspace);
 	}
 }
