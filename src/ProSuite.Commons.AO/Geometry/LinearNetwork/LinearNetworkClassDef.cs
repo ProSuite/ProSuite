@@ -52,8 +52,11 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork
 					FilterHelper.Create(ReadOnlyTableFactory.Create(FeatureClass), WhereClause);
 			}
 
-			return _filterHelper.Check(
-				ReadOnlyFeature.Create(ReadOnlyTableFactory.Create(FeatureClass), feature));
+			// TOP-5699: Do not use the FeatureClass as owner because it could be from the default version
+			// and there is a reference-equals assertion between the owner's base table and the feature's table.
+			IReadOnlyRow readOnlyFeature = ReadOnlyFeature.Create(feature);
+
+			return _filterHelper.Check(readOnlyFeature);
 		}
 
 		protected bool Equals(LinearNetworkClassDef other)

@@ -68,6 +68,11 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 				geometryType = GetGeometryType(DatasetUtils.GetShapeType(fcName));
 			}
 
+			if (geometryType == null)
+			{
+				_msg.Warn($"Ignoring vector dataset '{datasetName.Name}' due to undefined geometry type");
+				return null;
+			}
 			var verifiedVectorDataset = new VerifiedVectorDataset(datasetName.Name)
 			                            {
 				                            GeometryType = geometryType

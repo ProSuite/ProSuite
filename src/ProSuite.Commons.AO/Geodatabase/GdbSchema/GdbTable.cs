@@ -313,8 +313,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		#region ISubtypes Members
 
-		private bool _hasSubtype;
-		public override bool HasSubtype => _hasSubtype;
+		public override bool HasSubtype => SubtypeFieldName != null;
 
 		public override int DefaultSubtypeCode { get; set; }
 

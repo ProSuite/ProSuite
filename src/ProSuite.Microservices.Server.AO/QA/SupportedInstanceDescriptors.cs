@@ -5,6 +5,13 @@ using ProSuite.DomainModel.Core.QA;
 
 namespace ProSuite.Microservices.Server.AO.QA
 {
+	/// <summary>
+	/// Encapsulates the resolution of the currently available instance descriptors by name.
+	/// This could be the look-up of the instance descriptors as used in the DDX.
+	/// This could be the look-up of the instance descriptors using their canonical name.
+	/// TODO: Consider supporting the look-up by canonical name as automatic fallback.
+	/// TODO: Add methods for the look-up by type name including the old-name/new-name mapping
+	/// </summary>
 	public class SupportedInstanceDescriptors : ISupportedInstanceDescriptors
 	{
 		private readonly IDictionary<string, TestDescriptor> _testDescriptors;

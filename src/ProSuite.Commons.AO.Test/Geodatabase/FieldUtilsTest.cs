@@ -14,6 +14,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		{
 			const short int16Value = 100;
 			const int int32Value = 100;
+			const long int64Value = 100;
 
 			const double doubleValue = 1.111;
 			const double equalDoubleValue = 1.11100000000001;
@@ -25,6 +26,13 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 			Assert.True(FieldUtils.AreValuesEqual(int16Value, int32Value));
 			Assert.True(FieldUtils.AreValuesEqual(int32Value, int16Value));
+
+			Assert.True(FieldUtils.AreValuesEqual(int16Value, int64Value));
+			Assert.True(FieldUtils.AreValuesEqual(int64Value, int16Value));
+
+			Assert.True(FieldUtils.AreValuesEqual(int32Value, int64Value));
+			Assert.True(FieldUtils.AreValuesEqual(int64Value, int32Value));
+
 			Assert.True(FieldUtils.AreValuesEqual(doubleValue, floatValue));
 			Assert.True(FieldUtils.AreValuesEqual(floatValue, doubleValue));
 			Assert.True(FieldUtils.AreValuesEqual(floatValue, equalFloatValue));

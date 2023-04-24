@@ -2477,6 +2477,12 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		public static bool IsOleDbWorkspace([NotNull] IWorkspace workspace)
 		{
+			if (! Marshal.IsComObject(workspace))
+			{
+				// Specific implementation
+				return false;
+			}
+
 			const string classId = "{59158055-3171-11D2-AA94-00C04FA37849}";
 
 			return workspace.Type == esriWorkspaceType.esriRemoteDatabaseWorkspace &&
@@ -2506,6 +2512,12 @@ namespace ProSuite.Commons.AO.Geodatabase
 			                          StringComparison.OrdinalIgnoreCase);
 		}
 
+		/// <summary>
+		/// Determines whether the specified workspace is an SDE workspace.
+		/// DO NOT USE with custom workspace implementations.
+		/// </summary>
+		/// <param name="workspace"></param>
+		/// <returns></returns>
 		public static bool IsSDEGeodatabase([NotNull] IWorkspace workspace)
 		{
 			Assert.ArgumentNotNull(workspace, nameof(workspace));

@@ -43,7 +43,7 @@ namespace ProSuite.QA.Tests.Transformers
 			string rightTableKey,
 			[DocTr(nameof(DocTrStrings.TrTableJoinInMemory_joinType))]
 			JoinType joinType)
-			: base(new[] {leftTable, rightTable})
+			: base(new[] { leftTable, rightTable })
 		{
 			_leftTable = leftTable;
 			_rightTable = rightTable;
@@ -101,7 +101,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 				const bool ensureUniqueIds = true;
 
-				_joinedTable = CreateJoinedGdbFeatureClass(
+				_joinedTable = CreateJoinedGdbTable(
 					association, _leftTable, name, ensureUniqueIds, _joinType);
 
 				JoinedBackingDataset joinedDataset =
@@ -131,7 +131,7 @@ namespace ProSuite.QA.Tests.Transformers
 		/// <param name="joinType"></param>
 		/// <returns></returns>
 		/// <exception cref="NotImplementedException"></exception>
-		private static GdbTable CreateJoinedGdbFeatureClass(
+		private static GdbTable CreateJoinedGdbTable(
 			[NotNull] AssociationDescription associationDescription,
 			[CanBeNull] IReadOnlyTable geometryTable,
 			[NotNull] string name,
@@ -162,8 +162,7 @@ namespace ProSuite.QA.Tests.Transformers
 				       };
 			}
 
-			var result =
-				CreateJoinedGdbTable(name, BackingDatasetFactoryFunc, geometryTable);
+			var result = CreateJoinedGdbTable(name, BackingDatasetFactoryFunc, geometryTable);
 
 			return result;
 		}

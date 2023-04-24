@@ -1,7 +1,7 @@
 namespace ProSuite.QA.Tests
 {
 	/// <summary>
-	/// Describes with orpan noce related tests are done in OrphanNodeTest
+	/// Describes which orphan node related tests are done in <see cref="QaOrphanNode"/>
 	/// </summary>
 	public enum OrphanErrorType
 	{
@@ -16,7 +16,7 @@ namespace ProSuite.QA.Tests
 		OrphanedPoint = 2,
 
 		/// <summary>
-		/// tests if line without connected points is found
+		/// Tests if a line without connected points is found
 		/// </summary>
 		EndPointWithoutPoint = 3
 	}

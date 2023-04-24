@@ -27,8 +27,11 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 				return;
 			}
 
-			// Important in case it is a read-only field (such as the OID)
-			if (! _row.Value[index].Equals(value))
+			// Important in case it is a read-only field (such as the OID), compare values first:
+			// Attention: long object != int object, even if the values are the same!
+			object sourceValue = _row.Value[index];
+
+			if (! FieldUtils.AreValuesEqual(sourceValue, value))
 			{
 				_row.Value[index] = value;
 			}

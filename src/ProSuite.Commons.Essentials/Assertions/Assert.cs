@@ -219,6 +219,18 @@ namespace ProSuite.Commons.Essentials.Assertions
 
 		[NotNull]
 		[ContractAnnotation("o: null => halt")]
+		public static T? NotNull<T>(T? o, [NotNull] string message) where T : struct
+		{
+			if (o == null)
+			{
+				throw new AssertionException(message);
+			}
+
+			return o;
+		}
+
+		[NotNull]
+		[ContractAnnotation("o: null => halt")]
 		public static T NotNull<T>(T o, [NotNull] FormattableString message) where T : class
 		{
 			if (o == null)
@@ -231,11 +243,23 @@ namespace ProSuite.Commons.Essentials.Assertions
 
 		[NotNull]
 		[ContractAnnotation("o: null => halt")]
-		public static T? NotNull<T>(T? o, [NotNull] string message) where T : struct
+		public static T NotNull<T>(T o, [NotNull] Func<string> messageFunc) where T : class
 		{
 			if (o == null)
 			{
-				throw new AssertionException(message);
+				throw new AssertionException(messageFunc());
+			}
+
+			return o;
+		}
+
+		[NotNull]
+		[ContractAnnotation("o: null => halt")]
+		public static T? NotNull<T>(T? o, [NotNull] Func<string> messageFunc) where T : struct
+		{
+			if (o == null)
+			{
+				throw new AssertionException(messageFunc());
 			}
 
 			return o;

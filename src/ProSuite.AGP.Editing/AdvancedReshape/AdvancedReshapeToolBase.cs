@@ -97,7 +97,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		protected override void LogEnteringSketchMode()
 		{
 			string logText = LocalizableStrings.AdvancedReshapeTool_LogEnteringSketchMode;
-			//	"Sketch the reshape line to change the selection.<br>- Press R to restore the sketch from the previous reshape operation.<br>- Press S to toggle the non-default reshape side of the geometry.<br>- Press ESC to select different features.";
+			//	"Sketch the reshape line to change the selection.<br>- Press R to restore the sketch from the previous reshape operation.<br>- Press S to change the reshape side of the geometry.<br>- Press ESC to select different features.";
 
 			int selectionCount = ActiveMapView.Map.SelectionCount;
 

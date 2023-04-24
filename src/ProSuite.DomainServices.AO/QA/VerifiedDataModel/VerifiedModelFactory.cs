@@ -15,23 +15,6 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 {
 	public class VerifiedModelFactory : IVerifiedModelFactory
 	{
-		// FeatureClassNameClass does not exist in AO11 !
-		private class FeatureClassNameProxy : IFeatureClassName, IDatasetName 
-		{
-			esriGeometryType IFeatureClassName.ShapeType { get; set; }
-			IDatasetName IFeatureClassName.FeatureDatasetName { get; set; }
-			esriFeatureType IFeatureClassName.FeatureType { get; set; }
-			string IFeatureClassName.ShapeFieldName { get; set; }
-			string IDatasetName.Name { get; set; }
-
-			esriDatasetType IDatasetName.Type => esriDatasetType.esriDTFeatureClass;
-
-			string IDatasetName.Category { get; set; }
-			IWorkspaceName IDatasetName.WorkspaceName { get; set; }
-
-			IEnumDatasetName IDatasetName.SubsetNames => null;
-		}
-
 		[NotNull] private readonly IMasterDatabaseWorkspaceContextFactory _workspaceContextFactory;
 
 		[NotNull] private readonly VerifiedDatasetHarvesterBase _datasetHarvester;
@@ -63,33 +46,49 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 		}
 
 		public Model CreateModel(IWorkspace workspace,
-		                         string name,
+		                         string modelName,
+		                         int modelId,
 		                         string databaseName,
 		                         string schemaOwner,
 		                         IList<string> usedDatasetNames = null)
 		{
+			// TODO: This could be un-commented once 10.9.1 support has been dropped (and TopologyNameClass exists)
+			//       Additionally, the line containing new TopologyNameClass() should be un-commented and the
+			//       unit test re-activated.
 			//if (usedDatasetNames != null)
 			//{
-			//	return CreateNeededModel(workspace, name, databaseName, schemaOwner,
+			//	return CreateNeededModel(workspace, modelName, modelId, databaseName, schemaOwner,
 			//	                         usedDatasetNames);
 			//}
 
-			return CreateFullModel(workspace, name, databaseName, schemaOwner);
+			var result = CreateFullModel(workspace, modelName, modelId, databaseName, schemaOwner);
+
+			return result;
+		}
+
+		public void AssignMostFrequentlyUsedSpatialReference(
+			Model model,
+			IEnumerable<Dataset> usedDatasets)
+		{
+			ISpatialReference spatialReference = GetMainSpatialReference(
+				model, usedDatasets);
+
+			if (spatialReference != null)
+			{
+				model.SpatialReferenceDescriptor =
+					new SpatialReferenceDescriptor(spatialReference);
+			}
 		}
 
 		private Model CreateFullModel(
-			IWorkspace workspace, string name, string databaseName, string schemaOwner)
+			IWorkspace workspace, string name, int modelId, string databaseName, string schemaOwner)
 
 		{
 			Assert.ArgumentNotNull(workspace, nameof(workspace));
 			Assert.ArgumentNotNullOrEmpty(name, nameof(name));
 
-			// NOTE: The schema owner is ignored by harvesting (it's probably intentional).
 			VerifiedModel model =
-				WorkspaceUtils.UsesQualifiedDatasetNames(workspace)
-					? new VerifiedModel(name, workspace, _workspaceContextFactory, databaseName,
-					                    schemaOwner)
-					: new VerifiedModel(name, workspace, _workspaceContextFactory);
+				CreateVerifiedModel(name, workspace, modelId, databaseName, schemaOwner);
 
 			var featureWorkspace = (IFeatureWorkspace) workspace;
 
@@ -120,6 +119,7 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 
 		private Model CreateNeededModel(IWorkspace workspace,
 		                                string name,
+		                                int modelId,
 		                                string databaseName,
 		                                string schemaOwner,
 		                                [NotNull] IList<string> usedDatasetNames)
@@ -128,14 +128,8 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 			Assert.ArgumentNotNullOrEmpty(name, nameof(name));
 			Assert.ArgumentNotNull(usedDatasetNames, nameof(usedDatasetNames));
 
-			// NOTE: The schema owner is ignored by harvesting (it's probably intentional).
-			bool useQualitfiedDatasetNames = WorkspaceUtils.UsesQualifiedDatasetNames(workspace);
-			VerifiedModel model = useQualitfiedDatasetNames
-				                      ? new VerifiedModel(name, workspace, _workspaceContextFactory,
-				                                          databaseName,
-				                                          schemaOwner)
-				                      : new VerifiedModel(name, workspace,
-				                                          _workspaceContextFactory);
+			VerifiedModel model =
+				CreateVerifiedModel(name, workspace, modelId, databaseName, schemaOwner);
 
 			_datasetHarvester.ResetDatasets();
 
@@ -144,7 +138,7 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 				var ws = (IFeatureWorkspace) workspace;
 				IList<string> names = usedDatasetNames;
 				string schema = model.DefaultDatabaseSchemaOwner;
-				bool qn = useQualitfiedDatasetNames;
+				bool qn = model.ElementNamesAreQualified;
 
 				var harvestedNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
@@ -178,18 +172,24 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 			return model;
 		}
 
-		public void AssignMostFrequentlyUsedSpatialReference(
-			Model model,
-			IEnumerable<Dataset> usedDatasets)
+		private VerifiedModel CreateVerifiedModel(string name, IWorkspace workspace, int modelId,
+		                                          string databaseName, string schemaOwner)
 		{
-			ISpatialReference spatialReference = GetMainSpatialReference(
-				model, usedDatasets);
+			// NOTE: The schema owner is ignored by harvesting (it's probably intentional).
+			bool useQualitfiedDatasetNames = WorkspaceUtils.UsesQualifiedDatasetNames(workspace);
 
-			if (spatialReference != null)
+			if (! useQualitfiedDatasetNames)
 			{
-				model.SpatialReferenceDescriptor =
-					new SpatialReferenceDescriptor(spatialReference);
+				databaseName = null;
+				schemaOwner = null;
 			}
+
+			VerifiedModel model =
+				new VerifiedModel(name, workspace, _workspaceContextFactory, databaseName,
+				                  schemaOwner, SqlCaseSensitivity.SameAsDatabase,
+				                  modelId);
+
+			return model;
 		}
 
 		private static ISpatialReference GetMainSpatialReference(
@@ -277,7 +277,7 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 			esriDatasetType dtType,
 			[NotNull] Func<IDatasetName> createName,
 			bool useQualifiedNames,
-			[CanBeNull] string defaultSchema, 
+			[CanBeNull] string defaultSchema,
 			[NotNull] ICollection<string> harvestedNames)
 		{
 			IWorkspace2 ws = (IWorkspace2) workspace;
@@ -407,6 +407,23 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 
 			harvested.Add(name);
 			return false;
+		}
+
+		// FeatureClassNameClass does not exist in AO11 !
+		private class FeatureClassNameProxy : IFeatureClassName, IDatasetName
+		{
+			esriGeometryType IFeatureClassName.ShapeType { get; set; }
+			IDatasetName IFeatureClassName.FeatureDatasetName { get; set; }
+			esriFeatureType IFeatureClassName.FeatureType { get; set; }
+			string IFeatureClassName.ShapeFieldName { get; set; }
+			string IDatasetName.Name { get; set; }
+
+			esriDatasetType IDatasetName.Type => esriDatasetType.esriDTFeatureClass;
+
+			string IDatasetName.Category { get; set; }
+			IWorkspaceName IDatasetName.WorkspaceName { get; set; }
+
+			IEnumDatasetName IDatasetName.SubsetNames => null;
 		}
 	}
 }

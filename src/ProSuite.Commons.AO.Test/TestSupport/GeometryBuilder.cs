@@ -60,7 +60,30 @@ namespace ProSuite.Commons.AO.Test.TestSupport
 		{
 			IGeometry geometry = CreateEmptyGeometry();
 
-			var pointCollection = geometry as IPointCollection;
+			if (_shapeType == esriGeometryType.esriGeometryMultiPatch)
+			{
+				geometry = CreateEmptyGeometry(esriGeometryType.esriGeometryPolygon);
+			}
+
+			FillGeometry(geometry, points);
+
+			if (SimplifyResult)
+			{
+				var topoOp = geometry as ITopologicalOperator;
+				topoOp?.Simplify();
+			}
+
+			if (_shapeType == esriGeometryType.esriGeometryMultiPatch)
+			{
+				geometry = GeometryFactory.CreateMultiPatch((IPolygon) geometry);
+			}
+
+			return geometry;
+		}
+
+		private void FillGeometry(IGeometry emptyGeometry, IList<Pt> points)
+		{
+			var pointCollection = emptyGeometry as IPointCollection;
 
 			if (pointCollection != null)
 			{
@@ -72,7 +95,7 @@ namespace ProSuite.Commons.AO.Test.TestSupport
 			}
 			else
 			{
-				var point = geometry as IPoint;
+				var point = emptyGeometry as IPoint;
 
 				if (point != null)
 				{
@@ -86,22 +109,21 @@ namespace ProSuite.Commons.AO.Test.TestSupport
 						$"Unsupported shape type: {_shapeType}");
 				}
 			}
-
-			if (SimplifyResult)
-			{
-				var topoOp = geometry as ITopologicalOperator;
-				topoOp?.Simplify();
-			}
-
-			return geometry;
 		}
 
 		[NotNull]
 		public IGeometry CreateEmptyGeometry()
 		{
+			esriGeometryType geometryType = _shapeType;
+
+			return CreateEmptyGeometry(geometryType);
+		}
+
+		private IGeometry CreateEmptyGeometry(esriGeometryType geometryType)
+		{
 			var factory = (IGeometryFactory3) GeometryUtils.GeometryBridge;
 			IGeometry geometry;
-			factory.CreateEmptyGeometryByType(_shapeType, out geometry);
+			factory.CreateEmptyGeometryByType(geometryType, out geometry);
 
 			ConfigureGeometry(geometry);
 
