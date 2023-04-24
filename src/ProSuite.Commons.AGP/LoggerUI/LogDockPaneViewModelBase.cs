@@ -116,25 +116,6 @@ namespace ProSuite.Commons.AGP.LoggerUI
 			return _disabledLogTypes.Contains(logItem.Type);
 		}
 
-		internal static void ToggleDockWindowVisibility()
-		{
-			var pane =
-				(LogDockPaneViewModelBase) FrameworkApplication.DockPaneManager.Find(Id);
-			if (pane == null)
-			{
-				return;
-			}
-
-			if (! pane.IsVisible)
-			{
-				pane.Activate();
-			}
-			else if (pane.IsVisible)
-			{
-				pane.Hide();
-			}
-		}
-
 		protected override void OnShow(bool isVisible)
 		{
 			UpdateLogBtn(isVisible);
