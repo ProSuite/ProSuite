@@ -10,9 +10,6 @@ using ProSuite.Commons.Logging;
 
 namespace ProSuite.Commons.AGP.LoggerUI
 {
-	/// <summary>
-	/// Interaction logic for ProSuiteLogPaneView.xaml
-	/// </summary>
 	public partial class LogDockPane
 	{
 		public LogDockPane()
