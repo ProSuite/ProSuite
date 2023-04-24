@@ -464,7 +464,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 		}
 
 		[Test]
-		[Category(Commons.Test.TestCategory.FixMe)]
+		[Ignore("eqTrans is a non IReadOnlyTable-Transformer. Reactivate test when that's supported")]
 		public void CanRunFromXmlWithTableJoin()
 		{
 			// Init

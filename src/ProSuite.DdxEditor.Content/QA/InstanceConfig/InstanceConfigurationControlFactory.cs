@@ -16,10 +16,10 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 	{
 		[NotNull]
 		public static Control CreateControl([NotNull] QualityConditionItem item,
-											[NotNull] IItemNavigation itemNavigation,
-											[NotNull] CoreDomainModelItemModelBuilder modelBuilder,
-											[NotNull] TableState tableStateQSpec,
-											[NotNull] TableState tableStateIssueFilter)
+		                                    [NotNull] IItemNavigation itemNavigation,
+		                                    [NotNull] CoreDomainModelItemModelBuilder modelBuilder,
+		                                    [NotNull] TableState tableStateQSpec,
+		                                    [NotNull] TableState tableStateIssueFilter)
 		{
 			// ReSharper disable once JoinDeclarationAndInitializer
 			QualityConditionControl control;
@@ -32,8 +32,10 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			IInstanceConfigurationTableViewControl blazorControl =
 				new QualityConditionBlazor(viewModel);
 
+			bool ignoreLastTab = item.IsNew;
+
 			control = new QualityConditionControl(tableStateQSpec, tableStateIssueFilter,
-												  blazorControl);
+			                                      blazorControl, ignoreLastTab);
 
 			if (item.HideIssueFilters)
 			{
@@ -51,9 +53,9 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 
 		[NotNull]
 		public static Control CreateControl([NotNull] InstanceConfigurationItem item,
-											[NotNull] IItemNavigation itemNavigation,
-											[NotNull] CoreDomainModelItemModelBuilder modelBuilder,
-											[NotNull] TableState tableState)
+		                                    [NotNull] IItemNavigation itemNavigation,
+		                                    [NotNull] CoreDomainModelItemModelBuilder modelBuilder,
+		                                    [NotNull] TableState tableState)
 		{
 			// ReSharper disable once JoinDeclarationAndInitializer
 			InstanceConfigurationControl control;
@@ -66,7 +68,9 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			IInstanceConfigurationTableViewControl blazorControl =
 				new QualityConditionBlazor(viewModel);
 
-			control = new InstanceConfigurationControl(tableState, blazorControl);
+			bool ignoreLastTab = item.IsNew;
+
+			control = new InstanceConfigurationControl(tableState, blazorControl, ignoreLastTab);
 #else
 			control =
 				new InstanceConfigurationControl(tableState,

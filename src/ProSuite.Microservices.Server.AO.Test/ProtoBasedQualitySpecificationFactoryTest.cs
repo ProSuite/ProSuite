@@ -30,9 +30,14 @@ namespace ProSuite.Microservices.Server.AO.Test
 			string gdbPath = TestData.GetGdb1Path();
 			const string featureClassName = "lines";
 
+			var modelFactory =
+				new VerifiedModelFactory(new MasterDatabaseWorkspaceContextFactory(),
+				                         new SimpleVerifiedDatasetHarvester());
+
 			QualitySpecification qualitySpecification =
-				CreateConditionBasedQualitySpecification(condition1Name, featureClassName,
-				                                         specificationName, gdbPath);
+				CreateConditionBasedQualitySpecification(modelFactory, condition1Name,
+				                                         featureClassName,
+				                                         specificationName, gdbPath, "35");
 
 			Assert.AreEqual(specificationName, qualitySpecification.Name);
 			Assert.AreEqual(2, qualitySpecification.Elements.Count);
@@ -71,9 +76,44 @@ namespace ProSuite.Microservices.Server.AO.Test
 			string gdbPath = TestData.GetGdb1Path();
 			const string featureClassName = "lines";
 
+			var modelFactory =
+				new VerifiedModelFactory(new MasterDatabaseWorkspaceContextFactory(),
+				                         new SimpleVerifiedDatasetHarvester());
+
 			QualitySpecification qualitySpecification =
 				CreateConditionBasedQualitySpecification(
-					condition1Name, featureClassName, specificationName, gdbPath);
+					modelFactory, condition1Name, featureClassName, specificationName, gdbPath,
+					"21");
+
+			XmlBasedVerificationService service = new XmlBasedVerificationService();
+
+			string tempDirPath = TestUtils.GetTempDirPath(null);
+
+			service.ExecuteVerification(qualitySpecification, null, 1000, tempDirPath);
+
+			Assert.IsTrue(Directory.Exists(Path.Combine(tempDirPath, "issues.gdb")));
+			Assert.IsTrue(File.Exists(Path.Combine(tempDirPath, "verification.xml")));
+		}
+
+		[Test]
+		public void CanExecuteConditionBasedSpecificationWithModel()
+		{
+			const string specificationName = "TestSpec";
+			const string condition1Name = "Str_Simple";
+			string gdbPath = TestData.GetGdb1Path();
+			const string featureClassName = "lines";
+
+			// This time use the proto based model factory:
+			var modelId = 39;
+			SchemaMsg schemaMsg = ProtoTestUtils.CreateSchemaMsg(gdbPath, modelId);
+
+			var modelFactory =
+				new ProtoBasedModelFactory(schemaMsg, new MasterDatabaseWorkspaceContextFactory());
+
+			QualitySpecification qualitySpecification =
+				CreateConditionBasedQualitySpecification(
+					modelFactory, condition1Name, featureClassName, specificationName, gdbPath,
+					modelId.ToString());
 
 			XmlBasedVerificationService service = new XmlBasedVerificationService();
 
@@ -86,11 +126,34 @@ namespace ProSuite.Microservices.Server.AO.Test
 		}
 
 		private static QualitySpecification CreateConditionBasedQualitySpecification(
+			IVerifiedModelFactory VerifiedModelFactory,
 			string condition1Name, string featureClassName,
-			string specificationName, string gdbPath)
+			string specificationName, string gdbPath,
+			string workspaceId)
 		{
-			ISupportedInstanceDescriptors instanceDescriptors =
-				Substitute.For<ISupportedInstanceDescriptors>();
+			ConditionListSpecificationMsg conditionListSpecificationMsg =
+				CreateConditionListSpecificationMsg(
+					workspaceId, specificationName, condition1Name, featureClassName,
+					out ISupportedInstanceDescriptors instanceDescriptors);
+
+			var dataSources = new[]
+			                  {
+				                  new DataSource("Test DataSource", workspaceId, gdbPath)
+			                  };
+
+			QualitySpecification qualitySpecification =
+				CreateQualitySpecification(VerifiedModelFactory, instanceDescriptors,
+				                           conditionListSpecificationMsg,
+				                           dataSources);
+			return qualitySpecification;
+		}
+
+		private static ConditionListSpecificationMsg CreateConditionListSpecificationMsg(
+			string workspaceId, string specificationName, string condition1Name,
+			string featureClassName,
+			out ISupportedInstanceDescriptors instanceDescriptors)
+		{
+			instanceDescriptors = Substitute.For<ISupportedInstanceDescriptors>();
 
 			const string simpleGeometryDescriptorName = "SimpleGeometry(0)";
 			TestDescriptor simpleGeometryDescriptor = new TestDescriptor(
@@ -128,8 +191,6 @@ namespace ProSuite.Microservices.Server.AO.Test
 					"ProSuite.QA.Tests"), 0);
 			instanceDescriptors.GetInstanceDescriptor<IssueFilterDescriptor>(issueFilterDescName)
 			                   .Returns(issueFilterDescriptor);
-
-			const string workspaceId = "TestID";
 
 			//transformers
 			var transformer1 = new InstanceConfigurationMsg
@@ -220,26 +281,14 @@ namespace ProSuite.Microservices.Server.AO.Test
 				                                           Condition = condition2,
 				                                           CategoryName = "Attributes"
 			                                           });
-
-			var dataSources = new[]
-			                  {
-				                  new DataSource("Test DataSource", workspaceId, gdbPath)
-			                  };
-
-			QualitySpecification qualitySpecification =
-				CreateQualitySpecification(instanceDescriptors, conditionListSpecificationMsg,
-				                           dataSources);
-			return qualitySpecification;
+			return conditionListSpecificationMsg;
 		}
 
 		private static QualitySpecification CreateQualitySpecification(
+			IVerifiedModelFactory modelFactory,
 			ISupportedInstanceDescriptors instanceDescriptors,
 			ConditionListSpecificationMsg conditionListSpecificationMsg, DataSource[] dataSources)
 		{
-			var modelFactory =
-				new VerifiedModelFactory(new MasterDatabaseWorkspaceContextFactory(),
-				                         new SimpleVerifiedDatasetHarvester());
-
 			var factory = new ProtoBasedQualitySpecificationFactory(
 				modelFactory, instanceDescriptors);
 

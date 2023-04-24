@@ -19,8 +19,8 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 			[NotNull] IMasterDatabaseWorkspaceContextFactory workspaceContextFactory,
 			[CanBeNull] string databaseName = null,
 			[CanBeNull] string schemaOwner = null,
-			SqlCaseSensitivity sqlCaseSensitivity =
-				SqlCaseSensitivity.SameAsDatabase)
+			SqlCaseSensitivity sqlCaseSensitivity = SqlCaseSensitivity.SameAsDatabase,
+			int cloneId = -1)
 			: base(name)
 		{
 			Assert.ArgumentNotNullOrEmpty(name, nameof(name));
@@ -39,6 +39,8 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 
 			SqlCaseSensitivity = sqlCaseSensitivity;
 			UseDefaultDatabaseOnlyForSchema = false;
+
+			SetCloneId(cloneId);
 		}
 
 		#region Overrides of Model

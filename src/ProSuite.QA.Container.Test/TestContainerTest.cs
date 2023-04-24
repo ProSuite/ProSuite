@@ -19,7 +19,7 @@ namespace ProSuite.QA.Container.Test
 		{
 			Commons.AO.Test.TestUtils.InitializeLicense();
 
-			_testWs = TestWorkspaceUtils.CreateTestWorkspace("TestContainerTest");
+			_testWs = TestWorkspaceUtils.CreateTestFgdbWorkspace("TestContainerTest");
 		}
 
 		[OneTimeTearDown]

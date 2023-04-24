@@ -1,3 +1,5 @@
+using ProSuite.DomainServices.AO.QA;
+using System.Collections.Generic;
 using System.Xml.Serialization;
 
 namespace ProSuite.Microservices.Server.AO.QA
@@ -32,5 +34,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 		[XmlAttribute]
 		public double MinimumSplitAreaExtent { get; set; }
 
+		[XmlArray]
+		public List<QualityConditionExecType> TypePriority { get; set; }
 	}
 }

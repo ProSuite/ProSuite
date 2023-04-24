@@ -62,6 +62,18 @@ namespace ProSuite.QA.Container
 
 		private static Involved GetInvolvedCore(IReadOnlyRow row)
 		{
+			if (row.Table is ITransformedTableBasedOnTables transformedTable)
+			{
+				List<Involved> involveds = new List<Involved>();
+				foreach (Involved involvedRow in transformedTable.GetBaseRowReferences(row))
+				{
+					involveds.Add(involvedRow);
+				}
+
+				return new InvolvedNested(row.Table.Name, involveds);
+			}
+
+			// TODO: Consider putting this also behind the ITransformedTableBasedOnTables interface
 			int baseRowsField = row.Table.Fields.FindField(BaseRowField);
 			if (baseRowsField >= 0 && row.get_Value(baseRowsField) is IList<IReadOnlyRow> baseRows)
 			{
@@ -74,6 +86,7 @@ namespace ProSuite.QA.Container
 				return new InvolvedNested(row.Table.Name, involveds);
 			}
 
+			// TODO: Consider putting this also behind the ITransformedTableBasedOnTables interface
 			if (row.Table.FullName is IQueryName qn)
 			{
 				List<Involved> involveds = new List<Involved>();
@@ -82,14 +95,21 @@ namespace ProSuite.QA.Container
 					string t = table.Trim();
 					string oidField = $"{t}.OBJECTID";
 					int oidFieldIdx = row.Table.FindField(oidField);
-					if (oidFieldIdx >= 0)
+					if (oidFieldIdx < 0)
 					{
-						long oid = Assert.NotNull(GdbObjectUtils.ReadRowOidValue(row, oidFieldIdx))
-						                 .Value;
-						involveds.Add(new InvolvedRow(t, oid));
+						continue;
+					}
+
+					long? oidValue = GdbObjectUtils.ReadRowOidValue(row, oidFieldIdx);
+
+					if (oidValue.HasValue)
+					{
+						involveds.Add(new InvolvedRow(t, oidValue.Value));
 					}
 				}
 
+				Assert.True(involveds.Count > 0,
+				            $"Only NULL OIDs found for a record of IQueryName {row.Table.Name} with tables {qn.QueryDef.Tables}");
 				return new InvolvedNested(row.Table.Name, involveds);
 			}
 
@@ -118,6 +138,41 @@ namespace ProSuite.QA.Container
 			// TODO make sure that the first involved row is also the first row in the first table
 
 			return result;
+		}
+
+		public static IEnumerable<Involved> GetInvolvedRowsFromJoinedRow(
+			[NotNull] IReadOnlyRow joinedRow,
+			[NotNull] IEnumerable<IReadOnlyTable> baseTables)
+		{
+			foreach (IReadOnlyTable baseTable in baseTables)
+			{
+				string oidFieldName = baseTable.OIDFieldName;
+
+				string oidFieldQualified =
+					string.IsNullOrEmpty(oidFieldName)
+						? null // no OID field
+						: DatasetUtils.QualifyFieldName(baseTable, oidFieldName);
+
+				if (oidFieldName == null)
+				{
+					continue;
+				}
+
+				int oidFieldIdx = joinedRow.Table.FindField(oidFieldQualified);
+
+				if (oidFieldIdx == -1)
+				{
+					continue;
+				}
+
+				long? oidValue =
+					GdbObjectUtils.ReadRowOidValue(joinedRow, oidFieldIdx);
+
+				if (oidValue != null)
+				{
+					yield return new InvolvedRow(baseTable.Name, oidValue.Value);
+				}
+			}
 		}
 	}
 }

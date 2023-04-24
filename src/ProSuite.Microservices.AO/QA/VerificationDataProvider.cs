@@ -217,7 +217,7 @@ namespace ProSuite.Microservices.AO.QA
 			foreach (IObjectDataset objectDataset in objectDatasets)
 			{
 				foreach (Association association in
-				         objectDataset.AssociationEnds.Select(ae => ae.Association))
+				         objectDataset.GetAssociationEnds().Select(ae => ae.Association))
 				{
 					if (associations.ContainsKey(association.Id))
 					{
@@ -315,8 +315,11 @@ namespace ProSuite.Microservices.AO.QA
 				{
 					try
 					{
-						featureData.GdbObjects.Add(
-							ProtobufGdbUtils.ToGdbObjectMsg(obj, false, true));
+						GdbObjectMsg objectMsg =
+							ProtobufGdbUtils.ToGdbObjectMsg(
+								obj, false, true, dataRequest.SubFields);
+
+						featureData.GdbObjects.Add(objectMsg);
 					}
 					catch (Exception e)
 					{

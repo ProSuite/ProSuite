@@ -38,7 +38,7 @@ namespace ProSuite.DomainModel.Core.QA
 
 		#region Overrides of InstanceConfiguration
 
-		public override string TypeDisplayName => "Issue Filter ";
+		public override string TypeDisplayName => "Issue Filter";
 
 		[NotNull]
 		public override InstanceConfiguration CreateCopy()

@@ -14,9 +14,6 @@ using ProSuite.QA.Tests.Network;
 
 namespace ProSuite.QA.Tests
 {
-	/// <summary>
-	/// Check if there are orphan nodes by consulting several line layers
-	/// </summary>
 	[UsedImplicitly]
 	[LinearNetworkTest]
 	public class QaOrphanNode : QaNetworkBase
@@ -80,7 +77,7 @@ namespace ProSuite.QA.Tests
 			IReadOnlyFeatureClass polylineClass,
 			[Doc(nameof(DocStrings.QaOrphanNode_errorType))]
 			OrphanErrorType errorType)
-			: base(new[] {pointClass, polylineClass}, false)
+			: base(new[] { pointClass, polylineClass }, false)
 		{
 			_errorType = errorType;
 		}
@@ -98,23 +95,23 @@ namespace ProSuite.QA.Tests
 			return errorCount;
 		}
 
-		private int CheckRows([NotNull] IList<NetElement> connectedRows)
+		private int CheckRows([NotNull] IList<NetElement> connectedElements)
 		{
-			Assert.ArgumentNotNull(connectedRows, nameof(connectedRows));
+			Assert.ArgumentNotNull(connectedElements, nameof(connectedElements));
 
 			switch (_errorType)
 			{
 				case OrphanErrorType.Both:
-					int errorCount = CheckForEndPointWithoutPoint(connectedRows);
-					errorCount += CheckForOrphanedPoint(connectedRows);
+					int errorCount = CheckForOrphanedPoint(connectedElements);
+					errorCount += CheckForEndPointWithoutPoint(connectedElements);
 
 					return errorCount;
 
-				case OrphanErrorType.EndPointWithoutPoint:
-					return CheckForEndPointWithoutPoint(connectedRows);
-
 				case OrphanErrorType.OrphanedPoint:
-					return CheckForOrphanedPoint(connectedRows);
+					return CheckForOrphanedPoint(connectedElements);
+
+				case OrphanErrorType.EndPointWithoutPoint:
+					return CheckForEndPointWithoutPoint(connectedElements);
 
 				default:
 					throw new InvalidOperationException(
@@ -123,22 +120,19 @@ namespace ProSuite.QA.Tests
 		}
 
 		/// <summary>
-		/// Determines whether [is orphan node] [the specified connected elements].
+		/// Determines whether a point is connected to a line.
 		/// </summary>
 		/// <param name="connectedElements">The connected elements.</param>
-		/// <returns>Returns  true if node is not connected to a line, returns false if node is connected to at least one line</returns>
 		private int CheckForOrphanedPoint([NotNull] IList<NetElement> connectedElements)
 		{
-			Assert.ArgumentNotNull(connectedElements, nameof(connectedElements));
-
 			if (connectedElements.Count != 1 || ! (connectedElements[0] is NetPoint))
 			{
 				return NoError;
 			}
 
 			var p = (NetPoint) connectedElements[0];
-			const string description = "Orphan Node";
 
+			const string description = "Orphan Node";
 			IReadOnlyRow errorRow = p.Row.Row;
 
 			return ReportError(
@@ -150,17 +144,13 @@ namespace ProSuite.QA.Tests
 		/// Determines whether a line is connected to a point. 
 		/// </summary>
 		/// <param name="connectedElements">The connected elements.</param>
-		/// <returns>Returns true if line has no connected points, returns true if line is connected to at least one point</returns>
-		private int CheckForEndPointWithoutPoint(
-			[NotNull] IList<NetElement> connectedElements)
+		private int CheckForEndPointWithoutPoint([NotNull] IList<NetElement> connectedElements)
 		{
-			Assert.ArgumentNotNull(connectedElements, nameof(connectedElements));
-
 			foreach (NetElement elem in connectedElements)
 			{
 				if (elem is NetPoint)
 				{
-					return 0;
+					return NoError;
 				}
 			}
 

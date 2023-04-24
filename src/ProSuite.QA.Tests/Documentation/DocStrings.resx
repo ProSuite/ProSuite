@@ -388,7 +388,7 @@ Remark: All feature classes in 'crossingClasses' and 'crossedClasses' must have 
   </data>
   <data name="QaDuplicateGeometrySelf_validDuplicateConstraint" xml:space="preserve">
     <value>Constraint on features with duplicate geometries. If the constraint is defined and fulfilled, no error is reported.
-The involved features are aliased using "G1" and G2".
+The involved features are aliased using "G1" and "G2".
 Example: G1.Level &lt;&gt; G2.Level</value>
   </data>
   <data name="QaEmptyNotNullTextFields_0" xml:space="preserve">
@@ -565,7 +565,7 @@ Example: 25 meters</value>
   </data>
   <data name="QaInteriorIntersectsOther_constraint" xml:space="preserve">
     <value>Constraint on a pair of features that have intersecting interiors. If the constraint is defined and fulfilled, no error is reported.
-The involved features are aliased using "G1" (featureClass) and G2 (relatedClass)".
+The involved features are aliased using "G1" (featureClass) and "G2" (relatedClass).
 Example: G1.Level &lt;&gt; G2.Level</value>
   </data>
   <data name="QaInteriorIntersectsOther_featureClass" xml:space="preserve">
@@ -591,7 +591,7 @@ Example: G1.Level &lt;&gt; G2.Level</value>
   </data>
   <data name="QaInteriorIntersectsSelf_constraint" xml:space="preserve">
     <value>Constraint on a pair of features that have intersecting interiors. If the constraint is defined and fulfilled, no error is reported.
-The involved features are aliased using "G1" and G2".
+The involved features are aliased using "G1" and "G2".
 Example: G1.Level &lt;&gt; G2.Level</value>
   </data>
   <data name="QaInteriorIntersectsSelf_featureClass" xml:space="preserve">
@@ -622,7 +622,7 @@ Remark: The feature classes in 'featureClass' and 'relatedClass' must have the s
   </data>
   <data name="QaIntersectionMatrixOther_constraint" xml:space="preserve">
     <value>Constraint on features that are involved in the specified spatial relationship. If the constraint is defined and fulfilled, no error is reported.
-The involved features are aliased using "G1" and G2".
+The involved features are aliased using "G1" and "G2".
 Example: G1.Level &lt;&gt; G2.Level</value>
   </data>
   <data name="QaIntersectionMatrixOther_featureClass" xml:space="preserve">
@@ -671,7 +671,7 @@ Remark: The feature classes in 'featureClasses' must have the same spatial refer
   </data>
   <data name="QaIntersectionMatrixSelf_constraint" xml:space="preserve">
     <value>Constraint on features that are involved in the specified spatial relationship. If the constraint is defined and fulfilled, no error is reported.
-The involved features are aliased using "G1" and G2".
+The involved features are aliased using "G1" and "G2".
 Example: G1.Level &lt;&gt; G2.Level</value>
   </data>
   <data name="QaIntersectionMatrixSelf_featureClass" xml:space="preserve">
@@ -1001,7 +1001,7 @@ A negative tolerance value indicates that coincident points are not considered a
   </data>
   <data name="QaMinNodeDistance_validRelationConstraint" xml:space="preserve">
     <value>Constraint on a pair of features that are invalid according to the tolerance values. If the constraint is defined and fulfilled, no error is reported.
-The involved features are aliased using "G1" and G2".
+The involved features are aliased using "G1" and "G2".
 Example: G1.Level &lt;&gt; G2.Level</value>
   </data>
   <data name="QaMinSegAngle_0" xml:space="preserve">
@@ -1068,23 +1068,23 @@ Remark: The feature classes in 'featureClass' and 'reference' must have the same
     <value>Note: this parameter is no longer used</value>
   </data>
   <data name="QaOrphanNode_0" xml:space="preserve">
-    <value>Finds all points in 'pointClasses' that are neither from nor to point of any feature in 'polylineClasses'
+    <value>Finds all points in 'pointClasses' that are neither From- nor To-point of any feature in 'polylineClasses' and line end points without any point
 
 Remark: All feature classes in 'pointClasses' and 'polylineClasses' must have the same spatial reference.</value>
   </data>
   <data name="QaOrphanNode_1" xml:space="preserve">
-    <value>Finds all points in 'pointClass' that are neither from nor to point of any feature in 'polylineClass'
+    <value>Finds all points in 'pointClass' that are neither From- nor To-point of any feature in 'polylineClass' and line end points without any point
 
 Remark: The feature classes in 'pointClass' and 'polylineClass' must have the same spatial reference.</value>
   </data>
   <data name="QaOrphanNode_2" xml:space="preserve">
-    <value>Finds all points in 'pointClasses' that are neither from nor to point of any feature in 'polylineClasses'.
+    <value>Finds all points in 'pointClasses' that are neither From- nor To-point of any feature in 'polylineClasses' and/or line end points without any point
 Performs the tests defined in 'errorType'.
 
 Remark: All feature classes in 'pointClasses' and 'polylineClasses' must have the same spatial reference.</value>
   </data>
   <data name="QaOrphanNode_3" xml:space="preserve">
-    <value>Finds all points in 'pointClass' that are neither from nor to point of any feature in 'polylineClass'
+    <value>Finds all points in 'pointClass' that are neither From- nor To-point of any feature in 'polylineClass' and/or line end points without any point
 Performs the tests defined in 'errorType'.
 
 Remark: The feature classes in 'pointClass' and 'polylineClass' must have the same spatial reference.</value>
@@ -1461,7 +1461,7 @@ If there is exactly 1 'flipExpressions', the expression is applied to all 'polyl
   </data>
   <data name="QaTouchesOther_validRelationConstraint" xml:space="preserve">
     <value>Constraint on a pair of touching features. If the constraint is defined and fulfilled, no error is reported.
-The involved features are aliased using "G1" and G2".
+The involved features are aliased using "G1" and "G2".
 Example: G1.Level &lt;&gt; G2.Level</value>
   </data>
   <data name="QaTouchesSelf_0" xml:space="preserve">
@@ -1484,7 +1484,7 @@ Example: G1.Level &lt;&gt; G2.Level</value>
   </data>
   <data name="QaTouchesSelf_validRelationConstraint" xml:space="preserve">
     <value>Constraint on a pair of touching features. If the constraint is defined and fulfilled, no error is reported.
-The involved features are aliased using "G1" and G2".
+The involved features are aliased using "G1" and "G2".
 Example: G1.Level &lt;&gt; G2.Level</value>
   </data>
   <data name="QaRequiredFields_allowEmptyStrings" xml:space="preserve">
@@ -1637,7 +1637,7 @@ Remark: The feature classes in 'crossingClass' and 'crossedClass' must have the 
   </data>
   <data name="QaCrossesOther_validRelationConstraint" xml:space="preserve">
     <value>Constraint on a pair of crossing features. If the constraint is defined and fulfilled, no error is reported.
-The involved features are aliased using "G1" and G2".
+The involved features are aliased using "G1" and "G2".
 Example: G1.Level &lt;&gt; G2.Level</value>
   </data>
   <data name="QaCrossesSelf_0" xml:space="preserve">
@@ -1660,7 +1660,7 @@ Example: G1.Level &lt;&gt; G2.Level</value>
   </data>
   <data name="QaCrossesSelf_validRelationConstraint" xml:space="preserve">
     <value>Constraint on a pair of crossing features. If the constraint is defined and fulfilled, no error is reported.
-The involved features are aliased using "G1" and G2".
+The involved features are aliased using "G1" and "G2".
 Example: G1.Level &lt;&gt; G2.Level</value>
   </data>
   <data name="QaLineIntersect_2" xml:space="preserve">
@@ -1673,7 +1673,7 @@ Remark: The feature classes in 'polylineClasses' must have the same spatial refe
   </data>
   <data name="QaLineIntersect_validRelationConstraint" xml:space="preserve">
     <value>Constraint on a pair of line features that intersect. If the constraint is defined and fulfilled, no error is reported.
-The involved features are aliased using "G1" (featureClass) and G2 (relatedClass)".
+The involved features are aliased using "G1" (featureClass) and "G2" (relatedClass).
 Example: G1.Level &lt;&gt; G2.Level</value>
   </data>
   <data name="QaOverlapsSelf_1" xml:space="preserve">
@@ -1690,7 +1690,7 @@ Example: G1.Level &lt;&gt; G2.Level</value>
   </data>
   <data name="QaOverlapsSelf_validRelationConstraint" xml:space="preserve">
     <value>Constraint on a pair of overlapping features. If the constraint is defined and fulfilled, no error is reported.
-The involved features are aliased using "G1" and G2".
+The involved features are aliased using "G1" and "G2".
 Example: G1.Level &lt;&gt; G2.Level</value>
   </data>
   <data name="QaOverlapsOther_1" xml:space="preserve">
@@ -1710,7 +1710,7 @@ Remark: The feature classes 'overlappedClass' and 'overlappingClass' must have t
   </data>
   <data name="QaOverlapsOther_validRelationConstraint" xml:space="preserve">
     <value>Constraint on a pair of overlapping features. If the constraint is defined and fulfilled, no error is reported.
-The involved features are aliased using "G1" and G2".
+The involved features are aliased using "G1" and "G2".
 Example: G1.Level &lt;&gt; G2.Level</value>
   </data>
   <data name="QaIntersectsSelf_1" xml:space="preserve">
@@ -1727,7 +1727,7 @@ Example: G1.Level &lt;&gt; G2.Level</value>
   </data>
   <data name="QaIntersectsSelf_validRelationConstraint" xml:space="preserve">
     <value>Constraint on a pair of intersecting features. If the constraint is defined and fulfilled, no error is reported.
-The involved features are aliased using "G1" and G2".
+The involved features are aliased using "G1" and "G2".
 Example: G1.Level &lt;&gt; G2.Level</value>
   </data>
   <data name="QaIntersectsOther_1" xml:space="preserve">
@@ -1747,7 +1747,7 @@ Remark: The feature classes in 'intersectedClass' and 'intersectingClass' must h
   </data>
   <data name="QaIntersectsOther_validRelationConstraint" xml:space="preserve">
     <value>Constraint on a pair of intersecting features. If the constraint is defined and fulfilled, no error is reported.
-The involved features are aliased using "G1" and G2".
+The involved features are aliased using "G1" and "G2".
 Example: G1.Level &lt;&gt; G2.Level</value>
   </data>
   <data name="QaNeighbourAreas_1" xml:space="preserve">
@@ -2812,7 +2812,7 @@ Refer to the topic "Spatial Relationships" in the ArcGIS online help.</value>
   </data>
   <data name="QaMustIntersectMatrixOther_relevantRelationCondition" xml:space="preserve">
     <value>Condition on a pair of spatially related features. The pair only counts as related if the condition is either undefined or fulfilled.
-The feature to be tested is aliased using "G1". The touched ("other") feature is aliased using "G2".</value>
+The feature to be tested is aliased using "G1". The spatially related ("other") feature is aliased using "G2".</value>
   </data>
   <data name="QaMustIntersectMatrixOther_requiredIntersectionDimensions" xml:space="preserve">
     <value>A list of geometry dimensions that are expected in the 9IM intersection between compared features. The following dimensions are supported:
@@ -3468,7 +3468,7 @@ If 'GeometryComponents' contains one entry, this component is applied to all ref
   </data>
   <data name="QaPointNotNear_ValidRelationConstraints" xml:space="preserve">
     <value>If set, defines constraints between a feature of 'pointClass' and a feature of a reference feature class. If this constraint is fulfilled, the distance between the features is not checked against 'limit' and no error is reported.
-The involved features are aliased using "G1" and G2".
+The involved features are aliased using "G1" and "G2".
 Example: G1.Level &lt;&gt; G2.Level.
 If 'ValidRelationConstraints' contains one entry, this constraint is applied to all reference feature classes. If 'ValidRelationConstraints' contains more than one entry, it must contain exactly the number of feature classes in 'referenceClasses'.</value>
   </data>

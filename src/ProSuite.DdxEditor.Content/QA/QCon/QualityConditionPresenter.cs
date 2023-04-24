@@ -315,6 +315,21 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			_item.ExecuteWebHelpCommand();
 		}
 
+		public string GenerateName()
+		{
+			InstanceConfiguration instanceConfiguration = Assert.NotNull(_item.GetEntity());
+
+			string generatedName = InstanceConfigurationUtils.GenerateName(instanceConfiguration);
+
+			if (generatedName == null)
+			{
+				_msg.Warn("Test Descriptor or dataset parameter has not yet been configured. " +
+				          "Cannot generate name.");
+			}
+
+			return generatedName;
+		}
+
 		protected override void OnBoundTo(QualityCondition qualityCondition)
 		{
 			Assert.ArgumentNotNull(qualityCondition, nameof(qualityCondition));

@@ -25,9 +25,12 @@ namespace ProSuite.UI.QA.VerificationProgress
 			[NotNull] IApplicationBackgroundVerificationController appController,
 			[CanBeNull] string title)
 		{
+			bool provideClientData = verificationRun.VerificationDataProvider != null;
+
 			async Task<ServiceCallStatus> VerificationAction()
 			{
-				return await verificationRun.ExecuteAndProcessMessagesAsync(qaClient);
+				return await verificationRun.ExecuteAndProcessMessagesAsync(
+					       qaClient, provideClientData);
 			}
 
 			var qaProgressViewmodel =

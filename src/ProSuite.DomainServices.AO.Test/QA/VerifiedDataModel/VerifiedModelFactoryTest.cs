@@ -45,7 +45,7 @@ namespace ProSuite.DomainServices.AO.Test.QA.VerifiedDataModel
 			modelFactory.HarvestAttributes = true;
 			modelFactory.HarvestObjectTypes = true;
 
-			Model model = modelFactory.CreateModel(workspace, "TestTLM", null, "TOPGIS_TLM");
+			Model model = modelFactory.CreateModel(workspace, "TestTLM", 42, null, "TOPGIS_TLM");
 
 			int tableCount = model.GetDatasets<TableDataset>().Count;
 			int vectorCount = model.GetDatasets<VectorDataset>().Count;
@@ -70,6 +70,7 @@ namespace ProSuite.DomainServices.AO.Test.QA.VerifiedDataModel
 
 		[Test]
 		[Category(TestCategory.Sde)]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanHarvestUsedSimpleModel()
 		{
 			IWorkspace userWorkspace = TestUtils.OpenUserWorkspaceOracle();
@@ -113,11 +114,11 @@ namespace ProSuite.DomainServices.AO.Test.QA.VerifiedDataModel
 				FieldUtils.CreateFields(FieldUtils.CreateOIDField()));
 
 			{
-				var ws = (IWorkspace)fdgbWorkspace;
+				var ws = (IWorkspace) fdgbWorkspace;
 				CanHarvestUsedSimpleModel(ws, qualifiedUsedDatasetNames);
 			}
 			{
-				var ws = (IWorkspace)fdgbWorkspace;
+				var ws = (IWorkspace) fdgbWorkspace;
 				CanHarvestUsedSimpleModel(ws, unqualifiedUsedDatasetNames);
 			}
 		}
@@ -137,7 +138,7 @@ namespace ProSuite.DomainServices.AO.Test.QA.VerifiedDataModel
 			modelFactory.HarvestObjectTypes = false;
 
 			var w = Stopwatch.StartNew();
-			Model model = modelFactory.CreateModel(workspace, "TestTLM", null, "TOPGIS_TLM");
+			Model model = modelFactory.CreateModel(workspace, "TestTLM", 42, null, "TOPGIS_TLM");
 			w.Stop();
 
 			List<string> datasetNames = new List<string>();
@@ -151,15 +152,15 @@ namespace ProSuite.DomainServices.AO.Test.QA.VerifiedDataModel
 
 			w.Restart();
 			Model usedModel = modelFactory.CreateModel(
-				workspace, "TestTLM", null, "TOPGIS_TLM",
+				workspace, "TestTLM", 42, null, "TOPGIS_TLM",
 				usedDatasetNames: datasetNames);
 			w.Stop();
 			Console.WriteLine($"Used Model Creation: {w.ElapsedMilliseconds / 1000.0:N3} ms");
 			Assert.NotNull(usedModel);
-
 		}
 
-		private Model CanHarvestUsedSimpleModel(IWorkspace workspace, IList<string> usedDatasetNames)
+		private Model CanHarvestUsedSimpleModel(IWorkspace workspace,
+		                                        IList<string> usedDatasetNames)
 		{
 			VerifiedModelFactory modelFactory =
 				new VerifiedModelFactory(new MasterDatabaseWorkspaceContextFactory(),
@@ -168,8 +169,7 @@ namespace ProSuite.DomainServices.AO.Test.QA.VerifiedDataModel
 			modelFactory.HarvestAttributes = true;
 			modelFactory.HarvestObjectTypes = true;
 
-
-			Model model = modelFactory.CreateModel(workspace, "TestTLM", null, "TOPGIS_TLM",
+			Model model = modelFactory.CreateModel(workspace, "TestTLM", 42, null, "TOPGIS_TLM",
 			                                       usedDatasetNames: usedDatasetNames);
 
 			int tableCount = model.GetDatasets<TableDataset>().Count;
@@ -182,10 +182,8 @@ namespace ProSuite.DomainServices.AO.Test.QA.VerifiedDataModel
 			{
 				Assert.IsTrue(objectDataset.Attributes.Count > 0);
 			}
+
 			return model;
 		}
-
-
-
 	}
 }

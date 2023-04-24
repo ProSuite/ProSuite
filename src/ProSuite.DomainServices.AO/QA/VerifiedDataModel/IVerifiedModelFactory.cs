@@ -10,17 +10,21 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 	{
 		/// <summary>
 		/// Creates the model and harvests all the datasets that are supported by the current environment.
-		/// No spatial reference descriptor is assigned!
+		/// Depending on the implementation, no spatial reference descriptor is assigned. In that case,
+		/// <see cref="AssignMostFrequentlyUsedSpatialReference"/> could be used.
 		/// </summary>
-		/// <param name="workspace"></param>
-		/// <param name="name"></param>
+		/// <param name="workspace">The model's workspace</param>
+		/// <param name="modelName">The model name</param>
+		/// <param name="modelId">The model's original (unique) Id which will be maintained to clearly identify it.</param>
 		/// <param name="databaseName"></param>
 		/// <param name="schemaOwner"></param>
-		/// <param name="usedDatasetNames"></param>
+		/// <param name="usedDatasetNames">The dataset names that are actually going to be used. Other dataset names
+		/// do not need to be harvested.</param>
 		/// <returns></returns>
 		[NotNull]
 		Model CreateModel([NotNull] IWorkspace workspace,
-		                  [NotNull] string name,
+		                  [NotNull] string modelName,
+		                  int modelId,
 		                  [CanBeNull] string databaseName,
 		                  [CanBeNull] string schemaOwner,
 		                  [CanBeNull] IList<string> usedDatasetNames = null);
