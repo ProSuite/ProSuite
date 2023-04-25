@@ -12,7 +12,7 @@
     <VSArcGISProduct Condition=" '$(VSArcGISProduct)' == ''">ArcGIS</VSArcGISProduct>
     <ArcGISAssemblyPath Condition=" '$(ArcGISAssemblyPath)' == '' ">C:\Program Files (x86)\ArcGIS\DeveloperKit10.8\DotNet</ArcGISAssemblyPath>
 
-    <ArcGISServerVersion Condition=" '$(VSArcGISVersion)' == '11.0'">Server11</ArcGISServerVersion>
+    <ArcGISServerVersion Condition="$(VSArcGISVersion.StartsWith('11.'))">Server11</ArcGISServerVersion>
 
     <NoWarn>1591</NoWarn>
 
