@@ -11,6 +11,7 @@ using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.Picker;
+using ProSuite.Commons.AGP.Core.Carto;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -66,8 +67,7 @@ namespace ProSuite.AGP.Editing.PickerUI
 				SymbolFactory.Instance.ConstructPolygonSymbol(
 					magenta, SimpleFillStyle.Null, outline);
 
-			_highlightPointSymbol =
-				SymbolFactory.Instance.ConstructPointSymbol(magenta, 6);
+			_highlightPointSymbol = SymbolUtils.CreatePointSymbol(magenta, 6);
 
 			_resultTaskCompletionSource = new TaskCompletionSource<bool>();
 		}

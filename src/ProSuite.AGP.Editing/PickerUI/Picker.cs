@@ -49,11 +49,7 @@ namespace ProSuite.AGP.Editing.PickerUI
 				return _candidateList.First();
 			}
 
-			await QueuedTask.Run(() =>
-			{
-				_viewModel =
-					new PickerViewModel(_candidateList, true);
-			});
+			_viewModel = new PickerViewModel(_candidateList, true);
 
 			bool? dialogResult = await ShowPickerControl(_viewModel);
 
