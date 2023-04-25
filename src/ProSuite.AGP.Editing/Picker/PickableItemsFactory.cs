@@ -3,9 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
-using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
-using ProSuite.AGP.Editing.Selection;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -57,66 +55,6 @@ namespace ProSuite.AGP.Editing.Picker
 				yield return new PickableFeatureItem(classSelection.BasicFeatureLayer, feature, text);
 			}
 		}
-
-		#region trial
-
-		public static IList<IPickableItem> CreateFeatureItems_trial(
-			[NotNull] IEnumerable<FeatureClassSelection> selectionByClasses,
-			Func<IEnumerable<Feature>, IEnumerable<Feature>> reducer = null)
-		{
-			var pickCandidates = new List<IPickableItem>();
-
-			foreach (FeatureClassSelection classSelection in selectionByClasses)
-			{
-				pickCandidates.AddRange(CreateFeatureItems_trial(classSelection, reducer));
-			}
-
-			return pickCandidates;
-		}
-
-		public static IList<IPickableItem> CreateFeatureItems_trial(
-			[NotNull] IEnumerable<FeatureClassSelection> selectionByClasses,
-			Geometry referenceGeometry)
-		{
-			var pickCandidates = new List<IPickableItem>();
-
-			foreach (FeatureClassSelection classSelection in selectionByClasses)
-			{
-				pickCandidates.AddRange(CreateFeatureItems_trial(classSelection, referenceGeometry));
-			}
-
-			return pickCandidates;
-		}
-
-		public static IEnumerable<IPickableItem> CreateFeatureItems_trial(
-			[NotNull] FeatureClassSelection classSelection, Geometry referenceGeometry)
-		{
-			foreach (Feature feature in classSelection.GetFeatures())
-			{
-				string text = GetPickerItemText(feature, classSelection.BasicFeatureLayer);
-
-				yield return new PickableFeatureItem(classSelection.BasicFeatureLayer, feature, text);
-			}
-		}
-
-		public static IEnumerable<PickableFeatureItem> CreateFeatureItems_trial(
-			[NotNull] FeatureClassSelection classSelection,
-			Func<IEnumerable<Feature>, IEnumerable<Feature>> reducer = null)
-		{
-			IEnumerable<Feature> features = reducer == null
-				                                ? classSelection.GetFeatures()
-				                                : reducer(classSelection.GetFeatures());
-
-			foreach (Feature feature in features)
-			{
-				string text = GetPickerItemText(feature, classSelection.BasicFeatureLayer);
-
-				yield return new PickableFeatureItem(classSelection.BasicFeatureLayer, feature,
-				                                     text);
-			}
-		}
-
-		#endregion
 
 		private static string GetPickerItemText([NotNull] Feature feature,
 		                                        [CanBeNull] BasicFeatureLayer layer = null)

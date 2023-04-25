@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using ArcGIS.Core.Data;
-using ArcGIS.Core.Geometry;
 using ProSuite.AGP.Editing.Picker;
 using ProSuite.AGP.Editing.Selection;
 using ProSuite.Commons.AGP.Carto;
@@ -35,7 +34,8 @@ namespace ProSuite.AGP.Editing.PickerUI
 		/// <returns></returns>
 		public static async Task<PickableFeatureItem> PickSingleFeatureAsync(
 			[NotNull] IEnumerable<FeatureClassSelection> selectionByLayer,
-			Point pickerWindowLocation, Func<IEnumerable<Feature>, IEnumerable<Feature>> reducer = null)
+			Point pickerWindowLocation,
+			Func<IEnumerable<Feature>, IEnumerable<Feature>> reducer = null)
 		{
 			IList<IPickableItem> pickableItems =
 				await QueuedTaskUtils.Run(
@@ -45,33 +45,8 @@ namespace ProSuite.AGP.Editing.PickerUI
 							GeometryReducer.ReduceByGeometryDimension(selectionByLayer)
 							               .ToList();
 
-						return PickableItemsFactory.CreateFeatureItems_trial(selectionByLayer, reducer);
 						return PickableItemsFactory.CreateFeatureItems(selectionByLayer);
 					});
-
-			var picker = new Picker(pickableItems, pickerWindowLocation);
-
-			// Must not be called from a background Task!
-			return await picker.PickSingle() as PickableFeatureItem;
-		}
-		public static async Task<PickableFeatureItem> PickSingleFeatureAsync_trial(
-			[NotNull] IEnumerable<FeatureClassSelection> selectionByLayer,
-			Point pickerWindowLocation, Geometry referenceGeometry)
-		{
-			IList<IPickableItem> pickableItems =
-				await QueuedTaskUtils.Run(
-					delegate
-					{
-						selectionByLayer =
-							GeometryReducer.ReduceByGeometryDimension(selectionByLayer)
-							               .ToList();
-
-						IList<IPickableItem> items = PickableItemsFactory.CreateFeatureItems_trial(selectionByLayer, referenceGeometry);
-
-						return PickableItemsReducer.Reduce(items, referenceGeometry).ToList();
-					});
-
-
 
 			var picker = new Picker(pickableItems, pickerWindowLocation);
 

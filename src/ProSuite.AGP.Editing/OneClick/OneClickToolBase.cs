@@ -485,8 +485,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			bool result = singlePick
 				              ? await SingleClickSelect(candidatesOfManyLayers,
-				                                        pickerWindowLocation, selectionMethod,
-				                                        sketchGeometry)
+				                                        pickerWindowLocation, selectionMethod)
 				              : await AreaSelect(candidatesOfManyLayers, pickerWindowLocation,
 				                                 selectionMethod);
 
@@ -500,8 +499,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		private static async Task<bool> SingleClickSelect(
 			[NotNull] List<FeatureClassSelection> candidatesOfManyLayers,
 			Point pickerWindowLocation,
-			SelectionCombinationMethod selectionMethod,
-			Geometry sketchGeometry = null)
+			SelectionCombinationMethod selectionMethod)
 		{
 			if (GetSelectionSketchMode() == SelectionMode.Original)
 			{
@@ -523,19 +521,9 @@ namespace ProSuite.AGP.Editing.OneClick
 				// show picker if more than one candidate
 				if (GeometryReducer.ContainsManyFeatures(candidatesOfManyLayers))
 				{
-					// todo daro: to virtual method?
-					//Func<IEnumerable<Feature>, IEnumerable<Feature>> reducer =
-					//	sketchGeometry == null ?
-					//		(Func<IEnumerable<Feature>, IEnumerable<Feature>>) null :
-					//		features => GeometryReducer.ReduceRelativeToSelectionGeometry(features, sketchGeometry);
-
-					//PickableFeatureItem picked =
-					//	await PickerUtils.PickSingleFeatureAsync(
-					//		candidatesOfLayers, pickerWindowLocation, reducer);
-
 					PickableFeatureItem picked =
-						await PickerUtils.PickSingleFeatureAsync_trial(
-							candidatesOfLayers, pickerWindowLocation, sketchGeometry);
+						await PickerUtils.PickSingleFeatureAsync(
+							candidatesOfLayers, pickerWindowLocation);
 
 					if (picked != null)
 					{
