@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Xml;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
@@ -597,7 +596,8 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 					if (xmlCondition.Filters != null && xmlCondition.Filters.Count > 0)
 					{
 						var issueFilterConfigurations = new List<XmlInstanceConfiguration>();
-						foreach (string filterName in xmlCondition.Filters.Select(f => f.IssueFilterName))
+						foreach (string filterName in xmlCondition.Filters.Select(
+							         f => f.IssueFilterName))
 						{
 							if (! documentCache.TryGetIssueFilter(
 								    filterName.Trim(),
@@ -723,7 +723,7 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 				qualitySpecification.AddElement(qualityCondition, stopOnError, allowErrors);
 			}
 		}
-		
+
 		public static void UpdateQualityCondition([NotNull] QualityCondition qualityCondition,
 		                                          [NotNull] XmlQualityCondition xmlCondition,
 		                                          [CanBeNull] DataQualityCategory category)
@@ -1205,40 +1205,6 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 			}
 		}
 
-		[NotNull]
-		public static string ConcatenateUnknownDatasetNames(
-			[NotNull] IEnumerable<DatasetTestParameterRecord> unknownDatasetParameters,
-			[NotNull] IDictionary<string, DdxModel> modelsByWorkspaceId,
-			[NotNull] string anonymousWorkspaceId)
-		{
-			Assert.ArgumentNotNull(unknownDatasetParameters, nameof(unknownDatasetParameters));
-			Assert.ArgumentNotNull(modelsByWorkspaceId, nameof(modelsByWorkspaceId));
-			Assert.ArgumentNotNull(anonymousWorkspaceId, nameof(anonymousWorkspaceId));
-
-			var sb = new StringBuilder();
-
-			foreach (DatasetTestParameterRecord datasetParameter in unknownDatasetParameters)
-			{
-				if (sb.Length > 0)
-				{
-					sb.Append(", ");
-				}
-
-				string workspaceId = datasetParameter.WorkspaceId ?? anonymousWorkspaceId;
-				DdxModel model;
-				if (modelsByWorkspaceId.TryGetValue(workspaceId, out model))
-				{
-					sb.AppendFormat("{0} ({1})", datasetParameter.DatasetName, model.Name);
-				}
-				else
-				{
-					sb.Append(datasetParameter.DatasetName);
-				}
-			}
-
-			return sb.ToString();
-		}
-
 		[CanBeNull]
 		public static Dataset GetDatasetByParameterValue(
 			[NotNull] DdxModel model,
@@ -1321,8 +1287,8 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 
 					string datasetWorkspaceId = datasetParameterValue.WorkspaceId ?? string.Empty;
 
-					if (!string.Equals(datasetWorkspaceId, workspaceId,
-					                   StringComparison.OrdinalIgnoreCase))
+					if (! string.Equals(datasetWorkspaceId, workspaceId,
+					                    StringComparison.OrdinalIgnoreCase))
 					{
 						continue;
 					}
@@ -2039,6 +2005,7 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 				                                           .OrderBy(f => f.Name)
 				                                           .Select(CreateXmlFilter).ToList();
 			}
+
 			xmlConfiguration.FilterExpression =
 				CreateXmlFilterExpression(qualityCondition.IssueFilterExpression);
 

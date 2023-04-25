@@ -705,12 +705,9 @@ namespace ProSuite.Microservices.Server.AO.QA
 				return false;
 			}
 
-			bool result = false;
-
 			switch (specificationMsg.SpecificationCase)
 			{
 				case QualitySpecificationMsg.SpecificationOneofCase.XmlSpecification:
-				{
 					XmlQualitySpecificationMsg xmlSpecification = specificationMsg.XmlSpecification;
 
 					HashSet<int> excludedQcIds =
@@ -718,20 +715,13 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 					qualitySpecification =
 						SetupQualitySpecification(xmlSpecification, excludedQcIds);
-
-					result = true;
-				}
 					break;
 				case QualitySpecificationMsg.SpecificationOneofCase.ConditionListSpecification:
-				{
 					ConditionListSpecificationMsg conditionListSpec =
 						specificationMsg.ConditionListSpecification;
 
 					qualitySpecification =
 						SetupQualitySpecification(conditionListSpec, knownSchemaMsg);
-
-					result = true;
-				}
 					break;
 				default: return false;
 			}
@@ -739,7 +729,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			QualitySpecificationUtils.DisableExcludedConditions(
 				qualitySpecification, request.Specification.ExcludedConditionIds);
 
-			return result;
+			return qualitySpecification != null;
 		}
 
 		private static QualitySpecification SetupQualitySpecification(
@@ -815,7 +805,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 		private QualitySpecification CreateQualitySpecification(
 			[NotNull] ConditionListSpecificationMsg conditionsSpecificationMsg,
-			[NotNull] IEnumerable<DataSource> dataSources,
+			[NotNull] ICollection<DataSource> dataSources,
 			[CanBeNull] SchemaMsg knownSchemaMsg)
 		{
 			if (SupportedInstanceDescriptors == null || SupportedInstanceDescriptors.Count == 0)
@@ -825,15 +815,17 @@ namespace ProSuite.Microservices.Server.AO.QA
 			}
 
 			ProtoBasedQualitySpecificationFactory factory =
-				CreateSpecificationFactory(SupportedInstanceDescriptors, knownSchemaMsg);
+				CreateSpecificationFactory(dataSources, SupportedInstanceDescriptors,
+				                           knownSchemaMsg);
 
 			QualitySpecification result = factory.CreateQualitySpecification(
-				conditionsSpecificationMsg, dataSources);
+				conditionsSpecificationMsg);
 
 			return result;
 		}
 
 		private static ProtoBasedQualitySpecificationFactory CreateSpecificationFactory(
+			[NotNull] ICollection<DataSource> dataSources,
 			[NotNull] ISupportedInstanceDescriptors instanceDescriptors,
 			[CanBeNull] SchemaMsg knownSchemaMsg)
 		{
@@ -846,7 +838,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 					: new ProtoBasedModelFactory(knownSchemaMsg, contextFactory);
 
 			var factory =
-				new ProtoBasedQualitySpecificationFactory(modelFactory, instanceDescriptors);
+				new ProtoBasedQualitySpecificationFactory(modelFactory, dataSources,
+				                                          instanceDescriptors);
 
 			return factory;
 		}
