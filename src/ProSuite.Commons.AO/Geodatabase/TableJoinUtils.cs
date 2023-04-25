@@ -1593,7 +1593,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 					sb.Append("_");
 				}
 
-				sb.Append(GetUnqualifiedName(relClass));
+				sb.Append(DatasetUtils.GetUnqualifiedName(relClass));
 			}
 
 			sb.Append("_JOIN");
@@ -1604,12 +1604,6 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 
 			return sb.ToString();
-		}
-
-		[NotNull]
-		private static string GetUnqualifiedName([NotNull] IRelationshipClass relClass)
-		{
-			return DatasetUtils.GetTableName((IDataset) relClass);
 		}
 
 		private static void AddFields([NotNull] ICollection<JoinedSubfield> fields,
