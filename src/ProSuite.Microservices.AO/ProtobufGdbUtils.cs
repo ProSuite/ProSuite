@@ -270,35 +270,7 @@ namespace ProSuite.Microservices.AO
 		                                              bool includeFields = false,
 		                                              string aliasName = null)
 		{
-			int geometryType;
-
-			switch (dataset)
-			{
-				case IVectorDataset vds:
-				{
-					var shapeGeometryType = Assert.NotNull((GeometryTypeShape) vds.GeometryType);
-					geometryType = (int) shapeGeometryType.ShapeType;
-					break;
-				}
-				case ITableDataset _:
-					geometryType = (int) ProSuiteGeometryType.Null;
-					break;
-				case ITopologyDataset _:
-					geometryType = (int) ProSuiteGeometryType.Topology;
-					break;
-				case RasterDataset _:
-					geometryType = (int) ProSuiteGeometryType.Raster;
-					break;
-				case IRasterMosaicDataset _:
-					geometryType = (int) ProSuiteGeometryType.RasterMosaic;
-					break;
-				case ISimpleTerrainDataset _:
-					geometryType = (int) ProSuiteGeometryType.Terrain;
-					break;
-				default:
-					throw new ArgumentOutOfRangeException(
-						$"Unsupported dataset type: {dataset.Name}");
-			}
+			int geometryType = (int) GetGeometryType(dataset);
 
 			ObjectClassMsg result =
 				new ObjectClassMsg()
@@ -332,6 +304,41 @@ namespace ProSuite.Microservices.AO
 			}
 
 			return result;
+		}
+
+		public static ProSuiteGeometryType GetGeometryType(Dataset dataset)
+		{
+			ProSuiteGeometryType geometryType;
+
+			switch (dataset)
+			{
+				case IVectorDataset vds:
+				{
+					var shapeGeometryType = Assert.NotNull((GeometryTypeShape) vds.GeometryType);
+					geometryType = shapeGeometryType.ShapeType;
+					break;
+				}
+				case ITableDataset _:
+					geometryType = ProSuiteGeometryType.Null;
+					break;
+				case ITopologyDataset _:
+					geometryType = ProSuiteGeometryType.Topology;
+					break;
+				case RasterDataset _:
+					geometryType = ProSuiteGeometryType.Raster;
+					break;
+				case IRasterMosaicDataset _:
+					geometryType = ProSuiteGeometryType.RasterMosaic;
+					break;
+				case ISimpleTerrainDataset _:
+					geometryType = ProSuiteGeometryType.Terrain;
+					break;
+				default:
+					throw new ArgumentOutOfRangeException(
+						$"Unsupported dataset type: {dataset.Name}");
+			}
+
+			return geometryType;
 		}
 
 		private static FieldMsg ToFieldMsg(IField field)
