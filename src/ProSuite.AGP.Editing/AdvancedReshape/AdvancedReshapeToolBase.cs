@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,7 +12,6 @@ using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
-using ProSuite.Commons;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Framework;
@@ -290,6 +288,15 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 						return false;
 					}
 
+					if (result.ResultFeatures.Count == 0)
+					{
+						if (! string.IsNullOrEmpty(result.FailureMessage))
+						{
+							_msg.Warn(result.FailureMessage);
+							return false;
+						}
+					}
+
 					HashSet<long> editableClassHandles =
 						ToolUtils.GetEditableClassHandles(activeView);
 
@@ -419,8 +426,8 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			return foundFeatures;
 		}
 
-		private void LogReshapeResults(ReshapeResult reshapeResult,
-		                               int applicableSelectionCount)
+		private static void LogReshapeResults([NotNull] ReshapeResult reshapeResult,
+		                                      int applicableSelectionCount)
 		{
 			var result = new Dictionary<Feature, Geometry>();
 
@@ -434,9 +441,6 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 				if (! string.IsNullOrEmpty(message))
 				{
-					message =
-						$"{DatasetUtils.GetAliasName(feature.GetTable())} <oid> {feature.GetObjectID()}: {message}";
-
 					if (resultFeature.HasWarningMessage)
 					{
 						_msg.Warn(message);
@@ -460,16 +464,6 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 				{
 					_msg.Warn(reshapeResult.FailureMessage);
 				}
-
-				// Log individual reshape messages
-				string titleMessage = string.Empty;
-				if (applicableSelectionCount > 1)
-				{
-					titleMessage = $"Reshaped {reshapeResult.ResultFeatures.Count} " +
-					               $"of {applicableSelectionCount} selected features:";
-				}
-
-				LogSuccessfulReshape(titleMessage, result);
 			}
 		}
 
@@ -526,147 +520,6 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 			return await QueuedTaskUtils.Run(
 				       () => _feedback?.UpdatePreview(reshapeResult?.ResultFeatures));
-		}
-
-		private void LogSuccessfulReshape(
-			[CanBeNull] string titleMessage,
-			[NotNull] Dictionary<Feature, Geometry> reshapedGeometries)
-		{
-			IEnumerable<string> messages = GetReshapedFeaturesMessages(
-				reshapedGeometries);
-
-			string msg = string.Empty;
-			if (! string.IsNullOrEmpty(titleMessage))
-			{
-				msg += titleMessage;
-			}
-
-			foreach (string message in messages)
-			{
-				if (! string.IsNullOrEmpty(msg))
-				{
-					msg += Environment.NewLine;
-				}
-
-				msg += message;
-			}
-
-			_msg.Info(msg);
-		}
-
-		private IEnumerable<string> GetReshapedFeaturesMessages(
-			[NotNull] IDictionary<Feature, Geometry> reshapedFeatures)
-		{
-			IList<string> result = new List<string>();
-
-			foreach (
-				KeyValuePair<Feature, Geometry> keyValuePair in reshapedFeatures)
-			{
-				Feature feature = keyValuePair.Key;
-				Geometry updatedGeometry = keyValuePair.Value;
-
-				double sizeChangeMapUnits =
-					GetAreaOrLength(updatedGeometry) -
-					GetAreaOrLength(feature.GetShape());
-
-				// TODO: Get actual linear unit and convert (s. AdvancedReshaper)
-				Unit mapUnits = ActiveMapView.Map.SpatialReference.Unit;
-
-				bool is2D = updatedGeometry.Dimension == 2;
-				string sizeChangeText = GetSizeChangeText(sizeChangeMapUnits, is2D,
-				                                          mapUnits);
-
-				// TODO: RowFormat
-				string rowDisplayText = GdbObjectUtils.ToString(feature);
-
-				result.Add(string.Format("{0} was reshaped and is now {1}",
-				                         rowDisplayText, sizeChangeText));
-			}
-
-			return result;
-		}
-
-		private static double GetAreaOrLength(Geometry geometry)
-		{
-			Polygon polygon = geometry as Polygon;
-
-			if (polygon != null)
-			{
-				return polygon.Area;
-			}
-
-			Polyline polyline = geometry as Polyline;
-
-			if (polyline != null)
-			{
-				return polyline.Length;
-			}
-
-			return 0;
-		}
-
-		private static string GetSizeChangeText(double sizeDifference,
-		                                        bool isArea,
-		                                        Unit displayUnits)
-		{
-			string unitDisplay = $"{displayUnits}{(isArea ? "²" : string.Empty)}";
-
-			bool more = sizeDifference > 0;
-
-			string sizeAdjective = GetSizeAdjective(more, isArea);
-
-			const int significantDigits = 3;
-
-			double displayNumber =
-				Math.Abs(
-					MathUtils.RoundToSignificantDigits(
-						sizeDifference, significantDigits));
-
-			// fix 72000000 mm where it would actually be 721234567
-			if (Math.Abs(Math.Truncate(displayNumber) - displayNumber) < double.Epsilon)
-			{
-				displayNumber = Math.Abs(Math.Truncate(sizeDifference));
-			}
-
-			// fix 2.1E-05 nm²
-			string formatNonScientific = StringUtils.FormatNonScientific(
-				displayNumber, CultureInfo.CurrentCulture);
-
-			string lengthText = string.Format(
-				"{0} {1} {2}",
-				formatNonScientific,
-				unitDisplay, sizeAdjective);
-
-			return lengthText;
-		}
-
-		private static string GetSizeAdjective(bool isMore, bool isArea)
-		{
-			string sizeAdjective;
-			if (isMore)
-			{
-				if (isArea)
-				{
-					sizeAdjective = "larger";
-				}
-				else
-				{
-					sizeAdjective = "longer";
-				}
-			}
-			else
-			{
-				if (isArea)
-				{
-					sizeAdjective = "smaller";
-				}
-				else
-				{
-					sizeAdjective = "shorter";
-				}
-			}
-
-			return sizeAdjective;
 		}
 	}
 }

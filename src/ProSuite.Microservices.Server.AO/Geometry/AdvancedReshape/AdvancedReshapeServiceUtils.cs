@@ -72,8 +72,7 @@ namespace ProSuite.Microservices.Server.AO.Geometry.AdvancedReshape
 			response.OpenJawIntersectionCount = reshaper.OpenJawIntersectionPointCount;
 
 			PackReshapeResponseFeatures(response, storedFeatures, reshapedGeometries,
-			                            reshaper.OpenJawReshapeOcurred,
-			                            reshaper.NotificationIsWarning);
+			                            reshaper);
 
 			return response;
 		}
@@ -193,7 +192,7 @@ namespace ProSuite.Microservices.Server.AO.Geometry.AdvancedReshape
 			container = ProtobufConversionUtils.CreateGdbTableContainer(
 				request.ClassDefinitions, null, out _);
 
-			foreach (IDataset dataset in container.GetDatasets(esriDatasetType.esriDTAny))
+			foreach (VirtualTable dataset in container.GetDatasets(esriDatasetType.esriDTAny))
 			{
 				if (dataset is IObjectClass objectClass)
 				{
@@ -226,8 +225,7 @@ namespace ProSuite.Microservices.Server.AO.Geometry.AdvancedReshape
 			AdvancedReshapeResponse result,
 			[NotNull] IEnumerable<IFeature> storedFeatures,
 			[NotNull] IDictionary<IGeometry, NotificationCollection> reshapedGeometries,
-			bool openJawReshapeOccurred,
-			bool notificationIsWarning)
+			GeometryReshaperBase reshaper)
 		{
 			foreach (IFeature storedFeature in storedFeatures)
 			{
@@ -242,13 +240,28 @@ namespace ProSuite.Microservices.Server.AO.Geometry.AdvancedReshape
 
 				resultFeature.Update = resultFeatureMsg;
 
+				NotificationCollection notifications = reshapedGeometries[newGeometry];
+
+				bool notificationIsWarning = reshaper.NotificationIsWarning;
+
 				if (reshapedGeometries.ContainsKey(newGeometry) &&
-				    (reshapedGeometries[newGeometry] != null))
+				    notifications != null)
 				{
-					foreach (INotification notification in reshapedGeometries[newGeometry])
+					if (notifications.Count == 0)
 					{
-						resultFeature.Notifications.Add(notification.Message);
-						resultFeature.HasWarning = notificationIsWarning;
+						esriUnits units = esriUnits.esriMeters;
+						string message =
+							reshaper.GetSizeChangeMessage(newGeometry, feature, units, units);
+
+						resultFeature.Notifications.Add(message);
+					}
+					else
+					{
+						foreach (INotification notification in notifications)
+						{
+							resultFeature.Notifications.Add(notification.Message);
+							resultFeature.HasWarning = notificationIsWarning;
+						}
 					}
 				}
 
