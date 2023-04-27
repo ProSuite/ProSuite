@@ -5,7 +5,6 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
-using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using Geometry = ArcGIS.Core.Geometry.Geometry;
 
@@ -19,11 +18,8 @@ namespace ProSuite.AGP.Editing.Picker
 			_basicFeatureLayer = mapMember as BasicFeatureLayer;
 			Oid = feature.GetObjectID();
 			ItemText = text;
-			QueuedTask.Run(() =>
-			{
-				Geometry = feature.GetShape();
-				_itemImageUri = GetImagePath(Geometry);
-			});
+			Geometry = feature.GetShape();
+			_itemImageUri = GetImagePath(Geometry);
 		}
 
 		private readonly BasicFeatureLayer _basicFeatureLayer;
@@ -68,6 +64,7 @@ namespace ProSuite.AGP.Editing.Picker
 
 		public long Oid { get; }
 
+		// todo daro to DisplayValue
 		public string ItemText { get; }
 
 		public string LayerName => _basicFeatureLayer.Name;
@@ -107,7 +104,7 @@ namespace ProSuite.AGP.Editing.Picker
 
 		public override string ToString()
 		{
-			return $"{_basicFeatureLayer.Name} {Oid}";
+			return ItemText;
 		}
 	}
 }

@@ -1,9 +1,7 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
-using ArcGIS.Core.Data;
 using ProSuite.AGP.Editing.Picker;
 using ProSuite.AGP.Editing.Selection;
 using ProSuite.Commons.AGP.Carto;
@@ -30,12 +28,10 @@ namespace ProSuite.AGP.Editing.PickerUI
 		/// </summary>
 		/// <param name="selectionByLayer"></param>
 		/// <param name="pickerWindowLocation"></param>
-		/// <param name="reducer"></param>
 		/// <returns></returns>
 		public static async Task<PickableFeatureItem> PickSingleFeatureAsync(
 			[NotNull] IEnumerable<FeatureClassSelection> selectionByLayer,
-			Point pickerWindowLocation,
-			Func<IEnumerable<Feature>, IEnumerable<Feature>> reducer = null)
+			Point pickerWindowLocation)
 		{
 			IList<IPickableItem> pickableItems =
 				await QueuedTaskUtils.Run(

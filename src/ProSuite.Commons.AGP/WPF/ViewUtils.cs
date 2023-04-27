@@ -8,6 +8,7 @@ using ProSuite.Commons.Logging;
 
 namespace ProSuite.Commons.AGP.WPF
 {
+	// todo daro drop! use ProSuite.Commons.UI.ViewUtils
 	public static class ViewUtils
 	{
 		public static void Try([NotNull] Action action, [NotNull] IMsg msg,

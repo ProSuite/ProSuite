@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -79,7 +78,7 @@ namespace ProSuite.AGP.Editing.PickerUI
 				return new List<IPickableItem>();
 			}
 
-			RunOnUIThread(() => { ShowPickerControl(_viewModel); });
+			Commons.UI.ViewUtils.RunOnUIThread(() => { ShowPickerControl(_viewModel); });
 
 			_viewModel.DisposeOverlays();
 
@@ -115,19 +114,6 @@ namespace ProSuite.AGP.Editing.PickerUI
 
 			window.Left = dipLocation.X;
 			window.Top = dipLocation.Y;
-		}
-
-		private static void RunOnUIThread(Action action)
-		{
-			if (Application.Current.Dispatcher.CheckAccess())
-			{
-				action(); //No invoke needed
-			}
-			else
-				//We are not on the UI
-			{
-				Application.Current.Dispatcher.BeginInvoke(action);
-			}
 		}
 
 		private static bool IsUnknownLocation(Point location)
