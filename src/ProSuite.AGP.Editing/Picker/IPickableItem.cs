@@ -9,11 +9,14 @@ namespace ProSuite.AGP.Editing.Picker
 	{
 		string ItemText { get; }
 
+		// todo daro rename Selected
 		bool IsSelected { get; set; }
 
 		[CanBeNull]
 		Geometry Geometry { get; set; }
 
 		ImageSource ItemImageSource { get; }
+
+		int Score { get; set; }
 	}
 }

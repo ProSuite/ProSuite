@@ -25,6 +25,7 @@ using ProSuite.Commons.Notifications;
 using ProSuite.Commons.UI.Keyboard;
 using Cursor = System.Windows.Input.Cursor;
 using SelectionMode = ProSuite.AGP.Editing.Selection.SelectionMode;
+using ViewUtils = ProSuite.Commons.UI.ViewUtils;
 
 namespace ProSuite.AGP.Editing.OneClick
 {
@@ -33,6 +34,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		private const Key _keyShowOptionsPane = Key.O;
 
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
+		private StandardPickerPrecedence _pickerPrecedence;
 
 		protected OneClickToolBase()
 		{
@@ -63,6 +65,8 @@ namespace ProSuite.AGP.Editing.OneClick
 		protected virtual SelectionSettings SelectionSettings { get; } =
 			new SelectionSettings(SketchGeometryType.Rectangle, 50);
 
+		public virtual IPickerPrecedence PickerPrecedence =>
+			_pickerPrecedence ?? (_pickerPrecedence = new StandardPickerPrecedence());
 
 		/// <summary>
 		/// The list of handled keys, i.e. the keys for which <see cref="MapTool.HandleKeyDownAsync" />
@@ -449,7 +453,7 @@ namespace ProSuite.AGP.Editing.OneClick
 				                                          ? SpatialRelationship.Contains
 				                                          : SpatialRelationship.Intersects;
 
-			Geometry selectionGeometry;
+			Geometry selectionGeometry = null;
 			var pickerWindowLocation = new Point(0, 0);
 
 			bool singlePick = false;
@@ -482,11 +486,12 @@ namespace ProSuite.AGP.Editing.OneClick
 				return false;
 			}
 
-			// todo daro refactor
+			PickerPrecedence.SelectionGeometry = selectionGeometry;
 
+			// todo daro refactor
 			bool result = singlePick
-				              ? await SingleClickSelect(candidatesOfManyLayers,
-				                                        pickerWindowLocation, selectionMethod)
+				              ? await SingleClickSelect_trial(candidatesOfManyLayers,
+				                                        pickerWindowLocation, PickerPrecedence, selectionMethod)
 				              : await AreaSelect(candidatesOfManyLayers, pickerWindowLocation,
 				                                 selectionMethod);
 
@@ -548,6 +553,70 @@ namespace ProSuite.AGP.Editing.OneClick
 			return true;
 		}
 
+		// todo daro when return false?
+		private static async Task<bool> SingleClickSelect_trial(
+			[NotNull] IList<FeatureClassSelection> candidatesOfLayers,
+			Point pickerLocation,
+			IPickerPrecedence pickerPrecedence,
+			SelectionCombinationMethod selectionMethod)
+		{
+			if (GetSelectionSketchMode() == SelectionMode.Original)
+			{
+				// ALT was pressed: select all at xy location, do not show picker
+				await QueuedTask.Run(() =>
+				{
+					Selector.SelectLayersFeaturesByOids(
+						candidatesOfLayers, selectionMethod);
+				});
+			}
+			else
+			{
+				// show picker if more than one candidate
+				if (GeometryReducer.ContainsManyFeatures(candidatesOfLayers))
+				{
+					IList<IPickableItem> items =
+						await QueuedTaskUtils.Run(() =>
+						{
+							candidatesOfLayers = GeometryReducer.ReduceByGeometryDimension(candidatesOfLayers).ToList();
+
+							return PickableItemsFactory.CreateFeatureItems(candidatesOfLayers);
+						});
+
+					var picker = new PickerService();
+
+					
+
+					Func<Task<PickableFeatureItem>> showPickerControl =
+						await QueuedTaskUtils.Run(() => picker.PickSingle<PickableFeatureItem>(
+							                          items, pickerLocation,
+							                          pickerPrecedence));
+
+					PickableFeatureItem pickedItem = await ViewUtils.TryAsync(showPickerControl(), _msg);
+
+					if (pickedItem == null)
+					{
+						return true;
+					}
+
+					await QueuedTask.Run(() =>
+					{
+						Selector.SelectFeature(
+							pickedItem.Layer, selectionMethod, pickedItem.Oid);
+					});
+				}
+				else
+				{
+					await QueuedTask.Run(() =>
+					{
+						Selector.SelectLayersFeaturesByOids(
+							candidatesOfLayers.First(), selectionMethod);
+					});
+				}
+			}
+
+			return true;
+		}
+
 		private static async Task<bool> AreaSelect(
 			[NotNull] IList<FeatureClassSelection> candidatesOfManyLayers,
 			Point pickerWindowLocation,
@@ -595,7 +664,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			if (mapView == null)
 			{
-				return new List<FeatureClassSelection>(0);
+				return Enumerable.Empty<FeatureClassSelection>();
 			}
 
 			var featureFinder = new FeatureFinder(mapView)

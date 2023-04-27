@@ -11,7 +11,7 @@ using Geometry = ArcGIS.Core.Geometry.Geometry;
 
 namespace ProSuite.AGP.Editing.Picker
 {
-	public class PickableFeatureItem : IPickableItem
+	public class PickableFeatureItem : IPickableFeatureItem
 	{
 		public PickableFeatureItem(MapMember mapMember, Feature feature, string text)
 		{
@@ -90,6 +90,8 @@ namespace ProSuite.AGP.Editing.Picker
 				return _img;
 			}
 		}
+
+		public int Score { get; set; }
 
 		public BasicFeatureLayer Layer => _basicFeatureLayer;
 

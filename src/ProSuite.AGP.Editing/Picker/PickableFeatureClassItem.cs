@@ -57,6 +57,8 @@ namespace ProSuite.AGP.Editing.Picker
 			}
 		}
 
+		public int Score { get; set; }
+
 		public List<BasicFeatureLayer> BelongingFeatureLayers
 		{
 			get => _belongingFeatureLayers;
