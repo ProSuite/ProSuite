@@ -60,8 +60,9 @@ namespace ProSuite.AGP.Editing.OneClick
 		/// </summary>
 		protected bool AllowNotApplicableFeaturesInSelection { get; set; } = true;
 
-		protected virtual SelectionSettings SelectionSettings { get; set; } =
-			new SelectionSettings();
+		protected virtual SelectionSettings SelectionSettings { get; } =
+			new SelectionSettings(SketchGeometryType.Rectangle, 50);
+
 
 		/// <summary>
 		/// The list of handled keys, i.e. the keys for which <see cref="MapTool.HandleKeyDownAsync" />

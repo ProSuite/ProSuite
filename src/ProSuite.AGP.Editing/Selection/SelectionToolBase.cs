@@ -16,10 +16,11 @@ namespace ProSuite.AGP.Editing.Selection
 {
 	public abstract class SelectionToolBase : OneClickToolBase
 	{
+		// todo daro refactor
 		protected SelectionToolBase()
 		{
 			IsSketchTool = true;
-			SelectionSettings = new SelectionSettings();
+
 			SelectionCursor = ToolUtils.GetCursor(Resources.SelectionToolNormal);
 			SelectionCursorShift = ToolUtils.GetCursor(Resources.SelectionToolNormalShift);
 
@@ -106,7 +107,8 @@ namespace ProSuite.AGP.Editing.Selection
 			_msg.InfoFormat(LocalizableStrings.SelectionTool_LogPromptForSelection);
 		}
 
-		protected override SelectionSettings SelectionSettings { get; set; }
+		protected override SelectionSettings SelectionSettings =>
+			new SelectionSettings(SketchGeometryType.Rectangle, 50);
 
 		// todo daro: to DamlUtils?
 		private static void SetCheckState(string damlId, bool isChecked)
