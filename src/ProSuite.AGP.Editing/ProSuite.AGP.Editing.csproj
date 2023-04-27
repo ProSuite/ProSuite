@@ -21,6 +21,12 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
   </PropertyGroup>
+
+  <!-- .net 6 Winforms and WPF references: -->
+  <PropertyGroup>
+    <UseWpf>true</UseWpf>
+  </PropertyGroup>
+
   <ItemGroup>
     <Reference Include="ArcGIS.Core">
       <HintPath>$(ProAssemblyPath)\bin\ArcGIS.Core.dll</HintPath>
