@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using Google.Protobuf.Collections;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -129,7 +130,14 @@ namespace ProSuite.Microservices.Server.AO.Geodatabase
 					$"No data provided by the client for data request {response.DataRequest}");
 			}
 
-			foreach (GdbObjectMsg gdbObjMsg in moreData.Data.GdbObjects)
+			RepeatedField<GdbObjectMsg> foundGdbObjects = moreData.Data?.GdbObjects;
+
+			if (foundGdbObjects == null || foundGdbObjects.Count == 0)
+			{
+				yield break;
+			}
+
+			foreach (GdbObjectMsg gdbObjMsg in foundGdbObjects)
 			{
 				yield return ProtobufConversionUtils.FromGdbObjectMsg(gdbObjMsg, _schema);
 			}

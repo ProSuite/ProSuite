@@ -484,14 +484,14 @@ namespace ProSuite.QA.Tests.Test
 
 			string version = RuntimeUtils.Version;
 			double v;
-			if (double.TryParse(version, out v) && v < 10.4)
+			if (double.TryParse(version, out v) && (v < 10.4 || v >= 10.8))
 			{
 				Assert.AreEqual(rowCount, sortCount);
 			}
 			else
 			{
 				Assert.IsTrue(rowCount >
-				              sortCount); // bug in TableSort for joined FGDB-Tables, since 10.4
+				              sortCount); // bug in TableSort for joined FGDB-Tables, from 10.4 - 10.7
 			}
 
 			var orderByCount = 0;

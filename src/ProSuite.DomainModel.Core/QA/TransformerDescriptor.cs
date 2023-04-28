@@ -1,3 +1,4 @@
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.DomainModel.Core.QA
@@ -26,6 +27,14 @@ namespace ProSuite.DomainModel.Core.QA
 			       {
 				       InstanceDescriptor = this
 			       };
+		}
+
+		public override string GetCanonicalName()
+		{
+			Assert.NotNull(Class, nameof(Class));
+
+			return InstanceDescriptorUtils.GetCanonicalInstanceDescriptorName(
+				Class.TypeName, ConstructorId);
 		}
 
 		#endregion

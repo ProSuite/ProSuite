@@ -15,6 +15,13 @@
     <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' Or '$(TargetFrameworkVersion)' == 'v4.8' ">net48</TargetFrameworkVersion>
     <TargetFramework>$(TargetFrameworkVersion)</TargetFramework>
   </PropertyGroup>
+
+  <!-- .net 6 Winforms and WPF references: -->
+  <PropertyGroup>
+    <UseWpf>true</UseWpf>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugType>full</DebugType>
   </PropertyGroup>
@@ -54,7 +61,6 @@
     </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
-    <Reference Include="System.Xaml" />
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
@@ -70,17 +76,17 @@
     <Compile Remove="Gdb\GdbObjectReference.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Remove="LoggerUI\LogMessageDetailsDialog.xaml" />
-    <None Remove="LoggerUI\ProSuiteLogPane.xaml" />
-  </ItemGroup>
-  <ItemGroup>
-    <Page Include="LoggerUI\LogMessageDetailsDialog.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="LoggerUI\ProSuiteLogPane.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
+    <Resource Include="Images\StatusCriticalError_12x_16x.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Images\StatusDebug_12x_16x.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Images\StatusInformation_12x_16x.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Images\StatusWarning_12x_16x.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
 </Project>

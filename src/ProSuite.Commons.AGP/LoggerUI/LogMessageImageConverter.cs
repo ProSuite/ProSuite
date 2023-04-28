@@ -14,15 +14,15 @@ namespace ProSuite.Commons.AGP.LoggerUI
 				switch (logType)
 				{
 					case LogType.Debug:
-						return "/Dira.ProSuite.EditTools;component/Images/StatusDebug_12x_16x.png";
+						return "/ProSuite.Commons.AGP;component/Images/StatusDebug_12x_16x.png";
 					case LogType.Warn:
-						return "/Dira.ProSuite.EditTools;component/Images/StatusWarning_12x_16x.png";
+						return "/ProSuite.Commons.AGP;component/Images/StatusWarning_12x_16x.png";
 					case LogType.Error:
-						return "/Dira.ProSuite.EditTools;component/Images/StatusCriticalError_12x_16x.png";
+						return "/ProSuite.Commons.AGP;component/Images/StatusCriticalError_12x_16x.png";
 				}
 			}
 
-			return "/Dira.ProSuite.EditTools;component/Images/StatusInformation_12x_16x.png";
+			return "/ProSuite.Commons.AGP;component/Images/StatusInformation_12x_16x.png";
 		}
 
 		public object ConvertBack(object value, Type targetType, object parameter,

@@ -58,7 +58,8 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 		public QualityConditionControl(
 			[NotNull] TableState tableStateQSpec,
 			[NotNull] TableState tableStateIssueFilter,
-			[NotNull] IInstanceConfigurationTableViewControl tableViewControl)
+			[NotNull] IInstanceConfigurationTableViewControl tableViewControl,
+			bool ignoreLastDetailsTab = false)
 		{
 			Assert.ArgumentNotNull(tableStateQSpec, nameof(tableStateQSpec));
 			Assert.ArgumentNotNull(tableViewControl, nameof(tableViewControl));
@@ -168,9 +169,12 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			       .To(_textBoxFilterExpression)
 			       .WithLabel(_labelFilterExpression);
 
-			TabControlUtils.SelectTabPage(_tabControlDetails, _lastSelectedDetailsTab);
-			TabControlUtils.SelectTabPage(_tabControlParameterValues,
-			                              _lastSelectedParameterValuesTab);
+			if (! ignoreLastDetailsTab)
+			{
+				TabControlUtils.SelectTabPage(_tabControlDetails, _lastSelectedDetailsTab);
+				TabControlUtils.SelectTabPage(_tabControlParameterValues,
+				                              _lastSelectedParameterValuesTab);
+			}
 
 			_tableViewShown = _tabControlParameterValues.SelectedTab == _tabPageTableView;
 		}
@@ -765,6 +769,25 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			object sender, EventArgs e)
 		{
 			Observer?.DescriptorDocumentationLinkClicked();
+		}
+
+		private void _textBoxName_PreviewKeyDown(object sender, PreviewKeyDownEventArgs e)
+		{
+			bool tabKeyPressed = e.KeyData == Keys.Tab;
+
+			if (tabKeyPressed &&
+			    string.IsNullOrEmpty(_textBoxName.Text))
+			{
+				// Generate a name
+				_textBoxName.Text = Observer?.GenerateName();
+			}
+
+			if (! tabKeyPressed ||
+			    ! string.IsNullOrEmpty(_textBoxName.Text))
+			{
+				// Do not show the tooltip once the user has started typing or the name has bee generated:
+				_toolTip.SetToolTip(_textBoxName, null);
+			}
 		}
 	}
 }

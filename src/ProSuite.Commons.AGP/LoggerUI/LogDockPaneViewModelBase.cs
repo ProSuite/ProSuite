@@ -3,16 +3,17 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Windows.Data;
 using ArcGIS.Desktop.Framework;
-using ArcGIS.Desktop.Framework.Contracts;
+using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 
 namespace ProSuite.Commons.AGP.LoggerUI
 {
 	[UsedImplicitly]
-	public abstract class ProSuiteLogPaneViewModel : DockPane, IDisposable
+	public class LogDockPaneViewModelBase : DockPaneViewModelBase, IDisposable
 	{
 		public const string Id = "ProSuiteTools_Logger_ProSuiteLogPane";
+
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private static RelayCommand _openLinkMessage;
@@ -23,7 +24,7 @@ namespace ProSuite.Commons.AGP.LoggerUI
 
 		private LoggingEventItem _selectedRow;
 
-		public ProSuiteLogPaneViewModel()
+		public LogDockPaneViewModelBase() : base(new LogDockPane())
 		{
 			LogMessageList = new ObservableCollection<LoggingEventItem>();
 			BindingOperations.CollectionRegistering += BindingOperations_CollectionRegistering;
@@ -61,7 +62,7 @@ namespace ProSuite.Commons.AGP.LoggerUI
 			LoggingEventsAppender.OnNewLogMessage -= Logger_OnNewLogMessage;
 
 			var pane =
-				(ProSuiteLogPaneViewModel) FrameworkApplication.DockPaneManager.Find(Id);
+				(LogDockPaneViewModelBase) FrameworkApplication.DockPaneManager.Find(Id);
 			if (pane == null)
 			{
 				return;
@@ -76,6 +77,8 @@ namespace ProSuite.Commons.AGP.LoggerUI
 
 		private static void OpenLogLinkMessage(object msg)
 		{
+			var message = (LoggingEventItem) msg;
+
 			// TODO inform UI than "Hyperlink" is clicked
 			//_msg.Info($"Hyperlink clicked {message.LinkMessage}");
 		}

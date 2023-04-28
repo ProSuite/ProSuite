@@ -33,7 +33,8 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		{
 			object sourceValue = BaseRow.get_Value(fieldIndex) ?? DBNull.Value;
 
-			if (! sourceValue.Equals(value))
+			// Attention: long object != int object, even if the values are the same!
+			if (! FieldUtils.AreValuesEqual(sourceValue, value))
 			{
 				throw new InvalidOperationException("Cannot update read-only row");
 			}

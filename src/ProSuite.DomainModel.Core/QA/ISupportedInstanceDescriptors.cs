@@ -1,6 +1,4 @@
-using ProSuite.DomainModel.Core.QA;
-
-namespace ProSuite.Microservices.Server.AO.QA
+namespace ProSuite.DomainModel.Core.QA
 {
 	public interface ISupportedInstanceDescriptors
 	{

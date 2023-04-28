@@ -24,7 +24,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 		public AdvancedReshapeFeedback()
 		{
-			_openJawReplaceEndSymbol = CreateHollowCircle(0, 0, 200);
+			_openJawReplaceEndSymbol = CreateHollowCircle(0, 200, 255);
 
 			_addAreaSymbol = SymbolUtils.CreateHatchFillSymbol(0, 255, 0, 90);
 			_removeAreaSymbol = SymbolUtils.CreateHatchFillSymbol(255, 0, 0);

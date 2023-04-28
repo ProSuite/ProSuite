@@ -210,6 +210,11 @@ namespace ProSuite.Commons.AO.Geodatabase
 		{
 			var filterHelper = FilterHelper.Create(_joinedSchema, filter?.WhereClause);
 
+			if (_msg.IsVerboseDebugEnabled)
+			{
+				LogQueryProperties(filter);
+			}
+
 			// The filter's where clause must use the fully qualified rows. But the spatial
 			// constraint is applied during the creation of the join.
 			foreach (VirtualRow virtualRow in GetJoinedRows(filter, recycling))
@@ -303,8 +308,13 @@ namespace ProSuite.Commons.AO.Geodatabase
 			Assert.NotNull(OtherClassKeyField);
 
 			string originalSubfields = filter?.SubFields;
-			if (filter != null)
-				filter.SubFields = GeometryClassKeyField;
+
+			if (filter == null)
+			{
+				filter = new QueryFilter();
+			}
+
+			filter.SubFields = GeometryClassKeyField;
 
 			// TODO: More testing, does not seem to make a difference:
 			//esriSpatialRelEnum originalSpatialRel = esriSpatialRelEnum.esriSpatialRelUndefined;
@@ -323,8 +333,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 				GetOtherRowsByFeatureKey(leftFeatures);
 
 			// Revert the filter change:
-			if (filter != null)
-				filter.SubFields = originalSubfields;
+			filter.SubFields = originalSubfields;
 
 			return otherRows;
 		}
@@ -460,7 +469,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 				else
 				{
 					if (featureKeyValue == null ||
-					    ! otherRowsByFeatureKey.TryGetValue(featureKeyValue, out otherRowList))
+					    ! otherRowsByFeatureKey.TryGetValue(featureKeyValue, out otherRowList) ||
+					    otherRowList.Count == 0)
 					{
 						// No relationship or no relational integrity
 						yield return CreateJoinedFeature(feature, null);
@@ -988,6 +998,17 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 
 			return null;
+		}
+
+		private void LogQueryProperties(IQueryFilter filter)
+		{
+			_msg.DebugFormat("Querying joined table {0} using the following filter:",
+			                 _joinedSchema.Name);
+
+			using (_msg.IncrementIndentation())
+			{
+				GdbQueryUtils.LogFilterProperties(filter);
+			}
 		}
 
 		private class AssociationTableRowCache

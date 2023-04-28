@@ -482,7 +482,7 @@ namespace ProSuite.DomainServices.AO.QA
 
 			queryFilter = new QueryFilterClass();
 
-			var subfields = new List<string> {result.OIDFieldName};
+			var subfields = new List<string> { result.OIDFieldName };
 
 			if (includeDateOfChangeField)
 			{

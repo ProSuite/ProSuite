@@ -209,7 +209,7 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 
 							if (newIssueType == ErrorType.Allowed &&
 							    isFeatureClass &&
-							    IsTableIssueStoredWithReferenceGeometry(issueObject))
+							    IsTableIssueStoredWithReferenceGeometryFlag(issueObject))
 							{
 								// move to issue table without geometry
 								IssueDatasetWriter issueWriter =
@@ -273,14 +273,11 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 			}
 		}
 
-		private void RemoveReferenceGeometryFlag([NotNull] IRow row)
+		private void RemoveReferenceGeometryFlag([NotNull] IRow issueRow)
 		{
-			int fieldIndex = row.Fields.FindField(FieldNameDescription);
+			string issueDescription = GetIssueDescription(issueRow, out int fieldIndex);
 
-			string issueDescription = GetIssueDescription(row);
-
-			if (! issueDescription.EndsWith(
-				    ReferenceGeometryUtils.ReferencedGeometryInfo))
+			if (! issueDescription.EndsWith(ReferenceGeometryUtils.ReferencedGeometryInfo))
 			{
 				return;
 			}
@@ -290,21 +287,20 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 					0,
 					issueDescription.Length - ReferenceGeometryUtils.ReferencedGeometryInfo.Length);
 
-			row.set_Value(fieldIndex, newIssueDescription);
+			issueRow.Value[fieldIndex] = newIssueDescription;
 		}
 
-		private bool IsTableIssueStoredWithReferenceGeometry([NotNull] IRow issueRow)
+		private bool IsTableIssueStoredWithReferenceGeometryFlag([NotNull] IRow issueRow)
 		{
-			string issueDescription = GetIssueDescription(issueRow);
+			string issueDescription = GetIssueDescription(issueRow, out int _);
 
-			return issueDescription.EndsWith(
-				ReferenceGeometryUtils.ReferencedGeometryInfo);
+			return issueDescription.EndsWith(ReferenceGeometryUtils.ReferencedGeometryInfo);
 		}
 
 		[NotNull]
-		private string GetIssueDescription([NotNull] IRow issueRow)
+		private string GetIssueDescription([NotNull] IRow issueRow, out int fieldIndex)
 		{
-			int fieldIndex = issueRow.Fields.FindField(FieldNameDescription);
+			fieldIndex = issueRow.Fields.FindField(FieldNameDescription);
 
 			var value = issueRow.Value[fieldIndex] as string;
 

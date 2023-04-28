@@ -5,1301 +5,1266 @@ using ProSuite.UI.QA.Controls;
 
 namespace ProSuite.DdxEditor.Content.QA.QCon
 {
-    partial class QualityConditionControl
-    {
-        /// <summary> 
-        /// Required designer variable.
-        /// </summary>
-        private System.ComponentModel.IContainer components = null;
+	partial class QualityConditionControl
+	{
+		/// <summary> 
+		/// Required designer variable.
+		/// </summary>
+		private System.ComponentModel.IContainer components = null;
 
-        /// <summary> 
-        /// Clean up any resources being used.
-        /// </summary>
-        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing && (components != null))
-            {
-                components.Dispose();
+		/// <summary> 
+		/// Clean up any resources being used.
+		/// </summary>
+		/// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+		protected override void Dispose(bool disposing)
+		{
+			if (disposing && (components != null))
+			{
+				components.Dispose();
 
-                ITestConfigurator old = _propertyGrid.SelectedObject as ITestConfigurator;
-                if (old != null)
-                {
-                    old.DataChanged -= configurator_DataChanged;
-                }
+				ITestConfigurator old = _propertyGrid.SelectedObject as ITestConfigurator;
+				if (old != null)
+				{
+					old.DataChanged -= configurator_DataChanged;
+				}
 
-            }
-            base.Dispose(disposing);
-        }
+			}
+			base.Dispose(disposing);
+		}
 
-        #region Component Designer generated code
+		#region Component Designer generated code
 
-        /// <summary> 
-        /// Required method for Designer support - do not modify 
-        /// the contents of this method with the code editor.
-        /// </summary>
-        private void InitializeComponent()
-        {
-			this.components = new System.ComponentModel.Container();
+		/// <summary> 
+		/// Required method for Designer support - do not modify 
+		/// the contents of this method with the code editor.
+		/// </summary>
+		private void InitializeComponent()
+		{
+			components=new System.ComponentModel.Container();
 			System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
-			this._textBoxName = new System.Windows.Forms.TextBox();
-			this._labelName = new System.Windows.Forms.Label();
-			this._textBoxDescription = new System.Windows.Forms.TextBox();
-			this._labelDescription = new System.Windows.Forms.Label();
-			this._errorProvider = new System.Windows.Forms.ErrorProvider(this.components);
-			this._textBoxDescGrid = new System.Windows.Forms.TextBox();
-			this._labelTestDescriptor = new System.Windows.Forms.LinkLabel();
-			this._buttonExport = new System.Windows.Forms.Button();
-			this._buttonImport = new System.Windows.Forms.Button();
-			this.openFileDialogImport = new System.Windows.Forms.OpenFileDialog();
-			this.saveFileDialogExport = new System.Windows.Forms.SaveFileDialog();
-			this._tabControlParameterValues = new System.Windows.Forms.TabControl();
-			this.tabPageProperties = new System.Windows.Forms.TabPage();
-			this._splitContainerProperties = new ProSuite.Commons.UI.WinForms.Controls.SplitContainerEx();
-			this._textBoxDescProps = new System.Windows.Forms.TextBox();
-			this._panelDescriptionLabel = new System.Windows.Forms.Panel();
-			this._labelParameterDescription = new System.Windows.Forms.Label();
-			this._propertyGrid = new System.Windows.Forms.PropertyGrid();
-			this._tabPageTableView = new System.Windows.Forms.TabPage();
-			this._splitContainer = new ProSuite.Commons.UI.WinForms.Controls.SplitContainerEx();
-			this._splitContainerHeader = new ProSuite.Commons.UI.WinForms.Controls.SplitContainerEx();
-			this._dataGridViewParamGrid = new ProSuite.Commons.UI.WinForms.Controls.DoubleBufferedDataGridView();
-			this._labelStopOnError = new System.Windows.Forms.Label();
-			this._labelAllowErrors = new System.Windows.Forms.Label();
-			this._textBoxStopOnErrorDefault = new System.Windows.Forms.TextBox();
-			this._textBoxIssueTypeDefault = new System.Windows.Forms.TextBox();
-			this._labelTestDescriptorDefaultStopOnError = new System.Windows.Forms.Label();
-			this._labelTestDescriptorDefaultAllowErrors = new System.Windows.Forms.Label();
-			this._tabControlDetails = new System.Windows.Forms.TabControl();
-			this._tabPageParameters = new System.Windows.Forms.TabPage();
-			this._panelParameters = new System.Windows.Forms.Panel();
-			this._qualityConditionTableViewControlPanel = new System.Windows.Forms.Panel();
-			this._exportButtonPanel = new System.Windows.Forms.Panel();
-			this._instanceParameterConfigControl = new ProSuite.DdxEditor.Content.QA.InstanceConfig.InstanceParameterConfigControl();
-			this._tabPageIssueFilters = new System.Windows.Forms.TabPage();
-			this._issueFilterPanelBottom = new System.Windows.Forms.Panel();
-			this._textBoxFilterExpression = new System.Windows.Forms.TextBox();
-			this._labelFilterExpression = new System.Windows.Forms.Label();
-			this._dataGridViewIssueFilters = new ProSuite.Commons.UI.WinForms.Controls.DoubleBufferedDataGridView();
-			this._dataGridIssueColumnImage = new System.Windows.Forms.DataGridViewImageColumn();
-			this._dataGridIssueColumnName = new System.Windows.Forms.DataGridViewTextBoxColumn();
-			this._dataGridIssueColumnType = new System.Windows.Forms.DataGridViewTextBoxColumn();
-			this._dataGridIssueColumnAlgorithm = new System.Windows.Forms.DataGridViewTextBoxColumn();
-			this._dataGridIssueColumnCategory = new System.Windows.Forms.DataGridViewTextBoxColumn();
-			this._dataGridIssueColumnDescription = new System.Windows.Forms.DataGridViewTextBoxColumn();
-			this.toolStripEx1 = new ProSuite.Commons.UI.WinForms.Controls.ToolStripEx();
-			this._toolStripLabelIssueFilters = new System.Windows.Forms.ToolStripLabel();
-			this._toolStripButtonRemoveIssueFilter = new System.Windows.Forms.ToolStripButton();
-			this._toolStripButtonAddIssueFilter = new System.Windows.Forms.ToolStripButton();
-			this._tabPageQualitySpecifications = new System.Windows.Forms.TabPage();
-			this._dataGridViewQualitySpecifications = new ProSuite.Commons.UI.WinForms.Controls.DoubleBufferedDataGridView();
-			this._columnName = new System.Windows.Forms.DataGridViewTextBoxColumn();
-			this._columnCategory = new System.Windows.Forms.DataGridViewTextBoxColumn();
-			this._columnIssueType = new System.Windows.Forms.DataGridViewComboBoxColumn();
-			this._columnStopOnError = new System.Windows.Forms.DataGridViewComboBoxColumn();
-			this._toolStripElements = new ProSuite.Commons.UI.WinForms.Controls.ToolStripEx();
-			this.toolStripLabel1 = new System.Windows.Forms.ToolStripLabel();
-			this._toolStripButtonRemoveFromQualitySpecifications = new System.Windows.Forms.ToolStripButton();
-			this._toolStripButtonAssignToQualitySpecifications = new System.Windows.Forms.ToolStripButton();
-			this._tabPageOptions = new System.Windows.Forms.TabPage();
-			this._groupBoxIdentification = new System.Windows.Forms.GroupBox();
-			this._textBoxUuid = new System.Windows.Forms.TextBox();
-			this._buttonNewVersionGuid = new System.Windows.Forms.Button();
-			this._labelUuid = new System.Windows.Forms.Label();
-			this._labelVersionUuid = new System.Windows.Forms.Label();
-			this._textBoxVersionUuid = new System.Windows.Forms.TextBox();
-			this._groupBoxTablesWithoutGeometry = new System.Windows.Forms.GroupBox();
-			this._checkBoxNeverFilterTableRowsUsingRelatedGeometry = new System.Windows.Forms.CheckBox();
-			this._checkBoxNeverStoreRelatedGeometryForTableRowIssues = new System.Windows.Forms.CheckBox();
-			this._tabPageNotes = new System.Windows.Forms.TabPage();
-			this._textBoxNotes = new System.Windows.Forms.TextBox();
-			this._textBoxQualitySpecifications = new System.Windows.Forms.TextBox();
-			this._labelQualitySpecifications = new System.Windows.Forms.Label();
-			this._textBoxUrl = new System.Windows.Forms.TextBox();
-			this._labelUrl = new System.Windows.Forms.Label();
-			this._buttonOpenUrl = new System.Windows.Forms.Button();
-			this._textBoxCategory = new System.Windows.Forms.TextBox();
-			this._labelCategory = new System.Windows.Forms.Label();
-			this._toolTip = new System.Windows.Forms.ToolTip(this.components);
-			this._nullableBooleanComboboxIssueType = new ProSuite.Commons.UI.WinForms.Controls.NullableBooleanCombobox();
-			this._nullableBooleanComboboxStopOnError = new ProSuite.Commons.UI.WinForms.Controls.NullableBooleanCombobox();
-			this._objectReferenceControlTestDescriptor = new ProSuite.Commons.UI.WinForms.Controls.ObjectReferenceControl();
-			this.dataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
-			this._panelParametersTop = new System.Windows.Forms.Panel();
-			this._linkDocumentation = new System.Windows.Forms.LinkLabel();
-			this._panelParametersEdit = new System.Windows.Forms.Panel();
-			((System.ComponentModel.ISupportInitialize)(this._errorProvider)).BeginInit();
-			this._tabControlParameterValues.SuspendLayout();
-			this.tabPageProperties.SuspendLayout();
-			((System.ComponentModel.ISupportInitialize)(this._splitContainerProperties)).BeginInit();
-			this._splitContainerProperties.Panel1.SuspendLayout();
-			this._splitContainerProperties.Panel2.SuspendLayout();
-			this._splitContainerProperties.SuspendLayout();
-			this._panelDescriptionLabel.SuspendLayout();
-			this._tabPageTableView.SuspendLayout();
-			((System.ComponentModel.ISupportInitialize)(this._splitContainer)).BeginInit();
-			this._splitContainer.Panel1.SuspendLayout();
-			this._splitContainer.SuspendLayout();
-			((System.ComponentModel.ISupportInitialize)(this._splitContainerHeader)).BeginInit();
-			this._splitContainerHeader.Panel1.SuspendLayout();
-			this._splitContainerHeader.Panel2.SuspendLayout();
-			this._splitContainerHeader.SuspendLayout();
-			((System.ComponentModel.ISupportInitialize)(this._dataGridViewParamGrid)).BeginInit();
-			this._tabControlDetails.SuspendLayout();
-			this._tabPageParameters.SuspendLayout();
-			this._panelParameters.SuspendLayout();
-			this._qualityConditionTableViewControlPanel.SuspendLayout();
-			this._exportButtonPanel.SuspendLayout();
-			this._tabPageIssueFilters.SuspendLayout();
-			this._issueFilterPanelBottom.SuspendLayout();
-			((System.ComponentModel.ISupportInitialize)(this._dataGridViewIssueFilters)).BeginInit();
-			this.toolStripEx1.SuspendLayout();
-			this._tabPageQualitySpecifications.SuspendLayout();
-			((System.ComponentModel.ISupportInitialize)(this._dataGridViewQualitySpecifications)).BeginInit();
-			this._toolStripElements.SuspendLayout();
-			this._tabPageOptions.SuspendLayout();
-			this._groupBoxIdentification.SuspendLayout();
-			this._groupBoxTablesWithoutGeometry.SuspendLayout();
-			this._tabPageNotes.SuspendLayout();
-			this._panelParametersTop.SuspendLayout();
-			this.SuspendLayout();
+			_textBoxName=new System.Windows.Forms.TextBox();
+			_labelName=new System.Windows.Forms.Label();
+			_textBoxDescription=new System.Windows.Forms.TextBox();
+			_labelDescription=new System.Windows.Forms.Label();
+			_errorProvider=new System.Windows.Forms.ErrorProvider(components);
+			_textBoxDescGrid=new System.Windows.Forms.TextBox();
+			_labelTestDescriptor=new System.Windows.Forms.LinkLabel();
+			_buttonExport=new System.Windows.Forms.Button();
+			_buttonImport=new System.Windows.Forms.Button();
+			openFileDialogImport=new System.Windows.Forms.OpenFileDialog();
+			saveFileDialogExport=new System.Windows.Forms.SaveFileDialog();
+			_tabControlParameterValues=new System.Windows.Forms.TabControl();
+			tabPageProperties=new System.Windows.Forms.TabPage();
+			_splitContainerProperties=new SplitContainerEx();
+			_textBoxDescProps=new System.Windows.Forms.TextBox();
+			_panelDescriptionLabel=new System.Windows.Forms.Panel();
+			_labelParameterDescription=new System.Windows.Forms.Label();
+			_propertyGrid=new System.Windows.Forms.PropertyGrid();
+			_tabPageTableView=new System.Windows.Forms.TabPage();
+			_splitContainer=new SplitContainerEx();
+			_splitContainerHeader=new SplitContainerEx();
+			_dataGridViewParamGrid=new DoubleBufferedDataGridView();
+			_labelStopOnError=new System.Windows.Forms.Label();
+			_labelAllowErrors=new System.Windows.Forms.Label();
+			_textBoxStopOnErrorDefault=new System.Windows.Forms.TextBox();
+			_textBoxIssueTypeDefault=new System.Windows.Forms.TextBox();
+			_labelTestDescriptorDefaultStopOnError=new System.Windows.Forms.Label();
+			_labelTestDescriptorDefaultAllowErrors=new System.Windows.Forms.Label();
+			_tabControlDetails=new System.Windows.Forms.TabControl();
+			_tabPageParameters=new System.Windows.Forms.TabPage();
+			_panelParameters=new System.Windows.Forms.Panel();
+			_qualityConditionTableViewControlPanel=new System.Windows.Forms.Panel();
+			_exportButtonPanel=new System.Windows.Forms.Panel();
+			_instanceParameterConfigControl=new InstanceConfig.InstanceParameterConfigControl();
+			_tabPageIssueFilters=new System.Windows.Forms.TabPage();
+			_issueFilterPanelBottom=new System.Windows.Forms.Panel();
+			_textBoxFilterExpression=new System.Windows.Forms.TextBox();
+			_labelFilterExpression=new System.Windows.Forms.Label();
+			_dataGridViewIssueFilters=new DoubleBufferedDataGridView();
+			_dataGridIssueColumnImage=new System.Windows.Forms.DataGridViewImageColumn();
+			_dataGridIssueColumnName=new System.Windows.Forms.DataGridViewTextBoxColumn();
+			_dataGridIssueColumnType=new System.Windows.Forms.DataGridViewTextBoxColumn();
+			_dataGridIssueColumnAlgorithm=new System.Windows.Forms.DataGridViewTextBoxColumn();
+			_dataGridIssueColumnCategory=new System.Windows.Forms.DataGridViewTextBoxColumn();
+			_dataGridIssueColumnDescription=new System.Windows.Forms.DataGridViewTextBoxColumn();
+			toolStripEx1=new ToolStripEx();
+			_toolStripLabelIssueFilters=new System.Windows.Forms.ToolStripLabel();
+			_toolStripButtonRemoveIssueFilter=new System.Windows.Forms.ToolStripButton();
+			_toolStripButtonAddIssueFilter=new System.Windows.Forms.ToolStripButton();
+			_tabPageQualitySpecifications=new System.Windows.Forms.TabPage();
+			_dataGridViewQualitySpecifications=new DoubleBufferedDataGridView();
+			_columnName=new System.Windows.Forms.DataGridViewTextBoxColumn();
+			_columnCategory=new System.Windows.Forms.DataGridViewTextBoxColumn();
+			_columnIssueType=new System.Windows.Forms.DataGridViewComboBoxColumn();
+			_columnStopOnError=new System.Windows.Forms.DataGridViewComboBoxColumn();
+			_toolStripElements=new ToolStripEx();
+			toolStripLabel1=new System.Windows.Forms.ToolStripLabel();
+			_toolStripButtonRemoveFromQualitySpecifications=new System.Windows.Forms.ToolStripButton();
+			_toolStripButtonAssignToQualitySpecifications=new System.Windows.Forms.ToolStripButton();
+			_tabPageOptions=new System.Windows.Forms.TabPage();
+			_groupBoxIdentification=new System.Windows.Forms.GroupBox();
+			_textBoxUuid=new System.Windows.Forms.TextBox();
+			_buttonNewVersionGuid=new System.Windows.Forms.Button();
+			_labelUuid=new System.Windows.Forms.Label();
+			_labelVersionUuid=new System.Windows.Forms.Label();
+			_textBoxVersionUuid=new System.Windows.Forms.TextBox();
+			_groupBoxTablesWithoutGeometry=new System.Windows.Forms.GroupBox();
+			_checkBoxNeverFilterTableRowsUsingRelatedGeometry=new System.Windows.Forms.CheckBox();
+			_checkBoxNeverStoreRelatedGeometryForTableRowIssues=new System.Windows.Forms.CheckBox();
+			_tabPageNotes=new System.Windows.Forms.TabPage();
+			_textBoxNotes=new System.Windows.Forms.TextBox();
+			_textBoxQualitySpecifications=new System.Windows.Forms.TextBox();
+			_labelQualitySpecifications=new System.Windows.Forms.Label();
+			_textBoxUrl=new System.Windows.Forms.TextBox();
+			_labelUrl=new System.Windows.Forms.Label();
+			_buttonOpenUrl=new System.Windows.Forms.Button();
+			_textBoxCategory=new System.Windows.Forms.TextBox();
+			_labelCategory=new System.Windows.Forms.Label();
+			_toolTip=new System.Windows.Forms.ToolTip(components);
+			_nullableBooleanComboboxIssueType=new NullableBooleanCombobox();
+			_nullableBooleanComboboxStopOnError=new NullableBooleanCombobox();
+			_objectReferenceControlTestDescriptor=new ObjectReferenceControl();
+			dataGridViewTextBoxColumn1=new System.Windows.Forms.DataGridViewTextBoxColumn();
+			_panelParametersTop=new System.Windows.Forms.Panel();
+			_linkDocumentation=new System.Windows.Forms.LinkLabel();
+			_panelParametersEdit=new System.Windows.Forms.Panel();
+			((System.ComponentModel.ISupportInitialize)_errorProvider).BeginInit();
+			_tabControlParameterValues.SuspendLayout();
+			tabPageProperties.SuspendLayout();
+			((System.ComponentModel.ISupportInitialize)_splitContainerProperties).BeginInit();
+			_splitContainerProperties.Panel1.SuspendLayout();
+			_splitContainerProperties.Panel2.SuspendLayout();
+			_splitContainerProperties.SuspendLayout();
+			_panelDescriptionLabel.SuspendLayout();
+			_tabPageTableView.SuspendLayout();
+			((System.ComponentModel.ISupportInitialize)_splitContainer).BeginInit();
+			_splitContainer.Panel1.SuspendLayout();
+			_splitContainer.SuspendLayout();
+			((System.ComponentModel.ISupportInitialize)_splitContainerHeader).BeginInit();
+			_splitContainerHeader.Panel1.SuspendLayout();
+			_splitContainerHeader.Panel2.SuspendLayout();
+			_splitContainerHeader.SuspendLayout();
+			((System.ComponentModel.ISupportInitialize)_dataGridViewParamGrid).BeginInit();
+			_tabControlDetails.SuspendLayout();
+			_tabPageParameters.SuspendLayout();
+			_panelParameters.SuspendLayout();
+			_qualityConditionTableViewControlPanel.SuspendLayout();
+			_exportButtonPanel.SuspendLayout();
+			_tabPageIssueFilters.SuspendLayout();
+			_issueFilterPanelBottom.SuspendLayout();
+			((System.ComponentModel.ISupportInitialize)_dataGridViewIssueFilters).BeginInit();
+			toolStripEx1.SuspendLayout();
+			_tabPageQualitySpecifications.SuspendLayout();
+			((System.ComponentModel.ISupportInitialize)_dataGridViewQualitySpecifications).BeginInit();
+			_toolStripElements.SuspendLayout();
+			_tabPageOptions.SuspendLayout();
+			_groupBoxIdentification.SuspendLayout();
+			_groupBoxTablesWithoutGeometry.SuspendLayout();
+			_tabPageNotes.SuspendLayout();
+			_panelParametersTop.SuspendLayout();
+			SuspendLayout();
 			// 
 			// _textBoxName
 			// 
-			this._textBoxName.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-			this._textBoxName.Location = new System.Drawing.Point(111, 15);
-			this._textBoxName.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-			this._textBoxName.Name = "_textBoxName";
-			this._textBoxName.Size = new System.Drawing.Size(267, 23);
-			this._textBoxName.TabIndex = 0;
+			_textBoxName.Anchor=System.Windows.Forms.AnchorStyles.Top|System.Windows.Forms.AnchorStyles.Left|System.Windows.Forms.AnchorStyles.Right;
+			_textBoxName.Location=new System.Drawing.Point(111, 15);
+			_textBoxName.Margin=new System.Windows.Forms.Padding(4, 3, 4, 3);
+			_textBoxName.Name="_textBoxName";
+			_textBoxName.Size=new System.Drawing.Size(267, 23);
+			_textBoxName.TabIndex=0;
+			_toolTip.SetToolTip(_textBoxName, "Press TAB to suggest a name");
+			_textBoxName.PreviewKeyDown+=_textBoxName_PreviewKeyDown;
 			// 
 			// _labelName
 			// 
-			this._labelName.AutoSize = true;
-			this._labelName.Location = new System.Drawing.Point(59, 18);
-			this._labelName.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-			this._labelName.Name = "_labelName";
-			this._labelName.Size = new System.Drawing.Size(42, 15);
-			this._labelName.TabIndex = 1;
-			this._labelName.Text = "Name:";
-			this._labelName.TextAlign = System.Drawing.ContentAlignment.TopRight;
+			_labelName.AutoSize=true;
+			_labelName.Location=new System.Drawing.Point(59, 18);
+			_labelName.Margin=new System.Windows.Forms.Padding(4, 0, 4, 0);
+			_labelName.Name="_labelName";
+			_labelName.Size=new System.Drawing.Size(42, 15);
+			_labelName.TabIndex=1;
+			_labelName.Text="Name:";
+			_labelName.TextAlign=System.Drawing.ContentAlignment.TopRight;
 			// 
 			// _textBoxDescription
 			// 
-			this._textBoxDescription.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-			this._textBoxDescription.Location = new System.Drawing.Point(111, 46);
-			this._textBoxDescription.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-			this._textBoxDescription.Multiline = true;
-			this._textBoxDescription.Name = "_textBoxDescription";
-			this._textBoxDescription.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-			this._textBoxDescription.Size = new System.Drawing.Size(582, 56);
-			this._textBoxDescription.TabIndex = 2;
+			_textBoxDescription.Anchor=System.Windows.Forms.AnchorStyles.Top|System.Windows.Forms.AnchorStyles.Left|System.Windows.Forms.AnchorStyles.Right;
+			_textBoxDescription.Location=new System.Drawing.Point(111, 46);
+			_textBoxDescription.Margin=new System.Windows.Forms.Padding(4, 3, 4, 3);
+			_textBoxDescription.Multiline=true;
+			_textBoxDescription.Name="_textBoxDescription";
+			_textBoxDescription.ScrollBars=System.Windows.Forms.ScrollBars.Vertical;
+			_textBoxDescription.Size=new System.Drawing.Size(582, 56);
+			_textBoxDescription.TabIndex=2;
 			// 
 			// _labelDescription
 			// 
-			this._labelDescription.AutoSize = true;
-			this._labelDescription.Location = new System.Drawing.Point(30, 50);
-			this._labelDescription.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-			this._labelDescription.Name = "_labelDescription";
-			this._labelDescription.Size = new System.Drawing.Size(70, 15);
-			this._labelDescription.TabIndex = 3;
-			this._labelDescription.Text = "Description:";
-			this._labelDescription.TextAlign = System.Drawing.ContentAlignment.TopRight;
+			_labelDescription.AutoSize=true;
+			_labelDescription.Location=new System.Drawing.Point(30, 50);
+			_labelDescription.Margin=new System.Windows.Forms.Padding(4, 0, 4, 0);
+			_labelDescription.Name="_labelDescription";
+			_labelDescription.Size=new System.Drawing.Size(70, 15);
+			_labelDescription.TabIndex=3;
+			_labelDescription.Text="Description:";
+			_labelDescription.TextAlign=System.Drawing.ContentAlignment.TopRight;
 			// 
 			// _errorProvider
 			// 
-			this._errorProvider.BlinkStyle = System.Windows.Forms.ErrorBlinkStyle.NeverBlink;
-			this._errorProvider.ContainerControl = this;
+			_errorProvider.BlinkStyle=System.Windows.Forms.ErrorBlinkStyle.NeverBlink;
+			_errorProvider.ContainerControl=this;
 			// 
 			// _textBoxDescGrid
 			// 
-			this._textBoxDescGrid.Dock = System.Windows.Forms.DockStyle.Fill;
-			this._textBoxDescGrid.Location = new System.Drawing.Point(0, 0);
-			this._textBoxDescGrid.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-			this._textBoxDescGrid.Multiline = true;
-			this._textBoxDescGrid.Name = "_textBoxDescGrid";
-			this._textBoxDescGrid.ReadOnly = true;
-			this._textBoxDescGrid.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-			this._textBoxDescGrid.Size = new System.Drawing.Size(674, 48);
-			this._textBoxDescGrid.TabIndex = 21;
+			_textBoxDescGrid.Dock=System.Windows.Forms.DockStyle.Fill;
+			_textBoxDescGrid.Location=new System.Drawing.Point(0, 0);
+			_textBoxDescGrid.Margin=new System.Windows.Forms.Padding(4, 3, 4, 3);
+			_textBoxDescGrid.Multiline=true;
+			_textBoxDescGrid.Name="_textBoxDescGrid";
+			_textBoxDescGrid.ReadOnly=true;
+			_textBoxDescGrid.ScrollBars=System.Windows.Forms.ScrollBars.Vertical;
+			_textBoxDescGrid.Size=new System.Drawing.Size(674, 48);
+			_textBoxDescGrid.TabIndex=21;
 			// 
 			// _labelTestDescriptor
 			// 
-			this._labelTestDescriptor.AutoSize = true;
-			this._labelTestDescriptor.Location = new System.Drawing.Point(8, 209);
-			this._labelTestDescriptor.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-			this._labelTestDescriptor.Name = "_labelTestDescriptor";
-			this._labelTestDescriptor.Size = new System.Drawing.Size(87, 15);
-			this._labelTestDescriptor.TabIndex = 9;
-			this._labelTestDescriptor.TabStop = true;
-			this._labelTestDescriptor.Text = "Test Descriptor:";
-			this._labelTestDescriptor.TextAlign = System.Drawing.ContentAlignment.TopRight;
-			this._labelTestDescriptor.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this._labelTestDescriptor_LinkClicked);
+			_labelTestDescriptor.AutoSize=true;
+			_labelTestDescriptor.Location=new System.Drawing.Point(8, 209);
+			_labelTestDescriptor.Margin=new System.Windows.Forms.Padding(4, 0, 4, 0);
+			_labelTestDescriptor.Name="_labelTestDescriptor";
+			_labelTestDescriptor.Size=new System.Drawing.Size(87, 15);
+			_labelTestDescriptor.TabIndex=9;
+			_labelTestDescriptor.TabStop=true;
+			_labelTestDescriptor.Text="Test Descriptor:";
+			_labelTestDescriptor.TextAlign=System.Drawing.ContentAlignment.TopRight;
+			_labelTestDescriptor.LinkClicked+=_labelTestDescriptor_LinkClicked;
 			// 
 			// _buttonExport
 			// 
-			this._buttonExport.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this._buttonExport.Location = new System.Drawing.Point(506, 3);
-			this._buttonExport.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-			this._buttonExport.Name = "_buttonExport";
-			this._buttonExport.Size = new System.Drawing.Size(88, 27);
-			this._buttonExport.TabIndex = 5;
-			this._buttonExport.Text = "Export";
-			this._buttonExport.UseVisualStyleBackColor = true;
-			this._buttonExport.Click += new System.EventHandler(this._buttonExport_Click);
+			_buttonExport.Anchor=System.Windows.Forms.AnchorStyles.Top|System.Windows.Forms.AnchorStyles.Right;
+			_buttonExport.Location=new System.Drawing.Point(506, 3);
+			_buttonExport.Margin=new System.Windows.Forms.Padding(4, 3, 4, 3);
+			_buttonExport.Name="_buttonExport";
+			_buttonExport.Size=new System.Drawing.Size(88, 27);
+			_buttonExport.TabIndex=5;
+			_buttonExport.Text="Export";
+			_buttonExport.UseVisualStyleBackColor=true;
+			_buttonExport.Click+=_buttonExport_Click;
 			// 
 			// _buttonImport
 			// 
-			this._buttonImport.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this._buttonImport.Location = new System.Drawing.Point(602, 3);
-			this._buttonImport.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-			this._buttonImport.Name = "_buttonImport";
-			this._buttonImport.Size = new System.Drawing.Size(88, 27);
-			this._buttonImport.TabIndex = 6;
-			this._buttonImport.Text = "Import";
-			this._buttonImport.UseVisualStyleBackColor = true;
-			this._buttonImport.Click += new System.EventHandler(this._buttonImport_Click);
+			_buttonImport.Anchor=System.Windows.Forms.AnchorStyles.Top|System.Windows.Forms.AnchorStyles.Right;
+			_buttonImport.Location=new System.Drawing.Point(602, 3);
+			_buttonImport.Margin=new System.Windows.Forms.Padding(4, 3, 4, 3);
+			_buttonImport.Name="_buttonImport";
+			_buttonImport.Size=new System.Drawing.Size(88, 27);
+			_buttonImport.TabIndex=6;
+			_buttonImport.Text="Import";
+			_buttonImport.UseVisualStyleBackColor=true;
+			_buttonImport.Click+=_buttonImport_Click;
 			// 
 			// _tabControlParameterValues
 			// 
-			this._tabControlParameterValues.Controls.Add(this.tabPageProperties);
-			this._tabControlParameterValues.Controls.Add(this._tabPageTableView);
-			this._tabControlParameterValues.Dock = System.Windows.Forms.DockStyle.Fill;
-			this._tabControlParameterValues.Location = new System.Drawing.Point(0, 0);
-			this._tabControlParameterValues.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-			this._tabControlParameterValues.Name = "_tabControlParameterValues";
-			this._tabControlParameterValues.SelectedIndex = 0;
-			this._tabControlParameterValues.Size = new System.Drawing.Size(690, 345);
-			this._tabControlParameterValues.TabIndex = 28;
-			this._tabControlParameterValues.SelectedIndexChanged += new System.EventHandler(this._tabControlParameterValues_SelectedIndexChanged);
+			_tabControlParameterValues.Controls.Add(tabPageProperties);
+			_tabControlParameterValues.Controls.Add(_tabPageTableView);
+			_tabControlParameterValues.Dock=System.Windows.Forms.DockStyle.Fill;
+			_tabControlParameterValues.Location=new System.Drawing.Point(0, 0);
+			_tabControlParameterValues.Margin=new System.Windows.Forms.Padding(4, 3, 4, 3);
+			_tabControlParameterValues.Name="_tabControlParameterValues";
+			_tabControlParameterValues.SelectedIndex=0;
+			_tabControlParameterValues.Size=new System.Drawing.Size(690, 345);
+			_tabControlParameterValues.TabIndex=28;
+			_tabControlParameterValues.SelectedIndexChanged+=_tabControlParameterValues_SelectedIndexChanged;
 			// 
 			// tabPageProperties
 			// 
-			this.tabPageProperties.Controls.Add(this._splitContainerProperties);
-			this.tabPageProperties.Location = new System.Drawing.Point(4, 24);
-			this.tabPageProperties.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-			this.tabPageProperties.Name = "tabPageProperties";
-			this.tabPageProperties.Padding = new System.Windows.Forms.Padding(4, 3, 4, 3);
-			this.tabPageProperties.Size = new System.Drawing.Size(682, 317);
-			this.tabPageProperties.TabIndex = 0;
-			this.tabPageProperties.Text = "Parameter Values";
-			this.tabPageProperties.UseVisualStyleBackColor = true;
+			tabPageProperties.Controls.Add(_splitContainerProperties);
+			tabPageProperties.Location=new System.Drawing.Point(4, 24);
+			tabPageProperties.Margin=new System.Windows.Forms.Padding(4, 3, 4, 3);
+			tabPageProperties.Name="tabPageProperties";
+			tabPageProperties.Padding=new System.Windows.Forms.Padding(4, 3, 4, 3);
+			tabPageProperties.Size=new System.Drawing.Size(682, 317);
+			tabPageProperties.TabIndex=0;
+			tabPageProperties.Text="Parameter Values";
+			tabPageProperties.UseVisualStyleBackColor=true;
 			// 
 			// _splitContainerProperties
 			// 
-			this._splitContainerProperties.Dock = System.Windows.Forms.DockStyle.Fill;
-			this._splitContainerProperties.FixedPanel = System.Windows.Forms.FixedPanel.Panel1;
-			this._splitContainerProperties.Location = new System.Drawing.Point(4, 3);
-			this._splitContainerProperties.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-			this._splitContainerProperties.Name = "_splitContainerProperties";
-			this._splitContainerProperties.Orientation = System.Windows.Forms.Orientation.Horizontal;
+			_splitContainerProperties.Dock=System.Windows.Forms.DockStyle.Fill;
+			_splitContainerProperties.FixedPanel=System.Windows.Forms.FixedPanel.Panel1;
+			_splitContainerProperties.Location=new System.Drawing.Point(4, 3);
+			_splitContainerProperties.Margin=new System.Windows.Forms.Padding(4, 3, 4, 3);
+			_splitContainerProperties.Name="_splitContainerProperties";
+			_splitContainerProperties.Orientation=System.Windows.Forms.Orientation.Horizontal;
 			// 
 			// _splitContainerProperties.Panel1
 			// 
-			this._splitContainerProperties.Panel1.Controls.Add(this._textBoxDescProps);
-			this._splitContainerProperties.Panel1.Controls.Add(this._panelDescriptionLabel);
+			_splitContainerProperties.Panel1.Controls.Add(_textBoxDescProps);
+			_splitContainerProperties.Panel1.Controls.Add(_panelDescriptionLabel);
 			// 
 			// _splitContainerProperties.Panel2
 			// 
-			this._splitContainerProperties.Panel2.Controls.Add(this._propertyGrid);
-			this._splitContainerProperties.Size = new System.Drawing.Size(674, 311);
-			this._splitContainerProperties.SplitterDistance = 74;
-			this._splitContainerProperties.SplitterWidth = 5;
-			this._splitContainerProperties.TabIndex = 31;
+			_splitContainerProperties.Panel2.Controls.Add(_propertyGrid);
+			_splitContainerProperties.Size=new System.Drawing.Size(674, 311);
+			_splitContainerProperties.SplitterDistance=74;
+			_splitContainerProperties.SplitterWidth=5;
+			_splitContainerProperties.TabIndex=31;
 			// 
 			// _textBoxDescProps
 			// 
-			this._textBoxDescProps.Dock = System.Windows.Forms.DockStyle.Fill;
-			this._textBoxDescProps.Location = new System.Drawing.Point(86, 0);
-			this._textBoxDescProps.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-			this._textBoxDescProps.Multiline = true;
-			this._textBoxDescProps.Name = "_textBoxDescProps";
-			this._textBoxDescProps.ReadOnly = true;
-			this._textBoxDescProps.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-			this._textBoxDescProps.Size = new System.Drawing.Size(588, 74);
-			this._textBoxDescProps.TabIndex = 0;
+			_textBoxDescProps.Dock=System.Windows.Forms.DockStyle.Fill;
+			_textBoxDescProps.Location=new System.Drawing.Point(86, 0);
+			_textBoxDescProps.Margin=new System.Windows.Forms.Padding(4, 3, 4, 3);
+			_textBoxDescProps.Multiline=true;
+			_textBoxDescProps.Name="_textBoxDescProps";
+			_textBoxDescProps.ReadOnly=true;
+			_textBoxDescProps.ScrollBars=System.Windows.Forms.ScrollBars.Vertical;
+			_textBoxDescProps.Size=new System.Drawing.Size(588, 74);
+			_textBoxDescProps.TabIndex=0;
 			// 
 			// _panelDescriptionLabel
 			// 
-			this._panelDescriptionLabel.Controls.Add(this._labelParameterDescription);
-			this._panelDescriptionLabel.Dock = System.Windows.Forms.DockStyle.Left;
-			this._panelDescriptionLabel.Location = new System.Drawing.Point(0, 0);
-			this._panelDescriptionLabel.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-			this._panelDescriptionLabel.MaximumSize = new System.Drawing.Size(86, 11538);
-			this._panelDescriptionLabel.MinimumSize = new System.Drawing.Size(86, 0);
-			this._panelDescriptionLabel.Name = "_panelDescriptionLabel";
-			this._panelDescriptionLabel.Size = new System.Drawing.Size(86, 74);
-			this._panelDescriptionLabel.TabIndex = 23;
+			_panelDescriptionLabel.Controls.Add(_labelParameterDescription);
+			_panelDescriptionLabel.Dock=System.Windows.Forms.DockStyle.Left;
+			_panelDescriptionLabel.Location=new System.Drawing.Point(0, 0);
+			_panelDescriptionLabel.Margin=new System.Windows.Forms.Padding(4, 3, 4, 3);
+			_panelDescriptionLabel.MaximumSize=new System.Drawing.Size(86, 11538);
+			_panelDescriptionLabel.MinimumSize=new System.Drawing.Size(86, 0);
+			_panelDescriptionLabel.Name="_panelDescriptionLabel";
+			_panelDescriptionLabel.Size=new System.Drawing.Size(86, 74);
+			_panelDescriptionLabel.TabIndex=23;
 			// 
 			// _labelParameterDescription
 			// 
-			this._labelParameterDescription.AutoSize = true;
-			this._labelParameterDescription.Location = new System.Drawing.Point(6, 3);
-			this._labelParameterDescription.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-			this._labelParameterDescription.Name = "_labelParameterDescription";
-			this._labelParameterDescription.Size = new System.Drawing.Size(70, 15);
-			this._labelParameterDescription.TabIndex = 22;
-			this._labelParameterDescription.Text = "Description:";
-			this._labelParameterDescription.TextAlign = System.Drawing.ContentAlignment.TopRight;
+			_labelParameterDescription.AutoSize=true;
+			_labelParameterDescription.Location=new System.Drawing.Point(6, 3);
+			_labelParameterDescription.Margin=new System.Windows.Forms.Padding(4, 0, 4, 0);
+			_labelParameterDescription.Name="_labelParameterDescription";
+			_labelParameterDescription.Size=new System.Drawing.Size(70, 15);
+			_labelParameterDescription.TabIndex=22;
+			_labelParameterDescription.Text="Description:";
+			_labelParameterDescription.TextAlign=System.Drawing.ContentAlignment.TopRight;
 			// 
 			// _propertyGrid
 			// 
-			this._propertyGrid.Dock = System.Windows.Forms.DockStyle.Fill;
-			this._propertyGrid.Location = new System.Drawing.Point(0, 0);
-			this._propertyGrid.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-			this._propertyGrid.Name = "_propertyGrid";
-			this._propertyGrid.PropertySort = System.Windows.Forms.PropertySort.NoSort;
-			this._propertyGrid.Size = new System.Drawing.Size(674, 232);
-			this._propertyGrid.TabIndex = 0;
-			this._propertyGrid.PropertyValueChanged += new System.Windows.Forms.PropertyValueChangedEventHandler(this._propertyGrid_PropertyValueChanged);
+			_propertyGrid.Dock=System.Windows.Forms.DockStyle.Fill;
+			_propertyGrid.Location=new System.Drawing.Point(0, 0);
+			_propertyGrid.Margin=new System.Windows.Forms.Padding(4, 3, 4, 3);
+			_propertyGrid.Name="_propertyGrid";
+			_propertyGrid.PropertySort=System.Windows.Forms.PropertySort.NoSort;
+			_propertyGrid.Size=new System.Drawing.Size(674, 232);
+			_propertyGrid.TabIndex=0;
+			_propertyGrid.PropertyValueChanged+=_propertyGrid_PropertyValueChanged;
 			// 
 			// _tabPageTableView
 			// 
-			this._tabPageTableView.Controls.Add(this._splitContainer);
-			this._tabPageTableView.Location = new System.Drawing.Point(4, 24);
-			this._tabPageTableView.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-			this._tabPageTableView.Name = "_tabPageTableView";
-			this._tabPageTableView.Padding = new System.Windows.Forms.Padding(4, 3, 4, 3);
-			this._tabPageTableView.Size = new System.Drawing.Size(682, 317);
-			this._tabPageTableView.TabIndex = 1;
-			this._tabPageTableView.Text = "Table View";
-			this._tabPageTableView.UseVisualStyleBackColor = true;
+			_tabPageTableView.Controls.Add(_splitContainer);
+			_tabPageTableView.Location=new System.Drawing.Point(4, 24);
+			_tabPageTableView.Margin=new System.Windows.Forms.Padding(4, 3, 4, 3);
+			_tabPageTableView.Name="_tabPageTableView";
+			_tabPageTableView.Padding=new System.Windows.Forms.Padding(4, 3, 4, 3);
+			_tabPageTableView.Size=new System.Drawing.Size(682, 317);
+			_tabPageTableView.TabIndex=1;
+			_tabPageTableView.Text="Table View";
+			_tabPageTableView.UseVisualStyleBackColor=true;
 			// 
 			// _splitContainer
 			// 
-			this._splitContainer.Dock = System.Windows.Forms.DockStyle.Fill;
-			this._splitContainer.Location = new System.Drawing.Point(4, 3);
-			this._splitContainer.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-			this._splitContainer.Name = "_splitContainer";
-			this._splitContainer.Orientation = System.Windows.Forms.Orientation.Horizontal;
+			_splitContainer.Dock=System.Windows.Forms.DockStyle.Fill;
+			_splitContainer.Location=new System.Drawing.Point(4, 3);
+			_splitContainer.Margin=new System.Windows.Forms.Padding(4, 3, 4, 3);
+			_splitContainer.Name="_splitContainer";
+			_splitContainer.Orientation=System.Windows.Forms.Orientation.Horizontal;
 			// 
 			// _splitContainer.Panel1
 			// 
-			this._splitContainer.Panel1.Controls.Add(this._splitContainerHeader);
-			this._splitContainer.Size = new System.Drawing.Size(674, 311);
-			this._splitContainer.SplitterDistance = 169;
-			this._splitContainer.TabIndex = 30;
+			_splitContainer.Panel1.Controls.Add(_splitContainerHeader);
+			_splitContainer.Size=new System.Drawing.Size(674, 311);
+			_splitContainer.SplitterDistance=169;
+			_splitContainer.TabIndex=30;
 			// 
 			// _splitContainerHeader
 			// 
-			this._splitContainerHeader.Dock = System.Windows.Forms.DockStyle.Fill;
-			this._splitContainerHeader.FixedPanel = System.Windows.Forms.FixedPanel.Panel1;
-			this._splitContainerHeader.Location = new System.Drawing.Point(0, 0);
-			this._splitContainerHeader.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-			this._splitContainerHeader.Name = "_splitContainerHeader";
-			this._splitContainerHeader.Orientation = System.Windows.Forms.Orientation.Horizontal;
+			_splitContainerHeader.Dock=System.Windows.Forms.DockStyle.Fill;
+			_splitContainerHeader.FixedPanel=System.Windows.Forms.FixedPanel.Panel1;
+			_splitContainerHeader.Location=new System.Drawing.Point(0, 0);
+			_splitContainerHeader.Margin=new System.Windows.Forms.Padding(4, 3, 4, 3);
+			_splitContainerHeader.Name="_splitContainerHeader";
+			_splitContainerHeader.Orientation=System.Windows.Forms.Orientation.Horizontal;
 			// 
 			// _splitContainerHeader.Panel1
 			// 
-			this._splitContainerHeader.Panel1.Controls.Add(this._textBoxDescGrid);
+			_splitContainerHeader.Panel1.Controls.Add(_textBoxDescGrid);
 			// 
 			// _splitContainerHeader.Panel2
 			// 
-			this._splitContainerHeader.Panel2.Controls.Add(this._dataGridViewParamGrid);
-			this._splitContainerHeader.Panel2MinSize = 50;
-			this._splitContainerHeader.Size = new System.Drawing.Size(674, 169);
-			this._splitContainerHeader.SplitterDistance = 48;
-			this._splitContainerHeader.SplitterWidth = 5;
-			this._splitContainerHeader.TabIndex = 26;
+			_splitContainerHeader.Panel2.Controls.Add(_dataGridViewParamGrid);
+			_splitContainerHeader.Panel2MinSize=50;
+			_splitContainerHeader.Size=new System.Drawing.Size(674, 169);
+			_splitContainerHeader.SplitterDistance=48;
+			_splitContainerHeader.SplitterWidth=5;
+			_splitContainerHeader.TabIndex=26;
 			// 
 			// _dataGridViewParamGrid
 			// 
-			this._dataGridViewParamGrid.AllowUserToAddRows = false;
-			this._dataGridViewParamGrid.AllowUserToDeleteRows = false;
-			this._dataGridViewParamGrid.AllowUserToResizeRows = false;
-			this._dataGridViewParamGrid.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.AllCells;
-			this._dataGridViewParamGrid.AutoSizeRowsMode = System.Windows.Forms.DataGridViewAutoSizeRowsMode.AllCells;
-			this._dataGridViewParamGrid.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-			dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-			dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.ControlLight;
-			dataGridViewCellStyle1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-			dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.ControlText;
-			dataGridViewCellStyle1.Padding = new System.Windows.Forms.Padding(0, 2, 0, 2);
-			dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-			dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-			dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-			this._dataGridViewParamGrid.DefaultCellStyle = dataGridViewCellStyle1;
-			this._dataGridViewParamGrid.Dock = System.Windows.Forms.DockStyle.Fill;
-			this._dataGridViewParamGrid.Location = new System.Drawing.Point(0, 0);
-			this._dataGridViewParamGrid.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-			this._dataGridViewParamGrid.Name = "_dataGridViewParamGrid";
-			this._dataGridViewParamGrid.ReadOnly = true;
-			this._dataGridViewParamGrid.RowHeadersVisible = false;
-			this._dataGridViewParamGrid.RowHeadersWidth = 62;
-			this._dataGridViewParamGrid.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-			this._dataGridViewParamGrid.Size = new System.Drawing.Size(674, 116);
-			this._dataGridViewParamGrid.TabIndex = 24;
-			this._dataGridViewParamGrid.DataBindingComplete += new System.Windows.Forms.DataGridViewBindingCompleteEventHandler(this._dataGridViewParamGrid_DataBindingComplete);
+			_dataGridViewParamGrid.AllowUserToAddRows=false;
+			_dataGridViewParamGrid.AllowUserToDeleteRows=false;
+			_dataGridViewParamGrid.AllowUserToResizeRows=false;
+			_dataGridViewParamGrid.AutoSizeColumnsMode=System.Windows.Forms.DataGridViewAutoSizeColumnsMode.AllCells;
+			_dataGridViewParamGrid.AutoSizeRowsMode=System.Windows.Forms.DataGridViewAutoSizeRowsMode.AllCells;
+			_dataGridViewParamGrid.ColumnHeadersHeightSizeMode=System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+			dataGridViewCellStyle1.Alignment=System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+			dataGridViewCellStyle1.BackColor=System.Drawing.SystemColors.ControlLight;
+			dataGridViewCellStyle1.Font=new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+			dataGridViewCellStyle1.ForeColor=System.Drawing.SystemColors.ControlText;
+			dataGridViewCellStyle1.Padding=new System.Windows.Forms.Padding(0, 2, 0, 2);
+			dataGridViewCellStyle1.SelectionBackColor=System.Drawing.SystemColors.Highlight;
+			dataGridViewCellStyle1.SelectionForeColor=System.Drawing.SystemColors.HighlightText;
+			dataGridViewCellStyle1.WrapMode=System.Windows.Forms.DataGridViewTriState.False;
+			_dataGridViewParamGrid.DefaultCellStyle=dataGridViewCellStyle1;
+			_dataGridViewParamGrid.Dock=System.Windows.Forms.DockStyle.Fill;
+			_dataGridViewParamGrid.Location=new System.Drawing.Point(0, 0);
+			_dataGridViewParamGrid.Margin=new System.Windows.Forms.Padding(4, 3, 4, 3);
+			_dataGridViewParamGrid.Name="_dataGridViewParamGrid";
+			_dataGridViewParamGrid.ReadOnly=true;
+			_dataGridViewParamGrid.RowHeadersVisible=false;
+			_dataGridViewParamGrid.RowHeadersWidth=62;
+			_dataGridViewParamGrid.SelectionMode=System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
+			_dataGridViewParamGrid.Size=new System.Drawing.Size(674, 116);
+			_dataGridViewParamGrid.TabIndex=24;
+			_dataGridViewParamGrid.DataBindingComplete+=_dataGridViewParamGrid_DataBindingComplete;
 			// 
 			// _labelStopOnError
 			// 
-			this._labelStopOnError.AutoSize = true;
-			this._labelStopOnError.Location = new System.Drawing.Point(20, 175);
-			this._labelStopOnError.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-			this._labelStopOnError.Name = "_labelStopOnError";
-			this._labelStopOnError.Size = new System.Drawing.Size(79, 15);
-			this._labelStopOnError.TabIndex = 32;
-			this._labelStopOnError.Text = "Stop on error:";
-			this._labelStopOnError.TextAlign = System.Drawing.ContentAlignment.TopRight;
+			_labelStopOnError.AutoSize=true;
+			_labelStopOnError.Location=new System.Drawing.Point(20, 175);
+			_labelStopOnError.Margin=new System.Windows.Forms.Padding(4, 0, 4, 0);
+			_labelStopOnError.Name="_labelStopOnError";
+			_labelStopOnError.Size=new System.Drawing.Size(79, 15);
+			_labelStopOnError.TabIndex=32;
+			_labelStopOnError.Text="Stop on error:";
+			_labelStopOnError.TextAlign=System.Drawing.ContentAlignment.TopRight;
 			// 
 			// _labelAllowErrors
 			// 
-			this._labelAllowErrors.AutoSize = true;
-			this._labelAllowErrors.Location = new System.Drawing.Point(36, 143);
-			this._labelAllowErrors.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-			this._labelAllowErrors.Name = "_labelAllowErrors";
-			this._labelAllowErrors.Size = new System.Drawing.Size(62, 15);
-			this._labelAllowErrors.TabIndex = 32;
-			this._labelAllowErrors.Text = "Issue type:";
-			this._labelAllowErrors.TextAlign = System.Drawing.ContentAlignment.TopRight;
+			_labelAllowErrors.AutoSize=true;
+			_labelAllowErrors.Location=new System.Drawing.Point(36, 143);
+			_labelAllowErrors.Margin=new System.Windows.Forms.Padding(4, 0, 4, 0);
+			_labelAllowErrors.Name="_labelAllowErrors";
+			_labelAllowErrors.Size=new System.Drawing.Size(62, 15);
+			_labelAllowErrors.TabIndex=32;
+			_labelAllowErrors.Text="Issue type:";
+			_labelAllowErrors.TextAlign=System.Drawing.ContentAlignment.TopRight;
 			// 
 			// _textBoxStopOnErrorDefault
 			// 
-			this._textBoxStopOnErrorDefault.Location = new System.Drawing.Point(383, 172);
-			this._textBoxStopOnErrorDefault.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-			this._textBoxStopOnErrorDefault.Name = "_textBoxStopOnErrorDefault";
-			this._textBoxStopOnErrorDefault.ReadOnly = true;
-			this._textBoxStopOnErrorDefault.Size = new System.Drawing.Size(65, 23);
-			this._textBoxStopOnErrorDefault.TabIndex = 8;
-			this._textBoxStopOnErrorDefault.TabStop = false;
+			_textBoxStopOnErrorDefault.Location=new System.Drawing.Point(383, 172);
+			_textBoxStopOnErrorDefault.Margin=new System.Windows.Forms.Padding(4, 3, 4, 3);
+			_textBoxStopOnErrorDefault.Name="_textBoxStopOnErrorDefault";
+			_textBoxStopOnErrorDefault.ReadOnly=true;
+			_textBoxStopOnErrorDefault.Size=new System.Drawing.Size(65, 23);
+			_textBoxStopOnErrorDefault.TabIndex=8;
+			_textBoxStopOnErrorDefault.TabStop=false;
 			// 
 			// _textBoxIssueTypeDefault
 			// 
-			this._textBoxIssueTypeDefault.Location = new System.Drawing.Point(383, 140);
-			this._textBoxIssueTypeDefault.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-			this._textBoxIssueTypeDefault.Name = "_textBoxIssueTypeDefault";
-			this._textBoxIssueTypeDefault.ReadOnly = true;
-			this._textBoxIssueTypeDefault.Size = new System.Drawing.Size(65, 23);
-			this._textBoxIssueTypeDefault.TabIndex = 6;
-			this._textBoxIssueTypeDefault.TabStop = false;
+			_textBoxIssueTypeDefault.Location=new System.Drawing.Point(383, 140);
+			_textBoxIssueTypeDefault.Margin=new System.Windows.Forms.Padding(4, 3, 4, 3);
+			_textBoxIssueTypeDefault.Name="_textBoxIssueTypeDefault";
+			_textBoxIssueTypeDefault.ReadOnly=true;
+			_textBoxIssueTypeDefault.Size=new System.Drawing.Size(65, 23);
+			_textBoxIssueTypeDefault.TabIndex=6;
+			_textBoxIssueTypeDefault.TabStop=false;
 			// 
 			// _labelTestDescriptorDefaultStopOnError
 			// 
-			this._labelTestDescriptorDefaultStopOnError.AutoSize = true;
-			this._labelTestDescriptorDefaultStopOnError.Location = new System.Drawing.Point(230, 175);
-			this._labelTestDescriptorDefaultStopOnError.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-			this._labelTestDescriptorDefaultStopOnError.Name = "_labelTestDescriptorDefaultStopOnError";
-			this._labelTestDescriptorDefaultStopOnError.Size = new System.Drawing.Size(136, 15);
-			this._labelTestDescriptorDefaultStopOnError.TabIndex = 34;
-			this._labelTestDescriptorDefaultStopOnError.Text = "Default (Test Descriptor):";
-			this._labelTestDescriptorDefaultStopOnError.TextAlign = System.Drawing.ContentAlignment.TopRight;
+			_labelTestDescriptorDefaultStopOnError.AutoSize=true;
+			_labelTestDescriptorDefaultStopOnError.Location=new System.Drawing.Point(230, 175);
+			_labelTestDescriptorDefaultStopOnError.Margin=new System.Windows.Forms.Padding(4, 0, 4, 0);
+			_labelTestDescriptorDefaultStopOnError.Name="_labelTestDescriptorDefaultStopOnError";
+			_labelTestDescriptorDefaultStopOnError.Size=new System.Drawing.Size(136, 15);
+			_labelTestDescriptorDefaultStopOnError.TabIndex=34;
+			_labelTestDescriptorDefaultStopOnError.Text="Default (Test Descriptor):";
+			_labelTestDescriptorDefaultStopOnError.TextAlign=System.Drawing.ContentAlignment.TopRight;
 			// 
 			// _labelTestDescriptorDefaultAllowErrors
 			// 
-			this._labelTestDescriptorDefaultAllowErrors.AutoSize = true;
-			this._labelTestDescriptorDefaultAllowErrors.Location = new System.Drawing.Point(230, 143);
-			this._labelTestDescriptorDefaultAllowErrors.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-			this._labelTestDescriptorDefaultAllowErrors.Name = "_labelTestDescriptorDefaultAllowErrors";
-			this._labelTestDescriptorDefaultAllowErrors.Size = new System.Drawing.Size(136, 15);
-			this._labelTestDescriptorDefaultAllowErrors.TabIndex = 34;
-			this._labelTestDescriptorDefaultAllowErrors.Text = "Default (Test Descriptor):";
-			this._labelTestDescriptorDefaultAllowErrors.TextAlign = System.Drawing.ContentAlignment.TopRight;
+			_labelTestDescriptorDefaultAllowErrors.AutoSize=true;
+			_labelTestDescriptorDefaultAllowErrors.Location=new System.Drawing.Point(230, 143);
+			_labelTestDescriptorDefaultAllowErrors.Margin=new System.Windows.Forms.Padding(4, 0, 4, 0);
+			_labelTestDescriptorDefaultAllowErrors.Name="_labelTestDescriptorDefaultAllowErrors";
+			_labelTestDescriptorDefaultAllowErrors.Size=new System.Drawing.Size(136, 15);
+			_labelTestDescriptorDefaultAllowErrors.TabIndex=34;
+			_labelTestDescriptorDefaultAllowErrors.Text="Default (Test Descriptor):";
+			_labelTestDescriptorDefaultAllowErrors.TextAlign=System.Drawing.ContentAlignment.TopRight;
 			// 
 			// _tabControlDetails
 			// 
-			this._tabControlDetails.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-			this._tabControlDetails.Controls.Add(this._tabPageParameters);
-			this._tabControlDetails.Controls.Add(this._tabPageIssueFilters);
-			this._tabControlDetails.Controls.Add(this._tabPageQualitySpecifications);
-			this._tabControlDetails.Controls.Add(this._tabPageOptions);
-			this._tabControlDetails.Controls.Add(this._tabPageNotes);
-			this._tabControlDetails.Location = new System.Drawing.Point(10, 267);
-			this._tabControlDetails.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-			this._tabControlDetails.Name = "_tabControlDetails";
-			this._tabControlDetails.SelectedIndex = 0;
-			this._tabControlDetails.Size = new System.Drawing.Size(706, 414);
-			this._tabControlDetails.TabIndex = 0;
-			this._tabControlDetails.SelectedIndexChanged += new System.EventHandler(this._tabControlDetails_SelectedIndexChanged);
+			_tabControlDetails.Anchor=System.Windows.Forms.AnchorStyles.Top|System.Windows.Forms.AnchorStyles.Bottom|System.Windows.Forms.AnchorStyles.Left|System.Windows.Forms.AnchorStyles.Right;
+			_tabControlDetails.Controls.Add(_tabPageParameters);
+			_tabControlDetails.Controls.Add(_tabPageIssueFilters);
+			_tabControlDetails.Controls.Add(_tabPageQualitySpecifications);
+			_tabControlDetails.Controls.Add(_tabPageOptions);
+			_tabControlDetails.Controls.Add(_tabPageNotes);
+			_tabControlDetails.Location=new System.Drawing.Point(10, 267);
+			_tabControlDetails.Margin=new System.Windows.Forms.Padding(4, 3, 4, 3);
+			_tabControlDetails.Name="_tabControlDetails";
+			_tabControlDetails.SelectedIndex=0;
+			_tabControlDetails.Size=new System.Drawing.Size(706, 414);
+			_tabControlDetails.TabIndex=0;
+			_tabControlDetails.SelectedIndexChanged+=_tabControlDetails_SelectedIndexChanged;
 			// 
 			// _tabPageParameters
 			// 
-			this._tabPageParameters.Controls.Add(this._panelParameters);
-			this._tabPageParameters.Location = new System.Drawing.Point(4, 24);
-			this._tabPageParameters.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-			this._tabPageParameters.Name = "_tabPageParameters";
-			this._tabPageParameters.Padding = new System.Windows.Forms.Padding(4, 3, 4, 3);
-			this._tabPageParameters.Size = new System.Drawing.Size(698, 386);
-			this._tabPageParameters.TabIndex = 0;
-			this._tabPageParameters.Text = "Test Parameters";
+			_tabPageParameters.Controls.Add(_panelParameters);
+			_tabPageParameters.Location=new System.Drawing.Point(4, 24);
+			_tabPageParameters.Margin=new System.Windows.Forms.Padding(4, 3, 4, 3);
+			_tabPageParameters.Name="_tabPageParameters";
+			_tabPageParameters.Padding=new System.Windows.Forms.Padding(4, 3, 4, 3);
+			_tabPageParameters.Size=new System.Drawing.Size(698, 386);
+			_tabPageParameters.TabIndex=0;
+			_tabPageParameters.Text="Test Parameters";
 			// 
 			// _panelParameters
 			// 
-			this._panelParameters.BackColor = System.Drawing.SystemColors.ControlLightLight;
-			this._panelParameters.Controls.Add(this._qualityConditionTableViewControlPanel);
-			this._panelParameters.Controls.Add(this._exportButtonPanel);
-			this._panelParameters.Controls.Add(this._instanceParameterConfigControl);
-			this._panelParameters.Dock = System.Windows.Forms.DockStyle.Fill;
-			this._panelParameters.Location = new System.Drawing.Point(4, 3);
-			this._panelParameters.Name = "_panelParameters";
-			this._panelParameters.Size = new System.Drawing.Size(690, 380);
-			this._panelParameters.TabIndex = 31;
+			_panelParameters.BackColor=System.Drawing.SystemColors.ControlLightLight;
+			_panelParameters.Controls.Add(_qualityConditionTableViewControlPanel);
+			_panelParameters.Controls.Add(_exportButtonPanel);
+			_panelParameters.Controls.Add(_instanceParameterConfigControl);
+			_panelParameters.Dock=System.Windows.Forms.DockStyle.Fill;
+			_panelParameters.Location=new System.Drawing.Point(4, 3);
+			_panelParameters.Name="_panelParameters";
+			_panelParameters.Size=new System.Drawing.Size(690, 380);
+			_panelParameters.TabIndex=31;
 			// 
 			// _qualityConditionTableViewControlPanel
 			// 
-			this._qualityConditionTableViewControlPanel.Controls.Add(this._tabControlParameterValues);
-			this._qualityConditionTableViewControlPanel.Dock = System.Windows.Forms.DockStyle.Fill;
-			this._qualityConditionTableViewControlPanel.Location = new System.Drawing.Point(0, 35);
-			this._qualityConditionTableViewControlPanel.Name = "_qualityConditionTableViewControlPanel";
-			this._qualityConditionTableViewControlPanel.Size = new System.Drawing.Size(690, 345);
-			this._qualityConditionTableViewControlPanel.TabIndex = 29;
+			_qualityConditionTableViewControlPanel.Controls.Add(_tabControlParameterValues);
+			_qualityConditionTableViewControlPanel.Dock=System.Windows.Forms.DockStyle.Fill;
+			_qualityConditionTableViewControlPanel.Location=new System.Drawing.Point(0, 35);
+			_qualityConditionTableViewControlPanel.Name="_qualityConditionTableViewControlPanel";
+			_qualityConditionTableViewControlPanel.Size=new System.Drawing.Size(690, 345);
+			_qualityConditionTableViewControlPanel.TabIndex=29;
 			// 
 			// _exportButtonPanel
 			// 
-			this._exportButtonPanel.Controls.Add(this._buttonExport);
-			this._exportButtonPanel.Controls.Add(this._buttonImport);
-			this._exportButtonPanel.Dock = System.Windows.Forms.DockStyle.Top;
-			this._exportButtonPanel.Location = new System.Drawing.Point(0, 0);
-			this._exportButtonPanel.Name = "_exportButtonPanel";
-			this._exportButtonPanel.Size = new System.Drawing.Size(690, 35);
-			this._exportButtonPanel.TabIndex = 30;
+			_exportButtonPanel.Controls.Add(_buttonExport);
+			_exportButtonPanel.Controls.Add(_buttonImport);
+			_exportButtonPanel.Dock=System.Windows.Forms.DockStyle.Top;
+			_exportButtonPanel.Location=new System.Drawing.Point(0, 0);
+			_exportButtonPanel.Name="_exportButtonPanel";
+			_exportButtonPanel.Size=new System.Drawing.Size(690, 35);
+			_exportButtonPanel.TabIndex=30;
 			// 
 			// _instanceParameterConfigControl
 			// 
-			this._instanceParameterConfigControl.Dock = System.Windows.Forms.DockStyle.Fill;
-			this._instanceParameterConfigControl.Location = new System.Drawing.Point(0, 0);
-			this._instanceParameterConfigControl.Name = "_instanceParameterConfigControl";
-			this._instanceParameterConfigControl.Size = new System.Drawing.Size(690, 380);
-			this._instanceParameterConfigControl.TabIndex = 7;
-			this._instanceParameterConfigControl.Visible = false;
-			this._instanceParameterConfigControl.DocumentationLinkClicked += new System.EventHandler(this._instanceParameterConfigControl_DocumentationLinkClicked);
+			_instanceParameterConfigControl.Dock=System.Windows.Forms.DockStyle.Fill;
+			_instanceParameterConfigControl.Location=new System.Drawing.Point(0, 0);
+			_instanceParameterConfigControl.Name="_instanceParameterConfigControl";
+			_instanceParameterConfigControl.Size=new System.Drawing.Size(690, 380);
+			_instanceParameterConfigControl.TabIndex=7;
+			_instanceParameterConfigControl.Visible=false;
+			_instanceParameterConfigControl.DocumentationLinkClicked+=_instanceParameterConfigControl_DocumentationLinkClicked;
 			// 
 			// _tabPageIssueFilters
 			// 
-			this._tabPageIssueFilters.Controls.Add(this._issueFilterPanelBottom);
-			this._tabPageIssueFilters.Controls.Add(this._dataGridViewIssueFilters);
-			this._tabPageIssueFilters.Controls.Add(this.toolStripEx1);
-			this._tabPageIssueFilters.Location = new System.Drawing.Point(4, 24);
-			this._tabPageIssueFilters.Margin = new System.Windows.Forms.Padding(2);
-			this._tabPageIssueFilters.Name = "_tabPageIssueFilters";
-			this._tabPageIssueFilters.Size = new System.Drawing.Size(698, 386);
-			this._tabPageIssueFilters.TabIndex = 4;
-			this._tabPageIssueFilters.Text = "Issue Filters";
-			this._tabPageIssueFilters.UseVisualStyleBackColor = true;
+			_tabPageIssueFilters.Controls.Add(_issueFilterPanelBottom);
+			_tabPageIssueFilters.Controls.Add(_dataGridViewIssueFilters);
+			_tabPageIssueFilters.Controls.Add(toolStripEx1);
+			_tabPageIssueFilters.Location=new System.Drawing.Point(4, 24);
+			_tabPageIssueFilters.Margin=new System.Windows.Forms.Padding(2);
+			_tabPageIssueFilters.Name="_tabPageIssueFilters";
+			_tabPageIssueFilters.Size=new System.Drawing.Size(698, 386);
+			_tabPageIssueFilters.TabIndex=4;
+			_tabPageIssueFilters.Text="Issue Filters";
+			_tabPageIssueFilters.UseVisualStyleBackColor=true;
 			// 
 			// _issueFilterPanelBottom
 			// 
-			this._issueFilterPanelBottom.Controls.Add(this._textBoxFilterExpression);
-			this._issueFilterPanelBottom.Controls.Add(this._labelFilterExpression);
-			this._issueFilterPanelBottom.Dock = System.Windows.Forms.DockStyle.Bottom;
-			this._issueFilterPanelBottom.Location = new System.Drawing.Point(0, 339);
-			this._issueFilterPanelBottom.Name = "_issueFilterPanelBottom";
-			this._issueFilterPanelBottom.Size = new System.Drawing.Size(698, 47);
-			this._issueFilterPanelBottom.TabIndex = 28;
+			_issueFilterPanelBottom.Controls.Add(_textBoxFilterExpression);
+			_issueFilterPanelBottom.Controls.Add(_labelFilterExpression);
+			_issueFilterPanelBottom.Dock=System.Windows.Forms.DockStyle.Bottom;
+			_issueFilterPanelBottom.Location=new System.Drawing.Point(0, 339);
+			_issueFilterPanelBottom.Name="_issueFilterPanelBottom";
+			_issueFilterPanelBottom.Size=new System.Drawing.Size(698, 47);
+			_issueFilterPanelBottom.TabIndex=28;
 			// 
 			// _textBoxFilterExpression
 			// 
-			this._textBoxFilterExpression.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-			this._textBoxFilterExpression.Location = new System.Drawing.Point(108, 12);
-			this._textBoxFilterExpression.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-			this._textBoxFilterExpression.Name = "_textBoxFilterExpression";
-			this._textBoxFilterExpression.Size = new System.Drawing.Size(570, 23);
-			this._textBoxFilterExpression.TabIndex = 1;
+			_textBoxFilterExpression.Anchor=System.Windows.Forms.AnchorStyles.Top|System.Windows.Forms.AnchorStyles.Left|System.Windows.Forms.AnchorStyles.Right;
+			_textBoxFilterExpression.Location=new System.Drawing.Point(108, 12);
+			_textBoxFilterExpression.Margin=new System.Windows.Forms.Padding(4, 3, 4, 3);
+			_textBoxFilterExpression.Name="_textBoxFilterExpression";
+			_textBoxFilterExpression.Size=new System.Drawing.Size(570, 23);
+			_textBoxFilterExpression.TabIndex=1;
 			// 
 			// _labelFilterExpression
 			// 
-			this._labelFilterExpression.AutoSize = true;
-			this._labelFilterExpression.Location = new System.Drawing.Point(6, 15);
-			this._labelFilterExpression.Name = "_labelFilterExpression";
-			this._labelFilterExpression.Size = new System.Drawing.Size(95, 15);
-			this._labelFilterExpression.TabIndex = 0;
-			this._labelFilterExpression.Text = "Filter Expression:";
+			_labelFilterExpression.AutoSize=true;
+			_labelFilterExpression.Location=new System.Drawing.Point(6, 15);
+			_labelFilterExpression.Name="_labelFilterExpression";
+			_labelFilterExpression.Size=new System.Drawing.Size(95, 15);
+			_labelFilterExpression.TabIndex=0;
+			_labelFilterExpression.Text="Filter Expression:";
 			// 
 			// _dataGridViewIssueFilters
 			// 
-			this._dataGridViewIssueFilters.AllowUserToAddRows = false;
-			this._dataGridViewIssueFilters.AllowUserToDeleteRows = false;
-			this._dataGridViewIssueFilters.AllowUserToResizeRows = false;
-			this._dataGridViewIssueFilters.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-			this._dataGridViewIssueFilters.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
-            this._dataGridIssueColumnImage,
-            this._dataGridIssueColumnName,
-            this._dataGridIssueColumnType,
-            this._dataGridIssueColumnAlgorithm,
-            this._dataGridIssueColumnCategory,
-            this._dataGridIssueColumnDescription});
-			this._dataGridViewIssueFilters.Dock = System.Windows.Forms.DockStyle.Fill;
-			this._dataGridViewIssueFilters.EditMode = System.Windows.Forms.DataGridViewEditMode.EditOnEnter;
-			this._dataGridViewIssueFilters.Location = new System.Drawing.Point(0, 29);
-			this._dataGridViewIssueFilters.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-			this._dataGridViewIssueFilters.Name = "_dataGridViewIssueFilters";
-			this._dataGridViewIssueFilters.RowHeadersVisible = false;
-			this._dataGridViewIssueFilters.RowHeadersWidth = 62;
-			this._dataGridViewIssueFilters.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-			this._dataGridViewIssueFilters.Size = new System.Drawing.Size(698, 357);
-			this._dataGridViewIssueFilters.TabIndex = 27;
-			this._dataGridViewIssueFilters.CellDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this._dataGridViewIssueFilters_CellDoubleClick);
-			this._dataGridViewIssueFilters.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this._dataGridViewIssueFilters_CellEndEdit);
-			this._dataGridViewIssueFilters.CellValueChanged += new System.Windows.Forms.DataGridViewCellEventHandler(this._dataGridViewIssueFilters_CellValueChanged);
+			_dataGridViewIssueFilters.AllowUserToAddRows=false;
+			_dataGridViewIssueFilters.AllowUserToDeleteRows=false;
+			_dataGridViewIssueFilters.AllowUserToResizeRows=false;
+			_dataGridViewIssueFilters.ColumnHeadersHeightSizeMode=System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+			_dataGridViewIssueFilters.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] { _dataGridIssueColumnImage, _dataGridIssueColumnName, _dataGridIssueColumnType, _dataGridIssueColumnAlgorithm, _dataGridIssueColumnCategory, _dataGridIssueColumnDescription });
+			_dataGridViewIssueFilters.Dock=System.Windows.Forms.DockStyle.Fill;
+			_dataGridViewIssueFilters.EditMode=System.Windows.Forms.DataGridViewEditMode.EditOnEnter;
+			_dataGridViewIssueFilters.Location=new System.Drawing.Point(0, 29);
+			_dataGridViewIssueFilters.Margin=new System.Windows.Forms.Padding(4, 3, 4, 3);
+			_dataGridViewIssueFilters.Name="_dataGridViewIssueFilters";
+			_dataGridViewIssueFilters.RowHeadersVisible=false;
+			_dataGridViewIssueFilters.RowHeadersWidth=62;
+			_dataGridViewIssueFilters.SelectionMode=System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
+			_dataGridViewIssueFilters.Size=new System.Drawing.Size(698, 357);
+			_dataGridViewIssueFilters.TabIndex=27;
+			_dataGridViewIssueFilters.CellDoubleClick+=_dataGridViewIssueFilters_CellDoubleClick;
+			_dataGridViewIssueFilters.CellEndEdit+=_dataGridViewIssueFilters_CellEndEdit;
+			_dataGridViewIssueFilters.CellValueChanged+=_dataGridViewIssueFilters_CellValueChanged;
 			// 
 			// _dataGridIssueColumnImage
 			// 
-			this._dataGridIssueColumnImage.DataPropertyName = "Image";
-			this._dataGridIssueColumnImage.HeaderText = "";
-			this._dataGridIssueColumnImage.MinimumWidth = 20;
-			this._dataGridIssueColumnImage.Name = "_dataGridIssueColumnImage";
-			this._dataGridIssueColumnImage.ReadOnly = true;
-			this._dataGridIssueColumnImage.Resizable = System.Windows.Forms.DataGridViewTriState.False;
-			this._dataGridIssueColumnImage.Width = 30;
+			_dataGridIssueColumnImage.DataPropertyName="Image";
+			_dataGridIssueColumnImage.HeaderText="";
+			_dataGridIssueColumnImage.MinimumWidth=20;
+			_dataGridIssueColumnImage.Name="_dataGridIssueColumnImage";
+			_dataGridIssueColumnImage.ReadOnly=true;
+			_dataGridIssueColumnImage.Resizable=System.Windows.Forms.DataGridViewTriState.False;
+			_dataGridIssueColumnImage.Width=30;
 			// 
 			// _dataGridIssueColumnName
 			// 
-			this._dataGridIssueColumnName.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-			this._dataGridIssueColumnName.DataPropertyName = "Name";
-			this._dataGridIssueColumnName.HeaderText = "Name";
-			this._dataGridIssueColumnName.MinimumWidth = 200;
-			this._dataGridIssueColumnName.Name = "_dataGridIssueColumnName";
-			this._dataGridIssueColumnName.ReadOnly = true;
-			this._dataGridIssueColumnName.Width = 200;
+			_dataGridIssueColumnName.AutoSizeMode=System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+			_dataGridIssueColumnName.DataPropertyName="Name";
+			_dataGridIssueColumnName.HeaderText="Name";
+			_dataGridIssueColumnName.MinimumWidth=200;
+			_dataGridIssueColumnName.Name="_dataGridIssueColumnName";
+			_dataGridIssueColumnName.ReadOnly=true;
+			_dataGridIssueColumnName.Width=200;
 			// 
 			// _dataGridIssueColumnType
 			// 
-			this._dataGridIssueColumnType.DataPropertyName = "Type";
-			this._dataGridIssueColumnType.HeaderText = "Type";
-			this._dataGridIssueColumnType.MinimumWidth = 8;
-			this._dataGridIssueColumnType.Name = "_dataGridIssueColumnType";
-			this._dataGridIssueColumnType.ReadOnly = true;
-			this._dataGridIssueColumnType.Width = 180;
+			_dataGridIssueColumnType.DataPropertyName="Type";
+			_dataGridIssueColumnType.HeaderText="Type";
+			_dataGridIssueColumnType.MinimumWidth=8;
+			_dataGridIssueColumnType.Name="_dataGridIssueColumnType";
+			_dataGridIssueColumnType.ReadOnly=true;
+			_dataGridIssueColumnType.Width=180;
 			// 
 			// _dataGridIssueColumnAlgorithm
 			// 
-			this._dataGridIssueColumnAlgorithm.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-			this._dataGridIssueColumnAlgorithm.DataPropertyName = "AlgorithmImplementation";
-			this._dataGridIssueColumnAlgorithm.HeaderText = "Algorithm";
-			this._dataGridIssueColumnAlgorithm.MinimumWidth = 8;
-			this._dataGridIssueColumnAlgorithm.Name = "_dataGridIssueColumnAlgorithm";
-			this._dataGridIssueColumnAlgorithm.Width = 86;
+			_dataGridIssueColumnAlgorithm.AutoSizeMode=System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+			_dataGridIssueColumnAlgorithm.DataPropertyName="AlgorithmImplementation";
+			_dataGridIssueColumnAlgorithm.HeaderText="Algorithm";
+			_dataGridIssueColumnAlgorithm.MinimumWidth=8;
+			_dataGridIssueColumnAlgorithm.Name="_dataGridIssueColumnAlgorithm";
+			_dataGridIssueColumnAlgorithm.Width=86;
 			// 
 			// _dataGridIssueColumnCategory
 			// 
-			this._dataGridIssueColumnCategory.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-			this._dataGridIssueColumnCategory.DataPropertyName = "Category";
-			this._dataGridIssueColumnCategory.HeaderText = "Category";
-			this._dataGridIssueColumnCategory.MinimumWidth = 50;
-			this._dataGridIssueColumnCategory.Name = "_dataGridIssueColumnCategory";
-			this._dataGridIssueColumnCategory.ReadOnly = true;
-			this._dataGridIssueColumnCategory.Width = 80;
+			_dataGridIssueColumnCategory.AutoSizeMode=System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+			_dataGridIssueColumnCategory.DataPropertyName="Category";
+			_dataGridIssueColumnCategory.HeaderText="Category";
+			_dataGridIssueColumnCategory.MinimumWidth=50;
+			_dataGridIssueColumnCategory.Name="_dataGridIssueColumnCategory";
+			_dataGridIssueColumnCategory.ReadOnly=true;
+			_dataGridIssueColumnCategory.Width=80;
 			// 
 			// _dataGridIssueColumnDescription
 			// 
-			this._dataGridIssueColumnDescription.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-			this._dataGridIssueColumnDescription.DataPropertyName = "Description";
-			this._dataGridIssueColumnDescription.HeaderText = "Description";
-			this._dataGridIssueColumnDescription.MinimumWidth = 8;
-			this._dataGridIssueColumnDescription.Name = "_dataGridIssueColumnDescription";
+			_dataGridIssueColumnDescription.AutoSizeMode=System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+			_dataGridIssueColumnDescription.DataPropertyName="Description";
+			_dataGridIssueColumnDescription.HeaderText="Description";
+			_dataGridIssueColumnDescription.MinimumWidth=8;
+			_dataGridIssueColumnDescription.Name="_dataGridIssueColumnDescription";
 			// 
 			// toolStripEx1
 			// 
-			this.toolStripEx1.AutoSize = false;
-			this.toolStripEx1.ClickThrough = true;
-			this.toolStripEx1.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
-			this.toolStripEx1.ImageScalingSize = new System.Drawing.Size(24, 24);
-			this.toolStripEx1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this._toolStripLabelIssueFilters,
-            this._toolStripButtonRemoveIssueFilter,
-            this._toolStripButtonAddIssueFilter});
-			this.toolStripEx1.Location = new System.Drawing.Point(0, 0);
-			this.toolStripEx1.Name = "toolStripEx1";
-			this.toolStripEx1.Padding = new System.Windows.Forms.Padding(0, 0, 2, 0);
-			this.toolStripEx1.Size = new System.Drawing.Size(698, 29);
-			this.toolStripEx1.TabIndex = 26;
-			this.toolStripEx1.Text = "Element Tools";
+			toolStripEx1.AutoSize=false;
+			toolStripEx1.ClickThrough=true;
+			toolStripEx1.GripStyle=System.Windows.Forms.ToolStripGripStyle.Hidden;
+			toolStripEx1.ImageScalingSize=new System.Drawing.Size(24, 24);
+			toolStripEx1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { _toolStripLabelIssueFilters, _toolStripButtonRemoveIssueFilter, _toolStripButtonAddIssueFilter });
+			toolStripEx1.Location=new System.Drawing.Point(0, 0);
+			toolStripEx1.Name="toolStripEx1";
+			toolStripEx1.Padding=new System.Windows.Forms.Padding(0, 0, 2, 0);
+			toolStripEx1.Size=new System.Drawing.Size(698, 29);
+			toolStripEx1.TabIndex=26;
+			toolStripEx1.Text="Element Tools";
 			// 
 			// _toolStripLabelIssueFilters
 			// 
-			this._toolStripLabelIssueFilters.Name = "_toolStripLabelIssueFilters";
-			this._toolStripLabelIssueFilters.Size = new System.Drawing.Size(67, 26);
-			this._toolStripLabelIssueFilters.Text = "Issue Filters";
+			_toolStripLabelIssueFilters.Name="_toolStripLabelIssueFilters";
+			_toolStripLabelIssueFilters.Size=new System.Drawing.Size(67, 26);
+			_toolStripLabelIssueFilters.Text="Issue Filters";
 			// 
 			// _toolStripButtonRemoveIssueFilter
 			// 
-			this._toolStripButtonRemoveIssueFilter.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
-			this._toolStripButtonRemoveIssueFilter.Image = global::ProSuite.DdxEditor.Content.Properties.Resources.Remove;
-			this._toolStripButtonRemoveIssueFilter.Name = "_toolStripButtonRemoveIssueFilter";
-			this._toolStripButtonRemoveIssueFilter.Size = new System.Drawing.Size(78, 26);
-			this._toolStripButtonRemoveIssueFilter.Text = "Remove";
-			this._toolStripButtonRemoveIssueFilter.Click += new System.EventHandler(this._toolStripButtonRemoveIssueFilter_Click);
+			_toolStripButtonRemoveIssueFilter.Alignment=System.Windows.Forms.ToolStripItemAlignment.Right;
+			_toolStripButtonRemoveIssueFilter.Image=Properties.Resources.Remove;
+			_toolStripButtonRemoveIssueFilter.Name="_toolStripButtonRemoveIssueFilter";
+			_toolStripButtonRemoveIssueFilter.Size=new System.Drawing.Size(78, 26);
+			_toolStripButtonRemoveIssueFilter.Text="Remove";
+			_toolStripButtonRemoveIssueFilter.Click+=_toolStripButtonRemoveIssueFilter_Click;
 			// 
 			// _toolStripButtonAddIssueFilter
 			// 
-			this._toolStripButtonAddIssueFilter.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
-			this._toolStripButtonAddIssueFilter.Image = global::ProSuite.DdxEditor.Content.Properties.Resources.Assign;
-			this._toolStripButtonAddIssueFilter.Name = "_toolStripButtonAddIssueFilter";
-			this._toolStripButtonAddIssueFilter.Size = new System.Drawing.Size(66, 26);
-			this._toolStripButtonAddIssueFilter.Text = "Add...";
-			this._toolStripButtonAddIssueFilter.Click += new System.EventHandler(this._toolStripButtonAddIssueFilter_Click);
+			_toolStripButtonAddIssueFilter.Alignment=System.Windows.Forms.ToolStripItemAlignment.Right;
+			_toolStripButtonAddIssueFilter.Image=Properties.Resources.Assign;
+			_toolStripButtonAddIssueFilter.Name="_toolStripButtonAddIssueFilter";
+			_toolStripButtonAddIssueFilter.Size=new System.Drawing.Size(66, 26);
+			_toolStripButtonAddIssueFilter.Text="Add...";
+			_toolStripButtonAddIssueFilter.Click+=_toolStripButtonAddIssueFilter_Click;
 			// 
 			// _tabPageQualitySpecifications
 			// 
-			this._tabPageQualitySpecifications.Controls.Add(this._dataGridViewQualitySpecifications);
-			this._tabPageQualitySpecifications.Controls.Add(this._toolStripElements);
-			this._tabPageQualitySpecifications.Location = new System.Drawing.Point(4, 24);
-			this._tabPageQualitySpecifications.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-			this._tabPageQualitySpecifications.Name = "_tabPageQualitySpecifications";
-			this._tabPageQualitySpecifications.Padding = new System.Windows.Forms.Padding(4, 3, 4, 3);
-			this._tabPageQualitySpecifications.Size = new System.Drawing.Size(698, 386);
-			this._tabPageQualitySpecifications.TabIndex = 1;
-			this._tabPageQualitySpecifications.Text = "Quality Specifications";
+			_tabPageQualitySpecifications.Controls.Add(_dataGridViewQualitySpecifications);
+			_tabPageQualitySpecifications.Controls.Add(_toolStripElements);
+			_tabPageQualitySpecifications.Location=new System.Drawing.Point(4, 24);
+			_tabPageQualitySpecifications.Margin=new System.Windows.Forms.Padding(4, 3, 4, 3);
+			_tabPageQualitySpecifications.Name="_tabPageQualitySpecifications";
+			_tabPageQualitySpecifications.Padding=new System.Windows.Forms.Padding(4, 3, 4, 3);
+			_tabPageQualitySpecifications.Size=new System.Drawing.Size(698, 386);
+			_tabPageQualitySpecifications.TabIndex=1;
+			_tabPageQualitySpecifications.Text="Quality Specifications";
 			// 
 			// _dataGridViewQualitySpecifications
 			// 
-			this._dataGridViewQualitySpecifications.AllowUserToAddRows = false;
-			this._dataGridViewQualitySpecifications.AllowUserToDeleteRows = false;
-			this._dataGridViewQualitySpecifications.AllowUserToResizeRows = false;
-			this._dataGridViewQualitySpecifications.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-			this._dataGridViewQualitySpecifications.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
-            this._columnName,
-            this._columnCategory,
-            this._columnIssueType,
-            this._columnStopOnError});
-			this._dataGridViewQualitySpecifications.Dock = System.Windows.Forms.DockStyle.Fill;
-			this._dataGridViewQualitySpecifications.EditMode = System.Windows.Forms.DataGridViewEditMode.EditOnEnter;
-			this._dataGridViewQualitySpecifications.Location = new System.Drawing.Point(4, 32);
-			this._dataGridViewQualitySpecifications.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-			this._dataGridViewQualitySpecifications.Name = "_dataGridViewQualitySpecifications";
-			this._dataGridViewQualitySpecifications.RowHeadersVisible = false;
-			this._dataGridViewQualitySpecifications.RowHeadersWidth = 62;
-			this._dataGridViewQualitySpecifications.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-			this._dataGridViewQualitySpecifications.Size = new System.Drawing.Size(690, 351);
-			this._dataGridViewQualitySpecifications.TabIndex = 24;
-			this._dataGridViewQualitySpecifications.CellDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this._dataGridViewQualitySpecifications_CellDoubleClick);
-			this._dataGridViewQualitySpecifications.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this._dataGridViewQualitySpecifications_CellEndEdit);
-			this._dataGridViewQualitySpecifications.CellValueChanged += new System.Windows.Forms.DataGridViewCellEventHandler(this._dataGridViewQualitySpecifications_CellValueChanged);
+			_dataGridViewQualitySpecifications.AllowUserToAddRows=false;
+			_dataGridViewQualitySpecifications.AllowUserToDeleteRows=false;
+			_dataGridViewQualitySpecifications.AllowUserToResizeRows=false;
+			_dataGridViewQualitySpecifications.ColumnHeadersHeightSizeMode=System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+			_dataGridViewQualitySpecifications.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] { _columnName, _columnCategory, _columnIssueType, _columnStopOnError });
+			_dataGridViewQualitySpecifications.Dock=System.Windows.Forms.DockStyle.Fill;
+			_dataGridViewQualitySpecifications.EditMode=System.Windows.Forms.DataGridViewEditMode.EditOnEnter;
+			_dataGridViewQualitySpecifications.Location=new System.Drawing.Point(4, 32);
+			_dataGridViewQualitySpecifications.Margin=new System.Windows.Forms.Padding(4, 3, 4, 3);
+			_dataGridViewQualitySpecifications.Name="_dataGridViewQualitySpecifications";
+			_dataGridViewQualitySpecifications.RowHeadersVisible=false;
+			_dataGridViewQualitySpecifications.RowHeadersWidth=62;
+			_dataGridViewQualitySpecifications.SelectionMode=System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
+			_dataGridViewQualitySpecifications.Size=new System.Drawing.Size(690, 351);
+			_dataGridViewQualitySpecifications.TabIndex=24;
+			_dataGridViewQualitySpecifications.CellDoubleClick+=_dataGridViewQualitySpecifications_CellDoubleClick;
+			_dataGridViewQualitySpecifications.CellEndEdit+=_dataGridViewQualitySpecifications_CellEndEdit;
+			_dataGridViewQualitySpecifications.CellValueChanged+=_dataGridViewQualitySpecifications_CellValueChanged;
 			// 
 			// _columnName
 			// 
-			this._columnName.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-			this._columnName.DataPropertyName = "QualitySpecificationName";
-			this._columnName.HeaderText = "Quality Specification";
-			this._columnName.MinimumWidth = 200;
-			this._columnName.Name = "_columnName";
-			this._columnName.ReadOnly = true;
-			this._columnName.Width = 200;
+			_columnName.AutoSizeMode=System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+			_columnName.DataPropertyName="QualitySpecificationName";
+			_columnName.HeaderText="Quality Specification";
+			_columnName.MinimumWidth=200;
+			_columnName.Name="_columnName";
+			_columnName.ReadOnly=true;
+			_columnName.Width=200;
 			// 
 			// _columnCategory
 			// 
-			this._columnCategory.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-			this._columnCategory.DataPropertyName = "Category";
-			this._columnCategory.HeaderText = "Category";
-			this._columnCategory.MinimumWidth = 50;
-			this._columnCategory.Name = "_columnCategory";
-			this._columnCategory.ReadOnly = true;
+			_columnCategory.AutoSizeMode=System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+			_columnCategory.DataPropertyName="Category";
+			_columnCategory.HeaderText="Category";
+			_columnCategory.MinimumWidth=50;
+			_columnCategory.Name="_columnCategory";
+			_columnCategory.ReadOnly=true;
 			// 
 			// _columnIssueType
 			// 
-			this._columnIssueType.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-			this._columnIssueType.DataPropertyName = "AllowErrorsOverride";
-			this._columnIssueType.DisplayStyleForCurrentCellOnly = true;
-			this._columnIssueType.HeaderText = "Issue Type";
-			this._columnIssueType.Items.AddRange(new object[] {
-            "Warning",
-            "Error",
-            "Default"});
-			this._columnIssueType.MinimumWidth = 87;
-			this._columnIssueType.Name = "_columnIssueType";
-			this._columnIssueType.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
-			this._columnIssueType.Width = 87;
+			_columnIssueType.AutoSizeMode=System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+			_columnIssueType.DataPropertyName="AllowErrorsOverride";
+			_columnIssueType.DisplayStyleForCurrentCellOnly=true;
+			_columnIssueType.HeaderText="Issue Type";
+			_columnIssueType.Items.AddRange(new object[] { "Warning", "Error", "Default" });
+			_columnIssueType.MinimumWidth=87;
+			_columnIssueType.Name="_columnIssueType";
+			_columnIssueType.SortMode=System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
+			_columnIssueType.Width=87;
 			// 
 			// _columnStopOnError
 			// 
-			this._columnStopOnError.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-			this._columnStopOnError.DataPropertyName = "StopOnErrorOverride";
-			this._columnStopOnError.DisplayStyleForCurrentCellOnly = true;
-			this._columnStopOnError.HeaderText = "Stop On Error";
-			this._columnStopOnError.Items.AddRange(new object[] {
-            "Yes",
-            "No",
-            "Default"});
-			this._columnStopOnError.MinimumWidth = 96;
-			this._columnStopOnError.Name = "_columnStopOnError";
-			this._columnStopOnError.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
-			this._columnStopOnError.Width = 96;
+			_columnStopOnError.AutoSizeMode=System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+			_columnStopOnError.DataPropertyName="StopOnErrorOverride";
+			_columnStopOnError.DisplayStyleForCurrentCellOnly=true;
+			_columnStopOnError.HeaderText="Stop On Error";
+			_columnStopOnError.Items.AddRange(new object[] { "Yes", "No", "Default" });
+			_columnStopOnError.MinimumWidth=96;
+			_columnStopOnError.Name="_columnStopOnError";
+			_columnStopOnError.SortMode=System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
+			_columnStopOnError.Width=96;
 			// 
 			// _toolStripElements
 			// 
-			this._toolStripElements.AutoSize = false;
-			this._toolStripElements.ClickThrough = true;
-			this._toolStripElements.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
-			this._toolStripElements.ImageScalingSize = new System.Drawing.Size(24, 24);
-			this._toolStripElements.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.toolStripLabel1,
-            this._toolStripButtonRemoveFromQualitySpecifications,
-            this._toolStripButtonAssignToQualitySpecifications});
-			this._toolStripElements.Location = new System.Drawing.Point(4, 3);
-			this._toolStripElements.Name = "_toolStripElements";
-			this._toolStripElements.Padding = new System.Windows.Forms.Padding(0, 0, 2, 0);
-			this._toolStripElements.Size = new System.Drawing.Size(690, 29);
-			this._toolStripElements.TabIndex = 25;
-			this._toolStripElements.Text = "Element Tools";
+			_toolStripElements.AutoSize=false;
+			_toolStripElements.ClickThrough=true;
+			_toolStripElements.GripStyle=System.Windows.Forms.ToolStripGripStyle.Hidden;
+			_toolStripElements.ImageScalingSize=new System.Drawing.Size(24, 24);
+			_toolStripElements.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { toolStripLabel1, _toolStripButtonRemoveFromQualitySpecifications, _toolStripButtonAssignToQualitySpecifications });
+			_toolStripElements.Location=new System.Drawing.Point(4, 3);
+			_toolStripElements.Name="_toolStripElements";
+			_toolStripElements.Padding=new System.Windows.Forms.Padding(0, 0, 2, 0);
+			_toolStripElements.Size=new System.Drawing.Size(690, 29);
+			_toolStripElements.TabIndex=25;
+			_toolStripElements.Text="Element Tools";
 			// 
 			// toolStripLabel1
 			// 
-			this.toolStripLabel1.Name = "toolStripLabel1";
-			this.toolStripLabel1.Size = new System.Drawing.Size(121, 26);
-			this.toolStripLabel1.Text = "Quality Specifications";
+			toolStripLabel1.Name="toolStripLabel1";
+			toolStripLabel1.Size=new System.Drawing.Size(121, 26);
+			toolStripLabel1.Text="Quality Specifications";
 			// 
 			// _toolStripButtonRemoveFromQualitySpecifications
 			// 
-			this._toolStripButtonRemoveFromQualitySpecifications.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
-			this._toolStripButtonRemoveFromQualitySpecifications.Image = global::ProSuite.DdxEditor.Content.Properties.Resources.Remove;
-			this._toolStripButtonRemoveFromQualitySpecifications.Name = "_toolStripButtonRemoveFromQualitySpecifications";
-			this._toolStripButtonRemoveFromQualitySpecifications.Size = new System.Drawing.Size(78, 26);
-			this._toolStripButtonRemoveFromQualitySpecifications.Text = "Remove";
-			this._toolStripButtonRemoveFromQualitySpecifications.Click += new System.EventHandler(this._toolStripButtonRemoveQualityConditions_Click);
+			_toolStripButtonRemoveFromQualitySpecifications.Alignment=System.Windows.Forms.ToolStripItemAlignment.Right;
+			_toolStripButtonRemoveFromQualitySpecifications.Image=Properties.Resources.Remove;
+			_toolStripButtonRemoveFromQualitySpecifications.Name="_toolStripButtonRemoveFromQualitySpecifications";
+			_toolStripButtonRemoveFromQualitySpecifications.Size=new System.Drawing.Size(78, 26);
+			_toolStripButtonRemoveFromQualitySpecifications.Text="Remove";
+			_toolStripButtonRemoveFromQualitySpecifications.Click+=_toolStripButtonRemoveQualityConditions_Click;
 			// 
 			// _toolStripButtonAssignToQualitySpecifications
 			// 
-			this._toolStripButtonAssignToQualitySpecifications.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
-			this._toolStripButtonAssignToQualitySpecifications.Image = global::ProSuite.DdxEditor.Content.Properties.Resources.Assign;
-			this._toolStripButtonAssignToQualitySpecifications.Name = "_toolStripButtonAssignToQualitySpecifications";
-			this._toolStripButtonAssignToQualitySpecifications.Size = new System.Drawing.Size(211, 26);
-			this._toolStripButtonAssignToQualitySpecifications.Text = "Assign To Quality Specifications...";
-			this._toolStripButtonAssignToQualitySpecifications.Click += new System.EventHandler(this._toolStripButtonAssignToQualitySpecifications_Click);
+			_toolStripButtonAssignToQualitySpecifications.Alignment=System.Windows.Forms.ToolStripItemAlignment.Right;
+			_toolStripButtonAssignToQualitySpecifications.Image=Properties.Resources.Assign;
+			_toolStripButtonAssignToQualitySpecifications.Name="_toolStripButtonAssignToQualitySpecifications";
+			_toolStripButtonAssignToQualitySpecifications.Size=new System.Drawing.Size(211, 26);
+			_toolStripButtonAssignToQualitySpecifications.Text="Assign To Quality Specifications...";
+			_toolStripButtonAssignToQualitySpecifications.Click+=_toolStripButtonAssignToQualitySpecifications_Click;
 			// 
 			// _tabPageOptions
 			// 
-			this._tabPageOptions.Controls.Add(this._groupBoxIdentification);
-			this._tabPageOptions.Controls.Add(this._groupBoxTablesWithoutGeometry);
-			this._tabPageOptions.Location = new System.Drawing.Point(4, 24);
-			this._tabPageOptions.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-			this._tabPageOptions.Name = "_tabPageOptions";
-			this._tabPageOptions.Padding = new System.Windows.Forms.Padding(4, 3, 4, 3);
-			this._tabPageOptions.Size = new System.Drawing.Size(698, 386);
-			this._tabPageOptions.TabIndex = 2;
-			this._tabPageOptions.Text = "Options";
-			this._tabPageOptions.UseVisualStyleBackColor = true;
+			_tabPageOptions.Controls.Add(_groupBoxIdentification);
+			_tabPageOptions.Controls.Add(_groupBoxTablesWithoutGeometry);
+			_tabPageOptions.Location=new System.Drawing.Point(4, 24);
+			_tabPageOptions.Margin=new System.Windows.Forms.Padding(4, 3, 4, 3);
+			_tabPageOptions.Name="_tabPageOptions";
+			_tabPageOptions.Padding=new System.Windows.Forms.Padding(4, 3, 4, 3);
+			_tabPageOptions.Size=new System.Drawing.Size(698, 386);
+			_tabPageOptions.TabIndex=2;
+			_tabPageOptions.Text="Options";
+			_tabPageOptions.UseVisualStyleBackColor=true;
 			// 
 			// _groupBoxIdentification
 			// 
-			this._groupBoxIdentification.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-			this._groupBoxIdentification.Controls.Add(this._textBoxUuid);
-			this._groupBoxIdentification.Controls.Add(this._buttonNewVersionGuid);
-			this._groupBoxIdentification.Controls.Add(this._labelUuid);
-			this._groupBoxIdentification.Controls.Add(this._labelVersionUuid);
-			this._groupBoxIdentification.Controls.Add(this._textBoxVersionUuid);
-			this._groupBoxIdentification.Location = new System.Drawing.Point(19, 122);
-			this._groupBoxIdentification.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-			this._groupBoxIdentification.Name = "_groupBoxIdentification";
-			this._groupBoxIdentification.Padding = new System.Windows.Forms.Padding(4, 3, 4, 3);
-			this._groupBoxIdentification.Size = new System.Drawing.Size(662, 90);
-			this._groupBoxIdentification.TabIndex = 44;
-			this._groupBoxIdentification.TabStop = false;
-			this._groupBoxIdentification.Text = "Quality condition IDs";
+			_groupBoxIdentification.Anchor=System.Windows.Forms.AnchorStyles.Top|System.Windows.Forms.AnchorStyles.Left|System.Windows.Forms.AnchorStyles.Right;
+			_groupBoxIdentification.Controls.Add(_textBoxUuid);
+			_groupBoxIdentification.Controls.Add(_buttonNewVersionGuid);
+			_groupBoxIdentification.Controls.Add(_labelUuid);
+			_groupBoxIdentification.Controls.Add(_labelVersionUuid);
+			_groupBoxIdentification.Controls.Add(_textBoxVersionUuid);
+			_groupBoxIdentification.Location=new System.Drawing.Point(19, 122);
+			_groupBoxIdentification.Margin=new System.Windows.Forms.Padding(4, 3, 4, 3);
+			_groupBoxIdentification.Name="_groupBoxIdentification";
+			_groupBoxIdentification.Padding=new System.Windows.Forms.Padding(4, 3, 4, 3);
+			_groupBoxIdentification.Size=new System.Drawing.Size(662, 90);
+			_groupBoxIdentification.TabIndex=44;
+			_groupBoxIdentification.TabStop=false;
+			_groupBoxIdentification.Text="Quality condition IDs";
 			// 
 			// _textBoxUuid
 			// 
-			this._textBoxUuid.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-			this._textBoxUuid.Location = new System.Drawing.Point(111, 22);
-			this._textBoxUuid.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-			this._textBoxUuid.Name = "_textBoxUuid";
-			this._textBoxUuid.ReadOnly = true;
-			this._textBoxUuid.Size = new System.Drawing.Size(430, 23);
-			this._textBoxUuid.TabIndex = 41;
-			this._textBoxUuid.TabStop = false;
+			_textBoxUuid.Anchor=System.Windows.Forms.AnchorStyles.Top|System.Windows.Forms.AnchorStyles.Left|System.Windows.Forms.AnchorStyles.Right;
+			_textBoxUuid.Location=new System.Drawing.Point(111, 22);
+			_textBoxUuid.Margin=new System.Windows.Forms.Padding(4, 3, 4, 3);
+			_textBoxUuid.Name="_textBoxUuid";
+			_textBoxUuid.ReadOnly=true;
+			_textBoxUuid.Size=new System.Drawing.Size(430, 23);
+			_textBoxUuid.TabIndex=41;
+			_textBoxUuid.TabStop=false;
 			// 
 			// _buttonNewVersionGuid
 			// 
-			this._buttonNewVersionGuid.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this._buttonNewVersionGuid.Location = new System.Drawing.Point(565, 50);
-			this._buttonNewVersionGuid.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-			this._buttonNewVersionGuid.Name = "_buttonNewVersionGuid";
-			this._buttonNewVersionGuid.Size = new System.Drawing.Size(88, 27);
-			this._buttonNewVersionGuid.TabIndex = 43;
-			this._buttonNewVersionGuid.Text = "Assign New";
-			this._buttonNewVersionGuid.UseVisualStyleBackColor = true;
-			this._buttonNewVersionGuid.Click += new System.EventHandler(this._buttonNewVersionUuid_Click);
+			_buttonNewVersionGuid.Anchor=System.Windows.Forms.AnchorStyles.Top|System.Windows.Forms.AnchorStyles.Right;
+			_buttonNewVersionGuid.Location=new System.Drawing.Point(565, 50);
+			_buttonNewVersionGuid.Margin=new System.Windows.Forms.Padding(4, 3, 4, 3);
+			_buttonNewVersionGuid.Name="_buttonNewVersionGuid";
+			_buttonNewVersionGuid.Size=new System.Drawing.Size(88, 27);
+			_buttonNewVersionGuid.TabIndex=43;
+			_buttonNewVersionGuid.Text="Assign New";
+			_buttonNewVersionGuid.UseVisualStyleBackColor=true;
+			_buttonNewVersionGuid.Click+=_buttonNewVersionUuid_Click;
 			// 
 			// _labelUuid
 			// 
-			this._labelUuid.AutoSize = true;
-			this._labelUuid.Location = new System.Drawing.Point(16, 25);
-			this._labelUuid.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-			this._labelUuid.Name = "_labelUuid";
-			this._labelUuid.Size = new System.Drawing.Size(37, 15);
-			this._labelUuid.TabIndex = 40;
-			this._labelUuid.Text = "UUID:";
+			_labelUuid.AutoSize=true;
+			_labelUuid.Location=new System.Drawing.Point(16, 25);
+			_labelUuid.Margin=new System.Windows.Forms.Padding(4, 0, 4, 0);
+			_labelUuid.Name="_labelUuid";
+			_labelUuid.Size=new System.Drawing.Size(37, 15);
+			_labelUuid.TabIndex=40;
+			_labelUuid.Text="UUID:";
 			// 
 			// _labelVersionUuid
 			// 
-			this._labelVersionUuid.AutoSize = true;
-			this._labelVersionUuid.Location = new System.Drawing.Point(16, 55);
-			this._labelVersionUuid.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-			this._labelVersionUuid.Name = "_labelVersionUuid";
-			this._labelVersionUuid.Size = new System.Drawing.Size(78, 15);
-			this._labelVersionUuid.TabIndex = 42;
-			this._labelVersionUuid.Text = "Version UUID:";
+			_labelVersionUuid.AutoSize=true;
+			_labelVersionUuid.Location=new System.Drawing.Point(16, 55);
+			_labelVersionUuid.Margin=new System.Windows.Forms.Padding(4, 0, 4, 0);
+			_labelVersionUuid.Name="_labelVersionUuid";
+			_labelVersionUuid.Size=new System.Drawing.Size(78, 15);
+			_labelVersionUuid.TabIndex=42;
+			_labelVersionUuid.Text="Version UUID:";
 			// 
 			// _textBoxVersionUuid
 			// 
-			this._textBoxVersionUuid.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-			this._textBoxVersionUuid.Location = new System.Drawing.Point(111, 52);
-			this._textBoxVersionUuid.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-			this._textBoxVersionUuid.Name = "_textBoxVersionUuid";
-			this._textBoxVersionUuid.ReadOnly = true;
-			this._textBoxVersionUuid.Size = new System.Drawing.Size(430, 23);
-			this._textBoxVersionUuid.TabIndex = 41;
-			this._textBoxVersionUuid.TabStop = false;
+			_textBoxVersionUuid.Anchor=System.Windows.Forms.AnchorStyles.Top|System.Windows.Forms.AnchorStyles.Left|System.Windows.Forms.AnchorStyles.Right;
+			_textBoxVersionUuid.Location=new System.Drawing.Point(111, 52);
+			_textBoxVersionUuid.Margin=new System.Windows.Forms.Padding(4, 3, 4, 3);
+			_textBoxVersionUuid.Name="_textBoxVersionUuid";
+			_textBoxVersionUuid.ReadOnly=true;
+			_textBoxVersionUuid.Size=new System.Drawing.Size(430, 23);
+			_textBoxVersionUuid.TabIndex=41;
+			_textBoxVersionUuid.TabStop=false;
 			// 
 			// _groupBoxTablesWithoutGeometry
 			// 
-			this._groupBoxTablesWithoutGeometry.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-			this._groupBoxTablesWithoutGeometry.Controls.Add(this._checkBoxNeverFilterTableRowsUsingRelatedGeometry);
-			this._groupBoxTablesWithoutGeometry.Controls.Add(this._checkBoxNeverStoreRelatedGeometryForTableRowIssues);
-			this._groupBoxTablesWithoutGeometry.Location = new System.Drawing.Point(19, 18);
-			this._groupBoxTablesWithoutGeometry.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-			this._groupBoxTablesWithoutGeometry.Name = "_groupBoxTablesWithoutGeometry";
-			this._groupBoxTablesWithoutGeometry.Padding = new System.Windows.Forms.Padding(4, 3, 4, 3);
-			this._groupBoxTablesWithoutGeometry.Size = new System.Drawing.Size(659, 97);
-			this._groupBoxTablesWithoutGeometry.TabIndex = 39;
-			this._groupBoxTablesWithoutGeometry.TabStop = false;
-			this._groupBoxTablesWithoutGeometry.Text = "Tables without geometry";
+			_groupBoxTablesWithoutGeometry.Anchor=System.Windows.Forms.AnchorStyles.Top|System.Windows.Forms.AnchorStyles.Left|System.Windows.Forms.AnchorStyles.Right;
+			_groupBoxTablesWithoutGeometry.Controls.Add(_checkBoxNeverFilterTableRowsUsingRelatedGeometry);
+			_groupBoxTablesWithoutGeometry.Controls.Add(_checkBoxNeverStoreRelatedGeometryForTableRowIssues);
+			_groupBoxTablesWithoutGeometry.Location=new System.Drawing.Point(19, 18);
+			_groupBoxTablesWithoutGeometry.Margin=new System.Windows.Forms.Padding(4, 3, 4, 3);
+			_groupBoxTablesWithoutGeometry.Name="_groupBoxTablesWithoutGeometry";
+			_groupBoxTablesWithoutGeometry.Padding=new System.Windows.Forms.Padding(4, 3, 4, 3);
+			_groupBoxTablesWithoutGeometry.Size=new System.Drawing.Size(659, 97);
+			_groupBoxTablesWithoutGeometry.TabIndex=39;
+			_groupBoxTablesWithoutGeometry.TabStop=false;
+			_groupBoxTablesWithoutGeometry.Text="Tables without geometry";
 			// 
 			// _checkBoxNeverFilterTableRowsUsingRelatedGeometry
 			// 
-			this._checkBoxNeverFilterTableRowsUsingRelatedGeometry.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-			this._checkBoxNeverFilterTableRowsUsingRelatedGeometry.AutoEllipsis = true;
-			this._checkBoxNeverFilterTableRowsUsingRelatedGeometry.Location = new System.Drawing.Point(20, 32);
-			this._checkBoxNeverFilterTableRowsUsingRelatedGeometry.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-			this._checkBoxNeverFilterTableRowsUsingRelatedGeometry.Name = "_checkBoxNeverFilterTableRowsUsingRelatedGeometry";
-			this._checkBoxNeverFilterTableRowsUsingRelatedGeometry.Size = new System.Drawing.Size(632, 20);
-			this._checkBoxNeverFilterTableRowsUsingRelatedGeometry.TabIndex = 0;
-			this._checkBoxNeverFilterTableRowsUsingRelatedGeometry.Text = "Never filter table rows to verified perimeter by geometry of related features";
-			this._checkBoxNeverFilterTableRowsUsingRelatedGeometry.UseVisualStyleBackColor = true;
+			_checkBoxNeverFilterTableRowsUsingRelatedGeometry.Anchor=System.Windows.Forms.AnchorStyles.Top|System.Windows.Forms.AnchorStyles.Left|System.Windows.Forms.AnchorStyles.Right;
+			_checkBoxNeverFilterTableRowsUsingRelatedGeometry.AutoEllipsis=true;
+			_checkBoxNeverFilterTableRowsUsingRelatedGeometry.Location=new System.Drawing.Point(20, 32);
+			_checkBoxNeverFilterTableRowsUsingRelatedGeometry.Margin=new System.Windows.Forms.Padding(4, 3, 4, 3);
+			_checkBoxNeverFilterTableRowsUsingRelatedGeometry.Name="_checkBoxNeverFilterTableRowsUsingRelatedGeometry";
+			_checkBoxNeverFilterTableRowsUsingRelatedGeometry.Size=new System.Drawing.Size(632, 20);
+			_checkBoxNeverFilterTableRowsUsingRelatedGeometry.TabIndex=0;
+			_checkBoxNeverFilterTableRowsUsingRelatedGeometry.Text="Never filter table rows to verified perimeter by geometry of related features";
+			_checkBoxNeverFilterTableRowsUsingRelatedGeometry.UseVisualStyleBackColor=true;
 			// 
 			// _checkBoxNeverStoreRelatedGeometryForTableRowIssues
 			// 
-			this._checkBoxNeverStoreRelatedGeometryForTableRowIssues.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-			this._checkBoxNeverStoreRelatedGeometryForTableRowIssues.AutoEllipsis = true;
-			this._checkBoxNeverStoreRelatedGeometryForTableRowIssues.Location = new System.Drawing.Point(20, 59);
-			this._checkBoxNeverStoreRelatedGeometryForTableRowIssues.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-			this._checkBoxNeverStoreRelatedGeometryForTableRowIssues.Name = "_checkBoxNeverStoreRelatedGeometryForTableRowIssues";
-			this._checkBoxNeverStoreRelatedGeometryForTableRowIssues.Size = new System.Drawing.Size(632, 20);
-			this._checkBoxNeverStoreRelatedGeometryForTableRowIssues.TabIndex = 1;
-			this._checkBoxNeverStoreRelatedGeometryForTableRowIssues.Text = "Never derive geometry from related features for storing issues";
-			this._checkBoxNeverStoreRelatedGeometryForTableRowIssues.UseVisualStyleBackColor = true;
+			_checkBoxNeverStoreRelatedGeometryForTableRowIssues.Anchor=System.Windows.Forms.AnchorStyles.Top|System.Windows.Forms.AnchorStyles.Left|System.Windows.Forms.AnchorStyles.Right;
+			_checkBoxNeverStoreRelatedGeometryForTableRowIssues.AutoEllipsis=true;
+			_checkBoxNeverStoreRelatedGeometryForTableRowIssues.Location=new System.Drawing.Point(20, 59);
+			_checkBoxNeverStoreRelatedGeometryForTableRowIssues.Margin=new System.Windows.Forms.Padding(4, 3, 4, 3);
+			_checkBoxNeverStoreRelatedGeometryForTableRowIssues.Name="_checkBoxNeverStoreRelatedGeometryForTableRowIssues";
+			_checkBoxNeverStoreRelatedGeometryForTableRowIssues.Size=new System.Drawing.Size(632, 20);
+			_checkBoxNeverStoreRelatedGeometryForTableRowIssues.TabIndex=1;
+			_checkBoxNeverStoreRelatedGeometryForTableRowIssues.Text="Never derive geometry from related features for storing issues";
+			_checkBoxNeverStoreRelatedGeometryForTableRowIssues.UseVisualStyleBackColor=true;
 			// 
 			// _tabPageNotes
 			// 
-			this._tabPageNotes.Controls.Add(this._textBoxNotes);
-			this._tabPageNotes.Location = new System.Drawing.Point(4, 24);
-			this._tabPageNotes.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-			this._tabPageNotes.Name = "_tabPageNotes";
-			this._tabPageNotes.Padding = new System.Windows.Forms.Padding(7);
-			this._tabPageNotes.Size = new System.Drawing.Size(698, 386);
-			this._tabPageNotes.TabIndex = 3;
-			this._tabPageNotes.Text = "Notes";
-			this._tabPageNotes.UseVisualStyleBackColor = true;
+			_tabPageNotes.Controls.Add(_textBoxNotes);
+			_tabPageNotes.Location=new System.Drawing.Point(4, 24);
+			_tabPageNotes.Margin=new System.Windows.Forms.Padding(4, 3, 4, 3);
+			_tabPageNotes.Name="_tabPageNotes";
+			_tabPageNotes.Padding=new System.Windows.Forms.Padding(7);
+			_tabPageNotes.Size=new System.Drawing.Size(698, 386);
+			_tabPageNotes.TabIndex=3;
+			_tabPageNotes.Text="Notes";
+			_tabPageNotes.UseVisualStyleBackColor=true;
 			// 
 			// _textBoxNotes
 			// 
-			this._textBoxNotes.Dock = System.Windows.Forms.DockStyle.Fill;
-			this._textBoxNotes.Location = new System.Drawing.Point(7, 7);
-			this._textBoxNotes.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-			this._textBoxNotes.Multiline = true;
-			this._textBoxNotes.Name = "_textBoxNotes";
-			this._textBoxNotes.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-			this._textBoxNotes.Size = new System.Drawing.Size(684, 372);
-			this._textBoxNotes.TabIndex = 0;
+			_textBoxNotes.Dock=System.Windows.Forms.DockStyle.Fill;
+			_textBoxNotes.Location=new System.Drawing.Point(7, 7);
+			_textBoxNotes.Margin=new System.Windows.Forms.Padding(4, 3, 4, 3);
+			_textBoxNotes.Multiline=true;
+			_textBoxNotes.Name="_textBoxNotes";
+			_textBoxNotes.ScrollBars=System.Windows.Forms.ScrollBars.Vertical;
+			_textBoxNotes.Size=new System.Drawing.Size(684, 372);
+			_textBoxNotes.TabIndex=0;
 			// 
 			// _textBoxQualitySpecifications
 			// 
-			this._textBoxQualitySpecifications.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-			this._textBoxQualitySpecifications.Location = new System.Drawing.Point(111, 237);
-			this._textBoxQualitySpecifications.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-			this._textBoxQualitySpecifications.Name = "_textBoxQualitySpecifications";
-			this._textBoxQualitySpecifications.ReadOnly = true;
-			this._textBoxQualitySpecifications.Size = new System.Drawing.Size(582, 23);
-			this._textBoxQualitySpecifications.TabIndex = 8;
-			this._textBoxQualitySpecifications.TabStop = false;
+			_textBoxQualitySpecifications.Anchor=System.Windows.Forms.AnchorStyles.Top|System.Windows.Forms.AnchorStyles.Left|System.Windows.Forms.AnchorStyles.Right;
+			_textBoxQualitySpecifications.Location=new System.Drawing.Point(111, 237);
+			_textBoxQualitySpecifications.Margin=new System.Windows.Forms.Padding(4, 3, 4, 3);
+			_textBoxQualitySpecifications.Name="_textBoxQualitySpecifications";
+			_textBoxQualitySpecifications.ReadOnly=true;
+			_textBoxQualitySpecifications.Size=new System.Drawing.Size(582, 23);
+			_textBoxQualitySpecifications.TabIndex=8;
+			_textBoxQualitySpecifications.TabStop=false;
 			// 
 			// _labelQualitySpecifications
 			// 
-			this._labelQualitySpecifications.AutoSize = true;
-			this._labelQualitySpecifications.Location = new System.Drawing.Point(50, 240);
-			this._labelQualitySpecifications.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-			this._labelQualitySpecifications.Name = "_labelQualitySpecifications";
-			this._labelQualitySpecifications.Size = new System.Drawing.Size(49, 15);
-			this._labelQualitySpecifications.TabIndex = 32;
-			this._labelQualitySpecifications.Text = "Used in:";
-			this._labelQualitySpecifications.TextAlign = System.Drawing.ContentAlignment.TopRight;
+			_labelQualitySpecifications.AutoSize=true;
+			_labelQualitySpecifications.Location=new System.Drawing.Point(50, 240);
+			_labelQualitySpecifications.Margin=new System.Windows.Forms.Padding(4, 0, 4, 0);
+			_labelQualitySpecifications.Name="_labelQualitySpecifications";
+			_labelQualitySpecifications.Size=new System.Drawing.Size(49, 15);
+			_labelQualitySpecifications.TabIndex=32;
+			_labelQualitySpecifications.Text="Used in:";
+			_labelQualitySpecifications.TextAlign=System.Drawing.ContentAlignment.TopRight;
 			// 
 			// _textBoxUrl
 			// 
-			this._textBoxUrl.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-			this._textBoxUrl.Location = new System.Drawing.Point(111, 110);
-			this._textBoxUrl.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-			this._textBoxUrl.Name = "_textBoxUrl";
-			this._textBoxUrl.Size = new System.Drawing.Size(546, 23);
-			this._textBoxUrl.TabIndex = 3;
+			_textBoxUrl.Anchor=System.Windows.Forms.AnchorStyles.Top|System.Windows.Forms.AnchorStyles.Left|System.Windows.Forms.AnchorStyles.Right;
+			_textBoxUrl.Location=new System.Drawing.Point(111, 110);
+			_textBoxUrl.Margin=new System.Windows.Forms.Padding(4, 3, 4, 3);
+			_textBoxUrl.Name="_textBoxUrl";
+			_textBoxUrl.Size=new System.Drawing.Size(546, 23);
+			_textBoxUrl.TabIndex=3;
 			// 
 			// _labelUrl
 			// 
-			this._labelUrl.AutoSize = true;
-			this._labelUrl.Location = new System.Drawing.Point(65, 114);
-			this._labelUrl.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-			this._labelUrl.Name = "_labelUrl";
-			this._labelUrl.Size = new System.Drawing.Size(31, 15);
-			this._labelUrl.TabIndex = 1;
-			this._labelUrl.Text = "URL:";
-			this._labelUrl.TextAlign = System.Drawing.ContentAlignment.TopRight;
+			_labelUrl.AutoSize=true;
+			_labelUrl.Location=new System.Drawing.Point(65, 114);
+			_labelUrl.Margin=new System.Windows.Forms.Padding(4, 0, 4, 0);
+			_labelUrl.Name="_labelUrl";
+			_labelUrl.Size=new System.Drawing.Size(31, 15);
+			_labelUrl.TabIndex=1;
+			_labelUrl.Text="URL:";
+			_labelUrl.TextAlign=System.Drawing.ContentAlignment.TopRight;
 			// 
 			// _buttonOpenUrl
 			// 
-			this._buttonOpenUrl.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this._buttonOpenUrl.FlatAppearance.BorderSize = 0;
-			this._buttonOpenUrl.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-			this._buttonOpenUrl.Image = global::ProSuite.DdxEditor.Content.Properties.Resources.OpenUrl;
-			this._buttonOpenUrl.Location = new System.Drawing.Point(665, 106);
-			this._buttonOpenUrl.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-			this._buttonOpenUrl.Name = "_buttonOpenUrl";
-			this._buttonOpenUrl.Size = new System.Drawing.Size(30, 30);
-			this._buttonOpenUrl.TabIndex = 4;
-			this._buttonOpenUrl.UseVisualStyleBackColor = true;
-			this._buttonOpenUrl.Click += new System.EventHandler(this._buttonOpenUrl_Click);
+			_buttonOpenUrl.Anchor=System.Windows.Forms.AnchorStyles.Top|System.Windows.Forms.AnchorStyles.Right;
+			_buttonOpenUrl.FlatAppearance.BorderSize=0;
+			_buttonOpenUrl.FlatStyle=System.Windows.Forms.FlatStyle.Flat;
+			_buttonOpenUrl.Image=Properties.Resources.OpenUrl;
+			_buttonOpenUrl.Location=new System.Drawing.Point(665, 106);
+			_buttonOpenUrl.Margin=new System.Windows.Forms.Padding(4, 3, 4, 3);
+			_buttonOpenUrl.Name="_buttonOpenUrl";
+			_buttonOpenUrl.Size=new System.Drawing.Size(30, 30);
+			_buttonOpenUrl.TabIndex=4;
+			_buttonOpenUrl.UseVisualStyleBackColor=true;
+			_buttonOpenUrl.Click+=_buttonOpenUrl_Click;
 			// 
 			// _textBoxCategory
 			// 
-			this._textBoxCategory.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this._textBoxCategory.Location = new System.Drawing.Point(465, 15);
-			this._textBoxCategory.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-			this._textBoxCategory.Name = "_textBoxCategory";
-			this._textBoxCategory.ReadOnly = true;
-			this._textBoxCategory.Size = new System.Drawing.Size(227, 23);
-			this._textBoxCategory.TabIndex = 1;
-			this._textBoxCategory.TabStop = false;
+			_textBoxCategory.Anchor=System.Windows.Forms.AnchorStyles.Top|System.Windows.Forms.AnchorStyles.Right;
+			_textBoxCategory.Location=new System.Drawing.Point(465, 15);
+			_textBoxCategory.Margin=new System.Windows.Forms.Padding(4, 3, 4, 3);
+			_textBoxCategory.Name="_textBoxCategory";
+			_textBoxCategory.ReadOnly=true;
+			_textBoxCategory.Size=new System.Drawing.Size(227, 23);
+			_textBoxCategory.TabIndex=1;
+			_textBoxCategory.TabStop=false;
 			// 
 			// _labelCategory
 			// 
-			this._labelCategory.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this._labelCategory.AutoSize = true;
-			this._labelCategory.Location = new System.Drawing.Point(398, 18);
-			this._labelCategory.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-			this._labelCategory.Name = "_labelCategory";
-			this._labelCategory.Size = new System.Drawing.Size(58, 15);
-			this._labelCategory.TabIndex = 3;
-			this._labelCategory.Text = "Category:";
-			this._labelCategory.TextAlign = System.Drawing.ContentAlignment.TopRight;
+			_labelCategory.Anchor=System.Windows.Forms.AnchorStyles.Top|System.Windows.Forms.AnchorStyles.Right;
+			_labelCategory.AutoSize=true;
+			_labelCategory.Location=new System.Drawing.Point(398, 18);
+			_labelCategory.Margin=new System.Windows.Forms.Padding(4, 0, 4, 0);
+			_labelCategory.Name="_labelCategory";
+			_labelCategory.Size=new System.Drawing.Size(58, 15);
+			_labelCategory.TabIndex=3;
+			_labelCategory.Text="Category:";
+			_labelCategory.TextAlign=System.Drawing.ContentAlignment.TopRight;
 			// 
 			// _toolTip
 			// 
-			this._toolTip.AutomaticDelay = 100;
-			this._toolTip.AutoPopDelay = 5000;
-			this._toolTip.InitialDelay = 100;
-			this._toolTip.IsBalloon = true;
-			this._toolTip.ReshowDelay = 20;
-			this._toolTip.ShowAlways = true;
+			_toolTip.AutomaticDelay=100;
+			_toolTip.AutoPopDelay=5000;
+			_toolTip.InitialDelay=100;
+			_toolTip.IsBalloon=true;
+			_toolTip.ReshowDelay=20;
+			_toolTip.ShowAlways=true;
 			// 
 			// _nullableBooleanComboboxIssueType
 			// 
-			this._nullableBooleanComboboxIssueType.DefaultText = "Use Default";
-			this._nullableBooleanComboboxIssueType.FalseText = "Error";
-			this._nullableBooleanComboboxIssueType.FlatStyle = System.Windows.Forms.FlatStyle.Standard;
-			this._nullableBooleanComboboxIssueType.Location = new System.Drawing.Point(111, 140);
-			this._nullableBooleanComboboxIssueType.Margin = new System.Windows.Forms.Padding(5, 3, 5, 3);
-			this._nullableBooleanComboboxIssueType.Name = "_nullableBooleanComboboxIssueType";
-			this._nullableBooleanComboboxIssueType.Size = new System.Drawing.Size(112, 24);
-			this._nullableBooleanComboboxIssueType.TabIndex = 5;
-			this._nullableBooleanComboboxIssueType.TrueText = "Warning";
-			this._nullableBooleanComboboxIssueType.Value = null;
+			_nullableBooleanComboboxIssueType.DefaultText="Use Default";
+			_nullableBooleanComboboxIssueType.FalseText="Error";
+			_nullableBooleanComboboxIssueType.FlatStyle=System.Windows.Forms.FlatStyle.Standard;
+			_nullableBooleanComboboxIssueType.Location=new System.Drawing.Point(111, 140);
+			_nullableBooleanComboboxIssueType.Margin=new System.Windows.Forms.Padding(5, 3, 5, 3);
+			_nullableBooleanComboboxIssueType.Name="_nullableBooleanComboboxIssueType";
+			_nullableBooleanComboboxIssueType.Size=new System.Drawing.Size(112, 24);
+			_nullableBooleanComboboxIssueType.TabIndex=5;
+			_nullableBooleanComboboxIssueType.TrueText="Warning";
+			_nullableBooleanComboboxIssueType.Value=null;
 			// 
 			// _nullableBooleanComboboxStopOnError
 			// 
-			this._nullableBooleanComboboxStopOnError.DefaultText = "Use Default";
-			this._nullableBooleanComboboxStopOnError.FalseText = "No";
-			this._nullableBooleanComboboxStopOnError.FlatStyle = System.Windows.Forms.FlatStyle.Standard;
-			this._nullableBooleanComboboxStopOnError.Location = new System.Drawing.Point(111, 171);
-			this._nullableBooleanComboboxStopOnError.Margin = new System.Windows.Forms.Padding(5, 3, 5, 3);
-			this._nullableBooleanComboboxStopOnError.Name = "_nullableBooleanComboboxStopOnError";
-			this._nullableBooleanComboboxStopOnError.Size = new System.Drawing.Size(112, 24);
-			this._nullableBooleanComboboxStopOnError.TabIndex = 7;
-			this._nullableBooleanComboboxStopOnError.TrueText = "Yes";
-			this._nullableBooleanComboboxStopOnError.Value = null;
+			_nullableBooleanComboboxStopOnError.DefaultText="Use Default";
+			_nullableBooleanComboboxStopOnError.FalseText="No";
+			_nullableBooleanComboboxStopOnError.FlatStyle=System.Windows.Forms.FlatStyle.Standard;
+			_nullableBooleanComboboxStopOnError.Location=new System.Drawing.Point(111, 171);
+			_nullableBooleanComboboxStopOnError.Margin=new System.Windows.Forms.Padding(5, 3, 5, 3);
+			_nullableBooleanComboboxStopOnError.Name="_nullableBooleanComboboxStopOnError";
+			_nullableBooleanComboboxStopOnError.Size=new System.Drawing.Size(112, 24);
+			_nullableBooleanComboboxStopOnError.TabIndex=7;
+			_nullableBooleanComboboxStopOnError.TrueText="Yes";
+			_nullableBooleanComboboxStopOnError.Value=null;
 			// 
 			// _objectReferenceControlTestDescriptor
 			// 
-			this._objectReferenceControlTestDescriptor.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-			this._objectReferenceControlTestDescriptor.DataSource = null;
-			this._objectReferenceControlTestDescriptor.DisplayMember = null;
-			this._objectReferenceControlTestDescriptor.FindObjectDelegate = null;
-			this._objectReferenceControlTestDescriptor.Font = new System.Drawing.Font("Courier New", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-			this._objectReferenceControlTestDescriptor.FormatTextDelegate = null;
-			this._objectReferenceControlTestDescriptor.Location = new System.Drawing.Point(111, 205);
-			this._objectReferenceControlTestDescriptor.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-			this._objectReferenceControlTestDescriptor.Name = "_objectReferenceControlTestDescriptor";
-			this._objectReferenceControlTestDescriptor.ReadOnly = false;
-			this._objectReferenceControlTestDescriptor.Size = new System.Drawing.Size(582, 35);
-			this._objectReferenceControlTestDescriptor.TabIndex = 10;
+			_objectReferenceControlTestDescriptor.Anchor=System.Windows.Forms.AnchorStyles.Top|System.Windows.Forms.AnchorStyles.Left|System.Windows.Forms.AnchorStyles.Right;
+			_objectReferenceControlTestDescriptor.DataSource=null;
+			_objectReferenceControlTestDescriptor.DisplayMember=null;
+			_objectReferenceControlTestDescriptor.FindObjectDelegate=null;
+			_objectReferenceControlTestDescriptor.Font=new System.Drawing.Font("Courier New", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+			_objectReferenceControlTestDescriptor.FormatTextDelegate=null;
+			_objectReferenceControlTestDescriptor.Location=new System.Drawing.Point(111, 205);
+			_objectReferenceControlTestDescriptor.Margin=new System.Windows.Forms.Padding(4, 3, 4, 3);
+			_objectReferenceControlTestDescriptor.Name="_objectReferenceControlTestDescriptor";
+			_objectReferenceControlTestDescriptor.ReadOnly=false;
+			_objectReferenceControlTestDescriptor.Size=new System.Drawing.Size(582, 35);
+			_objectReferenceControlTestDescriptor.TabIndex=10;
 			// 
 			// dataGridViewTextBoxColumn1
 			// 
-			this.dataGridViewTextBoxColumn1.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-			this.dataGridViewTextBoxColumn1.DataPropertyName = "QualitySpecificationName";
-			this.dataGridViewTextBoxColumn1.HeaderText = "Quality Specification";
-			this.dataGridViewTextBoxColumn1.MinimumWidth = 200;
-			this.dataGridViewTextBoxColumn1.Name = "dataGridViewTextBoxColumn1";
-			this.dataGridViewTextBoxColumn1.ReadOnly = true;
+			dataGridViewTextBoxColumn1.AutoSizeMode=System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+			dataGridViewTextBoxColumn1.DataPropertyName="QualitySpecificationName";
+			dataGridViewTextBoxColumn1.HeaderText="Quality Specification";
+			dataGridViewTextBoxColumn1.MinimumWidth=200;
+			dataGridViewTextBoxColumn1.Name="dataGridViewTextBoxColumn1";
+			dataGridViewTextBoxColumn1.ReadOnly=true;
 			// 
 			// _panelParametersTop
 			// 
-			this._panelParametersTop.BackColor = System.Drawing.Color.Transparent;
-			this._panelParametersTop.Controls.Add(this._linkDocumentation);
-			this._panelParametersTop.Dock = System.Windows.Forms.DockStyle.Top;
-			this._panelParametersTop.Location = new System.Drawing.Point(0, 0);
-			this._panelParametersTop.Name = "_panelParametersTop";
-			this._panelParametersTop.Size = new System.Drawing.Size(690, 27);
-			this._panelParametersTop.TabIndex = 1;
+			_panelParametersTop.BackColor=System.Drawing.Color.Transparent;
+			_panelParametersTop.Controls.Add(_linkDocumentation);
+			_panelParametersTop.Dock=System.Windows.Forms.DockStyle.Top;
+			_panelParametersTop.Location=new System.Drawing.Point(0, 0);
+			_panelParametersTop.Name="_panelParametersTop";
+			_panelParametersTop.Size=new System.Drawing.Size(690, 27);
+			_panelParametersTop.TabIndex=1;
 			// 
 			// _linkDocumentation
 			// 
-			this._linkDocumentation.AutoSize = true;
-			this._linkDocumentation.Location = new System.Drawing.Point(6, 9);
-			this._linkDocumentation.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
-			this._linkDocumentation.Name = "_linkDocumentation";
-			this._linkDocumentation.Size = new System.Drawing.Size(179, 15);
-			this._linkDocumentation.TabIndex = 23;
-			this._linkDocumentation.TabStop = true;
-			this._linkDocumentation.Text = "Show Parameter Documentation";
-			this._linkDocumentation.TextAlign = System.Drawing.ContentAlignment.TopRight;
+			_linkDocumentation.AutoSize=true;
+			_linkDocumentation.Location=new System.Drawing.Point(6, 9);
+			_linkDocumentation.Margin=new System.Windows.Forms.Padding(6, 0, 6, 0);
+			_linkDocumentation.Name="_linkDocumentation";
+			_linkDocumentation.Size=new System.Drawing.Size(179, 15);
+			_linkDocumentation.TabIndex=23;
+			_linkDocumentation.TabStop=true;
+			_linkDocumentation.Text="Show Parameter Documentation";
+			_linkDocumentation.TextAlign=System.Drawing.ContentAlignment.TopRight;
 			// 
 			// _panelParametersEdit
 			// 
-			this._panelParametersEdit.Dock = System.Windows.Forms.DockStyle.Fill;
-			this._panelParametersEdit.Location = new System.Drawing.Point(0, 27);
-			this._panelParametersEdit.Name = "_panelParametersEdit";
-			this._panelParametersEdit.Size = new System.Drawing.Size(690, 318);
-			this._panelParametersEdit.TabIndex = 2;
+			_panelParametersEdit.Dock=System.Windows.Forms.DockStyle.Fill;
+			_panelParametersEdit.Location=new System.Drawing.Point(0, 27);
+			_panelParametersEdit.Name="_panelParametersEdit";
+			_panelParametersEdit.Size=new System.Drawing.Size(690, 318);
+			_panelParametersEdit.TabIndex=2;
 			// 
 			// QualityConditionControl
 			// 
-			this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
-			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.Controls.Add(this._textBoxQualitySpecifications);
-			this.Controls.Add(this._buttonOpenUrl);
-			this.Controls.Add(this._tabControlDetails);
-			this.Controls.Add(this._labelTestDescriptor);
-			this.Controls.Add(this._labelTestDescriptorDefaultAllowErrors);
-			this.Controls.Add(this._labelTestDescriptorDefaultStopOnError);
-			this.Controls.Add(this._textBoxIssueTypeDefault);
-			this.Controls.Add(this._textBoxStopOnErrorDefault);
-			this.Controls.Add(this._labelQualitySpecifications);
-			this.Controls.Add(this._labelAllowErrors);
-			this.Controls.Add(this._labelStopOnError);
-			this.Controls.Add(this._nullableBooleanComboboxIssueType);
-			this.Controls.Add(this._nullableBooleanComboboxStopOnError);
-			this.Controls.Add(this._labelCategory);
-			this.Controls.Add(this._labelDescription);
-			this.Controls.Add(this._textBoxDescription);
-			this.Controls.Add(this._labelUrl);
-			this.Controls.Add(this._labelName);
-			this.Controls.Add(this._textBoxCategory);
-			this.Controls.Add(this._textBoxUrl);
-			this.Controls.Add(this._textBoxName);
-			this.Controls.Add(this._objectReferenceControlTestDescriptor);
-			this.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-			this.Name = "QualityConditionControl";
-			this.Size = new System.Drawing.Size(720, 688);
-			this.Load += new System.EventHandler(this.QualityConditionControl_Load);
-			this.Paint += new System.Windows.Forms.PaintEventHandler(this.QualityConditionControl_Paint);
-			((System.ComponentModel.ISupportInitialize)(this._errorProvider)).EndInit();
-			this._tabControlParameterValues.ResumeLayout(false);
-			this.tabPageProperties.ResumeLayout(false);
-			this._splitContainerProperties.Panel1.ResumeLayout(false);
-			this._splitContainerProperties.Panel1.PerformLayout();
-			this._splitContainerProperties.Panel2.ResumeLayout(false);
-			((System.ComponentModel.ISupportInitialize)(this._splitContainerProperties)).EndInit();
-			this._splitContainerProperties.ResumeLayout(false);
-			this._panelDescriptionLabel.ResumeLayout(false);
-			this._panelDescriptionLabel.PerformLayout();
-			this._tabPageTableView.ResumeLayout(false);
-			this._splitContainer.Panel1.ResumeLayout(false);
-			((System.ComponentModel.ISupportInitialize)(this._splitContainer)).EndInit();
-			this._splitContainer.ResumeLayout(false);
-			this._splitContainerHeader.Panel1.ResumeLayout(false);
-			this._splitContainerHeader.Panel1.PerformLayout();
-			this._splitContainerHeader.Panel2.ResumeLayout(false);
-			((System.ComponentModel.ISupportInitialize)(this._splitContainerHeader)).EndInit();
-			this._splitContainerHeader.ResumeLayout(false);
-			((System.ComponentModel.ISupportInitialize)(this._dataGridViewParamGrid)).EndInit();
-			this._tabControlDetails.ResumeLayout(false);
-			this._tabPageParameters.ResumeLayout(false);
-			this._panelParameters.ResumeLayout(false);
-			this._qualityConditionTableViewControlPanel.ResumeLayout(false);
-			this._exportButtonPanel.ResumeLayout(false);
-			this._tabPageIssueFilters.ResumeLayout(false);
-			this._issueFilterPanelBottom.ResumeLayout(false);
-			this._issueFilterPanelBottom.PerformLayout();
-			((System.ComponentModel.ISupportInitialize)(this._dataGridViewIssueFilters)).EndInit();
-			this.toolStripEx1.ResumeLayout(false);
-			this.toolStripEx1.PerformLayout();
-			this._tabPageQualitySpecifications.ResumeLayout(false);
-			((System.ComponentModel.ISupportInitialize)(this._dataGridViewQualitySpecifications)).EndInit();
-			this._toolStripElements.ResumeLayout(false);
-			this._toolStripElements.PerformLayout();
-			this._tabPageOptions.ResumeLayout(false);
-			this._groupBoxIdentification.ResumeLayout(false);
-			this._groupBoxIdentification.PerformLayout();
-			this._groupBoxTablesWithoutGeometry.ResumeLayout(false);
-			this._tabPageNotes.ResumeLayout(false);
-			this._tabPageNotes.PerformLayout();
-			this._panelParametersTop.ResumeLayout(false);
-			this._panelParametersTop.PerformLayout();
-			this.ResumeLayout(false);
-			this.PerformLayout();
+			AutoScaleDimensions=new System.Drawing.SizeF(7F, 15F);
+			AutoScaleMode=System.Windows.Forms.AutoScaleMode.Font;
+			Controls.Add(_textBoxQualitySpecifications);
+			Controls.Add(_buttonOpenUrl);
+			Controls.Add(_tabControlDetails);
+			Controls.Add(_labelTestDescriptor);
+			Controls.Add(_labelTestDescriptorDefaultAllowErrors);
+			Controls.Add(_labelTestDescriptorDefaultStopOnError);
+			Controls.Add(_textBoxIssueTypeDefault);
+			Controls.Add(_textBoxStopOnErrorDefault);
+			Controls.Add(_labelQualitySpecifications);
+			Controls.Add(_labelAllowErrors);
+			Controls.Add(_labelStopOnError);
+			Controls.Add(_nullableBooleanComboboxIssueType);
+			Controls.Add(_nullableBooleanComboboxStopOnError);
+			Controls.Add(_labelCategory);
+			Controls.Add(_labelDescription);
+			Controls.Add(_textBoxDescription);
+			Controls.Add(_labelUrl);
+			Controls.Add(_labelName);
+			Controls.Add(_textBoxCategory);
+			Controls.Add(_textBoxUrl);
+			Controls.Add(_textBoxName);
+			Controls.Add(_objectReferenceControlTestDescriptor);
+			Margin=new System.Windows.Forms.Padding(4, 3, 4, 3);
+			Name="QualityConditionControl";
+			Size=new System.Drawing.Size(720, 688);
+			Load+=QualityConditionControl_Load;
+			Paint+=QualityConditionControl_Paint;
+			((System.ComponentModel.ISupportInitialize)_errorProvider).EndInit();
+			_tabControlParameterValues.ResumeLayout(false);
+			tabPageProperties.ResumeLayout(false);
+			_splitContainerProperties.Panel1.ResumeLayout(false);
+			_splitContainerProperties.Panel1.PerformLayout();
+			_splitContainerProperties.Panel2.ResumeLayout(false);
+			((System.ComponentModel.ISupportInitialize)_splitContainerProperties).EndInit();
+			_splitContainerProperties.ResumeLayout(false);
+			_panelDescriptionLabel.ResumeLayout(false);
+			_panelDescriptionLabel.PerformLayout();
+			_tabPageTableView.ResumeLayout(false);
+			_splitContainer.Panel1.ResumeLayout(false);
+			((System.ComponentModel.ISupportInitialize)_splitContainer).EndInit();
+			_splitContainer.ResumeLayout(false);
+			_splitContainerHeader.Panel1.ResumeLayout(false);
+			_splitContainerHeader.Panel1.PerformLayout();
+			_splitContainerHeader.Panel2.ResumeLayout(false);
+			((System.ComponentModel.ISupportInitialize)_splitContainerHeader).EndInit();
+			_splitContainerHeader.ResumeLayout(false);
+			((System.ComponentModel.ISupportInitialize)_dataGridViewParamGrid).EndInit();
+			_tabControlDetails.ResumeLayout(false);
+			_tabPageParameters.ResumeLayout(false);
+			_panelParameters.ResumeLayout(false);
+			_qualityConditionTableViewControlPanel.ResumeLayout(false);
+			_exportButtonPanel.ResumeLayout(false);
+			_tabPageIssueFilters.ResumeLayout(false);
+			_issueFilterPanelBottom.ResumeLayout(false);
+			_issueFilterPanelBottom.PerformLayout();
+			((System.ComponentModel.ISupportInitialize)_dataGridViewIssueFilters).EndInit();
+			toolStripEx1.ResumeLayout(false);
+			toolStripEx1.PerformLayout();
+			_tabPageQualitySpecifications.ResumeLayout(false);
+			((System.ComponentModel.ISupportInitialize)_dataGridViewQualitySpecifications).EndInit();
+			_toolStripElements.ResumeLayout(false);
+			_toolStripElements.PerformLayout();
+			_tabPageOptions.ResumeLayout(false);
+			_groupBoxIdentification.ResumeLayout(false);
+			_groupBoxIdentification.PerformLayout();
+			_groupBoxTablesWithoutGeometry.ResumeLayout(false);
+			_tabPageNotes.ResumeLayout(false);
+			_tabPageNotes.PerformLayout();
+			_panelParametersTop.ResumeLayout(false);
+			_panelParametersTop.PerformLayout();
+			ResumeLayout(false);
+			PerformLayout();
+		}
 
-        }
+		#endregion
 
-        #endregion
-
-        private System.Windows.Forms.TextBox _textBoxName;
-        private System.Windows.Forms.Label _labelName;
-        private System.Windows.Forms.TextBox _textBoxDescription;
-        private System.Windows.Forms.Label _labelDescription;
+		private System.Windows.Forms.TextBox _textBoxName;
+		private System.Windows.Forms.Label _labelName;
+		private System.Windows.Forms.TextBox _textBoxDescription;
+		private System.Windows.Forms.Label _labelDescription;
 		private System.Windows.Forms.ErrorProvider _errorProvider;
 		private ObjectReferenceControl _objectReferenceControlTestDescriptor;
-        private System.Windows.Forms.TextBox _textBoxDescGrid;
-        private System.Windows.Forms.LinkLabel _labelTestDescriptor;
-        private System.Windows.Forms.Button _buttonImport;
-        private System.Windows.Forms.Button _buttonExport;
-        private System.Windows.Forms.OpenFileDialog openFileDialogImport;
-        private System.Windows.Forms.SaveFileDialog saveFileDialogExport;
-        private System.Windows.Forms.TabControl _tabControlParameterValues;
-        private System.Windows.Forms.TabPage tabPageProperties;
-        private System.Windows.Forms.TabPage _tabPageTableView;
-        private System.Windows.Forms.PropertyGrid _propertyGrid;
-        private global::ProSuite.Commons.UI.WinForms.Controls.SplitContainerEx _splitContainer;
-        private System.Windows.Forms.Label _labelStopOnError;
-        private global::ProSuite.Commons.UI.WinForms.Controls.NullableBooleanCombobox _nullableBooleanComboboxIssueType;
-        private global::ProSuite.Commons.UI.WinForms.Controls.NullableBooleanCombobox _nullableBooleanComboboxStopOnError;
-        private System.Windows.Forms.Label _labelAllowErrors;
-        private System.Windows.Forms.Label _labelTestDescriptorDefaultAllowErrors;
-        private System.Windows.Forms.Label _labelTestDescriptorDefaultStopOnError;
-        private System.Windows.Forms.TextBox _textBoxIssueTypeDefault;
-        private System.Windows.Forms.TextBox _textBoxStopOnErrorDefault;
-        private global::ProSuite.Commons.UI.WinForms.Controls.SplitContainerEx _splitContainerProperties;
-        private System.Windows.Forms.Label _labelParameterDescription;
-        private System.Windows.Forms.TextBox _textBoxDescProps;
-        private System.Windows.Forms.TabControl _tabControlDetails;
-        private System.Windows.Forms.TabPage _tabPageParameters;
+		private System.Windows.Forms.TextBox _textBoxDescGrid;
+		private System.Windows.Forms.LinkLabel _labelTestDescriptor;
+		private System.Windows.Forms.Button _buttonImport;
+		private System.Windows.Forms.Button _buttonExport;
+		private System.Windows.Forms.OpenFileDialog openFileDialogImport;
+		private System.Windows.Forms.SaveFileDialog saveFileDialogExport;
+		private System.Windows.Forms.TabControl _tabControlParameterValues;
+		private System.Windows.Forms.TabPage tabPageProperties;
+		private System.Windows.Forms.TabPage _tabPageTableView;
+		private System.Windows.Forms.PropertyGrid _propertyGrid;
+		private global::ProSuite.Commons.UI.WinForms.Controls.SplitContainerEx _splitContainer;
+		private System.Windows.Forms.Label _labelStopOnError;
+		private global::ProSuite.Commons.UI.WinForms.Controls.NullableBooleanCombobox _nullableBooleanComboboxIssueType;
+		private global::ProSuite.Commons.UI.WinForms.Controls.NullableBooleanCombobox _nullableBooleanComboboxStopOnError;
+		private System.Windows.Forms.Label _labelAllowErrors;
+		private System.Windows.Forms.Label _labelTestDescriptorDefaultAllowErrors;
+		private System.Windows.Forms.Label _labelTestDescriptorDefaultStopOnError;
+		private System.Windows.Forms.TextBox _textBoxIssueTypeDefault;
+		private System.Windows.Forms.TextBox _textBoxStopOnErrorDefault;
+		private global::ProSuite.Commons.UI.WinForms.Controls.SplitContainerEx _splitContainerProperties;
+		private System.Windows.Forms.Label _labelParameterDescription;
+		private System.Windows.Forms.TextBox _textBoxDescProps;
+		private System.Windows.Forms.TabControl _tabControlDetails;
+		private System.Windows.Forms.TabPage _tabPageParameters;
 		private System.Windows.Forms.TabPage _tabPageQualitySpecifications;
-        private System.Windows.Forms.ToolStripLabel toolStripLabel1;
-        private System.Windows.Forms.ToolStripButton _toolStripButtonRemoveFromQualitySpecifications;
+		private System.Windows.Forms.ToolStripLabel toolStripLabel1;
+		private System.Windows.Forms.ToolStripButton _toolStripButtonRemoveFromQualitySpecifications;
 		private System.Windows.Forms.ToolStripButton _toolStripButtonAssignToQualitySpecifications;
-        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn1;
-        private System.Windows.Forms.TextBox _textBoxQualitySpecifications;
-        private System.Windows.Forms.Label _labelQualitySpecifications;
+		private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn1;
+		private System.Windows.Forms.TextBox _textBoxQualitySpecifications;
+		private System.Windows.Forms.Label _labelQualitySpecifications;
 		private DoubleBufferedDataGridView _dataGridViewParamGrid;
 		private DoubleBufferedDataGridView _dataGridViewQualitySpecifications;
 		private ToolStripEx _toolStripElements;

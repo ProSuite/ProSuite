@@ -28,10 +28,11 @@ namespace ProSuite.DomainModel.AO.QA
 			string relationshipClassName =
 				queryTableContext.GetRelationshipClassName(associationName, model);
 
-			ITable queryTable = queryTableContext.OpenQueryTable(relationshipClassName, model,
-			                                                     tables, joinType, whereClause);
+			IReadOnlyTable queryTable = queryTableContext.OpenQueryTable(
+				relationshipClassName, model,
+				tables, joinType, whereClause);
 
-			return ReadOnlyTableFactory.Create(queryTable);
+			return queryTable;
 		}
 
 		public static IReadOnlyTable OpenAoQueryTable([NotNull] string associationName,
@@ -87,7 +88,7 @@ namespace ProSuite.DomainModel.AO.QA
 		[NotNull]
 		public static string GetRelationshipClassName([NotNull] IWorkspace masterWorkspace,
 		                                              [NotNull] string associationName,
-		                                              [NotNull] Model model)
+		                                              [NotNull] DdxModel model)
 		{
 			if (masterWorkspace.Type != esriWorkspaceType.esriRemoteDatabaseWorkspace)
 			{

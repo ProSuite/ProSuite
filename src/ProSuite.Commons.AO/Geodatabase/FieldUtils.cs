@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geometry;
@@ -456,9 +458,17 @@ namespace ProSuite.Commons.AO.Geodatabase
 		                                  [CanBeNull] object v2,
 		                                  bool caseSensitive = true)
 		{
-			if (v1 is short && v2 is int)
+			if (v1 is short)
 			{
-				return v2.Equals(Convert.ToInt32(v1));
+				if (v2 is int)
+				{
+					return v2.Equals(Convert.ToInt32(v1));
+				}
+
+				if (v2 is long)
+				{
+					return v2.Equals(Convert.ToInt64(v1));
+				}
 			}
 
 			if (v1 is float f1)
@@ -474,9 +484,17 @@ namespace ProSuite.Commons.AO.Geodatabase
 				}
 			}
 
-			if (v1 is int && v2 is short)
+			if (v1 is int)
 			{
-				return Convert.ToInt32(v2).Equals(v1);
+				if (v2 is short)
+				{
+					return Convert.ToInt32(v2).Equals(v1);
+				}
+
+				if (v2 is long)
+				{
+					return Convert.ToInt64(v1).Equals(v2);
+				}
 			}
 
 			if (v1 is double d1)
@@ -489,6 +507,19 @@ namespace ProSuite.Commons.AO.Geodatabase
 				if (v2 is float f2)
 				{
 					return MathUtils.AreSignificantDigitsEqual(f2, d1);
+				}
+			}
+
+			if (v1 is long)
+			{
+				if (v2 is short)
+				{
+					return Convert.ToInt64(v2).Equals(v1);
+				}
+
+				if (v2 is int)
+				{
+					return Convert.ToInt64(v2).Equals(v1);
 				}
 			}
 
@@ -510,6 +541,42 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 
 			return Equals(v1, v2);
+		}
+
+		public static bool AreBlobValuesEqual([CanBeNull] object v1,
+		                                      [CanBeNull] object v2)
+		{
+			if (v1 is DBNull && v2 == null ||
+			    v1 == null && v2 is DBNull)
+			{
+				// treat null and DBNull the same
+				return true;
+			}
+
+			var memBlobStream1 = v1 as IMemoryBlobStream;
+			var memBlobStream2 = v2 as IMemoryBlobStream;
+
+			if (memBlobStream1 == null || memBlobStream2 == null)
+			{
+				return Equals(memBlobStream1, memBlobStream2);
+			}
+
+			if (memBlobStream1.Size != memBlobStream2.Size)
+			{
+				return false;
+			}
+
+			var blobStream1 = (IMemoryBlobStreamVariant) memBlobStream1;
+			var blobStream2 = (IMemoryBlobStreamVariant) memBlobStream2;
+
+			blobStream1.ExportToVariant(out object bytesObj1);
+			blobStream2.ExportToVariant(out object bytesObj2);
+
+			byte[] bytesMain = (byte[]) bytesObj1;
+			byte[] bytesTest = (byte[]) bytesObj2;
+
+			// In .NET 6 we could use ReadOnlySpan<byte>.SequenceEqual() for better performance
+			return bytesMain.SequenceEqual(bytesTest);
 		}
 
 		[NotNull]

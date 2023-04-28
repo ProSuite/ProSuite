@@ -51,6 +51,7 @@ namespace ProSuite.DomainServices.AO.QA.VerificationReports.Xml
 		private bool _cancelled;
 		[CanBeNull] private AreaOfInterest _areaOfInterest;
 		private readonly IssueReportingContexts _issueContexts;
+		private readonly int _maxExplicitIssuesPerQualityCondition;
 		private readonly VerifiedConditionContexts _verifiedConditionContexts;
 		private readonly bool _reportInvolvedTableForSchemaIssues;
 		[CanBeNull] private IExceptionStatistics _exceptionStatistics;
@@ -69,11 +70,14 @@ namespace ProSuite.DomainServices.AO.QA.VerificationReports.Xml
 		/// <param name="issueContexts"></param>
 		public XmlVerificationReportBuilder(IssueReportingContexts issueContexts,
 		                                    VerifiedConditionContexts verifiedConditionContexts,
-		                                    bool reportInvolvedTableForSchemaIssues)
+		                                    bool reportInvolvedTableForSchemaIssues,
+		                                    int maxExplicitIssuesPerQualityCondition = 256)
 		{
 			_issueContexts = issueContexts;
 			_verifiedConditionContexts = verifiedConditionContexts;
 			_reportInvolvedTableForSchemaIssues = reportInvolvedTableForSchemaIssues;
+
+			_maxExplicitIssuesPerQualityCondition = maxExplicitIssuesPerQualityCondition;
 		}
 
 		#endregion
@@ -141,7 +145,9 @@ namespace ProSuite.DomainServices.AO.QA.VerificationReports.Xml
 
 			issueStats.IssueCount = issueStats.IssueCount + 1;
 
-			if (_issueContexts != IssueReportingContexts.None)
+			if (_issueContexts != IssueReportingContexts.None &&
+			    (_maxExplicitIssuesPerQualityCondition <= 0 ||
+			     issueStats.IssueCount < _maxExplicitIssuesPerQualityCondition))
 			{
 				issueStats.AddIssue(CreateXmlIssue(issue, errorGeometry));
 			}
