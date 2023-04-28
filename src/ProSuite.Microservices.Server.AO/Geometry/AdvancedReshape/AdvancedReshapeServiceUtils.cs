@@ -229,29 +229,25 @@ namespace ProSuite.Microservices.Server.AO.Geometry.AdvancedReshape
 		{
 			foreach (IFeature storedFeature in storedFeatures)
 			{
-				IFeature feature = storedFeature;
 				IGeometry newGeometry = storedFeature.Shape;
 
 				var resultFeature = new ResultObjectMsg();
 
 				GdbObjectMsg resultFeatureMsg =
-					ProtobufGdbUtils.ToGdbObjectMsg(feature, newGeometry,
+					ProtobufGdbUtils.ToGdbObjectMsg(storedFeature, newGeometry,
 					                                storedFeature.Class.ObjectClassID);
 
 				resultFeature.Update = resultFeatureMsg;
 
-				NotificationCollection notifications = reshapedGeometries[newGeometry];
-
-				bool notificationIsWarning = reshaper.NotificationIsWarning;
-
-				if (reshapedGeometries.ContainsKey(newGeometry) &&
+				if (reshapedGeometries.TryGetValue(newGeometry,
+				                                   out NotificationCollection notifications) &&
 				    notifications != null)
 				{
 					if (notifications.Count == 0)
 					{
 						esriUnits units = esriUnits.esriMeters;
 						string message =
-							reshaper.GetSizeChangeMessage(newGeometry, feature, units, units);
+							reshaper.GetSizeChangeMessage(newGeometry, storedFeature, units, units);
 
 						resultFeature.Notifications.Add(message);
 					}
@@ -260,7 +256,7 @@ namespace ProSuite.Microservices.Server.AO.Geometry.AdvancedReshape
 						foreach (INotification notification in notifications)
 						{
 							resultFeature.Notifications.Add(notification.Message);
-							resultFeature.HasWarning = notificationIsWarning;
+							resultFeature.HasWarning = reshaper.NotificationIsWarning;
 						}
 					}
 				}
