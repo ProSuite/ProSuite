@@ -22,6 +22,15 @@ namespace ProSuite.AGP.Editing.Selection
 			return _sorted.First().Select(el => el);
 		}
 
+		// todo daro to picker utils?
+		public static IEnumerable<FeatureClassSelection> OrderByGeometryDimension(
+			IEnumerable<FeatureClassSelection> selectionSets)
+		{
+			return selectionSets
+			       .GroupBy(classSelection => classSelection.ShapeDimension)
+			       .OrderBy(group => group.Key).SelectMany(fcs => fcs);
+		}
+
 		/// <summary>
 		/// Reduces the specified selection to the selection classes with the lowest dimension (the classic picker behaviour).
 		/// </summary>
@@ -39,22 +48,16 @@ namespace ProSuite.AGP.Editing.Selection
 			return shapeGroups.First().Select(fcs => fcs);
 		}
 
-		public static bool ContainsManyFeatures(
-			ICollection<FeatureClassSelection> selectionSets)
+		public static bool ContainsOneFeature(
+			IEnumerable<FeatureClassSelection> selectionSets)
 		{
-			//several features of different layers
-			if (selectionSets.Count() > 1)
-			{
-				return true;
-			}
+			return selectionSets.Sum(set => set.FeatureCount) == 1;
+		}
 
-			//several features of the same layer
-			if (selectionSets.First().FeatureCount > 1)
-			{
-				return true;
-			}
-
-			return false;
+		public static bool ContainsManyFeatures(
+			IEnumerable<FeatureClassSelection> selectionSets)
+		{
+			return selectionSets.Sum(set => set.FeatureCount) > 1;
 		}
 
 		public static IEnumerable<Feature> ReduceRelativeToSelectionGeometry(
