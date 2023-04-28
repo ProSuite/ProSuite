@@ -17,7 +17,7 @@ namespace ProSuite.AGP.Editing.Test.Picker
 			// todo daro remove toList()
 			IEnumerable<IPickableItem> orderedItems = precedence.Order(items).ToList();
 
-			IPickableItem bestPick = precedence.PickBest(orderedItems);
+			IPickableItem bestPick = precedence.PickBest<IPickableItem>(orderedItems);
 
 			return async () =>
 			{

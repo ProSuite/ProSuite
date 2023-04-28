@@ -7,7 +7,7 @@ namespace ProSuite.AGP.Editing.Picker
 	{
 		IEnumerable<IPickableItem> Order(IEnumerable<IPickableItem> items);
 
-		IPickableItem PickBest(IEnumerable<IPickableItem> items);
+		T PickBest<T>(IEnumerable<IPickableItem> items) where T : class, IPickableItem;
 
 		Geometry SelectionGeometry { get; set; }
 	}

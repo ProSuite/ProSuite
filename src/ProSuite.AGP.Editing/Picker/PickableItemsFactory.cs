@@ -32,17 +32,10 @@ namespace ProSuite.AGP.Editing.Picker
 			                        .ToList();
 		}
 
-		public static IList<IPickableItem> CreateFeatureItems(
+		public static IEnumerable<IPickableItem> CreateFeatureItems(
 			[NotNull] IEnumerable<FeatureClassSelection> selectionByClasses)
 		{
-			var pickCandidates = new List<IPickableItem>();
-
-			foreach (FeatureClassSelection classSelection in selectionByClasses)
-			{
-				pickCandidates.AddRange(CreateFeatureItems(classSelection));
-			}
-
-			return pickCandidates;
+			return selectionByClasses.SelectMany(CreateFeatureItems);
 		}
 
 		private static IEnumerable<IPickableItem> CreateFeatureItems(

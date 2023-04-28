@@ -12,6 +12,7 @@ namespace ProSuite.AGP.Editing.Test.Picker
 		public bool IsSelected { get; set; }
 		public Geometry Geometry { get; set; }
 		public ImageSource ItemImageSource { get; }
-		public int Score { get; set; }
+		public double? Score { get; set; }
+		public bool Disjoint { get; set; }
 	}
 }

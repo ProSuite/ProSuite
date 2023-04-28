@@ -22,7 +22,22 @@ namespace ProSuite.Commons.AGP.Core.Test
 		[Test]
 		public void Can_get_distance_between_geometries()
 		{
+			var envelope = GeometryFactory.CreateEnvelope(0, 0, 100, 100);
+			var polygon = GeometryFactory.CreatePolygon(envelope);
+			var mapPoint = MapPointBuilder.CreateMapPoint(50, 50);
 
+			double distance = GeometryEngine.Instance.Distance(polygon, mapPoint);
+			Assert.AreEqual(0, distance);
+			Assert.False(GeometryUtils.Disjoint(polygon, mapPoint));
+
+			ProximityResult result = GeometryEngine.Instance.NearestPoint(polygon, mapPoint);
+			Assert.AreEqual(50, result.Distance);
+
+			mapPoint = MapPointBuilder.CreateMapPoint(110, 100);
+
+			distance = GeometryEngine.Instance.Distance(polygon, mapPoint);
+			Assert.AreEqual(10, distance);
+			Assert.True(GeometryUtils.Disjoint(polygon, mapPoint));
 		}
 
 		[Test]

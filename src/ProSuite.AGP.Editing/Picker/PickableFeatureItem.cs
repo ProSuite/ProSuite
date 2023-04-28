@@ -17,7 +17,7 @@ namespace ProSuite.AGP.Editing.Picker
 			_feature = feature;
 			_basicFeatureLayer = mapMember as BasicFeatureLayer;
 			Oid = feature.GetObjectID();
-			ItemText = text;
+			_displayValue = text;
 			Geometry = feature.GetShape();
 			_itemImageUri = GetImagePath(Geometry);
 		}
@@ -28,6 +28,7 @@ namespace ProSuite.AGP.Editing.Picker
 		private Geometry _geometry;
 		private Uri _itemImageUri;
 		private BitmapImage _img;
+		private readonly string _displayValue;
 
 		private static Uri GetImagePath(Geometry geometry)
 		{
@@ -65,7 +66,12 @@ namespace ProSuite.AGP.Editing.Picker
 		public long Oid { get; }
 
 		// todo daro to DisplayValue
-		public string ItemText { get; }
+		public string ItemText => GetDisplayValue();
+
+		private string GetDisplayValue()
+		{
+			return ToString();
+		}
 
 		public string LayerName => _basicFeatureLayer.Name;
 
@@ -88,7 +94,7 @@ namespace ProSuite.AGP.Editing.Picker
 			}
 		}
 
-		public int Score { get; set; }
+		public double? Score { get; set; }
 
 		public BasicFeatureLayer Layer => _basicFeatureLayer;
 
@@ -104,7 +110,7 @@ namespace ProSuite.AGP.Editing.Picker
 
 		public override string ToString()
 		{
-			return ItemText;
+			return $"{_displayValue} - {Score}";
 		}
 	}
 }

@@ -76,6 +76,16 @@
 		</ResourceDictionary>
 	</Window.Resources>
 
+	<Window.InputBindings>
+		<KeyBinding Key="Escape"
+		            Command="{Binding PressEscapeCommand}"
+		            CommandParameter="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}" />
+		<KeyBinding Key="LeftCtrl" 
+		            Command="{Binding PressControlCommand}"/>
+		<KeyBinding Key="Space" 
+		            Command="{Binding PressControlCommand}"/>
+	</Window.InputBindings>
+
 	<behaviors:Interaction.Triggers>
 		<behaviors:EventTrigger EventName="Deactivated">
 			<behaviors:InvokeCommandAction Command="{Binding Path=DeactivatedCommand}" 

@@ -14,6 +14,7 @@ using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.Editing
 {
+	// todo daro use GeometryUtils, GeometryFactory
 	public static class ToolUtils
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();

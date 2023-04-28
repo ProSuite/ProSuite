@@ -8,6 +8,7 @@ using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
+using Microsoft.Xaml.Behaviors.Core;
 using ProSuite.AGP.Editing.Picker;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Carto;
@@ -15,6 +16,7 @@ using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Misc;
+using ProSuite.Commons.UI;
 using ProSuite.Commons.UI.WPF;
 
 namespace ProSuite.AGP.Editing.PickerUI
@@ -26,11 +28,12 @@ namespace ProSuite.AGP.Editing.PickerUI
 		private readonly Latch _latch = new Latch();
 		private readonly TaskCompletionSource<IPickableItem> _taskCompletionSource;
 
-		private readonly CIMLineSymbol _highlightLineSymbol;
-		private readonly CIMPointSymbol _highlightPointSymbol;
-		private readonly CIMPolygonSymbol _highlightPolygonSymbol;
+		private readonly CIMLineSymbol _lineSymbol;
+		private readonly CIMPointSymbol _pointSymbol;
+		private readonly CIMPolygonSymbol _polygonSymbol;
 
 		private readonly List<IDisposable> _overlays = new List<IDisposable>();
+		[CanBeNull] private IDisposable _selectionGeometryOverlay;
 
 		[CanBeNull] private IPickableItem _selectedItem;
 
@@ -41,28 +44,42 @@ namespace ProSuite.AGP.Editing.PickerUI
 			FlashItemCommand = new RelayCommand<IPickableItem>(FlashItem);
 			SelectionChangedCommand = new RelayCommand<ICloseable>(OnSelectionChanged);
 			DeactivatedCommand = new RelayCommand<ICloseable>(OnWindowDeactivated);
+			PressEscapeCommand = new RelayCommand<ICloseable>(OnPressEscape);
+			PressControlCommand = new ActionCommand(OnPressControl);
 
 			Items = new ObservableCollection<IPickableItem>(pickingCandidates);
 
 			CIMColor magenta = ColorFactory.Instance.CreateRGBColor(255, 0, 255);
 
-			_highlightLineSymbol =
+			_lineSymbol =
 				SymbolFactory.Instance.ConstructLineSymbol(magenta, 4);
 
 			CIMStroke outline =
 				SymbolFactory.Instance.ConstructStroke(
 					magenta, 4, SimpleLineStyle.Solid);
 
-			_highlightPolygonSymbol =
+			_polygonSymbol =
 				SymbolFactory.Instance.ConstructPolygonSymbol(
 					magenta, SimpleFillStyle.Null, outline);
 
-			_highlightPointSymbol = SymbolUtils.CreatePointSymbol(magenta, 6);
+			_pointSymbol = SymbolUtils.CreatePointSymbol(magenta, 6);
+		}
+
+		public PickerViewModel0(IEnumerable<IPickableItem> pickingCandidates,
+		                        Geometry selectionGeometry) : this(pickingCandidates)
+		{
+			QueuedTask.Run(() =>
+			{
+				_selectionGeometryOverlay = MapView.Active.NotNullCallback(
+					mv => mv.AddOverlay(selectionGeometry, _polygonSymbol.MakeSymbolReference()));
+			});
 		}
 
 		public ICommand FlashItemCommand { get; }
 		public ICommand SelectionChangedCommand { get; }
 		public ICommand DeactivatedCommand { get; }
+		public ICommand PressControlCommand { get; }
+		public ICommand PressEscapeCommand { get; }
 
 		/// <summary>
 		/// The awaitable task that provides the result when the dialog is closed.
@@ -89,43 +106,46 @@ namespace ProSuite.AGP.Editing.PickerUI
 
 		private void FlashItem(IPickableItem candidate)
 		{
-			Geometry geometry = candidate.Geometry;
-
-			if (geometry == null)
+			ViewUtils.Try(() =>
 			{
-				return;
-			}
+				Geometry geometry = candidate.Geometry;
 
-			DisposeOverlays();
+				if (geometry == null)
+				{
+					return;
+				}
 
-			Geometry flashGeometry = null;
-			CIMSymbol symbol = null;
+				DisposeOverlays();
 
-			switch (geometry.GeometryType)
-			{
-				case GeometryType.Point:
-					flashGeometry = geometry;
-					symbol = _highlightPointSymbol;
-					break;
-				case GeometryType.Polyline:
-					flashGeometry = geometry;
-					symbol = _highlightLineSymbol;
-					break;
-				case GeometryType.Polygon:
-					flashGeometry = GetPolygonGeometry(geometry);
-					symbol = _highlightPolygonSymbol;
-					break;
-				case GeometryType.Unknown:
-				case GeometryType.Envelope:
-				case GeometryType.Multipoint:
-				case GeometryType.Multipatch:
-				case GeometryType.GeometryBag:
-					break;
-				default:
-					throw new ArgumentOutOfRangeException();
-			}
+				Geometry flashGeometry = null;
+				CIMSymbol symbol = null;
 
-			QueuedTask.Run(() => { AddOverlay(flashGeometry, symbol); });
+				switch (geometry.GeometryType)
+				{
+					case GeometryType.Point:
+						flashGeometry = geometry;
+						symbol = _pointSymbol;
+						break;
+					case GeometryType.Polyline:
+						flashGeometry = geometry;
+						symbol = _lineSymbol;
+						break;
+					case GeometryType.Polygon:
+						flashGeometry = GetPolygonGeometry(geometry);
+						symbol = _polygonSymbol;
+						break;
+					case GeometryType.Unknown:
+					case GeometryType.Envelope:
+					case GeometryType.Multipoint:
+					case GeometryType.Multipatch:
+					case GeometryType.GeometryBag:
+						break;
+					default:
+						throw new ArgumentOutOfRangeException();
+				}
+
+				QueuedTask.Run(() => { AddOverlay(flashGeometry, symbol); });
+			}, _msg);
 		}
 
 		private static Geometry GetPolygonGeometry(Geometry geometry)
@@ -146,7 +166,9 @@ namespace ProSuite.AGP.Editing.PickerUI
 		{
 			MapView.Active.NotNullCallback(mv =>
 			{
-				_overlays.Add(mv.AddOverlay(geometry, symbol.MakeSymbolReference()));
+				_overlays.Add(
+					mv.AddOverlay(
+						geometry, symbol.MakeSymbolReference()));
 			});
 		}
 
@@ -181,18 +203,44 @@ namespace ProSuite.AGP.Editing.PickerUI
 
 			_latch.RunInsideLatch(() =>
 			{
+				window?.Close();
+
 				// IMPORTANT set selected item otherwise
 				// task never completes resulting in deadlock
 				SelectedItem = null;
 
+				Dispose();
+			});
+		}
+
+		private void OnPressEscape(ICloseable window)
+		{
+			if (_latch.IsLatched) return;
+
+			_latch.RunInsideLatch(() =>
+			{
 				window?.Close();
 
-				DisposeOverlays();
+				// IMPORTANT set selected item otherwise
+				// task never completes resulting in deadlock
+				SelectedItem = null;
+
+				Dispose();
 			});
+		}
+
+		private void OnPressControl()
+		{
+			_selectionGeometryOverlay?.Dispose()
 		}
 
 		public void Dispose()
 		{
+			// Don't set to null here, throws an exception:
+			// An attempt was made to transition a task to a final state
+			// when it had already completed.
+			//SelectedItem = null;
+			_selectionGeometryOverlay?.Dispose();
 			DisposeOverlays();
 		}
 	}

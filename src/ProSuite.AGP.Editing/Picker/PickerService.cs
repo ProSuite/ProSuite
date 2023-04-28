@@ -16,19 +16,7 @@ namespace ProSuite.AGP.Editing.Picker
 		                                   IPickerPrecedence precedence)
 			where T : class, IPickableItem
 		{
-			// todo daro remove toList()
-			IEnumerable<IPickableItem> orderedItems = precedence.Order(items).ToList();
-
-			IPickableItem bestPick = precedence.PickBest(orderedItems);
-
-			return async () =>
-			{
-				await Task.FromResult(typeof(T));
-
-				return (T) bestPick;
-			};
-
-			var viewModel = new PickerViewModel0(orderedItems);
+			var viewModel = new PickerViewModel0(precedence.Order(items), precedence.SelectionGeometry);
 
 			return async () => await ShowPickerControlAsync<T>(viewModel, pickerLocation);
 		}
