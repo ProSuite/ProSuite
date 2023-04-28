@@ -454,6 +454,17 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			return Engine.Intersects(a, b);
 		}
 
+		[NotNull]
+		public static MapPoint Centroid([NotNull] Geometry geometry)
+		{
+			Assert.ArgumentNotNull(geometry, nameof(geometry));
+
+			Assert.False(geometry.IsEmpty, "geometry is empty");
+			Assert.True(Engine.IsSimpleAsFeature(geometry), "geometry is not simple");
+
+			return Engine.Centroid(geometry);
+		}
+
 		public static IGeometryEngine Engine
 		{
 			get => _engine ?? GeometryEngine.Instance;
