@@ -404,6 +404,10 @@ namespace ProSuite.Microservices.Server.AO.QA
 					}
 
 					StartSubverifications(unhandledSubverifications);
+					if (task.Status != TaskStatus.Faulted)
+					{
+						CompleteSubverification(completed);
+					}
 					if (_tasks.Count == 0)
 					{
 						EndVerification(QualityVerification);
@@ -624,8 +628,6 @@ namespace ProSuite.Microservices.Server.AO.QA
 			}
 
 			DrainIssues(subVerification);
-
-			ProcessCompletion(subVerification);
 		}
 
 		private IDictionary<IssueKey, IssueKey> _knownIssues;
@@ -725,8 +727,9 @@ namespace ProSuite.Microservices.Server.AO.QA
 			return error;
 		}
 
-		private void ProcessCompletion(SubVerification forSubVerification)
+		private void CompleteSubverification(SubVerification forSubVerification)
 		{
+			Thread.Sleep(100);
 			forSubVerification.Completed = true;
 			IEnvelope tile = forSubVerification.TileEnvelope;
 			IDictionary<IssueKey, IssueKey> knownIssues = KnownIssues;
