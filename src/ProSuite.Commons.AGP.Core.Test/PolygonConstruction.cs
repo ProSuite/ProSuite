@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using ArcGIS.Core.Geometry;
 using NUnit.Framework;
 
-namespace ProSuite.AGP.WorkList.Test
+namespace ProSuite.Commons.AGP.Core.Test
 {
 	public class PolygonConstruction
 	{

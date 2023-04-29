@@ -11,6 +11,7 @@ using ProSuite.AGP.WorkList.Domain;
 using ProSuite.AGP.WorkList.Domain.Persistence;
 using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
 using ProSuite.Commons.AGP.Core.Spatial;
+using ProSuite.Commons.AGP.Core.Test;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.AGP.Hosting;
 
