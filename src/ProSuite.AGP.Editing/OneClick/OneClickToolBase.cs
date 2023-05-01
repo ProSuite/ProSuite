@@ -489,7 +489,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			// todo daro refactor
 			bool result = singlePick
-				              ? await SingleClickSelect_trial(candidatesOfManyLayers,
+				              ? await SingleClickSelectAsync(candidatesOfManyLayers,
 				                                              pickerWindowLocation,
 				                                              PickerPrecedence, selectionMethod)
 				              : await AreaSelect(candidatesOfManyLayers, pickerWindowLocation,
@@ -504,14 +504,35 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		// todo daro when return false?
 		// todo daro ViewUtils.Try araound it?
-		private static async Task<bool> SingleClickSelect_trial(
+		private static async Task<bool> SingleClickSelectAsync(
 			[NotNull] IList<FeatureClassSelection> candidatesOfLayers,
 			Point pickerLocation,
 			IPickerPrecedence pickerPrecedence,
 			SelectionCombinationMethod selectionMethod)
 		{
+			PickerMode pickerMode = GetPickerMode();
+
 			if (GeometryReducer.ContainsOneFeature(candidatesOfLayers))
 			{
+				if (pickerMode == PickerMode.ShowPicker)
+				{
+					PickableFeatureItem pickedItem =
+						await ShowPickerAsync(candidatesOfLayers, pickerPrecedence, pickerLocation);
+
+					if (pickedItem == null)
+					{
+						return false;
+					}
+
+					await QueuedTask.Run(() =>
+					{
+						Selector.SelectFeature(
+							pickedItem.Layer, selectionMethod, pickedItem.Oid);
+					});
+
+					return true;
+				}
+
 				await QueuedTask.Run(() =>
 				{
 					Selector.SelectLayersFeaturesByOids(candidatesOfLayers.First(), selectionMethod);
@@ -519,8 +540,6 @@ namespace ProSuite.AGP.Editing.OneClick
 
 				return true;
 			}
-
-			PickerMode pickerMode = GetPickerMode();
 
 			// ALT pressed: select all, do not show picker
 			if (pickerMode == PickerMode.PickAll)
@@ -556,20 +575,8 @@ namespace ProSuite.AGP.Editing.OneClick
 			// CTRL pressed: show picker
 			if (pickerMode == PickerMode.ShowPicker)
 			{
-				IEnumerable<IPickableItem> items =
-					await QueuedTaskUtils.Run(
-						() => PickableItemsFactory.CreateFeatureItems(
-							GeometryReducer.OrderByGeometryDimension(candidatesOfLayers)));
-
-				var picker = new PickerService();
-
-				Func<Task<PickableFeatureItem>> showPickerControl =
-					await QueuedTaskUtils.Run(() => picker.PickSingle<PickableFeatureItem>(
-						                          items, pickerLocation,
-						                          pickerPrecedence));
-
 				PickableFeatureItem pickedItem =
-					await ViewUtils.TryAsync(showPickerControl(), _msg);
+					await ShowPickerAsync(candidatesOfLayers, pickerPrecedence, pickerLocation);
 
 				if (pickedItem == null)
 				{
@@ -586,6 +593,28 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 
 			return false;
+		}
+
+		private static async Task<PickableFeatureItem> ShowPickerAsync(
+			IList<FeatureClassSelection> candidatesOfLayers,
+			IPickerPrecedence pickerPrecedence,
+			Point pickerLocation)
+		{
+			IEnumerable<IPickableItem> items =
+				await QueuedTaskUtils.Run(
+					() => PickableItemsFactory.CreateFeatureItems(
+						GeometryReducer.OrderByGeometryDimension(candidatesOfLayers)));
+
+			var picker = new PickerService();
+
+			Func<Task<PickableFeatureItem>> showPickerControl =
+				await QueuedTaskUtils.Run(() => picker.PickSingle<PickableFeatureItem>(
+					                          items, pickerLocation,
+					                          pickerPrecedence));
+
+			PickableFeatureItem pickedItem =
+				await ViewUtils.TryAsync(showPickerControl(), _msg);
+			return pickedItem;
 		}
 
 		private static async Task<bool> AreaSelect(
