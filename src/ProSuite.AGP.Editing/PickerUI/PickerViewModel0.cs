@@ -23,6 +23,7 @@ namespace ProSuite.AGP.Editing.PickerUI
 {
 	public class PickerViewModel0 : PropertyChangedBase, IDisposable
 	{
+		private readonly Geometry _selectionGeometry;
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private readonly Latch _latch = new Latch();
@@ -45,7 +46,7 @@ namespace ProSuite.AGP.Editing.PickerUI
 			SelectionChangedCommand = new RelayCommand<ICloseable>(OnSelectionChanged);
 			DeactivatedCommand = new RelayCommand<ICloseable>(OnWindowDeactivated);
 			PressEscapeCommand = new RelayCommand<ICloseable>(OnPressEscape);
-			PressControlCommand = new ActionCommand(OnPressControl);
+			PressSpaceCommand = new ActionCommand(OnPressSpace);
 
 			Items = new ObservableCollection<IPickableItem>(pickingCandidates);
 
@@ -68,17 +69,13 @@ namespace ProSuite.AGP.Editing.PickerUI
 		public PickerViewModel0(IEnumerable<IPickableItem> pickingCandidates,
 		                        Geometry selectionGeometry) : this(pickingCandidates)
 		{
-			QueuedTask.Run(() =>
-			{
-				_selectionGeometryOverlay = MapView.Active.NotNullCallback(
-					mv => mv.AddOverlay(selectionGeometry, _polygonSymbol.MakeSymbolReference()));
-			});
+			_selectionGeometry = selectionGeometry;
 		}
 
 		public ICommand FlashItemCommand { get; }
 		public ICommand SelectionChangedCommand { get; }
 		public ICommand DeactivatedCommand { get; }
-		public ICommand PressControlCommand { get; }
+		public ICommand PressSpaceCommand { get; }
 		public ICommand PressEscapeCommand { get; }
 
 		/// <summary>
@@ -100,7 +97,14 @@ namespace ProSuite.AGP.Editing.PickerUI
 
 				_msg.Debug($"Picked {_selectedItem}");
 
-				_taskCompletionSource.SetResult(_selectedItem);
+				try
+				{
+					_taskCompletionSource.SetResult(_selectedItem);
+				}
+				catch (Exception e)
+				{
+					_msg.Debug("Error setting selected item", e);
+				}
 			}
 		}
 
@@ -184,54 +188,53 @@ namespace ProSuite.AGP.Editing.PickerUI
 
 		private void OnSelectionChanged(ICloseable window)
 		{
-			if (_latch.IsLatched) return;
-
-			_latch.RunInsideLatch(() =>
+			ViewUtils.Try(() =>
 			{
-				if (_selectedItem == null)
-				{
-					return;
-				}
+				if (_latch.IsLatched) return;
 
-				window?.Close();
-			});
+				_latch.RunInsideLatch(() =>
+				{
+					if (_selectedItem == null)
+					{
+						return;
+					}
+
+					window?.Close();
+				});
+			}, _msg);
 		}
 
 		private void OnWindowDeactivated(ICloseable window)
 		{
-			if (_latch.IsLatched) return;
-
-			_latch.RunInsideLatch(() =>
+			ViewUtils.Try(() =>
 			{
-				window?.Close();
+				if (_latch.IsLatched) return;
 
-				// IMPORTANT set selected item otherwise
-				// task never completes resulting in deadlock
-				SelectedItem = null;
+				_latch.RunInsideLatch(() =>
+				{
+					window?.Close();
 
-				Dispose();
-			});
+					// IMPORTANT set selected item otherwise
+					// task never completes resulting in deadlock
+					SelectedItem = null;
+
+					Dispose();
+				});
+			}, _msg);
 		}
 
 		private void OnPressEscape(ICloseable window)
 		{
-			if (_latch.IsLatched) return;
-
-			_latch.RunInsideLatch(() =>
-			{
-				window?.Close();
-
-				// IMPORTANT set selected item otherwise
-				// task never completes resulting in deadlock
-				SelectedItem = null;
-
-				Dispose();
-			});
+			OnWindowDeactivated(window);
 		}
 
-		private void OnPressControl()
+		private void OnPressSpace()
 		{
-			_selectionGeometryOverlay?.Dispose()
+			QueuedTask.Run(() =>
+			{
+				_selectionGeometryOverlay = MapView.Active.NotNullCallback(
+					mv => mv.AddOverlay(_selectionGeometry, _polygonSymbol.MakeSymbolReference()));
+			});
 		}
 
 		public void Dispose()
@@ -240,6 +243,7 @@ namespace ProSuite.AGP.Editing.PickerUI
 			// An attempt was made to transition a task to a final state
 			// when it had already completed.
 			//SelectedItem = null;
+			
 			_selectionGeometryOverlay?.Dispose();
 			DisposeOverlays();
 		}

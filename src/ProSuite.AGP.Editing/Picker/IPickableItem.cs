@@ -17,6 +17,6 @@ namespace ProSuite.AGP.Editing.Picker
 
 		ImageSource ItemImageSource { get; }
 
-		double? Score { get; set; }
+		double Score { get; set; }
 	}
 }

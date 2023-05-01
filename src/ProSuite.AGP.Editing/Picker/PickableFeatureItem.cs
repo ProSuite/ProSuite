@@ -94,7 +94,7 @@ namespace ProSuite.AGP.Editing.Picker
 			}
 		}
 
-		public double? Score { get; set; }
+		public double Score { get; set; }
 
 		public BasicFeatureLayer Layer => _basicFeatureLayer;
 
