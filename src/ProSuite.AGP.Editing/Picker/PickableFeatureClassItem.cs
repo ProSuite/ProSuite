@@ -12,25 +12,32 @@ using Geometry = ArcGIS.Core.Geometry.Geometry;
 
 namespace ProSuite.AGP.Editing.Picker
 {
-	public class PickableFeatureClassItem : IPickableItem
+	// todo daro refactor
+	public class PickableFeatureClassItem : IPickableFeatureClassItem
 	{
-		private readonly string _itemText;
+		private readonly IReadOnlyList<long> _oids;
 		private bool _isSelected;
 		[CanBeNull] private Geometry _geometry;
 		private readonly Uri _itemImageUri;
 		private List<BasicFeatureLayer> _belongingFeatureLayers;
 		private BitmapImage _img;
+		private readonly string _featureClassName;
 
-		public PickableFeatureClassItem(FeatureClass featureClass, esriGeometryType geometryType,
-		                                List<BasicFeatureLayer> belongingFeatureLayers)
+		public PickableFeatureClassItem(FeatureClass featureClass,
+		                                IReadOnlyList<long> oids,
+		                                esriGeometryType geometryType,
+		                                List<BasicFeatureLayer> layers)
 		{
-			_itemText = featureClass.GetName();
+			_oids = oids;
+			_featureClassName = featureClass.GetName();
 			_geometry = null;
 			_itemImageUri = GetImagePath(geometryType);
-			BelongingFeatureLayers = belongingFeatureLayers;
+			Layers = layers;
 		}
 
-		public string ItemText => _itemText;
+		public IReadOnlyList<long> Oids => _oids;
+
+		public string ItemText => ToString();
 
 		public bool IsSelected
 		{
@@ -58,9 +65,8 @@ namespace ProSuite.AGP.Editing.Picker
 		}
 
 		public double Score { get; set; }
-		public bool Disjoint { get; set; }
 
-		public List<BasicFeatureLayer> BelongingFeatureLayers
+		public List<BasicFeatureLayer> Layers
 		{
 			get => _belongingFeatureLayers;
 			set => _belongingFeatureLayers = value;
@@ -97,6 +103,11 @@ namespace ProSuite.AGP.Editing.Picker
 		protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
 		{
 			PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+		}
+
+		public override string ToString()
+		{
+			return $"{_featureClassName}: #{Oids.Count}";
 		}
 	}
 }

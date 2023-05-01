@@ -66,12 +66,7 @@ namespace ProSuite.AGP.Editing.Picker
 		public long Oid { get; }
 
 		// todo daro to DisplayValue
-		public string ItemText => GetDisplayValue();
-
-		private string GetDisplayValue()
-		{
-			return ToString();
-		}
+		public string ItemText => ToString();
 
 		public string LayerName => _basicFeatureLayer.Name;
 

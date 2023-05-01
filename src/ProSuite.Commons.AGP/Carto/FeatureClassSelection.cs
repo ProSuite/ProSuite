@@ -6,6 +6,7 @@ using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Gdb;
+using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -13,6 +14,7 @@ using ProSuite.Commons.Text;
 
 namespace ProSuite.Commons.AGP.Carto
 {
+	// todo daro refactor!
 	// todo daro move to .\Selection?
 	/// <summary>
 	/// Encapsulates a set of selected features that belong to the same FeatureClass and possibly
@@ -23,7 +25,7 @@ namespace ProSuite.Commons.AGP.Carto
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private List<Feature> _features;
-		private List<long> _objectIds;
+		private IList<long> _objectIds;
 
 		private readonly GeometryType _shapeType;
 		private readonly SpatialReference _outputSpatialReference;
@@ -54,7 +56,7 @@ namespace ProSuite.Commons.AGP.Carto
 		/// <param name="featureLayer"></param>
 		/// <param name="outputSpatialReference"></param>
 		public FeatureClassSelection([NotNull] FeatureClass featureClass,
-		                             [NotNull] List<long> objectIds,
+		                             [NotNull] IList<long> objectIds,
 		                             [CanBeNull] BasicFeatureLayer featureLayer,
 		                             [CanBeNull] SpatialReference outputSpatialReference)
 			: this(featureClass, featureLayer, outputSpatialReference)
@@ -83,7 +85,7 @@ namespace ProSuite.Commons.AGP.Carto
 		/// <summary>
 		/// The (top-most) layer which references the FeatureClass of the selected features.
 		/// </summary>
-		[CanBeNull]
+		[NotNull]
 		public BasicFeatureLayer BasicFeatureLayer { get; }
 
 		public int FeatureCount => _objectIds?.Count ?? _features.Count;
@@ -102,7 +104,7 @@ namespace ProSuite.Commons.AGP.Carto
 					}
 				}
 
-				return _objectIds.AsReadOnly();
+				return new ReadOnlyList<long>(_objectIds);
 			}
 		}
 
@@ -165,16 +167,8 @@ namespace ProSuite.Commons.AGP.Carto
 
 		public override string ToString()
 		{
-			_objectIds.Sort();
-
-			string oids = StringUtils.Concatenate(_objectIds, "; ");
-
-			if (BasicFeatureLayer != null)
-			{
-				return $"{BasicFeatureLayer.Name}, {oids}";
-			}
-
-			return $"{FeatureClass.GetDefinition().GetName()}, {oids}";
+			return
+				$"{BasicFeatureLayer.Name}, {StringUtils.Concatenate(_objectIds.OrderBy(id => id), "; ")}";
 		}
 	}
 }

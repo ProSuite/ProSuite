@@ -61,12 +61,12 @@ namespace ProSuite.AGP.Editing.PickerUI
 			[NotNull] IEnumerable<FeatureClassSelection> selectionByLayer,
 			Point pickerWindowLocation)
 		{
-			IList<IPickableItem> pickingCandidates =
+			IEnumerable<IPickableItem> pickingCandidates =
 				await QueuedTaskUtils.Run(
 					() => PickableItemsFactory.CreateFeatureClassItems(
 						selectionByLayer));
 
-			var picker = new Picker(pickingCandidates, pickerWindowLocation);
+			var picker = new Picker(pickingCandidates.ToList(), pickerWindowLocation);
 
 			return await picker.PickSingle() as PickableFeatureClassItem;
 		}
