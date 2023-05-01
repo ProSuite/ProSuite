@@ -11,6 +11,7 @@ namespace ProSuite.AGP.Editing.Picker
 {
 	public class PickableFeatureItem : PropertyChangedBase, IPickableFeatureItem
 	{
+		private readonly string _displayValue;
 		private BitmapImage _image;
 		private bool _selected;
 
@@ -23,8 +24,10 @@ namespace ProSuite.AGP.Editing.Picker
 			Layer = layer;
 			Oid = feature.GetObjectID();
 			Geometry = feature.GetShape();
+			_displayValue = $"{GdbObjectUtils.GetDisplayValue(Feature, Layer.Name)}";
 		}
 
+		[NotNull]
 		public Feature Feature { get; }
 
 		public long Oid { get; }
@@ -55,7 +58,7 @@ namespace ProSuite.AGP.Editing.Picker
 			// TODO: Alternatively allow using layer.QueryDisplayExpressions. But typically this is just the OID which is not very useful -> Requires configuration
 			// string[] displayExpressions = layer.QueryDisplayExpressions(new[] { feature.GetObjectID() });
 
-			return $"{GdbObjectUtils.GetDisplayValue(Feature, Layer.Name)} - {Score}";
+			return $"{_displayValue} - {Score}";
 		}
 	}
 }

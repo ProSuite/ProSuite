@@ -670,7 +670,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		//}
 
 		[NotNull]
-		private static async Task<T> ShowPickerAsync<T>(
+		protected static async Task<T> ShowPickerAsync<T>(
 			IEnumerable<IPickableItem> items, IPickerPrecedence pickerPrecedence,
 			Point pickerLocation)
 			where T : class, IPickableItem

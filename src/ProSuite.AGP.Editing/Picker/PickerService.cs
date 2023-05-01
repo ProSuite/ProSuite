@@ -9,6 +9,16 @@ using ProSuite.Commons.UI.WPF;
 
 namespace ProSuite.AGP.Editing.Picker
 {
+	// TODOs:
+	// - Improve item text (subtype, expression)
+	// - Consider tool tip for pickable items with all attributes
+	// - Check performance, consider not just clipping but also weeding
+	// - Configurable selection tolerance (consider using snapping?)
+	// - The highlighting in the map happens after the hovering over the list item
+	//   -> About 1-2 pixels of extra tolerance.
+	// - All tools: Select by polygon (currently just for  RAEF). Decide on mode vs keep P pressed.
+	//              Use sketch output mode Screen (and convert before selection)
+
 	public class PickerService : IPickerService
 	{
 		public Func<Task<T>> PickSingle<T>(IEnumerable<IPickableItem> items,
@@ -16,15 +26,34 @@ namespace ProSuite.AGP.Editing.Picker
 		                                   IPickerPrecedence precedence)
 			where T : class, IPickableItem
 		{
-			var viewModel = new PickerViewModel0(precedence.Order(items), precedence.SelectionGeometry);
+			// todo daro refactor. maybe add new dedicated method
+			PickerViewModel viewModel;
+
+			if (typeof(T) == typeof(IPickableFeatureItem))
+			{
+				// todo daro remove ToList()
+				var featureCandidates = precedence.Order(items).OfType<IPickableFeatureItem>();
+
+				var candidates = precedence.OrderByDrawingOutline(featureCandidates);
+
+				viewModel = new PickerViewModel(candidates, precedence.SelectionGeometry);
+			}
+			else if (typeof(T) == typeof(IPickableFeatureClassItem))
+			{
+				viewModel = new PickerViewModel(items, precedence.SelectionGeometry);
+			}
+			else
+			{
+				throw new ArgumentOutOfRangeException();
+			}
 
 			return async () => await ShowPickerControlAsync<T>(viewModel, pickerLocation);
 		}
 
-		private static async Task<T> ShowPickerControlAsync<T>(PickerViewModel0 vm, Point location)
+		private static async Task<T> ShowPickerControlAsync<T>(PickerViewModel vm, Point location)
 			where T : class, IPickableItem
 		{
-			using (var window = new PickerProWindow(vm))
+			using (var window = new PickerWindow(vm))
 			{
 				SetWindowLocation(window, location);
 
@@ -36,7 +65,7 @@ namespace ProSuite.AGP.Editing.Picker
 			}
 		}
 
-		private static void SetWindowLocation(PickerProWindow window, Point location)
+		private static void SetWindowLocation(PickerWindow window, Point location)
 		{
 			Window ownerWindow = Assert.NotNull(Application.Current.MainWindow);
 
