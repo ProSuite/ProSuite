@@ -1,9 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using ArcGIS.Core.Data;
-using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Carto;
-using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.Editing.Picker
@@ -31,16 +29,13 @@ namespace ProSuite.AGP.Editing.Picker
 					IPickableFeatureClassItem item = itemsByName[name];
 
 					item.Layers.Add(selection.BasicFeatureLayer);
-					
 				}
 				else
 				{
-					BasicFeatureLayer layer = selection.BasicFeatureLayer;
-
 					var item = new PickableFeatureClassItem(featureClass,
-					                                        selection.ObjectIds,
-					                                        layer.ShapeType,
-					                                        new List<BasicFeatureLayer> { layer });
+					                                        selection.ObjectIds);
+
+					item.Layers.Add(selection.BasicFeatureLayer);
 
 					itemsByName.Add(name, item);
 				}
@@ -52,23 +47,10 @@ namespace ProSuite.AGP.Editing.Picker
 		private static IEnumerable<IPickableItem> CreateFeatureItems(
 			[NotNull] FeatureClassSelection classSelection)
 		{
-			foreach (Feature feature in classSelection.GetFeatures())
-			{
-				string text = GetPickerItemText(feature, classSelection.BasicFeatureLayer);
-
-				yield return new PickableFeatureItem(classSelection.BasicFeatureLayer, feature, text);
-			}
-		}
-
-		private static string GetPickerItemText([NotNull] Feature feature,
-		                                        [CanBeNull] MapMember layer = null)
-		{
-			// TODO: Alternatively allow using layer.QueryDisplayExpressions. But typically this is just the OID which is not very useful -> Requires configuration
-			// string[] displayExpressions = layer.QueryDisplayExpressions(new[] { feature.GetObjectID() });
-
-			string className = layer == null ? feature.GetTable().GetName() : layer.Name;
-
-			return GdbObjectUtils.GetDisplayValue(feature, className);
+			return classSelection.GetFeatures()
+			                     .Select(feature =>
+				                             new PickableFeatureItem(
+					                             classSelection.BasicFeatureLayer, feature));
 		}
 	}
 }

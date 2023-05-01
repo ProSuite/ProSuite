@@ -8,10 +8,10 @@ namespace ProSuite.AGP.Editing.Test.Picker
 	class PickableFeatureMock : IPickableItem
 	{
 		public event PropertyChangedEventHandler PropertyChanged;
-		public string ItemText { get; }
-		public bool IsSelected { get; set; }
+		public string DisplayValue { get; }
+		public bool Selected { get; set; }
 		public Geometry Geometry { get; set; }
-		public ImageSource ItemImageSource { get; }
+		public ImageSource ImageSource { get; }
 		public double Score { get; set; }
 		public bool Disjoint { get; set; }
 	}

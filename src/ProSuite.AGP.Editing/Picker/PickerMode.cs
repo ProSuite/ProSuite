@@ -1,8 +1,6 @@
-namespace ProSuite.AGP.Editing.Selection
+namespace ProSuite.AGP.Editing.Picker
 {
 	// todo daro refactor: what is default?
-	// todo daro rename?
-	// todo daro move?
 	public enum PickerMode
 	{
 		ShowPicker,

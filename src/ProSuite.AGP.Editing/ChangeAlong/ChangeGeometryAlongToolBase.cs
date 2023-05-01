@@ -350,7 +350,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			    selectionByClass.Sum(s => s.FeatureCount) > 1)
 			{
 				PickableFeatureItem picked =
-					await PickerUtils.PickSingleFeatureAsync(
+					await PickerUI.PickerUtils.PickSingleFeatureAsync(
 						selectionByClass, pickerWindowLocation);
 
 				if (picked == null)

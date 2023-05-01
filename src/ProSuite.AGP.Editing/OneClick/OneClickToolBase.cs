@@ -497,10 +497,7 @@ namespace ProSuite.AGP.Editing.OneClick
 				                                 PickerPrecedence,
 				                                 selectionMethod);
 
-			MapView activeMapView = MapView.Active;
-
-			// todo daro use MapViewUtils?
-			await QueuedTask.Run(() => ProcessSelection(activeMapView, progressor));
+			await QueuedTask.Run(() => ProcessSelection(MapView.Active, progressor));
 
 			return result;
 		}

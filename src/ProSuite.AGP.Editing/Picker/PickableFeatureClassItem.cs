@@ -1,109 +1,73 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
+using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Mapping;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using Geometry = ArcGIS.Core.Geometry.Geometry;
 
 namespace ProSuite.AGP.Editing.Picker
 {
-	// todo daro refactor
-	public class PickableFeatureClassItem : IPickableFeatureClassItem
+	public class PickableFeatureClassItem : PropertyChangedBase, IPickableFeatureClassItem
 	{
-		private readonly IReadOnlyList<long> _oids;
-		private bool _isSelected;
-		[CanBeNull] private Geometry _geometry;
-		private readonly Uri _itemImageUri;
-		private List<BasicFeatureLayer> _belongingFeatureLayers;
-		private BitmapImage _img;
 		private readonly string _featureClassName;
+		private BitmapImage _image;
+		private bool _selected;
 
+		/// <summary>
+		/// Has to be called on MCT
+		/// </summary>
 		public PickableFeatureClassItem(FeatureClass featureClass,
-		                                IReadOnlyList<long> oids,
-		                                esriGeometryType geometryType,
-		                                List<BasicFeatureLayer> layers)
+		                                IReadOnlyList<long> oids)
 		{
-			_oids = oids;
 			_featureClassName = featureClass.GetName();
-			_geometry = null;
-			_itemImageUri = GetImagePath(geometryType);
-			Layers = layers;
+			Oids = oids;
 		}
 
-		public IReadOnlyList<long> Oids => _oids;
+		public IReadOnlyList<long> Oids { get; }
 
-		public string ItemText => ToString();
+		// todo daro get feature shapes and union
+		public Geometry Geometry { get; }
 
-		public bool IsSelected
+		public List<BasicFeatureLayer> Layers { get; } = new List<BasicFeatureLayer>();
+
+		public bool Selected
 		{
-			get => _isSelected;
-			set => _isSelected = value;
+			get => _selected;
+			set => SetProperty(ref _selected, value);
 		}
 
-		public Geometry Geometry
-		{
-			get => _geometry;
-			set => _geometry = value;
-		}
+		public string DisplayValue => ToString();
 
-		public ImageSource ItemImageSource
+		[NotNull]
+		public ImageSource ImageSource
 		{
 			get
 			{
-				if (_img == null)
+				BitmapImage image = _image;
+
+				if (image != null)
 				{
-					_img = new BitmapImage(_itemImageUri);
+					return _image;
 				}
 
-				return _img;
+				// todo daro refactor, unkown image
+				BasicFeatureLayer layer = Assert.NotNull(Layers.FirstOrDefault());
+
+				_image = new BitmapImage(PickerUtils.GetImagePath(layer.ShapeType));
+
+				return _image;
 			}
 		}
 
 		public double Score { get; set; }
-
-		public List<BasicFeatureLayer> Layers
-		{
-			get => _belongingFeatureLayers;
-			set => _belongingFeatureLayers = value;
-		}
-
-		private static Uri GetImagePath(esriGeometryType geometryType)
-		{
-			switch (geometryType)
-			{
-				case esriGeometryType.esriGeometryPoint:
-				case esriGeometryType.esriGeometryMultipoint:
-					return new Uri(
-						@"pack://application:,,,/ProSuite.AGP.Editing;component/PickerUI/Images/PointGeometry.bmp");
-				case esriGeometryType.esriGeometryLine:
-				case esriGeometryType.esriGeometryPolyline:
-					return new Uri(
-						@"pack://application:,,,/ProSuite.AGP.Editing;component/PickerUI/Images/LineGeometry.bmp");
-				case esriGeometryType.esriGeometryPolygon:
-					return new Uri(
-						@"pack://application:,,,/ProSuite.AGP.Editing;component/PickerUI/Images/PolygonGeometry.bmp",
-						UriKind.Absolute);
-				case esriGeometryType.esriGeometryMultiPatch:
-					return new Uri(
-						@"pack://application:,,,/ProSuite.AGP.Editing;component/PickerUI/Images/MultipatchGeometry.bmp");
-				default:
-					throw new ArgumentOutOfRangeException(
-						$"Unsupported geometry type: {geometryType}");
-			}
-		}
-
-		public event PropertyChangedEventHandler PropertyChanged;
-
-		[NotifyPropertyChangedInvocator]
-		protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
-		{
-			PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-		}
 
 		public override string ToString()
 		{

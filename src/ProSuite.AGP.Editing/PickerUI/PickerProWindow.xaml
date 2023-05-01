@@ -68,8 +68,8 @@
 								CommandParameter="{Binding}" />
 						</behaviors:EventTrigger>
 					</behaviors:Interaction.Triggers>
-					<Image Source="{Binding ItemImageSource}" Style="{StaticResource Image}" />
-					<TextBlock Text="{Binding ItemText}" Style="{StaticResource TextBlock}" />
+					<Image Source="{Binding ImageSource}" Style="{StaticResource Image}" />
+					<TextBlock Text="{Binding DisplayValue}" Style="{StaticResource TextBlock}" />
 				</DockPanel>
 			</DataTemplate>
 
@@ -107,7 +107,7 @@
                         the background color of highlighted items is blackish 
                         (bad contrast). -->
 					<Style TargetType="{x:Type ListBoxItem}">
-						<Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+						<Setter Property="IsSelected" Value="{Binding Selected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
 					</Style>
 				</ListBox.ItemContainerStyle>
 

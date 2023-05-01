@@ -119,7 +119,7 @@ namespace ProSuite.AGP.Editing.PickerUI
 
 		public IEnumerable<IPickableItem> SelectedItems
 		{
-			get { return _pickableItems.Where(item => item.IsSelected); }
+			get { return _pickableItems.Where(item => item.Selected); }
 		}
 
 		/// <summary>

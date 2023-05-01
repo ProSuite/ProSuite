@@ -5,7 +5,8 @@ namespace ProSuite.AGP.Editing.Picker
 {
 	public interface IPickableFeatureClassItem: IPickableItem
 	{
-		List<BasicFeatureLayer> Layers { get; set; }
+		List<BasicFeatureLayer> Layers { get; }
+
 		IReadOnlyList<long> Oids { get; }
 	}
 }

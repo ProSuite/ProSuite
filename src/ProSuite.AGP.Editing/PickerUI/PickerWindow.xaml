@@ -165,7 +165,7 @@
                 <ListBox.ItemContainerStyle>
                     <Style TargetType="{x:Type ListBoxItem}">
                         <Setter Property="IsSelected"
-                                Value="{Binding Mode=TwoWay, Path=IsSelected}" />
+                                Value="{Binding Mode=TwoWay, Path=Selected}" />
                     </Style>
                 </ListBox.ItemContainerStyle>
             </ListBox>

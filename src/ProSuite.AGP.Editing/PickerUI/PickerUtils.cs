@@ -10,6 +10,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.Editing.PickerUI
 {
+	// todo daro Move to Picker.PickerUitîls
 	public static class PickerUtils
 	{
 		// TODOs:

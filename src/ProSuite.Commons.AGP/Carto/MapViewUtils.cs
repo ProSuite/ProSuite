@@ -9,13 +9,13 @@ namespace ProSuite.Commons.AGP.Carto
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		public static void NotNullCallback([CanBeNull] this MapView mapView,
+		public static void NotNullCallback([CanBeNull] this MapView mv,
 		                                   [NotNull] Action<MapView> action)
 		{
-			if (mapView == null) return;
+			if (mv == null) return;
 			try
 			{
-				action(mapView);
+				action(mv);
 			}
 			catch (Exception e)
 			{
@@ -24,19 +24,19 @@ namespace ProSuite.Commons.AGP.Carto
 		}
 
 		[CanBeNull]
-		public static T NotNullCallback<T>([CanBeNull] this MapView mapView,
+		public static T NotNullCallback<T>([CanBeNull] this MapView mv,
 		                                   [NotNull] Func<MapView, T> action)
 		{
 			T result = default;
 
 			try
 			{
-				if (mapView == null)
+				if (mv == null)
 				{
 					return result;
 				}
 
-				result = action(mapView);
+				result = action(mv);
 			}
 			catch (Exception e)
 			{
