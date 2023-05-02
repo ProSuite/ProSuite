@@ -89,4 +89,7 @@
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Selection\" />
+  </ItemGroup>
 </Project>

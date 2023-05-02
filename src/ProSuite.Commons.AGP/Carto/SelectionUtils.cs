@@ -5,12 +5,14 @@ using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
 
 namespace ProSuite.Commons.AGP.Carto
 {
+	// todo daro move to Selection?
 	public static class SelectionUtils
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
@@ -60,7 +62,7 @@ namespace ProSuite.Commons.AGP.Carto
 				                  ObjectIDs = objectIds
 			                  };
 
-			using (ArcGIS.Core.Data.Selection selection = basicFeatureLayer.Select(queryFilter, combinationMethod))
+			using (Selection selection = basicFeatureLayer.Select(queryFilter, combinationMethod))
 			{
 				if (_msg.IsVerboseDebugEnabled)
 				{
@@ -103,7 +105,7 @@ namespace ProSuite.Commons.AGP.Carto
 
 		public static IEnumerable<Feature> GetSelectedFeatures([CanBeNull] BasicFeatureLayer layer)
 		{
-			ArcGIS.Core.Data.Selection selection = layer?.GetSelection();
+			Selection selection = layer?.GetSelection();
 
 			if (selection == null)
 			{
@@ -128,6 +130,14 @@ namespace ProSuite.Commons.AGP.Carto
 			MapSelectionChangedEventArgs selectionChangedArgs)
 		{
 			return selectionChangedArgs.Selection;
+		}
+
+		public static int GetFeatureCount(
+			[NotNull] IEnumerable<FeatureClassSelection> selection)
+		{
+			Assert.ArgumentNotNull(selection, nameof(selection));
+
+			return selection.Sum(set => set.FeatureCount);
 		}
 	}
 }

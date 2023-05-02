@@ -1,6 +1,10 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using ArcGIS.Core.CIM;
-using ArcGIS.Core.Geometry;
+using ProSuite.Commons.AGP.Carto;
+using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.Editing.Picker
 {
@@ -35,38 +39,15 @@ namespace ProSuite.AGP.Editing.Picker
 			}
 		}
 
-		public static GeometryType Translate(esriGeometryType geometryType)
+		[NotNull]
+		public static IEnumerable<FeatureClassSelection> OrderByGeometryDimension(
+			[NotNull] IEnumerable<FeatureClassSelection> selection)
 		{
-			switch (geometryType)
-			{
-				case esriGeometryType.esriGeometryPoint:
-				case esriGeometryType.esriGeometryMultipoint:
-					return GeometryType.Point;
-				case esriGeometryType.esriGeometryPolyline:
-					return GeometryType.Polyline;
-				case esriGeometryType.esriGeometryPolygon:
-					return GeometryType.Polygon;
-				case esriGeometryType.esriGeometryEnvelope:
-					return GeometryType.Envelope;
-				case esriGeometryType.esriGeometryPath:
-				case esriGeometryType.esriGeometryAny:
-				case esriGeometryType.esriGeometryMultiPatch:
-				case esriGeometryType.esriGeometryRing:
-				case esriGeometryType.esriGeometryLine:
-				case esriGeometryType.esriGeometryCircularArc:
-				case esriGeometryType.esriGeometryBezier3Curve:
-				case esriGeometryType.esriGeometryEllipticArc:
-				case esriGeometryType.esriGeometryBag:
-				case esriGeometryType.esriGeometryTriangleStrip:
-				case esriGeometryType.esriGeometryTriangleFan:
-				case esriGeometryType.esriGeometryRay:
-				case esriGeometryType.esriGeometrySphere:
-				case esriGeometryType.esriGeometryTriangles:
-				case esriGeometryType.esriGeometryNull:
-					return GeometryType.Unknown;
-				default:
-					throw new ArgumentOutOfRangeException(nameof(geometryType), geometryType, null);
-			}
+			Assert.ArgumentNotNull(selection, nameof(selection));
+
+			return selection
+			       .GroupBy(classSelection => classSelection.ShapeDimension)
+			       .OrderBy(group => group.Key).SelectMany(fcs => fcs);
 		}
 	}
 }

@@ -496,7 +496,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			IPickerPrecedence pickerPrecedence,
 			SelectionCombinationMethod selectionMethod)
 		{
-			int featureCount = GeometryReducer.GetFeatureCount(candidatesOfLayers);
+			int featureCount = SelectionUtils.GetFeatureCount(candidatesOfLayers);
 
 			PickerMode pickerMode = pickerPrecedence.GetPickerMode(featureCount);
 
@@ -508,7 +508,7 @@ namespace ProSuite.AGP.Editing.OneClick
 					IEnumerable<IPickableItem> items =
 						await QueuedTask.Run(
 							() => PickableItemsFactory.CreateFeatureItems(
-								GeometryReducer.OrderByGeometryDimension(candidatesOfLayers)));
+								PickerUtils.OrderByGeometryDimension(candidatesOfLayers)));
 
 					var pickedItem =
 						await ShowPickerAsync<IPickableFeatureItem>(
@@ -556,7 +556,7 @@ namespace ProSuite.AGP.Editing.OneClick
 						// IEnumerables are enumerated later
 						IEnumerable<IPickableItem> items =
 							PickableItemsFactory.CreateFeatureItems(
-								GeometryReducer.OrderByGeometryDimension(candidatesOfLayers));
+								PickerUtils.OrderByGeometryDimension(candidatesOfLayers));
 
 						var pickedItem =
 							pickerPrecedence.PickBest<IPickableFeatureItem>(items);
@@ -573,7 +573,7 @@ namespace ProSuite.AGP.Editing.OneClick
 				IEnumerable<IPickableItem> items =
 					await QueuedTask.Run(
 						() => PickableItemsFactory.CreateFeatureItems(
-							GeometryReducer.OrderByGeometryDimension(candidatesOfLayers)));
+							PickerUtils.OrderByGeometryDimension(candidatesOfLayers)));
 
 				IPickableFeatureItem pickedItem =
 					await ShowPickerAsync<IPickableFeatureItem>(
@@ -604,7 +604,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			PickerMode pickerMode =
 				pickerPrecedence.GetPickerMode(
-					GeometryReducer.GetFeatureCount(candidatesOfLayers), true);
+					SelectionUtils.GetFeatureCount(candidatesOfLayers), true);
 
 			//CTRL was pressed: picker shows FC's to select from
 			if (pickerMode == PickerMode.ShowPicker)
@@ -612,7 +612,7 @@ namespace ProSuite.AGP.Editing.OneClick
 				IEnumerable<IPickableItem> items =
 					await QueuedTask.Run(
 						() => PickableItemsFactory.CreateFeatureClassItems(
-							GeometryReducer.OrderByGeometryDimension(candidatesOfLayers)));
+							PickerUtils.OrderByGeometryDimension(candidatesOfLayers)));
 
 				IPickableFeatureClassItem pickedItem =
 					await ShowPickerAsync<IPickableFeatureClassItem>(

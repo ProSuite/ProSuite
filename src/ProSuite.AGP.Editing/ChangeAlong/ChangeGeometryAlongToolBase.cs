@@ -352,7 +352,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 				IEnumerable<IPickableItem> items =
 					await QueuedTask.Run(
 						() => PickableItemsFactory.CreateFeatureItems(
-							GeometryReducer.OrderByGeometryDimension(selectionByClass)));
+							PickerUtils.OrderByGeometryDimension(selectionByClass)));
 
 				PickerPrecedence.SelectionGeometry = sketch;
 
