@@ -107,9 +107,6 @@ namespace ProSuite.AGP.Editing.Selection
 			_msg.InfoFormat(LocalizableStrings.SelectionTool_LogPromptForSelection);
 		}
 
-		protected override SelectionSettings SelectionSettings =>
-			new SelectionSettings(SketchGeometryType.Rectangle, 50);
-
 		// todo daro: to DamlUtils?
 		private static void SetCheckState(string damlId, bool isChecked)
 		{

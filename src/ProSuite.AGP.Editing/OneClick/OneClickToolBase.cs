@@ -62,7 +62,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		protected bool AllowNotApplicableFeaturesInSelection { get; set; } = true;
 
 		protected virtual SelectionSettings SelectionSettings { get; } =
-			new SelectionSettings(SketchGeometryType.Rectangle, 50);
+			new SelectionSettings();
 
 		public virtual IPickerPrecedence PickerPrecedence =>
 			_pickerPrecedence ?? (_pickerPrecedence = new StandardPickerPrecedence());
