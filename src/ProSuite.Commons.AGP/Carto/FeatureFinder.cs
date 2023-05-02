@@ -15,6 +15,8 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AGP.Carto
 {
+	// todo daro refactor
+	// todo daro reformat
 	/// <summary>
 	/// Provides functionality to find features in the map. The features' shapes are returned in the
 	/// map spatial reference.
@@ -48,7 +50,7 @@ namespace ProSuite.Commons.AGP.Carto
 
 		public bool DelayFeatureFetching { get; set; }
 
-		public IEnumerable<FeatureClassSelection> FindFeaturesByLayer(
+		public IEnumerable<FeatureSelectionBase> FindFeaturesByLayer(
 			[NotNull] Geometry searchGeometry,
 			[CanBeNull] Predicate<BasicFeatureLayer> layerPredicate = null,
 			[CanBeNull] Predicate<Feature> featurePredicate = null,
@@ -64,7 +66,7 @@ namespace ProSuite.Commons.AGP.Carto
 			                           cancelableProgressor);
 		}
 
-		public IEnumerable<FeatureClassSelection> FindFeaturesByLayer(
+		public IEnumerable<FeatureSelectionBase> FindFeaturesByLayer(
 			IEnumerable<BasicFeatureLayer> layers,
 			Geometry searchGeometry,
 			Predicate<Feature> featurePredicate,
@@ -99,7 +101,7 @@ namespace ProSuite.Commons.AGP.Carto
 
 					if (objectIds.Count > 0)
 					{
-						yield return new FeatureClassSelection(
+						yield return new OidSelection(
 							featureClass, objectIds, basicFeatureLayer, outputSpatialReference);
 					}
 				}
@@ -112,15 +114,14 @@ namespace ProSuite.Commons.AGP.Carto
 
 					if (features.Count > 0)
 					{
-						yield return new FeatureClassSelection(featureClass, features, basicFeatureLayer,
-						                                       outputSpatialReference);
+						yield return new FeatureSelection(featureClass, features, basicFeatureLayer);
 					}
 				}
 			}
 		}
 
 		// todo daro rename to FindFeaturesByTable?
-		public IEnumerable<FeatureClassSelection> FindFeaturesByFeatureClass(
+		public IEnumerable<FeatureSelectionBase> FindFeaturesByFeatureClass(
 			[NotNull] Geometry searchGeometry,
 			[CanBeNull] Predicate<BasicFeatureLayer> layerPredicate = null,
 			[CanBeNull] Predicate<Feature> featurePredicate = null,
@@ -145,7 +146,7 @@ namespace ProSuite.Commons.AGP.Carto
 		/// criteria on the feature level.</param>
 		/// <param name="cancelableProgressor"></param>
 		/// <returns></returns>
-		public IEnumerable<FeatureClassSelection> FindFeaturesByFeatureClass(
+		public IEnumerable<FeatureSelectionBase> FindFeaturesByFeatureClass(
 			IEnumerable<BasicFeatureLayer> featureLayers,
 			Geometry searchGeometry,
 			Predicate<Feature> featurePredicate,
@@ -190,9 +191,9 @@ namespace ProSuite.Commons.AGP.Carto
 
 				if (featureClass != null && features.Count > 0)
 				{
-					yield return new FeatureClassSelection(
+					yield return new FeatureSelection(
 						featureClass, features.DistinctBy(f => f.GetObjectID()).ToList(),
-						basicFeatureLayer, outputSpatialReference);
+						basicFeatureLayer);
 				}
 			}
 		}
@@ -212,7 +213,7 @@ namespace ProSuite.Commons.AGP.Carto
 		/// SelectedFeatures.</remarks>
 		/// <returns>The found features in the same spatial reference as the provided selected features</returns>
 		[NotNull]
-		public IEnumerable<FeatureClassSelection> FindIntersectingFeaturesByFeatureClass(
+		public IEnumerable<FeatureSelectionBase> FindIntersectingFeaturesByFeatureClass(
 			[NotNull] Dictionary<MapMember, List<long>> intersectingSelectedFeatures,
 			[CanBeNull] Predicate<BasicFeatureLayer> layerPredicate = null,
 			[CanBeNull] Envelope extent = null,

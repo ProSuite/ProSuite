@@ -442,7 +442,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			var pickerWindowLocation = new Point(0, 0);
 
 			bool singlePick = false;
-			List<FeatureClassSelection> candidatesOfManyLayers =
+			List<FeatureSelectionBase> candidatesOfManyLayers =
 				await QueuedTaskUtils.Run(() =>
 				{
 					selectionGeometry = ToolUtils.SketchToSearchGeometry(sketchGeometry,
@@ -492,7 +492,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		// todo daro when return false?
 		// todo daro ViewUtils.Try araound it?
 		private static async Task<bool> SingleSelectAsync(
-			[NotNull] IList<FeatureClassSelection> candidatesOfLayers,
+			[NotNull] IList<FeatureSelectionBase> candidatesOfLayers,
 			Point pickerLocation,
 			IPickerPrecedence pickerPrecedence,
 			SelectionCombinationMethod selectionMethod)
@@ -616,7 +616,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		}
 
 		private static async Task<bool> AreaSelect(
-			[NotNull] IList<FeatureClassSelection> candidatesOfLayers,
+			[NotNull] IList<FeatureSelectionBase> candidatesOfLayers,
 			Point pickerLocation,
 			IPickerPrecedence pickerPrecedence,
 			SelectionCombinationMethod selectionMethod)
@@ -644,8 +644,8 @@ namespace ProSuite.AGP.Editing.OneClick
 
 				await QueuedTask.Run(() =>
 				{
-					foreach (FeatureClassSelection featureClassSelection in
-					         pickedItem.Layers.Select(layer => new FeatureClassSelection(
+					foreach (OidSelection featureClassSelection in
+					         pickedItem.Layers.Select(layer => new OidSelection(
 						                                  LayerUtils.GetFeatureClass(layer),
 						                                  pickedItem.Oids.ToList(), layer,
 						                                  MapView.Active.Map.SpatialReference)))
@@ -698,7 +698,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			return pickedItem;
 		}
 
-		private IEnumerable<FeatureClassSelection> FindFeaturesOfAllLayers(
+		private IEnumerable<FeatureSelectionBase> FindFeaturesOfAllLayers(
 			[NotNull] Geometry searchGeometry,
 			SpatialRelationship spatialRelationship)
 		{
@@ -706,7 +706,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			if (mapView == null)
 			{
-				return Enumerable.Empty<FeatureClassSelection>();
+				return Enumerable.Empty<FeatureSelectionBase>();
 			}
 
 			var featureFinder = new FeatureFinder(mapView)

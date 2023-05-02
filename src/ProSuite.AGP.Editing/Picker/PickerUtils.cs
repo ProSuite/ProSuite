@@ -41,8 +41,8 @@ namespace ProSuite.AGP.Editing.Picker
 		}
 
 		[NotNull]
-		public static IEnumerable<FeatureClassSelection> OrderByGeometryDimension(
-			[NotNull] IEnumerable<FeatureClassSelection> selection)
+		public static IEnumerable<FeatureSelectionBase> OrderByGeometryDimension(
+			[NotNull] IEnumerable<FeatureSelectionBase> selection)
 		{
 			Assert.ArgumentNotNull(selection, nameof(selection));
 

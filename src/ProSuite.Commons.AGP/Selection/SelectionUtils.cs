@@ -109,27 +109,28 @@ namespace ProSuite.Commons.AGP.Selection
 		}
 
 		public static void SelectFeatures(
-			[NotNull] IEnumerable<FeatureClassSelection> featuresPerLayer,
+			[NotNull] IEnumerable<FeatureSelectionBase> featuresPerLayer,
 			SelectionCombinationMethod selectionCombinationMethod)
 		{
 			Assert.ArgumentNotNull(featuresPerLayer, nameof(featuresPerLayer));
 
-			foreach (FeatureClassSelection featureClassSelection in featuresPerLayer)
+			foreach (FeatureSelectionBase featureClassSelection in featuresPerLayer)
 			{
 				SelectFeatures(featureClassSelection.BasicFeatureLayer,
-				               selectionCombinationMethod, featureClassSelection.ObjectIds);
+				               selectionCombinationMethod,
+				               featureClassSelection.GetOids().ToList());
 			}
 		}
 
 		public static void SelectFeatures(
-			[NotNull] FeatureClassSelection featureClassSelection,
+			[NotNull] FeatureSelectionBase featureClassSelection,
 			SelectionCombinationMethod selectionCombinationMethod)
 		{
 			Assert.ArgumentNotNull(featureClassSelection, nameof(featureClassSelection));
 
 			SelectFeatures(featureClassSelection.BasicFeatureLayer,
 			               selectionCombinationMethod,
-			               featureClassSelection.ObjectIds);
+			               featureClassSelection.GetOids().ToList());
 		}
 
 		public static IEnumerable<Feature> GetSelectedFeatures([NotNull] MapView activeView)
@@ -174,11 +175,11 @@ namespace ProSuite.Commons.AGP.Selection
 		}
 
 		public static int GetFeatureCount(
-			[NotNull] IEnumerable<FeatureClassSelection> selection)
+			[NotNull] IEnumerable<FeatureSelectionBase> selection)
 		{
 			Assert.ArgumentNotNull(selection, nameof(selection));
 
-			return selection.Sum(set => set.FeatureCount);
+			return selection.Sum(set => set.GetCount());
 		}
 	}
 }

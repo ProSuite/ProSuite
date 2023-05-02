@@ -17,7 +17,6 @@ using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Picker;
 using ProSuite.AGP.Editing.Properties;
-using ProSuite.AGP.Editing.Selection;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Framework;
@@ -326,7 +325,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 			bool isSingleClick = false;
 			Point pickerLocation = new Point();
-			List<FeatureClassSelection> selectionByClass =
+			List<FeatureSelectionBase> selectionByClass =
 				await QueuedTaskUtils.Run(() =>
 				{
 					sketch = ToolUtils.SketchToSearchGeometry(
@@ -348,7 +347,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			IEnumerable<Feature> targetFeatures;
 
 			if (isSingleClick &&
-			    selectionByClass.Sum(s => s.FeatureCount) > 1)
+			    SelectionUtils.GetFeatureCount(selectionByClass) > 1)
 			{
 				IEnumerable<IPickableItem> items =
 					await QueuedTask.Run(
@@ -380,7 +379,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			return true;
 		}
 
-		private List<FeatureClassSelection> FindTargetFeatureCandidates(
+		private List<FeatureSelectionBase> FindTargetFeatureCandidates(
 			[NotNull] Geometry sketch,
 			TargetFeatureSelection targetFeatureSelection,
 			[NotNull] List<Feature> selectedFeatures,
