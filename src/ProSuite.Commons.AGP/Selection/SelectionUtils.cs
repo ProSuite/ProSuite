@@ -57,11 +57,17 @@ namespace ProSuite.Commons.AGP.Selection
 		/// <param name="basicFeatureLayer"></param>
 		/// <param name="combinationMethod"></param>
 		/// <param name="objectIds"></param>
+		/// <param name="clearExistingSelection"></param>
 		public static void SelectFeatures([NotNull] BasicFeatureLayer basicFeatureLayer,
 		                                  SelectionCombinationMethod combinationMethod,
 		                                  [NotNull] IReadOnlyList<long> objectIds,
 		                                  bool clearExistingSelection = false)
 		{
+			if (objectIds.Count == 0)
+			{
+				return;
+			}
+
 			if (clearExistingSelection)
 			{
 				ClearSelection();
@@ -100,6 +106,30 @@ namespace ProSuite.Commons.AGP.Selection
 					SelectFeatures(layer, SelectionCombinationMethod.Add, objectIds);
 				}
 			}
+		}
+
+		public static void SelectFeatures(
+			[NotNull] IEnumerable<FeatureClassSelection> featuresPerLayer,
+			SelectionCombinationMethod selectionCombinationMethod)
+		{
+			Assert.ArgumentNotNull(featuresPerLayer, nameof(featuresPerLayer));
+
+			foreach (FeatureClassSelection featureClassSelection in featuresPerLayer)
+			{
+				SelectFeatures(featureClassSelection.BasicFeatureLayer,
+				               selectionCombinationMethod, featureClassSelection.ObjectIds);
+			}
+		}
+
+		public static void SelectFeatures(
+			[NotNull] FeatureClassSelection featureClassSelection,
+			SelectionCombinationMethod selectionCombinationMethod)
+		{
+			Assert.ArgumentNotNull(featureClassSelection, nameof(featureClassSelection));
+
+			SelectFeatures(featureClassSelection.BasicFeatureLayer,
+			               selectionCombinationMethod,
+			               featureClassSelection.ObjectIds);
 		}
 
 		public static IEnumerable<Feature> GetSelectedFeatures([NotNull] MapView activeView)
@@ -149,31 +179,6 @@ namespace ProSuite.Commons.AGP.Selection
 			Assert.ArgumentNotNull(selection, nameof(selection));
 
 			return selection.Sum(set => set.FeatureCount);
-		}
-
-		public static void SelectLayersFeaturesByOids(
-			[NotNull] IEnumerable<FeatureClassSelection> featuresPerLayer,
-			SelectionCombinationMethod selectionCombinationMethod)
-		{
-			foreach (FeatureClassSelection layerFeatures in featuresPerLayer)
-			{
-				SelectFeatures(layerFeatures.BasicFeatureLayer,
-				               selectionCombinationMethod, layerFeatures.ObjectIds);
-			}
-		}
-
-		public static void SelectLayersFeaturesByOids(
-			FeatureClassSelection featuresPerLayer,
-			SelectionCombinationMethod selectionCombinationMethod)
-		{
-			if (! featuresPerLayer.ObjectIds.Any())
-			{
-				return;
-			}
-
-			SelectFeatures(featuresPerLayer.BasicFeatureLayer,
-			               selectionCombinationMethod,
-			               featuresPerLayer.ObjectIds);
 		}
 	}
 }
