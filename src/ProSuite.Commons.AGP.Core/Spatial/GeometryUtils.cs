@@ -469,12 +469,15 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 		{
 			if (clipExtentRotationDeg == 0)
 			{
-				return (Polygon) Engine.Clip(polygon, clipExtent);
+				Envelope clipExtentSref =
+					EnsureSpatialReference(clipExtent, polygon.SpatialReference);
+
+				return (Polygon) Engine.Clip(polygon, clipExtentSref);
 			}
 
 			// It's a polygon:
 			Polygon envelopeAsPoly =
-				GeometryFactory.CreatePolygon(clipExtent, clipExtent.SpatialReference);
+				GeometryFactory.CreatePolygon(clipExtent, polygon.SpatialReference);
 
 			double rotationInRadians = MathUtils.ToRadians(clipExtentRotationDeg);
 
@@ -535,6 +538,16 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			if (a is null || b is null) return false;
 
 			return Engine.Intersects(a, b);
+		}
+
+		[NotNull]
+		public static MapPoint Centroid([NotNull] Geometry geometry)
+		{
+			Assert.ArgumentNotNull(geometry, nameof(geometry));
+
+			Assert.False(geometry.IsEmpty, "geometry is empty");
+
+			return Engine.Centroid(geometry);
 		}
 
 		public static IGeometryEngine Engine

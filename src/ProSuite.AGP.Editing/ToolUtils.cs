@@ -8,12 +8,14 @@ using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Spatial;
+using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.Editing
 {
+	// todo daro use GeometryUtils, GeometryFactory
 	public static class ToolUtils
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();

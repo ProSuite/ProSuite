@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Core.Internal.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Hosting;
@@ -20,6 +21,78 @@ public class GeometryUtilsTest
 	}
 
 	[Test]
+		public void Can_get_distance_between_geometries()
+		{
+			var envelope = GeometryFactory.CreateEnvelope(0, 0, 100, 100);
+			var polygon = GeometryFactory.CreatePolygon(envelope);
+			var mapPoint = MapPointBuilder.CreateMapPoint(50, 50);
+
+			double distance = GeometryEngine.Instance.Distance(polygon, mapPoint);
+			Assert.AreEqual(0, distance);
+			Assert.False(GeometryUtils.Disjoint(polygon, mapPoint));
+
+			ProximityResult result = GeometryEngine.Instance.NearestPoint(polygon, mapPoint);
+			Assert.AreEqual(50, result.Distance);
+
+			mapPoint = MapPointBuilder.CreateMapPoint(110, 100);
+
+			distance = GeometryEngine.Instance.Distance(polygon, mapPoint);
+			Assert.AreEqual(10, distance);
+			Assert.True(GeometryUtils.Disjoint(polygon, mapPoint));
+		}
+
+		[Test]
+		public void Can_get_nearest_point_to_geometry__point_inside_geometry()
+		{
+			var envelope = GeometryFactory.CreateEnvelope(0, 0, 100, 100);
+			var polygon = GeometryFactory.CreatePolygon(envelope);
+			var mapPoint = MapPointBuilder.CreateMapPoint(75, 50);
+
+			ProximityResult result = GeometryEngine.Instance.NearestPoint(polygon, mapPoint);
+
+			Assert.NotNull(result);
+			Assert.AreEqual(25, result.Distance);
+			Assert.AreEqual(0, result.PartIndex);
+			Assert.AreEqual(100, result.Point.X);
+			Assert.AreEqual(50, result.Point.Y);
+			Assert.True(result.IsRightSide);
+		}
+
+		[Test]
+		public void Can_get_nearest_point_to_geometry__point_outside_geometry()
+		{
+			var envelope = GeometryFactory.CreateEnvelope(0, 0, 100, 100);
+			var polygon = GeometryFactory.CreatePolygon(envelope);
+			var mapPoint = MapPointBuilder.CreateMapPoint(110, 100);
+
+			ProximityResult result = GeometryEngine.Instance.NearestPoint(polygon, mapPoint);
+
+			Assert.NotNull(result);
+			Assert.AreEqual(10, result.Distance);
+			Assert.AreEqual(0, result.PartIndex);
+			Assert.AreEqual(100, result.Point.X);
+			Assert.AreEqual(100, result.Point.Y);
+			Assert.False(result.IsRightSide);
+		}
+
+		[Test]
+		public void Can_get_nearest_point_to_geometry__point_on_geometry()
+		{
+			var envelope = GeometryFactory.CreateEnvelope(0, 0, 100, 100);
+			var polygon = GeometryFactory.CreatePolygon(envelope);
+			var mapPoint = MapPointBuilder.CreateMapPoint(100, 50);
+
+			ProximityResult result = GeometryEngine.Instance.NearestPoint(polygon, mapPoint);
+
+			Assert.NotNull(result);
+			Assert.AreEqual(0, result.Distance);
+			Assert.AreEqual(0, result.PartIndex);
+			Assert.AreEqual(100, result.Point.X);
+			Assert.AreEqual(50, result.Point.Y);
+			Assert.False(result.IsRightSide);
+		}
+
+		[Test]
 	public void CheckLineSegmentAngle()
 	{
 		// About LineSegment.Angle property:

@@ -23,7 +23,7 @@
 		<DebugType>pdbonly</DebugType>
 	</PropertyGroup>
 
-  <!-- .net 6 WPF reference -->
+  <!-- .net 6 Winforms and WPF references: -->
   <PropertyGroup>
     <UseWpf>true</UseWpf>
   </PropertyGroup>
@@ -69,7 +69,6 @@
       <SpecificVersion>False</SpecificVersion>
       <Private>False</Private>
     </Reference>
-
   </ItemGroup>
 
   <ItemGroup>
@@ -78,9 +77,6 @@
 
   <ItemGroup>
     <Compile Include="..\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
-    <!--<Compile Update="PickerUI\PickerWindow.xaml.cs">
-      <DependentUpon>PickerWindow.xaml</DependentUpon>
-    </Compile>-->
     <Compile Update="Properties\LocalizableStrings.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -143,10 +139,4 @@
     <Content Include="Properties\Images\SelectionToolUser.cur" />
     <Content Include="Properties\Images\SelectionToolUserShift.cur" />
   </ItemGroup>
-  <!--<ItemGroup>
-    <Page Include="PickerUI\PickerWindow.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-  </ItemGroup>-->
 </Project>

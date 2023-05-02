@@ -8,6 +8,7 @@ using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Gdb;
+using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -49,13 +50,14 @@ namespace ProSuite.Commons.AGP.Carto
 
 		public IEnumerable<FeatureClassSelection> FindFeaturesByLayer(
 			[NotNull] Geometry searchGeometry,
-			[CanBeNull] Predicate<FeatureLayer> layerPredicate = null,
+			[CanBeNull] Predicate<BasicFeatureLayer> layerPredicate = null,
 			[CanBeNull] Predicate<Feature> featurePredicate = null,
 			CancelableProgressor cancelableProgressor = null)
 		{
-			Predicate<FeatureLayer> predicate = fl => IsLayerApplicable(fl, layerPredicate);
+			// todo daro refactor
+			Predicate<BasicFeatureLayer> predicate = fl => IsLayerApplicable(fl, layerPredicate);
 
-			IEnumerable<FeatureLayer>
+			IEnumerable<BasicFeatureLayer>
 				featureLayers = MapUtils.GetFeatureLayers(predicate, _mapView);
 
 			return FindFeaturesByLayer(featureLayers, searchGeometry, featurePredicate,
@@ -63,14 +65,14 @@ namespace ProSuite.Commons.AGP.Carto
 		}
 
 		public IEnumerable<FeatureClassSelection> FindFeaturesByLayer(
-			IEnumerable<FeatureLayer> featureLayers,
+			IEnumerable<BasicFeatureLayer> layers,
 			Geometry searchGeometry,
 			Predicate<Feature> featurePredicate,
 			CancelableProgressor cancelableProgressor)
 		{
 			SpatialReference outputSpatialReference = _mapView.Map.SpatialReference;
 
-			foreach (FeatureLayer featureLayer in featureLayers)
+			foreach (BasicFeatureLayer basicFeatureLayer in layers)
 			{
 				if (cancelableProgressor != null
 				    && cancelableProgressor.CancellationToken.IsCancellationRequested)
@@ -86,19 +88,19 @@ namespace ProSuite.Commons.AGP.Carto
 				QueryFilter filter =
 					GdbQueryUtils.CreateSpatialFilter(searchGeometry, SpatialRelationship);
 
-				FeatureClass featureClass = featureLayer.GetFeatureClass();
+				FeatureClass featureClass = LayerUtils.GetFeatureClass(basicFeatureLayer);
 
 				if (DelayFeatureFetching)
 				{
 					filter.SubFields = featureClass.GetDefinition().GetObjectIDField();
 
 					List<long> objectIds =
-						LayerUtils.SearchObjectIds(featureLayer, filter, featurePredicate).ToList();
+						LayerUtils.SearchObjectIds(basicFeatureLayer, filter, featurePredicate).ToList();
 
 					if (objectIds.Count > 0)
 					{
 						yield return new FeatureClassSelection(
-							featureClass, objectIds, featureLayer, outputSpatialReference);
+							featureClass, objectIds, basicFeatureLayer, outputSpatialReference);
 					}
 				}
 				else
@@ -106,26 +108,27 @@ namespace ProSuite.Commons.AGP.Carto
 					filter.OutputSpatialReference = outputSpatialReference;
 
 					List<Feature> features =
-						LayerUtils.SearchRows(featureLayer, filter, featurePredicate).ToList();
+						LayerUtils.SearchRows(basicFeatureLayer, filter, featurePredicate).ToList();
 
 					if (features.Count > 0)
 					{
-						yield return new FeatureClassSelection(featureClass, features, featureLayer,
+						yield return new FeatureClassSelection(featureClass, features, basicFeatureLayer,
 						                                       outputSpatialReference);
 					}
 				}
 			}
 		}
 
+		// todo daro rename to FindFeaturesByTable?
 		public IEnumerable<FeatureClassSelection> FindFeaturesByFeatureClass(
 			[NotNull] Geometry searchGeometry,
-			[CanBeNull] Predicate<FeatureLayer> layerPredicate = null,
+			[CanBeNull] Predicate<BasicFeatureLayer> layerPredicate = null,
 			[CanBeNull] Predicate<Feature> featurePredicate = null,
 			CancelableProgressor cancelableProgressor = null)
 		{
-			Predicate<FeatureLayer> predicate = fl => IsLayerApplicable(fl, layerPredicate);
+			Predicate<BasicFeatureLayer> predicate = fl => IsLayerApplicable(fl, layerPredicate);
 
-			IEnumerable<FeatureLayer>
+			IEnumerable<BasicFeatureLayer>
 				featureLayers = MapUtils.GetFeatureLayers(predicate, _mapView);
 
 			return FindFeaturesByFeatureClass(featureLayers, searchGeometry, featurePredicate,
@@ -143,13 +146,13 @@ namespace ProSuite.Commons.AGP.Carto
 		/// <param name="cancelableProgressor"></param>
 		/// <returns></returns>
 		public IEnumerable<FeatureClassSelection> FindFeaturesByFeatureClass(
-			IEnumerable<FeatureLayer> featureLayers,
+			IEnumerable<BasicFeatureLayer> featureLayers,
 			Geometry searchGeometry,
 			Predicate<Feature> featurePredicate,
 			CancelableProgressor cancelableProgressor)
 		{
-			IEnumerable<IGrouping<IntPtr, FeatureLayer>> layersGroupedByClass =
-				featureLayers.GroupBy(fl => fl.GetFeatureClass().Handle);
+			IEnumerable<IGrouping<IntPtr, BasicFeatureLayer>> layersGroupedByClass =
+				featureLayers.GroupBy(fl => fl.GetTable().Handle);
 
 			SpatialReference outputSpatialReference = _mapView.Map.SpatialReference;
 
@@ -158,9 +161,9 @@ namespace ProSuite.Commons.AGP.Carto
 				// One query per distinct definition query, then make OIDs distinct
 
 				FeatureClass featureClass = null;
-				FeatureLayer featureLayer = null;
+				BasicFeatureLayer basicFeatureLayer = null;
 				List<Feature> features = new List<Feature>();
-				foreach (IGrouping<string, FeatureLayer> layers in layersInClass.GroupBy(
+				foreach (IGrouping<string, BasicFeatureLayer> layers in layersInClass.GroupBy(
 					         fl => fl.DefinitionQuery))
 				{
 					if (cancelableProgressor != null
@@ -169,8 +172,8 @@ namespace ProSuite.Commons.AGP.Carto
 						yield break;
 					}
 
-					featureLayer = layers.First();
-					featureClass = featureLayer.GetFeatureClass();
+					basicFeatureLayer = layers.First();
+					featureClass = LayerUtils.GetFeatureClass(basicFeatureLayer);
 
 					QueryFilter filter =
 						GdbQueryUtils.CreateSpatialFilter(searchGeometry, SpatialRelationship);
@@ -189,7 +192,7 @@ namespace ProSuite.Commons.AGP.Carto
 				{
 					yield return new FeatureClassSelection(
 						featureClass, features.DistinctBy(f => f.GetObjectID()).ToList(),
-						featureLayer, outputSpatialReference);
+						basicFeatureLayer, outputSpatialReference);
 				}
 			}
 		}
@@ -211,7 +214,7 @@ namespace ProSuite.Commons.AGP.Carto
 		[NotNull]
 		public IEnumerable<FeatureClassSelection> FindIntersectingFeaturesByFeatureClass(
 			[NotNull] Dictionary<MapMember, List<long>> intersectingSelectedFeatures,
-			[CanBeNull] Predicate<FeatureLayer> layerPredicate = null,
+			[CanBeNull] Predicate<BasicFeatureLayer> layerPredicate = null,
 			[CanBeNull] Envelope extent = null,
 			[CanBeNull] CancelableProgressor cancelableProgressor = null)
 		{
@@ -239,25 +242,25 @@ namespace ProSuite.Commons.AGP.Carto
 		}
 
 		private bool IsLayerApplicable(
-			[CanBeNull] FeatureLayer featureLayer,
-			[CanBeNull] Predicate<FeatureLayer> layerPredicate)
+			[CanBeNull] BasicFeatureLayer layer,
+			[CanBeNull] Predicate<BasicFeatureLayer> layerPredicate)
 		{
-			return IsLayerApplicable(featureLayer, layerPredicate, FeatureSelectionType,
+			return IsLayerApplicable(layer, layerPredicate, FeatureSelectionType,
 			                         SelectedFeatures);
 		}
 
 		private static bool IsLayerApplicable(
-			[CanBeNull] FeatureLayer featureLayer,
-			[CanBeNull] Predicate<FeatureLayer> layerPredicate,
+			[CanBeNull] BasicFeatureLayer basicFeatureLayer,
+			[CanBeNull] Predicate<BasicFeatureLayer> layerPredicate,
 			TargetFeatureSelection? targetSelectionType,
 			[CanBeNull] ICollection<Feature> selectedFeatures)
 		{
-			if (featureLayer?.GetFeatureClass() == null)
+			if (! LayerUtils.IsVisible(basicFeatureLayer))
 			{
 				return false;
 			}
 
-			if (layerPredicate != null && ! layerPredicate(featureLayer))
+			if (layerPredicate != null && ! layerPredicate(basicFeatureLayer))
 			{
 				return false;
 			}
@@ -267,30 +270,49 @@ namespace ProSuite.Commons.AGP.Carto
 				return true;
 			}
 
+			if (basicFeatureLayer == null)
+			{
+				return false;
+			}
+
 			if ((targetSelectionType == TargetFeatureSelection.VisibleEditableFeatures ||
 			     targetSelectionType == TargetFeatureSelection.VisibleSelectableEditableFeatures) &&
-			    ! featureLayer.IsEditable)
+			    ! basicFeatureLayer.IsEditable)
 			{
 				return false;
 			}
 
 			if ((targetSelectionType == TargetFeatureSelection.VisibleSelectableFeatures ||
-			     targetSelectionType == TargetFeatureSelection.VisibleSelectableEditableFeatures) &&
-			    ! featureLayer.IsSelectable)
-			{
-				return false;
-			}
-
-			if (! featureLayer.IsVisible)
+			     targetSelectionType ==
+			     TargetFeatureSelection.VisibleSelectableEditableFeatures) &&
+			    ! basicFeatureLayer.IsSelectable)
 			{
 				return false;
 			}
 
 			if (targetSelectionType == TargetFeatureSelection.SameClass &&
 			    ! Assert.NotNull(selectedFeatures).Any(
-				    f => DatasetUtils.IsSameClass(f.GetTable(), featureLayer.GetTable())))
+				    f => DatasetUtils.IsSameClass(f.GetTable(), basicFeatureLayer.GetTable())))
 			{
 				return false;
+			}
+
+			if (basicFeatureLayer is FeatureLayer fl)
+			{
+				if (fl.GetFeatureClass() == null)
+				{
+					return false;
+				}
+			}
+
+			// AnnotationLayer has it's own GetFeatureClass() method. There is no base
+			// method on BasicFeatureLayer.
+			if (basicFeatureLayer is AnnotationLayer annoLayer)
+			{
+				if (annoLayer.GetFeatureClass() == null)
+				{
+					return false;
+				}
 			}
 
 			return true;

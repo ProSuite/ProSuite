@@ -1,25 +1,26 @@
+using System;
+using System.Threading.Tasks;
+using ProSuite.AGP.Editing.Picker;
+
 namespace ProSuite.AGP.Editing.PickerUI
 {
-	/// <summary>
-	/// Interaction logic for PickerWindow.xaml
-	/// </summary>
-	public partial class PickerWindow
+	public partial class PickerWindow : IDisposable, ICloseable
 	{
-		public PickerWindow(PickerViewModel vm)
+		private readonly PickerViewModel _viewModel;
+
+		public PickerWindow(PickerViewModel viewModel)
 		{
 			InitializeComponent();
 
-			vm.CloseAction = Close;
+			_viewModel = viewModel;
+			DataContext = viewModel;
+		}
 
-			DataContext = vm;
+		public Task<IPickableItem> Task => _viewModel.Task;
 
-			// The Deactivated event should be fired if the user clicks outside the window.
-			// However, this sometimes does not work. The failing condition is:
-			// - Debugger NOT attached
-			// - The window is opened with ShowDialog() instead of Show()
-			Deactivated += vm.OnWindowDeactivated;
-			PreviewKeyDown += vm.OnPreviewKeyDown;
-			Closing += vm.OnWindowClosing;
+		public void Dispose()
+		{
+			_viewModel.Dispose();
 		}
 	}
 }

@@ -14,6 +14,7 @@ using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Framework;
+using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI.Keyboard;
 using Cursor = System.Windows.Input.Cursor;

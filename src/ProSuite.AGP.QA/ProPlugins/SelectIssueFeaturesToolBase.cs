@@ -7,12 +7,17 @@ namespace ProSuite.AGP.QA.ProPlugins
 {
 	public abstract class SelectIssueFeaturesToolBase : SelectionToolBase
 	{
-		protected override bool CanSelectFromLayerCore(FeatureLayer featureLayer)
+		protected override bool CanSelectFromLayerCore(BasicFeatureLayer basicFeatureLayer)
 		{
-			FeatureClass featureClass = featureLayer.GetFeatureClass();
+			if (basicFeatureLayer is FeatureLayer featureLayer)
+			{
+				FeatureClass featureClass = featureLayer.GetFeatureClass();
 
-			return featureClass != null &&
-			       IssueGdbSchema.IssueFeatureClassNames.Contains(featureClass.GetName());
+				return featureClass != null &&
+				       IssueGdbSchema.IssueFeatureClassNames.Contains(featureClass.GetName());
+			}
+
+			return false;
 		}
 	}
 }
