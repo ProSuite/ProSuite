@@ -27,6 +27,7 @@ using ViewUtils = ProSuite.Commons.UI.ViewUtils;
 
 namespace ProSuite.AGP.Editing.OneClick
 {
+	// todo daro log more, especially in subclasses
 	public abstract class OneClickToolBase : MapTool
 	{
 		private const Key _keyShowOptionsPane = Key.O;
@@ -495,9 +496,12 @@ namespace ProSuite.AGP.Editing.OneClick
 			IPickerPrecedence pickerPrecedence,
 			SelectionCombinationMethod selectionMethod)
 		{
-			PickerMode pickerMode = pickerPrecedence.GetPickerMode();
+			int featureCount = GeometryReducer.GetFeatureCount(candidatesOfLayers);
 
-			if (GeometryReducer.ContainsOneFeature(candidatesOfLayers))
+			PickerMode pickerMode = pickerPrecedence.GetPickerMode(featureCount);
+
+			// todo daro refactor
+			if (featureCount == 1)
 			{
 				if (pickerMode == PickerMode.ShowPicker)
 				{
@@ -598,7 +602,9 @@ namespace ProSuite.AGP.Editing.OneClick
 			IPickerPrecedence pickerPrecedence,
 			SelectionCombinationMethod selectionMethod)
 		{
-			PickerMode pickerMode = pickerPrecedence.GetPickerMode();
+			PickerMode pickerMode =
+				pickerPrecedence.GetPickerMode(
+					GeometryReducer.GetFeatureCount(candidatesOfLayers), true);
 
 			//CTRL was pressed: picker shows FC's to select from
 			if (pickerMode == PickerMode.ShowPicker)

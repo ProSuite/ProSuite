@@ -8,6 +8,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.Editing.Selection
 {
+	// todo daro refactor
 	public static class GeometryReducer
 	{
 		public static IEnumerable<KeyValuePair<BasicFeatureLayer, List<long>>> GetReducedset(
@@ -46,6 +47,13 @@ namespace ProSuite.AGP.Editing.Selection
 
 			// Get the first group representing FeatureClassSelections with the same shape dimension:
 			return shapeGroups.First().Select(fcs => fcs);
+		}
+
+		// todo daro to SelectionUtils, extension method?
+		public static int GetFeatureCount(
+			IEnumerable<FeatureClassSelection> selectionSets)
+		{
+			return selectionSets.Sum(set => set.FeatureCount);
 		}
 
 		public static bool ContainsOneFeature(

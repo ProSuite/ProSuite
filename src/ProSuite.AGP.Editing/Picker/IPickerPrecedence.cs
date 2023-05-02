@@ -5,7 +5,7 @@ namespace ProSuite.AGP.Editing.Picker
 {
 	public interface IPickerPrecedence
 	{
-		PickerMode GetPickerMode();
+		PickerMode GetPickerMode(int candidateCount, bool areaSelect = false);
 
 		IEnumerable<IPickableItem> Order(IEnumerable<IPickableItem> items);
 
