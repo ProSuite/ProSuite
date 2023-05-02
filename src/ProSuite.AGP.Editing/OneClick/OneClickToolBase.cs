@@ -522,8 +522,14 @@ namespace ProSuite.AGP.Editing.OneClick
 
 					await QueuedTask.Run(() =>
 					{
-						Selector.SelectFeature(
-							pickedItem.Layer, selectionMethod, pickedItem.Oid);
+						//since SelectionCombinationMethod.New is only applied to
+						//the current layer but selections of other layers remain,
+						//we manually need to clear all selections first.
+
+						SelectionUtils.SelectFeature(
+							pickedItem.Layer, selectionMethod,
+							pickedItem.Oid,
+							selectionMethod == SelectionCombinationMethod.New);
 					});
 
 					return true;
@@ -531,7 +537,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 				await QueuedTask.Run(() =>
 				{
-					Selector.SelectLayersFeaturesByOids(candidatesOfLayers.First(), selectionMethod);
+					SelectionUtils.SelectLayersFeaturesByOids(candidatesOfLayers.First(), selectionMethod);
 				});
 
 				return true;
@@ -542,7 +548,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			{
 				await QueuedTask.Run(() =>
 				{
-					Selector.SelectLayersFeaturesByOids(candidatesOfLayers, selectionMethod);
+					SelectionUtils.SelectLayersFeaturesByOids(candidatesOfLayers, selectionMethod);
 				});
 
 				return true;
@@ -562,8 +568,14 @@ namespace ProSuite.AGP.Editing.OneClick
 						var pickedItem =
 							pickerPrecedence.PickBest<IPickableFeatureItem>(items);
 
-						Selector.SelectFeature(
-							pickedItem.Layer, selectionMethod, pickedItem.Oid);
+						//since SelectionCombinationMethod.New is only applied to
+						//the current layer but selections of other layers remain,
+						//we manually need to clear all selections first.
+
+						SelectionUtils.SelectFeature(
+							pickedItem.Layer, selectionMethod,
+							pickedItem.Oid,
+							selectionMethod == SelectionCombinationMethod.New);
 					});
 
 				return true;
@@ -587,8 +599,14 @@ namespace ProSuite.AGP.Editing.OneClick
 
 				await QueuedTask.Run(() =>
 				{
-					Selector.SelectFeature(
-						pickedItem.Layer, selectionMethod, pickedItem.Oid);
+					//since SelectionCombinationMethod.New is only applied to
+					//the current layer but selections of other layers remain,
+					//we manually need to clear all selections first.
+
+					SelectionUtils.SelectFeature(
+						pickedItem.Layer, selectionMethod,
+						pickedItem.Oid,
+						selectionMethod == SelectionCombinationMethod.New);
 				});
 
 				return true;
@@ -632,7 +650,7 @@ namespace ProSuite.AGP.Editing.OneClick
 						                                  pickedItem.Oids.ToList(), layer,
 						                                  MapView.Active.Map.SpatialReference)))
 					{
-						Selector.SelectLayersFeaturesByOids(featureClassSelection, selectionMethod);
+						SelectionUtils.SelectLayersFeaturesByOids(featureClassSelection, selectionMethod);
 					}
 				});
 			}
@@ -641,7 +659,7 @@ namespace ProSuite.AGP.Editing.OneClick
 				//no modifier pressed: select all in envelope
 				await QueuedTask.Run(() =>
 				{
-					Selector.SelectLayersFeaturesByOids(candidatesOfLayers, selectionMethod);
+					SelectionUtils.SelectLayersFeaturesByOids(candidatesOfLayers, selectionMethod);
 				});
 			}
 

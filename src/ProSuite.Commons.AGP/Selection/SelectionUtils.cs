@@ -41,9 +41,12 @@ namespace ProSuite.Commons.AGP.Selection
 		}
 
 		public static void SelectFeature(BasicFeatureLayer basicFeatureLayer,
-		                                 SelectionCombinationMethod selectionMethod, long objectId)
+		                                 SelectionCombinationMethod selectionMethod,
+		                                 long objectId,
+		                                 bool clearExistingSelection = false)
 		{
-			SelectFeatures(basicFeatureLayer, selectionMethod, new[] { objectId });
+			SelectFeatures(basicFeatureLayer, selectionMethod, new[] { objectId },
+			               clearExistingSelection);
 		}
 
 		/// <summary>
@@ -56,14 +59,21 @@ namespace ProSuite.Commons.AGP.Selection
 		/// <param name="objectIds"></param>
 		public static void SelectFeatures([NotNull] BasicFeatureLayer basicFeatureLayer,
 		                                  SelectionCombinationMethod combinationMethod,
-		                                  [NotNull] IReadOnlyList<long> objectIds)
+		                                  [NotNull] IReadOnlyList<long> objectIds,
+		                                  bool clearExistingSelection = false)
 		{
+			if (clearExistingSelection)
+			{
+				ClearSelection();
+			}
+
 			var queryFilter = new QueryFilter
 			                  {
 				                  ObjectIDs = objectIds
 			                  };
 
-			using (ArcGIS.Core.Data.Selection selection = basicFeatureLayer.Select(queryFilter, combinationMethod))
+			using (ArcGIS.Core.Data.Selection selection =
+			       basicFeatureLayer.Select(queryFilter, combinationMethod))
 			{
 				if (_msg.IsVerboseDebugEnabled)
 				{
@@ -139,6 +149,31 @@ namespace ProSuite.Commons.AGP.Selection
 			Assert.ArgumentNotNull(selection, nameof(selection));
 
 			return selection.Sum(set => set.FeatureCount);
+		}
+
+		public static void SelectLayersFeaturesByOids(
+			[NotNull] IEnumerable<FeatureClassSelection> featuresPerLayer,
+			SelectionCombinationMethod selectionCombinationMethod)
+		{
+			foreach (FeatureClassSelection layerFeatures in featuresPerLayer)
+			{
+				SelectFeatures(layerFeatures.BasicFeatureLayer,
+				               selectionCombinationMethod, layerFeatures.ObjectIds);
+			}
+		}
+
+		public static void SelectLayersFeaturesByOids(
+			FeatureClassSelection featuresPerLayer,
+			SelectionCombinationMethod selectionCombinationMethod)
+		{
+			if (! featuresPerLayer.ObjectIds.Any())
+			{
+				return;
+			}
+
+			SelectFeatures(featuresPerLayer.BasicFeatureLayer,
+			               selectionCombinationMethod,
+			               featuresPerLayer.ObjectIds);
 		}
 	}
 }
