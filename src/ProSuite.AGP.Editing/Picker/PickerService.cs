@@ -31,10 +31,7 @@ namespace ProSuite.AGP.Editing.Picker
 
 			if (typeof(T) == typeof(IPickableFeatureItem))
 			{
-				// todo daro remove ToList()
-				var featureCandidates = precedence.Order(items).OfType<IPickableFeatureItem>();
-
-				var candidates = precedence.OrderByDrawingOutline(featureCandidates);
+				var candidates = precedence.Order(items).OfType<IPickableFeatureItem>();
 
 				viewModel = new PickerViewModel(candidates, precedence.SelectionGeometry);
 			}

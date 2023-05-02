@@ -1,54 +1,70 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows.Forms;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Desktop.Mapping;
+using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.UI.Keyboard;
 
 namespace ProSuite.AGP.Editing.Picker
 {
 	public class StandardPickerPrecedence : IPickerPrecedence
 	{
-		private static readonly int _maxItems = 50;
+		private static readonly int _maxItems = 25;
+		private static MapPoint _selectionCentroid;
 
 		private Geometry _selectionGeometry;
-		[CanBeNull] private IPickableItem _previousBestPick;
-
-		public StandardPickerPrecedence() { }
-
-		public StandardPickerPrecedence(Geometry selectionGeometry)
-		{
-			_selectionGeometry = selectionGeometry;
-		}
 
 		public Geometry SelectionGeometry
 		{
 			get => _selectionGeometry;
-			set => _selectionGeometry = value;
+			set
+			{
+				_selectionGeometry = value;
+				_selectionCentroid = GeometryUtils.Centroid(value);
+			}
+		}
+
+		public PickerMode GetPickerMode()
+		{
+			if (KeyboardUtils.IsModifierPressed(Keys.Alt))
+			{
+				return PickerMode.PickAll;
+			}
+
+			if (KeyboardUtils.IsModifierPressed(Keys.Control))
+			{
+				return PickerMode.ShowPicker;
+			}
+
+			return PickerMode.PickBest;
 		}
 
 		public IEnumerable<IPickableItem> Order(IEnumerable<IPickableItem> items)
 		{
 			return items.Take(_maxItems)
-			            .Select(item => SetScore(item, SelectionGeometry))
+			            .Select(item => SetScoreCosideringDistances(item, _selectionCentroid))
+			            .OfType<IPickableFeatureItem>()
+			            .Select(item => SetScoreConsideringDrawingOutline(item, _selectionCentroid))
 			            .OrderBy(item => item, new PickableItemComparer());
 		}
 
+		// todo daro move to subclass?
 		[CanBeNull]
-		public IPickableItem PickBest(IEnumerable<IPickableItem> items)
-		{
-			return Order(items).FirstOrDefault();
-		}
-
 		public T PickBest<T>(IEnumerable<IPickableItem> items) where T : class, IPickableItem
 		{
 			return Order(items).FirstOrDefault() as T;
 		}
 
-		private static IPickableItem SetScore(IPickableItem item, Geometry referenceGeometry)
+		private static IPickableItem SetScoreCosideringDistances(
+			IPickableItem item,
+			Geometry selectionGeometry)
 		{
-			double? score = 0.0;
+			double score = 0.0;
 			Geometry geometry = item.Geometry;
 
 			if (geometry == null)
@@ -59,10 +75,12 @@ namespace ProSuite.AGP.Editing.Picker
 			switch (geometry.GeometryType)
 			{
 				case GeometryType.Point:
-					score = GeometryUtils.Engine.NearestPoint(referenceGeometry, (MapPoint) item.Geometry).Distance;
+					score = GeometryUtils.Engine
+					                     .NearestPoint(selectionGeometry, (MapPoint) item.Geometry)
+					                     .Distance;
 					break;
 				case GeometryType.Polyline:
-					score = SumDistancesStartEndPoint(referenceGeometry, (Multipart) item.Geometry);
+					score = SumDistancesStartEndPoint(selectionGeometry, (Multipart) item.Geometry);
 					break;
 				case GeometryType.Polygon:
 					// negative
@@ -77,9 +95,33 @@ namespace ProSuite.AGP.Editing.Picker
 				default:
 					throw new ArgumentOutOfRangeException();
 			}
+			
+			SetScore(item, score);
 
-			Assert.NotNull(score);
-			item.Score = Math.Round(score.Value, 2);
+			return item;
+		}
+
+		private static IPickableFeatureItem SetScoreConsideringDrawingOutline(
+			IPickableFeatureItem item,
+			Geometry selectionGeometry)
+		{
+			Geometry itemGeometry = item.Geometry;
+
+			if (itemGeometry == null)
+			{
+				return item;
+			}
+
+			Geometry geometry = UseDrawingOutline(itemGeometry)
+				                    ? GetDrawingOutline(item.Layer, item.Oid)
+				                    : itemGeometry;
+
+			if (GeometryUtils.Disjoint(geometry, selectionGeometry))
+			{
+				SetScore(item, item.Score * item.Score);
+
+				return item;
+			}
 
 			return item;
 		}
@@ -97,6 +139,45 @@ namespace ProSuite.AGP.Editing.Picker
 				GeometryUtils.Engine.NearestPoint(referenceGeometry, endPoint).Distance;
 
 			return distanceFromStartPoint + distanceFromEndPoint;
+		}
+
+		private static bool UseDrawingOutline(Geometry geometry)
+		{
+			switch (geometry.GeometryType)
+			{
+				case GeometryType.Point:
+				case GeometryType.Multipoint:
+				case GeometryType.Polyline:
+					return true;
+				case GeometryType.Polygon:
+				case GeometryType.Multipatch:
+				case GeometryType.Envelope:
+				case GeometryType.Unknown:
+				case GeometryType.GeometryBag:
+					return false;
+				default:
+					throw new ArgumentOutOfRangeException(nameof(geometry), geometry,
+					                                      $@"Unexpected geometry type: {geometry}");
+			}
+		}
+
+		private static Geometry GetDrawingOutline(BasicFeatureLayer layer, long oid)
+		{
+			Geometry drawingOutline =
+				MapView.Active.NotNullCallback(
+					mv => layer.QueryDrawingOutline(oid, mv, DrawingOutlineType.Exact));
+
+			Assert.NotNull(drawingOutline);
+			Assert.False(drawingOutline.IsEmpty, "outline is empty");
+			Assert.False(drawingOutline.GeometryType == GeometryType.Point, "outline is a point");
+			Assert.False(drawingOutline.GeometryType == GeometryType.Polyline, "outline is a polyline");
+
+			return drawingOutline;
+		}
+
+		private static void SetScore(IPickableItem item, double score)
+		{
+			item.Score = Math.Round(score, 2);
 		}
 	}
 }

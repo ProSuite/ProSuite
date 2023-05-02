@@ -422,21 +422,6 @@ namespace ProSuite.AGP.Editing.OneClick
 			return SelectionSettings.SelectionTolerancePixels;
 		}
 
-		private static PickerMode GetPickerMode()
-		{
-			if (KeyboardUtils.IsModifierPressed(Keys.Alt))
-			{
-				return PickerMode.PickAll;
-			}
-
-			if (KeyboardUtils.IsModifierPressed(Keys.Control))
-			{
-				return PickerMode.ShowPicker;
-			}
-
-			return PickerMode.PickBest;
-		}
-
 		private async Task<bool> OnSelectionSketchComplete(Geometry sketchGeometry,
 		                                                   CancelableProgressor progressor)
 		{
@@ -510,7 +495,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			IPickerPrecedence pickerPrecedence,
 			SelectionCombinationMethod selectionMethod)
 		{
-			PickerMode pickerMode = GetPickerMode();
+			PickerMode pickerMode = pickerPrecedence.GetPickerMode();
 
 			if (GeometryReducer.ContainsOneFeature(candidatesOfLayers))
 			{
@@ -613,7 +598,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			IPickerPrecedence pickerPrecedence,
 			SelectionCombinationMethod selectionMethod)
 		{
-			PickerMode pickerMode = GetPickerMode();
+			PickerMode pickerMode = pickerPrecedence.GetPickerMode();
 
 			//CTRL was pressed: picker shows FC's to select from
 			if (pickerMode == PickerMode.ShowPicker)
