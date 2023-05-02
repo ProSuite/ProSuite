@@ -460,7 +460,6 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			Assert.ArgumentNotNull(geometry, nameof(geometry));
 
 			Assert.False(geometry.IsEmpty, "geometry is empty");
-			Assert.True(Engine.IsSimpleAsFeature(geometry), "geometry is not simple");
 
 			return Engine.Centroid(geometry);
 		}
