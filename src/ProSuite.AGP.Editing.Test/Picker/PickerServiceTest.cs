@@ -51,9 +51,12 @@ namespace ProSuite.AGP.Editing.Test.Picker
 
 			IEnumerable<IPickableItem> items = Create(polylines);
 
+			var pickerPrecedence = new StandardPickerPrecedenceMock();
+			pickerPrecedence.SelectionGeometry = referenceGeometry;
+
 			Func<Task<IPickableItem>> pickSingle =
 				picker.PickSingle<IPickableItem>(items, new Point(42, 99),
-				                                 new StandardPickerPrecedence(referenceGeometry));
+				                                 pickerPrecedence);
 
 			IPickableItem pickedItem = await pickSingle();
 
