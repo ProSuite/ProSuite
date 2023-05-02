@@ -89,7 +89,7 @@ namespace ProSuite.Commons.AGP.Carto
 				QueryFilter filter =
 					GdbQueryUtils.CreateSpatialFilter(searchGeometry, SpatialRelationship);
 
-				FeatureClass featureClass = LayerUtils.GetFeatureClass(basicFeatureLayer);
+				FeatureClass featureClass = basicFeatureLayer.GetFeatureClass();
 
 				if (DelayFeatureFetching)
 				{
@@ -178,7 +178,7 @@ namespace ProSuite.Commons.AGP.Carto
 					}
 
 					basicFeatureLayer = layers.First();
-					featureClass = LayerUtils.GetFeatureClass(basicFeatureLayer);
+					featureClass = basicFeatureLayer.GetFeatureClass();
 
 					QueryFilter filter =
 						GdbQueryUtils.CreateSpatialFilter(searchGeometry, SpatialRelationship);
