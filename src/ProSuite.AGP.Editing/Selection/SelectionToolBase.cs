@@ -7,7 +7,6 @@ using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
-using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Logging;
@@ -17,6 +16,8 @@ namespace ProSuite.AGP.Editing.Selection
 {
 	public abstract class SelectionToolBase : OneClickToolBase
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		// todo daro refactor
 		protected SelectionToolBase()
 		{
@@ -29,8 +30,6 @@ namespace ProSuite.AGP.Editing.Selection
 
 			SetCursor(SelectionCursor);
 		}
-
-		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		protected override async Task OnToolActivateAsync(bool hasMapViewChanged)
 		{
