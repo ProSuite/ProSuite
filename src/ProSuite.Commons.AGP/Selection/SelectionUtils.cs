@@ -5,12 +5,13 @@ using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
+using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
 
-namespace ProSuite.Commons.AGP.Carto
+namespace ProSuite.Commons.AGP.Selection
 {
 	// todo daro move to Selection?
 	public static class SelectionUtils
@@ -62,7 +63,7 @@ namespace ProSuite.Commons.AGP.Carto
 				                  ObjectIDs = objectIds
 			                  };
 
-			using (Selection selection = basicFeatureLayer.Select(queryFilter, combinationMethod))
+			using (ArcGIS.Core.Data.Selection selection = basicFeatureLayer.Select(queryFilter, combinationMethod))
 			{
 				if (_msg.IsVerboseDebugEnabled)
 				{
@@ -105,7 +106,7 @@ namespace ProSuite.Commons.AGP.Carto
 
 		public static IEnumerable<Feature> GetSelectedFeatures([CanBeNull] BasicFeatureLayer layer)
 		{
-			Selection selection = layer?.GetSelection();
+			ArcGIS.Core.Data.Selection selection = layer?.GetSelection();
 
 			if (selection == null)
 			{
