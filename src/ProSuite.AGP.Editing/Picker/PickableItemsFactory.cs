@@ -33,7 +33,7 @@ namespace ProSuite.AGP.Editing.Picker
 				else
 				{
 					var item = new PickableFeatureClassItem(featureClass,
-					                                        selection.GetOids().ToList());
+					                                        selection.GetFeatures().ToList());
 
 					item.Layers.Add(selection.BasicFeatureLayer);
 

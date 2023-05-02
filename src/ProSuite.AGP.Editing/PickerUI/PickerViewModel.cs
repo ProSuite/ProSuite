@@ -13,6 +13,7 @@ using ProSuite.AGP.Editing.Picker;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Carto;
 using ProSuite.Commons.AGP.Core.Spatial;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Misc;
@@ -127,6 +128,7 @@ namespace ProSuite.AGP.Editing.PickerUI
 				switch (geometry.GeometryType)
 				{
 					case GeometryType.Point:
+					case GeometryType.Multipoint:
 						flashGeometry = geometry;
 						symbol = _pointSymbol;
 						break;
@@ -140,7 +142,6 @@ namespace ProSuite.AGP.Editing.PickerUI
 						break;
 					case GeometryType.Unknown:
 					case GeometryType.Envelope:
-					case GeometryType.Multipoint:
 					case GeometryType.Multipatch:
 					case GeometryType.GeometryBag:
 						break;
@@ -170,9 +171,9 @@ namespace ProSuite.AGP.Editing.PickerUI
 		{
 			MapView.Active.NotNullCallback(mv =>
 			{
-				_overlays.Add(
-					mv.AddOverlay(
-						geometry, symbol.MakeSymbolReference()));
+				IDisposable overlay = mv.AddOverlay(geometry, symbol.MakeSymbolReference());
+
+				_overlays.Add(Assert.NotNull(overlay));
 			});
 		}
 

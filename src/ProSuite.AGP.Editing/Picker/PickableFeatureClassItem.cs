@@ -5,6 +5,7 @@ using System.Windows.Media.Imaging;
 using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Mapping;
+using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using Geometry = ArcGIS.Core.Geometry.Geometry;
@@ -21,10 +22,11 @@ namespace ProSuite.AGP.Editing.Picker
 		/// Has to be called on MCT
 		/// </summary>
 		public PickableFeatureClassItem(FeatureClass featureClass,
-		                                IReadOnlyList<long> oids)
+		                                IReadOnlyList<Feature> features)
 		{
 			_featureClassName = featureClass.GetName();
-			Oids = oids;
+			Oids = features.Select(feature => feature.GetObjectID()).ToList();
+			Geometry = GeometryUtils.Union(features.Select(feature => feature.GetShape()));
 		}
 
 		public IReadOnlyList<long> Oids { get; }
