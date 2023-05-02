@@ -12,7 +12,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
 
-namespace ProSuite.Commons.AGP.Carto
+namespace ProSuite.Commons.AGP.Selection
 {
 	// todo daro refactor!
 	// todo daro move to .\Selection?
