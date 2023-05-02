@@ -666,19 +666,6 @@ namespace ProSuite.AGP.Editing.OneClick
 			return true;
 		}
 
-		//private static async Task<T> ShowPickerAsync<T>(
-		//	IList<FeatureClassSelection> candidatesOfLayers,
-		//	IPickerPrecedence pickerPrecedence,
-		//	Point pickerLocation) where T : class, IPickableItem
-		//{
-		//	IEnumerable<IPickableItem> items =
-		//		await QueuedTaskUtils.Run(
-		//			() => PickableItemsFactory.CreateFeatureItems(
-		//				GeometryReducer.OrderByGeometryDimension(candidatesOfLayers)));
-
-		//	return await ShowPickerAsync<T>(items, pickerPrecedence, pickerLocation);
-		//}
-
 		[NotNull]
 		protected static async Task<T> ShowPickerAsync<T>(
 			IEnumerable<IPickableItem> items, IPickerPrecedence pickerPrecedence,
