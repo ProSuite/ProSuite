@@ -15,11 +15,10 @@ namespace ProSuite.Commons.AGP.Selection
 		private readonly SpatialReference _outputSpatialReference;
 		private readonly IList<long> _objectIds;
 
-		public OidSelection([NotNull] FeatureClass featureClass,
-		                    [NotNull] IList<long> objectIds,
+		public OidSelection([NotNull] IList<long> objectIds,
 		                    [NotNull] BasicFeatureLayer featureLayer,
 		                    [CanBeNull] SpatialReference outputSpatialReference)
-			: base(featureClass, featureLayer)
+			: base(featureLayer)
 		{
 			_objectIds = objectIds;
 			_outputSpatialReference = outputSpatialReference;

@@ -646,7 +646,6 @@ namespace ProSuite.AGP.Editing.OneClick
 				{
 					foreach (OidSelection featureClassSelection in
 					         pickedItem.Layers.Select(layer => new OidSelection(
-						                                  LayerUtils.GetFeatureClass(layer),
 						                                  pickedItem.Oids.ToList(), layer,
 						                                  MapView.Active.Map.SpatialReference)))
 					{

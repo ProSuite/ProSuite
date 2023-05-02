@@ -15,7 +15,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AGP.Carto
 {
-	// todo daro refactor
+	// todo daro refactor, maybe FeatureSelectionBase is unnecessary
 	/// <summary>
 	/// Provides functionality to find features in the map. The features' shapes are returned in the
 	/// map spatial reference.
@@ -47,6 +47,7 @@ namespace ProSuite.Commons.AGP.Carto
 		/// </summary>
 		public ICollection<Feature> SelectedFeatures { get; set; }
 
+		// todo daro rethink usage
 		public bool DelayFeatureFetching { get; set; }
 
 		public IEnumerable<FeatureSelectionBase> FindFeaturesByLayer(
@@ -101,8 +102,7 @@ namespace ProSuite.Commons.AGP.Carto
 
 					if (objectIds.Count > 0)
 					{
-						yield return new OidSelection(
-							featureClass, objectIds, basicFeatureLayer, outputSpatialReference);
+						yield return new OidSelection(objectIds, basicFeatureLayer, outputSpatialReference);
 					}
 				}
 				else
@@ -114,7 +114,7 @@ namespace ProSuite.Commons.AGP.Carto
 
 					if (features.Count > 0)
 					{
-						yield return new FeatureSelection(featureClass, features, basicFeatureLayer);
+						yield return new FeatureSelection(features, basicFeatureLayer);
 					}
 				}
 			}
@@ -195,9 +195,8 @@ namespace ProSuite.Commons.AGP.Carto
 
 				if (featureClass != null && features.Count > 0)
 				{
-					yield return new FeatureSelection(
-						featureClass, features.DistinctBy(f => f.GetObjectID()).ToList(),
-						basicFeatureLayer);
+					yield return new FeatureSelection(features.DistinctBy(f => f.GetObjectID()).ToList(),
+					                                  basicFeatureLayer);
 				}
 			}
 		}

@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
+using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -9,10 +10,9 @@ namespace ProSuite.Commons.AGP.Selection
 {
 	public abstract class FeatureSelectionBase
 	{
-		protected FeatureSelectionBase([NotNull] FeatureClass featureClass,
-		                               [NotNull] BasicFeatureLayer basicFeatureLayer)
+		protected FeatureSelectionBase([NotNull] BasicFeatureLayer basicFeatureLayer)
 		{
-			FeatureClass = featureClass;
+			FeatureClass = basicFeatureLayer.GetFeatureClass();
 			BasicFeatureLayer = basicFeatureLayer;
 		}
 

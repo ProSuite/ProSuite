@@ -11,10 +11,9 @@ namespace ProSuite.Commons.AGP.Selection
 	{
 		private readonly IList<Feature> _features;
 
-		public FeatureSelection([NotNull] FeatureClass featureClass,
-		                        [NotNull] IList<Feature> features,
+		public FeatureSelection([NotNull] IList<Feature> features,
 		                        [NotNull] BasicFeatureLayer featureLayer)
-			: base(featureClass, featureLayer)
+			: base(featureLayer)
 		{
 			_features = features;
 		}
