@@ -9,8 +9,8 @@ using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.WorkList;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Selection;
-using ProSuite.Commons.AGP.WPF;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.UI;
 using ProSuite.DomainModel.AGP.QA;
 
 namespace ProSuite.AGP.QA.ProPlugins
