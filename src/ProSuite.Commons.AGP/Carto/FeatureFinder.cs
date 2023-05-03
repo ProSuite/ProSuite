@@ -15,6 +15,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AGP.Carto
 {
+	// todo daro refactor, maybe FeatureSelectionBase is unnecessary
 	/// <summary>
 	/// Provides functionality to find features in the map. The features' shapes are returned in the
 	/// map spatial reference.
@@ -42,13 +43,14 @@ namespace ProSuite.Commons.AGP.Carto
 
 		/// <summary>
 		/// The selected features, relevant only for
-		/// <see cref="FeatureSelectionType"/> with value <see cref="TargetFeatureSelection.SameClass"></see>
+		/// <see cref="FeatureSelectionType" /> with value <see cref="TargetFeatureSelection.SameClass"></see>
 		/// </summary>
 		public ICollection<Feature> SelectedFeatures { get; set; }
 
+		// todo daro rethink usage
 		public bool DelayFeatureFetching { get; set; }
 
-		public IEnumerable<FeatureClassSelection> FindFeaturesByLayer(
+		public IEnumerable<FeatureSelectionBase> FindFeaturesByLayer(
 			[NotNull] Geometry searchGeometry,
 			[CanBeNull] Predicate<BasicFeatureLayer> layerPredicate = null,
 			[CanBeNull] Predicate<Feature> featurePredicate = null,
@@ -64,7 +66,7 @@ namespace ProSuite.Commons.AGP.Carto
 			                           cancelableProgressor);
 		}
 
-		public IEnumerable<FeatureClassSelection> FindFeaturesByLayer(
+		public IEnumerable<FeatureSelectionBase> FindFeaturesByLayer(
 			IEnumerable<BasicFeatureLayer> layers,
 			Geometry searchGeometry,
 			Predicate<Feature> featurePredicate,
@@ -88,19 +90,19 @@ namespace ProSuite.Commons.AGP.Carto
 				QueryFilter filter =
 					GdbQueryUtils.CreateSpatialFilter(searchGeometry, SpatialRelationship);
 
-				FeatureClass featureClass = LayerUtils.GetFeatureClass(basicFeatureLayer);
+				FeatureClass featureClass = basicFeatureLayer.GetFeatureClass();
 
 				if (DelayFeatureFetching)
 				{
 					filter.SubFields = featureClass.GetDefinition().GetObjectIDField();
 
 					List<long> objectIds =
-						LayerUtils.SearchObjectIds(basicFeatureLayer, filter, featurePredicate).ToList();
+						LayerUtils.SearchObjectIds(basicFeatureLayer, filter, featurePredicate)
+						          .ToList();
 
 					if (objectIds.Count > 0)
 					{
-						yield return new FeatureClassSelection(
-							featureClass, objectIds, basicFeatureLayer, outputSpatialReference);
+						yield return new OidSelection(objectIds, basicFeatureLayer, outputSpatialReference);
 					}
 				}
 				else
@@ -112,15 +114,14 @@ namespace ProSuite.Commons.AGP.Carto
 
 					if (features.Count > 0)
 					{
-						yield return new FeatureClassSelection(featureClass, features, basicFeatureLayer,
-						                                       outputSpatialReference);
+						yield return new FeatureSelection(features, basicFeatureLayer);
 					}
 				}
 			}
 		}
 
 		// todo daro rename to FindFeaturesByTable?
-		public IEnumerable<FeatureClassSelection> FindFeaturesByFeatureClass(
+		public IEnumerable<FeatureSelectionBase> FindFeaturesByFeatureClass(
 			[NotNull] Geometry searchGeometry,
 			[CanBeNull] Predicate<BasicFeatureLayer> layerPredicate = null,
 			[CanBeNull] Predicate<Feature> featurePredicate = null,
@@ -139,13 +140,17 @@ namespace ProSuite.Commons.AGP.Carto
 		/// Finds the features in the map by the specified criteria, grouped by feature class
 		/// </summary>
 		/// <param name="searchGeometry">The search geometry</param>
-		/// <param name="featureLayers">An extra layer predicate that allows for a more
-		/// fine-granular determination of the layers to be searched.</param>
-		/// <param name="featurePredicate">An extra feature predicate that allows to determine
-		/// criteria on the feature level.</param>
+		/// <param name="featureLayers">
+		/// An extra layer predicate that allows for a more
+		/// fine-granular determination of the layers to be searched.
+		/// </param>
+		/// <param name="featurePredicate">
+		/// An extra feature predicate that allows to determine
+		/// criteria on the feature level.
+		/// </param>
 		/// <param name="cancelableProgressor"></param>
 		/// <returns></returns>
-		public IEnumerable<FeatureClassSelection> FindFeaturesByFeatureClass(
+		public IEnumerable<FeatureSelectionBase> FindFeaturesByFeatureClass(
 			IEnumerable<BasicFeatureLayer> featureLayers,
 			Geometry searchGeometry,
 			Predicate<Feature> featurePredicate,
@@ -156,13 +161,13 @@ namespace ProSuite.Commons.AGP.Carto
 
 			SpatialReference outputSpatialReference = _mapView.Map.SpatialReference;
 
-			foreach (var layersInClass in layersGroupedByClass)
+			foreach (IGrouping<IntPtr, BasicFeatureLayer> layersInClass in layersGroupedByClass)
 			{
 				// One query per distinct definition query, then make OIDs distinct
 
 				FeatureClass featureClass = null;
 				BasicFeatureLayer basicFeatureLayer = null;
-				List<Feature> features = new List<Feature>();
+				var features = new List<Feature>();
 				foreach (IGrouping<string, BasicFeatureLayer> layers in layersInClass.GroupBy(
 					         fl => fl.DefinitionQuery))
 				{
@@ -173,7 +178,7 @@ namespace ProSuite.Commons.AGP.Carto
 					}
 
 					basicFeatureLayer = layers.First();
-					featureClass = LayerUtils.GetFeatureClass(basicFeatureLayer);
+					featureClass = basicFeatureLayer.GetFeatureClass();
 
 					QueryFilter filter =
 						GdbQueryUtils.CreateSpatialFilter(searchGeometry, SpatialRelationship);
@@ -190,9 +195,8 @@ namespace ProSuite.Commons.AGP.Carto
 
 				if (featureClass != null && features.Count > 0)
 				{
-					yield return new FeatureClassSelection(
-						featureClass, features.DistinctBy(f => f.GetObjectID()).ToList(),
-						basicFeatureLayer, outputSpatialReference);
+					yield return new FeatureSelection(features.DistinctBy(f => f.GetObjectID()).ToList(),
+					                                  basicFeatureLayer);
 				}
 			}
 		}
@@ -201,18 +205,22 @@ namespace ProSuite.Commons.AGP.Carto
 		/// Finds the distinct visible features in the map that intersect the selected
 		/// features and that fulfill the target-selection-type criteria.
 		/// </summary>
-		/// <param name="intersectingSelectedFeatures">The selected features to use in the search for
+		/// <param name="intersectingSelectedFeatures">
+		/// The selected features to use in the search for
 		/// other visible features intersecting any of the selected features. When using target selection
 		/// type SameClass these features are used to determine whether a potential target feature comes
-		/// from the same class as one of them.</param>
+		/// from the same class as one of them.
+		/// </param>
 		/// <param name="layerPredicate">An additional layer predicate to be tested.</param>
 		/// <param name="extent">The area of interest to which the search can be limited</param>
 		/// <param name="cancelableProgressor">The progress/cancel tracker.</param>
-		/// <remarks>The <see cref="FeatureSelectionType"/> most not be Undefined and must not be
-		/// SelectedFeatures.</remarks>
+		/// <remarks>
+		/// The <see cref="FeatureSelectionType" /> most not be Undefined and must not be
+		/// SelectedFeatures.
+		/// </remarks>
 		/// <returns>The found features in the same spatial reference as the provided selected features</returns>
 		[NotNull]
-		public IEnumerable<FeatureClassSelection> FindIntersectingFeaturesByFeatureClass(
+		public IEnumerable<FeatureSelectionBase> FindIntersectingFeaturesByFeatureClass(
 			[NotNull] Dictionary<MapMember, List<long>> intersectingSelectedFeatures,
 			[CanBeNull] Predicate<BasicFeatureLayer> layerPredicate = null,
 			[CanBeNull] Envelope extent = null,
@@ -227,14 +235,14 @@ namespace ProSuite.Commons.AGP.Carto
 			SelectedFeatures = MapUtils.GetFeatures(intersectingSelectedFeatures, spatialReference)
 			                           .ToList();
 
-			var searchGeometry = GetSearchGeometry(SelectedFeatures, extent);
+			Geometry searchGeometry = GetSearchGeometry(SelectedFeatures, extent);
 
 			if (searchGeometry == null)
 			{
 				yield break;
 			}
 
-			foreach (var classSelection in FindFeaturesByFeatureClass(
+			foreach (FeatureSelectionBase classSelection in FindFeaturesByFeatureClass(
 				         searchGeometry, layerPredicate, null, cancelableProgressor))
 			{
 				yield return classSelection;
@@ -255,7 +263,7 @@ namespace ProSuite.Commons.AGP.Carto
 			TargetFeatureSelection? targetSelectionType,
 			[CanBeNull] ICollection<Feature> selectedFeatures)
 		{
-			if (! LayerUtils.IsVisible(basicFeatureLayer))
+			if (! basicFeatureLayer.IsVisible())
 			{
 				return false;
 			}
@@ -323,14 +331,14 @@ namespace ProSuite.Commons.AGP.Carto
 			[NotNull] ICollection<Feature> intersectingFeatures,
 			[CanBeNull] Envelope clipExtent)
 		{
-			var intersectingGeometries =
+			IList<Geometry> intersectingGeometries =
 				GetSearchGeometries(intersectingFeatures, clipExtent);
 
 			Geometry result = null;
 
 			if (intersectingGeometries.Count != 0)
 			{
-				var sr = intersectingGeometries[0].SpatialReference;
+				SpatialReference sr = intersectingGeometries[0].SpatialReference;
 
 				result = GeometryBagBuilderEx.CreateGeometryBag(intersectingGeometries, sr);
 				//result = GeometryEngine.Instance.Union(intersectingGeometries);
@@ -340,8 +348,8 @@ namespace ProSuite.Commons.AGP.Carto
 		}
 
 		/// <summary>
-		///     Returns the list of geometries that can be used as spatial filter. Multipatches
-		///     are translated into polygons, polycurves are clipped.
+		/// Returns the list of geometries that can be used as spatial filter. Multipatches
+		/// are translated into polygons, polycurves are clipped.
 		/// </summary>
 		/// <param name="features">The features.</param>
 		/// <param name="clipExtent">The clip extent.</param>
@@ -353,7 +361,7 @@ namespace ProSuite.Commons.AGP.Carto
 		{
 			var result = new List<Geometry>(features.Count);
 
-			foreach (var geometry in GdbObjectUtils.GetGeometries(features))
+			foreach (Geometry geometry in GdbObjectUtils.GetGeometries(features))
 			{
 				if (clipExtent != null)
 				{
@@ -369,11 +377,11 @@ namespace ProSuite.Commons.AGP.Carto
 				var multiPatch = geometry as Multipatch;
 
 				// multipatches are not supported by ISpatialFilter (and neither are bags containing them)
-				var polycurve = multiPatch != null
+				Multipart polycurve = multiPatch != null
 					                ? PolygonBuilderEx.CreatePolygon(
-						                multiPatch
-							                .Extent) // GeometryFactory.CreatePolygon(multiPatch)
-					                : geometry as Multipart;
+						                      multiPatch
+							                      .Extent) // GeometryFactory.CreatePolygon(multiPatch)
+					                      : geometry as Multipart;
 
 				if (polycurve != null)
 				{

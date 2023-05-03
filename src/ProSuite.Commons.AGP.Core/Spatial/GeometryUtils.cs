@@ -692,5 +692,25 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 				$"expected type {expectedType.Name}, " +
 				$"actual type {actualValue?.GetType().Name ?? "(null)"}");
 		}
+
+		public static int GetShapeDimension(GeometryType geometryType)
+		{
+			switch (geometryType)
+			{
+				case GeometryType.Point:
+				case GeometryType.Multipoint:
+					return 0;
+				case GeometryType.Polyline:
+					return 1;
+				case GeometryType.Polygon:
+				case GeometryType.Multipatch:
+				case GeometryType.Envelope:
+					return 2;
+
+				default:
+					throw new ArgumentOutOfRangeException(nameof(geometryType), geometryType,
+					                                      $"Unexpected geometry type: {geometryType}");
+			}
+		}
 	}
 }

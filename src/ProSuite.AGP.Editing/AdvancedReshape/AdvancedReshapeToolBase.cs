@@ -403,7 +403,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 			var featureFinder = new FeatureFinder(ActiveMapView, targetFeatureSelection);
 
-			IEnumerable<FeatureClassSelection> featureClassSelections =
+			IEnumerable<FeatureSelectionBase> featureClassSelections =
 				featureFinder.FindIntersectingFeaturesByFeatureClass(
 					selection, layer => layer.ShapeType == esriGeometryType.esriGeometryPolyline,
 					inExtent, cancellabelProgressor);

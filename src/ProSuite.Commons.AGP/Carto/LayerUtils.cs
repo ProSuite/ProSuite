@@ -229,7 +229,7 @@ namespace ProSuite.Commons.AGP.Carto
 		}
 
 		[NotNull]
-		public static FeatureClass GetFeatureClass([NotNull] BasicFeatureLayer basicFeatureLayer)
+		public static FeatureClass GetFeatureClass([NotNull] this BasicFeatureLayer basicFeatureLayer)
 		{
 			Assert.ArgumentNotNull(basicFeatureLayer, nameof(basicFeatureLayer));
 			Assert.ArgumentCondition(

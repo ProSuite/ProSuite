@@ -442,7 +442,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			var pickerWindowLocation = new Point(0, 0);
 
 			bool singlePick = false;
-			List<FeatureClassSelection> candidatesOfManyLayers =
+			List<FeatureSelectionBase> candidatesOfManyLayers =
 				await QueuedTaskUtils.Run(() =>
 				{
 					selectionGeometry = ToolUtils.SketchToSearchGeometry(sketchGeometry,
@@ -492,7 +492,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		// todo daro when return false?
 		// todo daro ViewUtils.Try araound it?
 		private static async Task<bool> SingleSelectAsync(
-			[NotNull] IList<FeatureClassSelection> candidatesOfLayers,
+			[NotNull] IList<FeatureSelectionBase> candidatesOfLayers,
 			Point pickerLocation,
 			IPickerPrecedence pickerPrecedence,
 			SelectionCombinationMethod selectionMethod)
@@ -616,7 +616,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		}
 
 		private static async Task<bool> AreaSelect(
-			[NotNull] IList<FeatureClassSelection> candidatesOfLayers,
+			[NotNull] IList<FeatureSelectionBase> candidatesOfLayers,
 			Point pickerLocation,
 			IPickerPrecedence pickerPrecedence,
 			SelectionCombinationMethod selectionMethod)
@@ -644,9 +644,8 @@ namespace ProSuite.AGP.Editing.OneClick
 
 				await QueuedTask.Run(() =>
 				{
-					foreach (FeatureClassSelection featureClassSelection in
-					         pickedItem.Layers.Select(layer => new FeatureClassSelection(
-						                                  LayerUtils.GetFeatureClass(layer),
+					foreach (OidSelection featureClassSelection in
+					         pickedItem.Layers.Select(layer => new OidSelection(
 						                                  pickedItem.Oids.ToList(), layer,
 						                                  MapView.Active.Map.SpatialReference)))
 					{
@@ -665,19 +664,6 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			return true;
 		}
-
-		//private static async Task<T> ShowPickerAsync<T>(
-		//	IList<FeatureClassSelection> candidatesOfLayers,
-		//	IPickerPrecedence pickerPrecedence,
-		//	Point pickerLocation) where T : class, IPickableItem
-		//{
-		//	IEnumerable<IPickableItem> items =
-		//		await QueuedTaskUtils.Run(
-		//			() => PickableItemsFactory.CreateFeatureItems(
-		//				GeometryReducer.OrderByGeometryDimension(candidatesOfLayers)));
-
-		//	return await ShowPickerAsync<T>(items, pickerPrecedence, pickerLocation);
-		//}
 
 		[NotNull]
 		protected static async Task<T> ShowPickerAsync<T>(
@@ -698,7 +684,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			return pickedItem;
 		}
 
-		private IEnumerable<FeatureClassSelection> FindFeaturesOfAllLayers(
+		private IEnumerable<FeatureSelectionBase> FindFeaturesOfAllLayers(
 			[NotNull] Geometry searchGeometry,
 			SpatialRelationship spatialRelationship)
 		{
@@ -706,7 +692,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			if (mapView == null)
 			{
-				return Enumerable.Empty<FeatureClassSelection>();
+				return Enumerable.Empty<FeatureSelectionBase>();
 			}
 
 			var featureFinder = new FeatureFinder(mapView)

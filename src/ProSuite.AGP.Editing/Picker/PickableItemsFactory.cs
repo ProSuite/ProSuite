@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using ArcGIS.Core.Data;
-using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -10,17 +9,17 @@ namespace ProSuite.AGP.Editing.Picker
 	public static class PickableItemsFactory
 	{
 		public static IEnumerable<IPickableItem> CreateFeatureItems(
-			[NotNull] IEnumerable<FeatureClassSelection> selectionByClasses)
+			[NotNull] IEnumerable<FeatureSelectionBase> selectionByClasses)
 		{
 			return selectionByClasses.SelectMany(CreateFeatureItems);
 		}
 
 		public static IEnumerable<IPickableFeatureClassItem> CreateFeatureClassItems(
-			[NotNull] IEnumerable<FeatureClassSelection> selectionByClasses)
+			[NotNull] IEnumerable<FeatureSelectionBase> selectionByClasses)
 		{
 			var itemsByName = new Dictionary<string, IPickableFeatureClassItem>();
 
-			foreach (FeatureClassSelection selection in selectionByClasses)
+			foreach (FeatureSelectionBase selection in selectionByClasses)
 			{
 				FeatureClass featureClass = selection.FeatureClass;
 				string name = featureClass.GetName();
@@ -34,7 +33,7 @@ namespace ProSuite.AGP.Editing.Picker
 				else
 				{
 					var item = new PickableFeatureClassItem(featureClass,
-					                                        selection.ObjectIds);
+					                                        selection.GetFeatures().ToList());
 
 					item.Layers.Add(selection.BasicFeatureLayer);
 
@@ -46,7 +45,7 @@ namespace ProSuite.AGP.Editing.Picker
 		}
 
 		private static IEnumerable<IPickableItem> CreateFeatureItems(
-			[NotNull] FeatureClassSelection classSelection)
+			[NotNull] FeatureSelectionBase classSelection)
 		{
 			return classSelection.GetFeatures()
 			                     .Select(feature =>
