@@ -419,6 +419,15 @@ namespace ProSuite.Commons.AO.Geodatabase
 		}
 
 		[NotNull]
+		public static IFeatureClassFilter CreateSpatialFilter(
+			[NotNull] IReadOnlyFeatureClass featureClass,
+			[NotNull] IGeometry searchGeometry,
+			esriSpatialRelEnum spatialRel = esriSpatialRelEnum.esriSpatialRelIntersects)
+		{
+			return new AoFeatureClassFilter(searchGeometry, spatialRel);
+		}
+
+		[NotNull]
 		public static IQueryFilter CreateSpatialFilter(
 			[NotNull] IFeatureClass featureClass,
 			[NotNull] IGeometry searchGeometry,
@@ -1080,7 +1089,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			[NotNull] string fieldName,
 			[NotNull] IEnumerable valueList,
 			bool recycle,
-			[CanBeNull] IQueryFilter queryFilter = null)
+			[CanBeNull] ITableFilter queryFilter = null)
 		{
 			Assert.ArgumentNotNull(table, nameof(table));
 			Assert.ArgumentNotNullOrEmpty(fieldName, nameof(fieldName));
@@ -1098,8 +1107,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 			[NotNull] IWorkspace workspace,
 			[NotNull] IField field,
 			[NotNull] IEnumerable valueList,
-			[NotNull] Func<IQueryFilter, IEnumerable<T>> getRows,
-			[CanBeNull] IQueryFilter queryFilter = null)
+			[NotNull] Func<ITableFilter, IEnumerable<T>> getRows,
+			[CanBeNull] ITableFilter queryFilter = null)
 		{
 			Assert.ArgumentNotNull(workspace, nameof(workspace));
 			Assert.ArgumentNotNull(valueList, nameof(valueList));
@@ -1478,7 +1487,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		{
 			Assert.ArgumentNotNull(table, nameof(table));
 
-			IQueryFilter filter = new QueryFilterClass
+			ITableFilter filter = new AoTableFilter
 			                      {
 				                      WhereClause = whereClause,
 				                      SubFields = table.OIDFieldName

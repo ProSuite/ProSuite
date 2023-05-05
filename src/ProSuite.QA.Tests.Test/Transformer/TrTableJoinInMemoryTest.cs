@@ -556,7 +556,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				// prevents correct filtering:
 				var memoryJoinedFc = (IReadOnlyFeatureClass) tr.GetTransformed();
 
-				int count = memoryJoinedFc.EnumRows(new QueryFilterClass(), true).Count();
+				int count = memoryJoinedFc.EnumRows(null, true).Count();
 
 				Assert.AreEqual(1, count);
 			}
@@ -573,7 +573,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				// that references non-sub-fields.
 				var memoryJoinedFc = (IReadOnlyFeatureClass) tr.GetTransformed();
 				var filter = GdbQueryUtils.CreateSpatialFilter(
-					(IFeatureClass) memoryJoinedFc,
+					memoryJoinedFc,
 					GeometryFactory.CreateEnvelope(0, 0, 1000, 1000,
 					                               memoryJoinedFc.SpatialReference));
 				filter.SubFields = "OBJECTID";

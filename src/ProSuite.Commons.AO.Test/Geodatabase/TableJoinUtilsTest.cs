@@ -256,12 +256,8 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			               };
 
 			int rowCount = 0;
-			var filter = new SpatialFilterClass
-			             {
-				             Geometry = envelope,
-				             GeometryField = featureClass.ShapeFieldName,
-				             SpatialRel = esriSpatialRelEnum.esriSpatialRelIntersects
-			             };
+			var filter = new AoFeatureClassFilter(
+				envelope, esriSpatialRelEnum.esriSpatialRelIntersects);
 
 			foreach (IReadOnlyRow row in featureClass.EnumRows(filter, false))
 			{

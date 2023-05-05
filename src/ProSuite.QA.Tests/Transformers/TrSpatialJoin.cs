@@ -200,13 +200,13 @@ namespace ProSuite.QA.Tests.Transformers
 				throw new NotImplementedException();
 			}
 
-			public override long GetRowCount(IQueryFilter queryFilter)
+			public override long GetRowCount(ITableFilter queryFilter)
 			{
 				// TODO
 				return _t0.RowCount(queryFilter);
 			}
 
-			public override IEnumerable<VirtualRow> Search(IQueryFilter filter, bool recycling)
+			public override IEnumerable<VirtualRow> Search(ITableFilter filter, bool recycling)
 			{
 				IRelationalOperator t1LoadedExtent = null;
 
@@ -215,13 +215,21 @@ namespace ProSuite.QA.Tests.Transformers
 					t1LoadedExtent = (IRelationalOperator) DataSearchContainer.GetLoadedExtent(_t1);
 				}
 
-				ISpatialFilter joinFilter = new SpatialFilterClass();
-				joinFilter.SpatialRel = esriSpatialRelEnum.esriSpatialRelEnvelopeIntersects;
+				IFeatureClassFilter joinFilter = null;
 
 				foreach (var toJoin in DataSearchContainer.Search(
-					         _t0, filter ?? new QueryFilterClass(), QueryHelpers[0]))
+					         _t0, filter ?? new AoTableFilter(), QueryHelpers[0]))
 				{
-					joinFilter.Geometry = ((IReadOnlyFeature) toJoin).Extent;
+					IGeometry joinFilterGeometry = ((IReadOnlyFeature)toJoin).Extent;
+					if (joinFilter == null)
+					{
+						joinFilter = new AoFeatureClassFilter(joinFilterGeometry);
+					}
+					else
+					{
+						joinFilter.FilterGeometry = joinFilterGeometry;
+					}
+
 					var op = (IRelationalOperator) ((IReadOnlyFeature) toJoin).Shape;
 
 					List<IReadOnlyRow> joineds = new List<IReadOnlyRow>();
@@ -269,7 +277,7 @@ namespace ProSuite.QA.Tests.Transformers
 			}
 
 			private IEnumerable<IReadOnlyRow> EnumNeighbors(
-				[NotNull] ISpatialFilter joinFilter,
+				[NotNull] IFeatureClassFilter joinFilter,
 				[CanBeNull] IRelationalOperator loaded)
 			{
 				foreach (var joined in DataSearchContainer.Search(
@@ -283,12 +291,12 @@ namespace ProSuite.QA.Tests.Transformers
 					yield break;
 				}
 
-				if (loaded.Contains(joinFilter.Geometry))
+				if (loaded.Contains(joinFilter.FilterGeometry))
 				{
 					yield break;
 				}
 
-				IEnvelope queryGeom = joinFilter.Geometry.Envelope;
+				IEnvelope queryGeom = joinFilter.FilterGeometry.Envelope;
 				double tolerance = GeometryUtils.GetXyTolerance(queryGeom);
 				queryGeom.Expand(tolerance, tolerance, false);
 

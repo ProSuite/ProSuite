@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
@@ -237,7 +238,8 @@ namespace ProSuite.Commons.AO.Test.TestSupport
 			throw new NotImplementedException();
 		}
 
-		long IReadOnlyTable.RowCount(IQueryFilter filter) => RowCount(filter);
+		long IReadOnlyTable.RowCount(ITableFilter filter) =>
+			RowCount((IQueryFilter) filter.ToNativeFilterImpl());
 
 #if Server11
 		long ITable.RowCount(IQueryFilter QueryFilter) => RowCount(QueryFilter);
@@ -255,17 +257,29 @@ namespace ProSuite.Commons.AO.Test.TestSupport
 			throw new InvalidOperationException("No row count result specified for mock");
 		}
 
-		IEnumerable<IReadOnlyRow> IReadOnlyTable.EnumRows(IQueryFilter filter, bool recycle)
+		IEnumerable<IReadOnlyRow> IReadOnlyTable.EnumRows(ITableFilter filter, bool recycle)
 		{
-			foreach (var row in new EnumCursor(this, filter, recycle))
+			IQueryFilter queryFilter = null;
+			try
 			{
-				if (row is IReadOnlyRow roRow)
+				queryFilter = (IQueryFilter) filter.ToNativeFilterImpl();
+				foreach (var row in new EnumCursor(this, queryFilter, recycle))
 				{
-					yield return roRow;
+					if (row is IReadOnlyRow roRow)
+					{
+						yield return roRow;
+					}
+					else
+					{
+						throw new NotImplementedException();
+					}
 				}
-				else
+			}
+			finally
+			{
+				if (queryFilter != null)
 				{
-					throw new NotImplementedException();
+					Marshal.ReleaseComObject(queryFilter);
 				}
 			}
 		}

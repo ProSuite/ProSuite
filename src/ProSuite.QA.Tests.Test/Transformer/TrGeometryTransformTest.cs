@@ -9,7 +9,6 @@ using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Test;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestContainer;
 using ProSuite.QA.Tests.Test.Construction;
 using ProSuite.QA.Tests.Test.TestRunners;
 using ProSuite.QA.Tests.Transformers;
@@ -584,7 +583,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 		}
 
 		public IEnumerable<IReadOnlyRow> Search(IReadOnlyTable table,
-		                                        IQueryFilter queryFilter,
+		                                        ITableFilter queryFilter,
 		                                        QueryFilterHelper filterHelper)
 		{
 			return table.EnumRows(queryFilter, false);

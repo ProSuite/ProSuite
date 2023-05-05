@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
@@ -6,6 +7,8 @@ using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Test;
+using ProSuite.Commons.Exceptions;
+using ProSuite.Commons.Geom;
 using ProSuite.QA.Container.Test;
 using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Test.Construction;
@@ -605,5 +608,273 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			runner.Execute();
 
 		}
+
+		[Test]
+		[Category(TestCategory.Sde)]
+		public void TestTOP_7505_Topgis()
+		{
+			var workspace = (IFeatureWorkspace) TestData.TestDataUtils.OpenTopgisTlm();
+
+			IFeatureClass fcSg = workspace.OpenFeatureClass("TOPGIS_TLM.TLM_STEHENDES_GEWAESSER");
+			ITable tblGl = workspace.OpenTable("TOPGIS_TLM.TLM_GEWAESSER_LAUF");
+			IFeatureClass fcGk = workspace.OpenFeatureClass("TOPGIS_TLM.TLM_GEWAESSERNETZKNOTEN");
+			IFeatureClass fcFg = workspace.OpenFeatureClass("TOPGIS_TLM.TLM_FLIESSGEWAESSER");
+
+			QaConstraint qa = TestTOP_7505(fcSg, tblGl, fcGk, fcFg, out _);
+			var runner = new QaContainerTestRunner(10000, qa);
+			runner.Execute();
+		}
+
+		[Test]
+		public void TestTOP_7505_TestData()
+		{
+			IFeatureWorkspace ws = TestWorkspaceUtils.CreateInMemoryWorkspace("gewaesser");
+
+			ISpatialReference sr = SpatialReferenceUtils.CreateSpatialReference
+				((int) esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95, true);
+
+
+			IFeatureClass fcSg = DatasetUtils.CreateSimpleFeatureClass(
+				ws, "TLM_STEHENDES_GEWAESSER", FieldUtils.CreateFields(
+					FieldUtils.CreateOIDField(),
+					FieldUtils.CreateIntegerField("OBJEKTART"),
+					FieldUtils.CreateField("TLM_GEWAESSER_LAUF_UUID", esriFieldType.esriFieldTypeGUID),
+					FieldUtils.CreateShapeField(esriGeometryType.esriGeometryPolyline, sr)));
+
+			ITable tblGl = DatasetUtils.CreateTable(
+				ws, "TLM_GEWAESSER_LAUF",
+				FieldUtils.CreateOIDField(),
+				FieldUtils.CreateField("UUID", esriFieldType.esriFieldTypeGUID),
+				FieldUtils.CreateIntegerField("GEWISS_NR"));
+
+			IFeatureClass fcGk = DatasetUtils.CreateSimpleFeatureClass(
+				ws, "TLM_GEWAESSERNETZKNOTEN", FieldUtils.CreateFields(
+					FieldUtils.CreateOIDField(),
+					FieldUtils.CreateIntegerField("OBJEKTART"),
+					FieldUtils.CreateShapeField(esriGeometryType.esriGeometryPoint, sr)));
+
+			IFeatureClass fcFg = DatasetUtils.CreateSimpleFeatureClass(
+				ws, "TLM_FLIESSGEWAESSER", FieldUtils.CreateFields(
+					FieldUtils.CreateOIDField(),
+					FieldUtils.CreateIntegerField("OBJEKTART"),
+					FieldUtils.CreateShapeField(esriGeometryType.esriGeometryPolyline, sr)));
+
+			// Create Data
+
+			// See ohne Zu-/Abfluss
+			{
+				Guid seeGuid = Guid.NewGuid();
+				{
+					IRow r = tblGl.CreateRow();
+					r.Value[tblGl.FindField("UUID")] = seeGuid.ToString("B");
+					r.Store();
+				}
+				IPoint p0 = GeometryFactory.CreatePoint(0, 100);
+				IPoint p1 = GeometryFactory.CreatePoint(1200, 100);
+				{
+					IFeature f = fcSg.CreateFeature();
+					f.Shape = CurveConstruction.StartLine(p0).LineTo(800, 0).LineTo(p1).Curve;
+					f.Value[fcSg.FindField("OBJEKTART")] = 1;
+					f.Value[fcSg.FindField("TLM_GEWAESSER_LAUF_UUID")] = seeGuid.ToString("B");
+					f.Store();
+				}
+				{
+					IFeature f = fcSg.CreateFeature();
+					f.Shape = CurveConstruction.StartLine(p1).LineTo(800, 200).LineTo(p0).Curve;
+					f.Value[fcSg.FindField("OBJEKTART")] = 1;
+					f.Value[fcSg.FindField("TLM_GEWAESSER_LAUF_UUID")] = seeGuid.ToString("B");
+					f.Store();
+				}
+				{
+					IFeature f = fcGk.CreateFeature();
+					f.Value[fcGk.FindField("OBJEKTART")] = 1;
+					f.Shape = GeometryFactory.Clone(p0);
+					f.Store();
+				}
+				{
+					IFeature f = fcGk.CreateFeature();
+					f.Value[fcGk.FindField("OBJEKTART")] = 2;
+					f.Shape = GeometryFactory.Clone(p1);
+					f.Store();
+				}
+			}
+			// See mit Abfluss
+			{
+				Guid seeGuid = Guid.NewGuid();
+				{
+					IRow r = tblGl.CreateRow();
+					r.Value[tblGl.FindField("UUID")] = seeGuid.ToString("B");
+					r.Store();
+				}
+				IPoint p0 = GeometryFactory.CreatePoint(0, 400);
+				IPoint p1 = GeometryFactory.CreatePoint(1200, 400);
+				{
+					IFeature f = fcSg.CreateFeature();
+					f.Shape = CurveConstruction.StartLine(p0).LineTo(800, 300).LineTo(p1).Curve;
+					f.Value[fcSg.FindField("OBJEKTART")] = 1;
+					f.Value[fcSg.FindField("TLM_GEWAESSER_LAUF_UUID")] = seeGuid.ToString("B");
+					f.Store();
+				}
+				{
+					IFeature f = fcSg.CreateFeature();
+					f.Shape = CurveConstruction.StartLine(p1).LineTo(800, 500).LineTo(p0).Curve;
+					f.Value[fcSg.FindField("OBJEKTART")] = 1;
+					f.Value[fcSg.FindField("TLM_GEWAESSER_LAUF_UUID")] = seeGuid.ToString("B");
+					f.Store();
+				}
+				{
+					IFeature gkF = fcGk.CreateFeature();
+					gkF.Value[fcGk.FindField("OBJEKTART")] = 1;
+					gkF.Shape = GeometryFactory.Clone(p0);
+					gkF.Store();
+				}
+				{
+					IFeature gkF = fcGk.CreateFeature();
+					gkF.Value[fcGk.FindField("OBJEKTART")] = 0;
+					gkF.Shape = GeometryFactory.Clone(p1);
+					gkF.Store();
+
+					IFeature fgF = fcFg.CreateFeature();
+					fgF.Shape = CurveConstruction.StartLine(p1).LineTo(1600, 400).Curve;
+					fgF.Store();
+				}
+			}
+			// See mit Zu- und Abfluss
+			{
+				Guid seeGuid = Guid.NewGuid();
+				{
+					IRow r = tblGl.CreateRow();
+					r.Value[tblGl.FindField("UUID")] = seeGuid.ToString("B");
+					r.Store();
+				}
+				IPoint p0 = GeometryFactory.CreatePoint(0, 800);
+				IPoint p1 = GeometryFactory.CreatePoint(1200, 800);
+				{
+					IFeature f = fcSg.CreateFeature();
+					f.Shape = CurveConstruction.StartLine(p0).LineTo(800, 700).LineTo(p1).Curve;
+					f.Value[fcSg.FindField("OBJEKTART")] = 1;
+					f.Value[fcSg.FindField("TLM_GEWAESSER_LAUF_UUID")] = seeGuid.ToString("B");
+					f.Store();
+				}
+				{
+					IFeature f = fcSg.CreateFeature();
+					f.Shape = CurveConstruction.StartLine(p1).LineTo(800, 900).LineTo(p0).Curve;
+					f.Value[fcSg.FindField("OBJEKTART")] = 1;
+					f.Value[fcSg.FindField("TLM_GEWAESSER_LAUF_UUID")] = seeGuid.ToString("B");
+					f.Store();
+				}
+				{
+					IFeature gkF = fcGk.CreateFeature();
+					gkF.Value[fcGk.FindField("OBJEKTART")] = 0;
+					gkF.Shape = GeometryFactory.Clone(p0);
+					gkF.Store();
+
+					IFeature fgF = fcFg.CreateFeature();
+					fgF.Shape = CurveConstruction.StartLine(p0.X, p0.Y + 50).LineTo(p0).Curve;
+					fgF.Store();
+				}
+				{
+					IFeature gkF = fcGk.CreateFeature();
+					gkF.Value[fcGk.FindField("OBJEKTART")] = 0;
+					gkF.Shape = GeometryFactory.Clone(p1);
+					gkF.Store();
+
+					IFeature fgF = fcFg.CreateFeature();
+					fgF.Shape = CurveConstruction.StartLine(p1).LineTo(1600, 400).Curve;
+					fgF.Store();
+				}
+			}
+
+
+			QaConstraint qa = TestTOP_7505(fcSg, tblGl, fcGk, fcFg, out List<IReadOnlyTable> tables);
+
+			//{
+			//	var runner = new QaContainerTestRunner(10000, qa);
+			//	runner.Execute();
+			//	Assert.AreEqual(0, runner.Errors.Count);
+			//}
+			{
+				QaExportTables exp = new QaExportTables(tables, "C:\\temp\\TOP_7505")
+				{ ExportTileIds = true, ExportTiles = true };
+				var runner = new QaContainerTestRunner(1000, qa, exp);
+//				var runner = new QaContainerTestRunner(1000, qa);
+				runner.Execute();
+				Assert.AreEqual(0, runner.Errors.Count);
+			}
+		}
+
+		public QaConstraint TestTOP_7505(
+			IFeatureClass fcSg, ITable tblGl, IFeatureClass fcGk, IFeatureClass fcFg,
+			out List<IReadOnlyTable> tables)
+		{
+			tables = new List<IReadOnlyTable>();
+			tables.Add(ReadOnlyTableFactory.Create(fcSg));
+			tables.Add(ReadOnlyTableFactory.Create(fcGk));
+			tables.Add(ReadOnlyTableFactory.Create(fcFg));
+
+			TrTableJoinInMemory mjFg =
+				new TrTableJoinInMemory(
+					ReadOnlyTableFactory.Create(fcSg), ReadOnlyTableFactory.Create(tblGl),
+					"TLM_GEWAESSER_LAUF_UUID", "UUID", JoinType.InnerJoin
+				)
+				{ TransformerName = "mjFg" };
+			tables.Add((IReadOnlyFeatureClass) mjFg.GetTransformed());
+
+			TrDissolve dsSg = new TrDissolve((IReadOnlyFeatureClass) mjFg.GetTransformed())
+			                  {
+				                  NeighborSearchOption = TrDissolve.SearchOption.All,
+				                  Attributes = new List<string>
+				                               {
+					                               "COUNT(TLM_STEHENDES_GEWAESSER_OBJECTID) AS ANZAHL_LAEUFE"
+				                               },
+				                  GroupBy = new List<string> { "GEWISS_NR" },
+				                  TransformerName = "dsSg"
+			                  };
+			dsSg.SetConstraint(0, "OBJEKTART = 1");
+			tables.Add(dsSg.GetTransformed());
+
+			TrSpatialJoin sjFg = new TrSpatialJoin(
+				                     ReadOnlyTableFactory.Create(fcGk),
+				                     ReadOnlyTableFactory.Create(fcFg))
+			                     {
+				                     OuterJoin = true,
+				                     NeighborSearchOption = TrSpatialJoin.SearchOption.All,
+				                     Grouped = true,
+				                     T1Attributes = new List<string>
+				                                    { "SUM(FGW_P) AS ANZAHL_FGW_P" },
+				                     T1CalcAttributes = new List<string>
+				                                        { "IIF(OBJECTID > 0,1,0) AS FGW_P" },
+				                     TransformerName = "sjFg"
+			                     };
+			tables.Add(sjFg.GetTransformed());
+
+			TrSpatialJoin sj = new TrSpatialJoin(dsSg.GetTransformed(), sjFg.GetTransformed())
+			                   {
+				                   NeighborSearchOption = TrSpatialJoin.SearchOption.All,
+				                   Grouped = true,
+				                   T1Attributes = new List<string>
+				                                  {
+					                                  "SUM(LOOP_JUNCTION) AS ANZAHL_LOOP_JUNCTIONS",
+					                                  "SUM(SECONDARY_JUNCTION) AS ANZAHL_SECONDARY_JUNCTIONS",
+					                                  "SUM(ANZAHL_FGW_L) AS ANZAHL_FGW_SEE"
+				                                  },
+				                   T1CalcAttributes = new List<string>
+				                                      {
+					                                      "IIF(OBJEKTART=1,1,0) AS LOOP_JUNCTION",
+					                                      "IIF(OBJEKTART=2,1,0) AS SECONDARY_JUNCTION",
+					                                      "IIF(ANZAHL_FGW_P >= 1,1,0) AS ANZAHL_FGW_L"
+				                                      },
+				                   TransformerName = "sjSgFg"
+			                   };
+			tables.Add(sj.GetTransformed());
+
+			QaConstraint qa = new QaConstraint(
+				sj.GetTransformed(),
+				"ANZAHL_LOOP_JUNCTIONS = 1 AND ANZAHL_SECONDARY_JUNCTIONS = 0 AND ANZAHL_LAEUFE = 2");
+			qa.SetConstraint(0, "ANZAHL_FGW_SEE = 1");
+
+			return qa;
+		}
+
 	}
 }

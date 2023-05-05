@@ -4,7 +4,25 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AO.Geodatabase
 {
-	public class AoFeatureClassFilter : IFeatureClassFilter, ITileFilter
+	public class AoTableFilter : ITableFilter
+	{
+		public AoTableFilter()
+		{}
+		public string SubFields { get; set; }
+
+		public string WhereClause { get; set; }
+
+		public virtual object ToNativeFilterImpl(IFeatureClass featureClass = null)
+		{
+			IQueryFilter result = GdbQueryUtils.CreateQueryFilter();
+
+			result.SubFields = SubFields;
+			result.WhereClause = WhereClause;
+
+			return result;
+		}
+	}
+	public class AoFeatureClassFilter : AoTableFilter, IFeatureClassFilter, ITileFilter
 	{
 		public AoFeatureClassFilter(
 			[NotNull] IGeometry filterGeometry,
@@ -30,11 +48,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		#region Implementation of ITableFilter
 
-		public string SubFields { get; set; }
-
-		public string WhereClause { get; set; }
-
-		public object ToNativeFilterImpl(IFeatureClass featureClass = null)
+		public override object ToNativeFilterImpl(IFeatureClass featureClass = null)
 		{
 			IQueryFilter result = GdbQueryUtils.CreateSpatialFilter(
 				featureClass, FilterGeometry, SpatialRelationship,
@@ -60,5 +74,6 @@ namespace ProSuite.Commons.AO.Geodatabase
 		//}
 
 		#endregion
+
 	}
 }

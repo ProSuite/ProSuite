@@ -1,5 +1,6 @@
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Geom;
 
 namespace ProSuite.QA.Container.TestContainer
@@ -8,7 +9,7 @@ namespace ProSuite.QA.Container.TestContainer
 	{
 		private readonly IEnvelope _filterEnvelope;
 		private readonly Box _box;
-		private readonly ISpatialFilter _filter;
+		private readonly IFeatureClassFilter _filter;
 
 		public Tile(double tileXMin, double tileYMin, double tileXMax, double tileYMax,
 		            ISpatialReference spatialReference, int totalTileCount)
@@ -19,16 +20,15 @@ namespace ProSuite.QA.Container.TestContainer
 
 			_box = new Box(new Pnt2D(tileXMin, tileYMin), new Pnt2D(tileXMax, tileYMax));
 
-			_filter = new SpatialFilterClass();
-			_filter.Geometry = _filterEnvelope;
-			_filter.SpatialRel = totalTileCount == 1
-				                     ? esriSpatialRelEnum.esriSpatialRelIntersects
-				                     : esriSpatialRelEnum.esriSpatialRelEnvelopeIntersects;
+			var rel = totalTileCount == 1
+				          ? esriSpatialRelEnum.esriSpatialRelIntersects
+				          : esriSpatialRelEnum.esriSpatialRelEnvelopeIntersects;
+			_filter = new AoFeatureClassFilter(_filterEnvelope, rel);
 		}
 
 		public Box Box => _box;
 		public IEnvelope FilterEnvelope => _filterEnvelope;
-		public ISpatialFilter SpatialFilter => _filter;
+		public IFeatureClassFilter SpatialFilter => _filter;
 
 		#region Overrides of Object
 

@@ -118,18 +118,16 @@ namespace ProSuite.QA.Container
 		}
 
 		[NotNull]
-		public static IQueryFilter CreateFilter([CanBeNull] IGeometry queryArea,
+		public static ITableFilter CreateFilter([CanBeNull] IGeometry queryArea,
 		                                        [CanBeNull] IPolygon constraintArea,
 		                                        [CanBeNull] string constraint,
 		                                        [NotNull] IReadOnlyTable table,
 		                                        [CanBeNull] TableView tableView)
 		{
-			IQueryFilter filter;
+			ITableFilter filter;
 			if (constraintArea != null ||
 			    queryArea != null && table is IReadOnlyFeatureClass)
 			{
-				ISpatialFilter s = new SpatialFilterClass();
-
 				if (queryArea == null)
 				{
 					queryArea = constraintArea;
@@ -137,19 +135,18 @@ namespace ProSuite.QA.Container
 				else if (constraintArea != null)
 				{
 					queryArea =
-						((ITopologicalOperator) constraintArea).Intersect(
+						((ITopologicalOperator)constraintArea).Intersect(
 							queryArea, esriGeometryDimension.esriGeometry2Dimension);
 				}
 
-				s.Geometry = queryArea;
-				s.GeometryField = ((IReadOnlyFeatureClass) table).ShapeFieldName;
-				s.SpatialRel = esriSpatialRelEnum.esriSpatialRelIntersects;
+				IFeatureClassFilter s = new AoFeatureClassFilter(
+					queryArea, esriSpatialRelEnum.esriSpatialRelIntersects);
 
 				filter = s;
 			}
 			else
 			{
-				filter = new QueryFilterClass();
+				filter = new AoTableFilter();
 			}
 
 			if (tableView != null)

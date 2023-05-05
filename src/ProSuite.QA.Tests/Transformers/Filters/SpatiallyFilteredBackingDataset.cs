@@ -27,7 +27,7 @@ namespace ProSuite.QA.Tests.Transformers.Filters
 			_neighborSearchOption = neighborSearchOption;
 		}
 
-		public ISpatialFilter IntersectingFeatureFilter { get; set; }
+		public IFeatureClassFilter IntersectingFeatureFilter { get; set; }
 
 		/// <summary>
 		/// Whether a feature that is disjoint to any filtering feature passes the filter.
@@ -38,7 +38,7 @@ namespace ProSuite.QA.Tests.Transformers.Filters
 
 		#region Overrides of BackingDataset
 
-		public override IEnumerable<VirtualRow> Search(IQueryFilter filter, bool recycling)
+		public override IEnumerable<VirtualRow> Search(ITableFilter filter, bool recycling)
 		{
 			QueryFilterHelper resultFilter = QueryHelpers[0];
 			Assert.NotNull(filter);
@@ -64,9 +64,9 @@ namespace ProSuite.QA.Tests.Transformers.Filters
 		{
 			IGeometry testGeometry = resultFeature.Shape;
 
-			ISpatialFilter spatialFilter = IntersectingFeatureFilter;
+			IFeatureClassFilter spatialFilter = IntersectingFeatureFilter;
 
-			spatialFilter.Geometry = testGeometry;
+			spatialFilter.FilterGeometry = testGeometry;
 			QueryFilterHelper queryFilterHelper = QueryHelpers[1];
 			queryFilterHelper.FullGeometrySearch =
 				_neighborSearchOption == TrSpatiallyFiltered.SearchOption.All;

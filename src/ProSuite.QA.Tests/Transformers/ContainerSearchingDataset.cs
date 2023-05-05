@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
@@ -39,20 +38,20 @@ namespace ProSuite.QA.Tests.Transformers
 			return CreateRow(_sourceTable.GetRow(id));
 		}
 
-		public override long GetRowCount(IQueryFilter queryFilter)
+		public override long GetRowCount(ITableFilter queryFilter)
 		{
 			return _sourceTable.RowCount(queryFilter);
 		}
 
-		public override IEnumerable<VirtualRow> Search(IQueryFilter filter, bool recycling)
+		public override IEnumerable<VirtualRow> Search(ITableFilter filter, bool recycling)
 		{
 			if (DataContainer == null)
 			{
 				return SearchSourceTable(filter, recycling);
 			}
 
-			ISpatialFilter spatialFilter = filter as ISpatialFilter;
-			IGeometry spatialFilterGeometry = spatialFilter?.Geometry;
+			IFeatureClassFilter spatialFilter = filter as IFeatureClassFilter;
+			IGeometry spatialFilterGeometry = spatialFilter?.FilterGeometry;
 
 			if (spatialFilterGeometry == null)
 			{
@@ -121,7 +120,7 @@ namespace ProSuite.QA.Tests.Transformers
 			}
 		}
 
-		private IEnumerable<VirtualRow> SearchSourceTable([CanBeNull] IQueryFilter filter,
+		private IEnumerable<VirtualRow> SearchSourceTable([CanBeNull] ITableFilter filter,
 		                                                  bool recycling)
 		{
 			_msg.DebugFormat("Searching {0} rows in database...", _sourceTable.Name);
