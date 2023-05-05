@@ -451,6 +451,9 @@ namespace ProSuite.AGP.Editing.OneClick
 					pickerLocation =
 						MapView.Active.MapToScreen(selectionGeometry.Extent.Center);
 
+					_msg.VerboseDebug(() => $"Picker location on map {GeometryUtils.Format(selectionGeometry.Extent.Center)}");
+					_msg.VerboseDebug(() => $"Picker location on screen {pickerLocation.X}/{pickerLocation.Y}");
+
 					// find all features spatially related with searchGeometry
 					// TODO: 1. Find all features in point layers, if count > 0 -> skip the rest
 					//       2. Find all features in polyline layers, ...
