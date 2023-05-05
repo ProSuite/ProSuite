@@ -62,9 +62,6 @@ namespace ProSuite.AGP.Editing.OneClick
 		/// </summary>
 		protected bool AllowNotApplicableFeaturesInSelection { get; set; } = true;
 
-		protected virtual SelectionSettings SelectionSettings { get; } =
-			new SelectionSettings();
-
 		public virtual IPickerPrecedence PickerPrecedence =>
 			_pickerPrecedence ?? (_pickerPrecedence = new StandardPickerPrecedence());
 
@@ -269,7 +266,9 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected void StartSelectionPhase()
 		{
-			SetupSketch(SelectionSettings.SketchGeometryType, SelectionSettings.SketchOutputMode);
+			SelectionSettings settings = GetSelectionSettings();
+
+			SetupSketch(settings.SketchGeometryType, settings.SketchOutputMode);
 
 			if (KeyboardUtils.IsModifierPressed(Keys.Shift, true))
 			{
@@ -421,7 +420,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected int GetSelectionTolerancePixels()
 		{
-			return SelectionSettings.SelectionTolerancePixels;
+			return GetSelectionSettings().SelectionTolerancePixels;
 		}
 
 		private async Task<bool> OnSelectionSketchComplete(Geometry sketchGeometry,
@@ -728,6 +727,8 @@ namespace ProSuite.AGP.Editing.OneClick
 		protected virtual void ShowOptionsPane() { }
 
 		protected virtual void HideOptionsPane() { }
+
+		protected abstract SelectionSettings GetSelectionSettings();
 
 		protected abstract bool HandleEscape();
 
