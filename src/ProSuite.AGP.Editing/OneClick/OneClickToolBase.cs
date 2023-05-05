@@ -22,9 +22,9 @@ using ProSuite.Commons.AGP.WPF;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Notifications;
+using ProSuite.Commons.UI;
 using ProSuite.Commons.UI.Keyboard;
 using Cursor = System.Windows.Input.Cursor;
-using ViewUtils = ProSuite.Commons.UI.ViewUtils;
 
 namespace ProSuite.AGP.Editing.OneClick
 {
@@ -61,9 +61,6 @@ namespace ProSuite.AGP.Editing.OneClick
 		/// usable by the tool.
 		/// </summary>
 		protected bool AllowNotApplicableFeaturesInSelection { get; set; } = true;
-
-		protected virtual SelectionSettings SelectionSettings { get; } =
-			new SelectionSettings();
 
 		public virtual IPickerPrecedence PickerPrecedence =>
 			_pickerPrecedence ?? (_pickerPrecedence = new StandardPickerPrecedence());
@@ -269,7 +266,9 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected void StartSelectionPhase()
 		{
-			SetupSketch(SelectionSettings.SketchGeometryType, SelectionSettings.SketchOutputMode);
+			SelectionSettings settings = GetSelectionSettings();
+
+			SetupSketch(settings.SketchGeometryType, settings.SketchOutputMode);
 
 			if (KeyboardUtils.IsModifierPressed(Keys.Shift, true))
 			{
@@ -421,7 +420,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected int GetSelectionTolerancePixels()
 		{
-			return SelectionSettings.SelectionTolerancePixels;
+			return GetSelectionSettings().SelectionTolerancePixels;
 		}
 
 		private async Task<bool> OnSelectionSketchComplete(Geometry sketchGeometry,
@@ -439,7 +438,7 @@ namespace ProSuite.AGP.Editing.OneClick
 				                                          : SpatialRelationship.Intersects;
 
 			Geometry selectionGeometry = null;
-			var pickerWindowLocation = new Point(0, 0);
+			var pickerLocation = new Point(0, 0);
 
 			bool singlePick = false;
 			List<FeatureSelectionBase> candidatesOfManyLayers =
@@ -448,8 +447,11 @@ namespace ProSuite.AGP.Editing.OneClick
 					selectionGeometry = ToolUtils.SketchToSearchGeometry(sketchGeometry,
 						GetSelectionTolerancePixels(), out singlePick);
 
-					pickerWindowLocation =
+					pickerLocation =
 						MapView.Active.MapToScreen(selectionGeometry.Extent.Center);
+
+					_msg.VerboseDebug(() => $"Picker location on map {GeometryUtils.Format(selectionGeometry.Extent.Center)}");
+					_msg.VerboseDebug(() => $"Picker location on screen {pickerLocation.X}/{pickerLocation.Y}");
 
 					// find all features spatially related with searchGeometry
 					// TODO: 1. Find all features in point layers, if count > 0 -> skip the rest
@@ -476,11 +478,11 @@ namespace ProSuite.AGP.Editing.OneClick
 			// todo daro refactor
 			bool result = singlePick
 				              ? await SingleSelectAsync(candidatesOfManyLayers,
-				                                        pickerWindowLocation,
+				                                        pickerLocation,
 				                                        PickerPrecedence,
 				                                        selectionMethod)
 				              : await AreaSelect(candidatesOfManyLayers,
-				                                 pickerWindowLocation,
+				                                 pickerLocation,
 				                                 PickerPrecedence,
 				                                 selectionMethod);
 
@@ -725,6 +727,8 @@ namespace ProSuite.AGP.Editing.OneClick
 		protected virtual void ShowOptionsPane() { }
 
 		protected virtual void HideOptionsPane() { }
+
+		protected abstract SelectionSettings GetSelectionSettings();
 
 		protected abstract bool HandleEscape();
 

@@ -95,6 +95,26 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			return MapPointBuilderEx.CreateMapPoint(x, y, hasZ, z, hasM, m, hasId, id, sref);
 		}
 
+		[NotNull]
+		public static MapPoint GetUpperRight([NotNull] Envelope envelope)
+		{
+			double x = envelope.XMax;
+			double y = envelope.YMax;
+
+			bool hasZ = envelope.HasZ;
+			double z = hasZ ? envelope.ZMin : 0.0;
+
+			bool hasM = envelope.HasM;
+			double m = hasM ? envelope.MMin : double.NaN;
+
+			bool hasId = envelope.HasID;
+			int id = hasId ? envelope.IDMin : 0;
+
+			var sref = envelope.SpatialReference;
+
+			return MapPointBuilderEx.CreateMapPoint(x, y, hasZ, z, hasM, m, hasId, id, sref);
+		}
+
 		public static double GetArea([CanBeNull] Geometry geometry)
 		{
 			if (geometry is Polygon polygon) return polygon.Area;
@@ -711,6 +731,20 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 					throw new ArgumentOutOfRangeException(nameof(geometryType), geometryType,
 					                                      $"Unexpected geometry type: {geometryType}");
 			}
+		}
+
+		public static string Format([NotNull] MapPoint point, int digits = 0)
+		{
+			return $"{Math.Round(point.X, digits)}/{Math.Round(point.Y, digits)}";
+		}
+
+		[NotNull]
+		public static string Format([NotNull] Envelope extent, int digits = 0)
+		{
+			MapPoint lowerLeft = GetLowerLeft(extent);
+			MapPoint upperRight = GetUpperRight(extent);
+
+			return $"{Format(lowerLeft, digits)}, {Format(upperRight, digits)}";
 		}
 	}
 }

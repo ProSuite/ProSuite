@@ -20,11 +20,11 @@ using Attribute = ArcGIS.Desktop.Editing.Attributes.Attribute;
 
 namespace ProSuite.AGP.Editing.CreateFeatures
 {
-	public class CreateMultiplePointsToolBase : ConstructionToolBase
+	public abstract class CreateMultiplePointsToolBase : ConstructionToolBase
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		public CreateMultiplePointsToolBase()
+		protected CreateMultiplePointsToolBase()
 		{
 			UseSnapping = true;
 

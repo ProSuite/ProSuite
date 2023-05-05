@@ -8,12 +8,14 @@ using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI.Keyboard;
 
 namespace ProSuite.AGP.Editing.Picker
 {
 	public class SelectionToolPickerPrecedence : IPickerPrecedence
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 		private static readonly int _maxItems = 25;
 		private static MapPoint _selectionCentroid;
 
@@ -64,39 +66,46 @@ namespace ProSuite.AGP.Editing.Picker
 			IPickableItem item,
 			Geometry selectionGeometry)
 		{
-			double score = 0.0;
-			Geometry geometry = item.Geometry;
-
-			if (geometry == null)
+			try
 			{
-				return item;
-			}
+				double score = 0.0;
+				Geometry geometry = item.Geometry;
 
-			switch (geometry.GeometryType)
-			{
-				case GeometryType.Point:
-					score = GeometryUtils.Engine
-					                     .NearestPoint(selectionGeometry, (MapPoint) item.Geometry)
-					                     .Distance;
-					break;
-				case GeometryType.Polyline:
-					score = SumDistancesStartEndPoint(selectionGeometry, (Multipart) item.Geometry);
-					break;
-				case GeometryType.Polygon:
-					// negative
-					score = ((Polygon) geometry).Area;
-					break;
-				case GeometryType.Unknown:
-				case GeometryType.Envelope:
-				case GeometryType.Multipoint:
-				case GeometryType.Multipatch:
-				case GeometryType.GeometryBag:
-					break;
-				default:
-					throw new ArgumentOutOfRangeException();
-			}
+				if (geometry == null)
+				{
+					return item;
+				}
+
+				switch (geometry.GeometryType)
+				{
+					case GeometryType.Point:
+						score = GeometryUtils.Engine
+						                     .NearestPoint(selectionGeometry, (MapPoint) item.Geometry)
+						                     .Distance;
+						break;
+					case GeometryType.Polyline:
+						score = SumDistancesStartEndPoint(selectionGeometry, (Multipart) item.Geometry);
+						break;
+					case GeometryType.Polygon:
+						// negative
+						score = ((Polygon) geometry).Area;
+						break;
+					case GeometryType.Unknown:
+					case GeometryType.Envelope:
+					case GeometryType.Multipoint:
+					case GeometryType.Multipatch:
+					case GeometryType.GeometryBag:
+						break;
+					default:
+						throw new ArgumentOutOfRangeException();
+				}
 			
-			SetScore(item, score);
+				SetScore(item, score);
+			}
+			catch (Exception e)
+			{
+				_msg.Debug($"{nameof(SetScoreCosideringDistances)}", e);
+			}
 
 			return item;
 		}
@@ -105,22 +114,29 @@ namespace ProSuite.AGP.Editing.Picker
 			IPickableFeatureItem item,
 			Geometry selectionGeometry)
 		{
-			Geometry itemGeometry = item.Geometry;
-
-			if (itemGeometry == null)
+			try
 			{
-				return item;
+				Geometry itemGeometry = item.Geometry;
+
+				if (itemGeometry == null)
+				{
+					return item;
+				}
+
+				Geometry geometry = UseDrawingOutline(itemGeometry)
+					                    ? GetDrawingOutline(item.Layer, item.Oid)
+					                    : itemGeometry;
+
+				if (GeometryUtils.Disjoint(geometry, selectionGeometry))
+				{
+					SetScore(item, item.Score * item.Score);
+
+					return item;
+				}
 			}
-
-			Geometry geometry = UseDrawingOutline(itemGeometry)
-				                    ? GetDrawingOutline(item.Layer, item.Oid)
-				                    : itemGeometry;
-
-			if (GeometryUtils.Disjoint(geometry, selectionGeometry))
+			catch (Exception e)
 			{
-				SetScore(item, item.Score * item.Score);
-
-				return item;
+				_msg.Debug($"{nameof(SetScoreConsideringDrawingOutline)}", e);
 			}
 
 			return item;
