@@ -22,9 +22,9 @@ using ProSuite.Commons.AGP.WPF;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Notifications;
+using ProSuite.Commons.UI;
 using ProSuite.Commons.UI.Keyboard;
 using Cursor = System.Windows.Input.Cursor;
-using ViewUtils = ProSuite.Commons.UI.ViewUtils;
 
 namespace ProSuite.AGP.Editing.OneClick
 {
@@ -439,7 +439,7 @@ namespace ProSuite.AGP.Editing.OneClick
 				                                          : SpatialRelationship.Intersects;
 
 			Geometry selectionGeometry = null;
-			var pickerWindowLocation = new Point(0, 0);
+			var pickerLocation = new Point(0, 0);
 
 			bool singlePick = false;
 			List<FeatureSelectionBase> candidatesOfManyLayers =
@@ -448,7 +448,7 @@ namespace ProSuite.AGP.Editing.OneClick
 					selectionGeometry = ToolUtils.SketchToSearchGeometry(sketchGeometry,
 						GetSelectionTolerancePixels(), out singlePick);
 
-					pickerWindowLocation =
+					pickerLocation =
 						MapView.Active.MapToScreen(selectionGeometry.Extent.Center);
 
 					// find all features spatially related with searchGeometry
@@ -476,11 +476,11 @@ namespace ProSuite.AGP.Editing.OneClick
 			// todo daro refactor
 			bool result = singlePick
 				              ? await SingleSelectAsync(candidatesOfManyLayers,
-				                                        pickerWindowLocation,
+				                                        pickerLocation,
 				                                        PickerPrecedence,
 				                                        selectionMethod)
 				              : await AreaSelect(candidatesOfManyLayers,
-				                                 pickerWindowLocation,
+				                                 pickerLocation,
 				                                 PickerPrecedence,
 				                                 selectionMethod);
 
