@@ -4,9 +4,10 @@
                     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
                     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                     xmlns:extensions="clr-namespace:ArcGIS.Desktop.Extensions;assembly=ArcGIS.Desktop.Extensions"
-                    xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
+                    xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
                     xmlns:pickerUi="clr-namespace:ProSuite.AGP.Editing.PickerUI"
                     xmlns:controls="clr-namespace:ArcGIS.Desktop.Framework.Controls;assembly=ArcGIS.Desktop.Framework"
+                    xmlns:picker="clr-namespace:ProSuite.AGP.Editing.Picker"
                     d:DataContext="{d:DesignInstance Type=pickerUi:PickerViewModel}"
                     mc:Ignorable="d"
                     ShowTitleBar="false"
@@ -23,156 +24,104 @@
                     AllowsTransparency="True"
                     FontWeight="Normal"
                     Foreground="Black">
-
-    <!-- Notes regarding ProWindow properties:
+	<!-- Notes regarding ProWindow properties:
          - ShowTitleBar="false" is not enough to hide it. TitlebarHeight="0" makes it disappear.
          - ResizeMode="NoResize" is necessary to avoid the resize-handles appear
     -->
 
-    <Window.Background>
-        <SolidColorBrush Opacity="0.7" Color="White" />
-    </Window.Background>
+	<Window.Background>
+		<SolidColorBrush Opacity="0.7" Color="White" />
+	</Window.Background>
 
-    <!--<Window.CommandBindings>
-        <CommandBinding Command="Close" Executed="OnCloseExecuted" />
-    </Window.CommandBindings>
-    <Window.InputBindings>
-        <KeyBinding Command="Close" Key="Escape" />
-    </Window.InputBindings>-->
-
-    <Window.Resources>
-        <!--ArcGIS Pro dark and light themes are overriden with several style resources. 
+	<Window.Resources>
+		<!--ArcGIS Pro dark and light themes are overriden with several style resources. 
         This is because Pro dark/light themes result in bad contrast when transparent background is used -->
-        <ResourceDictionary>
+		<ResourceDictionary>
 
-            <ResourceDictionary.MergedDictionaries>
-                <!--for loading Pro XAML styles (DynamicResources) in Design Mode-->
-                <extensions:DesignOnlyResourceDictionary
-                    Source="pack://application:,,,/ArcGIS.Desktop.Framework;component\Themes\Default.xaml" />
-            </ResourceDictionary.MergedDictionaries>
+			<ResourceDictionary.MergedDictionaries>
+				<!--for loading Pro XAML styles (DynamicResources) in Design Mode-->
+				<extensions:DesignOnlyResourceDictionary
+					Source="pack://application:,,,/ArcGIS.Desktop.Framework;component\Themes\Default.xaml" />
+			</ResourceDictionary.MergedDictionaries>
 
-            <Style x:Key="Checkbox" TargetType="CheckBox">
-                <Setter Property="Background" Value="White" />
-                <Setter Property="Margin" Value="0,0,10,0" />
-                <Style.Resources>
-                    <SolidColorBrush x:Key="HighlightBrush" Color="Black" />
-                </Style.Resources>
-            </Style>
+			<Style x:Key="TextBlock" TargetType="TextBlock">
+				<Setter Property="Foreground" Value="Black" />
+			</Style>
 
-            <Style x:Key="TextBlock" TargetType="TextBlock">
-                <Setter Property="Foreground" Value="Black" />
-            </Style>
+			<Style x:Key="Image" TargetType="Image">
+				<Setter Property="Margin" Value="0,0,5,0" />
+			</Style>
 
-            <Style x:Key="Image" TargetType="Image">
-                <Setter Property="Margin" Value="0,0,5,0" />
-            </Style>
+			<Style x:Key="ListBox" TargetType="ListBox">
+				<Setter Property="Foreground" Value="Black" />
+				<Setter Property="Background" Value="Transparent" />
+				<Setter Property="BorderBrush" Value="Transparent" />
+				<Setter Property="Margin" Value="2" />
+			</Style>
 
-            <Style x:Key="ListBox" TargetType="ListBox">
-                <Setter Property="Foreground" Value="Black" />
-                <Setter Property="Background" Value="Transparent" />
-                <Setter Property="BorderBrush" Value="Transparent" />
-                <Setter Property="Margin" Value="2" />
-            </Style>
+			<DataTemplate x:Key="SinglePickTemplate" DataType="{x:Type picker:IPickableItem}">
+				<DockPanel>
+					<behaviors:Interaction.Triggers>
+						<behaviors:EventTrigger EventName="MouseEnter">
+							<behaviors:InvokeCommandAction
+								Command="{Binding Path=DataContext.FlashItemCommand, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}"
+								CommandParameter="{Binding}" />
+						</behaviors:EventTrigger>
+					</behaviors:Interaction.Triggers>
+					<Image Source="{Binding ImageSource}" Style="{StaticResource Image}" />
+					<TextBlock Text="{Binding DisplayValue}" Style="{StaticResource TextBlock}" />
+				</DockPanel>
+			</DataTemplate>
 
-            <BooleanToVisibilityConverter x:Key="VisibleIfTrueConverter" />
-            <pickerUi:VisibleIfFalseConverter x:Key="VisibleIfFalseConverter" />
+		</ResourceDictionary>
+	</Window.Resources>
 
-            <DataTemplate x:Key="SinglePickTemplate">
-                <DockPanel>
-                    <i:Interaction.Triggers>
-                        <i:EventTrigger EventName="MouseEnter">
-                            <i:InvokeCommandAction
-                                Command="{Binding Path=DataContext.FlashItemCommand,
-                                RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}"
-                                CommandParameter="{Binding}" />
-                        </i:EventTrigger>
-                    </i:Interaction.Triggers>
+	<Window.InputBindings>
+		<KeyBinding Key="Escape"
+		            Command="{Binding PressEscapeCommand}"
+		            CommandParameter="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}" />
+		<KeyBinding Key="Space" 
+		            Command="{Binding PressSpaceCommand}"/>
+	</Window.InputBindings>
 
-                    <Image Source="{Binding ItemImageSource}"
-                           Style="{StaticResource Image}" />
-                    <TextBlock Text="{Binding ItemText}"
-                               Style="{StaticResource TextBlock}" />
-                </DockPanel>
-            </DataTemplate>
+	<behaviors:Interaction.Triggers>
+		<behaviors:EventTrigger EventName="Deactivated">
+			<behaviors:InvokeCommandAction Command="{Binding Path=DeactivatedCommand}" 
+			                               CommandParameter="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}"/>
+		</behaviors:EventTrigger>
+	</behaviors:Interaction.Triggers>
 
-            <DataTemplate x:Key="MultiPickTemplate">
-                <DockPanel>
-                    <i:Interaction.Triggers>
-                        <i:EventTrigger EventName="MouseEnter">
-                            <i:InvokeCommandAction
-                                Command="{Binding Path=DataContext.FlashItemCommand,
-                                RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}"
-                                CommandParameter="{Binding}" />
-                        </i:EventTrigger>
-                    </i:Interaction.Triggers>
+	<Grid Background="Transparent">
+		<DockPanel Background="Transparent">
 
-                    <CheckBox IsChecked="{Binding IsSelected}"
-                              Style="{StaticResource Checkbox}" />
-
-                    <Image Source="{Binding ItemImageSource}"
-                           Style="{StaticResource Image}" />
-
-                    <TextBlock Text="{Binding ItemText}"
-                               Style="{StaticResource TextBlock}" />
-
-                </DockPanel>
-            </DataTemplate>
-
-        </ResourceDictionary>
-    </Window.Resources>
-
-
-    <Grid Background="Transparent">
-        <DockPanel Background="Transparent">
-            <!--<Image Source="pack://application:,,,/Images/PointGeometry.bmp"></Image>-->
-            <Button
-                DockPanel.Dock="Top"
-                HorizontalAlignment="Right"
-                Content="Close"
-                Command="{Binding CloseCommand}"
-                Style="{DynamicResource Esri_ButtonClose}"
-                Visibility="{Binding IsSingleMode, Converter={StaticResource VisibleIfFalseConverter}}" />
-
-            <!-- Listbox visibility is set in viewmodel 
+			<!-- Listbox visibility is set in viewmodel 
             and depends on Single/Multiselection mode. -->
-            <ListBox x:Name="SingleSelection"
-                     DockPanel.Dock="Top"
-                     ItemsSource="{Binding Path=PickableItems}"
-                     ItemTemplate="{StaticResource SinglePickTemplate}"
-                     SelectedItem="{Binding Path=SelectedPickableItem, Mode=TwoWay}"
-                     Style="{StaticResource ListBox}"
-                     Visibility="{Binding IsSingleMode, Converter={StaticResource VisibleIfTrueConverter}}">
+			<ListBox DockPanel.Dock="Top"
+			         ItemsSource="{Binding Path=Items}"
+			         ItemTemplate="{StaticResource SinglePickTemplate}"
+			         SelectedItem="{Binding Path=SelectedItem, Mode=TwoWay}"
+			         Style="{StaticResource ListBox}">
 
-                <ListBox.ItemContainerStyle>
-                    <!--when this block is not here (it does not even have content), 
+				<ListBox.ItemContainerStyle>
+					<!--when this block is not here (it does not even have content), 
                         the background color of highlighted items is blackish 
                         (bad contrast). -->
-                    <Style />
-                </ListBox.ItemContainerStyle>
+					<Style TargetType="{x:Type ListBoxItem}">
+						<Setter Property="IsSelected" Value="{Binding Selected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+					</Style>
+				</ListBox.ItemContainerStyle>
 
-            </ListBox>
+				<behaviors:Interaction.Triggers>
+					<behaviors:EventTrigger EventName="SelectionChanged">
+						<behaviors:InvokeCommandAction Command="{Binding Path=SelectionChangedCommand}"
+						                               CommandParameter="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}" />
+					</behaviors:EventTrigger>
+				</behaviors:Interaction.Triggers>
+			</ListBox>
 
-            <!-- Listbox visibility is set in viewmodel 
-            and depends on Single/Multiselection mode. -->
-            <ListBox x:Name="MultiSelection"
-                     DockPanel.Dock="Top"
-                     ItemsSource="{Binding Path=PickableItems}"
-                     ItemTemplate="{StaticResource MultiPickTemplate}"
-                     SelectionMode="Multiple"
-                     Style="{StaticResource ListBox}"
-                     Visibility="{Binding IsSingleMode, Converter={StaticResource VisibleIfFalseConverter}}">
-
-                <ListBox.ItemContainerStyle>
-                    <Style TargetType="{x:Type ListBoxItem}">
-                        <Setter Property="IsSelected"
-                                Value="{Binding Mode=TwoWay, Path=IsSelected}" />
-                    </Style>
-                </ListBox.ItemContainerStyle>
-            </ListBox>
-
-            <!-- This only works if the Window is modal (ShowDialog()). For ProWindows it is not necessary.
+			<!-- This only works if the Window is modal (ShowDialog()). For ProWindows it is not necessary.
         <Button Width="1" Height="1" Background="Transparent" BorderBrush="Transparent" IsCancel="True" />
         -->
-        </DockPanel>
-    </Grid>
+		</DockPanel>
+	</Grid>
 </controls:ProWindow>

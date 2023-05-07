@@ -88,6 +88,26 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			return MapPointBuilderEx.CreateMapPoint(x, y, hasZ, z, hasM, m, hasId, id, sref);
 		}
 
+		[NotNull]
+		public static MapPoint GetUpperRight([NotNull] Envelope envelope)
+		{
+			double x = envelope.XMax;
+			double y = envelope.YMax;
+
+			bool hasZ = envelope.HasZ;
+			double z = hasZ ? envelope.ZMin : 0.0;
+
+			bool hasM = envelope.HasM;
+			double m = hasM ? envelope.MMin : double.NaN;
+
+			bool hasId = envelope.HasID;
+			int id = hasId ? envelope.IDMin : 0;
+
+			var sref = envelope.SpatialReference;
+
+			return MapPointBuilderEx.CreateMapPoint(x, y, hasZ, z, hasM, m, hasId, id, sref);
+		}
+
 		public static double GetArea([CanBeNull] Geometry geometry)
 		{
 			if (geometry is Polygon polygon) return polygon.Area;
@@ -395,12 +415,15 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 		{
 			if (clipExtentRotationDeg == 0)
 			{
-				return (Polygon) Engine.Clip(polygon, clipExtent);
+				Envelope clipExtentSref =
+					EnsureSpatialReference(clipExtent, polygon.SpatialReference);
+
+				return (Polygon) Engine.Clip(polygon, clipExtentSref);
 			}
 
 			// It's a polygon:
 			Polygon envelopeAsPoly =
-				GeometryFactory.CreatePolygon(clipExtent, clipExtent.SpatialReference);
+				GeometryFactory.CreatePolygon(clipExtent, polygon.SpatialReference);
 
 			double rotationInRadians = MathUtils.ToRadians(clipExtentRotationDeg);
 
@@ -451,6 +474,16 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			return Engine.Intersects(a, b);
 		}
 
+		[NotNull]
+		public static MapPoint Centroid([NotNull] Geometry geometry)
+		{
+			Assert.ArgumentNotNull(geometry, nameof(geometry));
+
+			Assert.False(geometry.IsEmpty, "geometry is empty");
+
+			return Engine.Centroid(geometry);
+		}
+
 		public static IGeometryEngine Engine
 		{
 			get => _engine ?? GeometryEngine.Instance;
@@ -484,6 +517,40 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 				default:
 					throw new ArgumentOutOfRangeException($"Cannot translate {esriGeometryType}");
 			}
+		}
+
+		public static int GetShapeDimension(GeometryType geometryType)
+		{
+			switch (geometryType)
+			{
+				case GeometryType.Point:
+				case GeometryType.Multipoint:
+					return 0;
+				case GeometryType.Polyline:
+					return 1;
+				case GeometryType.Polygon:
+				case GeometryType.Multipatch:
+				case GeometryType.Envelope:
+					return 2;
+
+				default:
+					throw new ArgumentOutOfRangeException(nameof(geometryType), geometryType,
+					                                      $"Unexpected geometry type: {geometryType}");
+			}
+		}
+
+		public static string Format([NotNull] MapPoint point, int digits = 0)
+		{
+			return $"{Math.Round(point.X, digits)}/{Math.Round(point.Y, digits)}";
+		}
+
+		[NotNull]
+		public static string Format([NotNull] Envelope extent, int digits = 0)
+		{
+			MapPoint lowerLeft = GetLowerLeft(extent);
+			MapPoint upperRight = GetUpperRight(extent);
+
+			return $"{Format(lowerLeft, digits)}, {Format(upperRight, digits)}";
 		}
 	}
 }
