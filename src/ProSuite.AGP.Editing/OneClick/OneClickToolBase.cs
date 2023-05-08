@@ -539,7 +539,9 @@ namespace ProSuite.AGP.Editing.OneClick
 
 				await QueuedTask.Run(() =>
 				{
-					SelectionUtils.SelectFeatures(candidatesOfLayers.First(), selectionMethod);
+					SelectionUtils.SelectFeatures(
+						candidatesOfLayers.First(), selectionMethod,
+						selectionMethod == SelectionCombinationMethod.New);
 				});
 
 				return true;
@@ -550,7 +552,9 @@ namespace ProSuite.AGP.Editing.OneClick
 			{
 				await QueuedTask.Run(() =>
 				{
-					SelectionUtils.SelectFeatures(candidatesOfLayers, selectionMethod);
+					SelectionUtils.SelectFeatures(
+						candidatesOfLayers, selectionMethod,
+						selectionMethod == SelectionCombinationMethod.New);
 				});
 
 				return true;
@@ -651,7 +655,10 @@ namespace ProSuite.AGP.Editing.OneClick
 						                                  pickedItem.Oids.ToList(), layer,
 						                                  MapView.Active.Map.SpatialReference)))
 					{
-						SelectionUtils.SelectFeatures(featureClassSelection, selectionMethod);
+						SelectionUtils.SelectFeatures(
+							featureClassSelection,
+							selectionMethod,
+							selectionMethod == SelectionCombinationMethod.New);
 					}
 				});
 			}
@@ -660,7 +667,10 @@ namespace ProSuite.AGP.Editing.OneClick
 				//no modifier pressed: select all in envelope
 				await QueuedTask.Run(() =>
 				{
-					SelectionUtils.SelectFeatures(candidatesOfLayers, selectionMethod);
+					SelectionUtils.SelectFeatures(
+						candidatesOfLayers,
+						selectionMethod,
+						selectionMethod == SelectionCombinationMethod.New);
 				});
 			}
 
