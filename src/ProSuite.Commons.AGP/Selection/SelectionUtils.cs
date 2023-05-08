@@ -13,7 +13,6 @@ using ProSuite.Commons.Text;
 
 namespace ProSuite.Commons.AGP.Selection
 {
-	// todo daro move to Selection?
 	public static class SelectionUtils
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
@@ -27,7 +26,7 @@ namespace ProSuite.Commons.AGP.Selection
 				return;
 			}
 
-			Dictionary<MapMember, List<long>> selection = mapView.Map.GetSelection();
+			Dictionary<MapMember, List<long>> selection = mapView.Map.GetSelection().ToDictionary();
 
 			foreach (MapMember mapMembersWithSelection in selection.Keys)
 			{
@@ -108,40 +107,43 @@ namespace ProSuite.Commons.AGP.Selection
 			}
 		}
 
-		public static void SelectFeatures(
-			[NotNull] IEnumerable<FeatureSelectionBase> featuresPerLayer,
-			SelectionCombinationMethod selectionCombinationMethod)
+		public static void SelectFeatures([NotNull] FeatureSelectionBase featuresPerLayer,
+		                                  SelectionCombinationMethod selectionCombinationMethod,
+		                                  bool clearExistingSelection = false)
 		{
 			Assert.ArgumentNotNull(featuresPerLayer, nameof(featuresPerLayer));
 
-			foreach (FeatureSelectionBase featureClassSelection in featuresPerLayer)
-			{
-				SelectFeatures(featureClassSelection.BasicFeatureLayer,
-				               selectionCombinationMethod,
-				               featureClassSelection.GetOids().ToList());
-			}
+			SelectFeatures(featuresPerLayer.BasicFeatureLayer,
+			               selectionCombinationMethod,
+			               featuresPerLayer.GetOids().ToList(),
+			               clearExistingSelection);
 		}
 
 		public static void SelectFeatures(
-			[NotNull] FeatureSelectionBase featureClassSelection,
-			SelectionCombinationMethod selectionCombinationMethod)
+			[NotNull] IEnumerable<FeatureSelectionBase> featuresPerLayers,
+			SelectionCombinationMethod selectionCombinationMethod,
+			bool clearExistingSelection = false)
 		{
-			Assert.ArgumentNotNull(featureClassSelection, nameof(featureClassSelection));
+			Assert.ArgumentNotNull(featuresPerLayers, nameof(featuresPerLayers));
 
-			SelectFeatures(featureClassSelection.BasicFeatureLayer,
-			               selectionCombinationMethod,
-			               featureClassSelection.GetOids().ToList());
+			foreach (FeatureSelectionBase featuresPerLayer in featuresPerLayers)
+			{
+				SelectFeatures(featuresPerLayer.BasicFeatureLayer,
+				               selectionCombinationMethod,
+				               featuresPerLayer.GetOids().ToList(),
+				               clearExistingSelection);
+			}
 		}
 
 		public static IEnumerable<Feature> GetSelectedFeatures([NotNull] MapView activeView)
 		{
-			Dictionary<MapMember, List<long>> selection = activeView.Map.GetSelection();
+			Dictionary<MapMember, List<long>> selection = GetSelection(activeView.Map);
 
 			SpatialReference spatialReference = activeView.Map.SpatialReference;
 
-			foreach (Feature feature1 in MapUtils.GetFeatures(selection, spatialReference))
+			foreach (Feature feature in MapUtils.GetFeatures(selection, spatialReference))
 			{
-				yield return feature1;
+				yield return feature;
 			}
 		}
 
@@ -165,13 +167,19 @@ namespace ProSuite.Commons.AGP.Selection
 
 		public static Dictionary<MapMember, List<long>> GetSelection(Map map)
 		{
-			return map.GetSelection();
+			return map.GetSelection().ToDictionary();
+		}
+
+		public static Dictionary<MapMember, List<long>> GetSelectedOidsByLayer(
+			SelectionSet selectionSet)
+		{
+			return selectionSet.ToDictionary();
 		}
 
 		public static Dictionary<MapMember, List<long>> GetSelection(
 			MapSelectionChangedEventArgs selectionChangedArgs)
 		{
-			return selectionChangedArgs.Selection;
+			return selectionChangedArgs.Selection.ToDictionary();
 		}
 
 		public static int GetFeatureCount(
