@@ -49,7 +49,7 @@ namespace ProSuite.AGP.Editing.Picker
 		public IEnumerable<IPickableItem> Order(IEnumerable<IPickableItem> items)
 		{
 			return items.Take(_maxItems)
-			            .Select(item => SetScoreCosideringDistances(item, _selectionCentroid))
+			            .Select(item => SetScoreConsideringDistances(item, _selectionCentroid))
 			            .OfType<IPickableFeatureItem>()
 			            .Select(item => SetScoreConsideringDrawingOutline(item, _selectionCentroid))
 			            .OrderBy(item => item, new PickableItemComparer());
@@ -62,7 +62,7 @@ namespace ProSuite.AGP.Editing.Picker
 			return Order(items).FirstOrDefault() as T;
 		}
 
-		private static IPickableItem SetScoreCosideringDistances(
+		private static IPickableItem SetScoreConsideringDistances(
 			IPickableItem item,
 			Geometry selectionGeometry)
 		{
@@ -104,7 +104,7 @@ namespace ProSuite.AGP.Editing.Picker
 			}
 			catch (Exception e)
 			{
-				_msg.Debug($"{nameof(SetScoreCosideringDistances)}", e);
+				_msg.Debug($"{nameof(SetScoreConsideringDistances)}", e);
 			}
 
 			return item;
