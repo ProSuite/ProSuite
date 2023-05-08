@@ -34,7 +34,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		private const Key _keyShowOptionsPane = Key.O;
 
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
-		private StandardPickerPrecedence _pickerPrecedence;
+		private IPickerPrecedence _pickerPrecedence;
 
 		protected OneClickToolBase()
 		{
@@ -481,10 +481,10 @@ namespace ProSuite.AGP.Editing.OneClick
 				                                        pickerLocation,
 				                                        PickerPrecedence,
 				                                        selectionMethod)
-				              : await AreaSelect(candidatesOfManyLayers,
-				                                 pickerLocation,
-				                                 PickerPrecedence,
-				                                 selectionMethod);
+				              : await AreaSelectAsync(candidatesOfManyLayers,
+				                                      pickerLocation,
+				                                      PickerPrecedence,
+				                                      selectionMethod);
 
 			await QueuedTask.Run(() => ProcessSelection(MapView.Active, progressor));
 
@@ -617,7 +617,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			return false;
 		}
 
-		private static async Task<bool> AreaSelect(
+		private static async Task<bool> AreaSelectAsync(
 			[NotNull] IList<FeatureSelectionBase> candidatesOfLayers,
 			Point pickerLocation,
 			IPickerPrecedence pickerPrecedence,
@@ -682,7 +682,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			T pickedItem =
 				await ViewUtils.TryAsync(showPickerControl(), _msg);
-			
+
 			return pickedItem;
 		}
 
