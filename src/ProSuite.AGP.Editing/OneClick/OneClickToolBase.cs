@@ -34,7 +34,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		private const Key _keyShowOptionsPane = Key.O;
 
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
-		private StandardPickerPrecedence _pickerPrecedence;
+		private IPickerPrecedence _pickerPrecedence;
 
 		protected OneClickToolBase()
 		{
@@ -63,7 +63,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		protected bool AllowNotApplicableFeaturesInSelection { get; set; } = true;
 
 		public virtual IPickerPrecedence PickerPrecedence =>
-			_pickerPrecedence ?? (_pickerPrecedence = new StandardPickerPrecedence());
+			_pickerPrecedence ?? (_pickerPrecedence = new SelectionToolPickerPrecedence());
 
 		/// <summary>
 		/// The list of handled keys, i.e. the keys for which <see cref="MapTool.HandleKeyDownAsync" />
