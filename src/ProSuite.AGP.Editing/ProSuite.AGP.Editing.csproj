@@ -21,6 +21,12 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
   </PropertyGroup>
+
+  <!-- .net 6 Winforms and WPF references: -->
+  <PropertyGroup>
+    <UseWpf>true</UseWpf>
+  </PropertyGroup>
+
   <ItemGroup>
     <Reference Include="ArcGIS.Core">
       <HintPath>$(ProAssemblyPath)\bin\ArcGIS.Core.dll</HintPath>
@@ -59,9 +65,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
-    <Compile Update="PickerUI\PickerWindow.xaml.cs">
-      <DependentUpon>PickerWindow.xaml</DependentUpon>
-    </Compile>
     <Compile Update="Properties\LocalizableStrings.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -123,11 +126,5 @@
     <Content Include="Properties\Images\SelectionToolOriginalShift.cur" />
     <Content Include="Properties\Images\SelectionToolUser.cur" />
     <Content Include="Properties\Images\SelectionToolUserShift.cur" />
-  </ItemGroup>
-  <ItemGroup>
-    <Page Include="PickerUI\PickerWindow.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
   </ItemGroup>
 </Project>

@@ -14,7 +14,7 @@ namespace ProSuite.Commons.AGP.Carto
 
 		public static IEnumerable<Row> GetSelectedRows([CanBeNull] StandaloneTable table)
 		{
-			Selection selection = table?.GetSelection();
+			ArcGIS.Core.Data.Selection selection = table?.GetSelection();
 
 			if (selection == null)
 			{

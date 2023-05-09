@@ -8,13 +8,16 @@ using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Geom.EsriShape;
 using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.AGP.DataModel;
 using ProSuite.DomainModel.AGP.QA;
 using ProSuite.DomainModel.AGP.Workflow;
+using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.Microservices.Definitions.QA;
 using ProSuite.Microservices.Definitions.Shared;
+using GeometryType = ProSuite.DomainModel.Core.DataModel.GeometryType;
 
 namespace ProSuite.Microservices.Client.AGP.QA
 {
@@ -23,6 +26,9 @@ namespace ProSuite.Microservices.Client.AGP.QA
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private const int _timeoutMilliseconds = 60000;
+
+		private static readonly IList<GeometryType> _geometryTypes =
+			GeometryTypeFactory.CreateGeometryTypes().ToList();
 
 		public static async Task<List<ProjectWorkspace>> GetProjectWorkspaceCandidatesAsync(
 			[NotNull] ICollection<Table> tables,
@@ -156,7 +162,11 @@ namespace ProSuite.Microservices.Client.AGP.QA
 			{
 				BasicDataset dataset =
 					new BasicDataset(datasetMsg.DatasetId, datasetMsg.Name, null,
-					                 datasetMsg.AliasName);
+					                 datasetMsg.AliasName)
+					{
+						GeometryType =
+							GetGeometryType((ProSuiteGeometryType) datasetMsg.GeometryType)
+					};
 
 				if (! datasetsById.ContainsKey(dataset.Id))
 				{
@@ -181,7 +191,7 @@ namespace ProSuite.Microservices.Client.AGP.QA
 				                                                 .ToList();
 
 				candidates.Add(
-					new ProjectWorkspace(projectWorkspaceMsg.ProjectId,
+					new ProjectWorkspace(projectWorkspaceMsg.ProjectId, projectMsg.Name,
 					                     datasets, datastore, sr));
 			}
 
@@ -246,6 +256,20 @@ namespace ProSuite.Microservices.Client.AGP.QA
 					spatialReferencesByWkId.Add(sr.Wkid, sr);
 				}
 			}
+		}
+
+		[CanBeNull]
+		private static GeometryType GetGeometryType(ProSuiteGeometryType prosuiteGeometryType)
+		{
+			// TODO: Topology? Other types?
+			if (prosuiteGeometryType == ProSuiteGeometryType.Null)
+			{
+				return _geometryTypes.OfType<GeometryTypeNoGeometry>()
+				                     .FirstOrDefault();
+			}
+
+			return _geometryTypes.OfType<GeometryTypeShape>()
+			                     .FirstOrDefault(gt => gt.ShapeType == prosuiteGeometryType);
 		}
 	}
 }

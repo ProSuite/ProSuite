@@ -17,24 +17,27 @@ namespace ProSuite.DomainModel.AGP.Workflow
 	{
 		// TODO: Add project, dataset implementations to DomainModel
 		public ProjectWorkspace(int projectId,
+		                        string projectName,
 		                        IList<BasicDataset> datasets,
-		                        Datastore workspace,
+		                        Datastore datastore,
 		                        SpatialReference modelSpatialReference)
 		{
 			ProjectId = projectId;
+			ProjectName = projectName;
 			Datasets = datasets;
-			Workspace = workspace;
+			Datastore = datastore;
 			ModelSpatialReference = modelSpatialReference;
 		}
 
 		public int ProjectId { get; }
+		public string ProjectName { get; }
 		public IList<BasicDataset> Datasets { get; }
-		public Datastore Workspace { get; }
+		public Datastore Datastore { get; }
 		public SpatialReference ModelSpatialReference { get; }
 
 		public string GetVersionName()
 		{
-			return WorkspaceUtils.GetCurrentVersion(Workspace)?.GetName();
+			return WorkspaceUtils.GetCurrentVersion(Datastore)?.GetName();
 		}
 
 		public IList<int> GetDatasetIds()

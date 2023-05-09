@@ -7,8 +7,8 @@ using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
-using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Framework;
+using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI.Keyboard;
 
@@ -16,10 +16,13 @@ namespace ProSuite.AGP.Editing.Selection
 {
 	public abstract class SelectionToolBase : OneClickToolBase
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
+		// todo daro refactor
 		protected SelectionToolBase()
 		{
 			IsSketchTool = true;
-			SelectionSettings = new SelectionSettings();
+
 			SelectionCursor = ToolUtils.GetCursor(Resources.SelectionToolNormal);
 			SelectionCursorShift = ToolUtils.GetCursor(Resources.SelectionToolNormalShift);
 
@@ -27,8 +30,6 @@ namespace ProSuite.AGP.Editing.Selection
 
 			SetCursor(SelectionCursor);
 		}
-
-		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		protected override async Task OnToolActivateAsync(bool hasMapViewChanged)
 		{
@@ -105,8 +106,6 @@ namespace ProSuite.AGP.Editing.Selection
 		{
 			_msg.InfoFormat(LocalizableStrings.SelectionTool_LogPromptForSelection);
 		}
-
-		protected override SelectionSettings SelectionSettings { get; set; }
 
 		// todo daro: to DamlUtils?
 		private static void SetCheckState(string damlId, bool isChecked)

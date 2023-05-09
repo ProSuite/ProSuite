@@ -252,11 +252,15 @@ namespace ProSuite.Microservices.Server.AO.QA
 						modelMsg.ErrorDatasetIds.Add(dataset.Id);
 					}
 
+					int geometryType = (int) ProtobufGdbUtils.GetGeometryType(dataset);
+
 					var datasetMsg =
 						new DatasetMsg
 						{
 							DatasetId = dataset.Id,
 							Name = dataset.Name,
+							AliasName = dataset.AliasName,
+							GeometryType = geometryType
 						};
 
 					CallbackUtils.DoWithNonNull(
