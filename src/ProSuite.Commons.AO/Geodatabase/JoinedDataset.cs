@@ -1000,10 +1000,16 @@ namespace ProSuite.Commons.AO.Geodatabase
 			return null;
 		}
 
-		private void LogQueryProperties(IQueryFilter filter)
+		private void LogQueryProperties([CanBeNull] IQueryFilter filter)
 		{
 			_msg.DebugFormat("Querying joined table {0} using the following filter:",
 			                 _joinedSchema.Name);
+
+			if (filter == null)
+			{
+				_msg.Debug("NULL");
+				return;
+			}
 
 			using (_msg.IncrementIndentation())
 			{
