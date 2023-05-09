@@ -1,9 +1,10 @@
 using System;
 using System.Collections.Generic;
-using ESRI.ArcGIS.Geodatabase;
+using System.Linq;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Text;
 
 namespace ProSuite.QA.Container
 {
@@ -62,18 +63,21 @@ namespace ProSuite.QA.Container
 
 		private static Involved GetInvolvedCore(IReadOnlyRow row)
 		{
-			if (row.Table is ITransformedTableBasedOnTables transformedTable)
+			if (row.Table is ITableBased tableBased)
 			{
-				List<Involved> involveds = new List<Involved>();
-				foreach (Involved involvedRow in transformedTable.GetBaseRowReferences(row))
-				{
-					involveds.Add(involvedRow);
-				}
+				IEnumerable<IReadOnlyTable> readOnlyTables = tableBased.GetBaseTables();
+
+				List<Involved> involveds =
+					GetInvolvedRowsFromJoinedRow(row, readOnlyTables).ToList();
+
+				Assert.True(involveds.Count > 0,
+				            $"No involved rows for {row.Table.Name} with tables " +
+				            $"{StringUtils.Concatenate(readOnlyTables, t => t.Name, ", ")}");
 
 				return new InvolvedNested(row.Table.Name, involveds);
 			}
 
-			// TODO: Consider putting this also behind the ITransformedTableBasedOnTables interface
+			// TODO: Consider putting this also behind the ITableBased interface
 			int baseRowsField = row.Table.Fields.FindField(BaseRowField);
 			if (baseRowsField >= 0 && row.get_Value(baseRowsField) is IList<IReadOnlyRow> baseRows)
 			{
@@ -83,33 +87,6 @@ namespace ProSuite.QA.Container
 					involveds.Add(GetInvolvedCore(baseRow));
 				}
 
-				return new InvolvedNested(row.Table.Name, involveds);
-			}
-
-			// TODO: Consider putting this also behind the ITransformedTableBasedOnTables interface
-			if (row.Table.FullName is IQueryName qn)
-			{
-				List<Involved> involveds = new List<Involved>();
-				foreach (string table in qn.QueryDef.Tables.Split(','))
-				{
-					string t = table.Trim();
-					string oidField = $"{t}.OBJECTID";
-					int oidFieldIdx = row.Table.FindField(oidField);
-					if (oidFieldIdx < 0)
-					{
-						continue;
-					}
-
-					long? oidValue = GdbObjectUtils.ReadRowOidValue(row, oidFieldIdx);
-
-					if (oidValue.HasValue)
-					{
-						involveds.Add(new InvolvedRow(t, oidValue.Value));
-					}
-				}
-
-				Assert.True(involveds.Count > 0,
-				            $"Only NULL OIDs found for a record of IQueryName {row.Table.Name} with tables {qn.QueryDef.Tables}");
 				return new InvolvedNested(row.Table.Name, involveds);
 			}
 

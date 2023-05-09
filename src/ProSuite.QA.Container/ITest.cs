@@ -118,12 +118,6 @@ namespace ProSuite.QA.Container
 		bool NoCaching { get; }
 	}
 
-	// TODO: Merge with ITransformedTable
-	public interface ITransformedTableBasedOnTables
-	{
-		IEnumerable<Involved> GetBaseRowReferences(IReadOnlyRow forTransformedRow);
-	}
-
 	public interface INamedFilter : IInvolvesTables
 	{
 		string Name { get; set; }

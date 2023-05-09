@@ -1,20 +1,38 @@
-
 using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AO.Geodatabase
 {
-	public class ReadOnlyJoinedTable : ReadOnlyTable
+	/// <summary>
+	/// ReadOnly Table implementation for AO table joins that provides adapted logic for the
+	/// FindField() method and an implementation of <see cref="ITableBased"/> in order
+	/// to allow deterministic detection of the involved tables on which the join is based. 
+	/// </summary>
+	public class ReadOnlyJoinedTable : ReadOnlyTable, ITableBased
 	{
-		protected static ReadOnlyJoinedTable CreateReadOnlyJoinedTable(ITable table)
+		/// <summary>
+		/// NOTE: Do not call this method directly, instead use <see cref="ReadOnlyTableFactory.CreateQueryTable"/>.
+		/// </summary>
+		/// <param name="joinedTable"></param>
+		/// <param name="baseTables"></param>
+		/// <returns></returns>
+		internal static ReadOnlyJoinedTable Create(
+			[NotNull] ITable joinedTable,
+			[NotNull] IEnumerable<IReadOnlyTable> baseTables)
 		{
-			return new ReadOnlyJoinedTable(table);
+			return new ReadOnlyJoinedTable(joinedTable, baseTables);
 		}
 
-		protected ReadOnlyJoinedTable(ITable joinedTable):
-			base(joinedTable)
-		{}
+		private readonly List<IReadOnlyTable> _baseTables = new List<IReadOnlyTable>(2);
+
+		protected ReadOnlyJoinedTable([NotNull] ITable joinedTable,
+		                              [NotNull] IEnumerable<IReadOnlyTable> baseTables)
+			: base(joinedTable)
+		{
+			_baseTables.AddRange(baseTables);
+		}
 
 		public override int FindField(string name)
 		{
@@ -68,5 +86,14 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			return -1;
 		}
+
+		#region Implementation of ITableBased
+
+		public IList<IReadOnlyTable> GetBaseTables()
+		{
+			return _baseTables;
+		}
+
+		#endregion
 	}
 }
