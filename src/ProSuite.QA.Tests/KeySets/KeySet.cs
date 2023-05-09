@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -43,7 +44,7 @@ namespace ProSuite.QA.Tests.KeySets
 
 		protected virtual T Cast([NotNull] object key)
 		{
-			return (T) key;
+			return (T) Convert.ChangeType(key, typeof(T));
 		}
 
 		public IEnumerator GetEnumerator()
