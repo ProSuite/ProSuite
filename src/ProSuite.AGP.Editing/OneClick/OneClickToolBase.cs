@@ -145,8 +145,6 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected override void OnToolKeyDown(MapViewKeyEventArgs k)
 		{
-			_msg.VerboseDebug(() => "OnToolKeyDown");
-
 			try
 			{
 				PressedKeys.Add(k.Key);
@@ -189,8 +187,6 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected override void OnToolKeyUp(MapViewKeyEventArgs k)
 		{
-			_msg.VerboseDebug(() => "OnToolKeyUp");
-
 			try
 			{
 				QueuedTaskUtils.Run(

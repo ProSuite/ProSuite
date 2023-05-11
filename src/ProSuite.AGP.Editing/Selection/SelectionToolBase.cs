@@ -66,8 +66,6 @@ namespace ProSuite.AGP.Editing.Selection
 			{
 				SetCursor(SelectionCursor);
 			}
-
-			_msg.VerboseDebug(() => $"Key {k.Key} was pressed.");
 		}
 
 		protected override void OnKeyUpCore(MapViewKeyEventArgs k)
