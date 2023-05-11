@@ -125,13 +125,17 @@ namespace ProSuite.Commons.AGP.Selection
 			bool clearExistingSelection = false)
 		{
 			Assert.ArgumentNotNull(featuresPerLayers, nameof(featuresPerLayers));
+			
+			if (clearExistingSelection)
+			{
+				ClearSelection();
+			}
 
 			foreach (FeatureSelectionBase featuresPerLayer in featuresPerLayers)
 			{
 				SelectFeatures(featuresPerLayer.BasicFeatureLayer,
 				               selectionCombinationMethod,
-				               featuresPerLayer.GetOids().ToList(),
-				               clearExistingSelection);
+				               featuresPerLayer.GetOids().ToList());
 			}
 		}
 
