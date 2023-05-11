@@ -3,9 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.PickerUI;
 using ProSuite.Commons.Essentials.Assertions;
-using ProSuite.Commons.UI.WPF;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.Editing.Picker
 {
@@ -21,9 +22,11 @@ namespace ProSuite.AGP.Editing.Picker
 
 	public class PickerService : IPickerService
 	{
-		public Func<Task<T>> PickSingle<T>(IEnumerable<IPickableItem> items,
-		                                   Point pickerLocation,
-		                                   IPickerPrecedence precedence)
+		public Func<Task<T>> PickSingle<T>(
+			[NotNull] IEnumerable<IPickableItem> items,
+			[NotNull] IPickerPrecedence precedence,
+			[NotNull] IToolMouseEventsAware mouseEvents,
+			Point pickerLocation)
 			where T : class, IPickableItem
 		{
 			// todo daro refactor. maybe add new dedicated method
@@ -44,30 +47,51 @@ namespace ProSuite.AGP.Editing.Picker
 				throw new ArgumentOutOfRangeException();
 			}
 
-			return async () => await ShowPickerControlAsync<T>(viewModel, pickerLocation);
+			return async () => await ShowPickerControlAsync<T>(viewModel, mouseEvents, pickerLocation);
 		}
 
-		private static async Task<T> ShowPickerControlAsync<T>(PickerViewModel vm, Point location)
+		private async Task<T> ShowPickerControlAsync<T>(PickerViewModel vm,
+		                                                IToolMouseEventsAware mouseEvents,
+		                                                Point location)
 			where T : class, IPickableItem
 		{
-			using (var window = new PickerWindow(vm))
+			using (var window = new PickerWindow(vm, mouseEvents))
 			{
+				window.Owner = Assert.NotNull(Application.Current.MainWindow);
+
 				SetWindowLocation(window, location);
+
+				WireEvents(window);
 
 				window.Show();
 
 				IPickableItem pickable = await window.Task;
+				
+				UnwireEvents(window);
 
 				return (T) pickable;
 			}
 		}
 
-		private static void SetWindowLocation(PickerWindow window, Point location)
+		private void WireEvents(PickerWindow window)
 		{
-			Window ownerWindow = Assert.NotNull(Application.Current.MainWindow);
+			Window parent = Assert.NotNull(Application.Current.MainWindow);
 
-			window.Owner = ownerWindow;
+			// does not work: ArgumentException: Handler type is mismatched.
+			//parent.AddHandler(UIElement.PreviewKeyDownEvent, window.OnPreviewKeyDown, true);
 
+			parent.AddHandler(UIElement.PreviewKeyDownEvent, window.PreviewKeyDownEventHandler, true);
+		}
+
+		private void UnwireEvents(PickerWindow window)
+		{
+			Window parent = Assert.NotNull(Application.Current.MainWindow);
+
+			parent.RemoveHandler(UIElement.PreviewKeyDownEvent, window.PreviewKeyDownEventHandler);
+		}
+
+		private static void SetWindowLocation(Window window, Point location)
+		{
 			if (LocationUnkown(location))
 			{
 				window.WindowStartupLocation = WindowStartupLocation.CenterOwner;
@@ -75,7 +99,8 @@ namespace ProSuite.AGP.Editing.Picker
 			}
 
 			// NOTE: The window's Top/Left coordinates must be set in logical units or DIP (1/96 inch)
-			Point dipLocation = DisplayUtils.ToDeviceIndependentPixels(location, ownerWindow);
+			//Point dipLocation = DisplayUtils.ToDeviceIndependentPixels(location, Assert.NotNull(Application.Current.MainWindow));
+			Point dipLocation = window.Owner.PointToScreen(location);
 
 			window.Left = dipLocation.X;
 			window.Top = dipLocation.Y;

@@ -358,7 +358,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 				var pickedItem =
 					await ShowPickerAsync<PickableFeatureItem>(
-						items, PickerPrecedence, pickerLocation);
+						items, PickerPrecedence, this, pickerLocation);
 
 				if (pickedItem == null)
 				{

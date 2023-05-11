@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Picker;
 
 namespace ProSuite.AGP.Editing.Test.Picker
@@ -10,8 +11,9 @@ namespace ProSuite.AGP.Editing.Test.Picker
 	public class PickerServiceMock : IPickerService
 	{
 		public Func<Task<T>> PickSingle<T>(IEnumerable<IPickableItem> items,
-		                                   Point pickerLocation,
-		                                   IPickerPrecedence precedence)
+		                                   IPickerPrecedence precedence,
+		                                   IToolMouseEventsAware mouseEvents,
+		                                   Point pickerLocation)
 			where T : class, IPickableItem
 		{
 			// todo daro remove toList()

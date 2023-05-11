@@ -68,7 +68,7 @@ namespace ProSuite.AGP.Editing.PickerUI
 		}
 
 		public PickerViewModel(IEnumerable<IPickableItem> pickingCandidates,
-		                        Geometry selectionGeometry) : this(pickingCandidates)
+		                       Geometry selectionGeometry) : this(pickingCandidates)
 		{
 			_selectionGeometry = selectionGeometry;
 		}
@@ -96,7 +96,10 @@ namespace ProSuite.AGP.Editing.PickerUI
 			{
 				SetProperty(ref _selectedItem, value);
 
-				_msg.Debug($"Picked {_selectedItem}");
+				if (_selectedItem != null)
+				{
+					_msg.Debug($"Picked {_selectedItem}");
+				}
 
 				try
 				{
@@ -107,6 +110,30 @@ namespace ProSuite.AGP.Editing.PickerUI
 					_msg.Debug("Error setting selected item", e);
 				}
 			}
+		}
+
+		public void OnPreviewKeyDown(object sender, KeyEventArgs e)
+		{
+			if (sender is ICloseable closeable)
+			{
+				if (e.Key == Key.Escape)
+				{
+					OnPressEscape(closeable);
+
+					e.Handled = true;
+				}
+				else if (e.Key == Key.Space)
+				{
+					OnPressSpace();
+
+					e.Handled = true;
+				}
+			}
+		}
+
+		public void OnMouseDown(ICloseable window, MouseButtonEventArgs e)
+		{
+			ViewUtils.Try(() => { OnWindowDeactivated(window); }, _msg);
 		}
 
 		private void FlashItem(IPickableItem candidate)
@@ -213,24 +240,28 @@ namespace ProSuite.AGP.Editing.PickerUI
 
 				_latch.RunInsideLatch(() =>
 				{
+					_msg.VerboseDebug(() => $"{nameof(OnWindowDeactivated)}");
+
 					window?.Close();
 
 					// IMPORTANT set selected item otherwise
 					// task never completes resulting in deadlock
 					SelectedItem = null;
-
-					Dispose();
 				});
 			}, _msg);
 		}
 
 		private void OnPressEscape(ICloseable window)
 		{
+			_msg.VerboseDebug(() => $"{nameof(OnPressEscape)}");
+
 			OnWindowDeactivated(window);
 		}
 
 		private void OnPressSpace()
 		{
+			_msg.VerboseDebug(() => $"{nameof(OnPressSpace)}");
+
 			QueuedTask.Run(() =>
 			{
 				_selectionGeometryOverlay = MapView.Active.NotNullCallback(
@@ -244,9 +275,13 @@ namespace ProSuite.AGP.Editing.PickerUI
 			// An attempt was made to transition a task to a final state
 			// when it had already completed.
 			//SelectedItem = null;
-			
-			_selectionGeometryOverlay?.Dispose();
-			DisposeOverlays();
+
+			ViewUtils.Try(() =>
+			{
+				_selectionGeometryOverlay?.Dispose();
+
+				DisposeOverlays();
+			}, _msg);
 		}
 	}
 }
