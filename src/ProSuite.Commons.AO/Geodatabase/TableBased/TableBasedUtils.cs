@@ -9,17 +9,17 @@ namespace ProSuite.Commons.AO.Geodatabase.TableBased
 	{
 		public static IEnumerable<Involved> GetInvolvedRowsFromJoinedRow(
 			[NotNull] IReadOnlyRow joinedRow,
-			[NotNull] IEnumerable<IReadOnlyTable> baseTables,
+			[NotNull] IEnumerable<IReadOnlyTable> involvedTables,
 			[NotNull] Func<string, int> findFieldFunc)
 		{
-			foreach (IReadOnlyTable baseTable in baseTables)
+			foreach (IReadOnlyTable involvedTable in involvedTables)
 			{
-				string oidFieldName = baseTable.OIDFieldName;
+				string oidFieldName = involvedTable.OIDFieldName;
 
 				string oidFieldQualified =
 					string.IsNullOrEmpty(oidFieldName)
 						? null // no OID field
-						: DatasetUtils.QualifyFieldName(baseTable, oidFieldName);
+						: DatasetUtils.QualifyFieldName(involvedTable, oidFieldName);
 
 				if (oidFieldName == null)
 				{
@@ -38,7 +38,7 @@ namespace ProSuite.Commons.AO.Geodatabase.TableBased
 
 				if (oidValue != null)
 				{
-					yield return new InvolvedRow(baseTable.Name, oidValue.Value);
+					yield return new InvolvedRow(involvedTable.Name, oidValue.Value);
 				}
 			}
 		}
