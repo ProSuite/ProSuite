@@ -4,6 +4,7 @@ using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
+using ProSuite.Commons.AO.Geodatabase.TableBased;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Microservices.Server.AO.QA
@@ -27,9 +28,18 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 		#region Implementation of ITableBased
 
-		public IList<IReadOnlyTable> GetBaseTables()
+		public IList<IReadOnlyTable> GetInvolvedTables()
 		{
 			return _baseTables;
+		}
+
+		public IEnumerable<Involved> GetInvolvedRows(IReadOnlyRow forTransformedRow)
+		{
+			Func<string, int> findFieldFunc =
+				fieldName => forTransformedRow.Table.FindField(fieldName);
+
+			return TableBasedUtils.GetInvolvedRowsFromJoinedRow(
+				forTransformedRow, _baseTables, findFieldFunc);
 		}
 
 		#endregion

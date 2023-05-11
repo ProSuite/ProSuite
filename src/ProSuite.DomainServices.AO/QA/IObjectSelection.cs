@@ -1,8 +1,8 @@
 using System.Collections.Generic;
+using ProSuite.Commons.AO.Geodatabase.TableBased;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
-using ProSuite.QA.Container;
 
 namespace ProSuite.DomainServices.AO.QA
 {

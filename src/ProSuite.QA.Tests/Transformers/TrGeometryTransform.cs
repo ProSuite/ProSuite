@@ -7,6 +7,7 @@ using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema.RowValues;
+using ProSuite.Commons.AO.Geodatabase.TableBased;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.Essentials.Assertions;
@@ -26,7 +27,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 		protected TrGeometryTransform([NotNull] IReadOnlyFeatureClass fc,
 		                              esriGeometryType derivedShapeType)
-			: base(new List<IReadOnlyTable> {fc})
+			: base(new List<IReadOnlyTable> { fc })
 		{
 			_derivedShapeType = derivedShapeType;
 		}
@@ -119,7 +120,7 @@ namespace ProSuite.QA.Tests.Transformers
 				       workspace: new GdbWorkspace(new TransformerWorkspace()))
 			{
 				Transformer = transformer;
-				InvolvedTables = new List<IReadOnlyTable> {fc};
+				InvolvedTables = new List<IReadOnlyTable> { fc };
 				AddStandardFields(fc, derivedShapeType);
 			}
 
@@ -197,21 +198,23 @@ namespace ProSuite.QA.Tests.Transformers
 			{
 				private IndexedPolycurve _indexedPolycurve;
 
-				public PolycurveFeature(long oid, TransformedFc featureClass, MultiListValues valueList)
+				public PolycurveFeature(long oid, TransformedFc featureClass,
+				                        MultiListValues valueList)
 					: base(oid, featureClass, valueList) { }
 
 				bool IIndexedSegmentsFeature.AreIndexedSegmentsLoaded => _indexedPolycurve == null;
 
 				IIndexedSegments IIndexedSegmentsFeature.IndexedSegments
 					=> _indexedPolycurve ??
-					   (_indexedPolycurve = new IndexedPolycurve((IPointCollection4)Shape));
+					   (_indexedPolycurve = new IndexedPolycurve((IPointCollection4) Shape));
 			}
 
 			private class MultiPatchFeature : TransformedFeature, IIndexedMultiPatchFeature
 			{
 				private IndexedMultiPatch _indexedMultiPatch;
 
-				public MultiPatchFeature(long oid, TransformedFc featureClass, MultiListValues valueList)
+				public MultiPatchFeature(long oid, TransformedFc featureClass,
+				                         MultiListValues valueList)
 					: base(oid, featureClass, valueList) { }
 
 				bool IIndexedSegmentsFeature.AreIndexedSegmentsLoaded => true;
@@ -220,7 +223,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 				public IIndexedMultiPatch IndexedMultiPatch
 					=> _indexedMultiPatch ??
-					   (_indexedMultiPatch = new IndexedMultiPatch((IMultiPatch)Shape));
+					   (_indexedMultiPatch = new IndexedMultiPatch((IMultiPatch) Shape));
 			}
 
 			private class AnyFeature : TransformedFeature
@@ -325,7 +328,7 @@ namespace ProSuite.QA.Tests.Transformers
 					{
 						TransformedFeature f = (TransformedFeature) featureWithTransformedGeom;
 
-						List<IReadOnlyRow> involved = new List<IReadOnlyRow> {row};
+						List<IReadOnlyRow> involved = new List<IReadOnlyRow> { row };
 						f.set_Value(IdxBaseRowField, involved);
 
 						if (Resulting.BaseRowValuesDict != null)
@@ -365,7 +368,7 @@ namespace ProSuite.QA.Tests.Transformers
 				{
 					baseInvolved =
 						baseInvolved ??
-						InvolvedRowUtils.EnumInvolved(new[] {baseFeature}).First();
+						InvolvedRowUtils.EnumInvolved(new[] { baseFeature }).First();
 					if (ct.IsGeneratedFrom(knownInvolved, baseInvolved))
 					{
 						return true;

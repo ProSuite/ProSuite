@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
+using ProSuite.Commons.AO.Geodatabase.TableBased;
 
 namespace ProSuite.QA.Container.Test
 {

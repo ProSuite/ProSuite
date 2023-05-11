@@ -1,10 +1,9 @@
 using System;
 using System.Collections.Generic;
-using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
-namespace ProSuite.QA.Container
+namespace ProSuite.Commons.AO.Geodatabase.TableBased
 {
 	public class InvolvedRow : Involved, IComparable<InvolvedRow>, IEquatable<InvolvedRow>
 	{
@@ -117,7 +116,7 @@ namespace ProSuite.QA.Container
 		{
 			unchecked
 			{
-				return (OID.GetHashCode() * 397) ^ TableName.GetHashCode();
+				return OID.GetHashCode() * 397 ^ TableName.GetHashCode();
 			}
 		}
 

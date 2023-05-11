@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase.TableBased;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
-using ProSuite.QA.Container;
 
 namespace ProSuite.DomainServices.AO.QA.AreaSpecification
 {

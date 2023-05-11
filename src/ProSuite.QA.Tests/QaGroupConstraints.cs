@@ -6,6 +6,7 @@ using System.Text;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase.TableBased;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -82,7 +83,7 @@ namespace ProSuite.QA.Tests
 			int maxDistinctCount,
 			[Doc(nameof(DocStrings.QaGroupConstraints_limitToTestedRows))]
 			bool limitToTestedRows)
-			: this(new[] {table}, new[] {groupByExpression}, new[] {distinctExpression},
+			: this(new[] { table }, new[] { groupByExpression }, new[] { distinctExpression },
 			       0, maxDistinctCount, limitToTestedRows) { }
 
 		[Doc(nameof(DocStrings.QaGroupConstraints_1))]
@@ -196,7 +197,7 @@ namespace ProSuite.QA.Tests
 
 		public override int Execute(IReadOnlyRow row)
 		{
-			return Execute(new[] {row});
+			return Execute(new[] { row });
 		}
 
 		protected override ISpatialReference GetSpatialReference()
@@ -686,7 +687,7 @@ namespace ProSuite.QA.Tests
 
 				oidTuples.Add(IsJoinedTable
 					              ? GetJoinedRowOIDTuple(dataRow)
-					              : new[] {row.GetRowInfo()});
+					              : new[] { row.GetRowInfo() });
 			}
 
 			[NotNull]

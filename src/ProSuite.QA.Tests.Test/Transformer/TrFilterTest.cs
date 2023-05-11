@@ -3,6 +3,7 @@ using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase.TableBased;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Test;
 using ProSuite.QA.Container;
@@ -282,19 +283,19 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				IFeature f = polyFc.CreateFeature();
 				f.Value[1] = 12;
 				f.Shape = CurveConstruction.StartPoly(0, 0).LineTo(0, 100).LineTo(100, 100)
-										   .LineTo(100, 0).ClosePolygon();
+				                           .LineTo(100, 0).ClosePolygon();
 				f.Store();
 			}
 
 			var tr = new TrOnlyDisjointFeatures(ReadOnlyTableFactory.Create(lineFc),
-													ReadOnlyTableFactory.Create(polyFc));
+			                                    ReadOnlyTableFactory.Create(polyFc));
 
-			((ITableTransformer)tr).TransformerName = "filtered_lines";
+			((ITableTransformer) tr).TransformerName = "filtered_lines";
 			{
 				var test = new QaMaxLength(tr.GetTransformed(), 400);
 
 				var runner = new QaContainerTestRunner(1000, test)
-				{ KeepGeometry = true };
+				             { KeepGeometry = true };
 				runner.Execute();
 
 				Assert.AreEqual(1, runner.Errors.Count);
@@ -303,7 +304,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				var test = new QaMaxLength(tr.GetTransformed(), 400);
 
 				var runner = new QaContainerTestRunner(1000, test)
-				{ KeepGeometry = true };
+				             { KeepGeometry = true };
 				runner.Execute(GeometryFactory.CreateEnvelope(400, 0, 600, 100));
 
 				// disjoint polygon is outside test area 
@@ -317,14 +318,13 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				var test = new QaMaxLength(trFullSearch.GetTransformed(), 400);
 
 				var runner = new QaContainerTestRunner(1000, test)
-				{ KeepGeometry = true };
+				             { KeepGeometry = true };
 				runner.Execute(GeometryFactory.CreateEnvelope(400, 0, 600, 100));
 
 				// disjoint polygon is outside test area, but is searched everywhere 
 				Assert.AreEqual(1, runner.Errors.Count);
 			}
 		}
-
 
 		[Test]
 		public void CanGetFilteredLinesWithPolyContained()
@@ -711,7 +711,8 @@ namespace ProSuite.QA.Tests.Test.Transformer
 
 					TransformerName = "Tr_SpatialJoin_Dissolve_STGW_Gewässernetzknoten"
 				};
-			QaConstraint test = new QaConstraint(trSpatJoin.GetTransformed(), "ANZAHL_LAEUFE = 2 AND ANZAHL_LOOP_JUNCTIONS = 1 AND ANZAHL_SECONDARY_JUNCTIONS = 1");
+			QaConstraint test = new QaConstraint(trSpatJoin.GetTransformed(),
+			                                     "ANZAHL_LAEUFE = 2 AND ANZAHL_LOOP_JUNCTIONS = 1 AND ANZAHL_SECONDARY_JUNCTIONS = 1");
 		}
 
 		private static IList<QaError> ExecuteQaConstraint(TrOnlyContainedFeatures tr,

@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using NUnit.Framework;
+using ProSuite.Commons.AO.Geodatabase.TableBased;
 using ProSuite.DomainServices.AO.QA.Exceptions;
 using ProSuite.DomainServices.AO.QA.Issues;
 using ProSuite.QA.Container;

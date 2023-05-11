@@ -11,6 +11,7 @@ using Google.Protobuf.Collections;
 using Grpc.Core;
 using ProSuite.Commons.AO;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase.TableBased;
 using ProSuite.Commons.Callbacks;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;

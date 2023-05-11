@@ -5,6 +5,7 @@ using System.Text;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase.TableBased;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -166,6 +167,7 @@ namespace ProSuite.QA.Container
 			{
 				return null;
 			}
+
 			involvedExtent.QueryWKSCoords(out WKSEnvelope wksExtent);
 			return wksExtent;
 		}

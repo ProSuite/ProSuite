@@ -8,6 +8,7 @@ using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase.TableBased;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
@@ -153,7 +154,7 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 			Assert.ArgumentNotNull(transaction, nameof(transaction));
 			Assert.ArgumentNotNull(issueObject, nameof(issueObject));
 
-			ChangeIssueType(transaction, new[] {issueObject}, issueType);
+			ChangeIssueType(transaction, new[] { issueObject }, issueType);
 		}
 
 		/// <summary>
@@ -631,7 +632,7 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 
 			if (perimeter == null)
 			{
-				return new QueryFilterClass {WhereClause = whereClause};
+				return new QueryFilterClass { WhereClause = whereClause };
 			}
 
 			return new SpatialFilterClass
@@ -813,7 +814,7 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 				};
 
 			var qualityConditionsById = new Dictionary<int, QualityCondition>
-			                            {{qualityCondition.Id, qualityCondition}};
+			                            { { qualityCondition.Id, qualityCondition } };
 
 			var allowedErrors =
 				new List<AllowedError>(GetAllowedErrors(comparableError.Geometry,

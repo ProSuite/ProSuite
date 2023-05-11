@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase.TableBased;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
@@ -65,10 +66,9 @@ namespace ProSuite.QA.Container
 		{
 			if (row.Table is ITableBased tableBased)
 			{
-				IEnumerable<IReadOnlyTable> readOnlyTables = tableBased.GetBaseTables();
+				List<Involved> involveds = tableBased.GetInvolvedRows(row).ToList();
 
-				List<Involved> involveds =
-					GetInvolvedRowsFromJoinedRow(row, readOnlyTables).ToList();
+				IEnumerable<IReadOnlyTable> readOnlyTables = tableBased.GetInvolvedTables();
 
 				Assert.True(involveds.Count > 0,
 				            $"No involved rows for {row.Table.Name} with tables " +
@@ -115,41 +115,6 @@ namespace ProSuite.QA.Container
 			// TODO make sure that the first involved row is also the first row in the first table
 
 			return result;
-		}
-
-		public static IEnumerable<Involved> GetInvolvedRowsFromJoinedRow(
-			[NotNull] IReadOnlyRow joinedRow,
-			[NotNull] IEnumerable<IReadOnlyTable> baseTables)
-		{
-			foreach (IReadOnlyTable baseTable in baseTables)
-			{
-				string oidFieldName = baseTable.OIDFieldName;
-
-				string oidFieldQualified =
-					string.IsNullOrEmpty(oidFieldName)
-						? null // no OID field
-						: DatasetUtils.QualifyFieldName(baseTable, oidFieldName);
-
-				if (oidFieldName == null)
-				{
-					continue;
-				}
-
-				int oidFieldIdx = joinedRow.Table.FindField(oidFieldQualified);
-
-				if (oidFieldIdx == -1)
-				{
-					continue;
-				}
-
-				long? oidValue =
-					GdbObjectUtils.ReadRowOidValue(joinedRow, oidFieldIdx);
-
-				if (oidValue != null)
-				{
-					yield return new InvolvedRow(baseTable.Name, oidValue.Value);
-				}
-			}
 		}
 	}
 }

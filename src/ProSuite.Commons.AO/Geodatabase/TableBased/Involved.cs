@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace ProSuite.QA.Container
+namespace ProSuite.Commons.AO.Geodatabase.TableBased
 {
 	public abstract class Involved
 	{

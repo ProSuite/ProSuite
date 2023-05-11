@@ -3,6 +3,7 @@ using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase.TableBased;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
@@ -185,7 +186,7 @@ namespace ProSuite.QA.Tests
 				{
 					// no duplicate set yet for neither row
 					// -> create new set, assign the set to row1 and row2
-					var duplicates = new HashSet<long> {oid1, oid2};
+					var duplicates = new HashSet<long> { oid1, oid2 };
 					_duplicateSets.Add(duplicates);
 
 					_duplicatesPerOid.Add(oid1, duplicates);
