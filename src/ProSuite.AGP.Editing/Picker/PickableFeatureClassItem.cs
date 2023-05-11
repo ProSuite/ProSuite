@@ -69,7 +69,7 @@ namespace ProSuite.AGP.Editing.Picker
 
 		public override string ToString()
 		{
-			return $"{_featureClassName}: #{Oids.Count}";
+			return $"{_featureClassName}: #{Oids.Count} - {Score}";
 		}
 	}
 }
