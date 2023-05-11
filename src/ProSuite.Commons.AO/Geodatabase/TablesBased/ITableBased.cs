@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace ProSuite.Commons.AO.Geodatabase.TableBased
+namespace ProSuite.Commons.AO.Geodatabase.TablesBased
 {
 	/// <summary>
 	/// Optional interface for IReadOnlyTable implementations that are based on other tables, such as

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
-namespace ProSuite.Commons.AO.Geodatabase.TableBased
+namespace ProSuite.Commons.AO.Geodatabase.TablesBased
 {
 	public class InvolvedRow : Involved, IComparable<InvolvedRow>, IEquatable<InvolvedRow>
 	{

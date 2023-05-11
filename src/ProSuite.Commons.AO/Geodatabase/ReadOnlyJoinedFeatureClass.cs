@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
-using ProSuite.Commons.AO.Geodatabase.TableBased;
+using ProSuite.Commons.AO.Geodatabase.TablesBased;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AO.Geodatabase

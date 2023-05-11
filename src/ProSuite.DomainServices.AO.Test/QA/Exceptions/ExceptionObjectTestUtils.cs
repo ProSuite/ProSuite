@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
-using ProSuite.Commons.AO.Geodatabase.TableBased;
+using ProSuite.Commons.AO.Geodatabase.TablesBased;
 using ProSuite.Commons.AO.Test.TestSupport;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainServices.AO.QA.Exceptions;

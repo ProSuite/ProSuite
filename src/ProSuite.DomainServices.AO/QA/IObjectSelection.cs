@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using ProSuite.Commons.AO.Geodatabase.TableBased;
+using ProSuite.Commons.AO.Geodatabase.TablesBased;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;

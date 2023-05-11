@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
-namespace ProSuite.Commons.AO.Geodatabase.TableBased
+namespace ProSuite.Commons.AO.Geodatabase.TablesBased
 {
 	public static class TableBasedUtils
 	{

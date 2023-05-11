@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using ProSuite.Commons.AO.Geodatabase.TableBased;
+using ProSuite.Commons.AO.Geodatabase.TablesBased;
 
 namespace ProSuite.QA.Container.TestContainer
 {

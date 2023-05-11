@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using NUnit.Framework;
-using ProSuite.Commons.AO.Geodatabase.TableBased;
+using ProSuite.Commons.AO.Geodatabase.TablesBased;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainServices.AO.QA.Exceptions;
 using ProSuite.DomainServices.AO.QA.Issues;
