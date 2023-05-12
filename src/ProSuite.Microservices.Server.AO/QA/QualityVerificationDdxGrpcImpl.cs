@@ -65,6 +65,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 		/// </summary>
 		public IVerificationDataDictionary<TModel> VerificationDdx { get; set; }
 
+		#region Overrides of QualityVerificationDdxGrpcBase
+
 		public override async Task<GetProjectWorkspacesResponse> GetProjectWorkspaces(
 			GetProjectWorkspacesRequest request, ServerCallContext context)
 		{
@@ -157,6 +159,54 @@ namespace ProSuite.Microservices.Server.AO.QA
 			return response;
 		}
 
+		public override async Task<GetSpecificationResponse> GetQualitySpecification(
+			GetSpecificationRequest request, ServerCallContext context)
+		{
+			GetSpecificationResponse response;
+
+			try
+			{
+				await StartRequestAsync(context.Peer, request);
+
+				Stopwatch watch = _msg.DebugStartTiming();
+
+				Func<ITrackCancel, GetSpecificationResponse> func =
+					trackCancel => GetSpecificationCore(request);
+
+				using (_msg.IncrementIndentation("Getting quality specification for {0}",
+				                                 context.Peer))
+				{
+					response =
+						await GrpcServerUtils.ExecuteServiceCall(
+							func, context, _staThreadScheduler, true) ??
+						new GetSpecificationResponse();
+				}
+
+				_msg.DebugStopTiming(
+					watch, "Gotten quality specification for peer {0} (<id> {1})",
+					context.Peer, request.QualitySpecificationId);
+
+				_msg.InfoFormat("Returning quality specification {0} with {1} conditions",
+				                response.Specification.Name, response.Specification.Elements.Count);
+			}
+			catch (Exception e)
+			{
+				_msg.Error($"Error getting quality specifications {request}", e);
+
+				SetUnhealthy();
+
+				throw;
+			}
+			finally
+			{
+				EndRequest();
+			}
+
+			return response;
+		}
+
+		#endregion
+
 		private GetProjectWorkspacesResponse GetProjectWorkspacesCore(
 			GetProjectWorkspacesRequest request)
 		{
@@ -210,11 +260,13 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			foreach (Project<TModel> project in projects)
 			{
+				TModel productionModel = project.ProductionModel;
+
 				var projectMsg =
 					new ProjectMsg
 					{
 						ProjectId = project.Id,
-						ModelId = project.ProductionModel.Id,
+						ModelId = productionModel.Id,
 						Name = project.Name,
 						ShortName = project.ShortName,
 						MinimumScaleDenominator = project.MinimumScaleDenominator,
@@ -227,54 +279,33 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 				response.Projects.Add(projectMsg);
 
-				var srWkId = ProtobufGeometryUtils.ToSpatialReferenceMsg(
-					project.ProductionModel.SpatialReferenceDescriptor.SpatialReference,
-					SpatialReferenceMsg.FormatOneofCase.SpatialReferenceWkid);
+				RepeatedField<DatasetMsg> responseDatasets = response.Datasets;
 
-				var modelMsg =
-					new ModelMsg
-					{
-						ModelId = project.ProductionModel.Id,
-						Name = project.ProductionModel.Name,
-						SpatialReference = srWkId
-					};
-
-				IWorkspace masterWorkspace =
-					project.ProductionModel.GetMasterDatabaseWorkspace();
-
-				// If necessary, return the list of referenced workspaces
-				modelMsg.MasterDbWorkspaceHandle = masterWorkspace?.GetHashCode() ?? -1;
-
-				foreach (Dataset dataset in project.ProductionModel.Datasets)
-				{
-					modelMsg.DatasetIds.Add(dataset.Id);
-
-					if (dataset is IErrorDataset)
-					{
-						modelMsg.ErrorDatasetIds.Add(dataset.Id);
-			}
-
-					int geometryType = (int) ProtobufGdbUtils.GetGeometryType(dataset);
-
-					var datasetMsg =
-						new DatasetMsg
-		{
-							DatasetId = dataset.Id,
-							Name = dataset.Name,
-							AliasName = dataset.AliasName,
-							GeometryType = geometryType
-						};
-
-					CallbackUtils.DoWithNonNull(
-						datasetMsg.AliasName, s => dataset.AliasName = s);
-
-					response.Datasets.Add(datasetMsg);
-				}
+				ModelMsg modelMsg = ToModelMsg(productionModel, responseDatasets);
 
 				response.Models.Add(modelMsg);
 			}
 
 			return response;
+		}
+
+		private static ModelMsg ToModelMsg(TModel productionModel,
+		                                   ICollection<DatasetMsg> referencedDatasetMsgs)
+		{
+			SpatialReferenceMsg srWkId = ProtobufGeometryUtils.ToSpatialReferenceMsg(
+				productionModel.SpatialReferenceDescriptor.SpatialReference,
+				SpatialReferenceMsg.FormatOneofCase.SpatialReferenceWkid);
+
+			ModelMsg modelMsg =
+				ProtoDataQualityUtils.ToDdxModelMsg(productionModel, srWkId, referencedDatasetMsgs);
+
+			IWorkspace masterWorkspace =
+				productionModel.GetMasterDatabaseWorkspace();
+
+			// If necessary, return the list of referenced workspaces
+			modelMsg.MasterDbWorkspaceHandle = masterWorkspace?.GetHashCode() ?? -1;
+
+			return modelMsg;
 		}
 
 		private GetSpecificationRefsResponse GetSpecificationRefsCore(
@@ -298,6 +329,91 @@ namespace ProSuite.Microservices.Server.AO.QA
 				                                 }));
 
 			return response;
+		}
+
+		private GetSpecificationResponse GetSpecificationCore(
+			[NotNull] GetSpecificationRequest request)
+		{
+			var response = new GetSpecificationResponse();
+
+			IVerificationDataDictionary<TModel> verificationDataDictionary =
+				Assert.NotNull(VerificationDdx,
+				               "Data Dictionary access has not been configured or failed.");
+
+			QualitySpecification qualitySpecification =
+				verificationDataDictionary.GetQualitySpecification(
+					request.QualitySpecificationId);
+
+			if (qualitySpecification == null)
+			{
+				return response;
+			}
+
+			ConditionListSpecificationMsg specificationMsg =
+				ProtoDataQualityUtils.CreateConditionListSpecificationMsg(
+					qualitySpecification, null, out IDictionary<int, DdxModel> modelsById);
+
+			response.Specification = specificationMsg;
+
+			response.ReferencedInstanceDescriptors.AddRange(
+				ProtoDataQualityUtils.GetInstanceDescriptorMsgs(qualitySpecification));
+
+			RepeatedField<DatasetMsg> referencedDatasets = response.ReferencedDatasets;
+			foreach (DdxModel model in modelsById.Values)
+			{
+				ModelMsg modelMsg = ToModelMsg((TModel) model, referencedDatasets);
+				response.ReferencedModels.Add(modelMsg);
+			}
+
+			return response;
+		}
+
+		[NotNull]
+		private static IEnumerable<InstanceDescriptor> GetReferencedDescriptors(
+			[NotNull] IEnumerable<QualityCondition> qualityConditions)
+		{
+			var descriptors = new HashSet<InstanceDescriptor>();
+			var allTransformerConfigurations = new HashSet<TransformerConfiguration>();
+
+			foreach (QualityCondition qualityCondition in qualityConditions)
+			{
+				descriptors.Add(qualityCondition.TestDescriptor);
+
+				CollectTransformers(qualityCondition, allTransformerConfigurations);
+
+				foreach (IssueFilterConfiguration filterConfiguration in
+				         qualityCondition.IssueFilterConfigurations)
+				{
+					descriptors.Add(filterConfiguration.IssueFilterDescriptor);
+
+					CollectTransformers(filterConfiguration, allTransformerConfigurations);
+				}
+			}
+
+			foreach (TransformerConfiguration transformerConfiguration in
+			         allTransformerConfigurations)
+			{
+				descriptors.Add(transformerConfiguration.TransformerDescriptor);
+			}
+
+			return descriptors.ToList();
+		}
+
+		private static void CollectTransformers(
+			[NotNull] InstanceConfiguration configuration,
+			[NotNull] HashSet<TransformerConfiguration> allTransformers)
+		{
+			foreach (TestParameterValue parameterValue in configuration.ParameterValues)
+			{
+				TransformerConfiguration transformer = parameterValue.ValueSource;
+				if (transformer != null)
+				{
+					if (allTransformers.Add(transformer))
+					{
+						CollectTransformers(transformer, allTransformers);
+					}
+				}
+			}
 		}
 
 		private async Task<bool> StartRequestAsync(string peerName, object request,

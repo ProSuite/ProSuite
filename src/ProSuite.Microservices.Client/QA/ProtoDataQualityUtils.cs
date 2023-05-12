@@ -1,12 +1,17 @@
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using ProSuite.Commons.Callbacks;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Geom.EsriShape;
 using ProSuite.Commons.Logging;
+using ProSuite.DomainModel.Core;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.Microservices.Definitions.QA;
+using ProSuite.Microservices.Definitions.Shared;
 
 namespace ProSuite.Microservices.Client.QA
 {
@@ -257,5 +262,220 @@ namespace ProSuite.Microservices.Client.QA
 
 			return result;
 		}
+
+		public static IEnumerable<InstanceDescriptorMsg> GetInstanceDescriptorMsgs(
+			[NotNull] QualitySpecification specification)
+		{
+			var referencedDescriptors =
+				GetReferencedDescriptors(specification.Elements.Select(e => e.QualityCondition));
+
+			foreach (InstanceDescriptor instanceDescriptor in referencedDescriptors)
+			{
+				yield return ToInstanceDescriptorMsg(instanceDescriptor);
+			}
+		}
+
+		[NotNull]
+		private static ICollection<InstanceDescriptor> GetReferencedDescriptors(
+			[NotNull] IEnumerable<QualityCondition> qualityConditions)
+		{
+			var descriptors = new HashSet<InstanceDescriptor>();
+			var allTransformerConfigurations = new HashSet<TransformerConfiguration>();
+
+			foreach (QualityCondition qualityCondition in qualityConditions)
+			{
+				descriptors.Add(qualityCondition.TestDescriptor);
+
+				CollectTransformers(qualityCondition, allTransformerConfigurations);
+
+				foreach (IssueFilterConfiguration filterConfiguration in
+				         qualityCondition.IssueFilterConfigurations)
+				{
+					descriptors.Add(filterConfiguration.IssueFilterDescriptor);
+
+					CollectTransformers(filterConfiguration, allTransformerConfigurations);
+				}
+			}
+
+			foreach (TransformerConfiguration transformerConfiguration in
+			         allTransformerConfigurations)
+			{
+				descriptors.Add(transformerConfiguration.TransformerDescriptor);
+			}
+
+			return descriptors;
+		}
+
+		private static void CollectTransformers(
+			[NotNull] InstanceConfiguration configuration,
+			[NotNull] HashSet<TransformerConfiguration> allTransformers)
+		{
+			foreach (TestParameterValue parameterValue in configuration.ParameterValues)
+			{
+				TransformerConfiguration transformer = parameterValue.ValueSource;
+				if (transformer != null)
+				{
+					if (allTransformers.Add(transformer))
+					{
+						CollectTransformers(transformer, allTransformers);
+					}
+				}
+			}
+		}
+
+		public static InstanceDescriptorMsg ToInstanceDescriptorMsg(
+			[NotNull] InstanceDescriptor instanceDescriptor)
+		{
+			var result = new InstanceDescriptorMsg
+			             {
+				             Id = instanceDescriptor.Id,
+				             Name = instanceDescriptor.Name,
+				             Type = (int) GetInstanceType(instanceDescriptor)
+			             };
+
+			ClassDescriptor classDescriptor = instanceDescriptor.Class;
+
+			if (classDescriptor == null &&
+			    instanceDescriptor is TestDescriptor testDescriptor)
+			{
+				classDescriptor = testDescriptor.TestFactoryDescriptor;
+			}
+
+			if (classDescriptor != null)
+			{
+				result.ClassDescriptor = new ClassDescriptorMsg()
+				                         {
+					                         TypeName = classDescriptor.TypeName,
+					                         AssemblyName = classDescriptor.AssemblyName
+				                         };
+			}
+
+			// -1 in case of TestFactory
+			result.Constructor = instanceDescriptor.ConstructorId;
+
+			return result;
+		}
+
+		private static InstanceType GetInstanceType([NotNull] InstanceDescriptor instanceDescriptor)
+		{
+			if (instanceDescriptor is TestDescriptor)
+			{
+				return InstanceType.Test;
+			}
+
+			if (instanceDescriptor is TransformerDescriptor)
+			{
+				return InstanceType.Transformer;
+			}
+
+			if (instanceDescriptor is IssueFilterDescriptor)
+			{
+				return InstanceType.IssueFilter;
+			}
+
+			throw new ArgumentOutOfRangeException(
+				$"Unsupported type: {instanceDescriptor.GetType()}");
+		}
+
+		public static T FromInstanceDescriptorMsg<T>(
+			[NotNull] InstanceDescriptorMsg instanceDescriptorMsg) where T : InstanceDescriptor
+		{
+			// TODO: Use type to determine if test/transformer or issue filter
+			// TODO!!!
+			ClassDescriptorMsg classDescriptorMsg = instanceDescriptorMsg.ClassDescriptor;
+
+			var classDescriptor =
+				new ClassDescriptor(classDescriptorMsg.TypeName, classDescriptorMsg.AssemblyName);
+
+			string name = instanceDescriptorMsg.Name;
+
+			InstanceDescriptor result = new TestDescriptor(name, classDescriptor)
+			                            {
+				                            TestConstructorId = instanceDescriptorMsg.Constructor
+			                            };
+
+			result.SetCloneId(instanceDescriptorMsg.Id);
+
+			return (T) result;
+		}
+
+		#region ProtoModelUtils
+
+		public static ModelMsg ToDdxModelMsg(DdxModel productionModel, SpatialReferenceMsg srWkId,
+		                                     ICollection<DatasetMsg> referencedDatasetMsgs)
+		{
+			var modelMsg =
+				new ModelMsg
+				{
+					ModelId = productionModel.Id,
+					Name = productionModel.Name,
+					SpatialReference = srWkId
+				};
+
+			foreach (Dataset dataset in productionModel.Datasets)
+			{
+				modelMsg.DatasetIds.Add(dataset.Id);
+
+				if (dataset is IErrorDataset)
+				{
+					modelMsg.ErrorDatasetIds.Add(dataset.Id);
+				}
+
+				int geometryType = (int) GetGeometryType(dataset);
+
+				var datasetMsg =
+					new DatasetMsg
+					{
+						DatasetId = dataset.Id,
+						Name = dataset.Name,
+						AliasName = dataset.AliasName,
+						GeometryType = geometryType
+					};
+
+				CallbackUtils.DoWithNonNull(
+					datasetMsg.AliasName, s => dataset.AliasName = s);
+
+				referencedDatasetMsgs.Add(datasetMsg);
+			}
+
+			return modelMsg;
+		}
+
+		public static ProSuiteGeometryType GetGeometryType(Dataset dataset)
+		{
+			ProSuiteGeometryType geometryType;
+
+			switch (dataset)
+			{
+				case IVectorDataset vds:
+				{
+					var shapeGeometryType = Assert.NotNull((GeometryTypeShape) vds.GeometryType);
+					geometryType = shapeGeometryType.ShapeType;
+					break;
+				}
+				case ITableDataset _:
+					geometryType = ProSuiteGeometryType.Null;
+					break;
+				case ITopologyDataset _:
+					geometryType = ProSuiteGeometryType.Topology;
+					break;
+				case RasterDataset _:
+					geometryType = ProSuiteGeometryType.Raster;
+					break;
+				case IRasterMosaicDataset _:
+					geometryType = ProSuiteGeometryType.RasterMosaic;
+					break;
+				case ISimpleTerrainDataset _:
+					geometryType = ProSuiteGeometryType.Terrain;
+					break;
+				default:
+					throw new ArgumentOutOfRangeException(
+						$"Unsupported dataset type: {dataset.Name}");
+			}
+
+			return geometryType;
+		}
+
+		#endregion
 	}
 }

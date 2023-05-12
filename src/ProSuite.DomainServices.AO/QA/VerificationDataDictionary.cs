@@ -73,6 +73,27 @@ namespace ProSuite.DomainServices.AO.QA
 			return result ?? new List<QualitySpecification>(0);
 		}
 
+		public QualitySpecification GetQualitySpecification(int qualitySpecificationId)
+		{
+			QualitySpecification result = null;
+
+			_domainTransactions.UseTransaction(
+				() =>
+				{
+					result = _qualitySpecifications.Get(qualitySpecificationId);
+
+					if (result != null)
+					{
+						// The parameters must be initialized inside the transaction!
+						InstanceConfigurationUtils.InitializeParameterValues(result);
+
+						// TODO: Get datasets, initialize model datasets
+					}
+				});
+
+			return result;
+		}
+
 		[NotNull]
 		private IEnumerable<KeyValuePair<IWorkspace, IList<ProjectWorkspace>>>
 			GetProjectContentByWorkspaceTx(
