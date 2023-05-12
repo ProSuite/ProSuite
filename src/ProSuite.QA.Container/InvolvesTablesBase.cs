@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
@@ -23,7 +22,7 @@ namespace ProSuite.QA.Container
 
 		[NotNull]
 		protected IEnumerable<IReadOnlyRow> Search([NotNull] IReadOnlyTable table,
-		                                           [NotNull] IQueryFilter queryFilter,
+		                                           [NotNull] ITableFilter queryFilter,
 		                                           [NotNull] QueryFilterHelper filterHelper)
 		{
 			Assert.ArgumentNotNull(table, nameof(table));

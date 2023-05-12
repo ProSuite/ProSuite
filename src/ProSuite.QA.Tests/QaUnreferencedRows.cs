@@ -26,7 +26,7 @@ namespace ProSuite.QA.Tests
 		[NotNull] private readonly IList<IReadOnlyTable> _referencingTables;
 		[NotNull] private readonly IList<string> _relations;
 
-		private IQueryFilter _referencedTableFilter;
+		private ITableFilter _referencedTableFilter;
 
 		private ReferencedTableInfo _referencedTableInfo;
 		private IList<ReferencingTableInfo> _referencingTableInfos;
@@ -133,14 +133,14 @@ namespace ProSuite.QA.Tests
 			}
 
 			//TODO use TableJoinUtils where appropriate
-			IQueryFilter filter = TestUtils.CreateFilter(geometry, AreaOfInterest,
+			ITableFilter filter = TestUtils.CreateFilter(geometry, AreaOfInterest,
 			                                             GetConstraint(0),
 			                                             _referencedTable,
 			                                             null);
 
-			GdbQueryUtils.SetSubFields(filter,
-			                           _referencedTable.OIDFieldName,
-			                           _referencedTableKey);
+			TableFilterUtils.SetSubFields(filter,
+			                              _referencedTable.OIDFieldName,
+			                              _referencedTableKey);
 
 			var enumCursor = _referencedTable.EnumRows(filter, recycle: true);
 
@@ -186,7 +186,7 @@ namespace ProSuite.QA.Tests
 			}
 
 			const bool recycle = true;
-			foreach (IReadOnlyRow row in GdbQueryUtils.GetRowsInList(
+			foreach (IReadOnlyRow row in TableFilterUtils.GetRowsInList(
 				         referencedTableInfo.Table,
 				         referencedTableInfo.KeyFieldName,
 				         referencedTableInfo.KeySet,
@@ -289,7 +289,7 @@ namespace ProSuite.QA.Tests
 
 			if (referencedTableInfo.KeySet.Count <= maxKeyCount)
 			{
-				return GdbQueryUtils.GetRowsInList(
+				return TableFilterUtils.GetRowsInList(
 					referencingTableInfo.Table,
 					referencingTableInfo.ForeignKeyFieldName,
 					referencedTableInfo.KeySet, recycle,
@@ -297,7 +297,7 @@ namespace ProSuite.QA.Tests
 			}
 
 			var queryFilter =
-				new QueryFilterClass
+				new AoTableFilter
 				{
 					WhereClause = string.Format("{0} IS NOT NULL",
 					                            referencingTableInfo.ForeignKeyFieldName)
@@ -345,14 +345,14 @@ namespace ProSuite.QA.Tests
 				_referencingTableInfos.Add(referencingTableInfo);
 			}
 
-			_referencedTableFilter = new QueryFilterClass
+			_referencedTableFilter = new AoTableFilter
 			                         {
 				                         WhereClause = GetConstraint(0)
 			                         };
 
-			GdbQueryUtils.SetSubFields(_referencedTableFilter,
-			                           _referencedTableInfo.KeyFieldName,
-			                           _referencedTable.OIDFieldName);
+			TableFilterUtils.SetSubFields(_referencedTableFilter,
+			                              _referencedTableInfo.KeyFieldName,
+			                              _referencedTable.OIDFieldName);
 		}
 
 		[NotNull]
@@ -475,7 +475,7 @@ namespace ProSuite.QA.Tests
 			{
 				Table = GetQueryTable(table, relation, out _foreignKeyFieldName);
 
-				Filter = new QueryFilterClass {WhereClause = whereClause};
+				Filter = new AoTableFilter {WhereClause = whereClause};
 
 				_foreignKeyFieldIndex = Table.FindField(_foreignKeyFieldName);
 				ForeignKeyFieldType =
@@ -587,7 +587,7 @@ namespace ProSuite.QA.Tests
 			public IReadOnlyTable Table { get; }
 
 			[NotNull]
-			public IQueryFilter Filter { get; }
+			public ITableFilter Filter { get; }
 
 			public esriFieldType ForeignKeyFieldType { get; }
 

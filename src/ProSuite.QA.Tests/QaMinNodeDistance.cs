@@ -23,7 +23,7 @@ namespace ProSuite.QA.Tests
 	public class QaMinNodeDistance : ContainerTest
 	{
 		private IEnvelope _box;
-		private IList<ISpatialFilter> _filter;
+		private IList<IFeatureClassFilter> _filter;
 		private IList<QueryFilterHelper> _helper;
 		private readonly double _tolerance;
 		private readonly bool _is3D;
@@ -337,10 +337,10 @@ namespace ProSuite.QA.Tests
 		                         [NotNull] IReadOnlyRow row0,
 		                         int tableIndex0)
 		{
-			ISpatialFilter filter = _filter[neighborTableIndex];
+			IFeatureClassFilter filter = _filter[neighborTableIndex];
 
 			UpdateSearchEnvelope(_box, point);
-			filter.Geometry = _box;
+			filter.FilterGeometry = _box;
 
 			esriGeometryType neighborType = neighbor.ShapeType;
 
@@ -411,9 +411,9 @@ namespace ProSuite.QA.Tests
 		private void InitFilter()
 		{
 			CopyFilters(out _filter, out _helper);
-			foreach (ISpatialFilter filter in _filter)
+			foreach (var filter in _filter)
 			{
-				filter.SpatialRel = esriSpatialRelEnum.esriSpatialRelEnvelopeIntersects;
+				filter.SpatialRelationship = esriSpatialRelEnum.esriSpatialRelEnvelopeIntersects;
 			}
 
 			_box = new EnvelopeClass();

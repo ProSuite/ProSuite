@@ -83,7 +83,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		protected override void ConfigureQueryFilter(int tableIndex,
-		                                             IQueryFilter queryFilter)
+		                                             ITableFilter queryFilter)
 		{
 			base.ConfigureQueryFilter(tableIndex, queryFilter);
 

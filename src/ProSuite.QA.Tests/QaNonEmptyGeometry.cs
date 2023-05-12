@@ -136,7 +136,7 @@ namespace ProSuite.QA.Tests
 			var errorCount = 0;
 
 			const bool recycling = true;
-			IQueryFilter filter = CreateFilter(featureClass, GetConstraint(0));
+			ITableFilter filter = CreateFilter(featureClass, GetConstraint(0));
 
 			long previousOid = -1;
 			bool tryFallbackImplementation = false;
@@ -222,11 +222,11 @@ namespace ProSuite.QA.Tests
 		}
 
 		[NotNull]
-		private IQueryFilter CreateFilter([NotNull] IReadOnlyFeatureClass featureClass,
+		private ITableFilter CreateFilter([NotNull] IReadOnlyFeatureClass featureClass,
 		                                  [CanBeNull] string filterExpression)
 		{
-			IQueryFilter filter =
-				new QueryFilterClass
+			ITableFilter filter =
+				new AoTableFilter
 				{
 					SubFields = _shapeFieldName,
 					WhereClause =
@@ -240,7 +240,7 @@ namespace ProSuite.QA.Tests
 				subfields.Add(featureClass.OIDFieldName);
 			}
 
-			GdbQueryUtils.SetSubFields(filter, subfields);
+			TableFilterUtils.SetSubFields(filter, subfields);
 
 			return filter;
 		}

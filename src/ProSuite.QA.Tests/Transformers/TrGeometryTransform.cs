@@ -293,7 +293,7 @@ namespace ProSuite.QA.Tests.Transformers
 				throw new NotImplementedException();
 			}
 
-			public override long GetRowCount(IQueryFilter queryFilter)
+			public override long GetRowCount(ITableFilter queryFilter)
 			{
 				// TODO
 				return _t0.RowCount(queryFilter);
@@ -305,11 +305,11 @@ namespace ProSuite.QA.Tests.Transformers
 				_idxBaseRowField ??
 				(_idxBaseRowField = Resulting.FindField(InvolvedRowUtils.BaseRowField)).Value;
 
-			public override IEnumerable<VirtualRow> Search(IQueryFilter filter, bool recycling)
+			public override IEnumerable<VirtualRow> Search(ITableFilter filter, bool recycling)
 			{
 				var involvedDict = new Dictionary<IReadOnlyFeature, Involved>();
 
-				filter = filter ?? new QueryFilterClass();
+				filter = filter ?? new AoTableFilter();
 
 				Assert.NotNull(DataContainer, "DataContainer has not been set.");
 
@@ -343,10 +343,10 @@ namespace ProSuite.QA.Tests.Transformers
 				}
 
 				if ((Resulting.Transformer as IContainerTransformer)?.HandlesContainer == true &&
-				    Resulting.KnownRows != null && filter is ISpatialFilter sp)
+				    Resulting.KnownRows != null && filter is IFeatureClassFilter sp)
 				{
 					foreach (BoxTree<IReadOnlyFeature>.TileEntry entry in
-					         Resulting.KnownRows.Search(ProxyUtils.CreateBox(sp.Geometry)))
+					         Resulting.KnownRows.Search(ProxyUtils.CreateBox(sp.FilterGeometry)))
 					{
 						yield return (VirtualRow) entry.Value;
 					}

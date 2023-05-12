@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.Essentials.Assertions;
@@ -37,7 +36,7 @@ namespace ProSuite.QA.Tests.Transformers.Filters
 
 		#region Overrides of BackingDataset
 
-		public override IEnumerable<VirtualRow> Search(IQueryFilter filter, bool recycling)
+		public override IEnumerable<VirtualRow> Search(ITableFilter filter, bool recycling)
 		{
 			QueryFilterHelper resultFilter = QueryHelpers[0];
 			Assert.NotNull(filter);

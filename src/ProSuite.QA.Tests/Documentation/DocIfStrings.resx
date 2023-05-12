@@ -139,4 +139,11 @@
     <value>List of tables, to which a involved row must belong to to be checked.
 If not specified, all involved rows are check for the constraint</value>
   </data>
+  <data name="IfAll_0" xml:space="preserve">
+    <value>Filters all errors, if 'Filter' = true (default). If 'Filter' = false, no error is filtered</value>
+  </data>
+  <data name="IfAll_Filter" xml:space="preserve">
+    <value>if true (default): filter all errors
+if false: filter no errors</value>
+  </data>
 </root>

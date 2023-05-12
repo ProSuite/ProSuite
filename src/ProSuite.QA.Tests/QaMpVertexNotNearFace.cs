@@ -12,7 +12,6 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.Geometry;
 using ProSuite.QA.Core;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
@@ -78,7 +77,7 @@ namespace ProSuite.QA.Tests
 		private double _minimumSlopeDegrees;
 		private double _minimumSlopeTan2;
 
-		private IList<ISpatialFilter> _filters;
+		private IList<IFeatureClassFilter> _filters;
 		private IList<QueryFilterHelper> _filterHelpers;
 		private readonly IEnvelope _envelopeTemplate = new EnvelopeClass();
 
@@ -184,7 +183,7 @@ namespace ProSuite.QA.Tests
 			     relatedTableIndex < InvolvedTables.Count;
 			     relatedTableIndex++)
 			{
-				_filters[relatedTableIndex].Geometry = searchGeometry;
+				_filters[relatedTableIndex].FilterGeometry = searchGeometry;
 				int i = relatedTableIndex;
 
 				foreach (IReadOnlyRow relatedRow in
@@ -675,9 +674,9 @@ namespace ProSuite.QA.Tests
 
 			CopyFilters(out _filters, out _filterHelpers);
 
-			foreach (ISpatialFilter filter in _filters)
+			foreach (var filter in _filters)
 			{
-				filter.SpatialRel = esriSpatialRelEnum.esriSpatialRelIntersects;
+				filter.SpatialRelationship = esriSpatialRelEnum.esriSpatialRelIntersects;
 			}
 		}
 	}

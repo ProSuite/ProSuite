@@ -413,7 +413,7 @@ namespace ProSuite.QA.Tests
 				#region init handlig of table constraint
 
 				string filterExpression = GetConstraint(tableIndex);
-				IQueryFilter filter = GetQueryFilter(
+				ITableFilter filter = GetQueryFilter(
 					polylineClass, tableIndex, uniqueIdProvider,
 					getAllFields: StringUtils.IsNotEmpty(filterExpression));
 
@@ -466,12 +466,12 @@ namespace ProSuite.QA.Tests
 		}
 
 		[NotNull]
-		private IQueryFilter GetQueryFilter([NotNull] IReadOnlyTable polylineClass,
+		private ITableFilter GetQueryFilter([NotNull] IReadOnlyTable polylineClass,
 		                                    int tableIndex,
 		                                    [CanBeNull] IUniqueIdProvider uniqueIdProvider,
 		                                    bool getAllFields)
 		{
-			IQueryFilter filter = new QueryFilterClass();
+			ITableFilter filter = new AoTableFilter();
 
 			if (WorkspaceUtils.IsInMemoryWorkspace(polylineClass.Workspace)
 			    || getAllFields)

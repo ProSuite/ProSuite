@@ -10,6 +10,16 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 	public abstract class VirtualFeatureClass : VirtualTable, IFeatureClass, IGeoDataset
 	{
 		protected VirtualFeatureClass(string name) : base(name) { }
+
+#if Server11
+       
+		long IFeatureClass.FeatureCount(IQueryFilter QueryFilter) => TableRowCount(QueryFilter);
+#else
+		int IFeatureClass.FeatureCount(IQueryFilter QueryFilter) => (int)TableRowCount(QueryFilter);
+#endif
+
+		IFeatureCursor IFeatureClass.Search(IQueryFilter filter, bool recycling) =>
+			FeatureClassSearch(filter, recycling);
 	}
 
 	public abstract class VirtualTable : IDataset, ITable, IObjectClass, IDatasetEdit, ISchemaLock,
@@ -265,8 +275,13 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 #if Server11
 		long ITable.RowCount(IQueryFilter QueryFilter) => RowCount(QueryFilter);
 #else
-		int ITable.RowCount(IQueryFilter QueryFilter) => (int)RowCount(QueryFilter);
+		int ITable.RowCount(IQueryFilter QueryFilter) => (int)TableRowCount(QueryFilter);
 #endif
+		protected virtual long TableRowCount(IQueryFilter QueryFilter) =>
+			throw new NotImplementedException("Implement in derived class");
+
+		public virtual long RowCount(ITableFilter filter) =>
+				throw new NotImplementedException("Implement in derived class");
 
 		public bool Equals(IReadOnlyTable otherTable)
 		{
@@ -289,33 +304,24 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			return false;
 		}
 
-#if Server11
-		public long FeatureCount(IQueryFilter QueryFilter) => RowCount(QueryFilter);
-#else
-		public int FeatureCount(IQueryFilter QueryFilter) => (int)RowCount(QueryFilter);
-#endif
-
-		public virtual long RowCount(IQueryFilter QueryFilter) =>
-			throw new NotImplementedException("Implement in derived class");
-
 		ICursor ITable.Search(IQueryFilter QueryFilter, bool Recycling) =>
 			SearchT(QueryFilter, Recycling);
 
-		public virtual IFeatureCursor Search(IQueryFilter queryFilter, bool recycling) =>
+		protected virtual IFeatureCursor FeatureClassSearch(IQueryFilter queryFilter, bool recycling) =>
 			SearchT(queryFilter, recycling);
 
-		public virtual CursorImpl SearchT(IQueryFilter queryFilter, bool recycling) =>
+		protected virtual CursorImpl SearchT(IQueryFilter queryFilter, bool recycling) =>
 			new CursorImpl(this, EnumRows(queryFilter, recycling));
 
-		public virtual IEnumerable<IRow>
+		protected virtual IEnumerable<IRow>
 			EnumRows(IQueryFilter queryFilter, bool recycling) =>
 			throw new NotImplementedException("Implement in derived class");
 
-		IEnumerable<IReadOnlyRow> IReadOnlyTable.EnumRows(IQueryFilter filter, bool recycling)
+		IEnumerable<IReadOnlyRow> IReadOnlyTable.EnumRows(ITableFilter filter, bool recycling)
 			=> EnumReadOnlyRows(filter, recycling);
 
 		public virtual IEnumerable<IReadOnlyRow>
-			EnumReadOnlyRows(IQueryFilter queryFilter, bool recycling) =>
+			EnumReadOnlyRows(ITableFilter queryFilter, bool recycling) =>
 			throw new NotImplementedException("Implement in derived class");
 
 		ICursor ITable.Update(IQueryFilter QueryFilter, bool Recycling) =>

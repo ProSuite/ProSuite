@@ -28,7 +28,7 @@ namespace ProSuite.QA.Tests
 		private readonly IList<IReadOnlyFeatureClass> _polylineClasses;
 		private Dictionary<IReadOnlyTable, Dictionary<int, esriFieldType>> _compareFieldsPerTable;
 
-		private Dictionary<int, ISpatialFilter> _filters;
+		private Dictionary<int, IFeatureClassFilter> _filters;
 		private Dictionary<int, QueryFilterHelper> _helpers;
 
 		#region issue codes
@@ -243,8 +243,8 @@ namespace ProSuite.QA.Tests
 
 			foreach (int nonNetworkClassIndex in NonNetworkClassIndexList)
 			{
-				ISpatialFilter relatedFilter = Filters[nonNetworkClassIndex];
-				relatedFilter.Geometry = netPoint;
+				IFeatureClassFilter relatedFilter = Filters[nonNetworkClassIndex];
+				relatedFilter.FilterGeometry = netPoint;
 
 				QueryFilterHelper relatedFilterHelper = Helpers[nonNetworkClassIndex];
 
@@ -322,7 +322,7 @@ namespace ProSuite.QA.Tests
 			return true;
 		}
 
-		private Dictionary<int, ISpatialFilter> Filters
+		private Dictionary<int, IFeatureClassFilter> Filters
 		{
 			get
 			{
@@ -354,7 +354,7 @@ namespace ProSuite.QA.Tests
 		/// </summary>
 		private void InitFilters()
 		{
-			_filters = new Dictionary<int, ISpatialFilter>();
+			_filters = new Dictionary<int, IFeatureClassFilter>();
 			_helpers = new Dictionary<int, QueryFilterHelper>();
 
 			bool caseSensitive = GetSqlCaseSensitivity();
@@ -362,7 +362,7 @@ namespace ProSuite.QA.Tests
 			foreach (int tableIndex in NonNetworkClassIndexList)
 			{
 				IReadOnlyTable nonNetworkClass = InvolvedTables[tableIndex];
-				ISpatialFilter filter = new SpatialFilterClass();
+				IFeatureClassFilter filter = new AoFeatureClassFilter();
 
 				var helper = new QueryFilterHelper(nonNetworkClass,
 				                                   GetConstraint(tableIndex),
@@ -376,11 +376,11 @@ namespace ProSuite.QA.Tests
 				switch (geometryType)
 				{
 					case esriGeometryType.esriGeometryPolyline:
-						filter.SpatialRel = esriSpatialRelEnum.esriSpatialRelIntersects;
+						filter.SpatialRelationship = esriSpatialRelEnum.esriSpatialRelIntersects;
 						break;
 
 					case esriGeometryType.esriGeometryPolygon:
-						filter.SpatialRel = esriSpatialRelEnum.esriSpatialRelTouches;
+						filter.SpatialRelationship = esriSpatialRelEnum.esriSpatialRelTouches;
 						break;
 
 					default:

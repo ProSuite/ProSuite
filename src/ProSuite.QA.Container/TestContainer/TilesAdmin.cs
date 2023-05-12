@@ -60,11 +60,11 @@ namespace ProSuite.QA.Container.TestContainer
 			tileCache.LoadCachedTableRows(cachedRows, table, tile, _tileEnumContext);
 		}
 
-		public IEnumerable<IReadOnlyRow> Search(IReadOnlyTable table, ISpatialFilter queryFilter,
+		public IEnumerable<IReadOnlyRow> Search(IReadOnlyTable table, IFeatureClassFilter queryFilter,
 		                                        QueryFilterHelper filterHelper)
 		{
 			HashSet<long> handledOids = new HashSet<long>();
-			foreach (var tile in GetTiles(queryFilter.Geometry))
+			foreach (var tile in GetTiles(queryFilter.FilterGeometry))
 			{
 				TileCache tileCache = tile.Item1;
 				EnsureLoaded(tile.Item1, tile.Item2, table);

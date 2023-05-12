@@ -110,7 +110,7 @@ namespace ProSuite.QA.TestFactories
 				            constraintDescriptionField, constraintsTable.Name);
 			}
 
-			IQueryFilter filter = CreateQueryFilter(filterExpression, constraintField,
+			ITableFilter filter = CreateQueryFilter(filterExpression, constraintField,
 			                                        constraintDescriptionField);
 
 			const bool recycling = true;
@@ -193,12 +193,12 @@ namespace ProSuite.QA.TestFactories
 		}
 
 		[NotNull]
-		private static IQueryFilter CreateQueryFilter(
+		private static ITableFilter CreateQueryFilter(
 			[CanBeNull] string filterExpression,
 			[NotNull] string constraintField,
 			[CanBeNull] string constraintDescriptionField)
 		{
-			IQueryFilter result = new QueryFilterClass
+			ITableFilter result = new AoTableFilter
 			                      {
 				                      WhereClause = filterExpression,
 				                      SubFields = constraintField
@@ -210,7 +210,7 @@ namespace ProSuite.QA.TestFactories
 				subfields.Add(constraintDescriptionField);
 			}
 
-			GdbQueryUtils.SetSubFields(result, subfields);
+			TableFilterUtils.SetSubFields(result, subfields);
 
 			return result;
 		}

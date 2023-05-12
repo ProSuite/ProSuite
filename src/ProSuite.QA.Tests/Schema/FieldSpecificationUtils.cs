@@ -14,7 +14,7 @@ namespace ProSuite.QA.Tests.Schema
 	{
 		[NotNull]
 		public static IEnumerable<FieldSpecification> ReadFieldSpecifications(
-			[NotNull] IReadOnlyTable table, [NotNull] IQueryFilter queryFilter)
+			[NotNull] IReadOnlyTable table, [NotNull] ITableFilter queryFilter)
 		{
 			Assert.ArgumentNotNull(table, nameof(table));
 			Assert.ArgumentNotNull(queryFilter, nameof(queryFilter));

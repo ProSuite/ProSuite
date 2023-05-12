@@ -249,7 +249,7 @@ namespace ProSuite.QA.Tests
 
 			string tableName = _featureClass.Name;
 			const bool recycle = true;
-			foreach (IReadOnlyRow r in GdbQueryUtils.GetRows(
+			foreach (IReadOnlyRow r in TableFilterUtils.GetRows(
 				         _featureClass, duplicatesByFirstOid.Keys, recycle))
 			{
 				IReadOnlyFeature feature = (IReadOnlyFeature) r;

@@ -419,6 +419,15 @@ namespace ProSuite.Commons.AO.Geodatabase
 		}
 
 		[NotNull]
+		public static IFeatureClassFilter CreateSpatialFilter(
+			[NotNull] IReadOnlyFeatureClass featureClass,
+			[NotNull] IGeometry searchGeometry,
+			esriSpatialRelEnum spatialRel = esriSpatialRelEnum.esriSpatialRelIntersects)
+		{
+			return new AoFeatureClassFilter(searchGeometry, spatialRel);
+		}
+
+		[NotNull]
 		public static IQueryFilter CreateSpatialFilter(
 			[NotNull] IFeatureClass featureClass,
 			[NotNull] IGeometry searchGeometry,
@@ -454,7 +463,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		/// <param name="searchOrder"></param>
 		/// <returns></returns>
 		[NotNull]
-		public static IQueryFilter CreateSpatialFilter(
+		public static ISpatialFilter CreateSpatialFilter(
 			[CanBeNull] IFeatureClass featureClass,
 			[NotNull] IGeometry searchGeometry,
 			esriSpatialRelEnum spatialRel,
@@ -863,39 +872,6 @@ namespace ProSuite.Commons.AO.Geodatabase
 			//}
 		}
 
-		public static IEnumerable<IReadOnlyRow> GetRows(
-			[NotNull] IReadOnlyTable table,
-			[NotNull] IEnumerable<long> objectIds,
-			bool recycling)
-		{
-			if (table is ReadOnlyTable roTable)
-			{
-				if (roTable.AlternateOidFieldName != null)
-				{
-					foreach (IReadOnlyRow row in GetRowsInList(
-						         table, roTable.AlternateOidFieldName, objectIds, recycling))
-					{
-						yield return row;
-					}
-				}
-				else
-				{
-					foreach (IRow baseFeature in GetRowsByObjectIds(
-						         roTable.BaseTable, objectIds, recycling))
-					{
-						yield return roTable.CreateRow(baseFeature);
-					}
-				}
-			}
-			else
-			{
-				foreach (long oid in objectIds)
-				{
-					yield return table.GetRow(oid);
-				}
-			}
-		}
-
 		/// <summary>
 		/// Gets the features for a given collection of object ids
 		/// </summary>
@@ -1071,26 +1047,6 @@ namespace ProSuite.Commons.AO.Geodatabase
 			                                   (q) => GetRows(table, q, recycle), queryFilter))
 			{
 				yield return (T) row;
-			}
-		}
-
-		[NotNull]
-		public static IEnumerable<IReadOnlyRow> GetRowsInList(
-			[NotNull] IReadOnlyTable table,
-			[NotNull] string fieldName,
-			[NotNull] IEnumerable valueList,
-			bool recycle,
-			[CanBeNull] IQueryFilter queryFilter = null)
-		{
-			Assert.ArgumentNotNull(table, nameof(table));
-			Assert.ArgumentNotNullOrEmpty(fieldName, nameof(fieldName));
-			Assert.ArgumentNotNull(valueList, nameof(valueList));
-
-			foreach (IReadOnlyRow row in GetRowsInList(
-				         table.Workspace, DatasetUtils.GetField(table, fieldName), valueList,
-				         (q) => table.EnumRows(q, recycle), queryFilter))
-			{
-				yield return row;
 			}
 		}
 
@@ -1478,7 +1434,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		{
 			Assert.ArgumentNotNull(table, nameof(table));
 
-			IQueryFilter filter = new QueryFilterClass
+			ITableFilter filter = new AoTableFilter
 			                      {
 				                      WhereClause = whereClause,
 				                      SubFields = table.OIDFieldName

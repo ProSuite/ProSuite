@@ -46,12 +46,12 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			// TODO: Throw com exception with error code e.ErrorCode = (int)fdoError.FDO_E_ROW_NOT_FOUND
 		}
 
-		public override long GetRowCount(IQueryFilter filter)
+		public override long GetRowCount(ITableFilter filter)
 		{
 			return Search(filter, true).Count();
 		}
 
-		public override IEnumerable<VirtualRow> Search(IQueryFilter filter, bool recycling)
+		public override IEnumerable<VirtualRow> Search(ITableFilter filter, bool recycling)
 		{
 			var filterHelper = FilterHelper.Create(_schema, filter?.WhereClause);
 

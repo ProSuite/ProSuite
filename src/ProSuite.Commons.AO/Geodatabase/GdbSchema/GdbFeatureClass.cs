@@ -30,6 +30,16 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			ShapeType = template.ShapeType;
 		}
 
+#if Server11
+       
+		long IFeatureClass.FeatureCount(IQueryFilter QueryFilter) => TableRowCount(QueryFilter);
+#else
+		int IFeatureClass.FeatureCount(IQueryFilter QueryFilter) => (int)TableRowCount(QueryFilter);
+#endif
+
+		IFeatureCursor IFeatureClass.Search(IQueryFilter filter, bool recycling) =>
+			FeatureClassSearch(filter, recycling);
+
 		public GdbFields FieldsT => GdbFields;
 
 		public int ShapeFieldIndex
@@ -94,17 +104,6 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		#endregion
 
 		#region IFeatureClass Members
-
-		public override IFeatureCursor Search(IQueryFilter filter, bool recycling)
-		{
-			if (BackingDataset == null)
-			{
-				throw new NotImplementedException("No backing dataset provided for Search().");
-			}
-
-			var rows = BackingDataset.Search(filter, recycling);
-			return new CursorImpl(this, rows);
-		}
 
 		public override esriGeometryType ShapeType { get; }
 

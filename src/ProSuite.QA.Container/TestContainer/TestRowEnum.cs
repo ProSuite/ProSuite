@@ -265,7 +265,7 @@ namespace ProSuite.QA.Container.TestContainer
 		}
 
 		IEnumerable<IReadOnlyRow> IDataContainer.Search(IReadOnlyTable table,
-		                                                IQueryFilter queryFilter,
+		                                                ITableFilter queryFilter,
 		                                                QueryFilterHelper filterHelper)
 		{
 			return Search(table, queryFilter, filterHelper);
@@ -303,7 +303,7 @@ namespace ProSuite.QA.Container.TestContainer
 
 		[CanBeNull]
 		private IEnumerable<IReadOnlyRow> Search([NotNull] IReadOnlyTable table,
-		                                         [NotNull] IQueryFilter queryFilter,
+		                                         [NotNull] ITableFilter queryFilter,
 		                                         [NotNull] QueryFilterHelper filterHelper)
 		{
 			// if the table was not passed to the container, return null
@@ -316,11 +316,11 @@ namespace ProSuite.QA.Container.TestContainer
 			if ((queryFilter is ITileFilter tf && tf.TileExtent != null) ||
 			    filterHelper.FullGeometrySearch)
 			{
-				if (queryFilter is ISpatialFilter sf)
+				if (queryFilter is IFeatureClassFilter sf)
 				{
 					IEnvelope loaded = _tileCache.GetLoadedExtent(table);
-					if (sf.Geometry != null &&
-					    ! ((IRelationalOperator) loaded).Contains(sf.Geometry))
+					if (sf.FilterGeometry != null &&
+					    ! ((IRelationalOperator) loaded).Contains(sf.FilterGeometry))
 					{
 						_tilesAdmin = _tilesAdmin ?? new TilesAdmin(this, _tileCache);
 						return _tilesAdmin.Search(table, sf, filterHelper);
@@ -366,7 +366,7 @@ namespace ProSuite.QA.Container.TestContainer
 			[NotNull] IDictionary<IReadOnlyTable, long> totalRowCountPerTable,
 			[NotNull] IDictionary<IReadOnlyTable, long> loadedRowCountPerTable)
 		{
-			IQueryFilter filter = new QueryFilterClass();
+			ITableFilter filter = new AoTableFilter();
 
 			foreach (IReadOnlyTable table in tables)
 			{
@@ -381,7 +381,7 @@ namespace ProSuite.QA.Container.TestContainer
 				}
 				catch (Exception exp)
 				{
-					throw new DataException(EnumCursor.CreateMessage(table.Name, filter), exp);
+					throw new DataException(EnumCursor.CreateMessage(table, filter), exp);
 				}
 
 				totalRowCountPerTable.Add(table, count);
@@ -427,7 +427,7 @@ namespace ProSuite.QA.Container.TestContainer
 
 					// TODO: use new class Class_with_ContainerTest_and_InvolvedTableIndex instead of containerTest for applicable tests
 					IList<ContainerTest> applicableTests = GetApplicableTests(
-						testsPerTable, cachedRow.Feature, tile.SpatialFilter.Geometry,
+						testsPerTable, cachedRow.Feature, tile.SpatialFilter.FilterGeometry,
 						out IList<ContainerTest> reducedTests);
 
 					_overlappingFeatures.RegisterTestedFeature(
@@ -467,7 +467,7 @@ namespace ProSuite.QA.Container.TestContainer
 					foreach (IReadOnlyRow row in table.EnumRows(tile.SpatialFilter, recycle: true))
 					{
 						IList<ContainerTest> applicableTests = GetApplicableTests(
-							currentTests, row, tile.SpatialFilter.Geometry,
+							currentTests, row, tile.SpatialFilter.FilterGeometry,
 							out IList<ContainerTest> reducedTests);
 
 						var feature = row as IReadOnlyFeature;
@@ -655,7 +655,7 @@ namespace ProSuite.QA.Container.TestContainer
 		/// <param name="tileSpatialFilter">The tile spatial filter.</param>
 		/// <returns></returns>
 		private long GetTileNonCachedTablesRowCount(
-			[NotNull] ISpatialFilter tileSpatialFilter)
+			[NotNull] IFeatureClassFilter tileSpatialFilter)
 		{
 			long result = 0;
 
@@ -693,7 +693,7 @@ namespace ProSuite.QA.Container.TestContainer
 					catch (Exception exp)
 					{
 						throw new DataException(
-							EnumCursor.CreateMessage(table.Name, tileSpatialFilter), exp);
+							EnumCursor.CreateMessage(table, tileSpatialFilter), exp);
 					}
 				}
 				finally
@@ -1153,7 +1153,7 @@ namespace ProSuite.QA.Container.TestContainer
 		                             [NotNull] ICollection<CachedRow> cachedRows)
 		{
 			tileCache.IgnoredRowsByTableAndTest[table] =
-				GetIgnoredRows(table, cachedRows, tile.SpatialFilter.Geometry);
+				GetIgnoredRows(table, cachedRows, tile.SpatialFilter.FilterGeometry);
 		}
 
 		/// <summary>
@@ -1161,13 +1161,13 @@ namespace ProSuite.QA.Container.TestContainer
 		/// </summary>
 		[NotNull]
 		private static IEnumerable<IReadOnlyRow> GetRows([NotNull] IReadOnlyTable table,
-		                                                 [NotNull] ISpatialFilter filter)
+		                                                 [NotNull] IFeatureClassFilter filter)
 		{
 			Assert.ArgumentNotNull(table, nameof(table));
 			Assert.ArgumentNotNull(filter, nameof(filter));
 
 			IWorkspace workspace = table.Workspace;
-			esriSpatialRelEnum origRel = filter.SpatialRel;
+			esriSpatialRelEnum origRel = filter.SpatialRelationship;
 
 			var changedSpatialRel = false;
 
@@ -1176,7 +1176,7 @@ namespace ProSuite.QA.Container.TestContainer
 				if (origRel == esriSpatialRelEnum.esriSpatialRelEnvelopeIntersects &&
 				    workspace.Type == esriWorkspaceType.esriFileSystemWorkspace)
 				{
-					filter.SpatialRel = esriSpatialRelEnum.esriSpatialRelIntersects;
+					filter.SpatialRelationship = esriSpatialRelEnum.esriSpatialRelIntersects;
 					changedSpatialRel = true;
 				}
 
@@ -1186,7 +1186,7 @@ namespace ProSuite.QA.Container.TestContainer
 			{
 				if (changedSpatialRel)
 				{
-					filter.SpatialRel = origRel;
+					filter.SpatialRelationship = origRel;
 				}
 			}
 		}

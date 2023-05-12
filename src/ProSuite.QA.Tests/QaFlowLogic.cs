@@ -105,7 +105,7 @@ namespace ProSuite.QA.Tests
 		#endregion
 
 		protected override void ConfigureQueryFilter(int tableIndex,
-		                                             IQueryFilter queryFilter)
+		                                             ITableFilter queryFilter)
 		{
 			if (_flipExpressions != null)
 			{

@@ -166,7 +166,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		#region VirtualTable overrides
 
 		public override IEnumerable<IReadOnlyRow> EnumReadOnlyRows(
-			IQueryFilter queryFilter, bool recycling)
+			ITableFilter queryFilter, bool recycling)
 		{
 			if (BackingDataset == null)
 			{
@@ -287,7 +287,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			return CreateRow();
 		}
 
-		public override long RowCount(IQueryFilter queryFilter)
+		public override long RowCount(ITableFilter queryFilter)
 		{
 			if (BackingDataset == null)
 			{
@@ -297,16 +297,17 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			return BackingDataset.GetRowCount(queryFilter);
 		}
 
-		public override CursorImpl SearchT(IQueryFilter queryFilter, bool recycling)
+		protected override CursorImpl SearchT(IQueryFilter queryFilter, bool recycling)
 		{
 			if (BackingDataset == null)
 			{
 				throw new NotImplementedException("No backing dataset provided for Search().");
 			}
 
-			IEnumerable<VirtualRow> rows = BackingDataset.Search(queryFilter, recycling);
+			throw new NotImplementedException(); // TODO
+			//IEnumerable<VirtualRow> rows = BackingDataset.Search(queryFilter, recycling);
 
-			return new CursorImpl(this, rows);
+			//return new CursorImpl(this, rows);
 		}
 
 		#endregion

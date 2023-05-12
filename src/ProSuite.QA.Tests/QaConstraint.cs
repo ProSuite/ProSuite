@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
@@ -199,7 +198,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		protected override void ConfigureQueryFilter(int tableIndex,
-		                                             IQueryFilter queryFilter)
+		                                             ITableFilter queryFilter)
 		{
 			base.ConfigureQueryFilter(tableIndex, queryFilter);
 			queryFilter.SubFields = "*";

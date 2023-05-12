@@ -152,7 +152,7 @@ namespace ProSuite.QA.Tests
 			{
 				IReadOnlyFeatureClass featureClass = _polylineClasses[tableIndex];
 
-				IQueryFilter queryFilter = GetQueryFilter(featureClass, tableIndex, geometry);
+				ITableFilter queryFilter = GetQueryFilter(featureClass, tableIndex, geometry);
 
 				const bool recycle = true;
 				foreach (IReadOnlyRow feature in
@@ -388,7 +388,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[NotNull]
-		private IQueryFilter GetQueryFilter([NotNull] IReadOnlyFeatureClass featureClass,
+		private ITableFilter GetQueryFilter([NotNull] IReadOnlyFeatureClass featureClass,
 		                                    int tableIndex,
 		                                    [CanBeNull] IGeometry geometry)
 		{
@@ -396,27 +396,26 @@ namespace ProSuite.QA.Tests
 
 			string routeIdFieldName = GetRouteIdFieldName(featureClass, tableIndex);
 
-			IQueryFilter result;
+			ITableFilter result;
 			if (geometry == null)
 			{
-				result = new QueryFilterClass();
+				result = new AoTableFilter();
 			}
 			else
 			{
-				result = new SpatialFilterClass
+				result = new AoFeatureClassFilter
 				         {
-					         GeometryField = featureClass.ShapeFieldName,
-					         SpatialRel = esriSpatialRelEnum.esriSpatialRelIntersects,
-					         Geometry = geometry
+					         SpatialRelationship = esriSpatialRelEnum.esriSpatialRelIntersects,
+					         FilterGeometry = geometry
 				         };
 			}
 
 			result.WhereClause = GetWhereClause(tableIndex, routeIdFieldName);
 
-			GdbQueryUtils.SetSubFields(result,
-			                           featureClass.OIDFieldName,
-			                           featureClass.ShapeFieldName,
-			                           routeIdFieldName);
+			TableFilterUtils.SetSubFields(result,
+			                              featureClass.OIDFieldName,
+			                              featureClass.ShapeFieldName,
+			                              routeIdFieldName);
 
 			return result;
 		}

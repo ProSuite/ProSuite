@@ -257,7 +257,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 					ex);
 
 				// Re-try (only for final message)
-				Task.Delay(1000);
+				Task.Delay(1000).Wait();
 				_responseStream.WriteAsync(response);
 			}
 

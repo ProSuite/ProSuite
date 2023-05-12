@@ -4,6 +4,7 @@ using System.IO;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using Google.Protobuf.Collections;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -88,7 +89,7 @@ namespace ProSuite.Microservices.Server.AO.Geodatabase
 			return null;
 		}
 
-		public override long GetRowCount(IQueryFilter filter)
+		public override long GetRowCount(ITableFilter filter)
 		{
 			DataRequest dataRequest = CreateDataRequest(filter);
 
@@ -112,7 +113,7 @@ namespace ProSuite.Microservices.Server.AO.Geodatabase
 			return Convert.ToInt32(moreData.Data.GdbObjectCount);
 		}
 
-		public override IEnumerable<VirtualRow> Search(IQueryFilter filter, bool recycling)
+		public override IEnumerable<VirtualRow> Search(ITableFilter filter, bool recycling)
 		{
 			DataRequest dataRequest = CreateDataRequest(filter);
 
@@ -143,11 +144,12 @@ namespace ProSuite.Microservices.Server.AO.Geodatabase
 			}
 		}
 
-		private DataRequest CreateDataRequest([CanBeNull] IQueryFilter filter)
+		private DataRequest CreateDataRequest([CanBeNull] ITableFilter filter)
 		{
 			ShapeMsg searchGeoMsg =
-				filter is ISpatialFilter spatialFilter && spatialFilter.Geometry != null
-					? ProtobufGeometryUtils.ToShapeMsg(spatialFilter.Geometry)
+				filter is IFeatureClassFilter spatialFilter
+				&& spatialFilter.FilterGeometry != null
+					? ProtobufGeometryUtils.ToShapeMsg(spatialFilter.FilterGeometry)
 					: null;
 
 			var dataRequest = new DataRequest

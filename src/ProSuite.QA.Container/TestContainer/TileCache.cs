@@ -2,7 +2,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Text;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
@@ -15,7 +14,6 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
 using ProSuite.Commons.Geom.SpatialIndex;
 using ProSuite.Commons.Logging;
-using ProSuite.QA.Container.Geometry;
 using IPnt = ProSuite.Commons.Geom.IPnt;
 using Pnt = ProSuite.Commons.Geom.Pnt;
 
@@ -185,11 +183,11 @@ namespace ProSuite.QA.Container.TestContainer
 
 		[CanBeNull]
 		public IList<IReadOnlyRow> Search([NotNull] IReadOnlyTable table,
-		                                  [NotNull] IQueryFilter queryFilter,
+		                                  [NotNull] ITableFilter filter,
 		                                  [NotNull] QueryFilterHelper filterHelper)
 		{
-			var spatialFilter = (ISpatialFilter) queryFilter;
-			IGeometry filterGeometry = spatialFilter.Geometry;
+			var spatialFilter = (IFeatureClassFilter) filter;
+			IGeometry filterGeometry = spatialFilter.FilterGeometry;
 
 			IList<IReadOnlyRow> result = new List<IReadOnlyRow>();
 
@@ -532,7 +530,7 @@ namespace ProSuite.QA.Container.TestContainer
 		[NotNull]
 		private IFeatureClassFilter GetLoadSpatialFilter(
 			[NotNull] IReadOnlyTable table,
-			[NotNull] ISpatialFilter tileSpatialFilter,
+			[NotNull] IFeatureClassFilter tileSpatialFilter,
 			[NotNull] ITileEnumContext context,
 			[CanBeNull] string notInExpression)
 		{
@@ -550,7 +548,7 @@ namespace ProSuite.QA.Container.TestContainer
 					              : whereClause + " AND " + notInExpression;
 			}
 
-			IEnvelope filterGeometry = (IEnvelope) ((IClone) tileSpatialFilter.Geometry).Clone();
+			IEnvelope filterGeometry = (IEnvelope) ((IClone) tileSpatialFilter.FilterGeometry).Clone();
 
 			double searchTolerance = context.OverlappingFeatures.GetSearchTolerance(table);
 			if (searchTolerance > 0)
@@ -558,11 +556,11 @@ namespace ProSuite.QA.Container.TestContainer
 				filterGeometry.Expand(searchTolerance, searchTolerance, false);
 			}
 
-			var result = new AoFeatureClassFilter(filterGeometry, tileSpatialFilter.SpatialRel)
+			var result = new AoFeatureClassFilter(filterGeometry, tileSpatialFilter.SpatialRelationship)
 			             {
 				             SubFields = tileSpatialFilter.SubFields,
 				             WhereClause = whereClause,
-				             TileExtent = tileSpatialFilter.Geometry.Envelope
+				             TileExtent = tileSpatialFilter.FilterGeometry.Envelope
 			             };
 
 			return result;
@@ -585,17 +583,13 @@ namespace ProSuite.QA.Container.TestContainer
 				}
 			}
 
-			ISpatialFilter queryFilter = null;
-
 			IUniqueIdProvider uniqueIdProvider_ = context.GetUniqueIdProvider(table);
 			// get data from database
 			try
 			{
-				queryFilter = (ISpatialFilter) filter.ToNativeFilterImpl();
-
 				(table as ITransformedTable)?.SetKnownTransformedRows(
 					cachedRows.Values.Select(x => x.Feature as IReadOnlyRow));
-				foreach (IReadOnlyRow row in GetRows(table, queryFilter))
+				foreach (IReadOnlyRow row in GetRows(table, (IFeatureClassFilter)filter))
 				{
 					var feature = (IReadOnlyFeature) row;
 					IGeometry shape = feature.Shape;
@@ -642,11 +636,6 @@ namespace ProSuite.QA.Container.TestContainer
 			finally
 			{
 				(table as ITransformedTable)?.SetKnownTransformedRows(null);
-
-				if (queryFilter != null)
-				{
-					Marshal.ReleaseComObject(queryFilter);
-				}
 			}
 
 			foreach (CachedRow cachedRow in rowsWithoutCachedFeature)
@@ -665,13 +654,13 @@ namespace ProSuite.QA.Container.TestContainer
 		/// </summary>
 		[NotNull]
 		private static IEnumerable<IReadOnlyRow> GetRows([NotNull] IReadOnlyTable table,
-		                                                 [NotNull] ISpatialFilter filter)
+		                                                 [NotNull] IFeatureClassFilter filter)
 		{
 			Assert.ArgumentNotNull(table, nameof(table));
 			Assert.ArgumentNotNull(filter, nameof(filter));
 
 			IWorkspace workspace = table.Workspace;
-			esriSpatialRelEnum origRel = filter.SpatialRel;
+			esriSpatialRelEnum origRel = filter.SpatialRelationship;
 
 			var changedSpatialRel = false;
 
@@ -680,7 +669,7 @@ namespace ProSuite.QA.Container.TestContainer
 				if (origRel == esriSpatialRelEnum.esriSpatialRelEnvelopeIntersects &&
 				    workspace.Type == esriWorkspaceType.esriFileSystemWorkspace)
 				{
-					filter.SpatialRel = esriSpatialRelEnum.esriSpatialRelIntersects;
+					filter.SpatialRelationship = esriSpatialRelEnum.esriSpatialRelIntersects;
 					changedSpatialRel = true;
 				}
 
@@ -690,7 +679,7 @@ namespace ProSuite.QA.Container.TestContainer
 			{
 				if (changedSpatialRel)
 				{
-					filter.SpatialRel = origRel;
+					filter.SpatialRelationship = origRel;
 				}
 			}
 		}

@@ -95,11 +95,13 @@ namespace ProSuite.Commons.AO
 			Dispose();
 		}
 
+		public static string CreateMessage([NotNull] IReadOnlyTable table,
+		                                   [CanBeNull] ITableFilter filter)
+			=> CreateMessage(table.Name, TableFilterUtils.GetQueryFilter(filter));
+
 		public static string CreateMessage([NotNull] ITable table,
 		                                   [CanBeNull] IQueryFilter filter)
-		{
-			return CreateMessage(GetTableName(table), filter);
-		}
+			=> CreateMessage(GetTableName(table), filter);
 
 		public static string CreateMessage([NotNull] string tableName,
 		                                   [CanBeNull] IQueryFilter filter)
