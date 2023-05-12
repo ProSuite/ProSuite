@@ -280,6 +280,7 @@ namespace ProSuite.QA.Tests.Transformers
 				[NotNull] IFeatureClassFilter joinFilter,
 				[CanBeNull] IRelationalOperator loaded)
 			{
+				QueryHelpers[1].FullGeometrySearch = (NeighborSearchOption == SearchOption.All);
 				foreach (var joined in DataSearchContainer.Search(
 					         _t1, joinFilter, QueryHelpers[1]))
 				{

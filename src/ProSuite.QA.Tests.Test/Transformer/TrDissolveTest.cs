@@ -641,7 +641,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				ws, "TLM_GEWAESSER_LAUF",
 				FieldUtils.CreateOIDField(),
 				FieldUtils.CreateField("UUID", esriFieldType.esriFieldTypeGUID),
-				FieldUtils.CreateIntegerField("GEWISS_NR"));
+				FieldUtils.CreateTextField("GEWISS_NR", 32));
 
 			IFeatureClass fcGk = DatasetUtils.CreateSimpleFeatureClass(
 				ws, "TLM_GEWAESSERNETZKNOTEN", FieldUtils.CreateFields(
@@ -663,6 +663,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				{
 					IRow r = tblGl.CreateRow();
 					r.Value[tblGl.FindField("UUID")] = seeGuid.ToString("B");
+					r.Value[tblGl.FindField("GEWISS_NR")] = "See0";
 					r.Store();
 				}
 				IPoint p0 = GeometryFactory.CreatePoint(0, 100);
@@ -700,6 +701,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				{
 					IRow r = tblGl.CreateRow();
 					r.Value[tblGl.FindField("UUID")] = seeGuid.ToString("B");
+					r.Value[tblGl.FindField("GEWISS_NR")] = "See1";
 					r.Store();
 				}
 				IPoint p0 = GeometryFactory.CreatePoint(0, 400);
@@ -741,6 +743,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				{
 					IRow r = tblGl.CreateRow();
 					r.Value[tblGl.FindField("UUID")] = seeGuid.ToString("B");
+					r.Value[tblGl.FindField("GEWISS_NR")] = "See2";
 					r.Store();
 				}
 				IPoint p0 = GeometryFactory.CreatePoint(0, 800);
@@ -790,7 +793,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			//	Assert.AreEqual(0, runner.Errors.Count);
 			//}
 			{
-				QaExportTables exp = new QaExportTables(tables, "C:\\temp\\TOP_7505_t")
+				QaExportTables exp = new QaExportTables(tables, "C:\\temp\\TOP_7505")
 				{ ExportTileIds = true, ExportTiles = true };
 				var runner = new QaContainerTestRunner(1000, qa, exp);
 //				var runner = new QaContainerTestRunner(1000, qa);
