@@ -240,7 +240,7 @@ namespace ProSuite.Microservices.Client.QA
 		{
 			var result = new InstanceConfigurationMsg
 			             {
-				             ConditionId = instanceConfiguration.Id,
+				             Id = instanceConfiguration.Id,
 				             Name = instanceConfiguration.Name,
 				             Url = instanceConfiguration.Url ?? string.Empty,
 				             Description = instanceConfiguration.Description ?? string.Empty

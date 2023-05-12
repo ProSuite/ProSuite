@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
+using Google.Protobuf.Collections;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom.EsriShape;
@@ -15,8 +17,10 @@ using ProSuite.DomainModel.AGP.QA;
 using ProSuite.DomainModel.AGP.Workflow;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
+using ProSuite.Microservices.Client.QA;
 using ProSuite.Microservices.Definitions.QA;
 using ProSuite.Microservices.Definitions.Shared;
+using ProSuite.Microservices.Server.AO.QA;
 using GeometryType = ProSuite.DomainModel.Core.DataModel.GeometryType;
 
 namespace ProSuite.Microservices.Client.AGP.QA
@@ -64,18 +68,18 @@ namespace ProSuite.Microservices.Client.AGP.QA
 			bool includeHiddenSpecifications,
 			[NotNull] QualityVerificationDdxGrpc.QualityVerificationDdxGrpcClient ddxClient)
 		{
-			GetSpecificationsRequest request = new GetSpecificationsRequest()
-			                                   {
-				                                   IncludeHidden = includeHiddenSpecifications
-			                                   };
+			var request = new GetSpecificationRefsRequest()
+			              {
+				              IncludeHidden = includeHiddenSpecifications
+			              };
 
 			request.DatasetIds.AddRange(datasetIds);
 
 			_msg.DebugFormat("Getting quality specifications for {0} datasets.", datasetIds.Count);
 
-			GetSpecificationsResponse response =
+			GetSpecificationRefsResponse response =
 				await RpcCallUtils.TryAsync(async callOptions =>
-					                            await ddxClient.GetQualitySpecificationsAsync(
+					                            await ddxClient.GetQualitySpecificationRefsAsync(
 						                            request, callOptions), CancellationToken.None,
 				                            _timeoutMilliseconds);
 

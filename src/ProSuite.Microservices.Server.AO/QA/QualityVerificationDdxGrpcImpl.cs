@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
+using Google.Protobuf.Collections;
 using Grpc.Core;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.Callbacks;
@@ -18,6 +19,7 @@ using ProSuite.DomainModel.AO.Workflow;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.Microservices.AO;
+using ProSuite.Microservices.Client.QA;
 using ProSuite.Microservices.Definitions.QA;
 using ProSuite.Microservices.Definitions.Shared;
 using Quaestor.LoadReporting;
@@ -109,10 +111,10 @@ namespace ProSuite.Microservices.Server.AO.QA
 			return response;
 		}
 
-		public override async Task<GetSpecificationsResponse> GetQualitySpecifications(
-			GetSpecificationsRequest request, ServerCallContext context)
+		public override async Task<GetSpecificationRefsResponse> GetQualitySpecificationRefs(
+			GetSpecificationRefsRequest request, ServerCallContext context)
 		{
-			GetSpecificationsResponse response;
+			GetSpecificationRefsResponse response;
 
 			try
 			{
@@ -120,8 +122,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 				Stopwatch watch = _msg.DebugStartTiming();
 
-				Func<ITrackCancel, GetSpecificationsResponse> func =
-					trackCancel => GetQualitySpecificationsCore(request);
+				Func<ITrackCancel, GetSpecificationRefsResponse> func =
+					trackCancel => GetSpecificationRefsCore(request);
 
 				using (_msg.IncrementIndentation("Getting quality specifications for {0}",
 				                                 context.Peer))
@@ -129,7 +131,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 					response =
 						await GrpcServerUtils.ExecuteServiceCall(
 							func, context, _staThreadScheduler, true) ??
-						new GetSpecificationsResponse();
+						new GetSpecificationRefsResponse();
 				}
 
 				_msg.DebugStopTiming(
@@ -250,13 +252,13 @@ namespace ProSuite.Microservices.Server.AO.QA
 					if (dataset is IErrorDataset)
 					{
 						modelMsg.ErrorDatasetIds.Add(dataset.Id);
-					}
+			}
 
 					int geometryType = (int) ProtobufGdbUtils.GetGeometryType(dataset);
 
 					var datasetMsg =
 						new DatasetMsg
-						{
+		{
 							DatasetId = dataset.Id,
 							Name = dataset.Name,
 							AliasName = dataset.AliasName,
@@ -275,10 +277,10 @@ namespace ProSuite.Microservices.Server.AO.QA
 			return response;
 		}
 
-		private GetSpecificationsResponse GetQualitySpecificationsCore(
-			GetSpecificationsRequest request)
+		private GetSpecificationRefsResponse GetSpecificationRefsCore(
+			GetSpecificationRefsRequest request)
 		{
-			var response = new GetSpecificationsResponse();
+			var response = new GetSpecificationRefsResponse();
 
 			IVerificationDataDictionary<TModel> verificationDataDictionary =
 				Assert.NotNull(VerificationDdx,
