@@ -89,6 +89,12 @@ namespace ProSuite.DomainModel.Core.QA
 			set { _testDescriptor = value; }
 		}
 
+		protected override void InstanceDescriptorChanged()
+		{
+			// Redundancy (due to Nh mapping) must be accounted for:
+			TestDescriptor = (TestDescriptor) base.InstanceDescriptor;
+		}
+
 		[Required]
 		public string VersionUuid
 		{

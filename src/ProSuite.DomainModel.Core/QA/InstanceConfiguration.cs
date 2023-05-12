@@ -70,8 +70,14 @@ namespace ProSuite.DomainModel.Core.QA
 		public virtual InstanceDescriptor InstanceDescriptor
 		{
 			get => _instanceDescriptor;
-			set => _instanceDescriptor = value;
+			set
+			{
+				_instanceDescriptor = value;
+				InstanceDescriptorChanged();
+			}
 		}
+
+		protected virtual void InstanceDescriptorChanged() { }
 
 		[Required]
 		public string Uuid
