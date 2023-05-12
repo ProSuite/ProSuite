@@ -5,6 +5,7 @@ using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
+using ProSuite.Commons.AO.Geodatabase.TablesBased;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Test;
 using ProSuite.QA.Container;
@@ -34,7 +35,8 @@ namespace ProSuite.QA.Tests.Test.Transformer
 		public void CanInnerJoinOneToOne()
 		{
 			IFeatureWorkspace ws =
-				TestWorkspaceUtils.CreateInMemoryWorkspace("TrTableJoinInMemory");
+				TestWorkspaceUtils.CreateInMemoryWorkspace(
+					"TrTableJoinInMemory_CanInnerJoinOneToOne");
 
 			IFeatureClass lineFc =
 				CreateFeatureClass(
@@ -113,7 +115,8 @@ namespace ProSuite.QA.Tests.Test.Transformer
 		public void CanInnerJoinManyToOne()
 		{
 			IFeatureWorkspace ws =
-				TestWorkspaceUtils.CreateInMemoryWorkspace("TrTableJoinInMemory");
+				TestWorkspaceUtils.CreateInMemoryWorkspace(
+					"TrTableJoinInMemory_CanInnerJoinManyToOne");
 
 			// lineFc ist the right table, containing the unique key
 			IFeatureClass lineFc =
@@ -214,7 +217,8 @@ namespace ProSuite.QA.Tests.Test.Transformer
 		public void CanInnerJoinOneToMany()
 		{
 			IFeatureWorkspace ws =
-				TestWorkspaceUtils.CreateInMemoryWorkspace("TrTableJoinInMemory");
+				TestWorkspaceUtils.CreateInMemoryWorkspace(
+					"TrTableJoinInMemory_CanInnerJoinOneToMany");
 
 			// lineFc is the right table, containing several keys with value 12
 			IFeatureClass lineFc =
@@ -308,7 +312,8 @@ namespace ProSuite.QA.Tests.Test.Transformer
 		public void CanInnerJoinManyToMany()
 		{
 			IFeatureWorkspace ws =
-				TestWorkspaceUtils.CreateInMemoryWorkspace("TrTableJoinInMemory");
+				TestWorkspaceUtils.CreateInMemoryWorkspace(
+					"TrTableJoinInMemory_CanInnerJoinManyToMany");
 
 			IFeatureClass lineFc =
 				CreateFeatureClass(
@@ -442,7 +447,8 @@ namespace ProSuite.QA.Tests.Test.Transformer
 		public void CanInnerJoinManyToManyWithConstraint()
 		{
 			IFeatureWorkspace ws =
-				TestWorkspaceUtils.CreateInMemoryWorkspace("TrTableJoinInMemory");
+				TestWorkspaceUtils.CreateInMemoryWorkspace(
+					"TrTableJoinInMemory_CanInnerJoinManyToManyWithConstraint");
 
 			IFeatureClass lineFc =
 				CreateFeatureClass(
@@ -647,7 +653,8 @@ namespace ProSuite.QA.Tests.Test.Transformer
 		public void CanLeftJoinManyToMany()
 		{
 			IFeatureWorkspace ws =
-				TestWorkspaceUtils.CreateInMemoryWorkspace("TrTableJoinInMemory");
+				TestWorkspaceUtils.CreateInMemoryWorkspace(
+					"TrTableJoinInMemory_CanLeftJoinManyToMany");
 
 			IFeatureClass lineFc =
 				CreateFeatureClass(

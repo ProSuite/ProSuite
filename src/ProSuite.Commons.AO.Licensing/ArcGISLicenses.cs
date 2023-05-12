@@ -44,8 +44,11 @@ namespace ProSuite.Commons.AO.Licensing
 			if (! _initializer.InitializeApplication(productCodesArray,
 			                                         esriExtensionCodes))
 			{
-				throw new InvalidOperationException(
-					$"Cannot check out license ({product}, {StringUtils.Concatenate(esriExtensionCodes, ", ")})");
+				string productString = esriExtensionCodes.Length > 0
+					                       ? $"{product}, {StringUtils.Concatenate(esriExtensionCodes, ", ")}"
+					                       : $"{product}";
+
+				throw new InvalidOperationException($"Cannot check out license ({productString})");
 			}
 
 			// The _initializer is thread-affine and cannot be used from another thread.

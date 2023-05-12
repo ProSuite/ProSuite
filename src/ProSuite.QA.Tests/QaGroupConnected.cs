@@ -6,13 +6,13 @@ using System.Text;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase.TablesBased;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.Geometry;
 using ProSuite.QA.Container.PolygonGrower;
 using ProSuite.QA.Container.TestContainer;
 using ProSuite.QA.Core;
@@ -316,7 +316,7 @@ namespace ProSuite.QA.Tests
 			IList<string> groupBy,
 			[Doc(nameof(DocStrings.QaGroupConnected_allowedShape))]
 			ShapeAllowed allowedShape)
-			: this(new[] {polylineClass}, groupBy, null, allowedShape,
+			: this(new[] { polylineClass }, groupBy, null, allowedShape,
 			       _defaultErrorReporting, -1) { }
 
 		[Doc(nameof(DocStrings.QaGroupConnected_1))]
@@ -575,7 +575,7 @@ namespace ProSuite.QA.Tests
 			var hashSet = new HashSet<List<ConnectedLine>>();
 			foreach (ConnectedLine row in lines)
 			{
-				hashSet.UnionWith(new[] {row.Connected});
+				hashSet.UnionWith(new[] { row.Connected });
 			}
 
 			if (hashSet.Count < 2)
@@ -1905,8 +1905,8 @@ namespace ProSuite.QA.Tests
 			public IPoint CreatePoint(bool isBackward)
 			{
 				return isBackward
-					       ? new PointClass {X = ToX, Y = ToY}
-					       : new PointClass {X = FromX, Y = FromY};
+					       ? new PointClass { X = ToX, Y = ToY }
+					       : new PointClass { X = FromX, Y = FromY };
 			}
 
 			public void Reset()
@@ -2095,7 +2095,8 @@ namespace ProSuite.QA.Tests
 					sb.Append($"RowOID:{RowIndex}");
 				}
 
-				return $"{sb}; End: [{EndPoint.X:N0}, {EndPoint.Y:N0}]; Any: [{AnyPoint.X:N0}, {AnyPoint.Y:N0}]";
+				return
+					$"{sb}; End: [{EndPoint.X:N0}, {EndPoint.Y:N0}]; Any: [{AnyPoint.X:N0}, {AnyPoint.Y:N0}]";
 			}
 		}
 

@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
-namespace ProSuite.QA.Container
+namespace ProSuite.Commons.AO.Geodatabase.TablesBased
 {
 	public class InvolvedNested : Involved, IEquatable<InvolvedNested>
 	{
@@ -20,7 +20,7 @@ namespace ProSuite.QA.Container
 
 		public override int GetHashCode()
 		{
-			return (BaseRows[0].GetHashCode() * BaseRows.Count * 29) ^ TableName.GetHashCode();
+			return BaseRows[0].GetHashCode() * BaseRows.Count * 29 ^ TableName.GetHashCode();
 		}
 
 		public override IEnumerable<InvolvedRow> EnumInvolvedRows()

@@ -150,7 +150,8 @@ namespace ProSuite.Commons.AO.Test
 				new FeatureClassMock("MockFeatureClass", geometry.GeometryType,
 				                     _lastClassId++,
 				                     esriFeatureType.esriFTSimple,
-				                     (ISpatialReference) spatialRef, GeometryUtils.IsZAware(geometry));
+				                     (ISpatialReference) spatialRef,
+				                     GeometryUtils.IsZAware(geometry));
 
 			IFeature mockFeature = mockFeatureClass.CreateFeature(geometry);
 

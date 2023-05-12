@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using ProSuite.DomainModel.Core.QA;
 
-namespace ProSuite.Microservices.Server.AO.QA
+namespace ProSuite.Microservices.Client.QA
 {
 	/// <summary>
 	/// Encapsulates the resolution of the currently available instance descriptors by name.

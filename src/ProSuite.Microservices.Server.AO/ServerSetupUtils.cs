@@ -226,6 +226,7 @@ namespace ProSuite.Microservices.Server.AO
 		                                                      int defaultPort = 5151)
 		{
 			MicroserverArguments result = null;
+			_msg.InfoFormat($"Running process {Process.GetCurrentProcess().Id}");
 
 			if (args.Length == 0)
 			{

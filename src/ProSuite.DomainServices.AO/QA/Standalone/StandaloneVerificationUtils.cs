@@ -281,28 +281,6 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 			return filePaths;
 		}
 
-		public static void HandleNoConditionCreated(
-			[CanBeNull] string conditionName,
-			[NotNull] IDictionary<string, DdxModel> modelsByWorkspaceId,
-			bool ignoreConditionsForUnknownDatasets,
-			[NotNull] ICollection<DatasetTestParameterRecord> unknownDatasetParameters)
-		{
-			Assert.True(ignoreConditionsForUnknownDatasets,
-			            "ignoreConditionsForUnknownDatasets");
-			Assert.True(unknownDatasetParameters.Count > 0,
-			            "Unexpected number of unknown datasets");
-
-			_msg.WarnFormat(
-				unknownDatasetParameters.Count == 1
-					? "Quality condition '{0}' is ignored because the following dataset is not found: {1}"
-					: "Quality condition '{0}' is ignored because the following datasets are not found: {1}",
-				conditionName,
-				XmlDataQualityUtils.ConcatenateUnknownDatasetNames(
-					unknownDatasetParameters,
-					modelsByWorkspaceId,
-					DataSource.AnonymousId));
-		}
-
 		private static string WriteHtmlReport(
 			[NotNull] QualitySpecification qualitySpecification,
 			[NotNull] string directory,
